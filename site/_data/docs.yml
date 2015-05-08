@@ -1,0 +1,20 @@
+- title: Overview
+  docs:
+  - index
+  - self-contained
+  - indexes
+  - types
+  - acid
+
+- title: Hive Usage
+  docs:
+  - hive-ddl
+  - hive-config
+
+- title: Format Specification
+  docs:
+  - spec-intro
+  - file-tail
+  - compression
+  - run-length
+  - stripes

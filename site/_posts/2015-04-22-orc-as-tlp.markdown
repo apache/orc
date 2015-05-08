@@ -1,0 +1,10 @@
+---
+layout: news_item
+title: "ORC becomes an Apache Top Level Project"
+date: "2015-04-22 20:00:00 -0800"
+author: omalley
+---
+
+Today Apache ORC became a top level project at the Apache Software
+Foundation. This step represents a major step forward for the project,
+and is representative of its momentum.

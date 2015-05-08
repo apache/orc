@@ -1,0 +1,11 @@
+markdown: kramdown
+highlighter: rouge
+permalink: /news/:year/:month/:day/:title/
+excerpt_separator: ""
+
+repository: https://github.com/apache/orc
+destination: target
+
+collections:
+  docs:
+    output: true
