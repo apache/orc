@@ -13,8 +13,10 @@
     <span class="post-date">
       {{ post.date | date_to_string }}
     </span>
-    <a href="https://github.com/{{ post.author }}" class="post-author">
-      <img src="https://github.com/{{ post.author }}.png" class="avatar" alt="{{ post.author }} avatar" width="24" height="24">
+    <a href="https://people.apache.org/~{{ post.author }}" class="post-author">
+      <img src="https://people.apache.org/~{{ post.author }}//{{ post.author }}.png"
+           class="avatar" alt="{{ post.author }} avatar"
+           width="24" height="24">
       {{ post.author }}
     </a>
   </div>
