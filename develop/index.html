@@ -1,0 +1,252 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <title>Developing</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="generator" content="Jekyll v2.4.0">
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
+  <link rel="stylesheet" href="/css/screen.css">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <!--[if lt IE 9]>
+  <script src="/js/html5shiv.min.js"></script>
+  <script src="/js/respond.min.js"></script>
+  <![endif]-->
+</head>
+
+
+<body class="wrap">
+  <header role="banner">
+  <nav class="mobile-nav show-on-mobiles">
+    <ul>
+  <li class="">
+    <a href="/">Home</a>
+  </li>
+  <li class="">
+    <a href="/docs/">Documentation</a>
+  </li>
+  <li class="">
+    <a href="/talks/">Talks</a>
+  </li>
+  <li class="">
+    <a href="/news/">News</a>
+  </li>
+  <li class="">
+    <a href="/help/">Help</a>
+  </li>
+  <li class="current">
+    <a href="/develop/">Develop</a>
+  </li>
+</ul>
+
+  </nav>
+  <div class="grid">
+    <div class="unit one-third center-on-mobiles">
+      <h1>
+        <a href="/">
+          <span class="sr-only">Apache ORC</span>
+          <img src="/img/logo.png" width="249" height="115" alt="ORC Logo">
+        </a>
+      </h1>
+    </div>
+    <nav class="main-nav unit two-thirds hide-on-mobiles">
+      <ul>
+  <li class="">
+    <a href="/">Home</a>
+  </li>
+  <li class="">
+    <a href="/docs/">Documentation</a>
+  </li>
+  <li class="">
+    <a href="/talks/">Talks</a>
+  </li>
+  <li class="">
+    <a href="/news/">News</a>
+  </li>
+  <li class="">
+    <a href="/help/">Help</a>
+  </li>
+  <li class="current">
+    <a href="/develop/">Develop</a>
+  </li>
+</ul>
+
+    </nav>
+  </div>
+</header>
+
+
+  <section class="standalone">
+  <div class="grid">
+
+    <div class="unit whole">
+      <article>
+        <h1>Developing</h1>
+        <p>Want to help add a feature or fix a bug?</p>
+
+<h2 id="project-members">Project Members</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Name</th>
+      <th style="text-align: left">Apache Id</th>
+      <th style="text-align: left">Role</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">Chris Douglas</td>
+      <td style="text-align: left">cdouglas</td>
+      <td style="text-align: left">PMC</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Alan Gates</td>
+      <td style="text-align: left">gates</td>
+      <td style="text-align: left">PMC</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Gunther Hagleitner</td>
+      <td style="text-align: left">gunther</td>
+      <td style="text-align: left">Committer</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Prasanth Jayachandran</td>
+      <td style="text-align: left">prasanthj</td>
+      <td style="text-align: left">PMC</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Lefty Leverenz</td>
+      <td style="text-align: left">leftyl</td>
+      <td style="text-align: left">PMC</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Owen O’Malley</td>
+      <td style="text-align: left">omalley</td>
+      <td style="text-align: left">PMC</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Aliaksei Sandryhaila</td>
+      <td style="text-align: left">?</td>
+      <td style="text-align: left">Committer</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Sergey Shelukhin</td>
+      <td style="text-align: left">sershe</td>
+      <td style="text-align: left">Committer</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Gopal Vijayaraghavan</td>
+      <td style="text-align: left">gopalv</td>
+      <td style="text-align: left">Committer</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Stephen Walkauskas</td>
+      <td style="text-align: left">?</td>
+      <td style="text-align: left">Committer</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Kevin Wilfong</td>
+      <td style="text-align: left">kevinwilfong</td>
+      <td style="text-align: left">Committer</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Xuefu Zhang</td>
+      <td style="text-align: left">xuefu</td>
+      <td style="text-align: left">Committer</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="mailing-lists">Mailing Lists</h2>
+
+<p>There are several development mailing lists for ORC:</p>
+
+<ul>
+  <li><a href="&#109;&#097;&#105;&#108;&#116;&#111;:&#100;&#101;&#118;&#064;&#111;&#114;&#099;&#046;&#097;&#112;&#097;&#099;&#104;&#101;&#046;&#111;&#114;&#103;">&#100;&#101;&#118;&#064;&#111;&#114;&#099;&#046;&#097;&#112;&#097;&#099;&#104;&#101;&#046;&#111;&#114;&#103;</a> - Development discussions
+with archive <a href="https://mail-archives.apache.org/mod_mbox/orc-dev/">here</a></li>
+  <li><a href="&#109;&#097;&#105;&#108;&#116;&#111;:&#105;&#115;&#115;&#117;&#101;&#115;&#064;&#111;&#114;&#099;&#046;&#097;&#112;&#097;&#099;&#104;&#101;&#046;&#111;&#114;&#103;">&#105;&#115;&#115;&#117;&#101;&#115;&#064;&#111;&#114;&#099;&#046;&#097;&#112;&#097;&#099;&#104;&#101;&#046;&#111;&#114;&#103;</a> - Bug tracking
+with archive <a href="https://mail-archives.apache.org/mod_mbox/orc-issues/">here</a></li>
+  <li><a href="&#109;&#097;&#105;&#108;&#116;&#111;:&#099;&#111;&#109;&#109;&#105;&#116;&#115;&#064;&#111;&#114;&#099;&#046;&#097;&#112;&#097;&#099;&#104;&#101;&#046;&#111;&#114;&#103;">&#099;&#111;&#109;&#109;&#105;&#116;&#115;&#064;&#111;&#114;&#099;&#046;&#097;&#112;&#097;&#099;&#104;&#101;&#046;&#111;&#114;&#103;</a> - Git tracking
+with archive <a href="https://mail-archives.apache.org/mod_mbox/orc-commits/">here</a></li>
+</ul>
+
+<p>You can subscribe to the lists by sending email to
+<em>list</em>-subscribe@orc.apache.org and unsubscribe by sending email to
+<em>list</em>-unsubscribe@orc.apache.org.</p>
+
+<h2 id="source-code">Source code</h2>
+
+<p>ORC uses git for version control. Get the source code:</p>
+
+<p><code>% git clone https://git-wip-us.apache.org/repos/asf/orc.git</code></p>
+
+<p>The important branches are:</p>
+
+<ul>
+  <li>master - The trunk for all developement</li>
+  <li>asf-site - The pages that are deployed to https://orc.apache.org/</li>
+</ul>
+
+<p>Please check our <a href="/develop/coding.html">coding guidelines</a>.</p>
+
+<h2 id="reviews">Reviews</h2>
+
+<p>All code must be +1’ed by a committer other than the author prior to its 
+commit.</p>
+
+      </article>
+    </div>
+
+    <div class="clear"></div>
+
+  </div>
+</section>
+
+
+  <footer role="contentinfo">
+  <p>The contents of this website are &copy;&nbsp;2015
+     <a href="https://www.apache.org/">Apache Software Foundation</a>
+     under the terms of the <a
+      href="https://www.apache.org/licenses/LICENSE-2.0.html">
+      Apache&nbsp;License&nbsp;v2</a>. Apache ORC and its logo are trademarks
+      of the Apache Software Foundation.</p>
+</footer>
+
+  <script>
+  var anchorForId = function (id) {
+    var anchor = document.createElement("a");
+    anchor.className = "header-link";
+    anchor.href      = "#" + id;
+    anchor.innerHTML = "<span class=\"sr-only\">Permalink</span><i class=\"fa fa-link\"></i>";
+    anchor.title = "Permalink";
+    return anchor;
+  };
+
+  var linkifyAnchors = function (level, containingElement) {
+    var headers = containingElement.getElementsByTagName("h" + level);
+    for (var h = 0; h < headers.length; h++) {
+      var header = headers[h];
+
+      if (typeof header.id !== "undefined" && header.id !== "") {
+        header.appendChild(anchorForId(header.id));
+      }
+    }
+  };
+
+  document.onreadystatechange = function () {
+    if (this.readyState === "complete") {
+      var contentBlock = document.getElementsByClassName("docs")[0] || document.getElementsByClassName("news")[0];
+      if (!contentBlock) {
+        return;
+      }
+      for (var level = 1; level <= 6; level++) {
+        linkifyAnchors(level, contentBlock);
+      }
+    }
+  };
+</script>
+
+
+</body>
+</html>

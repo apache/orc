@@ -1,0 +1,167 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <title>Getting Help</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="generator" content="Jekyll v2.4.0">
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
+  <link rel="stylesheet" href="/css/screen.css">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <!--[if lt IE 9]>
+  <script src="/js/html5shiv.min.js"></script>
+  <script src="/js/respond.min.js"></script>
+  <![endif]-->
+</head>
+
+
+<body class="wrap">
+  <header role="banner">
+  <nav class="mobile-nav show-on-mobiles">
+    <ul>
+  <li class="">
+    <a href="/">Home</a>
+  </li>
+  <li class="">
+    <a href="/docs/">Documentation</a>
+  </li>
+  <li class="">
+    <a href="/talks/">Talks</a>
+  </li>
+  <li class="">
+    <a href="/news/">News</a>
+  </li>
+  <li class="current">
+    <a href="/help/">Help</a>
+  </li>
+  <li class="">
+    <a href="/develop/">Develop</a>
+  </li>
+</ul>
+
+  </nav>
+  <div class="grid">
+    <div class="unit one-third center-on-mobiles">
+      <h1>
+        <a href="/">
+          <span class="sr-only">Apache ORC</span>
+          <img src="/img/logo.png" width="249" height="115" alt="ORC Logo">
+        </a>
+      </h1>
+    </div>
+    <nav class="main-nav unit two-thirds hide-on-mobiles">
+      <ul>
+  <li class="">
+    <a href="/">Home</a>
+  </li>
+  <li class="">
+    <a href="/docs/">Documentation</a>
+  </li>
+  <li class="">
+    <a href="/talks/">Talks</a>
+  </li>
+  <li class="">
+    <a href="/news/">News</a>
+  </li>
+  <li class="current">
+    <a href="/help/">Help</a>
+  </li>
+  <li class="">
+    <a href="/develop/">Develop</a>
+  </li>
+</ul>
+
+    </nav>
+  </div>
+</header>
+
+
+  <section class="standalone">
+  <div class="grid">
+
+    <div class="unit whole">
+      <article>
+        <h1>Getting Help</h1>
+        <p>Need help with ORC? Try these resources.</p>
+
+<h2 id="mailing-lists">Mailing Lists</h2>
+
+<p>The best option is to send email to the user list
+<a href="&#109;&#097;&#105;&#108;&#116;&#111;:&#117;&#115;&#101;&#114;&#064;&#111;&#114;&#099;&#046;&#097;&#112;&#097;&#099;&#104;&#101;&#046;&#111;&#114;&#103;">&#117;&#115;&#101;&#114;&#064;&#111;&#114;&#099;&#046;&#097;&#112;&#097;&#099;&#104;&#101;&#046;&#111;&#114;&#103;</a>, which is for user
+discussions. All of the historic traffic is available in the
+<a href="http://mail-archives.apache.org/mod_mbox/orc-user/">archive</a>. To
+subscribe to the user list, please send email to
+<a href="&#109;&#097;&#105;&#108;&#116;&#111;:&#117;&#115;&#101;&#114;&#045;&#115;&#117;&#098;&#115;&#099;&#114;&#105;&#098;&#101;&#064;&#111;&#114;&#099;&#046;&#097;&#112;&#097;&#099;&#104;&#101;&#046;&#111;&#114;&#103;">&#117;&#115;&#101;&#114;&#045;&#115;&#117;&#098;&#115;&#099;&#114;&#105;&#098;&#101;&#064;&#111;&#114;&#099;&#046;&#097;&#112;&#097;&#099;&#104;&#101;&#046;&#111;&#114;&#103;</a>.</p>
+
+<h2 id="bug-reports">Bug Reports</h2>
+
+<p>Please file any issues you encounter or fixes you’d like on the
+<a href="https://issues.apache.org/jira/browse/orc">ORC Jira</a>. We welcome
+patches!</p>
+
+<h2 id="stackoverflow">StackOverflow</h2>
+
+<p><a href="http://stackoverflow.com">StackOverflow</a> is a wonderful resource for
+any developer. Take a look over there to see if someone has answered
+your question.</p>
+
+<h2 id="browse-the-code">Browse the code</h2>
+
+<p>One of the advantages of open source software is that you can browse the code.
+The code is available on <a href="https://github.com/apache/orc/tree/master">github</a>.</p>
+
+      </article>
+    </div>
+
+    <div class="clear"></div>
+
+  </div>
+</section>
+
+
+  <footer role="contentinfo">
+  <p>The contents of this website are &copy;&nbsp;2015
+     <a href="https://www.apache.org/">Apache Software Foundation</a>
+     under the terms of the <a
+      href="https://www.apache.org/licenses/LICENSE-2.0.html">
+      Apache&nbsp;License&nbsp;v2</a>. Apache ORC and its logo are trademarks
+      of the Apache Software Foundation.</p>
+</footer>
+
+  <script>
+  var anchorForId = function (id) {
+    var anchor = document.createElement("a");
+    anchor.className = "header-link";
+    anchor.href      = "#" + id;
+    anchor.innerHTML = "<span class=\"sr-only\">Permalink</span><i class=\"fa fa-link\"></i>";
+    anchor.title = "Permalink";
+    return anchor;
+  };
+
+  var linkifyAnchors = function (level, containingElement) {
+    var headers = containingElement.getElementsByTagName("h" + level);
+    for (var h = 0; h < headers.length; h++) {
+      var header = headers[h];
+
+      if (typeof header.id !== "undefined" && header.id !== "") {
+        header.appendChild(anchorForId(header.id));
+      }
+    }
+  };
+
+  document.onreadystatechange = function () {
+    if (this.readyState === "complete") {
+      var contentBlock = document.getElementsByClassName("docs")[0] || document.getElementsByClassName("news")[0];
+      if (!contentBlock) {
+        return;
+      }
+      for (var level = 1; level <= 6; level++) {
+        linkifyAnchors(level, contentBlock);
+      }
+    }
+  };
+</script>
+
+
+</body>
+</html>

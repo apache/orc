@@ -1,0 +1,1184 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <title>Hive Configuration</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="generator" content="Jekyll v2.4.0">
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
+  <link rel="stylesheet" href="/css/screen.css">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <!--[if lt IE 9]>
+  <script src="/js/html5shiv.min.js"></script>
+  <script src="/js/respond.min.js"></script>
+  <![endif]-->
+</head>
+
+
+<body class="wrap">
+  <header role="banner">
+  <nav class="mobile-nav show-on-mobiles">
+    <ul>
+  <li class="">
+    <a href="/">Home</a>
+  </li>
+  <li class="current">
+    <a href="/docs/">Documentation</a>
+  </li>
+  <li class="">
+    <a href="/talks/">Talks</a>
+  </li>
+  <li class="">
+    <a href="/news/">News</a>
+  </li>
+  <li class="">
+    <a href="/help/">Help</a>
+  </li>
+  <li class="">
+    <a href="/develop/">Develop</a>
+  </li>
+</ul>
+
+  </nav>
+  <div class="grid">
+    <div class="unit one-third center-on-mobiles">
+      <h1>
+        <a href="/">
+          <span class="sr-only">Apache ORC</span>
+          <img src="/img/logo.png" width="249" height="115" alt="ORC Logo">
+        </a>
+      </h1>
+    </div>
+    <nav class="main-nav unit two-thirds hide-on-mobiles">
+      <ul>
+  <li class="">
+    <a href="/">Home</a>
+  </li>
+  <li class="current">
+    <a href="/docs/">Documentation</a>
+  </li>
+  <li class="">
+    <a href="/talks/">Talks</a>
+  </li>
+  <li class="">
+    <a href="/news/">News</a>
+  </li>
+  <li class="">
+    <a href="/help/">Help</a>
+  </li>
+  <li class="">
+    <a href="/develop/">Develop</a>
+  </li>
+</ul>
+
+    </nav>
+  </div>
+</header>
+
+
+    <section class="docs">
+    <div class="grid">
+
+      <div class="docs-nav-mobile unit whole show-on-mobiles">
+  <select onchange="if (this.value) window.location.href=this.value">
+    <option value="">Navigate the docs…</option>
+    
+    <optgroup label="Overview">
+      
+
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/index.html">Background</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/types.html">Types</option>
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/indexes.html">Indexes</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+
+  
+    
+      <option value="/docs/acid.html">ACID support</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+
+    </optgroup>
+    
+    <optgroup label="Hive Usage">
+      
+
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/hive-ddl.html">Hive DDL</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/hive-config.html">Hive Configuration</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+
+    </optgroup>
+    
+    <optgroup label="Format Specification">
+      
+
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/spec-intro.html">Introduction</option>
+    
+  
+    
+  
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/file-tail.html">File Tail</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+
+  
+    
+  
+    
+      <option value="/docs/compression.html">Compression</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/run-length.html">Run Length Encoding</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/stripes.html">Stripes</option>
+    
+  
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+      <option value="/docs/encodings.html">Column Encodings</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/spec-index.html">Indexes</option>
+    
+  
+    
+  
+    
+  
+    
+  
+
+
+    </optgroup>
+    
+  </select>
+</div>
+
+
+      <div class="unit four-fifths">
+        <article>
+          <h1>Hive Configuration</h1>
+          <h2 id="table-properties">Table properties</h2>
+
+<p>Tables stored as ORC files use table properties to control their behavior. By
+using table properties, the table owner ensures that all clients store data
+with the same options.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Key</th>
+      <th style="text-align: left">Default</th>
+      <th style="text-align: left">Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">orc.compress</td>
+      <td style="text-align: left">ZLIB</td>
+      <td style="text-align: left">high level compression = {NONE, ZLIB, SNAPPY}</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">orc.compress.size</td>
+      <td style="text-align: left">262,144</td>
+      <td style="text-align: left">compression chunk size</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">orc.stripe.size</td>
+      <td style="text-align: left">268,435,456</td>
+      <td style="text-align: left">memory buffer size in bytes for writing</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">orc.row.index.stride</td>
+      <td style="text-align: left">10,000</td>
+      <td style="text-align: left">number of rows between index entries</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">orc.create.index</td>
+      <td style="text-align: left">true</td>
+      <td style="text-align: left">create indexes?</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">orc.bloom.filter.columns</td>
+      <td style="text-align: left">””</td>
+      <td style="text-align: left">comma separated list of column names</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">orc.bloom.filter.fpp</td>
+      <td style="text-align: left">0.05</td>
+      <td style="text-align: left">bloom filter false positive rate</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>For example, to create an ORC table without high level compression:</p>
+
+<p><code>CREATE TABLE istari (
+  name STRING,
+  color STRING
+) STORED AS ORC TBLPROPERTIES ("orc.compress"="NONE");
+</code></p>
+
+<h2 id="configuration-properties">Configuration properties</h2>
+
+<p>There are many Hive configuration properties related to ORC files:</p>
+
+<table class="configtable">
+<tr>
+  <th>Key</th>
+  <th>Default</th>
+  <th>Notes</th>
+</tr>
+<tr>
+  <td>hive.default.fileformat</td>
+  <td>TextFile</td>
+  <td>This is the default file format for new tables. If it is set to ORC,
+      new tables will default to ORC.</td>
+</tr>
+<tr>
+  <td>hive.stats.gather.num.threads</td>
+  <td>10</td>
+  <td>Number of threads used by partialscan/noscan analyze command for
+      partitioned tables. This is applicable only for file formats that
+      implement the StatsProvidingRecordReader interface (like ORC).</td>
+</tr>
+<tr>
+  <td>hive.exec.orc.memory.pool</td>
+  <td>0.5</td>
+  <td>Maximum fraction of heap that can be used by ORC file writers.</td>
+</tr>
+<tr>
+  <td>hive.exec.orc.write.format</td>
+  <td>NULL</td>
+  <td>Define the version of the file to write. Possible values are 0.11 and
+      0.12. If this parameter is not defined, ORC will use the latest
+      version.</td>
+</tr>
+<tr>
+  <td>hive.exec.orc.default.stripe.size</td>
+  <td>67,108,864</td>
+  <td>Define the default size of ORC writer buffers in bytes.</td>
+</tr>
+<tr>
+  <td>hive.exec.orc.default.block.size</td>
+  <td>268,435,456</td>
+  <td>Define the default file system block size for ORC files.</td>
+</tr>
+<tr>
+  <td>hive.exec.orc.dictionary.key.size.threshold</td>
+  <td>0.8</td>
+  <td>If the number of keys in a dictionary is greater than this
+      fraction of the total number of non-null rows, turn off
+      dictionary encoding. Use 1.0 to always use dictionary encoding.</td>
+</tr>
+<tr>
+  <td>hive.exec.orc.default.row.index.stride</td>
+  <td>10,000</td>
+  <td>Define the default number of rows between row index entries.</td>
+</tr>
+<tr>
+  <td>hive.exec.orc.default.buffer.size</td>
+  <td>262,144</td>
+  <td>Define the default ORC buffer size, in bytes.</td>
+</tr>
+<tr>
+  <td>hive.exec.orc.default.block.padding</td>
+  <td>true</td>
+  <td>Should ORC file writers pad stripes to minimize stripes that cross HDFS
+      block boundaries.</td>
+</tr>
+<tr>
+  <td>hive.exec.orc.block.padding.tolerance</td>
+  <td>0.05</td>
+  <td>Define the tolerance for block padding as a decimal fraction of
+      stripe size (for example, the default value 0.05 is 5% of the
+      stripe size). For the defaults of 64Mb ORC stripe and 256Mb HDFS
+      blocks, a maximum of 3.2Mb will be reserved for padding within
+      the 256Mb block with the default
+      hive.exec.orc.block.padding.tolerance. In that case, if the
+      available size within the block is more than 3.2Mb, a new
+      smaller stripe will be inserted to fit within that space. This
+      will make sure that no stripe written will cross block
+      boundaries and cause remote reads within a node local task.
+
+<tr>
+  <td>hive.exec.orc.default.compress</td>
+  <td>ZLIB</td>
+  <td>Define the default compression codec for ORC file.</td>
+</tr>
+<tr>
+  <td>hive.exec.orc.encoding.strategy</td>
+  <td>SPEED</td>
+  <td>Define the encoding strategy to use while writing data. Changing
+      this will only affect the light weight encoding for
+      integers. This flag will not change the compression level of
+      higher level compression codec (like ZLIB). Possible options are
+      SPEED and COMPRESSION.</td>
+</tr>
+<tr>
+  <td>hive.orc.splits.include.file.footer</td>
+  <td>false</td>
+  <td>If turned on, splits generated by ORC will include metadata
+      about the stripes in the file. This data is read remotely (from
+      the client or HiveServer2 machine) and sent to all the tasks.</td>
+</tr>
+<tr>
+  <td>hive.orc.cache.stripe.details.size</td>
+  <td>10,000</td>
+  <td>Cache size for keeping meta information about ORC splits cached in the
+      client.</td>
+</tr>
+<tr>
+  <td>hive.orc.compute.splits.num.threads</td>
+  <td>10</td>
+  <td>How many threads ORC should use to create splits in parallel.</td>
+</tr>
+<tr>
+  <td>hive.exec.orc.skip.corrupt.data</td>
+  <td>false</td>
+  <td>If ORC reader encounters corrupt data, this value will be used
+      to determine whether to skip the corrupt data or throw an
+      exception. The default behavior is to throw an exception.</td>
+</tr>
+<tr>
+  <td>hive.exec.orc.zerocopy</td>
+  <td>false</td>
+  <td>Use zerocopy reads with ORC. (This requires Hadoop 2.3 or later.)</td>
+</tr>
+<tr>
+  <td>hive.merge.orcfile.stripe.level</td>
+  <td>true</td>
+  <td>When hive.merge.mapfiles, hive.merge.mapredfiles or
+      hive.merge.tezfiles is enabled while writing a table with ORC
+      file format, enabling this configuration property will do
+      stripe-level fast merge for small ORC files. Note that enabling
+      this configuration property will not honor the padding tolerance
+      configuration (hive.exec.orc.block.padding.tolerance).</td>
+</tr>
+<tr>
+  <td>hive.orc.row.index.stride.dictionary.check</td>
+  <td>true</td>
+  <td>If enabled dictionary check will happen after first row index stride
+      (default 10000 rows) else dictionary check will happen before writing
+      first stripe. In both cases, the decision to use dictionary or not will
+      be retained thereafter.</td>
+</tr>
+<tr>
+  <td>hive.exec.orc.compression.strategy</td>
+  <td>SPEED</td>
+  <td>Define the compression strategy to use while writing data. This changes
+      the compression level of higher level compression codec. Value can be
+      SPEED or COMPRESSION.</td>
+</tr>
+
+</td></tr></table>
+
+          
+
+
+
+
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+    <div class="section-nav">
+      <div class="left align-right">
+          
+            
+            
+            <a href="/docs/hive-ddl.html" class="prev">Back</a>
+          
+      </div>
+      <div class="right align-left">
+          
+            
+            
+            <a href="/docs/spec-intro.html" class="next">Next</a>
+          
+      </div>
+    </div>
+    <div class="clear"></div>
+    
+
+        </article>
+      </div>
+
+      <div class="unit one-fifth hide-on-mobiles">
+  <aside>
+    
+    <h4>Overview</h4>
+    
+
+<ul>
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/index.html">Background</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/types.html">Types</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/indexes.html">Indexes</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+      <li class=""><a href="/docs/acid.html">ACID support</a></li>
+      
+
+
+</ul>
+
+    
+    <h4>Hive Usage</h4>
+    
+
+<ul>
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/hive-ddl.html">Hive DDL</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class="current"><a href="/docs/hive-config.html">Hive Configuration</a></li>
+      
+
+
+</ul>
+
+    
+    <h4>Format Specification</h4>
+    
+
+<ul>
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/spec-intro.html">Introduction</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/file-tail.html">File Tail</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+      <li class=""><a href="/docs/compression.html">Compression</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/run-length.html">Run Length Encoding</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/stripes.html">Stripes</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/encodings.html">Column Encodings</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/spec-index.html">Indexes</a></li>
+      
+
+
+</ul>
+
+    
+  </aside>
+</div>
+
+
+      <div class="clear"></div>
+
+    </div>
+  </section>
+
+
+  <footer role="contentinfo">
+  <p>The contents of this website are &copy;&nbsp;2015
+     <a href="https://www.apache.org/">Apache Software Foundation</a>
+     under the terms of the <a
+      href="https://www.apache.org/licenses/LICENSE-2.0.html">
+      Apache&nbsp;License&nbsp;v2</a>. Apache ORC and its logo are trademarks
+      of the Apache Software Foundation.</p>
+</footer>
+
+  <script>
+  var anchorForId = function (id) {
+    var anchor = document.createElement("a");
+    anchor.className = "header-link";
+    anchor.href      = "#" + id;
+    anchor.innerHTML = "<span class=\"sr-only\">Permalink</span><i class=\"fa fa-link\"></i>";
+    anchor.title = "Permalink";
+    return anchor;
+  };
+
+  var linkifyAnchors = function (level, containingElement) {
+    var headers = containingElement.getElementsByTagName("h" + level);
+    for (var h = 0; h < headers.length; h++) {
+      var header = headers[h];
+
+      if (typeof header.id !== "undefined" && header.id !== "") {
+        header.appendChild(anchorForId(header.id));
+      }
+    }
+  };
+
+  document.onreadystatechange = function () {
+    if (this.readyState === "complete") {
+      var contentBlock = document.getElementsByClassName("docs")[0] || document.getElementsByClassName("news")[0];
+      if (!contentBlock) {
+        return;
+      }
+      for (var level = 1; level <= 6; level++) {
+        linkifyAnchors(level, contentBlock);
+      }
+    }
+  };
+</script>
+
+
+</body>
+</html>

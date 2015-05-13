@@ -1,0 +1,1600 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <title>Column Encodings</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="generator" content="Jekyll v2.4.0">
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
+  <link rel="stylesheet" href="/css/screen.css">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <!--[if lt IE 9]>
+  <script src="/js/html5shiv.min.js"></script>
+  <script src="/js/respond.min.js"></script>
+  <![endif]-->
+</head>
+
+
+<body class="wrap">
+  <header role="banner">
+  <nav class="mobile-nav show-on-mobiles">
+    <ul>
+  <li class="">
+    <a href="/">Home</a>
+  </li>
+  <li class="current">
+    <a href="/docs/">Documentation</a>
+  </li>
+  <li class="">
+    <a href="/talks/">Talks</a>
+  </li>
+  <li class="">
+    <a href="/news/">News</a>
+  </li>
+  <li class="">
+    <a href="/help/">Help</a>
+  </li>
+  <li class="">
+    <a href="/develop/">Develop</a>
+  </li>
+</ul>
+
+  </nav>
+  <div class="grid">
+    <div class="unit one-third center-on-mobiles">
+      <h1>
+        <a href="/">
+          <span class="sr-only">Apache ORC</span>
+          <img src="/img/logo.png" width="249" height="115" alt="ORC Logo">
+        </a>
+      </h1>
+    </div>
+    <nav class="main-nav unit two-thirds hide-on-mobiles">
+      <ul>
+  <li class="">
+    <a href="/">Home</a>
+  </li>
+  <li class="current">
+    <a href="/docs/">Documentation</a>
+  </li>
+  <li class="">
+    <a href="/talks/">Talks</a>
+  </li>
+  <li class="">
+    <a href="/news/">News</a>
+  </li>
+  <li class="">
+    <a href="/help/">Help</a>
+  </li>
+  <li class="">
+    <a href="/develop/">Develop</a>
+  </li>
+</ul>
+
+    </nav>
+  </div>
+</header>
+
+
+    <section class="docs">
+    <div class="grid">
+
+      <div class="docs-nav-mobile unit whole show-on-mobiles">
+  <select onchange="if (this.value) window.location.href=this.value">
+    <option value="">Navigate the docs…</option>
+    
+    <optgroup label="Overview">
+      
+
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/index.html">Background</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/types.html">Types</option>
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/indexes.html">Indexes</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+
+  
+    
+      <option value="/docs/acid.html">ACID support</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+
+    </optgroup>
+    
+    <optgroup label="Hive Usage">
+      
+
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/hive-ddl.html">Hive DDL</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/hive-config.html">Hive Configuration</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+
+    </optgroup>
+    
+    <optgroup label="Format Specification">
+      
+
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/spec-intro.html">Introduction</option>
+    
+  
+    
+  
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/file-tail.html">File Tail</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+
+  
+    
+  
+    
+      <option value="/docs/compression.html">Compression</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/run-length.html">Run Length Encoding</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/stripes.html">Stripes</option>
+    
+  
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+      <option value="/docs/encodings.html">Column Encodings</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/spec-index.html">Indexes</option>
+    
+  
+    
+  
+    
+  
+    
+  
+
+
+    </optgroup>
+    
+  </select>
+</div>
+
+
+      <div class="unit four-fifths">
+        <article>
+          <h1>Column Encodings</h1>
+          <h2 id="smallint-int-and-bigint-columns">SmallInt, Int, and BigInt Columns</h2>
+
+<p>All of the 16, 32, and 64 bit integer column types use the same set of
+potential encodings, which is basically whether they use RLE v1 or
+v2. If the PRESENT stream is not included, all of the values are
+present. For values that have false bits in the present stream, no
+values are included in the data stream.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Encoding</th>
+      <th style="text-align: left">Stream Kind</th>
+      <th style="text-align: left">Optional</th>
+      <th style="text-align: left">Contents</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">DIRECT</td>
+      <td style="text-align: left">PRESENT</td>
+      <td style="text-align: left">Yes</td>
+      <td style="text-align: left">Boolean RLE</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">DATA</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">Signed Integer RLE v1</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">DIRECT_V2</td>
+      <td style="text-align: left">PRESENT</td>
+      <td style="text-align: left">Yes</td>
+      <td style="text-align: left">Boolean RLE</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">DATA</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">Signed Integer RLE v2</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="float-and-double-columns">Float and Double Columns</h2>
+
+<p>Floating point types are stored using IEEE 754 floating point bit
+layout. Float columns use 4 bytes per value and double columns use 8
+bytes.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Encoding</th>
+      <th style="text-align: left">Stream Kind</th>
+      <th style="text-align: left">Optional</th>
+      <th style="text-align: left">Contents</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">DIRECT</td>
+      <td style="text-align: left">PRESENT</td>
+      <td style="text-align: left">Yes</td>
+      <td style="text-align: left">Boolean RLE</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">DATA</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">IEEE 754 floating point representation</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="string-char-and-varchar-columns">String, Char, and VarChar Columns</h2>
+
+<p>String columns are adaptively encoded based on whether the first
+10,000 values are sufficiently distinct. In all of the encodings, the
+PRESENT stream encodes whether the value is null.</p>
+
+<p>For direct encoding the UTF-8 bytes are saved in the DATA stream and
+the length of each value is written into the LENGTH stream. In direct
+encoding, if the values were [“Nevada”, “California”]; the DATA
+would be “NevadaCalifornia” and the LENGTH would be [6, 10].</p>
+
+<p>For dictionary encodings the dictionary is sorted and UTF-8 bytes of
+each unique value are placed into DICTIONARY_DATA. The length of each
+item in the dictionary is put into the LENGTH stream. The DATA stream
+consists of the sequence of references to the dictionary elements.</p>
+
+<p>In dictionary encoding, if the values were [“Nevada”,
+“California”, “Nevada”, “California”, and “Florida”]; the
+DICTIONARY_DATA would be “CaliforniaFloridaNevada” and LENGTH would
+be [10, 7, 6]. The DATA would be [2, 0, 2, 0, 1].</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Encoding</th>
+      <th style="text-align: left">Stream Kind</th>
+      <th style="text-align: left">Optional</th>
+      <th style="text-align: left">Contents</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">DIRECT</td>
+      <td style="text-align: left">PRESENT</td>
+      <td style="text-align: left">Yes</td>
+      <td style="text-align: left">Boolean RLE</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">DATA</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">String contents</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">LENGTH</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">Unsigned Integer RLE v1</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">DICTIONARY</td>
+      <td style="text-align: left">PRESENT</td>
+      <td style="text-align: left">Yes</td>
+      <td style="text-align: left">Boolean RLE</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">DATA</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">Unsigned Integer RLE v1</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">DICTIONARY_DATA</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">String contents</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">LENGTH</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">Unsigned Integer RLE v1</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">DIRECT_V2</td>
+      <td style="text-align: left">PRESENT</td>
+      <td style="text-align: left">Yes</td>
+      <td style="text-align: left">Boolean RLE</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">DATA</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">String contents</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">LENGTH</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">Unsigned Integer RLE v2</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">DICTIONARY_V2</td>
+      <td style="text-align: left">PRESENT</td>
+      <td style="text-align: left">Yes</td>
+      <td style="text-align: left">Boolean RLE</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">DATA</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">Unsigned Integer RLE v2</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">DICTIONARY_DATA</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">String contents</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">LENGTH</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">Unsigned Integer RLE v2</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="boolean-columns">Boolean Columns</h2>
+
+<p>Boolean columns are rare, but have a simple encoding.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Encoding</th>
+      <th style="text-align: left">Stream Kind</th>
+      <th style="text-align: left">Optional</th>
+      <th style="text-align: left">Contents</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">DIRECT</td>
+      <td style="text-align: left">PRESENT</td>
+      <td style="text-align: left">Yes</td>
+      <td style="text-align: left">Boolean RLE</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">DATA</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">Boolean RLE</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="tinyint-columns">TinyInt Columns</h2>
+
+<p>TinyInt (byte) columns use byte run length encoding.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Encoding</th>
+      <th style="text-align: left">Stream Kind</th>
+      <th style="text-align: left">Optional</th>
+      <th style="text-align: left">Contents</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">DIRECT</td>
+      <td style="text-align: left">PRESENT</td>
+      <td style="text-align: left">Yes</td>
+      <td style="text-align: left">Boolean RLE</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">DATA</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">Byte RLE</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="binary-columns">Binary Columns</h2>
+
+<p>Binary data is encoded with a PRESENT stream, a DATA stream that records
+the contents, and a LENGTH stream that records the number of bytes per a
+value.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Encoding</th>
+      <th style="text-align: left">Stream Kind</th>
+      <th style="text-align: left">Optional</th>
+      <th style="text-align: left">Contents</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">DIRECT</td>
+      <td style="text-align: left">PRESENT</td>
+      <td style="text-align: left">Yes</td>
+      <td style="text-align: left">Boolean RLE</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">DATA</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">String contents</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">LENGTH</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">Unsigned Integer RLE v1</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">DIRECT_V2</td>
+      <td style="text-align: left">PRESENT</td>
+      <td style="text-align: left">Yes</td>
+      <td style="text-align: left">Boolean RLE</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">DATA</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">String contents</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">LENGTH</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">Unsigned Integer RLE v2</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="decimal-columns">Decimal Columns</h2>
+
+<p>Decimal was introduced in Hive 0.11 with infinite precision (the total
+number of digits). In Hive 0.13, the definition was change to limit
+the precision to a maximum of 38 digits, which conveniently uses 127
+bits plus a sign bit. The current encoding of decimal columns stores
+the integer representation of the value as an unbounded length zigzag
+encoded base 128 varint. The scale is stored in the SECONDARY stream
+as an unsigned integer.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Encoding</th>
+      <th style="text-align: left">Stream Kind</th>
+      <th style="text-align: left">Optional</th>
+      <th style="text-align: left">Contents</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">DIRECT</td>
+      <td style="text-align: left">PRESENT</td>
+      <td style="text-align: left">Yes</td>
+      <td style="text-align: left">Boolean RLE</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">DATA</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">Unbounded base 128 varints</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">SECONDARY</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">Unsigned Integer RLE v1</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">DIRECT_V2</td>
+      <td style="text-align: left">PRESENT</td>
+      <td style="text-align: left">Yes</td>
+      <td style="text-align: left">Boolean RLE</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">DATA</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">Unbounded base 128 varints</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">SECONDARY</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">Unsigned Integer RLE v2</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="date-columns">Date Columns</h2>
+
+<p>Date data is encoded with a PRESENT stream, a DATA stream that records
+the number of days after January 1, 1970 in UTC.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Encoding</th>
+      <th style="text-align: left">Stream Kind</th>
+      <th style="text-align: left">Optional</th>
+      <th style="text-align: left">Contents</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">DIRECT</td>
+      <td style="text-align: left">PRESENT</td>
+      <td style="text-align: left">Yes</td>
+      <td style="text-align: left">Boolean RLE</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">DATA</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">Signed Integer RLE v1</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">DIRECT_V2</td>
+      <td style="text-align: left">PRESENT</td>
+      <td style="text-align: left">Yes</td>
+      <td style="text-align: left">Boolean RLE</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">DATA</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">Signed Integer RLE v2</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="timestamp-columns">Timestamp Columns</h2>
+
+<p>Timestamp records times down to nanoseconds as a PRESENT stream that
+records non-null values, a DATA stream that records the number of
+seconds after 1 January 2015, and a SECONDARY stream that records the
+number of nanoseconds.</p>
+
+<p>Because the number of nanoseconds often has a large number of trailing
+zeros, the number has trailing decimal zero digits removed and the
+last three bits are used to record how many zeros were removed. Thus
+1000 nanoseconds would be serialized as 0x0b and 100000 would be
+serialized as 0x0d.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Encoding</th>
+      <th style="text-align: left">Stream Kind</th>
+      <th style="text-align: left">Optional</th>
+      <th style="text-align: left">Contents</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">DIRECT</td>
+      <td style="text-align: left">PRESENT</td>
+      <td style="text-align: left">Yes</td>
+      <td style="text-align: left">Boolean RLE</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">DATA</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">Signed Integer RLE v1</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">SECONDARY</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">Unsigned Integer RLE v1</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">DIRECT_V2</td>
+      <td style="text-align: left">PRESENT</td>
+      <td style="text-align: left">Yes</td>
+      <td style="text-align: left">Boolean RLE</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">DATA</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">Signed Integer RLE v2</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">SECONDARY</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">Unsigned Integer RLE v2</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="struct-columns">Struct Columns</h2>
+
+<p>Structs have no data themselves and delegate everything to their child
+columns except for their PRESENT stream. They have a child column
+for each of the fields.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Encoding</th>
+      <th style="text-align: left">Stream Kind</th>
+      <th style="text-align: left">Optional</th>
+      <th style="text-align: left">Contents</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">DIRECT</td>
+      <td style="text-align: left">PRESENT</td>
+      <td style="text-align: left">Yes</td>
+      <td style="text-align: left">Boolean RLE</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="list-columns">List Columns</h2>
+
+<p>Lists are encoded as the PRESENT stream and a length stream with
+number of items in each list. They have a single child column for the
+element values.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Encoding</th>
+      <th style="text-align: left">Stream Kind</th>
+      <th style="text-align: left">Optional</th>
+      <th style="text-align: left">Contents</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">DIRECT</td>
+      <td style="text-align: left">PRESENT</td>
+      <td style="text-align: left">Yes</td>
+      <td style="text-align: left">Boolean RLE</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">LENGTH</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">Unsigned Integer RLE v1</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">DIRECT_V2</td>
+      <td style="text-align: left">PRESENT</td>
+      <td style="text-align: left">Yes</td>
+      <td style="text-align: left">Boolean RLE</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">LENGTH</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">Unsigned Integer RLE v2</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="map-columns">Map Columns</h2>
+
+<p>Maps are encoded as the PRESENT stream and a length stream with number
+of items in each list. They have a child column for the key and
+another child column for the value.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Encoding</th>
+      <th style="text-align: left">Stream Kind</th>
+      <th style="text-align: left">Optional</th>
+      <th style="text-align: left">Contents</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">DIRECT</td>
+      <td style="text-align: left">PRESENT</td>
+      <td style="text-align: left">Yes</td>
+      <td style="text-align: left">Boolean RLE</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">LENGTH</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">Unsigned Integer RLE v1</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">DIRECT_V2</td>
+      <td style="text-align: left">PRESENT</td>
+      <td style="text-align: left">Yes</td>
+      <td style="text-align: left">Boolean RLE</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">LENGTH</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">Unsigned Integer RLE v2</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="union-columns">Union Columns</h2>
+
+<p>Unions are encoded as the PRESENT stream and a tag stream that controls which
+potential variant is used. They have a child column for each variant of the
+union. Currently ORC union types are limited to 256 variants, which matches
+the Hive type model.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Encoding</th>
+      <th style="text-align: left">Stream Kind</th>
+      <th style="text-align: left">Optional</th>
+      <th style="text-align: left">Contents</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">DIRECT</td>
+      <td style="text-align: left">PRESENT</td>
+      <td style="text-align: left">Yes</td>
+      <td style="text-align: left">Boolean RLE</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left">DIRECT</td>
+      <td style="text-align: left">No</td>
+      <td style="text-align: left">Byte RLE</td>
+    </tr>
+  </tbody>
+</table>
+
+          
+
+
+
+
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+    <div class="section-nav">
+      <div class="left align-right">
+          
+            
+            
+            <a href="/docs/stripes.html" class="prev">Back</a>
+          
+      </div>
+      <div class="right align-left">
+          
+            
+            
+            <a href="/docs/spec-index.html" class="next">Next</a>
+          
+      </div>
+    </div>
+    <div class="clear"></div>
+    
+
+        </article>
+      </div>
+
+      <div class="unit one-fifth hide-on-mobiles">
+  <aside>
+    
+    <h4>Overview</h4>
+    
+
+<ul>
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/index.html">Background</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/types.html">Types</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/indexes.html">Indexes</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+      <li class=""><a href="/docs/acid.html">ACID support</a></li>
+      
+
+
+</ul>
+
+    
+    <h4>Hive Usage</h4>
+    
+
+<ul>
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/hive-ddl.html">Hive DDL</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/hive-config.html">Hive Configuration</a></li>
+      
+
+
+</ul>
+
+    
+    <h4>Format Specification</h4>
+    
+
+<ul>
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/spec-intro.html">Introduction</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/file-tail.html">File Tail</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+      <li class=""><a href="/docs/compression.html">Compression</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/run-length.html">Run Length Encoding</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/stripes.html">Stripes</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+      <li class="current"><a href="/docs/encodings.html">Column Encodings</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/spec-index.html">Indexes</a></li>
+      
+
+
+</ul>
+
+    
+  </aside>
+</div>
+
+
+      <div class="clear"></div>
+
+    </div>
+  </section>
+
+
+  <footer role="contentinfo">
+  <p>The contents of this website are &copy;&nbsp;2015
+     <a href="https://www.apache.org/">Apache Software Foundation</a>
+     under the terms of the <a
+      href="https://www.apache.org/licenses/LICENSE-2.0.html">
+      Apache&nbsp;License&nbsp;v2</a>. Apache ORC and its logo are trademarks
+      of the Apache Software Foundation.</p>
+</footer>
+
+  <script>
+  var anchorForId = function (id) {
+    var anchor = document.createElement("a");
+    anchor.className = "header-link";
+    anchor.href      = "#" + id;
+    anchor.innerHTML = "<span class=\"sr-only\">Permalink</span><i class=\"fa fa-link\"></i>";
+    anchor.title = "Permalink";
+    return anchor;
+  };
+
+  var linkifyAnchors = function (level, containingElement) {
+    var headers = containingElement.getElementsByTagName("h" + level);
+    for (var h = 0; h < headers.length; h++) {
+      var header = headers[h];
+
+      if (typeof header.id !== "undefined" && header.id !== "") {
+        header.appendChild(anchorForId(header.id));
+      }
+    }
+  };
+
+  document.onreadystatechange = function () {
+    if (this.readyState === "complete") {
+      var contentBlock = document.getElementsByClassName("docs")[0] || document.getElementsByClassName("news")[0];
+      if (!contentBlock) {
+        return;
+      }
+      for (var level = 1; level <= 6; level++) {
+        linkifyAnchors(level, contentBlock);
+      }
+    }
+  };
+</script>
+
+
+</body>
+</html>

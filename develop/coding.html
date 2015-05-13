@@ -1,0 +1,184 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <title>Coding Guidelines</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="generator" content="Jekyll v2.4.0">
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
+  <link rel="stylesheet" href="/css/screen.css">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <!--[if lt IE 9]>
+  <script src="/js/html5shiv.min.js"></script>
+  <script src="/js/respond.min.js"></script>
+  <![endif]-->
+</head>
+
+
+<body class="wrap">
+  <header role="banner">
+  <nav class="mobile-nav show-on-mobiles">
+    <ul>
+  <li class="">
+    <a href="/">Home</a>
+  </li>
+  <li class="">
+    <a href="/docs/">Documentation</a>
+  </li>
+  <li class="">
+    <a href="/talks/">Talks</a>
+  </li>
+  <li class="">
+    <a href="/news/">News</a>
+  </li>
+  <li class="">
+    <a href="/help/">Help</a>
+  </li>
+  <li class="current">
+    <a href="/develop/">Develop</a>
+  </li>
+</ul>
+
+  </nav>
+  <div class="grid">
+    <div class="unit one-third center-on-mobiles">
+      <h1>
+        <a href="/">
+          <span class="sr-only">Apache ORC</span>
+          <img src="/img/logo.png" width="249" height="115" alt="ORC Logo">
+        </a>
+      </h1>
+    </div>
+    <nav class="main-nav unit two-thirds hide-on-mobiles">
+      <ul>
+  <li class="">
+    <a href="/">Home</a>
+  </li>
+  <li class="">
+    <a href="/docs/">Documentation</a>
+  </li>
+  <li class="">
+    <a href="/talks/">Talks</a>
+  </li>
+  <li class="">
+    <a href="/news/">News</a>
+  </li>
+  <li class="">
+    <a href="/help/">Help</a>
+  </li>
+  <li class="current">
+    <a href="/develop/">Develop</a>
+  </li>
+</ul>
+
+    </nav>
+  </div>
+</header>
+
+
+  <section class="standalone">
+  <div class="grid">
+
+    <div class="unit whole">
+      <article>
+        <h1>Coding Guidelines</h1>
+        <h2 id="general-rules">General rules</h2>
+
+<ul>
+  <li>All files must have an Apache copyright header at the top of the file.</li>
+  <li>Code should be removed rather than commented out.</li>
+  <li>All public functions should have javadoc comments.</li>
+  <li>Always use braces to surround branches.</li>
+  <li>try-finally should be avoided.</li>
+</ul>
+
+<h2 id="formatting">Formatting</h2>
+
+<ul>
+  <li>All files must have an 80 character maximum line length.</li>
+  <li>Indentation should be 2 spaces.</li>
+  <li>Files should use spaces instead of tabs.</li>
+  <li>Wrapping lines
+    <ul>
+      <li>Break after a comma.</li>
+      <li>Break before an operator.</li>
+      <li>Prefer higher-level breaks to lower-level breaks.</li>
+      <li>Align the new line with beginning of the expression at the same level
+on the previous line.</li>
+      <li>If the above rules lead to confusing code, just indent 8 spaces.</li>
+    </ul>
+  </li>
+  <li>One variable declaration per a line.</li>
+</ul>
+
+<h2 id="naming">Naming</h2>
+
+<ul>
+  <li>Packages should be all lowercase.
+    <ul>
+      <li>C++ code should be in <code>orc::</code>.</li>
+      <li>Java code should be in <code>org.apache.orc</code>, except for compatibility classes,
+which should be in <code>org.apache.hadoop.hive.ql.io.orc</code>.</li>
+    </ul>
+  </li>
+  <li>Classes should be in mixed case.</li>
+  <li>Variables should be in camel case.</li>
+  <li>Constants should be in upper case.</li>
+</ul>
+
+
+      </article>
+    </div>
+
+    <div class="clear"></div>
+
+  </div>
+</section>
+
+
+  <footer role="contentinfo">
+  <p>The contents of this website are &copy;&nbsp;2015
+     <a href="https://www.apache.org/">Apache Software Foundation</a>
+     under the terms of the <a
+      href="https://www.apache.org/licenses/LICENSE-2.0.html">
+      Apache&nbsp;License&nbsp;v2</a>. Apache ORC and its logo are trademarks
+      of the Apache Software Foundation.</p>
+</footer>
+
+  <script>
+  var anchorForId = function (id) {
+    var anchor = document.createElement("a");
+    anchor.className = "header-link";
+    anchor.href      = "#" + id;
+    anchor.innerHTML = "<span class=\"sr-only\">Permalink</span><i class=\"fa fa-link\"></i>";
+    anchor.title = "Permalink";
+    return anchor;
+  };
+
+  var linkifyAnchors = function (level, containingElement) {
+    var headers = containingElement.getElementsByTagName("h" + level);
+    for (var h = 0; h < headers.length; h++) {
+      var header = headers[h];
+
+      if (typeof header.id !== "undefined" && header.id !== "") {
+        header.appendChild(anchorForId(header.id));
+      }
+    }
+  };
+
+  document.onreadystatechange = function () {
+    if (this.readyState === "complete") {
+      var contentBlock = document.getElementsByClassName("docs")[0] || document.getElementsByClassName("news")[0];
+      if (!contentBlock) {
+        return;
+      }
+      for (var level = 1; level <= 6; level++) {
+        linkifyAnchors(level, contentBlock);
+      }
+    }
+  };
+</script>
+
+
+</body>
+</html>

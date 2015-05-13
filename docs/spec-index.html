@@ -1,0 +1,1108 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <title>Indexes</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="generator" content="Jekyll v2.4.0">
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
+  <link rel="stylesheet" href="/css/screen.css">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <!--[if lt IE 9]>
+  <script src="/js/html5shiv.min.js"></script>
+  <script src="/js/respond.min.js"></script>
+  <![endif]-->
+</head>
+
+
+<body class="wrap">
+  <header role="banner">
+  <nav class="mobile-nav show-on-mobiles">
+    <ul>
+  <li class="">
+    <a href="/">Home</a>
+  </li>
+  <li class="current">
+    <a href="/docs/">Documentation</a>
+  </li>
+  <li class="">
+    <a href="/talks/">Talks</a>
+  </li>
+  <li class="">
+    <a href="/news/">News</a>
+  </li>
+  <li class="">
+    <a href="/help/">Help</a>
+  </li>
+  <li class="">
+    <a href="/develop/">Develop</a>
+  </li>
+</ul>
+
+  </nav>
+  <div class="grid">
+    <div class="unit one-third center-on-mobiles">
+      <h1>
+        <a href="/">
+          <span class="sr-only">Apache ORC</span>
+          <img src="/img/logo.png" width="249" height="115" alt="ORC Logo">
+        </a>
+      </h1>
+    </div>
+    <nav class="main-nav unit two-thirds hide-on-mobiles">
+      <ul>
+  <li class="">
+    <a href="/">Home</a>
+  </li>
+  <li class="current">
+    <a href="/docs/">Documentation</a>
+  </li>
+  <li class="">
+    <a href="/talks/">Talks</a>
+  </li>
+  <li class="">
+    <a href="/news/">News</a>
+  </li>
+  <li class="">
+    <a href="/help/">Help</a>
+  </li>
+  <li class="">
+    <a href="/develop/">Develop</a>
+  </li>
+</ul>
+
+    </nav>
+  </div>
+</header>
+
+
+    <section class="docs">
+    <div class="grid">
+
+      <div class="docs-nav-mobile unit whole show-on-mobiles">
+  <select onchange="if (this.value) window.location.href=this.value">
+    <option value="">Navigate the docs…</option>
+    
+    <optgroup label="Overview">
+      
+
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/index.html">Background</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/types.html">Types</option>
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/indexes.html">Indexes</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+
+  
+    
+      <option value="/docs/acid.html">ACID support</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+
+    </optgroup>
+    
+    <optgroup label="Hive Usage">
+      
+
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/hive-ddl.html">Hive DDL</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/hive-config.html">Hive Configuration</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+
+    </optgroup>
+    
+    <optgroup label="Format Specification">
+      
+
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/spec-intro.html">Introduction</option>
+    
+  
+    
+  
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/file-tail.html">File Tail</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+
+  
+    
+  
+    
+      <option value="/docs/compression.html">Compression</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/run-length.html">Run Length Encoding</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/stripes.html">Stripes</option>
+    
+  
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+      <option value="/docs/encodings.html">Column Encodings</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/spec-index.html">Indexes</option>
+    
+  
+    
+  
+    
+  
+    
+  
+
+
+    </optgroup>
+    
+  </select>
+</div>
+
+
+      <div class="unit four-fifths">
+        <article>
+          <h1>Indexes</h1>
+          <h1 id="row-group-index">Row Group Index</h1>
+
+<p>The row group indexes consist of a ROW_INDEX stream for each primitive
+column that has an entry for each row group. Row groups are controlled
+by the writer and default to 10,000 rows. Each RowIndexEntry gives the
+position of each stream for the column and the statistics for that row
+group.</p>
+
+<p>The index streams are placed at the front of the stripe, because in
+the default case of streaming they do not need to be read. They are
+only loaded when either predicate push down is being used or the
+reader seeks to a particular row.</p>
+
+<p><code>message RowIndexEntry {
+ repeated uint64 positions = 1 [packed=true];
+ optional ColumnStatistics statistics = 2;
+}
+</code></p>
+
+<p><code>message RowIndex {
+ repeated RowIndexEntry entry = 1;
+}
+</code></p>
+
+<p>To record positions, each stream needs a sequence of numbers. For
+uncompressed streams, the position is the byte offset of the RLE run’s
+start location followed by the number of values that need to be
+consumed from the run. In compressed streams, the first number is the
+start of the compression chunk in the stream, followed by the number
+of decompressed bytes that need to be consumed, and finally the number
+of values consumed in the RLE.</p>
+
+<p>For columns with multiple streams, the sequences of positions in each
+stream are concatenated. That was an unfortunate decision on my part
+that we should fix at some point, because it makes code that uses the
+indexes error-prone.</p>
+
+<p>Because dictionaries are accessed randomly, there is not a position to
+record for the dictionary and the entire dictionary must be read even
+if only part of a stripe is being read.</p>
+
+<h1 id="bloom-filter-index">Bloom Filter Index</h1>
+
+<p>Bloom Filters are added to ORC indexes from Hive 1.2.0 onwards.
+Predicate pushdown can make use of bloom filters to better prune
+the row groups that do not satisfy the filter condition.
+The bloom filter indexes consist of a BLOOM_FILTER stream for each
+column specified through ‘orc.bloom.filter.columns’ table properties.
+A BLOOM_FILTER stream records a bloom filter entry for each row
+group (default to 10,000 rows) in a column. Only the row groups that
+satisfy min/max row index evaluation will be evaluated against the
+bloom filter index.</p>
+
+<p>Each BloomFilterEntry stores the number of hash functions (‘k’) used and
+the bitset backing the bloom filter. The bitset is serialized as repeated
+longs from which the number of bits (‘m’) for the bloom filter can be derived.
+m = bitset.length * 64.</p>
+
+<p><code>message BloomFilter {
+ optional uint32 numHashFunctions = 1;
+ repeated fixed64 bitset = 2;
+}
+</code></p>
+
+<p><code>message BloomFilterIndex {
+ repeated BloomFilter bloomFilter = 1;
+}
+</code></p>
+
+<p>Bloom filter internally uses two different hash functions to map a key
+to a position in the bit set. For tinyint, smallint, int, bigint, float
+and double types, Thomas Wang’s 64-bit integer hash function is used.
+Floats are converted to IEEE-754 32 bit representation
+(using Java’s Float.floatToIntBits(float)). Similary, Doubles are
+converted to IEEE-754 64 bit representation (using Java’s
+Double.doubleToLongBits(double)). All these primitive types
+are cast to long base type before being passed on to the hash function.
+For strings and binary types, Murmur3 64 bit hash algorithm is used.
+The 64 bit variant of Murmur3 considers only the most significant
+8 bytes of Murmur3 128-bit algorithm. The 64 bit hashcode generated
+from the above algorithms is used as a base to derive ‘k’ different
+hash functions. We use the idea mentioned in the paper “Less Hashing,
+Same Performance: Building a Better Bloom Filter” by Kirsch et. al. to
+quickly compute the k hashcodes.</p>
+
+<p>The algorithm for computing k hashcodes and setting the bit position
+in a bloom filter is as follows:</p>
+
+<ol>
+  <li>Get 64 bit base hash code from Murmur3 or Thomas Wang’s hash algorithm.</li>
+  <li>Split the above hashcode into two 32-bit hashcodes (say hash1 and hash2).</li>
+  <li>k’th hashcode is obtained by (where k &gt; 0):
+    <ul>
+      <li>combinedHash = hash1 + (k * hash2)</li>
+    </ul>
+  </li>
+  <li>If combinedHash is negative flip all the bits:
+    <ul>
+      <li>combinedHash = ~combinedHash</li>
+    </ul>
+  </li>
+  <li>Bit set position is obtained by performing modulo with m:
+    <ul>
+      <li>position = combinedHash % m</li>
+    </ul>
+  </li>
+  <li>Set the position in bit set. The LSB 6 bits identifies the long index
+within bitset and bit position within the long uses little endian order.
+    <ul>
+      <li>bitset[position »&gt; 6] |= (1L « position);</li>
+    </ul>
+  </li>
+</ol>
+
+<p>Bloom filter streams are interlaced with row group indexes. This placement
+makes it convenient to read the bloom filter stream and row index stream
+together in single read operation.</p>
+
+<p><img src="/img/BloomFilter.png" alt="bloom filter" /></p>
+
+          
+
+
+
+
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+    <div class="section-nav">
+      <div class="left align-right">
+          
+            
+            
+            <a href="/docs/encodings.html" class="prev">Back</a>
+          
+      </div>
+      <div class="right align-left">
+          
+            <span class="next disabled">Next</span>
+          
+      </div>
+    </div>
+    <div class="clear"></div>
+    
+
+        </article>
+      </div>
+
+      <div class="unit one-fifth hide-on-mobiles">
+  <aside>
+    
+    <h4>Overview</h4>
+    
+
+<ul>
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/index.html">Background</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/types.html">Types</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/indexes.html">Indexes</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+      <li class=""><a href="/docs/acid.html">ACID support</a></li>
+      
+
+
+</ul>
+
+    
+    <h4>Hive Usage</h4>
+    
+
+<ul>
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/hive-ddl.html">Hive DDL</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/hive-config.html">Hive Configuration</a></li>
+      
+
+
+</ul>
+
+    
+    <h4>Format Specification</h4>
+    
+
+<ul>
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/spec-intro.html">Introduction</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/file-tail.html">File Tail</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+      <li class=""><a href="/docs/compression.html">Compression</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/run-length.html">Run Length Encoding</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/stripes.html">Stripes</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/encodings.html">Column Encodings</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class="current"><a href="/docs/spec-index.html">Indexes</a></li>
+      
+
+
+</ul>
+
+    
+  </aside>
+</div>
+
+
+      <div class="clear"></div>
+
+    </div>
+  </section>
+
+
+  <footer role="contentinfo">
+  <p>The contents of this website are &copy;&nbsp;2015
+     <a href="https://www.apache.org/">Apache Software Foundation</a>
+     under the terms of the <a
+      href="https://www.apache.org/licenses/LICENSE-2.0.html">
+      Apache&nbsp;License&nbsp;v2</a>. Apache ORC and its logo are trademarks
+      of the Apache Software Foundation.</p>
+</footer>
+
+  <script>
+  var anchorForId = function (id) {
+    var anchor = document.createElement("a");
+    anchor.className = "header-link";
+    anchor.href      = "#" + id;
+    anchor.innerHTML = "<span class=\"sr-only\">Permalink</span><i class=\"fa fa-link\"></i>";
+    anchor.title = "Permalink";
+    return anchor;
+  };
+
+  var linkifyAnchors = function (level, containingElement) {
+    var headers = containingElement.getElementsByTagName("h" + level);
+    for (var h = 0; h < headers.length; h++) {
+      var header = headers[h];
+
+      if (typeof header.id !== "undefined" && header.id !== "") {
+        header.appendChild(anchorForId(header.id));
+      }
+    }
+  };
+
+  document.onreadystatechange = function () {
+    if (this.readyState === "complete") {
+      var contentBlock = document.getElementsByClassName("docs")[0] || document.getElementsByClassName("news")[0];
+      if (!contentBlock) {
+        return;
+      }
+      for (var level = 1; level <= 6; level++) {
+        linkifyAnchors(level, contentBlock);
+      }
+    }
+  };
+</script>
+
+
+</body>
+</html>

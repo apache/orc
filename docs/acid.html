@@ -1,0 +1,1179 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <title>ACID support</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="generator" content="Jekyll v2.4.0">
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
+  <link rel="stylesheet" href="/css/screen.css">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <!--[if lt IE 9]>
+  <script src="/js/html5shiv.min.js"></script>
+  <script src="/js/respond.min.js"></script>
+  <![endif]-->
+</head>
+
+
+<body class="wrap">
+  <header role="banner">
+  <nav class="mobile-nav show-on-mobiles">
+    <ul>
+  <li class="">
+    <a href="/">Home</a>
+  </li>
+  <li class="current">
+    <a href="/docs/">Documentation</a>
+  </li>
+  <li class="">
+    <a href="/talks/">Talks</a>
+  </li>
+  <li class="">
+    <a href="/news/">News</a>
+  </li>
+  <li class="">
+    <a href="/help/">Help</a>
+  </li>
+  <li class="">
+    <a href="/develop/">Develop</a>
+  </li>
+</ul>
+
+  </nav>
+  <div class="grid">
+    <div class="unit one-third center-on-mobiles">
+      <h1>
+        <a href="/">
+          <span class="sr-only">Apache ORC</span>
+          <img src="/img/logo.png" width="249" height="115" alt="ORC Logo">
+        </a>
+      </h1>
+    </div>
+    <nav class="main-nav unit two-thirds hide-on-mobiles">
+      <ul>
+  <li class="">
+    <a href="/">Home</a>
+  </li>
+  <li class="current">
+    <a href="/docs/">Documentation</a>
+  </li>
+  <li class="">
+    <a href="/talks/">Talks</a>
+  </li>
+  <li class="">
+    <a href="/news/">News</a>
+  </li>
+  <li class="">
+    <a href="/help/">Help</a>
+  </li>
+  <li class="">
+    <a href="/develop/">Develop</a>
+  </li>
+</ul>
+
+    </nav>
+  </div>
+</header>
+
+
+    <section class="docs">
+    <div class="grid">
+
+      <div class="docs-nav-mobile unit whole show-on-mobiles">
+  <select onchange="if (this.value) window.location.href=this.value">
+    <option value="">Navigate the docs…</option>
+    
+    <optgroup label="Overview">
+      
+
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/index.html">Background</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/types.html">Types</option>
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/indexes.html">Indexes</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+
+  
+    
+      <option value="/docs/acid.html">ACID support</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+
+    </optgroup>
+    
+    <optgroup label="Hive Usage">
+      
+
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/hive-ddl.html">Hive DDL</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/hive-config.html">Hive Configuration</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+
+    </optgroup>
+    
+    <optgroup label="Format Specification">
+      
+
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/spec-intro.html">Introduction</option>
+    
+  
+    
+  
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/file-tail.html">File Tail</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+
+  
+    
+  
+    
+      <option value="/docs/compression.html">Compression</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/run-length.html">Run Length Encoding</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/stripes.html">Stripes</option>
+    
+  
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+      <option value="/docs/encodings.html">Column Encodings</option>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/spec-index.html">Indexes</option>
+    
+  
+    
+  
+    
+  
+    
+  
+
+
+    </optgroup>
+    
+  </select>
+</div>
+
+
+      <div class="unit four-fifths">
+        <article>
+          <h1>ACID support</h1>
+          <p>Historically, the only way to atomically add data to a table in Hive
+was to add a new partition. Updating or deleting data in partition
+required removing the old partition and adding it back with the new
+data and it wasn’t possible to do atomically.</p>
+
+<p>However, user’s data is continually changing and as Hive matured,
+users required reliability guarantees despite the churning data
+lake. Thus, we needed to implement ACID transactions that guarantee
+atomicity, consistency, isolation, and durability. Although we support
+ACID transactions, they are not designed to support OLTP requirements.
+It can support millions of rows updated per a transaction, but it can
+not support millions of transactions an hour.</p>
+
+<p>Additionally, we wanted to support streaming ingest in to Hive tables where
+streaming applications like Flume or Storm could write data into Hive and 
+have transactions commit once a minute and queries would either see all of 
+a transaction or none of it.</p>
+
+<p>HDFS is a write once file system and ORC is a write-once file format, so edits
+were implemented using base files and delta files where insert, update, and
+delete operations are recorded.</p>
+
+<p>Hive tables without ACID enabled have each partition in HDFS look like:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Filename</th>
+      <th style="text-align: left">Contents</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">00000_0</td>
+      <td style="text-align: left">Bucket 0</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">00001_0</td>
+      <td style="text-align: left">Bucket 1</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>With ACID enabled, the system will add delta directories:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Filename</th>
+      <th style="text-align: left">Contents</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">00000_0</td>
+      <td style="text-align: left">Bucket 0 base</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">00001_0</td>
+      <td style="text-align: left">Bucket 1 base</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">delta_0000005_0000005/bucket_00000</td>
+      <td style="text-align: left">Transaction 5 to 5, bucket 0 delta</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">delta_0000005_0000005/bucket_00001</td>
+      <td style="text-align: left">Transaction 5 to 5, bucket 1 delta</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>When too many deltas have been created, a minor compaction will automatically
+run and merge a set of transactions into a single delta:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Filename</th>
+      <th style="text-align: left">Contents</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">00000_0</td>
+      <td style="text-align: left">Bucket 0 base</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">00001_0</td>
+      <td style="text-align: left">Bucket 1 base</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">delta_0000005_0000010/bucket_00000</td>
+      <td style="text-align: left">Transaction 5 to 10, bucket 0 delta</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">delta_0000005_0000010/bucket_00001</td>
+      <td style="text-align: left">Transaction 5 to 10, bucket 1 delta</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>When the deltas get large enough, major compaction will re-write the base
+to incorporate the deltas.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Filename</th>
+      <th style="text-align: left">Contents</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">base_0000010/bucket_00000</td>
+      <td style="text-align: left">Transactions upto 10, bucket 0 base</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">base_0000010/bucket_00001</td>
+      <td style="text-align: left">Transactions upto 10, bucket 1 base</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Reads and compactions do not require locks and thus compactions can
+not destructively modify their inputs, but rather write new
+directories.</p>
+
+<p>All rows are given an automatic assigned row id, which is the triple of
+original transaction id, bucket, and row id, that is guaranteed to be unique.
+All update and delete operations refer to that triple.</p>
+
+<p>The ORC files in an ACID table are extended with several column. They
+are the operation (insert, update, or delete), the triple that
+uniquely identifies the row (originalTransaction, bucket, rowId), and
+the current transaction.</p>
+
+<p><code>struct&lt;
+  operation: int,
+  originalTransaction: bigInt,
+  bucket: int,
+  rowId: bitInt,
+  currentTransaction: bigInt,
+  row: struct&lt;...&gt;
+&gt;
+</code></p>
+
+<p>The serialization for the operation codes is:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Operation</th>
+      <th style="text-align: left">Serialization</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">INSERT</td>
+      <td style="text-align: left">0</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">UPDATE</td>
+      <td style="text-align: left">1</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">DELETE</td>
+      <td style="text-align: left">2</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>When a application or query reads the ACID table, the reader provides
+the list of committed transactions to include. This list is produced
+by the Hive metastore when a query starts. The task does a merge
+sort. Each of the files is sorted by (originalTransaction ascending,
+bucket ascending, rowId ascending, and currentTransaction
+descending). Only the first record with a currentTransaction that is
+in the list of transactions to read is returned, which corresponds to
+the last visible update to a row.</p>
+
+<p>To support streaming ingest, we add two additional features. ORC files
+may have additional footers written in to their body that is parsable
+as a complete ORC file that only includes the records already
+written. As the file is later extended the preliminary file footer
+becomes dead space within the file. Secondly, a side file named
+“*_flush_length” is a small file that contains a set of 8 byte
+values. The last complete 8 byte value is the end of the last
+preliminary footer. </p>
+
+<p>Two properties are added to the metadata for ORC files to speed up the
+processing of the ACID tables. In particular, when a task is reading
+part of the base file for a bucket, it will use the first and last
+rowIds to find the corresponding spots in the delta files. The
+hive.acid.key.index lets the reader skip over stripes in the delta
+file that don’t need to be read in this task.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Key</th>
+      <th style="text-align: left">Meaning</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">hive.acid.stats</td>
+      <td style="text-align: left">Number of inserts, updates, and deletes comma separated</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">hive.acid.key.index</td>
+      <td style="text-align: left">The last originalTransaction, bucket, rowId for each stripe</td>
+    </tr>
+  </tbody>
+</table>
+
+          
+
+
+
+
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+    <div class="section-nav">
+      <div class="left align-right">
+          
+            
+            
+            <a href="/docs/indexes.html" class="prev">Back</a>
+          
+      </div>
+      <div class="right align-left">
+          
+            
+            
+            <a href="/docs/hive-ddl.html" class="next">Next</a>
+          
+      </div>
+    </div>
+    <div class="clear"></div>
+    
+
+        </article>
+      </div>
+
+      <div class="unit one-fifth hide-on-mobiles">
+  <aside>
+    
+    <h4>Overview</h4>
+    
+
+<ul>
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/index.html">Background</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/types.html">Types</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/indexes.html">Indexes</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+      <li class="current"><a href="/docs/acid.html">ACID support</a></li>
+      
+
+
+</ul>
+
+    
+    <h4>Hive Usage</h4>
+    
+
+<ul>
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/hive-ddl.html">Hive DDL</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/hive-config.html">Hive Configuration</a></li>
+      
+
+
+</ul>
+
+    
+    <h4>Format Specification</h4>
+    
+
+<ul>
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/spec-intro.html">Introduction</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/file-tail.html">File Tail</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+      <li class=""><a href="/docs/compression.html">Compression</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/run-length.html">Run Length Encoding</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/stripes.html">Stripes</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/encodings.html">Column Encodings</a></li>
+      
+
+
+  
+
+  
+    
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/spec-index.html">Indexes</a></li>
+      
+
+
+</ul>
+
+    
+  </aside>
+</div>
+
+
+      <div class="clear"></div>
+
+    </div>
+  </section>
+
+
+  <footer role="contentinfo">
+  <p>The contents of this website are &copy;&nbsp;2015
+     <a href="https://www.apache.org/">Apache Software Foundation</a>
+     under the terms of the <a
+      href="https://www.apache.org/licenses/LICENSE-2.0.html">
+      Apache&nbsp;License&nbsp;v2</a>. Apache ORC and its logo are trademarks
+      of the Apache Software Foundation.</p>
+</footer>
+
+  <script>
+  var anchorForId = function (id) {
+    var anchor = document.createElement("a");
+    anchor.className = "header-link";
+    anchor.href      = "#" + id;
+    anchor.innerHTML = "<span class=\"sr-only\">Permalink</span><i class=\"fa fa-link\"></i>";
+    anchor.title = "Permalink";
+    return anchor;
+  };
+
+  var linkifyAnchors = function (level, containingElement) {
+    var headers = containingElement.getElementsByTagName("h" + level);
+    for (var h = 0; h < headers.length; h++) {
+      var header = headers[h];
+
+      if (typeof header.id !== "undefined" && header.id !== "") {
+        header.appendChild(anchorForId(header.id));
+      }
+    }
+  };
+
+  document.onreadystatechange = function () {
+    if (this.readyState === "complete") {
+      var contentBlock = document.getElementsByClassName("docs")[0] || document.getElementsByClassName("news")[0];
+      if (!contentBlock) {
+        return;
+      }
+      for (var level = 1; level <= 6; level++) {
+        linkifyAnchors(level, contentBlock);
+      }
+    }
+  };
+</script>
+
+
+</body>
+</html>
