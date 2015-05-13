@@ -26,7 +26,7 @@ files will be merged at the stripe level without reserializatoin.
 ```ALTER TABLE istari [PARTITION partition_spec] CONCATENATE;
 ```
 
-To get information about an ORC file, there is the orcfiledump command.
+To get information about an ORC file, use the orcfiledump command.
 
 ```% hive --orcfiledump <path_to_file>
 ```

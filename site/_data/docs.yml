@@ -1,9 +1,8 @@
 - title: Overview
   docs:
   - index
-  - self-contained
-  - indexes
   - types
+  - indexes
   - acid
 
 - title: Hive Usage
@@ -18,3 +17,5 @@
   - compression
   - run-length
   - stripes
+  - encodings
+  - spec-index

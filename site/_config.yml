@@ -5,6 +5,8 @@ excerpt_separator: ""
 
 repository: https://github.com/apache/orc
 destination: target
+exclude: [README.md,Gemfile*]
+keep_files: [.git]
 
 collections:
   docs:

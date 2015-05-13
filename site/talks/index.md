@@ -27,6 +27,15 @@ Watch some presentations and read through some slide decks about ORC.
             src="https://www.youtube.com/embed/Jd4lFEK8gCM" frameborder="0"
             allowfullscreen></iframe>
 
+* Adding ACID Updates to Hive
+  [slides](http://www.slideshare.net/alanfgates/hive-acidupdatessummitsjc2014)
+
+    Owen O'Malley and Alan Gates at Hadoop Summit: San Jose 2014
+
+    <iframe width="560" height="315"
+            src="https://www.youtube.com/embed/_A-GMkIygtU" frameborder="0"
+            allowfullscreen></iframe>
+
 ## Slides
 
 * ORC Files

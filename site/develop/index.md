@@ -7,13 +7,20 @@ Want to help add a feature or fix a bug?
 
 ## Project Members
 
-Name                  | Apache Id | Role
-:-------------------- | :-------- | :---
-Chris Douglas         | cdouglas  | PMC
-Alan Gates            | gates     | PMC
-Prasanth Jayachandran | prasanthj | PMC
-Lefty Leverenz        | leftyl    | PMC
-Owen O'Malley         | omalley   | PMC
+Name                  | Apache Id    | Role
+:-------------------- | :----------- | :---
+Chris Douglas         | cdouglas     | PMC
+Alan Gates            | gates        | PMC
+Gunther Hagleitner    | gunther      | Committer
+Prasanth Jayachandran | prasanthj    | PMC
+Lefty Leverenz        | leftyl       | PMC
+Owen O'Malley         | omalley      | PMC
+Aliaksei Sandryhaila  | ?            | Committer
+Sergey Shelukhin      | sershe       | Committer
+Gopal Vijayaraghavan  | gopalv       | Committer
+Stephen Walkauskas    | ?            | Committer
+Kevin Wilfong         | kevinwilfong | Committer
+Xuefu Zhang           | xuefu        | Committer
 
 ## Mailing Lists
 
