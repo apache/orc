@@ -39,7 +39,9 @@ the values that are required for the current query.</description>
     <programming-language>Java</programming-language>
     <programming-language>C++</programming-language>
     <category rdf:resource="http://projects.apache.org/category/big-data" />
+    <category rdf:resource="http://projects.apache.org/category/database" />
     <category rdf:resource="http://projects.apache.org/category/hadoop" />
+    <category rdf:resource="http://projects.apache.org/category/library" />
     <repository>
       <GitRepository>
         <location rdf:resource="https://git-wip-us.apache.org/repos/asf/orc.git"/>
