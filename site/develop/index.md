@@ -15,10 +15,10 @@ Gunther Hagleitner    | gunther      | Committer
 Prasanth Jayachandran | prasanthj    | PMC
 Lefty Leverenz        | leftyl       | PMC
 Owen O'Malley         | omalley      | PMC
-Aliaksei Sandryhaila  | ?            | Committer
+Aliaksei Sandryhaila  | asandryh     | Committer
 Sergey Shelukhin      | sershe       | Committer
 Gopal Vijayaraghavan  | gopalv       | Committer
-Stephen Walkauskas    | ?            | Committer
+Stephen Walkauskas    | swalkaus     | Committer
 Kevin Wilfong         | kevinwilfong | Committer
 Xuefu Zhang           | xuefu        | Committer
 
