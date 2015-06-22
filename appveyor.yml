@@ -1,0 +1,9 @@
+version: 1.0.{build}
+branches:
+  only:
+  - c++
+build_script:
+- mkdir _vc10
+- cd _vc10
+- cmake -DCMAKE_MAKE_PROGRAM=C:/Windows/Microsoft.NET/Framework/v4.0.30319/MSBuild.exe -DC09=true -G "Visual Studio 10" ..
+- cmake --build .
