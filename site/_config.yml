@@ -5,8 +5,9 @@ excerpt_separator: ""
 
 repository: https://github.com/apache/orc
 destination: target
-exclude: [README.md,Gemfile*]
+exclude: [BUILD.md, Gemfile*]
 keep_files: [.git]
+highlight_color: "#67cf56"
 
 collections:
   docs:
