@@ -45,8 +45,10 @@ ORC uses git for version control. Get the source code:
 
 The important branches are:
 
-* master - The trunk for all developement
-* asf-site - The pages that are deployed to https://orc.apache.org/
+* [master](https://github.com/apache/orc/tree/master) -
+  The trunk for all developement
+* [asf-site](https://github.com/apache/orc/tree/asf-site) -
+  The pages that are deployed to https://orc.apache.org/
 
 Please check our [coding guidelines](/develop/coding.html).
 
