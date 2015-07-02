@@ -17,18 +17,19 @@
  */
 
 #include "orc/ColumnPrinter.hh"
-#include "orc/Exceptions.hh"
 
-#include <string>
+#include "Exceptions.hh"
+
 #include <memory>
+#include <string>
 #include <iostream>
 #include <string>
 
 int main(int argc, char* argv[]) {
   if (argc < 2) {
-    std::cout << "Usage: file-scan <filename>\n";
+    std::cout << "Usage: file-contents <filename>\n";
+    return 1;
   }
-
   orc::ReaderOptions opts;
   std::list<int64_t> cols;
   cols.push_back(0);
@@ -44,13 +45,19 @@ int main(int argc, char* argv[]) {
   }
 
   std::unique_ptr<orc::ColumnVectorBatch> batch = reader->createRowBatch(1000);
-  unsigned long rows = 0;
-  unsigned long batches = 0;
+  std::string line;
+  std::unique_ptr<orc::ColumnPrinter> printer =
+    createColumnPrinter(line, reader->getType());
+
   while (reader->next(*batch)) {
-    batches += 1;
-    rows += batch->numElements;
+    printer->reset(*batch);
+    for(unsigned long i=0; i < batch->numElements; ++i) {
+      line.clear();
+      printer->printRow(i);
+      line += "\n";
+      const char* str = line.c_str();
+      fwrite(str, 1, strlen(str), stdout);
+    }
   }
-  std::cout << "Rows: " << rows << std::endl;
-  std::cout << "Batches: " << batches << std::endl;
   return 0;
 }

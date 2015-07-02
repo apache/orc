@@ -82,8 +82,8 @@ CHECK_CXX_SOURCE_RUNS("
 )
 
 configure_file (
-  "orc/Adaptor.hh.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/orc/Adaptor.hh"
+  "Adaptor.hh.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/Adaptor.hh"
   )
 
 include_directories (
@@ -104,23 +104,23 @@ add_custom_command(OUTPUT orc_proto.pb.h orc_proto.pb.cc
 )
 
 add_library (orc STATIC
-  "${CMAKE_CURRENT_BINARY_DIR}/orc/Adaptor.hh"
+  "${CMAKE_CURRENT_BINARY_DIR}/Adaptor.hh"
   orc_proto.pb.h
   wrap/orc-proto-wrapper.cc
-  orc/ByteRLE.cc
-  orc/ColumnPrinter.cc
-  orc/ColumnReader.cc
-  orc/Compression.cc
-  orc/Exceptions.cc
-  orc/Int128.cc
-  orc/MemoryPool.cc
-  orc/OrcFile.cc
-  orc/Reader.cc
-  orc/RLEv1.cc
-  orc/RLEv2.cc
-  orc/RLE.cc
-  orc/TypeImpl.cc
-  orc/Vector.cc
+  ByteRLE.cc
+  ColumnPrinter.cc
+  ColumnReader.cc
+  Compression.cc
+  Exceptions.cc
+  Int128.cc
+  MemoryPool.cc
+  OrcFile.cc
+  Reader.cc
+  RLEv1.cc
+  RLEv2.cc
+  RLE.cc
+  TypeImpl.cc
+  Vector.cc
   )
 
 install(TARGETS orc DESTINATION lib)

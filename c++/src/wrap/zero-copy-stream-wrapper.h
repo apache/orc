@@ -15,7 +15,7 @@
 #ifndef ZERO_COPY_STREAM_WRAPPER_HH
 #define ZERO_COPY_STREAM_WRAPPER_HH
 
-#include "orc/Adaptor.hh"
+#include "Adaptor.hh"
 
 DIAGNOSTIC_PUSH
 

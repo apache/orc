@@ -16,10 +16,10 @@
  * limitations under the License.
  */
 
-#include "orc/Compression.hh"
-#include "orc/Exceptions.hh"
-#include "wrap/gtest-wrapper.h"
+#include "Compression.hh"
+#include "Exceptions.hh"
 #include "OrcTest.hh"
+#include "wrap/gtest-wrapper.h"
 
 #include <cstdio>
 #include <fstream>

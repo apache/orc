@@ -16,10 +16,9 @@
  * limitations under the License.
  */
 
-#include "orc/Adaptor.hh"
-#include "orc/ColumnReader.hh"
-#include "orc/Exceptions.hh"
-
+#include "Adaptor.hh"
+#include "ColumnReader.hh"
+#include "Exceptions.hh"
 #include "OrcTest.hh"
 
 #include "wrap/orc-proto-wrapper.hh"

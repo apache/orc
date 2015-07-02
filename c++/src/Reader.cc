@@ -16,14 +16,15 @@
  * limitations under the License.
  */
 
-#include "orc/Adaptor.hh"
-#include "orc/Reader.hh"
+#include "orc/Int128.hh"
 #include "orc/OrcFile.hh"
+#include "orc/Reader.hh"
+
+#include "Adaptor.hh"
 #include "ColumnReader.hh"
 #include "Exceptions.hh"
 #include "RLE.hh"
 #include "TypeImpl.hh"
-#include "orc/Int128.hh"
 
 #include "wrap/coded-stream-wrapper.h"
 

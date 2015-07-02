@@ -15,7 +15,7 @@
 #ifndef ORC_PROTO_WRAPPER_HH
 #define ORC_PROTO_WRAPPER_HH
 
-#include "orc/Adaptor.hh"
+#include "Adaptor.hh"
 
 DIAGNOSTIC_PUSH
 DIAGNOSTIC_IGNORE("-Wconversion")
