@@ -17,8 +17,8 @@
  */
 
 #include "orc/ColumnPrinter.hh"
-#include "orc/Exceptions.hh"
 
+#include "Exceptions.hh"
 #include "wrap/gtest-wrapper.h"
 
 namespace orc {

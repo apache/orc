@@ -16,10 +16,10 @@
  * limitations under the License.
  */
 
-#include "orc/Adaptor.hh"
-#include "RLEv1.hh"
+#include "Adaptor.hh"
 #include "Compression.hh"
 #include "Exceptions.hh"
+#include "RLEv1.hh"
 
 #include <algorithm>
 

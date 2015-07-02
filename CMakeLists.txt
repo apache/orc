@@ -95,7 +95,7 @@ enable_testing()
 set (EXAMPLE_DIRECTORY ${CMAKE_SOURCE_DIR}/examples)
 
 add_subdirectory(c++)
-add_subdirectory(tools-c++)
+add_subdirectory(tools)
 
 # Add another target called test-out that prints the results on failure
 if (CMAKE_CONFIGURATION_TYPES)

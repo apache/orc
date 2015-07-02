@@ -23,13 +23,13 @@ include_directories(
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX11_FLAGS} ${WARN_FLAGS}")
 
 add_executable (test-orc
-  orc/TestByteRle.cc
-  orc/TestColumnPrinter.cc
-  orc/TestColumnReader.cc
-  orc/TestCompression.cc
-  orc/TestDriver.cc
-  orc/TestInt128.cc
-  orc/TestRle.cc
+  TestByteRle.cc
+  TestColumnPrinter.cc
+  TestColumnReader.cc
+  TestCompression.cc
+  TestDriver.cc
+  TestInt128.cc
+  TestRle.cc
 )
 
 target_link_libraries (test-orc

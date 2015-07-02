@@ -19,9 +19,9 @@
 #ifndef ORC_RLEV2_HH
 #define ORC_RLEV2_HH
 
-#include "orc/Adaptor.hh"
-#include "RLE.hh"
+#include "Adaptor.hh"
 #include "Exceptions.hh"
+#include "RLE.hh"
 
 #include <vector>
 

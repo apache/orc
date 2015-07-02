@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "orc/Adaptor.hh"
+#include "Adaptor.hh"
 #include "gzip.hh"
 
 #include <iostream>

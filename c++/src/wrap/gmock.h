@@ -18,7 +18,7 @@
 // we need to disable a whole set of warnings as we include gtest.h
 // restore most of the warnings after the file is loaded.
 
-#include "orc/Adaptor.hh"
+#include "Adaptor.hh"
 
 DIAGNOSTIC_PUSH
 DIAGNOSTIC_IGNORE("-Wdeprecated")

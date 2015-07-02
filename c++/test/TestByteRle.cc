@@ -16,10 +16,10 @@
  * limitations under the License.
  */
 
-#include "orc/Adaptor.hh"
-#include "orc/ByteRLE.hh"
-#include "wrap/gtest-wrapper.h"
+#include "Adaptor.hh"
+#include "ByteRLE.hh"
 #include "OrcTest.hh"
+#include "wrap/gtest-wrapper.h"
 
 #include <iostream>
 #include <vector>

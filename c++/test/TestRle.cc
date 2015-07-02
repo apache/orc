@@ -16,11 +16,11 @@
  * limitations under the License.
  */
 
-#include "orc/Adaptor.hh"
-#include "orc/Compression.hh"
-#include "orc/RLE.hh"
-#include "wrap/gtest-wrapper.h"
+#include "Adaptor.hh"
+#include "Compression.hh"
 #include "OrcTest.hh"
+#include "RLE.hh"
+#include "wrap/gtest-wrapper.h"
 
 #include <iostream>
 #include <vector>

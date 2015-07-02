@@ -16,9 +16,9 @@
  * limitations under the License.
  */
 
-#include "orc/Adaptor.hh"
-#include "RLEv2.hh"
+#include "Adaptor.hh"
 #include "Compression.hh"
+#include "RLEv2.hh"
 
 #define MIN_REPEAT 3
 
