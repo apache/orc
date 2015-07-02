@@ -16,11 +16,11 @@
  * limitations under the License.
  */
 
-#include "orc/Adaptor.hh"
-
-#include "gzip.hh"
 #include "orc/ColumnPrinter.hh"
 #include "orc/OrcFile.hh"
+
+#include "Adaptor.hh"
+#include "gzip.hh"
 #include "ToolTest.hh"
 
 #include "wrap/gmock.h"

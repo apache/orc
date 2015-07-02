@@ -16,9 +16,10 @@
  * limitations under the License.
  */
 
-#include "orc/Adaptor.hh"
 #include "orc/ColumnPrinter.hh"
 #include "orc/orc-config.hh"
+
+#include "Adaptor.hh"
 
 #include <limits>
 #include <sstream>

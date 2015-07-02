@@ -15,7 +15,7 @@
 #ifndef SNAPPY_WRAPPER_HH
 #define SNAPPY_WRAPPER_HH
 
-#include "orc/Adaptor.hh"
+#include "Adaptor.hh"
 
 DIAGNOSTIC_PUSH
 

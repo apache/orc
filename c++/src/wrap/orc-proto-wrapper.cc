@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-#include "orc/Adaptor.hh"
+#include "Adaptor.hh"
 
 DIAGNOSTIC_IGNORE("-Wconversion")
 DIAGNOSTIC_IGNORE("-Wdeprecated")

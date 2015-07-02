@@ -19,8 +19,9 @@
 #ifndef ORC_COMPRESSION_HH
 #define ORC_COMPRESSION_HH
 
-#include "orc/Adaptor.hh"
 #include "orc/OrcFile.hh"
+
+#include "Adaptor.hh"
 #include "wrap/zero-copy-stream-wrapper.h"
 
 #include <list>
