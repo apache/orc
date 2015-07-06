@@ -31,24 +31,6 @@
 namespace orc {
 
   /**
-   * An abstract interface for a buffer provided by the input stream.
-   */
-  class Buffer {
-  public:
-    virtual ~Buffer();
-
-    /**
-     * Get the start of the buffer.
-     */
-    virtual char *getStart() const = 0;
-
-    /**
-     * Get the length of the buffer in bytes.
-     */
-    virtual uint64_t getLength() const = 0;
-  };
-
-  /**
    * An abstract interface for providing ORC readers a stream of bytes.
    */
   class InputStream {
@@ -62,16 +44,14 @@ namespace orc {
 
     /**
      * Read length bytes from the file starting at offset into
-     * the buffer.
-     * @param offset the position in the file to read from
-     * @param length the number of bytes to read
-     * @param buffer a Buffer to reuse from a previous call to read. Ownership
-     *    of this buffer passes to the InputStream object.
-     * @return the buffer with the requested data. The client owns the Buffer.
+     * the buffer starting at buf.
+     * @param buf the starting position of a buffer.
+     * @param length the number of bytes to read.
+     * @param offset the position in the stream to read from.
      */
-    virtual Buffer* read(uint64_t offset,
-                         uint64_t length,
-                         Buffer* buffer) = 0;
+    virtual void read(void* buf,
+                      uint64_t length,
+                      uint64_t offset) = 0;
 
     /**
      * Get the name of the stream for error messages.
