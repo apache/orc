@@ -67,19 +67,6 @@ namespace orc {
     // PASS
   }
 
-  #ifdef ORC_CXX_HAS_INITIALIZER_LIST
-    SeekableArrayInputStream::SeekableArrayInputStream
-       (std::initializer_list<unsigned char> values,
-        int64_t blkSize
-        ):ownedData(new DataBuffer<char>(*getDefaultPool(), values.size())),
-          data(0) {
-      length = values.size();
-      memcpy(ownedData->data(), values.begin(), values.size());
-      position = 0;
-      blockSize = blkSize == -1 ? length : static_cast<uint64_t>(blkSize);
-    }
-  #endif
-
   SeekableArrayInputStream::SeekableArrayInputStream
                (const unsigned char* values,
                 uint64_t size,
@@ -102,7 +89,7 @@ namespace orc {
   bool SeekableArrayInputStream::Next(const void** buffer, int*size) {
     uint64_t currentSize = std::min(length - position, blockSize);
     if (currentSize > 0) {
-      *buffer = (data ? data : ownedData->data()) + position;
+      *buffer = data + position;
       *size = static_cast<int>(currentSize);
       position += currentSize;
       return true;
@@ -158,32 +145,36 @@ namespace orc {
   SeekableFileInputStream::SeekableFileInputStream(InputStream* stream,
                                                    uint64_t offset,
                                                    uint64_t byteCount,
+                                                   MemoryPool& _pool,
                                                    int64_t _blockSize
-                                                   ): input(stream),
-                                                      start(offset),
-                                                      length(byteCount),
-                                                      blockSize(computeBlock
-                                                                (_blockSize,
-                                                                 length)) {
+                                                   ):pool(_pool),
+                                                     input(stream),
+                                                     start(offset),
+                                                     length(byteCount),
+                                                     blockSize(computeBlock
+                                                               (_blockSize,
+                                                                length)) {
+
     position = 0;
-    buffer = nullptr;
+    buffer.reset(new DataBuffer<char>(pool));
     pushBack = 0;
   }
 
   SeekableFileInputStream::~SeekableFileInputStream() {
-    delete buffer;
+    // PASS
   }
 
   bool SeekableFileInputStream::Next(const void** data, int*size) {
     uint64_t bytesRead;
     if (pushBack != 0) {
-      *data = buffer->getStart() + (buffer->getLength() - pushBack);
+      *data = buffer->data() + (buffer->size() - pushBack);
       bytesRead = pushBack;
     } else {
       bytesRead = std::min(length - position, blockSize);
+      buffer->resize(bytesRead);
       if (bytesRead > 0) {
-        buffer = input->read(start + position, bytesRead, buffer);
-        *data = static_cast<void*>(buffer->getStart());
+        input->read(buffer->data(), bytesRead, start+position);
+        *data = static_cast<void*>(buffer->data());
       }
     }
     position += bytesRead;

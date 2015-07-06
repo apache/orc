@@ -1232,7 +1232,8 @@ namespace orc {
                            std::unique_ptr<SeekableInputStream>
                              (new SeekableFileInputStream(stream.get(),
                                                           metadataStart,
-                                                          metadataSize)),
+                                                          metadataSize,
+                                                          memoryPool)),
                            blockSize,
                            memoryPool);
       metadata.reset(new proto::Metadata());
@@ -1314,6 +1315,7 @@ namespace orc {
                          (new SeekableFileInputStream(stream.get(),
                                                       stripeFooterStart,
                                                       stripeFooterLength,
+                                                      memoryPool,
                                                       static_cast<int64_t>
                                                       (blockSize)
                                                       )),
@@ -1406,6 +1408,7 @@ namespace orc {
                                    (&input,
                                     offset,
                                     stream.length(),
+                                    memoryPool,
                                     myBlock)),
                                   reader.getCompressionSize(),
                                   memoryPool);
@@ -1553,13 +1556,13 @@ namespace orc {
   }
 
   void ensureOrcFooter(InputStream* stream,
-                       Buffer *buffer,
+                       DataBuffer<char> *buffer,
                        uint64_t postscriptLength) {
 
     const std::string MAGIC("ORC");
     const uint64_t magicLength = MAGIC.length();
-    const char * const bufferStart = buffer->getStart();
-    const uint64_t bufferLength = buffer->getLength();
+    const char * const bufferStart = buffer->data();
+    const uint64_t bufferLength = buffer->size();
 
     if (postscriptLength < magicLength || bufferLength < magicLength) {
       throw ParseError("Invalid ORC postscript length");
@@ -1570,10 +1573,10 @@ namespace orc {
     if (memcmp(magicStart, MAGIC.c_str(), magicLength) != 0) {
       // If there is no magic string at the end, check the beginning.
       // Only files written by Hive 0.11.0 don't have the tail ORC string.
-      Buffer *frontBuffer = stream->read(0, magicLength, nullptr);
-      bool foundMatch =
-        memcmp(frontBuffer->getStart(), MAGIC.c_str(), magicLength) == 0;
-      delete frontBuffer;
+      char *frontBuffer = new char[magicLength];
+      stream->read(frontBuffer, magicLength, 0);
+      bool foundMatch = memcmp(frontBuffer, MAGIC.c_str(), magicLength) == 0;
+      delete[] frontBuffer;
       if (!foundMatch) {
         throw ParseError("Not an ORC file");
       }
@@ -1587,10 +1590,10 @@ namespace orc {
    * @param postscriptSize the length of postscript in bytes
    */
   std::unique_ptr<proto::PostScript> readPostscript(InputStream *stream,
-                                                    Buffer *buffer,
+                                                    DataBuffer<char> *buffer,
                                                     uint64_t postscriptSize) {
-    char *ptr = buffer->getStart();
-    uint64_t readSize = buffer->getLength();
+    char *ptr = buffer->data();
+    uint64_t readSize = buffer->size();
 
     ensureOrcFooter(stream, buffer, postscriptSize);
 
@@ -1613,11 +1616,11 @@ namespace orc {
    * @param memoryPool the memory pool to use
    */
   std::unique_ptr<proto::Footer> readFooter(InputStream* stream,
-                                            Buffer *&buffer,
+                                            DataBuffer<char> *&buffer,
                                             uint64_t footerOffset,
                                             const proto::PostScript& ps,
                                             MemoryPool& memoryPool) {
-    char *footerPtr = buffer->getStart() + footerOffset;
+    char *footerPtr = buffer->data() + footerOffset;
 
     std::unique_ptr<SeekableInputStream> pbStream =
       createDecompressor(convertCompressionKind(ps),
@@ -1662,9 +1665,10 @@ namespace orc {
       if (readSize < 4) {
         throw ParseError("File size too small");
       }
-      Buffer *buffer = stream->read(size - readSize, readSize, nullptr);
+      DataBuffer<char> *buffer = new DataBuffer<char>(*memoryPool, readSize);
+      stream->read(buffer->data(), readSize, size - readSize);
 
-      uint64_t postscriptSize = buffer->getStart()[readSize - 1] & 0xff;
+      uint64_t postscriptSize = buffer->data()[readSize - 1] & 0xff;
       ps = readPostscript(stream.get(), buffer, postscriptSize);
       uint64_t footerSize = ps->footerlength();
       uint64_t tailSize = 1 + postscriptSize + footerSize;
@@ -1672,7 +1676,8 @@ namespace orc {
       uint64_t footerOffset;
 
       if (tailSize > readSize) {
-        buffer = stream->read(size - tailSize, footerSize, buffer);
+        buffer->resize(footerSize);
+        stream->read(buffer->data(), footerSize, size - tailSize);
         footerOffset = 0;
       } else {
         footerOffset = readSize - tailSize;
