@@ -1329,13 +1329,14 @@ namespace orc {
       createDecompressor(
               compression,
               std::unique_ptr<SeekableInputStream>
-                    (new SeekableFileInputStream(
-                            stream.get(),
-                            stripeFooterStart,
-                            stripeFooterLength,
-                            memoryPool,
-                            std::max(blockSize, options.getStreamBlockSize())
-                    )),
+                (new SeekableFileInputStream(
+                      stream.get(),
+                      stripeFooterStart,
+                      stripeFooterLength,
+                      memoryPool,
+                      static_cast<int64_t>(std::max(blockSize,
+                                          options.getStreamBlockSize()))
+                )),
               blockSize,
               memoryPool);
     proto::StripeFooter result;
@@ -1416,9 +1417,9 @@ namespace orc {
       if (stream.has_kind() &&
           stream.kind() == kind &&
           stream.column() == static_cast<uint64_t>(columnId)) {
-        int64_t myBlock = shouldStream ?
+        int64_t myBlock = static_cast<int64_t>(shouldStream ?
                             reader.getReaderOptions().getStreamBlockSize() :
-                            static_cast<int64_t>(stream.length());
+                            stream.length());
         return createDecompressor(reader.getCompression(),
                                   std::unique_ptr<SeekableInputStream>
                                   (new SeekableFileInputStream
