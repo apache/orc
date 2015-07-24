@@ -48,7 +48,6 @@ namespace orc {
     std::ostream* errorStream;
     MemoryPool* memoryPool;
     std::string serializedTail;
-    uint64_t streamBlockSize;
 
     ReaderOptionsPrivate() {
       includedColumns.assign(1,0);
@@ -59,7 +58,6 @@ namespace orc {
       forcedScaleOnHive11Decimal = 6;
       errorStream = &std::cerr;
       memoryPool = getDefaultPool();
-      streamBlockSize = 1024*1024;
     }
   };
 
@@ -176,19 +174,6 @@ namespace orc {
 
   std::string ReaderOptions::getSerializedFileTail() const {
     return privateBits->serializedTail;
-  }
-
-  ReaderOptions& ReaderOptions::setStreamBlockSize(uint64_t blocksize) {
-    privateBits->streamBlockSize = blocksize;
-    return *this;
-  }
-
-  uint64_t ReaderOptions::getStreamBlockSize() {
-    return privateBits->streamBlockSize;
-  }
-
-  uint64_t ReaderOptions::getStreamBlockSize() const {
-    return privateBits->streamBlockSize;
   }
 
   StripeInformation::~StripeInformation() {
@@ -1326,18 +1311,17 @@ namespace orc {
       info.datalength();
     uint64_t stripeFooterLength = info.footerlength();
     std::unique_ptr<SeekableInputStream> pbStream =
-      createDecompressor(
-              compression,
-              std::unique_ptr<SeekableInputStream>
-                    (new SeekableFileInputStream(
-                            stream.get(),
-                            stripeFooterStart,
-                            stripeFooterLength,
-                            memoryPool,
-                            std::max(blockSize, options.getStreamBlockSize())
-                    )),
-              blockSize,
-              memoryPool);
+      createDecompressor(compression,
+                         std::unique_ptr<SeekableInputStream>
+                         (new SeekableFileInputStream(stream.get(),
+                                                      stripeFooterStart,
+                                                      stripeFooterLength,
+                                                      memoryPool,
+                                                      static_cast<int64_t>
+                                                      (blockSize)
+                                                      )),
+                         blockSize,
+                         memoryPool);
     proto::StripeFooter result;
     if (!result.ParseFromZeroCopyStream(pbStream.get())) {
       throw ParseError(std::string("bad StripeFooter from ") +
@@ -1416,9 +1400,9 @@ namespace orc {
       if (stream.has_kind() &&
           stream.kind() == kind &&
           stream.column() == static_cast<uint64_t>(columnId)) {
-        int64_t myBlock = shouldStream ?
-                            reader.getReaderOptions().getStreamBlockSize() :
-                            static_cast<int64_t>(stream.length());
+        int64_t myBlock = static_cast<int64_t>(shouldStream ?
+                                         1024 * 1024 :
+                                         stream.length());
         return createDecompressor(reader.getCompression(),
                                   std::unique_ptr<SeekableInputStream>
                                   (new SeekableFileInputStream

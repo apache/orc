@@ -542,17 +542,6 @@ namespace orc {
      * Get the serialized file tail that the user passed in.
      */
     std::string getSerializedFileTail() const;
-
-    /**
-     * Set the block size for seekable input streams
-     */
-    ReaderOptions& setStreamBlockSize(uint64_t blocksize);
-
-    /**
-     * Get the block size for seekable input streams
-     */
-    uint64_t getStreamBlockSize();
-    uint64_t getStreamBlockSize() const;
   };
 
   /**
