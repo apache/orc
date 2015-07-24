@@ -69,20 +69,20 @@ namespace orc {
   SeekableArrayInputStream::SeekableArrayInputStream
                (const unsigned char* values,
                 uint64_t size,
-                int64_t blkSize
+                uint64_t blkSize
                 ): data(reinterpret_cast<const char*>(values)) {
     length = size;
     position = 0;
-    blockSize = blkSize == -1 ? length : static_cast<uint64_t>(blkSize);
+    blockSize = blkSize == 0 ? length : static_cast<uint64_t>(blkSize);
   }
 
   SeekableArrayInputStream::SeekableArrayInputStream(const char* values,
                                                      uint64_t size,
-                                                     int64_t blkSize
+                                                     uint64_t blkSize
                                                      ): data(values) {
     length = size;
     position = 0;
-    blockSize = blkSize == -1 ? length : static_cast<uint64_t>(blkSize);
+    blockSize = blkSize == 0 ? length : static_cast<uint64_t>(blkSize);
   }
 
   bool SeekableArrayInputStream::Next(const void** buffer, int*size) {
@@ -135,17 +135,15 @@ namespace orc {
     return result.str();
   }
 
-  static uint64_t computeBlock(int64_t request, uint64_t length) {
-    return std::min(length,
-                    static_cast<uint64_t>(request < 0 ?
-                                          256 * 1024 : request));
+  static uint64_t computeBlock(uint64_t request, uint64_t length) {
+    return std::min(length, request == 0 ? 256 * 1024 : request);
   }
 
   SeekableFileInputStream::SeekableFileInputStream(InputStream* stream,
                                                    uint64_t offset,
                                                    uint64_t byteCount,
                                                    MemoryPool& _pool,
-                                                   int64_t _blockSize
+                                                   uint64_t _blockSize
                                                    ):pool(_pool),
                                                      input(stream),
                                                      start(offset),

@@ -57,6 +57,10 @@ namespace orc {
       return totalLength;
     }
 
+    uint64_t getNaturalReadSize() const override {
+      return 128 * 1024;
+    }
+
     void read(void* buf,
               uint64_t length,
               uint64_t offset) override {
