@@ -43,6 +43,12 @@ namespace orc {
     virtual uint64_t getLength() const = 0;
 
     /**
+     * Get the natural size for reads.
+     * @return the number of bytes that should be read at once
+     */
+    virtual uint64_t getNaturalReadSize() const = 0;
+
+    /**
      * Read length bytes from the file starting at offset into
      * the buffer starting at buf.
      * @param buf the starting position of a buffer.

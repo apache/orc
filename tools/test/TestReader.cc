@@ -2914,6 +2914,7 @@ public:
   MOCK_CONST_METHOD0(getLength, uint64_t());
   MOCK_CONST_METHOD0(getName, const std::string&());
   MOCK_METHOD3(read, void (void*, uint64_t, uint64_t));
+  MOCK_CONST_METHOD0(getNaturalReadSize, uint64_t());
 };
 
 MockInputStream::~MockInputStream() {
