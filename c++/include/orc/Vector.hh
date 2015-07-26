@@ -294,6 +294,24 @@ namespace orc {
     friend class DecimalHive11ColumnReader;
   };
 
+  /**
+   * A column vector batch for storing timestamp values.
+   * The timestamps are stored split into the time_t value (seconds since
+   * 1 Jan 1970 00:00:00) and the nanoseconds within the time_t value.
+   */
+  struct TimestampVectorBatch: public ColumnVectorBatch {
+    TimestampVectorBatch(uint64_t capacity, MemoryPool& pool);
+    virtual ~TimestampVectorBatch();
+    std::string toString() const;
+    void resize(uint64_t capacity);
+
+    // the number of seconds past 1 Jan 1970 00:00 UTC (aka time_t)
+    DataBuffer<int64_t> data;
+
+    // the nanoseconds of each value
+    DataBuffer<int64_t> nanoseconds;
+  };
+
 }
 
 #endif
