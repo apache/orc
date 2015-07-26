@@ -854,6 +854,8 @@ namespace orc {
 
   class ReaderImpl : public Reader {
   private:
+    const int64_t epochOffset;
+
     // inputs
     std::unique_ptr<InputStream> stream;
     ReaderOptions options;
@@ -993,12 +995,25 @@ namespace orc {
     }
   }
 
+  int64_t getEpochOffset() {
+    struct tm epoch;
+    epoch.tm_sec = 0;
+    epoch.tm_min = 0;
+    epoch.tm_hour = 0;
+    epoch.tm_mday = 1;
+    epoch.tm_mon = 0;
+    epoch.tm_year = 2015 - 1900;
+    epoch.tm_isdst = 0;
+    return static_cast<int64_t>(mktime(&epoch));
+  }
+
   ReaderImpl::ReaderImpl(std::unique_ptr<InputStream> input,
                          const ReaderOptions& opts,
                          std::unique_ptr<proto::PostScript> _postscript,
                          std::unique_ptr<proto::Footer> _footer,
                          uint64_t _footerStart
-                         ): stream(std::move(input)),
+                         ): epochOffset(getEpochOffset()),
+                            stream(std::move(input)),
                             options(opts),
                             footerStart(_footerStart),
                             memoryPool(*opts.getMemoryPool()),
@@ -1334,13 +1349,15 @@ namespace orc {
     const uint64_t stripeStart;
     InputStream& input;
     MemoryPool& memoryPool;
+    const int64_t epochOffset;
 
   public:
     StripeStreamsImpl(const ReaderImpl& reader,
                       const proto::StripeFooter& footer,
                       uint64_t stripeStart,
                       InputStream& input,
-                      MemoryPool& memoryPool);
+                      MemoryPool& memoryPool,
+                      int64_t epochOffset);
 
     virtual ~StripeStreamsImpl();
 
@@ -1356,18 +1373,22 @@ namespace orc {
               bool shouldStream) const override;
 
     MemoryPool& getMemoryPool() const override;
+
+    int64_t getEpochOffset() const override;
   };
 
   StripeStreamsImpl::StripeStreamsImpl(const ReaderImpl& _reader,
                                        const proto::StripeFooter& _footer,
                                        uint64_t _stripeStart,
                                        InputStream& _input,
-                                       MemoryPool& _memoryPool
+                                       MemoryPool& _memoryPool,
+                                       int64_t _epochOffset
                                        ): reader(_reader),
                                           footer(_footer),
                                           stripeStart(_stripeStart),
                                           input(_input),
-                                          memoryPool(_memoryPool) {
+                                          memoryPool(_memoryPool),
+                                          epochOffset(_epochOffset) {
     // PASS
   }
 
@@ -1383,8 +1404,13 @@ namespace orc {
     return reader.getSelectedColumns();
   }
 
-  proto::ColumnEncoding StripeStreamsImpl::getEncoding(int64_t columnId) const {
+  proto::ColumnEncoding StripeStreamsImpl::getEncoding(int64_t columnId
+                                                       ) const {
     return footer.columns(static_cast<int>(columnId));
+  }
+
+  int64_t StripeStreamsImpl::getEpochOffset() const {
+    return epochOffset;
   }
 
   std::unique_ptr<SeekableInputStream>
@@ -1426,7 +1452,8 @@ namespace orc {
     StripeStreamsImpl stripeStreams(*this, currentStripeFooter,
                                     currentStripeInfo.offset(),
                                     *(stream.get()),
-                                    memoryPool);
+                                    memoryPool,
+                                    epochOffset);
     reader = buildReader(*(schema.get()), stripeStreams);
   }
 
@@ -1479,7 +1506,6 @@ namespace orc {
     case SHORT:
     case INT:
     case LONG:
-    case TIMESTAMP:
     case DATE:
       result = new LongVectorBatch(capacity, memoryPool);
       break;
@@ -1492,6 +1518,9 @@ namespace orc {
     case CHAR:
     case VARCHAR:
       result = new StringVectorBatch(capacity, memoryPool);
+      break;
+    case TIMESTAMP:
+      result = new TimestampVectorBatch(capacity, memoryPool);
       break;
     case STRUCT:
       result = new StructVectorBatch(capacity, memoryPool);

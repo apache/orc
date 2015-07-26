@@ -63,6 +63,13 @@ namespace orc {
      * Get the memory pool for this reader.
      */
     virtual MemoryPool& getMemoryPool() const = 0;
+
+    /**
+     * Get the number of seconds between the ORC epoch and Unix epoch.
+     * ORC epoch is 1 Jan 2015 00:00:00 local.
+     * Unix epoch is 1 Jan 1970 00:00:00 UTC.
+     */
+    virtual int64_t getEpochOffset() const = 0;
   };
 
   /**

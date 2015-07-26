@@ -128,21 +128,33 @@ namespace orc {
     std::string line;
     std::unique_ptr<Type> type = createPrimitiveType(TIMESTAMP);
     std::unique_ptr<ColumnPrinter> printer = createColumnPrinter(line, *type);
-    LongVectorBatch batch(1024, *getDefaultPool());
+    TimestampVectorBatch batch(1024, *getDefaultPool());
     batch.numElements = 12;
     batch.hasNulls = false;
-    batch.data[0]  = 1420070400000000000;
-    batch.data[1]  =  963270000000000000;
-    batch.data[2]  = 1426168859000000000;
-    batch.data[3]  = 1426168859000000001;
-    batch.data[4]  = 1426168859000000010;
-    batch.data[5]  = 1426168859000000100;
-    batch.data[6]  = 1426168859000001000;
-    batch.data[7]  = 1426168859000010000;
-    batch.data[8]  = 1426168859000100000;
-    batch.data[9]  = 1426168859001000000;
-    batch.data[10] = 1426168859010000000;
-    batch.data[11] = 1426168859100000000;
+    batch.data[0]  = 1420099200;
+    batch.data[1]  =  963298800;
+    batch.data[2]  = 1426197659;
+    batch.data[3]  = 1426197659;
+    batch.data[4]  = 1426197659;
+    batch.data[5]  = 1426197659;
+    batch.data[6]  = 1426197659;
+    batch.data[7]  = 1426197659;
+    batch.data[8]  = 1426197659;
+    batch.data[9]  = 1426197659;
+    batch.data[10] = 1426197659;
+    batch.data[11] = 1426197659;
+    batch.nanoseconds[0]  = 0;
+    batch.nanoseconds[1]  = 0;
+    batch.nanoseconds[2]  = 0;
+    batch.nanoseconds[3]  = 1;
+    batch.nanoseconds[4]  = 10;
+    batch.nanoseconds[5]  = 100;
+    batch.nanoseconds[6]  = 1000;
+    batch.nanoseconds[7]  = 10000;
+    batch.nanoseconds[8]  = 100000;
+    batch.nanoseconds[9]  = 1000000;
+    batch.nanoseconds[10] = 10000000;
+    batch.nanoseconds[11] = 100000000;
     const char *expected[] = {"\"2015-01-01 00:00:00.0\"",
                               "\"2000-07-11 00:00:00.0\"",
                               "\"2015-03-12 15:00:59.0\"",

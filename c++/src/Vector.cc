@@ -303,4 +303,32 @@ namespace orc {
   std::string Decimal::toString() const {
     return value.toDecimalString(scale);
   }
+
+  TimestampVectorBatch::TimestampVectorBatch(uint64_t capacity,
+                                             MemoryPool& pool
+                                             ): ColumnVectorBatch(capacity,
+                                                                  pool),
+                                                data(pool, capacity),
+                                                nanoseconds(pool, capacity) {
+    // PASS
+  }
+
+  TimestampVectorBatch::~TimestampVectorBatch() {
+    // PASS
+  }
+
+  std::string TimestampVectorBatch::toString() const {
+    std::ostringstream buffer;
+    buffer << "Timestamp vector <" << numElements << " of " << capacity << ">";
+    return buffer.str();
+  }
+
+  void TimestampVectorBatch::resize(uint64_t cap) {
+    if (capacity < cap) {
+      ColumnVectorBatch::resize(cap);
+      data.resize(cap);
+      nanoseconds.resize(cap);
+    }
+  }
+
 }

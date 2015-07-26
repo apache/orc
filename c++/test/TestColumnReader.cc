@@ -48,6 +48,11 @@ public:
   MemoryPool& getMemoryPool() const {
     return *getDefaultPool();
   }
+
+  // the epoch offset for America/Los_Angeles
+  int64_t getEpochOffset() const {
+    return 1420099200;
+  }
 };
 
 MockStripeStreams::~MockStripeStreams() {
@@ -2634,17 +2639,19 @@ TEST(TestColumnReader, testTimestampSkipWithNulls) {
   std::unique_ptr<ColumnReader> reader =
       buildReader(*rowType, streams);
 
-  LongVectorBatch *longBatch = new LongVectorBatch(1024, *getDefaultPool());
+  TimestampVectorBatch *longBatch =
+    new TimestampVectorBatch(1024, *getDefaultPool());
   StructVectorBatch batch(1024, *getDefaultPool());
   batch.fields.push_back(longBatch);
 
-  // Test values are nanoseconds since 1970-01-01 00:00:00.0
-  int64_t test_vals[] = {
-      1368178850110000000,     //  2013-05-10 10:40:50.11
-      1402483311120000000,     //  2014-06-11 11:41:51.12
-      1436701372130000000,      //  2015-07-12 12:42:52.13
-      1471092233140000000       //  2016-08-13 13:43:53.14
-  };
+  const char *(expected[]) = {"Fri May 10 10:40:50 2013\n",
+                              "Wed Jun 11 11:41:51 2014\n",
+                              "Sun Jul 12 12:42:52 2015\n",
+                              "Sat Aug 13 13:43:53 2016\n"};
+  int64_t expected_nano[] = {110000000,
+                             120000000,
+                             130000000,
+                             140000000};
   int vals_ix = 0;
 
   reader->next(batch, 3, 0);
@@ -2658,7 +2665,9 @@ TEST(TestColumnReader, testTimestampSkipWithNulls) {
       EXPECT_EQ(0, longBatch->notNull[i]);
     } else {
       EXPECT_EQ(1, longBatch->notNull[i]);
-      EXPECT_EQ(test_vals[vals_ix], longBatch->data[i]);
+      time_t time = static_cast<time_t>(longBatch->data[i]);
+      EXPECT_STREQ(expected[vals_ix], ctime(&time));
+      EXPECT_EQ(expected_nano[vals_ix], longBatch->nanoseconds[i]);
       vals_ix++;
     }
   }
@@ -2675,7 +2684,9 @@ TEST(TestColumnReader, testTimestampSkipWithNulls) {
       EXPECT_EQ(0, longBatch->notNull[i]);
     } else {
       EXPECT_EQ(1, longBatch->notNull[i]);
-      EXPECT_EQ(test_vals[vals_ix], longBatch->data[i]);
+      time_t time = static_cast<time_t>(longBatch->data[i]);
+      EXPECT_STREQ(expected[vals_ix], ctime(&time));
+      EXPECT_EQ(expected_nano[vals_ix], longBatch->nanoseconds[i]);
       vals_ix++;
     }
   }
@@ -2739,22 +2750,31 @@ TEST(TestColumnReader, testTimestamp) {
   std::unique_ptr<ColumnReader> reader =
       buildReader(*rowType, streams);
 
-  LongVectorBatch *longBatch = new LongVectorBatch(1024, *getDefaultPool());
+  TimestampVectorBatch *longBatch =
+    new TimestampVectorBatch(1024, *getDefaultPool());
   StructVectorBatch batch(1024, *getDefaultPool());
   batch.fields.push_back(longBatch);
 
-  // Test values are nanoseconds since 1970-01-01 00:00:00.0
-  const int64_t expected[] = {952873200000000000,    // 2000-03-12 15:00:00.0
-                        953553600123456789,    // 2000-03-20 12:00:00.123456789
-                        -2208988800000000000,  // 1900-01-01 00:00:00.0
-                        -2198229903190000000,  // 1900-05-05 12:34:56.19
-                        -2166693903190100000,  // 1901-05-05 12:34:56.1901
-                        -2135157903190200000,  // 1902-05-05 12:34:56.1902
-                        -2103621903190300000,  // 1903-05-05 12:34:56.1903
-                        -2071999503190400000,  // 1904-05-05 12:34:56.1904
-                        -2040463503190500000,  // 1905-05-05 12:34:56.1905
-                        -1882697103191000000   // 1910-05-05 12:34:56.191
-                        };
+  const char *(expected[]) = {"Sun Mar 12 15:00:00 2000\n",
+                              "Mon Mar 20 12:00:00 2000\n",
+                              "Mon Jan  1 00:00:00 1900\n",
+                              "Sat May  5 12:34:56 1900\n",
+                              "Sun May  5 12:34:56 1901\n",
+                              "Mon May  5 12:34:56 1902\n",
+                              "Tue May  5 12:34:56 1903\n",
+                              "Thu May  5 12:34:56 1904\n",
+                              "Fri May  5 12:34:56 1905\n",
+                              "Thu May  5 12:34:56 1910\n"};
+  const int64_t expectedNano[] = {0,
+                                  123456789,
+                                  0,
+                                  190000000,
+                                  190100000,
+                                  190200000,
+                                  190300000,
+                                  190400000,
+                                  190500000,
+                                  191000000};
 
   reader->next(batch, 10, 0);
   ASSERT_EQ(10, batch.numElements);
@@ -2763,7 +2783,9 @@ TEST(TestColumnReader, testTimestamp) {
   ASSERT_EQ(true, !longBatch->hasNulls);
 
   for (size_t i = 0; i < batch.numElements; ++i) {
-    EXPECT_EQ(expected[i], longBatch->data[i]) << "Wrong value at " << i;
+    time_t time = static_cast<time_t>(longBatch->data[i]);
+    EXPECT_STREQ(expected[i], ctime(&time)) << "Wrong value at " << i;
+    EXPECT_EQ(expectedNano[i], longBatch->nanoseconds[i]);
   }
 }
 
