@@ -996,6 +996,8 @@ namespace orc {
   }
 
   int64_t getEpochOffset() {
+    // Build the literal for the ORC epoch
+    // 2015 Jan 1 00:00:00
     struct tm epoch;
     epoch.tm_sec = 0;
     epoch.tm_min = 0;
