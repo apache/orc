@@ -67,8 +67,8 @@ namespace orc {
 
   class TimestampColumnPrinter: public ColumnPrinter {
   private:
-    const int64_t* data;
-    time_t epoch;
+    const int64_t* seconds;
+    const int64_t* nanoseconds;
 
   public:
     TimestampColumnPrinter(std::string&, const Type&);
@@ -667,33 +667,18 @@ namespace orc {
                                                  const Type& type
                                                  ): ColumnPrinter(buffer,
                                                                   type) {
-    struct tm epochTm;
-    epochTm.tm_sec = 0;
-    epochTm.tm_min = 0;
-    epochTm.tm_hour = 0;
-    epochTm.tm_mday = 1;
-    epochTm.tm_mon = 0;
-    epochTm.tm_year = 70;
-    epochTm.tm_isdst = 0;
-    epoch = mktime(&epochTm);
+    // PASS
   }
 
   void TimestampColumnPrinter::printRow(uint64_t rowId) {
-    const int64_t NANOS_PER_SECOND = 1000000000;
     const int64_t NANO_DIGITS = 9;
     if (hasNulls && !notNull[rowId]) {
       writeString(buffer, "null");
     } else {
-      int64_t nanos = data[rowId] % NANOS_PER_SECOND;
-      time_t seconds =
-        static_cast<time_t>(data[rowId] / NANOS_PER_SECOND) + epoch;
-      // make sure the nanos are positive
-      if (nanos < 0) {
-        seconds -= 1;
-        nanos = -nanos;
-      }
+      int64_t nanos = nanoseconds[rowId];
+      time_t secs = static_cast<time_t>(seconds[rowId]);
       struct tm tmValue;
-      localtime_r(&seconds, &tmValue);
+      localtime_r(&secs, &tmValue);
       char timeBuffer[20];
       strftime(timeBuffer, sizeof(timeBuffer), "%Y-%m-%d %H:%M:%S", &tmValue);
       writeChar(buffer, '"');
@@ -720,6 +705,9 @@ namespace orc {
 
   void TimestampColumnPrinter::reset(const ColumnVectorBatch& batch) {
     ColumnPrinter::reset(batch);
-    data = dynamic_cast<const LongVectorBatch&>(batch).data.data();
+    const TimestampVectorBatch& ts =
+      dynamic_cast<const TimestampVectorBatch&>(batch);
+    seconds = ts.data.data();
+    nanoseconds = ts.nanoseconds.data();
   }
 }
