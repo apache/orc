@@ -261,10 +261,11 @@ namespace orc {
               numValues, rowBatch.hasNulls ? rowBatch.notNull.data() : 0);
   }
 
-  class TimestampColumnReader: public IntegerColumnReader {
+  class TimestampColumnReader: public ColumnReader {
   private:
+    std::unique_ptr<orc::RleDecoder> secondsRle;
     std::unique_ptr<orc::RleDecoder> nanoRle;
-    DataBuffer<int64_t> nanoBuffer;
+    const int64_t epochOffset;
 
   public:
     TimestampColumnReader(const Type& type, StripeStreams& stripe);
@@ -280,10 +281,13 @@ namespace orc {
 
   TimestampColumnReader::TimestampColumnReader(const Type& type,
                                                StripeStreams& stripe
-                                               ): IntegerColumnReader(type,
-                                                                      stripe),
-                                                  nanoBuffer(memoryPool, 1024){
+                                     ): ColumnReader(type, stripe),
+                                         epochOffset(stripe.getEpochOffset()) {
     RleVersion vers = convertRleVersion(stripe.getEncoding(columnId).kind());
+    secondsRle = createRleDecoder(stripe.getStream(columnId,
+                                                   proto::Stream_Kind_DATA,
+                                                   true),
+                                  true, vers, memoryPool);
     nanoRle = createRleDecoder(stripe.getStream(columnId,
                                                 proto::Stream_Kind_SECONDARY,
                                                 true),
@@ -295,41 +299,37 @@ namespace orc {
   }
 
   uint64_t TimestampColumnReader::skip(uint64_t numValues) {
-    numValues = IntegerColumnReader::skip(numValues);
+    numValues = ColumnReader::skip(numValues);
+    secondsRle->skip(numValues);
     nanoRle->skip(numValues);
     return numValues;
   }
 
   void TimestampColumnReader::next(ColumnVectorBatch& rowBatch,
-                                 uint64_t numValues,
-                                 char *notNull) {
+                                   uint64_t numValues,
+                                   char *notNull) {
     ColumnReader::next(rowBatch, numValues, notNull);
     notNull = rowBatch.hasNulls ? rowBatch.notNull.data() : nullptr;
-    int64_t* pStamp = dynamic_cast<LongVectorBatch&>(rowBatch).data.data();
-
-    // make sure that nanoBuffer is large enough
-    if (numValues > nanoBuffer.size()) {
-      nanoBuffer.resize(numValues);
-    }
-
-    rle->next(pStamp, numValues, notNull);
-    nanoRle->next(nanoBuffer.data(), numValues, notNull);
+    TimestampVectorBatch& timestampBatch =
+      dynamic_cast<TimestampVectorBatch&>(rowBatch);
+    int64_t *secsBuffer = timestampBatch.data.data();
+    secondsRle->next(secsBuffer, numValues, notNull);
+    int64_t *nanoBuffer = timestampBatch.nanoseconds.data();
+    nanoRle->next(nanoBuffer, numValues, notNull);
 
     // Construct the values
     for(uint64_t i=0; i < numValues; i++) {
       if (notNull == nullptr || notNull[i]) {
-        int64_t nanosec =  nanoBuffer[i] >> 3;
         uint64_t zeros = nanoBuffer[i] & 0x7;
+        nanoBuffer[i] >>= 3;
         if (zeros != 0) {
           for(uint64_t j = 0; j <= zeros; ++j) {
-            nanosec *= 10;
+            nanoBuffer[i] *= 10;
           }
         }
-        pStamp[i] =  pStamp[i] * 1000000000 + 1420070400000000000;
-        if (pStamp[i] >= 0) {
-          pStamp[i] += nanosec;
-        } else {
-          pStamp[i] -= nanosec;
+        secsBuffer[i] += epochOffset;
+        if (secsBuffer[i] < 0 && nanoBuffer[i] != 0) {
+          secsBuffer[i] -= 1;
         }
       }
     }
