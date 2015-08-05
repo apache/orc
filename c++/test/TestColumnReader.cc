@@ -1029,6 +1029,13 @@ TEST(TestColumnReader, testStringDirectShortBufferWithNulls) {
   }
 }
 
+/**
+ * Tests ORC-24.
+ * Requires:
+ *   * direct string encoding
+ *   * a null value where the unused length crosses the streaming block
+ *     and the actual value doesn't
+ */
 TEST(TestColumnReader, testStringDirectNullAcrossWindow) {
   MockStripeStreams streams;
 
@@ -1074,6 +1081,8 @@ TEST(TestColumnReader, testStringDirectNullAcrossWindow) {
   StructVectorBatch batch(25, *getDefaultPool());
   StringVectorBatch *strings = new StringVectorBatch(25, *getDefaultPool());
   batch.fields.push_back(strings);
+  // This length value won't be overwritten because the value is null,
+  // but it induces the problem.
   strings->length[0] = 5;
   reader->next(batch, 8, 0);
   ASSERT_EQ(8, batch.numElements);
