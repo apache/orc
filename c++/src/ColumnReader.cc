@@ -695,7 +695,8 @@ namespace orc {
     ptr = blobBuffer.data();
     if (notNull) {
       while (filledSlots < numValues &&
-             (usedBytes + static_cast<size_t>(lengthPtr[filledSlots]) <=
+             (!notNull[filledSlots] ||
+              usedBytes + static_cast<size_t>(lengthPtr[filledSlots]) <=
               bytesBuffered)) {
         if (notNull[filledSlots]) {
           startPtr[filledSlots] = ptr + usedBytes;
