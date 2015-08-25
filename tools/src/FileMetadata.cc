@@ -28,21 +28,27 @@
 
 using namespace orc::proto;
 
-uint64_t getTotalPaddingSize(Footer footer);
+uint64_t getTotalPaddingSize(const Footer& footer) {
+  uint64_t paddedBytes = 0;
+  StripeInformation stripe;
+  for (int stripeIx=1; stripeIx<footer.stripes_size(); stripeIx++) {
+      stripe = footer.stripes(stripeIx-1);
+      uint64_t prevStripeOffset = stripe.offset();
+      uint64_t prevStripeLen = stripe.datalength() + stripe.indexlength() +
+        stripe.footerlength();
+      paddedBytes += footer.stripes(stripeIx).offset() -
+        (prevStripeOffset + prevStripeLen);
+  };
+  return paddedBytes;
+}
 
-int main(int argc, char* argv[])
-{
+void printMetadata(const char*filename) {
+  std::streamsize origPrecision(std::cout.precision());
+  std::ios::fmtflags origFlags(std::cout.flags());
+  std::cout << "Structure for " << filename << std::endl;
   std::ifstream input;
 
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  if (argc < 2) {
-    std::cout << "Usage: file-metadata <filename>\n";
-  }
-
-  std::cout << "Structure for " << argv[1] << std::endl;
-
-  input.open(argv[1], std::ios::in | std::ios::binary);
+  input.open(filename, std::ios::in | std::ios::binary);
   input.seekg(0,input.end);
   std::streamoff fileSize = input.tellg();
 
@@ -50,8 +56,7 @@ int main(int argc, char* argv[])
   input.seekg(fileSize-1);
   int result = input.get();
   if (result == EOF) {
-    std::cerr << "Failed to read postscript size\n";
-    return -1;
+    throw std::runtime_error("Failed to read postscript size");
   }
   std::streamoff postscriptSize = result;
 
@@ -73,10 +78,9 @@ int main(int argc, char* argv[])
   case SNAPPY:
   case LZO:
   default:
-      std::cout << "ORC files with compression are not supported" << std::endl ;
-      input.close();
-      return -1;
-  };
+    input.close();
+    throw std::logic_error("ORC files with compression are not supported");
+  }
 
   std::streamoff footerSize =
     static_cast<std::streamoff>(postscript.footerlength());
@@ -104,8 +108,7 @@ int main(int argc, char* argv[])
   StripeInformation stripe ;
   Stream section;
   ColumnEncoding encoding;
-  for (int stripeIx=0; stripeIx<footer.stripes_size(); stripeIx++)
-  {
+  for (int stripeIx=0; stripeIx<footer.stripes_size(); stripeIx++) {
       std::cout << "Stripe " << stripeIx+1 <<": " << std::endl ;
       stripe = footer.stripes(stripeIx);
       stripe.PrintDebugString();
@@ -154,28 +157,27 @@ int main(int argc, char* argv[])
   std::cout <<"Padding length: " << paddedBytes << " bytes" << std::endl;
   std::cout <<"Padding ratio: " << std::fixed << std::setprecision(2)
             << percentPadding << " %" << std::endl;
-
+  std::cout.precision(origPrecision);
+  std::cout.flags(origFlags);
   input.close();
+}
 
+int main(int argc, char* argv[]) {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
 
+  if (argc < 2) {
+    std::cout << "Usage: file-metadata <filename>\n";
+  }
+  try {
+    printMetadata(argv[1]);
+  } catch (std::exception& ex) {
+    std::cerr << "Caught exception: " << ex.what() << "\n";
+    return 1;
+  }
 
   google::protobuf::ShutdownProtobufLibrary();
 
   return 0;
-}
-
-uint64_t getTotalPaddingSize(Footer footer) {
-  uint64_t paddedBytes = 0;
-  StripeInformation stripe;
-  for (int stripeIx=1; stripeIx<footer.stripes_size(); stripeIx++) {
-      stripe = footer.stripes(stripeIx-1);
-      uint64_t prevStripeOffset = stripe.offset();
-      uint64_t prevStripeLen = stripe.datalength() + stripe.indexlength() +
-        stripe.footerlength();
-      paddedBytes += footer.stripes(stripeIx).offset() -
-        (prevStripeOffset + prevStripeLen);
-  };
-  return paddedBytes;
 }
 
 

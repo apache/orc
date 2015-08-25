@@ -34,8 +34,7 @@ struct FixedBitSizes {
 };
 
 inline uint32_t decodeBitWidth(uint32_t n) {
-  if (n >= FixedBitSizes::ONE &&
-      n <= FixedBitSizes::TWENTYFOUR) {
+  if (n <= FixedBitSizes::TWENTYFOUR) {
     return n + 1;
   } else if (n == FixedBitSizes::TWENTYSIX) {
     return 26;
@@ -125,8 +124,11 @@ RleDecoderV2::RleDecoderV2(std::unique_ptr<SeekableInputStream> input,
                               bitsLeft(0),
                               curByte(0),
                               patchBitSize(0),
+                              unpackedIdx(0),
+                              patchIdx(0),
                               base(0),
                               curGap(0),
+                              curPatch(0),
                               patchMask(0),
                               actualGap(0),
                               unpacked(pool, 0),

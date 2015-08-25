@@ -24,28 +24,15 @@
 #include <iostream>
 #include <string>
 
-int main(int argc, char* argv[]) {
-  if (argc < 2) {
-    std::cout << "Usage: file-metadata <filename>\n";
-  }
+void printStatistics(const char *filename) {
 
   orc::ReaderOptions opts;
-  std::list<int64_t> cols;
-  cols.push_back(0);
-  opts.include(cols);
-
   std::unique_ptr<orc::Reader> reader;
-  try{
-    reader = orc::createReader(orc::readLocalFile(std::string(argv[1])), opts);
-  } catch (orc::ParseError e) {
-    std::cout << "Error reading file " << argv[1] << "! "
-              << e.what() << std::endl;
-    return -1;
-  }
+  reader = orc::createReader(orc::readLocalFile(std::string(filename)), opts);
 
   // print out all selected columns statistics.
   std::unique_ptr<orc::Statistics> colStats = reader->getStatistics();
-  std::cout << "File " << argv[1] << " has "
+  std::cout << "File " << filename << " has "
             << colStats->getNumberOfColumns() << " columns"  << std::endl;
   for(uint32_t i=0; i < colStats->getNumberOfColumns(); ++i) {
     std::cout << "*** Column " << i << " ***" << std::endl;
@@ -54,14 +41,15 @@ int main(int argc, char* argv[]) {
 
   // test stripe statistics
   std::unique_ptr<orc::Statistics> stripeStats;
-  std::cout << "File " << argv[1] << " has " << reader->getNumberOfStripes()
+  std::cout << "File " << filename << " has " << reader->getNumberOfStripes()
             << " stripes"  << std::endl;
-  if(reader->getNumberOfStripeStatistics() == 0){
-    std::cout << "File " << argv[1] << " doesn't have stripe statistics"  << std::endl;
-  }else{
+  if (reader->getNumberOfStripeStatistics() == 0) {
+    std::cout << "File " << filename << " doesn't have stripe statistics"
+              << std::endl;
+  } else {
     for (unsigned int j = 0; j < reader->getNumberOfStripeStatistics(); j++) {
       stripeStats = reader->getStripeStatistics(j);
-      std::cout << "*** Stripe " << j << " ***" << std::endl << std::endl ;
+      std::cout << "*** Stripe " << j << " ***" << std::endl << std::endl;
 
       for(unsigned int k = 0; k < stripeStats->getNumberOfColumns(); ++k) {
         std::cout << "--- Column " << k << " ---" << std::endl;
@@ -69,6 +57,19 @@ int main(int argc, char* argv[]) {
                   << std::endl;
       }
     }
+  }
+}
+
+int main(int argc, char* argv[]) {
+  if (argc < 2) {
+    std::cout << "Usage: file-metadata <filename>\n";
+  }
+
+  try {
+    printStatistics(argv[1]);
+  } catch (std::exception& ex) {
+    std::cerr << "Caught exception: " << ex.what() << "\n";
+    return 1;
   }
 
   return 0;

@@ -25,24 +25,9 @@
 #include <iostream>
 #include <string>
 
-int main(int argc, char* argv[]) {
-  if (argc < 2) {
-    std::cout << "Usage: file-contents <filename>\n";
-    return 1;
-  }
-  orc::ReaderOptions opts;
-  std::list<int64_t> cols;
-  cols.push_back(0);
-  opts.include(cols);
-
+void printContents(const char* filename, const orc::ReaderOptions opts) {
   std::unique_ptr<orc::Reader> reader;
-  try{
-    reader = orc::createReader(orc::readLocalFile(std::string(argv[1])), opts);
-  } catch (orc::ParseError e) {
-    std::cout << "Error reading file " << argv[1] << "! "
-              << e.what() << std::endl;
-    return -1;
-  }
+  reader = orc::createReader(orc::readLocalFile(std::string(filename)), opts);
 
   std::unique_ptr<orc::ColumnVectorBatch> batch = reader->createRowBatch(1000);
   std::string line;
@@ -58,6 +43,20 @@ int main(int argc, char* argv[]) {
       const char* str = line.c_str();
       fwrite(str, 1, strlen(str), stdout);
     }
+  }
+}
+
+int main(int argc, char* argv[]) {
+  if (argc < 2) {
+    std::cout << "Usage: file-contents <filename>\n";
+    return 1;
+  }
+  try {
+    orc::ReaderOptions opts;
+    printContents(argv[1], opts);
+  } catch (std::exception& ex) {
+    std::cerr << "Caught exception: " << ex.what() << "\n";
+    return 1;
   }
   return 0;
 }

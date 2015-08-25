@@ -132,18 +132,6 @@ namespace orc {
     EXPECT_EQ(GetParam().typeString, reader->getType().toString());
   }
 
-  std::string getOutput(FILE* outputFile) {
-    size_t posn = static_cast<size_t>(ftell(outputFile));
-    rewind(outputFile);
-    char *buffer = new char[posn];
-    size_t sizeRead = fread(buffer, 1, posn, outputFile);
-    if (sizeRead != posn) {
-      throw std::runtime_error("Bad read");
-    }
-    rewind(outputFile);
-    return std::string(buffer, posn);
-  }
-
   TEST_P(MatchTest, Contents) {
     orc::ReaderOptions opts;
     std::unique_ptr<Reader> reader =
@@ -579,9 +567,12 @@ INSTANTIATE_TEST_CASE_P(TestReader1900, MatchTest,
 
     unsigned long rowCount = 0;
     std::unique_ptr<ColumnVectorBatch> batch = reader->createRowBatch(1024);
-    LongVectorBatch* longVector =
-      dynamic_cast<LongVectorBatch*>
-      (dynamic_cast<StructVectorBatch&>(*batch).fields[0]);
+    StructVectorBatch* structBatch =
+      dynamic_cast<StructVectorBatch*>(batch.get());
+    ASSERT_TRUE(structBatch != nullptr);
+    LongVectorBatch* longVector = dynamic_cast<LongVectorBatch*>
+      (structBatch->fields[0]);
+    ASSERT_TRUE(longVector != nullptr);
     int64_t* idCol = longVector->data.data();
     while (reader->next(*batch)) {
       EXPECT_EQ(rowCount, reader->getRowNumber());
@@ -643,16 +634,24 @@ INSTANTIATE_TEST_CASE_P(TestReader1900, MatchTest,
       EXPECT_EQ(5000, fullBatch->numElements);
     }
 
+    StructVectorBatch *fullStructBatch =
+      dynamic_cast<StructVectorBatch*>(fullBatch.get());
+    ASSERT_TRUE(fullStructBatch != nullptr);
+    LongVectorBatch* fullLongVector =
+      dynamic_cast<LongVectorBatch*>(fullStructBatch->fields[0]);
+    ASSERT_TRUE(fullLongVector != nullptr);
+    int64_t* fullId = fullLongVector->data.data();
+
     std::unique_ptr<ColumnVectorBatch> offsetBatch =
       offsetReader->createRowBatch(5000);
-    LongVectorBatch* fullLongVector =
-      dynamic_cast<LongVectorBatch*>
-      (dynamic_cast<StructVectorBatch&>(*fullBatch).fields[0]);
-    int64_t* fullId = fullLongVector->data.data();
+    StructVectorBatch* offsetStructBatch =
+      dynamic_cast<StructVectorBatch*>(offsetBatch.get());
+    ASSERT_TRUE(offsetStructBatch != nullptr);
     LongVectorBatch* offsetLongVector =
-      dynamic_cast<LongVectorBatch*>
-      (dynamic_cast<StructVectorBatch&>(*offsetBatch).fields[0]);
+      dynamic_cast<LongVectorBatch*>(offsetStructBatch->fields[0]);
+    ASSERT_TRUE(offsetLongVector != nullptr);
     int64_t* offsetId = offsetLongVector->data.data();
+
     for (int i=7; i < 17; ++i) {
       EXPECT_TRUE(fullReader->next(*fullBatch));
       EXPECT_TRUE(offsetReader->next(*offsetBatch));
@@ -671,10 +670,14 @@ INSTANTIATE_TEST_CASE_P(TestReader1900, MatchTest,
 
     std::unique_ptr<ColumnVectorBatch> lastBatch =
       lastReader->createRowBatch(5000);
+    StructVectorBatch* lastStructBatch =
+      dynamic_cast<StructVectorBatch*>(lastBatch.get());
+    ASSERT_TRUE(lastStructBatch != nullptr);
     LongVectorBatch* lastLongVector =
-      dynamic_cast<LongVectorBatch*>
-      (dynamic_cast<StructVectorBatch&>(*lastBatch).fields[0]);
+      dynamic_cast<LongVectorBatch*>(lastStructBatch->fields[0]);
+    ASSERT_TRUE(lastLongVector != nullptr);
     int64_t* lastId = lastLongVector->data.data();
+
     EXPECT_TRUE(fullReader->next(*fullBatch));
     EXPECT_TRUE(lastReader->next(*lastBatch));
     EXPECT_EQ(fullBatch->numElements, lastBatch->numElements);
@@ -702,19 +705,22 @@ TEST(Reader, columnStatistics) {
   // 6th real column, start from 1
   std::unique_ptr<orc::ColumnStatistics> col_6 =
     reader->getColumnStatistics(6);
-  const orc::StringColumnStatistics& strStats =
-    dynamic_cast<const orc::StringColumnStatistics&> (*(col_6.get()));
-  EXPECT_EQ("Good", strStats.getMinimum());
-  EXPECT_EQ("Unknown", strStats.getMaximum());
+  const orc::StringColumnStatistics* strStats =
+    dynamic_cast<const orc::StringColumnStatistics*> (col_6.get());
+  ASSERT_TRUE(strStats != nullptr);
+
+  EXPECT_EQ("Good", strStats->getMinimum());
+  EXPECT_EQ("Unknown", strStats->getMaximum());
 
   // 7th real column
   std::unique_ptr<orc::ColumnStatistics> col_7 =
     reader->getColumnStatistics(7);
-  const orc::IntegerColumnStatistics& intStats =
-    dynamic_cast<const orc::IntegerColumnStatistics&> (*(col_7.get()));
-  EXPECT_EQ(0, intStats.getMinimum());
-  EXPECT_EQ(6, intStats.getMaximum());
-  EXPECT_EQ(5762400, intStats.getSum());
+  const orc::IntegerColumnStatistics* intStats =
+    dynamic_cast<const orc::IntegerColumnStatistics*> (col_7.get());
+  ASSERT_TRUE(intStats != nullptr);
+  EXPECT_EQ(0, intStats->getMinimum());
+  EXPECT_EQ(6, intStats->getMaximum());
+  EXPECT_EQ(5762400, intStats->getSum());
 }
 
 TEST(Reader, stripeStatistics) {
@@ -737,6 +743,7 @@ TEST(Reader, stripeStatistics) {
   const orc::StringColumnStatistics* col_6 =
     dynamic_cast<const orc::StringColumnStatistics*>
     (stripeStats->getColumnStatistics(6));
+  ASSERT_TRUE(col_6 != nullptr);
   EXPECT_EQ("Unknown", col_6->getMinimum());
   EXPECT_EQ("Unknown", col_6->getMaximum());
 
@@ -744,6 +751,7 @@ TEST(Reader, stripeStatistics) {
   const orc::IntegerColumnStatistics* col_7 =
     dynamic_cast<const orc::IntegerColumnStatistics*>
     (stripeStats->getColumnStatistics(7));
+  ASSERT_TRUE(col_7 != nullptr);
   EXPECT_EQ(6, col_7->getMinimum());
   EXPECT_EQ(6, col_7->getMaximum());
   EXPECT_EQ(4800, col_7->getSum());
@@ -776,6 +784,7 @@ TEST(Reader, corruptStatistics) {
   const orc::DecimalColumnStatistics* col_4 =
     dynamic_cast<const orc::DecimalColumnStatistics*>
     (stripeStats->getColumnStatistics(4));
+  ASSERT_TRUE(col_4 != nullptr);
   EXPECT_EQ(true, !col_4->hasMinimum());
   EXPECT_EQ(true, !col_4->hasMaximum());
 }
