@@ -38,7 +38,13 @@ namespace orc {
     // Per-test-case set-up.
     static void SetUpTestCase() {
       simpleFile = "simple-file.binary";
-      remove(simpleFile);
+      if (remove(simpleFile) != 0) {
+        if (errno != ENOENT) {
+          std::cerr << "Can't remove simple-file.binary: "
+                    << strerror(errno) << "\n";
+          throw std::runtime_error("Can't remove file");
+        }
+      }
       std::ofstream file;
       file.exceptions(std::ofstream::failbit | std::ofstream::badbit);
       file.open(simpleFile,
