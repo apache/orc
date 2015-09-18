@@ -431,7 +431,7 @@ namespace orc {
 
   TEST(Int128, testBuildFromArray) {
     Int128 result;
-    uint32_t array[4]={0x12345678, 0x9abcdef0, 0xfedcba98, 0x76543210};
+    uint32_t array[5]={0x12345678, 0x9abcdef0, 0xfedcba98, 0x76543210, 0};
 
     buildFromArray(result, array, 0);
     EXPECT_EQ(0, result.toLong());

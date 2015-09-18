@@ -38,10 +38,9 @@ int main(int argc, char* argv[]) {
   std::unique_ptr<orc::Reader> reader;
   try{
     reader = orc::createReader(orc::readLocalFile(std::string(argv[1])), opts);
-  } catch (orc::ParseError e) {
-    std::cout << "Error reading file " << argv[1] << "! "
-              << e.what() << std::endl;
-    return -1;
+  } catch (std::exception& ex) {
+    std::cerr << "Caught exception: " << ex.what() << "\n";
+    return 1;
   }
 
   std::unique_ptr<orc::ColumnVectorBatch> batch = reader->createRowBatch(1000);

@@ -310,6 +310,8 @@ namespace orc {
 
   Decimal64VectorBatch::Decimal64VectorBatch(uint64_t cap, MemoryPool& pool
                  ): ColumnVectorBatch(cap, pool),
+                    precision(0),
+                    scale(0),
                     values(pool, cap, "64Batch.values"),
                     readScales(pool, cap, "64Batch.readScales") {
     // PASS
@@ -344,6 +346,8 @@ namespace orc {
 
   Decimal128VectorBatch::Decimal128VectorBatch(uint64_t cap, MemoryPool& pool
                ): ColumnVectorBatch(cap, pool),
+                  precision(0),
+                  scale(0),
                   values(pool, cap, "128Batch.values"),
                   readScales(pool, cap, "128Batch.readScales") {
     // PASS

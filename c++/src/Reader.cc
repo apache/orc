@@ -1642,12 +1642,16 @@ namespace orc {
       result = new TimestampVectorBatch(capacity, memoryPool);
       break;
     case STRUCT:
-      result = new StructVectorBatch(capacity, memoryPool);
-      for(uint64_t i=0; i < type.getSubtypeCount(); ++i) {
-        subtype = &(type.getSubtype(i));
-        if (selectedColumns[static_cast<size_t>(subtype->getColumnId())]) {
-          dynamic_cast<StructVectorBatch*>(result)->fields.push_back
-            (createRowBatch(*subtype, capacity).release());
+      {
+        StructVectorBatch *structResult =
+          new StructVectorBatch(capacity, memoryPool);
+        result = structResult;
+        for(uint64_t i=0; i < type.getSubtypeCount(); ++i) {
+          subtype = &(type.getSubtype(i));
+          if (selectedColumns[static_cast<size_t>(subtype->getColumnId())]) {
+            structResult->fields.push_back(createRowBatch(*subtype,
+                                                          capacity).release());
+          }
         }
       }
       break;
@@ -1680,12 +1684,16 @@ namespace orc {
       }
       break;
     case UNION:
-      result = new UnionVectorBatch(capacity, memoryPool);
-      for(uint64_t i=0; i < type.getSubtypeCount(); ++i) {
-        subtype = &(type.getSubtype(i));
-        if (selectedColumns[static_cast<size_t>(subtype->getColumnId())]) {
-          dynamic_cast<UnionVectorBatch*>(result)->children.push_back
-            (createRowBatch(*subtype, capacity).release());
+      {
+        UnionVectorBatch *unionResult =
+          new UnionVectorBatch(capacity, memoryPool);
+        result = unionResult;
+        for(uint64_t i=0; i < type.getSubtypeCount(); ++i) {
+          subtype = &(type.getSubtype(i));
+          if (selectedColumns[static_cast<size_t>(subtype->getColumnId())]) {
+            unionResult->children.push_back(createRowBatch(*subtype,
+                                                          capacity).release());
+          }
         }
       }
       break;
@@ -1921,6 +1929,8 @@ namespace orc {
     valueCount = pb.numberofvalues();
     if (!pb.has_binarystatistics() || !correctStats) {
       _hasTotalLength = false;
+
+      totalLength = 0;
     }else{
       _hasTotalLength = pb.binarystatistics().has_sum();
       totalLength = static_cast<uint64_t>(pb.binarystatistics().sum());
@@ -1932,6 +1942,7 @@ namespace orc {
     valueCount = pb.numberofvalues();
     if (!pb.has_bucketstatistics() || !correctStats) {
       _hasCount = false;
+      trueCount = 0;
     }else{
       _hasCount = true;
       trueCount = pb.bucketstatistics().count(0);
@@ -1944,11 +1955,14 @@ namespace orc {
     if (!pb.has_datestatistics() || !correctStats) {
       _hasMinimum = false;
       _hasMaximum = false;
-    }else{
-        _hasMinimum = pb.datestatistics().has_minimum();
-        _hasMaximum = pb.datestatistics().has_maximum();
-        minimum = pb.datestatistics().minimum();
-        maximum = pb.datestatistics().maximum();
+
+      minimum = 0;
+      maximum = 0;
+    } else {
+      _hasMinimum = pb.datestatistics().has_minimum();
+      _hasMaximum = pb.datestatistics().has_maximum();
+      minimum = pb.datestatistics().minimum();
+      maximum = pb.datestatistics().maximum();
     }
   }
 
@@ -1978,6 +1992,10 @@ namespace orc {
       _hasMinimum = false;
       _hasMaximum = false;
       _hasSum = false;
+
+      minimum = 0;
+      maximum = 0;
+      sum = 0;
     }else{
       const proto::DoubleStatistics& stats = pb.doublestatistics();
       _hasMinimum = stats.has_minimum();
@@ -1997,6 +2015,10 @@ namespace orc {
       _hasMinimum = false;
       _hasMaximum = false;
       _hasSum = false;
+
+      minimum = 0;
+      maximum = 0;
+      sum = 0;
     }else{
       const proto::IntegerStatistics& stats = pb.intstatistics();
       _hasMinimum = stats.has_minimum();
@@ -2016,6 +2038,8 @@ namespace orc {
       _hasMinimum = false;
       _hasMaximum = false;
       _hasTotalLength = false;
+      
+      totalLength = 0;
     }else{
       const proto::StringStatistics& stats = pb.stringstatistics();
       _hasMinimum = stats.has_minimum();
@@ -2029,11 +2053,13 @@ namespace orc {
   }
 
   TimestampColumnStatisticsImpl::TimestampColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb, bool correctStats){
+  (const proto::ColumnStatistics& pb, bool correctStats) {
     valueCount = pb.numberofvalues();
     if (!pb.has_timestampstatistics() || !correctStats) {
       _hasMinimum = false;
       _hasMaximum = false;
+      minimum = 0;
+      maximum = 0;
     }else{
       const proto::TimestampStatistics& stats = pb.timestampstatistics();
       _hasMinimum = stats.has_minimum();

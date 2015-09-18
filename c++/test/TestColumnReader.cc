@@ -1029,6 +1029,74 @@ TEST(TestColumnReader, testStringDirectShortBufferWithNulls) {
   }
 }
 
+/**
+ * Tests ORC-24.
+ * Requires:
+ *   * direct string encoding
+ *   * a null value where the unused length crosses the streaming block
+ *     and the actual value doesn't
+ */
+TEST(TestColumnReader, testStringDirectNullAcrossWindow) {
+  MockStripeStreams streams;
+
+  // set getSelectedColumns()
+  std::vector<bool> selectedColumns(2, true);
+  EXPECT_CALL(streams, getSelectedColumns())
+      .WillRepeatedly(testing::Return(selectedColumns));
+
+  // set getEncoding
+  proto::ColumnEncoding directEncoding;
+  directEncoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
+  EXPECT_CALL(streams, getEncoding(testing::_))
+      .WillRepeatedly(testing::Return(directEncoding));
+
+  // set getStream
+  EXPECT_CALL(streams, getStreamProxy(0, proto::Stream_Kind_PRESENT, true))
+      .WillRepeatedly(testing::Return(nullptr));
+
+  const unsigned char isNull[2] = {0xff, 0x7f};
+  EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_PRESENT, true))
+    .WillRepeatedly(testing::Return
+                    (new SeekableArrayInputStream(isNull,
+                                                  ARRAY_SIZE(isNull))));
+
+  const char blob[] = "abcdefg";
+  EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_DATA, true))
+      .WillRepeatedly(testing::Return(new SeekableArrayInputStream
+                                      (blob, ARRAY_SIZE(blob), 4)));
+
+  // [1] * 7
+  const unsigned char lenData[] = {0x04, 0x00, 0x01};
+  EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_LENGTH, true))
+      .WillRepeatedly(testing::Return(new SeekableArrayInputStream
+                                      (lenData, ARRAY_SIZE(lenData))));
+
+  // create the row type
+  std::unique_ptr<Type> rowType = createStructType();
+  rowType->addStructField(createPrimitiveType(STRING), "col0");
+  rowType->assignIds(0);
+
+  std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
+
+  StructVectorBatch batch(25, *getDefaultPool());
+  StringVectorBatch *strings = new StringVectorBatch(25, *getDefaultPool());
+  batch.fields.push_back(strings);
+  // This length value won't be overwritten because the value is null,
+  // but it induces the problem.
+  strings->length[0] = 5;
+  reader->next(batch, 8, 0);
+  ASSERT_EQ(8, batch.numElements);
+  ASSERT_EQ(true, !batch.hasNulls);
+  ASSERT_EQ(8, strings->numElements);
+  ASSERT_EQ(true, strings->hasNulls);
+  ASSERT_EQ(true, !strings->notNull[0]);
+  for (size_t j = 1; j < batch.numElements; ++j) {
+    ASSERT_EQ(true, strings->notNull[j]);
+    ASSERT_EQ(1, strings->length[j]);
+    ASSERT_EQ('a' + j - 1, strings->data[j][0]) << "difference at " << j;
+  }
+}
+
 TEST(TestColumnReader, testStringDirectSkip) {
   MockStripeStreams streams;
 

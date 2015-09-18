@@ -14,7 +14,8 @@ This directory contains the code for the Apache ORC web site,
 ## Running locally
 
 You can preview your contributions before opening a pull request by running from within the directory:
-3. `bundle exec jekyll serve`
+
+1. `bundle exec jekyll serve`
 
 ## Pushing to site
 

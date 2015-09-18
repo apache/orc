@@ -3,7 +3,9 @@ layout: page
 title: Developing
 ---
 
-Want to help add a feature or fix a bug?
+Information about the ORC project that is most important for
+developers working on the project. The project has created
+[bylaws](bylaws.html) for itself.
 
 ## Project Members
 

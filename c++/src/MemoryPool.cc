@@ -90,7 +90,7 @@ namespace orc {
 
   template <class T>
   void DataBuffer<T>::reserve(uint64_t newCapacity){
-    if (newCapacity > currentCapacity) {
+    if (newCapacity > currentCapacity || !buf) {
       if (buf) {
         T* buf_old = buf;
         buf = reinterpret_cast<T*>(memoryPool.malloc(sizeof(T) * newCapacity, name));
