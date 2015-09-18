@@ -22,6 +22,7 @@
 #include "orc/orc-config.hh"
 
 #include <memory>
+#include <string>
 
 namespace orc {
 
@@ -29,8 +30,8 @@ namespace orc {
   public:
     virtual ~MemoryPool();
 
-    virtual char* malloc(uint64_t size) = 0;
-    virtual void free(char* p) = 0;
+    virtual char* malloc(uint64_t size, std::string name) = 0;
+    virtual void free(char* p, std::string name) = 0;
   };
   MemoryPool* getDefaultPool();
 
@@ -48,8 +49,11 @@ namespace orc {
     DataBuffer(DataBuffer& buffer);
     DataBuffer& operator=(DataBuffer& buffer);
 
+    // for debugging only
+    std::string name ;
+
   public:
-    DataBuffer(MemoryPool& pool, uint64_t _size = 0);
+    DataBuffer(MemoryPool& pool, uint64_t _size = 0, std::string _name = "Unknown");
     virtual ~DataBuffer();
 
     T* data() {

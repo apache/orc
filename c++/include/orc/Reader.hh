@@ -709,6 +709,16 @@ namespace orc {
      * @return a string of bytes with the file tail
      */
     virtual std::string getSerializedFileTail() const = 0;
+
+    /**
+     * Estimate an upper bound on heap memory allocation by the Reader
+     * based on the information in the file footer.
+     * The bound is less tight if only few columns are read or compression is used.
+     * @param stripeIx index of the stripe to be read (if not specified,
+     * all stripes are considered).
+     * @return upper bound on memory use
+     */
+    virtual uint64_t memoryUse(int stripeIx=-1) = 0;
   };
 }
 

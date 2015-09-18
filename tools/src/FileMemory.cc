@@ -27,24 +27,33 @@
 
 class TestMemoryPool: public orc::MemoryPool {
 private:
-  std::map<void*, uint64_t> blocks;
+  std::map<char*, uint64_t> blocks;
   uint64_t totalMemory;
   uint64_t maxMemory;
 
 public:
-  void* malloc(uint64_t size) override {
-    void* p = std::malloc(size);
+  char* malloc(uint64_t size, std::string name) override {
+    char* p = static_cast<char*>(std::malloc(size));
     blocks[p] = size ;
     totalMemory += size;
     if (maxMemory < totalMemory) {
       maxMemory = totalMemory;
     }
+
+//    std::cout << "[ " << name << " ] allocated " << size
+//              << "; total = " << totalMemory
+//              << "; max = " << maxMemory << std::endl;
     return p;
   }
 
-  void free(void* p) override {
+  void free(char* p, std::string name) override {
     std::free(p);
     totalMemory -= blocks[p] ;
+
+//    std::cout << "[ " << name << " ] freed " << blocks[p]
+//                  << "; total = " << totalMemory
+//                  << "; max = " << maxMemory << std::endl;
+
     blocks.erase(p);
   }
 
@@ -70,7 +79,7 @@ int main(int argc, char* argv[]) {
   const std::string BATCH_PREFIX = "--batch=";
 
   // Default parameters
-  std::list<int> cols;
+  std::list<int64_t> cols;
   uint32_t batchSize = 1000;
 
   // Read command-line options
@@ -80,6 +89,7 @@ int main(int argc, char* argv[]) {
     if ( (param = std::strstr(argv[i], COLUMNS_PREFIX.c_str())) ) {
       value = std::strtok(param+COLUMNS_PREFIX.length(), "," );
       while (value) {
+        std::cout << "Found column " << value << std::endl;
         cols.push_back(std::atoi(value));
         value = std::strtok(nullptr, "," );
       }
@@ -90,43 +100,56 @@ int main(int argc, char* argv[]) {
     }
   }
 
+  // Read the data
   orc::ReaderOptions opts;
   if (cols.size() > 0) {
     opts.include(cols);
   }
   std::unique_ptr<orc::MemoryPool> pool(new TestMemoryPool());
+  opts.setMemoryPool(*(pool.get()));
 
   std::unique_ptr<orc::Reader> reader;
   try{
-    reader = orc::createReader(orc::readLocalFile(std::string(argv[1])),
-                               opts, pool.get());
+    reader = orc::createReader(orc::readLocalFile(std::string(argv[1])), opts);
   } catch (orc::ParseError e) {
     std::cout << "Error reading file " << argv[1] << "! "
               << e.what() << std::endl;
     return -1;
   }
 
-  std::unique_ptr<orc::ColumnVectorBatch> batch =
-      reader->createRowBatch(batchSize);
-  while (reader->next(*batch)) {}
-
   std::cout << "Batch size: " << batchSize << std::endl;
-  std::cout << "Selected columns: " ;
+  std::cout << "Actually selected columns: " ;
   const std::vector<bool> c = reader->getSelectedColumns();
-  for (unsigned int i=1; i<c.size(); i++) {
+  for (unsigned int i=1; i < c.size(); i++) {
     if (c[i])
-      std::cout << i << "; " ;
+      std::cout << i << ", " ;
   }
   std::cout << std::endl ;
 
-  uint64_t estimate = reader->memoryEstimate() + batch->memoryUse();
-  uint64_t actual = static_cast<TestMemoryPool*>(pool.get())->getMaxMemory();
-  std::cout << "Reader memory estimate: " << reader->memoryEstimate() << std::endl;
-  std::cout << "Batch memory estimate:  " << batch->memoryUse() << std::endl;
-  std::cout << "Total memory estimate:  " << estimate << std::endl;
-  std::cout << "Actual max memory used: " << actual << std::endl;
-  if (actual > estimate) {
-    std::cout << "*** Memory use underestimated! **" << std::endl;
+  std::unique_ptr<orc::ColumnVectorBatch> batch =
+      reader->createRowBatch(batchSize);
+
+  uint64_t readerMemory = reader->memoryUse();
+  uint64_t batchMemory = batch->memoryUse();
+  uint64_t estimatedMemory = readerMemory + batchMemory;
+
+  while (reader->next(*batch)) {}
+
+  uint64_t readerAfter = reader->memoryUse();
+  uint64_t batchAfter = batch->memoryUse();
+
+  std::cout << "Reader memory estimate: " << readerMemory << " (before)"
+            << (readerMemory == readerAfter ? " == " : " != ")
+            << readerAfter << " (after)" << std::endl;
+  std::cout << "Batch memory estimate: " << batchMemory << " (before)"
+            << (batchMemory == batchAfter ? " == " : " != ")
+            << batchAfter << " (after)" << std::endl;
+  std::cout << "Total memory estimate before reading:  " << estimatedMemory << std::endl;
+
+  uint64_t actualMemory = static_cast<TestMemoryPool*>(pool.get())->getMaxMemory();
+  std::cout << "Actual max memory used: " << actualMemory << std::endl;
+  if (actualMemory > estimatedMemory) {
+    std::cout << "*** Memory use underestimated!" << std::endl;
   }
 
   return 0;
