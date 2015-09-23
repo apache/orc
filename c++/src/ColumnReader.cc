@@ -494,8 +494,8 @@ namespace orc {
              (const Type& type,
               StripeStreams& stripe
               ): ColumnReader(type, stripe),
-                 dictionaryBlob(stripe.getMemoryPool(), 0, "StringDict.dictionaryBlob"),
-                 dictionaryOffset(stripe.getMemoryPool(), 0, "StringDict.dictionaryOffset") {
+                 dictionaryBlob(stripe.getMemoryPool(), 0),
+                 dictionaryOffset(stripe.getMemoryPool(), 0) {
     RleVersion rleVersion = convertRleVersion(stripe.getEncoding(columnId)
                                                 .kind());
     dictionaryCount = stripe.getEncoding(columnId).dictionarysize();
@@ -599,7 +599,7 @@ namespace orc {
                  (const Type& type,
                   StripeStreams& stripe
                   ): ColumnReader(type, stripe),
-                     blobBuffer(stripe.getMemoryPool(), 0, "StringDirect.blobBuffer") {
+                     blobBuffer(stripe.getMemoryPool(), 0) {
     RleVersion rleVersion = convertRleVersion(stripe.getEncoding(columnId)
                                                 .kind());
     lengthRle = createRleDecoder(stripe.getStream(columnId,

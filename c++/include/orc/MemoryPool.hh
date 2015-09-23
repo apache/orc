@@ -30,8 +30,8 @@ namespace orc {
   public:
     virtual ~MemoryPool();
 
-    virtual char* malloc(uint64_t size, std::string name) = 0;
-    virtual void free(char* p, std::string name) = 0;
+    virtual char* malloc(uint64_t size) = 0;
+    virtual void free(char* p) = 0;
   };
   MemoryPool* getDefaultPool();
 
@@ -49,11 +49,8 @@ namespace orc {
     DataBuffer(DataBuffer& buffer);
     DataBuffer& operator=(DataBuffer& buffer);
 
-    // for debugging only
-    std::string name ;
-
   public:
-    DataBuffer(MemoryPool& pool, uint64_t _size = 0, std::string _name = "Unknown");
+    DataBuffer(MemoryPool& pool, uint64_t _size = 0);
     virtual ~DataBuffer();
 
     T* data() {

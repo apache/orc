@@ -31,7 +31,7 @@ namespace orc {
                                        MemoryPool& pool
                                        ): capacity(cap),
                                           numElements(0),
-                                          notNull(pool, cap, "ColumnBatch.notNull"),
+                                          notNull(pool, cap),
                                           hasNulls(false),
                                           memoryPool(pool) {
     // PASS
@@ -48,15 +48,14 @@ namespace orc {
     }
   }
 
-  uint64_t ColumnVectorBatch::memoryUse(std::string offset) {
-    return notNull.capacity() * sizeof(char);
+  int64_t ColumnVectorBatch::memoryUse() {
+    return static_cast<int64_t>(notNull.capacity() * sizeof(char));
   }
 
   LongVectorBatch::LongVectorBatch(uint64_t capacity, MemoryPool& pool
                      ): ColumnVectorBatch(capacity, pool),
-                        data(pool, capacity, "LongBatch.data") {
+                        data(pool, capacity) {
     // PASS
-    std::cout << "Long created with capacity " << capacity << std::endl;
   }
 
   LongVectorBatch::~LongVectorBatch() {
@@ -74,22 +73,17 @@ namespace orc {
       ColumnVectorBatch::resize(cap);
       data.resize(cap);
     }
-    std::cout << "Long resized to " << cap << std::endl;
   }
 
-  uint64_t LongVectorBatch::memoryUse(std::string offset) {
-    uint64_t memory = ColumnVectorBatch::memoryUse()
-          + data.capacity() * sizeof(int64_t);
-
-    std::cout << offset << "Long memory " << memory << std::endl;
-    return memory;
+  int64_t LongVectorBatch::memoryUse() {
+    return ColumnVectorBatch::memoryUse() +
+        static_cast<int64_t>(data.capacity() * sizeof(int64_t));
   }
 
   DoubleVectorBatch::DoubleVectorBatch(uint64_t capacity, MemoryPool& pool
                    ): ColumnVectorBatch(capacity, pool),
-                      data(pool, capacity, "DoubleBatch.data") {
+                      data(pool, capacity) {
     // PASS
-    std::cout << "Double created with capacity " << capacity << std::endl;
   }
 
   DoubleVectorBatch::~DoubleVectorBatch() {
@@ -109,19 +103,16 @@ namespace orc {
     }
   }
 
-  uint64_t DoubleVectorBatch::memoryUse(std::string offset) {
-    uint64_t memory = ColumnVectorBatch::memoryUse()
-          + data.capacity() * sizeof(double);
-    std::cout << offset << "Double memory " << memory << std::endl;
-    return memory;
+  int64_t DoubleVectorBatch::memoryUse() {
+    return ColumnVectorBatch::memoryUse()
+          + static_cast<int64_t>(data.capacity() * sizeof(double));
   }
 
   StringVectorBatch::StringVectorBatch(uint64_t capacity, MemoryPool& pool
                ): ColumnVectorBatch(capacity, pool),
-                  data(pool, capacity, "StringBatch.data"),
-                  length(pool, capacity, "StringBatch.length") {
+                  data(pool, capacity),
+                  length(pool, capacity) {
     // PASS
-    std::cout << "String created with capacity " << capacity << std::endl;
   }
 
   StringVectorBatch::~StringVectorBatch() {
@@ -140,21 +131,17 @@ namespace orc {
       data.resize(cap);
       length.resize(cap);
     }
-    std::cout << "String resized to " << cap << std::endl;
   }
 
-  uint64_t StringVectorBatch::memoryUse(std::string offset) {
-    uint64_t memory = ColumnVectorBatch::memoryUse()
-          + data.capacity() * sizeof(char*)
-          + length.capacity() * sizeof(int64_t);
-    std::cout << offset << "String memory " << memory << std::endl;
-    return memory;
+  int64_t StringVectorBatch::memoryUse() {
+    return ColumnVectorBatch::memoryUse()
+          + static_cast<int64_t>(data.capacity() * sizeof(char*)
+          + length.capacity() * sizeof(int64_t));
   }
 
   StructVectorBatch::StructVectorBatch(uint64_t cap, MemoryPool& pool
                                         ): ColumnVectorBatch(cap, pool) {
     // PASS
-    std::cout << "Struct created with capacity " << capacity << std::endl;
   }
 
   StructVectorBatch::~StructVectorBatch() {
@@ -177,26 +164,23 @@ namespace orc {
 
   void StructVectorBatch::resize(uint64_t cap) {
     ColumnVectorBatch::resize(cap);
-    std::cout << "Struct resized to " << cap << std::endl;
-//    if (cap == 2)
-//      throw NotImplementedYet("AAA!");
   }
 
-  uint64_t StructVectorBatch::memoryUse(std::string offset) {
-    uint64_t memory = ColumnVectorBatch::memoryUse();
+  int64_t StructVectorBatch::memoryUse() {
+    int64_t memory = ColumnVectorBatch::memoryUse();
     for (unsigned int i=0; i < fields.size(); i++) {
-      memory += fields[i]->memoryUse(offset + "---");
+      int64_t mem = fields[i]->memoryUse();
+      if (mem < 0)
+        return -1;
+      memory += mem;
     }
-
-    std::cout << offset << "Struct memory " << memory << std::endl;
     return memory;
   }
 
   ListVectorBatch::ListVectorBatch(uint64_t cap, MemoryPool& pool
                    ): ColumnVectorBatch(cap, pool),
-                      offsets(pool, cap+1, "ListBatch.offsets") {
+                      offsets(pool, cap+1) {
     // PASS
-    std::cout << "List created with capacity " << capacity << std::endl;
   }
 
   ListVectorBatch::~ListVectorBatch() {
@@ -215,22 +199,16 @@ namespace orc {
       ColumnVectorBatch::resize(cap);
       offsets.resize(cap + 1);
     }
-    std::cout << "List resized to " << cap << std::endl;
   }
 
-  uint64_t ListVectorBatch::memoryUse(std::string offset) {
-    uint64_t memory = ColumnVectorBatch::memoryUse()
-          + offsets.capacity() * sizeof(int64_t)
-          + elements->memoryUse(offset + "---");
-    std::cout << offset << "List memory " << memory << std::endl;
-    return memory;
+  int64_t ListVectorBatch::memoryUse() {
+    return -1;
   }
 
   MapVectorBatch::MapVectorBatch(uint64_t cap, MemoryPool& pool
                  ): ColumnVectorBatch(cap, pool),
-                    offsets(pool, cap+1, "MapBatch.offsets") {
+                    offsets(pool, cap+1) {
     // PASS
-    std::cout << "Map created with capacity " << capacity << std::endl;
   }
 
   MapVectorBatch::~MapVectorBatch() {
@@ -252,21 +230,15 @@ namespace orc {
     }
   }
 
-  uint64_t MapVectorBatch::memoryUse(std::string offset) {
-    uint64_t memory = ColumnVectorBatch::memoryUse()
-          + offsets.capacity() * sizeof(int64_t)
-          + keys->memoryUse(offset + "---")
-          + elements->memoryUse(offset + "---");
-    std::cout << offset << "Map memory " << memory << std::endl;
-    return memory;
+  int64_t MapVectorBatch::memoryUse() {
+    return -1;
   }
 
   UnionVectorBatch::UnionVectorBatch(uint64_t cap, MemoryPool& pool
                                      ): ColumnVectorBatch(cap, pool),
-                                        tags(pool, cap, "UnionBatch.tags"),
-                                        offsets(pool, cap, "UnionBatch.offsets") {
+                                        tags(pool, cap),
+                                        offsets(pool, cap) {
     // PASS
-    std::cout << "Union created with capacity " << capacity << std::endl;
   }
 
   UnionVectorBatch::~UnionVectorBatch() {
@@ -296,15 +268,16 @@ namespace orc {
     }
   }
 
-  uint64_t UnionVectorBatch::memoryUse(std::string offset) {
-    uint64_t memory = ColumnVectorBatch::memoryUse()
-                     + tags.capacity() * sizeof(unsigned char)
-                     + offsets.capacity() * sizeof(uint64_t);
+  int64_t UnionVectorBatch::memoryUse() {
+    int64_t memory = ColumnVectorBatch::memoryUse()
+                 + static_cast<int64_t>(tags.capacity() * sizeof(unsigned char)
+                 + offsets.capacity() * sizeof(uint64_t));
     for(size_t i=0; i < children.size(); ++i) {
-      memory += children[i]->memoryUse(offset + "---");
+      int64_t mem = children[i]->memoryUse();
+      if (mem < 0)
+        return -1;
+      memory += mem;
     }
-
-    std::cout << offset << "Union memory " << memory << std::endl;
     return memory;
   }
 
@@ -312,10 +285,9 @@ namespace orc {
                  ): ColumnVectorBatch(cap, pool),
                     precision(0),
                     scale(0),
-                    values(pool, cap, "64Batch.values"),
-                    readScales(pool, cap, "64Batch.readScales") {
+                    values(pool, cap),
+                    readScales(pool, cap) {
     // PASS
-    std::cout << "Dec64 created with capacity " << capacity << std::endl;
   }
 
   Decimal64VectorBatch::~Decimal64VectorBatch() {
@@ -337,21 +309,19 @@ namespace orc {
     }
   }
 
-  uint64_t Decimal64VectorBatch::memoryUse(std::string offset) {
-    uint64_t memory = ColumnVectorBatch::memoryUse()
-          + (values.capacity() + readScales.capacity()) * sizeof(int64_t);
-    std::cout << offset << "Dec64 memory " << memory << std::endl;
-    return memory;
+  int64_t Decimal64VectorBatch::memoryUse() {
+    return ColumnVectorBatch::memoryUse()
+          + static_cast<int64_t>(
+              (values.capacity() + readScales.capacity()) * sizeof(int64_t));
   }
 
   Decimal128VectorBatch::Decimal128VectorBatch(uint64_t cap, MemoryPool& pool
                ): ColumnVectorBatch(cap, pool),
                   precision(0),
                   scale(0),
-                  values(pool, cap, "128Batch.values"),
-                  readScales(pool, cap, "128Batch.readScales") {
+                  values(pool, cap),
+                  readScales(pool, cap) {
     // PASS
-    std::cout << "Dec128 created with capacity " << capacity << std::endl;
   }
 
   Decimal128VectorBatch::~Decimal128VectorBatch() {
@@ -373,13 +343,10 @@ namespace orc {
     }
   }
 
-  uint64_t Decimal128VectorBatch::memoryUse(std::string offset) {
-    uint64_t memory = ColumnVectorBatch::memoryUse()
-          + values.capacity() * sizeof(Int128)
-          + readScales.capacity() * sizeof(int64_t);
-
-    std::cout << offset << "Dec128 memory " << memory << std::endl;
-    return memory;
+  int64_t Decimal128VectorBatch::memoryUse() {
+    return ColumnVectorBatch::memoryUse()
+          + static_cast<int64_t>(values.capacity() * sizeof(Int128)
+          + readScales.capacity() * sizeof(int64_t));
   }
 
   Decimal::Decimal(const Int128& _value,
@@ -408,10 +375,9 @@ namespace orc {
                                              MemoryPool& pool
                                              ): ColumnVectorBatch(capacity,
                                                                   pool),
-                                                data(pool, capacity, "TimeBatch.data"),
-                                                nanoseconds(pool, capacity, "TimeBatch.nanoseconds") {
+                                                data(pool, capacity),
+                                                nanoseconds(pool, capacity) {
     // PASS
-    std::cout << "Time created with capacity " << capacity << std::endl;
   }
 
   TimestampVectorBatch::~TimestampVectorBatch() {
@@ -432,11 +398,9 @@ namespace orc {
     }
   }
 
-  uint64_t TimestampVectorBatch::memoryUse(std::string offset) {
-    uint64_t memory = ColumnVectorBatch::memoryUse()
-          + (data.capacity() + nanoseconds.capacity()) * sizeof(int64_t);
-
-    std::cout << offset << "Time memory " << memory << std::endl;
-    return memory;
+  int64_t TimestampVectorBatch::memoryUse() {
+    return ColumnVectorBatch::memoryUse()
+          + static_cast<int64_t>(
+              (data.capacity() + nanoseconds.capacity()) * sizeof(int64_t));
   }
 }

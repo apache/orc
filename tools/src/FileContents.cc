@@ -35,14 +35,14 @@ void printContents(const char* filename, const orc::ReaderOptions opts) {
     createColumnPrinter(line, reader->getType());
 
   while (reader->next(*batch)) {
-    printer->reset(*batch);
-    for(unsigned long i=0; i < batch->numElements; ++i) {
-      line.clear();
-      printer->printRow(i);
-      line += "\n";
-      const char* str = line.c_str();
-      fwrite(str, 1, strlen(str), stdout);
-    }
+//    printer->reset(*batch);
+//    for(unsigned long i=0; i < batch->numElements; ++i) {
+//      line.clear();
+//      printer->printRow(i);
+//      line += "\n";
+//      const char* str = line.c_str();
+//      fwrite(str, 1, strlen(str), stdout);
+//    }
   }
 }
 
@@ -53,6 +53,11 @@ int main(int argc, char* argv[]) {
   }
   try {
     orc::ReaderOptions opts;
+
+    std::list<int64_t> cols;
+    cols.push_back(16);
+    opts.include(cols);
+
     printContents(argv[1], opts);
   } catch (std::exception& ex) {
     std::cerr << "Caught exception: " << ex.what() << "\n";

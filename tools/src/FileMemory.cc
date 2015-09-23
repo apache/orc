@@ -32,28 +32,19 @@ private:
   uint64_t maxMemory;
 
 public:
-  char* malloc(uint64_t size, std::string name) override {
+  char* malloc(uint64_t size) override {
     char* p = static_cast<char*>(std::malloc(size));
     blocks[p] = size ;
     totalMemory += size;
     if (maxMemory < totalMemory) {
       maxMemory = totalMemory;
     }
-
-//    std::cout << "[ " << name << " ] allocated " << size
-//              << "; total = " << totalMemory
-//              << "; max = " << maxMemory << std::endl;
     return p;
   }
 
-  void free(char* p, std::string name) override {
+  void free(char* p) override {
     std::free(p);
     totalMemory -= blocks[p] ;
-
-//    std::cout << "[ " << name << " ] freed " << blocks[p]
-//                  << "; total = " << totalMemory
-//                  << "; max = " << maxMemory << std::endl;
-
     blocks.erase(p);
   }
 
@@ -89,7 +80,6 @@ int main(int argc, char* argv[]) {
     if ( (param = std::strstr(argv[i], COLUMNS_PREFIX.c_str())) ) {
       value = std::strtok(param+COLUMNS_PREFIX.length(), "," );
       while (value) {
-        std::cout << "Found column " << value << std::endl;
         cols.push_back(std::atoi(value));
         value = std::strtok(nullptr, "," );
       }
@@ -118,8 +108,9 @@ int main(int argc, char* argv[]) {
   }
 
   std::cout << "Batch size: " << batchSize << std::endl;
-  std::cout << "Actually selected columns: " ;
   const std::vector<bool> c = reader->getSelectedColumns();
+  std::cout << "Total columns: " << c.size() << std::endl;
+  std::cout << "Selected columns: " ;
   for (unsigned int i=1; i < c.size(); i++) {
     if (c[i])
       std::cout << i << ", " ;
@@ -130,27 +121,16 @@ int main(int argc, char* argv[]) {
       reader->createRowBatch(batchSize);
 
   uint64_t readerMemory = reader->memoryUse();
-  uint64_t batchMemory = batch->memoryUse();
-  uint64_t estimatedMemory = readerMemory + batchMemory;
+  int64_t batchMemory = batch->memoryUse();
 
   while (reader->next(*batch)) {}
 
-  uint64_t readerAfter = reader->memoryUse();
-  uint64_t batchAfter = batch->memoryUse();
-
-  std::cout << "Reader memory estimate: " << readerMemory << " (before)"
-            << (readerMemory == readerAfter ? " == " : " != ")
-            << readerAfter << " (after)" << std::endl;
-  std::cout << "Batch memory estimate: " << batchMemory << " (before)"
-            << (batchMemory == batchAfter ? " == " : " != ")
-            << batchAfter << " (after)" << std::endl;
-  std::cout << "Total memory estimate before reading:  " << estimatedMemory << std::endl;
+  std::cout << "Reader memory estimate: " << readerMemory << std::endl;
+  std::cout << "Batch memory estimate:  " << batchMemory << std::endl;
+  std::cout << "Total memory estimate:  " << readerMemory + batchMemory << std::endl;
 
   uint64_t actualMemory = static_cast<TestMemoryPool*>(pool.get())->getMaxMemory();
   std::cout << "Actual max memory used: " << actualMemory << std::endl;
-  if (actualMemory > estimatedMemory) {
-    std::cout << "*** Memory use underestimated!" << std::endl;
-  }
 
   return 0;
 }

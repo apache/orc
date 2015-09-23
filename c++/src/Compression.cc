@@ -153,7 +153,7 @@ namespace orc {
                                                                 length)) {
 
     position = 0;
-    buffer.reset(new DataBuffer<char>(pool, 0, "SFIStream.buffer"));
+    buffer.reset(new DataBuffer<char>(pool, 0));
     pushBack = 0;
   }
 

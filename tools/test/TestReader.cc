@@ -919,7 +919,7 @@ TEST(Reader, memoryUse) {
   cols.push_back(2);
   opts.include(cols);
   reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
-  EXPECT_EQ(458808, reader->memoryUse());
+  EXPECT_EQ(483517, reader->memoryUse());
   batch = reader->createRowBatch(1);
   EXPECT_EQ(10, batch->memoryUse());
   batch = reader->createRowBatch(1000);
@@ -943,13 +943,12 @@ TEST(Reader, memoryUse) {
   batch = reader->createRowBatch(1);
   EXPECT_EQ(18, batch->memoryUse());
 
-  // Struct column
+  // Struct column (with list subcolumn)
   cols.clear();
   cols.push_back(10);
   opts.include(cols);
   reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
-  EXPECT_EQ(680125, reader->memoryUse());
-
+  EXPECT_EQ(1294658, reader->memoryUse());
   const std::vector<bool> c = reader->getSelectedColumns();
   for (unsigned int i=1; i < c.size(); i++) {
     if (i>9 && i<15)
@@ -957,41 +956,28 @@ TEST(Reader, memoryUse) {
     else
       EXPECT_EQ(true, !c[i]);
   }
+  batch = reader->createRowBatch(1);
+  EXPECT_EQ(-1, batch->memoryUse());
+  batch = reader->createRowBatch(1000);
+  EXPECT_EQ(-1, batch->memoryUse());
 
-//  batch = reader->createRowBatch(1);
-//  // should not depend whether we read the data or not
-//  EXPECT_EQ(73, batch->memoryUse());
-//  while (reader->next(*batch)) {}
-//  EXPECT_EQ(73, batch->memoryUse());
+  // List column
+   cols.clear();
+   cols.push_back(15);
+   opts.include(cols);
+   reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
+   EXPECT_EQ(82527, reader->memoryUse());
+   batch = reader->createRowBatch(1);
+   EXPECT_EQ(-1, batch->memoryUse());
 
-//  batch = reader->createRowBatch(1000);
-//  EXPECT_EQ(65008, batch->memoryUse());
-//  while (reader->next(*batch)) {}
-//  EXPECT_EQ(65008, batch->memoryUse());
-
-//  // Array column
-//   cols.clear();
-//   cols.push_back(15);
-//   opts.include(cols);
-//   reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
-//   EXPECT_EQ(82527, reader->memoryUse());
-//   batch = reader->createRowBatch(1);
-//   // should be more than 1 byte and not depend whether we read the data or not
-//   EXPECT_EQ(10, batch->memoryUse());
-//   while (reader->next(*batch)) {}
-//   EXPECT_EQ(10, batch->memoryUse());
-//
-//  // Map column
-//  cols.clear();
-//  cols.push_back(19);
-//  opts.include(cols);
-//  reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
-//  EXPECT_EQ(82527, reader->memoryUse());
-//  batch = reader->createRowBatch(1);
-//  // should be more than 1 byte and not depend whether we read the data or not
-//  EXPECT_EQ(10, batch->memoryUse());
-//  while (reader->next(*batch)) {}
-//  EXPECT_EQ(10, batch->memoryUse());
+  // Map column
+  cols.clear();
+  cols.push_back(19);
+  opts.include(cols);
+  reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
+  EXPECT_EQ(82527, reader->memoryUse());
+  batch = reader->createRowBatch(1);
+  EXPECT_EQ(-1, batch->memoryUse());
 
   // All columns
   cols.clear();
@@ -999,13 +985,8 @@ TEST(Reader, memoryUse) {
   opts.include(cols);
   reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
   EXPECT_EQ(2343234, reader->memoryUse());
-//  batch = reader->createRowBatch(1);
-  // should not depend whether we read the data or not
-//  EXPECT_EQ(319, batch->memoryUse());
-//  while (reader->next(*batch)) {}
-//  EXPECT_EQ(319, batch->memoryUse());
-//  batch = reader->createRowBatch(1000);
-//  EXPECT_EQ(295024, batch->memoryUse());
+  batch = reader->createRowBatch(1);
+  EXPECT_EQ(-1, batch->memoryUse());
 }
 
   std::map<std::string, std::string> makeMetadata() {

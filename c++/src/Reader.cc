@@ -1027,7 +1027,7 @@ namespace orc {
                             blockSize(getCompressionBlockSize(*postscript)),
                             compression(convertCompressionKind(*postscript)),
                             footer(std::move(_footer)),
-                            firstRowOfStripe(memoryPool, 0, "firstRowOfStripe") {
+                            firstRowOfStripe(memoryPool, 0) {
     isMetadataLoaded = false;
     checkOrcVersion();
     numberOfStripes = static_cast<uint64_t>(footer->stripes_size());
@@ -1071,6 +1071,8 @@ namespace orc {
     selectedColumns.assign(static_cast<size_t>(footer->types_size()), false);
 
     const std::list<int64_t>& included = options.getInclude();
+    std::cout << "top-level columns: " << schema->getSubtypeCount() << std::endl;
+
     for(std::list<int64_t>::const_iterator columnId = included.begin();
         columnId != included.end(); ++columnId) {
       if (*columnId <= static_cast<int64_t>(schema->getSubtypeCount())) {
@@ -1349,73 +1351,63 @@ namespace orc {
   }
 
 
-  uint64_t maxStreamsForType(TypeKind kind) {
-    switch (static_cast<unsigned int>(kind)) {
-    case STRUCT:
-      return 1;
-    case INT:
-    case LONG:
-    case SHORT:
-    case FLOAT:
-    case DOUBLE:
-    case BOOLEAN:
-    case BYTE:
-    case DATE:
-    case LIST:
-    case MAP:
-    case UNION:
-      return 2;
-    case BINARY:
-    case DECIMAL:
-    case TIMESTAMP:
-      return 3;
-    case CHAR:
-    case STRING:
-    case VARCHAR:
-      return 4;
-    default:
-        return 0;
-    }
+  uint64_t maxStreamsForType(const proto::Type& type) {
+    switch (type.kind()) {
+      case proto::Type_Kind_STRUCT:
+        return 1;
+      case proto::Type_Kind_INT:
+      case proto::Type_Kind_LONG:
+      case proto::Type_Kind_SHORT:
+      case proto::Type_Kind_FLOAT:
+      case proto::Type_Kind_DOUBLE:
+      case proto::Type_Kind_BOOLEAN:
+      case proto::Type_Kind_BYTE:
+      case proto::Type_Kind_DATE:
+      case proto::Type_Kind_LIST:
+      case proto::Type_Kind_MAP:
+      case proto::Type_Kind_UNION:
+        return 2;
+      case proto::Type_Kind_BINARY:
+      case proto::Type_Kind_DECIMAL:
+      case proto::Type_Kind_TIMESTAMP:
+        return 3;
+      case proto::Type_Kind_CHAR:
+      case proto::Type_Kind_STRING:
+      case proto::Type_Kind_VARCHAR:
+        return 4;
+      default:
+          return 0;
+      }
   }
 
   uint64_t ReaderImpl::memoryUse(int stripeIx) {
-    uint64_t memory = 0;
+    uint64_t maxDataLength = 0;
 
-    /* We use stripeInfo.datalength() because we don't know the dictionary size
-     * for a string column.
-     * Then we have to multiple by 2 because a string column requires
-     * one buffer in the input stream and one in the seekable input stream.
-     */
     if (stripeIx >= 0 && stripeIx < footer->stripes_size()) {
-      uint64_t stripe = 2 * footer->stripes(stripeIx).datalength();
-      if (memory < stripe) {
-        memory = stripe;
+      uint64_t stripe = footer->stripes(stripeIx).datalength();
+      if (maxDataLength < stripe) {
+        maxDataLength = stripe;
       }
     } else {
       for (int i=0; i < footer->stripes_size(); i++) {
-        uint64_t stripe = 2 * footer->stripes(i).datalength();
-        if (memory < stripe) {
-          memory = stripe;
+        uint64_t stripe = footer->stripes(i).datalength();
+        if (maxDataLength < stripe) {
+          maxDataLength = stripe;
         }
       }
     }
 
-    /* If no string columns are selected, we can tighten the estimate
-     * because other column readers read streams in blocks and don't
-     * use an extra buffer
-     */
     bool hasStringColumn = false;
     uint64_t nSelectedStreams = 0;
-    unsigned int i=0;
-    for (; !hasStringColumn && i < schema->getSubtypeCount(); i++) {
-      if (selectedColumns[i+1]) {
-        TypeKind kind = schema->getSubtype(i).getKind();
-        nSelectedStreams += maxStreamsForType(kind) ;
-        switch (static_cast<unsigned int>(kind)) {
-          case CHAR:
-          case STRING:
-          case VARCHAR:
-          case BINARY: {
+    for (int i=0; !hasStringColumn && i < footer->types_size(); i++) {
+      if (selectedColumns[i]) {
+        const proto::Type& type = footer->types(i);
+        nSelectedStreams += maxStreamsForType(type) ;
+        switch (type.kind()) {
+          case proto::Type_Kind_CHAR:
+          case proto::Type_Kind_STRING:
+          case proto::Type_Kind_VARCHAR:
+          case proto::Type_Kind_BINARY: {
             hasStringColumn = true;
             break;
           }
@@ -1425,10 +1417,16 @@ namespace orc {
         }
       }
     }
-    if (!hasStringColumn) {
-      memory = std::min(uint64_t(memory/2),
-                        nSelectedStreams * stream->getNaturalReadSize());
-    }
+
+    /* If a string column is read, use stripe datalength as a memory estimate
+     * because we don't know the dictionary size. Multiply by 2 because
+     * a string column requires two buffers:
+     * in the input stream and in the seekable input stream.
+     * If no string column is read, estimate from the number of streams.
+     */
+    uint64_t memory = hasStringColumn ? 2 * maxDataLength :
+        std::min(uint64_t(maxDataLength),
+                 nSelectedStreams * stream->getNaturalReadSize());
 
     // Do we need even more memory to read the footer or the metadata?
     if (memory < postscript->footerlength() + DIRECTORY_SIZE_GUESS) {
@@ -1444,11 +1442,10 @@ namespace orc {
     // Decompressors need buffers for each stream
     uint64_t decompressorMemory = 0;
     if (compression != CompressionKind_NONE) {
-      decompressorMemory += maxStreamsForType(schema->getKind()) * blockSize;
-      for (unsigned int i=0; i < schema->getSubtypeCount(); i++) {
-        if (selectedColumns[i+1]) {
-          decompressorMemory +=
-              maxStreamsForType(schema->getSubtype(i).getKind()) * blockSize;
+      for (int i=0; i < footer->types_size(); i++) {
+        if (selectedColumns[i]) {
+          const proto::Type& type = footer->types(i);
+          decompressorMemory += maxStreamsForType(type) * blockSize;
         }
       }
       if (compression == CompressionKind_SNAPPY) {
@@ -1818,7 +1815,7 @@ namespace orc {
       if (readSize < 4) {
         throw ParseError("File size too small");
       }
-      DataBuffer<char> *buffer = new DataBuffer<char>(*memoryPool, readSize, "createReader");
+      DataBuffer<char> *buffer = new DataBuffer<char>(*memoryPool, readSize);
       stream->read(buffer->data(), readSize, size - readSize);
 
       uint64_t postscriptSize = buffer->data()[readSize - 1] & 0xff;
