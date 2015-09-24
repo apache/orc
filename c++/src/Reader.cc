@@ -895,8 +895,7 @@ namespace orc {
     proto::StripeFooter getStripeFooter(const proto::StripeInformation& info);
     void startNextStripe();
     void checkOrcVersion();
-    void selectTypeParent(size_t columnId);
-    void selectTypeChildren(size_t columnId);
+    void selectType(const Type& type);
     void readMetadata() const;
     std::unique_ptr<ColumnVectorBatch> createRowBatch(const Type& type,
                                                       uint64_t capacity
@@ -1069,9 +1068,22 @@ namespace orc {
     const std::list<int64_t>& included = options.getInclude();
     for(std::list<int64_t>::const_iterator columnId = included.begin();
         columnId != included.end(); ++columnId) {
-      if (*columnId <= static_cast<int64_t>(schema->getSubtypeCount())) {
-        selectTypeParent(static_cast<size_t>(*columnId));
-        selectTypeChildren(static_cast<size_t>(*columnId));
+      if (*columnId == 0) {
+        selectType(*(schema.get()));
+      } else if (*columnId <= static_cast<int64_t>(schema->getSubtypeCount())) {
+        selectType(schema->getSubtype(*columnId-1));
+      }
+    }
+    if (included.size() > 0) {
+      selectedColumns[0] = true;
+    }
+  }
+
+  void ReaderImpl::selectType(const Type& type) {
+    if (!selectedColumns[type.getColumnId()]) {
+      selectedColumns[type.getColumnId()] = true;
+      for (uint64_t i=0; i < type.getSubtypeCount(); i++) {
+        selectType(type.getSubtype(i));
       }
     }
   }
@@ -1182,34 +1194,6 @@ namespace orc {
       }
     }
     return false;
-  }
-
-  void ReaderImpl::selectTypeParent(size_t columnId) {
-    for(size_t parent=0; parent < columnId; ++parent) {
-      const proto::Type& parentType = footer->types(static_cast<int>(parent));
-      for(int idx=0; idx < parentType.subtypes_size(); ++idx) {
-        uint64_t child = parentType.subtypes(idx);
-        if (child == columnId) {
-          if (!selectedColumns[parent]) {
-            selectedColumns[parent] = true;
-            selectTypeParent(parent);
-            return;
-          }
-        }
-      }
-    }
-  }
-
-  void ReaderImpl::selectTypeChildren(size_t columnId) {
-    if (!selectedColumns[columnId]) {
-      selectedColumns[columnId] = true;
-      const proto::Type& parentType =
-        footer->types(static_cast<int>(columnId));
-      for(int idx=0; idx < parentType.subtypes_size(); ++idx) {
-        uint64_t child = parentType.subtypes(idx);
-        selectTypeChildren(child);
-      }
-    }
   }
 
   const std::vector<bool> ReaderImpl::getSelectedColumns() const {
