@@ -569,8 +569,6 @@ namespace orc {
                                          ): ColumnPrinter(buffer, type) {
     for(unsigned int i=0; i < type.getSubtypeCount(); ++i) {
       if (selectedColumns==nullptr || selectedColumns->at(type.getSubtype(i).getColumnId())) {
-        std::cout << "SELECTED COLUMN " << i << "(" << type.getFieldName(i)
-            << ") with columnId " << type.getSubtype(i).getColumnId() << std::endl;
         fieldNames.push_back(type.getFieldName(i));
         fieldPrinter.push_back(createColumnPrinter(buffer,
                                                    type.getSubtype(i)).release());
