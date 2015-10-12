@@ -49,20 +49,16 @@ void printContents(const char* filename, const orc::ReaderOptions opts) {
 
 int main(int argc, char* argv[]) {
   if (argc < 2) {
-    if (argc < 2) {
-      std::cout << "Usage: file-contents <filename> "
-          << "[--columns=column1,column2,...]\n" ;
-      return 1;
-    }
-
+    std::cout << "Usage: file-contents <filename> "
+        << "[--columns=column1,column2,...]\n" ;
+    return 1;
   }
   try {
     const std::string COLUMNS_PREFIX = "--columns=";
     std::list<int64_t> cols;
 
     // Read command-line options
-    char* param ;
-    char* value ;
+    char *param, *value;
     for (int i = 2; i < argc; i++) {
       if ( (param = std::strstr(argv[i], COLUMNS_PREFIX.c_str())) ) {
         value = std::strtok(param+COLUMNS_PREFIX.length(), "," );
