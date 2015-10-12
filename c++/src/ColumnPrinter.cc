@@ -173,8 +173,10 @@ namespace orc {
   class StructColumnPrinter: public ColumnPrinter {
   private:
     std::vector<ColumnPrinter*> fieldPrinter;
+    std::vector<std::string> fieldNames;
   public:
-    StructColumnPrinter(std::string&, const Type& type);
+    StructColumnPrinter(std::string&, const Type& type,
+                        const std::vector<bool>* selectedColumns);
     virtual ~StructColumnPrinter();
     void printRow(uint64_t rowId) override;
     void reset(const ColumnVectorBatch& batch) override;
@@ -209,9 +211,11 @@ namespace orc {
     }
   }
 
-  std::unique_ptr<ColumnPrinter> createColumnPrinter(std::string& buffer,
-                                                     const Type& type) {
-    ColumnPrinter *result;
+  std::unique_ptr<ColumnPrinter> createColumnPrinter(
+                                    std::string& buffer,
+                                    const Type& type,
+                                    const std::vector<bool>* selectedColumns) {
+    ColumnPrinter *result = nullptr;
     switch(static_cast<int64_t>(type.getKind())) {
     case BOOLEAN:
       result = new BooleanColumnPrinter(buffer, type);
@@ -252,7 +256,7 @@ namespace orc {
       break;
 
     case STRUCT:
-      result = new StructColumnPrinter(buffer, type);
+      result = new StructColumnPrinter(buffer, type, selectedColumns);
       break;
 
     case DECIMAL:
@@ -558,12 +562,19 @@ namespace orc {
     }
   }
 
-  StructColumnPrinter::StructColumnPrinter(std::string& buffer,
-                                           const Type& type
-                                           ): ColumnPrinter(buffer, type) {
+  StructColumnPrinter::StructColumnPrinter(
+                                       std::string& buffer,
+                                       const Type& type,
+                                       const std::vector<bool>* selectedColumns
+                                         ): ColumnPrinter(buffer, type) {
     for(unsigned int i=0; i < type.getSubtypeCount(); ++i) {
-      fieldPrinter.push_back(createColumnPrinter(buffer, type.getSubtype(i))
-                             .release());
+      if (selectedColumns==nullptr || selectedColumns->at(type.getSubtype(i).getColumnId())) {
+        std::cout << "SELECTED COLUMN " << i << "(" << type.getFieldName(i)
+            << ") with columnId " << type.getSubtype(i).getColumnId() << std::endl;
+        fieldNames.push_back(type.getFieldName(i));
+        fieldPrinter.push_back(createColumnPrinter(buffer,
+                                                   type.getSubtype(i)).release());
+      }
     }
   }
 
@@ -592,7 +603,7 @@ namespace orc {
           writeString(buffer, ", ");
         }
         writeChar(buffer, '"');
-        writeString(buffer, type.getFieldName(i).c_str());
+        writeString(buffer, fieldNames[i].c_str());
         writeString(buffer, "\": ");
         fieldPrinter[i]->printRow(rowId);
       }

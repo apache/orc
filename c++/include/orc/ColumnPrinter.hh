@@ -47,6 +47,6 @@ namespace orc {
   };
 
   ORC_UNIQUE_PTR<ColumnPrinter> createColumnPrinter(std::string&,
-						    const Type& type);
+						    const Type& type, const std::vector<bool>* selectedColumns = nullptr);
 }
 #endif
