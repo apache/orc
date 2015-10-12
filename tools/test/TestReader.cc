@@ -907,6 +907,76 @@ TEST(Reader, futureFormatVersion) {
   EXPECT_EQ("19.99", reader->getFormatVersion());
 }
 
+TEST(Reader, selectColumns) {
+    orc::ReaderOptions opts;
+    std::ostringstream filename;
+    filename << exampleDirectory << "/TestOrcFile.testSeek.orc";
+    std::list<int64_t> cols;
+
+    // All columns
+    cols.push_back(0);
+    opts.include(cols);
+    std::unique_ptr<orc::Reader> reader =
+        orc::createReader(orc::readLocalFile(filename.str()), opts);
+    std::vector<bool> c = reader->getSelectedColumns();
+    EXPECT_EQ(24, c.size());
+    for (unsigned int i=0; i < c.size(); i++) {
+      EXPECT_TRUE(c[i]);
+    }
+
+    // Int column #2
+    cols.clear();
+    cols.push_back(2);
+    opts.include(cols);
+    reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
+    c = reader->getSelectedColumns();
+    for (unsigned int i=1; i < c.size(); i++) {
+      if (i==2)
+        EXPECT_TRUE(c[i]);
+      else
+        EXPECT_TRUE(!c[i]);
+    }
+
+    // Struct column #10
+    cols.clear();
+    cols.push_back(10);
+    opts.include(cols);
+    reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
+    c = reader->getSelectedColumns();
+    for (unsigned int i=1; i < c.size(); i++) {
+      if (i>=10 && i<=14)
+        EXPECT_TRUE(c[i]);
+      else
+        EXPECT_TRUE(!c[i]);
+    }
+
+    // Array column #11
+    cols.clear();
+    cols.push_back(11);
+    opts.include(cols);
+    reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
+    c = reader->getSelectedColumns();
+    for (unsigned int i=1; i < c.size(); i++) {
+      if (i>=15 && i<=18)
+        EXPECT_TRUE(c[i]);
+      else
+        EXPECT_TRUE(!c[i]);
+    }
+
+    // Map column #12
+    cols.clear();
+    cols.push_back(12);
+    opts.include(cols);
+    reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
+    c = reader->getSelectedColumns();
+    for (unsigned int i=1; i < c.size(); i++) {
+      if (i>=19 && i<=23)
+        EXPECT_TRUE(c[i]);
+      else
+        EXPECT_TRUE(!c[i]);
+    }
+}
+
   std::map<std::string, std::string> makeMetadata() {
     std::map<std::string, std::string> result;
     result["my.meta"] = "\x01\x02\x03\x04\x05\x06\x07\xff\xfe\x7f\x80";
