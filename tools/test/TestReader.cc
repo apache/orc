@@ -907,86 +907,74 @@ TEST(Reader, futureFormatVersion) {
   EXPECT_EQ("19.99", reader->getFormatVersion());
 }
 
-TEST(Reader, memoryUse) {
-  std::ostringstream filename;
-  filename << exampleDirectory << "/TestOrcFile.testSeek.orc";
-  std::unique_ptr<orc::Reader> reader;
-  std::unique_ptr<orc::ColumnVectorBatch> batch;
-  orc::ReaderOptions opts;
-  std::list<int64_t> cols;
+TEST(Reader, selectColumns) {
+    orc::ReaderOptions opts;
+    std::ostringstream filename;
+    filename << exampleDirectory << "/TestOrcFile.testSeek.orc";
+    std::list<int64_t> cols;
 
-  // Int column
-  cols.push_back(2);
-  opts.include(cols);
-  reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
-  EXPECT_EQ(483517, reader->memoryUse());
-  batch = reader->createRowBatch(1);
-  EXPECT_EQ(10, batch->memoryUse());
-  batch = reader->createRowBatch(1000);
-  EXPECT_EQ(10000, batch->memoryUse());
+    // All columns
+    cols.push_back(0);
+    opts.include(cols);
+    std::unique_ptr<orc::Reader> reader =
+        orc::createReader(orc::readLocalFile(filename.str()), opts);
+    std::vector<bool> c = reader->getSelectedColumns();
+    EXPECT_EQ(24, c.size());
+    for (unsigned int i=0; i < c.size(); i++) {
+      EXPECT_TRUE(c[i]);
+    }
 
-  // Binary column
-  cols.clear();
-  cols.push_back(8);
-  opts.include(cols);
-  reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
-  EXPECT_EQ(835906, reader->memoryUse());
-  batch = reader->createRowBatch(1);
-  EXPECT_EQ(18, batch->memoryUse());
+    // Int column #2
+    cols.clear();
+    cols.push_back(2);
+    opts.include(cols);
+    reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
+    c = reader->getSelectedColumns();
+    for (unsigned int i=1; i < c.size(); i++) {
+      if (i==2)
+        EXPECT_TRUE(c[i]);
+      else
+        EXPECT_TRUE(!c[i]);
+    }
 
-  // String column
-  cols.clear();
-  cols.push_back(9);
-  opts.include(cols);
-  reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
-  EXPECT_EQ(901442, reader->memoryUse());
-  batch = reader->createRowBatch(1);
-  EXPECT_EQ(18, batch->memoryUse());
+    // Struct column #10
+    cols.clear();
+    cols.push_back(10);
+    opts.include(cols);
+    reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
+    c = reader->getSelectedColumns();
+    for (unsigned int i=1; i < c.size(); i++) {
+      if (i>=10 && i<=14)
+        EXPECT_TRUE(c[i]);
+      else
+        EXPECT_TRUE(!c[i]);
+    }
 
-  // Struct column (with list subcolumn)
-  cols.clear();
-  cols.push_back(10);
-  opts.include(cols);
-  reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
-  EXPECT_EQ(1294658, reader->memoryUse());
-  const std::vector<bool> c = reader->getSelectedColumns();
-  for (unsigned int i=1; i < c.size(); i++) {
-    if (i>9 && i<15)
-      EXPECT_EQ(true, c[i]);
-    else
-      EXPECT_EQ(true, !c[i]);
-  }
-  batch = reader->createRowBatch(1);
-  EXPECT_EQ(-1, batch->memoryUse());
-  batch = reader->createRowBatch(1000);
-  EXPECT_EQ(-1, batch->memoryUse());
+    // Array column #11
+    cols.clear();
+    cols.push_back(11);
+    opts.include(cols);
+    reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
+    c = reader->getSelectedColumns();
+    for (unsigned int i=1; i < c.size(); i++) {
+      if (i>=15 && i<=18)
+        EXPECT_TRUE(c[i]);
+      else
+        EXPECT_TRUE(!c[i]);
+    }
 
-  // List column
-   cols.clear();
-   cols.push_back(15);
-   opts.include(cols);
-   reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
-   EXPECT_EQ(82527, reader->memoryUse());
-   batch = reader->createRowBatch(1);
-   EXPECT_EQ(-1, batch->memoryUse());
-
-  // Map column
-  cols.clear();
-  cols.push_back(19);
-  opts.include(cols);
-  reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
-  EXPECT_EQ(82527, reader->memoryUse());
-  batch = reader->createRowBatch(1);
-  EXPECT_EQ(-1, batch->memoryUse());
-
-  // All columns
-  cols.clear();
-  cols.push_back(0);
-  opts.include(cols);
-  reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
-  EXPECT_EQ(2343234, reader->memoryUse());
-  batch = reader->createRowBatch(1);
-  EXPECT_EQ(-1, batch->memoryUse());
+    // Map column #12
+    cols.clear();
+    cols.push_back(12);
+    opts.include(cols);
+    reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
+    c = reader->getSelectedColumns();
+    for (unsigned int i=1; i < c.size(); i++) {
+      if (i>=19 && i<=23)
+        EXPECT_TRUE(c[i]);
+      else
+        EXPECT_TRUE(!c[i]);
+    }
 }
 
   std::map<std::string, std::string> makeMetadata() {
