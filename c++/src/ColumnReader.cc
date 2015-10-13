@@ -895,9 +895,6 @@ namespace orc {
         totalChildren += tmp;
       }
     }
-
-//    std::cout<< "List.next(): numValue = " << numValues << ", totalChildren = " << totalChildren << std::endl;
-
     offsets[numValues] = static_cast<int64_t>(totalChildren);
     ColumnReader *childReader = child.get();
     if (childReader) {
