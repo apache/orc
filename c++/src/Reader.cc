@@ -1070,8 +1070,6 @@ namespace orc {
     selectedColumns.assign(static_cast<size_t>(footer->types_size()), false);
 
     const std::list<int64_t>& included = options.getInclude();
-    std::cout << "top-level columns: " << schema->getSubtypeCount() << std::endl;
-
     for(std::list<int64_t>::const_iterator columnId = included.begin();
         columnId != included.end(); ++columnId) {
       if (*columnId == 0) {
