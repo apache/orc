@@ -36,8 +36,6 @@
 #include <string>
 #include <vector>
 
-#include <iostream>
-
 namespace orc {
 
   struct ReaderOptionsPrivate {
@@ -1542,8 +1540,7 @@ namespace orc {
   }
 
   void ReaderImpl::startNextStripe() {
-    reader.reset(); // ColumnReaders can take up a lot of memory; free up asap
-
+    reader.reset(); // ColumnReaders can use lots memory; free old memory first
     currentStripeInfo = footer->stripes(static_cast<int>(currentStripe));
     currentStripeFooter = getStripeFooter(currentStripeInfo);
     rowsInCurrentStripe = currentStripeInfo.numberofrows();

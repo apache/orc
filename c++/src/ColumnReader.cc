@@ -256,9 +256,6 @@ namespace orc {
   void IntegerColumnReader::next(ColumnVectorBatch& rowBatch,
                                  uint64_t numValues,
                                  char *notNull) {
-
-//    std::cout<< "Integer.next() " << std::endl;
-
     ColumnReader::next(rowBatch, numValues, notNull);
     rle->next(dynamic_cast<LongVectorBatch&>(rowBatch).data.data(),
               numValues, rowBatch.hasNulls ? rowBatch.notNull.data() : 0);
@@ -494,8 +491,8 @@ namespace orc {
              (const Type& type,
               StripeStreams& stripe
               ): ColumnReader(type, stripe),
-                 dictionaryBlob(stripe.getMemoryPool(), 0),
-                 dictionaryOffset(stripe.getMemoryPool(), 0) {
+                 dictionaryBlob(stripe.getMemoryPool()),
+                 dictionaryOffset(stripe.getMemoryPool()) {
     RleVersion rleVersion = convertRleVersion(stripe.getEncoding(columnId)
                                                 .kind());
     dictionaryCount = stripe.getEncoding(columnId).dictionarysize();
@@ -535,9 +532,6 @@ namespace orc {
   void StringDictionaryColumnReader::next(ColumnVectorBatch& rowBatch,
                                           uint64_t numValues,
                                           char *notNull) {
-
-//    std::cout<< "StringDict.next() " << std::endl;
-
     ColumnReader::next(rowBatch, numValues, notNull);
     // update the notNull from the parent class
     notNull = rowBatch.hasNulls ? rowBatch.notNull.data() : 0;
@@ -599,7 +593,7 @@ namespace orc {
                  (const Type& type,
                   StripeStreams& stripe
                   ): ColumnReader(type, stripe),
-                     blobBuffer(stripe.getMemoryPool(), 0) {
+                     blobBuffer(stripe.getMemoryPool()) {
     RleVersion rleVersion = convertRleVersion(stripe.getEncoding(columnId)
                                                 .kind());
     lengthRle = createRleDecoder(stripe.getStream(columnId,
@@ -664,9 +658,6 @@ namespace orc {
   void StringDirectColumnReader::next(ColumnVectorBatch& rowBatch,
                                       uint64_t numValues,
                                       char *notNull) {
-
-//    std::cout<< "StringDirect.next() " << std::endl;
-
     ColumnReader::next(rowBatch, numValues, notNull);
     // update the notNull from the parent class
     notNull = rowBatch.hasNulls ? rowBatch.notNull.data() : 0;
@@ -809,8 +800,6 @@ namespace orc {
   void StructColumnReader::next(ColumnVectorBatch& rowBatch,
                                 uint64_t numValues,
                                 char *notNull) {
-//    std::cout<< "Struct.next() " << std::endl;
-
     ColumnReader::next(rowBatch, numValues, notNull);
     uint64_t i=0;
     notNull = rowBatch.hasNulls? rowBatch.notNull.data() : 0;
@@ -883,9 +872,6 @@ namespace orc {
   void ListColumnReader::next(ColumnVectorBatch& rowBatch,
                               uint64_t numValues,
                               char *notNull) {
-
-//    std::cout<< "List.next() " << std::endl;
-
     ColumnReader::next(rowBatch, numValues, notNull);
     ListVectorBatch &listBatch = dynamic_cast<ListVectorBatch&>(rowBatch);
     int64_t* offsets = listBatch.offsets.data();

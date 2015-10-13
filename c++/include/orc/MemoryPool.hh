@@ -22,7 +22,6 @@
 #include "orc/orc-config.hh"
 
 #include <memory>
-#include <string>
 
 namespace orc {
 
