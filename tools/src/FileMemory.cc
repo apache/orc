@@ -62,7 +62,7 @@ int main(int argc, char* argv[]) {
   if (argc < 2) {
     std::cout << "Usage: file-memory <filename> "
         << "[--columns=column1,column2,...] "
-        << "[--batch=rows_in_batch]" << std::endl ;
+        << "[--batch=rows_in_batch]\n";
     return 1;
   }
 
@@ -74,8 +74,7 @@ int main(int argc, char* argv[]) {
   uint32_t batchSize = 1000;
 
   // Read command-line options
-  char* param ;
-  char* value ;
+  char *param, *value;
   for (int i = 2; i < argc; i++) {
     if ( (param = std::strstr(argv[i], COLUMNS_PREFIX.c_str())) ) {
       value = std::strtok(param+COLUMNS_PREFIX.length(), "," );
@@ -86,7 +85,7 @@ int main(int argc, char* argv[]) {
     } else if ( (param=strstr(argv[i], BATCH_PREFIX.c_str())) ) {
       batchSize = static_cast<uint32_t>(std::atoi(param+BATCH_PREFIX.length()));
     } else {
-      std::cout << "Unknown option " << argv[i] << std::endl ;
+      std::cout << "Unknown option " << argv[i] << "\n" ;
     }
   }
 
@@ -102,35 +101,26 @@ int main(int argc, char* argv[]) {
   try{
     reader = orc::createReader(orc::readLocalFile(std::string(argv[1])), opts);
   } catch (orc::ParseError e) {
-    std::cout << "Error reading file " << argv[1] << "! "
-              << e.what() << std::endl;
+    std::cout << "Error reading file " << argv[1] << "! " << e.what() << "\n";
     return -1;
   }
 
-  std::cout << "Batch size: " << batchSize << std::endl;
-  const std::vector<bool> c = reader->getSelectedColumns();
-  std::cout << "Total columns: " << c.size() << std::endl;
-  std::cout << "Selected columns: " ;
-  for (unsigned int i=1; i < c.size(); i++) {
-    if (c[i])
-      std::cout << i << ", " ;
-  }
-  std::cout << std::endl ;
-
   std::unique_ptr<orc::ColumnVectorBatch> batch =
       reader->createRowBatch(batchSize);
-
   uint64_t readerMemory = reader->memoryUse();
   int64_t batchMemory = batch->memoryUse();
-
   while (reader->next(*batch)) {}
-
-  std::cout << "Reader memory estimate: " << readerMemory << std::endl;
-  std::cout << "Batch memory estimate:  " << batchMemory << std::endl;
-  std::cout << "Total memory estimate:  " << readerMemory + batchMemory << std::endl;
-
-  uint64_t actualMemory = static_cast<TestMemoryPool*>(pool.get())->getMaxMemory();
-  std::cout << "Actual max memory used: " << actualMemory << std::endl;
+  uint64_t actualMemory =
+      static_cast<TestMemoryPool*>(pool.get())->getMaxMemory();
+  std::cout << "Reader memory estimate: " << readerMemory
+            << "\nBatch memory estimate:  " ;
+  if (batchMemory == -1) {
+    std::cout << "Cannot estimate because reading ARRAY or MAP columns";
+  } else {
+    std::cout << batchMemory
+              << "\nTotal memory estimate:  " << readerMemory + batchMemory;
+  }
+  std::cout << "\nActual max memory used: " << actualMemory << "\n";
 
   return 0;
 }
