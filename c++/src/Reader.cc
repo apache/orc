@@ -36,8 +36,6 @@
 #include <string>
 #include <vector>
 
-#include <iostream>
-
 namespace orc {
 
   struct ReaderOptionsPrivate {
@@ -1065,13 +1063,10 @@ namespace orc {
 
     schema = convertType(footer->types(0), *footer);
     schema->assignIds(0);
-    previousRow = (std::numeric_limits<uint64_t>::max)();
 
     selectedColumns.assign(static_cast<size_t>(footer->types_size()), false);
 
     const std::list<int64_t>& included = options.getInclude();
-    std::cout << "top-level columns: " << schema->getSubtypeCount() << std::endl;
-
     for(std::list<int64_t>::const_iterator columnId = included.begin();
         columnId != included.end(); ++columnId) {
       if (*columnId == 0) {
@@ -1544,8 +1539,7 @@ namespace orc {
   }
 
   void ReaderImpl::startNextStripe() {
-    reader.reset(); // ColumnReaders can take up a lot of memory; free up asap
-
+    reader.reset(); // ColumnReaders can use lots memory; free old memory first
     currentStripeInfo = footer->stripes(static_cast<int>(currentStripe));
     currentStripeFooter = getStripeFooter(currentStripeInfo);
     rowsInCurrentStripe = currentStripeInfo.numberofrows();
