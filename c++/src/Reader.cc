@@ -1063,7 +1063,6 @@ namespace orc {
 
     schema = convertType(footer->types(0), *footer);
     schema->assignIds(0);
-    previousRow = (std::numeric_limits<uint64_t>::max)();
 
     selectedColumns.assign(static_cast<size_t>(footer->types_size()), false);
 
