@@ -1071,8 +1071,9 @@ namespace orc {
         columnId != included.end(); ++columnId) {
       if (*columnId == 0) {
         selectType(*(schema.get()));
-      } else if (*columnId <= static_cast<int64_t>(schema->getSubtypeCount())) {
-        selectType(schema->getSubtype(*columnId-1));
+      } else if (*columnId <=
+                 static_cast<int64_t>(schema->getSubtypeCount())) {
+        selectType(schema->getSubtype(static_cast<uint64_t>(*columnId-1)));
       }
     }
     if (included.size() > 0) {
@@ -1081,8 +1082,8 @@ namespace orc {
   }
 
   void ReaderImpl::selectType(const Type& type) {
-    if (!selectedColumns[type.getColumnId()]) {
-      selectedColumns[type.getColumnId()] = true;
+    if (!selectedColumns[static_cast<size_t>(type.getColumnId())]) {
+      selectedColumns[static_cast<size_t>(type.getColumnId())] = true;
       for (uint64_t i=0; i < type.getSubtypeCount(); i++) {
         selectType(type.getSubtype(i));
       }
