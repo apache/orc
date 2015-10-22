@@ -21,6 +21,7 @@ DIAGNOSTIC_PUSH
 
 #ifdef __clang__
   DIAGNOSTIC_IGNORE("-Wshorten-64-to-32")
+  DIAGNOSTIC_IGNORE("-Wreserved-id-macro")
 #endif
 
 DIAGNOSTIC_IGNORE("-Wconversion")
