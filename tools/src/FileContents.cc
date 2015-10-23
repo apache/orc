@@ -49,17 +49,17 @@ void printContents(const char* filename, const orc::ReaderOptions opts) {
 
 int main(int argc, char* argv[]) {
   if (argc < 2) {
-    std::cout << "Usage: file-contents <filename> "
-        << "[--columns=column1,column2,...]\n" ;
+    std::cout << "Usage: file-contents [--columns=1,2,...] <filename>\n" ;
     return 1;
   }
   try {
     const std::string COLUMNS_PREFIX = "--columns=";
     std::list<int64_t> cols;
+    char* filename = ORC_NULLPTR;
 
     // Read command-line options
     char *param, *value;
-    for (int i = 2; i < argc; i++) {
+    for (int i = 1; i < argc; i++) {
       if ( (param = std::strstr(argv[i], COLUMNS_PREFIX.c_str())) ) {
         value = std::strtok(param+COLUMNS_PREFIX.length(), "," );
         while (value) {
@@ -67,14 +67,16 @@ int main(int argc, char* argv[]) {
           value = std::strtok(nullptr, "," );
         }
       } else {
-        std::cout << "Unknown option " << argv[i] << "\n" ;
+        filename = argv[i];
       }
     }
     orc::ReaderOptions opts;
     if (cols.size() > 0) {
       opts.include(cols);
     }
-    printContents(argv[1], opts);
+    if (filename != ORC_NULLPTR) {
+      printContents(filename, opts);
+    }
   } catch (std::exception& ex) {
     std::cerr << "Caught exception: " << ex.what() << "\n";
     return 1;
