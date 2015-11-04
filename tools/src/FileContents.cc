@@ -49,7 +49,9 @@ void printContents(const char* filename, const orc::ReaderOptions opts) {
 
 int main(int argc, char* argv[]) {
   if (argc < 2) {
-    std::cout << "Usage: file-contents [--columns=1,2,...] <filename>\n" ;
+    std::cout << "Usage: file-contents <filename> [--columns=1,2,...]\n"
+              << "Print contents of <filename>.\n"
+              << "If columns are specified, only these top-level (logical) columns are printed.\n" ;
     return 1;
   }
   try {
