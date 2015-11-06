@@ -56,9 +56,19 @@ target_link_libraries (file-statistics
   ${PROTOBUF_LIBRARIES}
   ) 
 
+ add_executable (file-memory
+  FileMemory.cc
+  )
+
+target_link_libraries (file-memory
+  orc
+  ${PROTOBUF_LIBRARIES}
+  ) 
+
 install(TARGETS
    file-contents
    file-metadata
    file-scan
    file-statistics
+   file-memory
    DESTINATION bin)

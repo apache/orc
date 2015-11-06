@@ -48,6 +48,10 @@ namespace orc {
     }
   }
 
+  int64_t ColumnVectorBatch::memoryUse() {
+    return static_cast<int64_t>(notNull.capacity() * sizeof(char));
+  }
+
   LongVectorBatch::LongVectorBatch(uint64_t capacity, MemoryPool& pool
                      ): ColumnVectorBatch(capacity, pool),
                         data(pool, capacity) {
@@ -71,6 +75,11 @@ namespace orc {
     }
   }
 
+  int64_t LongVectorBatch::memoryUse() {
+    return ColumnVectorBatch::memoryUse() +
+        static_cast<int64_t>(data.capacity() * sizeof(int64_t));
+  }
+
   DoubleVectorBatch::DoubleVectorBatch(uint64_t capacity, MemoryPool& pool
                    ): ColumnVectorBatch(capacity, pool),
                       data(pool, capacity) {
@@ -92,6 +101,11 @@ namespace orc {
       ColumnVectorBatch::resize(cap);
       data.resize(cap);
     }
+  }
+
+  int64_t DoubleVectorBatch::memoryUse() {
+    return ColumnVectorBatch::memoryUse()
+          + static_cast<int64_t>(data.capacity() * sizeof(double));
   }
 
   StringVectorBatch::StringVectorBatch(uint64_t capacity, MemoryPool& pool
@@ -119,6 +133,12 @@ namespace orc {
     }
   }
 
+  int64_t StringVectorBatch::memoryUse() {
+    return ColumnVectorBatch::memoryUse()
+          + static_cast<int64_t>(data.capacity() * sizeof(char*)
+          + length.capacity() * sizeof(int64_t));
+  }
+
   StructVectorBatch::StructVectorBatch(uint64_t cap, MemoryPool& pool
                                         ): ColumnVectorBatch(cap, pool) {
     // PASS
@@ -142,9 +162,19 @@ namespace orc {
     return buffer.str();
   }
 
-
   void StructVectorBatch::resize(uint64_t cap) {
     ColumnVectorBatch::resize(cap);
+  }
+
+  int64_t StructVectorBatch::memoryUse() {
+    int64_t memory = ColumnVectorBatch::memoryUse();
+    for (unsigned int i=0; i < fields.size(); i++) {
+      int64_t mem = fields[i]->memoryUse();
+      if (mem < 0)
+        return -1;
+      memory += mem;
+    }
+    return memory;
   }
 
   ListVectorBatch::ListVectorBatch(uint64_t cap, MemoryPool& pool
@@ -171,6 +201,10 @@ namespace orc {
     }
   }
 
+  int64_t ListVectorBatch::memoryUse() {
+    return -1;
+  }
+
   MapVectorBatch::MapVectorBatch(uint64_t cap, MemoryPool& pool
                  ): ColumnVectorBatch(cap, pool),
                     offsets(pool, cap+1) {
@@ -194,6 +228,10 @@ namespace orc {
       ColumnVectorBatch::resize(cap);
       offsets.resize(cap + 1);
     }
+  }
+
+  int64_t MapVectorBatch::memoryUse() {
+    return -1;
   }
 
   UnionVectorBatch::UnionVectorBatch(uint64_t cap, MemoryPool& pool
@@ -230,6 +268,19 @@ namespace orc {
     }
   }
 
+  int64_t UnionVectorBatch::memoryUse() {
+    int64_t memory = ColumnVectorBatch::memoryUse()
+                 + static_cast<int64_t>(tags.capacity() * sizeof(unsigned char)
+                 + offsets.capacity() * sizeof(uint64_t));
+    for(size_t i=0; i < children.size(); ++i) {
+      int64_t mem = children[i]->memoryUse();
+      if (mem < 0)
+        return -1;
+      memory += mem;
+    }
+    return memory;
+  }
+
   Decimal64VectorBatch::Decimal64VectorBatch(uint64_t cap, MemoryPool& pool
                  ): ColumnVectorBatch(cap, pool),
                     precision(0),
@@ -258,6 +309,12 @@ namespace orc {
     }
   }
 
+  int64_t Decimal64VectorBatch::memoryUse() {
+    return ColumnVectorBatch::memoryUse()
+          + static_cast<int64_t>(
+              (values.capacity() + readScales.capacity()) * sizeof(int64_t));
+  }
+
   Decimal128VectorBatch::Decimal128VectorBatch(uint64_t cap, MemoryPool& pool
                ): ColumnVectorBatch(cap, pool),
                   precision(0),
@@ -284,6 +341,12 @@ namespace orc {
       values.resize(cap);
       readScales.resize(cap);
     }
+  }
+
+  int64_t Decimal128VectorBatch::memoryUse() {
+    return ColumnVectorBatch::memoryUse()
+          + static_cast<int64_t>(values.capacity() * sizeof(Int128)
+          + readScales.capacity() * sizeof(int64_t));
   }
 
   Decimal::Decimal(const Int128& _value,
@@ -335,4 +398,9 @@ namespace orc {
     }
   }
 
+  int64_t TimestampVectorBatch::memoryUse() {
+    return ColumnVectorBatch::memoryUse()
+          + static_cast<int64_t>(
+              (data.capacity() + nanoseconds.capacity()) * sizeof(int64_t));
+  }
 }
