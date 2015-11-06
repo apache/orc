@@ -972,6 +972,8 @@ namespace orc {
     bool hasCorrectStatistics() const override;
 
     std::string getSerializedFileTail() const override;
+
+    uint64_t getMemoryUse(int stripeIx = -1) override;
   };
 
   InputStream::~InputStream() {
@@ -1061,7 +1063,6 @@ namespace orc {
 
     schema = convertType(footer->types(0), *footer);
     schema->assignIds(0);
-    previousRow = (std::numeric_limits<uint64_t>::max)();
 
     selectedColumns.assign(static_cast<size_t>(footer->types_size()), false);
 
@@ -1364,6 +1365,111 @@ namespace orc {
     int64_t getEpochOffset() const override;
   };
 
+  uint64_t maxStreamsForType(const proto::Type& type) {
+    switch (static_cast<int64_t>(type.kind())) {
+      case proto::Type_Kind_STRUCT:
+        return 1;
+      case proto::Type_Kind_INT:
+      case proto::Type_Kind_LONG:
+      case proto::Type_Kind_SHORT:
+      case proto::Type_Kind_FLOAT:
+      case proto::Type_Kind_DOUBLE:
+      case proto::Type_Kind_BOOLEAN:
+      case proto::Type_Kind_BYTE:
+      case proto::Type_Kind_DATE:
+      case proto::Type_Kind_LIST:
+      case proto::Type_Kind_MAP:
+      case proto::Type_Kind_UNION:
+        return 2;
+      case proto::Type_Kind_BINARY:
+      case proto::Type_Kind_DECIMAL:
+      case proto::Type_Kind_TIMESTAMP:
+        return 3;
+      case proto::Type_Kind_CHAR:
+      case proto::Type_Kind_STRING:
+      case proto::Type_Kind_VARCHAR:
+        return 4;
+      default:
+          return 0;
+      }
+  }
+
+  uint64_t ReaderImpl::getMemoryUse(int stripeIx) {
+    uint64_t maxDataLength = 0;
+
+    if (stripeIx >= 0 && stripeIx < footer->stripes_size()) {
+      uint64_t stripe = footer->stripes(stripeIx).datalength();
+      if (maxDataLength < stripe) {
+        maxDataLength = stripe;
+      }
+    } else {
+      for (int i=0; i < footer->stripes_size(); i++) {
+        uint64_t stripe = footer->stripes(i).datalength();
+        if (maxDataLength < stripe) {
+          maxDataLength = stripe;
+        }
+      }
+    }
+
+    bool hasStringColumn = false;
+    uint64_t nSelectedStreams = 0;
+    for (int i=0; !hasStringColumn && i < footer->types_size(); i++) {
+      if (selectedColumns[static_cast<size_t>(i)]) {
+        const proto::Type& type = footer->types(i);
+        nSelectedStreams += maxStreamsForType(type) ;
+        switch (static_cast<int64_t>(type.kind())) {
+          case proto::Type_Kind_CHAR:
+          case proto::Type_Kind_STRING:
+          case proto::Type_Kind_VARCHAR:
+          case proto::Type_Kind_BINARY: {
+            hasStringColumn = true;
+            break;
+          }
+          default: {
+            break;
+          }
+        }
+      }
+    }
+
+    /* If a string column is read, use stripe datalength as a memory estimate
+     * because we don't know the dictionary size. Multiply by 2 because
+     * a string column requires two buffers:
+     * in the input stream and in the seekable input stream.
+     * If no string column is read, estimate from the number of streams.
+     */
+    uint64_t memory = hasStringColumn ? 2 * maxDataLength :
+        std::min(uint64_t(maxDataLength),
+                 nSelectedStreams * stream->getNaturalReadSize());
+
+    // Do we need even more memory to read the footer or the metadata?
+    if (memory < postscript->footerlength() + DIRECTORY_SIZE_GUESS) {
+      memory =  postscript->footerlength() + DIRECTORY_SIZE_GUESS;
+    }
+    if (memory < postscript->metadatalength()) {
+      memory =  postscript->metadatalength();
+    }
+
+    // Account for firstRowOfStripe.
+    memory += firstRowOfStripe.capacity() * sizeof(uint64_t);
+
+    // Decompressors need buffers for each stream
+    uint64_t decompressorMemory = 0;
+    if (compression != CompressionKind_NONE) {
+      for (int i=0; i < footer->types_size(); i++) {
+        if (selectedColumns[static_cast<size_t>(i)]) {
+          const proto::Type& type = footer->types(i);
+          decompressorMemory += maxStreamsForType(type) * blockSize;
+        }
+      }
+      if (compression == CompressionKind_SNAPPY) {
+        decompressorMemory *= 2;  // Snappy decompressor uses a second buffer
+      }
+    }
+
+    return memory + decompressorMemory ;
+  }
+
   StripeStreamsImpl::StripeStreamsImpl(const ReaderImpl& _reader,
                                        const proto::StripeFooter& _footer,
                                        uint64_t _stripeStart,
@@ -1433,6 +1539,7 @@ namespace orc {
   }
 
   void ReaderImpl::startNextStripe() {
+    reader.reset(); // ColumnReaders use lots of memory; free old memory first
     currentStripeInfo = footer->stripes(static_cast<int>(currentStripe));
     currentStripeFooter = getStripeFooter(currentStripeInfo);
     rowsInCurrentStripe = currentStripeInfo.numberofrows();

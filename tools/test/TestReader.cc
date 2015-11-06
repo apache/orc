@@ -977,6 +977,86 @@ TEST(Reader, selectColumns) {
     }
 }
 
+TEST(Reader, memoryUse) {
+  std::ostringstream filename;
+  filename << exampleDirectory << "/TestOrcFile.testSeek.orc";
+  std::unique_ptr<orc::Reader> reader;
+  std::unique_ptr<orc::ColumnVectorBatch> batch;
+  orc::ReaderOptions opts;
+  std::list<int64_t> cols;
+
+  // Int column
+  cols.push_back(2);
+  opts.include(cols);
+  reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
+  EXPECT_EQ(483517, reader->getMemoryUse());
+  batch = reader->createRowBatch(1);
+  EXPECT_EQ(10, batch->getMemoryUsage());
+  batch = reader->createRowBatch(1000);
+  EXPECT_EQ(10000, batch->getMemoryUsage());
+  EXPECT_FALSE(batch->hasVariableLength());
+
+  // Binary column
+  cols.clear();
+  cols.push_back(8);
+  opts.include(cols);
+  reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
+  EXPECT_EQ(835906, reader->getMemoryUse());
+  batch = reader->createRowBatch(1);
+  EXPECT_EQ(18, batch->getMemoryUsage());
+  EXPECT_FALSE(batch->hasVariableLength());
+
+  // String column
+  cols.clear();
+  cols.push_back(9);
+  opts.include(cols);
+  reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
+  EXPECT_EQ(901442, reader->getMemoryUse());
+  batch = reader->createRowBatch(1);
+  EXPECT_EQ(18, batch->getMemoryUsage());
+  EXPECT_FALSE(batch->hasVariableLength());
+
+  // Struct column (with a List subcolumn)
+  cols.clear();
+  cols.push_back(10);
+  opts.include(cols);
+  reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
+  EXPECT_EQ(1294658, reader->getMemoryUse());
+  batch = reader->createRowBatch(1);
+  EXPECT_EQ(46, batch->getMemoryUsage());
+  EXPECT_TRUE(batch->hasVariableLength());
+
+  // List column
+   cols.clear();
+   cols.push_back(11);
+   opts.include(cols);
+   reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
+   EXPECT_EQ(1229122, reader->getMemoryUse());
+   batch = reader->createRowBatch(1);
+   EXPECT_EQ(45, batch->getMemoryUsage());
+   EXPECT_TRUE(batch->hasVariableLength());
+
+  // Map column
+  cols.clear();
+  cols.push_back(12);
+  opts.include(cols);
+  reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
+  EXPECT_EQ(1491266, reader->getMemoryUse());
+  batch = reader->createRowBatch(1);
+  EXPECT_EQ(62, batch->getMemoryUsage());
+  EXPECT_TRUE(batch->hasVariableLength());
+
+  // All columns
+  cols.clear();
+  cols.push_back(0);
+  opts.include(cols);
+  reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
+  EXPECT_EQ(4112706, reader->getMemoryUse());
+  batch = reader->createRowBatch(1);
+  EXPECT_EQ(248, batch->getMemoryUsage());
+  EXPECT_TRUE(batch->hasVariableLength());
+}
+
   std::map<std::string, std::string> makeMetadata() {
     std::map<std::string, std::string> result;
     result["my.meta"] = "\x01\x02\x03\x04\x05\x06\x07\xff\xfe\x7f\x80";

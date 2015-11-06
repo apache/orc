@@ -48,6 +48,14 @@ namespace orc {
     }
   }
 
+  uint64_t ColumnVectorBatch::getMemoryUsage() {
+    return static_cast<uint64_t>(notNull.capacity() * sizeof(char));
+  }
+
+  bool ColumnVectorBatch::hasVariableLength() {
+    return false;
+  }
+
   LongVectorBatch::LongVectorBatch(uint64_t capacity, MemoryPool& pool
                      ): ColumnVectorBatch(capacity, pool),
                         data(pool, capacity) {
@@ -71,6 +79,11 @@ namespace orc {
     }
   }
 
+  uint64_t LongVectorBatch::getMemoryUsage() {
+    return ColumnVectorBatch::getMemoryUsage() +
+        static_cast<uint64_t>(data.capacity() * sizeof(int64_t));
+  }
+
   DoubleVectorBatch::DoubleVectorBatch(uint64_t capacity, MemoryPool& pool
                    ): ColumnVectorBatch(capacity, pool),
                       data(pool, capacity) {
@@ -92,6 +105,11 @@ namespace orc {
       ColumnVectorBatch::resize(cap);
       data.resize(cap);
     }
+  }
+
+  uint64_t DoubleVectorBatch::getMemoryUsage() {
+    return ColumnVectorBatch::getMemoryUsage()
+          + static_cast<uint64_t>(data.capacity() * sizeof(double));
   }
 
   StringVectorBatch::StringVectorBatch(uint64_t capacity, MemoryPool& pool
@@ -119,6 +137,12 @@ namespace orc {
     }
   }
 
+  uint64_t StringVectorBatch::getMemoryUsage() {
+    return ColumnVectorBatch::getMemoryUsage()
+          + static_cast<uint64_t>(data.capacity() * sizeof(char*)
+          + length.capacity() * sizeof(int64_t));
+  }
+
   StructVectorBatch::StructVectorBatch(uint64_t cap, MemoryPool& pool
                                         ): ColumnVectorBatch(cap, pool) {
     // PASS
@@ -142,9 +166,25 @@ namespace orc {
     return buffer.str();
   }
 
-
   void StructVectorBatch::resize(uint64_t cap) {
     ColumnVectorBatch::resize(cap);
+  }
+
+  uint64_t StructVectorBatch::getMemoryUsage() {
+    uint64_t memory = ColumnVectorBatch::getMemoryUsage();
+    for (unsigned int i=0; i < fields.size(); i++) {
+      memory += fields[i]->getMemoryUsage();
+    }
+    return memory;
+  }
+
+  bool StructVectorBatch::hasVariableLength() {
+    for (unsigned int i=0; i < fields.size(); i++) {
+      if (fields[i]->hasVariableLength()) {
+        return true;
+      }
+    }
+    return false;
   }
 
   ListVectorBatch::ListVectorBatch(uint64_t cap, MemoryPool& pool
@@ -171,6 +211,16 @@ namespace orc {
     }
   }
 
+  uint64_t ListVectorBatch::getMemoryUsage() {
+    return ColumnVectorBatch::getMemoryUsage()
+           + static_cast<uint64_t>(offsets.capacity() * sizeof(int64_t))
+           + elements->getMemoryUsage();
+  }
+
+  bool ListVectorBatch::hasVariableLength() {
+    return true;
+  }
+
   MapVectorBatch::MapVectorBatch(uint64_t cap, MemoryPool& pool
                  ): ColumnVectorBatch(cap, pool),
                     offsets(pool, cap+1) {
@@ -194,6 +244,17 @@ namespace orc {
       ColumnVectorBatch::resize(cap);
       offsets.resize(cap + 1);
     }
+  }
+
+  uint64_t MapVectorBatch::getMemoryUsage() {
+    return ColumnVectorBatch::getMemoryUsage()
+           + static_cast<uint64_t>(offsets.capacity() * sizeof(int64_t))
+           + keys->getMemoryUsage()
+           + elements->getMemoryUsage();
+  }
+
+  bool MapVectorBatch::hasVariableLength() {
+    return true;
   }
 
   UnionVectorBatch::UnionVectorBatch(uint64_t cap, MemoryPool& pool
@@ -230,6 +291,25 @@ namespace orc {
     }
   }
 
+  uint64_t UnionVectorBatch::getMemoryUsage() {
+    uint64_t memory = ColumnVectorBatch::getMemoryUsage()
+               + static_cast<uint64_t>(tags.capacity() * sizeof(unsigned char)
+               + offsets.capacity() * sizeof(uint64_t));
+    for(size_t i=0; i < children.size(); ++i) {
+      memory += children[i]->getMemoryUsage();
+    }
+    return memory;
+  }
+
+  bool UnionVectorBatch::hasVariableLength() {
+    for(size_t i=0; i < children.size(); ++i) {
+      if (children[i]->hasVariableLength()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   Decimal64VectorBatch::Decimal64VectorBatch(uint64_t cap, MemoryPool& pool
                  ): ColumnVectorBatch(cap, pool),
                     precision(0),
@@ -258,6 +338,12 @@ namespace orc {
     }
   }
 
+  uint64_t Decimal64VectorBatch::getMemoryUsage() {
+    return ColumnVectorBatch::getMemoryUsage()
+          + static_cast<uint64_t>(
+              (values.capacity() + readScales.capacity()) * sizeof(int64_t));
+  }
+
   Decimal128VectorBatch::Decimal128VectorBatch(uint64_t cap, MemoryPool& pool
                ): ColumnVectorBatch(cap, pool),
                   precision(0),
@@ -284,6 +370,12 @@ namespace orc {
       values.resize(cap);
       readScales.resize(cap);
     }
+  }
+
+  uint64_t Decimal128VectorBatch::getMemoryUsage() {
+    return ColumnVectorBatch::getMemoryUsage()
+          + static_cast<uint64_t>(values.capacity() * sizeof(Int128)
+          + readScales.capacity() * sizeof(int64_t));
   }
 
   Decimal::Decimal(const Int128& _value,
@@ -335,4 +427,9 @@ namespace orc {
     }
   }
 
+  uint64_t TimestampVectorBatch::getMemoryUsage() {
+    return ColumnVectorBatch::getMemoryUsage()
+          + static_cast<uint64_t>(
+              (data.capacity() + nanoseconds.capacity()) * sizeof(int64_t));
+  }
 }
