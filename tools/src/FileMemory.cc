@@ -111,14 +111,14 @@ int main(int argc, char* argv[]) {
 
   std::unique_ptr<orc::ColumnVectorBatch> batch =
       reader->createRowBatch(batchSize);
-  uint64_t readerMemory = reader->memoryUse();
-  int64_t batchMemory = batch->memoryUse();
+  uint64_t readerMemory = reader->getMemoryUse();
+  uint64_t batchMemory = batch->getMemoryUsage();
   while (reader->next(*batch)) {}
   uint64_t actualMemory =
       static_cast<TestMemoryPool*>(pool.get())->getMaxMemory();
   std::cout << "Reader memory estimate: " << readerMemory
             << "\nBatch memory estimate:  " ;
-  if (batchMemory == -1) {
+  if (batch->hasVariableLength()) {
     std::cout << "Cannot estimate because reading ARRAY or MAP columns";
   } else {
     std::cout << batchMemory

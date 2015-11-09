@@ -143,7 +143,12 @@ namespace orc {
     /**
      * Heap memory used by the batch.
      */
-    virtual int64_t memoryUse();
+    virtual uint64_t getMemoryUsage();
+
+    /**
+     * Check whether the batch length varies depending on data.
+     */
+    virtual bool hasVariableLength();
 
   private:
     ColumnVectorBatch(const ColumnVectorBatch&);
@@ -157,7 +162,7 @@ namespace orc {
     DataBuffer<int64_t> data;
     std::string toString() const;
     void resize(uint64_t capacity);
-    int64_t memoryUse();
+    uint64_t getMemoryUsage();
   };
 
   struct DoubleVectorBatch: public ColumnVectorBatch {
@@ -165,7 +170,7 @@ namespace orc {
     virtual ~DoubleVectorBatch();
     std::string toString() const;
     void resize(uint64_t capacity);
-    int64_t memoryUse();
+    uint64_t getMemoryUsage();
 
     DataBuffer<double> data;
   };
@@ -175,7 +180,7 @@ namespace orc {
     virtual ~StringVectorBatch();
     std::string toString() const;
     void resize(uint64_t capacity);
-    int64_t memoryUse();
+    uint64_t getMemoryUsage();
 
     // pointers to the start of each string
     DataBuffer<char*> data;
@@ -188,7 +193,8 @@ namespace orc {
     virtual ~StructVectorBatch();
     std::string toString() const;
     void resize(uint64_t capacity);
-    int64_t memoryUse();
+    uint64_t getMemoryUsage();
+    bool hasVariableLength();
 
     std::vector<ColumnVectorBatch*> fields;
   };
@@ -198,7 +204,8 @@ namespace orc {
     virtual ~ListVectorBatch();
     std::string toString() const;
     void resize(uint64_t capacity);
-    int64_t memoryUse();
+    uint64_t getMemoryUsage();
+    bool hasVariableLength();
 
     /**
      * The offset of the first element of each list.
@@ -215,7 +222,8 @@ namespace orc {
     virtual ~MapVectorBatch();
     std::string toString() const;
     void resize(uint64_t capacity);
-    int64_t memoryUse();
+    uint64_t getMemoryUsage();
+    bool hasVariableLength();
 
     /**
      * The offset of the first element of each list.
@@ -234,7 +242,8 @@ namespace orc {
     virtual ~UnionVectorBatch();
     std::string toString() const;
     void resize(uint64_t capacity);
-    int64_t memoryUse();
+    uint64_t getMemoryUsage();
+    bool hasVariableLength();
 
     /**
      * For each value, which element of children has the value.
@@ -264,7 +273,7 @@ namespace orc {
     virtual ~Decimal64VectorBatch();
     std::string toString() const;
     void resize(uint64_t capacity);
-    int64_t memoryUse();
+    uint64_t getMemoryUsage();
 
     // total number of digits
     int32_t precision;
@@ -288,7 +297,7 @@ namespace orc {
     virtual ~Decimal128VectorBatch();
     std::string toString() const;
     void resize(uint64_t capacity);
-    int64_t memoryUse();
+    uint64_t getMemoryUsage();
 
     // total number of digits
     int32_t precision;
@@ -318,7 +327,7 @@ namespace orc {
     virtual ~TimestampVectorBatch();
     std::string toString() const;
     void resize(uint64_t capacity);
-    int64_t memoryUse();
+    uint64_t getMemoryUsage();
 
     // the number of seconds past 1 Jan 1970 00:00 UTC (aka time_t)
     DataBuffer<int64_t> data;

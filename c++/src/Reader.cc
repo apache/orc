@@ -973,7 +973,7 @@ namespace orc {
 
     std::string getSerializedFileTail() const override;
 
-    uint64_t memoryUse(int stripeIx = -1) override;
+    uint64_t getMemoryUse(int stripeIx = -1) override;
   };
 
   InputStream::~InputStream() {
@@ -1071,8 +1071,9 @@ namespace orc {
         columnId != included.end(); ++columnId) {
       if (*columnId == 0) {
         selectType(*(schema.get()));
-      } else if (*columnId <= static_cast<int64_t>(schema->getSubtypeCount())) {
-        selectType(schema->getSubtype(*columnId-1));
+      } else if (*columnId <=
+                 static_cast<int64_t>(schema->getSubtypeCount())) {
+        selectType(schema->getSubtype(static_cast<uint64_t>(*columnId-1)));
       }
     }
     if (included.size() > 0) {
@@ -1081,8 +1082,8 @@ namespace orc {
   }
 
   void ReaderImpl::selectType(const Type& type) {
-    if (!selectedColumns[type.getColumnId()]) {
-      selectedColumns[type.getColumnId()] = true;
+    if (!selectedColumns[static_cast<size_t>(type.getColumnId())]) {
+      selectedColumns[static_cast<size_t>(type.getColumnId())] = true;
       for (uint64_t i=0; i < type.getSubtypeCount(); i++) {
         selectType(type.getSubtype(i));
       }
@@ -1365,7 +1366,7 @@ namespace orc {
   };
 
   uint64_t maxStreamsForType(const proto::Type& type) {
-    switch (type.kind()) {
+    switch (static_cast<int64_t>(type.kind())) {
       case proto::Type_Kind_STRUCT:
         return 1;
       case proto::Type_Kind_INT:
@@ -1393,7 +1394,7 @@ namespace orc {
       }
   }
 
-  uint64_t ReaderImpl::memoryUse(int stripeIx) {
+  uint64_t ReaderImpl::getMemoryUse(int stripeIx) {
     uint64_t maxDataLength = 0;
 
     if (stripeIx >= 0 && stripeIx < footer->stripes_size()) {
@@ -1416,7 +1417,7 @@ namespace orc {
       if (selectedColumns[i]) {
         const proto::Type& type = footer->types(i);
         nSelectedStreams += maxStreamsForType(type) ;
-        switch (type.kind()) {
+        switch (static_cast<int64_t>(type.kind())) {
           case proto::Type_Kind_CHAR:
           case proto::Type_Kind_STRING:
           case proto::Type_Kind_VARCHAR:

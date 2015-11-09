@@ -989,67 +989,72 @@ TEST(Reader, memoryUse) {
   cols.push_back(2);
   opts.include(cols);
   reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
-  EXPECT_EQ(483517, reader->memoryUse());
+  EXPECT_EQ(483517, reader->getMemoryUse());
   batch = reader->createRowBatch(1);
-  EXPECT_EQ(10, batch->memoryUse());
+  EXPECT_EQ(10, batch->getMemoryUsage());
   batch = reader->createRowBatch(1000);
-  EXPECT_EQ(10000, batch->memoryUse());
+  EXPECT_EQ(10000, batch->getMemoryUsage());
+  EXPECT_FALSE(batch->hasVariableLength());
 
   // Binary column
   cols.clear();
   cols.push_back(8);
   opts.include(cols);
   reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
-  EXPECT_EQ(835906, reader->memoryUse());
+  EXPECT_EQ(835906, reader->getMemoryUse());
   batch = reader->createRowBatch(1);
-  EXPECT_EQ(18, batch->memoryUse());
+  EXPECT_EQ(18, batch->getMemoryUsage());
+  EXPECT_FALSE(batch->hasVariableLength());
 
   // String column
   cols.clear();
   cols.push_back(9);
   opts.include(cols);
   reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
-  EXPECT_EQ(901442, reader->memoryUse());
+  EXPECT_EQ(901442, reader->getMemoryUse());
   batch = reader->createRowBatch(1);
-  EXPECT_EQ(18, batch->memoryUse());
+  EXPECT_EQ(18, batch->getMemoryUsage());
+  EXPECT_FALSE(batch->hasVariableLength());
 
-  // Struct column (with list subcolumn)
+  // Struct column (with a List subcolumn)
   cols.clear();
   cols.push_back(10);
   opts.include(cols);
   reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
-  EXPECT_EQ(1294658, reader->memoryUse());
+  EXPECT_EQ(1294658, reader->getMemoryUse());
   batch = reader->createRowBatch(1);
-  EXPECT_EQ(-1, batch->memoryUse());
-  batch = reader->createRowBatch(1000);
-  EXPECT_EQ(-1, batch->memoryUse());
+  EXPECT_EQ(46, batch->getMemoryUsage());
+  EXPECT_TRUE(batch->hasVariableLength());
 
   // List column
    cols.clear();
    cols.push_back(11);
    opts.include(cols);
    reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
-   EXPECT_EQ(1229122, reader->memoryUse());
+   EXPECT_EQ(1229122, reader->getMemoryUse());
    batch = reader->createRowBatch(1);
-   EXPECT_EQ(-1, batch->memoryUse());
+   EXPECT_EQ(45, batch->getMemoryUsage());
+   EXPECT_TRUE(batch->hasVariableLength());
 
   // Map column
   cols.clear();
   cols.push_back(12);
   opts.include(cols);
   reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
-  EXPECT_EQ(1491266, reader->memoryUse());
+  EXPECT_EQ(1491266, reader->getMemoryUse());
   batch = reader->createRowBatch(1);
-  EXPECT_EQ(-1, batch->memoryUse());
+  EXPECT_EQ(35, batch->getMemoryUsage());
+  EXPECT_TRUE(batch->hasVariableLength());
 
   // All columns
   cols.clear();
   cols.push_back(0);
   opts.include(cols);
   reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
-  EXPECT_EQ(4112706, reader->memoryUse());
+  EXPECT_EQ(4112706, reader->getMemoryUse());
   batch = reader->createRowBatch(1);
-  EXPECT_EQ(-1, batch->memoryUse());
+  EXPECT_EQ(221, batch->getMemoryUsage());
+  EXPECT_TRUE(batch->hasVariableLength());
 }
 
   std::map<std::string, std::string> makeMetadata() {

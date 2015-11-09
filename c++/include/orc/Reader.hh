@@ -718,7 +718,7 @@ namespace orc {
     * all stripes are considered).
      * @return upper bound on memory use
      */
-    virtual uint64_t memoryUse(int stripeIx=-1) = 0;
+    virtual uint64_t getMemoryUse(int stripeIx=-1) = 0;
   };
 }
 
