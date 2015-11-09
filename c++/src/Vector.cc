@@ -249,7 +249,7 @@ namespace orc {
   uint64_t MapVectorBatch::getMemoryUsage() {
     return ColumnVectorBatch::getMemoryUsage()
            + static_cast<uint64_t>(offsets.capacity() * sizeof(int64_t))
-           + keys->getMemoryUsage();
+           + keys->getMemoryUsage()
            + elements->getMemoryUsage();
   }
 

@@ -1043,7 +1043,7 @@ TEST(Reader, memoryUse) {
   reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
   EXPECT_EQ(1491266, reader->getMemoryUse());
   batch = reader->createRowBatch(1);
-  EXPECT_EQ(35, batch->getMemoryUsage());
+  EXPECT_EQ(62, batch->getMemoryUsage());
   EXPECT_TRUE(batch->hasVariableLength());
 
   // All columns
@@ -1053,7 +1053,7 @@ TEST(Reader, memoryUse) {
   reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
   EXPECT_EQ(4112706, reader->getMemoryUse());
   batch = reader->createRowBatch(1);
-  EXPECT_EQ(221, batch->getMemoryUsage());
+  EXPECT_EQ(248, batch->getMemoryUsage());
   EXPECT_TRUE(batch->hasVariableLength());
 }
 

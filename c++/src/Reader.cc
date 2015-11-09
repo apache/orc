@@ -1414,7 +1414,7 @@ namespace orc {
     bool hasStringColumn = false;
     uint64_t nSelectedStreams = 0;
     for (int i=0; !hasStringColumn && i < footer->types_size(); i++) {
-      if (selectedColumns[i]) {
+      if (selectedColumns[static_cast<size_t>(i)]) {
         const proto::Type& type = footer->types(i);
         nSelectedStreams += maxStreamsForType(type) ;
         switch (static_cast<int64_t>(type.kind())) {
@@ -1457,7 +1457,7 @@ namespace orc {
     uint64_t decompressorMemory = 0;
     if (compression != CompressionKind_NONE) {
       for (int i=0; i < footer->types_size(); i++) {
-        if (selectedColumns[i]) {
+        if (selectedColumns[static_cast<size_t>(i)]) {
           const proto::Type& type = footer->types(i);
           decompressorMemory += maxStreamsForType(type) * blockSize;
         }
