@@ -11,17 +11,17 @@ developers working on the project. The project has created
 
 Name                  | Apache Id    | Role
 :-------------------- | :----------- | :---
+Aliaksei Sandryhaila  | asandryh     | PMC
 Chris Douglas         | cdouglas     | PMC
 Alan Gates            | gates        | PMC
+Gopal Vijayaraghavan  | gopalv       | Committer
 Gunther Hagleitner    | gunther      | Committer
-Prasanth Jayachandran | prasanthj    | PMC
+Kevin Wilfong         | kevinwilfong | Committer
 Lefty Leverenz        | leftyl       | PMC
 Owen O'Malley         | omalley      | PMC
-Aliaksei Sandryhaila  | asandryh     | Committer
+Prasanth Jayachandran | prasanthj    | PMC
 Sergey Shelukhin      | sershe       | Committer
-Gopal Vijayaraghavan  | gopalv       | Committer
 Stephen Walkauskas    | swalkaus     | Committer
-Kevin Wilfong         | kevinwilfong | Committer
 Xuefu Zhang           | xuefu        | Committer
 
 ## Mailing Lists
