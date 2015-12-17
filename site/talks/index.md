@@ -38,7 +38,7 @@ Watch some presentations and read through some slide decks about ORC.
 
 ## Slides
 
-* ORC Files
+* [ORC Files](http://www.slideshare.net/oom65/orc-files)
 
     Owen O'Malley at Berlin Buzzwords 2013
 
@@ -47,7 +47,7 @@ Watch some presentations and read through some slide decks about ORC.
     scrolling="no" style="border:1px solid #CCC; border-width:1px;
     margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe>
 
-* A Perfect Hive Query for a Perfect Meeting
+* [A Perfect Hive Query for a Perfect Meeting](http://www.slideshare.net/AdamKawa/a-perfect-hive-query-for-a-perfect-meeting-hadoop-summit-2014)
 
     Adam Kawa at Hadoop Summit: San Jose 2014
 
