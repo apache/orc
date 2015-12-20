@@ -31,8 +31,9 @@ void printContents(const char* filename, const orc::ReaderOptions opts) {
 
   std::unique_ptr<orc::ColumnVectorBatch> batch = reader->createRowBatch(1000);
   std::string line;
+  const std::vector<bool> selectedColumns = reader->getSelectedColumns();
   std::unique_ptr<orc::ColumnPrinter> printer =
-    createColumnPrinter(line, reader->getType());
+    createColumnPrinter(line, reader->getType(), &selectedColumns);
 
   while (reader->next(*batch)) {
     printer->reset(*batch);
@@ -48,12 +49,36 @@ void printContents(const char* filename, const orc::ReaderOptions opts) {
 
 int main(int argc, char* argv[]) {
   if (argc < 2) {
-    std::cout << "Usage: file-contents <filename>\n";
+    std::cout << "Usage: file-contents <filename> [--columns=1,2,...]\n"
+              << "Print contents of <filename>.\n"
+              << "If columns are specified, only these top-level (logical) columns are printed.\n" ;
     return 1;
   }
   try {
+    const std::string COLUMNS_PREFIX = "--columns=";
+    std::list<int64_t> cols;
+    char* filename = ORC_NULLPTR;
+
+    // Read command-line options
+    char *param, *value;
+    for (int i = 1; i < argc; i++) {
+      if ( (param = std::strstr(argv[i], COLUMNS_PREFIX.c_str())) ) {
+        value = std::strtok(param+COLUMNS_PREFIX.length(), "," );
+        while (value) {
+          cols.push_back(std::atoi(value));
+          value = std::strtok(nullptr, "," );
+        }
+      } else {
+        filename = argv[i];
+      }
+    }
     orc::ReaderOptions opts;
-    printContents(argv[1], opts);
+    if (cols.size() > 0) {
+      opts.include(cols);
+    }
+    if (filename != ORC_NULLPTR) {
+      printContents(filename, opts);
+    }
   } catch (std::exception& ex) {
     std::cerr << "Caught exception: " << ex.what() << "\n";
     return 1;

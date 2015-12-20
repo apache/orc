@@ -923,6 +923,26 @@ TEST(Reader, selectColumns) {
     for (unsigned int i=0; i < c.size(); i++) {
       EXPECT_TRUE(c[i]);
     }
+    std::unique_ptr<orc::ColumnVectorBatch> batch = reader->createRowBatch(1);
+    std::string line;
+    std::unique_ptr<orc::ColumnPrinter> printer =
+        createColumnPrinter(line, reader->getType(), &c);
+    reader->next(*batch);
+    printer->reset(*batch);
+    printer->printRow(0);
+    std::ostringstream expected;
+    expected << "{\"boolean1\": true, \"byte1\": -76, "
+        << "\"short1\": 21684, \"int1\": -941468492, "
+        << "\"long1\": -6863419716327549772, \"float1\": 0.7762409, "
+        << "\"double1\": 0.77624090391187, \"bytes1\": [123, 108, 207, 27, 93, "
+        << "157, 139, 233, 181, 90, 14, 60, 34, 120, 26, 119, 231, 50, 155, 121], "
+        << "\"string1\": \"887336a7\", \"middle\": {\"list\": [{\"int1\": "
+        << "-941468492, \"string1\": \"887336a7\"}, {\"int1\": -1598014431, "
+        << "\"string1\": \"ba419d35-x\"}]}, \"list\": [], \"map\": [{\"key\": "
+        << "\"ba419d35-x\", \"value\": {\"int1\": -1598014431, \"string1\": "
+        << "\"ba419d35-x\"}}, {\"key\": \"887336a7\", \"value\": {\"int1\": "
+        << "-941468492, \"string1\": \"887336a7\"}}]}";
+    EXPECT_EQ(expected.str(), line);
 
     // Int column #2
     cols.clear();
@@ -936,6 +956,15 @@ TEST(Reader, selectColumns) {
       else
         EXPECT_TRUE(!c[i]);
     }
+    batch = reader->createRowBatch(1);
+    line.clear();
+    printer = createColumnPrinter(line, reader->getType(), &c);
+    reader->next(*batch);
+    printer->reset(*batch);
+    printer->printRow(0);
+    std::string expectedInt("{\"byte1\": -76}");
+    EXPECT_EQ(expectedInt, line);
+
 
     // Struct column #10
     cols.clear();
@@ -949,6 +978,17 @@ TEST(Reader, selectColumns) {
       else
         EXPECT_TRUE(!c[i]);
     }
+    batch = reader->createRowBatch(1);
+    line.clear();
+    printer = createColumnPrinter(line, reader->getType(), &c);
+    reader->next(*batch);
+    printer->reset(*batch);
+    printer->printRow(0);
+    std::ostringstream expectedStruct;
+    expectedStruct << "{\"middle\": {\"list\": "
+        << "[{\"int1\": -941468492, \"string1\": \"887336a7\"}, "
+        << "{\"int1\": -1598014431, \"string1\": \"ba419d35-x\"}]}}";
+    EXPECT_EQ(expectedStruct.str(), line);
 
     // Array column #11
     cols.clear();
@@ -962,6 +1002,14 @@ TEST(Reader, selectColumns) {
       else
         EXPECT_TRUE(!c[i]);
     }
+    batch = reader->createRowBatch(1);
+    line.clear();
+    printer = createColumnPrinter(line, reader->getType(), &c);
+    reader->next(*batch);
+    printer->reset(*batch);
+    printer->printRow(0);
+    std::string expectedArray("{\"list\": []}");
+    EXPECT_EQ(expectedArray, line);
 
     // Map column #12
     cols.clear();
@@ -975,6 +1023,18 @@ TEST(Reader, selectColumns) {
       else
         EXPECT_TRUE(!c[i]);
     }
+    batch = reader->createRowBatch(1);
+    line.clear();
+    printer = createColumnPrinter(line, reader->getType(), &c);
+    reader->next(*batch);
+    printer->reset(*batch);
+    printer->printRow(0);
+    std::ostringstream expectedMap;
+    expectedMap << "{\"map\": [{\"key\": \"ba419d35-x\", \"value\": {\"int1\":"
+        << " -1598014431, \"string1\": \"ba419d35-x\"}}, {\"key\": "
+        << "\"887336a7\", \"value\": {\"int1\": -941468492, \"string1\": "
+        << "\"887336a7\"}}]}";
+    EXPECT_EQ(expectedMap.str(), line);
 }
 
 TEST(Reader, memoryUse) {
