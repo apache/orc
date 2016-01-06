@@ -140,7 +140,7 @@ namespace orc {
     std::unique_ptr<ColumnVectorBatch> batch = reader->createRowBatch(1024);
     std::string line;
     std::unique_ptr<orc::ColumnPrinter> printer =
-      orc::createColumnPrinter(line, reader->getType());
+      orc::createColumnPrinter(line, &reader->getSelectedType());
     GzipTextReader expected(getJsonFilename());
     std::string expectedLine;
     while (reader->next(*batch)) {
@@ -511,8 +511,8 @@ INSTANTIATE_TEST_CASE_P(TestReader1900, MatchTest,
 
   TEST(Reader, columnSelectionTest) {
     ReaderOptions opts;
-    std::list<int64_t> includes;
-    for(int i=1; i < 10; i += 2) {
+    std::list<uint64_t> includes;
+    for(uint64_t i=0; i < 9; i += 2) {
       includes.push_back(i);
     }
     opts.include(includes);
@@ -545,17 +545,17 @@ INSTANTIATE_TEST_CASE_P(TestReader1900, MatchTest,
     EXPECT_EQ("_col6", rootType.getFieldName(6));
     EXPECT_EQ("_col7", rootType.getFieldName(7));
     EXPECT_EQ("_col8", rootType.getFieldName(8));
-    EXPECT_EQ(INT, rootType.getSubtype(0).getKind());
-    EXPECT_EQ(STRING, rootType.getSubtype(1).getKind());
-    EXPECT_EQ(STRING, rootType.getSubtype(2).getKind());
-    EXPECT_EQ(STRING, rootType.getSubtype(3).getKind());
-    EXPECT_EQ(INT, rootType.getSubtype(4).getKind());
-    EXPECT_EQ(STRING, rootType.getSubtype(5).getKind());
-    EXPECT_EQ(INT, rootType.getSubtype(6).getKind());
-    EXPECT_EQ(INT, rootType.getSubtype(7).getKind());
-    EXPECT_EQ(INT, rootType.getSubtype(8).getKind());
+    EXPECT_EQ(INT, rootType.getSubtype(0)->getKind());
+    EXPECT_EQ(STRING, rootType.getSubtype(1)->getKind());
+    EXPECT_EQ(STRING, rootType.getSubtype(2)->getKind());
+    EXPECT_EQ(STRING, rootType.getSubtype(3)->getKind());
+    EXPECT_EQ(INT, rootType.getSubtype(4)->getKind());
+    EXPECT_EQ(STRING, rootType.getSubtype(5)->getKind());
+    EXPECT_EQ(INT, rootType.getSubtype(6)->getKind());
+    EXPECT_EQ(INT, rootType.getSubtype(7)->getKind());
+    EXPECT_EQ(INT, rootType.getSubtype(8)->getKind());
     for(unsigned int i=0; i < 9; ++i) {
-      EXPECT_EQ(i + 1, rootType.getSubtype(i).getColumnId())
+      EXPECT_EQ(i + 1, rootType.getSubtype(i)->getColumnId())
         << "fail on " << i;
     }
 
@@ -637,6 +637,11 @@ INSTANTIATE_TEST_CASE_P(TestReader1900, MatchTest,
     StructVectorBatch *fullStructBatch =
       dynamic_cast<StructVectorBatch*>(fullBatch.get());
     ASSERT_TRUE(fullStructBatch != nullptr);
+    std::cout << "OOM fullBatch " << reinterpret_cast<uint64_t>(fullStructBatch)
+              << "\n";
+    std::cout << "OOM fields.size() "
+              << fullStructBatch->fields.size()
+              << "\n";
     LongVectorBatch* fullLongVector =
       dynamic_cast<LongVectorBatch*>(fullStructBatch->fields[0]);
     ASSERT_TRUE(fullLongVector != nullptr);
@@ -911,11 +916,8 @@ TEST(Reader, selectColumns) {
     orc::ReaderOptions opts;
     std::ostringstream filename;
     filename << exampleDirectory << "/TestOrcFile.testSeek.orc";
-    std::list<int64_t> cols;
 
     // All columns
-    cols.push_back(0);
-    opts.include(cols);
     std::unique_ptr<orc::Reader> reader =
         orc::createReader(orc::readLocalFile(filename.str()), opts);
     std::vector<bool> c = reader->getSelectedColumns();
@@ -923,10 +925,30 @@ TEST(Reader, selectColumns) {
     for (unsigned int i=0; i < c.size(); i++) {
       EXPECT_TRUE(c[i]);
     }
+    std::unique_ptr<orc::ColumnVectorBatch> batch = reader->createRowBatch(1);
+    std::string line;
+    std::unique_ptr<orc::ColumnPrinter> printer =
+        createColumnPrinter(line, &reader->getSelectedType());
+    reader->next(*batch);
+    printer->reset(*batch);
+    printer->printRow(0);
+    std::ostringstream expected;
+    expected << "{\"boolean1\": true, \"byte1\": -76, "
+        << "\"short1\": 21684, \"int1\": -941468492, "
+        << "\"long1\": -6863419716327549772, \"float1\": 0.7762409, "
+        << "\"double1\": 0.77624090391187, \"bytes1\": [123, 108, 207, 27, 93, "
+        << "157, 139, 233, 181, 90, 14, 60, 34, 120, 26, 119, 231, 50, 155, 121], "
+        << "\"string1\": \"887336a7\", \"middle\": {\"list\": [{\"int1\": "
+        << "-941468492, \"string1\": \"887336a7\"}, {\"int1\": -1598014431, "
+        << "\"string1\": \"ba419d35-x\"}]}, \"list\": [], \"map\": [{\"key\": "
+        << "\"ba419d35-x\", \"value\": {\"int1\": -1598014431, \"string1\": "
+        << "\"ba419d35-x\"}}, {\"key\": \"887336a7\", \"value\": {\"int1\": "
+        << "-941468492, \"string1\": \"887336a7\"}}]}";
+    EXPECT_EQ(expected.str(), line);
 
     // Int column #2
-    cols.clear();
-    cols.push_back(2);
+    std::list<uint64_t> cols;
+    cols.push_back(1);
     opts.include(cols);
     reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
     c = reader->getSelectedColumns();
@@ -936,10 +958,19 @@ TEST(Reader, selectColumns) {
       else
         EXPECT_TRUE(!c[i]);
     }
+    batch = reader->createRowBatch(1);
+    line.clear();
+    printer = createColumnPrinter(line, &reader->getSelectedType());
+    reader->next(*batch);
+    printer->reset(*batch);
+    printer->printRow(0);
+    std::string expectedInt("{\"byte1\": -76}");
+    EXPECT_EQ(expectedInt, line);
+
 
     // Struct column #10
     cols.clear();
-    cols.push_back(10);
+    cols.push_back(9);
     opts.include(cols);
     reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
     c = reader->getSelectedColumns();
@@ -949,10 +980,21 @@ TEST(Reader, selectColumns) {
       else
         EXPECT_TRUE(!c[i]);
     }
+    batch = reader->createRowBatch(1);
+    line.clear();
+    printer = createColumnPrinter(line, &reader->getSelectedType());
+    reader->next(*batch);
+    printer->reset(*batch);
+    printer->printRow(0);
+    std::ostringstream expectedStruct;
+    expectedStruct << "{\"middle\": {\"list\": "
+        << "[{\"int1\": -941468492, \"string1\": \"887336a7\"}, "
+        << "{\"int1\": -1598014431, \"string1\": \"ba419d35-x\"}]}}";
+    EXPECT_EQ(expectedStruct.str(), line);
 
     // Array column #11
     cols.clear();
-    cols.push_back(11);
+    cols.push_back(10);
     opts.include(cols);
     reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
     c = reader->getSelectedColumns();
@@ -962,10 +1004,18 @@ TEST(Reader, selectColumns) {
       else
         EXPECT_TRUE(!c[i]);
     }
+    batch = reader->createRowBatch(1);
+    line.clear();
+    printer = createColumnPrinter(line, &reader->getSelectedType());
+    reader->next(*batch);
+    printer->reset(*batch);
+    printer->printRow(0);
+    std::string expectedArray("{\"list\": []}");
+    EXPECT_EQ(expectedArray, line);
 
     // Map column #12
     cols.clear();
-    cols.push_back(12);
+    cols.push_back(11);
     opts.include(cols);
     reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
     c = reader->getSelectedColumns();
@@ -975,6 +1025,18 @@ TEST(Reader, selectColumns) {
       else
         EXPECT_TRUE(!c[i]);
     }
+    batch = reader->createRowBatch(1);
+    line.clear();
+    printer = createColumnPrinter(line, &reader->getSelectedType());
+    reader->next(*batch);
+    printer->reset(*batch);
+    printer->printRow(0);
+    std::ostringstream expectedMap;
+    expectedMap << "{\"map\": [{\"key\": \"ba419d35-x\", \"value\": {\"int1\":"
+        << " -1598014431, \"string1\": \"ba419d35-x\"}}, {\"key\": "
+        << "\"887336a7\", \"value\": {\"int1\": -941468492, \"string1\": "
+        << "\"887336a7\"}}]}";
+    EXPECT_EQ(expectedMap.str(), line);
 }
 
 TEST(Reader, memoryUse) {
@@ -983,10 +1045,10 @@ TEST(Reader, memoryUse) {
   std::unique_ptr<orc::Reader> reader;
   std::unique_ptr<orc::ColumnVectorBatch> batch;
   orc::ReaderOptions opts;
-  std::list<int64_t> cols;
+  std::list<uint64_t> cols;
 
   // Int column
-  cols.push_back(2);
+  cols.push_back(1);
   opts.include(cols);
   reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
   EXPECT_EQ(483517, reader->getMemoryUse());
@@ -998,7 +1060,7 @@ TEST(Reader, memoryUse) {
 
   // Binary column
   cols.clear();
-  cols.push_back(8);
+  cols.push_back(7);
   opts.include(cols);
   reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
   EXPECT_EQ(835906, reader->getMemoryUse());
@@ -1008,7 +1070,7 @@ TEST(Reader, memoryUse) {
 
   // String column
   cols.clear();
-  cols.push_back(9);
+  cols.push_back(8);
   opts.include(cols);
   reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
   EXPECT_EQ(901442, reader->getMemoryUse());
@@ -1018,7 +1080,7 @@ TEST(Reader, memoryUse) {
 
   // Struct column (with a List subcolumn)
   cols.clear();
-  cols.push_back(10);
+  cols.push_back(9);
   opts.include(cols);
   reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
   EXPECT_EQ(1294658, reader->getMemoryUse());
@@ -1028,7 +1090,7 @@ TEST(Reader, memoryUse) {
 
   // List column
    cols.clear();
-   cols.push_back(11);
+   cols.push_back(10);
    opts.include(cols);
    reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
    EXPECT_EQ(1229122, reader->getMemoryUse());
@@ -1038,7 +1100,7 @@ TEST(Reader, memoryUse) {
 
   // Map column
   cols.clear();
-  cols.push_back(12);
+  cols.push_back(11);
   opts.include(cols);
   reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
   EXPECT_EQ(1491266, reader->getMemoryUse());
@@ -1048,7 +1110,9 @@ TEST(Reader, memoryUse) {
 
   // All columns
   cols.clear();
-  cols.push_back(0);
+  for(uint64_t c=0; c < 12; ++c) {
+    cols.push_back(c);
+  }
   opts.include(cols);
   reader = orc::createReader(orc::readLocalFile(filename.str()), opts);
   EXPECT_EQ(4112706, reader->getMemoryUse());

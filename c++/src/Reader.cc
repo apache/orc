@@ -39,7 +39,10 @@
 namespace orc {
 
   struct ReaderOptionsPrivate {
-    std::list<int64_t> includedColumns;
+    bool setIndexes;
+    bool setNames;
+    std::list<uint64_t> includedColumnIndexes;
+    std::list<std::string> includedColumnNames;
     uint64_t dataStart;
     uint64_t dataLength;
     uint64_t tailLocation;
@@ -50,7 +53,8 @@ namespace orc {
     std::string serializedTail;
 
     ReaderOptionsPrivate() {
-      includedColumns.assign(1,0);
+      setIndexes = false;
+      setNames = false;
       dataStart = 0;
       dataLength = std::numeric_limits<uint64_t>::max();
       tailLocation = std::numeric_limits<uint64_t>::max();
@@ -91,13 +95,20 @@ namespace orc {
     // PASS
   }
 
-  ReaderOptions& ReaderOptions::include(const std::list<int64_t>& include) {
-    privateBits->includedColumns.assign(include.begin(), include.end());
+  ReaderOptions& ReaderOptions::include(const std::list<uint64_t>& include) {
+    privateBits->setIndexes = true;
+    privateBits->includedColumnIndexes.assign(include.begin(), include.end());
+    privateBits->setNames = false;
+    privateBits->includedColumnNames.clear();
     return *this;
   }
 
-  ReaderOptions& ReaderOptions::include(std::vector<int64_t> include) {
-    privateBits->includedColumns.assign(include.begin(), include.end());
+  ReaderOptions& ReaderOptions::include
+       (const std::list<std::string>& include) {
+    privateBits->setNames = true;
+    privateBits->includedColumnNames.assign(include.begin(), include.end());
+    privateBits->setIndexes = false;
+    privateBits->includedColumnIndexes.clear();
     return *this;
   }
 
@@ -128,8 +139,20 @@ namespace orc {
     return privateBits->memoryPool;
   }
 
-  const std::list<int64_t>& ReaderOptions::getInclude() const {
-    return privateBits->includedColumns;
+  bool ReaderOptions::getIndexesSet() const {
+    return privateBits->setIndexes;
+  }
+
+  const std::list<uint64_t>& ReaderOptions::getInclude() const {
+    return privateBits->includedColumnIndexes;
+  }
+
+  bool ReaderOptions::getNamesSet() const {
+    return privateBits->setNames;
+  }
+
+  const std::list<std::string>& ReaderOptions::getIncludeNames() const {
+    return privateBits->includedColumnNames;
   }
 
   uint64_t ReaderOptions::getOffset() const {
@@ -875,6 +898,7 @@ namespace orc {
     DataBuffer<uint64_t> firstRowOfStripe;
     uint64_t numberOfStripes;
     std::unique_ptr<Type> schema;
+    mutable std::unique_ptr<Type> selectedSchema;
 
     // metadata
     mutable std::unique_ptr<proto::Metadata> metadata;
@@ -897,9 +921,8 @@ namespace orc {
     void checkOrcVersion();
     void selectType(const Type& type);
     void readMetadata() const;
-    std::unique_ptr<ColumnVectorBatch> createRowBatch(const Type& type,
-                                                      uint64_t capacity
-                                                      ) const;
+    void updateSelected(const std::list<uint64_t>& fieldIds);
+    void updateSelected(const std::list<std::string>& fieldNames);
 
   public:
     /**
@@ -955,6 +978,8 @@ namespace orc {
                                                           ) const override;
 
     const Type& getType() const override;
+
+    const Type& getSelectedType() const override;
 
     const std::vector<bool> getSelectedColumns() const override;
 
@@ -1062,30 +1087,23 @@ namespace orc {
     }
 
     schema = convertType(footer->types(0), *footer);
-    schema->assignIds(0);
 
     selectedColumns.assign(static_cast<size_t>(footer->types_size()), false);
-
-    const std::list<int64_t>& included = options.getInclude();
-    for(std::list<int64_t>::const_iterator columnId = included.begin();
-        columnId != included.end(); ++columnId) {
-      if (*columnId == 0) {
-        selectType(*(schema.get()));
-      } else if (*columnId <=
-                 static_cast<int64_t>(schema->getSubtypeCount())) {
-        selectType(schema->getSubtype(static_cast<uint64_t>(*columnId-1)));
-      }
+    if (schema->getKind() == STRUCT && options.getIndexesSet()) {
+      updateSelected(options.getInclude());
+    } else if (schema->getKind() == STRUCT && options.getNamesSet()) {
+      updateSelected(options.getIncludeNames());
+    } else {
+      std::fill(selectedColumns.begin(), selectedColumns.end(), true);
     }
-    if (included.size() > 0) {
-      selectedColumns[0] = true;
-    }
+    selectedColumns[0] = true;
   }
 
   void ReaderImpl::selectType(const Type& type) {
     if (!selectedColumns[static_cast<size_t>(type.getColumnId())]) {
       selectedColumns[static_cast<size_t>(type.getColumnId())] = true;
       for (uint64_t i=0; i < type.getSubtypeCount(); i++) {
-        selectType(type.getSubtype(i));
+        selectType(*type.getSubtype(i));
       }
     }
   }
@@ -1206,6 +1224,14 @@ namespace orc {
     return *(schema.get());
   }
 
+  const Type& ReaderImpl::getSelectedType() const {
+    if (selectedSchema.get() == nullptr) {
+      selectedSchema = buildSelectedType(schema.get(),
+                                         selectedColumns);
+    }
+    return *(selectedSchema.get());
+  }
+
   uint64_t ReaderImpl::getRowNumber() const {
     return previousRow;
   }
@@ -1298,10 +1324,10 @@ namespace orc {
     }
 
     currentStripe = seekToStripe;
-    currentRowInStripe = 0;
-    std::unique_ptr<orc::ColumnVectorBatch> batch =
-        createRowBatch(rowNumber-firstRowOfStripe[currentStripe]);
-    next(*batch);
+    currentRowInStripe = rowNumber - firstRowOfStripe[currentStripe];
+    previousRow = rowNumber;
+    startNextStripe();
+    reader->skip(currentRowInStripe);
   }
 
   bool ReaderImpl::hasCorrectStatistics() const {
@@ -1353,10 +1379,11 @@ namespace orc {
 
     virtual const std::vector<bool> getSelectedColumns() const override;
 
-    virtual proto::ColumnEncoding getEncoding(int64_t columnId) const override;
+    virtual proto::ColumnEncoding getEncoding(uint64_t columnId
+                                              ) const override;
 
     virtual std::unique_ptr<SeekableInputStream>
-    getStream(int64_t columnId,
+    getStream(uint64_t columnId,
               proto::Stream_Kind kind,
               bool shouldStream) const override;
 
@@ -1497,7 +1524,7 @@ namespace orc {
     return reader.getSelectedColumns();
   }
 
-  proto::ColumnEncoding StripeStreamsImpl::getEncoding(int64_t columnId
+  proto::ColumnEncoding StripeStreamsImpl::getEncoding(uint64_t columnId
                                                        ) const {
     return footer.columns(static_cast<int>(columnId));
   }
@@ -1507,7 +1534,7 @@ namespace orc {
   }
 
   std::unique_ptr<SeekableInputStream>
-  StripeStreamsImpl::getStream(int64_t columnId,
+  StripeStreamsImpl::getStream(uint64_t columnId,
                                proto::Stream_Kind kind,
                                bool shouldStream) const {
     uint64_t offset = stripeStart;
@@ -1591,96 +1618,8 @@ namespace orc {
   }
 
   std::unique_ptr<ColumnVectorBatch> ReaderImpl::createRowBatch
-  (const Type& type, uint64_t capacity) const {
-    ColumnVectorBatch* result = nullptr;
-    const Type* subtype;
-    switch (static_cast<int64_t>(type.getKind())) {
-    case BOOLEAN:
-    case BYTE:
-    case SHORT:
-    case INT:
-    case LONG:
-    case DATE:
-      result = new LongVectorBatch(capacity, memoryPool);
-      break;
-    case FLOAT:
-    case DOUBLE:
-      result = new DoubleVectorBatch(capacity, memoryPool);
-      break;
-    case STRING:
-    case BINARY:
-    case CHAR:
-    case VARCHAR:
-      result = new StringVectorBatch(capacity, memoryPool);
-      break;
-    case TIMESTAMP:
-      result = new TimestampVectorBatch(capacity, memoryPool);
-      break;
-    case STRUCT:
-      {
-        StructVectorBatch *structResult =
-          new StructVectorBatch(capacity, memoryPool);
-        result = structResult;
-        for(uint64_t i=0; i < type.getSubtypeCount(); ++i) {
-          subtype = &(type.getSubtype(i));
-          if (selectedColumns[static_cast<size_t>(subtype->getColumnId())]) {
-            structResult->fields.push_back(createRowBatch(*subtype,
-                                                          capacity).release());
-          }
-        }
-      }
-      break;
-    case LIST:
-      result = new ListVectorBatch(capacity, memoryPool);
-      subtype = &(type.getSubtype(0));
-      if (selectedColumns[static_cast<size_t>(subtype->getColumnId())]) {
-        dynamic_cast<ListVectorBatch*>(result)->elements =
-          createRowBatch(*subtype, capacity);
-      }
-      break;
-    case MAP:
-      result = new MapVectorBatch(capacity, memoryPool);
-      subtype = &(type.getSubtype(0));
-      if (selectedColumns[static_cast<size_t>(subtype->getColumnId())]) {
-        dynamic_cast<MapVectorBatch*>(result)->keys =
-          createRowBatch(*subtype, capacity);
-      }
-      subtype = &(type.getSubtype(1));
-      if (selectedColumns[static_cast<size_t>(subtype->getColumnId())]) {
-        dynamic_cast<MapVectorBatch*>(result)->elements =
-          createRowBatch(*subtype, capacity);
-      }
-      break;
-    case DECIMAL:
-      if (type.getPrecision() == 0 || type.getPrecision() > 18) {
-        result = new Decimal128VectorBatch(capacity, memoryPool);
-      } else {
-        result = new Decimal64VectorBatch(capacity, memoryPool);
-      }
-      break;
-    case UNION:
-      {
-        UnionVectorBatch *unionResult =
-          new UnionVectorBatch(capacity, memoryPool);
-        result = unionResult;
-        for(uint64_t i=0; i < type.getSubtypeCount(); ++i) {
-          subtype = &(type.getSubtype(i));
-          if (selectedColumns[static_cast<size_t>(subtype->getColumnId())]) {
-            unionResult->children.push_back(createRowBatch(*subtype,
-                                                          capacity).release());
-          }
-        }
-      }
-      break;
-    default:
-      throw NotImplementedYet("not supported yet");
-    }
-    return std::unique_ptr<ColumnVectorBatch>(result);
-  }
-
-  std::unique_ptr<ColumnVectorBatch> ReaderImpl::createRowBatch
                                               (uint64_t capacity) const {
-    return createRowBatch(*(schema.get()), capacity);
+    return getSelectedType().createRowBatch(capacity, memoryPool);
   }
 
   void ensureOrcFooter(InputStream* stream,
@@ -2045,4 +1984,43 @@ namespace orc {
     }
   }
 
+  void ReaderImpl::updateSelected(const std::list<uint64_t>& fieldIds) {
+    uint64_t childCount = schema->getSubtypeCount();
+    for(std::list<uint64_t>::const_iterator i = fieldIds.begin();
+        i != fieldIds.end(); ++i) {
+      if (*i >= childCount) {
+        std::stringstream buffer;
+        buffer << "Invalid column selected " << *i << " out of "
+               << childCount;
+        throw ParseError(buffer.str());
+      }
+      const Type& child = *schema->getSubtype(*i);
+      for(size_t c = child.getColumnId();
+          c <= child.getMaximumColumnId(); ++c){
+        selectedColumns[c] = true;
+      }
+    }
+  }
+
+  void ReaderImpl::updateSelected(const std::list<std::string>& fieldNames) {
+    uint64_t childCount = schema->getSubtypeCount();
+    for(std::list<std::string>::const_iterator i = fieldNames.begin();
+        i != fieldNames.end(); ++i) {
+      bool foundMatch = false;
+      for(size_t field=0; field < childCount; ++field) {
+        if (schema->getFieldName(field) == *i) {
+          const Type& child = *schema->getSubtype(field);
+          for(size_t c = child.getColumnId();
+              c <= child.getMaximumColumnId(); ++c){
+            selectedColumns[c] = true;
+          }
+          foundMatch = true;
+          break;
+        }
+      }
+      if (!foundMatch) {
+        throw ParseError("Invalid column selected " + *i);
+      }
+    }
+  }
 }// namespace

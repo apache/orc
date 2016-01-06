@@ -77,6 +77,7 @@ install(FILES
   "orc/MemoryPool.hh"
   "orc/OrcFile.hh"
   "orc/Reader.hh"
+  "orc/Type.hh"
   "orc/Vector.hh"
   DESTINATION "include/orc"
   )

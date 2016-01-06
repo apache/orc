@@ -30,7 +30,9 @@ namespace orc {
   }
 
   TypeImpl::TypeImpl(TypeKind _kind) {
-    columnId = 0;
+    parent = nullptr;
+    columnId = -1;
+    maximumColumnId = -1;
     kind = _kind;
     maxLength = 0;
     precision = 0;
@@ -39,7 +41,9 @@ namespace orc {
   }
 
   TypeImpl::TypeImpl(TypeKind _kind, uint64_t _maxLength) {
-    columnId = 0;
+    parent = nullptr;
+    columnId = -1;
+    maximumColumnId = -1;
     kind = _kind;
     maxLength = _maxLength;
     precision = 0;
@@ -49,7 +53,9 @@ namespace orc {
 
   TypeImpl::TypeImpl(TypeKind _kind, uint64_t _precision,
                      uint64_t _scale) {
-    columnId = 0;
+    parent = nullptr;
+    columnId = -1;
+    maximumColumnId = -1;
     kind = _kind;
     maxLength = 0;
     precision = _precision;
@@ -57,35 +63,13 @@ namespace orc {
     subtypeCount = 0;
   }
 
-  TypeImpl::TypeImpl(TypeKind _kind,
-                     const std::vector<Type*>& types,
-                     const std::vector<std::string>& _fieldNames) {
-    columnId = 0;
-    kind = _kind;
-    maxLength = 0;
-    precision = 0;
-    scale = 0;
-    subtypeCount = static_cast<uint64_t>(types.size());
-    subTypes.assign(types.begin(), types.end());
-    fieldNames.assign(_fieldNames.begin(), _fieldNames.end());
-  }
-
-  TypeImpl::TypeImpl(TypeKind _kind, const std::vector<Type*>& types) {
-    columnId = 0;
-    kind = _kind;
-    maxLength = 0;
-    precision = 0;
-    scale = 0;
-    subtypeCount = static_cast<uint64_t>(types.size());
-    subTypes.assign(types.begin(), types.end());
-  }
-
-  int64_t TypeImpl::assignIds(int64_t root) {
-    columnId = root;
-    int64_t current = root + 1;
+  uint64_t TypeImpl::assignIds(uint64_t root) const {
+    columnId = static_cast<int64_t>(root);
+    uint64_t current = root + 1;
     for(uint64_t i=0; i < subtypeCount; ++i) {
-      current = subTypes[i]->assignIds(current);
+      current = dynamic_cast<TypeImpl*>(subTypes[i])->assignIds(current);
     }
+    maximumColumnId = static_cast<int64_t>(current) - 1;
     return current;
   }
 
@@ -96,8 +80,24 @@ namespace orc {
     }
   }
 
-  int64_t TypeImpl::getColumnId() const {
-    return columnId;
+  void TypeImpl::ensureIdAssigned() const {
+    if (columnId == -1) {
+      const TypeImpl* root = this;
+      while (root->parent != nullptr) {
+        root = root->parent;
+      }
+      root->assignIds(0);
+    }
+  }
+
+  uint64_t TypeImpl::getColumnId() const {
+    ensureIdAssigned();
+    return static_cast<uint64_t>(columnId);
+  }
+
+  uint64_t TypeImpl::getMaximumColumnId() const {
+    ensureIdAssigned();
+    return static_cast<uint64_t>(maximumColumnId);
   }
 
   TypeKind TypeImpl::getKind() const {
@@ -108,8 +108,8 @@ namespace orc {
     return subtypeCount;
   }
 
-  const Type& TypeImpl::getSubtype(uint64_t i) const {
-    return *(subTypes[i]);
+  const Type* TypeImpl::getSubtype(uint64_t i) const {
+    return subTypes[i];
   }
 
   const std::string& TypeImpl::getFieldName(uint64_t i) const {
@@ -128,13 +128,30 @@ namespace orc {
     return scale;
   }
 
-  Type& TypeImpl::addStructField(std::unique_ptr<Type> fieldType,
-                                 const std::string& fieldName) {
-    Type* result = fieldType.release();
-    subTypes.push_back(result);
-    fieldNames.push_back(fieldName);
+  void TypeImpl::setIds(uint64_t _columnId, uint64_t _maxColumnId) {
+    columnId = static_cast<int64_t>(_columnId);
+    maximumColumnId = static_cast<int64_t>(_maxColumnId);
+  }
+
+  void TypeImpl::addChildType(std::unique_ptr<Type> childType) {
+    TypeImpl* child = dynamic_cast<TypeImpl*>(childType.release());
+    subTypes.push_back(child);
+    if (child != nullptr) {
+      child->parent = this;
+    }
     subtypeCount += 1;
-    return *result;
+  }
+
+  Type* TypeImpl::addStructField(const std::string& fieldName,
+                                 std::unique_ptr<Type> fieldType) {
+    addChildType(std::move(fieldType));
+    fieldNames.push_back(fieldName);
+    return this;
+  }
+
+  Type* TypeImpl::addUnionChild(std::unique_ptr<Type> fieldType) {
+    addChildType(std::move(fieldType));
+    return this;
   }
 
   std::string TypeImpl::toString() const {
@@ -160,10 +177,10 @@ namespace orc {
     case TIMESTAMP:
       return "timestamp";
     case LIST:
-      return "array<" + subTypes[0]->toString() + ">";
+      return "array<" + (subTypes[0] ? subTypes[0]->toString() : "void") + ">";
     case MAP:
-      return "map<" + subTypes[0]->toString() + "," +
-        subTypes[1]->toString() +  ">";
+      return "map<" + (subTypes[0] ? subTypes[0]->toString() : "void") + "," +
+        (subTypes[1] ? subTypes[1]->toString() : "void") +  ">";
     case STRUCT: {
       std::string result = "struct<";
       for(size_t i=0; i < subTypes.size(); ++i) {
@@ -210,6 +227,89 @@ namespace orc {
     }
   }
 
+  std::unique_ptr<ColumnVectorBatch>
+  TypeImpl::createRowBatch(uint64_t capacity,
+                           MemoryPool& memoryPool) const {
+    switch (static_cast<int64_t>(kind)) {
+    case BOOLEAN:
+    case BYTE:
+    case SHORT:
+    case INT:
+    case LONG:
+    case DATE:
+      return std::unique_ptr<ColumnVectorBatch>
+        (new LongVectorBatch(capacity, memoryPool));
+
+    case FLOAT:
+    case DOUBLE:
+      return std::unique_ptr<ColumnVectorBatch>
+        (new DoubleVectorBatch(capacity, memoryPool));
+
+    case STRING:
+    case BINARY:
+    case CHAR:
+    case VARCHAR:
+      return std::unique_ptr<ColumnVectorBatch>
+        (new StringVectorBatch(capacity, memoryPool));
+
+    case TIMESTAMP:
+      return std::unique_ptr<ColumnVectorBatch>
+        (new TimestampVectorBatch(capacity, memoryPool));
+
+    case STRUCT: {
+      StructVectorBatch *result = new StructVectorBatch(capacity, memoryPool);
+      for(uint64_t i=0; i < getSubtypeCount(); ++i) {
+          result->fields.push_back(getSubtype(i)->
+                                   createRowBatch(capacity,
+                                                  memoryPool).release());
+      }
+      return std::unique_ptr<ColumnVectorBatch>(result);
+    }
+
+    case LIST: {
+      ListVectorBatch* result = new ListVectorBatch(capacity, memoryPool);
+      if (getSubtype(0) != nullptr) {
+        result->elements = getSubtype(0)->createRowBatch(capacity, memoryPool);
+      }
+      return std::unique_ptr<ColumnVectorBatch>(result);
+    }
+
+    case MAP: {
+      MapVectorBatch* result = new MapVectorBatch(capacity, memoryPool);
+      if (getSubtype(0) != nullptr) {
+        result->keys = getSubtype(0)->createRowBatch(capacity, memoryPool);
+      }
+      if (getSubtype(1) != nullptr) {
+        result->elements = getSubtype(1)->createRowBatch(capacity, memoryPool);
+      }
+      return std::unique_ptr<ColumnVectorBatch>(result);
+    }
+
+    case DECIMAL: {
+      if (getPrecision() == 0 || getPrecision() > 18) {
+        return std::unique_ptr<ColumnVectorBatch>
+          (new Decimal128VectorBatch(capacity, memoryPool));
+      } else {
+        return std::unique_ptr<ColumnVectorBatch>
+          (new Decimal64VectorBatch(capacity, memoryPool));
+      }
+    }
+
+    case UNION: {
+      UnionVectorBatch *result = new UnionVectorBatch(capacity, memoryPool);
+      for(uint64_t i=0; i < getSubtypeCount(); ++i) {
+          result->children.push_back(getSubtype(i)->createRowBatch(capacity,
+                                                                   memoryPool)
+                                     .release());
+      }
+      return std::unique_ptr<ColumnVectorBatch>(result);
+    }
+
+    default:
+      throw NotImplementedYet("not supported yet");
+    }
+  }
+
   std::unique_ptr<Type> createPrimitiveType(TypeKind kind) {
     return std::unique_ptr<Type>(new TypeImpl(kind));
   }
@@ -228,55 +328,22 @@ namespace orc {
     return std::unique_ptr<Type>(new TypeImpl(STRUCT));
   }
 
-  std::unique_ptr<Type>
-      createStructType(std::vector<Type*> types,
-                       std::vector<std::string> fieldNames) {
-    std::vector<Type*> typeVector(types.begin(), types.end());
-    std::vector<std::string> fieldVector(fieldNames.begin(), fieldNames.end());
-
-    return std::unique_ptr<Type>(new TypeImpl(STRUCT, typeVector,
-                                              fieldVector));
-  }
-
-#ifdef ORC_CXX_HAS_INITIALIZER_LIST
-  std::unique_ptr<Type> createStructType(
-      std::initializer_list<std::unique_ptr<Type> > types,
-      std::initializer_list<std::string> fieldNames) {
-    std::vector<Type*> typeVector(types.size());
-    std::vector<std::string> fieldVector(types.size());
-    auto currentType = types.begin();
-    auto endType = types.end();
-    size_t current = 0;
-    while (currentType != endType) {
-      typeVector[current++] =
-          const_cast<std::unique_ptr<Type>*>(currentType)->release();
-      ++currentType;
-    }
-    fieldVector.insert(fieldVector.end(), fieldNames.begin(),
-        fieldNames.end());
-    return std::unique_ptr<Type>(new TypeImpl(STRUCT, typeVector,
-        fieldVector));
-  }
-#endif
-
   std::unique_ptr<Type> createListType(std::unique_ptr<Type> elements) {
-    std::vector<Type*> subtypes(1);
-    subtypes[0] = elements.release();
-    return std::unique_ptr<Type>(new TypeImpl(LIST, subtypes));
+    TypeImpl* result = new TypeImpl(LIST);
+    result->addChildType(std::move(elements));
+    return std::unique_ptr<Type>(result);
   }
 
   std::unique_ptr<Type> createMapType(std::unique_ptr<Type> key,
                                       std::unique_ptr<Type> value) {
-    std::vector<Type*> subtypes(2);
-    subtypes[0] = key.release();
-    subtypes[1] = value.release();
-    return std::unique_ptr<Type>(new TypeImpl(MAP, subtypes));
+    TypeImpl* result = new TypeImpl(MAP);
+    result->addChildType(std::move(key));
+    result->addChildType(std::move(value));
+    return std::unique_ptr<Type>(result);
   }
 
-  std::unique_ptr<Type>
-      createUnionType(std::vector<Type*> types) {
-    std::vector<Type*> typeVector(types.begin(), types.end());
-    return std::unique_ptr<Type>(new TypeImpl(UNION, typeVector));
+  std::unique_ptr<Type> createUnionType() {
+    return std::unique_ptr<Type>(new TypeImpl(UNION));
   }
 
   std::string printProtobufMessage(const google::protobuf::Message& message);
@@ -311,59 +378,117 @@ namespace orc {
     case proto::Type_Kind_LIST:
     case proto::Type_Kind_MAP:
     case proto::Type_Kind_UNION: {
-      uint64_t size = static_cast<uint64_t>(type.subtypes_size());
-      std::vector<Type*> typeList(size);
+      TypeImpl* result = new TypeImpl(static_cast<TypeKind>(type.kind()));
       for(int i=0; i < type.subtypes_size(); ++i) {
-        typeList[static_cast<uint64_t>(i)] =
-          convertType(footer.types(static_cast<int>(type.subtypes(i))),
-                      footer).release();
+        result->addUnionChild(convertType(footer.types(static_cast<int>
+                                                       (type.subtypes(i))),
+                                          footer));
       }
-      return std::unique_ptr<Type>
-        (new TypeImpl(static_cast<TypeKind>(type.kind()), typeList));
+      return std::unique_ptr<Type>(result);
     }
 
     case proto::Type_Kind_STRUCT: {
+      TypeImpl* result = new TypeImpl(STRUCT);
       uint64_t size = static_cast<uint64_t>(type.subtypes_size());
       std::vector<Type*> typeList(size);
       std::vector<std::string> fieldList(size);
       for(int i=0; i < type.subtypes_size(); ++i) {
-        typeList[static_cast<uint64_t>(i)] =
-          convertType(footer.types(static_cast<int>(type.subtypes(i))),
-                      footer).release();
-        fieldList[static_cast<uint64_t>(i)] = type.fieldnames(i);
+        result->addStructField(type.fieldnames(i),
+                               convertType(footer.types(static_cast<int>
+                                                        (type.subtypes(i))),
+                                           footer));
       }
-      return std::unique_ptr<Type>
-        (new TypeImpl(STRUCT, typeList, fieldList));
+      return std::unique_ptr<Type>(result);
     }
     default:
       throw NotImplementedYet("Unknown type kind");
     }
   }
 
-  std::string kind2String(TypeKind t) {
-      std::string name ;
-      switch(static_cast<int64_t>(t)) {
-        case BOOLEAN: { name = "BOOLEAN"; break; }
-        case BYTE: { name = "TINYINT"; break; }
-        case SHORT: { name = "SMALLINT"; break; }
-        case INT: { name = "INT"; break; }
-        case LONG: { name = "BIGINT"; break; }
-        case FLOAT: { name = "FLOAT"; break; }
-        case DOUBLE: { name = "DOUBLE"; break; }
-        case STRING: { name = "STRING"; break; }
-        case BINARY: { name = "BINARY"; break; }
-        case TIMESTAMP: { name = "TIMESTAMP"; break; }
-        case LIST: { name = "LIST"; break; }
-        case MAP: { name = "MAP"; break; }
-        case STRUCT: { name = "STRUCT"; break; }
-        case UNION: { name = "UNION"; break; }
-        case DECIMAL: { name = "DECIMAL"; break; }
-        case DATE: { name = "DATE"; break; }
-        case VARCHAR: { name = "VARCHAR"; break; }
-        case CHAR: { name = "CHAR"; break; }
-        default: { name = "UNKNOWN"; break; }
-      }
-      return name ;
+  /**
+   * Build a clone of the file type, projecting columns from the selected
+   * vector. This routine assumes that the parent of any selected column
+   * is also selected. The column ids are copied from the fileType.
+   * @param fileType the type in the file
+   * @param selected is each column by id selected
+   * @return a clone of the fileType filtered by the selection array
+   */
+  std::unique_ptr<Type> buildSelectedType(const Type *fileType,
+                                          const std::vector<bool>& selected) {
+    if (fileType == nullptr || !selected[fileType->getColumnId()]) {
+      return nullptr;
     }
+
+    TypeImpl* result;
+    switch (fileType->getKind()) {
+    case BOOLEAN:
+    case BYTE:
+    case SHORT:
+    case INT:
+    case LONG:
+    case FLOAT:
+    case DOUBLE:
+    case STRING:
+    case BINARY:
+    case TIMESTAMP:
+    case DATE:
+      result = new TypeImpl(fileType->getKind());
+      break;
+
+    case DECIMAL:
+      result= new TypeImpl(fileType->getKind(),
+                           fileType->getPrecision(), fileType->getScale());
+      break;
+
+    case VARCHAR:
+    case CHAR:
+      result = new TypeImpl(fileType->getKind(), fileType->getMaximumLength());
+      break;
+
+    case LIST:
+      result = new TypeImpl(fileType->getKind());
+      result->addChildType(buildSelectedType(fileType->getSubtype(0),
+                                             selected));
+      break;
+
+    case MAP:
+      result = new TypeImpl(fileType->getKind());
+      result->addChildType(buildSelectedType(fileType->getSubtype(0),
+                                             selected));
+      result->addChildType(buildSelectedType(fileType->getSubtype(1),
+                                             selected));
+      break;
+
+    case STRUCT: {
+      result = new TypeImpl(fileType->getKind());
+      for(uint64_t child=0; child < fileType->getSubtypeCount(); ++child) {
+        std::unique_ptr<Type> childType =
+          buildSelectedType(fileType->getSubtype(child), selected);
+        if (childType.get() != nullptr) {
+          result->addStructField(fileType->getFieldName(child),
+                                 std::move(childType));
+        }
+      }
+      break;
+    }
+
+    case UNION: {
+      result = new TypeImpl(fileType->getKind());
+      for(uint64_t child=0; child < fileType->getSubtypeCount(); ++child) {
+        std::unique_ptr<Type> childType =
+          buildSelectedType(fileType->getSubtype(child), selected);
+        if (childType.get() != nullptr) {
+          result->addUnionChild(std::move(childType));
+        }
+      }
+      break;
+    }
+
+    default:
+      throw NotImplementedYet("Unknown type kind");
+    }
+    result->setIds(fileType->getColumnId(), fileType->getMaximumColumnId());
+    return std::unique_ptr<Type>(result);
+  }
 
 }

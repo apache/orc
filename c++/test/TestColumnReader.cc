@@ -37,14 +37,14 @@ namespace orc {
 class MockStripeStreams: public StripeStreams {
 public:
   ~MockStripeStreams();
-  std::unique_ptr<SeekableInputStream> getStream(int64_t columnId,
+  std::unique_ptr<SeekableInputStream> getStream(uint64_t columnId,
                                                  proto::Stream_Kind kind,
                                                  bool stream) const override;
   MOCK_CONST_METHOD0(getReaderOptions, const ReaderOptions&());
   MOCK_CONST_METHOD0(getSelectedColumns, const std::vector<bool>());
-  MOCK_CONST_METHOD1(getEncoding, proto::ColumnEncoding (int64_t));
+  MOCK_CONST_METHOD1(getEncoding, proto::ColumnEncoding (uint64_t));
   MOCK_CONST_METHOD3(getStreamProxy, SeekableInputStream*
-                     (int64_t, proto::Stream_Kind, bool));
+                     (uint64_t, proto::Stream_Kind, bool));
   MemoryPool& getMemoryPool() const {
     return *getDefaultPool();
   }
@@ -60,7 +60,7 @@ MockStripeStreams::~MockStripeStreams() {
 }
 
 std::unique_ptr<SeekableInputStream>
-MockStripeStreams::getStream(int64_t columnId,
+MockStripeStreams::getStream(uint64_t columnId,
                              proto::Stream_Kind kind,
                              bool shouldStream) const {
   return std::unique_ptr < SeekableInputStream >
@@ -98,8 +98,7 @@ TEST(TestColumnReader, testBooleanWithNulls) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createPrimitiveType(BOOLEAN), "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", createPrimitiveType(BOOLEAN));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
   LongVectorBatch *longBatch = new LongVectorBatch(1024, *getDefaultPool());
@@ -152,8 +151,7 @@ TEST(TestColumnReader, testBooleanSkipsWithNulls) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createPrimitiveType(BOOLEAN), "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", createPrimitiveType(BOOLEAN));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
   LongVectorBatch *longBatch = new LongVectorBatch(1024, *getDefaultPool());
@@ -217,8 +215,7 @@ TEST(TestColumnReader, testByteWithNulls) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createPrimitiveType(BYTE), "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", createPrimitiveType(BYTE));
 
   std::unique_ptr<ColumnReader> reader =
       buildReader(*rowType, streams);
@@ -281,8 +278,7 @@ TEST(TestColumnReader, testByteSkipsWithNulls) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createPrimitiveType(BYTE), "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", createPrimitiveType(BYTE));
 
   std::unique_ptr<ColumnReader> reader =
       buildReader(*rowType, streams);
@@ -313,7 +309,7 @@ TEST(TestColumnReader, testIntegerWithNulls) {
 
   // set getSelectedColumns()
   std::vector<bool> selectedColumns(2, true);
-  
+
   EXPECT_CALL(streams, getSelectedColumns())
       .WillRepeatedly(testing::Return(selectedColumns));
 
@@ -337,8 +333,7 @@ TEST(TestColumnReader, testIntegerWithNulls) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createPrimitiveType(INT), "myInt" );
-  rowType->assignIds(0);
+  rowType->addStructField("myInt", createPrimitiveType(INT));
 
   std::unique_ptr<ColumnReader> reader =
       buildReader(*rowType, streams);
@@ -403,8 +398,7 @@ TEST(TestColumnReader, testDictionaryWithNulls) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createPrimitiveType(STRING), "myString");
-  rowType->assignIds(0);
+  rowType->addStructField("myString", createPrimitiveType(STRING));
 
   std::unique_ptr<ColumnReader> reader =
       buildReader(*rowType, streams);
@@ -503,10 +497,9 @@ TEST(TestColumnReader, testVarcharDictionaryWithNulls) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createPrimitiveType(VARCHAR), "col0");
-  rowType->addStructField(createPrimitiveType(CHAR), "col1");
-  rowType->addStructField(createPrimitiveType(STRING), "col2");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", createPrimitiveType(VARCHAR))
+    ->addStructField("col1", createPrimitiveType(CHAR))
+    ->addStructField("col2", createPrimitiveType(STRING));
 
   std::unique_ptr<ColumnReader> reader =
       buildReader(*rowType, streams);
@@ -576,11 +569,14 @@ TEST(TestColumnReader, testSubstructsWithNulls) {
                                       (buffer4, ARRAY_SIZE(buffer4))));
 
   // create the row type
+  std::unique_ptr<Type> innerType = createStructType();
+  innerType->addStructField("col2", createPrimitiveType(LONG));
+
+  std::unique_ptr<Type> middleType = createStructType();
+  middleType->addStructField("col1", std::move(innerType));
+
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createStructType(), "col0")
-    .addStructField(createStructType(), "col1")
-    .addStructField(createPrimitiveType(LONG), "col2");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", std::move(middleType));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -684,9 +680,8 @@ TEST(TestColumnReader, testSkipWithNulls) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createPrimitiveType(INT), "myInt");
-  rowType->addStructField(createPrimitiveType(STRING), "myString");
-  rowType->assignIds(0);
+  rowType->addStructField("myInt", createPrimitiveType(INT));
+  rowType->addStructField("myString", createPrimitiveType(STRING));
 
   std::unique_ptr<ColumnReader> reader =
       buildReader(*rowType, streams);
@@ -766,8 +761,7 @@ TEST(TestColumnReader, testBinaryDirect) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createPrimitiveType(BINARY), "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", createPrimitiveType(BINARY));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -829,8 +823,7 @@ TEST(TestColumnReader, testBinaryDirectWithNulls) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createPrimitiveType(BINARY), "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", createPrimitiveType(BINARY));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -881,7 +874,7 @@ TEST(TestColumnReader, testShortBlobError) {
   EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_DATA, true))
       .WillRepeatedly(testing::Return(new SeekableArrayInputStream
                                       (blob, ARRAY_SIZE(blob))));
-  
+
   const unsigned char buffer1[] = {0x61, 0x00, 0x02};
   EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_LENGTH, true))
       .WillRepeatedly(testing::Return(new SeekableArrayInputStream
@@ -889,8 +882,7 @@ TEST(TestColumnReader, testShortBlobError) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createPrimitiveType(STRING), "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", createPrimitiveType(STRING));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -939,8 +931,7 @@ TEST(TestColumnReader, testStringDirectShortBuffer) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createPrimitiveType(STRING), "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", createPrimitiveType(STRING));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -1002,8 +993,7 @@ TEST(TestColumnReader, testStringDirectShortBufferWithNulls) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createPrimitiveType(STRING), "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", createPrimitiveType(STRING));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -1073,8 +1063,7 @@ TEST(TestColumnReader, testStringDirectNullAcrossWindow) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createPrimitiveType(STRING), "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", createPrimitiveType(STRING));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -1132,7 +1121,7 @@ TEST(TestColumnReader, testStringDirectSkip) {
       (blob, BLOB_SIZE, 200)));
 
   // the stream of 0 to 1199
-  const unsigned char buffer1[] = 
+  const unsigned char buffer1[] =
     { 0x7f, 0x01, 0x00,
       0x7f, 0x01, 0x82, 0x01,
       0x7f, 0x01, 0x84, 0x02,
@@ -1149,8 +1138,7 @@ TEST(TestColumnReader, testStringDirectSkip) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createPrimitiveType(STRING), "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", createPrimitiveType(STRING));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -1250,8 +1238,7 @@ TEST(TestColumnReader, testStringDirectSkipWithNulls) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createPrimitiveType(STRING), "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", createPrimitiveType(STRING));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -1338,8 +1325,7 @@ TEST(TestColumnReader, testList) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createListType(createPrimitiveType(LONG)), "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", createListType(createPrimitiveType(LONG)));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -1371,10 +1357,11 @@ TEST(TestColumnReader, testListPropagateNulls) {
   EXPECT_CALL(streams, getSelectedColumns())
       .WillRepeatedly(testing::Return(selectedColumns));
 
+  std::unique_ptr<Type> innerType = createStructType();
+  innerType->addStructField("col0_0",
+                            createListType(createPrimitiveType(LONG)));
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createStructType(), "col0")
-    .addStructField(createListType(createPrimitiveType(LONG)), "col0_0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", std::move(innerType));
 
   // set getEncoding
   proto::ColumnEncoding directEncoding;
@@ -1495,8 +1482,7 @@ TEST(TestColumnReader, testListWithNulls) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createListType(createPrimitiveType(LONG)), "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", createListType(createPrimitiveType(LONG)));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -1658,8 +1644,7 @@ TEST(TestColumnReader, testListSkipWithNulls) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createListType(createPrimitiveType(LONG)), "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", createListType(createPrimitiveType(LONG)));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -1759,8 +1744,7 @@ TEST(TestColumnReader, testListSkipWithNullsNoData) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createListType(createPrimitiveType(LONG)), "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", createListType(createPrimitiveType(LONG)));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -1857,10 +1841,8 @@ TEST(TestColumnReader, testMap) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createMapType(createPrimitiveType(LONG),
-                                        createPrimitiveType(LONG)),
-                          "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", createMapType(createPrimitiveType(LONG),
+                                                createPrimitiveType(LONG)));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -1976,10 +1958,8 @@ TEST(TestColumnReader, testMapWithNulls) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createMapType(createPrimitiveType(LONG),
-                                        createPrimitiveType(LONG)),
-                          "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", createMapType(createPrimitiveType(LONG),
+                                                createPrimitiveType(LONG)));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -2186,10 +2166,8 @@ TEST(TestColumnReader, testMapSkipWithNulls) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createMapType(createPrimitiveType(LONG),
-                                        createPrimitiveType(LONG)),
-                          "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", createMapType(createPrimitiveType(LONG),
+                                                createPrimitiveType(LONG)));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -2296,10 +2274,8 @@ TEST(TestColumnReader, testMapSkipWithNullsNoData) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createMapType(createPrimitiveType(LONG),
-                                        createPrimitiveType(LONG)),
-                          "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", createMapType(createPrimitiveType(LONG),
+                                                createPrimitiveType(LONG)));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -2384,8 +2360,7 @@ TEST(TestColumnReader, testFloatWithNulls) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createPrimitiveType(FLOAT), "myFloat");
-  rowType->assignIds(0);
+  rowType->addStructField("myFloat", createPrimitiveType(FLOAT));
 
   std::unique_ptr<ColumnReader> reader =
       buildReader(*rowType, streams);
@@ -2448,8 +2423,7 @@ TEST(TestColumnReader, testFloatSkipWithNulls) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createPrimitiveType(FLOAT), "myFloat");
-  rowType->assignIds(0);
+  rowType->addStructField("myFloat", createPrimitiveType(FLOAT));
 
   std::unique_ptr<ColumnReader> reader =
       buildReader(*rowType, streams);
@@ -2550,8 +2524,7 @@ TEST(TestColumnReader, testDoubleWithNulls) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createPrimitiveType(DOUBLE), "myDouble");
-  rowType->assignIds(0);
+  rowType->addStructField("myDouble", createPrimitiveType(DOUBLE));
 
   std::unique_ptr<ColumnReader> reader =
       buildReader(*rowType, streams);
@@ -2615,8 +2588,7 @@ TEST(TestColumnReader, testDoubleSkipWithNulls) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createPrimitiveType(DOUBLE), "myDouble");
-  rowType->assignIds(0);
+  rowType->addStructField("myDouble", createPrimitiveType(DOUBLE));
 
   std::unique_ptr<ColumnReader> reader =
       buildReader(*rowType, streams);
@@ -2687,7 +2659,7 @@ TEST(TestColumnReader, testTimestampSkipWithNulls) {
       .WillRepeatedly(testing::Return(new SeekableArrayInputStream
                                       (buffer1, ARRAY_SIZE(buffer1))));
 
-  const unsigned char buffer2[] = { 0xfc, 0xbb, 0xb5, 0xbe, 0x31, 0xa1, 0xee, 
+  const unsigned char buffer2[] = { 0xfc, 0xbb, 0xb5, 0xbe, 0x31, 0xa1, 0xee,
                                     0xe2, 0x10, 0xf8, 0x92, 0xee, 0xf, 0x92,
                                     0xa0, 0xd4, 0x30 };
   EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_DATA, true))
@@ -2701,8 +2673,7 @@ TEST(TestColumnReader, testTimestampSkipWithNulls) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createPrimitiveType(TIMESTAMP), "myTimestamp");
-  rowType->assignIds(0);
+  rowType->addStructField("myTimestamp", createPrimitiveType(TIMESTAMP));
 
   std::unique_ptr<ColumnReader> reader =
       buildReader(*rowType, streams);
@@ -2812,8 +2783,7 @@ TEST(TestColumnReader, testTimestamp) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createPrimitiveType(TIMESTAMP), "myTimestamp");
-  rowType->assignIds(0);
+  rowType->addStructField("myTimestamp", createPrimitiveType(TIMESTAMP));
 
   std::unique_ptr<ColumnReader> reader =
       buildReader(*rowType, streams);
@@ -2902,8 +2872,7 @@ TEST(DecimalColumnReader, testDecimal64) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createDecimalType(12, 2), "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", createDecimalType(12, 2));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -2983,8 +2952,7 @@ TEST(DecimalColumnReader, testDecimal64Skip) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createDecimalType(12, 10), "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", createDecimalType(12, 10));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -3059,8 +3027,7 @@ TEST(DecimalColumnReader, testDecimal128) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createDecimalType(32, 2), "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", createDecimalType(32, 2));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -3153,8 +3120,7 @@ TEST(DecimalColumnReader, testDecimal128Skip) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createDecimalType(38, 37), "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", createDecimalType(38, 37));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -3241,8 +3207,7 @@ TEST(DecimalColumnReader, testDecimalHive11) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createDecimalType(0, 0), "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", createDecimalType(0, 0));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -3341,8 +3306,7 @@ TEST(DecimalColumnReader, testDecimalHive11Skip) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createDecimalType(0, 0), "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", createDecimalType(0, 0));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -3427,8 +3391,7 @@ TEST(DecimalColumnReader, testDecimalHive11ScaleUp) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createDecimalType(0, 0), "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", createDecimalType(0, 0));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -3516,8 +3479,7 @@ TEST(DecimalColumnReader, testDecimalHive11ScaleDown) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createDecimalType(0, 0), "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", createDecimalType(0, 0));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -3587,8 +3549,7 @@ TEST(DecimalColumnReader, testDecimalHive11OverflowException) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createDecimalType(0, 0), "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", createDecimalType(0, 0));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -3646,8 +3607,7 @@ TEST(DecimalColumnReader, testDecimalHive11OverflowExceptionNull) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createDecimalType(0, 0), "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", createDecimalType(0, 0));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -3712,8 +3672,7 @@ TEST(DecimalColumnReader, testDecimalHive11OverflowNull) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createDecimalType(0, 0), "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", createDecimalType(0, 0));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -3795,8 +3754,7 @@ TEST(DecimalColumnReader, testDecimalHive11BigBatches) {
 
   // create the row type
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createDecimalType(0, 0), "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", createDecimalType(0, 0));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -3892,12 +3850,11 @@ TEST(TestColumnReader, testUnion) {
                                       (buffer3, ARRAY_SIZE(buffer3))));
 
   // create the row type
-  std::vector<Type*> childrenTypes;
-  childrenTypes.push_back(createPrimitiveType(LONG).release());
-  childrenTypes.push_back(createPrimitiveType(INT).release());
+  std::unique_ptr<Type> unionType = createUnionType();
+  unionType->addUnionChild(createPrimitiveType(LONG));
+  unionType->addUnionChild(createPrimitiveType(INT));
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createUnionType(childrenTypes), "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", std::move(unionType));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -4043,12 +4000,11 @@ TEST(TestColumnReader, testUnionWithNulls) {
                                       (buffer4, ARRAY_SIZE(buffer4))));
 
   // create the row type
-  std::vector<Type*> childrenTypes;
-  childrenTypes.push_back(createPrimitiveType(LONG).release());
-  childrenTypes.push_back(createPrimitiveType(INT).release());
+  std::unique_ptr<Type> unionType = createUnionType();
+  unionType->addUnionChild(createPrimitiveType(LONG));
+  unionType->addUnionChild(createPrimitiveType(INT));
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createUnionType(childrenTypes), "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", std::move(unionType));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -4138,12 +4094,11 @@ TEST(TestColumnReader, testUnionSkips) {
                                       (buffer3, ARRAY_SIZE(buffer3))));
 
   // create the row type
-  std::vector<Type*> childrenTypes;
-  childrenTypes.push_back(createPrimitiveType(LONG).release());
-  childrenTypes.push_back(createPrimitiveType(INT).release());
+  std::unique_ptr<Type> unionType = createUnionType();
+  unionType->addUnionChild(createPrimitiveType(LONG));
+  unionType->addUnionChild(createPrimitiveType(INT));
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createUnionType(childrenTypes), "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", std::move(unionType));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -4242,12 +4197,11 @@ TEST(TestColumnReader, testUnionLongSkip) {
                                       (buffer2, ARRAY_SIZE(buffer2))));
 
   // create the row type
-  std::vector<Type*> childrenTypes;
-  childrenTypes.push_back(createPrimitiveType(LONG).release());
-  childrenTypes.push_back(createPrimitiveType(INT).release());
+  std::unique_ptr<Type> unionType = createUnionType();
+  unionType->addUnionChild(createPrimitiveType(LONG));
+  unionType->addUnionChild(createPrimitiveType(INT));
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createUnionType(childrenTypes), "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", std::move(unionType));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -4326,7 +4280,7 @@ TEST(TestColumnReader, testUnionWithManyVariants) {
   // for variant in range(0, 130):
   //   [variant & 0x3f, (variant & 0x3f) + 1, (variant & 0x3f) + 2]
   unsigned char buffer[3 * 130];
-  for(int variant = 0; variant < 130; ++variant) {
+  for(uint variant = 0; variant < 130; ++variant) {
     buffer[3 * variant] = 0x00;
     buffer[3 * variant + 1] = 0x01;
     buffer[3 * variant + 2] = static_cast<unsigned char>((variant * 2) & 0x7f);
@@ -4337,13 +4291,12 @@ TEST(TestColumnReader, testUnionWithManyVariants) {
   }
 
   // create the row type
-  std::vector<Type*> childrenTypes;
+  std::unique_ptr<Type> unionType = createUnionType();
   for(size_t variant=0; variant < 130; ++variant) {
-    childrenTypes.push_back(createPrimitiveType(LONG).release());
+    unionType->addUnionChild(createPrimitiveType(LONG));
   }
   std::unique_ptr<Type> rowType = createStructType();
-  rowType->addStructField(createUnionType(childrenTypes), "col0");
-  rowType->assignIds(0);
+  rowType->addStructField("col0", std::move(unionType));
 
   std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
 
@@ -4366,7 +4319,7 @@ TEST(TestColumnReader, testUnionWithManyVariants) {
   for (size_t i = 0; i < batch.numElements; ++i) {
     EXPECT_EQ(i, unions->tags[i]);
     EXPECT_EQ(0, unions->offsets[i]);
-    EXPECT_EQ(i & 0x3f, 
+    EXPECT_EQ(i & 0x3f,
               dynamic_cast<LongVectorBatch*>(unions->children[unions->tags[i]])
               ->data[unions->offsets[i]]);
   }

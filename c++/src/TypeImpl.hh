@@ -19,7 +19,7 @@
 #ifndef TYPE_IMPL_HH
 #define TYPE_IMPL_HH
 
-#include "orc/Vector.hh"
+#include "orc/Type.hh"
 
 #include "Adaptor.hh"
 #include "wrap/orc-proto-wrapper.hh"
@@ -30,7 +30,9 @@ namespace orc {
 
   class TypeImpl: public Type {
   private:
-    int64_t columnId;
+    TypeImpl* parent;
+    mutable int64_t columnId;
+    mutable int64_t maximumColumnId;
     TypeKind kind;
     std::vector<Type*> subTypes;
     std::vector<std::string> fieldNames;
@@ -56,29 +58,17 @@ namespace orc {
     TypeImpl(TypeKind kind, uint64_t precision,
              uint64_t scale);
 
-    /**
-     * Create struct type.
-     */
-    TypeImpl(TypeKind kind,
-             const std::vector<Type*>& types,
-             const std::vector<std::string>& fieldNames);
-
-    /**
-     * Create list, map, and union type.
-     */
-    TypeImpl(TypeKind kind, const std::vector<Type*>& types);
-
     virtual ~TypeImpl();
 
-    int64_t assignIds(int64_t root) override;
+    uint64_t getColumnId() const override;
 
-    int64_t getColumnId() const override;
+    uint64_t getMaximumColumnId() const override;
 
     TypeKind getKind() const override;
 
     uint64_t getSubtypeCount() const override;
 
-    const Type& getSubtype(uint64_t i) const override;
+    const Type* getSubtype(uint64_t i) const override;
 
     const std::string& getFieldName(uint64_t i) const override;
 
@@ -90,12 +80,51 @@ namespace orc {
 
     std::string toString() const override;
 
-    Type& addStructField(std::unique_ptr<Type> fieldType,
-                         const std::string& fieldName) override;
+    Type* addStructField(const std::string& fieldName,
+                         std::unique_ptr<Type> fieldType) override;
+    Type* addUnionChild(std::unique_ptr<Type> fieldType) override;
+
+    std::unique_ptr<ColumnVectorBatch> createRowBatch(uint64_t size,
+                                                      MemoryPool& memoryPool
+                                                      ) const override;
+
+    /**
+     * Explicitly set the column ids. Only for internal usage.
+     */
+    void setIds(uint64_t columnId, uint64_t maxColumnId);
+
+    /**
+     * Add a child type.
+     */
+    void addChildType(std::unique_ptr<Type> childType);
+
+  private:
+    /**
+     * Assign ids to this node and its children giving this
+     * node rootId.
+     * @param rootId the column id that should be assigned to this node.
+     */
+    uint64_t assignIds(uint64_t rootId) const;
+
+    /**
+     * Ensure that ids are assigned to all of the nodes.
+     */
+    void ensureIdAssigned() const;
   };
 
   std::unique_ptr<Type> convertType(const proto::Type& type,
                                     const proto::Footer& footer);
+
+  /**
+   * Build a clone of the file type, projecting columns from the selected
+   * vector. This routine assumes that the parent of any selected column
+   * is also selected.
+   * @param fileType the type in the file
+   * @param selected is each column by id selected
+   * @return a clone of the fileType filtered by the selection array
+   */
+  std::unique_ptr<Type> buildSelectedType(const Type *fileType,
+                                          const std::vector<bool>& selected);
 }
 
 #endif

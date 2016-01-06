@@ -27,7 +27,7 @@ namespace orc {
     std::string line;
     std::unique_ptr<Type> type = createPrimitiveType(BOOLEAN);
     std::unique_ptr<ColumnPrinter> printer =
-      createColumnPrinter(line, *type);
+      createColumnPrinter(line, type.get());
     LongVectorBatch batch(1024, *getDefaultPool());
     const char *expected[] = {"true", "false", "true"};
     batch.numElements = 3;
@@ -60,7 +60,8 @@ namespace orc {
   TEST(TestColumnPrinter, LongColumnPrinter) {
     std::string line;
     std::unique_ptr<Type> type = createPrimitiveType(LONG);
-    std::unique_ptr<ColumnPrinter> printer = createColumnPrinter(line, *type);
+    std::unique_ptr<ColumnPrinter> printer =
+      createColumnPrinter(line, type.get());
     LongVectorBatch batch(1024, *getDefaultPool());
     batch.numElements = 2;
     batch.hasNulls = false;
@@ -94,7 +95,7 @@ namespace orc {
     std::string line;
     std::unique_ptr<Type> type = createPrimitiveType(DOUBLE);
     std::unique_ptr<ColumnPrinter> printer =
-      createColumnPrinter(line, *type);
+      createColumnPrinter(line, type.get());
     DoubleVectorBatch batch(1024, *getDefaultPool());
     batch.numElements = 2;
     batch.hasNulls = false;
@@ -127,7 +128,8 @@ namespace orc {
   TEST(TestColumnPrinter, TimestampColumnPrinter) {
     std::string line;
     std::unique_ptr<Type> type = createPrimitiveType(TIMESTAMP);
-    std::unique_ptr<ColumnPrinter> printer = createColumnPrinter(line, *type);
+    std::unique_ptr<ColumnPrinter> printer =
+      createColumnPrinter(line, type.get());
     TimestampVectorBatch batch(1024, *getDefaultPool());
     batch.numElements = 12;
     batch.hasNulls = false;
@@ -193,7 +195,7 @@ namespace orc {
     std::string line;
     std::unique_ptr<Type> type = createPrimitiveType(DATE);
     std::unique_ptr<ColumnPrinter> printer =
-      createColumnPrinter(line, *type);
+      createColumnPrinter(line, type.get());
     LongVectorBatch batch(1024, *getDefaultPool());
     batch.numElements = 10;
     batch.hasNulls = false;
@@ -243,7 +245,7 @@ namespace orc {
     std::string line;
     std::unique_ptr<Type> type = createDecimalType(16, 5);
     std::unique_ptr<ColumnPrinter> printer =
-      createColumnPrinter(line, *type);
+      createColumnPrinter(line, type.get());
     Decimal64VectorBatch batch(1024, *getDefaultPool());
     batch.numElements = 10;
     batch.hasNulls = false;
@@ -294,7 +296,7 @@ namespace orc {
     std::string line;
     std::unique_ptr<Type> type = createDecimalType(30, 5);
     std::unique_ptr<ColumnPrinter> printer =
-      createColumnPrinter(line, *type);
+      createColumnPrinter(line, type.get());
     Decimal128VectorBatch batch(1024, *getDefaultPool());
     batch.numElements = 10;
     batch.hasNulls = false;
@@ -345,7 +347,7 @@ namespace orc {
     std::string line;
     std::unique_ptr<Type> type = createPrimitiveType(STRING);
     std::unique_ptr<ColumnPrinter> printer =
-      createColumnPrinter(line, *type);
+      createColumnPrinter(line, type.get());
     StringVectorBatch batch(1024, *getDefaultPool());
     const char *blob= "thisisatest\b\f\n\r\t\\\"'";
     batch.numElements = 5;
@@ -388,7 +390,7 @@ namespace orc {
     std::string line;
     std::unique_ptr<Type> type = createPrimitiveType(BINARY);
     std::unique_ptr<ColumnPrinter> printer =
-      createColumnPrinter(line, *type);
+      createColumnPrinter(line, type.get());
     StringVectorBatch batch(1024, *getDefaultPool());
     char blob[45];
     for(size_t i=0; i < sizeof(blob); ++i) {
@@ -438,7 +440,7 @@ namespace orc {
     std::string line;
     std::unique_ptr<Type> type = createListType(createPrimitiveType(LONG));
     std::unique_ptr<ColumnPrinter> printer =
-      createColumnPrinter(line, *type);
+      createColumnPrinter(line, type.get());
     ListVectorBatch batch(1024, *getDefaultPool());
     LongVectorBatch* longBatch = new LongVectorBatch(1024, *getDefaultPool());
     batch.elements = std::unique_ptr<ColumnVectorBatch>(longBatch);
@@ -490,7 +492,7 @@ namespace orc {
     std::unique_ptr<Type> type = createMapType(createPrimitiveType(LONG),
                                                createPrimitiveType(LONG));
     std::unique_ptr<ColumnPrinter> printer =
-      createColumnPrinter(line, *type);
+      createColumnPrinter(line, type.get());
     MapVectorBatch batch(1024, *getDefaultPool());
     LongVectorBatch* keyBatch = new LongVectorBatch(1024, *getDefaultPool());
     LongVectorBatch* valueBatch = new LongVectorBatch(1024, *getDefaultPool());
@@ -541,15 +543,11 @@ namespace orc {
 
   TEST(TestColumnPrinter, StructColumnPrinter) {
     std::string line;
-    std::vector<std::string> fieldNames;
-    std::vector<Type*> subtypes;
-    fieldNames.push_back("first");
-    fieldNames.push_back("second");
-    subtypes.push_back(createPrimitiveType(LONG).release());
-    subtypes.push_back(createPrimitiveType(LONG).release());
-    std::unique_ptr<Type> type = createStructType(subtypes, fieldNames);
+    std::unique_ptr<Type> type = createStructType();
+    type->addStructField("first", createPrimitiveType(LONG));
+    type->addStructField("second", createPrimitiveType(LONG));
     std::unique_ptr<ColumnPrinter> printer =
-      createColumnPrinter(line, *type);
+      createColumnPrinter(line, type.get());
     StructVectorBatch batch(1024, *getDefaultPool());
     LongVectorBatch* firstBatch = new LongVectorBatch(1024, *getDefaultPool());
     LongVectorBatch* secondBatch =

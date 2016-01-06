@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
   char* filename = ORC_NULLPTR;
 
   // Default parameters
-  std::list<int64_t> cols;
+  std::list<uint64_t> cols;
   uint32_t batchSize = 1000;
 
   // Read command-line options
@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) {
     if ( (param = std::strstr(argv[i], COLUMNS_PREFIX.c_str())) ) {
       value = std::strtok(param+COLUMNS_PREFIX.length(), "," );
       while (value) {
-        cols.push_back(std::atoi(value));
+        cols.push_back(static_cast<uint64_t>(std::atoi(value)));
         value = std::strtok(nullptr, "," );
       }
     } else if ( (param=strstr(argv[i], BATCH_PREFIX.c_str())) ) {

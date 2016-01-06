@@ -34,12 +34,11 @@ namespace orc {
   class ColumnPrinter {
   protected:
     std::string &buffer;
-    const Type& type;
     bool hasNulls ;
     const char* notNull;
 
   public:
-    ColumnPrinter(std::string&, const Type&);
+    ColumnPrinter(std::string&);
     virtual ~ColumnPrinter();
     virtual void printRow(uint64_t rowId) = 0;
     // should be called once at the start of each batch of rows
@@ -47,6 +46,6 @@ namespace orc {
   };
 
   ORC_UNIQUE_PTR<ColumnPrinter> createColumnPrinter(std::string&,
-						    const Type& type);
+                                                    const Type* type);
 }
 #endif

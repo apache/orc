@@ -20,7 +20,8 @@
 #define ORC_READER_HH
 
 #include "orc/orc-config.hh"
-#include "Vector.hh"
+#include "orc/Type.hh"
+#include "orc/Vector.hh"
 
 #include <memory>
 #include <string>
@@ -411,22 +412,23 @@ namespace orc {
     virtual ~ReaderOptions();
 
     /**
-     * Set the list of columns to read. All columns that are children of
-     * selected columns are automatically selected. The default value is
-     * {0}.
-     * @param include a list of columns to read
+     * For files that have structs as the top-level object, select the fields
+     * to read. The first field is 0, the second 1, and so on. By default,
+     * all columns are read. This option clears any previous setting of
+     * the selected columns.
+     * @param include a list of fields to read
      * @return this
      */
-    ReaderOptions& include(const std::list<int64_t>& include);
+    ReaderOptions& include(const std::list<uint64_t>& include);
 
     /**
-     * Set the list of columns to read. All columns that are children of
-     * selected columns are automatically selected. The default value is
-     * {0}.
-     * @param include a list of columns to read
+     * For files that have structs as the top-level object, select the fields
+     * to read by name. By default, all columns are read. This option clears
+     * any previous setting of the selected columns.
+     * @param include a list of fields to read
      * @return this
      */
-    ReaderOptions& include(std::vector<int64_t> include);
+    ReaderOptions& include(const std::list<std::string>& include);
 
     /**
      * Set the section of the file to process.
@@ -493,10 +495,26 @@ namespace orc {
     ReaderOptions& setMemoryPool(MemoryPool& pool);
 
     /**
+     * Were the include indexes set?
+     */
+    bool getIndexesSet() const;
+
+    /**
      * Get the list of selected columns to read. All children of the selected
      * columns are also selected.
      */
-    const std::list<int64_t>& getInclude() const;
+    const std::list<uint64_t>& getInclude() const;
+
+    /**
+     * Were the include names set?
+     */
+    bool getNamesSet() const;
+
+    /**
+     * Get the list of selected columns to read. All children of the selected
+     * columns are also selected.
+     */
+    const std::list<std::string>& getIncludeNames() const;
 
     /**
      * Get the start of the range for the data being processed.
@@ -652,10 +670,21 @@ namespace orc {
     getColumnStatistics(uint32_t columnId) const = 0;
 
     /**
-     * Get the type of the rows in the file. The top level is always a struct.
+     * Get the type of the rows in the file. The top level is typically a
+     * struct.
      * @return the root type
      */
     virtual const Type& getType() const = 0;
+
+    /**
+     * Get the selected type of the rows in the file. The file's row type
+     * is projected down to just the selected columns. Thus, if the file's
+     * type is struct<col0:int,col1:double,col2:string> and the selected
+     * columns are "col0,col2" the selected type would be
+     * struct<col0:int,col2:string>.
+     * @return the root type
+     */
+    virtual const Type& getSelectedType() const = 0;
 
     /**
      * Get the selected columns of the file.
@@ -667,8 +696,8 @@ namespace orc {
      * @param size the number of rows to read
      * @return a new ColumnVectorBatch to read into
      */
-    virtual ORC_UNIQUE_PTR<ColumnVectorBatch> createRowBatch
-    (uint64_t size) const = 0;
+    virtual ORC_UNIQUE_PTR<ColumnVectorBatch> createRowBatch(uint64_t size
+                                                             ) const = 0;
 
     /**
      * Read the next row batch from the current position.
@@ -713,9 +742,10 @@ namespace orc {
     /**
      * Estimate an upper bound on heap memory allocation by the Reader
      * based on the information in the file footer.
-     * The bound is less tight if only few columns are read or compression is used.
+     * The bound is less tight if only few columns are read or compression is
+     * used.
      * @param stripeIx index of the stripe to be read (if not specified,
-    * all stripes are considered).
+     *        all stripes are considered).
      * @return upper bound on memory use
      */
     virtual uint64_t getMemoryUse(int stripeIx=-1) = 0;

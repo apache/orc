@@ -31,10 +31,6 @@ int main(int argc, char* argv[]) {
   }
 
   orc::ReaderOptions opts;
-  std::list<int64_t> cols;
-  cols.push_back(0);
-  opts.include(cols);
-
   std::unique_ptr<orc::Reader> reader;
   try{
     reader = orc::createReader(orc::readLocalFile(std::string(argv[1])), opts);

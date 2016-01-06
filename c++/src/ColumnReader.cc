@@ -769,7 +769,7 @@ namespace orc {
     switch (static_cast<int64_t>(stripe.getEncoding(columnId).kind())) {
     case proto::ColumnEncoding_Kind_DIRECT:
       for(unsigned int i=0; i < type.getSubtypeCount(); ++i) {
-        const Type& child = type.getSubtype(i);
+        const Type& child = *type.getSubtype(i);
         if (selectedColumns[static_cast<uint64_t>(child.getColumnId())]) {
           children.push_back(buildReader(child, stripe).release());
         }
@@ -836,7 +836,7 @@ namespace orc {
                                             proto::Stream_Kind_LENGTH,
                                             true),
                            false, vers, memoryPool);
-    const Type& childType = type.getSubtype(0);
+    const Type& childType = *type.getSubtype(0);
     if (selectedColumns[static_cast<uint64_t>(childType.getColumnId())]) {
       child = buildReader(childType, stripe);
     }
@@ -929,11 +929,11 @@ namespace orc {
                                             proto::Stream_Kind_LENGTH,
                                             true),
                            false, vers, memoryPool);
-    const Type& keyType = type.getSubtype(0);
+    const Type& keyType = *type.getSubtype(0);
     if (selectedColumns[static_cast<uint64_t>(keyType.getColumnId())]) {
       keyReader = buildReader(keyType, stripe);
     }
-    const Type& elementType = type.getSubtype(1);
+    const Type& elementType = *type.getSubtype(1);
     if (selectedColumns[static_cast<uint64_t>(elementType.getColumnId())]) {
       elementReader = buildReader(elementType, stripe);
     }
@@ -1040,7 +1040,7 @@ namespace orc {
     // figure out which types are selected
     const std::vector<bool> selectedColumns = stripe.getSelectedColumns();
     for(unsigned int i=0; i < numChildren; ++i) {
-      const Type &child = type.getSubtype(i);
+      const Type &child = *type.getSubtype(i);
       if (selectedColumns[static_cast<size_t>(child.getColumnId())]) {
         childrenReader[i] = buildReader(child, stripe).release();
       }

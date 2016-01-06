@@ -45,7 +45,7 @@ namespace orc {
     /**
      * Get the encoding for the given column for this stripe.
      */
-    virtual proto::ColumnEncoding getEncoding(int64_t columnId) const = 0;
+    virtual proto::ColumnEncoding getEncoding(uint64_t columnId) const = 0;
 
     /**
      * Get the stream for the given column/kind in this stripe.
@@ -55,7 +55,7 @@ namespace orc {
      * @return the new stream
      */
     virtual std::unique_ptr<SeekableInputStream>
-                    getStream(int64_t columnId,
+                    getStream(uint64_t columnId,
                               proto::Stream_Kind kind,
                               bool shouldStream) const = 0;
 
@@ -78,7 +78,7 @@ namespace orc {
   class ColumnReader {
   protected:
     std::unique_ptr<ByteRleDecoder> notNullDecoder;
-    int64_t columnId;
+    uint64_t columnId;
     MemoryPool& memoryPool;
 
   public:
