@@ -41,5 +41,14 @@ target_link_libraries (test-orc
   ${SNAPPY_LIBRARIES}
 )
 
+add_executable (create-test-files
+  CreateTestFiles.cc
+)
+
+target_link_libraries (create-test-files
+  orc
+  ${PROTOBUF_LIBRARIES}
+)
+
 add_test (test-orc test-orc)
 
