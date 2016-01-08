@@ -416,7 +416,7 @@ namespace orc {
   std::unique_ptr<Type> buildSelectedType(const Type *fileType,
                                           const std::vector<bool>& selected) {
     if (fileType == nullptr || !selected[fileType->getColumnId()]) {
-      return nullptr;
+      return std::unique_ptr<Type>();
     }
 
     TypeImpl* result;
