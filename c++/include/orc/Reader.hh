@@ -40,6 +40,22 @@ namespace orc {
   };
 
   /**
+   * Get the name of the CompressionKind.
+   */
+  std::string compressionKindToString(CompressionKind kind);
+
+  enum WriterVersion {
+    WriterVersion_ORIGINAL = 0,
+    WriterVersion_HIVE_8732 = 1,
+    WriterVersion_HIVE_4243 = 2
+  };
+
+  /**
+   * Get the name of the WriterVersion.
+   */
+  std::string writerVersionToString(WriterVersion kind);
+
+  /**
    * Statistics that are available for all types of columns.
    */
   class ColumnStatistics {
@@ -337,6 +353,41 @@ namespace orc {
     virtual int64_t getMaximum() const = 0;
   };
 
+  enum StreamKind {
+    StreamKind_PRESENT = 0,
+    StreamKind_DATA = 1,
+    StreamKind_LENGTH = 2,
+    StreamKind_DICTIONARY_DATA = 3,
+    StreamKind_DICTIONARY_COUNT = 4,
+    StreamKind_SECONDARY = 5,
+    StreamKind_ROW_INDEX = 6,
+    StreamKind_BLOOM_FILTER = 7
+  };
+
+  /**
+   * Get the string representation of the StreamKind.
+   */
+  std::string streamKindToString(StreamKind kind);
+
+  class StreamInformation {
+  public:
+    virtual ~StreamInformation();
+
+    virtual StreamKind getKind() const = 0;
+    virtual uint64_t getColumnId() const = 0;
+    virtual uint64_t getOffset() const = 0;
+    virtual uint64_t getLength() const = 0;
+  };
+
+  enum ColumnEncodingKind {
+    ColumnEncodingKind_DIRECT = 0,
+    ColumnEncodingKind_DICTIONARY = 1,
+    ColumnEncodingKind_DIRECT_V2 = 2,
+    ColumnEncodingKind_DICTIONARY_V2 = 3
+  };
+
+  std::string columnEncodingKindToString(ColumnEncodingKind kind);
+
   class StripeInformation {
   public:
     virtual ~StripeInformation();
@@ -376,6 +427,35 @@ namespace orc {
      * @return a count of the number of rows
      */
     virtual uint64_t getNumberOfRows() const = 0;
+
+    /**
+     * Get the number of streams in the stripe.
+     */
+    virtual uint64_t getNumberOfStreams() const = 0;
+
+    /**
+     * Get the StreamInformation for the given stream.
+     */
+    virtual ORC_UNIQUE_PTR<StreamInformation>
+      getStreamInformation(uint64_t streamId) const = 0;
+
+    /**
+     * Get the column encoding for the given column.
+     * @param colId the columnId
+     */
+    virtual ColumnEncodingKind getColumnEncoding(uint64_t colId) const = 0;
+
+    /**
+     * Get the dictionary size.
+     * @param colId the columnId
+     * @return the size of the dictionary or 0 if there isn't one
+     */
+    virtual uint64_t getDictionarySize(uint64_t colId) const = 0;
+
+    /**
+     * Get the writer timezone.
+     */
+    virtual const std::string& getWriterTimezone() const = 0;
   };
 
   class Statistics {
@@ -616,6 +696,12 @@ namespace orc {
     virtual uint64_t getCompressionSize() const = 0;
 
     /**
+     * Get the version of the writer.
+     * @return the version of the writer.
+     */
+    virtual WriterVersion getWriterVersion() const = 0;
+
+    /**
      * Get the number of rows per a entry in the row index.
      * @return the number of rows per an entry in the row index or 0 if there
      * is no row index.
@@ -651,10 +737,34 @@ namespace orc {
     getStripeStatistics(uint64_t stripeIndex) const = 0;
 
     /**
-     * Get the length of the file.
-     * @return the number of bytes in the file
+     * Get the length of the data stripes in the file.
+     * @return the number of bytes in stripes
      */
     virtual uint64_t getContentLength() const = 0;
+
+    /**
+     * Get the length of the file stripe statistics
+     * @return the number of compressed bytes in the file stripe statistics
+     */
+    virtual uint64_t getStripeStatisticsLength() const = 0;
+
+    /**
+     * Get the length of the file footer
+     * @return the number of compressed bytes in the file footer
+     */
+    virtual uint64_t getFileFooterLength() const = 0;
+
+    /**
+     * Get the length of the file postscript
+     * @return the number of bytes in the file postscript
+     */
+    virtual uint64_t getFilePostscriptLength() const = 0;
+
+    /**
+     * Get the total length of the file.
+     * @return the number of bytes in the file
+     */
+    virtual uint64_t getFileLength() const = 0;
 
     /**
      * Get the statistics about the columns in the file.

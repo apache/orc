@@ -16,168 +16,161 @@
  * limitations under the License.
  */
 
+#include <getopt.h>
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <string>
 #include <sstream>
-#include <iomanip>
 
-#include "wrap/orc-proto-wrapper.hh"
 #include "orc/OrcFile.hh"
 
-using namespace orc::proto;
-
-uint64_t getTotalPaddingSize(const Footer& footer) {
-  uint64_t paddedBytes = 0;
-  StripeInformation stripe;
-  for (int stripeIx=1; stripeIx<footer.stripes_size(); stripeIx++) {
-      stripe = footer.stripes(stripeIx-1);
-      uint64_t prevStripeOffset = stripe.offset();
-      uint64_t prevStripeLen = stripe.datalength() + stripe.indexlength() +
-        stripe.footerlength();
-      paddedBytes += footer.stripes(stripeIx).offset() -
-        (prevStripeOffset + prevStripeLen);
-  };
-  return paddedBytes;
+void printStripeInformation(std::ostream& out,
+                            uint64_t index,
+                            uint64_t columns,
+                            std::unique_ptr<orc::StripeInformation> stripe,
+                            bool verbose) {
+  out << "    { \"stripe\": " << index
+      << ", \"rows\": " << stripe->getNumberOfRows() << ",\n";
+  out << "      \"offset\": " << stripe->getOffset()
+      << ", \"length\": " << stripe->getLength() << ",\n";
+  out << "      \"index\": " << stripe->getIndexLength()
+      << ", \"data\": " << stripe->getDataLength()
+      << ", \"footer\": " << stripe->getFooterLength();
+  if (verbose) {
+    out << ",\n      \"encodings\": [\n";
+    for(uint64_t col=0; col < columns; ++col) {
+      if (col != 0) {
+        out << ",\n";
+      }
+      orc::ColumnEncodingKind encoding = stripe->getColumnEncoding(col);
+      out << "         { \"column\": " << col
+          << ", \"encoding\": \""
+          << columnEncodingKindToString(encoding) << "\"";
+      if (encoding == orc::ColumnEncodingKind_DICTIONARY ||
+          encoding == orc::ColumnEncodingKind_DICTIONARY_V2) {
+        out << ", \"count\": " << stripe->getDictionarySize(col);
+      }
+      out << " }";
+    }
+    out << "\n      ],\n";
+    out << "      \"streams\": [\n";
+    for(uint64_t str = 0; str < stripe->getNumberOfStreams(); ++str) {
+      if (str != 0) {
+        out << ",\n";
+      }
+      ORC_UNIQUE_PTR<orc::StreamInformation> stream =
+        stripe->getStreamInformation(str);
+      out << "        { \"id\": " << str
+          << ", \"column\": " << stream->getColumnId()
+          << ", \"kind\": \"" << streamKindToString(stream->getKind())
+          << "\", \"offset\": " << stream->getOffset()
+          << ", \"length\": " << stream->getLength() << " }";
+    }
+    out << "\n      ]";
+    std::string tz = stripe->getWriterTimezone();
+    if (tz.length() != 0) {
+      out << ",\n      \"timezone\": \"" << tz << "\"";
+    }
+  }
+  out << "\n    }";
 }
 
-void printMetadata(const char*filename) {
-  std::streamsize origPrecision(std::cout.precision());
-  std::ios::fmtflags origFlags(std::cout.flags());
-  std::cout << "Structure for " << filename << std::endl;
-  std::ifstream input;
-
-  input.open(filename, std::ios::in | std::ios::binary);
-  input.seekg(0,input.end);
-  std::streamoff fileSize = input.tellg();
-
-  // Read the postscript size
-  input.seekg(fileSize-1);
-  int result = input.get();
-  if (result == EOF) {
-    throw std::runtime_error("Failed to read postscript size");
+void printMetadata(std::ostream & out, const char*filename, bool verbose) {
+  std::unique_ptr<orc::Reader> reader =
+    orc::createReader(orc::readLocalFile(filename), orc::ReaderOptions());
+  out << "{ \"name\": \"" << filename << "\",\n";
+  uint64_t numberColumns = reader->getType().getMaximumColumnId() + 1;
+  out << "  \"type\": \""
+            << reader->getType().toString() << "\",\n";
+  out << "  \"rows\": " << reader->getNumberOfRows() << ",\n";
+  uint64_t stripeCount = reader->getNumberOfStripes();
+  out << "  \"stripe count\": " << stripeCount << ",\n";
+  out << "  \"format\": \"" << reader->getFormatVersion()
+      << "\", \"writer version\": \""
+            << orc::writerVersionToString(reader->getWriterVersion())
+            << "\",\n";
+  out << "  \"compression\": \""
+            << orc::compressionKindToString(reader->getCompression())
+            << "\",";
+  if (reader->getCompression() != orc::CompressionKind_NONE) {
+    out << " \"compression block\": "
+              << reader->getCompressionSize() << ",";
   }
-  std::streamoff postscriptSize = result;
-
-  // Read the postscript
-  input.seekg(fileSize - postscriptSize-1);
-  std::vector<char> buffer(static_cast<size_t>(postscriptSize));
-  input.read(buffer.data(), postscriptSize);
-  PostScript postscript ;
-  postscript.ParseFromArray(buffer.data(),
-                            static_cast<int>(postscriptSize));
-  std::cout << std::endl << " === Postscript === " << std::endl ;
-  postscript.PrintDebugString();
-
-  // Everything but the postscript is compressed
-  switch (static_cast<int>(postscript.compression())) {
-  case NONE:
-      break;
-  case ZLIB:
-  case SNAPPY:
-  case LZO:
-  default:
-    input.close();
-    throw std::logic_error("ORC files with compression are not supported");
+  out << "\n  \"file length\": " << reader->getFileLength() << ",\n";
+  out << "  \"content\": " << reader->getContentLength()
+      << ", \"stripe stats\": " << reader->getStripeStatisticsLength()
+      << ", \"footer\": " << reader->getFileFooterLength()
+      << ", \"postscript\": " << reader->getFilePostscriptLength() << ",\n";
+  if (reader->getRowIndexStride()) {
+    out << "  \"row index stride\": "
+              << reader->getRowIndexStride() << ",\n";
   }
-
-  std::streamoff footerSize =
-    static_cast<std::streamoff>(postscript.footerlength());
-  std::streamoff metadataSize =
-    static_cast<std::streamoff>(postscript.metadatalength());
-
-  // Read the metadata
-  input.seekg(fileSize - 1 - postscriptSize - footerSize - metadataSize);
-  buffer.resize(static_cast<size_t>(metadataSize));
-  input.read(buffer.data(), metadataSize);
-  Metadata metadata ;
-  metadata.ParseFromArray(buffer.data(), static_cast<int>(metadataSize));
-
-  // Read the footer
-  //input.seekg(fileSize -1 - postscriptSize-footerSize);
-  buffer.resize(static_cast<size_t>(footerSize));
-  input.read(buffer.data(), footerSize);
-  Footer footer ;
-  footer.ParseFromArray(buffer.data(), static_cast<int>(footerSize));
-  std::cout << std::endl << " === Footer === " << std::endl ;
-  footer.PrintDebugString();
-
-  std::cout << std::endl << "=== Stripe Statistics ===" << std::endl;
-
-  StripeInformation stripe ;
-  Stream section;
-  ColumnEncoding encoding;
-  for (int stripeIx=0; stripeIx<footer.stripes_size(); stripeIx++) {
-      std::cout << "Stripe " << stripeIx+1 <<": " << std::endl ;
-      stripe = footer.stripes(stripeIx);
-      stripe.PrintDebugString();
-
-      std::streamoff offset =
-        static_cast<std::streamoff>(stripe.offset() + stripe.indexlength() +
-                                    stripe.datalength());
-      std::streamoff tailLength =
-        static_cast<std::streamoff>(stripe.footerlength());
-
-      // read the stripe footer
-      input.seekg(offset);
-      buffer.resize(static_cast<size_t>(tailLength));
-      input.read(buffer.data(), tailLength);
-
-      StripeFooter stripeFooter;
-      stripeFooter.ParseFromArray(buffer.data(), static_cast<int>(tailLength));
-      //stripeFooter.PrintDebugString();
-      uint64_t stripeStart = stripe.offset();
-      uint64_t sectionStart = stripeStart;
-      for (int streamIx=0; streamIx<stripeFooter.streams_size(); streamIx++) {
-          section = stripeFooter.streams(streamIx);
-          std::cout << "    Stream: column " << section.column()
-                    << " section "
-                    << section.kind() << " start: " << sectionStart
-                    << " length " << section.length() << std::endl;
-          sectionStart += section.length();
-      };
-      for (int columnIx=0; columnIx<stripeFooter.columns_size();
-           columnIx++) {
-          encoding = stripeFooter.columns(columnIx);
-          std::cout << "    Encoding column " << columnIx << ": "
-                    << encoding.kind() ;
-          if (encoding.kind() == ColumnEncoding_Kind_DICTIONARY ||
-              encoding.kind() == ColumnEncoding_Kind_DICTIONARY_V2)
-              std::cout << "[" << encoding.dictionarysize() << "]";
-          std::cout << std::endl;
-      };
-  };
-
-  uint64_t paddedBytes = getTotalPaddingSize(footer);
-  // empty ORC file is ~45 bytes. Assumption here is file length always >0
-  double percentPadding =
-    static_cast<double>(paddedBytes) * 100 / static_cast<double>(fileSize);
-  std::cout << "File length: " << fileSize << " bytes" << std::endl;
-  std::cout <<"Padding length: " << paddedBytes << " bytes" << std::endl;
-  std::cout <<"Padding ratio: " << std::fixed << std::setprecision(2)
-            << percentPadding << " %" << std::endl;
-  std::cout.precision(origPrecision);
-  std::cout.flags(origFlags);
-  input.close();
+  out << "  \"user metadata\": {";
+  std::list<std::string> keys = reader->getMetadataKeys();
+  uint64_t remaining = keys.size();
+  for(std::list<std::string>::const_iterator itr = keys.begin();
+      itr != keys.end(); ++itr) {
+    out << "\n    \"" << *itr << "\": \""
+              << reader->getMetadataValue(*itr) << "\"";
+    if (--remaining != 0) {
+      out << ",";
+    }
+  }
+  out << "\n  },\n";
+  out << "  \"stripes\": [\n";
+  for(uint64_t i=0; i < stripeCount; ++i) {
+    printStripeInformation(out, i, numberColumns, reader->getStripe(i),
+                           verbose);
+    if (i == stripeCount - 1) {
+      out << "\n";
+    } else {
+      out << ",\n";
+    }
+  }
+  out << "  ]\n";
+  out << "}\n";
 }
 
 int main(int argc, char* argv[]) {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
+  static struct option longOptions[] = {
+    {"help", no_argument, nullptr, 'h'},
+    {"verbose", no_argument, nullptr, 'v'},
+    {nullptr, 0, nullptr, 0}
+  };
+  bool helpFlag = false;
+  bool verboseFlag = false;
+  int opt;
+  do {
+    opt = getopt_long(argc, argv, "hv", longOptions, nullptr);
+    switch (opt) {
+    case '?':
+    case 'h':
+      helpFlag = true;
+      opt = -1;
+      break;
+    case 'v':
+      verboseFlag = true;
+      break;
+    }
+  } while (opt != -1);
+  argc -= optind;
+  argv += optind;
 
-  if (argc < 2) {
-    std::cout << "Usage: file-metadata <filename>\n";
+  if (argc < 1 || helpFlag) {
+    std::cerr
+      << "Usage: file-metadata [-h] [--help] [-v] [--verbose] <filename>\n";
+    exit(1);
+  } else {
+    for(int i=0; i < argc; ++i) {
+      try {
+        printMetadata(std::cout, argv[i], verboseFlag);
+      } catch (std::exception& ex) {
+        std::cerr << "Caught exception in " << argv[i]
+                  << ": " << ex.what() << "\n";
+        return 1;
+      }
+    }
   }
-  try {
-    printMetadata(argv[1]);
-  } catch (std::exception& ex) {
-    std::cerr << "Caught exception: " << ex.what() << "\n";
-    return 1;
-  }
-
-  google::protobuf::ShutdownProtobufLibrary();
-
   return 0;
 }
-
-
