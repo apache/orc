@@ -222,5 +222,6 @@ message PostScript {
 message FileTail {
   optional PostScript postscript = 1;
   optional Footer footer = 2;
-  optional uint64 footerStart = 3;
+  optional uint64 fileLength = 3;
+  optional uint64 postscriptLength = 4;
 }
