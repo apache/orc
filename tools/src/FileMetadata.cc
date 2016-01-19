@@ -64,8 +64,7 @@ void printStripeInformation(std::ostream& out,
       out << "        { \"id\": " << str
           << ", \"column\": " << stream->getColumnId()
           << ", \"kind\": \"" << streamKindToString(stream->getKind())
-          << "\",\n";
-      out << "          \"offset\": " << stream->getOffset()
+          << "\", \"offset\": " << stream->getOffset()
           << ", \"length\": " << stream->getLength() << " }";
     }
     out << "\n      ]";
