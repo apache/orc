@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include "orc/orc-config.hh"
 #include "orc/ColumnPrinter.hh"
 
 #include "Exceptions.hh"
@@ -65,7 +66,7 @@ int main(int argc, char* argv[]) {
         value = std::strtok(param+COLUMNS_PREFIX.length(), "," );
         while (value) {
           cols.push_back(static_cast<uint64_t>(std::atoi(value)));
-          value = std::strtok(nullptr, "," );
+          value = std::strtok(ORC_NULLPTR, "," );
         }
       } else {
         filename = argv[i];

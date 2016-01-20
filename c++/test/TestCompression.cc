@@ -22,6 +22,7 @@
 #include "wrap/gtest-wrapper.h"
 
 #include <cstdio>
+#include <errno.h>
 #include <fstream>
 #include <iostream>
 #include <sstream>
