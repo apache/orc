@@ -76,7 +76,9 @@ void writeVersion1999() {
   orc::proto::ColumnStatistics* stats = footer.add_statistics();
   stats->set_numberofvalues(0);
   stats->set_hasnull(false);
-  std::vector<uint> version{19, 99};
+  std::vector<uint> version;
+  version.push_back(19);
+  version.push_back(99);
   writeCustomOrcFile("version1999.orc", meta, footer, version, 1);
 }
 

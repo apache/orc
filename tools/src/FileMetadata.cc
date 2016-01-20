@@ -24,6 +24,7 @@
 #include <sstream>
 
 #include "orc/OrcFile.hh"
+#include "Adaptor.hh"
 
 void printStripeInformation(std::ostream& out,
                             uint64_t index,
@@ -134,15 +135,15 @@ void printMetadata(std::ostream & out, const char*filename, bool verbose) {
 
 int main(int argc, char* argv[]) {
   static struct option longOptions[] = {
-    {"help", no_argument, nullptr, 'h'},
-    {"verbose", no_argument, nullptr, 'v'},
-    {nullptr, 0, nullptr, 0}
+    {"help", no_argument, ORC_NULLPTR, 'h'},
+    {"verbose", no_argument, ORC_NULLPTR, 'v'},
+    {ORC_NULLPTR, 0, ORC_NULLPTR, 0}
   };
   bool helpFlag = false;
   bool verboseFlag = false;
   int opt;
   do {
-    opt = getopt_long(argc, argv, "hv", longOptions, nullptr);
+    opt = getopt_long(argc, argv, "hv", longOptions, ORC_NULLPTR);
     switch (opt) {
     case '?':
     case 'h':
