@@ -29,7 +29,7 @@ _Optimized Row Columnar_ (ORC) file format.
 % mkdir build
 % cd build
 % cmake ..
-% make
+% make package
 % make test-out
 
 ```
