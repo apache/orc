@@ -87,6 +87,8 @@
     <option value="/news/">Home</option>
     <optgroup label="v1.x">
       
+      <option value="/news/2016/01/25/ORC-1.0/">ORC 1.0.0 Released</option>
+      
       <option value="/news/2015/11/19/aliaksei-on-pmc/">ORC adds Aliaksei Sandryhaila to PMC</option>
       
       <option value="/news/2015/06/26/new-logo/">ORC adopts new logo</option>
@@ -102,6 +104,76 @@
 
       <div class="unit four-fifths">
         
+  <article>
+  <h2>
+    <a href="/news/2016/01/25/ORC-1.0/">
+      ORC 1.0.0 Released
+    </a>
+  </h2>
+  <span class="post-category">
+    <span class="label">
+      release
+    </span>
+  </span>
+  <div class="post-meta">
+    <span class="post-date">
+      25 Jan 2016
+    </span>
+    <a href="https://people.apache.org/~omalley" class="post-author">
+      <img src="https://people.apache.org/~omalley//omalley.png"
+           class="avatar" alt="omalley avatar"
+           width="24" height="24">
+      omalley
+    </a>
+  </div>
+  <div class="post-content">
+    <p>The ORC team is excited to announce the release of ORC v1.0.0. This release
+contains the native C++ ORC reader and some tools.</p>
+
+<p>Release Artifacts:</p>
+
+<ul>
+  <li>Source: <a href="https://dist.apache.org/repos/dist/release/orc/orc-1.0.0/orc-1.0.0.tgz">orc-1.0.0.tgz</a></li>
+  <li>Git Tag: 
+<a href="https://github.com/apache/orc/releases/tag/rel%2Frelease-1.0.0">rel/release-1.0.0 (704d97e)</a></li>
+  <li><a href="https://dist.apache.org/repos/dist/release/orc/orc-1.0.0/orc-1.0.0.tgz.asc">GPG Signature</a>
+signed by <a href="https://dist.apache.org/repos/dist/release/orc/KEYS">Owen O’Malley (3D0C92B9)</a></li>
+  <li>SHA 256: <a href="https://dist.apache.org/repos/dist/release/orc/orc-1.0.0/orc-1.0.0.tgz.mds">8AD5111F 0CA3B72F</a></li>
+</ul>
+
+<p>The major features:</p>
+
+<ul>
+  <li>Portable pure C++ ORC reader</li>
+  <li>The C++ reader is known to work on:
+    <ul>
+      <li>CentOS and RHEL 5, 6, and 7</li>
+      <li>Debian 6 and 7</li>
+      <li>Ubuntu 12 and 14</li>
+      <li>Mac OS 10.10 and 10.11</li>
+    </ul>
+  </li>
+  <li>A file-contents command that prints the contents of the file as json records.</li>
+  <li>A file-metadata command that prints the metadata of the file.</li>
+  <li>Docker files for building and testing on various Linux distributions.</li>
+  <li>Memory estimation for the reader.</li>
+</ul>
+
+<p>Known issues:</p>
+
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1">ORC-1</a> We are still working on moving the Java 
+reader and writer out of Hive’s code base and thus it is not included here.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-10">ORC-10</a> When moving ORC files between timezones,
+different daylight savings rules will cause timestamps to shift in the C++
+reader.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-40">ORC-40</a> Predicate push down is not implemented in C++.</li>
+</ul>
+
+  </div>
+</article>
+
+
 
       </div>
 
@@ -118,9 +190,15 @@
     <h4>Recent Releases</h4>
     <ul>
       
+      <li class="">
+        <a href="/news/2016/01/25/ORC-1.0/">Version 1.0.0</a>
+      </li>
+      
     </ul>
     <h4>Other News</h4>
     <ul>
+        
+        
         
         
         <li class="">
