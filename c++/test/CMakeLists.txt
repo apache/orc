@@ -30,6 +30,7 @@ add_executable (test-orc
   TestDriver.cc
   TestInt128.cc
   TestRle.cc
+  TestTimezone.cc
   TestType.cc
 )
 

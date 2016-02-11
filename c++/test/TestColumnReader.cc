@@ -25,6 +25,7 @@
 #include "wrap/gtest-wrapper.h"
 #include "wrap/gmock.h"
 
+#include <cmath>
 #include <iostream>
 #include <vector>
 
@@ -49,9 +50,8 @@ public:
     return *getDefaultPool();
   }
 
-  // the epoch offset for America/Los_Angeles
-  int64_t getEpochOffset() const {
-    return 1420099200;
+  const Timezone& getWriterTimezone() const override {
+    return getTimezoneByName("America/Los_Angeles");
   }
 };
 
@@ -65,6 +65,10 @@ MockStripeStreams::getStream(uint64_t columnId,
                              bool shouldStream) const {
   return std::unique_ptr < SeekableInputStream >
     (getStreamProxy(columnId, kind, shouldStream));
+}
+
+bool isNotNull(tm *timeptr) {
+  return timeptr != nullptr;
 }
 
 TEST(TestColumnReader, testBooleanWithNulls) {
@@ -2708,7 +2712,11 @@ TEST(TestColumnReader, testTimestampSkipWithNulls) {
     } else {
       EXPECT_EQ(1, longBatch->notNull[i]);
       time_t time = static_cast<time_t>(longBatch->data[i]);
-      EXPECT_STREQ(expected[vals_ix], ctime(&time));
+      tm timeStruct;
+      ASSERT_PRED1(isNotNull, gmtime_r(&time, &timeStruct));
+      char buffer[30];
+      asctime_r(&timeStruct, buffer);
+      EXPECT_STREQ(expected[vals_ix], buffer);
       EXPECT_EQ(expected_nano[vals_ix], longBatch->nanoseconds[i]);
       vals_ix++;
     }
@@ -2727,7 +2735,11 @@ TEST(TestColumnReader, testTimestampSkipWithNulls) {
     } else {
       EXPECT_EQ(1, longBatch->notNull[i]);
       time_t time = static_cast<time_t>(longBatch->data[i]);
-      EXPECT_STREQ(expected[vals_ix], ctime(&time));
+      tm timeStruct;
+      ASSERT_PRED1(isNotNull, gmtime_r(&time, &timeStruct));
+      char buffer[30];
+      asctime_r(&timeStruct, buffer);
+      EXPECT_STREQ(expected[vals_ix], buffer);
       EXPECT_EQ(expected_nano[vals_ix], longBatch->nanoseconds[i]);
       vals_ix++;
     }
@@ -2767,7 +2779,6 @@ TEST(TestColumnReader, testTimestamp) {
   EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_DATA, true))
       .WillRepeatedly(testing::Return(new SeekableArrayInputStream
                                       (buffer1, ARRAY_SIZE(buffer1))));
-
 
   const unsigned char buffer2[] = { 0xf6,
                                     0x00,
@@ -2825,7 +2836,11 @@ TEST(TestColumnReader, testTimestamp) {
 
   for (size_t i = 0; i < batch.numElements; ++i) {
     time_t time = static_cast<time_t>(longBatch->data[i]);
-    EXPECT_STREQ(expected[i], ctime(&time)) << "Wrong value at " << i;
+    tm timeStruct;
+    ASSERT_PRED1(isNotNull, gmtime_r(&time, &timeStruct));
+    char buffer[30];
+    asctime_r(&timeStruct, buffer);
+    EXPECT_STREQ(expected[i], buffer) << "Wrong value at " << i;
     EXPECT_EQ(expectedNano[i], longBatch->nanoseconds[i]);
   }
 }
