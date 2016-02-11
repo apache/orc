@@ -25,7 +25,6 @@ _Optimized Row Columnar_ (ORC) file format.
 
 ```shell
 -To compile:
-% export TZ=America/Los_Angeles
 % mkdir build
 % cd build
 % cmake ..

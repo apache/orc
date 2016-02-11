@@ -88,8 +88,11 @@ CHECK_CXX_SOURCE_RUNS("
 )
 
 CHECK_CXX_SOURCE_RUNS("
+    #include<stdlib.h>
     #include<time.h>
     int main(int, char *[]) {
+      setenv(\"TZ\", \"America/Los_Angeles\", 1);
+      tzset();
       struct tm time2037;
       struct tm time2038;
       strptime(\"2037-05-05 12:34:56\", \"%Y-%m-%d %H:%M:%S\", &time2037);
@@ -137,6 +140,7 @@ add_library (orc STATIC
   RLEv1.cc
   RLEv2.cc
   RLE.cc
+  Timezone.cc
   TypeImpl.cc
   Vector.cc
   )

@@ -265,6 +265,7 @@ namespace orc {
   private:
     std::unique_ptr<orc::RleDecoder> secondsRle;
     std::unique_ptr<orc::RleDecoder> nanoRle;
+    const Timezone& writerTimezone;
     const int64_t epochOffset;
 
   public:
@@ -281,8 +282,9 @@ namespace orc {
 
   TimestampColumnReader::TimestampColumnReader(const Type& type,
                                                StripeStreams& stripe
-                                     ): ColumnReader(type, stripe),
-                                         epochOffset(stripe.getEpochOffset()) {
+                               ): ColumnReader(type, stripe),
+                                  writerTimezone(stripe.getWriterTimezone()),
+                                  epochOffset(writerTimezone.getEpoch()) {
     RleVersion vers = convertRleVersion(stripe.getEncoding(columnId).kind());
     secondsRle = createRleDecoder(stripe.getStream(columnId,
                                                    proto::Stream_Kind_DATA,
@@ -327,7 +329,9 @@ namespace orc {
             nanoBuffer[i] *= 10;
           }
         }
-        secsBuffer[i] += epochOffset;
+        int64_t writerTime = secsBuffer[i] + epochOffset;
+        secsBuffer[i] = writerTime +
+          writerTimezone.getVariant(writerTime).gmtOffset;
         if (secsBuffer[i] < 0 && nanoBuffer[i] != 0) {
           secsBuffer[i] -= 1;
         }

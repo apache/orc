@@ -1066,7 +1066,7 @@ namespace orc {
 
   class ReaderImpl : public Reader {
   private:
-    const int64_t epochOffset;
+    const Timezone& localTimezone;
 
     // inputs
     std::unique_ptr<InputStream> stream;
@@ -1219,27 +1219,13 @@ namespace orc {
     }
   }
 
-  int64_t getEpochOffset() {
-    // Build the literal for the ORC epoch
-    // 2015 Jan 1 00:00:00
-    struct tm epoch;
-    epoch.tm_sec = 0;
-    epoch.tm_min = 0;
-    epoch.tm_hour = 0;
-    epoch.tm_mday = 1;
-    epoch.tm_mon = 0;
-    epoch.tm_year = 2015 - 1900;
-    epoch.tm_isdst = 0;
-    return static_cast<int64_t>(mktime(&epoch));
-  }
-
   ReaderImpl::ReaderImpl(std::unique_ptr<InputStream> input,
                          const ReaderOptions& opts,
                          std::unique_ptr<proto::PostScript> _postscript,
                          std::unique_ptr<proto::Footer> _footer,
                          uint64_t _fileLength,
                          uint64_t _postscriptLength
-                         ): epochOffset(getEpochOffset()),
+                         ): localTimezone(getLocalTimezone()),
                             stream(std::move(input)),
                             options(opts),
                             fileLength(_fileLength),
@@ -1592,7 +1578,7 @@ namespace orc {
     const uint64_t stripeStart;
     InputStream& input;
     MemoryPool& memoryPool;
-    const int64_t epochOffset;
+    const Timezone& writerTimezone;
 
   public:
     StripeStreamsImpl(const ReaderImpl& reader,
@@ -1600,7 +1586,7 @@ namespace orc {
                       uint64_t stripeStart,
                       InputStream& input,
                       MemoryPool& memoryPool,
-                      int64_t epochOffset);
+                      const Timezone& writerTimezone);
 
     virtual ~StripeStreamsImpl();
 
@@ -1618,7 +1604,7 @@ namespace orc {
 
     MemoryPool& getMemoryPool() const override;
 
-    int64_t getEpochOffset() const override;
+    const Timezone& getWriterTimezone() const override;
   };
 
   uint64_t maxStreamsForType(const proto::Type& type) {
@@ -1731,13 +1717,13 @@ namespace orc {
                                        uint64_t _stripeStart,
                                        InputStream& _input,
                                        MemoryPool& _memoryPool,
-                                       int64_t _epochOffset
+                                       const Timezone& _writerTimezone
                                        ): reader(_reader),
                                           footer(_footer),
                                           stripeStart(_stripeStart),
                                           input(_input),
                                           memoryPool(_memoryPool),
-                                          epochOffset(_epochOffset) {
+                                          writerTimezone(_writerTimezone) {
     // PASS
   }
 
@@ -1758,8 +1744,8 @@ namespace orc {
     return footer.columns(static_cast<int>(columnId));
   }
 
-  int64_t StripeStreamsImpl::getEpochOffset() const {
-    return epochOffset;
+  const Timezone& StripeStreamsImpl::getWriterTimezone() const {
+    return writerTimezone;
   }
 
   std::unique_ptr<SeekableInputStream>
@@ -1799,11 +1785,15 @@ namespace orc {
     currentStripeInfo = footer->stripes(static_cast<int>(currentStripe));
     currentStripeFooter = getStripeFooter(currentStripeInfo);
     rowsInCurrentStripe = currentStripeInfo.numberofrows();
+    const Timezone& writerTimezone =
+      currentStripeFooter.has_writertimezone() ?
+        getTimezoneByName(currentStripeFooter.writertimezone()) :
+        localTimezone;
     StripeStreamsImpl stripeStreams(*this, currentStripeFooter,
                                     currentStripeInfo.offset(),
                                     *(stream.get()),
                                     memoryPool,
-                                    epochOffset);
+                                    writerTimezone);
     reader = buildReader(*(schema.get()), stripeStreams);
   }
 

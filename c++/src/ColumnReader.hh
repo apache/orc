@@ -22,6 +22,7 @@
 #include "orc/Vector.hh"
 #include "ByteRLE.hh"
 #include "Compression.hh"
+#include "Timezone.hh"
 #include "wrap/orc-proto-wrapper.hh"
 
 namespace orc {
@@ -65,11 +66,9 @@ namespace orc {
     virtual MemoryPool& getMemoryPool() const = 0;
 
     /**
-     * Get the number of seconds between the ORC epoch and Unix epoch.
-     * ORC epoch is 1 Jan 2015 00:00:00 local.
-     * Unix epoch is 1 Jan 1970 00:00:00 UTC.
+     * Get the writer's timezone, so that we can convert their dates correctly.
      */
-    virtual int64_t getEpochOffset() const = 0;
+    virtual const Timezone& getWriterTimezone() const = 0;
   };
 
   /**
