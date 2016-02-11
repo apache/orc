@@ -15,11 +15,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+REPOSITORY="https://github.com/apache/orc.git"
+BRANCH="master"
+
 start=`date`
 for os in centos5 centos6 centos7 debian6 debian7 ubuntu12 ubuntu14; do
   echo "Testing $os"
   ( cd $os && docker build -t "orc-$os" . )
-  docker run "orc-$os" || exit 1
+  docker run "orc-$os" /bin/bash -c "git clone $REPOSITORY -b $BRANCH && mkdir orc/build && cd orc/build && cmake .. && make package test-out" || exit 1
 done
 echo "Start: $start"
 echo "End:" `date`

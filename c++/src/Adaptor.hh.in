@@ -87,6 +87,14 @@
   #define UINT32_MAX 0xffffffff
 #endif
 
+#ifndef INT64_MAX
+  #define INT64_MAX 0x7fffffffffffffff
+#endif
+
+#ifndef INT64_MIN
+  #define INT64_MIN (-0x7fffffffffffffff - 1)
+#endif
+
 #define GTEST_LANG_CXX11 0
 
 #endif /* ADAPTER_HH */
