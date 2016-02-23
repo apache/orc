@@ -59,6 +59,37 @@ public:
 
 TestMemoryPool::~TestMemoryPool() {}
 
+void processFile(const char* filename,
+                 const std::list<uint64_t>& cols,
+                 uint32_t batchSize) {
+  orc::ReaderOptions opts;
+  if (cols.size() > 0) {
+    opts.include(cols);
+  }
+  std::unique_ptr<orc::MemoryPool> pool(new TestMemoryPool());
+  opts.setMemoryPool(*(pool.get()));
+
+  std::unique_ptr<orc::Reader> reader =
+    orc::createReader(orc::readLocalFile(std::string(filename)), opts);
+
+  std::unique_ptr<orc::ColumnVectorBatch> batch =
+      reader->createRowBatch(batchSize);
+  uint64_t readerMemory = reader->getMemoryUse();
+  uint64_t batchMemory = batch->getMemoryUsage();
+  while (reader->next(*batch)) {}
+  uint64_t actualMemory =
+      static_cast<TestMemoryPool*>(pool.get())->getMaxMemory();
+  std::cout << "Reader memory estimate: " << readerMemory
+            << "\nBatch memory estimate:  " ;
+  if (batch->hasVariableLength()) {
+    std::cout << "Cannot estimate because reading ARRAY or MAP columns";
+  } else {
+    std::cout << batchMemory
+              << "\nTotal memory estimate:  " << readerMemory + batchMemory;
+  }
+  std::cout << "\nActual max memory used: " << actualMemory << "\n";
+}
+
 int main(int argc, char* argv[]) {
   if (argc < 2) {
     std::cout << "Usage: file-memory [--columns=column1,column2,...] "
@@ -84,7 +115,8 @@ int main(int argc, char* argv[]) {
         value = std::strtok(ORC_NULLPTR, "," );
       }
     } else if ( (param=strstr(argv[i], BATCH_PREFIX.c_str())) ) {
-      batchSize = static_cast<uint32_t>(std::atoi(param+BATCH_PREFIX.length()));
+      batchSize =
+        static_cast<uint32_t>(std::atoi(param+BATCH_PREFIX.length()));
     } else {
       filename = argv[i];
     }
@@ -95,37 +127,11 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  orc::ReaderOptions opts;
-  if (cols.size() > 0) {
-    opts.include(cols);
+  try {
+    processFile(filename, cols, batchSize);
+    return 0;
+  } catch (std::exception& ex) {
+    std::cerr << "Caught exception: " << ex.what() << "\n";
+    return 1;
   }
-  std::unique_ptr<orc::MemoryPool> pool(new TestMemoryPool());
-  opts.setMemoryPool(*(pool.get()));
-
-  std::unique_ptr<orc::Reader> reader;
-  try{
-    reader = orc::createReader(orc::readLocalFile(std::string(filename)), opts);
-  } catch (orc::ParseError e) {
-    std::cout << "Error reading file " << filename << "! " << e.what() << "\n";
-    return -1;
-  }
-
-  std::unique_ptr<orc::ColumnVectorBatch> batch =
-      reader->createRowBatch(batchSize);
-  uint64_t readerMemory = reader->getMemoryUse();
-  uint64_t batchMemory = batch->getMemoryUsage();
-  while (reader->next(*batch)) {}
-  uint64_t actualMemory =
-      static_cast<TestMemoryPool*>(pool.get())->getMaxMemory();
-  std::cout << "Reader memory estimate: " << readerMemory
-            << "\nBatch memory estimate:  " ;
-  if (batch->hasVariableLength()) {
-    std::cout << "Cannot estimate because reading ARRAY or MAP columns";
-  } else {
-    std::cout << batchMemory
-              << "\nTotal memory estimate:  " << readerMemory + batchMemory;
-  }
-  std::cout << "\nActual max memory used: " << actualMemory << "\n";
-
-  return 0;
 }
