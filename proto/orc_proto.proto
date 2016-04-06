@@ -198,6 +198,8 @@ enum CompressionKind {
   ZLIB = 1;
   SNAPPY = 2;
   LZO = 3;
+  LZ4 = 4;
+  ZSTD = 5;
 }
 
 // Serialized length must be less that 255 bytes
