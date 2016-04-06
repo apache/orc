@@ -48,6 +48,10 @@ namespace orc {
       return "snappy";
     case CompressionKind_LZO:
       return "LZO";
+    case CompressionKind_LZ4:
+      return "LZ4";
+    case CompressionKind_ZSTD:
+      return "ZSTD";
     }
     std::stringstream buffer;
     buffer << "unknown - " << kind;

@@ -36,7 +36,9 @@ namespace orc {
     CompressionKind_NONE = 0,
     CompressionKind_ZLIB = 1,
     CompressionKind_SNAPPY = 2,
-    CompressionKind_LZO = 3
+    CompressionKind_LZO = 3,
+    CompressionKind_LZ4 = 4,
+    CompressionKind_ZSTD = 5
   };
 
   /**

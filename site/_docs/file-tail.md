@@ -60,6 +60,8 @@ and parsed.
  ZLIB = 1;
  SNAPPY = 2;
  LZO = 3;
+ LZ4 = 4;
+ ZSTD = 5;
 }
 ```
 
