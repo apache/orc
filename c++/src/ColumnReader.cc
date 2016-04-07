@@ -380,7 +380,7 @@ namespace orc {
         bits |= readByte() << (i*8);
       }
       float *result = reinterpret_cast<float*>(&bits);
-      return *result;
+      return static_cast<double>(*result);
     }
   };
 

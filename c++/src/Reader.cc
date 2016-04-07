@@ -1896,7 +1896,7 @@ namespace orc {
       throw ParseError("Failed to parse the postscript from " +
                        stream->getName());
     }
-    return std::move(postscript);
+    return REDUNDANT_MOVE(postscript);
   }
 
   /**
@@ -1928,7 +1928,7 @@ namespace orc {
       throw ParseError("Failed to parse the footer from " +
                        stream->getName());
     }
-    return std::move(footer);
+    return REDUNDANT_MOVE(footer);
   }
 
   std::unique_ptr<Reader> createReader(std::unique_ptr<InputStream> stream,
