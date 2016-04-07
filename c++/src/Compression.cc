@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include "Adaptor.hh"
 #include "Compression.hh"
 #include "Exceptions.hh"
 
@@ -732,7 +733,7 @@ DIAGNOSTIC_POP
                         MemoryPool& pool) {
     switch (static_cast<int64_t>(kind)) {
     case CompressionKind_NONE:
-      return std::move(input);
+      return REDUNDANT_MOVE(input);
     case CompressionKind_ZLIB:
       return std::unique_ptr<SeekableInputStream>
         (new ZlibDecompressionStream(std::move(input), blockSize, pool));

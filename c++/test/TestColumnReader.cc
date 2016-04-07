@@ -2380,10 +2380,11 @@ TEST(TestColumnReader, testFloatWithNulls) {
       EXPECT_EQ(0, doubleBatch->notNull[i]);
     } else if (i == 7) {
       EXPECT_EQ(1, doubleBatch->notNull[i]);
-      EXPECT_EQ(true, isnan(doubleBatch->data[i]));
+      EXPECT_EQ(true, std::isnan(doubleBatch->data[i]));
     } else {
       EXPECT_EQ(1, doubleBatch->notNull[i]);
-      EXPECT_DOUBLE_EQ(test_vals[i], doubleBatch->data[i]);
+      EXPECT_DOUBLE_EQ(static_cast<double>(test_vals[i]),
+                       doubleBatch->data[i]);
     }
   }
 }
@@ -2447,7 +2448,8 @@ TEST(TestColumnReader, testFloatSkipWithNulls) {
       EXPECT_EQ(0, doubleBatch->notNull[i]);
     } else {
       EXPECT_EQ(1, doubleBatch->notNull[i]);
-      EXPECT_DOUBLE_EQ(test_vals[vals_ix], doubleBatch->data[i]);
+      EXPECT_DOUBLE_EQ(static_cast<double>(test_vals[vals_ix]),
+                       doubleBatch->data[i]);
       vals_ix++;
     }
   }
@@ -2464,7 +2466,8 @@ TEST(TestColumnReader, testFloatSkipWithNulls) {
       EXPECT_EQ(0, doubleBatch->notNull[i]);
     } else {
       EXPECT_EQ(1, doubleBatch->notNull[i]);
-      EXPECT_DOUBLE_EQ(test_vals[vals_ix], doubleBatch->data[i]);
+      EXPECT_DOUBLE_EQ(static_cast<double>(test_vals[vals_ix]),
+                       doubleBatch->data[i]);
       vals_ix++;
     }
   }
@@ -2544,7 +2547,7 @@ TEST(TestColumnReader, testDoubleWithNulls) {
       EXPECT_EQ(0, doubleBatch->notNull[i]) << "Wrong value at " << i;
     } else if (i == 7) {
       EXPECT_EQ(1, doubleBatch->notNull[i]) << "Wrong value at " << i;
-      EXPECT_EQ(true, isnan(doubleBatch->data[i]));
+      EXPECT_EQ(true, std::isnan(doubleBatch->data[i]));
     } else {
       EXPECT_EQ(1, doubleBatch->notNull[i]) << "Wrong value at " << i;
       EXPECT_DOUBLE_EQ(test_vals[i], doubleBatch->data[i])

@@ -58,6 +58,24 @@ CHECK_CXX_SOURCE_COMPILES("
   HAS_DIAGNOSTIC_PUSH
 )
 
+CHECK_CXX_SOURCE_COMPILES("
+    #include<cmath>
+    int main(int, char *[]) {
+      return std::isnan(1.0f);
+    }"
+  HAS_STD_ISNAN
+)
+
+CHECK_CXX_SOURCE_COMPILES("
+    #include<string>
+    std::string func() {
+      std::string var = \"test\";
+      return std::move(var);
+    }
+    int main(int, char *[]) {}"
+  NEEDS_REDUNDANT_MOVE
+)
+
 INCLUDE(CheckCXXSourceRuns)
 
 CHECK_CXX_SOURCE_RUNS("

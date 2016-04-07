@@ -25,6 +25,8 @@
 #cmakedefine HAS_DIAGNOSTIC_PUSH
 #cmakedefine HAS_PRE_1970
 #cmakedefine HAS_POST_2038
+#cmakedefine HAS_STD_ISNAN
+#cmakedefine NEEDS_REDUNDANT_MOVE
 
 #include "orc/orc-config.hh"
 #include <string>
@@ -88,5 +90,18 @@
 #endif
 
 #define GTEST_LANG_CXX11 0
+
+#ifdef NEEDS_REDUNDANT_MOVE
+  #define REDUNDANT_MOVE(XXX) std::move(XXX)
+#else
+  #define REDUNDANT_MOVE(XXX) XXX
+#endif
+
+#ifndef HAS_STD_ISNAN
+  #include <math.h>
+  #define std::isnan(XXX) isnan(XXX)
+#else
+  #include <cmath>
+#endif
 
 #endif /* ADAPTER_HH */
