@@ -572,7 +572,14 @@ public class ReaderImpl implements Reader {
     boolean[] include = options.getInclude();
     // if included columns is null, then include all columns
     if (include == null) {
-      include = new boolean[types.size()];
+      int size;
+      TypeDescription readSchema = options.getSchema();
+      if (readSchema != null){
+        size = readSchema.getMaximumId() + 1;
+      } else {
+        size = types.size();
+      }
+      include = new boolean[size];
       Arrays.fill(include, true);
       options.include(include);
     }

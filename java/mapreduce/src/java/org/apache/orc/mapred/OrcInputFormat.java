@@ -113,7 +113,8 @@ public class OrcInputFormat<V extends WritableComparable>
     Reader.Options options = new Reader.Options()
         .range(start, length)
         .useZeroCopy(OrcConf.USE_ZEROCOPY.getBoolean(conf))
-        .skipCorruptRecords(OrcConf.SKIP_CORRUPT_DATA.getBoolean(conf));
+        .skipCorruptRecords(OrcConf.SKIP_CORRUPT_DATA.getBoolean(conf))
+        .tolerateMissingSchema(OrcConf.TOLERATE_MISSING_SCHEMA.getBoolean(conf));
     if (schema != null) {
       options.schema(schema);
     } else {

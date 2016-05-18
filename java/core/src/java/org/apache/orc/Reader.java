@@ -150,6 +150,7 @@ public interface Reader {
     private Boolean skipCorruptRecords = null;
     private TypeDescription schema = null;
     private DataReader dataReader = null;
+    private Boolean tolerateMissingSchema = false;
 
     /**
      * Set the list of columns to read.
@@ -218,6 +219,18 @@ public interface Reader {
       return this;
     }
 
+    /**
+     * Set whether to make a best effort to tolerate schema evolution for files
+     * which do not have an embedded schema because they were written with a'
+     * pre-HIVE-4243 writer.
+     * @param value the new tolerance flag
+     * @return this
+     */
+    public Options tolerateMissingSchema(boolean value) {
+      this.tolerateMissingSchema = value;
+      return this;
+    }
+
     public boolean[] getInclude() {
       return include;
     }
@@ -273,6 +286,7 @@ public interface Reader {
       result.useZeroCopy = useZeroCopy;
       result.skipCorruptRecords = skipCorruptRecords;
       result.dataReader = dataReader == null ? null : dataReader.clone();
+      result.tolerateMissingSchema = tolerateMissingSchema;
       return result;
     }
 
@@ -316,6 +330,10 @@ public interface Reader {
       }
       buffer.append("}");
       return buffer.toString();
+    }
+
+    public boolean getTolerateMissingSchema() {
+      return tolerateMissingSchema;
     }
   }
 
