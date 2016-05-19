@@ -27,7 +27,7 @@
 
 int main(int argc, char* argv[]) {
   if (argc < 2) {
-    std::cout << "Usage: file-scan <filename>\n";
+    std::cout << "Usage: orc-scan <filename>\n";
   }
 
   orc::ReaderOptions opts;

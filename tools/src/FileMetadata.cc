@@ -160,7 +160,7 @@ int main(int argc, char* argv[]) {
 
   if (argc < 1 || helpFlag) {
     std::cerr
-      << "Usage: file-metadata [-h] [--help] [-v] [--verbose] <filename>\n";
+      << "Usage: orc-metadata [-h] [--help] [-v] [--verbose] <filename>\n";
     exit(1);
   } else {
     for(int i=0; i < argc; ++i) {

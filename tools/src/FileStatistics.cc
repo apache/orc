@@ -62,7 +62,7 @@ void printStatistics(const char *filename) {
 
 int main(int argc, char* argv[]) {
   if (argc < 2) {
-    std::cout << "Usage: file-metadata <filename>\n";
+    std::cout << "Usage: orc-statistics <filename>\n";
   }
 
   try {
