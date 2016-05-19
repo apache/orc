@@ -92,7 +92,7 @@ void processFile(const char* filename,
 
 int main(int argc, char* argv[]) {
   if (argc < 2) {
-    std::cout << "Usage: file-memory [--columns=column1,column2,...] "
+    std::cout << "Usage: orc-memory [--columns=column1,column2,...] "
         << "[--batch=rows_in_batch] <filename> \n";
     return 1;
   }

@@ -20,55 +20,53 @@ include_directories (
 
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g ${CXX11_FLAGS} ${WARN_FLAGS}")
 
-add_executable (file-contents
+add_executable (orc-contents
   FileContents.cc
   )
 
-target_link_libraries (file-contents
+target_link_libraries (orc-contents
   orc
   ${PROTOBUF_LIBRARIES}
   )
 
-add_executable (file-scan
+add_executable (orc-scan
   FileScan.cc
   )
 
-target_link_libraries (file-scan
+target_link_libraries (orc-scan
   orc
   ${PROTOBUF_LIBRARIES}
   )
 
-add_executable (file-metadata
+add_executable (orc-metadata
   FileMetadata.cc
   )
 
-target_link_libraries (file-metadata
+target_link_libraries (orc-metadata
   orc
   ${PROTOBUF_LIBRARIES}
   )
   
- add_executable (file-statistics
+ add_executable (orc-statistics
   FileStatistics.cc
   )
 
-target_link_libraries (file-statistics
+target_link_libraries (orc-statistics
   orc
   ${PROTOBUF_LIBRARIES}
   ) 
   
-add_executable (file-memory
+add_executable (orc-memory
   FileMemory.cc
   )
 
-target_link_libraries (file-memory
+target_link_libraries (orc-memory
   orc
   ${PROTOBUF_LIBRARIES}
   )   
 
 install(TARGETS
-   file-contents
-   file-metadata
-   file-scan
-   file-statistics
-   file-memory
+   orc-contents
+   orc-metadata
+   orc-statistics
    DESTINATION bin)
