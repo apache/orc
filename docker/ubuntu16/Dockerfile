@@ -14,33 +14,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# ORC compile for CentOS 5
+# ORC compile for Ubuntu 16
 #
 
-FROM centos:5
+FROM ubuntu:16.04
 MAINTAINER Owen O'Malley <owen@hortonworks.com>
 
-RUN yum check-update || true
-RUN yum install -y \
+RUN apt-get update
+RUN apt-get install -y \
   cmake \
-  curl-devel \
-  expat-devel \
+  default-jdk \
   gcc \
-  gcc-c++ \
-  gettext-devel \
+  g++ \
+  git \
   make \
-  openssl-devel \
-  wget \
-  zlib-devel
+  maven
 
-ENV TZ=America/Los_Angeles
 WORKDIR /root
-RUN wget https://github.com/git/git/archive/v2.7.0.tar.gz -O git.tgz
-RUN tar xzf git.tgz
-RUN cd git-2.7.0 && make prefix=/usr all install
 
 CMD git clone https://github.com/apache/orc.git -b master && \
   mkdir orc/build && \
   cd orc/build && \
-  cmake .. && \ 
+  cmake .. && \
   make package test-out

@@ -75,4 +75,13 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>cmake</id>
+      <build>
+        <directory>${build.dir}/storage-api</directory>
+      </build>
+    </profile>
+  </profiles>
 </project>

@@ -26,9 +26,10 @@ RUN apt-get install -y \
   gcc \
   g++ \
   git \
-  make
+  make \
+  maven \
+  openjdk-7-jdk
 
-ENV TZ=America/Los_Angeles
 WORKDIR /root
 
 CMD git clone https://github.com/apache/orc.git -b master && \

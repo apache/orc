@@ -14,10 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# ORC compile for Debian 6
+# ORC compile for Debian 8
 #
 
-FROM debian:6
+FROM debian:8
 MAINTAINER Owen O'Malley <owen@hortonworks.com>
 
 RUN apt-get update
@@ -26,13 +26,14 @@ RUN apt-get install -y \
   gcc \
   g++ \
   git \
-  make
+  make \
+  maven \
+  openjdk-7-jdk
 
-ENV TZ=America/Los_Angeles
 WORKDIR /root
 
 CMD git clone https://github.com/apache/orc.git -b master && \
   mkdir orc/build && \
   cd orc/build && \
-  cmake .. && \ 
+  cmake .. && \
   make package test-out
