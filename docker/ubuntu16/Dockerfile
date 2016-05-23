@@ -14,21 +14,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# ORC compile for Debian 6
+# ORC compile for Ubuntu 16
 #
 
-FROM debian:6
+FROM ubuntu:16.04
 MAINTAINER Owen O'Malley <owen@hortonworks.com>
 
 RUN apt-get update
 RUN apt-get install -y \
   cmake \
+  default-jdk \
   gcc \
   g++ \
   git \
-  make
+  make \
+  maven
 
-ENV TZ=America/Los_Angeles
 WORKDIR /root
 
 CMD git clone https://github.com/apache/orc.git -b master && \

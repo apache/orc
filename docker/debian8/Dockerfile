@@ -14,30 +14,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# ORC compile for CentOS 5
+# ORC compile for Debian 8
 #
 
-FROM centos:5
+FROM debian:8
 MAINTAINER Owen O'Malley <owen@hortonworks.com>
 
-RUN yum check-update || true
-RUN yum install -y \
+RUN apt-get update
+RUN apt-get install -y \
   cmake \
-  curl-devel \
-  expat-devel \
   gcc \
-  gcc-c++ \
-  gettext-devel \
+  g++ \
+  git \
   make \
-  openssl-devel \
-  wget \
-  zlib-devel
+  maven \
+  openjdk-7-jdk
 
-ENV TZ=America/Los_Angeles
 WORKDIR /root
-RUN wget https://github.com/git/git/archive/v2.7.0.tar.gz -O git.tgz
-RUN tar xzf git.tgz
-RUN cd git-2.7.0 && make prefix=/usr all install
 
 CMD git clone https://github.com/apache/orc.git -b master && \
   mkdir orc/build && \

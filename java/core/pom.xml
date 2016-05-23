@@ -19,7 +19,7 @@
   <parent>
     <groupId>org.apache.orc</groupId>
     <artifactId>orc</artifactId>
-    <version>1.1.0-SNAPSHOT</version>
+    <version>1.1.0</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -136,7 +136,7 @@
             </goals>
             <configuration>
               <sources>
-                <source>target/generated-sources</source>
+                <source>${project.build.directory}/generated-sources</source>
               </sources>
             </configuration>
           </execution>
@@ -176,4 +176,13 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>cmake</id>
+      <build>
+        <directory>${build.dir}/core</directory>
+      </build>
+    </profile>
+  </profiles>
 </project>

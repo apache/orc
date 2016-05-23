@@ -20,7 +20,7 @@ URL=https://github.com/$GITHUB_USER/orc.git
 BRANCH=$2
 
 start=`date`
-for os in centos5 centos6 centos7 debian6 debian7 ubuntu12 ubuntu14; do
+for os in centos6 centos7 debian7 debian8 ubuntu12 ubuntu14 ubuntu16; do
   echo "Testing $os"
   ( cd $os && docker build -t "orc-$os" . )
   docker run "orc-$os" /bin/bash -c "git clone $URL -b $BRANCH && mkdir orc/build && cd orc/build && cmake .. && make package test-out" || exit 1
