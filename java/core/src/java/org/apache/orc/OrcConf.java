@@ -101,9 +101,18 @@ public enum OrcConf {
       "The maximum size of the file to read for finding the file tail. This\n" +
           "is primarily used for streaming ingest to read intermediate\n" +
           "footers while the file is still open"),
-  SCHEMA("orc.schema", "orc.schema", null,
-      "The schema that the user desires to read or write. The values are\n" +
+  MAPRED_INPUT_SCHEMA("orc.mapred.input.schema", null, null,
+      "The schema that the user desires to read. The values are\n" +
       "interpreted using TypeDescription.fromString."),
+  MAPRED_SHUFFLE_KEY_SCHEMA("orc.mapred.map.output.key.schema", null, null,
+      "The schema of the MapReduce shuffle key. The values are\n" +
+          "interpreted using TypeDescription.fromString."),
+  MAPRED_SHUFFLE_VALUE_SCHEMA("orc.mapred.map.output.value.schema", null, null,
+      "The schema of the MapReduce shuffle value. The values are\n" +
+          "interpreted using TypeDescription.fromString."),
+  MAPRED_OUTPUT_SCHEMA("orc.mapred.output.schema", null, null,
+      "The schema that the user desires to write. The values are\n" +
+          "interpreted using TypeDescription.fromString."),
   INCLUDE_COLUMNS("orc.include.columns", "hive.io.file.readcolumn.ids", null,
       "The list of comma separated column ids that should be read with 0\n" +
           "being the first column, 1 being the next, and so on. ."),
@@ -151,7 +160,7 @@ public enum OrcConf {
     }
     if (result == null && conf != null) {
       result = conf.get(attribute);
-      if (result == null) {
+      if (result == null && hiveConfName != null) {
         result = conf.get(hiveConfName);
       }
     }
@@ -170,6 +179,10 @@ public enum OrcConf {
     return getLong(null, conf);
   }
 
+  public void setLong(Configuration conf, long value) {
+    conf.setLong(attribute, value);
+  }
+
   public String getString(Properties tbl, Configuration conf) {
     String value = lookupValue(tbl, conf);
     return value == null ? (String) defaultValue : value;
@@ -177,6 +190,10 @@ public enum OrcConf {
 
   public String getString(Configuration conf) {
     return getString(null, conf);
+  }
+
+  public void setString(Configuration conf, String value) {
+    conf.set(attribute, value);
   }
 
   public boolean getBoolean(Properties tbl, Configuration conf) {
@@ -191,6 +208,10 @@ public enum OrcConf {
     return getBoolean(null, conf);
   }
 
+  public void setBoolean(Configuration conf, boolean value) {
+    conf.setBoolean(attribute, value);
+  }
+
   public double getDouble(Properties tbl, Configuration conf) {
     String value = lookupValue(tbl, conf);
     if (value != null) {
@@ -201,5 +222,9 @@ public enum OrcConf {
 
   public double getDouble(Configuration conf) {
     return getDouble(null, conf);
+  }
+
+  public void setDouble(Configuration conf, double value) {
+    conf.setDouble(attribute, value);
   }
 }

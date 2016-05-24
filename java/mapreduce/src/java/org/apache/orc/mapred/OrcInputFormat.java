@@ -25,7 +25,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentImpl;
-import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.RecordReader;
@@ -46,7 +46,7 @@ import org.apache.orc.TypeDescription;
 /**
  * A MapReduce/Hive input format for ORC files.
  */
-public class OrcInputFormat<V extends Writable>
+public class OrcInputFormat<V extends WritableComparable>
     extends FileInputFormat<NullWritable, V> {
 
   /**
@@ -56,7 +56,8 @@ public class OrcInputFormat<V extends Writable>
    * @param columnsStr the comma separated list of column ids
    * @return a boolean array
    */
-  static boolean[] parseInclude(TypeDescription schema, String columnsStr) {
+  public static boolean[] parseInclude(TypeDescription schema,
+                                       String columnsStr) {
     if (columnsStr == null ||
         schema.getCategory() != TypeDescription.Category.STRUCT) {
       return null;
@@ -82,39 +83,41 @@ public class OrcInputFormat<V extends Writable>
   public static void setSearchArgument(Configuration conf,
                                        SearchArgument sarg,
                                        String[] columnNames) {
-    Output out = new Output();
+    Output out = new Output(100000);
     new Kryo().writeObject(out, sarg);
-    conf.set(OrcConf.KRYO_SARG.getAttribute(),
-        Base64.encodeBase64String(out.toBytes()));
+    OrcConf.KRYO_SARG.setString(conf, Base64.encodeBase64String(out.toBytes()));
     StringBuilder buffer = new StringBuilder();
-    for(int i=0; i < columnNames.length; ++i) {
+    for (int i = 0; i < columnNames.length; ++i) {
       if (i != 0) {
         buffer.append(',');
       }
       buffer.append(columnNames[i]);
     }
-    conf.set(OrcConf.SARG_COLUMNS.getAttribute(), buffer.toString());
+    OrcConf.SARG_COLUMNS.setString(conf, buffer.toString());
   }
 
-  @Override
-  public RecordReader<NullWritable, V>
-  getRecordReader(InputSplit inputSplit,
-                  JobConf conf,
-                  Reporter reporter) throws IOException {
-    FileSplit split = (FileSplit) inputSplit;
-    Reader file = OrcFile.createReader(split.getPath(),
-        OrcFile.readerOptions(conf)
-            .maxLength(OrcConf.MAX_FILE_LENGTH.getLong(conf)));
+  /**
+   * Build the Reader.Options object based on the JobConf and the range of
+   * bytes.
+   * @param conf the job configuratoin
+   * @param start the byte offset to start reader
+   * @param length the number of bytes to read
+   * @return the options to read with
+   */
+  public static Reader.Options buildOptions(Configuration conf,
+                                            Reader reader,
+                                            long start,
+                                            long length) {
     TypeDescription schema =
-        TypeDescription.fromString(OrcConf.SCHEMA.getString(conf));
+        TypeDescription.fromString(OrcConf.MAPRED_INPUT_SCHEMA.getString(conf));
     Reader.Options options = new Reader.Options()
-        .range(split.getStart(), split.getLength())
+        .range(start, length)
         .useZeroCopy(OrcConf.USE_ZEROCOPY.getBoolean(conf))
         .skipCorruptRecords(OrcConf.SKIP_CORRUPT_DATA.getBoolean(conf));
-    if (schema == null) {
-      schema = file.getSchema();
-    } else {
+    if (schema != null) {
       options.schema(schema);
+    } else {
+      schema = reader.getSchema();
     }
     options.include(parseInclude(schema,
         OrcConf.INCLUDE_COLUMNS.getString(conf)));
@@ -126,6 +129,19 @@ public class OrcInputFormat<V extends Writable>
           new Kryo().readObject(new Input(sargBytes), SearchArgumentImpl.class);
       options.searchArgument(sarg, sargColumns.split(","));
     }
-    return new OrcRecordReader(file, options);
+    return options;
+  }
+
+  @Override
+  public RecordReader<NullWritable, V>
+  getRecordReader(InputSplit inputSplit,
+                  JobConf conf,
+                  Reporter reporter) throws IOException {
+    FileSplit split = (FileSplit) inputSplit;
+    Reader file = OrcFile.createReader(split.getPath(),
+        OrcFile.readerOptions(conf)
+            .maxLength(OrcConf.MAX_FILE_LENGTH.getLong(conf)));
+    return new OrcMapredRecordReader<>(file, buildOptions(conf,
+        file, split.getStart(), split.getLength()));
   }
 }

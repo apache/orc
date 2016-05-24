@@ -53,14 +53,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-public class OrcRecordWriter<V extends Writable>
+public class OrcMapredRecordWriter<V extends Writable>
     implements RecordWriter<NullWritable, V> {
   private final Writer writer;
   private final VectorizedRowBatch batch;
   private final TypeDescription schema;
   private final boolean isTopStruct;
 
-  public OrcRecordWriter(Writer writer) {
+  public OrcMapredRecordWriter(Writer writer) {
     this.writer = writer;
     schema = writer.getSchema();
     this.batch = schema.createRowBatch();
@@ -174,10 +174,10 @@ public class OrcRecordWriter<V extends Writable>
     }
   }
 
-  static void setColumn(TypeDescription schema,
-                        ColumnVector vector,
-                        int row,
-                        Writable value) {
+  public static void setColumn(TypeDescription schema,
+                               ColumnVector vector,
+                               int row,
+                               Writable value) {
     if (value == null) {
       vector.noNulls = false;
       vector.isNull[row] = true;
@@ -256,6 +256,12 @@ public class OrcRecordWriter<V extends Writable>
 
     // add the new row
     int row = batch.size++;
+    // skip over the OrcKey or OrcValue
+    if (v instanceof OrcKey) {
+      v = (V)((OrcKey) v).key;
+    } else if (v instanceof OrcValue) {
+      v = (V)((OrcValue) v).value;
+    }
     if (isTopStruct) {
       for(int f=0; f < schema.getChildren().size(); ++f) {
         setColumn(schema.getChildren().get(f), batch.cols[f], row,

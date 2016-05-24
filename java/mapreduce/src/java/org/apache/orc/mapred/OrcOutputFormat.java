@@ -18,6 +18,7 @@
 
 package org.apache.orc.mapred;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
@@ -34,8 +35,34 @@ import org.apache.orc.Writer;
 
 import java.io.IOException;
 
+/**
+ * An ORC output format that satisfies the org.apache.hadoop.mapred API.
+ */
 public class OrcOutputFormat<V extends Writable>
     extends FileOutputFormat<NullWritable, V> {
+
+  /**
+   * This function builds the options for the ORC Writer based on the JobConf.
+   * @param conf the job configuration
+   * @return a new options object
+   */
+  public static OrcFile.WriterOptions buildOptions(Configuration conf) {
+    return OrcFile.writerOptions(conf)
+        .version(OrcFile.Version.byName(OrcConf.WRITE_FORMAT.getString(conf)))
+        .setSchema(TypeDescription.fromString(OrcConf.MAPRED_OUTPUT_SCHEMA
+            .getString(conf)))
+        .compress(CompressionKind.valueOf(OrcConf.COMPRESS.getString(conf)))
+        .encodingStrategy(OrcFile.EncodingStrategy.valueOf
+            (OrcConf.ENCODING_STRATEGY.getString(conf)))
+        .bloomFilterColumns(OrcConf.BLOOM_FILTER_COLUMNS.getString(conf))
+        .bloomFilterFpp(OrcConf.BLOOM_FILTER_FPP.getDouble(conf))
+        .blockSize(OrcConf.BLOCK_SIZE.getLong(conf))
+        .blockPadding(OrcConf.BLOCK_PADDING.getBoolean(conf))
+        .stripeSize(OrcConf.STRIPE_SIZE.getLong(conf))
+        .rowIndexStride((int) OrcConf.ROW_INDEX_STRIDE.getLong(conf))
+        .bufferSize((int) OrcConf.BUFFER_SIZE.getLong(conf))
+        .paddingTolerance(OrcConf.BLOCK_PADDING_TOLERANCE.getDouble(conf));
+  }
 
   @Override
   public RecordWriter<NullWritable, V> getRecordWriter(FileSystem fileSystem,
@@ -45,21 +72,7 @@ public class OrcOutputFormat<V extends Writable>
                                                        ) throws IOException {
     Path path = getTaskOutputPath(conf, name);
     Writer writer = OrcFile.createWriter(path,
-        OrcFile.writerOptions(conf)
-            .fileSystem(fileSystem)
-            .version(OrcFile.Version.byName(OrcConf.WRITE_FORMAT.getString(conf)))
-            .setSchema(TypeDescription.fromString(OrcConf.SCHEMA.getString(conf)))
-            .compress(CompressionKind.valueOf(OrcConf.COMPRESS.getString(conf)))
-            .encodingStrategy(OrcFile.EncodingStrategy.valueOf
-                (OrcConf.ENCODING_STRATEGY.getString(conf)))
-            .bloomFilterColumns(OrcConf.BLOOM_FILTER_COLUMNS.getString(conf))
-            .bloomFilterFpp(OrcConf.BLOOM_FILTER_FPP.getDouble(conf))
-            .blockSize(OrcConf.BLOCK_SIZE.getLong(conf))
-            .blockPadding(OrcConf.BLOCK_PADDING.getBoolean(conf))
-            .stripeSize(OrcConf.STRIPE_SIZE.getLong(conf))
-            .rowIndexStride((int) OrcConf.ROW_INDEX_STRIDE.getLong(conf))
-            .bufferSize((int) OrcConf.BUFFER_SIZE.getLong(conf))
-            .paddingTolerance(OrcConf.BLOCK_PADDING_TOLERANCE.getDouble(conf)));
-    return new OrcRecordWriter<>(writer);
+        buildOptions(conf).fileSystem(fileSystem));
+    return new OrcMapredRecordWriter<>(writer);
   }
 }

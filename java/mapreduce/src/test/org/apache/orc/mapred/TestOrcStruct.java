@@ -76,6 +76,11 @@ public class TestOrcStruct {
     assertEquals(new IntWritable(42), struct.getFieldValue("i"));
     assertEquals(new DoubleWritable(1.5), struct.getFieldValue(1));
     assertEquals(new Text("Moria"), struct.getFieldValue("k"));
+    struct.setAllFields(new IntWritable(123), new DoubleWritable(4.5),
+        new Text("ok"));
+    assertEquals("123", struct.getFieldValue(0).toString());
+    assertEquals("4.5", struct.getFieldValue(1).toString());
+    assertEquals("ok", struct.getFieldValue(2).toString());
   }
 
   @Test
