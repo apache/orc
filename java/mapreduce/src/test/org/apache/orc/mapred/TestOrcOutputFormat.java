@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.orc.mapred.other;
+package org.apache.orc.mapred;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -32,6 +32,7 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.JobConf;
@@ -47,18 +48,19 @@ import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.mapred.OrcInputFormat;
+import org.apache.orc.mapred.OrcKey;
 import org.apache.orc.mapred.OrcList;
 import org.apache.orc.mapred.OrcMap;
 import org.apache.orc.mapred.OrcOutputFormat;
 import org.apache.orc.mapred.OrcStruct;
 import org.apache.orc.mapred.OrcTimestamp;
 import org.apache.orc.mapred.OrcUnion;
+import org.apache.orc.mapred.OrcValue;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -245,5 +247,60 @@ public class TestOrcOutputFormat {
       assertEquals(lo, value.get());
     }
     assertEquals(false, reader.next(nada, value));
+  }
+
+  /**
+   * Make sure that the writer ignores the OrcKey
+   * @throws Exception
+   */
+  @Test
+  public void testOrcKey() throws Exception {
+    conf.set("mapreduce.output.fileoutputformat.outputdir", workDir.toString());
+    conf.set("mapreduce.task.attempt.id", "attempt_jt0_0_m_0_0");
+    conf.set("orc.schema", "struct<i:int,s:string>");
+    conf.setOutputCommitter(NullOutputCommitter.class);
+    TypeDescription schema = TypeDescription.fromString(conf.get("orc.schema"));
+    OrcKey key = new OrcKey(new OrcStruct(schema));
+    RecordWriter<NullWritable, Writable> writer =
+        new OrcOutputFormat<>().getRecordWriter(fs, conf, "key.orc",
+            Reporter.NULL);
+    NullWritable nada = NullWritable.get();
+    for(int r=0; r < 2000; ++r) {
+      ((OrcStruct) key.key).setAllFields(new IntWritable(r),
+          new Text(Integer.toString(r)));
+      writer.write(nada, key);
+    }
+    writer.close(Reporter.NULL);
+    Path path = new Path(workDir, "key.orc");
+    Reader file = OrcFile.createReader(path, OrcFile.readerOptions(conf));
+    assertEquals(2000, file.getNumberOfRows());
+    assertEquals("struct<i:int,s:string>", file.getSchema().toString());
+  }
+
+  /**
+   * Make sure that the writer ignores the OrcValue
+   * @throws Exception
+   */
+  @Test
+  public void testOrcValue() throws Exception {
+    conf.set("mapreduce.output.fileoutputformat.outputdir", workDir.toString());
+    conf.set("mapreduce.task.attempt.id", "attempt_jt0_0_m_0_0");
+    conf.set("orc.schema", "struct<i:int>");
+    conf.setOutputCommitter(NullOutputCommitter.class);
+    TypeDescription schema = TypeDescription.fromString(conf.get("orc.schema"));
+    OrcValue value = new OrcValue(new OrcStruct(schema));
+    RecordWriter<NullWritable, Writable> writer =
+        new OrcOutputFormat<>().getRecordWriter(fs, conf, "value.orc",
+            Reporter.NULL);
+    NullWritable nada = NullWritable.get();
+    for(int r=0; r < 3000; ++r) {
+      ((OrcStruct) value.value).setAllFields(new IntWritable(r));
+      writer.write(nada, value);
+    }
+    writer.close(Reporter.NULL);
+    Path path = new Path(workDir, "value.orc");
+    Reader file = OrcFile.createReader(path, OrcFile.readerOptions(conf));
+    assertEquals(3000, file.getNumberOfRows());
+    assertEquals("struct<i:int>", file.getSchema().toString());
   }
 }

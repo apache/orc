@@ -17,12 +17,12 @@
  */
 package org.apache.orc.mapred;
 
-
 import org.apache.hadoop.io.WritableComparable;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Date;
 import java.sql.Timestamp;
 import java.util.Date;
 

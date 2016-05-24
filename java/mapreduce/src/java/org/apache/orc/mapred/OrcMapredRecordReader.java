@@ -49,6 +49,10 @@ import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
 import org.apache.orc.TypeDescription;
 
+/**
+ * This record reader implements the org.apache.hadoop.mapred API.
+ * @param <V> the root type of the file
+ */
 public class OrcRecordReader<V extends WritableComparable>
     implements org.apache.hadoop.mapred.RecordReader<NullWritable, V> {
   private final TypeDescription schema;
@@ -56,8 +60,8 @@ public class OrcRecordReader<V extends WritableComparable>
   private final VectorizedRowBatch batch;
   private int rowInBatch;
 
-  protected OrcRecordReader(Reader fileReader,
-                            Reader.Options options) throws IOException {
+  protected OrcMapredRecordReader(Reader fileReader,
+                                  Reader.Options options) throws IOException {
     this.batchReader = fileReader.rows(options);
     if (options.getSchema() == null) {
       schema = fileReader.getSchema();

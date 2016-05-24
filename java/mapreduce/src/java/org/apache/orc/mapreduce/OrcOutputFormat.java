@@ -16,16 +16,17 @@
  * limitations under the License.
  */
 
-package org.apache.orc.mapred;
+package org.apache.orc.mapreduce;
 
-import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.mapred.FileOutputFormat;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.RecordWriter;
-import org.apache.hadoop.util.Progressable;
+import org.apache.hadoop.mapreduce.OutputCommitter;
+import org.apache.hadoop.mapreduce.RecordWriter;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.orc.CompressionKind;
 import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
@@ -34,19 +35,25 @@ import org.apache.orc.Writer;
 
 import java.io.IOException;
 
+/**
+ * An ORC output format that satisfies the org.apache.hadoop.mapreduce API.
+ */
 public class OrcOutputFormat<V extends Writable>
     extends FileOutputFormat<NullWritable, V> {
+  private static final String EXTENSION = ".orc";
+  // This is useful for unit tests or local runs where you don't need the
+  // output committer.
+  public static final String SKIP_TEMP_DIRECTORY =
+      "orc.mapreduce.output.skip-temporary-directory";
 
   @Override
-  public RecordWriter<NullWritable, V> getRecordWriter(FileSystem fileSystem,
-                                                       JobConf conf,
-                                                       String name,
-                                                       Progressable progressable
-                                                       ) throws IOException {
-    Path path = getTaskOutputPath(conf, name);
-    Writer writer = OrcFile.createWriter(path,
+  public RecordWriter<NullWritable, V>
+       getRecordWriter(TaskAttemptContext taskAttemptContext
+                       ) throws IOException {
+    Configuration conf = taskAttemptContext.getConfiguration();
+    Path filename = getDefaultWorkFile(taskAttemptContext, EXTENSION);
+    Writer writer = OrcFile.createWriter(filename,
         OrcFile.writerOptions(conf)
-            .fileSystem(fileSystem)
             .version(OrcFile.Version.byName(OrcConf.WRITE_FORMAT.getString(conf)))
             .setSchema(TypeDescription.fromString(OrcConf.SCHEMA.getString(conf)))
             .compress(CompressionKind.valueOf(OrcConf.COMPRESS.getString(conf)))
@@ -60,6 +67,17 @@ public class OrcOutputFormat<V extends Writable>
             .rowIndexStride((int) OrcConf.ROW_INDEX_STRIDE.getLong(conf))
             .bufferSize((int) OrcConf.BUFFER_SIZE.getLong(conf))
             .paddingTolerance(OrcConf.BLOCK_PADDING_TOLERANCE.getDouble(conf)));
-    return new OrcMapredRecordWriter<>(writer);
+     return new OrcMapreduceRecordWriter<V>(writer);
+  }
+
+  @Override
+  public Path getDefaultWorkFile(TaskAttemptContext context,
+                                 String extension) throws IOException {
+    if (context.getConfiguration().getBoolean(SKIP_TEMP_DIRECTORY, false)) {
+      return new Path(getOutputPath(context),
+          getUniqueFile(context, getOutputName(context), extension));
+    } else {
+      return super.getDefaultWorkFile(context, extension);
+    }
   }
 }

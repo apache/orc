@@ -16,63 +16,35 @@
  * limitations under the License.
  */
 
-package org.apache.orc.mapred;
+package org.apache.orc.mapreduce;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentImpl;
 import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.mapred.FileInputFormat;
-import org.apache.hadoop.mapred.FileSplit;
-import org.apache.hadoop.mapred.RecordReader;
+import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.RecordReader;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
-  
+
 import java.io.IOException;
-import java.util.List;
 
 import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.mapred.InputSplit;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.Reporter;
 import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.TypeDescription;
 
 /**
- * A MapReduce/Hive input format for ORC files.
+ * An ORC input format that satisfies the org.apache.hadoop.mapreduce API.
  */
 public class OrcInputFormat<V extends Writable>
     extends FileInputFormat<NullWritable, V> {
-
-  /**
-   * Convert a string with a comma separated list of column ids into the
-   * array of boolean that match the schemas.
-   * @param schema the schema for the reader
-   * @param columnsStr the comma separated list of column ids
-   * @return a boolean array
-   */
-  public static boolean[] parseInclude(TypeDescription schema,
-                                       String columnsStr) {
-    if (columnsStr == null ||
-        schema.getCategory() != TypeDescription.Category.STRUCT) {
-      return null;
-    }
-    boolean[] result = new boolean[schema.getMaximumId() + 1];
-    result[0] = true;
-    List<TypeDescription> types = schema.getChildren();
-    for(String idString: columnsStr.split(",")) {
-      TypeDescription type = types.get(Integer.parseInt(idString));
-      for(int c=type.getId(); c <= type.getMaximumId(); ++c) {
-        result[c] = true;
-      }
-    }
-    return result;
-  }
 
   /**
    * Put the given SearchArgument into the configuration for an OrcInputFormat.
@@ -83,26 +55,17 @@ public class OrcInputFormat<V extends Writable>
   public static void setSearchArgument(Configuration conf,
                                        SearchArgument sarg,
                                        String[] columnNames) {
-    Output out = new Output(100000);
-    new Kryo().writeObject(out, sarg);
-    conf.set(OrcConf.KRYO_SARG.getAttribute(),
-        Base64.encodeBase64String(out.toBytes()));
-    StringBuilder buffer = new StringBuilder();
-    for(int i=0; i < columnNames.length; ++i) {
-      if (i != 0) {
-        buffer.append(',');
-      }
-      buffer.append(columnNames[i]);
-    }
-    conf.set(OrcConf.SARG_COLUMNS.getAttribute(), buffer.toString());
+    org.apache.orc.mapred.OrcInputFormat.setSearchArgument(conf, sarg,
+        columnNames);
   }
 
   @Override
   public RecordReader<NullWritable, V>
-  getRecordReader(InputSplit inputSplit,
-                  JobConf conf,
-                  Reporter reporter) throws IOException {
+      createRecordReader(InputSplit inputSplit,
+                         TaskAttemptContext taskAttemptContext
+                         ) throws IOException, InterruptedException {
     FileSplit split = (FileSplit) inputSplit;
+    Configuration conf = taskAttemptContext.getConfiguration();
     Reader file = OrcFile.createReader(split.getPath(),
         OrcFile.readerOptions(conf)
             .maxLength(OrcConf.MAX_FILE_LENGTH.getLong(conf)));
@@ -117,7 +80,7 @@ public class OrcInputFormat<V extends Writable>
     } else {
       options.schema(schema);
     }
-    options.include(parseInclude(schema,
+    options.include(org.apache.orc.mapred.OrcInputFormat.parseInclude(schema,
         OrcConf.INCLUDE_COLUMNS.getString(conf)));
     String kryoSarg = OrcConf.KRYO_SARG.getString(conf);
     String sargColumns = OrcConf.SARG_COLUMNS.getString(conf);
@@ -127,6 +90,6 @@ public class OrcInputFormat<V extends Writable>
           new Kryo().readObject(new Input(sargBytes), SearchArgumentImpl.class);
       options.searchArgument(sarg, sargColumns.split(","));
     }
-    return new OrcMapredRecordReader(file, options);
+    return new OrcMapreduceRecordReader<V>(file, options);
   }
 }

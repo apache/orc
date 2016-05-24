@@ -82,6 +82,14 @@ public final class OrcStruct implements WritableComparable<OrcStruct> {
   }
 
   /**
+   * Get the schema for this object.
+   * @return the schema object
+   */
+  public TypeDescription getSchema() {
+    return schema;
+  }
+
+  /**
    * Set all of the fields in the struct
    * @param values the list of values for each of the fields.
    */

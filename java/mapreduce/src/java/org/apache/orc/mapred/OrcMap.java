@@ -45,7 +45,6 @@ public final class OrcMap<K extends WritableComparable,
 
   @Override
   public void write(DataOutput output) throws IOException {
-    Iterator<Map.Entry<K,V>> itr = entrySet().iterator();
     output.writeInt(size());
     for(Map.Entry<K,V> entry: entrySet()) {
       K key = entry.getKey();
