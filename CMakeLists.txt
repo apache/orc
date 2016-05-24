@@ -89,20 +89,28 @@ elseif (MSVC)
 
   set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /NODEFAULTLIB:msvcrtd.lib")
 endif ()
-  
+
 enable_testing()
 
 set (EXAMPLE_DIRECTORY ${CMAKE_SOURCE_DIR}/examples)
 
 add_subdirectory(c++)
 add_subdirectory(tools)
+add_subdirectory(java)
 
 # Add another target called test-out that prints the results on failure
 if (CMAKE_CONFIGURATION_TYPES)
-  add_custom_target (test-out COMMAND ${CMAKE_CTEST_COMMAND}
-    --force-new-ctest-process --output-on-failure
-    --build-config "$<CONFIGURATION>")
+  add_custom_target (test-out
+    COMMAND ${CMAKE_CTEST_COMMAND} --force-new-ctest-process
+      --output-on-failure --build-config "$<CONFIGURATION>"
+  )
 else (CMAKE_CONFIGURATION_TYPES)
-  add_custom_target (test-out COMMAND ${CMAKE_CTEST_COMMAND}
-    --force-new-ctest-process --output-on-failure)
+  add_custom_target (test-out
+    COMMAND ${CMAKE_CTEST_COMMAND} --force-new-ctest-process
+      --output-on-failure
+  )
 endif (CMAKE_CONFIGURATION_TYPES)
+
+install(
+  FILES LICENSE NOTICE
+  DESTINATION .)

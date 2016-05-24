@@ -29,12 +29,19 @@ RUN yum install -y \
   gcc-c++ \
   gettext-devel \
   git \
+  java-1.7.0-openjdk \
+  java-1.7.0-openjdk-devel \
   make \
   openssl-devel \
+  tar \
+  wget \
+  which \
   zlib-devel
 
-ENV TZ=America/Los_Angeles
 WORKDIR /root
+RUN wget http://apache.mesi.com.ar/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz -O maven.tgz
+RUN tar xzf maven.tgz
+RUN ln -s /root/apache-maven-3.3.9/bin/mvn /usr/bin/mvn
 
 CMD git clone https://github.com/apache/orc.git -b master && \
   mkdir orc/build && \

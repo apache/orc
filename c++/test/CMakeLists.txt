@@ -22,7 +22,7 @@ include_directories(
 
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX11_FLAGS} ${WARN_FLAGS}")
 
-add_executable (test-orc
+add_executable (orc-test
   TestByteRle.cc
   TestColumnPrinter.cc
   TestColumnReader.cc
@@ -34,7 +34,7 @@ add_executable (test-orc
   TestType.cc
 )
 
-target_link_libraries (test-orc
+target_link_libraries (orc-test
   orc
   ${PROTOBUF_LIBRARIES}
   ${GMOCK_LIBRARIES}
@@ -51,5 +51,5 @@ target_link_libraries (create-test-files
   ${PROTOBUF_LIBRARIES}
 )
 
-add_test (test-orc test-orc)
+add_test (NAME orc-test COMMAND orc-test)
 

@@ -29,8 +29,12 @@ RUN yum install -y \
   gcc-c++ \
   gettext-devel \
   git \
+  java-1.7.0-openjdk \
+  java-1.7.0-openjdk-devel \
   make \
+  maven \
   openssl-devel \
+  which \
   zlib-devel
 
 ENV TZ=America/Los_Angeles

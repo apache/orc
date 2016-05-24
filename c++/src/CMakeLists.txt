@@ -116,11 +116,9 @@ include_directories (
   )
 
 add_custom_command(OUTPUT orc_proto.pb.h orc_proto.pb.cc
-   COMMAND mkdir -p "${CMAKE_BINARY_DIR}/orc-java" &&
-     ${PROTOBUF_EXECUTABLE}
+   COMMAND ${PROTOBUF_EXECUTABLE}
         -I ${CMAKE_SOURCE_DIR}/proto
         --cpp_out="${CMAKE_CURRENT_BINARY_DIR}"
-        --java_out="${CMAKE_BINARY_DIR}/orc-java"
         "${CMAKE_SOURCE_DIR}/proto/orc_proto.proto"
 )
 
