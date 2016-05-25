@@ -50,6 +50,7 @@
     <protobuf.version>2.5.0</protobuf.version>
     <slf4j.version>1.7.5</slf4j.version>
     <snappy.version>0.2</snappy.version>
+    <storage-api.version>2.1.0-pre-orc</storage-api.version>
   </properties>
 
   <build>
