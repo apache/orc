@@ -18,11 +18,9 @@
 
 package org.apache.orc.mapred;
 
-import org.apache.hadoop.io.DataInputBuffer;
-import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.Text;
 import org.apache.orc.TypeDescription;
 import org.junit.Test;
 
@@ -53,5 +51,125 @@ public class TestOrcMap {
     expected.put(new IntWritable(1), new LongWritable(777));
     TestOrcList.cloneWritable(expected, actual);
     assertEquals(expected, actual);
+  }
+
+  @Test
+  public void testCompare() {
+    TypeDescription schema = TypeDescription.fromString("map<string,string>");
+    OrcMap<Text,Text> left = new OrcMap<>(schema);
+    assertEquals(-1 ,left.compareTo(null));
+    OrcMap<Text,Text> right = new OrcMap<>(schema);
+
+    // empty maps
+    assertEquals(0, left.compareTo(right));
+    assertEquals(0, right.compareTo(left));
+
+    // {} vs {"aa" -> null}
+    right.put(new Text("aa"), null);
+    assertEquals(-1, left.compareTo(right));
+    assertEquals(1, right.compareTo(left));
+
+    // {"aa" -> null} vs {"aa" -> null}
+    left.put(new Text("aa"), null);
+    assertEquals(0, left.compareTo(right));
+    assertEquals(0, right.compareTo(left));
+
+    // {"aa" -> "bb"} vs {"aa" -> "bb"}
+    left.put(new Text("aa"), new Text("bb"));
+    right.put(new Text("aa"), new Text("bb"));
+    assertEquals(0, left.compareTo(right));
+    assertEquals(0, right.compareTo(left));
+
+    // {"aa" -> "bb"} vs {"aa" -> "cc"}
+    right.put(new Text("aa"), new Text("cc"));
+    assertEquals(-1, left.compareTo(right));
+    assertEquals(1, right.compareTo(left));
+
+    // {"aa" -> "bb"} vs {"a" -> "zzz", "aa" -> "cc"}
+    right.put(new Text("a"), new Text("zzz"));
+    assertEquals(1, left.compareTo(right));
+    assertEquals(-1, right.compareTo(left));
+
+    // {"aa" -> null} vs {"aa" -> "bb"}
+    left.put(new Text("aa"), null);
+    right.remove(new Text("a"));
+    right.put(new Text("aa"), new Text("cc"));
+    assertEquals(1, left.compareTo(right));
+    assertEquals(-1, right.compareTo(left));
+
+    // {"aa" -> null, "bb" -> "cc"} vs {"aa" -> null, "bb" -> "dd"}
+    left.put(new Text("aa"), null);
+    left.put(new Text("bb"), new Text("cc"));
+    right.put(new Text("aa"), null);
+    right.put(new Text("bb"), new Text("dd"));
+    assertEquals(-1, left.compareTo(right));
+    assertEquals(1, right.compareTo(left));
+  }
+
+  @Test
+  public void testStructKeys() {
+    TypeDescription schema = TypeDescription.fromString("map<struct<i:int>,string>");
+    OrcMap<OrcStruct, Text> map = new OrcMap<>(schema);
+    OrcStruct struct = new OrcStruct(schema.getChildren().get(0));
+    struct.setFieldValue(0, new IntWritable(12));
+    map.put(struct, new Text("a"));
+    assertEquals("a", map.get(struct).toString());
+    struct = new OrcStruct(schema.getChildren().get(0));
+    struct.setFieldValue(0, new IntWritable(14));
+    map.put(struct, new Text("b"));
+    assertEquals(2, map.size());
+  }
+
+  @Test
+  public void testListKeys() {
+    TypeDescription schema = TypeDescription.fromString("map<array<int>,string>");
+    OrcMap<OrcList, Text> map = new OrcMap<>(schema);
+    OrcList<IntWritable> list = new OrcList<>(schema.getChildren().get(0));
+    list.add(new IntWritable(123));
+    map.put(list, new Text("a"));
+    assertEquals("a", map.get(list).toString());
+    list = new OrcList<>(schema.getChildren().get(0));
+    list.add(new IntWritable(333));
+    map.put(list, new Text("b"));
+    assertEquals(2, map.size());
+    assertEquals("b", map.get(list).toString());
+  }
+
+  @Test
+  public void testUnionKeys() {
+    TypeDescription schema = TypeDescription.fromString("map<uniontype<int,string>,string>");
+    OrcMap<OrcUnion, Text> map = new OrcMap<>(schema);
+    OrcUnion un = new OrcUnion(schema.getChildren().get(0));
+    un.set(0, new IntWritable(123));
+    map.put(un, new Text("hi"));
+    un = new OrcUnion(schema.getChildren().get(0));
+    un.set(1, new Text("aaaa"));
+    map.put(un, new Text("google"));
+    assertEquals(2, map.size());
+    assertEquals("google", map.get(un).toString());
+  }
+
+  @Test
+  public void testMapKeys() {
+    TypeDescription schema = TypeDescription.fromString("map<map<string,string>,string>");
+    OrcMap<OrcMap<Text,Text>, Text> left = new OrcMap<>(schema);
+
+    assertEquals(-1, left.compareTo(null));
+
+    OrcMap<OrcMap<Text,Text>, Text> right = new OrcMap<>(schema);
+    assertEquals(0, left.compareTo(right));
+    assertEquals(0, right.compareTo(left));
+
+    OrcMap<Text,Text> item = new OrcMap<>(schema.getChildren().get(0));
+    item.put(new Text("aa"), new Text("bb"));
+    left.put(item, new Text("cc"));
+    assertEquals(1, left.compareTo(right));
+    assertEquals(-1, right.compareTo(left));
+
+    item =  new OrcMap<>(schema.getChildren().get(0));
+    item.put(new Text("aa"), new Text("dd"));
+    right.put(item, new Text("bb"));
+    assertEquals(-2, left.compareTo(right));
+    assertEquals(2, right.compareTo(left));
   }
 }

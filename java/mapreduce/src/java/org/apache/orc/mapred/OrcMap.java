@@ -34,7 +34,7 @@ import java.util.TreeMap;
  * @param <V> the value type, which must be Writable
  */
 public final class OrcMap<K extends Writable, V extends Writable>
-    extends TreeMap<K, V> implements Writable {
+    extends TreeMap<K, V> implements Writable, Comparable<OrcMap<K,V>> {
   private final TypeDescription keySchema;
   private final TypeDescription valueSchema;
 
@@ -81,6 +81,46 @@ public final class OrcMap<K extends Writable, V extends Writable>
         value = null;
       }
       put(key, value);
+    }
+  }
+
+  @Override
+  public int compareTo(OrcMap<K,V> other) {
+    if (other == null) {
+      return -1;
+    }
+    Iterator<Map.Entry<K,V>> ourItr = entrySet().iterator();
+    Iterator<Map.Entry<K,V>> theirItr = other.entrySet().iterator();
+    while (ourItr.hasNext() && theirItr.hasNext()) {
+      Map.Entry<K,V> ourItem = ourItr.next();
+      Map.Entry<K,V> theirItem = theirItr.next();
+      K ourKey = ourItem.getKey();
+      K theirKey = theirItem.getKey();
+      int val = ((Comparable<K>) ourKey).compareTo(theirKey);
+      if (val != 0) {
+        return val;
+      }
+      Comparable<V> ourValue = (Comparable<V>) ourItem.getValue();
+      V theirValue = theirItem.getValue();
+      if (ourValue == null) {
+        if (theirValue != null) {
+          return 1;
+        }
+      } else if (theirValue == null) {
+        return -1;
+      } else {
+        val = ((Comparable<V>) ourItem.getValue()).compareTo(theirItem.getValue());
+        if (val != 0) {
+          return val;
+        }
+      }
+    }
+    if (ourItr.hasNext()) {
+      return 1;
+    } else if (theirItr.hasNext()) {
+      return -1;
+    } else {
+      return 0;
     }
   }
 }

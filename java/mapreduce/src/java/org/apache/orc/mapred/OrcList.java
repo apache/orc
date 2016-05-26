@@ -31,7 +31,7 @@ import java.util.Iterator;
  * @param <E> the element type, which must be Writable
  */
 public class OrcList<E extends Writable>
-    extends ArrayList<E> implements Writable {
+    extends ArrayList<E> implements Writable, Comparable<OrcList<E>> {
   private final TypeDescription childSchema;
 
   public OrcList(TypeDescription schema) {
@@ -70,5 +70,31 @@ public class OrcList<E extends Writable>
         add(null);
       }
     }
+  }
+
+  @Override
+  public int compareTo(OrcList<E> other) {
+    if (other == null) {
+      return -1;
+    }
+    int ourSize = size();
+    int otherSize = other.size();
+    for(int e=0; e < ourSize && e < otherSize; ++e) {
+      Writable ours = get(e);
+      Writable theirs = other.get(e);
+      if (ours == null) {
+        if (theirs != null) {
+          return 1;
+        }
+      } else if (theirs == null) {
+        return -1;
+      } else {
+        int val = ((Comparable<Writable>) ours).compareTo(theirs);
+        if (val != 0) {
+          return val;
+        }
+      }
+    }
+    return ourSize - otherSize;
   }
 }

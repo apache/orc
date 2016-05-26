@@ -21,6 +21,7 @@ package org.apache.orc.mapred;
 import org.apache.hadoop.io.DataInputBuffer;
 import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.orc.TypeDescription;
 import org.junit.Test;
@@ -61,5 +62,35 @@ public class TestOrcList {
     expected.add(new IntWritable(500));
     cloneWritable(expected, actual);
     assertEquals(expected, actual);
+  }
+
+  @Test
+  public void testCompare() {
+    TypeDescription schema = TypeDescription.fromString("array<string>");
+    OrcList<Text> left = new OrcList<>(schema);
+    assertEquals(-1 ,left.compareTo(null));
+    OrcList<Text> right = new OrcList<>(schema);
+    assertEquals(0, left.compareTo(right));
+    assertEquals(0, right.compareTo(left));
+    right.add(new Text("aa"));
+    assertEquals(-1, left.compareTo(right));
+    assertEquals(1, right.compareTo(left));
+    left.add(new Text("aa"));
+    assertEquals(0, left.compareTo(right));
+    assertEquals(0, right.compareTo(left));
+    left.add(new Text("bb"));
+    right.add(new Text("cc"));
+    assertEquals(-1, left.compareTo(right));
+    assertEquals(1, right.compareTo(left));
+    left.clear();
+    right.clear();
+    left.add(null);
+    right.add(null);
+    assertEquals(0, left.compareTo(right));
+    assertEquals(0, right.compareTo(left));
+    right.clear();
+    right.add(new Text("ddd"));
+    assertEquals(1, left.compareTo(right));
+    assertEquals(-1, right.compareTo(left));
   }
 }

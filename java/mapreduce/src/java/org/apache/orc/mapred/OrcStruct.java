@@ -35,7 +35,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-public final class OrcStruct implements Writable {
+public final class OrcStruct implements Writable, Comparable<OrcStruct> {
 
   private Writable[] fields;
   private final TypeDescription schema;
@@ -184,5 +184,27 @@ public final class OrcStruct implements Writable {
       default:
         throw new IllegalArgumentException("Unknown type " + type);
     }
+  }
+
+  @Override
+  public int compareTo(OrcStruct other) {
+    if (other == null) {
+      return -1;
+    }
+    for(int c = 0; c < fields.length && c < other.fields.length; ++c) {
+      if (fields[c] == null) {
+        if (other.fields[c] != null) {
+          return 1;
+        }
+      } else if (other.fields[c] == null) {
+        return -1;
+      } else {
+        int val = ((Comparable<Writable>) fields[c]).compareTo(other.fields[c]);
+        if (val != 0) {
+          return val;
+        }
+      }
+    }
+    return fields.length - other.fields.length;
   }
 }

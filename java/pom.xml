@@ -92,6 +92,7 @@
             <TZ>US/Pacific</TZ>
             <LANG>en_US.UTF-8</LANG>
           </environmentVariables>
+          <failIfNoTests>false</failIfNoTests>
           <systemPropertyVariables>
             <test.tmp.dir>${test.tmp.dir}</test.tmp.dir>
           </systemPropertyVariables>

@@ -27,7 +27,7 @@ import java.io.IOException;
 /**
  * An in-memory representation of a union type.
  */
-public final class OrcUnion implements Writable {
+public final class OrcUnion implements Writable, Comparable<OrcUnion> {
   private byte tag;
   private Writable object;
   private final TypeDescription schema;
@@ -36,8 +36,8 @@ public final class OrcUnion implements Writable {
     this.schema = schema;
   }
 
-  public void set(byte tag, Writable object) {
-    this.tag = tag;
+  public void set(int tag, Writable object) {
+    this.tag = (byte) tag;
     this.object = object;
   }
 
@@ -99,5 +99,19 @@ public final class OrcUnion implements Writable {
     } else {
       object = null;
     }
+  }
+
+  @Override
+  public int compareTo(OrcUnion other) {
+    if (other == null) {
+      return -1;
+    }
+    if (tag != other.tag) {
+      return tag - other.tag;
+    }
+    if (object == null) {
+      return other.object == null ? 0 : 1;
+    }
+    return ((Comparable<Writable>) object).compareTo(other.object);
   }
 }
