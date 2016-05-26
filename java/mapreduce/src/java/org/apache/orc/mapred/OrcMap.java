@@ -17,24 +17,24 @@
  */
 package org.apache.orc.mapred;
 
-import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
 import org.apache.orc.TypeDescription;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 
 /**
  * A TreeMap implementation that implements Writable.
- * @param <K> the key type, which must be Writable
- * @param <V> the value type, which must be Writable
+ * @param <K> the key type, which must be WritableComparable
+ * @param <V> the value type, which must be WritableComparable
  */
-public final class OrcMap<K extends Writable, V extends Writable>
-    extends TreeMap<K, V> implements Writable {
+public final class OrcMap<K extends WritableComparable,
+                          V extends WritableComparable>
+    extends TreeMap<K, V> implements WritableComparable<OrcMap<K,V>> {
   private final TypeDescription keySchema;
   private final TypeDescription valueSchema;
 
@@ -81,6 +81,54 @@ public final class OrcMap<K extends Writable, V extends Writable>
         value = null;
       }
       put(key, value);
+    }
+  }
+
+  @Override
+  public int compareTo(OrcMap<K,V> other) {
+    if (other == null) {
+      return -1;
+    }
+    int result = keySchema.compareTo(other.keySchema);
+    if (result != 0) {
+      return result;
+    }
+    result = valueSchema.compareTo(other.valueSchema);
+    if (result != 0) {
+      return result;
+    }
+    Iterator<Map.Entry<K,V>> ourItr = entrySet().iterator();
+    Iterator<Map.Entry<K,V>> theirItr = other.entrySet().iterator();
+    while (ourItr.hasNext() && theirItr.hasNext()) {
+      Map.Entry<K,V> ourItem = ourItr.next();
+      Map.Entry<K,V> theirItem = theirItr.next();
+      K ourKey = ourItem.getKey();
+      K theirKey = theirItem.getKey();
+      int val = ourKey.compareTo(theirKey);
+      if (val != 0) {
+        return val;
+      }
+      Comparable<V> ourValue = ourItem.getValue();
+      V theirValue = theirItem.getValue();
+      if (ourValue == null) {
+        if (theirValue != null) {
+          return 1;
+        }
+      } else if (theirValue == null) {
+        return -1;
+      } else {
+        val = ourItem.getValue().compareTo(theirItem.getValue());
+        if (val != 0) {
+          return val;
+        }
+      }
+    }
+    if (ourItr.hasNext()) {
+      return 1;
+    } else if (theirItr.hasNext()) {
+      return -1;
+    } else {
+      return 0;
     }
   }
 }

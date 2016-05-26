@@ -28,28 +28,28 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
 import org.apache.orc.TypeDescription;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-public final class OrcStruct implements Writable {
+public final class OrcStruct implements WritableComparable<OrcStruct> {
 
-  private Writable[] fields;
+  private WritableComparable[] fields;
   private final TypeDescription schema;
 
   public OrcStruct(TypeDescription schema) {
     this.schema = schema;
-    fields = new Writable[schema.getChildren().size()];
+    fields = new WritableComparable[schema.getChildren().size()];
   }
 
-  public Writable getFieldValue(int fieldIndex) {
+  public WritableComparable getFieldValue(int fieldIndex) {
     return fields[fieldIndex];
   }
 
-  public void setFieldValue(int fieldIndex, Writable value) {
+  public void setFieldValue(int fieldIndex, WritableComparable value) {
     fields[fieldIndex] = value;
   }
 
@@ -59,10 +59,10 @@ public final class OrcStruct implements Writable {
 
   @Override
   public void write(DataOutput output) throws IOException {
-    for(int f=0; f < fields.length; ++f) {
-      output.writeBoolean(fields[f] != null);
-      if (fields[f] != null) {
-        fields[f].write(output);
+    for(WritableComparable field: fields) {
+      output.writeBoolean(field != null);
+      if (field != null) {
+        field.write(output);
       }
     }
   }
@@ -81,7 +81,21 @@ public final class OrcStruct implements Writable {
     }
   }
 
-  public void setFieldValue(String fieldName, Writable value) {
+  /**
+   * Set all of the fields in the struct
+   * @param values the list of values for each of the fields.
+   */
+  public void setAllFields(WritableComparable... values) {
+    if (fields.length != values.length) {
+      throw new IllegalArgumentException("Wrong number (" + values.length +
+          ") of fields for " + schema);
+    }
+    for (int col = 0; col < fields.length && col < values.length; ++col) {
+      fields[col] = values[col];
+    }
+  }
+
+  public void setFieldValue(String fieldName, WritableComparable value) {
     int fieldIdx = schema.getFieldNames().indexOf(fieldName);
     if (fieldIdx == -1) {
       throw new IllegalArgumentException("Field " + fieldName +
@@ -90,7 +104,7 @@ public final class OrcStruct implements Writable {
     fields[fieldIdx] = value;
   }
 
-  public Writable getFieldValue(String fieldName) {
+  public WritableComparable getFieldValue(String fieldName) {
     int fieldIdx = schema.getFieldNames().indexOf(fieldName);
     if (fieldIdx == -1) {
       throw new IllegalArgumentException("Field " + fieldName +
@@ -150,7 +164,7 @@ public final class OrcStruct implements Writable {
 
   /* Routines for stubbing into Writables */
 
-  public static Writable createValue(TypeDescription type) {
+  public static WritableComparable createValue(TypeDescription type) {
     switch (type.getCategory()) {
       case BOOLEAN: return new BooleanWritable();
       case BYTE: return new ByteWritable();
@@ -184,5 +198,31 @@ public final class OrcStruct implements Writable {
       default:
         throw new IllegalArgumentException("Unknown type " + type);
     }
+  }
+
+  @Override
+  public int compareTo(OrcStruct other) {
+    if (other == null) {
+      return -1;
+    }
+    int result = schema.compareTo(other.schema);
+    if (result != 0) {
+      return result;
+    }
+    for(int c = 0; c < fields.length && c < other.fields.length; ++c) {
+      if (fields[c] == null) {
+        if (other.fields[c] != null) {
+          return 1;
+        }
+      } else if (other.fields[c] == null) {
+        return -1;
+      } else {
+        int val = fields[c].compareTo(other.fields[c]);
+        if (val != 0) {
+          return val;
+        }
+      }
+    }
+    return fields.length - other.fields.length;
   }
 }

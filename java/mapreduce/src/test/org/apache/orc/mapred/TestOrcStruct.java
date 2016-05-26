@@ -93,4 +93,48 @@ public class TestOrcStruct {
     thrown.expect(IllegalArgumentException.class);
     struct.setFieldValue("bad", new Text("foobar"));
   }
+
+  @Test
+  public void testCompare() {
+    OrcStruct left = new OrcStruct(TypeDescription.fromString
+        ("struct<i:int,j:string>"));
+    assertEquals(-1 ,left.compareTo(null));
+    OrcStruct right = new OrcStruct(TypeDescription.fromString
+        ("struct<i:int,j:string,k:int>"));
+    left.setFieldValue(0, new IntWritable(10));
+    right.setFieldValue(0, new IntWritable(12));
+    assertEquals(-1, left.compareTo(right));
+    assertEquals(1, right.compareTo(left));
+    right.setFieldValue(0, new IntWritable(10));
+    left.setFieldValue(1, new Text("a"));
+    right.setFieldValue(1, new Text("b"));
+    assertEquals(-1, left.compareTo(right));
+    assertEquals(1, right.compareTo(left));
+    right.setFieldValue(1, new Text("a"));
+    assertEquals(-1, left.compareTo(right));
+    assertEquals(1, right.compareTo(left));
+    right = new OrcStruct(TypeDescription.fromString
+        ("struct<i:int,j:string>"));
+    left.setFieldValue(0, null);
+    left.setFieldValue(1, null);
+    assertEquals(0, left.compareTo(right));
+    assertEquals(0, right.compareTo(left));
+    right.setFieldValue(0, new IntWritable(12));
+    assertEquals(1 , left.compareTo(right));
+    assertEquals(-1, right.compareTo(left));
+  }
+
+  @Test
+  public void testSchemaInCompare() {
+    TypeDescription leftType = TypeDescription.fromString("struct<s:string,i:int>");
+    TypeDescription rightType = TypeDescription.fromString("struct<s:string,j:bigint>");
+    OrcStruct left = new OrcStruct(leftType);
+    OrcStruct right = new OrcStruct(rightType);
+    assertEquals(-1, left.compareTo(right));
+    assertEquals(1, right.compareTo(left));
+    left.setAllFields(new Text("123"), new IntWritable(123));
+    right.setAllFields(new Text("123"), new LongWritable(456));
+    assertEquals(-1, left.compareTo(right));
+    assertEquals(1, right.compareTo(left));
+  }
 }

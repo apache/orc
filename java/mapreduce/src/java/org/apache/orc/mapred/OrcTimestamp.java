@@ -17,17 +17,19 @@
  */
 package org.apache.orc.mapred;
 
-import org.apache.hadoop.io.Writable;
+
+import org.apache.hadoop.io.WritableComparable;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.Date;
 
 /**
  * A Timestamp implementation that implements Writable.
  */
-public class OrcTimestamp extends Timestamp implements Writable {
+public class OrcTimestamp extends Timestamp implements WritableComparable<Date> {
 
   public OrcTimestamp() {
     super(0);

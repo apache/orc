@@ -55,4 +55,37 @@ public class TestOrcUnion {
     TestOrcList.cloneWritable(expected, actual);
     assertEquals(expected, actual);
   }
+
+  @Test
+  public void testCompare() {
+    TypeDescription schema =
+        TypeDescription.fromString("uniontype<int,string,bigint>");
+    OrcUnion left = new OrcUnion(schema);
+    OrcUnion right = new OrcUnion(schema);
+    assertEquals(-1 ,left.compareTo(null));
+    assertEquals(0, left.compareTo(right));
+
+    left.set(1, new IntWritable(10));
+    right.set(1, new IntWritable(12));
+    assertEquals(-1, left.compareTo(right));
+    assertEquals(1, right.compareTo(left));
+
+    right.set(2, new Text("a"));
+    assertEquals(-1, left.compareTo(right));
+    assertEquals(1, right.compareTo(left));
+  }
+
+  @Test
+  public void testSchemaInCompare() {
+    TypeDescription leftType = TypeDescription.fromString("uniontype<string,tinyint>");
+    TypeDescription rightType = TypeDescription.fromString("uniontype<string,bigint>");
+    OrcUnion left = new OrcUnion(leftType);
+    OrcUnion right = new OrcUnion(rightType);
+    assertEquals(-3, left.compareTo(right));
+    assertEquals(3, right.compareTo(left));
+    left.set(0, new Text("123"));
+    right.set(0, new Text("1"));
+    assertEquals(-3, left.compareTo(right));
+    assertEquals(3, right.compareTo(left));
+  }
 }
