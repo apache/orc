@@ -75,8 +75,6 @@ public class TestJsonFileDump {
     String expectedLine = eStream.readLine();
     while (expectedLine != null) {
       String actualLine = aStream.readLine();
-      System.out.println("actual:   " + actualLine);
-      System.out.println("expected: " + expectedLine);
       assertEquals(expectedLine, actualLine);
       expectedLine = eStream.readLine();
     }
