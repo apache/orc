@@ -187,8 +187,6 @@ public class TestFileDump {
     String expectedLine = eStream.readLine().trim();
     while (expectedLine != null) {
       String actualLine = aStream.readLine().trim();
-      System.out.println("actual:   " + actualLine);
-      System.out.println("expected: " + expectedLine);
       Assert.assertEquals(expectedLine, actualLine);
       expectedLine = eStream.readLine();
       expectedLine = expectedLine == null ? null : expectedLine.trim();
