@@ -29,13 +29,14 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
 import org.apache.orc.TypeDescription;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-public final class OrcStruct implements Writable, Comparable<OrcStruct> {
+public final class OrcStruct implements WritableComparable<OrcStruct> {
 
   private Writable[] fields;
   private final TypeDescription schema;
@@ -190,6 +191,10 @@ public final class OrcStruct implements Writable, Comparable<OrcStruct> {
   public int compareTo(OrcStruct other) {
     if (other == null) {
       return -1;
+    }
+    int result = schema.compareTo(other.schema);
+    if (result != 0) {
+      return result;
     }
     for(int c = 0; c < fields.length && c < other.fields.length; ++c) {
       if (fields[c] == null) {

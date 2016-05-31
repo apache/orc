@@ -74,4 +74,18 @@ public class TestOrcUnion {
     assertEquals(-1, left.compareTo(right));
     assertEquals(1, right.compareTo(left));
   }
+
+  @Test
+  public void testSchemaInCompare() {
+    TypeDescription leftType = TypeDescription.fromString("uniontype<string,tinyint>");
+    TypeDescription rightType = TypeDescription.fromString("uniontype<string,bigint>");
+    OrcUnion left = new OrcUnion(leftType);
+    OrcUnion right = new OrcUnion(rightType);
+    assertEquals(-3, left.compareTo(right));
+    assertEquals(3, right.compareTo(left));
+    left.set(0, new Text("123"));
+    right.set(0, new Text("1"));
+    assertEquals(-3, left.compareTo(right));
+    assertEquals(3, right.compareTo(left));
+  }
 }

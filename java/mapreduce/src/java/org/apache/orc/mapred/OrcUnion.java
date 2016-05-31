@@ -18,6 +18,7 @@
 package org.apache.orc.mapred;
 
 import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
 import org.apache.orc.TypeDescription;
 
 import java.io.DataInput;
@@ -27,7 +28,7 @@ import java.io.IOException;
 /**
  * An in-memory representation of a union type.
  */
-public final class OrcUnion implements Writable, Comparable<OrcUnion> {
+public final class OrcUnion implements WritableComparable<OrcUnion> {
   private byte tag;
   private Writable object;
   private final TypeDescription schema;
@@ -105,6 +106,10 @@ public final class OrcUnion implements Writable, Comparable<OrcUnion> {
   public int compareTo(OrcUnion other) {
     if (other == null) {
       return -1;
+    }
+    int result = schema.compareTo(other.schema);
+    if (result != 0) {
+      return result;
     }
     if (tag != other.tag) {
       return tag - other.tag;

@@ -18,12 +18,12 @@
 package org.apache.orc.mapred;
 
 import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
 import org.apache.orc.TypeDescription;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
@@ -34,7 +34,7 @@ import java.util.TreeMap;
  * @param <V> the value type, which must be Writable
  */
 public final class OrcMap<K extends Writable, V extends Writable>
-    extends TreeMap<K, V> implements Writable, Comparable<OrcMap<K,V>> {
+    extends TreeMap<K, V> implements WritableComparable<OrcMap<K,V>> {
   private final TypeDescription keySchema;
   private final TypeDescription valueSchema;
 
@@ -88,6 +88,14 @@ public final class OrcMap<K extends Writable, V extends Writable>
   public int compareTo(OrcMap<K,V> other) {
     if (other == null) {
       return -1;
+    }
+    int result = keySchema.compareTo(other.keySchema);
+    if (result != 0) {
+      return result;
+    }
+    result = valueSchema.compareTo(other.valueSchema);
+    if (result != 0) {
+      return result;
     }
     Iterator<Map.Entry<K,V>> ourItr = entrySet().iterator();
     Iterator<Map.Entry<K,V>> theirItr = other.entrySet().iterator();

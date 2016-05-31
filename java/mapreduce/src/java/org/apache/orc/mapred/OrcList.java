@@ -18,6 +18,7 @@
 package org.apache.orc.mapred;
 
 import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
 import org.apache.orc.TypeDescription;
 
 import java.io.DataInput;
@@ -31,7 +32,7 @@ import java.util.Iterator;
  * @param <E> the element type, which must be Writable
  */
 public class OrcList<E extends Writable>
-    extends ArrayList<E> implements Writable, Comparable<OrcList<E>> {
+    extends ArrayList<E> implements WritableComparable<OrcList<E>> {
   private final TypeDescription childSchema;
 
   public OrcList(TypeDescription schema) {
@@ -76,6 +77,10 @@ public class OrcList<E extends Writable>
   public int compareTo(OrcList<E> other) {
     if (other == null) {
       return -1;
+    }
+    int result = childSchema.compareTo(other.childSchema);
+    if (result != 0) {
+      return result;
     }
     int ourSize = size();
     int otherSize = other.size();

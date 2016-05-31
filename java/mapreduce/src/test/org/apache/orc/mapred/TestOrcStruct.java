@@ -123,4 +123,18 @@ public class TestOrcStruct {
     assertEquals(1 , left.compareTo(right));
     assertEquals(-1, right.compareTo(left));
   }
+
+  @Test
+  public void testSchemaInCompare() {
+    TypeDescription leftType = TypeDescription.fromString("struct<s:string,i:int>");
+    TypeDescription rightType = TypeDescription.fromString("struct<s:string,j:bigint>");
+    OrcStruct left = new OrcStruct(leftType);
+    OrcStruct right = new OrcStruct(rightType);
+    assertEquals(-1, left.compareTo(right));
+    assertEquals(1, right.compareTo(left));
+    left.setAllFields(new Text("123"), new IntWritable(123));
+    right.setAllFields(new Text("123"), new LongWritable(456));
+    assertEquals(-1, left.compareTo(right));
+    assertEquals(1, right.compareTo(left));
+  }
 }

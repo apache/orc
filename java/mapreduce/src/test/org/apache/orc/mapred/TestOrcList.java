@@ -93,4 +93,18 @@ public class TestOrcList {
     assertEquals(1, left.compareTo(right));
     assertEquals(-1, right.compareTo(left));
   }
+
+  @Test
+  public void testSchemaInCompare() {
+    TypeDescription leftType = TypeDescription.fromString("array<int>");
+    TypeDescription rightType = TypeDescription.fromString("array<string>");
+    OrcList leftList = new OrcList(leftType);
+    OrcList rightList = new OrcList(rightType);
+    assertEquals(-4, leftList.compareTo(rightList));
+    assertEquals(4, rightList.compareTo(leftList));
+    leftList.add(new IntWritable(123));
+    rightList.add(new Text("123"));
+    assertEquals(-4, leftList.compareTo(rightList));
+    assertEquals(4, rightList.compareTo(leftList));
+  }
 }

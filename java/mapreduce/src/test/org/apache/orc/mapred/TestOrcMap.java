@@ -172,4 +172,18 @@ public class TestOrcMap {
     assertEquals(-2, left.compareTo(right));
     assertEquals(2, right.compareTo(left));
   }
+
+  @Test
+  public void testSchemaInCompare() {
+    TypeDescription leftType = TypeDescription.fromString("map<string,int>");
+    TypeDescription rightType = TypeDescription.fromString("map<string,string>");
+    OrcMap left = new OrcMap(leftType);
+    OrcMap right = new OrcMap(rightType);
+    assertEquals(-4, left.compareTo(right));
+    assertEquals(4, right.compareTo(left));
+    left.put(new Text("123"), new IntWritable(123));
+    right.put(new Text("123"), new Text("123"));
+    assertEquals(-4, left.compareTo(right));
+    assertEquals(4, right.compareTo(left));
+  }
 }
