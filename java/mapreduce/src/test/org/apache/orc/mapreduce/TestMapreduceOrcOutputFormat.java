@@ -71,7 +71,7 @@ public class TestMapreduceOrcOutputFormat {
     TaskAttemptID id = new TaskAttemptID("jt", 0, TaskType.MAP, 0, 0);
     TaskAttemptContext attemptContext = new TaskAttemptContextImpl(conf, id);
     final String typeStr = "struct<i:int,s:string>";
-    conf.set(OrcConf.SCHEMA.getAttribute(), typeStr);
+    OrcConf.MAPRED_OUTPUT_SCHEMA.setString(conf, typeStr);
     conf.set("mapreduce.output.fileoutputformat.outputdir", workDir.toString());
     conf.setInt(OrcConf.ROW_INDEX_STRIDE.getAttribute(), 1000);
     conf.setBoolean(OrcOutputFormat.SKIP_TEMP_DIRECTORY, true);
@@ -113,7 +113,7 @@ public class TestMapreduceOrcOutputFormat {
   @Test
   public void testColumnSelection() throws Exception {
     String typeStr = "struct<i:int,j:int,k:int>";
-    conf.set(OrcConf.SCHEMA.getAttribute(), typeStr);
+    OrcConf.MAPRED_OUTPUT_SCHEMA.setString(conf, typeStr);
     conf.set("mapreduce.output.fileoutputformat.outputdir", workDir.toString());
     conf.setInt(OrcConf.ROW_INDEX_STRIDE.getAttribute(), 1000);
     conf.setBoolean(OrcOutputFormat.SKIP_TEMP_DIRECTORY, true);
@@ -161,11 +161,12 @@ public class TestMapreduceOrcOutputFormat {
   @Test
   public void testOrcKey() throws Exception {
     conf.set("mapreduce.output.fileoutputformat.outputdir", workDir.toString());
-    conf.set("orc.schema", "struct<i:int,s:string>");
+    String TYPE_STRING = "struct<i:int,s:string>";
+    OrcConf.MAPRED_OUTPUT_SCHEMA.setString(conf, TYPE_STRING);
     conf.setBoolean(OrcOutputFormat.SKIP_TEMP_DIRECTORY, true);
     TaskAttemptID id = new TaskAttemptID("jt", 0, TaskType.MAP, 0, 1);
     TaskAttemptContext attemptContext = new TaskAttemptContextImpl(conf, id);
-    TypeDescription schema = TypeDescription.fromString(conf.get("orc.schema"));
+    TypeDescription schema = TypeDescription.fromString(TYPE_STRING);
     OrcKey key = new OrcKey(new OrcStruct(schema));
     RecordWriter<NullWritable, Writable> writer =
         new OrcOutputFormat<>().getRecordWriter(attemptContext);
@@ -179,7 +180,7 @@ public class TestMapreduceOrcOutputFormat {
     Path path = new Path(workDir, "part-m-00000.orc");
     Reader file = OrcFile.createReader(path, OrcFile.readerOptions(conf));
     assertEquals(2000, file.getNumberOfRows());
-    assertEquals("struct<i:int,s:string>", file.getSchema().toString());
+    assertEquals(TYPE_STRING, file.getSchema().toString());
   }
 
   /**
@@ -189,12 +190,13 @@ public class TestMapreduceOrcOutputFormat {
   @Test
   public void testOrcValue() throws Exception {
     conf.set("mapreduce.output.fileoutputformat.outputdir", workDir.toString());
-    conf.set("orc.schema", "struct<i:int>");
+    String TYPE_STRING = "struct<i:int>";
+    OrcConf.MAPRED_OUTPUT_SCHEMA.setString(conf, TYPE_STRING);
     conf.setBoolean(OrcOutputFormat.SKIP_TEMP_DIRECTORY, true);
     TaskAttemptID id = new TaskAttemptID("jt", 0, TaskType.MAP, 0, 1);
     TaskAttemptContext attemptContext = new TaskAttemptContextImpl(conf, id);
 
-    TypeDescription schema = TypeDescription.fromString(conf.get("orc.schema"));
+    TypeDescription schema = TypeDescription.fromString(TYPE_STRING);
     OrcValue value = new OrcValue(new OrcStruct(schema));
     RecordWriter<NullWritable, Writable> writer =
         new OrcOutputFormat<>().getRecordWriter(attemptContext);
@@ -207,6 +209,6 @@ public class TestMapreduceOrcOutputFormat {
     Path path = new Path(workDir, "part-m-00000.orc");
     Reader file = OrcFile.createReader(path, OrcFile.readerOptions(conf));
     assertEquals(3000, file.getNumberOfRows());
-    assertEquals("struct<i:int>", file.getSchema().toString());
+    assertEquals(TYPE_STRING, file.getSchema().toString());
   }
 }

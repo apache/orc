@@ -29,6 +29,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mrunit.mapreduce.MapReduceDriver;
+import org.apache.orc.OrcConf;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.mapred.OrcKey;
 import org.apache.orc.mapred.OrcStruct;
@@ -161,8 +162,8 @@ public class TestMrUnit {
     conf.set("io.serializations",
         OrcStructSerialization.class.getName() + "," +
             WritableSerialization.class.getName());
-    conf.set(OrcKey.ORC_KEY_TYPE, "struct<x:int,y:int>");
-    conf.set(OrcValue.ORC_VALUE_TYPE, "struct<z:string>");
+    OrcConf.MAPRED_SHUFFLE_KEY_SCHEMA.setString(conf, "struct<x:int,y:int>");
+    OrcConf.MAPRED_SHUFFLE_VALUE_SCHEMA.setString(conf, "struct<z:string>");
     MyMapper mapper = new MyMapper();
     MyReducer reducer = new MyReducer();
     MapReduceDriver<NullWritable, OrcStruct,

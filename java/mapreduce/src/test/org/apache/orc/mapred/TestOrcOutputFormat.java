@@ -47,15 +47,6 @@ import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.TypeDescription;
-import org.apache.orc.mapred.OrcInputFormat;
-import org.apache.orc.mapred.OrcKey;
-import org.apache.orc.mapred.OrcList;
-import org.apache.orc.mapred.OrcMap;
-import org.apache.orc.mapred.OrcOutputFormat;
-import org.apache.orc.mapred.OrcStruct;
-import org.apache.orc.mapred.OrcTimestamp;
-import org.apache.orc.mapred.OrcUnion;
-import org.apache.orc.mapred.OrcValue;
 import org.junit.Test;
 
 import java.io.File;
@@ -117,7 +108,7 @@ public class TestOrcOutputFormat {
         "c:char(10),d1:date,d2:decimal(20,5),d3:double,fff:float,int:int," +
         "l:array<bigint>,map:map<smallint,string>," +
         "str:struct<u:uniontype<timestamp,varchar(100)>>,ts:timestamp>";
-    conf.set(OrcConf.SCHEMA.getAttribute(), typeStr);
+    OrcConf.MAPRED_OUTPUT_SCHEMA.setString(conf, typeStr);
     FileOutputFormat.setOutputPath(conf, workDir);
     TypeDescription type = TypeDescription.fromString(typeStr);
 
@@ -214,7 +205,7 @@ public class TestOrcOutputFormat {
     conf.setInt(OrcConf.BUFFER_SIZE.getAttribute(), 64 * 1024);
     conf.set(OrcConf.WRITE_FORMAT.getAttribute(), "0.11");
     final String typeStr = "bigint";
-    conf.set(OrcConf.SCHEMA.getAttribute(), typeStr);
+    OrcConf.MAPRED_OUTPUT_SCHEMA.setString(conf, typeStr);
     FileOutputFormat.setOutputPath(conf, workDir);
     TypeDescription type = TypeDescription.fromString(typeStr);
     LongWritable value = new LongWritable();
@@ -257,9 +248,10 @@ public class TestOrcOutputFormat {
   public void testOrcKey() throws Exception {
     conf.set("mapreduce.output.fileoutputformat.outputdir", workDir.toString());
     conf.set("mapreduce.task.attempt.id", "attempt_jt0_0_m_0_0");
-    conf.set("orc.schema", "struct<i:int,s:string>");
+    String TYPE_STRING = "struct<i:int,s:string>";
+    OrcConf.MAPRED_OUTPUT_SCHEMA.setString(conf, TYPE_STRING);
     conf.setOutputCommitter(NullOutputCommitter.class);
-    TypeDescription schema = TypeDescription.fromString(conf.get("orc.schema"));
+    TypeDescription schema = TypeDescription.fromString(TYPE_STRING);
     OrcKey key = new OrcKey(new OrcStruct(schema));
     RecordWriter<NullWritable, Writable> writer =
         new OrcOutputFormat<>().getRecordWriter(fs, conf, "key.orc",
@@ -274,7 +266,7 @@ public class TestOrcOutputFormat {
     Path path = new Path(workDir, "key.orc");
     Reader file = OrcFile.createReader(path, OrcFile.readerOptions(conf));
     assertEquals(2000, file.getNumberOfRows());
-    assertEquals("struct<i:int,s:string>", file.getSchema().toString());
+    assertEquals(TYPE_STRING, file.getSchema().toString());
   }
 
   /**
@@ -285,9 +277,10 @@ public class TestOrcOutputFormat {
   public void testOrcValue() throws Exception {
     conf.set("mapreduce.output.fileoutputformat.outputdir", workDir.toString());
     conf.set("mapreduce.task.attempt.id", "attempt_jt0_0_m_0_0");
-    conf.set("orc.schema", "struct<i:int>");
+    String TYPE_STRING = "struct<i:int>";
+    OrcConf.MAPRED_OUTPUT_SCHEMA.setString(conf, TYPE_STRING);
     conf.setOutputCommitter(NullOutputCommitter.class);
-    TypeDescription schema = TypeDescription.fromString(conf.get("orc.schema"));
+    TypeDescription schema = TypeDescription.fromString(TYPE_STRING);
     OrcValue value = new OrcValue(new OrcStruct(schema));
     RecordWriter<NullWritable, Writable> writer =
         new OrcOutputFormat<>().getRecordWriter(fs, conf, "value.orc",
@@ -301,6 +294,6 @@ public class TestOrcOutputFormat {
     Path path = new Path(workDir, "value.orc");
     Reader file = OrcFile.createReader(path, OrcFile.readerOptions(conf));
     assertEquals(3000, file.getNumberOfRows());
-    assertEquals("struct<i:int>", file.getSchema().toString());
+    assertEquals(TYPE_STRING, file.getSchema().toString());
   }
 }

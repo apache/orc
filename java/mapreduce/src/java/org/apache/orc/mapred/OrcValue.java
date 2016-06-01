@@ -20,6 +20,7 @@ package org.apache.orc.mapred;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.JobConfigurable;
+import org.apache.orc.OrcConf;
 import org.apache.orc.TypeDescription;
 
 import java.io.DataInput;
@@ -34,7 +35,6 @@ import java.io.IOException;
  * string of the type.
  */
 public final class OrcValue implements Writable, JobConfigurable {
-  public final static String ORC_VALUE_TYPE = "orc.mapred.value.type";
 
   public Writable value;
 
@@ -60,7 +60,8 @@ public final class OrcValue implements Writable, JobConfigurable {
   public void configure(JobConf conf) {
     if (value == null) {
       TypeDescription schema =
-          TypeDescription.fromString(conf.get(ORC_VALUE_TYPE));
+          TypeDescription.fromString(OrcConf.MAPRED_SHUFFLE_VALUE_SCHEMA
+              .getString(conf));
       value = OrcStruct.createValue(schema);
     }
   }

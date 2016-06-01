@@ -21,6 +21,7 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.JobConfigurable;
+import org.apache.orc.OrcConf;
 import org.apache.orc.TypeDescription;
 
 import java.io.DataInput;
@@ -36,7 +37,6 @@ import java.io.IOException;
  */
 public final class OrcKey
     implements WritableComparable<OrcKey>, JobConfigurable {
-  public final static String ORC_KEY_TYPE = "orc.mapred.key.type";
 
   public Writable key;
 
@@ -62,7 +62,8 @@ public final class OrcKey
   public void configure(JobConf conf) {
     if (key == null) {
       TypeDescription schema =
-          TypeDescription.fromString(conf.get(ORC_KEY_TYPE));
+          TypeDescription.fromString(OrcConf.MAPRED_SHUFFLE_KEY_SCHEMA
+              .getString(conf));
       key = OrcStruct.createValue(schema);
     }
   }

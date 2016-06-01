@@ -53,20 +53,7 @@ public class OrcOutputFormat<V extends Writable>
     Configuration conf = taskAttemptContext.getConfiguration();
     Path filename = getDefaultWorkFile(taskAttemptContext, EXTENSION);
     Writer writer = OrcFile.createWriter(filename,
-        OrcFile.writerOptions(conf)
-            .version(OrcFile.Version.byName(OrcConf.WRITE_FORMAT.getString(conf)))
-            .setSchema(TypeDescription.fromString(OrcConf.SCHEMA.getString(conf)))
-            .compress(CompressionKind.valueOf(OrcConf.COMPRESS.getString(conf)))
-            .encodingStrategy(OrcFile.EncodingStrategy.valueOf
-                (OrcConf.ENCODING_STRATEGY.getString(conf)))
-            .bloomFilterColumns(OrcConf.BLOOM_FILTER_COLUMNS.getString(conf))
-            .bloomFilterFpp(OrcConf.BLOOM_FILTER_FPP.getDouble(conf))
-            .blockSize(OrcConf.BLOCK_SIZE.getLong(conf))
-            .blockPadding(OrcConf.BLOCK_PADDING.getBoolean(conf))
-            .stripeSize(OrcConf.STRIPE_SIZE.getLong(conf))
-            .rowIndexStride((int) OrcConf.ROW_INDEX_STRIDE.getLong(conf))
-            .bufferSize((int) OrcConf.BUFFER_SIZE.getLong(conf))
-            .paddingTolerance(OrcConf.BLOCK_PADDING_TOLERANCE.getDouble(conf)));
+        org.apache.orc.mapred.OrcOutputFormat.buildOptions(conf));
      return new OrcMapreduceRecordWriter<V>(writer);
   }
 

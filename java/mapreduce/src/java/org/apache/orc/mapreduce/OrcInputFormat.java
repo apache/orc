@@ -18,12 +18,8 @@
 
 package org.apache.orc.mapreduce;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Input;
-import org.apache.commons.codec.binary.Base64;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
-import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentImpl;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
@@ -38,7 +34,6 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
-import org.apache.orc.TypeDescription;
 
 /**
  * An ORC input format that satisfies the org.apache.hadoop.mapreduce API.
@@ -69,27 +64,8 @@ public class OrcInputFormat<V extends Writable>
     Reader file = OrcFile.createReader(split.getPath(),
         OrcFile.readerOptions(conf)
             .maxLength(OrcConf.MAX_FILE_LENGTH.getLong(conf)));
-    TypeDescription schema =
-        TypeDescription.fromString(OrcConf.SCHEMA.getString(conf));
-    Reader.Options options = new Reader.Options()
-        .range(split.getStart(), split.getLength())
-        .useZeroCopy(OrcConf.USE_ZEROCOPY.getBoolean(conf))
-        .skipCorruptRecords(OrcConf.SKIP_CORRUPT_DATA.getBoolean(conf));
-    if (schema == null) {
-      schema = file.getSchema();
-    } else {
-      options.schema(schema);
-    }
-    options.include(org.apache.orc.mapred.OrcInputFormat.parseInclude(schema,
-        OrcConf.INCLUDE_COLUMNS.getString(conf)));
-    String kryoSarg = OrcConf.KRYO_SARG.getString(conf);
-    String sargColumns = OrcConf.SARG_COLUMNS.getString(conf);
-    if (kryoSarg != null && sargColumns != null) {
-      byte[] sargBytes = Base64.decodeBase64(kryoSarg);
-      SearchArgument sarg =
-          new Kryo().readObject(new Input(sargBytes), SearchArgumentImpl.class);
-      options.searchArgument(sarg, sargColumns.split(","));
-    }
-    return new OrcMapreduceRecordReader<V>(file, options);
+    return new OrcMapreduceRecordReader<>(file,
+        org.apache.orc.mapred.OrcInputFormat.buildOptions(conf,
+            file, split.getStart(), split.getLength()));
   }
 }
