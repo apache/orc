@@ -17,7 +17,6 @@
  */
 package org.apache.orc.mapred;
 
-import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.JobConfigurable;
@@ -38,9 +37,9 @@ import java.io.IOException;
 public final class OrcKey
     implements WritableComparable<OrcKey>, JobConfigurable {
 
-  public Writable key;
+  public WritableComparable key;
 
-  public OrcKey(Writable key) {
+  public OrcKey(WritableComparable key) {
     this.key = key;
   }
 
@@ -70,7 +69,7 @@ public final class OrcKey
 
   @Override
   public int compareTo(OrcKey o) {
-    return ((Comparable<Writable>) key).compareTo(o.key);
+    return key.compareTo(o.key);
   }
 
   @Override

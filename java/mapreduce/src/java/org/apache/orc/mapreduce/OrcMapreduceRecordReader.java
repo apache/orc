@@ -19,7 +19,7 @@ package org.apache.orc.mapreduce;
 
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.orc.Reader;
@@ -37,7 +37,7 @@ import java.util.List;
  * the mapred API record reader.
  * @param <V> the root type of the file
  */
-public class OrcMapreduceRecordReader<V extends Writable>
+public class OrcMapreduceRecordReader<V extends WritableComparable>
     extends org.apache.hadoop.mapreduce.RecordReader<NullWritable, V> {
   private final TypeDescription schema;
   private final RecordReader batchReader;

@@ -20,7 +20,7 @@ package org.apache.orc.mapreduce;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
-import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
@@ -38,7 +38,7 @@ import org.apache.orc.Reader;
 /**
  * An ORC input format that satisfies the org.apache.hadoop.mapreduce API.
  */
-public class OrcInputFormat<V extends Writable>
+public class OrcInputFormat<V extends WritableComparable>
     extends FileInputFormat<NullWritable, V> {
 
   /**

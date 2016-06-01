@@ -18,6 +18,7 @@
 package org.apache.orc.mapred;
 
 import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.JobConfigurable;
 import org.apache.orc.OrcConf;
@@ -36,9 +37,9 @@ import java.io.IOException;
  */
 public final class OrcValue implements Writable, JobConfigurable {
 
-  public Writable value;
+  public WritableComparable value;
 
-  public OrcValue(Writable value) {
+  public OrcValue(WritableComparable value) {
     this.value = value;
   }
 

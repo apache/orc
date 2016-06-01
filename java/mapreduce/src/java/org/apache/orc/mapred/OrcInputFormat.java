@@ -25,7 +25,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentImpl;
-import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.RecordReader;
@@ -46,7 +46,7 @@ import org.apache.orc.TypeDescription;
 /**
  * A MapReduce/Hive input format for ORC files.
  */
-public class OrcInputFormat<V extends Writable>
+public class OrcInputFormat<V extends WritableComparable>
     extends FileInputFormat<NullWritable, V> {
 
   /**
