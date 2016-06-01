@@ -18,8 +18,6 @@
 
 package org.apache.orc.impl;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
@@ -32,6 +30,7 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.TreeMap;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.hadoop.hive.ql.util.JavaDataModel;
 import org.apache.orc.BinaryColumnStatistics;
 import org.apache.orc.BloomFilterIO;
@@ -65,9 +64,6 @@ import org.apache.hadoop.hive.ql.exec.vector.UnionColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.io.Text;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
-import com.google.common.primitives.Longs;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.CodedOutputStream;
 
@@ -207,7 +203,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
         compress, bufferSize);
   }
 
-  @VisibleForTesting
+  //@VisibleForTesting
   public static int getEstimatedBufferSize(long stripeSize, int numColumns,
                                            int bs) {
     // The worst case is that there are 2 big streams per a column and
@@ -614,7 +610,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       rowIndex = OrcProto.RowIndex.newBuilder();
       rowIndexEntry = OrcProto.RowIndexEntry.newBuilder();
       rowIndexPosition = new RowIndexPositionRecorder(rowIndexEntry);
-      stripeStatsBuilders = Lists.newArrayList();
+      stripeStatsBuilders = new ArrayList<>();
       if (streamFactory.buildIndex()) {
         rowIndexStream = streamFactory.createStream(id, OrcProto.Stream.Kind.ROW_INDEX);
       } else {
@@ -848,7 +844,8 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     void addBloomFilterEntry() {
       if (createBloomFilter) {
         bloomFilterEntry.setNumHashFunctions(bloomFilter.getNumHashFunctions());
-        bloomFilterEntry.addAllBitset(Longs.asList(bloomFilter.getBitSet()));
+        bloomFilterEntry.addAllBitset(Arrays.asList(ArrayUtils.toObject(
+            bloomFilter.getBitSet())));
         bloomFilterIndex.addBloomFilter(bloomFilterEntry.build());
         bloomFilter.reset();
         bloomFilterEntry.clear();
@@ -2462,7 +2459,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     }
   }
 
-  @VisibleForTesting
+  // @VisibleForTesting
   public FSDataOutputStream getStream() throws IOException {
     if (rawWriter == null) {
       rawWriter = fs.create(path, false, HDFS_BUFFER_SIZE,
@@ -2828,6 +2825,12 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     return rawWriter.getPos();
   }
 
+  static void checkArgument(boolean expression, String message) {
+    if (!expression) {
+      throw new IllegalArgumentException(message);
+    }
+  }
+
   @Override
   public void appendStripe(byte[] stripe, int offset, int length,
       StripeInformation stripeInfo,
@@ -2892,7 +2895,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
   }
 
   private List<TreeWriter> getAllColumnTreeWriters(TreeWriter rootTreeWriter) {
-    List<TreeWriter> result = Lists.newArrayList();
+    List<TreeWriter> result = new ArrayList<>();
     getAllColumnTreeWritersImpl(rootTreeWriter, result);
     return result;
   }

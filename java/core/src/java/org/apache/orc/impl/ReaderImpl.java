@@ -50,7 +50,6 @@ import org.apache.hadoop.hive.ql.util.JavaDataModel;
 import org.apache.hadoop.io.Text;
 import org.apache.orc.OrcProto;
 
-import com.google.common.collect.Lists;
 import com.google.protobuf.CodedInputStream;
 
 public class ReaderImpl implements Reader {
@@ -384,12 +383,18 @@ public class ReaderImpl implements Reader {
     return OrcFile.WriterVersion.FUTURE;
   }
 
+  static List<DiskRange> singleton(DiskRange item) {
+    List<DiskRange> result = new ArrayList<>();
+    result.add(item);
+    return result;
+  }
+
   private static OrcProto.Footer extractFooter(ByteBuffer bb, int footerAbsPos,
       int footerSize, CompressionCodec codec, int bufferSize) throws IOException {
     bb.position(footerAbsPos);
     bb.limit(footerAbsPos + footerSize);
     return OrcProto.Footer.parseFrom(InStream.createCodedInputStream("footer",
-        Lists.<DiskRange>newArrayList(new BufferChunk(bb, 0)), footerSize, codec, bufferSize));
+        singleton(new BufferChunk(bb, 0)), footerSize, codec, bufferSize));
   }
 
   private static OrcProto.Metadata extractMetadata(ByteBuffer bb, int metadataAbsPos,
@@ -397,7 +402,7 @@ public class ReaderImpl implements Reader {
     bb.position(metadataAbsPos);
     bb.limit(metadataAbsPos + metadataSize);
     return OrcProto.Metadata.parseFrom(InStream.createCodedInputStream("metadata",
-        Lists.<DiskRange>newArrayList(new BufferChunk(bb, 0)), metadataSize, codec, bufferSize));
+        singleton(new BufferChunk(bb, 0)), metadataSize, codec, bufferSize));
   }
 
   private static OrcProto.PostScript extractPostScript(ByteBuffer bb, Path path,
@@ -581,7 +586,7 @@ public class ReaderImpl implements Reader {
     // return the already computed size. since we are reading from the footer
     // we don't have to compute deserialized size repeatedly
     if (deserializedSize == -1) {
-      List<Integer> indices = Lists.newArrayList();
+      List<Integer> indices = new ArrayList<>();
       for (int i = 0; i < fileStats.size(); ++i) {
         indices.add(i);
       }
@@ -659,7 +664,7 @@ public class ReaderImpl implements Reader {
   private List<Integer> getColumnIndicesFromNames(List<String> colNames) {
     // top level struct
     OrcProto.Type type = types.get(0);
-    List<Integer> colIndices = Lists.newArrayList();
+    List<Integer> colIndices = new ArrayList<>();
     List<String> fieldNames = type.getFieldNamesList();
     int fieldIdx;
     for (String colName : colNames) {

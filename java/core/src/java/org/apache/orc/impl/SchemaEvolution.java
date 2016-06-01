@@ -24,9 +24,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.orc.TypeDescription;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Take the file types and the (optional) configuration column names/types and see if there
@@ -36,7 +36,7 @@ public class SchemaEvolution {
   private final Map<Integer, TypeDescription> readerToFile;
   private final boolean[] included;
   private final TypeDescription readerSchema;
-  private static final Log LOG = LogFactory.getLog(SchemaEvolution.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SchemaEvolution.class);
 
   public SchemaEvolution(TypeDescription readerSchema, boolean[] included) {
     this.included = included;

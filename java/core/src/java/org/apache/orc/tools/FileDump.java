@@ -30,6 +30,7 @@ import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -69,16 +70,12 @@ import org.apache.orc.impl.RecordReaderImpl;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONWriter;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
-
 /**
  * A tool for printing out the file structure of ORC files.
  */
 public final class FileDump {
   public static final String UNKNOWN = "UNKNOWN";
-  public static final String SEPARATOR = Strings.repeat("_", 120) + "\n";
+  public static final String SEPARATOR = StringUtils.repeat("_", 120) + "\n";
   public static final int DEFAULT_BLOCK_SIZE = 256 * 1024 * 1024;
   public static final String DEFAULT_BACKUP_PATH = System.getProperty("java.io.tmpdir");
   public static final PathFilter HIDDEN_AND_SIDE_FILE_FILTER = new PathFilter() {
@@ -136,7 +133,7 @@ public final class FileDump {
     }
 
     // if the specified path is directory, iterate through all files and print the file dump
-    List<String> filesInPath = Lists.newArrayList();
+    List<String> filesInPath = new ArrayList<>();
     for (String filename : files) {
       Path path = new Path(filename);
       filesInPath.addAll(getAllFilesInPath(path, conf));
@@ -260,7 +257,7 @@ public final class FileDump {
 
   public static Collection<String> getAllFilesInPath(final Path path,
       final Configuration conf) throws IOException {
-    List<String> filesInPath = Lists.newArrayList();
+    List<String> filesInPath = new ArrayList<>();
     FileSystem fs = path.getFileSystem(conf);
     FileStatus fileStatus = fs.getFileStatus(path);
     if (fileStatus.isDir()) {
@@ -285,7 +282,7 @@ public final class FileDump {
     for (String file : files) {
       try {
         Path path = new Path(file);
-        Reader reader = getReader(path, conf, Lists.<String>newArrayList());
+        Reader reader = getReader(path, conf, new ArrayList<String>());
         if (reader == null) {
           continue;
         }
@@ -302,7 +299,7 @@ public final class FileDump {
       List<Integer> rowIndexCols, boolean printTimeZone, final boolean recover,
       final String backupPath)
       throws IOException {
-    List<String> corruptFiles = Lists.newArrayList();
+    List<String> corruptFiles = new ArrayList<>();
     for (String filename : files) {
       printMetaDataImpl(filename, conf, rowIndexCols, printTimeZone, corruptFiles);
       System.out.println(SEPARATOR);
@@ -314,8 +311,13 @@ public final class FileDump {
       } else {
         System.err.println(corruptFiles.size() + " file(s) are corrupted." +
             " Run the following command to recover corrupted files.\n");
-        String fileNames = Joiner.on(" ").skipNulls().join(corruptFiles);
-        System.err.println("hive --orcfiledump --recover --skip-dump " + fileNames);
+        StringBuilder buffer = new StringBuilder();
+        buffer.append("hive --orcfiledump --recover --skip-dump");
+        for(String file: corruptFiles) {
+          buffer.append(' ');
+          buffer.append(file);
+        }
+        System.err.println(buffer.toString());
         System.out.println(SEPARATOR);
       }
     }
@@ -448,7 +450,7 @@ public final class FileDump {
       try {
         long corruptFileLen = fs.getFileStatus(corruptPath).getLen();
         long remaining = corruptFileLen;
-        List<Long> footerOffsets = Lists.newArrayList();
+        List<Long> footerOffsets = new ArrayList<>();
 
         // start reading the data file form top to bottom and record the valid footers
         while (remaining > 0) {

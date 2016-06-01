@@ -29,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hive.common.io.DiskRange;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.protobuf.CodedInputStream;
 
 public abstract class InStream extends InputStream {
@@ -436,7 +435,7 @@ public abstract class InStream extends InputStream {
    * @return an input stream
    * @throws IOException
    */
-  @VisibleForTesting
+  //@VisibleForTesting
   @Deprecated
   public static InStream create(String streamName,
                                 ByteBuffer[] buffers,

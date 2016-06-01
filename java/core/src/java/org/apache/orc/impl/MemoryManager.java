@@ -24,8 +24,6 @@ import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 
-import com.google.common.base.Preconditions;
-
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.util.HashMap;
