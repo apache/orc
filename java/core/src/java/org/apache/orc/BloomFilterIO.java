@@ -20,8 +20,6 @@ package org.apache.orc;
 
 import org.apache.hive.common.util.BloomFilter;
 
-import com.google.common.primitives.Longs;
-
 public class BloomFilterIO extends BloomFilter {
 
   public BloomFilterIO(long expectedEntries) {
@@ -32,11 +30,20 @@ public class BloomFilterIO extends BloomFilter {
     super(expectedEntries, fpp);
   }
 
+  static long[] toArray(OrcProto.BloomFilter filter) {
+    long[] result = new long[filter.getBitsetCount()];
+    int i =0;
+    for(Long l: filter.getBitsetList()) {
+      result[i++] = l;
+    }
+    return result;
+  }
+
 /**
  * Initializes the BloomFilter from the given Orc BloomFilter
  */
   public BloomFilterIO(OrcProto.BloomFilter bloomFilter) {
-    this.bitSet = new BitSet(Longs.toArray(bloomFilter.getBitsetList()));
+    this.bitSet = new BitSet(toArray(bloomFilter));
     this.numHashFunctions = bloomFilter.getNumHashFunctions();
     this.numBits = (int) this.bitSet.bitSize();
   }

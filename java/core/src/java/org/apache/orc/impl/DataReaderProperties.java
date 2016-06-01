@@ -17,12 +17,9 @@
  */
 package org.apache.orc.impl;
 
-import com.google.common.base.Preconditions;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.orc.CompressionKind;
-
-import javax.annotation.Nullable;
 
 public final class DataReaderProperties {
 
@@ -114,8 +111,10 @@ public final class DataReaderProperties {
     }
 
     public DataReaderProperties build() {
-      Preconditions.checkNotNull(fileSystem);
-      Preconditions.checkNotNull(path);
+      if (fileSystem == null || path == null) {
+        throw new NullPointerException("Filesystem = " + fileSystem +
+                                           ", path = " + path);
+      }
 
       return new DataReaderProperties(this);
     }

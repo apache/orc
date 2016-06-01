@@ -21,8 +21,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.EnumSet;
 
-import javax.annotation.Nullable;
-
 public interface CompressionCodec {
 
   enum Modifier {
@@ -61,9 +59,9 @@ public interface CompressionCodec {
    * This does not modify the current object, but returns a new object if
    * modifications are possible. Returns the same object if no modifications
    * are possible.
-   * @param modifiers compression modifiers
+   * @param modifiers compression modifiers (nullable)
    * @return codec for use after optional modification
    */
-  CompressionCodec modify(@Nullable EnumSet<Modifier> modifiers);
+  CompressionCodec modify(EnumSet<Modifier> modifiers);
 
 }

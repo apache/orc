@@ -24,9 +24,6 @@ import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
-import javax.annotation.Nullable;
-
-import org.apache.hadoop.io.compress.DirectDecompressor;
 import org.apache.orc.CompressionCodec;
 
 public class ZlibCodec implements CompressionCodec, DirectDecompressionCodec {
@@ -130,7 +127,7 @@ public class ZlibCodec implements CompressionCodec, DirectDecompressionCodec {
   }
 
   @Override
-  public CompressionCodec modify(@Nullable EnumSet<Modifier> modifiers) {
+  public CompressionCodec modify(/* @Nullable */ EnumSet<Modifier> modifiers) {
 
     if (modifiers == null) {
       return this;

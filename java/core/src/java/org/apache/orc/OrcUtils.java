@@ -21,8 +21,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.google.common.collect.Lists;
-
 public class OrcUtils {
 
   /**
@@ -80,7 +78,7 @@ public class OrcUtils {
   }
 
   public static List<OrcProto.Type> getOrcTypes(TypeDescription typeDescr) {
-    List<OrcProto.Type> result = Lists.newArrayList();
+    List<OrcProto.Type> result = new ArrayList<>();
     appendOrcTypes(result, typeDescr);
     return result;
   }
