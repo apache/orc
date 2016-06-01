@@ -30,14 +30,14 @@ import java.io.IOException;
  */
 public final class OrcUnion implements WritableComparable<OrcUnion> {
   private byte tag;
-  private Writable object;
+  private WritableComparable object;
   private final TypeDescription schema;
 
   public OrcUnion(TypeDescription schema) {
     this.schema = schema;
   }
 
-  public void set(int tag, Writable object) {
+  public void set(int tag, WritableComparable object) {
     this.tag = (byte) tag;
     this.object = object;
   }
@@ -117,6 +117,6 @@ public final class OrcUnion implements WritableComparable<OrcUnion> {
     if (object == null) {
       return other.object == null ? 0 : 1;
     }
-    return ((Comparable<Writable>) object).compareTo(other.object);
+    return object.compareTo(other.object);
   }
 }

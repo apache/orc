@@ -17,7 +17,6 @@
  */
 package org.apache.orc.mapred;
 
-import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.orc.TypeDescription;
 
@@ -30,10 +29,11 @@ import java.util.TreeMap;
 
 /**
  * A TreeMap implementation that implements Writable.
- * @param <K> the key type, which must be Writable
- * @param <V> the value type, which must be Writable
+ * @param <K> the key type, which must be WritableComparable
+ * @param <V> the value type, which must be WritableComparable
  */
-public final class OrcMap<K extends Writable, V extends Writable>
+public final class OrcMap<K extends WritableComparable,
+                          V extends WritableComparable>
     extends TreeMap<K, V> implements WritableComparable<OrcMap<K,V>> {
   private final TypeDescription keySchema;
   private final TypeDescription valueSchema;
@@ -104,11 +104,11 @@ public final class OrcMap<K extends Writable, V extends Writable>
       Map.Entry<K,V> theirItem = theirItr.next();
       K ourKey = ourItem.getKey();
       K theirKey = theirItem.getKey();
-      int val = ((Comparable<K>) ourKey).compareTo(theirKey);
+      int val = ourKey.compareTo(theirKey);
       if (val != 0) {
         return val;
       }
-      Comparable<V> ourValue = (Comparable<V>) ourItem.getValue();
+      Comparable<V> ourValue = ourItem.getValue();
       V theirValue = theirItem.getValue();
       if (ourValue == null) {
         if (theirValue != null) {
@@ -117,7 +117,7 @@ public final class OrcMap<K extends Writable, V extends Writable>
       } else if (theirValue == null) {
         return -1;
       } else {
-        val = ((Comparable<V>) ourItem.getValue()).compareTo(theirItem.getValue());
+        val = ourItem.getValue().compareTo(theirItem.getValue());
         if (val != 0) {
           return val;
         }

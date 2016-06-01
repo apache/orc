@@ -44,12 +44,12 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
 import org.apache.orc.TypeDescription;
 
-public class OrcRecordReader<V extends Writable>
+public class OrcRecordReader<V extends WritableComparable>
     implements org.apache.hadoop.mapred.RecordReader<NullWritable, V> {
   private final TypeDescription schema;
   private final RecordReader batchReader;
@@ -501,10 +501,10 @@ public class OrcRecordReader<V extends Writable>
     }
   }
 
-  static Writable nextValue(ColumnVector vector,
-                            int row,
-                            TypeDescription schema,
-                            Object previous) {
+  static WritableComparable nextValue(ColumnVector vector,
+                                      int row,
+                                      TypeDescription schema,
+                                      Object previous) {
     switch (schema.getCategory()) {
       case BOOLEAN:
         return nextBoolean(vector, row, previous);
