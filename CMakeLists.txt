@@ -20,6 +20,14 @@ SET(CPACK_PACKAGE_VERSION_MINOR "1")
 SET(CPACK_PACKAGE_VERSION_PATCH "0")
 SET(ORC_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
 
+# Make sure that a build type is selected
+if (NOT CMAKE_BUILD_TYPE)
+  message(STATUS "No build type seelcted, default to ReleaseWithDebugInfo")
+  set (CMAKE_BUILD_TYPE "RELWITHDEBINFO")
+else ()
+  message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+endif ()
+
 # Set the package format
 SET(CPACK_GENERATOR "TGZ")
 
@@ -56,8 +64,10 @@ set (ZLIB_LIBRARIES zlib)
 #
 # Compiler specific flags
 #
+set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g -DNDEBUG")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  set (CMAKE_CXX_FLAGS "-g -O2")
   set (CXX11_FLAGS "-std=c++11")
   set (WARN_FLAGS "-Weverything -Wno-c++98-compat -Wno-missing-prototypes")
   set (WARN_FLAGS "${WARN_FLAGS} -Wno-c++98-compat-pedantic -Wno-padded")
@@ -65,7 +75,6 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set (WARN_FLAGS "${WARN_FLAGS} -Wno-missing-noreturn -Wno-unknown-pragmas")
   set (WARN_FLAGS "${WARN_FLAGS} -Wconversion -Werror")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  set (CMAKE_CXX_FLAGS "-g -O2")
   set (WARN_FLAGS "-Wall -Wno-unknown-pragmas -Wconversion -Werror")
   if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.3")
     set (CXX11_FLAGS "")

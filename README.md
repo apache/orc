@@ -13,22 +13,52 @@ narrow the search to a particular set of 10,000 rows. ORC supports the
 complete set of types in Hive, including the complex types: structs,
 lists, maps, and unions.
 
-## ORC File C++ Library
+## ORC File Library
 
-This library allows C++ programs to read and write the
-_Optimized Row Columnar_ (ORC) file format.
-
-[![Build Status](https://travis-ci.org/hortonworks/orc.svg?branch=c%2B%2B)](https://travis-ci.org/hortonworks/orc)
-[![Build status](https://ci.appveyor.com/api/projects/status/6aoqt6c860rf6ad4/branch/c++?svg=true)](https://ci.appveyor.com/project/thanhdowisc/orc/branch/c++)
+This project includes both a Java library for reading and writing and
+a C++ library for reading the _Optimized Row Columnar_ (ORC) file
+format. The C++ and Java libraries are completely independent of each
+other and will each read all versions of ORC files.
 
 ### Building
 
+* Install java 1.7 or higher
+* Install maven 3 or higher
+* Install cmake
+
+To build a release version with debug information:
 ```shell
--To compile:
 % mkdir build
 % cd build
 % cmake ..
 % make package
 % make test-out
+
+```
+
+To build a debug version:
+```shell
+% mkdir build
+% cd build
+% cmake .. -DCMAKE_BUILD_TYPE=DEBUG
+% make package
+% make test-out
+
+```
+
+To build a release version without debug information:
+```shell
+% mkdir build
+% cd build
+% cmake .. -DCMAKE_BUILD_TYPE=RELEASE
+% make package
+% make test-out
+
+```
+
+To build only the Java library:
+```shell
+% cd java
+% mvn package
 
 ```
