@@ -22,7 +22,7 @@ SET(ORC_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.$
 
 # Make sure that a build type is selected
 if (NOT CMAKE_BUILD_TYPE)
-  message(STATUS "No build type seelcted, default to ReleaseWithDebugInfo")
+  message(STATUS "No build type selected, default to ReleaseWithDebugInfo")
   set (CMAKE_BUILD_TYPE "RELWITHDEBINFO")
 else ()
   message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
