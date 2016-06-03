@@ -1,14 +1,33 @@
 - title: Overview
   docs:
   - index
+  - adopters
   - types
   - indexes
   - acid
 
-- title: Hive Usage
+- title: Installing
+  docs:
+  - building
+  - releases
+
+- title: Using in Hive
   docs:
   - hive-ddl
   - hive-config
+
+- title: Using in MapReduce
+  docs:
+  - mapred
+  - mapreduce
+
+- title: Using ORC Core
+  docs:
+  - core-java
+
+- title: Tools
+  docs:
+  - tools
 
 - title: Format Specification
   docs:
