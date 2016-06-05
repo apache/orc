@@ -28,14 +28,16 @@
 
 void printContents(const char* filename, const orc::ReaderOptions opts) {
   std::unique_ptr<orc::Reader> reader;
+  std::unique_ptr<orc::RowReader> rowReader;
   reader = orc::createReader(orc::readLocalFile(std::string(filename)), opts);
+  rowReader = reader->getRowReader();
 
-  std::unique_ptr<orc::ColumnVectorBatch> batch = reader->createRowBatch(1000);
+  std::unique_ptr<orc::ColumnVectorBatch> batch = rowReader->createRowBatch(1000);
   std::string line;
   std::unique_ptr<orc::ColumnPrinter> printer =
-    createColumnPrinter(line, &reader->getSelectedType());
+    createColumnPrinter(line, &rowReader->getSelectedType());
 
-  while (reader->next(*batch)) {
+  while (rowReader->next(*batch)) {
     printer->reset(*batch);
     for(unsigned long i=0; i < batch->numElements; ++i) {
       line.clear();

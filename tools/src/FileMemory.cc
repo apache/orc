@@ -69,8 +69,8 @@ void processFile(const char* filename,
   std::unique_ptr<orc::MemoryPool> pool(new TestMemoryPool());
   opts.setMemoryPool(*(pool.get()));
 
-  std::unique_ptr<orc::Reader> reader =
-    orc::createReader(orc::readLocalFile(std::string(filename)), opts);
+  std::unique_ptr<orc::RowReader> reader =
+    orc::createReader(orc::readLocalFile(std::string(filename)), opts)->getRowReader();
 
   std::unique_ptr<orc::ColumnVectorBatch> batch =
       reader->createRowBatch(batchSize);

@@ -666,7 +666,72 @@ namespace orc {
   };
 
   /**
-   * The interface for reading ORC files.
+   * The interface for reading rows in ORC files.
+   * This is an an abstract class that will subclassed as necessary.
+   */
+  class RowReader {
+  public:
+    virtual ~RowReader();
+    /**
+     * Get the selected type of the rows in the file. The file's row type
+     * is projected down to just the selected columns. Thus, if the file's
+     * type is struct<col0:int,col1:double,col2:string> and the selected
+     * columns are "col0,col2" the selected type would be
+     * struct<col0:int,col2:string>.
+     * @return the root type
+     */
+    virtual const Type& getSelectedType() const = 0;
+
+    /**
+     * Get the selected columns of the file.
+     */
+    virtual const std::vector<bool> getSelectedColumns() const = 0;
+
+    /**
+     * Create a row batch for reading the selected columns of this file.
+     * @param size the number of rows to read
+     * @return a new ColumnVectorBatch to read into
+     */
+    virtual ORC_UNIQUE_PTR<ColumnVectorBatch> createRowBatch(uint64_t size
+                                                             ) const = 0;
+
+    /**
+     * Read the next row batch from the current position.
+     * Caller must look at numElements in the row batch to determine how
+     * many rows were read.
+     * @param data the row batch to read into.
+     * @return true if a non-zero number of rows were read or false if the
+     *   end of the file was reached.
+     */
+    virtual bool next(ColumnVectorBatch& data) = 0;
+
+    /**
+     * Get the row number of the first row in the previously read batch.
+     * @return the row number of the previous batch.
+     */
+    virtual uint64_t getRowNumber() const = 0;
+
+    /**
+     * Seek to a given row.
+     * @param rowNumber the next row the reader should return
+     */
+    virtual void seekToRow(uint64_t rowNumber) = 0;
+  
+    /**
+     * Estimate an upper bound on heap memory allocation by the Reader
+     * based on the information in the file footer.
+     * The bound is less tight if only few columns are read or compression is
+     * used.
+     * @param stripeIx index of the stripe to be read (if not specified,
+     *        all stripes are considered).
+     * @return upper bound on memory use
+     */
+    virtual uint64_t getMemoryUse(int stripeIx=-1) = 0;
+ 
+  };
+
+  /**
+   * The interface for reading ORC file meta-data.
    * This is an an abstract class that will subclassed as necessary.
    */
   class Reader {
@@ -803,63 +868,6 @@ namespace orc {
     getColumnStatistics(uint32_t columnId) const = 0;
 
     /**
-     * Get the type of the rows in the file. The top level is typically a
-     * struct.
-     * @return the root type
-     */
-    virtual const Type& getType() const = 0;
-
-    /**
-     * Get the selected type of the rows in the file. The file's row type
-     * is projected down to just the selected columns. Thus, if the file's
-     * type is struct<col0:int,col1:double,col2:string> and the selected
-     * columns are "col0,col2" the selected type would be
-     * struct<col0:int,col2:string>.
-     * @return the root type
-     */
-    virtual const Type& getSelectedType() const = 0;
-
-    /**
-     * Get the selected columns of the file.
-     */
-    virtual const std::vector<bool> getSelectedColumns() const = 0;
-
-    /**
-     * Create a row batch for reading the selected columns of this file.
-     * @param size the number of rows to read
-     * @return a new ColumnVectorBatch to read into
-     */
-    virtual ORC_UNIQUE_PTR<ColumnVectorBatch> createRowBatch(uint64_t size
-                                                             ) const = 0;
-
-    /**
-     * Read the next row batch from the current position.
-     * Caller must look at numElements in the row batch to determine how
-     * many rows were read.
-     * @param data the row batch to read into.
-     * @return true if a non-zero number of rows were read or false if the
-     *   end of the file was reached.
-     */
-    virtual bool next(ColumnVectorBatch& data) = 0;
-
-    /**
-     * Get the row number of the first row in the previously read batch.
-     * @return the row number of the previous batch.
-     */
-    virtual uint64_t getRowNumber() const = 0;
-
-    /**
-     * Seek to a given row.
-     * @param rowNumber the next row the reader should return
-     */
-    virtual void seekToRow(uint64_t rowNumber) = 0;
-
-    /**
-     * Get the name of the input stream.
-     */
-    virtual const std::string& getStreamName() const = 0;
-
-    /**
      * check file has correct column statistics
      */
     virtual bool hasCorrectStatistics() const = 0;
@@ -873,15 +881,29 @@ namespace orc {
     virtual std::string getSerializedFileTail() const = 0;
 
     /**
-     * Estimate an upper bound on heap memory allocation by the Reader
-     * based on the information in the file footer.
-     * The bound is less tight if only few columns are read or compression is
-     * used.
-     * @param stripeIx index of the stripe to be read (if not specified,
-     *        all stripes are considered).
-     * @return upper bound on memory use
+     * Get the type of the rows in the file. The top level is typically a
+     * struct.
+     * @return the root type
      */
-    virtual uint64_t getMemoryUse(int stripeIx=-1) = 0;
+    virtual const Type& getType() const = 0;
+
+    /**
+     * @return a RowReader to read the rows
+     */
+    virtual ORC_UNIQUE_PTR<RowReader> getRowReader() const = 0;
+
+    /**
+     * @param include update with new columns
+     * @return a RowReader to read the rows
+     */
+    virtual ORC_UNIQUE_PTR<RowReader>
+    getRowReader(const std::list<uint64_t>& include) const = 0;
+
+    /**
+     * Get the name of the input stream.
+     */
+    virtual const std::string& getStreamName() const = 0;
+
   };
 }
 
