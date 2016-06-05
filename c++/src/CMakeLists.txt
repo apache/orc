@@ -149,6 +149,8 @@ add_library (orc STATIC
   RLEv1.cc
   RLEv2.cc
   RLE.cc
+  Statistics.cc
+  StripeStream.cc
   Timezone.cc
   TypeImpl.cc
   Vector.cc

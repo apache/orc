@@ -34,7 +34,7 @@ namespace orc {
     /**
      * Get the reader options.
      */
-    virtual const ReaderOptions& getReaderOptions() const = 0;
+    virtual const RowReaderOptions& getRowReaderOptions() const = 0;
 
     /**
      * Get the array of booleans for which columns are selected.
