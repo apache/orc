@@ -46,7 +46,7 @@ target_link_libraries (orc-metadata
   orc
   ${PROTOBUF_LIBRARIES}
   )
-  
+
  add_executable (orc-statistics
   FileStatistics.cc
   )
@@ -54,8 +54,8 @@ target_link_libraries (orc-metadata
 target_link_libraries (orc-statistics
   orc
   ${PROTOBUF_LIBRARIES}
-  ) 
-  
+  )
+
 add_executable (orc-memory
   FileMemory.cc
   )
@@ -63,7 +63,16 @@ add_executable (orc-memory
 target_link_libraries (orc-memory
   orc
   ${PROTOBUF_LIBRARIES}
-  )   
+  )
+
+add_executable (timezone-dump
+  TimezoneDump.cc
+  )
+
+target_link_libraries (timezone-dump
+  orc
+  ${PROTOBUF_LIBRARIES}
+  )
 
 install(TARGETS
    orc-contents

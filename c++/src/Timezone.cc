@@ -71,12 +71,16 @@ namespace orc {
   /**
    * Find the position that is the closest and less than or equal to the
    * target.
-   * @return -1 if the target < array[0] or
+   * @return -1 if the target < array[0] or array is empty or
    *          i if array[i] <= target and (i == n or array[i] < array[i+1])
    */
   int64_t binarySearch(const std::vector<int64_t> &array, int64_t target) {
+    uint64_t size = array.size();
+    if (size == 0) {
+      return -1;
+    }
     uint64_t min = 0;
-    uint64_t max = array.size() - 1;
+    uint64_t max = size - 1;
     uint64_t mid = (min + max) / 2;
     while ((array[mid] != target) && (min < max)) {
       if (array[mid] < target) {
@@ -899,11 +903,14 @@ namespace orc {
     if (clk > lastTransition) {
       return futureRule->getVariant(clk);
     } else {
-      int64_t idx = binarySearch(transitions, clk);
-      if (idx < 0) {
-        idx = static_cast<int64_t>(ancientVariant);
+      int64_t transition = binarySearch(transitions, clk);
+      uint64_t idx;
+      if (transition < 0) {
+        idx = ancientVariant;
+      } else {
+        idx = currentVariant[static_cast<size_t>(transition)];
       }
-      return variants[currentVariant[static_cast<size_t>(idx)]];
+      return variants[idx];
     }
   }
 

@@ -42,6 +42,7 @@ namespace orc {
 
   TEST(TestTimezone, testBinarySearch) {
     std::vector<int64_t> vect;
+    EXPECT_EQ(-1, binarySearch(vect, 0));
     vect.push_back(0);
     EXPECT_EQ(-1, binarySearch(vect, -5));
     EXPECT_EQ(0, binarySearch(vect, 0));
@@ -357,5 +358,14 @@ namespace orc {
     EXPECT_EQ("EDT", getVariantFromZone(*ny1, "1974-01-06 07:00:00"));
     EXPECT_EQ("EDT", getVariantFromZone(*ny1, "1974-10-27 05:59:59"));
     EXPECT_EQ("EST", getVariantFromZone(*ny1, "1974-10-27 06:00:00"));
+  }
+
+  TEST(TestTimezone, testGMTv1) {
+    const char GMT[] = ("VFppZgAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAQAAAA"
+                        "AAAAAAAAAAAQAAAAQAAAAAAABHTVQAAAA=");
+    std::unique_ptr<Timezone> gmt = getTimezone("GMT", decodeBase64(GMT));
+    EXPECT_EQ(1, gmt->getVersion());
+    EXPECT_EQ("GMT", getVariantFromZone(*gmt, "1974-01-06 09:59:59"));
+    EXPECT_EQ("GMT", getVariantFromZone(*gmt, "2015-06-06 12:34:56"));
   }
 }  // namespace orc
