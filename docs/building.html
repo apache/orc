@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>Hive DDL</title>
+  <title>Building ORC</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="generator" content="Jekyll v2.4.0">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
@@ -1060,50 +1060,84 @@
 
       <div class="unit four-fifths">
         <article>
-          <h1>Hive DDL</h1>
-          <p>ORC is well integrated into Hive, so storing your istari table as ORC
-is done by adding “STORED AS ORC”.</p>
+          <h1>Building ORC</h1>
+          <h2 id="building-both-c-and-java">Building both C++ and Java</h2>
 
-<p><code>CREATE TABLE istari (
-  name STRING,
-  color STRING
-) STORED AS ORC;
-</code></p>
+<p>The C++ library is supported on the following operating systems:</p>
 
-<p>To modify a table so that new partitions of the istari table are
-stored as ORC files:</p>
+<ul>
+  <li>CentOS 6 or 7</li>
+  <li>Debian 7 or 8</li>
+  <li>MacOS 10.10 or 10.11</li>
+  <li>Ubuntu 12.04, 14.04, or 16.04</li>
+</ul>
 
-<p><code>ALTER TABLE istari SET FILEFORMAT ORC;
-</code></p>
+<p>You’ll want to install the usual set of developer tools, but at least:</p>
 
-<p>As of Hive 0.14, users can request an efficient merge of small ORC files
-together by issuing a CONCATENATE command on their table or partition. The
-files will be merged at the stripe level without reserializatoin.</p>
+<ul>
+  <li>cmake</li>
+  <li>g++ or clang++</li>
+  <li>java ( &gt;= 1.7)</li>
+  <li>make</li>
+  <li>maven ( &gt;= 3)</li>
+</ul>
 
-<p><code>ALTER TABLE istari [PARTITION partition_spec] CONCATENATE;
-</code></p>
+<p>For each version of Linux, please check the corresponding Dockerfile, which
+is in the docker subdirectory, for the list of packages required to build ORC:</p>
 
-<p>To get information about an ORC file, use the orcfiledump command.</p>
+<ul>
+  <li><a href="https://github.com/apache/orc/blob/master/docker/centos6/Dockerfile">CentOS 6</a></li>
+  <li><a href="https://github.com/apache/orc/blob/master/docker/centos7/Dockerfile">CentOS 7</a></li>
+  <li><a href="https://github.com/apache/orc/blob/master/docker/debian7/Dockerfile">Debian 7</a></li>
+  <li><a href="https://github.com/apache/orc/blob/master/docker/debian8/Dockerfile">Debian 8</a></li>
+  <li><a href="https://github.com/apache/orc/blob/master/docker/ubuntu12/Dockerfile">Ubuntu 12</a></li>
+  <li><a href="https://github.com/apache/orc/blob/master/docker/ubuntu14/Dockerfile">Ubuntu 14</a></li>
+  <li><a href="https://github.com/apache/orc/blob/master/docker/ubuntu16/Dockerfile">Ubuntu 16</a></li>
+</ul>
 
-<p><code>% hive --orcfiledump &lt;path_to_file&gt;
-</code></p>
+<p>To build a normal release:</p>
 
-<p>As of Hive 1.1, to display the data in the ORC file, use:</p>
+<pre><code class="language-shell">% mkdir build
+% cmake ..
+% make package test-out
+</code></pre>
 
-<p><code>% hive --orcfiledump -d &lt;path_to_file&gt;
-</code></p>
+<p>ORC’s C++ build supports three build types, which are controlled by adding
+<code>-DCMAKE_BUILD_TYPE=&lt;type&gt;</code> to the cmake command.</p>
+
+<ul>
+  <li><strong>RELWITHDEBINFO</strong> (default) - Optimized with debug information</li>
+  <li><strong>DEBUG</strong> - Unoptimized with debug information</li>
+  <li><strong>RELEASE</strong> - Optimized with no debug information</li>
+</ul>
+
+<p>If your make command fails, it is useful to see the actual commands that make
+is invoking:</p>
+
+<pre><code class="language-shell">% make package test-out VERBOSE=1
+</code></pre>
+
+<h2 id="building-just-java">Building just Java</h2>
+
+<p>You’ll need to install:</p>
+
+<ul>
+  <li>java (&gt;= 1.7)</li>
+  <li>maven (&gt;= 3)</li>
+</ul>
+
+<p>To build:</p>
+
+<pre><code class="language-shell">% cd java
+% mvn package
+</code></pre>
+
 
           
 
 
 
 
-
-  
-  
-
-  
-  
 
   
   
@@ -1127,14 +1161,14 @@ files will be merged at the stripe level without reserializatoin.</p>
           
             
             
-            <a href="/docs/releases.html" class="prev">Back</a>
+            <a href="/docs/acid.html" class="prev">Back</a>
           
       </div>
       <div class="right align-left">
           
             
             
-            <a href="/docs/hive-config.html" class="next">Next</a>
+            <a href="/docs/releases.html" class="next">Next</a>
           
       </div>
     </div>
@@ -1310,7 +1344,7 @@ files will be merged at the stripe level without reserializatoin.</p>
     
   
     
-      <li class=""><a href="/docs/building.html">Building ORC</a></li>
+      <li class="current"><a href="/docs/building.html">Building ORC</a></li>
       
 
 
@@ -1384,7 +1418,7 @@ files will be merged at the stripe level without reserializatoin.</p>
     
   
     
-      <li class="current"><a href="/docs/hive-ddl.html">Hive DDL</a></li>
+      <li class=""><a href="/docs/hive-ddl.html">Hive DDL</a></li>
       
 
 

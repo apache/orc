@@ -729,7 +729,7 @@ footer {
     font-size: 3.2em; } }
 /* Quickstart */
 .quickstart {
-  background-color: #3F1F1F;
+  background-color: #242424;
   color: #fff;
   margin: 60px 0;
   -webkit-box-shadow: inset 0 3px 10px rgba(0, 0, 0, 0.4);
@@ -737,10 +737,10 @@ footer {
   box-shadow: inset 0 3px 10px rgba(0, 0, 0, 0.4); }
   .quickstart .content {
     padding: 0; }
-  .quickstart h3 {
-    font-size: 24px;
-    line-height: 24px;
-    margin-top: 20px;
+  .quickstart .side {
+    font-size: 22px;
+    line-height: 22px;
+    margin-top: 10px;
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); }
   .quickstart .code {
     font-size: 12px;
@@ -826,27 +826,39 @@ footer {
   .quickstart .code .output {
     color: #888; }
 
+/* Apache bar */
+.apache .pane {
+  background-color: #3e3e3e;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  border-radius: 10px;
+  text-shadow: none;
+  position: relative;
+  padding: 0 20px 30px; }
+.apache img {
+  margin: -30px 0 0;
+  width: 180px;
+  height: 150px; }
+.apache h2 {
+  font-size: 28px; }
+.apache p,
+.apache a {
+  font-size: 16px; }
+.apache p {
+  margin: .75em 0; }
+
 @media (min-width: 768px) {
-  .free-hosting img {
+  .apache img {
     float: left;
-    margin: -20px -30px -30px -50px;
-    width: 300px;
-    height: 251px; }
-  .free-hosting .pane-content {
+    margin: 20px 20px -20px -20px;
+    width: 429px;
+    height: 175px; }
+  .apache .pane-content {
     margin-top: 35px;
     padding-right: 30px; }
-  .free-hosting p,
-  .free-hosting a {
-    font-size: 18px; }
-  .free-hosting .pane:after {
-    content: " ";
-    float: right;
-    background: url(../img/footer-arrow.png) top left no-repeat;
-    width: 73px;
-    height: 186px;
-    position: absolute;
-    right: 0;
-    bottom: -30px; } }
+  .apache p,
+  .apache a {
+    font-size: 18px; } }
 /* Article - Used for both docs and news */
 article {
   background-color: #444;

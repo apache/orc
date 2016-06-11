@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>Hive DDL</title>
+  <title>Using Core Java</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="generator" content="Jekyll v2.4.0">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
@@ -1060,44 +1060,330 @@
 
       <div class="unit four-fifths">
         <article>
-          <h1>Hive DDL</h1>
-          <p>ORC is well integrated into Hive, so storing your istari table as ORC
-is done by adding “STORED AS ORC”.</p>
+          <h1>Using Core Java</h1>
+          <p>The Core ORC API reads and writes ORC files into Hive’s storage-api
+vectorized classes. Both Hive and MapReduce use the Core API to actually
+read and write the data.</p>
 
-<p><code>CREATE TABLE istari (
-  name STRING,
-  color STRING
-) STORED AS ORC;
-</code></p>
+<h2 id="vectorized-row-batch">Vectorized Row Batch</h2>
 
-<p>To modify a table so that new partitions of the istari table are
-stored as ORC files:</p>
+<p>Data is passed to ORC as instances of <code>VectorizedRowBatch</code> that contain
+the data for 1024 rows. The focus is on speed and accessing the data
+fields directly. <code>cols</code> is an array of <code>ColumnVector</code> and <code>size</code> is the number
+of rows.</p>
 
-<p><code>ALTER TABLE istari SET FILEFORMAT ORC;
-</code></p>
+<pre><code class="language-java">package org.apache.hadoop.hive.ql.exec.vector;
 
-<p>As of Hive 0.14, users can request an efficient merge of small ORC files
-together by issuing a CONCATENATE command on their table or partition. The
-files will be merged at the stripe level without reserializatoin.</p>
+public class VectorizedRowBatch {
+  public ColumnVector[] cols;
+  public int size;
+  ...
+}
+</code></pre>
 
-<p><code>ALTER TABLE istari [PARTITION partition_spec] CONCATENATE;
-</code></p>
+<p><code>ColumnVector</code> is the parent type of the different kinds of columns
+and has some fields that are shared across all of the column types. In
+particular, the <code>noNulls</code> flag if there are no nulls in this column for
+this batch and the <code>isRepeating</code> flag for columns were the entire batch is the
+same value. For columns where <code>noNulls == false</code> the <code>isNull</code> array is true
+if that value is null.</p>
 
-<p>To get information about an ORC file, use the orcfiledump command.</p>
+<pre><code class="language-java">public abstract class ColumnVector {
 
-<p><code>% hive --orcfiledump &lt;path_to_file&gt;
-</code></p>
+  // If the whole column vector has no nulls, this is true, otherwise false.
+  public boolean noNulls;
 
-<p>As of Hive 1.1, to display the data in the ORC file, use:</p>
+  // If hasNulls is true, then this array contains true if the value is
+  // is null, otherwise false.
+  public boolean[] isNull;
 
-<p><code>% hive --orcfiledump -d &lt;path_to_file&gt;
-</code></p>
+  /*
+   * True if same value repeats for whole column vector.
+   * If so, vector[0] holds the repeating value.
+   */
+  public boolean isRepeating;
+  ...
+}
+</code></pre>
+
+<p>The subtypes of <code>ColumnVector</code> are:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>ORC Type</th>
+      <th>ColumnVector</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>array</td>
+      <td>ListColumnVector</td>
+    </tr>
+    <tr>
+      <td>binary</td>
+      <td>BytesColumnVector</td>
+    </tr>
+    <tr>
+      <td>bigint</td>
+      <td>LongColumnVector</td>
+    </tr>
+    <tr>
+      <td>boolean</td>
+      <td>LongColumnVector</td>
+    </tr>
+    <tr>
+      <td>char</td>
+      <td>BytesColumnVector</td>
+    </tr>
+    <tr>
+      <td>date</td>
+      <td>LongColumnVector</td>
+    </tr>
+    <tr>
+      <td>decimal</td>
+      <td>DecimalColumnVector</td>
+    </tr>
+    <tr>
+      <td>double</td>
+      <td>DoubleColumnVector</td>
+    </tr>
+    <tr>
+      <td>float</td>
+      <td>DoubleColumnVector</td>
+    </tr>
+    <tr>
+      <td>int</td>
+      <td>LongColumnVector</td>
+    </tr>
+    <tr>
+      <td>map</td>
+      <td>MapColumnVector</td>
+    </tr>
+    <tr>
+      <td>smallint</td>
+      <td>LongColumnVector</td>
+    </tr>
+    <tr>
+      <td>string</td>
+      <td>BytesColumnVector</td>
+    </tr>
+    <tr>
+      <td>struct</td>
+      <td>StructColumnVector</td>
+    </tr>
+    <tr>
+      <td>timestamp</td>
+      <td>TimestampColumnVector</td>
+    </tr>
+    <tr>
+      <td>tinyint</td>
+      <td>LongColumnVector</td>
+    </tr>
+    <tr>
+      <td>uniontype</td>
+      <td>UnionColumnVector</td>
+    </tr>
+    <tr>
+      <td>varchar</td>
+      <td>BytesColumnVector</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><code>LongColumnVector</code> handles all of the integer types (boolean, bigint,
+date, int, smallint, and tinyint). The data is represented as an array of
+longs where each value is sign-extended as necessary.</p>
+
+<pre><code class="language-java">public class LongColumnVector extends ColumnVector {
+  public long[] vector;
+  ...
+}
+</code></pre>
+
+<p><code>TimestampColumnVector</code> handles timestamp values. The data is represented
+as an array of longs and an array of ints.</p>
+
+<pre><code class="language-java">public class TimestampColumnVector extends ColumnVector {
+
+  // the number of milliseconds since 1 Jan 1970 00:00 GMT
+  public long[] time;
+
+  // the number of nanoseconds within the second
+  public int[] nanos
+  ...
+}
+</code></pre>
+
+<p><code>DoubleColumnVector</code> handles all of the floating point types (double,
+and float). The data is represented as an array of doubles.</p>
+
+<pre><code class="language-java">public class DoubleColumnVector extends ColumnVector {
+  public double[] vector;
+  ...
+}
+</code></pre>
+
+<p><code>DecimalColumnVector</code> handles decimal columns. The data is represented
+as an array of HiveDecimalWritable. Note that this implementation is not
+performant and will likely be replaced.</p>
+
+<pre><code class="language-java">public class DecimalColumnVector extends ColumnVector {
+  public HiveDecimalWritable[] vector;
+  ...
+}
+</code></pre>
+
+<p><code>BytesColumnVector</code> handles all of the binary types (binary, char,
+string, and varchar). The data is represented as a byte array, offset,
+and length. The byte arrays may or may not be shared between values.</p>
+
+<pre><code class="language-java">public class BytesColumnVector extends ColumnVector {
+  public byte[][] vector;
+  public int[] start;
+  public int[] length;
+  ...
+}
+</code></pre>
+
+<p><code>StructColumnVector</code> handles the struct columns and represents the data as an
+array of <code>ColumnVector</code>. The value for row 5 consists of the fifth value from
+each of the <code>fields</code> values.</p>
+
+<pre><code class="language-java">public class StructColumnVector extends ColumnVector {
+  public ColumnVector[] fields;
+  ...
+}
+</code></pre>
+
+<p><code>UnionColumnVector</code> handles the union columns and represents the data
+as an array of integers that pick the subtype and a <code>fields</code> array one
+per a subtype. Only the value of the <code>fields</code> that corresponds to
+<code>tags[row]</code> is set.</p>
+
+<pre><code class="language-java">public class UnionColumnVector extends ColumnVector {
+  public int[] tags;
+  public ColumnVector[] fields;
+  ...
+}
+</code></pre>
+
+<p><code>ListColumnVector</code> handles the array columns and represents the data
+as two arrays of integers for the offset and lengths and a
+<code>ColumnVector</code> for the children values.</p>
+
+<pre><code class="language-java">public class ListColumnVector extends ColumnVector {
+  // for each row, the first offset of the child
+  public long[] offsets;
+  // for each row, the number of elements in the array
+  public long[] lengths;
+  // the offset in the child that should be used for new values
+  public int childCount;
+
+  // the values of the children
+  public ColumnVector child;
+  ...
+}
+</code></pre>
+
+<p><code>MapColumnVector</code> handles the map columns and represents the data
+as two arrays of integers for the offset and lengths and two
+<code>ColumnVector</code>s for the keys and values.</p>
+
+<pre><code class="language-java">public class ListColumnVector extends ColumnVector {
+  // for each row, the first offset of the child
+  public long[] offsets;
+  // for each row, the number of elements in the array
+  public long[] lengths;
+  // the offset in the child that should be used for new values
+  public int childCount;
+
+  // the values of the keys and values
+  public ColumnVector keys;
+  public ColumnVector values;
+  ...
+}
+</code></pre>
+
+<h2 id="writing-orc-files">Writing ORC Files</h2>
+
+<p>To write an ORC file, you need to define the schema and create a <code>Writer</code>
+with the desired filename. This example sets the required schema parameter,
+but there are many other options to control the ORC writer.</p>
+
+<pre><code class="language-java">TypeDescription schema = TypeDescription.fromString("struct&lt;x:int,y:int&gt;");
+Writer writer = OrcFile.createWriter(new Path("my-file.orc"),
+                  OrcFile.writerOptions(conf)
+                         .schema(schema));
+</code></pre>
+
+<p>Now you need to create a row batch, set the data, and write it to the file
+as the batch fills up. When the file is done, close the <code>Writer</code>.</p>
+
+<pre><code class="language-java">VectorizedRowBatch batch = schema.createRowBatch();
+LongColumnVector x = (LongColumnVector) batch.cols[0];
+LongColumnVector y = (LongColumnVector) batch.cols[1];
+for(int r=0; r &lt; 10000; ++r) {
+  int row = batch.size++;
+  x.vector[row] = r;
+  y.vector[row] = r * 3;
+  // If the batch is full, write it out and start over.
+  if (batch.size == batch.getMaxSize()) {
+    writer.addRowBatch(batch);
+    batch.reset();
+  }
+}
+writer.close();
+</code></pre>
+
+<h2 id="reading-orc-files">Reading ORC Files</h2>
+
+<p>To read ORC files, create a <code>Reader</code> that contains the metadata about
+the file. There are a few options to the ORC reader, but far fewer than
+the writer and none of them are required. The reader has methods for
+getting the number of rows, schema, compression, etc. from the file.</p>
+
+<pre><code class="language-java">Reader reader = OrcFile.createReader(new Path("my-file.orc"),
+                  OrcFile.readerOptions(conf));
+</code></pre>
+
+<p>To get the data, create a <code>RecordReader</code> object. By default, the
+RecordReader reads all rows and all columns, but there are options to
+control the data that is read.</p>
+
+<pre><code class="language-java">RecordReader rows = reader.rows();
+VectorizedRowBatch batch = reader.getSchema().createRowBatch();
+</code></pre>
+
+<p>With a <code>RecordReader</code> the user can ask for the next batch until there
+are no more left. The reader will stop the batch at certain boundaries, so the
+returned batch may not be full, but it will always contain some rows.</p>
+
+<pre><code class="language-java">while (rows.nextBatch(batch)) {
+  for(int r=0; r &lt; batch.size; ++r) {
+    ... process row r from batch
+  }
+}
+rows.close();
+</code></pre>
 
           
 
 
 
 
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
 
   
   
@@ -1127,14 +1413,14 @@ files will be merged at the stripe level without reserializatoin.</p>
           
             
             
-            <a href="/docs/releases.html" class="prev">Back</a>
+            <a href="/docs/mapreduce.html" class="prev">Back</a>
           
       </div>
       <div class="right align-left">
           
             
             
-            <a href="/docs/hive-config.html" class="next">Next</a>
+            <a href="/docs/tools.html" class="next">Next</a>
           
       </div>
     </div>
@@ -1384,7 +1670,7 @@ files will be merged at the stripe level without reserializatoin.</p>
     
   
     
-      <li class="current"><a href="/docs/hive-ddl.html">Hive DDL</a></li>
+      <li class=""><a href="/docs/hive-ddl.html">Hive DDL</a></li>
       
 
 
@@ -1516,7 +1802,7 @@ files will be merged at the stripe level without reserializatoin.</p>
     
   
     
-      <li class=""><a href="/docs/core-java.html">Using Core Java</a></li>
+      <li class="current"><a href="/docs/core-java.html">Using Core Java</a></li>
       
 
 

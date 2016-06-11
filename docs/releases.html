@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>Hive DDL</title>
+  <title>Releases</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="generator" content="Jekyll v2.4.0">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
@@ -1060,47 +1060,62 @@
 
       <div class="unit four-fifths">
         <article>
-          <h1>Hive DDL</h1>
-          <p>ORC is well integrated into Hive, so storing your istari table as ORC
-is done by adding “STORED AS ORC”.</p>
+          <h1>Releases</h1>
+          <h2 id="current-release---110">Current Release - 1.1.0:</h2>
 
-<p><code>CREATE TABLE istari (
-  name STRING,
-  color STRING
-) STORED AS ORC;
-</code></p>
+<p>ORC 1.1.0 contains both the Java reader and writer and the C++ reader. It also
+contains tools for working with ORC files and looking at their contents and
+metadata.</p>
 
-<p>To modify a table so that new partitions of the istari table are
-stored as ORC files:</p>
+<ul>
+  <li>Released: 10 Jun 2016</li>
+  <li>Source code: <a href="http://www.apache.org/dyn/closer.cgi/orc/orc-1.1.0/orc-1.1.0.tgz">orc-1.1.0.tgz</a></li>
+  <li><a href="https://dist.apache.org/repos/dist/release/orc/orc-1.1.0/orc-1.1.0.tgz.asc">GPG Signature</a>
+signed by <a href="https://dist.apache.org/repos/dist/release/orc/KEYS">Owen O’Malley (3D0C92B9)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.1.0">fc571e77</a></li>
+  <li>SHA 256: <a href="https://dist.apache.org/repos/dist/release/orc/orc-1.1.0/orc-1.1.0.tgz.sha256">8beea2be</a></li>
+</ul>
 
-<p><code>ALTER TABLE istari SET FILEFORMAT ORC;
-</code></p>
+<p>Known issues:</p>
 
-<p>As of Hive 0.14, users can request an efficient merge of small ORC files
-together by issuing a CONCATENATE command on their table or partition. The
-files will be merged at the stripe level without reserializatoin.</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-40">ORC-40</a> Predicate push down is not implemented in C++.</li>
+</ul>
 
-<p><code>ALTER TABLE istari [PARTITION partition_spec] CONCATENATE;
-</code></p>
+<h2 id="checking-signatures">Checking signatures</h2>
 
-<p>To get information about an ORC file, use the orcfiledump command.</p>
+<p>All GPG signatures should be verified as matching one of the keys in ORC’s
+committers’ <a href="https://dist.apache.org/repos/dist/release/orc/KEYS">key list</a>.</p>
 
-<p><code>% hive --orcfiledump &lt;path_to_file&gt;
-</code></p>
+<pre><code class="language-shell">% shasum -a 256 orc-1.1.0.tgz | diff - orc-1.1.0.tgz.sha256
+% gpg --import KEYS
+% gpg --verify orc-1.1.0.tgz.asc
+</code></pre>
 
-<p>As of Hive 1.1, to display the data in the ORC file, use:</p>
+<h2 id="previous-releases">Previous releases:</h2>
 
-<p><code>% hive --orcfiledump -d &lt;path_to_file&gt;
-</code></p>
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center">Version</th>
+      <th style="text-align: center">Date</th>
+      <th style="text-align: center">Release</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center">1.0.0</td>
+      <td style="text-align: center">25 Jan 2016</td>
+      <td style="text-align: center"><a href="/news/2016/01/25/ORC-1.0.0/">ORC-1.0.0</a></td>
+    </tr>
+  </tbody>
+</table>
 
           
 
 
 
 
-
-  
-  
 
   
   
@@ -1127,14 +1142,14 @@ files will be merged at the stripe level without reserializatoin.</p>
           
             
             
-            <a href="/docs/releases.html" class="prev">Back</a>
+            <a href="/docs/building.html" class="prev">Back</a>
           
       </div>
       <div class="right align-left">
           
             
             
-            <a href="/docs/hive-config.html" class="next">Next</a>
+            <a href="/docs/hive-ddl.html" class="next">Next</a>
           
       </div>
     </div>
@@ -1348,7 +1363,7 @@ files will be merged at the stripe level without reserializatoin.</p>
     
   
     
-      <li class=""><a href="/docs/releases.html">Releases</a></li>
+      <li class="current"><a href="/docs/releases.html">Releases</a></li>
       
 
 
@@ -1384,7 +1399,7 @@ files will be merged at the stripe level without reserializatoin.</p>
     
   
     
-      <li class="current"><a href="/docs/hive-ddl.html">Hive DDL</a></li>
+      <li class=""><a href="/docs/hive-ddl.html">Hive DDL</a></li>
       
 
 

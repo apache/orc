@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>Hive DDL</title>
+  <title>Using in MapReduce</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="generator" content="Jekyll v2.4.0">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
@@ -1060,44 +1060,253 @@
 
       <div class="unit four-fifths">
         <article>
-          <h1>Hive DDL</h1>
-          <p>ORC is well integrated into Hive, so storing your istari table as ORC
-is done by adding “STORED AS ORC”.</p>
+          <h1>Using in MapReduce</h1>
+          <p>This page describes how to read and write ORC files from Hadoop’s
+newer org.apache.hadoop.mapreduce MapReduce APIs. If you want to use the
+older org.apache.hadoop.mapred API, please look at the <a href="/docs/mapred.html">previous
+page</a>.</p>
 
-<p><code>CREATE TABLE istari (
-  name STRING,
-  color STRING
-) STORED AS ORC;
-</code></p>
+<h2 id="reading-orc-files">Reading ORC files</h2>
 
-<p>To modify a table so that new partitions of the istari table are
-stored as ORC files:</p>
+<p>Add ORC and your desired version of Hadoop to your <code>pom.xml</code>:</p>
 
-<p><code>ALTER TABLE istari SET FILEFORMAT ORC;
-</code></p>
+<pre><code class="language-xml">&lt;dependencies&gt;
+  &lt;dependency&gt;
+    &lt;groupId&gt;org.apache.orc&lt;/groupId&gt;
+    &lt;artifactId&gt;orc-mapreduce&lt;/artifactId&gt;
+    &lt;version&gt;1.1.0&lt;/version&gt;
+  &lt;/dependency&gt;
+  &lt;dependency&gt;
+    &lt;groupId&gt;org.apache.hadoop&lt;/groupId&gt;
+    &lt;artifactId&gt;hadoop-mapreduce-client-core&lt;/artifactId&gt;
+    &lt;version&gt;2.7.0&lt;/version&gt;
+  &lt;/dependency&gt;
+&lt;/dependencies&gt;
+</code></pre>
 
-<p>As of Hive 0.14, users can request an efficient merge of small ORC files
-together by issuing a CONCATENATE command on their table or partition. The
-files will be merged at the stripe level without reserializatoin.</p>
+<p>Set the minimal properties in your JobConf:</p>
 
-<p><code>ALTER TABLE istari [PARTITION partition_spec] CONCATENATE;
-</code></p>
+<ul>
+  <li><strong>mapreduce.job.inputformat.class</strong> = org.apache.orc.mapreduce.OrcInputFormat</li>
+  <li><strong>mapreduce.input.fileinputformat.inputdir</strong> = your input directory</li>
+</ul>
 
-<p>To get information about an ORC file, use the orcfiledump command.</p>
+<p>ORC files contain a series of values of the same type and that type
+schema is encoded in the file. Because the ORC files are
+self-describing, the reader always knows how to correctly interpret
+the data. All of the ORC files written by Hive and most of the others have
+a struct as the value type.</p>
 
-<p><code>% hive --orcfiledump &lt;path_to_file&gt;
-</code></p>
+<p>Your Mapper class will receive org.apache.hadoop.io.NullWritable as
+the key and a value based on the table below expanded recursively.</p>
 
-<p>As of Hive 1.1, to display the data in the ORC file, use:</p>
+<table>
+  <thead>
+    <tr>
+      <th>ORC Type</th>
+      <th>Writable Type</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>array</td>
+      <td>org.apache.orc.mapred.OrcList</td>
+    </tr>
+    <tr>
+      <td>binary</td>
+      <td>org.apache.hadoop.io.BytesWritable</td>
+    </tr>
+    <tr>
+      <td>bigint</td>
+      <td>org.apache.hadoop.io.LongWritable</td>
+    </tr>
+    <tr>
+      <td>boolean</td>
+      <td>org.apache.hadoop.io.BooleanWritable</td>
+    </tr>
+    <tr>
+      <td>char</td>
+      <td>org.apache.hadoop.io.Text</td>
+    </tr>
+    <tr>
+      <td>date</td>
+      <td>org.apache.hadoop.hive.serde2.io.DateWritable</td>
+    </tr>
+    <tr>
+      <td>decimal</td>
+      <td>org.apache.hadoop.hive.serde2.io.HiveDecimalWritable</td>
+    </tr>
+    <tr>
+      <td>double</td>
+      <td>org.apache.hadoop.io.DoubleWritable</td>
+    </tr>
+    <tr>
+      <td>float</td>
+      <td>org.apache.hadoop.io.FloatWritable</td>
+    </tr>
+    <tr>
+      <td>int</td>
+      <td>org.apache.hadoop.io.IntWritable</td>
+    </tr>
+    <tr>
+      <td>map</td>
+      <td>org.apache.orc.mapred.OrcMap</td>
+    </tr>
+    <tr>
+      <td>smallint</td>
+      <td>org.apache.hadoop.io.ShortWritable</td>
+    </tr>
+    <tr>
+      <td>string</td>
+      <td>org.apache.hadoop.io.Text</td>
+    </tr>
+    <tr>
+      <td>struct</td>
+      <td>org.apache.orc.mapred.OrcStruct</td>
+    </tr>
+    <tr>
+      <td>timestamp</td>
+      <td>org.apache.orc.mapred.OrcTimestamp</td>
+    </tr>
+    <tr>
+      <td>tinyint</td>
+      <td>org.apache.hadoop.io.ByteWritable</td>
+    </tr>
+    <tr>
+      <td>uniontype</td>
+      <td>org.apache.orc.mapred.OrcUnion</td>
+    </tr>
+    <tr>
+      <td>varchar</td>
+      <td>org.apache.hadoop.io.Text</td>
+    </tr>
+  </tbody>
+</table>
 
-<p><code>% hive --orcfiledump -d &lt;path_to_file&gt;
-</code></p>
+<p>Let’s assume that your input directory contains ORC files with the
+schema <code>struct&lt;s:string,i:int&gt;</code> and you want to use the string field
+as the key to the MapReduce shuffle and the integer as the value. The
+mapper code would look like:</p>
+
+<pre><code class="language-java">public static class MyMapper
+    extends Mapper&lt;NullWritable,OrcStruct,Text,IntWritable&gt; {
+
+  // Assume the ORC file has type: struct&lt;s:string,i:int&gt;
+  public void map(NullWritable key, OrcStruct value,
+                  Context output) throws IOException, InterruptedException {
+    // take the first field as the key and the second field as the value
+    output.write((Text) value.getFieldValue(0),
+                 (IntWritable) value.getFieldValue(1));
+  }
+}
+</code></pre>
+
+<h2 id="writing-orc-files">Writing ORC files</h2>
+
+<p>To write ORC files from your MapReduce job, you’ll need to set</p>
+
+<ul>
+  <li><strong>mapreduce.job.outputformat.class</strong> = org.apache.orc.mapreduce.OrcOutputFormat</li>
+  <li><strong>mapreduce.output.fileoutputformat.outputdir</strong> = your output directory</li>
+  <li><strong>orc.mapred.output.schema</strong> = the schema to write to the ORC file</li>
+</ul>
+
+<p>The reducer needs to create the Writable value to be put into the ORC
+file and typically uses the OrcStruct.createValue(TypeDescription)
+function. For our example, let’s assume that the shuffle types are
+(Text, IntWritable) from the previous section and the reduce should
+gather the integer for each key together and write them as a list. The
+output schema would be <code>struct&lt;key:string,ints:array&lt;int&gt;&gt;</code>. As always
+with MapReduce, if your method stores the values, you need to copy their
+value before getting the next.</p>
+
+<pre><code class="language-java">public static class MyReducer
+  extends Reducer&lt;Text,IntWritable,NullWritable,OrcStruct&gt; {
+
+  private TypeDescription schema =
+    TypeDescription.fromString("struct&lt;key:string,ints:array&lt;int&gt;&gt;");
+  // createValue creates the correct value type for the schema
+  private OrcStruct pair = (OrcStruct) OrcStruct.createValue(schema);
+  // get a handle to the list of ints
+  private OrcList&lt;IntWritable&gt; valueList =
+    (OrcList&lt;IntWritable&gt;) pair.getFieldValue(1);
+  private final NullWritable nada = NullWritable.get();
+
+  public void reduce(Text key, Iterable&lt;IntWritable&gt; values,
+                     Context output
+                     ) throws IOException, InterruptedException {
+    pair.setFieldValue(0, key);
+    valueList.clear();
+    for(IntWritable val: values) {
+      valueList.add(new IntWritable(val.get()));
+    }
+    output.write(nada, pair);
+  }
+}
+</code></pre>
+
+<h2 id="sending-orcstruct-orclist-orcmap-or-orcunion-through-the-shuffle">Sending OrcStruct, OrcList, OrcMap, or OrcUnion through the Shuffle</h2>
+
+<p>In the previous examples, only the Hadoop types were sent through the
+MapReduce shuffle. The complex ORC types, since they are generic
+types, need to have their full type information provided to create the
+object. To enable MapReduce to properly instantiate the OrcStruct and
+other ORC types, we need to wrap it in either an OrcKey for the
+shuffle key or OrcValue for the shuffle value.</p>
+
+<p>To send two OrcStructs through the shuffle, define the following properties
+in the JobConf:</p>
+
+<ul>
+  <li><strong>mapreduce.map.output.key.class</strong> = org.apache.orc.mapred.OrcKey</li>
+  <li><strong>orc.mapred.map.output.key.schema</strong> = the shuffle key’s schema</li>
+  <li><strong>mapreduce.map.output.value.class</strong> = org.apache.orc.mapred.OrcValue</li>
+  <li><strong>orc.mapred.map.output.value.schema</strong> = the shuffle value’s schema</li>
+</ul>
+
+<p>The mapper just adds an OrcKey and OrcWrapper around the key and value
+respectively. These objects should be created once and reused as the mapper
+runs.</p>
+
+<pre><code class="language-java">public static class MyMapperShuffle
+    extends Mapper&lt;NullWritable,OrcStruct,OrcKey,OrcValue&gt; {
+  private OrcKey keyWrapper = new OrcKey();
+  private OrcValue valueWrapper = new OrcValue();
+  private OrcStruct outStruct = (OrcStruct) OrcStruct.createValue
+    (TypeDescription.fromString("struct&lt;i:int,j:int&gt;"));
+  private IntWritable i = (IntWritable) outStruct.getFieldValue("i");
+  private IntWritable j = (IntWritable) outStruct.getFieldValue("j");
+
+  // Assume the input has type: struct&lt;s:string,i:int&gt;
+  public void map(NullWritable key, OrcStruct value,
+                  Context output) throws IOException, InterruptedException {
+    keyWrapper.key = value;
+    valueWrapper.value = outStruct;
+    int val = ((IntWritable) value.getFieldValue("i")).get();
+    i.set(val * 2);
+    j.set(val * val);
+    output.write(keyWrapper, valueWrapper);
+  }
+}
+</code></pre>
+
+<p>The reducer code accesses the underlying OrcStructs by using the
+OrcKey.key and OrcValue.value fields.</p>
 
           
 
 
 
 
+
+  
+  
+
+  
+  
+
+  
+  
 
   
   
@@ -1127,14 +1336,14 @@ files will be merged at the stripe level without reserializatoin.</p>
           
             
             
-            <a href="/docs/releases.html" class="prev">Back</a>
+            <a href="/docs/mapred.html" class="prev">Back</a>
           
       </div>
       <div class="right align-left">
           
             
             
-            <a href="/docs/hive-config.html" class="next">Next</a>
+            <a href="/docs/core-java.html" class="next">Next</a>
           
       </div>
     </div>
@@ -1384,7 +1593,7 @@ files will be merged at the stripe level without reserializatoin.</p>
     
   
     
-      <li class="current"><a href="/docs/hive-ddl.html">Hive DDL</a></li>
+      <li class=""><a href="/docs/hive-ddl.html">Hive DDL</a></li>
       
 
 
@@ -1488,7 +1697,7 @@ files will be merged at the stripe level without reserializatoin.</p>
     
   
     
-      <li class=""><a href="/docs/mapreduce.html">Using in MapReduce</a></li>
+      <li class="current"><a href="/docs/mapreduce.html">Using in MapReduce</a></li>
       
 
 
