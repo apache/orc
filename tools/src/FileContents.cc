@@ -26,11 +26,13 @@
 #include <iostream>
 #include <string>
 
-void printContents(const char* filename, const orc::ReaderOptions opts) {
+void printContents(const char* filename,
+                   const orc::ReaderOptions opts,
+                   uint64_t batchSize) {
   std::unique_ptr<orc::Reader> reader;
   reader = orc::createReader(orc::readLocalFile(std::string(filename)), opts);
 
-  std::unique_ptr<orc::ColumnVectorBatch> batch = reader->createRowBatch(1000);
+  std::unique_ptr<orc::ColumnVectorBatch> batch = reader->createRowBatch(batchSize);
   std::string line;
   std::unique_ptr<orc::ColumnPrinter> printer =
     createColumnPrinter(line, &reader->getSelectedType());
@@ -49,15 +51,18 @@ void printContents(const char* filename, const orc::ReaderOptions opts) {
 
 int main(int argc, char* argv[]) {
   if (argc < 2) {
-    std::cout << "Usage: orc-contents <filename> [--columns=1,2,...]\n"
+    std::cout << "Usage: orc-contents <filename> [--columns=1,2,...] [--batch=rows_in_batch]\n"
               << "Print contents of <filename>.\n"
-              << "If columns are specified, only these top-level (logical) columns are printed.\n" ;
+              << "If columns are specified, only these top-level (logical) columns are printed.\n"
+              << "If batch is specified, only that number of rows are read once.\n";
     return 1;
   }
   try {
     const std::string COLUMNS_PREFIX = "--columns=";
+    const std::string BATCH_PREFIX = "--batch=";
     std::list<uint64_t> cols;
     char* filename = ORC_NULLPTR;
+    uint64_t batchSize = 1000;
 
     // Read command-line options
     char *param, *value;
@@ -68,6 +73,9 @@ int main(int argc, char* argv[]) {
           cols.push_back(static_cast<uint64_t>(std::atoi(value)));
           value = std::strtok(ORC_NULLPTR, "," );
         }
+      } else if( (param=strstr(argv[i], BATCH_PREFIX.c_str())) ) {
+        batchSize =
+            static_cast<uint64_t>(std::atoi(param+BATCH_PREFIX.length()));
       } else {
         filename = argv[i];
       }
@@ -77,7 +85,7 @@ int main(int argc, char* argv[]) {
       opts.include(cols);
     }
     if (filename != ORC_NULLPTR) {
-      printContents(filename, opts);
+      printContents(filename, opts, batchSize);
     }
   } catch (std::exception& ex) {
     std::cerr << "Caught exception: " << ex.what() << "\n";
