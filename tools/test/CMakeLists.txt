@@ -26,6 +26,7 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX11_FLAGS} ${WARN_FLAGS}")
 add_executable (tool-test
   gzip.cc
   TestReader.cc
+  TestFileScan.cc
   ToolTest.cc
 )
 
@@ -37,4 +38,4 @@ target_link_libraries (tool-test
   ${SNAPPY_LIBRARIES}
 )
 
-add_test (tool-test tool-test ${EXAMPLE_DIRECTORY})
+add_test (tool-test tool-test ${EXAMPLE_DIRECTORY} ${PROJECT_BINARY_DIR})

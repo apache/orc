@@ -637,11 +637,6 @@ INSTANTIATE_TEST_CASE_P(TestReader1900, MatchTest,
     StructVectorBatch *fullStructBatch =
       dynamic_cast<StructVectorBatch*>(fullBatch.get());
     ASSERT_TRUE(fullStructBatch != nullptr);
-    std::cout << "OOM fullBatch " << reinterpret_cast<uint64_t>(fullStructBatch)
-              << "\n";
-    std::cout << "OOM fields.size() "
-              << fullStructBatch->fields.size()
-              << "\n";
     LongVectorBatch* fullLongVector =
       dynamic_cast<LongVectorBatch*>(fullStructBatch->fields[0]);
     ASSERT_TRUE(fullLongVector != nullptr);

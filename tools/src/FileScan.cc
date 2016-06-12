@@ -20,33 +20,72 @@
 
 #include "Exceptions.hh"
 
+#include <getopt.h>
 #include <string>
 #include <memory>
 #include <iostream>
 #include <string>
 
-int main(int argc, char* argv[]) {
-  if (argc < 2) {
-    std::cout << "Usage: orc-scan <filename>\n";
-  }
-
+void scanFile(std::ostream & out, const char* filename, uint64_t batchSize) {
   orc::ReaderOptions opts;
-  std::unique_ptr<orc::Reader> reader;
-  try{
-    reader = orc::createReader(orc::readLocalFile(std::string(argv[1])), opts);
-  } catch (std::exception& ex) {
-    std::cerr << "Caught exception: " << ex.what() << "\n";
-    return 1;
-  }
-
-  std::unique_ptr<orc::ColumnVectorBatch> batch = reader->createRowBatch(1000);
+  std::unique_ptr<orc::Reader> reader =
+    orc::createReader(orc::readLocalFile(filename), opts);
+  std::unique_ptr<orc::ColumnVectorBatch> batch =
+    reader->createRowBatch(batchSize);
   unsigned long rows = 0;
   unsigned long batches = 0;
   while (reader->next(*batch)) {
     batches += 1;
     rows += batch->numElements;
   }
-  std::cout << "Rows: " << rows << std::endl;
-  std::cout << "Batches: " << batches << std::endl;
+  out << "Rows: " << rows << std::endl;
+  out << "Batches: " << batches << std::endl;
+}
+
+int main(int argc, char* argv[]) {
+  static struct option longOptions[] = {
+    {"help", no_argument, ORC_NULLPTR, 'h'},
+    {"batch", required_argument, ORC_NULLPTR, 'b'},
+    {ORC_NULLPTR, 0, ORC_NULLPTR, 0}
+  };
+  bool helpFlag = false;
+  uint64_t batchSize = 1024;
+  int opt;
+  char *tail;
+  do {
+    opt = getopt_long(argc, argv, "hb:", longOptions, ORC_NULLPTR);
+    switch (opt) {
+    case '?':
+    case 'h':
+      helpFlag = true;
+      opt = -1;
+      break;
+    case 'b':
+      batchSize = strtoul(optarg, &tail, 10);
+      if (*tail != '\0') {
+        fprintf(stderr, "The --batch parameter requires an integer option.\n");
+        return 1;
+      }
+      break;
+    }
+  } while (opt != -1);
+  argc -= optind;
+  argv += optind;
+
+  if (argc < 1 || helpFlag) {
+    std::cerr << "Usage: orc-scan [-h] [--help]\n"
+              << "                [-b<size>] [--batch=<size>] <filename>\n";
+    return 1;
+  } else {
+    for(int i=0; i < argc; ++i) {
+      try {
+        scanFile(std::cout, argv[i], batchSize);
+      } catch (std::exception& ex) {
+        std::cerr << "Caught exception in " << argv[i]
+                  << ": " << ex.what() << "\n";
+        return 1;
+      }
+    }
+  }
   return 0;
 }
