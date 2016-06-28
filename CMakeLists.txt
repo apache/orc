@@ -103,9 +103,15 @@ enable_testing()
 
 set (EXAMPLE_DIRECTORY ${CMAKE_SOURCE_DIR}/examples)
 
+option (INCLUDE_JAVA
+    "Include Java in the build process"
+       ON)
+
 add_subdirectory(c++)
 add_subdirectory(tools)
-add_subdirectory(java)
+if (INCLUDE_JAVA)
+  add_subdirectory(java)
+endif()
 
 # Add another target called test-out that prints the results on failure
 if (CMAKE_CONFIGURATION_TYPES)

@@ -62,3 +62,13 @@ To build only the Java library:
 % mvn package
 
 ```
+
+To build only the C++ library:
+```shell
+% mkdir build
+% cd build
+% cmake .. -DINCLUDE_JAVA=OFF
+% make package
+% make test-out
+
+```
