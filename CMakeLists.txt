@@ -20,6 +20,10 @@ SET(CPACK_PACKAGE_VERSION_MINOR "2")
 SET(CPACK_PACKAGE_VERSION_PATCH "0-SNAPSHOT")
 SET(ORC_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
 
+option (BUILD_JAVA
+    "Include ORC Java library in the build process"
+     ON)
+
 # Make sure that a build type is selected
 if (NOT CMAKE_BUILD_TYPE)
   message(STATUS "No build type selected, default to ReleaseWithDebugInfo")
@@ -105,7 +109,9 @@ set (EXAMPLE_DIRECTORY ${CMAKE_SOURCE_DIR}/examples)
 
 add_subdirectory(c++)
 add_subdirectory(tools)
-add_subdirectory(java)
+if (BUILD_JAVA)
+  add_subdirectory(java)
+endif()
 
 # Add another target called test-out that prints the results on failure
 if (CMAKE_CONFIGURATION_TYPES)
