@@ -69,6 +69,7 @@ import java.util.Random;
 
 import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -2778,5 +2779,42 @@ public class TestVectorOrcFile {
     }
     rows.nextBatch(batch);
     assertEquals(0, batch.size);
+  }
+
+  @Test
+  public void testExpansion() throws Exception {
+    TypeDescription schema =
+        TypeDescription.fromString(
+            "struct<list1:array<string>," +
+                    "list2:array<binary>>");
+    Writer writer = OrcFile.createWriter(testFilePath,
+        OrcFile.writerOptions(conf).setSchema(schema));
+    VectorizedRowBatch batch = schema.createRowBatch();
+    batch.size = 2;
+    ListColumnVector list1 = (ListColumnVector) batch.cols[0];
+    BytesColumnVector str = (BytesColumnVector) list1.child;
+    str.ensureSize(6000, false);
+    ListColumnVector list2 = (ListColumnVector) batch.cols[1];
+    BytesColumnVector bin = (BytesColumnVector) list2.child;
+    bin.ensureSize(6000, false);
+    list1.offsets[0] = 0;
+    list1.lengths[0] = 2000;
+    list2.offsets[1] = 2000;
+    list2.lengths[1] = 3000;
+    for(int v=0; v < 5000; ++v) {
+      byte[] bytes = Long.toHexString(v).getBytes();
+      str.setVal(v, bytes);
+      bin.setVal(v, bytes);
+    }
+    writer.addRowBatch(batch);
+    writer.close();
+    Reader reader = OrcFile.createReader(testFilePath,
+        OrcFile.readerOptions(conf));
+    RecordReader rows = reader.rows();
+    batch = reader.getSchema().createRowBatch();
+    assertTrue(rows.nextBatch(batch));
+    assertEquals(2, batch.size);
+    assertFalse(rows.nextBatch(batch));
+    rows.close();
   }
 }
