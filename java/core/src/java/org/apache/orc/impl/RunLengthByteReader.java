@@ -35,7 +35,7 @@ public class RunLengthByteReader {
   private int used = 0;
   private boolean repeat = false;
 
-  public RunLengthByteReader(InStream input) throws IOException {
+  public RunLengthByteReader(InStream input) {
     this.input = input;
   }
 

@@ -34,7 +34,7 @@ public class BitFieldReader {
   private final int mask;
 
   public BitFieldReader(InStream input,
-      int bitSize) throws IOException {
+      int bitSize) {
     this.input = new RunLengthByteReader(input);
     this.bitSize = bitSize;
     mask = (1 << bitSize) - 1;

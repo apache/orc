@@ -201,6 +201,10 @@ public class TreeReaderFactory {
     public BitFieldReader getPresent() {
       return present;
     }
+
+    public void collectRequiredColumns(boolean[] writerColumns){
+      writerColumns[columnId] = true;
+    };
   }
 
   public static class NullTreeReader extends TreeReader {
@@ -235,6 +239,11 @@ public class TreeReaderFactory {
       vector.noNulls = false;
       vector.isNull[0] = true;
       vector.isRepeating = true;
+    }
+
+    @Override
+    public void collectRequiredColumns(boolean[] writerColumns) {
+      // PASS
     }
   }
 
@@ -1778,6 +1787,14 @@ public class TreeReaderFactory {
         }
       }
     }
+
+    @Override
+    public void collectRequiredColumns(boolean[] writerColumns){
+      super.collectRequiredColumns(writerColumns);
+      for (TreeReader field : fields){
+        field.collectRequiredColumns(writerColumns);
+      }
+    }
   }
 
   public static class UnionTreeReader extends TreeReader {
@@ -1853,6 +1870,14 @@ public class TreeReaderFactory {
       }
       for (int i = 0; i < counts.length; ++i) {
         fields[i].skipRows(counts[i]);
+      }
+    }
+
+    @Override
+    public void collectRequiredColumns(boolean[] writerColumns) {
+      super.collectRequiredColumns(writerColumns);
+      for (TreeReader field : fields){
+        field.collectRequiredColumns(writerColumns);
       }
     }
   }
@@ -1933,6 +1958,12 @@ public class TreeReaderFactory {
         childSkip += lengths.next();
       }
       elementReader.skipRows(childSkip);
+    }
+
+    @Override
+    public void collectRequiredColumns(boolean[] writerColumns) {
+      super.collectRequiredColumns(writerColumns);
+      elementReader.collectRequiredColumns(writerColumns);
     }
   }
 
@@ -2020,6 +2051,13 @@ public class TreeReaderFactory {
       }
       keyReader.skipRows(childSkip);
       valueReader.skipRows(childSkip);
+    }
+
+    @Override
+    public void collectRequiredColumns(boolean[] writerColumns) {
+      super.collectRequiredColumns(writerColumns);
+      keyReader.collectRequiredColumns(writerColumns);
+      valueReader.collectRequiredColumns(writerColumns);
     }
   }
 
