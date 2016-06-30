@@ -257,7 +257,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
           bytesColVector.vector[elementNum],
           bytesColVector.start[elementNum], bytesColVector.length[elementNum],
           StandardCharsets.UTF_8);
- 
+
       return string;
     }
 
@@ -1323,6 +1323,8 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
 
     private DecimalTreeReader decimalTreeReader;
 
+    private final TypeDescription fileType;
+    private final TypeDescription readerType;
     private DecimalColumnVector fileDecimalColVector;
     private int filePrecision;
     private int fileScale;
@@ -1333,8 +1335,10 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     DecimalFromDecimalTreeReader(int columnId, TypeDescription fileType, TypeDescription readerType)
         throws IOException {
       super(columnId);
+      this.fileType = fileType;
       filePrecision = fileType.getPrecision();
       fileScale = fileType.getScale();
+      this.readerType = readerType;
       readerPrecision = readerType.getPrecision();
       readerScale = readerType.getScale();
       decimalTreeReader = new DecimalTreeReader(columnId, filePrecision, fileScale);
@@ -2248,7 +2252,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       return new TimestampFromDecimalTreeReader(columnId, fileType, skipCorrupt);
 
     case DECIMAL:
-      // UNDONE: Decimal to Decimal conversion????
+      return new DecimalFromDecimalTreeReader(columnId, fileType, readerType);
 
     // Not currently supported conversion(s):
     case BINARY:
@@ -2354,8 +2358,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       return new StringGroupFromStringGroupTreeReader(columnId, fileType, readerType);
 
     case CHAR:
-      throw new IllegalArgumentException("No conversion of type " +
-          readerType.getCategory() + " to self needed");
+      return new StringGroupFromStringGroupTreeReader(columnId, fileType, readerType);
 
     case BINARY:
       return new BinaryFromStringGroupTreeReader(columnId, fileType);
@@ -2411,8 +2414,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       return new StringGroupFromStringGroupTreeReader(columnId, fileType, readerType);
 
     case VARCHAR:
-      throw new IllegalArgumentException("No conversion of type " +
-          readerType.getCategory() + " to self needed");
+      return new StringGroupFromStringGroupTreeReader(columnId, fileType, readerType);
 
     case BINARY:
       return new BinaryFromStringGroupTreeReader(columnId, fileType);
@@ -2628,11 +2630,11 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
    *   StringGroupFromFloatTreeReader (written)
    *   StringGroupFromDoubleTreeReader (written)
    *   StringGroupFromDecimalTreeReader (written)
-   *  
+   *
    *   String from Char/Varchar conversion
    *   Char from String/Varchar conversion
    *   Varchar from String/Char conversion
-   *  
+   *
    *   StringGroupFromTimestampTreeReader (written)
    *   StringGroupFromDateTreeReader (written)
    *   StringGroupFromBinaryTreeReader *****
@@ -2650,7 +2652,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
    *   TimestampFromDecimalTreeeReader (written)
    *   TimestampFromStringGroupTreeReader (written)
    *   TimestampFromDateTreeReader
-   * 
+   *
    *
    * To DATE:
    *   Convert from (STRING, CHAR, VARCHAR) using string conversion.
@@ -2780,7 +2782,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       // Fall through.
     }
 
-    // Now look for the few cases we don't convert from 
+    // Now look for the few cases we don't convert from
     switch (fileType.getCategory()) {
 
     case BOOLEAN:
@@ -2799,8 +2801,8 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       default:
         return true;
       }
-   
-    
+
+
     case STRING:
     case CHAR:
     case VARCHAR:
@@ -2836,7 +2838,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       default:
         return true;
       }
-    
+
     case BINARY:
       switch (readerType.getCategory()) {
       // Not currently supported conversion(s):
