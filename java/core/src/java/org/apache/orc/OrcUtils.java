@@ -17,6 +17,8 @@
  */
 package org.apache.orc;
 
+import org.apache.orc.impl.ReaderImpl;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -524,5 +526,14 @@ public class OrcUtils {
       }
     }
     throw new IllegalArgumentException("Unknown ORC type " + type.getKind());
+  }
+
+  public static List<StripeInformation> convertProtoStripesToStripes(
+      List<OrcProto.StripeInformation> stripes) {
+    List<StripeInformation> result = new ArrayList<StripeInformation>(stripes.size());
+    for (OrcProto.StripeInformation info : stripes) {
+      result.add(new ReaderImpl.StripeInformationImpl(info));
+    }
+    return result;
   }
 }

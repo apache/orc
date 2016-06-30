@@ -224,6 +224,7 @@ message PostScript {
 }
 
 // The contents of the file tail that must be serialized.
+// This gets serialized as part of OrcSplit, also used by footer cache.
 message FileTail {
   optional PostScript postscript = 1;
   optional Footer footer = 2;
