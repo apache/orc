@@ -27,7 +27,9 @@
 
 int main(int argc, char* argv[]) {
   if (argc < 2) {
-    std::cout << "Usage: orc-scan <filename>\n";
+    std::cout << "Usage: orc-scan <filename> [--batch=rows_in_batch]\n"
+              << "If batch is specified, only that number of rows are read once.\n";
+    return 1;
   }
 
   orc::ReaderOptions opts;
@@ -39,7 +41,20 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  std::unique_ptr<orc::ColumnVectorBatch> batch = reader->createRowBatch(1000);
+  const std::string BATCH_PREFIX="--batch=";
+  uint64_t batchSize = 1000;
+  char *param;
+  if (argc == 3) {
+    if ( (param=strstr(argv[2], BATCH_PREFIX.c_str())) ) {
+      batchSize = static_cast<uint64_t>(std::atoi(param+BATCH_PREFIX.length()));
+    } else {
+      std::cout << "Usage: orc-scan <filename> [--batch=rows_in_batch]\n"
+                << "If batch is specified, only that number of rows are read once.\n";
+      return 1;
+    }
+  }
+
+  std::unique_ptr<orc::ColumnVectorBatch> batch = reader->createRowBatch(batchSize);
   unsigned long rows = 0;
   unsigned long batches = 0;
   while (reader->next(*batch)) {
