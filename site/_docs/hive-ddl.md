@@ -21,7 +21,7 @@ stored as ORC files:
 
 As of Hive 0.14, users can request an efficient merge of small ORC files
 together by issuing a CONCATENATE command on their table or partition. The
-files will be merged at the stripe level without reserializatoin.
+files will be merged at the stripe level without reserialization.
 
 ```ALTER TABLE istari [PARTITION partition_spec] CONCATENATE;
 ```
