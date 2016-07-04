@@ -87,6 +87,10 @@
     <option value="/news/">Home</option>
     <optgroup label="v1.x">
       
+      <option value="/news/2016/06/28/file-format-talk/">File format benchmark</option>
+      
+      <option value="/news/2016/06/13/ORC-1.1.1/">ORC 1.1.1 Released</option>
+      
       <option value="/news/2016/06/10/ORC-1.1.0/">ORC 1.1.0 Released</option>
       
       <option value="/news/2016/01/25/ORC-1.0.0/">ORC 1.0.0 Released</option>
@@ -106,6 +110,115 @@
 
       <div class="unit four-fifths">
         
+  <article>
+  <h2>
+    <a href="/news/2016/06/28/file-format-talk/">
+      File format benchmark
+    </a>
+  </h2>
+  <span class="post-category">
+    <span class="label">
+      talk
+    </span>
+  </span>
+  <div class="post-meta">
+    <span class="post-date">
+      28 Jun 2016
+    </span>
+    <a href="https://people.apache.org/~omalley" class="post-author">
+      <img src="https://people.apache.org/~omalley//omalley.png"
+           class="avatar" alt="omalley avatar"
+           width="24" height="24">
+      omalley
+    </a>
+  </div>
+  <div class="post-content">
+    <p>I gave a talk at Hadoop Summit San Jose 2016 about a file format
+benchmark that I’ve contributed as <a href="https://issues.apache.org/jira/browse/ORC-72">ORC-72</a>. The
+benchmark focuses on real data sets that are publically available. The data
+sets represent a wide variety of use cases:</p>
+
+<ul>
+  <li><em>NYC Taxi Data</em> - very dense data with mostly numeric types</li>
+  <li><em>Github Archives</em> - very sparse data with a lot of complex structure</li>
+  <li><em>Sales</em> - a real production schema from a sales table with a synthetic generator</li>
+</ul>
+
+<p>The benchmarks look at a set of three very common use cases:</p>
+
+<ul>
+  <li><em>Full table scan</em> - read all columns and rows</li>
+  <li><em>Column projection</em> - read some columns, but all of the rows</li>
+  <li><em>Column projection and predicate push down</em> - read some columns and some rows</li>
+</ul>
+
+<p>You can see the slides here:</p>
+
+<p><a href="http://www.slideshare.net/oom65/file-format-benchmarks-avro-json-orc-parquet">File Format Benchmarks: Avro, JSON, ORC, &amp; Parquet</a></p>
+
+<iframe src="//www.slideshare.net/slideshow/embed_code/key/fSn4xuYXBXGvlx" width="595" height="485" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px;
+margin-bottom:5px; max-width: 100%;" allowfullscreen=""> </iframe>
+
+  </div>
+</article>
+
+
+  <article>
+  <h2>
+    <a href="/news/2016/06/13/ORC-1.1.1/">
+      ORC 1.1.1 Released
+    </a>
+  </h2>
+  <span class="post-category">
+    <span class="label">
+      release
+    </span>
+  </span>
+  <div class="post-meta">
+    <span class="post-date">
+      13 Jun 2016
+    </span>
+    <a href="https://people.apache.org/~omalley" class="post-author">
+      <img src="https://people.apache.org/~omalley//omalley.png"
+           class="avatar" alt="omalley avatar"
+           width="24" height="24">
+      omalley
+    </a>
+  </div>
+  <div class="post-content">
+    <p>The ORC team is excited to announce the release of ORC v1.1.1. This release
+contains the Java reader and writer and the native C++ ORC reader and tools.</p>
+
+<p>Release Artifacts:</p>
+
+<ul>
+  <li>Released: 13 Jun 2016</li>
+  <li>Source code: <a href="http://www.apache.org/dyn/closer.cgi/orc/orc-1.1.1/orc-1.1.1.tgz">orc-1.1.1.tgz</a></li>
+  <li><a href="https://dist.apache.org/repos/dist/release/orc/orc-1.1.1/orc-1.1.1.tgz.asc">GPG Signature</a>
+signed by <a href="https://dist.apache.org/repos/dist/release/orc/KEYS">Owen O’Malley (3D0C92B9)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.1.1">662938ed</a></li>
+  <li>SHA 256: <a href="https://dist.apache.org/repos/dist/release/orc/orc-1.1.1/orc-1.1.1.tgz.sha256">19292a18</a></li>
+</ul>
+
+<p>The major new features:</p>
+
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1">ORC-1</a> Copy the Java ORC code from Hive.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-10">ORC-10</a> Fix the C++ reader to correctly read
+timestamps from timezones with different daylight savings rules.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-52">ORC-52</a> Add mapred and mapreduce connectors.</li>
+</ul>
+
+<p>Known issues:</p>
+
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-40">ORC-40</a> Predicate push down is not implemented in C++.</li>
+</ul>
+
+  </div>
+</article>
+
+
   <article>
   <h2>
     <a href="/news/2016/06/10/ORC-1.1.0/">
@@ -431,6 +544,10 @@ of the website.</p>
     <ul>
       
       <li class="">
+        <a href="/news/2016/06/13/ORC-1.1.1/">Version 1.1.1</a>
+      </li>
+      
+      <li class="">
         <a href="/news/2016/06/10/ORC-1.1.0/">Version 1.1.0</a>
       </li>
       
@@ -441,6 +558,14 @@ of the website.</p>
     </ul>
     <h4>Other News</h4>
     <ul>
+        
+        
+        <li class="">
+          <a href="/news/2016/06/28/file-format-talk/">File format benchmark</a>
+        </li>
+        
+        
+        
         
         
         

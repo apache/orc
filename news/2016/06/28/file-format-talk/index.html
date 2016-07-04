@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>ORC adds 7 committers</title>
+  <title>File format benchmark</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="generator" content="Jekyll v2.4.0">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
@@ -111,17 +111,17 @@
       <div class="unit four-fifths">
         <article>
   <h2>
-    ORC adds 7 committers
-    <a href="/news/2015/05/11/new-committers/" class="permalink" title="Permalink">∞</a>
+    File format benchmark
+    <a href="/news/2016/06/28/file-format-talk/" class="permalink" title="Permalink">∞</a>
   </h2>
   <span class="post-category">
     <span class="label">
-      team
+      talk
     </span>
   </span>
   <div class="post-meta">
     <span class="post-date">
-      11 May 2015
+      28 Jun 2016
     </span>
     <a href="https://people.apache.org/~omalley" class="post-author">
       <img src="https://people.apache.org/~omalley/omalley.png"
@@ -131,18 +131,31 @@
     </a>
   </div>
   <div class="post-content">
-    <p>The ORC project management committee today added seven new committers
-for their work on ORC. Welcome all!</p>
+    <p>I gave a talk at Hadoop Summit San Jose 2016 about a file format
+benchmark that I’ve contributed as <a href="https://issues.apache.org/jira/browse/ORC-72">ORC-72</a>. The
+benchmark focuses on real data sets that are publically available. The data
+sets represent a wide variety of use cases:</p>
 
 <ul>
-  <li>Gunther Hagleitner</li>
-  <li>Aliaksei Sandryhaila</li>
-  <li>Sergey Shelukhin</li>
-  <li>Gopal Vijayaraghavan</li>
-  <li>Stephen Walkauskas</li>
-  <li>Kevin Wilfong</li>
-  <li>Xuefu Zhang</li>
+  <li><em>NYC Taxi Data</em> - very dense data with mostly numeric types</li>
+  <li><em>Github Archives</em> - very sparse data with a lot of complex structure</li>
+  <li><em>Sales</em> - a real production schema from a sales table with a synthetic generator</li>
 </ul>
+
+<p>The benchmarks look at a set of three very common use cases:</p>
+
+<ul>
+  <li><em>Full table scan</em> - read all columns and rows</li>
+  <li><em>Column projection</em> - read some columns, but all of the rows</li>
+  <li><em>Column projection and predicate push down</em> - read some columns and some rows</li>
+</ul>
+
+<p>You can see the slides here:</p>
+
+<p><a href="http://www.slideshare.net/oom65/file-format-benchmarks-avro-json-orc-parquet">File Format Benchmarks: Avro, JSON, ORC, &amp; Parquet</a></p>
+
+<iframe src="//www.slideshare.net/slideshow/embed_code/key/fSn4xuYXBXGvlx" width="595" height="485" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px;
+margin-bottom:5px; max-width: 100%;" allowfullscreen=""> </iframe>
 
   </div>
 </article>
@@ -179,7 +192,7 @@ for their work on ORC. Welcome all!</p>
     <ul>
         
         
-        <li class="">
+        <li class="current">
           <a href="/news/2016/06/28/file-format-talk/">File format benchmark</a>
         </li>
         
@@ -203,7 +216,7 @@ for their work on ORC. Welcome all!</p>
         
         
         
-        <li class="current">
+        <li class="">
           <a href="/news/2015/05/11/new-committers/">ORC adds 7 committers</a>
         </li>
         
