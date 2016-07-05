@@ -246,6 +246,11 @@
         <version>2.6</version>
       </dependency>
       <dependency>
+        <groupId>io.airlift</groupId>
+        <artifactId>aircompressor</artifactId>
+        <version>0.3</version>
+      </dependency>
+      <dependency>
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-common</artifactId>
         <version>${hadoop.version}</version>
@@ -347,11 +352,6 @@
         <groupId>org.codehaus.jettison</groupId>
         <artifactId>jettison</artifactId>
         <version>1.1</version>
-      </dependency>
-      <dependency>
-        <groupId>org.iq80.snappy</groupId>
-        <artifactId>snappy</artifactId>
-        <version>0.2</version>
       </dependency>
       <dependency>
         <groupId>org.slf4j</groupId>

@@ -18,46 +18,20 @@
 
 package org.apache.orc.impl;
 
-import org.apache.orc.CompressionCodec;
-import org.iq80.snappy.Snappy;
+import io.airlift.compress.snappy.SnappyCompressor;
+import io.airlift.compress.snappy.SnappyDecompressor;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.EnumSet;
 
-public class SnappyCodec implements CompressionCodec, DirectDecompressionCodec {
+public class SnappyCodec extends AircompressorCodec
+    implements DirectDecompressionCodec{
   private static final HadoopShims SHIMS = HadoopShims.Factory.get();
 
   Boolean direct = null;
 
-  @Override
-  public boolean compress(ByteBuffer in, ByteBuffer out,
-                          ByteBuffer overflow) throws IOException {
-    int inBytes = in.remaining();
-    // I should work on a patch for Snappy to support an overflow buffer
-    // to prevent the extra buffer copy.
-    byte[] compressed = new byte[Snappy.maxCompressedLength(inBytes)];
-    int outBytes =
-        Snappy.compress(in.array(), in.arrayOffset() + in.position(), inBytes,
-            compressed, 0);
-    if (outBytes < inBytes) {
-      int remaining = out.remaining();
-      if (remaining >= outBytes) {
-        System.arraycopy(compressed, 0, out.array(), out.arrayOffset() +
-            out.position(), outBytes);
-        out.position(out.position() + outBytes);
-      } else {
-        System.arraycopy(compressed, 0, out.array(), out.arrayOffset() +
-            out.position(), remaining);
-        out.position(out.limit());
-        System.arraycopy(compressed, remaining, overflow.array(),
-            overflow.arrayOffset(), outBytes - remaining);
-        overflow.position(outBytes - remaining);
-      }
-      return true;
-    } else {
-      return false;
-    }
+  SnappyCodec() {
+    super(new SnappyCompressor(), new SnappyDecompressor());
   }
 
   @Override
@@ -66,12 +40,7 @@ public class SnappyCodec implements CompressionCodec, DirectDecompressionCodec {
       directDecompress(in, out);
       return;
     }
-    int inOffset = in.position();
-    int uncompressLen =
-        Snappy.uncompress(in.array(), in.arrayOffset() + inOffset,
-        in.limit() - inOffset, out.array(), out.arrayOffset() + out.position());
-    out.position(uncompressLen + out.position());
-    out.flip();
+    super.decompress(in, out);
   }
 
   @Override
@@ -98,11 +67,5 @@ public class SnappyCodec implements CompressionCodec, DirectDecompressionCodec {
         SHIMS.getDirectDecompressor(HadoopShims.DirectCompressionType.SNAPPY);
     decompressShim.decompress(in, out);
     out.flip(); // flip for read
-  }
-
-  @Override
-  public CompressionCodec modify(EnumSet<Modifier> modifiers) {
-    // snappy allows no modifications
-    return this;
   }
 }
