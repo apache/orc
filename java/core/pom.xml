@@ -42,16 +42,16 @@
       <artifactId>commons-lang</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.airlift</groupId>
+      <artifactId>aircompressor</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-common</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
       <artifactId>hive-storage-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.iq80.snappy</groupId>
-      <artifactId>snappy</artifactId>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
