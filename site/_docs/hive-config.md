@@ -14,7 +14,7 @@ Key                      | Default     | Notes
 :----------------------- | :---------- | :------------------------
 orc.compress             | ZLIB        | high level compression = {NONE, ZLIB, SNAPPY}
 orc.compress.size        | 262,144     | compression chunk size
-orc.stripe.size          | 268,435,456 | memory buffer size in bytes for writing
+orc.stripe.size          | 67,108,864  | memory buffer in bytes for writing
 orc.row.index.stride     | 10,000      | number of rows between index entries
 orc.create.index         | true        | create indexes?
 orc.bloom.filter.columns | ""          | comma separated list of column names

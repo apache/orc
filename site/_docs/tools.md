@@ -96,7 +96,7 @@ The org.apache.orc.tools.FileDump Java class, which is available via Hive as:
   : print the data instead of the metadata
 
 -t
-  : print the timezone
+  : print the timezone of the writer
 
 --rowindex
   : print the row indexes for the comma separated list of column ids
@@ -108,7 +108,7 @@ The org.apache.orc.tools.FileDump Java class, which is available via Hive as:
   : skip dumping the metadata
 
 --backup-path
-  : a new path to write the recovered file to
+  : when used with --recover specifies the path where the recovered file is written
 
 An example of the output is given below:
 
