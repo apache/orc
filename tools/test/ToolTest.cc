@@ -115,7 +115,7 @@ int runProgram(const std::vector<std::string>& command,
     argv[command.size()] = 0;
 
     // do the stdout & stderr redirection
-    int stdoutFd = open(stdoutName, O_WRONLY | O_CREAT | O_TRUNC);
+    int stdoutFd = open(stdoutName, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (stdoutFd == -1) {
       std::cerr << "Failed to open " << stdoutName << " - "
                 << strerror(errno) << "\n";
@@ -126,7 +126,7 @@ int runProgram(const std::vector<std::string>& command,
       exit(1);
     }
     close(stdoutFd);
-    int stderrFd = open(stderrName, O_WRONLY | O_CREAT | O_TRUNC);
+    int stderrFd = open(stderrName, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (stderrFd == -1) {
       std::cerr << "Failed to open " << stderrName << " - "
                 << strerror(errno) << "\n";
@@ -163,7 +163,7 @@ int runProgram(const std::vector<std::string>& command,
     if (result == -1) {
       std::cerr << "Error: " << strerror(errno) << "\n";
     } else if (WIFSIGNALED(status)) {
-      std::cerr << "Fatal signal: " << WTERMSIG(signal) << "\n";
+      std::cerr << "Fatal signal: " << WTERMSIG(status) << "\n";
     }
     exit(1);
   }
