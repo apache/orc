@@ -333,13 +333,154 @@ namespace orc {
     }
   }
 
-  TEST_F(TestCompression, testCreateLzo) {
+  TEST_F(TestCompression, testLzoEmpty) {
     const unsigned char buffer[] = {0};
-    EXPECT_THROW(createDecompressor(CompressionKind_LZO,
-                             std::unique_ptr<SeekableInputStream>
-                                    (new SeekableArrayInputStream(buffer, 0)),
-                                    32768, *getDefaultPool()),
-                 NotImplementedYet);
+    std::unique_ptr<SeekableInputStream> result =
+      createDecompressor(CompressionKind_LZO,
+                         std::unique_ptr<SeekableInputStream>
+                         (new SeekableArrayInputStream(buffer, 0)),
+                         32768, *getDefaultPool());
+    EXPECT_EQ("lzo(SeekableArrayInputStream 0 of 0)", result->getName());
+    const void *ptr;
+    int length;
+    ASSERT_TRUE(!result->Next(&ptr, &length));
+  }
+
+  TEST_F(TestCompression, testLzoSmall) {
+    const unsigned char buffer[] = { 70,   0,   0,
+                                     48,  88,  88,  88,  88,  97,  98,
+                                     99, 100,  97,  98,  99, 100,  65,
+                                     66,  67,  68,  65,  66,  67,  68,
+                                    119, 120, 121, 122, 119, 122, 121,
+                                    122,  49,  50,  51,  17,   0,   0};
+    std::unique_ptr<SeekableInputStream> result =
+      createDecompressor(CompressionKind_LZO,
+                         std::unique_ptr<SeekableInputStream>
+                         (new SeekableArrayInputStream(buffer,
+                                                       ARRAY_SIZE(buffer))),
+                         128*1024, *getDefaultPool());
+    const void *ptr;
+    int length;
+    ASSERT_EQ(true, result->Next(&ptr, &length));
+    const char *expected = "XXXXabcdabcdABCDABCDwxyzwzyz123";
+    ASSERT_EQ(strlen(expected), length);
+    for(uint64_t i=0; i < length; ++i) {
+      ASSERT_EQ(static_cast<const char>(expected[i]),
+                static_cast<const char*>(ptr)[i]);
+    }
+    ASSERT_TRUE(!result->Next(&ptr, &length));
+  }
+
+  TEST_F(TestCompression, testLzoLong) {
+    // set up a framed lzo buffer with 100,000 'a'
+    unsigned char buffer[482];
+    bzero(buffer, ARRAY_SIZE(buffer));
+    // header
+    buffer[0] = 190;
+    buffer[1] = 3;
+
+    // lzo data
+    buffer[3] = 2;
+    memset(buffer + 4, 97, 5);
+    buffer[9] = 32;
+    buffer[202] = 134;
+    buffer[203] = 16;
+    buffer[206] = 3;
+    memset(buffer + 207, 97, 21);
+    buffer[228] = 32;
+    buffer[421] = 138;
+    buffer[425] = 3;
+    memset(buffer + 426, 97, 21);
+    buffer[447] = 32;
+    buffer[454] = 112;
+    buffer[458] = 2;
+    memset(buffer + 459, 97, 20);
+    buffer[479] = 17;
+    std::unique_ptr<SeekableInputStream> result =
+      createDecompressor(CompressionKind_LZO,
+                         std::unique_ptr<SeekableInputStream>
+                         (new SeekableArrayInputStream(buffer,
+                                                       ARRAY_SIZE(buffer))),
+                         128*1024, *getDefaultPool());
+    const void *ptr;
+    int length;
+    ASSERT_EQ(true, result->Next(&ptr, &length));
+    ASSERT_EQ(100000, length);
+    for(uint64_t i=0; i < length; ++i) {
+      ASSERT_EQ('a', static_cast<const char*>(ptr)[i]);
+    }
+    ASSERT_TRUE(!result->Next(&ptr, &length));
+  }
+
+  TEST_F(TestCompression, testLz4Empty) {
+    const unsigned char buffer[] = {0};
+    std::unique_ptr<SeekableInputStream> result =
+      createDecompressor(CompressionKind_LZ4,
+                         std::unique_ptr<SeekableInputStream>
+                         (new SeekableArrayInputStream(buffer, 0)),
+                         32768, *getDefaultPool());
+    EXPECT_EQ("lz4(SeekableArrayInputStream 0 of 0)", result->getName());
+    const void *ptr;
+    int length;
+    ASSERT_TRUE(!result->Next(&ptr, &length));
+  }
+
+  TEST_F(TestCompression, testLz4Small) {
+    const unsigned char buffer[] = { 60,   0,   0,
+                                     128,  88,  88,  88,  88,  97,  98,  99,
+                                     100,   4,   0,  64,  65,  66,  67,  68,
+                                       4,   0, 176, 119, 120, 121, 122, 119,
+                                     122, 121, 122,  49,  50,  51};
+    std::unique_ptr<SeekableInputStream> result =
+      createDecompressor(CompressionKind_LZ4,
+                         std::unique_ptr<SeekableInputStream>
+                         (new SeekableArrayInputStream(buffer,
+                                                       ARRAY_SIZE(buffer))),
+                         128*1024, *getDefaultPool());
+    const void *ptr;
+    int length;
+    ASSERT_EQ(true, result->Next(&ptr, &length));
+    const char *expected = "XXXXabcdabcdABCDABCDwxyzwzyz123";
+    ASSERT_EQ(strlen(expected), length);
+    for(uint64_t i=0; i < length; ++i) {
+      ASSERT_EQ(static_cast<const char>(expected[i]),
+                static_cast<const char*>(ptr)[i]);
+    }
+    ASSERT_TRUE(!result->Next(&ptr, &length));
+  }
+
+  TEST_F(TestCompression, testLz4Long) {
+    // set up a framed lzo buffer with 100,000 'a'
+    unsigned char buffer[406];
+    memset(buffer, 255, ARRAY_SIZE(buffer));
+    // header
+    buffer[0] = 38;
+    buffer[1] = 3;
+    buffer[2] = 0;
+
+    // lz4 data
+    buffer[3] = 31;
+    buffer[4] = 97;
+    buffer[5] = 1;
+    buffer[6] = 0;
+    buffer[399] = 15;
+    buffer[400] = 80;
+    memset(buffer + 401, 97, 5);
+
+    std::unique_ptr<SeekableInputStream> result =
+      createDecompressor(CompressionKind_LZ4,
+                         std::unique_ptr<SeekableInputStream>
+                         (new SeekableArrayInputStream(buffer,
+                                                       ARRAY_SIZE(buffer))),
+                         128*1024, *getDefaultPool());
+    const void *ptr;
+    int length;
+    ASSERT_EQ(true, result->Next(&ptr, &length));
+    ASSERT_EQ(100000, length);
+    for(uint64_t i=0; i < length; ++i) {
+      ASSERT_EQ('a', static_cast<const char*>(ptr)[i]);
+    }
+    ASSERT_TRUE(!result->Next(&ptr, &length));
   }
 
   TEST(Zlib, testCreateZlib) {

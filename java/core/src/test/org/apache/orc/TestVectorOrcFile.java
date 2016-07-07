@@ -1698,20 +1698,20 @@ public class TestVectorOrcFile {
   @Test
   public void testLzo() throws Exception {
     TypeDescription schema =
-        TypeDescription.fromString("struct<x:bigint,y:double,z:bigint>");
+        TypeDescription.fromString("struct<x:bigint,y:int,z:bigint>");
     Writer writer = OrcFile.createWriter(testFilePath,
         OrcFile.writerOptions(conf)
             .setSchema(schema)
-            .stripeSize(1000)
+            .stripeSize(10000)
             .compress(CompressionKind.LZO)
-            .bufferSize(100));
+            .bufferSize(1000));
     VectorizedRowBatch batch = schema.createRowBatch();
     Random rand = new Random(69);
     batch.size = 1000;
     for(int b=0; b < 10; ++b) {
       for (int r=0; r < 1000; ++r) {
         ((LongColumnVector) batch.cols[0]).vector[r] = rand.nextInt();
-        ((DoubleColumnVector) batch.cols[1]).vector[r] = rand.nextDouble();
+        ((LongColumnVector) batch.cols[1]).vector[r] = b * 1000 + r;
         ((LongColumnVector) batch.cols[2]).vector[r] = rand.nextLong();
       }
       writer.addRowBatch(batch);
@@ -1729,8 +1729,8 @@ public class TestVectorOrcFile {
       for(int r=0; r < batch.size; ++r) {
         assertEquals(rand.nextInt(),
             ((LongColumnVector) batch.cols[0]).vector[r]);
-        assertEquals(rand.nextDouble(),
-            ((DoubleColumnVector) batch.cols[1]).vector[r], 0.00001);
+        assertEquals(b * 1000 + r,
+            ((LongColumnVector) batch.cols[1]).vector[r]);
         assertEquals(rand.nextLong(),
             ((LongColumnVector) batch.cols[2]).vector[r]);
       }
@@ -1747,20 +1747,20 @@ public class TestVectorOrcFile {
   @Test
   public void testLz4() throws Exception {
     TypeDescription schema =
-        TypeDescription.fromString("struct<x:bigint,y:double,z:bigint>");
+        TypeDescription.fromString("struct<x:bigint,y:int,z:bigint>");
     Writer writer = OrcFile.createWriter(testFilePath,
         OrcFile.writerOptions(conf)
             .setSchema(schema)
-            .stripeSize(1000)
+            .stripeSize(10000)
             .compress(CompressionKind.LZ4)
-            .bufferSize(100));
+            .bufferSize(1000));
     VectorizedRowBatch batch = schema.createRowBatch();
     Random rand = new Random(3);
     batch.size = 1000;
     for(int b=0; b < 10; ++b) {
       for (int r=0; r < 1000; ++r) {
         ((LongColumnVector) batch.cols[0]).vector[r] = rand.nextInt();
-        ((DoubleColumnVector) batch.cols[1]).vector[r] = rand.nextDouble();
+        ((LongColumnVector) batch.cols[1]).vector[r] = b * 1000 + r;
         ((LongColumnVector) batch.cols[2]).vector[r] = rand.nextLong();
       }
       writer.addRowBatch(batch);
@@ -1778,8 +1778,8 @@ public class TestVectorOrcFile {
       for(int r=0; r < batch.size; ++r) {
         assertEquals(rand.nextInt(),
             ((LongColumnVector) batch.cols[0]).vector[r]);
-        assertEquals(rand.nextDouble(),
-            ((DoubleColumnVector) batch.cols[1]).vector[r], 0.00001);
+        assertEquals(b * 1000 + r,
+            ((LongColumnVector) batch.cols[1]).vector[r]);
         assertEquals(rand.nextLong(),
             ((LongColumnVector) batch.cols[2]).vector[r]);
       }
