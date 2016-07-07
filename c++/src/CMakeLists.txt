@@ -113,6 +113,7 @@ include_directories (
   ${PROTOBUF_INCLUDE_DIRS}
   ${ZLIB_INCLUDE_DIRS}
   ${SNAPPY_INCLUDE_DIRS}
+  ${LZ4_INCLUDE_DIRS}
   )
 
 add_custom_command(OUTPUT orc_proto.pb.h orc_proto.pb.cc
@@ -132,6 +133,7 @@ add_library (orc STATIC
   Compression.cc
   Exceptions.cc
   Int128.cc
+  LzoDecompressor.cc
   MemoryPool.cc
   OrcFile.cc
   Reader.cc
@@ -149,6 +151,7 @@ target_link_libraries (orc
   ${PROTOBUF_LIBRARIES}
   ${ZLIB_LIBRARIES}
   ${SNAPPY_LIBRARIES}
+  ${LZ4_LIBRARIES}
   )
 
 add_dependencies(orc protoc)
