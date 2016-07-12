@@ -1651,15 +1651,19 @@ public class TestRecordReaderImpl {
   @Test
   public void testClose() throws Exception {
     DataReader mockedDataReader = mock(DataReader.class);
+    DataReader cloned = mock(DataReader.class);
+    when(mockedDataReader.clone()).thenReturn(cloned);
     closeMockedRecordReader(mockedDataReader);
 
-    verify(mockedDataReader, atLeastOnce()).close();
+    verify(cloned, atLeastOnce()).close();
   }
 
   @Test
   public void testCloseWithException() throws Exception {
     DataReader mockedDataReader = mock(DataReader.class);
-    doThrow(IOException.class).when(mockedDataReader).close();
+    DataReader cloned = mock(DataReader.class);
+    when(mockedDataReader.clone()).thenReturn(cloned);
+    doThrow(IOException.class).when(cloned).close();
 
     try {
       closeMockedRecordReader(mockedDataReader);
@@ -1668,7 +1672,7 @@ public class TestRecordReaderImpl {
 
     }
 
-    verify(mockedDataReader, atLeastOnce()).close();
+    verify(cloned, atLeastOnce()).close();
   }
 
   Path workDir = new Path(System.getProperty("test.tmp.dir",

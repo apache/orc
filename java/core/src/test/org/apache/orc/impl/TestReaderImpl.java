@@ -20,6 +20,8 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
+
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PositionedReadable;
@@ -27,10 +29,15 @@ import org.apache.hadoop.fs.Seekable;
 import org.apache.orc.FileFormatException;
 import org.apache.hadoop.io.Text;
 import org.apache.orc.OrcFile;
+import org.apache.orc.Reader;
+import org.apache.orc.RecordReader;
+import org.apache.orc.tools.TestJsonFileDump;
 import org.junit.Test;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
+
+import static org.junit.Assert.assertEquals;
 
 public class TestReaderImpl {
 
@@ -71,6 +78,18 @@ public class TestReaderImpl {
   public void testEnsureOrcFooterCorrectORCFooter() throws IOException {
     prepareTestCase(composeContent("", OrcFile.MAGIC));
     ReaderImpl.ensureOrcFooter(in, path, psLen, buffer);
+  }
+
+  @Test
+  public void testOptionSafety() throws IOException {
+    Reader.Options options = new Reader.Options();
+    String expected = options.toString();
+    Configuration conf = new Configuration();
+    Path path = new Path(TestJsonFileDump.getFileFromClasspath
+        ("orc-file-11-format.orc"));
+    Reader reader = OrcFile.createReader(path, OrcFile.readerOptions(conf));
+    RecordReader rows = reader.rows(options);
+    assertEquals(expected, options.toString());
   }
 
   private void prepareTestCase(byte[] bytes) {
