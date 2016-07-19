@@ -31,7 +31,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
-import org.apache.orc.tools.TestJsonFileDump;
+import org.apache.orc.TestVectorOrcFile;
 import org.junit.Test;
 import org.junit.Before;
 import org.junit.Rule;
@@ -85,7 +85,7 @@ public class TestReaderImpl {
     Reader.Options options = new Reader.Options();
     String expected = options.toString();
     Configuration conf = new Configuration();
-    Path path = new Path(TestJsonFileDump.getFileFromClasspath
+    Path path = new Path(TestVectorOrcFile.getFileFromClasspath
         ("orc-file-11-format.orc"));
     Reader reader = OrcFile.createReader(path, OrcFile.readerOptions(conf));
     RecordReader rows = reader.rows(options);

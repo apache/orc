@@ -77,12 +77,12 @@ string,struct<int1:int,string1:string>>>",
 }
 ~~~
 
-## file-dump
+## Java Metadata
 
 The org.apache.orc.tools.FileDump Java class, which is available via Hive as:
 
 ~~~ shell
-% hive --orcfiledump [-j] [-p] [-d] [-t] [--rowindex <cols>]
+% java -jar orc-tools-*.jar meta [-j] [-p] [-t] [--rowindex <cols>]
        [--recover] [--skip-dump] [--backup-path <new path>] <file>
 ~~~
 
@@ -91,9 +91,6 @@ The org.apache.orc.tools.FileDump Java class, which is available via Hive as:
 
 -p
   : pretty print the output
-
--d
-  : print the data instead of the metadata
 
 -t
   : print the timezone of the writer
@@ -113,7 +110,7 @@ The org.apache.orc.tools.FileDump Java class, which is available via Hive as:
 An example of the output is given below:
 
 ~~~ shell
-% hive --orcfiledump examples/TestOrcFile.test1.orc
+% java -jar orc-tools-*.jar meta examples/TestOrcFile.test1.orc
 Processing data file examples/TestOrcFile.test1.orc [length: 1711]
 Structure for examples/TestOrcFile.test1.orc
 File Version: 0.12 with HIVE_8732
