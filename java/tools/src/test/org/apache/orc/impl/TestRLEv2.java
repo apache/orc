@@ -58,7 +58,7 @@ public class TestRLEv2 {
     fs.delete(testFilePath, false);
   }
 
-  void appendInt(VectorizedRowBatch batch, int i) {
+  private void appendInt(VectorizedRowBatch batch, int i) {
     ((LongColumnVector) batch.cols[0]).vector[batch.size++] = i;
   }
 

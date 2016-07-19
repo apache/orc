@@ -44,6 +44,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class TestJsonFileDump {
+
   public static String getFileFromClasspath(String name) {
     URL url = ClassLoader.getSystemResource(name);
     if (url == null) {
