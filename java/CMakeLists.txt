@@ -19,6 +19,7 @@ set(ORC_JARS
   ${CMAKE_CURRENT_BINARY_DIR}/storage-api/hive-storage-api-2.1.1-pre-orc.jar
   ${CMAKE_CURRENT_BINARY_DIR}/core/orc-core-${ORC_VERSION}.jar
   ${CMAKE_CURRENT_BINARY_DIR}/mapreduce/orc-mapreduce-${ORC_VERSION}.jar
+  ${CMAKE_CURRENT_BINARY_DIR}/tools/orc-tools-${ORC_VERSION}-jar-with-dependencies.jar
 )
 
 add_custom_command(

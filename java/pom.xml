@@ -60,6 +60,7 @@
     <module>storage-api</module>
     <module>core</module>
     <module>mapreduce</module>
+    <module>tools</module>
   </modules>
 
   <properties>
@@ -206,10 +207,23 @@
 
   <dependencyManagement>
     <dependencies>
+      <!-- intra-project depedencies -->
+      <dependency>
+        <groupId>org.apache.orc</groupId>
+        <artifactId>orc-core</artifactId>
+        <version>1.2.0-SNAPSHOT</version>
+      </dependency>
+
+      <!-- inter-project depedencies -->
       <dependency>
         <groupId>com.esotericsoftware</groupId>
         <artifactId>kryo-shaded</artifactId>
         <version>3.0.3</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>11.0.2</version>
       </dependency>
       <dependency>
         <groupId>com.google.protobuf</groupId>
@@ -236,10 +250,6 @@
         <artifactId>hadoop-common</artifactId>
         <version>${hadoop.version}</version>
         <exclusions>
-          <exclusion>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-          </exclusion>
           <exclusion>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>jsr305</artifactId>
@@ -272,10 +282,6 @@
         <version>${hadoop.version}</version>
         <exclusions>
           <exclusion>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-          </exclusion>
-          <exclusion>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>jsr305</artifactId>
           </exclusion>
@@ -306,10 +312,6 @@
         <artifactId>hadoop-mapreduce-client-core</artifactId>
         <version>${hadoop.version}</version>
         <exclusions>
-          <exclusion>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-          </exclusion>
           <exclusion>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>jsr305</artifactId>
@@ -358,12 +360,6 @@
       </dependency>
 
       <!-- test inter-project -->
-      <dependency>
-        <groupId>com.google.guava</groupId>
-        <artifactId>guava</artifactId>
-        <version>11.0.2</version>
-        <scope>test</scope>
-      </dependency>
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>

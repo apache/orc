@@ -47,7 +47,6 @@ import org.apache.orc.impl.MemoryManager;
 import org.apache.orc.impl.OrcIndex;
 import org.apache.orc.impl.RecordReaderImpl;
 import org.apache.orc.impl.RecordReaderUtils;
-import org.apache.orc.tools.TestJsonFileDump;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -56,6 +55,7 @@ import org.junit.rules.TestName;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.sql.Date;
 import java.sql.Timestamp;
@@ -77,6 +77,14 @@ import static org.junit.Assert.assertTrue;
  * Tests for the vectorized reader and writer for ORC files.
  */
 public class TestVectorOrcFile {
+
+  public static String getFileFromClasspath(String name) {
+    URL url = ClassLoader.getSystemResource(name);
+    if (url == null) {
+      throw new IllegalArgumentException("Could not find " + name);
+    }
+    return url.getPath();
+  }
 
   public static class InnerStruct {
     int int1;
@@ -170,7 +178,7 @@ public class TestVectorOrcFile {
   @Test
   public void testReadFormat_0_11() throws Exception {
     Path oldFilePath =
-        new Path(TestJsonFileDump.getFileFromClasspath("orc-file-11-format.orc"));
+        new Path(getFileFromClasspath("orc-file-11-format.orc"));
     Reader reader = OrcFile.createReader(oldFilePath,
         OrcFile.readerOptions(conf).filesystem(fs));
 
