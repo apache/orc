@@ -420,7 +420,7 @@ namespace orc {
     }
 
     TypeImpl* result;
-    switch (fileType->getKind()) {
+    switch (static_cast<int>(fileType->getKind())) {
     case BOOLEAN:
     case BYTE:
     case SHORT:

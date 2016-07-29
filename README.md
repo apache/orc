@@ -20,7 +20,10 @@ a C++ library for reading the _Optimized Row Columnar_ (ORC) file
 format. The C++ and Java libraries are completely independent of each
 other and will each read all versions of ORC files.
 
-### Building
+The current build status:
+* Apache ORC master ![master build status](https://travis-ci.org/apache/orc.svg?branch=master)
+
+### Building 
 
 * Install java 1.7 or higher
 * Install maven 3 or higher

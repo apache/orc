@@ -39,7 +39,7 @@
 namespace orc {
 
   std::string compressionKindToString(CompressionKind kind) {
-    switch (kind) {
+    switch (static_cast<int>(kind)) {
     case CompressionKind_NONE:
       return "none";
     case CompressionKind_ZLIB:
@@ -59,7 +59,7 @@ namespace orc {
   }
 
   std::string writerVersionToString(WriterVersion version) {
-    switch (version) {
+    switch (static_cast<int>(version)) {
     case WriterVersion_ORIGINAL:
       return "original";
     case WriterVersion_HIVE_8732:
@@ -785,7 +785,7 @@ namespace orc {
   };
 
   std::string streamKindToString(StreamKind kind) {
-    switch (kind) {
+    switch (static_cast<int>(kind)) {
     case StreamKind_PRESENT:
       return "present";
     case StreamKind_DATA:
@@ -809,7 +809,7 @@ namespace orc {
   }
 
   std::string columnEncodingKindToString(ColumnEncodingKind kind) {
-    switch (kind) {
+    switch (static_cast<int>(kind)) {
     case ColumnEncodingKind_DIRECT:
       return "direct";
     case ColumnEncodingKind_DICTIONARY:
