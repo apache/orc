@@ -21,7 +21,8 @@ format. The C++ and Java libraries are completely independent of each
 other and will each read all versions of ORC files.
 
 The current build status:
-* Apache ORC master [![master build status](https://travis-ci.org/apache/orc.svg?branch=master)][https://travis-ci.org/apache/orc/branches]
+* Apache ORC master <a href="https://travis-ci.org/apache/orc/branches">
+![master build status](https://travis-ci.org/apache/orc.svg?branch=master)</a>
 
 ### Building
 
