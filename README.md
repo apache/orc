@@ -21,8 +21,18 @@ format. The C++ and Java libraries are completely independent of each
 other and will each read all versions of ORC files.
 
 The current build status:
-* Apache ORC master <a href="https://travis-ci.org/apache/orc/branches">
+* Master branch <a href="https://travis-ci.org/apache/orc/branches">
 ![master build status](https://travis-ci.org/apache/orc.svg?branch=master)</a>
+* <a href="https://travis-ci.org/apache/orc/pull_requests">Pull Requests</a>
+
+The subdirectories are:
+* c++ - the c++ reader
+* docker - docker scripts to build and test on various linuxes
+* examples - various ORC example files that are used to test compatibility
+* java - the java reader and writer
+* proto - the protocol buffer definition for the ORC metadata
+* site - the website and documentation
+* tools - the c++ tools for reading and inspecting ORC files
 
 ### Building
 
