@@ -1349,8 +1349,6 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
 
     private DecimalTreeReader decimalTreeReader;
 
-    private final TypeDescription fileType;
-    private final TypeDescription readerType;
     private DecimalColumnVector fileDecimalColVector;
     private int filePrecision;
     private int fileScale;
@@ -1361,10 +1359,8 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     DecimalFromDecimalTreeReader(int columnId, TypeDescription fileType, TypeDescription readerType)
         throws IOException {
       super(columnId);
-      this.fileType = fileType;
       filePrecision = fileType.getPrecision();
       fileScale = fileType.getScale();
-      this.readerType = readerType;
       readerPrecision = readerType.getPrecision();
       readerScale = readerType.getScale();
       decimalTreeReader = new DecimalTreeReader(columnId, filePrecision, fileScale);
@@ -2791,8 +2787,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     }
   }
 
-  public static boolean canConvert(TypeDescription fileType, TypeDescription readerType)
-    throws IOException {
+  public static boolean canConvert(TypeDescription fileType, TypeDescription readerType) {
 
     Category readerTypeCategory = readerType.getCategory();
 
