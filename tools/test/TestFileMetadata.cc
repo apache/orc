@@ -149,11 +149,11 @@ TEST (TestFileMetadata, testRaw) {
   std::string output;
   std::string error;
 
-  EXPECT_EQ(0, runProgram({pgm, "-r", file}, output, error));
+  EXPECT_EQ(0, runProgram({pgm, std::string("-r"), file}, output, error));
   EXPECT_EQ(expected, output);
   EXPECT_EQ("", error);
 
-  EXPECT_EQ(0, runProgram({pgm, "--raw", file}, output, error));
+  EXPECT_EQ(0, runProgram({pgm, std::string("--raw"), file}, output, error));
   EXPECT_EQ(expected, output);
   EXPECT_EQ("", error);
 }

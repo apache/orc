@@ -29,6 +29,7 @@ add_executable (orc-test
   TestCompression.cc
   TestDriver.cc
   TestInt128.cc
+  TestReader.cc
   TestRle.cc
   TestTimezone.cc
   TestType.cc

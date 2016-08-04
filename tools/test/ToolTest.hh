@@ -19,8 +19,6 @@
 #include <string>
 #include <vector>
 
-extern const char* exampleDirectory;
-
 /**
  * Run the given program and set the stdout and stderr parameters to
  * the output on each of the streams. The return code of the program is

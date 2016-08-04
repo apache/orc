@@ -33,8 +33,8 @@
 #include <unistd.h>
 #include <vector>
 
-const char *exampleDirectory = 0;
 namespace {
+  const char *exampleDirectory = 0;
   const char *buildDirectory = 0;
 }
 
