@@ -42,11 +42,15 @@ the line breaks within each record):
 ## orc-metadata
 
 Displays the metadata of the ORC file as a JSON document. With the
-`verbose` argument additional information about the layout of the file
+`verbose` option additional information about the layout of the file
 is also printed.
 
+For diagnosing problems, it is useful to use the '--raw' option that
+prints the protocol buffers from the ORC file directly rather than
+interpreting them.
+
 ~~~ shell
-% orc-metadata [-v] <filename>
+% orc-metadata [-v] [--raw] <filename>
 ~~~
 
 If you run it on the example file TestOrcFile.test1.orc, you'll see:
