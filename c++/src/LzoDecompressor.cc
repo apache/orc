@@ -55,10 +55,10 @@ namespace orc {
                             ): ParseError(other.what()) {
     }
 
-    virtual ~MalformedInputException();
+    virtual ~MalformedInputException() noexcept;
   };
 
-  MalformedInputException::~MalformedInputException() {
+  MalformedInputException::~MalformedInputException() noexcept {
     // PASS
   }
 
