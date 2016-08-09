@@ -47,7 +47,6 @@ import org.apache.orc.impl.MemoryManager;
 import org.apache.orc.impl.OrcIndex;
 import org.apache.orc.impl.RecordReaderImpl;
 import org.apache.orc.impl.RecordReaderUtils;
-import org.apache.orc.tools.TestJsonFileDump;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -56,6 +55,7 @@ import org.junit.rules.TestName;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.sql.Date;
 import java.sql.Timestamp;
@@ -77,6 +77,14 @@ import static org.junit.Assert.assertTrue;
  * Tests for the vectorized reader and writer for ORC files.
  */
 public class TestVectorOrcFile {
+
+  public static String getFileFromClasspath(String name) {
+    URL url = ClassLoader.getSystemResource(name);
+    if (url == null) {
+      throw new IllegalArgumentException("Could not find " + name);
+    }
+    return url.getPath();
+  }
 
   public static class InnerStruct {
     int int1;
@@ -170,7 +178,7 @@ public class TestVectorOrcFile {
   @Test
   public void testReadFormat_0_11() throws Exception {
     Path oldFilePath =
-        new Path(TestJsonFileDump.getFileFromClasspath("orc-file-11-format.orc"));
+        new Path(getFileFromClasspath("orc-file-11-format.orc"));
     Reader reader = OrcFile.createReader(oldFilePath,
         OrcFile.readerOptions(conf).filesystem(fs));
 
@@ -1676,6 +1684,104 @@ public class TestVectorOrcFile {
       for(int r=0; r < batch.size; ++r) {
         assertEquals(rand.nextInt(), longs.vector[r]);
         assertEquals(Integer.toHexString(rand.nextInt()), strs.toString(r));
+      }
+    }
+    rows.nextBatch(batch);
+    assertEquals(0, batch.size);
+    rows.close();
+  }
+
+  /**
+   * Read and write a randomly generated lzo file.
+   * @throws Exception
+   */
+  @Test
+  public void testLzo() throws Exception {
+    TypeDescription schema =
+        TypeDescription.fromString("struct<x:bigint,y:int,z:bigint>");
+    Writer writer = OrcFile.createWriter(testFilePath,
+        OrcFile.writerOptions(conf)
+            .setSchema(schema)
+            .stripeSize(10000)
+            .compress(CompressionKind.LZO)
+            .bufferSize(1000));
+    VectorizedRowBatch batch = schema.createRowBatch();
+    Random rand = new Random(69);
+    batch.size = 1000;
+    for(int b=0; b < 10; ++b) {
+      for (int r=0; r < 1000; ++r) {
+        ((LongColumnVector) batch.cols[0]).vector[r] = rand.nextInt();
+        ((LongColumnVector) batch.cols[1]).vector[r] = b * 1000 + r;
+        ((LongColumnVector) batch.cols[2]).vector[r] = rand.nextLong();
+      }
+      writer.addRowBatch(batch);
+    }
+    writer.close();
+    Reader reader = OrcFile.createReader(testFilePath,
+        OrcFile.readerOptions(conf).filesystem(fs));
+    assertEquals(CompressionKind.LZO, reader.getCompressionKind());
+    RecordReader rows = reader.rows();
+    batch = reader.getSchema().createRowBatch(1000);
+    rand = new Random(69);
+    for(int b=0; b < 10; ++b) {
+      rows.nextBatch(batch);
+      assertEquals(1000, batch.size);
+      for(int r=0; r < batch.size; ++r) {
+        assertEquals(rand.nextInt(),
+            ((LongColumnVector) batch.cols[0]).vector[r]);
+        assertEquals(b * 1000 + r,
+            ((LongColumnVector) batch.cols[1]).vector[r]);
+        assertEquals(rand.nextLong(),
+            ((LongColumnVector) batch.cols[2]).vector[r]);
+      }
+    }
+    rows.nextBatch(batch);
+    assertEquals(0, batch.size);
+    rows.close();
+  }
+
+  /**
+   * Read and write a randomly generated lzo file.
+   * @throws Exception
+   */
+  @Test
+  public void testLz4() throws Exception {
+    TypeDescription schema =
+        TypeDescription.fromString("struct<x:bigint,y:int,z:bigint>");
+    Writer writer = OrcFile.createWriter(testFilePath,
+        OrcFile.writerOptions(conf)
+            .setSchema(schema)
+            .stripeSize(10000)
+            .compress(CompressionKind.LZ4)
+            .bufferSize(1000));
+    VectorizedRowBatch batch = schema.createRowBatch();
+    Random rand = new Random(3);
+    batch.size = 1000;
+    for(int b=0; b < 10; ++b) {
+      for (int r=0; r < 1000; ++r) {
+        ((LongColumnVector) batch.cols[0]).vector[r] = rand.nextInt();
+        ((LongColumnVector) batch.cols[1]).vector[r] = b * 1000 + r;
+        ((LongColumnVector) batch.cols[2]).vector[r] = rand.nextLong();
+      }
+      writer.addRowBatch(batch);
+    }
+    writer.close();
+    Reader reader = OrcFile.createReader(testFilePath,
+        OrcFile.readerOptions(conf).filesystem(fs));
+    assertEquals(CompressionKind.LZ4, reader.getCompressionKind());
+    RecordReader rows = reader.rows();
+    batch = reader.getSchema().createRowBatch(1000);
+    rand = new Random(3);
+    for(int b=0; b < 10; ++b) {
+      rows.nextBatch(batch);
+      assertEquals(1000, batch.size);
+      for(int r=0; r < batch.size; ++r) {
+        assertEquals(rand.nextInt(),
+            ((LongColumnVector) batch.cols[0]).vector[r]);
+        assertEquals(b * 1000 + r,
+            ((LongColumnVector) batch.cols[1]).vector[r]);
+        assertEquals(rand.nextLong(),
+            ((LongColumnVector) batch.cols[2]).vector[r]);
       }
     }
     rows.nextBatch(batch);

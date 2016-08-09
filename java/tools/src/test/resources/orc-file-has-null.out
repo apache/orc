@@ -1,4 +1,4 @@
-Structure for TestOrcFile.testHasNull.orc
+Structure for TestFileDump.testDump.orc
 File Version: 0.12 with HIVE_13083
 Rows: 20000
 Compression: ZLIB

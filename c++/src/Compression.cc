@@ -19,6 +19,8 @@
 #include "Adaptor.hh"
 #include "Compression.hh"
 #include "Exceptions.hh"
+#include "LzoDecompressor.hh"
+#include "lz4.h"
 
 #include <algorithm>
 #include <iomanip>
@@ -496,19 +498,27 @@ DIAGNOSTIC_POP
     return result.str();
   }
 
-  class SnappyDecompressionStream: public SeekableInputStream {
+  class BlockDecompressionStream: public SeekableInputStream {
   public:
-    SnappyDecompressionStream(std::unique_ptr<SeekableInputStream> inStream,
-                              size_t blockSize,
-                              MemoryPool& pool);
+    BlockDecompressionStream(std::unique_ptr<SeekableInputStream> inStream,
+                             size_t blockSize,
+                             MemoryPool& pool);
 
-    virtual ~SnappyDecompressionStream() {}
+    virtual ~BlockDecompressionStream() {}
     virtual bool Next(const void** data, int*size) override;
     virtual void BackUp(int count) override;
     virtual bool Skip(int count) override;
     virtual int64_t ByteCount() const override;
     virtual void seek(PositionProvider& position) override;
-    virtual std::string getName() const override;
+    virtual std::string getName() const override = 0;
+
+  protected:
+    virtual uint64_t decompress(const char *input, uint64_t length,
+                                char *output, size_t maxOutputLength) = 0;
+
+    std::string getStreamName() const {
+      return input->getName();
+    }
 
   private:
     void readBuffer(bool failOnEof) {
@@ -516,7 +526,7 @@ DIAGNOSTIC_POP
       if (!input->Next(reinterpret_cast<const void**>(&inputBufferPtr),
                        &length)) {
         if (failOnEof) {
-          throw ParseError("SnappyDecompressionStream read past EOF");
+          throw ParseError(getName() + "read past EOF");
         }
         state = DECOMPRESS_EOF;
         inputBufferPtr = nullptr;
@@ -581,7 +591,7 @@ DIAGNOSTIC_POP
     off_t bytesReturned;
   };
 
-  SnappyDecompressionStream::SnappyDecompressionStream
+  BlockDecompressionStream::BlockDecompressionStream
                    (std::unique_ptr<SeekableInputStream> inStream,
                     size_t bufferSize,
                     MemoryPool& _pool
@@ -598,7 +608,7 @@ DIAGNOSTIC_POP
     input.reset(inStream.release());
   }
 
-  bool SnappyDecompressionStream::Next(const void** data, int*size) {
+  bool BlockDecompressionStream::Next(const void** data, int*size) {
     // if the user pushed back, return them the partial buffer
     if (outputBufferLength) {
       *data = outputBufferPtr;
@@ -645,7 +655,8 @@ DIAGNOSTIC_POP
         for (size_t pos = availSize; pos < remainingLength; ) {
           readBuffer(true);
           size_t avail =
-              std::min(static_cast<size_t>(inputBufferPtrEnd - inputBufferPtr),
+              std::min(static_cast<size_t>(inputBufferPtrEnd -
+                                           inputBufferPtr),
                        remainingLength - pos);
           ::memcpy(inputBuffer.data() + pos, inputBufferPtr, avail);
           pos += avail;
@@ -653,19 +664,9 @@ DIAGNOSTIC_POP
         }
       }
 
-      if (!snappy::GetUncompressedLength(compressed, remainingLength,
-                                         &outputBufferLength)) {
-        throw ParseError("SnappyDecompressionStream choked on corrupt input");
-      }
-
-      if (outputBufferLength > outputBuffer.capacity()) {
-        throw std::logic_error("uncompressed length exceeds block size");
-      }
-
-      if (!snappy::RawUncompress(compressed, remainingLength,
-                                 outputBuffer.data())) {
-        throw ParseError("SnappyDecompressionStream choked on corrupt input");
-      }
+      outputBufferLength = decompress(compressed, remainingLength,
+                                      outputBuffer.data(),
+                                      outputBuffer.capacity());
 
       remainingLength = 0;
       state = DECOMPRESS_HEADER;
@@ -679,17 +680,16 @@ DIAGNOSTIC_POP
     return true;
   }
 
-  void SnappyDecompressionStream::BackUp(int count) {
+  void BlockDecompressionStream::BackUp(int count) {
     if (outputBufferPtr == nullptr || outputBufferLength != 0) {
-      throw std::logic_error("Backup without previous Next in "
-                             "SnappyDecompressionStream");
+      throw std::logic_error("Backup without previous Next in "+getName());
     }
     outputBufferPtr -= static_cast<size_t>(count);
     outputBufferLength = static_cast<size_t>(count);
     bytesReturned -= count;
   }
 
-  bool SnappyDecompressionStream::Skip(int count) {
+  bool BlockDecompressionStream::Skip(int count) {
     bytesReturned += count;
     // this is a stupid implementation for now.
     // should skip entire blocks without decompressing
@@ -709,21 +709,126 @@ DIAGNOSTIC_POP
     return true;
   }
 
-  int64_t SnappyDecompressionStream::ByteCount() const {
+  int64_t BlockDecompressionStream::ByteCount() const {
     return bytesReturned;
   }
 
-  void SnappyDecompressionStream::seek(PositionProvider& position) {
+  void BlockDecompressionStream::seek(PositionProvider& position) {
     input->seek(position);
     if (!Skip(static_cast<int>(position.next()))) {
-      throw ParseError("Bad skip in SnappyDecompressionStream::seek");
+      throw ParseError("Bad skip in " + getName());
     }
   }
 
-  std::string SnappyDecompressionStream::getName() const {
-    std::ostringstream result;
-    result << "snappy(" << input->getName() << ")";
-    return result.str();
+  class SnappyDecompressionStream: public BlockDecompressionStream {
+  public:
+    SnappyDecompressionStream(std::unique_ptr<SeekableInputStream> inStream,
+                              size_t blockSize,
+                              MemoryPool& pool
+                              ): BlockDecompressionStream
+                                 (std::move(inStream),
+                                  blockSize,
+                                  pool) {
+      // PASS
+    }
+
+    std::string getName() const override {
+      std::ostringstream result;
+      result << "snappy(" << getStreamName() << ")";
+      return result.str();
+    }
+
+  protected:
+    virtual uint64_t decompress(const char *input, uint64_t length,
+                                char *output, size_t maxOutputLength
+                                ) override;
+  };
+
+  uint64_t SnappyDecompressionStream::decompress(const char *input,
+                                                 uint64_t length,
+                                                 char *output,
+                                                 size_t maxOutputLength) {
+    size_t outLength;
+    if (!snappy::GetUncompressedLength(input, length, &outLength)) {
+      throw ParseError("SnappyDecompressionStream choked on corrupt input");
+    }
+
+    if (outLength > maxOutputLength) {
+      throw std::logic_error("Snappy length exceeds block size");
+    }
+
+    if (!snappy::RawUncompress(input, length, output)) {
+      throw ParseError("SnappyDecompressionStream choked on corrupt input");
+    }
+    return outLength;
+  }
+
+  class LzoDecompressionStream: public BlockDecompressionStream {
+  public:
+    LzoDecompressionStream(std::unique_ptr<SeekableInputStream> inStream,
+                           size_t blockSize,
+                           MemoryPool& pool
+                           ): BlockDecompressionStream
+                              (std::move(inStream),
+                               blockSize,
+                               pool) {
+      // PASS
+    }
+
+    std::string getName() const override {
+      std::ostringstream result;
+      result << "lzo(" << getStreamName() << ")";
+      return result.str();
+    }
+
+  protected:
+    virtual uint64_t decompress(const char *input, uint64_t length,
+                                char *output, size_t maxOutputLength
+                                ) override;
+  };
+
+  uint64_t LzoDecompressionStream::decompress(const char *input,
+                                              uint64_t length,
+                                              char *output,
+                                              size_t maxOutputLength) {
+    return lzoDecompress(input, input + length, output,
+                         output + maxOutputLength);
+  }
+
+  class Lz4DecompressionStream: public BlockDecompressionStream {
+  public:
+    Lz4DecompressionStream(std::unique_ptr<SeekableInputStream> inStream,
+                           size_t blockSize,
+                           MemoryPool& pool
+                           ): BlockDecompressionStream
+                              (std::move(inStream),
+                               blockSize,
+                               pool) {
+      // PASS
+    }
+
+    std::string getName() const override {
+      std::ostringstream result;
+      result << "lz4(" << getStreamName() << ")";
+      return result.str();
+    }
+
+  protected:
+    virtual uint64_t decompress(const char *input, uint64_t length,
+                                char *output, size_t maxOutputLength
+                                ) override;
+  };
+
+  uint64_t Lz4DecompressionStream::decompress(const char *input,
+                                              uint64_t length,
+                                              char *output,
+                                              size_t maxOutputLength) {
+    int result = LZ4_decompress_safe(input, output, static_cast<int>(length),
+                                     static_cast<int>(maxOutputLength));
+    if (result < 0) {
+      throw new ParseError(getName() + " - failed to decompress");
+    }
+    return static_cast<uint64_t>(result);
   }
 
   std::unique_ptr<SeekableInputStream>
@@ -741,8 +846,16 @@ DIAGNOSTIC_POP
       return std::unique_ptr<SeekableInputStream>
         (new SnappyDecompressionStream(std::move(input), blockSize, pool));
     case CompressionKind_LZO:
-    default:
-      throw NotImplementedYet("compression codec");
+      return std::unique_ptr<SeekableInputStream>
+        (new LzoDecompressionStream(std::move(input), blockSize, pool));
+    case CompressionKind_LZ4:
+      return std::unique_ptr<SeekableInputStream>
+        (new Lz4DecompressionStream(std::move(input), blockSize, pool));
+    default: {
+      std::ostringstream buffer;
+      buffer << "Unknown compression codec " << kind;
+      throw NotImplementedYet(buffer.str());
+    }
     }
   }
 

@@ -436,12 +436,10 @@ public class ReaderImpl implements Reader {
     // Check compression codec.
     switch (ps.getCompression()) {
       case NONE:
-        break;
       case ZLIB:
-        break;
       case SNAPPY:
-        break;
       case LZO:
+      case LZ4:
         break;
       default:
         throw new IllegalArgumentException("Unknown compression");

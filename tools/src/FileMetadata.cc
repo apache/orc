@@ -25,6 +25,8 @@
 
 #include "orc/OrcFile.hh"
 #include "Adaptor.hh"
+#include "Exceptions.hh"
+#include "wrap/orc-proto-wrapper.hh"
 
 void printStripeInformation(std::ostream& out,
                             uint64_t index,
@@ -75,6 +77,19 @@ void printStripeInformation(std::ostream& out,
     }
   }
   out << "\n    }";
+}
+
+void printRawTail(std::ostream& out,
+                  const char*filename) {
+  out << "Raw file tail: " << filename << "\n";
+  std::unique_ptr<orc::Reader> reader =
+    orc::createReader(orc::readLocalFile(filename), orc::ReaderOptions());
+  // Parse the file tail from the serialized one.
+  orc::proto::FileTail tail;
+  if (!tail.ParseFromString(reader->getSerializedFileTail())) {
+    throw orc::ParseError("Failed to parse the file tail from string");
+  }
+  out << tail.DebugString();
 }
 
 void printMetadata(std::ostream & out, const char*filename, bool verbose) {
@@ -136,14 +151,16 @@ void printMetadata(std::ostream & out, const char*filename, bool verbose) {
 int main(int argc, char* argv[]) {
   static struct option longOptions[] = {
     {"help", no_argument, ORC_NULLPTR, 'h'},
+    {"raw", no_argument, ORC_NULLPTR, 'r'},
     {"verbose", no_argument, ORC_NULLPTR, 'v'},
     {ORC_NULLPTR, 0, ORC_NULLPTR, 0}
   };
   bool helpFlag = false;
   bool verboseFlag = false;
+  bool rawFlag = false;
   int opt;
   do {
-    opt = getopt_long(argc, argv, "hv", longOptions, ORC_NULLPTR);
+    opt = getopt_long(argc, argv, "hrv", longOptions, ORC_NULLPTR);
     switch (opt) {
     case '?':
     case 'h':
@@ -153,6 +170,9 @@ int main(int argc, char* argv[]) {
     case 'v':
       verboseFlag = true;
       break;
+    case 'r':
+      rawFlag = true;
+      break;
     }
   } while (opt != -1);
   argc -= optind;
@@ -160,12 +180,17 @@ int main(int argc, char* argv[]) {
 
   if (argc < 1 || helpFlag) {
     std::cerr
-      << "Usage: orc-metadata [-h] [--help] [-v] [--verbose] <filename>\n";
+      << "Usage: orc-metadata [-h] [--help] [-r] [--raw] [-v] [--verbose]"
+      << " <filename>\n";
     exit(1);
   } else {
     for(int i=0; i < argc; ++i) {
       try {
-        printMetadata(std::cout, argv[i], verboseFlag);
+        if (rawFlag) {
+          printRawTail(std::cout, argv[i]);
+        } else {
+          printMetadata(std::cout, argv[i], verboseFlag);
+        }
       } catch (std::exception& ex) {
         std::cerr << "Caught exception in " << argv[i]
                   << ": " << ex.what() << "\n";

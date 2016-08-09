@@ -38,7 +38,8 @@ namespace orc {
     CompressionKind_SNAPPY = 2,
     CompressionKind_LZO = 3,
     CompressionKind_LZ4 = 4,
-    CompressionKind_ZSTD = 5
+    CompressionKind_ZSTD = 5,
+    CompressionKind_MAX = INT64_MAX
   };
 
   /**
@@ -49,7 +50,10 @@ namespace orc {
   enum WriterVersion {
     WriterVersion_ORIGINAL = 0,
     WriterVersion_HIVE_8732 = 1,
-    WriterVersion_HIVE_4243 = 2
+    WriterVersion_HIVE_4243 = 2,
+    WriterVersion_HIVE_12055 = 3,
+    WriterVersion_HIVE_13083 = 4,
+    WriterVersion_MAX = INT64_MAX
   };
 
   /**

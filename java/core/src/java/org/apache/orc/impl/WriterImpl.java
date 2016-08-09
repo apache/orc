@@ -30,6 +30,12 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.TreeMap;
 
+import io.airlift.compress.lz4.Lz4Compressor;
+import io.airlift.compress.lz4.Lz4Decompressor;
+import io.airlift.compress.lzo.LzoCompressor;
+import io.airlift.compress.lzo.LzoDecompressor;
+import io.airlift.compress.snappy.SnappyCompressor;
+import io.airlift.compress.snappy.SnappyDecompressor;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.hadoop.hive.ql.util.JavaDataModel;
 import org.apache.orc.BinaryColumnStatistics;
@@ -249,23 +255,11 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       case SNAPPY:
         return new SnappyCodec();
       case LZO:
-        try {
-          ClassLoader loader = Thread.currentThread().getContextClassLoader();
-          if (loader == null) {
-            loader = WriterImpl.class.getClassLoader();
-          }
-          @SuppressWarnings("unchecked")
-          Class<? extends CompressionCodec> lzo =
-              (Class<? extends CompressionCodec>)
-              loader.loadClass("org.apache.hadoop.hive.ql.io.orc.LzoCodec");
-          return lzo.newInstance();
-        } catch (ClassNotFoundException e) {
-          throw new IllegalArgumentException("LZO is not available.", e);
-        } catch (InstantiationException e) {
-          throw new IllegalArgumentException("Problem initializing LZO", e);
-        } catch (IllegalAccessException e) {
-          throw new IllegalArgumentException("Insufficient access to LZO", e);
-        }
+        return new AircompressorCodec(new LzoCompressor(),
+            new LzoDecompressor());
+      case LZ4:
+        return new AircompressorCodec(new Lz4Compressor(),
+            new Lz4Decompressor());
       default:
         throw new IllegalArgumentException("Unknown compression codec: " +
             kind);
@@ -2648,6 +2642,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       case ZLIB: return OrcProto.CompressionKind.ZLIB;
       case SNAPPY: return OrcProto.CompressionKind.SNAPPY;
       case LZO: return OrcProto.CompressionKind.LZO;
+      case LZ4: return OrcProto.CompressionKind.LZ4;
       default:
         throw new IllegalArgumentException("Unknown compression " + kind);
     }

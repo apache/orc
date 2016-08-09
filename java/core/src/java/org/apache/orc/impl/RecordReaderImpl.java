@@ -44,8 +44,6 @@ import org.apache.orc.StripeInformation;
 import org.apache.orc.TimestampColumnStatistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.io.DiskRange;
 import org.apache.hadoop.hive.common.io.DiskRangeList;
@@ -76,6 +74,7 @@ public class RecordReaderImpl implements RecordReader {
   protected final TypeDescription schema;
   private final List<OrcProto.Type> types;
   private final int bufferSize;
+  private final SchemaEvolution evolution;
   private final boolean[] included;
   private final long rowIndexStride;
   private long rowInStripe = 0;
@@ -134,24 +133,29 @@ public class RecordReaderImpl implements RecordReader {
 
   protected RecordReaderImpl(ReaderImpl fileReader,
                              Reader.Options options) throws IOException {
-    SchemaEvolution treeReaderSchema;
     this.included = options.getInclude();
     included[0] = true;
     if (options.getSchema() == null) {
       if (LOG.isInfoEnabled()) {
-        LOG.info("Schema on read not provided -- using file schema " +
+        LOG.info("Reader schema not provided -- using file schema " +
             fileReader.getSchema());
       }
-      treeReaderSchema = new SchemaEvolution(fileReader.getSchema(), included);
+      evolution = new SchemaEvolution(fileReader.getSchema(), included);
     } else {
 
-      // Now that we are creating a record reader for a file, validate that the schema to read
-      // is compatible with the file schema.
+      // Now that we are creating a record reader for a file, validate that
+      // the schema to read is compatible with the file schema.
       //
-      treeReaderSchema = new SchemaEvolution(fileReader.getSchema(),
+      evolution = new SchemaEvolution(fileReader.getSchema(),
           options.getSchema(),included);
+      if (LOG.isDebugEnabled() && evolution.hasConversion()) {
+        LOG.debug("ORC file " + fileReader.path.toString() +
+            " has data type conversion --\n" +
+            "reader schema: " + options.getSchema().toString() + "\n" +
+            "file schema:   " + fileReader.getSchema());
+      }
     }
-    this.schema = treeReaderSchema.getReaderSchema();
+    this.schema = evolution.getReaderSchema();
     this.path = fileReader.path;
     this.codec = fileReader.codec;
     this.types = fileReader.types;
@@ -159,9 +163,8 @@ public class RecordReaderImpl implements RecordReader {
     this.rowIndexStride = fileReader.rowIndexStride;
     SearchArgument sarg = options.getSearchArgument();
     if (sarg != null && rowIndexStride != 0) {
-      sargApp = new SargApplier(
-          sarg, options.getColumnNames(), rowIndexStride, types,
-          included.length);
+      sargApp = new SargApplier(sarg, options.getColumnNames(), rowIndexStride,
+          included.length, evolution);
     } else {
       sargApp = null;
     }
@@ -205,8 +208,8 @@ public class RecordReaderImpl implements RecordReader {
       skipCorrupt = OrcConf.SKIP_CORRUPT_DATA.getBoolean(fileReader.conf);
     }
 
-    reader = TreeReaderFactory.createTreeReader(treeReaderSchema.getReaderSchema(),
-        treeReaderSchema, included, skipCorrupt);
+    reader = TreeReaderFactory.createTreeReader(evolution.getReaderSchema(),
+        evolution, included, skipCorrupt);
     indexes = new OrcProto.RowIndex[types.size()];
     bloomFilterIndices = new OrcProto.BloomFilterIndex[types.size()];
     advanceToNextRow(reader, 0L, true);
@@ -705,9 +708,10 @@ public class RecordReaderImpl implements RecordReader {
     private final long rowIndexStride;
     // same as the above array, but indices are set to true
     private final boolean[] sargColumns;
+    private SchemaEvolution evolution;
 
     public SargApplier(SearchArgument sarg, String[] columnNames, long rowIndexStride,
-        List<OrcProto.Type> types, int includedCount) {
+        int includedCount, final SchemaEvolution evolution) {
       this.sarg = sarg;
       sargLeaves = sarg.getLeaves();
       filterColumns = mapSargColumnsToOrcInternalColIdx(sargLeaves, columnNames, 0);
@@ -720,6 +724,7 @@ public class RecordReaderImpl implements RecordReader {
           sargColumns[i] = true;
         }
       }
+      this.evolution = evolution;
     }
 
     /**
@@ -749,10 +754,14 @@ public class RecordReaderImpl implements RecordReader {
             }
             OrcProto.ColumnStatistics stats = entry.getStatistics();
             OrcProto.BloomFilter bf = null;
-            if (bloomFilterIndices != null && bloomFilterIndices[filterColumns[pred]] != null) {
-              bf = bloomFilterIndices[filterColumns[pred]].getBloomFilter(rowGroup);
+            if (bloomFilterIndices != null && bloomFilterIndices[columnIx] != null) {
+              bf = bloomFilterIndices[columnIx].getBloomFilter(rowGroup);
             }
-            leafValues[pred] = evaluatePredicateProto(stats, sargLeaves.get(pred), bf);
+            if (evolution != null && evolution.isPPDSafeConversion(columnIx)) {
+              leafValues[pred] = evaluatePredicateProto(stats, sargLeaves.get(pred), bf);
+            } else {
+              leafValues[pred] = TruthValue.YES_NO_NULL;
+            }
             if (LOG.isTraceEnabled()) {
               LOG.trace("Stats = " + stats);
               LOG.trace("Setting " + sargLeaves.get(pred) + " to " + leafValues[pred]);

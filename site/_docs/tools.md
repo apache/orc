@@ -42,11 +42,15 @@ the line breaks within each record):
 ## orc-metadata
 
 Displays the metadata of the ORC file as a JSON document. With the
-`verbose` argument additional information about the layout of the file
+`verbose` option additional information about the layout of the file
 is also printed.
 
+For diagnosing problems, it is useful to use the '--raw' option that
+prints the protocol buffers from the ORC file directly rather than
+interpreting them.
+
 ~~~ shell
-% orc-metadata [-v] <filename>
+% orc-metadata [-v] [--raw] <filename>
 ~~~
 
 If you run it on the example file TestOrcFile.test1.orc, you'll see:
@@ -77,12 +81,12 @@ string,struct<int1:int,string1:string>>>",
 }
 ~~~
 
-## file-dump
+## Java Metadata
 
 The org.apache.orc.tools.FileDump Java class, which is available via Hive as:
 
 ~~~ shell
-% hive --orcfiledump [-j] [-p] [-d] [-t] [--rowindex <cols>]
+% java -jar orc-tools-*.jar meta [-j] [-p] [-t] [--rowindex <cols>]
        [--recover] [--skip-dump] [--backup-path <new path>] <file>
 ~~~
 
@@ -91,9 +95,6 @@ The org.apache.orc.tools.FileDump Java class, which is available via Hive as:
 
 -p
   : pretty print the output
-
--d
-  : print the data instead of the metadata
 
 -t
   : print the timezone of the writer
@@ -113,7 +114,7 @@ The org.apache.orc.tools.FileDump Java class, which is available via Hive as:
 An example of the output is given below:
 
 ~~~ shell
-% hive --orcfiledump examples/TestOrcFile.test1.orc
+% java -jar orc-tools-*.jar meta examples/TestOrcFile.test1.orc
 Processing data file examples/TestOrcFile.test1.orc [length: 1711]
 Structure for examples/TestOrcFile.test1.orc
 File Version: 0.12 with HIVE_8732

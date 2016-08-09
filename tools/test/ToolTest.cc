@@ -33,8 +33,8 @@
 #include <unistd.h>
 #include <vector>
 
-const char *exampleDirectory = 0;
 namespace {
+  const char *exampleDirectory = 0;
   const char *buildDirectory = 0;
 }
 
@@ -78,8 +78,8 @@ std::string getFileContents(const char *filename) {
  * returned as the result.
  */
 int runProgram(const std::vector<std::string>& command,
-               std::string &stdout,
-               std::string &stderr) {
+               std::string &out,
+               std::string &err) {
 
   // create temporary filenames for stdout and stderr
   char *stdoutName = strdup("/tmp/orc-test-stdout-XXXXXXXX");
@@ -167,11 +167,11 @@ int runProgram(const std::vector<std::string>& command,
     }
     exit(1);
   }
-  stdout = getFileContents(stdoutName);
+  out = getFileContents(stdoutName);
   if (std::remove(stdoutName) != 0) {
     std::cerr << "Failed to remove " << stdoutName << "\n";
   }
-  stderr = getFileContents(stderrName);
+  err = getFileContents(stderrName);
   if (std::remove(stderrName) != 0) {
     std::cerr << "Failed to remove " << stderrName << "\n";
   }

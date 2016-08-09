@@ -982,8 +982,34 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize) throws IOException {
-      // The DoubleColumnVector produced by FloatTreeReader is what we want.
+      // we get the DoubleColumnVector produced by float tree reader first, then iterate through
+      // the elements and make double -> float -> string -> double conversion to preserve the
+      // precision. When float tree reader reads float and assign it to double, java's widening
+      // conversion adds more precision which will break all comparisons.
+      // Example: float f = 74.72
+      // double d = f ---> 74.72000122070312
+      // Double.parseDouble(String.valueOf(f)) ---> 74.72
       floatTreeReader.nextVector(previousVector, isNull, batchSize);
+
+      DoubleColumnVector doubleColumnVector = (DoubleColumnVector) previousVector;
+      if (doubleColumnVector.isRepeating) {
+        if (doubleColumnVector.noNulls || !doubleColumnVector.isNull[0]) {
+          final float f = (float) doubleColumnVector.vector[0];
+          doubleColumnVector.vector[0] = Double.parseDouble(String.valueOf(f));
+        }
+      } else if (doubleColumnVector.noNulls){
+        for (int i = 0; i < batchSize; i++) {
+          final float f = (float) doubleColumnVector.vector[i];
+          doubleColumnVector.vector[i] = Double.parseDouble(String.valueOf(f));
+        }
+      } else {
+        for (int i = 0; i < batchSize; i++) {
+          if (!doubleColumnVector.isNull[i]) {
+            final float f = (float) doubleColumnVector.vector[i];
+            doubleColumnVector.vector[i] = Double.parseDouble(String.valueOf(f));
+          }
+        }
+      }
     }
   }
 
@@ -1323,8 +1349,6 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
 
     private DecimalTreeReader decimalTreeReader;
 
-    private final TypeDescription fileType;
-    private final TypeDescription readerType;
     private DecimalColumnVector fileDecimalColVector;
     private int filePrecision;
     private int fileScale;
@@ -1335,10 +1359,8 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     DecimalFromDecimalTreeReader(int columnId, TypeDescription fileType, TypeDescription readerType)
         throws IOException {
       super(columnId);
-      this.fileType = fileType;
       filePrecision = fileType.getPrecision();
       fileScale = fileType.getScale();
-      this.readerType = readerType;
       readerPrecision = readerType.getPrecision();
       readerScale = readerType.getScale();
       decimalTreeReader = new DecimalTreeReader(columnId, filePrecision, fileScale);
@@ -2765,8 +2787,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     }
   }
 
-  public static boolean canConvert(TypeDescription fileType, TypeDescription readerType)
-    throws IOException {
+  public static boolean canConvert(TypeDescription fileType, TypeDescription readerType) {
 
     Category readerTypeCategory = readerType.getCategory();
 

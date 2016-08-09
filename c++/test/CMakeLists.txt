@@ -29,6 +29,7 @@ add_executable (orc-test
   TestCompression.cc
   TestDriver.cc
   TestInt128.cc
+  TestReader.cc
   TestRle.cc
   TestTimezone.cc
   TestType.cc
@@ -36,10 +37,11 @@ add_executable (orc-test
 
 target_link_libraries (orc-test
   orc
-  ${PROTOBUF_LIBRARIES}
   ${GMOCK_LIBRARIES}
-  ${ZLIB_LIBRARIES}
+  ${LZ4_LIBRARIES}
+  ${PROTOBUF_LIBRARIES}
   ${SNAPPY_LIBRARIES}
+  ${ZLIB_LIBRARIES}
 )
 
 add_executable (create-test-files

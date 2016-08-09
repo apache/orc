@@ -25,8 +25,9 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX11_FLAGS} ${WARN_FLAGS}")
 
 add_executable (tool-test
   gzip.cc
-  TestReader.cc
+  TestFileMetadata.cc
   TestFileScan.cc
+  TestMatch.cc
   ToolTest.cc
 )
 
