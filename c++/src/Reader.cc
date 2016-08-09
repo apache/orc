@@ -2217,6 +2217,7 @@ namespace orc {
     }
   }
 
+<<<<<<< HEAD
   void ReaderImpl::updateSelected(const std::list<uint64_t>& ids) {
     if (options.isColumnIdIncluded()) {
       updateSelectedColumnId(ids);
@@ -2234,12 +2235,47 @@ namespace orc {
         buffer << "Invalid column selected " << *i << " out of "
                << childCount;
         throw ParseError(buffer.str());
+=======
+  void ReaderImpl::updateSelected(const std::list<uint64_t>& fieldIds) {
+    std::set<uint64_t> idSet(fieldIds.begin(), fieldIds.end());
+    updateSelectedByIdHelper(schema.get(), idSet);
+    if (!idSet.empty()) {
+      std::set<uint64_t>::const_iterator begIter = idSet.begin();
+      std::set<uint64_t>::const_iterator endIter = idSet.end();
+      std::stringstream buffer;
+      buffer << "Invalid column selected: ";
+      while (begIter != endIter) {
+        buffer << *begIter << " "; 
+        ++begIter;
+>>>>>>> 21ca200c35c21c2ea5a8bb8c395b44510343fa88
       }
-      const Type& child = *schema->getSubtype(*i);
-      for(size_t c = child.getColumnId();
-          c <= child.getMaximumColumnId(); ++c){
+      buffer << "out of " << selectedColumns.size();
+      throw ParseError(buffer.str());
+    }
+  }
+
+  bool ReaderImpl::updateSelectedByIdHelper(const Type* type, std::set<uint64_t>& idSet) {
+    uint64_t columnId = type->getColumnId();
+    std::set<uint64_t>::const_iterator found = idSet.find(columnId);
+    if (found != idSet.end()) {
+      for (size_t c = columnId;
+          c <= type->getMaximumColumnId(); ++c) {
         selectedColumns[c] = true;
+        idSet.erase(c);
       }
+      return true;
+    }
+    if (0 == type->getSubtypeCount()) {
+      // primitive type, not found in idSet
+      return false;
+    } else {
+      // mark column as selected if any of his subtype is selected.
+      bool subtypeSelected = selectedColumns[columnId];
+      for (size_t i = 0; i < type->getSubtypeCount(); ++i) {
+        subtypeSelected |= updateSelectedByIdHelper(type->getSubtype(i), idSet);
+      }
+      selectedColumns[columnId] = subtypeSelected;
+      return subtypeSelected;
     }
   }
 
