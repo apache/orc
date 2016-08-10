@@ -1035,6 +1035,35 @@ TEST(TestMatch, selectColumns) {
         << "\"887336a7\", \"value\": {\"int1\": -941468492, \"string1\": "
         << "\"887336a7\"}}]}";
     EXPECT_EQ(expectedMap.str(), line);
+
+    // Map column #12
+    // two subtypes with column id:
+    // map<string(20),struct(21)<int1(22):int,string1(23):string>
+    cols.clear();
+    cols.push_back(20);
+    cols.push_back(22);
+    cols.push_back(23);
+    opts.includeTypes(cols);
+    reader = orc::createReader(orc::readLocalFile(filename), opts);
+    c = reader->getSelectedColumns();
+    for (unsigned int i=1; i < c.size(); i++) {
+      if (i>=19 && i<=23)
+        EXPECT_TRUE(c[i]);
+      else
+        EXPECT_TRUE(!c[i]);
+    }
+    batch = reader->createRowBatch(1);
+    line.clear();
+    printer = createColumnPrinter(line, &reader->getSelectedType());
+    reader->next(*batch);
+    printer->reset(*batch);
+    printer->printRow(0);
+    std::ostringstream expectedMapWithColumnId;
+    expectedMapWithColumnId << "{\"map\": [{\"key\": \"ba419d35-x\", \"value\": {\"int1\":"
+        << " -1598014431, \"string1\": \"ba419d35-x\"}}, {\"key\": "
+        << "\"887336a7\", \"value\": {\"int1\": -941468492, \"string1\": "
+        << "\"887336a7\"}}]}";
+    EXPECT_EQ(expectedMapWithColumnId.str(), line);
 }
 
 TEST(TestMatch, memoryUse) {

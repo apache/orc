@@ -517,6 +517,18 @@ namespace orc {
     ReaderOptions& include(const std::list<std::string>& include);
 
     /**
+     * Selects which type ids to read. The root type is always 0 and the
+     * rest of the types are labeled in a preorder traversal of the tree.
+     * The parent types are automatically selected, but the children are not.
+     *
+     * This option clears any previous setting of the selected columns or
+     * types.
+     * @param types a list of the type ids to read
+     * @return this
+     */
+    ReaderOptions& includeTypes(const std::list<uint64_t>& types);
+
+    /**
      * Set the section of the file to process.
      * @param offset the starting byte offset
      * @param length the number of bytes to read
@@ -581,13 +593,17 @@ namespace orc {
     ReaderOptions& setMemoryPool(MemoryPool& pool);
 
     /**
-     * Were the include indexes set?
+     * Were the field ids set?
      */
     bool getIndexesSet() const;
 
     /**
-     * Get the list of selected columns to read. All children of the selected
-     * columns are also selected.
+     * Were the type ids set?
+     */
+    bool getTypeIdsSet() const;
+
+    /**
+     * Get the list of selected field or type ids to read.
      */
     const std::list<uint64_t>& getInclude() const;
 
