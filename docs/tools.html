@@ -1097,10 +1097,14 @@ the line breaks within each record):</p>
 <h2 id="orc-metadata">orc-metadata</h2>
 
 <p>Displays the metadata of the ORC file as a JSON document. With the
-<code>verbose</code> argument additional information about the layout of the file
+<code>verbose</code> option additional information about the layout of the file
 is also printed.</p>
 
-<pre><code class="language-shell">% orc-metadata [-v] &lt;filename&gt;
+<p>For diagnosing problems, it is useful to use the ‘–raw’ option that
+prints the protocol buffers from the ORC file directly rather than
+interpreting them.</p>
+
+<pre><code class="language-shell">% orc-metadata [-v] [--raw] &lt;filename&gt;
 </code></pre>
 
 <p>If you run it on the example file TestOrcFile.test1.orc, you’ll see:</p>
@@ -1130,11 +1134,11 @@ string,struct&lt;int1:int,string1:string&gt;&gt;&gt;",
 }
 </code></pre>
 
-<h2 id="file-dump">file-dump</h2>
+<h2 id="java-metadata">Java Metadata</h2>
 
 <p>The org.apache.orc.tools.FileDump Java class, which is available via Hive as:</p>
 
-<pre><code class="language-shell">% hive --orcfiledump [-j] [-p] [-d] [-t] [--rowindex &lt;cols&gt;]
+<pre><code class="language-shell">% java -jar orc-tools-*.jar meta [-j] [-p] [-t] [--rowindex &lt;cols&gt;]
        [--recover] [--skip-dump] [--backup-path &lt;new path&gt;] &lt;file&gt;
 </code></pre>
 
@@ -1143,8 +1147,6 @@ string,struct&lt;int1:int,string1:string&gt;&gt;&gt;",
   <dd>format the output in JSON</dd>
   <dt>-p</dt>
   <dd>pretty print the output</dd>
-  <dt>-d</dt>
-  <dd>print the data instead of the metadata</dd>
   <dt>-t</dt>
   <dd>print the timezone of the writer</dd>
   <dt>–rowindex</dt>
@@ -1159,7 +1161,7 @@ string,struct&lt;int1:int,string1:string&gt;&gt;&gt;",
 
 <p>An example of the output is given below:</p>
 
-<pre><code class="language-shell">% hive --orcfiledump examples/TestOrcFile.test1.orc
+<pre><code class="language-shell">% java -jar orc-tools-*.jar meta examples/TestOrcFile.test1.orc
 Processing data file examples/TestOrcFile.test1.orc [length: 1711]
 Structure for examples/TestOrcFile.test1.orc
 File Version: 0.12 with HIVE_8732
