@@ -27,10 +27,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.orc.BloomFilterIO;
 import org.apache.orc.BooleanColumnStatistics;
-import org.apache.orc.Reader;
-import org.apache.orc.RecordReader;
-import org.apache.orc.TypeDescription;
 import org.apache.orc.ColumnStatistics;
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.DataReader;
@@ -39,9 +37,13 @@ import org.apache.orc.DecimalColumnStatistics;
 import org.apache.orc.DoubleColumnStatistics;
 import org.apache.orc.IntegerColumnStatistics;
 import org.apache.orc.OrcConf;
+import org.apache.orc.OrcProto;
+import org.apache.orc.Reader;
+import org.apache.orc.RecordReader;
 import org.apache.orc.StringColumnStatistics;
 import org.apache.orc.StripeInformation;
 import org.apache.orc.TimestampColumnStatistics;
+import org.apache.orc.TypeDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.Path;
@@ -50,7 +52,6 @@ import org.apache.hadoop.hive.common.io.DiskRangeList;
 import org.apache.hadoop.hive.common.io.DiskRangeList.CreateHelper;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
-import org.apache.orc.BloomFilterIO;
 import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument.TruthValue;
@@ -58,7 +59,6 @@ import org.apache.hadoop.hive.serde2.io.DateWritable;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.hadoop.hive.ql.util.TimestampUtils;
 import org.apache.hadoop.io.Text;
-import org.apache.orc.OrcProto;
 
 public class RecordReaderImpl implements RecordReader {
   static final Logger LOG = LoggerFactory.getLogger(RecordReaderImpl.class);
@@ -76,6 +76,7 @@ public class RecordReaderImpl implements RecordReader {
   private final int bufferSize;
   private final SchemaEvolution evolution;
   private final boolean[] included;
+  private final boolean[] writerIncluded;
   private final long rowIndexStride;
   private long rowInStripe = 0;
   private int currentStripe = -1;
@@ -95,17 +96,18 @@ public class RecordReaderImpl implements RecordReader {
   /**
    * Given a list of column names, find the given column and return the index.
    *
-   * @param columnNames the list of potential column names
+   * @param evolution the mapping from reader to file schema
    * @param columnName  the column name to look for
-   * @param rootColumn  offset the result with the rootColumn
-   * @return the column number or -1 if the column wasn't found
+   * @return the file column number or -1 if the column wasn't found
    */
-  static int findColumns(String[] columnNames,
-                         String columnName,
-                         int rootColumn) {
-    for(int i=0; i < columnNames.length; ++i) {
-      if (columnName.equals(columnNames[i])) {
-        return i + rootColumn;
+  static int findColumns(SchemaEvolution evolution,
+                         String columnName) {
+    TypeDescription readerSchema = evolution.getReaderBaseSchema();
+    List<String> fieldNames = readerSchema.getFieldNames();
+    List<TypeDescription> children = readerSchema.getChildren();
+    for (int i = 0; i < fieldNames.size(); ++i) {
+      if (columnName.equals(fieldNames.get(i))) {
+        return evolution.getFileType(children.get(i)).getId();
       }
     }
     return -1;
@@ -114,19 +116,17 @@ public class RecordReaderImpl implements RecordReader {
   /**
    * Find the mapping from predicate leaves to columns.
    * @param sargLeaves the search argument that we need to map
-   * @param columnNames the names of the columns
-   * @param rootColumn the offset of the top level row, which offsets the
-   *                   result
-   * @return an array mapping the sarg leaves to concrete column numbers
+   * @param evolution the mapping from reader to file schema
+   * @return an array mapping the sarg leaves to concrete column numbers in the
+   * file
    */
   public static int[] mapSargColumnsToOrcInternalColIdx(List<PredicateLeaf> sargLeaves,
-                             String[] columnNames,
-                             int rootColumn) {
+                             SchemaEvolution evolution) {
     int[] result = new int[sargLeaves.size()];
     Arrays.fill(result, -1);
     for(int i=0; i < result.length; ++i) {
       String colName = sargLeaves.get(i).getColumnName();
-      result[i] = findColumns(columnNames, colName, rootColumn);
+      result[i] = findColumns(evolution, colName);
     }
     return result;
   }
@@ -140,14 +140,15 @@ public class RecordReaderImpl implements RecordReader {
         LOG.info("Reader schema not provided -- using file schema " +
             fileReader.getSchema());
       }
-      evolution = new SchemaEvolution(fileReader.getSchema(), included);
+      evolution = new SchemaEvolution(fileReader.getSchema(), options);
     } else {
 
       // Now that we are creating a record reader for a file, validate that
       // the schema to read is compatible with the file schema.
       //
       evolution = new SchemaEvolution(fileReader.getSchema(),
-          options.getSchema(),included);
+                                      options.getSchema(),
+                                      options);
       if (LOG.isDebugEnabled() && evolution.hasConversion()) {
         LOG.debug("ORC file " + fileReader.path.toString() +
             " has data type conversion --\n" +
@@ -163,8 +164,9 @@ public class RecordReaderImpl implements RecordReader {
     this.rowIndexStride = fileReader.rowIndexStride;
     SearchArgument sarg = options.getSearchArgument();
     if (sarg != null && rowIndexStride != 0) {
-      sargApp = new SargApplier(sarg, options.getColumnNames(), rowIndexStride,
-          included.length, evolution);
+      sargApp = new SargApplier(sarg, options.getColumnNames(),
+                                rowIndexStride,
+                                included.length, evolution);
     } else {
       sargApp = null;
     }
@@ -210,6 +212,8 @@ public class RecordReaderImpl implements RecordReader {
 
     reader = TreeReaderFactory.createTreeReader(evolution.getReaderSchema(),
         evolution, included, skipCorrupt);
+
+    writerIncluded = evolution.getFileIncluded();
     indexes = new OrcProto.RowIndex[types.size()];
     bloomFilterIndices = new OrcProto.BloomFilterIndex[types.size()];
     advanceToNextRow(reader, 0L, true);
@@ -710,16 +714,21 @@ public class RecordReaderImpl implements RecordReader {
     private final boolean[] sargColumns;
     private SchemaEvolution evolution;
 
-    public SargApplier(SearchArgument sarg, String[] columnNames, long rowIndexStride,
-        int includedCount, final SchemaEvolution evolution) {
+    public SargApplier(SearchArgument sarg, String[] columnNames,
+                       long rowIndexStride,
+                       int includedCount,
+                       SchemaEvolution evolution) {
       this.sarg = sarg;
       sargLeaves = sarg.getLeaves();
-      filterColumns = mapSargColumnsToOrcInternalColIdx(sargLeaves, columnNames, 0);
+      filterColumns = mapSargColumnsToOrcInternalColIdx(sargLeaves,
+                                                        evolution);
       this.rowIndexStride = rowIndexStride;
-      // included will not be null, row options will fill the array with trues if null
+      // included will not be null, row options will fill the array with
+      // trues if null
       sargColumns = new boolean[includedCount];
       for (int i : filterColumns) {
-        // filter columns may have -1 as index which could be partition column in SARG.
+        // filter columns may have -1 as index which could be partition
+        // column in SARG.
         if (i > 0) {
           sargColumns[i] = true;
         }
@@ -797,7 +806,7 @@ public class RecordReaderImpl implements RecordReader {
     if (sargApp == null) {
       return null;
     }
-    readRowIndex(currentStripe, included, sargApp.sargColumns);
+    readRowIndex(currentStripe, writerIncluded, sargApp.sargColumns);
     return sargApp.pickRowGroups(stripes.get(currentStripe), indexes, bloomFilterIndices, false);
   }
 
@@ -840,7 +849,7 @@ public class RecordReaderImpl implements RecordReader {
     // if we haven't skipped the whole stripe, read the data
     if (rowInStripe < rowCountInStripe) {
       // if we aren't projecting columns or filtering rows, just read it all
-      if (included == null && includedRowGroups == null) {
+      if (isFullRead() && includedRowGroups == null) {
         readAllDataStreams(stripe);
       } else {
         readPartialDataStreams(stripe);
@@ -851,6 +860,15 @@ public class RecordReaderImpl implements RecordReader {
         seekToRowEntry(reader, (int) (rowInStripe / rowIndexStride));
       }
     }
+  }
+
+  private boolean isFullRead() {
+    for (Boolean isColumnPresent : writerIncluded){
+      if (!isColumnPresent){
+        return false;
+      }
+    }
+    return true;
   }
 
   private StripeInformation beginReadStripe() throws IOException {
@@ -942,7 +960,7 @@ public class RecordReaderImpl implements RecordReader {
     for (OrcProto.Stream streamDesc : streamDescriptions) {
       int column = streamDesc.getColumn();
       if ((includeColumn != null &&
-          (column < included.length && !includeColumn[column])) ||
+          (column < includeColumn.length && !includeColumn[column])) ||
           streamDesc.hasKind() &&
               (StreamName.getArea(streamDesc.getKind()) != StreamName.Area.DATA)) {
         streamOffset += streamDesc.getLength();
@@ -960,7 +978,7 @@ public class RecordReaderImpl implements RecordReader {
   private void readPartialDataStreams(StripeInformation stripe) throws IOException {
     List<OrcProto.Stream> streamList = stripeFooter.getStreamsList();
     DiskRangeList toRead = planReadPartialDataStreams(streamList,
-        indexes, included, includedRowGroups, codec != null,
+        indexes, writerIncluded, includedRowGroups, codec != null,
         stripeFooter.getColumnsList(), types, bufferSize, true);
     if (LOG.isDebugEnabled()) {
       LOG.debug("chunks = " + RecordReaderUtils.stringifyDiskRanges(toRead));
@@ -970,7 +988,7 @@ public class RecordReaderImpl implements RecordReader {
       LOG.debug("merge = " + RecordReaderUtils.stringifyDiskRanges(bufferChunks));
     }
 
-    createStreams(streamList, bufferChunks, included, codec, bufferSize, streams);
+    createStreams(streamList, bufferChunks, writerIncluded, codec, bufferSize, streams);
   }
 
   /**
@@ -1181,7 +1199,7 @@ public class RecordReaderImpl implements RecordReader {
       currentStripe = rightStripe;
       readStripe();
     }
-    readRowIndex(currentStripe, included, sargApp == null ? null : sargApp.sargColumns);
+    readRowIndex(currentStripe, writerIncluded, sargApp == null ? null : sargApp.sargColumns);
 
     // if we aren't to the right row yet, advance in the stripe.
     advanceToNextRow(reader, rowNumber, true);

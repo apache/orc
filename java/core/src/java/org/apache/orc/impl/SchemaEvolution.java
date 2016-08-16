@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,56 +20,129 @@ package org.apache.orc.impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
 
+import org.apache.orc.Reader;
 import org.apache.orc.TypeDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Take the file types and the (optional) configuration column names/types and
- * see if there has been schema evolution.
+ * Infer and track the evolution between the schema as stored in the file and
+ * the schema that has been requested by the reader.
  */
 public class SchemaEvolution {
   // indexed by reader column id
   private final TypeDescription[] readerFileTypes;
   // indexed by reader column id
-  private final boolean[] included;
+  private final boolean[] readerIncluded;
+  // indexed by file column id
+  private final boolean[] fileIncluded;
   private final TypeDescription fileSchema;
   private final TypeDescription readerSchema;
   private boolean hasConversion = false;
+  private final boolean isAcid;
+
   // indexed by reader column id
   private final boolean[] ppdSafeConversion;
 
-  public SchemaEvolution(TypeDescription fileSchema, boolean[] includedCols) {
-    this(fileSchema, null, includedCols);
+  private static final Logger LOG =
+    LoggerFactory.getLogger(SchemaEvolution.class);
+  private static final Pattern missingMetadataPattern =
+    Pattern.compile("_col\\d+");
+
+  public static class IllegalEvolutionException extends RuntimeException {
+    public IllegalEvolutionException(String msg) {
+      super(msg);
+    }
+  }
+
+  public SchemaEvolution(TypeDescription fileSchema,
+                         Reader.Options options) {
+    this(fileSchema, null, options);
   }
 
   public SchemaEvolution(TypeDescription fileSchema,
                          TypeDescription readerSchema,
-                         boolean[] includedCols) {
-    this.included = includedCols == null ? null :
+                         Reader.Options options) {
+    boolean allowMissingMetadata = options.getTolerateMissingSchema();
+    boolean[] includedCols = options.getInclude();
+    this.readerIncluded = includedCols == null ? null :
       Arrays.copyOf(includedCols, includedCols.length);
+    this.fileIncluded = new boolean[fileSchema.getMaximumId() + 1];
     this.hasConversion = false;
     this.fileSchema = fileSchema;
+    isAcid = checkAcidSchema(fileSchema);
     if (readerSchema != null) {
-      if (checkAcidSchema(fileSchema)) {
+      if (isAcid) {
         this.readerSchema = createEventSchema(readerSchema);
       } else {
         this.readerSchema = readerSchema;
       }
-      this.readerFileTypes = new TypeDescription[this.readerSchema.getMaximumId() + 1];
-      buildConversionFileTypesArray(fileSchema, this.readerSchema);
+      this.readerFileTypes =
+        new TypeDescription[this.readerSchema.getMaximumId() + 1];
+      int positionalLevels = 0;
+      if (!hasColumnNames(isAcid? getBaseRow(fileSchema) : fileSchema)){
+        if (!this.fileSchema.equals(this.readerSchema)) {
+          if (!allowMissingMetadata) {
+            throw new RuntimeException("Found that schema metadata is missing"
+                + " from file. This is likely caused by"
+                + " a writer earlier than HIVE-4243. Will"
+                + " not try to reconcile schemas");
+          } else {
+            LOG.warn("Column names are missing from this file. This is"
+                + " caused by a writer earlier than HIVE-4243. The reader will"
+                + " reconcile schemas based on index. File type: " +
+                this.fileSchema + ", reader type: " + this.readerSchema);
+            positionalLevels = isAcid ? 2 : 1;
+          }
+        }
+      }
+      buildConversion(fileSchema, this.readerSchema, positionalLevels);
     } else {
       this.readerSchema = fileSchema;
-      this.readerFileTypes = new TypeDescription[this.readerSchema.getMaximumId() + 1];
-      buildSameSchemaFileTypesArray();
+      this.readerFileTypes =
+        new TypeDescription[this.readerSchema.getMaximumId() + 1];
+      buildIdentityConversion(this.readerSchema);
     }
     this.ppdSafeConversion = populatePpdSafeConversion();
   }
 
+  // Return true iff all fields have names like _col[0-9]+
+  private boolean hasColumnNames(TypeDescription fileSchema) {
+    if (fileSchema.getCategory() != TypeDescription.Category.STRUCT) {
+      return true;
+    }
+    for (String fieldName : fileSchema.getFieldNames()) {
+      if (!missingMetadataPattern.matcher(fieldName).matches()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public TypeDescription getReaderSchema() {
     return readerSchema;
+  }
+
+  /**
+   * Returns the non-ACID (aka base) reader type description.
+   *
+   * @return the reader type ignoring the ACID rowid columns, if any
+   */
+  public TypeDescription getReaderBaseSchema() {
+    return isAcid ? getBaseRow(readerSchema) : readerSchema;
+  }
+
+  /**
+   * Does the file include ACID columns?
+   * @return is this an ACID file?
+   */
+  boolean isAcid() {
+    return isAcid;
   }
 
   /**
@@ -93,6 +166,10 @@ public class SchemaEvolution {
     return readerFileTypes[id];
   }
 
+  public boolean[] getFileIncluded() {
+    return fileIncluded;
+  }
+
   /**
    * Check if column is safe for ppd evaluation
    * @param colId reader column id
@@ -100,10 +177,8 @@ public class SchemaEvolution {
    */
   public boolean isPPDSafeConversion(final int colId) {
     if (hasConversion()) {
-      if (colId < 0 || colId >= ppdSafeConversion.length) {
-        return false;
-      }
-      return ppdSafeConversion[colId];
+      return !(colId < 0 || colId >= ppdSafeConversion.length) &&
+          ppdSafeConversion[colId];
     }
 
     // when there is no schema evolution PPD is safe
@@ -137,11 +212,8 @@ public class SchemaEvolution {
     if (fileType.getCategory().isPrimitive()) {
       if (fileType.getCategory().equals(readerType.getCategory())) {
         // for decimals alone do equality check to not mess up with precision change
-        if (fileType.getCategory().equals(TypeDescription.Category.DECIMAL) &&
-            !fileType.equals(readerType)) {
-          return false;
-        }
-        return true;
+        return !(fileType.getCategory() == TypeDescription.Category.DECIMAL &&
+            !fileType.equals(readerType));
       }
 
       // only integer and string evolutions are safe
@@ -192,10 +264,11 @@ public class SchemaEvolution {
     return false;
   }
 
-  void buildConversionFileTypesArray(TypeDescription fileType,
-                                     TypeDescription readerType) {
+  void buildConversion(TypeDescription fileType,
+                       TypeDescription readerType,
+                       int positionalLevels) {
     // if the column isn't included, don't map it
-    if (included != null && !included[readerType.getId()]) {
+    if (readerIncluded != null && !readerIncluded[readerType.getId()]) {
       return;
     }
     boolean isOk = true;
@@ -239,8 +312,8 @@ public class SchemaEvolution {
           List<TypeDescription> readerChildren = readerType.getChildren();
           if (fileChildren.size() == readerChildren.size()) {
             for(int i=0; i < fileChildren.size(); ++i) {
-              buildConversionFileTypesArray(fileChildren.get(i),
-                                            readerChildren.get(i));
+              buildConversion(fileChildren.get(i),
+                              readerChildren.get(i), 0);
             }
           } else {
             isOk = false;
@@ -248,16 +321,38 @@ public class SchemaEvolution {
           break;
         }
         case STRUCT: {
-          // allow either side to have fewer fields than the other
-          List<TypeDescription> fileChildren = fileType.getChildren();
           List<TypeDescription> readerChildren = readerType.getChildren();
+          List<TypeDescription> fileChildren = fileType.getChildren();
           if (fileChildren.size() != readerChildren.size()) {
             hasConversion = true;
           }
-          int jointSize = Math.min(fileChildren.size(), readerChildren.size());
-          for(int i=0; i < jointSize; ++i) {
-            buildConversionFileTypesArray(fileChildren.get(i),
-                                          readerChildren.get(i));
+
+          if (positionalLevels == 0) {
+            List<String> readerFieldNames = readerType.getFieldNames();
+            List<String> fileFieldNames = fileType.getFieldNames();
+            Map<String, TypeDescription> fileTypesIdx = new HashMap<>();
+            for (int i = 0; i < fileFieldNames.size(); i++) {
+              fileTypesIdx.put(fileFieldNames.get(i), fileChildren.get(i));
+            }
+
+            for (int i = 0; i < readerFieldNames.size(); i++) {
+              String readerFieldName = readerFieldNames.get(i);
+              TypeDescription readerField = readerChildren.get(i);
+
+              TypeDescription fileField = fileTypesIdx.get(readerFieldName);
+              if (fileField == null) {
+                continue;
+              }
+
+              buildConversion(fileField, readerField, 0);
+            }
+          } else {
+            int jointSize = Math.min(fileChildren.size(),
+                                     readerChildren.size());
+            for (int i = 0; i < jointSize; ++i) {
+              buildConversion(fileChildren.get(i), readerChildren.get(i),
+                  positionalLevels - 1);
+            }
           }
           break;
         }
@@ -273,45 +368,31 @@ public class SchemaEvolution {
       hasConversion = true;
     }
     if (isOk) {
-      int id = readerType.getId();
-      if (readerFileTypes[id] != null) {
-        throw new RuntimeException("reader to file type entry already" +
-                                   " assigned");
-      }
-      readerFileTypes[id] = fileType;
+      readerFileTypes[readerType.getId()] = fileType;
+      fileIncluded[fileType.getId()] = true;
     } else {
-      throw new IllegalArgumentException(String.format
-                                         ("ORC does not support type" +
-                                          " conversion from file type %s" +
-                                          " (%d) to reader type %s (%d)",
-                                          fileType.toString(),
-                                          fileType.getId(),
-                                          readerType.toString(),
-                                          readerType.getId()));
+      throw new IllegalEvolutionException(
+          String.format("ORC does not support type conversion from file" +
+                        " type %s (%d) to reader type %s (%d)",
+                        fileType.toString(), fileType.getId(),
+                        readerType.toString(), readerType.getId()));
     }
   }
 
-  /**
-   * Use to make a reader to file type array when the schema is the same.
-   * @return
-   */
-  private void buildSameSchemaFileTypesArray() {
-    buildSameSchemaFileTypesArrayRecurse(readerSchema);
-  }
-
-  void buildSameSchemaFileTypesArrayRecurse(TypeDescription readerType) {
-    if (included != null && !included[readerType.getId()]) {
+  void buildIdentityConversion(TypeDescription readerType) {
+    int id = readerType.getId();
+    if (readerIncluded != null && !readerIncluded[id]) {
       return;
     }
-    int id = readerType.getId();
     if (readerFileTypes[id] != null) {
       throw new RuntimeException("reader to file type entry already assigned");
     }
     readerFileTypes[id] = readerType;
+    fileIncluded[id] = true;
     List<TypeDescription> children = readerType.getChildren();
     if (children != null) {
       for (TypeDescription child : children) {
-        buildSameSchemaFileTypesArrayRecurse(child);
+        buildIdentityConversion(child);
       }
     }
   }
@@ -341,8 +422,19 @@ public class SchemaEvolution {
     return result;
   }
 
+  /**
+   * Get the underlying base row from an ACID event struct.
+   * @param typeDescription the ACID event schema.
+   * @return the subtype for the real row
+   */
+  static TypeDescription getBaseRow(TypeDescription typeDescription) {
+    final int ACID_ROW_OFFSET = 5;
+    return typeDescription.getChildren().get(ACID_ROW_OFFSET);
+  }
+
   public static final List<String> acidEventFieldNames=
     new ArrayList<String>();
+
   static {
     acidEventFieldNames.add("operation");
     acidEventFieldNames.add("originalTransaction");
