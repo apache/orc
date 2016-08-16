@@ -863,7 +863,7 @@ public class RecordReaderImpl implements RecordReader {
   }
 
   private boolean isFullRead() {
-    for (Boolean isColumnPresent : writerIncluded){
+    for (boolean isColumnPresent : writerIncluded){
       if (!isColumnPresent){
         return false;
       }

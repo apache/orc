@@ -264,6 +264,17 @@ public class SchemaEvolution {
     return false;
   }
 
+  /**
+   * Build the mapping from the file type to the reader type. For pre-HIVE-4243
+   * ORC files, the top level structure is matched using position within the
+   * row. Otherwise, structs fields are matched by name.
+   * @param fileType the type in the file
+   * @param readerType the type in the reader
+   * @param positionalLevels the number of structure levels that must be
+   *                         mapped by position rather than field name. Pre
+   *                         HIVE-4243 files have either 1 or 2 levels matched
+   *                         positionally depending on whether they are ACID.
+   */
   void buildConversion(TypeDescription fileType,
                        TypeDescription readerType,
                        int positionalLevels) {
