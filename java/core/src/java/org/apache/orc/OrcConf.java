@@ -82,6 +82,12 @@ public enum OrcConf {
       "If ORC reader encounters corrupt data, this value will be used to\n" +
           "determine whether to skip the corrupt data or throw exception.\n" +
           "The default behavior is to throw exception."),
+  TOLERATE_MISSING_SCHEMA("orc.tolerate.missing.schema",
+      "hive.exec.orc.tolerate.missing.schema",
+      true,
+      "Writers earlier than HIVE-4243 may have inaccurate schema metadata.\n"
+          + "This setting will enable best effort schema evolution rather\n"
+          + "than rejecting mismatched schemas"),
   MEMORY_POOL("orc.memory.pool", "hive.exec.orc.memory.pool", 0.5,
       "Maximum fraction of heap that can be used by ORC file writers"),
   DICTIONARY_KEY_SIZE_THRESHOLD("orc.dictionary.key.threshold",

@@ -568,8 +568,13 @@ public class ReaderImpl implements Reader {
   }
 
   @Override
+  public Options options() {
+    return new Options(conf);
+  }
+
+  @Override
   public RecordReader rows() throws IOException {
-    return rows(new Options());
+    return rows(options());
   }
 
   @Override
@@ -579,7 +584,11 @@ public class ReaderImpl implements Reader {
     // if included columns is null, then include all columns
     if (include == null) {
       options = options.clone();
-      include = new boolean[types.size()];
+      TypeDescription readSchema = options.getSchema();
+      if (readSchema == null) {
+        readSchema = schema;
+      }
+      include = new boolean[readSchema.getMaximumId() + 1];
       Arrays.fill(include, true);
       options.include(include);
     }
