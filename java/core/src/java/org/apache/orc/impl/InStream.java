@@ -124,15 +124,10 @@ public abstract class InStream extends InputStream {
 
     public void seek(long desired) {
       if (desired == 0 && bytes.isEmpty()) {
-        logEmptySeek(name);
         return;
       }
       int i = 0;
       for (DiskRange curRange : bytes) {
-        if (desired == 0 && curRange.getData().remaining() == 0) {
-          logEmptySeek(name);
-          return;
-        }
         if (curRange.getOffset() <= desired &&
             (desired - curRange.getOffset()) < curRange.getLength()) {
           currentOffset = desired;
@@ -360,7 +355,6 @@ public abstract class InStream extends InputStream {
 
     private void seek(long desired) throws IOException {
       if (desired == 0 && bytes.isEmpty()) {
-        logEmptySeek(name);
         return;
       }
       int i = 0;
@@ -416,12 +410,6 @@ public abstract class InStream extends InputStream {
   }
 
   public abstract void seek(PositionProvider index) throws IOException;
-
-  private static void logEmptySeek(String name) {
-    if (LOG.isWarnEnabled()) {
-      LOG.warn("Attempting seek into empty stream (" + name + ") Skipping stream.");
-    }
-  }
 
   /**
    * Create an input stream from a list of buffers.
