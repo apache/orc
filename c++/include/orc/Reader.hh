@@ -503,9 +503,17 @@ namespace orc {
      * all columns are read. This option clears any previous setting of
      * the selected columns.
      * @param include a list of fields to read
+     * @param isColumnIdIncluded whether ids in include are ColumnId
      * @return this
      */
-    ReaderOptions& include(const std::list<uint64_t>& include);
+    ReaderOptions& include(const std::list<uint64_t>& include, 
+        bool isColumnIdIncluded = false);
+
+    /**
+     * Tell whether column ids are stored in include
+     * @return bool, true for column id
+     */
+    bool isColumnIdIncluded();
 
     /**
      * For files that have structs as the top-level object, select the fields
