@@ -166,6 +166,10 @@ public class SchemaEvolution {
     return readerFileTypes[id];
   }
 
+  public boolean[] getReaderIncluded() {
+    return readerIncluded;
+  }
+
   public boolean[] getFileIncluded() {
     return fileIncluded;
   }
