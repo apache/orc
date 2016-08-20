@@ -210,8 +210,10 @@ public class RecordReaderImpl implements RecordReader {
       skipCorrupt = OrcConf.SKIP_CORRUPT_DATA.getBoolean(fileReader.conf);
     }
 
-    reader = TreeReaderFactory.createTreeReader(evolution.getReaderSchema(),
-        evolution, included, skipCorrupt);
+    TreeReaderFactory.ReaderContext readerContext = new TreeReaderFactory.ReaderContext()
+      .setSchemaEvolution(evolution)
+      .skipCorrupt(skipCorrupt);
+    reader = TreeReaderFactory.createTreeReader(evolution.getReaderSchema(), readerContext);
 
     writerIncluded = evolution.getFileIncluded();
     indexes = new OrcProto.RowIndex[types.size()];
