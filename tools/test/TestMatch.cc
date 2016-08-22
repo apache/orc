@@ -1043,7 +1043,7 @@ TEST(TestMatch, selectColumns) {
     cols.push_back(20);
     cols.push_back(22);
     cols.push_back(23);
-    opts.include(cols, true);
+    opts.includeTypes(cols);
     reader = orc::createReader(orc::readLocalFile(filename), opts);
     c = reader->getSelectedColumns();
     for (unsigned int i=1; i < c.size(); i++) {

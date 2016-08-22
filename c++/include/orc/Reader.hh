@@ -503,17 +503,9 @@ namespace orc {
      * all columns are read. This option clears any previous setting of
      * the selected columns.
      * @param include a list of fields to read
-     * @param isColumnIdIncluded whether ids in include are ColumnId
      * @return this
      */
-    ReaderOptions& include(const std::list<uint64_t>& include, 
-        bool isColumnIdIncluded = false);
-
-    /**
-     * Tell whether column ids are stored in include
-     * @return bool, true for column id
-     */
-    bool isColumnIdIncluded();
+    ReaderOptions& include(const std::list<uint64_t>& include);
 
     /**
      * For files that have structs as the top-level object, select the fields
@@ -523,6 +515,18 @@ namespace orc {
      * @return this
      */
     ReaderOptions& include(const std::list<std::string>& include);
+
+    /**
+     * Selects which type ids to read. The root type is always 0 and the
+     * rest of the types are labeled in a preorder traversal of the tree.
+     * The parent types are automatically selected, but the children are not.
+     *
+     * This option clears any previous setting of the selected columns or
+     * types.
+     * @param types a list of the type ids to read
+     * @return this
+     */
+    ReaderOptions& includeTypes(const std::list<uint64_t>& types);
 
     /**
      * Set the section of the file to process.
@@ -589,13 +593,17 @@ namespace orc {
     ReaderOptions& setMemoryPool(MemoryPool& pool);
 
     /**
-     * Were the include indexes set?
+     * Were the field ids set?
      */
     bool getIndexesSet() const;
 
     /**
-     * Get the list of selected columns to read. All children of the selected
-     * columns are also selected.
+     * Were the type ids set?
+     */
+    bool getTypeIdsSet() const;
+
+    /**
+     * Get the list of selected field or type ids to read.
      */
     const std::list<uint64_t>& getInclude() const;
 

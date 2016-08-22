@@ -77,11 +77,16 @@ namespace orc {
     return buffer.str();
   }
 
+  enum ColumnSelection {
+    ColumnSelection_NONE = 0,
+    ColumnSelection_FIELD_NAMES = 1,
+    ColumnSelection_FIELD_IDS = 2,
+    ColumnSelection_TYPE_IDS = 3
+  };
+
   struct ReaderOptionsPrivate {
-    bool setIndexes;
-    bool setNames;
+    ColumnSelection selection;
     std::list<uint64_t> includedColumnIndexes;
-    bool isColumnIdIncluded;
     std::list<std::string> includedColumnNames;
     uint64_t dataStart;
     uint64_t dataLength;
@@ -93,9 +98,7 @@ namespace orc {
     std::string serializedTail;
 
     ReaderOptionsPrivate() {
-      setIndexes = false;
-      setNames = false;
-      isColumnIdIncluded = false;
+      selection = ColumnSelection_NONE;
       dataStart = 0;
       dataLength = std::numeric_limits<uint64_t>::max();
       tailLocation = std::numeric_limits<uint64_t>::max();
@@ -136,26 +139,24 @@ namespace orc {
     // PASS
   }
 
-  ReaderOptions& ReaderOptions::include(const std::list<uint64_t>& include,
-          bool isColumnIdIncluded) {
-    privateBits->setIndexes = true;
+  ReaderOptions& ReaderOptions::include(const std::list<uint64_t>& include) {
+    privateBits->selection = ColumnSelection_FIELD_IDS;
     privateBits->includedColumnIndexes.assign(include.begin(), include.end());
-    privateBits->setNames = false;
     privateBits->includedColumnNames.clear();
-    privateBits->isColumnIdIncluded = isColumnIdIncluded;
     return *this;
   }
 
-  bool ReaderOptions::isColumnIdIncluded() {
-    return privateBits->isColumnIdIncluded;
+  ReaderOptions& ReaderOptions::include(const std::list<std::string>& include) {
+    privateBits->selection = ColumnSelection_FIELD_NAMES;
+    privateBits->includedColumnNames.assign(include.begin(), include.end());
+    privateBits->includedColumnIndexes.clear();
+    return *this;
   }
 
-  ReaderOptions& ReaderOptions::include
-       (const std::list<std::string>& include) {
-    privateBits->setNames = true;
-    privateBits->includedColumnNames.assign(include.begin(), include.end());
-    privateBits->setIndexes = false;
-    privateBits->includedColumnIndexes.clear();
+  ReaderOptions& ReaderOptions::includeTypes(const std::list<uint64_t>& types) {
+    privateBits->selection = ColumnSelection_TYPE_IDS;
+    privateBits->includedColumnIndexes.assign(types.begin(), types.end());
+    privateBits->includedColumnNames.clear();
     return *this;
   }
 
@@ -187,7 +188,11 @@ namespace orc {
   }
 
   bool ReaderOptions::getIndexesSet() const {
-    return privateBits->setIndexes;
+    return privateBits->selection == ColumnSelection_FIELD_IDS;
+  }
+
+  bool ReaderOptions::getTypeIdsSet() const {
+    return privateBits->selection == ColumnSelection_TYPE_IDS;
   }
 
   const std::list<uint64_t>& ReaderOptions::getInclude() const {
@@ -195,7 +200,7 @@ namespace orc {
   }
 
   bool ReaderOptions::getNamesSet() const {
-    return privateBits->setNames;
+    return privateBits->selection == ColumnSelection_FIELD_NAMES;
   }
 
   const std::list<std::string>& ReaderOptions::getIncludeNames() const {
@@ -1122,13 +1127,24 @@ namespace orc {
     proto::StripeFooter getStripeFooter(const proto::StripeInformation& info);
     void startNextStripe();
     void checkOrcVersion();
-    void selectType(const Type& type);
     void readMetadata() const;
-    void updateSelected(const std::list<uint64_t>& Ids);
-    void updateSelectedFieldId(const std::list<uint64_t>& fieldIds);
-    void updateSelectedColumnId(const std::list<uint64_t>& columnIds);
-    bool updateSelectedByIdHelper(const Type* type, std::set<uint64_t>& columnIds);
-    void updateSelected(const std::list<std::string>& fieldNames);
+
+    // Select the columns from the options object
+    void updateSelected();
+
+    // Select a field by name
+    void updateSelectedByName(const std::string& name);
+    // Select a field by id
+    void updateSelectedByFieldId(uint64_t fieldId);
+    // Select a type by id
+    void updateSelectedByTypeId(uint64_t typeId);
+
+    // Select all of the recursive children of the given type.
+    void selectChildren(const Type& type);
+
+    // For each child of type, select it if one of its children
+    // is selected.
+    bool selectParents(const Type& type);
 
   public:
     /**
@@ -1289,25 +1305,31 @@ namespace orc {
     }
 
     schema = convertType(footer->types(0), *footer);
-
-    selectedColumns.assign(static_cast<size_t>(footer->types_size()), false);
-    if (schema->getKind() == STRUCT && options.getIndexesSet()) {
-      updateSelected(options.getInclude());
-    } else if (schema->getKind() == STRUCT && options.getNamesSet()) {
-      updateSelected(options.getIncludeNames());
-    } else {
-      std::fill(selectedColumns.begin(), selectedColumns.end(), true);
-    }
-    selectedColumns[0] = true;
+    updateSelected();
   }
 
-  void ReaderImpl::selectType(const Type& type) {
-    if (!selectedColumns[static_cast<size_t>(type.getColumnId())]) {
-      selectedColumns[static_cast<size_t>(type.getColumnId())] = true;
-      for (uint64_t i=0; i < type.getSubtypeCount(); i++) {
-        selectType(*type.getSubtype(i));
+  void ReaderImpl::updateSelected() {
+    selectedColumns.assign(static_cast<size_t>(footer->types_size()), false);
+    if (schema->getKind() == STRUCT && options.getIndexesSet()) {
+      for(std::list<uint64_t>::const_iterator field = options.getInclude().begin();
+          field != options.getInclude().end(); ++field) {
+        updateSelectedByFieldId(*field);
       }
+    } else if (schema->getKind() == STRUCT && options.getNamesSet()) {
+      for(std::list<std::string>::const_iterator field = options.getIncludeNames().begin();
+          field != options.getIncludeNames().end(); ++field) {
+        updateSelectedByName(*field);
+      }
+    } else if (options.getTypeIdsSet()) {
+      for(std::list<uint64_t>::const_iterator typeId = options.getInclude().begin();
+          typeId != options.getInclude().end(); ++typeId) {
+        updateSelectedByTypeId(*typeId);
+      }
+    } else {
+      // default is to select all columns
+      std::fill(selectedColumns.begin(), selectedColumns.end(), true);
     }
+    selectParents(*schema);
   }
 
   std::string ReaderImpl::getSerializedFileTail() const {
@@ -2221,93 +2243,63 @@ namespace orc {
     }
   }
 
-  void ReaderImpl::updateSelected(const std::list<uint64_t>& ids) {
-    if (options.isColumnIdIncluded()) {
-      updateSelectedColumnId(ids);
+  void ReaderImpl::updateSelectedByFieldId(uint64_t fieldId) {
+    if (fieldId < schema->getSubtypeCount()) {
+      selectChildren(*schema->getSubtype(fieldId));
     } else {
-      updateSelectedFieldId(ids);
-    }
-  }
-
-  void ReaderImpl::updateSelectedFieldId(const std::list<uint64_t>& fieldIds) {
-    uint64_t childCount = schema->getSubtypeCount();
-    for(std::list<uint64_t>::const_iterator i = fieldIds.begin();
-        i != fieldIds.end(); ++i) {
-      if (*i >= childCount) {
-        std::stringstream buffer;
-        buffer << "Invalid column selected " << *i << " out of "
-               << childCount;
-        throw ParseError(buffer.str());
-      }
-      const Type& child = *schema->getSubtype(*i);
-      for(size_t c = child.getColumnId();
-          c <= child.getMaximumColumnId(); ++c){
-        selectedColumns[c] = true;
-      }
-    }
-  }
-
-  void ReaderImpl::updateSelectedColumnId(const std::list<uint64_t>& columnIds) {
-    std::set<uint64_t> idSet(columnIds.begin(), columnIds.end());
-    updateSelectedByIdHelper(schema.get(), idSet);
-    if (!idSet.empty()) {
-      std::set<uint64_t>::const_iterator begIter = idSet.begin();
-      std::set<uint64_t>::const_iterator endIter = idSet.end();
       std::stringstream buffer;
-      buffer << "Invalid column selected: ";
-      while (begIter != endIter) {
-        buffer << *begIter << " "; 
-        ++begIter;
-      }
-      buffer << "out of " << selectedColumns.size();
+      buffer << "Invalid column selected " << fieldId << " out of "
+             << schema->getSubtypeCount();
       throw ParseError(buffer.str());
     }
   }
 
-  bool ReaderImpl::updateSelectedByIdHelper(const Type* type, std::set<uint64_t>& idSet) {
-    uint64_t columnId = type->getColumnId();
-    std::set<uint64_t>::const_iterator found = idSet.find(columnId);
-    if (found != idSet.end()) {
-      for (size_t c = columnId;
-          c <= type->getMaximumColumnId(); ++c) {
-        selectedColumns[c] = true;
-        idSet.erase(c);
-      }
-      return true;
-    }
-    if (0 == type->getSubtypeCount()) {
-      // primitive type, not found in idSet
-      return false;
+  void ReaderImpl::updateSelectedByTypeId(uint64_t typeId) {
+    if (typeId < selectedColumns.size()) {
+      selectedColumns[typeId] = true;
     } else {
-      // mark column as selected if any of his subtype is selected.
-      bool subtypeSelected = selectedColumns[columnId];
-      for (size_t i = 0; i < type->getSubtypeCount(); ++i) {
-        subtypeSelected |= updateSelectedByIdHelper(type->getSubtype(i), idSet);
-      }
-      selectedColumns[columnId] = subtypeSelected;
-      return subtypeSelected;
+      std::stringstream buffer;
+      buffer << "Invalid type id selected " << typeId << " out of "
+             << selectedColumns.size();
+      throw ParseError(buffer.str());
     }
   }
 
-  void ReaderImpl::updateSelected(const std::list<std::string>& fieldNames) {
-    uint64_t childCount = schema->getSubtypeCount();
-    for(std::list<std::string>::const_iterator i = fieldNames.begin();
-        i != fieldNames.end(); ++i) {
-      bool foundMatch = false;
-      for(size_t field=0; field < childCount; ++field) {
-        if (schema->getFieldName(field) == *i) {
-          const Type& child = *schema->getSubtype(field);
-          for(size_t c = child.getColumnId();
-              c <= child.getMaximumColumnId(); ++c){
-            selectedColumns[c] = true;
-          }
-          foundMatch = true;
-          break;
-        }
+  void ReaderImpl::updateSelectedByName(const std::string& fieldName) {
+    for(size_t field=0; field < schema->getSubtypeCount(); ++field) {
+      if (schema->getFieldName(field) == fieldName) {
+        selectChildren(*schema->getSubtype(field));
+        return;
       }
-      if (!foundMatch) {
-        throw ParseError("Invalid column selected " + *i);
+    }
+    throw ParseError("Invalid column selected " + fieldName);
+  }
+
+  void ReaderImpl::selectChildren(const Type& type) {
+    size_t id = static_cast<size_t>(type.getColumnId());
+    if (!selectedColumns[id]) {
+      selectedColumns[id] = true;
+      for(size_t c = id; c <= type.getMaximumColumnId(); ++c){
+        selectedColumns[c] = true;
       }
     }
   }
+
+  /**
+   * Recurses over a type tree and selects the parents of every selected type.
+   * @return true if any child was selected.
+   */
+  bool ReaderImpl::selectParents(const Type& type) {
+    size_t id = static_cast<size_t>(type.getColumnId());
+    if (selectedColumns[id]) {
+      return true;
+    }
+    bool result = false;
+    for(uint64_t c=0; c < type.getSubtypeCount(); ++c) {
+      result |= selectParents(*type.getSubtype(c));
+    }
+    selectedColumns[id] = result;
+    return result;
+  }
+
 }// namespace

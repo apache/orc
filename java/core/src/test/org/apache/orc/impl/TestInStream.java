@@ -29,6 +29,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.hadoop.hive.common.io.DiskRange;
 import org.apache.orc.CompressionCodec;
 import org.junit.Test;
 
@@ -310,5 +311,20 @@ public class TestInStream {
     for(int i=768; i < 1024; ++i) {
       assertEquals(i, inStream.readInt());
     }
+  }
+
+  @Test
+  public void testEmptyDiskRange() throws IOException {
+    List<DiskRange> rangeList = new ArrayList<>();
+    rangeList.add(new BufferChunk(ByteBuffer.allocate(0), 0));
+    InStream stream = new InStream.UncompressedStream("test", rangeList, 0);
+    assertEquals(0, stream.available());
+    stream.seek(new PositionProvider() {
+      @Override
+      public long getNext() {
+        return 0;
+      }
+    });
+    assertEquals(0, stream.available());
   }
 }

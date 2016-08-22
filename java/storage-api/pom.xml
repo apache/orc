@@ -116,7 +116,7 @@
         <version>2.16</version>
         <configuration>
           <reuseForks>false</reuseForks>
-          <argLine>-Xmx2048m -XX:MaxPermSize=512m</argLine>
+          <argLine>-Xmx2048m</argLine>
           <failIfNoTests>false</failIfNoTests>
           <systemPropertyVariables>
             <test.tmp.dir>${test.tmp.dir}</test.tmp.dir>

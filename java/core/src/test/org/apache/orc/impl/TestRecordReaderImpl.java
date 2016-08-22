@@ -1687,7 +1687,7 @@ public class TestRecordReaderImpl {
     writer.close();
     Reader reader = OrcFile.createReader(path, OrcFile.readerOptions(conf));
 
-    RecordReader recordReader = reader.rows(new Reader.Options()
+    RecordReader recordReader = reader.rows(reader.options()
         .dataReader(mockedDataReader));
 
     recordReader.close();

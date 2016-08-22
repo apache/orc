@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 
 /**
@@ -157,6 +158,17 @@ public interface Reader {
     private Boolean skipCorruptRecords = null;
     private TypeDescription schema = null;
     private DataReader dataReader = null;
+    private Boolean tolerateMissingSchema = null;
+
+    public Options() {
+      // PASS
+    }
+
+    public Options(Configuration conf) {
+      useZeroCopy = OrcConf.USE_ZEROCOPY.getBoolean(conf);
+      skipCorruptRecords = OrcConf.SKIP_CORRUPT_DATA.getBoolean(conf);
+      tolerateMissingSchema = OrcConf.TOLERATE_MISSING_SCHEMA.getBoolean(conf);
+    }
 
     /**
      * Set the list of columns to read.
@@ -225,6 +237,18 @@ public interface Reader {
       return this;
     }
 
+    /**
+     * Set whether to make a best effort to tolerate schema evolution for files
+     * which do not have an embedded schema because they were written with a'
+     * pre-HIVE-4243 writer.
+     * @param value the new tolerance flag
+     * @return this
+     */
+    public Options tolerateMissingSchema(boolean value) {
+      this.tolerateMissingSchema = value;
+      return this;
+    }
+
     public boolean[] getInclude() {
       return include;
     }
@@ -280,6 +304,7 @@ public interface Reader {
       result.useZeroCopy = useZeroCopy;
       result.skipCorruptRecords = skipCorruptRecords;
       result.dataReader = dataReader == null ? null : dataReader.clone();
+      result.tolerateMissingSchema = tolerateMissingSchema;
       return result;
     }
 
@@ -324,7 +349,19 @@ public interface Reader {
       buffer.append("}");
       return buffer.toString();
     }
+
+    public boolean getTolerateMissingSchema() {
+      return tolerateMissingSchema != null ? tolerateMissingSchema :
+          (Boolean) OrcConf.TOLERATE_MISSING_SCHEMA.getDefaultValue();
+    }
   }
+
+  /**
+   * Create a default options object that can be customized for creating
+   * a RecordReader.
+   * @return a new default Options object
+   */
+  Options options();
 
   /**
    * Create a RecordReader that reads everything with the default options.

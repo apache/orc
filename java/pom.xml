@@ -21,7 +21,7 @@
   </parent>
   <groupId>org.apache.orc</groupId>
   <artifactId>orc</artifactId>
-  <version>1.2.0-SNAPSHOT</version>
+  <version>1.2.0</version>
   <packaging>pom</packaging>
 
   <name>Apache ORC</name>
@@ -106,7 +106,7 @@
         <version>2.16</version>
         <configuration>
           <reuseForks>false</reuseForks>
-          <argLine>-Xmx2048m -XX:MaxPermSize=512m</argLine>
+          <argLine>-Xmx2048m</argLine>
           <environmentVariables>
             <TZ>US/Pacific</TZ>
             <LANG>en_US.UTF-8</LANG>
@@ -211,7 +211,7 @@
       <dependency>
         <groupId>org.apache.orc</groupId>
         <artifactId>orc-core</artifactId>
-        <version>1.2.0-SNAPSHOT</version>
+        <version>1.2.0</version>
       </dependency>
 
       <!-- inter-project depedencies -->

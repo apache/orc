@@ -1199,9 +1199,9 @@ public class TestVectorOrcFile {
 
     // read the contents and make sure they match
     RecordReader rows1 = reader.rows(
-        new Reader.Options().include(new boolean[]{true, true, false}));
+        reader.options().include(new boolean[]{true, true, false}));
     RecordReader rows2 = reader.rows(
-        new Reader.Options().include(new boolean[]{true, false, true}));
+        reader.options().include(new boolean[]{true, false, true}));
     r1 = new Random(1);
     r2 = new Random(2);
     VectorizedRowBatch batch1 = reader.getSchema().createRowBatch(1000);
@@ -1946,7 +1946,7 @@ public class TestVectorOrcFile {
     boolean[] columns = new boolean[reader.getStatistics().length];
     columns[5] = true; // long colulmn
     columns[9] = true; // text column
-    rows = reader.rows(new Reader.Options()
+    rows = reader.rows(reader.options()
         .range(offsetOfStripe2, offsetOfStripe4 - offsetOfStripe2)
         .include(columns));
     rows.seekToRow(lastRowOfStripe2);
@@ -2146,7 +2146,7 @@ public class TestVectorOrcFile {
           .lessThan("int1", PredicateLeaf.Type.LONG, 600000L)
         .end()
         .build();
-    RecordReader rows = reader.rows(new Reader.Options()
+    RecordReader rows = reader.rows(reader.options()
         .range(0L, Long.MAX_VALUE)
         .include(new boolean[]{true, true, true})
         .searchArgument(sarg, new String[]{null, "int1", "string1"}));
@@ -2171,7 +2171,7 @@ public class TestVectorOrcFile {
           .lessThan("int1", PredicateLeaf.Type.LONG, 0L)
         .end()
         .build();
-    rows = reader.rows(new Reader.Options()
+    rows = reader.rows(reader.options()
         .range(0L, Long.MAX_VALUE)
         .include(new boolean[]{true, true, true})
         .searchArgument(sarg, new String[]{null, "int1", "string1"}));
@@ -2187,7 +2187,7 @@ public class TestVectorOrcFile {
           .end()
         .end()
         .build();
-    rows = reader.rows(new Reader.Options()
+    rows = reader.rows(reader.options()
         .range(0L, Long.MAX_VALUE)
         .include(new boolean[]{true, true, true})
         .searchArgument(sarg, new String[]{null, "int1", "string1"}));
