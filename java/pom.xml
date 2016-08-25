@@ -21,7 +21,7 @@
   </parent>
   <groupId>org.apache.orc</groupId>
   <artifactId>orc</artifactId>
-  <version>1.2.0</version>
+  <version>1.2.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Apache ORC</name>
@@ -211,7 +211,7 @@
       <dependency>
         <groupId>org.apache.orc</groupId>
         <artifactId>orc-core</artifactId>
-        <version>1.2.0</version>
+        <version>1.2.1-SNAPSHOT</version>
       </dependency>
 
       <!-- inter-project depedencies -->
