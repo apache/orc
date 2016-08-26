@@ -138,18 +138,17 @@
     <p>The ORC team is excited to announce the release of ORC v1.1.1. This release
 contains the Java reader and writer and the native C++ ORC reader and tools.</p>
 
-<p>Release Artifacts:</p>
-
 <ul>
-  <li>Released: 13 Jun 2016</li>
-  <li>Source code: <a href="http://www.apache.org/dyn/closer.cgi/orc/orc-1.1.1/orc-1.1.1.tgz">orc-1.1.1.tgz</a></li>
-  <li><a href="https://dist.apache.org/repos/dist/release/orc/orc-1.1.1/orc-1.1.1.tgz.asc">GPG Signature</a>
+  <li>Released: 13 June 2016</li>
+  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-1.1.1/orc-1.1.1.tgz">orc-1.1.1.tgz</a></li>
+  <li><a href="https://archive.apache.org/dist/orc/orc-1.1.1/orc-1.1.1.tgz.asc">GPG Signature</a>
 signed by <a href="https://dist.apache.org/repos/dist/release/orc/KEYS">Owen O’Malley (3D0C92B9)</a></li>
-  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.1.1">662938ed</a></li>
-  <li>SHA 256: <a href="https://dist.apache.org/repos/dist/release/orc/orc-1.1.1/orc-1.1.1.tgz.sha256">19292a18</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.1.1">rel/release-1.1.1</a></li>
+  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-1.1.1/orc-1.1.1.tgz.sha256">19292a1848672c9c…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.1.1%22&amp;tempMax=500">ORC-1.1.1</a></li>
 </ul>
 
-<p>The major new features:</p>
+<p>The major new features in ORC 1.1 are:</p>
 
 <ul>
   <li><a href="https://issues.apache.org/jira/browse/ORC-1">ORC-1</a> Copy the Java ORC code from Hive.</li>
@@ -161,8 +160,14 @@ timestamps from timezones with different daylight savings rules.</li>
 <p>Known issues:</p>
 
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-40">ORC-40</a> Predicate push down is not implemented in C++.</li>
+  <li>
+    <p><a href="https://issues.apache.org/jira/browse/HIVE-14214">HIVE-14214</a> Schema evolution and predicate pushdown don’t work together.</p>
+  </li>
+  <li>
+    <p><a href="https://issues.apache.org/jira/browse/ORC-40">ORC-40</a> Predicate push down is not implemented in C++.</p>
+  </li>
 </ul>
+
 
   </div>
 </article>

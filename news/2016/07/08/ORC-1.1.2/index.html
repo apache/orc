@@ -138,18 +138,17 @@
     <p>The ORC team is excited to announce the release of ORC v1.1.2. This release
 contains the Java reader and writer and the native C++ ORC reader and tools.</p>
 
-<p>Release Artifacts:</p>
-
 <ul>
   <li>Released: 8 July 2016</li>
   <li>Source code: <a href="http://www.apache.org/dyn/closer.cgi/orc/orc-1.1.2/orc-1.1.2.tgz">orc-1.1.2.tgz</a></li>
   <li><a href="https://dist.apache.org/repos/dist/release/orc/orc-1.1.2/orc-1.1.2.tgz.asc">GPG Signature</a>
 signed by <a href="https://dist.apache.org/repos/dist/release/orc/KEYS">Owen O’Malley (3D0C92B9)</a></li>
-  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.1.2">1b5544f7</a></li>
-  <li>SHA 256: <a href="https://dist.apache.org/repos/dist/release/orc/orc-1.1.2/orc-1.1.2.tgz.sha256">5d14df7d</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.1.2">rel/release-1.1.2</a></li>
+  <li>SHA 256: <a href="https://dist.apache.org/repos/dist/release/orc/orc-1.1.2/orc-1.1.2.tgz.sha256">5d14df7d48126dd8…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.1.2%22&amp;tempMax=500">ORC-1.1.2</a></li>
 </ul>
 
-<p>The major new features of ORC 1.1:</p>
+<p>The major new features in ORC 1.1 are:</p>
 
 <ul>
   <li><a href="https://issues.apache.org/jira/browse/ORC-1">ORC-1</a> Copy the Java ORC code from Hive.</li>
@@ -161,8 +160,14 @@ timestamps from timezones with different daylight savings rules.</li>
 <p>Known issues:</p>
 
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-40">ORC-40</a> Predicate push down is not implemented in C++.</li>
+  <li>
+    <p><a href="https://issues.apache.org/jira/browse/HIVE-14214">HIVE-14214</a> Schema evolution and predicate pushdown don’t work together.</p>
+  </li>
+  <li>
+    <p><a href="https://issues.apache.org/jira/browse/ORC-40">ORC-40</a> Predicate push down is not implemented in C++.</p>
+  </li>
 </ul>
+
 
   </div>
 </article>

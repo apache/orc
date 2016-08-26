@@ -138,15 +138,14 @@
     <p>The ORC team is excited to announce the release of ORC v1.0.0. This release
 contains the native C++ ORC reader and some tools.</p>
 
-<p>Release Artifacts:</p>
-
 <ul>
-  <li>Source: <a href="http://www.apache.org/dyn/closer.cgi/orc/orc-1.0.0/orc-1.0.0.tgz">orc-1.0.0.tgz</a></li>
-  <li>Git Tag: 
-<a href="https://github.com/apache/orc/releases/tag/rel/release-1.0.0">rel/release-1.0.0 (704d97e)</a></li>
-  <li><a href="https://dist.apache.org/repos/dist/release/orc/orc-1.0.0/orc-1.0.0.tgz.asc">GPG Signature</a>
+  <li>Released: 25 January 2016</li>
+  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-1.0.0/orc-1.0.0.tgz">orc-1.0.0.tgz</a></li>
+  <li><a href="https://archive.apache.org/dist/orc/orc-1.0.0/orc-1.0.0.tgz.asc">GPG Signature</a>
 signed by <a href="https://dist.apache.org/repos/dist/release/orc/KEYS">Owen O’Malley (3D0C92B9)</a></li>
-  <li>SHA 256: <a href="https://dist.apache.org/repos/dist/release/orc/orc-1.0.0/orc-1.0.0.tgz.mds">8AD5111F 0CA3B72F</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.0.0">rel/release-1.0.0</a></li>
+  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-1.0.0/orc-1.0.0.tgz.sha256">8ad5111f0ca3b72f…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.0.0%22&amp;tempMax=500">ORC-1.0.0</a></li>
 </ul>
 
 <p>The major features:</p>
@@ -170,13 +169,17 @@ signed by <a href="https://dist.apache.org/repos/dist/release/orc/KEYS">Owen O�
 <p>Known issues:</p>
 
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1">ORC-1</a> We are still working on moving the Java 
-reader and writer out of Hive’s code base and thus it is not included here.</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-10">ORC-10</a> When moving ORC files between timezones,
-different daylight savings rules will cause timestamps to shift in the C++
-reader.</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-40">ORC-40</a> Predicate push down is not implemented in C++.</li>
+  <li>
+    <p><a href="https://issues.apache.org/jira/browse/ORC-1">ORC-1</a> We are still working on moving the Java reader and writer out of Hive’s code base and thus it is not included here.</p>
+  </li>
+  <li>
+    <p><a href="https://issues.apache.org/jira/browse/ORC-10">ORC-10</a> When moving ORC files between timezones, different daylight savings rules will cause timestamps to shift in the C++ reader.</p>
+  </li>
+  <li>
+    <p><a href="https://issues.apache.org/jira/browse/ORC-40">ORC-40</a> Predicate push down is not implemented in C++.</p>
+  </li>
 </ul>
+
 
   </div>
 </article>
