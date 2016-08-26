@@ -1,0 +1,52 @@
+# List the releases in reverse logical order
+# Only one release should be tagged latest
+
+1.2.0:
+  date: 2016-08-25
+  state: latest
+  tar: orc-1.2.0.tar.gz
+  signed-by: Owen O’Malley (3D0C92B9)
+  sha256: 5c394c7ed3a31d20726ded55ed9c5a0eeff1bd5b85b1cb2ee6c3c1a94560578c
+  known-issues:
+    ORC-40: Predicate push down is not implemented in C++.
+
+1.1.2:
+  date: 2016-07-08
+  state: stable
+  tar: orc-1.1.2.tgz
+  signed-by: Owen O’Malley (3D0C92B9)
+  sha256: 5d14df7d48126dd846cc9688e71462703ccaa66354fa247017c0aa0a354a4770
+  known-issues:
+    HIVE-14214: Schema evolution and predicate pushdown don't work together.
+    ORC-40: Predicate push down is not implemented in C++.
+
+1.1.1:
+  date: 2016-06-13
+  state: archived
+  tar: orc-1.1.1.tgz
+  signed-by: Owen O’Malley (3D0C92B9)
+  sha256: 19292a1848672c9c6dca4ccb8cb1173bffbe1c43e78663b4b9656ecf439a52c6
+  known-issues:
+    HIVE-14214: Schema evolution and predicate pushdown don't work together.
+    ORC-40: Predicate push down is not implemented in C++.
+
+1.1.0:
+  date: 2016-06-10
+  state: archived
+  tar: orc-1.1.0.tgz
+  signed-by: Owen O’Malley (3D0C92B9)
+  sha256: 8beea2be064baf37fcd5d2cc56bf002a48e19edb238a1502418b7368dcc8587c
+  known-issues:
+    HIVE-14214: Schema evolution and predicate pushdown don't work together.
+    ORC-40: Predicate push down is not implemented in C++.
+
+1.0.0:
+  date: 2016-01-25
+  state: archived
+  tar: orc-1.0.0.tgz
+  signed-by: Owen O’Malley (3D0C92B9)
+  sha256: 8ad5111f0ca3b72fd4e3d539e51fc8df204c43bc4469a8e79f951519b728303e
+  known-issues:
+    ORC-1: We are still working on moving the Java reader and writer out of Hive’s code base and thus it is not included here.
+    ORC-10: When moving ORC files between timezones, different daylight savings rules will cause timestamps to shift in the C++ reader.
+    ORC-40: Predicate push down is not implemented in C++.

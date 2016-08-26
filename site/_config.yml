@@ -8,6 +8,7 @@ jira: https://issues.apache.org/jira/browse
 dist: https://dist.apache.org/repos/dist/release/orc
 dist_mirror: http://www.apache.org/dyn/closer.cgi/orc
 tag_url: https://github.com/apache/orc/releases/tag/rel
+dist_archive: https://archive.apache.org/dist/orc
 destination: target
 exclude: [README.md, Gemfile*]
 keep_files: [.git]
