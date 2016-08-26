@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>ORC 1.1.2 Released</title>
+  <title>ORC 1.2.0 Released</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="generator" content="Jekyll v2.4.0">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
@@ -115,8 +115,8 @@
       <div class="unit four-fifths">
         <article>
   <h2>
-    ORC 1.1.2 Released
-    <a href="/news/2016/07/08/ORC-1.1.2/" class="permalink" title="Permalink">∞</a>
+    ORC 1.2.0 Released
+    <a href="/news/2016/08/25/ORC-1.2.0/" class="permalink" title="Permalink">∞</a>
   </h2>
   <span class="post-category">
     <span class="label">
@@ -125,7 +125,7 @@
   </span>
   <div class="post-meta">
     <span class="post-date">
-      08 Jul 2016
+      25 Aug 2016
     </span>
     <a href="https://people.apache.org/~omalley" class="post-author">
       <img src="https://people.apache.org/~omalley/omalley.png"
@@ -135,27 +135,33 @@
     </a>
   </div>
   <div class="post-content">
-    <p>The ORC team is excited to announce the release of ORC v1.1.2. This release
-contains the Java reader and writer and the native C++ ORC reader and tools.</p>
+    <p>The ORC team is excited to announce the release of ORC v1.2.0.</p>
 
 <p>Release Artifacts:</p>
 
 <ul>
-  <li>Released: 8 July 2016</li>
-  <li>Source code: <a href="http://www.apache.org/dyn/closer.cgi/orc/orc-1.1.2/orc-1.1.2.tgz">orc-1.1.2.tgz</a></li>
-  <li><a href="https://dist.apache.org/repos/dist/release/orc/orc-1.1.2/orc-1.1.2.tgz.asc">GPG Signature</a>
+  <li>Released: 25 August 2016</li>
+  <li>Source code: <a href="http://www.apache.org/dyn/closer.cgi/orc/orc-1.2.0/orc-1.2.0.tar.gz">orc-1.2.0.tar.gz</a></li>
+  <li><a href="https://dist.apache.org/repos/dist/release/orc/orc-1.2.0/orc-1.2.0.tar.gz.asc">GPG Signature</a>
 signed by <a href="https://dist.apache.org/repos/dist/release/orc/KEYS">Owen O’Malley (3D0C92B9)</a></li>
-  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.1.2">1b5544f7</a></li>
-  <li>SHA 256: <a href="https://dist.apache.org/repos/dist/release/orc/orc-1.1.2/orc-1.1.2.tgz.sha256">5d14df7d</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.2.0">d71f1338</a></li>
+  <li>SHA 256: <a href="https://dist.apache.org/repos/dist/release/orc/orc-1.2.0/orc-1.2.0.tar.gz.sha256">5c394c7e</a></li>
 </ul>
 
-<p>The major new features of ORC 1.1:</p>
+<p>The new features of ORC 1.2:</p>
 
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-1">ORC-1</a> Copy the Java ORC code from Hive.</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-10">ORC-10</a> Fix the C++ reader to correctly read
-timestamps from timezones with different daylight savings rules.</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-52">ORC-52</a> Add mapred and mapreduce connectors.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-54">ORC-54</a> Evolve schemas based on field name rather than index</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-84">ORC-84</a> Create a separate java tool module.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-77">ORC-77</a> and <a href="https://issues.apache.org/jira/browse/ORC-81">ORC-81</a> Implement LZO and LZ4 compression codecs.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-92">ORC-92</a> Add support for nested column id selection in C++</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-69">ORC-69</a> Add batch option support in orc-scan tools.</li>
+</ul>
+
+<p>Important fixes:</p>
+
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/HIVE-14214">HIVE-14214</a> ORC schema evolution and predicate push down do not work together.</li>
 </ul>
 
 <p>Known issues:</p>
@@ -182,11 +188,11 @@ timestamps from timezones with different daylight savings rules.</li>
     <h4>Recent Releases</h4>
     <ul>
       
-      <li class="">
+      <li class="current">
         <a href="/news/2016/08/25/ORC-1.2.0/">Version 1.2.0</a>
       </li>
       
-      <li class="current">
+      <li class="">
         <a href="/news/2016/07/08/ORC-1.1.2/">Version 1.1.2</a>
       </li>
       

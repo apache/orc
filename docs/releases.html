@@ -1061,19 +1061,35 @@
       <div class="unit four-fifths">
         <article>
           <h1>Releases</h1>
-          <h2 id="current-release---112">Current Release - 1.1.2:</h2>
+          <h2 id="current-release---120">Current Release - 1.2.0:</h2>
 
-<p>ORC 1.1.2 contains both the Java reader and writer and the C++ reader. It also
+<p>ORC 1.2.0 contains both the Java reader and writer and the C++ reader for ORC files. It also
 contains tools for working with ORC files and looking at their contents and
 metadata.</p>
 
 <ul>
-  <li>Released: 8 July 2016</li>
-  <li>Source code: <a href="http://www.apache.org/dyn/closer.cgi/orc/orc-1.1.2/orc-1.1.2.tgz">orc-1.1.2.tgz</a></li>
-  <li><a href="https://dist.apache.org/repos/dist/release/orc/orc-1.1.2/orc-1.1.2.tgz.asc">GPG Signature</a>
+  <li>Released: 25 August 2016</li>
+  <li>Source code: <a href="http://www.apache.org/dyn/closer.cgi/orc/orc-1.2.0/orc-1.2.0.tar.gz">orc-1.2.0.tar.gz</a></li>
+  <li><a href="https://dist.apache.org/repos/dist/release/orc/orc-1.2.0/orc-1.2.0.tar.gz.asc">GPG Signature</a>
 signed by <a href="https://dist.apache.org/repos/dist/release/orc/KEYS">Owen O’Malley (3D0C92B9)</a></li>
-  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.1.2">1b5544f7</a></li>
-  <li>SHA 256: <a href="https://dist.apache.org/repos/dist/release/orc/orc-1.1.2/orc-1.1.2.tgz.sha256">5d14df7d</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.2.0">d71f1338</a></li>
+  <li>SHA 256: <a href="https://dist.apache.org/repos/dist/release/orc/orc-1.2.0/orc-1.2.0.tar.gz.sha256">5c394c7e</a></li>
+</ul>
+
+<p>The new features of ORC 1.2:</p>
+
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-54">ORC-54</a> Evolve schemas based on field name rather than index</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-84">ORC-84</a> Create a separate java tool module.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-77">ORC-77</a> and <a href="https://issues.apache.org/jira/browse/ORC-81">ORC-81</a> Implement LZO and LZ4 compression codecs.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-92">ORC-92</a> Add support for nested column id selection in C++</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-69">ORC-69</a> Add batch option support in orc-scan tools.</li>
+</ul>
+
+<p>Important fixes:</p>
+
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/HIVE-14214">HIVE-14214</a> ORC schema evolution and predicate push down do not work together.</li>
 </ul>
 
 <p>Known issues:</p>
@@ -1103,6 +1119,11 @@ committers’ <a href="https://dist.apache.org/repos/dist/release/orc/KEYS">key 
     </tr>
   </thead>
   <tbody>
+    <tr>
+      <td style="text-align: center">1.1.2</td>
+      <td style="text-align: center">8 Jul 2016</td>
+      <td style="text-align: center"><a href="/news/2016/07/08/ORC-1.1.2/">ORC-1.1.2</a></td>
+    </tr>
     <tr>
       <td style="text-align: center">1.1.1</td>
       <td style="text-align: center">13 Jun 2016</td>
