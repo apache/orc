@@ -863,7 +863,7 @@ public class TreeReaderFactory {
     protected IntegerReader nanos = null;
     private final boolean skipCorrupt;
     private Map<String, Long> baseTimestampMap;
-    private long base_timestamp;
+    protected long base_timestamp;
     private final TimeZone readerTimeZone;
     private TimeZone writerTimeZone;
     private boolean hasSameTZRules;
@@ -896,6 +896,7 @@ public class TreeReaderFactory {
         if (nanosStream != null) {
           this.nanos = createIntegerReader(encoding.getKind(), nanosStream, false, context);
         }
+        base_timestamp = getBaseTimestamp(context.getWriterTimezone());
       }
     }
 
@@ -922,7 +923,7 @@ public class TreeReaderFactory {
       base_timestamp = getBaseTimestamp(stripeFooter.getWriterTimezone());
     }
 
-    private long getBaseTimestamp(String timeZoneId) throws IOException {
+    protected long getBaseTimestamp(String timeZoneId) throws IOException {
       // to make sure new readers read old files in the same way
       if (timeZoneId == null || timeZoneId.isEmpty()) {
         timeZoneId = readerTimeZone.getID();
