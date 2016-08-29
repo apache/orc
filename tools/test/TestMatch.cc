@@ -1064,6 +1064,31 @@ TEST(TestMatch, selectColumns) {
         << "\"887336a7\", \"value\": {\"int1\": -941468492, \"string1\": "
         << "\"887336a7\"}}]}";
     EXPECT_EQ(expectedMapWithColumnId.str(), line);
+
+    // Struct column #10, with field name: middle
+    std::list<std::string> colNames;
+    colNames.push_back("middle.list.int1");
+    colNames.push_back("middle.list.string1");
+    opts.include(colNames);
+    reader = orc::createReader(orc::readLocalFile(filename), opts);
+    c = reader->getSelectedColumns();
+    for (unsigned int i=1; i < c.size(); i++) {
+      if (i>=10 && i<=14)
+        EXPECT_TRUE(c[i]);
+      else
+        EXPECT_TRUE(!c[i]);
+    }
+    batch = reader->createRowBatch(1);
+    line.clear();
+    printer = createColumnPrinter(line, &reader->getSelectedType());
+    reader->next(*batch);
+    printer->reset(*batch);
+    printer->printRow(0);
+    std::ostringstream expectedStructWithColumnName;
+    expectedStructWithColumnName << "{\"middle\": {\"list\": "
+        << "[{\"int1\": -941468492, \"string1\": \"887336a7\"}, "
+        << "{\"int1\": -1598014431, \"string1\": \"ba419d35-x\"}]}}";
+    EXPECT_EQ(expectedStructWithColumnName.str(), line);
 }
 
 TEST(TestMatch, memoryUse) {
