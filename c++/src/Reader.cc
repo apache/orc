@@ -35,6 +35,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <iterator>
 #include <set>
 
 namespace orc {
@@ -79,9 +80,9 @@ namespace orc {
 
   enum ColumnSelection {
     ColumnSelection_NONE = 0,
-    ColumnSelection_FIELD_NAMES = 1,
+    ColumnSelection_NAMES = 1,
     ColumnSelection_FIELD_IDS = 2,
-    ColumnSelection_TYPE_IDS = 3
+    ColumnSelection_TYPE_IDS = 3,
   };
 
   struct ReaderOptionsPrivate {
@@ -147,7 +148,7 @@ namespace orc {
   }
 
   ReaderOptions& ReaderOptions::include(const std::list<std::string>& include) {
-    privateBits->selection = ColumnSelection_FIELD_NAMES;
+    privateBits->selection = ColumnSelection_NAMES;
     privateBits->includedColumnNames.assign(include.begin(), include.end());
     privateBits->includedColumnIndexes.clear();
     return *this;
@@ -200,7 +201,7 @@ namespace orc {
   }
 
   bool ReaderOptions::getNamesSet() const {
-    return privateBits->selection == ColumnSelection_FIELD_NAMES;
+    return privateBits->selection == ColumnSelection_NAMES;
   }
 
   const std::list<std::string>& ReaderOptions::getIncludeNames() const {
@@ -1122,12 +1123,18 @@ namespace orc {
     proto::StripeInformation currentStripeInfo;
     proto::StripeFooter currentStripeFooter;
     std::unique_ptr<ColumnReader> reader;
+    std::map<std::string, uint64_t> nameIdMap;
+    std::map<uint64_t, const Type*> idTypeMap;
 
     // internal methods
     proto::StripeFooter getStripeFooter(const proto::StripeInformation& info);
     void startNextStripe();
     void checkOrcVersion();
     void readMetadata() const;
+
+    // build map from type name and id, id to Type
+    void buildTypeNameIdMap(const Type* type, std::vector<std::string>& columns);
+    std::string toDotColumnPath(const std::vector<std::string>& columns);
 
     // Select the columns from the options object
     void updateSelected();
@@ -1305,6 +1312,8 @@ namespace orc {
     }
 
     schema = convertType(footer->types(0), *footer);
+    std::vector<std::string> columns;
+    buildTypeNameIdMap(schema.get(), columns);
     updateSelected();
   }
 
@@ -1330,6 +1339,7 @@ namespace orc {
       std::fill(selectedColumns.begin(), selectedColumns.end(), true);
     }
     selectParents(*schema);
+    selectedColumns[0] = true; // column 0 is selected by default
   }
 
   std::string ReaderImpl::getSerializedFileTail() const {
@@ -2256,7 +2266,8 @@ namespace orc {
 
   void ReaderImpl::updateSelectedByTypeId(uint64_t typeId) {
     if (typeId < selectedColumns.size()) {
-      selectedColumns[typeId] = true;
+      const Type& type = *idTypeMap[typeId];
+      selectChildren(type);
     } else {
       std::stringstream buffer;
       buffer << "Invalid type id selected " << typeId << " out of "
@@ -2266,13 +2277,12 @@ namespace orc {
   }
 
   void ReaderImpl::updateSelectedByName(const std::string& fieldName) {
-    for(size_t field=0; field < schema->getSubtypeCount(); ++field) {
-      if (schema->getFieldName(field) == fieldName) {
-        selectChildren(*schema->getSubtype(field));
-        return;
-      }
+    std::map<std::string, uint64_t>::const_iterator ite = nameIdMap.find(fieldName);
+    if (ite != nameIdMap.end()) {
+      updateSelectedByTypeId(ite->second);
+    } else {
+      throw ParseError("Invalid column selected " + fieldName);
     }
-    throw ParseError("Invalid column selected " + fieldName);
   }
 
   void ReaderImpl::selectChildren(const Type& type) {
@@ -2290,16 +2300,52 @@ namespace orc {
    * @return true if any child was selected.
    */
   bool ReaderImpl::selectParents(const Type& type) {
-    size_t id = static_cast<size_t>(type.getColumnId());
-    if (selectedColumns[id]) {
-      return true;
+    if (type.getSubtypeCount() == 0) {
+      return selectedColumns[type.getColumnId()];
     }
+    size_t id = static_cast<size_t>(type.getColumnId());
     bool result = false;
     for(uint64_t c=0; c < type.getSubtypeCount(); ++c) {
       result |= selectParents(*type.getSubtype(c));
     }
     selectedColumns[id] = result;
     return result;
+  }
+
+  /**
+   * Recurses over a type tree and build two maps
+   * map<TypeName, TypeId>, map<TypeId, Type>
+   */
+  void ReaderImpl::buildTypeNameIdMap(const Type* type, std::vector<std::string>& columns) {
+    // map<type_id, Type*>
+    idTypeMap[type->getColumnId()] = type;
+
+    if (orc::STRUCT == type->getKind()) {
+      for (size_t i = 0; i < type->getSubtypeCount(); ++i) {
+        const std::string& fieldName = type->getFieldName(i);
+        columns.push_back(fieldName);
+        nameIdMap[toDotColumnPath(columns)] = type->getSubtype(i)->getColumnId();
+        buildTypeNameIdMap(type->getSubtype(i), columns);
+        columns.pop_back();
+      }
+    } else {
+      // other non-primitive type
+      for (size_t j = 0; j < type->getSubtypeCount(); ++j) {
+        buildTypeNameIdMap(type->getSubtype(j), columns);
+      }
+    }
+  }
+
+  std::string ReaderImpl::toDotColumnPath(const std::vector<std::string>& columns) {
+      if (columns.empty()) {
+          return std::string();
+      }
+      std::string columnPath;
+      std::ostringstream stream;
+      std::copy(columns.begin(), columns.end(),
+              std::ostream_iterator<std::string>(stream, "."));
+      std::string result = stream.str();
+      return result.substr(0, result.length() - 1);
   }
 
 }// namespace
