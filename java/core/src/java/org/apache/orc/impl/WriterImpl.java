@@ -21,6 +21,7 @@ package org.apache.orc.impl;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,12 +35,10 @@ import io.airlift.compress.lz4.Lz4Compressor;
 import io.airlift.compress.lz4.Lz4Decompressor;
 import io.airlift.compress.lzo.LzoCompressor;
 import io.airlift.compress.lzo.LzoDecompressor;
-import io.airlift.compress.snappy.SnappyCompressor;
-import io.airlift.compress.snappy.SnappyDecompressor;
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.hadoop.hive.ql.util.JavaDataModel;
 import org.apache.orc.BinaryColumnStatistics;
-import org.apache.orc.BloomFilterIO;
+import org.apache.orc.util.BloomFilter;
+import org.apache.orc.util.BloomFilterIO;
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.CompressionKind;
 import org.apache.orc.OrcConf;
@@ -50,6 +49,7 @@ import org.apache.orc.StringColumnStatistics;
 import org.apache.orc.StripeInformation;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
+import org.apache.orc.util.BloomFilterUtf8;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -147,6 +147,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
   private final OrcFile.CompressionStrategy compressionStrategy;
   private final boolean[] bloomFilterColumns;
   private final double bloomFilterFpp;
+  private final OrcFile.BloomFilterVersion bloomFilterVersion;
   private boolean writeTimeZone;
 
   public WriterImpl(FileSystem fs,
@@ -157,6 +158,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     this.conf = opts.getConfiguration();
     this.callback = opts.getCallback();
     this.schema = opts.getSchema();
+    bloomFilterVersion = opts.getBloomFilterVersion();
     if (callback != null) {
       callbackContext = new OrcFile.WriterContext(){
 
@@ -426,6 +428,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
         case BLOOM_FILTER:
         case DATA:
         case DICTIONARY_DATA:
+        case BLOOM_FILTER_UTF8:
           if (getCompressionStrategy() == OrcFile.CompressionStrategy.SPEED) {
             modifiers = EnumSet.of(CompressionCodec.Modifier.FAST,
                 CompressionCodec.Modifier.TEXT);
@@ -543,6 +546,10 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     public boolean hasWriterTimeZone() {
       return writeTimeZone;
     }
+
+    public OrcFile.BloomFilterVersion getBloomFilterVersion() {
+      return bloomFilterVersion;
+    }
   }
 
   /**
@@ -564,9 +571,12 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     private final OrcProto.RowIndexEntry.Builder rowIndexEntry;
     private final PositionedOutputStream rowIndexStream;
     private final PositionedOutputStream bloomFilterStream;
-    protected final BloomFilterIO bloomFilter;
+    private final PositionedOutputStream bloomFilterStreamUtf8;
+    protected final BloomFilter bloomFilter;
+    protected final BloomFilterUtf8 bloomFilterUtf8;
     protected final boolean createBloomFilter;
     private final OrcProto.BloomFilterIndex.Builder bloomFilterIndex;
+    private final OrcProto.BloomFilterIndex.Builder bloomFilterIndexUtf8;
     private final OrcProto.BloomFilter.Builder bloomFilterEntry;
     private boolean foundNulls;
     private OutStream isPresentOutStream;
@@ -612,15 +622,30 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       }
       if (createBloomFilter) {
         bloomFilterEntry = OrcProto.BloomFilter.newBuilder();
-        bloomFilterIndex = OrcProto.BloomFilterIndex.newBuilder();
-        bloomFilterStream = streamFactory.createStream(id, OrcProto.Stream.Kind.BLOOM_FILTER);
-        bloomFilter = new BloomFilterIO(streamFactory.getRowIndexStride(),
+        if (streamFactory.getBloomFilterVersion() == OrcFile.BloomFilterVersion.ORIGINAL) {
+          bloomFilter = new BloomFilter(streamFactory.getRowIndexStride(),
+              streamFactory.getBloomFilterFPP());
+          bloomFilterIndex = OrcProto.BloomFilterIndex.newBuilder();
+          bloomFilterStream = streamFactory.createStream(id,
+              OrcProto.Stream.Kind.BLOOM_FILTER);;
+        } else {
+          bloomFilter = null;
+          bloomFilterIndex = null;
+          bloomFilterStream = null;
+        }
+        bloomFilterUtf8 = new BloomFilterUtf8(streamFactory.getRowIndexStride(),
             streamFactory.getBloomFilterFPP());
+        bloomFilterIndexUtf8 = OrcProto.BloomFilterIndex.newBuilder();
+        bloomFilterStreamUtf8 = streamFactory.createStream(id,
+              OrcProto.Stream.Kind.BLOOM_FILTER_UTF8);;
       } else {
         bloomFilterEntry = null;
         bloomFilterIndex = null;
+        bloomFilterIndexUtf8 = null;
+        bloomFilterStreamUtf8 = null;
         bloomFilterStream = null;
         bloomFilter = null;
+        bloomFilterUtf8 = null;
       }
     }
 
@@ -788,7 +813,12 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
         bloomFilterIndex.build().writeTo(bloomFilterStream);
         bloomFilterStream.flush();
         bloomFilterIndex.clear();
-        bloomFilterEntry.clear();
+      }
+      // write the bloom filter to out stream
+      if (bloomFilterStreamUtf8 != null) {
+        bloomFilterIndexUtf8.build().writeTo(bloomFilterStreamUtf8);
+        bloomFilterStreamUtf8.flush();
+        bloomFilterIndexUtf8.clear();
       }
     }
 
@@ -837,12 +867,16 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
 
     void addBloomFilterEntry() {
       if (createBloomFilter) {
-        bloomFilterEntry.setNumHashFunctions(bloomFilter.getNumHashFunctions());
-        bloomFilterEntry.addAllBitset(Arrays.asList(ArrayUtils.toObject(
-            bloomFilter.getBitSet())));
-        bloomFilterIndex.addBloomFilter(bloomFilterEntry.build());
-        bloomFilter.reset();
-        bloomFilterEntry.clear();
+        if (bloomFilter != null) {
+          BloomFilterIO.serialize(bloomFilterEntry, bloomFilter);
+          bloomFilterIndex.addBloomFilter(bloomFilterEntry.build());
+          bloomFilter.reset();
+        }
+        if (bloomFilterUtf8 != null) {
+          BloomFilterIO.serialize(bloomFilterEntry, bloomFilterUtf8);
+          bloomFilterIndexUtf8.addBloomFilter(bloomFilterEntry.build());
+          bloomFilterUtf8.reset();
+        }
       }
     }
 
@@ -946,7 +980,10 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
           byte value = (byte) vec.vector[0];
           indexStatistics.updateInteger(value, length);
           if (createBloomFilter) {
-            bloomFilter.addLong(value);
+            if (bloomFilter != null) {
+              bloomFilter.addLong(value);
+            }
+            bloomFilterUtf8.addLong(value);
           }
           for(int i=0; i < length; ++i) {
             writer.write(value);
@@ -959,7 +996,10 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
             writer.write(value);
             indexStatistics.updateInteger(value, 1);
             if (createBloomFilter) {
-              bloomFilter.addLong(value);
+              if (bloomFilter != null) {
+                bloomFilter.addLong(value);
+              }
+              bloomFilterUtf8.addLong(value);
             }
           }
         }
@@ -1017,7 +1057,10 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
           long value = vec.vector[0];
           indexStatistics.updateInteger(value, length);
           if (createBloomFilter) {
-            bloomFilter.addLong(value);
+            if (bloomFilter != null) {
+              bloomFilter.addLong(value);
+            }
+            bloomFilterUtf8.addLong(value);
           }
           for(int i=0; i < length; ++i) {
             writer.write(value);
@@ -1030,7 +1073,10 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
             writer.write(value);
             indexStatistics.updateInteger(value, 1);
             if (createBloomFilter) {
-              bloomFilter.addLong(value);
+              if (bloomFilter != null) {
+                bloomFilter.addLong(value);
+              }
+              bloomFilterUtf8.addLong(value);
             }
           }
         }
@@ -1077,7 +1123,10 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
           float value = (float) vec.vector[0];
           indexStatistics.updateDouble(value);
           if (createBloomFilter) {
-            bloomFilter.addDouble(value);
+            if (bloomFilter != null) {
+              bloomFilter.addDouble(value);
+            }
+            bloomFilterUtf8.addDouble(value);
           }
           for(int i=0; i < length; ++i) {
             utils.writeFloat(stream, value);
@@ -1090,7 +1139,10 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
             utils.writeFloat(stream, value);
             indexStatistics.updateDouble(value);
             if (createBloomFilter) {
-              bloomFilter.addDouble(value);
+              if (bloomFilter != null) {
+                bloomFilter.addDouble(value);
+              }
+              bloomFilterUtf8.addDouble(value);
             }
           }
         }
@@ -1138,7 +1190,10 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
           double value = vec.vector[0];
           indexStatistics.updateDouble(value);
           if (createBloomFilter) {
-            bloomFilter.addDouble(value);
+            if (bloomFilter != null) {
+              bloomFilter.addDouble(value);
+            }
+            bloomFilterUtf8.addDouble(value);
           }
           for(int i=0; i < length; ++i) {
             utils.writeDouble(stream, value);
@@ -1151,7 +1206,10 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
             utils.writeDouble(stream, value);
             indexStatistics.updateDouble(value);
             if (createBloomFilter) {
-              bloomFilter.addDouble(value);
+              if (bloomFilter != null) {
+                bloomFilter.addDouble(value);
+              }
+              bloomFilterUtf8.addDouble(value);
             }
           }
         }
@@ -1430,7 +1488,12 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
           indexStatistics.updateString(vec.vector[0], vec.start[0],
               vec.length[0], length);
           if (createBloomFilter) {
-            bloomFilter.addBytes(vec.vector[0], vec.start[0], vec.length[0]);
+            if (bloomFilter != null) {
+              // translate from UTF-8 to the default charset
+              bloomFilter.addString(new String(vec.vector[0], vec.start[0],
+                  vec.length[0], StandardCharsets.UTF_8));
+            }
+            bloomFilterUtf8.addBytes(vec.vector[0], vec.start[0], vec.length[0]);
           }
         }
       } else {
@@ -1447,7 +1510,13 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
             indexStatistics.updateString(vec.vector[offset + i],
                 vec.start[offset + i], vec.length[offset + i], 1);
             if (createBloomFilter) {
-              bloomFilter.addBytes(vec.vector[offset + i],
+              if (bloomFilter != null) {
+                // translate from UTF-8 to the default charset
+                bloomFilter.addString(new String(vec.vector[offset + i],
+                    vec.start[offset + i], vec.length[offset + i],
+                    StandardCharsets.UTF_8));
+              }
+              bloomFilterUtf8.addBytes(vec.vector[offset + i],
                   vec.start[offset + i], vec.length[offset + i]);
             }
           }
@@ -1504,7 +1573,12 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
           }
           indexStatistics.updateString(ptr, ptrOffset, itemLength, length);
           if (createBloomFilter) {
-            bloomFilter.addBytes(ptr, ptrOffset, itemLength);
+            if (bloomFilter != null) {
+              // translate from UTF-8 to the default charset
+              bloomFilter.addString(new String(vec.vector[0], vec.start[0],
+                  vec.length[0], StandardCharsets.UTF_8));
+            }
+            bloomFilterUtf8.addBytes(vec.vector[0], vec.start[0], vec.length[0]);
           }
         }
       } else {
@@ -1531,7 +1605,14 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
             }
             indexStatistics.updateString(ptr, ptrOffset, itemLength, 1);
             if (createBloomFilter) {
-              bloomFilter.addBytes(ptr, ptrOffset, itemLength);
+              if (bloomFilter != null) {
+                // translate from UTF-8 to the default charset
+                bloomFilter.addString(new String(vec.vector[offset + i],
+                    vec.start[offset + i], vec.length[offset + i],
+                    StandardCharsets.UTF_8));
+              }
+              bloomFilterUtf8.addBytes(vec.vector[offset + i],
+                  vec.start[offset + i], vec.length[offset + i]);
             }
           }
         }
@@ -1576,7 +1657,14 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
           indexStatistics.updateString(vec.vector[0], vec.start[0],
               itemLength, length);
           if (createBloomFilter) {
-            bloomFilter.addBytes(vec.vector[0], vec.start[0], itemLength);
+            if (bloomFilter != null) {
+              // translate from UTF-8 to the default charset
+              bloomFilter.addString(new String(vec.vector[0],
+                  vec.start[0], itemLength,
+                  StandardCharsets.UTF_8));
+            }
+            bloomFilterUtf8.addBytes(vec.vector[0],
+                vec.start[0], itemLength);
           }
         }
       } else {
@@ -1594,7 +1682,13 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
             indexStatistics.updateString(vec.vector[offset + i],
                 vec.start[offset + i], itemLength, 1);
             if (createBloomFilter) {
-              bloomFilter.addBytes(vec.vector[offset + i],
+              if (bloomFilter != null) {
+                // translate from UTF-8 to the default charset
+                bloomFilter.addString(new String(vec.vector[offset + i],
+                    vec.start[offset + i], itemLength,
+                    StandardCharsets.UTF_8));
+              }
+              bloomFilterUtf8.addBytes(vec.vector[offset + i],
                   vec.start[offset + i], itemLength);
             }
           }
@@ -1646,7 +1740,10 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
           indexStatistics.updateBinary(vec.vector[0], vec.start[0],
               vec.length[0], length);
           if (createBloomFilter) {
-            bloomFilter.addBytes(vec.vector[0], vec.start[0], vec.length[0]);
+            if (bloomFilter != null) {
+              bloomFilter.addBytes(vec.vector[0], vec.start[0], vec.length[0]);
+            }
+            bloomFilterUtf8.addBytes(vec.vector[0], vec.start[0], vec.length[0]);
           }
         }
       } else {
@@ -1658,7 +1755,11 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
             indexStatistics.updateBinary(vec.vector[offset + i],
                 vec.start[offset + i], vec.length[offset + i], 1);
             if (createBloomFilter) {
-              bloomFilter.addBytes(vec.vector[offset + i],
+              if (bloomFilter != null) {
+                bloomFilter.addBytes(vec.vector[offset + i],
+                    vec.start[offset + i], vec.length[offset + i]);
+              }
+              bloomFilterUtf8.addBytes(vec.vector[offset + i],
                   vec.start[offset + i], vec.length[offset + i]);
             }
           }
@@ -1734,7 +1835,10 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
           long millis = val.getTime();
           indexStatistics.updateTimestamp(millis);
           if (createBloomFilter) {
-            bloomFilter.addLong(millis);
+            if (bloomFilter != null) {
+              bloomFilter.addLong(millis);
+            }
+            bloomFilterUtf8.addLong(millis);
           }
           final long secs = millis / MILLIS_PER_SECOND - base_timestamp;
           final long nano = formatNanos(val.getNanos());
@@ -1753,7 +1857,10 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
             nanos.write(formatNanos(val.getNanos()));
             indexStatistics.updateTimestamp(millis);
             if (createBloomFilter) {
-              bloomFilter.addLong(millis);
+              if (bloomFilter != null) {
+                bloomFilter.addLong(millis);
+              }
+              bloomFilterUtf8.addLong(millis);
             }
           }
         }
@@ -1819,7 +1926,10 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
           int value = (int) vec.vector[0];
           indexStatistics.updateDate(value);
           if (createBloomFilter) {
-            bloomFilter.addLong(value);
+            if (bloomFilter != null) {
+              bloomFilter.addLong(value);
+            }
+            bloomFilterUtf8.addLong(value);
           }
           for(int i=0; i < length; ++i) {
             writer.write(value);
@@ -1832,7 +1942,10 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
             writer.write(value);
             indexStatistics.updateDate(value);
             if (createBloomFilter) {
-              bloomFilter.addLong(value);
+              if (bloomFilter != null) {
+                bloomFilter.addLong(value);
+              }
+              bloomFilterUtf8.addLong(value);
             }
           }
         }
@@ -1901,7 +2014,11 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
           HiveDecimal value = vec.vector[0].getHiveDecimal();
           indexStatistics.updateDecimal(value);
           if (createBloomFilter) {
-            bloomFilter.addString(value.toString());
+            String str = value.toString();
+            if (bloomFilter != null) {
+              bloomFilter.addString(str);
+            }
+            bloomFilterUtf8.addString(str);
           }
           for(int i=0; i < length; ++i) {
             SerializationUtils.writeBigInteger(valueStream,
@@ -1918,7 +2035,11 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
             scaleStream.write(value.scale());
             indexStatistics.updateDecimal(value);
             if (createBloomFilter) {
-              bloomFilter.addString(value.toString());
+              String str = value.toString();
+              if (bloomFilter != null) {
+                bloomFilter.addString(str);
+              }
+              bloomFilterUtf8.addString(str);
             }
           }
         }
@@ -2065,7 +2186,10 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
             childrenWriters[0].writeBatch(vec.child, childOffset, childLength);
           }
           if (createBloomFilter) {
-            bloomFilter.addLong(childLength);
+            if (bloomFilter != null) {
+              bloomFilter.addLong(childLength);
+            }
+            bloomFilterUtf8.addLong(childLength);
           }
         }
       } else {
@@ -2087,6 +2211,12 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
               currentLength = nextLength;
             } else {
               currentLength += nextLength;
+            }
+            if (createBloomFilter) {
+              if (bloomFilter != null) {
+                bloomFilter.addLong(nextLength);
+              }
+              bloomFilterUtf8.addLong(nextLength);
             }
           }
         }
@@ -2161,7 +2291,10 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
             childrenWriters[1].writeBatch(vec.values, childOffset, childLength);
           }
           if (createBloomFilter) {
-            bloomFilter.addLong(childLength);
+            if (bloomFilter != null) {
+              bloomFilter.addLong(childLength);
+            }
+            bloomFilterUtf8.addLong(childLength);
           }
         }
       } else {
@@ -2185,6 +2318,12 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
               currentLength = nextLength;
             } else {
               currentLength += nextLength;
+            }
+            if (createBloomFilter) {
+              if (bloomFilter != null) {
+                bloomFilter.addLong(nextLength);
+              }
+              bloomFilterUtf8.addLong(nextLength);
             }
           }
         }
@@ -2247,7 +2386,10 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
             tags.write(tag);
           }
           if (createBloomFilter) {
-            bloomFilter.addLong(tag);
+            if (bloomFilter != null) {
+              bloomFilter.addLong(tag);
+            }
+            bloomFilterUtf8.addLong(tag);
           }
           childrenWriters[tag].writeBatch(vec.fields[tag], offset, length);
         }
@@ -2274,6 +2416,12 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
                   currentStart[tag], currentLength[tag]);
               currentStart[tag] = i + offset;
               currentLength[tag] = 1;
+            }
+            if (createBloomFilter) {
+              if (bloomFilter != null) {
+                bloomFilter.addLong(tag);
+              }
+              bloomFilterUtf8.addLong(tag);
             }
           }
         }

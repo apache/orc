@@ -16,8 +16,9 @@
  * limitations under the License.
  */
 
-package org.apache.hive.common.util;
+package org.apache.orc.util;
 
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
 
@@ -38,24 +39,25 @@ import java.util.List;
  * algorithm. Although Murmur2 is slightly faster than Murmur3 in Java, it suffers from hash
  * collisions for specific sequence of repeating bytes. Check the following link for more info
  * https://code.google.com/p/smhasher/wiki/MurmurHash2Flaw
+ *
+ * Note that this class is here for backwards compatibility, because it uses
+ * the JVM default character set for strings. All new users should
+ * BloomFilterUtf8, which always uses UTF8 for the encoding.
  */
 public class BloomFilter {
   public static final double DEFAULT_FPP = 0.05;
-  protected BitSet bitSet;
-  protected int numBits;
-  protected int numHashFunctions;
-
-  public BloomFilter() {
-  }
-
-  public BloomFilter(long expectedEntries) {
-    this(expectedEntries, DEFAULT_FPP);
-  }
+  private final BitSet bitSet;
+  private final int numBits;
+  private final int numHashFunctions;
 
   static void checkArgument(boolean expression, String message) {
     if (!expression) {
       throw new IllegalArgumentException(message);
     }
+  }
+
+  public BloomFilter(long expectedEntries) {
+    this(expectedEntries, DEFAULT_FPP);
   }
 
   public BloomFilter(long expectedEntries, double fpp) {
@@ -70,16 +72,13 @@ public class BloomFilter {
 
   /**
    * A constructor to support rebuilding the BloomFilter from a serialized representation.
-   * @param bits
-   * @param numBits
-   * @param numFuncs
+   * @param bits the serialized bits
+   * @param numFuncs the number of functions used
    */
-  public BloomFilter(List<Long> bits, int numBits, int numFuncs) {
+  public BloomFilter(long[] bits, int numFuncs) {
     super();
-    long[] copied = new long[bits.size()];
-    for (int i = 0; i < bits.size(); i++) copied[i] = bits.get(i);
-    bitSet = new BitSet(copied);
-    this.numBits = numBits;
+    bitSet = new BitSet(bits);
+    this.numBits = (int) bitSet.bitSize();
     numHashFunctions = numFuncs;
   }
 
@@ -89,6 +88,15 @@ public class BloomFilter {
 
   static int optimalNumOfBits(long n, double p) {
     return (int) (-n * Math.log(p) / (Math.log(2) * Math.log(2)));
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    return other != null &&
+        other.getClass() == getClass() &&
+        numBits == ((BloomFilter) other).numBits &&
+        numHashFunctions == ((BloomFilter) other).numHashFunctions &&
+        bitSet.equals(((BloomFilter) other).bitSet);
   }
 
   public void add(byte[] val) {
@@ -130,7 +138,7 @@ public class BloomFilter {
     if (val == null) {
       add(null);
     } else {
-      add(val.getBytes());
+      add(val.getBytes(Charset.defaultCharset()));
     }
   }
 
@@ -177,7 +185,7 @@ public class BloomFilter {
     if (val == null) {
       return test(null);
     } else {
-      return test(val.getBytes());
+      return test(val.getBytes(Charset.defaultCharset()));
     }
   }
 
@@ -245,7 +253,7 @@ public class BloomFilter {
    * Bare metal bit set implementation. For performance reasons, this implementation does not check
    * for index bounds nor expand the bit set size if the specified index is greater than the size.
    */
-  public class BitSet {
+  public static class BitSet {
     private final long[] data;
 
     public BitSet(long bits) {
@@ -308,6 +316,13 @@ public class BloomFilter {
      */
     public void clear() {
       Arrays.fill(data, 0);
+    }
+
+    @Override
+    public boolean equals(Object other) {
+      return other != null &&
+          other.getClass() == getClass() &&
+          Arrays.equals(data, ((BitSet) other).data);
     }
   }
 }

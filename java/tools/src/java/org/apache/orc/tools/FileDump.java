@@ -37,7 +37,8 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
-import org.apache.orc.BloomFilterIO;
+import org.apache.orc.util.BloomFilter;
+import org.apache.orc.util.BloomFilterIO;
 import org.apache.orc.ColumnStatistics;
 import org.apache.orc.CompressionKind;
 import org.apache.orc.OrcFile;
@@ -383,7 +384,9 @@ public final class FileDump {
           StringBuilder buf = new StringBuilder();
           String rowIdxString = getFormattedRowIndices(col, indices.getRowGroupIndex());
           buf.append(rowIdxString);
-          String bloomFilString = getFormattedBloomFilters(col, indices.getBloomFilterIndex());
+          String bloomFilString = getFormattedBloomFilters(col, indices,
+              reader.getWriterVersion(),
+              reader.getSchema().findSubtype(col).getCategory());
           buf.append(bloomFilString);
           System.out.println(buf);
         }
@@ -604,15 +607,18 @@ public final class FileDump {
     return -1;
   }
 
-  private static String getFormattedBloomFilters(int col,
-      OrcProto.BloomFilterIndex[] bloomFilterIndex) {
+  private static String getFormattedBloomFilters(int col, OrcIndex index,
+                                                 OrcFile.WriterVersion version,
+                                                 TypeDescription.Category type) {
+    OrcProto.BloomFilterIndex[] bloomFilterIndex = index.getBloomFilterIndex();
     StringBuilder buf = new StringBuilder();
-    BloomFilterIO stripeLevelBF = null;
+    BloomFilter stripeLevelBF = null;
     if (bloomFilterIndex != null && bloomFilterIndex[col] != null) {
       int idx = 0;
       buf.append("\n    Bloom filters for column ").append(col).append(":");
       for (OrcProto.BloomFilter bf : bloomFilterIndex[col].getBloomFilterList()) {
-        BloomFilterIO toMerge = new BloomFilterIO(bf);
+        BloomFilter toMerge = BloomFilterIO.deserialize(
+            index.getBloomFilterKinds()[col], version, type, bf);
         buf.append("\n      Entry ").append(idx++).append(":").append(getBloomFilterStats(toMerge));
         if (stripeLevelBF == null) {
           stripeLevelBF = toMerge;
@@ -626,7 +632,7 @@ public final class FileDump {
     return buf.toString();
   }
 
-  private static String getBloomFilterStats(BloomFilterIO bf) {
+  private static String getBloomFilterStats(BloomFilter bf) {
     StringBuilder sb = new StringBuilder();
     int bitCount = bf.getBitSize();
     int popCount = 0;
