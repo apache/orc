@@ -72,6 +72,8 @@ namespace orc {
       return "HIVE-12055";
     case WriterVersion_HIVE_13083:
       return "HIVE-13083";
+    case WriterVersion_ORC_101:
+      return "ORC-101";
     }
     std::stringstream buffer;
     buffer << "future - " << version;

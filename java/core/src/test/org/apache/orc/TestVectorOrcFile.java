@@ -1904,8 +1904,8 @@ public class TestVectorOrcFile {
             .withZeroCopy(false)
             .build());
     OrcIndex index =
-        meta.readRowIndex(reader.getStripes().get(0), null, null, null, null,
-            null);
+        meta.readRowIndex(reader.getStripes().get(0), null, null, false, null, null,
+            null, OrcFile.WriterVersion.ORC_101, null, null);
     // check the primitive columns to make sure they have the right number of
     // items in the first row group
     for(int c=1; c < 9; ++c) {

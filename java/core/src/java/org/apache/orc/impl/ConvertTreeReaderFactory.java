@@ -1408,7 +1408,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void setConvertVectorElement(int elementNum) {
       long longValue = longColVector.vector[elementNum];
       String string = anyIntegerAsLongTreeReader.getString(longValue);
-      byte[] bytes = string.getBytes();
+      byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
       assignStringGroupVectorEntry(bytesColVector, elementNum, readerType, bytes);
     }
 
@@ -1450,7 +1450,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       float floatValue = (float) doubleColVector.vector[elementNum];
       if (!Float.isNaN(floatValue)) {
         String string = String.valueOf(floatValue);
-        byte[] bytes = string.getBytes();
+        byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
         assignStringGroupVectorEntry(bytesColVector, elementNum, readerType, bytes);
       } else {
         bytesColVector.noNulls = false;
@@ -1495,7 +1495,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       double doubleValue = doubleColVector.vector[elementNum];
       if (!Double.isNaN(doubleValue)) {
         String string = String.valueOf(doubleValue);
-        byte[] bytes = string.getBytes();
+        byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
         assignStringGroupVectorEntry(bytesColVector, elementNum, readerType, bytes);
       } else {
         bytesColVector.noNulls = false;
@@ -1544,7 +1544,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     @Override
     public void setConvertVectorElement(int elementNum) {
       String string = decimalColVector.vector[elementNum].getHiveDecimal().toString();
-      byte[] bytes = string.getBytes();
+      byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
       assignStringGroupVectorEntry(bytesColVector, elementNum, readerType, bytes);
     }
 
@@ -1584,7 +1584,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void setConvertVectorElement(int elementNum) throws IOException {
       String string =
           timestampColVector.asScratchTimestamp(elementNum).toString();
-      byte[] bytes = string.getBytes();
+      byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
       assignStringGroupVectorEntry(bytesColVector, elementNum, readerType, bytes);
     }
 
@@ -1626,7 +1626,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void setConvertVectorElement(int elementNum) throws IOException {
       date.setTime(DateWritable.daysToMillis((int) longColVector.vector[elementNum]));
       String string = date.toString();
-      byte[] bytes = string.getBytes();
+      byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
       assignStringGroupVectorEntry(bytesColVector, elementNum, readerType, bytes);
     }
 

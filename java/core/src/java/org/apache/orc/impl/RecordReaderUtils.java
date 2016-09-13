@@ -30,19 +30,113 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.io.DiskRange;
 import org.apache.hadoop.hive.common.io.DiskRangeList;
-import org.apache.hadoop.hive.common.io.DiskRangeList.CreateHelper;
-import org.apache.hadoop.hive.common.io.DiskRangeList.MutateHelper;
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.DataReader;
+import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
 
 import org.apache.orc.StripeInformation;
+import org.apache.orc.TypeDescription;
 
 /**
  * Stateless methods shared between RecordReaderImpl and EncodedReaderImpl.
  */
 public class RecordReaderUtils {
   private static final HadoopShims SHIMS = HadoopShims.Factory.get();
+
+  static boolean hadBadBloomFilters(TypeDescription.Category category,
+                                    OrcFile.WriterVersion version) {
+    switch(category) {
+      case STRING:
+      case CHAR:
+      case VARCHAR:
+        return !version.includes(OrcFile.WriterVersion.HIVE_12055);
+      case DECIMAL:
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Plans the list of disk ranges that the given stripe needs to read the
+   * indexes. All of the positions are relative to the start of the stripe.
+   * @param  fileSchema the schema for the file
+   * @param footer the stripe footer
+   * @param ignoreNonUtf8BloomFilter should the reader ignore non-utf8
+   *                                 encoded bloom filters
+   * @param fileIncluded the columns (indexed by file columns) that should be
+   *                     read
+   * @param sargColumns true for the columns (indexed by file columns) that
+   *                    we need bloom filters for
+   * @param version the version of the software that wrote the file
+   * @param bloomFilterKinds (output) the stream kind of the bloom filters
+   * @return a list of merged disk ranges to read
+   */
+  static DiskRangeList planIndexReading(TypeDescription fileSchema,
+                                        OrcProto.StripeFooter footer,
+                                        boolean ignoreNonUtf8BloomFilter,
+                                        boolean[] fileIncluded,
+                                        boolean[] sargColumns,
+                                        OrcFile.WriterVersion version,
+                                        OrcProto.Stream.Kind[] bloomFilterKinds) {
+    DiskRangeList.CreateHelper result = new DiskRangeList.CreateHelper();
+    List<OrcProto.Stream> streams = footer.getStreamsList();
+    // figure out which kind of bloom filter we want for each column
+    // picks bloom_filter_utf8 if its available, otherwise bloom_filter
+    if (sargColumns != null) {
+      for (OrcProto.Stream stream : streams) {
+        if (stream.hasKind() && stream.hasColumn()) {
+          int column = stream.getColumn();
+          if (sargColumns[column]) {
+            switch (stream.getKind()) {
+              case BLOOM_FILTER:
+                if (bloomFilterKinds[column] == null &&
+                    !(ignoreNonUtf8BloomFilter &&
+                        hadBadBloomFilters(fileSchema.findSubtype(column)
+                            .getCategory(), version))) {
+                  bloomFilterKinds[column] = OrcProto.Stream.Kind.BLOOM_FILTER;
+                }
+                break;
+              case BLOOM_FILTER_UTF8:
+                bloomFilterKinds[column] = OrcProto.Stream.Kind.BLOOM_FILTER_UTF8;
+                break;
+              default:
+                break;
+            }
+          }
+        }
+      }
+    }
+    long offset = 0;
+    for(OrcProto.Stream stream: footer.getStreamsList()) {
+      if (stream.hasKind() && stream.hasColumn()) {
+        int column = stream.getColumn();
+        if (fileIncluded == null || fileIncluded[column]) {
+          boolean needStream = false;
+          switch (stream.getKind()) {
+            case ROW_INDEX:
+              needStream = true;
+              break;
+            case BLOOM_FILTER:
+              needStream = bloomFilterKinds[column] == OrcProto.Stream.Kind.BLOOM_FILTER;
+              break;
+            case BLOOM_FILTER_UTF8:
+              needStream = bloomFilterKinds[column] == OrcProto.Stream.Kind.BLOOM_FILTER_UTF8;
+              break;
+            default:
+              // PASS
+              break;
+          }
+          if (needStream) {
+            result.addOrMerge(offset, offset + stream.getLength(), true, false);
+          }
+        }
+      }
+      offset += stream.getLength();
+    }
+    return result.get();
+  }
 
   private static class DefaultDataReader implements DataReader {
     private FSDataInputStream file = null;
@@ -91,10 +185,14 @@ public class RecordReaderUtils {
 
     @Override
     public OrcIndex readRowIndex(StripeInformation stripe,
+                                 TypeDescription fileSchema,
                                  OrcProto.StripeFooter footer,
+                                 boolean ignoreNonUtf8BloomFilter,
                                  boolean[] included,
                                  OrcProto.RowIndex[] indexes,
                                  boolean[] sargColumns,
+                                 OrcFile.WriterVersion version,
+                                 OrcProto.Stream.Kind[] bloomFilterKinds,
                                  OrcProto.BloomFilterIndex[] bloomFilterIndices
                                  ) throws IOException {
       if (file == null) {
@@ -106,49 +204,61 @@ public class RecordReaderUtils {
       if (indexes == null) {
         indexes = new OrcProto.RowIndex[typeCount];
       }
+      if (bloomFilterKinds == null) {
+        bloomFilterKinds = new OrcProto.Stream.Kind[typeCount];
+      }
       if (bloomFilterIndices == null) {
         bloomFilterIndices = new OrcProto.BloomFilterIndex[typeCount];
       }
-      long offset = stripe.getOffset();
-      List<OrcProto.Stream> streams = footer.getStreamsList();
-      for (int i = 0; i < streams.size(); i++) {
-        OrcProto.Stream stream = streams.get(i);
-        OrcProto.Stream nextStream = null;
-        if (i < streams.size() - 1) {
-          nextStream = streams.get(i+1);
+      DiskRangeList ranges = planIndexReading(fileSchema, footer,
+          ignoreNonUtf8BloomFilter, included, sargColumns, version,
+          bloomFilterKinds);
+      ranges = readDiskRanges(file, zcr, stripe.getOffset(), ranges, false);
+      long offset = 0;
+      DiskRangeList range = ranges;
+      for(OrcProto.Stream stream: footer.getStreamsList()) {
+        // advance to find the next range
+        while (range != null && range.getEnd() <= offset) {
+          range = range.next;
         }
-        int col = stream.getColumn();
-        int len = (int) stream.getLength();
-        // row index stream and bloom filter are interlaced, check if the sarg column contains bloom
-        // filter and combine the io to read row index and bloom filters for that column together
-        if (stream.hasKind() && (stream.getKind() == OrcProto.Stream.Kind.ROW_INDEX)) {
-          boolean readBloomFilter = false;
-          if (sargColumns != null && sargColumns[col] &&
-              nextStream.getKind() == OrcProto.Stream.Kind.BLOOM_FILTER) {
-            len += nextStream.getLength();
-            i += 1;
-            readBloomFilter = true;
-          }
-          if ((included == null || included[col]) && indexes[col] == null) {
-            byte[] buffer = new byte[len];
-            file.readFully(offset, buffer, 0, buffer.length);
-            ByteBuffer bb = ByteBuffer.wrap(buffer);
-            indexes[col] = OrcProto.RowIndex.parseFrom(InStream.create("index",
-                ReaderImpl.singleton(new BufferChunk(bb, 0)), stream.getLength(),
-                codec, bufferSize));
-            if (readBloomFilter) {
-              bb.position((int) stream.getLength());
-              bloomFilterIndices[col] = OrcProto.BloomFilterIndex.parseFrom(InStream.create(
-                  "bloom_filter", ReaderImpl.singleton(new BufferChunk(bb, 0)),
-                  nextStream.getLength(), codec, bufferSize));
-            }
+        // no more ranges, so we are done
+        if (range == null) {
+          break;
+        }
+        int column = stream.getColumn();
+        if (stream.hasKind() && range.getOffset() <= offset) {
+          switch (stream.getKind()) {
+            case ROW_INDEX:
+              if (included == null || included[column]) {
+                ByteBuffer bb = range.getData().duplicate();
+                bb.position((int) (offset - range.getOffset()));
+                bb.limit((int) (bb.position() + stream.getLength()));
+                indexes[column] = OrcProto.RowIndex.parseFrom(
+                    InStream.createCodedInputStream("index",
+                        ReaderImpl.singleton(new BufferChunk(bb, 0)),
+                        stream.getLength(),
+                    codec, bufferSize));
+              }
+              break;
+            case BLOOM_FILTER:
+            case BLOOM_FILTER_UTF8:
+              if (sargColumns != null && sargColumns[column]) {
+                ByteBuffer bb = range.getData().duplicate();
+                bb.position((int) (offset - range.getOffset()));
+                bb.limit((int) (bb.position() + stream.getLength()));
+                bloomFilterIndices[column] = OrcProto.BloomFilterIndex.parseFrom
+                    (InStream.createCodedInputStream("bloom_filter",
+                        ReaderImpl.singleton(new BufferChunk(bb, 0)),
+                    stream.getLength(), codec, bufferSize));
+              }
+              break;
+            default:
+              break;
           }
         }
-        offset += len;
+        offset += stream.getLength();
       }
-
-      OrcIndex index = new OrcIndex(indexes, bloomFilterIndices);
-      return index;
+      return new OrcIndex(indexes, bloomFilterKinds, bloomFilterIndices);
     }
 
     @Override
@@ -234,14 +344,14 @@ public class RecordReaderUtils {
   }
 
   public static void addEntireStreamToRanges(
-      long offset, long length, CreateHelper list, boolean doMergeBuffers) {
+      long offset, long length, DiskRangeList.CreateHelper list, boolean doMergeBuffers) {
     list.addOrMerge(offset, offset + length, doMergeBuffers, false);
   }
 
   public static void addRgFilteredStreamToRanges(OrcProto.Stream stream,
       boolean[] includedRowGroups, boolean isCompressed, OrcProto.RowIndex index,
       OrcProto.ColumnEncoding encoding, OrcProto.Type type, int compressionSize, boolean hasNull,
-      long offset, long length, CreateHelper list, boolean doMergeBuffers) {
+      long offset, long length, DiskRangeList.CreateHelper list, boolean doMergeBuffers) {
     for (int group = 0; group < includedRowGroups.length; ++group) {
       if (!includedRowGroups[group]) continue;
       int posn = getIndexPosition(
@@ -399,7 +509,7 @@ public class RecordReaderUtils {
     if (range == null) return null;
     DiskRangeList prev = range.prev;
     if (prev == null) {
-      prev = new MutateHelper(range);
+      prev = new DiskRangeList.MutateHelper(range);
     }
     while (range != null) {
       if (range.hasData()) {

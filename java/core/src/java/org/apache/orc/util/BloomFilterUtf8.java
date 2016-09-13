@@ -16,35 +16,40 @@
  * limitations under the License.
  */
 
-package org.apache.orc;
+package org.apache.orc.util;
 
-import org.apache.hive.common.util.BloomFilter;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
 
-public class BloomFilterIO extends BloomFilter {
+/**
+ * This class represents the fix from ORC-101 where we fixed the bloom filter
+ * from using the JVM's default character set to always using UTF-8.
+ */
+public class BloomFilterUtf8 extends BloomFilter {
 
-  public BloomFilterIO(long expectedEntries) {
-    super(expectedEntries, DEFAULT_FPP);
-  }
-
-  public BloomFilterIO(long expectedEntries, double fpp) {
+  public BloomFilterUtf8(long expectedEntries, double fpp) {
     super(expectedEntries, fpp);
   }
 
-  static long[] toArray(OrcProto.BloomFilter filter) {
-    long[] result = new long[filter.getBitsetCount()];
-    int i =0;
-    for(Long l: filter.getBitsetList()) {
-      result[i++] = l;
-    }
-    return result;
+  public BloomFilterUtf8(long[] bits, int numFuncs) {
+    super(bits, numFuncs);
   }
 
-/**
- * Initializes the BloomFilter from the given Orc BloomFilter
- */
-  public BloomFilterIO(OrcProto.BloomFilter bloomFilter) {
-    this.bitSet = new BitSet(toArray(bloomFilter));
-    this.numHashFunctions = bloomFilter.getNumHashFunctions();
-    this.numBits = (int) this.bitSet.bitSize();
+
+  public void addString(String val) {
+    if (val == null) {
+      add(null);
+    } else {
+      add(val.getBytes(StandardCharsets.UTF_8));
+    }
+  }
+
+  public boolean testString(String val) {
+    if (val == null) {
+      return test(null);
+    } else {
+      return test(val.getBytes(StandardCharsets.UTF_8));
+    }
   }
 }

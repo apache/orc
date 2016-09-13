@@ -31,9 +31,14 @@ public interface DataReader extends AutoCloseable {
   void open() throws IOException;
 
   OrcIndex readRowIndex(StripeInformation stripe,
+                        TypeDescription fileSchema,
                         OrcProto.StripeFooter footer,
-                        boolean[] included, OrcProto.RowIndex[] indexes,
+                        boolean ignoreNonUtf8BloomFilter,
+                        boolean[] included,
+                        OrcProto.RowIndex[] indexes,
                         boolean[] sargColumns,
+                        OrcFile.WriterVersion version,
+                        OrcProto.Stream.Kind[] bloomFilterKinds,
                         OrcProto.BloomFilterIndex[] bloomFilterIndices
                         ) throws IOException;
 

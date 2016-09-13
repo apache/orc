@@ -20,18 +20,20 @@ package org.apache.orc.tools;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.orc.CompressionKind;
+import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
+import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.AcidStats;
 import org.apache.orc.impl.OrcAcidUtils;
 import org.apache.orc.impl.RecordReaderImpl;
+import org.apache.orc.util.BloomFilter;
 import org.codehaus.jettison.json.JSONArray;
-import org.apache.orc.BloomFilterIO;
+import org.apache.orc.util.BloomFilterIO;
 import org.apache.orc.BinaryColumnStatistics;
 import org.apache.orc.BooleanColumnStatistics;
 import org.apache.orc.ColumnStatistics;
@@ -50,11 +52,15 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.codehaus.jettison.json.JSONStringer;
 import org.codehaus.jettison.json.JSONWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * File dump tool with json formatted output.
  */
 public class JsonFileDump {
+
+  private static final Logger LOG = LoggerFactory.getLogger(JsonFileDump.class);
 
   public static void printJsonMetaData(List<String> files,
       Configuration conf,
@@ -185,7 +191,9 @@ public class JsonFileDump {
               writer.object();
               writer.key("columnId").value(col);
               writeRowGroupIndexes(writer, col, indices.getRowGroupIndex());
-              writeBloomFilterIndexes(writer, col, indices.getBloomFilterIndex());
+              writeBloomFilterIndexes(writer, col, indices,
+                  reader.getWriterVersion(),
+                  reader.getSchema().findSubtype(col).getCategory());
               writer.endObject();
             }
             writer.endArray();
@@ -334,16 +342,21 @@ public class JsonFileDump {
   }
 
   private static void writeBloomFilterIndexes(JSONWriter writer, int col,
-      OrcProto.BloomFilterIndex[] bloomFilterIndex) throws JSONException {
+                                              OrcIndex index,
+                                              OrcFile.WriterVersion version,
+                                              TypeDescription.Category type
+                                              ) throws JSONException {
 
-    BloomFilterIO stripeLevelBF = null;
+    BloomFilter stripeLevelBF = null;
+    OrcProto.BloomFilterIndex[] bloomFilterIndex = index.getBloomFilterIndex();
     if (bloomFilterIndex != null && bloomFilterIndex[col] != null) {
       int entryIx = 0;
       writer.key("bloomFilterIndexes").array();
       for (OrcProto.BloomFilter bf : bloomFilterIndex[col].getBloomFilterList()) {
         writer.object();
         writer.key("entryId").value(entryIx++);
-        BloomFilterIO toMerge = new BloomFilterIO(bf);
+        BloomFilter toMerge = BloomFilterIO.deserialize(
+            index.getBloomFilterKinds()[col], version, type, bf);
         writeBloomFilterStats(writer, toMerge);
         if (stripeLevelBF == null) {
           stripeLevelBF = toMerge;
@@ -362,7 +375,7 @@ public class JsonFileDump {
     }
   }
 
-  private static void writeBloomFilterStats(JSONWriter writer, BloomFilterIO bf)
+  private static void writeBloomFilterStats(JSONWriter writer, BloomFilter bf)
       throws JSONException {
     int bitCount = bf.getBitSize();
     int popCount = 0;

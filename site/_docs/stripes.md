@@ -56,6 +56,10 @@ depends on the type and encoding of the column.
  SECONDARY = 5;
  // the index for seeking to particular row groups
  ROW_INDEX = 6;
+ // original bloom filters used before ORC-101
+ BLOOM_FILTER = 7;
+ // bloom filters that consistently use utf8
+ BLOOM_FILTER_UTF8 = 8;
  }
  required Kind kind = 1;
  // the column id

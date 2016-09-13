@@ -57,14 +57,17 @@ group (default to 10,000 rows) in a column. Only the row groups that
 satisfy min/max row index evaluation will be evaluated against the
 bloom filter index.
 
-Each BloomFilterEntry stores the number of hash functions ('k') used and
-the bitset backing the bloom filter. The bitset is serialized as repeated
-longs from which the number of bits ('m') for the bloom filter can be derived.
-m = bitset.length * 64.
+Each BloomFilterEntry stores the number of hash functions ('k') used
+and the bitset backing the bloom filter. The original encoding (pre
+ORC-101) of bloom filters used the bitset field encoded as a repeating
+sequence of longs in the bitset field with a little endian encoding
+(0x1 is bit 0 and 0x2 is bit 1.) After ORC-101, the encoding is a
+sequence of bytes with a little endian encoding in the utf8bitset field.
 
 ```message BloomFilter {
  optional uint32 numHashFunctions = 1;
  repeated fixed64 bitset = 2;
+ optional bytes utf8bitset = 3;
 }
 ```
 

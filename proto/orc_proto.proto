@@ -91,6 +91,7 @@ message RowIndex {
 message BloomFilter {
   optional uint32 numHashFunctions = 1;
   repeated fixed64 bitset = 2;
+  optional bytes utf8bitset = 3;
 }
 
 message BloomFilterIndex {
@@ -109,6 +110,7 @@ message Stream {
     SECONDARY = 5;
     ROW_INDEX = 6;
     BLOOM_FILTER = 7;
+    BLOOM_FILTER_UTF8 = 8;
   }
   optional Kind kind = 1;
   optional uint32 column = 2;
