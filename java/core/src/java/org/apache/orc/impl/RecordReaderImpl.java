@@ -27,7 +27,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.orc.BloomFilterIO;
+import org.apache.orc.OrcFile;
+import org.apache.orc.util.BloomFilter;
+import org.apache.orc.util.BloomFilterIO;
 import org.apache.orc.BooleanColumnStatistics;
 import org.apache.orc.ColumnStatistics;
 import org.apache.orc.CompressionCodec;
@@ -88,10 +90,13 @@ public class RecordReaderImpl implements RecordReader {
   private final TreeReaderFactory.TreeReader reader;
   private final OrcProto.RowIndex[] indexes;
   private final OrcProto.BloomFilterIndex[] bloomFilterIndices;
+  private final OrcProto.Stream.Kind[] bloomFilterKind;
   private final SargApplier sargApp;
   // an array about which row groups aren't skipped
   private boolean[] includedRowGroups = null;
   private final DataReader dataReader;
+  private final boolean ignoreNonUtf8BloomFilter;
+  private final OrcFile.WriterVersion writerVersion;
 
   /**
    * Given a list of column names, find the given column and return the index.
@@ -134,6 +139,7 @@ public class RecordReaderImpl implements RecordReader {
   protected RecordReaderImpl(ReaderImpl fileReader,
                              Reader.Options options) throws IOException {
     this.included = options.getInclude();
+    this.writerVersion = fileReader.getWriterVersion();
     included[0] = true;
     if (options.getSchema() == null) {
       if (LOG.isInfoEnabled()) {
@@ -162,11 +168,14 @@ public class RecordReaderImpl implements RecordReader {
     this.types = fileReader.types;
     this.bufferSize = fileReader.bufferSize;
     this.rowIndexStride = fileReader.rowIndexStride;
+    this.ignoreNonUtf8BloomFilter =
+        OrcConf.IGNORE_NON_UTF8_BLOOM_FILTERS.getBoolean(fileReader.conf);
     SearchArgument sarg = options.getSearchArgument();
     if (sarg != null && rowIndexStride != 0) {
       sargApp = new SargApplier(sarg, options.getColumnNames(),
                                 rowIndexStride,
-                                included.length, evolution);
+                                included.length, evolution,
+                                writerVersion);
     } else {
       sargApp = null;
     }
@@ -218,6 +227,7 @@ public class RecordReaderImpl implements RecordReader {
     writerIncluded = evolution.getFileIncluded();
     indexes = new OrcProto.RowIndex[types.size()];
     bloomFilterIndices = new OrcProto.BloomFilterIndex[types.size()];
+    bloomFilterKind = new OrcProto.Stream.Kind[types.size()];
     advanceToNextRow(reader, 0L, true);
   }
 
@@ -339,20 +349,23 @@ public class RecordReaderImpl implements RecordReader {
    * that is referenced in the predicate.
    * @param statsProto the statistics for the column mentioned in the predicate
    * @param predicate the leaf predicate we need to evaluation
-   * @param bloomFilter
+   * @param bloomFilter the bloom filter
+   * @param writerVersion the version of software that wrote the file
+   * @param type what is the kind of this column
    * @return the set of truth values that may be returned for the given
    *   predicate.
    */
   static TruthValue evaluatePredicateProto(OrcProto.ColumnStatistics statsProto,
-      PredicateLeaf predicate, OrcProto.BloomFilter bloomFilter) {
+                                           PredicateLeaf predicate,
+                                           OrcProto.Stream.Kind kind,
+                                           OrcProto.BloomFilter bloomFilter,
+                                           OrcFile.WriterVersion writerVersion,
+                                           TypeDescription.Category type) {
     ColumnStatistics cs = ColumnStatisticsImpl.deserialize(statsProto);
     Object minValue = getMin(cs);
     Object maxValue = getMax(cs);
-    BloomFilterIO bf = null;
-    if (bloomFilter != null) {
-      bf = new BloomFilterIO(bloomFilter);
-    }
-    return evaluatePredicateRange(predicate, minValue, maxValue, cs.hasNull(), bf);
+    return evaluatePredicateRange(predicate, minValue, maxValue, cs.hasNull(),
+        BloomFilterIO.deserialize(kind, writerVersion, type, bloomFilter));
   }
 
   /**
@@ -365,14 +378,14 @@ public class RecordReaderImpl implements RecordReader {
    */
   public static TruthValue evaluatePredicate(ColumnStatistics stats,
                                              PredicateLeaf predicate,
-                                             BloomFilterIO bloomFilter) {
+                                             BloomFilter bloomFilter) {
     Object minValue = getMin(stats);
     Object maxValue = getMax(stats);
     return evaluatePredicateRange(predicate, minValue, maxValue, stats.hasNull(), bloomFilter);
   }
 
   static TruthValue evaluatePredicateRange(PredicateLeaf predicate, Object min,
-      Object max, boolean hasNull, BloomFilterIO bloomFilter) {
+      Object max, boolean hasNull, BloomFilter bloomFilter) {
     // if we didn't have any values, everything must have been null
     if (min == null) {
       if (predicate.getOperator() == PredicateLeaf.Operator.IS_NULL) {
@@ -421,7 +434,7 @@ public class RecordReaderImpl implements RecordReader {
   }
 
   private static boolean shouldEvaluateBloomFilter(PredicateLeaf predicate,
-      TruthValue result, BloomFilterIO bloomFilter) {
+      TruthValue result, BloomFilter bloomFilter) {
     // evaluate bloom filter only when
     // 1) Bloom filter is available
     // 2) Min/Max evaluation yield YES or MAYBE
@@ -531,7 +544,7 @@ public class RecordReaderImpl implements RecordReader {
   }
 
   private static TruthValue evaluatePredicateBloomFilter(PredicateLeaf predicate,
-      final Object predObj, BloomFilterIO bloomFilter, boolean hasNull) {
+      final Object predObj, BloomFilter bloomFilter, boolean hasNull) {
     switch (predicate.getOperator()) {
       case NULL_SAFE_EQUALS:
         // null safe equals does not return *_NULL variant. So set hasNull to false
@@ -553,7 +566,7 @@ public class RecordReaderImpl implements RecordReader {
     }
   }
 
-  private static TruthValue checkInBloomFilter(BloomFilterIO bf, Object predObj, boolean hasNull) {
+  private static TruthValue checkInBloomFilter(BloomFilter bf, Object predObj, boolean hasNull) {
     TruthValue result = hasNull ? TruthValue.NO_NULL : TruthValue.NO;
 
     if (predObj instanceof Long) {
@@ -708,6 +721,7 @@ public class RecordReaderImpl implements RecordReader {
     public final static boolean[] READ_ALL_RGS = null;
     public final static boolean[] READ_NO_RGS = new boolean[0];
 
+    private final OrcFile.WriterVersion writerVersion;
     private final SearchArgument sarg;
     private final List<PredicateLeaf> sargLeaves;
     private final int[] filterColumns;
@@ -716,10 +730,13 @@ public class RecordReaderImpl implements RecordReader {
     private final boolean[] sargColumns;
     private SchemaEvolution evolution;
 
-    public SargApplier(SearchArgument sarg, String[] columnNames,
+    public SargApplier(SearchArgument sarg,
+                       String[] columnNames,
                        long rowIndexStride,
                        int includedCount,
-                       SchemaEvolution evolution) {
+                       SchemaEvolution evolution,
+                       OrcFile.WriterVersion writerVersion) {
+      this.writerVersion = writerVersion;
       this.sarg = sarg;
       sargLeaves = sarg.getLeaves();
       filterColumns = mapSargColumnsToOrcInternalColIdx(sargLeaves,
@@ -745,8 +762,11 @@ public class RecordReaderImpl implements RecordReader {
      * row groups must be read.
      * @throws IOException
      */
-    public boolean[] pickRowGroups(StripeInformation stripe, OrcProto.RowIndex[] indexes,
-        OrcProto.BloomFilterIndex[] bloomFilterIndices, boolean returnNone) throws IOException {
+    public boolean[] pickRowGroups(StripeInformation stripe,
+                                   OrcProto.RowIndex[] indexes,
+                                   OrcProto.Stream.Kind[] bloomFilterKinds,
+                                   OrcProto.BloomFilterIndex[] bloomFilterIndices,
+                                   boolean returnNone) throws IOException {
       long rowsInStripe = stripe.getNumberOfRows();
       int groupsInStripe = (int) ((rowsInStripe + rowIndexStride - 1) / rowIndexStride);
       boolean[] result = new boolean[groupsInStripe]; // TODO: avoid alloc?
@@ -765,11 +785,15 @@ public class RecordReaderImpl implements RecordReader {
             }
             OrcProto.ColumnStatistics stats = entry.getStatistics();
             OrcProto.BloomFilter bf = null;
+            OrcProto.Stream.Kind bfk = null;
             if (bloomFilterIndices != null && bloomFilterIndices[columnIx] != null) {
+              bfk = bloomFilterKinds[columnIx];
               bf = bloomFilterIndices[columnIx].getBloomFilter(rowGroup);
             }
             if (evolution != null && evolution.isPPDSafeConversion(columnIx)) {
-              leafValues[pred] = evaluatePredicateProto(stats, sargLeaves.get(pred), bf);
+              leafValues[pred] = evaluatePredicateProto(stats,
+                  sargLeaves.get(pred), bfk, bf, writerVersion,
+                  evolution.getFileSchema().findSubtype(columnIx).getCategory());
             } else {
               leafValues[pred] = TruthValue.YES_NO_NULL;
             }
@@ -809,7 +833,8 @@ public class RecordReaderImpl implements RecordReader {
       return null;
     }
     readRowIndex(currentStripe, writerIncluded, sargApp.sargColumns);
-    return sargApp.pickRowGroups(stripes.get(currentStripe), indexes, bloomFilterIndices, false);
+    return sargApp.pickRowGroups(stripes.get(currentStripe), indexes,
+        bloomFilterKind, bloomFilterIndices, false);
   }
 
   private void clearStreams() {
@@ -1168,8 +1193,9 @@ public class RecordReaderImpl implements RecordReader {
       sargColumns = sargColumns == null ?
           (sargApp == null ? null : sargApp.sargColumns) : sargColumns;
     }
-    return dataReader.readRowIndex(stripe, stripeFooter, included, indexes, sargColumns,
-        bloomFilterIndex);
+    return dataReader.readRowIndex(stripe, evolution.getFileType(0), stripeFooter,
+        ignoreNonUtf8BloomFilter, included, indexes, sargColumns, writerVersion,
+        bloomFilterKind, bloomFilterIndex);
   }
 
   private void seekToRowEntry(TreeReaderFactory.TreeReader reader, int rowEntry)

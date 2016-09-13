@@ -108,6 +108,7 @@ public class OrcFile {
     HIVE_4243(2), // use real column names from Hive tables
     HIVE_12055(3), // vectorized writer
     HIVE_13083(4), // decimal writer updating present stream wrongly
+    ORC_101(5),    // bloom filters use utf8
 
     // Don't use any magic numbers here except for the below:
     FUTURE(Integer.MAX_VALUE); // a version from a future writer
@@ -144,8 +145,12 @@ public class OrcFile {
       if (val == FUTURE.id) return FUTURE; // Special handling for the magic value.
       return values[val];
     }
+
+    public boolean includes(WriterVersion other) {
+      return id >= other.id;
+    }
   }
-  public static final WriterVersion CURRENT_WRITER = WriterVersion.HIVE_13083;
+  public static final WriterVersion CURRENT_WRITER = WriterVersion.ORC_101;
 
   public enum EncodingStrategy {
     SPEED, COMPRESSION
@@ -231,6 +236,33 @@ public class OrcFile {
     void preFooterWrite(WriterContext context) throws IOException;
   }
 
+  public static enum BloomFilterVersion {
+    // Include both the BLOOM_FILTER and BLOOM_FILTER_UTF8 streams to support
+    // both old and new readers.
+    ORIGINAL("original"),
+    // Only include the BLOOM_FILTER_UTF8 streams that consistently use UTF8.
+    // See ORC-101
+    UTF8("utf8");
+
+    private final String id;
+    private BloomFilterVersion(String id) {
+      this.id = id;
+    }
+
+    public String toString() {
+      return id;
+    }
+
+    public static BloomFilterVersion fromString(String s) {
+      for (BloomFilterVersion version: values()) {
+        if (version.id.equals(s)) {
+          return version;
+        }
+      }
+      throw new IllegalArgumentException("Unknown BloomFilterVersion " + s);
+    }
+  }
+
   /**
    * Options for creating ORC file writers.
    */
@@ -253,6 +285,7 @@ public class OrcFile {
     private double paddingTolerance;
     private String bloomFilterColumns;
     private double bloomFilterFpp;
+    private BloomFilterVersion bloomFilterVersion;
 
     protected WriterOptions(Properties tableProperties, Configuration conf) {
       configuration = conf;
@@ -286,6 +319,10 @@ public class OrcFile {
           conf);
       bloomFilterFpp = OrcConf.BLOOM_FILTER_FPP.getDouble(tableProperties,
           conf);
+      bloomFilterVersion =
+          BloomFilterVersion.fromString(
+              OrcConf.BLOOM_FILTER_WRITE_VERSION.getString(tableProperties,
+                  conf));
     }
 
     /**
@@ -430,6 +467,14 @@ public class OrcFile {
     }
 
     /**
+     * Set the version of the bloom filters to write.
+     */
+    public WriterOptions bloomFilterVersion(BloomFilterVersion version) {
+      this.bloomFilterVersion = version;
+      return this;
+    }
+
+    /**
      * A package local option to set the memory manager.
      */
     protected WriterOptions memory(MemoryManager value) {
@@ -507,6 +552,10 @@ public class OrcFile {
 
     public double getBloomFilterFpp() {
       return bloomFilterFpp;
+    }
+
+    public BloomFilterVersion getBloomFilterVersion() {
+      return bloomFilterVersion;
     }
   }
 

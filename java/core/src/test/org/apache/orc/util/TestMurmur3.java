@@ -16,13 +16,14 @@
  * limitations under the License.
  */
 
-package org.apache.hive.common.util;
+package org.apache.orc.util;
 
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 
+import org.apache.orc.util.Murmur3;
 import org.junit.Test;
 
 import java.nio.ByteBuffer;

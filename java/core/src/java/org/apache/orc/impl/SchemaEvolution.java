@@ -153,6 +153,10 @@ public class SchemaEvolution {
     return hasConversion;
   }
 
+  public TypeDescription getFileSchema() {
+    return fileSchema;
+  }
+
   public TypeDescription getFileType(TypeDescription readerType) {
     return getFileType(readerType.getId());
   }

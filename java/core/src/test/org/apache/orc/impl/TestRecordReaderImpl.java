@@ -19,9 +19,11 @@
 package org.apache.orc.impl;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.TestCase.fail;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.any;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -33,9 +35,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-import junit.framework.Assert;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -46,7 +48,7 @@ import org.apache.hadoop.fs.Seekable;
 import org.apache.hadoop.hive.common.io.DiskRangeList;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentImpl;
-import org.apache.orc.BloomFilterIO;
+import org.apache.orc.util.BloomFilter;
 import org.apache.orc.DataReader;
 import org.apache.orc.RecordReader;
 import org.apache.orc.TypeDescription;
@@ -62,6 +64,7 @@ import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.OrcProto;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.MockSettings;
 import org.mockito.Mockito;
@@ -375,23 +378,23 @@ public class TestRecordReaderImpl {
     PredicateLeaf pred = createPredicateLeaf(
         PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.BOOLEAN, "x", true, null);
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createBooleanStats(10, 10), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createBooleanStats(10, 10), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.BOOLEAN));
     assertEquals(TruthValue.NO,
-        RecordReaderImpl.evaluatePredicateProto(createBooleanStats(10, 0), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createBooleanStats(10, 0), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.BOOLEAN));
 
     pred = createPredicateLeaf(
         PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.BOOLEAN, "x", true, null);
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createBooleanStats(10, 10), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createBooleanStats(10, 10), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.BOOLEAN));
     assertEquals(TruthValue.NO,
-        RecordReaderImpl.evaluatePredicateProto(createBooleanStats(10, 0), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createBooleanStats(10, 0), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.BOOLEAN));
 
     pred = createPredicateLeaf(
         PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.BOOLEAN, "x", false, null);
     assertEquals(TruthValue.NO,
-      RecordReaderImpl.evaluatePredicateProto(createBooleanStats(10, 10), pred, null));
+      RecordReaderImpl.evaluatePredicateProto(createBooleanStats(10, 10), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.BOOLEAN));
     assertEquals(TruthValue.YES_NO,
-      RecordReaderImpl.evaluatePredicateProto(createBooleanStats(10, 0), pred, null));
+      RecordReaderImpl.evaluatePredicateProto(createBooleanStats(10, 0), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.BOOLEAN));
   }
 
   @Test
@@ -399,34 +402,34 @@ public class TestRecordReaderImpl {
     PredicateLeaf pred = createPredicateLeaf(
         PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.LONG, "x", 15L, null);
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(10, 100), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(10, 100), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.FLOAT, "x", 15.0, null);
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(10, 100), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(10, 100), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     // Stats gets converted to column type. "15" is outside of "10" and "100"
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.STRING, "x", "15", null);
     assertEquals(TruthValue.NO,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(10, 100), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(10, 100), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     // Integer stats will not be converted date because of days/seconds/millis ambiguity
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.DATE, "x", new DateWritable(15).get(), null);
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(10, 100), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(10, 100), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.DECIMAL, "x", new HiveDecimalWritable("15"), null);
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(10, 100), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(10, 100), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.TIMESTAMP, "x", new Timestamp(15), null);
     assertEquals(TruthValue.YES_NO,
-      RecordReaderImpl.evaluatePredicateProto(createIntStats(10, 100), pred, null));
+      RecordReaderImpl.evaluatePredicateProto(createIntStats(10, 100), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
   }
 
   @Test
@@ -434,39 +437,39 @@ public class TestRecordReaderImpl {
     PredicateLeaf pred = createPredicateLeaf(
         PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.LONG, "x", 15L, null);
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createDoubleStats(10.0, 100.0), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createDoubleStats(10.0, 100.0), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.FLOAT, "x", 15.0, null);
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createDoubleStats(10.0, 100.0), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createDoubleStats(10.0, 100.0), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     // Stats gets converted to column type. "15.0" is outside of "10.0" and "100.0"
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.STRING, "x", "15", null);
     assertEquals(TruthValue.NO,
-        RecordReaderImpl.evaluatePredicateProto(createDoubleStats(10.0, 100.0), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createDoubleStats(10.0, 100.0), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.DOUBLE));
 
     // Double is not converted to date type because of days/seconds/millis ambiguity
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.DATE, "x", new DateWritable(15).get(), null);
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createDoubleStats(10.0, 100.0), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createDoubleStats(10.0, 100.0), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.DOUBLE));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.DECIMAL, "x", new HiveDecimalWritable("15"), null);
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createDoubleStats(10.0, 100.0), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createDoubleStats(10.0, 100.0), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.DOUBLE));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.TIMESTAMP, "x", new Timestamp(15*1000L), null);
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createDoubleStats(10.0, 100.0), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createDoubleStats(10.0, 100.0), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.DOUBLE));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.TIMESTAMP, "x", new Timestamp(150*1000L), null);
     assertEquals(TruthValue.NO,
-        RecordReaderImpl.evaluatePredicateProto(createDoubleStats(10.0, 100.0), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createDoubleStats(10.0, 100.0), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.DOUBLE));
   }
 
   @Test
@@ -474,33 +477,33 @@ public class TestRecordReaderImpl {
     PredicateLeaf pred = createPredicateLeaf(
         PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.LONG, "x", 100L, null);
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("10", "1000"), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("10", "1000"), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.FLOAT, "x", 100.0, null);
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("10", "1000"), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("10", "1000"), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.STRING, "x", "100", null);
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("10", "1000"), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("10", "1000"), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     // IllegalArgumentException is thrown when converting String to Date, hence YES_NO
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.DATE, "x", new DateWritable(100).get(), null);
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createDateStats(10, 1000), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createDateStats(10, 1000), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.DECIMAL, "x", new HiveDecimalWritable("100"), null);
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("10", "1000"), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("10", "1000"), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.TIMESTAMP, "x", new Timestamp(100), null);
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("10", "1000"), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("10", "1000"), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
   }
 
   @Test
@@ -509,69 +512,69 @@ public class TestRecordReaderImpl {
         PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.LONG, "x", 15L, null);
     // Date to Integer conversion is not possible.
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createDateStats(10, 100), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createDateStats(10, 100), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     // Date to Float conversion is also not possible.
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.FLOAT, "x", 15.0, null);
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createDateStats(10, 100), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createDateStats(10, 100), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.STRING, "x", "15", null);
     assertEquals(TruthValue.NO,
-        RecordReaderImpl.evaluatePredicateProto(createDateStats(10, 100), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createDateStats(10, 100), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.STRING, "x", "1970-01-11", null);
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createDateStats(10, 100), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createDateStats(10, 100), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.STRING, "x", "15.1", null);
     assertEquals(TruthValue.NO,
-        RecordReaderImpl.evaluatePredicateProto(createDateStats(10, 100), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createDateStats(10, 100), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.STRING, "x", "__a15__1", null);
     assertEquals(TruthValue.NO,
-        RecordReaderImpl.evaluatePredicateProto(createDateStats(10, 100), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createDateStats(10, 100), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.STRING, "x", "2000-01-16", null);
     assertEquals(TruthValue.NO,
-        RecordReaderImpl.evaluatePredicateProto(createDateStats(10, 100), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createDateStats(10, 100), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.STRING, "x", "1970-01-16", null);
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createDateStats(10, 100), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createDateStats(10, 100), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.DATE, "x", new DateWritable(15).get(), null);
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createDateStats(10, 100), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createDateStats(10, 100), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.DATE, "x", new DateWritable(150).get(), null);
     assertEquals(TruthValue.NO,
-        RecordReaderImpl.evaluatePredicateProto(createDateStats(10, 100), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createDateStats(10, 100), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     // Date to Decimal conversion is also not possible.
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.DECIMAL, "x", new HiveDecimalWritable("15"), null);
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createDateStats(10, 100), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createDateStats(10, 100), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.TIMESTAMP, "x", new Timestamp(15), null);
     assertEquals(TruthValue.NO,
-        RecordReaderImpl.evaluatePredicateProto(createDateStats(10, 100), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createDateStats(10, 100), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.TIMESTAMP, "x", new Timestamp(15L * 24L * 60L * 60L * 1000L), null);
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createDateStats(10, 100), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createDateStats(10, 100), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
   }
 
   @Test
@@ -579,39 +582,39 @@ public class TestRecordReaderImpl {
     PredicateLeaf pred = createPredicateLeaf(
         PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.LONG, "x", 15L, null);
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createDecimalStats("10.0", "100.0"), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createDecimalStats("10.0", "100.0"), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.FLOAT, "x", 15.0, null);
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createDecimalStats("10.0", "100.0"), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createDecimalStats("10.0", "100.0"), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     // "15" out of range of "10.0" and "100.0"
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.STRING, "x", "15", null);
     assertEquals(TruthValue.NO,
-        RecordReaderImpl.evaluatePredicateProto(createDecimalStats("10.0", "100.0"), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createDecimalStats("10.0", "100.0"), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     // Decimal to Date not possible.
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.DATE, "x", new DateWritable(15).get(), null);
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createDecimalStats("10.0", "100.0"), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createDecimalStats("10.0", "100.0"), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.DECIMAL, "x", new HiveDecimalWritable("15"), null);
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createDecimalStats("10.0", "100.0"), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createDecimalStats("10.0", "100.0"), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.TIMESTAMP, "x", new Timestamp(15 * 1000L), null);
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createDecimalStats("10.0", "100.0"), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createDecimalStats("10.0", "100.0"), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.TIMESTAMP, "x", new Timestamp(150 * 1000L), null);
     assertEquals(TruthValue.NO,
-        RecordReaderImpl.evaluatePredicateProto(createDecimalStats("10.0", "100.0"), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createDecimalStats("10.0", "100.0"), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
   }
 
   @Test
@@ -619,46 +622,46 @@ public class TestRecordReaderImpl {
     PredicateLeaf pred = createPredicateLeaf(
         PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.LONG, "x", 15L, null);
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createTimestampStats(10, 100), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createTimestampStats(10, 100), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.FLOAT, "x", 15.0, null);
     assertEquals(TruthValue.NO,
-        RecordReaderImpl.evaluatePredicateProto(createTimestampStats(10, 100), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createTimestampStats(10, 100), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createTimestampStats(10000, 100000), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createTimestampStats(10000, 100000), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.STRING, "x", "15", null);
     assertEquals(TruthValue.NO,
-        RecordReaderImpl.evaluatePredicateProto(createTimestampStats(10, 100), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createTimestampStats(10, 100), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.STRING, "x", new Timestamp(15).toString(), null);
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createTimestampStats(10, 100), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createTimestampStats(10, 100), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.DATE, "x", new DateWritable(15).get(), null);
     assertEquals(TruthValue.NO,
-        RecordReaderImpl.evaluatePredicateProto(createTimestampStats(10, 100), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createTimestampStats(10, 100), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.YES_NO,
         RecordReaderImpl.evaluatePredicateProto(createTimestampStats(10 * 24L * 60L * 60L * 1000L,
-          100 * 24L * 60L * 60L * 1000L), pred, null));
+          100 * 24L * 60L * 60L * 1000L), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.DECIMAL, "x", new HiveDecimalWritable("15"), null);
     assertEquals(TruthValue.NO,
-        RecordReaderImpl.evaluatePredicateProto(createTimestampStats(10, 100), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createTimestampStats(10, 100), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createTimestampStats(10000, 100000), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createTimestampStats(10000, 100000), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.TIMESTAMP, "x", new Timestamp(15), null);
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createTimestampStats(10, 100), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createTimestampStats(10, 100), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.NO,
-        RecordReaderImpl.evaluatePredicateProto(createTimestampStats(10000, 100000), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createTimestampStats(10000, 100000), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
   }
 
   @Test
@@ -667,17 +670,17 @@ public class TestRecordReaderImpl {
         (PredicateLeaf.Operator.EQUALS, PredicateLeaf.Type.LONG,
             "x", 15L, null);
     assertEquals(TruthValue.NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(20L, 30L), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(20L, 30L), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.YES_NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(15L, 30L), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(15L, 30L), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.YES_NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(10L, 30L), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(10L, 30L), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.YES_NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(10L, 15L), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(10L, 15L), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(0L, 10L), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(0L, 10L), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.YES_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(15L, 15L), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(15L, 15L), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
   }
 
   @Test
@@ -686,17 +689,17 @@ public class TestRecordReaderImpl {
         (PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.LONG,
             "x", 15L, null);
     assertEquals(TruthValue.NO,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(20L, 30L), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(20L, 30L), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(15L, 30L), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(15L, 30L), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(10L, 30L), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(10L, 30L), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(10L, 15L), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(10L, 15L), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.NO,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(0L, 10L), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(0L, 10L), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(15L, 15L), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(15L, 15L), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
   }
 
   @Test
@@ -705,15 +708,15 @@ public class TestRecordReaderImpl {
         (PredicateLeaf.Operator.LESS_THAN, PredicateLeaf.Type.LONG,
             "x", 15L, null);
     assertEquals(TruthValue.NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(20L, 30L), lessThan, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(20L, 30L), lessThan, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(15L, 30L), lessThan, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(15L, 30L), lessThan, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.YES_NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(10L, 30L), lessThan, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(10L, 30L), lessThan, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.YES_NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(10L, 15L), lessThan, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(10L, 15L), lessThan, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.YES_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(0L, 10L), lessThan, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(0L, 10L), lessThan, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
   }
 
   @Test
@@ -722,15 +725,15 @@ public class TestRecordReaderImpl {
         (PredicateLeaf.Operator.LESS_THAN_EQUALS, PredicateLeaf.Type.LONG,
             "x", 15L, null);
     assertEquals(TruthValue.NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(20L, 30L), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(20L, 30L), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.YES_NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(15L, 30L), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(15L, 30L), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.YES_NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(10L, 30L), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(10L, 30L), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.YES_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(10L, 15L), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(10L, 15L), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.YES_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(0L, 10L), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(0L, 10L), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
   }
 
   @Test
@@ -742,13 +745,13 @@ public class TestRecordReaderImpl {
         (PredicateLeaf.Operator.IN, PredicateLeaf.Type.LONG,
             "x", null, args);
     assertEquals(TruthValue.YES_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(20L, 20L), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(20L, 20L), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(30L, 30L), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(30L, 30L), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.YES_NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(10L, 30L), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(10L, 30L), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(12L, 18L), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(12L, 18L), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
   }
 
   @Test
@@ -760,19 +763,19 @@ public class TestRecordReaderImpl {
         (PredicateLeaf.Operator.BETWEEN, PredicateLeaf.Type.LONG,
             "x", null, args);
     assertEquals(TruthValue.NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(0L, 5L), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(0L, 5L), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.NO_NULL,
-      RecordReaderImpl.evaluatePredicateProto(createIntStats(30L, 40L), pred, null));
+      RecordReaderImpl.evaluatePredicateProto(createIntStats(30L, 40L), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.YES_NO_NULL,
-      RecordReaderImpl.evaluatePredicateProto(createIntStats(5L, 15L), pred, null));
+      RecordReaderImpl.evaluatePredicateProto(createIntStats(5L, 15L), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.YES_NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(15L, 25L), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(15L, 25L), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.YES_NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(5L, 25L), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(5L, 25L), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.YES_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(10L, 20L), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(10L, 20L), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.YES_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(12L, 18L), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(12L, 18L), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
   }
 
   @Test
@@ -781,7 +784,7 @@ public class TestRecordReaderImpl {
         (PredicateLeaf.Operator.IS_NULL, PredicateLeaf.Type.LONG,
             "x", null, null);
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createIntStats(20L, 30L), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createIntStats(20L, 30L), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
   }
 
 
@@ -791,17 +794,17 @@ public class TestRecordReaderImpl {
         (PredicateLeaf.Operator.EQUALS, PredicateLeaf.Type.STRING,
             "x", "c", null);
     assertEquals(TruthValue.NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("d", "e", true), pred, null)); // before
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("d", "e", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG)); // before
     assertEquals(TruthValue.NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("a", "b", true), pred, null)); // after
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("a", "b", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG)); // after
     assertEquals(TruthValue.YES_NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("b", "c", true), pred, null)); // max
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("b", "c", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG)); // max
     assertEquals(TruthValue.YES_NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("c", "d", true), pred, null)); // min
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("c", "d", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG)); // min
     assertEquals(TruthValue.YES_NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("b", "d", true), pred, null)); // middle
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("b", "d", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG)); // middle
     assertEquals(TruthValue.YES_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("c", "c", true), pred, null)); // same
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("c", "c", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG)); // same
   }
 
   @Test
@@ -810,17 +813,17 @@ public class TestRecordReaderImpl {
         (PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.STRING,
             "x", "c", null);
     assertEquals(TruthValue.NO,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("d", "e", true), pred, null)); // before
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("d", "e", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG)); // before
     assertEquals(TruthValue.NO,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("a", "b", true), pred, null)); // after
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("a", "b", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG)); // after
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("b", "c", true), pred, null)); // max
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("b", "c", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG)); // max
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("c", "d", true), pred, null)); // min
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("c", "d", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG)); // min
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("b", "d", true), pred, null)); // middle
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("b", "d", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG)); // middle
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("c", "c", true), pred, null)); // same
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("c", "c", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG)); // same
   }
 
   @Test
@@ -829,17 +832,17 @@ public class TestRecordReaderImpl {
         (PredicateLeaf.Operator.LESS_THAN, PredicateLeaf.Type.STRING,
             "x", "c", null);
     assertEquals(TruthValue.NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("d", "e", true), pred, null)); // before
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("d", "e", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG)); // before
     assertEquals(TruthValue.YES_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("a", "b", true), pred, null)); // after
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("a", "b", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG)); // after
     assertEquals(TruthValue.YES_NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("b", "c", true), pred, null)); // max
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("b", "c", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG)); // max
     assertEquals(TruthValue.NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("c", "d", true), pred, null)); // min
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("c", "d", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG)); // min
     assertEquals(TruthValue.YES_NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("b", "d", true), pred, null)); // middle
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("b", "d", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG)); // middle
     assertEquals(TruthValue.NO_NULL, // min, same stats
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("c", "c", true), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("c", "c", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
   }
 
   @Test
@@ -848,17 +851,17 @@ public class TestRecordReaderImpl {
         (PredicateLeaf.Operator.LESS_THAN_EQUALS, PredicateLeaf.Type.STRING,
             "x", "c", null);
     assertEquals(TruthValue.NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("d", "e", true), pred, null)); // before
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("d", "e", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG)); // before
     assertEquals(TruthValue.YES_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("a", "b", true), pred, null)); // after
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("a", "b", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG)); // after
     assertEquals(TruthValue.YES_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("b", "c", true), pred, null)); // max
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("b", "c", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG)); // max
     assertEquals(TruthValue.YES_NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("c", "d", true), pred, null)); // min
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("c", "d", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG)); // min
     assertEquals(TruthValue.YES_NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("b", "d", true), pred, null)); // middle
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("b", "d", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG)); // middle
     assertEquals(TruthValue.YES_NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("c", "c", true), pred, null)); // same
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("c", "c", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG)); // same
   }
 
   @Test
@@ -870,17 +873,17 @@ public class TestRecordReaderImpl {
         (PredicateLeaf.Operator.IN, PredicateLeaf.Type.STRING,
             "x", null, args);
     assertEquals(TruthValue.NO_NULL, // before & after
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("d", "e", true), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("d", "e", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("a", "b", true), pred, null)); // after
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("a", "b", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG)); // after
     assertEquals(TruthValue.YES_NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("e", "f", true), pred, null)); // max
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("e", "f", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG)); // max
     assertEquals(TruthValue.YES_NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("c", "d", true), pred, null)); // min
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("c", "d", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG)); // min
     assertEquals(TruthValue.YES_NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("b", "d", true), pred, null)); // middle
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("b", "d", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG)); // middle
     assertEquals(TruthValue.YES_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("c", "c", true), pred, null)); // same
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("c", "c", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG)); // same
   }
 
   @Test
@@ -892,31 +895,31 @@ public class TestRecordReaderImpl {
         (PredicateLeaf.Operator.BETWEEN, PredicateLeaf.Type.STRING,
             "x", null, args);
     assertEquals(TruthValue.YES_NULL, // before & after
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("d", "e", true), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("d", "e", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.YES_NULL, // before & max
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("e", "f", true), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("e", "f", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.NO_NULL, // before & before
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("h", "g", true), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("h", "g", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.YES_NO_NULL, // before & min
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("f", "g", true), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("f", "g", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.YES_NO_NULL, // before & middle
-      RecordReaderImpl.evaluatePredicateProto(createStringStats("e", "g", true), pred, null));
+      RecordReaderImpl.evaluatePredicateProto(createStringStats("e", "g", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     assertEquals(TruthValue.YES_NULL, // min & after
-      RecordReaderImpl.evaluatePredicateProto(createStringStats("c", "e", true), pred, null));
+      RecordReaderImpl.evaluatePredicateProto(createStringStats("c", "e", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.YES_NULL, // min & max
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("c", "f", true), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("c", "f", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.YES_NO_NULL, // min & middle
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("c", "g", true), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("c", "g", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
 
     assertEquals(TruthValue.NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("a", "b", true), pred, null)); // after
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("a", "b", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG)); // after
     assertEquals(TruthValue.YES_NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("a", "c", true), pred, null)); // max
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("a", "c", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG)); // max
     assertEquals(TruthValue.YES_NO_NULL,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("b", "d", true), pred, null)); // middle
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("b", "d", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG)); // middle
     assertEquals(TruthValue.YES_NULL, // min & after, same stats
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("c", "c", true), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("c", "c", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
   }
 
   @Test
@@ -925,9 +928,9 @@ public class TestRecordReaderImpl {
         (PredicateLeaf.Operator.IS_NULL, PredicateLeaf.Type.STRING,
             "x", null, null);
     assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("c", "d", true), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("c", "d", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.NO,
-        RecordReaderImpl.evaluatePredicateProto(createStringStats("c", "d", false), pred, null));
+        RecordReaderImpl.evaluatePredicateProto(createStringStats("c", "d", false), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
   }
 
   @Test
@@ -1304,7 +1307,7 @@ public class TestRecordReaderImpl {
   public void testIntNullSafeEqualsBloomFilter() throws Exception {
     PredicateLeaf pred = createPredicateLeaf(
         PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.LONG, "x", 15L, null);
-    BloomFilterIO bf = new BloomFilterIO(10000);
+    BloomFilter bf = new BloomFilter(10000);
     for (int i = 20; i < 1000; i++) {
       bf.addLong(i);
     }
@@ -1319,7 +1322,7 @@ public class TestRecordReaderImpl {
   public void testIntEqualsBloomFilter() throws Exception {
     PredicateLeaf pred = createPredicateLeaf(
         PredicateLeaf.Operator.EQUALS, PredicateLeaf.Type.LONG, "x", 15L, null);
-    BloomFilterIO bf = new BloomFilterIO(10000);
+    BloomFilter bf = new BloomFilter(10000);
     for (int i = 20; i < 1000; i++) {
       bf.addLong(i);
     }
@@ -1338,7 +1341,7 @@ public class TestRecordReaderImpl {
     PredicateLeaf pred = createPredicateLeaf
         (PredicateLeaf.Operator.IN, PredicateLeaf.Type.LONG,
             "x", null, args);
-    BloomFilterIO bf = new BloomFilterIO(10000);
+    BloomFilter bf = new BloomFilter(10000);
     for (int i = 20; i < 1000; i++) {
       bf.addLong(i);
     }
@@ -1356,7 +1359,7 @@ public class TestRecordReaderImpl {
   public void testDoubleNullSafeEqualsBloomFilter() throws Exception {
     PredicateLeaf pred = createPredicateLeaf(
         PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.FLOAT, "x", 15.0, null);
-    BloomFilterIO bf = new BloomFilterIO(10000);
+    BloomFilter bf = new BloomFilter(10000);
     for (int i = 20; i < 1000; i++) {
       bf.addDouble(i);
     }
@@ -1371,7 +1374,7 @@ public class TestRecordReaderImpl {
   public void testDoubleEqualsBloomFilter() throws Exception {
     PredicateLeaf pred = createPredicateLeaf(
         PredicateLeaf.Operator.EQUALS, PredicateLeaf.Type.FLOAT, "x", 15.0, null);
-    BloomFilterIO bf = new BloomFilterIO(10000);
+    BloomFilter bf = new BloomFilter(10000);
     for (int i = 20; i < 1000; i++) {
       bf.addDouble(i);
     }
@@ -1390,7 +1393,7 @@ public class TestRecordReaderImpl {
     PredicateLeaf pred = createPredicateLeaf
         (PredicateLeaf.Operator.IN, PredicateLeaf.Type.FLOAT,
             "x", null, args);
-    BloomFilterIO bf = new BloomFilterIO(10000);
+    BloomFilter bf = new BloomFilter(10000);
     for (int i = 20; i < 1000; i++) {
       bf.addDouble(i);
     }
@@ -1408,7 +1411,7 @@ public class TestRecordReaderImpl {
   public void testStringNullSafeEqualsBloomFilter() throws Exception {
     PredicateLeaf pred = createPredicateLeaf(
         PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.STRING, "x", "str_15", null);
-    BloomFilterIO bf = new BloomFilterIO(10000);
+    BloomFilter bf = new BloomFilter(10000);
     for (int i = 20; i < 1000; i++) {
       bf.addString("str_" + i);
     }
@@ -1423,7 +1426,7 @@ public class TestRecordReaderImpl {
   public void testStringEqualsBloomFilter() throws Exception {
     PredicateLeaf pred = createPredicateLeaf(
         PredicateLeaf.Operator.EQUALS, PredicateLeaf.Type.STRING, "x", "str_15", null);
-    BloomFilterIO bf = new BloomFilterIO(10000);
+    BloomFilter bf = new BloomFilter(10000);
     for (int i = 20; i < 1000; i++) {
       bf.addString("str_" + i);
     }
@@ -1442,7 +1445,7 @@ public class TestRecordReaderImpl {
     PredicateLeaf pred = createPredicateLeaf
         (PredicateLeaf.Operator.IN, PredicateLeaf.Type.STRING,
             "x", null, args);
-    BloomFilterIO bf = new BloomFilterIO(10000);
+    BloomFilter bf = new BloomFilter(10000);
     for (int i = 20; i < 1000; i++) {
       bf.addString("str_" + i);
     }
@@ -1461,7 +1464,7 @@ public class TestRecordReaderImpl {
     PredicateLeaf pred = createPredicateLeaf(
         PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.DATE, "x",
         new DateWritable(15).get(), null);
-    BloomFilterIO bf = new BloomFilterIO(10000);
+    BloomFilter bf = new BloomFilter(10000);
     for (int i = 20; i < 1000; i++) {
       bf.addLong((new DateWritable(i)).getDays());
     }
@@ -1477,7 +1480,7 @@ public class TestRecordReaderImpl {
     PredicateLeaf pred = createPredicateLeaf(
         PredicateLeaf.Operator.EQUALS, PredicateLeaf.Type.DATE, "x",
         new DateWritable(15).get(), null);
-    BloomFilterIO bf = new BloomFilterIO(10000);
+    BloomFilter bf = new BloomFilter(10000);
     for (int i = 20; i < 1000; i++) {
       bf.addLong((new DateWritable(i)).getDays());
     }
@@ -1496,7 +1499,7 @@ public class TestRecordReaderImpl {
     PredicateLeaf pred = createPredicateLeaf
         (PredicateLeaf.Operator.IN, PredicateLeaf.Type.DATE,
             "x", null, args);
-    BloomFilterIO bf = new BloomFilterIO(10000);
+    BloomFilter bf = new BloomFilter(10000);
     for (int i = 20; i < 1000; i++) {
       bf.addLong((new DateWritable(i)).getDays());
     }
@@ -1516,7 +1519,7 @@ public class TestRecordReaderImpl {
         PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.TIMESTAMP, "x",
         new Timestamp(15),
         null);
-    BloomFilterIO bf = new BloomFilterIO(10000);
+    BloomFilter bf = new BloomFilter(10000);
     for (int i = 20; i < 1000; i++) {
       bf.addLong((new Timestamp(i)).getTime());
     }
@@ -1531,7 +1534,7 @@ public class TestRecordReaderImpl {
   public void testTimestampEqualsBloomFilter() throws Exception {
     PredicateLeaf pred = createPredicateLeaf(
         PredicateLeaf.Operator.EQUALS, PredicateLeaf.Type.TIMESTAMP, "x", new Timestamp(15), null);
-    BloomFilterIO bf = new BloomFilterIO(10000);
+    BloomFilter bf = new BloomFilter(10000);
     for (int i = 20; i < 1000; i++) {
       bf.addLong((new Timestamp(i)).getTime());
     }
@@ -1550,7 +1553,7 @@ public class TestRecordReaderImpl {
     PredicateLeaf pred = createPredicateLeaf
         (PredicateLeaf.Operator.IN, PredicateLeaf.Type.TIMESTAMP,
             "x", null, args);
-    BloomFilterIO bf = new BloomFilterIO(10000);
+    BloomFilter bf = new BloomFilter(10000);
     for (int i = 20; i < 1000; i++) {
       bf.addLong((new Timestamp(i)).getTime());
     }
@@ -1570,7 +1573,7 @@ public class TestRecordReaderImpl {
         PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.DECIMAL, "x",
         new HiveDecimalWritable("15"),
         null);
-    BloomFilterIO bf = new BloomFilterIO(10000);
+    BloomFilter bf = new BloomFilter(10000);
     for (int i = 20; i < 1000; i++) {
       bf.addString(HiveDecimal.create(i).toString());
     }
@@ -1587,7 +1590,7 @@ public class TestRecordReaderImpl {
         PredicateLeaf.Operator.EQUALS, PredicateLeaf.Type.DECIMAL, "x",
         new HiveDecimalWritable("15"),
         null);
-    BloomFilterIO bf = new BloomFilterIO(10000);
+    BloomFilter bf = new BloomFilter(10000);
     for (int i = 20; i < 1000; i++) {
       bf.addString(HiveDecimal.create(i).toString());
     }
@@ -1606,7 +1609,7 @@ public class TestRecordReaderImpl {
     PredicateLeaf pred = createPredicateLeaf
         (PredicateLeaf.Operator.IN, PredicateLeaf.Type.DECIMAL,
             "x", null, args);
-    BloomFilterIO bf = new BloomFilterIO(10000);
+    BloomFilter bf = new BloomFilter(10000);
     for (int i = 20; i < 1000; i++) {
       bf.addString(HiveDecimal.create(i).toString());
     }
@@ -1629,7 +1632,7 @@ public class TestRecordReaderImpl {
     PredicateLeaf pred = createPredicateLeaf
         (PredicateLeaf.Operator.IN, PredicateLeaf.Type.DECIMAL,
             "x", null, args);
-    BloomFilterIO bf = new BloomFilterIO(10000);
+    BloomFilter bf = new BloomFilter(10000);
     for (int i = 20; i < 1000; i++) {
       bf.addString(HiveDecimal.create(i).toString());
     }
@@ -1691,5 +1694,172 @@ public class TestRecordReaderImpl {
         .dataReader(mockedDataReader));
 
     recordReader.close();
+  }
+
+  @Test
+  public void TestOldBloomFilters() throws Exception {
+    OrcProto.StripeFooter footer =
+        OrcProto.StripeFooter.newBuilder()
+            .addStreams(OrcProto.Stream.newBuilder()
+               .setColumn(1).setKind(OrcProto.Stream.Kind.ROW_INDEX).setLength(1000).build())
+            .addStreams(OrcProto.Stream.newBuilder()
+                .setColumn(1).setKind(OrcProto.Stream.Kind.BLOOM_FILTER).setLength(1000).build())
+            .addStreams(OrcProto.Stream.newBuilder()
+                .setColumn(2).setKind(OrcProto.Stream.Kind.ROW_INDEX).setLength(1000).build())
+            .addStreams(OrcProto.Stream.newBuilder()
+                .setColumn(2).setKind(OrcProto.Stream.Kind.BLOOM_FILTER).setLength(1000).build())
+            .addStreams(OrcProto.Stream.newBuilder()
+                .setColumn(3).setKind(OrcProto.Stream.Kind.ROW_INDEX).setLength(1000).build())
+            .addStreams(OrcProto.Stream.newBuilder()
+                .setColumn(3).setKind(OrcProto.Stream.Kind.BLOOM_FILTER).setLength(1000).build())
+        .build();
+    TypeDescription schema = TypeDescription.fromString("struct<x:int,y:decimal(10,2),z:string>");
+    OrcProto.Stream.Kind[] bloomFilterKinds = new OrcProto.Stream.Kind[4];
+
+    // normal read
+    DiskRangeList ranges = RecordReaderUtils.planIndexReading(schema, footer,
+        false, new boolean[]{true, true, false, true},
+        new boolean[]{false, true, false, true},
+        OrcFile.WriterVersion.HIVE_4243,
+        bloomFilterKinds);
+    assertEquals(OrcProto.Stream.Kind.BLOOM_FILTER, bloomFilterKinds[1]);
+    assertEquals(OrcProto.Stream.Kind.BLOOM_FILTER, bloomFilterKinds[3]);
+    assertEquals("range start: 0 end: 2000", ranges.toString());
+    assertEquals("range start: 4000 end: 6000", ranges.next.toString());
+    assertEquals(null, ranges.next.next);
+
+    // ignore non-utf8 bloom filter
+    Arrays.fill(bloomFilterKinds, null);
+    ranges = RecordReaderUtils.planIndexReading(schema, footer,
+        true, new boolean[]{true, true, false, true},
+        new boolean[]{false, true, false, true},
+        OrcFile.WriterVersion.HIVE_4243,
+        bloomFilterKinds);
+    assertEquals(OrcProto.Stream.Kind.BLOOM_FILTER, bloomFilterKinds[1]);
+    assertEquals(null, bloomFilterKinds[3]);
+    assertEquals("range start: 0 end: 2000", ranges.toString());
+    assertEquals("range start: 4000 end: 5000", ranges.next.toString());
+    assertEquals(null, ranges.next.next);
+
+    // check that we are handling the post hive-12055 strings correctly
+    Arrays.fill(bloomFilterKinds, null);
+    ranges = RecordReaderUtils.planIndexReading(schema, footer,
+        true, null, new boolean[]{false, true, true, true},
+        OrcFile.WriterVersion.HIVE_12055, bloomFilterKinds);
+    assertEquals(OrcProto.Stream.Kind.BLOOM_FILTER, bloomFilterKinds[1]);
+    assertEquals(null, bloomFilterKinds[2]);
+    assertEquals(OrcProto.Stream.Kind.BLOOM_FILTER, bloomFilterKinds[3]);
+    assertEquals("range start: 0 end: 3000", ranges.toString());
+    assertEquals("range start: 4000 end: 6000", ranges.next.toString());
+    assertEquals(null, ranges.next.next);
+
+    // ignore non-utf8 bloom filter on decimal
+    Arrays.fill(bloomFilterKinds, null);
+    ranges = RecordReaderUtils.planIndexReading(schema, footer,
+        true, null,
+        new boolean[]{false, false, true, false},
+        OrcFile.WriterVersion.HIVE_4243,
+        bloomFilterKinds);
+    assertEquals(null, bloomFilterKinds[2]);
+    assertEquals("range start: 0 end: 1000", ranges.toString());
+    assertEquals("range start: 2000 end: 3000", ranges.next.toString());
+    assertEquals("range start: 4000 end: 5000", ranges.next.next.toString());
+    assertEquals(null, ranges.next.next.next);
+  }
+
+  @Test
+  public void TestCompatibleBloomFilters() throws Exception {
+    OrcProto.StripeFooter footer =
+        OrcProto.StripeFooter.newBuilder()
+            .addStreams(OrcProto.Stream.newBuilder()
+                .setColumn(1).setKind(OrcProto.Stream.Kind.ROW_INDEX).setLength(1000).build())
+            .addStreams(OrcProto.Stream.newBuilder()
+                .setColumn(1).setKind(OrcProto.Stream.Kind.BLOOM_FILTER).setLength(1000).build())
+            .addStreams(OrcProto.Stream.newBuilder()
+                .setColumn(2).setKind(OrcProto.Stream.Kind.ROW_INDEX).setLength(1000).build())
+            .addStreams(OrcProto.Stream.newBuilder()
+                .setColumn(2).setKind(OrcProto.Stream.Kind.BLOOM_FILTER).setLength(1000).build())
+            .addStreams(OrcProto.Stream.newBuilder()
+                .setColumn(2).setKind(OrcProto.Stream.Kind.BLOOM_FILTER_UTF8).setLength(1000).build())
+            .addStreams(OrcProto.Stream.newBuilder()
+                .setColumn(3).setKind(OrcProto.Stream.Kind.ROW_INDEX).setLength(1000).build())
+            .addStreams(OrcProto.Stream.newBuilder()
+                .setColumn(3).setKind(OrcProto.Stream.Kind.BLOOM_FILTER).setLength(1000).build())
+            .addStreams(OrcProto.Stream.newBuilder()
+                .setColumn(3).setKind(OrcProto.Stream.Kind.BLOOM_FILTER_UTF8).setLength(1000).build())
+            .build();
+    TypeDescription schema = TypeDescription.fromString("struct<x:int,y:decimal(10,2),z:string>");
+    OrcProto.Stream.Kind[] bloomFilterKinds = new OrcProto.Stream.Kind[4];
+
+    // normal read
+    DiskRangeList ranges = RecordReaderUtils.planIndexReading(schema, footer,
+        false, new boolean[]{true, true, false, true},
+        new boolean[]{false, true, false, true},
+        OrcFile.WriterVersion.HIVE_4243,
+        bloomFilterKinds);
+    assertEquals(OrcProto.Stream.Kind.BLOOM_FILTER, bloomFilterKinds[1]);
+    assertEquals(OrcProto.Stream.Kind.BLOOM_FILTER_UTF8, bloomFilterKinds[3]);
+    assertEquals("range start: 0 end: 2000", ranges.toString());
+    assertEquals("range start: 5000 end: 6000", ranges.next.toString());
+    assertEquals("range start: 7000 end: 8000", ranges.next.next.toString());
+    assertEquals(null, ranges.next.next.next);
+
+    //
+    Arrays.fill(bloomFilterKinds, null);
+    ranges = RecordReaderUtils.planIndexReading(schema, footer,
+        true, null,
+        new boolean[]{false, true, true, false},
+        OrcFile.WriterVersion.HIVE_4243,
+        bloomFilterKinds);
+    assertEquals(OrcProto.Stream.Kind.BLOOM_FILTER, bloomFilterKinds[1]);
+    assertEquals(OrcProto.Stream.Kind.BLOOM_FILTER_UTF8, bloomFilterKinds[2]);
+    assertEquals("range start: 0 end: 3000", ranges.toString());
+    assertEquals("range start: 4000 end: 6000", ranges.next.toString());
+    assertEquals(null, ranges.next.next);
+  }
+
+  @Test
+  public void TestNewBloomFilters() throws Exception {
+    OrcProto.StripeFooter footer =
+        OrcProto.StripeFooter.newBuilder()
+            .addStreams(OrcProto.Stream.newBuilder()
+                .setColumn(1).setKind(OrcProto.Stream.Kind.ROW_INDEX).setLength(1000).build())
+            .addStreams(OrcProto.Stream.newBuilder()
+                .setColumn(1).setKind(OrcProto.Stream.Kind.BLOOM_FILTER).setLength(1000).build())
+            .addStreams(OrcProto.Stream.newBuilder()
+                .setColumn(2).setKind(OrcProto.Stream.Kind.ROW_INDEX).setLength(1000).build())
+            .addStreams(OrcProto.Stream.newBuilder()
+                .setColumn(2).setKind(OrcProto.Stream.Kind.BLOOM_FILTER_UTF8).setLength(1000).build())
+            .addStreams(OrcProto.Stream.newBuilder()
+                .setColumn(3).setKind(OrcProto.Stream.Kind.ROW_INDEX).setLength(1000).build())
+            .addStreams(OrcProto.Stream.newBuilder()
+                .setColumn(3).setKind(OrcProto.Stream.Kind.BLOOM_FILTER_UTF8).setLength(1000).build())
+            .build();
+    TypeDescription schema = TypeDescription.fromString("struct<x:int,y:decimal(10,2),z:string>");
+    OrcProto.Stream.Kind[] bloomFilterKinds = new OrcProto.Stream.Kind[4];
+
+    // normal read
+    DiskRangeList ranges = RecordReaderUtils.planIndexReading(schema, footer,
+        false, new boolean[]{true, true, false, true},
+        new boolean[]{false, true, false, true},
+        OrcFile.WriterVersion.HIVE_4243,
+        bloomFilterKinds);
+    assertEquals(OrcProto.Stream.Kind.BLOOM_FILTER, bloomFilterKinds[1]);
+    assertEquals(OrcProto.Stream.Kind.BLOOM_FILTER_UTF8, bloomFilterKinds[3]);
+    assertEquals("range start: 0 end: 2000", ranges.toString());
+    assertEquals("range start: 4000 end: 6000", ranges.next.toString());
+    assertEquals(null, ranges.next.next);
+
+    //
+    Arrays.fill(bloomFilterKinds, null);
+    ranges = RecordReaderUtils.planIndexReading(schema, footer,
+        true, null,
+        new boolean[]{false, true, true, false},
+        OrcFile.WriterVersion.HIVE_4243,
+        bloomFilterKinds);
+    assertEquals(OrcProto.Stream.Kind.BLOOM_FILTER, bloomFilterKinds[1]);
+    assertEquals(OrcProto.Stream.Kind.BLOOM_FILTER_UTF8, bloomFilterKinds[2]);
+    assertEquals("range start: 0 end: 5000", ranges.toString());
+    assertEquals(null, ranges.next);
   }
 }

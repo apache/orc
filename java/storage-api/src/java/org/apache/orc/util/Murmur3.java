@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.hive.common.util;
+package org.apache.orc.util;
 
 /**
  * Murmur3 is successor to Murmur2 fast non-crytographic hash algorithms.
