@@ -24,7 +24,7 @@ import org.apache.orc.OrcProto;
 import org.apache.orc.TypeDescription;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
+import java.nio.ByteOrder;
 
 public class BloomFilterIO  {
 
@@ -62,7 +62,8 @@ public class BloomFilterIO  {
       case BLOOM_FILTER_UTF8: {
         ByteString bits = bloomFilter.getUtf8Bitset();
         long[] values = new long[bits.size() / 8];
-        bits.asReadOnlyByteBuffer().asLongBuffer().get(values);
+        bits.asReadOnlyByteBuffer().order(ByteOrder.LITTLE_ENDIAN)
+            .asLongBuffer().get(values);
         return new BloomFilterUtf8(values, numFuncs);
       }
       default:
@@ -82,6 +83,7 @@ public class BloomFilterIO  {
     long[] bitset = bloomFilter.getBitSet();
     if (bloomFilter instanceof BloomFilterUtf8) {
       ByteBuffer buffer = ByteBuffer.allocate(bitset.length * 8);
+      buffer.order(ByteOrder.LITTLE_ENDIAN);
       buffer.asLongBuffer().put(bitset);
       builder.setUtf8Bitset(ByteString.copyFrom(buffer));
     } else {
