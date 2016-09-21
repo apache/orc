@@ -90,6 +90,15 @@ public class BloomFilter {
     return (int) (-n * Math.log(p) / (Math.log(2) * Math.log(2)));
   }
 
+  @Override
+  public boolean equals(Object other) {
+    return other != null &&
+        other.getClass() == getClass() &&
+        numBits == ((BloomFilter) other).numBits &&
+        numHashFunctions == ((BloomFilter) other).numHashFunctions &&
+        bitSet.equals(((BloomFilter) other).bitSet);
+  }
+
   public void add(byte[] val) {
     if (val == null) {
       addBytes(val, -1, -1);
@@ -307,6 +316,13 @@ public class BloomFilter {
      */
     public void clear() {
       Arrays.fill(data, 0);
+    }
+
+    @Override
+    public boolean equals(Object other) {
+      return other != null &&
+          other.getClass() == getClass() &&
+          Arrays.equals(data, ((BitSet) other).data);
     }
   }
 }
