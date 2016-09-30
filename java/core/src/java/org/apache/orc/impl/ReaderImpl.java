@@ -495,6 +495,11 @@ public class ReaderImpl implements Reader {
         size = maxFileLength;
         modificationTime = -1;
       }
+      // Anything lesser than MAGIC header cannot be valid (valid ORC file is actually around 45 bytes, this is
+      // more conservative)
+      if (size <= OrcFile.MAGIC.length()) {
+        throw new FileFormatException("Not a valid ORC file");
+      }
       fileTailBuilder.setFileLength(size);
 
       //read last bytes into buffer to get PostScript
