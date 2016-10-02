@@ -157,7 +157,7 @@ void RleDecoderV1::next(int64_t* const data,
     } else {
       if (notNull) {
         for (uint64_t i = 0 ; i < count; ++i) {
-          if (notNull[i]) {
+          if (notNull[position + i]) {
             data[position + i] = isSigned
                 ? unZigZag(readLong())
                 : static_cast<int64_t>(readLong());

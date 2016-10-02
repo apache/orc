@@ -2636,4 +2636,21 @@ TEST(RLEv1, seekTest) {
   } while (i != 0);
 }
 
+TEST(RLEv1, testLeadingNulls) {
+  const unsigned char buffer[] = {0xfb, 0x01, 0x02, 0x03, 0x04, 0x05};
+  std::unique_ptr<RleDecoder> rle =
+      createRleDecoder(std::unique_ptr<SeekableInputStream>
+		       (new SeekableArrayInputStream(buffer,
+						     ARRAY_SIZE(buffer))),
+		       false, RleVersion_1, *getDefaultPool());
+  std::vector<int64_t> data(10);
+  const char isNull[] = {0x00, 0x00, 0x00, 0x00, 0x00,
+                         0x01, 0x01, 0x01, 0x01, 0x01};
+  rle->next(data.data(), 10, isNull);
+
+  for (size_t i = 5; i < 10; ++i) {
+    EXPECT_EQ(i - 4, data[i]) << "Output wrong at " << i;
+  }
+};
+
 }  // namespace orc
