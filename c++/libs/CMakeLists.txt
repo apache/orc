@@ -10,6 +10,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-shift-negative-value")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
+endif ()
+
 add_subdirectory(gmock-${GMOCK_VERSION})
 add_subdirectory(zlib-${ZLIB_VERSION})
 add_subdirectory(protobuf-${PROTOBUF_VERSION})
