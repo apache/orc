@@ -23,6 +23,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.util.List;
+
 public class TestTypeDescription {
   @Rule
   public ExpectedException thrown= ExpectedException.none();
@@ -70,6 +72,19 @@ public class TestTypeDescription {
   }
 
   @Test
+  public void testSpecialFieldNames() {
+    TypeDescription type = TypeDescription.createStruct()
+        .addField("foo bar", TypeDescription.createInt())
+        .addField("`some`thing`", TypeDescription.createInt())
+        .addField("èœ", TypeDescription.createInt())
+        .addField("1234567890_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", TypeDescription.createInt())
+        .addField("'!@#$%^&*()-=_+", TypeDescription.createInt());
+    assertEquals("struct<`foo bar`:int,```some``thing```:int,`èœ`:int," +
+        "1234567890_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:int," +
+        "`'!@#$%^&*()-=_+`:int>", type.toString());
+  }
+
+  @Test
   public void testParserSimple() {
     TypeDescription expected = TypeDescription.createStruct()
         .addField("b1", TypeDescription.createBinary())
@@ -114,6 +129,39 @@ public class TestTypeDescription {
     assertEquals(TypeDescription.Category.UNION, type.getCategory());
     assertEquals(TypeDescription.Category.STRING,
         type.getChildren().get(0).getCategory());
+  }
+
+  @Test
+  public void testSpecialFieldNameParser() {
+    TypeDescription type = TypeDescription.fromString("struct<`foo bar`:int," +
+        "```quotes```:double,`abc``def````ghi`:float>");
+    assertEquals(TypeDescription.Category.STRUCT, type.getCategory());
+    List<String> fields = type.getFieldNames();
+    assertEquals(3, fields.size());
+    assertEquals("foo bar", fields.get(0));
+    assertEquals("`quotes`", fields.get(1));
+    assertEquals("abc`def``ghi", fields.get(2));
+  }
+
+  @Test
+  public void testMissingField() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("Missing name at 'struct<^'");
+    TypeDescription.fromString("struct<");
+  }
+
+  @Test
+  public void testQuotedField1() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("Unmatched quote at 'struct<^`abc'");
+    TypeDescription.fromString("struct<`abc");
+  }
+
+  @Test
+  public void testQuotedField2() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("Empty quoted field name at 'struct<``^:int>'");
+    TypeDescription.fromString("struct<``:int>");
   }
 
   @Test
