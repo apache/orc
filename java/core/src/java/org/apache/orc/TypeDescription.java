@@ -34,6 +34,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * This is the description of the types in an ORC file.
@@ -45,6 +46,7 @@ public class TypeDescription
   private static final int DEFAULT_PRECISION = 38;
   private static final int DEFAULT_SCALE = 10;
   private static final int DEFAULT_LENGTH = 256;
+  private static final Pattern UNQUOTED_NAMES = Pattern.compile("^\\w+$");
 
   @Override
   public int compareTo(TypeDescription other) {
@@ -239,18 +241,50 @@ public class TypeDescription
   }
 
   static String parseName(StringPosition source) {
-    int start = source.position;
-    while (source.position < source.length) {
-      char ch = source.value.charAt(source.position);
-      if (!Character.isLetterOrDigit(ch) && ch != '.' && ch != '_') {
-        break;
-      }
-      source.position += 1;
-    }
-    if (source.position == start) {
+    if (source.position == source.length) {
       throw new IllegalArgumentException("Missing name at " + source);
     }
-    return source.value.substring(start, source.position);
+    final int start = source.position;
+    if (source.value.charAt(source.position) == '`') {
+      source.position += 1;
+      StringBuilder buffer = new StringBuilder();
+      boolean closed = false;
+      while (source.position < source.length) {
+        char ch = source.value.charAt(source.position);
+        source.position += 1;
+        if (ch == '`') {
+          if (source.position < source.length &&
+              source.value.charAt(source.position) == '`') {
+            source.position += 1;
+            buffer.append('`');
+          } else {
+            closed = true;
+            break;
+          }
+        } else {
+          buffer.append(ch);
+        }
+      }
+      if (!closed) {
+        source.position = start;
+        throw new IllegalArgumentException("Unmatched quote at " + source);
+      } else if (buffer.length() == 0) {
+        throw new IllegalArgumentException("Empty quoted field name at " + source);
+      }
+      return buffer.toString();
+    } else {
+      while (source.position < source.length) {
+        char ch = source.value.charAt(source.position);
+        if (!Character.isLetterOrDigit(ch) && ch != '.' && ch != '_') {
+          break;
+        }
+        source.position += 1;
+      }
+      if (source.position == start) {
+        throw new IllegalArgumentException("Missing name at " + source);
+      }
+      return source.value.substring(start, source.position);
+    }
   }
 
   static void requireChar(StringPosition source, char required) {
@@ -731,6 +765,16 @@ public class TypeDescription
   private int precision = DEFAULT_PRECISION;
   private int scale = DEFAULT_SCALE;
 
+  static void printFieldName(StringBuilder buffer, String name) {
+    if (UNQUOTED_NAMES.matcher(name).matches()) {
+      buffer.append(name);
+    } else {
+      buffer.append('`');
+      buffer.append(name.replace("`", "``"));
+      buffer.append('`');
+    }
+  }
+
   public void printToBuffer(StringBuilder buffer) {
     buffer.append(category.name);
     switch (category) {
@@ -765,7 +809,7 @@ public class TypeDescription
           if (i != 0) {
             buffer.append(',');
           }
-          buffer.append(fieldNames.get(i));
+          printFieldName(buffer, fieldNames.get(i));
           buffer.append(':');
           children.get(i).printToBuffer(buffer);
         }
