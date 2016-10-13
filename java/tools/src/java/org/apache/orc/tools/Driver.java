@@ -86,6 +86,7 @@ public class Driver {
       System.err.println("Commands:");
       System.err.println("   meta - print the metadata about the ORC file");
       System.err.println("   data - print the data from the ORC file");
+      System.err.println("   scan - scan the ORC file");
       System.err.println();
       System.err.println("To get more help, provide -h to the command");
       System.exit(1);
@@ -99,6 +100,8 @@ public class Driver {
       FileDump.main(conf, options.commandArgs);
     } else if ("data".equals(options.command)) {
       PrintData.main(conf, options.commandArgs);
+    } else if ("scan".equals(options.command)) {
+      ScanData.main(conf, options.commandArgs);
     } else {
       System.err.println("Unknown subcommand: " + options.command);
       System.exit(1);
