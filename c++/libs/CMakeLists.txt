@@ -11,7 +11,10 @@
 # limitations under the License.
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-shift-negative-value")
+  if (NOT CMAKE_C_COMPILER_VERSION STREQUAL "" AND
+      NOT CMAKE_C_COMPILER_VERSION VERSION_LESS "4.0")
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-shift-negative-value")
+  endif ()
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
 endif ()
 
