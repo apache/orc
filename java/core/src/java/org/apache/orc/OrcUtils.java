@@ -31,11 +31,12 @@ public class OrcUtils {
    * For example:
    * selectedColumns - a,b,c
    * allColumns - a,b,c,d
-   * If column c is a complex type, say list<string> and other types are primitives then result will
+   * If column c is a complex type, say list&lt;string&gt; and other types are
+   * primitives then result will
    * be [false, true, true, true, true, true, false]
    * Index 0 is the root element of the struct which is set to false by default, index 1,2
-   * corresponds to columns a and b. Index 3,4 correspond to column c which is list<string> and
-   * index 5 correspond to column d. After flattening list<string> gets 2 columns.
+   * corresponds to columns a and b. Index 3,4 correspond to column c which is list&lt;string&gt; and
+   * index 5 correspond to column d. After flattening list&lt;string&gt; gets 2 columns.
    *
    * @param selectedColumns - comma separated list of selected column names
    * @param schema       - object schema

@@ -50,7 +50,7 @@ public interface DataCache {
    *    return both ranges). It should really be same as #1, however currently ORC uses estimated
    *    end offsets; if we don't return the end block, the caller may read it from disk needlessly.
    *
-   * @param fileId Unique ID of the target file on the file system.
+   * @param fileKey Unique ID of the target file on the file system.
    * @param range A set of DiskRange-s (linked list) that is to be retrieved. May be modified.
    * @param baseOffset base offset for the ranges (stripe/stream offset in case of ORC).
    * @param factory A factory to produce DiskRangeList-s out of cached MemoryBuffer-s.
@@ -72,7 +72,7 @@ public interface DataCache {
    * caller is done with it. Buffers rejected due to conflict will neither be locked, nor
    * automatically deallocated. The caller must take care to discard these buffers.
    *
-   * @param fileId Unique ID of the target file on the file system.
+   * @param fileKey Unique ID of the target file on the file system.
    * @param ranges The ranges for which the data is being cached. These objects will not be stored.
    * @param data The data for the corresponding ranges.
    * @param baseOffset base offset for the ranges (stripe/stream offset in case of ORC).

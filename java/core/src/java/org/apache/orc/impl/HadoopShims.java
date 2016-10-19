@@ -110,7 +110,6 @@ public interface HadoopShims {
     /**
      * @param txt
      * @param size
-     * @return bytes read
      * @throws IOException
      */
     void read(Text txt, int size) throws IOException;

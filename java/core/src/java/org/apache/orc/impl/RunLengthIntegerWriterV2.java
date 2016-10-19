@@ -20,19 +20,17 @@ package org.apache.orc.impl;
 import java.io.IOException;
 
 /**
- * A writer that performs light weight compression over sequence of integers.
- * <p>
- * There are four types of lightweight integer compression
+ * <p>A writer that performs light weight compression over sequence of integers.
+ * </p>
+ * <p>There are four types of lightweight integer compression</p>
  * <ul>
  * <li>SHORT_REPEAT</li>
  * <li>DIRECT</li>
  * <li>PATCHED_BASE</li>
  * <li>DELTA</li>
  * </ul>
- * </p>
- * The description and format for these types are as below:
- * <p>
- * <b>SHORT_REPEAT:</b> Used for short repeated integer sequences.
+ * <p>The description and format for these types are as below:
+ * <b>SHORT_REPEAT:</b> Used for short repeated integer sequences.</p>
  * <ul>
  * <li>1 byte header
  * <ul>
@@ -43,49 +41,45 @@ import java.io.IOException;
  * </li>
  * <li>Blob - repeat value (fixed bytes)</li>
  * </ul>
- * </p>
  * <p>
  * <b>DIRECT:</b> Used for random integer sequences whose number of bit
- * requirement doesn't vary a lot.
+ * requirement doesn't vary a lot.</p>
  * <ul>
- * <li>2 bytes header
+ * <li>2 byte header (1st byte)
  * <ul>
- * 1st byte
  * <li>2 bits for encoding type</li>
  * <li>5 bits for fixed bit width of values in blob</li>
  * <li>1 bit for storing MSB of run length</li>
- * </ul>
+ * </ul></li>
+ * <li>2nd byte
  * <ul>
- * 2nd byte
  * <li>8 bits for lower run length bits</li>
  * </ul>
  * </li>
  * <li>Blob - stores the direct values using fixed bit width. The length of the
  * data blob is (fixed width * run length) bits long</li>
  * </ul>
- * </p>
  * <p>
  * <b>PATCHED_BASE:</b> Used for random integer sequences whose number of bit
- * requirement varies beyond a threshold.
+ * requirement varies beyond a threshold.</p>
  * <ul>
- * <li>4 bytes header
+ * <li>4 bytes header (1st byte)
  * <ul>
- * 1st byte
  * <li>2 bits for encoding type</li>
  * <li>5 bits for fixed bit width of values in blob</li>
  * <li>1 bit for storing MSB of run length</li>
- * </ul>
+ * </ul></li>
+ * <li>2nd byte
  * <ul>
- * 2nd byte
  * <li>8 bits for lower run length bits</li>
- * </ul>
+ * </ul></li>
+ * <li>3rd byte
  * <ul>
- * 3rd byte
  * <li>3 bits for bytes required to encode base value</li>
  * <li>5 bits for patch width</li>
- * </ul>
+ * </ul></li>
+ * <li>4th byte
  * <ul>
- * 4th byte
  * <li>3 bits for patch gap width</li>
  * <li>5 bits for patch length</li>
  * </ul>
@@ -101,29 +95,25 @@ import java.io.IOException;
  * patch values are stored in lower part of entry. Length of patch blob is
  * ((patch width + patch gap width) * patch length) bits.</li>
  * </ul>
- * </p>
  * <p>
  * <b>DELTA</b> Used for monotonically increasing or decreasing sequences,
  * sequences with fixed delta values or long repeated sequences.
  * <ul>
- * <li>2 bytes header
+ * <li>2 bytes header (1st byte)
  * <ul>
- * 1st byte
  * <li>2 bits for encoding type</li>
  * <li>5 bits for fixed bit width of values in blob</li>
  * <li>1 bit for storing MSB of run length</li>
- * </ul>
+ * </ul></li>
+ * <li>2nd byte
  * <ul>
- * 2nd byte
  * <li>8 bits for lower run length bits</li>
- * </ul>
- * </li>
+ * </ul></li>
  * <li>Base value - zigzag encoded value written as varint</li>
  * <li>Delta base - zigzag encoded value written as varint</li>
  * <li>Delta blob - only positive values. monotonicity and orderness are decided
  * based on the sign of the base value and delta base</li>
  * </ul>
- * </p>
  */
 public class RunLengthIntegerWriterV2 implements IntegerWriter {
 

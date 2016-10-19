@@ -100,6 +100,7 @@ public class OrcInputFormat<V extends WritableComparable>
    * Build the Reader.Options object based on the JobConf and the range of
    * bytes.
    * @param conf the job configuratoin
+   * @param reader the file footer reader
    * @param start the byte offset to start reader
    * @param length the number of bytes to read
    * @return the options to read with
