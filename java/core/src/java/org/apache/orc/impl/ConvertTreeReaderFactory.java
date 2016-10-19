@@ -2665,7 +2665,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
    *   Input must be data type STRUCT
    *   minFields = Math.min(numSourceFields, numTargetFields)
    *   Convert those fields
-   *   Extra targetFields --> NULL
+   *   Extra targetFields to NULL
    *
    * (Notes from ListConverter)
    *

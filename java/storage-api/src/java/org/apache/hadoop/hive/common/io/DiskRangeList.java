@@ -47,7 +47,7 @@ public class DiskRangeList extends DiskRange {
 
   /**
    * Inserts an intersecting range before current in the list and adjusts offset accordingly.
-   * @returns the new element.
+   * @return the new element.
    */
   public DiskRangeList insertPartBefore(DiskRangeList other) {
     assert other.end >= this.offset;
@@ -63,7 +63,7 @@ public class DiskRangeList extends DiskRange {
 
   /**
    * Inserts an element after current in the list.
-   * @returns the new element.
+   * @return the new element.
    * */
   public DiskRangeList insertAfter(DiskRangeList other) {
     other.next = this.next;
@@ -77,7 +77,7 @@ public class DiskRangeList extends DiskRange {
 
   /**
    * Inserts an intersecting range after current in the list and adjusts offset accordingly.
-   * @returns the new element.
+   * @return the new element.
    */
   public DiskRangeList insertPartAfter(DiskRangeList other) {
     assert other.offset <= this.end;

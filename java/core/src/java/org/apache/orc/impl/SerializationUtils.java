@@ -261,7 +261,7 @@ public final class SerializationUtils {
   /**
    * Compute the bits required to represent pth percentile value
    * @param data - array
-   * @param p - percentile value (>=0.0 to <=1.0)
+   * @param p - percentile value (&gt;=0.0 to &lt;=1.0)
    * @return pth percentile bits
    */
   public int percentileBits(long[] data, int offset, int length,

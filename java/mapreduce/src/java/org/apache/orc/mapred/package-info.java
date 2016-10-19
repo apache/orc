@@ -29,13 +29,10 @@
  * object type will be the appropriate one.)
  * </p>
  *
- * <p>
- * The mapping of types is:
+ * <p>The mapping of types is:</p>
  * <table summary="Mapping of ORC types to Writable types"
  *        border="1">
  *   <thead>
- *     <col width="25%">
- *     <col width="75%">
  *     <tr><th>ORC Type</th><th>Writable Type</th></tr>
  *   </thead>
  *   <tbody>
@@ -59,20 +56,18 @@
  *     <tr><td>varchar</td><td>Text</td></tr>
  *   </tbody>
  * </table>
- * </p>
  *
  * <p>
  * For writing, set the OutputFormat to OrcOutputFormat and define the
  * property "orc.schema" in your configuration. The property defines the
  * type of the file and uses the Hive type strings, such as
  * "struct&lt;x:int,y:string,z:timestamp&gt;" for a row with an integer,
- * string, and timestamp. You can create an example object using:
+ * string, and timestamp. You can create an example object using:</p>
  *<pre>{@code
  *String typeStr = "struct<x:int,y:string,z:timestamp>";
  *OrcStruct row = (OrcStruct) OrcStruct.createValue(
  *    TypeDescription.fromString(typeStr));
  *}</pre>
- * </p>
  *
  * <p>
  * Please look at the OrcConf class for the configuration knobs that are
