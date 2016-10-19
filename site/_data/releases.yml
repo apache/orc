@@ -12,7 +12,7 @@
 
 1.2.0:
   date: 2016-08-25
-  state: stable
+  state: archived
   tar: orc-1.2.0.tar.gz
   signed-by: Owen O’Malley (3D0C92B9)
   sha256: 5c394c7ed3a31d20726ded55ed9c5a0eeff1bd5b85b1cb2ee6c3c1a94560578c
