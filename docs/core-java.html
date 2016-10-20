@@ -1067,10 +1067,12 @@ read and write the data.</p>
 
 <h2 id="vectorized-row-batch">Vectorized Row Batch</h2>
 
-<p>Data is passed to ORC as instances of <code>VectorizedRowBatch</code> that contain
-the data for 1024 rows. The focus is on speed and accessing the data
-fields directly. <code>cols</code> is an array of <code>ColumnVector</code> and <code>size</code> is the number
-of rows.</p>
+<p>Data is passed to ORC as instances of
+<a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/VectorizedRowBatch.html">VectorizedRowBatch</a>
+that contain the data for 1024 rows. The focus is on speed and
+accessing the data fields directly. <code>cols</code> is an array of
+<a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/ColumnVector.html">ColumnVector</a>
+and <code>size</code> is the number of rows.</p>
 
 <pre><code class="language-java">package org.apache.hadoop.hive.ql.exec.vector;
 
@@ -1081,12 +1083,13 @@ public class VectorizedRowBatch {
 }
 </code></pre>
 
-<p><code>ColumnVector</code> is the parent type of the different kinds of columns
-and has some fields that are shared across all of the column types. In
-particular, the <code>noNulls</code> flag if there are no nulls in this column for
-this batch and the <code>isRepeating</code> flag for columns were the entire batch is the
-same value. For columns where <code>noNulls == false</code> the <code>isNull</code> array is true
-if that value is null.</p>
+<p><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/ColumnVector.html">ColumnVector</a>
+is the parent type of the different kinds of columns and has some
+fields that are shared across all of the column types. In particular,
+the <code>noNulls</code> flag if there are no nulls in this column for this batch
+and the <code>isRepeating</code> flag for columns were the entire batch is the
+same value. For columns where <code>noNulls == false</code> the <code>isNull</code> array is
+true if that value is null.</p>
 
 <pre><code class="language-java">public abstract class ColumnVector {
 
@@ -1106,7 +1109,7 @@ if that value is null.</p>
 }
 </code></pre>
 
-<p>The subtypes of <code>ColumnVector</code> are:</p>
+<p>The subtypes of ColumnVector are:</p>
 
 <table>
   <thead>
@@ -1118,80 +1121,80 @@ if that value is null.</p>
   <tbody>
     <tr>
       <td>array</td>
-      <td>ListColumnVector</td>
+      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/ListColumnVector.html">ListColumnVector</a></td>
     </tr>
     <tr>
       <td>binary</td>
-      <td>BytesColumnVector</td>
+      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html">BytesColumnVector</a></td>
     </tr>
     <tr>
       <td>bigint</td>
-      <td>LongColumnVector</td>
+      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a></td>
     </tr>
     <tr>
       <td>boolean</td>
-      <td>LongColumnVector</td>
+      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a></td>
     </tr>
     <tr>
       <td>char</td>
-      <td>BytesColumnVector</td>
+      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html">BytesColumnVector</a></td>
     </tr>
     <tr>
       <td>date</td>
-      <td>LongColumnVector</td>
+      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a></td>
     </tr>
     <tr>
       <td>decimal</td>
-      <td>DecimalColumnVector</td>
+      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/DecimalColumnVector.html">DecimalColumnVector</a></td>
     </tr>
     <tr>
       <td>double</td>
-      <td>DoubleColumnVector</td>
+      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/DoubleColumnVector.html">DoubleColumnVector</a></td>
     </tr>
     <tr>
       <td>float</td>
-      <td>DoubleColumnVector</td>
+      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/DoubleColumnVector.html">DoubleColumnVector</a></td>
     </tr>
     <tr>
       <td>int</td>
-      <td>LongColumnVector</td>
+      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a></td>
     </tr>
     <tr>
       <td>map</td>
-      <td>MapColumnVector</td>
+      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/MapColumnVector.html">MapColumnVector</a></td>
     </tr>
     <tr>
       <td>smallint</td>
-      <td>LongColumnVector</td>
+      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a></td>
     </tr>
     <tr>
       <td>string</td>
-      <td>BytesColumnVector</td>
+      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html">BytesColumnVector</a></td>
     </tr>
     <tr>
       <td>struct</td>
-      <td>StructColumnVector</td>
+      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/StructColumnVector.html">StructColumnVector</a></td>
     </tr>
     <tr>
       <td>timestamp</td>
-      <td>TimestampColumnVector</td>
+      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/TimestampColumnVector.html">TimestampColumnVector</a></td>
     </tr>
     <tr>
       <td>tinyint</td>
-      <td>LongColumnVector</td>
+      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a></td>
     </tr>
     <tr>
       <td>uniontype</td>
-      <td>UnionColumnVector</td>
+      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/UnionColumnVector.html">UnionColumnVector</a></td>
     </tr>
     <tr>
       <td>varchar</td>
-      <td>BytesColumnVector</td>
+      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html">BytesColumnVector</a></td>
     </tr>
   </tbody>
 </table>
 
-<p><code>LongColumnVector</code> handles all of the integer types (boolean, bigint,
+<p><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a> handles all of the integer types (boolean, bigint,
 date, int, smallint, and tinyint). The data is represented as an array of
 longs where each value is sign-extended as necessary.</p>
 
@@ -1201,8 +1204,9 @@ longs where each value is sign-extended as necessary.</p>
 }
 </code></pre>
 
-<p><code>TimestampColumnVector</code> handles timestamp values. The data is represented
-as an array of longs and an array of ints.</p>
+<p><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/TimestampColumnVector.html">TimestampColumnVector</a>
+handles timestamp values. The data is represented as an array of longs
+and an array of ints.</p>
 
 <pre><code class="language-java">public class TimestampColumnVector extends ColumnVector {
 
@@ -1215,8 +1219,9 @@ as an array of longs and an array of ints.</p>
 }
 </code></pre>
 
-<p><code>DoubleColumnVector</code> handles all of the floating point types (double,
-and float). The data is represented as an array of doubles.</p>
+<p><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/DoubleColumnVector.html">DoubleColumnVector</a>
+handles all of the floating point types (double, and float). The data
+is represented as an array of doubles.</p>
 
 <pre><code class="language-java">public class DoubleColumnVector extends ColumnVector {
   public double[] vector;
@@ -1224,9 +1229,10 @@ and float). The data is represented as an array of doubles.</p>
 }
 </code></pre>
 
-<p><code>DecimalColumnVector</code> handles decimal columns. The data is represented
-as an array of HiveDecimalWritable. Note that this implementation is not
-performant and will likely be replaced.</p>
+<p><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/DecimalColumnVector.html">DecimalColumnVector</a>
+handles decimal columns. The data is represented as an array of
+HiveDecimalWritable. Note that this implementation is not performant
+and will likely be replaced.</p>
 
 <pre><code class="language-java">public class DecimalColumnVector extends ColumnVector {
   public HiveDecimalWritable[] vector;
@@ -1234,9 +1240,10 @@ performant and will likely be replaced.</p>
 }
 </code></pre>
 
-<p><code>BytesColumnVector</code> handles all of the binary types (binary, char,
-string, and varchar). The data is represented as a byte array, offset,
-and length. The byte arrays may or may not be shared between values.</p>
+<p><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html">BytesColumnVector</a>
+handles all of the binary types (binary, char, string, and
+varchar). The data is represented as a byte array, offset, and
+length. The byte arrays may or may not be shared between values.</p>
 
 <pre><code class="language-java">public class BytesColumnVector extends ColumnVector {
   public byte[][] vector;
@@ -1246,8 +1253,9 @@ and length. The byte arrays may or may not be shared between values.</p>
 }
 </code></pre>
 
-<p><code>StructColumnVector</code> handles the struct columns and represents the data as an
-array of <code>ColumnVector</code>. The value for row 5 consists of the fifth value from
+<p><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/StructColumnVector.html">StructColumnVector</a>
+handles the struct columns and represents the data as an array of
+<code>ColumnVector</code>. The value for row 5 consists of the fifth value from
 each of the <code>fields</code> values.</p>
 
 <pre><code class="language-java">public class StructColumnVector extends ColumnVector {
@@ -1256,9 +1264,10 @@ each of the <code>fields</code> values.</p>
 }
 </code></pre>
 
-<p><code>UnionColumnVector</code> handles the union columns and represents the data
-as an array of integers that pick the subtype and a <code>fields</code> array one
-per a subtype. Only the value of the <code>fields</code> that corresponds to
+<p><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/UnionColumnVector.html">UnionColumnVector</a>
+handles the union columns and represents the data as an array of
+integers that pick the subtype and a <code>fields</code> array one per a
+subtype. Only the value of the <code>fields</code> that corresponds to
 <code>tags[row]</code> is set.</p>
 
 <pre><code class="language-java">public class UnionColumnVector extends ColumnVector {
@@ -1268,9 +1277,10 @@ per a subtype. Only the value of the <code>fields</code> that corresponds to
 }
 </code></pre>
 
-<p><code>ListColumnVector</code> handles the array columns and represents the data
-as two arrays of integers for the offset and lengths and a
-<code>ColumnVector</code> for the children values.</p>
+<p><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/ListColumnVector.html">ListColumnVector</a>
+handles the array columns and represents the data as two arrays of
+integers for the offset and lengths and a <code>ColumnVector</code> for the
+children values.</p>
 
 <pre><code class="language-java">public class ListColumnVector extends ColumnVector {
   // for each row, the first offset of the child
@@ -1286,9 +1296,10 @@ as two arrays of integers for the offset and lengths and a
 }
 </code></pre>
 
-<p><code>MapColumnVector</code> handles the map columns and represents the data
-as two arrays of integers for the offset and lengths and two
-<code>ColumnVector</code>s for the keys and values.</p>
+<p><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/MapColumnVector.html">MapColumnVector</a>
+handles the map columns and represents the data as two arrays of
+integers for the offset and lengths and two <code>ColumnVector</code>s for the
+keys and values.</p>
 
 <pre><code class="language-java">public class ListColumnVector extends ColumnVector {
   // for each row, the first offset of the child
@@ -1307,9 +1318,12 @@ as two arrays of integers for the offset and lengths and two
 
 <h2 id="writing-orc-files">Writing ORC Files</h2>
 
-<p>To write an ORC file, you need to define the schema and create a <code>Writer</code>
-with the desired filename. This example sets the required schema parameter,
-but there are many other options to control the ORC writer.</p>
+<p>To write an ORC file, you need to define the schema and use the
+<a href="/api/orc-core/index.html?org/apache/orc/OrcFile.html">OrcFile</a>
+class to create a
+<a href="/api/orc-core/index.html?org/apache/orc/Writer.html">Writer</a>
+with the desired filename. This example sets the required schema
+parameter, but there are many other options to control the ORC writer.</p>
 
 <pre><code class="language-java">TypeDescription schema = TypeDescription.fromString("struct&lt;x:int,y:int&gt;");
 Writer writer = OrcFile.createWriter(new Path("my-file.orc"),
@@ -1338,18 +1352,23 @@ writer.close();
 
 <h2 id="reading-orc-files">Reading ORC Files</h2>
 
-<p>To read ORC files, create a <code>Reader</code> that contains the metadata about
-the file. There are a few options to the ORC reader, but far fewer than
-the writer and none of them are required. The reader has methods for
-getting the number of rows, schema, compression, etc. from the file.</p>
+<p>To read ORC files, use the
+<a href="/api/orc-core/index.html?org/apache/orc/OrcFile.html">OrcFile</a>
+class to create a
+<a href="/api/orc-core/index.html?org/apache/orc/Reader.html">Reader</a>
+that contains the metadata about the file. There are a few options to
+the ORC reader, but far fewer than the writer and none of them are
+required. The reader has methods for getting the number of rows,
+schema, compression, etc. from the file.</p>
 
 <pre><code class="language-java">Reader reader = OrcFile.createReader(new Path("my-file.orc"),
                   OrcFile.readerOptions(conf));
 </code></pre>
 
-<p>To get the data, create a <code>RecordReader</code> object. By default, the
-RecordReader reads all rows and all columns, but there are options to
-control the data that is read.</p>
+<p>To get the data, create a
+<a href="/api/orc-core/index.html?org/apache/orc/RecordReader.html">RecordReader</a>
+object. By default, the RecordReader reads all rows and all columns,
+but there are options to control the data that is read.</p>
 
 <pre><code class="language-java">RecordReader rows = reader.rows();
 VectorizedRowBatch batch = reader.getSchema().createRowBatch();

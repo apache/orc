@@ -1087,7 +1087,7 @@ page</a>.</p>
 <p>Set the minimal properties in your JobConf:</p>
 
 <ul>
-  <li><strong>mapreduce.job.inputformat.class</strong> = org.apache.orc.mapred.OrcInputFormat</li>
+  <li><strong>mapreduce.job.inputformat.class</strong> = <a href="/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcInputFormat.html">org.apache.orc.mapred.OrcInputFormat</a></li>
   <li><strong>mapreduce.input.fileinputformat.inputdir</strong> = your input directory</li>
 </ul>
 
@@ -1110,7 +1110,7 @@ the key and a value based on the table below expanded recursively.</p>
   <tbody>
     <tr>
       <td>array</td>
-      <td>org.apache.orc.mapred.OrcList</td>
+      <td><a href="/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcStruct.html">org.apache.orc.mapred.OrcList</a></td>
     </tr>
     <tr>
       <td>binary</td>
@@ -1130,11 +1130,11 @@ the key and a value based on the table below expanded recursively.</p>
     </tr>
     <tr>
       <td>date</td>
-      <td>org.apache.hadoop.hive.serde2.io.DateWritable</td>
+      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/serde2/io/DateWritable.html">org.apache.hadoop.hive.serde2.io.DateWritable</a></td>
     </tr>
     <tr>
       <td>decimal</td>
-      <td>org.apache.hadoop.hive.serde2.io.HiveDecimalWritable</td>
+      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/serde2/io/HiveDecimalWritable.html">org.apache.hadoop.hive.serde2.io.HiveDecimalWritable</a></td>
     </tr>
     <tr>
       <td>double</td>
@@ -1150,7 +1150,7 @@ the key and a value based on the table below expanded recursively.</p>
     </tr>
     <tr>
       <td>map</td>
-      <td>org.apache.orc.mapred.OrcMap</td>
+      <td><a href="/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcMap.html">org.apache.orc.mapred.OrcMap</a></td>
     </tr>
     <tr>
       <td>smallint</td>
@@ -1162,11 +1162,11 @@ the key and a value based on the table below expanded recursively.</p>
     </tr>
     <tr>
       <td>struct</td>
-      <td>org.apache.orc.mapred.OrcStruct</td>
+      <td><a href="/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcStruct.html">org.apache.orc.mapred.OrcStruct</a></td>
     </tr>
     <tr>
       <td>timestamp</td>
-      <td>org.apache.orc.mapred.OrcTimestamp</td>
+      <td><a href="/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcTimestamp.html">org.apache.orc.mapred.OrcTimestamp</a></td>
     </tr>
     <tr>
       <td>tinyint</td>
@@ -1174,7 +1174,7 @@ the key and a value based on the table below expanded recursively.</p>
     </tr>
     <tr>
       <td>uniontype</td>
-      <td>org.apache.orc.mapred.OrcUnion</td>
+      <td><a href="/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcUnion.html">org.apache.orc.mapred.OrcUnion</a></td>
     </tr>
     <tr>
       <td>varchar</td>
@@ -1210,7 +1210,7 @@ mapper code would look like:</p>
 <p>To write ORC files from your MapReduce job, you’ll need to set</p>
 
 <ul>
-  <li><strong>mapreduce.job.outputformat.class</strong> = org.apache.orc.mapred.OrcOutputFormat</li>
+  <li><strong>mapreduce.job.outputformat.class</strong> = <a href="/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcOutputFormat.html">org.apache.orc.mapred.OrcOutputFormat</a></li>
   <li><strong>mapreduce.output.fileoutputformat.outputdir</strong> = your output directory</li>
   <li><strong>orc.mapred.output.schema</strong> = the schema to write to the ORC file</li>
 </ul>
@@ -1259,8 +1259,11 @@ value before getting the next.</p>
 MapReduce shuffle. The complex ORC types, since they are generic
 types, need to have their full type information provided to create the
 object. To enable MapReduce to properly instantiate the OrcStruct and
-other ORC types, we need to wrap it in either an OrcKey for the
-shuffle key or OrcValue for the shuffle value.</p>
+other ORC types, we need to wrap it in either an
+<a href="/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcKey.html">OrcKey</a>
+for the shuffle key or
+<a href="/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcValue.html">OrcValue</a>
+for the shuffle value.</p>
 
 <p>To send two OrcStructs through the shuffle, define the following properties
 in the JobConf:</p>
