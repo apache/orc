@@ -10,10 +10,12 @@ read and write the data.
 
 ## Vectorized Row Batch
 
-Data is passed to ORC as instances of `VectorizedRowBatch` that contain
-the data for 1024 rows. The focus is on speed and accessing the data
-fields directly. `cols` is an array of `ColumnVector` and `size` is the number
-of rows.
+Data is passed to ORC as instances of
+[VectorizedRowBatch]({{site.url}}/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/VectorizedRowBatch.html)
+that contain the data for 1024 rows. The focus is on speed and
+accessing the data fields directly. `cols` is an array of
+[ColumnVector]({{site.url}}/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/ColumnVector.html)
+and `size` is the number of rows.
 
 ~~~ java
 package org.apache.hadoop.hive.ql.exec.vector;
@@ -25,12 +27,13 @@ public class VectorizedRowBatch {
 }
 ~~~
 
-`ColumnVector` is the parent type of the different kinds of columns
-and has some fields that are shared across all of the column types. In
-particular, the `noNulls` flag if there are no nulls in this column for
-this batch and the `isRepeating` flag for columns were the entire batch is the
-same value. For columns where `noNulls == false` the `isNull` array is true
-if that value is null.
+[ColumnVector]({{site.url}}/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/ColumnVector.html)
+is the parent type of the different kinds of columns and has some
+fields that are shared across all of the column types. In particular,
+the `noNulls` flag if there are no nulls in this column for this batch
+and the `isRepeating` flag for columns were the entire batch is the
+same value. For columns where `noNulls == false` the `isNull` array is
+true if that value is null.
 
 ~~~ java
 public abstract class ColumnVector {
@@ -51,30 +54,30 @@ public abstract class ColumnVector {
 }
 ~~~
 
-The subtypes of `ColumnVector` are:
+The subtypes of ColumnVector are:
 
 | ORC Type | ColumnVector |
 | -------- | ------------- |
-| array | ListColumnVector |
-| binary | BytesColumnVector |
-| bigint | LongColumnVector |
-| boolean | LongColumnVector |
-| char | BytesColumnVector |
-| date | LongColumnVector |
-| decimal | DecimalColumnVector |
-| double | DoubleColumnVector |
-| float | DoubleColumnVector |
-| int | LongColumnVector |
-| map | MapColumnVector |
-| smallint | LongColumnVector |
-| string | BytesColumnVector |
-| struct | StructColumnVector |
-| timestamp | TimestampColumnVector |
-| tinyint | LongColumnVector |
-| uniontype | UnionColumnVector |
-| varchar | BytesColumnVector |
+| array | [ListColumnVector]({{site.url}}/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/ListColumnVector.html) |
+| binary | [BytesColumnVector]({{site.url}}/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html) |
+| bigint | [LongColumnVector]({{site.url}}/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html) |
+| boolean | [LongColumnVector]({{site.url}}/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html) |
+| char | [BytesColumnVector]({{site.url}}/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html) |
+| date | [LongColumnVector]({{site.url}}/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html) |
+| decimal | [DecimalColumnVector]({{site.url}}/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/DecimalColumnVector.html) |
+| double | [DoubleColumnVector]({{site.url}}/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/DoubleColumnVector.html) |
+| float | [DoubleColumnVector]({{site.url}}/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/DoubleColumnVector.html) |
+| int | [LongColumnVector]({{site.url}}/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html) |
+| map | [MapColumnVector]({{site.url}}/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/MapColumnVector.html) |
+| smallint | [LongColumnVector]({{site.url}}/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html) |
+| string | [BytesColumnVector]({{site.url}}/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html) |
+| struct | [StructColumnVector]({{site.url}}/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/StructColumnVector.html) |
+| timestamp | [TimestampColumnVector]({{site.url}}/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/TimestampColumnVector.html) |
+| tinyint | [LongColumnVector]({{site.url}}/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html) |
+| uniontype | [UnionColumnVector]({{site.url}}/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/UnionColumnVector.html) |
+| varchar | [BytesColumnVector]({{site.url}}/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html) |
 
-`LongColumnVector` handles all of the integer types (boolean, bigint,
+[LongColumnVector]({{site.url}}/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html) handles all of the integer types (boolean, bigint,
 date, int, smallint, and tinyint). The data is represented as an array of
 longs where each value is sign-extended as necessary.
 
@@ -85,8 +88,9 @@ public class LongColumnVector extends ColumnVector {
 }
 ~~~
 
-`TimestampColumnVector` handles timestamp values. The data is represented
-as an array of longs and an array of ints.
+[TimestampColumnVector]({{site.url}}/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/TimestampColumnVector.html)
+handles timestamp values. The data is represented as an array of longs
+and an array of ints.
 
 ~~~ java
 public class TimestampColumnVector extends ColumnVector {
@@ -100,8 +104,9 @@ public class TimestampColumnVector extends ColumnVector {
 }
 ~~~
 
-`DoubleColumnVector` handles all of the floating point types (double,
-and float). The data is represented as an array of doubles.
+[DoubleColumnVector]({{site.url}}/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/DoubleColumnVector.html)
+handles all of the floating point types (double, and float). The data
+is represented as an array of doubles.
 
 ~~~ java
 public class DoubleColumnVector extends ColumnVector {
@@ -110,9 +115,10 @@ public class DoubleColumnVector extends ColumnVector {
 }
 ~~~
 
-`DecimalColumnVector` handles decimal columns. The data is represented
-as an array of HiveDecimalWritable. Note that this implementation is not
-performant and will likely be replaced.
+[DecimalColumnVector]({{site.url}}/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/DecimalColumnVector.html)
+handles decimal columns. The data is represented as an array of
+HiveDecimalWritable. Note that this implementation is not performant
+and will likely be replaced.
 
 ~~~ java
 public class DecimalColumnVector extends ColumnVector {
@@ -121,9 +127,10 @@ public class DecimalColumnVector extends ColumnVector {
 }
 ~~~
 
-`BytesColumnVector` handles all of the binary types (binary, char,
-string, and varchar). The data is represented as a byte array, offset,
-and length. The byte arrays may or may not be shared between values.
+[BytesColumnVector]({{site.url}}/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html)
+handles all of the binary types (binary, char, string, and
+varchar). The data is represented as a byte array, offset, and
+length. The byte arrays may or may not be shared between values.
 
 ~~~ java
 public class BytesColumnVector extends ColumnVector {
@@ -134,8 +141,9 @@ public class BytesColumnVector extends ColumnVector {
 }
 ~~~
 
-`StructColumnVector` handles the struct columns and represents the data as an
-array of `ColumnVector`. The value for row 5 consists of the fifth value from
+[StructColumnVector]({{site.url}}/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/StructColumnVector.html)
+handles the struct columns and represents the data as an array of
+`ColumnVector`. The value for row 5 consists of the fifth value from
 each of the `fields` values.
 
 ~~~ java
@@ -145,9 +153,10 @@ public class StructColumnVector extends ColumnVector {
 }
 ~~~
 
-`UnionColumnVector` handles the union columns and represents the data
-as an array of integers that pick the subtype and a `fields` array one
-per a subtype. Only the value of the `fields` that corresponds to
+[UnionColumnVector]({{site.url}}/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/UnionColumnVector.html)
+handles the union columns and represents the data as an array of
+integers that pick the subtype and a `fields` array one per a
+subtype. Only the value of the `fields` that corresponds to
 `tags[row]` is set.
 
 ~~~ java
@@ -158,9 +167,10 @@ public class UnionColumnVector extends ColumnVector {
 }
 ~~~
 
-`ListColumnVector` handles the array columns and represents the data
-as two arrays of integers for the offset and lengths and a
-`ColumnVector` for the children values.
+[ListColumnVector]({{site.url}}/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/ListColumnVector.html)
+handles the array columns and represents the data as two arrays of
+integers for the offset and lengths and a `ColumnVector` for the
+children values.
 
 ~~~ java
 public class ListColumnVector extends ColumnVector {
@@ -177,9 +187,10 @@ public class ListColumnVector extends ColumnVector {
 }
 ~~~
 
-`MapColumnVector` handles the map columns and represents the data
-as two arrays of integers for the offset and lengths and two
-`ColumnVector`s for the keys and values.
+[MapColumnVector]({{site.url}}/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/MapColumnVector.html)
+handles the map columns and represents the data as two arrays of
+integers for the offset and lengths and two `ColumnVector`s for the
+keys and values.
 
 ~~~ java
 public class ListColumnVector extends ColumnVector {
@@ -199,9 +210,12 @@ public class ListColumnVector extends ColumnVector {
 
 ## Writing ORC Files
 
-To write an ORC file, you need to define the schema and create a `Writer`
-with the desired filename. This example sets the required schema parameter,
-but there are many other options to control the ORC writer.
+To write an ORC file, you need to define the schema and use the
+[OrcFile]({{site.url}}/api/orc-core/index.html?org/apache/orc/OrcFile.html)
+class to create a
+[Writer]({{site.url}}/api/orc-core/index.html?org/apache/orc/Writer.html)
+with the desired filename. This example sets the required schema
+parameter, but there are many other options to control the ORC writer.
 
 ~~~ java
 TypeDescription schema = TypeDescription.fromString("struct<x:int,y:int>");
@@ -232,19 +246,24 @@ writer.close();
 
 ## Reading ORC Files
 
-To read ORC files, create a `Reader` that contains the metadata about
-the file. There are a few options to the ORC reader, but far fewer than
-the writer and none of them are required. The reader has methods for
-getting the number of rows, schema, compression, etc. from the file.
+To read ORC files, use the
+[OrcFile]({{site.url}}/api/orc-core/index.html?org/apache/orc/OrcFile.html)
+class to create a
+[Reader]({{site.url}}/api/orc-core/index.html?org/apache/orc/Reader.html)
+that contains the metadata about the file. There are a few options to
+the ORC reader, but far fewer than the writer and none of them are
+required. The reader has methods for getting the number of rows,
+schema, compression, etc. from the file.
 
 ~~~ java
 Reader reader = OrcFile.createReader(new Path("my-file.orc"),
                   OrcFile.readerOptions(conf));
 ~~~
 
-To get the data, create a `RecordReader` object. By default, the
-RecordReader reads all rows and all columns, but there are options to
-control the data that is read.
+To get the data, create a
+[RecordReader]({{site.url}}/api/orc-core/index.html?org/apache/orc/RecordReader.html)
+object. By default, the RecordReader reads all rows and all columns,
+but there are options to control the data that is read.
 
 ~~~ java
 RecordReader rows = reader.rows();
