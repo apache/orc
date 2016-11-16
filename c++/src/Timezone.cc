@@ -650,6 +650,7 @@ namespace orc {
     DIAGNOSTIC_IGNORE("-Wglobal-constructors")
     DIAGNOSTIC_IGNORE("-Wexit-time-destructors")
   #endif
+  static std::mutex timezone_mutex;
   static std::map<std::string, Timezone*> timezoneCache;
   DIAGNOSTIC_POP
 
@@ -688,6 +689,8 @@ namespace orc {
    * Results are cached.
    */
   const Timezone& getTimezoneByFilename(const std::string& filename) {
+    // ORC-110
+    std::lock_guard<std::mutex> timezone_lock(timezone_mutex);
     std::map<std::string, Timezone*>::iterator itr =
       timezoneCache.find(filename);
     if (itr != timezoneCache.end()) {
