@@ -22,6 +22,7 @@
 #include <iostream>
 #include <fcntl.h>
 #include <map>
+#include <pthread.h>
 #include <sstream>
 #include <stdint.h>
 #include <stdio.h>
@@ -650,6 +651,7 @@ namespace orc {
     DIAGNOSTIC_IGNORE("-Wglobal-constructors")
     DIAGNOSTIC_IGNORE("-Wexit-time-destructors")
   #endif
+  pthread_mutex_t timezone_mutex;
   static std::map<std::string, Timezone*> timezoneCache;
   DIAGNOSTIC_POP
 
@@ -735,7 +737,10 @@ namespace orc {
    * Get the local timezone.
    */
   const Timezone& getLocalTimezone() {
-    return getTimezoneByFilename(LOCAL_TIMEZONE);
+    pthread_mutex_lock(&timezone_mutex);
+    const Timezone& timezone = getTimezoneByFilename(LOCAL_TIMEZONE);
+    pthread_mutex_unlock(&timezone_mutex);
+    return timezone;
   }
 
   /**
@@ -746,7 +751,10 @@ namespace orc {
     std::string filename(getTimezoneDirectory());
     filename += "/";
     filename += zone;
-    return getTimezoneByFilename(filename);
+    pthread_mutex_lock(&timezone_mutex);
+    const Timezone& timezone = getTimezoneByFilename(filename);
+    pthread_mutex_unlock(&timezone_mutex);
+    return timezone;
   }
 
   /**
