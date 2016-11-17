@@ -651,7 +651,7 @@ namespace orc {
     DIAGNOSTIC_IGNORE("-Wglobal-constructors")
     DIAGNOSTIC_IGNORE("-Wexit-time-destructors")
   #endif
-  pthread_mutex_t timezone_mutex;
+  static pthread_mutex_t timezone_mutex;
   static std::map<std::string, Timezone*> timezoneCache;
   DIAGNOSTIC_POP
 
