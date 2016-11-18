@@ -690,6 +690,8 @@ namespace orc {
    * Results are cached.
    */
   const Timezone& getTimezoneByFilename(const std::string& filename) {
+    // ORC-110
+    pthread_mutex_lock(&timezone_mutex);
     std::map<std::string, Timezone*>::iterator itr =
       timezoneCache.find(filename);
     if (itr != timezoneCache.end()) {
@@ -730,6 +732,7 @@ namespace orc {
     }
     Timezone* result = new TimezoneImpl(filename, buffer);
     timezoneCache[filename] = result;
+    pthread_mutex_unlock(&timezone_mutex);
     return *result;
   }
 
@@ -737,10 +740,7 @@ namespace orc {
    * Get the local timezone.
    */
   const Timezone& getLocalTimezone() {
-    pthread_mutex_lock(&timezone_mutex);
-    const Timezone& timezone = getTimezoneByFilename(LOCAL_TIMEZONE);
-    pthread_mutex_unlock(&timezone_mutex);
-    return timezone;
+    return getTimezoneByFilename(LOCAL_TIMEZONE);
   }
 
   /**
@@ -751,10 +751,7 @@ namespace orc {
     std::string filename(getTimezoneDirectory());
     filename += "/";
     filename += zone;
-    pthread_mutex_lock(&timezone_mutex);
-    const Timezone& timezone = getTimezoneByFilename(filename);
-    pthread_mutex_unlock(&timezone_mutex);
-    return timezone;
+    return getTimezoneByFilename(filename);
   }
 
   /**
