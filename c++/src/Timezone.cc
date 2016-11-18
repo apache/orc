@@ -695,23 +695,27 @@ namespace orc {
     std::map<std::string, Timezone*>::iterator itr =
       timezoneCache.find(filename);
     if (itr != timezoneCache.end()) {
+      pthread_mutex_unlock(&timezone_mutex);
       return *(itr->second);
     }
     int in = open(filename.c_str(), O_RDONLY);
     if (in == -1) {
       std::stringstream buffer;
       buffer << "failed to open " << filename << " - " << strerror(errno);
+      pthread_mutex_unlock(&timezone_mutex);
       throw TimezoneError(buffer.str());
     }
     struct stat fileInfo;
     if (fstat(in, &fileInfo) == -1) {
       std::stringstream buffer;
       buffer << "failed to stat " << filename << " - " << strerror(errno);
+      pthread_mutex_unlock(&timezone_mutex);
       throw TimezoneError(buffer.str());
     }
     if ((fileInfo.st_mode & S_IFMT) != S_IFREG) {
       std::stringstream buffer;
       buffer << "non-file in tzfile reader " << filename;
+      pthread_mutex_unlock(&timezone_mutex);
       throw TimezoneError(buffer.str());
     }
     size_t size = static_cast<size_t>(fileInfo.st_size);
@@ -720,6 +724,7 @@ namespace orc {
     while (posn < size) {
       ssize_t ret = read(in, &buffer[posn], size - posn);
       if (ret == -1) {
+        pthread_mutex_unlock(&timezone_mutex);
         throw TimezoneError(std::string("Failure to read timezone file ") +
                             filename + " - " + strerror(errno));
       }
@@ -728,6 +733,7 @@ namespace orc {
     if (close(in) == -1) {
       std::stringstream err;
       err << "failed to close " << filename << " - " << strerror(errno);
+      pthread_mutex_unlock(&timezone_mutex);
       throw TimezoneError(err.str());
     }
     Timezone* result = new TimezoneImpl(filename, buffer);
