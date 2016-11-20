@@ -1318,7 +1318,7 @@ namespace orc {
         }
       }
       unZigZagInt128(value);
-      scaleInt128(value, static_cast<uint32_t>(scale), 
+      scaleInt128(value, static_cast<uint32_t>(scale),
                   static_cast<uint32_t>(currentScale));
     }
   };
@@ -1416,7 +1416,7 @@ namespace orc {
                     (const Type& type,
                      StripeStreams& stripe
                      ): Decimal64ColumnReader(type, stripe) {
-    const ReaderOptions options = stripe.getReaderOptions();
+    const RowReaderOptions options = stripe.getRowReaderOptions();
     scale = options.getForcedScaleOnHive11Decimal();
     throwOnOverflow = options.getThrowOnHive11DecimalOverflow();
     errorStream = options.getErrorStream();

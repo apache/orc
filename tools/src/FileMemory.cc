@@ -62,21 +62,25 @@ TestMemoryPool::~TestMemoryPool() {}
 void processFile(const char* filename,
                  const std::list<uint64_t>& cols,
                  uint32_t batchSize) {
-  orc::ReaderOptions opts;
+  orc::ReaderOptions readerOpts;
+  orc::RowReaderOptions rowReaderOpts;
   if (cols.size() > 0) {
-    opts.include(cols);
+    readerOpts.include(cols);
+    rowReaderOpts.include(cols);
   }
   std::unique_ptr<orc::MemoryPool> pool(new TestMemoryPool());
-  opts.setMemoryPool(*(pool.get()));
+  readerOpts.setMemoryPool(*(pool.get()));
+  rowReaderOpts.setMemoryPool(*(pool.get()));
 
-  std::unique_ptr<orc::RowReader> reader =
-    orc::createReader(orc::readLocalFile(std::string(filename)), opts)->getRowReader();
+  std::unique_ptr<orc::Reader> reader =
+                  orc::createReader(orc::readLocalFile(std::string(filename)), readerOpts);
+  std::unique_ptr<orc::RowReader> rowReader = reader->getRowReader(rowReaderOpts);
 
   std::unique_ptr<orc::ColumnVectorBatch> batch =
-      reader->createRowBatch(batchSize);
+      rowReader->createRowBatch(batchSize);
   uint64_t readerMemory = reader->getMemoryUse();
   uint64_t batchMemory = batch->getMemoryUsage();
-  while (reader->next(*batch)) {}
+  while (rowReader->next(*batch)) {}
   uint64_t actualMemory =
       static_cast<TestMemoryPool*>(pool.get())->getMaxMemory();
   std::cout << "Reader memory estimate: " << readerMemory

@@ -16,21 +16,16 @@
  * limitations under the License.
  */
 
-#include "orc/Int128.hh"
-#include "orc/OrcFile.hh"
-#include "orc/Reader.hh"
 
-#include "Adaptor.hh"
-#include "ColumnReader.hh"
-#include "Exceptions.hh"
-#include "RLE.hh"
-#include "TypeImpl.hh"
+#include "Options.hh"
+#include "Reader.hh"
+#include "Statistics.hh"
+#include "StripeStream.hh"
 
 #include "wrap/coded-stream-wrapper.h"
 
 #include <algorithm>
 #include <iostream>
-#include <limits>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -80,1210 +75,6 @@ namespace orc {
     return buffer.str();
   }
 
-  enum ColumnSelection {
-    ColumnSelection_NONE = 0,
-    ColumnSelection_NAMES = 1,
-    ColumnSelection_FIELD_IDS = 2,
-    ColumnSelection_TYPE_IDS = 3,
-  };
-
-  struct ReaderOptionsPrivate {
-    ColumnSelection selection;
-    std::list<uint64_t> includedColumnIndexes;
-    std::list<std::string> includedColumnNames;
-    uint64_t dataStart;
-    uint64_t dataLength;
-    uint64_t tailLocation;
-    bool throwOnHive11DecimalOverflow;
-    int32_t forcedScaleOnHive11Decimal;
-    std::ostream* errorStream;
-    MemoryPool* memoryPool;
-    std::string serializedTail;
-
-    ReaderOptionsPrivate() {
-      selection = ColumnSelection_NONE;
-      dataStart = 0;
-      dataLength = std::numeric_limits<uint64_t>::max();
-      tailLocation = std::numeric_limits<uint64_t>::max();
-      throwOnHive11DecimalOverflow = true;
-      forcedScaleOnHive11Decimal = 6;
-      errorStream = &std::cerr;
-      memoryPool = getDefaultPool();
-    }
-  };
-
-  ReaderOptions::ReaderOptions():
-    privateBits(std::unique_ptr<ReaderOptionsPrivate>
-                (new ReaderOptionsPrivate())) {
-    // PASS
-  }
-
-  ReaderOptions::ReaderOptions(const ReaderOptions& rhs):
-    privateBits(std::unique_ptr<ReaderOptionsPrivate>
-                (new ReaderOptionsPrivate(*(rhs.privateBits.get())))) {
-    // PASS
-  }
-
-  ReaderOptions::ReaderOptions(ReaderOptions& rhs) {
-    // swap privateBits with rhs
-    ReaderOptionsPrivate* l = privateBits.release();
-    privateBits.reset(rhs.privateBits.release());
-    rhs.privateBits.reset(l);
-  }
-
-  ReaderOptions& ReaderOptions::operator=(const ReaderOptions& rhs) {
-    if (this != &rhs) {
-      privateBits.reset(new ReaderOptionsPrivate(*(rhs.privateBits.get())));
-    }
-    return *this;
-  }
-
-  ReaderOptions::~ReaderOptions() {
-    // PASS
-  }
-
-  ReaderOptions& ReaderOptions::include(const std::list<uint64_t>& include) {
-    privateBits->selection = ColumnSelection_FIELD_IDS;
-    privateBits->includedColumnIndexes.assign(include.begin(), include.end());
-    privateBits->includedColumnNames.clear();
-    return *this;
-  }
-
-  ReaderOptions& ReaderOptions::include(const std::list<std::string>& include) {
-    privateBits->selection = ColumnSelection_NAMES;
-    privateBits->includedColumnNames.assign(include.begin(), include.end());
-    privateBits->includedColumnIndexes.clear();
-    return *this;
-  }
-
-  ReaderOptions& ReaderOptions::includeTypes(const std::list<uint64_t>& types) {
-    privateBits->selection = ColumnSelection_TYPE_IDS;
-    privateBits->includedColumnIndexes.assign(types.begin(), types.end());
-    privateBits->includedColumnNames.clear();
-    return *this;
-  }
-
-  ReaderOptions& ReaderOptions::range(uint64_t offset,
-                                      uint64_t length) {
-    privateBits->dataStart = offset;
-    privateBits->dataLength = length;
-    return *this;
-  }
-
-  ReaderOptions& ReaderOptions::setTailLocation(uint64_t offset) {
-    privateBits->tailLocation = offset;
-    return *this;
-  }
-
-  ReaderOptions& ReaderOptions::setMemoryPool(MemoryPool& pool) {
-    privateBits->memoryPool = &pool;
-    return *this;
-  }
-
-  ReaderOptions& ReaderOptions::setSerializedFileTail(const std::string& value
-                                                      ) {
-    privateBits->serializedTail = value;
-    return *this;
-  }
-
-  MemoryPool* ReaderOptions::getMemoryPool() const{
-    return privateBits->memoryPool;
-  }
-
-  bool ReaderOptions::getIndexesSet() const {
-    return privateBits->selection == ColumnSelection_FIELD_IDS;
-  }
-
-  bool ReaderOptions::getTypeIdsSet() const {
-    return privateBits->selection == ColumnSelection_TYPE_IDS;
-  }
-
-  const std::list<uint64_t>& ReaderOptions::getInclude() const {
-    return privateBits->includedColumnIndexes;
-  }
-
-  bool ReaderOptions::getNamesSet() const {
-    return privateBits->selection == ColumnSelection_NAMES;
-  }
-
-  const std::list<std::string>& ReaderOptions::getIncludeNames() const {
-    return privateBits->includedColumnNames;
-  }
-
-  uint64_t ReaderOptions::getOffset() const {
-    return privateBits->dataStart;
-  }
-
-  uint64_t ReaderOptions::getLength() const {
-    return privateBits->dataLength;
-  }
-
-  uint64_t ReaderOptions::getTailLocation() const {
-    return privateBits->tailLocation;
-  }
-
-  ReaderOptions& ReaderOptions::throwOnHive11DecimalOverflow(bool shouldThrow){
-    privateBits->throwOnHive11DecimalOverflow = shouldThrow;
-    return *this;
-  }
-
-  bool ReaderOptions::getThrowOnHive11DecimalOverflow() const {
-    return privateBits->throwOnHive11DecimalOverflow;
-  }
-
-  ReaderOptions& ReaderOptions::forcedScaleOnHive11Decimal(int32_t forcedScale
-                                                           ) {
-    privateBits->forcedScaleOnHive11Decimal = forcedScale;
-    return *this;
-  }
-
-  int32_t ReaderOptions::getForcedScaleOnHive11Decimal() const {
-    return privateBits->forcedScaleOnHive11Decimal;
-  }
-
-  ReaderOptions& ReaderOptions::setErrorStream(std::ostream& stream) {
-    privateBits->errorStream = &stream;
-    return *this;
-  }
-
-  std::ostream* ReaderOptions::getErrorStream() const {
-    return privateBits->errorStream;
-  }
-
-  std::string ReaderOptions::getSerializedFileTail() const {
-    return privateBits->serializedTail;
-  }
-
-  StreamInformation::~StreamInformation() {
-    // PASS
-  }
-
-  StripeInformation::~StripeInformation() {
-    // PASS
-  }
-
-  class ColumnStatisticsImpl: public ColumnStatistics {
-  private:
-    uint64_t valueCount;
-
-  public:
-    ColumnStatisticsImpl(const proto::ColumnStatistics& stats);
-    virtual ~ColumnStatisticsImpl();
-
-    uint64_t getNumberOfValues() const override {
-      return valueCount;
-    }
-
-    std::string toString() const override {
-      std::ostringstream buffer;
-      buffer << "Column has " << valueCount << " values" << std::endl;
-      return buffer.str();
-    }
-  };
-
-  class BinaryColumnStatisticsImpl: public BinaryColumnStatistics {
-  private:
-    bool _hasTotalLength;
-    uint64_t valueCount;
-    uint64_t totalLength;
-
-  public:
-    BinaryColumnStatisticsImpl(const proto::ColumnStatistics& stats,
-                               bool correctStats);
-    virtual ~BinaryColumnStatisticsImpl();
-
-    bool hasTotalLength() const override {
-      return _hasTotalLength;
-    }
-    uint64_t getNumberOfValues() const override {
-      return valueCount;
-    }
-
-    uint64_t getTotalLength() const override {
-      if(_hasTotalLength){
-        return totalLength;
-      }else{
-        throw ParseError("Total length is not defined.");
-      }
-    }
-
-    std::string toString() const override {
-      std::ostringstream buffer;
-      buffer << "Data type: Binary" << std::endl
-             << "Values: " << valueCount << std::endl;
-      if(_hasTotalLength){
-        buffer << "Total length: " << totalLength << std::endl;
-      }else{
-        buffer << "Total length: not defined" << std::endl;
-      }
-      return buffer.str();
-    }
-  };
-
-  class BooleanColumnStatisticsImpl: public BooleanColumnStatistics {
-  private:
-    bool _hasCount;
-    uint64_t valueCount;
-    uint64_t trueCount;
-
-  public:
-    BooleanColumnStatisticsImpl(const proto::ColumnStatistics& stats, bool correctStats);
-    virtual ~BooleanColumnStatisticsImpl();
-
-    bool hasCount() const override {
-      return _hasCount;
-    }
-
-    uint64_t getNumberOfValues() const override {
-      return valueCount;
-    }
-
-    uint64_t getFalseCount() const override {
-      if(_hasCount){
-        return valueCount - trueCount;
-      }else{
-        throw ParseError("False count is not defined.");
-      }
-    }
-
-    uint64_t getTrueCount() const override {
-      if(_hasCount){
-        return trueCount;
-      }else{
-        throw ParseError("True count is not defined.");
-      }
-    }
-
-    std::string toString() const override {
-      std::ostringstream buffer;
-      buffer << "Data type: Boolean" << std::endl
-             << "Values: " << valueCount << std::endl;
-      if(_hasCount){
-        buffer << "(true: " << trueCount << "; false: "
-               << valueCount - trueCount << ")" << std::endl;
-      } else {
-        buffer << "(true: not defined; false: not defined)" << std::endl;
-        buffer << "True and false count are not defined" << std::endl;
-      }
-      return buffer.str();
-    }
-  };
-
-  class DateColumnStatisticsImpl: public DateColumnStatistics {
-  private:
-    bool _hasMinimum;
-    bool _hasMaximum;
-    uint64_t valueCount;
-    int32_t minimum;
-    int32_t maximum;
-
-  public:
-    DateColumnStatisticsImpl(const proto::ColumnStatistics& stats, bool correctStats);
-    virtual ~DateColumnStatisticsImpl();
-
-    bool hasMinimum() const override {
-      return _hasMinimum;
-    }
-
-    bool hasMaximum() const override {
-      return _hasMaximum;
-    }
-
-    uint64_t getNumberOfValues() const override {
-      return valueCount;
-    }
-
-    int32_t getMinimum() const override {
-      if(_hasMinimum){
-        return minimum;
-      }else{
-        throw ParseError("Minimum is not defined.");
-      }
-    }
-
-    int32_t getMaximum() const override {
-      if(_hasMaximum){
-        return maximum;
-      }else{
-        throw ParseError("Maximum is not defined.");
-      }
-    }
-
-    std::string toString() const override {
-      std::ostringstream buffer;
-      buffer << "Data type: Date" << std::endl
-             << "Values: " << valueCount << std::endl;
-      if(_hasMinimum){
-        buffer << "Minimum: " << minimum << std::endl;
-      }else{
-        buffer << "Minimum: not defined" << std::endl;
-      }
-
-      if(_hasMaximum){
-        buffer << "Maximum: " << maximum << std::endl;
-      }else{
-        buffer << "Maximum: not defined" << std::endl;
-      }
-      return buffer.str();
-    }
-  };
-
-  class DecimalColumnStatisticsImpl: public DecimalColumnStatistics {
-  private:
-    bool _hasMinimum;
-    bool _hasMaximum;
-    bool _hasSum;
-    uint64_t valueCount;
-    std::string minimum;
-    std::string maximum;
-    std::string sum;
-
-  public:
-    DecimalColumnStatisticsImpl(const proto::ColumnStatistics& stats, bool correctStats);
-    virtual ~DecimalColumnStatisticsImpl();
-
-    bool hasMinimum() const override {
-      return _hasMinimum;
-    }
-
-    bool hasMaximum() const override {
-      return _hasMaximum;
-    }
-
-    bool hasSum() const override {
-      return _hasSum;
-    }
-
-    uint64_t getNumberOfValues() const override {
-      return valueCount;
-    }
-
-    Decimal getMinimum() const override {
-      if(_hasMinimum){
-        return Decimal(minimum);
-      }else{
-        throw ParseError("Minimum is not defined.");
-      }
-    }
-
-    Decimal getMaximum() const override {
-      if(_hasMaximum){
-        return Decimal(maximum);
-      }else{
-        throw ParseError("Maximum is not defined.");
-      }
-    }
-
-    Decimal getSum() const override {
-      if(_hasSum){
-        return Decimal(sum);
-      }else{
-        throw ParseError("Sum is not defined.");
-      }
-    }
-
-    std::string toString() const override {
-      std::ostringstream buffer;
-      buffer << "Data type: Decimal" << std::endl
-          << "Values: " << valueCount << std::endl;
-      if(_hasMinimum){
-        buffer << "Minimum: " << minimum << std::endl;
-      }else{
-        buffer << "Minimum: not defined" << std::endl;
-      }
-
-      if(_hasMaximum){
-        buffer << "Maximum: " << maximum << std::endl;
-      }else{
-        buffer << "Maximum: not defined" << std::endl;
-      }
-
-      if(_hasSum){
-        buffer << "Sum: " << sum << std::endl;
-      }else{
-        buffer << "Sum: not defined" << std::endl;
-      }
-
-      return buffer.str();
-    }
-  };
-
-  class DoubleColumnStatisticsImpl: public DoubleColumnStatistics {
-  private:
-    bool _hasMinimum;
-    bool _hasMaximum;
-    bool _hasSum;
-    uint64_t valueCount;
-    double minimum;
-    double maximum;
-    double sum;
-
-  public:
-    DoubleColumnStatisticsImpl(const proto::ColumnStatistics& stats);
-    virtual ~DoubleColumnStatisticsImpl();
-
-    bool hasMinimum() const override {
-      return _hasMinimum;
-    }
-
-    bool hasMaximum() const override {
-      return _hasMaximum;
-    }
-
-    bool hasSum() const override {
-      return _hasSum;
-    }
-
-    uint64_t getNumberOfValues() const override {
-      return valueCount;
-    }
-
-    double getMinimum() const override {
-      if(_hasMinimum){
-        return minimum;
-      }else{
-        throw ParseError("Minimum is not defined.");
-      }
-    }
-
-    double getMaximum() const override {
-      if(_hasMaximum){
-        return maximum;
-      }else{
-        throw ParseError("Maximum is not defined.");
-      }
-    }
-
-    double getSum() const override {
-      if(_hasSum){
-        return sum;
-      }else{
-        throw ParseError("Sum is not defined.");
-      }
-    }
-
-    std::string toString() const override {
-      std::ostringstream buffer;
-      buffer << "Data type: Double" << std::endl
-          << "Values: " << valueCount << std::endl;
-      if(_hasMinimum){
-        buffer << "Minimum: " << minimum << std::endl;
-      }else{
-        buffer << "Minimum: not defined" << std::endl;
-      }
-
-      if(_hasMaximum){
-        buffer << "Maximum: " << maximum << std::endl;
-      }else{
-        buffer << "Maximum: not defined" << std::endl;
-      }
-
-      if(_hasSum){
-        buffer << "Sum: " << sum << std::endl;
-      }else{
-        buffer << "Sum: not defined" << std::endl;
-      }
-      return buffer.str();
-    }
-  };
-
-  class IntegerColumnStatisticsImpl: public IntegerColumnStatistics {
-  private:
-    bool _hasMinimum;
-    bool _hasMaximum;
-    bool _hasSum;
-    uint64_t valueCount;
-    int64_t minimum;
-    int64_t maximum;
-    int64_t sum;
-
-  public:
-    IntegerColumnStatisticsImpl(const proto::ColumnStatistics& stats);
-    virtual ~IntegerColumnStatisticsImpl();
-
-    bool hasMinimum() const override {
-      return _hasMinimum;
-    }
-
-    bool hasMaximum() const override {
-      return _hasMaximum;
-    }
-
-    bool hasSum() const override {
-      return _hasSum;
-    }
-
-    uint64_t getNumberOfValues() const override {
-      return valueCount;
-    }
-
-    int64_t getMinimum() const override {
-      if(_hasMinimum){
-        return minimum;
-      }else{
-        throw ParseError("Minimum is not defined.");
-      }
-    }
-
-    int64_t getMaximum() const override {
-      if(_hasMaximum){
-        return maximum;
-      }else{
-        throw ParseError("Maximum is not defined.");
-      }
-    }
-
-    int64_t getSum() const override {
-      if(_hasSum){
-        return sum;
-      }else{
-        throw ParseError("Sum is not defined.");
-      }
-    }
-
-    std::string toString() const override {
-      std::ostringstream buffer;
-      buffer << "Data type: Integer" << std::endl
-          << "Values: " << valueCount << std::endl;
-      if(_hasMinimum){
-        buffer << "Minimum: " << minimum << std::endl;
-      }else{
-        buffer << "Minimum: not defined" << std::endl;
-      }
-
-      if(_hasMaximum){
-        buffer << "Maximum: " << maximum << std::endl;
-      }else{
-        buffer << "Maximum: not defined" << std::endl;
-      }
-
-      if(_hasSum){
-        buffer << "Sum: " << sum << std::endl;
-      }else{
-        buffer << "Sum: not defined" << std::endl;
-      }
-      return buffer.str();
-    }
-  };
-
-  class StringColumnStatisticsImpl: public StringColumnStatistics {
-  private:
-    bool _hasMinimum;
-    bool _hasMaximum;
-    bool _hasTotalLength;
-    uint64_t valueCount;
-    std::string minimum;
-    std::string maximum;
-    uint64_t totalLength;
-
-  public:
-    StringColumnStatisticsImpl(const proto::ColumnStatistics& stats, bool correctStats);
-    virtual ~StringColumnStatisticsImpl();
-
-    bool hasMinimum() const override {
-      return _hasMinimum;
-    }
-
-    bool hasMaximum() const override {
-      return _hasMaximum;
-    }
-
-    bool hasTotalLength() const override {
-      return _hasTotalLength;
-    }
-
-    uint64_t getNumberOfValues() const override {
-      return valueCount;
-    }
-
-    std::string getMinimum() const override {
-      if(_hasMinimum){
-        return minimum;
-      }else{
-        throw ParseError("Minimum is not defined.");
-      }
-    }
-
-    std::string getMaximum() const override {
-      if(_hasMaximum){
-        return maximum;
-      }else{
-        throw ParseError("Maximum is not defined.");
-      }
-    }
-
-    uint64_t getTotalLength() const override {
-      if(_hasTotalLength){
-        return totalLength;
-      }else{
-        throw ParseError("Total length is not defined.");
-      }
-    }
-
-    std::string toString() const override {
-      std::ostringstream buffer;
-      buffer << "Data type: String" << std::endl
-          << "Values: " << valueCount << std::endl;
-      if(_hasMinimum){
-        buffer << "Minimum: " << minimum << std::endl;
-      }else{
-        buffer << "Minimum is not defined" << std::endl;
-      }
-
-      if(_hasMaximum){
-        buffer << "Maximum: " << maximum << std::endl;
-      }else{
-        buffer << "Maximum is not defined" << std::endl;
-      }
-
-      if(_hasTotalLength){
-        buffer << "Total length: " << totalLength << std::endl;
-      }else{
-        buffer << "Total length is not defined" << std::endl;
-      }
-      return buffer.str();
-    }
-  };
-
-  class TimestampColumnStatisticsImpl: public TimestampColumnStatistics {
-  private:
-    bool _hasMinimum;
-    bool _hasMaximum;
-    uint64_t valueCount;
-    int64_t minimum;
-    int64_t maximum;
-
-  public:
-    TimestampColumnStatisticsImpl(const proto::ColumnStatistics& stats,
-                                  bool correctStats);
-    virtual ~TimestampColumnStatisticsImpl();
-
-    bool hasMinimum() const override {
-      return _hasMinimum;
-    }
-
-    bool hasMaximum() const override {
-      return _hasMaximum;
-    }
-
-    uint64_t getNumberOfValues() const override {
-      return valueCount;
-    }
-
-    int64_t getMinimum() const override {
-      if(_hasMinimum){
-        return minimum;
-      }else{
-        throw ParseError("Minimum is not defined.");
-      }
-    }
-
-    int64_t getMaximum() const override {
-      if(_hasMaximum){
-        return maximum;
-      }else{
-        throw ParseError("Maximum is not defined.");
-      }
-    }
-
-    std::string toString() const override {
-      std::ostringstream buffer;
-      buffer << "Data type: Timestamp" << std::endl
-          << "Values: " << valueCount << std::endl;
-      if(_hasMinimum){
-        buffer << "Minimum: " << minimum << std::endl;
-      }else{
-        buffer << "Minimum is not defined" << std::endl;
-      }
-
-      if(_hasMaximum){
-        buffer << "Maximum: " << maximum << std::endl;
-      }else{
-        buffer << "Maximum is not defined" << std::endl;
-      }
-      return buffer.str();
-    }
-  };
-
-  std::string streamKindToString(StreamKind kind) {
-    switch (static_cast<int>(kind)) {
-    case StreamKind_PRESENT:
-      return "present";
-    case StreamKind_DATA:
-      return "data";
-    case StreamKind_LENGTH:
-      return "length";
-    case StreamKind_DICTIONARY_DATA:
-      return "dictionary";
-    case StreamKind_DICTIONARY_COUNT:
-      return "dictionary count";
-    case StreamKind_SECONDARY:
-      return "secondary";
-    case StreamKind_ROW_INDEX:
-      return "index";
-    case StreamKind_BLOOM_FILTER:
-      return "bloom";
-    }
-    std::stringstream buffer;
-    buffer << "unknown - " << kind;
-    return buffer.str();
-  }
-
-  std::string columnEncodingKindToString(ColumnEncodingKind kind) {
-    switch (static_cast<int>(kind)) {
-    case ColumnEncodingKind_DIRECT:
-      return "direct";
-    case ColumnEncodingKind_DICTIONARY:
-      return "dictionary";
-    case ColumnEncodingKind_DIRECT_V2:
-      return "direct rle2";
-    case ColumnEncodingKind_DICTIONARY_V2:
-      return "dictionary rle2";
-    }
-    std::stringstream buffer;
-    buffer << "unknown - " << kind;
-    return buffer.str();
-  }
-
-  class StreamInformationImpl: public StreamInformation {
-  private:
-    StreamKind kind;
-    uint64_t column;
-    uint64_t offset;
-    uint64_t length;
-  public:
-    StreamInformationImpl(uint64_t _offset,
-                          const proto::Stream& stream
-                          ): kind(static_cast<StreamKind>(stream.kind())),
-                             column(stream.column()),
-                             offset(_offset),
-                             length(stream.length()) {
-      // PASS
-    }
-
-    ~StreamInformationImpl();
-
-    StreamKind getKind() const override {
-      return kind;
-    }
-
-    uint64_t getColumnId() const override {
-      return column;
-    }
-
-    uint64_t getOffset() const override {
-      return offset;
-    }
-
-    uint64_t getLength() const override {
-      return length;
-    }
-  };
-
-  StreamInformationImpl::~StreamInformationImpl() {
-    // PASS
-  }
-
-  class StripeInformationImpl : public StripeInformation {
-    uint64_t offset;
-    uint64_t indexLength;
-    uint64_t dataLength;
-    uint64_t footerLength;
-    uint64_t numRows;
-    InputStream* stream;
-    MemoryPool& memory;
-    CompressionKind compression;
-    uint64_t blockSize;
-    mutable std::unique_ptr<proto::StripeFooter> stripeFooter;
-    void ensureStripeFooterLoaded() const;
-  public:
-
-    StripeInformationImpl(uint64_t _offset,
-                          uint64_t _indexLength,
-                          uint64_t _dataLength,
-                          uint64_t _footerLength,
-                          uint64_t _numRows,
-                          InputStream* _stream,
-                          MemoryPool& _memory,
-                          CompressionKind _compression,
-                          uint64_t _blockSize
-                          ) : offset(_offset),
-                              indexLength(_indexLength),
-                              dataLength(_dataLength),
-                              footerLength(_footerLength),
-                              numRows(_numRows),
-                              stream(_stream),
-                              memory(_memory),
-                              compression(_compression),
-                              blockSize(_blockSize) {
-      // PASS
-    }
-
-    virtual ~StripeInformationImpl() {
-      // PASS
-    }
-
-    uint64_t getOffset() const override {
-      return offset;
-    }
-
-    uint64_t getLength() const override {
-      return indexLength + dataLength + footerLength;
-    }
-    uint64_t getIndexLength() const override {
-      return indexLength;
-    }
-
-    uint64_t getDataLength()const override {
-      return dataLength;
-    }
-
-    uint64_t getFooterLength() const override {
-      return footerLength;
-    }
-
-    uint64_t getNumberOfRows() const override {
-      return numRows;
-    }
-
-    uint64_t getNumberOfStreams() const override {
-      ensureStripeFooterLoaded();
-      return static_cast<uint64_t>(stripeFooter->streams_size());
-    }
-
-    std::unique_ptr<StreamInformation> getStreamInformation(uint64_t streamId
-                                                            ) const override;
-
-    ColumnEncodingKind getColumnEncoding(uint64_t colId) const override {
-      ensureStripeFooterLoaded();
-      return static_cast<ColumnEncodingKind>(stripeFooter->
-                                             columns(static_cast<int>(colId))
-                                             .kind());
-    }
-
-    uint64_t getDictionarySize(uint64_t colId) const override {
-      ensureStripeFooterLoaded();
-      return static_cast<ColumnEncodingKind>(stripeFooter->
-                                             columns(static_cast<int>(colId))
-                                             .dictionarysize());
-    }
-
-    const std::string& getWriterTimezone() const override {
-      ensureStripeFooterLoaded();
-      return stripeFooter->writertimezone();
-    }
-  };
-
-  void StripeInformationImpl::ensureStripeFooterLoaded() const {
-    if (stripeFooter.get() == nullptr) {
-      std::unique_ptr<SeekableInputStream> pbStream =
-        createDecompressor(compression,
-                           std::unique_ptr<SeekableInputStream>
-                             (new SeekableFileInputStream(stream,
-                                                          offset +
-                                                            indexLength +
-                                                            dataLength,
-                                                          footerLength,
-                                                          memory)),
-                           blockSize,
-                           memory);
-      stripeFooter.reset(new proto::StripeFooter());
-      if (!stripeFooter->ParseFromZeroCopyStream(pbStream.get())) {
-        throw ParseError("Failed to parse the stripe footer");
-      }
-    }
-  }
-
-  std::unique_ptr<StreamInformation>
-     StripeInformationImpl::getStreamInformation(uint64_t streamId) const {
-    ensureStripeFooterLoaded();
-    uint64_t streamOffset = offset;
-    for(uint64_t s=0; s < streamId; ++s) {
-      streamOffset += stripeFooter->streams(static_cast<int>(s)).length();
-    }
-    return ORC_UNIQUE_PTR<StreamInformation>
-      (new StreamInformationImpl(streamOffset,
-                                 stripeFooter->
-                                   streams(static_cast<int>(streamId))));
-  }
-
-  ColumnStatistics* convertColumnStatistics(const proto::ColumnStatistics& s,
-                                            bool correctStats) {
-    if (s.has_intstatistics()) {
-      return new IntegerColumnStatisticsImpl(s);
-    } else if (s.has_doublestatistics()) {
-      return new DoubleColumnStatisticsImpl(s);
-    } else if (s.has_stringstatistics()) {
-      return new StringColumnStatisticsImpl(s, correctStats);
-    } else if (s.has_bucketstatistics()) {
-      return new BooleanColumnStatisticsImpl(s, correctStats);
-    } else if (s.has_decimalstatistics()) {
-      return new DecimalColumnStatisticsImpl(s, correctStats);
-    } else if (s.has_timestampstatistics()) {
-      return new TimestampColumnStatisticsImpl(s, correctStats);
-    } else if (s.has_datestatistics()) {
-      return new DateColumnStatisticsImpl(s, correctStats);
-    } else if (s.has_binarystatistics()) {
-      return new BinaryColumnStatisticsImpl(s, correctStats);
-    } else {
-      return new ColumnStatisticsImpl(s);
-    }
-  }
-
-  Statistics::~Statistics() {
-    // PASS
-  }
-
-  class StatisticsImpl: public Statistics {
-  private:
-    std::list<ColumnStatistics*> colStats;
-
-    // DELIBERATELY NOT IMPLEMENTED
-    StatisticsImpl(const StatisticsImpl&);
-    StatisticsImpl& operator=(const StatisticsImpl&);
-
-  public:
-    StatisticsImpl(const proto::StripeStatistics& stripeStats, bool correctStats) {
-      for(int i = 0; i < stripeStats.colstats_size(); i++) {
-        colStats.push_back(convertColumnStatistics
-                           (stripeStats.colstats(i), correctStats));
-      }
-    }
-
-    StatisticsImpl(const proto::Footer& footer, bool correctStats) {
-      for(int i = 0; i < footer.statistics_size(); i++) {
-        colStats.push_back(convertColumnStatistics
-                           (footer.statistics(i), correctStats));
-      }
-    }
-
-    virtual const ColumnStatistics* getColumnStatistics(uint32_t columnId
-                                                        ) const override {
-      std::list<ColumnStatistics*>::const_iterator it = colStats.begin();
-      std::advance(it, static_cast<int64_t>(columnId));
-      return *it;
-    }
-
-    virtual ~StatisticsImpl();
-
-    uint32_t getNumberOfColumns() const override {
-      return static_cast<uint32_t>(colStats.size());
-    }
-  };
-
-  StatisticsImpl::~StatisticsImpl() {
-    for(std::list<ColumnStatistics*>::iterator ptr = colStats.begin();
-        ptr != colStats.end();
-        ++ptr) {
-      delete *ptr;
-    }
-  }
-
-  Reader::~Reader() {
-    // PASS
-  }
-
-  RowReader::~RowReader() {
-    // PASS
-  }
-
-  static const uint64_t DIRECTORY_SIZE_GUESS = 16 * 1024;
-
-  class ReaderImpl;
-
-  class RowReaderImpl : public RowReader {
-  private:
-    const Timezone& localTimezone;
-
-    // inputs
-    std::vector<bool> selectedColumns;
-    std::shared_ptr<InputStream> stream;
-    std::shared_ptr<ReaderOptions> options;
-    
-    // custom memory pool
-    MemoryPool& memoryPool;
-
-    // postscript
-    std::shared_ptr<proto::PostScript> postscript;
-    const uint64_t blockSize;
-    const CompressionKind compression;
-
-    // footer
-    DataBuffer<uint64_t> firstRowOfStripe;
-    mutable std::unique_ptr<Type> selectedSchema;
-    std::shared_ptr<proto::Footer> footer;
-    std::shared_ptr<Type> schema;
-
-    // reading state
-    uint64_t previousRow;
-    uint64_t firstStripe;
-    uint64_t currentStripe;
-    uint64_t lastStripe; // the stripe AFTER the last one
-    uint64_t currentRowInStripe;
-    uint64_t rowsInCurrentStripe;
-    proto::StripeInformation currentStripeInfo;
-    proto::StripeFooter currentStripeFooter;
-    std::unique_ptr<ColumnReader> reader;
-    std::map<std::string, uint64_t> nameIdMap;
-    std::map<uint64_t, const Type*> idTypeMap;
-
-    // internal methods
-    proto::StripeFooter getStripeFooter(const proto::StripeInformation& info);
-    void startNextStripe();
-    void selectType(const Type& type);
-    void updateSelected(const std::list<uint64_t>& fieldIds);
-    void updateSelected(const std::list<std::string>& fieldNames);
-
-  public:
-   /**
-    * Constructor that lets the user specify additional options.
-    * @param filereader the object to read from
-    * @param options options for reading
-    */
-    RowReaderImpl(const ReaderImpl* filereader,
-           std::shared_ptr<ReaderOptions> options);
-
-    uint64_t getMemoryUse(int stripeIx = -1) override;
-
-    const std::vector<bool> getSelectedColumns() const override;
-
-    const Type& getSelectedType() const override;
-
-    std::unique_ptr<ColumnVectorBatch> createRowBatch(uint64_t size
-                                                      ) const override;
-
-    bool next(ColumnVectorBatch& data) override;
-
-    const ReaderOptions& getReaderOptions() const;
-
-    CompressionKind getCompression() const;
-
-    uint64_t getCompressionSize() const;
-
-    uint64_t getRowNumber() const override;
-
-    void seekToRow(uint64_t rowNumber) override;
-
-    MemoryPool* getMemoryPool() const ;
-
-  };
-
-  class ReaderImpl : public Reader {
-   private:
-    // inputs
-    std::shared_ptr<InputStream> stream;
-    std::shared_ptr<ReaderOptions> options;
-    const uint64_t fileLength;
-    const uint64_t postscriptLength;
-
-    // custom memory pool
-    MemoryPool& memoryPool;
-
-    // postscript
-    std::shared_ptr<proto::PostScript> postscript;
-    const uint64_t blockSize;
-    const CompressionKind compression;
-
-    // footer
-    std::shared_ptr<proto::Footer> footer;
-    uint64_t numberOfStripes;
-    std::shared_ptr<Type> schema;
-
-    // internal methods
-    void readMetadata() const;
-    void checkOrcVersion();
-
-    // metadata
-    mutable std::shared_ptr<proto::Metadata> metadata;
-    mutable bool isMetadataLoaded;
-
- public:
-    /**
-     * Constructor that lets the user specify additional options.
-     * @param stream the stream to read from
-     * @param options options for reading
-     * @param postscript the postscript for the file
-     * @param footer the footer for the file
-     * @param fileLength the length of the file in bytes
-     * @param postscriptLength the length of the postscript in bytes
-     */
-    ReaderImpl(std::unique_ptr<InputStream> stream,
-               std::shared_ptr<ReaderOptions> options,
-               std::unique_ptr<proto::PostScript> postscript,
-               std::unique_ptr<proto::Footer> footer,
-               uint64_t fileLength,
-               uint64_t postscriptLength);
-
-    const ReaderOptions& getReaderOptions() const;
-
-    CompressionKind getCompression() const override;
-
-    std::string getFormatVersion() const override;
-
-    WriterVersion getWriterVersion() const override;
-
-    uint64_t getNumberOfRows() const override;
-
-    uint64_t getRowIndexStride() const override;
-
-    std::list<std::string> getMetadataKeys() const override;
-
-    std::string getMetadataValue(const std::string& key) const override;
-
-    bool hasMetadataValue(const std::string& key) const override;
-
-    uint64_t getCompressionSize() const override;
-
-    uint64_t getNumberOfStripes() const override;
-
-    std::unique_ptr<StripeInformation> getStripe(uint64_t
-                                                 ) const override;
-
-    uint64_t getNumberOfStripeStatistics() const override;
-
-    const std::string& getStreamName() const override;
-
-    std::unique_ptr<Statistics>
-    getStripeStatistics(uint64_t stripeIndex) const override;
-
-    std::unique_ptr<RowReader> getRowReader() const override;
-
-    std::unique_ptr<RowReader> getRowReader(const std::list<uint64_t>& include
-                                            ) const override;
-
-    uint64_t getContentLength() const override;
-    uint64_t getStripeStatisticsLength() const override;
-    uint64_t getFileFooterLength() const override;
-    uint64_t getFilePostscriptLength() const override;
-    uint64_t getFileLength() const override;
-
-    std::unique_ptr<Statistics> getStatistics() const override;
-
-    std::unique_ptr<ColumnStatistics> getColumnStatistics(uint32_t columnId
-                                                          ) const override;
-
-    const Type& getType() const override;
-
-    bool hasCorrectStatistics() const override;
-
-    std::string getSerializedFileTail() const override;
-
-    std::shared_ptr<proto::PostScript> getPostscript() const {return postscript;}
-
-    uint64_t getBlockSize() const {return blockSize;}
-
-    std::shared_ptr<proto::Footer> getFooter() const {return footer;}
-
-    std::shared_ptr<Type> getSchema() const {return schema;}
-
-    std::shared_ptr<InputStream> getStream() const {return stream;}
-
-  };
-
-  InputStream::~InputStream() {
-    // PASS
-  };
-
   uint64_t getCompressionBlockSize(const proto::PostScript& ps) {
     if (ps.has_compressionblocksize()) {
       return ps.compressionblocksize();
@@ -1299,258 +90,161 @@ namespace orc {
       throw ParseError("Unknown compression type");
     }
   }
- 
-  ReaderImpl::ReaderImpl(std::unique_ptr<InputStream> input,
-                         std::shared_ptr<ReaderOptions> opts,
-                         std::unique_ptr<proto::PostScript> _postscript,
-                         std::unique_ptr<proto::Footer> _footer,
-                         uint64_t _fileLength,
-                         uint64_t _postscriptLength
-                         ): stream(std::move(input)),
-                            options(opts),
-                            fileLength(_fileLength),
-                            postscriptLength(_postscriptLength),
-                            memoryPool(*opts->getMemoryPool()),
-                            postscript(std::move(_postscript)),
-                            blockSize(getCompressionBlockSize(*postscript)),
-                            compression(convertCompressionKind(*postscript)),
-                            footer(std::move(_footer)) {
-    checkOrcVersion();
-    numberOfStripes = static_cast<uint64_t>(footer->stripes_size());
-    schema = convertType(footer->types(0), *footer);
-    isMetadataLoaded = false;
+
+  std::string ColumnSelector::toDotColumnPath() {
+      if (columns.empty()) {
+          return std::string();
+      }
+      std::ostringstream columnStream;
+      std::copy(columns.begin(), columns.end(),
+              std::ostream_iterator<std::string>(columnStream, "."));
+      std::string columnPath = columnStream.str();
+      return columnPath.substr(0, columnPath.length() - 1);
   }
 
-  std::string ReaderImpl::getSerializedFileTail() const {
-    proto::FileTail tail;
-    proto::PostScript *mutable_ps = tail.mutable_postscript();
-    mutable_ps->CopyFrom(*postscript);
-    proto::Footer *mutableFooter = tail.mutable_footer();
-    mutableFooter->CopyFrom(*footer);
-    tail.set_filelength(fileLength);
-    tail.set_postscriptlength(postscriptLength);
-    std::string result;
-    if (!tail.SerializeToString(&result)) {
-      throw ParseError("Failed to serialize file tail");
+
+  void ColumnSelector::selectChildren(std::vector<bool>& selectedColumns, const Type& type) {
+    size_t id = static_cast<size_t>(type.getColumnId());
+    if (!selectedColumns[id]) {
+      selectedColumns[id] = true;
+      for(size_t c = id; c <= type.getMaximumColumnId(); ++c){
+        selectedColumns[c] = true;
+      }
     }
+  }
+
+  /**
+   * Recurses over a type tree and selects the parents of every selected type.
+   * @return true if any child was selected.
+   */
+  bool ColumnSelector::selectParents(std::vector<bool>& selectedColumns, const Type& type) {
+    size_t id = static_cast<size_t>(type.getColumnId());
+    bool result = selectedColumns[id];
+    for(uint64_t c=0; c < type.getSubtypeCount(); ++c) {
+      result |= selectParents(selectedColumns, *type.getSubtype(c));
+    }
+    selectedColumns[id] = result;
     return result;
   }
 
-  const ReaderOptions& ReaderImpl::getReaderOptions() const {
-    return *options.get();
-  }
+  /**
+   * Recurses over a type tree and build two maps
+   * map<TypeName, TypeId>, map<TypeId, Type>
+   */
+  void ColumnSelector::buildTypeNameIdMap(const Type* type) {
+    // map<type_id, Type*>
+    idTypeMap[type->getColumnId()] = type;
 
-  CompressionKind ReaderImpl::getCompression() const {
-    return compression;
-  }
-
-  uint64_t ReaderImpl::getCompressionSize() const {
-    return blockSize;
-  }
-
-  uint64_t ReaderImpl::getNumberOfStripes() const {
-    return numberOfStripes;
-  }
-
-  uint64_t ReaderImpl::getNumberOfStripeStatistics() const {
-    if (!isMetadataLoaded) {
-      readMetadata();
-    }
-    return metadata.get() == nullptr ? 0 :
-      static_cast<uint64_t>(metadata->stripestats_size());
-  }
-
-  std::unique_ptr<StripeInformation>
-  ReaderImpl::getStripe(uint64_t stripeIndex) const {
-    if (stripeIndex > getNumberOfStripes()) {
-      throw std::logic_error("stripe index out of range");
-    }
-    proto::StripeInformation stripeInfo =
-      footer->stripes(static_cast<int>(stripeIndex));
-
-    return std::unique_ptr<StripeInformation>
-      (new StripeInformationImpl
-       (stripeInfo.offset(),
-        stripeInfo.indexlength(),
-        stripeInfo.datalength(),
-        stripeInfo.footerlength(),
-        stripeInfo.numberofrows(),
-        stream.get(),
-        memoryPool,
-        compression,
-        blockSize));
-  }
-
-  std::string ReaderImpl::getFormatVersion() const {
-    std::stringstream result;
-    for(int i=0; i < postscript->version_size(); ++i) {
-      if (i != 0) {
-        result << ".";
+    if (STRUCT == type->getKind()) {
+      for (size_t i = 0; i < type->getSubtypeCount(); ++i) {
+        const std::string& fieldName = type->getFieldName(i);
+        columns.push_back(fieldName);
+        nameIdMap[toDotColumnPath()] = type->getSubtype(i)->getColumnId();
+        buildTypeNameIdMap(type->getSubtype(i));
+        columns.pop_back();
       }
-      result << postscript->version(i);
-    }
-    return result.str();
-  }
-
-  uint64_t ReaderImpl::getNumberOfRows() const {
-    return footer->numberofrows();
-  }
-
-  WriterVersion ReaderImpl::getWriterVersion() const {
-    if (!postscript->has_writerversion()) {
-      return WriterVersion_ORIGINAL;
-    }
-    return static_cast<WriterVersion>(postscript->writerversion());
-  }
-
-  uint64_t ReaderImpl::getContentLength() const {
-    return footer->contentlength();
-  }
-
-  uint64_t ReaderImpl::getStripeStatisticsLength() const {
-    return postscript->metadatalength();
-  }
-
-  uint64_t ReaderImpl::getFileFooterLength() const {
-    return postscript->footerlength();
-  }
-
-  uint64_t ReaderImpl::getFilePostscriptLength() const {
-    return postscriptLength;
-  }
-
-  uint64_t ReaderImpl::getFileLength() const {
-    return fileLength;
-  }
-
-  uint64_t ReaderImpl::getRowIndexStride() const {
-    return footer->rowindexstride();
-  }
-
-  const std::string& ReaderImpl::getStreamName() const {
-    return stream->getName();
-  }
-
-  std::list<std::string> ReaderImpl::getMetadataKeys() const {
-    std::list<std::string> result;
-    for(int i=0; i < footer->metadata_size(); ++i) {
-      result.push_back(footer->metadata(i).name());
-    }
-    return result;
-  }
-
-  std::string ReaderImpl::getMetadataValue(const std::string& key) const {
-    for(int i=0; i < footer->metadata_size(); ++i) {
-      if (footer->metadata(i).name() == key) {
-        return footer->metadata(i).value();
+    } else {
+      // other non-primitive type
+      for (size_t j = 0; j < type->getSubtypeCount(); ++j) {
+        buildTypeNameIdMap(type->getSubtype(j));
       }
     }
-    throw std::range_error("key not found");
   }
 
-  bool ReaderImpl::hasMetadataValue(const std::string& key) const {
-    for(int i=0; i < footer->metadata_size(); ++i) {
-      if (footer->metadata(i).name() == key) {
-        return true;
+  void ColumnSelector::updateSelected(std::vector<bool>& selectedColumns, const ReaderOptions& options) {
+    selectedColumns.assign(static_cast<size_t>(contents->footer->types_size()), false);
+    if (contents->schema->getKind() == STRUCT && options.getIndexesSet()) {
+      for(std::list<uint64_t>::const_iterator field = options.getInclude().begin();
+          field != options.getInclude().end(); ++field) {
+        updateSelectedByFieldId(selectedColumns, *field);
       }
-    }
-    return false;
-  }
-
-  const Type& ReaderImpl::getType() const {
-    return *(schema.get());
-  }
-
-  std::unique_ptr<Statistics>
-  ReaderImpl::getStripeStatistics(uint64_t stripeIndex) const {
-    if (!isMetadataLoaded) {
-      readMetadata();
-    }
-    if (metadata.get() == nullptr) {
-      throw std::logic_error("No stripe statistics in file");
-    }
-    return std::unique_ptr<Statistics>
-      (new StatisticsImpl(metadata->stripestats
-                          (static_cast<int>(stripeIndex)),
-                          hasCorrectStatistics()));
-  }
-
-  std::unique_ptr<Statistics> ReaderImpl::getStatistics() const {
-    return std::unique_ptr<Statistics>
-      (new StatisticsImpl(*footer,
-                          hasCorrectStatistics()));
-  }
-
-  std::unique_ptr<ColumnStatistics>
-  ReaderImpl::getColumnStatistics(uint32_t index) const {
-    if (index >= static_cast<uint64_t>(footer->statistics_size())) {
-      throw std::logic_error("column index out of range");
-    }
-    proto::ColumnStatistics col =
-      footer->statistics(static_cast<int32_t>(index));
-    return std::unique_ptr<ColumnStatistics> (convertColumnStatistics
-                                              (col, hasCorrectStatistics()));
-  }
-
-  void ReaderImpl::readMetadata() const {
-    uint64_t metadataSize = postscript->metadatalength();
-    uint64_t metadataStart = fileLength - metadataSize
-      - postscript->footerlength() - postscriptLength - 1;
-    if (metadataSize != 0) {
-      std::unique_ptr<SeekableInputStream> pbStream =
-        createDecompressor(compression,
-                           std::unique_ptr<SeekableInputStream>
-                             (new SeekableFileInputStream(stream.get(),
-                                                          metadataStart,
-                                                          metadataSize,
-                                                          memoryPool)),
-                           blockSize,
-                           memoryPool);
-      metadata.reset(new proto::Metadata());
-      if (!metadata->ParseFromZeroCopyStream(pbStream.get())) {
-        throw ParseError("Failed to parse the metadata");
+    } else if (contents->schema->getKind() == STRUCT && options.getNamesSet()) {
+      for(std::list<std::string>::const_iterator field = options.getIncludeNames().begin();
+          field != options.getIncludeNames().end(); ++field) {
+        updateSelectedByName(selectedColumns, *field);
       }
+    } else if (options.getTypeIdsSet()) {
+      for(std::list<uint64_t>::const_iterator typeId = options.getInclude().begin();
+          typeId != options.getInclude().end(); ++typeId) {
+        updateSelectedByTypeId(selectedColumns, *typeId);
+      }
+    } else {
+      // default is to select all columns
+      std::fill(selectedColumns.begin(), selectedColumns.end(), true);
     }
-    isMetadataLoaded = true;
+    selectParents(selectedColumns, *contents->schema.get());
+    selectedColumns[0] = true; // column 0 is selected by default
   }
 
-  bool ReaderImpl::hasCorrectStatistics() const {
-    return getWriterVersion() != WriterVersion_ORIGINAL;
+  void ColumnSelector::updateSelected(std::vector<bool>& selectedColumns, const RowReaderOptions& options) {
+    selectedColumns.assign(static_cast<size_t>(contents->footer->types_size()), false);
+    if (contents->schema->getKind() == STRUCT && options.getIndexesSet()) {
+      for(std::list<uint64_t>::const_iterator field = options.getInclude().begin();
+          field != options.getInclude().end(); ++field) {
+        updateSelectedByFieldId(selectedColumns, *field);
+      }
+    } else if (contents->schema->getKind() == STRUCT && options.getNamesSet()) {
+      for(std::list<std::string>::const_iterator field = options.getIncludeNames().begin();
+          field != options.getIncludeNames().end(); ++field) {
+        updateSelectedByName(selectedColumns, *field);
+      }
+    } else if (options.getTypeIdsSet()) {
+      for(std::list<uint64_t>::const_iterator typeId = options.getInclude().begin();
+          typeId != options.getInclude().end(); ++typeId) {
+        updateSelectedByTypeId(selectedColumns, *typeId);
+      }
+    } else {
+      // default is to select all columns
+      std::fill(selectedColumns.begin(), selectedColumns.end(), true);
+    }
+    selectParents(selectedColumns, *contents->schema.get());
+    selectedColumns[0] = true; // column 0 is selected by default
   }
 
-  void ReaderImpl::checkOrcVersion() {
-    std::string version = getFormatVersion();
-    if (version != "0.11" && version != "0.12") {
-      *(options->getErrorStream())
-        << "Warning: ORC file " << stream->getName()
-        << " was written in an unknown format version "
-        << version << "\n";
+  void ColumnSelector::updateSelectedByFieldId(std::vector<bool>& selectedColumns, uint64_t fieldId) {
+    if (fieldId < contents->schema->getSubtypeCount()) {
+      selectChildren(selectedColumns, *contents->schema->getSubtype(fieldId));
+    } else {
+      std::stringstream buffer;
+      buffer << "Invalid column selected " << fieldId << " out of "
+             << contents->schema->getSubtypeCount();
+      throw ParseError(buffer.str());
     }
   }
 
-  std::unique_ptr<RowReader> ReaderImpl::getRowReader() const {
-    return std::unique_ptr<RowReader>(new RowReaderImpl(this, options));
+  void ColumnSelector::updateSelectedByTypeId(std::vector<bool>& selectedColumns, uint64_t typeId) {
+    if (typeId < selectedColumns.size()) {
+      const Type& type = *idTypeMap[typeId];
+      selectChildren(selectedColumns, type);
+    } else {
+      std::stringstream buffer;
+      buffer << "Invalid type id selected " << typeId << " out of "
+             << selectedColumns.size();
+      throw ParseError(buffer.str());
+    }
   }
 
-  std::unique_ptr<RowReader> ReaderImpl::getRowReader(
-      const std::list<uint64_t>& newCols) const {
-    options->include(newCols);
-    return std::unique_ptr<RowReader>(new RowReaderImpl(this, options));
+  void ColumnSelector::updateSelectedByName(std::vector<bool>& selectedColumns, const std::string& fieldName) {
+    std::map<std::string, uint64_t>::const_iterator ite = nameIdMap.find(fieldName);
+    if (ite != nameIdMap.end()) {
+      updateSelectedByTypeId(selectedColumns, ite->second);
+    } else {
+      throw ParseError("Invalid column selected " + fieldName);
+    }
   }
 
-  /*RowReaderImpl class method definitions*/
-  RowReaderImpl::RowReaderImpl(const ReaderImpl* _filereader,
-                            std::shared_ptr<ReaderOptions> opts
+  ColumnSelector::ColumnSelector(const Contents* _contents): contents(_contents) {
+    buildTypeNameIdMap(contents->schema.get());
+  }
+
+  RowReaderImpl::RowReaderImpl(const Contents* _contents,
+                            const RowReaderOptions& opts
                          ): localTimezone(getLocalTimezone()),
-                            stream(_filereader->getStream()),
+                            contents(_contents),
                             options(opts),
-                            memoryPool(*opts->getMemoryPool()),
-                            postscript(_filereader->getPostscript()),
-                            blockSize(_filereader->getBlockSize()),
-                            compression(_filereader->getCompression()),
-                            firstRowOfStripe(memoryPool, 0),
-                            footer(_filereader->getFooter()),
-                            schema(_filereader->getSchema()) {
+                            memoryPool(*opts.getMemoryPool()),
+                            footer(contents->footer.get()),
+                            firstRowOfStripe(memoryPool, 0) {
     uint64_t numberOfStripes;
     numberOfStripes = static_cast<uint64_t>(footer->stripes_size());
     currentStripe = numberOfStripes;
@@ -1564,8 +258,8 @@ namespace orc {
       proto::StripeInformation stripeInfo =
         footer->stripes(static_cast<int>(i));
       rowTotal += stripeInfo.numberofrows();
-      bool isStripeInRange = stripeInfo.offset() >= opts->getOffset() &&
-        stripeInfo.offset() < opts->getOffset() + opts->getLength();
+      bool isStripeInRange = stripeInfo.offset() >= opts.getOffset() &&
+        stripeInfo.offset() < opts.getOffset() + opts.getLength();
       if (isStripeInRange) {
         if (i < currentStripe) {
           currentStripe = i;
@@ -1585,37 +279,20 @@ namespace orc {
       previousRow = firstRowOfStripe[firstStripe]-1;
     }
 
-    selectedColumns.assign(static_cast<size_t>(footer->types_size()), false);
-    if (schema->getKind() == STRUCT && options->getIndexesSet()) {
-      updateSelected(options->getInclude());
-    } else if (schema->getKind() == STRUCT && options->getNamesSet()) {
-      updateSelected(options->getIncludeNames());
-    } else {
-      std::fill(selectedColumns.begin(), selectedColumns.end(), true);
-    }
-    selectedColumns[0] = true;
+    ColumnSelector column_selector(contents);
+    column_selector.updateSelected(selectedColumns, options);
   }
 
-
-  void RowReaderImpl::selectType(const Type& type) {
-    if (!selectedColumns[static_cast<size_t>(type.getColumnId())]) {
-      selectedColumns[static_cast<size_t>(type.getColumnId())] = true;
-      for (uint64_t i=0; i < type.getSubtypeCount(); i++) {
-        selectType(*type.getSubtype(i));
-      }
-    }
-  }
-
-  const ReaderOptions& RowReaderImpl::getReaderOptions() const {
-    return *options.get();
+  const RowReaderOptions& RowReaderImpl::getRowReaderOptions() const {
+    return options;
   }
 
   CompressionKind RowReaderImpl::getCompression() const {
-    return compression;
+    return contents->compression;
   }
 
   uint64_t RowReaderImpl::getCompressionSize() const {
-    return blockSize;
+    return contents->blockSize;
   }
 
   const std::vector<bool> RowReaderImpl::getSelectedColumns() const {
@@ -1624,7 +301,7 @@ namespace orc {
 
   const Type& RowReaderImpl::getSelectedType() const {
     if (selectedSchema.get() == nullptr) {
-      selectedSchema = buildSelectedType(schema.get(),
+      selectedSchema = buildSelectedType(contents->schema.get(),
                                          selectedColumns);
     }
     return *(selectedSchema.get());
@@ -1682,13 +359,13 @@ namespace orc {
       info.datalength();
     uint64_t stripeFooterLength = info.footerlength();
     std::unique_ptr<SeekableInputStream> pbStream =
-      createDecompressor(compression,
+      createDecompressor(contents->compression,
                          std::unique_ptr<SeekableInputStream>
-                         (new SeekableFileInputStream(stream.get(),
+                         (new SeekableFileInputStream(contents->stream.get(),
                                                       stripeFooterStart,
                                                       stripeFooterLength,
                                                       memoryPool)),
-                         blockSize,
+                         contents->blockSize,
                          memoryPool);
     proto::StripeFooter result;
     if (!result.ParseFromZeroCopyStream(pbStream.get())) {
@@ -1698,41 +375,237 @@ namespace orc {
     return result;
   }
 
-  class StripeStreamsImpl: public StripeStreams {
-  private:
-    const RowReaderImpl& reader;
-    const proto::StripeFooter& footer;
-    const uint64_t stripeStart;
-    InputStream& input;
-    MemoryPool& memoryPool;
-    const Timezone& writerTimezone;
+  ReaderImpl::ReaderImpl(std::unique_ptr<Contents> _contents,
+                         const ReaderOptions& opts,
+                         uint64_t _fileLength,
+                         uint64_t _postscriptLength
+                         ): contents(std::move(_contents)),
+                            options(opts),
+                            fileLength(_fileLength),
+                            postscriptLength(_postscriptLength),
+                            memoryPool(*opts.getMemoryPool()),
+                            footer(contents->footer.get()) {
+    isMetadataLoaded = false;
+    checkOrcVersion();
+    numberOfStripes = static_cast<uint64_t>(footer->stripes_size());
+    contents->schema = std::move(convertType(footer->types(0), *footer));
+    contents->blockSize = getCompressionBlockSize(*contents->postscript);
+    contents->compression= convertCompressionKind(*contents->postscript);
+    ColumnSelector column_selector(contents.get());
+    column_selector.updateSelected(selectedColumns, options);
+  }
 
-  public:
-    StripeStreamsImpl(const RowReaderImpl& reader,
-                      const proto::StripeFooter& footer,
-                      uint64_t stripeStart,
-                      InputStream& input,
-                      MemoryPool& memoryPool,
-                      const Timezone& writerTimezone);
+  std::string ReaderImpl::getSerializedFileTail() const {
+    proto::FileTail tail;
+    proto::PostScript *mutable_ps = tail.mutable_postscript();
+    mutable_ps->CopyFrom(*contents->postscript);
+    proto::Footer *mutableFooter = tail.mutable_footer();
+    mutableFooter->CopyFrom(*footer);
+    tail.set_filelength(fileLength);
+    tail.set_postscriptlength(postscriptLength);
+    std::string result;
+    if (!tail.SerializeToString(&result)) {
+      throw ParseError("Failed to serialize file tail");
+    }
+    return result;
+  }
 
-    virtual ~StripeStreamsImpl();
+  const ReaderOptions& ReaderImpl::getReaderOptions() const {
+    return options;
+  }
 
-    virtual const ReaderOptions& getReaderOptions() const override;
+  CompressionKind ReaderImpl::getCompression() const {
+    return contents->compression;
+  }
 
-    virtual const std::vector<bool> getSelectedColumns() const override;
+  uint64_t ReaderImpl::getCompressionSize() const {
+    return contents->blockSize;
+  }
 
-    virtual proto::ColumnEncoding getEncoding(uint64_t columnId
-                                              ) const override;
+  uint64_t ReaderImpl::getNumberOfStripes() const {
+    return numberOfStripes;
+  }
 
-    virtual std::unique_ptr<SeekableInputStream>
-    getStream(uint64_t columnId,
-              proto::Stream_Kind kind,
-              bool shouldStream) const override;
+  uint64_t ReaderImpl::getNumberOfStripeStatistics() const {
+    if (!isMetadataLoaded) {
+      readMetadata();
+    }
+    return metadata.get() == nullptr ? 0 :
+      static_cast<uint64_t>(metadata->stripestats_size());
+  }
 
-    MemoryPool& getMemoryPool() const override;
+  std::unique_ptr<StripeInformation>
+  ReaderImpl::getStripe(uint64_t stripeIndex) const {
+    if (stripeIndex > getNumberOfStripes()) {
+      throw std::logic_error("stripe index out of range");
+    }
+    proto::StripeInformation stripeInfo =
+      footer->stripes(static_cast<int>(stripeIndex));
 
-    const Timezone& getWriterTimezone() const override;
-  };
+    return std::unique_ptr<StripeInformation>
+      (new StripeInformationImpl
+       (stripeInfo.offset(),
+        stripeInfo.indexlength(),
+        stripeInfo.datalength(),
+        stripeInfo.footerlength(),
+        stripeInfo.numberofrows(),
+        contents->stream.get(),
+        memoryPool,
+        contents->compression,
+        contents->blockSize));
+  }
+
+  std::string ReaderImpl::getFormatVersion() const {
+    std::stringstream result;
+    for(int i=0; i < contents->postscript->version_size(); ++i) {
+      if (i != 0) {
+        result << ".";
+      }
+      result << contents->postscript->version(i);
+    }
+    return result.str();
+  }
+
+  uint64_t ReaderImpl::getNumberOfRows() const {
+    return footer->numberofrows();
+  }
+
+  WriterVersion ReaderImpl::getWriterVersion() const {
+    if (!contents->postscript->has_writerversion()) {
+      return WriterVersion_ORIGINAL;
+    }
+    return static_cast<WriterVersion>(contents->postscript->writerversion());
+  }
+
+  uint64_t ReaderImpl::getContentLength() const {
+    return footer->contentlength();
+  }
+
+  uint64_t ReaderImpl::getStripeStatisticsLength() const {
+    return contents->postscript->metadatalength();
+  }
+
+  uint64_t ReaderImpl::getFileFooterLength() const {
+    return contents->postscript->footerlength();
+  }
+
+  uint64_t ReaderImpl::getFilePostscriptLength() const {
+    return postscriptLength;
+  }
+
+  uint64_t ReaderImpl::getFileLength() const {
+    return fileLength;
+  }
+
+  uint64_t ReaderImpl::getRowIndexStride() const {
+    return footer->rowindexstride();
+  }
+
+  const std::string& ReaderImpl::getStreamName() const {
+    return contents->stream->getName();
+  }
+
+  std::list<std::string> ReaderImpl::getMetadataKeys() const {
+    std::list<std::string> result;
+    for(int i=0; i < footer->metadata_size(); ++i) {
+      result.push_back(footer->metadata(i).name());
+    }
+    return result;
+  }
+
+  std::string ReaderImpl::getMetadataValue(const std::string& key) const {
+    for(int i=0; i < footer->metadata_size(); ++i) {
+      if (footer->metadata(i).name() == key) {
+        return footer->metadata(i).value();
+      }
+    }
+    throw std::range_error("key not found");
+  }
+
+  bool ReaderImpl::hasMetadataValue(const std::string& key) const {
+    for(int i=0; i < footer->metadata_size(); ++i) {
+      if (footer->metadata(i).name() == key) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  const Type& ReaderImpl::getType() const {
+    return *(contents->schema.get());
+  }
+
+  std::unique_ptr<Statistics>
+  ReaderImpl::getStripeStatistics(uint64_t stripeIndex) const {
+    if (!isMetadataLoaded) {
+      readMetadata();
+    }
+    if (metadata.get() == nullptr) {
+      throw std::logic_error("No stripe statistics in file");
+    }
+    return std::unique_ptr<Statistics>
+      (new StatisticsImpl(metadata->stripestats
+                          (static_cast<int>(stripeIndex)),
+                          hasCorrectStatistics()));
+  }
+
+  std::unique_ptr<Statistics> ReaderImpl::getStatistics() const {
+    return std::unique_ptr<Statistics>
+      (new StatisticsImpl(*footer,
+                          hasCorrectStatistics()));
+  }
+
+  std::unique_ptr<ColumnStatistics>
+  ReaderImpl::getColumnStatistics(uint32_t index) const {
+    if (index >= static_cast<uint64_t>(footer->statistics_size())) {
+      throw std::logic_error("column index out of range");
+    }
+    proto::ColumnStatistics col =
+      footer->statistics(static_cast<int32_t>(index));
+    return std::unique_ptr<ColumnStatistics> (convertColumnStatistics
+                                              (col, hasCorrectStatistics()));
+  }
+
+  void ReaderImpl::readMetadata() const {
+    uint64_t metadataSize = contents->postscript->metadatalength();
+    uint64_t metadataStart = fileLength - metadataSize
+      - contents->postscript->footerlength() - postscriptLength - 1;
+    if (metadataSize != 0) {
+      std::unique_ptr<SeekableInputStream> pbStream =
+        createDecompressor(contents->compression,
+                           std::unique_ptr<SeekableInputStream>
+                             (new SeekableFileInputStream(contents->stream.get(),
+                                                          metadataStart,
+                                                          metadataSize,
+                                                          memoryPool)),
+                           contents->blockSize,
+                           memoryPool);
+      metadata.reset(new proto::Metadata());
+      if (!metadata->ParseFromZeroCopyStream(pbStream.get())) {
+        throw ParseError("Failed to parse the metadata");
+      }
+    }
+    isMetadataLoaded = true;
+  }
+
+  bool ReaderImpl::hasCorrectStatistics() const {
+    return getWriterVersion() != WriterVersion_ORIGINAL;
+  }
+
+  void ReaderImpl::checkOrcVersion() {
+    std::string version = getFormatVersion();
+    if (version != "0.11" && version != "0.12") {
+      *(options.getErrorStream())
+        << "Warning: ORC file " << contents->stream->getName()
+        << " was written in an unknown format version "
+        << version << "\n";
+    }
+  }
+
+  std::unique_ptr<RowReader> ReaderImpl::getRowReader(
+           const RowReaderOptions& opts) const {
+    return std::unique_ptr<RowReader>(new RowReaderImpl(contents.get(), opts));
+  }
 
   uint64_t maxStreamsForType(const proto::Type& type) {
     switch (static_cast<int64_t>(type.kind())) {
@@ -1763,7 +636,7 @@ namespace orc {
       }
   }
 
-  uint64_t RowReaderImpl::getMemoryUse(int stripeIx) {
+  uint64_t ReaderImpl::getMemoryUse(int stripeIx) {
     uint64_t maxDataLength = 0;
 
     if (stripeIx >= 0 && stripeIx < footer->stripes_size()) {
@@ -1809,102 +682,34 @@ namespace orc {
      */
     uint64_t memory = hasStringColumn ? 2 * maxDataLength :
         std::min(uint64_t(maxDataLength),
-                 nSelectedStreams * stream->getNaturalReadSize());
+                 nSelectedStreams * contents->stream->getNaturalReadSize());
 
     // Do we need even more memory to read the footer or the metadata?
-    if (memory < postscript->footerlength() + DIRECTORY_SIZE_GUESS) {
-      memory =  postscript->footerlength() + DIRECTORY_SIZE_GUESS;
+    if (memory < contents->postscript->footerlength() + DIRECTORY_SIZE_GUESS) {
+      memory =  contents->postscript->footerlength() + DIRECTORY_SIZE_GUESS;
     }
-    if (memory < postscript->metadatalength()) {
-      memory =  postscript->metadatalength();
+    if (memory < contents->postscript->metadatalength()) {
+      memory =  contents->postscript->metadatalength();
     }
 
     // Account for firstRowOfStripe.
-    memory += firstRowOfStripe.capacity() * sizeof(uint64_t);
+    memory += static_cast<uint64_t>(footer->stripes_size()) * sizeof(uint64_t);
 
     // Decompressors need buffers for each stream
     uint64_t decompressorMemory = 0;
-    if (compression != CompressionKind_NONE) {
+    if (contents->compression != CompressionKind_NONE) {
       for (int i=0; i < footer->types_size(); i++) {
         if (selectedColumns[static_cast<size_t>(i)]) {
           const proto::Type& type = footer->types(i);
-          decompressorMemory += maxStreamsForType(type) * blockSize;
+          decompressorMemory += maxStreamsForType(type) * contents->blockSize;
         }
       }
-      if (compression == CompressionKind_SNAPPY) {
+      if (contents->compression == CompressionKind_SNAPPY) {
         decompressorMemory *= 2;  // Snappy decompressor uses a second buffer
       }
     }
 
     return memory + decompressorMemory ;
-  }
-
-  StripeStreamsImpl::StripeStreamsImpl(const RowReaderImpl& _reader,
-                                       const proto::StripeFooter& _footer,
-                                       uint64_t _stripeStart,
-                                       InputStream& _input,
-                                       MemoryPool& _memoryPool,
-                                       const Timezone& _writerTimezone
-                                       ): reader(_reader),
-                                          footer(_footer),
-                                          stripeStart(_stripeStart),
-                                          input(_input),
-                                          memoryPool(_memoryPool),
-                                          writerTimezone(_writerTimezone) {
-    // PASS
-  }
-
-  StripeStreamsImpl::~StripeStreamsImpl() {
-    // PASS
-  }
-
-  const ReaderOptions& StripeStreamsImpl::getReaderOptions() const {
-    return reader.getReaderOptions();
-  }
-
-  const std::vector<bool> StripeStreamsImpl::getSelectedColumns() const {
-    return reader.getSelectedColumns();
-  }
-
-  proto::ColumnEncoding StripeStreamsImpl::getEncoding(uint64_t columnId
-                                                       ) const {
-    return footer.columns(static_cast<int>(columnId));
-  }
-
-  const Timezone& StripeStreamsImpl::getWriterTimezone() const {
-    return writerTimezone;
-  }
-
-  std::unique_ptr<SeekableInputStream>
-  StripeStreamsImpl::getStream(uint64_t columnId,
-                               proto::Stream_Kind kind,
-                               bool shouldStream) const {
-    uint64_t offset = stripeStart;
-    for(int i = 0; i < footer.streams_size(); ++i) {
-      const proto::Stream& stream = footer.streams(i);
-      if (stream.has_kind() &&
-          stream.kind() == kind &&
-          stream.column() == static_cast<uint64_t>(columnId)) {
-        uint64_t myBlock = shouldStream ? input.getNaturalReadSize():
-          stream.length();
-        return createDecompressor(reader.getCompression(),
-                                  std::unique_ptr<SeekableInputStream>
-                                  (new SeekableFileInputStream
-                                   (&input,
-                                    offset,
-                                    stream.length(),
-                                    memoryPool,
-                                    myBlock)),
-                                  reader.getCompressionSize(),
-                                  memoryPool);
-      }
-      offset += stream.length();
-    }
-    return std::unique_ptr<SeekableInputStream>();
-  }
-
-  MemoryPool& StripeStreamsImpl::getMemoryPool() const {
-    return memoryPool;
   }
 
   void RowReaderImpl::startNextStripe() {
@@ -1918,10 +723,10 @@ namespace orc {
         localTimezone;
     StripeStreamsImpl stripeStreams(*this, currentStripeFooter,
                                     currentStripeInfo.offset(),
-                                    *(stream.get()),
+                                    *(contents->stream.get()),
                                     memoryPool,
                                     writerTimezone);
-    reader = buildReader(*(schema.get()), stripeStreams);
+    reader = buildReader(*contents->schema.get(), stripeStreams);
   }
 
   bool RowReaderImpl::next(ColumnVectorBatch& data) {
@@ -1951,46 +756,6 @@ namespace orc {
       currentRowInStripe = 0;
     }
     return rowsToRead != 0;
-  }
-
-  void RowReaderImpl::updateSelected(const std::list<uint64_t>& fieldIds) {
-    uint64_t childCount = schema->getSubtypeCount();
-    for(std::list<uint64_t>::const_iterator i = fieldIds.begin();
-        i != fieldIds.end(); ++i) {
-      if (*i >= childCount) {
-        std::stringstream buffer;
-        buffer << "Invalid column selected " << *i << " out of "
-               << childCount;
-        throw ParseError(buffer.str());
-      }
-      const Type& child = *schema->getSubtype(*i);
-      for(size_t c = child.getColumnId();
-          c <= child.getMaximumColumnId(); ++c){
-        selectedColumns[c] = true;
-      }
-    }
-  }
-
-  void RowReaderImpl::updateSelected(const std::list<std::string>& fieldNames) {
-    uint64_t childCount = schema->getSubtypeCount();
-    for(std::list<std::string>::const_iterator i = fieldNames.begin();
-        i != fieldNames.end(); ++i) {
-      bool foundMatch = false;
-      for(size_t field=0; field < childCount; ++field) {
-        if (schema->getFieldName(field) == *i) {
-          const Type& child = *schema->getSubtype(field);
-          for(size_t c = child.getColumnId();
-              c <= child.getMaximumColumnId(); ++c){
-            selectedColumns[c] = true;
-          }
-          foundMatch = true;
-          break;
-        }
-      }
-      if (!foundMatch) {
-        throw ParseError("Invalid column selected " + *i);
-      }
-    }
   }
 
   std::unique_ptr<ColumnVectorBatch> RowReaderImpl::createRowBatch
@@ -2085,8 +850,7 @@ namespace orc {
   std::unique_ptr<Reader> createReader(std::unique_ptr<InputStream> stream,
                                        const ReaderOptions& options) {
     MemoryPool *memoryPool = options.getMemoryPool();
-    std::unique_ptr<proto::PostScript> ps;
-    std::unique_ptr<proto::Footer> footer;
+    std::unique_ptr<Contents> contents = std::unique_ptr<Contents>(new Contents());
     std::string serializedFooter = options.getSerializedFileTail();
     uint64_t fileLength;
     uint64_t postscriptLength;
@@ -2096,8 +860,8 @@ namespace orc {
       if (!tail.ParseFromString(serializedFooter)) {
         throw ParseError("Failed to parse the file tail from string");
       }
-      ps.reset(new proto::PostScript(tail.postscript()));
-      footer.reset(new proto::Footer(tail.footer()));
+      contents->postscript.reset(new proto::PostScript(tail.postscript()));
+      contents->footer.reset(new proto::Footer(tail.footer()));
       fileLength = tail.filelength();
       postscriptLength = tail.postscriptlength();
     } else {
@@ -2114,8 +878,8 @@ namespace orc {
       stream->read(buffer->data(), readSize, fileLength - readSize);
 
       postscriptLength = buffer->data()[readSize - 1] & 0xff;
-      ps = readPostscript(stream.get(), buffer, postscriptLength);
-      uint64_t footerSize = ps->footerlength();
+      contents->postscript = std::move(readPostscript(stream.get(), buffer, postscriptLength));
+      uint64_t footerSize = contents->postscript->footerlength();
       uint64_t tailSize = 1 + postscriptLength + footerSize;
       uint64_t footerOffset;
 
@@ -2127,332 +891,69 @@ namespace orc {
         footerOffset = readSize - tailSize;
       }
 
-      footer = readFooter(stream.get(), buffer, footerOffset, *ps,
-                          *memoryPool);
+      contents->footer = std::move(readFooter(stream.get(), buffer, footerOffset,
+                          *contents->postscript,  *memoryPool));
       delete buffer;
     }
-    return std::unique_ptr<Reader>(new ReaderImpl(std::move(stream),
-                                                  std::make_shared<ReaderOptions>(options),
-                                                  std::move(ps),
-                                                  std::move(footer),
+    contents->stream = std::move(stream);
+    return std::unique_ptr<Reader>(new ReaderImpl(std::move(contents),
+                                                  options,
                                                   fileLength,
                                                   postscriptLength));
   }
 
-  ColumnStatistics::~ColumnStatistics() {
-    // PASS
-  }
-
-  BinaryColumnStatistics::~BinaryColumnStatistics() {
-    // PASS
-  }
-
-  BooleanColumnStatistics::~BooleanColumnStatistics() {
-    // PASS
-  }
-
-  DateColumnStatistics::~DateColumnStatistics() {
-    // PASS
-  }
-
-  DecimalColumnStatistics::~DecimalColumnStatistics() {
-    // PASS
-  }
-
-  DoubleColumnStatistics::~DoubleColumnStatistics() {
-    // PASS
-  }
-
-  IntegerColumnStatistics::~IntegerColumnStatistics() {
-    // PASS
-  }
-
-  StringColumnStatistics::~StringColumnStatistics() {
-    // PASS
-  }
-
-  TimestampColumnStatistics::~TimestampColumnStatistics() {
-    // PASS
-  }
-
-  ColumnStatisticsImpl::~ColumnStatisticsImpl() {
-    // PASS
-  }
-
-  BinaryColumnStatisticsImpl::~BinaryColumnStatisticsImpl() {
-    // PASS
-  }
-
-  BooleanColumnStatisticsImpl::~BooleanColumnStatisticsImpl() {
-    // PASS
-  }
-
-  DateColumnStatisticsImpl::~DateColumnStatisticsImpl() {
-    // PASS
-  }
-
-  DecimalColumnStatisticsImpl::~DecimalColumnStatisticsImpl() {
-    // PASS
-  }
-
-  DoubleColumnStatisticsImpl::~DoubleColumnStatisticsImpl() {
-    // PASS
-  }
-
-  IntegerColumnStatisticsImpl::~IntegerColumnStatisticsImpl() {
-    // PASS
-  }
-
-  StringColumnStatisticsImpl::~StringColumnStatisticsImpl() {
-    // PASS
-  }
-
-  TimestampColumnStatisticsImpl::~TimestampColumnStatisticsImpl() {
-    // PASS
-  }
-
-  ColumnStatisticsImpl::ColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb) {
-    valueCount = pb.numberofvalues();
-  }
-
-  BinaryColumnStatisticsImpl::BinaryColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb, bool correctStats){
-    valueCount = pb.numberofvalues();
-    if (!pb.has_binarystatistics() || !correctStats) {
-      _hasTotalLength = false;
-
-      totalLength = 0;
-    }else{
-      _hasTotalLength = pb.binarystatistics().has_sum();
-      totalLength = static_cast<uint64_t>(pb.binarystatistics().sum());
+  std::string streamKindToString(StreamKind kind) {
+    switch (static_cast<int>(kind)) {
+    case StreamKind_PRESENT:
+      return "present";
+    case StreamKind_DATA:
+      return "data";
+    case StreamKind_LENGTH:
+      return "length";
+    case StreamKind_DICTIONARY_DATA:
+      return "dictionary";
+    case StreamKind_DICTIONARY_COUNT:
+      return "dictionary count";
+    case StreamKind_SECONDARY:
+      return "secondary";
+    case StreamKind_ROW_INDEX:
+      return "index";
+    case StreamKind_BLOOM_FILTER:
+      return "bloom";
     }
+    std::stringstream buffer;
+    buffer << "unknown - " << kind;
+    return buffer.str();
   }
 
-  BooleanColumnStatisticsImpl::BooleanColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb, bool correctStats){
-    valueCount = pb.numberofvalues();
-    if (!pb.has_bucketstatistics() || !correctStats) {
-      _hasCount = false;
-      trueCount = 0;
-    }else{
-      _hasCount = true;
-      trueCount = pb.bucketstatistics().count(0);
+  std::string columnEncodingKindToString(ColumnEncodingKind kind) {
+    switch (static_cast<int>(kind)) {
+    case ColumnEncodingKind_DIRECT:
+      return "direct";
+    case ColumnEncodingKind_DICTIONARY:
+      return "dictionary";
+    case ColumnEncodingKind_DIRECT_V2:
+      return "direct rle2";
+    case ColumnEncodingKind_DICTIONARY_V2:
+      return "dictionary rle2";
     }
+    std::stringstream buffer;
+    buffer << "unknown - " << kind;
+    return buffer.str();
   }
 
-  DateColumnStatisticsImpl::DateColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb, bool correctStats){
-    valueCount = pb.numberofvalues();
-    if (!pb.has_datestatistics() || !correctStats) {
-      _hasMinimum = false;
-      _hasMaximum = false;
-
-      minimum = 0;
-      maximum = 0;
-    } else {
-      _hasMinimum = pb.datestatistics().has_minimum();
-      _hasMaximum = pb.datestatistics().has_maximum();
-      minimum = pb.datestatistics().minimum();
-      maximum = pb.datestatistics().maximum();
-    }
+  RowReader::~RowReader() {
+    // PASS
   }
 
-  DecimalColumnStatisticsImpl::DecimalColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb, bool correctStats){
-    valueCount = pb.numberofvalues();
-    if (!pb.has_decimalstatistics() || !correctStats) {
-      _hasMinimum = false;
-      _hasMaximum = false;
-      _hasSum = false;
-    }else{
-      const proto::DecimalStatistics& stats = pb.decimalstatistics();
-      _hasMinimum = stats.has_minimum();
-      _hasMaximum = stats.has_maximum();
-      _hasSum = stats.has_sum();
-
-      minimum = stats.minimum();
-      maximum = stats.maximum();
-      sum = stats.sum();
-    }
+  Reader::~Reader() {
+    // PASS
   }
 
-  DoubleColumnStatisticsImpl::DoubleColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb){
-    valueCount = pb.numberofvalues();
-    if (!pb.has_doublestatistics()) {
-      _hasMinimum = false;
-      _hasMaximum = false;
-      _hasSum = false;
+  InputStream::~InputStream() {
+    // PASS
+  };
 
-      minimum = 0;
-      maximum = 0;
-      sum = 0;
-    }else{
-      const proto::DoubleStatistics& stats = pb.doublestatistics();
-      _hasMinimum = stats.has_minimum();
-      _hasMaximum = stats.has_maximum();
-      _hasSum = stats.has_sum();
 
-      minimum = stats.minimum();
-      maximum = stats.maximum();
-      sum = stats.sum();
-    }
-  }
 
-  IntegerColumnStatisticsImpl::IntegerColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb){
-    valueCount = pb.numberofvalues();
-    if (!pb.has_intstatistics()) {
-      _hasMinimum = false;
-      _hasMaximum = false;
-      _hasSum = false;
-
-      minimum = 0;
-      maximum = 0;
-      sum = 0;
-    }else{
-      const proto::IntegerStatistics& stats = pb.intstatistics();
-      _hasMinimum = stats.has_minimum();
-      _hasMaximum = stats.has_maximum();
-      _hasSum = stats.has_sum();
-
-      minimum = stats.minimum();
-      maximum = stats.maximum();
-      sum = stats.sum();
-    }
-  }
-
-  StringColumnStatisticsImpl::StringColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb, bool correctStats){
-    valueCount = pb.numberofvalues();
-    if (!pb.has_stringstatistics() || !correctStats) {
-      _hasMinimum = false;
-      _hasMaximum = false;
-      _hasTotalLength = false;
-
-      totalLength = 0;
-    }else{
-      const proto::StringStatistics& stats = pb.stringstatistics();
-      _hasMinimum = stats.has_minimum();
-      _hasMaximum = stats.has_maximum();
-      _hasTotalLength = stats.has_sum();
-
-      minimum = stats.minimum();
-      maximum = stats.maximum();
-      totalLength = static_cast<uint64_t>(stats.sum());
-    }
-  }
-
-  TimestampColumnStatisticsImpl::TimestampColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb, bool correctStats) {
-    valueCount = pb.numberofvalues();
-    if (!pb.has_timestampstatistics() || !correctStats) {
-      _hasMinimum = false;
-      _hasMaximum = false;
-      minimum = 0;
-      maximum = 0;
-    }else{
-      const proto::TimestampStatistics& stats = pb.timestampstatistics();
-      _hasMinimum = stats.has_minimum();
-      _hasMaximum = stats.has_maximum();
-
-      minimum = stats.minimum();
-      maximum = stats.maximum();
-    }
-  }
-
-  void ReaderImpl::updateSelectedByFieldId(uint64_t fieldId) {
-    if (fieldId < schema->getSubtypeCount()) {
-      selectChildren(*schema->getSubtype(fieldId));
-    } else {
-      std::stringstream buffer;
-      buffer << "Invalid column selected " << fieldId << " out of "
-             << schema->getSubtypeCount();
-      throw ParseError(buffer.str());
-    }
-  }
-
-  void ReaderImpl::updateSelectedByTypeId(uint64_t typeId) {
-    if (typeId < selectedColumns.size()) {
-      const Type& type = *idTypeMap[typeId];
-      selectChildren(type);
-    } else {
-      std::stringstream buffer;
-      buffer << "Invalid type id selected " << typeId << " out of "
-             << selectedColumns.size();
-      throw ParseError(buffer.str());
-    }
-  }
-
-  void ReaderImpl::updateSelectedByName(const std::string& fieldName) {
-    std::map<std::string, uint64_t>::const_iterator ite = nameIdMap.find(fieldName);
-    if (ite != nameIdMap.end()) {
-      updateSelectedByTypeId(ite->second);
-    } else {
-      throw ParseError("Invalid column selected " + fieldName);
-    }
-  }
-
-  void ReaderImpl::selectChildren(const Type& type) {
-    size_t id = static_cast<size_t>(type.getColumnId());
-    if (!selectedColumns[id]) {
-      selectedColumns[id] = true;
-      for(size_t c = id; c <= type.getMaximumColumnId(); ++c){
-        selectedColumns[c] = true;
-      }
-    }
-  }
-
-  /**
-   * Recurses over a type tree and selects the parents of every selected type.
-   * @return true if any child was selected.
-   */
-  bool ReaderImpl::selectParents(const Type& type) {
-    size_t id = static_cast<size_t>(type.getColumnId());
-    bool result = selectedColumns[id];
-    for(uint64_t c=0; c < type.getSubtypeCount(); ++c) {
-      result |= selectParents(*type.getSubtype(c));
-    }
-    selectedColumns[id] = result;
-    return result;
-  }
-
-  /**
-   * Recurses over a type tree and build two maps
-   * map<TypeName, TypeId>, map<TypeId, Type>
-   */
-  void ReaderImpl::buildTypeNameIdMap(const Type* type, std::vector<std::string>& columns) {
-    // map<type_id, Type*>
-    idTypeMap[type->getColumnId()] = type;
-
-    if (orc::STRUCT == type->getKind()) {
-      for (size_t i = 0; i < type->getSubtypeCount(); ++i) {
-        const std::string& fieldName = type->getFieldName(i);
-        columns.push_back(fieldName);
-        nameIdMap[toDotColumnPath(columns)] = type->getSubtype(i)->getColumnId();
-        buildTypeNameIdMap(type->getSubtype(i), columns);
-        columns.pop_back();
-      }
-    } else {
-      // other non-primitive type
-      for (size_t j = 0; j < type->getSubtypeCount(); ++j) {
-        buildTypeNameIdMap(type->getSubtype(j), columns);
-      }
-    }
-  }
-
-  std::string ReaderImpl::toDotColumnPath(const std::vector<std::string>& columns) {
-      if (columns.empty()) {
-          return std::string();
-      }
-      std::ostringstream columnStream;
-      std::copy(columns.begin(), columns.end(),
-              std::ostream_iterator<std::string>(columnStream, "."));
-      std::string columnPath = columnStream.str();
-      return columnPath.substr(0, columnPath.length() - 1);
-  }
-
-=======
->>>>>>> Split curent Reader into RowReader and Reader
 }// namespace

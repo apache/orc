@@ -31,6 +31,7 @@ namespace orc {
 
   // classes that hold data members so we can maintain binary compatibility
   struct ReaderOptionsPrivate;
+  struct RowReaderOptionsPrivate;
 
   enum CompressionKind {
     CompressionKind_NONE = 0,
@@ -483,6 +484,157 @@ namespace orc {
     virtual uint32_t getNumberOfColumns() const = 0;
   };
 
+  /**
+   * Options for creating a Reader.
+   */
+  class RowReaderOptions {
+  private:
+    ORC_UNIQUE_PTR<RowReaderOptionsPrivate> privateBits;
+
+  public:
+    RowReaderOptions();
+    RowReaderOptions(const RowReaderOptions&);
+    RowReaderOptions(RowReaderOptions&);
+    RowReaderOptions& operator=(const RowReaderOptions&);
+    virtual ~RowReaderOptions();
+
+    /**
+     * For files that have structs as the top-level object, select the fields
+     * to read. The first field is 0, the second 1, and so on. By default,
+     * all columns are read. This option clears any previous setting of
+     * the selected columns.
+     * @param include a list of fields to read
+     * @return this
+     */
+    RowReaderOptions& include(const std::list<uint64_t>& include);
+
+    /**
+     * For files that have structs as the top-level object, select the fields
+     * to read by name. By default, all columns are read. This option clears
+     * any previous setting of the selected columns.
+     * @param include a list of fields to read
+     * @return this
+     */
+    RowReaderOptions& include(const std::list<std::string>& include);
+
+    /**
+     * Selects which type ids to read. The root type is always 0 and the
+     * rest of the types are labeled in a preorder traversal of the tree.
+     * The parent types are automatically selected, but the children are not.
+     *
+     * This option clears any previous setting of the selected columns or
+     * types.
+     * @param types a list of the type ids to read
+     * @return this
+     */
+    RowReaderOptions& includeTypes(const std::list<uint64_t>& types);
+
+    /**
+     * Set the section of the file to process.
+     * @param offset the starting byte offset
+     * @param length the number of bytes to read
+     * @return this
+     */
+    RowReaderOptions& range(uint64_t offset, uint64_t length);
+
+    /**
+     * For Hive 0.11 (and 0.12) decimals, the precision was unlimited
+     * and thus may overflow the 38 digits that is supported. If one
+     * of the Hive 0.11 decimals is too large, the reader may either convert
+     * the value to NULL or throw an exception. That choice is controlled
+     * by this setting.
+     *
+     * Defaults to true.
+     *
+     * @param shouldThrow should the reader throw a ParseError?
+     * @return returns *this
+     */
+    RowReaderOptions& throwOnHive11DecimalOverflow(bool shouldThrow);
+
+    /**
+     * For Hive 0.11 (and 0.12) written decimals, which have unlimited
+     * scale and precision, the reader forces the scale to a consistent
+     * number that is configured. This setting changes the scale that is
+     * forced upon these old decimals. See also throwOnHive11DecimalOverflow.
+     *
+     * Defaults to 6.
+     *
+     * @param forcedScale the scale that will be forced on Hive 0.11 decimals
+     * @return returns *this
+     */
+    RowReaderOptions& forcedScaleOnHive11Decimal(int32_t forcedScale);
+
+    /**
+     * Set the memory allocator.
+     */
+    RowReaderOptions& setMemoryPool(MemoryPool& pool);
+
+    /**
+     * Set the stream to use for printing warning or error messages.
+     */
+    RowReaderOptions& setErrorStream(std::ostream& stream);
+
+    /**
+     * Get the stream to write warnings or errors to.
+     */
+    std::ostream* getErrorStream() const;
+
+    /**
+     * Were the field ids set?
+     */
+    bool getIndexesSet() const;
+
+    /**
+     * Were the type ids set?
+     */
+    bool getTypeIdsSet() const;
+
+    /**
+     * Get the list of selected field or type ids to read.
+     */
+    const std::list<uint64_t>& getInclude() const;
+
+    /**
+     * Were the include names set?
+     */
+    bool getNamesSet() const;
+
+    /**
+     * Get the list of selected columns to read. All children of the selected
+     * columns are also selected.
+     */
+    const std::list<std::string>& getIncludeNames() const;
+
+    /**
+     * Get the start of the range for the data being processed.
+     * @return if not set, return 0
+     */
+    uint64_t getOffset() const;
+
+    /**
+     * Get the end of the range for the data being processed.
+     * @return if not set, return the maximum long
+     */
+    uint64_t getLength() const;
+
+    /**
+     * Should the reader throw a ParseError when a Hive 0.11 decimal is
+     * larger than the supported 38 digits of precision? Otherwise, the
+     * data item is replaced by a NULL.
+     */
+    bool getThrowOnHive11DecimalOverflow() const;
+
+    /**
+     * What scale should all Hive 0.11 decimals be normalized to?
+     */
+    int32_t getForcedScaleOnHive11Decimal() const;
+
+    /**
+     * Get the memory allocator.
+     */
+    MemoryPool* getMemoryPool() const;
+  };
+
 
   /**
    * Options for creating a Reader.
@@ -530,47 +682,6 @@ namespace orc {
     ReaderOptions& includeTypes(const std::list<uint64_t>& types);
 
     /**
-     * Set the section of the file to process.
-     * @param offset the starting byte offset
-     * @param length the number of bytes to read
-     * @return this
-     */
-    ReaderOptions& range(uint64_t offset, uint64_t length);
-
-    /**
-     * For Hive 0.11 (and 0.12) decimals, the precision was unlimited
-     * and thus may overflow the 38 digits that is supported. If one
-     * of the Hive 0.11 decimals is too large, the reader may either convert
-     * the value to NULL or throw an exception. That choice is controlled
-     * by this setting.
-     *
-     * Defaults to true.
-     *
-     * @param shouldThrow should the reader throw a ParseError?
-     * @return returns *this
-     */
-    ReaderOptions& throwOnHive11DecimalOverflow(bool shouldThrow);
-
-    /**
-     * For Hive 0.11 (and 0.12) written decimals, which have unlimited
-     * scale and precision, the reader forces the scale to a consistent
-     * number that is configured. This setting changes the scale that is
-     * forced upon these old decimals. See also throwOnHive11DecimalOverflow.
-     *
-     * Defaults to 6.
-     *
-     * @param forcedScale the scale that will be forced on Hive 0.11 decimals
-     * @return returns *this
-     */
-    ReaderOptions& forcedScaleOnHive11Decimal(int32_t forcedScale);
-
-    /**
-     * Set the location of the tail as defined by the logical length of the
-     * file.
-     */
-    ReaderOptions& setTailLocation(uint64_t offset);
-
-    /**
      * Set the stream to use for printing warning or error messages.
      */
     ReaderOptions& setErrorStream(std::ostream& stream);
@@ -592,6 +703,12 @@ namespace orc {
      * Set the memory allocator.
      */
     ReaderOptions& setMemoryPool(MemoryPool& pool);
+
+    /**
+     * Set the location of the tail as defined by the logical length of the
+     * file.
+     */
+    ReaderOptions& setTailLocation(uint64_t offset);
 
     /**
      * Were the field ids set?
@@ -620,16 +737,14 @@ namespace orc {
     const std::list<std::string>& getIncludeNames() const;
 
     /**
-     * Get the start of the range for the data being processed.
-     * @return if not set, return 0
+     * Get the stream to write warnings or errors to.
      */
-    uint64_t getOffset() const;
+    std::ostream* getErrorStream() const;
 
     /**
-     * Get the end of the range for the data being processed.
-     * @return if not set, return the maximum long
+     * Get the serialized file tail that the user passed in.
      */
-    uint64_t getLength() const;
+    std::string getSerializedFileTail() const;
 
     /**
      * Get the desired tail location.
@@ -638,31 +753,9 @@ namespace orc {
     uint64_t getTailLocation() const;
 
     /**
-     * Should the reader throw a ParseError when a Hive 0.11 decimal is
-     * larger than the supported 38 digits of precision? Otherwise, the
-     * data item is replaced by a NULL.
-     */
-    bool getThrowOnHive11DecimalOverflow() const;
-
-    /**
-     * What scale should all Hive 0.11 decimals be normalized to?
-     */
-    int32_t getForcedScaleOnHive11Decimal() const;
-
-    /**
-     * Get the stream to write warnings or errors to.
-     */
-    std::ostream* getErrorStream() const;
-
-    /**
      * Get the memory allocator.
      */
     MemoryPool* getMemoryPool() const;
-
-    /**
-     * Get the serialized file tail that the user passed in.
-     */
-    std::string getSerializedFileTail() const;
   };
 
   /**
@@ -716,18 +809,7 @@ namespace orc {
      * @param rowNumber the next row the reader should return
      */
     virtual void seekToRow(uint64_t rowNumber) = 0;
-  
-    /**
-     * Estimate an upper bound on heap memory allocation by the Reader
-     * based on the information in the file footer.
-     * The bound is less tight if only few columns are read or compression is
-     * used.
-     * @param stripeIx index of the stripe to be read (if not specified,
-     *        all stripes are considered).
-     * @return upper bound on memory use
-     */
-    virtual uint64_t getMemoryUse(int stripeIx=-1) = 0;
- 
+
   };
 
   /**
@@ -888,21 +970,27 @@ namespace orc {
     virtual const Type& getType() const = 0;
 
     /**
-     * @return a RowReader to read the rows
-     */
-    virtual ORC_UNIQUE_PTR<RowReader> getRowReader() const = 0;
-
-    /**
-     * @param include update with new columns
+     * @param options RowReader Options
      * @return a RowReader to read the rows
      */
     virtual ORC_UNIQUE_PTR<RowReader>
-    getRowReader(const std::list<uint64_t>& include) const = 0;
+    getRowReader(const RowReaderOptions& options) const = 0;
 
     /**
      * Get the name of the input stream.
      */
     virtual const std::string& getStreamName() const = 0;
+
+    /**
+     * Estimate an upper bound on heap memory allocation by the Reader
+     * based on the information in the file footer.
+     * The bound is less tight if only few columns are read or compression is
+     * used.
+     * @param stripeIx index of the stripe to be read (if not specified,
+     *        all stripes are considered).
+     * @return upper bound on memory use
+     */
+    virtual uint64_t getMemoryUse(int stripeIx=-1) = 0;
 
   };
 }
