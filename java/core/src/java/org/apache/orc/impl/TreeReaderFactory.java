@@ -126,7 +126,7 @@ public class TreeReaderFactory {
       }
     }
 
-    static IntegerReader createIntegerReader(OrcProto.ColumnEncoding.Kind kind,
+    protected static IntegerReader createIntegerReader(OrcProto.ColumnEncoding.Kind kind,
         InStream in,
         boolean signed,
         Context context) throws IOException {
@@ -162,7 +162,7 @@ public class TreeReaderFactory {
      * @param index the indexes loaded from the file
      * @throws IOException
      */
-    void seek(PositionProvider[] index) throws IOException {
+    public void seek(PositionProvider[] index) throws IOException {
       seek(index[columnId]);
     }
 
@@ -248,6 +248,10 @@ public class TreeReaderFactory {
     public BitFieldReader getPresent() {
       return present;
     }
+
+    public int getColumnId() {
+      return columnId;
+    }
   }
 
   public static class NullTreeReader extends TreeReader {
@@ -309,7 +313,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void seek(PositionProvider[] index) throws IOException {
+    public void seek(PositionProvider[] index) throws IOException {
       seek(index[columnId]);
     }
 
@@ -360,7 +364,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void seek(PositionProvider[] index) throws IOException {
+    public void seek(PositionProvider[] index) throws IOException {
       seek(index[columnId]);
     }
 
@@ -427,7 +431,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void seek(PositionProvider[] index) throws IOException {
+    public void seek(PositionProvider[] index) throws IOException {
       seek(index[columnId]);
     }
 
@@ -494,7 +498,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void seek(PositionProvider[] index) throws IOException {
+    public void seek(PositionProvider[] index) throws IOException {
       seek(index[columnId]);
     }
 
@@ -562,7 +566,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void seek(PositionProvider[] index) throws IOException {
+    public void seek(PositionProvider[] index) throws IOException {
       seek(index[columnId]);
     }
 
@@ -616,7 +620,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void seek(PositionProvider[] index) throws IOException {
+    public void seek(PositionProvider[] index) throws IOException {
       seek(index[columnId]);
     }
 
@@ -710,7 +714,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void seek(PositionProvider[] index) throws IOException {
+    public void seek(PositionProvider[] index) throws IOException {
       seek(index[columnId]);
     }
 
@@ -821,7 +825,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void seek(PositionProvider[] index) throws IOException {
+    public void seek(PositionProvider[] index) throws IOException {
       seek(index[columnId]);
     }
 
@@ -950,7 +954,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void seek(PositionProvider[] index) throws IOException {
+    public void seek(PositionProvider[] index) throws IOException {
       seek(index[columnId]);
     }
 
@@ -1059,7 +1063,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void seek(PositionProvider[] index) throws IOException {
+    public void seek(PositionProvider[] index) throws IOException {
       seek(index[columnId]);
     }
 
@@ -1130,7 +1134,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void seek(PositionProvider[] index) throws IOException {
+    public void seek(PositionProvider[] index) throws IOException {
       seek(index[columnId]);
     }
 
@@ -1244,7 +1248,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void seek(PositionProvider[] index) throws IOException {
+    public void seek(PositionProvider[] index) throws IOException {
       reader.seek(index);
     }
 
@@ -1392,7 +1396,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void seek(PositionProvider[] index) throws IOException {
+    public void seek(PositionProvider[] index) throws IOException {
       seek(index[columnId]);
     }
 
@@ -1542,7 +1546,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void seek(PositionProvider[] index) throws IOException {
+    public void seek(PositionProvider[] index) throws IOException {
       seek(index[columnId]);
     }
 
@@ -1748,7 +1752,7 @@ public class TreeReaderFactory {
     }
   }
 
-  protected static class StructTreeReader extends TreeReader {
+  public static class StructTreeReader extends TreeReader {
     protected final TreeReader[] fields;
 
     protected StructTreeReader(int columnId,
@@ -1764,8 +1768,23 @@ public class TreeReaderFactory {
       }
     }
 
+    public TreeReader[] getChildReaders() {
+      return fields;
+    }
+
+    protected StructTreeReader(int columnId, InStream present,
+                               Context context,
+                               OrcProto.ColumnEncoding encoding,
+                               TreeReader[] childReaders) throws IOException {
+      super(columnId, present, context);
+      if (encoding != null) {
+        checkEncoding(encoding);
+      }
+      this.fields = childReaders;
+    }
+
     @Override
-    void seek(PositionProvider[] index) throws IOException {
+    public void seek(PositionProvider[] index) throws IOException {
       super.seek(index);
       for (TreeReader kid : fields) {
         if (kid != null) {
@@ -1847,8 +1866,19 @@ public class TreeReaderFactory {
       }
     }
 
+    protected UnionTreeReader(int columnId, InStream present,
+                              Context context,
+                              OrcProto.ColumnEncoding encoding,
+                              TreeReader[] childReaders) throws IOException {
+      super(columnId, present, context);
+      if (encoding != null) {
+        checkEncoding(encoding);
+      }
+      this.fields = childReaders;
+    }
+
     @Override
-    void seek(PositionProvider[] index) throws IOException {
+    public void seek(PositionProvider[] index) throws IOException {
       super.seek(index);
       tags.seek(index[columnId]);
       for (TreeReader kid : fields) {
@@ -1917,8 +1947,22 @@ public class TreeReaderFactory {
       elementReader = createTreeReader(elementType, context);
     }
 
+    protected ListTreeReader(int columnId,
+                             InStream present,
+                             Context context,
+                             InStream data,
+                             OrcProto.ColumnEncoding encoding,
+                             TreeReader elementReader) throws IOException {
+      super(columnId, present, context);
+      if (data != null && encoding != null) {
+        checkEncoding(encoding);
+        this.lengths = createIntegerReader(encoding.getKind(), data, false, context);
+      }
+      this.elementReader = elementReader;
+    }
+
     @Override
-    void seek(PositionProvider[] index) throws IOException {
+    public void seek(PositionProvider[] index) throws IOException {
       super.seek(index);
       lengths.seek(index[columnId]);
       elementReader.seek(index);
@@ -1996,8 +2040,24 @@ public class TreeReaderFactory {
       valueReader = createTreeReader(valueType, context);
     }
 
+    protected MapTreeReader(int columnId,
+                            InStream present,
+                            Context context,
+                            InStream data,
+                            OrcProto.ColumnEncoding encoding,
+                            TreeReader keyReader,
+                            TreeReader valueReader) throws IOException {
+      super(columnId, present, context);
+      if (data != null && encoding != null) {
+        checkEncoding(encoding);
+        this.lengths = createIntegerReader(encoding.getKind(), data, false, context);
+      }
+      this.keyReader = keyReader;
+      this.valueReader = valueReader;
+    }
+
     @Override
-    void seek(PositionProvider[] index) throws IOException {
+    public void seek(PositionProvider[] index) throws IOException {
       super.seek(index);
       lengths.seek(index[columnId]);
       keyReader.seek(index);
