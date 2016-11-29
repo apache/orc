@@ -585,18 +585,6 @@ public class ReaderImpl implements Reader {
   @Override
   public RecordReader rows(Options options) throws IOException {
     LOG.info("Reading ORC rows from " + path + " with " + options);
-    boolean[] include = options.getInclude();
-    // if included columns is null, then include all columns
-    if (include == null) {
-      options = options.clone();
-      TypeDescription readSchema = options.getSchema();
-      if (readSchema == null) {
-        readSchema = schema;
-      }
-      include = new boolean[readSchema.getMaximumId() + 1];
-      Arrays.fill(include, true);
-      options.include(include);
-    }
     return new RecordReaderImpl(this, options);
   }
 

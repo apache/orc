@@ -2132,8 +2132,7 @@ public class TreeReaderFactory {
     final SchemaEvolution evolution = context.getSchemaEvolution();
     final boolean[] included = evolution.getReaderIncluded();
     TypeDescription fileType = evolution.getFileType(readerType);
-    if (fileType == null ||
-        (included != null && !included[readerType.getId()])) {
+    if (fileType == null || !evolution.includeReaderColumn(readerType.getId())){
       return new NullTreeReader(0);
     }
     TypeDescription.Category readerTypeCategory = readerType.getCategory();

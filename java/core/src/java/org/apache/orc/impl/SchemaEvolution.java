@@ -39,6 +39,8 @@ public class SchemaEvolution {
   private final TypeDescription[] readerFileTypes;
   // indexed by reader column id
   private final boolean[] readerIncluded;
+  // the offset to the first column id ignoring any ACID columns
+  private final int readerColumnOffset;
   // indexed by file column id
   private final boolean[] fileIncluded;
   private final TypeDescription fileSchema;
@@ -76,11 +78,19 @@ public class SchemaEvolution {
     this.hasConversion = false;
     this.fileSchema = fileSchema;
     isAcid = checkAcidSchema(fileSchema);
+    this.readerColumnOffset = isAcid ? acidEventFieldNames.size() : 0;
     if (readerSchema != null) {
       if (isAcid) {
         this.readerSchema = createEventSchema(readerSchema);
       } else {
         this.readerSchema = readerSchema;
+      }
+      if (readerIncluded != null &&
+          readerIncluded.length + readerColumnOffset !=
+            this.readerSchema.getMaximumId() + 1) {
+        throw new IllegalArgumentException("Include vector the wrong length: "
+            + this.readerSchema.toJson() + " with include length "
+            + readerIncluded.length);
       }
       this.readerFileTypes =
         new TypeDescription[this.readerSchema.getMaximumId() + 1];
@@ -106,6 +116,13 @@ public class SchemaEvolution {
       this.readerSchema = fileSchema;
       this.readerFileTypes =
         new TypeDescription[this.readerSchema.getMaximumId() + 1];
+      if (readerIncluded != null &&
+          readerIncluded.length + readerColumnOffset !=
+            this.readerSchema.getMaximumId() + 1) {
+        throw new IllegalArgumentException("Include vector the wrong length: "
+            + this.readerSchema.toJson() + " with include length "
+            + readerIncluded.length);
+      }
       buildIdentityConversion(this.readerSchema);
     }
     this.ppdSafeConversion = populatePpdSafeConversion();
@@ -170,10 +187,18 @@ public class SchemaEvolution {
     return readerFileTypes[id];
   }
 
+  /**
+   * Get whether each column is included from the reader's point of view.
+   * @return a boolean array indexed by reader column id
+   */
   public boolean[] getReaderIncluded() {
     return readerIncluded;
   }
 
+  /**
+   * Get whether each column is included from the file's point of view.
+   * @return a boolean array indexed by file column id
+   */
   public boolean[] getFileIncluded() {
     return fileIncluded;
   }
@@ -273,6 +298,17 @@ public class SchemaEvolution {
   }
 
   /**
+   * Should we read the given reader column?
+   * @param readerId the id of column in the extended reader schema
+   * @return true if the column should be read
+   */
+  public boolean includeReaderColumn(int readerId) {
+    return readerIncluded == null ||
+        readerId <= readerColumnOffset ||
+        readerIncluded[readerId - readerColumnOffset];
+  }
+
+  /**
    * Build the mapping from the file type to the reader type. For pre-HIVE-4243
    * ORC files, the top level structure is matched using position within the
    * row. Otherwise, structs fields are matched by name.
@@ -287,7 +323,7 @@ public class SchemaEvolution {
                        TypeDescription readerType,
                        int positionalLevels) {
     // if the column isn't included, don't map it
-    if (readerIncluded != null && !readerIncluded[readerType.getId()]) {
+    if (!includeReaderColumn(readerType.getId())) {
       return;
     }
     boolean isOk = true;
@@ -400,7 +436,7 @@ public class SchemaEvolution {
 
   void buildIdentityConversion(TypeDescription readerType) {
     int id = readerType.getId();
-    if (readerIncluded != null && !readerIncluded[id]) {
+    if (!includeReaderColumn(id)) {
       return;
     }
     if (readerFileTypes[id] != null) {

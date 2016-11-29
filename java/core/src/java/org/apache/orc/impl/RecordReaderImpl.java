@@ -77,8 +77,8 @@ public class RecordReaderImpl implements RecordReader {
   private final List<OrcProto.Type> types;
   private final int bufferSize;
   private final SchemaEvolution evolution;
-  private final boolean[] included;
-  private final boolean[] writerIncluded;
+  // the file included columns indexed by the file's column ids.
+  private final boolean[] fileIncluded;
   private final long rowIndexStride;
   private long rowInStripe = 0;
   private int currentStripe = -1;
@@ -138,9 +138,7 @@ public class RecordReaderImpl implements RecordReader {
 
   protected RecordReaderImpl(ReaderImpl fileReader,
                              Reader.Options options) throws IOException {
-    this.included = options.getInclude();
     this.writerVersion = fileReader.getWriterVersion();
-    included[0] = true;
     if (options.getSchema() == null) {
       if (LOG.isInfoEnabled()) {
         LOG.info("Reader schema not provided -- using file schema " +
@@ -174,7 +172,7 @@ public class RecordReaderImpl implements RecordReader {
     if (sarg != null && rowIndexStride != 0) {
       sargApp = new SargApplier(sarg, options.getColumnNames(),
                                 rowIndexStride,
-                                included.length, evolution,
+                                evolution,
                                 writerVersion);
     } else {
       sargApp = null;
@@ -198,7 +196,7 @@ public class RecordReaderImpl implements RecordReader {
       zeroCopy = OrcConf.USE_ZEROCOPY.getBoolean(fileReader.conf);
     }
     if (options.getDataReader() != null) {
-      this.dataReader = options.getDataReader();
+      this.dataReader = options.getDataReader().clone();
     } else {
       this.dataReader = RecordReaderUtils.createDefaultDataReader(
           DataReaderProperties.builder()
@@ -224,7 +222,7 @@ public class RecordReaderImpl implements RecordReader {
       .skipCorrupt(skipCorrupt);
     reader = TreeReaderFactory.createTreeReader(evolution.getReaderSchema(), readerContext);
 
-    writerIncluded = evolution.getFileIncluded();
+    this.fileIncluded = evolution.getFileIncluded();
     indexes = new OrcProto.RowIndex[types.size()];
     bloomFilterIndices = new OrcProto.BloomFilterIndex[types.size()];
     bloomFilterKind = new OrcProto.Stream.Kind[types.size()];
@@ -733,7 +731,6 @@ public class RecordReaderImpl implements RecordReader {
     public SargApplier(SearchArgument sarg,
                        String[] columnNames,
                        long rowIndexStride,
-                       int includedCount,
                        SchemaEvolution evolution,
                        OrcFile.WriterVersion writerVersion) {
       this.writerVersion = writerVersion;
@@ -744,7 +741,7 @@ public class RecordReaderImpl implements RecordReader {
       this.rowIndexStride = rowIndexStride;
       // included will not be null, row options will fill the array with
       // trues if null
-      sargColumns = new boolean[includedCount];
+      sargColumns = new boolean[evolution.getFileIncluded().length];
       for (int i : filterColumns) {
         // filter columns may have -1 as index which could be partition
         // column in SARG.
@@ -832,7 +829,7 @@ public class RecordReaderImpl implements RecordReader {
     if (sargApp == null) {
       return null;
     }
-    readRowIndex(currentStripe, writerIncluded, sargApp.sargColumns);
+    readRowIndex(currentStripe, fileIncluded, sargApp.sargColumns);
     return sargApp.pickRowGroups(stripes.get(currentStripe), indexes,
         bloomFilterKind, bloomFilterIndices, false);
   }
@@ -890,7 +887,7 @@ public class RecordReaderImpl implements RecordReader {
   }
 
   private boolean isFullRead() {
-    for (boolean isColumnPresent : writerIncluded){
+    for (boolean isColumnPresent : fileIncluded){
       if (!isColumnPresent){
         return false;
       }
@@ -1005,7 +1002,7 @@ public class RecordReaderImpl implements RecordReader {
   private void readPartialDataStreams(StripeInformation stripe) throws IOException {
     List<OrcProto.Stream> streamList = stripeFooter.getStreamsList();
     DiskRangeList toRead = planReadPartialDataStreams(streamList,
-        indexes, writerIncluded, includedRowGroups, codec != null,
+        indexes, fileIncluded, includedRowGroups, codec != null,
         stripeFooter.getColumnsList(), types, bufferSize, true);
     if (LOG.isDebugEnabled()) {
       LOG.debug("chunks = " + RecordReaderUtils.stringifyDiskRanges(toRead));
@@ -1015,7 +1012,7 @@ public class RecordReaderImpl implements RecordReader {
       LOG.debug("merge = " + RecordReaderUtils.stringifyDiskRanges(bufferChunks));
     }
 
-    createStreams(streamList, bufferChunks, writerIncluded, codec, bufferSize, streams);
+    createStreams(streamList, bufferChunks, fileIncluded, codec, bufferSize, streams);
   }
 
   /**
@@ -1227,7 +1224,7 @@ public class RecordReaderImpl implements RecordReader {
       currentStripe = rightStripe;
       readStripe();
     }
-    readRowIndex(currentStripe, writerIncluded, sargApp == null ? null : sargApp.sargColumns);
+    readRowIndex(currentStripe, fileIncluded, sargApp == null ? null : sargApp.sargColumns);
 
     // if we aren't to the right row yet, advance in the stripe.
     advanceToNextRow(reader, rowNumber, true);
