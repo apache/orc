@@ -218,10 +218,11 @@ with the desired filename. This example sets the required schema
 parameter, but there are many other options to control the ORC writer.
 
 ~~~ java
+Configuration conf = new Configuration();
 TypeDescription schema = TypeDescription.fromString("struct<x:int,y:int>");
 Writer writer = OrcFile.createWriter(new Path("my-file.orc"),
                   OrcFile.writerOptions(conf)
-                         .schema(schema));
+                         .setSchema(schema));
 ~~~
 
 Now you need to create a row batch, set the data, and write it to the file
