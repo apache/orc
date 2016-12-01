@@ -28,4 +28,9 @@
       <directory>${project.build.outputDirectory}</directory>
     </fileSet>
   </fileSets>
+  <containerDescriptorHandlers>
+    <containerDescriptorHandler>
+      <handlerName>metaInf-services</handlerName>
+    </containerDescriptorHandler>
+  </containerDescriptorHandlers>
 </assembly>
