@@ -87,6 +87,8 @@
     <option value="/news/">Home</option>
     <optgroup label="v1.x">
       
+      <option value="/news/2016/12/01/ORC-1.2.2/">ORC 1.2.2 Released</option>
+      
       <option value="/news/2016/10/05/ORC-1.2.1/">ORC 1.2.1 Released</option>
       
       <option value="/news/2016/08/25/ORC-1.2.0/">ORC 1.2.0 Released</option>
@@ -118,6 +120,68 @@
         
   <article>
   <h2>
+    <a href="/news/2016/12/01/ORC-1.2.2/">
+      ORC 1.2.2 Released
+    </a>
+  </h2>
+  <span class="post-category">
+    <span class="label">
+      release
+    </span>
+  </span>
+  <div class="post-meta">
+    <span class="post-date">
+      01 Dec 2016
+    </span>
+    <a href="https://people.apache.org/~omalley" class="post-author">
+      <img src="https://people.apache.org/~omalley//omalley.png"
+           class="avatar" alt="omalley avatar"
+           width="24" height="24">
+      omalley
+    </a>
+  </div>
+  <div class="post-content">
+    <p>The ORC team is excited to announce the release of ORC v1.2.2.</p>
+
+<ul>
+  <li>Released: 1 December 2016</li>
+  <li>Source code: <a href="http://www.apache.org/dyn/closer.cgi/orc/orc-1.2.2/orc-1.2.2.tar.gz">orc-1.2.2.tar.gz</a></li>
+  <li><a href="https://dist.apache.org/repos/dist/release/orc/orc-1.2.2/orc-1.2.2.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://dist.apache.org/repos/dist/release/orc/KEYS">Owen O’Malley (3D0C92B9)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.2.2">rel/release-1.2.2</a></li>
+  <li>SHA 256: <a href="https://dist.apache.org/repos/dist/release/orc/orc-1.2.2/orc-1.2.2.tar.gz.sha256">6aa87390f0f03c43…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.2.2%22&amp;tempMax=500">ORC-1.2.2</a></li>
+</ul>
+
+<p>The new features of ORC 1.2:</p>
+
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-54">ORC-54</a> Evolve schemas based on field name rather than index</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-84">ORC-84</a> Create a separate java tool module.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-77">ORC-77</a> and <a href="https://issues.apache.org/jira/browse/ORC-81">ORC-81</a> Implement LZO and LZ4 compression codecs.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-92">ORC-92</a> Add support for nested column id selection in C++</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-69">ORC-69</a> Add batch option support in orc-scan tools.</li>
+</ul>
+
+<p>Important fixes:</p>
+
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/HIVE-14214">HIVE-14214</a> ORC schema evolution and predicate push down do not work together.</li>
+</ul>
+
+<p>Known issues:</p>
+
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-40">ORC-40</a> Predicate push down is not implemented in C++.</li>
+</ul>
+
+
+  </div>
+</article>
+
+
+  <article>
+  <h2>
     <a href="/news/2016/10/05/ORC-1.2.1/">
       ORC 1.2.1 Released
     </a>
@@ -143,11 +207,11 @@
 
 <ul>
   <li>Released: 5 October 2016</li>
-  <li>Source code: <a href="http://www.apache.org/dyn/closer.cgi/orc/orc-1.2.1/orc-1.2.1.tar.gz">orc-1.2.1.tar.gz</a></li>
-  <li><a href="https://dist.apache.org/repos/dist/release/orc/orc-1.2.1/orc-1.2.1.tar.gz.asc">GPG Signature</a>
+  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-1.2.1/orc-1.2.1.tar.gz">orc-1.2.1.tar.gz</a></li>
+  <li><a href="https://archive.apache.org/dist/orc/orc-1.2.1/orc-1.2.1.tar.gz.asc">GPG Signature</a>
 signed by <a href="https://dist.apache.org/repos/dist/release/orc/KEYS">Owen O’Malley (3D0C92B9)</a></li>
   <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.2.1">rel/release-1.2.1</a></li>
-  <li>SHA 256: <a href="https://dist.apache.org/repos/dist/release/orc/orc-1.2.1/orc-1.2.1.tar.gz.sha256">793bcc0419574fba…</a></li>
+  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-1.2.1/orc-1.2.1.tar.gz.sha256">793bcc0419574fba…</a></li>
   <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.2.1%22&amp;tempMax=500">ORC-1.2.1</a></li>
 </ul>
 
@@ -764,6 +828,10 @@ of the website.</p>
     <ul>
       
       <li class="">
+        <a href="/news/2016/12/01/ORC-1.2.2/">Version 1.2.2</a>
+      </li>
+      
+      <li class="">
         <a href="/news/2016/10/05/ORC-1.2.1/">Version 1.2.1</a>
       </li>
       
@@ -779,13 +847,11 @@ of the website.</p>
         <a href="/news/2016/06/13/ORC-1.1.1/">Version 1.1.1</a>
       </li>
       
-      <li class="">
-        <a href="/news/2016/06/10/ORC-1.1.0/">Version 1.1.0</a>
-      </li>
-      
     </ul>
     <h4>Other News</h4>
     <ul>
+        
+        
         
         
         
