@@ -77,7 +77,7 @@ the current transaction.
   operation: int,
   originalTransaction: bigInt,
   bucket: int,
-  rowId: bitInt,
+  rowId: bigInt,
   currentTransaction: bigInt,
   row: struct<...>
 >
