@@ -58,6 +58,7 @@
     <module>core</module>
     <module>mapreduce</module>
     <module>tools</module>
+    <module>examples</module>
   </modules>
 
   <properties>
@@ -324,19 +325,19 @@
           <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>findbugs-maven-plugin</artifactId>
-	  </plugin>
+          </plugin>
           <plugin>
             <groupId>org.apache.rat</groupId>
             <artifactId>apache-rat-plugin</artifactId>
-	  </plugin>
-	</plugins>
+          </plugin>
+        </plugins>
       </build>
     </profile>
     <profile>
       <!-- a developer profile to build some benchmarks -->
       <id>benchmark</id>
       <modules>
-	<module>bench</module>
+        <module>bench</module>
       </modules>
     </profile>
   </profiles>
@@ -348,6 +349,16 @@
         <groupId>org.apache.orc</groupId>
         <artifactId>orc-shims</artifactId>
         <version>1.5.1-SNAPSHOT</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-hdfs</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.orc</groupId>
@@ -392,8 +403,8 @@
         <version>3.9</version>
         <exclusions>
           <exclusion>
-	    <groupId>commons-beanutils</groupId>
-	    <artifactId>commons-beanutils</artifactId>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -418,8 +429,8 @@
         <version>0.10</version>
         <exclusions>
           <exclusion>
-	    <groupId>io.airlift</groupId>
-	    <artifactId>slice</artifactId>
+            <groupId>io.airlift</groupId>
+            <artifactId>slice</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -442,8 +453,8 @@
             <artifactId>jersey-json</artifactId>
           </exclusion>
           <exclusion>
-	    <groupId>commons-beanutils</groupId>
-	    <artifactId>commons-beanutils-core</artifactId>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils-core</artifactId>
           </exclusion>
           <exclusion>
             <groupId>commons-daemon</groupId>
@@ -585,6 +596,12 @@
         <groupId>org.apache.hive</groupId>
         <artifactId>hive-storage-api</artifactId>
         <version>${storage-api.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-hdfs</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.zookeeper</groupId>
