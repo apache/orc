@@ -2693,8 +2693,8 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
                                                    Context context) throws IOException {
     final SchemaEvolution evolution = context.getSchemaEvolution();
 
-    int columnId = readerType.getId();
-    TypeDescription fileType = evolution.getFileType(readerType);
+    TypeDescription fileType = evolution.getFileType(readerType.getId());
+    int columnId = fileType.getId();
 
     switch (fileType.getCategory()) {
 

@@ -24,14 +24,23 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.common.io.DiskRange;
+import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.OrcFile;
+import org.apache.orc.OrcProto;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
 import org.apache.orc.TypeDescription;
@@ -995,5 +1004,73 @@ public class TestSchemaEvolution {
     assertFalse(fileInclude[1]);
     assertTrue(fileInclude[2]);
     assertFalse(fileInclude[3]);
+  }
+
+  static void createStream(Map<StreamName, InStream> streams,
+                           int id,
+                           OrcProto.Stream.Kind kind,
+                           int... values) throws IOException {
+    StreamName name = new StreamName(id, kind);
+    List<DiskRange> ranges = new ArrayList<>();
+    byte[] buffer = new byte[values.length];
+    for(int i=0; i < values.length; ++i) {
+      buffer[i] = (byte) values[i];
+    }
+    ranges.add(new BufferChunk(ByteBuffer.wrap(buffer), 0));
+    streams.put(name, InStream.create(name.toString(), ranges, values.length, null,
+        values.length));
+  }
+
+  @Test
+  public void testTypeConversion() throws IOException {
+    TypeDescription fileType = TypeDescription.fromString("struct<x:int,y:string>");
+    TypeDescription readType = TypeDescription.fromString("struct<z:int,y:string,x:bigint>");
+    SchemaEvolution evo = new SchemaEvolution(fileType, readType, options);
+
+    // check to make sure the fields are mapped correctly
+    assertEquals(null, evo.getFileType(1));
+    assertEquals(2, evo.getFileType(2).getId());
+    assertEquals(1, evo.getFileType(3).getId());
+
+    TreeReaderFactory.Context treeContext =
+        new TreeReaderFactory.ReaderContext().setSchemaEvolution(evo);
+    TreeReaderFactory.TreeReader reader =
+        TreeReaderFactory.createTreeReader(readType, treeContext);
+
+    // check to make sure the tree reader is built right
+    assertEquals(TreeReaderFactory.StructTreeReader.class, reader.getClass());
+    TreeReaderFactory.TreeReader[] children =
+        ((TreeReaderFactory.StructTreeReader) reader).getChildReaders();
+    assertEquals(3, children.length);
+    assertEquals(TreeReaderFactory.NullTreeReader.class, children[0].getClass());
+    assertEquals(TreeReaderFactory.StringTreeReader.class, children[1].getClass());
+    assertEquals(ConvertTreeReaderFactory.AnyIntegerFromAnyIntegerTreeReader.class,
+        children[2].getClass());
+
+    // check to make sure the data is read correctly
+    OrcProto.StripeFooter.Builder footer = OrcProto.StripeFooter.newBuilder();
+    OrcProto.ColumnEncoding DIRECT =
+        OrcProto.ColumnEncoding.newBuilder()
+            .setKind(OrcProto.ColumnEncoding.Kind.DIRECT).build();
+    footer.addColumns(DIRECT);
+    footer.addColumns(DIRECT);
+    footer.addColumns(DIRECT);
+    Map<StreamName, InStream> streams = new HashMap<>();
+    createStream(streams, 1, OrcProto.Stream.Kind.DATA, 7, 1, 0);
+    createStream(streams, 2, OrcProto.Stream.Kind.DATA,
+        65, 66, 67, 68, 69, 70, 71, 72, 73, 74);
+    createStream(streams, 2, OrcProto.Stream.Kind.LENGTH, 7, 0, 1);
+    reader.startStripe(streams, footer.build());
+    VectorizedRowBatch batch = readType.createRowBatch();
+    reader.nextBatch(batch, 10);
+    final String EXPECTED = "ABCDEFGHIJ";
+    assertEquals(true, batch.cols[0].isRepeating);
+    assertEquals(true, batch.cols[0].isNull[0]);
+    for(int r=0; r < 10; ++r) {
+      assertEquals("col1." + r, EXPECTED.substring(r, r+1),
+          ((BytesColumnVector) batch.cols[1]).toString(r));
+      assertEquals("col2." + r, r,
+          ((LongColumnVector) batch.cols[2]).vector[r]);
+    }
   }
 }
