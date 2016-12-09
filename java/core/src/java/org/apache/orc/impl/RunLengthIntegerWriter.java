@@ -140,4 +140,8 @@ public class RunLengthIntegerWriter implements IntegerWriter {
     recorder.addPosition(numLiterals);
   }
 
+  @Override
+  public long estimateMemory() {
+    return output.getBufferSize();
+  }
 }

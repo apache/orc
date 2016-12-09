@@ -19,7 +19,6 @@
 package org.apache.orc.impl;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
@@ -39,23 +38,23 @@ import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.hadoop.hive.ql.util.JavaDataModel;
 import org.apache.orc.BinaryColumnStatistics;
 import org.apache.orc.ColumnStatistics;
-import org.apache.orc.util.BloomFilter;
-import org.apache.orc.util.BloomFilterIO;
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.CompressionKind;
 import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
 import org.apache.orc.OrcUtils;
+import org.apache.orc.PhysicalWriter;
 import org.apache.orc.StringColumnStatistics;
 import org.apache.orc.StripeInformation;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
+import org.apache.orc.util.BloomFilter;
+import org.apache.orc.util.BloomFilterIO;
 import org.apache.orc.util.BloomFilterUtf8;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
@@ -73,7 +72,6 @@ import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.io.Text;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.CodedOutputStream;
 
 /**
  * An ORC file writer. The file is divided into stripes, which is the natural
@@ -98,40 +96,28 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
 
   private static final Logger LOG = LoggerFactory.getLogger(WriterImpl.class);
 
-  private static final int HDFS_BUFFER_SIZE = 256 * 1024;
   private static final int MIN_ROW_INDEX_STRIDE = 1000;
 
   // threshold above which buffer size will be automatically resized
   private static final int COLUMN_COUNT_THRESHOLD = 1000;
 
-  private final FileSystem fs;
   private final Path path;
   private final long defaultStripeSize;
   private long adjustedStripeSize;
   private final int rowIndexStride;
   private final CompressionKind compress;
   private final CompressionCodec codec;
-  private final boolean addBlockPadding;
   private final int bufferSize;
   private final long blockSize;
-  private final double paddingTolerance;
   private final TypeDescription schema;
+  private final PhysicalWriter physicalWriter;
 
-  // the streams that make up the current stripe
-  private final Map<StreamName, BufferedStream> streams =
-    new TreeMap<StreamName, BufferedStream>();
-
-  private FSDataOutputStream rawWriter = null;
-  // the compressed metadata information outStream
-  private OutStream writer = null;
-  // a protobuf outStream around streamFactory
-  private CodedOutputStream protobufWriter = null;
-  private long headerLength;
   private int columnCount;
   private long rowCount = 0;
   private long rowsInStripe = 0;
   private long rawDataSize = 0;
   private int rowsInIndex = 0;
+  private long lastFlushOffset = 0;
   private int stripesAtLastFlush = -1;
   private final List<OrcProto.StripeInformation> stripes =
     new ArrayList<OrcProto.StripeInformation>();
@@ -155,7 +141,6 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
   public WriterImpl(FileSystem fs,
                     Path path,
                     OrcFile.WriterOptions opts) throws IOException {
-    this.fs = fs;
     this.path = path;
     this.conf = opts.getConfiguration();
     this.callback = opts.getCallback();
@@ -177,9 +162,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     this.version = opts.getVersion();
     this.encodingStrategy = opts.getEncodingStrategy();
     this.compressionStrategy = opts.getCompressionStrategy();
-    this.addBlockPadding = opts.getBlockPadding();
     this.blockSize = opts.getBlockSize();
-    this.paddingTolerance = opts.getPaddingTolerance();
     this.compress = opts.getCompress();
     this.rowIndexStride = opts.getRowIndexStride();
     this.memoryManager = opts.getMemoryManager();
@@ -200,6 +183,9 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
           OrcUtils.includeColumns(opts.getBloomFilterColumns(), schema);
     }
     this.bloomFilterFpp = opts.getBloomFilterFpp();
+    this.physicalWriter = opts.getPhysicalWriter() == null ?
+        new PhysicalFsWriter(fs, path, opts) : opts.getPhysicalWriter();
+    physicalWriter.writeHeader();
     treeWriter = createTreeWriter(schema, streamFactory, false);
     if (buildIndex && rowIndexStride < MIN_ROW_INDEX_STRIDE) {
       throw new IllegalArgumentException("Row stride must be at least " +
@@ -273,126 +259,16 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
   @Override
   public boolean checkMemory(double newScale) throws IOException {
     long limit = (long) Math.round(adjustedStripeSize * newScale);
-    long size = estimateStripeSize();
+    long size = treeWriter.estimateMemory();
     if (LOG.isDebugEnabled()) {
-      LOG.debug("ORC writer " + path + " size = " + size + " limit = " +
-                limit);
+      LOG.debug("ORC writer " + physicalWriter + " size = " + size +
+          " limit = " + limit);
     }
     if (size > limit) {
       flushStripe();
       return true;
     }
     return false;
-  }
-
-  /**
-   * This class is used to hold the contents of streams as they are buffered.
-   * The TreeWriters write to the outStream and the codec compresses the
-   * data as buffers fill up and stores them in the output list. When the
-   * stripe is being written, the whole stream is written to the file.
-   */
-  private class BufferedStream implements OutStream.OutputReceiver {
-    private final OutStream outStream;
-    private final List<ByteBuffer> output = new ArrayList<ByteBuffer>();
-
-    BufferedStream(String name, int bufferSize,
-                   CompressionCodec codec) throws IOException {
-      outStream = new OutStream(name, bufferSize, codec, this);
-    }
-
-    /**
-     * Receive a buffer from the compression codec.
-     * @param buffer the buffer to save
-     */
-    @Override
-    public void output(ByteBuffer buffer) {
-      output.add(buffer);
-    }
-
-    /**
-     * Get the number of bytes in buffers that are allocated to this stream.
-     * @return number of bytes in buffers
-     */
-    public long getBufferSize() {
-      long result = 0;
-      for(ByteBuffer buf: output) {
-        result += buf.capacity();
-      }
-      return outStream.getBufferSize() + result;
-    }
-
-    /**
-     * Flush the stream to the codec.
-     * @throws IOException
-     */
-    public void flush() throws IOException {
-      outStream.flush();
-    }
-
-    /**
-     * Clear all of the buffers.
-     * @throws IOException
-     */
-    public void clear() throws IOException {
-      outStream.clear();
-      output.clear();
-    }
-
-    /**
-     * Check the state of suppress flag in output stream
-     * @return value of suppress flag
-     */
-    public boolean isSuppressed() {
-      return outStream.isSuppressed();
-    }
-
-    /**
-     * Get the number of bytes that will be written to the output. Assumes
-     * the stream has already been flushed.
-     * @return the number of bytes
-     */
-    public long getOutputSize() {
-      long result = 0;
-      for(ByteBuffer buffer: output) {
-        result += buffer.remaining();
-      }
-      return result;
-    }
-
-    /**
-     * Write the saved compressed buffers to the OutputStream.
-     * @param out the stream to write to
-     * @throws IOException
-     */
-    void spillTo(OutputStream out) throws IOException {
-      for(ByteBuffer buffer: output) {
-        out.write(buffer.array(), buffer.arrayOffset() + buffer.position(),
-          buffer.remaining());
-      }
-    }
-
-    @Override
-    public String toString() {
-      return outStream.toString();
-    }
-  }
-
-  /**
-   * An output receiver that writes the ByteBuffers to the output stream
-   * as they are received.
-   */
-  private class DirectStream implements OutStream.OutputReceiver {
-    private final FSDataOutputStream output;
-
-    DirectStream(FSDataOutputStream output) {
-      this.output = output;
-    }
-
-    @Override
-    public void output(ByteBuffer buffer) throws IOException {
-      output.write(buffer.array(), buffer.arrayOffset() + buffer.position(),
-        buffer.remaining());
-    }
   }
 
   private static class RowIndexPositionRecorder implements PositionRecorder {
@@ -424,43 +300,38 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
                                   OrcProto.Stream.Kind kind
                                   ) throws IOException {
       final StreamName name = new StreamName(column, kind);
-      final EnumSet<CompressionCodec.Modifier> modifiers;
-
-      switch (kind) {
-        case BLOOM_FILTER:
-        case DATA:
-        case DICTIONARY_DATA:
-        case BLOOM_FILTER_UTF8:
-          if (getCompressionStrategy() == OrcFile.CompressionStrategy.SPEED) {
-            modifiers = EnumSet.of(CompressionCodec.Modifier.FAST,
-                CompressionCodec.Modifier.TEXT);
-          } else {
-            modifiers = EnumSet.of(CompressionCodec.Modifier.DEFAULT,
-                CompressionCodec.Modifier.TEXT);
-          }
-          break;
-        case LENGTH:
-        case DICTIONARY_COUNT:
-        case PRESENT:
-        case ROW_INDEX:
-        case SECONDARY:
-          // easily compressed using the fastest modes
-          modifiers = EnumSet.of(CompressionCodec.Modifier.FASTEST,
-              CompressionCodec.Modifier.BINARY);
-          break;
-        default:
-          LOG.warn("Missing ORC compression modifiers for " + kind);
-          modifiers = null;
-          break;
+      CompressionCodec codec = WriterImpl.this.codec;
+      if (codec != null) {
+        switch (kind) {
+          case BLOOM_FILTER:
+          case DATA:
+          case DICTIONARY_DATA:
+          case BLOOM_FILTER_UTF8:
+            if (getCompressionStrategy() == OrcFile.CompressionStrategy.SPEED) {
+              codec = codec.modify(EnumSet.of(CompressionCodec.Modifier.FAST,
+                  CompressionCodec.Modifier.TEXT));
+            } else {
+              codec = codec.modify(EnumSet.of(CompressionCodec.Modifier.DEFAULT,
+                  CompressionCodec.Modifier.TEXT));
+            }
+            break;
+          case LENGTH:
+          case DICTIONARY_COUNT:
+          case PRESENT:
+          case ROW_INDEX:
+          case SECONDARY:
+            // easily compressed using the fastest modes
+            codec = codec.modify(EnumSet.of(CompressionCodec.Modifier.FASTEST,
+                CompressionCodec.Modifier.BINARY));
+            break;
+          default:
+            LOG.info("Missing ORC compression modifiers for " + kind);
+            break;
+        }
       }
 
-      BufferedStream result = streams.get(name);
-      if (result == null) {
-        result = new BufferedStream(name.toString(), bufferSize,
-            codec == null ? codec : codec.modify(modifiers));
-        streams.put(name, result);
-      }
-      return result.outStream;
+      return new OutStream(physicalWriter.toString(), bufferSize, codec,
+          physicalWriter.createDataStream(name));
     }
 
     /**
@@ -899,6 +770,9 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
      */
     long estimateMemory() {
       long result = 0;
+      if (isPresent != null) {
+        result = isPresentOutStream.getBufferSize();
+      }
       for (TreeWriter child: childrenWriters) {
         result += child.estimateMemory();
       }
@@ -956,6 +830,11 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     void recordPosition(PositionRecorder recorder) throws IOException {
       super.recordPosition(recorder);
       writer.getPosition(recorder);
+    }
+
+    @Override
+    long estimateMemory() {
+      return super.estimateMemory() + writer.estimateMemory();
     }
   }
 
@@ -1020,6 +899,11 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     void recordPosition(PositionRecorder recorder) throws IOException {
       super.recordPosition(recorder);
       writer.getPosition(recorder);
+    }
+
+    @Override
+    long estimateMemory() {
+      return super.estimateMemory() + writer.estimateMemory();
     }
   }
 
@@ -1098,6 +982,11 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       super.recordPosition(recorder);
       writer.getPosition(recorder);
     }
+
+    @Override
+    long estimateMemory() {
+      return super.estimateMemory() + writer.estimateMemory();
+    }
   }
 
   private static class FloatTreeWriter extends TreeWriter {
@@ -1165,6 +1054,11 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       super.recordPosition(recorder);
       stream.getPosition(recorder);
     }
+
+    @Override
+    long estimateMemory() {
+      return super.estimateMemory() + stream.getBufferSize();
+    }
   }
 
   private static class DoubleTreeWriter extends TreeWriter {
@@ -1231,18 +1125,22 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       super.recordPosition(recorder);
       stream.getPosition(recorder);
     }
+
+    @Override
+    long estimateMemory() {
+      return super.estimateMemory() + stream.getBufferSize();
+    }
   }
 
   private static abstract class StringBaseTreeWriter extends TreeWriter {
     private static final int INITIAL_DICTIONARY_SIZE = 4096;
     private final OutStream stringOutput;
-    private final IntegerWriter lengthOutput;
+    protected final IntegerWriter lengthOutput;
     private final IntegerWriter rowOutput;
     protected final StringRedBlackTree dictionary =
         new StringRedBlackTree(INITIAL_DICTIONARY_SIZE);
     protected final DynamicIntArray rows = new DynamicIntArray();
     protected final PositionedOutputStream directStreamOutput;
-    protected final IntegerWriter directLengthOutput;
     private final List<OrcProto.RowIndexEntry> savedRowIndex =
         new ArrayList<OrcProto.RowIndexEntry>();
     private final boolean buildIndex;
@@ -1261,18 +1159,16 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
                      boolean nullable) throws IOException {
       super(columnId, schema, writer, nullable);
       this.isDirectV2 = isNewWriteFormat(writer);
+      directStreamOutput = writer.createStream(id, OrcProto.Stream.Kind.DATA);
       stringOutput = writer.createStream(id,
           OrcProto.Stream.Kind.DICTIONARY_DATA);
       lengthOutput = createIntegerWriter(writer.createStream(id,
           OrcProto.Stream.Kind.LENGTH), false, isDirectV2, writer);
-      rowOutput = createIntegerWriter(writer.createStream(id,
-          OrcProto.Stream.Kind.DATA), false, isDirectV2, writer);
+      rowOutput = createIntegerWriter(directStreamOutput, false, isDirectV2,
+          writer);
       recordPosition(rowIndexPosition);
       rowIndexValueCount.add(0L);
       buildIndex = writer.buildIndex();
-      directStreamOutput = writer.createStream(id, OrcProto.Stream.Kind.DATA);
-      directLengthOutput = createIntegerWriter(writer.createStream(id,
-          OrcProto.Stream.Kind.LENGTH), false, isDirectV2, writer);
       Configuration conf = writer.getConfiguration();
       dictionaryKeySizeThreshold =
           OrcConf.DICTIONARY_KEY_SIZE_THRESHOLD.getDouble(conf);
@@ -1315,11 +1211,14 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       // we need to build the rowindex before calling super, since it
       // writes it out.
       super.writeStripe(builder, requiredIndexEntries);
-      stringOutput.flush();
-      lengthOutput.flush();
-      rowOutput.flush();
-      directStreamOutput.flush();
-      directLengthOutput.flush();
+      if (useDictionaryEncoding) {
+        stringOutput.flush();
+        lengthOutput.flush();
+        rowOutput.flush();
+      } else {
+        directStreamOutput.flush();
+        lengthOutput.flush();
+      }
       // reset all of the fields to be ready for the next stripe.
       dictionary.clear();
       savedRowIndex.clear();
@@ -1374,7 +1273,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
             } else {
               PositionRecorder posn = new RowIndexPositionRecorder(base);
               directStreamOutput.getPosition(posn);
-              directLengthOutput.getPosition(posn);
+              lengthOutput.getPosition(posn);
             }
             rowIndex.addEntry(base.build());
           }
@@ -1385,7 +1284,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
           } else {
             dictionary.getText(text, rows.get(i));
             directStreamOutput.write(text.getBytes(), 0, text.getLength());
-            directLengthOutput.write(text.getLength());
+            lengthOutput.write(text.getLength());
           }
         }
       }
@@ -1451,12 +1350,18 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
 
     private void recordDirectStreamPosition() throws IOException {
       directStreamOutput.getPosition(rowIndexPosition);
-      directLengthOutput.getPosition(rowIndexPosition);
+      lengthOutput.getPosition(rowIndexPosition);
     }
 
     @Override
     long estimateMemory() {
-      return rows.getSizeInBytes() + dictionary.getSizeInBytes();
+      long parent = super.estimateMemory();
+      if (useDictionaryEncoding) {
+        return parent + dictionary.getSizeInBytes() + rows.getSizeInBytes();
+      } else {
+        return parent + lengthOutput.estimateMemory() +
+            directStreamOutput.getBufferSize();
+      }
     }
   }
 
@@ -1484,7 +1389,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
             for(int i=0; i < length; ++i) {
               directStreamOutput.write(vec.vector[0], vec.start[0],
                   vec.length[0]);
-              directLengthOutput.write(vec.length[0]);
+              lengthOutput.write(vec.length[0]);
             }
           }
           indexStatistics.updateString(vec.vector[0], vec.start[0],
@@ -1507,7 +1412,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
             } else {
               directStreamOutput.write(vec.vector[offset + i],
                   vec.start[offset + i], vec.length[offset + i]);
-              directLengthOutput.write(vec.length[offset + i]);
+              lengthOutput.write(vec.length[offset + i]);
             }
             indexStatistics.updateString(vec.vector[offset + i],
                 vec.start[offset + i], vec.length[offset + i], 1);
@@ -1570,7 +1475,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
           } else {
             for(int i=0; i < length; ++i) {
               directStreamOutput.write(ptr, ptrOffset, itemLength);
-              directLengthOutput.write(itemLength);
+              lengthOutput.write(itemLength);
             }
           }
           indexStatistics.updateString(ptr, ptrOffset, itemLength, length);
@@ -1603,7 +1508,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
               rows.add(dictionary.add(ptr, ptrOffset, itemLength));
             } else {
               directStreamOutput.write(ptr, ptrOffset, itemLength);
-              directLengthOutput.write(itemLength);
+              lengthOutput.write(itemLength);
             }
             indexStatistics.updateString(ptr, ptrOffset, itemLength, 1);
             if (createBloomFilter) {
@@ -1653,7 +1558,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
             for(int i=0; i < length; ++i) {
               directStreamOutput.write(vec.vector[0], vec.start[0],
                   itemLength);
-              directLengthOutput.write(itemLength);
+              lengthOutput.write(itemLength);
             }
           }
           indexStatistics.updateString(vec.vector[0], vec.start[0],
@@ -1679,7 +1584,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
             } else {
               directStreamOutput.write(vec.vector[offset + i],
                   vec.start[offset + i], itemLength);
-              directLengthOutput.write(itemLength);
+              lengthOutput.write(itemLength);
             }
             indexStatistics.updateString(vec.vector[offset + i],
                 vec.start[offset + i], itemLength, 1);
@@ -1784,6 +1689,12 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       super.recordPosition(recorder);
       stream.getPosition(recorder);
       length.getPosition(recorder);
+    }
+
+    @Override
+    long estimateMemory() {
+      return super.estimateMemory() + stream.getBufferSize() +
+          length.estimateMemory();
     }
   }
 
@@ -1900,6 +1811,12 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       seconds.getPosition(recorder);
       nanos.getPosition(recorder);
     }
+
+    @Override
+    long estimateMemory() {
+      return super.estimateMemory() + seconds.estimateMemory() +
+          nanos.estimateMemory();
+    }
   }
 
   private static class DateTreeWriter extends TreeWriter {
@@ -1976,6 +1893,11 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       }
       return OrcProto.ColumnEncoding.newBuilder()
           .setKind(OrcProto.ColumnEncoding.Kind.DIRECT).build();
+    }
+
+    @Override
+    long estimateMemory() {
+      return super.estimateMemory() + writer.estimateMemory();
     }
   }
 
@@ -2068,6 +1990,12 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       super.recordPosition(recorder);
       valueStream.getPosition(recorder);
       scaleStream.getPosition(recorder);
+    }
+
+    @Override
+    long estimateMemory() {
+      return super.estimateMemory() + valueStream.getBufferSize() +
+          scaleStream.estimateMemory();
     }
   }
 
@@ -2251,6 +2179,11 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       super.recordPosition(recorder);
       lengths.getPosition(recorder);
     }
+
+    @Override
+    long estimateMemory() {
+      return super.estimateMemory() + lengths.estimateMemory();
+    }
   }
 
   private static class MapTreeWriter extends TreeWriter {
@@ -2360,6 +2293,11 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       super.recordPosition(recorder);
       lengths.getPosition(recorder);
     }
+
+    @Override
+    long estimateMemory() {
+      return super.estimateMemory() + lengths.estimateMemory();
+    }
   }
 
   private static class UnionTreeWriter extends TreeWriter {
@@ -2458,6 +2396,11 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     void recordPosition(PositionRecorder recorder) throws IOException {
       super.recordPosition(recorder);
       tags.getPosition(recorder);
+    }
+
+    @Override
+    long estimateMemory() {
+      return super.estimateMemory() + tags.estimateMemory();
     }
   }
 
@@ -2609,27 +2552,12 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     }
   }
 
-  // @VisibleForTesting
-  public FSDataOutputStream getStream() throws IOException {
-    if (rawWriter == null) {
-      rawWriter = fs.create(path, false, HDFS_BUFFER_SIZE,
-                            fs.getDefaultReplication(path), blockSize);
-      rawWriter.writeBytes(OrcFile.MAGIC);
-      headerLength = rawWriter.getPos();
-      writer = new OutStream("metadata", bufferSize, codec,
-                             new DirectStream(rawWriter));
-      protobufWriter = CodedOutputStream.newInstance(writer);
-    }
-    return rawWriter;
-  }
-
   private void createRowIndexEntry() throws IOException {
     treeWriter.createRowIndexEntry();
     rowsInIndex = 0;
   }
 
   private void flushStripe() throws IOException {
-    getStream();
     if (buildIndex && rowsInIndex != 0) {
       createRowIndexEntry();
     }
@@ -2643,95 +2571,11 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       OrcProto.StripeFooter.Builder builder =
           OrcProto.StripeFooter.newBuilder();
       treeWriter.writeStripe(builder, requiredIndexEntries);
-      long indexSize = 0;
-      long dataSize = 0;
-      for(Map.Entry<StreamName, BufferedStream> pair: streams.entrySet()) {
-        BufferedStream stream = pair.getValue();
-        if (!stream.isSuppressed()) {
-          stream.flush();
-          StreamName name = pair.getKey();
-          long streamSize = pair.getValue().getOutputSize();
-          builder.addStreams(OrcProto.Stream.newBuilder()
-                             .setColumn(name.getColumn())
-                             .setKind(name.getKind())
-                             .setLength(streamSize));
-          if (StreamName.Area.INDEX == name.getArea()) {
-            indexSize += streamSize;
-          } else {
-            dataSize += streamSize;
-          }
-        }
-      }
-      OrcProto.StripeFooter footer = builder.build();
-
-      // Do we need to pad the file so the stripe doesn't straddle a block
-      // boundary?
-      long start = rawWriter.getPos();
-      final long currentStripeSize = indexSize + dataSize + footer.getSerializedSize();
-      final long available = blockSize - (start % blockSize);
-      final long overflow = currentStripeSize - adjustedStripeSize;
-      final float availRatio = (float) available / (float) defaultStripeSize;
-
-      if (availRatio > 0.0f && availRatio < 1.0f
-          && availRatio > paddingTolerance) {
-        // adjust default stripe size to fit into remaining space, also adjust
-        // the next stripe for correction based on the current stripe size
-        // and user specified padding tolerance. Since stripe size can overflow
-        // the default stripe size we should apply this correction to avoid
-        // writing portion of last stripe to next hdfs block.
-        double correction = overflow > 0 ? (double) overflow
-            / (double) adjustedStripeSize : 0.0;
-
-        // correction should not be greater than user specified padding
-        // tolerance
-        correction = correction > paddingTolerance ? paddingTolerance
-            : correction;
-
-        // adjust next stripe size based on current stripe estimate correction
-        adjustedStripeSize = (long) ((1.0f - correction) * (availRatio * defaultStripeSize));
-      } else if (availRatio >= 1.0) {
-        adjustedStripeSize = defaultStripeSize;
-      }
-
-      if (availRatio < paddingTolerance && addBlockPadding) {
-        long padding = blockSize - (start % blockSize);
-        byte[] pad = new byte[(int) Math.min(HDFS_BUFFER_SIZE, padding)];
-        LOG.info(String.format("Padding ORC by %d bytes (<=  %.2f * %d)", 
-            padding, availRatio, defaultStripeSize));
-        start += padding;
-        while (padding > 0) {
-          int writeLen = (int) Math.min(padding, pad.length);
-          rawWriter.write(pad, 0, writeLen);
-          padding -= writeLen;
-        }
-        adjustedStripeSize = defaultStripeSize;
-      } else if (currentStripeSize < blockSize
-          && (start % blockSize) + currentStripeSize > blockSize) {
-        // even if you don't pad, reset the default stripe size when crossing a
-        // block boundary
-        adjustedStripeSize = defaultStripeSize;
-      }
-
-      // write out the data streams
-      for(Map.Entry<StreamName, BufferedStream> pair: streams.entrySet()) {
-        BufferedStream stream = pair.getValue();
-        if (!stream.isSuppressed()) {
-          stream.spillTo(rawWriter);
-        }
-        stream.clear();
-      }
-      footer.writeTo(protobufWriter);
-      protobufWriter.flush();
-      writer.flush();
-      long footerLength = rawWriter.getPos() - start - dataSize - indexSize;
-      OrcProto.StripeInformation dirEntry =
+      OrcProto.StripeInformation.Builder dirEntry =
           OrcProto.StripeInformation.newBuilder()
-              .setOffset(start)
-              .setNumberOfRows(rowsInStripe)
-              .setIndexLength(indexSize)
-              .setDataLength(dataSize)
-              .setFooterLength(footerLength).build();
-      stripes.add(dirEntry);
+              .setNumberOfRows(rowsInStripe);
+      physicalWriter.finalizeStripe(builder, dirEntry);
+      stripes.add(dirEntry.build());
       rowCount += rowsInStripe;
       rowsInStripe = 0;
     }
@@ -2812,30 +2656,33 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     }
   }
 
-  private int writeMetadata() throws IOException {
-    getStream();
+  private void writeMetadata() throws IOException {
     OrcProto.Metadata.Builder builder = OrcProto.Metadata.newBuilder();
     for(OrcProto.StripeStatistics.Builder ssb : treeWriter.stripeStatsBuilders) {
       builder.addStripeStats(ssb.build());
     }
-
-    long startPosn = rawWriter.getPos();
-    OrcProto.Metadata metadata = builder.build();
-    metadata.writeTo(protobufWriter);
-    protobufWriter.flush();
-    writer.flush();
-    return (int) (rawWriter.getPos() - startPosn);
+    physicalWriter.writeFileMetadata(builder);
   }
 
-  private int writeFooter(long bodyLength) throws IOException {
-    getStream();
+  private long writePostScript() throws IOException {
+    OrcProto.PostScript.Builder builder =
+        OrcProto.PostScript.newBuilder()
+            .setCompression(writeCompressionKind(compress))
+            .setMagic(OrcFile.MAGIC)
+            .addVersion(version.getMajor())
+            .addVersion(version.getMinor())
+            .setWriterVersion(OrcFile.CURRENT_WRITER.getId());
+    if (compress != CompressionKind.NONE) {
+      builder.setCompressionBlockSize(bufferSize);
+    }
+    return physicalWriter.writePostScript(builder);
+  }
+
+  private long writeFooter() throws IOException {
+    writeMetadata();
     OrcProto.Footer.Builder builder = OrcProto.Footer.newBuilder();
-    builder.setContentLength(bodyLength);
-    builder.setHeaderLength(headerLength);
     builder.setNumberOfRows(rowCount);
     builder.setRowIndexStride(rowIndexStride);
-    // populate raw data size
-    rawDataSize = computeRawDataSize();
     // serialize the types
     writeTypes(builder, schema);
     // add the stripe information
@@ -2849,45 +2696,8 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       builder.addMetadata(OrcProto.UserMetadataItem.newBuilder()
         .setName(entry.getKey()).setValue(entry.getValue()));
     }
-    long startPosn = rawWriter.getPos();
-    OrcProto.Footer footer = builder.build();
-    footer.writeTo(protobufWriter);
-    protobufWriter.flush();
-    writer.flush();
-    return (int) (rawWriter.getPos() - startPosn);
-  }
-
-  private int writePostScript(int footerLength, int metadataLength) throws IOException {
-    OrcProto.PostScript.Builder builder =
-      OrcProto.PostScript.newBuilder()
-        .setCompression(writeCompressionKind(compress))
-        .setFooterLength(footerLength)
-        .setMetadataLength(metadataLength)
-        .setMagic(OrcFile.MAGIC)
-        .addVersion(version.getMajor())
-        .addVersion(version.getMinor())
-        .setWriterVersion(OrcFile.CURRENT_WRITER.getId());
-    if (compress != CompressionKind.NONE) {
-      builder.setCompressionBlockSize(bufferSize);
-    }
-    OrcProto.PostScript ps = builder.build();
-    // need to write this uncompressed
-    long startPosn = rawWriter.getPos();
-    ps.writeTo(rawWriter);
-    long length = rawWriter.getPos() - startPosn;
-    if (length > 255) {
-      throw new IllegalArgumentException("PostScript too large at " + length);
-    }
-    return (int) length;
-  }
-
-  private long estimateStripeSize() {
-    long result = 0;
-    for(BufferedStream stream: streams.values()) {
-      result += stream.getBufferSize();
-    }
-    result += treeWriter.estimateMemory();
-    return result;
+    physicalWriter.writeFileFooter(builder);
+    return writePostScript();
   }
 
   @Override
@@ -2933,11 +2743,8 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     memoryManager.removeWriter(path);
     // actually close the file
     flushStripe();
-    int metadataLength = writeMetadata();
-    int footerLength = writeFooter(rawWriter.getPos() - metadataLength);
-    rawWriter.writeByte(writePostScript(footerLength, metadataLength));
-    rawWriter.close();
-
+    lastFlushOffset = writeFooter();
+    physicalWriter.close();
   }
 
   /**
@@ -2967,13 +2774,11 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       if (callback != null) {
         callback.preFooterWrite(callbackContext);
       }
-      int metaLength = writeMetadata();
-      int footLength = writeFooter(rawWriter.getPos() - metaLength);
-      rawWriter.writeByte(writePostScript(footLength, metaLength));
+      lastFlushOffset = writeFooter();
       stripesAtLastFlush = stripes.size();
-      rawWriter.hflush();
+      physicalWriter.flush();
     }
-    return rawWriter.getPos();
+    return lastFlushOffset;
   }
 
   static void checkArgument(boolean expression, String message) {
@@ -2993,28 +2798,15 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     checkArgument(stripeStatistics != null,
         "Stripe statistics must not be null");
 
-    getStream();
-    long start = rawWriter.getPos();
-    long availBlockSpace = blockSize - (start % blockSize);
-
-    // see if stripe can fit in the current hdfs block, else pad the remaining
-    // space in the block
-    if (length < blockSize && length > availBlockSpace &&
-        addBlockPadding) {
-      byte[] pad = new byte[(int) Math.min(HDFS_BUFFER_SIZE, availBlockSpace)];
-      LOG.info(String.format("Padding ORC by %d bytes while merging..",
-          availBlockSpace));
-      start += availBlockSpace;
-      while (availBlockSpace > 0) {
-        int writeLen = (int) Math.min(availBlockSpace, pad.length);
-        rawWriter.write(pad, 0, writeLen);
-        availBlockSpace -= writeLen;
-      }
-    }
-
-    rawWriter.write(stripe);
-    rowsInStripe = stripeStatistics.getColStats(0).getNumberOfValues();
-    rowCount += rowsInStripe;
+    // update stripe information
+    OrcProto.StripeInformation.Builder dirEntry = OrcProto.StripeInformation
+        .newBuilder()
+        .setNumberOfRows(rowsInStripe)
+        .setIndexLength(stripeInfo.getIndexLength())
+        .setDataLength(stripeInfo.getDataLength())
+        .setFooterLength(stripeInfo.getFooterLength());
+    physicalWriter.appendRawStripe(ByteBuffer.wrap(stripe, offset, length),
+        dirEntry);
 
     // since we have already written the stripe, just update stripe statistics
     treeWriter.stripeStatsBuilders.add(stripeStatistics.toBuilder());
@@ -3022,16 +2814,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     // update file level statistics
     updateFileStatistics(stripeStatistics);
 
-    // update stripe information
-    OrcProto.StripeInformation dirEntry = OrcProto.StripeInformation
-        .newBuilder()
-        .setOffset(start)
-        .setNumberOfRows(rowsInStripe)
-        .setIndexLength(stripeInfo.getIndexLength())
-        .setDataLength(stripeInfo.getDataLength())
-        .setFooterLength(stripeInfo.getFooterLength())
-        .build();
-    stripes.add(dirEntry);
+    stripes.add(dirEntry.build());
 
     // reset it after writing the stripe
     rowsInStripe = 0;
