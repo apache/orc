@@ -112,7 +112,8 @@ public class RecordReaderImpl implements RecordReader {
     List<TypeDescription> children = readerSchema.getChildren();
     for (int i = 0; i < fieldNames.size(); ++i) {
       if (columnName.equals(fieldNames.get(i))) {
-        return evolution.getFileType(children.get(i)).getId();
+        TypeDescription result = evolution.getFileType(children.get(i));
+        return result == null ? -1 : result.getId();
       }
     }
     return -1;
