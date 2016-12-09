@@ -18,26 +18,16 @@
 package org.apache.orc.impl;
 
 import org.apache.orc.CompressionCodec;
+import org.apache.orc.PhysicalWriter;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
 public class OutStream extends PositionedOutputStream {
 
-  public interface OutputReceiver {
-    /**
-     * Output the given buffer to the final destination
-     * @param buffer the buffer to output
-     * @throws IOException
-     */
-    void output(ByteBuffer buffer) throws IOException;
-  }
-
   public static final int HEADER_SIZE = 3;
   private final String name;
-  private final OutputReceiver receiver;
-  // if enabled the stream will be suppressed when writing stripe
-  private boolean suppress;
+  private final PhysicalWriter.OutputReceiver receiver;
 
   /**
    * Stores the uncompressed bytes that have been serialized, but not
@@ -69,17 +59,15 @@ public class OutStream extends PositionedOutputStream {
   public OutStream(String name,
                    int bufferSize,
                    CompressionCodec codec,
-                   OutputReceiver receiver) throws IOException {
+                   PhysicalWriter.OutputReceiver receiver) throws IOException {
     this.name = name;
     this.bufferSize = bufferSize;
     this.codec = codec;
     this.receiver = receiver;
-    this.suppress = false;
   }
 
   public void clear() throws IOException {
     flush();
-    suppress = false;
   }
 
   /**
@@ -258,32 +246,28 @@ public class OutStream extends PositionedOutputStream {
 
   @Override
   public long getBufferSize() {
-    long result = 0;
-    if (current != null) {
-      result += current.capacity();
+    if (codec == null) {
+      return uncompressedBytes + (current == null ? 0 : current.remaining());
+    } else {
+      long result = 0;
+      if (current != null) {
+        result += current.capacity();
+      }
+      if (compressed != null) {
+        result += compressed.capacity();
+      }
+      if (overflow != null) {
+        result += overflow.capacity();
+      }
+      return result + compressedBytes;
     }
-    if (compressed != null) {
-      result += compressed.capacity();
-    }
-    if (overflow != null) {
-      result += overflow.capacity();
-    }
-    return result;
   }
 
   /**
    * Set suppress flag
    */
   public void suppress() {
-    suppress = true;
-  }
-
-  /**
-   * Returns the state of suppress flag
-   * @return value of suppress flag
-   */
-  public boolean isSuppressed() {
-    return suppress;
+    receiver.suppress();
   }
 }
 

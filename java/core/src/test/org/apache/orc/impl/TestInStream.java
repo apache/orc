@@ -31,17 +31,23 @@ import java.util.List;
 
 import org.apache.hadoop.hive.common.io.DiskRange;
 import org.apache.orc.CompressionCodec;
+import org.apache.orc.PhysicalWriter;
 import org.junit.Test;
 
 public class TestInStream {
 
-  static class OutputCollector implements OutStream.OutputReceiver {
+  static class OutputCollector implements PhysicalWriter.OutputReceiver {
     DynamicByteArray buffer = new DynamicByteArray();
 
     @Override
     public void output(ByteBuffer buffer) throws IOException {
       this.buffer.add(buffer.array(), buffer.arrayOffset() + buffer.position(),
           buffer.remaining());
+    }
+
+    @Override
+    public void suppress() {
+      // PASS
     }
   }
 

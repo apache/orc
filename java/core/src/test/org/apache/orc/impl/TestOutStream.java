@@ -19,6 +19,7 @@
 package org.apache.orc.impl;
 
 import org.apache.orc.CompressionCodec;
+import org.apache.orc.PhysicalWriter;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -30,8 +31,8 @@ public class TestOutStream {
 
   @Test
   public void testFlush() throws Exception {
-    OutStream.OutputReceiver receiver =
-        Mockito.mock(OutStream.OutputReceiver.class);
+    PhysicalWriter.OutputReceiver receiver =
+        Mockito.mock(PhysicalWriter.OutputReceiver.class);
     CompressionCodec codec = new ZlibCodec();
     OutStream stream = new OutStream("test", 128*1024, codec, receiver);
     assertEquals(0L, stream.getBufferSize());
