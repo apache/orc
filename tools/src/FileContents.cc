@@ -26,8 +26,8 @@
 #include <iostream>
 #include <string>
 
-void printContents(const char* filename, const orc::ReaderOptions readerOpts,
-                   const orc::RowReaderOptions rowReaderOpts) {
+void printContents(const char* filename, const orc::RowReaderOptions rowReaderOpts) {
+  orc::ReaderOptions readerOpts;
   std::unique_ptr<orc::Reader> reader;
   std::unique_ptr<orc::RowReader> rowReader;
   reader = orc::createReader(orc::readLocalFile(std::string(filename)), readerOpts);
@@ -75,14 +75,12 @@ int main(int argc, char* argv[]) {
         filename = argv[i];
       }
     }
-    orc::ReaderOptions readerOpts;
     orc::RowReaderOptions rowReaderOpts;
     if (cols.size() > 0) {
-      readerOpts.include(cols);
       rowReaderOpts.include(cols);
     }
     if (filename != ORC_NULLPTR) {
-      printContents(filename, readerOpts, rowReaderOpts);
+      printContents(filename, rowReaderOpts);
     }
   } catch (std::exception& ex) {
     std::cerr << "Caught exception: " << ex.what() << "\n";

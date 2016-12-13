@@ -60,6 +60,7 @@ namespace orc {
     void buildTypeNameIdMap(const Type* type);
     std::string toDotColumnPath();
 
+   public:
     // Select a field by name
     void updateSelectedByName(std::vector<bool>& selectedColumns, const std::string& name);
     // Select a field by id
@@ -73,7 +74,6 @@ namespace orc {
     // For each child of type, select it if one of its children
     // is selected.
     bool selectParents(std::vector<bool>& selectedColumns, const Type& type);
-   public:
    /**
     * Constructor that selects columns.
     * @param contents of the file
@@ -162,7 +162,6 @@ namespace orc {
     std::unique_ptr<Contents> contents;
 
     // inputs
-    std::vector<bool> selectedColumns;
     const ReaderOptions& options;
     const uint64_t fileLength;
     const uint64_t postscriptLength;
@@ -173,7 +172,7 @@ namespace orc {
     // footer
     proto::Footer* footer;
     uint64_t numberOfStripes;
-    uint64_t getMemoryUse(int stripeIx = -1) override;
+    uint64_t getMemoryUse(int stripeIx, std::vector<bool>& selectedColumns);
 
     // internal methods
     void readMetadata() const;
@@ -256,6 +255,14 @@ namespace orc {
     const Type* getSchema() const {return contents->schema.get();}
 
     InputStream* getStream() const {return contents->stream.get();}
+
+    uint64_t getMemoryUse(int stripeIx = -1) override;
+
+    uint64_t getMemoryUseByFieldId(const std::list<uint64_t>& include, int stripeIx=-1) override;
+
+    uint64_t getMemoryUseByName(const std::list<std::string>& names, int stripeIx=-1) override;
+
+    uint64_t getMemoryUseByTypeId(const std::list<uint64_t>& include, int stripeIx=-1) override;
   };
 
 }// namespace

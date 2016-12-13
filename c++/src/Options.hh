@@ -39,8 +39,6 @@ namespace orc {
  */
   struct ReaderOptionsPrivate {
     ColumnSelection selection;
-    std::list<uint64_t> includedColumnIndexes;
-    std::list<std::string> includedColumnNames;
     uint64_t tailLocation;
     std::ostream* errorStream;
     MemoryPool* memoryPool;
@@ -84,27 +82,6 @@ namespace orc {
     // PASS
   }
 
-  ReaderOptions& ReaderOptions::include(const std::list<uint64_t>& include) {
-    privateBits->selection = ColumnSelection_FIELD_IDS;
-    privateBits->includedColumnIndexes.assign(include.begin(), include.end());
-    privateBits->includedColumnNames.clear();
-    return *this;
-  }
-
-  ReaderOptions& ReaderOptions::include(const std::list<std::string>& include) {
-    privateBits->selection = ColumnSelection_NAMES;
-    privateBits->includedColumnNames.assign(include.begin(), include.end());
-    privateBits->includedColumnIndexes.clear();
-    return *this;
-  }
-
-  ReaderOptions& ReaderOptions::includeTypes(const std::list<uint64_t>& types) {
-    privateBits->selection = ColumnSelection_TYPE_IDS;
-    privateBits->includedColumnIndexes.assign(types.begin(), types.end());
-    privateBits->includedColumnNames.clear();
-    return *this;
-  }
-
   ReaderOptions& ReaderOptions::setMemoryPool(MemoryPool& pool) {
     privateBits->memoryPool = &pool;
     return *this;
@@ -127,26 +104,6 @@ namespace orc {
                                                       ) {
     privateBits->serializedTail = value;
     return *this;
-  }
-
-  bool ReaderOptions::getIndexesSet() const {
-    return privateBits->selection == ColumnSelection_FIELD_IDS;
-  }
-
-  bool ReaderOptions::getTypeIdsSet() const {
-    return privateBits->selection == ColumnSelection_TYPE_IDS;
-  }
-
-  const std::list<uint64_t>& ReaderOptions::getInclude() const {
-    return privateBits->includedColumnIndexes;
-  }
-
-  bool ReaderOptions::getNamesSet() const {
-    return privateBits->selection == ColumnSelection_NAMES;
-  }
-
-  const std::list<std::string>& ReaderOptions::getIncludeNames() const {
-    return privateBits->includedColumnNames;
   }
 
   std::string ReaderOptions::getSerializedFileTail() const {

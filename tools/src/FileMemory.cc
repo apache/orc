@@ -65,7 +65,6 @@ void processFile(const char* filename,
   orc::ReaderOptions readerOpts;
   orc::RowReaderOptions rowReaderOpts;
   if (cols.size() > 0) {
-    readerOpts.include(cols);
     rowReaderOpts.include(cols);
   }
   std::unique_ptr<orc::MemoryPool> pool(new TestMemoryPool());
@@ -78,7 +77,7 @@ void processFile(const char* filename,
 
   std::unique_ptr<orc::ColumnVectorBatch> batch =
       rowReader->createRowBatch(batchSize);
-  uint64_t readerMemory = reader->getMemoryUse();
+  uint64_t readerMemory = reader->getMemoryUseByFieldId(cols);
   uint64_t batchMemory = batch->getMemoryUsage();
   while (rowReader->next(*batch)) {}
   uint64_t actualMemory =

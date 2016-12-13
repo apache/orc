@@ -151,31 +151,6 @@ namespace orc {
     }
   }
 
-  void ColumnSelector::updateSelected(std::vector<bool>& selectedColumns, const ReaderOptions& options) {
-    selectedColumns.assign(static_cast<size_t>(contents->footer->types_size()), false);
-    if (contents->schema->getKind() == STRUCT && options.getIndexesSet()) {
-      for(std::list<uint64_t>::const_iterator field = options.getInclude().begin();
-          field != options.getInclude().end(); ++field) {
-        updateSelectedByFieldId(selectedColumns, *field);
-      }
-    } else if (contents->schema->getKind() == STRUCT && options.getNamesSet()) {
-      for(std::list<std::string>::const_iterator field = options.getIncludeNames().begin();
-          field != options.getIncludeNames().end(); ++field) {
-        updateSelectedByName(selectedColumns, *field);
-      }
-    } else if (options.getTypeIdsSet()) {
-      for(std::list<uint64_t>::const_iterator typeId = options.getInclude().begin();
-          typeId != options.getInclude().end(); ++typeId) {
-        updateSelectedByTypeId(selectedColumns, *typeId);
-      }
-    } else {
-      // default is to select all columns
-      std::fill(selectedColumns.begin(), selectedColumns.end(), true);
-    }
-    selectParents(selectedColumns, *contents->schema.get());
-    selectedColumns[0] = true; // column 0 is selected by default
-  }
-
   void ColumnSelector::updateSelected(std::vector<bool>& selectedColumns, const RowReaderOptions& options) {
     selectedColumns.assign(static_cast<size_t>(contents->footer->types_size()), false);
     if (contents->schema->getKind() == STRUCT && options.getIndexesSet()) {
@@ -391,8 +366,6 @@ namespace orc {
     contents->schema = std::move(convertType(footer->types(0), *footer));
     contents->blockSize = getCompressionBlockSize(*contents->postscript);
     contents->compression= convertCompressionKind(*contents->postscript);
-    ColumnSelector column_selector(contents.get());
-    column_selector.updateSelected(selectedColumns, options);
   }
 
   std::string ReaderImpl::getSerializedFileTail() const {
@@ -637,6 +610,66 @@ namespace orc {
   }
 
   uint64_t ReaderImpl::getMemoryUse(int stripeIx) {
+    std::vector<bool> selectedColumns;
+    selectedColumns.assign(static_cast<size_t>(contents->footer->types_size()), true);
+    return getMemoryUse(stripeIx, selectedColumns);
+  }
+
+  uint64_t ReaderImpl::getMemoryUseByFieldId(const std::list<uint64_t>& include, int stripeIx) {
+    std::vector<bool> selectedColumns;
+    selectedColumns.assign(static_cast<size_t>(contents->footer->types_size()), false);
+    ColumnSelector column_selector(contents.get());
+    if (contents->schema->getKind() == STRUCT && include.begin() != include.end()) {
+      for(std::list<uint64_t>::const_iterator field = include.begin();
+          field != include.end(); ++field) {
+        column_selector.updateSelectedByFieldId(selectedColumns, *field);
+      }
+    } else {
+      // default is to select all columns
+      std::fill(selectedColumns.begin(), selectedColumns.end(), true);
+    }
+    column_selector.selectParents(selectedColumns, *contents->schema.get());
+    selectedColumns[0] = true; // column 0 is selected by default
+    return getMemoryUse(stripeIx, selectedColumns);
+  }
+
+  uint64_t ReaderImpl::getMemoryUseByName(const std::list<std::string>& names, int stripeIx) {
+    std::vector<bool> selectedColumns;
+    selectedColumns.assign(static_cast<size_t>(contents->footer->types_size()), false);
+    ColumnSelector column_selector(contents.get());
+    if (contents->schema->getKind() == STRUCT && names.begin() != names.end()) {
+      for(std::list<std::string>::const_iterator field = names.begin();
+          field != names.end(); ++field) {
+        column_selector.updateSelectedByName(selectedColumns, *field);
+      }
+    } else {
+      // default is to select all columns
+      std::fill(selectedColumns.begin(), selectedColumns.end(), true);
+    }
+    column_selector.selectParents(selectedColumns, *contents->schema.get());
+    selectedColumns[0] = true; // column 0 is selected by default
+    return getMemoryUse(stripeIx, selectedColumns);
+  }
+
+  uint64_t ReaderImpl::getMemoryUseByTypeId(const std::list<uint64_t>& include, int stripeIx) {
+    std::vector<bool> selectedColumns;
+    selectedColumns.assign(static_cast<size_t>(contents->footer->types_size()), false);
+    ColumnSelector column_selector(contents.get());
+    if (include.begin() != include.end()) {
+      for(std::list<uint64_t>::const_iterator field = include.begin();
+          field != include.end(); ++field) {
+        column_selector.updateSelectedByTypeId(selectedColumns, *field);
+      }
+    } else {
+      // default is to select all columns
+      std::fill(selectedColumns.begin(), selectedColumns.end(), true);
+    }
+    column_selector.selectParents(selectedColumns, *contents->schema.get());
+    selectedColumns[0] = true; // column 0 is selected by default
+    return getMemoryUse(stripeIx, selectedColumns);
+  }
+
+  uint64_t ReaderImpl::getMemoryUse(int stripeIx, std::vector<bool>& selectedColumns) {
     uint64_t maxDataLength = 0;
 
     if (stripeIx >= 0 && stripeIx < footer->stripes_size()) {
