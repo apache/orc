@@ -1073,4 +1073,16 @@ public class TestSchemaEvolution {
           ((LongColumnVector) batch.cols[2]).vector[r]);
     }
   }
+
+  @Test
+  public void testPositionalEvolution() throws IOException {
+    options.forcePositionalEvolution(true);
+    TypeDescription file = TypeDescription.fromString("struct<x:int,y:int,z:int>");
+    TypeDescription read = TypeDescription.fromString("struct<z:int,x:int,a:int,b:int>");
+    SchemaEvolution evo = new SchemaEvolution(file, read, options);
+    assertEquals(1, evo.getFileType(1).getId());
+    assertEquals(2, evo.getFileType(2).getId());
+    assertEquals(3, evo.getFileType(3).getId());
+    assertEquals(null, evo.getFileType(4));
+  }
 }
