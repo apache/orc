@@ -95,7 +95,10 @@ public class SchemaEvolution {
       this.readerFileTypes =
         new TypeDescription[this.readerSchema.getMaximumId() + 1];
       int positionalLevels = 0;
-      if (!hasColumnNames(isAcid? getBaseRow(fileSchema) : fileSchema)){
+      if (options.getForcePositionalEvolution()) {
+        positionalLevels = isAcid ? 2 : 1;
+        buildConversion(fileSchema, this.readerSchema, positionalLevels);
+      } else if (!hasColumnNames(isAcid? getBaseRow(fileSchema) : fileSchema)) {
         if (!this.fileSchema.equals(this.readerSchema)) {
           if (!allowMissingMetadata) {
             throw new RuntimeException("Found that schema metadata is missing"

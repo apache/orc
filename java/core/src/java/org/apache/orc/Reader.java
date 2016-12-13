@@ -159,6 +159,7 @@ public interface Reader {
     private TypeDescription schema = null;
     private DataReader dataReader = null;
     private Boolean tolerateMissingSchema = null;
+    private boolean forcePositionalEvolution;
 
     public Options() {
       // PASS
@@ -168,6 +169,7 @@ public interface Reader {
       useZeroCopy = OrcConf.USE_ZEROCOPY.getBoolean(conf);
       skipCorruptRecords = OrcConf.SKIP_CORRUPT_DATA.getBoolean(conf);
       tolerateMissingSchema = OrcConf.TOLERATE_MISSING_SCHEMA.getBoolean(conf);
+      forcePositionalEvolution = OrcConf.FORCE_POSITIONAL_EVOLUTION.getBoolean(conf);
     }
 
     /**
@@ -249,6 +251,17 @@ public interface Reader {
       return this;
     }
 
+    /**
+     * Set whether to force schema evolution to be positional instead of
+     * based on the column names.
+     * @param value force positional evolution
+     * @return this
+     */
+    public Options forcePositionalEvolution(boolean value) {
+      this.forcePositionalEvolution = value;
+      return this;
+    }
+
     public boolean[] getInclude() {
       return include;
     }
@@ -291,6 +304,10 @@ public interface Reader {
 
     public DataReader getDataReader() {
       return dataReader;
+    }
+
+    public boolean getForcePositionalEvolution() {
+      return forcePositionalEvolution;
     }
 
     public Options clone() {

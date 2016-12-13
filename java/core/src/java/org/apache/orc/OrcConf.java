@@ -137,7 +137,12 @@ public enum OrcConf {
   KRYO_SARG("orc.kryo.sarg", "orc.kryo.sarg", null,
       "The kryo and base64 encoded SearchArgument for predicate pushdown."),
   SARG_COLUMNS("orc.sarg.column.names", "org.sarg.column.names", null,
-      "The list of column names for the SearchArgument.")
+      "The list of column names for the SearchArgument."),
+  FORCE_POSITIONAL_EVOLUTION("orc.force.positional.evolution",
+      "orc.force.positional.evolution", false,
+      "Require schema evolution to match the top level columns using position\n" +
+      "rather than column names. This provides backwards compatibility with\n" +
+      "Hive 2.1.")
   ;
 
   private final String attribute;
