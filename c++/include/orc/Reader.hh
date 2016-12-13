@@ -756,7 +756,7 @@ namespace orc {
   };
 
   /**
-   * The interface for reading ORC file meta-data.
+   * The interface for reading ORC file meta-data and constructing RowReaders.
    * This is an an abstract class that will subclassed as necessary.
    */
   class Reader {
@@ -929,6 +929,8 @@ namespace orc {
      * based on the information in the file footer.
      * The bound is less tight if only few columns are read or compression is
      * used.
+    */
+    /**
      * @param stripeIx index of the stripe to be read (if not specified,
      *        all stripes are considered).
      * @return upper bound on memory use by all columns

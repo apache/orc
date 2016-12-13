@@ -38,14 +38,12 @@ namespace orc {
  * ReaderOptions Implementation
  */
   struct ReaderOptionsPrivate {
-    ColumnSelection selection;
     uint64_t tailLocation;
     std::ostream* errorStream;
     MemoryPool* memoryPool;
     std::string serializedTail;
 
     ReaderOptionsPrivate() {
-      selection = ColumnSelection_NONE;
       tailLocation = std::numeric_limits<uint64_t>::max();
       errorStream = &std::cerr;
       memoryPool = getDefaultPool();
