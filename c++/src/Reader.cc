@@ -363,7 +363,7 @@ namespace orc {
     isMetadataLoaded = false;
     checkOrcVersion();
     numberOfStripes = static_cast<uint64_t>(footer->stripes_size());
-    contents->schema = std::move(convertType(footer->types(0), *footer));
+    contents->schema = REDUNDANT_MOVE(convertType(footer->types(0), *footer));
     contents->blockSize = getCompressionBlockSize(*contents->postscript);
     contents->compression= convertCompressionKind(*contents->postscript);
   }
@@ -911,7 +911,8 @@ namespace orc {
       stream->read(buffer->data(), readSize, fileLength - readSize);
 
       postscriptLength = buffer->data()[readSize - 1] & 0xff;
-      contents->postscript = std::move(readPostscript(stream.get(), buffer, postscriptLength));
+      contents->postscript = REDUNDANT_MOVE(readPostscript(stream.get(),
+        buffer, postscriptLength));
       uint64_t footerSize = contents->postscript->footerlength();
       uint64_t tailSize = 1 + postscriptLength + footerSize;
       uint64_t footerOffset;
@@ -924,8 +925,8 @@ namespace orc {
         footerOffset = readSize - tailSize;
       }
 
-      contents->footer = std::move(readFooter(stream.get(), buffer, footerOffset,
-                          *contents->postscript,  *memoryPool));
+      contents->footer = REDUNDANT_MOVE(readFooter(stream.get(), buffer,
+        footerOffset, *contents->postscript,  *memoryPool));
       delete buffer;
     }
     contents->stream = std::move(stream);
