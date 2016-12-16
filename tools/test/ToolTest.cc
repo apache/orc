@@ -18,6 +18,7 @@
 
 
 #include "orc/orc-config.hh"
+#include "orc/OrcFile.hh"
 #include "ToolTest.hh"
 
 #include "wrap/orc-proto-wrapper.hh"
@@ -82,8 +83,10 @@ int runProgram(const std::vector<std::string>& command,
                std::string &err) {
 
   // create temporary filenames for stdout and stderr
-  char *stdoutName = strdup("/tmp/orc-test-stdout-XXXXXXXX");
-  char *stderrName = strdup("/tmp/orc-test-stderr-XXXXXXXX");
+  std::string stdoutStr = "/tmp/orc-test-stdout-XXXXXXXX";
+  std::string stderrStr = "/tmp/orc-test-stderr-XXXXXXXX";
+  char *stdoutName = const_cast<char*>(stdoutStr.data());
+  char *stderrName = const_cast<char*>(stderrStr.data());
   if (mkstemp(stdoutName) == -1) {
     std::cerr << "Failed to make unique name " << stdoutName
               << " - " << strerror(errno) << "\n";
@@ -108,11 +111,11 @@ int runProgram(const std::vector<std::string>& command,
   } else if (child == 0) {
 
     // build the parameters
-    const char **argv = new const char*[command.size() + 1];
+    std::unique_ptr<const char*> argv(new const char*[command.size() + 1]);
     for(uint64_t i=0; i < command.size(); ++i) {
-      argv[i] = command[i].c_str();
+      argv.get()[i] = command[i].c_str();
     }
-    argv[command.size()] = 0;
+    argv.get()[command.size()] = 0;
 
     // do the stdout & stderr redirection
     int stdoutFd = open(stdoutName, O_WRONLY | O_CREAT | O_TRUNC, 0644);
@@ -139,7 +142,7 @@ int runProgram(const std::vector<std::string>& command,
     close(stderrFd);
 
     // run the program
-    execvp(argv[0], const_cast<char * const *>(argv));
+    execvp(argv.get()[0], const_cast<char * const *>(argv.get()));
 
     // can only reach here if the exec fails
     std::cerr << "Can't run -";
