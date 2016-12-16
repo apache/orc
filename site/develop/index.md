@@ -13,15 +13,25 @@ Name                  | Apache Id    | Role
 :-------------------- | :----------- | :---
 Aliaksei Sandryhaila  | asandryh     | PMC
 Chris Douglas         | cdouglas     | PMC
+Chaoyu Tang           | ctang        | Committer
+Eugene Koifman        | ekoifman     | Committer
 Alan Gates            | gates        | PMC
 Gopal Vijayaraghavan  | gopalv       | Committer
 Gunther Hagleitner    | gunther      | Committer
+Ashutosh Chauhan      | hashutosh    | Committer
+Jason Dere            | jdere        | Committer
 Kevin Wilfong         | kevinwilfong | Committer
 Lefty Leverenz        | leftyl       | PMC
+Mithun Radhakrishnan  | mithun       | Committer
+Matthew McCline       | mmccline     | Committer
 Owen O'Malley         | omalley      | PMC
 Prasanth Jayachandran | prasanthj    | PMC
+Pengcheng Xiong       | pxiong       | Committer
+Rajesh Balamohan      | rbalamohan   | Committer
 Sergey Shelukhin      | sershe       | Committer
 Stephen Walkauskas    | swalkaus     | Committer
+Vaibhav Gumashta      | vgumashta    | Committer
+Wei Zheng             | weiz         | Committer
 Xuefu Zhang           | xuefu        | Committer
 
 ## Mailing Lists
