@@ -20,6 +20,7 @@
 #define ORC_READER_HH
 
 #include "orc/orc-config.hh"
+#include "orc/Statistics.hh"
 #include "orc/Type.hh"
 #include "orc/Vector.hh"
 
@@ -62,304 +63,6 @@ namespace orc {
    * Get the name of the WriterVersion.
    */
   std::string writerVersionToString(WriterVersion kind);
-
-  /**
-   * Statistics that are available for all types of columns.
-   */
-  class ColumnStatistics {
-  public:
-    virtual ~ColumnStatistics();
-
-    /**
-     * Get the number of values in this column. It will differ from the number
-     * of rows because of NULL values and repeated values.
-     * @return the number of values
-     */
-    virtual uint64_t getNumberOfValues() const = 0;
-
-    /**
-     * print out statistics of column if any
-     */
-    virtual std::string toString() const = 0;
-  };
-
-  /**
-   * Statistics for binary columns.
-   */
-  class BinaryColumnStatistics: public ColumnStatistics {
-  public:
-    virtual ~BinaryColumnStatistics();
-
-    /**
-     * check whether column has total length
-     * @return true if has total length
-     */
-    virtual bool hasTotalLength() const = 0;
-
-    virtual uint64_t getTotalLength() const = 0;
-  };
-
-  /**
-   * Statistics for boolean columns.
-   */
-  class BooleanColumnStatistics: public ColumnStatistics {
-  public:
-    virtual ~BooleanColumnStatistics();
-
-    /**
-     * check whether column has true/false count
-     * @return true if has true/false count
-     */
-    virtual bool hasCount() const = 0;
-
-    virtual uint64_t getFalseCount() const = 0;
-    virtual uint64_t getTrueCount() const = 0;
-  };
-
-  /**
-   * Statistics for date columns.
-   */
-  class DateColumnStatistics: public ColumnStatistics {
-  public:
-    virtual ~DateColumnStatistics();
-
-    /**
-     * check whether column has minimum
-     * @return true if has minimum
-     */
-    virtual bool hasMinimum() const = 0;
-
-    /**
-     * check whether column has maximum
-     * @return true if has maximum
-     */
-    virtual bool hasMaximum() const = 0;
-
-    /**
-     * Get the minimum value for the column.
-     * @return minimum value
-     */
-    virtual int32_t getMinimum() const = 0;
-
-    /**
-     * Get the maximum value for the column.
-     * @return maximum value
-     */
-    virtual int32_t getMaximum() const = 0;
-  };
-
-  /**
-   * Statistics for decimal columns.
-   */
-  class DecimalColumnStatistics: public ColumnStatistics {
-  public:
-    virtual ~DecimalColumnStatistics();
-
-    /**
-     * check whether column has minimum
-     * @return true if has minimum
-     */
-    virtual bool hasMinimum() const = 0;
-
-    /**
-     * check whether column has maximum
-     * @return true if has maximum
-     */
-    virtual bool hasMaximum() const = 0;
-
-    /**
-     * check whether column has sum
-     * @return true if has sum
-     */
-    virtual bool hasSum() const = 0;
-
-    /**
-     * Get the minimum value for the column.
-     * @return minimum value
-     */
-    virtual Decimal getMinimum() const = 0;
-
-    /**
-     * Get the maximum value for the column.
-     * @return maximum value
-     */
-    virtual Decimal getMaximum() const = 0;
-
-    /**
-     * Get the sum for the column.
-     * @return sum of all the values
-     */
-    virtual Decimal getSum() const = 0;
-  };
-
-  /**
-   * Statistics for float and double columns.
-   */
-  class DoubleColumnStatistics: public ColumnStatistics {
-  public:
-    virtual ~DoubleColumnStatistics();
-
-    /**
-     * check whether column has minimum
-     * @return true if has minimum
-     */
-    virtual bool hasMinimum() const = 0;
-
-    /**
-     * check whether column has maximum
-     * @return true if has maximum
-     */
-    virtual bool hasMaximum() const = 0;
-
-    /**
-     * check whether column has sum
-     * @return true if has sum
-     */
-    virtual bool hasSum() const = 0;
-
-    /**
-     * Get the smallest value in the column. Only defined if getNumberOfValues
-     * is non-zero.
-     * @return the minimum
-     */
-    virtual double getMinimum() const = 0;
-
-    /**
-     * Get the largest value in the column. Only defined if getNumberOfValues
-     * is non-zero.
-     * @return the maximum
-     */
-    virtual double getMaximum() const = 0;
-
-    /**
-     * Get the sum of the values in the column.
-     * @return the sum
-     */
-    virtual double getSum() const = 0;
-  };
-
-  /**
-   * Statistics for all of the integer columns, such as byte, short, int, and
-   * long.
-   */
-  class IntegerColumnStatistics: public ColumnStatistics {
-  public:
-    virtual ~IntegerColumnStatistics();
-
-    /**
-     * check whether column has minimum
-     * @return true if has minimum
-     */
-    virtual bool hasMinimum() const = 0;
-
-    /**
-     * check whether column has maximum
-     * @return true if has maximum
-     */
-    virtual bool hasMaximum() const = 0;
-
-    /**
-     * check whether column has sum
-     * @return true if has sum
-     */
-    virtual bool hasSum() const = 0;
-
-    /**
-     * Get the smallest value in the column. Only defined if getNumberOfValues
-     * is non-zero.
-     * @return the minimum
-     */
-    virtual int64_t getMinimum() const = 0;
-
-    /**
-     * Get the largest value in the column. Only defined if getNumberOfValues
-     * is non-zero.
-     * @return the maximum
-     */
-    virtual int64_t getMaximum() const = 0;
-
-    /**
-     * Get the sum of the column. Only valid if isSumDefined returns true.
-     * @return the sum of the column
-     */
-    virtual int64_t getSum() const = 0;
-  };
-
-  /**
-   * Statistics for string columns.
-   */
-  class StringColumnStatistics: public ColumnStatistics {
-  public:
-    virtual ~StringColumnStatistics();
-
-    /**
-     * check whether column has minimum
-     * @return true if has minimum
-     */
-    virtual bool hasMinimum() const = 0;
-
-    /**
-     * check whether column has maximum
-     * @return true if has maximum
-     */
-    virtual bool hasMaximum() const = 0;
-
-    /**
-     * check whether column
-     * @return true if has maximum
-     */
-    virtual bool hasTotalLength() const = 0;
-
-    /**
-     * Get the minimum value for the column.
-     * @return minimum value
-     */
-    virtual std::string getMinimum() const = 0;
-
-    /**
-     * Get the maximum value for the column.
-     * @return maximum value
-     */
-    virtual std::string getMaximum() const = 0;
-
-    /**
-     * Get the total length of all values.
-     * @return total length of all the values
-     */
-    virtual uint64_t getTotalLength() const = 0;
-  };
-
-  /**
-   * Statistics for timestamp columns.
-   */
-  class TimestampColumnStatistics: public ColumnStatistics {
-  public:
-    virtual ~TimestampColumnStatistics();
-
-    /**
-     * check whether column minimum
-     * @return true if has minimum
-     */
-    virtual bool hasMinimum() const = 0;
-
-    /**
-     * check whether column maximum
-     * @return true if has maximum
-     */
-    virtual bool hasMaximum() const = 0;
-
-    /**
-     * Get the minimum value for the column.
-     * @return minimum value
-     */
-    virtual int64_t getMinimum() const = 0;
-
-    /**
-     * Get the maximum value for the column.
-     * @return maximum value
-     */
-    virtual int64_t getMaximum() const = 0;
-  };
 
   enum StreamKind {
     StreamKind_PRESENT = 0,
@@ -466,26 +169,73 @@ namespace orc {
     virtual const std::string& getWriterTimezone() const = 0;
   };
 
-  class Statistics {
+  /**
+   * Options for creating a Reader.
+   */
+  class ReaderOptions {
+  private:
+    ORC_UNIQUE_PTR<ReaderOptionsPrivate> privateBits;
+
   public:
-    virtual ~Statistics();
+    ReaderOptions();
+    ReaderOptions(const ReaderOptions&);
+    ReaderOptions(ReaderOptions&);
+    ReaderOptions& operator=(const ReaderOptions&);
+    virtual ~ReaderOptions();
 
     /**
-     * Get the statistics of colId column.
-     * @return one column's statistics
+     * Set the stream to use for printing warning or error messages.
      */
-    virtual const ColumnStatistics* getColumnStatistics(uint32_t colId
-                                                        ) const = 0;
+    ReaderOptions& setErrorStream(std::ostream& stream);
 
     /**
-     * Get the number of columns
-     * @return the number of columns
+     * Open the file used a serialized copy of the file tail.
+     *
+     * When one process opens the file and other processes need to read
+     * the rows, we want to enable clients to just read the tail once.
+     * By passing the string returned by Reader.getSerializedFileTail(), to
+     * this function, the second reader will not need to read the file tail
+     * from disk.
+     *
+     * @param serialization the bytes of the serialized tail to use
      */
-    virtual uint32_t getNumberOfColumns() const = 0;
+    ReaderOptions& setSerializedFileTail(const std::string& serialization);
+
+    /**
+     * Set the memory allocator.
+     */
+    ReaderOptions& setMemoryPool(MemoryPool& pool);
+
+    /**
+     * Set the location of the tail as defined by the logical length of the
+     * file.
+     */
+    ReaderOptions& setTailLocation(uint64_t offset);
+
+    /**
+     * Get the stream to write warnings or errors to.
+     */
+    std::ostream* getErrorStream() const;
+
+    /**
+     * Get the serialized file tail that the user passed in.
+     */
+    std::string getSerializedFileTail() const;
+
+    /**
+     * Get the desired tail location.
+     * @return if not set, return the maximum long.
+     */
+    uint64_t getTailLocation() const;
+
+    /**
+     * Get the memory allocator.
+     */
+    MemoryPool* getMemoryPool() const;
   };
 
   /**
-   * Options for creating a Reader.
+   * Options for creating a RowReader.
    */
   class RowReaderOptions {
   private:
@@ -636,124 +386,7 @@ namespace orc {
   };
 
 
-  /**
-   * Options for creating a Reader.
-   */
-  class ReaderOptions {
-  private:
-    ORC_UNIQUE_PTR<ReaderOptionsPrivate> privateBits;
-
-  public:
-    ReaderOptions();
-    ReaderOptions(const ReaderOptions&);
-    ReaderOptions(ReaderOptions&);
-    ReaderOptions& operator=(const ReaderOptions&);
-    virtual ~ReaderOptions();
-
-    /**
-     * Set the stream to use for printing warning or error messages.
-     */
-    ReaderOptions& setErrorStream(std::ostream& stream);
-
-    /**
-     * Open the file used a serialized copy of the file tail.
-     *
-     * When one process opens the file and other processes need to read
-     * the rows, we want to enable clients to just read the tail once.
-     * By passing the string returned by Reader.getSerializedFileTail(), to
-     * this function, the second reader will not need to read the file tail
-     * from disk.
-     *
-     * @param serialization the bytes of the serialized tail to use
-     */
-    ReaderOptions& setSerializedFileTail(const std::string& serialization);
-
-    /**
-     * Set the memory allocator.
-     */
-    ReaderOptions& setMemoryPool(MemoryPool& pool);
-
-    /**
-     * Set the location of the tail as defined by the logical length of the
-     * file.
-     */
-    ReaderOptions& setTailLocation(uint64_t offset);
-
-    /**
-     * Get the stream to write warnings or errors to.
-     */
-    std::ostream* getErrorStream() const;
-
-    /**
-     * Get the serialized file tail that the user passed in.
-     */
-    std::string getSerializedFileTail() const;
-
-    /**
-     * Get the desired tail location.
-     * @return if not set, return the maximum long.
-     */
-    uint64_t getTailLocation() const;
-
-    /**
-     * Get the memory allocator.
-     */
-    MemoryPool* getMemoryPool() const;
-  };
-
-  /**
-   * The interface for reading rows in ORC files.
-   * This is an an abstract class that will subclassed as necessary.
-   */
-  class RowReader {
-  public:
-    virtual ~RowReader();
-    /**
-     * Get the selected type of the rows in the file. The file's row type
-     * is projected down to just the selected columns. Thus, if the file's
-     * type is struct<col0:int,col1:double,col2:string> and the selected
-     * columns are "col0,col2" the selected type would be
-     * struct<col0:int,col2:string>.
-     * @return the root type
-     */
-    virtual const Type& getSelectedType() const = 0;
-
-    /**
-     * Get the selected columns of the file.
-     */
-    virtual const std::vector<bool> getSelectedColumns() const = 0;
-
-    /**
-     * Create a row batch for reading the selected columns of this file.
-     * @param size the number of rows to read
-     * @return a new ColumnVectorBatch to read into
-     */
-    virtual ORC_UNIQUE_PTR<ColumnVectorBatch> createRowBatch(uint64_t size
-                                                             ) const = 0;
-
-    /**
-     * Read the next row batch from the current position.
-     * Caller must look at numElements in the row batch to determine how
-     * many rows were read.
-     * @param data the row batch to read into.
-     * @return true if a non-zero number of rows were read or false if the
-     *   end of the file was reached.
-     */
-    virtual bool next(ColumnVectorBatch& data) = 0;
-
-    /**
-     * Get the row number of the first row in the previously read batch.
-     * @return the row number of the previous batch.
-     */
-    virtual uint64_t getRowNumber() const = 0;
-
-    /**
-     * Seek to a given row.
-     * @param rowNumber the next row the reader should return
-     */
-    virtual void seekToRow(uint64_t rowNumber) = 0;
-
-  };
+  class RowReader;
 
   /**
    * The interface for reading ORC file meta-data and constructing RowReaders.
@@ -960,6 +593,60 @@ namespace orc {
      * @return upper bound on memory use by selected columns
      */
     virtual uint64_t getMemoryUseByTypeId(const std::list<uint64_t>& include, int stripeIx=-1) = 0;
+
+  };
+
+  /**
+   * The interface for reading rows in ORC files.
+   * This is an an abstract class that will subclassed as necessary.
+   */
+  class RowReader {
+  public:
+    virtual ~RowReader();
+    /**
+     * Get the selected type of the rows in the file. The file's row type
+     * is projected down to just the selected columns. Thus, if the file's
+     * type is struct<col0:int,col1:double,col2:string> and the selected
+     * columns are "col0,col2" the selected type would be
+     * struct<col0:int,col2:string>.
+     * @return the root type
+     */
+    virtual const Type& getSelectedType() const = 0;
+
+    /**
+     * Get the selected columns of the file.
+     */
+    virtual const std::vector<bool> getSelectedColumns() const = 0;
+
+    /**
+     * Create a row batch for reading the selected columns of this file.
+     * @param size the number of rows to read
+     * @return a new ColumnVectorBatch to read into
+     */
+    virtual ORC_UNIQUE_PTR<ColumnVectorBatch> createRowBatch(uint64_t size
+                                                             ) const = 0;
+
+    /**
+     * Read the next row batch from the current position.
+     * Caller must look at numElements in the row batch to determine how
+     * many rows were read.
+     * @param data the row batch to read into.
+     * @return true if a non-zero number of rows were read or false if the
+     *   end of the file was reached.
+     */
+    virtual bool next(ColumnVectorBatch& data) = 0;
+
+    /**
+     * Get the row number of the first row in the previously read batch.
+     * @return the row number of the previous batch.
+     */
+    virtual uint64_t getRowNumber() const = 0;
+
+    /**
+     * Seek to a given row.
+     * @param rowNumber the next row the reader should return
+     */
+    virtual void seekToRow(uint64_t rowNumber) = 0;
 
   };
 }

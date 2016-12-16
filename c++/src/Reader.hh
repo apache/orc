@@ -35,10 +35,11 @@ namespace orc {
   class StripeInformation;
 
   static const uint64_t DIRECTORY_SIZE_GUESS = 16 * 1024;
- /**
- * State shared between Reader and Row Reader
- */
-  struct Contents {
+
+  /**
+  * State shared between Reader and Row Reader
+  */
+  struct FileContents {
     std::unique_ptr<InputStream> stream;
     std::unique_ptr<proto::PostScript> postscript;
     std::unique_ptr<proto::Footer> footer;
@@ -53,7 +54,7 @@ namespace orc {
    private:
     std::map<std::string, uint64_t> nameIdMap;
     std::map<uint64_t, const Type*> idTypeMap;
-    const Contents* contents;
+    const FileContents* contents;
     std::vector<std::string> columns;
 
     // build map from type name and id, id to Type
@@ -78,7 +79,7 @@ namespace orc {
     * Constructor that selects columns.
     * @param contents of the file
     */
-    ColumnSelector(const Contents* contents);
+    ColumnSelector(const FileContents* contents);
 
     // Select the columns from the RowReaderoptions object
     void updateSelected(std::vector<bool>& selectedColumns, const RowReaderOptions& options);
@@ -93,7 +94,7 @@ namespace orc {
     const Timezone& localTimezone;
 
     // contents
-    const Contents* contents;
+    const FileContents* contents;
 
     // inputs
     std::vector<bool> selectedColumns;
@@ -128,7 +129,7 @@ namespace orc {
     * @param contents of the file
     * @param options options for reading
     */
-    RowReaderImpl(const Contents* contents,
+    RowReaderImpl(const FileContents* contents,
            const RowReaderOptions& options);
 
     // Select the columns from the options object
@@ -159,7 +160,7 @@ namespace orc {
   class ReaderImpl : public Reader {
    private:
     // FileContents
-    std::unique_ptr<Contents> contents;
+    std::unique_ptr<FileContents> contents;
 
     // inputs
     const ReaderOptions& options;
@@ -189,7 +190,7 @@ namespace orc {
      * @param fileLength the length of the file in bytes
      * @param postscriptLength the length of the postscript in bytes
      */
-    ReaderImpl(std::unique_ptr<Contents> contents,
+    ReaderImpl(std::unique_ptr<FileContents> contents,
                const ReaderOptions& options,
                uint64_t fileLength,
                uint64_t postscriptLength);

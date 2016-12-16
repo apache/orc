@@ -208,11 +208,11 @@ namespace orc {
     }
   }
 
-  ColumnSelector::ColumnSelector(const Contents* _contents): contents(_contents) {
+  ColumnSelector::ColumnSelector(const FileContents* _contents): contents(_contents) {
     buildTypeNameIdMap(contents->schema.get());
   }
 
-  RowReaderImpl::RowReaderImpl(const Contents* _contents,
+  RowReaderImpl::RowReaderImpl(const FileContents* _contents,
                             const RowReaderOptions& opts
                          ): localTimezone(getLocalTimezone()),
                             contents(_contents),
@@ -350,7 +350,7 @@ namespace orc {
     return result;
   }
 
-  ReaderImpl::ReaderImpl(std::unique_ptr<Contents> _contents,
+  ReaderImpl::ReaderImpl(std::unique_ptr<FileContents> _contents,
                          const ReaderOptions& opts,
                          uint64_t _fileLength,
                          uint64_t _postscriptLength
@@ -883,7 +883,7 @@ namespace orc {
   std::unique_ptr<Reader> createReader(std::unique_ptr<InputStream> stream,
                                        const ReaderOptions& options) {
     MemoryPool *memoryPool = options.getMemoryPool();
-    std::unique_ptr<Contents> contents = std::unique_ptr<Contents>(new Contents());
+    std::unique_ptr<FileContents> contents = std::unique_ptr<FileContents>(new FileContents());
     std::string serializedFooter = options.getSerializedFileTail();
     uint64_t fileLength;
     uint64_t postscriptLength;
