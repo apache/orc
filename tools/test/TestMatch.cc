@@ -131,9 +131,8 @@ namespace orc {
   TEST_P(FileParam, Contents) {
     orc::ReaderOptions readerOpts;
     orc::RowReaderOptions rowReaderOpts;
-    std::unique_ptr<Reader> reader =
-      createReader(readLocalFile(getFilename()), readerOpts);
-    std::unique_ptr<RowReader> rowReader = reader->getRowReader(rowReaderOpts);
+    std::unique_ptr<RowReader> rowReader =
+         createReader(readLocalFile(getFilename()), readerOpts)->getRowReader(rowReaderOpts);
 
     unsigned long rowCount = 0;
     std::unique_ptr<ColumnVectorBatch> batch = rowReader->createRowBatch(1024);

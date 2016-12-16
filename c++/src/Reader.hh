@@ -94,7 +94,7 @@ namespace orc {
     const Timezone& localTimezone;
 
     // contents
-    const FileContents* contents;
+    std::shared_ptr<FileContents> contents;
 
     // inputs
     std::vector<bool> selectedColumns;
@@ -129,7 +129,7 @@ namespace orc {
     * @param contents of the file
     * @param options options for reading
     */
-    RowReaderImpl(const FileContents* contents,
+    RowReaderImpl(std::shared_ptr<FileContents> contents,
            const RowReaderOptions& options);
 
     // Select the columns from the options object
@@ -160,7 +160,7 @@ namespace orc {
   class ReaderImpl : public Reader {
    private:
     // FileContents
-    std::unique_ptr<FileContents> contents;
+    std::shared_ptr<FileContents> contents;
 
     // inputs
     const ReaderOptions& options;
@@ -190,7 +190,7 @@ namespace orc {
      * @param fileLength the length of the file in bytes
      * @param postscriptLength the length of the postscript in bytes
      */
-    ReaderImpl(std::unique_ptr<FileContents> contents,
+    ReaderImpl(std::shared_ptr<FileContents> contents,
                const ReaderOptions& options,
                uint64_t fileLength,
                uint64_t postscriptLength);

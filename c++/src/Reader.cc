@@ -212,7 +212,7 @@ namespace orc {
     buildTypeNameIdMap(contents->schema.get());
   }
 
-  RowReaderImpl::RowReaderImpl(const FileContents* _contents,
+  RowReaderImpl::RowReaderImpl(std::shared_ptr<FileContents> _contents,
                             const RowReaderOptions& opts
                          ): localTimezone(getLocalTimezone()),
                             contents(_contents),
@@ -254,7 +254,7 @@ namespace orc {
       previousRow = firstRowOfStripe[firstStripe]-1;
     }
 
-    ColumnSelector column_selector(contents);
+    ColumnSelector column_selector(contents.get());
     column_selector.updateSelected(selectedColumns, options);
   }
 
@@ -350,7 +350,7 @@ namespace orc {
     return result;
   }
 
-  ReaderImpl::ReaderImpl(std::unique_ptr<FileContents> _contents,
+  ReaderImpl::ReaderImpl(std::shared_ptr<FileContents> _contents,
                          const ReaderOptions& opts,
                          uint64_t _fileLength,
                          uint64_t _postscriptLength
@@ -577,7 +577,7 @@ namespace orc {
 
   std::unique_ptr<RowReader> ReaderImpl::getRowReader(
            const RowReaderOptions& opts) const {
-    return std::unique_ptr<RowReader>(new RowReaderImpl(contents.get(), opts));
+    return std::unique_ptr<RowReader>(new RowReaderImpl(contents, opts));
   }
 
   uint64_t maxStreamsForType(const proto::Type& type) {
@@ -883,7 +883,7 @@ namespace orc {
   std::unique_ptr<Reader> createReader(std::unique_ptr<InputStream> stream,
                                        const ReaderOptions& options) {
     MemoryPool *memoryPool = options.getMemoryPool();
-    std::unique_ptr<FileContents> contents = std::unique_ptr<FileContents>(new FileContents());
+    std::shared_ptr<FileContents> contents = std::shared_ptr<FileContents>(new FileContents());
     std::string serializedFooter = options.getSerializedFileTail();
     uint64_t fileLength;
     uint64_t postscriptLength;
