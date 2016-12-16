@@ -10,13 +10,18 @@ As part of the removal of the ORC code base from Hive, the ORC PMC has
 offered to make any existing Hive committers into ORC committers. The new ORC
 committers coming from Hive are:
 
+* Aihua Xu
 * Ashutosh Chauhan
 * Chaoyu Tang
+* Chinna Rao Lalam
 * Eugene Koifman
 * Jason Dere
+* Jesus Camacho Rodriguez
 * Matthew McCline
 * Mithun Radhakrishnan 
 * Pengcheng Xiong 
 * Rajesh Balamohan
+* Rui Li
 * Vaibhav Gumashta
 * Wei Zheng
+* Yongzhi Chen

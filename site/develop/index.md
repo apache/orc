@@ -9,30 +9,35 @@ developers working on the project. The project has created
 
 ## Project Members
 
-Name                  | Apache Id    | Role
-:-------------------- | :----------- | :---
-Aliaksei Sandryhaila  | asandryh     | PMC
-Chris Douglas         | cdouglas     | PMC
-Chaoyu Tang           | ctang        | Committer
-Eugene Koifman        | ekoifman     | Committer
-Alan Gates            | gates        | PMC
-Gopal Vijayaraghavan  | gopalv       | Committer
-Gunther Hagleitner    | gunther      | Committer
-Ashutosh Chauhan      | hashutosh    | Committer
-Jason Dere            | jdere        | Committer
-Kevin Wilfong         | kevinwilfong | Committer
-Lefty Leverenz        | leftyl       | PMC
-Mithun Radhakrishnan  | mithun       | Committer
-Matthew McCline       | mmccline     | Committer
-Owen O'Malley         | omalley      | PMC
-Prasanth Jayachandran | prasanthj    | PMC
-Pengcheng Xiong       | pxiong       | Committer
-Rajesh Balamohan      | rbalamohan   | Committer
-Sergey Shelukhin      | sershe       | Committer
-Stephen Walkauskas    | swalkaus     | Committer
-Vaibhav Gumashta      | vgumashta    | Committer
-Wei Zheng             | weiz         | Committer
-Xuefu Zhang           | xuefu        | Committer
+Name                    | Apache Id    | Role
+:---------------------- | :----------- | :---
+Aihua Xu                | zihuaxu      | Committer
+Aliaksei Sandryhaila    | asandryh     | PMC
+Chris Douglas           | cdouglas     | PMC
+Chaoyu Tang             | ctang        | Committer
+Chinna Rao Lalam        | chinnaraol   | Committer
+Eugene Koifman          | ekoifman     | Committer
+Alan Gates              | gates        | PMC
+Gopal Vijayaraghavan    | gopalv       | Committer
+Gunther Hagleitner      | gunther      | Committer
+Ashutosh Chauhan        | hashutosh    | Committer
+Jesus Camacho Rodriguez | jcamacho     | Committer
+Jason Dere              | jdere        | Committer
+Kevin Wilfong           | kevinwilfong | Committer
+Lefty Leverenz          | leftyl       | PMC
+Rui Li                  | lirui        | Committer
+Mithun Radhakrishnan    | mithun       | Committer
+Matthew McCline         | mmccline     | Committer
+Owen O'Malley           | omalley      | PMC
+Prasanth Jayachandran   | prasanthj    | PMC
+Pengcheng Xiong         | pxiong       | Committer
+Rajesh Balamohan        | rbalamohan   | Committer
+Sergey Shelukhin        | sershe       | Committer
+Stephen Walkauskas      | swalkaus     | Committer
+Vaibhav Gumashta        | vgumashta    | Committer
+Wei Zheng               | weiz         | Committer
+Xuefu Zhang             | xuefu        | Committer
+Yongzhi Chen            | ychena       | Committer
 
 ## Mailing Lists
 
