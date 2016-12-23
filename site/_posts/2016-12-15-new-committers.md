@@ -14,14 +14,17 @@ committers coming from Hive are:
 * Ashutosh Chauhan
 * Chaoyu Tang
 * Chinna Rao Lalam
+* Daniel Dai
 * Eugene Koifman
 * Jason Dere
 * Jesus Camacho Rodriguez
+* Lars Francke
 * Matthew McCline
 * Mithun Radhakrishnan 
 * Pengcheng Xiong 
 * Rajesh Balamohan
 * Rui Li
+* Sergio Pena
 * Vaibhav Gumashta
 * Wei Zheng
 * Yongzhi Chen

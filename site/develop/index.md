@@ -16,6 +16,7 @@ Aliaksei Sandryhaila    | asandryh     | PMC
 Chris Douglas           | cdouglas     | PMC
 Chaoyu Tang             | ctang        | Committer
 Chinna Rao Lalam        | chinnaraol   | Committer
+Daniel Dai              | daijy        | Committer
 Eugene Koifman          | ekoifman     | Committer
 Alan Gates              | gates        | PMC
 Gopal Vijayaraghavan    | gopalv       | Committer
@@ -24,6 +25,7 @@ Ashutosh Chauhan        | hashutosh    | Committer
 Jesus Camacho Rodriguez | jcamacho     | Committer
 Jason Dere              | jdere        | Committer
 Kevin Wilfong           | kevinwilfong | Committer
+Lars Francke            | larsfrancke  | Committer
 Lefty Leverenz          | leftyl       | PMC
 Rui Li                  | lirui        | Committer
 Mithun Radhakrishnan    | mithun       | Committer
@@ -33,6 +35,7 @@ Prasanth Jayachandran   | prasanthj    | PMC
 Pengcheng Xiong         | pxiong       | Committer
 Rajesh Balamohan        | rbalamohan   | Committer
 Sergey Shelukhin        | sershe       | Committer
+Sergio Pena             | spena        | Committer
 Stephen Walkauskas      | swalkaus     | Committer
 Vaibhav Gumashta        | vgumashta    | Committer
 Wei Zheng               | weiz         | Committer
