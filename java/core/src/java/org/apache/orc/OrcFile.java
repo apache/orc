@@ -141,8 +141,16 @@ public class OrcFile {
       }
     }
 
+    /**
+     * Convert the integer from OrcProto.PostScript.writerVersion
+     * to the enumeration with unknown versions being mapped to FUTURE.
+     * @param val the serialized writer version
+     * @return the corresponding enumeration value
+     */
     public static WriterVersion from(int val) {
-      if (val == FUTURE.id) return FUTURE; // Special handling for the magic value.
+      if (val >= values.length) {
+        return FUTURE;
+      }
       return values[val];
     }
 
@@ -150,6 +158,10 @@ public class OrcFile {
       return id >= other.id;
     }
   }
+
+  /**
+   * The WriterVersion for this version of the software.
+   */
   public static final WriterVersion CURRENT_WRITER = WriterVersion.ORC_101;
 
   public enum EncodingStrategy {
