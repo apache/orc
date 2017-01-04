@@ -16,6 +16,7 @@ committers coming from Hive are:
 * Chinna Rao Lalam
 * Daniel Dai
 * Eugene Koifman
+* Ferdinand Xu
 * Jason Dere
 * Jesus Camacho Rodriguez
 * Lars Francke

@@ -19,7 +19,7 @@ Chinna Rao Lalam        | chinnaraol   | Committer
 Daniel Dai              | daijy        | Committer
 Eugene Koifman          | ekoifman     | Committer
 Alan Gates              | gates        | PMC
-Gopal Vijayaraghavan    | gopalv       | Committer
+Gopal Vijayaraghavan    | gopalv       | PMC
 Gunther Hagleitner      | gunther      | Committer
 Ashutosh Chauhan        | hashutosh    | Committer
 Jesus Camacho Rodriguez | jcamacho     | Committer
@@ -40,6 +40,7 @@ Stephen Walkauskas      | swalkaus     | Committer
 Vaibhav Gumashta        | vgumashta    | Committer
 Wei Zheng               | weiz         | Committer
 Xuefu Zhang             | xuefu        | Committer
+Ferdinand Xu            | xuf          | Committer
 Yongzhi Chen            | ychena       | Committer
 
 ## Mailing Lists
