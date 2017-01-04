@@ -41,7 +41,7 @@ public:
   std::unique_ptr<SeekableInputStream> getStream(uint64_t columnId,
                                                  proto::Stream_Kind kind,
                                                  bool stream) const override;
-  MOCK_CONST_METHOD0(getReaderOptions, const ReaderOptions&());
+  MOCK_CONST_METHOD0(getRowReaderOptions, const RowReaderOptions&());
   MOCK_CONST_METHOD0(getSelectedColumns, const std::vector<bool>());
   MOCK_CONST_METHOD1(getEncoding, proto::ColumnEncoding (uint64_t));
   MOCK_CONST_METHOD3(getStreamProxy, SeekableInputStream*
@@ -3179,10 +3179,10 @@ TEST(DecimalColumnReader, testDecimal128Skip) {
 TEST(DecimalColumnReader, testDecimalHive11) {
   MockStripeStreams streams;
 
-  // set getReaderOptions()
-  ReaderOptions readerOptions;
-  EXPECT_CALL(streams, getReaderOptions())
-    .WillRepeatedly(testing::ReturnRef(readerOptions));
+  // set getRowReaderOptions()
+  RowReaderOptions rowReaderOptions;
+  EXPECT_CALL(streams, getRowReaderOptions())
+    .WillRepeatedly(testing::ReturnRef(rowReaderOptions));
 
   // set getSelectedColumns()
   std::vector<bool> selectedColumns(2, true);
@@ -3258,12 +3258,12 @@ TEST(DecimalColumnReader, testDecimalHive11) {
 TEST(DecimalColumnReader, testDecimalHive11Skip) {
   MockStripeStreams streams;
 
-  // set getReaderOptions()
-  ReaderOptions readerOptions;
-  readerOptions.throwOnHive11DecimalOverflow(false)
+  // set getRowReaderOptions()
+  RowReaderOptions rowReaderOptions;
+  rowReaderOptions.throwOnHive11DecimalOverflow(false)
     .forcedScaleOnHive11Decimal(3);
-  EXPECT_CALL(streams, getReaderOptions())
-      .WillRepeatedly(testing::ReturnRef(readerOptions));
+  EXPECT_CALL(streams, getRowReaderOptions())
+      .WillRepeatedly(testing::ReturnRef(rowReaderOptions));
 
   // set getSelectedColumns()
   std::vector<bool> selectedColumns(2, true);
@@ -3365,11 +3365,11 @@ TEST(DecimalColumnReader, testDecimalHive11Skip) {
 TEST(DecimalColumnReader, testDecimalHive11ScaleUp) {
   MockStripeStreams streams;
 
-  // set getReaderOptions()
-  ReaderOptions readerOptions;
-  readerOptions.forcedScaleOnHive11Decimal(20);
-  EXPECT_CALL(streams, getReaderOptions())
-      .WillRepeatedly(testing::ReturnRef(readerOptions));
+  // set getRowReaderOptions()
+  RowReaderOptions rowReaderOptions;
+  rowReaderOptions.forcedScaleOnHive11Decimal(20);
+  EXPECT_CALL(streams, getRowReaderOptions())
+      .WillRepeatedly(testing::ReturnRef(rowReaderOptions));
 
   // set getSelectedColumns()
   std::vector<bool> selectedColumns(2, true);
@@ -3434,11 +3434,11 @@ TEST(DecimalColumnReader, testDecimalHive11ScaleUp) {
 TEST(DecimalColumnReader, testDecimalHive11ScaleDown) {
   MockStripeStreams streams;
 
-  // set getReaderOptions()
-  ReaderOptions readerOptions;
-  readerOptions.forcedScaleOnHive11Decimal(0);
-  EXPECT_CALL(streams, getReaderOptions())
-      .WillRepeatedly(testing::ReturnRef(readerOptions));
+  // set getRowReaderOptions()
+  RowReaderOptions rowReaderOptions;
+  rowReaderOptions.forcedScaleOnHive11Decimal(0);
+  EXPECT_CALL(streams, getRowReaderOptions())
+      .WillRepeatedly(testing::ReturnRef(rowReaderOptions));
 
   // set getSelectedColumns()
   std::vector<bool> selectedColumns(2, true);
@@ -3523,10 +3523,10 @@ TEST(DecimalColumnReader, testDecimalHive11ScaleDown) {
 TEST(DecimalColumnReader, testDecimalHive11OverflowException) {
   MockStripeStreams streams;
 
-  // set getReaderOptions()
-  ReaderOptions readerOptions;
-  EXPECT_CALL(streams, getReaderOptions())
-      .WillRepeatedly(testing::ReturnRef(readerOptions));
+  // set getRowReaderOptions()
+  RowReaderOptions rowReaderOptions;
+  EXPECT_CALL(streams, getRowReaderOptions())
+      .WillRepeatedly(testing::ReturnRef(rowReaderOptions));
 
   // set getSelectedColumns()
   std::vector<bool> selectedColumns(2, true);
@@ -3581,10 +3581,10 @@ TEST(DecimalColumnReader, testDecimalHive11OverflowException) {
 TEST(DecimalColumnReader, testDecimalHive11OverflowExceptionNull) {
   MockStripeStreams streams;
 
-  // set getReaderOptions()
-  ReaderOptions readerOptions;
-  EXPECT_CALL(streams, getReaderOptions())
-      .WillRepeatedly(testing::ReturnRef(readerOptions));
+  // set getRowReaderOptions()
+  RowReaderOptions rowReaderOptions;
+  EXPECT_CALL(streams, getRowReaderOptions())
+      .WillRepeatedly(testing::ReturnRef(rowReaderOptions));
 
   // set getSelectedColumns()
   std::vector<bool> selectedColumns(2, true);
@@ -3639,13 +3639,13 @@ TEST(DecimalColumnReader, testDecimalHive11OverflowExceptionNull) {
 TEST(DecimalColumnReader, testDecimalHive11OverflowNull) {
   MockStripeStreams streams;
 
-  // set getReaderOptions()
-  ReaderOptions readerOptions;
+  // set getRowReaderOptions()
+  RowReaderOptions rowReaderOptions;
   std::stringstream errStream;
-  readerOptions.throwOnHive11DecimalOverflow(false)
+  rowReaderOptions.throwOnHive11DecimalOverflow(false)
     .setErrorStream(errStream);
-  EXPECT_CALL(streams, getReaderOptions())
-      .WillRepeatedly(testing::ReturnRef(readerOptions));
+  EXPECT_CALL(streams, getRowReaderOptions())
+      .WillRepeatedly(testing::ReturnRef(rowReaderOptions));
 
   // set getSelectedColumns()
   std::vector<bool> selectedColumns(2, true);
@@ -3729,10 +3729,10 @@ TEST(DecimalColumnReader, testDecimalHive11OverflowNull) {
 TEST(DecimalColumnReader, testDecimalHive11BigBatches) {
   MockStripeStreams streams;
 
-  // set getReaderOptions()
-  ReaderOptions readerOptions;
-  EXPECT_CALL(streams, getReaderOptions())
-      .WillRepeatedly(testing::ReturnRef(readerOptions));
+  // set getRowReaderOptions()
+  RowReaderOptions rowReaderOptions;
+  EXPECT_CALL(streams, getRowReaderOptions())
+      .WillRepeatedly(testing::ReturnRef(rowReaderOptions));
 
   // set getSelectedColumns()
   std::vector<bool> selectedColumns(2, true);

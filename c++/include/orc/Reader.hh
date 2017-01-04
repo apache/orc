@@ -20,6 +20,7 @@
 #define ORC_READER_HH
 
 #include "orc/orc-config.hh"
+#include "orc/Statistics.hh"
 #include "orc/Type.hh"
 #include "orc/Vector.hh"
 
@@ -31,6 +32,7 @@ namespace orc {
 
   // classes that hold data members so we can maintain binary compatibility
   struct ReaderOptionsPrivate;
+  struct RowReaderOptionsPrivate;
 
   enum CompressionKind {
     CompressionKind_NONE = 0,
@@ -61,304 +63,6 @@ namespace orc {
    * Get the name of the WriterVersion.
    */
   std::string writerVersionToString(WriterVersion kind);
-
-  /**
-   * Statistics that are available for all types of columns.
-   */
-  class ColumnStatistics {
-  public:
-    virtual ~ColumnStatistics();
-
-    /**
-     * Get the number of values in this column. It will differ from the number
-     * of rows because of NULL values and repeated values.
-     * @return the number of values
-     */
-    virtual uint64_t getNumberOfValues() const = 0;
-
-    /**
-     * print out statistics of column if any
-     */
-    virtual std::string toString() const = 0;
-  };
-
-  /**
-   * Statistics for binary columns.
-   */
-  class BinaryColumnStatistics: public ColumnStatistics {
-  public:
-    virtual ~BinaryColumnStatistics();
-
-    /**
-     * check whether column has total length
-     * @return true if has total length
-     */
-    virtual bool hasTotalLength() const = 0;
-
-    virtual uint64_t getTotalLength() const = 0;
-  };
-
-  /**
-   * Statistics for boolean columns.
-   */
-  class BooleanColumnStatistics: public ColumnStatistics {
-  public:
-    virtual ~BooleanColumnStatistics();
-
-    /**
-     * check whether column has true/false count
-     * @return true if has true/false count
-     */
-    virtual bool hasCount() const = 0;
-
-    virtual uint64_t getFalseCount() const = 0;
-    virtual uint64_t getTrueCount() const = 0;
-  };
-
-  /**
-   * Statistics for date columns.
-   */
-  class DateColumnStatistics: public ColumnStatistics {
-  public:
-    virtual ~DateColumnStatistics();
-
-    /**
-     * check whether column has minimum
-     * @return true if has minimum
-     */
-    virtual bool hasMinimum() const = 0;
-
-    /**
-     * check whether column has maximum
-     * @return true if has maximum
-     */
-    virtual bool hasMaximum() const = 0;
-
-    /**
-     * Get the minimum value for the column.
-     * @return minimum value
-     */
-    virtual int32_t getMinimum() const = 0;
-
-    /**
-     * Get the maximum value for the column.
-     * @return maximum value
-     */
-    virtual int32_t getMaximum() const = 0;
-  };
-
-  /**
-   * Statistics for decimal columns.
-   */
-  class DecimalColumnStatistics: public ColumnStatistics {
-  public:
-    virtual ~DecimalColumnStatistics();
-
-    /**
-     * check whether column has minimum
-     * @return true if has minimum
-     */
-    virtual bool hasMinimum() const = 0;
-
-    /**
-     * check whether column has maximum
-     * @return true if has maximum
-     */
-    virtual bool hasMaximum() const = 0;
-
-    /**
-     * check whether column has sum
-     * @return true if has sum
-     */
-    virtual bool hasSum() const = 0;
-
-    /**
-     * Get the minimum value for the column.
-     * @return minimum value
-     */
-    virtual Decimal getMinimum() const = 0;
-
-    /**
-     * Get the maximum value for the column.
-     * @return maximum value
-     */
-    virtual Decimal getMaximum() const = 0;
-
-    /**
-     * Get the sum for the column.
-     * @return sum of all the values
-     */
-    virtual Decimal getSum() const = 0;
-  };
-
-  /**
-   * Statistics for float and double columns.
-   */
-  class DoubleColumnStatistics: public ColumnStatistics {
-  public:
-    virtual ~DoubleColumnStatistics();
-
-    /**
-     * check whether column has minimum
-     * @return true if has minimum
-     */
-    virtual bool hasMinimum() const = 0;
-
-    /**
-     * check whether column has maximum
-     * @return true if has maximum
-     */
-    virtual bool hasMaximum() const = 0;
-
-    /**
-     * check whether column has sum
-     * @return true if has sum
-     */
-    virtual bool hasSum() const = 0;
-
-    /**
-     * Get the smallest value in the column. Only defined if getNumberOfValues
-     * is non-zero.
-     * @return the minimum
-     */
-    virtual double getMinimum() const = 0;
-
-    /**
-     * Get the largest value in the column. Only defined if getNumberOfValues
-     * is non-zero.
-     * @return the maximum
-     */
-    virtual double getMaximum() const = 0;
-
-    /**
-     * Get the sum of the values in the column.
-     * @return the sum
-     */
-    virtual double getSum() const = 0;
-  };
-
-  /**
-   * Statistics for all of the integer columns, such as byte, short, int, and
-   * long.
-   */
-  class IntegerColumnStatistics: public ColumnStatistics {
-  public:
-    virtual ~IntegerColumnStatistics();
-
-    /**
-     * check whether column has minimum
-     * @return true if has minimum
-     */
-    virtual bool hasMinimum() const = 0;
-
-    /**
-     * check whether column has maximum
-     * @return true if has maximum
-     */
-    virtual bool hasMaximum() const = 0;
-
-    /**
-     * check whether column has sum
-     * @return true if has sum
-     */
-    virtual bool hasSum() const = 0;
-
-    /**
-     * Get the smallest value in the column. Only defined if getNumberOfValues
-     * is non-zero.
-     * @return the minimum
-     */
-    virtual int64_t getMinimum() const = 0;
-
-    /**
-     * Get the largest value in the column. Only defined if getNumberOfValues
-     * is non-zero.
-     * @return the maximum
-     */
-    virtual int64_t getMaximum() const = 0;
-
-    /**
-     * Get the sum of the column. Only valid if isSumDefined returns true.
-     * @return the sum of the column
-     */
-    virtual int64_t getSum() const = 0;
-  };
-
-  /**
-   * Statistics for string columns.
-   */
-  class StringColumnStatistics: public ColumnStatistics {
-  public:
-    virtual ~StringColumnStatistics();
-
-    /**
-     * check whether column has minimum
-     * @return true if has minimum
-     */
-    virtual bool hasMinimum() const = 0;
-
-    /**
-     * check whether column has maximum
-     * @return true if has maximum
-     */
-    virtual bool hasMaximum() const = 0;
-
-    /**
-     * check whether column
-     * @return true if has maximum
-     */
-    virtual bool hasTotalLength() const = 0;
-
-    /**
-     * Get the minimum value for the column.
-     * @return minimum value
-     */
-    virtual std::string getMinimum() const = 0;
-
-    /**
-     * Get the maximum value for the column.
-     * @return maximum value
-     */
-    virtual std::string getMaximum() const = 0;
-
-    /**
-     * Get the total length of all values.
-     * @return total length of all the values
-     */
-    virtual uint64_t getTotalLength() const = 0;
-  };
-
-  /**
-   * Statistics for timestamp columns.
-   */
-  class TimestampColumnStatistics: public ColumnStatistics {
-  public:
-    virtual ~TimestampColumnStatistics();
-
-    /**
-     * check whether column minimum
-     * @return true if has minimum
-     */
-    virtual bool hasMinimum() const = 0;
-
-    /**
-     * check whether column maximum
-     * @return true if has maximum
-     */
-    virtual bool hasMaximum() const = 0;
-
-    /**
-     * Get the minimum value for the column.
-     * @return minimum value
-     */
-    virtual int64_t getMinimum() const = 0;
-
-    /**
-     * Get the maximum value for the column.
-     * @return maximum value
-     */
-    virtual int64_t getMaximum() const = 0;
-  };
 
   enum StreamKind {
     StreamKind_PRESENT = 0,
@@ -465,25 +169,6 @@ namespace orc {
     virtual const std::string& getWriterTimezone() const = 0;
   };
 
-  class Statistics {
-  public:
-    virtual ~Statistics();
-
-    /**
-     * Get the statistics of colId column.
-     * @return one column's statistics
-     */
-    virtual const ColumnStatistics* getColumnStatistics(uint32_t colId
-                                                        ) const = 0;
-
-    /**
-     * Get the number of columns
-     * @return the number of columns
-     */
-    virtual uint32_t getNumberOfColumns() const = 0;
-  };
-
-
   /**
    * Options for creating a Reader.
    */
@@ -497,78 +182,6 @@ namespace orc {
     ReaderOptions(ReaderOptions&);
     ReaderOptions& operator=(const ReaderOptions&);
     virtual ~ReaderOptions();
-
-    /**
-     * For files that have structs as the top-level object, select the fields
-     * to read. The first field is 0, the second 1, and so on. By default,
-     * all columns are read. This option clears any previous setting of
-     * the selected columns.
-     * @param include a list of fields to read
-     * @return this
-     */
-    ReaderOptions& include(const std::list<uint64_t>& include);
-
-    /**
-     * For files that have structs as the top-level object, select the fields
-     * to read by name. By default, all columns are read. This option clears
-     * any previous setting of the selected columns.
-     * @param include a list of fields to read
-     * @return this
-     */
-    ReaderOptions& include(const std::list<std::string>& include);
-
-    /**
-     * Selects which type ids to read. The root type is always 0 and the
-     * rest of the types are labeled in a preorder traversal of the tree.
-     * The parent types are automatically selected, but the children are not.
-     *
-     * This option clears any previous setting of the selected columns or
-     * types.
-     * @param types a list of the type ids to read
-     * @return this
-     */
-    ReaderOptions& includeTypes(const std::list<uint64_t>& types);
-
-    /**
-     * Set the section of the file to process.
-     * @param offset the starting byte offset
-     * @param length the number of bytes to read
-     * @return this
-     */
-    ReaderOptions& range(uint64_t offset, uint64_t length);
-
-    /**
-     * For Hive 0.11 (and 0.12) decimals, the precision was unlimited
-     * and thus may overflow the 38 digits that is supported. If one
-     * of the Hive 0.11 decimals is too large, the reader may either convert
-     * the value to NULL or throw an exception. That choice is controlled
-     * by this setting.
-     *
-     * Defaults to true.
-     *
-     * @param shouldThrow should the reader throw a ParseError?
-     * @return returns *this
-     */
-    ReaderOptions& throwOnHive11DecimalOverflow(bool shouldThrow);
-
-    /**
-     * For Hive 0.11 (and 0.12) written decimals, which have unlimited
-     * scale and precision, the reader forces the scale to a consistent
-     * number that is configured. This setting changes the scale that is
-     * forced upon these old decimals. See also throwOnHive11DecimalOverflow.
-     *
-     * Defaults to 6.
-     *
-     * @param forcedScale the scale that will be forced on Hive 0.11 decimals
-     * @return returns *this
-     */
-    ReaderOptions& forcedScaleOnHive11Decimal(int32_t forcedScale);
-
-    /**
-     * Set the location of the tail as defined by the logical length of the
-     * file.
-     */
-    ReaderOptions& setTailLocation(uint64_t offset);
 
     /**
      * Set the stream to use for printing warning or error messages.
@@ -592,6 +205,129 @@ namespace orc {
      * Set the memory allocator.
      */
     ReaderOptions& setMemoryPool(MemoryPool& pool);
+
+    /**
+     * Set the location of the tail as defined by the logical length of the
+     * file.
+     */
+    ReaderOptions& setTailLocation(uint64_t offset);
+
+    /**
+     * Get the stream to write warnings or errors to.
+     */
+    std::ostream* getErrorStream() const;
+
+    /**
+     * Get the serialized file tail that the user passed in.
+     */
+    std::string getSerializedFileTail() const;
+
+    /**
+     * Get the desired tail location.
+     * @return if not set, return the maximum long.
+     */
+    uint64_t getTailLocation() const;
+
+    /**
+     * Get the memory allocator.
+     */
+    MemoryPool* getMemoryPool() const;
+  };
+
+  /**
+   * Options for creating a RowReader.
+   */
+  class RowReaderOptions {
+  private:
+    ORC_UNIQUE_PTR<RowReaderOptionsPrivate> privateBits;
+
+  public:
+    RowReaderOptions();
+    RowReaderOptions(const RowReaderOptions&);
+    RowReaderOptions(RowReaderOptions&);
+    RowReaderOptions& operator=(const RowReaderOptions&);
+    virtual ~RowReaderOptions();
+
+    /**
+     * For files that have structs as the top-level object, select the fields
+     * to read. The first field is 0, the second 1, and so on. By default,
+     * all columns are read. This option clears any previous setting of
+     * the selected columns.
+     * @param include a list of fields to read
+     * @return this
+     */
+    RowReaderOptions& include(const std::list<uint64_t>& include);
+
+    /**
+     * For files that have structs as the top-level object, select the fields
+     * to read by name. By default, all columns are read. This option clears
+     * any previous setting of the selected columns.
+     * @param include a list of fields to read
+     * @return this
+     */
+    RowReaderOptions& include(const std::list<std::string>& include);
+
+    /**
+     * Selects which type ids to read. The root type is always 0 and the
+     * rest of the types are labeled in a preorder traversal of the tree.
+     * The parent types are automatically selected, but the children are not.
+     *
+     * This option clears any previous setting of the selected columns or
+     * types.
+     * @param types a list of the type ids to read
+     * @return this
+     */
+    RowReaderOptions& includeTypes(const std::list<uint64_t>& types);
+
+    /**
+     * Set the section of the file to process.
+     * @param offset the starting byte offset
+     * @param length the number of bytes to read
+     * @return this
+     */
+    RowReaderOptions& range(uint64_t offset, uint64_t length);
+
+    /**
+     * For Hive 0.11 (and 0.12) decimals, the precision was unlimited
+     * and thus may overflow the 38 digits that is supported. If one
+     * of the Hive 0.11 decimals is too large, the reader may either convert
+     * the value to NULL or throw an exception. That choice is controlled
+     * by this setting.
+     *
+     * Defaults to true.
+     *
+     * @param shouldThrow should the reader throw a ParseError?
+     * @return returns *this
+     */
+    RowReaderOptions& throwOnHive11DecimalOverflow(bool shouldThrow);
+
+    /**
+     * For Hive 0.11 (and 0.12) written decimals, which have unlimited
+     * scale and precision, the reader forces the scale to a consistent
+     * number that is configured. This setting changes the scale that is
+     * forced upon these old decimals. See also throwOnHive11DecimalOverflow.
+     *
+     * Defaults to 6.
+     *
+     * @param forcedScale the scale that will be forced on Hive 0.11 decimals
+     * @return returns *this
+     */
+    RowReaderOptions& forcedScaleOnHive11Decimal(int32_t forcedScale);
+
+    /**
+     * Set the memory allocator.
+     */
+    RowReaderOptions& setMemoryPool(MemoryPool& pool);
+
+    /**
+     * Set the stream to use for printing warning or error messages.
+     */
+    RowReaderOptions& setErrorStream(std::ostream& stream);
+
+    /**
+     * Get the stream to write warnings or errors to.
+     */
+    std::ostream* getErrorStream() const;
 
     /**
      * Were the field ids set?
@@ -632,12 +368,6 @@ namespace orc {
     uint64_t getLength() const;
 
     /**
-     * Get the desired tail location.
-     * @return if not set, return the maximum long.
-     */
-    uint64_t getTailLocation() const;
-
-    /**
      * Should the reader throw a ParseError when a Hive 0.11 decimal is
      * larger than the supported 38 digits of precision? Otherwise, the
      * data item is replaced by a NULL.
@@ -650,23 +380,16 @@ namespace orc {
     int32_t getForcedScaleOnHive11Decimal() const;
 
     /**
-     * Get the stream to write warnings or errors to.
-     */
-    std::ostream* getErrorStream() const;
-
-    /**
      * Get the memory allocator.
      */
     MemoryPool* getMemoryPool() const;
-
-    /**
-     * Get the serialized file tail that the user passed in.
-     */
-    std::string getSerializedFileTail() const;
   };
 
+
+  class RowReader;
+
   /**
-   * The interface for reading ORC files.
+   * The interface for reading ORC file meta-data and constructing RowReaders.
    * This is an an abstract class that will subclassed as necessary.
    */
   class Reader {
@@ -803,12 +526,83 @@ namespace orc {
     getColumnStatistics(uint32_t columnId) const = 0;
 
     /**
+     * check file has correct column statistics
+     */
+    virtual bool hasCorrectStatistics() const = 0;
+
+    /**
+     * Get the serialized file tail.
+     * Usefull if another reader of the same file wants to avoid re-reading
+     * the file tail. See ReaderOptions.setSerializedFileTail().
+     * @return a string of bytes with the file tail
+     */
+    virtual std::string getSerializedFileTail() const = 0;
+
+    /**
      * Get the type of the rows in the file. The top level is typically a
      * struct.
      * @return the root type
      */
     virtual const Type& getType() const = 0;
 
+    /**
+     * @param options RowReader Options
+     * @return a RowReader to read the rows
+     */
+    virtual ORC_UNIQUE_PTR<RowReader>
+    getRowReader(const RowReaderOptions& options) const = 0;
+
+    /**
+     * Get the name of the input stream.
+     */
+    virtual const std::string& getStreamName() const = 0;
+
+    /**
+     * Estimate an upper bound on heap memory allocation by the Reader
+     * based on the information in the file footer.
+     * The bound is less tight if only few columns are read or compression is
+     * used.
+    */
+    /**
+     * @param stripeIx index of the stripe to be read (if not specified,
+     *        all stripes are considered).
+     * @return upper bound on memory use by all columns
+     */
+    virtual uint64_t getMemoryUse(int stripeIx=-1) = 0;
+
+    /** 
+     * @param include Column Field Ids
+     * @param stripeIx index of the stripe to be read (if not specified,
+     *        all stripes are considered).
+     * @return upper bound on memory use by selected columns
+     */
+    virtual uint64_t getMemoryUseByFieldId(const std::list<uint64_t>& include, int stripeIx=-1) = 0;
+
+    /** 
+     * @param stripeIx index of the stripe to be read (if not specified,
+     *        all stripes are considered).
+     * @param names Column Names
+     * @return upper bound on memory use by selected columns
+     */
+    virtual uint64_t getMemoryUseByName(const std::list<std::string>& names, int stripeIx=-1) = 0;
+
+    /** 
+     * @param stripeIx index of the stripe to be read (if not specified,
+     *        all stripes are considered).
+     * @param include Column Type Ids
+     * @return upper bound on memory use by selected columns
+     */
+    virtual uint64_t getMemoryUseByTypeId(const std::list<uint64_t>& include, int stripeIx=-1) = 0;
+
+  };
+
+  /**
+   * The interface for reading rows in ORC files.
+   * This is an an abstract class that will subclassed as necessary.
+   */
+  class RowReader {
+  public:
+    virtual ~RowReader();
     /**
      * Get the selected type of the rows in the file. The file's row type
      * is projected down to just the selected columns. Thus, if the file's
@@ -854,34 +648,6 @@ namespace orc {
      */
     virtual void seekToRow(uint64_t rowNumber) = 0;
 
-    /**
-     * Get the name of the input stream.
-     */
-    virtual const std::string& getStreamName() const = 0;
-
-    /**
-     * check file has correct column statistics
-     */
-    virtual bool hasCorrectStatistics() const = 0;
-
-    /**
-     * Get the serialized file tail.
-     * Usefull if another reader of the same file wants to avoid re-reading
-     * the file tail. See ReaderOptions.setSerializedFileTail().
-     * @return a string of bytes with the file tail
-     */
-    virtual std::string getSerializedFileTail() const = 0;
-
-    /**
-     * Estimate an upper bound on heap memory allocation by the Reader
-     * based on the information in the file footer.
-     * The bound is less tight if only few columns are read or compression is
-     * used.
-     * @param stripeIx index of the stripe to be read (if not specified,
-     *        all stripes are considered).
-     * @return upper bound on memory use
-     */
-    virtual uint64_t getMemoryUse(int stripeIx=-1) = 0;
   };
 }
 

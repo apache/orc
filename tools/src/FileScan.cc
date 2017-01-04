@@ -27,14 +27,17 @@
 #include <string>
 
 void scanFile(std::ostream & out, const char* filename, uint64_t batchSize) {
-  orc::ReaderOptions opts;
+  orc::ReaderOptions readerOpts;
+  orc::RowReaderOptions rowReaderOpts;
   std::unique_ptr<orc::Reader> reader =
-    orc::createReader(orc::readLocalFile(filename), opts);
+    orc::createReader(orc::readLocalFile(filename), readerOpts);
+  std::unique_ptr<orc::RowReader> rowReader = reader->getRowReader(rowReaderOpts);
   std::unique_ptr<orc::ColumnVectorBatch> batch =
-    reader->createRowBatch(batchSize);
+    rowReader->createRowBatch(batchSize);
+
   unsigned long rows = 0;
   unsigned long batches = 0;
-  while (reader->next(*batch)) {
+  while (rowReader->next(*batch)) {
     batches += 1;
     rows += batch->numElements;
   }
