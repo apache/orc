@@ -225,6 +225,7 @@ namespace orc {
     currentStripe = numberOfStripes;
     lastStripe = 0;
     currentRowInStripe = 0;
+    rowsInCurrentStripe = 0;
     uint64_t rowTotal = 0;
 
     firstRowOfStripe.resize(numberOfStripes);
