@@ -29,13 +29,11 @@ namespace orc {
                                        const proto::StripeFooter& _footer,
                                        uint64_t _stripeStart,
                                        InputStream& _input,
-                                       MemoryPool& _memoryPool,
                                        const Timezone& _writerTimezone
                                        ): reader(_reader),
                                           footer(_footer),
                                           stripeStart(_stripeStart),
                                           input(_input),
-                                          memoryPool(_memoryPool),
                                           writerTimezone(_writerTimezone) {
     // PASS
   }
@@ -57,10 +55,6 @@ namespace orc {
     // PASS
   }
 
-  const RowReaderOptions& StripeStreamsImpl::getRowReaderOptions() const {
-    return reader.getRowReaderOptions();
-  }
-
   const std::vector<bool> StripeStreamsImpl::getSelectedColumns() const {
     return reader.getSelectedColumns();
   }
@@ -74,11 +68,16 @@ namespace orc {
     return writerTimezone;
   }
 
-  std::unique_ptr<SeekableInputStream>
+  std::ostream* StripeStreamsImpl::getErrorStream() const {
+    return reader.getFileContents().errorStream;
+  }
+
+    std::unique_ptr<SeekableInputStream>
   StripeStreamsImpl::getStream(uint64_t columnId,
                                proto::Stream_Kind kind,
                                bool shouldStream) const {
     uint64_t offset = stripeStart;
+    MemoryPool *pool = reader.getFileContents().pool;
     for(int i = 0; i < footer.streams_size(); ++i) {
       const proto::Stream& stream = footer.streams(i);
       if (stream.has_kind() &&
@@ -92,10 +91,10 @@ namespace orc {
                                    (&input,
                                     offset,
                                     stream.length(),
-                                    memoryPool,
+                                    *pool,
                                     myBlock)),
                                   reader.getCompressionSize(),
-                                  memoryPool);
+                                  *pool);
       }
       offset += stream.length();
     }
@@ -103,7 +102,15 @@ namespace orc {
   }
 
   MemoryPool& StripeStreamsImpl::getMemoryPool() const {
-    return memoryPool;
+    return *reader.getFileContents().pool;
+  }
+
+  bool StripeStreamsImpl::getThrowOnHive11DecimalOverflow() const {
+    return reader.getThrowOnHive11DecimalOverflow();
+  }
+
+  int32_t StripeStreamsImpl::getForcedScaleOnHive11Decimal() const {
+    return reader.getForcedScaleOnHive11Decimal();
   }
 
   void StripeInformationImpl::ensureStripeFooterLoaded() const {

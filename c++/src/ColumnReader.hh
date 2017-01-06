@@ -32,11 +32,6 @@ namespace orc {
     virtual ~StripeStreams();
 
     /**
-     * Get the reader options.
-     */
-    virtual const RowReaderOptions& getRowReaderOptions() const = 0;
-
-    /**
      * Get the array of booleans for which columns are selected.
      * @return the address of an array which contains true at the index of
      *    each columnId is selected.
@@ -69,6 +64,25 @@ namespace orc {
      * Get the writer's timezone, so that we can convert their dates correctly.
      */
     virtual const Timezone& getWriterTimezone() const = 0;
+
+    /**
+     * Get the error stream.
+     * @return a pointer to the stream that should get error messages
+     */
+    virtual std::ostream* getErrorStream() const = 0;
+
+    /**
+     * Should the reader throw when the scale overflows when reading Hive 0.11
+     * decimals.
+     * @return true if it should throw
+     */
+    virtual bool getThrowOnHive11DecimalOverflow() const = 0;
+
+    /**
+     * What is the scale forced on the Hive 0.11 decimals?
+     * @return the number of scale digits
+     */
+    virtual int32_t getForcedScaleOnHive11Decimal() const = 0;
   };
 
   /**

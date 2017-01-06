@@ -1416,10 +1416,9 @@ namespace orc {
                     (const Type& type,
                      StripeStreams& stripe
                      ): Decimal64ColumnReader(type, stripe) {
-    const RowReaderOptions options = stripe.getRowReaderOptions();
-    scale = options.getForcedScaleOnHive11Decimal();
-    throwOnOverflow = options.getThrowOnHive11DecimalOverflow();
-    errorStream = options.getErrorStream();
+    scale = stripe.getForcedScaleOnHive11Decimal();
+    throwOnOverflow = stripe.getThrowOnHive11DecimalOverflow();
+    errorStream = stripe.getErrorStream();
   }
 
   DecimalHive11ColumnReader::~DecimalHive11ColumnReader() {
