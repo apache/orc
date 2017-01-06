@@ -37,6 +37,7 @@ import io.airlift.compress.lzo.LzoCompressor;
 import io.airlift.compress.lzo.LzoDecompressor;
 import org.apache.hadoop.hive.ql.util.JavaDataModel;
 import org.apache.orc.BinaryColumnStatistics;
+import org.apache.orc.ColumnStatistics;
 import org.apache.orc.util.BloomFilter;
 import org.apache.orc.util.BloomFilterIO;
 import org.apache.orc.CompressionCodec;
@@ -3058,5 +3059,16 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
         this.userMetadata.put(item.getName(), item.getValue());
       }
     }
+  }
+
+  @Override
+  public ColumnStatistics[] getStatistics()
+      throws IOException {
+    // Generate the stats
+    OrcProto.Footer.Builder builder = OrcProto.Footer.newBuilder();
+
+    // add the column statistics
+    writeFileStatistics(builder, treeWriter);
+    return ReaderImpl.deserializeStats(builder.getStatisticsList());
   }
 }

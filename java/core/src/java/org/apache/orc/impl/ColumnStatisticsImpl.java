@@ -39,6 +39,34 @@ import org.apache.orc.TypeDescription;
 
 public class ColumnStatisticsImpl implements ColumnStatistics {
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof ColumnStatisticsImpl)) {
+      return false;
+    }
+
+    ColumnStatisticsImpl that = (ColumnStatisticsImpl) o;
+
+    if (count != that.count) {
+      return false;
+    }
+    if (hasNull != that.hasNull) {
+      return false;
+    }
+
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = (int) (count ^ (count >>> 32));
+    result = 31 * result + (hasNull ? 1 : 0);
+    return result;
+  }
+
   private static final class BooleanStatisticsImpl extends ColumnStatisticsImpl
       implements BooleanColumnStatistics {
     private long trueCount = 0;
@@ -101,6 +129,34 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     @Override
     public String toString() {
       return super.toString() + " true: " + trueCount;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (!(o instanceof BooleanStatisticsImpl)) {
+        return false;
+      }
+      if (!super.equals(o)) {
+        return false;
+      }
+
+      BooleanStatisticsImpl that = (BooleanStatisticsImpl) o;
+
+      if (trueCount != that.trueCount) {
+        return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      int result = super.hashCode();
+      result = 31 * result + (int) (trueCount ^ (trueCount >>> 32));
+      return result;
     }
   }
 
@@ -247,6 +303,50 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       }
       return buf.toString();
     }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (!(o instanceof IntegerStatisticsImpl)) {
+        return false;
+      }
+      if (!super.equals(o)) {
+        return false;
+      }
+
+      IntegerStatisticsImpl that = (IntegerStatisticsImpl) o;
+
+      if (minimum != that.minimum) {
+        return false;
+      }
+      if (maximum != that.maximum) {
+        return false;
+      }
+      if (sum != that.sum) {
+        return false;
+      }
+      if (hasMinimum != that.hasMinimum) {
+        return false;
+      }
+      if (overflow != that.overflow) {
+        return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      int result = super.hashCode();
+      result = 31 * result + (int) (minimum ^ (minimum >>> 32));
+      result = 31 * result + (int) (maximum ^ (maximum >>> 32));
+      result = 31 * result + (int) (sum ^ (sum >>> 32));
+      result = 31 * result + (hasMinimum ? 1 : 0);
+      result = 31 * result + (overflow ? 1 : 0);
+      return result;
+    }
   }
 
   private static final class DoubleStatisticsImpl extends ColumnStatisticsImpl
@@ -363,6 +463,50 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       buf.append(" sum: ");
       buf.append(sum);
       return buf.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (!(o instanceof DoubleStatisticsImpl)) {
+        return false;
+      }
+      if (!super.equals(o)) {
+        return false;
+      }
+
+      DoubleStatisticsImpl that = (DoubleStatisticsImpl) o;
+
+      if (hasMinimum != that.hasMinimum) {
+        return false;
+      }
+      if (Double.compare(that.minimum, minimum) != 0) {
+        return false;
+      }
+      if (Double.compare(that.maximum, maximum) != 0) {
+        return false;
+      }
+      if (Double.compare(that.sum, sum) != 0) {
+        return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      int result = super.hashCode();
+      long temp;
+      result = 31 * result + (hasMinimum ? 1 : 0);
+      temp = Double.doubleToLongBits(minimum);
+      result = 31 * result + (int) (temp ^ (temp >>> 32));
+      temp = Double.doubleToLongBits(maximum);
+      result = 31 * result + (int) (temp ^ (temp >>> 32));
+      temp = Double.doubleToLongBits(sum);
+      result = 31 * result + (int) (temp ^ (temp >>> 32));
+      return result;
     }
   }
 
@@ -498,6 +642,42 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       }
       return buf.toString();
     }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (!(o instanceof StringStatisticsImpl)) {
+        return false;
+      }
+      if (!super.equals(o)) {
+        return false;
+      }
+
+      StringStatisticsImpl that = (StringStatisticsImpl) o;
+
+      if (sum != that.sum) {
+        return false;
+      }
+      if (minimum != null ? !minimum.equals(that.minimum) : that.minimum != null) {
+        return false;
+      }
+      if (maximum != null ? !maximum.equals(that.maximum) : that.maximum != null) {
+        return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      int result = super.hashCode();
+      result = 31 * result + (minimum != null ? minimum.hashCode() : 0);
+      result = 31 * result + (maximum != null ? maximum.hashCode() : 0);
+      result = 31 * result + (int) (sum ^ (sum >>> 32));
+      return result;
+    }
   }
 
   protected static final class BinaryStatisticsImpl extends ColumnStatisticsImpl implements
@@ -568,6 +748,34 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
         buf.append(sum);
       }
       return buf.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (!(o instanceof BinaryStatisticsImpl)) {
+        return false;
+      }
+      if (!super.equals(o)) {
+        return false;
+      }
+
+      BinaryStatisticsImpl that = (BinaryStatisticsImpl) o;
+
+      if (sum != that.sum) {
+        return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      int result = super.hashCode();
+      result = 31 * result + (int) (sum ^ (sum >>> 32));
+      return result;
     }
   }
 
@@ -694,6 +902,42 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       }
       return buf.toString();
     }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (!(o instanceof DecimalStatisticsImpl)) {
+        return false;
+      }
+      if (!super.equals(o)) {
+        return false;
+      }
+
+      DecimalStatisticsImpl that = (DecimalStatisticsImpl) o;
+
+      if (minimum != null ? !minimum.equals(that.minimum) : that.minimum != null) {
+        return false;
+      }
+      if (maximum != null ? !maximum.equals(that.maximum) : that.maximum != null) {
+        return false;
+      }
+      if (sum != null ? !sum.equals(that.sum) : that.sum != null) {
+        return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      int result = super.hashCode();
+      result = 31 * result + (minimum != null ? minimum.hashCode() : 0);
+      result = 31 * result + (maximum != null ? maximum.hashCode() : 0);
+      result = 31 * result + (sum != null ? sum.hashCode() : 0);
+      return result;
+    }
   }
 
   private static final class DateStatisticsImpl extends ColumnStatisticsImpl
@@ -815,6 +1059,46 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       }
       return buf.toString();
     }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (!(o instanceof DateStatisticsImpl)) {
+        return false;
+      }
+      if (!super.equals(o)) {
+        return false;
+      }
+
+      DateStatisticsImpl that = (DateStatisticsImpl) o;
+
+      if (minimum != null ? !minimum.equals(that.minimum) : that.minimum != null) {
+        return false;
+      }
+      if (maximum != null ? !maximum.equals(that.maximum) : that.maximum != null) {
+        return false;
+      }
+      if (minDate != null ? !minDate.equals(that.minDate) : that.minDate != null) {
+        return false;
+      }
+      if (maxDate != null ? !maxDate.equals(that.maxDate) : that.maxDate != null) {
+        return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      int result = super.hashCode();
+      result = 31 * result + (minimum != null ? minimum.hashCode() : 0);
+      result = 31 * result + (maximum != null ? maximum.hashCode() : 0);
+      result = 31 * result + (minDate != null ? minDate.hashCode() : 0);
+      result = 31 * result + (maxDate != null ? maxDate.hashCode() : 0);
+      return result;
+    }
   }
 
   private static final class TimestampStatisticsImpl extends ColumnStatisticsImpl
@@ -924,6 +1208,38 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
         buf.append(getMaximum());
       }
       return buf.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (!(o instanceof TimestampStatisticsImpl)) {
+        return false;
+      }
+      if (!super.equals(o)) {
+        return false;
+      }
+
+      TimestampStatisticsImpl that = (TimestampStatisticsImpl) o;
+
+      if (minimum != null ? !minimum.equals(that.minimum) : that.minimum != null) {
+        return false;
+      }
+      if (maximum != null ? !maximum.equals(that.maximum) : that.maximum != null) {
+        return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      int result = super.hashCode();
+      result = 31 * result + (minimum != null ? minimum.hashCode() : 0);
+      result = 31 * result + (maximum != null ? maximum.hashCode() : 0);
+      return result;
     }
   }
 

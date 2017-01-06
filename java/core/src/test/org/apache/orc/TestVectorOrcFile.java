@@ -20,7 +20,7 @@ package org.apache.orc;
 
 import com.google.common.collect.Lists;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -69,6 +69,7 @@ import java.util.Random;
 
 import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -438,6 +439,7 @@ public class TestVectorOrcFile {
 
     // check the stats
     ColumnStatistics[] stats = reader.getStatistics();
+    assertArrayEquals(stats, writer.getStatistics());
     assertEquals(4, stats[0].getNumberOfValues());
     assertEquals("count: 4 hasNull: false", stats[0].toString());
 
@@ -914,7 +916,7 @@ public class TestVectorOrcFile {
             createInnerSchema()));
   }
 
-  static void assertArrayEquals(boolean[] expected, boolean[] actual) {
+  static void assertArrayBooleanEquals(boolean[] expected, boolean[] actual) {
     assertEquals(expected.length, actual.length);
     boolean diff = false;
     for(int i=0; i < expected.length; ++i) {
@@ -935,6 +937,7 @@ public class TestVectorOrcFile {
             .setSchema(schema)
             .stripeSize(100000)
             .bufferSize(10000));
+    assertEmptyStats(writer.getStatistics());
     VectorizedRowBatch batch = schema.createRowBatch();
     batch.size = 2;
     setBigRow(batch, 0, false, (byte) 1, (short) 1024, 65536,
@@ -948,7 +951,9 @@ public class TestVectorOrcFile {
         list(inner(100000000, "cat"), inner(-100000, "in"), inner(1234, "hat")),
         map(inner(5, "chani"), inner(1, "mauddib")));
     writer.addRowBatch(batch);
+    assertEmptyStats(writer.getStatistics());
     writer.close();
+    ColumnStatistics[] closeStatistics = writer.getStatistics();
     Reader reader = OrcFile.createReader(testFilePath,
         OrcFile.readerOptions(conf).filesystem(fs));
 
@@ -969,7 +974,7 @@ public class TestVectorOrcFile {
         true, true, true, true};
     included = OrcUtils.includeColumns("boolean1,string1,middle,map", schema);
 
-    assertArrayEquals(expected, included);
+    assertArrayBooleanEquals(expected, included);
 
     expected = new boolean[] {false, true, false, false, false,
         false, false, false, false, true,
@@ -977,7 +982,7 @@ public class TestVectorOrcFile {
         false, false, false, false, true,
         true, true, true, true};
     included = OrcUtils.includeColumns("boolean1,string1,middle,map", schema);
-    assertArrayEquals(expected, included);
+    assertArrayBooleanEquals(expected, included);
 
     expected = new boolean[] {false, true, true, true, true,
         true, true, true, true, true,
@@ -991,6 +996,7 @@ public class TestVectorOrcFile {
 
     // check the stats
     ColumnStatistics[] stats = reader.getStatistics();
+    assertArrayEquals(stats, closeStatistics);
     assertEquals(2, stats[1].getNumberOfValues());
     assertEquals(1, ((BooleanColumnStatistics) stats[1]).getFalseCount());
     assertEquals(1, ((BooleanColumnStatistics) stats[1]).getTrueCount());
@@ -1126,6 +1132,13 @@ public class TestVectorOrcFile {
     // handle the close up
     Assert.assertEquals(false, rows.nextBatch(batch));
     rows.close();
+  }
+
+  static void assertEmptyStats(ColumnStatistics[] writerStatistics) {
+    for (ColumnStatistics columnStatistics : writerStatistics){
+      assertEquals(0, columnStatistics.getNumberOfValues());
+      assertFalse(columnStatistics.hasNull());
+    }
   }
 
   @Test
@@ -2366,6 +2379,7 @@ public class TestVectorOrcFile {
 
     // check the stats
     ColumnStatistics[] stats = reader.getStatistics();
+    assertArrayEquals(stats, writer.getStatistics());
     assertEquals(4096, stats[0].getNumberOfValues());
     assertEquals(false, stats[0].hasNull());
     for(TypeDescription colType: schema.getChildren()) {

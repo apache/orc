@@ -111,4 +111,16 @@ public interface Writer {
    * @param userMetadata - user metadata
    */
   public void appendUserMetadata(List<OrcProto.UserMetadataItem> userMetadata);
+
+  /**
+   * Get the statistics about the columns in the file. The output of this is
+   * based on the time at which it is called. It shall use all of the currently
+   * written data to provide the statistics.
+   *
+   * Please note there are costs involved with invoking this method and should
+   * be used judiciously.
+   *
+   * @return the information about the column
+   */
+  ColumnStatistics[] getStatistics() throws IOException;
 }
