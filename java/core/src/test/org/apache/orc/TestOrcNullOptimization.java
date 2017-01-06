@@ -18,13 +18,15 @@
 package org.apache.orc;
 
 import static junit.framework.Assert.assertEquals;
+import static org.apache.orc.TestVectorOrcFile.assertEmptyStats;
+import static org.junit.Assert.assertArrayEquals;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Random;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -233,9 +235,19 @@ public class TestOrcNullOptimization {
                                          .compress(CompressionKind.NONE)
                                          .bufferSize(10000));
     Random rand = new Random(100);
-    VectorizedRowBatch batch = schema.createRowBatch();
+    int batchSize = 5000;
+    VectorizedRowBatch batch = schema.createRowBatch(batchSize);
+    ColumnStatistics[] writerStats = writer.getStatistics();
+    assertEmptyStats(writerStats);
+    int count = 0;
     for (int i = 1; i < 20000; i++) {
       addRow(writer, batch, rand.nextInt(1), "a", true, 100);
+      count++;
+      if (count % batchSize == 1) {
+        writerStats = writer.getStatistics();
+      } else {
+        assertArrayEquals(writerStats, writer.getStatistics());
+      }
     }
     addRow(writer, batch, 0, "b", true, 100);
     writer.addRowBatch(batch);
@@ -245,6 +257,7 @@ public class TestOrcNullOptimization {
         OrcFile.readerOptions(conf).filesystem(fs));
     // check the stats
     ColumnStatistics[] stats = reader.getStatistics();
+    assertArrayEquals(stats, writer.getStatistics());
     assertEquals(20000, reader.getNumberOfRows());
     assertEquals(20000, stats[0].getNumberOfValues());
 
@@ -338,6 +351,7 @@ public class TestOrcNullOptimization {
         OrcFile.readerOptions(conf).filesystem(fs));
     // check the stats
     ColumnStatistics[] stats = reader.getStatistics();
+    assertArrayEquals(stats, writer.getStatistics());
     assertEquals(8, reader.getNumberOfRows());
     assertEquals(8, stats[0].getNumberOfValues());
 
