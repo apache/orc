@@ -30,10 +30,6 @@
 
 namespace orc {
 
-  class ReaderOptions;
-  class RowReaderOptions;
-  class StripeInformation;
-
   static const uint64_t DIRECTORY_SIZE_GUESS = 16 * 1024;
 
   /**
@@ -46,6 +42,8 @@ namespace orc {
     std::unique_ptr<Type> schema;
     uint64_t blockSize;
     CompressionKind compression;
+    MemoryPool *pool;
+    std::ostream *errorStream;
   };
 
   class ReaderImpl;
@@ -95,13 +93,11 @@ namespace orc {
 
     // contents
     std::shared_ptr<FileContents> contents;
+    const bool throwOnHive11DecimalOverflow;
+    const int32_t forcedScaleOnHive11Decimal;
 
     // inputs
     std::vector<bool> selectedColumns;
-    const RowReaderOptions& options;
-
-    // custom memory pool
-    MemoryPool& memoryPool;
 
     // footer
     proto::Footer* footer;
@@ -130,7 +126,7 @@ namespace orc {
     * @param options options for reading
     */
     RowReaderImpl(std::shared_ptr<FileContents> contents,
-           const RowReaderOptions& options);
+                  const RowReaderOptions& options);
 
     // Select the columns from the options object
     void updateSelected();
@@ -143,8 +139,6 @@ namespace orc {
 
     bool next(ColumnVectorBatch& data) override;
 
-    const RowReaderOptions& getRowReaderOptions() const;
-
     CompressionKind getCompression() const;
 
     uint64_t getCompressionSize() const;
@@ -153,8 +147,9 @@ namespace orc {
 
     void seekToRow(uint64_t rowNumber) override;
 
-    MemoryPool* getMemoryPool() const ;
-
+    const FileContents& getFileContents() const;
+    bool getThrowOnHive11DecimalOverflow() const;
+    int32_t getForcedScaleOnHive11Decimal() const;
   };
 
   class ReaderImpl : public Reader {
@@ -166,9 +161,6 @@ namespace orc {
     const ReaderOptions& options;
     const uint64_t fileLength;
     const uint64_t postscriptLength;
-
-    // custom memory pool
-    MemoryPool& memoryPool;
 
     // footer
     proto::Footer* footer;
@@ -227,8 +219,10 @@ namespace orc {
     std::unique_ptr<Statistics>
     getStripeStatistics(uint64_t stripeIndex) const override;
 
-    std::unique_ptr<RowReader> getRowReader(const RowReaderOptions& options
-                                           ) const override;
+    std::unique_ptr<RowReader> createRowReader() const override;
+
+    std::unique_ptr<RowReader> createRowReader(const RowReaderOptions& options
+                                               ) const override;
 
     uint64_t getContentLength() const override;
     uint64_t getStripeStatisticsLength() const override;

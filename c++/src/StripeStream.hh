@@ -40,7 +40,6 @@ namespace orc {
     const proto::StripeFooter& footer;
     const uint64_t stripeStart;
     InputStream& input;
-    MemoryPool& memoryPool;
     const Timezone& writerTimezone;
 
   public:
@@ -48,12 +47,9 @@ namespace orc {
                       const proto::StripeFooter& footer,
                       uint64_t stripeStart,
                       InputStream& input,
-                      MemoryPool& memoryPool,
                       const Timezone& writerTimezone);
 
     virtual ~StripeStreamsImpl();
-
-    virtual const RowReaderOptions& getRowReaderOptions() const override;
 
     virtual const std::vector<bool> getSelectedColumns() const override;
 
@@ -68,6 +64,12 @@ namespace orc {
     MemoryPool& getMemoryPool() const override;
 
     const Timezone& getWriterTimezone() const override;
+
+    std::ostream* getErrorStream() const override;
+
+    bool getThrowOnHive11DecimalOverflow() const override;
+
+    int32_t getForcedScaleOnHive11Decimal() const override;
   };
 
  /**

@@ -315,21 +315,6 @@ namespace orc {
     RowReaderOptions& forcedScaleOnHive11Decimal(int32_t forcedScale);
 
     /**
-     * Set the memory allocator.
-     */
-    RowReaderOptions& setMemoryPool(MemoryPool& pool);
-
-    /**
-     * Set the stream to use for printing warning or error messages.
-     */
-    RowReaderOptions& setErrorStream(std::ostream& stream);
-
-    /**
-     * Get the stream to write warnings or errors to.
-     */
-    std::ostream* getErrorStream() const;
-
-    /**
      * Were the field ids set?
      */
     bool getIndexesSet() const;
@@ -378,11 +363,6 @@ namespace orc {
      * What scale should all Hive 0.11 decimals be normalized to?
      */
     int32_t getForcedScaleOnHive11Decimal() const;
-
-    /**
-     * Get the memory allocator.
-     */
-    MemoryPool* getMemoryPool() const;
   };
 
 
@@ -546,11 +526,17 @@ namespace orc {
     virtual const Type& getType() const = 0;
 
     /**
+     * Create a RowReader based on this reader with the default options.
+     * @return a RowReader to read the rows
+     */
+    virtual ORC_UNIQUE_PTR<RowReader> createRowReader() const = 0;
+
+    /**
+     * Create a RowReader based on this reader.
      * @param options RowReader Options
      * @return a RowReader to read the rows
      */
-    virtual ORC_UNIQUE_PTR<RowReader>
-    getRowReader(const RowReaderOptions& options) const = 0;
+    virtual ORC_UNIQUE_PTR<RowReader> createRowReader(const RowReaderOptions& options) const = 0;
 
     /**
      * Get the name of the input stream.

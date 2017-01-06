@@ -28,10 +28,9 @@
 
 void scanFile(std::ostream & out, const char* filename, uint64_t batchSize) {
   orc::ReaderOptions readerOpts;
-  orc::RowReaderOptions rowReaderOpts;
   std::unique_ptr<orc::Reader> reader =
     orc::createReader(orc::readLocalFile(filename), readerOpts);
-  std::unique_ptr<orc::RowReader> rowReader = reader->getRowReader(rowReaderOpts);
+  std::unique_ptr<orc::RowReader> rowReader = reader->createRowReader();
   std::unique_ptr<orc::ColumnVectorBatch> batch =
     rowReader->createRowBatch(batchSize);
 

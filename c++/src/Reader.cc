@@ -213,13 +213,13 @@ namespace orc {
   }
 
   RowReaderImpl::RowReaderImpl(std::shared_ptr<FileContents> _contents,
-                            const RowReaderOptions& opts
+                               const RowReaderOptions& opts
                          ): localTimezone(getLocalTimezone()),
                             contents(_contents),
-                            options(opts),
-                            memoryPool(*opts.getMemoryPool()),
+                            throwOnHive11DecimalOverflow(opts.getThrowOnHive11DecimalOverflow()),
+                            forcedScaleOnHive11Decimal(opts.getForcedScaleOnHive11Decimal()),
                             footer(contents->footer.get()),
-                            firstRowOfStripe(memoryPool, 0) {
+                            firstRowOfStripe(*contents->pool, 0) {
     uint64_t numberOfStripes;
     numberOfStripes = static_cast<uint64_t>(footer->stripes_size());
     currentStripe = numberOfStripes;
@@ -256,11 +256,7 @@ namespace orc {
     }
 
     ColumnSelector column_selector(contents.get());
-    column_selector.updateSelected(selectedColumns, options);
-  }
-
-  const RowReaderOptions& RowReaderImpl::getRowReaderOptions() const {
-    return options;
+    column_selector.updateSelected(selectedColumns, opts);
   }
 
   CompressionKind RowReaderImpl::getCompression() const {
@@ -329,6 +325,18 @@ namespace orc {
     reader->skip(currentRowInStripe);
   }
 
+  const FileContents& RowReaderImpl::getFileContents() const {
+    return *contents;
+  }
+
+  bool RowReaderImpl::getThrowOnHive11DecimalOverflow() const {
+    return throwOnHive11DecimalOverflow;
+  }
+
+  int32_t RowReaderImpl::getForcedScaleOnHive11Decimal() const {
+    return forcedScaleOnHive11Decimal;
+  }
+
   proto::StripeFooter RowReaderImpl::getStripeFooter
        (const proto::StripeInformation& info) {
     uint64_t stripeFooterStart = info.offset() + info.indexlength() +
@@ -340,9 +348,9 @@ namespace orc {
                          (new SeekableFileInputStream(contents->stream.get(),
                                                       stripeFooterStart,
                                                       stripeFooterLength,
-                                                      memoryPool)),
+                                                      *contents->pool)),
                          contents->blockSize,
-                         memoryPool);
+                         *contents->pool);
     proto::StripeFooter result;
     if (!result.ParseFromZeroCopyStream(pbStream.get())) {
       throw ParseError(std::string("bad StripeFooter from ") +
@@ -359,7 +367,6 @@ namespace orc {
                             options(opts),
                             fileLength(_fileLength),
                             postscriptLength(_postscriptLength),
-                            memoryPool(*opts.getMemoryPool()),
                             footer(contents->footer.get()) {
     isMetadataLoaded = false;
     checkOrcVersion();
@@ -424,7 +431,7 @@ namespace orc {
         stripeInfo.footerlength(),
         stripeInfo.numberofrows(),
         contents->stream.get(),
-        memoryPool,
+        *contents->pool,
         contents->compression,
         contents->blockSize));
   }
@@ -551,9 +558,9 @@ namespace orc {
                              (new SeekableFileInputStream(contents->stream.get(),
                                                           metadataStart,
                                                           metadataSize,
-                                                          memoryPool)),
+                                                          *contents->pool)),
                            contents->blockSize,
-                           memoryPool);
+                           *contents->pool);
       metadata.reset(new proto::Metadata());
       if (!metadata->ParseFromZeroCopyStream(pbStream.get())) {
         throw ParseError("Failed to parse the metadata");
@@ -576,7 +583,12 @@ namespace orc {
     }
   }
 
-  std::unique_ptr<RowReader> ReaderImpl::getRowReader(
+  std::unique_ptr<RowReader> ReaderImpl::createRowReader() const {
+    RowReaderOptions defaultOpts;
+    return createRowReader(defaultOpts);
+  }
+
+  std::unique_ptr<RowReader> ReaderImpl::createRowReader(
            const RowReaderOptions& opts) const {
     return std::unique_ptr<RowReader>(new RowReaderImpl(contents, opts));
   }
@@ -758,7 +770,6 @@ namespace orc {
     StripeStreamsImpl stripeStreams(*this, currentStripeFooter,
                                     currentStripeInfo.offset(),
                                     *(contents->stream.get()),
-                                    memoryPool,
                                     writerTimezone);
     reader = buildReader(*contents->schema.get(), stripeStreams);
   }
@@ -794,7 +805,7 @@ namespace orc {
 
   std::unique_ptr<ColumnVectorBatch> RowReaderImpl::createRowBatch
                                               (uint64_t capacity) const {
-    return getSelectedType().createRowBatch(capacity, memoryPool);
+    return getSelectedType().createRowBatch(capacity, *contents->pool);
   }
 
   void ensureOrcFooter(InputStream* stream,
@@ -883,8 +894,9 @@ namespace orc {
 
   std::unique_ptr<Reader> createReader(std::unique_ptr<InputStream> stream,
                                        const ReaderOptions& options) {
-    MemoryPool *memoryPool = options.getMemoryPool();
     std::shared_ptr<FileContents> contents = std::shared_ptr<FileContents>(new FileContents());
+    contents->pool = options.getMemoryPool();
+    contents->errorStream = options.getErrorStream();
     std::string serializedFooter = options.getSerializedFileTail();
     uint64_t fileLength;
     uint64_t postscriptLength;
@@ -908,7 +920,7 @@ namespace orc {
       if (readSize < 4) {
         throw ParseError("File size too small");
       }
-      DataBuffer<char> *buffer = new DataBuffer<char>(*memoryPool, readSize);
+      DataBuffer<char> *buffer = new DataBuffer<char>(*contents->pool, readSize);
       stream->read(buffer->data(), readSize, fileLength - readSize);
 
       postscriptLength = buffer->data()[readSize - 1] & 0xff;
@@ -927,7 +939,7 @@ namespace orc {
       }
 
       contents->footer = REDUNDANT_MOVE(readFooter(stream.get(), buffer,
-        footerOffset, *contents->postscript,  *memoryPool));
+        footerOffset, *contents->postscript,  *contents->pool));
       delete buffer;
     }
     contents->stream = std::move(stream);

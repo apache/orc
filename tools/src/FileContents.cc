@@ -26,12 +26,12 @@
 #include <iostream>
 #include <string>
 
-void printContents(const char* filename, const orc::RowReaderOptions rowReaderOpts) {
+void printContents(const char* filename, const orc::RowReaderOptions& rowReaderOpts) {
   orc::ReaderOptions readerOpts;
   std::unique_ptr<orc::Reader> reader;
   std::unique_ptr<orc::RowReader> rowReader;
   reader = orc::createReader(orc::readLocalFile(std::string(filename)), readerOpts);
-  rowReader = reader->getRowReader(rowReaderOpts);
+  rowReader = reader->createRowReader(rowReaderOpts);
 
   std::unique_ptr<orc::ColumnVectorBatch> batch = rowReader->createRowBatch(1000);
   std::string line;

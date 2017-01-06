@@ -129,8 +129,6 @@ namespace orc {
     uint64_t dataLength;
     bool throwOnHive11DecimalOverflow;
     int32_t forcedScaleOnHive11Decimal;
-    std::ostream* errorStream;
-    MemoryPool* memoryPool;
 
     RowReaderOptionsPrivate() {
       selection = ColumnSelection_NONE;
@@ -138,8 +136,6 @@ namespace orc {
       dataLength = std::numeric_limits<uint64_t>::max();
       throwOnHive11DecimalOverflow = true;
       forcedScaleOnHive11Decimal = 6;
-      errorStream = &std::cerr;
-      memoryPool = getDefaultPool();
     }
   };
 
@@ -200,15 +196,6 @@ namespace orc {
     return *this;
   }
 
-  RowReaderOptions& RowReaderOptions::setMemoryPool(MemoryPool& pool) {
-    privateBits->memoryPool = &pool;
-    return *this;
-  }
-
-  MemoryPool* RowReaderOptions::getMemoryPool() const{
-    return privateBits->memoryPool;
-  }
-
   bool RowReaderOptions::getIndexesSet() const {
     return privateBits->selection == ColumnSelection_FIELD_IDS;
   }
@@ -255,16 +242,6 @@ namespace orc {
   int32_t RowReaderOptions::getForcedScaleOnHive11Decimal() const {
     return privateBits->forcedScaleOnHive11Decimal;
   }
-
-  RowReaderOptions& RowReaderOptions::setErrorStream(std::ostream& stream) {
-    privateBits->errorStream = &stream;
-    return *this;
-  }
-
-  std::ostream* RowReaderOptions::getErrorStream() const {
-    return privateBits->errorStream;
-  }
-
 }
 
 #endif
