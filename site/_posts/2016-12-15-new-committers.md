@@ -26,6 +26,7 @@ committers coming from Hive are:
 * Rajesh Balamohan
 * Rui Li
 * Sergio Pena
+* Siddharth Seth
 * Vaibhav Gumashta
 * Wei Zheng
 * Yongzhi Chen
