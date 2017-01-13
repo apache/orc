@@ -57,7 +57,6 @@
   </mailingLists>
 
   <modules>
-    <module>storage-api</module>
     <module>core</module>
     <module>mapreduce</module>
     <module>tools</module>
@@ -70,7 +69,7 @@
     <test.tmp.dir>${project.build.directory}/testing-tmp</test.tmp.dir>
 
     <hadoop.version>2.6.4</hadoop.version>
-    <storage-api.version>2.1.1.2-pre-orc</storage-api.version>
+    <storage-api.version>2.2.0</storage-api.version>
   </properties>
 
   <build>
