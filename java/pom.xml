@@ -57,7 +57,6 @@
   </mailingLists>
 
   <modules>
-    <module>storage-api</module>
     <module>core</module>
     <module>mapreduce</module>
     <module>tools</module>
