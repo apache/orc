@@ -40,6 +40,7 @@ import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.UnionColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.ql.exec.vector.expressions.StringExpr;
+import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.OrcProto;
 
@@ -1096,6 +1097,7 @@ public class TreeReaderFactory {
     protected InStream valueStream;
     protected IntegerReader scaleReader = null;
     private int[] scratchScaleVector;
+    private byte[] scratchBytes;
 
     DecimalTreeReader(int columnId, Context context) throws IOException {
       this(columnId, null, null, null, null, context);
@@ -1107,6 +1109,7 @@ public class TreeReaderFactory {
       super(columnId, present, context);
       this.scratchScaleVector = new int[VectorizedRowBatch.DEFAULT_SIZE];
       this.valueStream = valueStream;
+      this.scratchBytes = new byte[HiveDecimal.SCRATCH_BUFFER_LEN_SERIALIZATION_UTILS_READ];
       if (scaleStream != null && encoding != null) {
         checkEncoding(encoding);
         this.scaleReader = createIntegerReader(encoding.getKind(), scaleStream, true, context);
@@ -1159,18 +1162,30 @@ public class TreeReaderFactory {
       // read the scales
       scaleReader.nextVector(result, scratchScaleVector, batchSize);
       // Read value entries based on isNull entries
+      // Use the fast ORC deserialization method that emulates SerializationUtils.readBigInteger
+      // provided by HiveDecimalWritable.
+      HiveDecimalWritable[] vector = result.vector;
+      HiveDecimalWritable decWritable;
       if (result.noNulls) {
         for (int r=0; r < batchSize; ++r) {
-          BigInteger bInt = SerializationUtils.readBigInteger(valueStream);
-          HiveDecimal dec = HiveDecimal.create(bInt, scratchScaleVector[r]);
-          result.set(r, dec);
+          decWritable = vector[r];
+          if (!decWritable.serializationUtilsRead(
+              valueStream, scratchScaleVector[r],
+              scratchBytes)) {
+            result.isNull[r] = true;
+            result.noNulls = false;
+          }
         }
       } else if (!result.isRepeating || !result.isNull[0]) {
         for (int r=0; r < batchSize; ++r) {
           if (!result.isNull[r]) {
-            BigInteger bInt = SerializationUtils.readBigInteger(valueStream);
-            HiveDecimal dec = HiveDecimal.create(bInt, scratchScaleVector[r]);
-            result.set(r, dec);
+            decWritable = vector[r];
+            if (!decWritable.serializationUtilsRead(
+                valueStream, scratchScaleVector[r],
+                scratchBytes)) {
+              result.isNull[r] = true;
+              result.noNulls = false;
+            }
           }
         }
       }
@@ -1179,8 +1194,9 @@ public class TreeReaderFactory {
     @Override
     void skipRows(long items) throws IOException {
       items = countNonNulls(items);
+      HiveDecimalWritable scratchDecWritable = new HiveDecimalWritable();
       for (int i = 0; i < items; i++) {
-        SerializationUtils.readBigInteger(valueStream);
+        scratchDecWritable.serializationUtilsRead(valueStream, 0, scratchBytes);
       }
       scaleReader.skip(items);
     }

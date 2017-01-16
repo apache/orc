@@ -818,7 +818,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     @Override
     public void setConvertVectorElement(int elementNum) throws IOException {
       doubleColVector.vector[elementNum] =
-          (float) decimalColVector.vector[elementNum].getHiveDecimal().doubleValue();
+          (float) decimalColVector.vector[elementNum].doubleValue();
     }
 
     @Override
@@ -1024,7 +1024,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     @Override
     public void setConvertVectorElement(int elementNum) throws IOException {
       doubleColVector.vector[elementNum] =
-          decimalColVector.vector[elementNum].getHiveDecimal().doubleValue();
+          decimalColVector.vector[elementNum].doubleValue();
     }
 
     @Override
@@ -1361,14 +1361,8 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     @Override
     public void setConvertVectorElement(int elementNum) throws IOException {
 
-      HiveDecimalWritable valueWritable = HiveDecimalWritable.enforcePrecisionScale(
-          fileDecimalColVector.vector[elementNum], readerPrecision, readerScale);
-      if (valueWritable != null) {
-        decimalColVector.set(elementNum, valueWritable);
-      } else {
-        decimalColVector.noNulls = false;
-        decimalColVector.isNull[elementNum] = true;
-      }
+      decimalColVector.set(elementNum, fileDecimalColVector.vector[elementNum]);
+
     }
 
     @Override
@@ -1530,6 +1524,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     private final TypeDescription readerType;
     private DecimalColumnVector decimalColVector;
     private BytesColumnVector bytesColVector;
+    private byte[] scratchBuffer;
 
     StringGroupFromDecimalTreeReader(int columnId, TypeDescription fileType,
         TypeDescription readerType, Context context) throws IOException {
