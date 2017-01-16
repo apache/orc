@@ -37,6 +37,7 @@ To build a normal release:
 
 ~~~ shell
 % mkdir build
+% cd build
 % cmake ..
 % make package test-out
 ~~~
