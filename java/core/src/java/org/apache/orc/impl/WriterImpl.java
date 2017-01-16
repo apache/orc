@@ -35,6 +35,7 @@ import io.airlift.compress.lz4.Lz4Compressor;
 import io.airlift.compress.lz4.Lz4Decompressor;
 import io.airlift.compress.lzo.LzoCompressor;
 import io.airlift.compress.lzo.LzoDecompressor;
+import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.hadoop.hive.ql.util.JavaDataModel;
 import org.apache.orc.BinaryColumnStatistics;
 import org.apache.orc.ColumnStatistics;
@@ -1980,6 +1981,11 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
 
   private static class DecimalTreeWriter extends TreeWriter {
     private final PositionedOutputStream valueStream;
+
+    // These scratch buffers allow us to serialize decimals much faster.
+    private final long[] scratchLongs;
+    private final byte[] scratchBuffer;
+
     private final IntegerWriter scaleStream;
     private final boolean isDirectV2;
 
@@ -1990,6 +1996,8 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       super(columnId, schema, writer, nullable);
       this.isDirectV2 = isNewWriteFormat(writer);
       valueStream = writer.createStream(id, OrcProto.Stream.Kind.DATA);
+      scratchLongs = new long[HiveDecimal.SCRATCH_LONGS_LEN];
+      scratchBuffer = new byte[HiveDecimal.SCRATCH_BUFFER_LEN_TO_BYTES];
       this.scaleStream = createIntegerWriter(writer.createStream(id,
           OrcProto.Stream.Kind.SECONDARY), true, isDirectV2, writer);
       recordPosition(rowIndexPosition);
@@ -2012,31 +2020,30 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       DecimalColumnVector vec = (DecimalColumnVector) vector;
       if (vector.isRepeating) {
         if (vector.noNulls || !vector.isNull[0]) {
-          HiveDecimal value = vec.vector[0].getHiveDecimal();
+          HiveDecimalWritable value = vec.vector[0];
           indexStatistics.updateDecimal(value);
           if (createBloomFilter) {
-            String str = value.toString();
+            String str = value.toString(scratchBuffer);
             if (bloomFilter != null) {
               bloomFilter.addString(str);
             }
             bloomFilterUtf8.addString(str);
           }
           for(int i=0; i < length; ++i) {
-            SerializationUtils.writeBigInteger(valueStream,
-                value.unscaledValue());
+            value.serializationUtilsWrite(valueStream,
+                                          scratchLongs);
             scaleStream.write(value.scale());
           }
         }
       } else {
         for(int i=0; i < length; ++i) {
           if (vec.noNulls || !vec.isNull[i + offset]) {
-            HiveDecimal value = vec.vector[i + offset].getHiveDecimal();
-            SerializationUtils.writeBigInteger(valueStream,
-                value.unscaledValue());
+            HiveDecimalWritable value = vec.vector[i + offset];
+            value.serializationUtilsWrite(valueStream, scratchLongs);
             scaleStream.write(value.scale());
             indexStatistics.updateDecimal(value);
             if (createBloomFilter) {
-              String str = value.toString();
+              String str = value.toString(scratchBuffer);
               if (bloomFilter != null) {
                 bloomFilter.addString(str);
               }
