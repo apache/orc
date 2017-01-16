@@ -64,11 +64,11 @@ public interface PhysicalWriter {
   /**
    * Write an index in the given stream name.
    * @param name the name of the stream
-   * @param bloom the bloom filter to write
+   * @param index the bloom filter to write
    * @param codec the compression codec to use
    */
   void writeIndex(StreamName name,
-                  OrcProto.RowIndex.Builder bloom,
+                  OrcProto.RowIndex.Builder index,
                   CompressionCodec codec) throws IOException;
 
   /**
