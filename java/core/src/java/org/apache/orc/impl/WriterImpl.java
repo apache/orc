@@ -284,6 +284,39 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     }
   }
 
+  CompressionCodec getCustomizedCodec(OrcProto.Stream.Kind kind) {
+    CompressionCodec result = codec;
+    if (codec != null) {
+      switch (kind) {
+        case BLOOM_FILTER:
+        case DATA:
+        case DICTIONARY_DATA:
+        case BLOOM_FILTER_UTF8:
+          if (compressionStrategy == OrcFile.CompressionStrategy.SPEED) {
+            result = codec.modify(EnumSet.of(CompressionCodec.Modifier.FAST,
+                CompressionCodec.Modifier.TEXT));
+          } else {
+            result = codec.modify(EnumSet.of(CompressionCodec.Modifier.DEFAULT,
+                CompressionCodec.Modifier.TEXT));
+          }
+          break;
+        case LENGTH:
+        case DICTIONARY_COUNT:
+        case PRESENT:
+        case ROW_INDEX:
+        case SECONDARY:
+          // easily compressed using the fastest modes
+          result = codec.modify(EnumSet.of(CompressionCodec.Modifier.FASTEST,
+              CompressionCodec.Modifier.BINARY));
+          break;
+        default:
+          LOG.info("Missing ORC compression modifiers for " + kind);
+          break;
+      }
+    }
+    return result;
+  }
+
   /**
    * Interface from the Writer to the TreeWriters. This limits the visibility
    * that the TreeWriters have into the Writer.
@@ -300,35 +333,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
                                   OrcProto.Stream.Kind kind
                                   ) throws IOException {
       final StreamName name = new StreamName(column, kind);
-      CompressionCodec codec = WriterImpl.this.codec;
-      if (codec != null) {
-        switch (kind) {
-          case BLOOM_FILTER:
-          case DATA:
-          case DICTIONARY_DATA:
-          case BLOOM_FILTER_UTF8:
-            if (getCompressionStrategy() == OrcFile.CompressionStrategy.SPEED) {
-              codec = codec.modify(EnumSet.of(CompressionCodec.Modifier.FAST,
-                  CompressionCodec.Modifier.TEXT));
-            } else {
-              codec = codec.modify(EnumSet.of(CompressionCodec.Modifier.DEFAULT,
-                  CompressionCodec.Modifier.TEXT));
-            }
-            break;
-          case LENGTH:
-          case DICTIONARY_COUNT:
-          case PRESENT:
-          case ROW_INDEX:
-          case SECONDARY:
-            // easily compressed using the fastest modes
-            codec = codec.modify(EnumSet.of(CompressionCodec.Modifier.FASTEST,
-                CompressionCodec.Modifier.BINARY));
-            break;
-          default:
-            LOG.info("Missing ORC compression modifiers for " + kind);
-            break;
-        }
-      }
+      CompressionCodec codec = getCustomizedCodec(kind);
 
       return new OutStream(physicalWriter.toString(), bufferSize, codec,
           physicalWriter.createDataStream(name));
@@ -423,6 +428,18 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     public OrcFile.BloomFilterVersion getBloomFilterVersion() {
       return bloomFilterVersion;
     }
+
+    public void writeIndex(StreamName name,
+                           OrcProto.RowIndex.Builder index) throws IOException {
+      physicalWriter.writeIndex(name, index, getCustomizedCodec(name.getKind()));
+    }
+
+    public void writeBloomFilter(StreamName name,
+                                 OrcProto.BloomFilterIndex.Builder bloom
+                                 ) throws IOException {
+      physicalWriter.writeBloomFilter(name, bloom,
+          getCustomizedCodec(name.getKind()));
+    }
   }
 
   /**
@@ -442,9 +459,6 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     protected final RowIndexPositionRecorder rowIndexPosition;
     private final OrcProto.RowIndex.Builder rowIndex;
     private final OrcProto.RowIndexEntry.Builder rowIndexEntry;
-    private final PositionedOutputStream rowIndexStream;
-    private final PositionedOutputStream bloomFilterStream;
-    private final PositionedOutputStream bloomFilterStreamUtf8;
     protected final BloomFilter bloomFilter;
     protected final BloomFilterUtf8 bloomFilterUtf8;
     protected final boolean createBloomFilter;
@@ -484,39 +498,33 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       stripeColStatistics = ColumnStatisticsImpl.create(schema);
       fileStatistics = ColumnStatisticsImpl.create(schema);
       childrenWriters = new TreeWriter[0];
-      rowIndex = OrcProto.RowIndex.newBuilder();
-      rowIndexEntry = OrcProto.RowIndexEntry.newBuilder();
-      rowIndexPosition = new RowIndexPositionRecorder(rowIndexEntry);
-      stripeStatsBuilders = new ArrayList<>();
       if (streamFactory.buildIndex()) {
-        rowIndexStream = streamFactory.createStream(id, OrcProto.Stream.Kind.ROW_INDEX);
+        rowIndex = OrcProto.RowIndex.newBuilder();
+        rowIndexEntry = OrcProto.RowIndexEntry.newBuilder();
+        rowIndexPosition = new RowIndexPositionRecorder(rowIndexEntry);
       } else {
-        rowIndexStream = null;
+        rowIndex = null;
+        rowIndexEntry = null;
+        rowIndexPosition = null;
       }
+      stripeStatsBuilders = new ArrayList<>();
       if (createBloomFilter) {
         bloomFilterEntry = OrcProto.BloomFilter.newBuilder();
         if (streamFactory.getBloomFilterVersion() == OrcFile.BloomFilterVersion.ORIGINAL) {
           bloomFilter = new BloomFilter(streamFactory.getRowIndexStride(),
               streamFactory.getBloomFilterFPP());
           bloomFilterIndex = OrcProto.BloomFilterIndex.newBuilder();
-          bloomFilterStream = streamFactory.createStream(id,
-              OrcProto.Stream.Kind.BLOOM_FILTER);;
         } else {
           bloomFilter = null;
           bloomFilterIndex = null;
-          bloomFilterStream = null;
         }
         bloomFilterUtf8 = new BloomFilterUtf8(streamFactory.getRowIndexStride(),
             streamFactory.getBloomFilterFPP());
         bloomFilterIndexUtf8 = OrcProto.BloomFilterIndex.newBuilder();
-        bloomFilterStreamUtf8 = streamFactory.createStream(id,
-              OrcProto.Stream.Kind.BLOOM_FILTER_UTF8);;
       } else {
         bloomFilterEntry = null;
         bloomFilterIndex = null;
         bloomFilterIndexUtf8 = null;
-        bloomFilterStreamUtf8 = null;
-        bloomFilterStream = null;
         bloomFilter = null;
         bloomFilterUtf8 = null;
       }
@@ -650,7 +658,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
           isPresentOutStream.suppress();
           // since isPresent bitstream is suppressed, update the index to
           // remove the positions of the isPresent stream
-          if (rowIndexStream != null) {
+          if (rowIndex != null) {
             removeIsPresentPositions();
           }
         }
@@ -669,28 +677,27 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       if (streamFactory.hasWriterTimeZone()) {
         builder.setWriterTimezone(TimeZone.getDefault().getID());
       }
-      if (rowIndexStream != null) {
+      if (rowIndex != null) {
         if (rowIndex.getEntryCount() != requiredIndexEntries) {
           throw new IllegalArgumentException("Column has wrong number of " +
                "index entries found: " + rowIndex.getEntryCount() + " expected: " +
                requiredIndexEntries);
         }
-        rowIndex.build().writeTo(rowIndexStream);
-        rowIndexStream.flush();
+        streamFactory.writeIndex(new StreamName(id, OrcProto.Stream.Kind.ROW_INDEX), rowIndex);
+        rowIndex.clear();
+        rowIndexEntry.clear();
       }
-      rowIndex.clear();
-      rowIndexEntry.clear();
 
       // write the bloom filter to out stream
-      if (bloomFilterStream != null) {
-        bloomFilterIndex.build().writeTo(bloomFilterStream);
-        bloomFilterStream.flush();
+      if (bloomFilterIndex != null) {
+        streamFactory.writeBloomFilter(new StreamName(id,
+            OrcProto.Stream.Kind.BLOOM_FILTER), bloomFilterIndex);
         bloomFilterIndex.clear();
       }
       // write the bloom filter to out stream
-      if (bloomFilterStreamUtf8 != null) {
-        bloomFilterIndexUtf8.build().writeTo(bloomFilterStreamUtf8);
-        bloomFilterStreamUtf8.flush();
+      if (bloomFilterIndexUtf8 != null) {
+        streamFactory.writeBloomFilter(new StreamName(id,
+            OrcProto.Stream.Kind.BLOOM_FILTER_UTF8), bloomFilterIndexUtf8);
         bloomFilterIndexUtf8.clear();
       }
     }
@@ -791,7 +798,9 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       PositionedOutputStream out = writer.createStream(id,
           OrcProto.Stream.Kind.DATA);
       this.writer = new BitFieldWriter(out, 1);
-      recordPosition(rowIndexPosition);
+      if (rowIndexPosition != null) {
+        recordPosition(rowIndexPosition);
+      }
     }
 
     @Override
@@ -823,7 +832,9 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
                      int requiredIndexEntries) throws IOException {
       super.writeStripe(builder, requiredIndexEntries);
       writer.flush();
-      recordPosition(rowIndexPosition);
+      if (rowIndexPosition != null) {
+        recordPosition(rowIndexPosition);
+      }
     }
 
     @Override
@@ -848,7 +859,9 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       super(columnId, schema, writer, nullable);
       this.writer = new RunLengthByteWriter(writer.createStream(id,
           OrcProto.Stream.Kind.DATA));
-      recordPosition(rowIndexPosition);
+      if (rowIndexPosition != null) {
+        recordPosition(rowIndexPosition);
+      }
     }
 
     @Override
@@ -892,7 +905,9 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
                      int requiredIndexEntries) throws IOException {
       super.writeStripe(builder, requiredIndexEntries);
       writer.flush();
-      recordPosition(rowIndexPosition);
+      if (rowIndexPosition != null) {
+        recordPosition(rowIndexPosition);
+      }
     }
 
     @Override
@@ -920,7 +935,9 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
           OrcProto.Stream.Kind.DATA);
       this.isDirectV2 = isNewWriteFormat(writer);
       this.writer = createIntegerWriter(out, true, isDirectV2, writer);
-      recordPosition(rowIndexPosition);
+      if (rowIndexPosition != null) {
+        recordPosition(rowIndexPosition);
+      }
     }
 
     @Override
@@ -974,7 +991,9 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
                      int requiredIndexEntries) throws IOException {
       super.writeStripe(builder, requiredIndexEntries);
       writer.flush();
-      recordPosition(rowIndexPosition);
+      if (rowIndexPosition != null) {
+        recordPosition(rowIndexPosition);
+      }
     }
 
     @Override
@@ -1001,7 +1020,9 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       this.stream = writer.createStream(id,
           OrcProto.Stream.Kind.DATA);
       this.utils = new SerializationUtils();
-      recordPosition(rowIndexPosition);
+      if (rowIndexPosition != null) {
+        recordPosition(rowIndexPosition);
+      }
     }
 
     @Override
@@ -1046,7 +1067,9 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
                      int requiredIndexEntries) throws IOException {
       super.writeStripe(builder, requiredIndexEntries);
       stream.flush();
-      recordPosition(rowIndexPosition);
+      if (rowIndexPosition != null) {
+        recordPosition(rowIndexPosition);
+      }
     }
 
     @Override
@@ -1073,7 +1096,9 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       this.stream = writer.createStream(id,
           OrcProto.Stream.Kind.DATA);
       this.utils = new SerializationUtils();
-      recordPosition(rowIndexPosition);
+      if (rowIndexPosition != null) {
+        recordPosition(rowIndexPosition);
+      }
     }
 
     @Override
@@ -1117,7 +1142,9 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
                      int requiredIndexEntries) throws IOException {
       super.writeStripe(builder, requiredIndexEntries);
       stream.flush();
-      recordPosition(rowIndexPosition);
+      if (rowIndexPosition != null) {
+        recordPosition(rowIndexPosition);
+      }
     }
 
     @Override
@@ -1166,7 +1193,9 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
           OrcProto.Stream.Kind.LENGTH), false, isDirectV2, writer);
       rowOutput = createIntegerWriter(directStreamOutput, false, isDirectV2,
           writer);
-      recordPosition(rowIndexPosition);
+      if (rowIndexPosition != null) {
+        recordPosition(rowIndexPosition);
+      }
       rowIndexValueCount.add(0L);
       buildIndex = writer.buildIndex();
       Configuration conf = writer.getConfiguration();
@@ -1223,7 +1252,9 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       dictionary.clear();
       savedRowIndex.clear();
       rowIndexValueCount.clear();
-      recordPosition(rowIndexPosition);
+      if (rowIndexPosition != null) {
+        recordPosition(rowIndexPosition);
+      }
       rowIndexValueCount.add(0L);
 
       if (!useDictionaryEncoding) {
@@ -1349,8 +1380,10 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     }
 
     private void recordDirectStreamPosition() throws IOException {
-      directStreamOutput.getPosition(rowIndexPosition);
-      lengthOutput.getPosition(rowIndexPosition);
+      if (rowIndexPosition != null) {
+        directStreamOutput.getPosition(rowIndexPosition);
+        lengthOutput.getPosition(rowIndexPosition);
+      }
     }
 
     @Override
@@ -1619,7 +1652,9 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       this.isDirectV2 = isNewWriteFormat(writer);
       this.length = createIntegerWriter(writer.createStream(id,
           OrcProto.Stream.Kind.LENGTH), false, isDirectV2, writer);
-      recordPosition(rowIndexPosition);
+      if (rowIndexPosition != null) {
+        recordPosition(rowIndexPosition);
+      }
     }
 
     @Override
@@ -1681,7 +1716,9 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       super.writeStripe(builder, requiredIndexEntries);
       stream.flush();
       length.flush();
-      recordPosition(rowIndexPosition);
+      if (rowIndexPosition != null) {
+        recordPosition(rowIndexPosition);
+      }
     }
 
     @Override
@@ -1720,7 +1757,9 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
           OrcProto.Stream.Kind.DATA), true, isDirectV2, writer);
       this.nanos = createIntegerWriter(writer.createStream(id,
           OrcProto.Stream.Kind.SECONDARY), false, isDirectV2, writer);
-      recordPosition(rowIndexPosition);
+      if (rowIndexPosition != null) {
+        recordPosition(rowIndexPosition);
+      }
       // for unit tests to set different time zones
       this.base_timestamp = Timestamp.valueOf(BASE_TIMESTAMP_STRING).getTime() / MILLIS_PER_SECOND;
       writer.useWriterTimeZone(true);
@@ -1786,7 +1825,9 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       super.writeStripe(builder, requiredIndexEntries);
       seconds.flush();
       nanos.flush();
-      recordPosition(rowIndexPosition);
+      if (rowIndexPosition != null) {
+        recordPosition(rowIndexPosition);
+      }
     }
 
     private static long formatNanos(int nanos) {
@@ -1832,7 +1873,9 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
           OrcProto.Stream.Kind.DATA);
       this.isDirectV2 = isNewWriteFormat(writer);
       this.writer = createIntegerWriter(out, true, isDirectV2, writer);
-      recordPosition(rowIndexPosition);
+      if (rowIndexPosition != null) {
+        recordPosition(rowIndexPosition);
+      }
     }
 
     @Override
@@ -1876,7 +1919,9 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
                      int requiredIndexEntries) throws IOException {
       super.writeStripe(builder, requiredIndexEntries);
       writer.flush();
-      recordPosition(rowIndexPosition);
+      if (rowIndexPosition != null) {
+        recordPosition(rowIndexPosition);
+      }
     }
 
     @Override
@@ -1922,7 +1967,9 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       scratchBuffer = new byte[HiveDecimal.SCRATCH_BUFFER_LEN_TO_BYTES];
       this.scaleStream = createIntegerWriter(writer.createStream(id,
           OrcProto.Stream.Kind.SECONDARY), true, isDirectV2, writer);
-      recordPosition(rowIndexPosition);
+      if (rowIndexPosition != null) {
+        recordPosition(rowIndexPosition);
+      }
     }
 
     @Override
@@ -1982,7 +2029,9 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       super.writeStripe(builder, requiredIndexEntries);
       valueStream.flush();
       scaleStream.flush();
-      recordPosition(rowIndexPosition);
+      if (rowIndexPosition != null) {
+        recordPosition(rowIndexPosition);
+      }
     }
 
     @Override
@@ -2012,7 +2061,9 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
           children.get(i), writer,
           true);
       }
-      recordPosition(rowIndexPosition);
+      if (rowIndexPosition != null) {
+        recordPosition(rowIndexPosition);
+      }
     }
 
     @Override
@@ -2076,7 +2127,9 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       for(TreeWriter child: childrenWriters) {
         child.writeStripe(builder, requiredIndexEntries);
       }
-      recordPosition(rowIndexPosition);
+      if (rowIndexPosition != null) {
+        recordPosition(rowIndexPosition);
+      }
     }
   }
 
@@ -2095,7 +2148,9 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
         createTreeWriter(schema.getChildren().get(0), writer, true);
       lengths = createIntegerWriter(writer.createStream(columnId,
           OrcProto.Stream.Kind.LENGTH), false, isDirectV2, writer);
-      recordPosition(rowIndexPosition);
+      if (rowIndexPosition != null) {
+        recordPosition(rowIndexPosition);
+      }
     }
 
     @Override
@@ -2171,7 +2226,9 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       for(TreeWriter child: childrenWriters) {
         child.writeStripe(builder, requiredIndexEntries);
       }
-      recordPosition(rowIndexPosition);
+      if (rowIndexPosition != null) {
+        recordPosition(rowIndexPosition);
+      }
     }
 
     @Override
@@ -2204,7 +2261,9 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
         createTreeWriter(children.get(1), writer, true);
       lengths = createIntegerWriter(writer.createStream(columnId,
           OrcProto.Stream.Kind.LENGTH), false, isDirectV2, writer);
-      recordPosition(rowIndexPosition);
+      if (rowIndexPosition != null) {
+        recordPosition(rowIndexPosition);
+      }
     }
 
     @Override
@@ -2285,7 +2344,9 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       for(TreeWriter child: childrenWriters) {
         child.writeStripe(builder, requiredIndexEntries);
       }
-      recordPosition(rowIndexPosition);
+      if (rowIndexPosition != null) {
+        recordPosition(rowIndexPosition);
+      }
     }
 
     @Override
@@ -2317,7 +2378,9 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       tags =
         new RunLengthByteWriter(writer.createStream(columnId,
             OrcProto.Stream.Kind.DATA));
-      recordPosition(rowIndexPosition);
+      if (rowIndexPosition != null) {
+        recordPosition(rowIndexPosition);
+      }
     }
 
     @Override
@@ -2389,7 +2452,9 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       for(TreeWriter child: childrenWriters) {
         child.writeStripe(builder, requiredIndexEntries);
       }
-      recordPosition(rowIndexPosition);
+      if (rowIndexPosition != null) {
+        recordPosition(rowIndexPosition);
+      }
     }
 
     @Override

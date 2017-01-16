@@ -19,6 +19,7 @@
 package org.apache.orc.impl;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -356,6 +357,26 @@ public class PhysicalFsWriter implements PhysicalWriter {
       streams.put(name, result);
     }
     return result;
+  }
+
+  @Override
+  public void writeIndex(StreamName name,
+                         OrcProto.RowIndex.Builder index,
+                         CompressionCodec codec) throws IOException {
+    OutputStream stream = new OutStream(path.toString(), bufferSize, codec,
+        createDataStream(name));
+    index.build().writeTo(stream);
+    stream.flush();
+  }
+
+  @Override
+  public void writeBloomFilter(StreamName name,
+                               OrcProto.BloomFilterIndex.Builder bloom,
+                               CompressionCodec codec) throws IOException {
+    OutputStream stream = new OutStream(path.toString(), bufferSize, codec,
+        createDataStream(name));
+    bloom.build().writeTo(stream);
+    stream.flush();
   }
 
   @Override

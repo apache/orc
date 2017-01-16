@@ -62,6 +62,26 @@ public interface PhysicalWriter {
   OutputReceiver createDataStream(StreamName name) throws IOException;
 
   /**
+   * Write an index in the given stream name.
+   * @param name the name of the stream
+   * @param bloom the bloom filter to write
+   * @param codec the compression codec to use
+   */
+  void writeIndex(StreamName name,
+                  OrcProto.RowIndex.Builder bloom,
+                  CompressionCodec codec) throws IOException;
+
+  /**
+   * Write a bloom filter index in the given stream name.
+   * @param name the name of the stream
+   * @param bloom the bloom filter to write
+   * @param codec the compression codec to use
+   */
+  void writeBloomFilter(StreamName name,
+                        OrcProto.BloomFilterIndex.Builder bloom,
+                        CompressionCodec codec) throws IOException;
+
+  /**
    * Flushes the data in all the streams, spills them to disk, write out stripe
    * footer.
    * @param footer Stripe footer to be updated with relevant data and written out.
