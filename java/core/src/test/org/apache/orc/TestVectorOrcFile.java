@@ -2117,8 +2117,8 @@ public class TestVectorOrcFile {
     int i = 0;
     for(StripeInformation stripe: reader.getStripes()) {
       i += 1;
-      assertTrue("stripe " + i + " is too long at " + stripe.getDataLength(),
-          stripe.getDataLength() < 5000);
+      assertTrue(testFilePath + " stripe " + i + " is too long at " +
+              stripe.getDataLength(), stripe.getDataLength() < 5000);
     }
     // with HIVE-7832, the dictionaries will be disabled after writing the first
     // stripe as there are too many distinct values. Hence only 3 stripes as

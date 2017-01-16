@@ -298,6 +298,7 @@ public class OrcFile {
     private String bloomFilterColumns;
     private double bloomFilterFpp;
     private BloomFilterVersion bloomFilterVersion;
+    private PhysicalWriter physicalWriter;
 
     protected WriterOptions(Properties tableProperties, Configuration conf) {
       configuration = conf;
@@ -487,6 +488,19 @@ public class OrcFile {
     }
 
     /**
+     * Change the physical writer of the ORC file.
+     *
+     * SHOULD ONLY BE USED BY LLAP.
+     *
+     * @param writer the writer to control the layout and persistence
+     * @return this
+     */
+    public WriterOptions physicalWriter(PhysicalWriter writer) {
+      this.physicalWriter = writer;
+      return this;
+    }
+
+    /**
      * A package local option to set the memory manager.
      */
     protected WriterOptions memory(MemoryManager value) {
@@ -568,6 +582,10 @@ public class OrcFile {
 
     public BloomFilterVersion getBloomFilterVersion() {
       return bloomFilterVersion;
+    }
+
+    public PhysicalWriter getPhysicalWriter() {
+      return physicalWriter;
     }
   }
 

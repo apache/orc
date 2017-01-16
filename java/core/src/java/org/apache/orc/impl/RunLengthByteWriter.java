@@ -103,4 +103,8 @@ public class RunLengthByteWriter {
     output.getPosition(recorder);
     recorder.addPosition(numLiterals);
   }
+
+  public long estimateMemory() {
+    return output.getBufferSize() + MAX_LITERAL_SIZE;
+  }
 }

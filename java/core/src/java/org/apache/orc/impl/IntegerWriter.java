@@ -44,4 +44,10 @@ public interface IntegerWriter {
    * @throws IOException
    */
   void flush() throws IOException;
+
+  /**
+   * Estimate the amount of memory being used.
+   * @return number of bytes
+   */
+  long estimateMemory();
 }

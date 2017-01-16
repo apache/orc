@@ -70,4 +70,8 @@ public class BitFieldWriter {
     output.getPosition(recorder);
     recorder.addPosition(8 - bitsLeft);
   }
+
+  public long estimateMemory() {
+    return output.estimateMemory();
+  }
 }
