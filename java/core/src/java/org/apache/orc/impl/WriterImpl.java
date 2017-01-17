@@ -2748,6 +2748,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     OrcProto.Footer.Builder builder = OrcProto.Footer.newBuilder();
     builder.setNumberOfRows(rowCount);
     builder.setRowIndexStride(rowIndexStride);
+    rawDataSize = computeRawDataSize();
     // serialize the types
     writeTypes(builder, schema);
     // add the stripe information

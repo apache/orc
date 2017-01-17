@@ -238,6 +238,8 @@ public class TestFileDump {
       writer.addRowBatch(batch);
     }
     writer.close();
+    assertEquals(2079000, writer.getRawDataSize());
+    assertEquals(21000, writer.getNumberOfRows());
     PrintStream origOut = System.out;
     String outputFilename = "orc-file-dump.out";
     FileOutputStream myOut = new FileOutputStream(workDir + File.separator + outputFilename);
@@ -306,6 +308,8 @@ public class TestFileDump {
     writer.addRowBatch(batch);
 
     writer.close();
+    assertEquals(1564, 0, writer.getRawDataSize());
+    assertEquals(2, writer.getNumberOfRows());
     PrintStream origOut = System.out;
     ByteArrayOutputStream myOut = new ByteArrayOutputStream();
 
