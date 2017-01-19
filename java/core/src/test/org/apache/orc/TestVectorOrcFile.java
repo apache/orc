@@ -20,6 +20,7 @@ package org.apache.orc;
 
 import com.google.common.collect.Lists;
 
+import org.apache.orc.impl.ReaderImpl;
 import org.junit.Assert;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -51,12 +52,15 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
+import org.mockito.Mockito;
 
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URL;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -2943,5 +2947,165 @@ public class TestVectorOrcFile {
     assertEquals(OrcFile.WriterVersion.FUTURE, OrcFile.WriterVersion.from(99));
     assertEquals(OrcFile.WriterVersion.ORIGINAL, OrcFile.WriterVersion.from(0));
     assertEquals(OrcFile.WriterVersion.HIVE_4243, OrcFile.WriterVersion.from(2));
+  }
+
+  /**
+   * Test whether the file versions are translated correctly
+   * @throws Exception
+   */
+  @Test
+  public void testFileVersion() throws Exception {
+    assertEquals(OrcFile.Version.V_0_11, ReaderImpl.getFileVersion(null));
+    assertEquals(OrcFile.Version.V_0_11, ReaderImpl.getFileVersion(new ArrayList<Integer>()));
+    assertEquals(OrcFile.Version.V_0_11,
+        ReaderImpl.getFileVersion(Arrays.asList(new Integer[]{0, 11})));
+    assertEquals(OrcFile.Version.V_0_12,
+        ReaderImpl.getFileVersion(Arrays.asList(new Integer[]{0, 12})));
+    assertEquals(OrcFile.Version.FUTURE,
+        ReaderImpl.getFileVersion(Arrays.asList(new Integer[]{9999, 0})));
+  }
+
+  @Test
+  public void testMergeUnderstood() throws Exception {
+    Path p = new Path("test.orc");
+    Reader futureVersion = Mockito.mock(Reader.class);
+    Mockito.when(futureVersion.getFileVersion()).thenReturn(OrcFile.Version.FUTURE);
+    Mockito.when(futureVersion.getWriterVersion()).thenReturn(OrcFile.WriterVersion.HIVE_4243);
+    assertEquals(false, OrcFile.understandFormat(p, futureVersion));
+    Reader futureWriter = Mockito.mock(Reader.class);
+    Mockito.when(futureWriter.getFileVersion()).thenReturn(OrcFile.Version.V_0_11);
+    Mockito.when(futureWriter.getWriterVersion()).thenReturn(OrcFile.WriterVersion.FUTURE);
+    assertEquals(false, OrcFile.understandFormat(p, futureWriter));
+    Reader current = Mockito.mock(Reader.class);
+    Mockito.when(current.getFileVersion()).thenReturn(OrcFile.Version.CURRENT);
+    Mockito.when(current.getWriterVersion()).thenReturn(OrcFile.CURRENT_WRITER);
+    assertEquals(true, OrcFile.understandFormat(p, current));
+  }
+
+  static ByteBuffer fromString(String s) {
+    return ByteBuffer.wrap(s.getBytes(StandardCharsets.UTF_8));
+  }
+
+  static byte[] fromInt(int x) {
+    return Integer.toHexString(x).getBytes(StandardCharsets.UTF_8);
+  }
+
+  @Test
+  public void testGoodMerge() throws Exception {
+    Path input1 = new Path(workDir, "TestVectorOrcFile.testGoodMerge1.orc");
+    fs.delete(input1, false);
+    Path input2 = new Path(workDir, "TestVectorOrcFile.testGoodMerge2.orc");
+    fs.delete(input2, false);
+    Path input3 = new Path(workDir, "TestVectorOrcFile.testGoodMerge3.orc");
+    fs.delete(input3, false);
+    TypeDescription schema = TypeDescription.fromString("struct<a:int,b:string>");
+    // change all of the options away from default to find anything we
+    // don't copy to the merged file
+    OrcFile.WriterOptions opts = OrcFile.writerOptions(conf)
+        .setSchema(schema)
+        .compress(CompressionKind.LZO)
+        .enforceBufferSize()
+        .bufferSize(20*1024)
+        .rowIndexStride(1000)
+        .version(OrcFile.Version.V_0_11)
+        .writerVersion(OrcFile.WriterVersion.HIVE_8732);
+
+    Writer writer = OrcFile.createWriter(input1, opts);
+    VectorizedRowBatch batch = schema.createRowBatch();
+    batch.size = 1024;
+    for(int r=0; r < 1024; ++r) {
+      ((LongColumnVector) batch.cols[0]).vector[r] = r;
+      ((BytesColumnVector) batch.cols[1]).setVal(r, fromInt(r));
+    }
+    writer.addRowBatch(batch);
+    writer.addUserMetadata("a", fromString("foo"));
+    writer.addUserMetadata("b", fromString("bar"));
+    writer.close();
+
+    writer = OrcFile.createWriter(input2, opts);
+    batch.size = 1024;
+    for(int r=0; r < 1024; ++r) {
+      ((LongColumnVector) batch.cols[0]).vector[r] = 2 * r;
+      ((BytesColumnVector) batch.cols[1]).setVal(r, fromInt(2 * r));
+    }
+    writer.addRowBatch(batch);
+    writer.addUserMetadata("a", fromString("foo"));
+    writer.addUserMetadata("c", fromString("baz"));
+    writer.close();
+
+    writer = OrcFile.createWriter(input3, opts);
+    batch.size = 1024;
+    for(int r=0; r < 1024; ++r) {
+      ((LongColumnVector) batch.cols[0]).vector[r] = 3 * r;
+      ((BytesColumnVector) batch.cols[1]).setVal(r, fromInt(3 * r));
+    }
+    writer.addRowBatch(batch);
+    writer.addUserMetadata("c", fromString("baz"));
+    writer.addUserMetadata("d", fromString("bat"));
+    writer.close();
+
+    Path output1 = new Path(workDir, "TestVectorOrcFile.testGoodMerge.out1.orc");
+    fs.delete(output1, false);
+    List<Path> paths = OrcFile.mergeFiles(output1,
+        OrcFile.writerOptions(conf), input1, input2, input3);
+    assertEquals(3, paths.size());
+    Reader reader = OrcFile.createReader(output1, OrcFile.readerOptions(conf));
+    assertEquals(3 * 1024, reader.getNumberOfRows());
+    assertEquals(CompressionKind.LZO, reader.getCompressionKind());
+    assertEquals(20 * 1024, reader.getCompressionSize());
+    assertEquals(1000, reader.getRowIndexStride());
+    assertEquals(OrcFile.Version.V_0_11, reader.getFileVersion());
+    assertEquals(OrcFile.WriterVersion.HIVE_8732, reader.getWriterVersion());
+    assertEquals(3, reader.getStripes().size());
+    assertEquals(4, reader.getMetadataKeys().size());
+    assertEquals(fromString("foo"), reader.getMetadataValue("a"));
+    assertEquals(fromString("bar"), reader.getMetadataValue("b"));
+    assertEquals(fromString("baz"), reader.getMetadataValue("c"));
+    assertEquals(fromString("bat"), reader.getMetadataValue("d"));
+
+    TypeDescription schema4 = TypeDescription.fromString("struct<a:int>");
+    Path input4 = new Path(workDir, "TestVectorOrcFile.testGoodMerge4.orc");
+    fs.delete(input4, false);
+    opts.setSchema(schema4);
+    writer = OrcFile.createWriter(input4, opts);
+    batch = schema4.createRowBatch();
+    batch.size = 1024;
+    for(int r=0; r < 1024; ++r) {
+      ((LongColumnVector) batch.cols[0]).vector[r] = 4 * r;
+    }
+    writer.addRowBatch(batch);
+    writer.close();
+
+    Path input5 = new Path(workDir, "TestVectorOrcFile.testGoodMerge5.orc");
+    fs.delete(input5, false);
+    opts.setSchema(schema).compress(CompressionKind.NONE);
+    writer = OrcFile.createWriter(input5, opts);
+    batch = schema.createRowBatch();
+    batch.size = 1024;
+    for(int r=0; r < 1024; ++r) {
+      ((LongColumnVector) batch.cols[0]).vector[r] = 4 * r;
+      ((BytesColumnVector) batch.cols[1]).setVal(r, fromInt(5 * r));
+    }
+    writer.addRowBatch(batch);
+    writer.close();
+
+    Path output2 = new Path(workDir, "TestVectorOrcFile.testGoodMerge.out2.orc");
+    fs.delete(output2, false);
+    paths = OrcFile.mergeFiles(output2,
+        OrcFile.writerOptions(conf), input1, input4, input3, input5);
+    assertEquals(2, paths.size());
+    reader = OrcFile.createReader(output2, OrcFile.readerOptions(conf));
+    assertEquals(2 * 1024, reader.getNumberOfRows());
+    assertEquals(CompressionKind.LZO, reader.getCompressionKind());
+    assertEquals(20 * 1024, reader.getCompressionSize());
+    assertEquals(1000, reader.getRowIndexStride());
+    assertEquals(OrcFile.Version.V_0_11, reader.getFileVersion());
+    assertEquals(OrcFile.WriterVersion.HIVE_8732, reader.getWriterVersion());
+    assertEquals(2, reader.getStripes().size());
+    assertEquals(4, reader.getMetadataKeys().size());
+    assertEquals(fromString("foo"), reader.getMetadataValue("a"));
+    assertEquals(fromString("bar"), reader.getMetadataValue("b"));
+    assertEquals(fromString("baz"), reader.getMetadataValue("c"));
+    assertEquals(fromString("bat"), reader.getMetadataValue("d"));
   }
 }
