@@ -2991,12 +2991,12 @@ public class TestVectorOrcFile {
   }
 
   @Test
-  public void testGoodMerge() throws Exception {
-    Path input1 = new Path(workDir, "TestVectorOrcFile.testGoodMerge1.orc");
+  public void testMerge() throws Exception {
+    Path input1 = new Path(workDir, "TestVectorOrcFile.testMerge1.orc");
     fs.delete(input1, false);
-    Path input2 = new Path(workDir, "TestVectorOrcFile.testGoodMerge2.orc");
+    Path input2 = new Path(workDir, "TestVectorOrcFile.testMerge2.orc");
     fs.delete(input2, false);
-    Path input3 = new Path(workDir, "TestVectorOrcFile.testGoodMerge3.orc");
+    Path input3 = new Path(workDir, "TestVectorOrcFile.testMerge3.orc");
     fs.delete(input3, false);
     TypeDescription schema = TypeDescription.fromString("struct<a:int,b:string>");
     // change all of the options away from default to find anything we
@@ -3022,6 +3022,8 @@ public class TestVectorOrcFile {
     writer.addUserMetadata("b", fromString("bar"));
     writer.close();
 
+    // increase the buffer size to 30k
+    opts.bufferSize(30*1024);
     writer = OrcFile.createWriter(input2, opts);
     batch.size = 1024;
     for(int r=0; r < 1024; ++r) {
@@ -3033,6 +3035,8 @@ public class TestVectorOrcFile {
     writer.addUserMetadata("c", fromString("baz"));
     writer.close();
 
+    // decrease the buffer size to 10k
+    opts.bufferSize(10*1024);
     writer = OrcFile.createWriter(input3, opts);
     batch.size = 1024;
     for(int r=0; r < 1024; ++r) {
@@ -3044,15 +3048,15 @@ public class TestVectorOrcFile {
     writer.addUserMetadata("d", fromString("bat"));
     writer.close();
 
-    Path output1 = new Path(workDir, "TestVectorOrcFile.testGoodMerge.out1.orc");
+    Path output1 = new Path(workDir, "TestVectorOrcFile.testMerge.out1.orc");
     fs.delete(output1, false);
     List<Path> paths = OrcFile.mergeFiles(output1,
-        OrcFile.writerOptions(conf), input1, input2, input3);
+        OrcFile.writerOptions(conf), Arrays.asList(input1, input2, input3));
     assertEquals(3, paths.size());
     Reader reader = OrcFile.createReader(output1, OrcFile.readerOptions(conf));
     assertEquals(3 * 1024, reader.getNumberOfRows());
     assertEquals(CompressionKind.LZO, reader.getCompressionKind());
-    assertEquals(20 * 1024, reader.getCompressionSize());
+    assertEquals(30 * 1024, reader.getCompressionSize());
     assertEquals(1000, reader.getRowIndexStride());
     assertEquals(OrcFile.Version.V_0_11, reader.getFileVersion());
     assertEquals(OrcFile.WriterVersion.HIVE_8732, reader.getWriterVersion());
@@ -3064,7 +3068,7 @@ public class TestVectorOrcFile {
     assertEquals(fromString("bat"), reader.getMetadataValue("d"));
 
     TypeDescription schema4 = TypeDescription.fromString("struct<a:int>");
-    Path input4 = new Path(workDir, "TestVectorOrcFile.testGoodMerge4.orc");
+    Path input4 = new Path(workDir, "TestVectorOrcFile.testMerge4.orc");
     fs.delete(input4, false);
     opts.setSchema(schema4);
     writer = OrcFile.createWriter(input4, opts);
@@ -3076,9 +3080,11 @@ public class TestVectorOrcFile {
     writer.addRowBatch(batch);
     writer.close();
 
-    Path input5 = new Path(workDir, "TestVectorOrcFile.testGoodMerge5.orc");
+    Path input5 = new Path(workDir, "TestVectorOrcFile.testMerge5.orc");
     fs.delete(input5, false);
-    opts.setSchema(schema).compress(CompressionKind.NONE);
+    opts.setSchema(schema)
+        .compress(CompressionKind.NONE)
+        .bufferSize(100*1024);
     writer = OrcFile.createWriter(input5, opts);
     batch = schema.createRowBatch();
     batch.size = 1024;
@@ -3089,10 +3095,10 @@ public class TestVectorOrcFile {
     writer.addRowBatch(batch);
     writer.close();
 
-    Path output2 = new Path(workDir, "TestVectorOrcFile.testGoodMerge.out2.orc");
+    Path output2 = new Path(workDir, "TestVectorOrcFile.testMerge.out2.orc");
     fs.delete(output2, false);
-    paths = OrcFile.mergeFiles(output2,
-        OrcFile.writerOptions(conf), input1, input4, input3, input5);
+    paths = OrcFile.mergeFiles(output2, OrcFile.writerOptions(conf),
+        Arrays.asList(input3, input4, input1, input5));
     assertEquals(2, paths.size());
     reader = OrcFile.createReader(output2, OrcFile.readerOptions(conf));
     assertEquals(2 * 1024, reader.getNumberOfRows());

@@ -694,7 +694,6 @@ public class OrcFile {
    * @param schema the writer schema
    * @param fileVersion the writer fileVersion
    * @param writerVersion the writer writerVersion
-   * @param compressionSize the compression buffer size
    * @param rowIndexStride the row index stride
    * @param compression the compression that was used
    * @param userMetadata the user metadata
@@ -705,7 +704,6 @@ public class OrcFile {
   static boolean readerIsCompatible(TypeDescription schema,
                                     Version fileVersion,
                                     WriterVersion writerVersion,
-                                    int compressionSize,
                                     int rowIndexStride,
                                     CompressionKind compression,
                                     Map<String, ByteBuffer> userMetadata,
@@ -720,12 +718,6 @@ public class OrcFile {
     if (reader.getCompressionKind() != compression) {
       LOG.info("Can't merge {} because of different compression {} vs {}",
           path, reader.getCompressionKind(), compression);
-      return false;
-    }
-    if (compression != CompressionKind.NONE &&
-        reader.getCompressionSize() != compressionSize) {
-      LOG.info("Can't merge {} because of different compression sizes {} vs {}",
-          path, reader.getCompressionSize(), compressionSize);
       return false;
     }
     if (reader.getFileVersion() != fileVersion) {
@@ -782,7 +774,7 @@ public class OrcFile {
    */
   public static List<Path> mergeFiles(Path outputPath,
                                       WriterOptions options,
-                                      Path... inputFiles) throws IOException {
+                                      List<Path> inputFiles) throws IOException {
     Writer output = null;
     byte[] buffer = new byte[0];
     Configuration conf = options.getConfiguration();
@@ -792,7 +784,7 @@ public class OrcFile {
     Version fileVersion = null;
     WriterVersion writerVersion = null;
     int rowIndexStride = 0;
-    List<Path> result = new ArrayList<>(inputFiles.length);
+    List<Path> result = new ArrayList<>(inputFiles.size());
     Map<String, ByteBuffer> userMetadata = new HashMap<>();
 
     for (Path input: inputFiles) {
@@ -822,11 +814,14 @@ public class OrcFile {
         mergeMetadata(userMetadata, reader);
         output = createWriter(outputPath, options);
       } else if (!readerIsCompatible(schema, fileVersion, writerVersion,
-          bufferSize, rowIndexStride, compression, userMetadata, input,
-          reader)) {
+          rowIndexStride, compression, userMetadata, input, reader)) {
         continue;
       } else {
         mergeMetadata(userMetadata, reader);
+        if (bufferSize < reader.getCompressionSize()) {
+          bufferSize = reader.getCompressionSize();
+          ((WriterImpl) output).increaseCompressionSize(bufferSize);
+        }
       }
       List<OrcProto.StripeStatistics> statList =
           reader.getOrcProtoStripeStatistics();

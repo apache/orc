@@ -107,7 +107,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
   private final int rowIndexStride;
   private final CompressionKind compress;
   private final CompressionCodec codec;
-  private final int bufferSize;
+  private int bufferSize;
   private final long blockSize;
   private final TypeDescription schema;
   private final PhysicalWriter physicalWriter;
@@ -211,6 +211,18 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     int estBufferSize = (int) (stripeSize / (20 * numColumns));
     estBufferSize = getClosestBufferSize(estBufferSize);
     return estBufferSize > bs ? bs : estBufferSize;
+  }
+
+  /**
+   * Increase the buffer size for this writer.
+   * This function is internal only and should only be called by the
+   * ORC file merger.
+   * @param newSize the new buffer size.
+   */
+  public void increaseCompressionSize(int newSize) {
+    if (newSize > bufferSize) {
+      bufferSize = newSize;
+    }
   }
 
   private static int getClosestBufferSize(int estBufferSize) {
