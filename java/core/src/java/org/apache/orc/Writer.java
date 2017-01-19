@@ -20,6 +20,7 @@ package org.apache.orc;
 
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -31,7 +32,7 @@ import org.apache.orc.TypeDescription;
 /**
  * The interface for writing ORC files.
  */
-public interface Writer {
+public interface Writer extends Closeable {
 
   /**
    * Get the schema for this writer

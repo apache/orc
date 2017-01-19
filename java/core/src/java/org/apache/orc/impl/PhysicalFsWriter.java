@@ -204,9 +204,6 @@ public class PhysicalFsWriter implements PhysicalWriter {
   public long writePostScript(OrcProto.PostScript.Builder builder) throws IOException {
     builder.setFooterLength(footerLength);
     builder.setMetadataLength(metadataLength);
-    if (compress != CompressionKind.NONE) {
-      builder.setCompressionBlockSize(bufferSize);
-    }
     OrcProto.PostScript ps = builder.build();
     // need to write this uncompressed
     long startPosn = rawWriter.getPos();

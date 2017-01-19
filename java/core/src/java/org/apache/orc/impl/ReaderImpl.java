@@ -187,16 +187,22 @@ public class ReaderImpl implements Reader {
     return types;
   }
 
-  @Override
-  public OrcFile.Version getFileVersion() {
+  public static OrcFile.Version getFileVersion(List<Integer> versionList) {
+    if (versionList == null || versionList.isEmpty()) {
+      return OrcFile.Version.V_0_11;
+    }
     for (OrcFile.Version version: OrcFile.Version.values()) {
-      if ((versionList != null && !versionList.isEmpty()) &&
-          version.getMajor() == versionList.get(0) &&
+      if (version.getMajor() == versionList.get(0) &&
           version.getMinor() == versionList.get(1)) {
         return version;
       }
     }
-    return OrcFile.Version.V_0_11;
+    return OrcFile.Version.FUTURE;
+  }
+
+  @Override
+  public OrcFile.Version getFileVersion() {
+    return getFileVersion(versionList);
   }
 
   @Override
