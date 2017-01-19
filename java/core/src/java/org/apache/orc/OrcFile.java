@@ -776,77 +776,94 @@ public class OrcFile {
                                       WriterOptions options,
                                       List<Path> inputFiles) throws IOException {
     Writer output = null;
-    byte[] buffer = new byte[0];
-    Configuration conf = options.getConfiguration();
-    TypeDescription schema = null;
-    CompressionKind compression = null;
-    int bufferSize = 0;
-    Version fileVersion = null;
-    WriterVersion writerVersion = null;
-    int rowIndexStride = 0;
-    List<Path> result = new ArrayList<>(inputFiles.size());
-    Map<String, ByteBuffer> userMetadata = new HashMap<>();
+    final Configuration conf = options.getConfiguration();
+    try {
+      byte[] buffer = new byte[0];
+      TypeDescription schema = null;
+      CompressionKind compression = null;
+      int bufferSize = 0;
+      Version fileVersion = null;
+      WriterVersion writerVersion = null;
+      int rowIndexStride = 0;
+      List<Path> result = new ArrayList<>(inputFiles.size());
+      Map<String, ByteBuffer> userMetadata = new HashMap<>();
 
-    for (Path input: inputFiles) {
-      FileSystem fs = input.getFileSystem(conf);
-      Reader reader = createReader(input,
-          readerOptions(options.getConfiguration()).filesystem(fs));
+      for (Path input : inputFiles) {
+        FileSystem fs = input.getFileSystem(conf);
+        Reader reader = createReader(input,
+            readerOptions(options.getConfiguration()).filesystem(fs));
 
-      if (!understandFormat(input, reader)) {
-        continue;
-      } else if (schema == null) {
-        // if this is the first file that we are including, grab the values
-        schema = reader.getSchema();
-        compression = reader.getCompressionKind();
-        bufferSize = reader.getCompressionSize();
-        rowIndexStride = reader.getRowIndexStride();
-        fileVersion = reader.getFileVersion();
-        writerVersion = reader.getWriterVersion();
-        options.blockSize(bufferSize)
-            .version(fileVersion)
-            .writerVersion(writerVersion)
-            .compress(compression)
-            .rowIndexStride(rowIndexStride)
-            .setSchema(schema);
-        if (compression != CompressionKind.NONE) {
-          options.enforceBufferSize().bufferSize(bufferSize);
-        }
-        mergeMetadata(userMetadata, reader);
-        output = createWriter(outputPath, options);
-      } else if (!readerIsCompatible(schema, fileVersion, writerVersion,
-          rowIndexStride, compression, userMetadata, input, reader)) {
-        continue;
-      } else {
-        mergeMetadata(userMetadata, reader);
-        if (bufferSize < reader.getCompressionSize()) {
+        if (!understandFormat(input, reader)) {
+          continue;
+        } else if (schema == null) {
+          // if this is the first file that we are including, grab the values
+          schema = reader.getSchema();
+          compression = reader.getCompressionKind();
           bufferSize = reader.getCompressionSize();
-          ((WriterImpl) output).increaseCompressionSize(bufferSize);
+          rowIndexStride = reader.getRowIndexStride();
+          fileVersion = reader.getFileVersion();
+          writerVersion = reader.getWriterVersion();
+          options.blockSize(bufferSize)
+              .version(fileVersion)
+              .writerVersion(writerVersion)
+              .compress(compression)
+              .rowIndexStride(rowIndexStride)
+              .setSchema(schema);
+          if (compression != CompressionKind.NONE) {
+            options.enforceBufferSize().bufferSize(bufferSize);
+          }
+          mergeMetadata(userMetadata, reader);
+          output = createWriter(outputPath, options);
+        } else if (!readerIsCompatible(schema, fileVersion, writerVersion,
+            rowIndexStride, compression, userMetadata, input, reader)) {
+          continue;
+        } else {
+          mergeMetadata(userMetadata, reader);
+          if (bufferSize < reader.getCompressionSize()) {
+            bufferSize = reader.getCompressionSize();
+            ((WriterImpl) output).increaseCompressionSize(bufferSize);
+          }
         }
-      }
-      List<OrcProto.StripeStatistics> statList =
-          reader.getOrcProtoStripeStatistics();
-      FSDataInputStream inputStream = fs.open(input);
-      int stripeNum = 0;
-      result.add(input);
+        List<OrcProto.StripeStatistics> statList =
+            reader.getOrcProtoStripeStatistics();
+        try (FSDataInputStream inputStream = fs.open(input)) {
+          int stripeNum = 0;
+          result.add(input);
 
-      for(StripeInformation stripe: reader.getStripes()) {
-        int length = (int) stripe.getLength();
-        if (buffer.length < length) {
-          buffer = new byte[length];
+          for (StripeInformation stripe : reader.getStripes()) {
+            int length = (int) stripe.getLength();
+            if (buffer.length < length) {
+              buffer = new byte[length];
+            }
+            long offset = stripe.getOffset();
+            inputStream.readFully(offset, buffer, 0, length);
+            output.appendStripe(buffer, 0, length, stripe, statList.get(stripeNum++));
+          }
         }
-        long offset = stripe.getOffset();
-        inputStream.readFully(offset, buffer, 0, length);
-        output.appendStripe(buffer, 0, length, stripe, statList.get(stripeNum++));
       }
-      inputStream.close();
-    }
-    if (output != null) {
-      for(Map.Entry<String,ByteBuffer> entry: userMetadata.entrySet()) {
-        output.addUserMetadata(entry.getKey(), entry.getValue());
+      if (output != null) {
+        for (Map.Entry<String, ByteBuffer> entry : userMetadata.entrySet()) {
+          output.addUserMetadata(entry.getKey(), entry.getValue());
+        }
+        output.close();
       }
-      output.close();
+      return result;
+    } catch (IOException ioe) {
+      if (output != null) {
+        try {
+          output.close();
+        } catch (Throwable t) {
+          // PASS
+        }
+        try {
+          FileSystem fs = options.getFileSystem() == null ?
+              outputPath.getFileSystem(conf) : options.getFileSystem();
+          fs.delete(outputPath, false);
+        } catch (Throwable t) {
+          // PASS
+        }
+      }
+      throw ioe;
     }
-    return result;
   }
-
 }
