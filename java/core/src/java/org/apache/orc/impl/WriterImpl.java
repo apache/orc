@@ -107,10 +107,11 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
   private final int rowIndexStride;
   private final CompressionKind compress;
   private final CompressionCodec codec;
-  private final int bufferSize;
+  private int bufferSize;
   private final long blockSize;
   private final TypeDescription schema;
   private final PhysicalWriter physicalWriter;
+  private final OrcFile.WriterVersion writerVersion;
 
   private int columnCount;
   private long rowCount = 0;
@@ -145,6 +146,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     this.conf = opts.getConfiguration();
     this.callback = opts.getCallback();
     this.schema = opts.getSchema();
+    this.writerVersion = opts.getWriterVersion();
     bloomFilterVersion = opts.getBloomFilterVersion();
     if (callback != null) {
       callbackContext = new OrcFile.WriterContext(){
@@ -209,6 +211,18 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     int estBufferSize = (int) (stripeSize / (20 * numColumns));
     estBufferSize = getClosestBufferSize(estBufferSize);
     return estBufferSize > bs ? bs : estBufferSize;
+  }
+
+  /**
+   * Increase the buffer size for this writer.
+   * This function is internal only and should only be called by the
+   * ORC file merger.
+   * @param newSize the new buffer size.
+   */
+  public void increaseCompressionSize(int newSize) {
+    if (newSize > bufferSize) {
+      bufferSize = newSize;
+    }
   }
 
   private static int getClosestBufferSize(int estBufferSize) {
@@ -2736,7 +2750,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
             .setMagic(OrcFile.MAGIC)
             .addVersion(version.getMajor())
             .addVersion(version.getMinor())
-            .setWriterVersion(OrcFile.CURRENT_WRITER.getId());
+            .setWriterVersion(writerVersion.getId());
     if (compress != CompressionKind.NONE) {
       builder.setCompressionBlockSize(bufferSize);
     }
@@ -2864,6 +2878,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     checkArgument(stripeStatistics != null,
         "Stripe statistics must not be null");
 
+    rowsInStripe = stripeInfo.getNumberOfRows();
     // update stripe information
     OrcProto.StripeInformation.Builder dirEntry = OrcProto.StripeInformation
         .newBuilder()
@@ -2883,6 +2898,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     stripes.add(dirEntry.build());
 
     // reset it after writing the stripe
+    rowCount += rowsInStripe;
     rowsInStripe = 0;
   }
 
