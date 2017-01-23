@@ -71,7 +71,7 @@ public class HadoopShimsCurrent implements HadoopShims {
     return ZeroCopyShims.getZeroCopyReader(in, pool);
   }
 
-  private final class FastTextReaderShim implements TextReaderShim {
+  private static final class FastTextReaderShim implements TextReaderShim {
     private final DataInputStream din;
 
     public FastTextReaderShim(InputStream in) {

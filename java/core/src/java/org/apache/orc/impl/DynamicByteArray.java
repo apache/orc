@@ -298,6 +298,6 @@ public final class DynamicByteArray {
    * Get the size of the buffers.
    */
   public long getSizeInBytes() {
-    return initializedChunks * chunkSize;
+    return (long) initializedChunks * chunkSize;
   }
 }

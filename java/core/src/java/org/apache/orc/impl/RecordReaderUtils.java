@@ -149,16 +149,6 @@ public class RecordReaderUtils {
     private final int bufferSize;
     private final int typeCount;
 
-    private DefaultDataReader(DefaultDataReader other) {
-      this.pool = other.pool;
-      this.bufferSize = other.bufferSize;
-      this.typeCount = other.typeCount;
-      this.fs = other.fs;
-      this.path = other.path;
-      this.useZeroCopy = other.useZeroCopy;
-      this.codec = other.codec;
-    }
-
     private DefaultDataReader(DataReaderProperties properties) {
       this.fs = properties.getFileSystem();
       this.path = properties.getPath();
@@ -308,7 +298,11 @@ public class RecordReaderUtils {
 
     @Override
     public DataReader clone() {
-      return new DefaultDataReader(this);
+      try {
+        return (DataReader) super.clone();
+      } catch (CloneNotSupportedException e) {
+        throw new UnsupportedOperationException("uncloneable", e);
+      }
     }
 
   }

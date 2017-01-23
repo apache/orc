@@ -690,11 +690,14 @@ public class ReaderImpl implements Reader {
       if (fieldNames.contains(colName)) {
         fieldIdx = fieldNames.indexOf(colName);
       } else {
-        String s = "Cannot find field for: " + colName + " in ";
+        StringBuilder s = new StringBuilder("Cannot find field for: ");
+        s.append(colName);
+        s.append(" in ");
         for (String fn : fieldNames) {
-          s += fn + ", ";
+          s.append(fn);
+          s.append(", ");
         }
-        LOG.warn(s);
+        LOG.warn(s.toString());
         continue;
       }
 
@@ -747,8 +750,10 @@ public class ReaderImpl implements Reader {
 
   @Override
   public List<StripeStatistics> getStripeStatistics() throws IOException {
-    if (stripeStats == null && metadata == null) {
+    if (metadata == null) {
       metadata = extractMetadata(tail.getSerializedTail(), 0, metadataSize, codec, bufferSize);
+    }
+    if (stripeStats == null) {
       stripeStats = metadata.getStripeStatsList();
     }
     List<StripeStatistics> result = new ArrayList<>();

@@ -14,21 +14,6 @@
 -->
 <FindBugsFilter>
   <Match>
-    <Class name="~org\.apache\.orc\.OrcProto.*"/>
-  </Match>
-  <Match>
     <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
-  </Match>
-  <Match>
-    <Bug pattern="CN_IDIOM_NO_SUPER_CALL"/>
-    <Class name="org.apache.orc.TypeDescription"/>
-  </Match>
-  <Match>
-    <Bug pattern="SF_SWITCH_FALLTHROUGH,SF_SWITCH_NO_DEFAULT"/>
-    <Class name="org.apache.orc.util.Murmur3"/>
-  </Match>
-  <Match>
-    <Bug pattern="MS_PKGPROTECT"/>
-    <Class name="org.apache.orc.impl.RecordReaderImpl$SargApplier"/>
   </Match>
 </FindBugsFilter>

@@ -569,7 +569,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
         maximum = new Text();
         maximum.set(bytes, offset, length);
       }
-      sum += length * repetitions;
+      sum += (long)length * repetitions;
     }
 
     @Override
@@ -711,7 +711,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     @Override
     public void updateBinary(byte[] bytes, int offset, int length,
                              int repetitions) {
-      sum += length * repetitions;
+      sum += (long)length * repetitions;
     }
 
     @Override

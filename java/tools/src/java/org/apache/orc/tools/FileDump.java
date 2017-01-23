@@ -18,6 +18,7 @@
 package org.apache.orc.tools;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -432,11 +433,11 @@ public final class FileDump {
           // find all MAGIC string and see if the file is readable from there
           int index = 0;
           long nextFooterOffset;
-
+          byte[] magicBytes = OrcFile.MAGIC.getBytes(StandardCharsets.UTF_8);
           while (index != -1) {
-            index = indexOf(data, OrcFile.MAGIC.getBytes(), index + 1);
+            index = indexOf(data, magicBytes, index + 1);
             if (index != -1) {
-              nextFooterOffset = startPos + index + OrcFile.MAGIC.length() + 1;
+              nextFooterOffset = startPos + index + magicBytes.length + 1;
               if (isReadable(corruptPath, conf, nextFooterOffset)) {
                 footerOffsets.add(nextFooterOffset);
               }

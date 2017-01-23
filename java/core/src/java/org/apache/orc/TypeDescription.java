@@ -40,7 +40,7 @@ import java.util.regex.Pattern;
  * This is the description of the types in an ORC file.
  */
 public class TypeDescription
-    implements Comparable<TypeDescription>, Serializable {
+    implements Comparable<TypeDescription>, Serializable, Cloneable {
   private static final int MAX_PRECISION = 38;
   private static final int MAX_SCALE = 38;
   private static final int DEFAULT_PRECISION = 38;

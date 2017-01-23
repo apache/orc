@@ -25,7 +25,7 @@ import org.apache.hadoop.hive.common.io.DiskRangeList;
 import org.apache.orc.impl.OrcIndex;
 
 /** An abstract data reader that IO formats can use to read bytes from underlying storage. */
-public interface DataReader extends AutoCloseable {
+public interface DataReader extends AutoCloseable, Cloneable {
 
   /** Opens the DataReader, making it ready to use. */
   void open() throws IOException;

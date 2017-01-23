@@ -411,9 +411,7 @@ public class RecordReaderImpl implements RecordReader {
       // in case failed conversion, return the default YES_NO_NULL truth value
     } catch (Exception e) {
       if (LOG.isWarnEnabled()) {
-        final String statsType = min == null ?
-            (max == null ? "null" : max.getClass().getSimpleName()) :
-            min.getClass().getSimpleName();
+        final String statsType = min.getClass().getSimpleName();
         final String predicateType = baseObj == null ? "null" : baseObj.getClass().getSimpleName();
         final String reason = e.getClass().getSimpleName() + " when evaluating predicate." +
             " Skipping ORC PPD." +
@@ -682,10 +680,7 @@ public class RecordReaderImpl implements RecordReader {
         }
         break;
       case STRING:
-        if (obj != null) {
-          return (obj.toString());
-        }
-        break;
+        return (obj.toString());
       case TIMESTAMP:
         if (obj instanceof Timestamp) {
           return obj;
@@ -712,7 +707,7 @@ public class RecordReaderImpl implements RecordReader {
     }
 
     throw new IllegalArgumentException(String.format(
-        "ORC SARGS could not convert from %s to %s", obj == null ? "(null)" : obj.getClass()
+        "ORC SARGS could not convert from %s to %s", obj.getClass()
             .getSimpleName(), type));
   }
 
