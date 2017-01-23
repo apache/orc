@@ -487,6 +487,35 @@ public class TestVectorOrcFile {
     rows.close();
   }
 
+  @Test
+  public void testHiveDecimalStatsAllNulls() throws Exception {
+    TypeDescription schema = TypeDescription.createStruct()
+      .addField("dec1", TypeDescription.createDecimal());
+
+    Writer writer = OrcFile.createWriter(testFilePath,
+      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000).bufferSize(10000));
+    VectorizedRowBatch batch = schema.createRowBatch();
+    batch.size = 4;
+    DecimalColumnVector field1 = (DecimalColumnVector) batch.cols[0];
+    field1.noNulls = false;
+    field1.isNull[0] = true;
+    field1.isNull[1] = true;
+    field1.isNull[2] = true;
+    field1.isNull[3] = true;
+    writer.addRowBatch(batch);
+    writer.close();
+
+    Reader reader = OrcFile.createReader(testFilePath,
+      OrcFile.readerOptions(conf).filesystem(fs));
+    // check the stats
+    ColumnStatistics[] stats = reader.getStatistics();
+    Assert.assertEquals(4, stats[0].getNumberOfValues());
+    Assert.assertEquals(0, stats[1].getNumberOfValues());
+    Assert.assertEquals(true, stats[1].hasNull());
+    Assert.assertNull(((DecimalColumnStatistics)stats[1]).getMinimum());
+    Assert.assertNull(((DecimalColumnStatistics)stats[1]).getMaximum());
+    Assert.assertEquals(new HiveDecimalWritable(0).getHiveDecimal(), ((DecimalColumnStatistics)stats[1]).getSum());
+  }
 
   @Test
   public void testStripeLevelStats() throws Exception {
