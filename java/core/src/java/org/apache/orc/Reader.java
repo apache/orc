@@ -148,7 +148,7 @@ public interface Reader {
   /**
    * Options for creating a RecordReader.
    */
-  public static class Options {
+  public static class Options implements Cloneable {
     private boolean[] include;
     private long offset = 0;
     private long length = Long.MAX_VALUE;
@@ -311,18 +311,15 @@ public interface Reader {
     }
 
     public Options clone() {
-      Options result = new Options();
-      result.include = include;
-      result.offset = offset;
-      result.length = length;
-      result.sarg = sarg;
-      result.schema = schema;
-      result.columnNames = columnNames;
-      result.useZeroCopy = useZeroCopy;
-      result.skipCorruptRecords = skipCorruptRecords;
-      result.dataReader = dataReader == null ? null : dataReader.clone();
-      result.tolerateMissingSchema = tolerateMissingSchema;
-      return result;
+      try {
+        Options result = (Options) super.clone();
+        if (dataReader != null) {
+          result.dataReader = dataReader.clone();
+        }
+        return result;
+      } catch (CloneNotSupportedException e) {
+        throw new UnsupportedOperationException("uncloneable", e);
+      }
     }
 
     @Override

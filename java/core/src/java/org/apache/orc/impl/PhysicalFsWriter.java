@@ -147,7 +147,7 @@ public class PhysicalFsWriter implements PhysicalWriter {
    * An output receiver that writes the ByteBuffers to the output stream
    * as they are received.
    */
-  private class DirectStream implements OutputReceiver {
+  private static class DirectStream implements OutputReceiver {
     private final FSDataOutputStream output;
 
     DirectStream(FSDataOutputStream output) {

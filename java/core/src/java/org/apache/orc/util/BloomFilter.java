@@ -99,12 +99,13 @@ public class BloomFilter {
         bitSet.equals(((BloomFilter) other).bitSet);
   }
 
+  @Override
+  public int hashCode() {
+    return bitSet.hashCode() + numHashFunctions * 5;
+  }
+
   public void add(byte[] val) {
-    if (val == null) {
-      addBytes(val, -1, -1);
-    } else {
-      addBytes(val, 0, val.length);
-    }
+    addBytes(val, 0, val == null ? 0 : val.length);
   }
 
   public void addBytes(byte[] val, int offset, int length) {
@@ -151,10 +152,7 @@ public class BloomFilter {
   }
 
   public boolean test(byte[] val) {
-    if (val == null) {
-      return testBytes(val, -1, -1);
-    }
-    return testBytes(val, 0, val.length);
+    return testBytes(val, 0, val == null ? 0 : val.length);
   }
 
   public boolean testBytes(byte[] val, int offset, int length) {
@@ -323,6 +321,15 @@ public class BloomFilter {
       return other != null &&
           other.getClass() == getClass() &&
           Arrays.equals(data, ((BitSet) other).data);
+    }
+
+    @Override
+    public int hashCode() {
+      int result = 0;
+      for(long l: data) {
+        result = (int) (result * 13 + l);
+      }
+      return result;
     }
   }
 }

@@ -70,7 +70,7 @@ public class HadoopShims_2_2 implements HadoopShims {
     return null;
   }
 
-  private final class BasicTextReaderShim implements TextReaderShim {
+  private static final class BasicTextReaderShim implements TextReaderShim {
     private final InputStream in;
 
     public BasicTextReaderShim(InputStream in) {

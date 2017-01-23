@@ -220,7 +220,7 @@ public class JsonFileDump {
         rows.close();
 
         writer.endObject();
-      } catch (Exception e) {
+      } catch (Throwable e) {
         writer.key("status").value("FAILED");
         throw e;
       }

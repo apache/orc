@@ -490,7 +490,7 @@ public class SchemaEvolution {
     return typeDescription.getChildren().get(ACID_ROW_OFFSET);
   }
 
-  public static final List<String> acidEventFieldNames=
+  private static final List<String> acidEventFieldNames=
     new ArrayList<String>();
 
   static {

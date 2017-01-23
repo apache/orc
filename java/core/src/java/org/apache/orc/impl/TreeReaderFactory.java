@@ -96,7 +96,6 @@ public class TreeReaderFactory {
   public abstract static class TreeReader {
     protected final int columnId;
     protected BitFieldReader present = null;
-    protected boolean valuePresent = false;
     protected int vectorColumnCount;
     protected final Context context;
 
@@ -109,7 +108,6 @@ public class TreeReaderFactory {
       this.context = context;
       if (in == null) {
         present = null;
-        valuePresent = true;
       } else {
         present = new BitFieldReader(in, 1);
       }
@@ -151,7 +149,6 @@ public class TreeReaderFactory {
           OrcProto.Stream.Kind.PRESENT));
       if (in == null) {
         present = null;
-        valuePresent = true;
       } else {
         present = new BitFieldReader(in, 1);
       }
@@ -1369,7 +1366,6 @@ public class TreeReaderFactory {
   public static class StringDirectTreeReader extends TreeReader {
     private static final HadoopShims SHIMS = HadoopShims.Factory.get();
     protected InStream stream;
-    protected HadoopShims.TextReaderShim data;
     protected IntegerReader lengths;
     private final LongColumnVector scratchlcv;
 
@@ -1384,7 +1380,6 @@ public class TreeReaderFactory {
       this.stream = data;
       if (length != null && encoding != null) {
         this.lengths = createIntegerReader(encoding, length, false, context);
-        this.data = SHIMS.getTextReaderShim(this.stream);
       }
     }
 
@@ -1405,7 +1400,6 @@ public class TreeReaderFactory {
       StreamName name = new StreamName(columnId,
           OrcProto.Stream.Kind.DATA);
       stream = streams.get(name);
-      data = SHIMS.getTextReaderShim(this.stream);
       lengths = createIntegerReader(stripeFooter.getColumnsList().get(columnId).getKind(),
           streams.get(new StreamName(columnId, OrcProto.Stream.Kind.LENGTH)),
           false, context);
@@ -2146,7 +2140,6 @@ public class TreeReaderFactory {
                                             Context context
                                             ) throws IOException {
     final SchemaEvolution evolution = context.getSchemaEvolution();
-    final boolean[] included = evolution.getReaderIncluded();
     TypeDescription fileType = evolution.getFileType(readerType);
     if (fileType == null || !evolution.includeReaderColumn(readerType.getId())){
       return new NullTreeReader(0);

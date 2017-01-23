@@ -208,7 +208,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     // we want to guarantee that each stream gets ~10 buffers.
     // This keeps buffers small enough that we don't get really small stripe
     // sizes.
-    int estBufferSize = (int) (stripeSize / (20 * numColumns));
+    int estBufferSize = (int) (stripeSize / (20L * numColumns));
     estBufferSize = getClosestBufferSize(estBufferSize);
     return estBufferSize > bs ? bs : estBufferSize;
   }

@@ -53,7 +53,7 @@ public class StreamName implements Comparable<StreamName> {
     Area area = getArea(kind);
     Area otherArea = streamName.getArea(streamName.kind);
     if (area != otherArea) {
-      return -area.compareTo(otherArea);
+      return otherArea.compareTo(area);
     }
     if (column != streamName.column) {
       return column < streamName.column ? -1 : 1;

@@ -79,6 +79,20 @@ public class BufferChunk extends DiskRangeList {
   }
 
   @Override
+  public boolean equals(Object other) {
+    if (other == null || other.getClass() != getClass()) {
+      return false;
+    }
+    BufferChunk ob = (BufferChunk) other;
+    return chunk.equals(ob.chunk);
+  }
+
+  @Override
+  public int hashCode() {
+    return chunk.hashCode();
+  }
+
+  @Override
   public ByteBuffer getData() {
     return chunk;
   }
