@@ -2,5 +2,7 @@ build
 target
 *~
 *.iml
+*.ipr
+*.iws
 .idea
 .DS_Store
