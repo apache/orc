@@ -369,12 +369,9 @@ public class RecordReaderImpl implements RecordReader {
     Object maxValue = getMax(cs);
     // files written before ORC-135 stores timestamp wrt to local timezone causing issues with PPD.
     // disable PPD for timestamp for all old files
-    if (type.equals(TypeDescription.Category.TIMESTAMP)
-      && !writerVersion.includes(OrcFile.WriterVersion.ORC_135)
-      && bloomFilter.hasEncoding()
-      && bloomFilter.getEncoding().equals(OrcProto.BloomFilter.Encoding.TIMESTAMP_UTC_UTF8)) {
-      LOG.warn("Not using bloom filter for timestamp column as bloom filter is missing encoding kind (new reader is" +
-        " trying to read old files)");
+    if (type.equals(TypeDescription.Category.TIMESTAMP) && bloomFilter != null && !bloomFilter.hasEncoding()) {
+      LOG.warn("Not using bloom filter for timestamp column as bloom filter is missing encoding kind (reading files " +
+          "before ORC-135). Writer version: {}", writerVersion);
       return TruthValue.YES_NO_NULL;
     }
     return evaluatePredicateRange(predicate, minValue, maxValue, cs.hasNull(),
@@ -414,7 +411,7 @@ public class RecordReaderImpl implements RecordReader {
     Object baseObj = predicate.getLiteral();
     // correction for timezone. Min/Max stats are stored in UTC as of ORC-135.
     // Convert timestamp literals to UTC as well for correct PPD evaluation.
-    if (min != null && min instanceof Timestamp && baseObj instanceof Timestamp) {
+    if (min instanceof Timestamp && baseObj instanceof Timestamp) {
         baseObj = getUtcTimestamp(baseObj.toString());
     }
     try {

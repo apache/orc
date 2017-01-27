@@ -1762,7 +1762,6 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     private final long baseEpochSecsLocalTz;
     private final ThreadLocal<DateFormat> threadLocalDateFormatUtc;
     private final TimeZone tzUtc;
-    private long baseEpochMillisUtc;
 
     TimestampTreeWriter(int columnId,
                      TypeDescription schema,
@@ -1784,7 +1783,6 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       this.threadLocalDateFormatUtc = new ThreadLocal<>();
       this.threadLocalDateFormatUtc.set(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
       this.threadLocalDateFormatUtc.get().setTimeZone(tzUtc);
-      this.baseEpochMillisUtc = getMillisUtc(BASE_TIMESTAMP_STRING);
       // for unit tests to set different time zones
       this.baseEpochSecsLocalTz = Timestamp.valueOf(BASE_TIMESTAMP_STRING).getTime() / MILLIS_PER_SECOND;
       writer.useWriterTimeZone(true);
@@ -1833,13 +1831,13 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
             long secs = millis / MILLIS_PER_SECOND - baseEpochSecsLocalTz;
             seconds.write(secs);
             nanos.write(formatNanos(val.getNanos()));
-            long utcMillis = getMillisUtc(val.toString());
-            indexStatistics.updateTimestamp(utcMillis);
+            long millisUtc = getMillisUtc(val.toString());
+            indexStatistics.updateTimestamp(millisUtc);
             if (createBloomFilter) {
               if (bloomFilter != null) {
                 bloomFilter.addLong(millis);
               }
-              bloomFilterUtf8.addLong(utcMillis);
+              bloomFilterUtf8.addLong(millisUtc);
             }
           }
         }

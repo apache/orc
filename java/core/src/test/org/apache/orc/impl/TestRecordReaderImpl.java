@@ -34,9 +34,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -64,6 +69,8 @@ import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.OrcProto;
 
+import org.apache.orc.util.BloomFilterIO;
+import org.apache.orc.util.BloomFilterUtf8;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.MockSettings;
@@ -932,17 +939,34 @@ public class TestRecordReaderImpl {
   @Test
   public void testTimestampStatsOldFiles() throws Exception {
     PredicateLeaf pred = createPredicateLeaf
-      (PredicateLeaf.Operator.LESS_THAN, PredicateLeaf.Type.TIMESTAMP,
+      (PredicateLeaf.Operator.EQUALS, PredicateLeaf.Type.TIMESTAMP,
         "x", Timestamp.valueOf("2000-01-01 00:00:00"), null);
     OrcProto.ColumnStatistics cs = createTimestampStats(10, 100);
     assertEquals(TruthValue.YES_NO_NULL,
-      RecordReaderImpl.evaluatePredicateProto(cs, pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription
-        .Category.TIMESTAMP));
-    assertEquals(TruthValue.YES_NULL,
-      RecordReaderImpl.evaluatePredicateProto(cs, pred, null, null, OrcFile.WriterVersion.ORC_135, TypeDescription
-        .Category.TIMESTAMP));
+      RecordReaderImpl.evaluatePredicateProto(cs, pred, null, OrcProto.BloomFilter.getDefaultInstance(),
+        OrcFile.WriterVersion.ORC_101, TypeDescription.Category.TIMESTAMP));
+    BloomFilterUtf8 bf = new BloomFilterUtf8(10, 0.05);
+    bf.addLong(getUtcTimestamp("2000-01-01 00:00:00").getTime());
+    OrcProto.BloomFilter.Builder builder = OrcProto.BloomFilter.newBuilder();
+    BloomFilterIO.serialize(builder, bf);
+    builder.setEncoding(OrcProto.BloomFilter.Encoding.TIMESTAMP_UTC_UTF8);
+    assertEquals(TruthValue.NO_NULL,
+      RecordReaderImpl.evaluatePredicateProto(cs, pred, OrcProto.Stream.Kind.BLOOM_FILTER_UTF8, builder.build(),
+        OrcFile.WriterVersion.ORC_135,
+        TypeDescription.Category.TIMESTAMP));
+    builder.clearEncoding();
+    assertEquals(TruthValue.YES_NO_NULL,
+      RecordReaderImpl.evaluatePredicateProto(cs, pred, OrcProto.Stream.Kind.BLOOM_FILTER_UTF8, builder.build(),
+        OrcFile.WriterVersion.ORC_135,
+        TypeDescription.Category.TIMESTAMP));
   }
 
+  private Timestamp getUtcTimestamp(String ts) throws ParseException {
+    DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+    Date date = dateFormat.parse(ts);
+    return new Timestamp(date.getTime());
+  }
   @Test
   public void testIsNullWithNullInStats() throws Exception {
     PredicateLeaf pred = createPredicateLeaf
