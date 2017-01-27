@@ -22,6 +22,9 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -478,7 +481,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     protected final boolean createBloomFilter;
     private final OrcProto.BloomFilterIndex.Builder bloomFilterIndex;
     private final OrcProto.BloomFilterIndex.Builder bloomFilterIndexUtf8;
-    private final OrcProto.BloomFilter.Builder bloomFilterEntry;
+    protected final OrcProto.BloomFilter.Builder bloomFilterEntry;
     private boolean foundNulls;
     private OutStream isPresentOutStream;
     private final List<OrcProto.StripeStatistics.Builder> stripeStatsBuilders;
@@ -1749,17 +1752,16 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     }
   }
 
-  public static long MILLIS_PER_DAY = 24 * 60 * 60 * 1000;
-  public static long NANOS_PER_MILLI = 1000000;
   public static final int MILLIS_PER_SECOND = 1000;
-  static final int NANOS_PER_SECOND = 1000000000;
   public static final String BASE_TIMESTAMP_STRING = "2015-01-01 00:00:00";
 
   private static class TimestampTreeWriter extends TreeWriter {
     private final IntegerWriter seconds;
     private final IntegerWriter nanos;
     private final boolean isDirectV2;
-    private final long base_timestamp;
+    private final long baseEpochSecsLocalTz;
+    private final ThreadLocal<DateFormat> threadLocalDateFormatUtc;
+    private final TimeZone tzUtc;
 
     TimestampTreeWriter(int columnId,
                      TypeDescription schema,
@@ -1774,8 +1776,15 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       if (rowIndexPosition != null) {
         recordPosition(rowIndexPosition);
       }
+      if (createBloomFilter && bloomFilterEntry != null) {
+        this.bloomFilterEntry.setEncoding(OrcProto.BloomFilter.Encoding.TIMESTAMP_UTC_UTF8);
+      }
+      this.tzUtc = TimeZone.getTimeZone("UTC");
+      this.threadLocalDateFormatUtc = new ThreadLocal<>();
+      this.threadLocalDateFormatUtc.set(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
+      this.threadLocalDateFormatUtc.get().setTimeZone(tzUtc);
       // for unit tests to set different time zones
-      this.base_timestamp = Timestamp.valueOf(BASE_TIMESTAMP_STRING).getTime() / MILLIS_PER_SECOND;
+      this.baseEpochSecsLocalTz = Timestamp.valueOf(BASE_TIMESTAMP_STRING).getTime() / MILLIS_PER_SECOND;
       writer.useWriterTimeZone(true);
     }
 
@@ -1799,14 +1808,15 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
         if (vector.noNulls || !vector.isNull[0]) {
           val = vec.asScratchTimestamp(0);
           long millis = val.getTime();
-          indexStatistics.updateTimestamp(millis);
+          long millisUtc = getMillisUtc(val.toString());
+          indexStatistics.updateTimestamp(millisUtc);
           if (createBloomFilter) {
             if (bloomFilter != null) {
               bloomFilter.addLong(millis);
             }
-            bloomFilterUtf8.addLong(millis);
+            bloomFilterUtf8.addLong(millisUtc);
           }
-          final long secs = millis / MILLIS_PER_SECOND - base_timestamp;
+          final long secs = millis / MILLIS_PER_SECOND - baseEpochSecsLocalTz;
           final long nano = formatNanos(val.getNanos());
           for(int i=0; i < length; ++i) {
             seconds.write(secs);
@@ -1818,18 +1828,31 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
           if (vec.noNulls || !vec.isNull[i + offset]) {
             val = vec.asScratchTimestamp(i + offset);
             long millis = val.getTime();
-            long secs = millis / MILLIS_PER_SECOND - base_timestamp;
+            long secs = millis / MILLIS_PER_SECOND - baseEpochSecsLocalTz;
             seconds.write(secs);
             nanos.write(formatNanos(val.getNanos()));
-            indexStatistics.updateTimestamp(millis);
+            long millisUtc = getMillisUtc(val.toString());
+            indexStatistics.updateTimestamp(millisUtc);
             if (createBloomFilter) {
               if (bloomFilter != null) {
                 bloomFilter.addLong(millis);
               }
-              bloomFilterUtf8.addLong(millis);
+              bloomFilterUtf8.addLong(millisUtc);
             }
           }
         }
+      }
+    }
+
+    private Long getMillisUtc(String tsString) {
+      try {
+        java.util.Date date = threadLocalDateFormatUtc.get().parse(tsString);
+        if (date == null) {
+          return null;
+        }
+        return date.getTime();
+      } catch (ParseException err) {
+        return null;
       }
     }
 
