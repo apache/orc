@@ -26,14 +26,11 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
-import org.apache.hadoop.util.Time;
 import org.apache.orc.OrcFile;
 import org.apache.orc.util.BloomFilter;
 import org.apache.orc.util.BloomFilterIO;
@@ -372,7 +369,10 @@ public class RecordReaderImpl implements RecordReader {
     Object maxValue = getMax(cs);
     // files written before ORC-135 stores timestamp wrt to local timezone causing issues with PPD.
     // disable PPD for timestamp for all old files
-    if (type.equals(TypeDescription.Category.TIMESTAMP) && !writerVersion.includes(OrcFile.WriterVersion.ORC_135)) {
+    if (type.equals(TypeDescription.Category.TIMESTAMP)
+      && !writerVersion.includes(OrcFile.WriterVersion.ORC_135)
+      && bloomFilter.hasEncoding()
+      && bloomFilter.getEncoding().equals(OrcProto.BloomFilter.Encoding.TIMESTAMP_UTC_UTF8)) {
       LOG.warn("Not using bloom filter for timestamp column as bloom filter is missing encoding kind (new reader is" +
         " trying to read old files)");
       return TruthValue.YES_NO_NULL;
