@@ -56,6 +56,7 @@ namespace orc {
     WriterVersion_HIVE_12055 = 3,
     WriterVersion_HIVE_13083 = 4,
     WriterVersion_ORC_101 = 5,
+    WriterVersion_ORC_135 = 6,
     WriterVersion_MAX = INT64_MAX
   };
 

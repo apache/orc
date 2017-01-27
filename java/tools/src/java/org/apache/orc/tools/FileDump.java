@@ -387,7 +387,8 @@ public final class FileDump {
           buf.append(rowIdxString);
           String bloomFilString = getFormattedBloomFilters(col, indices,
               reader.getWriterVersion(),
-              reader.getSchema().findSubtype(col).getCategory());
+              reader.getSchema().findSubtype(col).getCategory(),
+              footer.getColumns(col));
           buf.append(bloomFilString);
           System.out.println(buf);
         }
@@ -610,7 +611,8 @@ public final class FileDump {
 
   private static String getFormattedBloomFilters(int col, OrcIndex index,
                                                  OrcFile.WriterVersion version,
-                                                 TypeDescription.Category type) {
+                                                 TypeDescription.Category type,
+                                                 OrcProto.ColumnEncoding encoding) {
     OrcProto.BloomFilterIndex[] bloomFilterIndex = index.getBloomFilterIndex();
     StringBuilder buf = new StringBuilder();
     BloomFilter stripeLevelBF = null;
@@ -619,7 +621,7 @@ public final class FileDump {
       buf.append("\n    Bloom filters for column ").append(col).append(":");
       for (OrcProto.BloomFilter bf : bloomFilterIndex[col].getBloomFilterList()) {
         BloomFilter toMerge = BloomFilterIO.deserialize(
-            index.getBloomFilterKinds()[col], version, type, bf);
+            index.getBloomFilterKinds()[col], encoding, version, type, bf);
         buf.append("\n      Entry ").append(idx++).append(":").append(getBloomFilterStats(toMerge));
         if (stripeLevelBF == null) {
           stripeLevelBF = toMerge;

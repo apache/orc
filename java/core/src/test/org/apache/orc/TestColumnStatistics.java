@@ -25,7 +25,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -141,9 +144,11 @@ public class TestColumnStatistics {
   }
 
   @Test
-  public void testTimestampMerge() throws Exception {
+  public void testTimestampMergeUTC() throws Exception {
     TypeDescription schema = TypeDescription.createTimestamp();
 
+    TimeZone original = TimeZone.getDefault();
+    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     ColumnStatisticsImpl stats1 = ColumnStatisticsImpl.create(schema);
     ColumnStatisticsImpl stats2 = ColumnStatisticsImpl.create(schema);
     stats1.updateTimestamp(new Timestamp(10));
@@ -160,6 +165,56 @@ public class TestColumnStatistics {
     stats1.merge(stats2);
     assertEquals(-10, typed.getMinimum().getTime());
     assertEquals(10000, typed.getMaximum().getTime());
+    TimeZone.setDefault(original);
+  }
+
+  private static final String TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
+  private final SimpleDateFormat format = new SimpleDateFormat(TIME_FORMAT);
+
+  private Timestamp parseTime(String value) {
+    try {
+      return new Timestamp(format.parse(value).getTime());
+    } catch (ParseException e) {
+      throw new IllegalArgumentException("bad time parse for " + value, e);
+    }
+  }
+
+  @Test
+  public void testTimestampMergeLA() throws Exception {
+    TypeDescription schema = TypeDescription.createTimestamp();
+
+    TimeZone original = TimeZone.getDefault();
+    TimeZone.setDefault(TimeZone.getTimeZone("America/Los_Angeles"));
+    ColumnStatisticsImpl stats1 = ColumnStatisticsImpl.create(schema);
+    ColumnStatisticsImpl stats2 = ColumnStatisticsImpl.create(schema);
+    stats1.updateTimestamp(parseTime("2000-04-02 03:30:00"));
+    stats1.updateTimestamp(parseTime("2000-04-02 01:30:00"));
+    stats1.increment(2);
+    stats2.updateTimestamp(parseTime("2000-10-29 01:30:00"));
+    stats2.updateTimestamp(parseTime("2000-10-29 03:30:00"));
+    stats2.increment(2);
+    TimestampColumnStatistics typed = (TimestampColumnStatistics) stats1;
+    assertEquals("2000-04-02 01:30:00.0", typed.getMinimum().toString());
+    assertEquals("2000-04-02 03:30:00.0", typed.getMaximum().toString());
+    stats1.merge(stats2);
+    assertEquals("2000-04-02 01:30:00.0", typed.getMinimum().toString());
+    assertEquals("2000-10-29 03:30:00.0", typed.getMaximum().toString());
+    stats1.reset();
+    stats1.updateTimestamp(parseTime("1999-04-04 00:00:00"));
+    stats1.updateTimestamp(parseTime("2009-03-08 12:00:00"));
+    stats1.merge(stats2);
+    assertEquals("1999-04-04 00:00:00.0", typed.getMinimum().toString());
+    assertEquals("2009-03-08 12:00:00.0", typed.getMaximum().toString());
+
+    // serialize and read back in with phoenix timezone
+    OrcProto.ColumnStatistics serial = stats2.serialize().build();
+    TimeZone.setDefault(TimeZone.getTimeZone("America/Phoenix"));
+    ColumnStatisticsImpl stats3 = ColumnStatisticsImpl.deserialize(serial);
+    assertEquals("2000-10-29 01:30:00.0",
+        ((TimestampColumnStatistics) stats3).getMinimum().toString());
+    assertEquals("2000-10-29 03:30:00.0",
+        ((TimestampColumnStatistics) stats3).getMaximum().toString());
+    TimeZone.setDefault(original);
   }
 
   @Test
