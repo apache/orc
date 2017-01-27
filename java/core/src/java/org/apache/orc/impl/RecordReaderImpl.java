@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 import org.apache.orc.OrcFile;
 import org.apache.orc.util.BloomFilter;
@@ -171,7 +172,7 @@ public class RecordReaderImpl implements RecordReader {
         OrcConf.IGNORE_NON_UTF8_BLOOM_FILTERS.getBoolean(fileReader.conf);
     SearchArgument sarg = options.getSearchArgument();
     if (sarg != null && rowIndexStride != 0) {
-      sargApp = new SargApplier(sarg, options.getColumnNames(),
+      sargApp = new SargApplier(sarg,
                                 rowIndexStride,
                                 evolution,
                                 writerVersion);
@@ -357,14 +358,30 @@ public class RecordReaderImpl implements RecordReader {
   static TruthValue evaluatePredicateProto(OrcProto.ColumnStatistics statsProto,
                                            PredicateLeaf predicate,
                                            OrcProto.Stream.Kind kind,
+                                           OrcProto.ColumnEncoding encoding,
                                            OrcProto.BloomFilter bloomFilter,
                                            OrcFile.WriterVersion writerVersion,
                                            TypeDescription.Category type) {
     ColumnStatistics cs = ColumnStatisticsImpl.deserialize(statsProto);
     Object minValue = getMin(cs);
     Object maxValue = getMax(cs);
+    // files written before ORC-135 stores timestamp wrt to local timezone causing issues with PPD.
+    // disable PPD for timestamp for all old files
+    if (type.equals(TypeDescription.Category.TIMESTAMP)) {
+      if (!writerVersion.includes(OrcFile.WriterVersion.ORC_135)) {
+        LOG.warn("Not using predication pushdown on {} because it doesn't " +
+                "include ORC-135. Writer version: {}", predicate.getColumnName(),
+            writerVersion);
+        return TruthValue.YES_NO_NULL;
+      }
+      if (predicate.getType() != PredicateLeaf.Type.TIMESTAMP &&
+          predicate.getType() != PredicateLeaf.Type.DATE &&
+          predicate.getType() != PredicateLeaf.Type.STRING) {
+        return TruthValue.YES_NO_NULL;
+      }
+    }
     return evaluatePredicateRange(predicate, minValue, maxValue, cs.hasNull(),
-        BloomFilterIO.deserialize(kind, writerVersion, type, bloomFilter));
+        BloomFilterIO.deserialize(kind, encoding, writerVersion, type, bloomFilter));
   }
 
   /**
@@ -518,7 +535,6 @@ public class RecordReaderImpl implements RecordReader {
         loc = compareToRange((Comparable) predObj1, minValue, maxValue);
         if (loc == Location.BEFORE || loc == Location.MIN) {
           Object predObj2 = getBaseObjectForComparison(predicate.getType(), args.get(1));
-
           Location loc2 = compareToRange((Comparable) predObj2, minValue, maxValue);
           if (loc2 == Location.AFTER || loc2 == Location.MAX) {
             return hasNull ? TruthValue.YES_NULL : TruthValue.YES;
@@ -581,7 +597,7 @@ public class RecordReaderImpl implements RecordReader {
         result = TruthValue.YES_NO_NULL;
       }
     } else if (predObj instanceof Timestamp) {
-      if (bf.testLong(((Timestamp) predObj).getTime())) {
+      if (bf.testLong(SerializationUtils.convertToUtc(TimeZone.getDefault(), ((Timestamp) predObj).getTime()))) {
         result = TruthValue.YES_NO_NULL;
       }
     } else if (predObj instanceof Date) {
@@ -725,7 +741,6 @@ public class RecordReaderImpl implements RecordReader {
     private SchemaEvolution evolution;
 
     public SargApplier(SearchArgument sarg,
-                       String[] columnNames,
                        long rowIndexStride,
                        SchemaEvolution evolution,
                        OrcFile.WriterVersion writerVersion) {
@@ -758,6 +773,7 @@ public class RecordReaderImpl implements RecordReader {
     public boolean[] pickRowGroups(StripeInformation stripe,
                                    OrcProto.RowIndex[] indexes,
                                    OrcProto.Stream.Kind[] bloomFilterKinds,
+                                   List<OrcProto.ColumnEncoding> encodings,
                                    OrcProto.BloomFilterIndex[] bloomFilterIndices,
                                    boolean returnNone) throws IOException {
       long rowsInStripe = stripe.getNumberOfRows();
@@ -785,7 +801,7 @@ public class RecordReaderImpl implements RecordReader {
             }
             if (evolution != null && evolution.isPPDSafeConversion(columnIx)) {
               leafValues[pred] = evaluatePredicateProto(stats,
-                  sargLeaves.get(pred), bfk, bf, writerVersion,
+                  sargLeaves.get(pred), bfk, encodings.get(columnIx), bf, writerVersion,
                   evolution.getFileSchema().findSubtype(columnIx).getCategory());
             } else {
               leafValues[pred] = TruthValue.YES_NO_NULL;
@@ -827,7 +843,7 @@ public class RecordReaderImpl implements RecordReader {
     }
     readRowIndex(currentStripe, fileIncluded, sargApp.sargColumns);
     return sargApp.pickRowGroups(stripes.get(currentStripe), indexes,
-        bloomFilterKind, bloomFilterIndices, false);
+        bloomFilterKind, stripeFooter.getColumnsList(), bloomFilterIndices, false);
   }
 
   private void clearStreams() {

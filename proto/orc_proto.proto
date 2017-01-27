@@ -59,6 +59,8 @@ message TimestampStatistics {
   // min,max values saved as milliseconds since epoch
   optional sint64 minimum = 1;
   optional sint64 maximum = 2;
+  optional sint64 minimumUtc = 3;
+  optional sint64 maximumUtc = 4;
 }
 
 message BinaryStatistics {
@@ -126,6 +128,11 @@ message ColumnEncoding {
   }
   optional Kind kind = 1;
   optional uint32 dictionarySize = 2;
+
+  // The encoding of the bloom filters for this column:
+  //   0 or missing = none or original
+  //   1            = ORC-135 (utc for timestamps)
+  optional uint32 bloomEncoding = 3;
 }
 
 message StripeFooter {
@@ -220,6 +227,8 @@ message PostScript {
   //   2 = HIVE-4243 fixed
   //   3 = HIVE-12055 fixed
   //   4 = HIVE-13083 fixed
+  //   5 = ORC-101 fixed
+  //   6 = ORC-135 fixed
   optional uint32 writerVersion = 6;
   // Leave this last in the record
   optional string magic = 8000;

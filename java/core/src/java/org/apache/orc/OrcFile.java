@@ -120,6 +120,7 @@ public class OrcFile {
     HIVE_12055(3), // vectorized writer
     HIVE_13083(4), // decimal writer updating present stream wrongly
     ORC_101(5),    // bloom filters use utf8
+    ORC_135(6), // timestamp stats use utc
 
     // Don't use any magic numbers here except for the below:
     FUTURE(Integer.MAX_VALUE); // a version from a future writer
@@ -173,7 +174,7 @@ public class OrcFile {
   /**
    * The WriterVersion for this version of the software.
    */
-  public static final WriterVersion CURRENT_WRITER = WriterVersion.ORC_101;
+  public static final WriterVersion CURRENT_WRITER = WriterVersion.ORC_135;
 
   public enum EncodingStrategy {
     SPEED, COMPRESSION

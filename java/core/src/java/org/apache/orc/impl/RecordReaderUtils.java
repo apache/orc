@@ -53,6 +53,8 @@ public class RecordReaderUtils {
         return !version.includes(OrcFile.WriterVersion.HIVE_12055);
       case DECIMAL:
         return true;
+      case TIMESTAMP:
+        return !version.includes(OrcFile.WriterVersion.ORC_135);
       default:
         return false;
     }

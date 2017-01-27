@@ -19,7 +19,7 @@ package org.apache.orc.impl;
 
 import java.io.EOFException;
 import java.io.IOException;
-import java.math.BigInteger;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
@@ -863,12 +863,12 @@ public class TreeReaderFactory {
   public static class TimestampTreeReader extends TreeReader {
     protected IntegerReader data = null;
     protected IntegerReader nanos = null;
-    private final boolean skipCorrupt;
     private Map<String, Long> baseTimestampMap;
     protected long base_timestamp;
     private final TimeZone readerTimeZone;
     private TimeZone writerTimeZone;
     private boolean hasSameTZRules;
+    private ThreadLocal<DateFormat> threadLocalDateFormat;
 
     TimestampTreeReader(int columnId, Context context) throws IOException {
       this(columnId, null, null, null, null, context);
@@ -878,7 +878,8 @@ public class TreeReaderFactory {
         InStream nanosStream, OrcProto.ColumnEncoding encoding, Context context)
         throws IOException {
       super(columnId, presentStream, context);
-      this.skipCorrupt = context.isSkipCorrupt();
+      this.threadLocalDateFormat = new ThreadLocal<>();
+      this.threadLocalDateFormat.set(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
       this.baseTimestampMap = new HashMap<>();
       this.readerTimeZone = TimeZone.getDefault();
       if (context.getWriterTimezone() == null || context.getWriterTimezone().isEmpty()) {
@@ -934,17 +935,16 @@ public class TreeReaderFactory {
       if (!baseTimestampMap.containsKey(timeZoneId)) {
         writerTimeZone = TimeZone.getTimeZone(timeZoneId);
         hasSameTZRules = writerTimeZone.hasSameRules(readerTimeZone);
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        sdf.setTimeZone(writerTimeZone);
+        threadLocalDateFormat.get().setTimeZone(writerTimeZone);
         try {
-          long epoch =
-              sdf.parse(WriterImpl.BASE_TIMESTAMP_STRING).getTime() / WriterImpl.MILLIS_PER_SECOND;
+          long epoch = threadLocalDateFormat.get()
+            .parse(WriterImpl.BASE_TIMESTAMP_STRING).getTime() / WriterImpl.MILLIS_PER_SECOND;
           baseTimestampMap.put(timeZoneId, epoch);
           return epoch;
         } catch (ParseException e) {
           throw new IOException("Unable to create base timestamp", e);
         } finally {
-          sdf.setTimeZone(readerTimeZone);
+          threadLocalDateFormat.get().setTimeZone(readerTimeZone);
         }
       }
 
