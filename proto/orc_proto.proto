@@ -59,6 +59,8 @@ message TimestampStatistics {
   // min,max values saved as milliseconds since epoch
   optional sint64 minimum = 1;
   optional sint64 maximum = 2;
+  optional sint64 minimumUtc = 3;
+  optional sint64 maximumUtc = 4;
 }
 
 message BinaryStatistics {
@@ -89,9 +91,14 @@ message RowIndex {
 }
 
 message BloomFilter {
+  // ORC-135 encodes timestamp in millis UTC, older version uses local timezone
+  enum Encoding {
+    TIMESTAMP_UTC_UTF8 = 1;
+  }
   optional uint32 numHashFunctions = 1;
   repeated fixed64 bitset = 2;
   optional bytes utf8bitset = 3;
+  optional Encoding encoding = 4;
 }
 
 message BloomFilterIndex {

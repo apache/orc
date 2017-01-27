@@ -669,13 +669,6 @@ public class TestRecordReaderImpl {
         RecordReaderImpl.evaluatePredicateProto(createTimestampStats(10, 100), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
     assertEquals(TruthValue.YES_NO,
         RecordReaderImpl.evaluatePredicateProto(createTimestampStats(10000, 100000), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
-
-    pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
-        PredicateLeaf.Type.TIMESTAMP, "x", new Timestamp(15), null);
-    assertEquals(TruthValue.YES_NO,
-        RecordReaderImpl.evaluatePredicateProto(createTimestampStats(10, 100), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
-    assertEquals(TruthValue.NO,
-        RecordReaderImpl.evaluatePredicateProto(createTimestampStats(10000, 100000), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
   }
 
   @Test
@@ -934,6 +927,20 @@ public class TestRecordReaderImpl {
         RecordReaderImpl.evaluatePredicateProto(createStringStats("b", "d", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG)); // middle
     assertEquals(TruthValue.YES_NULL, // min & after, same stats
         RecordReaderImpl.evaluatePredicateProto(createStringStats("c", "c", true), pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription.Category.LONG));
+  }
+
+  @Test
+  public void testTimestampStatsOldFiles() throws Exception {
+    PredicateLeaf pred = createPredicateLeaf
+      (PredicateLeaf.Operator.LESS_THAN, PredicateLeaf.Type.TIMESTAMP,
+        "x", Timestamp.valueOf("2000-01-01 00:00:00"), null);
+    OrcProto.ColumnStatistics cs = createTimestampStats(10, 100);
+    assertEquals(TruthValue.YES_NO_NULL,
+      RecordReaderImpl.evaluatePredicateProto(cs, pred, null, null, OrcFile.WriterVersion.ORC_101, TypeDescription
+        .Category.TIMESTAMP));
+    assertEquals(TruthValue.YES_NULL,
+      RecordReaderImpl.evaluatePredicateProto(cs, pred, null, null, OrcFile.WriterVersion.ORC_135, TypeDescription
+        .Category.TIMESTAMP));
   }
 
   @Test
@@ -1525,77 +1532,6 @@ public class TestRecordReaderImpl {
 
     bf.addLong((new DateWritable(15)).getDays());
     assertEquals(TruthValue.YES_NO_NULL, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
-  }
-
-  @Test
-  public void testTimestampNullSafeEqualsBloomFilter() throws Exception {
-    PredicateLeaf pred = createPredicateLeaf(
-        PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.TIMESTAMP, "x",
-        new Timestamp(15),
-        null);
-    BloomFilter bf = new BloomFilter(10000);
-    for (int i = 20; i < 1000; i++) {
-      bf.addLong((new Timestamp(i)).getTime());
-    }
-    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(createTimestampStats(10, 100));
-    assertEquals(TruthValue.NO, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
-
-    bf.addLong((new Timestamp(15)).getTime());
-    assertEquals(TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
-  }
-
-  @Test
-  public void testTimestampEqualsBloomFilter() throws Exception {
-    PredicateLeaf pred = createPredicateLeaf(
-        PredicateLeaf.Operator.EQUALS, PredicateLeaf.Type.TIMESTAMP, "x", new Timestamp(15), null);
-    BloomFilter bf = new BloomFilter(10000);
-    for (int i = 20; i < 1000; i++) {
-      bf.addLong((new Timestamp(i)).getTime());
-    }
-    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(createTimestampStats(10, 100));
-    assertEquals(TruthValue.NO_NULL, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
-
-    bf.addLong((new Timestamp(15)).getTime());
-    assertEquals(TruthValue.YES_NO_NULL, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
-  }
-
-  @Test
-  public void testTimestampInBloomFilter() throws Exception {
-    List<Object> args = new ArrayList<Object>();
-    args.add(new Timestamp(15));
-    args.add(new Timestamp(19));
-    PredicateLeaf pred = createPredicateLeaf
-        (PredicateLeaf.Operator.IN, PredicateLeaf.Type.TIMESTAMP,
-            "x", null, args);
-    BloomFilter bf = new BloomFilter(10000);
-    for (int i = 20; i < 1000; i++) {
-      bf.addLong((new Timestamp(i)).getTime());
-    }
-    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(createTimestampStats(10, 100));
-    assertEquals(TruthValue.NO_NULL, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
-
-    bf.addLong((new Timestamp(19)).getTime());
-    assertEquals(TruthValue.YES_NO_NULL, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
-
-    bf.addLong((new Timestamp(15)).getTime());
-    assertEquals(TruthValue.YES_NO_NULL, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
-  }
-
-  @Test
-  public void testDecimalNullSafeEqualsBloomFilter() throws Exception {
-    PredicateLeaf pred = createPredicateLeaf(
-        PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.DECIMAL, "x",
-        new HiveDecimalWritable("15"),
-        null);
-    BloomFilter bf = new BloomFilter(10000);
-    for (int i = 20; i < 1000; i++) {
-      bf.addString(HiveDecimal.create(i).toString());
-    }
-    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(createDecimalStats("10", "200"));
-    assertEquals(TruthValue.NO, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
-
-    bf.addString(HiveDecimal.create(15).toString());
-    assertEquals(TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
   }
 
   @Test
