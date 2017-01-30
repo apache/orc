@@ -91,14 +91,9 @@ message RowIndex {
 }
 
 message BloomFilter {
-  // ORC-135 encodes timestamp in millis UTC, older version uses local timezone
-  enum Encoding {
-    TIMESTAMP_UTC_UTF8 = 1;
-  }
   optional uint32 numHashFunctions = 1;
   repeated fixed64 bitset = 2;
   optional bytes utf8bitset = 3;
-  optional Encoding encoding = 4;
 }
 
 message BloomFilterIndex {
@@ -133,6 +128,11 @@ message ColumnEncoding {
   }
   optional Kind kind = 1;
   optional uint32 dictionarySize = 2;
+
+  // The encoding of the bloom filters for this column:
+  //   0 or missing = none or original
+  //   1            = ORC-135 (utc for timestamps)
+  optional uint32 bloomEncoding = 3;
 }
 
 message StripeFooter {
@@ -227,6 +227,8 @@ message PostScript {
   //   2 = HIVE-4243 fixed
   //   3 = HIVE-12055 fixed
   //   4 = HIVE-13083 fixed
+  //   5 = ORC-101 fixed
+  //   6 = ORC-135 fixed
   optional uint32 writerVersion = 6;
   // Leave this last in the record
   optional string magic = 8000;

@@ -22,9 +22,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -100,9 +97,6 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
   private static final Logger LOG = LoggerFactory.getLogger(WriterImpl.class);
 
   private static final int MIN_ROW_INDEX_STRIDE = 1000;
-
-  // threshold above which buffer size will be automatically resized
-  private static final int COLUMN_COUNT_THRESHOLD = 1000;
 
   private final Path path;
   private final long defaultStripeSize;
@@ -737,9 +731,14 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
      * Get the encoding for this column.
      * @return the information about the encoding of this column
      */
-    OrcProto.ColumnEncoding getEncoding() {
-      return OrcProto.ColumnEncoding.newBuilder().setKind(
-          OrcProto.ColumnEncoding.Kind.DIRECT).build();
+    OrcProto.ColumnEncoding.Builder getEncoding() {
+      OrcProto.ColumnEncoding.Builder builder =
+          OrcProto.ColumnEncoding.newBuilder()
+              .setKind(OrcProto.ColumnEncoding.Kind.DIRECT);
+      if (createBloomFilter) {
+        builder.setBloomEncoding(BloomFilterIO.Encoding.CURRENT.getId());
+      }
+      return builder;
     }
 
     /**
@@ -958,13 +957,14 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     }
 
     @Override
-    OrcProto.ColumnEncoding getEncoding() {
+    OrcProto.ColumnEncoding.Builder getEncoding() {
+      OrcProto.ColumnEncoding.Builder result = super.getEncoding();
       if (isDirectV2) {
-        return OrcProto.ColumnEncoding.newBuilder()
-            .setKind(OrcProto.ColumnEncoding.Kind.DIRECT_V2).build();
+        result.setKind(OrcProto.ColumnEncoding.Kind.DIRECT_V2);
+      } else {
+        result.setKind(OrcProto.ColumnEncoding.Kind.DIRECT);
       }
-      return OrcProto.ColumnEncoding.newBuilder()
-          .setKind(OrcProto.ColumnEncoding.Kind.DIRECT).build();
+      return result;
     }
 
     @Override
@@ -1340,25 +1340,23 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     }
 
     @Override
-    OrcProto.ColumnEncoding getEncoding() {
-      // Returns the encoding used for the last call to writeStripe
+    OrcProto.ColumnEncoding.Builder getEncoding() {
+      OrcProto.ColumnEncoding.Builder result = super.getEncoding();
       if (useDictionaryEncoding) {
+        result.setDictionarySize(dictionary.size());
         if(isDirectV2) {
-          return OrcProto.ColumnEncoding.newBuilder().setKind(
-              OrcProto.ColumnEncoding.Kind.DICTIONARY_V2).
-              setDictionarySize(dictionary.size()).build();
+          result.setKind(OrcProto.ColumnEncoding.Kind.DICTIONARY_V2);
+        } else {
+          result.setKind(OrcProto.ColumnEncoding.Kind.DICTIONARY);
         }
-        return OrcProto.ColumnEncoding.newBuilder().setKind(
-            OrcProto.ColumnEncoding.Kind.DICTIONARY).
-            setDictionarySize(dictionary.size()).build();
       } else {
         if(isDirectV2) {
-          return OrcProto.ColumnEncoding.newBuilder().setKind(
-              OrcProto.ColumnEncoding.Kind.DIRECT_V2).build();
+          result.setKind(OrcProto.ColumnEncoding.Kind.DIRECT_V2);
+        } else {
+          result.setKind(OrcProto.ColumnEncoding.Kind.DIRECT);
         }
-        return OrcProto.ColumnEncoding.newBuilder().setKind(
-            OrcProto.ColumnEncoding.Kind.DIRECT).build();
       }
+      return result;
     }
 
     /**
@@ -1675,13 +1673,14 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     }
 
     @Override
-    OrcProto.ColumnEncoding getEncoding() {
+    OrcProto.ColumnEncoding.Builder getEncoding() {
+      OrcProto.ColumnEncoding.Builder result = super.getEncoding();
       if (isDirectV2) {
-        return OrcProto.ColumnEncoding.newBuilder()
-            .setKind(OrcProto.ColumnEncoding.Kind.DIRECT_V2).build();
+        result.setKind(OrcProto.ColumnEncoding.Kind.DIRECT_V2);
+      } else {
+        result.setKind(OrcProto.ColumnEncoding.Kind.DIRECT);
       }
-      return OrcProto.ColumnEncoding.newBuilder()
-          .setKind(OrcProto.ColumnEncoding.Kind.DIRECT).build();
+      return result;
     }
 
     @Override
@@ -1759,9 +1758,8 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     private final IntegerWriter seconds;
     private final IntegerWriter nanos;
     private final boolean isDirectV2;
+    private final TimeZone localTimezone;
     private final long baseEpochSecsLocalTz;
-    private final ThreadLocal<DateFormat> threadLocalDateFormatUtc;
-    private final TimeZone tzUtc;
 
     TimestampTreeWriter(int columnId,
                      TypeDescription schema,
@@ -1776,26 +1774,21 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       if (rowIndexPosition != null) {
         recordPosition(rowIndexPosition);
       }
-      if (createBloomFilter && bloomFilterEntry != null) {
-        this.bloomFilterEntry.setEncoding(OrcProto.BloomFilter.Encoding.TIMESTAMP_UTC_UTF8);
-      }
-      this.tzUtc = TimeZone.getTimeZone("UTC");
-      this.threadLocalDateFormatUtc = new ThreadLocal<>();
-      this.threadLocalDateFormatUtc.set(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
-      this.threadLocalDateFormatUtc.get().setTimeZone(tzUtc);
+      this.localTimezone = TimeZone.getDefault();
       // for unit tests to set different time zones
       this.baseEpochSecsLocalTz = Timestamp.valueOf(BASE_TIMESTAMP_STRING).getTime() / MILLIS_PER_SECOND;
       writer.useWriterTimeZone(true);
     }
 
     @Override
-    OrcProto.ColumnEncoding getEncoding() {
+    OrcProto.ColumnEncoding.Builder getEncoding() {
+      OrcProto.ColumnEncoding.Builder result = super.getEncoding();
       if (isDirectV2) {
-        return OrcProto.ColumnEncoding.newBuilder()
-            .setKind(OrcProto.ColumnEncoding.Kind.DIRECT_V2).build();
+        result.setKind(OrcProto.ColumnEncoding.Kind.DIRECT_V2);
+      } else {
+        result.setKind(OrcProto.ColumnEncoding.Kind.DIRECT);
       }
-      return OrcProto.ColumnEncoding.newBuilder()
-          .setKind(OrcProto.ColumnEncoding.Kind.DIRECT).build();
+      return result;
     }
 
     @Override
@@ -1808,13 +1801,13 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
         if (vector.noNulls || !vector.isNull[0]) {
           val = vec.asScratchTimestamp(0);
           long millis = val.getTime();
-          long millisUtc = getMillisUtc(val.toString());
-          indexStatistics.updateTimestamp(millisUtc);
+          long utc = SerializationUtils.convertToUtc(localTimezone, millis);
+          indexStatistics.updateTimestamp(utc);
           if (createBloomFilter) {
             if (bloomFilter != null) {
               bloomFilter.addLong(millis);
             }
-            bloomFilterUtf8.addLong(millisUtc);
+            bloomFilterUtf8.addLong(utc);
           }
           final long secs = millis / MILLIS_PER_SECOND - baseEpochSecsLocalTz;
           final long nano = formatNanos(val.getNanos());
@@ -1829,30 +1822,18 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
             val = vec.asScratchTimestamp(i + offset);
             long millis = val.getTime();
             long secs = millis / MILLIS_PER_SECOND - baseEpochSecsLocalTz;
+            long utc = SerializationUtils.convertToUtc(localTimezone, millis);
             seconds.write(secs);
             nanos.write(formatNanos(val.getNanos()));
-            long millisUtc = getMillisUtc(val.toString());
-            indexStatistics.updateTimestamp(millisUtc);
+            indexStatistics.updateTimestamp(utc);
             if (createBloomFilter) {
               if (bloomFilter != null) {
                 bloomFilter.addLong(millis);
               }
-              bloomFilterUtf8.addLong(millisUtc);
+              bloomFilterUtf8.addLong(utc);
             }
           }
         }
-      }
-    }
-
-    private Long getMillisUtc(String tsString) {
-      try {
-        java.util.Date date = threadLocalDateFormatUtc.get().parse(tsString);
-        if (date == null) {
-          return null;
-        }
-        return date.getTime();
-      } catch (ParseException err) {
-        return null;
       }
     }
 
@@ -1968,13 +1949,14 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     }
 
     @Override
-    OrcProto.ColumnEncoding getEncoding() {
+    OrcProto.ColumnEncoding.Builder getEncoding() {
+      OrcProto.ColumnEncoding.Builder result = super.getEncoding();
       if (isDirectV2) {
-        return OrcProto.ColumnEncoding.newBuilder()
-            .setKind(OrcProto.ColumnEncoding.Kind.DIRECT_V2).build();
+        result.setKind(OrcProto.ColumnEncoding.Kind.DIRECT_V2);
+      } else {
+        result.setKind(OrcProto.ColumnEncoding.Kind.DIRECT);
       }
-      return OrcProto.ColumnEncoding.newBuilder()
-          .setKind(OrcProto.ColumnEncoding.Kind.DIRECT).build();
+      return result;
     }
 
     @Override
@@ -2010,13 +1992,14 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     }
 
     @Override
-    OrcProto.ColumnEncoding getEncoding() {
+    OrcProto.ColumnEncoding.Builder getEncoding() {
+      OrcProto.ColumnEncoding.Builder result = super.getEncoding();
       if (isDirectV2) {
-        return OrcProto.ColumnEncoding.newBuilder()
-            .setKind(OrcProto.ColumnEncoding.Kind.DIRECT_V2).build();
+        result.setKind(OrcProto.ColumnEncoding.Kind.DIRECT_V2);
+      } else {
+        result.setKind(OrcProto.ColumnEncoding.Kind.DIRECT);
       }
-      return OrcProto.ColumnEncoding.newBuilder()
-          .setKind(OrcProto.ColumnEncoding.Kind.DIRECT).build();
+      return result;
     }
 
     @Override
@@ -2191,13 +2174,14 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     }
 
     @Override
-    OrcProto.ColumnEncoding getEncoding() {
+    OrcProto.ColumnEncoding.Builder getEncoding() {
+      OrcProto.ColumnEncoding.Builder result = super.getEncoding();
       if (isDirectV2) {
-        return OrcProto.ColumnEncoding.newBuilder()
-            .setKind(OrcProto.ColumnEncoding.Kind.DIRECT_V2).build();
+        result.setKind(OrcProto.ColumnEncoding.Kind.DIRECT_V2);
+      } else {
+        result.setKind(OrcProto.ColumnEncoding.Kind.DIRECT);
       }
-      return OrcProto.ColumnEncoding.newBuilder()
-          .setKind(OrcProto.ColumnEncoding.Kind.DIRECT).build();
+      return result;
     }
 
     @Override
@@ -2304,13 +2288,14 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     }
 
     @Override
-    OrcProto.ColumnEncoding getEncoding() {
+    OrcProto.ColumnEncoding.Builder getEncoding() {
+      OrcProto.ColumnEncoding.Builder result = super.getEncoding();
       if (isDirectV2) {
-        return OrcProto.ColumnEncoding.newBuilder()
-            .setKind(OrcProto.ColumnEncoding.Kind.DIRECT_V2).build();
+        result.setKind(OrcProto.ColumnEncoding.Kind.DIRECT_V2);
+      } else {
+        result.setKind(OrcProto.ColumnEncoding.Kind.DIRECT);
       }
-      return OrcProto.ColumnEncoding.newBuilder()
-          .setKind(OrcProto.ColumnEncoding.Kind.DIRECT).build();
+      return result;
     }
 
     @Override

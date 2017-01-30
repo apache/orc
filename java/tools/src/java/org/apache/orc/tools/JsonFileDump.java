@@ -193,7 +193,8 @@ public class JsonFileDump {
               writeRowGroupIndexes(writer, col, indices.getRowGroupIndex());
               writeBloomFilterIndexes(writer, col, indices,
                   reader.getWriterVersion(),
-                  reader.getSchema().findSubtype(col).getCategory());
+                  reader.getSchema().findSubtype(col).getCategory(),
+                  footer.getColumns(col));
               writer.endObject();
             }
             writer.endArray();
@@ -344,7 +345,8 @@ public class JsonFileDump {
   private static void writeBloomFilterIndexes(JSONWriter writer, int col,
                                               OrcIndex index,
                                               OrcFile.WriterVersion version,
-                                              TypeDescription.Category type
+                                              TypeDescription.Category type,
+                                              OrcProto.ColumnEncoding encoding
                                               ) throws JSONException {
 
     BloomFilter stripeLevelBF = null;
@@ -356,7 +358,7 @@ public class JsonFileDump {
         writer.object();
         writer.key("entryId").value(entryIx++);
         BloomFilter toMerge = BloomFilterIO.deserialize(
-            index.getBloomFilterKinds()[col], version, type, bf);
+            index.getBloomFilterKinds()[col], encoding, version, type, bf);
         writeBloomFilterStats(writer, toMerge);
         if (stripeLevelBF == null) {
           stripeLevelBF = toMerge;

@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
+import java.util.TimeZone;
 
 public final class SerializationUtils {
 
@@ -1307,5 +1308,15 @@ public final class SerializationUtils {
   // ArithmeticException in case of overflow
   public boolean isSafeSubtract(long left, long right) {
     return (left ^ right) >= 0 | (left ^ (left - right)) >= 0;
+  }
+
+  public static long convertFromUtc(TimeZone local, long time) {
+    int offset = local.getOffset(time - local.getRawOffset());
+    return time - offset;
+  }
+
+  public static long convertToUtc(TimeZone local, long time) {
+    int offset = local.getOffset(time);
+    return time + offset;
   }
 }

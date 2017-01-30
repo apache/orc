@@ -20,7 +20,6 @@ import static junit.framework.Assert.assertEquals;
 import java.io.File;
 import java.sql.Timestamp;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collection;
@@ -39,6 +38,7 @@ import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentImpl;
 import org.apache.orc.impl.OrcIndex;
 import org.apache.orc.impl.RecordReaderImpl;
+import org.apache.orc.impl.SerializationUtils;
 import org.apache.orc.util.BloomFilter;
 import org.apache.orc.util.BloomFilterIO;
 import org.junit.After;
@@ -159,13 +159,11 @@ public class TestOrcTimezonePPD {
     }
     rows.close();
     ColumnStatistics[] colStats = reader.getStatistics();
-    Timestamp expectedMin = getUtcTimestamp("2007-08-01 00:00:00.0");
     Timestamp gotMin = ((TimestampColumnStatistics) colStats[0]).getMinimum();
-    assertEquals(expectedMin, gotMin);
+    assertEquals("2007-08-01 00:00:00.0", gotMin.toString());
 
-    Timestamp expectedMax = getUtcTimestamp("2007-08-01 04:00:00.0");
     Timestamp gotMax = ((TimestampColumnStatistics) colStats[0]).getMaximum();
-    assertEquals(expectedMax, gotMax);
+    assertEquals("2007-08-01 04:00:00.0", gotMax.toString());
 
     Assert.assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[0],
       SearchArgumentFactory.newBuilder().equals
@@ -202,8 +200,17 @@ public class TestOrcTimezonePPD {
       null));
   }
 
+  static OrcProto.ColumnEncoding buildEncoding() {
+    OrcProto.ColumnEncoding.Builder result =
+        OrcProto.ColumnEncoding.newBuilder();
+    result.setKind(OrcProto.ColumnEncoding.Kind.DIRECT)
+        .setBloomEncoding(BloomFilterIO.Encoding.UTF8_UTC.getId());
+    return result.build();
+  }
+
   @Test
   public void testTimestampPPDBloomFilter() throws Exception {
+    System.out.println("Writer = " + writerTimeZone + " reader = " + readerTimeZone);
     TypeDescription schema = TypeDescription.createStruct().addField("ts", TypeDescription.createTimestamp());
 
     TimeZone.setDefault(TimeZone.getTimeZone(writerTimeZone));
@@ -240,17 +247,16 @@ public class TestOrcTimezonePPD {
     OrcIndex indices = ((RecordReaderImpl) rows).readRowIndex(0, null, sargColumns);
     rows.close();
     ColumnStatistics[] colStats = reader.getStatistics();
-    Timestamp expectedMin = getUtcTimestamp("2007-08-01 00:00:00.0");
     Timestamp gotMin = ((TimestampColumnStatistics) colStats[1]).getMinimum();
-    assertEquals(expectedMin, gotMin);
+    assertEquals("2007-08-01 00:00:00.0", gotMin.toString());
 
-    Timestamp expectedMax = getUtcTimestamp("2007-08-01 04:00:00.0");
     Timestamp gotMax = ((TimestampColumnStatistics) colStats[1]).getMaximum();
-    assertEquals(expectedMax, gotMax);
+    assertEquals("2007-08-01 04:00:00.0", gotMax.toString());
 
     OrcProto.BloomFilterIndex[] bloomFilterIndices = indices.getBloomFilterIndex();
     OrcProto.BloomFilter bloomFilter = bloomFilterIndices[1].getBloomFilter(0);
-    BloomFilter bf = BloomFilterIO.deserialize(OrcProto.Stream.Kind.BLOOM_FILTER_UTF8, reader.getWriterVersion(),
+    BloomFilter bf = BloomFilterIO.deserialize(OrcProto.Stream.Kind.BLOOM_FILTER_UTF8,
+        buildEncoding(), reader.getWriterVersion(),
       TypeDescription.Category.TIMESTAMP, bloomFilter);
     Assert.assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[1],
       SearchArgumentFactory.newBuilder().equals
@@ -313,18 +319,17 @@ public class TestOrcTimezonePPD {
     OrcIndex indices = ((RecordReaderImpl) rows).readRowIndex(0, null, sargColumns);
     rows.close();
     ColumnStatistics[] colStats = reader.getStatistics();
-    Timestamp expectedMin = getUtcTimestamp("2007-08-01 00:00:00.0");
     Timestamp gotMin = ((TimestampColumnStatistics) colStats[1]).getMinimum();
-    assertEquals(expectedMin, gotMin);
+    assertEquals("2007-08-01 00:00:00.0", gotMin.toString());
 
-    Timestamp expectedMax = getUtcTimestamp("2007-08-01 04:00:00.0");
     Timestamp gotMax = ((TimestampColumnStatistics) colStats[1]).getMaximum();
-    assertEquals(expectedMax, gotMax);
+    assertEquals("2007-08-01 04:00:00.0", gotMax.toString());
 
     OrcProto.BloomFilterIndex[] bloomFilterIndices = indices.getBloomFilterIndex();
     OrcProto.BloomFilter bloomFilter = bloomFilterIndices[1].getBloomFilter(0);
-    BloomFilter bf = BloomFilterIO.deserialize(OrcProto.Stream.Kind.BLOOM_FILTER_UTF8, reader.getWriterVersion(),
-      TypeDescription.Category.TIMESTAMP, bloomFilter);
+    BloomFilter bf = BloomFilterIO.deserialize(OrcProto.Stream.Kind.BLOOM_FILTER_UTF8,
+        buildEncoding(), reader.getWriterVersion(),
+        TypeDescription.Category.TIMESTAMP, bloomFilter);
     PredicateLeaf pred = createPredicateLeaf(
       PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.TIMESTAMP, "x",
       Timestamp.valueOf("2007-08-01 00:00:00.0"), null);
@@ -334,7 +339,8 @@ public class TestOrcTimezonePPD {
       Timestamp.valueOf("2007-08-01 02:00:00.0"), null);
     Assert.assertEquals(SearchArgument.TruthValue.NO, RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
 
-    bf.addLong(getUtcTimestamp("2007-08-01 02:00:00.0").getTime());
+    bf.addLong(SerializationUtils.convertToUtc(TimeZone.getDefault(),
+        Timestamp.valueOf("2007-08-01 02:00:00.0").getTime()));
     Assert.assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.LESS_THAN, PredicateLeaf.Type.TIMESTAMP, "x",
@@ -384,8 +390,9 @@ public class TestOrcTimezonePPD {
 
     OrcProto.BloomFilterIndex[] bloomFilterIndices = indices.getBloomFilterIndex();
     OrcProto.BloomFilter bloomFilter = bloomFilterIndices[1].getBloomFilter(0);
-    BloomFilter bf = BloomFilterIO.deserialize(OrcProto.Stream.Kind.BLOOM_FILTER_UTF8, reader.getWriterVersion(),
-      TypeDescription.Category.TIMESTAMP, bloomFilter);
+    BloomFilter bf = BloomFilterIO.deserialize(OrcProto.Stream.Kind.BLOOM_FILTER_UTF8,
+        buildEncoding(), reader.getWriterVersion(),
+        TypeDescription.Category.TIMESTAMP, bloomFilter);
     PredicateLeaf pred = createPredicateLeaf(
       PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.TIMESTAMP, "x",
       Timestamp.valueOf("2007-08-01 00:00:00.0"), null);
@@ -393,11 +400,5 @@ public class TestOrcTimezonePPD {
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.IS_NULL, PredicateLeaf.Type.TIMESTAMP, "x", null, null);
     Assert.assertEquals(SearchArgument.TruthValue.YES, RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
-  }
-
-  private Timestamp getUtcTimestamp(String ts) throws ParseException {
-    dateFormat.setTimeZone(utcTz);
-    Date date = dateFormat.parse(ts);
-    return new Timestamp(date.getTime());
   }
 }

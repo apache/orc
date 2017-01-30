@@ -28,6 +28,38 @@ import java.nio.ByteOrder;
 
 public class BloomFilterIO  {
 
+  public enum Encoding {
+    ORIGINAL(0),
+    UTF8_UTC(1),
+    FUTURE(Integer.MAX_VALUE);
+
+    public static final Encoding CURRENT = UTF8_UTC;
+
+    private final int id;
+
+    Encoding(int id) {
+      this.id = id;
+    }
+
+    public int getId() {
+      return id;
+    }
+
+    public static Encoding from(OrcProto.ColumnEncoding encoding) {
+      if (!encoding.hasBloomEncoding()) {
+        return ORIGINAL;
+      }
+      switch (encoding.getBloomEncoding()) {
+        case 0:
+          return ORIGINAL;
+        case 1:
+          return UTF8_UTC;
+        default:
+          return FUTURE;
+      }
+    }
+  }
+
   private BloomFilterIO() {
     // never called
   }
@@ -36,6 +68,7 @@ public class BloomFilterIO  {
    * Deserialize a bloom filter from the ORC file.
    */
   public static BloomFilter deserialize(OrcProto.Stream.Kind kind,
+                                        OrcProto.ColumnEncoding encoding,
                                         OrcFile.WriterVersion fileVersion,
                                         TypeDescription.Category type,
                                         OrcProto.BloomFilter bloomFilter) {
@@ -60,6 +93,13 @@ public class BloomFilterIO  {
         return new BloomFilter(values, numFuncs);
       }
       case BLOOM_FILTER_UTF8: {
+        // make sure we don't use unknown encodings or original timestamp encodings
+        Encoding version = Encoding.from(encoding);
+        if (version == Encoding.FUTURE ||
+            (type == TypeDescription.Category.TIMESTAMP &&
+                version == Encoding.ORIGINAL)) {
+          return null;
+        }
         ByteString bits = bloomFilter.getUtf8Bitset();
         long[] values = new long[bits.size() / 8];
         bits.asReadOnlyByteBuffer().order(ByteOrder.LITTLE_ENDIAN)

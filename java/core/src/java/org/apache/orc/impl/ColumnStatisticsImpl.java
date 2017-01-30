@@ -19,8 +19,6 @@ package org.apache.orc.impl;
 
 import java.sql.Date;
 import java.sql.Timestamp;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
 import java.util.TimeZone;
 
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
@@ -1121,10 +1119,12 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       OrcProto.TimestampStatistics timestampStats = stats.getTimestampStatistics();
       // min,max values serialized/deserialized as int (milliseconds since epoch)
       if (timestampStats.hasMaximum()) {
-        maximum = timestampStats.getMaximum();
+        maximum = SerializationUtils.convertToUtc(TimeZone.getDefault(),
+            timestampStats.getMaximum());
       }
       if (timestampStats.hasMinimum()) {
-        minimum = timestampStats.getMinimum();
+        maximum = SerializationUtils.convertToUtc(TimeZone.getDefault(),
+            timestampStats.getMinimum());
       }
       if (timestampStats.hasMaximumUtc()) {
         maximum = timestampStats.getMaximumUtc();
@@ -1143,14 +1143,9 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
     @Override
     public void updateTimestamp(Timestamp value) {
-      if (minimum == null) {
-        minimum = value.getTime();
-        maximum = value.getTime();
-      } else if (minimum > value.getTime()) {
-        minimum = value.getTime();
-      } else if (maximum < value.getTime()) {
-        maximum = value.getTime();
-      }
+      long millis = SerializationUtils.convertToUtc(TimeZone.getDefault(),
+          value.getTime());
+      updateTimestamp(millis);
     }
 
     @Override
@@ -1203,18 +1198,22 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
     @Override
     public Timestamp getMinimum() {
-      return minimum == null ? null : new Timestamp(minimum);
+      return minimum == null ? null :
+          new Timestamp(SerializationUtils.convertFromUtc(TimeZone.getDefault(),
+              minimum));
     }
 
     @Override
     public Timestamp getMaximum() {
-      return maximum == null ? null : new Timestamp(maximum);
+      return maximum == null ? null :
+          new Timestamp(SerializationUtils.convertFromUtc(TimeZone.getDefault(),
+              maximum));
     }
 
     @Override
     public String toString() {
       StringBuilder buf = new StringBuilder(super.toString());
-      if (getNumberOfValues() != 0) {
+      if (minimum != null || maximum != null) {
         buf.append(" min: ");
         buf.append(getMinimum());
         buf.append(" max: ");

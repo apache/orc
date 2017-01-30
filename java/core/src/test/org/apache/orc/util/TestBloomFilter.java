@@ -73,10 +73,15 @@ public class TestBloomFilter {
     byte[] expected = new byte[]{0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40,
         (byte) 0x80, ~0x01, ~0x02, ~0x04, ~0x08, ~0x10, ~0x20, ~0x40,
         (byte) ~0x80};
+    OrcProto.ColumnEncoding.Builder encoding =
+        OrcProto.ColumnEncoding.newBuilder();
+    encoding.setKind(OrcProto.ColumnEncoding.Kind.DIRECT)
+        .setBloomEncoding(BloomFilterIO.Encoding.UTF8_UTC.getId());
     assertArrayEquals(expected, bs.toByteArray());
     BloomFilter rebuilt = BloomFilterIO.deserialize(
         OrcProto.Stream.Kind.BLOOM_FILTER_UTF8,
-        OrcFile.WriterVersion.ORC_101,
+        encoding.build(),
+        OrcFile.WriterVersion.ORC_135,
         TypeDescription.Category.INT,
         proto);
     assertEquals(bloom, rebuilt);
