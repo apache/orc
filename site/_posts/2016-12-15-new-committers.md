@@ -12,6 +12,7 @@ committers coming from Hive are:
 
 * Aihua Xu
 * Ashutosh Chauhan
+* Carl Steinbach
 * Chaoyu Tang
 * Chinna Rao Lalam
 * Daniel Dai
@@ -19,6 +20,7 @@ committers coming from Hive are:
 * Ferdinand Xu
 * Jason Dere
 * Jesus Camacho Rodriguez
+* Jimmy Xiang
 * Lars Francke
 * Matthew McCline
 * Mithun Radhakrishnan 

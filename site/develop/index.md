@@ -9,13 +9,16 @@ developers working on the project. The project has created
 
 ## Project Members
 
+{% comment %}
+please sort by Apache Id
+{% endcomment %}
 Name                    | Apache Id    | Role
 :---------------------- | :----------- | :---
-Aihua Xu                | zihuaxu      | Committer
 Aliaksei Sandryhaila    | asandryh     | PMC
 Chris Douglas           | cdouglas     | PMC
-Chaoyu Tang             | ctang        | Committer
 Chinna Rao Lalam        | chinnaraol   | Committer
+Chaoyu Tang             | ctang        | Committer
+Carl Steinbach          | cws          | Committer
 Daniel Dai              | daijy        | Committer
 Eugene Koifman          | ekoifman     | Committer
 Alan Gates              | gates        | PMC
@@ -24,6 +27,7 @@ Gunther Hagleitner      | gunther      | Committer
 Ashutosh Chauhan        | hashutosh    | Committer
 Jesus Camacho Rodriguez | jcamacho     | Committer
 Jason Dere              | jdere        | Committer
+Jimmy Xiang             | jxiang       | Committer
 Kevin Wilfong           | kevinwilfong | Committer
 Lars Francke            | larsfrancke  | Committer
 Lefty Leverenz          | leftyl       | PMC
@@ -43,6 +47,18 @@ Wei Zheng               | weiz         | Committer
 Xuefu Zhang             | xuefu        | Committer
 Ferdinand Xu            | xuf          | Committer
 Yongzhi Chen            | ychena       | Committer
+Aihua Xu                | zihuaxu      | Committer
+
+Companies with employees that are committers:
+
+* Cloudera
+* Facebook
+* Hewlett Packard Enterprise
+* Hortonworks
+* Intel
+* LinkedIn
+* Microsoft
+* Yahoo
 
 ## Mailing Lists
 
