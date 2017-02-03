@@ -17,7 +17,7 @@ reader for ORC files. It also contains tools for working with ORC
 files and looking at their contents and metadata.
 
 {% include release_description.md %}
-{% include orc_1.2.md %}
+{% include orc_1.3.md %}
 {% include known_issues.md %}
 
 ## Checking signatures
