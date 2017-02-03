@@ -87,6 +87,10 @@
     <option value="/news/">Home</option>
     <optgroup label="v1.x">
       
+      <option value="/news/2017/02/03/ORC-1.3.1/">ORC 1.3.1 Released</option>
+      
+      <option value="/news/2017/01/23/ORC-1.3.0/">ORC 1.3.0 Released</option>
+      
       <option value="/news/2017/01/04/gopal-on-pmc/">ORC adds Gopal Vijayaraghavan to PMC</option>
       
       <option value="/news/2016/12/15/new-committers/">ORC adds new committers</option>
@@ -124,6 +128,126 @@
 
       <div class="unit four-fifths">
         
+  <article>
+  <h2>
+    <a href="/news/2017/02/03/ORC-1.3.1/">
+      ORC 1.3.1 Released
+    </a>
+  </h2>
+  <span class="post-category">
+    <span class="label">
+      release
+    </span>
+  </span>
+  <div class="post-meta">
+    <span class="post-date">
+      03 Feb 2017
+    </span>
+    <a href="https://people.apache.org/~omalley" class="post-author">
+      <img src="https://people.apache.org/~omalley//omalley.png"
+           class="avatar" alt="omalley avatar"
+           width="24" height="24">
+      omalley
+    </a>
+  </div>
+  <div class="post-content">
+    <p>The ORC team is excited to announce the release of ORC v1.3.1.</p>
+
+<ul>
+  <li>Released: 3 February 2017</li>
+  <li>Source code: <a href="http://www.apache.org/dyn/closer.cgi/orc/orc-1.3.1/orc-1.3.1.tar.gz">orc-1.3.1.tar.gz</a></li>
+  <li><a href="https://dist.apache.org/repos/dist/release/orc/orc-1.3.1/orc-1.3.1.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://dist.apache.org/repos/dist/release/orc/KEYS">Owen Oâ€™Malley (3D0C92B9)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.3.1">rel/release-1.3.1</a></li>
+  <li>SHA 256: <a href="https://dist.apache.org/repos/dist/release/orc/orc-1.3.1/orc-1.3.1.tar.gz.sha256">d16c55f20f9fe217â€¦</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.3.1%22&amp;tempMax=500">ORC-1.3.1</a></li>
+</ul>
+
+<p>The new features of ORC 1.3:</p>
+
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-58">ORC-58</a> Split C++ Reader into Reader and RowReader</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-120">ORC-120</a> Add backwards compatibility mode for schema evolution.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-124">ORC-124</a> Fast decimal improvements</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-128">ORC-128</a> Add ability to get statistics from writer</li>
+</ul>
+
+<p>Known issues:</p>
+
+<ul>
+  <li>
+    <p><a href="https://issues.apache.org/jira/browse/ORC-40">ORC-40</a> Predicate push down is not implemented in C++.</p>
+  </li>
+  <li>
+    <p><a href="https://issues.apache.org/jira/browse/ORC-135">ORC-135</a> Predicate push down is incorrect on timestamps when moved between timezones</p>
+  </li>
+</ul>
+
+
+  </div>
+</article>
+
+
+  <article>
+  <h2>
+    <a href="/news/2017/01/23/ORC-1.3.0/">
+      ORC 1.3.0 Released
+    </a>
+  </h2>
+  <span class="post-category">
+    <span class="label">
+      release
+    </span>
+  </span>
+  <div class="post-meta">
+    <span class="post-date">
+      23 Jan 2017
+    </span>
+    <a href="https://people.apache.org/~omalley" class="post-author">
+      <img src="https://people.apache.org/~omalley//omalley.png"
+           class="avatar" alt="omalley avatar"
+           width="24" height="24">
+      omalley
+    </a>
+  </div>
+  <div class="post-content">
+    <p>The ORC team is excited to announce the release of ORC v1.3.0.</p>
+
+<ul>
+  <li>Released: 23 January 2017</li>
+  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-1.3.0/orc-1.3.0.tar.gz">orc-1.3.0.tar.gz</a></li>
+  <li><a href="https://archive.apache.org/dist/orc/orc-1.3.0/orc-1.3.0.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://dist.apache.org/repos/dist/release/orc/KEYS">Owen Oâ€™Malley (3D0C92B9)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.3.0">rel/release-1.3.0</a></li>
+  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-1.3.0/orc-1.3.0.tar.gz.sha256">d19a5b5cc1df5797â€¦</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.3.0%22&amp;tempMax=500">ORC-1.3.0</a></li>
+</ul>
+
+<p>The new features of ORC 1.3:</p>
+
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-58">ORC-58</a> Split C++ Reader into Reader and RowReader</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-120">ORC-120</a> Add backwards compatibility mode for schema evolution.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-124">ORC-124</a> Fast decimal improvements</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-128">ORC-128</a> Add ability to get statistics from writer</li>
+</ul>
+
+<p>Known issues:</p>
+
+<ul>
+  <li>
+    <p><a href="https://issues.apache.org/jira/browse/ORC-40">ORC-40</a> Predicate push down is not implemented in C++.</p>
+  </li>
+  <li>
+    <p><a href="https://issues.apache.org/jira/browse/ORC-135">ORC-135</a> Predicate push down is incorrect on timestamps when moved between timezones</p>
+  </li>
+</ul>
+
+
+  </div>
+</article>
+
+
   <article>
   <h2>
     <a href="/news/2017/01/04/gopal-on-pmc/">
@@ -270,7 +394,12 @@ signed by <a href="https://dist.apache.org/repos/dist/release/orc/KEYS">Owen Oâ€
 <p>Known issues:</p>
 
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-40">ORC-40</a> Predicate push down is not implemented in C++.</li>
+  <li>
+    <p><a href="https://issues.apache.org/jira/browse/ORC-40">ORC-40</a> Predicate push down is not implemented in C++.</p>
+  </li>
+  <li>
+    <p><a href="https://issues.apache.org/jira/browse/ORC-135">ORC-135</a> Predicate push down is incorrect on timestamps when moved between timezones</p>
+  </li>
 </ul>
 
 
@@ -332,7 +461,12 @@ signed by <a href="https://dist.apache.org/repos/dist/release/orc/KEYS">Owen Oâ€
 <p>Known issues:</p>
 
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-40">ORC-40</a> Predicate push down is not implemented in C++.</li>
+  <li>
+    <p><a href="https://issues.apache.org/jira/browse/ORC-40">ORC-40</a> Predicate push down is not implemented in C++.</p>
+  </li>
+  <li>
+    <p><a href="https://issues.apache.org/jira/browse/ORC-135">ORC-135</a> Predicate push down is incorrect on timestamps when moved between timezones</p>
+  </li>
 </ul>
 
 
@@ -394,7 +528,12 @@ signed by <a href="https://dist.apache.org/repos/dist/release/orc/KEYS">Owen Oâ€
 <p>Known issues:</p>
 
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-40">ORC-40</a> Predicate push down is not implemented in C++.</li>
+  <li>
+    <p><a href="https://issues.apache.org/jira/browse/ORC-40">ORC-40</a> Predicate push down is not implemented in C++.</p>
+  </li>
+  <li>
+    <p><a href="https://issues.apache.org/jira/browse/ORC-135">ORC-135</a> Predicate push down is incorrect on timestamps when moved between timezones</p>
+  </li>
 </ul>
 
 
@@ -462,6 +601,9 @@ signed by <a href="https://dist.apache.org/repos/dist/release/orc/KEYS">Owen Oâ€
   <li>
     <p><a href="https://issues.apache.org/jira/browse/ORC-101">ORC-101</a> Bloom filters for string and decimal use inconsistent encoding</p>
   </li>
+  <li>
+    <p><a href="https://issues.apache.org/jira/browse/ORC-135">ORC-135</a> Predicate push down is incorrect on timestamps when moved between timezones</p>
+  </li>
 </ul>
 
 
@@ -525,6 +667,9 @@ timestamps from timezones with different daylight savings rules.</li>
   </li>
   <li>
     <p><a href="https://issues.apache.org/jira/browse/ORC-101">ORC-101</a> Bloom filters for string and decimal use inconsistent encoding</p>
+  </li>
+  <li>
+    <p><a href="https://issues.apache.org/jira/browse/ORC-135">ORC-135</a> Predicate push down is incorrect on timestamps when moved between timezones</p>
   </li>
 </ul>
 
@@ -643,6 +788,9 @@ timestamps from timezones with different daylight savings rules.</li>
   <li>
     <p><a href="https://issues.apache.org/jira/browse/ORC-101">ORC-101</a> Bloom filters for string and decimal use inconsistent encoding</p>
   </li>
+  <li>
+    <p><a href="https://issues.apache.org/jira/browse/ORC-135">ORC-135</a> Predicate push down is incorrect on timestamps when moved between timezones</p>
+  </li>
 </ul>
 
 
@@ -708,6 +856,9 @@ timestamps from timezones with different daylight savings rules.</li>
   </li>
   <li>
     <p><a href="https://issues.apache.org/jira/browse/ORC-101">ORC-101</a> Bloom filters for string and decimal use inconsistent encoding</p>
+  </li>
+  <li>
+    <p><a href="https://issues.apache.org/jira/browse/ORC-135">ORC-135</a> Predicate push down is incorrect on timestamps when moved between timezones</p>
   </li>
 </ul>
 
@@ -988,6 +1139,14 @@ of the website.</p>
     <ul>
       
       <li class="">
+        <a href="/news/2017/02/03/ORC-1.3.1/">Version 1.3.1</a>
+      </li>
+      
+      <li class="">
+        <a href="/news/2017/01/23/ORC-1.3.0/">Version 1.3.0</a>
+      </li>
+      
+      <li class="">
         <a href="/news/2016/12/12/ORC-1.2.3/">Version 1.2.3</a>
       </li>
       
@@ -999,17 +1158,13 @@ of the website.</p>
         <a href="/news/2016/10/05/ORC-1.2.1/">Version 1.2.1</a>
       </li>
       
-      <li class="">
-        <a href="/news/2016/08/25/ORC-1.2.0/">Version 1.2.0</a>
-      </li>
-      
-      <li class="">
-        <a href="/news/2016/07/08/ORC-1.1.2/">Version 1.1.2</a>
-      </li>
-      
     </ul>
     <h4>Other News</h4>
     <ul>
+        
+        
+        
+        
         
         
         <li class="">
