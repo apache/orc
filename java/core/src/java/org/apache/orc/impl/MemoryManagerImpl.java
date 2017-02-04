@@ -18,6 +18,7 @@
 
 package org.apache.orc.impl;
 
+import org.apache.orc.MemoryManager;
 import org.apache.orc.OrcConf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,9 +41,9 @@ import java.util.concurrent.locks.ReentrantLock;
  * This class is not thread safe, but is re-entrant - ensure creation and all
  * invocations are triggered from the same thread.
  */
-public class MemoryManager {
+public class MemoryManagerImpl implements MemoryManager {
 
-  private static final Logger LOG = LoggerFactory.getLogger(MemoryManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(MemoryManagerImpl.class);
 
   /**
    * How often should we check the memory sizes? Measured in rows added
@@ -73,22 +74,12 @@ public class MemoryManager {
     }
   }
 
-  public interface Callback {
-    /**
-     * The writer needs to check its memory usage
-     * @param newScale the current scale factor for memory allocations
-     * @return true if the writer was over the limit
-     * @throws IOException
-     */
-    boolean checkMemory(double newScale) throws IOException;
-  }
-
   /**
    * Create the memory manager.
    * @param conf use the configuration to find the maximum size of the memory
    *             pool.
    */
-  public MemoryManager(Configuration conf) {
+  public MemoryManagerImpl(Configuration conf) {
     double maxLoad = OrcConf.MEMORY_POOL.getDouble(conf);
     totalMemoryPool = Math.round(ManagementFactory.getMemoryMXBean().
         getHeapMemoryUsage().getMax() * maxLoad);
@@ -174,6 +165,7 @@ public class MemoryManager {
    * @param rows number of rows added
    * @throws IOException
    */
+  @Override
   public void addedRow(int rows) throws IOException {
     rowsAddedSinceCheck += rows;
     if (rowsAddedSinceCheck >= ROWS_BETWEEN_CHECKS) {
