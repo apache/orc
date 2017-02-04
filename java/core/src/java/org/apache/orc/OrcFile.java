@@ -30,7 +30,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.orc.impl.MemoryManager;
+import org.apache.orc.MemoryManager;
+import org.apache.orc.impl.MemoryManagerImpl;
 import org.apache.orc.impl.OrcTail;
 import org.apache.orc.impl.ReaderImpl;
 import org.apache.orc.impl.WriterImpl;
@@ -514,7 +515,7 @@ public class OrcFile {
     /**
      * A package local option to set the memory manager.
      */
-    protected WriterOptions memory(MemoryManager value) {
+    public WriterOptions memory(MemoryManager value) {
       memoryManagerValue = value;
       return this;
     }
@@ -647,7 +648,7 @@ public class OrcFile {
       memoryManager = new ThreadLocal<MemoryManager>() {
         @Override
         protected MemoryManager initialValue() {
-          return new MemoryManager(conf);
+          return new MemoryManagerImpl(conf);
         }
       };
     }

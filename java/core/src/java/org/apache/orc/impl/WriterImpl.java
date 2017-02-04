@@ -40,6 +40,7 @@ import org.apache.orc.BinaryColumnStatistics;
 import org.apache.orc.ColumnStatistics;
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.CompressionKind;
+import org.apache.orc.MemoryManager;
 import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
