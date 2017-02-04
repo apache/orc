@@ -19,7 +19,7 @@ package org.apache.orc.impl;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.orc.impl.MemoryManager;
+import org.apache.orc.MemoryManager;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.junit.Test;
@@ -39,7 +39,7 @@ import static org.mockito.Mockito.verify;
 public class TestMemoryManager {
   private static final double ERROR = 0.000001;
 
-  private static class NullCallback implements MemoryManager.Callback {
+  private static class NullCallback implements MemoryManagerImpl.Callback {
     public boolean checkMemory(double newScale) {
       return false;
     }
@@ -48,7 +48,7 @@ public class TestMemoryManager {
   @Test
   public void testBasics() throws Exception {
     Configuration conf = new Configuration();
-    MemoryManager mgr = new MemoryManager(conf);
+    MemoryManagerImpl mgr = new MemoryManagerImpl(conf);
     NullCallback callback = new NullCallback();
     long poolSize = mgr.getTotalMemoryPool();
     assertEquals(Math.round(ManagementFactory.getMemoryMXBean().
@@ -77,7 +77,7 @@ public class TestMemoryManager {
   public void testConfig() throws Exception {
     Configuration conf = new Configuration();
     conf.set("hive.exec.orc.memory.pool", "0.9");
-    MemoryManager mgr = new MemoryManager(conf);
+    MemoryManagerImpl mgr = new MemoryManagerImpl(conf);
     long mem =
         ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getMax();
     System.err.print("Memory = " + mem);
@@ -114,7 +114,7 @@ public class TestMemoryManager {
   @Test
   public void testCallback() throws Exception {
     Configuration conf = new Configuration();
-    MemoryManager mgr = new MemoryManager(conf);
+    MemoryManagerImpl mgr = new MemoryManagerImpl(conf);
     long pool = mgr.getTotalMemoryPool();
     MemoryManager.Callback[] calls = new MemoryManager.Callback[20];
     for(int i=0; i < calls.length; ++i) {
