@@ -21,11 +21,15 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 import org.apache.orc.OrcFile;
 import org.apache.orc.util.BloomFilter;
@@ -363,6 +367,13 @@ public class RecordReaderImpl implements RecordReader {
     ColumnStatistics cs = ColumnStatisticsImpl.deserialize(statsProto);
     Object minValue = getMin(cs);
     Object maxValue = getMax(cs);
+    // files written before ORC-135 stores timestamp wrt to local timezone causing issues with PPD.
+    // disable PPD for timestamp for all old files
+    if (type.equals(TypeDescription.Category.TIMESTAMP) && bloomFilter != null && !bloomFilter.hasEncoding()) {
+      LOG.warn("Not using bloom filter for timestamp column as bloom filter is missing encoding kind (reading files " +
+          "before ORC-135). Writer version: {}", writerVersion);
+      return TruthValue.YES_NO_NULL;
+    }
     return evaluatePredicateRange(predicate, minValue, maxValue, cs.hasNull(),
         BloomFilterIO.deserialize(kind, writerVersion, type, bloomFilter));
   }
@@ -398,6 +409,11 @@ public class RecordReaderImpl implements RecordReader {
 
     TruthValue result;
     Object baseObj = predicate.getLiteral();
+    // correction for timezone. Min/Max stats are stored in UTC as of ORC-135.
+    // Convert timestamp literals to UTC as well for correct PPD evaluation.
+    if (min instanceof Timestamp && baseObj instanceof Timestamp) {
+        baseObj = getUtcTimestamp(baseObj.toString());
+    }
     try {
       // Predicate object and stats objects are converted to the type of the predicate object.
       Object minValue = getBaseObjectForComparison(predicate.getType(), min);
@@ -428,6 +444,22 @@ public class RecordReaderImpl implements RecordReader {
       }
     }
     return result;
+  }
+
+  static Timestamp getUtcTimestamp(String ts) {
+    DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    TimeZone utcTz = TimeZone.getTimeZone("UTC");
+    dateFormat.setTimeZone(utcTz);
+    java.util.Date date;
+    try {
+      date = dateFormat.parse(ts);
+      if (date == null) {
+        return null;
+      }
+    } catch (ParseException e) {
+      return null;
+    }
+    return new Timestamp(date.getTime());
   }
 
   private static boolean shouldEvaluateBloomFilter(PredicateLeaf predicate,
@@ -493,6 +525,9 @@ public class RecordReaderImpl implements RecordReader {
           // set
           for (Object arg : predicate.getLiteralList()) {
             predObj = getBaseObjectForComparison(predicate.getType(), arg);
+            if (predObj instanceof Timestamp) {
+              predObj = getUtcTimestamp(predObj.toString());
+            }
             loc = compareToRange((Comparable) predObj, minValue, maxValue);
             if (loc == Location.MIN) {
               return hasNull ? TruthValue.YES_NULL : TruthValue.YES;
@@ -503,6 +538,9 @@ public class RecordReaderImpl implements RecordReader {
           // are all of the values outside of the range?
           for (Object arg : predicate.getLiteralList()) {
             predObj = getBaseObjectForComparison(predicate.getType(), arg);
+            if (predObj instanceof Timestamp) {
+              predObj = getUtcTimestamp(predObj.toString());
+            }
             loc = compareToRange((Comparable) predObj, minValue, maxValue);
             if (loc == Location.MIN || loc == Location.MIDDLE ||
                 loc == Location.MAX) {
@@ -514,11 +552,16 @@ public class RecordReaderImpl implements RecordReader {
       case BETWEEN:
         List<Object> args = predicate.getLiteralList();
         Object predObj1 = getBaseObjectForComparison(predicate.getType(), args.get(0));
+        if (predObj1 instanceof Timestamp) {
+          predObj1 = getUtcTimestamp(predObj1.toString());
+        }
 
         loc = compareToRange((Comparable) predObj1, minValue, maxValue);
         if (loc == Location.BEFORE || loc == Location.MIN) {
           Object predObj2 = getBaseObjectForComparison(predicate.getType(), args.get(1));
-
+          if (predObj2 instanceof Timestamp) {
+            predObj2 = getUtcTimestamp(predObj2.toString());
+          }
           Location loc2 = compareToRange((Comparable) predObj2, minValue, maxValue);
           if (loc2 == Location.AFTER || loc2 == Location.MAX) {
             return hasNull ? TruthValue.YES_NULL : TruthValue.YES;
@@ -552,6 +595,9 @@ public class RecordReaderImpl implements RecordReader {
         for (Object arg : predicate.getLiteralList()) {
           // if atleast one value in IN list exist in bloom filter, qualify the row group/stripe
           Object predObjItem = getBaseObjectForComparison(predicate.getType(), arg);
+          if (predObjItem instanceof Timestamp) {
+            predObjItem = getUtcTimestamp(predObjItem.toString());
+          }
           TruthValue result = checkInBloomFilter(bloomFilter, predObjItem, hasNull);
           if (result == TruthValue.YES_NO_NULL || result == TruthValue.YES_NO) {
             return result;

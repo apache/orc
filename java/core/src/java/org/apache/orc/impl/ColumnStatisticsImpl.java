@@ -19,6 +19,9 @@ package org.apache.orc.impl;
 
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.TimeZone;
 
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
@@ -1123,6 +1126,12 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       if (timestampStats.hasMinimum()) {
         minimum = timestampStats.getMinimum();
       }
+      if (timestampStats.hasMaximumUtc()) {
+        maximum = timestampStats.getMaximumUtc();
+      }
+      if (timestampStats.hasMinimumUtc()) {
+        minimum = timestampStats.getMinimumUtc();
+      }
     }
 
     @Override
@@ -1185,8 +1194,8 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       OrcProto.TimestampStatistics.Builder timestampStats = OrcProto.TimestampStatistics
           .newBuilder();
       if (getNumberOfValues() != 0 && minimum != null) {
-        timestampStats.setMinimum(minimum);
-        timestampStats.setMaximum(maximum);
+        timestampStats.setMinimumUtc(minimum);
+        timestampStats.setMaximumUtc(maximum);
       }
       result.setTimestampStatistics(timestampStats);
       return result;
