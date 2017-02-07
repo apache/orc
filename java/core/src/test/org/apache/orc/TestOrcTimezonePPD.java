@@ -23,7 +23,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -51,12 +50,16 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  */
 @RunWith(Parameterized.class)
 public class TestOrcTimezonePPD {
+  private static final Logger LOG = LoggerFactory.getLogger(TestOrcTimezonePPD.class);
+
   Path workDir = new Path(System.getProperty("test.tmp.dir",
     "target" + File.separator + "test" + File.separator + "tmp"));
   Configuration conf;
@@ -210,7 +213,7 @@ public class TestOrcTimezonePPD {
 
   @Test
   public void testTimestampPPDBloomFilter() throws Exception {
-    System.out.println("Writer = " + writerTimeZone + " reader = " + readerTimeZone);
+    LOG.info("Writer = " + writerTimeZone + " reader = " + readerTimeZone);
     TypeDescription schema = TypeDescription.createStruct().addField("ts", TypeDescription.createTimestamp());
 
     TimeZone.setDefault(TimeZone.getTimeZone(writerTimeZone));
