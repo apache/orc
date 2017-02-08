@@ -18,10 +18,18 @@
 
 package org.apache.orc.impl;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.serde2.io.DateWritable;
+import org.apache.orc.ColumnStatistics;
+import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
+import org.apache.orc.Reader;
+import org.apache.orc.TimestampColumnStatistics;
 import org.apache.orc.TypeDescription;
 import org.junit.Test;
+
+import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -60,5 +68,17 @@ public class TestColumnStatisticsImpl {
     assertEquals(minimum, protoStat.getMinimum());
     assertTrue(protoStat.hasMaximum());
     assertEquals(maximum, protoStat.getMaximum());
+  }
+
+  @Test
+  public void testOldTimestamps() throws IOException {
+    Path exampleDir = new Path(System.getProperty("example.dir"));
+    Path file = new Path(exampleDir, "TestOrcFile.testTimestamp.orc");
+    Configuration conf = new Configuration();
+    Reader reader = OrcFile.createReader(file, OrcFile.readerOptions(conf));
+    TimestampColumnStatistics stats =
+        (TimestampColumnStatistics) reader.getStatistics()[0];
+    assertEquals("1995-01-01 00:00:00.688", stats.getMinimum().toString());
+    assertEquals("2037-01-01 00:00:00.0", stats.getMaximum().toString());
   }
 }

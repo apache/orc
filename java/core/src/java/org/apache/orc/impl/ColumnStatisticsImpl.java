@@ -1123,7 +1123,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
             timestampStats.getMaximum());
       }
       if (timestampStats.hasMinimum()) {
-        maximum = SerializationUtils.convertToUtc(TimeZone.getDefault(),
+        minimum = SerializationUtils.convertToUtc(TimeZone.getDefault(),
             timestampStats.getMinimum());
       }
       if (timestampStats.hasMaximumUtc()) {
