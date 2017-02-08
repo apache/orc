@@ -67,6 +67,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.useIncrementalCompilation>false</maven.compiler.useIncrementalCompilation>
     <test.tmp.dir>${project.build.directory}/testing-tmp</test.tmp.dir>
+    <example.dir>${project.basedir}/../../examples</example.dir>
 
     <hadoop.version>2.6.4</hadoop.version>
     <storage-api.version>2.2.0</storage-api.version>
@@ -137,6 +138,7 @@
           <failIfNoTests>false</failIfNoTests>
           <systemPropertyVariables>
             <test.tmp.dir>${test.tmp.dir}</test.tmp.dir>
+            <example.dir>${example.dir}</example.dir>
           </systemPropertyVariables>
         </configuration>
       </plugin>
