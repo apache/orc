@@ -138,6 +138,47 @@ public class RecordReaderImpl implements RecordReader {
     return result;
   }
 
+  /**
+   * Given a list of column names, find the given column and return the index.
+   *
+   * @param columnNames the list of potential column names
+   * @param columnName  the column name to look for
+   * @param rootColumn  offset the result with the rootColumn
+   * @return the column number or -1 if the column wasn't found
+   */
+  private static int findColumns(String[] columnNames,
+                         String columnName,
+                         int rootColumn) {
+    for(int i=0; i < columnNames.length; ++i) {
+      if (columnName.equals(columnNames[i])) {
+        return i + rootColumn;
+      }
+    }
+    return -1;
+  }
+
+  /**
+   * Find the mapping from predicate leaves to columns.
+   * @param sargLeaves the search argument that we need to map
+   * @param columnNames the names of the columns
+   * @param rootColumn the offset of the top level row, which offsets the
+   *                   result
+   * @return an array mapping the sarg leaves to concrete column numbers
+   * @deprecated Use #mapSargColumnsToOrcInternalColIdx(List, SchemaEvolution)
+   */
+  @Deprecated
+  public static int[] mapSargColumnsToOrcInternalColIdx(List<PredicateLeaf> sargLeaves,
+                                                        String[] columnNames,
+                                                        int rootColumn) {
+    int[] result = new int[sargLeaves.size()];
+    Arrays.fill(result, -1);
+    for(int i=0; i < result.length; ++i) {
+      String colName = sargLeaves.get(i).getColumnName();
+      result[i] = findColumns(columnNames, colName, rootColumn);
+    }
+    return result;
+  }
+
   protected RecordReaderImpl(ReaderImpl fileReader,
                              Reader.Options options) throws IOException {
     this.writerVersion = fileReader.getWriterVersion();
@@ -146,7 +187,7 @@ public class RecordReaderImpl implements RecordReader {
         LOG.info("Reader schema not provided -- using file schema " +
             fileReader.getSchema());
       }
-      evolution = new SchemaEvolution(fileReader.getSchema(), options);
+      evolution = new SchemaEvolution(fileReader.getSchema(), null, options);
     } else {
 
       // Now that we are creating a record reader for a file, validate that

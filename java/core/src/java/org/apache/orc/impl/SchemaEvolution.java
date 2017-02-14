@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.orc.Reader;
 import org.apache.orc.TypeDescription;
 import org.slf4j.Logger;
@@ -60,11 +61,6 @@ public class SchemaEvolution {
     public IllegalEvolutionException(String msg) {
       super(msg);
     }
-  }
-
-  public SchemaEvolution(TypeDescription fileSchema,
-                         Reader.Options options) {
-    this(fileSchema, null, options);
   }
 
   public SchemaEvolution(TypeDescription fileSchema,
@@ -129,6 +125,20 @@ public class SchemaEvolution {
       buildIdentityConversion(this.readerSchema);
     }
     this.ppdSafeConversion = populatePpdSafeConversion();
+  }
+
+  @Deprecated
+  public SchemaEvolution(TypeDescription fileSchema, boolean[] readerIncluded) {
+    this(fileSchema, null, readerIncluded);
+  }
+
+  @Deprecated
+  public SchemaEvolution(TypeDescription fileSchema,
+                         TypeDescription readerSchema,
+                         boolean[] readerIncluded) {
+    this(fileSchema, readerSchema,
+        new Reader.Options(new Configuration())
+            .include(readerIncluded));
   }
 
   // Return true iff all fields have names like _col[0-9]+
