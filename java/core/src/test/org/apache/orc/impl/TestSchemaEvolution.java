@@ -78,7 +78,7 @@ public class TestSchemaEvolution {
         .addField("f1", TypeDescription.createInt())
         .addField("f2", TypeDescription.createString())
         .addField("f3", TypeDescription.createDecimal().withPrecision(38).withScale(10));
-    SchemaEvolution same1 = new SchemaEvolution(fileStruct1, options);
+    SchemaEvolution same1 = new SchemaEvolution(fileStruct1, null, options);
     assertFalse(same1.hasConversion());
     TypeDescription readerStruct1 = TypeDescription.createStruct()
         .addField("f1", TypeDescription.createInt())
@@ -113,7 +113,7 @@ public class TestSchemaEvolution {
             .addField("f4", TypeDescription.createDouble())
             .addField("f5", TypeDescription.createBoolean()))
         .addField("f6", TypeDescription.createChar().withMaxLength(100));
-    SchemaEvolution same2 = new SchemaEvolution(fileStruct2, options);
+    SchemaEvolution same2 = new SchemaEvolution(fileStruct2, null, options);
     assertFalse(same2.hasConversion());
     TypeDescription readerStruct2 = TypeDescription.createStruct()
         .addField("f1", TypeDescription.createUnion()
@@ -186,7 +186,7 @@ public class TestSchemaEvolution {
         .addField("f1", TypeDescription.createInt())
         .addField("f2", TypeDescription.createString())
         .addField("f3", TypeDescription.createDecimal().withPrecision(38).withScale(10));
-    SchemaEvolution same1 = new SchemaEvolution(fileStruct1, options);
+    SchemaEvolution same1 = new SchemaEvolution(fileStruct1, null, options);
     assertTrue(same1.isPPDSafeConversion(0));
     assertFalse(same1.hasConversion());
     TypeDescription readerStruct1 = TypeDescription.createStruct()
@@ -247,7 +247,7 @@ public class TestSchemaEvolution {
     // byte -> short -> int -> long
     TypeDescription fileSchema = TypeDescription.createStruct()
         .addField("f1", TypeDescription.createByte());
-    SchemaEvolution schemaEvolution = new SchemaEvolution(fileSchema, options);
+    SchemaEvolution schemaEvolution = new SchemaEvolution(fileSchema, null, options);
     assertFalse(schemaEvolution.hasConversion());
 
     // byte -> short
@@ -277,7 +277,7 @@ public class TestSchemaEvolution {
     // short -> int -> long
     fileSchema = TypeDescription.createStruct()
         .addField("f1", TypeDescription.createShort());
-    schemaEvolution = new SchemaEvolution(fileSchema, options);
+    schemaEvolution = new SchemaEvolution(fileSchema, null, options);
     assertFalse(schemaEvolution.hasConversion());
 
     // unsafe conversion short -> byte
@@ -307,7 +307,7 @@ public class TestSchemaEvolution {
     // int -> long
     fileSchema = TypeDescription.createStruct()
         .addField("f1", TypeDescription.createInt());
-    schemaEvolution = new SchemaEvolution(fileSchema, options);
+    schemaEvolution = new SchemaEvolution(fileSchema, null, options);
     assertFalse(schemaEvolution.hasConversion());
 
     // unsafe conversion int -> byte
@@ -337,7 +337,7 @@ public class TestSchemaEvolution {
     // long
     fileSchema = TypeDescription.createStruct()
         .addField("f1", TypeDescription.createLong());
-    schemaEvolution = new SchemaEvolution(fileSchema, options);
+    schemaEvolution = new SchemaEvolution(fileSchema, null, options);
     assertTrue(schemaEvolution.isPPDSafeConversion(0));
     assertFalse(schemaEvolution.hasConversion());
 
@@ -394,7 +394,7 @@ public class TestSchemaEvolution {
   public void testSafePpdEvaluationForStrings() throws IOException {
     TypeDescription fileSchema = TypeDescription.createStruct()
         .addField("f1", TypeDescription.createString());
-    SchemaEvolution schemaEvolution = new SchemaEvolution(fileSchema, options);
+    SchemaEvolution schemaEvolution = new SchemaEvolution(fileSchema, null, options);
     assertTrue(schemaEvolution.isPPDSafeConversion(0));
     assertFalse(schemaEvolution.hasConversion());
 
@@ -416,7 +416,7 @@ public class TestSchemaEvolution {
 
     fileSchema = TypeDescription.createStruct()
         .addField("f1", TypeDescription.createChar());
-    schemaEvolution = new SchemaEvolution(fileSchema, options);
+    schemaEvolution = new SchemaEvolution(fileSchema, null, options);
     assertTrue(schemaEvolution.isPPDSafeConversion(0));
     assertFalse(schemaEvolution.hasConversion());
 
@@ -438,7 +438,7 @@ public class TestSchemaEvolution {
 
     fileSchema = TypeDescription.createStruct()
         .addField("f1", TypeDescription.createVarchar());
-    schemaEvolution = new SchemaEvolution(fileSchema, options);
+    schemaEvolution = new SchemaEvolution(fileSchema, null, options);
     assertTrue(schemaEvolution.isPPDSafeConversion(0));
     assertFalse(schemaEvolution.hasConversion());
 
@@ -994,7 +994,7 @@ public class TestSchemaEvolution {
   public void testFileIncludeWithNoEvolution() {
     TypeDescription fileType = TypeDescription.fromString(
         "struct<a:int,b:double,c:string>");
-    SchemaEvolution evo = new SchemaEvolution(fileType,
+    SchemaEvolution evo = new SchemaEvolution(fileType, null,
         options.include(new boolean[]{true, false, true, false}));
     assertFalse(evo.isAcid());
     assertEquals("struct<a:int,b:double,c:string>",
