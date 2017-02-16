@@ -23,7 +23,8 @@ committers coming from Hive are:
 * Jimmy Xiang
 * Lars Francke
 * Matthew McCline
-* Mithun Radhakrishnan 
+* Mithun Radhakrishnan
+* Naveen Gangam
 * Pengcheng Xiong 
 * Rajesh Balamohan
 * Rui Li

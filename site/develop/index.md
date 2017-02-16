@@ -34,6 +34,7 @@ Lefty Leverenz          | leftyl       | PMC
 Rui Li                  | lirui        | Committer
 Mithun Radhakrishnan    | mithun       | Committer
 Matthew McCline         | mmccline     | Committer
+Naveen Gangam           | ngangam      | Committer
 Owen O'Malley           | omalley      | PMC
 Prasanth Jayachandran   | prasanthj    | PMC
 Pengcheng Xiong         | pxiong       | Committer
