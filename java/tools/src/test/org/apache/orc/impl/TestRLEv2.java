@@ -386,4 +386,11 @@ public class TestRLEv2 {
     TestOutputCatcher output = encodeV2(input, false);
     output.compareBytes(0xc6, 0x09, 0x02, 0x02, 0x22, 0x42, 0x42, 0x46);
   }
+
+  @Test
+  public void testDelta2Example() throws Exception {
+    long[] input = {0, 10000, 10001, 10001, 10002, 10003, 10003};
+    TestOutputCatcher output = encodeV2(input, false);
+    output.compareBytes(0xc2, 0x06, 0x0, 0xa0, 0x9c, 0x01, 0x45, 0x0);
+  }
 }
