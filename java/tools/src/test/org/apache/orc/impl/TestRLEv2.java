@@ -21,7 +21,11 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import org.apache.hadoop.conf.Configuration;
@@ -29,8 +33,10 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.orc.CompressionCodec;
 import org.apache.orc.CompressionKind;
 import org.apache.orc.OrcFile;
+import org.apache.orc.PhysicalWriter;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
 import org.apache.orc.tools.FileDump;
@@ -303,5 +309,81 @@ public class TestRLEv2 {
     // use PATCHED_BASE encoding
     assertEquals(true, outDump.contains("Stream: column 0 section DATA start: 3 length 583"));
     System.setOut(origOut);
+  }
+
+  static class TestOutputCatcher implements PhysicalWriter.OutputReceiver {
+    int currentBuffer = 0;
+    List<ByteBuffer> buffers = new ArrayList<ByteBuffer>();
+
+    @Override
+    public void output(ByteBuffer buffer) throws IOException {
+      buffers.add(buffer);
+    }
+
+    @Override
+    public void suppress() {
+    }
+
+    ByteBuffer getCurrentBuffer() {
+      while (currentBuffer < buffers.size() &&
+          buffers.get(currentBuffer).remaining() == 0) {
+        currentBuffer += 1;
+      }
+      return currentBuffer < buffers.size() ? buffers.get(currentBuffer) : null;
+    }
+
+    // assert that the list of ints (as bytes) are equal to the output
+    public void compareBytes(int... expected) {
+      for(int i=0; i < expected.length; ++i) {
+        ByteBuffer current = getCurrentBuffer();
+        assertEquals("position " + i, (byte) expected[i], current.get());
+      }
+      assertEquals(null, getCurrentBuffer());
+    }
+  }
+
+  static TestOutputCatcher encodeV2(long[] input,
+                                    boolean signed) throws IOException {
+    TestOutputCatcher catcher = new TestOutputCatcher();
+    RunLengthIntegerWriterV2 writer =
+        new RunLengthIntegerWriterV2(new OutStream("test", 10000, null,
+            catcher), signed);
+    for(long x: input) {
+      writer.write(x);
+    }
+    writer.flush();
+    return catcher;
+  }
+
+  @Test
+  public void testShortRepeatExample() throws Exception {
+    long[] input = {10000, 10000, 10000, 10000, 10000};
+    TestOutputCatcher output = encodeV2(input, false);
+    output.compareBytes(0x0a, 0x27, 0x10);
+  }
+
+  @Test
+  public void testDirectExample() throws Exception {
+    long[] input = {23713, 43806, 57005, 48879};
+    TestOutputCatcher output = encodeV2(input, false);
+    output.compareBytes(0x5e, 0x03, 0x5c, 0xa1, 0xab, 0x1e, 0xde, 0xad, 0xbe,
+        0xef);
+  }
+
+  @Test
+  public void testPatchedBaseExample() throws Exception {
+    long[] input = {2030, 2000, 2020, 1000000, 2040, 2050, 2060, 2070, 2080,
+        2090, 2100, 2110, 2120, 2130, 2140, 2150, 2160, 2170, 2180, 2190};
+    TestOutputCatcher output = encodeV2(input, false);
+    output.compareBytes(0x8e, 0x13, 0x2b, 0x21, 0x07, 0xd0, 0x1e, 0x00, 0x14,
+        0x70, 0x28, 0x32, 0x3c, 0x46, 0x50, 0x5a, 0x64, 0x6e, 0x78, 0x82, 0x8c,
+        0x96, 0xa0, 0xaa, 0xb4, 0xbe, 0xfc, 0xe8);
+  }
+
+  @Test
+  public void testDeltaExample() throws Exception {
+    long[] input = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29};
+    TestOutputCatcher output = encodeV2(input, false);
+    output.compareBytes(0xc6, 0x09, 0x02, 0x02, 0x22, 0x42, 0x42, 0x46);
   }
 }

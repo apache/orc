@@ -201,15 +201,17 @@ the index values and the additional value bits.
   combined length of each patch (PGW + PW) must be less or equal to
   64.
 
-The unsigned sequence of [2030, 2000, 2020, 1000000, 2040, 2050, 2060,
-2070, 2080, 2090] has a minimum of 2000, which makes the adjusted
-sequence [30, 0, 20, 998000, 40, 50, 60, 70, 80, 90]. It has an
-encoding of patched base (2), a bit width of 8 (7), a length of 10
-(9), a base value width of 2 bytes (1), a patch width of 12 bits (11),
+The unsigned sequence of [2030, 2000, 2020, 1000000, 2040, 2050, 2060, 2070,
+2080, 2090, 2100, 2110, 2120, 2130, 2140, 2150, 2160, 2170, 2180, 2190]
+has a minimum of 2000, which makes the adjusted
+sequence [30, 0, 20, 998000, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140,
+150, 160, 170, 180, 190]. It has an
+encoding of patched base (2), a bit width of 8 (7), a length of 20
+(19), a base value width of 2 bytes (1), a patch width of 12 bits (11),
 patch gap width of 2 bits (1), and a patch list length of 1 (1). The
-base value is 2000 and the combined result is [0x8e, 0x09, 0x2b, 0x21,
-0x07, 0xd0, 0x1e, 0x00, 0x14, 0x70, 0x28, 0x32, 0x3c, 0x46, 0x50,
-0x5a, 0xfc, 0xe8]
+base value is 2000 and the combined result is [0x8e, 0x13, 0x2b, 0x21, 0x07,
+0xd0, 0x1e, 0x00, 0x14, 0x70, 0x28, 0x32, 0x3c, 0x46, 0x50, 0x5a, 0x64, 0x6e,
+0x78, 0x82, 0x8c, 0x96, 0xa0, 0xaa, 0xb4, 0xbe, 0xfc, 0xe8]
 
 ## Delta
 
