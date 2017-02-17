@@ -430,8 +430,8 @@ public class RunLengthIntegerWriterV2 implements IntegerWriter {
     this.min = literals[0];
     long max = literals[0];
     final long initialDelta = literals[1] - literals[0];
-    long currDelta = initialDelta;
-    long deltaMax = initialDelta;
+    long currDelta = 0;
+    long deltaMax = 0;
     this.adjDeltas[0] = initialDelta;
 
     for (int i = 1; i < numLiterals; i++) {
