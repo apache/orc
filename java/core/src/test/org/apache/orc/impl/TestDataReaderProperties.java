@@ -36,15 +36,18 @@ public class TestDataReaderProperties {
 
   @Test
   public void testCompleteBuild() {
+    InStream.StreamOptions options = InStream.options()
+        .withCodec(OrcCodecPool.getCodec(CompressionKind.ZLIB));
     DataReaderProperties properties = DataReaderProperties.builder()
       .withFileSystem(mockedFileSystem)
       .withPath(mockedPath)
-      .withCompression(CompressionKind.ZLIB)
+      .withCompression(options)
       .withZeroCopy(mockedZeroCopy)
       .build();
     assertEquals(mockedFileSystem, properties.getFileSystem());
     assertEquals(mockedPath, properties.getPath());
-    assertEquals(CompressionKind.ZLIB, properties.getCompression());
+    assertEquals(CompressionKind.ZLIB,
+        properties.getCompression().getCodec().getKind());
     assertEquals(mockedZeroCopy, properties.getZeroCopy());
   }
 
@@ -69,7 +72,7 @@ public class TestDataReaderProperties {
   public void testMissingPath() {
     DataReaderProperties.builder()
       .withFileSystem(mockedFileSystem)
-      .withCompression(CompressionKind.NONE)
+      .withCompression(InStream.options())
       .withZeroCopy(mockedZeroCopy)
       .build();
   }
@@ -78,7 +81,7 @@ public class TestDataReaderProperties {
   public void testMissingFileSystem() {
     DataReaderProperties.builder()
       .withPath(mockedPath)
-      .withCompression(CompressionKind.NONE)
+      .withCompression(InStream.options())
       .withZeroCopy(mockedZeroCopy)
       .build();
   }

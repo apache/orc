@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,18 +20,14 @@ package org.apache.orc.impl;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.orc.CompressionKind;
-import org.apache.orc.OrcConf;
 
 public final class DataReaderProperties {
 
   private final FileSystem fileSystem;
   private final Path path;
   private final FSDataInputStream file;
-  private final CompressionKind compression;
+  private final InStream.StreamOptions compression;
   private final boolean zeroCopy;
-  private final int typeCount;
-  private final int bufferSize;
   private final int maxDiskRangeChunkLimit;
 
   private DataReaderProperties(Builder builder) {
@@ -40,8 +36,6 @@ public final class DataReaderProperties {
     this.file = builder.file;
     this.compression = builder.compression;
     this.zeroCopy = builder.zeroCopy;
-    this.typeCount = builder.typeCount;
-    this.bufferSize = builder.bufferSize;
     this.maxDiskRangeChunkLimit = builder.maxDiskRangeChunkLimit;
   }
 
@@ -57,20 +51,12 @@ public final class DataReaderProperties {
     return file;
   }
 
-  public CompressionKind getCompression() {
+  public InStream.StreamOptions getCompression() {
     return compression;
   }
 
   public boolean getZeroCopy() {
     return zeroCopy;
-  }
-
-  public int getTypeCount() {
-    return typeCount;
-  }
-
-  public int getBufferSize() {
-    return bufferSize;
   }
 
   public int getMaxDiskRangeChunkLimit() {
@@ -86,11 +72,9 @@ public final class DataReaderProperties {
     private FileSystem fileSystem;
     private Path path;
     private FSDataInputStream file;
-    private CompressionKind compression;
+    private InStream.StreamOptions compression;
     private boolean zeroCopy;
-    private int typeCount;
-    private int bufferSize;
-    private int maxDiskRangeChunkLimit = (int) OrcConf.ORC_MAX_DISK_RANGE_CHUNK_LIMIT.getDefaultValue();
+    private int maxDiskRangeChunkLimit;
 
     private Builder() {
 
@@ -111,7 +95,7 @@ public final class DataReaderProperties {
       return this;
     }
 
-    public Builder withCompression(CompressionKind value) {
+    public Builder withCompression(InStream.StreamOptions value) {
       this.compression = value;
       return this;
     }
@@ -121,18 +105,8 @@ public final class DataReaderProperties {
       return this;
     }
 
-    public Builder withTypeCount(int value) {
-      this.typeCount = value;
-      return this;
-    }
-
-    public Builder withBufferSize(int value) {
-      this.bufferSize = value;
-      return this;
-    }
-
     public Builder withMaxDiskRangeChunkLimit(int value) {
-      this.maxDiskRangeChunkLimit = value;
+      maxDiskRangeChunkLimit = value;
       return this;
     }
 

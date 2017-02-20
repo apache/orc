@@ -207,7 +207,7 @@ public class TestNewIntegerEncoding {
       }
     }
   }
-  
+
   @Test
   public void testBasicDelta1() throws Exception {
     TypeDescription schema = TypeDescription.createLong();
@@ -1276,8 +1276,9 @@ public class TestNewIntegerEncoding {
     tslist.add(Timestamp.valueOf("1974-01-01 00:00:00"));
     int idx = 0;
     for (Timestamp ts : tslist) {
-      ((TimestampColumnVector) batch.cols[0]).set(idx, ts);
+      ((TimestampColumnVector) batch.cols[0]).set(idx++, ts);
     }
+    batch.size = tslist.size();
     writer.addRowBatch(batch);
     writer.close();
 
@@ -1287,6 +1288,7 @@ public class TestNewIntegerEncoding {
     batch = reader.getSchema().createRowBatch();
     idx = 0;
     while (rows.nextBatch(batch)) {
+      assertEquals(tslist.size(), batch.size);
       for(int r=0; r < batch.size; ++r) {
         assertEquals(tslist.get(idx++),
             ((TimestampColumnVector) batch.cols[0]).asScratchTimestamp(r));

@@ -44,6 +44,8 @@ import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
+import org.apache.orc.impl.reader.ReaderEncryption;
+import org.apache.orc.impl.reader.StripePlanner;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -1618,19 +1620,19 @@ public class TestSchemaEvolution {
         children[2].getClass());
 
     // check to make sure the data is read correctly
-    OrcProto.StripeFooter.Builder footer = OrcProto.StripeFooter.newBuilder();
-    OrcProto.ColumnEncoding DIRECT =
-        OrcProto.ColumnEncoding.newBuilder()
-            .setKind(OrcProto.ColumnEncoding.Kind.DIRECT).build();
-    footer.addColumns(DIRECT);
-    footer.addColumns(DIRECT);
-    footer.addColumns(DIRECT);
-    Map<StreamName, InStream> streams = new HashMap<>();
-    createStream(streams, 1, OrcProto.Stream.Kind.DATA, 7, 1, 0);
-    createStream(streams, 2, OrcProto.Stream.Kind.DATA,
-        65, 66, 67, 68, 69, 70, 71, 72, 73, 74);
-    createStream(streams, 2, OrcProto.Stream.Kind.LENGTH, 7, 0, 1);
-    reader.startStripe(streams, footer.build());
+    MockDataReader dataReader = new MockDataReader(fileType)
+        .addStream(1, OrcProto.Stream.Kind.DATA, createBuffer(7, 1, 0))
+        .addStream(2, OrcProto.Stream.Kind.DATA, createBuffer(65, 66, 67, 68,
+            69, 70, 71, 72, 73, 74))
+        .addStream(2, OrcProto.Stream.Kind.LENGTH, createBuffer(7, 0, 1))
+        .addStripeFooter(100, null);
+    StripePlanner planner = new StripePlanner(fileType, new ReaderEncryption(),
+        InStream.options(), dataReader,
+        OrcFile.WriterVersion.ORC_14, true, Integer.MAX_VALUE);
+    boolean[] columns = new boolean[]{true, true, true};
+    planner.parseStripe(dataReader.getStripe(0), columns)
+        .readData(null, null, false);
+    reader.startStripe(planner);
     VectorizedRowBatch batch = readType.createRowBatch();
     reader.nextBatch(batch, 10);
     final String EXPECTED = "ABCDEFGHIJ";

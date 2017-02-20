@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,13 +18,11 @@
 
 package org.apache.orc.impl;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.TestCase.fail;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
@@ -36,7 +34,8 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.text.DateFormat;
@@ -47,7 +46,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.TimeZone;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -62,6 +60,11 @@ import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentImpl;
+import org.apache.orc.CompressionCodec;
+import org.apache.orc.CompressionKind;
+import org.apache.orc.impl.reader.ReaderEncryption;
+import org.apache.orc.impl.reader.StripePlanner;
+import org.apache.orc.impl.writer.StreamOptions;
 import org.apache.orc.util.BloomFilter;
 import org.apache.orc.DataReader;
 import org.apache.orc.RecordReader;
@@ -80,7 +83,6 @@ import org.apache.orc.OrcProto;
 
 import org.apache.orc.util.BloomFilterIO;
 import org.apache.orc.util.BloomFilterUtf8;
-import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.MockSettings;
 import org.mockito.Mockito;
@@ -111,9 +113,6 @@ public class TestRecordReaderImpl {
     return new SearchArgumentImpl.PredicateLeafImpl(operator, type, columnName,
         literal, literalList);
   }
-
-  // can add .verboseLogging() to cause Mockito to log invocations
-  private final MockSettings settings = Mockito.withSettings().verboseLogging();
 
   static class BufferInStream
       extends InputStream implements PositionedReadable, Seekable {
@@ -205,18 +204,19 @@ public class TestRecordReaderImpl {
     footer.writeTo(buffer);
     ps.writeTo(buffer);
     buffer.write(ps.getSerializedSize());
-    FileSystem fs = mock(FileSystem.class, settings);
+    FileSystem fs = mock(FileSystem.class);
     FSDataInputStream file =
         new FSDataInputStream(new BufferInStream(buffer.getData(),
             buffer.getLength()));
     Path p = new Path("/dir/file.orc");
-    when(fs.open(p)).thenReturn(file);
+    when(fs.open(eq(p))).thenReturn(file);
     OrcFile.ReaderOptions options = OrcFile.readerOptions(conf);
     options.filesystem(fs);
     options.maxLength(buffer.getLength());
-    when(fs.getFileStatus(p))
+    when(fs.getFileStatus(eq(p)))
         .thenReturn(new FileStatus(10, false, 3, 3000, 0, p));
     Reader reader = OrcFile.createReader(p, options);
+    assertEquals(0, reader.getNumberOfRows());
   }
 
   static class StubPredicate implements PredicateLeaf {
@@ -953,7 +953,7 @@ public class TestRecordReaderImpl {
   }
 
   @Test
-  public void testBetween() throws Exception {
+  public void testBetween() {
     List<Object> args = new ArrayList<Object>();
     args.add(10L);
     args.add(20L);
@@ -1001,7 +1001,7 @@ public class TestRecordReaderImpl {
 
 
   @Test
-  public void testEqualsWithNullInStats() throws Exception {
+  public void testEqualsWithNullInStats() {
     PredicateLeaf pred = createPredicateLeaf
         (PredicateLeaf.Operator.EQUALS, PredicateLeaf.Type.STRING,
             "x", "c", null);
@@ -1020,7 +1020,7 @@ public class TestRecordReaderImpl {
   }
 
   @Test
-  public void testNullSafeEqualsWithNullInStats() throws Exception {
+  public void testNullSafeEqualsWithNullInStats() {
     PredicateLeaf pred = createPredicateLeaf
         (PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.STRING,
             "x", "c", null);
@@ -1039,7 +1039,7 @@ public class TestRecordReaderImpl {
   }
 
   @Test
-  public void testLessThanWithNullInStats() throws Exception {
+  public void testLessThanWithNullInStats() {
     PredicateLeaf pred = createPredicateLeaf
         (PredicateLeaf.Operator.LESS_THAN, PredicateLeaf.Type.STRING,
             "x", "c", null);
@@ -1236,341 +1236,277 @@ public class TestRecordReaderImpl {
 
   @Test
   public void testGetIndexPosition() throws Exception {
+    boolean uncompressed = false;
+    boolean compressed = true;
     assertEquals(0, RecordReaderUtils.getIndexPosition
-        (OrcProto.ColumnEncoding.Kind.DIRECT, OrcProto.Type.Kind.INT,
-            OrcProto.Stream.Kind.PRESENT, true, true));
+        (OrcProto.ColumnEncoding.Kind.DIRECT, TypeDescription.Category.INT,
+            OrcProto.Stream.Kind.PRESENT, compressed, true));
     assertEquals(4, RecordReaderUtils.getIndexPosition
-        (OrcProto.ColumnEncoding.Kind.DIRECT, OrcProto.Type.Kind.INT,
-            OrcProto.Stream.Kind.DATA, true, true));
+        (OrcProto.ColumnEncoding.Kind.DIRECT, TypeDescription.Category.INT,
+            OrcProto.Stream.Kind.DATA, compressed, true));
     assertEquals(3, RecordReaderUtils.getIndexPosition
-        (OrcProto.ColumnEncoding.Kind.DIRECT, OrcProto.Type.Kind.INT,
-            OrcProto.Stream.Kind.DATA, false, true));
+        (OrcProto.ColumnEncoding.Kind.DIRECT, TypeDescription.Category.INT,
+            OrcProto.Stream.Kind.DATA, uncompressed, true));
     assertEquals(0, RecordReaderUtils.getIndexPosition
-        (OrcProto.ColumnEncoding.Kind.DIRECT, OrcProto.Type.Kind.INT,
-            OrcProto.Stream.Kind.DATA, true, false));
+        (OrcProto.ColumnEncoding.Kind.DIRECT, TypeDescription.Category.INT,
+            OrcProto.Stream.Kind.DATA, compressed, false));
     assertEquals(4, RecordReaderUtils.getIndexPosition
-        (OrcProto.ColumnEncoding.Kind.DICTIONARY, OrcProto.Type.Kind.STRING,
-            OrcProto.Stream.Kind.DATA, true, true));
+        (OrcProto.ColumnEncoding.Kind.DICTIONARY, TypeDescription.Category.STRING,
+            OrcProto.Stream.Kind.DATA, compressed, true));
     assertEquals(4, RecordReaderUtils.getIndexPosition
-        (OrcProto.ColumnEncoding.Kind.DIRECT, OrcProto.Type.Kind.BINARY,
-            OrcProto.Stream.Kind.DATA, true, true));
+        (OrcProto.ColumnEncoding.Kind.DIRECT, TypeDescription.Category.BINARY,
+            OrcProto.Stream.Kind.DATA, compressed, true));
     assertEquals(3, RecordReaderUtils.getIndexPosition
-        (OrcProto.ColumnEncoding.Kind.DIRECT, OrcProto.Type.Kind.BINARY,
-            OrcProto.Stream.Kind.DATA, false, true));
+        (OrcProto.ColumnEncoding.Kind.DIRECT, TypeDescription.Category.BINARY,
+            OrcProto.Stream.Kind.DATA, uncompressed, true));
     assertEquals(6, RecordReaderUtils.getIndexPosition
-        (OrcProto.ColumnEncoding.Kind.DIRECT, OrcProto.Type.Kind.BINARY,
-            OrcProto.Stream.Kind.LENGTH, true, true));
+        (OrcProto.ColumnEncoding.Kind.DIRECT, TypeDescription.Category.BINARY,
+            OrcProto.Stream.Kind.LENGTH, compressed, true));
     assertEquals(4, RecordReaderUtils.getIndexPosition
-        (OrcProto.ColumnEncoding.Kind.DIRECT, OrcProto.Type.Kind.BINARY,
-            OrcProto.Stream.Kind.LENGTH, false, true));
+        (OrcProto.ColumnEncoding.Kind.DIRECT, TypeDescription.Category.BINARY,
+            OrcProto.Stream.Kind.LENGTH, uncompressed, true));
     assertEquals(4, RecordReaderUtils.getIndexPosition
-        (OrcProto.ColumnEncoding.Kind.DIRECT, OrcProto.Type.Kind.DECIMAL,
-            OrcProto.Stream.Kind.DATA, true, true));
+        (OrcProto.ColumnEncoding.Kind.DIRECT, TypeDescription.Category.DECIMAL,
+            OrcProto.Stream.Kind.DATA, compressed, true));
     assertEquals(3, RecordReaderUtils.getIndexPosition
-        (OrcProto.ColumnEncoding.Kind.DIRECT, OrcProto.Type.Kind.DECIMAL,
-            OrcProto.Stream.Kind.DATA, false, true));
+        (OrcProto.ColumnEncoding.Kind.DIRECT, TypeDescription.Category.DECIMAL,
+            OrcProto.Stream.Kind.DATA, uncompressed, true));
     assertEquals(6, RecordReaderUtils.getIndexPosition
-        (OrcProto.ColumnEncoding.Kind.DIRECT, OrcProto.Type.Kind.DECIMAL,
-            OrcProto.Stream.Kind.SECONDARY, true, true));
+        (OrcProto.ColumnEncoding.Kind.DIRECT, TypeDescription.Category.DECIMAL,
+            OrcProto.Stream.Kind.SECONDARY, compressed, true));
     assertEquals(4, RecordReaderUtils.getIndexPosition
-        (OrcProto.ColumnEncoding.Kind.DIRECT, OrcProto.Type.Kind.DECIMAL,
-            OrcProto.Stream.Kind.SECONDARY, false, true));
+        (OrcProto.ColumnEncoding.Kind.DIRECT, TypeDescription.Category.DECIMAL,
+            OrcProto.Stream.Kind.SECONDARY, uncompressed, true));
     assertEquals(4, RecordReaderUtils.getIndexPosition
-        (OrcProto.ColumnEncoding.Kind.DIRECT, OrcProto.Type.Kind.TIMESTAMP,
-            OrcProto.Stream.Kind.DATA, true, true));
+        (OrcProto.ColumnEncoding.Kind.DIRECT, TypeDescription.Category.TIMESTAMP,
+            OrcProto.Stream.Kind.DATA, compressed, true));
     assertEquals(3, RecordReaderUtils.getIndexPosition
-        (OrcProto.ColumnEncoding.Kind.DIRECT, OrcProto.Type.Kind.TIMESTAMP,
-            OrcProto.Stream.Kind.DATA, false, true));
+        (OrcProto.ColumnEncoding.Kind.DIRECT, TypeDescription.Category.TIMESTAMP,
+            OrcProto.Stream.Kind.DATA, uncompressed, true));
     assertEquals(7, RecordReaderUtils.getIndexPosition
-        (OrcProto.ColumnEncoding.Kind.DIRECT, OrcProto.Type.Kind.TIMESTAMP,
-            OrcProto.Stream.Kind.SECONDARY, true, true));
+        (OrcProto.ColumnEncoding.Kind.DIRECT, TypeDescription.Category.TIMESTAMP,
+            OrcProto.Stream.Kind.SECONDARY, compressed, true));
     assertEquals(5, RecordReaderUtils.getIndexPosition
-        (OrcProto.ColumnEncoding.Kind.DIRECT, OrcProto.Type.Kind.TIMESTAMP,
-            OrcProto.Stream.Kind.SECONDARY, false, true));
+        (OrcProto.ColumnEncoding.Kind.DIRECT, TypeDescription.Category.TIMESTAMP,
+            OrcProto.Stream.Kind.SECONDARY, uncompressed, true));
   }
 
   @Test
   public void testPartialPlan() throws Exception {
-    DiskRangeList result;
-
-    // set the streams
-    List<OrcProto.Stream> streams = new ArrayList<OrcProto.Stream>();
-    streams.add(OrcProto.Stream.newBuilder()
-        .setKind(OrcProto.Stream.Kind.PRESENT)
-        .setColumn(1).setLength(1000).build());
-    streams.add(OrcProto.Stream.newBuilder()
-        .setKind(OrcProto.Stream.Kind.DATA)
-        .setColumn(1).setLength(99000).build());
-    streams.add(OrcProto.Stream.newBuilder()
-        .setKind(OrcProto.Stream.Kind.PRESENT)
-        .setColumn(2).setLength(2000).build());
-    streams.add(OrcProto.Stream.newBuilder()
-        .setKind(OrcProto.Stream.Kind.DATA)
-        .setColumn(2).setLength(98000).build());
+    TypeDescription schema = TypeDescription.fromString("struct<x:int,y:int>");
+    MockDataReader dataReader = new MockDataReader(schema)
+        .addStream(1, OrcProto.Stream.Kind.ROW_INDEX,
+                   createRowIndex(entry(0, -1, -1, 0),
+                                  entry(100, -1, -1, 10000),
+                                  entry(200, -1, -1, 20000),
+                                  entry(300, -1, -1, 30000),
+                                  entry(400, -1, -1, 40000),
+                                  entry(500, -1, -1, 50000)))
+        .addStream(2, OrcProto.Stream.Kind.ROW_INDEX,
+                   createRowIndex(entry(0, -1, -1, 0),
+                                  entry(200, -1, -1, 20000),
+                                  entry(400, -1, -1, 40000),
+                                  entry(600, -1, -1, 60000),
+                                  entry(800, -1, -1, 80000),
+                                  entry(1000, -1, -1, 100000)))
+        .addStream(1, OrcProto.Stream.Kind.PRESENT, createDataStream(1, 1000))
+        .addStream(1, OrcProto.Stream.Kind.DATA, createDataStream(2, 99000))
+        .addStream(2, OrcProto.Stream.Kind.PRESENT, createDataStream(3, 2000))
+        .addStream(2, OrcProto.Stream.Kind.DATA, createDataStream(4, 198000))
+        .addEncoding(OrcProto.ColumnEncoding.Kind.DIRECT)
+        .addEncoding(OrcProto.ColumnEncoding.Kind.DIRECT)
+        .addEncoding(OrcProto.ColumnEncoding.Kind.DIRECT)
+        .addStripeFooter(1000, null);
+    MockStripe stripe = dataReader.getStripe(0);
+    // get the start of the data streams
+    final long START = stripe.getStream(1, OrcProto.Stream.Kind.PRESENT).offset;
 
     boolean[] columns = new boolean[]{true, true, false};
     boolean[] rowGroups = new boolean[]{true, true, false, false, true, false};
 
-    // set the index
-    OrcProto.RowIndex[] indexes = new OrcProto.RowIndex[columns.length];
-    indexes[1] = OrcProto.RowIndex.newBuilder()
-        .addEntry(OrcProto.RowIndexEntry.newBuilder()
-            .addPositions(0).addPositions(-1).addPositions(-1)
-            .addPositions(0)
-            .build())
-        .addEntry(OrcProto.RowIndexEntry.newBuilder()
-            .addPositions(100).addPositions(-1).addPositions(-1)
-            .addPositions(10000)
-            .build())
-        .addEntry(OrcProto.RowIndexEntry.newBuilder()
-            .addPositions(200).addPositions(-1).addPositions(-1)
-            .addPositions(20000)
-            .build())
-        .addEntry(OrcProto.RowIndexEntry.newBuilder()
-            .addPositions(300).addPositions(-1).addPositions(-1)
-            .addPositions(30000)
-            .build())
-        .addEntry(OrcProto.RowIndexEntry.newBuilder()
-            .addPositions(400).addPositions(-1).addPositions(-1)
-            .addPositions(40000)
-            .build())
-        .addEntry(OrcProto.RowIndexEntry.newBuilder()
-            .addPositions(500).addPositions(-1).addPositions(-1)
-            .addPositions(50000)
-            .build())
-        .build();
-
-    // set encodings
-    List<OrcProto.ColumnEncoding> encodings =
-        new ArrayList<OrcProto.ColumnEncoding>();
-    encodings.add(OrcProto.ColumnEncoding.newBuilder()
-                    .setKind(OrcProto.ColumnEncoding.Kind.DIRECT).build());
-    encodings.add(OrcProto.ColumnEncoding.newBuilder()
-        .setKind(OrcProto.ColumnEncoding.Kind.DIRECT).build());
-    encodings.add(OrcProto.ColumnEncoding.newBuilder()
-        .setKind(OrcProto.ColumnEncoding.Kind.DIRECT).build());
-
-    // set types struct{x: int, y: int}
-    List<OrcProto.Type> types = new ArrayList<OrcProto.Type>();
-    types.add(OrcProto.Type.newBuilder().setKind(OrcProto.Type.Kind.STRUCT)
-                .addSubtypes(1).addSubtypes(2).addFieldNames("x")
-                .addFieldNames("y").build());
-    types.add(OrcProto.Type.newBuilder().setKind(OrcProto.Type.Kind.INT).build());
-    types.add(OrcProto.Type.newBuilder().setKind(OrcProto.Type.Kind.INT).build());
-
     // filter by rows and groups
-    result = RecordReaderImpl.planReadPartialDataStreams(streams, indexes,
-        columns, rowGroups, false, encodings, types, 32768, true);
-    assertThat(result, is(diskRanges(0, 21000 + RecordReaderUtils.WORST_UNCOMPRESSED_SLOP,
-        41000, 51000 + RecordReaderUtils.WORST_UNCOMPRESSED_SLOP)));
-    result = RecordReaderImpl.planReadPartialDataStreams(streams, indexes,
-        columns, rowGroups, false, encodings, types, 32768, true);
-    assertThat(result, is(diskRanges(0, 21000 + RecordReaderUtils.WORST_UNCOMPRESSED_SLOP,
-        41000, 51000 + RecordReaderUtils.WORST_UNCOMPRESSED_SLOP)));
+    StripePlanner planner = new StripePlanner(schema, new ReaderEncryption(),
+        new InStream.StreamOptions(), dataReader,
+        OrcFile.WriterVersion.ORC_14, false, Integer.MAX_VALUE);
+    planner.parseStripe(stripe, columns);
+    OrcIndex index = planner.readRowIndex(null, null);
+    BufferChunkList result = planner.readData(index, rowGroups, false);
+
+    assertEquals(START, result.get(0).getOffset());
+    assertEquals(1000, result.get(0).getLength());
+    assertEquals(START + 1000, result.get(1).getOffset());
+    assertEquals(20000 + RecordReaderUtils.WORST_UNCOMPRESSED_SLOP, result.get(1).getLength());
+    assertEquals(START + 41000, result.get(2).getOffset());
+    assertEquals(10000 + RecordReaderUtils.WORST_UNCOMPRESSED_SLOP, result.get(2).getLength());
+    assertEquals(null, result.get(3));
 
     // if we read no rows, don't read any bytes
     rowGroups = new boolean[]{false, false, false, false, false, false};
-    result = RecordReaderImpl.planReadPartialDataStreams(streams, indexes,
-        columns, rowGroups, false, encodings, types, 32768, true);
-    assertNull(result);
+    result = planner.readData(index, rowGroups, false);
+    assertEquals(null, result.get(0));
 
     // all rows, but only columns 0 and 2.
     rowGroups = null;
     columns = new boolean[]{true, false, true};
-    result = RecordReaderImpl.planReadPartialDataStreams(streams, indexes,
-        columns, null, false, encodings, types, 32768, true);
-    assertThat(result, is(diskRanges(100000, 200000)));
-    result = RecordReaderImpl.planReadPartialDataStreams(streams, indexes,
-        columns, null, false, encodings, types, 32768, true);
-    assertThat(result, is(diskRanges(100000, 200000)));
+    planner.parseStripe(stripe, columns).readRowIndex(null, index);
+    result = planner.readData(index, rowGroups, false);
+    assertEquals(START + 100000, result.get(0).getOffset());
+    assertEquals(2000, result.get(0).getLength());
+    assertEquals(START + 102000, result.get(1).getOffset());
+    assertEquals(198000, result.get(1).getLength());
+    assertEquals(null, result.get(2));
 
     rowGroups = new boolean[]{false, true, false, false, false, false};
-    indexes[2] = indexes[1];
-    indexes[1] = null;
-    result = RecordReaderImpl.planReadPartialDataStreams(streams, indexes,
-        columns, rowGroups, false, encodings, types, 32768, true);
-    assertThat(result, is(diskRanges(100100, 102000,
-        112000, 122000 + RecordReaderUtils.WORST_UNCOMPRESSED_SLOP)));
-    result = RecordReaderImpl.planReadPartialDataStreams(streams, indexes,
-        columns, rowGroups, false, encodings, types, 32768, true);
-    assertThat(result, is(diskRanges(100100, 102000,
-        112000, 122000 + RecordReaderUtils.WORST_UNCOMPRESSED_SLOP)));
+    result = planner.readData(index, rowGroups, false);
+    assertEquals(START + 100200, result.get(0).getOffset());
+    assertEquals(1800, result.get(0).getLength());
+    assertEquals(START + 122000, result.get(1).getOffset());
+    assertEquals(20000 + RecordReaderUtils.WORST_UNCOMPRESSED_SLOP,
+        result.get(1).getLength());
+    assertEquals(null, result.get(2));
 
     rowGroups = new boolean[]{false, false, false, false, false, true};
-    indexes[1] = indexes[2];
     columns = new boolean[]{true, true, true};
-    result = RecordReaderImpl.planReadPartialDataStreams(streams, indexes,
-        columns, rowGroups, false, encodings, types, 32768, true);
-    assertThat(result, is(diskRanges(500, 1000, 51000, 100000, 100500, 102000,
-        152000, 200000)));
-    result = RecordReaderImpl.planReadPartialDataStreams(streams, indexes,
-        columns, rowGroups, false, encodings, types, 32768, true);
-    assertThat(result, is(diskRanges(500, 1000, 51000, 100000, 100500, 102000,
-        152000, 200000)));
+    planner.parseStripe(stripe, columns).readRowIndex(null, index);
+    result = planner.readData(index, rowGroups, false);
+    assertEquals(START + 500, result.get(0).getOffset());
+    assertEquals(500, result.get(0).getLength());
+    assertEquals(START + 51000, result.get(1).getOffset());
+    assertEquals(49000, result.get(1).getLength());
+    assertEquals(START + 101000, result.get(2).getOffset());
+    assertEquals(1000, result.get(2).getLength());
+    assertEquals(START + 202000, result.get(3).getOffset());
+    assertEquals(98000, result.get(3).getLength());
+    assertEquals(null, result.get(4));
   }
 
 
   @Test
   public void testPartialPlanCompressed() throws Exception {
-    DiskRangeList result;
+    TypeDescription schema = TypeDescription.fromString("struct<x:int,y:int>");
+    InStream.StreamOptions options =
+        new InStream.StreamOptions()
+            .withCodec(OrcCodecPool.getCodec(CompressionKind.ZLIB))
+            .withBufferSize(1024);
+    final int SLOP = 2 * (OutStream.HEADER_SIZE + options.getBufferSize());
+    MockDataReader dataReader = new MockDataReader(schema)
+      .addStream(1, OrcProto.Stream.Kind.ROW_INDEX,
+          createRowIndex(options,
+              entry(0,   -1, -1, -1, 0),
+              entry(100, -1, -1, -1, 10000),
+              entry(200, -1, -1, -1, 20000),
+              entry(300, -1, -1, -1, 30000),
+              entry(400, -1, -1, -1, 40000),
+              entry(500, -1, -1, -1, 50000)))
+      .addStream(2, OrcProto.Stream.Kind.ROW_INDEX,
+          createRowIndex(options,
+              entry(0,   -1, -1, -1, 0),
+              entry(200, -1, -1, -1, 20000),
+              entry(400, -1, -1, -1, 40000),
+              entry(600, -1, -1, -1, 60000),
+              entry(800, -1, -1, -1, 80000),
+              entry(1000, -1, -1, -1, 100000)))
+      .addStream(1, OrcProto.Stream.Kind.PRESENT, createDataStream(1, 1000))
+      .addStream(1, OrcProto.Stream.Kind.DATA, createDataStream(2, 99000))
+      .addStream(2, OrcProto.Stream.Kind.PRESENT, createDataStream(3, 2000))
+      .addStream(2, OrcProto.Stream.Kind.DATA, createDataStream(4, 198000))
+      .addEncoding(OrcProto.ColumnEncoding.Kind.DIRECT)
+      .addEncoding(OrcProto.ColumnEncoding.Kind.DIRECT)
+      .addEncoding(OrcProto.ColumnEncoding.Kind.DIRECT)
+      .addStripeFooter(1000, null);
+    MockStripe stripe = dataReader.getStripe(0);
+    // get the start of the data streams
+    final long START = stripe.getStream(1, OrcProto.Stream.Kind.PRESENT).offset;
 
-    // set the streams
-    List<OrcProto.Stream> streams = new ArrayList<OrcProto.Stream>();
-    streams.add(OrcProto.Stream.newBuilder()
-        .setKind(OrcProto.Stream.Kind.PRESENT)
-        .setColumn(1).setLength(1000).build());
-    streams.add(OrcProto.Stream.newBuilder()
-        .setKind(OrcProto.Stream.Kind.DATA)
-        .setColumn(1).setLength(99000).build());
-    streams.add(OrcProto.Stream.newBuilder()
-        .setKind(OrcProto.Stream.Kind.PRESENT)
-        .setColumn(2).setLength(2000).build());
-    streams.add(OrcProto.Stream.newBuilder()
-        .setKind(OrcProto.Stream.Kind.DATA)
-        .setColumn(2).setLength(98000).build());
-
-    boolean[] columns = new boolean[]{true, true, false};
-    boolean[] rowGroups = new boolean[]{true, true, false, false, true, false};
-
-    // set the index
-    OrcProto.RowIndex[] indexes = new OrcProto.RowIndex[columns.length];
-    indexes[1] = OrcProto.RowIndex.newBuilder()
-        .addEntry(OrcProto.RowIndexEntry.newBuilder()
-            .addPositions(0).addPositions(-1).addPositions(-1).addPositions(-1)
-            .addPositions(0)
-            .build())
-        .addEntry(OrcProto.RowIndexEntry.newBuilder()
-            .addPositions(100).addPositions(-1).addPositions(-1).addPositions(-1)
-            .addPositions(10000)
-            .build())
-        .addEntry(OrcProto.RowIndexEntry.newBuilder()
-            .addPositions(200).addPositions(-1).addPositions(-1).addPositions(-1)
-            .addPositions(20000)
-            .build())
-        .addEntry(OrcProto.RowIndexEntry.newBuilder()
-            .addPositions(300).addPositions(-1).addPositions(-1).addPositions(-1)
-            .addPositions(30000)
-            .build())
-        .addEntry(OrcProto.RowIndexEntry.newBuilder()
-            .addPositions(400).addPositions(-1).addPositions(-1).addPositions(-1)
-            .addPositions(40000)
-            .build())
-        .addEntry(OrcProto.RowIndexEntry.newBuilder()
-            .addPositions(500).addPositions(-1).addPositions(-1).addPositions(-1)
-            .addPositions(50000)
-            .build())
-        .build();
-
-    // set encodings
-    List<OrcProto.ColumnEncoding> encodings =
-        new ArrayList<OrcProto.ColumnEncoding>();
-    encodings.add(OrcProto.ColumnEncoding.newBuilder()
-        .setKind(OrcProto.ColumnEncoding.Kind.DIRECT).build());
-    encodings.add(OrcProto.ColumnEncoding.newBuilder()
-        .setKind(OrcProto.ColumnEncoding.Kind.DIRECT).build());
-    encodings.add(OrcProto.ColumnEncoding.newBuilder()
-        .setKind(OrcProto.ColumnEncoding.Kind.DIRECT).build());
-
-    // set types struct{x: int, y: int}
-    List<OrcProto.Type> types = new ArrayList<OrcProto.Type>();
-    types.add(OrcProto.Type.newBuilder().setKind(OrcProto.Type.Kind.STRUCT)
-        .addSubtypes(1).addSubtypes(2).addFieldNames("x")
-        .addFieldNames("y").build());
-    types.add(OrcProto.Type.newBuilder().setKind(OrcProto.Type.Kind.INT).build());
-    types.add(OrcProto.Type.newBuilder().setKind(OrcProto.Type.Kind.INT).build());
+    StripePlanner planner = new StripePlanner(schema, new ReaderEncryption(),
+        options, dataReader, OrcFile.WriterVersion.ORC_14, false,
+        Integer.MAX_VALUE);
 
     // filter by rows and groups
-    result = RecordReaderImpl.planReadPartialDataStreams(streams, indexes,
-        columns, rowGroups, true, encodings, types, 32768, true);
-    assertThat(result, is(diskRanges(0, 100000)));
+    boolean[] columns = new boolean[]{true, true, false};
+    boolean[] rowGroups = new boolean[]{true, true, false, false, true, false};
+    planner.parseStripe(stripe, columns);
+    OrcIndex index = planner.readRowIndex(null, null);
+    BufferChunkList result = planner.readData(index, rowGroups, false);
+    assertEquals(START, result.get(0).getOffset());
+    assertEquals(1000, result.get(0).getLength());
+    assertEquals(START + 1000, result.get(1).getOffset());
+    assertEquals(20000 + SLOP, result.get(1).getLength());
+    assertEquals(START + 41000, result.get(2).getOffset());
+    assertEquals(10000 + SLOP, result.get(2).getLength());
+    assertEquals(null, result.get(3));
 
     rowGroups = new boolean[]{false, false, false, false, false, true};
-    result = RecordReaderImpl.planReadPartialDataStreams(streams, indexes,
-        columns, rowGroups, true, encodings, types, 32768, true);
-    assertThat(result, is(diskRanges(500, 1000, 51000, 100000)));
+    result = planner.readData(index, rowGroups, false);
+    assertEquals(START + 500, result.get(0).getOffset());
+    assertEquals(500, result.get(0).getLength());
+    assertEquals(START + 51000, result.get(1).getOffset());
+    assertEquals(49000, result.get(1).getLength());
+    assertEquals(null, result.get(2));
   }
 
   @Test
   public void testPartialPlanString() throws Exception {
-    DiskRangeList result;
-
-    // set the streams
-    List<OrcProto.Stream> streams = new ArrayList<OrcProto.Stream>();
-    streams.add(OrcProto.Stream.newBuilder()
-        .setKind(OrcProto.Stream.Kind.PRESENT)
-        .setColumn(1).setLength(1000).build());
-    streams.add(OrcProto.Stream.newBuilder()
-        .setKind(OrcProto.Stream.Kind.DATA)
-        .setColumn(1).setLength(94000).build());
-    streams.add(OrcProto.Stream.newBuilder()
-        .setKind(OrcProto.Stream.Kind.LENGTH)
-        .setColumn(1).setLength(2000).build());
-    streams.add(OrcProto.Stream.newBuilder()
-        .setKind(OrcProto.Stream.Kind.DICTIONARY_DATA)
-        .setColumn(1).setLength(3000).build());
-    streams.add(OrcProto.Stream.newBuilder()
-        .setKind(OrcProto.Stream.Kind.PRESENT)
-        .setColumn(2).setLength(2000).build());
-    streams.add(OrcProto.Stream.newBuilder()
-        .setKind(OrcProto.Stream.Kind.DATA)
-        .setColumn(2).setLength(98000).build());
-
-    boolean[] columns = new boolean[]{true, true, false};
-    boolean[] rowGroups = new boolean[]{false, true, false, false, true, true};
-
-    // set the index
-    OrcProto.RowIndex[] indexes = new OrcProto.RowIndex[columns.length];
-    indexes[1] = OrcProto.RowIndex.newBuilder()
-        .addEntry(OrcProto.RowIndexEntry.newBuilder()
-            .addPositions(0).addPositions(-1).addPositions(-1)
-            .addPositions(0)
-            .build())
-        .addEntry(OrcProto.RowIndexEntry.newBuilder()
-            .addPositions(100).addPositions(-1).addPositions(-1)
-            .addPositions(10000)
-            .build())
-        .addEntry(OrcProto.RowIndexEntry.newBuilder()
-            .addPositions(200).addPositions(-1).addPositions(-1)
-            .addPositions(20000)
-            .build())
-        .addEntry(OrcProto.RowIndexEntry.newBuilder()
-            .addPositions(300).addPositions(-1).addPositions(-1)
-            .addPositions(30000)
-            .build())
-        .addEntry(OrcProto.RowIndexEntry.newBuilder()
-            .addPositions(400).addPositions(-1).addPositions(-1)
-            .addPositions(40000)
-            .build())
-        .addEntry(OrcProto.RowIndexEntry.newBuilder()
-            .addPositions(500).addPositions(-1).addPositions(-1)
-            .addPositions(50000)
-            .build())
-        .build();
-
-    // set encodings
-    List<OrcProto.ColumnEncoding> encodings =
-        new ArrayList<OrcProto.ColumnEncoding>();
-    encodings.add(OrcProto.ColumnEncoding.newBuilder()
-        .setKind(OrcProto.ColumnEncoding.Kind.DIRECT).build());
-    encodings.add(OrcProto.ColumnEncoding.newBuilder()
-        .setKind(OrcProto.ColumnEncoding.Kind.DICTIONARY).build());
-    encodings.add(OrcProto.ColumnEncoding.newBuilder()
-        .setKind(OrcProto.ColumnEncoding.Kind.DIRECT).build());
-
-    // set types struct{x: string, y: int}
-    List<OrcProto.Type> types = new ArrayList<OrcProto.Type>();
-    types.add(OrcProto.Type.newBuilder().setKind(OrcProto.Type.Kind.STRUCT)
-        .addSubtypes(1).addSubtypes(2).addFieldNames("x")
-        .addFieldNames("y").build());
-    types.add(OrcProto.Type.newBuilder().setKind(OrcProto.Type.Kind.STRING).build());
-    types.add(OrcProto.Type.newBuilder().setKind(OrcProto.Type.Kind.INT).build());
+    TypeDescription schema = TypeDescription.fromString("struct<x:string,y:int>");
+    MockDataReader dataReader =
+        new MockDataReader(schema)
+            .addStream(1, OrcProto.Stream.Kind.ROW_INDEX,
+                createRowIndex(entry(0, -1, -1, 0),
+                    entry(100, -1, -1, 10000),
+                    entry(200, -1, -1, 20000),
+                    entry(300, -1, -1, 30000),
+                    entry(400, -1, -1, 40000),
+                    entry(500, -1, -1, 50000)))
+            .addStream(2, OrcProto.Stream.Kind.ROW_INDEX,
+                createRowIndex(entry(0, -1, -1, 0),
+                    entry(200, -1, -1, 20000),
+                    entry(400, -1, -1, 40000),
+                    entry(600, -1, -1, 60000),
+                    entry(800, -1, -1, 80000),
+                    entry(1000, -1, -1, 100000)))
+            .addStream(1, OrcProto.Stream.Kind.PRESENT, createDataStream(1, 1000))
+            .addStream(1, OrcProto.Stream.Kind.DATA, createDataStream(2, 94000))
+            .addStream(1, OrcProto.Stream.Kind.LENGTH, createDataStream(3, 2000))
+            .addStream(1, OrcProto.Stream.Kind.DICTIONARY_DATA, createDataStream(4, 3000))
+            .addStream(2, OrcProto.Stream.Kind.PRESENT, createDataStream(5, 2000))
+            .addStream(2, OrcProto.Stream.Kind.DATA, createDataStream(6, 198000))
+            .addEncoding(OrcProto.ColumnEncoding.Kind.DIRECT)
+            .addEncoding(OrcProto.ColumnEncoding.Kind.DICTIONARY)
+            .addEncoding(OrcProto.ColumnEncoding.Kind.DIRECT)
+            .addStripeFooter(1000, null);
+    MockStripe stripe = dataReader.getStripe(0);
+    // get the start of the data streams
+    final long START = stripe.getStream(1, OrcProto.Stream.Kind.PRESENT).offset;
 
     // filter by rows and groups
-    result = RecordReaderImpl.planReadPartialDataStreams(streams, indexes,
-        columns, rowGroups, false, encodings, types, 32768, true);
-    assertThat(result, is(diskRanges(100, 1000,
-        11000, 21000 + RecordReaderUtils.WORST_UNCOMPRESSED_SLOP,
-        41000, 100000)));
+    StripePlanner planner = new StripePlanner(schema, new ReaderEncryption(),
+        new InStream.StreamOptions(),
+        dataReader, OrcFile.WriterVersion.ORC_14, false, Integer.MAX_VALUE);
+
+    // filter by rows and groups
+    boolean[] columns = new boolean[]{true, true, false};
+    boolean[] rowGroups = new boolean[]{false, true, false, false, true, true};
+    planner.parseStripe(stripe, columns);
+    OrcIndex index = planner.readRowIndex(null, null);
+    BufferChunkList result = planner.readData(index, rowGroups, false);
+
+    assertEquals(START + 100, result.get(0).getOffset());
+    assertEquals(900, result.get(0).getLength());
+    assertEquals(START + 11000, result.get(1).getOffset());
+    assertEquals(10000 + RecordReaderUtils.WORST_UNCOMPRESSED_SLOP,
+        result.get(1).getLength());
+    assertEquals(START + 41000, result.get(2).getOffset());
+    assertEquals(54000, result.get(2).getLength());
+    assertEquals(START + 95000, result.get(3).getOffset());
+    assertEquals(2000, result.get(3).getLength());
+    assertEquals(START + 97000, result.get(4).getOffset());
+    assertEquals(3000, result.get(4).getLength());
+    assertEquals(null, result.get(5));
+
+    // Don't read anything if no groups are selected
+    rowGroups = new boolean[6];
+    result = planner.readData(index, rowGroups, false);
+    assertEquals(null, result.get(0));
   }
 
   @Test
@@ -1895,171 +1831,267 @@ public class TestRecordReaderImpl {
     recordReader.close();
   }
 
+  static ByteBuffer createDataStream(int tag, int bytes) {
+    ByteBuffer result = ByteBuffer.allocate(bytes);
+    IntBuffer iBuf = result.asIntBuffer();
+    for(int i= 0; i < bytes; i += 4) {
+      iBuf.put((tag << 24) + i);
+    }
+    result.limit(bytes);
+    return result;
+  }
+
+  static OrcProto.RowIndexEntry entry(int... values) {
+    OrcProto.RowIndexEntry.Builder builder = OrcProto.RowIndexEntry.newBuilder();
+    for(int v: values) {
+      builder.addPositions(v);
+    }
+    return builder.build();
+  }
+
+  static ByteBuffer createRowIndex(InStream.StreamOptions options,
+                                   OrcProto.RowIndexEntry... entries
+                                   ) throws IOException {
+    ByteBuffer uncompressed = createRowIndex(entries);
+    if (options.getCodec() != null) {
+      CompressionCodec codec = options.getCodec();
+      PhysicalFsWriter.BufferedStream buffer =
+          new PhysicalFsWriter.BufferedStream();
+      StreamOptions writerOptions = new StreamOptions(options.getBufferSize())
+          .withCodec(codec, codec.getDefaultOptions());
+      OutStream out = new OutStream("row index", writerOptions, buffer);
+      out.write(uncompressed.array(),
+          uncompressed.arrayOffset() + uncompressed.position(),
+          uncompressed.remaining());
+      out.flush();
+      return buffer.getByteBuffer();
+    } else {
+      return uncompressed;
+    }
+  }
+
+  static ByteBuffer createRowIndex(OrcProto.RowIndexEntry... entries) {
+    OrcProto.RowIndex.Builder builder = OrcProto.RowIndex.newBuilder();
+    for(OrcProto.RowIndexEntry entry: entries) {
+      builder.addEntry(entry);
+    }
+    return ByteBuffer.wrap(builder.build().toByteArray());
+  }
+
+  static ByteBuffer createRowIndex(int value) {
+    OrcProto.RowIndexEntry entry =
+        OrcProto.RowIndexEntry.newBuilder().addPositions(value).build();
+    return ByteBuffer.wrap(OrcProto.RowIndex.newBuilder().addEntry(entry)
+                               .build().toByteArray());
+  }
+
+  static ByteBuffer createBloomFilter(int value) {
+    OrcProto.BloomFilter entry =
+        OrcProto.BloomFilter.newBuilder().setNumHashFunctions(value).build();
+    return ByteBuffer.wrap(OrcProto.BloomFilterIndex.newBuilder()
+                               .addBloomFilter(entry).build().toByteArray());
+  }
+
+  static MockDataReader createOldBlooms(TypeDescription schema) {
+    return new MockDataReader(schema)
+               .addStream(1, OrcProto.Stream.Kind.ROW_INDEX, createRowIndex(10))
+               .addStream(1, OrcProto.Stream.Kind.BLOOM_FILTER, createBloomFilter(11))
+               .addStream(2, OrcProto.Stream.Kind.ROW_INDEX, createRowIndex(20))
+               .addStream(2, OrcProto.Stream.Kind.BLOOM_FILTER, createBloomFilter(21))
+               .addStream(3, OrcProto.Stream.Kind.ROW_INDEX, createRowIndex(30))
+               .addStream(3, OrcProto.Stream.Kind.BLOOM_FILTER, createBloomFilter(31))
+               .addStripeFooter(1000, null);
+  }
+
+  static MockDataReader createMixedBlooms(TypeDescription schema) {
+    return new MockDataReader(schema)
+        .addStream(1, OrcProto.Stream.Kind.ROW_INDEX, createRowIndex(10))
+        .addStream(1, OrcProto.Stream.Kind.BLOOM_FILTER, createBloomFilter(11))
+        .addStream(2, OrcProto.Stream.Kind.ROW_INDEX, createRowIndex(20))
+        .addStream(2, OrcProto.Stream.Kind.BLOOM_FILTER, createBloomFilter(21))
+        .addStream(2, OrcProto.Stream.Kind.BLOOM_FILTER_UTF8, createBloomFilter(22))
+        .addStream(3, OrcProto.Stream.Kind.ROW_INDEX, createRowIndex(30))
+        .addStream(3, OrcProto.Stream.Kind.BLOOM_FILTER, createBloomFilter(31))
+        .addStream(3, OrcProto.Stream.Kind.BLOOM_FILTER_UTF8, createBloomFilter(32))
+        .addStripeFooter(1000, null);
+  }
+
+  static MockDataReader createNewBlooms(TypeDescription schema) {
+    return new MockDataReader(schema)
+               .addStream(1, OrcProto.Stream.Kind.ROW_INDEX, createRowIndex(10))
+               .addStream(1, OrcProto.Stream.Kind.BLOOM_FILTER, createBloomFilter(11))
+               .addStream(2, OrcProto.Stream.Kind.ROW_INDEX, createRowIndex(20))
+               .addStream(2, OrcProto.Stream.Kind.BLOOM_FILTER_UTF8, createBloomFilter(22))
+               .addStream(3, OrcProto.Stream.Kind.ROW_INDEX, createRowIndex(30))
+               .addStream(3, OrcProto.Stream.Kind.BLOOM_FILTER_UTF8, createBloomFilter(32))
+               .addStripeFooter(1000, null);
+  }
+
   @Test
   public void TestOldBloomFilters() throws Exception {
-    OrcProto.StripeFooter footer =
-        OrcProto.StripeFooter.newBuilder()
-            .addStreams(OrcProto.Stream.newBuilder()
-               .setColumn(1).setKind(OrcProto.Stream.Kind.ROW_INDEX).setLength(1000).build())
-            .addStreams(OrcProto.Stream.newBuilder()
-                .setColumn(1).setKind(OrcProto.Stream.Kind.BLOOM_FILTER).setLength(1000).build())
-            .addStreams(OrcProto.Stream.newBuilder()
-                .setColumn(2).setKind(OrcProto.Stream.Kind.ROW_INDEX).setLength(1000).build())
-            .addStreams(OrcProto.Stream.newBuilder()
-                .setColumn(2).setKind(OrcProto.Stream.Kind.BLOOM_FILTER).setLength(1000).build())
-            .addStreams(OrcProto.Stream.newBuilder()
-                .setColumn(3).setKind(OrcProto.Stream.Kind.ROW_INDEX).setLength(1000).build())
-            .addStreams(OrcProto.Stream.newBuilder()
-                .setColumn(3).setKind(OrcProto.Stream.Kind.BLOOM_FILTER).setLength(1000).build())
-        .build();
     TypeDescription schema = TypeDescription.fromString("struct<x:int,y:decimal(10,2),z:string>");
-    OrcProto.Stream.Kind[] bloomFilterKinds = new OrcProto.Stream.Kind[4];
+    MockDataReader dataReader = createOldBlooms(schema);
+    MockStripe stripe = dataReader.getStripe(0);
 
-    // normal read
-    DiskRangeList ranges = RecordReaderUtils.planIndexReading(schema, footer,
-        false, new boolean[]{true, true, false, true},
-        new boolean[]{false, true, false, true},
-        OrcFile.WriterVersion.HIVE_4243,
-        bloomFilterKinds);
+    // use old blooms
+    ReaderEncryption encryption = new ReaderEncryption();
+    StripePlanner planner = new StripePlanner(schema, encryption,
+        new InStream.StreamOptions(), dataReader,
+        OrcFile.WriterVersion.HIVE_4243, false, Integer.MAX_VALUE);
+    planner.parseStripe(stripe, new boolean[]{true, true, false, true});
+    OrcIndex index =
+        planner.readRowIndex(new boolean[]{false, true, false, true}, null);
+    OrcProto.Stream.Kind[] bloomFilterKinds = index.getBloomFilterKinds();
     assertEquals(OrcProto.Stream.Kind.BLOOM_FILTER, bloomFilterKinds[1]);
     assertEquals(OrcProto.Stream.Kind.BLOOM_FILTER, bloomFilterKinds[3]);
-    assertEquals("range start: 0 end: 2000", ranges.toString());
-    assertEquals("range start: 4000 end: 6000", ranges.next.toString());
-    assertEquals(null, ranges.next.next);
+    assertEquals(1, stripe.getStream(1, OrcProto.Stream.Kind.ROW_INDEX).readCount);
+    assertEquals(1, stripe.getStream(1, OrcProto.Stream.Kind.BLOOM_FILTER).readCount);
+    assertEquals(0, stripe.getStream(2, OrcProto.Stream.Kind.ROW_INDEX).readCount);
+    assertEquals(0, stripe.getStream(2, OrcProto.Stream.Kind.BLOOM_FILTER).readCount);
+    assertEquals(1, stripe.getStream(3, OrcProto.Stream.Kind.ROW_INDEX).readCount);
+    assertEquals(1, stripe.getStream(3, OrcProto.Stream.Kind.BLOOM_FILTER).readCount);
 
     // ignore non-utf8 bloom filter
+    dataReader.resetCounts();
     Arrays.fill(bloomFilterKinds, null);
-    ranges = RecordReaderUtils.planIndexReading(schema, footer,
-        true, new boolean[]{true, true, false, true},
-        new boolean[]{false, true, false, true},
-        OrcFile.WriterVersion.HIVE_4243,
-        bloomFilterKinds);
+    planner = new StripePlanner(schema, encryption,
+        new InStream.StreamOptions(), dataReader,
+        OrcFile.WriterVersion.HIVE_4243, true, Integer.MAX_VALUE);
+    planner.parseStripe(stripe, new boolean[]{true, true, true, false});
+    planner.readRowIndex(new boolean[]{false, true, true, false}, index);
     assertEquals(OrcProto.Stream.Kind.BLOOM_FILTER, bloomFilterKinds[1]);
-    assertEquals(null, bloomFilterKinds[3]);
-    assertEquals("range start: 0 end: 2000", ranges.toString());
-    assertEquals("range start: 4000 end: 5000", ranges.next.toString());
-    assertEquals(null, ranges.next.next);
+    assertEquals(null, bloomFilterKinds[2]);
+    assertEquals(1, stripe.getStream(1, OrcProto.Stream.Kind.ROW_INDEX).readCount);
+    assertEquals(1, stripe.getStream(1, OrcProto.Stream.Kind.BLOOM_FILTER).readCount);
+    assertEquals(1, stripe.getStream(2, OrcProto.Stream.Kind.ROW_INDEX).readCount);
+    assertEquals(0, stripe.getStream(2, OrcProto.Stream.Kind.BLOOM_FILTER).readCount);
+    assertEquals(0, stripe.getStream(3, OrcProto.Stream.Kind.ROW_INDEX).readCount);
+    assertEquals(0, stripe.getStream(3, OrcProto.Stream.Kind.BLOOM_FILTER).readCount);
 
     // check that we are handling the post hive-12055 strings correctly
+    dataReader.resetCounts();
     Arrays.fill(bloomFilterKinds, null);
-    ranges = RecordReaderUtils.planIndexReading(schema, footer,
-        true, null, new boolean[]{false, true, true, true},
-        OrcFile.WriterVersion.HIVE_12055, bloomFilterKinds);
+    planner = new StripePlanner(schema, encryption,
+        new InStream.StreamOptions(), dataReader,
+        OrcFile.WriterVersion.HIVE_12055, true, Integer.MAX_VALUE);
+    planner.parseStripe(stripe, new boolean[]{true, true, true, true});
+    planner.readRowIndex(new boolean[]{false, true, true, true}, index);
     assertEquals(OrcProto.Stream.Kind.BLOOM_FILTER, bloomFilterKinds[1]);
     assertEquals(null, bloomFilterKinds[2]);
     assertEquals(OrcProto.Stream.Kind.BLOOM_FILTER, bloomFilterKinds[3]);
-    assertEquals("range start: 0 end: 3000", ranges.toString());
-    assertEquals("range start: 4000 end: 6000", ranges.next.toString());
-    assertEquals(null, ranges.next.next);
+    assertEquals(1, stripe.getStream(1, OrcProto.Stream.Kind.ROW_INDEX).readCount);
+    assertEquals(1, stripe.getStream(1, OrcProto.Stream.Kind.BLOOM_FILTER).readCount);
+    assertEquals(1, stripe.getStream(2, OrcProto.Stream.Kind.ROW_INDEX).readCount);
+    assertEquals(0, stripe.getStream(2, OrcProto.Stream.Kind.BLOOM_FILTER).readCount);
+    assertEquals(1, stripe.getStream(3, OrcProto.Stream.Kind.ROW_INDEX).readCount);
+    assertEquals(1, stripe.getStream(3, OrcProto.Stream.Kind.BLOOM_FILTER).readCount);
 
     // ignore non-utf8 bloom filter on decimal
+    dataReader.resetCounts();
     Arrays.fill(bloomFilterKinds, null);
-    ranges = RecordReaderUtils.planIndexReading(schema, footer,
-        true, null,
-        new boolean[]{false, false, true, false},
-        OrcFile.WriterVersion.HIVE_4243,
-        bloomFilterKinds);
+    planner = new StripePlanner(schema, encryption,
+        new InStream.StreamOptions(), dataReader,
+        OrcFile.WriterVersion.HIVE_4243, true, Integer.MAX_VALUE);
+    planner.parseStripe(stripe, new boolean[]{true, false, true, false});
+    planner.readRowIndex(new boolean[]{false, false, true, false}, index);
+    assertEquals(null, bloomFilterKinds[1]);
     assertEquals(null, bloomFilterKinds[2]);
-    assertEquals("range start: 0 end: 1000", ranges.toString());
-    assertEquals("range start: 2000 end: 3000", ranges.next.toString());
-    assertEquals("range start: 4000 end: 5000", ranges.next.next.toString());
-    assertEquals(null, ranges.next.next.next);
+    assertEquals(0, stripe.getStream(1, OrcProto.Stream.Kind.ROW_INDEX).readCount);
+    assertEquals(0, stripe.getStream(1, OrcProto.Stream.Kind.BLOOM_FILTER).readCount);
+    assertEquals(1, stripe.getStream(2, OrcProto.Stream.Kind.ROW_INDEX).readCount);
+    assertEquals(0, stripe.getStream(2, OrcProto.Stream.Kind.BLOOM_FILTER).readCount);
+    assertEquals(0, stripe.getStream(3, OrcProto.Stream.Kind.ROW_INDEX).readCount);
+    assertEquals(0, stripe.getStream(3, OrcProto.Stream.Kind.BLOOM_FILTER).readCount);
   }
 
   @Test
   public void TestCompatibleBloomFilters() throws Exception {
-    OrcProto.StripeFooter footer =
-        OrcProto.StripeFooter.newBuilder()
-            .addStreams(OrcProto.Stream.newBuilder()
-                .setColumn(1).setKind(OrcProto.Stream.Kind.ROW_INDEX).setLength(1000).build())
-            .addStreams(OrcProto.Stream.newBuilder()
-                .setColumn(1).setKind(OrcProto.Stream.Kind.BLOOM_FILTER).setLength(1000).build())
-            .addStreams(OrcProto.Stream.newBuilder()
-                .setColumn(2).setKind(OrcProto.Stream.Kind.ROW_INDEX).setLength(1000).build())
-            .addStreams(OrcProto.Stream.newBuilder()
-                .setColumn(2).setKind(OrcProto.Stream.Kind.BLOOM_FILTER).setLength(1000).build())
-            .addStreams(OrcProto.Stream.newBuilder()
-                .setColumn(2).setKind(OrcProto.Stream.Kind.BLOOM_FILTER_UTF8).setLength(1000).build())
-            .addStreams(OrcProto.Stream.newBuilder()
-                .setColumn(3).setKind(OrcProto.Stream.Kind.ROW_INDEX).setLength(1000).build())
-            .addStreams(OrcProto.Stream.newBuilder()
-                .setColumn(3).setKind(OrcProto.Stream.Kind.BLOOM_FILTER).setLength(1000).build())
-            .addStreams(OrcProto.Stream.newBuilder()
-                .setColumn(3).setKind(OrcProto.Stream.Kind.BLOOM_FILTER_UTF8).setLength(1000).build())
-            .build();
     TypeDescription schema = TypeDescription.fromString("struct<x:int,y:decimal(10,2),z:string>");
-    OrcProto.Stream.Kind[] bloomFilterKinds = new OrcProto.Stream.Kind[4];
+    MockDataReader dataReader = createMixedBlooms(schema);
+    MockStripe stripe = dataReader.getStripe(0);
 
-    // normal read
-    DiskRangeList ranges = RecordReaderUtils.planIndexReading(schema, footer,
-        false, new boolean[]{true, true, false, true},
-        new boolean[]{false, true, false, true},
-        OrcFile.WriterVersion.HIVE_4243,
-        bloomFilterKinds);
+    // use old bloom filters
+    ReaderEncryption encryption = new ReaderEncryption();
+    StripePlanner planner = new StripePlanner(schema, encryption,
+        new InStream.StreamOptions(), dataReader,
+        OrcFile.WriterVersion.HIVE_4243, true, Integer.MAX_VALUE);
+    planner.parseStripe(stripe, new boolean[]{true, true, false, true});
+    OrcIndex index =
+        planner.readRowIndex(new boolean[]{false, true, false, true}, null);
+
+    OrcProto.Stream.Kind[] bloomFilterKinds = index.getBloomFilterKinds();
     assertEquals(OrcProto.Stream.Kind.BLOOM_FILTER, bloomFilterKinds[1]);
     assertEquals(OrcProto.Stream.Kind.BLOOM_FILTER_UTF8, bloomFilterKinds[3]);
-    assertEquals("range start: 0 end: 2000", ranges.toString());
-    assertEquals("range start: 5000 end: 6000", ranges.next.toString());
-    assertEquals("range start: 7000 end: 8000", ranges.next.next.toString());
-    assertEquals(null, ranges.next.next.next);
+    assertEquals(1, stripe.getStream(1, OrcProto.Stream.Kind.ROW_INDEX).readCount);
+    assertEquals(1, stripe.getStream(1, OrcProto.Stream.Kind.BLOOM_FILTER).readCount);
+    assertEquals(0, stripe.getStream(2, OrcProto.Stream.Kind.ROW_INDEX).readCount);
+    assertEquals(0, stripe.getStream(2, OrcProto.Stream.Kind.BLOOM_FILTER).readCount);
+    assertEquals(0, stripe.getStream(2, OrcProto.Stream.Kind.BLOOM_FILTER_UTF8).readCount);
+    assertEquals(1, stripe.getStream(3, OrcProto.Stream.Kind.ROW_INDEX).readCount);
+    assertEquals(0, stripe.getStream(3, OrcProto.Stream.Kind.BLOOM_FILTER).readCount);
+    assertEquals(1, stripe.getStream(3, OrcProto.Stream.Kind.BLOOM_FILTER_UTF8).readCount);
 
-    //
+    // ignore non-utf8 bloom filter
     Arrays.fill(bloomFilterKinds, null);
-    ranges = RecordReaderUtils.planIndexReading(schema, footer,
-        true, null,
-        new boolean[]{false, true, true, false},
-        OrcFile.WriterVersion.HIVE_4243,
-        bloomFilterKinds);
+    dataReader.resetCounts();
+    planner = new StripePlanner(schema, encryption,
+        new InStream.StreamOptions(), dataReader,
+        OrcFile.WriterVersion.HIVE_4243, true, Integer.MAX_VALUE);
+    planner.parseStripe(stripe, new boolean[]{true, true, true, false});
+    planner.readRowIndex(new boolean[]{false, true, true, false}, index);
     assertEquals(OrcProto.Stream.Kind.BLOOM_FILTER, bloomFilterKinds[1]);
     assertEquals(OrcProto.Stream.Kind.BLOOM_FILTER_UTF8, bloomFilterKinds[2]);
-    assertEquals("range start: 0 end: 3000", ranges.toString());
-    assertEquals("range start: 4000 end: 6000", ranges.next.toString());
-    assertEquals(null, ranges.next.next);
+    assertEquals(1, stripe.getStream(1, OrcProto.Stream.Kind.ROW_INDEX).readCount);
+    assertEquals(1, stripe.getStream(1, OrcProto.Stream.Kind.BLOOM_FILTER).readCount);
+    assertEquals(1, stripe.getStream(2, OrcProto.Stream.Kind.ROW_INDEX).readCount);
+    assertEquals(0, stripe.getStream(2, OrcProto.Stream.Kind.BLOOM_FILTER).readCount);
+    assertEquals(1, stripe.getStream(2, OrcProto.Stream.Kind.BLOOM_FILTER_UTF8).readCount);
+    assertEquals(0, stripe.getStream(3, OrcProto.Stream.Kind.ROW_INDEX).readCount);
+    assertEquals(0, stripe.getStream(3, OrcProto.Stream.Kind.BLOOM_FILTER).readCount);
+    assertEquals(0, stripe.getStream(3, OrcProto.Stream.Kind.BLOOM_FILTER_UTF8).readCount);
   }
 
   @Test
   public void TestNewBloomFilters() throws Exception {
-    OrcProto.StripeFooter footer =
-        OrcProto.StripeFooter.newBuilder()
-            .addStreams(OrcProto.Stream.newBuilder()
-                .setColumn(1).setKind(OrcProto.Stream.Kind.ROW_INDEX).setLength(1000).build())
-            .addStreams(OrcProto.Stream.newBuilder()
-                .setColumn(1).setKind(OrcProto.Stream.Kind.BLOOM_FILTER).setLength(1000).build())
-            .addStreams(OrcProto.Stream.newBuilder()
-                .setColumn(2).setKind(OrcProto.Stream.Kind.ROW_INDEX).setLength(1000).build())
-            .addStreams(OrcProto.Stream.newBuilder()
-                .setColumn(2).setKind(OrcProto.Stream.Kind.BLOOM_FILTER_UTF8).setLength(1000).build())
-            .addStreams(OrcProto.Stream.newBuilder()
-                .setColumn(3).setKind(OrcProto.Stream.Kind.ROW_INDEX).setLength(1000).build())
-            .addStreams(OrcProto.Stream.newBuilder()
-                .setColumn(3).setKind(OrcProto.Stream.Kind.BLOOM_FILTER_UTF8).setLength(1000).build())
-            .build();
     TypeDescription schema = TypeDescription.fromString("struct<x:int,y:decimal(10,2),z:string>");
-    OrcProto.Stream.Kind[] bloomFilterKinds = new OrcProto.Stream.Kind[4];
+    MockDataReader dataReader = createNewBlooms(schema);
+    MockStripe stripe = dataReader.getStripe(0);
 
-    // normal read
-    DiskRangeList ranges = RecordReaderUtils.planIndexReading(schema, footer,
-        false, new boolean[]{true, true, false, true},
-        new boolean[]{false, true, false, true},
-        OrcFile.WriterVersion.HIVE_4243,
-        bloomFilterKinds);
+    // use old bloom filters
+    ReaderEncryption encryption = new ReaderEncryption();
+    StripePlanner planner = new StripePlanner(schema, encryption,
+        new InStream.StreamOptions(), dataReader,
+        OrcFile.WriterVersion.HIVE_4243, true, Integer.MAX_VALUE);
+    planner.parseStripe(stripe, new boolean[]{true, true, false, true});
+    OrcIndex index =
+        planner.readRowIndex(new boolean[]{false, true, false, true}, null);
+
+    OrcProto.Stream.Kind[] bloomFilterKinds = index.getBloomFilterKinds();
     assertEquals(OrcProto.Stream.Kind.BLOOM_FILTER, bloomFilterKinds[1]);
     assertEquals(OrcProto.Stream.Kind.BLOOM_FILTER_UTF8, bloomFilterKinds[3]);
-    assertEquals("range start: 0 end: 2000", ranges.toString());
-    assertEquals("range start: 4000 end: 6000", ranges.next.toString());
-    assertEquals(null, ranges.next.next);
+    assertEquals(1, stripe.getStream(1, OrcProto.Stream.Kind.ROW_INDEX).readCount);
+    assertEquals(1, stripe.getStream(1, OrcProto.Stream.Kind.BLOOM_FILTER).readCount);
+    assertEquals(0, stripe.getStream(2, OrcProto.Stream.Kind.ROW_INDEX).readCount);
+    assertEquals(0, stripe.getStream(2, OrcProto.Stream.Kind.BLOOM_FILTER_UTF8).readCount);
+    assertEquals(1, stripe.getStream(3, OrcProto.Stream.Kind.ROW_INDEX).readCount);
+    assertEquals(1, stripe.getStream(3, OrcProto.Stream.Kind.BLOOM_FILTER_UTF8).readCount);
 
-    //
+    // ignore non-utf8 bloom filter
     Arrays.fill(bloomFilterKinds, null);
-    ranges = RecordReaderUtils.planIndexReading(schema, footer,
-        true, null,
-        new boolean[]{false, true, true, false},
-        OrcFile.WriterVersion.HIVE_4243,
-        bloomFilterKinds);
+    dataReader.resetCounts();
+    planner = new StripePlanner(schema, encryption,
+        new InStream.StreamOptions(), dataReader,
+        OrcFile.WriterVersion.HIVE_4243, true, Integer.MAX_VALUE);
+    planner.parseStripe(stripe, new boolean[]{true, true, true, false});
+    planner.readRowIndex(new boolean[]{false, true, true, false}, index);
     assertEquals(OrcProto.Stream.Kind.BLOOM_FILTER, bloomFilterKinds[1]);
     assertEquals(OrcProto.Stream.Kind.BLOOM_FILTER_UTF8, bloomFilterKinds[2]);
-    assertEquals("range start: 0 end: 5000", ranges.toString());
-    assertEquals(null, ranges.next);
+    assertEquals(1, stripe.getStream(1, OrcProto.Stream.Kind.ROW_INDEX).readCount);
+    assertEquals(1, stripe.getStream(1, OrcProto.Stream.Kind.BLOOM_FILTER).readCount);
+    assertEquals(1, stripe.getStream(2, OrcProto.Stream.Kind.ROW_INDEX).readCount);
+    assertEquals(1, stripe.getStream(2, OrcProto.Stream.Kind.BLOOM_FILTER_UTF8).readCount);
+    assertEquals(0, stripe.getStream(3, OrcProto.Stream.Kind.ROW_INDEX).readCount);
+    assertEquals(0, stripe.getStream(3, OrcProto.Stream.Kind.BLOOM_FILTER_UTF8).readCount);
   }
 
   static OrcProto.RowIndexEntry createIndexEntry(Long min, Long max) {
@@ -2104,7 +2136,8 @@ public class TestRecordReaderImpl {
         .setKind(OrcProto.ColumnEncoding.Kind.DIRECT_V2).build());
     encodings.add(OrcProto.ColumnEncoding.newBuilder()
         .setKind(OrcProto.ColumnEncoding.Kind.DIRECT_V2).build());
-    boolean[] rows = applier.pickRowGroups(new ReaderImpl.StripeInformationImpl(stripe, 0, 1, null),
+    boolean[] rows = applier.pickRowGroups(
+        new ReaderImpl.StripeInformationImpl(stripe, 1, -1, null),
         indexes, null, encodings, null, false);
     assertEquals(4, rows.length);
     assertEquals(false, rows[0]);
@@ -2150,7 +2183,8 @@ public class TestRecordReaderImpl {
         .setKind(OrcProto.ColumnEncoding.Kind.DIRECT_V2).build());
     encodings.add(OrcProto.ColumnEncoding.newBuilder()
         .setKind(OrcProto.ColumnEncoding.Kind.DIRECT_V2).build());
-    boolean[] rows = applier.pickRowGroups(new ReaderImpl.StripeInformationImpl(stripe, 0, 1, null),
+    boolean[] rows = applier.pickRowGroups(
+        new ReaderImpl.StripeInformationImpl(stripe, 1, -1, null),
         indexes, null, encodings, null, false);
     assertEquals(3, rows.length);
     assertEquals(false, rows[0]);
