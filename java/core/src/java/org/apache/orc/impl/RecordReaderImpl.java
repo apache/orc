@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,8 +19,6 @@ package org.apache.orc.impl;
 
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.common.io.DiskRangeList;
-import org.apache.hadoop.hive.common.io.DiskRangeList.CreateHelper;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
@@ -47,6 +45,8 @@ import org.apache.orc.StringColumnStatistics;
 import org.apache.orc.StripeInformation;
 import org.apache.orc.TimestampColumnStatistics;
 import org.apache.orc.TypeDescription;
+import org.apache.orc.impl.reader.ReaderEncryption;
+import org.apache.orc.impl.reader.StripePlanner;
 import org.apache.orc.util.BloomFilter;
 import org.apache.orc.util.BloomFilterIO;
 import org.slf4j.Logger;
@@ -58,9 +58,7 @@ import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.TimeZone;
 
 public class RecordReaderImpl implements RecordReader {
@@ -68,14 +66,10 @@ public class RecordReaderImpl implements RecordReader {
   private static final boolean isLogDebugEnabled = LOG.isDebugEnabled();
   protected final Path path;
   private final long firstRow;
-  private final List<StripeInformation> stripes =
-      new ArrayList<StripeInformation>();
+  private final List<StripeInformation> stripes = new ArrayList<>();
   private OrcProto.StripeFooter stripeFooter;
   private final long totalRowCount;
   protected final TypeDescription schema;
-  private final List<OrcProto.Type> types;
-  private final int bufferSize;
-  private final SchemaEvolution evolution;
   // the file included columns indexed by the file's column ids.
   private final boolean[] fileIncluded;
   private final long rowIndexStride;
@@ -83,20 +77,14 @@ public class RecordReaderImpl implements RecordReader {
   private int currentStripe = -1;
   private long rowBaseInStripe = 0;
   private long rowCountInStripe = 0;
-  private final Map<StreamName, InStream> streams =
-      new HashMap<StreamName, InStream>();
-  DiskRangeList bufferChunks = null;
   private final TreeReaderFactory.TreeReader reader;
-  private final OrcProto.RowIndex[] indexes;
-  private final OrcProto.BloomFilterIndex[] bloomFilterIndices;
-  private final OrcProto.Stream.Kind[] bloomFilterKind;
+  private final OrcIndex indexes;
   private final SargApplier sargApp;
   // an array about which row groups aren't skipped
   private boolean[] includedRowGroups = null;
   private final DataReader dataReader;
-  private final boolean ignoreNonUtf8BloomFilter;
-  private final OrcFile.WriterVersion writerVersion;
   private final int maxDiskRangeChunkLimit;
+  private final StripePlanner planner;
 
   /**
    * Given a list of column names, find the given column and return the index.
@@ -133,50 +121,10 @@ public class RecordReaderImpl implements RecordReader {
     return result;
   }
 
-  /**
-   * Given a list of column names, find the given column and return the index.
-   *
-   * @param columnNames the list of potential column names
-   * @param columnName  the column name to look for
-   * @param rootColumn  offset the result with the rootColumn
-   * @return the column number or -1 if the column wasn't found
-   */
-  private static int findColumns(String[] columnNames,
-                         String columnName,
-                         int rootColumn) {
-    for(int i=0; i < columnNames.length; ++i) {
-      if (columnName.equals(columnNames[i])) {
-        return i + rootColumn;
-      }
-    }
-    return -1;
-  }
-
-  /**
-   * Find the mapping from predicate leaves to columns.
-   * @param sargLeaves the search argument that we need to map
-   * @param columnNames the names of the columns
-   * @param rootColumn the offset of the top level row, which offsets the
-   *                   result
-   * @return an array mapping the sarg leaves to concrete column numbers
-   * @deprecated Use #mapSargColumnsToOrcInternalColIdx(List, SchemaEvolution)
-   */
-  @Deprecated
-  public static int[] mapSargColumnsToOrcInternalColIdx(List<PredicateLeaf> sargLeaves,
-                                                        String[] columnNames,
-                                                        int rootColumn) {
-    int[] result = new int[sargLeaves.size()];
-    Arrays.fill(result, -1);
-    for(int i=0; i < result.length; ++i) {
-      String colName = sargLeaves.get(i).getColumnName();
-      result[i] = findColumns(columnNames, colName, rootColumn);
-    }
-    return result;
-  }
-
   protected RecordReaderImpl(ReaderImpl fileReader,
                              Reader.Options options) throws IOException {
-    this.writerVersion = fileReader.getWriterVersion();
+    OrcFile.WriterVersion writerVersion = fileReader.getWriterVersion();
+    SchemaEvolution evolution;
     if (options.getSchema() == null) {
       if (LOG.isInfoEnabled()) {
         LOG.info("Reader schema not provided -- using file schema " +
@@ -200,11 +148,14 @@ public class RecordReaderImpl implements RecordReader {
     }
     this.schema = evolution.getReaderSchema();
     this.path = fileReader.path;
-    this.types = fileReader.types;
-    this.bufferSize = fileReader.bufferSize;
+    List<OrcProto.Type> types = fileReader.types;
+    InStream.StreamOptions unencryptedOptions = InStream.options()
+                                                    .withCodec(OrcCodecPool.getCodec(fileReader.getCompressionKind()))
+                                                    .withBufferSize(fileReader.getCompressionSize());
     this.rowIndexStride = fileReader.rowIndexStride;
-    this.ignoreNonUtf8BloomFilter =
-        OrcConf.IGNORE_NON_UTF8_BLOOM_FILTERS.getBoolean(fileReader.conf);
+    boolean ignoreNonUtf8BloomFilter = OrcConf.IGNORE_NON_UTF8_BLOOM_FILTERS.getBoolean(fileReader.conf);
+    ReaderEncryption encryption = fileReader.getEncryption();
+    this.fileIncluded = evolution.getFileIncluded();
     SearchArgument sarg = options.getSearchArgument();
     if (sarg != null && rowIndexStride != 0) {
       sargApp = new SargApplier(sarg,
@@ -239,11 +190,9 @@ public class RecordReaderImpl implements RecordReader {
     } else {
       DataReaderProperties.Builder builder =
           DataReaderProperties.builder()
-              .withBufferSize(bufferSize)
-              .withCompression(fileReader.compressionKind)
+              .withCompression(unencryptedOptions)
               .withFileSystem(fileReader.getFileSystem())
               .withPath(fileReader.path)
-              .withTypeCount(types.size())
               .withMaxDiskRangeChunkLimit(maxDiskRangeChunkLimit)
               .withZeroCopy(zeroCopy);
       FSDataInputStream file = fileReader.takeFile();
@@ -265,14 +214,18 @@ public class RecordReaderImpl implements RecordReader {
           .setSchemaEvolution(evolution)
           .skipCorrupt(skipCorrupt)
           .fileFormat(fileReader.getFileVersion())
-          .useUTCTimestamp(fileReader.useUTCTimestamp);
+          .useUTCTimestamp(fileReader.useUTCTimestamp)
+          .setEncryption(encryption);
     reader = TreeReaderFactory.createTreeReader(evolution.getReaderSchema(),
         readerContext);
 
-    this.fileIncluded = evolution.getFileIncluded();
-    indexes = new OrcProto.RowIndex[types.size()];
-    bloomFilterIndices = new OrcProto.BloomFilterIndex[types.size()];
-    bloomFilterKind = new OrcProto.Stream.Kind[types.size()];
+    indexes = new OrcIndex(new OrcProto.RowIndex[types.size()],
+        new OrcProto.Stream.Kind[types.size()],
+        new OrcProto.BloomFilterIndex[types.size()]);
+
+    planner = new StripePlanner(evolution.getFileSchema(), encryption,
+        unencryptedOptions, dataReader, writerVersion,
+        ignoreNonUtf8BloomFilter,  maxDiskRangeChunkLimit);
 
     try {
       advanceToNextRow(reader, 0L, true);
@@ -1046,27 +999,14 @@ public class RecordReaderImpl implements RecordReader {
       return null;
     }
     readRowIndex(currentStripe, fileIncluded, sargApp.sargColumns);
-    return sargApp.pickRowGroups(stripes.get(currentStripe), indexes,
-        bloomFilterKind, stripeFooter.getColumnsList(), bloomFilterIndices, false);
+    return sargApp.pickRowGroups(stripes.get(currentStripe),
+        indexes.getRowGroupIndex(),
+        indexes.getBloomFilterKinds(), stripeFooter.getColumnsList(),
+        indexes.getBloomFilterIndex(), false);
   }
 
   private void clearStreams() {
-    // explicit close of all streams to de-ref ByteBuffers
-    for (InStream is : streams.values()) {
-      is.close();
-    }
-    if (bufferChunks != null) {
-      if (dataReader.isTrackingDiskRanges()) {
-        for (DiskRangeList range = bufferChunks; range != null; range = range.next) {
-          if (!(range instanceof BufferChunk)) {
-            continue;
-          }
-          dataReader.releaseBuffer(range.getData());
-        }
-      }
-    }
-    bufferChunks = null;
-    streams.clear();
+    planner.clearStreams();
   }
 
   /**
@@ -1076,6 +1016,7 @@ public class RecordReaderImpl implements RecordReader {
    */
   private void readStripe() throws IOException {
     StripeInformation stripe = beginReadStripe();
+    planner.parseStripe(stripe, fileIncluded);
     includedRowGroups = pickRowGroups();
 
     // move forward to the first unskipped row
@@ -1088,27 +1029,13 @@ public class RecordReaderImpl implements RecordReader {
 
     // if we haven't skipped the whole stripe, read the data
     if (rowInStripe < rowCountInStripe) {
-      // if we aren't projecting columns or filtering rows, just read it all
-      if (isFullRead() && includedRowGroups == null) {
-        readAllDataStreams(stripe);
-      } else {
-        readPartialDataStreams(stripe);
-      }
-      reader.startStripe(streams, stripeFooter);
+      planner.readData(indexes, includedRowGroups, false);
+      reader.startStripe(planner);
       // if we skipped the first row group, move the pointers forward
       if (rowInStripe != 0) {
         seekToRowEntry(reader, (int) (rowInStripe / rowIndexStride));
       }
     }
-  }
-
-  private boolean isFullRead() {
-    for (boolean isColumnPresent : fileIncluded){
-      if (!isColumnPresent){
-        return false;
-      }
-    }
-    return true;
   }
 
   private StripeInformation beginReadStripe() throws IOException {
@@ -1123,116 +1050,11 @@ public class RecordReaderImpl implements RecordReader {
       rowBaseInStripe += stripes.get(i).getNumberOfRows();
     }
     // reset all of the indexes
-    for (int i = 0; i < indexes.length; ++i) {
-      indexes[i] = null;
+    OrcProto.RowIndex[] rowIndex = indexes.getRowGroupIndex();
+    for (int i = 0; i < rowIndex.length; ++i) {
+      rowIndex[i] = null;
     }
     return stripe;
-  }
-
-  private void readAllDataStreams(StripeInformation stripe) throws IOException {
-    long start = stripe.getIndexLength();
-    long end = start + stripe.getDataLength();
-    // explicitly trigger 1 big read
-    DiskRangeList toRead = new DiskRangeList(start, end);
-    bufferChunks = dataReader.readFileData(toRead, stripe.getOffset(), false);
-    List<OrcProto.Stream> streamDescriptions = stripeFooter.getStreamsList();
-    createStreams(streamDescriptions, bufferChunks, null,
-        dataReader.getCompressionCodec(), bufferSize, streams);
-  }
-
-  /**
-   * Plan the ranges of the file that we need to read given the list of
-   * columns and row groups.
-   *
-   * @param streamList        the list of streams available
-   * @param indexes           the indexes that have been loaded
-   * @param includedColumns   which columns are needed
-   * @param includedRowGroups which row groups are needed
-   * @param isCompressed      does the file have generic compression
-   * @param encodings         the encodings for each column
-   * @param types             the types of the columns
-   * @param compressionSize   the compression block size
-   * @return the list of disk ranges that will be loaded
-   */
-  static DiskRangeList planReadPartialDataStreams
-  (List<OrcProto.Stream> streamList,
-      OrcProto.RowIndex[] indexes,
-      boolean[] includedColumns,
-      boolean[] includedRowGroups,
-      boolean isCompressed,
-      List<OrcProto.ColumnEncoding> encodings,
-      List<OrcProto.Type> types,
-      int compressionSize,
-      boolean doMergeBuffers) {
-    long offset = 0;
-    // figure out which columns have a present stream
-    boolean[] hasNull = RecordReaderUtils.findPresentStreamsByColumn(streamList, types);
-    CreateHelper list = new CreateHelper();
-    for (OrcProto.Stream stream : streamList) {
-      long length = stream.getLength();
-      int column = stream.getColumn();
-      OrcProto.Stream.Kind streamKind = stream.getKind();
-      // since stream kind is optional, first check if it exists
-      if (stream.hasKind() &&
-          (StreamName.getArea(streamKind) == StreamName.Area.DATA) &&
-          (column < includedColumns.length && includedColumns[column])) {
-        // if we aren't filtering or it is a dictionary, load it.
-        if (includedRowGroups == null
-            || RecordReaderUtils.isDictionary(streamKind, encodings.get(column))) {
-          RecordReaderUtils.addEntireStreamToRanges(offset, length, list, doMergeBuffers);
-        } else {
-          RecordReaderUtils.addRgFilteredStreamToRanges(stream, includedRowGroups,
-              isCompressed, indexes[column], encodings.get(column), types.get(column),
-              compressionSize, hasNull[column], offset, length, list, doMergeBuffers);
-        }
-      }
-      offset += length;
-    }
-    return list.extract();
-  }
-
-  void createStreams(List<OrcProto.Stream> streamDescriptions,
-      DiskRangeList ranges,
-      boolean[] includeColumn,
-      CompressionCodec codec,
-      int bufferSize,
-      Map<StreamName, InStream> streams) throws IOException {
-    long streamOffset = 0;
-    InStream.StreamOptions options = InStream.options().withCodec(codec)
-        .withBufferSize(bufferSize);
-    for (OrcProto.Stream streamDesc : streamDescriptions) {
-      int column = streamDesc.getColumn();
-      if ((includeColumn != null &&
-          (column < includeColumn.length && !includeColumn[column])) ||
-          streamDesc.hasKind() &&
-              (StreamName.getArea(streamDesc.getKind()) != StreamName.Area.DATA)) {
-        streamOffset += streamDesc.getLength();
-        continue;
-      }
-      DiskRangeList buffers = RecordReaderUtils.getStreamBuffers(
-          ranges, streamOffset, streamDesc.getLength());
-      StreamName name = new StreamName(column, streamDesc.getKind());
-      streams.put(name, InStream.create(name.toString(), buffers,
-          0, streamDesc.getLength(), options));
-      streamOffset += streamDesc.getLength();
-    }
-  }
-
-  private void readPartialDataStreams(StripeInformation stripe) throws IOException {
-    List<OrcProto.Stream> streamList = stripeFooter.getStreamsList();
-    DiskRangeList toRead = planReadPartialDataStreams(streamList,
-        indexes, fileIncluded, includedRowGroups, dataReader.getCompressionCodec() != null,
-        stripeFooter.getColumnsList(), types, bufferSize, true);
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("chunks = " + RecordReaderUtils.stringifyDiskRanges(toRead));
-    }
-    bufferChunks = dataReader.readFileData(toRead, stripe.getOffset(), false);
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("merge = " + RecordReaderUtils.stringifyDiskRanges(bufferChunks));
-    }
-
-    createStreams(streamList, bufferChunks, fileIncluded,
-        dataReader.getCompressionCodec(), bufferSize, streams);
   }
 
   /**
@@ -1393,34 +1215,29 @@ public class RecordReaderImpl implements RecordReader {
 
   public OrcIndex readRowIndex(int stripeIndex, boolean[] included,
                                boolean[] sargColumns) throws IOException {
-    return readRowIndex(stripeIndex, included, null, null, sargColumns);
-  }
-
-  public OrcIndex readRowIndex(int stripeIndex, boolean[] included,
-                               OrcProto.RowIndex[] indexes,
-                               OrcProto.BloomFilterIndex[] bloomFilterIndex,
-                               boolean[] sargColumns) throws IOException {
-    StripeInformation stripe = stripes.get(stripeIndex);
-    OrcProto.StripeFooter stripeFooter = null;
     // if this is the current stripe, use the cached objects.
     if (stripeIndex == currentStripe) {
-      stripeFooter = this.stripeFooter;
-      indexes = indexes == null ? this.indexes : indexes;
-      bloomFilterIndex = bloomFilterIndex == null ? this.bloomFilterIndices : bloomFilterIndex;
-      sargColumns = sargColumns == null ?
-          (sargApp == null ? null : sargApp.sargColumns) : sargColumns;
+      return planner.readRowIndex(
+          sargColumns != null || sargApp == null
+              ? sargColumns : sargApp.sargColumns, indexes);
+    } else {
+      StripePlanner copy = new StripePlanner(planner);
+      if (included == null) {
+        included = new boolean[schema.getMaximumId() + 1];
+        Arrays.fill(included, true);
+      }
+      copy.parseStripe(stripes.get(stripeIndex), included);
+      return copy.readRowIndex(sargColumns, null);
     }
-    return dataReader.readRowIndex(stripe, evolution.getFileType(0), stripeFooter,
-        ignoreNonUtf8BloomFilter, included, indexes, sargColumns, writerVersion,
-        bloomFilterKind, bloomFilterIndex);
   }
 
   private void seekToRowEntry(TreeReaderFactory.TreeReader reader, int rowEntry)
       throws IOException {
-    PositionProvider[] index = new PositionProvider[indexes.length];
-    for (int i = 0; i < indexes.length; ++i) {
-      if (indexes[i] != null) {
-        index[i] = new PositionProviderImpl(indexes[i].getEntry(rowEntry));
+    OrcProto.RowIndex[] rowIndices = indexes.getRowGroupIndex();
+    PositionProvider[] index = new PositionProvider[rowIndices.length];
+    for (int i = 0; i < index.length; ++i) {
+      if (rowIndices[i] != null) {
+        index[i] = new PositionProviderImpl(rowIndices[i].getEntry(rowEntry));
       }
     }
     reader.seek(index);
