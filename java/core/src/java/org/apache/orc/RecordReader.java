@@ -24,7 +24,7 @@ import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 /**
  * A row-by-row iterator for ORC files.
  */
-public interface RecordReader {
+public interface RecordReader extends AutoCloseable {
   /**
    * Read the next row batch. The size of the batch to read cannot be
    * controlled by the callers. Caller need to look at

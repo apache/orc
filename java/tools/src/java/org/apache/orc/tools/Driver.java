@@ -24,6 +24,8 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.orc.tools.convert.ConvertTool;
+import org.apache.orc.tools.json.JsonSchemaFinder;
 
 import java.util.Map;
 import java.util.Properties;
@@ -87,6 +89,8 @@ public class Driver {
       System.err.println("   meta - print the metadata about the ORC file");
       System.err.println("   data - print the data from the ORC file");
       System.err.println("   scan - scan the ORC file");
+      System.err.println("   convert - convert JSON files to ORC");
+      System.err.println("   json-schema - scan JSON files to determine their schema");
       System.err.println();
       System.err.println("To get more help, provide -h to the command");
       System.exit(1);
@@ -102,6 +106,10 @@ public class Driver {
       PrintData.main(conf, options.commandArgs);
     } else if ("scan".equals(options.command)) {
       ScanData.main(conf, options.commandArgs);
+    } else if ("json-schema".equals(options.command)) {
+      JsonSchemaFinder.main(conf, options.commandArgs);
+    } else if ("convert".equals(options.command)) {
+      ConvertTool.main(conf, options.commandArgs);
     } else {
       System.err.println("Unknown subcommand: " + options.command);
       System.exit(1);
