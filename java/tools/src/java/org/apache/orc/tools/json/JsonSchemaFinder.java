@@ -286,7 +286,7 @@ public class JsonSchemaFinder {
     options.addOption(Option.builder("t").longOpt("table")
         .desc("Print types as Hive table declaration").build());
     CommandLine cli = new GnuParser().parse(options, args);
-    if (cli.hasOption('h')) {
+    if (cli.hasOption('h') || cli.getArgs().length == 0) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp("json-schema", options);
       System.exit(1);
