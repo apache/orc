@@ -85,7 +85,7 @@ public class ConvertTool {
         Option.builder("o").longOpt("output").desc("Output filename")
             .hasArg().build());
     CommandLine cli = new GnuParser().parse(options, args);
-    if (cli.hasOption('h')) {
+    if (cli.hasOption('h') || cli.getArgs().length == 0) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp("convert", options);
       System.exit(1);
