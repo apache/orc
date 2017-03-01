@@ -1134,13 +1134,27 @@ string,struct&lt;int1:int,string1:string&gt;&gt;&gt;",
 }
 </code></pre>
 
-<h2 id="java-metadata">Java Metadata</h2>
+<h2 id="java-orc-tools">Java ORC Tools</h2>
 
-<p>The org.apache.orc.tools.FileDump Java class, which is available via Hive as:</p>
+<p>In addition to the C++ tools above, there is an ORC tools jar that
+packages several useful utilities and the necessary Java dependencies
+(including Hadoop) into a single package. The Java ORC tool jar
+supports both the local file system and HDFS.</p>
 
-<pre><code class="language-shell">% java -jar orc-tools-*.jar meta [-j] [-p] [-t] [--rowindex &lt;cols&gt;]
-       [--recover] [--skip-dump] [--backup-path &lt;new path&gt;] &lt;file&gt;
+<p>The subcommands for the tools are:
+  * meta - print the metadata of an ORC file
+  * data - print the data of an ORC file
+  * scan (since ORC 1.3) - scan the data for benchmarking
+  * convert (since ORC 1.4) - convert JSON files to ORC
+  * json-schema (since ORC 1.4) - determine the schema of JSON documents</p>
+
+<pre><code class="language-shell">% java -jar orc-tools-X.Y.Z-uber.jar &lt;sub-command&gt; &lt;args&gt;
 </code></pre>
+
+<h3 id="java-meta">Java Meta</h3>
+
+<p>The meta command prints the metadata about the given ORC file and is
+equivalent to the Hive ORC File Dump command.</p>
 
 <dl>
   <dt>-j</dt>
@@ -1161,7 +1175,7 @@ string,struct&lt;int1:int,string1:string&gt;&gt;&gt;",
 
 <p>An example of the output is given below:</p>
 
-<pre><code class="language-shell">% java -jar orc-tools-*.jar meta examples/TestOrcFile.test1.orc
+<pre><code class="language-shell">% java -jar orc-tools-X.Y.Z-uber.jar meta examples/TestOrcFile.test1.orc
 Processing data file examples/TestOrcFile.test1.orc [length: 1711]
 Structure for examples/TestOrcFile.test1.orc
 File Version: 0.12 with HIVE_8732
@@ -1309,6 +1323,51 @@ Padding length: 0 bytes
 Padding ratio: 0%
 ______________________________________________________________________
 </code></pre>
+
+<h3 id="java-data">Java Data</h3>
+
+<p>The data command prints the data in an ORC file as a JSON document. Each
+record is printed as a JSON object on a line. Each record is annotated with
+the fieldnames and a JSON representation that depends on the field’s type.</p>
+
+<h3 id="java-scan">Java Scan</h3>
+
+<p>The scan command reads the contents of the file without printing anything. It
+is primarily intendend for benchmarking the Java reader without including the
+cost of printing the data out.</p>
+
+<h3 id="java-convert">Java Convert</h3>
+
+<p>The convert command reads several JSON files and converts them into a
+single ORC file.</p>
+
+<dl>
+  <dt>-o <filename></filename></dt>
+  <dd>Sets the output ORC filename, which defaults to output.orc</dd>
+  <dt>-s <schema></schema></dt>
+  <dd>Sets the schema for the ORC file. By default, the schema is automatically discovered.</dd>
+  <dt>-h</dt>
+  <dd>Print help</dd>
+</dl>
+
+<p>The automatic JSON schema discovery is equivalent to the json-schema tool
+below.</p>
+
+<h3 id="java-json-schema">Java JSON Schema</h3>
+
+<p>The JSON Schema discovery tool processes a set of JSON documents and
+produces a schema that encompasses all of the records in all of the
+documents. It works by computing the enclosing type and promoting it
+to include all of the observed values.</p>
+
+<dl>
+  <dt>-f</dt>
+  <dd>Print the schema as a list of flat types for each subfield</dd>
+  <dt>-t</dt>
+  <dd>Print the schema as a Hive table declaration</dd>
+  <dt>-h</dt>
+  <dd>Print help</dd>
+</dl>
 
           
 
