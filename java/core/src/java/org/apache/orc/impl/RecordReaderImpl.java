@@ -410,9 +410,11 @@ public class RecordReaderImpl implements RecordReader {
     // disable PPD for timestamp for all old files
     if (type.equals(TypeDescription.Category.TIMESTAMP)) {
       if (!writerVersion.includes(OrcFile.WriterVersion.ORC_135)) {
-        LOG.warn("Not using predication pushdown on {} because it doesn't " +
-                "include ORC-135. Writer version: {}", predicate.getColumnName(),
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("Not using predication pushdown on {} because it doesn't " +
+              "include ORC-135. Writer version: {}", predicate.getColumnName(),
             writerVersion);
+        }
         return TruthValue.YES_NO_NULL;
       }
       if (predicate.getType() != PredicateLeaf.Type.TIMESTAMP &&
@@ -468,7 +470,7 @@ public class RecordReaderImpl implements RecordReader {
       }
       // in case failed conversion, return the default YES_NO_NULL truth value
     } catch (Exception e) {
-      if (LOG.isWarnEnabled()) {
+      if (LOG.isDebugEnabled()) {
         final String statsType = min.getClass().getSimpleName();
         final String predicateType = baseObj == null ? "null" : baseObj.getClass().getSimpleName();
         final String reason = e.getClass().getSimpleName() + " when evaluating predicate." +
@@ -476,8 +478,7 @@ public class RecordReaderImpl implements RecordReader {
             " Exception: " + e.getMessage() +
             " StatsType: " + statsType +
             " PredicateType: " + predicateType;
-        LOG.warn(reason);
-        LOG.debug(reason, e);
+        LOG.debug(reason);
       }
       if (predicate.getOperator().equals(PredicateLeaf.Operator.NULL_SAFE_EQUALS) || !hasNull) {
         result = TruthValue.YES_NO;
