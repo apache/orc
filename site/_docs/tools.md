@@ -89,12 +89,15 @@ packages several useful utilities and the necessary Java dependencies
 supports both the local file system and HDFS.
 
 The subcommands for the tools are:
+
   * meta - print the metadata of an ORC file
   * data - print the data of an ORC file
   * scan (since ORC 1.3) - scan the data for benchmarking
   * convert (since ORC 1.4) - convert JSON files to ORC
   * json-schema (since ORC 1.4) - determine the schema of JSON documents
-  
+
+The command line looks like:
+
 ~~~ shell
 % java -jar orc-tools-X.Y.Z-uber.jar <sub-command> <args>
 ~~~
