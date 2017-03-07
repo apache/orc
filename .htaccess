@@ -1,3 +1,6 @@
 # .htaccess for ORC
 RedirectMatch Permanent ^/jira$ https://issues.apache.org/jira/browse/orc
 RedirectMatch Permanent ^/github$ https://github.com/apache/orc
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
