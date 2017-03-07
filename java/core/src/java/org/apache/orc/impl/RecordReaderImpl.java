@@ -99,7 +99,7 @@ public class RecordReaderImpl implements RecordReader {
   private final DataReader dataReader;
   private final boolean ignoreNonUtf8BloomFilter;
   private final OrcFile.WriterVersion writerVersion;
-  
+
   /**
    * Given a list of column names, find the given column and return the index.
    *
@@ -409,9 +409,9 @@ public class RecordReaderImpl implements RecordReader {
     // disable PPD for timestamp for all old files
     if (type.equals(TypeDescription.Category.TIMESTAMP)) {
       if (!writerVersion.includes(OrcFile.WriterVersion.ORC_135)) {
-        LOG.warn("Not using predication pushdown on {} because it doesn't " +
-                "include ORC-135. Writer version: {}", predicate.getColumnName(),
-            writerVersion);
+        LOG.debug("Not using predication pushdown on {} because it doesn't " +
+                  "include ORC-135. Writer version: {}",
+            predicate.getColumnName(), writerVersion);
         return TruthValue.YES_NO_NULL;
       }
       if (predicate.getType() != PredicateLeaf.Type.TIMESTAMP &&
@@ -455,36 +455,17 @@ public class RecordReaderImpl implements RecordReader {
 
     TruthValue result;
     Object baseObj = predicate.getLiteral();
-    try {
-      // Predicate object and stats objects are converted to the type of the predicate object.
-      Object minValue = getBaseObjectForComparison(predicate.getType(), min);
-      Object maxValue = getBaseObjectForComparison(predicate.getType(), max);
-      Object predObj = getBaseObjectForComparison(predicate.getType(), baseObj);
+    // Predicate object and stats objects are converted to the type of the predicate object.
+    Object minValue = getBaseObjectForComparison(predicate.getType(), min);
+    Object maxValue = getBaseObjectForComparison(predicate.getType(), max);
+    Object predObj = getBaseObjectForComparison(predicate.getType(), baseObj);
 
-      result = evaluatePredicateMinMax(predicate, predObj, minValue, maxValue, hasNull);
-      if (shouldEvaluateBloomFilter(predicate, result, bloomFilter)) {
-        result = evaluatePredicateBloomFilter(predicate, predObj, bloomFilter, hasNull);
-      }
-      // in case failed conversion, return the default YES_NO_NULL truth value
-    } catch (Exception e) {
-      if (LOG.isWarnEnabled()) {
-        final String statsType = min.getClass().getSimpleName();
-        final String predicateType = baseObj == null ? "null" : baseObj.getClass().getSimpleName();
-        final String reason = e.getClass().getSimpleName() + " when evaluating predicate." +
-            " Skipping ORC PPD." +
-            " Exception: " + e.getMessage() +
-            " StatsType: " + statsType +
-            " PredicateType: " + predicateType;
-        LOG.warn(reason);
-        LOG.debug(reason, e);
-      }
-      if (predicate.getOperator().equals(PredicateLeaf.Operator.NULL_SAFE_EQUALS) || !hasNull) {
-        result = TruthValue.YES_NO;
-      } else {
-        result = TruthValue.YES_NO_NULL;
-      }
+    result = evaluatePredicateMinMax(predicate, predObj, minValue, maxValue, hasNull);
+    if (shouldEvaluateBloomFilter(predicate, result, bloomFilter)) {
+      return evaluatePredicateBloomFilter(predicate, predObj, bloomFilter, hasNull);
+    } else {
+      return result;
     }
-    return result;
   }
 
   private static boolean shouldEvaluateBloomFilter(PredicateLeaf predicate,
@@ -664,6 +645,16 @@ public class RecordReaderImpl implements RecordReader {
     return result;
   }
 
+  /**
+   * An exception for when we can't cast things appropriately
+   */
+  static class SargCastException extends IllegalArgumentException {
+
+    public SargCastException(String string) {
+      super(string);
+    }
+  }
+
   private static Object getBaseObjectForComparison(PredicateLeaf.Type type, Object obj) {
     if (obj == null) {
       return null;
@@ -762,7 +753,7 @@ public class RecordReaderImpl implements RecordReader {
         break;
     }
 
-    throw new IllegalArgumentException(String.format(
+    throw new SargCastException(String.format(
         "ORC SARGS could not convert from %s to %s", obj.getClass()
             .getSimpleName(), type));
   }
@@ -779,6 +770,7 @@ public class RecordReaderImpl implements RecordReader {
     // same as the above array, but indices are set to true
     private final boolean[] sargColumns;
     private SchemaEvolution evolution;
+    private final long[] exceptionCount;
 
     public SargApplier(SearchArgument sarg,
                        long rowIndexStride,
@@ -801,6 +793,7 @@ public class RecordReaderImpl implements RecordReader {
         }
       }
       this.evolution = evolution;
+      exceptionCount = new long[sargLeaves.size()];
     }
 
     /**
@@ -820,11 +813,18 @@ public class RecordReaderImpl implements RecordReader {
       int groupsInStripe = (int) ((rowsInStripe + rowIndexStride - 1) / rowIndexStride);
       boolean[] result = new boolean[groupsInStripe]; // TODO: avoid alloc?
       TruthValue[] leafValues = new TruthValue[sargLeaves.size()];
-      boolean hasSelected = false, hasSkipped = false;
+      boolean hasSelected = false;
+      boolean hasSkipped = false;
+      TruthValue[] exceptionAnswer = new TruthValue[leafValues.length];
       for (int rowGroup = 0; rowGroup < result.length; ++rowGroup) {
         for (int pred = 0; pred < leafValues.length; ++pred) {
           int columnIx = filterColumns[pred];
-          if (columnIx != -1) {
+          if (columnIx == -1) {
+            // the column is a virtual column
+            leafValues[pred] = TruthValue.YES_NO_NULL;
+          } else if (exceptionAnswer[pred] != null) {
+            leafValues[pred] = exceptionAnswer[pred];
+          } else {
             if (indexes[columnIx] == null) {
               throw new AssertionError("Index is not populated for " + columnIx);
             }
@@ -840,9 +840,35 @@ public class RecordReaderImpl implements RecordReader {
               bf = bloomFilterIndices[columnIx].getBloomFilter(rowGroup);
             }
             if (evolution != null && evolution.isPPDSafeConversion(columnIx)) {
-              leafValues[pred] = evaluatePredicateProto(stats,
-                  sargLeaves.get(pred), bfk, encodings.get(columnIx), bf, writerVersion,
-                  evolution.getFileSchema().findSubtype(columnIx).getCategory());
+              PredicateLeaf predicate = sargLeaves.get(pred);
+              try {
+                leafValues[pred] = evaluatePredicateProto(stats,
+                    predicate, bfk, encodings.get(columnIx), bf,
+                    writerVersion, evolution.getFileSchema().
+                        findSubtype(columnIx).getCategory());
+              } catch (Exception e) {
+                exceptionCount[pred] += 1;
+                if (e instanceof SargCastException) {
+                  LOG.info("Skipping ORC PPD - " + e.getMessage() + " on "
+                      + predicate);
+                } else {
+                  if (LOG.isWarnEnabled()) {
+                    final String reason = e.getClass().getSimpleName() + " when evaluating predicate." +
+                        " Skipping ORC PPD." +
+                        " Stats: " + stats +
+                        " Predicate: " + predicate;
+                    LOG.warn(reason, e);
+                  }
+                }
+                boolean hasNoNull = stats.hasHasNull() && !stats.getHasNull();
+                if (predicate.getOperator().equals(PredicateLeaf.Operator.NULL_SAFE_EQUALS)
+                    || hasNoNull) {
+                  exceptionAnswer[pred] = TruthValue.YES_NO;
+                } else {
+                  exceptionAnswer[pred] = TruthValue.YES_NO_NULL;
+                }
+                leafValues[pred] = exceptionAnswer[pred];
+              }
             } else {
               leafValues[pred] = TruthValue.YES_NO_NULL;
             }
@@ -850,9 +876,6 @@ public class RecordReaderImpl implements RecordReader {
               LOG.trace("Stats = " + stats);
               LOG.trace("Setting " + sargLeaves.get(pred) + " to " + leafValues[pred]);
             }
-          } else {
-            // the column is a virtual column
-            leafValues[pred] = TruthValue.YES_NO_NULL;
           }
         }
         result[rowGroup] = sarg.evaluate(leafValues).isNeeded();
@@ -866,6 +889,14 @@ public class RecordReaderImpl implements RecordReader {
       }
 
       return hasSkipped ? ((hasSelected || !returnNone) ? result : READ_NO_RGS) : READ_ALL_RGS;
+    }
+
+    /**
+     * Get the count of exceptions for testing.
+     * @return
+     */
+    long[] getExceptionCount() {
+      return exceptionCount;
     }
   }
 
