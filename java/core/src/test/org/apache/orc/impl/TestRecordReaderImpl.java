@@ -52,6 +52,8 @@ import org.apache.hadoop.fs.PositionedReadable;
 import org.apache.hadoop.fs.Seekable;
 import org.apache.hadoop.hive.common.io.DiskRangeList;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
+import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
+import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentImpl;
 import org.apache.orc.util.BloomFilter;
 import org.apache.orc.DataReader;
@@ -509,8 +511,12 @@ public class TestRecordReaderImpl {
     // Integer stats will not be converted date because of days/seconds/millis ambiguity
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.DATE, "x", new DateWritable(15).get(), null);
-    assertEquals(TruthValue.YES_NO,
-        evaluateInteger(createIntStats(10, 100), pred));
+    try {
+      evaluateInteger(createIntStats(10, 100), pred);
+      fail("evaluate should throw");
+    } catch (RecordReaderImpl.SargCastException ia) {
+      assertEquals("ORC SARGS could not convert from Long to DATE", ia.getMessage());
+    }
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.DECIMAL, "x", new HiveDecimalWritable("15"), null);
@@ -519,8 +525,12 @@ public class TestRecordReaderImpl {
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.TIMESTAMP, "x", new Timestamp(15), null);
-    assertEquals(TruthValue.YES_NO,
-        evaluateInteger(createIntStats(10, 100), pred));
+    try {
+      evaluateInteger(createIntStats(10, 100), pred);
+      fail("evaluate should throw");
+    } catch (RecordReaderImpl.SargCastException ia) {
+      assertEquals("ORC SARGS could not convert from Long to TIMESTAMP", ia.getMessage());
+    }
   }
 
   @Test
@@ -544,8 +554,12 @@ public class TestRecordReaderImpl {
     // Double is not converted to date type because of days/seconds/millis ambiguity
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.DATE, "x", new DateWritable(15).get(), null);
-    assertEquals(TruthValue.YES_NO,
-        evaluateDouble(createDoubleStats(10.0, 100.0), pred));
+    try {
+      evaluateDouble(createDoubleStats(10.0, 100.0), pred);
+      fail("evaluate should throw");
+    } catch (RecordReaderImpl.SargCastException ia) {
+      assertEquals("ORC SARGS could not convert from Double to DATE", ia.getMessage());
+    }
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.DECIMAL, "x", new HiveDecimalWritable("15"), null);
@@ -593,8 +607,12 @@ public class TestRecordReaderImpl {
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.TIMESTAMP, "x", new Timestamp(100), null);
-    assertEquals(TruthValue.YES_NO,
-        evaluateInteger(createStringStats("10", "1000"), pred));
+    try {
+      evaluateInteger(createStringStats("10", "1000"), pred);
+      fail("evaluate should throw");
+    } catch (RecordReaderImpl.SargCastException ia) {
+      assertEquals("ORC SARGS could not convert from String to TIMESTAMP", ia.getMessage());
+    }
   }
 
   @Test
@@ -602,14 +620,22 @@ public class TestRecordReaderImpl {
     PredicateLeaf pred = createPredicateLeaf(
         PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.LONG, "x", 15L, null);
     // Date to Integer conversion is not possible.
-    assertEquals(TruthValue.YES_NO,
-        evaluateInteger(createDateStats(10, 100), pred));
+    try {
+      evaluateInteger(createDateStats(10, 100), pred);
+      fail("evaluate should throw");
+    } catch (RecordReaderImpl.SargCastException ia) {
+      assertEquals("ORC SARGS could not convert from Date to LONG", ia.getMessage());
+    }
 
     // Date to Float conversion is also not possible.
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.FLOAT, "x", 15.0, null);
-    assertEquals(TruthValue.YES_NO,
-        evaluateInteger(createDateStats(10, 100), pred));
+    try {
+      evaluateInteger(createDateStats(10, 100), pred);
+      fail("evaluate should throw");
+    } catch (RecordReaderImpl.SargCastException ia) {
+      assertEquals("ORC SARGS could not convert from Date to FLOAT", ia.getMessage());
+    }
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.STRING, "x", "15", null);
@@ -654,8 +680,12 @@ public class TestRecordReaderImpl {
     // Date to Decimal conversion is also not possible.
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.DECIMAL, "x", new HiveDecimalWritable("15"), null);
-    assertEquals(TruthValue.YES_NO,
-        evaluateInteger(createDateStats(10, 100), pred));
+    try {
+      evaluateInteger(createDateStats(10, 100), pred);
+      fail("evaluate should throw");
+    } catch (RecordReaderImpl.SargCastException ia) {
+      assertEquals("ORC SARGS could not convert from Date to DECIMAL", ia.getMessage());
+    }
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.TIMESTAMP, "x", new Timestamp(15), null);
@@ -689,8 +719,12 @@ public class TestRecordReaderImpl {
     // Decimal to Date not possible.
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.DATE, "x", new DateWritable(15).get(), null);
-    assertEquals(TruthValue.YES_NO,
-        evaluateInteger(createDecimalStats("10.0", "100.0"), pred));
+    try {
+      evaluateInteger(createDecimalStats("10.0", "100.0"), pred);
+      fail("evaluate should throw");
+    } catch (RecordReaderImpl.SargCastException ia) {
+      assertEquals("ORC SARGS could not convert from HiveDecimal to DATE", ia.getMessage());
+    }
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.DECIMAL, "x", new HiveDecimalWritable("15"), null);
@@ -1907,5 +1941,103 @@ public class TestRecordReaderImpl {
     assertEquals(OrcProto.Stream.Kind.BLOOM_FILTER_UTF8, bloomFilterKinds[2]);
     assertEquals("range start: 0 end: 5000", ranges.toString());
     assertEquals(null, ranges.next);
+  }
+
+  static OrcProto.RowIndexEntry createIndexEntry(Long min, Long max) {
+    return OrcProto.RowIndexEntry.newBuilder()
+             .setStatistics(createIntStats(min, max)).build();
+  }
+
+  @Test
+  public void testPickRowGroups() throws Exception {
+    Configuration conf = new Configuration();
+    TypeDescription schema = TypeDescription.fromString("struct<x:int,y:int>");
+    SchemaEvolution evolution = new SchemaEvolution(schema, schema,
+        new Reader.Options(conf));
+    SearchArgument sarg =
+        SearchArgumentFactory.newBuilder()
+            .startAnd()
+            .equals("x", PredicateLeaf.Type.LONG, 100L)
+            .equals("y", PredicateLeaf.Type.LONG, 10L)
+            .end().build();
+    RecordReaderImpl.SargApplier applier =
+        new RecordReaderImpl.SargApplier(sarg, 1000, evolution,
+            OrcFile.WriterVersion.ORC_135);
+    OrcProto.StripeInformation stripe =
+        OrcProto.StripeInformation.newBuilder().setNumberOfRows(4000).build();
+    OrcProto.RowIndex[] indexes = new OrcProto.RowIndex[3];
+    indexes[1] = OrcProto.RowIndex.newBuilder()
+        .addEntry(createIndexEntry(0L, 10L))
+        .addEntry(createIndexEntry(100L, 200L))
+        .addEntry(createIndexEntry(300L, 500L))
+        .addEntry(createIndexEntry(100L, 100L))
+        .build();
+    indexes[2] = OrcProto.RowIndex.newBuilder()
+        .addEntry(createIndexEntry(0L, 9L))
+        .addEntry(createIndexEntry(11L, 20L))
+        .addEntry(createIndexEntry(10L, 10L))
+        .addEntry(createIndexEntry(0L, 100L))
+        .build();
+    List<OrcProto.ColumnEncoding> encodings = new ArrayList<>();
+    encodings.add(OrcProto.ColumnEncoding.newBuilder()
+        .setKind(OrcProto.ColumnEncoding.Kind.DIRECT).build());
+    encodings.add(OrcProto.ColumnEncoding.newBuilder()
+        .setKind(OrcProto.ColumnEncoding.Kind.DIRECT_V2).build());
+    encodings.add(OrcProto.ColumnEncoding.newBuilder()
+        .setKind(OrcProto.ColumnEncoding.Kind.DIRECT_V2).build());
+    boolean[] rows = applier.pickRowGroups(new ReaderImpl.StripeInformationImpl(stripe),
+        indexes, null, encodings, null, false);
+    assertEquals(4, rows.length);
+    assertEquals(false, rows[0]);
+    assertEquals(false, rows[1]);
+    assertEquals(false, rows[2]);
+    assertEquals(true, rows[3]);
+    assertEquals(0, applier.getExceptionCount()[0]);
+    assertEquals(0, applier.getExceptionCount()[1]);
+  }
+
+  @Test
+  public void testPickRowGroupsError() throws Exception {
+    Configuration conf = new Configuration();
+    TypeDescription schema = TypeDescription.fromString("struct<x:int,y:int>");
+    SchemaEvolution evolution = new SchemaEvolution(schema, schema,
+        new Reader.Options(conf));
+    SearchArgument sarg =
+        SearchArgumentFactory.newBuilder()
+            .startAnd()
+              .equals("x", PredicateLeaf.Type.DATE, Date.valueOf("2017-01-02"))
+              .equals("y", PredicateLeaf.Type.LONG, 10L)
+            .end().build();
+    RecordReaderImpl.SargApplier applier =
+        new RecordReaderImpl.SargApplier(sarg, 1000, evolution,
+            OrcFile.WriterVersion.ORC_135);
+    OrcProto.StripeInformation stripe =
+        OrcProto.StripeInformation.newBuilder().setNumberOfRows(3000).build();
+    OrcProto.RowIndex[] indexes = new OrcProto.RowIndex[3];
+    indexes[1] = OrcProto.RowIndex.newBuilder()
+        .addEntry(createIndexEntry(0L, 10L))
+        .addEntry(createIndexEntry(10L, 20L))
+        .addEntry(createIndexEntry(20L, 30L))
+        .build();
+    indexes[2] = OrcProto.RowIndex.newBuilder()
+        .addEntry(createIndexEntry(0L, 9L))
+        .addEntry(createIndexEntry(10L, 20L))
+        .addEntry(createIndexEntry(0L, 30L))
+        .build();
+    List<OrcProto.ColumnEncoding> encodings = new ArrayList<>();
+    encodings.add(OrcProto.ColumnEncoding.newBuilder()
+        .setKind(OrcProto.ColumnEncoding.Kind.DIRECT).build());
+    encodings.add(OrcProto.ColumnEncoding.newBuilder()
+        .setKind(OrcProto.ColumnEncoding.Kind.DIRECT_V2).build());
+    encodings.add(OrcProto.ColumnEncoding.newBuilder()
+        .setKind(OrcProto.ColumnEncoding.Kind.DIRECT_V2).build());
+    boolean[] rows = applier.pickRowGroups(new ReaderImpl.StripeInformationImpl(stripe),
+        indexes, null, encodings, null, false);
+    assertEquals(3, rows.length);
+    assertEquals(false, rows[0]);
+    assertEquals(true, rows[1]);
+    assertEquals(true, rows[2]);
+    assertEquals(1, applier.getExceptionCount()[0]);
+    assertEquals(0, applier.getExceptionCount()[1]);
   }
 }
