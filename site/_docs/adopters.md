@@ -19,7 +19,7 @@ WritableComparable and can be serialized through the MapReduce shuffle.
 Apache Hive was the original use case and home for ORC.  ORC's strong
 type system, advanced compression, column projection, predicate push
 down, and vectorization support make Hive [perform
-better](http://hortonworks.com/blog/orcfile-in-hdp-2-better-compression-better-performance/)
+better](https://hortonworks.com/blog/orcfile-in-hdp-2-better-compression-better-performance/)
 than any other format for your data.
 
 ### [Apache Nifi](https://nifi.apache.org/)
@@ -31,12 +31,12 @@ ORC files.
 ### [Apache Pig](https://pig.apache.org/)
 
 Apache Pig added support for reading and writing ORC files in [Pig
-14.0](http://hortonworks.com/blog/announcing-apache-pig-0-14-0/).
+14.0](https://hortonworks.com/blog/announcing-apache-pig-0-14-0/).
 
 ### [Apache Spark](https://spark.apache.org/)
 
 Apache Spark has [added
-support](http://hortonworks.com/blog/bringing-orc-support-into-apache-spark/)
+support](https://hortonworks.com/blog/bringing-orc-support-into-apache-spark/)
 for reading and writing ORC files with support for column project and
 predicate push down.
 

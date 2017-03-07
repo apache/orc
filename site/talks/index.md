@@ -10,7 +10,7 @@ Watch some presentations and read through some slide decks about ORC.
 ## Videos
 
 * ORC File & Vectorization - Improving Hive Data Storage and Query Performance
-  [slides](http://www.slideshare.net/oom65/orc-andvectorizationhadoopsummit)
+  [slides](https://www.slideshare.net/oom65/orc-andvectorizationhadoopsummit)
  
     Owen O'Malley and Eric Hanson at Hadoop Summit: San Jose 2013
 
@@ -19,7 +19,7 @@ Watch some presentations and read through some slide decks about ORC.
             allowfullscreen></iframe>
 
 * ORC 2015: Faster, Better, Smaller
-  [slides](http://www.slideshare.net/t3rmin4t0r/orc-2015)
+  [slides](https://www.slideshare.net/t3rmin4t0r/orc-2015)
 
     Gopal Vijayaraghavan at Hadoop Summit: Brussels 2015
 
@@ -28,7 +28,7 @@ Watch some presentations and read through some slide decks about ORC.
             allowfullscreen></iframe>
 
 * Adding ACID Updates to Hive
-  [slides](http://www.slideshare.net/alanfgates/hive-acidupdatessummitsjc2014)
+  [slides](https://www.slideshare.net/alanfgates/hive-acidupdatessummitsjc2014)
 
     Owen O'Malley and Alan Gates at Hadoop Summit: San Jose 2014
 
@@ -38,7 +38,7 @@ Watch some presentations and read through some slide decks about ORC.
 
 ## Slides
 
-* [File Format Benchmarks: Avro, JSON, ORC, & Parquet](http://www.slideshare.net/oom65/file-format-benchmarks-avro-json-orc-parquet)
+* [File Format Benchmarks: Avro, JSON, ORC, & Parquet](https://www.slideshare.net/oom65/file-format-benchmarks-avro-json-orc-parquet)
 
     Owen O'Malley at Hadoop Summit San Jose 2016
 
@@ -47,7 +47,7 @@ Watch some presentations and read through some slide decks about ORC.
     scrolling="no" style="border:1px solid #CCC; border-width:1px;
     margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe>
 
-* [ORC Files](http://www.slideshare.net/oom65/orc-files)
+* [ORC Files](https://www.slideshare.net/oom65/orc-files)
 
     Owen O'Malley at Berlin Buzzwords 2013
 
@@ -56,7 +56,7 @@ Watch some presentations and read through some slide decks about ORC.
     scrolling="no" style="border:1px solid #CCC; border-width:1px;
     margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe>
 
-* [A Perfect Hive Query for a Perfect Meeting](http://www.slideshare.net/AdamKawa/a-perfect-hive-query-for-a-perfect-meeting-hadoop-summit-2014)
+* [A Perfect Hive Query for a Perfect Meeting](https://www.slideshare.net/AdamKawa/a-perfect-hive-query-for-a-perfect-meeting-hadoop-summit-2014)
 
     Adam Kawa at Hadoop Summit: San Jose 2014
 

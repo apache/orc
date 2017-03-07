@@ -10,7 +10,7 @@ Need help with ORC? Try these resources.
 The best option is to send email to the user list
 [user@orc.apache.org](mailto:user@orc.apache.org), which is for user
 discussions. All of the historic traffic is available in the
-[archive](http://mail-archives.apache.org/mod_mbox/orc-user/). To
+[archive](https://mail-archives.apache.org/mod_mbox/orc-user/). To
 subscribe to the user list, please send email to
 [user-subscribe@orc.apache.org](mailto:user-subscribe@orc.apache.org).
 
@@ -22,7 +22,7 @@ patches!
 
 ## StackOverflow
 
-[StackOverflow](http://stackoverflow.com) is a wonderful resource for
+[StackOverflow](https://stackoverflow.com) is a wonderful resource for
 any developer. Take a look over there to see if someone has answered
 your question.
 

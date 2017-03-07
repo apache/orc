@@ -24,11 +24,11 @@ complete set of types in Hive, including the complex types: structs,
 lists, maps, and unions.
 
 Many large Hadoop users have adopted ORC. For instance, Facebook uses
-ORC to [save tens of petabytes](http://s.apache.org/fb-scaling-300-pb)
+ORC to [save tens of petabytes](https://s.apache.org/fb-scaling-300-pb)
 in their data warehouse and demonstrated that ORC is [significantly
-faster](http://s.apache.org/presto-orc) than RC File or Parquet. Yahoo
+faster](https://s.apache.org/presto-orc) than RC File or Parquet. Yahoo
 uses ORC to store their production data and has released some of their
-[benchmark results](http://s.apache.org/yahoo-orc).
+[benchmark results](https://s.apache.org/yahoo-orc).
 
 ORC files are divided in to *stripes* that are roughly 64MB by
 default. The stripes in a file are independent of each other and form

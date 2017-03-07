@@ -11,10 +11,10 @@ file's tail consists of 3 parts; the file metadata, file footer and
 postscript.
 
 The metadata for ORC is stored using
-[Protocol Buffers](http://s.apache.org/protobuf_encoding), which provides
+[Protocol Buffers](https://s.apache.org/protobuf_encoding), which provides
 the ability to add new fields without breaking readers. This document
 incorporates the Protobuf definition from the
-[ORC source code](http://s.apache.org/orc_proto) and the
+[ORC source code](https://s.apache.org/orc_proto) and the
 reader is encouraged to review the Protobuf encoding if they need to
 understand the byte-level encoding
 

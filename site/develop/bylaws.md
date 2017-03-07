@@ -12,12 +12,12 @@ who may vote, how voting works, how conflicts are resolved, etc.
 ORC is a project of the Apache Software Foundation (ASF) and the foundation
 holds the trademark on the name "ORC" and copyright on the combined
 code base. The [Apache Foundation
-FAQ](http://www.apache.org/foundation/faq.html) and
-[How-It-Works](http://www.apache.org/foundation/how-it-works.html)
+FAQ](https://www.apache.org/foundation/faq.html) and
+[How-It-Works](https://www.apache.org/foundation/how-it-works.html)
 explain the operation and background of the foundation.
 
 Apache has a [code of
-conduct](http://www.apache.org/foundation/policies/conduct.html) that
+conduct](https://www.apache.org/foundation/policies/conduct.html) that
 it expects its members to follow. In particular:
 
 * Be **open and welcoming**. It is important that we grow and
@@ -33,7 +33,7 @@ it expects its members to follow. In particular:
 ORC is typical of Apache projects in that it operates under a set of
 principles, known collectively as the "Apache Way". If you are new to
 Apache development, please refer to the [Incubator
-project](http://incubator.apache.org/) for more
+project](https://incubator.apache.org/) for more
 information on how Apache projects operate.
 
 ## Roles and Responsibilities
@@ -84,7 +84,7 @@ All Apache committers are required to have a signed [Individual
 Contributor License
 Agreement](https://www.apache.org/licenses/icla.txt) (ICLA) on file
 with the Apache Software Foundation. There is a [Committer
-FAQ](http://www.apache.org/dev/committers.html) which provides more
+FAQ](https://www.apache.org/dev/committers.html) which provides more
 details on the requirements for Committers.
 
 A committer who makes a
@@ -140,7 +140,7 @@ project.
 
 When the project desires a new PMC chair, the PMC votes to recommend a
 new chair using [Single Transferable
-Vote](http://wiki.apache.org/general/BoardVoting) voting. The decision
+Vote](https://wiki.apache.org/general/BoardVoting) voting. The decision
 must be ratified by the Apache board.
 
 ## Decision Making

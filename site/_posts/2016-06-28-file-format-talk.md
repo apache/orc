@@ -23,7 +23,7 @@ The benchmarks look at a set of three very common use cases:
 
 You can see the slides here:
 
-[File Format Benchmarks: Avro, JSON, ORC, & Parquet](http://www.slideshare.net/oom65/file-format-benchmarks-avro-json-orc-parquet)
+[File Format Benchmarks: Avro, JSON, ORC, & Parquet](https://www.slideshare.net/oom65/file-format-benchmarks-avro-json-orc-parquet)
 
 <iframe src="//www.slideshare.net/slideshow/embed_code/key/fSn4xuYXBXGvlx"
 width="595" height="485" frameborder="0" marginwidth="0" marginheight="0"
