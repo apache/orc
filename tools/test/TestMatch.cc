@@ -441,16 +441,17 @@ namespace orc {
                                        262144,
                                        10000,
                                        std::map<std::string, std::string>()),
-                    OrcFileDescription("orc_split_elim.orc",
-                                       "orc_split_elim.jsn.gz",
+                    OrcFileDescription("orc_split_elim_new.orc",
+                                       "orc_split_elim_new.jsn.gz",
                                        ("struct<userid:bigint,string1:string,"
-                                        "subtype:double,decimal1:decimal(0,0),"
+                                        "subtype:double,"
+					"decimal1:decimal(16,6),"
                                         "ts:timestamp>"),
                                        "0.12",
                                        25000,
-                                       245568,
-                                       5,
-                                       CompressionKind_NONE,
+                                       1981,
+                                       1,
+                                       CompressionKind_ZLIB,
                                        262144,
                                        10000,
                                        std::map<std::string, std::string>()),
