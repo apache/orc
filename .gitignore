@@ -1,5 +1,8 @@
 build
 target
+.classpath*
+.project
+.settings
 *~
 *.iml
 *.ipr
