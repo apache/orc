@@ -290,7 +290,7 @@ public class OrcFile {
   /**
    * Options for creating ORC file writers.
    */
-  public static class WriterOptions {
+  public static class WriterOptions implements Cloneable {
     private final Configuration configuration;
     private FileSystem fileSystemValue = null;
     private TypeDescription schema = null;
@@ -349,6 +349,18 @@ public class OrcFile {
           BloomFilterVersion.fromString(
               OrcConf.BLOOM_FILTER_WRITE_VERSION.getString(tableProperties,
                   conf));
+    }
+
+    /**
+     * @return a SHALLOW clone
+     */
+    public WriterOptions clone() {
+      try {
+        return (WriterOptions) super.clone();
+      }
+      catch(CloneNotSupportedException ex) {
+        throw new AssertionError("Expected super.clone() to work");
+      }
     }
 
     /**
