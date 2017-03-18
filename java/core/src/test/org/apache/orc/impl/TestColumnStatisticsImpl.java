@@ -30,8 +30,6 @@ import org.apache.orc.TypeDescription;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.TimeZone;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -80,9 +78,7 @@ public class TestColumnStatisticsImpl {
     Reader reader = OrcFile.createReader(file, OrcFile.readerOptions(conf));
     TimestampColumnStatistics stats =
         (TimestampColumnStatistics) reader.getStatistics()[0];
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
-    sdf.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
-    assertEquals("1995-01-01 00:00:00.688", sdf.format(stats.getMinimum()));
-    assertEquals("2037-01-01 00:00:00.0", sdf.format(stats.getMaximum()));
+    assertEquals("1995-01-01 00:00:00.688", stats.getMinimum().toString());
+    assertEquals("2037-01-01 00:00:00.0", stats.getMaximum().toString());
   }
 }
