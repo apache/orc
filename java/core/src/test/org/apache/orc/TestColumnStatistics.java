@@ -183,6 +183,7 @@ public class TestColumnStatistics {
   public void testTimestampMergeLA() throws Exception {
     TypeDescription schema = TypeDescription.createTimestamp();
 
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
     TimeZone original = TimeZone.getDefault();
     TimeZone.setDefault(TimeZone.getTimeZone("America/Los_Angeles"));
     ColumnStatisticsImpl stats1 = ColumnStatisticsImpl.create(schema);
@@ -194,26 +195,27 @@ public class TestColumnStatistics {
     stats2.updateTimestamp(parseTime("2000-10-29 03:30:00"));
     stats2.increment(2);
     TimestampColumnStatistics typed = (TimestampColumnStatistics) stats1;
-    assertEquals("2000-04-02 01:30:00.0", typed.getMinimum().toString());
-    assertEquals("2000-04-02 03:30:00.0", typed.getMaximum().toString());
+    assertEquals("2000-04-02 01:30:00.0", sdf.format(typed.getMinimum()));
+    assertEquals("2000-04-02 03:30:00.0", sdf.format(typed.getMaximum()));
     stats1.merge(stats2);
-    assertEquals("2000-04-02 01:30:00.0", typed.getMinimum().toString());
-    assertEquals("2000-10-29 03:30:00.0", typed.getMaximum().toString());
+    assertEquals("2000-04-02 01:30:00.0", sdf.format(typed.getMinimum()));
+    assertEquals("2000-10-29 03:30:00.0", sdf.format(typed.getMaximum()));
     stats1.reset();
     stats1.updateTimestamp(parseTime("1999-04-04 00:00:00"));
     stats1.updateTimestamp(parseTime("2009-03-08 12:00:00"));
     stats1.merge(stats2);
-    assertEquals("1999-04-04 00:00:00.0", typed.getMinimum().toString());
-    assertEquals("2009-03-08 12:00:00.0", typed.getMaximum().toString());
+    assertEquals("1999-04-04 00:00:00.0", sdf.format(typed.getMinimum()));
+    assertEquals("2009-03-08 12:00:00.0", sdf.format(typed.getMaximum()));
 
     // serialize and read back in with phoenix timezone
     OrcProto.ColumnStatistics serial = stats2.serialize().build();
     TimeZone.setDefault(TimeZone.getTimeZone("America/Phoenix"));
+
     ColumnStatisticsImpl stats3 = ColumnStatisticsImpl.deserialize(serial);
-    assertEquals("2000-10-29 01:30:00.0",
-        ((TimestampColumnStatistics) stats3).getMinimum().toString());
-    assertEquals("2000-10-29 03:30:00.0",
-        ((TimestampColumnStatistics) stats3).getMaximum().toString());
+    assertEquals("2000-10-29 01:30:00.0", sdf.format(
+        ((TimestampColumnStatistics) stats3).getMinimum()));
+    assertEquals("2000-10-29 03:30:00.0", sdf.format(
+        ((TimestampColumnStatistics) stats3).getMaximum()));
     TimeZone.setDefault(original);
   }
 
