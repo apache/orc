@@ -17,6 +17,8 @@
  */
 package org.apache.orc.impl;
 
+import org.apache.orc.CompressionKind;
+
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Date;
@@ -73,7 +75,6 @@ public class RecordReaderImpl implements RecordReader {
       new ArrayList<StripeInformation>();
   private OrcProto.StripeFooter stripeFooter;
   private final long totalRowCount;
-  private final CompressionCodec codec;
   protected final TypeDescription schema;
   private final List<OrcProto.Type> types;
   private final int bufferSize;
@@ -98,7 +99,7 @@ public class RecordReaderImpl implements RecordReader {
   private final DataReader dataReader;
   private final boolean ignoreNonUtf8BloomFilter;
   private final OrcFile.WriterVersion writerVersion;
-
+  
   /**
    * Given a list of column names, find the given column and return the index.
    *
@@ -205,7 +206,6 @@ public class RecordReaderImpl implements RecordReader {
     }
     this.schema = evolution.getReaderSchema();
     this.path = fileReader.path;
-    this.codec = fileReader.codec;
     this.types = fileReader.types;
     this.bufferSize = fileReader.bufferSize;
     this.rowIndexStride = fileReader.rowIndexStride;
@@ -252,7 +252,6 @@ public class RecordReaderImpl implements RecordReader {
               .build());
     }
     this.dataReader.open();
-
     firstRow = skippedRows;
     totalRowCount = rows;
     Boolean skipCorrupt = options.getSkipCorruptRecords();
@@ -973,7 +972,8 @@ public class RecordReaderImpl implements RecordReader {
     DiskRangeList toRead = new DiskRangeList(start, end);
     bufferChunks = dataReader.readFileData(toRead, stripe.getOffset(), false);
     List<OrcProto.Stream> streamDescriptions = stripeFooter.getStreamsList();
-    createStreams(streamDescriptions, bufferChunks, null, codec, bufferSize, streams);
+    createStreams(streamDescriptions, bufferChunks, null,
+        dataReader.getCompressionCodec(), bufferSize, streams);
   }
 
   /**
@@ -1055,7 +1055,7 @@ public class RecordReaderImpl implements RecordReader {
   private void readPartialDataStreams(StripeInformation stripe) throws IOException {
     List<OrcProto.Stream> streamList = stripeFooter.getStreamsList();
     DiskRangeList toRead = planReadPartialDataStreams(streamList,
-        indexes, fileIncluded, includedRowGroups, codec != null,
+        indexes, fileIncluded, includedRowGroups, dataReader.getCompressionCodec() != null,
         stripeFooter.getColumnsList(), types, bufferSize, true);
     if (LOG.isDebugEnabled()) {
       LOG.debug("chunks = " + RecordReaderUtils.stringifyDiskRanges(toRead));
@@ -1065,7 +1065,8 @@ public class RecordReaderImpl implements RecordReader {
       LOG.debug("merge = " + RecordReaderUtils.stringifyDiskRanges(bufferChunks));
     }
 
-    createStreams(streamList, bufferChunks, fileIncluded, codec, bufferSize, streams);
+    createStreams(streamList, bufferChunks, fileIncluded,
+        dataReader.getCompressionCodec(), bufferSize, streams);
   }
 
   /**
@@ -1316,5 +1317,9 @@ public class RecordReaderImpl implements RecordReader {
       result[i] = lastRoot.getSubtypes(index);
     }
     return result;
+  }
+
+  public CompressionCodec getCompressionCodec() {
+    return dataReader.getCompressionCodec();
   }
 }
