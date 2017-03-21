@@ -29,6 +29,7 @@ public class SnappyCodec extends AircompressorCodec
   private static final HadoopShims SHIMS = HadoopShims.Factory.get();
 
   Boolean direct = null;
+  HadoopShims.DirectDecompressor decompressShim = null;
 
   SnappyCodec() {
     super(new SnappyCompressor(), new SnappyDecompressor());
@@ -47,12 +48,8 @@ public class SnappyCodec extends AircompressorCodec
   public boolean isAvailable() {
     if (direct == null) {
       try {
-        if (SHIMS.getDirectDecompressor(
-            HadoopShims.DirectCompressionType.SNAPPY) != null) {
-          direct = Boolean.valueOf(true);
-        } else {
-          direct = Boolean.valueOf(false);
-        }
+        ensureShim();
+        direct = (decompressShim != null);
       } catch (UnsatisfiedLinkError ule) {
         direct = Boolean.valueOf(false);
       }
@@ -63,9 +60,30 @@ public class SnappyCodec extends AircompressorCodec
   @Override
   public void directDecompress(ByteBuffer in, ByteBuffer out)
       throws IOException {
-    HadoopShims.DirectDecompressor decompressShim =
-        SHIMS.getDirectDecompressor(HadoopShims.DirectCompressionType.SNAPPY);
+    ensureShim();
     decompressShim.decompress(in, out);
     out.flip(); // flip for read
+  }
+
+  private void ensureShim() {
+    if (decompressShim == null) {
+      decompressShim = SHIMS.getDirectDecompressor(HadoopShims.DirectCompressionType.SNAPPY);
+    }
+  }
+
+  @Override
+  public void reset() {
+    super.reset();
+    if (decompressShim != null) {
+      decompressShim.reset();
+    }
+  }
+
+  @Override
+  public void close() {
+    super.close();
+    if (decompressShim != null) {
+      decompressShim.end();
+    }
   }
 }

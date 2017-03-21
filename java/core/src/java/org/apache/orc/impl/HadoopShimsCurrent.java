@@ -21,6 +21,7 @@ package org.apache.orc.impl;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.compress.snappy.SnappyDecompressor;
+import org.apache.hadoop.io.compress.snappy.SnappyDecompressor.SnappyDirectDecompressor;
 import org.apache.hadoop.io.compress.zlib.ZlibDecompressor;
 
 import java.io.DataInputStream;
@@ -33,16 +34,47 @@ import java.nio.ByteBuffer;
  */
 public class HadoopShimsCurrent implements HadoopShims {
 
-  private static class DirectDecompressWrapper implements DirectDecompressor {
-    private final org.apache.hadoop.io.compress.DirectDecompressor root;
+  private static class SnappyDirectDecompressWrapper implements DirectDecompressor {
+    private final SnappyDirectDecompressor root;
 
-    DirectDecompressWrapper(org.apache.hadoop.io.compress.DirectDecompressor root) {
+    SnappyDirectDecompressWrapper(SnappyDirectDecompressor root) {
       this.root = root;
     }
 
-    public void decompress(ByteBuffer input,
-                           ByteBuffer output) throws IOException {
+    public void decompress(ByteBuffer input, ByteBuffer output) throws IOException {
       root.decompress(input, output);
+    }
+
+    @Override
+    public void reset() {
+      root.reset();
+    }
+
+    @Override
+    public void end() {
+      root.end();
+    }
+  }
+
+  private static class ZlibDirectDecompressWrapper implements DirectDecompressor {
+    private final ZlibDecompressor.ZlibDirectDecompressor root;
+
+    ZlibDirectDecompressWrapper(ZlibDecompressor.ZlibDirectDecompressor root) {
+      this.root = root;
+    }
+
+    public void decompress(ByteBuffer input, ByteBuffer output) throws IOException {
+      root.decompress(input, output);
+    }
+
+    @Override
+    public void reset() {
+      root.reset();
+    }
+
+    @Override
+    public void end() {
+      root.end();
     }
   }
 
@@ -50,14 +82,14 @@ public class HadoopShimsCurrent implements HadoopShims {
       DirectCompressionType codec) {
     switch (codec) {
       case ZLIB:
-        return new DirectDecompressWrapper
+        return new ZlibDirectDecompressWrapper
             (new ZlibDecompressor.ZlibDirectDecompressor());
       case ZLIB_NOHEADER:
-        return new DirectDecompressWrapper
+        return new ZlibDirectDecompressWrapper
             (new ZlibDecompressor.ZlibDirectDecompressor
                 (ZlibDecompressor.CompressionHeader.NO_HEADER, 0));
       case SNAPPY:
-        return new DirectDecompressWrapper
+        return new SnappyDirectDecompressWrapper
             (new SnappyDecompressor.SnappyDirectDecompressor());
       default:
         return null;

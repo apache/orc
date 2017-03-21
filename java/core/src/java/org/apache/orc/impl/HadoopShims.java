@@ -38,6 +38,8 @@ public interface HadoopShims {
 
   interface DirectDecompressor {
     void decompress(ByteBuffer var1, ByteBuffer var2) throws IOException;
+    void reset();
+    void end();
   }
 
   /**

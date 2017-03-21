@@ -104,7 +104,6 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
   private long adjustedStripeSize;
   private final int rowIndexStride;
   private final CompressionKind compress;
-  private final CompressionCodec codec;
   private int bufferSize;
   private final long blockSize;
   private final TypeDescription schema;
@@ -167,7 +166,6 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     this.rowIndexStride = opts.getRowIndexStride();
     this.memoryManager = opts.getMemoryManager();
     buildIndex = rowIndexStride > 0;
-    codec = createCodec(compress);
     int numColumns = schema.getMaximumId() + 1;
     if (opts.isEnforceBufferSize()) {
       this.bufferSize = opts.getBufferSize();
@@ -297,18 +295,20 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
   }
 
   CompressionCodec getCustomizedCodec(OrcProto.Stream.Kind kind) {
-    CompressionCodec result = codec;
-    if (codec != null) {
+    // TODO: modify may create a new codec here. We want to end() it when the stream is closed,
+    //       but at this point there's no close() for the stream.
+    CompressionCodec result = physicalWriter.getCompressionCodec();
+    if (result != null) {
       switch (kind) {
         case BLOOM_FILTER:
         case DATA:
         case DICTIONARY_DATA:
         case BLOOM_FILTER_UTF8:
           if (compressionStrategy == OrcFile.CompressionStrategy.SPEED) {
-            result = codec.modify(EnumSet.of(CompressionCodec.Modifier.FAST,
+            result = result.modify(EnumSet.of(CompressionCodec.Modifier.FAST,
                 CompressionCodec.Modifier.TEXT));
           } else {
-            result = codec.modify(EnumSet.of(CompressionCodec.Modifier.DEFAULT,
+            result = result.modify(EnumSet.of(CompressionCodec.Modifier.DEFAULT,
                 CompressionCodec.Modifier.TEXT));
           }
           break;
@@ -318,7 +318,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
         case ROW_INDEX:
         case SECONDARY:
           // easily compressed using the fastest modes
-          result = codec.modify(EnumSet.of(CompressionCodec.Modifier.FASTEST,
+          result = result.modify(EnumSet.of(CompressionCodec.Modifier.FASTEST,
               CompressionCodec.Modifier.BINARY));
           break;
         default:
@@ -379,7 +379,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
      * @return are the streams compressed
      */
     public boolean isCompressed() {
-      return codec != null;
+      return physicalWriter.getCompressionCodec() != null;
     }
 
     /**
@@ -2951,5 +2951,9 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     // add the column statistics
     writeFileStatistics(builder, treeWriter);
     return ReaderImpl.deserializeStats(builder.getStatisticsList());
+  }
+
+  public CompressionCodec getCompressionCodec() {
+    return physicalWriter.getCompressionCodec();
   }
 }
