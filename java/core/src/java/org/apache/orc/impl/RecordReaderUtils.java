@@ -31,6 +31,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.io.DiskRange;
 import org.apache.hadoop.hive.common.io.DiskRangeList;
 import org.apache.orc.CompressionCodec;
+import org.apache.orc.CompressionKind;
 import org.apache.orc.DataReader;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
@@ -150,12 +151,14 @@ public class RecordReaderUtils {
     private final CompressionCodec codec;
     private final int bufferSize;
     private final int typeCount;
+    private CompressionKind compressionKind;
 
     private DefaultDataReader(DataReaderProperties properties) {
       this.fs = properties.getFileSystem();
       this.path = properties.getPath();
       this.useZeroCopy = properties.getZeroCopy();
-      this.codec = WriterImpl.createCodec(properties.getCompression());
+      this.compressionKind = properties.getCompression();
+      this.codec = OrcCodecPool.getCodec(compressionKind);
       this.bufferSize = properties.getBufferSize();
       this.typeCount = properties.getTypeCount();
       if (useZeroCopy) {
@@ -277,6 +280,9 @@ public class RecordReaderUtils {
 
     @Override
     public void close() throws IOException {
+      if (codec != null) {
+        OrcCodecPool.returnCodec(compressionKind, codec);
+      }
       if (pool != null) {
         pool.clear();
       }
@@ -307,6 +313,10 @@ public class RecordReaderUtils {
       }
     }
 
+    @Override
+    public CompressionCodec getCompressionCodec() {
+      return codec;
+    }
   }
 
   public static DataReader createDefaultDataReader(DataReaderProperties properties) {

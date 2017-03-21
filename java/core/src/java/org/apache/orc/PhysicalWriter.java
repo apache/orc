@@ -130,4 +130,6 @@ public interface PhysicalWriter {
                        OrcProto.StripeInformation.Builder dirEntry
                        ) throws IOException;
 
+  /** Gets a compression codec used by this writer. */
+  CompressionCodec getCompressionCodec();
 }

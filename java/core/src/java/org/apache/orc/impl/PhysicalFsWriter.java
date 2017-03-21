@@ -56,6 +56,7 @@ public class PhysicalFsWriter implements PhysicalWriter {
   private final double paddingTolerance;
   private final long defaultStripeSize;
   private final CompressionKind compress;
+  private final CompressionCodec codec;
   private final boolean addBlockPadding;
 
   // the streams that make up the current stripe
@@ -89,10 +90,15 @@ public class PhysicalFsWriter implements PhysicalWriter {
         compress, bufferSize);
     rawWriter = fs.create(path, false, HDFS_BUFFER_SIZE,
         fs.getDefaultReplication(path), blockSize);
-    CompressionCodec codec = WriterImpl.createCodec(compress);
+    codec = OrcCodecPool.getCodec(compress);
     writer = new OutStream("metadata", bufferSize, codec,
         new DirectStream(rawWriter));
     protobufWriter = CodedOutputStream.newInstance(writer);
+  }
+
+  @Override
+  public CompressionCodec getCompressionCodec() {
+    return codec;
   }
 
   private void padStripe(long indexSize, long dataSize, int footerSize) throws IOException {
@@ -218,6 +224,7 @@ public class PhysicalFsWriter implements PhysicalWriter {
 
   @Override
   public void close() throws IOException {
+    OrcCodecPool.returnCodec(compress, codec);
     rawWriter.close();
   }
 

@@ -86,10 +86,6 @@ public final class OrcTail {
     return CompressionKind.valueOf(fileTail.getPostscript().getCompression().name());
   }
 
-  public CompressionCodec getCompressionCodec() {
-    return WriterImpl.createCodec(getCompressionKind());
-  }
-
   public int getCompressionBufferSize() {
     return (int) fileTail.getPostscript().getCompressionBlockSize();
   }
@@ -108,9 +104,13 @@ public final class OrcTail {
   public List<OrcProto.StripeStatistics> getStripeStatisticsProto() throws IOException {
     if (serializedTail == null) return null;
     if (metadata == null) {
-      metadata = extractMetadata(serializedTail, 0,
-          (int) fileTail.getPostscript().getMetadataLength(),
-          getCompressionCodec(), getCompressionBufferSize());
+      CompressionCodec codec = OrcCodecPool.getCodec(getCompressionKind());
+      try {
+        metadata = extractMetadata(serializedTail, 0,
+            (int) fileTail.getPostscript().getMetadataLength(), codec, getCompressionBufferSize());
+      } finally {
+        OrcCodecPool.returnCodec(getCompressionKind(), codec);
+      }
       // clear does not clear the contents but sets position to 0 and limit = capacity
       serializedTail.clear();
     }

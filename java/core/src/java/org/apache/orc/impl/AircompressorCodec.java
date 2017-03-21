@@ -99,4 +99,14 @@ public class AircompressorCodec implements CompressionCodec {
     // snappy allows no modifications
     return this;
   }
+
+  @Override
+  public void reset() {
+    // Nothing to do.
+  }
+
+  @Override
+  public void close() {
+    // Nothing to do.
+  }
 }

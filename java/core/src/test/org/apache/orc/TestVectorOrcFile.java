@@ -18,6 +18,12 @@
 
 package org.apache.orc;
 
+import org.apache.orc.impl.OrcCodecPool;
+
+import org.apache.orc.impl.WriterImpl;
+
+import org.apache.orc.OrcFile.WriterOptions;
+
 import com.google.common.collect.Lists;
 
 import org.apache.orc.impl.ReaderImpl;
@@ -70,11 +76,7 @@ import java.util.Map;
 import java.util.Random;
 
 import static junit.framework.TestCase.assertNotNull;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Tests for the vectorized reader and writer for ORC files.
@@ -1703,16 +1705,8 @@ public class TestVectorOrcFile {
                                          .compress(CompressionKind.SNAPPY)
                                          .bufferSize(100));
     VectorizedRowBatch batch = schema.createRowBatch();
-    Random rand = new Random(12);
-    batch.size = 1000;
-    for(int b=0; b < 10; ++b) {
-      for (int r=0; r < 1000; ++r) {
-        ((LongColumnVector) batch.cols[0]).vector[r] = rand.nextInt();
-        ((BytesColumnVector) batch.cols[1]).setVal(r,
-            Integer.toHexString(rand.nextInt()).getBytes());
-      }
-      writer.addRowBatch(batch);
-    }
+    Random rand;
+    writeRandomIntBytesBatches(writer, batch, 10, 1000);
     writer.close();
     Reader reader = OrcFile.createReader(testFilePath,
         OrcFile.readerOptions(conf).filesystem(fs));
@@ -1831,6 +1825,92 @@ public class TestVectorOrcFile {
     rows.nextBatch(batch);
     assertEquals(0, batch.size);
     rows.close();
+  }
+
+  /**
+   * Read and write a file; verify codec usage.
+   * @throws Exception
+   */
+  @Test
+  public void testCodecPool() throws Exception {
+    TypeDescription schema = createInnerSchema();
+    VectorizedRowBatch batch = schema.createRowBatch();
+    WriterOptions opts = OrcFile.writerOptions(conf)
+        .setSchema(schema).stripeSize(1000).bufferSize(100);
+
+    CompressionCodec snappyCodec, zlibCodec;
+    snappyCodec = writeBatchesAndGetCodec(10, 1000, opts.compress(CompressionKind.SNAPPY), batch);
+    assertEquals(1, OrcCodecPool.getPoolSize(CompressionKind.SNAPPY));
+    Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf).filesystem(fs));
+    Assert.assertEquals(CompressionKind.SNAPPY, reader.getCompressionKind());
+    CompressionCodec codec = readBatchesAndGetCodec(reader, 10, 1000);
+    assertEquals(1, OrcCodecPool.getPoolSize(CompressionKind.SNAPPY));
+    assertSame(snappyCodec, codec);
+
+    reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf).filesystem(fs));
+    Assert.assertEquals(CompressionKind.SNAPPY, reader.getCompressionKind());
+    codec = readBatchesAndGetCodec(reader, 10, 1000);
+    assertSame(snappyCodec, codec);
+    assertEquals(1, OrcCodecPool.getPoolSize(CompressionKind.SNAPPY));
+
+    zlibCodec = writeBatchesAndGetCodec(10, 1000, opts.compress(CompressionKind.ZLIB), batch);
+    assertNotSame(snappyCodec, zlibCodec);
+    assertEquals(1, OrcCodecPool.getPoolSize(CompressionKind.ZLIB));
+    codec = writeBatchesAndGetCodec(10, 1000, opts.compress(CompressionKind.ZLIB), batch);
+    assertEquals(1, OrcCodecPool.getPoolSize(CompressionKind.ZLIB));
+    assertSame(zlibCodec, codec);
+
+    assertSame(snappyCodec, OrcCodecPool.getCodec(CompressionKind.SNAPPY));
+    CompressionCodec snappyCodec2 = writeBatchesAndGetCodec(
+        10, 1000, opts.compress(CompressionKind.SNAPPY), batch);
+    assertNotSame(snappyCodec, snappyCodec2);
+    OrcCodecPool.returnCodec(CompressionKind.SNAPPY, snappyCodec);
+    reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf).filesystem(fs));
+    Assert.assertEquals(CompressionKind.SNAPPY, reader.getCompressionKind());
+    codec = readBatchesAndGetCodec(reader, 10, 1000);
+    assertEquals(2, OrcCodecPool.getPoolSize(CompressionKind.SNAPPY));
+    assertTrue(snappyCodec == codec || snappyCodec2 == codec);
+  }
+
+  private CompressionCodec writeBatchesAndGetCodec(int count, int size, WriterOptions opts,
+      VectorizedRowBatch batch) throws IOException {
+    fs.delete(testFilePath, false);
+    Writer writer = OrcFile.createWriter(testFilePath, opts);
+    writeRandomIntBytesBatches(writer, batch, count, size);
+    CompressionCodec codec = ((WriterImpl)writer).getCompressionCodec();
+    writer.close();
+    return codec;
+  }
+
+  private CompressionCodec readBatchesAndGetCodec(
+      Reader reader, int count, int size) throws IOException {
+    RecordReader rows = reader.rows();
+    VectorizedRowBatch batch = reader.getSchema().createRowBatch(size);
+    for (int b = 0; b < count; ++b) {
+      rows.nextBatch(batch);
+    }
+    CompressionCodec codec = ((RecordReaderImpl)rows).getCompressionCodec();
+    rows.close();
+    return codec;
+  }
+
+  private void readRandomBatches(
+      Reader reader, RecordReader rows, int count, int size) throws IOException {
+
+  }
+
+  private void writeRandomIntBytesBatches(
+      Writer writer, VectorizedRowBatch batch, int count, int size) throws IOException {
+    Random rand = new Random(12);
+    batch.size = size;
+    for(int b=0; b < count; ++b) {
+      for (int r=0; r < size; ++r) {
+        ((LongColumnVector) batch.cols[0]).vector[r] = rand.nextInt();
+        ((BytesColumnVector) batch.cols[1]).setVal(r,
+            Integer.toHexString(rand.nextInt()).getBytes());
+      }
+      writer.addRowBatch(batch);
+    }
   }
 
   /**
