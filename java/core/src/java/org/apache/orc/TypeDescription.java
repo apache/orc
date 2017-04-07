@@ -749,7 +749,7 @@ public class TypeDescription
     return startId;
   }
 
-  private TypeDescription(Category category) {
+  public TypeDescription(Category category) {
     this.category = category;
     if (category.isPrimitive) {
       children = null;

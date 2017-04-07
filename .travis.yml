@@ -12,5 +12,7 @@ before_script:
   - mkdir build
   - cd build
   - cmake ..
+env:
+  - MAVEN_OPTS=-Xmx512m
 script:
   - make package test-out
