@@ -193,7 +193,7 @@ integers for the offset and lengths and two `ColumnVector`s for the
 keys and values.
 
 ~~~ java
-public class ListColumnVector extends ColumnVector {
+public class MapColumnVector extends ColumnVector {
   // for each row, the first offset of the child
   public long[] offsets;
   // for each row, the number of elements in the array
