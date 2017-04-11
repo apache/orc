@@ -198,4 +198,26 @@ public class TestTypeDescription {
     thrown.expectMessage("Extra characters at 'struct<i:int>^,'");
     TypeDescription.fromString("struct<i:int>,");
   }
+
+  @Test
+  public void testConnectedListSubtrees() {
+    TypeDescription type =
+        TypeDescription.fromString("struct<field1:array<struct<field2:int>>>");
+    TypeDescription leaf = type.getChildren().get(0)
+        .getChildren().get(0)
+        .getChildren().get(0);
+    assertEquals(3, leaf.getId());
+    assertEquals(0, type.getId());
+    assertEquals(3, leaf.getId());
+  }
+
+  @Test
+  public void testConnectedMapSubtrees() {
+    TypeDescription type =
+        TypeDescription.fromString("struct<field1:map<string,int>>");
+    TypeDescription leaf = type.getChildren().get(0).getChildren().get(0);
+    assertEquals(2, leaf.getId());
+    assertEquals(0, type.getId());
+    assertEquals(2, leaf.getId());
+  }
 }
