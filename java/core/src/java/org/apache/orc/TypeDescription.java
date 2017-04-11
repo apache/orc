@@ -353,18 +353,26 @@ public class TypeDescription
         requireChar(source, ')');
         break;
       }
-      case LIST:
+      case LIST: {
         requireChar(source, '<');
-        result.children.add(parseType(source));
+        TypeDescription child = parseType(source);
+        result.children.add(child);
+        child.parent = result;
         requireChar(source, '>');
         break;
-      case MAP:
+      }
+      case MAP: {
         requireChar(source, '<');
-        result.children.add(parseType(source));
+        TypeDescription keyType = parseType(source);
+        result.children.add(keyType);
+        keyType.parent = result;
         requireChar(source, ',');
-        result.children.add(parseType(source));
+        TypeDescription valueType = parseType(source);
+        result.children.add(valueType);
+        valueType.parent = result;
         requireChar(source, '>');
         break;
+      }
       case UNION:
         parseUnion(result, source);
         break;
