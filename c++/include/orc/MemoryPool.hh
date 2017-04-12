@@ -20,6 +20,7 @@
 #define MEMORYPOOL_HH_
 
 #include "orc/orc-config.hh"
+#include "orc/Int128.hh"
 
 #include <memory>
 
@@ -76,6 +77,70 @@ namespace orc {
     void resize(uint64_t _size);
   };
 
+  // Specializations for char
+
+  template <>
+  DataBuffer<char>::~DataBuffer();
+
+  template <>
+  void DataBuffer<char>::resize(uint64_t newSize);
+
+  // Specializations for char*
+
+  template <>
+  DataBuffer<char*>::~DataBuffer();
+
+  template <>
+  void DataBuffer<char*>::resize(uint64_t newSize);
+
+  // Specializations for double
+
+  template <>
+  DataBuffer<double>::~DataBuffer();
+
+  template <>
+  void DataBuffer<double>::resize(uint64_t newSize);
+
+  // Specializations for int64_t
+
+  template <>
+  DataBuffer<int64_t>::~DataBuffer();
+
+  template <>
+  void DataBuffer<int64_t>::resize(uint64_t newSize);
+
+  // Specializations for uint64_t
+
+  template <>
+  DataBuffer<uint64_t>::~DataBuffer();
+
+  template <>
+  void DataBuffer<uint64_t>::resize(uint64_t newSize);
+
+  // Specializations for unsigned char
+
+  template <>
+  DataBuffer<unsigned char>::~DataBuffer();
+
+  template <>
+  void DataBuffer<unsigned char>::resize(uint64_t newSize);
+
+  #ifdef __clang__
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wweak-template-vtables"
+  #endif
+
+  extern template class DataBuffer<char>;
+  extern template class DataBuffer<char*>;
+  extern template class DataBuffer<double>;
+  extern template class DataBuffer<Int128>;
+  extern template class DataBuffer<int64_t>;
+  extern template class DataBuffer<uint64_t>;
+  extern template class DataBuffer<unsigned char>;
+
+  #ifdef __clang__
+    #pragma clang diagnostic pop
+  #endif
 } // namespace orc
 
 
