@@ -19,15 +19,12 @@
   <includeBaseDirectory>false</includeBaseDirectory>
   <dependencySets>
     <dependencySet>
+      <outputDirectory>/</outputDirectory>
+      <useProjectArtifact>true</useProjectArtifact>
       <unpack>true</unpack>
       <scope>runtime</scope>
     </dependencySet>
   </dependencySets>
-  <fileSets>
-    <fileSet>
-      <directory>${project.build.outputDirectory}</directory>
-    </fileSet>
-  </fileSets>
   <containerDescriptorHandlers>
     <containerDescriptorHandler>
       <handlerName>metaInf-services</handlerName>
