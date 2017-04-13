@@ -13,6 +13,7 @@ before_script:
   - cd build
   - cmake ..
 env:
-  - MAVEN_OPTS=-Xmx512m
+  - MAVEN_OPTS="-Xmx2g -server"
+  - JAVA_TOOL_OPTIONS="-Xmx2g -server"
 script:
   - make package test-out
