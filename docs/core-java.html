@@ -1301,7 +1301,7 @@ handles the map columns and represents the data as two arrays of
 integers for the offset and lengths and two <code>ColumnVector</code>s for the
 keys and values.</p>
 
-<pre><code class="language-java">public class ListColumnVector extends ColumnVector {
+<pre><code class="language-java">public class MapColumnVector extends ColumnVector {
   // for each row, the first offset of the child
   public long[] offsets;
   // for each row, the number of elements in the array
@@ -1347,6 +1347,10 @@ for(int r=0; r &lt; 10000; ++r) {
     writer.addRowBatch(batch);
     batch.reset();
   }
+}
+if (batch.size != 0) {
+  writer.addRowBatch(batch);
+  batch.reset();
 }
 writer.close();
 </code></pre>
