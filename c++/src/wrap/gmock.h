@@ -29,6 +29,7 @@ DIAGNOSTIC_IGNORE("-Wsign-conversion")
 DIAGNOSTIC_IGNORE("-Wundef")
 
 #ifdef __clang__
+  DIAGNOSTIC_IGNORE("-Wnull-dereference")
   DIAGNOSTIC_IGNORE("-Wshift-sign-overflow")
   DIAGNOSTIC_IGNORE("-Wused-but-marked-unused")
   DIAGNOSTIC_IGNORE("-Wweak-vtables")

@@ -244,6 +244,11 @@ for(int r=0; r < 10000; ++r) {
   }
   batch.size++;
 }
+if (batch.size != 0) {
+  writer.addRowBatch(batch);
+  batch.reset();
+}
+
 writer.close();
 ~~~
 
