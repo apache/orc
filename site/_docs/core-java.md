@@ -234,7 +234,7 @@ VectorizedRowBatch batch = schema.createRowBatch();
 LongColumnVector x = (LongColumnVector) batch.cols[0];
 LongColumnVector y = (LongColumnVector) batch.cols[1];
 for(int r=0; r < 10000; ++r) {
-  int row = batch.size;
+  int row = batch.size++;
   x.vector[row] = r;
   y.vector[row] = r * 3;
   // If the batch is full, write it out and start over.
@@ -242,7 +242,6 @@ for(int r=0; r < 10000; ++r) {
     writer.addRowBatch(batch);
     batch.reset();
   }
-  batch.size++;
 }
 if (batch.size != 0) {
   writer.addRowBatch(batch);
