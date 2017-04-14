@@ -314,6 +314,7 @@ for(int r=0; r < 15; ++r) {
         if (batchSizeCounter + 2 + mapElementSize >= batch.getMaxSize()) {
                 writer.addRowBatch(batch);
                 batch.reset();
+                batchSizeCounter = 0;
         }
 }
 
