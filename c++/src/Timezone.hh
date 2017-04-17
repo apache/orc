@@ -49,7 +49,7 @@ namespace orc {
    */
   class Timezone {
   public:
-    virtual ~Timezone();
+    virtual ~Timezone() = 0;
 
     /**
      * Get the variant for the given time (time_t).
@@ -116,7 +116,7 @@ namespace orc {
   /**
    * Parse the POSIX TZ string.
    */
-  std::unique_ptr<FutureRule> parseFutureRule(const std::string& ruleString);
+  std::shared_ptr<FutureRule> parseFutureRule(const std::string& ruleString);
 }
 
 #endif
