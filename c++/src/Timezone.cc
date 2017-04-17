@@ -590,7 +590,7 @@ namespace orc {
   public:
     TimezoneImpl(const std::string& name,
                  const std::vector<unsigned char> bytes);
-    ~TimezoneImpl();
+    virtual ~TimezoneImpl();
 
     /**
      * Get the variant for the given time (time_t).

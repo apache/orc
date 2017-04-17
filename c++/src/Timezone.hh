@@ -49,7 +49,7 @@ namespace orc {
    */
   class Timezone {
   public:
-    virtual ~Timezone() = 0;
+    virtual ~Timezone();
 
     /**
      * Get the variant for the given time (time_t).
