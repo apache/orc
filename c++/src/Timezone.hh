@@ -116,7 +116,7 @@ namespace orc {
   /**
    * Parse the POSIX TZ string.
    */
-  std::unique_ptr<FutureRule> parseFutureRule(const std::string& ruleString);
+  std::shared_ptr<FutureRule> parseFutureRule(const std::string& ruleString);
 }
 
 #endif

@@ -461,8 +461,8 @@ namespace orc {
   /**
    * Parse the POSIX TZ string.
    */
-  std::unique_ptr<FutureRule> parseFutureRule(const std::string& ruleString) {
-    std::unique_ptr<FutureRule> result(new FutureRuleImpl());
+  std::shared_ptr<FutureRule> parseFutureRule(const std::string& ruleString) {
+    std::shared_ptr<FutureRule> result(new FutureRuleImpl());
     FutureRuleParser parser(ruleString,
                             dynamic_cast<FutureRuleImpl*>(result.get()));
     return result;
@@ -636,7 +636,7 @@ namespace orc {
     uint64_t ancientVariant;
 
     // the rule for future times
-    std::unique_ptr<FutureRule> futureRule;
+    std::shared_ptr<FutureRule> futureRule;
 
     // the last explicit transition after which we use the future rule
     int64_t lastTransition;
@@ -651,7 +651,7 @@ namespace orc {
     DIAGNOSTIC_IGNORE("-Wexit-time-destructors")
   #endif
   static std::mutex timezone_mutex;
-  static std::map<std::string, std::unique_ptr<Timezone> > timezoneCache;
+  static std::map<std::string, std::shared_ptr<Timezone> > timezoneCache;
   DIAGNOSTIC_POP
 
   Timezone::~Timezone() {
@@ -691,7 +691,7 @@ namespace orc {
   const Timezone& getTimezoneByFilename(const std::string& filename) {
     // ORC-110
     std::lock_guard<std::mutex> timezone_lock(timezone_mutex);
-    std::map<std::string, std::unique_ptr<Timezone> >::iterator itr =
+    std::map<std::string, std::shared_ptr<Timezone> >::iterator itr =
       timezoneCache.find(filename);
     if (itr != timezoneCache.end()) {
       return *(itr->second).get();
@@ -729,7 +729,7 @@ namespace orc {
       err << "failed to close " << filename << " - " << strerror(errno);
       throw TimezoneError(err.str());
     }
-    timezoneCache[filename].reset(new TimezoneImpl(filename, buffer));
+    timezoneCache[filename] = std::shared_ptr<Timezone>(new TimezoneImpl(filename, buffer));
     return *timezoneCache[filename].get();
   }
 
