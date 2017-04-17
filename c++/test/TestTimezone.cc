@@ -59,7 +59,7 @@ namespace orc {
    * Parse a future rule string and return the parsed rule as a string.
    */
   std::string stringifyRule(const std::string& ruleString) {
-    std::unique_ptr<FutureRule> rule = parseFutureRule(ruleString);
+    std::shared_ptr<FutureRule> rule = parseFutureRule(ruleString);
     std::stringstream buffer;
     rule->print(buffer);
     return buffer.str();
@@ -130,7 +130,7 @@ namespace orc {
   }
 
   TEST(TestTimezone, useFutureRule) {
-    std::unique_ptr<FutureRule> rule =
+    std::shared_ptr<FutureRule> rule =
       parseFutureRule("FOO8BAR,M3.2.0,M11.1.0");
     // 1970
     EXPECT_EQ("FOO", getZoneFromRule(rule.get(), "1970-01-01 00:00:00"));
