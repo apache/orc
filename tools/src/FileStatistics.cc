@@ -19,12 +19,13 @@
 #include "orc/ColumnPrinter.hh"
 #include "Exceptions.hh"
 
+#include <getopt.h>
 #include <string>
 #include <memory>
 #include <iostream>
 #include <string>
 
-void printStatistics(const char *filename) {
+void printStatistics(const char *filename, bool withIndex) {
 
   orc::ReaderOptions opts;
   std::unique_ptr<orc::Reader> reader;
@@ -40,7 +41,7 @@ void printStatistics(const char *filename) {
   }
 
   // test stripe statistics
-  std::unique_ptr<orc::Statistics> stripeStats;
+  std::unique_ptr<orc::StripeStatistics> stripeStats;
   std::cout << "File " << filename << " has " << reader->getNumberOfStripes()
             << " stripes"  << std::endl;
   if (reader->getNumberOfStripeStatistics() == 0) {
@@ -55,21 +56,59 @@ void printStatistics(const char *filename) {
         std::cout << "--- Column " << k << " ---" << std::endl;
         std::cout << stripeStats->getColumnStatistics(k)->toString()
                   << std::endl;
+        if (withIndex) {
+          for(unsigned int r = 0; r < stripeStats->getNumberOfRowIndexStats(k); ++r) {
+            std::cout << "--- RowIndex " << r << " ---" << std::endl;
+            std::cout << stripeStats->getRowIndexStatistics(k, r)->toString()
+                      << std::endl;
+          }
+        }
       }
     }
   }
 }
 
 int main(int argc, char* argv[]) {
-  if (argc < 2) {
-    std::cout << "Usage: orc-statistics <filename>\n";
+  static struct option longOptions[] = {
+    {"help", no_argument, ORC_NULLPTR, 'h'},
+    {"withIndex", no_argument, ORC_NULLPTR, 'i'},
+    {ORC_NULLPTR, 0, ORC_NULLPTR, 0}
+  };
+  const char* filename = NULL;
+  bool withIndex = false;
+  bool helpFlag = false;
+  int opt;
+  do {
+    opt = getopt_long(argc, argv, "hi", longOptions, ORC_NULLPTR);
+    switch (opt) {
+    case '?':
+    case 'h':
+      helpFlag = true;
+      opt = -1;
+      break;
+    case 'i':
+      withIndex = true;
+      break;
+    }
+  } while (opt != -1);
+  argc -= optind;
+  argv += optind;
+
+  if (argc < 1 || helpFlag) {
+    std::cerr
+      << "Usage: orc-statistics [-h] [--help] [-i] [--withIndex]"
+      << " <filenames>\n";
+    exit(1);
   }
 
-  try {
-    printStatistics(argv[1]);
-  } catch (std::exception& ex) {
-    std::cerr << "Caught exception: " << ex.what() << "\n";
-    return 1;
+  for(int i=0; i < argc; ++i) {
+      filename = argv[i];
+      try {
+          printStatistics(filename, withIndex);
+      } catch (std::exception& ex) {
+          std::cerr << "Caught exception: " << ex.what() << "\n";
+          return 1;
+      }
   }
 
   return 0;

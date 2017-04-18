@@ -35,6 +35,11 @@
 
 namespace orc {
 
+  const WriterVersionImpl &WriterVersionImpl::VERSION_HIVE_8732() {
+    static const WriterVersionImpl version(WriterVersion_HIVE_8732);
+    return version;
+  }
+
   uint64_t getCompressionBlockSize(const proto::PostScript& ps) {
     if (ps.has_compressionblocksize()) {
       return ps.compressionblocksize();
@@ -111,7 +116,8 @@ namespace orc {
     }
   }
 
-  void ColumnSelector::updateSelected(std::vector<bool>& selectedColumns, const RowReaderOptions& options) {
+  void ColumnSelector::updateSelected(std::vector<bool>& selectedColumns,
+                                      const RowReaderOptions& options) {
     selectedColumns.assign(static_cast<size_t>(contents->footer->types_size()), false);
     if (contents->schema->getKind() == STRUCT && options.getIndexesSet()) {
       for(std::list<uint64_t>::const_iterator field = options.getInclude().begin();
@@ -136,7 +142,8 @@ namespace orc {
     selectedColumns[0] = true; // column 0 is selected by default
   }
 
-  void ColumnSelector::updateSelectedByFieldId(std::vector<bool>& selectedColumns, uint64_t fieldId) {
+  void ColumnSelector::updateSelectedByFieldId(std::vector<bool>& selectedColumns,
+                                               uint64_t fieldId) {
     if (fieldId < contents->schema->getSubtypeCount()) {
       selectChildren(selectedColumns, *contents->schema->getSubtype(fieldId));
     } else {
@@ -159,7 +166,8 @@ namespace orc {
     }
   }
 
-  void ColumnSelector::updateSelectedByName(std::vector<bool>& selectedColumns, const std::string& fieldName) {
+  void ColumnSelector::updateSelectedByName(std::vector<bool>& selectedColumns,
+                                            const std::string& fieldName) {
     std::map<std::string, uint64_t>::const_iterator ite = nameIdMap.find(fieldName);
     if (ite != nameIdMap.end()) {
       updateSelectedByTypeId(selectedColumns, ite->second);
@@ -463,6 +471,40 @@ namespace orc {
     throw std::range_error("key not found");
   }
 
+  void ReaderImpl::getRowIndexStatistics(
+           uint64_t stripeOffset, const proto::StripeFooter& currentStripeFooter,
+           std::vector<std::vector<proto::ColumnStatistics> >* indexStats) const {
+    int num_streams = currentStripeFooter.streams_size();
+    uint64_t offset = stripeOffset;
+    for (int i = 0; i < num_streams; i++) {
+      const proto::Stream& stream = currentStripeFooter.streams(i);
+      uint64_t length = static_cast<uint64_t>(stream.length());
+      if (static_cast<StreamKind>(stream.kind()) == StreamKind::StreamKind_ROW_INDEX) {
+        std::unique_ptr<SeekableInputStream> pbStream =
+          createDecompressor(contents->compression,
+                  std::unique_ptr<SeekableInputStream>
+                  (new SeekableFileInputStream(contents->stream.get(),
+                                                offset,
+                                                length,
+                                                *contents->pool)),
+                  contents->blockSize,
+                  *(contents->pool));
+
+        proto::RowIndex rowIndex;
+        if (!rowIndex.ParseFromZeroCopyStream(pbStream.get())) {
+          throw ParseError("Failed to parse RowIndex from stripe footer");
+        }
+        int num_entries = rowIndex.entry_size();
+        size_t column = static_cast<size_t>(stream.column());
+        for (int j = 0; j < num_entries; j++) {
+          const proto::RowIndexEntry& entry = rowIndex.entry(j);
+          (*indexStats)[column].push_back(entry.statistics());
+        }
+      }
+      offset += length;
+    }
+  }
+
   bool ReaderImpl::hasMetadataValue(const std::string& key) const {
     for(int i=0; i < footer->metadata_size(); ++i) {
       if (footer->metadata(i).name() == key) {
@@ -476,7 +518,7 @@ namespace orc {
     return *(contents->schema.get());
   }
 
-  std::unique_ptr<Statistics>
+  std::unique_ptr<StripeStatistics>
   ReaderImpl::getStripeStatistics(uint64_t stripeIndex) const {
     if (!isMetadataLoaded) {
       readMetadata();
@@ -484,19 +526,26 @@ namespace orc {
     if (metadata.get() == nullptr) {
       throw std::logic_error("No stripe statistics in file");
     }
+    size_t num_cols = static_cast<size_t>(
+                          metadata->stripestats(
+                              static_cast<int>(stripeIndex)).colstats_size());
+    std::vector<std::vector<proto::ColumnStatistics> > indexStats(num_cols);
+
     proto::StripeInformation currentStripeInfo =
         footer->stripes(static_cast<int>(stripeIndex));
     proto::StripeFooter currentStripeFooter =
         getStripeFooter(currentStripeInfo, *contents.get());
+
+    getRowIndexStatistics(currentStripeInfo.offset(), currentStripeFooter, &indexStats);
 
     const Timezone& writerTZ =
       currentStripeFooter.has_writertimezone() ?
         getTimezoneByName(currentStripeFooter.writertimezone()) :
         getLocalTimezone();
     StatContext statContext(hasCorrectStatistics(), &writerTZ);
-    return std::unique_ptr<Statistics>
-      (new StatisticsImpl(metadata->stripestats
-                          (static_cast<int>(stripeIndex)), statContext));
+    return std::unique_ptr<StripeStatistics>
+           (new StripeStatisticsImpl(metadata->stripestats(static_cast<int>(stripeIndex)),
+                                                   indexStats, statContext));
   }
 
   std::unique_ptr<Statistics> ReaderImpl::getStatistics() const {
@@ -540,7 +589,7 @@ namespace orc {
   }
 
   bool ReaderImpl::hasCorrectStatistics() const {
-    return getWriterVersion() != WriterVersion_ORIGINAL;
+    return !WriterVersionImpl::VERSION_HIVE_8732().compareGT(getWriterVersion());
   }
 
   void ReaderImpl::checkOrcVersion() {

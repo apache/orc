@@ -657,7 +657,8 @@ namespace orc {
     StatisticsImpl& operator=(const StatisticsImpl&);
 
   public:
-    StatisticsImpl(const proto::StripeStatistics& stripeStats, const StatContext& statContext);
+    StatisticsImpl(const proto::StripeStatistics& stripeStats,
+                   const StatContext& statContext);
 
     StatisticsImpl(const proto::Footer& footer, const StatContext& statContext);
 
@@ -674,6 +675,43 @@ namespace orc {
       return static_cast<uint32_t>(colStats.size());
     }
   };
+
+  class StripeStatisticsImpl: public StripeStatistics {
+  private:
+    std::unique_ptr<StatisticsImpl> columnStats;
+    std::vector<std::vector<std::shared_ptr<const ColumnStatistics> > > rowIndexStats;
+
+    // DELIBERATELY NOT IMPLEMENTED
+    StripeStatisticsImpl(const StripeStatisticsImpl&);
+    StripeStatisticsImpl& operator=(const StripeStatisticsImpl&);
+
+  public:
+    StripeStatisticsImpl(const proto::StripeStatistics& stripeStats,
+                   std::vector<std::vector<proto::ColumnStatistics> >& indexStats,
+                   const StatContext& statContext);
+
+    virtual const ColumnStatistics* getColumnStatistics(uint32_t columnId
+                                                        ) const override {
+      return columnStats->getColumnStatistics(columnId);
+    }
+
+    uint32_t getNumberOfColumns() const override {
+      return columnStats->getNumberOfColumns();
+    }
+
+    virtual const ColumnStatistics* getRowIndexStatistics(uint32_t columnId, uint32_t rowIndex
+                                                        ) const override {
+      // check id indices are valid
+      return rowIndexStats[columnId][rowIndex].get();
+    }
+
+    virtual ~StripeStatisticsImpl();
+
+    uint32_t getNumberOfRowIndexStats(uint32_t columnId) const override {
+      return static_cast<uint32_t>(rowIndexStats[columnId].size());
+    }
+  };
+
 
 }// namespace
 

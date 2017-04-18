@@ -31,8 +31,9 @@ add_executable (orc-test
   TestInt128.cc
   TestReader.cc
   TestRle.cc
-  TestTimezone.cc
+  TestStripeIndexStatistics.cc
   TestTimestampStatistics.cc
+  TestTimezone.cc
   TestType.cc
 )
 
