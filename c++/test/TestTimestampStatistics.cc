@@ -42,7 +42,7 @@ namespace orc {
     const orc::TimestampColumnStatistics* footerColStats =
         reinterpret_cast<const orc::TimestampColumnStatistics*>(footerStats.get());
 
-    std::unique_ptr<orc::Statistics> stripeStats = reader->getStripeStatistics(0);
+    std::unique_ptr<orc::StripeStatistics> stripeStats = reader->getStripeStatistics(0);
     const orc::TimestampColumnStatistics* stripeColStats =
         reinterpret_cast<const orc::TimestampColumnStatistics*>(stripeStats->getColumnStatistics(0));
 

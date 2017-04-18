@@ -325,7 +325,7 @@ namespace orc {
      * @param stripeIndex the stripe 0 to N-1 to get statistics about
      * @return the statistics about that stripe
      */
-    virtual ORC_UNIQUE_PTR<Statistics>
+    virtual ORC_UNIQUE_PTR<StripeStatistics>
     getStripeStatistics(uint64_t stripeIndex) const = 0;
 
     /**

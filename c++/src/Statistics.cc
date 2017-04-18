@@ -47,7 +47,8 @@ namespace orc {
     }
   }
 
-  StatisticsImpl::StatisticsImpl(const proto::StripeStatistics& stripeStats, const StatContext& statContext) {
+  StatisticsImpl::StatisticsImpl(const proto::StripeStatistics& stripeStats,
+                                 const StatContext& statContext) {
     for(int i = 0; i < stripeStats.colstats_size(); i++) {
       colStats.push_back(convertColumnStatistics(stripeStats.colstats(i), statContext));
     }
@@ -70,6 +71,29 @@ namespace orc {
   Statistics::~Statistics() {
     // PASS
   }
+
+  StripeStatistics::~StripeStatistics() {
+    // PASS
+  }
+
+  StripeStatisticsImpl::~StripeStatisticsImpl() {
+    // PASS
+  }
+
+  StripeStatisticsImpl::StripeStatisticsImpl(const proto::StripeStatistics& stripeStats,
+                                 std::vector<std::vector<proto::ColumnStatistics> >& indexStats,
+                                 const StatContext& statContext) {
+    columnStats.reset(new StatisticsImpl(stripeStats, statContext));
+    rowIndexStats.resize(indexStats.size());
+    for(size_t i = 0; i < rowIndexStats.size(); i++) {
+      for(size_t j = 0; j < indexStats[i].size(); j++) {
+        rowIndexStats[i].push_back(
+            std::shared_ptr<const ColumnStatistics>(
+                convertColumnStatistics(indexStats[i][j], statContext)));
+      }
+    }
+  }
+
 
   ColumnStatistics::~ColumnStatistics() {
     // PASS
