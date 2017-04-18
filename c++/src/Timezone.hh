@@ -31,6 +31,9 @@
 
 namespace orc {
 
+  static const int64_t SECONDS_PER_HOUR = 60 * 60;
+  static const int64_t SECONDS_PER_DAY = SECONDS_PER_HOUR * 24;
+
   /**
    * A variant  (eg. PST or PDT) of a timezone (eg. America/Los_Angeles).
    */

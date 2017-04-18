@@ -25,39 +25,37 @@
 namespace orc {
 
   ColumnStatistics* convertColumnStatistics(const proto::ColumnStatistics& s,
-                                            bool correctStats) {
+                                            const StatContext& statContext) {
     if (s.has_intstatistics()) {
       return new IntegerColumnStatisticsImpl(s);
     } else if (s.has_doublestatistics()) {
       return new DoubleColumnStatisticsImpl(s);
     } else if (s.has_stringstatistics()) {
-      return new StringColumnStatisticsImpl(s, correctStats);
+      return new StringColumnStatisticsImpl(s, statContext);
     } else if (s.has_bucketstatistics()) {
-      return new BooleanColumnStatisticsImpl(s, correctStats);
+      return new BooleanColumnStatisticsImpl(s, statContext);
     } else if (s.has_decimalstatistics()) {
-      return new DecimalColumnStatisticsImpl(s, correctStats);
+      return new DecimalColumnStatisticsImpl(s, statContext);
     } else if (s.has_timestampstatistics()) {
-      return new TimestampColumnStatisticsImpl(s, correctStats);
+      return new TimestampColumnStatisticsImpl(s, statContext);
     } else if (s.has_datestatistics()) {
-      return new DateColumnStatisticsImpl(s, correctStats);
+      return new DateColumnStatisticsImpl(s, statContext);
     } else if (s.has_binarystatistics()) {
-      return new BinaryColumnStatisticsImpl(s, correctStats);
+      return new BinaryColumnStatisticsImpl(s, statContext);
     } else {
       return new ColumnStatisticsImpl(s);
     }
   }
 
-  StatisticsImpl::StatisticsImpl(const proto::StripeStatistics& stripeStats, bool correctStats) {
+  StatisticsImpl::StatisticsImpl(const proto::StripeStatistics& stripeStats, const StatContext& statContext) {
     for(int i = 0; i < stripeStats.colstats_size(); i++) {
-      colStats.push_back(convertColumnStatistics
-          (stripeStats.colstats(i), correctStats));
+      colStats.push_back(convertColumnStatistics(stripeStats.colstats(i), statContext));
     }
   }
 
-  StatisticsImpl::StatisticsImpl(const proto::Footer& footer, bool correctStats) {
+  StatisticsImpl::StatisticsImpl(const proto::Footer& footer, const StatContext& statContext) {
     for(int i = 0; i < footer.statistics_size(); i++) {
-      colStats.push_back(convertColumnStatistics
-          (footer.statistics(i), correctStats));
+      colStats.push_back(convertColumnStatistics(footer.statistics(i), statContext));
     }
   }
 
@@ -151,9 +149,9 @@ namespace orc {
   }
 
   BinaryColumnStatisticsImpl::BinaryColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb, bool correctStats){
+  (const proto::ColumnStatistics& pb, const StatContext& statContext){
     valueCount = pb.numberofvalues();
-    if (!pb.has_binarystatistics() || !correctStats) {
+    if (!pb.has_binarystatistics() || !statContext.correctStats) {
       _hasTotalLength = false;
 
       totalLength = 0;
@@ -164,9 +162,9 @@ namespace orc {
   }
 
   BooleanColumnStatisticsImpl::BooleanColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb, bool correctStats){
+  (const proto::ColumnStatistics& pb, const StatContext& statContext){
     valueCount = pb.numberofvalues();
-    if (!pb.has_bucketstatistics() || !correctStats) {
+    if (!pb.has_bucketstatistics() || !statContext.correctStats) {
       _hasCount = false;
       trueCount = 0;
     }else{
@@ -176,9 +174,9 @@ namespace orc {
   }
 
   DateColumnStatisticsImpl::DateColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb, bool correctStats){
+  (const proto::ColumnStatistics& pb, const StatContext& statContext){
     valueCount = pb.numberofvalues();
-    if (!pb.has_datestatistics() || !correctStats) {
+    if (!pb.has_datestatistics() || !statContext.correctStats) {
       _hasMinimum = false;
       _hasMaximum = false;
 
@@ -193,9 +191,9 @@ namespace orc {
   }
 
   DecimalColumnStatisticsImpl::DecimalColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb, bool correctStats){
+  (const proto::ColumnStatistics& pb, const StatContext& statContext){
     valueCount = pb.numberofvalues();
-    if (!pb.has_decimalstatistics() || !correctStats) {
+    if (!pb.has_decimalstatistics() || !statContext.correctStats) {
       _hasMinimum = false;
       _hasMaximum = false;
       _hasSum = false;
@@ -258,9 +256,9 @@ namespace orc {
   }
 
   StringColumnStatisticsImpl::StringColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb, bool correctStats){
+  (const proto::ColumnStatistics& pb, const StatContext& statContext){
     valueCount = pb.numberofvalues();
-    if (!pb.has_stringstatistics() || !correctStats) {
+    if (!pb.has_stringstatistics() || !statContext.correctStats) {
       _hasMinimum = false;
       _hasMaximum = false;
       _hasTotalLength = false;
@@ -279,20 +277,55 @@ namespace orc {
   }
 
   TimestampColumnStatisticsImpl::TimestampColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb, bool correctStats) {
+  (const proto::ColumnStatistics& pb, const StatContext& statContext) {
     valueCount = pb.numberofvalues();
-    if (!pb.has_timestampstatistics() || !correctStats) {
+    if (!pb.has_timestampstatistics() || !statContext.correctStats) {
       _hasMinimum = false;
       _hasMaximum = false;
+      _hasLowerBound = false;
+      _hasUpperBound = false;
       minimum = 0;
       maximum = 0;
+      lowerBound = 0;
+      upperBound = 0;
     }else{
       const proto::TimestampStatistics& stats = pb.timestampstatistics();
-      _hasMinimum = stats.has_minimum();
-      _hasMaximum = stats.has_maximum();
+      _hasMinimum = stats.has_minimumutc() || (stats.has_minimum() && (statContext.writerTimezone != NULL));
+      _hasMaximum = stats.has_maximumutc() || (stats.has_maximum() && (statContext.writerTimezone != NULL));
+      _hasLowerBound = stats.has_minimumutc() || stats.has_minimum();
+      _hasUpperBound = stats.has_maximumutc() || stats.has_maximum();
 
-      minimum = stats.minimum();
-      maximum = stats.maximum();
+      // Timestamp stats are stored in milliseconds
+      if (stats.has_minimumutc()) {
+        minimum = stats.minimumutc();
+        lowerBound = minimum;
+      } else if (statContext.writerTimezone) {
+        int64_t writerTimeSec = stats.minimum() / 1000;
+        // multiply the offset by 1000 to convert to millisecond
+        minimum = stats.minimum() + (statContext.writerTimezone->getVariant(writerTimeSec).gmtOffset) * 1000;
+        lowerBound = minimum;
+      } else {
+        minimum = 0;
+        // subtract 1 day 1 hour (25 hours) in milliseconds to handle unknown TZ and daylight savings
+        lowerBound = stats.minimum() - (25 * SECONDS_PER_HOUR * 1000);
+      }
+
+      // Timestamp stats are stored in milliseconds
+      if (stats.has_maximumutc()) {
+        maximum = stats.maximumutc();
+        upperBound = maximum;
+      } else if (statContext.writerTimezone) {
+        int64_t writerTimeSec = stats.maximum() / 1000;
+        // multiply the offset by 1000 to convert to millisecond
+        maximum = stats.maximum() + (statContext.writerTimezone->getVariant(writerTimeSec).gmtOffset) * 1000;
+        upperBound = maximum;
+      } else {
+        maximum = 0;
+        // add 1 day 1 hour (25 hours) in milliseconds to handle unknown TZ and daylight savings
+        upperBound = stats.maximum() +  (25 * SECONDS_PER_HOUR * 1000);
+      }
+      // Add 1 millisecond to account for microsecond precision of values
+      upperBound += 1;
     }
   }
 

@@ -52,8 +52,6 @@ namespace orc {
   static const int64_t DAYS_PER_MONTH[2][MONTHS_PER_YEAR] =
      {{31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31},
       {31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}};
-  static const int64_t SECONDS_PER_HOUR = 60 * 60;
-  static const int64_t SECONDS_PER_DAY = SECONDS_PER_HOUR * 24;
   static const int64_t DAYS_PER_WEEK = 7;
 
   // Leap years and day of the week repeat every 400 years, which makes it
