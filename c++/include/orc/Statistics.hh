@@ -321,6 +321,32 @@ namespace orc {
      * @return maximum value
      */
     virtual int64_t getMaximum() const = 0;
+
+    /**
+     * check whether column has a lowerBound
+     * @return true if column has a lowerBound
+     */
+    virtual bool hasLowerBound() const = 0;
+
+    /**
+     * check whether column has an upperBound
+     * @return true if column has an upperBound
+     */
+    virtual bool hasUpperBound() const = 0;
+
+    /**
+     * Get the lowerBound value for the column.
+     * @return lowerBound value
+     */
+    virtual int64_t getLowerBound() const = 0;
+
+    /**
+     * Get the upperBound value for the column.
+     * @return upperBound value
+     */
+    virtual int64_t getUpperBound() const = 0;
+
+
   };
 
   class Statistics {

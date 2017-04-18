@@ -46,6 +46,9 @@ namespace orc {
     std::ostream *errorStream;
   };
 
+  proto::StripeFooter getStripeFooter(const proto::StripeInformation& info,
+                                      const FileContents& contents);
+
   class ReaderImpl;
 
   class ColumnSelector {
@@ -116,7 +119,6 @@ namespace orc {
     std::unique_ptr<ColumnReader> reader;
 
     // internal methods
-    proto::StripeFooter getStripeFooter(const proto::StripeInformation& info);
     void startNextStripe();
 
   public:
