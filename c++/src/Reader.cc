@@ -339,20 +339,20 @@ namespace orc {
     return forcedScaleOnHive11Decimal;
   }
 
-  proto::StripeFooter RowReaderImpl::getStripeFooter
-       (const proto::StripeInformation& info) {
+  proto::StripeFooter getStripeFooter(const proto::StripeInformation& info,
+                                      const FileContents& contents) {
     uint64_t stripeFooterStart = info.offset() + info.indexlength() +
       info.datalength();
     uint64_t stripeFooterLength = info.footerlength();
     std::unique_ptr<SeekableInputStream> pbStream =
-      createDecompressor(contents->compression,
+      createDecompressor(contents.compression,
                          std::unique_ptr<SeekableInputStream>
-                         (new SeekableFileInputStream(contents->stream.get(),
+                         (new SeekableFileInputStream(contents.stream.get(),
                                                       stripeFooterStart,
                                                       stripeFooterLength,
-                                                      *contents->pool)),
-                         contents->blockSize,
-                         *contents->pool);
+                                                      *contents.pool)),
+                         contents.blockSize,
+                         *contents.pool);
     proto::StripeFooter result;
     if (!result.ParseFromZeroCopyStream(pbStream.get())) {
       throw ParseError(std::string("bad StripeFooter from ") +
@@ -526,16 +526,25 @@ namespace orc {
     if (metadata.get() == nullptr) {
       throw std::logic_error("No stripe statistics in file");
     }
+    proto::StripeInformation currentStripeInfo =
+        footer->stripes(static_cast<int>(stripeIndex));
+    proto::StripeFooter currentStripeFooter =
+        getStripeFooter(currentStripeInfo, *contents.get());
+
+    const Timezone& writerTZ =
+      currentStripeFooter.has_writertimezone() ?
+        getTimezoneByName(currentStripeFooter.writertimezone()) :
+        getLocalTimezone();
+    StatContext statContext(hasCorrectStatistics(), &writerTZ);
     return std::unique_ptr<Statistics>
       (new StatisticsImpl(metadata->stripestats
-                          (static_cast<int>(stripeIndex)),
-                          hasCorrectStatistics()));
+                          (static_cast<int>(stripeIndex)), statContext));
   }
 
   std::unique_ptr<Statistics> ReaderImpl::getStatistics() const {
+    StatContext statContext(hasCorrectStatistics());
     return std::unique_ptr<Statistics>
-      (new StatisticsImpl(*footer,
-                          hasCorrectStatistics()));
+      (new StatisticsImpl(*footer, statContext));
   }
 
   std::unique_ptr<ColumnStatistics>
@@ -545,8 +554,9 @@ namespace orc {
     }
     proto::ColumnStatistics col =
       footer->statistics(static_cast<int32_t>(index));
-    return std::unique_ptr<ColumnStatistics> (convertColumnStatistics
-                                              (col, hasCorrectStatistics()));
+
+    StatContext statContext(hasCorrectStatistics());
+    return std::unique_ptr<ColumnStatistics> (convertColumnStatistics(col, statContext));
   }
 
   void ReaderImpl::readMetadata() const {
@@ -763,7 +773,7 @@ namespace orc {
   void RowReaderImpl::startNextStripe() {
     reader.reset(); // ColumnReaders use lots of memory; free old memory first
     currentStripeInfo = footer->stripes(static_cast<int>(currentStripe));
-    currentStripeFooter = getStripeFooter(currentStripeInfo);
+    currentStripeFooter = getStripeFooter(currentStripeInfo, *contents.get());
     rowsInCurrentStripe = currentStripeInfo.numberofrows();
     const Timezone& writerTimezone =
       currentStripeFooter.has_writertimezone() ?
