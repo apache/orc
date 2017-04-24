@@ -225,6 +225,43 @@
             <target>1.7</target>
           </configuration>
         </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-shade-plugin</artifactId>
+          <version>3.0.0</version>
+          <executions>
+            <execution>
+              <phase>package</phase>
+              <goals>
+                <goal>shade</goal>
+              </goals>
+              <configuration>
+                <artifactSet>
+                  <includes>
+                    <include>com.google.protobuf:protobuf-java</include>
+                    <include>org.apache.hive:hive-storage-api</include>
+                  </includes>
+                </artifactSet>
+                <shadedArtifactAttached>true</shadedArtifactAttached>
+                <shadedClassifierName>nohive</shadedClassifierName>
+                <relocations>
+                  <relocation>
+                    <pattern>com.google.protobuf</pattern>
+                    <shadedPattern>com.google.protobuf25</shadedPattern>
+                  </relocation>
+                  <relocation>
+                    <pattern>org.apache.hadoop.hive</pattern>
+                    <shadedPattern>org.apache.orc.storage</shadedPattern>
+                  </relocation>
+                  <relocation>
+                    <pattern>org.apache.hive</pattern>
+                    <shadedPattern>org.apache.orc.storage</shadedPattern>
+                  </relocation>
+                </relocations>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
       </plugins>
     </pluginManagement>
   </build>
@@ -274,9 +311,9 @@
         <version>11.0.2</version>
       </dependency>
       <dependency>
-	<groupId>com.fasterxml.jackson.core</groupId>
-	<artifactId>jackson-core</artifactId>
-	<version>2.8.4</version>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-core</artifactId>
+        <version>2.8.4</version>
       </dependency>
       <dependency>
         <groupId>com.google.protobuf</groupId>
@@ -392,12 +429,12 @@
         <version>${hive.version}</version>
         <exclusions>
           <exclusion>
-	    <groupId>org.apache.hive</groupId>
-	    <artifactId>hive-storage-api</artifactId>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-storage-api</artifactId>
           </exclusion>
           <exclusion>
-	    <groupId>org.apache.hive</groupId>
-	    <artifactId>hive-orc</artifactId>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-orc</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -408,12 +445,12 @@
         <classifier>core</classifier>
         <exclusions>
           <exclusion>
-	    <groupId>org.apache.hive</groupId>
-	    <artifactId>hive-storage-api</artifactId>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-storage-api</artifactId>
           </exclusion>
           <exclusion>
-	    <groupId>org.apache.hive</groupId>
-	    <artifactId>hive-orc</artifactId>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-orc</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -423,12 +460,12 @@
         <version>${hive.version}</version>
         <exclusions>
           <exclusion>
-	    <groupId>org.apache.hive</groupId>
-	    <artifactId>hive-storage-api</artifactId>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-storage-api</artifactId>
           </exclusion>
           <exclusion>
-	    <groupId>org.apache.hive</groupId>
-	    <artifactId>hive-orc</artifactId>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-orc</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -523,13 +560,13 @@
         <groupId>org.apache.zookeeper</groupId>
         <artifactId>zookeeper</artifactId>
         <version>${zookeeper.version}</version>
-	<scope>runtime</scope>
-	<exclusions>
-	  <exclusion>
-	    <groupId>io.netty</groupId>
-	    <artifactId>netty</artifactId>
-	  </exclusion>
-	</exclusions>
+        <scope>runtime</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.parquet</groupId>
@@ -540,18 +577,18 @@
         <groupId>org.codehaus.jettison</groupId>
         <artifactId>jettison</artifactId>
         <version>1.1</version>
-	<exclusions>
-	  <exclusion>
-	    <groupId>stax</groupId>
-	    <artifactId>stax-api</artifactId>
-	  </exclusion>
-	</exclusions>
+        <exclusions>
+          <exclusion>
+            <groupId>stax</groupId>
+            <artifactId>stax-api</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.jodd</groupId>
         <artifactId>jodd-core</artifactId>
         <version>3.5.2</version>
-	<scope>runtime</scope>
+        <scope>runtime</scope>
       </dependency>
       <dependency>
         <groupId>org.openjdk.jmh</groupId>
