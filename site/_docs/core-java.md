@@ -210,6 +210,7 @@ public class MapColumnVector extends ColumnVector {
 
 ## Writing ORC Files
 
+### Simple Example
 To write an ORC file, you need to define the schema and use the
 [OrcFile]({{site.url}}/api/orc-core/index.html?org/apache/orc/OrcFile.html)
 class to create a
@@ -246,8 +247,85 @@ if (batch.size != 0) {
   writer.addRowBatch(batch);
   batch.reset();
 }
+
 writer.close();
 ~~~
+
+### Advanced Example 
+
+~~~ java 
+Path testFilePath = new Path("/a/file/path.orc");
+Configuration conf = new Configuration();
+
+TypeDescription schema = TypeDescription
+        .fromString("struct<firstLong:int,secondLong:int,map:map<string,int>>");
+
+Writer writer = OrcFile.createWriter(
+        testFilePath,
+        OrcFile.writerOptions(conf)
+                .setSchema(schema)
+);
+
+VectorizedRowBatch batch = schema.createRowBatch(10);
+LongColumnVector firstLong = (LongColumnVector) batch.cols[0];
+LongColumnVector secondLong = (LongColumnVector) batch.cols[1];
+
+//Define map. You need also to cast the key and value vectors
+MapColumnVector map = (MapColumnVector) batch.cols[2];
+BytesColumnVector mapKey = (BytesColumnVector) map.keys;
+LongColumnVector mapValue = (LongColumnVector) map.values;
+
+Integer mapElementSize = 5;
+//Initialize a counter for the batch size. batch.size is only a counter for the rows
+Integer batchSizeCounter = 0;
+
+for(int r=0; r < 15; ++r) {
+        int row = batch.size++;
+        
+        firstLong.vector[row] = r;
+        secondLong.vector[row] = r * 3;
+
+        //Added all element except for map, so increment the counter by one
+        batchSizeCounter++;
+
+        map.lengths[row] = mapElementSize;
+        map.offsets[row] = map.childCount;
+
+        //Add mapElementSize times a key value pair to the current row map
+        for(int mapIndex=0; mapIndex <= mapElementSize -1; ++mapIndex){
+                byte[] byteString = ("row|"+r).getBytes();
+                mapKey.setVal(map.childCount, byteString);
+                mapValue.vector[map.childCount] = r;
+
+                map.childCount++;
+
+                //Increment batchSize by two. Map needs two spaces in the batch.
+                // One for the key, the other for the value
+                batchSizeCounter += 2;
+            }
+
+
+        /*
+        * If the current batch plus the next row is larger or equals the max batch size
+        * batchSizeCounter + firstColumn + secondColumn + MapKey + MapValue
+        * Each key value pair increases the batch size with 2
+        * A array element increases also the batch.size but only by once
+        * */
+        if (batchSizeCounter + 2 + mapElementSize >= batch.getMaxSize()) {
+                writer.addRowBatch(batch);
+                batch.reset();
+                batchSizeCounter = 0;
+        }
+}
+
+if (batch.size != 0) {
+        writer.addRowBatch(batch);
+        batch.reset();
+}
+
+writer.close();
+~~~
+
 
 ## Reading ORC Files
 
