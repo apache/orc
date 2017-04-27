@@ -118,7 +118,7 @@ namespace orc {
     // read a new header
     readHeader();
     // skip ahead the given number of records
-    skip(location.next());
+    ByteRleDecoderImpl::skip(location.next());
   }
 
   void ByteRleDecoderImpl::skip(uint64_t numValues) {
