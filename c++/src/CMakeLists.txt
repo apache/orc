@@ -139,6 +139,7 @@ add_library (orc STATIC
   ByteRLE.cc
   ColumnPrinter.cc
   ColumnReader.cc
+  Common.cc
   Compression.cc
   Exceptions.cc
   Int128.cc
@@ -150,6 +151,7 @@ add_library (orc STATIC
   RLEv2.cc
   RLE.cc
   Statistics.cc
+  Stream.cc
   StripeStream.cc
   Timezone.cc
   TypeImpl.cc
