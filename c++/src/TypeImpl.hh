@@ -98,6 +98,11 @@ namespace orc {
      */
     void addChildType(std::unique_ptr<Type> childType);
 
+    static std::vector<std::pair<std::string, Type *> > buildTypeFromStringImpl(
+      const std::string& input,
+      size_t start,
+      size_t end);
+
   private:
     /**
      * Assign ids to this node and its children giving this

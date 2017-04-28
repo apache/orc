@@ -491,4 +491,190 @@ namespace orc {
     return std::unique_ptr<Type>(result);
   }
 
+  Type * Type::buildTypeFromString(const std::string& input) {
+    std::vector<std::pair<std::string, Type *> > res =
+      TypeImpl::buildTypeFromStringImpl(input, 0, input.size());
+    if (res.size() != 1) {
+      throw std::logic_error("Invalid type string.");
+    }
+    return res[0].second;
+  }
+
+  std::vector<std::pair<std::string, Type *> >
+  TypeImpl::buildTypeFromStringImpl(const std::string& input,
+                                    size_t start,
+                                    size_t end) {
+    std::string types = input.substr(start, end - start);
+    std::vector<std::pair<std::string, Type *> > res;
+    size_t pos = 0;
+
+    while (pos < types.size()) {
+      size_t endPos = pos;
+      while (endPos < types.size() &&
+             ((types[endPos] >= 'a' && types[endPos] <= 'z') ||
+              (types[endPos] >= '0' && types[endPos] <= '9'))) {
+        ++endPos;
+      }
+
+      std::string fieldName;
+      if (types[endPos] == ':') {
+        fieldName = types.substr(pos, endPos - pos);
+        pos = ++endPos;
+        while (endPos < types.size() && types[endPos] >= 'a'
+               && types[endPos] <= 'z') {
+          ++endPos;
+        }
+      }
+
+      size_t nextPos = endPos + 1;
+      if (types[endPos] == '<') {
+        int count = 1;
+        while (nextPos < types.size()) {
+          if (types[nextPos] == '<') {
+            ++count;
+          } else if (types[nextPos] == '>') {
+            --count;
+          }
+          if (count == 0) {
+            break;
+          }
+          ++nextPos;
+        }
+        if (nextPos == types.size()) {
+          throw std::logic_error("Invalid type string. Cannot find closing >");
+        }
+      } else if (types[endPos] == '(') {
+        while (nextPos < types.size() && types[nextPos] != ')') {
+          ++nextPos;
+        }
+        if (nextPos == types.size()) {
+          throw std::logic_error("Invalid type string. Cannot find closing )");
+        }
+      } else if (types[endPos] != ',' && types[endPos] != '\0') {
+        throw std::logic_error("Unrecognize character.");
+      }
+
+      std::string typeName = types.substr(pos, endPos - pos);
+      if (typeName == "boolean") {
+        res.push_back(std::make_pair(fieldName, new TypeImpl(BOOLEAN)));
+      } else if (typeName == "tinyint") {
+        res.push_back(std::make_pair(fieldName, new TypeImpl(BYTE)));
+      } else if (typeName == "smallint") {
+        res.push_back(std::make_pair(fieldName, new TypeImpl(SHORT)));
+      } else if (typeName == "int") {
+        res.push_back(std::make_pair(fieldName, new TypeImpl(INT)));
+      } else if (typeName == "bigint") {
+        res.push_back(std::make_pair(fieldName, new TypeImpl(LONG)));
+      } else if (typeName == "float") {
+        res.push_back(std::make_pair(fieldName, new TypeImpl(FLOAT)));
+      } else if (typeName == "double") {
+        res.push_back(std::make_pair(fieldName, new TypeImpl(DOUBLE)));
+      } else if (typeName == "string") {
+        res.push_back(std::make_pair(fieldName, new TypeImpl(STRING)));
+      } else if (typeName == "binary") {
+        res.push_back(std::make_pair(fieldName, new TypeImpl(BINARY)));
+      } else if (typeName == "timestamp") {
+        res.push_back(std::make_pair(fieldName, new TypeImpl(TIMESTAMP)));
+      } else if (typeName == "array") {
+        TypeImpl * arrayType = new TypeImpl(LIST);
+        std::vector<std::pair<std::string, Type *> > v =
+          TypeImpl::buildTypeFromStringImpl(
+            types,
+            endPos + 1,
+            nextPos);
+        if (v.size() != 1) {
+          throw std::logic_error(
+            "Array type must contain exactly one sub type.");
+        }
+        arrayType->addChildType(std::unique_ptr<Type>(v[0].second));
+        res.push_back(std::make_pair(fieldName, arrayType));
+      } else if (typeName == "map") {
+        TypeImpl * mapType = new TypeImpl(MAP);
+        std::vector<std::pair<std::string, Type *> > v =
+          TypeImpl::buildTypeFromStringImpl(
+            types,
+            endPos + 1,
+            nextPos);
+        if (v.size() != 2) {
+          throw std::logic_error(
+            "Map type must contain exactly two sub types.");
+        }
+        mapType->addChildType(std::unique_ptr<Type>(v[0].second));
+        mapType->addChildType(std::unique_ptr<Type>(v[1].second));
+        res.push_back(std::make_pair(fieldName, mapType));
+      } else if (typeName == "struct") {
+        TypeImpl * structType = new TypeImpl(STRUCT);
+        std::vector<std::pair<std::string, Type *> > v =
+          TypeImpl::buildTypeFromStringImpl(
+            types,
+            endPos + 1,
+            nextPos);
+        if (v.size() == 0) {
+          throw std::logic_error(
+            "Struct type must contain at least one sub type.");
+        }
+        for (size_t i = 0; i < v.size(); ++i) {
+          structType->addStructField(
+            v[i].first,
+            std::unique_ptr<Type>(v[i].second));
+        }
+        res.push_back(std::make_pair(fieldName, structType));
+      } else if (typeName == "uniontype") {
+        TypeImpl * unionType = new TypeImpl(UNION);
+        std::vector<std::pair<std::string, Type *> > v =
+          TypeImpl::buildTypeFromStringImpl(
+            types,
+            endPos + 1,
+            nextPos);
+        if (v.size() == 0) {
+          throw std::logic_error(
+            "Union type must contain at least one sub type.");
+        }
+        for (size_t i = 0; i < v.size(); ++i) {
+          unionType->addChildType(std::unique_ptr<Type>(v[i].second));
+        }
+        res.push_back(std::make_pair(fieldName, unionType));
+      } else if (typeName == "decimal") {
+        size_t sep = types.find(',', endPos + 1);
+        if (sep + 1 >= nextPos || sep == std::string::npos) {
+          throw std::logic_error(
+            "Decimal type must specify precision and scale.");
+        }
+        uint64_t precision =
+          static_cast<uint64_t>(
+            atoi(
+              types.substr(endPos + 1, sep - endPos - 1).c_str()));
+        uint64_t scale =
+          static_cast<uint64_t>(
+            atoi(types.substr(sep + 1, nextPos - sep - 1).c_str()));
+        TypeImpl * decimalType = new TypeImpl(DECIMAL, precision, scale);
+        res.push_back(std::make_pair(fieldName, decimalType));
+      } else if (typeName == "date") {
+        res.push_back(std::make_pair(fieldName, new TypeImpl(DATE)));
+      } else if (typeName == "varchar") {
+        uint64_t maxLength = static_cast<uint64_t>(
+          atoi(
+            types.substr(endPos + 1, nextPos - endPos - 1).c_str()));
+        res.push_back(
+          std::make_pair(fieldName, new TypeImpl(VARCHAR, maxLength)));
+      } else if (typeName == "char") {
+        uint64_t maxLength = static_cast<uint64_t>(
+          atoi(
+            types.substr(endPos + 1, nextPos - endPos - 1).c_str()));
+        res.push_back(std::make_pair(fieldName, new TypeImpl(CHAR, maxLength)));
+      }
+      else {
+        throw std::logic_error("Unknown type " + typeName);
+      }
+
+      if (types[nextPos] == ')' || types[nextPos] == '>') {
+        pos = nextPos + 2;
+      } else {
+        pos = nextPos;
+      }
+    }
+
+    return res;
+  }
+
 }
