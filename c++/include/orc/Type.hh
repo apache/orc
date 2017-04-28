@@ -82,6 +82,11 @@ namespace orc {
      * @return a reference to the union type
      */
     virtual Type* addUnionChild(ORC_UNIQUE_PTR<Type> fieldType) = 0;
+
+    /**
+     * Build a Type object from string text representation.
+     */
+    static ORC_UNIQUE_PTR<Type> buildTypeFromString(const std::string& input);
   };
 
   const int64_t DEFAULT_DECIMAL_SCALE = 18;
