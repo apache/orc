@@ -1382,4 +1382,42 @@ TEST(BooleanRle, seekTestWithNulls) {
   } while (i != 0);
 }
 
+TEST(BooleanRle, seekBoolAndByteRLE) {
+  // ORC-181
+  // original data is as follows (1 is true and 0 is false):
+  // 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0,
+  // 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0,
+  // 0, 0, 1, 1
+  // The RLE result is 0xf9, 0xf0, 0xf0, 0xf7, 0x1c, 0x71, 0xc1, 0x80
+  // The position of the 21st number (index starts from 0) in the RLE result
+  // is [0, 2, 5]; the position of the 45th number is [0, 5, 5].
+  const char num[] = {
+    1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0,
+    1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0,
+    0, 0, 1, 1
+  };
+  const unsigned char buffer[] = {
+    0xf9, 0xf0, 0xf0, 0xf7, 0x1c, 0x71, 0xc1, 0x80
+  };
+
+  std::unique_ptr<SeekableInputStream> stream
+    (new SeekableArrayInputStream(buffer, ARRAY_SIZE(buffer)));
+  std::unique_ptr<ByteRleDecoder> rle =
+    createBooleanRleDecoder(std::move(stream));
+  std::vector<char> data(sizeof(num) / sizeof(char));
+  rle->next(data.data(), data.size(), nullptr);
+  for (size_t i = 0; i < data.size(); ++i) {
+    EXPECT_EQ(num[i], data[i]) << "Output wrong at " << i;
+  }
+
+  std::list<uint64_t> pos21st = {0, 2, 5}, pos45th = {0, 5, 5};
+  PositionProvider posProvider21st(pos21st), provider2(pos45th);
+  char value[1];
+  rle->seek(posProvider21st);
+  rle->next(value, 1, nullptr);
+  EXPECT_EQ(num[21], value[0]);
+  rle->seek(provider2);
+  rle->next(value, 1, nullptr);
+  EXPECT_EQ(num[45], value[0]);
+  }
 }  // namespace orc
