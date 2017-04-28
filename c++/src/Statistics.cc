@@ -146,94 +146,87 @@ namespace orc {
   }
 
   ColumnStatisticsImpl::ColumnStatisticsImpl
-    (const proto::ColumnStatistics& pb) {
+  (const proto::ColumnStatistics& pb) {
     valueCount = pb.numberofvalues();
-    hasNullValue = pb.hasnull();
   }
 
   BinaryColumnStatisticsImpl::BinaryColumnStatisticsImpl
-    (const proto::ColumnStatistics& pb, bool correctStats){
+  (const proto::ColumnStatistics& pb, bool correctStats){
     valueCount = pb.numberofvalues();
-    hasNullValue = pb.hasnull();
     if (!pb.has_binarystatistics() || !correctStats) {
-      hasTotalLengthValue = false;
+      _hasTotalLength = false;
+
       totalLength = 0;
     }else{
-      hasTotalLengthValue = pb.binarystatistics().has_sum();
+      _hasTotalLength = pb.binarystatistics().has_sum();
       totalLength = static_cast<uint64_t>(pb.binarystatistics().sum());
     }
   }
 
   BooleanColumnStatisticsImpl::BooleanColumnStatisticsImpl
-    (const proto::ColumnStatistics& pb, bool correctStats){
+  (const proto::ColumnStatistics& pb, bool correctStats){
     valueCount = pb.numberofvalues();
-    hasNullValue = pb.hasnull();
     if (!pb.has_bucketstatistics() || !correctStats) {
-      hasCountValue = false;
+      _hasCount = false;
       trueCount = 0;
     }else{
-      hasCountValue = true;
+      _hasCount = true;
       trueCount = pb.bucketstatistics().count(0);
     }
   }
 
   DateColumnStatisticsImpl::DateColumnStatisticsImpl
-    (const proto::ColumnStatistics& pb, bool correctStats){
+  (const proto::ColumnStatistics& pb, bool correctStats){
     valueCount = pb.numberofvalues();
-    hasNullValue = pb.hasnull();
     if (!pb.has_datestatistics() || !correctStats) {
-      hasMinimumValue = false;
-      hasMaximumValue = false;
+      _hasMinimum = false;
+      _hasMaximum = false;
 
       minimum = 0;
       maximum = 0;
     } else {
-      hasMinimumValue = pb.datestatistics().has_minimum();
-      hasMaximumValue = pb.datestatistics().has_maximum();
+      _hasMinimum = pb.datestatistics().has_minimum();
+      _hasMaximum = pb.datestatistics().has_maximum();
       minimum = pb.datestatistics().minimum();
       maximum = pb.datestatistics().maximum();
     }
   }
 
   DecimalColumnStatisticsImpl::DecimalColumnStatisticsImpl
-    (const proto::ColumnStatistics& pb, bool correctStats): minimum(0, 0),
-                                                            maximum(0, 0),
-                                                            sum(0, 0){
+  (const proto::ColumnStatistics& pb, bool correctStats){
     valueCount = pb.numberofvalues();
-    hasNullValue = pb.hasnull();
     if (!pb.has_decimalstatistics() || !correctStats) {
-      hasMinimumValue = false;
-      hasMaximumValue = false;
-      hasSumValue = false;
+      _hasMinimum = false;
+      _hasMaximum = false;
+      _hasSum = false;
     }else{
       const proto::DecimalStatistics& stats = pb.decimalstatistics();
-      hasMinimumValue = stats.has_minimum();
-      hasMaximumValue = stats.has_maximum();
-      hasSumValue = stats.has_sum();
+      _hasMinimum = stats.has_minimum();
+      _hasMaximum = stats.has_maximum();
+      _hasSum = stats.has_sum();
 
-      minimum = Decimal(stats.minimum());
-      maximum = Decimal(stats.maximum());
-      sum = Decimal(stats.sum());
+      minimum = stats.minimum();
+      maximum = stats.maximum();
+      sum = stats.sum();
     }
   }
 
   DoubleColumnStatisticsImpl::DoubleColumnStatisticsImpl
-    (const proto::ColumnStatistics& pb){
+  (const proto::ColumnStatistics& pb){
     valueCount = pb.numberofvalues();
-    hasNullValue = pb.hasnull();
     if (!pb.has_doublestatistics()) {
-      hasMinimumValue = false;
-      hasMaximumValue = false;
-      hasSumValue = false;
+      _hasMinimum = false;
+      _hasMaximum = false;
+      _hasSum = false;
 
       minimum = 0;
       maximum = 0;
       sum = 0;
     }else{
       const proto::DoubleStatistics& stats = pb.doublestatistics();
-      hasMinimumValue = stats.has_minimum();
-      hasMaximumValue = stats.has_maximum();
-      hasSumValue = stats.has_sum();
+      _hasMinimum = stats.has_minimum();
+      _hasMaximum = stats.has_maximum();
+      _hasSum = stats.has_sum();
 
       minimum = stats.minimum();
       maximum = stats.maximum();
@@ -242,22 +235,21 @@ namespace orc {
   }
 
   IntegerColumnStatisticsImpl::IntegerColumnStatisticsImpl
-    (const proto::ColumnStatistics& pb){
+  (const proto::ColumnStatistics& pb){
     valueCount = pb.numberofvalues();
-    hasNullValue = pb.hasnull();
     if (!pb.has_intstatistics()) {
-      hasMinimumValue = false;
-      hasMaximumValue = false;
-      hasSumValue = false;
+      _hasMinimum = false;
+      _hasMaximum = false;
+      _hasSum = false;
 
       minimum = 0;
       maximum = 0;
       sum = 0;
     }else{
       const proto::IntegerStatistics& stats = pb.intstatistics();
-      hasMinimumValue = stats.has_minimum();
-      hasMaximumValue = stats.has_maximum();
-      hasSumValue = stats.has_sum();
+      _hasMinimum = stats.has_minimum();
+      _hasMaximum = stats.has_maximum();
+      _hasSum = stats.has_sum();
 
       minimum = stats.minimum();
       maximum = stats.maximum();
@@ -266,20 +258,19 @@ namespace orc {
   }
 
   StringColumnStatisticsImpl::StringColumnStatisticsImpl
-    (const proto::ColumnStatistics& pb, bool correctStats){
+  (const proto::ColumnStatistics& pb, bool correctStats){
     valueCount = pb.numberofvalues();
-    hasNullValue = pb.hasnull();
     if (!pb.has_stringstatistics() || !correctStats) {
-      hasMinimumValue = false;
-      hasMaximumValue = false;
-      hasTotalLen = false;
+      _hasMinimum = false;
+      _hasMaximum = false;
+      _hasTotalLength = false;
 
       totalLength = 0;
     }else{
       const proto::StringStatistics& stats = pb.stringstatistics();
-      hasMinimumValue = stats.has_minimum();
-      hasMaximumValue = stats.has_maximum();
-      hasTotalLen = stats.has_sum();
+      _hasMinimum = stats.has_minimum();
+      _hasMaximum = stats.has_maximum();
+      _hasTotalLength = stats.has_sum();
 
       minimum = stats.minimum();
       maximum = stats.maximum();
@@ -288,66 +279,20 @@ namespace orc {
   }
 
   TimestampColumnStatisticsImpl::TimestampColumnStatisticsImpl
-    (const proto::ColumnStatistics& pb, bool correctStats) {
+  (const proto::ColumnStatistics& pb, bool correctStats) {
     valueCount = pb.numberofvalues();
-    hasNullValue = pb.hasnull();
     if (!pb.has_timestampstatistics() || !correctStats) {
-      hasMinimumValue = false;
-      hasMaximumValue = false;
+      _hasMinimum = false;
+      _hasMaximum = false;
       minimum = 0;
       maximum = 0;
     }else{
       const proto::TimestampStatistics& stats = pb.timestampstatistics();
-      hasMinimumValue = stats.has_minimum();
-      hasMaximumValue = stats.has_maximum();
+      _hasMinimum = stats.has_minimum();
+      _hasMaximum = stats.has_maximum();
 
       minimum = stats.minimum();
       maximum = stats.maximum();
-    }
-  }
-
-  std::unique_ptr<ColumnStatistics> createColumnStatistics(
-    const Type& type, bool enableStrCmp) {
-    switch (static_cast<int64_t>(type.getKind())) {
-      case BOOLEAN:
-        return std::unique_ptr<ColumnStatistics>(
-          new BooleanColumnStatisticsImpl());
-      case BYTE:
-      case INT:
-      case LONG:
-      case SHORT:
-        return std::unique_ptr<ColumnStatistics>(
-          new IntegerColumnStatisticsImpl());
-      case STRUCT:
-      case MAP:
-      case LIST:
-      case UNION:
-        return std::unique_ptr<ColumnStatistics>(
-          new ColumnStatisticsImpl());
-      case FLOAT:
-      case DOUBLE:
-        return std::unique_ptr<ColumnStatistics>(
-          new DoubleColumnStatisticsImpl());
-      case BINARY:
-        return std::unique_ptr<ColumnStatistics>(
-          new BinaryColumnStatisticsImpl());
-      case STRING:
-      case CHAR:
-      case VARCHAR:
-        return std::unique_ptr<ColumnStatistics>(
-          new StringColumnStatisticsImpl(enableStrCmp));
-      case DATE:
-        return std::unique_ptr<ColumnStatistics>(
-          new DateColumnStatisticsImpl());
-      case TIMESTAMP:
-        return std::unique_ptr<ColumnStatistics>(
-          new TimestampColumnStatisticsImpl());
-      case DECIMAL:
-        return std::unique_ptr<ColumnStatistics>(
-          new DecimalColumnStatisticsImpl());
-      default:
-        throw NotImplementedYet("Not supported type " + type.toString() +
-                                  " for ColumnStatistics");
     }
   }
 

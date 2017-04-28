@@ -151,26 +151,6 @@ namespace orc {
     Int128 divide(const Int128 &right, Int128& remainder) const;
 
     /**
-     * Divide this number by right and return the integral part. This operation
-     * is destructive.
-     * @param right the number to divide by
-     */
-    Int128& operator/=(const Int128 &right) {
-      *this = operator/(right);
-      return *this;
-    }
-
-    /**
-     * Divide this number by right and return the integral part. This operation
-     * is not destructive.
-     * @param right the number to divide by
-     */
-    Int128 operator/(const Int128 &right) const {
-      Int128 remainder;
-      return divide(right, remainder);
-    }
-
-    /**
      * Logical or between two Int128.
      * @param right the number to or in
      * @return *this
@@ -182,34 +162,14 @@ namespace orc {
     }
 
     /**
-     * Logical or between two Int128.
-     * @param right the number to or in
-     * @return result
-     */
-    Int128 operator|(const Int128 right) {
-      Int128 value = *this;
-      value |= right;
-      return value;
-    }
-
-    /**
      * Logical and between two Int128.
      * @param right the number to and in
+     * @return *this
      */
     Int128& operator&=(const Int128 &right) {
       lowbits &= right.lowbits;
       highbits &= right.highbits;
       return *this;
-    }
-
-    /**
-     * Logical and between two Int128.
-     * @param right the number to and in
-     */
-    Int128 operator&(const Int128 &right) {
-      Int128 value = *this;
-      value &= right;
-      return value;
     }
 
     /**
@@ -234,16 +194,6 @@ namespace orc {
     }
 
     /**
-     * Shift left by the given number of bits.
-     * Values larger than 2**127 will shift into the sign bit.
-     */
-    Int128 operator<<(uint32_t bits) {
-      Int128 value = *this;
-      value <<= bits;
-      return value;
-    }
-
-    /**
      * Shift right by the given number of bits. Negative values will
      * sign extend and fill with one bits.
      */
@@ -263,16 +213,6 @@ namespace orc {
         }
       }
       return *this;
-    }
-
-    /**
-     * Shift right by the given number of bits. Negative values will
-     * sign extend and fill with one bits.
-     */
-    Int128 operator>>(uint32_t bits) {
-      Int128 value = *this;
-      value >>= bits;
-      return value;
     }
 
     bool operator==(const Int128& right) const {
@@ -392,52 +332,5 @@ namespace orc {
     int64_t highbits;
     uint64_t lowbits;
   };
-
-  /**
-   * Scales an Int128 value
-   * @param value the Int128 value to scale
-   * @param scaleMultiplier the scale offset. Result of a negative
-   *                        scaleMultiplier is undefined.
-   * @param overflow returns whether the result overflows or not
-   * @return the scaled value
-   */
-  Int128 scaleInt128(Int128 value,
-                     int32_t scaleMultiplier,
-                     bool &overflow);
-
-  /**
-   * Compares two decimals
-   * @param lValue the integer representation of left decimal
-   * @param lScale the scale of left decimal
-   * @param rValue the integer representation of right decimal
-   * @param rScale the scale of right decimal
-   * @return -1 if left decimal is smaller, or
-   *          1 if right decimal is smaller, or
-   *          0 if they are equal
-   */
-  int32_t decimalCompare(Int128 lValue, int32_t lScale,
-                         Int128 rValue, int32_t rScale);
-
-  const int32_t MAX_PRECISION_64 = 18;
-  const int64_t POWERS_OF_TEN[MAX_PRECISION_64 + 1] =
-    {1,
-     10,
-     100,
-     1000,
-     10000,
-     100000,
-     1000000,
-     10000000,
-     100000000,
-     1000000000,
-     10000000000,
-     100000000000,
-     1000000000000,
-     10000000000000,
-     100000000000000,
-     1000000000000000,
-     10000000000000000,
-     100000000000000000,
-     1000000000000000000};
 }
 #endif
