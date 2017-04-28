@@ -1411,12 +1411,12 @@ TEST(BooleanRle, seekBoolAndByteRLE) {
   }
 
   std::list<uint64_t> pos21st = {0, 2, 5}, pos45th = {0, 5, 5};
-  PositionProvider posProvider21st(pos21st), provider2(pos45th);
+  PositionProvider posProvider21st(pos21st), posProvider45th(pos45th);
   char value[1];
   rle->seek(posProvider21st);
   rle->next(value, 1, nullptr);
   EXPECT_EQ(num[21], value[0]);
-  rle->seek(provider2);
+  rle->seek(posProvider45th);
   rle->next(value, 1, nullptr);
   EXPECT_EQ(num[45], value[0]);
   }
