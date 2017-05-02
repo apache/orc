@@ -40,6 +40,12 @@ namespace orc {
     virtual uint64_t getNumberOfValues() const = 0;
 
     /**
+     * Check whether column has null value
+     * @return true if has null value
+     */
+    virtual bool hasNull() const = 0;
+
+    /**
      * print out statistics of column if any
      */
     virtual std::string toString() const = 0;

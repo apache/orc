@@ -187,6 +187,7 @@ namespace orc {
   struct Decimal {
     Decimal(const Int128& value, int32_t scale);
     explicit Decimal(const std::string& value);
+    Decimal();
 
     std::string toString() const;
     Int128 value;
