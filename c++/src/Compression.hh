@@ -19,7 +19,7 @@
 #ifndef ORC_COMPRESSION_HH
 #define ORC_COMPRESSION_HH
 
-#include "Stream.hh"
+#include "io/InputStream.hh"
 
 namespace orc {
 

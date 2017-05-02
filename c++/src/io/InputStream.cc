@@ -17,7 +17,7 @@
  */
 
 #include "Exceptions.hh"
-#include "Stream.hh"
+#include "InputStream.hh"
 
 #include <algorithm>
 #include <iomanip>
@@ -61,10 +61,10 @@ namespace orc {
   }
 
   SeekableArrayInputStream::SeekableArrayInputStream
-    (const unsigned char* values,
-     uint64_t size,
-     uint64_t blkSize
-    ): data(reinterpret_cast<const char*>(values)) {
+               (const unsigned char* values,
+                uint64_t size,
+                uint64_t blkSize
+               ): data(reinterpret_cast<const char*>(values)) {
     length = size;
     position = 0;
     blockSize = blkSize == 0 ? length : static_cast<uint64_t>(blkSize);
@@ -138,13 +138,13 @@ namespace orc {
                                                    uint64_t byteCount,
                                                    MemoryPool& _pool,
                                                    uint64_t _blockSize
-  ):pool(_pool),
-    input(stream),
-    start(offset),
-    length(byteCount),
-    blockSize(computeBlock
-                (_blockSize,
-                 length)) {
+                                                   ):pool(_pool),
+                                                     input(stream),
+                                                     start(offset),
+                                                     length(byteCount),
+                                                     blockSize(computeBlock
+                                                               (_blockSize,
+                                                                length)) {
 
     position = 0;
     buffer.reset(new DataBuffer<char>(pool));

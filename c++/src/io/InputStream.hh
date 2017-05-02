@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef ORC_STREAM_HH
-#define ORC_STREAM_HH
+#ifndef ORC_INPUTSTREAM_HH
+#define ORC_INPUTSTREAM_HH
 
 #include "Adaptor.hh"
 #include "orc/OrcFile.hh"
@@ -113,4 +113,4 @@ namespace orc {
 
 }
 
-#endif //ORC_STREAM_HH
+#endif //ORC_INPUTSTREAM_HH
