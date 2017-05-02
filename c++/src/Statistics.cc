@@ -169,187 +169,175 @@ namespace orc {
 
   ColumnStatisticsImpl::ColumnStatisticsImpl
   (const proto::ColumnStatistics& pb) {
-    valueCount = pb.numberofvalues();
+    _stats.setNumberOfValues(pb.numberofvalues());
+    _stats.setHasNull(pb.hasnull());
   }
 
   BinaryColumnStatisticsImpl::BinaryColumnStatisticsImpl
   (const proto::ColumnStatistics& pb, const StatContext& statContext){
-    valueCount = pb.numberofvalues();
-    if (!pb.has_binarystatistics() || !statContext.correctStats) {
-      _hasTotalLength = false;
-
-      totalLength = 0;
-    }else{
-      _hasTotalLength = pb.binarystatistics().has_sum();
-      totalLength = static_cast<uint64_t>(pb.binarystatistics().sum());
+    _stats.setNumberOfValues(pb.numberofvalues());
+    _stats.setHasNull(pb.hasnull());
+    if (pb.has_binarystatistics() && statContext.correctStats) {
+      _stats.setHasTotalLength(pb.binarystatistics().has_sum());
+      _stats.setTotalLength(
+          static_cast<uint64_t>(pb.binarystatistics().sum()));
     }
   }
 
   BooleanColumnStatisticsImpl::BooleanColumnStatisticsImpl
   (const proto::ColumnStatistics& pb, const StatContext& statContext){
-    valueCount = pb.numberofvalues();
-    if (!pb.has_bucketstatistics() || !statContext.correctStats) {
-      _hasCount = false;
-      trueCount = 0;
-    }else{
-      _hasCount = true;
-      trueCount = pb.bucketstatistics().count(0);
+    _stats.setNumberOfValues(pb.numberofvalues());
+    _stats.setHasNull(pb.hasnull());
+    if (pb.has_bucketstatistics() && statContext.correctStats) {
+      _stats.setHasSum(true);
+      _stats.setSum(pb.bucketstatistics().count(0));
     }
   }
 
   DateColumnStatisticsImpl::DateColumnStatisticsImpl
   (const proto::ColumnStatistics& pb, const StatContext& statContext){
-    valueCount = pb.numberofvalues();
+    _stats.setNumberOfValues(pb.numberofvalues());
+    _stats.setHasNull(pb.hasnull());
     if (!pb.has_datestatistics() || !statContext.correctStats) {
-      _hasMinimum = false;
-      _hasMaximum = false;
-
-      minimum = 0;
-      maximum = 0;
+      // hasMinimum_ is false by default;
+      // hasMaximum_ is false by default;
+      _stats.setMinimum(0);
+      _stats.setMaximum(0);
     } else {
-      _hasMinimum = pb.datestatistics().has_minimum();
-      _hasMaximum = pb.datestatistics().has_maximum();
-      minimum = pb.datestatistics().minimum();
-      maximum = pb.datestatistics().maximum();
+      _stats.setHasMinimum(pb.datestatistics().has_minimum());
+      _stats.setHasMaximum(pb.datestatistics().has_maximum());
+      _stats.setMinimum(pb.datestatistics().minimum());
+      _stats.setMaximum(pb.datestatistics().maximum());
     }
   }
 
   DecimalColumnStatisticsImpl::DecimalColumnStatisticsImpl
   (const proto::ColumnStatistics& pb, const StatContext& statContext){
-    valueCount = pb.numberofvalues();
-    if (!pb.has_decimalstatistics() || !statContext.correctStats) {
-      _hasMinimum = false;
-      _hasMaximum = false;
-      _hasSum = false;
-    }else{
+    _stats.setNumberOfValues(pb.numberofvalues());
+    _stats.setHasNull(pb.hasnull());
+    if (pb.has_decimalstatistics() && statContext.correctStats) {
       const proto::DecimalStatistics& stats = pb.decimalstatistics();
-      _hasMinimum = stats.has_minimum();
-      _hasMaximum = stats.has_maximum();
-      _hasSum = stats.has_sum();
+      _stats.setHasMinimum(stats.has_minimum());
+      _stats.setHasMaximum(stats.has_maximum());
+      _stats.setHasSum(stats.has_sum());
 
-      minimum = stats.minimum();
-      maximum = stats.maximum();
-      sum = stats.sum();
+      _stats.setMinimum(Decimal(stats.minimum()));
+      _stats.setMaximum(Decimal(stats.maximum()));
+      _stats.setSum(Decimal(stats.sum()));
     }
   }
 
   DoubleColumnStatisticsImpl::DoubleColumnStatisticsImpl
   (const proto::ColumnStatistics& pb){
-    valueCount = pb.numberofvalues();
+    _stats.setNumberOfValues(pb.numberofvalues());
+    _stats.setHasNull(pb.hasnull());
     if (!pb.has_doublestatistics()) {
-      _hasMinimum = false;
-      _hasMaximum = false;
-      _hasSum = false;
-
-      minimum = 0;
-      maximum = 0;
-      sum = 0;
+      _stats.setMinimum(0);
+      _stats.setMaximum(0);
+      _stats.setSum(0);
     }else{
       const proto::DoubleStatistics& stats = pb.doublestatistics();
-      _hasMinimum = stats.has_minimum();
-      _hasMaximum = stats.has_maximum();
-      _hasSum = stats.has_sum();
+      _stats.setHasMinimum(stats.has_minimum());
+      _stats.setHasMaximum(stats.has_maximum());
+      _stats.setHasSum(stats.has_sum());
 
-      minimum = stats.minimum();
-      maximum = stats.maximum();
-      sum = stats.sum();
+      _stats.setMinimum(stats.minimum());
+      _stats.setMaximum(stats.maximum());
+      _stats.setSum(stats.sum());
     }
   }
 
   IntegerColumnStatisticsImpl::IntegerColumnStatisticsImpl
   (const proto::ColumnStatistics& pb){
-    valueCount = pb.numberofvalues();
+    _stats.setNumberOfValues(pb.numberofvalues());
+    _stats.setHasNull(pb.hasnull());
     if (!pb.has_intstatistics()) {
-      _hasMinimum = false;
-      _hasMaximum = false;
-      _hasSum = false;
-
-      minimum = 0;
-      maximum = 0;
-      sum = 0;
+      _stats.setMinimum(0);
+      _stats.setMaximum(0);
+      _stats.setSum(0);
     }else{
       const proto::IntegerStatistics& stats = pb.intstatistics();
-      _hasMinimum = stats.has_minimum();
-      _hasMaximum = stats.has_maximum();
-      _hasSum = stats.has_sum();
+      _stats.setHasMinimum(stats.has_minimum());
+      _stats.setHasMaximum(stats.has_maximum());
+      _stats.setHasSum(stats.has_sum());
 
-      minimum = stats.minimum();
-      maximum = stats.maximum();
-      sum = stats.sum();
+      _stats.setMinimum(stats.minimum());
+      _stats.setMaximum(stats.maximum());
+      _stats.setSum(stats.sum());
     }
   }
 
   StringColumnStatisticsImpl::StringColumnStatisticsImpl
   (const proto::ColumnStatistics& pb, const StatContext& statContext){
-    valueCount = pb.numberofvalues();
+    _stats.setNumberOfValues(pb.numberofvalues());
+    _stats.setHasNull(pb.hasnull());
     if (!pb.has_stringstatistics() || !statContext.correctStats) {
-      _hasMinimum = false;
-      _hasMaximum = false;
-      _hasTotalLength = false;
-
-      totalLength = 0;
+      _stats.setTotalLength(0);
     }else{
       const proto::StringStatistics& stats = pb.stringstatistics();
-      _hasMinimum = stats.has_minimum();
-      _hasMaximum = stats.has_maximum();
-      _hasTotalLength = stats.has_sum();
+      _stats.setHasMinimum(stats.has_minimum());
+      _stats.setHasMaximum(stats.has_maximum());
+      _stats.setHasTotalLength(stats.has_sum());
 
-      minimum = stats.minimum();
-      maximum = stats.maximum();
-      totalLength = static_cast<uint64_t>(stats.sum());
+      _stats.setMinimum(stats.minimum());
+      _stats.setMaximum(stats.maximum());
+      _stats.setTotalLength(static_cast<uint64_t>(stats.sum()));
     }
   }
 
   TimestampColumnStatisticsImpl::TimestampColumnStatisticsImpl
   (const proto::ColumnStatistics& pb, const StatContext& statContext) {
-    valueCount = pb.numberofvalues();
+    _stats.setNumberOfValues(pb.numberofvalues());
+    _stats.setHasNull(pb.hasnull());
     if (!pb.has_timestampstatistics() || !statContext.correctStats) {
-      _hasMinimum = false;
-      _hasMaximum = false;
-      _hasLowerBound = false;
-      _hasUpperBound = false;
-      minimum = 0;
-      maximum = 0;
-      lowerBound = 0;
-      upperBound = 0;
+      _stats.setMinimum(0);
+      _stats.setMaximum(0);
+      _lowerBound = 0;
+      _upperBound = 0;
     }else{
       const proto::TimestampStatistics& stats = pb.timestampstatistics();
-      _hasMinimum = stats.has_minimumutc() || (stats.has_minimum() && (statContext.writerTimezone != NULL));
-      _hasMaximum = stats.has_maximumutc() || (stats.has_maximum() && (statContext.writerTimezone != NULL));
+      _stats.setHasMinimum(
+                  stats.has_minimumutc() || (stats.has_minimum() && (statContext.writerTimezone != NULL)));
+      _stats.setHasMaximum(
+                  stats.has_maximumutc() || (stats.has_maximum() && (statContext.writerTimezone != NULL)));
       _hasLowerBound = stats.has_minimumutc() || stats.has_minimum();
       _hasUpperBound = stats.has_maximumutc() || stats.has_maximum();
 
       // Timestamp stats are stored in milliseconds
       if (stats.has_minimumutc()) {
-        minimum = stats.minimumutc();
-        lowerBound = minimum;
+        int64_t minimum = stats.minimumutc();
+        _stats.setMinimum(minimum);
+        _lowerBound = minimum;
       } else if (statContext.writerTimezone) {
         int64_t writerTimeSec = stats.minimum() / 1000;
         // multiply the offset by 1000 to convert to millisecond
-        minimum = stats.minimum() + (statContext.writerTimezone->getVariant(writerTimeSec).gmtOffset) * 1000;
-        lowerBound = minimum;
+        int64_t minimum = stats.minimum() + (statContext.writerTimezone->getVariant(writerTimeSec).gmtOffset) * 1000;
+        _stats.setMinimum(minimum);
+        _lowerBound = minimum;
       } else {
-        minimum = 0;
+        _stats.setMinimum(0);
         // subtract 1 day 1 hour (25 hours) in milliseconds to handle unknown TZ and daylight savings
-        lowerBound = stats.minimum() - (25 * SECONDS_PER_HOUR * 1000);
+        _lowerBound = stats.minimum() - (25 * SECONDS_PER_HOUR * 1000);
       }
 
       // Timestamp stats are stored in milliseconds
       if (stats.has_maximumutc()) {
-        maximum = stats.maximumutc();
-        upperBound = maximum;
+        int64_t maximum = stats.maximumutc();
+        _stats.setMaximum(maximum);
+        _upperBound = maximum;
       } else if (statContext.writerTimezone) {
         int64_t writerTimeSec = stats.maximum() / 1000;
         // multiply the offset by 1000 to convert to millisecond
-        maximum = stats.maximum() + (statContext.writerTimezone->getVariant(writerTimeSec).gmtOffset) * 1000;
-        upperBound = maximum;
+        int64_t maximum = stats.maximum() + (statContext.writerTimezone->getVariant(writerTimeSec).gmtOffset) * 1000;
+        _stats.setMaximum(maximum);
+        _upperBound = maximum;
       } else {
-        maximum = 0;
+        _stats.setMaximum(0);
         // add 1 day 1 hour (25 hours) in milliseconds to handle unknown TZ and daylight savings
-        upperBound = stats.maximum() +  (25 * SECONDS_PER_HOUR * 1000);
+        _upperBound = stats.maximum() +  (25 * SECONDS_PER_HOUR * 1000);
       }
       // Add 1 millisecond to account for microsecond precision of values
-      upperBound += 1;
+      _upperBound += 1;
     }
   }
 

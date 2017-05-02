@@ -396,6 +396,10 @@ namespace orc {
     }
   }
 
+  Decimal::Decimal() : value(0), scale(0) {
+    // PASS
+  }
+
   std::string Decimal::toString() const {
     return value.toDecimalString(scale);
   }
