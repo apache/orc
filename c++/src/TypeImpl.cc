@@ -617,16 +617,15 @@ namespace orc {
       uint64_t maxLength = static_cast<uint64_t>(
         atoi(input.substr(start, end - start).c_str()));
       return new TypeImpl(CHAR, maxLength);
-    }
-    else {
+    } else {
       throw std::logic_error("Unknown type " + category);
     }
   }
 
   std::vector<std::pair<std::string, Type *> > TypeImpl::parseType(
-    const std::string &input,
-    size_t start,
-    size_t end) {
+                                                       const std::string &input,
+                                                       size_t start,
+                                                       size_t end) {
     std::string types = input.substr(start, end - start);
     std::vector<std::pair<std::string, Type *> > res;
     size_t pos = 0;
