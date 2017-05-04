@@ -274,4 +274,27 @@ namespace orc {
     EXPECT_EQ(13, cutType->getSubtype(1)->getColumnId());
     EXPECT_EQ(13, cutType->getSubtype(1)->getMaximumColumnId());
   }
+
+  TEST(TestType, buildTypeFromString) {
+    std::string typeStr = "struct<a:int,b:string,c:decimal(10,2),d:varchar(5)>";
+    ORC_UNIQUE_PTR<Type> type = Type::buildTypeFromString(typeStr);
+    EXPECT_EQ(typeStr, type->toString());
+
+    typeStr = "map<boolean,float>";
+    type = Type::buildTypeFromString(typeStr);
+    EXPECT_EQ(typeStr, type->toString());
+
+    typeStr = "uniontype<bigint,binary,timestamp>";
+    type = Type::buildTypeFromString(typeStr);
+    EXPECT_EQ(typeStr, type->toString());
+
+    typeStr = "struct<a:bigint,b:struct<a:binary,b:timestamp>>";
+    type = Type::buildTypeFromString(typeStr);
+    EXPECT_EQ(typeStr, type->toString());
+
+    typeStr =
+      "struct<a:bigint,b:struct<a:binary,b:timestamp>,c:map<double,tinyint>>";
+    type = Type::buildTypeFromString(typeStr);
+    EXPECT_EQ(typeStr, type->toString());
+  }
 }

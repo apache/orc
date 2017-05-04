@@ -86,7 +86,7 @@ namespace orc {
     /**
      * Build a Type object from string text representation.
      */
-    static Type* buildTypeFromString(const std::string& input);
+    static ORC_UNIQUE_PTR<Type> buildTypeFromString(const std::string& input);
   };
 
   const int64_t DEFAULT_DECIMAL_SCALE = 18;

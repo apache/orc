@@ -98,8 +98,8 @@ namespace orc {
      */
     void addChildType(std::unique_ptr<Type> childType);
 
-    static std::vector<std::pair<std::string, Type *> > buildTypeFromStringImpl(
-      const std::string& input,
+    static std::vector<std::pair<std::string, Type *> > parseType(
+      const std::string &input,
       size_t start,
       size_t end);
 
@@ -115,6 +115,68 @@ namespace orc {
      * Ensure that ids are assigned to all of the nodes.
      */
     void ensureIdAssigned() const;
+
+    /**
+     * Parse array type from string
+     * @param input the input string of an array type
+     * @param start start position of the input string
+     * @param end end position of the input string
+     */
+    static Type* parseArrayType(const std::string &input,
+                                size_t start,
+                                size_t end);
+
+    /**
+     * Parse map type from string
+     * @param input the input string of a map type
+     * @param start start position of the input string
+     * @param end end position of the input string
+     */
+    static Type* parseMapType(const std::string &input,
+                              size_t start,
+                              size_t end);
+
+    /**
+     * Parse struct type from string
+     * @param input the input string of a struct type
+     * @param start start position of the input string
+     * @param end end position of the input string
+     */
+    static Type* parseStructType(const std::string &input,
+                                 size_t start,
+                                 size_t end);
+
+    /**
+     * Parse union type from string
+     * @param input the input string of an union type
+     * @param start start position of the input string
+     * @param end end position of the input string
+     */
+    static Type* parseUnionType(const std::string &input,
+                                size_t start,
+                                size_t end);
+
+    /**
+     * Parse decimal type from string
+     * @param input the input string of a decimal type
+     * @param start start position of the input string
+     * @param end end position of the input string
+     */
+    static Type* parseDecimalType(const std::string &input,
+                                  size_t start,
+                                  size_t end);
+
+    /**
+     * Parse type for a category
+     * @param category type name
+     * @param input the input string of the category
+     * @param start start position of the input string
+     * @param end end position of the input string
+     */
+    static Type* parseCategory(std::string category,
+                               const std::string &input,
+                               size_t start,
+                               size_t end);
   };
 
   std::unique_ptr<Type> convertType(const proto::Type& type,
