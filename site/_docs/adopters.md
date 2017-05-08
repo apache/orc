@@ -50,6 +50,12 @@ ORC](https://code.facebook.com/posts/229861827208629/scaling-the-facebook-data-w
 The Presto team has done a lot of work [integrating
 ORC](https://code.facebook.com/posts/370832626374903/even-faster-data-at-the-speed-of-presto-orc/) into their SQL engine.
 
+### [Timber](https://timber.io/)
+
+Timber adopted ORC for it's S3 based logging platform that stores
+petabytes of log data. ORC has been key in ensuring a fast,
+cost-effective strategy for persisting and querying that data.
+
 ### [Vertica](http://www8.hp.com/us/en/software-solutions/advanced-sql-big-data-analytics/)
 
 HPE Vertica has contributed significantly to the ORC C++ library. ORC
