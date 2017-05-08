@@ -1,9 +1,0 @@
-org.apache.hadoop.fs
-org.apache.hadoop.hive.ql.io.orc
-org.apache.orc.bench
-org.apache.orc.bench.convert
-org.apache.orc.bench.convert.avro
-org.apache.orc.bench.convert.csv
-org.apache.orc.bench.convert.json
-org.apache.orc.bench.convert.orc
-org.apache.orc.bench.convert.parquet
