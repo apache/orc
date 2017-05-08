@@ -167,6 +167,27 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <version>0.10</version>
+        <configuration>
+          <excludeSubProject>false</excludeSubProject>
+          <excludes>
+            <exclude>**/*.json</exclude>
+            <exclude>**/*.json.gz</exclude>
+            <exclude>**/*.orc</exclude>
+            <exclude>**/*.out</exclude>
+            <exclude>**/*.schema</exclude>
+            <exclude>**/target/**</exclude>
+            <exclude>.idea/**</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
     </plugins>
     <pluginManagement>
       <plugins>
