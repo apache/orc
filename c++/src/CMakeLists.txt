@@ -135,10 +135,12 @@ add_custom_command(OUTPUT orc_proto.pb.h orc_proto.pb.cc
 add_library (orc STATIC
   "${CMAKE_CURRENT_BINARY_DIR}/Adaptor.hh"
   orc_proto.pb.h
+  io/InputStream.cc
   wrap/orc-proto-wrapper.cc
   ByteRLE.cc
   ColumnPrinter.cc
   ColumnReader.cc
+  Common.cc
   Compression.cc
   Exceptions.cc
   Int128.cc
