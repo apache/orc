@@ -108,7 +108,7 @@ namespace orc {
                            static_cast<size_t>(bufferLength - bufferOffset),
                            size);
       memcpy(buffer + bufferOffset, data + dataOffset, len);
-      bufferOffset += len;
+      bufferOffset += static_cast<int>(len);
       dataOffset += len;
       size -= len;
     }
