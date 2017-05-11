@@ -89,6 +89,78 @@ namespace orc {
   std::unique_ptr<InputStream> readLocalFile(const std::string& path) {
     return std::unique_ptr<InputStream>(new FileInputStream(path));
   }
+
+  OutputStream::~OutputStream() {
+      // PASS
+  };
+
+  class FileOutputStream : public OutputStream {
+  private:
+    std::string filename;
+    int file;
+    uint64_t bytesWritten;
+    bool closed;
+
+  public:
+    FileOutputStream(std::string _filename) {
+      bytesWritten = 0;
+      filename = _filename;
+      closed = false;
+      file = open(
+                  filename.c_str(),
+                  O_CREAT | O_WRONLY | O_TRUNC,
+                  S_IRUSR | S_IWUSR);
+      if (file == -1) {
+        throw ParseError("Can't open " + filename);
+      }
+    }
+
+    ~FileOutputStream();
+
+    uint64_t getLength() const override {
+      return bytesWritten;
+    }
+
+    uint64_t getNaturalWriteSize() const override {
+      return 128 * 1024;
+    }
+
+    void write(const void* buf, size_t length) override {
+      if (closed) {
+        throw std::logic_error("Cannot write to closed stream.");
+      }
+      ssize_t bytesWrite = ::write(file, buf, length);
+      if (bytesWrite == -1) {
+        throw ParseError("Bad write of " + filename);
+      }
+      if (static_cast<uint64_t>(bytesWrite) != length) {
+        throw ParseError("Short write of " + filename);
+      }
+      bytesWritten += static_cast<uint64_t>(bytesWrite);
+    }
+
+    const std::string& getName() const override {
+      return filename;
+    }
+
+    void close() override {
+      if (!closed) {
+        ::close(file);
+        closed = true;
+      }
+    }
+  };
+
+  FileOutputStream::~FileOutputStream() {
+    if (!closed) {
+      ::close(file);
+      closed = true;
+    }
+  }
+
+  std::unique_ptr<OutputStream> writeLocalFile(const std::string& path) {
+    return std::unique_ptr<OutputStream>(new FileOutputStream(path));
+  }
 }
 
 #ifndef HAS_STOLL
