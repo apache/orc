@@ -22,10 +22,6 @@
 #include "MemoryOutputStream.hh"
 
 namespace orc {
-  MemoryOutputStream::~MemoryOutputStream() {
-    // PASS
-  }
-
   TEST(BufferedOutputStream, block_aligned) {
     MemoryOutputStream memStream(1024);
     MemoryPool * pool = getDefaultPool();

@@ -19,6 +19,11 @@
 #include "MemoryOutputStream.hh"
 
 namespace orc {
+
+  MemoryOutputStream::~MemoryOutputStream() {
+    // PASS
+  }
+
   void MemoryOutputStream::write(const void* buf, size_t size) {
       memcpy(data + length, buf, size);
       length += size;
