@@ -40,6 +40,35 @@ namespace orc {
     virtual uint64_t getNumberOfValues() const = 0;
 
     /**
+     * Check whether column has null value
+     * @return true if has null value
+     */
+    virtual bool hasNull() const = 0;
+
+    /**
+     * Increases count of values
+     * @param count number of values to be increased
+     */
+    virtual void increase(uint64_t count) = 0;
+
+    /**
+     * Merges another statistics
+     * @param other statistics to be merged
+     */
+    virtual void merge(const ColumnStatistics& other) = 0;
+
+    /**
+     * Convert statistics to protobuf version
+     * @param pbStats output of protobuf stats
+     */
+    virtual void toProtoBuf(proto::ColumnStatistics& pbStats) const = 0;
+
+    /**
+     * reset column statistics to initial state
+     */
+    virtual void reset() = 0;
+
+    /**
      * print out statistics of column if any
      */
     virtual std::string toString() const = 0;
@@ -59,6 +88,12 @@ namespace orc {
     virtual bool hasTotalLength() const = 0;
 
     virtual uint64_t getTotalLength() const = 0;
+
+    /**
+     * update stats by a new value
+     * @param length of the value
+     */
+    virtual void update(size_t length) = 0;
   };
 
   /**
@@ -76,6 +111,13 @@ namespace orc {
 
     virtual uint64_t getFalseCount() const = 0;
     virtual uint64_t getTrueCount() const = 0;
+
+    /**
+     * update stats by a new value
+     * @param value new value to update
+     * @param repetitions the repetitions of the boolean value
+     */
+    virtual void update(bool value, size_t repetitions) = 0;
   };
 
   /**
@@ -108,6 +150,12 @@ namespace orc {
      * @return maximum value
      */
     virtual int32_t getMaximum() const = 0;
+
+    /**
+     * update stats by a new value
+     * @param value new value to update
+     */
+    virtual void update(int32_t value) = 0;
   };
 
   /**
@@ -152,6 +200,12 @@ namespace orc {
      * @return sum of all the values
      */
     virtual Decimal getSum() const = 0;
+
+    /**
+     * update stats by a new value
+     * @param value new value to update
+     */
+    virtual void update(const Decimal& value) = 0;
   };
 
   /**
@@ -198,6 +252,12 @@ namespace orc {
      * @return the sum
      */
     virtual double getSum() const = 0;
+
+    /**
+     * update stats by a new value
+     * @param value new value to update
+     */
+    virtual void update(double value) = 0;
   };
 
   /**
@@ -245,6 +305,13 @@ namespace orc {
      * @return the sum of the column
      */
     virtual int64_t getSum() const = 0;
+
+    /**
+     * update stats by a new value
+     * @param value new value to update
+     * @param repetitions repetition of the value
+     */
+    virtual void update(int64_t value, int repetitions) = 0;
   };
 
   /**
@@ -289,6 +356,19 @@ namespace orc {
      * @return total length of all the values
      */
     virtual uint64_t getTotalLength() const = 0;
+
+    /**
+     * update stats by a new value
+     * @param value new value to update
+     */
+    virtual void update(const std::string& value) = 0;
+
+    /**
+     * update stats by a new value
+     * @param value new value to update
+     * @param length length of the value
+     */
+    virtual void update(const char* value, size_t length) = 0;
   };
 
   /**
@@ -346,7 +426,11 @@ namespace orc {
      */
     virtual int64_t getUpperBound() const = 0;
 
-
+    /**
+     * update stats by a new value
+     * @param value new value to update
+     */
+    virtual void update(int64_t value) = 0;
   };
 
   class Statistics {

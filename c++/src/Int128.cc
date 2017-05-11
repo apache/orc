@@ -435,4 +435,60 @@ namespace orc {
     return buf.str();
   }
 
+  const static int32_t MAX_PRECISION_64 = 18;
+  const static int64_t POWERS_OF_TEN[MAX_PRECISION_64 + 1] =
+    {1,
+     10,
+     100,
+     1000,
+     10000,
+     100000,
+     1000000,
+     10000000,
+     100000000,
+     1000000000,
+     10000000000,
+     100000000000,
+     1000000000000,
+     10000000000000,
+     100000000000000,
+     1000000000000000,
+     10000000000000000,
+     100000000000000000,
+     1000000000000000000};
+
+  Int128 scaleUpInt128ByPowerOfTen(Int128 value,
+                                   int32_t power,
+                                   bool &overflow) {
+    overflow = false;
+
+    Int128 remainder;
+    while (power > 0) {
+      int32_t step = std::min(power, MAX_PRECISION_64);
+      if (value > 0
+          && Int128::maximumValue().divide(POWERS_OF_TEN[step], remainder) < value) {
+        overflow = true;
+        return Int128::maximumValue();
+      } else if (value < 0 && Int128::minimumValue().divide(POWERS_OF_TEN[step], remainder) > value) {
+        overflow = true;
+        return Int128::minimumValue();
+      }
+
+      value *= POWERS_OF_TEN[step];
+      power -= step;
+    }
+
+    return value;
+  }
+
+  Int128 scaleDownInt128ByPowerOfTen(Int128 value, int32_t power) {
+    Int128 remainder;
+    while (power > 0) {
+      int32_t step = std::min(std::abs(power), MAX_PRECISION_64);
+      value = value.divide(POWERS_OF_TEN[step], remainder);
+      power -= step;
+    }
+    return value;
+  }
+
 }
