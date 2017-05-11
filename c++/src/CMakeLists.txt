@@ -136,6 +136,7 @@ add_library (orc STATIC
   "${CMAKE_CURRENT_BINARY_DIR}/Adaptor.hh"
   orc_proto.pb.h
   io/InputStream.cc
+  io/OutputStream.cc
   wrap/orc-proto-wrapper.cc
   ByteRLE.cc
   ColumnPrinter.cc

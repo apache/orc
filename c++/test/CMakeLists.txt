@@ -23,6 +23,9 @@ include_directories(
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX11_FLAGS} ${WARN_FLAGS}")
 
 add_executable (orc-test
+  MemoryInputStream.cc
+  MemoryOutputStream.cc
+  TestBufferedOutputStream.cc
   TestByteRle.cc
   TestColumnPrinter.cc
   TestColumnReader.cc

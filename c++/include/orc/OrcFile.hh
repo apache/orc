@@ -66,6 +66,42 @@ namespace orc {
   };
 
   /**
+   * An abstract interface for providing ORC writer a stream of bytes.
+   */
+  class OutputStream {
+  public:
+    virtual ~OutputStream();
+
+    /**
+     * Get the total length of bytes written.
+     */
+    virtual uint64_t getLength() const = 0;
+
+    /**
+     * Get the natural size for reads.
+     * @return the number of bytes that should be written at once
+     */
+    virtual uint64_t getNaturalWriteSize() const = 0;
+
+    /**
+     * Write/Append length bytes pointed by buf to the file stream
+     * @param buf the starting position of a buffer.
+     * @param length the number of bytes to write.
+     */
+    virtual void write(const void* buf, size_t length) = 0;
+
+    /**
+     * Get the name of the stream for error messages.
+     */
+    virtual const std::string& getName() const = 0;
+
+    /**
+     * Close the stream and flush any pending data to the disk.
+     */
+    virtual void close() = 0;
+  };
+
+  /**
    * Create a stream to a local file.
    * @param path the name of the file in the local file system
    */
@@ -78,6 +114,11 @@ namespace orc {
    */
   ORC_UNIQUE_PTR<Reader> createReader(ORC_UNIQUE_PTR<InputStream> stream,
                                       const ReaderOptions& options);
+  /**
+   * Create a stream to write to a local file.
+   * @param path the name of the file in the local file system
+   */
+  ORC_UNIQUE_PTR<OutputStream> writeLocalFile(const std::string& path);
 }
 
 #endif
