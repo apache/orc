@@ -25,8 +25,7 @@
 
 namespace orc {
 
-  TEST(Int128, testDecimalComparison) {
-
+  TEST(Decimal, testDecimalComparison) {
     // same scales
     EXPECT_TRUE(Decimal(Int128(99), 0) < Decimal(Int128(100), 0));
     EXPECT_TRUE(Decimal(Int128(34543), 5) < Decimal(Int128(4324324), 5));
@@ -53,7 +52,6 @@ namespace orc {
     EXPECT_FALSE(Decimal(Int128(10), 11) < Decimal(Int128(1), 10));
 
     // large scales (>18)
-
     EXPECT_TRUE(Decimal(Int128(99), 35) < Decimal(Int128(100), 35));
     EXPECT_TRUE(Decimal(Int128("12345678999999999999999999999999999998"), 29)
                 < Decimal(Int128("123456789999999999999999999999999999999"), 30));
