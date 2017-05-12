@@ -35,7 +35,7 @@ namespace orc {
       EXPECT_TRUE(bufStream.Next(reinterpret_cast<void **>(&buf), &len));
       EXPECT_EQ(10, len);
       for (int j = 0; j < 10; ++j) {
-        buf[j] = 'a' + static_cast<char>(j);
+        buf[j] = static_cast<char>('a' + j);
       }
     }
 
@@ -60,7 +60,7 @@ namespace orc {
     EXPECT_EQ(10, len);
 
     for (int i = 0; i < 7; ++i) {
-        buf[i] = 'a' + static_cast<char>(i);
+        buf[i] = static_cast<char>('a' + i);
     }
 
     bufStream.BackUp(3);
@@ -75,7 +75,7 @@ namespace orc {
     EXPECT_EQ(10, len);
 
     for (int i = 0; i < 5; ++i) {
-        buf[i] = 'a' + static_cast<char>(i);
+        buf[i] = static_cast<char>('a' + i);
     }
 
     bufStream.BackUp(5);
