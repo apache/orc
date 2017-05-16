@@ -584,4 +584,43 @@ namespace orc {
     EXPECT_EQ("-0.0123", num.toDecimalString(4));
     EXPECT_EQ("-0.00123", num.toDecimalString(5));
   }
+
+  TEST(Int128, testInt128Scale) {
+    Int128 num = Int128(10);
+    bool overflow = false;
+
+    num = scaleUpInt128ByPowerOfTen(num, 0, overflow);
+    EXPECT_FALSE(overflow);
+    EXPECT_EQ(Int128(10), num);
+
+    num = scaleUpInt128ByPowerOfTen(num, 5, overflow);
+    EXPECT_FALSE(overflow);
+    EXPECT_EQ(Int128(1000000), num);
+
+    num = scaleUpInt128ByPowerOfTen(num, 5, overflow);
+    EXPECT_FALSE(overflow);
+    EXPECT_EQ(Int128(100000000000l), num);
+
+    num = scaleUpInt128ByPowerOfTen(num, 20, overflow);
+    EXPECT_FALSE(overflow);
+    EXPECT_EQ(Int128("10000000000000000000000000000000"), num);
+
+    scaleUpInt128ByPowerOfTen(num, 10, overflow);
+    EXPECT_TRUE(overflow);
+
+    scaleUpInt128ByPowerOfTen(Int128::maximumValue(), 0, overflow);
+    EXPECT_FALSE(overflow);
+
+    scaleUpInt128ByPowerOfTen(Int128::maximumValue(), 1, overflow);
+    EXPECT_TRUE(overflow);
+
+    num = scaleDownInt128ByPowerOfTen(Int128(10001), 0);
+    EXPECT_EQ(Int128(10001), num);
+
+    num = scaleDownInt128ByPowerOfTen(Int128(10001), 2);
+    EXPECT_EQ(Int128(100), num);
+
+    num = scaleDownInt128ByPowerOfTen(Int128(10000), 5);
+    EXPECT_EQ(Int128(0), num);
+  }
 }  // namespace orc

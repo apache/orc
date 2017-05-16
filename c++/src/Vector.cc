@@ -383,6 +383,10 @@ namespace orc {
     // PASS
   }
 
+  Decimal::Decimal(): value(0), scale(0) {
+    // PASS
+  }
+
   Decimal::Decimal(const std::string& str) {
     std::size_t foundPoint = str.find(".");
     // no decimal point, it is int
@@ -398,6 +402,53 @@ namespace orc {
 
   std::string Decimal::toString() const {
     return value.toDecimalString(scale);
+  }
+
+  bool operator<(Decimal decimal1, Decimal decimal2) {
+    // compare integral parts
+    Int128 integral1 = scaleDownInt128ByPowerOfTen(decimal1.value,
+                                                   decimal1.scale);
+    Int128 integral2 = scaleDownInt128ByPowerOfTen(decimal2.value,
+                                                   decimal2.scale);
+
+    if (integral1 < integral2) {
+      return true;
+    } else if (integral1 > integral2) {
+      return false;
+    }
+
+    // integral parts are equal, continue comparing fractional parts
+    // unnecessary to check overflow here because the scaled number will not
+    // exceed original ones
+    bool overflow = false, positive = decimal1.value >= 0;
+    decimal1.value -= scaleUpInt128ByPowerOfTen(integral1,
+                                                decimal1.scale,
+                                                overflow);
+    decimal2.value -= scaleUpInt128ByPowerOfTen(integral2,
+                                                decimal2.scale,
+                                                overflow);
+
+    int32_t diff = decimal1.scale - decimal2.scale;
+    if (diff > 0) {
+      decimal2.value = scaleUpInt128ByPowerOfTen(decimal2.value,
+                                                 diff,
+                                                 overflow);
+      if (overflow) {
+        return positive ? true : false;
+      }
+    } else {
+      decimal1.value = scaleUpInt128ByPowerOfTen(decimal1.value,
+                                                 -diff,
+                                                 overflow);
+      if (overflow) {
+        return positive ? false : true;
+      }
+    }
+
+    if (decimal1.value < decimal2.value) {
+      return true;
+    }
+    return false;
   }
 
   TimestampVectorBatch::TimestampVectorBatch(uint64_t capacity,

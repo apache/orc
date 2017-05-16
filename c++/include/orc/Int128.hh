@@ -332,5 +332,23 @@ namespace orc {
     int64_t highbits;
     uint64_t lowbits;
   };
+
+  /**
+   * Scales up an Int128 value
+   * @param value the Int128 value to scale
+   * @param power the scale offset. Result of a negative factor is undefined.
+   * @param overflow returns whether the result overflows or not
+   * @return the scaled value
+   */
+  Int128 scaleUpInt128ByPowerOfTen(Int128 value,
+                                   int32_t power,
+                                   bool &overflow);
+  /**
+   * Scales down an Int128 value
+   * @param value the Int128 value to scale
+   * @param power the scale offset. Result of a negative factor is undefined.
+   * @return the scaled value
+   */
+  Int128 scaleDownInt128ByPowerOfTen(Int128 value, int32_t power);
 }
 #endif

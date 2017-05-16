@@ -186,12 +186,16 @@ namespace orc {
 
   struct Decimal {
     Decimal(const Int128& value, int32_t scale);
+    Decimal();
     explicit Decimal(const std::string& value);
 
     std::string toString() const;
     Int128 value;
     int32_t scale;
   };
+
+  // compares two decimals
+  bool operator<(Decimal decimal1, Decimal decimal2);
 
   struct Decimal64VectorBatch: public ColumnVectorBatch {
     Decimal64VectorBatch(uint64_t capacity, MemoryPool& pool);
