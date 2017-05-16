@@ -151,6 +151,10 @@ public class TestMapreduceOrcOutputFormat {
       assertEquals(r * 3, ((IntWritable) row.getFieldValue(2)).get());
     }
     assertEquals(false, reader.nextKeyValue());
+    reader.close();
+
+    Reader orcReader = OrcFile.createReader(split.getPath(), OrcFile.readerOptions(conf));
+    assertEquals(2, orcReader.getSchema().getFieldNames().size());
   }
 
 
