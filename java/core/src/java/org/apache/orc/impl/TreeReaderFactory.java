@@ -43,6 +43,7 @@ import org.apache.hadoop.hive.ql.exec.vector.expressions.StringExpr;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.OrcProto;
+import org.apache.orc.impl.writer.TimestampTreeWriter;
 
 /**
  * Factory for creating ORC tree readers.
@@ -938,7 +939,8 @@ public class TreeReaderFactory {
         threadLocalDateFormat.get().setTimeZone(writerTimeZone);
         try {
           long epoch = threadLocalDateFormat.get()
-            .parse(WriterImpl.BASE_TIMESTAMP_STRING).getTime() / WriterImpl.MILLIS_PER_SECOND;
+            .parse(TimestampTreeWriter.BASE_TIMESTAMP_STRING).getTime() /
+              TimestampTreeWriter.MILLIS_PER_SECOND;
           baseTimestampMap.put(timeZoneId, epoch);
           return epoch;
         } catch (ParseException e) {
@@ -977,7 +979,7 @@ public class TreeReaderFactory {
           if (millis < 0 && newNanos != 0) {
             millis -= 1;
           }
-          millis *= WriterImpl.MILLIS_PER_SECOND;
+          millis *= TimestampTreeWriter.MILLIS_PER_SECOND;
           long offset = 0;
           // If reader and writer time zones have different rules, adjust the timezone difference
           // between reader and writer taking day light savings into account.

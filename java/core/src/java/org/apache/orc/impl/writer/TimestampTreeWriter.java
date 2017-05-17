@@ -1,0 +1,165 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.apache.orc.impl.writer;
+
+import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
+import org.apache.hadoop.hive.ql.util.JavaDataModel;
+import org.apache.orc.OrcProto;
+import org.apache.orc.TypeDescription;
+import org.apache.orc.impl.IntegerWriter;
+import org.apache.orc.impl.PositionRecorder;
+import org.apache.orc.impl.SerializationUtils;
+
+import java.io.IOException;
+import java.sql.Timestamp;
+import java.util.TimeZone;
+
+public class TimestampTreeWriter extends TreeWriterBase {
+  public static final int MILLIS_PER_SECOND = 1000;
+  public static final String BASE_TIMESTAMP_STRING = "2015-01-01 00:00:00";
+
+  private final IntegerWriter seconds;
+  private final IntegerWriter nanos;
+  private final boolean isDirectV2;
+  private final TimeZone localTimezone;
+  private final long baseEpochSecsLocalTz;
+
+  public TimestampTreeWriter(int columnId,
+                             TypeDescription schema,
+                             WriterContext writer,
+                             boolean nullable) throws IOException {
+    super(columnId, schema, writer, nullable);
+    this.isDirectV2 = isNewWriteFormat(writer);
+    this.seconds = createIntegerWriter(writer.createStream(id,
+        OrcProto.Stream.Kind.DATA), true, isDirectV2, writer);
+    this.nanos = createIntegerWriter(writer.createStream(id,
+        OrcProto.Stream.Kind.SECONDARY), false, isDirectV2, writer);
+    if (rowIndexPosition != null) {
+      recordPosition(rowIndexPosition);
+    }
+    this.localTimezone = TimeZone.getDefault();
+    // for unit tests to set different time zones
+    this.baseEpochSecsLocalTz = Timestamp.valueOf(BASE_TIMESTAMP_STRING).getTime() / MILLIS_PER_SECOND;
+  }
+
+  @Override
+  OrcProto.ColumnEncoding.Builder getEncoding() {
+    OrcProto.ColumnEncoding.Builder result = super.getEncoding();
+    if (isDirectV2) {
+      result.setKind(OrcProto.ColumnEncoding.Kind.DIRECT_V2);
+    } else {
+      result.setKind(OrcProto.ColumnEncoding.Kind.DIRECT);
+    }
+    return result;
+  }
+
+  @Override
+  public void writeBatch(ColumnVector vector, int offset,
+                         int length) throws IOException {
+    super.writeBatch(vector, offset, length);
+    TimestampColumnVector vec = (TimestampColumnVector) vector;
+    Timestamp val;
+    if (vector.isRepeating) {
+      if (vector.noNulls || !vector.isNull[0]) {
+        val = vec.asScratchTimestamp(0);
+        long millis = val.getTime();
+        long utc = SerializationUtils.convertToUtc(localTimezone, millis);
+        indexStatistics.updateTimestamp(utc);
+        if (createBloomFilter) {
+          if (bloomFilter != null) {
+            bloomFilter.addLong(millis);
+          }
+          bloomFilterUtf8.addLong(utc);
+        }
+        final long secs = millis / MILLIS_PER_SECOND - baseEpochSecsLocalTz;
+        final long nano = formatNanos(val.getNanos());
+        for (int i = 0; i < length; ++i) {
+          seconds.write(secs);
+          nanos.write(nano);
+        }
+      }
+    } else {
+      for (int i = 0; i < length; ++i) {
+        if (vec.noNulls || !vec.isNull[i + offset]) {
+          val = vec.asScratchTimestamp(i + offset);
+          long millis = val.getTime();
+          long secs = millis / MILLIS_PER_SECOND - baseEpochSecsLocalTz;
+          long utc = SerializationUtils.convertToUtc(localTimezone, millis);
+          seconds.write(secs);
+          nanos.write(formatNanos(val.getNanos()));
+          indexStatistics.updateTimestamp(utc);
+          if (createBloomFilter) {
+            if (bloomFilter != null) {
+              bloomFilter.addLong(millis);
+            }
+            bloomFilterUtf8.addLong(utc);
+          }
+        }
+      }
+    }
+  }
+
+  @Override
+  public void writeStripe(OrcProto.StripeFooter.Builder builder,
+                          OrcProto.StripeStatistics.Builder stats,
+                          int requiredIndexEntries) throws IOException {
+    super.writeStripe(builder, stats, requiredIndexEntries);
+    seconds.flush();
+    nanos.flush();
+    if (rowIndexPosition != null) {
+      recordPosition(rowIndexPosition);
+    }
+  }
+
+  private static long formatNanos(int nanos) {
+    if (nanos == 0) {
+      return 0;
+    } else if (nanos % 100 != 0) {
+      return ((long) nanos) << 3;
+    } else {
+      nanos /= 100;
+      int trailingZeros = 1;
+      while (nanos % 10 == 0 && trailingZeros < 7) {
+        nanos /= 10;
+        trailingZeros += 1;
+      }
+      return ((long) nanos) << 3 | trailingZeros;
+    }
+  }
+
+  @Override
+  void recordPosition(PositionRecorder recorder) throws IOException {
+    super.recordPosition(recorder);
+    seconds.getPosition(recorder);
+    nanos.getPosition(recorder);
+  }
+
+  @Override
+  public long estimateMemory() {
+    return super.estimateMemory() + seconds.estimateMemory() +
+        nanos.estimateMemory();
+  }
+
+  @Override
+  public long getRawDataSize() {
+    return fileStatistics.getNumberOfValues() *
+        JavaDataModel.get().lengthOfTimestamp();
+  }
+}
