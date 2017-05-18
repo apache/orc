@@ -147,7 +147,7 @@ void RleEncoderV1::write(int64_t value) {
         repeat = true;
         numLiterals += 1;
       } else {
-        numLiterals -= MINIMUM_REPEAT - 1;
+        numLiterals -= static_cast<int>(MINIMUM_REPEAT - 1);
         long base = literals[numLiterals];
         writeValues();
         literals[0] = base;

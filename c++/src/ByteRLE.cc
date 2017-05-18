@@ -166,7 +166,7 @@ namespace orc {
           repeat = true;
           numLiterals += 1;
         } else {
-          numLiterals -= MINIMUM_REPEAT - 1;
+          numLiterals -= static_cast<int>(MINIMUM_REPEAT - 1);
           writeValues();
           literals[0] = value;
           repeat = true;
@@ -258,7 +258,8 @@ namespace orc {
       }
       if (!notNull || notNull[i]) {
         if (!data || data[i]) {
-          current |= static_cast<unsigned char>(0x80 >> (8 - bitsRemained));
+          current =
+            static_cast<unsigned char>(current | (0x80 >> (8 - bitsRemained)));
         }
         --bitsRemained;
       }
