@@ -259,7 +259,7 @@ namespace orc {
       if (!notNull || notNull[i]) {
         if (!data || data[i]) {
           current =
-            static_cast<unsigned char>(current | (0x80 >> (8 - bitsRemained)));
+            static_cast<char>(current | (0x80 >> (8 - bitsRemained)));
         }
         --bitsRemained;
       }
