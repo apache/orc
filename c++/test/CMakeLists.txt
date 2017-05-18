@@ -27,6 +27,7 @@ add_executable (orc-test
   MemoryOutputStream.cc
   TestBufferedOutputStream.cc
   TestByteRle.cc
+  TestByteRLEEncoder.cc
   TestColumnPrinter.cc
   TestColumnReader.cc
   TestCompression.cc
@@ -34,6 +35,7 @@ add_executable (orc-test
   TestInt128.cc
   TestReader.cc
   TestRle.cc
+  TestRLEv1Encoder.cc
   TestStripeIndexStatistics.cc
   TestTimestampStatistics.cc
   TestTimezone.cc

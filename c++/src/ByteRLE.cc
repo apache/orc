@@ -27,6 +27,268 @@
 namespace orc {
 
   const size_t MINIMUM_REPEAT = 3;
+  const size_t MAXIMUM_REPEAT = 127 + MINIMUM_REPEAT;
+  const size_t MAX_LITERAL_SIZE = 128;
+
+  ByteRleEncoder::~ByteRleEncoder() {
+    // PASS
+  }
+
+  class ByteRleEncoderImpl : public ByteRleEncoder {
+  public:
+    ByteRleEncoderImpl(std::unique_ptr<BufferedOutputStream> output);
+    virtual ~ByteRleEncoderImpl();
+
+    /**
+     * Encode the next batch of values
+     * @param data to be encoded
+     * @param numValues the number of values to be encoded
+     * @param notNull If the pointer is null, all values are read. If the
+     *    pointer is not null, positions that are false are skipped.
+     */
+    virtual void add(const char* data, uint64_t numValues,
+                      const char* notNull) override;
+
+    /**
+     * Get size of buffer used so far.
+     */
+    virtual uint64_t getBufferSize() const override;
+
+    /**
+     * Flushing underlying BufferedOutputStream
+    */
+    virtual uint64_t flush() override;
+
+    virtual void recordPosition(PositionRecorder* recorder) const override;
+
+  protected:
+    std::unique_ptr<BufferedOutputStream> outputStream;
+    char * literals;
+    int numLiterals;
+    bool repeat;
+    int tailRunLength;
+    int bufferPosition;
+    int bufferLength;
+    char * buffer;
+
+    void writeByte(char c);
+    void writeValues();
+    void write(char c);
+  };
+
+  ByteRleEncoderImpl::ByteRleEncoderImpl(
+                                std::unique_ptr<BufferedOutputStream> output)
+                                  : outputStream(std::move(output)) {
+    literals = new char[MAX_LITERAL_SIZE];
+    numLiterals = 0;
+    tailRunLength = 0;
+    repeat = false;
+    bufferPosition = 0;
+    bufferLength = 0;
+    buffer = nullptr;
+  }
+
+  ByteRleEncoderImpl::~ByteRleEncoderImpl() {
+    // PASS
+  }
+
+  void ByteRleEncoderImpl::writeByte(char c) {
+    if (bufferPosition == bufferLength) {
+      int addedSize = 0;
+      if (!outputStream->Next(reinterpret_cast<void **>(&buffer), &addedSize)) {
+        throw std::bad_alloc();
+      }
+      bufferPosition = 0;
+      bufferLength = addedSize;
+    }
+    buffer[bufferPosition++] = c;
+  }
+
+  void ByteRleEncoderImpl::add(
+                               const char* data,
+                               uint64_t numValues,
+                               const char* notNull) {
+    for (uint64_t i = 0; i < numValues; ++i) {
+      if (!notNull || notNull[i]) {
+        write(data[i]);
+      }
+    }
+  }
+
+  void ByteRleEncoderImpl::writeValues() {
+    if (numLiterals != 0) {
+      if (repeat) {
+        writeByte(static_cast<char>(numLiterals - static_cast<int>(MINIMUM_REPEAT)));
+        writeByte(literals[0]);
+     } else {
+        writeByte(static_cast<char>(-numLiterals));
+        for (int i = 0; i < numLiterals; ++i) {
+          writeByte(literals[i]);
+        }
+      }
+      repeat = false;
+      tailRunLength = 0;
+      numLiterals = 0;
+    }
+  }
+
+  uint64_t ByteRleEncoderImpl::flush() {
+    writeValues();
+    outputStream->BackUp(bufferLength - bufferPosition);
+    uint64_t dataSize = outputStream->flush();
+    bufferLength = bufferPosition = 0;
+    return dataSize;
+  }
+
+  void ByteRleEncoderImpl::write(char value) {
+    if (numLiterals == 0) {
+      literals[numLiterals++] = value;
+      tailRunLength = 1;
+    } else if (repeat) {
+      if (value == literals[0]) {
+        numLiterals += 1;
+        if (numLiterals == MAXIMUM_REPEAT) {
+          writeValues();
+        }
+      } else {
+        writeValues();
+        literals[numLiterals++] = value;
+        tailRunLength = 1;
+      }
+    } else {
+      if (value == literals[numLiterals - 1]) {
+        tailRunLength += 1;
+      } else {
+        tailRunLength = 1;
+      }
+      if (tailRunLength == MINIMUM_REPEAT) {
+        if (numLiterals + 1 == MINIMUM_REPEAT) {
+          repeat = true;
+          numLiterals += 1;
+        } else {
+          numLiterals -= MINIMUM_REPEAT - 1;
+          writeValues();
+          literals[0] = value;
+          repeat = true;
+          numLiterals = MINIMUM_REPEAT;
+        }
+      } else {
+        literals[numLiterals++] = value;
+        if (numLiterals == MAX_LITERAL_SIZE) {
+          writeValues();
+        }
+      }
+    }
+  }
+
+  uint64_t ByteRleEncoderImpl::getBufferSize() const {
+    return outputStream->getSize();
+  }
+
+  void ByteRleEncoderImpl::recordPosition(PositionRecorder *recorder) const {
+    uint64_t flushedSize = outputStream->getSize();
+    uint64_t unflushedSize = static_cast<uint64_t>(bufferPosition);
+    if (outputStream->isCompressed()) {
+      // start of the compression chunk in the stream
+      recorder->add(flushedSize);
+      // number of decompressed bytes that need to be consumed
+      recorder->add(unflushedSize);
+    } else {
+      flushedSize -= static_cast<uint64_t>(bufferLength);
+      // byte offset of the RLE run’s start location
+      recorder->add(flushedSize + unflushedSize);
+    }
+    recorder->add(static_cast<uint64_t>(numLiterals));
+  }
+
+  std::unique_ptr<ByteRleEncoder> createByteRleEncoder
+                              (std::unique_ptr<BufferedOutputStream> output) {
+    return std::unique_ptr<ByteRleEncoder>(new ByteRleEncoderImpl
+                                           (std::move(output)));
+  }
+
+  class BooleanRleEncoderImpl : public ByteRleEncoderImpl {
+  public:
+    BooleanRleEncoderImpl(std::unique_ptr<BufferedOutputStream> output);
+    virtual ~BooleanRleEncoderImpl();
+
+    /**
+     * Encode the next batch of values
+     * @param data to be encoded
+     * @param numValues the number of values to be encoded
+     * @param notNull If the pointer is null, all values are read. If the
+     *    pointer is not null, positions that are false are skipped.
+     */
+    virtual void add(const char* data, uint64_t numValues,
+                      const char* notNull) override;
+
+    /**
+     * Flushing underlying BufferedOutputStream
+     */
+    virtual uint64_t flush() override;
+
+    virtual void recordPosition(PositionRecorder* recorder) const override;
+
+  private:
+    int bitsRemained;
+    char current;
+
+  };
+
+  BooleanRleEncoderImpl::BooleanRleEncoderImpl(
+                        std::unique_ptr<BufferedOutputStream> output)
+                        : ByteRleEncoderImpl(std::move(output)) {
+    bitsRemained = 8;
+    current = static_cast<char>(0);
+  }
+
+  BooleanRleEncoderImpl::~BooleanRleEncoderImpl() {
+    // PASS
+  }
+
+  void BooleanRleEncoderImpl::add(
+                                  const char* data,
+                                  uint64_t numValues,
+                                  const char* notNull) {
+    for (uint64_t i = 0; i < numValues; ++i) {
+      if (bitsRemained == 0) {
+        write(current);
+        current = static_cast<char>(0);
+        bitsRemained = 8;
+      }
+      if (!notNull || notNull[i]) {
+        if (!data || data[i]) {
+          current |= static_cast<unsigned char>(0x80 >> (8 - bitsRemained));
+        }
+        --bitsRemained;
+      }
+    }
+    if (bitsRemained == 0) {
+      write(current);
+      current = static_cast<char>(0);
+      bitsRemained = 8;
+    }
+  }
+
+  uint64_t BooleanRleEncoderImpl::flush() {
+    if (bitsRemained != 8) {
+      write(current);
+    }
+    bitsRemained = 8;
+    current = static_cast<char>(0);
+    return ByteRleEncoderImpl::flush();
+  }
+
+  void BooleanRleEncoderImpl::recordPosition(PositionRecorder* recorder) const {
+    ByteRleEncoderImpl::recordPosition(recorder);
+    recorder->add(static_cast<uint64_t>(8 - bitsRemained));
+  }
+
+  std::unique_ptr<ByteRleEncoder> createBooleanRleEncoder
+                                 (std::unique_ptr<BufferedOutputStream> output) {
+    BooleanRleEncoderImpl* encoder = new BooleanRleEncoderImpl(std::move(output)) ;
+    return std::unique_ptr<ByteRleEncoder>(reinterpret_cast<ByteRleEncoder*>(encoder));
+  }
 
   ByteRleDecoder::~ByteRleDecoder() {
     // PASS

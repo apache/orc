@@ -26,7 +26,172 @@
 namespace orc {
 
 const uint64_t MINIMUM_REPEAT = 3;
+const uint64_t MAXIMUM_REPEAT = 127 + MINIMUM_REPEAT;
+
 const uint64_t BASE_128_MASK = 0x7f;
+
+const int MAX_DELTA = 127;
+const int MIN_DELTA = -128;
+const int MAX_LITERAL_SIZE = 128;
+
+RleEncoderV1::RleEncoderV1(
+                          std::unique_ptr<BufferedOutputStream> outStream,
+                          bool hasSigned):
+                          outputStream(std::move(outStream)) {
+  isSigned = hasSigned;
+  literals = new int64_t[MAX_LITERAL_SIZE];
+  numLiterals = 0;
+  delta = 0;
+  repeat = false;
+  tailRunLength = 0;
+  bufferPosition = 0;
+  bufferLength = 0;
+  buffer = nullptr;
+}
+
+RleEncoderV1::~RleEncoderV1() {
+  delete [] literals;
+}
+
+void RleEncoderV1::add(const int64_t* data, uint64_t numValues,
+                          const char* notNull) {
+  for (uint64_t i = 0; i < numValues; ++i) {
+    if (!notNull || notNull[i]) {
+      write(data[i]);
+    }
+  }
+}
+
+void RleEncoderV1::writeByte(char c) {
+  if (bufferPosition == bufferLength) {
+    int addedSize = 0;
+    if (!outputStream->Next(reinterpret_cast<void **>(&buffer), &addedSize)) {
+      throw std::bad_alloc();
+    }
+    bufferPosition = 0;
+    bufferLength = addedSize;
+  }
+  buffer[bufferPosition++] = c;
+}
+
+void RleEncoderV1::writeValues() {
+  if (numLiterals != 0) {
+    if (repeat) {
+      writeByte(static_cast<char>
+                (static_cast<uint64_t>(numLiterals) - MINIMUM_REPEAT));
+      writeByte(static_cast<char>(delta));
+      if (isSigned) {
+        writeVslong(literals[0]);
+      } else {
+        writeVulong(literals[0]);
+      }
+    } else {
+      writeByte(static_cast<char>(-numLiterals));
+      for(int i=0; i < numLiterals; ++i) {
+        if (isSigned) {
+          writeVslong(literals[i]);
+        } else {
+          writeVulong(literals[i]);
+        }
+      }
+    }
+    repeat = false;
+    numLiterals = 0;
+    tailRunLength = 0;
+  }
+}
+
+uint64_t RleEncoderV1::flush() {
+  writeValues();
+  outputStream->BackUp(bufferLength - bufferPosition);
+  uint64_t dataSize = outputStream->flush();
+  bufferLength = bufferPosition = 0;
+  return dataSize;
+}
+
+void RleEncoderV1::write(int64_t value) {
+  if (numLiterals == 0) {
+    literals[numLiterals++] = value;
+    tailRunLength = 1;
+  } else if (repeat) {
+    if (value == literals[0] + delta * numLiterals) {
+      numLiterals += 1;
+      if (numLiterals == MAXIMUM_REPEAT) {
+        writeValues();
+      }
+    } else {
+      writeValues();
+      literals[numLiterals++] = value;
+      tailRunLength = 1;
+    }
+  } else {
+    if (tailRunLength == 1) {
+      delta = value - literals[numLiterals - 1];
+      if (delta < MIN_DELTA || delta > MAX_DELTA) {
+        tailRunLength = 1;
+      } else {
+        tailRunLength = 2;
+      }
+    } else if (value == literals[numLiterals - 1] + delta) {
+      tailRunLength += 1;
+    } else {
+      delta = value - literals[numLiterals - 1];
+      if (delta < MIN_DELTA || delta > MAX_DELTA) {
+        tailRunLength = 1;
+      } else {
+        tailRunLength = 2;
+      }
+    }
+    if (tailRunLength == MINIMUM_REPEAT) {
+      if (numLiterals + 1 == MINIMUM_REPEAT) {
+        repeat = true;
+        numLiterals += 1;
+      } else {
+        numLiterals -= MINIMUM_REPEAT - 1;
+        long base = literals[numLiterals];
+        writeValues();
+        literals[0] = base;
+        repeat = true;
+        numLiterals = MINIMUM_REPEAT;
+      }
+    } else {
+      literals[numLiterals++] = value;
+      if (numLiterals == MAX_LITERAL_SIZE) {
+        writeValues();
+      }
+    }
+  }
+}
+
+void RleEncoderV1::writeVslong(int64_t val) {
+  writeVulong((val << 1) ^ (val >> 63));
+}
+
+void RleEncoderV1::writeVulong(int64_t val) {
+  while (true) {
+    if ((val & ~0x7f) == 0) {
+      writeByte(static_cast<char>(val));
+      return;
+    } else {
+      writeByte(static_cast<char>(0x80 | (val & 0x7f)));
+      // cast val to unsigned so as to force 0-fill right shift
+      val = (static_cast<uint64_t>(val) >> 7);
+    }
+  }
+}
+
+void RleEncoderV1::recordPosition(PositionRecorder* recorder) const {
+  uint64_t flushedSize = outputStream->getSize();
+  uint64_t unflushedSize = static_cast<uint64_t>(bufferPosition);
+  if (outputStream->isCompressed()) {
+    recorder->add(flushedSize);
+    recorder->add(unflushedSize);
+  } else {
+    flushedSize -= static_cast<uint64_t>(bufferLength);
+    recorder->add(flushedSize + unflushedSize);
+  }
+  recorder->add(static_cast<uint64_t>(numLiterals));
+}
 
 signed char RleDecoderV1::readByte() {
   if (bufferStart == bufferEnd) {

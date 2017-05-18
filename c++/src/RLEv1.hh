@@ -26,6 +26,59 @@
 
 namespace orc {
 
+class RleEncoderV1 : public RleEncoder {
+public:
+    RleEncoderV1(std::unique_ptr<BufferedOutputStream> outStream,
+                 bool hasSigned);
+    ~RleEncoderV1();
+
+    /**
+     * Encode the next batch of values.
+     * @param data the array to be written
+     * @param numValues the number of values to write
+     * @param notNull If the pointer is null, all values are writen. If the
+     *    pointer is not null, positions that are false are skipped.
+     */
+    void add(const int64_t* data, uint64_t numValues,
+             const char* notNull) override;
+
+    /**
+     * Get size of buffer used so far.
+     */
+    uint64_t getBufferSize() const override {
+        return outputStream->getSize();
+    }
+
+    /**
+     * Flushing underlying BufferedOutputStream
+     */
+    uint64_t flush() override;
+
+    /**
+     * record current position
+     * @param recorder use the recorder to record current positions
+     */
+    virtual void recordPosition(PositionRecorder* recorder) const override;
+
+private:
+    std::unique_ptr<BufferedOutputStream> outputStream;
+    bool isSigned;
+    int64_t* literals;
+    int numLiterals;
+    int64_t delta;
+    bool repeat;
+    int tailRunLength;
+    int bufferPosition;
+    int bufferLength;
+    char * buffer;
+
+    void write(int64_t val);
+    void writeByte(char c);
+    void writeVulong(int64_t val);
+    void writeVslong(int64_t val);
+    void writeValues();
+};
+
 class RleDecoderV1 : public RleDecoder {
 public:
     RleDecoderV1(std::unique_ptr<SeekableInputStream> input,
