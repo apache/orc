@@ -19,15 +19,52 @@
 #ifndef ORC_RLE_HH
 #define ORC_RLE_HH
 
-#include "Compression.hh"
+#include "io/InputStream.hh"
+#include "io/OutputStream.hh"
 
 #include <memory>
 
 namespace orc {
 
+  inline int64_t zigZag(int64_t value) {
+    return (value << 1) ^ (value >> 63);
+  }
+
   inline int64_t unZigZag(uint64_t value) {
     return value >> 1 ^ -(value & 1);
   }
+
+  class RleEncoder {
+  public:
+    // must be non-inline!
+    virtual ~RleEncoder();
+
+    /**
+     * Encode the next batch of values.
+     * @param data the array to read from
+     * @param numValues the number of values to write
+     * @param notNull If the pointer is null, all values are read. If the
+     *    pointer is not null, positions that are false are skipped.
+     */
+    virtual void add(const int64_t* data, uint64_t numValues,
+                      const char* notNull) = 0;
+
+    /**
+     * Get size of buffer used so far.
+     */
+    virtual uint64_t getBufferSize() const = 0;
+
+    /**
+     * Flushing underlying BufferedOutputStream
+     */
+    virtual uint64_t flush() = 0;
+
+    /**
+     * record current position
+     * @param recorder use the recorder to record current positions
+     */
+    virtual void recordPosition(PositionRecorder* recorder) const = 0;
+  };
 
   class RleDecoder {
   public:
@@ -59,6 +96,19 @@ namespace orc {
     RleVersion_1,
     RleVersion_2
   };
+
+  /**
+   * Create an RLE encoder.
+   * @param output the output stream to write to
+   * @param isSigned true if the number sequence is signed
+   * @param version version of RLE decoding to do
+   * @param pool memory pool to use for allocation
+   */
+  std::unique_ptr<RleEncoder> createRleEncoder
+                         (std::unique_ptr<BufferedOutputStream> output,
+                          bool isSigned,
+                          RleVersion version,
+                          MemoryPool& pool);
 
   /**
    * Create an RLE decoder.

@@ -22,8 +22,28 @@
 
 namespace orc {
 
+  RleEncoder::~RleEncoder() {
+    // PASS
+  }
+
   RleDecoder::~RleDecoder() {
     // PASS
+  }
+
+  std::unique_ptr<RleEncoder> createRleEncoder
+                         (std::unique_ptr<BufferedOutputStream> output,
+                          bool isSigned,
+                          RleVersion version,
+                          MemoryPool&) {
+    switch (static_cast<int64_t>(version)) {
+    case RleVersion_1:
+      // We don't have std::make_unique() yet.
+      return std::unique_ptr<RleEncoder>(new RleEncoderV1(std::move(output),
+                                                          isSigned));
+    case RleVersion_2:
+    default:
+      throw NotImplementedYet("Not implemented yet");
+    }
   }
 
   std::unique_ptr<RleDecoder> createRleDecoder

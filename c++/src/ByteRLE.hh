@@ -21,9 +21,41 @@
 
 #include <memory>
 
-#include "Compression.hh"
+#include "io/InputStream.hh"
+#include "io/OutputStream.hh"
 
 namespace orc {
+
+  class ByteRleEncoder {
+  public:
+    virtual ~ByteRleEncoder();
+
+    /**
+     * Encode the next batch of values
+     * @param data to be encoded
+     * @param numValues the number of values to be encoded
+     * @param notNull If the pointer is null, all values are read. If the
+     *    pointer is not null, positions that are false are skipped.
+     */
+    virtual void add(const char* data, uint64_t numValues,
+                      const char* notNull) = 0;
+
+    /**
+     * Get size of buffer used so far.
+     */
+    virtual uint64_t getBufferSize() const = 0;
+
+    /**
+     * Flushing underlying output stream
+     */
+    virtual uint64_t flush() = 0;
+
+    /**
+     * record current position
+     * @param recorder use the recorder to record current positions
+     */
+    virtual void recordPosition(PositionRecorder* recorder) const = 0;
+  };
 
   class ByteRleDecoder {
   public:
@@ -48,6 +80,20 @@ namespace orc {
      */
     virtual void next(char* data, uint64_t numValues, char* notNull) = 0;
   };
+
+  /**
+   * Create a byte RLE encoder.
+   * @param output the output stream to write to
+   */
+  std::unique_ptr<ByteRleEncoder> createByteRleEncoder
+                                 (std::unique_ptr<BufferedOutputStream> output);
+
+  /**
+   * Create a boolean RLE encoder.
+   * @param output the output stream to write to
+   */
+  std::unique_ptr<ByteRleEncoder> createBooleanRleEncoder
+                                 (std::unique_ptr<BufferedOutputStream> output);
 
   /**
    * Create a byte RLE decoder.
