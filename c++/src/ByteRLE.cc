@@ -118,7 +118,8 @@ namespace orc {
   void ByteRleEncoderImpl::writeValues() {
     if (numLiterals != 0) {
       if (repeat) {
-        writeByte(static_cast<char>(numLiterals - static_cast<int>(MINIMUM_REPEAT)));
+        writeByte(
+            static_cast<char>(numLiterals - static_cast<int>(MINIMUM_REPEAT)));
         writeByte(literals[0]);
      } else {
         writeByte(static_cast<char>(-numLiterals));
@@ -286,9 +287,11 @@ namespace orc {
   }
 
   std::unique_ptr<ByteRleEncoder> createBooleanRleEncoder
-                                 (std::unique_ptr<BufferedOutputStream> output) {
-    BooleanRleEncoderImpl* encoder = new BooleanRleEncoderImpl(std::move(output)) ;
-    return std::unique_ptr<ByteRleEncoder>(reinterpret_cast<ByteRleEncoder*>(encoder));
+                                (std::unique_ptr<BufferedOutputStream> output) {
+    BooleanRleEncoderImpl* encoder =
+      new BooleanRleEncoderImpl(std::move(output)) ;
+    return std::unique_ptr<ByteRleEncoder>(
+                                    reinterpret_cast<ByteRleEncoder*>(encoder));
   }
 
   ByteRleDecoder::~ByteRleDecoder() {
@@ -609,7 +612,9 @@ namespace orc {
 
   std::unique_ptr<ByteRleDecoder> createBooleanRleDecoder
                                  (std::unique_ptr<SeekableInputStream> input) {
-    BooleanRleDecoderImpl* decoder = new BooleanRleDecoderImpl(std::move(input)) ;
-    return std::unique_ptr<ByteRleDecoder>(reinterpret_cast<ByteRleDecoder*>(decoder));
+    BooleanRleDecoderImpl* decoder =
+      new BooleanRleDecoderImpl(std::move(input));
+    return std::unique_ptr<ByteRleDecoder>(
+                                    reinterpret_cast<ByteRleDecoder*>(decoder));
   }
 }
