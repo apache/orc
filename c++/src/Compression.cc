@@ -105,7 +105,7 @@ namespace orc {
     void * data;
     int size;
     if (!Next(&data, &size)) {
-      throw std::logic_error("Failed to flush compression buffer.");
+      throw std::runtime_error("Failed to flush compression buffer.");
     }
     BufferedOutputStream::BackUp(outputSize - outputPosition);
     bufferSize = outputSize = outputPosition = 0;
@@ -157,7 +157,7 @@ namespace orc {
         if (!BufferedOutputStream::Next(
           reinterpret_cast<void **>(&outputBuffer),
           &outputSize)) {
-          throw std::logic_error(
+          throw std::runtime_error(
             "Failed to get next output buffer from output stream.");
         }
         outputPosition = newPosition;
@@ -225,7 +225,7 @@ namespace orc {
 
   uint64_t ZlibCompressionStream::doStreamingCompression() {
     if (deflateReset(&strm) != Z_OK) {
-      throw std::logic_error("Failed to reset inflate.");
+      throw std::runtime_error("Failed to reset inflate.");
     }
 
     strm.avail_in = static_cast<unsigned int>(bufferSize);
@@ -236,7 +236,7 @@ namespace orc {
         if (!BufferedOutputStream::Next(
           reinterpret_cast<void **>(&outputBuffer),
           &outputSize)) {
-          throw std::logic_error(
+          throw std::runtime_error(
             "Failed to get next output buffer from output stream.");
         }
         outputPosition = 0;
@@ -254,7 +254,7 @@ namespace orc {
       } else if (ret == Z_OK) {
         // needs more buffer so will continue the loop
       } else {
-        throw std::logic_error("Failed to deflate input data.");
+        throw std::runtime_error("Failed to deflate input data.");
       }
     } while (strm.avail_out == 0);
 
@@ -275,7 +275,7 @@ DIAGNOSTIC_IGNORE("-Wold-style-cast")
 
     if (deflateInit2(&strm, level, Z_DEFLATED, -15, 8, Z_DEFAULT_STRATEGY)
         != Z_OK) {
-      throw std::logic_error("Error while calling deflateInit2() for zlib.");
+      throw std::runtime_error("Error while calling deflateInit2() for zlib.");
     }
   }
 
@@ -898,7 +898,7 @@ DIAGNOSTIC_POP
         (new BufferedOutputStream(pool, outStream, bufferCapacity, blockSize));
     }
     case CompressionKind_ZLIB: {
-      int level = strategy == CompressionStrategy_SPEED ? 1 : 9;
+      int level = (strategy == CompressionStrategy_SPEED) ? -1 : 9;
       return std::unique_ptr<BufferedOutputStream>
         (new ZlibCompressionStream(
                 outStream, level, bufferCapacity, blockSize, pool));
