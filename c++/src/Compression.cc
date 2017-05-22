@@ -898,7 +898,8 @@ DIAGNOSTIC_POP
         (new BufferedOutputStream(pool, outStream, bufferCapacity, blockSize));
     }
     case CompressionKind_ZLIB: {
-      int level = (strategy == CompressionStrategy_SPEED) ? -1 : 9;
+      int level = (strategy == CompressionStrategy_SPEED) ?
+              Z_BEST_SPEED + 1 : Z_DEFAULT_COMPRESSION;
       return std::unique_ptr<BufferedOutputStream>
         (new ZlibCompressionStream(
                 outStream, level, bufferCapacity, blockSize, pool));
