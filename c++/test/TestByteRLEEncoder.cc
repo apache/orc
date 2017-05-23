@@ -30,40 +30,37 @@ namespace orc {
 
   void generateNotNull(uint64_t numValues,
                        uint64_t numNulls,
-                       char ** notNull) {
+                       char* notNull) {
     if (numNulls != 0 && notNull != nullptr) {
-      *notNull = new char[numValues];
-      memset(*notNull, 1, numValues);
+      memset(notNull, 1, numValues);
       while (numNulls > 0) {
         uint64_t pos = static_cast<uint64_t>(std::rand()) % numValues;
-        if ((*notNull)[pos]) {
-          (*notNull)[pos] = static_cast<char>(0);
+        if (notNull[pos]) {
+          notNull[pos] = static_cast<char>(0);
           --numNulls;
         }
       }
     }
   }
 
-  char * generateData(uint64_t numValues,
+  void generateData(uint64_t numValues,
+                      char* data,
                       uint64_t numNulls = 0,
-                      char ** notNull = nullptr) {
+                      char* notNull = nullptr) {
     generateNotNull(numValues, numNulls, notNull);
-    char * res = new char[numValues];
     for (uint64_t i = 0; i < numValues; ++i) {
-        res[i] = static_cast<char>(std::rand() % 256);
+        data[i] = static_cast<char>(std::rand() % 256);
     }
-    return res;
   }
 
-  char * generateBoolData(uint64_t numValues,
+  void generateBoolData(uint64_t numValues,
+                          char* data,
                           uint64_t numNulls = 0,
-                          char ** notNull = nullptr) {
+                          char* notNull = nullptr) {
     generateNotNull(numValues, numNulls, notNull);
-    char * res = new char[numValues];
     for (uint64_t i = 0; i < numValues; ++i) {
-        res[i] = static_cast<char>(std::rand() % 2);
-      }
-    return res;
+        data[i] = static_cast<char>(std::rand() % 2);
+    }
   }
 
   void decodeAndVerify(
@@ -130,7 +127,8 @@ namespace orc {
     std::unique_ptr<ByteRleEncoder> encoder =
       createByteRleEncoder(std::move(outStream));
 
-    char* data = generateData(102400);
+    char* data = new char[102400];
+    generateData(102400, data);
     encoder->add(data, 102400, nullptr);
     encoder->flush();
 
@@ -152,8 +150,9 @@ namespace orc {
     std::unique_ptr<ByteRleEncoder> encoder =
       createByteRleEncoder(std::move(outStream));
 
-    char* notNull = nullptr;
-    char* data = generateData(102400, 377, &notNull);
+    char* notNull = new char[102400];
+    char* data = new char[102400];
+    generateData(102400, data, 377, notNull);
     encoder->add(data, 102400, notNull);
     encoder->flush();
 
@@ -176,11 +175,13 @@ namespace orc {
     std::unique_ptr<ByteRleEncoder> encoder =
       createBooleanRleEncoder(std::move(outStream));
 
-    char * data = generateBoolData(1779);
+    char* data = new char[1779];
+    generateBoolData(1779, data);
     encoder->add(data, 1779, nullptr);
     encoder->flush();
 
     decodeAndVerifyBoolean(memStream, data, 1779, nullptr);
+    delete [] data;
   }
 
   TEST(BooleanRleEncoder, random_bits_aligned) {
@@ -197,7 +198,8 @@ namespace orc {
     std::unique_ptr<ByteRleEncoder> encoder =
       createBooleanRleEncoder(std::move(outStream));
 
-    char* data = generateBoolData(8000);
+    char* data = new char[8000];
+    generateBoolData(8000, data);
     encoder->add(data, 8000, nullptr);
     encoder->flush();
 
@@ -219,8 +221,9 @@ namespace orc {
     std::unique_ptr<ByteRleEncoder> encoder =
       createBooleanRleEncoder(std::move(outStream));
 
-    char* notNull = nullptr;
-    char* data = generateBoolData(8000, 515, &notNull);
+    char* notNull = new char[8000];
+    char* data = new char[8000];
+    generateBoolData(8000, data, 515, notNull);
     encoder->add(data, 8000, notNull);
     encoder->flush();
 

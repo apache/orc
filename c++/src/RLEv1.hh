@@ -70,7 +70,7 @@ private:
     int tailRunLength;
     int bufferPosition;
     int bufferLength;
-    char * buffer;
+    char* buffer;
 
     void write(int64_t val);
     void writeByte(char c);
@@ -113,8 +113,8 @@ private:
     const bool isSigned;
     uint64_t remainingValues;
     int64_t value;
-    const char *bufferStart;
-    const char *bufferEnd;
+    const char* bufferStart;
+    const char* bufferEnd;
     int64_t delta;
     bool repeating;
 };

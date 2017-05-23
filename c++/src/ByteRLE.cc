@@ -63,13 +63,13 @@ namespace orc {
 
   protected:
     std::unique_ptr<BufferedOutputStream> outputStream;
-    char * literals;
+    char* literals;
     int numLiterals;
     bool repeat;
     int tailRunLength;
     int bufferPosition;
     int bufferLength;
-    char * buffer;
+    char* buffer;
 
     void writeByte(char c);
     void writeValues();
@@ -90,6 +90,7 @@ namespace orc {
 
   ByteRleEncoderImpl::~ByteRleEncoderImpl() {
     // PASS
+    delete [] literals;
   }
 
   void ByteRleEncoderImpl::writeByte(char c) {
