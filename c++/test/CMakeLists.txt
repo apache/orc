@@ -30,8 +30,10 @@ add_executable (orc-test
   TestByteRLEEncoder.cc
   TestColumnPrinter.cc
   TestColumnReader.cc
+  TestColumnStatistics.cc
   TestCompression.cc
   TestDecompression.cc
+  TestDecimal.cc
   TestDriver.cc
   TestInt128.cc
   TestReader.cc

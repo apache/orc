@@ -73,6 +73,7 @@ configure_file (
 install(FILES
   "${CMAKE_CURRENT_BINARY_DIR}/orc/orc-config.hh"
   "orc/ColumnPrinter.hh"
+  "orc/Common.hh"
   "orc/Int128.hh"
   "orc/MemoryPool.hh"
   "orc/OrcFile.hh"
