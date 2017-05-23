@@ -391,8 +391,6 @@ namespace orc {
      */
     virtual uint32_t getNumberOfRowIndexStats(uint32_t columnId) const = 0;
   };
-
-
 }
 
 #endif

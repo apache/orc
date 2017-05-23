@@ -162,6 +162,61 @@ namespace orc {
      */
     virtual const std::string& getWriterTimezone() const = 0;
   };
+
+  // Return true if val1 < val2; otherwise return false
+  template <typename T>
+  inline bool compare(T val1, T val2) {
+    return (val1 < val2);
+  }
+
+  // Specialization for Decimal
+  template <>
+  inline bool compare(Decimal val1, Decimal val2) {
+    // compare integral parts
+    Int128 integral1 = scaleDownInt128ByPowerOfTen(val1.value,
+                                                   val1.scale);
+    Int128 integral2 = scaleDownInt128ByPowerOfTen(val2.value,
+                                                   val2.scale);
+
+    if (integral1 < integral2) {
+      return true;
+    } else if (integral1 > integral2) {
+      return false;
+    }
+
+    // integral parts are equal, continue comparing fractional parts
+    // unnecessary to check overflow here because the scaled number will not
+    // exceed original ones
+    bool overflow = false, positive = val1.value >= 0;
+    val1.value -= scaleUpInt128ByPowerOfTen(integral1,
+                                            val1.scale,
+                                            overflow);
+    val2.value -= scaleUpInt128ByPowerOfTen(integral2,
+                                            val2.scale,
+                                            overflow);
+
+    int32_t diff = val1.scale - val2.scale;
+    if (diff > 0) {
+      val2.value = scaleUpInt128ByPowerOfTen(val2.value,
+                                             diff,
+                                             overflow);
+      if (overflow) {
+        return positive ? true : false;
+      }
+    } else {
+      val1.value = scaleUpInt128ByPowerOfTen(val1.value,
+                                             -diff,
+                                             overflow);
+      if (overflow) {
+        return positive ? false : true;
+      }
+    }
+
+    if (val1.value < val2.value) {
+      return true;
+    }
+    return false;
+  }
 }
 
 #endif

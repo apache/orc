@@ -189,8 +189,11 @@ namespace orc {
     _stats.setNumberOfValues(pb.numberofvalues());
     _stats.setHasNull(pb.hasnull());
     if (pb.has_bucketstatistics() && statContext.correctStats) {
-      _stats.setHasSum(true);
-      _stats.setSum(pb.bucketstatistics().count(0));
+      _hasCount = true;
+      _trueCount = pb.bucketstatistics().count(0);
+    } else {
+      _hasCount = false;
+      _trueCount = 0;
     }
   }
 
@@ -338,6 +341,50 @@ namespace orc {
       }
       // Add 1 millisecond to account for microsecond precision of values
       _upperBound += 1;
+    }
+  }
+
+  std::unique_ptr<ColumnStatistics> createColumnStatistics(
+    const Type& type, bool enableStringComparison) {
+    switch (static_cast<int64_t>(type.getKind())) {
+      case BOOLEAN:
+        return std::unique_ptr<ColumnStatistics>(
+          new BooleanColumnStatisticsImpl());
+      case BYTE:
+      case INT:
+      case LONG:
+      case SHORT:
+        return std::unique_ptr<ColumnStatistics>(
+          new IntegerColumnStatisticsImpl());
+      case STRUCT:
+      case MAP:
+      case LIST:
+      case UNION:
+        return std::unique_ptr<ColumnStatistics>(
+          new ColumnStatisticsImpl());
+      case FLOAT:
+      case DOUBLE:
+        return std::unique_ptr<ColumnStatistics>(
+          new DoubleColumnStatisticsImpl());
+      case BINARY:
+        return std::unique_ptr<ColumnStatistics>(
+          new BinaryColumnStatisticsImpl());
+      case STRING:
+      case CHAR:
+      case VARCHAR:
+        return std::unique_ptr<ColumnStatistics>(
+          new StringColumnStatisticsImpl(enableStringComparison));
+      case DATE:
+        return std::unique_ptr<ColumnStatistics>(
+          new DateColumnStatisticsImpl());
+      case TIMESTAMP:
+        return std::unique_ptr<ColumnStatistics>(
+          new TimestampColumnStatisticsImpl());
+      case DECIMAL:
+        return std::unique_ptr<ColumnStatistics>(
+          new DecimalColumnStatisticsImpl());
+      default:
+        throw NotImplementedYet("Not supported type: " + type.toString());
     }
   }
 
