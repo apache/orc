@@ -25,6 +25,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.Seekable;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
@@ -41,6 +42,7 @@ import org.apache.orc.TypeDescription;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.util.List;
@@ -51,7 +53,7 @@ public class JsonReader implements RecordReader {
   private final JsonStreamParser parser;
   private final JsonConverter[] converters;
   private final long totalSize;
-  private final FSDataInputStream rawStream;
+  private final FSDataInputStream input;
   private long rowNumber = 0;
 
   interface JsonConverter {
@@ -234,26 +236,17 @@ public class JsonReader implements RecordReader {
     }
   }
 
-  public JsonReader(Path path,
-                    TypeDescription schema,
-                    Configuration conf) throws IOException {
+  public JsonReader(Reader reader,
+                    FSDataInputStream underlying,
+                    long size,
+                    TypeDescription schema) throws IOException {
     this.schema = schema;
-    FileSystem fs = path.getFileSystem(conf);
-    totalSize = fs.getFileStatus(path).getLen();
-    rawStream = fs.open(path);
-    String name = path.getName();
-    int lastDot = name.lastIndexOf(".");
-    InputStream input = rawStream;
-    if (lastDot >= 0) {
-      if (".gz".equals(name.substring(lastDot))) {
-        input = new GZIPInputStream(rawStream);
-      }
-    }
-    parser = new JsonStreamParser(new InputStreamReader(input,
-        StandardCharsets.UTF_8));
     if (schema.getCategory() != TypeDescription.Category.STRUCT) {
       throw new IllegalArgumentException("Root must be struct - " + schema);
     }
+    this.input = underlying;
+    this.totalSize = size;
+    parser = new JsonStreamParser(reader);
     List<TypeDescription> fieldTypes = schema.getChildren();
     converters = new JsonConverter[fieldTypes.size()];
     for(int c = 0; c < converters.length; ++c) {
@@ -291,12 +284,12 @@ public class JsonReader implements RecordReader {
 
   @Override
   public float getProgress() throws IOException {
-    long pos = rawStream.getPos();
+    long pos = input.getPos();
     return totalSize != 0 && pos < totalSize ? (float) pos / totalSize : 1;
   }
 
   public void close() throws IOException {
-    rawStream.close();
+    input.close();
   }
 
   @Override

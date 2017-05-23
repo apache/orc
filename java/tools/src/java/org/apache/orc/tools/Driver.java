@@ -89,7 +89,7 @@ public class Driver {
       System.err.println("   meta - print the metadata about the ORC file");
       System.err.println("   data - print the data from the ORC file");
       System.err.println("   scan - scan the ORC file");
-      System.err.println("   convert - convert JSON files to ORC");
+      System.err.println("   convert - convert CSV and JSON files to ORC");
       System.err.println("   json-schema - scan JSON files to determine their schema");
       System.err.println();
       System.err.println("To get more help, provide -h to the command");
