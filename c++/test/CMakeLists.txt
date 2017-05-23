@@ -31,6 +31,7 @@ add_executable (orc-test
   TestColumnPrinter.cc
   TestColumnReader.cc
   TestCompression.cc
+  TestDecompression.cc
   TestDriver.cc
   TestInt128.cc
   TestReader.cc
