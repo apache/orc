@@ -92,11 +92,6 @@ namespace orc {
                       const char* notNull) = 0;
   };
 
-  enum RleVersion {
-    RleVersion_1,
-    RleVersion_2
-  };
-
   /**
    * Create an RLE encoder.
    * @param output the output stream to write to

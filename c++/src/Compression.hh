@@ -24,11 +24,6 @@
 
 namespace orc {
 
-  enum CompressionStrategy {
-    CompressionStrategy_SPEED = 0,
-    CompressionStrategy_COMPRESSION
-  };
-
   /**
    * Create a decompressor for the given compression kind.
    * @param kind the compression type to implement

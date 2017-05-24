@@ -23,6 +23,7 @@
 
 #include "orc/orc-config.hh"
 #include "orc/Reader.hh"
+#include "orc/Writer.hh"
 
 /** /file orc/OrcFile.hh
     @brief The top level interface to ORC.
@@ -119,6 +120,17 @@ namespace orc {
    * @param path the name of the file in the local file system
    */
   ORC_UNIQUE_PTR<OutputStream> writeLocalFile(const std::string& path);
+
+  /**
+   * Create a writer to write the ORC file.
+   * @param type the type of data to be written
+   * @param stream the stream to write to
+   * @param options the options for writing the file
+   */
+  ORC_UNIQUE_PTR<Writer> createWriter(
+                                      const Type& type,
+                                      OutputStream * stream,
+                                      const WriterOptions& options);
 }
 
 #endif

@@ -35,6 +35,7 @@ namespace orc {
                                           hasNulls(false),
                                           memoryPool(pool) {
     // PASS
+    std::memset(notNull.data(), 1, capacity);
   }
 
   ColumnVectorBatch::~ColumnVectorBatch() {
