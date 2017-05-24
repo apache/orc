@@ -102,7 +102,7 @@ class NumericType extends HiveType {
         return TypeDescription.createLong();
       case DECIMAL:
         return TypeDescription.createDecimal()
-            .withPrecision(intDigits+scale).withScale(scale);
+            .withScale(scale).withPrecision(intDigits+scale);
       case FLOAT:
         return TypeDescription.createFloat();
       case DOUBLE:
