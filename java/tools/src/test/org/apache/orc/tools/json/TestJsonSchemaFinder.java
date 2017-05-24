@@ -114,6 +114,10 @@ public class TestJsonSchemaFinder {
     assertEquals("double",
         JsonSchemaFinder.pickType(new JsonPrimitive
             (new LazilyParsedNumber("1.2E40"))).toString());
+    // Make the schema
+    assertEquals("decimal(3,2)",
+        JsonSchemaFinder.pickType(new JsonPrimitive(
+            new LazilyParsedNumber("1.23"))).getSchema().toString());
   }
 
   @Test
