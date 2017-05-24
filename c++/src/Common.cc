@@ -104,4 +104,9 @@ namespace orc {
     return buffer.str();
   }
 
+  std::string FileVersion::toString() const {
+    std::stringstream ss;
+    ss << getMajor() << '.' << getMinor();
+    return ss.str();
+  }
 }

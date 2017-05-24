@@ -24,11 +24,6 @@
 
 namespace orc {
 
-  enum CompressionStrategy {
-    CompressionStrategy_SPEED = 0,
-    CompressionStrategy_COMPRESSION
-  };
-
   /**
    * Create a decompressor for the given compression kind.
    * @param kind the compression type to implement
@@ -48,7 +43,7 @@ namespace orc {
    * @param outStream the output stream that is the underlying target
    * @param strategy compression strategy
    * @param bufferCapacity compression stream buffer total capacity
-   * @param blockSize compresssion buffer block size
+   * @param compressionBlockSize compresssion buffer block size
    * @param pool the memory pool
    */
   std::unique_ptr<BufferedOutputStream>
@@ -56,7 +51,7 @@ namespace orc {
                       OutputStream * outStream,
                       CompressionStrategy strategy,
                       uint64_t bufferCapacity,
-                      uint64_t blockSize,
+                      uint64_t compressionBlockSize,
                       MemoryPool& pool);
 }
 

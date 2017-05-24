@@ -404,15 +404,13 @@ namespace orc {
         contents->blockSize));
   }
 
-  std::string ReaderImpl::getFormatVersion() const {
-    std::stringstream result;
-    for(int i=0; i < contents->postscript->version_size(); ++i) {
-      if (i != 0) {
-        result << ".";
-      }
-      result << contents->postscript->version(i);
+  FileVersion ReaderImpl::getFormatVersion() const {
+    if (contents->postscript->version_size() != 2) {
+      throw std::logic_error("Unrecognized file version.");
     }
-    return result.str();
+    return FileVersion(
+                contents->postscript->version(0),
+                contents->postscript->version(1));
   }
 
   uint64_t ReaderImpl::getNumberOfRows() const {
@@ -593,12 +591,12 @@ namespace orc {
   }
 
   void ReaderImpl::checkOrcVersion() {
-    std::string version = getFormatVersion();
-    if (version != "0.11" && version != "0.12") {
+    FileVersion version = getFormatVersion();
+    if (version != FileVersion(0, 11) && version != FileVersion(0, 12)) {
       *(options.getErrorStream())
         << "Warning: ORC file " << contents->stream->getName()
         << " was written in an unknown format version "
-        << version << "\n";
+        << version.toString() << "\n";
     }
   }
 
