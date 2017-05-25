@@ -128,6 +128,11 @@ public class SchemaEvolution {
   }
 
   @Deprecated
+  public SchemaEvolution(TypeDescription fileSchema, Reader.Options options) {
+    this(fileSchema, null, options);
+  }
+
+  @Deprecated
   public SchemaEvolution(TypeDescription fileSchema, boolean[] readerIncluded) {
     this(fileSchema, null, readerIncluded);
   }
