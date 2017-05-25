@@ -99,7 +99,7 @@ public class RecordReaderImpl implements RecordReader {
   private final DataReader dataReader;
   private final boolean ignoreNonUtf8BloomFilter;
   private final OrcFile.WriterVersion writerVersion;
-
+  
   /**
    * Given a list of column names, find the given column and return the index.
    *
