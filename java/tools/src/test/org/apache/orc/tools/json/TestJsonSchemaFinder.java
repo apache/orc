@@ -52,9 +52,15 @@ public class TestJsonSchemaFinder {
     assertEquals("string",
         JsonSchemaFinder.pickType(new JsonPrimitive("2016/01/05")).toString());
     assertEquals("timestamp",
-        JsonSchemaFinder.pickType(new JsonPrimitive("2016-01-01 56:00:00 +08")).toString());
+        JsonSchemaFinder.pickType(new JsonPrimitive("2016-01-01 16:00:00 +08")).toString());
     assertEquals("timestamp",
-        JsonSchemaFinder.pickType(new JsonPrimitive("2016-01-01 56:00:00 -08:30")).toString());
+        JsonSchemaFinder.pickType(new JsonPrimitive("2016-01-01 16:00:00+08")).toString());
+    assertEquals("string",
+        JsonSchemaFinder.pickType(new JsonPrimitive("2016-01-01 16:00:0008")).toString());
+    assertEquals("timestamp",
+        JsonSchemaFinder.pickType(new JsonPrimitive("2016-01-01 06:00:00 -08:30")).toString());
+    assertEquals("timestamp",
+        JsonSchemaFinder.pickType(new JsonPrimitive("2017-05-31T12:44:40-04:00")).toString());
   }
 
   @Test

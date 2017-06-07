@@ -59,7 +59,7 @@ public class JsonSchemaFinder {
   private static final Pattern TIMESTAMP_PATTERN =
       Pattern.compile("^[\"]?([0-9]{4}[-/][0-9]{2}[-/][0-9]{2})[T ]" +
           "([0-9]{2}:[0-9]{2}:[0-9]{2})" +
-          "(([ ][-+]?[0-9]{2}([:][0-9]{2})?)|Z)?[\"]?$");
+          "(( [-+]?|[-+])([0-9]{2}(:[0-9]{2})?)|Z)?[\"]?$");
   private static final Pattern DECIMAL_PATTERN =
       Pattern.compile("^-?(?<int>[0-9]+)([.](?<fraction>[0-9]+))?$");
   private static final int INDENT = 2;
