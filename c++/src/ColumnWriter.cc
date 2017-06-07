@@ -34,7 +34,7 @@ namespace orc {
   public:
     StreamsFactoryImpl(
                        const WriterOptions& writerOptions,
-                       OutputStream * outputStream) :
+                       OutputStream* outputStream) :
                        options(writerOptions),
                        outStream(outputStream) {
                        }
@@ -43,7 +43,7 @@ namespace orc {
                     createStream(proto::Stream_Kind kind) override;
   private:
     const WriterOptions& options;
-    OutputStream * outStream;
+    OutputStream* outStream;
   };
 
   std::unique_ptr<BufferedOutputStream> StreamsFactoryImpl::createStream(
@@ -62,7 +62,7 @@ namespace orc {
 
   std::unique_ptr<StreamsFactory> createStreamsFactory(
                                         const WriterOptions& options,
-                                        OutputStream * outStream) {
+                                        OutputStream* outStream) {
     return std::unique_ptr<StreamsFactory>(
                                    new StreamsFactoryImpl(options, outStream));
   }

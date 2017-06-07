@@ -39,8 +39,8 @@ namespace orc {
                                       uint64_t bufferSize,
                                       CompressionKind compression,
                                       const Type& type,
-                                      MemoryPool * memoryPool,
-                                      OutputStream * stream) {
+                                      MemoryPool* memoryPool,
+                                      OutputStream* stream) {
     WriterOptions options;
     options.setStripeSize(stripeSize);
     options.setBlockSize(blockSize);
@@ -67,7 +67,7 @@ namespace orc {
 
   TEST(Writer, writeEmptyFile) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    MemoryPool * pool = getDefaultPool();
+    MemoryPool* pool = getDefaultPool();
     ORC_UNIQUE_PTR<Type> type(Type::buildTypeFromString("struct<col1:int>"));
 
     uint64_t stripeSize = 16 * 1024; // 16K
@@ -98,7 +98,7 @@ namespace orc {
 
   TEST(Writer, writeIntFileOneStripe) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    MemoryPool * pool = getDefaultPool();
+    MemoryPool* pool = getDefaultPool();
     ORC_UNIQUE_PTR<Type> type(Type::buildTypeFromString("struct<col1:int>"));
 
     uint64_t stripeSize = 16 * 1024; // 16K
@@ -114,9 +114,9 @@ namespace orc {
                                       pool,
                                       &memStream);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(1024);
-    StructVectorBatch * structBatch =
+    StructVectorBatch* structBatch =
       dynamic_cast<StructVectorBatch *>(batch.get());
-    LongVectorBatch * longBatch =
+    LongVectorBatch* longBatch =
       dynamic_cast<LongVectorBatch *>(structBatch->fields[0]);
 
     for (uint64_t i = 0; i < 1024; ++i) {
@@ -158,7 +158,7 @@ namespace orc {
 
   TEST(Writer, writeIntFileMultipleStripes) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    MemoryPool * pool = getDefaultPool();
+    MemoryPool* pool = getDefaultPool();
     ORC_UNIQUE_PTR<Type> type(Type::buildTypeFromString("struct<col1:int>"));
 
     uint64_t stripeSize = 1024; // 1K
@@ -174,10 +174,10 @@ namespace orc {
                                       pool,
                                       &memStream);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(65535);
-    StructVectorBatch * structBatch =
-      dynamic_cast<StructVectorBatch *>(batch.get());
-    LongVectorBatch * longBatch =
-      dynamic_cast<LongVectorBatch *>(structBatch->fields[0]);
+    StructVectorBatch* structBatch =
+      dynamic_cast<StructVectorBatch*>(batch.get());
+    LongVectorBatch* longBatch =
+      dynamic_cast<LongVectorBatch*>(structBatch->fields[0]);
 
     for (uint64_t j = 0; j < 10; ++j) {
       for (uint64_t i = 0; i < 65535; ++i) {
@@ -205,8 +205,8 @@ namespace orc {
       EXPECT_EQ(65535, batch->numElements);
 
       for (uint64_t i = 0; i < 65535; ++i) {
-        structBatch = dynamic_cast<StructVectorBatch *>(batch.get());
-        longBatch = dynamic_cast<LongVectorBatch *>(structBatch->fields[0]);
+        structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
+        longBatch = dynamic_cast<LongVectorBatch*>(structBatch->fields[0]);
         EXPECT_EQ(i, longBatch->data[i]);
       }
     }

@@ -129,7 +129,7 @@ namespace orc {
    */
   ORC_UNIQUE_PTR<Writer> createWriter(
                                       const Type& type,
-                                      OutputStream * stream,
+                                      OutputStream* stream,
                                       const WriterOptions& options);
 }
 

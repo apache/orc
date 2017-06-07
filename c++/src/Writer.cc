@@ -35,7 +35,7 @@ namespace orc {
     CompressionKind compression;
     EncodingStrategy encodingStrategy;
     CompressionStrategy compressionStrategy;
-    MemoryPool *memoryPool;
+    MemoryPool* memoryPool;
     WriterVersion version;
     double paddingTolerance;
     std::ostream* errorStream;
@@ -207,12 +207,12 @@ namespace orc {
     return privateBits->paddingTolerance;
   }
 
-  WriterOptions& WriterOptions::setMemoryPool(MemoryPool * memoryPool) {
+  WriterOptions& WriterOptions::setMemoryPool(MemoryPool* memoryPool) {
     privateBits->memoryPool = memoryPool;
     return *this;
   }
 
-  MemoryPool * WriterOptions::getMemoryPool() const {
+  MemoryPool* WriterOptions::getMemoryPool() const {
     return privateBits->memoryPool;
   }
 
@@ -221,7 +221,7 @@ namespace orc {
     return *this;
   }
 
-  std::ostream * WriterOptions::getErrorStream() const {
+  std::ostream* WriterOptions::getErrorStream() const {
     return privateBits->errorStream;
   }
 
@@ -271,7 +271,7 @@ namespace orc {
     std::unique_ptr<BufferedOutputStream> compressionStream;
     std::unique_ptr<BufferedOutputStream> bufferedStream;
     std::unique_ptr<StreamsFactory> streamsFactory;
-    OutputStream * outStream;
+    OutputStream* outStream;
     WriterOptions options;
     const Type& type;
     uint64_t stripeRows, totalRows, indexRows;
@@ -281,7 +281,7 @@ namespace orc {
     proto::StripeInformation stripeInfo;
     proto::Metadata metadata;
 
-    static const char * magicId;
+    static const char* magicId;
 
   public:
     WriterImpl(
@@ -297,13 +297,13 @@ namespace orc {
     void close() override;
 
   private:
-    void Init();
-    void InitStripe();
-    void WriteStripe();
-    void WriteMetadata();
-    void WriteFileFooter();
-    void WritePostscript();
-    void BuildFooterType(const Type& t, proto::Footer& footer, uint32_t& index);
+    void init();
+    void initStripe();
+    void writeStripe();
+    void writeMetadata();
+    void writeFileFooter();
+    void writePostscript();
+    void buildFooterType(const Type& t, proto::Footer& footer, uint32_t& index);
     static proto::CompressionKind convertCompressionKind(
                                                   const CompressionKind& kind);
   };
@@ -312,7 +312,7 @@ namespace orc {
 
   WriterImpl::WriterImpl(
                          const Type& t,
-                         OutputStream * stream,
+                         OutputStream* stream,
                          const WriterOptions& opts) :
                          outStream(stream),
                          options(opts),
@@ -336,7 +336,7 @@ namespace orc {
                                             bufferCapacity,
                                             options.getBlockSize()));
 
-    Init();
+    init();
   }
 
   std::unique_ptr<ColumnVectorBatch> WriterImpl::createRowBatch(uint64_t size)
@@ -369,21 +369,21 @@ namespace orc {
     }
 
     if (columnWriter->getEstimatedSize() >= options.getStripeSize()) {
-      WriteStripe();
+      writeStripe();
     }
   }
 
   void WriterImpl::close() {
     if (stripeRows > 0) {
-      WriteStripe();
+      writeStripe();
     }
-    WriteMetadata();
-    WriteFileFooter();
-    WritePostscript();
+    writeMetadata();
+    writeFileFooter();
+    writePostscript();
     outStream->close();
   }
 
-  void WriterImpl::Init() {
+  void WriterImpl::init() {
     // Write file header
     outStream->write(WriterImpl::magicId, strlen(WriterImpl::magicId));
     currentOffset += strlen(WriterImpl::magicId);
@@ -396,7 +396,7 @@ namespace orc {
                           static_cast<uint32_t>(options.getRowIndexStride()));
 
     uint32_t index = 0;
-    BuildFooterType(type, fileFooter, index);
+    buildFooterType(type, fileFooter, index);
 
     // Initialize post script
     postScript.set_footerlength(0);
@@ -413,10 +413,10 @@ namespace orc {
     postScript.set_magic("ORC");
 
     // Initialize first stripe
-    InitStripe();
+    initStripe();
   }
 
-  void WriterImpl::InitStripe() {
+  void WriterImpl::initStripe() {
     stripeInfo.set_offset(currentOffset);
     stripeInfo.set_indexlength(0);
     stripeInfo.set_datalength(0);
@@ -426,7 +426,7 @@ namespace orc {
     stripeRows = indexRows = 0;
   }
 
-  void WriterImpl::WriteStripe() {
+  void WriterImpl::writeStripe() {
     if (options.getEnableIndex() && indexRows != 0) {
       columnWriter->createRowIndexEntry();
       indexRows = 0;
@@ -501,10 +501,10 @@ namespace orc {
     currentOffset = currentOffset + indexLength + dataLength + footerLength;
     totalRows += stripeRows;
 
-    InitStripe();
+    initStripe();
   }
 
-  void WriterImpl::WriteMetadata() {
+  void WriterImpl::writeMetadata() {
     if (options.getEnableStats()) {
       if (!metadata.SerializeToZeroCopyStream(compressionStream.get())) {
         throw std::logic_error("Failed to write metadata.");
@@ -513,7 +513,7 @@ namespace orc {
     }
   }
 
-  void WriterImpl::WriteFileFooter() {
+  void WriterImpl::writeFileFooter() {
     fileFooter.set_contentlength(currentOffset - fileFooter.headerlength());
     fileFooter.set_numberofrows(totalRows);
 
@@ -532,7 +532,7 @@ namespace orc {
     postScript.set_footerlength(compressionStream->flush());
   }
 
-  void WriterImpl::WritePostscript() {
+  void WriterImpl::writePostscript() {
     if (!postScript.SerializeToZeroCopyStream(bufferedStream.get())) {
       throw std::logic_error("Failed to write post script.");
     }
@@ -541,7 +541,7 @@ namespace orc {
     outStream->write(&psLength, sizeof(unsigned char));
   }
 
-  void WriterImpl::BuildFooterType(
+  void WriterImpl::buildFooterType(
                                    const Type& t,
                                    proto::Footer& footer,
                                    uint32_t & index) {
@@ -635,7 +635,7 @@ namespace orc {
         footer.mutable_types(pos)->add_fieldnames(t.getFieldName(i));
       }
       footer.mutable_types(pos)->add_subtypes(++index);
-      BuildFooterType(*t.getSubtype(i), footer, index);
+      buildFooterType(*t.getSubtype(i), footer, index);
     }
   }
 
@@ -646,7 +646,7 @@ namespace orc {
 
   std::unique_ptr<Writer> createWriter(
                                        const Type& type,
-                                       OutputStream * stream,
+                                       OutputStream* stream,
                                       const WriterOptions& options) {
     return std::unique_ptr<Writer>(
                                    new WriterImpl(
