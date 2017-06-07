@@ -37,6 +37,11 @@ import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.RecordReader;
 import org.apache.orc.TypeDescription;
+import org.threeten.bp.LocalDateTime;
+import org.threeten.bp.ZonedDateTime;
+import org.threeten.bp.ZoneId;
+import org.threeten.bp.format.DateTimeFormatter;
+import org.threeten.bp.temporal.TemporalAccessor;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,6 +52,9 @@ import java.util.List;
 import java.util.zip.GZIPInputStream;
 
 public class JsonReader implements RecordReader {
+  private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern(
+    "yyyy[[-][/]]MM[[-][/]]dd[['T'][ ]]HH:mm:ss[ ][XXX][X]");
+
   private final TypeDescription schema;
   private final JsonStreamParser parser;
   private final JsonConverter[] converters;
@@ -131,8 +139,16 @@ public class JsonReader implements RecordReader {
         vect.isNull[row] = true;
       } else {
         TimestampColumnVector vector = (TimestampColumnVector) vect;
-        vector.set(row, Timestamp.valueOf(value.getAsString()
-            .replaceAll("[TZ]", " ")));
+        TemporalAccessor temporalAccessor = DATE_TIME_FORMATTER.parseBest(value.getAsString(),
+          ZonedDateTime.FROM, LocalDateTime.FROM);
+        if (temporalAccessor instanceof ZonedDateTime) {
+          vector.set(row, new Timestamp(((ZonedDateTime) temporalAccessor).toEpochSecond() * 1000L));
+        } else if (temporalAccessor instanceof LocalDateTime) {
+          vector.set(row, new Timestamp(((LocalDateTime) temporalAccessor).atZone(ZoneId.systemDefault()).toEpochSecond() * 1000L));
+        } else {
+          vect.noNulls = false;
+          vect.isNull[row] = true;
+        }
       }
     }
   }
