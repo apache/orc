@@ -223,7 +223,7 @@ message PostScript {
   optional uint64 metadataLength = 5;
   // Version of the writer:
   //   0 (or missing) = original
-  //   1 = HIVE-8732 fixed
+  //   1 = HIVE-8732 fixed (String stats switched to UTF-8) 
   //   2 = HIVE-4243 fixed
   //   3 = HIVE-12055 fixed
   //   4 = HIVE-13083 fixed
