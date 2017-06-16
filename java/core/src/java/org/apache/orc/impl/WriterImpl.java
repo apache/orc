@@ -492,6 +492,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       builder.addMetadata(OrcProto.UserMetadataItem.newBuilder()
         .setName(entry.getKey()).setValue(entry.getValue()));
     }
+    builder.setWriter(OrcFile.WriterImplementation.ORC_JAVA.getId());
     physicalWriter.writeFileFooter(builder);
     return writePostScript();
   }

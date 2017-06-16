@@ -50,6 +50,8 @@ public interface FileMetadata {
 
   int getMetadataSize();
 
+  int getWriterImplementation();
+
   int getWriterVersionNum();
 
   List<OrcProto.Type> getTypes();

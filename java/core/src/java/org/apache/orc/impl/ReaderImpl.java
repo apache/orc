@@ -361,8 +361,10 @@ public class ReaderImpl implements Reader {
       this.metadataSize = fileMetadata.getMetadataSize();
       this.stripeStats = fileMetadata.getStripeStats();
       this.versionList = fileMetadata.getVersionList();
+      OrcFile.WriterImplementation writer =
+          OrcFile.WriterImplementation.from(fileMetadata.getWriterImplementation());
       this.writerVersion =
-          OrcFile.WriterVersion.from(fileMetadata.getWriterVersionNum());
+          OrcFile.WriterVersion.from(writer, fileMetadata.getWriterVersionNum());
       this.types = fileMetadata.getTypes();
       this.rowIndexStride = fileMetadata.getRowIndexStride();
       this.contentLength = fileMetadata.getContentLength();

@@ -70,8 +70,10 @@ public final class OrcTail {
 
   public OrcFile.WriterVersion getWriterVersion() {
     OrcProto.PostScript ps = fileTail.getPostscript();
-    return (ps.hasWriterVersion()
-        ? OrcFile.WriterVersion.from(ps.getWriterVersion()) : OrcFile.WriterVersion.ORIGINAL);
+    OrcProto.Footer footer = fileTail.getFooter();
+    OrcFile.WriterImplementation writer =
+        OrcFile.WriterImplementation.from(footer.getWriter());
+    return OrcFile.WriterVersion.from(writer, ps.getWriterVersion());
   }
 
   public List<StripeInformation> getStripes() {

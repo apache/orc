@@ -30,7 +30,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.orc.MemoryManager;
 import org.apache.orc.impl.MemoryManagerImpl;
 import org.apache.orc.impl.OrcTail;
 import org.apache.orc.impl.ReaderImpl;
@@ -108,47 +107,91 @@ public class OrcFile {
     }
   }
 
-  /**
-   * Records the version of the writer in terms of which bugs have been fixed.
-   * For bugs in the writer, but the old readers already read the new data
-   * correctly, bump this version instead of the Version.
-   */
-  public enum WriterVersion {
-    ORIGINAL(0),
-    HIVE_8732(1), // corrupted stripe/file maximum column statistics
-    HIVE_4243(2), // use real column names from Hive tables
-    HIVE_12055(3), // vectorized writer
-    HIVE_13083(4), // decimal writer updating present stream wrongly
-    ORC_101(5),    // bloom filters use utf8
-    ORC_135(6), // timestamp stats use utc
-
-    // Don't use any magic numbers here except for the below:
-    FUTURE(Integer.MAX_VALUE); // a version from a future writer
+  public enum WriterImplementation {
+    ORC_JAVA(0), // ORC Java writer
+    ORC_CPP(1),  // ORC C++ writer
+    PRESTO(2),   // Presto writer
+    UNKNOWN(Integer.MAX_VALUE);
 
     private final int id;
+
+    WriterImplementation(int id) {
+      this.id = id;
+    }
 
     public int getId() {
       return id;
     }
 
-    WriterVersion(int id) {
+    public static WriterImplementation from(int id) {
+      WriterImplementation[] values = values();
+      if (id >= 0 && id < values.length - 1) {
+        return values[id];
+      }
+      return UNKNOWN;
+    }
+  }
+
+  /**
+   * Records the version of the writer in terms of which bugs have been fixed.
+   * When you fix bugs in the writer (or make substantial changes) that don't
+   * change the file format, add a new version here instead of Version.
+   *
+   * The ids are assigned sequentially from 6 per a WriterImplementation so that
+   * readers that predate ORC-202 treat the other writers correctly.
+   */
+  public enum WriterVersion {
+    // Java ORC Writer
+    ORIGINAL(WriterImplementation.ORC_JAVA, 0),
+    HIVE_8732(WriterImplementation.ORC_JAVA, 1), // fixed stripe/file maximum
+                                                 // statistics & string statistics
+                                                 // use utf8 for min/max
+    HIVE_4243(WriterImplementation.ORC_JAVA, 2), // use real column names from
+                                                 // Hive tables
+    HIVE_12055(WriterImplementation.ORC_JAVA, 3), // vectorized writer
+    HIVE_13083(WriterImplementation.ORC_JAVA, 4), // decimals write present stream correctly
+    ORC_101(WriterImplementation.ORC_JAVA, 5),   // bloom filters use utf8
+    ORC_135(WriterImplementation.ORC_JAVA, 6),   // timestamp stats use utc
+
+    // C++ ORC Writer
+    ORC_CPP_ORIGINAL(WriterImplementation.ORC_CPP, 6),
+
+    // Presto Writer
+    PRESTO_ORIGINAL(WriterImplementation.PRESTO, 6),
+
+    // Don't use any magic numbers here except for the below:
+    FUTURE(WriterImplementation.UNKNOWN, Integer.MAX_VALUE); // a version from a future writer
+
+    private final int id;
+    private final WriterImplementation writer;
+
+    public WriterImplementation getWriterImplementation() {
+      return writer;
+    }
+
+    public int getId() {
+      return id;
+    }
+
+    WriterVersion(WriterImplementation writer, int id) {
+      this.writer = writer;
       this.id = id;
     }
 
-    private static final WriterVersion[] values;
+    private static final WriterVersion[][] values =
+        new WriterVersion[WriterImplementation.values().length][];
+
     static {
-      // Assumes few non-negative values close to zero.
-      int max = Integer.MIN_VALUE;
-      for (WriterVersion v : WriterVersion.values()) {
-        if (v.id < 0) throw new AssertionError();
-        if (v.id > max && FUTURE.id != v.id) {
-          max = v.id;
-        }
-      }
-      values = new WriterVersion[max + 1];
-      for (WriterVersion v : WriterVersion.values()) {
-        if (v.id < values.length) {
-          values[v.id] = v;
+      for(WriterVersion v: WriterVersion.values()) {
+        WriterImplementation writer = v.writer;
+        if (writer != WriterImplementation.UNKNOWN) {
+          if (values[writer.id] == null) {
+            values[writer.id] = new WriterVersion[WriterVersion.values().length];
+          }
+          if (values[writer.id][v.id] != null) {
+            throw new IllegalArgumentException("Duplicate WriterVersion id " + v);
+          }
+          values[writer.id][v.id] = v;
         }
       }
     }
@@ -156,18 +199,33 @@ public class OrcFile {
     /**
      * Convert the integer from OrcProto.PostScript.writerVersion
      * to the enumeration with unknown versions being mapped to FUTURE.
+     * @param writer the writer implementation
      * @param val the serialized writer version
      * @return the corresponding enumeration value
      */
-    public static WriterVersion from(int val) {
-      if (val >= values.length) {
+    public static WriterVersion from(WriterImplementation writer, int val) {
+      if (writer == WriterImplementation.UNKNOWN) {
         return FUTURE;
       }
-      return values[val];
+      if (writer != WriterImplementation.ORC_JAVA && val < 6) {
+        throw new IllegalArgumentException("ORC File with illegval version " +
+            val + " for writer " + writer);
+      }
+      WriterVersion[] versions = values[writer.id];
+      if (val < 0 || versions.length < val) {
+        return FUTURE;
+      }
+      WriterVersion result = versions[val];
+      return result == null ? FUTURE : result;
     }
 
-    public boolean includes(WriterVersion other) {
-      return id >= other.id;
+    /**
+     * Does this file include the given fix or come from a different writer?
+     * @param fix the required fix
+     * @return true if the required fix is present
+     */
+    public boolean includes(WriterVersion fix) {
+      return writer != fix.writer || id >= fix.id;
     }
   }
 
