@@ -23,10 +23,11 @@ start decompressing without the previous bytes.
 ![compression streams]({{ site.url }}/img/CompressionStream.png)
 
 The default compression chunk size is 256K, but writers can choose
-their own value less than 223. Larger chunks lead to better
-compression, but require more memory. The chunk size is recorded in
-the Postscript so that readers can allocate appropriately sized
-buffers.
+their own value. Larger chunks lead to better compression, but require
+more memory. The chunk size is recorded in the Postscript so that
+readers can allocate appropriately sized buffers. Readers are
+guaranteed that no chunk will expand to more than the compression chunk
+size.
 
 ORC files without generic compression write each stream directly
 with no headers.

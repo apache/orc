@@ -32,9 +32,12 @@ DIRECT    | PRESENT     | Yes      | Boolean RLE
 
 ## String, Char, and VarChar Columns
 
-String columns are adaptively encoded based on whether the first
-10,000 values are sufficiently distinct. In all of the encodings, the
-PRESENT stream encodes whether the value is null.
+String, char, and varchar columns may be encoded either using a
+dictionary encoding or a direct encoding. A direct encoding should be
+preferred when there are many distinct values. In all of the
+encodings, the PRESENT stream encodes whether the value is null. The
+Java ORC writer automatically picks the encoding after the first row
+group (10,000 rows).
 
 For direct encoding the UTF-8 bytes are saved in the DATA stream and
 the length of each value is written into the LENGTH stream. In direct
