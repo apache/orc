@@ -3039,9 +3039,50 @@ public class TestVectorOrcFile {
 
   @Test
   public void testWriterVersion() throws Exception {
-    assertEquals(OrcFile.WriterVersion.FUTURE, OrcFile.WriterVersion.from(99));
-    assertEquals(OrcFile.WriterVersion.ORIGINAL, OrcFile.WriterVersion.from(0));
-    assertEquals(OrcFile.WriterVersion.HIVE_4243, OrcFile.WriterVersion.from(2));
+    // test writer implementation serialization
+    assertEquals(OrcFile.WriterImplementation.ORC_JAVA,
+        OrcFile.WriterImplementation.from(0));
+    assertEquals(OrcFile.WriterImplementation.ORC_CPP,
+        OrcFile.WriterImplementation.from(1));
+    assertEquals(OrcFile.WriterImplementation.PRESTO,
+        OrcFile.WriterImplementation.from(2));
+    assertEquals(OrcFile.WriterImplementation.UNKNOWN,
+        OrcFile.WriterImplementation.from(99));
+
+    // test writer version serialization
+    assertEquals(OrcFile.WriterVersion.FUTURE,
+        OrcFile.WriterVersion.from(OrcFile.WriterImplementation.ORC_JAVA, 99));
+    assertEquals(OrcFile.WriterVersion.ORIGINAL,
+        OrcFile.WriterVersion.from(OrcFile.WriterImplementation.ORC_JAVA, 0));
+    assertEquals(OrcFile.WriterVersion.HIVE_4243,
+        OrcFile.WriterVersion.from(OrcFile.WriterImplementation.ORC_JAVA, 2));
+    assertEquals(OrcFile.WriterVersion.FUTURE,
+        OrcFile.WriterVersion.from(OrcFile.WriterImplementation.ORC_CPP, 99));
+    assertEquals(OrcFile.WriterVersion.ORC_CPP_ORIGINAL,
+        OrcFile.WriterVersion.from(OrcFile.WriterImplementation.ORC_CPP, 6));
+    assertEquals(OrcFile.WriterVersion.PRESTO_ORIGINAL,
+        OrcFile.WriterVersion.from(OrcFile.WriterImplementation.PRESTO, 6));
+    assertEquals(OrcFile.WriterVersion.FUTURE,
+        OrcFile.WriterVersion.from(OrcFile.WriterImplementation.UNKNOWN, 0));
+
+    // test compatibility
+    assertTrue(OrcFile.WriterVersion.FUTURE.includes(
+        OrcFile.WriterVersion.ORC_CPP_ORIGINAL));
+    assertTrue(OrcFile.WriterVersion.FUTURE.includes(
+        OrcFile.WriterVersion.HIVE_8732));
+    assertTrue(OrcFile.WriterVersion.HIVE_12055.includes(
+        OrcFile.WriterVersion.HIVE_4243));
+    assertTrue(OrcFile.WriterVersion.HIVE_12055.includes(
+        OrcFile.WriterVersion.HIVE_12055));
+    assertTrue(!OrcFile.WriterVersion.HIVE_4243.includes(
+        OrcFile.WriterVersion.HIVE_12055));
+    assertTrue(OrcFile.WriterVersion.HIVE_12055.includes(
+        OrcFile.WriterVersion.PRESTO_ORIGINAL));
+  }
+
+  @Test(expected=IllegalArgumentException.class)
+  public void testBadPrestoVersion() {
+    OrcFile.WriterVersion.from(OrcFile.WriterImplementation.PRESTO, 0);
   }
 
   /**

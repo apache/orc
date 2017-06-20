@@ -200,6 +200,12 @@ message Footer {
   optional uint64 numberOfRows = 6;
   repeated ColumnStatistics statistics = 7;
   optional uint32 rowIndexStride = 8;
+
+  // Each implementation that writes ORC files should register for a code
+  // 0 = ORC Java
+  // 1 = ORC C++
+  // 2 = Presto
+  optional uint32 writer = 9;
 }
 
 enum CompressionKind {
@@ -221,15 +227,33 @@ message PostScript {
   //   [0, 12] = Hive 0.12
   repeated uint32 version = 4 [packed = true];
   optional uint64 metadataLength = 5;
-  // Version of the writer:
-  //   0 (or missing) = original
-  //   1 = HIVE-8732 fixed
-  //   2 = HIVE-4243 fixed
-  //   3 = HIVE-12055 fixed
-  //   4 = HIVE-13083 fixed
-  //   5 = ORC-101 fixed
-  //   6 = ORC-135 fixed
+
+  // The version of the writer that wrote the file. This number is
+  // updated when we make fixes or large changes to the writer so that
+  // readers can detect whether a given bug is present in the data.
+  //
+  // Only the Java ORC writer may use values under 6 (or missing) so that
+  // readers that predate ORC-202 treat the new writers correctly. Each
+  // writer should assign their own sequence of versions starting from 6.
+  //
+  // Version of the ORC Java writer:
+  //   0 = original
+  //   1 = HIVE-8732 fixed (fixed stripe/file maximum statistics &
+  //                        string statistics use utf8 for min/max)
+  //   2 = HIVE-4243 fixed (use real column names from Hive tables)
+  //   3 = HIVE-12055 fixed (vectorized writer implementation)
+  //   4 = HIVE-13083 fixed (decimals write present stream correctly)
+  //   5 = ORC-101 fixed (bloom filters use utf8 consistently)
+  //   6 = ORC-135 fixed (timestamp statistics use utc)
+  //
+  // Version of the ORC C++ writer:
+  //   6 = original
+  //
+  // Version of the Presto writer:
+  //   6 = original
+  //
   optional uint32 writerVersion = 6;
+
   // Leave this last in the record
   optional string magic = 8000;
 }

@@ -173,7 +173,7 @@ that contains the list of their children's type ids.
  repeated uint32 subtypes = 2 [packed=true];
  // the list of field names for struct
  repeated string fieldNames = 3;
- // the maximum length of the type for varchar or char
+ // the maximum length of the type for varchar or char in UTF-8 characters
  optional uint32 maximumLength = 4;
  // the precision and scale for decimal
  optional uint32 precision = 5;
