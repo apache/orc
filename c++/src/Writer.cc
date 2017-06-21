@@ -282,6 +282,7 @@ namespace orc {
     proto::Metadata metadata;
 
     static const char* magicId;
+    static const uint32_t writerId;
 
   public:
     WriterImpl(
@@ -309,6 +310,12 @@ namespace orc {
   };
 
   const char * WriterImpl::magicId = "ORC";
+
+  // Identification for C++ Orc writer
+  // 0 = ORC Java
+  // 1 = ORC C++
+  // 2 = Presto
+  const uint32_t WriterImpl::writerId = 1;
 
   WriterImpl::WriterImpl(
                          const Type& t,
@@ -394,6 +401,7 @@ namespace orc {
     fileFooter.set_numberofrows(0);
     fileFooter.set_rowindexstride(
                           static_cast<uint32_t>(options.getRowIndexStride()));
+    fileFooter.set_writer(writerId);
 
     uint32_t index = 0;
     buildFooterType(type, fileFooter, index);
@@ -460,7 +468,7 @@ namespace orc {
       *stripeFooter.add_columns() = encodings[i];
     }
 
-    // TODO: writerTimezone
+    // TODO: ORC-205 Include writer timezone in stripe footer
 
     // add stripe statistics to metadata
     if (options.getEnableStats()) {
