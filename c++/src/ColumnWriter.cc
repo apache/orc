@@ -40,14 +40,14 @@ namespace orc {
                        }
 
     virtual std::unique_ptr<BufferedOutputStream>
-                    createStream(proto::Stream_Kind kind) override;
+                    createStream(proto::Stream_Kind kind) const override;
   private:
     const WriterOptions& options;
     OutputStream* outStream;
   };
 
   std::unique_ptr<BufferedOutputStream> StreamsFactoryImpl::createStream(
-                                                      proto::Stream_Kind) {
+                                                    proto::Stream_Kind) const {
     // In the future, we can decide compression strategy and modifier
     // based on stream kind. But for now we just use the setting from
     // WriterOption
@@ -73,10 +73,9 @@ namespace orc {
 
   ColumnWriter::ColumnWriter(
                              const Type& type,
-                             StreamsFactory& factory,
+                             const StreamsFactory& factory,
                              const WriterOptions& options) :
                                 columnId(type.getColumnId()),
-                                streamsFactory(factory),
                                 colIndexStatistics(),
                                 colStripeStatistics(),
                                 colFileStatistics(),
@@ -201,7 +200,7 @@ namespace orc {
   public:
     StructColumnWriter(
                        const Type& type,
-                       StreamsFactory& factory,
+                       const StreamsFactory& factory,
                        const WriterOptions& options);
     ~StructColumnWriter();
 
@@ -238,7 +237,7 @@ namespace orc {
 
   StructColumnWriter::StructColumnWriter(
                                          const Type& type,
-                                         StreamsFactory& factory,
+                                         const StreamsFactory& factory,
                                          const WriterOptions& options) :
                                          ColumnWriter(type, factory, options) {
     for(unsigned int i = 0; i < type.getSubtypeCount(); ++i) {
@@ -377,7 +376,7 @@ namespace orc {
   public:
     IntegerColumnWriter(
                         const Type& type,
-                        StreamsFactory& factory,
+                        const StreamsFactory& factory,
                         const WriterOptions& options);
 
     virtual void add(ColumnVectorBatch& rowBatch,
@@ -402,10 +401,10 @@ namespace orc {
 
   IntegerColumnWriter::IntegerColumnWriter(
                         const Type& type,
-                        StreamsFactory& factory,
+                        const StreamsFactory& factory,
                         const WriterOptions& options) :
                           ColumnWriter(type, factory, options),
-                          rleVersion(options.getRleVersion()) {
+                          rleVersion(RleVersion_1) {
     std::unique_ptr<BufferedOutputStream> dataStream =
       factory.createStream(proto::Stream_Kind_DATA);
     rleEncoder = createRleEncoder(
@@ -482,7 +481,7 @@ namespace orc {
 
   std::unique_ptr<ColumnWriter> buildWriter(
                                             const Type& type,
-                                            StreamsFactory& factory,
+                                            const StreamsFactory& factory,
                                             const WriterOptions& options) {
     switch (static_cast<int64_t>(type.getKind())) {
       case STRUCT:

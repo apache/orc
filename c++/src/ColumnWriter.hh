@@ -40,7 +40,7 @@ namespace orc {
      * @return the buffer output stream
      */
     virtual std::unique_ptr<BufferedOutputStream>
-                    createStream(proto::Stream_Kind kind) = 0;
+                    createStream(proto::Stream_Kind kind) const = 0;
   };
 
   std::unique_ptr<StreamsFactory> createStreamsFactory(
@@ -72,7 +72,6 @@ namespace orc {
   protected:
     std::unique_ptr<ByteRleEncoder> notNullEncoder;
     uint64_t columnId;
-    StreamsFactory& streamsFactory;
     std::unique_ptr<ColumnStatisticsImplBase> colIndexStatistics;
     std::unique_ptr<ColumnStatisticsImplBase> colStripeStatistics;
     std::unique_ptr<ColumnStatisticsImplBase> colFileStatistics;
@@ -84,7 +83,7 @@ namespace orc {
     std::unique_ptr<RowIndexPositionRecorder> rowIndexPosition;
 
   public:
-    ColumnWriter(const Type& type, StreamsFactory& factory,
+    ColumnWriter(const Type& type, const StreamsFactory& factory,
                  const WriterOptions& options);
 
     virtual ~ColumnWriter();
@@ -191,7 +190,7 @@ namespace orc {
    */
   std::unique_ptr<ColumnWriter> buildWriter(
                                             const Type& type,
-                                            StreamsFactory& factory,
+                                            const StreamsFactory& factory,
                                             const WriterOptions& options);
 }
 

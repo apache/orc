@@ -43,11 +43,6 @@ namespace orc {
     CompressionStrategy_COMPRESSION
   };
 
-  enum RleVersion {
-    RleVersion_1,
-    RleVersion_2
-  };
-
   class Timezone;
 
   /**
@@ -121,25 +116,14 @@ namespace orc {
     double getDictionaryKeySizeThreshold() const;
 
     /**
-     * Set whether or not to have block padding.
+     * Set Orc file version
      */
-    WriterOptions& setBlockPadding(bool padding);
+    WriterOptions& setFileVersion(const FileVersion& version);
 
     /**
-     * Get whether or not to have block padding.
-     * @return if not set, return default value which is false.
+     * Get Orc file version
      */
-    bool getBlockPadding() const;
-
-    /**
-     * Set Run length encoding version
-     */
-    WriterOptions& setRleVersion(RleVersion version);
-
-    /**
-     * Get Run Length Encoding version
-     */
-    RleVersion getRleVersion() const;
+    FileVersion getFileVersion() const;
 
     /**
      * Set compression kind.
@@ -173,17 +157,6 @@ namespace orc {
      * @return if not set, return default value which is speed.
      */
     CompressionStrategy getCompressionStrategy() const;
-
-    /**
-     * Set the writer version.
-     */
-    WriterOptions& setWriterVersion(WriterVersion version);
-
-    /**
-     * Get the strip size.
-     * @return if not set, return default value which is WriterVersion_ORIGINAL
-     */
-    WriterVersion getWriterVersion() const;
 
     /**
      * Set the padding tolerance.

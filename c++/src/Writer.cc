@@ -31,35 +31,31 @@ namespace orc {
     uint64_t blockSize;
     uint64_t rowIndexStride;
     uint64_t bufferSize;
-    bool blockPadding;
     CompressionKind compression;
     EncodingStrategy encodingStrategy;
     CompressionStrategy compressionStrategy;
     MemoryPool* memoryPool;
-    WriterVersion version;
     double paddingTolerance;
     std::ostream* errorStream;
-    RleVersion rleVersion;
+    FileVersion fileVersion;
     double dictionaryKeySizeThreshold;
     bool enableStats;
     bool enableStrStatsCmp;
     bool enableIndex;
     const Timezone* timezone;
 
-    WriterOptionsPrivate() {
+    WriterOptionsPrivate() :
+                            fileVersion(0, 12) { // default to Hive_0_12
       stripeSize = 64 * 1024 * 1024; // 64M
       blockSize = 256 * 1024; // 256K
       rowIndexStride = 10000;
       bufferSize = 4 * 1024 * 1024; // 4M
-      blockPadding = false;
       compression = CompressionKind_ZLIB;
       encodingStrategy = EncodingStrategy_SPEED;
       compressionStrategy = CompressionStrategy_SPEED;
       memoryPool = getDefaultPool();
-      version = WriterVersion_ORC_135;
       paddingTolerance = 0.0;
       errorStream = &std::cerr;
-      rleVersion = RleVersion_1;
       dictionaryKeySizeThreshold = 0.0;
       enableStats = true;
       enableStrStatsCmp = false;
@@ -143,22 +139,13 @@ namespace orc {
     return privateBits->dictionaryKeySizeThreshold;
   }
 
-  WriterOptions& WriterOptions::setBlockPadding(bool padding) {
-    privateBits->blockPadding = padding;
+  WriterOptions& WriterOptions::setFileVersion(const FileVersion& version) {
+    privateBits->fileVersion = version;
     return *this;
   }
 
-  bool WriterOptions::getBlockPadding() const {
-    return privateBits->blockPadding;
-  }
-
-  WriterOptions& WriterOptions::setRleVersion(RleVersion version) {
-    privateBits->rleVersion = version;
-    return *this;
-  }
-
-  RleVersion WriterOptions::getRleVersion() const {
-    return privateBits->rleVersion;
+  FileVersion WriterOptions::getFileVersion() const {
+    return privateBits->fileVersion;
   }
 
   WriterOptions& WriterOptions::setCompression(CompressionKind comp) {
@@ -187,15 +174,6 @@ namespace orc {
 
   CompressionStrategy WriterOptions::getCompressionStrategy() const {
     return privateBits->compressionStrategy;
-  }
-
-  WriterOptions& WriterOptions::setWriterVersion(WriterVersion version) {
-    privateBits->version = version;
-    return *this;
-  }
-
-  WriterVersion WriterOptions::getWriterVersion() const {
-    return privateBits->version;
   }
 
   WriterOptions& WriterOptions::setPaddingTolerance(double tolerance) {
@@ -412,12 +390,10 @@ namespace orc {
                   WriterImpl::convertCompressionKind(options.getCompression()));
     postScript.set_compressionblocksize(options.getBlockSize());
 
-    // Hive 0.12
-    postScript.add_version(0);
-    postScript.add_version(12);
+    postScript.add_version(options.getFileVersion().getMajor());
+    postScript.add_version(options.getFileVersion().getMinor());
 
-    postScript.set_writerversion(
-      static_cast<uint32_t>(options.getWriterVersion()));
+    postScript.set_writerversion(WriterVersion_ORC_135);
     postScript.set_magic("ORC");
 
     // Initialize first stripe

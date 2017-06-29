@@ -40,7 +40,8 @@ namespace orc {
                                       CompressionKind compression,
                                       const Type& type,
                                       MemoryPool* memoryPool,
-                                      OutputStream* stream) {
+                                      OutputStream* stream,
+                                      FileVersion version = FileVersion(0, 12)){
     WriterOptions options;
     options.setStripeSize(stripeSize);
     options.setBlockSize(blockSize);
@@ -49,6 +50,7 @@ namespace orc {
     options.setMemoryPool(memoryPool);
     options.setEnableStats(false);
     options.setEnableIndex(false);
+    options.setFileVersion(version);
     return createWriter(type, stream, options);
   }
 
@@ -90,6 +92,8 @@ namespace orc {
                                                 pool,
                                                 std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
+    EXPECT_EQ("0.12", reader->getFormatVersion());
+    EXPECT_EQ(WriterVersion_ORC_135, reader->getWriterVersion());
     EXPECT_EQ(0, reader->getNumberOfRows());
 
     std::unique_ptr<ColumnVectorBatch> batch = rowReader->createRowBatch(1024);
@@ -112,7 +116,8 @@ namespace orc {
                                       CompressionKind_ZLIB,
                                       *type,
                                       pool,
-                                      &memStream);
+                                      &memStream,
+                                      FileVersion(0, 11));
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(1024);
     StructVectorBatch* structBatch =
       dynamic_cast<StructVectorBatch *>(batch.get());
@@ -142,6 +147,7 @@ namespace orc {
                                                 pool,
                                                 std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
+    EXPECT_EQ("0.11", reader->getFormatVersion());
     EXPECT_EQ(2000, reader->getNumberOfRows());
 
     batch = rowReader->createRowBatch(2048);

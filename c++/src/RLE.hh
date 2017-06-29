@@ -26,6 +26,11 @@
 
 namespace orc {
 
+  enum RleVersion {
+    RleVersion_1,
+    RleVersion_2
+  };
+
   inline int64_t zigZag(int64_t value) {
     return (value << 1) ^ (value >> 63);
   }
