@@ -19,7 +19,4 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 endif ()
 
 add_subdirectory(gmock-${GMOCK_VERSION})
-add_subdirectory(zlib-${ZLIB_VERSION})
 add_subdirectory(protobuf-${PROTOBUF_VERSION})
-add_subdirectory(snappy-${SNAPPY_VERSION})
-add_subdirectory(lz4-${LZ4_VERSION})
