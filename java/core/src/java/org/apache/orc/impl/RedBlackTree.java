@@ -18,8 +18,6 @@
 
 package org.apache.orc.impl;
 
-import org.apache.orc.impl.DynamicIntArray;
-
 /**
  * A memory efficient red-black tree that does not allocate any objects per
  * an element. This class is abstract and assumes that the child class

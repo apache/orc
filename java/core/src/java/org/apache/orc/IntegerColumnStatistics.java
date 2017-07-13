@@ -17,8 +17,6 @@
  */
 package org.apache.orc;
 
-import org.apache.orc.ColumnStatistics;
-
 /**
  * Statistics for all of the integer columns, such as byte, short, int, and
  * long.

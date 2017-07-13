@@ -38,7 +38,6 @@ import org.apache.orc.util.BloomFilterUtf8;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.TimeZone;
 
 /**
  * The parent class of all of the writers for each column. Each column
