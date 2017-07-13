@@ -18,7 +18,6 @@
 package org.apache.orc;
 
 import org.apache.hadoop.hive.common.type.HiveDecimal;
-import org.apache.orc.ColumnStatistics;
 
 /**
  * Statistics for decimal columns.

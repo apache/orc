@@ -21,9 +21,6 @@ import java.io.EOFException;
 import java.io.IOException;
 
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
-import org.apache.orc.impl.InStream;
-import org.apache.orc.impl.PositionProvider;
-import org.apache.orc.impl.RunLengthByteReader;
 
 public class BitFieldReader {
   private final RunLengthByteReader input;

@@ -21,7 +21,6 @@ import java.util.List;
 
 import org.apache.hadoop.hive.common.DiskRangeInfo;
 import org.apache.hadoop.hive.common.io.DiskRange;
-import org.apache.orc.impl.InStream;
 
 /**
  * An uncompressed stream whose underlying byte buffer can be set.
