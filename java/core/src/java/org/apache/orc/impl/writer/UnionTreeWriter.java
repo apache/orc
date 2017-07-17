@@ -24,7 +24,6 @@ import org.apache.orc.OrcProto;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.PositionRecorder;
 import org.apache.orc.impl.RunLengthByteWriter;
-import org.apache.orc.impl.WriterImpl;
 
 import java.io.IOException;
 import java.util.List;

@@ -25,10 +25,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 
-import org.apache.orc.OrcProto;
-import org.apache.orc.StripeInformation;
-import org.apache.orc.TypeDescription;
-
 /**
  * The interface for writing ORC files.
  */

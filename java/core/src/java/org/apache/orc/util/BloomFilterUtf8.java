@@ -19,8 +19,6 @@
 package org.apache.orc.util;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * This class represents the fix from ORC-101 where we fixed the bloom filter
