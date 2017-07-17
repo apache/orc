@@ -40,6 +40,19 @@ support](https://hortonworks.com/blog/bringing-orc-support-into-apache-spark/)
 for reading and writing ORC files with support for column project and
 predicate push down.
 
+### [EEL](https://github.com/51zero/eel-sdk)
+
+EEL is a Scala BigData API that supports reading and writing data for
+various file formats and storage systems including to and from ORC. It
+is designed as a in-process low level API for manipulating data. Data
+is lazily streamed from source to sink and using standard Scala
+operations such as map, flatMap and filter, it is especially suited
+for ETL style applications. EEL supports ORC predicate and projection
+pushdowns and correct handles conversions from other formats including
+complex types such as maps, lists or nested structs. A typical use
+case would be to extract data from JDBC to ORC files housed in HDFS,
+or directly into Hive tables backed by an ORC file format.
+
 ### [Facebook](https://facebook.com)
 
 With more than 300 PB of data, Facebook was an [early adopter of
