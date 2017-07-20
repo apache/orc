@@ -362,7 +362,7 @@ namespace orc {
   }
 
   std::unique_ptr<ColumnStatisticsImplBase> createColumnStatistics(
-    const Type& type, bool enableStringComparison) {
+    const Type& type) {
     switch (static_cast<int64_t>(type.getKind())) {
       case BOOLEAN:
         return std::unique_ptr<ColumnStatisticsImplBase>(
@@ -390,7 +390,7 @@ namespace orc {
       case CHAR:
       case VARCHAR:
         return std::unique_ptr<ColumnStatisticsImplBase>(
-          new StringColumnStatisticsImpl(enableStringComparison));
+          new StringColumnStatisticsImpl());
       case DATE:
         return std::unique_ptr<ColumnStatisticsImplBase>(
           new DateColumnStatisticsImpl());

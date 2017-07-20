@@ -55,8 +55,9 @@ namespace orc {
                             options.getCompression(),
                             outStream,
                             options.getCompressionStrategy(),
-                            options.getBufferSize(),
-                            options.getBlockSize(),
+                            // BufferedOutputStream initial capacity
+                            4 * 1024 * 1024,
+                            options.getCompressionBlockSize(),
                             *options.getMemoryPool());
   }
 
@@ -92,11 +93,10 @@ namespace orc {
     notNullEncoder = createBooleanRleEncoder(std::move(presentStream));
 
     if (enableIndex || enableStats) {
-      bool enableStrCmp = options.getEnableStrStatsCmp();
-      colIndexStatistics = createColumnStatistics(type, enableStrCmp);
+      colIndexStatistics = createColumnStatistics(type);
       if (enableStats) {
-        colStripeStatistics = createColumnStatistics(type, enableStrCmp);
-        colFileStatistics = createColumnStatistics(type, enableStrCmp);
+        colStripeStatistics = createColumnStatistics(type);
+        colFileStatistics = createColumnStatistics(type);
       }
     }
 

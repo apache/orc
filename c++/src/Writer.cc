@@ -28,9 +28,8 @@ namespace orc {
 
   struct WriterOptionsPrivate {
     uint64_t stripeSize;
-    uint64_t blockSize;
+    uint64_t compressionBlockSize;
     uint64_t rowIndexStride;
-    uint64_t bufferSize;
     CompressionKind compression;
     EncodingStrategy encodingStrategy;
     CompressionStrategy compressionStrategy;
@@ -40,16 +39,13 @@ namespace orc {
     FileVersion fileVersion;
     double dictionaryKeySizeThreshold;
     bool enableStats;
-    bool enableStrStatsCmp;
     bool enableIndex;
-    const Timezone* timezone;
 
     WriterOptionsPrivate() :
                             fileVersion(0, 12) { // default to Hive_0_12
       stripeSize = 64 * 1024 * 1024; // 64M
-      blockSize = 256 * 1024; // 256K
+      compressionBlockSize = 64 * 1024; // 64K
       rowIndexStride = 10000;
-      bufferSize = 4 * 1024 * 1024; // 4M
       compression = CompressionKind_ZLIB;
       encodingStrategy = EncodingStrategy_SPEED;
       compressionStrategy = CompressionStrategy_SPEED;
@@ -58,9 +54,7 @@ namespace orc {
       errorStream = &std::cerr;
       dictionaryKeySizeThreshold = 0.0;
       enableStats = true;
-      enableStrStatsCmp = false;
       enableIndex = true;
-      timezone = &getLocalTimezone();
     }
   };
 
@@ -103,31 +97,23 @@ namespace orc {
     return privateBits->stripeSize;
   }
 
-  WriterOptions& WriterOptions::setBlockSize(uint64_t size) {
-    privateBits->blockSize = size;
+  WriterOptions& WriterOptions::setCompressionBlockSize(uint64_t size) {
+    privateBits->compressionBlockSize = size;
     return *this;
   }
 
-  uint64_t WriterOptions::getBlockSize() const {
-    return privateBits->blockSize;
+  uint64_t WriterOptions::getCompressionBlockSize() const {
+    return privateBits->compressionBlockSize;
   }
 
   WriterOptions& WriterOptions::setRowIndexStride(uint64_t stride) {
     privateBits->rowIndexStride = stride;
+    privateBits->enableIndex = (stride != 0);
     return *this;
   }
 
   uint64_t WriterOptions::getRowIndexStride() const {
     return privateBits->rowIndexStride;
-  }
-
-  WriterOptions& WriterOptions::setBufferSize(uint64_t size) {
-    privateBits->bufferSize = size;
-    return *this;
-  }
-
-  uint64_t WriterOptions::getBufferSize() const {
-    return privateBits->bufferSize;
   }
 
   WriterOptions& WriterOptions::setDictionaryKeySizeThreshold(double val) {
@@ -212,31 +198,8 @@ namespace orc {
     return privateBits->enableStats;
   }
 
-  WriterOptions& WriterOptions::setEnableStrStatsCmp(bool enable) {
-    privateBits->enableStrStatsCmp = enable;
-    return *this;
-  }
-
-  bool WriterOptions::getEnableStrStatsCmp() const {
-    return privateBits->enableStrStatsCmp;
-  }
-
-  WriterOptions& WriterOptions::setEnableIndex(bool enable) {
-    privateBits->enableIndex = enable;
-    return *this;
-  }
-
   bool WriterOptions::getEnableIndex() const {
     return privateBits->enableIndex;
-  }
-
-  const Timezone* WriterOptions::getTimezone() const {
-    return privateBits->timezone;
-  }
-
-  WriterOptions&  WriterOptions::setTimezone(const std::string& zone) {
-    privateBits->timezone = &getTimezoneByName(zone);
-    return *this;
   }
 
   Writer::~Writer() {
@@ -313,13 +276,13 @@ namespace orc {
                                   outStream,
                                   options.getCompressionStrategy(),
                                   bufferCapacity,
-                                  options.getBlockSize(),
+                                  options.getCompressionBlockSize(),
                                   *options.getMemoryPool());
     bufferedStream.reset(new BufferedOutputStream(
                                             *options.getMemoryPool(),
                                             outStream,
                                             bufferCapacity,
-                                            options.getBlockSize()));
+                                            options.getCompressionBlockSize()));
 
     init();
   }
@@ -388,7 +351,7 @@ namespace orc {
     postScript.set_footerlength(0);
     postScript.set_compression(
                   WriterImpl::convertCompressionKind(options.getCompression()));
-    postScript.set_compressionblocksize(options.getBlockSize());
+    postScript.set_compressionblocksize(options.getCompressionBlockSize());
 
     postScript.add_version(options.getFileVersion().getMajor());
     postScript.add_version(options.getFileVersion().getMinor());

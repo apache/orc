@@ -71,15 +71,15 @@ namespace orc {
     uint64_t getStripeSize() const;
 
     /**
-     * Set the block size.
+     * Set the data compression block size.
      */
-    WriterOptions& setBlockSize(uint64_t size);
+    WriterOptions& setCompressionBlockSize(uint64_t size);
 
     /**
-     * Get the block size.
+     * Get the data compression block size.
      * @return if not set, return default value.
      */
-    uint64_t getBlockSize() const;
+    uint64_t getCompressionBlockSize() const;
 
     /**
      * Set row index stride.
@@ -91,17 +91,6 @@ namespace orc {
      * @return if not set, return default value.
      */
     uint64_t getRowIndexStride() const;
-
-    /**
-     * Set the buffer size.
-     */
-    WriterOptions& setBufferSize(uint64_t size);
-
-    /**
-     * Get the buffer size.
-     * @return if not set, return default value.
-     */
-    uint64_t getBufferSize() const;
 
     /**
      * Set the dictionary key size threshold.
@@ -205,38 +194,10 @@ namespace orc {
      bool getEnableStats() const;
 
     /**
-     * Set whether or not to update string min/max stats
-     */
-    WriterOptions& setEnableStrStatsCmp(bool enable);
-
-    /**
-     * Get whether or not to update string min/max stats
-     * @return if not set, the default is false
-     */
-    bool getEnableStrStatsCmp() const;
-
-    /**
-     * Set whether or not to write row group index
-     */
-    WriterOptions& setEnableIndex(bool enable);
-
-    /**
      * Get whether or not to write row group index
      * @return if not set, the default is false
      */
     bool getEnableIndex() const;
-
-    /**
-     * Get writer timezone
-     * @return writer timezone
-     */
-    const Timezone* getTimezone() const;
-
-    /**
-     * Set writer timezone
-     * @param zone writer timezone name
-     */
-    WriterOptions& setTimezone(const std::string& zone);
   };
 
   class Writer {

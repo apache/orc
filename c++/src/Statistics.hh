@@ -1026,11 +1026,9 @@ namespace orc {
                                     public ColumnStatisticsImplBase{
   private:
     InternalStringStatistics _stats;
-    bool _enableStringComparison;
 
   public:
-    StringColumnStatisticsImpl(bool enableStringComparision) {
-      _enableStringComparison = enableStringComparision;
+    StringColumnStatisticsImpl() {
       reset();
     }
     StringColumnStatisticsImpl(const proto::ColumnStatistics& stats,
@@ -1109,7 +1107,7 @@ namespace orc {
     }
 
     void update(const char* value, size_t length) {
-      if (_enableStringComparison && value != nullptr) {
+      if (value != nullptr) {
         if (!_stats.hasMinimum()) {
           setMinimum(std::string(value, value + length));
           setMaximum(std::string(value, value + length));
@@ -1437,11 +1435,10 @@ namespace orc {
   /**
    * Create ColumnStatistics for writers
    * @param type of column
-   * @param enableStringComparison whether enable string columns comparision
    * @return ColumnStatisticsImplBase instances
    */
   std::unique_ptr<ColumnStatisticsImplBase> createColumnStatistics(
-    const Type& type, bool enableStringComparison);
+                                                            const Type& type);
 
 }// namespace
 

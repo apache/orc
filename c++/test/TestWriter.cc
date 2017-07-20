@@ -35,8 +35,7 @@ namespace orc {
 
   std::unique_ptr<Writer> createWriter(
                                       uint64_t stripeSize,
-                                      uint64_t blockSize,
-                                      uint64_t bufferSize,
+                                      uint64_t compresionblockSize,
                                       CompressionKind compression,
                                       const Type& type,
                                       MemoryPool* memoryPool,
@@ -44,12 +43,11 @@ namespace orc {
                                       FileVersion version = FileVersion(0, 12)){
     WriterOptions options;
     options.setStripeSize(stripeSize);
-    options.setBlockSize(blockSize);
-    options.setBufferSize(bufferSize);
+    options.setCompressionBlockSize(compresionblockSize);
     options.setCompression(compression);
     options.setMemoryPool(memoryPool);
     options.setEnableStats(false);
-    options.setEnableIndex(false);
+    options.setRowIndexStride(0);
     options.setFileVersion(version);
     return createWriter(type, stream, options);
   }
@@ -73,13 +71,11 @@ namespace orc {
     ORC_UNIQUE_PTR<Type> type(Type::buildTypeFromString("struct<col1:int>"));
 
     uint64_t stripeSize = 16 * 1024; // 16K
-    uint64_t blockSize = 1024; // 1k
-    uint64_t bufferSize = 4 * 1024; // 4k
+    uint64_t compressionBlockSize = 1024; // 1k
 
     std::unique_ptr<Writer> writer = createWriter(
                                       stripeSize,
-                                      blockSize,
-                                      bufferSize,
+                                      compressionBlockSize,
                                       CompressionKind_ZLIB,
                                       *type,
                                       pool,
@@ -106,13 +102,11 @@ namespace orc {
     ORC_UNIQUE_PTR<Type> type(Type::buildTypeFromString("struct<col1:int>"));
 
     uint64_t stripeSize = 16 * 1024; // 16K
-    uint64_t blockSize = 1024; // 1k
-    uint64_t bufferSize = 4 * 1024; // 4k
+    uint64_t compressionBlockSize = 1024; // 1k
 
     std::unique_ptr<Writer> writer = createWriter(
                                       stripeSize,
-                                      blockSize,
-                                      bufferSize,
+                                      compressionBlockSize,
                                       CompressionKind_ZLIB,
                                       *type,
                                       pool,
@@ -168,13 +162,11 @@ namespace orc {
     ORC_UNIQUE_PTR<Type> type(Type::buildTypeFromString("struct<col1:int>"));
 
     uint64_t stripeSize = 1024; // 1K
-    uint64_t blockSize = 1024; // 1k
-    uint64_t bufferSize = 4 * 1024; // 4k
+    uint64_t compressionBlockSize = 1024; // 1k
 
     std::unique_ptr<Writer> writer = createWriter(
                                       stripeSize,
-                                      blockSize,
-                                      bufferSize,
+                                      compressionBlockSize,
                                       CompressionKind_ZLIB,
                                       *type,
                                       pool,
