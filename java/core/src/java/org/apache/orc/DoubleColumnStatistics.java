@@ -17,8 +17,6 @@
  */
 package org.apache.orc;
 
-import org.apache.orc.ColumnStatistics;
-
 /**
  * Statistics for float and double columns.
  */

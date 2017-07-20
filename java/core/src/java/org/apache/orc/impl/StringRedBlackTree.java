@@ -21,9 +21,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import org.apache.hadoop.io.Text;
-import org.apache.orc.impl.DynamicByteArray;
-import org.apache.orc.impl.DynamicIntArray;
-import org.apache.orc.impl.RedBlackTree;
 
 /**
  * A red-black tree that stores strings. The strings are stored as UTF-8 bytes

@@ -20,7 +20,7 @@ package org.apache.orc.impl.writer;
 
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
-import org.apache.orc.TypeDescription;import org.apache.orc.impl.WriterImpl;
+import org.apache.orc.TypeDescription;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
