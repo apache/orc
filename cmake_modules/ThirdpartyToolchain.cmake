@@ -1,6 +1,3 @@
-set (LZ4_VERSION "1.7.5")
-set (SNAPPY_VERSION "1.1.4")
-set (ZLIB_VERSION "1.2.11")
 set (THIRDPARTY_DIR "${CMAKE_BINARY_DIR}/c++/libs/thirdparty")
 
 string(TOUPPER ${CMAKE_BUILD_TYPE} UPPERCASE_BUILD_TYPE)
@@ -19,7 +16,7 @@ if (${UPPERCASE_BUILD_TYPE} EQUAL "RELEASE")
 endif ()
 
 ExternalProject_Add (snappy_ep
-  CONFIGURE_COMMAND ./configure "--prefix=${SNAPPY_PREFIX}" ${SNAPPY_CXXFLAGS}
+  CONFIGURE_COMMAND "./configure" "--disable-shared" "--prefix=${SNAPPY_PREFIX}" ${SNAPPY_CXXFLAGS}
   BUILD_COMMAND ${MAKE}
   BUILD_IN_SOURCE 1
   INSTALL_DIR ${SNAPPY_PREFIX}
@@ -34,6 +31,9 @@ add_library (snappy STATIC IMPORTED)
 set_target_properties (snappy PROPERTIES IMPORTED_LOCATION ${SNAPPY_STATIC_LIB})
 set (SNAPPY_LIBRARIES snappy)
 add_dependencies (snappy snappy_ep)
+install(DIRECTORY ${SNAPPY_PREFIX}/lib DESTINATION .
+                                       PATTERN "pkgconfig" EXCLUDE
+                                       PATTERN "*.so*" EXCLUDE)
 
 # ----------------------------------------------------------------------
 # ZLIB
@@ -63,6 +63,9 @@ add_library (zlib STATIC IMPORTED)
 set_target_properties (zlib PROPERTIES IMPORTED_LOCATION ${ZLIB_STATIC_LIB})
 set (ZLIB_LIBRARIES zlib)
 add_dependencies (zlib zlib_ep)
+install(DIRECTORY ${ZLIB_PREFIX}/lib DESTINATION .
+                                     PATTERN "pkgconfig" EXCLUDE
+                                     PATTERN "*.so*" EXCLUDE)
 
 # ----------------------------------------------------------------------
 # LZ4
@@ -90,3 +93,6 @@ add_library (lz4 STATIC IMPORTED)
 set_target_properties (lz4 PROPERTIES IMPORTED_LOCATION ${LZ4_STATIC_LIB})
 set (LZ4_LIBRARIES lz4)
 add_dependencies (lz4 lz4_ep)
+install(DIRECTORY ${LZ4_PREFIX}/lib DESTINATION .
+                                    PATTERN "pkgconfig" EXCLUDE
+                                    PATTERN "*.so*" EXCLUDE)
