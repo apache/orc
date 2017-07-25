@@ -84,7 +84,8 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
   private final CompressionKind compress;
   private int bufferSize;
   private final TypeDescription schema;
-  private final PhysicalWriter physicalWriter;
+  private PhysicalWriter physicalWriter;
+  private final OrcFile.WriterOptions writerOptions;
   private final OrcFile.WriterVersion writerVersion;
 
   private long rowCount = 0;
@@ -157,9 +158,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
           OrcUtils.includeColumns(opts.getBloomFilterColumns(), schema);
     }
     this.bloomFilterFpp = opts.getBloomFilterFpp();
-    this.physicalWriter = opts.getPhysicalWriter() == null ?
-        new PhysicalFsWriter(fs, path, opts) : opts.getPhysicalWriter();
-    physicalWriter.writeHeader();
+    this.writerOptions = opts;
     treeWriter = TreeWriter.Factory.create(schema, new StreamFactory(), false);
     if (buildIndex && rowIndexStride < MIN_ROW_INDEX_STRIDE) {
       throw new IllegalArgumentException("Row stride must be at least " +
@@ -405,6 +404,15 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
   }
 
   private void flushStripe() throws IOException {
+    if (physicalWriter == null) {
+      this.physicalWriter = writerOptions.getPhysicalWriter() == null ?
+              new PhysicalFsWriter(
+                      path.getFileSystem(writerOptions.getConfiguration()),
+                      path, writerOptions)
+              : writerOptions.getPhysicalWriter();
+      physicalWriter.writeHeader();
+    }
+    
     if (buildIndex && rowsInIndex != 0) {
       createRowIndexEntry();
     }
