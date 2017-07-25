@@ -173,10 +173,6 @@
       <plugin>
         <groupId>org.apache.rat</groupId>
         <artifactId>apache-rat-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.rat</groupId>
-        <artifactId>apache-rat-plugin</artifactId>
         <version>0.10</version>
         <configuration>
           <excludeSubProject>false</excludeSubProject>
