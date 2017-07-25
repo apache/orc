@@ -76,7 +76,7 @@ public class RecordReaderUtils {
    * @param bloomFilterKinds (output) the stream kind of the bloom filters
    * @return a list of merged disk ranges to read
    */
-  static DiskRangeList planIndexReading(TypeDescription fileSchema,
+  public static DiskRangeList planIndexReading(TypeDescription fileSchema,
                                         OrcProto.StripeFooter footer,
                                         boolean ignoreNonUtf8BloomFilter,
                                         boolean[] fileIncluded,
