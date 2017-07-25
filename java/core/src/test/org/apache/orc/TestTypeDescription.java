@@ -19,6 +19,7 @@ package org.apache.orc;
 
 import static org.junit.Assert.assertEquals;
 
+import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -219,5 +220,12 @@ public class TestTypeDescription {
     assertEquals(2, leaf.getId());
     assertEquals(0, type.getId());
     assertEquals(2, leaf.getId());
+  }
+
+  @Test
+  public void testVRBSize() {
+    TypeDescription typeDescription = TypeDescription.fromString("string");
+    VectorizedRowBatch vrb = typeDescription.createRowBatch(100);
+    assertEquals(100, vrb.size);
   }
 }

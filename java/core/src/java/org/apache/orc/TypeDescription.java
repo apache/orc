@@ -678,6 +678,7 @@ public class TypeDescription
       result.cols[0] = createColumn(maxSize);
     }
     result.reset();
+    result.size = maxSize;
     return result;
   }
 
