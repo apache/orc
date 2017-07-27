@@ -149,7 +149,7 @@ set (PROTOBUF_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/protobuf_ep-prefix/src/prot
 set (PROTOBUF_INCLUDE_DIRS "${PROTOBUF_PREFIX}/include")
 set (PROTOBUF_STATIC_LIB "${PROTOBUF_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}protobuf${CMAKE_STATIC_LIBRARY_SUFFIX}")
 set (PROTOBUF_EXECUTABLE "${PROTOBUF_PREFIX}/bin/protoc")
-set (PROTOBUF_SRC_URL "https://github.com/google/protobuf/releases/download/v2.6.0/protobuf-${PROTOBUF_VERSION}.tar.gz")
+set (PROTOBUF_SRC_URL "https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protobuf-${PROTOBUF_VERSION}.tar.gz")
 
 ExternalProject_Add(protobuf_ep
   CONFIGURE_COMMAND "./configure" "--disable-shared" "--prefix=${PROTOBUF_PREFIX}"
