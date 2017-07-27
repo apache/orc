@@ -23,6 +23,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_modules")
 set (LZ4_VERSION "1.7.5")
 set (SNAPPY_VERSION "1.1.4")
 set (ZLIB_VERSION "1.2.11")
+set (GTEST_VERSION "1.8.0")
 
 option (BUILD_JAVA
     "Include ORC Java library in the build process"
@@ -41,16 +42,6 @@ SET(CPACK_GENERATOR "TGZ")
 
 INCLUDE(CPack)
 INCLUDE(ExternalProject)
-
-set (GMOCK_VERSION "1.7.0")
-set (GMOCK_INCLUDE_DIRS
-     "${CMAKE_SOURCE_DIR}/c++/libs/gmock-${GMOCK_VERSION}/include"
-     "${CMAKE_SOURCE_DIR}/c++/libs/gmock-${GMOCK_VERSION}/gtest/include"
-    )
-set (GMOCK_LIBRARIES gmock)
-if(NOT APPLE AND NOT MSVC)
-  list (APPEND GMOCK_LIBRARIES pthread)
-endif(NOT APPLE AND NOT MSVC)
 
 set (PROTOBUF_VERSION "2.6.0")
 set (PROTOBUF_INCLUDE_DIRS

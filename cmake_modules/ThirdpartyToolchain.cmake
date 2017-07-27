@@ -99,3 +99,43 @@ install(DIRECTORY ${LZ4_PREFIX}/lib DESTINATION .
                                     PATTERN "pkgconfig" EXCLUDE
                                     PATTERN "*.so*" EXCLUDE
                                     PATTERN "*.dylib" EXCLUDE)
+
+# ----------------------------------------------------------------------
+# GoogleTest (gtest now includes gmock)
+
+set (GTEST_PREFIX "${THIRDPARTY_DIR}/googletest_ep-install")
+set (GTEST_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/googletest_ep-prefix/src/googletest_ep")
+set (GTEST_INCLUDE_DIRS "${GTEST_PREFIX}/include")
+set (GMOCK_STATIC_LIB "${GTEST_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}gmock${CMAKE_STATIC_LIBRARY_SUFFIX}")
+set (GTEST_SRC_URL "https://github.com/google/googletest/archive/release-${GTEST_VERSION}.tar.gz")
+if(APPLE)
+  set(GTEST_CMAKE_CXX_FLAGS " -DGTEST_USE_OWN_TR1_TUPLE=1 -Wno-unused-value -Wno-ignored-attributes")
+else()
+  set(GTEST_CMAKE_CXX_FLAGS "")
+endif()
+
+set(GTEST_CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+                     -DCMAKE_INSTALL_PREFIX=${GTEST_PREFIX}
+                     -Dgtest_force_shared_crt=ON
+                     -DCMAKE_CXX_FLAGS=${GTEST_CMAKE_CXX_FLAGS})
+
+ExternalProject_Add(googletest_ep
+  BUILD_IN_SOURCE 1
+  URL ${GTEST_SRC_URL}
+  LOG_DOWNLOAD 1
+  LOG_INSTALL 1
+  LOG_BUILD 1
+  BUILD_BYPRODUCTS "${GMOCK_STATIC_LIB}"
+  CMAKE_ARGS ${GTEST_CMAKE_ARGS}
+  )
+
+include_directories (SYSTEM ${GTEST_INCLUDE_DIRS})
+
+add_library (gmock STATIC IMPORTED)
+set_target_properties (gmock PROPERTIES IMPORTED_LOCATION ${GMOCK_STATIC_LIB})
+add_dependencies (gmock googletest_ep)
+
+set (GTEST_LIBRARIES gmock)
+if(NOT APPLE AND NOT MSVC)
+  list (APPEND GTEST_LIBRARIES pthread)
+endif(NOT APPLE AND NOT MSVC)

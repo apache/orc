@@ -17,7 +17,7 @@ include_directories(
   ${PROTOBUF_INCLUDE_DIRS}
   ${ZLIB_INCLUDE_DIRS}
   ${SNAPPY_INCLUDE_DIRS}
-  ${GMOCK_INCLUDE_DIRS}
+  ${GTEST_INCLUDE_DIRS}
 )
 
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX11_FLAGS} ${WARN_FLAGS}")
@@ -47,7 +47,7 @@ add_executable (orc-test
 
 target_link_libraries (orc-test
   orc
-  ${GMOCK_LIBRARIES}
+  ${GTEST_LIBRARIES}
   ${LZ4_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   ${SNAPPY_LIBRARIES}
