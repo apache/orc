@@ -24,6 +24,7 @@ set (LZ4_VERSION "1.7.5")
 set (SNAPPY_VERSION "1.1.4")
 set (ZLIB_VERSION "1.2.11")
 set (GTEST_VERSION "1.8.0")
+set (PROTOBUF_VERSION "2.6.0")
 
 option (BUILD_JAVA
     "Include ORC Java library in the build process"
@@ -42,12 +43,6 @@ SET(CPACK_GENERATOR "TGZ")
 
 INCLUDE(CPack)
 INCLUDE(ExternalProject)
-
-set (PROTOBUF_VERSION "2.6.0")
-set (PROTOBUF_INCLUDE_DIRS
-     "${CMAKE_SOURCE_DIR}/c++/libs/protobuf-${PROTOBUF_VERSION}/src")
-set (PROTOBUF_LIBRARIES protobuf)
-set (PROTOBUF_EXECUTABLE "${CMAKE_BINARY_DIR}/c++/libs/protobuf-${PROTOBUF_VERSION}/protoc")
 
 #
 # Compiler specific flags

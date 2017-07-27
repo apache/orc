@@ -22,9 +22,9 @@ ExternalProject_Add (snappy_ep
   INSTALL_DIR ${SNAPPY_PREFIX}
   URL ${SNAPPY_SRC_URL}
   LOG_DOWNLOAD 1
-  LOG_INSTALL 1
-  LOG_BUILD 1
   LOG_CONFIGURE 1
+  LOG_BUILD 1
+  LOG_INSTALL 1
   BUILD_BYPRODUCTS "${SNAPPY_STATIC_LIB}")
 include_directories (SYSTEM ${SNAPPY_INCLUDE_DIRS})
 add_library (snappy STATIC IMPORTED)
@@ -53,10 +53,10 @@ set (ZLIB_CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
 ExternalProject_Add (zlib_ep
   URL ${ZLIB_SRC_URL}
   BUILD_BYPRODUCTS "${ZLIB_STATIC_LIB}"
-  LOG_INSTALL 1
   LOG_DOWNLOAD 1
   LOG_CONFIGURE 1
   LOG_BUILD 1
+  LOG_INSTALL 1
   CMAKE_ARGS ${ZLIB_CMAKE_ARGS})
 
 include_directories (SYSTEM ${ZLIB_INCLUDE_DIRS})
@@ -86,8 +86,8 @@ ExternalProject_Add(lz4_ep
   BUILD_COMMAND ${MAKE}
   URL ${LZ4_SRC_URL}
   LOG_DOWNLOAD 1
-  LOG_INSTALL 1
   LOG_BUILD 1
+  LOG_INSTALL 1
   BUILD_BYPRODUCTS ${LZ4_STATIC_LIB}
   )
 include_directories (SYSTEM ${LZ4_INCLUDE_DIRS})
@@ -123,8 +123,9 @@ ExternalProject_Add(googletest_ep
   BUILD_IN_SOURCE 1
   URL ${GTEST_SRC_URL}
   LOG_DOWNLOAD 1
-  LOG_INSTALL 1
+  LOG_CONFIGURE 1
   LOG_BUILD 1
+  LOG_INSTALL 1
   BUILD_BYPRODUCTS "${GMOCK_STATIC_LIB}"
   CMAKE_ARGS ${GTEST_CMAKE_ARGS}
   )
@@ -139,3 +140,35 @@ set (GTEST_LIBRARIES gmock)
 if(NOT APPLE AND NOT MSVC)
   list (APPEND GTEST_LIBRARIES pthread)
 endif(NOT APPLE AND NOT MSVC)
+
+# ----------------------------------------------------------------------
+# Protobuf
+
+set (PROTOBUF_PREFIX "${THIRDPARTY_DIR}/protobuf_ep-install")
+set (PROTOBUF_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/protobuf_ep-prefix/src/protobuf_ep")
+set (PROTOBUF_INCLUDE_DIRS "${PROTOBUF_PREFIX}/include")
+set (PROTOBUF_STATIC_LIB "${PROTOBUF_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}protobuf${CMAKE_STATIC_LIBRARY_SUFFIX}")
+set (PROTOBUF_EXECUTABLE "${PROTOBUF_PREFIX}/bin/protoc")
+set (PROTOBUF_SRC_URL "https://github.com/google/protobuf/releases/download/v2.6.0/protobuf-${PROTOBUF_VERSION}.tar.gz")
+
+ExternalProject_Add(protobuf_ep
+  CONFIGURE_COMMAND "./configure" "--disable-shared" "--prefix=${PROTOBUF_PREFIX}"
+  BUILD_IN_SOURCE 1
+  URL ${PROTOBUF_SRC_URL}
+  LOG_DOWNLOAD 1
+  LOG_CONFIGURE 1
+  LOG_BUILD 1
+  LOG_INSTALL 1
+  BUILD_BYPRODUCTS "${PROTOBUF_STATIC_LIB}"
+  )
+
+include_directories (SYSTEM ${PROTOBUF_INCLUDE_DIRS})
+
+add_library (protobuf STATIC IMPORTED)
+set_target_properties (protobuf PROPERTIES IMPORTED_LOCATION ${PROTOBUF_STATIC_LIB})
+add_dependencies (protobuf protobuf_ep)
+set (PROTOBUF_LIBRARIES protobuf)
+install(DIRECTORY ${PROTOBUF_PREFIX}/lib DESTINATION .
+                                         PATTERN "pkgconfig" EXCLUDE
+                                         PATTERN "*.so*" EXCLUDE
+                                         PATTERN "*.dylib" EXCLUDE)
