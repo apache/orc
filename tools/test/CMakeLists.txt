@@ -18,7 +18,7 @@ include_directories(
   ${PROJECT_BINARY_DIR}/c++/src
   ${PROTOBUF_INCLUDE_DIRS}
   ${ZLIB_INCLUDE_DIRS}
-  ${GMOCK_INCLUDE_DIRS}
+  ${GTEST_INCLUDE_DIRS}
 )
 
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX11_FLAGS} ${WARN_FLAGS}")
@@ -34,7 +34,7 @@ add_executable (tool-test
 target_link_libraries (tool-test
   orc
   ${PROTOBUF_LIBRARIES}
-  ${GMOCK_LIBRARIES}
+  ${GTEST_LIBRARIES}
   ${ZLIB_LIBRARIES}
   ${SNAPPY_LIBRARIES}
 )
