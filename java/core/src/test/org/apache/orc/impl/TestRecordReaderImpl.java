@@ -901,6 +901,20 @@ public class TestRecordReaderImpl {
         evaluateInteger(createIntStats(10L, 20L), pred));
     assertEquals(TruthValue.YES_NULL,
         evaluateInteger(createIntStats(12L, 18L), pred));
+
+    // check with empty predicate list
+    args.clear();
+    pred = createPredicateLeaf
+        (PredicateLeaf.Operator.BETWEEN, PredicateLeaf.Type.LONG,
+            "x", null, args);
+    assertEquals(TruthValue.YES_NO,
+        evaluateInteger(createIntStats(0L, 5L), pred));
+    assertEquals(TruthValue.YES_NO,
+        evaluateInteger(createIntStats(30L, 40L), pred));
+    assertEquals(TruthValue.YES_NO,
+        evaluateInteger(createIntStats(5L, 15L), pred));
+    assertEquals(TruthValue.YES_NO,
+        evaluateInteger(createIntStats(10L, 20L), pred));
   }
 
   @Test
