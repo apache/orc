@@ -551,6 +551,9 @@ public class RecordReaderImpl implements RecordReader {
         }
       case BETWEEN:
         List<Object> args = predicate.getLiteralList();
+        if (args == null || args.isEmpty()) {
+          return TruthValue.YES_NO;
+        }
         Object predObj1 = getBaseObjectForComparison(predicate.getType(), args.get(0));
 
         loc = compareToRange((Comparable) predObj1, minValue, maxValue);
