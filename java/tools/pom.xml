@@ -112,7 +112,7 @@
               <mainClass>org.apache.orc.tools.Driver</mainClass>
             </manifest>
           </archive>
-	  <descriptors>
+          <descriptors>
             <descriptor>src/assembly/uber.xml</descriptor>
           </descriptors>
         </configuration>
