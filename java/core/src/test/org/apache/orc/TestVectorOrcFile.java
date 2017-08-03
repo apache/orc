@@ -19,9 +19,7 @@
 package org.apache.orc;
 
 import org.apache.orc.impl.OrcCodecPool;
-
 import org.apache.orc.impl.WriterImpl;
-
 import org.apache.orc.OrcFile.WriterOptions;
 
 import com.google.common.collect.Lists;
@@ -164,7 +162,7 @@ public class TestVectorOrcFile {
   Path workDir = new Path(System.getProperty("test.tmp.dir",
       "target" + File.separator + "test" + File.separator + "tmp"));
 
-  Configuration conf;
+  org.apache.hadoop.conf.Configuration conf;
   FileSystem fs;
   Path testFilePath;
 
@@ -1689,6 +1687,164 @@ public class TestVectorOrcFile {
     assertEquals("hello", strs.toString(0));
     assertEquals(new HiveDecimalWritable(HiveDecimal.create("-5643.234")), decs.vector[0]);
     rows.close();
+  }
+
+  /**
+   * We test union, timestamp, and decimal separately since we need to make the
+   * object inspector manually. (The Hive reflection-based doesn't handle
+   * them properly.)
+   */
+  @Test
+  public void testDecimal() throws Exception {
+    for (int i = 0; i <= 1; i++) {
+      boolean isWriteScaledDecimalValue = (i == 1);
+      Random random = new Random(2823);
+      doTestDecimal(7, 2, random.nextLong(), isWriteScaledDecimalValue);
+      doTestDecimal(7, 2, random.nextLong(), isWriteScaledDecimalValue);
+      doTestDecimal(8, 1, random.nextLong(), isWriteScaledDecimalValue);
+      doTestDecimal(10, 6, random.nextLong(), isWriteScaledDecimalValue);
+      doTestDecimal(15, 2, random.nextLong(), isWriteScaledDecimalValue);
+      doTestDecimal(16, 7, random.nextLong(), isWriteScaledDecimalValue);
+      doTestDecimal(17, 2, random.nextLong(), isWriteScaledDecimalValue);
+      doTestDecimal(18, 16, random.nextLong(), isWriteScaledDecimalValue);
+      doTestDecimal(19, 4, random.nextLong(), isWriteScaledDecimalValue);
+      doTestDecimal(20, 2, random.nextLong(), isWriteScaledDecimalValue);
+      doTestDecimal(32, 8, random.nextLong(), isWriteScaledDecimalValue);
+      doTestDecimal(38, 10, random.nextLong(), isWriteScaledDecimalValue);
+    }
+  }
+
+  private void doTestDecimal(int precision, int scale, long seed, boolean isWriteScaledDecimalValue)
+      throws Exception {
+    TypeDescription schema = TypeDescription.createStruct()
+        .addField("decimal", TypeDescription.createDecimal()
+            .withScale(scale)
+            .withPrecision(precision));
+
+    conf.set("orc.decimal.use.scaled.value", Boolean.toString(isWriteScaledDecimalValue));
+    Writer writer = OrcFile.createWriter(testFilePath,
+                                         OrcFile.writerOptions(conf)
+                                         .setSchema(schema)
+                                         .stripeSize(1000)
+                                         .compress(CompressionKind.NONE)
+                                         .bufferSize(100)
+                                         .blockPadding(false));
+
+    BigInteger maxRange = BigInteger.valueOf(10).pow(precision);
+    int bitCount = Math.min(64, maxRange.bitCount() + 2);
+
+    VectorizedRowBatch batch = schema.createRowBatch();
+    DecimalColumnVector decimalColVector = (DecimalColumnVector) batch.cols[0];
+    HiveDecimalWritable min = new HiveDecimalWritable(0);
+    HiveDecimalWritable max = new HiveDecimalWritable(0);
+    Random rand = new Random(seed);
+    boolean seenNonNull = false;
+    for (int b = 0; b < 10; b++) {
+      for(int i = 0; i < VectorizedRowBatch.DEFAULT_SIZE; ++i) {
+        // Generate some scales beyond our max to cause NULLs.
+        HiveDecimal dec =
+            HiveDecimal.create(new BigInteger(bitCount, rand), rand.nextInt(scale + 2));
+        dec = HiveDecimal.enforcePrecisionScale(dec, precision, scale);
+        if (dec == null) {
+          decimalColVector.noNulls = false;
+          decimalColVector.isNull[i] = true;
+        } else {
+          decimalColVector.vector[i].set(dec);
+        }
+        if (dec != null) {
+          if (!seenNonNull) {
+            seenNonNull = true;
+            min.set(dec);
+            max.set(dec);
+          } else {
+            if (dec.compareTo(min.getHiveDecimal()) < 0) {
+              min.set(dec);
+            }
+            if (dec.compareTo(max.getHiveDecimal()) > 0) {
+              max.set(dec);
+            }
+          }
+        }
+      }
+      batch.size = VectorizedRowBatch.DEFAULT_SIZE;
+      writer.addRowBatch(batch);
+      batch.reset();
+    }
+    writer.close();
+
+    /*
+     * Read and verify.
+     */
+    Reader reader = OrcFile.createReader(testFilePath,
+        OrcFile.readerOptions(conf).filesystem(fs));
+  
+    schema = writer.getSchema();
+    assertEquals(1, schema.getMaximumId());
+    boolean[] expected = new boolean[] {false, false};
+    boolean[] included = OrcUtils.includeColumns("", schema);
+    assertEquals(true, Arrays.equals(expected, included));
+  
+    expected = new boolean[] {false, true};
+    included = OrcUtils.includeColumns("decimal", schema);
+    assertEquals(true, Arrays.equals(expected, included));
+
+    Assert.assertEquals(false, reader.getMetadataKeys().iterator().hasNext());
+    final long numberOfRows = reader.getNumberOfRows();
+    Assert.assertEquals(10 * VectorizedRowBatch.DEFAULT_SIZE, numberOfRows);
+    DecimalColumnStatistics stats =
+        (DecimalColumnStatistics) reader.getStatistics()[1];
+    assertEquals(min.getHiveDecimal(), stats.getMinimum());
+    assertEquals(max.getHiveDecimal(), stats.getMaximum());
+
+    int stripeCount = 0;
+    int rowCount = 0;
+    long currentOffset = -1;
+    for(StripeInformation stripe: reader.getStripes()) {
+      stripeCount += 1;
+      rowCount += stripe.getNumberOfRows();
+      if (currentOffset < 0) {
+        currentOffset = stripe.getOffset() + stripe.getLength();
+      } else {
+        assertEquals(currentOffset, stripe.getOffset());
+        currentOffset += stripe.getLength();
+      }
+    }
+    Assert.assertEquals(reader.getNumberOfRows(), rowCount);
+    assertEquals(2, stripeCount);
+    Assert.assertEquals(reader.getContentLength(), currentOffset);
+    RecordReader rows = reader.rows();
+    Assert.assertEquals(0, rows.getRowNumber());
+    Assert.assertEquals(0.0, rows.getProgress(), 0.000001);
+  
+    schema = reader.getSchema();
+    batch = schema.createRowBatch(VectorizedRowBatch.DEFAULT_SIZE);
+
+    decimalColVector = (DecimalColumnVector) batch.cols[0];
+
+    String expectedSchema = "struct<decimal:decimal(" + precision + "," + scale + ")>";
+    assertEquals(expectedSchema, schema.toString());
+  
+    rand = new Random(seed);
+    for (int b = 0; b < 10; b++) {
+      rows.nextBatch(batch);
+
+      for(int i = 0; i < VectorizedRowBatch.DEFAULT_SIZE; ++i) {
+        HiveDecimal expectedDec =
+            HiveDecimal.create(new BigInteger(bitCount, rand), rand.nextInt(scale + 2));
+        expectedDec = HiveDecimal.enforcePrecisionScale(expectedDec, precision, scale);
+        if (expectedDec == null) {
+          assertTrue(decimalColVector.isNull[i]);
+        } else {
+          assertTrue(!decimalColVector.isNull[i]);
+          HiveDecimal dec = decimalColVector.vector[i].getHiveDecimal();
+          if (!expectedDec.equals(dec)) {
+            assertEquals(expectedDec, dec);
+          }
+        }
+      }
+    }
+    rows.close();
+    fs.delete(testFilePath, false);
   }
 
   /**

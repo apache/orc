@@ -125,6 +125,7 @@ message ColumnEncoding {
     DICTIONARY = 1;
     DIRECT_V2 = 2;
     DICTIONARY_V2 = 3;
+    DECIMAL_64 = 4;
   }
   optional Kind kind = 1;
   optional uint32 dictionarySize = 2;
@@ -245,6 +246,7 @@ message PostScript {
   //   4 = HIVE-13083 fixed (decimals write present stream correctly)
   //   5 = ORC-101 fixed (bloom filters use utf8 consistently)
   //   6 = ORC-135 fixed (timestamp statistics use utc)
+  //   7 = ORC-209 added Decimal64 serialization
   //
   // Version of the ORC C++ writer:
   //   6 = original
@@ -252,7 +254,7 @@ message PostScript {
   // Version of the Presto writer:
   //   6 = original
   //
-  optional uint32 writerVersion = 6;
+  optional uint32 writerVersion = 7;
 
   // Leave this last in the record
   optional string magic = 8000;

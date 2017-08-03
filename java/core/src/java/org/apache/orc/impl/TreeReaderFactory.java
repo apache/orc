@@ -133,6 +133,7 @@ public class TreeReaderFactory {
       switch (kind) {
         case DIRECT_V2:
         case DICTIONARY_V2:
+        case DECIMAL_64:
           return new RunLengthIntegerReaderV2(in, signed, context == null ? false : context.isSkipCorrupt());
         case DIRECT:
         case DICTIONARY:
@@ -1093,16 +1094,103 @@ public class TreeReaderFactory {
   }
 
   public static class DecimalTreeReader extends TreeReader {
+
+    final protected TypeDescription readerType;
+
+    protected TreeReader reader;
+
+    DecimalTreeReader(int columnId, TypeDescription readerType, Context context)
+        throws IOException {
+      super(columnId, context);
+      this.readerType = readerType;
+    }
+
+    protected DecimalTreeReader(int columnId, InStream present, InStream data, InStream secondary,
+        OrcProto.ColumnEncoding encoding, TypeDescription readerType, Context context)
+            throws IOException {
+      super(columnId, present, context);
+      this.readerType = readerType;
+      if (encoding != null) {
+        switch (encoding.getKind()) {
+          case DIRECT:
+          case DIRECT_V2:
+            reader = new DecimalTreeReaderV1(columnId, present, data, secondary,
+                encoding, context);
+            break;
+          case DECIMAL_64:
+            reader = new DecimalTreeReaderV2(columnId, present, data,
+                encoding, readerType, context);
+            break;
+          default:
+            throw new IllegalArgumentException("Unsupported encoding " +
+                encoding.getKind());
+        }
+      }
+    }
+
+    @Override
+    void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
+      reader.checkEncoding(encoding);
+    }
+
+    @Override
+    void startStripe(Map<StreamName, InStream> streams,
+        OrcProto.StripeFooter stripeFooter
+    ) throws IOException {
+
+      // For each stripe, checks it has the whether V1 or V2 decimal and initialize the appropriate
+      // reader.
+      OrcProto.ColumnEncoding encoding = stripeFooter.getColumnsList().get(columnId);
+      switch (encoding.getKind()) {
+      case DIRECT:
+      case DIRECT_V2:
+        reader = new DecimalTreeReaderV1(columnId, context);
+        break;
+      case DECIMAL_64:
+        reader = new DecimalTreeReaderV2(columnId, readerType, context);
+        break;
+      default:
+        throw new IllegalArgumentException("Unsupported encoding " +
+            encoding.getKind());
+      }
+
+      reader.startStripe(streams, stripeFooter);
+    }
+
+    @Override
+    public void seek(PositionProvider[] index) throws IOException {
+      reader.seek(index);
+    }
+
+    @Override
+    public void seek(PositionProvider index) throws IOException {
+      reader.seek(index);
+    }
+
+    @Override
+    public void nextVector(ColumnVector previousVector,
+                           boolean[] isNull,
+                           final int batchSize) throws IOException {
+      reader.nextVector(previousVector, isNull, batchSize);
+    }
+
+    @Override
+    void skipRows(long items) throws IOException {
+      reader.skipRows(items);
+    }
+  }
+
+  public static class DecimalTreeReaderV1 extends TreeReader {
     protected InStream valueStream;
     protected IntegerReader scaleReader = null;
     private int[] scratchScaleVector;
     private byte[] scratchBytes;
 
-    DecimalTreeReader(int columnId, Context context) throws IOException {
+    DecimalTreeReaderV1(int columnId, Context context) throws IOException {
       this(columnId, null, null, null, null, context);
     }
 
-    protected DecimalTreeReader(int columnId, InStream present,
+    protected DecimalTreeReaderV1(int columnId, InStream present,
         InStream valueStream, InStream scaleStream, OrcProto.ColumnEncoding encoding, Context context)
         throws IOException {
       super(columnId, present, context);
@@ -1199,6 +1287,101 @@ public class TreeReaderFactory {
       }
       scaleReader.skip(items);
     }
+  }
+
+  public static class DecimalTreeReaderV2 extends TreeReader {
+
+    private final int scale;
+
+    protected IntegerReader decimal64Reader;
+
+    private LongColumnVector scratchDecimalLongColVector;
+
+    DecimalTreeReaderV2(int columnId, TypeDescription readerType, Context context) throws IOException {
+      this(columnId, null, null, null, readerType, context);;
+    }
+
+    protected DecimalTreeReaderV2(int columnId, InStream present,
+        InStream longStream, OrcProto.ColumnEncoding encoding,
+        TypeDescription readerType, Context context)
+        throws IOException {
+      super(columnId, present, context);
+      scale = readerType.getScale();
+      if (longStream != null && encoding != null) {
+        checkEncoding(encoding);
+        decimal64Reader = createIntegerReader(encoding.getKind(), longStream, true, context);
+      }
+      scratchDecimalLongColVector = new LongColumnVector(VectorizedRowBatch.DEFAULT_SIZE);
+    }
+
+    @Override
+    void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
+      if ((encoding.getKind() != OrcProto.ColumnEncoding.Kind.DECIMAL_64)) {
+        throw new IOException("Unknown encoding " + encoding + " in column " +
+            columnId);
+      }
+    }
+
+    @Override
+    void startStripe(Map<StreamName, InStream> streams,
+        OrcProto.StripeFooter stripeFooter
+    ) throws IOException {
+      super.startStripe(streams, stripeFooter);
+      StreamName name = new StreamName(columnId,
+          OrcProto.Stream.Kind.DATA);
+      decimal64Reader = createIntegerReader(stripeFooter.getColumnsList().get(columnId).getKind(),
+          streams.get(name), true, context);
+    }
+
+    @Override
+    public void seek(PositionProvider[] index) throws IOException {
+      seek(index[columnId]);
+    }
+
+    @Override
+    public void seek(PositionProvider index) throws IOException {
+      super.seek(index);
+      decimal64Reader.seek(index);
+    }
+
+    @Override
+    public void nextVector(ColumnVector previousVector,
+                           boolean[] isNull,
+                           final int batchSize) throws IOException {
+      final DecimalColumnVector result = (DecimalColumnVector) previousVector;
+
+      // Read present/isNull stream
+      super.nextVector(result, isNull, batchSize);
+
+      // Read decimal longs entries based on isNull entries.
+      scratchDecimalLongColVector.isNull = result.isNull;
+      scratchDecimalLongColVector.noNulls = result.noNulls;
+      decimal64Reader.nextVector(scratchDecimalLongColVector, scratchDecimalLongColVector.vector, batchSize);
+
+      // Use the fast ORC deserialization method that emulates SerializationUtils.readBigInteger
+      // provided by HiveDecimalWritable.
+      HiveDecimalWritable[] decimalWritableVector = result.vector;
+      long[] decimalLongVector = scratchDecimalLongColVector.vector;
+
+      if (result.noNulls) {
+        for (int r=0; r < batchSize; ++r) {
+          decimalWritableVector[r].deserialize64(
+              decimalLongVector[r], scale);
+        }
+      } else if (!result.isRepeating || !result.isNull[0]) {
+        for (int r=0; r < batchSize; ++r) {
+          if (!result.isNull[r]) {
+            decimalWritableVector[r].deserialize64(
+                decimalLongVector[r], scale);
+          }
+        }
+      }
+    }
+
+    @Override
+    void skipRows(long items) throws IOException {
+      decimal64Reader.skip(countNonNulls(items));
+     }
   }
 
   /**
@@ -2183,7 +2366,7 @@ public class TreeReaderFactory {
       case DATE:
         return new DateTreeReader(fileType.getId(), context);
       case DECIMAL:
-        return new DecimalTreeReader(fileType.getId(), context);
+        return new DecimalTreeReader(fileType.getId(), fileType, context);
       case STRUCT:
         return new StructTreeReader(fileType.getId(), readerType, context);
       case LIST:

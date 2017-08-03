@@ -18,8 +18,12 @@
 
 package org.apache.orc.impl.writer;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
+import org.apache.orc.OrcConf;
+import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
 import org.apache.orc.TypeDescription;
 
@@ -136,7 +140,7 @@ public interface TreeWriter {
           return new DateTreeWriter(schema.getId(),
               schema, streamFactory, nullable);
         case DECIMAL:
-          return new DecimalTreeWriter(schema.getId(),
+          return createDecimalTreeWriter(schema.getId(),
               schema, streamFactory, nullable);
         case STRUCT:
           return new StructTreeWriter(schema.getId(),
@@ -156,5 +160,23 @@ public interface TreeWriter {
       }
     }
 
+    public static boolean isWriteScaledDecimalValue(Configuration configuration, int precision) {
+      return OrcConf.DECIMAL_USE_SCALED_VALUE.getBoolean(configuration) &&
+             HiveDecimalWritable.isPrecisionDecimal64(precision);
+    }
+
+    private static TreeWriterBase createDecimalTreeWriter(int columnId,
+                                                      TypeDescription schema,
+                                                      WriterContext writerContext,
+                                                      boolean nullable) throws IOException {
+      if (writerContext.getVersion() != OrcFile.Version.V_0_11 &&
+          isWriteScaledDecimalValue(writerContext.getConfiguration(), schema.getPrecision())) {
+        return new DecimalTreeWriter64(schema.getId(),
+            schema, writerContext, nullable);
+      } else {
+        return new DecimalTreeWriter(schema.getId(),
+            schema, writerContext, nullable);
+      }
+    }
   }
 }
