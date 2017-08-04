@@ -1722,6 +1722,9 @@ public class TestVectorOrcFile {
             .withPrecision(precision));
 
     conf.set("orc.decimal.use.scaled.value", Boolean.toString(isWriteScaledDecimalValue));
+    if (isWriteScaledDecimalValue) {
+      conf.set("orc.write.format", "0.13");
+    }
     Writer writer = OrcFile.createWriter(testFilePath,
                                          OrcFile.writerOptions(conf)
                                          .setSchema(schema)
