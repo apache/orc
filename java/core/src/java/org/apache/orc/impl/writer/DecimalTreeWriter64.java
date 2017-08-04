@@ -38,6 +38,9 @@ public class DecimalTreeWriter64 extends TreeWriterBase {
 
   private final int scale;
 
+  // These scratch buffer allows us to decimals to string much faster.
+  private final byte[] scratchBuffer;
+
   public DecimalTreeWriter64(int columnId,
                            TypeDescription schema,
                            WriterContext writerContext,
@@ -48,6 +51,8 @@ public class DecimalTreeWriter64 extends TreeWriterBase {
     writer = createIntegerWriter(out, true, true, writerContext);
 
     scale = schema.getScale();
+
+    scratchBuffer = new byte[HiveDecimal.SCRATCH_BUFFER_LEN_TO_BYTES];
 
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
@@ -72,10 +77,11 @@ public class DecimalTreeWriter64 extends TreeWriterBase {
         final long decimal64Long = decValue.serialize64(scale);
         indexStatistics.updateDecimal64(decValue, decimal64Long);
         if (createBloomFilter) {
+          String str = decValue.toString(scratchBuffer);
           if (bloomFilter != null) {
-            bloomFilter.addLong(decimal64Long);
+            bloomFilter.addString(str);
           }
-          bloomFilterUtf8.addLong(decimal64Long);
+          bloomFilterUtf8.addString(str);
         }
         for (int i = 0; i < length; ++i) {
           writer.write(decimal64Long);
@@ -89,10 +95,11 @@ public class DecimalTreeWriter64 extends TreeWriterBase {
           long decimal64Long = decValue.serialize64(scale);
           indexStatistics.updateDecimal64(decValue, decimal64Long);
           if (createBloomFilter) {
+            String str = decValue.toString(scratchBuffer);
             if (bloomFilter != null) {
-              bloomFilter.addLong(decimal64Long);
+              bloomFilter.addString(str);
             }
-            bloomFilterUtf8.addLong(decimal64Long);
+            bloomFilterUtf8.addString(str);
           }
           writer.write(decimal64Long);
         }

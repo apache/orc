@@ -1799,8 +1799,8 @@ public class TestVectorOrcFile {
       assertEquals(max.getHiveDecimal(), stats.getMaximum());
     } else {
       Decimal64ColumnStatistics stats64 = (Decimal64ColumnStatistics) columnStatistics;
-      assertEquals(min.getHiveDecimal(), stats64.getMinimum().getHiveDecimal());
-      assertEquals(max.getHiveDecimal(), stats64.getMaximum().getHiveDecimal());
+      assertEquals(min.getHiveDecimal(), stats64.getMinimum());
+      assertEquals(max.getHiveDecimal(), stats64.getMaximum());
     }
 
     int stripeCount = 0;

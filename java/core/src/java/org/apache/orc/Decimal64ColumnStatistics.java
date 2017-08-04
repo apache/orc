@@ -29,13 +29,13 @@ public interface Decimal64ColumnStatistics extends ColumnStatistics {
    * Get the minimum value for the column.
    * @return the minimum value
    */
-  OrcDecimal64 getMinimum();
+  HiveDecimal getMinimum();
 
   /**
    * Get the maximum value for the column.
    * @return the maximum value
    */
-  OrcDecimal64 getMaximum();
+  HiveDecimal getMaximum();
 
   /**
    * Get the sum of the values of the column.

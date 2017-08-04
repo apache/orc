@@ -36,7 +36,6 @@ import org.apache.orc.Decimal64ColumnStatistics;
 import org.apache.orc.DecimalColumnStatistics;
 import org.apache.orc.DoubleColumnStatistics;
 import org.apache.orc.IntegerColumnStatistics;
-import org.apache.orc.OrcDecimal64;
 import org.apache.orc.OrcProto;
 import org.apache.orc.StringColumnStatistics;
 import org.apache.orc.TimestampColumnStatistics;
@@ -955,13 +954,13 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
     private final int scale;
 
+    // The minimum and maximum are decimal64 longs.
     private boolean hasMinimum;
     private long minimum;
     private boolean hasMaximum;
     private long maximum;
 
     // Since the sum can be very large, use the larger capacity decimal.
-    // Also, we only use OrcDecimal64 for min and max returns.
     private HiveDecimalWritable sum = new HiveDecimalWritable(0);
 
     Decimal64StatisticsImpl(int scale) {
@@ -1069,13 +1068,23 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     }
 
     @Override
-    public OrcDecimal64 getMinimum() {
-      return (hasMinimum ? new OrcDecimal64(minimum, scale) : null);
+    public HiveDecimal getMinimum() {
+      if (!hasMinimum) {
+        return null;
+      }
+      HiveDecimalWritable resultWritable = new HiveDecimalWritable(0);
+      resultWritable.deserialize64(minimum, scale);
+      return resultWritable.getHiveDecimal();
     }
 
     @Override
-    public OrcDecimal64 getMaximum() {
-      return (hasMaximum ? new OrcDecimal64(maximum, scale) : null);
+    public HiveDecimal getMaximum() {
+      if (!hasMaximum) {
+        return null;
+      }
+      HiveDecimalWritable resultWritable = new HiveDecimalWritable(0);
+      resultWritable.deserialize64(maximum, scale);
+      return resultWritable.getHiveDecimal();
     }
 
     @Override
