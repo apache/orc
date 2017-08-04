@@ -168,4 +168,4 @@ target_link_libraries (orc
   ${LZ4_LIBRARIES}
   )
 
-add_dependencies(orc protoc)
+add_dependencies(orc protobuf)
