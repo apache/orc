@@ -18,53 +18,22 @@
 
 package org.apache.orc.tools.convert;
 
+import static org.junit.Assert.assertEquals;
+
+import java.io.StringReader;
+
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.ListColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.MapColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.StructColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
-import org.apache.hadoop.hive.serde2.io.DateWritable;
-import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
-import org.apache.hadoop.io.BytesWritable;
-import org.apache.orc.ColumnStatistics;
-import org.apache.orc.CompressionKind;
-import org.apache.orc.OrcConf;
-import org.apache.orc.OrcFile;
-import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
-import org.apache.orc.StripeStatistics;
 import org.apache.orc.TypeDescription;
-import org.apache.orc.Writer;
-import org.apache.orc.tools.FileDump;
-import org.apache.orc.tools.TestJsonFileDump;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.PrintStream;
-import java.io.StringReader;
-import java.sql.Date;
-import java.sql.Timestamp;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assume.assumeTrue;
 
 public class TestCsvReader {
 
@@ -77,28 +46,33 @@ public class TestCsvReader {
 
   @Test
   public void testSimple() throws Exception {
+    // yyyy[[-][/]]MM[[-][/]]dd[['T'][ ]]HH:mm:ss[ ][XXX][X]
     StringReader input = new StringReader(
-        "1,1.25,1.01,'a'\n" +
-        "2,2.5,2.02,'14'\n" +
-        "3,3.75,3.03,'1e'\n" +
-        "4,5,4.04,'28'\n" +
-        "5,6.25,5.05,'32'\n" +
-        "6,7.5,6.06,'3c'\n" +
-        "7,8.75,7.07,'46'\n" +
-        "8,10,8.08,'50'\n"
+        "1,1.25,1.01,'a',f,'2000-01-01T00:00:00+00:00'\n" +
+        "2,2.5,2.02,'14',t,'2000/01/01T00:00:00+00'\n" +
+        "3,3.75,3.03,'1e',false,'2000-01-01T00:00:00Z'\n" +
+        "4,5,4.04,'28',true,'2000-01-01 00:00:00+00'\n" +
+        "5,6.25,5.05,'32',0,'2000-01-01 00:00:00-00'\n" +
+        "6,7.5,6.06,'3c',1,'2000-01-01T04:00:00+04'\n" +
+        "7,8.75,7.07,'46',2,'1999-12-31T20:00:00-04:00'\n" +
+        "8,10,8.08,'50',t,'2000-01-01T00:00:00+00'\n"
     );
     TypeDescription schema = TypeDescription.fromString(
-        "struct<a:int,b:double,c:decimal(10,2),d:string>");
+        "struct<a:int,b:double,c:decimal(10,2),d:string,e:boolean,e:timestamp>");
     RecordReader reader = new CsvReader(input, null, 1, schema, ',', '\'',
         '\\', 0, "");
     VectorizedRowBatch batch = schema.createRowBatch(5);
     assertEquals(true, reader.nextBatch(batch));
     assertEquals(5, batch.size);
+    long bool = 0;
     for(int r = 0; r < batch.size; ++r) {
       assertEquals(r+1, ((LongColumnVector) batch.cols[0]).vector[r]);
       assertEquals(1.25 * (r + 1), ((DoubleColumnVector) batch.cols[1]).vector[r], 0.001);
       assertEquals((r + 1) + ".0" + (r + 1), ((DecimalColumnVector) batch.cols[2]).vector[r].toFormatString(2));
       assertEquals(Integer.toHexString((r + 1) * 10), ((BytesColumnVector) batch.cols[3]).toString(r));
+      assertEquals(bool, ((LongColumnVector) batch.cols[4]).vector[r]);
+      bool = 1 - bool;
+      assertEquals(946684800000L, ((TimestampColumnVector) batch.cols[5]).getTime(r));
     }
     assertEquals(true, reader.nextBatch(batch));
     assertEquals(3, batch.size);
@@ -107,6 +81,9 @@ public class TestCsvReader {
       assertEquals(1.25 * (r + 6), ((DoubleColumnVector) batch.cols[1]).vector[r], 0.001);
       assertEquals((r + 6) + ".0" + (r + 6), ((DecimalColumnVector) batch.cols[2]).vector[r].toFormatString(2));
       assertEquals(Integer.toHexString((r + 6) * 10), ((BytesColumnVector) batch.cols[3]).toString(r));
+      assertEquals(bool, ((LongColumnVector) batch.cols[4]).vector[r]);
+      bool = 1 - bool;
+      assertEquals(946684800000L, ((TimestampColumnVector) batch.cols[5]).getTime(r));
     }
     assertEquals(false, reader.nextBatch(batch));
   }
