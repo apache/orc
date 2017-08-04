@@ -63,6 +63,13 @@ message TimestampStatistics {
   optional sint64 maximumUtc = 4;
 }
 
+message Decimal64Statistics  {
+  optional sint32 scale = 1;
+  optional sint64 minimum = 2;
+  optional sint64 maximum = 3;
+  optional string sum = 4;
+}
+
 message BinaryStatistics {
   // sum will store the total binary blob length in a stripe
   optional sint64 sum = 1;
@@ -79,6 +86,7 @@ message ColumnStatistics {
   optional BinaryStatistics binaryStatistics = 8;
   optional TimestampStatistics timestampStatistics = 9;
   optional bool hasNull = 10;
+  optional Decimal64Statistics decimal64Statistics = 11;
 }
 
 message RowIndexEntry {
@@ -226,6 +234,7 @@ message PostScript {
   // the version of the file format
   //   [0, 11] = Hive 0.11
   //   [0, 12] = Hive 0.12
+  //   [0, 13] = Hive 0.13
   repeated uint32 version = 4 [packed = true];
   optional uint64 metadataLength = 5;
 

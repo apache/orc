@@ -38,12 +38,6 @@ public class DecimalTreeWriter64 extends TreeWriterBase {
 
   private final int scale;
 
-  // These scratch buffers allow us to serialize decimals much faster.
-  private final long[] scratchLongs;
-  private final byte[] scratchBuffer;
-
-  private final boolean isDirectV2;
-
   public DecimalTreeWriter64(int columnId,
                            TypeDescription schema,
                            WriterContext writerContext,
@@ -51,13 +45,9 @@ public class DecimalTreeWriter64 extends TreeWriterBase {
     super(columnId, schema, writerContext, nullable);
     OutStream out = writerContext.createStream(id,
         OrcProto.Stream.Kind.DATA);
-    this.isDirectV2 = true;
     writer = createIntegerWriter(out, true, true, writerContext);
 
     scale = schema.getScale();
-
-    scratchLongs = new long[HiveDecimal.SCRATCH_LONGS_LEN];
-    scratchBuffer = new byte[HiveDecimal.SCRATCH_BUFFER_LEN_TO_BYTES];
 
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
@@ -76,35 +66,35 @@ public class DecimalTreeWriter64 extends TreeWriterBase {
                          int length) throws IOException {
     super.writeBatch(vector, offset, length);
     DecimalColumnVector decimalColVector = (DecimalColumnVector) vector;
-
     if (decimalColVector.isRepeating) {
       if (decimalColVector.noNulls || !decimalColVector.isNull[0]) {
-        HiveDecimalWritable value = decimalColVector.vector[0];
-        indexStatistics.updateDecimal(value);
+        final HiveDecimalWritable decValue = decimalColVector.vector[0];
+        final long decimal64Long = decValue.serialize64(scale);
+        indexStatistics.updateDecimal64(decValue, decimal64Long);
         if (createBloomFilter) {
-          String str = value.toString(scratchBuffer);
           if (bloomFilter != null) {
-            bloomFilter.addString(str);
+            bloomFilter.addLong(decimal64Long);
           }
-          bloomFilterUtf8.addString(str);
+          bloomFilterUtf8.addLong(decimal64Long);
         }
         for (int i = 0; i < length; ++i) {
-          writer.write(value.serialize64(scale));
+          writer.write(decimal64Long);
         }
       }
     } else {
+      HiveDecimalWritable[] decimalVector = decimalColVector.vector;
       for (int i = 0; i < length; ++i) {
         if (decimalColVector.noNulls || !decimalColVector.isNull[i + offset]) {
-          HiveDecimalWritable value = decimalColVector.vector[i + offset];
-          writer.write(value.serialize64(scale));
-          indexStatistics.updateDecimal(value);
+          final HiveDecimalWritable decValue = decimalColVector.vector[i + offset];
+          long decimal64Long = decValue.serialize64(scale);
+          indexStatistics.updateDecimal64(decValue, decimal64Long);
           if (createBloomFilter) {
-            String str = value.toString(scratchBuffer);
             if (bloomFilter != null) {
-              bloomFilter.addString(str);
+              bloomFilter.addLong(decimal64Long);
             }
-            bloomFilterUtf8.addString(str);
+            bloomFilterUtf8.addLong(decimal64Long);
           }
+          writer.write(decimal64Long);
         }
       }
     }

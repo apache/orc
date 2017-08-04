@@ -160,8 +160,9 @@ public interface TreeWriter {
       }
     }
 
-    public static boolean isWriteScaledDecimalValue(Configuration configuration, int precision) {
-      return OrcConf.DECIMAL_USE_SCALED_VALUE.getBoolean(configuration) &&
+    public static boolean isWriteScaledDecimalValue(int precision, WriterContext writerContext) {
+      return writerContext.getVersion().ordinal() >= OrcFile.Version.V_0_13.ordinal() &&
+             OrcConf.DECIMAL_USE_SCALED_VALUE.getBoolean(writerContext.getConfiguration()) &&
              HiveDecimalWritable.isPrecisionDecimal64(precision);
     }
 
@@ -169,8 +170,7 @@ public interface TreeWriter {
                                                       TypeDescription schema,
                                                       WriterContext writerContext,
                                                       boolean nullable) throws IOException {
-      if (writerContext.getVersion() != OrcFile.Version.V_0_11 &&
-          isWriteScaledDecimalValue(writerContext.getConfiguration(), schema.getPrecision())) {
+      if (isWriteScaledDecimalValue(schema.getPrecision(), writerContext)) {
         return new DecimalTreeWriter64(schema.getId(),
             schema, writerContext, nullable);
       } else {

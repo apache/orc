@@ -40,6 +40,7 @@ import org.apache.orc.DataReader;
 import org.apache.orc.DateColumnStatistics;
 import org.apache.orc.DecimalColumnStatistics;
 import org.apache.orc.DoubleColumnStatistics;
+import org.apache.orc.OrcDecimal64;
 import org.apache.orc.IntegerColumnStatistics;
 import org.apache.orc.OrcConf;
 import org.apache.orc.OrcProto;
@@ -614,6 +615,10 @@ public class RecordReaderImpl implements RecordReader {
       if (bf.testDouble(((Double) predObj).doubleValue())) {
         result = TruthValue.YES_NO_NULL;
       }
+    } else if (predObj instanceof OrcDecimal64) {
+      if (bf.testLong(((OrcDecimal64) predObj).getDecimal64Long())) {
+        result = TruthValue.YES_NO_NULL;
+      }
     } else if (predObj instanceof String || predObj instanceof Text ||
         predObj instanceof HiveDecimalWritable ||
         predObj instanceof BigDecimal) {
@@ -692,6 +697,8 @@ public class RecordReaderImpl implements RecordReader {
         } else if (obj instanceof Float || obj instanceof Double ||
             obj instanceof String) {
           return new HiveDecimalWritable(obj.toString());
+        } else if (obj instanceof OrcDecimal64) {
+          return obj;
         } else if (obj instanceof BigDecimal) {
           return new HiveDecimalWritable(HiveDecimal.create((BigDecimal) obj));
         } else if (obj instanceof HiveDecimal) {

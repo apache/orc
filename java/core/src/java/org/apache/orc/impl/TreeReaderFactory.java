@@ -1367,12 +1367,26 @@ public class TreeReaderFactory {
         for (int r=0; r < batchSize; ++r) {
           decimalWritableVector[r].deserialize64(
               decimalLongVector[r], scale);
+          /*
+          int fake = 0;
+          if (!decimalWritableVector[r].isValid()) {
+            fake++;
+            System.out.println(fake);
+          }
+          */
         }
       } else if (!result.isRepeating || !result.isNull[0]) {
         for (int r=0; r < batchSize; ++r) {
           if (!result.isNull[r]) {
             decimalWritableVector[r].deserialize64(
                 decimalLongVector[r], scale);
+            /*
+            int fake = 0;
+            if (!decimalWritableVector[r].isValid()) {
+              fake++;
+              System.out.println(fake);
+            }
+            */
           }
         }
       }

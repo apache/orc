@@ -39,7 +39,7 @@ public class TestColumnStatisticsImpl {
 
   @Test
   public void testUpdateDate() throws Exception {
-    ColumnStatisticsImpl stat = ColumnStatisticsImpl.create(TypeDescription.createDate());
+    ColumnStatisticsImpl stat = ColumnStatisticsImpl.create(TypeDescription.createDate(), null);
     DateWritable date = new DateWritable(16400);
     stat.increment();
     stat.updateDate(date);

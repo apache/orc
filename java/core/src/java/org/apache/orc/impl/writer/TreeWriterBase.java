@@ -18,6 +18,7 @@
 
 package org.apache.orc.impl.writer;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.OrcFile;
@@ -88,9 +89,9 @@ public abstract class TreeWriterBase implements TreeWriter {
     }
     this.foundNulls = false;
     createBloomFilter = streamFactory.getBloomFilterColumns()[columnId];
-    indexStatistics = ColumnStatisticsImpl.create(schema);
-    stripeColStatistics = ColumnStatisticsImpl.create(schema);
-    fileStatistics = ColumnStatisticsImpl.create(schema);
+    indexStatistics = ColumnStatisticsImpl.create(schema, streamFactory);
+    stripeColStatistics = ColumnStatisticsImpl.create(schema, streamFactory);
+    fileStatistics = ColumnStatisticsImpl.create(schema, streamFactory);
     if (streamFactory.buildIndex()) {
       rowIndex = OrcProto.RowIndex.newBuilder();
       rowIndexEntry = OrcProto.RowIndexEntry.newBuilder();

@@ -1791,10 +1791,17 @@ public class TestVectorOrcFile {
     Assert.assertEquals(false, reader.getMetadataKeys().iterator().hasNext());
     final long numberOfRows = reader.getNumberOfRows();
     Assert.assertEquals(10 * VectorizedRowBatch.DEFAULT_SIZE, numberOfRows);
-    DecimalColumnStatistics stats =
-        (DecimalColumnStatistics) reader.getStatistics()[1];
-    assertEquals(min.getHiveDecimal(), stats.getMinimum());
-    assertEquals(max.getHiveDecimal(), stats.getMaximum());
+
+    ColumnStatistics columnStatistics = reader.getStatistics()[1];
+    if (columnStatistics instanceof DecimalColumnStatistics) {
+      DecimalColumnStatistics stats = (DecimalColumnStatistics) columnStatistics;
+      assertEquals(min.getHiveDecimal(), stats.getMinimum());
+      assertEquals(max.getHiveDecimal(), stats.getMaximum());
+    } else {
+      Decimal64ColumnStatistics stats64 = (Decimal64ColumnStatistics) columnStatistics;
+      assertEquals(min.getHiveDecimal(), stats64.getMinimum().getHiveDecimal());
+      assertEquals(max.getHiveDecimal(), stats64.getMaximum().getHiveDecimal());
+    }
 
     int stripeCount = 0;
     int rowCount = 0;
