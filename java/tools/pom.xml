@@ -74,6 +74,10 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.threeten</groupId>
+      <artifactId>threetenbp</artifactId>
+    </dependency>
 
     <!-- test inter-project -->
     <dependency>
@@ -108,7 +112,7 @@
               <mainClass>org.apache.orc.tools.Driver</mainClass>
             </manifest>
           </archive>
-	  <descriptors>
+          <descriptors>
             <descriptor>src/assembly/uber.xml</descriptor>
           </descriptors>
         </configuration>

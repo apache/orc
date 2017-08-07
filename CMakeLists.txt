@@ -19,6 +19,12 @@ SET(CPACK_PACKAGE_VERSION_MAJOR "1")
 SET(CPACK_PACKAGE_VERSION_MINOR "5")
 SET(CPACK_PACKAGE_VERSION_PATCH "0-SNAPSHOT")
 SET(ORC_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_modules")
+set (LZ4_VERSION "1.7.5")
+set (SNAPPY_VERSION "1.1.4")
+set (ZLIB_VERSION "1.2.11")
+set (GTEST_VERSION "1.8.0")
+set (PROTOBUF_VERSION "2.6.0")
 
 option (BUILD_JAVA
     "Include ORC Java library in the build process"
@@ -36,38 +42,7 @@ endif ()
 SET(CPACK_GENERATOR "TGZ")
 
 INCLUDE(CPack)
-
-set (GMOCK_VERSION "1.7.0")
-set (GMOCK_INCLUDE_DIRS
-     "${CMAKE_SOURCE_DIR}/c++/libs/gmock-${GMOCK_VERSION}/include"
-     "${CMAKE_SOURCE_DIR}/c++/libs/gmock-${GMOCK_VERSION}/gtest/include"
-    )
-set (GMOCK_LIBRARIES gmock)
-if(NOT APPLE AND NOT MSVC)
-  list (APPEND GMOCK_LIBRARIES pthread)
-endif(NOT APPLE AND NOT MSVC)
-
-set (LZ4_VERSION "r131")
-set (LZ4_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/c++/libs/lz4-${LZ4_VERSION}/lib")
-set (LZ4_LIBRARIES lz4)
-
-set (PROTOBUF_VERSION "2.6.0")
-set (PROTOBUF_INCLUDE_DIRS
-     "${CMAKE_SOURCE_DIR}/c++/libs/protobuf-${PROTOBUF_VERSION}/src")
-set (PROTOBUF_LIBRARIES protobuf)
-set (PROTOBUF_EXECUTABLE "${CMAKE_BINARY_DIR}/c++/libs/protobuf-${PROTOBUF_VERSION}/protoc")
-
-set (SNAPPY_VERSION "1.1.2")
-set (SNAPPY_INCLUDE_DIRS
-     "${CMAKE_SOURCE_DIR}/c++/libs/snappy-${SNAPPY_VERSION}")
-set (SNAPPY_LIBRARIES snappy)
-
-set (ZLIB_VERSION "1.2.8")
-set (ZLIB_INCLUDE_DIRS
-     "${CMAKE_SOURCE_DIR}/c++/libs/zlib-${ZLIB_VERSION}"
-     "${CMAKE_BINARY_DIR}/c++/libs/zlib-${ZLIB_VERSION}"
-    )
-set (ZLIB_LIBRARIES zlib)
+INCLUDE(ExternalProject)
 
 #
 # Compiler specific flags
@@ -82,6 +57,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set (WARN_FLAGS "${WARN_FLAGS} -Wno-c++98-compat-pedantic -Wno-padded")
   set (WARN_FLAGS "${WARN_FLAGS} -Wno-covered-switch-default")
   set (WARN_FLAGS "${WARN_FLAGS} -Wno-missing-noreturn -Wno-unknown-pragmas")
+  set (WARN_FLAGS "${WARN_FLAGS} -Wno-gnu-zero-variadic-macro-arguments")
   set (WARN_FLAGS "${WARN_FLAGS} -Wconversion -Werror")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set (WARN_FLAGS "-Wall -Wno-unknown-pragmas -Wconversion -Werror")
@@ -107,6 +83,8 @@ elseif (MSVC)
 endif ()
 
 enable_testing()
+
+INCLUDE(ThirdpartyToolchain)
 
 set (EXAMPLE_DIRECTORY ${CMAKE_SOURCE_DIR}/examples)
 

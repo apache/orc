@@ -7,18 +7,27 @@ import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.StructColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.orc.RecordReader;
 import org.apache.orc.TypeDescription;
+import org.threeten.bp.LocalDateTime;
+import org.threeten.bp.ZoneId;
+import org.threeten.bp.ZonedDateTime;
+import org.threeten.bp.format.DateTimeFormatter;
+import org.threeten.bp.temporal.TemporalAccessor;
 
 import com.opencsv.CSVReader;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.sql.Timestamp;
 
 public class CsvReader implements RecordReader {
+  private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern(
+      "yyyy[[-][/]]MM[[-][/]]dd[['T'][ ]]HH:mm:ss[ ][XXX][X]");
 
   private long rowNumber = 0;
   private final Converter converter;
@@ -123,6 +132,28 @@ public class CsvReader implements RecordReader {
     }
   }
 
+  class BooleanConverter extends ConverterImpl {
+    BooleanConverter(IntWritable offset) {
+      super(offset);
+    }
+
+    @Override
+    public void convert(String[] values, ColumnVector column, int row) {
+      if (values[offset] == null || nullString.equals(values[offset])) {
+        column.noNulls = false;
+        column.isNull[row] = true;
+      } else {
+        if (values[offset].equalsIgnoreCase("true")
+            || values[offset].equalsIgnoreCase("t")
+            || values[offset].equals("1")) {
+          ((LongColumnVector) column).vector[row] = 1;
+        } else {
+          ((LongColumnVector) column).vector[row] = 0;
+        }
+      }
+    }
+  }
+
   class LongConverter extends ConverterImpl {
     LongConverter(IntWritable offset) {
       super(offset);
@@ -191,6 +222,35 @@ public class CsvReader implements RecordReader {
     }
   }
 
+  class TimestampConverter extends ConverterImpl {
+    TimestampConverter(IntWritable offset) {
+      super(offset);
+    }
+
+    @Override
+    public void convert(String[] values, ColumnVector column, int row) {
+      if (values[offset] == null || nullString.equals(values[offset])) {
+        column.noNulls = false;
+        column.isNull[row] = true;
+      } else {
+        TimestampColumnVector vector = (TimestampColumnVector) column;
+        TemporalAccessor temporalAccessor =
+            DATE_TIME_FORMATTER.parseBest(values[offset],
+                ZonedDateTime.FROM, LocalDateTime.FROM);
+        if (temporalAccessor instanceof ZonedDateTime) {
+          vector.set(row, new Timestamp(
+              ((ZonedDateTime) temporalAccessor).toEpochSecond() * 1000L));
+        } else if (temporalAccessor instanceof LocalDateTime) {
+          vector.set(row, new Timestamp(((LocalDateTime) temporalAccessor)
+              .atZone(ZoneId.systemDefault()).toEpochSecond() * 1000L));
+        } else {
+          column.noNulls = false;
+          column.isNull[row] = true;
+        }
+      }
+    }
+  }
+
   class StructConverter implements Converter {
     final Converter[] children;
 
@@ -222,6 +282,7 @@ public class CsvReader implements RecordReader {
   Converter buildConverter(IntWritable startOffset, TypeDescription schema) {
     switch (schema.getCategory()) {
       case BOOLEAN:
+        return new BooleanConverter(startOffset);
       case BYTE:
       case SHORT:
       case INT:
@@ -237,6 +298,8 @@ public class CsvReader implements RecordReader {
       case CHAR:
       case VARCHAR:
         return new BytesConverter(startOffset);
+      case TIMESTAMP:
+        return new TimestampConverter(startOffset);
       case STRUCT:
         return new StructConverter(startOffset, schema);
       default:
