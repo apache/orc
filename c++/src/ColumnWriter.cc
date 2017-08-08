@@ -56,7 +56,7 @@ namespace orc {
                             outStream,
                             options.getCompressionStrategy(),
                             // BufferedOutputStream initial capacity
-                            4 * 1024 * 1024,
+                            1 * 1024 * 1024,
                             options.getCompressionBlockSize(),
                             *options.getMemoryPool());
   }
@@ -81,7 +81,6 @@ namespace orc {
                                 colStripeStatistics(),
                                 colFileStatistics(),
                                 enableIndex(options.getEnableIndex()),
-                                enableStats(options.getEnableStats()),
                                 rowIndex(),
                                 rowIndexEntry(),
                                 rowIndexPosition(),
@@ -92,13 +91,9 @@ namespace orc {
         factory.createStream(proto::Stream_Kind_PRESENT);
     notNullEncoder = createBooleanRleEncoder(std::move(presentStream));
 
-    if (enableIndex || enableStats) {
-      colIndexStatistics = createColumnStatistics(type);
-      if (enableStats) {
-        colStripeStatistics = createColumnStatistics(type);
-        colFileStatistics = createColumnStatistics(type);
-      }
-    }
+    colIndexStatistics = createColumnStatistics(type);
+    colStripeStatistics = createColumnStatistics(type);
+    colFileStatistics = createColumnStatistics(type);
 
     if (enableIndex) {
       rowIndex = std::unique_ptr<proto::RowIndex>(new proto::RowIndex());
@@ -162,9 +157,7 @@ namespace orc {
     rowIndexEntry->clear_positions();
     rowIndexEntry->clear_statistics();
 
-    if (enableStats) {
-      colStripeStatistics->merge(*colIndexStatistics);
-    }
+    colStripeStatistics->merge(*colIndexStatistics);
     colIndexStatistics->reset();
 
     recordPosition();
@@ -270,22 +263,20 @@ namespace orc {
     }
 
     // update stats
-    if (enableIndex || enableStats) {
-      bool hasNull = false;
-      if (!structBatch.hasNulls) {
-        colIndexStatistics->increase(numValues);
-      } else {
-        const char* notNull = structBatch.notNull.data() + offset;
-        for (uint64_t i = 0; i < numValues; ++i) {
-          if (notNull[i]) {
-            colIndexStatistics->increase(1);
-          } else if (!hasNull) {
-            hasNull = true;
-          }
+    bool hasNull = false;
+    if (!structBatch.hasNulls) {
+      colIndexStatistics->increase(numValues);
+    } else {
+      const char* notNull = structBatch.notNull.data() + offset;
+      for (uint64_t i = 0; i < numValues; ++i) {
+        if (notNull[i]) {
+          colIndexStatistics->increase(1);
+        } else if (!hasNull) {
+          hasNull = true;
         }
       }
-      colIndexStatistics->setHasNull(hasNull);
     }
+    colIndexStatistics->setHasNull(hasNull);
   }
 
   void StructColumnWriter::flush(std::vector<proto::Stream>& streams) {
@@ -434,16 +425,14 @@ namespace orc {
     rleEncoder->add(data, numValues, notNull);
 
     // update stats
-    if (enableIndex || enableStats) {
-      IntegerColumnStatisticsImpl* intStats =
-        dynamic_cast<IntegerColumnStatisticsImpl*>(colIndexStatistics.get());
-      for (uint64_t i = 0; i < numValues; ++i) {
-        if (notNull == nullptr || notNull[i]) {
-          intStats->increase(1);
-          intStats->update(data[i], 1);
-        } else if (!intStats->hasNull()) {
-          intStats->setHasNull(true);
-        }
+    IntegerColumnStatisticsImpl* intStats =
+      dynamic_cast<IntegerColumnStatisticsImpl*>(colIndexStatistics.get());
+    for (uint64_t i = 0; i < numValues; ++i) {
+      if (notNull == nullptr || notNull[i]) {
+        intStats->increase(1);
+        intStats->update(data[i], 1);
+      } else if (!intStats->hasNull()) {
+        intStats->setHasNull(true);
       }
     }
   }

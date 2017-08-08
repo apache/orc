@@ -49,6 +49,17 @@ namespace orc {
     uint32_t getMinor() const {
         return this->minorVersion;
     }
+
+    bool operator == (const FileVersion & right) const {
+      return this->majorVersion == right.getMajor() &&
+              this->minorVersion == right.getMinor();
+    }
+
+    bool operator != (const FileVersion & right) const {
+      return !(*this == right);
+    }
+
+    std::string toString() const;
   };
 
   enum CompressionKind {

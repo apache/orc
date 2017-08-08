@@ -33,11 +33,6 @@ namespace orc {
   // classes that hold data members so we can maintain binary compatibility
   struct WriterOptionsPrivate;
 
-  enum EncodingStrategy {
-    EncodingStrategy_SPEED = 0,
-    EncodingStrategy_COMPRESSION
-  };
-
   enum CompressionStrategy {
     CompressionStrategy_SPEED = 0,
     CompressionStrategy_COMPRESSION
@@ -82,7 +77,7 @@ namespace orc {
     uint64_t getCompressionBlockSize() const;
 
     /**
-     * Set row index stride.
+     * Set row index stride. Use value 0 to disable row index.
      */
     WriterOptions& setRowIndexStride(uint64_t stride);
 
@@ -124,17 +119,6 @@ namespace orc {
      * @return if not set, return default value which is ZLIB.
      */
     CompressionKind getCompression() const;
-
-    /**
-     * Set the encoding strategy.
-     */
-    WriterOptions& setEncodingStrategy(EncodingStrategy strategy);
-
-    /**
-     * Get the encoding strategy.
-     * @return if not set, return default value which is SPEED.
-     */
-    EncodingStrategy getEncodingStrategy() const;
 
     /**
      * Set the compression strategy.
@@ -179,19 +163,6 @@ namespace orc {
      * @return if not set, return std::err.
      */
     std::ostream * getErrorStream() const;
-
-    /**
-     * Set whether or not to write statistics (file statistics,
-     * stripe statistics, etc.)
-     */
-    WriterOptions& setEnableStats(bool enable);
-
-    /**
-     * Get whether or not to write statistics (file statistics,
-     * stripe statistics, etc.)
-     * @return if not set, the default is true
-     */
-     bool getEnableStats() const;
 
     /**
      * Get whether or not to write row group index

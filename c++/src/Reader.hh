@@ -214,7 +214,7 @@ namespace orc {
 
     CompressionKind getCompression() const override;
 
-    std::string getFormatVersion() const override;
+    FileVersion getFormatVersion() const override;
 
     WriterVersion getWriterVersion() const override;
 

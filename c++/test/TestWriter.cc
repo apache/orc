@@ -40,13 +40,12 @@ namespace orc {
                                       const Type& type,
                                       MemoryPool* memoryPool,
                                       OutputStream* stream,
-                                      FileVersion version = FileVersion(0, 12)){
+                                      FileVersion version = FileVersion(0, 11)){
     WriterOptions options;
     options.setStripeSize(stripeSize);
     options.setCompressionBlockSize(compresionblockSize);
     options.setCompression(compression);
     options.setMemoryPool(memoryPool);
-    options.setEnableStats(false);
     options.setRowIndexStride(0);
     options.setFileVersion(version);
     return createWriter(type, stream, options);
@@ -88,7 +87,8 @@ namespace orc {
                                                 pool,
                                                 std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
-    EXPECT_EQ("0.12", reader->getFormatVersion());
+    EXPECT_EQ(FileVersion(0, 11), reader->getFormatVersion());
+    EXPECT_EQ("0.11", reader->getFormatVersion().toString());
     EXPECT_EQ(WriterVersion_ORC_135, reader->getWriterVersion());
     EXPECT_EQ(0, reader->getNumberOfRows());
 
@@ -141,7 +141,6 @@ namespace orc {
                                                 pool,
                                                 std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
-    EXPECT_EQ("0.11", reader->getFormatVersion());
     EXPECT_EQ(2000, reader->getNumberOfRows());
 
     batch = rowReader->createRowBatch(2048);

@@ -76,7 +76,7 @@ namespace orc {
     std::unique_ptr<ColumnStatisticsImplBase> colStripeStatistics;
     std::unique_ptr<ColumnStatisticsImplBase> colFileStatistics;
 
-    bool enableIndex, enableStats;
+    bool enableIndex;
     // row index for this column, contains all RowIndexEntries in 1 stripe
     std::unique_ptr<proto::RowIndex> rowIndex;
     std::unique_ptr<proto::RowIndexEntry> rowIndexEntry;

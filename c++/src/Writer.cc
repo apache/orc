@@ -31,29 +31,25 @@ namespace orc {
     uint64_t compressionBlockSize;
     uint64_t rowIndexStride;
     CompressionKind compression;
-    EncodingStrategy encodingStrategy;
     CompressionStrategy compressionStrategy;
     MemoryPool* memoryPool;
     double paddingTolerance;
     std::ostream* errorStream;
     FileVersion fileVersion;
     double dictionaryKeySizeThreshold;
-    bool enableStats;
     bool enableIndex;
 
     WriterOptionsPrivate() :
-                            fileVersion(0, 12) { // default to Hive_0_12
+                            fileVersion(0, 11) { // default to Hive_0_11
       stripeSize = 64 * 1024 * 1024; // 64M
       compressionBlockSize = 64 * 1024; // 64K
       rowIndexStride = 10000;
       compression = CompressionKind_ZLIB;
-      encodingStrategy = EncodingStrategy_SPEED;
       compressionStrategy = CompressionStrategy_SPEED;
       memoryPool = getDefaultPool();
       paddingTolerance = 0.0;
       errorStream = &std::cerr;
       dictionaryKeySizeThreshold = 0.0;
-      enableStats = true;
       enableIndex = true;
     }
   };
@@ -126,8 +122,12 @@ namespace orc {
   }
 
   WriterOptions& WriterOptions::setFileVersion(const FileVersion& version) {
-    privateBits->fileVersion = version;
-    return *this;
+    // Only Hive_0_11 version is supported currently
+    if (version.getMajor() == 0 && version.getMinor() == 11) {
+      privateBits->fileVersion = version;
+      return *this;
+    }
+    throw std::logic_error("Unpoorted file version specified.");
   }
 
   FileVersion WriterOptions::getFileVersion() const {
@@ -141,15 +141,6 @@ namespace orc {
 
   CompressionKind WriterOptions::getCompression() const {
     return privateBits->compression;
-  }
-
-  WriterOptions& WriterOptions::setEncodingStrategy(EncodingStrategy strategy) {
-    privateBits->encodingStrategy = strategy;
-    return *this;
-  }
-
-  EncodingStrategy WriterOptions::getEncodingStrategy() const {
-    return privateBits->encodingStrategy;
   }
 
   WriterOptions& WriterOptions::setCompressionStrategy(
@@ -187,15 +178,6 @@ namespace orc {
 
   std::ostream* WriterOptions::getErrorStream() const {
     return privateBits->errorStream;
-  }
-
-  WriterOptions& WriterOptions::setEnableStats(bool enable) {
-    privateBits->enableStats = enable;
-    return *this;
-  }
-
-  bool WriterOptions::getEnableStats() const {
-    return privateBits->enableStats;
   }
 
   bool WriterOptions::getEnableIndex() const {
@@ -270,18 +252,20 @@ namespace orc {
     stripeRows = totalRows = indexRows = 0;
     currentOffset = 0;
 
-    uint64_t bufferCapacity = 4 * 1024 * 1024; // 4M
+    // compression stream for stripe footer, file footer and metadata
     compressionStream = createCompressor(
                                   options.getCompression(),
                                   outStream,
                                   options.getCompressionStrategy(),
-                                  bufferCapacity,
+                                  1 * 1024 * 1024, // buffer capacity: 1M
                                   options.getCompressionBlockSize(),
                                   *options.getMemoryPool());
+
+    // uncompressed stream for post script
     bufferedStream.reset(new BufferedOutputStream(
                                             *options.getMemoryPool(),
                                             outStream,
-                                            bufferCapacity,
+                                            1024, // buffer capacity: 1024 bytes
                                             options.getCompressionBlockSize()));
 
     init();
@@ -377,7 +361,7 @@ namespace orc {
     if (options.getEnableIndex() && indexRows != 0) {
       columnWriter->createRowIndexEntry();
       indexRows = 0;
-    } else if (options.getEnableStats()) {
+    } else {
       columnWriter->mergeRowGroupStatsIntoStripeStats();
     }
 
@@ -410,16 +394,14 @@ namespace orc {
     // TODO: ORC-205 Include writer timezone in stripe footer
 
     // add stripe statistics to metadata
-    if (options.getEnableStats()) {
-      proto::StripeStatistics* stripeStats = metadata.add_stripestats();
-      std::vector<proto::ColumnStatistics> colStats;
-      columnWriter->getStripeStatistics(colStats);
-      for (uint32_t i = 0; i != colStats.size(); ++i) {
-        *stripeStats->add_colstats() = colStats[i];
-      }
-      // merge stripe stats into file stats and clear stripe stats
-      columnWriter->mergeStripeStatsIntoFileStats();
+    proto::StripeStatistics* stripeStats = metadata.add_stripestats();
+    std::vector<proto::ColumnStatistics> colStats;
+    columnWriter->getStripeStatistics(colStats);
+    for (uint32_t i = 0; i != colStats.size(); ++i) {
+      *stripeStats->add_colstats() = colStats[i];
     }
+    // merge stripe stats into file stats and clear stripe stats
+    columnWriter->mergeStripeStatsIntoFileStats();
 
     if (!stripeFooter.SerializeToZeroCopyStream(compressionStream.get())) {
       throw std::logic_error("Failed to write stripe footer.");
@@ -452,12 +434,10 @@ namespace orc {
   }
 
   void WriterImpl::writeMetadata() {
-    if (options.getEnableStats()) {
-      if (!metadata.SerializeToZeroCopyStream(compressionStream.get())) {
-        throw std::logic_error("Failed to write metadata.");
-      }
-      postScript.set_metadatalength(compressionStream.get()->flush());
+    if (!metadata.SerializeToZeroCopyStream(compressionStream.get())) {
+      throw std::logic_error("Failed to write metadata.");
     }
+    postScript.set_metadatalength(compressionStream.get()->flush());
   }
 
   void WriterImpl::writeFileFooter() {
@@ -465,12 +445,10 @@ namespace orc {
     fileFooter.set_numberofrows(totalRows);
 
     // update file statistics
-    if (options.getEnableStats()) {
-      std::vector<proto::ColumnStatistics> colStats;
-      columnWriter->getFileStatistics(colStats);
-      for (uint32_t i = 0; i != colStats.size(); ++i) {
-        *fileFooter.add_statistics() = colStats[i];
-      }
+    std::vector<proto::ColumnStatistics> colStats;
+    columnWriter->getFileStatistics(colStats);
+    for (uint32_t i = 0; i != colStats.size(); ++i) {
+      *fileFooter.add_statistics() = colStats[i];
     }
 
     if (!fileFooter.SerializeToZeroCopyStream(compressionStream.get())) {
