@@ -171,10 +171,10 @@ public interface TreeWriter {
                                                       WriterContext writerContext,
                                                       boolean nullable) throws IOException {
       if (isWriteScaledDecimalValue(schema.getPrecision(), writerContext)) {
-        return new DecimalTreeWriter64(schema.getId(),
+        return new DecimalTreeWriterV2(schema.getId(),
             schema, writerContext, nullable);
       } else {
-        return new DecimalTreeWriter(schema.getId(),
+        return new DecimalTreeWriterV1(schema.getId(),
             schema, writerContext, nullable);
       }
     }

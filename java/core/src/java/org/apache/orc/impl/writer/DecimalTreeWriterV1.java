@@ -25,35 +25,36 @@ import org.apache.hadoop.hive.ql.util.JavaDataModel;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.orc.OrcProto;
 import org.apache.orc.TypeDescription;
-import org.apache.orc.impl.BitFieldWriter;
 import org.apache.orc.impl.IntegerWriter;
-import org.apache.orc.impl.OutStream;
 import org.apache.orc.impl.PositionRecorder;
 import org.apache.orc.impl.PositionedOutputStream;
 
 import java.io.IOException;
 
-public class DecimalTreeWriter64 extends TreeWriterBase {
-  private final IntegerWriter writer;
+/*
+ * The original decimal format read/written by SerializationUtils.
+ */
+public class DecimalTreeWriterV1 extends TreeWriterBase {
+  private final PositionedOutputStream valueStream;
 
-  private final int scale;
-
-  // These scratch buffer allows us to decimals to string much faster.
+  // These scratch buffers allow us to serialize decimals much faster.
+  private final long[] scratchLongs;
   private final byte[] scratchBuffer;
 
-  public DecimalTreeWriter64(int columnId,
+  private final IntegerWriter scaleStream;
+  private final boolean isDirectV2;
+
+  public DecimalTreeWriterV1(int columnId,
                            TypeDescription schema,
-                           WriterContext writerContext,
+                           WriterContext writer,
                            boolean nullable) throws IOException {
-    super(columnId, schema, writerContext, nullable);
-    OutStream out = writerContext.createStream(id,
-        OrcProto.Stream.Kind.DATA);
-    writer = createIntegerWriter(out, true, true, writerContext);
-
-    scale = schema.getScale();
-
+    super(columnId, schema, writer, nullable);
+    this.isDirectV2 = isNewWriteFormat(writer);
+    valueStream = writer.createStream(id, OrcProto.Stream.Kind.DATA);
+    scratchLongs = new long[HiveDecimal.SCRATCH_LONGS_LEN];
     scratchBuffer = new byte[HiveDecimal.SCRATCH_BUFFER_LEN_TO_BYTES];
-
+    this.scaleStream = createIntegerWriter(writer.createStream(id,
+        OrcProto.Stream.Kind.SECONDARY), true, isDirectV2, writer);
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
     }
@@ -62,7 +63,11 @@ public class DecimalTreeWriter64 extends TreeWriterBase {
   @Override
   OrcProto.ColumnEncoding.Builder getEncoding() {
     OrcProto.ColumnEncoding.Builder result = super.getEncoding();
-    result.setKind(OrcProto.ColumnEncoding.Kind.DECIMAL_64);
+    if (isDirectV2) {
+      result.setKind(OrcProto.ColumnEncoding.Kind.DIRECT_V2);
+    } else {
+      result.setKind(OrcProto.ColumnEncoding.Kind.DIRECT);
+    }
     return result;
   }
 
@@ -70,38 +75,38 @@ public class DecimalTreeWriter64 extends TreeWriterBase {
   public void writeBatch(ColumnVector vector, int offset,
                          int length) throws IOException {
     super.writeBatch(vector, offset, length);
-    DecimalColumnVector decimalColVector = (DecimalColumnVector) vector;
-    if (decimalColVector.isRepeating) {
-      if (decimalColVector.noNulls || !decimalColVector.isNull[0]) {
-        final HiveDecimalWritable decValue = decimalColVector.vector[0];
-        final long decimal64Long = decValue.serialize64(scale);
-        indexStatistics.updateDecimal64(decValue, decimal64Long);
+    DecimalColumnVector vec = (DecimalColumnVector) vector;
+    if (vector.isRepeating) {
+      if (vector.noNulls || !vector.isNull[0]) {
+        HiveDecimalWritable value = vec.vector[0];
+        indexStatistics.updateDecimal(value);
         if (createBloomFilter) {
-          String str = decValue.toString(scratchBuffer);
+          String str = value.toString(scratchBuffer);
           if (bloomFilter != null) {
             bloomFilter.addString(str);
           }
           bloomFilterUtf8.addString(str);
         }
         for (int i = 0; i < length; ++i) {
-          writer.write(decimal64Long);
+          value.serializationUtilsWrite(valueStream,
+              scratchLongs);
+          scaleStream.write(value.scale());
         }
       }
     } else {
-      HiveDecimalWritable[] decimalVector = decimalColVector.vector;
       for (int i = 0; i < length; ++i) {
-        if (decimalColVector.noNulls || !decimalColVector.isNull[i + offset]) {
-          final HiveDecimalWritable decValue = decimalColVector.vector[i + offset];
-          long decimal64Long = decValue.serialize64(scale);
-          indexStatistics.updateDecimal64(decValue, decimal64Long);
+        if (vec.noNulls || !vec.isNull[i + offset]) {
+          HiveDecimalWritable value = vec.vector[i + offset];
+          value.serializationUtilsWrite(valueStream, scratchLongs);
+          scaleStream.write(value.scale());
+          indexStatistics.updateDecimal(value);
           if (createBloomFilter) {
-            String str = decValue.toString(scratchBuffer);
+            String str = value.toString(scratchBuffer);
             if (bloomFilter != null) {
               bloomFilter.addString(str);
             }
             bloomFilterUtf8.addString(str);
           }
-          writer.write(decimal64Long);
         }
       }
     }
@@ -112,7 +117,8 @@ public class DecimalTreeWriter64 extends TreeWriterBase {
                           OrcProto.StripeStatistics.Builder stats,
                           int requiredIndexEntries) throws IOException {
     super.writeStripe(builder, stats, requiredIndexEntries);
-    writer.flush();
+    valueStream.flush();
+    scaleStream.flush();
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
     }
@@ -121,12 +127,14 @@ public class DecimalTreeWriter64 extends TreeWriterBase {
   @Override
   void recordPosition(PositionRecorder recorder) throws IOException {
     super.recordPosition(recorder);
-    writer.getPosition(recorder);
+    valueStream.getPosition(recorder);
+    scaleStream.getPosition(recorder);
   }
 
   @Override
   public long estimateMemory() {
-    return super.estimateMemory() + writer.estimateMemory() ;
+    return super.estimateMemory() + valueStream.getBufferSize() +
+        scaleStream.estimateMemory();
   }
 
   @Override

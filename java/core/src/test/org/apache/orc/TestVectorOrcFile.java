@@ -1845,7 +1845,9 @@ public class TestVectorOrcFile {
         if (expectedDec == null) {
           assertTrue(decimalColVector.isNull[i]);
         } else {
-          assertTrue(!decimalColVector.isNull[i]);
+          if (decimalColVector.isNull[i]) {
+            assertTrue(!decimalColVector.isNull[i]);
+          }
           HiveDecimal dec = decimalColVector.vector[i].getHiveDecimal();
           if (!expectedDec.equals(dec)) {
             assertEquals(expectedDec, dec);

@@ -1291,7 +1291,9 @@ public class TreeReaderFactory {
 
   public static class DecimalTreeReaderV2 extends TreeReader {
 
+    private final int precision;
     private final int scale;
+    private final long decimal64AbsMax;
 
     protected IntegerReader decimal64Reader;
 
@@ -1306,6 +1308,8 @@ public class TreeReaderFactory {
         TypeDescription readerType, Context context)
         throws IOException {
       super(columnId, present, context);
+      precision = readerType.getPrecision();
+      decimal64AbsMax = HiveDecimalWritable.getDecimal64AbsMax(precision);
       scale = readerType.getScale();
       if (longStream != null && encoding != null) {
         checkEncoding(encoding);
@@ -1365,28 +1369,25 @@ public class TreeReaderFactory {
 
       if (result.noNulls) {
         for (int r=0; r < batchSize; ++r) {
-          decimalWritableVector[r].deserialize64(
-              decimalLongVector[r], scale);
-          /*
-          int fake = 0;
-          if (!decimalWritableVector[r].isValid()) {
-            fake++;
-            System.out.println(fake);
+          final long decimal64Long = decimalLongVector[r];
+          if (Math.abs(decimal64Long) > decimal64AbsMax) {
+            result.noNulls = false;
+            result.isNull[r] = true;
+          } else {
+            decimalWritableVector[r].deserialize64(
+                decimal64Long, scale);
           }
-          */
         }
       } else if (!result.isRepeating || !result.isNull[0]) {
         for (int r=0; r < batchSize; ++r) {
           if (!result.isNull[r]) {
-            decimalWritableVector[r].deserialize64(
-                decimalLongVector[r], scale);
-            /*
-            int fake = 0;
-            if (!decimalWritableVector[r].isValid()) {
-              fake++;
-              System.out.println(fake);
+            final long decimal64Long = decimalLongVector[r];
+            if (Math.abs(decimal64Long) > decimal64AbsMax) {
+              result.isNull[r] = true;
+            } else {
+              decimalWritableVector[r].deserialize64(
+                  decimal64Long, scale);
             }
-            */
           }
         }
       }

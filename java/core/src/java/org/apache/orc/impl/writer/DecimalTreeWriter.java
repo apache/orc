@@ -18,125 +18,15 @@
 
 package org.apache.orc.impl.writer;
 
-import org.apache.hadoop.hive.common.type.HiveDecimal;
-import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
-import org.apache.hadoop.hive.ql.util.JavaDataModel;
-import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
-import org.apache.orc.OrcProto;
-import org.apache.orc.TypeDescription;
-import org.apache.orc.impl.IntegerWriter;
-import org.apache.orc.impl.PositionRecorder;
-import org.apache.orc.impl.PositionedOutputStream;
-
 import java.io.IOException;
 
-public class DecimalTreeWriter extends TreeWriterBase {
-  private final PositionedOutputStream valueStream;
+import org.apache.orc.TypeDescription;
 
-  // These scratch buffers allow us to serialize decimals much faster.
-  private final long[] scratchLongs;
-  private final byte[] scratchBuffer;
+// UNDONE: Keep DecimalTreeWriter class name until LLAP is converted to use both ~V1 and ~V2.
+public class DecimalTreeWriter extends DecimalTreeWriterV1 {
 
-  private final IntegerWriter scaleStream;
-  private final boolean isDirectV2;
-
-  public DecimalTreeWriter(int columnId,
-                           TypeDescription schema,
-                           WriterContext writer,
-                           boolean nullable) throws IOException {
+  public DecimalTreeWriter(int columnId, TypeDescription schema,
+      WriterContext writer, boolean nullable) throws IOException {
     super(columnId, schema, writer, nullable);
-    this.isDirectV2 = isNewWriteFormat(writer);
-    valueStream = writer.createStream(id, OrcProto.Stream.Kind.DATA);
-    scratchLongs = new long[HiveDecimal.SCRATCH_LONGS_LEN];
-    scratchBuffer = new byte[HiveDecimal.SCRATCH_BUFFER_LEN_TO_BYTES];
-    this.scaleStream = createIntegerWriter(writer.createStream(id,
-        OrcProto.Stream.Kind.SECONDARY), true, isDirectV2, writer);
-    if (rowIndexPosition != null) {
-      recordPosition(rowIndexPosition);
-    }
-  }
-
-  @Override
-  OrcProto.ColumnEncoding.Builder getEncoding() {
-    OrcProto.ColumnEncoding.Builder result = super.getEncoding();
-    if (isDirectV2) {
-      result.setKind(OrcProto.ColumnEncoding.Kind.DIRECT_V2);
-    } else {
-      result.setKind(OrcProto.ColumnEncoding.Kind.DIRECT);
-    }
-    return result;
-  }
-
-  @Override
-  public void writeBatch(ColumnVector vector, int offset,
-                         int length) throws IOException {
-    super.writeBatch(vector, offset, length);
-    DecimalColumnVector vec = (DecimalColumnVector) vector;
-    if (vector.isRepeating) {
-      if (vector.noNulls || !vector.isNull[0]) {
-        HiveDecimalWritable value = vec.vector[0];
-        indexStatistics.updateDecimal(value);
-        if (createBloomFilter) {
-          String str = value.toString(scratchBuffer);
-          if (bloomFilter != null) {
-            bloomFilter.addString(str);
-          }
-          bloomFilterUtf8.addString(str);
-        }
-        for (int i = 0; i < length; ++i) {
-          value.serializationUtilsWrite(valueStream,
-              scratchLongs);
-          scaleStream.write(value.scale());
-        }
-      }
-    } else {
-      for (int i = 0; i < length; ++i) {
-        if (vec.noNulls || !vec.isNull[i + offset]) {
-          HiveDecimalWritable value = vec.vector[i + offset];
-          value.serializationUtilsWrite(valueStream, scratchLongs);
-          scaleStream.write(value.scale());
-          indexStatistics.updateDecimal(value);
-          if (createBloomFilter) {
-            String str = value.toString(scratchBuffer);
-            if (bloomFilter != null) {
-              bloomFilter.addString(str);
-            }
-            bloomFilterUtf8.addString(str);
-          }
-        }
-      }
-    }
-  }
-
-  @Override
-  public void writeStripe(OrcProto.StripeFooter.Builder builder,
-                          OrcProto.StripeStatistics.Builder stats,
-                          int requiredIndexEntries) throws IOException {
-    super.writeStripe(builder, stats, requiredIndexEntries);
-    valueStream.flush();
-    scaleStream.flush();
-    if (rowIndexPosition != null) {
-      recordPosition(rowIndexPosition);
-    }
-  }
-
-  @Override
-  void recordPosition(PositionRecorder recorder) throws IOException {
-    super.recordPosition(recorder);
-    valueStream.getPosition(recorder);
-    scaleStream.getPosition(recorder);
-  }
-
-  @Override
-  public long estimateMemory() {
-    return super.estimateMemory() + valueStream.getBufferSize() +
-        scaleStream.estimateMemory();
-  }
-
-  @Override
-  public long getRawDataSize() {
-    return fileStatistics.getNumberOfValues() *
-        JavaDataModel.get().lengthOfDecimal();
   }
 }
