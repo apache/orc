@@ -163,7 +163,7 @@ namespace orc {
     /**
      * Reset positions for index
      */
-    virtual void resetIndex();
+    virtual void reset();
 
   protected:
     /**
