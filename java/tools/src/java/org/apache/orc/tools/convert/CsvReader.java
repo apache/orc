@@ -166,7 +166,7 @@ public class CsvReader implements RecordReader {
         column.isNull[row] = true;
       } else {
         ((LongColumnVector) column).vector[row] =
-            Integer.parseInt(values[offset]);
+            Long.parseLong(values[offset]);
       }
     }
   }
