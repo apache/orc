@@ -102,7 +102,7 @@ void printMetadata(std::ostream & out, const char*filename, bool verbose) {
   out << "  \"rows\": " << reader->getNumberOfRows() << ",\n";
   uint64_t stripeCount = reader->getNumberOfStripes();
   out << "  \"stripe count\": " << stripeCount << ",\n";
-  out << "  \"format\": \"" << reader->getFormatVersion()
+  out << "  \"format\": \"" << reader->getFormatVersion().toString()
       << "\", \"writer version\": \""
             << orc::writerVersionToString(reader->getWriterVersion())
             << "\",\n";

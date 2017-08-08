@@ -23,6 +23,10 @@
 
 namespace orc {
 
+  PositionRecorder::~PositionRecorder() {
+    // PASS
+  }
+
   BufferedOutputStream::BufferedOutputStream(
                                     MemoryPool& pool,
                                     OutputStream * outStream,

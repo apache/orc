@@ -43,6 +43,7 @@ add_executable (orc-test
   TestTimestampStatistics.cc
   TestTimezone.cc
   TestType.cc
+  TestWriter.cc
 )
 
 target_link_libraries (orc-test

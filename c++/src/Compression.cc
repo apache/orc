@@ -890,19 +890,20 @@ DIAGNOSTIC_POP
                       OutputStream * outStream,
                       CompressionStrategy strategy,
                       uint64_t bufferCapacity,
-                      uint64_t blockSize,
+                      uint64_t compressionBlockSize,
                       MemoryPool& pool) {
     switch (static_cast<int64_t>(kind)) {
     case CompressionKind_NONE: {
       return std::unique_ptr<BufferedOutputStream>
-        (new BufferedOutputStream(pool, outStream, bufferCapacity, blockSize));
+        (new BufferedOutputStream(
+                pool, outStream, bufferCapacity, compressionBlockSize));
     }
     case CompressionKind_ZLIB: {
       int level = (strategy == CompressionStrategy_SPEED) ?
               Z_BEST_SPEED + 1 : Z_DEFAULT_COMPRESSION;
       return std::unique_ptr<BufferedOutputStream>
         (new ZlibCompressionStream(
-                outStream, level, bufferCapacity, blockSize, pool));
+                outStream, level, bufferCapacity, compressionBlockSize, pool));
     }
     case CompressionKind_SNAPPY:
     case CompressionKind_LZO:

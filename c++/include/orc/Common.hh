@@ -27,6 +27,41 @@
 #include <string>
 
 namespace orc {
+
+  class FileVersion {
+  private:
+    uint32_t majorVersion, minorVersion;
+  public:
+    FileVersion(uint32_t major, uint32_t minor) :
+                            majorVersion(major), minorVersion(minor) {
+    }
+
+    /**
+     * Get major version
+     */
+    uint32_t getMajor() const {
+        return this->majorVersion;
+    }
+
+    /**
+     * Get minor version
+     */
+    uint32_t getMinor() const {
+        return this->minorVersion;
+    }
+
+    bool operator == (const FileVersion & right) const {
+      return this->majorVersion == right.getMajor() &&
+              this->minorVersion == right.getMinor();
+    }
+
+    bool operator != (const FileVersion & right) const {
+      return !(*this == right);
+    }
+
+    std::string toString() const;
+  };
+
   enum CompressionKind {
     CompressionKind_NONE = 0,
     CompressionKind_ZLIB = 1,

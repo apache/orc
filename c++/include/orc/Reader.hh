@@ -244,10 +244,10 @@ namespace orc {
 
     /**
      * Get the format version of the file. Currently known values are:
-     * "0.11" and "0.12"
-     * @return the version string
+     * 0.11 and 0.12
+     * @return the FileVersion object
      */
-    virtual std::string getFormatVersion() const = 0;
+    virtual FileVersion getFormatVersion() const = 0;
 
     /**
      * Get the number of rows in the file.

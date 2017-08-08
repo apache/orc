@@ -178,7 +178,7 @@ namespace orc {
     std::shared_ptr<FileContents> contents;
 
     // inputs
-    const ReaderOptions& options;
+    const ReaderOptions options;
     const uint64_t fileLength;
     const uint64_t postscriptLength;
 
@@ -214,7 +214,7 @@ namespace orc {
 
     CompressionKind getCompression() const override;
 
-    std::string getFormatVersion() const override;
+    FileVersion getFormatVersion() const override;
 
     WriterVersion getWriterVersion() const override;
 
