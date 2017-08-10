@@ -63,6 +63,13 @@ message TimestampStatistics {
   optional sint64 maximumUtc = 4;
 }
 
+message Decimal64Statistics  {
+  optional sint32 scale = 1;
+  optional sint64 minimum = 2;
+  optional sint64 maximum = 3;
+  optional string sum = 4;
+}
+
 message BinaryStatistics {
   // sum will store the total binary blob length in a stripe
   optional sint64 sum = 1;
@@ -79,6 +86,7 @@ message ColumnStatistics {
   optional BinaryStatistics binaryStatistics = 8;
   optional TimestampStatistics timestampStatistics = 9;
   optional bool hasNull = 10;
+  optional Decimal64Statistics decimal64Statistics = 11;
 }
 
 message RowIndexEntry {
@@ -125,6 +133,7 @@ message ColumnEncoding {
     DICTIONARY = 1;
     DIRECT_V2 = 2;
     DICTIONARY_V2 = 3;
+    DECIMAL_64 = 4;
   }
   optional Kind kind = 1;
   optional uint32 dictionarySize = 2;
@@ -225,6 +234,7 @@ message PostScript {
   // the version of the file format
   //   [0, 11] = Hive 0.11
   //   [0, 12] = Hive 0.12
+  //   [0, 13] = Hive 0.13
   repeated uint32 version = 4 [packed = true];
   optional uint64 metadataLength = 5;
 
@@ -245,6 +255,7 @@ message PostScript {
   //   4 = HIVE-13083 fixed (decimals write present stream correctly)
   //   5 = ORC-101 fixed (bloom filters use utf8 consistently)
   //   6 = ORC-135 fixed (timestamp statistics use utc)
+  //   7 = ORC-209 added Decimal64 serialization
   //
   // Version of the ORC C++ writer:
   //   6 = original
@@ -252,7 +263,7 @@ message PostScript {
   // Version of the Presto writer:
   //   6 = original
   //
-  optional uint32 writerVersion = 6;
+  optional uint32 writerVersion = 7;
 
   // Leave this last in the record
   optional string magic = 8000;

@@ -595,7 +595,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       this.precision = fileType.getPrecision();
       this.scale = fileType.getScale();
       this.readerType = readerType;
-      decimalTreeReader = new DecimalTreeReader(columnId, context);
+      decimalTreeReader = new DecimalTreeReader(columnId, fileType, context);
       setConvertTreeReader(decimalTreeReader);
     }
 
@@ -848,7 +848,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       super(columnId);
       this.precision = fileType.getPrecision();
       this.scale = fileType.getScale();
-      decimalTreeReader = new DecimalTreeReader(columnId, context);
+      decimalTreeReader = new DecimalTreeReader(columnId, fileType, context);
       setConvertTreeReader(decimalTreeReader);
     }
 
@@ -1054,7 +1054,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       super(columnId);
       this.precision = fileType.getPrecision();
       this.scale = fileType.getScale();
-      decimalTreeReader = new DecimalTreeReader(columnId, context);
+      decimalTreeReader = new DecimalTreeReader(columnId, fileType, context);
       setConvertTreeReader(decimalTreeReader);
     }
 
@@ -1387,7 +1387,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       super(columnId);
       filePrecision = fileType.getPrecision();
       fileScale = fileType.getScale();
-      decimalTreeReader = new DecimalTreeReader(columnId, context);
+      decimalTreeReader = new DecimalTreeReader(columnId, fileType, context);
       setConvertTreeReader(decimalTreeReader);
     }
 
@@ -1565,7 +1565,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       this.precision = fileType.getPrecision();
       this.scale = fileType.getScale();
       this.readerType = readerType;
-      decimalTreeReader = new DecimalTreeReader(columnId, context);
+      decimalTreeReader = new DecimalTreeReader(columnId, fileType, context);
       setConvertTreeReader(decimalTreeReader);
       scratchBuffer = new byte[HiveDecimal.SCRATCH_BUFFER_LEN_TO_BYTES];
     }
@@ -1904,7 +1904,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       super(columnId);
       this.precision = fileType.getPrecision();
       this.scale = fileType.getScale();
-      decimalTreeReader = new DecimalTreeReader(columnId, context);
+      decimalTreeReader = new DecimalTreeReader(columnId, fileType, context);
       setConvertTreeReader(decimalTreeReader);
     }
 

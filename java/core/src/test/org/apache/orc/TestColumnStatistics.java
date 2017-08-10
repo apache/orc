@@ -55,8 +55,8 @@ public class TestColumnStatistics {
   public void testLongMerge() throws Exception {
     TypeDescription schema = TypeDescription.createInt();
 
-    ColumnStatisticsImpl stats1 = ColumnStatisticsImpl.create(schema);
-    ColumnStatisticsImpl stats2 = ColumnStatisticsImpl.create(schema);
+    ColumnStatisticsImpl stats1 = ColumnStatisticsImpl.create(schema, null);
+    ColumnStatisticsImpl stats2 = ColumnStatisticsImpl.create(schema, null);
     stats1.updateInteger(10, 2);
     stats2.updateInteger(1, 1);
     stats2.updateInteger(1000, 1);
@@ -76,8 +76,8 @@ public class TestColumnStatistics {
   public void testDoubleMerge() throws Exception {
     TypeDescription schema = TypeDescription.createDouble();
 
-    ColumnStatisticsImpl stats1 = ColumnStatisticsImpl.create(schema);
-    ColumnStatisticsImpl stats2 = ColumnStatisticsImpl.create(schema);
+    ColumnStatisticsImpl stats1 = ColumnStatisticsImpl.create(schema, null);
+    ColumnStatisticsImpl stats2 = ColumnStatisticsImpl.create(schema, null);
     stats1.updateDouble(10.0);
     stats1.updateDouble(100.0);
     stats2.updateDouble(1.0);
@@ -99,8 +99,8 @@ public class TestColumnStatistics {
   public void testStringMerge() throws Exception {
     TypeDescription schema = TypeDescription.createString();
 
-    ColumnStatisticsImpl stats1 = ColumnStatisticsImpl.create(schema);
-    ColumnStatisticsImpl stats2 = ColumnStatisticsImpl.create(schema);
+    ColumnStatisticsImpl stats1 = ColumnStatisticsImpl.create(schema, null);
+    ColumnStatisticsImpl stats2 = ColumnStatisticsImpl.create(schema, null);
     stats1.updateString(new Text("bob"));
     stats1.updateString(new Text("david"));
     stats1.updateString(new Text("charles"));
@@ -125,8 +125,8 @@ public class TestColumnStatistics {
   public void testDateMerge() throws Exception {
     TypeDescription schema = TypeDescription.createDate();
 
-    ColumnStatisticsImpl stats1 = ColumnStatisticsImpl.create(schema);
-    ColumnStatisticsImpl stats2 = ColumnStatisticsImpl.create(schema);
+    ColumnStatisticsImpl stats1 = ColumnStatisticsImpl.create(schema, null);
+    ColumnStatisticsImpl stats2 = ColumnStatisticsImpl.create(schema, null);
     stats1.updateDate(new DateWritable(1000));
     stats1.updateDate(new DateWritable(100));
     stats2.updateDate(new DateWritable(10));
@@ -149,8 +149,8 @@ public class TestColumnStatistics {
 
     TimeZone original = TimeZone.getDefault();
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-    ColumnStatisticsImpl stats1 = ColumnStatisticsImpl.create(schema);
-    ColumnStatisticsImpl stats2 = ColumnStatisticsImpl.create(schema);
+    ColumnStatisticsImpl stats1 = ColumnStatisticsImpl.create(schema, null);
+    ColumnStatisticsImpl stats2 = ColumnStatisticsImpl.create(schema, null);
     stats1.updateTimestamp(new Timestamp(10));
     stats1.updateTimestamp(new Timestamp(100));
     stats2.updateTimestamp(new Timestamp(1));
@@ -185,8 +185,8 @@ public class TestColumnStatistics {
 
     TimeZone original = TimeZone.getDefault();
     TimeZone.setDefault(TimeZone.getTimeZone("America/Los_Angeles"));
-    ColumnStatisticsImpl stats1 = ColumnStatisticsImpl.create(schema);
-    ColumnStatisticsImpl stats2 = ColumnStatisticsImpl.create(schema);
+    ColumnStatisticsImpl stats1 = ColumnStatisticsImpl.create(schema, null);
+    ColumnStatisticsImpl stats2 = ColumnStatisticsImpl.create(schema, null);
     stats1.updateTimestamp(parseTime("2000-04-02 03:30:00"));
     stats1.updateTimestamp(parseTime("2000-04-02 01:30:00"));
     stats1.increment(2);
@@ -222,8 +222,8 @@ public class TestColumnStatistics {
     TypeDescription schema = TypeDescription.createDecimal()
         .withPrecision(38).withScale(16);
 
-    ColumnStatisticsImpl stats1 = ColumnStatisticsImpl.create(schema);
-    ColumnStatisticsImpl stats2 = ColumnStatisticsImpl.create(schema);
+    ColumnStatisticsImpl stats1 = ColumnStatisticsImpl.create(schema, null);
+    ColumnStatisticsImpl stats2 = ColumnStatisticsImpl.create(schema, null);
     stats1.updateDecimal(new HiveDecimalWritable(10));
     stats1.updateDecimal(new HiveDecimalWritable(100));
     stats2.updateDecimal(new HiveDecimalWritable(1));

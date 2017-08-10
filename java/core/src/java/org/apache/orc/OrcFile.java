@@ -62,6 +62,7 @@ public class OrcFile {
   public enum Version {
     V_0_11("0.11", 0, 11),
     V_0_12("0.12", 0, 12),
+    V_0_13("0.13", 0, 13),
     FUTURE("future", Integer.MAX_VALUE, Integer.MAX_VALUE);
 
     public static final Version CURRENT = V_0_12;

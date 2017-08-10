@@ -142,7 +142,10 @@ public enum OrcConf {
       "orc.force.positional.evolution", false,
       "Require schema evolution to match the top level columns using position\n" +
       "rather than column names. This provides backwards compatibility with\n" +
-      "Hive 2.1.")
+      "Hive 2.1."),
+  DECIMAL_USE_SCALED_VALUE("orc.decimal.use.scaled.value",
+      "orc.decimal.use.scaled.value", true,
+      "Should the writer write the scaled decimal values?"),
   ;
 
   private final String attribute;

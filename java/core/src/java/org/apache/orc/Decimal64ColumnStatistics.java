@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,18 +15,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.orc;
 
-package org.apache.orc.impl.writer;
+import org.apache.hadoop.hive.common.type.HiveDecimal;
+import org.apache.orc.ColumnStatistics;
 
-import java.io.IOException;
+/**
+ * Statistics for decimal64 columns.
+ */
+public interface Decimal64ColumnStatistics extends ColumnStatistics {
 
-import org.apache.orc.TypeDescription;
+  /**
+   * Get the minimum value for the column.
+   * @return the minimum value
+   */
+  HiveDecimal getMinimum();
 
-// UNDONE: Keep DecimalTreeWriter class name until LLAP is converted to use both ~V1 and ~V2.
-public class DecimalTreeWriter extends DecimalTreeWriterV1 {
+  /**
+   * Get the maximum value for the column.
+   * @return the maximum value
+   */
+  HiveDecimal getMaximum();
 
-  public DecimalTreeWriter(int columnId, TypeDescription schema,
-      WriterContext writer, boolean nullable) throws IOException {
-    super(columnId, schema, writer, nullable);
-  }
+  /**
+   * Get the sum of the values of the column.
+   * @return the sum
+   */
+  HiveDecimal getSum();
+
 }
