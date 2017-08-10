@@ -153,4 +153,23 @@ public class TestCsvReader {
     }
     assertEquals(false, reader.nextBatch(batch));
   }
+
+  @Test
+  public void testLargeNumbers() throws Exception {
+    StringReader input = new StringReader(
+            "2147483646,-2147483647,9223372036854775806,-9223372036854775807\n"
+    );
+    TypeDescription schema = TypeDescription.fromString(
+            "struct<a:int,b:int,d:bigint,e:bigint>");
+    RecordReader reader = new CsvReader(input, null, 1, schema, ',', '\'',
+            '\\', 0, "null");
+    VectorizedRowBatch batch = schema.createRowBatch();
+    assertEquals(true, reader.nextBatch(batch));
+    assertEquals(1, batch.size);
+    assertEquals(2147483646, ((LongColumnVector) batch.cols[0]).vector[0]);
+    assertEquals(-2147483647, ((LongColumnVector) batch.cols[1]).vector[0]);
+    assertEquals(9223372036854775806L, ((LongColumnVector) batch.cols[2]).vector[0]);
+    assertEquals(-9223372036854775807L, ((LongColumnVector) batch.cols[3]).vector[0]);
+    assertEquals(false, reader.nextBatch(batch));
+  }
 }
