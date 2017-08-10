@@ -26,9 +26,9 @@
 
 namespace orc {
 
-  const size_t MINIMUM_REPEAT = 3;
-  const size_t MAXIMUM_REPEAT = 127 + MINIMUM_REPEAT;
-  const size_t MAX_LITERAL_SIZE = 128;
+  const int MINIMUM_REPEAT = 3;
+  const int MAXIMUM_REPEAT = 127 + MINIMUM_REPEAT;
+  const int MAX_LITERAL_SIZE = 128;
 
   ByteRleEncoder::~ByteRleEncoder() {
     // PASS
