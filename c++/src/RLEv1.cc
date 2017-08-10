@@ -25,10 +25,10 @@
 
 namespace orc {
 
-const uint64_t MINIMUM_REPEAT = 3;
-const uint64_t MAXIMUM_REPEAT = 127 + MINIMUM_REPEAT;
+const int MINIMUM_REPEAT = 3;
+const int MAXIMUM_REPEAT = 127 + MINIMUM_REPEAT;
 
-const uint64_t BASE_128_MASK = 0x7f;
+const int BASE_128_MASK = 0x7f;
 
 const int MAX_DELTA = 127;
 const int MIN_DELTA = -128;
