@@ -62,6 +62,20 @@ public class OrcFile {
   public enum Version {
     V_0_11("0.11", 0, 11),
     V_0_12("0.12", 0, 12),
+
+    /**
+     * Do not use this format except for testing. It will not be compatible
+     * with other versions of the software. While we iterate on the ORC 2.0
+     * format, we will make incompatible format changes under this version
+     * without providing any forward or backward compatibility.
+     *
+     * When 2.0 is released, this version identifier will be completely removed.
+     */
+    UNSTABLE_PRE_2_0("UNSTABLE-PRE-2.0", 1, 9999),
+
+    /**
+     * The generic identifier for all unknown versions.
+     */
     FUTURE("future", Integer.MAX_VALUE, Integer.MAX_VALUE);
 
     public static final Version CURRENT = V_0_12;
