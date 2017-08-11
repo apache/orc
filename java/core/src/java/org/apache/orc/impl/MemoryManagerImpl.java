@@ -49,7 +49,7 @@ public class MemoryManagerImpl implements MemoryManager {
    * How often should we check the memory sizes? Measured in rows added
    * to all of the writers.
    */
-  private static final int ROWS_BETWEEN_CHECKS = 5000;
+  final long ROWS_BETWEEN_CHECKS;
   private final long totalMemoryPool;
   private final Map<Path, WriterInfo> writerList =
       new HashMap<Path, WriterInfo>();
@@ -81,6 +81,7 @@ public class MemoryManagerImpl implements MemoryManager {
    */
   public MemoryManagerImpl(Configuration conf) {
     double maxLoad = OrcConf.MEMORY_POOL.getDouble(conf);
+    ROWS_BETWEEN_CHECKS = OrcConf.ROWS_BETWEEN_CHECKS.getLong(conf);
     totalMemoryPool = Math.round(ManagementFactory.getMemoryMXBean().
         getHeapMemoryUsage().getMax() * maxLoad);
     ownerLock.lock();

@@ -142,7 +142,10 @@ public enum OrcConf {
       "orc.force.positional.evolution", false,
       "Require schema evolution to match the top level columns using position\n" +
       "rather than column names. This provides backwards compatibility with\n" +
-      "Hive 2.1.")
+      "Hive 2.1."),
+  ROWS_BETWEEN_CHECKS("orc.rows.between.memory.checks", "orc.rows.between.memory.checks", 5000,
+    "How often should MemoryManager check the memory sizes? Measured in rows\n" +
+      "added to all of the writers.  This is primarily for testing.")
   ;
 
   private final String attribute;
