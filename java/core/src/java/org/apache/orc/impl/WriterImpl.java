@@ -149,6 +149,13 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       this.bufferSize = getEstimatedBufferSize(adjustedStripeSize,
           numColumns, opts.getBufferSize());
     }
+    if (version == OrcFile.Version.FUTURE) {
+      throw new IllegalArgumentException("Can not write in a unknown version.");
+    } else if (version == OrcFile.Version.UNSTABLE_PRE_2_0) {
+      LOG.warn("ORC files written in " + version.getName() + " will not be" +
+          " readable by other versions of the software. It is only for" +
+          " developer testing.");
+    }
     if (version == OrcFile.Version.V_0_11) {
       /* do not write bloom filters for ORC v11 */
       this.bloomFilterColumns = new boolean[schema.getMaximumId() + 1];
