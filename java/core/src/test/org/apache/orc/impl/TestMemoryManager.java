@@ -20,6 +20,7 @@ package org.apache.orc.impl;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.orc.MemoryManager;
+import org.apache.orc.OrcConf;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.junit.Test;
@@ -78,12 +79,18 @@ public class TestMemoryManager {
     Configuration conf = new Configuration();
     conf.set("hive.exec.orc.memory.pool", "0.9");
     MemoryManagerImpl mgr = new MemoryManagerImpl(conf);
+    assertEquals("Wrong default ",
+      OrcConf.ROWS_BETWEEN_CHECKS.getLong(conf), mgr.ROWS_BETWEEN_CHECKS);
     long mem =
         ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getMax();
     System.err.print("Memory = " + mem);
     long pool = mgr.getTotalMemoryPool();
     assertTrue("Pool too small: " + pool, mem * 0.899 < pool);
     assertTrue("Pool too big: " + pool, pool < mem * 0.901);
+
+    conf.setLong(OrcConf.ROWS_BETWEEN_CHECKS.getAttribute(), 1234);
+    mgr = new MemoryManagerImpl(conf);
+    assertEquals("Wrong default ", 1234, mgr.ROWS_BETWEEN_CHECKS);
   }
 
   private static class DoubleMatcher extends BaseMatcher<Double> {
