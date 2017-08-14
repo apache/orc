@@ -88,9 +88,9 @@ public class TestMemoryManager {
     assertTrue("Pool too small: " + pool, mem * 0.899 < pool);
     assertTrue("Pool too big: " + pool, pool < mem * 0.901);
 
-    conf.setLong(OrcConf.ROWS_BETWEEN_CHECKS.getAttribute(), 12345);
+    conf.setLong(OrcConf.ROWS_BETWEEN_CHECKS.getAttribute(), 1234);
     mgr = new MemoryManagerImpl(conf);
-    assertEquals("Wrong default ", 12345, mgr.ROWS_BETWEEN_CHECKS);
+    assertEquals("Wrong default ", 1234, mgr.ROWS_BETWEEN_CHECKS);
   }
 
   private static class DoubleMatcher extends BaseMatcher<Double> {

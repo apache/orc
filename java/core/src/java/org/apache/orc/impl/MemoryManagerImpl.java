@@ -82,6 +82,11 @@ public class MemoryManagerImpl implements MemoryManager {
   public MemoryManagerImpl(Configuration conf) {
     double maxLoad = OrcConf.MEMORY_POOL.getDouble(conf);
     ROWS_BETWEEN_CHECKS = OrcConf.ROWS_BETWEEN_CHECKS.getLong(conf);
+    LOG.info(OrcConf.ROWS_BETWEEN_CHECKS.getAttribute() + "=" + ROWS_BETWEEN_CHECKS);
+    if(ROWS_BETWEEN_CHECKS < 1 || ROWS_BETWEEN_CHECKS > 10000) {
+      throw new IllegalArgumentException(OrcConf.ROWS_BETWEEN_CHECKS.getAttribute() + "="
+        + ROWS_BETWEEN_CHECKS + " is outside valid range [1,10000].");
+    }
     totalMemoryPool = Math.round(ManagementFactory.getMemoryMXBean().
         getHeapMemoryUsage().getMax() * maxLoad);
     ownerLock.lock();

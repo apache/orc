@@ -145,7 +145,8 @@ public enum OrcConf {
       "Hive 2.1."),
   ROWS_BETWEEN_CHECKS("orc.rows.between.memory.checks", "orc.rows.between.memory.checks", 5000,
     "How often should MemoryManager check the memory sizes? Measured in rows\n" +
-      "added to all of the writers.  This is primarily for testing.")
+      "added to all of the writers.  Valid range is [1,10000] and is primarily meant for" +
+      "n\testing.  Setting this too low may negatively affect performance.")
   ;
 
   private final String attribute;
