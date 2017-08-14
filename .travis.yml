@@ -7,10 +7,12 @@ compiler:
 jdk:
   - openjdk7
 before_script:
+env:
+  - MAVEN_OPTS=-Xmx2g MAVEN_SKIP_RC=true TZ_CACHE= STATIC_TZ=
+  - MAVEN_OPTS=-Xmx2g MAVEN_SKIP_RC=true TZ_CACHE=-DEMBEDDED_TZ_DB=ON STATIC_TZ=
+  - MAVEN_OPTS=-Xmx2g MAVEN_SKIP_RC=true TZ_CACHE=-DEMBEDDED_TZ_DB=ON STATIC_TZ=-DSTATIC_TZ=UTC
+script:
   - mkdir build
   - cd build
-  - cmake ..
-env:
-  - MAVEN_OPTS=-Xmx2g MAVEN_SKIP_RC=true
-script:
+  - cmake .. $TZ_CACHE
   - make package test-out

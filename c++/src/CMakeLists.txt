@@ -125,6 +125,79 @@ include_directories (
   ${LZ4_INCLUDE_DIRS}
   )
 
+# To avoid reading the Timezone database from disk, we load the file during the
+# build and inject them as binary into the library. This can increase the size
+# of library but avoids doing system calls at runtime. The behavior can be
+# disabled by using the CMake flag NO_EMBEDDED_TZ_DB
+set(TZ_DEPS "")
+if (EMBEDDED_TZ_DB)
+  message(STATUS "Caching of timezone data enabled.")
+  set(DEFAULT_TIMEZONE_DIR "/usr/share/zoneinfo")
+
+  # Check if zone1970.tab is present, otherwise select zone.tab
+  # Parse zone tab to extract all availble zones
+  execute_process(COMMAND find ${DEFAULT_TIMEZONE_DIR} -type f
+    COMMAND grep -v "posix"
+    COMMAND grep -v "right"
+    COMMAND grep -v "tab"
+    COMMAND grep -v "leap" # ignore leap seconds file
+    RESULT_VARIABLE TZ_LIST_RC
+    OUTPUT_VARIABLE TZ_LIST_OUTPUT
+    ERROR_VARIABLE TZ_ERROR)
+
+  if (TZ_LIST_RC)
+    message(FATAL_ERROR "Could not parse Timezone database.")
+  endif()
+
+  set(FILE2ARRAY "${CMAKE_CURRENT_SOURCE_DIR}/../file2array.sh")
+
+  # Add each target to dependency on Timezone.cc
+  string(REPLACE "\n" ";" TZ_LIST_OUT ${TZ_LIST_OUTPUT})
+  set(TZ_CLOBBERED)
+  set(TZ_CLOBBERED "${TZ_CLOBBERED}#include <map>\n")
+  set(TZ_CLOBBERED "${TZ_CLOBBERED}#include <string>\n")
+  set(TZ_CLOBBERED "${TZ_CLOBBERED}#include <vector>\n")
+  set(TZ_CLOBBERED "${TZ_CLOBBERED}\n")
+
+  # First, generate all header files.
+  foreach(TZ_PATH ${TZ_LIST_OUT})
+    string(REPLACE "${DEFAULT_TIMEZONE_DIR}/" "" OF_NAME ${TZ_PATH})
+    string(REPLACE "/" "_" OF_NAME ${OF_NAME})
+    string(REPLACE "-" "_" OF_NAME ${OF_NAME})
+    string(REPLACE "+" "__" OF_NAME ${OF_NAME})
+
+    add_custom_command(OUTPUT "${OF_NAME}.h"
+      COMMAND ${FILE2ARRAY} -v ${OF_NAME} ${TZ_PATH} >"${OF_NAME}.h"
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    list(APPEND TZ_DEPS "${OF_NAME}.h")
+    set(TZ_CLOBBERED "${TZ_CLOBBERED}#include \"${OF_NAME}.h\"\n")
+  endforeach()
+
+  # Second, generate the initializer list for the map of timezone buffers.
+  set(TZ_CLOBBERED "${TZ_CLOBBERED}extern std::map<std::string, std::vector<unsigned char>> TZ_DATABASE\;\n")
+  set(TZ_CLOBBERED "${TZ_CLOBBERED}std::map<std::string, std::vector<unsigned char>> TZ_DATABASE = {\n")
+  foreach(TZ_PATH ${TZ_LIST_OUT})
+    string(REPLACE "${DEFAULT_TIMEZONE_DIR}/" "" REL_PATH ${TZ_PATH})
+    string(REPLACE "/" "_" OF_NAME ${REL_PATH})
+    string(REPLACE "-" "_" OF_NAME ${OF_NAME})
+    string(REPLACE "+" "__" OF_NAME ${OF_NAME})
+    set(TZ_CLOBBERED "${TZ_CLOBBERED}{ \"${REL_PATH}\", ${OF_NAME} }, \n")
+  endforeach()
+  set(TZ_CLOBBERED "${TZ_CLOBBERED}}\;\n")
+
+  # To make it easier to include the TZ files, generated a clobbered file.
+  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/tz_db_clobbered.h ${TZ_CLOBBERED})
+
+  add_definitions(-DUSE_TZ_DB)
+
+  if (STATIC_TZ)
+    add_definitions(-DTZ_DB_STATIC_TZ=${STATIC_TZ})
+  endif()
+  list(APPEND TZ_DEPS "tz_db_clobbered")
+else()
+  message(STATUS "Caching of timezone information disabled.")
+endif()
+
 add_custom_command(OUTPUT orc_proto.pb.h orc_proto.pb.cc
    COMMAND ${PROTOBUF_EXECUTABLE}
         -I ${CMAKE_SOURCE_DIR}/proto
@@ -134,6 +207,7 @@ add_custom_command(OUTPUT orc_proto.pb.h orc_proto.pb.cc
 
 add_library (orc STATIC
   "${CMAKE_CURRENT_BINARY_DIR}/Adaptor.hh"
+  ${TZ_DEPS}
   orc_proto.pb.h
   io/InputStream.cc
   io/OutputStream.cc

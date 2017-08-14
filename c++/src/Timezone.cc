@@ -18,6 +18,16 @@
 
 #include "Timezone.hh"
 
+#ifdef USE_TZ_DB
+DIAGNOSTIC_PUSH
+#ifdef __clang__
+DIAGNOSTIC_IGNORE("-Wglobal-constructors")
+    DIAGNOSTIC_IGNORE("-Wexit-time-destructors")
+#endif
+#include "tz_db_clobbered.h"
+DIAGNOSTIC_POP
+#endif
+
 #include <errno.h>
 #include <iostream>
 #include <fcntl.h>
@@ -649,12 +659,26 @@ namespace orc {
     DIAGNOSTIC_IGNORE("-Wexit-time-destructors")
   #endif
   static std::mutex timezone_mutex;
+
+#ifdef USE_TZ_DB
+  static std::map<std::string, std::shared_ptr<Timezone>> populateCache() {
+    std::map<std::string, std::shared_ptr<Timezone> > cache;
+    for (const auto& kv : TZ_DATABASE)  {
+      cache[kv.first] = std::shared_ptr<Timezone>(new TimezoneImpl(kv.first, kv.second));
+    }
+    return cache;
+  }
+
+  static std::map<std::string, std::shared_ptr<Timezone> > timezoneCache = populateCache();
+#else
   static std::map<std::string, std::shared_ptr<Timezone> > timezoneCache;
+#endif
   DIAGNOSTIC_POP
 
   Timezone::~Timezone() {
     // PASS
   }
+
 
   TimezoneImpl::TimezoneImpl(const std::string& _filename,
                              const std::vector<unsigned char> buffer
@@ -735,7 +759,12 @@ namespace orc {
    * Get the local timezone.
    */
   const Timezone& getLocalTimezone() {
+#ifdef TZ_DB_STATIC_TZ
+#define TZ_STR(x) #x
+    return getTimezoneByName(TZ_STR(TZ_DB_STATIC_TZ));
+#else
     return getTimezoneByFilename(LOCAL_TIMEZONE);
+#endif
   }
 
   /**
@@ -743,10 +772,16 @@ namespace orc {
    * Results are cached.
    */
   const Timezone& getTimezoneByName(const std::string& zone) {
+#ifdef USE_TZ_DB
+    {
+      return *timezoneCache[zone].get();
+    }
+#else
     std::string filename(getTimezoneDirectory());
     filename += "/";
     filename += zone;
     return getTimezoneByFilename(filename);
+#endif
   }
 
   /**
