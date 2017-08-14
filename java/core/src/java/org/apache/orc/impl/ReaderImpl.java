@@ -512,7 +512,8 @@ public class ReaderImpl implements Reader {
       // Anything lesser than MAGIC header cannot be valid (valid ORC file is actually around 45 bytes, this is
       // more conservative)
       if (size <= OrcFile.MAGIC.length()) {
-        throw new FileFormatException("Not a valid ORC file");
+        throw new FileFormatException("Not a valid ORC file " + path
+          + " (maxFileLength= " + maxFileLength + ")");
       }
       fileTailBuilder.setFileLength(size);
 
