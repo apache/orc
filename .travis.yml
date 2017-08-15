@@ -1,16 +1,25 @@
 language: cpp
 sudo: false
 dist: trusty
-compiler:
-  - gcc
-  - clang
+
+matrix:
+  fast_finish: true
+  include:
+  - compiler: gcc
+    os: linux
+  - compiler: clang
+    os: linux
+  - compiler: clang
+    os: osx
+    osx_image: xcode6.4
+
 jdk:
   - openjdk7
 before_script:
-  - mkdir build
-  - cd build
-  - cmake ..
 env:
   - MAVEN_OPTS=-Xmx2g MAVEN_SKIP_RC=true
 script:
+  - mkdir build
+  - cd build
+  - cmake ..
   - make package test-out
