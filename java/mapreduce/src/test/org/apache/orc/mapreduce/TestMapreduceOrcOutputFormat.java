@@ -153,6 +153,48 @@ public class TestMapreduceOrcOutputFormat {
     assertEquals(false, reader.nextKeyValue());
   }
 
+  @Test
+  public void testColumnSelectionBlank() throws Exception {
+    String typeStr = "struct<i:int,j:int,k:int>";
+    OrcConf.MAPRED_OUTPUT_SCHEMA.setString(conf, typeStr);
+    conf.set("mapreduce.output.fileoutputformat.outputdir", workDir.toString());
+    conf.setInt(OrcConf.ROW_INDEX_STRIDE.getAttribute(), 1000);
+    conf.setBoolean(OrcOutputFormat.SKIP_TEMP_DIRECTORY, true);
+    TaskAttemptID id = new TaskAttemptID("jt", 0, TaskType.MAP, 0, 1);
+    TaskAttemptContext attemptContext = new TaskAttemptContextImpl(conf, id);
+    OutputFormat<NullWritable, OrcStruct> outputFormat =
+        new OrcOutputFormat<OrcStruct>();
+    RecordWriter<NullWritable, OrcStruct> writer =
+        outputFormat.getRecordWriter(attemptContext);
+
+    // write 3000 rows with the integer and the binary string
+    TypeDescription type = TypeDescription.fromString(typeStr);
+    OrcStruct row = (OrcStruct) OrcStruct.createValue(type);
+    NullWritable nada = NullWritable.get();
+    for (int r = 0; r < 3000; ++r) {
+      row.setFieldValue(0, new IntWritable(r));
+      row.setFieldValue(1, new IntWritable(r * 2));
+      row.setFieldValue(2, new IntWritable(r * 3));
+      writer.write(nada, row);
+    }
+    writer.close(attemptContext);
+
+    conf.set(OrcConf.INCLUDE_COLUMNS.getAttribute(), "");
+    FileSplit split = new FileSplit(new Path(workDir, "part-m-00000.orc"),
+        0, 1000000, new String[0]);
+    RecordReader<NullWritable, OrcStruct> reader =
+        new OrcInputFormat<OrcStruct>().createRecordReader(split,
+            attemptContext);
+    // the sarg should cause it to skip over the rows except 1000 to 2000
+    for (int r = 0; r < 3000; ++r) {
+      assertEquals(true, reader.nextKeyValue());
+      row = reader.getCurrentValue();
+      assertEquals(null, row.getFieldValue(0));
+      assertEquals(null, row.getFieldValue(1));
+      assertEquals(null, row.getFieldValue(2));
+    }
+    assertEquals(false, reader.nextKeyValue());
+  }
 
   /**
    * Make sure that the writer ignores the OrcKey
