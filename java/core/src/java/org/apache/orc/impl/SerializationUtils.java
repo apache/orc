@@ -127,7 +127,7 @@ public final class SerializationUtils {
     writeLongLE(output, Double.doubleToLongBits(value));
   }
 
-  private void writeLongLE(OutputStream output, long value) throws IOException {
+  void writeLongLE(OutputStream output, long value) throws IOException {
     writeBuffer[0] = (byte) ((value >> 0)  & 0xff);
     writeBuffer[1] = (byte) ((value >> 8)  & 0xff);
     writeBuffer[2] = (byte) ((value >> 16) & 0xff);

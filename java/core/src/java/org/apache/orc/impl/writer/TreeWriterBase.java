@@ -25,6 +25,9 @@ import org.apache.orc.OrcProto;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.BitFieldWriter;
 import org.apache.orc.impl.ColumnStatisticsImpl;
+import org.apache.orc.impl.DoubleWriter;
+import org.apache.orc.impl.DoubleWriterV1;
+import org.apache.orc.impl.DoubleWriterV2;
 import org.apache.orc.impl.IntegerWriter;
 import org.apache.orc.impl.OutStream;
 import org.apache.orc.impl.PositionRecorder;
@@ -132,6 +135,15 @@ public abstract class TreeWriterBase implements TreeWriter {
 
   protected OrcProto.RowIndexEntry.Builder getRowIndexEntry() {
     return rowIndexEntry;
+  }
+
+  DoubleWriter createDoubleWriter(PositionedOutputStream output,
+                                  boolean isDoubleV2) throws IOException {
+    if (isDoubleV2) {
+      return new DoubleWriterV2(output);
+    } else {
+      return new DoubleWriterV1(output);
+    }
   }
 
   IntegerWriter createIntegerWriter(PositionedOutputStream output,

@@ -963,13 +963,23 @@ public class TestVectorOrcFile {
   }
 
   @Test
-  public void test1() throws Exception {
+  public void test1_0_12() throws Exception {
+    test1(OrcFile.Version.V_0_12);
+  }
+
+  @Test
+  public void test1_2_0() throws Exception {
+    test1(OrcFile.Version.UNSTABLE_PRE_2_0);
+  }
+
+  private void test1(OrcFile.Version version) throws Exception {
     TypeDescription schema = createBigRowSchema();
     Writer writer = OrcFile.createWriter(testFilePath,
         OrcFile.writerOptions(conf)
             .setSchema(schema)
             .stripeSize(100000)
-            .bufferSize(10000));
+            .bufferSize(10000)
+            .version(version));
     assertEmptyStats(writer.getStatistics());
     VectorizedRowBatch batch = schema.createRowBatch();
     batch.size = 2;
@@ -1271,14 +1281,24 @@ public class TestVectorOrcFile {
   }
 
   @Test
-  public void testEmptyFile() throws Exception {
+  public void testEmptyFile_2_0() throws Exception {
+    testEmptyFile(OrcFile.Version.UNSTABLE_PRE_2_0);
+  }
+
+  @Test
+  public void testEmptyFile_0_12() throws Exception {
+    testEmptyFile(OrcFile.Version.V_0_12);
+  }
+
+  private void testEmptyFile(OrcFile.Version version) throws Exception {
     TypeDescription schema = createBigRowSchema();
     Writer writer = OrcFile.createWriter(testFilePath,
                                          OrcFile.writerOptions(conf)
                                          .setSchema(schema)
                                          .stripeSize(1000)
                                          .compress(CompressionKind.NONE)
-                                         .bufferSize(100));
+                                         .bufferSize(100)
+                                         .version(version));
     writer.close();
     Reader reader = OrcFile.createReader(testFilePath,
         OrcFile.readerOptions(conf).filesystem(fs));
@@ -1293,14 +1313,24 @@ public class TestVectorOrcFile {
   }
 
   @Test
-  public void metaData() throws Exception {
+  public void metaData_0_12() throws Exception {
+    metaData(OrcFile.Version.V_0_12);
+  }
+
+  @Test
+  public void metaData_2_0() throws Exception {
+    metaData(OrcFile.Version.UNSTABLE_PRE_2_0);
+  }
+
+  private void metaData(OrcFile.Version version) throws Exception {
     TypeDescription schema = createBigRowSchema();
     Writer writer = OrcFile.createWriter(testFilePath,
         OrcFile.writerOptions(conf)
             .setSchema(schema)
             .stripeSize(1000)
             .compress(CompressionKind.NONE)
-            .bufferSize(100));
+            .bufferSize(100)
+            .version(version));
     writer.addUserMetadata("my.meta", byteBuf(1, 2, 3, 4, 5, 6, 7, -1, -2, 127,
                                               -128));
     writer.addUserMetadata("clobber", byteBuf(1, 2, 3));
@@ -1970,14 +2000,24 @@ public class TestVectorOrcFile {
   }
 
   @Test
-  public void testSeek() throws Exception {
+  public void testSeek_0_12() throws Exception {
+    testSeek(OrcFile.Version.V_0_12);
+  }
+
+  @Test
+  public void testSeek_2_0() throws Exception {
+    testSeek(OrcFile.Version.UNSTABLE_PRE_2_0);
+  }
+
+  private void testSeek(OrcFile.Version version) throws Exception {
     TypeDescription schema = createBigRowSchema();
     Writer writer = OrcFile.createWriter(testFilePath,
                                          OrcFile.writerOptions(conf)
                                          .setSchema(schema)
                                          .stripeSize(200000)
                                          .bufferSize(65536)
-                                         .rowIndexStride(1000));
+                                         .rowIndexStride(1000)
+                                         .version(version));
     VectorizedRowBatch batch = schema.createRowBatch();
     Random rand = new Random(42);
     final int COUNT=32768;
