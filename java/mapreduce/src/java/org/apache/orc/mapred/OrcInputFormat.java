@@ -22,6 +22,7 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentImpl;
@@ -30,7 +31,6 @@ import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.RecordReader;
 
-  
 import java.io.IOException;
 import java.util.List;
 
@@ -62,8 +62,13 @@ public class OrcInputFormat<V extends WritableComparable>
         schema.getCategory() != TypeDescription.Category.STRUCT) {
       return null;
     }
+
     boolean[] result = new boolean[schema.getMaximumId() + 1];
     result[0] = true;
+    if (StringUtils.isBlank(columnsStr)) {
+      return result;
+    }
+
     List<TypeDescription> types = schema.getChildren();
     for(String idString: columnsStr.split(",")) {
       TypeDescription type = types.get(Integer.parseInt(idString));
