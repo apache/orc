@@ -312,10 +312,12 @@ public class OrcFile {
     private BloomFilterVersion bloomFilterVersion;
     private PhysicalWriter physicalWriter;
     private WriterVersion writerVersion = CURRENT_WRITER;
+    private boolean overwrite;
 
     protected WriterOptions(Properties tableProperties, Configuration conf) {
       configuration = conf;
       memoryManagerValue = getStaticMemoryManager(conf);
+      overwrite = OrcConf.OVERWRITE_OUTPUT_FILE.getBoolean(tableProperties, conf);
       stripeSizeValue = OrcConf.STRIPE_SIZE.getLong(tableProperties, conf);
       blockSizeValue = OrcConf.BLOCK_SIZE.getLong(tableProperties, conf);
       rowIndexStrideValue =
@@ -369,6 +371,15 @@ public class OrcFile {
      */
     public WriterOptions fileSystem(FileSystem value) {
       fileSystemValue = value;
+      return this;
+    }
+
+    /**
+     * If the output file already exists, should it be overwritten?
+     * If it is not provided, write operation will fail if the file already exists.
+     */
+    public WriterOptions overwrite(boolean value) {
+      overwrite = value;
       return this;
     }
 
@@ -557,6 +568,10 @@ public class OrcFile {
 
     public String getBloomFilterColumns() {
       return bloomFilterColumns;
+    }
+
+    public boolean getOverwrite() {
+      return overwrite;
     }
 
     public FileSystem getFileSystem() {

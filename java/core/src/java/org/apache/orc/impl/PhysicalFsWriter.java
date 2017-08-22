@@ -88,7 +88,7 @@ public class PhysicalFsWriter implements PhysicalWriter {
     LOG.info("ORC writer created for path: {} with stripeSize: {} blockSize: {}" +
         " compression: {} bufferSize: {}", path, defaultStripeSize, blockSize,
         compress, bufferSize);
-    rawWriter = fs.create(path, false, HDFS_BUFFER_SIZE,
+    rawWriter = fs.create(path, opts.getOverwrite(), HDFS_BUFFER_SIZE,
         fs.getDefaultReplication(path), blockSize);
     codec = OrcCodecPool.getCodec(compress);
     writer = new OutStream("metadata", bufferSize, codec,
