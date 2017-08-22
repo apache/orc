@@ -31,26 +31,30 @@ public class TestIsal {
 
   @Test
   public void testNoOverflow() throws Exception {
-    ByteBuffer in = ByteBuffer.allocate(10);
-    ByteBuffer out = ByteBuffer.allocate(10);
-    in.put(new byte[]{1,2,3,4,5,6,7,10});
-    in.flip();
-    CompressionCodec codec = new IsalCodec();
-    assertEquals(false, codec.compress(in, out, null));
+    if(System.getProperty("os.name").contains("Linux")){
+      ByteBuffer in = ByteBuffer.allocate(10);
+      ByteBuffer out = ByteBuffer.allocate(10);
+      in.put(new byte[]{1, 2, 3, 4, 5, 6, 7, 10});
+      in.flip();
+      CompressionCodec codec = new IsalCodec();
+      assertEquals(false, codec.compress(in, out, null));
+    }
   }
 
   @Test
   public void testCorrupt() throws Exception {
-    ByteBuffer buf = ByteBuffer.allocate(1000);
-    buf.put(new byte[]{127,-128,0,99,98,-1});
-    buf.flip();
-    CompressionCodec codec = new IsalCodec();
-    ByteBuffer out = ByteBuffer.allocate(1000);
-    try {
-      codec.decompress(buf, out);
-      fail();
-    } catch (IOException ioe) {
-      // EXPECTED
+    if (System.getProperty("os.name").contains("Linux")) {
+      ByteBuffer buf = ByteBuffer.allocate(1000);
+      buf.put(new byte[]{127, -128, 0, 99, 98, -1});
+      buf.flip();
+      CompressionCodec codec = new IsalCodec();
+      ByteBuffer out = ByteBuffer.allocate(1000);
+      try {
+        codec.decompress(buf, out);
+        fail();
+      } catch (IOException ioe) {
+        // EXPECTED
+      }
     }
   }
 }
