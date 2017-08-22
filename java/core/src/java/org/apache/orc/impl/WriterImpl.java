@@ -18,40 +18,25 @@
 
 package org.apache.orc.impl;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
-import java.util.TreeMap;
-
+import com.google.protobuf.ByteString;
 import io.airlift.compress.lz4.Lz4Compressor;
 import io.airlift.compress.lz4.Lz4Decompressor;
 import io.airlift.compress.lzo.LzoCompressor;
 import io.airlift.compress.lzo.LzoDecompressor;
-import org.apache.orc.ColumnStatistics;
-import org.apache.orc.CompressionCodec;
-import org.apache.orc.CompressionKind;
-import org.apache.orc.MemoryManager;
-import org.apache.orc.OrcFile;
-import org.apache.orc.OrcProto;
-import org.apache.orc.OrcUtils;
-import org.apache.orc.PhysicalWriter;
-import org.apache.orc.StripeInformation;
-import org.apache.orc.TypeDescription;
-import org.apache.orc.Writer;
-import org.apache.orc.impl.writer.TreeWriter;
-import org.apache.orc.impl.writer.WriterContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.orc.*;
+import org.apache.orc.MemoryManager;
+import org.apache.orc.impl.writer.TreeWriter;
+import org.apache.orc.impl.writer.WriterContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.protobuf.ByteString;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.*;
 
 /**
  * An ORC file writer. The file is divided into stripes, which is the natural
@@ -243,6 +228,8 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       case LZ4:
         return new AircompressorCodec(new Lz4Compressor(),
             new Lz4Decompressor());
+      case ISAL:
+        return new IsalCodec();
       default:
         throw new IllegalArgumentException("Unknown compression codec: " +
             kind);
@@ -452,6 +439,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       case SNAPPY: return OrcProto.CompressionKind.SNAPPY;
       case LZO: return OrcProto.CompressionKind.LZO;
       case LZ4: return OrcProto.CompressionKind.LZ4;
+      case ISAL: return OrcProto.CompressionKind.ISAL;
       default:
         throw new IllegalArgumentException("Unknown compression " + kind);
     }

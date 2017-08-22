@@ -74,7 +74,7 @@ public class ColumnProjectionBenchmark {
   @Param({ "github", "sales", "taxi"})
   public String dataset;
 
-  @Param({"none", "snappy", "zlib"})
+  @Param({"none", "snappy", "zlib", "isal"})
   public String compression;
 
   @AuxCounters

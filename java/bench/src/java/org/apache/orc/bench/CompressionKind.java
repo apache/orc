@@ -33,7 +33,8 @@ import java.util.zip.GZIPOutputStream;
 public enum CompressionKind {
   NONE(".none"),
   ZLIB(".gz"),
-  SNAPPY(".snappy");
+  SNAPPY(".snappy"),
+  ISAL(".isal");
 
   CompressionKind(String extendsion) {
     this.extension = extendsion;
@@ -53,6 +54,8 @@ public enum CompressionKind {
         return new GZIPOutputStream(out);
       case SNAPPY:
         return new SnappyCodec().createOutputStream(out);
+      case ISAL:
+        return new GZIPOutputStream(out);
       default:
         throw new IllegalArgumentException("Unhandled kind " + this);
     }
@@ -66,6 +69,8 @@ public enum CompressionKind {
         return new GZIPInputStream(in);
       case SNAPPY:
         return new SnappyCodec().createInputStream(in);
+      case ISAL:
+        return new GZIPInputStream(in);
       default:
         throw new IllegalArgumentException("Unhandled kind " + this);
     }
