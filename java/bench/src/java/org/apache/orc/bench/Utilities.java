@@ -18,7 +18,6 @@
 
 package org.apache.orc.bench;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.orc.TypeDescription;
@@ -57,6 +56,8 @@ public class Utilities {
         return org.apache.orc.CompressionKind.ZLIB;
       case SNAPPY:
         return org.apache.orc.CompressionKind.SNAPPY;
+      case ISAL:
+        return org.apache.orc.CompressionKind.ISAL;
       default:
         throw new IllegalArgumentException("Unknown compression " + compression);
     }
