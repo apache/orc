@@ -27,14 +27,11 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import com.google.protobuf.CodedOutputStream;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.orc.CompressionCodec;
-import org.apache.orc.CompressionKind;
-import org.apache.orc.OrcFile;
-import org.apache.orc.OrcProto;
-import org.apache.orc.PhysicalWriter;
+import org.apache.orc.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,7 +85,7 @@ public class PhysicalFsWriter implements PhysicalWriter {
     LOG.info("ORC writer created for path: {} with stripeSize: {} blockSize: {}" +
         " compression: {} bufferSize: {}", path, defaultStripeSize, blockSize,
         compress, bufferSize);
-    rawWriter = fs.create(path, false, HDFS_BUFFER_SIZE,
+    rawWriter = fs.create(path, opts.getOverwrite(), HDFS_BUFFER_SIZE,
         fs.getDefaultReplication(path), blockSize);
     codec = OrcCodecPool.getCodec(compress);
     writer = new OutStream("metadata", bufferSize, codec,

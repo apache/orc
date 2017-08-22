@@ -146,7 +146,9 @@ public enum OrcConf {
   ROWS_BETWEEN_CHECKS("orc.rows.between.memory.checks", "orc.rows.between.memory.checks", 5000,
     "How often should MemoryManager check the memory sizes? Measured in rows\n" +
       "added to all of the writers.  Valid range is [1,10000] and is primarily meant for" +
-      "n\testing.  Setting this too low may negatively affect performance.")
+      "n\testing.  Setting this too low may negatively affect performance."),
+  OVERWRITE_OUTPUT_FILE("orc.overwrite.output.file", "orc.overwrite.output.file", false,
+    "A boolean flag to enable overwriting of the output file if it already exists.\n")
   ;
 
   private final String attribute;
