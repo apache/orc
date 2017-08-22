@@ -31,7 +31,6 @@ import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.RecordReader;
 
-
 import java.io.IOException;
 import java.util.List;
 
