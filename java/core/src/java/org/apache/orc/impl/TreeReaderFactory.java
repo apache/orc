@@ -142,6 +142,18 @@ public class TreeReaderFactory {
       }
     }
 
+    protected static DoubleReader createDoubleReader(OrcProto.ColumnEncoding.Kind kind,
+        InStream in) throws IOException {
+      switch (kind) {
+        case DOUBLE_FPC:
+          return new DoubleReaderV2(in);
+        case DIRECT:
+          return new DoubleReaderV1(in);
+        default:
+          throw new IllegalArgumentException("Unknown encoding " + kind);
+      }
+    }
+
     void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
@@ -688,8 +700,7 @@ public class TreeReaderFactory {
   }
 
   public static class DoubleTreeReader extends TreeReader {
-    protected InStream stream;
-    private final SerializationUtils utils;
+    private DoubleReader reader;
 
     DoubleTreeReader(int columnId) throws IOException {
       this(columnId, null, null);
@@ -697,8 +708,15 @@ public class TreeReaderFactory {
 
     protected DoubleTreeReader(int columnId, InStream present, InStream data) throws IOException {
       super(columnId, present, null);
-      this.utils = new SerializationUtils();
-      this.stream = data;
+    }
+
+    @Override
+    void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
+      if ((encoding.getKind() != OrcProto.ColumnEncoding.Kind.DIRECT) &&
+          (encoding.getKind() != OrcProto.ColumnEncoding.Kind.DOUBLE_FPC)) {
+        throw new IOException("Unknown encoding " + encoding + " in column " +
+            columnId);
+      }
     }
 
     @Override
@@ -709,7 +727,9 @@ public class TreeReaderFactory {
       StreamName name =
           new StreamName(columnId,
               OrcProto.Stream.Kind.DATA);
-      stream = streams.get(name);
+      reader = createDoubleReader(
+          stripeFooter.getColumnsList().get(columnId).getKind(),
+          streams.get(name));
     }
 
     @Override
@@ -720,7 +740,7 @@ public class TreeReaderFactory {
     @Override
     public void seek(PositionProvider index) throws IOException {
       super.seek(index);
-      stream.seek(index);
+      reader.seek(index);
     }
 
     @Override
@@ -732,53 +752,12 @@ public class TreeReaderFactory {
       // Read present/isNull stream
       super.nextVector(result, isNull, batchSize);
 
-      final boolean hasNulls = !result.noNulls;
-      boolean allNulls = hasNulls;
-
-      if (hasNulls) {
-        // conditions to ensure bounds checks skips
-        for (int i = 0; i < batchSize && batchSize <= result.isNull.length; i++) {
-          allNulls = allNulls & result.isNull[i];
-        }
-        if (allNulls) {
-          result.vector[0] = Double.NaN;
-          result.isRepeating = true;
-        } else {
-          // some nulls
-          result.isRepeating = false;
-          // conditions to ensure bounds checks skips
-          for (int i = 0; batchSize <= result.isNull.length
-              && batchSize <= result.vector.length && i < batchSize; i++) {
-            if (!result.isNull[i]) {
-              result.vector[i] = utils.readDouble(stream);
-            } else {
-              // If the value is not present then set NaN
-              result.vector[i] = Double.NaN;
-            }
-          }
-        }
-      } else {
-        // no nulls
-        boolean repeating = (batchSize > 1);
-        final double d1 = utils.readDouble(stream);
-        result.vector[0] = d1;
-        // conditions to ensure bounds checks skips
-        for (int i = 1; i < batchSize && batchSize <= result.vector.length; i++) {
-          final double d2 = utils.readDouble(stream);
-          repeating = repeating && (d1 == d2);
-          result.vector[i] = d2;
-        }
-        result.isRepeating = repeating;
-      }
+      reader.nextVector(result, result.vector, batchSize);
     }
 
     @Override
     void skipRows(long items) throws IOException {
-      items = countNonNulls(items);
-      long len = items * 8;
-      while (len > 0) {
-        len -= stream.skip(len);
-      }
+      reader.skip(countNonNulls(items));
     }
   }
 
