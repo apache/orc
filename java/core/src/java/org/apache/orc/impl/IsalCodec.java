@@ -27,11 +27,6 @@ import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 
 public class IsalCodec implements CompressionCodec, DirectDecompressionCodec {
-  private static final HadoopShims SHIMS = HadoopShims.Factory.get();
-  // Note: shim path does not care about levels and strategies (only used for decompression).
-  private HadoopShims.DirectDecompressor decompressShim = null;
-  private Boolean direct = null;
-
   // HACK - Use this as a global lock in the JNI layer
   private static Class clazz = ZlibCodec.class;
   private long stream;
@@ -44,13 +39,12 @@ public class IsalCodec implements CompressionCodec, DirectDecompressionCodec {
   private static File nativeLibFile = null;
 
   static {
-    System.out.println("before load isal codec ");
-    //System.load("/usr/lib/libIsalCodec.so");
+    System.out.println("before load Native Isal Codec ");
     if (!isLoaded) {
       try {
         nativeLibFile = findNativeLibrary();
         if (nativeLibFile != null) {
-          // Load extracted or specified snappyjava native library.
+          // Load extracted or specified isal native library.
           System.load(nativeLibFile.getAbsolutePath());
         } else {
           throw new IOException("can not load Native Isal Codec");
@@ -59,7 +53,7 @@ public class IsalCodec implements CompressionCodec, DirectDecompressionCodec {
         e.printStackTrace();
       }
 
-      System.out.println("after load isal codec ");
+      System.out.println("after load Native Isal Codec ");
       initIDs();
       System.out.println("after initIDs ");
       isLoaded = true;
@@ -86,32 +80,24 @@ public class IsalCodec implements CompressionCodec, DirectDecompressionCodec {
     int outSize = 0;
     int size = 0;
     int offset = out.arrayOffset() + out.position();
-    //int remain = out.remaining();
-    //System.out.printf("begin deflate: in  offset %d length %d. out, offset %d length %d\n",
-    //        in.arrayOffset() + in.position(), in.remaining(),
-    //       out.arrayOffset() + out.position(), out.remaining());
     finished = false;
     while(true != finished)
     {
       size = deflate(stream, 0, out.array(), offset, out.remaining());
       if(size < 0)
       {
-        end(stream);
+        end(stream, true);
         return false;
       }
       out.position(size + out.position());
       outSize += size;
       offset += size;
-      //System.out.printf("finish deflate: size %d. in  offset %d length %d. out, offset %d length %d\n",
-      //        size, in.arrayOffset() + in.position(), in.remaining(),
-      //        out.arrayOffset() + out.position(), out.remaining());
       // if we run out of space in the out buffer, use the overflow
       if((true != finished && overflow == null) || outSize >= in.remaining()) {
-        System.out.println("!!!!!!!!!!!!!!!!!!overflow !!!!!!!!!!!!!!!!. finished flag " + finished + " outSize " + outSize + " in remain " + in.remaining());
         if(overflow == null) {
-          System.out.println("!!!!!!!!!!overflow is null");
+          System.out.println("!!!!!!!!!!overflow is null, but deflate not finished");
         }
-        end(stream);
+        end(stream, true);
         return false;
       }
 
@@ -120,11 +106,8 @@ public class IsalCodec implements CompressionCodec, DirectDecompressionCodec {
         overflow = null;
         offset = out.arrayOffset() + out.position();
       }
-        //remain = 262144;
     }
-    end(stream);
-
-    //System.out.printf("after deflate: length %d, outSize %d\n", length, outSize);
+    end(stream, true);
     return true;
   }
 
@@ -132,13 +115,10 @@ public class IsalCodec implements CompressionCodec, DirectDecompressionCodec {
   public void decompress(ByteBuffer in, ByteBuffer out) throws IOException {
 
     int outSize = 0;
-   // int length = in.remaining();
 
     if(in.isDirect() && out.isDirect()) {
       System.out.println("isal codec enter direct decompress");
       throw new IllegalArgumentException("No directDecompress method in ISA-L codec");
-      //directDecompress(in, out);
-      //return;
     }
     stream = inflateinit(level, strategy, in.array(), in.arrayOffset() + in.position(), in.remaining());
 
@@ -159,36 +139,22 @@ public class IsalCodec implements CompressionCodec, DirectDecompressionCodec {
       throw new IOException("Bad compression data", dfe);
     }
     out.flip();
-    end(stream);
+    end(stream, false);
     in.position(in.limit());
   }
 
   @Override
   public boolean isAvailable() {
-    if (direct == null) {
-      // see nowrap option in new Inflater(boolean) which disables zlib headers
-      try {
-        ensureShim();
-        direct = (decompressShim != null);
-      } catch (UnsatisfiedLinkError ule) {
-        direct = Boolean.valueOf(false);
-      }
-    }
-    return direct.booleanValue();
+    throw new IllegalArgumentException("No directDecompress method in ISA-L codec");
   }
 
   private void ensureShim() {
-    if (decompressShim == null) {
-      decompressShim = SHIMS.getDirectDecompressor(
-          HadoopShims.DirectCompressionType.ZLIB_NOHEADER);
-    }
+    throw new IllegalArgumentException("No directDecompress method in ISA-L codec");
   }
 
   @Override
   public void directDecompress(ByteBuffer in, ByteBuffer out) throws IOException {
-    ensureShim();
-    decompressShim.decompress(in, out);
-    out.flip(); // flip for read
+    throw new IllegalArgumentException("No directDecompress method in ISA-L codec");
   }
 
   @Override
@@ -233,16 +199,10 @@ public class IsalCodec implements CompressionCodec, DirectDecompressionCodec {
   public void reset() {
     level = Deflater.DEFAULT_COMPRESSION;
     strategy = Deflater.DEFAULT_STRATEGY;
-    if (decompressShim != null) {
-      decompressShim.reset();
-    }
   }
 
   @Override
   public void close() {
-    if (decompressShim != null) {
-      decompressShim.end();
-    }
   }
 
   private static boolean contentsEquals(InputStream in1, InputStream in2)
@@ -281,7 +241,7 @@ public class IsalCodec implements CompressionCodec, DirectDecompressionCodec {
 
     // Attach UUID to the native library file to ensure multiple class loaders can read the libsnappy-java multiple times.
     String uuid = UUID.randomUUID().toString();
-    String extractedLibFileName = String.format("snappy-%s-%s", uuid, libraryFileName);
+    String extractedLibFileName = String.format("isal-%s-%s", uuid, libraryFileName);
     File extractedLibFile = new File(targetFolder, extractedLibFileName);
 
     try {
@@ -391,5 +351,5 @@ public class IsalCodec implements CompressionCodec, DirectDecompressionCodec {
   private native static long inflateinit(int level, int strategy, byte[] b, int off, int len);
   private native int deflate(long strm, int flush, byte[] in, int off, int len);
   private native int inflate(long strm, int flush, byte[] in, int off, int len);
-  private native static void end(long strm);
+  private native static void end(long strm, boolean deflateflag);
 }

@@ -4,7 +4,6 @@
 #include <dlfcn.h>
 #include <jni.h>
 #include <assert.h>
-/* Header for class org_apache_hadoop_hive_ql_io_orc_IzlibCodec */
 
 #ifndef ORG_APACHE_ORC_ISAL_CODEC
 #define ORG_APACHE_ORC_ISAL_CODEC
@@ -75,7 +74,7 @@ JNIEXPORT jint JNICALL Java_org_apache_orc_impl_IsalCodec_inflate
  * Signature: (J)V
  */
 JNIEXPORT void JNICALL Java_org_apache_orc_impl_IsalCodec_end
-  (JNIEnv *, jclass, jlong);
+  (JNIEnv *, jclass, jlong, jboolean);
 
 #ifdef __cplusplus
 }
