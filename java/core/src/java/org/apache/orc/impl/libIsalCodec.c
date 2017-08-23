@@ -27,7 +27,7 @@ static jfieldID ZlibCompressor_clazz;
 static jfieldID ZlibCompressor_stream;
 static jfieldID ZlibCompressor_finished;
 
-#define ISAL_CODEC_VER   "0.9.1"
+#define ISAL_CODEC_VER   "0.9.2"
 
 JNIEXPORT void JNICALL Java_org_apache_orc_impl_IsalCodec_initIDs(JNIEnv *env, jclass class) {
 	printf("%s: enter isal codec. ver %s\n", __FUNCTION__, ISAL_CODEC_VER);
