@@ -721,8 +721,12 @@ namespace orc {
     const char* notNull = dblBatch.hasNulls ?
                           dblBatch.notNull.data() + offset : nullptr;
 
+    DoubleColumnStatisticsImpl* doubleStats =
+      dynamic_cast<DoubleColumnStatisticsImpl*>(colIndexStatistics.get());
+
     size_t bytes = isFloat ? 4 : 8;
     char* data = buffer.data();
+    bool hasNull = false;
 
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!notNull || notNull[i]) {
@@ -742,14 +746,7 @@ namespace orc {
           }
         }
         dataStream->write(data, bytes);
-      }
-    }
 
-    DoubleColumnStatisticsImpl* doubleStats =
-        dynamic_cast<DoubleColumnStatisticsImpl*>(colIndexStatistics.get());
-    bool hasNull = false;
-    for (uint64_t i = 0; i < numValues; ++i) {
-      if (!notNull || notNull[i]) {
         doubleStats->increase(1);
         doubleStats->update(doubleData[i]);
       } else if (!hasNull) {
@@ -847,20 +844,13 @@ namespace orc {
 
     lengthEncoder->add(length, numValues, notNull);
 
-    for (uint64_t i = 0; i < numValues; ++i) {
-      if (!notNull || notNull[i]) {
-        dataStream->write(data[i], static_cast<size_t>(length[i]));
-      }
-    }
-
     StringColumnStatisticsImpl* strStats =
-        dynamic_cast<StringColumnStatisticsImpl*>(colIndexStatistics.get());
-
+      dynamic_cast<StringColumnStatisticsImpl*>(colIndexStatistics.get());
     bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!notNull || notNull[i]) {
-        strStats->update(data[i],
-                         static_cast<size_t>(length[i]));
+        dataStream->write(data[i], static_cast<size_t>(length[i]));
+        strStats->update(data[i], static_cast<size_t>(length[i]));
         strStats->increase(1);
       } else if (!hasNull) {
         hasNull = true;
@@ -1112,6 +1102,10 @@ namespace orc {
     }
   }
 
+  // Because the number of nanoseconds often has a large number of trailing zeros,
+  // the number has trailing decimal zero digits removed and the last three bits
+  // are used to record how many zeros were removed. Thus 1000 nanoseconds would
+  // be serialized as 0x0b and 100000 would be serialized as 0x0d.
   static int64_t formatNano(int64_t nanos) {
     if (nanos == 0) {
       return 0;
@@ -1143,24 +1137,22 @@ namespace orc {
 
     TimestampColumnStatisticsImpl* tsStats =
         dynamic_cast<TimestampColumnStatisticsImpl*>(colIndexStatistics.get());
+    bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (notNull == nullptr || notNull[i]) {
         // TimestampVectorBatch already stores data in UTC
         int64_t millsUTC = secs[i] * 1000 + nanos[i] / 1000000;
         tsStats->increase(1);
         tsStats->update(millsUTC);
-      } else if (!tsStats->hasNull()) {
-        tsStats->setHasNull(true);
-      }
-    }
 
-    for (uint64_t i = 0; i < numValues; ++i) {
-      if (notNull == nullptr || notNull[i]) {
         secs[i] -= timezone.getVariant(secs[i]).gmtOffset;
         secs[i] -= timezone.getEpoch();
         nanos[i] = formatNano(nanos[i]);
+      } else if (!hasNull) {
+        hasNull = true;
       }
     }
+    tsStats->setHasNull(hasNull);
 
     secRleEncoder->add(secs, numValues, notNull);
     nanoRleEncoder->add(nanos, numValues, notNull);
@@ -1318,6 +1310,9 @@ namespace orc {
     const char* notNull = decBatch.hasNulls ?
                           decBatch.notNull.data() + offset : nullptr;
     const int64_t* values = decBatch.values.data() + offset;
+    DecimalColumnStatisticsImpl* decStats =
+      dynamic_cast<DecimalColumnStatisticsImpl*>(colIndexStatistics.get());
+    bool hasNull = false;
 
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!notNull || notNull[i]) {
@@ -1334,22 +1329,16 @@ namespace orc {
           }
         }
         valueStream->write(buffer, static_cast<size_t>(data - buffer));
-      }
-    }
-    std::vector<int64_t> scales(numValues, static_cast<int64_t>(scale));
-    scaleEncoder->add(scales.data(), numValues, notNull);
 
-    DecimalColumnStatisticsImpl* decStats =
-        dynamic_cast<DecimalColumnStatisticsImpl*>(colIndexStatistics.get());
-    bool hasNull = false;
-    for (uint64_t i = 0; i < numValues; ++i) {
-      if (!notNull || notNull[i]) {
         decStats->increase(1);
         decStats->update(Decimal(values[i], static_cast<int32_t>(scale)));
       } else if (!hasNull) {
         hasNull = true;
       }
     }
+    std::vector<int64_t> scales(numValues, static_cast<int64_t>(scale));
+    scaleEncoder->add(scales.data(), numValues, notNull);
+
     decStats->setHasNull(hasNull);
   }
 
@@ -1412,6 +1401,9 @@ namespace orc {
     // PASS
   }
 
+  // Zigzag encoding moves the sign bit to the least significant bit using the
+  // expression (val « 1) ^ (val » 63) and derives its name from the fact that
+  // positive and negative numbers alternate once encoded.
   Int128 zigZagInt128(const Int128& value) {
     bool isNegative = value < 0;
     Int128 val = value.abs();
@@ -1433,7 +1425,12 @@ namespace orc {
     const char* notNull = decBatch.hasNulls ?
                           decBatch.notNull.data() + offset : nullptr;
     const Int128* values = decBatch.values.data() + offset;
+    DecimalColumnStatisticsImpl* decStats =
+      dynamic_cast<DecimalColumnStatisticsImpl*>(colIndexStatistics.get());
+    bool hasNull = false;
 
+    // The current encoding of decimal columns stores the integer representation
+    // of the value as an unbounded length zigzag encoded base 128 varint.
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!notNull || notNull[i]) {
         Int128 val = zigZagInt128(values[i]);
@@ -1448,22 +1445,16 @@ namespace orc {
           }
         }
         valueStream->write(buffer, static_cast<size_t>(data - buffer));
-      }
-    }
-    std::vector<int64_t> scales(numValues, static_cast<int64_t>(scale));
-    scaleEncoder->add(scales.data(), numValues, notNull);
 
-    DecimalColumnStatisticsImpl* decStats =
-        dynamic_cast<DecimalColumnStatisticsImpl*>(colIndexStatistics.get());
-    bool hasNull = false;
-    for (uint64_t i = 0; i < numValues; ++i) {
-      if (!notNull || notNull[i]) {
         decStats->increase(1);
         decStats->update(Decimal(values[i], static_cast<int32_t>(scale)));
       } else if (!hasNull) {
         hasNull = true;
       }
     }
+    std::vector<int64_t> scales(numValues, static_cast<int64_t>(scale));
+    scaleEncoder->add(scales.data(), numValues, notNull);
+
     decStats->setHasNull(hasNull);
   }
 
