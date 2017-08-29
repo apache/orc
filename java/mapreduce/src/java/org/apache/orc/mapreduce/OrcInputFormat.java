@@ -19,9 +19,11 @@
 package org.apache.orc.mapreduce;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
@@ -29,6 +31,8 @@ import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.hadoop.io.NullWritable;
 import org.apache.orc.OrcConf;
@@ -67,5 +71,16 @@ public class OrcInputFormat<V extends WritableComparable>
     return new OrcMapreduceRecordReader<>(file,
         org.apache.orc.mapred.OrcInputFormat.buildOptions(conf,
             file, split.getStart(), split.getLength()));
+  }
+
+  protected List<FileStatus> listStatus(JobContext job) throws IOException {
+    List<FileStatus> complete = super.listStatus(job);
+    List<FileStatus> result = new ArrayList<>(complete.size());
+    for(FileStatus stat: complete) {
+      if (stat.getLen() != 0) {
+        result.add(stat);
+      }
+    }
+    return result;
   }
 }

@@ -49,13 +49,14 @@ public class TestReader {
     fs.delete(testFilePath, false);
   }
 
-  @Test(expected=FileFormatException.class)
+  @Test
   public void testReadZeroLengthFile() throws Exception {
     FSDataOutputStream fout = fs.create(testFilePath);
     fout.close();
     assertEquals(0, fs.getFileStatus(testFilePath).getLen());
-    OrcFile.createReader(testFilePath,
+    Reader reader = OrcFile.createReader(testFilePath,
         OrcFile.readerOptions(conf).filesystem(fs));
+    assertEquals(0, reader.getNumberOfRows());
   }
 
   @Test(expected=FileFormatException.class)
