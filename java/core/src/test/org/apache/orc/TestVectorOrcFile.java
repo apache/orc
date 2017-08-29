@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -3249,5 +3249,29 @@ public class TestVectorOrcFile {
     assertEquals(fromString("bar"), reader.getMetadataValue("b"));
     assertEquals(fromString("baz"), reader.getMetadataValue("c"));
     assertEquals(fromString("bat"), reader.getMetadataValue("d"));
+  }
+
+  Path exampleDir = new Path(System.getProperty("example.dir",
+      "../../examples/"));
+
+  @Test
+  public void testZeroByteOrcFile() throws Exception {
+    Path zeroFile = new Path(exampleDir, "zero.orc");
+    Reader reader = OrcFile.createReader(zeroFile, OrcFile.readerOptions(conf));
+    assertEquals(0, reader.getNumberOfRows());
+    assertEquals("struct<>", reader.getSchema().toString());
+    assertEquals(CompressionKind.NONE, reader.getCompressionKind());
+    assertEquals(0, reader.getRawDataSize());
+    assertEquals(0, reader.getRowIndexStride());
+    assertEquals(0, reader.getCompressionSize());
+    assertEquals(0, reader.getMetadataSize());
+    assertEquals(OrcFile.Version.CURRENT, reader.getFileVersion());
+    assertEquals(0, reader.getStripes().size());
+    assertEquals(0, reader.getStatistics().length);
+    assertEquals(0, reader.getMetadataKeys().size());
+    assertEquals(OrcFile.CURRENT_WRITER, reader.getWriterVersion());
+    VectorizedRowBatch batch =
+        TypeDescription.fromString("struct<>").createRowBatch();
+    assertEquals(false, reader.rows().nextBatch(batch));
   }
 }

@@ -491,6 +491,40 @@ public class ReaderImpl implements Reader {
     return new OrcTail(fileTailBuilder.build(), buffer.slice(), modificationTime);
   }
 
+  /**
+   * Build a virtual OrcTail for empty files.
+   * @return a new OrcTail
+   */
+  OrcTail buildEmptyTail() {
+    OrcProto.PostScript.Builder postscript = OrcProto.PostScript.newBuilder();
+    OrcFile.Version version = OrcFile.Version.CURRENT;
+    postscript.setMagic(OrcFile.MAGIC)
+        .setCompression(OrcProto.CompressionKind.NONE)
+        .setFooterLength(0)
+        .addVersion(version.getMajor())
+        .addVersion(version.getMinor())
+        .setMetadataLength(0)
+        .setWriterVersion(OrcFile.CURRENT_WRITER.getId());
+
+    // Use a struct with no fields
+    OrcProto.Type.Builder struct = OrcProto.Type.newBuilder();
+    struct.setKind(OrcProto.Type.Kind.STRUCT);
+
+    OrcProto.Footer.Builder footer = OrcProto.Footer.newBuilder();
+    footer.setHeaderLength(0)
+          .setContentLength(0)
+          .addTypes(struct)
+          .setNumberOfRows(0)
+          .setRowIndexStride(0);
+
+    OrcProto.FileTail.Builder result = OrcProto.FileTail.newBuilder();
+    result.setFooter(footer);
+    result.setPostscript(postscript);
+    result.setFileLength(0);
+    result.setPostscriptLength(0);
+    return new OrcTail(result.build(), null);
+  }
+
   protected OrcTail extractFileTail(FileSystem fs, Path path,
       long maxFileLength) throws IOException {
     FSDataInputStream file = fs.open(path);
@@ -509,9 +543,13 @@ public class ReaderImpl implements Reader {
         size = maxFileLength;
         modificationTime = -1;
       }
-      // Anything lesser than MAGIC header cannot be valid (valid ORC file is actually around 45 bytes, this is
-      // more conservative)
-      if (size <= OrcFile.MAGIC.length()) {
+      if (size == 0) {
+        // Hive often creates empty files (including ORC) and has an
+        // optimization to create a 0 byte file as an empty ORC file.
+        return buildEmptyTail();
+      } else if (size <= OrcFile.MAGIC.length()) {
+        // Anything smaller than MAGIC header cannot be valid (valid ORC files
+	// are actually around 40 bytes, this is more conservative)
         throw new FileFormatException("Not a valid ORC file " + path
           + " (maxFileLength= " + maxFileLength + ")");
       }

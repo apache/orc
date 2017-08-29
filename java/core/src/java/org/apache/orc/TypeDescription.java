@@ -315,12 +315,17 @@ public class TypeDescription
 
   static void parseStruct(TypeDescription type, StringPosition source) {
     requireChar(source, '<');
-    do {
+    boolean needComma = false;
+    while (!consumeChar(source, '>')) {
+      if (needComma) {
+        requireChar(source, ',');
+      } else {
+        needComma = true;
+      }
       String fieldName = parseName(source);
       requireChar(source, ':');
       type.addField(fieldName, parseType(source));
-    } while (consumeChar(source, ','));
-    requireChar(source, '>');
+    }
   }
 
   static TypeDescription parseType(StringPosition source) {
