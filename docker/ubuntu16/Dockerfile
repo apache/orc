@@ -27,6 +27,8 @@ RUN apt-get install -y \
   gcc \
   g++ \
   git \
+  libsasl2-dev \
+  libssl-dev \
   make \
   maven \
   tzdata

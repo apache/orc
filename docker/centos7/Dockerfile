@@ -24,6 +24,7 @@ RUN yum check-update || true
 RUN yum install -y \
   cmake \
   curl-devel \
+  cyrus-sasl-devel \
   expat-devel \
   gcc \
   gcc-c++ \

@@ -28,6 +28,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <string.h>
 
 namespace orc {
 
@@ -86,8 +87,20 @@ namespace orc {
     close(file);
   }
 
+  std::unique_ptr<InputStream> readFile(const std::string& path) {
+#ifdef BUILD_LIBHDFSPP
+    if(strncmp (path.c_str(), "hdfs://", 7) == 0){
+      return orc::readHdfsFile(std::string(path));
+    } else {
+#endif
+      return orc::readLocalFile(std::string(path));
+#ifdef BUILD_LIBHDFSPP
+      }
+#endif
+  }
+
   std::unique_ptr<InputStream> readLocalFile(const std::string& path) {
-    return std::unique_ptr<InputStream>(new FileInputStream(path));
+      return std::unique_ptr<InputStream>(new FileInputStream(path));
   }
 
   OutputStream::~OutputStream() {
