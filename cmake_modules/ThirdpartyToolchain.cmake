@@ -148,6 +148,7 @@ set (PROTOBUF_PREFIX "${THIRDPARTY_DIR}/protobuf_ep-install")
 set (PROTOBUF_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/protobuf_ep-prefix/src/protobuf_ep")
 set (PROTOBUF_INCLUDE_DIRS "${PROTOBUF_PREFIX}/include")
 set (PROTOBUF_STATIC_LIB "${PROTOBUF_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}protobuf${CMAKE_STATIC_LIBRARY_SUFFIX}")
+set (PROTOC_STATIC_LIB "${PROTOBUF_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}protoc${CMAKE_STATIC_LIBRARY_SUFFIX}")
 set (PROTOBUF_EXECUTABLE "${PROTOBUF_PREFIX}/bin/protoc")
 set (PROTOBUF_SRC_URL "https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protobuf-${PROTOBUF_VERSION}.tar.gz")
 
@@ -168,7 +169,58 @@ add_library (protobuf STATIC IMPORTED)
 set_target_properties (protobuf PROPERTIES IMPORTED_LOCATION ${PROTOBUF_STATIC_LIB})
 add_dependencies (protobuf protobuf_ep)
 set (PROTOBUF_LIBRARIES protobuf)
+
+add_library (protoc STATIC IMPORTED)
+set_target_properties (protoc PROPERTIES IMPORTED_LOCATION ${PROTOC_STATIC_LIB})
+add_dependencies (protoc protobuf_ep)
+
 install(DIRECTORY ${PROTOBUF_PREFIX}/lib DESTINATION .
                                          PATTERN "pkgconfig" EXCLUDE
                                          PATTERN "*.so*" EXCLUDE
                                          PATTERN "*.dylib" EXCLUDE)
+
+# ----------------------------------------------------------------------
+# LIBHDFSPP
+
+if(ORC_CXX_HAS_THREAD_LOCAL)
+  find_package(CyrusSASL)
+  find_package(OpenSSL)
+  find_package(Threads)
+
+  set (LIBHDFSPP_PREFIX "${THIRDPARTY_DIR}/libhdfspp_ep-install")
+  set (LIBHDFSPP_INCLUDE_DIRS "${LIBHDFSPP_PREFIX}/include")
+  set (LIBHDFSPP_STATIC_LIB_NAME hdfspp_static)
+  set (LIBHDFSPP_STATIC_LIB "${LIBHDFSPP_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${LIBHDFSPP_STATIC_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+  set (LIBHDFSPP_SRC_URL "${CMAKE_SOURCE_DIR}/c++/libs/libhdfspp/libhdfspp.tar.gz")
+  set (LIBHDFSPP_CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+                        -DCMAKE_INSTALL_PREFIX=${LIBHDFSPP_PREFIX}
+                        -DPROTOBUF_INCLUDE_DIR=${PROTOBUF_INCLUDE_DIRS}
+                        -DPROTOBUF_LIBRARY=${PROTOBUF_STATIC_LIB}
+                        -DPROTOBUF_PROTOC_LIBRARY=${PROTOC_STATIC_LIB}
+                        -DPROTOBUF_PROTOC_EXECUTABLE=${PROTOBUF_EXECUTABLE}
+                        -DOPENSSL_ROOT_DIR=${OPENSSL_ROOT_DIR}
+                        -DCMAKE_C_FLAGS=${EP_C_FLAGS}
+                        -DBUILD_SHARED_LIBS=OFF
+                        -DHDFSPP_LIBRARY_ONLY=TRUE
+                        -DBUILD_SHARED_HDFSPP=FALSE)
+
+  ExternalProject_Add (libhdfspp_ep
+    DEPENDS protobuf_ep
+    URL ${LIBHDFSPP_SRC_URL}
+    LOG_DOWNLOAD 0
+    LOG_CONFIGURE 0
+    LOG_BUILD 0
+    LOG_INSTALL 0
+    BUILD_BYPRODUCTS "${LIBHDFSPP_STATIC_LIB}"
+    CMAKE_ARGS ${LIBHDFSPP_CMAKE_ARGS})
+
+  include_directories (SYSTEM ${LIBHDFSPP_INCLUDE_DIRS})
+  add_library (libhdfspp STATIC IMPORTED)
+  set_target_properties (libhdfspp PROPERTIES IMPORTED_LOCATION ${LIBHDFSPP_STATIC_LIB})
+  set (LIBHDFSPP_LIBRARIES libhdfspp ${CYRUS_SASL_SHARED_LIB} ${OPENSSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+  add_dependencies (libhdfspp libhdfspp_ep)
+  install(DIRECTORY ${LIBHDFSPP_PREFIX}/lib DESTINATION .
+                                       PATTERN "pkgconfig" EXCLUDE
+                                       PATTERN "*.so*" EXCLUDE
+                                       PATTERN "*.dylib" EXCLUDE)
+endif(ORC_CXX_HAS_THREAD_LOCAL)

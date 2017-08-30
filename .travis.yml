@@ -12,6 +12,9 @@ matrix:
   - compiler: clang
     os: osx
     osx_image: xcode6.4
+  - compiler: clang
+    os: osx
+    osx_image: xcode8.3
 
 jdk:
   - openjdk7
@@ -21,5 +24,5 @@ env:
 script:
   - mkdir build
   - cd build
-  - cmake ..
+  - cmake -DOPENSSL_ROOT_DIR=`brew --prefix openssl` ..
   - make package test-out

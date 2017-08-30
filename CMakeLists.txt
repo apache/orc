@@ -84,6 +84,7 @@ endif ()
 
 enable_testing()
 
+INCLUDE(CheckSourceCompiles)
 INCLUDE(ThirdpartyToolchain)
 
 set (EXAMPLE_DIRECTORY ${CMAKE_SOURCE_DIR}/examples)
