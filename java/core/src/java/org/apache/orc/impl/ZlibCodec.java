@@ -27,7 +27,7 @@ import java.util.zip.Inflater;
 import org.apache.orc.CompressionCodec;
 
 public class ZlibCodec implements CompressionCodec, DirectDecompressionCodec {
-  private static final HadoopShims SHIMS = HadoopShims.Factory.get();
+  private static final HadoopShims SHIMS = HadoopShimsFactory.get();
   // Note: shim path does not care about levels and strategies (only used for decompression).
   private HadoopShims.DirectDecompressor decompressShim = null;
   private Boolean direct = null;

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -105,6 +105,7 @@ public interface HadoopShims {
      */
     public void close() throws IOException;
   }
+
   /**
    * Read data into a Text object in the fastest way possible
    */
@@ -123,22 +124,4 @@ public interface HadoopShims {
    * which are required for TextReaderShim.read() input.
    */
   public TextReaderShim getTextReaderShim(InputStream input) throws IOException;
-
-  class Factory {
-    private static HadoopShims SHIMS = null;
-
-    public static synchronized HadoopShims get() {
-      if (SHIMS == null) {
-        String[] versionParts = VersionInfo.getVersion().split("[.]");
-        int major = Integer.parseInt(versionParts[0]);
-        int minor = Integer.parseInt(versionParts[1]);
-        if (major < 2 || (major == 2 && minor < 3)) {
-          SHIMS = new HadoopShims_2_2();
-        } else {
-          SHIMS = new HadoopShimsCurrent();
-        }
-      }
-      return SHIMS;
-    }
-  }
 }
