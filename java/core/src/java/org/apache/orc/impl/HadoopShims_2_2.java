@@ -19,11 +19,13 @@
 package org.apache.orc.impl;
 
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.io.Text;
 
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Method;
 
 /**
@@ -98,4 +100,11 @@ public class HadoopShims_2_2 implements HadoopShims {
   public TextReaderShim getTextReaderShim(InputStream in) throws IOException {
     return new BasicTextReaderShim(in);
   }
+
+  @Override
+  public BlockFillerShim getBlockFillerShim(FileSystem fs) {
+    // no special cases
+    return new ZeroFillerShim();
+  }
+
 }

@@ -19,6 +19,11 @@
 package org.apache.orc.impl;
 
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Syncable;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
+import org.apache.hadoop.hdfs.client.HdfsDataOutputStream.SyncFlag;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.compress.snappy.SnappyDecompressor;
 import org.apache.hadoop.io.compress.snappy.SnappyDecompressor.SnappyDirectDecompressor;
@@ -27,7 +32,9 @@ import org.apache.hadoop.io.compress.zlib.ZlibDecompressor;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.util.EnumSet;
 
 /**
  * Shims for recent versions of Hadoop
@@ -119,6 +126,46 @@ public class HadoopShimsCurrent implements HadoopShims {
   @Override
   public TextReaderShim getTextReaderShim(InputStream in) throws IOException {
     return new FastTextReaderShim(in);
+  }
+
+  private static class VariableBlockFillerShim implements BlockFillerShim {
+    static final EnumSet<SyncFlag> variableBlocksSupported = checkVariableBlocksSupport();
+    static final BlockFillerShim fallback = new ZeroFillerShim();
+
+    private static EnumSet<SyncFlag> checkVariableBlocksSupport() {
+      if (SyncFlag.values().length > 1) {
+        // make sure this can compile on 2.6.x
+        return EnumSet.of(SyncFlag.valueOf("END_BLOCK"));
+      }
+      return null;
+    }
+
+    @Override
+    public long fill(OutputStream output, long padding) throws IOException {
+      if (padding == 0) {
+        return 0;
+      }
+      if (output instanceof HdfsDataOutputStream && variableBlocksSupported != null) {
+        ((HdfsDataOutputStream) output).hsync(variableBlocksSupported);
+        return 0; // no padding
+      }
+      return fallback.fill(output, padding);
+    }
+  }
+  
+  @Override
+  public BlockFillerShim getBlockFillerShim(FileSystem fs) throws IOException {
+    // this is currently specialized by name, because the direct class access breaks
+    if (fs.getClass().getName().equals("org.apache.hadoop.hdfs.DistributedFileSystem")) {
+      try {
+        // use class name lookups
+        return (BlockFillerShim) Class.forName(
+            "org.apache.orc.impl.HadoopShimsCurrent.VariableBlockFillerShim").newInstance();
+      } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+        // fall through to old implementation
+      }
+    }
+    return new ZeroFillerShim();
   }
 
 }

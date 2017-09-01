@@ -19,12 +19,14 @@
 package org.apache.orc.impl;
 
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.util.VersionInfo;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
 public interface HadoopShims {
@@ -123,6 +125,43 @@ public interface HadoopShims {
    * which are required for TextReaderShim.read() input.
    */
   public TextReaderShim getTextReaderShim(InputStream input) throws IOException;
+
+  
+  /** 
+   * Block filler shim - make sure the DFS blocks ends at this offset.
+   */
+  public interface BlockFillerShim {
+    /**
+     * Allow block boundaries to be reached by zero-fill or variable length block markers (in HDFS).
+     * @return the number of bytes written
+     */
+    long fill(OutputStream output, long padding) throws IOException;
+  }
+  
+  /**
+   * Default implementation of BlockFillerShim
+   */
+  public class ZeroFillerShim implements BlockFillerShim {
+    private static final int BUFFER_SIZE = 256  * 1024;
+
+    @Override
+    public long fill(OutputStream output, long padding) throws IOException {
+      byte[] pad = new byte[(int) Math.min(BUFFER_SIZE, padding)]; // always clear
+      while (padding > 0) {
+        int writeLen = (int) Math.min(padding, pad.length);
+        output.write(pad, 0, writeLen);
+        padding -= writeLen;
+      }
+      return padding;
+    }
+  }
+
+  /**
+   * 
+   * @return
+   * @throws IOException
+   */
+  public BlockFillerShim getBlockFillerShim(FileSystem fs) throws IOException;
 
   class Factory {
     private static HadoopShims SHIMS = null;

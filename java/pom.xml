@@ -71,7 +71,7 @@
     <example.dir>${project.basedir}/../../examples</example.dir>
 
     <avro.version>1.8.1</avro.version>
-    <hadoop.version>2.6.4</hadoop.version>
+    <hadoop.version>2.7.3</hadoop.version>
     <hive.version>2.1.1</hive.version>
     <storage-api.version>2.2.1</storage-api.version>
     <zookeeper.version>3.4.6</zookeeper.version>
@@ -232,6 +232,15 @@
               </configuration>
             </execution>
           </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.1</version>
+          <configuration>
+            <source>1.7</source>
+            <target>1.7</target>
+          </configuration>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>

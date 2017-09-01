@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import com.google.protobuf.CodedOutputStream;
+
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -35,6 +36,7 @@ import org.apache.orc.CompressionKind;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
 import org.apache.orc.PhysicalWriter;
+import org.apache.orc.impl.HadoopShims.BlockFillerShim;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,8 +45,10 @@ public class PhysicalFsWriter implements PhysicalWriter {
   private static final Logger LOG = LoggerFactory.getLogger(PhysicalFsWriter.class);
 
   private static final int HDFS_BUFFER_SIZE = 256 * 1024;
+  private static final HadoopShims shims = HadoopShims.Factory.get();
 
   private final FSDataOutputStream rawWriter;
+  private final BlockFillerShim blockFiller;
   // the compressed metadata information outStream
   private OutStream writer = null;
   // a protobuf outStream around streamFactory
@@ -66,6 +70,7 @@ public class PhysicalFsWriter implements PhysicalWriter {
   private long adjustedStripeSize;
   private long headerLength;
   private long stripeStart;
+  private long blockStart;
   private int metadataLength;
   private int footerLength;
 
@@ -94,6 +99,7 @@ public class PhysicalFsWriter implements PhysicalWriter {
     writer = new OutStream("metadata", bufferSize, codec,
         new DirectStream(rawWriter));
     protobufWriter = CodedOutputStream.newInstance(writer);
+    blockFiller = shims.getBlockFillerShim(fs);
   }
 
   @Override
@@ -104,7 +110,7 @@ public class PhysicalFsWriter implements PhysicalWriter {
   private void padStripe(long indexSize, long dataSize, int footerSize) throws IOException {
     this.stripeStart = rawWriter.getPos();
     final long currentStripeSize = indexSize + dataSize + footerSize;
-    final long available = blockSize - (stripeStart % blockSize);
+    final long available = blockSize - (stripeStart - blockStart);
     final long overflow = currentStripeSize - adjustedStripeSize;
     final float availRatio = (float) available / (float) defaultStripeSize;
 
@@ -130,22 +136,18 @@ public class PhysicalFsWriter implements PhysicalWriter {
     }
 
     if (availRatio < paddingTolerance && addBlockPadding) {
-      long padding = blockSize - (stripeStart % blockSize);
-      byte[] pad = new byte[(int) Math.min(HDFS_BUFFER_SIZE, padding)];
+      long padding = blockSize - (stripeStart - blockStart);
       LOG.info(String.format("Padding ORC by %d bytes (<=  %.2f * %d)",
           padding, availRatio, defaultStripeSize));
-      stripeStart += padding;
-      while (padding > 0) {
-        int writeLen = (int) Math.min(padding, pad.length);
-        rawWriter.write(pad, 0, writeLen);
-        padding -= writeLen;
-      }
+      stripeStart += blockFiller.fill(rawWriter, padding);
+      blockStart = stripeStart; // new block
       adjustedStripeSize = defaultStripeSize;
     } else if (currentStripeSize < blockSize
-        && (stripeStart % blockSize) + currentStripeSize > blockSize) {
+        && (stripeStart - blockStart) + currentStripeSize > blockSize) {
       // even if you don't pad, reset the default stripe size when crossing a
       // block boundary
       adjustedStripeSize = defaultStripeSize;
+      blockStart = stripeStart + (stripeStart + currentStripeSize) % blockSize;
     }
   }
 
