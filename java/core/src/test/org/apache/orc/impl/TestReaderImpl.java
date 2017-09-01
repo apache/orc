@@ -92,7 +92,7 @@ public class TestReaderImpl {
     assertEquals(expected, options.toString());
   }
 
-  private void prepareTestCase(byte[] bytes) {
+  private void prepareTestCase(byte[] bytes) throws IOException {
     buffer = ByteBuffer.wrap(bytes);
     psLen = buffer.get(bytes.length - 1) & 0xff;
     in = new FSDataInputStream(new SeekableByteArrayInputStream(bytes));

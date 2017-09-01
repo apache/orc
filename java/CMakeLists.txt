@@ -16,6 +16,7 @@ execute_process(COMMAND mvn versions:set -DnewVersion=${ORC_VERSION}
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 set(ORC_JARS
+  ${CMAKE_CURRENT_BINARY_DIR}/shims/orc-shims-${ORC_VERSION}.jar
   ${CMAKE_CURRENT_BINARY_DIR}/core/orc-core-${ORC_VERSION}.jar
   ${CMAKE_CURRENT_BINARY_DIR}/mapreduce/orc-mapreduce-${ORC_VERSION}.jar
   ${CMAKE_CURRENT_BINARY_DIR}/tools/orc-tools-${ORC_VERSION}-uber.jar
