@@ -1366,7 +1366,7 @@ public class TreeReaderFactory {
    * stripe.
    */
   public static class StringDirectTreeReader extends TreeReader {
-    private static final HadoopShims SHIMS = HadoopShims.Factory.get();
+    private static final HadoopShims SHIMS = HadoopShimsFactory.get();
     protected InStream stream;
     protected IntegerReader lengths;
     private final LongColumnVector scratchlcv;

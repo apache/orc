@@ -43,7 +43,7 @@ import org.apache.orc.TypeDescription;
  * Stateless methods shared between RecordReaderImpl and EncodedReaderImpl.
  */
 public class RecordReaderUtils {
-  private static final HadoopShims SHIMS = HadoopShims.Factory.get();
+  private static final HadoopShims SHIMS = HadoopShimsFactory.get();
 
   static boolean hadBadBloomFilters(TypeDescription.Category category,
                                     OrcFile.WriterVersion version) {

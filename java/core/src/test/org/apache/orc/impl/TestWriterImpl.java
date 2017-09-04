@@ -31,6 +31,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.IOException;
+
 public class TestWriterImpl {
 
   Path workDir = new Path(System.getProperty("test.tmp.dir"));
@@ -54,7 +56,7 @@ public class TestWriterImpl {
     fs.delete(testFilePath, false);
   }
 
-  @Test(expected = FileAlreadyExistsException.class)
+  @Test(expected = IOException.class)
   public void testDefaultOverwriteFlagForWriter() throws Exception {
     // default value of the overwrite flag is false, so this should fail
     Writer w = OrcFile.createWriter(testFilePath, OrcFile.writerOptions(conf).setSchema(schema));

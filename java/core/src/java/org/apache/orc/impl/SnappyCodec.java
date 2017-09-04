@@ -26,7 +26,7 @@ import java.nio.ByteBuffer;
 
 public class SnappyCodec extends AircompressorCodec
     implements DirectDecompressionCodec{
-  private static final HadoopShims SHIMS = HadoopShims.Factory.get();
+  private static final HadoopShims SHIMS = HadoopShimsFactory.get();
 
   Boolean direct = null;
   HadoopShims.DirectDecompressor decompressShim = null;
