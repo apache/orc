@@ -357,6 +357,12 @@
         <groupId>com.opencsv</groupId>
         <artifactId>opencsv</artifactId>
         <version>3.9</version>
+        <exclusions>
+          <exclusion>
+	    <groupId>commons-beanutils</groupId>
+	    <artifactId>commons-beanutils</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>commons-cli</groupId>
@@ -377,6 +383,12 @@
         <groupId>io.airlift</groupId>
         <artifactId>aircompressor</artifactId>
         <version>0.8</version>
+        <exclusions>
+          <exclusion>
+	    <groupId>io.airlift</groupId>
+	    <artifactId>slice</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.avro</groupId>
@@ -408,6 +420,10 @@
             <artifactId>jersey-json</artifactId>
           </exclusion>
           <exclusion>
+	    <groupId>commons-beanutils</groupId>
+	    <artifactId>commons-beanutils-core</artifactId>
+          </exclusion>
+          <exclusion>
             <groupId>commons-daemon</groupId>
             <artifactId>commons-daemon</artifactId>
           </exclusion>
@@ -430,6 +446,10 @@
           <exclusion>
             <groupId>net.java.dev.jets3t</groupId>
             <artifactId>jets3t</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.tukaani</groupId>
+            <artifactId>xz</artifactId>
           </exclusion>
           <exclusion>
             <groupId>org.apache.curator</groupId>
@@ -532,6 +552,10 @@
           <exclusion>
             <groupId>org.apache.avro</groupId>
             <artifactId>avro</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.fusesource.leveldbjni</groupId>
+            <artifactId>leveldbjni-all</artifactId>
           </exclusion>
           <exclusion>
             <groupId>org.mortbay.jetty</groupId>
