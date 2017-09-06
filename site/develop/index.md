@@ -20,8 +20,8 @@ Chinna Rao Lalam        | chinnaraol   | Committer
 Chaoyu Tang             | ctang        | Committer
 Carl Steinbach          | cws          | Committer
 Daniel Dai              | daijy        | Committer
-Deepak Majeti           | mdeepak      | Committer
-Eugene Koifman          | ekoifman     | Committer
+Deepak Majeti           | mdeepak      | PMC
+Eugene Koifman          | ekoifman     | PMC
 Alan Gates              | gates        | PMC
 Gopal Vijayaraghavan    | gopalv       | PMC
 Gunther Hagleitner      | gunther      | Committer
