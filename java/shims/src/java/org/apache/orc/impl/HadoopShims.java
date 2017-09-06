@@ -19,12 +19,10 @@
 package org.apache.orc.impl;
 
 import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.util.VersionInfo;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
 public interface HadoopShims {
@@ -44,15 +42,15 @@ public interface HadoopShims {
 
   /**
    * Get a direct decompressor codec, if it is available
-   * @param codec
-   * @return
+   * @param codec the kind of decompressor that we need
+   * @return a direct decompressor or null, if it isn't available
    */
   DirectDecompressor getDirectDecompressor(DirectCompressionType codec);
 
   /**
    * a hadoop.io ByteBufferPool shim.
    */
-  public interface ByteBufferPoolShim {
+  interface ByteBufferPoolShim {
     /**
      * Get a new ByteBuffer from the pool.  The pool can provide this from
      * removing a buffer from its internal cache, or by allocating a
@@ -78,50 +76,37 @@ public interface HadoopShims {
   /**
    * Provides an HDFS ZeroCopyReader shim.
    * @param in FSDataInputStream to read from (where the cached/mmap buffers are tied to)
-   * @param in ByteBufferPoolShim to allocate fallback buffers with
+   * @param pool ByteBufferPoolShim to allocate fallback buffers with
    *
    * @return returns null if not supported
    */
-  public ZeroCopyReaderShim getZeroCopyReader(FSDataInputStream in, ByteBufferPoolShim pool) throws IOException;
+  ZeroCopyReaderShim getZeroCopyReader(FSDataInputStream in, ByteBufferPoolShim pool) throws IOException;
 
-  public interface ZeroCopyReaderShim extends Closeable {
+  interface ZeroCopyReaderShim extends Closeable {
     /**
      * Get a ByteBuffer from the FSDataInputStream - this can be either a HeapByteBuffer or an MappedByteBuffer.
      * Also move the in stream by that amount. The data read can be small than maxLength.
      *
      * @return ByteBuffer read from the stream,
      */
-    public ByteBuffer readBuffer(int maxLength, boolean verifyChecksums) throws IOException;
+    ByteBuffer readBuffer(int maxLength, boolean verifyChecksums) throws IOException;
     /**
      * Release a ByteBuffer obtained from a read on the
      * Also move the in stream by that amount. The data read can be small than maxLength.
      *
      */
-    public void releaseBuffer(ByteBuffer buffer);
+    void releaseBuffer(ByteBuffer buffer);
 
     /**
      * Close the underlying stream.
-     * @throws IOException
      */
-    public void close() throws IOException;
+    void close() throws IOException;
   }
 
   /**
-   * Read data into a Text object in the fastest way possible
+   * Allow block boundaries to be reached by zero-fill or variable length block
+   * markers (in HDFS).
+   * @return the number of bytes written
    */
-  public interface TextReaderShim {
-    /**
-     * @param txt
-     * @param size
-     * @throws IOException
-     */
-    void read(Text txt, int size) throws IOException;
-  }
-
-  /**
-   * Wrap a TextReaderShim around an input stream. The reader shim will not
-   * buffer any reads from the underlying stream and will only consume bytes
-   * which are required for TextReaderShim.read() input.
-   */
-  public TextReaderShim getTextReaderShim(InputStream input) throws IOException;
+  long padStreamToBlock(OutputStream output, long padding) throws IOException;
 }

@@ -73,7 +73,7 @@
 
     <avro.version>1.8.1</avro.version>
     <min.hadoop.version>2.2.0</min.hadoop.version>
-    <hadoop.version>2.6.4</hadoop.version>
+    <hadoop.version>2.7.3</hadoop.version>
     <hive.version>2.1.1</hive.version>
     <storage-api.version>2.2.1</storage-api.version>
     <zookeeper.version>3.4.6</zookeeper.version>
@@ -246,6 +246,15 @@
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.1</version>
+          <configuration>
+            <source>1.7</source>
+            <target>1.7</target>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-shade-plugin</artifactId>
           <version>3.0.0</version>
           <executions>
@@ -348,6 +357,12 @@
         <groupId>com.opencsv</groupId>
         <artifactId>opencsv</artifactId>
         <version>3.9</version>
+        <exclusions>
+          <exclusion>
+	    <groupId>commons-beanutils</groupId>
+	    <artifactId>commons-beanutils</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>commons-cli</groupId>
@@ -368,6 +383,12 @@
         <groupId>io.airlift</groupId>
         <artifactId>aircompressor</artifactId>
         <version>0.8</version>
+        <exclusions>
+          <exclusion>
+	    <groupId>io.airlift</groupId>
+	    <artifactId>slice</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.avro</groupId>
@@ -399,6 +420,10 @@
             <artifactId>jersey-json</artifactId>
           </exclusion>
           <exclusion>
+	    <groupId>commons-beanutils</groupId>
+	    <artifactId>commons-beanutils-core</artifactId>
+          </exclusion>
+          <exclusion>
             <groupId>commons-daemon</groupId>
             <artifactId>commons-daemon</artifactId>
           </exclusion>
@@ -421,6 +446,10 @@
           <exclusion>
             <groupId>net.java.dev.jets3t</groupId>
             <artifactId>jets3t</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.tukaani</groupId>
+            <artifactId>xz</artifactId>
           </exclusion>
           <exclusion>
             <groupId>org.apache.curator</groupId>
@@ -523,6 +552,10 @@
           <exclusion>
             <groupId>org.apache.avro</groupId>
             <artifactId>avro</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.fusesource.leveldbjni</groupId>
+            <artifactId>leveldbjni-all</artifactId>
           </exclusion>
           <exclusion>
             <groupId>org.mortbay.jetty</groupId>
