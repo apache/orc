@@ -19,39 +19,47 @@
 package org.apache.orc.impl;
 
 import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.EnumSet;
 
 /**
- * Shims for recent versions of Hadoop
+ * Shims for versions of Hadoop up to and including 2.2.x
  */
-public class HadoopShimsCurrent implements HadoopShims {
+public class HadoopShimsPre2_3 implements HadoopShims {
 
-  public DirectDecompressor getDirectDecompressor(DirectCompressionType codec) {
-    return HadoopShimsPre2_7.getDecompressor(codec);
+  HadoopShimsPre2_3() {
+  }
+
+  public DirectDecompressor getDirectDecompressor(
+      DirectCompressionType codec) {
+    return null;
   }
 
   @Override
   public ZeroCopyReaderShim getZeroCopyReader(FSDataInputStream in,
                                               ByteBufferPoolShim pool
                                               ) throws IOException {
-    return ZeroCopyShims.getZeroCopyReader(in, pool);
+    /* not supported */
+    return null;
+  }
+
+  private static final int BUFFER_SIZE = 256  * 1024;
+
+  static long padStream(OutputStream output,
+                        long padding) throws IOException {
+    byte[] pad = new byte[(int) Math.min(BUFFER_SIZE, padding)]; // always clear
+    while (padding > 0) {
+      int writeLen = (int) Math.min(padding, pad.length);
+      output.write(pad, 0, writeLen);
+      padding -= writeLen;
+    }
+    return padding;
   }
 
   @Override
-  public long padStreamToBlock(OutputStream output,
-                               long padding) throws IOException {
-    if (output instanceof HdfsDataOutputStream) {
-      ((HdfsDataOutputStream) output).hsync(
-          EnumSet.of(HdfsDataOutputStream.SyncFlag.END_BLOCK));
-      return 0; // no padding
-    } else {
-      return HadoopShimsPre2_3.padStream(output, padding);
-    }
+  public long padStreamToBlock(OutputStream output, long padding) throws IOException {
+    return padStream(output, padding);
   }
-
 
 }

@@ -26,6 +26,8 @@ import org.apache.hadoop.util.VersionInfo;
 public class HadoopShimsFactory {
   private static final String CURRENT_SHIM_NAME =
       "org.apache.orc.impl.HadoopShimsCurrent";
+  private static final String PRE_2_7_SHIM_NAME =
+      "org.apache.orc.impl.HadoopShimsPre2_7";
 
   private static HadoopShims SHIMS = null;
 
@@ -49,7 +51,9 @@ public class HadoopShimsFactory {
       int major = Integer.parseInt(versionParts[0]);
       int minor = Integer.parseInt(versionParts[1]);
       if (major < 2 || (major == 2 && minor < 3)) {
-        SHIMS = new HadoopShims_2_2();
+        SHIMS = new HadoopShimsPre2_3();
+      } else if (major == 2 && minor < 7) {
+        SHIMS = createShimByName(PRE_2_7_SHIM_NAME);
       } else {
         SHIMS = createShimByName(CURRENT_SHIM_NAME);
       }
