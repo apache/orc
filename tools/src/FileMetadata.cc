@@ -83,7 +83,7 @@ void printRawTail(std::ostream& out,
                   const char*filename) {
   out << "Raw file tail: " << filename << "\n";
   std::unique_ptr<orc::Reader> reader =
-    orc::createReader(orc::readLocalFile(filename), orc::ReaderOptions());
+    orc::createReader(orc::readFile(filename), orc::ReaderOptions());
   // Parse the file tail from the serialized one.
   orc::proto::FileTail tail;
   if (!tail.ParseFromString(reader->getSerializedFileTail())) {
@@ -94,7 +94,7 @@ void printRawTail(std::ostream& out,
 
 void printMetadata(std::ostream & out, const char*filename, bool verbose) {
   std::unique_ptr<orc::Reader> reader =
-    orc::createReader(orc::readLocalFile(filename), orc::ReaderOptions());
+    orc::createReader(orc::readFile(filename), orc::ReaderOptions());
   out << "{ \"name\": \"" << filename << "\",\n";
   uint64_t numberColumns = reader->getType().getMaximumColumnId() + 1;
   out << "  \"type\": \""

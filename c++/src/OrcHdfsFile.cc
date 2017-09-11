@@ -39,6 +39,7 @@ namespace orc {
     std::unique_ptr<hdfs::FileHandle> file;
     std::unique_ptr<hdfs::FileSystem> file_system;
     uint64_t totalLength;
+    const uint64_t READ_SIZE = 1024 * 1024; //1 MB
 
   public:
     HdfsFileInputStream(std::string _filename) {
@@ -130,7 +131,7 @@ namespace orc {
     }
 
     uint64_t getNaturalReadSize() const override {
-      return 1048576; //1 MB
+      return READ_SIZE;
     }
 
     void read(void* buf,

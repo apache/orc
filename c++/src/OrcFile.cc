@@ -87,16 +87,20 @@ namespace orc {
     close(file);
   }
 
-  std::unique_ptr<InputStream> readLocalFile(const std::string& path) {
+  std::unique_ptr<InputStream> readFile(const std::string& path) {
 #ifdef ORC_CXX_HAS_THREAD_LOCAL
     if(strncmp (path.c_str(), "hdfs://", 7) == 0){
       return orc::readHdfsFile(std::string(path));
     } else {
 #endif
-      return std::unique_ptr<InputStream>(new FileInputStream(path));
+      return orc::readLocalFile(std::string(path));
 #ifdef ORC_CXX_HAS_THREAD_LOCAL
       }
 #endif
+  }
+
+  std::unique_ptr<InputStream> readLocalFile(const std::string& path) {
+      return std::unique_ptr<InputStream>(new FileInputStream(path));
   }
 
   OutputStream::~OutputStream() {

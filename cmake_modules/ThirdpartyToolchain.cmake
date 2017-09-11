@@ -223,4 +223,10 @@ if(ORC_CXX_HAS_THREAD_LOCAL)
                                        PATTERN "pkgconfig" EXCLUDE
                                        PATTERN "*.so*" EXCLUDE
                                        PATTERN "*.dylib" EXCLUDE)
+else(ORC_CXX_HAS_THREAD_LOCAL)
+  message(WARNING
+  "WARNING: Libhdfs++ library was not built because the required feature \
+  thread_local storage is not supported by your compiler. Known compilers that \
+  support this feature: GCC, Visual Studio, Clang (community version), \
+  Clang (version for iOS 9 and later), Clang (version for Xcode 8 and later)")
 endif(ORC_CXX_HAS_THREAD_LOCAL)

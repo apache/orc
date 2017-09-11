@@ -30,7 +30,7 @@ void printContents(const char* filename, const orc::RowReaderOptions& rowReaderO
   orc::ReaderOptions readerOpts;
   std::unique_ptr<orc::Reader> reader;
   std::unique_ptr<orc::RowReader> rowReader;
-  reader = orc::createReader(orc::readLocalFile(std::string(filename)), readerOpts);
+  reader = orc::createReader(orc::readFile(std::string(filename)), readerOpts);
   rowReader = reader->createRowReader(rowReaderOpts);
 
   std::unique_ptr<orc::ColumnVectorBatch> batch = rowReader->createRowBatch(1000);
