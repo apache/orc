@@ -30,10 +30,12 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.common.ValidTxnList;
 import org.apache.orc.impl.MemoryManagerImpl;
 import org.apache.orc.impl.OrcTail;
 import org.apache.orc.impl.ReaderImpl;
 import org.apache.orc.impl.WriterImpl;
+import org.apache.orc.impl.acid.AcidReaderImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -272,6 +274,7 @@ public class OrcFile {
     // and remove this class altogether. Both footer caching and llap caching just needs OrcTail.
     // For now keeping this around to avoid complex surgery
     private FileMetadata fileMetadata;
+    private ValidTxnList validTxns;
 
     public ReaderOptions(Configuration conf) {
       this.conf = conf;
@@ -315,6 +318,15 @@ public class OrcFile {
 
     public FileMetadata getFileMetadata() {
       return fileMetadata;
+    }
+
+    public ReaderOptions validTxnList(ValidTxnList validTxns) {
+      this.validTxns = validTxns;
+      return this;
+    }
+
+    public ValidTxnList getValidTxns() {
+      return validTxns;
     }
   }
 
