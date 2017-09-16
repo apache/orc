@@ -80,5 +80,6 @@ install(FILES
   "orc/Reader.hh"
   "orc/Type.hh"
   "orc/Vector.hh"
+  "orc/Statistics.hh"
   DESTINATION "include/orc"
   )
