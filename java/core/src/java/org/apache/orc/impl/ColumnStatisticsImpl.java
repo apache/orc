@@ -21,6 +21,7 @@ import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.TimeZone;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.serde2.io.DateWritable;
@@ -608,8 +609,23 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       OrcProto.StringStatistics.Builder str =
         OrcProto.StringStatistics.newBuilder();
       if (getNumberOfValues() != 0) {
-        str.setMinimum(getMinimum());
-        str.setMaximum(getMaximum());
+        String value = getMinimum();
+        if (value != null && value.length() > 1024) {
+          str.setIsMinimumTrimmed(true);
+          str.setMinimum(StringUtils.left(value,1024));
+        } else {
+          str.setIsMinimumTrimmed(false);
+          str.setMinimum(value);
+        }
+
+        value = getMaximum();
+        if (value != null && value.length() > 1024) {
+          str.setIsMaximumTrimmed(true);
+          str.setMaximum(StringUtils.left(value, 1024));
+        } else {
+          str.setIsMaximumTrimmed(false);
+          str.setMaximum(getMaximum());
+        }
         str.setSum(sum);
       }
       result.setStringStatistics(str);
