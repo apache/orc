@@ -417,6 +417,26 @@ namespace orc {
     return footer->numberofrows();
   }
 
+  WriterId ReaderImpl::getWriterId() const {
+    if (footer->has_writer()) {
+      uint32_t id = footer->writer();
+      if (id > WriterId::PRESTO_WRITER) {
+        return WriterId::UNKNOWN_WRITER;
+      } else {
+	return static_cast<WriterId>(id);
+      }
+    }
+    return WriterId::ORC_JAVA_WRITER;
+  }
+
+  uint32_t ReaderImpl::getWriterIdValue() const {
+    if (footer->has_writer()) {
+      return footer->writer();
+    } else {
+      return WriterId::ORC_JAVA_WRITER;
+    }
+  }
+
   WriterVersion ReaderImpl::getWriterVersion() const {
     if (!contents->postscript->has_writerversion()) {
       return WriterVersion_ORIGINAL;

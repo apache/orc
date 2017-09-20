@@ -288,6 +288,18 @@ namespace orc {
     virtual uint64_t getCompressionSize() const = 0;
 
     /**
+     * Get ID of writer that generated the file.
+     * @return UNKNOWN_WRITER if the writer ID is undefined
+     */
+    virtual WriterId getWriterId() const = 0;
+
+    /**
+     * Get the writer id value when getWriterId() returns an unknown writer.
+     * @return the integer value of the writer ID.
+     */
+    virtual uint32_t getWriterIdValue() const = 0;
+
+    /**
      * Get the version of the writer.
      * @return the version of the writer.
      */

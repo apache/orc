@@ -205,7 +205,7 @@ namespace orc {
     proto::Metadata metadata;
 
     static const char* magicId;
-    static const uint32_t writerId;
+    static const WriterId writerId;
 
   public:
     WriterImpl(
@@ -234,11 +234,7 @@ namespace orc {
 
   const char * WriterImpl::magicId = "ORC";
 
-  // Identification for C++ Orc writer
-  // 0 = ORC Java
-  // 1 = ORC C++
-  // 2 = Presto
-  const uint32_t WriterImpl::writerId = 1;
+  const WriterId WriterImpl::writerId = WriterId::ORC_CPP_WRITER;
 
   WriterImpl::WriterImpl(
                          const Type& t,
