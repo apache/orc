@@ -88,13 +88,13 @@ namespace orc {
   }
 
   std::unique_ptr<InputStream> readFile(const std::string& path) {
-#ifdef ORC_CXX_HAS_THREAD_LOCAL
+#ifdef BUILD_LIBHDFSPP
     if(strncmp (path.c_str(), "hdfs://", 7) == 0){
       return orc::readHdfsFile(std::string(path));
     } else {
 #endif
       return orc::readLocalFile(std::string(path));
-#ifdef ORC_CXX_HAS_THREAD_LOCAL
+#ifdef BUILD_LIBHDFSPP
       }
 #endif
   }
