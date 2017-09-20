@@ -63,6 +63,13 @@ namespace orc {
     std::string toString() const;
   };
 
+  enum WriterId {
+    ORC_JAVA_WRITER = 0,
+    ORC_CPP_WRITER,
+    PRESTO_WRITER,
+    UNKNOWN_WRITER = INT32_MAX
+  };
+
   enum CompressionKind {
     CompressionKind_NONE = 0,
     CompressionKind_ZLIB = 1,
