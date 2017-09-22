@@ -252,24 +252,26 @@ namespace orc {
   }
 
   void StructColumnWriter::add(
-                              ColumnVectorBatch& rowBatch,
-                              uint64_t offset,
-                              uint64_t numValues) {
+                               ColumnVectorBatch& rowBatch,
+                               uint64_t offset,
+                               uint64_t numValues) {
     ColumnWriter::add(rowBatch, offset, numValues);
-
-    const StructVectorBatch & structBatch =
-          dynamic_cast<const StructVectorBatch &>(rowBatch);
+    const StructVectorBatch* structBatch =
+      dynamic_cast<const StructVectorBatch *>(&rowBatch);
+    if (structBatch == nullptr) {
+      throw InvalidArgument("Failed to cast to StructVectorBatch");
+    }
 
     for (uint32_t i = 0; i < children.size(); ++i) {
-      children[i]->add(*structBatch.fields[i], offset, numValues);
+      children[i]->add(*structBatch->fields[i], offset, numValues);
     }
 
     // update stats
     bool hasNull = false;
-    if (!structBatch.hasNulls) {
+    if (!structBatch->hasNulls) {
       colIndexStatistics->increase(numValues);
     } else {
-      const char* notNull = structBatch.notNull.data() + offset;
+      const char* notNull = structBatch->notNull.data() + offset;
       for (uint64_t i = 0; i < numValues; ++i) {
         if (notNull[i]) {
           colIndexStatistics->increase(1);
@@ -393,11 +395,11 @@ namespace orc {
   };
 
   IntegerColumnWriter::IntegerColumnWriter(
-                        const Type& type,
-                        const StreamsFactory& factory,
-                        const WriterOptions& options) :
-                          ColumnWriter(type, factory, options),
-                          rleVersion(RleVersion_1) {
+                           const Type& type,
+                           const StreamsFactory& factory,
+                           const WriterOptions& options) :
+                             ColumnWriter(type, factory, options),
+                             rleVersion(RleVersion_1) {
     std::unique_ptr<BufferedOutputStream> dataStream =
       factory.createStream(proto::Stream_Kind_DATA);
     rleEncoder = createRleEncoder(
@@ -412,23 +414,30 @@ namespace orc {
   }
 
   void IntegerColumnWriter::add(
-                              ColumnVectorBatch& rowBatch,
-                              uint64_t offset,
-                              uint64_t numValues) {
+                                ColumnVectorBatch& rowBatch,
+                                uint64_t offset,
+                                uint64_t numValues) {
     ColumnWriter::add(rowBatch, offset, numValues);
 
-    const LongVectorBatch & longBatch =
-                    dynamic_cast<const LongVectorBatch &>(rowBatch);
+    const LongVectorBatch* longBatch =
+      dynamic_cast<const LongVectorBatch*>(&rowBatch);
+    if (longBatch == nullptr) {
+      throw InvalidArgument("Failed to cast to LongVectorBatch");
+    }
 
-    const int64_t* data = longBatch.data.data() + offset;
-    const char* notNull = longBatch.hasNulls ?
-                          longBatch.notNull.data() + offset : nullptr;
+    const int64_t* data = longBatch->data.data() + offset;
+    const char* notNull = longBatch->hasNulls ?
+                          longBatch->notNull.data() + offset : nullptr;
 
     rleEncoder->add(data, numValues, notNull);
 
     // update stats
     IntegerColumnStatisticsImpl* intStats =
       dynamic_cast<IntegerColumnStatisticsImpl*>(colIndexStatistics.get());
+    if (intStats == nullptr) {
+      throw InvalidArgument("Failed to cast to IntegerColumnStatisticsImpl");
+    }
+
     bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (notNull == nullptr || notNull[i]) {
@@ -514,12 +523,14 @@ namespace orc {
                              uint64_t numValues) {
     ColumnWriter::add(rowBatch, offset, numValues);
 
-    LongVectorBatch& byteBatch =
-                               dynamic_cast<LongVectorBatch&>(rowBatch);
+    LongVectorBatch* byteBatch = dynamic_cast<LongVectorBatch*>(&rowBatch);
+    if (byteBatch == nullptr) {
+      throw InvalidArgument("Failed to cast to LongVectorBatch");
+    }
 
-    int64_t* data = byteBatch.data.data() + offset;
-    const char* notNull = byteBatch.hasNulls ?
-                          byteBatch.notNull.data() + offset : nullptr;
+    int64_t* data = byteBatch->data.data() + offset;
+    const char* notNull = byteBatch->hasNulls ?
+                          byteBatch->notNull.data() + offset : nullptr;
 
     char* byteData = reinterpret_cast<char*>(data);
     for (uint64_t i = 0; i < numValues; ++i) {
@@ -529,6 +540,9 @@ namespace orc {
 
     IntegerColumnStatisticsImpl* intStats =
         dynamic_cast<IntegerColumnStatisticsImpl*>(colIndexStatistics.get());
+    if (intStats == nullptr) {
+      throw InvalidArgument("Failed to cast to IntegerColumnStatisticsImpl");
+    }
     bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (notNull == nullptr || notNull[i]) {
@@ -612,10 +626,13 @@ namespace orc {
                                 uint64_t numValues) {
     ColumnWriter::add(rowBatch, offset, numValues);
 
-    LongVectorBatch& byteBatch = dynamic_cast<LongVectorBatch&>(rowBatch);
-    int64_t* data = byteBatch.data.data() + offset;
-    const char* notNull = byteBatch.hasNulls ?
-                          byteBatch.notNull.data() + offset : nullptr;
+    LongVectorBatch* byteBatch = dynamic_cast<LongVectorBatch*>(&rowBatch);
+    if (byteBatch == nullptr) {
+      throw InvalidArgument("Failed to cast to LongVectorBatch");
+    }
+    int64_t* data = byteBatch->data.data() + offset;
+    const char* notNull = byteBatch->hasNulls ?
+                          byteBatch->notNull.data() + offset : nullptr;
 
     char* byteData = reinterpret_cast<char*>(data);
     for (uint64_t i = 0; i < numValues; ++i) {
@@ -625,6 +642,9 @@ namespace orc {
 
     BooleanColumnStatisticsImpl* boolStats =
         dynamic_cast<BooleanColumnStatisticsImpl*>(colIndexStatistics.get());
+    if (boolStats == nullptr) {
+      throw InvalidArgument("Failed to cast to BooleanColumnStatisticsImpl");
+    }
     bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (notNull == nullptr || notNull[i]) {
@@ -709,20 +729,35 @@ namespace orc {
     }
   }
 
+  // Floating point types are stored using IEEE 754 floating point bit layout.
+  // Float columns use 4 bytes per value and double columns use 8 bytes.
+  template <typename FLOAT_TYPE, typename INTEGER_TYPE>
+  inline void encodeFloatNum(FLOAT_TYPE input, char* output) {
+    INTEGER_TYPE* intBits = reinterpret_cast<INTEGER_TYPE*>(&input);
+    for (size_t i = 0; i < sizeof(INTEGER_TYPE); ++i) {
+      output[i] = static_cast<char>(((*intBits) >> (8 * i)) & 0xff);
+    }
+  }
+
   void DoubleColumnWriter::add(ColumnVectorBatch& rowBatch,
                                uint64_t offset,
                                uint64_t numValues) {
     ColumnWriter::add(rowBatch, offset, numValues);
+    const DoubleVectorBatch* dblBatch =
+      dynamic_cast<const DoubleVectorBatch*>(&rowBatch);
+    if (dblBatch == nullptr) {
+      throw InvalidArgument("Failed to cast to DoubleVectorBatch");
+    }
 
-    const DoubleVectorBatch& dblBatch =
-                             dynamic_cast<const DoubleVectorBatch&>(rowBatch);
-
-    const double* doubleData = dblBatch.data.data() + offset;
-    const char* notNull = dblBatch.hasNulls ?
-                          dblBatch.notNull.data() + offset : nullptr;
+    const double* doubleData = dblBatch->data.data() + offset;
+    const char* notNull = dblBatch->hasNulls ?
+                          dblBatch->notNull.data() + offset : nullptr;
 
     DoubleColumnStatisticsImpl* doubleStats =
       dynamic_cast<DoubleColumnStatisticsImpl*>(colIndexStatistics.get());
+    if (doubleStats == nullptr) {
+      throw InvalidArgument("Failed to cast to DoubleColumnStatisticsImpl");
+    }
 
     size_t bytes = isFloat ? 4 : 8;
     char* data = buffer.data();
@@ -731,19 +766,9 @@ namespace orc {
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!notNull || notNull[i]) {
         if (isFloat) {
-          // to avoid float-double cast
-          const int32_t* intBits =
-            reinterpret_cast<const int32_t*>(&static_cast<const float&>(
-              doubleData[i]));
-          for (size_t j = 0; j < bytes; ++j) {
-            data[j] = static_cast<char>(((*intBits) >> (8 * j)) & 0xff);
-          }
+          encodeFloatNum<float, int32_t>(static_cast<float>(doubleData[i]), data);
         } else {
-          const int64_t* intBits =
-            reinterpret_cast<const int64_t*>(&(doubleData[i]));
-          for (size_t j = 0; j < bytes; ++j) {
-            data[j] = static_cast<char>(((*intBits) >> (8 * j)) & 0xff);
-          }
+          encodeFloatNum<double, int64_t>(doubleData[i], data);
         }
         dataStream->write(data, bytes);
 
@@ -834,18 +859,24 @@ namespace orc {
                                uint64_t offset,
                                uint64_t numValues) {
     ColumnWriter::add(rowBatch, offset, numValues);
-    const StringVectorBatch & stringBatch =
-      dynamic_cast<const StringVectorBatch &>(rowBatch);
+    const StringVectorBatch* stringBatch =
+      dynamic_cast<const StringVectorBatch*>(&rowBatch);
+    if (stringBatch == nullptr) {
+      throw InvalidArgument("Failed to cast to StringVectorBatch");
+    }
 
-    char *const * data = stringBatch.data.data() + offset;
-    const int64_t* length = stringBatch.length.data() + offset;
-    const char* notNull = stringBatch.hasNulls ?
-                          stringBatch.notNull.data() + offset : nullptr;
+    char *const * data = stringBatch->data.data() + offset;
+    const int64_t* length = stringBatch->length.data() + offset;
+    const char* notNull = stringBatch->hasNulls ?
+                          stringBatch->notNull.data() + offset : nullptr;
 
     lengthEncoder->add(length, numValues, notNull);
 
     StringColumnStatisticsImpl* strStats =
       dynamic_cast<StringColumnStatisticsImpl*>(colIndexStatistics.get());
+    if (strStats == nullptr) {
+      throw InvalidArgument("Failed to cast to StringColumnStatisticsImpl");
+    }
     bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!notNull || notNull[i]) {
@@ -923,15 +954,21 @@ namespace orc {
                              uint64_t offset,
                              uint64_t numValues) {
     ColumnWriter::add(rowBatch, offset, numValues);
-    StringVectorBatch& charsBatch = dynamic_cast<StringVectorBatch&>(rowBatch);
+    StringVectorBatch* charsBatch = dynamic_cast<StringVectorBatch*>(&rowBatch);
+    if (charsBatch == nullptr) {
+      throw InvalidArgument("Failed to cast to StringVectorBatch");
+    }
 
-    char** data = charsBatch.data.data() + offset;
-    int64_t* length = charsBatch.length.data() + offset;
-    const char* notNull = charsBatch.hasNulls ?
-                          charsBatch.notNull.data() + offset : nullptr;
+    char** data = charsBatch->data.data() + offset;
+    int64_t* length = charsBatch->length.data() + offset;
+    const char* notNull = charsBatch->hasNulls ?
+                          charsBatch->notNull.data() + offset : nullptr;
 
     StringColumnStatisticsImpl* strStats =
         dynamic_cast<StringColumnStatisticsImpl*>(colIndexStatistics.get());
+    if (strStats == nullptr) {
+      throw InvalidArgument("Failed to cast to StringColumnStatisticsImpl");
+    }
     bool hasNull = false;
 
     for (uint64_t i = 0; i < numValues; ++i) {
@@ -978,15 +1015,21 @@ namespace orc {
                                 uint64_t offset,
                                 uint64_t numValues) {
     ColumnWriter::add(rowBatch, offset, numValues);
-    StringVectorBatch& charsBatch = dynamic_cast<StringVectorBatch&>(rowBatch);
+    StringVectorBatch* charsBatch = dynamic_cast<StringVectorBatch*>(&rowBatch);
+    if (charsBatch == nullptr) {
+      throw InvalidArgument("Failed to cast to StringVectorBatch");
+    }
 
-    char* const* data = charsBatch.data.data() + offset;
-    int64_t* length = charsBatch.length.data() + offset;
-    const char* notNull = charsBatch.hasNulls ?
-                          charsBatch.notNull.data() + offset : nullptr;
+    char* const* data = charsBatch->data.data() + offset;
+    int64_t* length = charsBatch->length.data() + offset;
+    const char* notNull = charsBatch->hasNulls ?
+                          charsBatch->notNull.data() + offset : nullptr;
 
     StringColumnStatisticsImpl* strStats =
         dynamic_cast<StringColumnStatisticsImpl*>(colIndexStatistics.get());
+    if (strStats == nullptr) {
+      throw InvalidArgument("Failed to cast to StringColumnStatisticsImpl");
+    }
     bool hasNull = false;
 
     for (uint64_t i = 0; i < numValues; ++i) {
@@ -1025,14 +1068,20 @@ namespace orc {
                                uint64_t numValues) {
     ColumnWriter::add(rowBatch, offset, numValues);
 
-    StringVectorBatch & binBatch = dynamic_cast<StringVectorBatch &>(rowBatch);
-    char** data = binBatch.data.data() + offset;
-    int64_t* length = binBatch.length.data() + offset;
-    const char* notNull = binBatch.hasNulls ?
-                          binBatch.notNull.data() + offset : nullptr;
+    StringVectorBatch* binBatch = dynamic_cast<StringVectorBatch*>(&rowBatch);
+    if (binBatch == nullptr) {
+      throw InvalidArgument("Failed to cast to StringVectorBatch");
+    }
+    char** data = binBatch->data.data() + offset;
+    int64_t* length = binBatch->length.data() + offset;
+    const char* notNull = binBatch->hasNulls ?
+                          binBatch->notNull.data() + offset : nullptr;
 
     BinaryColumnStatisticsImpl* binStats =
         dynamic_cast<BinaryColumnStatisticsImpl*>(colIndexStatistics.get());
+    if (binStats == nullptr) {
+      throw InvalidArgument("Failed to cast to BinaryColumnStatisticsImpl");
+    }
 
     bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
@@ -1126,17 +1175,22 @@ namespace orc {
                                   uint64_t offset,
                                   uint64_t numValues) {
     ColumnWriter::add(rowBatch, offset, numValues);
+    TimestampVectorBatch* tsBatch =
+      dynamic_cast<TimestampVectorBatch*>(&rowBatch);
+    if (tsBatch == nullptr) {
+      throw InvalidArgument("Failed to cast to TimestampVectorBatch");
+    }
 
-    TimestampVectorBatch& tsBatch =
-      dynamic_cast<TimestampVectorBatch &>(rowBatch);
-
-    const char* notNull = tsBatch.hasNulls ?
-                          tsBatch.notNull.data() + offset : nullptr;
-    int64_t *secs = tsBatch.data.data() + offset;
-    int64_t *nanos = tsBatch.nanoseconds.data() + offset;
+    const char* notNull = tsBatch->hasNulls ?
+                          tsBatch->notNull.data() + offset : nullptr;
+    int64_t *secs = tsBatch->data.data() + offset;
+    int64_t *nanos = tsBatch->nanoseconds.data() + offset;
 
     TimestampColumnStatisticsImpl* tsStats =
         dynamic_cast<TimestampColumnStatisticsImpl*>(colIndexStatistics.get());
+    if (tsStats == nullptr) {
+      throw InvalidArgument("Failed to cast to TimestampColumnStatisticsImpl");
+    }
     bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (notNull == nullptr || notNull[i]) {
@@ -1220,18 +1274,23 @@ namespace orc {
                              uint64_t offset,
                              uint64_t numValues) {
     ColumnWriter::add(rowBatch, offset, numValues);
+    const LongVectorBatch* longBatch =
+      dynamic_cast<const LongVectorBatch*>(&rowBatch);
+    if (longBatch == nullptr) {
+      throw InvalidArgument("Failed to cast to LongVectorBatch");
+    }
 
-    const LongVectorBatch& longBatch =
-      dynamic_cast<const LongVectorBatch&>(rowBatch);
-
-    const int64_t* data = longBatch.data.data() + offset;
-    const char* notNull = longBatch.hasNulls ?
-                          longBatch.notNull.data() + offset : nullptr;
+    const int64_t* data = longBatch->data.data() + offset;
+    const char* notNull = longBatch->hasNulls ?
+                          longBatch->notNull.data() + offset : nullptr;
 
     rleEncoder->add(data, numValues, notNull);
 
     DateColumnStatisticsImpl* dateStats =
       dynamic_cast<DateColumnStatisticsImpl*>(colIndexStatistics.get());
+    if (dateStats == nullptr) {
+      throw InvalidArgument("Failed to cast to DateColumnStatisticsImpl");
+    }
     bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!notNull || notNull[i]) {
@@ -1303,15 +1362,20 @@ namespace orc {
                                   uint64_t offset,
                                   uint64_t numValues) {
     ColumnWriter::add(rowBatch, offset, numValues);
+    const Decimal64VectorBatch* decBatch =
+      dynamic_cast<const Decimal64VectorBatch*>(&rowBatch);
+    if (decBatch == nullptr) {
+      throw InvalidArgument("Failed to cast to Decimal64VectorBatch");
+    }
 
-    const Decimal64VectorBatch& decBatch =
-      dynamic_cast<const Decimal64VectorBatch&>(rowBatch);
-
-    const char* notNull = decBatch.hasNulls ?
-                          decBatch.notNull.data() + offset : nullptr;
-    const int64_t* values = decBatch.values.data() + offset;
+    const char* notNull = decBatch->hasNulls ?
+                          decBatch->notNull.data() + offset : nullptr;
+    const int64_t* values = decBatch->values.data() + offset;
     DecimalColumnStatisticsImpl* decStats =
       dynamic_cast<DecimalColumnStatisticsImpl*>(colIndexStatistics.get());
+    if (decStats == nullptr) {
+      throw InvalidArgument("Failed to cast to DecimalColumnStatisticsImpl");
+    }
     bool hasNull = false;
 
     for (uint64_t i = 0; i < numValues; ++i) {
@@ -1418,15 +1482,20 @@ namespace orc {
                                    uint64_t offset,
                                    uint64_t numValues) {
     ColumnWriter::add(rowBatch, offset, numValues);
+    const Decimal128VectorBatch* decBatch =
+      dynamic_cast<const Decimal128VectorBatch*>(&rowBatch);
+    if (decBatch == nullptr) {
+      throw InvalidArgument("Failed to cast to Decimal128VectorBatch");
+    }
 
-    const Decimal128VectorBatch & decBatch =
-      dynamic_cast<const Decimal128VectorBatch &>(rowBatch);
-
-    const char* notNull = decBatch.hasNulls ?
-                          decBatch.notNull.data() + offset : nullptr;
-    const Int128* values = decBatch.values.data() + offset;
+    const char* notNull = decBatch->hasNulls ?
+                          decBatch->notNull.data() + offset : nullptr;
+    const Int128* values = decBatch->values.data() + offset;
     DecimalColumnStatisticsImpl* decStats =
       dynamic_cast<DecimalColumnStatisticsImpl*>(colIndexStatistics.get());
+    if (decStats == nullptr) {
+      throw InvalidArgument("Failed to cast to DecimalColumnStatisticsImpl");
+    }
     bool hasNull = false;
 
     // The current encoding of decimal columns stores the integer representation
