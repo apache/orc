@@ -417,6 +417,26 @@ namespace orc {
     return footer->numberofrows();
   }
 
+  WriterId ReaderImpl::getWriterId() const {
+    WriterId id = WriterId::UNKNOWN_WRITER;
+    if (footer->has_writer()) {
+      id = static_cast<WriterId>(footer->writer());
+      if (id != WriterId::ORC_JAVA_WRITER &&
+          id != WriterId::ORC_CPP_WRITER &&
+          id != WriterId::PRESTO_WRITER) {
+        id = WriterId::UNKNOWN_WRITER;
+      }
+    }
+    return id;
+  }
+
+  int ReaderImpl::getWriterIdValue() const {
+    if (footer->has_writer()) {
+      return static_cast<int>(footer->writer());
+    }
+    throw std::logic_error("Writer id is not availiable.");
+  }
+
   WriterVersion ReaderImpl::getWriterVersion() const {
     if (!contents->postscript->has_writerversion()) {
       return WriterVersion_ORIGINAL;

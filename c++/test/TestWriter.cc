@@ -92,6 +92,10 @@ namespace orc {
     EXPECT_EQ(WriterVersion_ORC_135, reader->getWriterVersion());
     EXPECT_EQ(0, reader->getNumberOfRows());
 
+    WriterId writerId = WriterId::ORC_CPP_WRITER;
+    EXPECT_EQ(writerId, reader->getWriterId());
+    EXPECT_EQ(1, reader->getWriterIdValue());
+
     std::unique_ptr<ColumnVectorBatch> batch = rowReader->createRowBatch(1024);
     EXPECT_FALSE(rowReader->next(*batch));
   }

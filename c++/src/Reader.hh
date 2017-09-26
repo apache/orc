@@ -216,6 +216,10 @@ namespace orc {
 
     FileVersion getFormatVersion() const override;
 
+    WriterId getWriterId() const override;
+
+    int getWriterIdValue() const override;
+
     WriterVersion getWriterVersion() const override;
 
     uint64_t getNumberOfRows() const override;
