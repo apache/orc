@@ -21,4 +21,5 @@ class AcidConstants {
   static final String BASE_PREFIX = "base_";
   static final String DELTA_PREFIX = "delta_";
   static final String DELETE_DELTA_PREFIX = "delete_delta_";
+  static final String DELTA_SIDE_FILE_SUFFIX = "_flush_length";
 }

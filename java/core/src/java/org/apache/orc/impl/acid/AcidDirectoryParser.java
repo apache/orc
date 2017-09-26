@@ -65,16 +65,14 @@ public class AcidDirectoryParser {
     final List<FileStatus> deletes = new ArrayList<>();
     final List<FileStatus> original = new ArrayList<>();
 
-    List<ParsedDelta> insertDeltas = new ArrayList<>();
-    List<ParsedDelta> deleteDeltas = new ArrayList<>();
+    List<ParsedDelta> deltas = new ArrayList<>();
     List<FileStatus> originalDirectories = new ArrayList<>();
 
     FileSystem fs = directory.getFileSystem(conf);
     TxnBase bestBase = new TxnBase();
     List<FileStatus> children = listLocatedStatus(fs, directory, hiddenFileFilter);
     for (FileStatus child : children) {
-      getChildState(child, txnList, insertDeltas, deleteDeltas, originalDirectories, original,
-          bestBase);
+      getChildState(child, txnList, deltas, originalDirectories, original, bestBase);
     }
 
     if (bestBase.status != null) inputs.add(bestBase.status);
@@ -90,8 +88,7 @@ public class AcidDirectoryParser {
     }
 
     // Decide on our deltas
-    pickBestDeltas(insertDeltas, inputs, bestBase, txnList);
-    pickBestDeltas(deleteDeltas, deletes, bestBase, txnList);
+    pickBestDeltas(deltas, inputs, deletes, bestBase, txnList);
 
 
     return new AcidVersionedDirectory() {
@@ -112,67 +109,6 @@ public class AcidDirectoryParser {
     };
   }
 
-  /*
-  static AcidVersionedDirectory parse(Path directory, Configuration conf, ValidTxnList txnList)
-      throws IOException {
-
-
-    if(bestBase.oldestBase != null && bestBase.status == null) {
-      /*
-       * If here, it means there was a base_x (> 1 perhaps) but none were suitable for given
-       * {@link txnList}.  Note that 'original' files are logically a base_Long.MIN_VALUE and thus
-       * cannot have any data for an open txn.  We could check {@link deltas} has files to cover
-       * [1,n] w/o gaps but this would almost never happen...*/
-  /*
-      long[] exceptions = txnList.getInvalidTransactions();
-      String minOpenTxn = exceptions != null && exceptions.length > 0 ?
-          Long.toString(exceptions[0]) : "x";
-      throw new IOException("Not enough history available for (" + txnList.getHighWatermark() +
-        "," + minOpenTxn + ").  Oldest available base:  " + bestBase.oldestBase);
-    }
-
-    final Path base = bestBase.status == null ? null : bestBase.status.getPath();
-    LOG.debug("in directory " + directory.toUri().toString() + " base = " + base + " deltas = " +
-        deltas.size());
-    /*
-     * If this sort order is changed and there are tables that have been converted to transactional
-     * and have had any update/delete/merge operations performed but not yet MAJOR compacted, it
-     * may result in data loss since it may change how
-     * {@link org.apache.hadoop.hive.ql.io.orc.OrcRawRecordMerger.OriginalReaderPair} assigns
-     * {@link RecordIdentifier#rowId} for read (that have happened) and compaction (yet to happen).
-     */
-  /*Collections.sort(original, new Comparator<FileStatus>() {
-      @Override
-      public int compare(FileStatus o1, FileStatus o2) {
-        return o1.compareTo(o2);
-      }
-    });
-
-    return new AcidVersionedDirectory(){
-
-      @Override
-      public Path getBaseDirectory() {
-        return base;
-      }
-
-      @Override
-      public List<FileStatus> getOriginalFiles() {
-        return original;
-      }
-
-      @Override
-      public List<ParsedDelta> getCurrentDirectories() {
-        return deltas;
-      }
-
-      @Override
-      public List<FileStatus> getObsolete() {
-        return obsolete;
-      }
-    };
-  }
-  */
-
   private static List<FileStatus> listLocatedStatus(final FileSystem fs,
                                                     final Path path,
                                                     final PathFilter filter) throws IOException {
@@ -190,8 +126,7 @@ public class AcidDirectoryParser {
    * Figure out the status of a child directory.
    * @param child directory we are investigating
    * @param txnList our valid txns
-   * @param insertDeltas set of valid insert deltas we have found so far
-   * @param deleteDeltas set of valid delete deltas we have found so far
+   * @param deltas set of valid deltas we have found so far
    * @param originalDirectories set of original directories we have found so far
    * @param original set of original files we have found so far
    * @param bestBase best base file we have found so far
@@ -199,8 +134,7 @@ public class AcidDirectoryParser {
    */
   private static void getChildState(FileStatus child,
                                     ValidTxnList txnList,
-                                    List<ParsedDelta> insertDeltas,
-                                    List<ParsedDelta> deleteDeltas,
+                                    List<ParsedDelta> deltas,
                                     List<FileStatus> originalDirectories,
                                     List<FileStatus> original,
                                     TxnBase bestBase) throws IOException {
@@ -225,13 +159,13 @@ public class AcidDirectoryParser {
       ParsedDelta delta = parseDelta(child, false);
       if (txnList.isTxnRangeValid(delta.getMinTransaction(), delta.getMaxTransaction()) !=
           ValidTxnList.RangeResponse.NONE) {
-        insertDeltas.add(delta);
+        deltas.add(delta);
       }
     } else if (fn.startsWith(DELETE_DELTA_PREFIX) && child.isDirectory()) {
       ParsedDelta delta = parseDelta(child, true);
       if (txnList.isTxnRangeValid(delta.getMinTransaction(), delta.getMaxTransaction()) !=
           ValidTxnList.RangeResponse.NONE) {
-        deleteDeltas.add(delta);
+        deltas.add(delta);
       }
     } else if (child.isDirectory()) {
       // This is just the directory.  We need to recurse and find the actual files.  But don't
@@ -309,12 +243,14 @@ public class AcidDirectoryParser {
    * set of files that can satisfy the requirements.  This means that compacted deltas with
    * multiple transactions will be picked over single transaction deltas.
    * @param candidates list of all valid deltas for this transaction
-   * @param finalists select list of best deltas
+   * @param inputs select list of best insert deltas
+   * @param deletes select list of best delete deltas
    * @param bestBase the base file being used with these deltas
    * @param txnList the valid transaction list
    */
   private static void pickBestDeltas(List<ParsedDelta> candidates,
-                                     List<FileStatus> finalists,
+                                     List<FileStatus> inputs,
+                                     List<FileStatus> deletes,
                                      TxnBase bestBase,
                                      ValidTxnList txnList) {
     Collections.sort(candidates);
@@ -324,7 +260,8 @@ public class AcidDirectoryParser {
     long current = bestBase.txn;
     int lastStmtId = -1;
     ParsedDelta prev = null;
-    for(ParsedDelta next: candidates) {
+    for (ParsedDelta next: candidates) {
+      List<FileStatus> finalists = next.isDeleteDelta() ? deletes : inputs;
       if (next.getMaxTransaction() > current) {
         // are any of the new transactions ones that we care about?
         if (txnList.isTxnRangeValid(current+1, next.getMaxTransaction()) !=
@@ -335,7 +272,7 @@ public class AcidDirectoryParser {
           prev = next;
         }
       }
-      else if(next.getMaxTransaction() == current && lastStmtId >= 0) {
+      else if (next.getMaxTransaction() == current && lastStmtId >= 0) {
         //make sure to get all deltas within a single transaction;  multi-statement txn
         //generate multiple delta files with the same txnId range
         //of course, if maxTransaction has already been minor compacted, all per statement deltas are obsolete

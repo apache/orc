@@ -56,7 +56,7 @@ class ParsedDelta implements Comparable<ParsedDelta> {
   }
 
   int getStatementId() {
-    return statementId == -1 ? 0 : statementId;
+    return statementId;
   }
 
   boolean isDeleteDelta() {
