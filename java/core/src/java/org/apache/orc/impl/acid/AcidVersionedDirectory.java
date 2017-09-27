@@ -36,18 +36,18 @@ public interface AcidVersionedDirectory {
    * base and delta files.  Delete deltas are not included in this list.
    * @return list of files to read.
    */
-  List<FileStatus> getInputFiles();
+  List<ParsedAcidFile> getInputFiles();
 
   /**
    * Get a list of all delete files.
    * @return delete deltas.
    */
-  List<FileStatus> getDeleteFiles();
+  List<ParsedAcidFile> getDeleteFiles();
 
   /**
    * Get a list of all files that are pre-ACID (e.g. they do not contain the ROW__ID column).
    * Readers will need to handle these differently.
    * @return list of all original files.
    */
-  List<FileStatus> getPreAcidFiles();
+  List<ParsedAcidFile> getPreAcidFiles();
 }

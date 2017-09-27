@@ -17,6 +17,8 @@
  */
 package org.apache.orc.impl.acid;
 
+import org.apache.hadoop.classification.InterfaceAudience;
+import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -30,6 +32,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.apache.orc.impl.acid.AcidConstants.BASE_PREFIX;
 import static org.apache.orc.impl.acid.AcidConstants.DELETE_DELTA_PREFIX;
@@ -38,6 +41,8 @@ import static org.apache.orc.impl.acid.AcidConstants.DELTA_PREFIX;
 /**
  * A utility class to parse ACID directories.
  */
+@InterfaceAudience.Public
+@InterfaceStability.Evolving
 public class AcidDirectoryParser {
   private static final Logger LOG = LoggerFactory.getLogger(AcidDirectoryParser.class);
 
@@ -61,24 +66,24 @@ public class AcidDirectoryParser {
   public static AcidVersionedDirectory parseDirectory(Path directory,
                                                       Configuration conf,
                                                       ValidTxnList txnList) throws IOException {
-    final List<FileStatus> inputs = new ArrayList<>();
-    final List<FileStatus> deletes = new ArrayList<>();
-    final List<FileStatus> original = new ArrayList<>();
+    final List<ParsedAcidFile> inputs = new ArrayList<>();
+    final List<ParsedAcidFile> deletes = new ArrayList<>();
+    final List<ParsedAcidFile> original = new ArrayList<>();
 
-    List<ParsedDelta> deltas = new ArrayList<>();
+    List<ParsedAcidFile> deltas = new ArrayList<>();
     List<FileStatus> originalDirectories = new ArrayList<>();
 
     FileSystem fs = directory.getFileSystem(conf);
-    TxnBase bestBase = new TxnBase();
+    AtomicReference<ParsedAcidFile> bestBase = new AtomicReference<>();
     List<FileStatus> children = listLocatedStatus(fs, directory, hiddenFileFilter);
     for (FileStatus child : children) {
       getChildState(child, txnList, deltas, originalDirectories, original, bestBase);
     }
 
-    if (bestBase.status != null) inputs.add(bestBase.status);
+    if (bestBase.get() != null) inputs.add(bestBase.get());
 
     // If we didn't find a base but we found original directories, we need to use those originals.
-    if (bestBase.status == null && originalDirectories.size() > 0) {
+    if (bestBase.get() == null && originalDirectories.size() > 0) {
       for (FileStatus origDir : originalDirectories) {
         findOriginals(fs, origDir, original);
       }
@@ -88,22 +93,22 @@ public class AcidDirectoryParser {
     }
 
     // Decide on our deltas
-    pickBestDeltas(deltas, inputs, deletes, bestBase, txnList);
+    pickBestDeltas(deltas, inputs, deletes, bestBase.get(), txnList);
 
 
     return new AcidVersionedDirectory() {
       @Override
-      public List<FileStatus> getInputFiles() {
+      public List<ParsedAcidFile> getInputFiles() {
         return inputs;
       }
 
       @Override
-      public List<FileStatus> getDeleteFiles() {
+      public List<ParsedAcidFile> getDeleteFiles() {
         return deletes;
       }
 
       @Override
-      public List<FileStatus> getPreAcidFiles() {
+      public List<ParsedAcidFile> getPreAcidFiles() {
         return original;
       }
     };
@@ -129,40 +134,40 @@ public class AcidDirectoryParser {
    * @param deltas set of valid deltas we have found so far
    * @param originalDirectories set of original directories we have found so far
    * @param original set of original files we have found so far
-   * @param bestBase best base file we have found so far
+   * @param bestBase reference to best base file we have found so far.  The referenced value can
+   *                 be null until the bestBase is found.  It can also be null once all parsing
+   *                 is done if no base was found.
    * @throws IOException if the underlying fs calls throw it
    */
   private static void getChildState(FileStatus child,
                                     ValidTxnList txnList,
-                                    List<ParsedDelta> deltas,
+                                    List<ParsedAcidFile> deltas,
                                     List<FileStatus> originalDirectories,
-                                    List<FileStatus> original,
-                                    TxnBase bestBase) throws IOException {
+                                    List<ParsedAcidFile> original,
+                                    AtomicReference<ParsedAcidFile> bestBase) throws IOException {
     Path p = child.getPath();
     String fn = p.getName();
     if (fn.startsWith(BASE_PREFIX) && child.isDirectory()) {
       long txn = parseBase(fn);
-      if (bestBase.status == null) {
+      if (bestBase.get() == null) {
         if (isValidBase(txn, txnList)) {
-          bestBase.status = child;
-          bestBase.txn = txn;
+          bestBase.set(ParsedAcidFile.fromBaseFile(child, txn));
         }
-      } else if (bestBase.txn < txn) {
+      } else if (bestBase.get().getMaxTransaction() < txn) {
         if (isValidBase(txn, txnList)) {
           // Use this one instead of the earlier base
-          bestBase.status = child;
-          bestBase.txn = txn;
+          bestBase.set(ParsedAcidFile.fromBaseFile(child, txn));
         }
       }
       // Ignore this one as it's not as good as what we already have
     } else if (fn.startsWith(DELTA_PREFIX) && child.isDirectory()) {
-      ParsedDelta delta = parseDelta(child, false);
+      ParsedAcidFile delta = parseDelta(child, false);
       if (txnList.isTxnRangeValid(delta.getMinTransaction(), delta.getMaxTransaction()) !=
           ValidTxnList.RangeResponse.NONE) {
         deltas.add(delta);
       }
     } else if (fn.startsWith(DELETE_DELTA_PREFIX) && child.isDirectory()) {
-      ParsedDelta delta = parseDelta(child, true);
+      ParsedAcidFile delta = parseDelta(child, true);
       if (txnList.isTxnRangeValid(delta.getMinTransaction(), delta.getMaxTransaction()) !=
           ValidTxnList.RangeResponse.NONE) {
         deltas.add(delta);
@@ -174,7 +179,7 @@ public class AcidDirectoryParser {
       // in which case recursing through them could cause us to get an error.
       originalDirectories.add(child);
     } else if (child.getLen() != 0){
-      original.add(child);
+      original.add(ParsedAcidFile.fromPreAcidFile(child));
     }
   }
 
@@ -186,7 +191,7 @@ public class AcidDirectoryParser {
    */
   private static void findOriginals(FileSystem fs,
                                     FileStatus stat,
-                                    List<FileStatus> original) throws IOException {
+                                    List<ParsedAcidFile> original) throws IOException {
     assert stat.isDirectory();
     List<FileStatus> children = listLocatedStatus(fs, stat.getPath(), hiddenFileFilter);
     for (FileStatus child : children) {
@@ -194,7 +199,7 @@ public class AcidDirectoryParser {
         findOriginals(fs, child, original);
       } else {
         if(child.getLen() > 0) {
-          original.add(child);
+          original.add(ParsedAcidFile.fromPreAcidFile(child));
         }
       }
     }
@@ -222,7 +227,7 @@ public class AcidDirectoryParser {
     return baseTxnId == Long.MIN_VALUE || txnList.isValidBase(baseTxnId);
   }
 
-  private static ParsedDelta parseDelta(FileStatus fs, boolean isDeleteDelta) {
+  private static ParsedAcidFile parseDelta(FileStatus fs, boolean isDeleteDelta) {
       String rest = fs.getPath().getName().substring(isDeleteDelta ? DELETE_DELTA_PREFIX.length() :
           DELTA_PREFIX.length());
       int split = rest.indexOf('_');
@@ -232,10 +237,10 @@ public class AcidDirectoryParser {
           Long.parseLong(rest.substring(split + 1)) :
           Long.parseLong(rest.substring(split + 1, split2));
       if (split2 == -1) {
-        return new ParsedDelta(min, max, fs, isDeleteDelta);
+        return ParsedAcidFile.fromDeltaFile(min, max, fs, isDeleteDelta);
       }
       int statementId = Integer.parseInt(rest.substring(split2 + 1));
-      return new ParsedDelta(min, max, fs, statementId, isDeleteDelta);
+      return ParsedAcidFile.fromDeltaFile(min, max, fs, statementId, isDeleteDelta);
   }
 
   /**
@@ -248,25 +253,25 @@ public class AcidDirectoryParser {
    * @param bestBase the base file being used with these deltas
    * @param txnList the valid transaction list
    */
-  private static void pickBestDeltas(List<ParsedDelta> candidates,
-                                     List<FileStatus> inputs,
-                                     List<FileStatus> deletes,
-                                     TxnBase bestBase,
+  private static void pickBestDeltas(List<ParsedAcidFile> candidates,
+                                     List<ParsedAcidFile> inputs,
+                                     List<ParsedAcidFile> deletes,
+                                     ParsedAcidFile bestBase,
                                      ValidTxnList txnList) {
     Collections.sort(candidates);
     //so now, 'working' should be sorted like delta_5_20 delta_5_10 delta_11_20 delta_51_60 for example
     //and we want to end up with the best set containing all relevant data: delta_5_20 delta_51_60,
     //subject to list of 'exceptions' in 'txnList' (not show in above example).
-    long current = bestBase.txn;
+    long current = bestBase == null ? 0 : bestBase.getMaxTransaction();
     int lastStmtId = -1;
-    ParsedDelta prev = null;
-    for (ParsedDelta next: candidates) {
-      List<FileStatus> finalists = next.isDeleteDelta() ? deletes : inputs;
+    ParsedAcidFile prev = null;
+    for (ParsedAcidFile next: candidates) {
+      List<ParsedAcidFile> finalists = next.isDeleteDelta() ? deletes : inputs;
       if (next.getMaxTransaction() > current) {
         // are any of the new transactions ones that we care about?
         if (txnList.isTxnRangeValid(current+1, next.getMaxTransaction()) !=
             ValidTxnList.RangeResponse.NONE) {
-          finalists.add(next.getFileStatus());
+          finalists.add(next);
           current = next.getMaxTransaction();
           lastStmtId = next.getStatementId();
           prev = next;
@@ -276,7 +281,7 @@ public class AcidDirectoryParser {
         //make sure to get all deltas within a single transaction;  multi-statement txn
         //generate multiple delta files with the same txnId range
         //of course, if maxTransaction has already been minor compacted, all per statement deltas are obsolete
-        finalists.add(next.getFileStatus());
+        finalists.add(next);
         prev = next;
       }
       else if (prev != null && next.getMaxTransaction() == prev.getMaxTransaction()
@@ -293,16 +298,11 @@ public class AcidDirectoryParser {
         // delete_delta_40_40 and delta_50_50, then running minor compaction would produce
         // delta_30_50 and delete_delta_30_50.
 
-        finalists.add(next.getFileStatus());
+        finalists.add(next);
         prev = next;
       }
       // If it doesn't match any of these, just drop it on the floor.
     }
 
-  }
-
-  private static class TxnBase {
-    private FileStatus status;
-    private long txn = 0;
   }
 }

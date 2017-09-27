@@ -24,7 +24,6 @@ import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.ValidCompactorTxnList;
@@ -82,11 +81,11 @@ public class TestAcidDirectoryParser {
     checkExpected(expectedPreAcid, dir.getPreAcidFiles(), "pre-acids");
   }
 
-  private void checkExpected(Set<String> expected, List<FileStatus> files, String name) {
+  private void checkExpected(Set<String> expected, List<ParsedAcidFile> files, String name) {
     Assert.assertEquals("Found wrong number of " + name, expected.size(), files.size());
-    for (FileStatus stat : files) {
-      Assert.assertTrue("Found unexpected file in " + name + ": " + stat.getPath().getName(),
-          expected.contains(stat.getPath().getName()));
+    for (ParsedAcidFile paf : files) {
+      Assert.assertTrue("Found unexpected file in " + name + ": " + paf.getFileStatus().getPath().getName(),
+          expected.contains(paf.getFileStatus().getPath().getName()));
     }
   }
 
@@ -152,7 +151,7 @@ public class TestAcidDirectoryParser {
   }
 
   @Test
-  public void testOverlapingDelta() throws Exception {
+  public void testOverlappingDelta() throws Exception {
     expectedInputs.add(createFile("delta_0000063_63/bucket_0").getParent().getName());
     expectedInputs.add(createFile("delta_000062_62/bucket_0").getParent().getName());
     expectedInputs.add(createFile("delta_00061_61/bucket_0").getParent().getName());
