@@ -63,12 +63,12 @@ public class AcidDirectoryParser {
    * @throws IOException if thrown by underlying file operations or there is something wrong in
    * the directory layout.
    */
-  public static AcidVersionedDirectory parseDirectory(Path directory,
-                                                      Configuration conf,
-                                                      ValidTxnList txnList) throws IOException {
-    final List<ParsedAcidFile> inputs = new ArrayList<>();
-    final List<ParsedAcidFile> deletes = new ArrayList<>();
-    final List<ParsedAcidFile> original = new ArrayList<>();
+  public static ParsedAcidDirectory parseDirectory(Path directory,
+                                                   Configuration conf,
+                                                   ValidTxnList txnList) throws IOException {
+    List<ParsedAcidFile> inputDirs = new ArrayList<>();
+    List<ParsedAcidFile> deleteDirs = new ArrayList<>();
+    List<ParsedAcidFile> original = new ArrayList<>();
 
     List<ParsedAcidFile> deltas = new ArrayList<>();
     List<FileStatus> originalDirectories = new ArrayList<>();
@@ -80,38 +80,28 @@ public class AcidDirectoryParser {
       getChildState(child, txnList, deltas, originalDirectories, original, bestBase);
     }
 
-    if (bestBase.get() != null) inputs.add(bestBase.get());
+    if (bestBase.get() != null) inputDirs.add(bestBase.get());
 
     // If we didn't find a base but we found original directories, we need to use those originals.
-    if (bestBase.get() == null && originalDirectories.size() > 0) {
+    if (bestBase.get() == null && (originalDirectories.size() > 0 || !original.isEmpty())) {
       for (FileStatus origDir : originalDirectories) {
         findOriginals(fs, origDir, original);
       }
       // We need to consistently sort the originals so that every reader thinks of them in the
       // same order when assigning delta ids.
       Collections.sort(original);
+      inputDirs.addAll(original);
     }
 
     // Decide on our deltas
-    pickBestDeltas(deltas, inputs, deletes, bestBase.get(), txnList);
+    pickBestDeltas(deltas, inputDirs, deleteDirs, bestBase.get(), txnList);
 
+    // Now, we've figured out which directories to read.  Now we need to find all of the files in
+    // those directories.
+    List<ParsedAcidFile> inputFiles = getFilesInDirs(fs, inputDirs);
+    List<ParsedAcidFile> deleteFiles = getFilesInDirs(fs, deleteDirs);
 
-    return new AcidVersionedDirectory() {
-      @Override
-      public List<ParsedAcidFile> getInputFiles() {
-        return inputs;
-      }
-
-      @Override
-      public List<ParsedAcidFile> getDeleteFiles() {
-        return deletes;
-      }
-
-      @Override
-      public List<ParsedAcidFile> getPreAcidFiles() {
-        return original;
-      }
-    };
+    return new ParsedAcidDirectory(inputFiles, deleteFiles);
   }
 
   private static List<FileStatus> listLocatedStatus(final FileSystem fs,
@@ -304,5 +294,40 @@ public class AcidDirectoryParser {
       // If it doesn't match any of these, just drop it on the floor.
     }
 
+  }
+
+  private static List<ParsedAcidFile> getFilesInDirs(FileSystem fs, List<ParsedAcidFile> dirs)
+      throws IOException {
+    if (dirs == null || dirs.isEmpty()) return Collections.emptyList();
+
+    List<ParsedAcidFile> files = new ArrayList<>();
+    for (ParsedAcidFile dir : dirs) {
+      if (dir.getFileStatus().isDirectory()) {
+        FileStatus[] stats = fs.listStatus(dir.getFileStatus().getPath());
+        for (FileStatus stat : stats) {
+          if (stat.isFile()) {
+            files.add(ParsedAcidFile.fromDirectory(dir, stat));
+          } else {
+            throw new IOException(stat.getPath().toString() +
+                " is not a regular file.  Expected to only find regular files inside acid " +
+                "directories");
+          }
+        }
+      } else {
+        // this can happen with original files, which may be a file rather than a directory
+        if (!dir.getFileStatus().isFile()) {
+          throw new IOException("Unexpected file type for file " +
+              dir.getFileStatus().getPath().toString());
+        }
+        if (!dir.isPreAcid()) {
+          throw new IOException(dir.getFileStatus().getPath().toString() +
+              " is a file, but is not marked as pre-acid.  Only pre-acid files should be regular " +
+              "files rather than directories");
+        }
+        files.add(dir);
+      }
+
+    }
+    return files;
   }
 }

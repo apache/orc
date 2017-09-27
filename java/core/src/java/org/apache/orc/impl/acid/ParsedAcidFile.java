@@ -82,6 +82,19 @@ public class ParsedAcidFile implements Comparable<ParsedAcidFile> {
     return new ParsedAcidFile(minTxn, maxTxn, deltaFile, statementId, isDeleteDelta);
   }
 
+  /**
+   * Build a ParsedAcidFile from its parent directory.  This is useful when finding all the
+   * buckets in an acid directory.
+   * @param dir parent directory
+   * @param file bucket file
+   * @return new ParsedAcidFile with the same transaction and statement id information as its
+   * parent.
+   */
+  static ParsedAcidFile fromDirectory(ParsedAcidFile dir, FileStatus file) {
+    return new ParsedAcidFile(dir.minTransaction, dir.maxTransaction, file, dir.statementId,
+        dir.isDeleteDelta);
+  }
+
 
   private ParsedAcidFile(long min, long max, FileStatus fileStatus, int statementId, boolean isDeleteDelta) {
     this.minTransaction = min;
@@ -111,6 +124,18 @@ public class ParsedAcidFile implements Comparable<ParsedAcidFile> {
     return isDeleteDelta;
   }
 
+  public boolean isBase() {
+    return minTransaction == 0 && maxTransaction < Long.MAX_VALUE;
+  }
+
+  public boolean isDelta() {
+    return minTransaction > 0;
+  }
+
+  public boolean isPreAcid() {
+    return minTransaction == 0 && maxTransaction == Long.MAX_VALUE;
+  }
+
   /**
    * Compactions (Major/Minor) merge deltas/bases but delete of old files
    * happens in a different process; thus it's possible to have bases/deltas with
@@ -119,28 +144,28 @@ public class ParsedAcidFile implements Comparable<ParsedAcidFile> {
    * This sorts "wider" delta before "narrower" i.e. delta_5_20 sorts before delta_5_10 (and delta_11_20)
    */
   @Override
-  public int compareTo(ParsedAcidFile parsedAcidFile) {
-    if (minTransaction != parsedAcidFile.minTransaction) {
-      if (minTransaction < parsedAcidFile.minTransaction) {
+  public int compareTo(ParsedAcidFile other) {
+    if (minTransaction != other.minTransaction) {
+      if (minTransaction < other.minTransaction) {
         return -1;
       } else {
         return 1;
       }
-    } else if (maxTransaction != parsedAcidFile.maxTransaction) {
-      if (maxTransaction < parsedAcidFile.maxTransaction) {
+    } else if (maxTransaction != other.maxTransaction) {
+      if (maxTransaction < other.maxTransaction) {
         return 1;
       } else {
         return -1;
       }
     }
-    else if(statementId != parsedAcidFile.statementId) {
+    else if(statementId != other.statementId) {
       /*
        * We want deltas after minor compaction (w/o statementId) to sort
        * earlier so that getAcidState() considers compacted files (into larger ones) obsolete
        * Before compaction, include deltas with all statementIds for a given txnId
        * in a {@link org.apache.hadoop.hive.ql.io.AcidUtils.Directory}
        */
-      if(statementId < parsedAcidFile.statementId) {
+      if(statementId < other.statementId) {
         return -1;
       }
       else {
@@ -148,11 +173,10 @@ public class ParsedAcidFile implements Comparable<ParsedAcidFile> {
       }
     }
     else {
-      return fileStatus.compareTo(parsedAcidFile.fileStatus);
+      return fileStatus.compareTo(other.fileStatus);
     }
   }
 
-  // The below overrides are just to keep findbugs happy, I don't think they're useful.
   @Override
   public boolean equals(Object other) {
     return other instanceof ParsedAcidFile && compareTo((ParsedAcidFile) other) == 0;

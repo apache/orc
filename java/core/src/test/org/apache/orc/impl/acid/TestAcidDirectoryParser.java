@@ -22,81 +22,45 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.hive.common.ValidCompactorTxnList;
 import org.apache.hadoop.hive.common.ValidReadTxnList;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-public class TestAcidDirectoryParser {
-  private Configuration conf;
-  private FileSystem fs;
-  private Path baseDir;
-  private Set<String> expectedInputs;
-  private Set<String> expectedDeletes;
-  private Set<String> expectedPreAcid;
-
-  @Before
-  public void createFs() throws IOException {
-    conf = new Configuration();
-    fs = FileSystem.getLocal(conf);
-    baseDir = new Path("target/testing-tmp/test-acid-directory-parser");
-  }
+public class TestAcidDirectoryParser extends AcidTestBase {
+  private Set<FileStatus> expectedInputs;
+  private Set<FileStatus> expectedDeletes;
 
   @Before
   public void initExpectedFiles() {
     expectedInputs = new HashSet<>();
     expectedDeletes = new HashSet<>();
-    expectedPreAcid = new HashSet<>();
   }
 
-  @After
-  public void cleanupFs() throws IOException {
-    fs.delete(baseDir, true);
-  }
-
-  private Path createFile(String name) throws IOException {
-    Path parent = baseDir;
-    Path namePath = new Path(name);
-    if (namePath.getParent() != null) {
-      Path dirPath = new Path(baseDir, namePath.getParent());
-      fs.mkdirs(dirPath);
-      parent = dirPath;
-    }
-    Path path = new Path(parent, name);
-    FSDataOutputStream out = fs.create(path);
-    out.writeBytes("abc123");
-    out.close();
-    return path;
-  }
-
-  private void checkExpected(AcidVersionedDirectory dir) {
+  private void checkExpected(ParsedAcidDirectory dir) {
     checkExpected(expectedInputs, dir.getInputFiles(), "inputs");
     checkExpected(expectedDeletes, dir.getDeleteFiles(), "deletes");
-    checkExpected(expectedPreAcid, dir.getPreAcidFiles(), "pre-acids");
   }
 
-  private void checkExpected(Set<String> expected, List<ParsedAcidFile> files, String name) {
+  private void checkExpected(Set<FileStatus> expected, List<ParsedAcidFile> files, String name) {
     Assert.assertEquals("Found wrong number of " + name, expected.size(), files.size());
     for (ParsedAcidFile paf : files) {
-      Assert.assertTrue("Found unexpected file in " + name + ": " + paf.getFileStatus().getPath().getName(),
-          expected.contains(paf.getFileStatus().getPath().getName()));
+      Assert.assertTrue("Found unexpected file in " + name + ": " +
+              paf.getFileStatus().getPath().toString(),
+          expected.contains(paf.getFileStatus()));
     }
   }
 
   @Test
   public void testOriginal() throws IOException {
-    expectedPreAcid.add(createFile("000000_0").getName());
-    expectedPreAcid.add(createFile("000000_1").getName());
-    expectedPreAcid.add(createFile("000000_2").getName());
-    expectedPreAcid.add(createFile("subdir/000000_3").getName());
+    expectedInputs.add(createFile("000000_0"));
+    expectedInputs.add(createFile("000000_1"));
+    expectedInputs.add(createFile("000000_2"));
+    expectedInputs.add(createFile("subdir/000000_3"));
     createFile("_done");
-    expectedPreAcid.add(createFile("random").getName());
+    expectedInputs.add(createFile("random"));
 
     checkExpected(AcidDirectoryParser.parseDirectory(baseDir, conf,
         new ValidReadTxnList("100:" + Long.MAX_VALUE + ":")));
@@ -104,17 +68,16 @@ public class TestAcidDirectoryParser {
 
   @Test
   public void testOriginalDeltas() throws Exception {
-    expectedPreAcid.add(createFile("000000_0").getName());
-    expectedPreAcid.add(createFile("000000_1").getName());
-    expectedPreAcid.add(createFile("000000_2").getName());
-    expectedPreAcid.add(createFile("subdir/000000_3").getName());
+    expectedInputs.add(createFile("000000_0"));
+    expectedInputs.add(createFile("000000_1"));
+    expectedInputs.add(createFile("000000_2"));
     createFile("_done");
-    expectedPreAcid.add(createFile("random").getName());
+    expectedInputs.add(createFile("random"));
     createFile("delta_025_025/bucket_0");
     createFile("delta_029_029/bucket_0");
-    expectedInputs.add(createFile("delta_025_30/bucket_0").getParent().getName());
-    expectedInputs.add(createFile("delta_50_99/bucket_0").getParent().getName());
-    expectedInputs.add(createFile("delta_100_100/bucket_0").getParent().getName());
+    expectedInputs.add(createFile("delta_025_30/bucket_0"));
+    expectedInputs.add(createFile("delta_50_99/bucket_0"));
+    expectedInputs.add(createFile("delta_100_100/bucket_0"));
     createFile("delta_101_101/bucket_0");
 
     checkExpected(AcidDirectoryParser.parseDirectory(baseDir, conf,
@@ -125,11 +88,11 @@ public class TestAcidDirectoryParser {
   public void testBaseDeltas() throws Exception {
     createFile("base_5/bucket_0");
     createFile("base_10/bucket_0");
-    expectedInputs.add(createFile("base_49/bucket_0").getParent().getName());
+    expectedInputs.add(createFile("base_49/bucket_0"));
     createFile("delta_025_025/bucket_0");
     createFile("delta_029_029/bucket_0");
     createFile("delta_025_030/bucket_0");
-    expectedInputs.add(createFile("delta_050_105/bucket_0").getParent().getName());
+    expectedInputs.add(createFile("delta_050_105/bucket_0"));
     createFile("delta_090_120/bucket_0");
 
     checkExpected(AcidDirectoryParser.parseDirectory(baseDir, conf,
@@ -142,8 +105,8 @@ public class TestAcidDirectoryParser {
     createFile("base_10/bucket_0");
     createFile("base_25/bucket_0");
     createFile("delta_098_100/bucket_0");
-    expectedInputs.add(createFile("base_100/bucket_0").getParent().getName());
-    expectedInputs.add(createFile("delta_120_130/bucket_0").getParent().getName());
+    expectedInputs.add(createFile("base_100/bucket_0"));
+    expectedInputs.add(createFile("delta_120_130/bucket_0"));
     createFile("base_200/bucket_0");
 
     checkExpected(AcidDirectoryParser.parseDirectory(baseDir, conf,
@@ -152,13 +115,13 @@ public class TestAcidDirectoryParser {
 
   @Test
   public void testOverlappingDelta() throws Exception {
-    expectedInputs.add(createFile("delta_0000063_63/bucket_0").getParent().getName());
-    expectedInputs.add(createFile("delta_000062_62/bucket_0").getParent().getName());
-    expectedInputs.add(createFile("delta_00061_61/bucket_0").getParent().getName());
-    expectedInputs.add(createFile("delta_40_60/bucket_0").getParent().getName());
+    expectedInputs.add(createFile("delta_0000063_63/bucket_0"));
+    expectedInputs.add(createFile("delta_000062_62/bucket_0"));
+    expectedInputs.add(createFile("delta_00061_61/bucket_0"));
+    expectedInputs.add(createFile("delta_40_60/bucket_0"));
     createFile("delta_0060_60/bucket_0");
     createFile("delta_052_55/bucket_0");
-    expectedInputs.add(createFile("base_50/bucket_0").getParent().getName());
+    expectedInputs.add(createFile("base_50/bucket_0"));
 
     checkExpected(AcidDirectoryParser.parseDirectory(baseDir, conf,
         new ValidReadTxnList("100:" + Long.MAX_VALUE + ":")));
@@ -169,17 +132,17 @@ public class TestAcidDirectoryParser {
    */
   @Test
   public void testOverlapingDelta2() throws Exception {
-    expectedInputs.add(createFile("delta_0000063_63_0/bucket_0").getParent().getName());
-    expectedInputs.add(createFile("delta_000062_62_0/bucket_0").getParent().getName());
-    expectedInputs.add(createFile("delta_000062_62_3/bucket_0").getParent().getName());
-    expectedInputs.add(createFile("delta_00061_61_0/bucket_0").getParent().getName());
-    expectedInputs.add(createFile("delta_40_60/bucket_0").getParent().getName());
+    expectedInputs.add(createFile("delta_0000063_63_0/bucket_0"));
+    expectedInputs.add(createFile("delta_000062_62_0/bucket_0"));
+    expectedInputs.add(createFile("delta_000062_62_3/bucket_0"));
+    expectedInputs.add(createFile("delta_00061_61_0/bucket_0"));
+    expectedInputs.add(createFile("delta_40_60/bucket_0"));
     createFile("delta_0060_60_1/bucket_0");
     createFile("delta_0060_60_4/bucket_0");
     createFile("delta_0060_60_7/bucket_0");
     createFile("delta_052_55/bucket_0");
     createFile("delta_058_58/bucket_0");
-    expectedInputs.add(createFile("base_50/bucket_0").getParent().getName());
+    expectedInputs.add(createFile("base_50/bucket_0"));
 
     checkExpected(AcidDirectoryParser.parseDirectory(baseDir, conf,
         new ValidReadTxnList("100:" + Long.MAX_VALUE + ":")));
@@ -187,8 +150,8 @@ public class TestAcidDirectoryParser {
 
   @Test
   public void deltasWithOpenTxnInRead() throws Exception {
-    expectedInputs.add(createFile("delta_1_1/bucket_0").getParent().getName());
-    expectedInputs.add(createFile("delta_2_5/bucket_0").getParent().getName());
+    expectedInputs.add(createFile("delta_1_1/bucket_0"));
+    expectedInputs.add(createFile("delta_2_5/bucket_0"));
 
     checkExpected(AcidDirectoryParser.parseDirectory(baseDir, conf,
         new ValidReadTxnList("100:4:4")));
@@ -196,8 +159,8 @@ public class TestAcidDirectoryParser {
 
   @Test
   public void deltasWithOpenTxnInRead2() throws Exception {
-    expectedInputs.add(createFile("delta_1_1/bucket_0").getParent().getName());
-    expectedInputs.add(createFile("delta_2_5/bucket_0").getParent().getName());
+    expectedInputs.add(createFile("delta_1_1/bucket_0"));
+    expectedInputs.add(createFile("delta_2_5/bucket_0"));
     createFile("delta_4_4_1/bucket_0");
     createFile("delta_4_4_3/bucket_0");
     createFile("delta_101_101_1/bucket_0");
@@ -208,7 +171,7 @@ public class TestAcidDirectoryParser {
 
   @Test
   public void deltasWithOpenTxnsNotInCompact() throws Exception {
-    expectedInputs.add(createFile("delta_1_1/bucket_0").getParent().getName());
+    expectedInputs.add(createFile("delta_1_1/bucket_0"));
     createFile("delta_2_5/bucket_0");
 
     checkExpected(AcidDirectoryParser.parseDirectory(baseDir, conf,
@@ -217,7 +180,7 @@ public class TestAcidDirectoryParser {
 
   @Test
   public void deltasWithOpenTxnsNotInCompact2() throws Exception {
-    expectedInputs.add(createFile("delta_1_1/bucket_0").getParent().getName());
+    expectedInputs.add(createFile("delta_1_1/bucket_0"));
     createFile("delta_2_5/bucket_0");
     createFile("delta_2_5/bucket_0" + AcidConstants.DELTA_SIDE_FILE_SUFFIX);
     createFile("delta_6_10/bucket_0");
@@ -230,14 +193,14 @@ public class TestAcidDirectoryParser {
   public void testBaseWithDeleteDeltas() throws Exception {
     createFile("base_5/bucket_0");
     createFile("base_10/bucket_0");
-    expectedInputs.add(createFile("base_49/bucket_0").getParent().getName());
+    expectedInputs.add(createFile("base_49/bucket_0"));
     createFile("delta_025_025/bucket_0");
     createFile("delta_029_029/bucket_0");
     createFile("delete_delta_029_029/bucket_0");
     createFile("delta_025_030/bucket_0");
     createFile("delete_delta_025_030/bucket_0");
-    expectedInputs.add(createFile("delta_050_105/bucket_0").getParent().getName());
-    expectedDeletes.add(createFile("delete_delta_050_105/bucket_0").getParent().getName());
+    expectedInputs.add(createFile("delta_050_105/bucket_0"));
+    expectedDeletes.add(createFile("delete_delta_050_105/bucket_0"));
     // The delete_delta_110_110 should not be read because it is greater than the high watermark.
     createFile("delete_delta_110_110/bucket_0");
 
@@ -247,16 +210,16 @@ public class TestAcidDirectoryParser {
 
   @Test
   public void testOverlapingDeltaAndDeleteDelta() throws Exception {
-    expectedInputs.add(createFile("delta_0000063_63/bucket_0").getParent().getName());
-    expectedInputs.add(createFile("delta_000062_62/bucket_0").getParent().getName());
-    expectedInputs.add(createFile("delta_00061_61/bucket_0").getParent().getName());
-    expectedDeletes.add(createFile("delete_delta_00064_64/bucket_0").getParent().getName());
-    expectedInputs.add(createFile("delta_40_60/bucket_0").getParent().getName());
-    expectedDeletes.add(createFile("delete_delta_40_60/bucket_0").getParent().getName());
+    expectedInputs.add(createFile("delta_0000063_63/bucket_0"));
+    expectedInputs.add(createFile("delta_000062_62/bucket_0"));
+    expectedInputs.add(createFile("delta_00061_61/bucket_0"));
+    expectedDeletes.add(createFile("delete_delta_00064_64/bucket_0"));
+    expectedInputs.add(createFile("delta_40_60/bucket_0"));
+    expectedDeletes.add(createFile("delete_delta_40_60/bucket_0"));
     createFile("delta_0060_60/bucket_0");
     createFile("delta_052_55/bucket_0");
     createFile("delete_delta_052_55/bucket_0");
-    expectedInputs.add(createFile("base_50/bucket_0").getParent().getName());
+    expectedInputs.add(createFile("base_50/bucket_0"));
 
     checkExpected(AcidDirectoryParser.parseDirectory(baseDir, conf,
         new ValidReadTxnList("100:" + Long.MAX_VALUE + ":")));
@@ -266,7 +229,7 @@ public class TestAcidDirectoryParser {
   // then it will make any delete delta in that range as obsolete.
   @Test
   public void testMinorCompactedDeltaMakesInBetweenDeleteDeltaObsolete() throws Exception {
-    expectedInputs.add(createFile("delta_40_60/bucket_0").getParent().getName());
+    expectedInputs.add(createFile("delta_40_60/bucket_0"));
     createFile("delete_delta_50_50/bucket_0");
 
     checkExpected(AcidDirectoryParser.parseDirectory(baseDir, conf,
@@ -277,8 +240,8 @@ public class TestAcidDirectoryParser {
   // compactions specifies a valid open txn range.
   @Test
   public void deltasAndDeleteDeltasWithOpenTxnsNotInCompact() throws Exception {
-    expectedInputs.add(createFile("delta_1_1/bucket_0").getParent().getName());
-    expectedDeletes.add(createFile("delete_delta_2_2/bucket_0").getParent().getName());
+    expectedInputs.add(createFile("delta_1_1/bucket_0"));
+    expectedDeletes.add(createFile("delete_delta_2_2/bucket_0"));
     createFile("delta_2_5/bucket_0");
     createFile("delete_delta_2_5/bucket_0");
     createFile("delta_2_5/bucket_0" + AcidConstants.DELTA_SIDE_FILE_SUFFIX);
@@ -291,9 +254,9 @@ public class TestAcidDirectoryParser {
 
   @Test
   public void deleteDeltasWithOpenTxnInRead() throws Exception {
-    expectedInputs.add(createFile("delta_1_1/bucket_0").getParent().getName());
-    expectedInputs.add(createFile("delta_2_5/bucket_0").getParent().getName());
-    expectedDeletes.add(createFile("delete_delta_2_5/bucket_0").getParent().getName());
+    expectedInputs.add(createFile("delta_1_1/bucket_0"));
+    expectedInputs.add(createFile("delta_2_5/bucket_0"));
+    expectedDeletes.add(createFile("delete_delta_2_5/bucket_0"));
     // Note that delete_delta_3_3 should not be read, when a minor compacted
     // [delete_]delta_2_5 is present.
     createFile("delete_delta_3_3/bucket_0");
@@ -303,5 +266,43 @@ public class TestAcidDirectoryParser {
 
     checkExpected(AcidDirectoryParser.parseDirectory(baseDir, conf,
         new ValidReadTxnList("100:4:4")));
+  }
+
+  @Test
+  public void origWithBase() throws IOException {
+    createFile("000000_0");
+    createFile("subdir/000000_3");
+    createFile("_done");
+    createFile("random");
+    createFile("delta_025_025/bucket_0");
+    createFile("delta_025_30/bucket_0");
+    expectedInputs.add(createFile("delta_50_99/bucket_0"));
+    expectedInputs.add(createFile("delta_100_100/bucket_0"));
+    createFile("delta_101_101/bucket_0");
+    createFile("base_10/bucket_0");
+    expectedInputs.add(createFile("base_49/bucket_0"));
+
+    checkExpected(AcidDirectoryParser.parseDirectory(baseDir, conf,
+        new ValidReadTxnList("100:" + Long.MAX_VALUE + ":")));
+  }
+
+  @Test
+  public void multipleBuckets() throws IOException {
+    createFile("delta_025_025/bucket_0");
+    createFile("delta_025_025/bucket_1");
+    createFile("delta_025_30/bucket_0");
+    expectedInputs.add(createFile("delta_50_99/bucket_0"));
+    expectedInputs.add(createFile("delta_50_99/bucket_1"));
+    expectedDeletes.add(createFile("delete_delta_50_99/bucket_0"));
+    expectedDeletes.add(createFile("delete_delta_50_99/bucket_1"));
+    expectedInputs.add(createFile("delta_100_100/bucket_0"));
+    expectedInputs.add(createFile("delta_100_100/bucket_1"));
+    createFile("delta_101_101/bucket_0");
+    createFile("base_10/bucket_0");
+    expectedInputs.add(createFile("base_49/bucket_0"));
+    expectedInputs.add(createFile("base_49/bucket_1"));
+
+    checkExpected(AcidDirectoryParser.parseDirectory(baseDir, conf,
+        new ValidReadTxnList("100:" + Long.MAX_VALUE + ":")));
   }
 }

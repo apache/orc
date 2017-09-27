@@ -35,7 +35,7 @@ import org.apache.orc.impl.MemoryManagerImpl;
 import org.apache.orc.impl.OrcTail;
 import org.apache.orc.impl.ReaderImpl;
 import org.apache.orc.impl.WriterImpl;
-import org.apache.orc.impl.acid.AcidReaderImpl;
+import org.apache.orc.impl.acid.ParsedAcidDirectory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -275,6 +275,7 @@ public class OrcFile {
     // For now keeping this around to avoid complex surgery
     private FileMetadata fileMetadata;
     private ValidTxnList validTxns;
+    private ParsedAcidDirectory acidDir;
 
     public ReaderOptions(Configuration conf) {
       this.conf = conf;
@@ -292,6 +293,33 @@ public class OrcFile {
 
     public ReaderOptions orcTail(OrcTail tail) {
       this.orcTail = tail;
+      return this;
+    }
+
+    /**
+     * Provide the transaction context for this read.  If you are reading non-transaction files
+     * this is ignored and you do not need to call it.  If you are reading transaction files you
+     * must provide this value.
+     * @param validTxns transaction context for this read.
+     * @return The this pointer.
+     */
+    public ReaderOptions validTxnList(ValidTxnList validTxns) {
+      this.validTxns = validTxns;
+      return this;
+    }
+
+    /**
+     * If the directory of ACID files to be read has already been parsed the result can be set
+     * here.  This is a performance optimization as it means the directory can be parsed once up
+     * front rather than being parsed when every input file in the directory is read.  You do not
+     * need to call this.  If you do not the directory will be parsed (possibly many times).
+     * This is only meaningful when reading ACID files.
+     * @param acidDir parsed directory.  Note that this refers to the top level acid directory,
+     *                not a particular delta or base directory.
+     * @return The this pointer.
+     */
+    public ReaderOptions acidDir(ParsedAcidDirectory acidDir) {
+      this.acidDir = acidDir;
       return this;
     }
 
@@ -320,13 +348,12 @@ public class OrcFile {
       return fileMetadata;
     }
 
-    public ReaderOptions validTxnList(ValidTxnList validTxns) {
-      this.validTxns = validTxns;
-      return this;
-    }
-
     public ValidTxnList getValidTxns() {
       return validTxns;
+    }
+
+    public ParsedAcidDirectory getAcidDir() {
+      return acidDir;
     }
   }
 

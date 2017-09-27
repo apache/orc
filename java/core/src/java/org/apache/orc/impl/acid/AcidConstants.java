@@ -17,8 +17,12 @@
  */
 package org.apache.orc.impl.acid;
 
+import java.util.regex.Pattern;
+
 class AcidConstants {
   static final String BASE_PREFIX = "base_";
+  static final Pattern BUCKET_PATTERN = Pattern.compile("bucket_([0-9]+)");
+  static final Pattern LEGACY_BUCKET_PATTERN = Pattern.compile("[0-9]+_([0-9]+)");
   static final String DELTA_PREFIX = "delta_";
   static final String DELETE_DELTA_PREFIX = "delete_delta_";
   static final String DELTA_SIDE_FILE_SUFFIX = "_flush_length";
