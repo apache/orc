@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,7 +21,6 @@ package org.apache.orc.impl;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -40,6 +39,7 @@ import org.apache.orc.CompressionCodec;
 import org.apache.orc.FileFormatException;
 import org.apache.orc.StripeInformation;
 import org.apache.orc.StripeStatistics;
+import org.apache.orc.UnknownFormatException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -135,7 +135,7 @@ public class ReaderImpl implements Reader {
 
   @Override
   public List<String> getMetadataKeys() {
-    List<String> result = new ArrayList<String>();
+    List<String> result = new ArrayList<>();
     for(OrcProto.UserMetadataItem item: userMetadata) {
       result.add(item.getName());
     }
@@ -244,7 +244,6 @@ public class ReaderImpl implements Reader {
    * @param path the filename for error messages
    * @param psLen the postscript length
    * @param buffer the tail of the file
-   * @throws IOException
    */
   protected static void ensureOrcFooter(FSDataInputStream in,
                                         Path path,
@@ -277,7 +276,6 @@ public class ReaderImpl implements Reader {
    * files or RC files as ORC files.
    * @param psLen the postscript length
    * @param buffer the tail of the file
-   * @throws IOException
    */
   protected static void ensureOrcFooter(ByteBuffer buffer, int psLen) throws IOException {
     int magicLength = OrcFile.MAGIC.length();
@@ -317,25 +315,16 @@ public class ReaderImpl implements Reader {
   /**
    * Check to see if this ORC file is from a future version and if so,
    * warn the user that we may not be able to read all of the column encodings.
-   * @param log the logger to write any error message to
    * @param path the data source path for error messages
-   * @param version the version of hive that wrote the file.
+   * @param postscript the parsed postscript
    */
-  protected static void checkOrcVersion(Logger log, Path path,
-                                        List<Integer> version) {
-    if (version.size() >= 1) {
-      int major = version.get(0);
-      int minor = 0;
-      if (version.size() >= 2) {
-        minor = version.get(1);
-      }
-      if (major > OrcFile.Version.CURRENT.getMajor() ||
-          (major == OrcFile.Version.CURRENT.getMajor() &&
-           minor > OrcFile.Version.CURRENT.getMinor())) {
-        log.warn(path + " was written by a future Hive version " +
-                 versionString(version) +
-                 ". This file may not be readable by this version of Hive.");
-      }
+  protected static void checkOrcVersion(Path path,
+                                        OrcProto.PostScript postscript
+                                        ) throws IOException {
+    List<Integer> version = postscript.getVersionList();
+    if (getFileVersion(version) == OrcFile.Version.FUTURE) {
+      throw new UnknownFormatException(path, versionString(version),
+          postscript);
     }
   }
 
@@ -343,7 +332,6 @@ public class ReaderImpl implements Reader {
   * Constructor that let's the user specify additional options.
    * @param path pathname for file
    * @param options options for reading
-   * @throws IOException
    */
   public ReaderImpl(Path path, OrcFile.ReaderOptions options) throws IOException {
     FileSystem fs = options.getFilesystem();
@@ -376,6 +364,7 @@ public class ReaderImpl implements Reader {
         tail = extractFileTail(fs, path, options.getMaxLength());
         options.orcTail(tail);
       } else {
+        checkOrcVersion(path, orcTail.getPostScript());
         tail = orcTail;
       }
       this.compressionKind = tail.getCompressionKind();
@@ -438,7 +427,7 @@ public class ReaderImpl implements Reader {
     CodedInputStream in = CodedInputStream.newInstance(
         bb.array(), bb.arrayOffset() + psAbsOffset, psLen);
     OrcProto.PostScript ps = OrcProto.PostScript.parseFrom(in);
-    checkOrcVersion(LOG, path, ps.getVersionList());
+    checkOrcVersion(path, ps);
 
     // Check compression codec.
     switch (ps.getCompression()) {
@@ -470,7 +459,7 @@ public class ReaderImpl implements Reader {
     OrcProto.PostScript ps = OrcProto.PostScript.parseFrom(psBuffer);
     int footerSize = (int) ps.getFooterLength();
     CompressionKind kind = CompressionKind.valueOf(ps.getCompression().name());
-    OrcProto.FileTail.Builder fileTailBuilder = null;
+    OrcProto.FileTail.Builder fileTailBuilder;
     CompressionCodec codec = OrcCodecPool.getCodec(kind);
     try {
       OrcProto.Footer footer = extractFooter(buffer,
@@ -601,7 +590,7 @@ public class ReaderImpl implements Reader {
       buffer.position(footerOffset);
       ByteBuffer footerBuffer = buffer.slice();
       buffer.reset();
-      OrcProto.Footer footer = null;
+      OrcProto.Footer footer;
       CompressionCodec codec = OrcCodecPool.getCodec(compressionKind);
       try {
         footer = extractFooter(footerBuffer, 0, footerSize, codec, bufferSize);
