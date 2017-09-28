@@ -3233,4 +3233,19 @@ public class TestVectorOrcFile {
         TypeDescription.fromString("struct<>").createRowBatch();
     assertEquals(false, reader.rows().nextBatch(batch));
   }
+
+  @Test
+  public void testFutureOrcFile() throws Exception {
+    Path zeroFile = new Path(exampleDir, "version1999.orc");
+    try {
+      Reader reader = OrcFile.createReader(zeroFile, OrcFile.readerOptions(conf));
+      assertTrue("no exception for bad verion", false);
+    } catch (UnknownFormatException uf) {
+      assertEquals("path is correct", "version1999.orc", uf.getPath().getName());
+      assertEquals("19.99", uf.getVersionString());
+      OrcProto.PostScript ps = uf.getPostscript();
+      assertEquals("ORC", ps.getMagic());
+      assertEquals(OrcProto.CompressionKind.NONE, ps.getCompression());
+    }
+  }
 }
