@@ -20,10 +20,43 @@ package org.apache.orc.impl.acid;
 import java.util.regex.Pattern;
 
 class AcidConstants {
+  // File prefixes
   static final String BASE_PREFIX = "base_";
-  static final Pattern BUCKET_PATTERN = Pattern.compile("bucket_([0-9]+)");
-  static final Pattern LEGACY_BUCKET_PATTERN = Pattern.compile("[0-9]+_([0-9]+)");
   static final String DELTA_PREFIX = "delta_";
   static final String DELETE_DELTA_PREFIX = "delete_delta_";
+
+  // File patterns
   static final String DELTA_SIDE_FILE_SUFFIX = "_flush_length";
+  static final Pattern BUCKET_PATTERN = Pattern.compile("bucket_([0-9]+)");
+  static final Pattern LEGACY_BUCKET_PATTERN = Pattern.compile("[0-9]+_([0-9]+)");
+
+  /**
+   * Operation is no longer necessary but is still present for backwards compatibility
+   */
+  public static final String ROW_ID_OPERATION_COL_NAME = "operation";
+  public static final int ROW_ID_OPERATION_OFFSET = 0;
+  public static final String ROW_ID_ORIG_TXN_COL_NAME = "original_transaction";
+  public static final int ROW_ID_ORIG_TXN_OFFSET = 1;
+  /**
+   * Bucket is now really writer id, but still called bucket for backwards compatibility.
+   */
+  public static final String ROW_ID_BUCKET_COL_NAME = "bucket";
+  public static final int ROW_ID_BUCKET_OFFSET = 2;
+  public static final String ROW_ID_ROW_ID_COL_NAME = "row_id";
+  public static final int ROW_ID_ROW_ID_OFFSET = 3;
+  public static final String ROW_ID_CURRENT_TXN_COL_NAME = "current_transaction";
+  public static final int ROW_ID_CURRENT_TXN_OFFSET = 4;
+
+  /**
+   * In ACID files the row data is stored in a separate struct that comes after the ROW__ID struct.
+   */
+  public static final String ROWS_STRUCT_COL_NAME = "ROWS";
+  public static final int ROWS_STRUCT_COL = 5;
+
+
+
+  // Operations are no longer used but still populated for backward compatibility
+  static final int OPERATION_INSERT = 0;
+  static final int OPERATION_DELETE = 2;
+
 }

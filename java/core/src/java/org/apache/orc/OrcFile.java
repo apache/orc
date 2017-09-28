@@ -35,6 +35,7 @@ import org.apache.orc.impl.MemoryManagerImpl;
 import org.apache.orc.impl.OrcTail;
 import org.apache.orc.impl.ReaderImpl;
 import org.apache.orc.impl.WriterImpl;
+import org.apache.orc.impl.acid.OrcFileAcidHelper;
 import org.apache.orc.impl.acid.ParsedAcidDirectory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -364,6 +365,26 @@ public class OrcFile {
   public static Reader createReader(Path path,
                                     ReaderOptions options) throws IOException {
     return new ReaderImpl(path, options);
+  }
+
+  /**
+   * Get a reader for an acid file.  This is a separate method from
+   * {@link #createReader(Path, ReaderOptions)} because it requires the user to set explicit
+   * options and has to take different actions internally to determine what to read.
+   * @param path Path to the file
+   * @param options This must contain the valid transaction list.  If the acidDir
+   *                information has been set it will be used.  If not, the directory will be
+   *                parsed.  If you are reading a number of files you should parse the directory
+   *                before hand and pass it to each createReaderForAcidFile call to avoid parsing
+   *                the directory many times.  See
+   *                {@link org.apache.orc.impl.acid.AcidDirectoryParser#parseDirectory(Path, Configuration, ValidTxnList)}
+   * @return A reader for this file.
+   * @throws IOException If the transaction information is not provided, or if the directory
+   * fails to parse, or if an underlying file operation fails.
+   */
+  public static Reader createReaderForAcidFile(Path path, ReaderOptions options)
+      throws IOException {
+    return OrcFileAcidHelper.getReader(path, options);
   }
 
   public interface WriterContext {

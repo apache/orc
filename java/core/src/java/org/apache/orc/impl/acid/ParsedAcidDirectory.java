@@ -23,9 +23,9 @@ import org.apache.hadoop.fs.FileStatus;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 /**
  * A view of a directory of ACID files.  This view has been created with a particular
@@ -37,7 +37,7 @@ public class ParsedAcidDirectory {
   private final List<ParsedAcidFile> inputFiles;
   private final List<ParsedAcidFile> deleteFiles;
 
-  private Set<FileStatus> inputFileStats;
+  private Map<FileStatus, ParsedAcidFile> inputFileStats;
 
   ParsedAcidDirectory(List<ParsedAcidFile> inputFiles, List<ParsedAcidFile> deleteFiles) {
     this.inputFiles = inputFiles;
@@ -68,22 +68,23 @@ public class ParsedAcidDirectory {
    * @param file file to check
    * @return whether this file should be read.
    */
-  public boolean shouldBeUsedForInput(FileStatus file) {
-    if (inputFileStats == null) {
-      inputFileStats = new HashSet<>(inputFiles.size());
-      for (ParsedAcidFile inputFile : inputFiles) inputFileStats.add(inputFile.getFileStatus());
-    }
-    return inputFileStats.contains(file);
+  boolean shouldBeUsedForInput(FileStatus file) {
+    fillOutInputFileStats();
+    return inputFileStats.containsKey(file);
   }
 
   /**
    * Given an inputFile, find all of the delete deltas that should be applied to this input file.
-   * @param inputFile file with inserts to read
+   * @param stat file with inserts to read
    * @return list of delete files that should be read for this file
    */
-  public List<ParsedAcidFile> getRelevantDeletes(ParsedAcidFile inputFile) {
+  List<ParsedAcidFile> getRelevantDeletes(FileStatus stat) {
     if (deleteFiles == null || deleteFiles.isEmpty()) return Collections.emptyList();
 
+    if (!shouldBeUsedForInput(stat)) return Collections.emptyList();
+    // The preceding if should guarantee that the following get never returns null
+    ParsedAcidFile inputFile = inputFileStats.get(stat);
+    assert inputFile != null;
     // All deltas always apply to base and preAcid files.  For preAcid this is true because these
     // are essentially base files with maxTxn = MAX_LONG.  For Base this is true because the
     // directory parser will have removed any delta files that don't apply to the base.
@@ -105,6 +106,19 @@ public class ParsedAcidDirectory {
       relevantDirectories.add(deleteFile);
     }
     return relevantDirectories;
+  }
+
+  private void fillOutInputFileStats() {
+    if (inputFileStats == null) {
+      synchronized (this) {
+        if (inputFileStats == null) {
+          inputFileStats = new HashMap<>(inputFiles.size());
+          for (ParsedAcidFile inputFile : inputFiles) {
+            inputFileStats.put(inputFile.getFileStatus(), inputFile);
+          }
+        }
+      }
+    }
   }
 
 }

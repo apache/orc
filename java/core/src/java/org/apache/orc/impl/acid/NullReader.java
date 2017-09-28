@@ -17,7 +17,7 @@
  */
 package org.apache.orc.impl.acid;
 
-import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.ColumnStatistics;
 import org.apache.orc.CompressionKind;
 import org.apache.orc.OrcFile;
@@ -30,10 +30,20 @@ import org.apache.orc.TypeDescription;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Collections;
 import java.util.List;
 
-public class AcidReaderImpl implements Reader {
-  public AcidReaderImpl(Path dir, OrcFile.ReaderOptions options) {
+class NullReader implements Reader {
+
+  private static NullReader self = null;
+
+  static NullReader getNullReader() {
+    if (self == null) self = new NullReader();
+    return self;
+  }
+
+  private NullReader() {
+
   }
 
   @Override
@@ -58,12 +68,12 @@ public class AcidReaderImpl implements Reader {
 
   @Override
   public List<String> getMetadataKeys() {
-    return null;
+    return Collections.emptyList();
   }
 
   @Override
   public ByteBuffer getMetadataValue(String key) {
-    return null;
+    return ByteBuffer.allocate(0);
   }
 
   @Override
@@ -73,7 +83,7 @@ public class AcidReaderImpl implements Reader {
 
   @Override
   public CompressionKind getCompressionKind() {
-    return null;
+    return CompressionKind.NONE;
   }
 
   @Override
@@ -88,7 +98,7 @@ public class AcidReaderImpl implements Reader {
 
   @Override
   public List<StripeInformation> getStripes() {
-    return null;
+    return Collections.emptyList();
   }
 
   @Override
@@ -103,47 +113,49 @@ public class AcidReaderImpl implements Reader {
 
   @Override
   public TypeDescription getSchema() {
+    // TODO not sure if this is ok or not
     return null;
   }
 
   @Override
   public List<OrcProto.Type> getTypes() {
-    return null;
+    return Collections.emptyList();
   }
 
   @Override
   public OrcFile.Version getFileVersion() {
-    return null;
+    return OrcFile.Version.CURRENT;
   }
 
   @Override
   public OrcFile.WriterVersion getWriterVersion() {
-    return null;
+    return OrcFile.CURRENT_WRITER;
   }
 
   @Override
   public OrcProto.FileTail getFileTail() {
+    // TODO not sure if this is ok or not
     return null;
   }
 
   @Override
   public Options options() {
-    return null;
+    return new Options();
   }
 
   @Override
   public RecordReader rows() throws IOException {
-    return null;
+    return nullRecordReader;
   }
 
   @Override
   public RecordReader rows(Options options) throws IOException {
-    return null;
+    return nullRecordReader;
   }
 
   @Override
   public List<Integer> getVersionList() {
-    return null;
+    return Collections.emptyList();
   }
 
   @Override
@@ -153,21 +165,48 @@ public class AcidReaderImpl implements Reader {
 
   @Override
   public List<OrcProto.StripeStatistics> getOrcProtoStripeStatistics() {
-    return null;
+    return Collections.emptyList();
   }
 
   @Override
   public List<StripeStatistics> getStripeStatistics() throws IOException {
-    return null;
+    return Collections.emptyList();
   }
 
   @Override
   public List<OrcProto.ColumnStatistics> getOrcProtoFileStatistics() {
-    return null;
+    return Collections.emptyList();
   }
 
   @Override
   public ByteBuffer getSerializedFileFooter() {
-    return null;
+    return ByteBuffer.allocate(0);
   }
+
+  private static RecordReader nullRecordReader = new RecordReader() {
+    @Override
+    public boolean nextBatch(VectorizedRowBatch batch) throws IOException {
+      return false;
+    }
+
+    @Override
+    public long getRowNumber() throws IOException {
+      return 0;
+    }
+
+    @Override
+    public float getProgress() throws IOException {
+      return 0;
+    }
+
+    @Override
+    public void close() throws IOException {
+
+    }
+
+    @Override
+    public void seekToRow(long rowCount) throws IOException {
+
+    }
+  };
 }

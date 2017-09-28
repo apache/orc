@@ -67,14 +67,13 @@ public class TestParsedAcidDirectory extends AcidTestBase {
 
   @Test
   public void relevantDeletesOrig() throws IOException {
-    createFile("000000_1");
+    FileStatus orig = createFile("000000_1");
     expectedDeletes.add(createFile("delete_delta_025_025/bucket_0"));
     expectedDeletes.add(createFile("delete_delta_026_027/bucket_1"));
 
     ParsedAcidDirectory dir = AcidDirectoryParser.parseDirectory(baseDir, conf,
         new ValidReadTxnList("100:" + Long.MAX_VALUE + ":"));
 
-    ParsedAcidFile orig = dir.getInputFiles().get(0);
     List<FileStatus> deleteFiles = parcedAcidFileListToFileStatusList(dir.getRelevantDeletes(orig));
     Collections.sort(expectedDeletes);
     Collections.sort(deleteFiles);
@@ -83,14 +82,13 @@ public class TestParsedAcidDirectory extends AcidTestBase {
 
   @Test
   public void relevantDeletesBase() throws IOException {
-    createFile("base_10/bucket_1");
+    FileStatus base = createFile("base_10/bucket_1");
     expectedDeletes.add(createFile("delete_delta_025_025/bucket_0"));
     expectedDeletes.add(createFile("delete_delta_026_027/bucket_1"));
 
     ParsedAcidDirectory dir = AcidDirectoryParser.parseDirectory(baseDir, conf,
         new ValidReadTxnList("100:" + Long.MAX_VALUE + ":"));
 
-    ParsedAcidFile base = dir.getInputFiles().get(0);
     List<FileStatus> deleteFiles = parcedAcidFileListToFileStatusList(dir.getRelevantDeletes(base));
     Collections.sort(expectedDeletes);
     Collections.sort(deleteFiles);
@@ -100,15 +98,13 @@ public class TestParsedAcidDirectory extends AcidTestBase {
   @Test
   public void relevantDeletesDeltaSingleTransaction() throws IOException {
     createFile("base_10/000000");
-    createFile("delta_025_025/bucket_0");
+    FileStatus delta = createFile("delta_025_025/bucket_0");
     expectedDeletes.add(createFile("delete_delta_025_025/bucket_0"));
     expectedDeletes.add(createFile("delete_delta_025_025/bucket_1"));
 
     ParsedAcidDirectory dir = AcidDirectoryParser.parseDirectory(baseDir, conf,
         new ValidReadTxnList("100:" + Long.MAX_VALUE + ":"));
 
-    ParsedAcidFile delta = dir.getInputFiles().get(1);
-    assert delta.isDelta(); // Make sure we got the right one.
     List<FileStatus> deleteFiles = parcedAcidFileListToFileStatusList(dir.getRelevantDeletes(delta));
     Collections.sort(expectedDeletes);
     Collections.sort(deleteFiles);
@@ -118,15 +114,13 @@ public class TestParsedAcidDirectory extends AcidTestBase {
   @Test
   public void relevantDeletesDeltaMinorCompacted() throws IOException {
     createFile("base_10/000000");
-    createFile("delta_025_030/bucket_0");
+    FileStatus delta = createFile("delta_025_030/bucket_0");
     expectedDeletes.add(createFile("delete_delta_025_030/bucket_0"));
     expectedDeletes.add(createFile("delete_delta_025_030/bucket_1"));
 
     ParsedAcidDirectory dir = AcidDirectoryParser.parseDirectory(baseDir, conf,
         new ValidReadTxnList("100:" + Long.MAX_VALUE + ":"));
 
-    ParsedAcidFile delta = dir.getInputFiles().get(1);
-    assert delta.isDelta();
     List<FileStatus> deleteFiles = parcedAcidFileListToFileStatusList(dir.getRelevantDeletes(delta));
     Collections.sort(expectedDeletes);
     Collections.sort(deleteFiles);
@@ -136,8 +130,8 @@ public class TestParsedAcidDirectory extends AcidTestBase {
   @Test
   public void relevantDeletesDeltaDeltaBefore() throws IOException {
     createFile("base_10/000000");
-    createFile("delta_024_027/bucket_0");
-    createFile("delta_028_028/bucket_0");
+    FileStatus delta24_27 = createFile("delta_024_027/bucket_0");
+    FileStatus delta28_28 = createFile("delta_028_028/bucket_0");
     createFile("delta_028_028/bucket_1");
     createFile("delta_029_029/bucket_0");
     createFile("delta_029_029/bucket_1");
@@ -147,18 +141,13 @@ public class TestParsedAcidDirectory extends AcidTestBase {
     ParsedAcidDirectory dir = AcidDirectoryParser.parseDirectory(baseDir, conf,
         new ValidReadTxnList("100:" + Long.MAX_VALUE + ":"));
 
-    ParsedAcidFile delta = dir.getInputFiles().get(1);
-    assert delta.isDelta() &&
-        delta.getFileStatus().getPath().getParent().getName().equals("delta_024_027");
-    List<FileStatus> deleteFiles = parcedAcidFileListToFileStatusList(dir.getRelevantDeletes(delta));
+    List<FileStatus> deleteFiles =
+        parcedAcidFileListToFileStatusList(dir.getRelevantDeletes(delta24_27));
     Collections.sort(expectedDeletes);
     Collections.sort(deleteFiles);
     Assert.assertEquals(expectedDeletes, deleteFiles);
 
-    delta = dir.getInputFiles().get(2);
-    assert delta.isDelta() &&
-        delta.getFileStatus().getPath().getParent().getName().equals("delta_028_028");
-    deleteFiles = parcedAcidFileListToFileStatusList(dir.getRelevantDeletes(delta));
+    deleteFiles = parcedAcidFileListToFileStatusList(dir.getRelevantDeletes(delta28_28));
     Collections.sort(expectedDeletes);
     Collections.sort(deleteFiles);
     Assert.assertEquals(expectedDeletes, deleteFiles);
@@ -169,24 +158,19 @@ public class TestParsedAcidDirectory extends AcidTestBase {
     createFile("base_10/000000");
     createFile("delta_020_024/bucket_0");
     createFile("delta_020_024/bucket_1");
-    createFile("delta_025_029/bucket_0");
-    createFile("delta_030_030/bucket_0");
+    FileStatus delta25_29 = createFile("delta_025_029/bucket_0");
+    FileStatus delta30_30 = createFile("delta_030_030/bucket_0");
     createFile("delete_delta_020_024/bucket_0");
     createFile("delete_delta_020_024/bucket_1");
 
     ParsedAcidDirectory dir = AcidDirectoryParser.parseDirectory(baseDir, conf,
         new ValidReadTxnList("100:" + Long.MAX_VALUE + ":"));
 
-    ParsedAcidFile delta = dir.getInputFiles().get(3);
-    assert delta.isDelta() &&
-        delta.getFileStatus().getPath().getParent().getName().equals("delta_025_029");
-    List<FileStatus> deleteFiles = parcedAcidFileListToFileStatusList(dir.getRelevantDeletes(delta));
+    List<FileStatus> deleteFiles =
+        parcedAcidFileListToFileStatusList(dir.getRelevantDeletes(delta25_29));
     Assert.assertTrue(deleteFiles.isEmpty());
 
-    delta = dir.getInputFiles().get(4);
-    assert delta.isDelta() &&
-        delta.getFileStatus().getPath().getParent().getName().equals("delta_030_030");
-    deleteFiles = parcedAcidFileListToFileStatusList(dir.getRelevantDeletes(delta));
+    deleteFiles = parcedAcidFileListToFileStatusList(dir.getRelevantDeletes(delta30_30));
     Assert.assertTrue(deleteFiles.isEmpty());
   }
 }
