@@ -82,7 +82,7 @@ public class FullReadBenchmark {
   @Param({"taxi", "sales", "github"})
   public String dataset;
 
-  @Param({"none", "zlib", "snappy"})
+  @Param({"none", "zlib", "snappy", "isal"})
   public String compression;
 
   @AuxCounters

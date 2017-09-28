@@ -18,40 +18,22 @@
 
 package org.apache.orc.impl;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.orc.CompressionKind;
-import org.apache.orc.FileMetadata;
-import org.apache.orc.OrcFile;
-import org.apache.orc.OrcUtils;
-import org.apache.orc.Reader;
-import org.apache.orc.RecordReader;
-import org.apache.orc.TypeDescription;
-import org.apache.orc.ColumnStatistics;
-import org.apache.orc.CompressionCodec;
-import org.apache.orc.FileFormatException;
-import org.apache.orc.StripeInformation;
-import org.apache.orc.StripeStatistics;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.google.protobuf.CodedInputStream;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.io.DiskRange;
 import org.apache.hadoop.hive.ql.util.JavaDataModel;
 import org.apache.hadoop.io.Text;
-import org.apache.orc.OrcProto;
+import org.apache.orc.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.protobuf.CodedInputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.*;
 
 public class ReaderImpl implements Reader {
 
@@ -449,6 +431,7 @@ public class ReaderImpl implements Reader {
       case SNAPPY:
       case LZO:
       case LZ4:
+      case ISAL:
         break;
       default:
         throw new IllegalArgumentException("Unknown compression");
