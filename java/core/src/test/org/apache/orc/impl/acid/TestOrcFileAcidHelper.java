@@ -143,6 +143,9 @@ public class TestOrcFileAcidHelper extends AcidTestBase {
     Assert.assertEquals("the lamb was sure to go", col.toString(batch.selected[1]));
     Assert.assertTrue(col.isNull[batch.selected[2]]);
   }
+
+  // TODO test file with all same txn ids
+
   // TODO test on valid file with deletes
 
 }

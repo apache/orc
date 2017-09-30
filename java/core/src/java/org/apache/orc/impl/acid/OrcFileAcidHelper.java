@@ -53,7 +53,7 @@ public class OrcFileAcidHelper {
     // Acid file layout we may be passed files that aren't relevant
     if (options.getAcidDir().shouldBeUsedForInput(stat)) {
       List<ParsedAcidFile> deleteDeltas = options.getAcidDir().getRelevantDeletes(stat);
-      return new AcidReader(path, options, deleteDeltas, options.getValidTxns());
+      return new AcidReader(path, options, deleteDeltas);
     } else {
       return NullReader.getNullReader();
     }

@@ -101,7 +101,7 @@ public class AcidDirectoryParser {
     List<ParsedAcidFile> inputFiles = getFilesInDirs(fs, inputDirs);
     List<ParsedAcidFile> deleteFiles = getFilesInDirs(fs, deleteDirs);
 
-    return new ParsedAcidDirectory(inputFiles, deleteFiles);
+    return new ParsedAcidDirectory(directory, txnList, conf, inputFiles, deleteFiles);
   }
 
   private static List<FileStatus> listLocatedStatus(final FileSystem fs,

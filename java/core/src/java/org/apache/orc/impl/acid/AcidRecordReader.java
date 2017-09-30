@@ -17,9 +17,11 @@
  */
 package org.apache.orc.impl.acid;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.common.ValidTxnList;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.impl.ReaderImpl;
 import org.apache.orc.impl.RecordReaderImpl;
@@ -29,18 +31,21 @@ import java.util.BitSet;
 import java.util.List;
 
 class AcidRecordReader extends RecordReaderImpl {
-  private final List<ParsedAcidFile> deleteDeltas;
-  private final ValidTxnList validTxnList;
+  private final ValidTxnList validTxns;
+  private final ParsedAcidDirectory baseDir;
+  private final Configuration conf;
+  private final DeleteSet deleteSet;
 
   // Much of the non-trivial code in this class is taken from Hive's
   // VectorizedOrcAcidRowBatchReader.
 
-  AcidRecordReader(ReaderImpl fileReader, Reader.Options options,
-                   List<ParsedAcidFile> deleteDeltas,
-                   ValidTxnList validTxnList) throws IOException {
+  AcidRecordReader(ReaderImpl fileReader, Reader.Options options, ValidTxnList validTxns,
+                   ParsedAcidDirectory baseDir, Configuration conf) throws IOException {
     super(fileReader, options);
-    this.deleteDeltas = deleteDeltas;
-    this.validTxnList = validTxnList;
+    this.validTxns = validTxns;
+    this.baseDir = baseDir;
+    this.conf = conf;
+    deleteSet = DeleteSetCache.getCache(conf).getDeleteSet(baseDir);
   }
 
   @Override
@@ -55,7 +60,10 @@ class AcidRecordReader extends RecordReaderImpl {
 
     findRecordsWithInvalidTransactionIds(batch, selectedBitSet);
 
-    // TODO handle delete deltas
+    // If there are any valid records, run the deletes against it
+    if (selectedBitSet.cardinality() > 0) {
+      deleteSet.applyDeletesToBatch(batch, selectedBitSet);
+    }
 
     if (selectedBitSet.cardinality() != batch.size) {
       // Some records have been selected out, so set up the selected array
@@ -70,7 +78,6 @@ class AcidRecordReader extends RecordReaderImpl {
     }
 
     return true;
-
   }
 
   private void findRecordsWithInvalidTransactionIds(VectorizedRowBatch batch, BitSet selectedBitSet) {
@@ -79,7 +86,7 @@ class AcidRecordReader extends RecordReaderImpl {
       // if the repeating value is not a valid transaction.
       long currentTransactionIdForBatch = ((LongColumnVector)
           batch.cols[AcidConstants.ROW_ID_CURRENT_TXN_OFFSET]).vector[0];
-      if (!validTxnList.isTxnValid(currentTransactionIdForBatch)) {
+      if (!validTxns.isTxnValid(currentTransactionIdForBatch)) {
         selectedBitSet.clear(0, batch.size);
       }
       return;
@@ -91,7 +98,7 @@ class AcidRecordReader extends RecordReaderImpl {
     for (int setBitIndex = selectedBitSet.nextSetBit(0);
          setBitIndex >= 0;
          setBitIndex = selectedBitSet.nextSetBit(setBitIndex+1)) {
-      if (!validTxnList.isTxnValid(currentTransactionVector[setBitIndex])) {
+      if (!validTxns.isTxnValid(currentTransactionVector[setBitIndex])) {
         selectedBitSet.clear(setBitIndex);
       }
     }

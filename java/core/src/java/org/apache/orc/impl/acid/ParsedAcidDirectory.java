@@ -19,7 +19,10 @@ package org.apache.orc.impl.acid;
 
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.common.ValidTxnList;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,14 +37,21 @@ import java.util.Map;
 @InterfaceAudience.Public
 @InterfaceStability.Evolving
 public class ParsedAcidDirectory {
+  private final Path baseDir;
+  private final ValidTxnList validTxns;
+  private final Configuration conf;
   private final List<ParsedAcidFile> inputFiles;
   private final List<ParsedAcidFile> deleteFiles;
 
   private Map<FileStatus, ParsedAcidFile> inputFileStats;
 
-  ParsedAcidDirectory(List<ParsedAcidFile> inputFiles, List<ParsedAcidFile> deleteFiles) {
+  ParsedAcidDirectory(Path baseDir, ValidTxnList validTxns, Configuration conf,
+                      List<ParsedAcidFile> inputFiles, List<ParsedAcidFile> deleteFiles) {
+    this.baseDir = baseDir;
+    this.validTxns = validTxns;
     this.inputFiles = inputFiles;
     this.deleteFiles = deleteFiles;
+    this.conf = conf;
   }
 
   /**
@@ -59,6 +69,34 @@ public class ParsedAcidDirectory {
    */
   public List<ParsedAcidFile> getDeleteFiles() {
     return deleteFiles;
+  }
+
+  public Path getBaseDir() {
+    return baseDir;
+  }
+
+  public ValidTxnList getValidTxns() {
+    return validTxns;
+  }
+
+  public Configuration getConf() {
+    return conf;
+  }
+
+  @Override
+  public int hashCode() {
+    // Note on this and equals(), I don't think ValidReadTxnList implements equals or hashCode
+    // which means I'll be doing object equality.  But I think that's ok.
+    return baseDir.hashCode() * 31 + validTxns.hashCode();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj instanceof ParsedAcidDirectory) {
+      ParsedAcidDirectory that = (ParsedAcidDirectory)obj;
+      return baseDir.equals(that.baseDir) && validTxns.equals(that.validTxns);
+    }
+    return false;
   }
 
   /**

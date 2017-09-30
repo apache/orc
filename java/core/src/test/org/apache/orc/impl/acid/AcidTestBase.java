@@ -109,7 +109,7 @@ public class AcidTestBase {
 
     LongColumnVector bucketCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_BUCKET_OFFSET];
     bucketCol.isRepeating = true;
-    bucketCol.vector[0] = 0;
+    bucketCol.vector[0] = BucketCodec.V1.encode(0, 0);
 
     LongColumnVector rowIdCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_ROW_ID_OFFSET];
     for (int i = 0; i < batch.size; i++) rowIdCol.vector[i] = i;

@@ -39,4 +39,12 @@
     <Bug pattern="IS2_INCONSISTENT_SYNC"/>
     <Class name="org.apache.orc.impl.acid.ParsedAcidDirectory"/>
   </Match>
+  <Match>
+    <Bug pattern="DC_DOUBLECHECK"/>
+    <Class name="org.apache.orc.impl.acid.DeleteSetCache"/>
+  </Match>
+  <Match>
+    <Bug pattern="IS2_INCONSISTENT_SYNC"/>
+    <Class name="org.apache.orc.impl.acid.DeleteSetCache"/>
+  </Match>
 </FindBugsFilter>

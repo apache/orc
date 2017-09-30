@@ -17,6 +17,7 @@
  */
 package org.apache.orc.impl.acid;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.ValidTxnList;
 import org.apache.orc.OrcFile;
@@ -28,14 +29,17 @@ import java.util.List;
 
 class AcidReader extends ReaderImpl {
   private final List<ParsedAcidFile> deleteDeltas;
-  private final ValidTxnList validTxnList;
+  private final ValidTxnList validTxns;
+  private final ParsedAcidDirectory baseDir;
+  private final Configuration conf;
 
   AcidReader(Path path, OrcFile.ReaderOptions options,
-             List<ParsedAcidFile> deleteDeltas,
-             ValidTxnList validTxnList) throws IOException {
+             List<ParsedAcidFile> deleteDeltas) throws IOException {
     super(path, options);
     this.deleteDeltas = deleteDeltas;
-    this.validTxnList = validTxnList;
+    this.validTxns = options.getValidTxns();
+    this.baseDir = options.getAcidDir();
+    this.conf = options.getConfiguration();
   }
 
   @Override
@@ -45,6 +49,6 @@ class AcidReader extends ReaderImpl {
 
   @Override
   public RecordReader rows(Options options) throws IOException {
-    return new AcidRecordReader(this, options, deleteDeltas, validTxnList);
+    return new AcidRecordReader(this, options, validTxns, baseDir, conf);
   }
 }
