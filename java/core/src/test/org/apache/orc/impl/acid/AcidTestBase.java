@@ -78,9 +78,22 @@ public class AcidTestBase {
     return stats;
   }
 
-  protected Path writeAcidOrcFile(String name) throws IOException {
+  protected Path writeAcidOrcFile(String name,
+                                  boolean isDelete,
+                                  long[] origTxns,
+                                  long[] buckets,
+                                  long[] rowIds,
+                                  long[] currentTxns,
+                                  String[] rows) throws IOException {
     Path path = createPath(name);
-    TypeDescription schema = TypeDescription.createStruct()
+    TypeDescription schema = isDelete ?
+        TypeDescription.createStruct()
+        .addField(AcidConstants.ROW_ID_OPERATION_COL_NAME, TypeDescription.createLong())
+        .addField(AcidConstants.ROW_ID_ORIG_TXN_COL_NAME, TypeDescription.createLong())
+        .addField(AcidConstants.ROW_ID_BUCKET_COL_NAME, TypeDescription.createLong())
+        .addField(AcidConstants.ROW_ID_ROW_ID_COL_NAME, TypeDescription.createLong())
+        .addField(AcidConstants.ROW_ID_CURRENT_TXN_COL_NAME, TypeDescription.createLong())
+      : TypeDescription.createStruct()
         .addField(AcidConstants.ROW_ID_OPERATION_COL_NAME, TypeDescription.createLong())
         .addField(AcidConstants.ROW_ID_ORIG_TXN_COL_NAME, TypeDescription.createLong())
         .addField(AcidConstants.ROW_ID_BUCKET_COL_NAME, TypeDescription.createLong())
@@ -94,45 +107,106 @@ public class AcidTestBase {
         .bufferSize(10000));
     VectorizedRowBatch batch = schema.createRowBatch();
 
-    batch.size = 5;
+    batch.size = origTxns.length;
 
-    LongColumnVector opCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_OPERATION_OFFSET];
+    LongColumnVector opCol = (LongColumnVector) batch.cols[AcidConstants.ROW_ID_OPERATION_OFFSET];
     opCol.isRepeating = true;
-    opCol.vector[0] = AcidConstants.OPERATION_INSERT;
+    opCol.vector[0] = isDelete ? AcidConstants.OPERATION_DELETE : AcidConstants.OPERATION_INSERT;
 
-    LongColumnVector origTxnCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_ORIG_TXN_OFFSET];
-    origTxnCol.vector[0] = 1;
-    origTxnCol.vector[1] = 2;
-    origTxnCol.vector[2] = 2;
-    origTxnCol.vector[3] = 3;
-    origTxnCol.vector[4] = 3;
+    boolean repeating = true;
+    for (long origTxn : origTxns) repeating &= origTxn == origTxns[0];
+    LongColumnVector origTxnCol =
+        (LongColumnVector) batch.cols[AcidConstants.ROW_ID_ORIG_TXN_OFFSET];
+    if (repeating) {
+      origTxnCol.isRepeating = true;
+      origTxnCol.vector[0] = origTxns[0];
+    } else {
+      System.arraycopy(origTxns, 0, origTxnCol.vector, 0, origTxns.length);
+    }
 
-    LongColumnVector bucketCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_BUCKET_OFFSET];
-    bucketCol.isRepeating = true;
-    bucketCol.vector[0] = BucketCodec.V1.encode(0, 0);
+    repeating = true;
+    for (long bucket : buckets) repeating &= bucket == buckets[0];
+    LongColumnVector bucketCol = (LongColumnVector) batch.cols[AcidConstants.ROW_ID_BUCKET_OFFSET];
+    if (repeating) {
+      bucketCol.isRepeating = true;
+      bucketCol.vector[0] = buckets[0];
+    } else {
+      System.arraycopy(buckets, 0, bucketCol.vector, 0, buckets.length);
+    }
 
-    LongColumnVector rowIdCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_ROW_ID_OFFSET];
-    for (int i = 0; i < batch.size; i++) rowIdCol.vector[i] = i;
+    LongColumnVector rowIdCol = (LongColumnVector) batch.cols[AcidConstants.ROW_ID_ROW_ID_OFFSET];
+    for (int i = 0; i < batch.size; i++) rowIdCol.vector[i] = rowIds[i];
 
-    LongColumnVector currentTxnCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_CURRENT_TXN_OFFSET];
-    currentTxnCol.vector[0] = 1;
-    currentTxnCol.vector[1] = 2;
-    currentTxnCol.vector[2] = 2;
-    currentTxnCol.vector[3] = 3;
-    currentTxnCol.vector[4] = 3;
+    repeating = true;
+    for (long currentTxn : currentTxns) repeating &= currentTxn == currentTxns[0];
+    LongColumnVector currentTxnCol =
+        (LongColumnVector) batch.cols[AcidConstants.ROW_ID_CURRENT_TXN_OFFSET];
+    if (repeating) {
+      currentTxnCol.isRepeating = true;
+      currentTxnCol.vector[0] = origTxns[0];
+    } else {
+      System.arraycopy(currentTxns, 0, currentTxnCol.vector, 0, currentTxns.length);
+    }
 
-    BytesColumnVector str =
-        (BytesColumnVector)((StructColumnVector)batch.cols[AcidConstants.ROWS_STRUCT_COL]).fields[0];
-    str.noNulls = false;
-    str.isNull[4] = true;
-    str.setVal(0, "mary had a little lamb".getBytes());
-    str.setVal(1, "its fleece was white as snow".getBytes());
-    str.setVal(2, "and everywhere that mary went".getBytes());
-    str.setVal(3, "the lamb was sure to go".getBytes());
+    if (!isDelete) {
+      BytesColumnVector str =
+          (BytesColumnVector) ((StructColumnVector) batch.cols[AcidConstants.ROWS_STRUCT_COL]).fields[0];
+      for (int i = 0; i < rows.length; i++) {
+        if (rows[i] == null) {
+          str.noNulls = false;
+          str.isNull[i] = true;
+        } else {
+          str.setVal(i, rows[i].getBytes());
+        }
+      }
+    }
 
     writer.addRowBatch(batch);
     writer.close();
 
     return path;
+  }
+
+  protected Path insertFile(String name,
+                            long[] origTxns,
+                            long[] buckets,
+                            String[] rows) throws IOException {
+    long[] rowIds = new long[origTxns.length];
+    for (int i = 0; i < rowIds.length; i++) rowIds[i] = i;
+    return writeAcidOrcFile(name, false, origTxns, buckets, rowIds, origTxns, rows);
+  }
+
+  protected Path deleteDeltaFile(String name,
+                                 long[] origTxns,
+                                 long[] buckets,
+                                 long[] rowIds,
+                                 long[] currentTxns) throws IOException {
+    return writeAcidOrcFile(name, true, origTxns, buckets, rowIds, currentTxns, null);
+  }
+
+  protected Path multiTxnInsertFile(String name) throws IOException {
+    long[] txns = new long[]{1, 2, 2, 3, 3};
+    long[] buckets = new long[5];
+    for (int i = 0; i < buckets.length; i++) buckets[i] = BucketCodec.V1.encode(0, 0);
+    String[] rows = new String[]{
+        "mary had a little lamb",
+        "its fleece was white as snow",
+        "and everywhere that mary went",
+        "the lamb was sure to go",
+        null};
+    return insertFile(name, txns, buckets, rows);
+  }
+
+  protected Path singleTxnInsertFile(String name) throws IOException {
+    long[] txns = new long[]{10, 10, 10, 10, 10};
+    long[] buckets = new long[5];
+    for (int i = 0; i < buckets.length; i++) buckets[i] = BucketCodec.V1.encode(0, 0);
+    String[] rows = new String[]{
+        "hickery dickery dock",
+        "the mouse ran up the clock",
+        "the clock struck one",
+        "down the mouse did run",
+        "hickery dickery dock."};
+    return insertFile(name, txns, buckets, rows);
   }
 }

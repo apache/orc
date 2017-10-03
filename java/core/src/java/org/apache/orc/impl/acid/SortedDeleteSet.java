@@ -45,18 +45,17 @@ class SortedDeleteSet implements DeleteSet {
   @Override
   public void applyDeletesToBatch(VectorizedRowBatch batch, BitSet selectedBitSet) throws
       IOException {
-
+    assert !batch.selectedInUse;
+    LongColumnVector origTxnCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_ORIG_TXN_OFFSET];
+    LongColumnVector bucketCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_BUCKET_OFFSET];
+    LongColumnVector rowIdCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_ROW_ID_OFFSET];
     for (int i = 0; i < batch.size; i++) {
-      assert !batch.selectedInUse;
-      LongColumnVector origTxnCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_ORIG_TXN_OFFSET];
       long origTxn = origTxnCol.isRepeating ? origTxnCol.vector[0] : origTxnCol.vector[i];
-      LongColumnVector bucketCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_BUCKET_OFFSET];
       long bucket = bucketCol.isRepeating ? bucketCol.vector[0] : bucketCol.vector[i];
-      LongColumnVector rowIdCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_ROW_ID_OFFSET];
       long rowId = rowIdCol.isRepeating ? rowIdCol.vector[0] : rowIdCol.vector[i];
       for (DeleteDeltaWrapper delete : deletes) {
         if (delete.advanceUntil(origTxn, bucket, rowId)) {
-          selectedBitSet.set(i);
+          selectedBitSet.clear(i);
           break;
         }
       }
@@ -74,9 +73,16 @@ class SortedDeleteSet implements DeleteSet {
     VectorizedRowBatch batch;
     int currentOffset;
     boolean batchDone; // true if we've finished reading whatever's in batch
+    private LongColumnVector delOrigTxnCol = null;
+    private LongColumnVector delBucketCol = null;
+    private LongColumnVector delRowIdCol = null;
 
     DeleteDeltaWrapper(Reader reader) throws IOException {
-      rows = reader.rows();
+      Reader.Options options = reader.options();
+      options.searchArgument(null, null) // Make sure there's no SARG push down
+        .range(0, Long.MAX_VALUE) // Make sure we read the whole file
+        .isDeleteDelta(true);
+      rows = reader.rows(options);
       batchDone = true;
       batch = reader.getSchema().createRowBatch();
     }
@@ -90,6 +96,9 @@ class SortedDeleteSet implements DeleteSet {
           if (!moreToDo) return false;
           batchDone = false;
           currentOffset = 0;
+          delOrigTxnCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_ORIG_TXN_OFFSET];
+          delBucketCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_BUCKET_OFFSET];
+          delRowIdCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_ROW_ID_OFFSET];
         }
 
         if (currentOffset >= batch.size) {
@@ -98,11 +107,8 @@ class SortedDeleteSet implements DeleteSet {
         }
 
         int batchOffset = batch.selectedInUse ? batch.selected[currentOffset] : currentOffset;
-        LongColumnVector delOrigTxnCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_ORIG_TXN_OFFSET];
         long delOrigTxn = delOrigTxnCol.isRepeating ? delOrigTxnCol.vector[0] : delOrigTxnCol.vector[batchOffset];
-        LongColumnVector delBucketCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_BUCKET_OFFSET];
         long delBucket = delBucketCol.isRepeating ? delBucketCol.vector[0] : delBucketCol.vector[batchOffset];
-        LongColumnVector delRowIdCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_ROW_ID_OFFSET];
         long delRowId = delRowIdCol.isRepeating ? delRowIdCol.vector[0] : delRowIdCol.vector[batchOffset];
 
         if (delOrigTxn > insertOrigTxn) {

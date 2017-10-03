@@ -28,12 +28,9 @@ import org.apache.orc.impl.RecordReaderImpl;
 
 import java.io.IOException;
 import java.util.BitSet;
-import java.util.List;
 
 class AcidRecordReader extends RecordReaderImpl {
   private final ValidTxnList validTxns;
-  private final ParsedAcidDirectory baseDir;
-  private final Configuration conf;
   private final DeleteSet deleteSet;
 
   // Much of the non-trivial code in this class is taken from Hive's
@@ -43,9 +40,8 @@ class AcidRecordReader extends RecordReaderImpl {
                    ParsedAcidDirectory baseDir, Configuration conf) throws IOException {
     super(fileReader, options);
     this.validTxns = validTxns;
-    this.baseDir = baseDir;
-    this.conf = conf;
-    deleteSet = DeleteSetCache.getCache(conf).getDeleteSet(baseDir);
+    deleteSet = options.getIsDeleteDelta() ? DeleteSetCache.getCache(conf).getNullDeleteSet() :
+        DeleteSetCache.getCache(conf).getDeleteSet(baseDir);
   }
 
   @Override
@@ -80,6 +76,12 @@ class AcidRecordReader extends RecordReaderImpl {
     return true;
   }
 
+  @Override
+  public void close() throws IOException {
+    super.close();
+    deleteSet.release();
+  }
+
   private void findRecordsWithInvalidTransactionIds(VectorizedRowBatch batch, BitSet selectedBitSet) {
     if (batch.cols[AcidConstants.ROW_ID_CURRENT_TXN_OFFSET].isRepeating) {
       // When we have repeating values, we can unset the whole bitset at once
@@ -95,11 +97,9 @@ class AcidRecordReader extends RecordReaderImpl {
         ((LongColumnVector) batch.cols[AcidConstants.ROW_ID_CURRENT_TXN_OFFSET]).vector;
     // Loop through the bits that are set to true and mark those rows as false, if their
     // current transactions are not valid.
-    for (int setBitIndex = selectedBitSet.nextSetBit(0);
-         setBitIndex >= 0;
-         setBitIndex = selectedBitSet.nextSetBit(setBitIndex+1)) {
-      if (!validTxns.isTxnValid(currentTransactionVector[setBitIndex])) {
-        selectedBitSet.clear(setBitIndex);
+    for (int row = 0; row < batch.size; row++) {
+      if (!validTxns.isTxnValid(currentTransactionVector[row])) {
+        selectedBitSet.clear(row);
       }
     }
   }

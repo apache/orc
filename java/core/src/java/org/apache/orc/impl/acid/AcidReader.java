@@ -25,18 +25,14 @@ import org.apache.orc.RecordReader;
 import org.apache.orc.impl.ReaderImpl;
 
 import java.io.IOException;
-import java.util.List;
 
 class AcidReader extends ReaderImpl {
-  private final List<ParsedAcidFile> deleteDeltas;
   private final ValidTxnList validTxns;
   private final ParsedAcidDirectory baseDir;
   private final Configuration conf;
 
-  AcidReader(Path path, OrcFile.ReaderOptions options,
-             List<ParsedAcidFile> deleteDeltas) throws IOException {
+  AcidReader(Path path, OrcFile.ReaderOptions options) throws IOException {
     super(path, options);
-    this.deleteDeltas = deleteDeltas;
     this.validTxns = options.getValidTxns();
     this.baseDir = options.getAcidDir();
     this.conf = options.getConfiguration();

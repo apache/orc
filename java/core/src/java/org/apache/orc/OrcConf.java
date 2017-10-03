@@ -151,7 +151,7 @@ public enum OrcConf {
       "n\testing.  Setting this too low may negatively affect performance."),
   OVERWRITE_OUTPUT_FILE("orc.overwrite.output.file", "orc.overwrite.output.file", false,
     "A boolean flag to enable overwriting of the output file if it already exists.\n"),
-  MAX_DELETE_ENTRIES_IN_MEMORY("orc.acid.deletes.in.mem", "orc.acid.deletes.in.mem", 10000000,
+  MAX_DELETE_ENTRIES_IN_MEMORY("orc.acid.deletes.in.mem", "orc.acid.deletes.in.mem", 1000000,
       "How many delete events are allowed in memory for all delete deltas currently being read.  " +
           "After this any new delete deltas will be read via merge rather than into memory")
   ;

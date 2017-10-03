@@ -160,6 +160,7 @@ public interface Reader {
     private DataReader dataReader = null;
     private Boolean tolerateMissingSchema = null;
     private boolean forcePositionalEvolution;
+    private boolean isDeleteDelta;
 
     public Options() {
       // PASS
@@ -262,6 +263,11 @@ public interface Reader {
       return this;
     }
 
+    public Options isDeleteDelta(boolean value) {
+      this.isDeleteDelta = value;
+      return this;
+    }
+
     public boolean[] getInclude() {
       return include;
     }
@@ -308,6 +314,10 @@ public interface Reader {
 
     public boolean getForcePositionalEvolution() {
       return forcePositionalEvolution;
+    }
+
+    public boolean getIsDeleteDelta() {
+      return isDeleteDelta;
     }
 
     public Options clone() {

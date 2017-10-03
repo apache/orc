@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.Map;
@@ -36,17 +37,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 /**
- * A set of delete events.  This is not stored as a simple set but as a trie, since long runs of
+ * A set of delete events.  This is not stored as a simple set but as a trie, since long runs of an
  * original transaction id are very common.  Since this is a trie it is vastly more efficient to
  * access it ordered by original transaction id.  It is assumed that is the most common
  * case since insert files are ordered by this value.
- *
- * This class assumes that is it will be used for a given {@link ParsedAcidDirectory}.
- * The delete deltas that have already been read are tracked so if a request is made to reread a
- * given delta it will be ignored.
- *
- * Note that a particular DeleteSet assumes that all
- * records came from the same {@link org.apache.hadoop.hive.common.ValidTxnList}.
  */
 class InMemoryDeleteSet implements DeleteSet {
   private Map<Long, Set<BucketRowId>> trie;
@@ -70,13 +64,15 @@ class InMemoryDeleteSet implements DeleteSet {
             @Override
             public Map<Long, Set<BucketRowId>> call() throws Exception {
 
-              // On the assumption that a particular delete delta will fit in cache, all the deletes for a
-              // particular original transaction might fit into cache, but this whole set will not, we
-              // don't put each record directly into the trie.  Instead we build a local (hopefully
-              // smaller) trie and then copy it into the master one.
               Map<Long, Set<BucketRowId>> localTrie = new HashMap<>();
-              RecordReader rows = reader.rows();
+              Reader.Options options = reader.options();
+              options.searchArgument(null, null)  // Make sure there's no SARG push down
+                .range(0, Long.MAX_VALUE) // Make sure we read the whole file
+                .isDeleteDelta(true);
+              RecordReader rows = reader.rows(options);
               VectorizedRowBatch batch = reader.getSchema().createRowBatch();
+              long lastOrigTxn = -1;
+              Set<BucketRowId> bucketRowId = null;
               while (rows.nextBatch(batch)) {
                 assert batch.cols.length == 5;
 
@@ -89,12 +85,16 @@ class InMemoryDeleteSet implements DeleteSet {
                   LongColumnVector rowIdCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_ROW_ID_OFFSET];
                   long rowId = rowIdCol.isRepeating ? rowIdCol.vector[0] : rowIdCol.vector[offset];
 
-                  Set<BucketRowId> s = localTrie.get(origTxn);
-                  if (s == null) {
-                    s = new HashSet<>();
-                    localTrie.put(origTxn, s);
+                  // Take advantage of the potentially long runs of original txn ids
+                  if (origTxn != lastOrigTxn) {
+                    bucketRowId = localTrie.get(origTxn);
+                    lastOrigTxn = origTxn;
                   }
-                  s.add(new BucketRowId(bucket, rowId));
+                  if (bucketRowId == null) {
+                    bucketRowId = new HashSet<>();
+                    localTrie.put(origTxn, bucketRowId);
+                  }
+                  bucketRowId.add(new BucketRowId(BucketCodec.V1.decodeWriterId((int)bucket), rowId));
                 }
               }
               return localTrie;
@@ -103,26 +103,36 @@ class InMemoryDeleteSet implements DeleteSet {
     }
 
     while (!tasks.isEmpty()) {
-      for (Future<Map<Long, Set<BucketRowId>>> task : tasks) {
-        if (task.isDone()) {
-          try {
-            Map<Long, Set<BucketRowId>> localTrie = task.get();
-            // If this is the first one then just use it.
-            if (trie == null) {
-              trie = localTrie;
-            } else {
-              // copy it in
-              for (Map.Entry<Long, Set<BucketRowId>> e : localTrie.entrySet()) {
-                Set<BucketRowId> s = trie.get(e.getKey());
-                if (s == null) trie.put(e.getKey(), e.getValue());
-                else s.addAll(e.getValue());
+      // Move the results out of the individual tries to the master trie as they finish.  Don't
+      // wait for them in order to avoid serializing in the case where the early ones are bigger
+      // (which is quite likely since minor compactions will create large files before any
+      // smaller single txn deltas).
+      try {
+        // Dare you to get more <> in a type than this!
+        while (!tasks.isEmpty()) {
+          Iterator<Future<Map<Long, Set<BucketRowId>>>> iter = tasks.iterator();
+          while (iter.hasNext()) {
+            Future<Map<Long, Set<BucketRowId>>> task = iter.next();
+            if (task.isDone()) {
+              Map<Long, Set<BucketRowId>> localTrie = task.get();
+              // If this is the first one then just use it.
+              if (trie == null) {
+                trie = localTrie;
+              } else {
+                // copy it in
+                for (Map.Entry<Long, Set<BucketRowId>> e : localTrie.entrySet()) {
+                  Set<BucketRowId> s = trie.get(e.getKey());
+                  if (s == null) trie.put(e.getKey(), e.getValue());
+                  else s.addAll(e.getValue());
+                }
               }
+              iter.remove();
             }
-            tasks.remove(task);
-          } catch (InterruptedException|ExecutionException e) {
-            throw new IOException(e);
           }
         }
+        Thread.sleep(10);
+      } catch (InterruptedException|ExecutionException e) {
+        throw new IOException(e);
       }
     }
   }
@@ -148,26 +158,31 @@ class InMemoryDeleteSet implements DeleteSet {
   // evaluate which records in a VectorizedRowBatch should be deleted
   @Override
   public void applyDeletesToBatch(VectorizedRowBatch batch, BitSet selectedBitSet) {
-    long origTxn = 0;
+    long prevOrigTxn = -1;
+
     assert !batch.selectedInUse;
-    if (batch.cols[AcidConstants.ROW_ID_ORIG_TXN_OFFSET].isRepeating) {
-      origTxn = ((LongColumnVector) batch.cols[AcidConstants.ROW_ID_ORIG_TXN_OFFSET]).vector[0];
-      evaluateAgainstOneOrigTxn(batch, selectedBitSet, origTxn, 0, batch.size);
-    } else {
-      long prevOrig = 0;
-      int start = 0;
-      for (int row = 0; row < batch.size; row++) {
-        origTxn = ((LongColumnVector)batch.cols[AcidConstants.ROW_ID_ORIG_TXN_OFFSET]).vector[row];
-        if (origTxn != prevOrig) {
-          if (prevOrig != 0) {
-            evaluateAgainstOneOrigTxn(batch, selectedBitSet, origTxn, start, row);
-            start = row;
-          }
-          prevOrig = origTxn;
+    Set<BucketRowId> s = null;
+    LongColumnVector origTxnCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_ORIG_TXN_OFFSET];
+    LongColumnVector bucketCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_BUCKET_OFFSET];
+    LongColumnVector rowIdCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_ROW_ID_OFFSET];
+    for (int row = 0; row < batch.size; row++) {
+      long origTxn = origTxnCol.isRepeating ? origTxnCol.vector[0] : origTxnCol.vector[row];
+
+      if (origTxn != prevOrigTxn) {
+        // This is either the first txn or we changed origTxn numbers and we need to fetch the
+        // proper part of the trie
+        s = trie.get(origTxn);
+        prevOrigTxn = origTxn;
+      }
+      if (s != null) {
+        int bucket = bucketCol.isRepeating ? (int)bucketCol.vector[0] : (int)bucketCol.vector[row];
+        long rowId = rowIdCol.isRepeating ? rowIdCol.vector[0] : rowIdCol.vector[row];
+        assert BucketCodec.determineVersion(bucket).equals(BucketCodec.V1);
+        if (s.contains(new BucketRowId(BucketCodec.V1.decodeWriterId(bucket), rowId))) {
+          selectedBitSet.clear(row);
         }
       }
-      // Call for the final batch
-      evaluateAgainstOneOrigTxn(batch, selectedBitSet, origTxn, start, batch.size);
+
     }
   }
 
@@ -176,37 +191,18 @@ class InMemoryDeleteSet implements DeleteSet {
     inUse = false;
   }
 
-  private void evaluateAgainstOneOrigTxn(VectorizedRowBatch batch, BitSet selectedBitSet,
-                                         long origTxn, int start, int end) {
-    Set<BucketRowId> s = trie.get(origTxn);
-    if (s != null) {
-      LongColumnVector bucketCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_BUCKET_OFFSET];
-      LongColumnVector rowIdCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_ROW_ID_OFFSET];
-
-      for (int row = start; row < end; row++) {
-        int bucket = bucketCol.isRepeating ? (int)bucketCol.vector[0] : (int)bucketCol.vector[row];
-        long rowId = rowIdCol.isRepeating ? rowIdCol.vector[0] : rowIdCol.vector[row];
-        assert BucketCodec.determineVersion(bucket) == BucketCodec.V1;
-        if (s.contains(new BucketRowId(BucketCodec.V1.decodeWriterId(bucket), rowId))) {
-          selectedBitSet.clear(row);
-        }
-      }
-    }
-
-  }
-
   private static class BucketRowId {
-    final long bucket;
+    final int bucket;
     final long rowId;
 
-    BucketRowId(long bucket, long rowId) {
+    BucketRowId(int bucket, long rowId) {
       this.bucket = bucket;
       this.rowId = rowId;
     }
 
     @Override
     public int hashCode() {
-      return (int)(bucket * 31 + rowId);
+      return bucket * 31 + (int)rowId;
     }
 
     @Override

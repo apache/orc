@@ -22,6 +22,14 @@ import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import java.io.IOException;
 import java.util.BitSet;
 
+/**
+ * A set of delete events.  Callers should expect that DeleteSets are implemented to take
+ * advantage of that fact that insert files are ordered first by original transaction id.  This
+ * allows them to be vastly more efficient.
+ *
+ * This interface assumes that is it will be used for a given {@link ParsedAcidDirectory} parsed
+ * with a particular {@link org.apache.hadoop.hive.common.ValidTxnList}.
+ */
 public interface DeleteSet {
 
   /**
