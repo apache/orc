@@ -21,6 +21,7 @@ import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
+import org.apache.orc.util.Measurable;
 
 import java.io.IOException;
 import java.util.BitSet;
@@ -42,10 +43,9 @@ import java.util.concurrent.Future;
  * access it ordered by original transaction id.  It is assumed that is the most common
  * case since insert files are ordered by this value.
  */
-class InMemoryDeleteSet implements DeleteSet {
+class InMemoryDeleteSet implements DeleteSet, Measurable {
   private Map<Long, Set<BucketRowId>> trie;
   private final long size;
-  private boolean inUse;
 
   /**
    * This should only be called by {@link DeleteSetCache}.  If you need a DeleteSet call
@@ -137,22 +137,9 @@ class InMemoryDeleteSet implements DeleteSet {
     }
   }
 
-  /**
-   * Only to be called by {@link DeleteSetCache}.
-   */
-  long size() {
+  @Override
+  public long size() {
     return size;
-  }
-
-  /**
-   * Only to be called by {@link DeleteSetCache}.
-   */
-  void setInUse() {
-    inUse = true;
-  }
-
-  boolean isInUse() {
-    return inUse;
   }
 
   // evaluate which records in a VectorizedRowBatch should be deleted
@@ -184,11 +171,6 @@ class InMemoryDeleteSet implements DeleteSet {
       }
 
     }
-  }
-
-  @Override
-  public void release() {
-    inUse = false;
   }
 
   private static class BucketRowId {

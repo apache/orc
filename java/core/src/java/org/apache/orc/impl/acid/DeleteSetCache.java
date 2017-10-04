@@ -23,6 +23,7 @@ import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.util.CloseableLock;
+import org.apache.orc.util.SizedRefCountingLRU;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -42,9 +43,8 @@ class DeleteSetCache {
 
   private static DeleteSetCache self;
 
-  private final Configuration conf;
   private final DeleteSet nullDeleteSet;
-  private Map<ParsedAcidDirectory, InMemoryDeleteSet> cache;
+  private SizedRefCountingLRU<ParsedAcidDirectory, InMemoryDeleteSet> cache;
   private Map<ParsedAcidDirectory, Lock> locks;
   private long currentSize;
 
@@ -68,19 +68,13 @@ class DeleteSetCache {
 
 
   private DeleteSetCache(Configuration conf) {
-    this.conf = conf;
-    cache = new HashMap<>();
+    cache = new SizedRefCountingLRU<>(OrcConf.MAX_DELETE_ENTRIES_IN_MEMORY.getLong(conf));
     locks = new HashMap<>();
     currentSize = 0;
     nullDeleteSet = new DeleteSet() {
       @Override
       public void applyDeletesToBatch(VectorizedRowBatch batch, BitSet selectedBitSet)
           throws IOException {
-
-      }
-
-      @Override
-      public void release() {
 
       }
     };
@@ -94,7 +88,7 @@ class DeleteSetCache {
    * Get a delete set for a given ParsedAcidDirectory.  The cache is keyed by directory, which
    * means it is for a specific combination of file system directory and ValidTxnList.  This
    * method is not synchronized but access to a particular value in the cache is.  This prevents
-   * multiple threads from accidently building the same entry simultaneously.
+   * multiple threads from accidentally building the same entry simultaneously.
    * @param dir directory to get delete delta from
    * @return Set of deletes for this directory.  This will never be null.  In the case where
    * there are no delete files it will return a nullDeleteSet that never filters records.
@@ -106,7 +100,12 @@ class DeleteSetCache {
       return nullDeleteSet;
     }
 
-    Lock lockForThisDir = null;
+    InMemoryDeleteSet deleteSet = cache.get(dir);
+    if (deleteSet != null) return deleteSet;
+
+    // We didn't find it in the cache, so we have to build it.  First lock just this key so we
+    // don't have multiple builders at the same time.
+    Lock lockForThisDir;
     synchronized (this) {
       lockForThisDir = locks.get(dir);
       if (lockForThisDir == null) {
@@ -117,11 +116,9 @@ class DeleteSetCache {
 
     lockForThisDir.lock();
     try (CloseableLock cl = new CloseableLock(lockForThisDir)) {
-      InMemoryDeleteSet deleteSet = cache.get(dir);
-      if (deleteSet != null) {
-        deleteSet.setInUse();
-        return deleteSet;
-      }
+      // Check that someone else didn't build it meantime
+      deleteSet = cache.get(dir);
+      if (deleteSet != null) return deleteSet;
 
       // Figure out if I can fit this in memory or not.  To do this, we have to first get a size
       // estimate.
@@ -139,8 +136,7 @@ class DeleteSetCache {
         readers.add(reader);
       }
 
-      long maxSize = OrcConf.MAX_DELETE_ENTRIES_IN_MEMORY.getLong(conf);
-      if (addedSize > maxSize) {
+      if (addedSize > cache.getMaxSize()) {
         // Don't dump the cache for no purpose
         return new SortedDeleteSet(readers);
       }
