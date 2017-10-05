@@ -42,9 +42,11 @@ public interface DeleteSet {
    */
   void applyDeletesToBatch(VectorizedRowBatch batch, BitSet selectedBitSet) throws IOException;
 
-  /**
-   * Call this when you are done reading a release set.  It is imperative that you call this so
-   * the cache knows it can get rid of this delete set if it needs to.  Use 'finally'!
-   */
-  void release();
+  DeleteSet nullDeleteSet = new DeleteSet() {
+    @Override
+    public void applyDeletesToBatch(VectorizedRowBatch batch, BitSet selectedBitSet) throws
+        IOException {
+
+    }
+  };
 }

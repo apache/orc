@@ -29,13 +29,11 @@ import java.io.IOException;
 class AcidReader extends ReaderImpl {
   private final ValidTxnList validTxns;
   private final ParsedAcidDirectory baseDir;
-  private final Configuration conf;
 
   AcidReader(Path path, OrcFile.ReaderOptions options) throws IOException {
     super(path, options);
     this.validTxns = options.getValidTxns();
     this.baseDir = options.getAcidDir();
-    this.conf = options.getConfiguration();
   }
 
   @Override
@@ -45,6 +43,6 @@ class AcidReader extends ReaderImpl {
 
   @Override
   public RecordReader rows(Options options) throws IOException {
-    return new AcidRecordReader(this, options, validTxns, baseDir, conf);
+    return new AcidRecordReader(this, options, validTxns, baseDir);
   }
 }

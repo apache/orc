@@ -28,7 +28,6 @@ import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -47,11 +46,6 @@ public class TestOrcFileAcidHelper extends AcidTestBase {
 
     twoBucketZero = new long[2];
     twoBucketZero[0] = twoBucketZero[1] = BucketCodec.V1.encode(0, 0);
-  }
-
-  @After
-  public void clearDeleteSetCache() {
-    DeleteSetCache.dumpCache();
   }
 
   // test no transaction info set

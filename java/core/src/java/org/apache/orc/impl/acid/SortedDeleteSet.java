@@ -63,11 +63,6 @@ class SortedDeleteSet implements DeleteSet {
 
   }
 
-  @Override
-  public void release() {
-    // NOP, as this isn't held in memory
-  }
-
   private static class DeleteDeltaWrapper {
     final RecordReader rows;
     VectorizedRowBatch batch;

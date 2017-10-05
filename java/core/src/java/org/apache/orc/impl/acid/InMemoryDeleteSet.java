@@ -21,7 +21,6 @@ import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
-import org.apache.orc.util.Measurable;
 
 import java.io.IOException;
 import java.util.BitSet;
@@ -43,17 +42,13 @@ import java.util.concurrent.Future;
  * access it ordered by original transaction id.  It is assumed that is the most common
  * case since insert files are ordered by this value.
  */
-class InMemoryDeleteSet implements DeleteSet, Measurable {
+class InMemoryDeleteSet implements DeleteSet {
   private Map<Long, Set<BucketRowId>> trie;
-  private final long size;
 
   /**
-   * This should only be called by {@link DeleteSetCache}.  If you need a DeleteSet call
-   * {@link DeleteSetCache#getDeleteSet(ParsedAcidDirectory)}.  (Java really needs 'friend'.)
    * @param readers readers for the delete deltas
    */
-  InMemoryDeleteSet(List<Reader> readers, long size) throws IOException {
-    this.size = size;
+  InMemoryDeleteSet(List<Reader> readers) throws IOException {
 
     // Just to avoid a pathological case where someone has hundreds of delete deltas
     ExecutorService executor = Executors.newFixedThreadPool(Math.max(50, readers.size()));
@@ -135,11 +130,6 @@ class InMemoryDeleteSet implements DeleteSet, Measurable {
         throw new IOException(e);
       }
     }
-  }
-
-  @Override
-  public long size() {
-    return size;
   }
 
   // evaluate which records in a VectorizedRowBatch should be deleted

@@ -21,7 +21,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.common.ValidTxnList;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
-import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.impl.ReaderImpl;
 import org.apache.orc.impl.RecordReaderImpl;
@@ -31,17 +30,18 @@ import java.util.BitSet;
 
 class AcidRecordReader extends RecordReaderImpl {
   private final ValidTxnList validTxns;
-  private final DeleteSet deleteSet;
+  private final ParsedAcidDirectory baseDir;
+  private final boolean readingDeleteDelta;
 
   // Much of the non-trivial code in this class is taken from Hive's
   // VectorizedOrcAcidRowBatchReader.
 
   AcidRecordReader(ReaderImpl fileReader, Reader.Options options, ValidTxnList validTxns,
-                   ParsedAcidDirectory baseDir, Configuration conf) throws IOException {
+                   ParsedAcidDirectory baseDir) throws IOException {
     super(fileReader, options);
     this.validTxns = validTxns;
-    deleteSet = options.getIsDeleteDelta() ? DeleteSetCache.getCache(conf).getNullDeleteSet() :
-        DeleteSetCache.getCache(conf).getDeleteSet(baseDir);
+    this.baseDir = baseDir;
+    this.readingDeleteDelta = options.getIsDeleteDelta();
   }
 
   @Override
@@ -57,8 +57,8 @@ class AcidRecordReader extends RecordReaderImpl {
     findRecordsWithInvalidTransactionIds(batch, selectedBitSet);
 
     // If there are any valid records, run the deletes against it
-    if (selectedBitSet.cardinality() > 0) {
-      deleteSet.applyDeletesToBatch(batch, selectedBitSet);
+    if (!readingDeleteDelta && selectedBitSet.cardinality() > 0) {
+      baseDir.getDeleteSet().applyDeletesToBatch(batch, selectedBitSet);
     }
 
     if (selectedBitSet.cardinality() != batch.size) {
@@ -79,7 +79,6 @@ class AcidRecordReader extends RecordReaderImpl {
   @Override
   public void close() throws IOException {
     super.close();
-    deleteSet.release();
   }
 
   private void findRecordsWithInvalidTransactionIds(VectorizedRowBatch batch, BitSet selectedBitSet) {
@@ -103,5 +102,4 @@ class AcidRecordReader extends RecordReaderImpl {
       }
     }
   }
-
 }

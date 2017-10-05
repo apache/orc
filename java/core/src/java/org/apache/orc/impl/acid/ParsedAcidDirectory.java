@@ -23,7 +23,11 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.ValidTxnList;
+import org.apache.orc.OrcConf;
+import org.apache.orc.OrcFile;
+import org.apache.orc.Reader;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -42,6 +46,8 @@ public class ParsedAcidDirectory {
   private final Configuration conf;
   private final List<ParsedAcidFile> inputFiles;
   private final List<ParsedAcidFile> deleteFiles;
+  private DeleteSet deleteSet;
+  private boolean needsSortedDeleteSet;
 
   private Map<FileStatus, ParsedAcidFile> inputFileStats;
 
@@ -52,6 +58,7 @@ public class ParsedAcidDirectory {
     this.inputFiles = inputFiles;
     this.deleteFiles = deleteFiles;
     this.conf = conf;
+    needsSortedDeleteSet = false;
   }
 
   /**
@@ -144,6 +151,45 @@ public class ParsedAcidDirectory {
       relevantDirectories.add(deleteFile);
     }
     return relevantDirectories;
+  }
+
+  /**
+   * Get the delete set for this directory.  If there is room to build it in memory that will be
+   * done and the result cached so that other readers of this directory can share it.  If there
+   * is not room to do it in memory a DeleteSet will be returned that does a merge on the deletes
+   * and applies them to the input.  This type cannot be shared across threads and thus will not
+   * be stored for other readers.
+   * @return a DeleteSet
+   */
+  synchronized DeleteSet getDeleteSet() throws IOException {
+    if (deleteSet != null) return deleteSet;
+
+    if (deleteFiles == null || deleteFiles.isEmpty()) return DeleteSet.nullDeleteSet;
+
+    // Figure out if I can fit this in memory or not.  To do this, we have to first get a size
+    // estimate.
+    OrcFile.ReaderOptions options = new OrcFile.ReaderOptions(conf)
+        .acidDir(this)
+        .validTxnList(validTxns)
+        .filesystem(deleteFiles.get(0).getFileStatus().getPath().getFileSystem(conf));
+
+    long size = 0;
+    List<Reader> readers = new ArrayList<>();
+    for (final ParsedAcidFile deleteDelta : deleteFiles) {
+      Reader reader = new AcidReader(deleteDelta.getFileStatus().getPath(), options);
+      if (!needsSortedDeleteSet) size += reader.getNumberOfRows();
+      readers.add(reader);
+    }
+
+    if (needsSortedDeleteSet || size > OrcConf.MAX_DELETE_ENTRIES_IN_MEMORY.getLong(conf)) {
+      // Remember this for later, so we don't keep checking the size every time someone reads
+      // this directory.
+      needsSortedDeleteSet = true;
+      return new SortedDeleteSet(readers);
+    }
+
+    deleteSet = new InMemoryDeleteSet(readers);
+    return deleteSet;
   }
 
   private void fillOutInputFileStats() {
