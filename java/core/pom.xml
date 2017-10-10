@@ -95,6 +95,11 @@
   <build>
     <sourceDirectory>${basedir}/src/java</sourceDirectory>
     <testSourceDirectory>${basedir}/src/test</testSourceDirectory>
+    <resources>
+      <resource>
+	<directory>${basedir}/src/resources</directory>
+      </resource>
+    </resources>
     <testResources>
       <testResource>
         <directory>${basedir}/src/test/resources</directory>
