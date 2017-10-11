@@ -125,6 +125,7 @@ public class OrcFile {
     ORC_JAVA(0), // ORC Java writer
     ORC_CPP(1),  // ORC C++ writer
     PRESTO(2),   // Presto writer
+    SCRITCHLEY_GO(3), // Go writer from https://github.com/scritchley/orc
     UNKNOWN(Integer.MAX_VALUE);
 
     private final int id;
@@ -172,6 +173,9 @@ public class OrcFile {
 
     // Presto Writer
     PRESTO_ORIGINAL(WriterImplementation.PRESTO, 6),
+
+    // Scritchley Go Writer
+    SCRITCHLEY_GO_ORIGINAL(WriterImplementation.SCRITCHLEY_GO, 6),
 
     // Don't use any magic numbers here except for the below:
     FUTURE(WriterImplementation.UNKNOWN, Integer.MAX_VALUE); // a version from a future writer
