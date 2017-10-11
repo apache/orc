@@ -28,7 +28,8 @@ RUN apt-get install -y \
   g++ \
   git \
   make \
-  maven
+  maven \
+  tzdata
 
 WORKDIR /root
 
