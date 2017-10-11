@@ -94,5 +94,9 @@ Please check our [coding guidelines](/develop/coding.html).
 
 ## Reviews
 
-All code must be +1'ed by a committer other than the author prior to its 
-commit.
+ORC uses Commit-Then-Review, so patches can be committed without a
+committer's review. However, most changes should be reviewed first.
+
+## Making a Release
+
+The process to make a release is documented [here](/develop/make-release.html).
