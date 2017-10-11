@@ -205,6 +205,7 @@ message Footer {
   // 0 = ORC Java
   // 1 = ORC C++
   // 2 = Presto
+  // 3 = Scritchley Go from https://github.com/scritchley/orc
   optional uint32 writer = 9;
 }
 
@@ -250,6 +251,9 @@ message PostScript {
   //   6 = original
   //
   // Version of the Presto writer:
+  //   6 = original
+  //
+  // Version of the Scritchley Go writer:
   //   6 = original
   //
   optional uint32 writerVersion = 6;
