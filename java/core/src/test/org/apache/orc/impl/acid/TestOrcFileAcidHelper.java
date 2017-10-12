@@ -95,7 +95,7 @@ public class TestOrcFileAcidHelper extends AcidTestBase {
     Assert.assertEquals(5, batch.size);
 
     BytesColumnVector col =
-        (BytesColumnVector)((StructColumnVector)batch.cols[AcidConstants.ROWS_STRUCT_COL]).fields[0];
+        (BytesColumnVector)((StructColumnVector)batch.cols[AcidConstants.ROWS_STRUCT_COL_OFFSET]).fields[0];
 
     Assert.assertFalse(batch.selectedInUse);
     Assert.assertEquals("mary had a little lamb", col.toString(0));
@@ -125,7 +125,7 @@ public class TestOrcFileAcidHelper extends AcidTestBase {
     Assert.assertEquals(3, batch.size);
 
     BytesColumnVector col =
-        (BytesColumnVector)((StructColumnVector)batch.cols[AcidConstants.ROWS_STRUCT_COL]).fields[0];
+        (BytesColumnVector)((StructColumnVector)batch.cols[AcidConstants.ROWS_STRUCT_COL_OFFSET]).fields[0];
 
     Assert.assertTrue(batch.selectedInUse);
     Assert.assertEquals("mary had a little lamb", col.toString(batch.selected[0]));
@@ -153,7 +153,7 @@ public class TestOrcFileAcidHelper extends AcidTestBase {
     Assert.assertEquals(3, batch.size);
 
     BytesColumnVector col =
-        (BytesColumnVector)((StructColumnVector)batch.cols[AcidConstants.ROWS_STRUCT_COL]).fields[0];
+        (BytesColumnVector)((StructColumnVector)batch.cols[AcidConstants.ROWS_STRUCT_COL_OFFSET]).fields[0];
 
     Assert.assertTrue(batch.selectedInUse);
     Assert.assertEquals("mary had a little lamb", col.toString(batch.selected[0]));
@@ -182,7 +182,7 @@ public class TestOrcFileAcidHelper extends AcidTestBase {
     Assert.assertEquals(5, batch.size);
 
     BytesColumnVector col =
-        (BytesColumnVector)((StructColumnVector)batch.cols[AcidConstants.ROWS_STRUCT_COL]).fields[0];
+        (BytesColumnVector)((StructColumnVector)batch.cols[AcidConstants.ROWS_STRUCT_COL_OFFSET]).fields[0];
 
     Assert.assertFalse(batch.selectedInUse);
     Assert.assertEquals("hickery dickery dock", col.toString(0));
@@ -235,7 +235,7 @@ public class TestOrcFileAcidHelper extends AcidTestBase {
     Assert.assertEquals(4, batch.size);
 
     BytesColumnVector col =
-        (BytesColumnVector)((StructColumnVector)batch.cols[AcidConstants.ROWS_STRUCT_COL]).fields[0];
+        (BytesColumnVector)((StructColumnVector)batch.cols[AcidConstants.ROWS_STRUCT_COL_OFFSET]).fields[0];
 
     Assert.assertTrue(batch.selectedInUse);
     Assert.assertEquals("its fleece was white as snow", col.toString(batch.selected[0]));
@@ -265,7 +265,7 @@ public class TestOrcFileAcidHelper extends AcidTestBase {
     Assert.assertTrue(rows.nextBatch(batch));
     Assert.assertEquals(3, batch.size);
     BytesColumnVector col =
-        (BytesColumnVector)((StructColumnVector)batch.cols[AcidConstants.ROWS_STRUCT_COL]).fields[0];
+        (BytesColumnVector)((StructColumnVector)batch.cols[AcidConstants.ROWS_STRUCT_COL_OFFSET]).fields[0];
 
     Assert.assertTrue(batch.selectedInUse);
     Assert.assertEquals("the clock struck one", col.toString(batch.selected[0]));
@@ -295,7 +295,7 @@ public class TestOrcFileAcidHelper extends AcidTestBase {
     Assert.assertEquals(3, batch.size);
 
     BytesColumnVector col =
-        (BytesColumnVector)((StructColumnVector)batch.cols[AcidConstants.ROWS_STRUCT_COL]).fields[0];
+        (BytesColumnVector)((StructColumnVector)batch.cols[AcidConstants.ROWS_STRUCT_COL_OFFSET]).fields[0];
 
     Assert.assertTrue(batch.selectedInUse);
     Assert.assertEquals("its fleece was white as snow", col.toString(batch.selected[0]));
@@ -327,7 +327,7 @@ public class TestOrcFileAcidHelper extends AcidTestBase {
     Assert.assertEquals(3, batch.size);
 
     BytesColumnVector col =
-        (BytesColumnVector)((StructColumnVector)batch.cols[AcidConstants.ROWS_STRUCT_COL]).fields[0];
+        (BytesColumnVector)((StructColumnVector)batch.cols[AcidConstants.ROWS_STRUCT_COL_OFFSET]).fields[0];
 
     Assert.assertTrue(batch.selectedInUse);
     Assert.assertEquals("its fleece was white as snow", col.toString(batch.selected[0]));
@@ -358,7 +358,7 @@ public class TestOrcFileAcidHelper extends AcidTestBase {
     Assert.assertEquals(4, batch.size);
 
     BytesColumnVector col =
-        (BytesColumnVector)((StructColumnVector)batch.cols[AcidConstants.ROWS_STRUCT_COL]).fields[0];
+        (BytesColumnVector)((StructColumnVector)batch.cols[AcidConstants.ROWS_STRUCT_COL_OFFSET]).fields[0];
 
     Assert.assertTrue(batch.selectedInUse);
     Assert.assertEquals("its fleece was white as snow", col.toString(batch.selected[0]));
@@ -394,7 +394,7 @@ public class TestOrcFileAcidHelper extends AcidTestBase {
     Assert.assertEquals(1, batch.size);
 
     BytesColumnVector col =
-        (BytesColumnVector)((StructColumnVector)batch.cols[AcidConstants.ROWS_STRUCT_COL]).fields[0];
+        (BytesColumnVector)((StructColumnVector)batch.cols[AcidConstants.ROWS_STRUCT_COL_OFFSET]).fields[0];
 
     Assert.assertTrue(batch.selectedInUse);
     Assert.assertEquals("def", col.toString(batch.selected[0]));
@@ -427,7 +427,7 @@ public class TestOrcFileAcidHelper extends AcidTestBase {
     Assert.assertEquals(1, batch.size);
 
     BytesColumnVector col =
-        (BytesColumnVector)((StructColumnVector)batch.cols[AcidConstants.ROWS_STRUCT_COL]).fields[0];
+        (BytesColumnVector)((StructColumnVector)batch.cols[AcidConstants.ROWS_STRUCT_COL_OFFSET]).fields[0];
 
     Assert.assertTrue(batch.selectedInUse);
     Assert.assertEquals("def", col.toString(batch.selected[0]));
@@ -459,7 +459,7 @@ public class TestOrcFileAcidHelper extends AcidTestBase {
     Assert.assertEquals(3, batch.size);
 
     BytesColumnVector col =
-        (BytesColumnVector)((StructColumnVector)batch.cols[AcidConstants.ROWS_STRUCT_COL]).fields[0];
+        (BytesColumnVector)((StructColumnVector)batch.cols[AcidConstants.ROWS_STRUCT_COL_OFFSET]).fields[0];
 
     Assert.assertTrue(batch.selectedInUse);
     Assert.assertEquals("its fleece was white as snow", col.toString(batch.selected[0]));
@@ -493,7 +493,7 @@ public class TestOrcFileAcidHelper extends AcidTestBase {
     Assert.assertEquals(1, batch.size);
 
     BytesColumnVector col =
-        (BytesColumnVector)((StructColumnVector)batch.cols[AcidConstants.ROWS_STRUCT_COL]).fields[0];
+        (BytesColumnVector)((StructColumnVector)batch.cols[AcidConstants.ROWS_STRUCT_COL_OFFSET]).fields[0];
 
     Assert.assertTrue(batch.selectedInUse);
     Assert.assertEquals("its fleece was white as snow", col.toString(batch.selected[0]));
@@ -504,6 +504,8 @@ public class TestOrcFileAcidHelper extends AcidTestBase {
   // TODO test with projection pushdown
 
   // TODO test with schema evolution
+
+  // TODO test with file offsets
 
 
 }

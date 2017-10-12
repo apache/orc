@@ -17,7 +17,6 @@
  */
 package org.apache.orc.impl.acid;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.common.ValidTxnList;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
@@ -82,18 +81,18 @@ class AcidRecordReader extends RecordReaderImpl {
   }
 
   private void findRecordsWithInvalidTransactionIds(VectorizedRowBatch batch, BitSet selectedBitSet) {
-    if (batch.cols[AcidConstants.ROW_ID_CURRENT_TXN_OFFSET].isRepeating) {
+    if (batch.cols[AcidConstants.CURRENT_TXN_COL_OFFSET].isRepeating) {
       // When we have repeating values, we can unset the whole bitset at once
       // if the repeating value is not a valid transaction.
       long currentTransactionIdForBatch = ((LongColumnVector)
-          batch.cols[AcidConstants.ROW_ID_CURRENT_TXN_OFFSET]).vector[0];
+          batch.cols[AcidConstants.CURRENT_TXN_COL_OFFSET]).vector[0];
       if (!validTxns.isTxnValid(currentTransactionIdForBatch)) {
         selectedBitSet.clear(0, batch.size);
       }
       return;
     }
     long[] currentTransactionVector =
-        ((LongColumnVector) batch.cols[AcidConstants.ROW_ID_CURRENT_TXN_OFFSET]).vector;
+        ((LongColumnVector) batch.cols[AcidConstants.CURRENT_TXN_COL_OFFSET]).vector;
     // Loop through the bits that are set to true and mark those rows as false, if their
     // current transactions are not valid.
     for (int row = 0; row < batch.size; row++) {

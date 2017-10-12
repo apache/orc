@@ -47,4 +47,12 @@
     <Bug pattern="IS2_INCONSISTENT_SYNC"/>
     <Class name="org.apache.orc.impl.acid.DeleteSetCache"/>
   </Match>
+  <Match>
+    <Bug pattern="SIC_INNER_SHOULD_BE_STATIC"/>
+    <Class name="org.apache.orc.impl.acid.MergingAcidRecordReader$RowOffset"/>
+  </Match>
+  <Match>
+    <Bug pattern="EQ_COMPARETO_USE_OBJECT_EQUALS"/>
+    <Class name="org.apache.orc.impl.acid.MergingAcidRecordReader$RowOffset"/>
+  </Match>
 </FindBugsFilter>

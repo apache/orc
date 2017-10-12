@@ -73,11 +73,11 @@ class InMemoryDeleteSet implements DeleteSet {
 
                 for (int i = 0; i < batch.size; i++) {
                   int offset = batch.selectedInUse ? batch.selected[i] : i;
-                  LongColumnVector origTxnCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_ORIG_TXN_OFFSET];
+                  LongColumnVector origTxnCol = (LongColumnVector)batch.cols[AcidConstants.ORIG_TXN_COL_OFFSET];
                   long origTxn = origTxnCol.isRepeating ? origTxnCol.vector[0] : origTxnCol.vector[offset];
-                  LongColumnVector bucketCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_BUCKET_OFFSET];
+                  LongColumnVector bucketCol = (LongColumnVector)batch.cols[AcidConstants.BUCKET_COL_OFFSET];
                   long bucket = bucketCol.isRepeating ? bucketCol.vector[0] : bucketCol.vector[offset];
-                  LongColumnVector rowIdCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_ROW_ID_OFFSET];
+                  LongColumnVector rowIdCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_COL_OFFSET];
                   long rowId = rowIdCol.isRepeating ? rowIdCol.vector[0] : rowIdCol.vector[offset];
 
                   // Take advantage of the potentially long runs of original txn ids
@@ -139,9 +139,9 @@ class InMemoryDeleteSet implements DeleteSet {
 
     assert !batch.selectedInUse;
     Set<BucketRowId> s = null;
-    LongColumnVector origTxnCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_ORIG_TXN_OFFSET];
-    LongColumnVector bucketCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_BUCKET_OFFSET];
-    LongColumnVector rowIdCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_ROW_ID_OFFSET];
+    LongColumnVector origTxnCol = (LongColumnVector)batch.cols[AcidConstants.ORIG_TXN_COL_OFFSET];
+    LongColumnVector bucketCol = (LongColumnVector)batch.cols[AcidConstants.BUCKET_COL_OFFSET];
+    LongColumnVector rowIdCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_COL_OFFSET];
     for (int row = 0; row < batch.size; row++) {
       long origTxn = origTxnCol.isRepeating ? origTxnCol.vector[0] : origTxnCol.vector[row];
 

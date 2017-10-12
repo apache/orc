@@ -17,7 +17,6 @@
  */
 package org.apache.orc.impl.acid;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.ValidTxnList;
 import org.apache.orc.OrcFile;

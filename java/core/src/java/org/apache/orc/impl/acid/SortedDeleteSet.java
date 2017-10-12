@@ -46,9 +46,9 @@ class SortedDeleteSet implements DeleteSet {
   public void applyDeletesToBatch(VectorizedRowBatch batch, BitSet selectedBitSet) throws
       IOException {
     assert !batch.selectedInUse;
-    LongColumnVector origTxnCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_ORIG_TXN_OFFSET];
-    LongColumnVector bucketCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_BUCKET_OFFSET];
-    LongColumnVector rowIdCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_ROW_ID_OFFSET];
+    LongColumnVector origTxnCol = (LongColumnVector)batch.cols[AcidConstants.ORIG_TXN_COL_OFFSET];
+    LongColumnVector bucketCol = (LongColumnVector)batch.cols[AcidConstants.BUCKET_COL_OFFSET];
+    LongColumnVector rowIdCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_COL_OFFSET];
     for (int i = 0; i < batch.size; i++) {
       long origTxn = origTxnCol.isRepeating ? origTxnCol.vector[0] : origTxnCol.vector[i];
       long bucket = bucketCol.isRepeating ? bucketCol.vector[0] : bucketCol.vector[i];
@@ -91,9 +91,9 @@ class SortedDeleteSet implements DeleteSet {
           if (!moreToDo) return false;
           batchDone = false;
           currentOffset = 0;
-          delOrigTxnCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_ORIG_TXN_OFFSET];
-          delBucketCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_BUCKET_OFFSET];
-          delRowIdCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_ROW_ID_OFFSET];
+          delOrigTxnCol = (LongColumnVector)batch.cols[AcidConstants.ORIG_TXN_COL_OFFSET];
+          delBucketCol = (LongColumnVector)batch.cols[AcidConstants.BUCKET_COL_OFFSET];
+          delRowIdCol = (LongColumnVector)batch.cols[AcidConstants.ROW_ID_COL_OFFSET];
         }
 
         if (currentOffset >= batch.size) {

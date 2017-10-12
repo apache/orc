@@ -33,25 +33,25 @@ class AcidConstants {
   /**
    * Operation is no longer necessary but is still present for backwards compatibility
    */
-  public static final String ROW_ID_OPERATION_COL_NAME = "operation";
-  public static final int ROW_ID_OPERATION_OFFSET = 0;
-  public static final String ROW_ID_ORIG_TXN_COL_NAME = "original_transaction";
-  public static final int ROW_ID_ORIG_TXN_OFFSET = 1;
+  public static final String OPERATION_COL_NAME = "operation";
+  public static final int OPERATION_COL_OFFSET = 0;
+  public static final String ORIG_TXN_COL_NAME = "original_transaction";
+  public static final int ORIG_TXN_COL_OFFSET = 1;
   /**
    * Bucket is now really writer id, but still called bucket for backwards compatibility.
    */
-  public static final String ROW_ID_BUCKET_COL_NAME = "bucket";
-  public static final int ROW_ID_BUCKET_OFFSET = 2;
-  public static final String ROW_ID_ROW_ID_COL_NAME = "row_id";
-  public static final int ROW_ID_ROW_ID_OFFSET = 3;
-  public static final String ROW_ID_CURRENT_TXN_COL_NAME = "current_transaction";
-  public static final int ROW_ID_CURRENT_TXN_OFFSET = 4;
+  public static final String BUCKET_COL_NAME = "bucket";
+  public static final int BUCKET_COL_OFFSET = 2;
+  public static final String ROW_ID_COL_NAME = "row_id";
+  public static final int ROW_ID_COL_OFFSET = 3;
+  public static final String CURRENT_TXN_COL_NAME = "current_transaction";
+  public static final int CURRENT_TXN_COL_OFFSET = 4;
 
   /**
    * In ACID files the row data is stored in a separate struct that comes after the ROW__ID struct.
    */
   public static final String ROWS_STRUCT_COL_NAME = "ROWS";
-  public static final int ROWS_STRUCT_COL = 5;
+  public static final int ROWS_STRUCT_COL_OFFSET = 5;
 
 
 

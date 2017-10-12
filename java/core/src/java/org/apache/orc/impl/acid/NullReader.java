@@ -183,7 +183,7 @@ class NullReader implements Reader {
     return ByteBuffer.allocate(0);
   }
 
-  private static RecordReader nullRecordReader = new RecordReader() {
+  static RecordReader nullRecordReader = new RecordReader() {
     @Override
     public boolean nextBatch(VectorizedRowBatch batch) throws IOException {
       return false;

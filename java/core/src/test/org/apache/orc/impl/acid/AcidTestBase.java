@@ -88,17 +88,17 @@ public class AcidTestBase {
     Path path = createPath(name);
     TypeDescription schema = isDelete ?
         TypeDescription.createStruct()
-        .addField(AcidConstants.ROW_ID_OPERATION_COL_NAME, TypeDescription.createLong())
-        .addField(AcidConstants.ROW_ID_ORIG_TXN_COL_NAME, TypeDescription.createLong())
-        .addField(AcidConstants.ROW_ID_BUCKET_COL_NAME, TypeDescription.createLong())
-        .addField(AcidConstants.ROW_ID_ROW_ID_COL_NAME, TypeDescription.createLong())
-        .addField(AcidConstants.ROW_ID_CURRENT_TXN_COL_NAME, TypeDescription.createLong())
+        .addField(AcidConstants.OPERATION_COL_NAME, TypeDescription.createLong())
+        .addField(AcidConstants.ORIG_TXN_COL_NAME, TypeDescription.createLong())
+        .addField(AcidConstants.BUCKET_COL_NAME, TypeDescription.createLong())
+        .addField(AcidConstants.ROW_ID_COL_NAME, TypeDescription.createLong())
+        .addField(AcidConstants.CURRENT_TXN_COL_NAME, TypeDescription.createLong())
       : TypeDescription.createStruct()
-        .addField(AcidConstants.ROW_ID_OPERATION_COL_NAME, TypeDescription.createLong())
-        .addField(AcidConstants.ROW_ID_ORIG_TXN_COL_NAME, TypeDescription.createLong())
-        .addField(AcidConstants.ROW_ID_BUCKET_COL_NAME, TypeDescription.createLong())
-        .addField(AcidConstants.ROW_ID_ROW_ID_COL_NAME, TypeDescription.createLong())
-        .addField(AcidConstants.ROW_ID_CURRENT_TXN_COL_NAME, TypeDescription.createLong())
+        .addField(AcidConstants.OPERATION_COL_NAME, TypeDescription.createLong())
+        .addField(AcidConstants.ORIG_TXN_COL_NAME, TypeDescription.createLong())
+        .addField(AcidConstants.BUCKET_COL_NAME, TypeDescription.createLong())
+        .addField(AcidConstants.ROW_ID_COL_NAME, TypeDescription.createLong())
+        .addField(AcidConstants.CURRENT_TXN_COL_NAME, TypeDescription.createLong())
         .addField(AcidConstants.ROWS_STRUCT_COL_NAME, TypeDescription.createStruct()
             .addField("str", TypeDescription.createString()));
     Writer writer = OrcFile.createWriter(path, OrcFile.writerOptions(conf)
@@ -109,14 +109,14 @@ public class AcidTestBase {
 
     batch.size = origTxns.length;
 
-    LongColumnVector opCol = (LongColumnVector) batch.cols[AcidConstants.ROW_ID_OPERATION_OFFSET];
+    LongColumnVector opCol = (LongColumnVector) batch.cols[AcidConstants.OPERATION_COL_OFFSET];
     opCol.isRepeating = true;
     opCol.vector[0] = isDelete ? AcidConstants.OPERATION_DELETE : AcidConstants.OPERATION_INSERT;
 
     boolean repeating = true;
     for (long origTxn : origTxns) repeating &= origTxn == origTxns[0];
     LongColumnVector origTxnCol =
-        (LongColumnVector) batch.cols[AcidConstants.ROW_ID_ORIG_TXN_OFFSET];
+        (LongColumnVector) batch.cols[AcidConstants.ORIG_TXN_COL_OFFSET];
     if (repeating) {
       origTxnCol.isRepeating = true;
       origTxnCol.vector[0] = origTxns[0];
@@ -126,7 +126,7 @@ public class AcidTestBase {
 
     repeating = true;
     for (long bucket : buckets) repeating &= bucket == buckets[0];
-    LongColumnVector bucketCol = (LongColumnVector) batch.cols[AcidConstants.ROW_ID_BUCKET_OFFSET];
+    LongColumnVector bucketCol = (LongColumnVector) batch.cols[AcidConstants.BUCKET_COL_OFFSET];
     if (repeating) {
       bucketCol.isRepeating = true;
       bucketCol.vector[0] = buckets[0];
@@ -134,13 +134,13 @@ public class AcidTestBase {
       System.arraycopy(buckets, 0, bucketCol.vector, 0, buckets.length);
     }
 
-    LongColumnVector rowIdCol = (LongColumnVector) batch.cols[AcidConstants.ROW_ID_ROW_ID_OFFSET];
+    LongColumnVector rowIdCol = (LongColumnVector) batch.cols[AcidConstants.ROW_ID_COL_OFFSET];
     for (int i = 0; i < batch.size; i++) rowIdCol.vector[i] = rowIds[i];
 
     repeating = true;
     for (long currentTxn : currentTxns) repeating &= currentTxn == currentTxns[0];
     LongColumnVector currentTxnCol =
-        (LongColumnVector) batch.cols[AcidConstants.ROW_ID_CURRENT_TXN_OFFSET];
+        (LongColumnVector) batch.cols[AcidConstants.CURRENT_TXN_COL_OFFSET];
     if (repeating) {
       currentTxnCol.isRepeating = true;
       currentTxnCol.vector[0] = origTxns[0];
@@ -150,7 +150,7 @@ public class AcidTestBase {
 
     if (!isDelete) {
       BytesColumnVector str =
-          (BytesColumnVector) ((StructColumnVector) batch.cols[AcidConstants.ROWS_STRUCT_COL]).fields[0];
+          (BytesColumnVector) ((StructColumnVector) batch.cols[AcidConstants.ROWS_STRUCT_COL_OFFSET]).fields[0];
       for (int i = 0; i < rows.length; i++) {
         if (rows[i] == null) {
           str.noNulls = false;
