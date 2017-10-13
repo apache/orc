@@ -91,6 +91,7 @@ public class Driver {
       System.err.println("   scan - scan the ORC file");
       System.err.println("   convert - convert CSV and JSON files to ORC");
       System.err.println("   json-schema - scan JSON files to determine their schema");
+      System.err.println("   key - print information about the keys");
       System.err.println();
       System.err.println("To get more help, provide -h to the command");
       System.exit(1);
@@ -110,6 +111,8 @@ public class Driver {
       JsonSchemaFinder.main(conf, options.commandArgs);
     } else if ("convert".equals(options.command)) {
       ConvertTool.main(conf, options.commandArgs);
+    } else if ("key".equals(options.command)) {
+      KeyTool.main(conf, options.commandArgs);
     } else {
       System.err.println("Unknown subcommand: " + options.command);
       System.exit(1);
