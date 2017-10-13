@@ -18,12 +18,16 @@
 
 package org.apache.orc.impl;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.orc.EncryptionAlgorithm;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.security.Key;
+import java.util.List;
 
 public interface HadoopShims {
 
@@ -75,25 +79,32 @@ public interface HadoopShims {
 
   /**
    * Provides an HDFS ZeroCopyReader shim.
-   * @param in FSDataInputStream to read from (where the cached/mmap buffers are tied to)
+   * @param in FSDataInputStream to read from (where the cached/mmap buffers are
+   *          tied to)
    * @param pool ByteBufferPoolShim to allocate fallback buffers with
    *
    * @return returns null if not supported
    */
-  ZeroCopyReaderShim getZeroCopyReader(FSDataInputStream in, ByteBufferPoolShim pool) throws IOException;
+  ZeroCopyReaderShim getZeroCopyReader(FSDataInputStream in,
+                                       ByteBufferPoolShim pool
+                                       ) throws IOException;
 
   interface ZeroCopyReaderShim extends Closeable {
+
     /**
-     * Get a ByteBuffer from the FSDataInputStream - this can be either a HeapByteBuffer or an MappedByteBuffer.
-     * Also move the in stream by that amount. The data read can be small than maxLength.
+     * Get a ByteBuffer from the FSDataInputStream - this can be either a
+     * HeapByteBuffer or an MappedByteBuffer. Also move the in stream by that
+     * amount. The data read can be small than maxLength.
      *
      * @return ByteBuffer read from the stream,
      */
-    ByteBuffer readBuffer(int maxLength, boolean verifyChecksums) throws IOException;
+    ByteBuffer readBuffer(int maxLength,
+                          boolean verifyChecksums) throws IOException;
+
     /**
      * Release a ByteBuffer obtained from a read on the
-     * Also move the in stream by that amount. The data read can be small than maxLength.
-     *
+     * Also move the in stream by that amount. The data read can be small than
+     * maxLength.
      */
     void releaseBuffer(ByteBuffer buffer);
 
@@ -109,4 +120,81 @@ public interface HadoopShims {
    * @return the number of bytes written
    */
   long padStreamToBlock(OutputStream output, long padding) throws IOException;
+
+  /**
+   * A source of crypto keys. This is usually backed by a Ranger KMS.
+   */
+  interface KeyProvider {
+
+    /**
+     * Get the list of key names from the key provider.
+     * @return a list of key names
+     * @throws IOException
+     */
+    List<String> getKeyNames() throws IOException;
+
+    /**
+     * Get the current metadata for a given key. This is used when encrypting
+     * new data.
+     * @param keyName the name of a key
+     * @return metadata for the current version of the key
+     */
+    KeyMetadata getCurrentKeyVersion(String keyName) throws IOException;
+
+    /**
+     * Create a metadata object while reading.
+     * @param keyName the name of the key
+     * @param version the version of the key to use
+     * @param algorithm the algorithm for that version of the key
+     * @return the metadata for the key version
+     */
+    KeyMetadata getKeyVersion(String keyName, int version,
+                              EncryptionAlgorithm algorithm);
+
+    /**
+     * Create a local key for the given key version and initialization vector.
+     * Given a probabilistically unique iv, it will generate a unique key
+     * with the master key at the specified version. This allows the encryption
+     * to use this local key for the encryption and decryption without ever
+     * having access to the master key.
+     *
+     * This uses KeyProviderCryptoExtension.decryptEncryptedKey with a fixed key
+     * of the appropriate length.
+     *
+     * @param key the master key version
+     * @param iv the unique initialization vector
+     * @return the local key's material
+     */
+    Key getLocalKey(KeyMetadata key, byte[] iv) throws IOException;
+  }
+
+  /**
+   * Information about a crypto key.
+   */
+  interface KeyMetadata {
+    /**
+     * Get the name of the key.
+     */
+    String getKeyName();
+
+    /**
+     * Get the encryption algorithm for this key.
+     * @return the algorithm
+     */
+    EncryptionAlgorithm getAlgorithm();
+
+    /**
+     * Get the version of this key.
+     * @return the version
+     */
+    int getVersion();
+  }
+
+  /**
+   * Create a random key for encrypting.
+   * @param conf the configuration
+   * @return a key provider or null if none was provided
+   */
+  KeyProvider getKeyProvider(Configuration conf) throws IOException;
+
 }
