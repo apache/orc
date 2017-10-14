@@ -194,9 +194,18 @@
         <groupId>org.apache.rat</groupId>
         <artifactId>apache-rat-plugin</artifactId>
         <version>0.10</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
         <configuration>
           <excludeSubProject>false</excludeSubProject>
           <excludes>
+            <exclude>**/data/**</exclude>
             <exclude>**/*.json</exclude>
             <exclude>**/*.json.gz</exclude>
             <exclude>**/*.orc</exclude>
