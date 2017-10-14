@@ -25,6 +25,9 @@ The current build status:
 ![master build status](https://travis-ci.org/apache/orc.svg?branch=master)</a>
 * <a href="https://travis-ci.org/apache/orc/pull_requests">Pull Requests</a>
 
+Latest release: <a href="http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22">
+![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.apache.orc/orc/badge.svg)</a>
+
 The subdirectories are:
 * c++ - the c++ reader
 * docker - docker scripts to build and test on various linuxes
