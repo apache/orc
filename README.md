@@ -20,15 +20,16 @@ a C++ library for reading the _Optimized Row Columnar_ (ORC) file
 format. The C++ and Java libraries are completely independent of each
 other and will each read all versions of ORC files.
 
+Releases:
+* Latest: <a href="http://orc.apache.org/releases">Apache ORC releases</a>
+* Maven Central: <a href="http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22">![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.apache.orc/orc/badge.svg)</a>
+* Downloads: <a href="http://orc.apache.org/downloads">Apache ORC downloads</a>
+
 The current build status:
 * Master branch <a href="https://travis-ci.org/apache/orc/branches">
 ![master build status](https://travis-ci.org/apache/orc.svg?branch=master)</a>
 * <a href="https://travis-ci.org/apache/orc/pull_requests">Pull Requests</a>
 
-Latest release: from <a href="http://orc.apache.org/releases">Apache</a> and 
-<a href="http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22">Maven Central</a>
-
-Downloads: <a href="http://orc.apache.org/downloads">Apache Dist</a>
 
 Bug tracking: <a href="http://orc.apache.org/bugs">Apache Jira</a>
 
