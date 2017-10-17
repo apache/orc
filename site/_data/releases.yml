@@ -12,7 +12,7 @@
 
 1.4.0:
   date: 2017-05-08
-  state: stable
+  state: archived
   tar: orc-1.4.0.tar.gz
   signed-by: Owen O’Malley (3D0C92B9)
   sha256: 0f96b2096dd053b6e7559472c7eff8061f8e4459f914adf6c81c3d1eb83d3b0f
