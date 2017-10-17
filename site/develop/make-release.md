@@ -16,7 +16,8 @@ Set version so that it isn't a SNAPSHOT.
 Commit the changes back to Apache along with a tag for the release candidate.
 
 ~~~
-% git commit -s -S -c 'Preparing for release X.Y.Z'
+% git commit -s -S -am 'Preparing for release X.Y.Z'
+% git remote add apache https://git-wip-us.apache.org/repos/asf/orc.git
 % git push apache branch-X.Y
 % git tag release-X.Y.Zrc0
 % git push apache release-X.Y.Zrc0
@@ -43,6 +44,8 @@ sftp> cd orc-X.Y.Zrc0
 sftp> put orc-X.Y.Zrc0*
 sftp> quit
 ~~~
+
+Make sure your GPG exists in https://dist.apache.org/repos/dist/release/orc/KEYS for others to verify signature in RC
 
 Send email with the vote:
 
@@ -71,7 +74,7 @@ Update the final tag and remove the rc tag.
 % git push apache :release-X.Y.Zrc0
 ~~~
 
-Publish the artifacts to Maven central staging.
+Publish the artifacts to Maven central staging. Make sure to have this [setup](http://www.apache.org/dev/publishing-maven-artifacts.html#dev-env) for Apache releases
 
 ~~~
 % cd java
@@ -105,7 +108,7 @@ Update the release branch with the version for the next release.
 edit CMakeLists.txt to change version to X.Y.(Z+1)-SNAPSHOT
 % cd build
 % cmake ..
-% git commit -a -s -S -C 'Preparing branch for post X.Y.Z development'
+% git commit -a -s -S -am 'Preparing branch for post X.Y.Z development'
 % git push apache branch-X.Y
 ~~~
 
