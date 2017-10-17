@@ -122,7 +122,10 @@ sftp&gt; put orc-X.Y.Zrc0*
 sftp&gt; quit
 </code></pre>
 
-<p>Make sure your GPG exists in https://dist.apache.org/repos/dist/release/orc/KEYS for others to verify signature in RC</p>
+<p>Make sure your GPG key exists <a href="https://dist.apache.org/repos/dist/release/orc/KEYS">here</a> for others to verify signature in RC</p>
+
+<p>Click the version to release (X.Y.Z) <a href="https://issues.apache.org/jira/projects/ORC?selectedItem=com.atlassian.jira.jira-projects-plugin:release-page">here</a>
+to get the list of jiras that are fixed in X.Y.Z</p>
 
 <p>Send email with the vote:</p>
 
@@ -171,11 +174,15 @@ Thanks!
 % cd orc-X.Y.Z
 copy release artifacts with a rename from orc-X.Y.Zrc0* to orc-X.Y.Z*
 % svn add .
-% svn commit
-</code></pre>
+% svn commit ---username &lt;apacheid&gt; -m "ORC X.Y.Z Release"
 
-<p>We keep the latest patch release for each of the last two branches, so remove
-extra releases from the Apache dist area.</p>
+We keep the latest patch release for each of the last two branches, so remove
+extra releases (say I.J.K) from the Apache dist area.
+
+% cd ..
+% svn rm orc-I.J.K
+% svn commit --username &lt;apacheid&gt; -m "Removed old release ORC I.J.K"
+</code></pre>
 
 <p>Update the release branch with the version for the next release.</p>
 
@@ -190,7 +197,22 @@ extra releases from the Apache dist area.</p>
 
 <ul>
   <li>Check out the master branch (git co apache/master)</li>
-  <li>Change directory in to site.</li>
+</ul>
+
+<pre><code>Change directory in to site.
+% pwd
+&lt;path-to-master-src&gt;
+% cd site
+% mkdir target
+% cd target
+Set up site/target to be a separate git workspace that tracks the asf-site branch.
+% git init
+% git remote add origin https://git-wip-us.apache.org/repos/asf/orc.git -t asf-site
+% git fetch origin
+% git checkout asf-site
+% cd ..
+</code></pre>
+<ul>
   <li>edit site/_data/releases.yml to add new release
     <ul>
       <li>update the state for the releases to match the changes in the Apache dist
@@ -204,9 +226,18 @@ extra releases from the Apache dist area.</p>
   </li>
   <li>create a new file _posts/YYYY-MM-DD-ORC-X.Y.Z.md for the news section</li>
   <li>Run “bundle exec jekyll serve”</li>
-  <li>Check the website on http:/0.0.0.0:4000/</li>
-  <li>If it looks good, use git add to add the new files and commit to master with a message of “update site for X.Y.Z”.</li>
-  <li>Change directory into target.</li>
+  <li>Check the website on http://0.0.0.0:4000/</li>
+  <li>If it looks good, use git add (from within site directory) to add the new files and commit to master with a message of “update site for X.Y.Z”.</li>
+</ul>
+
+<pre><code>% pwd
+&lt;path-to-master-src&gt;/site
+% git commit -am "Update site for X.Y.Z"
+% git push origin master
+</code></pre>
+
+<ul>
+  <li>Change directory into site/target for publishing the site.</li>
   <li>Add the new files that you just generated.
     <ul>
       <li>This assumes you’ve set up site/target to be a separate git workspace that tracks the asf-site branch.</li>
@@ -215,15 +246,22 @@ extra releases from the Apache dist area.</p>
   <li>Commit to asf-site to publish the updated site.</li>
 </ul>
 
+<pre><code>% cd target
+% pwd
+&lt;path-to-master-src&gt;/site/target
+% git commit -am "Publish site for X.Y.Z"
+% git push origin asf-site
+</code></pre>
+
 <p>Update ORC’s jira to reflect the released version.</p>
 
 <ul>
-  <li>Select the resolved issues and bulk transition them to closed.
+  <li>Select the resolved issues and bulk transition them to closed with following query <a href="https://issues.apache.org/jira/issues/?filter=-1">here</a>.
     <ul>
       <li>query: project = ORC AND fixVersion = X.Y.Z and status = Resolved ORDER BY created desc</li>
     </ul>
   </li>
-  <li>Mark the version as released and set the date.</li>
+  <li>Mark the version as released and set the date <a href="https://issues.apache.org/jira/projects/ORC?selectedItem=com.atlassian.jira.jira-projects-plugin:release-page">here</a>.</li>
 </ul>
 
 <p>It usually take up to 24 hours for the apache dist mirrors and maven central to update with the new release.</p>
