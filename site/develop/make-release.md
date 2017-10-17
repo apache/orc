@@ -45,7 +45,10 @@ sftp> put orc-X.Y.Zrc0*
 sftp> quit
 ~~~
 
-Make sure your GPG exists in https://dist.apache.org/repos/dist/release/orc/KEYS for others to verify signature in RC
+Make sure your GPG key exists [here](https://dist.apache.org/repos/dist/release/orc/KEYS) for others to verify signature in RC
+
+Click the version to release (X.Y.Z) [here](https://issues.apache.org/jira/projects/ORC?selectedItem=com.atlassian.jira.jira-projects-plugin:release-page)
+to get the list of jiras that are fixed in X.Y.Z
 
 Send email with the vote:
 
@@ -96,11 +99,15 @@ In a svn clone of https://dist.apache.org/repos/dist/release/orc
 % cd orc-X.Y.Z
 copy release artifacts with a rename from orc-X.Y.Zrc0* to orc-X.Y.Z*
 % svn add .
-% svn commit
-~~~
+% svn commit ---username <apacheid> -m "ORC X.Y.Z Release"
 
 We keep the latest patch release for each of the last two branches, so remove
-extra releases from the Apache dist area.
+extra releases (say I.J.K) from the Apache dist area.
+
+% cd ..
+% svn rm orc-I.J.K
+% svn commit --username <apacheid> -m "Removed old release ORC I.J.K"
+~~~
 
 Update the release branch with the version for the next release.
 
@@ -123,9 +130,9 @@ Update the site with the new release.
       * archived = removed from dist
 * create a new file _posts/YYYY-MM-DD-ORC-X.Y.Z.md for the news section
 * Run "bundle exec jekyll serve"
-* Check the website on http:/0.0.0.0:4000/
+* Check the website on http://0.0.0.0:4000/
 * If it looks good, use git add to add the new files and commit to master with a message of "update site for X.Y.Z".
-* Change directory into target.
+* Change directory into target for publishing the site.
 * Add the new files that you just generated.
    * This assumes you've set up site/target to be a separate git workspace that tracks the asf-site branch.
 * Commit to asf-site to publish the updated site.
