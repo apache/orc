@@ -122,7 +122,21 @@ edit CMakeLists.txt to change version to X.Y.(Z+1)-SNAPSHOT
 Update the site with the new release.
 
 * Check out the master branch (git co apache/master)
-* Change directory in to site.
+
+~~~
+Change directory in to site.
+% pwd
+<path-to-master-src>
+% cd site
+% mkdir target
+% cd target
+Set up site/target to be a separate git workspace that tracks the asf-site branch.
+% git init
+% git remote add origin https://git-wip-us.apache.org/repos/asf/orc.git -t asf-site
+% git fetch origin
+% git checkout asf-site
+% cd ..
+~~~
 * edit site/_data/releases.yml to add new release
    * update the state for the releases to match the changes in the Apache dist
       * latest = new release (only one of these!)
@@ -131,16 +145,32 @@ Update the site with the new release.
 * create a new file _posts/YYYY-MM-DD-ORC-X.Y.Z.md for the news section
 * Run "bundle exec jekyll serve"
 * Check the website on http://0.0.0.0:4000/
-* If it looks good, use git add to add the new files and commit to master with a message of "update site for X.Y.Z".
-* Change directory into target for publishing the site.
+* If it looks good, use git add (from within site directory) to add the new files and commit to master with a message of "update site for X.Y.Z".
+
+~~~
+% pwd
+<path-to-master-src>/site
+% git commit -am "Update site for X.Y.Z"
+% git push origin master
+~~~
+
+* Change directory into site/target for publishing the site.
 * Add the new files that you just generated.
    * This assumes you've set up site/target to be a separate git workspace that tracks the asf-site branch.
 * Commit to asf-site to publish the updated site.
 
+~~~
+% cd target
+% pwd
+<path-to-master-src>/site/target
+% git commit -am "Publish site for X.Y.Z"
+% git push origin asf-site
+~~~
+
 Update ORC's jira to reflect the released version.
 
-* Select the resolved issues and bulk transition them to closed.
+* Select the resolved issues and bulk transition them to closed with following query [here](https://issues.apache.org/jira/issues/?filter=-1).
    * query: project = ORC AND fixVersion = X.Y.Z and status = Resolved ORDER BY created desc
-* Mark the version as released and set the date.
+* Mark the version as released and set the date [here](https://issues.apache.org/jira/projects/ORC?selectedItem=com.atlassian.jira.jira-projects-plugin:release-page).
 
 It usually take up to 24 hours for the apache dist mirrors and maven central to update with the new release.

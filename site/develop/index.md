@@ -5,7 +5,7 @@ title: Developing
 
 Information about the ORC project that is most important for
 developers working on the project. The project has created
-[bylaws](/develop/bylaws) for itself.
+[bylaws](bylaws.html) for itself.
 
 ## Project Members
 
@@ -90,7 +90,7 @@ The important branches are:
 * [asf-site](https://github.com/apache/orc/tree/asf-site) -
   The pages that are deployed to https://orc.apache.org/
 
-Please check our [coding guidelines](/develop/coding).
+Please check our [coding guidelines](/develop/coding.html).
 
 ## Reviews
 
@@ -99,4 +99,4 @@ committer's review. However, most changes should be reviewed first.
 
 ## Making a Release
 
-The process to make a release is documented [here](/develop/make-release).
+The process to make a release is documented [here](/develop/make-release.html).
