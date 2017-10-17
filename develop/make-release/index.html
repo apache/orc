@@ -1,0 +1,294 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <title>Making a Release</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="generator" content="Jekyll v3.5.2">
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
+  <link rel="stylesheet" href="/css/screen.css">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <!--[if lt IE 9]>
+  <script src="/js/html5shiv.min.js"></script>
+  <script src="/js/respond.min.js"></script>
+  <![endif]-->
+</head>
+
+
+<body class="wrap">
+  <header role="banner">
+  <nav class="mobile-nav show-on-mobiles">
+    <ul>
+  <li class="">
+    <a href="/">Home</a>
+  </li>
+  <li class="">
+    <a href="/docs/"><span class="show-on-mobiles">Docs</span>
+                     <span class="hide-on-mobiles">Documentation</span></a>
+  </li>
+  <li class="">
+    <a href="/talks/">Talks</a>
+  </li>
+  <li class="">
+    <a href="/news/">News</a>
+  </li>
+  <li class="">
+    <a href="/help/">Help</a>
+  </li>
+  <li class="current">
+    <a href="/develop/">Develop</a>
+  </li>
+</ul>
+
+  </nav>
+  <div class="grid">
+    <div class="unit one-third center-on-mobiles">
+      <h1>
+        <a href="/">
+          <span class="sr-only">Apache ORC</span>
+          <img src="/img/logo.png" width="249" height="101" alt="ORC Logo">
+        </a>
+      </h1>
+    </div>
+    <nav class="main-nav unit two-thirds hide-on-mobiles">
+      <ul>
+  <li class="">
+    <a href="/">Home</a>
+  </li>
+  <li class="">
+    <a href="/docs/"><span class="show-on-mobiles">Docs</span>
+                     <span class="hide-on-mobiles">Documentation</span></a>
+  </li>
+  <li class="">
+    <a href="/talks/">Talks</a>
+  </li>
+  <li class="">
+    <a href="/news/">News</a>
+  </li>
+  <li class="">
+    <a href="/help/">Help</a>
+  </li>
+  <li class="current">
+    <a href="/develop/">Develop</a>
+  </li>
+</ul>
+
+    </nav>
+  </div>
+</header>
+
+
+  <section class="standalone">
+  <div class="grid">
+
+    <div class="unit whole">
+      <article>
+        <h1>Making a Release</h1>
+        <h2 id="preparing-for-release">Preparing for release</h2>
+
+<p>Set version so that it isn’t a SNAPSHOT.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>% git checkout branch-X.Y
+% edit CMakeLists.txt
+% (mkdir build; cd build; cmake ..)
+</code></pre>
+</div>
+
+<p>Commit the changes back to Apache along with a tag for the release candidate.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>% git commit -s -S -am 'Preparing for release X.Y.Z'
+% git remote add apache https://git-wip-us.apache.org/repos/asf/orc.git
+% git push apache branch-X.Y
+% git tag release-X.Y.Zrc0
+% git push apache release-X.Y.Zrc0
+</code></pre>
+</div>
+
+<p>Generate the source tarball and checksums for the release.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>% wget https://github.com/apache/orc/archive/release-X.Y.Zrc0.tar.gz
+% tar xzf release-X.Y.Zrc0.tar.gz
+% mv orc-release-X.Y.Zrc0 orc-X.Y.Z
+% tar czf orc-X.Y.Zrc0.tar.gz orc-X.Y.Z
+% shasum -a 256 orc-X.Y.Zrc0.tar.gz &gt; orc-X.Y.Zrc0.tar.gz.sha256
+% gpg --detach-sig --armor orc-X.Y.Zrc0.tar.gz
+</code></pre>
+</div>
+
+<p>Copy the artifacts into your personal Apache website.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>% sftp &lt;apacheid&gt;@home.apache.org
+sftp&gt; cd public_html
+sftp&gt; mkdir orc-X.Y.Zrc0
+sftp&gt; cd orc-X.Y.Zrc0
+sftp&gt; put orc-X.Y.Zrc0*
+sftp&gt; quit
+</code></pre>
+</div>
+
+<p>Make sure your GPG exists in https://dist.apache.org/repos/dist/release/orc/KEYS for others to verify signature in RC</p>
+
+<p>Send email with the vote:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>To: dev@orc.apache.org
+Subject: [VOTE] Should we release ORC X.Y.Zrc0?
+
+All,
+
+Should we release the following artifacts as ORC X.Y.Z?
+
+tar: http://home.apache.org/~omalley/orc-X.Y.Zrc0/
+tag: https://github.com/apache/orc/releases/tag/release-X.Y.Zrc0
+jiras: https://issues.apache.org/jira/browse/ORC/fixforversion/&lt;fixid&gt;
+
+Thanks!
+</code></pre>
+</div>
+
+<h2 id="to-promote-a-release-candidate-rc-to-a-real-release">To promote a release candidate (RC) to a real release.</h2>
+
+<p>Update the final tag and remove the rc tag.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>% git tag rel/release-X.Y.Z -s
+% git push apache rel/release-X.Y.Z
+% git push apache :release-X.Y.Zrc0
+</code></pre>
+</div>
+
+<p>Publish the artifacts to Maven central staging. Make sure to have this <a href="http://www.apache.org/dev/publishing-maven-artifacts.html#dev-env">setup</a> for Apache releases</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>% cd java
+% mvn -Papache-release clean deploy
+</code></pre>
+</div>
+
+<p>Publish from the staging area:</p>
+
+<ul>
+  <li>login to <a href="https://repository.apache.org/index.html#stagingRepositories">Maven staging</a></li>
+  <li>find your staging repository (search for org.apache.org)</li>
+  <li>close it</li>
+  <li>release it</li>
+</ul>
+
+<p>Publish the artifacts to Apache’s dist area.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>In a svn clone of https://dist.apache.org/repos/dist/release/orc
+% mkdir orc-X.Y.Z
+% cd orc-X.Y.Z
+copy release artifacts with a rename from orc-X.Y.Zrc0* to orc-X.Y.Z*
+% svn add .
+% svn commit
+</code></pre>
+</div>
+
+<p>We keep the latest patch release for each of the last two branches, so remove
+extra releases from the Apache dist area.</p>
+
+<p>Update the release branch with the version for the next release.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>edit CMakeLists.txt to change version to X.Y.(Z+1)-SNAPSHOT
+% cd build
+% cmake ..
+% git commit -a -s -S -am 'Preparing branch for post X.Y.Z development'
+% git push apache branch-X.Y
+</code></pre>
+</div>
+
+<p>Update the site with the new release.</p>
+
+<ul>
+  <li>Check out the master branch (git co apache/master)</li>
+  <li>Change directory in to site.</li>
+  <li>edit site/_data/releases.yml to add new release
+    <ul>
+      <li>update the state for the releases to match the changes in the Apache dist
+        <ul>
+          <li>latest = new release (only one of these!)</li>
+          <li>stable = other release still in dist</li>
+          <li>archived = removed from dist</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>create a new file _posts/YYYY-MM-DD-ORC-X.Y.Z.md for the news section</li>
+  <li>Run “bundle exec jekyll serve”</li>
+  <li>Check the website on http:/0.0.0.0:4000/</li>
+  <li>If it looks good, use git add to add the new files and commit to master with a message of “update site for X.Y.Z”.</li>
+  <li>Change directory into target.</li>
+  <li>Add the new files that you just generated.
+    <ul>
+      <li>This assumes you’ve set up site/target to be a separate git workspace that tracks the asf-site branch.</li>
+    </ul>
+  </li>
+  <li>Commit to asf-site to publish the updated site.</li>
+</ul>
+
+<p>Update ORC’s jira to reflect the released version.</p>
+
+<ul>
+  <li>Select the resolved issues and bulk transition them to closed.
+    <ul>
+      <li>query: project = ORC AND fixVersion = X.Y.Z and status = Resolved ORDER BY created desc</li>
+    </ul>
+  </li>
+  <li>Mark the version as released and set the date.</li>
+</ul>
+
+<p>It usually take up to 24 hours for the apache dist mirrors and maven central to update with the new release.</p>
+
+      </article>
+    </div>
+
+    <div class="clear"></div>
+
+  </div>
+</section>
+
+
+  <footer role="contentinfo">
+  <p>The contents of this website are &copy;&nbsp;2017
+     <a href="https://www.apache.org/">Apache Software Foundation</a>
+     under the terms of the <a
+      href="https://www.apache.org/licenses/LICENSE-2.0.html">
+      Apache&nbsp;License&nbsp;v2</a>. Apache ORC and its logo are trademarks
+      of the Apache Software Foundation.</p>
+</footer>
+
+  <script>
+  var anchorForId = function (id) {
+    var anchor = document.createElement("a");
+    anchor.className = "header-link";
+    anchor.href      = "#" + id;
+    anchor.innerHTML = "<span class=\"sr-only\">Permalink</span><i class=\"fa fa-link\"></i>";
+    anchor.title = "Permalink";
+    return anchor;
+  };
+
+  var linkifyAnchors = function (level, containingElement) {
+    var headers = containingElement.getElementsByTagName("h" + level);
+    for (var h = 0; h < headers.length; h++) {
+      var header = headers[h];
+
+      if (typeof header.id !== "undefined" && header.id !== "") {
+        header.appendChild(anchorForId(header.id));
+      }
+    }
+  };
+
+  document.onreadystatechange = function () {
+    if (this.readyState === "complete") {
+      var contentBlock = document.getElementsByClassName("docs")[0] || document.getElementsByClassName("news")[0];
+      if (!contentBlock) {
+        return;
+      }
+      for (var level = 1; level <= 6; level++) {
+        linkifyAnchors(level, contentBlock);
+      }
+    }
+  };
+</script>
+
+
+</body>
+</html>
