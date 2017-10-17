@@ -136,6 +136,7 @@ Set up site/target to be a separate git workspace that tracks the asf-site branc
 % git fetch origin
 % git checkout asf-site
 % cd ..
+% bundle install
 ~~~
 * edit site/_data/releases.yml to add new release
    * update the state for the releases to match the changes in the Apache dist
