@@ -95,7 +95,8 @@
 
 <p>Commit the changes back to Apache along with a tag for the release candidate.</p>
 
-<pre><code>% git commit -s -S -c 'Preparing for release X.Y.Z'
+<pre><code>% git commit -s -S -am 'Preparing for release X.Y.Z'
+% git remote add apache https://git-wip-us.apache.org/repos/asf/orc.git
 % git push apache branch-X.Y
 % git tag release-X.Y.Zrc0
 % git push apache release-X.Y.Zrc0
@@ -120,6 +121,8 @@ sftp&gt; cd orc-X.Y.Zrc0
 sftp&gt; put orc-X.Y.Zrc0*
 sftp&gt; quit
 </code></pre>
+
+<p>Make sure your GPG exists in https://dist.apache.org/repos/dist/release/orc/KEYS for others to verify signature in RC</p>
 
 <p>Send email with the vote:</p>
 
@@ -146,7 +149,7 @@ Thanks!
 % git push apache :release-X.Y.Zrc0
 </code></pre>
 
-<p>Publish the artifacts to Maven central staging.</p>
+<p>Publish the artifacts to Maven central staging. Make sure to have this <a href="http://www.apache.org/dev/publishing-maven-artifacts.html#dev-env">setup</a> for Apache releases</p>
 
 <pre><code>% cd java
 % mvn -Papache-release clean deploy
@@ -179,7 +182,7 @@ extra releases from the Apache dist area.</p>
 <pre><code>edit CMakeLists.txt to change version to X.Y.(Z+1)-SNAPSHOT
 % cd build
 % cmake ..
-% git commit -a -s -S -C 'Preparing branch for post X.Y.Z development'
+% git commit -a -s -S -am 'Preparing branch for post X.Y.Z development'
 % git push apache branch-X.Y
 </code></pre>
 
