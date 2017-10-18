@@ -123,6 +123,7 @@ include_directories (
   ${ZLIB_INCLUDE_DIRS}
   ${SNAPPY_INCLUDE_DIRS}
   ${LZ4_INCLUDE_DIRS}
+  ${LIBHDFSPP_INCLUDE_DIRS}
   )
 
 add_custom_command(OUTPUT orc_proto.pb.h orc_proto.pb.cc
@@ -132,7 +133,7 @@ add_custom_command(OUTPUT orc_proto.pb.h orc_proto.pb.cc
         "${CMAKE_SOURCE_DIR}/proto/orc_proto.proto"
 )
 
-add_library (orc STATIC
+set(SOURCE_FILES
   "${CMAKE_CURRENT_BINARY_DIR}/Adaptor.hh"
   orc_proto.pb.h
   io/InputStream.cc
@@ -161,6 +162,12 @@ add_library (orc STATIC
   Writer.cc
   )
 
+if(ORC_CXX_HAS_THREAD_LOCAL AND BUILD_LIBHDFSPP)
+  set(SOURCE_FILES ${SOURCE_FILES} OrcHdfsFile.cc)
+endif(ORC_CXX_HAS_THREAD_LOCAL AND BUILD_LIBHDFSPP)
+
+add_library (orc STATIC ${SOURCE_FILES})
+
 install(TARGETS orc DESTINATION lib)
 
 target_link_libraries (orc
@@ -168,6 +175,11 @@ target_link_libraries (orc
   ${ZLIB_LIBRARIES}
   ${SNAPPY_LIBRARIES}
   ${LZ4_LIBRARIES}
+  ${LIBHDFSPP_LIBRARIES}
   )
 
 add_dependencies(orc protobuf)
+
+if(ORC_CXX_HAS_THREAD_LOCAL AND BUILD_LIBHDFSPP)
+  add_definitions(-DBUILD_LIBHDFSPP)
+endif(ORC_CXX_HAS_THREAD_LOCAL AND BUILD_LIBHDFSPP)

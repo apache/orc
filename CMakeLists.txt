@@ -30,6 +30,10 @@ option (BUILD_JAVA
     "Include ORC Java library in the build process"
      ON)
 
+option (BUILD_LIBHDFSPP
+    "Include LIBHDFSPP library in the build process"
+     ON)
+
 # Make sure that a build type is selected
 if (NOT CMAKE_BUILD_TYPE)
   message(STATUS "No build type selected, default to ReleaseWithDebugInfo")
@@ -84,6 +88,7 @@ endif ()
 
 enable_testing()
 
+INCLUDE(CheckSourceCompiles)
 INCLUDE(ThirdpartyToolchain)
 
 set (EXAMPLE_DIRECTORY ${CMAKE_SOURCE_DIR}/examples)
