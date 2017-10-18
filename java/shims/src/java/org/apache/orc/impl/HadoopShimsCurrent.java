@@ -18,6 +18,7 @@
 
 package org.apache.orc.impl;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
 
@@ -27,11 +28,16 @@ import java.util.EnumSet;
 
 /**
  * Shims for recent versions of Hadoop
+ *
+ * Adds support for:
+ * <ul>
+ *   <li>Variable length HDFS blocks</li>
+ * </ul>
  */
 public class HadoopShimsCurrent implements HadoopShims {
 
   public DirectDecompressor getDirectDecompressor(DirectCompressionType codec) {
-    return HadoopShimsPre2_7.getDecompressor(codec);
+    return HadoopShimsPre2_6.getDecompressor(codec);
   }
 
   @Override
@@ -51,6 +57,11 @@ public class HadoopShimsCurrent implements HadoopShims {
     } else {
       return HadoopShimsPre2_3.padStream(output, padding);
     }
+  }
+
+  @Override
+  public KeyProvider getKeyProvider(Configuration conf) throws IOException {
+    return new HadoopShimsPre2_7.KeyProviderImpl(conf);
   }
 
 

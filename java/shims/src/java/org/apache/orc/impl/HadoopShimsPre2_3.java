@@ -18,6 +18,7 @@
 
 package org.apache.orc.impl;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 
 import java.io.IOException;
@@ -60,6 +61,12 @@ public class HadoopShimsPre2_3 implements HadoopShims {
   @Override
   public long padStreamToBlock(OutputStream output, long padding) throws IOException {
     return padStream(output, padding);
+  }
+
+  @Override
+  public KeyProvider getKeyProvider(Configuration conf) {
+    // Not supported
+    return null;
   }
 
 }
