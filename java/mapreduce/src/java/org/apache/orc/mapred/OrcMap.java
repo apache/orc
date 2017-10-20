@@ -130,4 +130,15 @@ public final class OrcMap<K extends WritableComparable,
       return 0;
     }
   }
+
+  @Override
+  public boolean equals(Object other) {
+    return other != null && other.getClass() == getClass() &&
+        compareTo((OrcMap<K,V>) other) == 0;
+  }
+
+  @Override
+  public int hashCode() {
+    return super.hashCode();
+  }
 }

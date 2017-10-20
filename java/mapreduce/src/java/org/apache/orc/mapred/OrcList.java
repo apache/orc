@@ -101,4 +101,15 @@ public class OrcList<E extends WritableComparable>
     }
     return ourSize - otherSize;
   }
+
+  @Override
+  public boolean equals(Object other) {
+    return other != null && other.getClass() == getClass() &&
+        compareTo((OrcList<E>) other) == 0;
+  }
+
+  @Override
+  public int hashCode() {
+    return super.hashCode();
+  }
 }
