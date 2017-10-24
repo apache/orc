@@ -16,9 +16,10 @@
  * limitations under the License.
  */
 
-#include "orc/Reader.hh"
+#include "orc/OrcFile.hh"
 
-#include "Adaptor.hh"
+#include "MemoryInputStream.hh"
+#include "MemoryOutputStream.hh"
 
 #include "wrap/gmock.h"
 #include "wrap/gtest-wrapper.h"
@@ -44,6 +45,50 @@ namespace orc {
     EXPECT_EQ("zstd", compressionKindToString(CompressionKind_ZSTD));
     EXPECT_EQ("unknown - 99",
               compressionKindToString(static_cast<CompressionKind>(99)));
+  }
+
+  TEST(TestReader, testGetRowNumber) {
+    const int DEFAULT_MEM_STREAM_SIZE = 10 * 1024 * 1024; // 10M
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    std::unique_ptr<Type> type(Type::buildTypeFromString("struct<col1:int>"));
+    std::unique_ptr<Writer> writer = createWriter(*type,
+                                                  &memStream,
+                                                  WriterOptions());
+    size_t batchSize = 1024;
+    std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(batchSize);
+    StructVectorBatch* structBatch =
+      dynamic_cast<StructVectorBatch *>(batch.get());
+    LongVectorBatch* longBatch =
+      dynamic_cast<LongVectorBatch *>(structBatch->fields[0]);
+
+    for (size_t i = 0; i < batchSize; ++i) {
+      longBatch->data[i] = static_cast<int64_t>(i);
+    }
+    structBatch->numElements = batchSize;
+    longBatch->numElements = batchSize;
+
+    writer->add(*batch);
+    writer->close();
+
+    std::unique_ptr<InputStream> inStream(
+      new MemoryInputStream(memStream.getData(), memStream.getLength()));
+    std::unique_ptr<Reader> reader = createReader(std::move(inStream),
+                                                  ReaderOptions());
+    std::unique_ptr<RowReader> rowReader = reader->createRowReader();
+    EXPECT_EQ(batchSize, reader->getNumberOfRows());
+
+    EXPECT_EQ(-1, rowReader->getRowNumber());
+
+    batch = rowReader->createRowBatch(10);
+    rowReader->next(*batch);
+    EXPECT_EQ(9, rowReader->getRowNumber());
+
+    rowReader->next(*batch);
+    EXPECT_EQ(19, rowReader->getRowNumber());
+
+    rowReader->next(*batch);
+    EXPECT_EQ(29, rowReader->getRowNumber());
+
   }
 
 }  // namespace

@@ -831,8 +831,8 @@ namespace orc {
     data.numElements = rowsToRead;
     reader->next(data, rowsToRead, 0);
     // update row number
-    previousRow = firstRowOfStripe[currentStripe] + currentRowInStripe;
     currentRowInStripe += rowsToRead;
+    previousRow = firstRowOfStripe[currentStripe] + currentRowInStripe - 1;
     if (currentRowInStripe >= rowsInCurrentStripe) {
       currentStripe += 1;
       currentRowInStripe = 0;
