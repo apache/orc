@@ -22,9 +22,15 @@ set(ORC_JARS
   ${CMAKE_CURRENT_BINARY_DIR}/tools/orc-tools-${ORC_VERSION}-uber.jar
 )
 
+if (ANALYZE_JAVA)
+  set(JAVA_PROFILE "-Pcmake,analyze")
+else()
+  set(JAVA_PROFILE "-Pcmake")
+endif()
+
 add_custom_command(
    OUTPUT ${ORC_JARS}
-   COMMAND mvn -Pcmake -Dbuild.dir=${CMAKE_CURRENT_BINARY_DIR} -DskipTests package
+   COMMAND mvn ${JAVA_PROFILE} -Dbuild.dir=${CMAKE_CURRENT_BINARY_DIR} -DskipTests package
    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
    COMMENT "Build the java directory"
    VERBATIM)

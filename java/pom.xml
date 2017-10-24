@@ -170,55 +170,55 @@
         <artifactId>maven-project-info-reports-plugin</artifactId>
         <version>2.9</version>
       </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>findbugs-maven-plugin</artifactId>
-        <version>3.0.3</version>
-        <configuration>
-          <effort>Max</effort>
-          <excludeFilterFile>${basedir}/src/findbugs/exclude.xml</excludeFilterFile>
-          <xmlOutput>true</xmlOutput>
-          <findbugsXmlOutputDirectory>${project.build.directory}/findbugs</findbugsXmlOutputDirectory>
-        </configuration>
-        <executions>
-          <execution>
-            <id>analyze-compile</id>
-            <phase>compile</phase>
-            <goals>
-              <goal>check</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.rat</groupId>
-        <artifactId>apache-rat-plugin</artifactId>
-        <version>0.10</version>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>check</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <excludeSubProject>false</excludeSubProject>
-          <excludes>
-            <exclude>**/data/**</exclude>
-            <exclude>**/*.json</exclude>
-            <exclude>**/*.json.gz</exclude>
-            <exclude>**/*.orc</exclude>
-            <exclude>**/*.out</exclude>
-            <exclude>**/*.schema</exclude>
-            <exclude>**/target/**</exclude>
-            <exclude>.idea/**</exclude>
-          </excludes>
-        </configuration>
-      </plugin>
     </plugins>
     <pluginManagement>
       <plugins>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>findbugs-maven-plugin</artifactId>
+          <version>3.0.3</version>
+          <configuration>
+            <effort>Max</effort>
+            <excludeFilterFile>${basedir}/src/findbugs/exclude.xml</excludeFilterFile>
+            <xmlOutput>true</xmlOutput>
+            <findbugsXmlOutputDirectory>${project.build.directory}/findbugs</findbugsXmlOutputDirectory>
+          </configuration>
+          <executions>
+            <execution>
+              <id>analyze-compile</id>
+              <phase>compile</phase>
+              <goals>
+                <goal>check</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.rat</groupId>
+          <artifactId>apache-rat-plugin</artifactId>
+          <version>0.10</version>
+          <executions>
+            <execution>
+              <phase>package</phase>
+              <goals>
+                <goal>check</goal>
+              </goals>
+            </execution>
+          </executions>
+          <configuration>
+            <excludeSubProject>false</excludeSubProject>
+            <excludes>
+              <exclude>**/data/**</exclude>
+              <exclude>**/*.json</exclude>
+              <exclude>**/*.json.gz</exclude>
+              <exclude>**/*.orc</exclude>
+              <exclude>**/*.out</exclude>
+              <exclude>**/*.schema</exclude>
+              <exclude>**/target/**</exclude>
+              <exclude>.idea/**</exclude>
+            </excludes>
+          </configuration>
+        </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>build-helper-maven-plugin</artifactId>
@@ -316,6 +316,22 @@
       <id>cmake</id>
       <build>
         <directory>${build.dir}</directory>
+      </build>
+    </profile>
+    <profile>
+      <!-- a profile to check the source for common problems -->
+      <id>analyze</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>findbugs-maven-plugin</artifactId>
+	  </plugin>
+          <plugin>
+            <groupId>org.apache.rat</groupId>
+            <artifactId>apache-rat-plugin</artifactId>
+	  </plugin>
+	</plugins>
       </build>
     </profile>
   </profiles>

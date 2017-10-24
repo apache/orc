@@ -29,5 +29,5 @@ env:
 script:
   - mkdir build
   - cd build
-  - cmake ..
+  - cmake -DANALYZE_JAVA=ON ..
   - make package test-out
