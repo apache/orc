@@ -23,9 +23,11 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.orc.bench.convert.GenerateVariants;
 import org.apache.orc.bench.convert.ScanVariants;
+import org.apache.orc.bench.floating.DoubleReadBenchmark;
+import org.apache.orc.bench.floating.DoubleReadSetup;
+import org.apache.orc.bench.floating.DoubleWriteBenchmark;
 
 import java.util.Arrays;
 
@@ -47,7 +49,9 @@ public class Driver {
       System.err.println("  scan      - Scan data variants");
       System.err.println("  read-all  - Full table scan benchmark");
       System.err.println("  read-some - Column projection benchmark");
-      System.err.println("  double-en - Double encoding benchmark");
+      System.err.println("  double-write - Double write benchmark");
+      System.err.println("  double-read-setup - Create files for double-read");
+      System.err.println("  double-read - Double read benchmark");
       System.exit(1);
     }
     return result;
@@ -71,8 +75,14 @@ public class Driver {
       case "read-some":
         ColumnProjectionBenchmark.main(args);
         break;
-      case "double-en":
-        DoubleEncodingBenchmark.main(args);
+      case "double-write":
+        DoubleWriteBenchmark.main(args);
+        break;
+      case "double-read":
+        DoubleReadBenchmark.main(args);
+        break;
+      case "double-read-setup":
+        DoubleReadSetup.main(args);
         break;
       default:
         System.err.println("Unknown command " + command);

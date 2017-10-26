@@ -113,6 +113,8 @@ message Stream {
     ROW_INDEX = 6;
     BLOOM_FILTER = 7;
     BLOOM_FILTER_UTF8 = 8;
+    SIGN = 9;
+    EXPONENT = 10;
   }
   optional Kind kind = 1;
   optional uint32 column = 2;

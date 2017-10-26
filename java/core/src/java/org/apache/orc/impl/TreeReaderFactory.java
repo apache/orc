@@ -142,21 +142,9 @@ public class TreeReaderFactory {
       }
     }
 
-    protected static DoubleReader createDoubleReader(OrcProto.ColumnEncoding.Kind kind,
-        InStream in) throws IOException {
-      switch (kind) {
-        case DOUBLE_FPC:
-          return new DoubleReaderV2(in);
-        case DIRECT:
-          return new DoubleReaderV1(in);
-        default:
-          throw new IllegalArgumentException("Unknown encoding " + kind);
-      }
-    }
-
-    void startStripe(Map<StreamName, InStream> streams,
-        OrcProto.StripeFooter stripeFooter
-    ) throws IOException {
+    public void startStripe(Map<StreamName, InStream> streams,
+                            OrcProto.StripeFooter stripeFooter
+                            ) throws IOException {
       checkEncoding(stripeFooter.getColumnsList().get(columnId));
       InStream in = streams.get(new StreamName(columnId,
           OrcProto.Stream.Kind.PRESENT));
@@ -315,7 +303,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
@@ -366,7 +354,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
@@ -431,7 +419,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
@@ -498,7 +486,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
@@ -566,7 +554,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
@@ -621,7 +609,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
@@ -700,36 +688,28 @@ public class TreeReaderFactory {
   }
 
   public static class DoubleTreeReader extends TreeReader {
-    private DoubleReader reader;
+    protected InStream stream;
+    private final SerializationUtils utils;
 
-    DoubleTreeReader(int columnId) throws IOException {
+    public DoubleTreeReader(int columnId) throws IOException {
       this(columnId, null, null);
     }
 
     protected DoubleTreeReader(int columnId, InStream present, InStream data) throws IOException {
       super(columnId, present, null);
+      this.utils = new SerializationUtils();
+      this.stream = data;
     }
 
     @Override
-    void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
-      if ((encoding.getKind() != OrcProto.ColumnEncoding.Kind.DIRECT) &&
-          (encoding.getKind() != OrcProto.ColumnEncoding.Kind.DOUBLE_FPC)) {
-        throw new IOException("Unknown encoding " + encoding + " in column " +
-            columnId);
-      }
-    }
-
-    @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
       StreamName name =
           new StreamName(columnId,
               OrcProto.Stream.Kind.DATA);
-      reader = createDoubleReader(
-          stripeFooter.getColumnsList().get(columnId).getKind(),
-          streams.get(name));
+      stream = streams.get(name);
     }
 
     @Override
@@ -740,7 +720,7 @@ public class TreeReaderFactory {
     @Override
     public void seek(PositionProvider index) throws IOException {
       super.seek(index);
-      reader.seek(index);
+      stream.seek(index);
     }
 
     @Override
@@ -752,12 +732,53 @@ public class TreeReaderFactory {
       // Read present/isNull stream
       super.nextVector(result, isNull, batchSize);
 
-      reader.nextVector(result, result.vector, batchSize);
+      final boolean hasNulls = !result.noNulls;
+      boolean allNulls = hasNulls;
+
+      if (hasNulls) {
+        // conditions to ensure bounds checks skips
+        for (int i = 0; i < batchSize && batchSize <= result.isNull.length; i++) {
+          allNulls = allNulls & result.isNull[i];
+        }
+        if (allNulls) {
+          result.vector[0] = Double.NaN;
+          result.isRepeating = true;
+        } else {
+          // some nulls
+          result.isRepeating = false;
+          // conditions to ensure bounds checks skips
+          for (int i = 0; batchSize <= result.isNull.length
+              && batchSize <= result.vector.length && i < batchSize; i++) {
+            if (!result.isNull[i]) {
+              result.vector[i] = utils.readDouble(stream);
+            } else {
+              // If the value is not present then set NaN
+              result.vector[i] = Double.NaN;
+            }
+          }
+        }
+      } else {
+        // no nulls
+        boolean repeating = (batchSize > 1);
+        final double d1 = utils.readDouble(stream);
+        result.vector[0] = d1;
+        // conditions to ensure bounds checks skips
+        for (int i = 1; i < batchSize && batchSize <= result.vector.length; i++) {
+          final double d2 = utils.readDouble(stream);
+          repeating = repeating && (d1 == d2);
+          result.vector[i] = d2;
+        }
+        result.isRepeating = repeating;
+      }
     }
 
     @Override
     void skipRows(long items) throws IOException {
-      reader.skip(countNonNulls(items));
+      items = countNonNulls(items);
+      long len = items * 8;
+      while (len > 0) {
+        len -= stream.skip(len);
+      }
     }
   }
 
@@ -791,7 +812,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
@@ -893,7 +914,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
@@ -1031,7 +1052,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
@@ -1104,7 +1125,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
@@ -1220,7 +1241,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       // For each stripe, checks the encoding and initializes the appropriate
@@ -1374,7 +1395,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
@@ -1480,7 +1501,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
@@ -1818,7 +1839,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
@@ -1900,7 +1921,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
@@ -1993,7 +2014,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
@@ -2090,7 +2111,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);

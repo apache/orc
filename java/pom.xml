@@ -72,6 +72,7 @@
     <min.hadoop.version>2.2.0</min.hadoop.version>
     <hadoop.version>2.7.3</hadoop.version>
     <hive.version>2.1.1</hive.version>
+    <jmh.version>1.19</jmh.version>
     <storage-api.version>2.2.1</storage-api.version>
     <zookeeper.version>3.4.6</zookeeper.version>
   </properties>
@@ -524,6 +525,10 @@
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-orc</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
@@ -539,6 +544,10 @@
           <exclusion>
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-orc</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -681,21 +690,16 @@
       <dependency>
         <groupId>org.openjdk.jmh</groupId>
         <artifactId>jmh-core</artifactId>
-        <version>1.18</version>
+        <version>${jmh.version}</version>
       </dependency>
       <dependency>
         <groupId>org.openjdk.jmh</groupId>
         <artifactId>jmh-generator-annprocess</artifactId>
-        <version>1.18</version>
+        <version>${jmh.version}</version>
       </dependency>
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
-        <version>1.7.5</version>
-      </dependency>
-      <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-simple</artifactId>
         <version>1.7.5</version>
       </dependency>
       <dependency>

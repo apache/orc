@@ -110,8 +110,8 @@ public final class SerializationUtils {
         + ((long) (readBuffer[7] & 0xff) << 56));
   }
 
-  private void readFully(final InputStream in, final byte[] buffer, final int off, final int len)
-      throws IOException {
+  static void readFully(final InputStream in, final byte[] buffer,
+                        final int off, final int len) throws IOException {
     int n = 0;
     while (n < len) {
       int count = in.read(buffer, off + n, len - n);

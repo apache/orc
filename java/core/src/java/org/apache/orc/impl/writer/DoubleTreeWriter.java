@@ -21,27 +21,26 @@ package org.apache.orc.impl.writer;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
 import org.apache.hadoop.hive.ql.util.JavaDataModel;
-import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
 import org.apache.orc.TypeDescription;
-import org.apache.orc.impl.DoubleWriter;
-import org.apache.orc.impl.OutStream;
 import org.apache.orc.impl.PositionRecorder;
+import org.apache.orc.impl.PositionedOutputStream;
+import org.apache.orc.impl.SerializationUtils;
 
 import java.io.IOException;
 
 public class DoubleTreeWriter extends TreeWriterBase {
-  private final DoubleWriter writer;
-  private final boolean isDoubleV2;
+  private final PositionedOutputStream stream;
+  private final SerializationUtils utils;
 
   public DoubleTreeWriter(int columnId,
                           TypeDescription schema,
                           WriterContext writer,
                           boolean nullable) throws IOException {
     super(columnId, schema, writer, nullable);
-    OutStream out = writer.createStream(id, OrcProto.Stream.Kind.DATA);
-    this.isDoubleV2 = writer.getVersion() == OrcFile.Version.UNSTABLE_PRE_2_0;
-    this.writer = createDoubleWriter(out, isDoubleV2);
+    this.stream = writer.createStream(id,
+        OrcProto.Stream.Kind.DATA);
+    this.utils = new SerializationUtils();
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
     }
@@ -63,14 +62,14 @@ public class DoubleTreeWriter extends TreeWriterBase {
           bloomFilterUtf8.addDouble(value);
         }
         for (int i = 0; i < length; ++i) {
-          writer.write(value);
+          utils.writeDouble(stream, value);
         }
       }
     } else {
       for (int i = 0; i < length; ++i) {
         if (vec.noNulls || !vec.isNull[i + offset]) {
           double value = vec.vector[i + offset];
-          writer.write(value);
+          utils.writeDouble(stream, value);
           indexStatistics.updateDouble(value);
           if (createBloomFilter) {
             if (bloomFilter != null) {
@@ -88,7 +87,7 @@ public class DoubleTreeWriter extends TreeWriterBase {
                           OrcProto.StripeStatistics.Builder stats,
                           int requiredIndexEntries) throws IOException {
     super.writeStripe(builder, stats, requiredIndexEntries);
-    writer.flush();
+    stream.flush();
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
     }
@@ -97,26 +96,17 @@ public class DoubleTreeWriter extends TreeWriterBase {
   @Override
   void recordPosition(PositionRecorder recorder) throws IOException {
     super.recordPosition(recorder);
-    writer.getPosition(recorder);
+    stream.getPosition(recorder);
   }
 
   @Override
   public long estimateMemory() {
-    return super.estimateMemory() + writer.estimateMemory();
+    return super.estimateMemory() + stream.getBufferSize();
   }
 
   @Override
   public long getRawDataSize() {
     long num = fileStatistics.getNumberOfValues();
     return num * JavaDataModel.get().primitive2();
-  }
-
-  @Override
-  OrcProto.ColumnEncoding.Builder getEncoding() {
-    OrcProto.ColumnEncoding.Builder builder = super.getEncoding();
-    if (isDoubleV2) {
-      builder.setKind(OrcProto.ColumnEncoding.Kind.DOUBLE_FPC);
-    }
-    return builder;
   }
 }
