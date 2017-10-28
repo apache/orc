@@ -17,6 +17,7 @@
  */
 package org.apache.orc.impl.mask;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
@@ -25,16 +26,18 @@ import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.orc.TypeDescription;
 import org.apache.orc.DataMask;
+import org.apache.orc.TypeDescription;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Map;
+import java.util.SortedMap;
 import java.util.TimeZone;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
 
 /**
  * Masking strategy that hides most string and numeric values based on unicode
@@ -114,6 +117,9 @@ public class RedactMaskFactory extends MaskFactory {
   private final boolean maskDate;
   private final boolean maskTimestamp;
 
+  // index tuples that are not to be masked
+  private final SortedMap<Integer,Integer> unmaskIndexRanges = new TreeMap<>();
+
   public RedactMaskFactory(String... params) {
     ByteBuffer param = params.length < 1 ? ByteBuffer.allocate(0) :
         ByteBuffer.wrap(params[0].getBytes(StandardCharsets.UTF_8));
@@ -129,7 +135,7 @@ public class RedactMaskFactory extends MaskFactory {
     OTHER_NUMBER_REPLACEMENT = getNextCodepoint(param, DEFAULT_NUMBER_OTHER);
     OTHER_REPLACEMENT = getNextCodepoint(param, DEFAULT_OTHER);
     String[] timeParams;
-    if (params.length < 2) {
+    if (params.length < 2 || StringUtils.isBlank(params[1])) {
       timeParams = null;
     } else {
       timeParams = params[1].split("\\W+");
@@ -146,6 +152,16 @@ public class RedactMaskFactory extends MaskFactory {
     maskTimestamp = maskDate || (HOUR_REPLACEMENT != UNMASKED_DATE) ||
         (MINUTE_REPLACEMENT != UNMASKED_DATE) ||
         (SECOND_REPLACEMENT != UNMASKED_DATE);
+
+    /* un-mask range */
+    if(!(params.length < 3 || StringUtils.isBlank(params[2]))) {
+      String[] unmaskIndexes = params[2].split(",");
+
+      for(int i=0; i < unmaskIndexes.length; i++ ) {
+        String[] pair = unmaskIndexes[i].trim().split(":");
+        unmaskIndexRanges.put(Integer.parseInt(pair[0]), Integer.parseInt(pair[1]));
+      }
+    }
   }
 
   @Override
@@ -451,6 +467,12 @@ public class RedactMaskFactory extends MaskFactory {
    * @return the masked value
    */
   public long maskLong(long value) {
+
+    /* check whether unmasking range provided */
+    if (!unmaskIndexRanges.isEmpty()) {
+      return maskLongWithUnmasking(value);
+    }
+
     long base;
     if (DIGIT_REPLACEMENT == 0) {
       return 0;
@@ -521,6 +543,7 @@ public class RedactMaskFactory extends MaskFactory {
     } else {
       base *= 1_111_111_111_111_111_111L;
     }
+
     return DIGIT_REPLACEMENT * base;
   }
 
@@ -601,6 +624,12 @@ public class RedactMaskFactory extends MaskFactory {
    * @return the
    */
   public double maskDouble(double value) {
+
+    /* check whether unmasking range provided */
+    if (!unmaskIndexRanges.isEmpty()) {
+      return maskDoubleWIthUnmasking(value);
+    }
+
     double base;
     // It seems better to mask 0 to 9.99999 rather than 9.99999e-308.
     if (value == 0 || DIGIT_REPLACEMENT == 0) {
@@ -684,8 +713,6 @@ public class RedactMaskFactory extends MaskFactory {
     return (int) (utcScratch.getTimeInMillis() / MILLIS_PER_DAY);
   }
 
-  private static final Pattern DIGIT_PATTERN = Pattern.compile("[0-9]");
-
   /**
    * Mask a decimal.
    * This is painfully slow because it converts to a string and then back to
@@ -695,9 +722,7 @@ public class RedactMaskFactory extends MaskFactory {
    * @return the masked value.
    */
   HiveDecimalWritable maskDecimal(HiveDecimalWritable source) {
-    String str = DIGIT_PATTERN.matcher(source.toString()).
-        replaceAll(Integer.toString(DIGIT_REPLACEMENT));
-    return new HiveDecimalWritable(str);
+    return new HiveDecimalWritable(maskNumericString(source.toString()));
   }
 
   /**
@@ -815,14 +840,20 @@ public class RedactMaskFactory extends MaskFactory {
     byte[] outputBuffer = target.getValPreallocatedBytes();
     int outputOffset = target.getValPreallocatedStart();
     int outputStart = outputOffset;
+
+    int index = 0;
     while (sourceBytes.remaining() > 0) {
       int cp = Text.bytesToCodePoint(sourceBytes);
 
       // Find the replacement for the current character.
       int replacement = getReplacement(cp);
-      if (replacement == UNMASKED_CHAR) {
+      if (replacement == UNMASKED_CHAR || isIndexInUnmaskRange(index, source.length[row])) {
         replacement = cp;
       }
+
+      // increment index
+      index++;
+
       int len = getCodepointLength(replacement);
 
       // If the translation will overflow the buffer, we need to resize.
@@ -853,5 +884,93 @@ public class RedactMaskFactory extends MaskFactory {
       outputOffset += len;
     }
     target.setValPreallocated(row, outputOffset - outputStart);
+  }
+
+  static final long OVERFLOW_REPLACEMENT = 111_111_111_111_111_111L;
+
+  /**
+   * A function that masks longs when there are unmasked ranges.
+   * @param value the original value
+   * @return the masked value
+   */
+  long maskLongWithUnmasking(long value) throws IndexOutOfBoundsException {
+    try {
+      return Long.parseLong(maskNumericString(Long.toString(value)));
+    } catch (NumberFormatException nfe) {
+      return OVERFLOW_REPLACEMENT * DIGIT_REPLACEMENT;
+    }
+  }
+
+  /**
+   * A function that masks doubles when there are unmasked ranges.
+   * @param value original value
+   * @return masked value
+   */
+  double maskDoubleWIthUnmasking(final double value) {
+    try {
+      return Double.parseDouble(maskNumericString(Double.toString(value)));
+    } catch (NumberFormatException nfe) {
+      return OVERFLOW_REPLACEMENT * DIGIT_REPLACEMENT;
+    }
+  }
+
+  /**
+   * Mask the given stringified numeric value excluding the unmask range.
+   * Non-digit characters are passed through on the assumption they are
+   * markers (eg. one of ",.ef").
+   * @param value the original value.
+   */
+  String maskNumericString(final String value) {
+    StringBuilder result = new StringBuilder();
+    final int length = value.codePointCount(0, value.length());
+    for(int c=0; c < length; ++c) {
+      int cp = value.codePointAt(c);
+      if (isIndexInUnmaskRange(c, length) ||
+          Character.getType(cp) != Character.DECIMAL_DIGIT_NUMBER) {
+        result.appendCodePoint(cp);
+      } else {
+        result.appendCodePoint(DIGIT_CP_REPLACEMENT);
+      }
+    }
+    return result.toString();
+  }
+
+  /**
+   * Given an index and length of a string
+   * find out whether it is in a given un-mask range.
+   * @param index the character point index
+   * @param length the length of the string in character points
+   * @return true if the index is in un-mask range else false.
+   */
+  private boolean isIndexInUnmaskRange(final int index, final int length) {
+
+    for(final Map.Entry<Integer, Integer> pair : unmaskIndexRanges.entrySet()) {
+       int start;
+       int end;
+
+       if(pair.getKey() >= 0) {
+         // for positive indexes
+         start = pair.getKey();
+       } else {
+         // for negative indexes
+         start = length + pair.getKey();
+       }
+
+       if(pair.getValue() >= 0) {
+         // for positive indexes
+         end = pair.getValue();
+       } else {
+         // for negative indexes
+         end = length + pair.getValue();
+       }
+
+      // if the given index is in range
+      if(index >= start && index <= end ) {
+        return true;
+      }
+
+    }
+
+    return false;
   }
 }
