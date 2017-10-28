@@ -17,6 +17,7 @@
  */
 package org.apache.orc.impl.mask;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
@@ -25,15 +26,20 @@ import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.orc.TypeDescription;
 import org.apache.orc.DataMask;
+import org.apache.orc.TypeDescription;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Map;
+import java.util.SortedMap;
 import java.util.TimeZone;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -114,6 +120,10 @@ public class RedactMaskFactory extends MaskFactory {
   private final boolean maskDate;
   private final boolean maskTimestamp;
 
+  // index tuples that are not to be masked
+  private final SortedMap<Integer,Integer> unmaskIndexRanges = Collections.synchronizedSortedMap(new TreeMap());
+
+
   public RedactMaskFactory(String... params) {
     ByteBuffer param = params.length < 1 ? ByteBuffer.allocate(0) :
         ByteBuffer.wrap(params[0].getBytes(StandardCharsets.UTF_8));
@@ -131,6 +141,9 @@ public class RedactMaskFactory extends MaskFactory {
     String[] timeParams;
     if (params.length < 2) {
       timeParams = null;
+    } else if(StringUtils.isBlank(params[1])) {
+      // Date params blank
+      timeParams = null;
     } else {
       timeParams = params[1].split("\\W+");
     }
@@ -146,6 +159,19 @@ public class RedactMaskFactory extends MaskFactory {
     maskTimestamp = maskDate || (HOUR_REPLACEMENT != UNMASKED_DATE) ||
         (MINUTE_REPLACEMENT != UNMASKED_DATE) ||
         (SECOND_REPLACEMENT != UNMASKED_DATE);
+
+    /* un-mask range */
+    String[] unmaskIndexes;
+    if(params.length >= 3 && !StringUtils.isBlank(params[2])) {
+      unmaskIndexes = params[2].split(",");
+
+      for(int i=0; i < unmaskIndexes.length; i++ ) {
+        String[] pair = unmaskIndexes[i].trim().split(":");
+        unmaskIndexRanges.put(Integer.parseInt(pair[0]), Integer.parseInt(pair[1]));
+      }
+
+    }
+
   }
 
   @Override
@@ -451,6 +477,16 @@ public class RedactMaskFactory extends MaskFactory {
    * @return the masked value
    */
   public long maskLong(long value) {
+
+    /* check whether unmasking range provided */
+    try {
+      if (!unmaskIndexRanges.isEmpty()) {
+        return unmaskRangeLongValue(value);
+      }
+    } catch(final IndexOutOfBoundsException e) {
+      // Bad range, we move on and return the mask without un-masking.
+    }
+
     long base;
     if (DIGIT_REPLACEMENT == 0) {
       return 0;
@@ -521,6 +557,7 @@ public class RedactMaskFactory extends MaskFactory {
     } else {
       base *= 1_111_111_111_111_111_111L;
     }
+
     return DIGIT_REPLACEMENT * base;
   }
 
@@ -601,6 +638,16 @@ public class RedactMaskFactory extends MaskFactory {
    * @return the
    */
   public double maskDouble(double value) {
+
+    /* check whether unmasking range provided */
+    try {
+      if (!unmaskIndexRanges.isEmpty()) {
+        return unmaskRangeDoubleValue(value);
+      }
+    } catch(final IndexOutOfBoundsException e) {
+      // Bad range, we move on and return the mask without un-masking.
+    }
+
     double base;
     // It seems better to mask 0 to 9.99999 rather than 9.99999e-308.
     if (value == 0 || DIGIT_REPLACEMENT == 0) {
@@ -695,9 +742,23 @@ public class RedactMaskFactory extends MaskFactory {
    * @return the masked value.
    */
   HiveDecimalWritable maskDecimal(HiveDecimalWritable source) {
-    String str = DIGIT_PATTERN.matcher(source.toString()).
-        replaceAll(Integer.toString(DIGIT_REPLACEMENT));
-    return new HiveDecimalWritable(str);
+    // No unmasking range
+    if(unmaskIndexRanges.isEmpty()) {
+      String str = DIGIT_PATTERN.matcher(source.toString()).replaceAll(Integer.toString(DIGIT_REPLACEMENT));
+      return new HiveDecimalWritable(str);
+    } else {
+      final StringBuffer result = new StringBuffer();
+      // get the ranges that need to be masked
+      for(final Map.Entry<Integer, Integer> map : getInverseIndexRange(source.toString().length()).entrySet() ) {
+        final Matcher m = DIGIT_PATTERN.matcher(source.toString()).region(map.getKey(), map.getValue() + 1);
+        while(m.find()) {
+          m.appendReplacement(result, Integer.toString(DIGIT_REPLACEMENT));
+        }
+        m.appendTail(result);
+      }
+      return new HiveDecimalWritable(result.toString());
+    }
+
   }
 
   /**
@@ -815,14 +876,20 @@ public class RedactMaskFactory extends MaskFactory {
     byte[] outputBuffer = target.getValPreallocatedBytes();
     int outputOffset = target.getValPreallocatedStart();
     int outputStart = outputOffset;
+
+    int index = 0;
     while (sourceBytes.remaining() > 0) {
       int cp = Text.bytesToCodePoint(sourceBytes);
 
       // Find the replacement for the current character.
       int replacement = getReplacement(cp);
-      if (replacement == UNMASKED_CHAR) {
+      if (replacement == UNMASKED_CHAR || isIndexInUnmaskRange(index, source.length[row])) {
         replacement = cp;
       }
+
+      // increment index
+      index++;
+
       int len = getCodepointLength(replacement);
 
       // If the translation will overflow the buffer, we need to resize.
@@ -854,4 +921,176 @@ public class RedactMaskFactory extends MaskFactory {
     }
     target.setValPreallocated(row, outputOffset - outputStart);
   }
+
+  /**
+   * A function that accepts the original value and the computed Mask then tries
+   * to un-mask any masked values.
+   * <p>
+   * Returns the value which are partially masked (if configured), else
+   * returns the mask.
+   * @param value
+   * @return
+   */
+  long unmaskRangeLongValue(final long value) throws IndexOutOfBoundsException {
+
+    final StringBuffer result = new StringBuffer();
+    unmaskRangeDigitHelper(String.valueOf(value), result);
+    return Long.parseLong(result.toString());
+  }
+
+  /**
+   *
+   * @param value
+   * @return
+   */
+  double unmaskRangeDoubleValue(final double value) {
+
+    final StringBuffer result = new StringBuffer();
+    unmaskRangeDigitHelper(String.valueOf(value), result);
+    return Double.valueOf(result.toString());
+
+  }
+
+  /**
+   * A helper method that does partial masking based on the the<br>
+   * un-marking arguments.
+   * @param value
+   * @param result
+   */
+  void unmaskRangeDigitHelper(final String value, final StringBuffer result) {
+    // get the ranges that need to be masked
+
+    for (final Map.Entry<Integer, Integer> map : getInverseIndexRange(
+        value.length()).entrySet()) {
+      final Matcher m = DIGIT_PATTERN.matcher(value)
+          .region(map.getKey(), map.getValue() + 1);
+      while (m.find()) {
+        m.appendReplacement(result, Integer.toString(DIGIT_REPLACEMENT));
+      }
+      m.appendTail(result);
+    }
+  }
+
+  /**
+   * Given an index and length of a string
+   * find out whether it is in a given un-mask range.
+   * @param index
+   * @param length
+   * @return true if the index is in un-mask range else false.
+   */
+  private boolean isIndexInUnmaskRange(final int index, final int length) {
+
+    for(final Map.Entry<Integer, Integer> pair : unmaskIndexRanges.entrySet()) {
+       int start = 0;
+       int end = 0;
+
+       if(pair.getKey() >= 0) {
+         // for positive indexes
+         start = pair.getKey();
+       } else {
+         // for negative indexes
+         start = length + pair.getKey();
+       }
+
+       if(pair.getValue() >= 0) {
+         // for positive indexes
+         end = pair.getValue();
+       } else {
+         // for negative indexes
+         end = length + pair.getValue();
+       }
+
+      // if the given index is in range
+      if(index >= start && index <= end ) {
+        return true;
+      }
+
+    }
+
+    return false;
+  }
+
+  /**
+   * A helper method that converts negative indexes to positive given the length
+   * of string and returns a sorted map based on keys (start index)
+   * @param length
+   * @return
+   */
+  private SortedMap<Integer,Integer> getPositiveUnmaskRangeIndexes(final int length) {
+
+    /* Always return a sorted map */
+    final SortedMap<Integer,Integer> result = Collections.synchronizedSortedMap(new TreeMap());
+
+    for(final Map.Entry<Integer, Integer> pair : unmaskIndexRanges.entrySet()) {
+      int start = 0;
+      int end = 0;
+
+      if(pair.getKey() >= 0) {
+        // for positive indexes
+        start = pair.getKey();
+      } else {
+        // for negative indexes
+        start = length + pair.getKey();
+      }
+
+      if(pair.getValue() >= 0) {
+        // for positive indexes
+        end = pair.getValue();
+      } else {
+        // for negative indexes
+        end = length + pair.getValue();
+      }
+
+      result.put(start, end);
+
+    }
+
+    return result;
+  }
+
+  /**
+   * Given the length <br>
+   * this method returns index ranges which exclude the supplied range. <br>
+   * i.e. for unmask range, return masked range.
+   * NOTE: This function requires the Map to be sorted.
+   * @param length
+   * @return
+   */
+  private Map<Integer,Integer> getInverseIndexRange(final int length) {
+
+    final SortedMap<Integer,Integer> inverse = new TreeMap<>();
+
+    // Normalize the range indexes
+    final SortedMap<Integer,Integer> range =  getPositiveUnmaskRangeIndexes(length);
+
+    int startIndex = 0;
+    int endIndex = 0;
+
+    for(final Map.Entry<Integer, Integer> pair : range.entrySet()) {
+
+      // Unmasking states from first index so we move on
+      if(pair.getKey() == 0) {
+        startIndex = pair.getValue() + 1;
+        endIndex = pair.getValue();
+        continue;
+      }
+
+      inverse.put(startIndex, pair.getKey() - 1);
+      startIndex = pair.getValue() + 1;
+
+      endIndex = (endIndex >= pair.getValue()) ? endIndex : pair.getValue();
+
+    }
+
+    // final range
+    if(endIndex < length -1) {
+      inverse.put(startIndex, length -1 );
+    }
+
+    return inverse;
+
+  }
+
+
+
 }
