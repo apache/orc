@@ -18,7 +18,7 @@
 
 #include "Adaptor.hh"
 #include "Compression.hh"
-#include "Exceptions.hh"
+#include "orc/Exceptions.hh"
 #include "RLEv1.hh"
 
 #include <algorithm>

@@ -18,7 +18,7 @@
 
 #include "Adaptor.hh"
 #include "ColumnReader.hh"
-#include "Exceptions.hh"
+#include "orc/Exceptions.hh"
 #include "OrcTest.hh"
 
 #include "wrap/orc-proto-wrapper.hh"

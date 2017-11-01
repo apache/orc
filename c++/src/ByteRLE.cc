@@ -22,7 +22,7 @@
 #include <utility>
 
 #include "ByteRLE.hh"
-#include "Exceptions.hh"
+#include "orc/Exceptions.hh"
 
 namespace orc {
 
