@@ -20,7 +20,7 @@
 #define ORC_RLEV2_HH
 
 #include "Adaptor.hh"
-#include "Exceptions.hh"
+#include "orc/Exceptions.hh"
 #include "RLE.hh"
 
 #include <vector>

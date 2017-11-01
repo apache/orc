@@ -21,7 +21,7 @@
 #include "Adaptor.hh"
 #include "ByteRLE.hh"
 #include "ColumnReader.hh"
-#include "Exceptions.hh"
+#include "orc/Exceptions.hh"
 #include "RLE.hh"
 
 #include <math.h>

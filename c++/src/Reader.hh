@@ -24,7 +24,7 @@
 #include "orc/Reader.hh"
 
 #include "ColumnReader.hh"
-#include "Exceptions.hh"
+#include "orc/Exceptions.hh"
 #include "RLE.hh"
 #include "TypeImpl.hh"
 
