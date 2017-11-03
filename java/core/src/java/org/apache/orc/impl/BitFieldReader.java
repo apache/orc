@@ -54,10 +54,9 @@ public final class BitFieldReader {
       readByte();
     }
 
-    // Highest bit is the first val
-    final int retVal = ((current >>> (7 - currentIdx)) & 1);
     currentIdx++;
-    return retVal;
+    // Highest bit is the first val
+    return ((current >>> (8 - currentIdx)) & 1);
   }
 
   public void nextVector(LongColumnVector previous,
@@ -94,23 +93,20 @@ public final class BitFieldReader {
       readByte();
       currentIdx = (byte) consumed;
     } else {
-      currentIdx = 8;
+      currentIdx = 0;
     }
   }
 
   public void skip(long items) throws IOException {
     final long totalBits = bitSize * items;
-    final int availableBits = 8 - (currentIdx + 1);
+    final int availableBits = 8 - currentIdx;
     if (totalBits <= availableBits) {
       currentIdx += totalBits;
     } else {
       final long bitsToSkip = (totalBits - availableBits);
-      input.skip(Math.min(1, bitsToSkip / 8));
-      final byte newIdx = (byte) ((bitsToSkip % 8) - 1);
-      if (newIdx > 0) {
-        readByte();
-      }
-      currentIdx = newIdx;
+      input.skip(bitsToSkip / 8);
+      current = input.next();
+      currentIdx = (byte) (bitsToSkip % 8);
     }
   }
 
