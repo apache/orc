@@ -80,37 +80,6 @@ public class TestBitFieldReader {
   }
 
   @Test
-  public void testBiggerItems() throws Exception {
-    TestInStream.OutputCollector collect = new TestInStream.OutputCollector();
-    final int COUNT = 16384;
-    BitFieldWriter out = new BitFieldWriter(
-        new OutStream("test", 500, null, collect), 3);
-    for(int i=0; i < COUNT; ++i) {
-      // test runs, non-runs
-      if (i < COUNT / 2) {
-        out.write(i & 7);
-      } else {
-        out.write((i/3) & 7);
-      }
-    }
-    out.flush();
-    ByteBuffer inBuf = ByteBuffer.allocate(collect.buffer.size());
-    collect.buffer.setByteBuffer(inBuf, 0, collect.buffer.size());
-    inBuf.flip();
-    BitFieldReader in = new BitFieldReader(InStream.create("test",
-        new ByteBuffer[]{inBuf}, new long[]{0}, inBuf.remaining(),
-        null, 500), 3);
-    for(int i=0; i < COUNT; ++i) {
-      int x = in.next();
-      if (i < COUNT / 2) {
-        assertEquals(i & 7, x);
-      } else {
-        assertEquals((i/3) & 7, x);
-      }
-    }
-  }
-
-  @Test
   public void testSkips() throws Exception {
     TestInStream.OutputCollector collect = new TestInStream.OutputCollector();
     BitFieldWriter out = new BitFieldWriter(
