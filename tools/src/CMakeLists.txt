@@ -10,10 +10,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# TODO:
+# - orc-metadata relies on the protobuf routines, meaning protobuf and
+#   binary_dir/c++/src still need to be included
+# - timezone-dump relies on non-public timezone routines. I *think* this
+#   executable can just be removed, as it looks like it was written for testing
+#   alone.
+
 include_directories (
   ${PROJECT_SOURCE_DIR}/c++/include
-  ${PROJECT_SOURCE_DIR}/c++/src
   ${PROJECT_BINARY_DIR}/c++/include
+  ${PROJECT_SOURCE_DIR}/c++/src
   ${PROJECT_BINARY_DIR}/c++/src
   ${PROTOBUF_INCLUDE_DIRS}
   )
@@ -26,7 +33,6 @@ add_executable (orc-contents
 
 target_link_libraries (orc-contents
   orc
-  ${PROTOBUF_LIBRARIES}
   )
 
 add_executable (orc-scan
@@ -35,7 +41,6 @@ add_executable (orc-scan
 
 target_link_libraries (orc-scan
   orc
-  ${PROTOBUF_LIBRARIES}
   )
 
 add_executable (orc-metadata
@@ -53,7 +58,6 @@ target_link_libraries (orc-metadata
 
 target_link_libraries (orc-statistics
   orc
-  ${PROTOBUF_LIBRARIES}
   )
 
 add_executable (orc-memory
@@ -62,7 +66,6 @@ add_executable (orc-memory
 
 target_link_libraries (orc-memory
   orc
-  ${PROTOBUF_LIBRARIES}
   )
 
 add_executable (timezone-dump
@@ -71,7 +74,6 @@ add_executable (timezone-dump
 
 target_link_libraries (timezone-dump
   orc
-  ${PROTOBUF_LIBRARIES}
   )
 
 install(TARGETS

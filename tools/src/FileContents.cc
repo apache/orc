@@ -18,8 +18,7 @@
 
 #include "orc/orc-config.hh"
 #include "orc/ColumnPrinter.hh"
-
-#include "Exceptions.hh"
+#include "orc/Exceptions.hh"
 
 #include <memory>
 #include <string>

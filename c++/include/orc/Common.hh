@@ -21,8 +21,7 @@
 
 #include "orc/Vector.hh"
 #include "orc/Type.hh"
-#include "Exceptions.hh"
-#include "wrap/orc-proto-wrapper.hh"
+#include "orc/Exceptions.hh"
 
 #include <string>
 

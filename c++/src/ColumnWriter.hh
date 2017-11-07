@@ -23,7 +23,7 @@
 
 #include "ByteRLE.hh"
 #include "Compression.hh"
-#include "Exceptions.hh"
+#include "orc/Exceptions.hh"
 #include "Statistics.hh"
 
 #include "wrap/orc-proto-wrapper.hh"

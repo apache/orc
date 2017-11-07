@@ -16,9 +16,9 @@
  * limitations under the License.
  */
 
-#include "Timezone.hh"
+#include "orc/Exceptions.hh"
 
-#include "Exceptions.hh"
+#include "Timezone.hh"
 
 #include <string>
 #include <memory>

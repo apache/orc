@@ -19,7 +19,7 @@
 #include "orc/OrcFile.hh"
 
 #include "Adaptor.hh"
-#include "Exceptions.hh"
+#include "orc/Exceptions.hh"
 
 #include <errno.h>
 #include <fcntl.h>
