@@ -110,7 +110,7 @@ public class TreeReaderFactory {
       if (in == null) {
         present = null;
       } else {
-        present = new BitFieldReader(in, 1);
+        present = new BitFieldReader(in);
       }
       vectorColumnCount = -1;
     }
@@ -151,7 +151,7 @@ public class TreeReaderFactory {
       if (in == null) {
         present = null;
       } else {
-        present = new BitFieldReader(in, 1);
+        present = new BitFieldReader(in);
       }
     }
 
@@ -298,7 +298,7 @@ public class TreeReaderFactory {
     protected BooleanTreeReader(int columnId, InStream present, InStream data) throws IOException {
       super(columnId, present, null);
       if (data != null) {
-        reader = new BitFieldReader(data, 1);
+        reader = new BitFieldReader(data);
       }
     }
 
@@ -308,7 +308,7 @@ public class TreeReaderFactory {
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
       reader = new BitFieldReader(streams.get(new StreamName(columnId,
-          OrcProto.Stream.Kind.DATA)), 1);
+          OrcProto.Stream.Kind.DATA)));
     }
 
     @Override

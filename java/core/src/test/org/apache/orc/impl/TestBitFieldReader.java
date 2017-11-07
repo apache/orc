@@ -49,7 +49,7 @@ public class TestBitFieldReader {
     inBuf.flip();
     BitFieldReader in = new BitFieldReader(InStream.create("test",
         new ByteBuffer[]{inBuf}, new long[]{0}, inBuf.remaining(),
-        codec, 500), 1);
+        codec, 500));
     for(int i=0; i < COUNT; ++i) {
       int x = in.next();
       if (i < COUNT / 2) {
@@ -97,7 +97,7 @@ public class TestBitFieldReader {
     collect.buffer.setByteBuffer(inBuf, 0, collect.buffer.size());
     inBuf.flip();
     BitFieldReader in = new BitFieldReader(InStream.create("test", new ByteBuffer[]{inBuf},
-        new long[]{0}, inBuf.remaining(), null, 100), 1);
+        new long[]{0}, inBuf.remaining(), null, 100));
     for(int i=0; i < COUNT; i += 5) {
       int x = (int) in.next();
       if (i < COUNT/2) {
