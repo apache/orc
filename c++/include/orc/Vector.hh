@@ -216,6 +216,7 @@ namespace orc {
      */
     DataBuffer<int64_t> readScales;
     friend class Decimal64ColumnReader;
+    friend class Decimal64ColumnWriter;
   };
 
   struct Decimal128VectorBatch: public ColumnVectorBatch {
@@ -241,6 +242,7 @@ namespace orc {
     DataBuffer<int64_t> readScales;
     friend class Decimal128ColumnReader;
     friend class DecimalHive11ColumnReader;
+    friend class Decimal128ColumnWriter;
   };
 
   /**

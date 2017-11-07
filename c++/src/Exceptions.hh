@@ -45,6 +45,16 @@ namespace orc {
   private:
     ParseError& operator=(const ParseError&);
   };
+
+  class InvalidArgument: public std::runtime_error {
+  public:
+    explicit InvalidArgument(const std::string& what_arg);
+    explicit InvalidArgument(const char* what_arg);
+    virtual ~InvalidArgument() noexcept;
+    InvalidArgument(const InvalidArgument&);
+  private:
+    InvalidArgument& operator=(const InvalidArgument&);
+  };
 }
 
 #endif

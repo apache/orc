@@ -369,11 +369,6 @@ namespace orc {
     // write streams like PRESENT, DATA, etc.
     columnWriter->flush(streams);
 
-    // only until all streams are flushed can we reset positions
-    if (options.getEnableIndex()) {
-      columnWriter->resetIndex();
-    }
-
     // generate and write stripe footer
     proto::StripeFooter stripeFooter;
     for (uint32_t i = 0; i < streams.size(); ++i) {
@@ -425,6 +420,8 @@ namespace orc {
 
     currentOffset = currentOffset + indexLength + dataLength + footerLength;
     totalRows += stripeRows;
+
+    columnWriter->reset();
 
     initStripe();
   }
@@ -568,7 +565,7 @@ namespace orc {
   std::unique_ptr<Writer> createWriter(
                                        const Type& type,
                                        OutputStream* stream,
-                                      const WriterOptions& options) {
+                                       const WriterOptions& options) {
     return std::unique_ptr<Writer>(
                                    new WriterImpl(
                                             type,
