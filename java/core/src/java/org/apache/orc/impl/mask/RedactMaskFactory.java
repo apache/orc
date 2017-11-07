@@ -335,7 +335,7 @@ public class RedactMaskFactory extends MaskFactory {
         for(int r = start; r < start + length; ++r) {
           target.isNull[r] = source.isNull[r];
           if (target.noNulls || !target.isNull[r]) {
-            target.vector[r].set(source.vector[r]);
+            target.vector[r].set(maskDecimal(source.vector[r]));
           }
         }
       }
