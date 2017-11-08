@@ -1527,6 +1527,634 @@ namespace orc {
     decStats->setHasNull(hasNull);
   }
 
+  class ListColumnWriter : public ColumnWriter {
+  public:
+    ListColumnWriter(const Type& type,
+                     const StreamsFactory& factory,
+                     const WriterOptions& options);
+    ~ListColumnWriter();
+
+    virtual void add(ColumnVectorBatch& rowBatch,
+                     uint64_t offset,
+                     uint64_t numValues) override;
+
+    virtual void flush(std::vector<proto::Stream>& streams) override;
+
+    virtual uint64_t getEstimatedSize() const override;
+
+    virtual void getColumnEncoding(
+      std::vector<proto::ColumnEncoding>& encodings) const override;
+
+    virtual void getStripeStatistics(
+      std::vector<proto::ColumnStatistics>& stats) const override;
+
+    virtual void getFileStatistics(
+      std::vector<proto::ColumnStatistics>& stats) const override;
+
+    virtual void mergeStripeStatsIntoFileStats() override;
+
+    virtual void mergeRowGroupStatsIntoStripeStats() override;
+
+    virtual void createRowIndexEntry() override;
+
+    virtual void writeIndex(
+      std::vector<proto::Stream> &streams) const override;
+
+    virtual void recordPosition() const override;
+
+  private:
+    std::unique_ptr<RleEncoder> lengthEncoder;
+    RleVersion rleVersion;
+    std::unique_ptr<ColumnWriter> child;
+  };
+
+  ListColumnWriter::ListColumnWriter(const Type& type,
+                                     const StreamsFactory& factory,
+                                     const WriterOptions& options) :
+                                       ColumnWriter(type, factory, options),
+                                       rleVersion(RleVersion_1){
+
+    std::unique_ptr<BufferedOutputStream> lengthStream =
+      factory.createStream(proto::Stream_Kind_LENGTH);
+    lengthEncoder = createRleEncoder(std::move(lengthStream),
+                                     false,
+                                     rleVersion,
+                                     memPool);
+
+    if (type.getSubtypeCount() == 1) {
+      child = buildWriter(*type.getSubtype(0), factory, options);
+    }
+
+    if (enableIndex) {
+      recordPosition();
+    }
+  }
+
+  ListColumnWriter::~ListColumnWriter() {
+    // PASS
+  }
+
+  void ListColumnWriter::add(ColumnVectorBatch& rowBatch,
+                             uint64_t offset,
+                             uint64_t numValues) {
+    ColumnWriter::add(rowBatch, offset, numValues);
+
+    ListVectorBatch* listBatch = dynamic_cast<ListVectorBatch*>(&rowBatch);
+    if (listBatch == nullptr) {
+      throw InvalidArgument("Failed to cast to ListVectorBatch");
+    }
+
+    int64_t* offsets = listBatch->offsets.data() + offset;
+    const char* notNull = listBatch->hasNulls ?
+                          listBatch->notNull.data() + offset : nullptr;
+
+    uint64_t elemOffset = static_cast<uint64_t>(offsets[0]);
+    uint64_t totalNumValues = static_cast<uint64_t>(offsets[numValues] - offsets[0]);
+
+    // translate offsets to lengths
+    for (uint64_t i = 0; i != numValues; ++i) {
+      offsets[i] = offsets[i + 1] - offsets[i];
+    }
+
+    // unnecessary to deal with null as elements are packed together
+    if (child.get()) {
+      child->add(*listBatch->elements, elemOffset, totalNumValues);
+    }
+    lengthEncoder->add(offsets, numValues, notNull);
+
+    if (enableIndex) {
+      bool hasNull = false;
+      if (!notNull) {
+        colIndexStatistics->increase(numValues);
+      } else {
+        for (uint64_t i = 0; i < numValues; ++i) {
+          if (notNull[i]) {
+            colIndexStatistics->increase(1);
+          } else if (!hasNull) {
+            hasNull = true;
+          }
+        }
+      }
+      colIndexStatistics->setHasNull(hasNull);
+    }
+  }
+
+  void ListColumnWriter::flush(std::vector<proto::Stream>& streams) {
+    ColumnWriter::flush(streams);
+
+    proto::Stream stream;
+    stream.set_kind(proto::Stream_Kind_LENGTH);
+    stream.set_column(static_cast<uint32_t>(columnId));
+    stream.set_length(lengthEncoder->flush());
+    streams.push_back(stream);
+
+    if (child.get()) {
+      child->flush(streams);
+    }
+  }
+
+  void ListColumnWriter::writeIndex(std::vector<proto::Stream> &streams) const {
+    ColumnWriter::writeIndex(streams);
+    if (child.get()) {
+      child->writeIndex(streams);
+    }
+  }
+
+  uint64_t ListColumnWriter::getEstimatedSize() const {
+    uint64_t size = ColumnWriter::getEstimatedSize();
+    if (child.get()) {
+      size += lengthEncoder->getBufferSize();
+      size += child->getEstimatedSize();
+    }
+    return size;
+  }
+
+  void ListColumnWriter::getColumnEncoding(
+                    std::vector<proto::ColumnEncoding>& encodings) const {
+    proto::ColumnEncoding encoding;
+    encoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
+    encoding.set_dictionarysize(0);
+    encodings.push_back(encoding);
+    if (child.get()) {
+      child->getColumnEncoding(encodings);
+    }
+  }
+
+  void ListColumnWriter::getStripeStatistics(
+                    std::vector<proto::ColumnStatistics>& stats) const {
+    ColumnWriter::getStripeStatistics(stats);
+    if (child.get()) {
+      child->getStripeStatistics(stats);
+    }
+  }
+
+  void ListColumnWriter::mergeStripeStatsIntoFileStats() {
+    ColumnWriter::mergeStripeStatsIntoFileStats();
+    if (child.get()) {
+      child->mergeStripeStatsIntoFileStats();
+    }
+  }
+
+  void ListColumnWriter::getFileStatistics(
+                    std::vector<proto::ColumnStatistics>& stats) const {
+    ColumnWriter::getFileStatistics(stats);
+    if (child.get()) {
+      child->getFileStatistics(stats);
+    }
+  }
+
+  void ListColumnWriter::mergeRowGroupStatsIntoStripeStats()  {
+    ColumnWriter::mergeRowGroupStatsIntoStripeStats();
+    if (child.get()) {
+      child->mergeRowGroupStatsIntoStripeStats();
+    }
+  }
+
+  void ListColumnWriter::createRowIndexEntry() {
+    ColumnWriter::createRowIndexEntry();
+    if (child.get()) {
+      child->createRowIndexEntry();
+    }
+  }
+
+  void ListColumnWriter::recordPosition() const {
+    ColumnWriter::recordPosition();
+    lengthEncoder->recordPosition(rowIndexPosition.get());
+  }
+
+  class MapColumnWriter : public ColumnWriter {
+  public:
+    MapColumnWriter(const Type& type,
+                    const StreamsFactory& factory,
+                    const WriterOptions& options);
+    ~MapColumnWriter();
+
+    virtual void add(ColumnVectorBatch& rowBatch,
+                     uint64_t offset,
+                     uint64_t numValues) override;
+
+    virtual void flush(std::vector<proto::Stream>& streams) override;
+
+    virtual uint64_t getEstimatedSize() const override;
+
+    virtual void getColumnEncoding(
+      std::vector<proto::ColumnEncoding>& encodings) const override;
+
+    virtual void getStripeStatistics(
+      std::vector<proto::ColumnStatistics>& stats) const override;
+
+    virtual void getFileStatistics(
+      std::vector<proto::ColumnStatistics>& stats) const override;
+
+    virtual void mergeStripeStatsIntoFileStats() override;
+
+    virtual void mergeRowGroupStatsIntoStripeStats() override;
+
+    virtual void createRowIndexEntry() override;
+
+    virtual void writeIndex(
+      std::vector<proto::Stream> &streams) const override;
+
+    virtual void recordPosition() const override;
+
+  private:
+    std::unique_ptr<ColumnWriter> keyWriter;
+    std::unique_ptr<ColumnWriter> elemWriter;
+    std::unique_ptr<RleEncoder> lengthEncoder;
+    RleVersion rleVersion;
+  };
+
+  MapColumnWriter::MapColumnWriter(const Type& type,
+                                   const StreamsFactory& factory,
+                                   const WriterOptions& options) :
+                                     ColumnWriter(type, factory, options),
+                                     rleVersion(RleVersion_1){
+    std::unique_ptr<BufferedOutputStream> lengthStream =
+      factory.createStream(proto::Stream_Kind_LENGTH);
+    lengthEncoder = createRleEncoder(std::move(lengthStream),
+                                     false,
+                                     rleVersion,
+                                     memPool);
+
+    if (type.getSubtypeCount() > 0) {
+      keyWriter = buildWriter(*type.getSubtype(0), factory, options);
+    }
+
+    if (type.getSubtypeCount() > 1) {
+      elemWriter = buildWriter(*type.getSubtype(1), factory, options);
+    }
+
+    if (enableIndex) {
+      recordPosition();
+    }
+  }
+
+  MapColumnWriter::~MapColumnWriter() {
+    // PASS
+  }
+
+  void MapColumnWriter::add(ColumnVectorBatch& rowBatch,
+                            uint64_t offset,
+                            uint64_t numValues) {
+    ColumnWriter::add(rowBatch, offset, numValues);
+
+    MapVectorBatch* mapBatch = dynamic_cast<MapVectorBatch*>(&rowBatch);
+    if (mapBatch == nullptr) {
+      throw InvalidArgument("Failed to cast to MapVectorBatch");
+    }
+
+    int64_t* offsets = mapBatch->offsets.data() + offset;
+    const char* notNull = mapBatch->hasNulls ?
+                          mapBatch->notNull.data() + offset : nullptr;
+
+    uint64_t elemOffset = static_cast<uint64_t>(offsets[0]);
+    uint64_t totalNumValues = static_cast<uint64_t>(offsets[numValues] - offsets[0]);
+
+    // translate offsets to lengths
+    for (uint64_t i = 0; i != numValues; ++i) {
+      offsets[i] = offsets[i + 1] - offsets[i];
+    }
+
+    lengthEncoder->add(offsets, numValues, notNull);
+
+    // unnecessary to deal with null as keys and values are packed together
+    if (keyWriter.get()) {
+      keyWriter->add(*mapBatch->keys, elemOffset, totalNumValues);
+    }
+    if (elemWriter.get()) {
+      elemWriter->add(*mapBatch->elements, elemOffset, totalNumValues);
+    }
+
+    if (enableIndex) {
+      bool hasNull = false;
+      if (!notNull) {
+        colIndexStatistics->increase(numValues);
+      } else {
+        for (uint64_t i = 0; i < numValues; ++i) {
+          if (notNull[i]) {
+            colIndexStatistics->increase(1);
+          } else if (!hasNull) {
+            hasNull = true;
+          }
+        }
+      }
+      colIndexStatistics->setHasNull(hasNull);
+    }
+  }
+
+  void MapColumnWriter::flush(std::vector<proto::Stream>& streams) {
+    ColumnWriter::flush(streams);
+
+    proto::Stream stream;
+    stream.set_kind(proto::Stream_Kind_LENGTH);
+    stream.set_column(static_cast<uint32_t>(columnId));
+    stream.set_length(lengthEncoder->flush());
+    streams.push_back(stream);
+
+    if (keyWriter.get()) {
+      keyWriter->flush(streams);
+    }
+    if (elemWriter.get()) {
+      elemWriter->flush(streams);
+    }
+  }
+
+  void MapColumnWriter::writeIndex(
+    std::vector<proto::Stream> &streams) const {
+    ColumnWriter::writeIndex(streams);
+    if (keyWriter.get()) {
+      keyWriter->writeIndex(streams);
+    }
+    if (elemWriter.get()) {
+      elemWriter->writeIndex(streams);
+    }
+  }
+
+  uint64_t MapColumnWriter::getEstimatedSize() const {
+    uint64_t size = ColumnWriter::getEstimatedSize();
+    size += lengthEncoder->getBufferSize();
+    if (keyWriter.get()) {
+      size += keyWriter->getEstimatedSize();
+    }
+    if (elemWriter.get()) {
+      size += elemWriter->getEstimatedSize();
+    }
+    return size;
+  }
+
+  void MapColumnWriter::getColumnEncoding(
+                   std::vector<proto::ColumnEncoding>& encodings) const {
+    proto::ColumnEncoding encoding;
+    encoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
+    encoding.set_dictionarysize(0);
+    encodings.push_back(encoding);
+    if (keyWriter.get()) {
+      keyWriter->getColumnEncoding(encodings);
+    }
+    if (elemWriter.get()) {
+      elemWriter->getColumnEncoding(encodings);
+    }
+  }
+
+  void MapColumnWriter::getStripeStatistics(
+                   std::vector<proto::ColumnStatistics>& stats) const {
+    ColumnWriter::getStripeStatistics(stats);
+    if (keyWriter.get()) {
+      keyWriter->getStripeStatistics(stats);
+    }
+    if (elemWriter.get()) {
+      elemWriter->getStripeStatistics(stats);
+    }
+  }
+
+  void MapColumnWriter::mergeStripeStatsIntoFileStats() {
+    ColumnWriter::mergeStripeStatsIntoFileStats();
+    if (keyWriter.get()) {
+      keyWriter->mergeStripeStatsIntoFileStats();
+    }
+    if (elemWriter.get()) {
+      elemWriter->mergeStripeStatsIntoFileStats();
+    }
+  }
+
+  void MapColumnWriter::getFileStatistics(
+                   std::vector<proto::ColumnStatistics>& stats) const {
+    ColumnWriter::getFileStatistics(stats);
+    if (keyWriter.get()) {
+      keyWriter->getFileStatistics(stats);
+    }
+    if (elemWriter.get()) {
+      elemWriter->getFileStatistics(stats);
+    }
+  }
+
+  void MapColumnWriter::mergeRowGroupStatsIntoStripeStats()  {
+    ColumnWriter::mergeRowGroupStatsIntoStripeStats();
+    if (keyWriter.get()) {
+      keyWriter->mergeRowGroupStatsIntoStripeStats();
+    }
+    if (elemWriter.get()) {
+      elemWriter->mergeRowGroupStatsIntoStripeStats();
+    }
+  }
+
+  void MapColumnWriter::createRowIndexEntry() {
+    ColumnWriter::createRowIndexEntry();
+    if (keyWriter.get()) {
+      keyWriter->createRowIndexEntry();
+    }
+    if (elemWriter.get()) {
+      elemWriter->createRowIndexEntry();
+    }
+  }
+
+  void MapColumnWriter::recordPosition() const {
+    ColumnWriter::recordPosition();
+    lengthEncoder->recordPosition(rowIndexPosition.get());
+  }
+
+  class UnionColumnWriter : public ColumnWriter {
+  public:
+    UnionColumnWriter(const Type& type,
+                      const StreamsFactory& factory,
+                      const WriterOptions& options);
+    ~UnionColumnWriter();
+
+    virtual void add(ColumnVectorBatch& rowBatch,
+                     uint64_t offset,
+                     uint64_t numValues) override;
+
+    virtual void flush(std::vector<proto::Stream>& streams) override;
+
+    virtual uint64_t getEstimatedSize() const override;
+
+    virtual void getColumnEncoding(
+      std::vector<proto::ColumnEncoding>& encodings) const override;
+
+    virtual void getStripeStatistics(
+      std::vector<proto::ColumnStatistics>& stats) const override;
+
+    virtual void getFileStatistics(
+      std::vector<proto::ColumnStatistics>& stats) const override;
+
+    virtual void mergeStripeStatsIntoFileStats() override;
+
+    virtual void mergeRowGroupStatsIntoStripeStats() override;
+
+    virtual void createRowIndexEntry() override;
+
+    virtual void writeIndex(
+      std::vector<proto::Stream> &streams) const override;
+
+    virtual void recordPosition() const override;
+
+  private:
+    std::unique_ptr<ByteRleEncoder> rleEncoder;
+    std::vector<ColumnWriter*> children;
+  };
+
+  UnionColumnWriter::UnionColumnWriter(const Type& type,
+                                       const StreamsFactory& factory,
+                                       const WriterOptions& options) :
+    ColumnWriter(type, factory, options) {
+
+    std::unique_ptr<BufferedOutputStream> dataStream =
+      factory.createStream(proto::Stream_Kind_DATA);
+    rleEncoder = createByteRleEncoder(std::move(dataStream));
+
+    for (uint64_t i = 0; i != type.getSubtypeCount(); ++i) {
+      children.push_back(buildWriter(*type.getSubtype(i),
+                                     factory,
+                                     options).release());
+    }
+
+    if (enableIndex) {
+      recordPosition();
+    }
+  }
+
+  UnionColumnWriter::~UnionColumnWriter() {
+    for (uint32_t i = 0; i < children.size(); ++i) {
+      delete children[i];
+    }
+  }
+
+  void UnionColumnWriter::add(ColumnVectorBatch& rowBatch,
+                              uint64_t offset,
+                              uint64_t numValues) {
+    ColumnWriter::add(rowBatch, offset, numValues);
+
+    UnionVectorBatch* unionBatch = dynamic_cast<UnionVectorBatch*>(&rowBatch);
+    if (unionBatch == nullptr) {
+      throw InvalidArgument("Failed to cast to UnionVectorBatch");
+    }
+
+    const char* notNull = unionBatch->hasNulls ?
+                          unionBatch->notNull.data() + offset : nullptr;
+    unsigned char * tags = unionBatch->tags.data() + offset;
+    uint64_t * offsets = unionBatch->offsets.data() + offset;
+
+    std::vector<int64_t> childOffset(children.size(), -1);
+    std::vector<uint64_t> childLength(children.size(), 0);
+
+    for (uint64_t i = 0; i != numValues; ++i) {
+      if (childOffset[tags[i]] == -1) {
+        childOffset[tags[i]] = static_cast<int64_t>(offsets[i]);
+      }
+      ++childLength[tags[i]];
+    }
+
+    rleEncoder->add(reinterpret_cast<char*>(tags), numValues, notNull);
+
+    for (uint32_t i = 0; i < children.size(); ++i) {
+      if (childLength[i] > 0) {
+        children[i]->add(*unionBatch->children[i],
+                         static_cast<uint64_t>(childOffset[i]),
+                         childLength[i]);
+      }
+    }
+
+    // update stats
+    if (enableIndex) {
+      bool hasNull = false;
+      if (!notNull) {
+        colIndexStatistics->increase(numValues);
+      } else {
+        for (uint64_t i = 0; i < numValues; ++i) {
+          if (notNull[i]) {
+            colIndexStatistics->increase(1);
+          } else if (!hasNull) {
+            hasNull = true;
+          }
+        }
+      }
+      colIndexStatistics->setHasNull(hasNull);
+    }
+  }
+
+  void UnionColumnWriter::flush(std::vector<proto::Stream>& streams) {
+    ColumnWriter::flush(streams);
+
+    proto::Stream stream;
+    stream.set_kind(proto::Stream_Kind_DATA);
+    stream.set_column(static_cast<uint32_t>(columnId));
+    stream.set_length(rleEncoder->flush());
+    streams.push_back(stream);
+
+    for (uint32_t i = 0; i < children.size(); ++i) {
+      children[i]->flush(streams);
+    }
+  }
+
+  void UnionColumnWriter::writeIndex(std::vector<proto::Stream> &streams) const {
+    ColumnWriter::writeIndex(streams);
+    for (uint32_t i = 0; i < children.size(); ++i) {
+      children[i]->writeIndex(streams);
+    }
+  }
+
+  uint64_t UnionColumnWriter::getEstimatedSize() const {
+    uint64_t size = ColumnWriter::getEstimatedSize();
+    size += rleEncoder->getBufferSize();
+    for (uint32_t i = 0; i < children.size(); ++i) {
+      size += children[i]->getEstimatedSize();
+    }
+    return size;
+  }
+
+  void UnionColumnWriter::getColumnEncoding(
+                     std::vector<proto::ColumnEncoding>& encodings) const {
+    proto::ColumnEncoding encoding;
+    encoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
+    encoding.set_dictionarysize(0);
+    encodings.push_back(encoding);
+    for (uint32_t i = 0; i < children.size(); ++i) {
+      children[i]->getColumnEncoding(encodings);
+    }
+  }
+
+  void UnionColumnWriter::getStripeStatistics(
+                     std::vector<proto::ColumnStatistics>& stats) const {
+    ColumnWriter::getStripeStatistics(stats);
+    for (uint32_t i = 0; i < children.size(); ++i) {
+      children[i]->getStripeStatistics(stats);
+    }
+  }
+
+  void UnionColumnWriter::mergeStripeStatsIntoFileStats() {
+    ColumnWriter::mergeStripeStatsIntoFileStats();
+    for (uint32_t i = 0; i < children.size(); ++i) {
+      children[i]->mergeStripeStatsIntoFileStats();
+    }
+  }
+
+  void UnionColumnWriter::getFileStatistics(
+                     std::vector<proto::ColumnStatistics>& stats) const {
+    ColumnWriter::getFileStatistics(stats);
+    for (uint32_t i = 0; i < children.size(); ++i) {
+      children[i]->getFileStatistics(stats);
+    }
+  }
+
+  void UnionColumnWriter::mergeRowGroupStatsIntoStripeStats()  {
+    ColumnWriter::mergeRowGroupStatsIntoStripeStats();
+    for (uint32_t i = 0; i < children.size(); ++i) {
+      children[i]->mergeRowGroupStatsIntoStripeStats();
+    }
+  }
+
+  void UnionColumnWriter::createRowIndexEntry() {
+    ColumnWriter::createRowIndexEntry();
+    for (uint32_t i = 0; i < children.size(); ++i) {
+      children[i]->createRowIndexEntry();
+    }
+  }
+
+  void UnionColumnWriter::recordPosition() const {
+    ColumnWriter::recordPosition();
+    rleEncoder->recordPosition(rowIndexPosition.get());
+  }
+
   std::unique_ptr<ColumnWriter> buildWriter(
                                             const Type& type,
                                             const StreamsFactory& factory,
@@ -1625,6 +2253,24 @@ namespace orc {
           throw NotImplementedYet("Decimal precision more than 38 is not "
                                     "supported");
         }
+      case LIST:
+        return std::unique_ptr<ColumnWriter>(
+          new ListColumnWriter(
+                               type,
+                               factory,
+                               options));
+      case MAP:
+        return std::unique_ptr<ColumnWriter>(
+          new MapColumnWriter(
+                              type,
+                              factory,
+                              options));
+      case UNION:
+        return std::unique_ptr<ColumnWriter>(
+          new UnionColumnWriter(
+                                type,
+                                factory,
+                                options));
       default:
         throw NotImplementedYet("Type is not supported yet for creating "
                                   "ColumnWriter.");

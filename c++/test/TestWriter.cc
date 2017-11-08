@@ -821,4 +821,274 @@ namespace orc {
       EXPECT_EQ(nbase + os.str(), decBatch->values[i].toString());
     }
   }
+
+  TEST(Writer, writeListColumn) {
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    MemoryPool * pool = getDefaultPool();
+
+    std::unique_ptr<Type> type(Type::buildTypeFromString(
+      "struct<col1:array<int>>"));
+
+    uint64_t stripeSize = 1024 * 1024;
+    uint64_t compressionBlockSize = 64 * 1024;
+    uint64_t rowCount = 1024;
+    uint64_t maxListLength = 10;
+    uint64_t offset = 0;
+
+    std::unique_ptr<Writer> writer = createWriter(stripeSize,
+                                                  compressionBlockSize,
+                                                  CompressionKind_ZLIB,
+                                                  *type,
+                                                  pool,
+                                                  &memStream);
+    std::unique_ptr<ColumnVectorBatch> batch =
+      writer->createRowBatch(rowCount * maxListLength);
+
+    StructVectorBatch * structBatch =
+      dynamic_cast<StructVectorBatch *>(batch.get());
+    ListVectorBatch * listBatch =
+      dynamic_cast<ListVectorBatch *>(structBatch->fields[0]);
+    LongVectorBatch * intBatch =
+      dynamic_cast<LongVectorBatch *>(listBatch->elements.get());
+    int64_t * data = intBatch->data.data();
+    int64_t * offsets = listBatch->offsets.data();
+
+    for (uint64_t i = 0; i < rowCount; ++i) {
+      offsets[i] = static_cast<int64_t>(offset);
+      for (uint64_t length = i % maxListLength + 1; length != 0; --length) {
+        data[offset++] = static_cast<int64_t >(i);
+      }
+    }
+    offsets[rowCount] = static_cast<int64_t>(offset);
+
+    structBatch->numElements = rowCount;
+    listBatch->numElements = rowCount;
+
+    writer->add(*batch);
+    writer->close();
+
+    std::unique_ptr<InputStream> inStream(
+      new MemoryInputStream (memStream.getData(), memStream.getLength()));
+    std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
+    std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
+    EXPECT_EQ(rowCount, reader->getNumberOfRows());
+
+    batch = rowReader->createRowBatch(rowCount * maxListLength);
+    EXPECT_EQ(true, rowReader->next(*batch));
+
+    structBatch = dynamic_cast<StructVectorBatch *>(batch.get());
+    listBatch = dynamic_cast<ListVectorBatch *>(structBatch->fields[0]);
+    intBatch = dynamic_cast<LongVectorBatch *>(listBatch->elements.get());
+    data = intBatch->data.data();
+    offsets = listBatch->offsets.data();
+
+    EXPECT_EQ(rowCount, listBatch->numElements);
+    EXPECT_EQ(offset, intBatch->numElements);
+
+    for (uint64_t i = 0; i < rowCount; ++i) {
+      uint64_t length = i % maxListLength + 1;
+      for (int64_t j = 0; j != length; ++j) {
+        EXPECT_EQ(static_cast<int64_t>(i), data[offsets[i] + j]);
+      }
+    }
+  }
+
+  TEST(Writer, writeMapColumn) {
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    MemoryPool * pool = getDefaultPool();
+    std::unique_ptr<Type> type(
+      Type::buildTypeFromString("struct<col1:map<string,int>>"));
+
+    uint64_t stripeSize = 16 * 1024;
+    uint64_t compressionBlockSize = 1024;
+    uint64_t rowCount = 1024, maxListLength = 10, offset = 0;
+
+    std::unique_ptr<Writer> writer = createWriter(stripeSize,
+                                                  compressionBlockSize,
+                                                  CompressionKind_ZLIB,
+                                                  *type,
+                                                  pool,
+                                                  &memStream);
+    std::unique_ptr<ColumnVectorBatch> batch =
+      writer->createRowBatch(rowCount * maxListLength);
+    StructVectorBatch * structBatch =
+      dynamic_cast<StructVectorBatch *>(batch.get());
+    MapVectorBatch * mapBatch =
+      dynamic_cast<MapVectorBatch *>(structBatch->fields[0]);
+    StringVectorBatch * keyBatch =
+      dynamic_cast<StringVectorBatch *>(mapBatch->keys.get());
+    LongVectorBatch * elemBatch =
+      dynamic_cast<LongVectorBatch *>(mapBatch->elements.get());
+
+    char dataBuffer[327675]; // 300k
+    uint64_t strOffset = 0;
+
+    int64_t * offsets = mapBatch->offsets.data();
+    char ** keyData = keyBatch->data.data();
+    int64_t * keyLength = keyBatch->length.data();
+    int64_t * elemData = elemBatch->data.data();
+
+    for (uint64_t i = 0; i < rowCount; ++i) {
+      offsets[i] = static_cast<int64_t>(offset);
+      for (uint64_t j = 0; j != i % maxListLength + 1; ++j) {
+        std::ostringstream os;
+        os << (i + j);
+        memcpy(dataBuffer + strOffset, os.str().c_str(), os.str().size());
+        keyData[offset] = dataBuffer + strOffset;
+
+        keyLength[offset] = static_cast<int64_t>(os.str().size());
+        elemData[offset++] = static_cast<int64_t>(i);
+
+        strOffset += os.str().size();
+      }
+    }
+    offsets[rowCount] = static_cast<int64_t>(offset);
+
+    structBatch->numElements = rowCount;
+    mapBatch->numElements = rowCount;
+
+    writer->add(*batch);
+    writer->close();
+
+    std::unique_ptr<InputStream> inStream(
+      new MemoryInputStream (memStream.getData(), memStream.getLength()));
+    std::unique_ptr<Reader> reader = createReader(
+      pool,
+      std::move(inStream));
+    std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
+    EXPECT_EQ(rowCount, reader->getNumberOfRows());
+
+    batch = rowReader->createRowBatch(rowCount * maxListLength);
+    EXPECT_EQ(true, rowReader->next(*batch));
+
+    structBatch = dynamic_cast<StructVectorBatch *>(batch.get());
+    mapBatch = dynamic_cast<MapVectorBatch *>(structBatch->fields[0]);
+    keyBatch = dynamic_cast<StringVectorBatch *>(mapBatch->keys.get());
+    elemBatch = dynamic_cast<LongVectorBatch *>(mapBatch->elements.get());
+    offsets = mapBatch->offsets.data();
+    keyData = keyBatch->data.data();
+    keyLength = keyBatch->length.data();
+    elemData = elemBatch->data.data();
+
+    EXPECT_EQ(rowCount, mapBatch->numElements);
+    EXPECT_EQ(offset, keyBatch->numElements);
+    EXPECT_EQ(offset, elemBatch->numElements);
+
+    for (uint64_t i = 0; i != rowCount; ++i) {
+      for (int64_t j = 0; j != i % maxListLength + 1; ++j) {
+        std::ostringstream os;
+        os << i + static_cast<uint64_t>(j);
+        uint64_t lenRead = static_cast<uint64_t>(keyLength[offsets[i] + j]);
+        EXPECT_EQ(os.str(), std::string(keyData[offsets[i] + j], lenRead));
+        EXPECT_EQ(static_cast<int64_t>(i), elemData[offsets[i] + j]);
+      }
+    }
+  }
+
+  TEST(Writer, writeUnionColumn) {
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    MemoryPool * pool = getDefaultPool();
+    std::unique_ptr<Type> type(Type::buildTypeFromString(
+      "struct<col1:uniontype<int,double,boolean>>"));
+
+    uint64_t stripeSize = 16 * 1024;
+    uint64_t compressionBlockSize = 1024;
+    uint64_t rowCount = 3333;
+
+    std::unique_ptr<Writer> writer = createWriter(stripeSize,
+                                                  compressionBlockSize,
+                                                  CompressionKind_ZLIB,
+                                                  *type,
+                                                  pool,
+                                                  &memStream);
+    std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
+    StructVectorBatch * structBatch =
+      dynamic_cast<StructVectorBatch *>(batch.get());
+    UnionVectorBatch * unionBatch =
+      dynamic_cast<UnionVectorBatch *>(structBatch->fields[0]);
+    unsigned char * tags = unionBatch->tags.data();
+    uint64_t * offsets = unionBatch->offsets.data();
+
+    LongVectorBatch * intBatch =
+      dynamic_cast<LongVectorBatch *>(unionBatch->children[0]);
+    DoubleVectorBatch * doubleBatch =
+      dynamic_cast<DoubleVectorBatch *>(unionBatch->children[1]);
+    LongVectorBatch * boolBatch =
+      dynamic_cast<LongVectorBatch *>(unionBatch->children[2]);
+    int64_t *intData = intBatch->data.data();
+    double *doubleData = doubleBatch->data.data();
+    int64_t *boolData = boolBatch->data.data();
+
+    uint64_t intOffset = 0, doubleOffset = 0, boolOffset = 0, tag = 0;
+    for (uint64_t i = 0; i < rowCount; ++i) {
+      tags[i] = static_cast<unsigned char>(tag);
+      switch(tag) {
+        case 0:
+          offsets[i] = intOffset;
+          intData[intOffset++] = static_cast<int64_t>(i);
+          break;
+        case 1:
+          offsets[i] = doubleOffset;
+          doubleData[doubleOffset++] = i + 0.5;
+          break;
+        case 2:
+          offsets[i] = boolOffset;
+          boolData[boolOffset++] = (i % 2 == 0);
+          break;
+      }
+      tag = (++tag) % 3;
+    }
+
+    structBatch->numElements = rowCount;
+    unionBatch->numElements = rowCount;
+
+    writer->add(*batch);
+    writer->close();
+
+    std::unique_ptr<InputStream> inStream(
+      new MemoryInputStream (memStream.getData(), memStream.getLength()));
+    std::unique_ptr<Reader> reader = createReader(
+      pool,
+      std::move(inStream));
+    std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
+    EXPECT_EQ(rowCount, reader->getNumberOfRows());
+
+    batch = rowReader->createRowBatch(rowCount);
+    EXPECT_EQ(true, rowReader->next(*batch));
+
+    structBatch =dynamic_cast<StructVectorBatch *>(batch.get());
+    unionBatch =dynamic_cast<UnionVectorBatch *>(structBatch->fields[0]);
+    tags = unionBatch->tags.data();
+    offsets = unionBatch->offsets.data();
+
+    intBatch =  dynamic_cast<LongVectorBatch *>(unionBatch->children[0]);
+    doubleBatch = dynamic_cast<DoubleVectorBatch *>(unionBatch->children[1]);
+    boolBatch = dynamic_cast<LongVectorBatch *>(unionBatch->children[2]);
+    intData = intBatch->data.data();
+    doubleData = doubleBatch->data.data();
+    boolData = boolBatch->data.data();
+
+    EXPECT_EQ(rowCount, unionBatch->numElements);
+    EXPECT_EQ(rowCount / 3, intBatch->numElements);
+    EXPECT_EQ(rowCount / 3, doubleBatch->numElements);
+    EXPECT_EQ(rowCount / 3, boolBatch->numElements);
+
+    uint64_t offset;
+    for (uint64_t i = 0; i < rowCount; ++i) {
+      tag = tags[i];
+      offset = offsets[i];
+
+      switch(tag) {
+        case 0:
+          EXPECT_EQ(i, intData[offset]);
+          break;
+        case 1:
+          EXPECT_TRUE(std::abs(i + 0.5 - doubleData[offset]) < 0.000001);
+          break;
+        case 2:
+          EXPECT_EQ(i % 2 == 0, boolData[offset]);
+          break;
+      }
+    }
+  }
 }
