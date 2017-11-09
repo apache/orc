@@ -12,19 +12,15 @@
 
 configure_file (
   "orc/orc-config.hh.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/orc/orc-config.hh"
+  "orc/orc-config.hh"
   )
 
 install(FILES
   "${CMAKE_CURRENT_BINARY_DIR}/orc/orc-config.hh"
-  "orc/ColumnPrinter.hh"
-  "orc/Common.hh"
-  "orc/Int128.hh"
-  "orc/MemoryPool.hh"
-  "orc/OrcFile.hh"
-  "orc/Reader.hh"
-  "orc/Type.hh"
-  "orc/Vector.hh"
-  "orc/Statistics.hh"
   DESTINATION "include/orc"
   )
+
+install(DIRECTORY
+        "orc/"
+        DESTINATION "include/orc"
+        FILES_MATCHING PATTERN "*.hh")

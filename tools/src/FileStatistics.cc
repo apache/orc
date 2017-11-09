@@ -17,7 +17,7 @@
  */
 
 #include "orc/ColumnPrinter.hh"
-#include "Exceptions.hh"
+#include "orc/Exceptions.hh"
 
 #include <getopt.h>
 #include <string>

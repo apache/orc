@@ -19,7 +19,7 @@
 #include "orc/Vector.hh"
 
 #include "Adaptor.hh"
-#include "Exceptions.hh"
+#include "orc/Exceptions.hh"
 
 #include <iostream>
 #include <sstream>
@@ -391,7 +391,7 @@ namespace orc {
       scale = 0;
     }else{
       std::string copy(str);
-      scale = static_cast<int32_t>(str.length() - foundPoint);
+      scale = static_cast<int32_t>(str.length() - foundPoint - 1);
       value = Int128(copy.replace(foundPoint, 1, ""));
     }
   }

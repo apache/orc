@@ -18,7 +18,7 @@
 
 #include "RLEv1.hh"
 #include "RLEv2.hh"
-#include "Exceptions.hh"
+#include "orc/Exceptions.hh"
 
 namespace orc {
 

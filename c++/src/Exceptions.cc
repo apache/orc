@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "Exceptions.hh"
+#include "orc/Exceptions.hh"
 
 namespace orc {
 
@@ -54,6 +54,25 @@ namespace orc {
   }
 
   ParseError::~ParseError() noexcept {
+    // PASS
+  }
+
+  InvalidArgument::InvalidArgument(const std::string& what_arg
+                                   ): runtime_error(what_arg) {
+    // PASS
+  }
+
+  InvalidArgument::InvalidArgument(const char* what_arg
+                                   ): runtime_error(what_arg) {
+    // PASS
+  }
+
+  InvalidArgument::InvalidArgument(const InvalidArgument& error
+                                   ): runtime_error(error) {
+    // PASS
+  }
+
+  InvalidArgument::~InvalidArgument() noexcept {
     // PASS
   }
 }

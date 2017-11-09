@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "Exceptions.hh"
+#include "orc/Exceptions.hh"
 #include "InputStream.hh"
 
 #include <algorithm>

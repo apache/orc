@@ -107,4 +107,48 @@ namespace orc {
               Decimal(Int128::minimumValue(), 39)));
   }
 
+  TEST(Decimal, testString2Decimal) {
+    // no decimal point
+    Decimal decimal1("12345");
+    EXPECT_EQ(Int128(12345), decimal1.value);
+    EXPECT_EQ(0, decimal1.scale);
+
+    Decimal decimal2("0");
+    EXPECT_EQ(Int128(0), decimal2.value);
+    EXPECT_EQ(0, decimal2.scale);
+
+    Decimal decimal3("99999999999999999999999999999999999999");
+    EXPECT_EQ(Int128("99999999999999999999999999999999999999"), decimal3.value);
+    EXPECT_EQ(0, decimal3.scale);
+
+    Decimal decimal4("-99999999999999999999999999999999999999");
+    EXPECT_EQ(Int128("-99999999999999999999999999999999999999"), decimal4.value);
+    EXPECT_EQ(0, decimal4.scale);
+
+    Decimal decimal5("-12345");
+    EXPECT_EQ(Int128(-12345), decimal5.value);
+    EXPECT_EQ(0, decimal5.scale);
+
+    // has decimal point
+    Decimal decimal6("12345.12345");
+    EXPECT_EQ(Int128("1234512345"), decimal6.value);
+    EXPECT_EQ(5, decimal6.scale);
+
+    Decimal decimal7("0.0");
+    EXPECT_EQ(Int128(0), decimal7.value);
+    EXPECT_EQ(1, decimal7.scale);
+
+    Decimal decimal8("999999999999999999999999999999.99999999");
+    EXPECT_EQ(Int128("99999999999999999999999999999999999999"), decimal8.value);
+    EXPECT_EQ(8, decimal8.scale);
+
+    Decimal decimal9("-999999999999999999999999999999.99999999");
+    EXPECT_EQ(Int128("-99999999999999999999999999999999999999"), decimal9.value);
+    EXPECT_EQ(8, decimal9.scale);
+
+    Decimal decimal10("-123.45");
+    EXPECT_EQ(Int128(-12345), decimal10.value);
+    EXPECT_EQ(2, decimal10.scale);
+  }
+
 }

@@ -19,8 +19,6 @@
 #ifndef ORC_EXCEPTIONS_HH
 #define ORC_EXCEPTIONS_HH
 
-#include "Adaptor.hh"
-
 #include <stdexcept>
 #include <string>
 
@@ -44,6 +42,16 @@ namespace orc {
     ParseError(const ParseError&);
   private:
     ParseError& operator=(const ParseError&);
+  };
+
+  class InvalidArgument: public std::runtime_error {
+  public:
+    explicit InvalidArgument(const std::string& what_arg);
+    explicit InvalidArgument(const char* what_arg);
+    virtual ~InvalidArgument() noexcept;
+    InvalidArgument(const InvalidArgument&);
+  private:
+    InvalidArgument& operator=(const InvalidArgument&);
   };
 }
 

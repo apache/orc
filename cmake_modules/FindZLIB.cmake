@@ -1,0 +1,53 @@
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# ZLIB_HOME environmental variable is used to check for ZLIB headers and static library
+
+# ZLIB_FOUND is set if ZLIB is found
+# ZLIB_INCLUDE_DIRS is set to the header directory
+# ZLIB_LIBS is set to zlib.a static library
+# ZLIB_PREFIX will be ZLIB_HOME
+
+if (NOT "${ZLIB_HOME}" STREQUAL "")
+  message (STATUS "ZLIB_HOME set: ${ZLIB_HOME}")
+endif ()
+
+file (TO_CMAKE_PATH "${ZLIB_HOME}" _zlib_path )
+
+find_path (ZLIB_INCLUDE_DIRS zlib.h HINTS
+  ${_zlib_path}
+  NO_DEFAULT_PATH
+  PATH_SUFFIXES "include")
+
+find_library (ZLIB_LIBRARIES NAMES z PATHS
+  ${_zlib_path}
+  NO_DEFAULT_PATH
+  PATH_SUFFIXES "lib")
+
+if (ZLIB_INCLUDE_DIRS AND ZLIB_LIBRARIES)
+  set (ZLIB_FOUND TRUE)
+  set (ZLIB_PREFIX ${ZLIB_HOME})
+  get_filename_component (ZLIB_LIBS ${ZLIB_LIBRARIES} PATH )
+  set (ZLIB_HEADER_NAME zlib.h)
+  set (ZLIB_HEADER ${ZLIB_INCLUDE_DIRS}/${ZLIB_HEADER_NAME})
+  set (ZLIB_LIB_NAME z)
+  set (ZLIB_STATIC_LIB ${ZLIB_LIBS}/${CMAKE_STATIC_LIBRARY_PREFIX}${ZLIB_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX})
+else ()
+  set (ZLIB_FOUND FALSE)
+endif ()
+
+if (ZLIB_FOUND)
+  message (STATUS "Found the ZLIB header: ${ZLIB_HEADER}")
+  message (STATUS "Found the ZLIB library: ${ZLIB_STATIC_LIB}")
+elseif (NOT "${ZLIB_HOME}" STREQUAL "")
+  message (STATUS "Could not find ZLIB headers and library")
+endif ()

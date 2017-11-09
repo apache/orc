@@ -17,7 +17,7 @@
  */
 
 #include "Adaptor.hh"
-#include "Exceptions.hh"
+#include "orc/Exceptions.hh"
 #include "TypeImpl.hh"
 
 #include <iostream>
