@@ -1029,14 +1029,14 @@ namespace orc {
           break;
         case 1:
           offsets[i] = doubleOffset;
-          doubleData[doubleOffset++] = i + 0.5;
+          doubleData[doubleOffset++] = static_cast<double>(i) + 0.5;
           break;
         case 2:
           offsets[i] = boolOffset;
           boolData[boolOffset++] = (i % 2 == 0);
           break;
       }
-      tag = (++tag) % 3;
+      tag = (tag + 1) % 3;
     }
 
     structBatch->numElements = rowCount;
@@ -1083,7 +1083,8 @@ namespace orc {
           EXPECT_EQ(i, intData[offset]);
           break;
         case 1:
-          EXPECT_TRUE(std::abs(i + 0.5 - doubleData[offset]) < 0.000001);
+          EXPECT_TRUE(
+            std::abs(static_cast<double>(i) + 0.5 - doubleData[offset]) < 0.000001);
           break;
         case 2:
           EXPECT_EQ(i % 2 == 0, boolData[offset]);
