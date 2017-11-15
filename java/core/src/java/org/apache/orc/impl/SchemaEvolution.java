@@ -400,11 +400,12 @@ public class SchemaEvolution {
             List<String> fileFieldNames = fileType.getFieldNames();
             Map<String, TypeDescription> fileTypesIdx = new HashMap<>();
             for (int i = 0; i < fileFieldNames.size(); i++) {
-              fileTypesIdx.put(fileFieldNames.get(i), fileChildren.get(i));
+              final String fileFieldName = fileFieldNames.get(i).toLowerCase();
+              fileTypesIdx.put(fileFieldName, fileChildren.get(i));
             }
 
             for (int i = 0; i < readerFieldNames.size(); i++) {
-              String readerFieldName = readerFieldNames.get(i);
+              final String readerFieldName = readerFieldNames.get(i).toLowerCase();
               TypeDescription readerField = readerChildren.get(i);
 
               TypeDescription fileField = fileTypesIdx.get(readerFieldName);
