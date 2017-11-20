@@ -49,10 +49,16 @@ if (GTEST_FOUND)
   message (STATUS "Found the GTest library: ${GMOCK_STATIC_LIB}")
 else ()
   if (_gtest_path)
-    message (STATUS "Could not find GTest. Looked in ${_gtest_path}.")
+    set (GTEST_ERR_MSG "Could not find GTest. Looked in ${_gtest_path}.")
   else ()
-    message (STATUS "Could not find GTest in system search paths.")
+    set (GTEST_ERR_MSG "Could not find GTest in system search paths.")
   endif()
+
+  if (GTest_FIND_REQUIRED)
+    message (FATAL_ERROR "${GTEST_ERR_MSG}")
+  else ()
+    message (STATUS "${GTEST_ERR_MSG}")
+  endif ()
 endif ()
 
 mark_as_advanced (

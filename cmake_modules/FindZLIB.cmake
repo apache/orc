@@ -49,10 +49,16 @@ if (ZLIB_FOUND)
   message (STATUS "Found the ZLIB library: ${ZLIB_STATIC_LIB}")
 else()
   if (_zlib_path)
-    message (STATUS "Could not find ZLIB. Looked in ${_zlib_path}.")
+    set (ZLIB_ERR_MSG "Could not find ZLIB. Looked in ${_zlib_path}.")
   else ()
-    message (STATUS "Could not find ZLIB in system search paths.")
+    set (ZLIB_ERR_MSG "Could not find ZLIB in system search paths.")
   endif()
+
+  if (ZLIB_FIND_REQUIRED)
+    message (FATAL_ERROR "${ZLIB_ERR_MSG}")
+  else ()
+    message (STATUS "${ZLIB_ERR_MSG}")
+  endif ()
 endif()
 
 mark_as_advanced (

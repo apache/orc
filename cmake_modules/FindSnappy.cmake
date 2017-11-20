@@ -49,10 +49,16 @@ if (SNAPPY_FOUND)
   message (STATUS "Found the Snappy library: ${SNAPPY_STATIC_LIB}")
 else()
   if (_snappy_path)
-    message (STATUS "Could not find Snappy. Looked in ${_snappy_path}.")
+    set (SNAPPY_ERR_MSG "Could not find Snappy. Looked in ${_snappy_path}.")
   else ()
-    message (STATUS "Could not find Snappy in system search paths.")
+    set (SNAPPY_ERR_MSG "Could not find Snappy in system search paths.")
   endif()
+
+  if (Snappy_FIND_REQUIRED)
+    message (FATAL_ERROR "${SNAPPY_ERR_MSG}")
+  else ()
+    message (STATUS "${SNAPPY_ERR_MSG}")
+  endif ()
 endif()
 
 mark_as_advanced (

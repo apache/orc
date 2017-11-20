@@ -69,10 +69,16 @@ if (PROTOBUF_FOUND)
   message (STATUS "Found the Protoc executable: ${PROTOBUF_EXECUTABLE}")
 else()
   if (_protobuf_path)
-    message (STATUS "Could not find Protobuf. Looked in ${_protobuf_path}.")
+    set (PROTOBUF_ERR_MSG "Could not find Protobuf. Looked in ${_protobuf_path}.")
   else ()
-    message (STATUS "Could not find Protobuf in system search paths.")
+    set (PROTOBUF_ERR_MSG "Could not find Protobuf in system search paths.")
   endif()
+
+  if (Protobuf_FIND_REQUIRED)
+    message (FATAL_ERROR "${PROTOBUF_ERR_MSG}")
+  else ()
+    message (STATUS "${PROTOBUF_ERR_MSG}")
+  endif ()
 endif()
 
 mark_as_advanced (
