@@ -13,23 +13,25 @@
 # PROTOBUF_HOME environmental variable is used to check for Protobuf headers and static library
 
 # PROTOBUF_FOUND is set if Protobuf is found
-# PROTOBUF_INCLUDE_DIRS is set to the header directory
-# PROTOBUF_LIBS is set to protobuf.a protoc.a static libraries
-# PROTOBUF_EXECUTABLE is set to protoc
-# PROTOBUF_PREFIX will be PROTOBUF_HOME
+# PROTOBUF_INCLUDE_DIR: directory containing headers
+# PROTOBUF_LIBS: directory containing Protobuf libraries
+# PROTOBUF_STATIC_LIB: location of protobuf.a
+# PROTOC_STATIC_LIB: location of protoc.a
+# PROTOBUF_EXECUTABLE: location of protoc
 
-if (NOT "${PROTOBUF_HOME}" STREQUAL "")
-  message (STATUS "PROTOBUF_HOME set: ${PROTOBUF_HOME}")
-endif ()
 
-file (TO_CMAKE_PATH "${PROTOBUF_HOME}" _protobuf_path )
+if( NOT "${PROTOBUF_HOME}" STREQUAL "")
+    file (TO_CMAKE_PATH "${PROTOBUF_HOME}" _protobuf_path)
+endif()
 
-find_path (PROTOBUF_INCLUDE_DIRS google/protobuf/io/zero_copy_stream.h HINTS
+message (STATUS "PROTOBUF_HOME: ${PROTOBUF_HOME}")
+
+find_path (PROTOBUF_INCLUDE_DIR google/protobuf/io/zero_copy_stream.h HINTS
   ${_protobuf_path}
   NO_DEFAULT_PATH
   PATH_SUFFIXES "include")
 
-find_path (PROTOBUF_INCLUDE_DIRS google/protobuf/io/coded_stream.h HINTS
+find_path (PROTOBUF_INCLUDE_DIR google/protobuf/io/coded_stream.h HINTS
   ${_protobuf_path}
   NO_DEFAULT_PATH
   PATH_SUFFIXES "include")
@@ -49,26 +51,33 @@ find_program(PROTOBUF_EXECUTABLE protoc HINTS
   NO_DEFAULT_PATH
   PATH_SUFFIXES "bin")
 
-if (PROTOBUF_INCLUDE_DIRS AND PROTOBUF_LIBRARY AND PROTOC_LIBRARY AND PROTOBUF_EXECUTABLE)
+if (PROTOBUF_INCLUDE_DIR AND PROTOBUF_LIBRARY AND PROTOC_LIBRARY AND PROTOBUF_EXECUTABLE)
   set (PROTOBUF_FOUND TRUE)
-  set (PROTOBUF_PREFIX ${PROTOBUF_HOME})
-  set (PROTOBUF_HEADER ${PROTOBUF_INCLUDE_DIRS}/${PROTOBUF_HEADER_NAME})
-  get_filename_component (PROTOBUF_LIB ${PROTOBUF_LIBRARY} PATH )
-  get_filename_component (PROTOC_LIB ${PROTOC_LIBRARY} PATH )
-  set (PROTOBUF_HEADER_NAME protobuf.h)
+  get_filename_component (PROTOBUF_LIBS ${PROTOBUF_LIBRARY} PATH)
   set (PROTOBUF_LIB_NAME protobuf)
-  set (PROTOBUF_STATIC_LIB ${PROTOBUF_LIB}/${CMAKE_STATIC_LIBRARY_PREFIX}${PROTOBUF_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX})
   set (PROTOC_LIB_NAME protoc)
-  set (PROTOC_STATIC_LIB ${PROTOC_LIB}/${CMAKE_STATIC_LIBRARY_PREFIX}${PROTOC_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX})
+  set (PROTOBUF_STATIC_LIB ${PROTOBUF_LIBS}/${CMAKE_STATIC_LIBRARY_PREFIX}${PROTOBUF_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX})
+  set (PROTOC_STATIC_LIB ${PROTOBUF_LIBS}/${CMAKE_STATIC_LIBRARY_PREFIX}${PROTOC_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX})
 else ()
   set (PROTOBUF_FOUND FALSE)
 endif ()
 
 if (PROTOBUF_FOUND)
-  message (STATUS "Found the Protobuf headers: ${PROTOBUF_INCLUDE_DIRS}")
-  message (STATUS "Found the Protobuf library: ${PROTOBUF_LIBRARY}")
-  message (STATUS "Found the Protobuf library: ${PROTOC_LIBRARY}")
-  message (STATUS "Found the Protobuf executable: ${PROTOBUF_EXECUTABLE}")
-elseif (NOT "${PROTOBUF_HOME}" STREQUAL "")
-  message (STATUS "Could not find Protobuf headers, library and binary")
-endif ()
+  message (STATUS "Found the Protobuf headers: ${PROTOBUF_INCLUDE_DIR}")
+  message (STATUS "Found the Protobuf library: ${PROTOBUF_STATIC_LIB}")
+  message (STATUS "Found the Protoc library: ${PROTOC_STATIC_LIB}")
+  message (STATUS "Found the Protoc executable: ${PROTOBUF_EXECUTABLE}")
+else()
+  if (_protobuf_path)
+    message (STATUS "Could not find Protobuf. Looked in ${_protobuf_path}.")
+  else ()
+    message (STATUS "Could not find Protobuf in system search paths.")
+  endif()
+endif()
+
+mark_as_advanced (
+  PROTOBUF_INCLUDE_DIR
+  PROTOBUF_LIBS
+  PROTOBUF_STATIC_LIB
+  PROTOC_STATIC_LIB
+)

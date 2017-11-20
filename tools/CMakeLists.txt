@@ -11,4 +11,7 @@
 # limitations under the License.
 
 add_subdirectory(src)
-add_subdirectory(test)
+
+if (BUILD_CPP_TESTS)
+  add_subdirectory(test)
+endif ()

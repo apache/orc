@@ -14,10 +14,10 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/c++/src
   ${PROJECT_BINARY_DIR}/c++/include
   ${PROJECT_BINARY_DIR}/c++/src
-  ${PROTOBUF_INCLUDE_DIRS}
-  ${ZLIB_INCLUDE_DIRS}
-  ${SNAPPY_INCLUDE_DIRS}
-  ${GTEST_INCLUDE_DIRS}
+  ${PROTOBUF_INCLUDE_DIR}
+  ${ZLIB_INCLUDE_DIR}
+  ${SNAPPY_INCLUDE_DIR}
+  ${GTEST_INCLUDE_DIR}
 )
 
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX11_FLAGS} ${WARN_FLAGS}")
@@ -48,11 +48,11 @@ add_executable (orc-test
 
 target_link_libraries (orc-test
   orc
+  lz4
+  protobuf
+  snappy
+  zlib
   ${GTEST_LIBRARIES}
-  ${LZ4_LIBRARIES}
-  ${PROTOBUF_LIBRARIES}
-  ${SNAPPY_LIBRARIES}
-  ${ZLIB_LIBRARIES}
 )
 
 add_executable (create-test-files
@@ -61,8 +61,7 @@ add_executable (create-test-files
 
 target_link_libraries (create-test-files
   orc
-  ${PROTOBUF_LIBRARIES}
+  protobuf
 )
 
 add_test (NAME orc-test COMMAND orc-test)
-

@@ -12,18 +12,18 @@
 
 # SNAPPY_HOME environmental variable is used to check for Snappy headers and static library
 
-# SNAPPY_FOUND is set if Snappy is found
-# SNAPPY_INCLUDE_DIRS is set to the header directory
-# SNAPPY_LIBS is set to snappy.a static library
-# SNAPPY_PREFIX will be SNAPPY_HOME
+# SNAPPY_INCLUDE_DIR: directory containing headers
+# SNAPPY_LIBS: directory containing snappy libraries
+# SNAPPY_STATIC_LIB: path to libsnappy.a
+# SNAPPY_FOUND: whether snappy has been found
 
-if (NOT "${SNAPPY_HOME}" STREQUAL "")
-  message (STATUS "SNAPPY_HOME set: ${SNAPPY_HOME}")
-endif ()
+if( NOT "${SNAPPY_HOME}" STREQUAL "")
+    file (TO_CMAKE_PATH "${SNAPPY_HOME}" _snappy_path)
+endif()
 
-file (TO_CMAKE_PATH "${SNAPPY_HOME}" _snappy_path )
+message (STATUS "SNAPPY_HOME: ${SNAPPY_HOME}")
 
-find_path (SNAPPY_INCLUDE_DIRS snappy.h HINTS
+find_path (SNAPPY_INCLUDE_DIR snappy.h HINTS
   ${_snappy_path}
   NO_DEFAULT_PATH
   PATH_SUFFIXES "include")
@@ -33,12 +33,11 @@ find_library (SNAPPY_LIBRARIES NAMES snappy PATHS
   NO_DEFAULT_PATH
   PATH_SUFFIXES "lib")
 
-if (SNAPPY_INCLUDE_DIRS AND SNAPPY_LIBRARIES)
+if (SNAPPY_INCLUDE_DIR AND SNAPPY_LIBRARIES)
   set (SNAPPY_FOUND TRUE)
-  set (SNAPPY_PREFIX ${SNAPPY_HOME})
-  get_filename_component (SNAPPY_LIBS ${SNAPPY_LIBRARIES} PATH )
+  get_filename_component (SNAPPY_LIBS ${SNAPPY_LIBRARIES} PATH)
   set (SNAPPY_HEADER_NAME snappy.h)
-  set (SNAPPY_HEADER ${SNAPPY_INCLUDE_DIRS}/${SNAPPY_HEADER_NAME})
+  set (SNAPPY_HEADER ${SNAPPY_INCLUDE_DIR}/${SNAPPY_HEADER_NAME})
   set (SNAPPY_LIB_NAME snappy)
   set (SNAPPY_STATIC_LIB ${SNAPPY_LIBS}/${CMAKE_STATIC_LIBRARY_PREFIX}${SNAPPY_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX})
 else ()
@@ -48,6 +47,17 @@ endif ()
 if (SNAPPY_FOUND)
   message (STATUS "Found the Snappy header: ${SNAPPY_HEADER}")
   message (STATUS "Found the Snappy library: ${SNAPPY_STATIC_LIB}")
-elseif (NOT "${SNAPPY_HOME}" STREQUAL "")
-  message (STATUS "Could not find Snappy headers and library")
-endif ()
+else()
+  if (_snappy_path)
+    message (STATUS "Could not find Snappy. Looked in ${_snappy_path}.")
+  else ()
+    message (STATUS "Could not find Snappy in system search paths.")
+  endif()
+endif()
+
+mark_as_advanced (
+  SNAPPY_INCLUDE_DIR
+  SNAPPY_STATIC_LIB
+  SNAPPY_LIBS
+  SNAPPY_LIBRARIES
+)

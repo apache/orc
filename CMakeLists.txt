@@ -20,11 +20,6 @@ SET(CPACK_PACKAGE_VERSION_MINOR "5")
 SET(CPACK_PACKAGE_VERSION_PATCH "0-SNAPSHOT")
 SET(ORC_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_modules")
-set (LZ4_VERSION "1.7.5")
-set (SNAPPY_VERSION "1.1.4")
-set (ZLIB_VERSION "1.2.11")
-set (GTEST_VERSION "1.8.0")
-set (PROTOBUF_VERSION "2.6.0")
 
 option (BUILD_JAVA
     "Include ORC Java library in the build process"
@@ -37,6 +32,14 @@ option (ANALYZE_JAVA
 option (BUILD_LIBHDFSPP
     "Include LIBHDFSPP library in the build process"
      ON)
+
+option(BUILD_CPP_TESTS
+    "Build the googletest unit tests"
+    ON)
+
+option(BUILD_TOOLS
+    "Build the tools"
+    ON)
 
 # Make sure that a build type is selected
 if (NOT CMAKE_BUILD_TYPE)
@@ -98,23 +101,28 @@ INCLUDE(ThirdpartyToolchain)
 set (EXAMPLE_DIRECTORY ${CMAKE_SOURCE_DIR}/examples)
 
 add_subdirectory(c++)
-add_subdirectory(tools)
 if (BUILD_JAVA)
   add_subdirectory(java)
 endif()
 
-# Add another target called test-out that prints the results on failure
-if (CMAKE_CONFIGURATION_TYPES)
-  add_custom_target (test-out
-    COMMAND ${CMAKE_CTEST_COMMAND} --force-new-ctest-process
-      --output-on-failure --build-config "$<CONFIGURATION>"
-  )
-else (CMAKE_CONFIGURATION_TYPES)
-  add_custom_target (test-out
-    COMMAND ${CMAKE_CTEST_COMMAND} --force-new-ctest-process
-      --output-on-failure
-  )
-endif (CMAKE_CONFIGURATION_TYPES)
+if (BUILD_TOOLS)
+  add_subdirectory(tools)
+endif ()
+
+if (BUILD_CPP_TESTS)
+  # Add another target called test-out that prints the results on failure
+  if (CMAKE_CONFIGURATION_TYPES)
+    add_custom_target (test-out
+      COMMAND ${CMAKE_CTEST_COMMAND} --force-new-ctest-process
+        --output-on-failure --build-config "$<CONFIGURATION>"
+    )
+  else ()
+    add_custom_target (test-out
+      COMMAND ${CMAKE_CTEST_COMMAND} --force-new-ctest-process
+        --output-on-failure
+    )
+  endif ()
+endif ()
 
 install(
   FILES LICENSE NOTICE

@@ -17,4 +17,7 @@ include_directories (
 
 add_subdirectory(include)
 add_subdirectory(src)
-add_subdirectory(test)
+
+if (BUILD_CPP_TESTS)
+  add_subdirectory(test)
+endif ()
