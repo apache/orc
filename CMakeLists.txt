@@ -123,7 +123,3 @@ if (BUILD_CPP_TESTS)
     )
   endif ()
 endif ()
-
-install(
-  FILES LICENSE NOTICE
-  DESTINATION .)
