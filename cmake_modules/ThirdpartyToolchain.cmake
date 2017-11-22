@@ -78,6 +78,10 @@ set_target_properties (snappy PROPERTIES IMPORTED_LOCATION ${SNAPPY_STATIC_LIB})
 
 if (SNAPPY_VENDORED)
   add_dependencies (snappy snappy_ep)
+  if (INSTALL_VENDORED_LIBS)
+    install(FILES "${SNAPPY_STATIC_LIB}"
+            DESTINATION "lib")
+  endif ()
 endif ()
 
 # ----------------------------------------------------------------------
@@ -116,6 +120,10 @@ set_target_properties (zlib PROPERTIES IMPORTED_LOCATION ${ZLIB_STATIC_LIB})
 
 if (ZLIB_VENDORED)
   add_dependencies (zlib zlib_ep)
+  if (INSTALL_VENDORED_LIBS)
+    install(FILES "${ZLIB_STATIC_LIB}"
+            DESTINATION "lib")
+  endif ()
 endif ()
 
 # ----------------------------------------------------------------------
@@ -153,6 +161,10 @@ set_target_properties (lz4 PROPERTIES IMPORTED_LOCATION ${LZ4_STATIC_LIB})
 
 if (LZ4_VENDORED)
   add_dependencies (lz4 lz4_ep)
+  if (INSTALL_VENDORED_LIBS)
+    install(FILES "${LZ4_STATIC_LIB}"
+            DESTINATION "lib")
+  endif ()
 endif ()
 
 # ----------------------------------------------------------------------
@@ -248,6 +260,10 @@ set_target_properties (protoc PROPERTIES IMPORTED_LOCATION ${PROTOC_STATIC_LIB})
 if (PROTOBUF_VENDORED)
   add_dependencies (protoc protobuf_ep)
   add_dependencies (protobuf protobuf_ep)
+  if (INSTALL_VENDORED_LIBS)
+    install(FILES "${PROTOBUF_STATIC_LIB}" "${PROTOC_STATIC_LIB}"
+            DESTINATION "lib")
+  endif ()
 endif ()
 
 # ----------------------------------------------------------------------
@@ -291,6 +307,10 @@ if(BUILD_LIBHDFSPP)
     add_library (libhdfspp STATIC IMPORTED)
     set_target_properties (libhdfspp PROPERTIES IMPORTED_LOCATION ${LIBHDFSPP_STATIC_LIB})
     add_dependencies (libhdfspp libhdfspp_ep)
+    if (INSTALL_VENDORED_LIBS)
+      install(FILES "${LIBHDFSPP_STATIC_LIB}"
+              DESTINATION "lib")
+    endif ()
 
     set (LIBHDFSPP_LIBRARIES
          libhdfspp

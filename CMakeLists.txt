@@ -41,6 +41,10 @@ option(BUILD_TOOLS
     "Build the tools"
     ON)
 
+option(INSTALL_VENDORED_LIBS
+    "Install vendored thirdparty libraries along with liborc"
+    ON)
+
 # Make sure that a build type is selected
 if (NOT CMAKE_BUILD_TYPE)
   message(STATUS "No build type selected, default to ReleaseWithDebugInfo")
