@@ -22,7 +22,7 @@ include_directories (
   ${PROJECT_BINARY_DIR}/c++/include
   ${PROJECT_SOURCE_DIR}/c++/src
   ${PROJECT_BINARY_DIR}/c++/src
-  ${PROTOBUF_INCLUDE_DIRS}
+  ${PROTOBUF_INCLUDE_DIR}
   )
 
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g ${CXX11_FLAGS} ${WARN_FLAGS}")
@@ -49,7 +49,7 @@ add_executable (orc-metadata
 
 target_link_libraries (orc-metadata
   orc
-  ${PROTOBUF_LIBRARIES}
+  protobuf
   )
 
  add_executable (orc-statistics

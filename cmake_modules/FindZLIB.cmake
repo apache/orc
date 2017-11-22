@@ -12,18 +12,18 @@
 
 # ZLIB_HOME environmental variable is used to check for ZLIB headers and static library
 
-# ZLIB_FOUND is set if ZLIB is found
-# ZLIB_INCLUDE_DIRS is set to the header directory
-# ZLIB_LIBS is set to zlib.a static library
-# ZLIB_PREFIX will be ZLIB_HOME
+# ZLIB_INCLUDE_DIR: directory containing headers
+# ZLIB_LIBS: directory containing ZLIB libraries
+# ZLIB_STATIC_LIB: path to zlib.a
+# ZLIB_FOUND: whether ZLIB has been found
 
-if (NOT "${ZLIB_HOME}" STREQUAL "")
-  message (STATUS "ZLIB_HOME set: ${ZLIB_HOME}")
-endif ()
+if( NOT "${ZLIB_HOME}" STREQUAL "")
+    file (TO_CMAKE_PATH "${ZLIB_HOME}" _zlib_path)
+endif()
 
-file (TO_CMAKE_PATH "${ZLIB_HOME}" _zlib_path )
+message (STATUS "ZLIB_HOME: ${ZLIB_HOME}")
 
-find_path (ZLIB_INCLUDE_DIRS zlib.h HINTS
+find_path (ZLIB_INCLUDE_DIR zlib.h HINTS
   ${_zlib_path}
   NO_DEFAULT_PATH
   PATH_SUFFIXES "include")
@@ -33,12 +33,11 @@ find_library (ZLIB_LIBRARIES NAMES z PATHS
   NO_DEFAULT_PATH
   PATH_SUFFIXES "lib")
 
-if (ZLIB_INCLUDE_DIRS AND ZLIB_LIBRARIES)
+if (ZLIB_INCLUDE_DIR AND ZLIB_LIBRARIES)
   set (ZLIB_FOUND TRUE)
-  set (ZLIB_PREFIX ${ZLIB_HOME})
   get_filename_component (ZLIB_LIBS ${ZLIB_LIBRARIES} PATH )
   set (ZLIB_HEADER_NAME zlib.h)
-  set (ZLIB_HEADER ${ZLIB_INCLUDE_DIRS}/${ZLIB_HEADER_NAME})
+  set (ZLIB_HEADER ${ZLIB_INCLUDE_DIR}/${ZLIB_HEADER_NAME})
   set (ZLIB_LIB_NAME z)
   set (ZLIB_STATIC_LIB ${ZLIB_LIBS}/${CMAKE_STATIC_LIBRARY_PREFIX}${ZLIB_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX})
 else ()
@@ -48,6 +47,23 @@ endif ()
 if (ZLIB_FOUND)
   message (STATUS "Found the ZLIB header: ${ZLIB_HEADER}")
   message (STATUS "Found the ZLIB library: ${ZLIB_STATIC_LIB}")
-elseif (NOT "${ZLIB_HOME}" STREQUAL "")
-  message (STATUS "Could not find ZLIB headers and library")
-endif ()
+else()
+  if (_zlib_path)
+    set (ZLIB_ERR_MSG "Could not find ZLIB. Looked in ${_zlib_path}.")
+  else ()
+    set (ZLIB_ERR_MSG "Could not find ZLIB in system search paths.")
+  endif()
+
+  if (ZLIB_FIND_REQUIRED)
+    message (FATAL_ERROR "${ZLIB_ERR_MSG}")
+  else ()
+    message (STATUS "${ZLIB_ERR_MSG}")
+  endif ()
+endif()
+
+mark_as_advanced (
+  ZLIB_INCLUDE_DIR
+  ZLIB_STATIC_LIB
+  ZLIB_LIBS
+  ZLIB_LIBRARIES
+)
