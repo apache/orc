@@ -105,6 +105,11 @@ INCLUDE(ThirdpartyToolchain)
 set (EXAMPLE_DIRECTORY ${CMAKE_SOURCE_DIR}/examples)
 
 add_subdirectory(c++)
+
+install(
+  FILES LICENSE NOTICE
+  DESTINATION .)
+
 if (BUILD_JAVA)
   add_subdirectory(java)
 endif()
