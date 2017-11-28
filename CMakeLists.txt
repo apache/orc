@@ -55,6 +55,8 @@ endif ()
 
 # Set the package format
 SET(CPACK_GENERATOR "TGZ")
+SET(CPACK_PACKAGE_VENDOR "Apache ORC")
+SET(CPACK_PACKAGE_CONTACT "Apache ORC <dev@orc.apache.org>")
 
 INCLUDE(CPack)
 INCLUDE(ExternalProject)

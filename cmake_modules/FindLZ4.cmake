@@ -30,7 +30,6 @@ find_path (LZ4_INCLUDE_DIR lz4.h HINTS
 
 find_library (LZ4_LIBRARIES NAMES lz4 PATHS
   ${_lz4_path}
-  NO_DEFAULT_PATH
   PATH_SUFFIXES "lib")
 
 if (LZ4_INCLUDE_DIR AND LZ4_LIBRARIES)
