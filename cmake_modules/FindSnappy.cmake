@@ -30,7 +30,6 @@ find_path (SNAPPY_INCLUDE_DIR snappy.h HINTS
 
 find_library (SNAPPY_LIBRARIES NAMES snappy PATHS
   ${_snappy_path}
-  NO_DEFAULT_PATH
   PATH_SUFFIXES "lib")
 
 if (SNAPPY_INCLUDE_DIR AND SNAPPY_LIBRARIES)

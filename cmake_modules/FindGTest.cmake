@@ -30,7 +30,6 @@ find_path (GTEST_INCLUDE_DIR gmock/gmock.h HINTS
 
 find_library (GTEST_LIBRARIES NAMES gmock PATHS
   ${_gtest_path}
-  NO_DEFAULT_PATH
   PATH_SUFFIXES "lib")
 
 if (GTEST_INCLUDE_DIR AND GTEST_LIBRARIES)

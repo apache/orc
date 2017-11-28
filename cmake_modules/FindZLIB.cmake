@@ -30,7 +30,6 @@ find_path (ZLIB_INCLUDE_DIR zlib.h HINTS
 
 find_library (ZLIB_LIBRARIES NAMES z PATHS
   ${_zlib_path}
-  NO_DEFAULT_PATH
   PATH_SUFFIXES "lib")
 
 if (ZLIB_INCLUDE_DIR AND ZLIB_LIBRARIES)
