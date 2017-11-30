@@ -1133,6 +1133,25 @@ is invoking:</p>
 % mvn package
 </code></pre>
 
+<h2 id="building-just-c">Building just C++</h2>
+
+<pre><code class="language-shell">% mkdir build
+% cd build
+% cmake .. -DBUILD_JAVA=OFF
+% make package test-out
+</code></pre>
+
+<h2 id="specify-third-party-libraries-for-c-build">Specify third-party libraries for C++ build</h2>
+
+<pre><code class="language-shell">% mkdir build
+% cd build
+% cmake .. -DSNAPPY_HOME=&lt;PATH&gt; \
+           -DZLIB_HOME=&lt;PATH&gt; \
+           -DLZ4_HOME=&lt;PATH&gt; \
+           -DGTEST_HOME=&lt;PATH&gt; \
+           -DPROTOBUF_HOME=&lt;PATH&gt;
+% make package test-out
+</code></pre>
 
           
 
