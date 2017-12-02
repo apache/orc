@@ -34,9 +34,9 @@ add_executable (tool-test
 target_link_libraries (tool-test
   orc
   protobuf
-  gmock
   zlib
   snappy
+  ${GTEST_LIBRARIES}
 )
 
 add_test (tool-test tool-test ${EXAMPLE_DIRECTORY} ${PROJECT_BINARY_DIR})
