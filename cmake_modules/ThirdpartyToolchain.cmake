@@ -293,7 +293,7 @@ if(BUILD_LIBHDFSPP)
                               -DBUILD_SHARED_HDFSPP=FALSE)
 
     ExternalProject_Add (libhdfspp_ep
-      DEPENDS protobuf_ep
+      DEPENDS protobuf
       URL ${LIBHDFSPP_SRC_URL}
       LOG_DOWNLOAD 0
       LOG_CONFIGURE 0
