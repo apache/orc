@@ -18,8 +18,8 @@ It can support millions of rows updated per a transaction, but it can
 not support millions of transactions an hour.
 
 Additionally, we wanted to support streaming ingest in to Hive tables where
-streaming applications like Flume or Storm could write data into Hive and 
-have transactions commit once a minute and queries would either see all of 
+streaming applications like Flume or Storm could write data into Hive and
+have transactions commit once a minute and queries would either see all of
 a transaction or none of it.
 
 HDFS is a write once file system and ORC is a write-once file format, so edits
@@ -107,7 +107,7 @@ written. As the file is later extended the preliminary file footer
 becomes dead space within the file. Secondly, a side file named
 "*_flush_length" is a small file that contains a set of 8 byte
 values. The last complete 8 byte value is the end of the last
-preliminary footer. 
+preliminary footer.
 
 Two properties are added to the metadata for ORC files to speed up the
 processing of the ACID tables. In particular, when a task is reading

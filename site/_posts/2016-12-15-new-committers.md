@@ -25,7 +25,7 @@ committers coming from Hive are:
 * Matthew McCline
 * Mithun Radhakrishnan
 * Naveen Gangam
-* Pengcheng Xiong 
+* Pengcheng Xiong
 * Rajesh Balamohan
 * Rui Li
 * Sergio Pena
