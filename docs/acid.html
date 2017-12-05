@@ -1075,8 +1075,8 @@ It can support millions of rows updated per a transaction, but it can
 not support millions of transactions an hour.</p>
 
 <p>Additionally, we wanted to support streaming ingest in to Hive tables where
-streaming applications like Flume or Storm could write data into Hive and 
-have transactions commit once a minute and queries would either see all of 
+streaming applications like Flume or Storm could write data into Hive and
+have transactions commit once a minute and queries would either see all of
 a transaction or none of it.</p>
 
 <p>HDFS is a write once file system and ORC is a write-once file format, so edits
