@@ -90,8 +90,9 @@ INCLUDE(CheckCXXSourceRuns)
 CHECK_CXX_SOURCE_RUNS("
     #include<time.h>
     int main(int, char *[]) {
-      time_t t = -1000;
-      return gmtime(&t) == 0;
+      time_t t = -14210715; // 1969-07-20 12:34:45
+      struct tm *ptm = gmtime(&t);
+      return !(ptm && ptm->tm_year == 69);
     }"
   HAS_PRE_1970
 )
