@@ -317,7 +317,7 @@ namespace orc {
     EXPECT_EQ(0x9abcdef0, array[2]);
   }
 
-  int fls(uint32_t x);
+  int64_t fls(uint32_t x);
 
   TEST(Int128, testFindLastSet) {
     EXPECT_EQ(0, fls(0));
