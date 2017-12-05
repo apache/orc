@@ -2839,12 +2839,15 @@ TEST(TestColumnReader, testTimestamp) {
 
   for (size_t i = 0; i < batch.numElements; ++i) {
     time_t time = static_cast<time_t>(longBatch->data[i]);
+    EXPECT_EQ(expectedNano[i], longBatch->nanoseconds[i]);
+#ifndef HAS_PRE_1970
+    if (time < 0) continue;
+#endif
     tm timeStruct;
     ASSERT_PRED1(isNotNull, gmtime_r(&time, &timeStruct));
     char buffer[30];
     asctime_r(&timeStruct, buffer);
     EXPECT_STREQ(expected[i], buffer) << "Wrong value at " << i;
-    EXPECT_EQ(expectedNano[i], longBatch->nanoseconds[i]);
   }
 }
 
