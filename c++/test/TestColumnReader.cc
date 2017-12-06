@@ -2347,7 +2347,9 @@ TEST(TestColumnReader, testFloatWithNulls) {
       std::numeric_limits<float>::infinity(),
       std::numeric_limits<float>::quiet_NaN(),
       -std::numeric_limits<float>::infinity(),
-      3.4028235E38f, -3.4028235E38f, 1.4e-45f, -1.4e-45f };
+      std::numeric_limits<float>::max(),
+      -std::numeric_limits<float>::max(),
+      1.4e-45f, -1.4e-45f };
   const unsigned char buffer2[] = { 0x00, 0x00, 0x80, 0x3f,
                                     0x00, 0x00, 0x20, 0x40,
                                     0x00, 0x40, 0xc8, 0xc2,
