@@ -260,7 +260,7 @@ namespace orc {
     x *= 6432346;
     EXPECT_EQ(6432346 * 5, x.toLong());
 
-    x = (1L << 62) + (3L << 34) + 3L;
+    x = (1LL << 62) + (3LL << 34) + 3LL;
     x *= 96;
     EXPECT_EQ("0x00000000000000180000048000000120", x.toHexString());
 

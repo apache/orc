@@ -60,7 +60,7 @@ namespace orc {
 
   Int128& Int128::operator*=(const Int128 &right) {
     const uint64_t INT_MASK = 0xffffffff;
-    const uint64_t CARRY_BIT = 1l << 32;
+    const uint64_t CARRY_BIT = INT_MASK + 1;
 
     // Break the left and right numbers into 32 bit chunks
     // so that we can multiply them without overflow.
