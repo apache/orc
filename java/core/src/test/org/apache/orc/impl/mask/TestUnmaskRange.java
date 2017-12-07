@@ -152,14 +152,6 @@ public class TestUnmaskRange {
     assertEquals(new HiveDecimalWritable("123477777.777654"),
         mask.maskDecimal(new HiveDecimalWritable("123456789.987654")));
 
-    // test removal of leading and  trailing zeros.
-    /*
-    assertEquals(new HiveDecimalWritable("777777777777777777.7777"),
-        mask.maskDecimal(new HiveDecimalWritable("0123456789123456789.01230")));
-        */
-
-
-
   }
 
 }

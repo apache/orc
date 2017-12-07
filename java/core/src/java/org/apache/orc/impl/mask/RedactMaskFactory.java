@@ -33,7 +33,6 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TimeZone;
@@ -121,8 +120,7 @@ public class RedactMaskFactory extends MaskFactory {
   private final boolean maskTimestamp;
 
   // index tuples that are not to be masked
-  private final SortedMap<Integer,Integer> unmaskIndexRanges = Collections.synchronizedSortedMap(new TreeMap());
-
+  private final SortedMap<Integer,Integer> unmaskIndexRanges = new TreeMap();
 
   public RedactMaskFactory(String... params) {
     ByteBuffer param = params.length < 1 ? ByteBuffer.allocate(0) :
@@ -1019,7 +1017,7 @@ public class RedactMaskFactory extends MaskFactory {
   private SortedMap<Integer,Integer> getPositiveUnmaskRangeIndexes(final int length) {
 
     /* Always return a sorted map */
-    final SortedMap<Integer,Integer> result = Collections.synchronizedSortedMap(new TreeMap());
+    final SortedMap<Integer,Integer> result = new TreeMap();
 
     for(final Map.Entry<Integer, Integer> pair : unmaskIndexRanges.entrySet()) {
       int start = 0;
@@ -1090,7 +1088,5 @@ public class RedactMaskFactory extends MaskFactory {
     return inverse;
 
   }
-
-
 
 }
