@@ -19,10 +19,10 @@
 #include "orc/Int128.hh"
 #include "Adaptor.hh"
 
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
-#include <algorithm> // std::min
 
 namespace orc {
 
