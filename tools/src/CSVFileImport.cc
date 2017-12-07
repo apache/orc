@@ -27,18 +27,18 @@
 #include <sys/time.h>
 #include <time.h>
 
-#define DELIMITER ','
+static char gDelimiter = ',';
 
 std::string extractColumn(std::string s, uint64_t colIndex) {
   uint64_t col = 0;
   size_t start = 0;
-  size_t end = s.find(DELIMITER);
+  size_t end = s.find(gDelimiter);
   while (col < colIndex && end != std::string::npos) {
     start = end + 1;
-    end = s.find(DELIMITER, start);
+    end = s.find(gDelimiter, start);
     ++col;
   }
-  return s.substr(start, end - start);
+  return col == colIndex ? s.substr(start, end - start) : "";
 }
 
 static const char* GetDate(void)
@@ -60,9 +60,10 @@ void fillLongValues(const std::vector<std::string>& data,
   for (uint64_t i = 0; i < numValues; ++i) {
     std::string col = extractColumn(data[i], colIndex);
     if (col.empty()) {
-      longBatch->notNull[i] = 0;
+      batch->notNull[i] = 0;
       hasNull = true;
     } else {
+      batch->notNull[i] = 1;
       longBatch->data[i] = atoll(col.c_str());
     }
   }
@@ -82,9 +83,13 @@ void fillStringValues(const std::vector<std::string>& data,
   for (uint64_t i = 0; i < numValues; ++i) {
     std::string col = extractColumn(data[i], colIndex);
     if (col.empty()) {
-      stringBatch->notNull[i] = 0;
+      batch->notNull[i] = 0;
       hasNull = true;
     } else {
+      batch->notNull[i] = 1;
+      if (buffer.size() - offset < col.size()) {
+        buffer.reserve(buffer.size() * 2);
+      }
       memcpy(buffer.data() + offset,
              col.c_str(),
              col.size());
@@ -107,9 +112,10 @@ void fillDoubleValues(const std::vector<std::string>& data,
   for (uint64_t i = 0; i < numValues; ++i) {
     std::string col = extractColumn(data[i], colIndex);
     if (col.empty()) {
-      dblBatch->notNull[i] = 0;
+      batch->notNull[i] = 0;
       hasNull = true;
     } else {
+      batch->notNull[i] = 1;
       dblBatch->data[i] = atof(col.c_str());
     }
   }
@@ -142,6 +148,7 @@ void fillDecimalValues(const std::vector<std::string>& data,
       batch->notNull[i] = 0;
       hasNull = true;
     } else {
+      batch->notNull[i] = 1;
       size_t ptPos = col.find('.');
       size_t curScale = 0;
       std::string num = col;
@@ -175,9 +182,10 @@ void fillBoolValues(const std::vector<std::string>& data,
   for (uint64_t i = 0; i < numValues; ++i) {
     std::string col = extractColumn(data[i], colIndex);
     if (col.empty()) {
-      boolBatch->notNull[i] = 0;
+      batch->notNull[i] = 0;
       hasNull = true;
     } else {
+      batch->notNull[i] = 1;
       std::transform(col.begin(), col.end(), col.begin(), ::tolower);
       if (col == "true" || col == "t") {
         boolBatch->data[i] = true;
@@ -201,9 +209,10 @@ void fillDateValues(const std::vector<std::string>& data,
   for (uint64_t i = 0; i < numValues; ++i) {
     std::string col = extractColumn(data[i], colIndex);
     if (col.empty()) {
-      longBatch->notNull[i] = 0;
+      batch->notNull[i] = 0;
       hasNull = true;
     } else {
+      batch->notNull[i] = 1;
       struct tm tm;
       memset(&tm, 0, sizeof(struct tm));
       strptime(col.c_str(), "%Y-%m-%d", &tm);
@@ -229,9 +238,10 @@ void fillTimestampValues(const std::vector<std::string>& data,
   for (uint64_t i = 0; i < numValues; ++i) {
     std::string col = extractColumn(data[i], colIndex);
     if (col.empty()) {
-      tsBatch->notNull[i] = 0;
+      batch->notNull[i] = 0;
       hasNull = true;
     } else {
+      batch->notNull[i] = 1;
       tsBatch->data[i] = atoll(col.c_str());
       tsBatch->nanoseconds[i] = 0;
     }
@@ -242,11 +252,13 @@ void fillTimestampValues(const std::vector<std::string>& data,
 
 void usage() {
   std::cout << "Usage: csv-import <input> <output> --schema=<file schema>"
-            << "Import CSV file into an Orc file using the specified schema.\n";
+            << " [--delimiter=<delimiter character>]\n"
+            << "Import CSV file into an Orc file using the specified schema.\n"
+            << "Compound types are not supported at the moment.\n";
 }
 
 int main(int argc, char* argv[]) {
-  if (argc != 4) {
+  if (argc < 4) {
     std::cout << "Invalid number of arguments." << std::endl;
     usage();
     return 1;
@@ -266,17 +278,29 @@ int main(int argc, char* argv[]) {
     fileType = orc::Type::buildTypeFromString(schema.substr(SCHEMA_PREFIX.size()));
   }
 
+  if (argc > 4) {
+    std::string delimiter = argv[4];
+    const std::string DELIMITER_PREFIX = "--delimiter=";
+    if (delimiter.find(DELIMITER_PREFIX) != 0) {
+      std::cout << "Cannot find " << DELIMITER_PREFIX << " argument." << std::endl;
+      usage();
+      return 1;
+    } else {
+      gDelimiter = delimiter.substr(DELIMITER_PREFIX.size())[0];
+    }
+  }
+
   std::cout << GetDate() << "Start importing Orc file..." << std::endl;
 
   double totalElapsedTime = 0.0;
-  double totalCPUTime = 0.0;
+  clock_t totalCPUTime = 0;
 
   orc::DataBuffer<char> buffer(*orc::getDefaultPool());
   buffer.resize(4 * 1024 * 1024);
 
   // set ORC writer options here
-  uint64_t stripeSize = (36 << 20); // 36M
-  uint64_t blockSize = 64 * 1024; // 64K
+  uint64_t stripeSize = (128 << 20); // 128M
+  uint64_t blockSize = 64 << 10;     // 64K
   uint64_t batchSize = 1024;
   orc::CompressionKind compression = orc::CompressionKind_ZLIB;
 
@@ -317,8 +341,8 @@ int main(int argc, char* argv[]) {
       structBatch->numElements = numValues;
 
       for (uint64_t i = 0; i < structBatch->fields.size(); ++i) {
-        orc::TypeKind subTypeKind = fileType->getSubtype(i)->getKind();
-        switch (subTypeKind) {
+        const orc::Type* subType = fileType->getSubtype(i);
+        switch (subType->getKind()) {
           case orc::BYTE:
           case orc::INT:
           case orc::SHORT:
@@ -351,8 +375,8 @@ int main(int argc, char* argv[]) {
                               structBatch->fields[i],
                               numValues,
                               i,
-                              fileType->getSubtype(i)->getScale(),
-                              fileType->getSubtype(i)->getPrecision());
+                              subType->getScale(),
+                              subType->getPrecision());
             break;
           case orc::BOOLEAN:
             fillBoolValues(data,
@@ -376,7 +400,7 @@ int main(int argc, char* argv[]) {
           case orc::LIST:
           case orc::MAP:
           case orc::UNION:
-            throw std::runtime_error("Type is not supported yet.");
+            throw std::runtime_error(subType->toString() + " is not supported yet.");
         }
       }
 
@@ -387,8 +411,8 @@ int main(int argc, char* argv[]) {
       totalCPUTime += (clock() - c_start);
       gettimeofday(&t_end, NULL);
       totalElapsedTime +=
-        (static_cast<double>((t_end.tv_sec - t_start.tv_sec) * 1000000.0 +
-                             t_end.tv_usec - t_start.tv_usec) / 1000000);
+        (static_cast<double>(t_end.tv_sec - t_start.tv_sec) * 1000000.0
+          + static_cast<double>(t_end.tv_usec - t_start.tv_usec)) / 1000000.0;
     }
   }
 
@@ -399,13 +423,14 @@ int main(int argc, char* argv[]) {
   totalCPUTime += (clock() - c_start);
   gettimeofday(&t_end, NULL);
   totalElapsedTime +=
-    (static_cast<double>((t_end.tv_sec - t_start.tv_sec) * 1000000.0 +
-                         t_end.tv_usec - t_start.tv_usec) / 1000000);
+    (static_cast<double>(t_end.tv_sec - t_start.tv_sec) * 1000000.0
+     + static_cast<double>(t_end.tv_usec - t_start.tv_usec)) / 1000000.0;
 
-  std::cout << GetDate() << "Finish importing Orc file." << std::endl;
-  std::cout << GetDate() << "Total writer elasped time: "
+  std::cout << GetDate() << " Finish importing Orc file." << std::endl;
+  std::cout << GetDate() << " Total writer elasped time: "
             << totalElapsedTime << "s." << std::endl;
-  std::cout << GetDate() << "Total writer CPU time: "
-            << totalCPUTime / CLOCKS_PER_SEC << "s." << std::endl;
+  std::cout << GetDate() << " Total writer CPU time: "
+            << static_cast<double>(totalCPUTime) / CLOCKS_PER_SEC
+            << "s." << std::endl;
   return 0;
 }
