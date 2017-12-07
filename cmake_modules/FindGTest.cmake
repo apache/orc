@@ -12,9 +12,10 @@
 
 # GTEST_HOME environmental variable is used to check for GTest headers and static library
 
+# GTEST_INCLUDE_DIR: directory containing headers
+# GTEST_LIBS: directory containing gtest libraries
+# GMOCK_STATIC_LIB: is set to gmock.a static library
 # GTEST_FOUND is set if GTEST is found
-# GTEST_INCLUDE_DIRS is set to the header directory
-# GTEST_LIBS is set to gmock.a static library
 
 if (NOT "${GTEST_HOME}" STREQUAL "")
   message (STATUS "GTEST_HOME set: ${GTEST_HOME}")
@@ -22,21 +23,20 @@ endif ()
 
 file (TO_CMAKE_PATH "${GTEST_HOME}" _gtest_path )
 
-find_path (GTEST_INCLUDE_DIRS gmock/gmock.h HINTS
+find_path (GTEST_INCLUDE_DIR gmock/gmock.h HINTS
   ${_gtest_path}
   NO_DEFAULT_PATH
   PATH_SUFFIXES "include")
 
 find_library (GTEST_LIBRARIES NAMES gmock PATHS
   ${_gtest_path}
-  NO_DEFAULT_PATH
   PATH_SUFFIXES "lib")
 
-if (GTEST_INCLUDE_DIRS AND GTEST_LIBRARIES)
+if (GTEST_INCLUDE_DIR AND GTEST_LIBRARIES)
   set (GTEST_FOUND TRUE)
   get_filename_component (GTEST_LIBS ${GTEST_LIBRARIES} PATH )
   set (GTEST_HEADER_NAME gmock/gmock.h)
-  set (GTEST_HEADER ${GTEST_INCLUDE_DIRS}/${GTEST_HEADER_NAME})
+  set (GTEST_HEADER ${GTEST_INCLUDE_DIR}/${GTEST_HEADER_NAME})
   set (GTEST_LIB_NAME gmock)
   set (GMOCK_STATIC_LIB ${GTEST_LIBS}/${CMAKE_STATIC_LIBRARY_PREFIX}${GTEST_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX})
 else ()
@@ -46,6 +46,23 @@ endif ()
 if (GTEST_FOUND)
   message (STATUS "Found the GTest header: ${GTEST_HEADER}")
   message (STATUS "Found the GTest library: ${GMOCK_STATIC_LIB}")
-elseif (NOT "${GTEST_HOME}" STREQUAL "")
-  message (STATUS "Could not find GTest headers and library")
+else ()
+  if (_gtest_path)
+    set (GTEST_ERR_MSG "Could not find GTest. Looked in ${_gtest_path}.")
+  else ()
+    set (GTEST_ERR_MSG "Could not find GTest in system search paths.")
+  endif()
+
+  if (GTest_FIND_REQUIRED)
+    message (FATAL_ERROR "${GTEST_ERR_MSG}")
+  else ()
+    message (STATUS "${GTEST_ERR_MSG}")
+  endif ()
 endif ()
+
+mark_as_advanced (
+  GTEST_INCLUDE_DIR
+  GMOCK_STATIC_LIB
+  GTEST_LIBS
+  GTEST_LIBRARIES
+)

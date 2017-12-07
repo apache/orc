@@ -119,11 +119,11 @@ configure_file (
 include_directories (
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_BINARY_DIR}
-  ${PROTOBUF_INCLUDE_DIRS}
-  ${ZLIB_INCLUDE_DIRS}
-  ${SNAPPY_INCLUDE_DIRS}
-  ${LZ4_INCLUDE_DIRS}
-  ${LIBHDFSPP_INCLUDE_DIRS}
+  ${PROTOBUF_INCLUDE_DIR}
+  ${ZLIB_INCLUDE_DIR}
+  ${SNAPPY_INCLUDE_DIR}
+  ${LZ4_INCLUDE_DIR}
+  ${LIBHDFSPP_INCLUDE_DIR}
   )
 
 add_custom_command(OUTPUT orc_proto.pb.h orc_proto.pb.cc
@@ -168,17 +168,15 @@ endif(ORC_CXX_HAS_THREAD_LOCAL AND BUILD_LIBHDFSPP)
 
 add_library (orc STATIC ${SOURCE_FILES})
 
-install(TARGETS orc DESTINATION lib)
-
 target_link_libraries (orc
-  ${PROTOBUF_LIBRARIES}
-  ${ZLIB_LIBRARIES}
-  ${SNAPPY_LIBRARIES}
-  ${LZ4_LIBRARIES}
+  protobuf
+  zlib
+  snappy
+  lz4
   ${LIBHDFSPP_LIBRARIES}
   )
 
-add_dependencies(orc protobuf)
+install(TARGETS orc DESTINATION lib)
 
 if(ORC_CXX_HAS_THREAD_LOCAL AND BUILD_LIBHDFSPP)
   add_definitions(-DBUILD_LIBHDFSPP)

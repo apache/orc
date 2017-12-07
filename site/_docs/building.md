@@ -70,3 +70,24 @@ To build:
 % mvn package
 ~~~
 
+## Building just C++
+
+~~~ shell
+% mkdir build
+% cd build
+% cmake .. -DBUILD_JAVA=OFF
+% make package test-out
+~~~
+
+## Specify third-party libraries for C++ build
+
+~~~ shell
+% mkdir build
+% cd build
+% cmake .. -DSNAPPY_HOME=<PATH> \
+           -DZLIB_HOME=<PATH> \
+           -DLZ4_HOME=<PATH> \
+           -DGTEST_HOME=<PATH> \
+           -DPROTOBUF_HOME=<PATH>
+% make package test-out
+~~~
