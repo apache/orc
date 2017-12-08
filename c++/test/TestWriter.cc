@@ -296,7 +296,7 @@ namespace orc {
     uint64_t compressionBlockSize = 1024;
     uint64_t rowCount = 655350;
 
-    std::vector<double> data(655350);
+    std::vector<double> data(rowCount);
     for (uint64_t i = 0; i < rowCount; ++i) {
       data[i] = 100000 * (std::rand() * 1.0 / RAND_MAX);
     }
