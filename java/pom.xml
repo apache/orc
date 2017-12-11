@@ -72,7 +72,7 @@
     <min.hadoop.version>2.2.0</min.hadoop.version>
     <hadoop.version>2.7.3</hadoop.version>
     <hive.version>2.1.1</hive.version>
-    <storage-api.version>2.2.1</storage-api.version>
+    <storage-api.version>3.0.0-SNAPSHOT</storage-api.version>
     <zookeeper.version>3.4.6</zookeeper.version>
   </properties>
 
