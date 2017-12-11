@@ -23,6 +23,7 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <getopt.h>
 #include <string>
 #include <sys/time.h>
 #include <time.h>
@@ -251,58 +252,92 @@ void fillTimestampValues(const std::vector<std::string>& data,
 }
 
 void usage() {
-  std::cout << "Usage: csv-import <input> <output> --schema=<file schema>"
-            << " [--delimiter=<delimiter character>]\n"
+  std::cout << "Usage: csv-import --input <input file> --output <output> "
+            << "--schema <file schema> [--delimiter <delimiter character>] "
+            << "[--stripe <size value>] [--block <size value>] [--batch <size value>]\n"
             << "Import CSV file into an Orc file using the specified schema.\n"
             << "Compound types are not supported at the moment.\n";
 }
 
 int main(int argc, char* argv[]) {
-  if (argc < 4) {
-    std::cout << "Invalid number of arguments." << std::endl;
-    usage();
-    return 1;
-  }
-
-  std::string input = argv[1];
-  std::string output = argv[2];
-  std::string schema = argv[3];
-
-  const std::string SCHEMA_PREFIX = "--schema=";
-  ORC_UNIQUE_PTR<orc::Type> fileType = ORC_NULLPTR;
-  if (schema.find(SCHEMA_PREFIX) != 0) {
-    std::cout << "Cannot find " << SCHEMA_PREFIX << " argument." << std::endl;
-    usage();
-    return 1;
-  } else {
-    fileType = orc::Type::buildTypeFromString(schema.substr(SCHEMA_PREFIX.size()));
-  }
-
-  if (argc > 4) {
-    std::string delimiter = argv[4];
-    const std::string DELIMITER_PREFIX = "--delimiter=";
-    if (delimiter.find(DELIMITER_PREFIX) != 0) {
-      std::cout << "Cannot find " << DELIMITER_PREFIX << " argument." << std::endl;
-      usage();
-      return 1;
-    } else {
-      gDelimiter = delimiter.substr(DELIMITER_PREFIX.size())[0];
-    }
-  }
-
-  std::cout << GetDate() << "Start importing Orc file..." << std::endl;
-
-  double totalElapsedTime = 0.0;
-  clock_t totalCPUTime = 0;
-
-  orc::DataBuffer<char> buffer(*orc::getDefaultPool());
-  buffer.resize(4 * 1024 * 1024);
-
-  // set ORC writer options here
+  std::string input;
+  std::string output;
+  std::string schema;
   uint64_t stripeSize = (128 << 20); // 128M
   uint64_t blockSize = 64 << 10;     // 64K
   uint64_t batchSize = 1024;
   orc::CompressionKind compression = orc::CompressionKind_ZLIB;
+
+  static struct option longOptions[] = {
+    {"help", no_argument, ORC_NULLPTR, 'h'},
+    {"input", required_argument, ORC_NULLPTR, 'i'},
+    {"output", required_argument, ORC_NULLPTR, 'o'},
+    {"schema", required_argument, ORC_NULLPTR, 's'},
+    {"delimiter", required_argument, ORC_NULLPTR, 'd'},
+    {"stripe", required_argument, ORC_NULLPTR, 'p'},
+    {"block", required_argument, ORC_NULLPTR, 'c'},
+    {"batch", required_argument, ORC_NULLPTR, 'b'},
+    {ORC_NULLPTR, 0, ORC_NULLPTR, 0}
+  };
+  bool helpFlag = false;
+  int opt;
+  char *tail;
+  do {
+    opt = getopt_long(argc, argv, "i:o:s:b:c:p:h", longOptions, ORC_NULLPTR);
+    switch (opt) {
+      case '?':
+      case 'h':
+        helpFlag = true;
+        opt = -1;
+        break;
+      case 'i':
+        input = optarg;
+        break;
+      case 'o':
+        output = optarg;
+        break;
+      case 's':
+        schema = optarg;
+        break;
+      case 'd':
+        gDelimiter = optarg[0];
+        break;
+      case 'p':
+        stripeSize = strtoul(optarg, &tail, 10);
+        if (*tail != '\0') {
+          fprintf(stderr, "The --stripe parameter requires an integer option.\n");
+          return 1;
+        }
+        break;
+      case 'c':
+        blockSize = strtoul(optarg, &tail, 10);
+        if (*tail != '\0') {
+          fprintf(stderr, "The --block parameter requires an integer option.\n");
+          return 1;
+        }
+        break;
+      case 'b':
+        batchSize = strtoul(optarg, &tail, 10);
+        if (*tail != '\0') {
+          fprintf(stderr, "The --batch parameter requires an integer option.\n");
+          return 1;
+        }
+        break;
+    }
+  } while (opt != -1);
+
+  if (helpFlag || optind != argc) {
+    usage();
+    return 1;
+  }
+
+  std::cout << GetDate() << "Start importing Orc file..." << std::endl;
+  ORC_UNIQUE_PTR<orc::Type> fileType = orc::Type::buildTypeFromString(schema);
+
+  double totalElapsedTime = 0.0;
+  clock_t totalCPUTime = 0;
+
+  orc::DataBuffer<char> buffer(*orc::getDefaultPool(), 4 * 1024 * 1024);
 
   orc::WriterOptions options;
   options.setStripeSize(stripeSize);
