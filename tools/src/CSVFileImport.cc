@@ -30,6 +30,7 @@
 
 static char gDelimiter = ',';
 
+// extract one column raw text from one line
 std::string extractColumn(std::string s, uint64_t colIndex) {
   uint64_t col = 0;
   size_t start = 0;
@@ -42,8 +43,7 @@ std::string extractColumn(std::string s, uint64_t colIndex) {
   return col == colIndex ? s.substr(start, end - start) : "";
 }
 
-static const char* GetDate(void)
-{
+static const char* GetDate(void) {
   static char buf[200];
   time_t t = time(NULL);
   struct tm* p = localtime(&t);
@@ -199,7 +199,7 @@ void fillBoolValues(const std::vector<std::string>& data,
   boolBatch->numElements = numValues;
 }
 
-// parse date string from format YYYY-MM-dd
+// parse date string from format YYYY-mm-dd
 void fillDateValues(const std::vector<std::string>& data,
                     orc::ColumnVectorBatch* batch,
                     uint64_t numValues,
@@ -352,15 +352,16 @@ int main(int argc, char* argv[]) {
 
   bool eof = false;
   std::string line;
-  std::vector<std::string> data;
+  std::vector<std::string> data; // buffer that holds a batch of rows in raw text
   std::ifstream finput(input.c_str());
   while (!eof) {
-    uint64_t numValues = 0;
-    uint64_t bufferOffset = 0;
+    uint64_t numValues = 0;      // num of lines read in a batch
+    uint64_t bufferOffset = 0;   // current offset in the string buffer
 
     data.clear();
     memset(rowBatch->notNull.data(), 1, batchSize);
 
+    // read a batch of lines from the input file
     for (uint64_t i = 0; i < batchSize; ++i) {
       if (!std::getline(finput, line)) {
         eof = true;
@@ -442,7 +443,9 @@ int main(int argc, char* argv[]) {
       struct timeval t_start, t_end;
       gettimeofday(&t_start, NULL);
       clock_t c_start = clock();
+
       writer->add(*rowBatch);
+
       totalCPUTime += (clock() - c_start);
       gettimeofday(&t_end, NULL);
       totalElapsedTime +=
@@ -454,7 +457,9 @@ int main(int argc, char* argv[]) {
   struct timeval t_start, t_end;
   gettimeofday(&t_start, NULL);
   clock_t c_start = clock();
+
   writer->close();
+
   totalCPUTime += (clock() - c_start);
   gettimeofday(&t_end, NULL);
   totalElapsedTime +=
