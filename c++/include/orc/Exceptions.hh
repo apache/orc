@@ -19,6 +19,8 @@
 #ifndef ORC_EXCEPTIONS_HH
 #define ORC_EXCEPTIONS_HH
 
+#include "Adaptor.hh"
+
 #include <stdexcept>
 #include <string>
 
