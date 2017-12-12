@@ -283,7 +283,7 @@ namespace orc {
       EXPECT_EQ(i, static_cast<uint64_t>(atoi(bin.c_str())));
     }
 
-    EXPECT_EQ(false, rowReader->next(*batch));
+    EXPECT_FALSE(rowReader->next(*batch));
   }
 
   TEST(Writer, writeFloatAndDoubleColumn) {
@@ -345,7 +345,7 @@ namespace orc {
       EXPECT_TRUE(std::abs(static_cast<float>(data[i]) -
                            static_cast<float>(floatBatch->data[i])) < 0.000001f);
     }
-    EXPECT_EQ(false, rowReader->next(*batch));
+    EXPECT_FALSE(rowReader->next(*batch));
   }
 
   TEST(Writer, writeShortIntLong) {
@@ -685,7 +685,7 @@ namespace orc {
       EXPECT_EQ(varcharRead, varcharExpected);
     }
 
-    EXPECT_EQ(false, rowReader->next(*batch));
+    EXPECT_FALSE(rowReader->next(*batch));
   }
 
   TEST(Writer, writeDecimal64Column) {
