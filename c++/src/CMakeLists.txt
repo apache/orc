@@ -111,6 +111,18 @@ CHECK_CXX_SOURCE_RUNS("
   HAS_POST_2038
 )
 
+set(CMAKE_REQUIRED_INCLUDES ${ZLIB_INCLUDE_DIR})
+set(CMAKE_REQUIRED_LIBRARIES zlib)
+CHECK_CXX_SOURCE_COMPILES("
+    #define Z_PREFIX
+    #include<zlib.h>
+    z_stream strm;
+    int main(int, char *[]) {
+        deflateReset(&strm);
+    }"
+  NEEDS_Z_PREFIX
+)
+
 configure_file (
   "Adaptor.hh.in"
   "${CMAKE_CURRENT_BINARY_DIR}/Adaptor.hh"

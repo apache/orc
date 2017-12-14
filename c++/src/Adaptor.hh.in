@@ -28,6 +28,7 @@
 #cmakedefine HAS_STD_ISNAN
 #cmakedefine HAS_STD_MUTEX
 #cmakedefine NEEDS_REDUNDANT_MOVE
+#cmakedefine NEEDS_Z_PREFIX
 
 #include "orc/orc-config.hh"
 #include <string>
@@ -140,6 +141,10 @@
   #define std::lock_guard<std::mutex> LockORC
 #else
   #include <mutex>
+#endif
+
+#ifdef NEEDS_Z_PREFIX
+#define Z_PREFIX 1
 #endif
 
 #endif /* ADAPTER_HH */
