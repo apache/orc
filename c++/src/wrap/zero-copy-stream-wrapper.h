@@ -25,6 +25,8 @@ DIAGNOSTIC_IGNORE("-Wunused-parameter")
 
 #ifdef __clang__
   DIAGNOSTIC_IGNORE("-Wreserved-id-macro")
+  DIAGNOSTIC_IGNORE("-Wunknown-warning-option")
+  DIAGNOSTIC_IGNORE("-Wzero-as-null-pointer-constant")
 #endif
 
 #include <google/protobuf/io/zero_copy_stream.h>

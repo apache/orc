@@ -140,7 +140,7 @@ void RleDecoderV2::seek(PositionProvider& location) {
   // move the input stream
   inputStream->seek(location);
   // clear state
-  bufferEnd = bufferStart = 0;
+  bufferEnd = bufferStart = nullptr;
   runRead = runLength = 0;
   // skip ahead the given number of records
   skip(location.next());

@@ -58,7 +58,7 @@ namespace orc {
     TypeImpl(TypeKind kind, uint64_t precision,
              uint64_t scale);
 
-    virtual ~TypeImpl();
+    virtual ~TypeImpl() override;
 
     uint64_t getColumnId() const override;
 

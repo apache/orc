@@ -36,22 +36,22 @@ namespace orc {
   public:
     ByteRleDecoderImpl(std::unique_ptr<SeekableInputStream> input);
 
-    virtual ~ByteRleDecoderImpl();
+    virtual ~ByteRleDecoderImpl() override;
 
     /**
      * Seek to a particular spot.
      */
-    virtual void seek(PositionProvider&);
+    virtual void seek(PositionProvider&) override;
 
     /**
      * Seek over a given number of values.
      */
-    virtual void skip(uint64_t numValues);
+    virtual void skip(uint64_t numValues) override;
 
     /**
      * Read a number of values into the batch.
      */
-    virtual void next(char* data, uint64_t numValues, char* notNull);
+    virtual void next(char* data, uint64_t numValues, char* notNull) override;
 
   protected:
     inline void nextBuffer();
@@ -102,8 +102,8 @@ namespace orc {
     repeating = false;
     remainingValues = 0;
     value = 0;
-    bufferStart = 0;
-    bufferEnd = 0;
+    bufferStart = nullptr;
+    bufferEnd = nullptr;
   }
 
   ByteRleDecoderImpl::~ByteRleDecoderImpl() {
@@ -218,22 +218,22 @@ namespace orc {
   public:
     BooleanRleDecoderImpl(std::unique_ptr<SeekableInputStream> input);
 
-    virtual ~BooleanRleDecoderImpl();
+    virtual ~BooleanRleDecoderImpl() override;
 
     /**
      * Seek to a particular spot.
      */
-    virtual void seek(PositionProvider&);
+    virtual void seek(PositionProvider&) override;
 
     /**
      * Seek over a given number of values.
      */
-    virtual void skip(uint64_t numValues);
+    virtual void skip(uint64_t numValues) override;
 
     /**
      * Read a number of values into the batch.
      */
-    virtual void next(char* data, uint64_t numValues, char* notNull);
+    virtual void next(char* data, uint64_t numValues, char* notNull) override;
 
   protected:
     size_t remainingBits;
@@ -259,7 +259,7 @@ namespace orc {
     }
     if (consumed != 0) {
       remainingBits = 8 - consumed;
-      ByteRleDecoderImpl::next(&lastByte, 1, 0);
+      ByteRleDecoderImpl::next(&lastByte, 1, nullptr);
     }
   }
 
@@ -270,7 +270,7 @@ namespace orc {
       numValues -= remainingBits;
       uint64_t bytesSkipped = numValues / 8;
       ByteRleDecoderImpl::skip(bytesSkipped);
-      ByteRleDecoderImpl::next(&lastByte, 1, 0);
+      ByteRleDecoderImpl::next(&lastByte, 1, nullptr);
       remainingBits = 8 - (numValues % 8);
     }
   }
@@ -318,7 +318,7 @@ namespace orc {
     } else if (position < numValues) {
       // read the new bytes into the array
       uint64_t bytesRead = (nonNulls + 7) / 8;
-      ByteRleDecoderImpl::next(data + position, bytesRead, 0);
+      ByteRleDecoderImpl::next(data + position, bytesRead, nullptr);
       lastByte = data[position + bytesRead - 1];
       remainingBits = bytesRead * 8 - nonNulls;
       // expand the array backwards so that we don't clobber the data

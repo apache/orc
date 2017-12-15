@@ -290,8 +290,8 @@ namespace orc {
       upperBound = 0;
     }else{
       const proto::TimestampStatistics& stats = pb.timestampstatistics();
-      _hasMinimum = stats.has_minimumutc() || (stats.has_minimum() && (statContext.writerTimezone != NULL));
-      _hasMaximum = stats.has_maximumutc() || (stats.has_maximum() && (statContext.writerTimezone != NULL));
+      _hasMinimum = stats.has_minimumutc() || (stats.has_minimum() && (statContext.writerTimezone != nullptr));
+      _hasMaximum = stats.has_maximumutc() || (stats.has_maximum() && (statContext.writerTimezone != nullptr));
       _hasLowerBound = stats.has_minimumutc() || stats.has_minimum();
       _hasUpperBound = stats.has_maximumutc() || stats.has_maximum();
 

@@ -238,7 +238,7 @@ namespace orc {
     }
 
   public:
-    virtual ~FutureRuleImpl();
+    virtual ~FutureRuleImpl() override;
     bool isDefined() const override;
     const TimezoneVariant& getVariant(int64_t clk) const override;
     void print(std::ostream& out) const override;
@@ -518,7 +518,7 @@ namespace orc {
 
   class Version1Parser: public VersionParser {
   public:
-    virtual ~Version1Parser();
+    virtual ~Version1Parser() override;
 
     virtual uint64_t getVersion() const override {
       return 1;
@@ -552,7 +552,7 @@ namespace orc {
 
   class Version2Parser: public VersionParser {
   public:
-    virtual ~Version2Parser();
+    virtual ~Version2Parser() override;
 
     virtual uint64_t getVersion() const override {
       return 2;
@@ -588,7 +588,7 @@ namespace orc {
   public:
     TimezoneImpl(const std::string& name,
                  const std::vector<unsigned char> bytes);
-    virtual ~TimezoneImpl();
+    virtual ~TimezoneImpl() override;
 
     /**
      * Get the variant for the given time (time_t).

@@ -36,7 +36,7 @@ namespace orc {
   class VoidColumnPrinter: public ColumnPrinter {
   public:
     VoidColumnPrinter(std::string&);
-    ~VoidColumnPrinter() {}
+    ~VoidColumnPrinter() override {}
     void printRow(uint64_t rowId) override;
     void reset(const ColumnVectorBatch& batch) override;
   };
@@ -46,7 +46,7 @@ namespace orc {
     const int64_t* data;
   public:
     BooleanColumnPrinter(std::string&);
-    ~BooleanColumnPrinter() {}
+    ~BooleanColumnPrinter() override {}
     void printRow(uint64_t rowId) override;
     void reset(const ColumnVectorBatch& batch) override;
   };
@@ -56,7 +56,7 @@ namespace orc {
     const int64_t* data;
   public:
     LongColumnPrinter(std::string&);
-    ~LongColumnPrinter() {}
+    ~LongColumnPrinter() override {}
     void printRow(uint64_t rowId) override;
     void reset(const ColumnVectorBatch& batch) override;
   };
@@ -68,7 +68,7 @@ namespace orc {
 
   public:
     DoubleColumnPrinter(std::string&, const Type& type);
-    virtual ~DoubleColumnPrinter() {}
+    virtual ~DoubleColumnPrinter() override {}
     void printRow(uint64_t rowId) override;
     void reset(const ColumnVectorBatch& batch) override;
   };
@@ -80,7 +80,7 @@ namespace orc {
 
   public:
     TimestampColumnPrinter(std::string&);
-    ~TimestampColumnPrinter() {}
+    ~TimestampColumnPrinter() override {}
     void printRow(uint64_t rowId) override;
     void reset(const ColumnVectorBatch& batch) override;
   };
@@ -91,7 +91,7 @@ namespace orc {
 
   public:
     DateColumnPrinter(std::string&);
-    ~DateColumnPrinter() {}
+    ~DateColumnPrinter() override {}
     void printRow(uint64_t rowId) override;
     void reset(const ColumnVectorBatch& batch) override;
   };
@@ -102,7 +102,7 @@ namespace orc {
     int32_t scale;
   public:
     Decimal64ColumnPrinter(std::string&);
-    ~Decimal64ColumnPrinter() {}
+    ~Decimal64ColumnPrinter() override {}
     void printRow(uint64_t rowId) override;
     void reset(const ColumnVectorBatch& batch) override;
   };
@@ -113,7 +113,7 @@ namespace orc {
     int32_t scale;
   public:
     Decimal128ColumnPrinter(std::string&);
-    ~Decimal128ColumnPrinter() {}
+    ~Decimal128ColumnPrinter() override {}
     void printRow(uint64_t rowId) override;
     void reset(const ColumnVectorBatch& batch) override;
   };
@@ -124,7 +124,7 @@ namespace orc {
     const int64_t* length;
   public:
     StringColumnPrinter(std::string&);
-    virtual ~StringColumnPrinter() {}
+    virtual ~StringColumnPrinter() override {}
     void printRow(uint64_t rowId) override;
     void reset(const ColumnVectorBatch& batch) override;
   };
@@ -135,7 +135,7 @@ namespace orc {
     const int64_t* length;
   public:
     BinaryColumnPrinter(std::string&);
-    virtual ~BinaryColumnPrinter() {}
+    virtual ~BinaryColumnPrinter() override {}
     void printRow(uint64_t rowId) override;
     void reset(const ColumnVectorBatch& batch) override;
   };
@@ -147,7 +147,7 @@ namespace orc {
 
   public:
     ListColumnPrinter(std::string&, const Type& type);
-    virtual ~ListColumnPrinter() {}
+    virtual ~ListColumnPrinter() override {}
     void printRow(uint64_t rowId) override;
     void reset(const ColumnVectorBatch& batch) override;
   };
@@ -160,7 +160,7 @@ namespace orc {
 
   public:
     MapColumnPrinter(std::string&, const Type& type);
-    virtual ~MapColumnPrinter() {}
+    virtual ~MapColumnPrinter() override {}
     void printRow(uint64_t rowId) override;
     void reset(const ColumnVectorBatch& batch) override;
   };
@@ -173,7 +173,7 @@ namespace orc {
 
   public:
     UnionColumnPrinter(std::string&, const Type& type);
-    virtual ~UnionColumnPrinter();
+    virtual ~UnionColumnPrinter() override;
     void printRow(uint64_t rowId) override;
     void reset(const ColumnVectorBatch& batch) override;
   };
@@ -184,7 +184,7 @@ namespace orc {
     std::vector<std::string> fieldNames;
   public:
     StructColumnPrinter(std::string&, const Type& type);
-    virtual ~StructColumnPrinter();
+    virtual ~StructColumnPrinter() override;
     void printRow(uint64_t rowId) override;
     void reset(const ColumnVectorBatch& batch) override;
   };

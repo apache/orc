@@ -804,7 +804,7 @@ namespace orc {
       std::min(static_cast<uint64_t>(data.capacity),
                rowsInCurrentStripe - currentRowInStripe);
     data.numElements = rowsToRead;
-    reader->next(data, rowsToRead, 0);
+    reader->next(data, rowsToRead, nullptr);
     // update row number
     previousRow = firstRowOfStripe[currentStripe] + currentRowInStripe;
     currentRowInStripe += rowsToRead;

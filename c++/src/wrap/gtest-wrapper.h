@@ -26,7 +26,9 @@ DIAGNOSTIC_IGNORE("-Wsign-compare")
   DIAGNOSTIC_IGNORE("-Wconversion-null")
   DIAGNOSTIC_IGNORE("-Wexit-time-destructors")
   DIAGNOSTIC_IGNORE("-Wglobal-constructors")
+  DIAGNOSTIC_IGNORE("-Wunknown-warning-option")
   DIAGNOSTIC_IGNORE("-Wused-but-marked-unused")
+  DIAGNOSTIC_IGNORE("-Wzero-as-null-pointer-constant")
 #endif
 
 DIAGNOSTIC_PUSH

@@ -239,7 +239,7 @@ namespace orc {
     ZlibDecompressionStream(std::unique_ptr<SeekableInputStream> inStream,
                             size_t blockSize,
                             MemoryPool& pool);
-    virtual ~ZlibDecompressionStream();
+    virtual ~ZlibDecompressionStream() override;
     virtual bool Next(const void** data, int*size) override;
     virtual void BackUp(int count) override;
     virtual bool Skip(int count) override;
@@ -327,11 +327,11 @@ DIAGNOSTIC_IGNORE("-Wold-style-cast")
                        blockSize(_blockSize),
                        buffer(pool, _blockSize) {
     input.reset(inStream.release());
-    zstream.next_in = Z_NULL;
+    zstream.next_in = nullptr;
     zstream.avail_in = 0;
-    zstream.zalloc = Z_NULL;
-    zstream.zfree = Z_NULL;
-    zstream.opaque = Z_NULL;
+    zstream.zalloc = nullptr;
+    zstream.zfree = nullptr;
+    zstream.opaque = nullptr;
     zstream.next_out = reinterpret_cast<Bytef*>(buffer.data());
     zstream.avail_out = static_cast<uInt>(blockSize);
     int64_t result = inflateInit2(&zstream, -15);
@@ -504,7 +504,7 @@ DIAGNOSTIC_POP
                              size_t blockSize,
                              MemoryPool& pool);
 
-    virtual ~BlockDecompressionStream() {}
+    virtual ~BlockDecompressionStream() override {}
     virtual bool Next(const void** data, int*size) override;
     virtual void BackUp(int count) override;
     virtual bool Skip(int count) override;
@@ -599,11 +599,11 @@ DIAGNOSTIC_POP
                         inputBuffer(pool, bufferSize),
                         outputBuffer(pool, bufferSize),
                         state(DECOMPRESS_HEADER),
-                        outputBufferPtr(0),
+                        outputBufferPtr(nullptr),
                         outputBufferLength(0),
                         remainingLength(0),
-                        inputBufferPtr(0),
-                        inputBufferPtrEnd(0),
+                        inputBufferPtr(nullptr),
+                        inputBufferPtrEnd(nullptr),
                         bytesReturned(0) {
     input.reset(inStream.release());
   }
