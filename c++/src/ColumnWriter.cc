@@ -197,7 +197,7 @@ namespace orc {
                        const Type& type,
                        const StreamsFactory& factory,
                        const WriterOptions& options);
-    ~StructColumnWriter();
+    ~StructColumnWriter() override;
 
     virtual void add(ColumnVectorBatch& rowBatch,
                      uint64_t offset,
@@ -1532,7 +1532,7 @@ namespace orc {
     ListColumnWriter(const Type& type,
                      const StreamsFactory& factory,
                      const WriterOptions& options);
-    ~ListColumnWriter();
+    ~ListColumnWriter() override;
 
     virtual void add(ColumnVectorBatch& rowBatch,
                      uint64_t offset,
@@ -1727,7 +1727,7 @@ namespace orc {
     MapColumnWriter(const Type& type,
                     const StreamsFactory& factory,
                     const WriterOptions& options);
-    ~MapColumnWriter();
+    ~MapColumnWriter() override;
 
     virtual void add(ColumnVectorBatch& rowBatch,
                      uint64_t offset,
@@ -1958,7 +1958,7 @@ namespace orc {
     UnionColumnWriter(const Type& type,
                       const StreamsFactory& factory,
                       const WriterOptions& options);
-    ~UnionColumnWriter();
+    ~UnionColumnWriter() override;
 
     virtual void add(ColumnVectorBatch& rowBatch,
                      uint64_t offset,

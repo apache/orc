@@ -37,7 +37,7 @@ namespace orc {
 
 class MockStripeStreams: public StripeStreams {
 public:
-  ~MockStripeStreams();
+  ~MockStripeStreams() override;
   std::unique_ptr<SeekableInputStream> getStream(uint64_t columnId,
                                                  proto::Stream_Kind kind,
                                                  bool stream) const override;

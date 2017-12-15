@@ -27,7 +27,9 @@ DIAGNOSTIC_IGNORE("-Wunused-parameter")
   DIAGNOSTIC_IGNORE("-Wnested-anon-types")
   DIAGNOSTIC_IGNORE("-Wreserved-id-macro")
   DIAGNOSTIC_IGNORE("-Wshorten-64-to-32")
+  DIAGNOSTIC_IGNORE("-Wunknown-warning-option")
   DIAGNOSTIC_IGNORE("-Wweak-vtables")
+  DIAGNOSTIC_IGNORE("-Wzero-as-null-pointer-constant")
 #endif
 
 #include "orc_proto.pb.h"

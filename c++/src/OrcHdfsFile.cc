@@ -161,7 +161,7 @@ namespace orc {
       return filename;
     }
 
-    ~HdfsFileInputStream();
+    ~HdfsFileInputStream() override;
   };
 
   HdfsFileInputStream::~HdfsFileInputStream() {

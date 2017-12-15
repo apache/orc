@@ -34,7 +34,7 @@ namespace orc {
                                         name("MemoryInputStream") {
     }
 
-    ~MemoryInputStream();
+    ~MemoryInputStream() override;
 
     virtual uint64_t getLength() const override {
       return size;

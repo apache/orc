@@ -52,7 +52,7 @@ namespace orc {
    */
   class RowIndexPositionRecorder : public PositionRecorder {
   public:
-    virtual ~RowIndexPositionRecorder();
+    virtual ~RowIndexPositionRecorder() override;
 
     RowIndexPositionRecorder(proto::RowIndexEntry& entry):
       rowIndexEntry(entry) {}

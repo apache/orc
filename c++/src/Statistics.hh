@@ -36,8 +36,8 @@ namespace orc {
   struct StatContext {
     const bool correctStats;
     const Timezone* const writerTimezone;
-    StatContext() : correctStats(false), writerTimezone(NULL) {}
-    StatContext(bool cStat, const Timezone* const timezone = NULL) :
+    StatContext() : correctStats(false), writerTimezone(nullptr) {}
+    StatContext(bool cStat, const Timezone* const timezone = nullptr) :
         correctStats(cStat), writerTimezone(timezone) {}
   };
 
@@ -205,7 +205,7 @@ namespace orc {
   public:
     ColumnStatisticsImpl() { reset(); }
     ColumnStatisticsImpl(const proto::ColumnStatistics& stats);
-    virtual ~ColumnStatisticsImpl();
+    virtual ~ColumnStatisticsImpl() override;
 
     uint64_t getNumberOfValues() const override {
       return _stats.getNumberOfValues();
@@ -257,7 +257,7 @@ namespace orc {
     BinaryColumnStatisticsImpl() { reset(); }
     BinaryColumnStatisticsImpl(const proto::ColumnStatistics& stats,
                                const StatContext& statContext);
-    virtual ~BinaryColumnStatisticsImpl();
+    virtual ~BinaryColumnStatisticsImpl() override;
 
     uint64_t getNumberOfValues() const override {
       return _stats.getNumberOfValues();
@@ -344,7 +344,7 @@ namespace orc {
     BooleanColumnStatisticsImpl() { reset(); }
     BooleanColumnStatisticsImpl(const proto::ColumnStatistics& stats,
                                 const StatContext& statContext);
-    virtual ~BooleanColumnStatisticsImpl();
+    virtual ~BooleanColumnStatisticsImpl() override;
 
     bool hasCount() const override {
       return _hasCount;
@@ -445,7 +445,7 @@ namespace orc {
     DateColumnStatisticsImpl() { reset(); }
     DateColumnStatisticsImpl(const proto::ColumnStatistics& stats,
                              const StatContext& statContext);
-    virtual ~DateColumnStatisticsImpl();
+    virtual ~DateColumnStatisticsImpl() override;
 
     bool hasMinimum() const override {
       return _stats.hasMinimum();
@@ -556,7 +556,7 @@ namespace orc {
     DecimalColumnStatisticsImpl() { reset(); }
     DecimalColumnStatisticsImpl(const proto::ColumnStatistics& stats,
                                 const StatContext& statContext);
-    virtual ~DecimalColumnStatisticsImpl();
+    virtual ~DecimalColumnStatisticsImpl() override;
 
     bool hasMinimum() const override {
       return _stats.hasMinimum();
@@ -734,7 +734,7 @@ namespace orc {
   public:
     DoubleColumnStatisticsImpl() { reset(); }
     DoubleColumnStatisticsImpl(const proto::ColumnStatistics& stats);
-    virtual ~DoubleColumnStatisticsImpl();
+    virtual ~DoubleColumnStatisticsImpl() override;
 
     bool hasMinimum() const override {
       return _stats.hasMinimum();
@@ -875,7 +875,7 @@ namespace orc {
   public:
     IntegerColumnStatisticsImpl() { reset(); }
     IntegerColumnStatisticsImpl(const proto::ColumnStatistics& stats);
-    virtual ~IntegerColumnStatisticsImpl();
+    virtual ~IntegerColumnStatisticsImpl() override;
 
     bool hasMinimum() const override {
       return _stats.hasMinimum();
@@ -1033,7 +1033,7 @@ namespace orc {
     }
     StringColumnStatisticsImpl(const proto::ColumnStatistics& stats,
                                const StatContext& statContext);
-    virtual ~StringColumnStatisticsImpl();
+    virtual ~StringColumnStatisticsImpl() override;
 
     bool hasMinimum() const override {
       return _stats.hasMinimum();
@@ -1203,7 +1203,7 @@ namespace orc {
     TimestampColumnStatisticsImpl() { reset(); }
     TimestampColumnStatisticsImpl(const proto::ColumnStatistics& stats,
                                   const StatContext& statContext);
-    virtual ~TimestampColumnStatisticsImpl();
+    virtual ~TimestampColumnStatisticsImpl() override;
 
     bool hasMinimum() const override {
       return _stats.hasMinimum();
@@ -1386,7 +1386,7 @@ namespace orc {
       return *it;
     }
 
-    virtual ~StatisticsImpl();
+    virtual ~StatisticsImpl() override;
 
     uint32_t getNumberOfColumns() const override {
       return static_cast<uint32_t>(colStats.size());
@@ -1425,7 +1425,7 @@ namespace orc {
       return rowIndexStats[columnId][rowIndex].get();
     }
 
-    virtual ~StripeStatisticsImpl();
+    virtual ~StripeStatisticsImpl() override;
 
     uint32_t getNumberOfRowIndexStats(uint32_t columnId) const override {
       return static_cast<uint32_t>(rowIndexStats[columnId].size());

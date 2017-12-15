@@ -49,7 +49,7 @@ namespace orc {
                       InputStream& input,
                       const Timezone& writerTimezone);
 
-    virtual ~StripeStreamsImpl();
+    virtual ~StripeStreamsImpl() override;
 
     virtual const std::vector<bool> getSelectedColumns() const override;
 
@@ -92,7 +92,7 @@ namespace orc {
       // PASS
     }
 
-    ~StreamInformationImpl();
+    ~StreamInformationImpl() override;
 
     StreamKind getKind() const override {
       return kind;
@@ -150,7 +150,7 @@ namespace orc {
       // PASS
     }
 
-    virtual ~StripeInformationImpl() {
+    virtual ~StripeInformationImpl() override {
       // PASS
     }
 

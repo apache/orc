@@ -72,7 +72,7 @@ namespace orc {
     SeekableArrayInputStream(const char* list,
                              uint64_t length,
                              uint64_t block_size = 0);
-    virtual ~SeekableArrayInputStream();
+    virtual ~SeekableArrayInputStream() override;
     virtual bool Next(const void** data, int*size) override;
     virtual void BackUp(int count) override;
     virtual bool Skip(int count) override;
@@ -101,7 +101,7 @@ namespace orc {
                             uint64_t byteCount,
                             MemoryPool& pool,
                             uint64_t blockSize = 0);
-    virtual ~SeekableFileInputStream();
+    virtual ~SeekableFileInputStream() override;
 
     virtual bool Next(const void** data, int*size) override;
     virtual void BackUp(int count) override;

@@ -33,7 +33,7 @@ namespace orc {
       length = 0;
     }
 
-    virtual ~MemoryOutputStream();
+    virtual ~MemoryOutputStream() override;
 
     virtual uint64_t getLength() const override {
       return length;

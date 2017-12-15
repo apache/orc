@@ -30,7 +30,7 @@ class RleEncoderV1 : public RleEncoder {
 public:
     RleEncoderV1(std::unique_ptr<BufferedOutputStream> outStream,
                  bool hasSigned);
-    ~RleEncoderV1();
+    ~RleEncoderV1() override;
 
     /**
      * Encode the next batch of values.

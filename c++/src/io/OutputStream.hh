@@ -51,7 +51,7 @@ namespace orc {
                       OutputStream * outStream,
                       uint64_t capacity,
                       uint64_t block_size);
-    virtual ~BufferedOutputStream();
+    virtual ~BufferedOutputStream() override;
 
     virtual bool Next(void** data, int*size) override;
     virtual void BackUp(int count) override;

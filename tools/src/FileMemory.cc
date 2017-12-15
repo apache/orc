@@ -54,7 +54,7 @@ public:
   }
 
   TestMemoryPool(): totalMemory(0), maxMemory(0) {}
-  ~TestMemoryPool();
+  ~TestMemoryPool() override;
 };
 
 TestMemoryPool::~TestMemoryPool() {}

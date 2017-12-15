@@ -52,7 +52,7 @@ namespace orc {
       totalLength = static_cast<uint64_t>(fileStat.st_size);
     }
 
-    ~FileInputStream();
+    ~FileInputStream() override;
 
     uint64_t getLength() const override {
       return totalLength;
@@ -128,7 +128,7 @@ namespace orc {
       }
     }
 
-    ~FileOutputStream();
+    ~FileOutputStream() override;
 
     uint64_t getLength() const override {
       return bytesWritten;

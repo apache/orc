@@ -34,12 +34,12 @@ namespace orc {
     if (file == nullptr) {
       throw std::runtime_error("can't open " + filename);
     }
-    stream.zalloc = Z_NULL;
-    stream.zfree = Z_NULL;
-    stream.opaque = Z_NULL;
+    stream.zalloc = nullptr;
+    stream.zfree = nullptr;
+    stream.opaque = nullptr;
     stream.avail_in = 0;
     stream.avail_out = 1;
-    stream.next_in = Z_NULL;
+    stream.next_in = nullptr;
     int ret = inflateInit2(&stream, 16+MAX_WBITS);
     if (ret != Z_OK) {
       throw std::runtime_error("zlib failed initialization for " + filename);
