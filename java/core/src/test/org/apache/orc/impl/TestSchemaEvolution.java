@@ -46,6 +46,7 @@ import org.apache.orc.RecordReader;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -727,7 +728,7 @@ public class TestSchemaEvolution {
     boolean[] included = includeAll(readerType);
     options.tolerateMissingSchema(false);
     SchemaEvolution transition =
-            new SchemaEvolution(fileType, readerType, options.include(included));
+            new SchemaEvolution(fileType, readerType, options.include(included).isSchemaEvolutionCaseAware(false));
 
     // a -> A
     TypeDescription reader = readerType.getChildren().get(0);

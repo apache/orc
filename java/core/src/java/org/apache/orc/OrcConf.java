@@ -150,7 +150,9 @@ public enum OrcConf {
       "added to all of the writers.  Valid range is [1,10000] and is primarily meant for" +
       "n\testing.  Setting this too low may negatively affect performance."),
   OVERWRITE_OUTPUT_FILE("orc.overwrite.output.file", "orc.overwrite.output.file", false,
-    "A boolean flag to enable overwriting of the output file if it already exists.\n")
+    "A boolean flag to enable overwriting of the output file if it already exists.\n"),
+  IS_SCHEMA_EVOLUTION_CASE_SENSITIVE("orc.schema.evolution.case.sensitive", "orc.schema.evolution.case.sensitive", true,
+          "A boolean flag to determine if the comparision of field names in schema evolution is case sensitive .\n")
   ;
 
   private final String attribute;
