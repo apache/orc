@@ -74,7 +74,7 @@ int main(int argc, char* argv[]) {
     {"withIndex", no_argument, ORC_NULLPTR, 'i'},
     {ORC_NULLPTR, 0, ORC_NULLPTR, 0}
   };
-  const char* filename = nullptr;
+  const char* filename = ORC_NULLPTR;
   bool withIndex = false;
   bool helpFlag = false;
   int opt;
