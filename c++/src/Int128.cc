@@ -19,6 +19,7 @@
 #include "orc/Int128.hh"
 #include "Adaptor.hh"
 
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -41,7 +42,7 @@ namespace orc {
       bool isNegative = str[0] == '-';
       size_t posn = isNegative ? 1 : 0;
       while (posn < length) {
-        size_t group = std::min(18ul, length - posn);
+        size_t group = std::min(static_cast<size_t>(18), length - posn);
         int64_t chunk = std::stoll(str.substr(posn, group));
         int64_t multiple = 1;
         for(size_t i=0; i < group; ++i) {
@@ -59,7 +60,7 @@ namespace orc {
 
   Int128& Int128::operator*=(const Int128 &right) {
     const uint64_t INT_MASK = 0xffffffff;
-    const uint64_t CARRY_BIT = 1l << 32;
+    const uint64_t CARRY_BIT = INT_MASK + 1;
 
     // Break the left and right numbers into 32 bit chunks
     // so that we can multiply them without overflow.

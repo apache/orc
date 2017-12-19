@@ -224,7 +224,7 @@ TEST(RLEv2, multiByteShortRepeats) {
   std::vector<int64_t> values;
   for (size_t i = 0; i < nVals; ++i) {
     for (size_t j = 0; j < runLength; ++j) {
-      values.push_back(static_cast<int64_t>(i)+(1L<<62));
+      values.push_back(static_cast<int64_t>(i) + (1LL << 62));
     }
   }
 
