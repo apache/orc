@@ -48,6 +48,7 @@ public class SchemaEvolution {
   private final TypeDescription readerSchema;
   private boolean hasConversion = false;
   private final boolean isAcid;
+  private final boolean isSchemaEvolutionCaseAware;
 
   // indexed by reader column id
   private final boolean[] ppdSafeConversion;
@@ -56,6 +57,7 @@ public class SchemaEvolution {
     LoggerFactory.getLogger(SchemaEvolution.class);
   private static final Pattern missingMetadataPattern =
     Pattern.compile("_col\\d+");
+
 
   public static class IllegalEvolutionException extends RuntimeException {
     public IllegalEvolutionException(String msg) {
@@ -68,6 +70,7 @@ public class SchemaEvolution {
                          Reader.Options options) {
     boolean allowMissingMetadata = options.getTolerateMissingSchema();
     boolean[] includedCols = options.getInclude();
+    this.isSchemaEvolutionCaseAware=options.getIsSchemaEvolutionCaseAware();
     this.readerIncluded = includedCols == null ? null :
       Arrays.copyOf(includedCols, includedCols.length);
     this.fileIncluded = new boolean[fileSchema.getMaximumId() + 1];
@@ -398,13 +401,21 @@ public class SchemaEvolution {
           if (positionalLevels == 0) {
             List<String> readerFieldNames = readerType.getFieldNames();
             List<String> fileFieldNames = fileType.getFieldNames();
-            Map<String, TypeDescription> fileTypesIdx = new HashMap<>();
+
+            final Map<String, TypeDescription> fileTypesIdx;
+            if ( isSchemaEvolutionCaseAware) {
+              fileTypesIdx = new HashMap<>();
+            }
+            else {
+              fileTypesIdx = new CaseInsensitiveMap<TypeDescription>();
+            }
             for (int i = 0; i < fileFieldNames.size(); i++) {
-              fileTypesIdx.put(fileFieldNames.get(i), fileChildren.get(i));
+              final String fileFieldName = fileFieldNames.get(i);
+              fileTypesIdx.put(fileFieldName, fileChildren.get(i));
             }
 
             for (int i = 0; i < readerFieldNames.size(); i++) {
-              String readerFieldName = readerFieldNames.get(i);
+              final String readerFieldName = readerFieldNames.get(i);
               TypeDescription readerField = readerChildren.get(i);
 
               TypeDescription fileField = fileTypesIdx.get(readerFieldName);
@@ -510,5 +521,23 @@ public class SchemaEvolution {
     acidEventFieldNames.add("rowId");
     acidEventFieldNames.add("currentTransaction");
     acidEventFieldNames.add("row");
+  }
+
+
+
+  private static class CaseInsensitiveMap<V> extends   HashMap<String,V> {
+    @Override
+    public V put(String key, V value) {
+      return super.put(key.toLowerCase(), value);
+    }
+
+    @Override
+    public V get(Object key) {
+      return this.get((String) key);
+    }
+    // not @Override as key to be of type Object
+    public V get(String key) {
+      return super.get(key.toLowerCase());
+    }
   }
 }

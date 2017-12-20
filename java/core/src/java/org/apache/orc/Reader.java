@@ -160,6 +160,7 @@ public interface Reader {
     private DataReader dataReader = null;
     private Boolean tolerateMissingSchema = null;
     private boolean forcePositionalEvolution;
+    private boolean isSchemaEvolutionCaseAware;
 
     public Options() {
       // PASS
@@ -170,6 +171,7 @@ public interface Reader {
       skipCorruptRecords = OrcConf.SKIP_CORRUPT_DATA.getBoolean(conf);
       tolerateMissingSchema = OrcConf.TOLERATE_MISSING_SCHEMA.getBoolean(conf);
       forcePositionalEvolution = OrcConf.FORCE_POSITIONAL_EVOLUTION.getBoolean(conf);
+      isSchemaEvolutionCaseAware = OrcConf.IS_SCHEMA_EVOLUTION_CASE_SENSITIVE.getBoolean(conf);
     }
 
     /**
@@ -262,6 +264,17 @@ public interface Reader {
       return this;
     }
 
+    /**
+     * Set boolean flag to determine if the comparision of field names in schema evolution is case sensitive
+     * @param value the flag for schema evolution is case sensitive or not.
+     * @return
+     */
+    public Options isSchemaEvolutionCaseAware(boolean value) {
+      this.isSchemaEvolutionCaseAware = value;
+      return this;
+    }
+
+
     public boolean[] getInclude() {
       return include;
     }
@@ -309,6 +322,7 @@ public interface Reader {
     public boolean getForcePositionalEvolution() {
       return forcePositionalEvolution;
     }
+    public boolean getIsSchemaEvolutionCaseAware() { return isSchemaEvolutionCaseAware; }
 
     public Options clone() {
       try {
