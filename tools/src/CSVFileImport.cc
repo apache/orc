@@ -252,9 +252,9 @@ void fillTimestampValues(const std::vector<std::string>& data,
 }
 
 void usage() {
-  std::cout << "Usage: csv-import --input <input file> --output <output> "
-            << "--schema <file schema> [--delimiter <delimiter character>] "
-            << "[--stripe <size value>] [--block <size value>] [--batch <size value>]\n"
+  std::cout << "Usage: csv-import [--delimiter <delimiter character>] "
+            << "[--stripe <size value>] [--block <size value>] "
+            << "[--batch <size value>] <schema> <input> <output>\n"
             << "Import CSV file into an Orc file using the specified schema.\n"
             << "Compound types are not supported at the moment.\n";
 }
@@ -270,9 +270,6 @@ int main(int argc, char* argv[]) {
 
   static struct option longOptions[] = {
     {"help", no_argument, ORC_NULLPTR, 'h'},
-    {"input", required_argument, ORC_NULLPTR, 'i'},
-    {"output", required_argument, ORC_NULLPTR, 'o'},
-    {"schema", required_argument, ORC_NULLPTR, 's'},
     {"delimiter", required_argument, ORC_NULLPTR, 'd'},
     {"stripe", required_argument, ORC_NULLPTR, 'p'},
     {"block", required_argument, ORC_NULLPTR, 'c'},
@@ -289,15 +286,6 @@ int main(int argc, char* argv[]) {
       case 'h':
         helpFlag = true;
         opt = -1;
-        break;
-      case 'i':
-        input = optarg;
-        break;
-      case 'o':
-        output = optarg;
-        break;
-      case 's':
-        schema = optarg;
         break;
       case 'd':
         gDelimiter = optarg[0];
@@ -326,10 +314,17 @@ int main(int argc, char* argv[]) {
     }
   } while (opt != -1);
 
-  if (helpFlag || optind != argc) {
+  argc -= optind;
+  argv += optind;
+
+  if (argc != 3 || helpFlag) {
     usage();
     return 1;
   }
+
+  schema = argv[0];
+  input = argv[1];
+  output = argv[2];
 
   std::cout << GetDate() << "Start importing Orc file..." << std::endl;
   ORC_UNIQUE_PTR<orc::Type> fileType = orc::Type::buildTypeFromString(schema);
