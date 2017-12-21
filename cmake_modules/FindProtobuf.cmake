@@ -36,11 +36,11 @@ find_path (PROTOBUF_INCLUDE_DIR google/protobuf/io/coded_stream.h HINTS
   NO_DEFAULT_PATH
   PATH_SUFFIXES "include")
 
-find_library (PROTOBUF_LIBRARY NAMES protobuf PATHS
+find_library (PROTOBUF_LIBRARY NAMES protobuf HINTS
   ${_protobuf_path}
   PATH_SUFFIXES "lib")
 
-find_library (PROTOC_LIBRARY NAMES protoc PATHS
+find_library (PROTOC_LIBRARY NAMES protoc HINTS
   ${_protobuf_path}
   PATH_SUFFIXES "lib")
 

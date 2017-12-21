@@ -28,7 +28,7 @@ find_path (SNAPPY_INCLUDE_DIR snappy.h HINTS
   NO_DEFAULT_PATH
   PATH_SUFFIXES "include")
 
-find_library (SNAPPY_LIBRARIES NAMES snappy PATHS
+find_library (SNAPPY_LIBRARIES NAMES snappy HINTS
   ${_snappy_path}
   PATH_SUFFIXES "lib")
 
