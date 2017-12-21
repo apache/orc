@@ -28,7 +28,7 @@ find_path (LZ4_INCLUDE_DIR lz4.h HINTS
   NO_DEFAULT_PATH
   PATH_SUFFIXES "include")
 
-find_library (LZ4_LIBRARIES NAMES lz4 PATHS
+find_library (LZ4_LIBRARIES NAMES lz4 HINTS
   ${_lz4_path}
   PATH_SUFFIXES "lib")
 
