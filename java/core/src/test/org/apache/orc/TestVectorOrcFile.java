@@ -3289,4 +3289,39 @@ public class TestVectorOrcFile {
       assertEquals(OrcProto.CompressionKind.NONE, ps.getCompression());
     }
   }
+
+  @Test
+  public void testEmptyDoubleStream() throws Exception {
+    TypeDescription schema =
+        TypeDescription.fromString("struct<list1:array<double>," +
+            "list2:array<float>>");
+    Writer writer = OrcFile.createWriter(testFilePath,
+        OrcFile.writerOptions(conf).setSchema(schema));
+    VectorizedRowBatch batch = schema.createRowBatch();
+    batch.size = 2;
+    ListColumnVector list1 = (ListColumnVector) batch.cols[0];
+    ListColumnVector list2 = (ListColumnVector) batch.cols[1];
+    for(int r=0; r < batch.size; ++r) {
+      list1.offsets[r] = 0;
+      list1.lengths[r] = 0;
+      list2.offsets[r] = 0;
+      list2.lengths[r] = 0;
+    }
+    writer.addRowBatch(batch);
+    writer.close();
+    Reader reader = OrcFile.createReader(testFilePath,
+        OrcFile.readerOptions(conf));
+    RecordReader rows = reader.rows();
+    batch = reader.getSchema().createRowBatch();
+    assertTrue(rows.nextBatch(batch));
+    assertEquals(2, batch.size);
+    list1 = (ListColumnVector) batch.cols[0];
+    list2 = (ListColumnVector) batch.cols[1];
+    for(int r=0; r < batch.size; ++r) {
+      assertEquals(0, list1.lengths[r]);
+      assertEquals(0, list2.lengths[r]);
+    }
+    assertFalse(rows.nextBatch(batch));
+    rows.close();
+  }
 }
