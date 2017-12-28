@@ -46,6 +46,7 @@ import org.apache.orc.RecordReader;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -710,6 +711,35 @@ public class TestSchemaEvolution {
     readerChild = reader.getChildren().get(0);
     mapped = transition.getFileType(readerChild);
     originalChild = null;
+    assertSame(originalChild, mapped);
+
+    // c -> c
+    reader = readerType.getChildren().get(1);
+    mapped = transition.getFileType(reader);
+    original = fileType.getChildren().get(1);
+    assertSame(original, mapped);
+  }
+  @Test
+  public void testCaseMismatchInReaderAndWriterSchema() {
+    TypeDescription fileType =
+            TypeDescription.fromString("struct<a:struct<b:int>,c:string>");
+    TypeDescription readerType =
+            TypeDescription.fromString("struct<A:struct<b:int>,c:string>");
+    boolean[] included = includeAll(readerType);
+    options.tolerateMissingSchema(false);
+    SchemaEvolution transition =
+            new SchemaEvolution(fileType, readerType, options.include(included).isSchemaEvolutionCaseAware(false));
+
+    // a -> A
+    TypeDescription reader = readerType.getChildren().get(0);
+    TypeDescription mapped = transition.getFileType(reader);
+    TypeDescription original = fileType.getChildren().get(0);
+    assertSame(original, mapped);
+
+    // a.b -> a.b
+    TypeDescription readerChild = reader.getChildren().get(0);
+    mapped = transition.getFileType(readerChild);
+    TypeDescription originalChild = original.getChildren().get(0);
     assertSame(originalChild, mapped);
 
     // c -> c
