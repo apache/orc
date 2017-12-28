@@ -142,7 +142,9 @@ public enum OrcConf {
       "orc.force.positional.evolution", false,
       "Require schema evolution to match the top level columns using position\n" +
       "rather than column names. This provides backwards compatibility with\n" +
-      "Hive 2.1.")
+      "Hive 2.1."),
+  IS_SCHEMA_EVOLUTION_CASE_SENSITIVE("orc.schema.evolution.case.sensitive", "orc.schema.evolution.case.sensitive", true,
+          "A boolean flag to determine if the comparision of field names in schema evolution is case sensitive .\n")
   ;
 
   private final String attribute;
