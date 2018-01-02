@@ -160,7 +160,8 @@ public interface Reader {
     private DataReader dataReader = null;
     private Boolean tolerateMissingSchema = null;
     private boolean forcePositionalEvolution;
-    private boolean isSchemaEvolutionCaseAware;
+    private boolean isSchemaEvolutionCaseAware =
+        (boolean) OrcConf.IS_SCHEMA_EVOLUTION_CASE_SENSITIVE.getDefaultValue();
 
     public Options() {
       // PASS
