@@ -110,7 +110,7 @@ add_subdirectory(c++)
 
 install(
   FILES LICENSE NOTICE
-  DESTINATION .)
+  DESTINATION "share/doc/orc")
 
 if (BUILD_JAVA)
   add_subdirectory(java)
