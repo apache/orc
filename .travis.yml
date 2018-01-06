@@ -32,8 +32,14 @@ matrix:
 
 jdk:
   - openjdk7
+
 env:
   - MAVEN_OPTS=-Xmx2g MAVEN_SKIP_RC=true
+
+cache:
+  directories:
+  - $HOME/.m2
+
 script:
   - mkdir build
   - cd build
