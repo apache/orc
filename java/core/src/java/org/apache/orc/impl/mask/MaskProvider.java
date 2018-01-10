@@ -33,6 +33,8 @@ public class MaskProvider implements DataMask.Provider {
       return new NullifyMask();
     } else if (name.equals(DataMask.Standard.REDACT.getName())) {
       return new RedactMaskFactory(params).build(schema);
+    } else if(name.equals(DataMask.Standard.SHA256.getName())) {
+      return new SHA256MaskFactory(params).build(schema);
     }
     return null;
   }
