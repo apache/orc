@@ -38,7 +38,8 @@ public interface DataMask {
    */
   enum Standard {
     NULLIFY("nullify"),
-    REDACT("redact");
+    REDACT("redact"),
+    SHA256("sha256");
 
     Standard(String name) {
       this.name = name;
