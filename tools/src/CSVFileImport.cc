@@ -252,11 +252,14 @@ void fillTimestampValues(const std::vector<std::string>& data,
 }
 
 void usage() {
-  std::cout << "Usage: csv-import [--delimiter <delimiter character>] "
-            << "[--stripe <size value>] [--block <size value>] "
-            << "[--batch <size value>] <schema> <input> <output>\n"
+  std::cout << "Usage: csv-import [-h] [--help]\n"
+            << "                  [-d <character>] [--delimiter=<character>]\n"
+            << "                  [-s <size>] [--stripe=<size>]\n"
+            << "                  [-c <size>] [--block=<size>]\n"
+            << "                  [-b <size>] [--batch=<size>]\n"
+            << "                  <schema> <input> <output>\n"
             << "Import CSV file into an Orc file using the specified schema.\n"
-            << "Compound types are not supported at the moment.\n";
+            << "Compound types are not yet supported.\n";
 }
 
 int main(int argc, char* argv[]) {
@@ -326,7 +329,7 @@ int main(int argc, char* argv[]) {
   input = argv[1];
   output = argv[2];
 
-  std::cout << GetDate() << "Start importing Orc file..." << std::endl;
+  std::cout << GetDate() << " Start importing Orc file..." << std::endl;
   ORC_UNIQUE_PTR<orc::Type> fileType = orc::Type::buildTypeFromString(schema);
 
   double totalElapsedTime = 0.0;
