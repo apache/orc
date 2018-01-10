@@ -37,19 +37,19 @@ TEST (TestCSVFileImport, test10rows) {
   EXPECT_EQ("", error);
 
   // verify the ORC file content
-  const std::string pgm = findProgram("tools/src/orc-contents");
+  const std::string pgm2 = findProgram("tools/src/orc-contents");
   const std::string expected =
     "{\"a\": 0, \"b\": \"a\", \"c\": 0}\n"
     "{\"a\": 1, \"b\": \"b\", \"c\": 1.1}\n"
     "{\"a\": 2, \"b\": \"c\", \"c\": 2.2}\n"
-    "{\"a\": 3, \"b\": \"d\", \"c\": 3.3}\n"
-    "{\"a\": 4, \"b\": \"e\", \"c\": 4.4}\n"
-    "{\"a\": 5, \"b\": \"f\", \"c\": 5.5}\n"
-    "{\"a\": 6, \"b\": \"g\", \"c\": 6.6}\n"
+    "{\"a\": 3, \"b\": \"d\", \"c\": null}\n"
+    "{\"a\": 4, \"b\": null, \"c\": 4.4}\n"
+    "{\"a\": null, \"b\": \"f\", \"c\": 5.5}\n"
+    "{\"a\": null, \"b\": null, \"c\": null}\n"
     "{\"a\": 7, \"b\": \"h\", \"c\": 7.7}\n"
     "{\"a\": 8, \"b\": \"i\", \"c\": 8.8}\n"
     "{\"a\": 9, \"b\": \"j\", \"c\": 9.9}\n";
-  EXPECT_EQ(0, runProgram({pgm, orcFile}, output, error));
+  EXPECT_EQ(0, runProgram({pgm2, orcFile}, output, error));
   EXPECT_EQ(expected, output);
   EXPECT_EQ("", error);
 }
