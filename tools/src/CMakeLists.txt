@@ -76,6 +76,14 @@ target_link_libraries (timezone-dump
   orc
   )
 
+add_executable (csv-import
+  CSVFileImport.cc
+  )
+
+target_link_libraries (csv-import
+  orc
+  )
+
 install(TARGETS
    orc-contents
    orc-metadata
