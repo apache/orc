@@ -28,7 +28,7 @@ find_path (GTEST_INCLUDE_DIR gmock/gmock.h HINTS
   NO_DEFAULT_PATH
   PATH_SUFFIXES "include")
 
-find_library (GTEST_LIBRARIES NAMES gmock PATHS
+find_library (GTEST_LIBRARIES NAMES gmock HINTS
   ${_gtest_path}
   PATH_SUFFIXES "lib")
 

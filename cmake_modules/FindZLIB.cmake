@@ -28,7 +28,7 @@ find_path (ZLIB_INCLUDE_DIR zlib.h HINTS
   NO_DEFAULT_PATH
   PATH_SUFFIXES "include")
 
-find_library (ZLIB_LIBRARIES NAMES z PATHS
+find_library (ZLIB_LIBRARIES NAMES z HINTS
   ${_zlib_path}
   PATH_SUFFIXES "lib")
 
