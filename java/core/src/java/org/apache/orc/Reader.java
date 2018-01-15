@@ -163,7 +163,7 @@ public interface Reader {
     private boolean isSchemaEvolutionCaseAware=(boolean) OrcConf.IS_SCHEMA_EVOLUTION_CASE_SENSITIVE.getDefaultValue();
 
     public Options() {
-      // PASS
+      isSchemaEvolutionCaseAware = false;
     }
 
     public Options(Configuration conf) {
@@ -171,8 +171,7 @@ public interface Reader {
       skipCorruptRecords = OrcConf.SKIP_CORRUPT_DATA.getBoolean(conf);
       tolerateMissingSchema = OrcConf.TOLERATE_MISSING_SCHEMA.getBoolean(conf);
       forcePositionalEvolution = OrcConf.FORCE_POSITIONAL_EVOLUTION.getBoolean(conf);
-      isSchemaEvolutionCaseAware =
-          OrcConf.IS_SCHEMA_EVOLUTION_CASE_SENSITIVE.getBoolean(conf);
+      isSchemaEvolutionCaseAware = false;
     }
 
     /**
