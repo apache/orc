@@ -221,6 +221,9 @@ namespace orc {
                               "\"2003-08-11\""};
     printer->reset(batch);
     for(uint64_t i=0; i < batch.numElements; ++i) {
+#ifndef HAS_PRE_1970
+      if (batch.data[i] < 0) continue;
+#endif
       line.clear();
       printer->printRow(i);
       EXPECT_EQ(expected[i], line) << "for i = " << i;
@@ -231,6 +234,9 @@ namespace orc {
     }
     printer->reset(batch);
     for(uint64_t i=0; i < batch.numElements; ++i) {
+#ifndef HAS_PRE_1970
+      if (batch.data[i] < 0) continue;
+#endif
       line.clear();
       printer->printRow(i);
       if (i % 2) {
