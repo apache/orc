@@ -69,7 +69,7 @@ namespace orc {
     UNKNOWN_WRITER = INT32_MAX
   };
 
-  enum CompressionKind {
+  enum CompressionKind : std::int64_t {
     CompressionKind_NONE = 0,
     CompressionKind_ZLIB = 1,
     CompressionKind_SNAPPY = 2,
@@ -84,7 +84,7 @@ namespace orc {
    */
   std::string compressionKindToString(CompressionKind kind);
 
-  enum WriterVersion {
+  enum WriterVersion : std::int64_t {
     WriterVersion_ORIGINAL = 0,
     WriterVersion_HIVE_8732 = 1,
     WriterVersion_HIVE_4243 = 2,

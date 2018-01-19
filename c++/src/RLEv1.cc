@@ -28,7 +28,7 @@ namespace orc {
 const int MINIMUM_REPEAT = 3;
 const int MAXIMUM_REPEAT = 127 + MINIMUM_REPEAT;
 
-const int BASE_128_MASK = 0x7f;
+const int64_t BASE_128_MASK = 0x7f;
 
 const int MAX_DELTA = 127;
 const int MIN_DELTA = -128;
@@ -148,7 +148,7 @@ void RleEncoderV1::write(int64_t value) {
         numLiterals += 1;
       } else {
         numLiterals -= static_cast<int>(MINIMUM_REPEAT - 1);
-        long base = literals[numLiterals];
+        int64_t base = literals[numLiterals];
         writeValues();
         literals[0] = base;
         repeat = true;
@@ -169,11 +169,11 @@ void RleEncoderV1::writeVslong(int64_t val) {
 
 void RleEncoderV1::writeVulong(int64_t val) {
   while (true) {
-    if ((val & ~0x7f) == 0) {
+    if ((val & ~BASE_128_MASK) == 0) {
       writeByte(static_cast<char>(val));
       return;
     } else {
-      writeByte(static_cast<char>(0x80 | (val & 0x7f)));
+      writeByte(static_cast<char>(0x80 | (val & BASE_128_MASK)));
       // cast val to unsigned so as to force 0-fill right shift
       val = (static_cast<uint64_t>(val) >> 7);
     }
