@@ -1,9 +1,18 @@
 # List the releases in reverse logical order
 # Only one release should be tagged latest
 
+1.4.2:
+  date: 2018-01-23
+  state: latest
+  tar: orc-1.4.2.tar.gz
+  signed-by: Owen O’Malley (3D0C92B9)
+  sha256: 4c32e30a2b93953c287fb6879894bec20c59c79617e5a8a103a76d8dd2a5ee89
+  known-issues:
+    ORC-40: Predicate push down is not implemented in C++.
+
 1.4.1:
   date: 2017-10-16
-  state: latest
+  state: archived
   tar: orc-1.4.1.tar.gz
   signed-by: Prasanth Jayachandran (65C468A3)
   sha256: bf9f107c61ecd6a9f08f439ad6a3870fbabbfeb1b68d9430b1258e5df03a5bb2
@@ -68,7 +77,7 @@
 
 1.2.3:
   date: 2016-12-12
-  state: stable
+  state: archived
   tar: orc-1.2.3.tar.gz
   signed-by: Owen O’Malley (3D0C92B9)
   sha256: a86a335052553bc51f30d80f4f3b5bc70cb99f77430d062c73e8ffe00ab15562
