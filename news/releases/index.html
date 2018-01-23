@@ -87,6 +87,8 @@
     <option value="/news/">Home</option>
     <optgroup label="v1.x">
       
+      <option value="/news/2018/01/23/ORC-1.4.2/">ORC 1.4.2 Released</option>
+      
       <option value="/news/2017/10/16/ORC-1.4.1/">ORC 1.4.1 Released</option>
       
       <option value="/news/2017/10/16/ORC-1.3.4/">ORC 1.3.4 Released</option>
@@ -144,6 +146,63 @@
         
   <article>
   <h2>
+    <a href="/news/2018/01/23/ORC-1.4.2/">
+      ORC 1.4.2 Released
+    </a>
+  </h2>
+  <span class="post-category">
+    <span class="label">
+      release
+    </span>
+  </span>
+  <div class="post-meta">
+    <span class="post-date">
+      23 Jan 2018
+    </span>
+    <a href="https://people.apache.org/~omalley" class="post-author">
+      <img src="https://people.apache.org/~omalley//omalley.png"
+           class="avatar" alt="omalley avatar"
+           width="24" height="24">
+      omalley
+    </a>
+  </div>
+  <div class="post-content">
+    <p>The ORC team is excited to announce the release of ORC v1.4.2.</p>
+
+<ul>
+  <li>Released: 23 January 2018</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.4.2/orc-1.4.2.tar.gz">orc-1.4.2.tar.gz</a></li>
+  <li><a href="https://dist.apache.org/repos/dist/release/orc/orc-1.4.2/orc-1.4.2.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://dist.apache.org/repos/dist/release/orc/KEYS">Owen O’Malley (3D0C92B9)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.4.2">rel/release-1.4.2</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.4.2%22">ORC 1.4.2</a></li>
+  <li>SHA 256: <a href="https://dist.apache.org/repos/dist/release/orc/orc-1.4.2/orc-1.4.2.tar.gz.sha256">4c32e30a2b93953c…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.4.2%22&amp;tempMax=500">ORC-1.4.2</a></li>
+</ul>
+
+<p>The new features of ORC 1.4:</p>
+
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-72">ORC-72</a> Add benchmark code for file formats.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-87">ORC-87</a> Fix timestamp statistics in C++.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-150">ORC-150</a> Add tool to convert from JSON.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-151">ORC-151</a> Reduce the size of tools.jar.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-174">ORC-174</a> Create a nohive variant of the jars.</li>
+</ul>
+
+<p>Known issues:</p>
+
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-40">ORC-40</a> Predicate push down is not implemented in C++.</li>
+</ul>
+
+
+  </div>
+</article>
+
+
+  <article>
+  <h2>
     <a href="/news/2017/10/16/ORC-1.4.1/">
       ORC 1.4.1 Released
     </a>
@@ -169,12 +228,12 @@
 
 <ul>
   <li>Released: 16 October 2017</li>
-  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.4.1/orc-1.4.1.tar.gz">orc-1.4.1.tar.gz</a></li>
-  <li><a href="https://dist.apache.org/repos/dist/release/orc/orc-1.4.1/orc-1.4.1.tar.gz.asc">GPG Signature</a>
+  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-1.4.1/orc-1.4.1.tar.gz">orc-1.4.1.tar.gz</a></li>
+  <li><a href="https://archive.apache.org/dist/orc/orc-1.4.1/orc-1.4.1.tar.gz.asc">GPG Signature</a>
 signed by <a href="https://dist.apache.org/repos/dist/release/orc/KEYS">Prasanth Jayachandran (65C468A3)</a></li>
   <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.4.1">rel/release-1.4.1</a></li>
   <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.4.1%22">ORC 1.4.1</a></li>
-  <li>SHA 256: <a href="https://dist.apache.org/repos/dist/release/orc/orc-1.4.1/orc-1.4.1.tar.gz.sha256">bf9f107c61ecd6a9…</a></li>
+  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-1.4.1/orc-1.4.1.tar.gz.sha256">bf9f107c61ecd6a9…</a></li>
   <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.4.1%22&amp;tempMax=500">ORC-1.4.1</a></li>
 </ul>
 
@@ -574,12 +633,12 @@ fixes some bugs in the Java schema evolution code.</p>
 
 <ul>
   <li>Released: 12 December 2016</li>
-  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.2.3/orc-1.2.3.tar.gz">orc-1.2.3.tar.gz</a></li>
-  <li><a href="https://dist.apache.org/repos/dist/release/orc/orc-1.2.3/orc-1.2.3.tar.gz.asc">GPG Signature</a>
+  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-1.2.3/orc-1.2.3.tar.gz">orc-1.2.3.tar.gz</a></li>
+  <li><a href="https://archive.apache.org/dist/orc/orc-1.2.3/orc-1.2.3.tar.gz.asc">GPG Signature</a>
 signed by <a href="https://dist.apache.org/repos/dist/release/orc/KEYS">Owen O’Malley (3D0C92B9)</a></li>
   <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.2.3">rel/release-1.2.3</a></li>
   <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.2.3%22">ORC 1.2.3</a></li>
-  <li>SHA 256: <a href="https://dist.apache.org/repos/dist/release/orc/orc-1.2.3/orc-1.2.3.tar.gz.sha256">a86a335052553bc5…</a></li>
+  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-1.2.3/orc-1.2.3.tar.gz.sha256">a86a335052553bc5…</a></li>
   <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.2.3%22&amp;tempMax=500">ORC-1.2.3</a></li>
 </ul>
 
@@ -1119,6 +1178,10 @@ signed by <a href="https://dist.apache.org/repos/dist/release/orc/KEYS">Owen O�
     <ul>
       
       <li class="">
+        <a href="/news/2018/01/23/ORC-1.4.2/">Version 1.4.2</a>
+      </li>
+      
+      <li class="">
         <a href="/news/2017/10/16/ORC-1.4.1/">Version 1.4.1</a>
       </li>
       
@@ -1134,13 +1197,11 @@ signed by <a href="https://dist.apache.org/repos/dist/release/orc/KEYS">Owen O�
         <a href="/news/2017/02/21/ORC-1.3.3/">Version 1.3.3</a>
       </li>
       
-      <li class="">
-        <a href="/news/2017/02/13/ORC-1.3.2/">Version 1.3.2</a>
-      </li>
-      
     </ul>
     <h4>Other News</h4>
     <ul>
+        
+        
         
         
         
@@ -1238,7 +1299,7 @@ signed by <a href="https://dist.apache.org/repos/dist/release/orc/KEYS">Owen O�
 
 
   <footer role="contentinfo">
-  <p>The contents of this website are &copy;&nbsp;2017
+  <p>The contents of this website are &copy;&nbsp;2018
      <a href="https://www.apache.org/">Apache Software Foundation</a>
      under the terms of the <a
       href="https://www.apache.org/licenses/LICENSE-2.0.html">
