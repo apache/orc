@@ -677,7 +677,7 @@ namespace orc {
       Type* type = parseCategory(category, types, endPos + 1, nextPos);
       res.push_back(std::make_pair(fieldName, type));
 
-      if (types[nextPos] == ')' || types[nextPos] == '>') {
+      if (nextPos < types.size() && (types[nextPos] == ')' || types[nextPos] == '>')) {
         pos = nextPos + 2;
       } else {
         pos = nextPos;
