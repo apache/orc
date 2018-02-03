@@ -239,35 +239,36 @@ public abstract class InStream extends InputStream {
 
     @Override
     public int read() throws IOException {
-      if (uncompressed == null || uncompressed.remaining() == 0) {
-        if (currentOffset == length) {
-          return -1;
-        }
-        readHeader();
+      if (!ensureUncompressed()) {
+        return -1;
       }
       return 0xff & uncompressed.get();
     }
 
     @Override
     public int read(byte[] data, int offset, int length) throws IOException {
-      if (uncompressed == null || uncompressed.remaining() == 0) {
-        if (currentOffset == this.length) {
-          return -1;
-        }
-        readHeader();
+      if (!ensureUncompressed()) {
+        return -1;
       }
       int actualLength = Math.min(length, uncompressed.remaining());
       uncompressed.get(data, offset, actualLength);
       return actualLength;
     }
 
-    @Override
-    public int available() throws IOException {
-      if (uncompressed == null || uncompressed.remaining() == 0) {
-        if (currentOffset == length) {
-          return 0;
+    private boolean ensureUncompressed() throws IOException {
+      while (uncompressed == null || uncompressed.remaining() == 0) {
+        if (currentOffset == this.length) {
+          return false;
         }
         readHeader();
+      }
+      return true;
+    }
+
+    @Override
+    public int available() throws IOException {
+      if (!ensureUncompressed()) {
+        return 0;
       }
       return uncompressed.remaining();
     }

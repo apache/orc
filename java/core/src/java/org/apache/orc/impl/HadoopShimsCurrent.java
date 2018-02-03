@@ -36,12 +36,18 @@ public class HadoopShimsCurrent implements HadoopShims {
 
   private static class SnappyDirectDecompressWrapper implements DirectDecompressor {
     private final SnappyDirectDecompressor root;
+    private boolean isFirstCall = true;
 
     SnappyDirectDecompressWrapper(SnappyDirectDecompressor root) {
       this.root = root;
     }
 
     public void decompress(ByteBuffer input, ByteBuffer output) throws IOException {
+      if (!isFirstCall) {
+        root.reset();
+      } else {
+        isFirstCall = false;
+      }
       root.decompress(input, output);
     }
 
@@ -58,12 +64,18 @@ public class HadoopShimsCurrent implements HadoopShims {
 
   private static class ZlibDirectDecompressWrapper implements DirectDecompressor {
     private final ZlibDecompressor.ZlibDirectDecompressor root;
+    private boolean isFirstCall = true;
 
     ZlibDirectDecompressWrapper(ZlibDecompressor.ZlibDirectDecompressor root) {
       this.root = root;
     }
 
     public void decompress(ByteBuffer input, ByteBuffer output) throws IOException {
+      if (!isFirstCall) {
+        root.reset();
+      } else {
+        isFirstCall = false;
+      }
       root.decompress(input, output);
     }
 
