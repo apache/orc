@@ -284,7 +284,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       // Pass-thru.

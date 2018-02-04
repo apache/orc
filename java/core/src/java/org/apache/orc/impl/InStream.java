@@ -76,7 +76,7 @@ public abstract class InStream extends InputStream {
     }
 
     @Override
-    public int read() {
+    public int read() throws IOException {
       if (range == null || range.remaining() == 0) {
         if (currentOffset == length) {
           return -1;
@@ -88,7 +88,7 @@ public abstract class InStream extends InputStream {
     }
 
     @Override
-    public int read(byte[] data, int offset, int length) {
+    public int read(byte[] data, int offset, int length) throws IOException {
       if (range == null || range.remaining() == 0) {
         if (currentOffset == this.length) {
           return -1;
@@ -122,7 +122,7 @@ public abstract class InStream extends InputStream {
       seek(index.getNext());
     }
 
-    public void seek(long desired) {
+    public void seek(long desired) throws IOException {
       if (desired == 0 && bytes.isEmpty()) {
         return;
       }
@@ -152,7 +152,7 @@ public abstract class InStream extends InputStream {
         this.range.position(pos);
         return;
       }
-      throw new IllegalArgumentException("Seek in " + name + " to " +
+      throw new IOException("Seek in " + name + " to " +
         desired + " is outside of the data");
     }
 

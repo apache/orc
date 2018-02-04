@@ -142,9 +142,9 @@ public class TreeReaderFactory {
       }
     }
 
-    void startStripe(Map<StreamName, InStream> streams,
-        OrcProto.StripeFooter stripeFooter
-    ) throws IOException {
+    public void startStripe(Map<StreamName, InStream> streams,
+                            OrcProto.StripeFooter stripeFooter
+                            ) throws IOException {
       checkEncoding(stripeFooter.getColumnsList().get(columnId));
       InStream in = streams.get(new StreamName(columnId,
           OrcProto.Stream.Kind.PRESENT));
@@ -303,7 +303,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
@@ -354,7 +354,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
@@ -419,7 +419,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
@@ -486,7 +486,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
@@ -554,7 +554,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
@@ -609,7 +609,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
@@ -693,7 +693,7 @@ public class TreeReaderFactory {
     protected InStream stream;
     private final SerializationUtils utils;
 
-    DoubleTreeReader(int columnId) throws IOException {
+    public DoubleTreeReader(int columnId) throws IOException {
       this(columnId, null, null);
     }
 
@@ -704,7 +704,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
@@ -815,7 +815,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
@@ -917,7 +917,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
@@ -1055,7 +1055,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
@@ -1128,7 +1128,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
@@ -1244,7 +1244,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       // For each stripe, checks the encoding and initializes the appropriate
@@ -1398,7 +1398,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
@@ -1504,7 +1504,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
@@ -1842,7 +1842,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
@@ -1924,7 +1924,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
@@ -2017,7 +2017,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
@@ -2114,7 +2114,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(Map<StreamName, InStream> streams,
+    public void startStripe(Map<StreamName, InStream> streams,
         OrcProto.StripeFooter stripeFooter
     ) throws IOException {
       super.startStripe(streams, stripeFooter);
