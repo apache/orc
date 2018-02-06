@@ -58,7 +58,6 @@
     <module>core</module>
     <module>mapreduce</module>
     <module>tools</module>
-    <module>bench</module>
   </modules>
 
   <properties>
