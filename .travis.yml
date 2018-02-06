@@ -9,17 +9,33 @@ matrix:
     os: linux
   - compiler: clang
     os: linux
+    addons:
+      apt:
+         sources:
+           - llvm-toolchain-trusty-4.0
+         packages:
+           - clang-4.0
+    before_script:
+      - export CC=clang-4.0
+      - export CXX=clang++-4.0
   - compiler: clang
     os: osx
     osx_image: xcode6.4
+  - compiler: clang
+    os: osx
+    osx_image: xcode9.2
+    script:
+    - mkdir build
+    - cd build
+    - cmake -DOPENSSL_ROOT_DIR=`brew --prefix openssl` ..
+    - make package test-out
 
 jdk:
   - openjdk7
-before_script:
 env:
   - MAVEN_OPTS=-Xmx2g MAVEN_SKIP_RC=true
 script:
   - mkdir build
   - cd build
-  - cmake ..
+  - cmake -DANALYZE_JAVA=ON ..
   - make package test-out
