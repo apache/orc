@@ -42,7 +42,7 @@ TEST (TestFileContents, testRaw) {
       " {\"int1\": -100000, \"string1\": \"in\"}, {\"int1\": 1234, "
       "\"string1\": \"hat\"}], \"map\": [{\"key\": \"chani\", \"value\": "
       "{\"int1\": 5, \"string1\": \"chani\"}}, {\"key\": \"mauddib\", "
-      "\"value\": {\"int1\": 1, \"string1\": \"mauddib\"}}]}";
+      "\"value\": {\"int1\": 1, \"string1\": \"mauddib\"}}]}\n";
 
   std::string output;
   std::string error;
@@ -58,7 +58,7 @@ TEST (TestFileContents, testSelectedColumns) {
   const std::string options = "--columns=1,3,5,7";
   const std::string expected =
     "{\"byte1\": 1, \"int1\": 65536, \"float1\": 1, \"bytes1\": [0, 1, 2, 3, 4]}\n"
-      "{\"byte1\": 100, \"int1\": 65536, \"float1\": 2, \"bytes1\": []}";
+      "{\"byte1\": 100, \"int1\": 65536, \"float1\": 2, \"bytes1\": []}\n";
 
   std::string output;
   std::string error;

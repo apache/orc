@@ -68,7 +68,7 @@ TEST (TestFileStatistics, testNormal) {
       "Has null: no\n"
       "Minimum: 1000\n"
       "Maximum: 9a\n"
-      "Total length: 23892\n";
+      "Total length: 23892\n\n";
 
   std::string output;
   std::string error;
@@ -179,7 +179,7 @@ TEST (TestFileStatistics, testOptions) {
       "Has null: no\n"
       "Minimum: 4001\n"
       "Maximum: 6000\n"
-      "Total length: 8000\n";
+      "Total length: 8000\n\n";
 
   std::string output;
   std::string error;
