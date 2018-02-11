@@ -50,6 +50,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
+import java.util.Iterator;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
@@ -58,7 +59,7 @@ public class JsonReader implements RecordReader {
     "yyyy[[-][/]]MM[[-][/]]dd[['T'][ ]]HH:mm:ss[ ][XXX][X]");
 
   private final TypeDescription schema;
-  private final JsonStreamParser parser;
+  private final Iterator<JsonElement> parser;
   private final JsonConverter[] converters;
   private final long totalSize;
   private final FSDataInputStream input;
@@ -256,13 +257,20 @@ public class JsonReader implements RecordReader {
                     FSDataInputStream underlying,
                     long size,
                     TypeDescription schema) throws IOException {
+    this(new JsonStreamParser(reader), underlying, size, schema);
+  }
+
+  public JsonReader(Iterator<JsonElement> parser,
+                    FSDataInputStream underlying,
+                    long size,
+                    TypeDescription schema) throws IOException {
     this.schema = schema;
     if (schema.getCategory() != TypeDescription.Category.STRUCT) {
       throw new IllegalArgumentException("Root must be struct - " + schema);
     }
     this.input = underlying;
     this.totalSize = size;
-    parser = new JsonStreamParser(reader);
+    this.parser = parser;
     List<TypeDescription> fieldTypes = schema.getChildren();
     converters = new JsonConverter[fieldTypes.size()];
     for(int c = 0; c < converters.length; ++c) {
