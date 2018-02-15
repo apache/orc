@@ -516,13 +516,11 @@ public class ReaderImpl implements Reader {
 
   protected OrcTail extractFileTail(FileSystem fs, Path path,
       long maxFileLength) throws IOException {
-    FSDataInputStream file = null;
     ByteBuffer buffer;
     OrcProto.PostScript ps;
     OrcProto.FileTail.Builder fileTailBuilder = OrcProto.FileTail.newBuilder();
     long modificationTime;
-    try {
-      file = fs.open(path);
+    try (FSDataInputStream file = fs.open(path)) {
       // figure out the size of the file using the option or filesystem
       long size;
       if (maxFileLength == Long.MAX_VALUE) {
@@ -601,14 +599,6 @@ public class ReaderImpl implements Reader {
         OrcCodecPool.returnCodec(compressionKind, codec);
       }
       fileTailBuilder.setFooter(footer);
-    } finally {
-      try {
-        if (file != null) {
-          file.close();
-        }
-      } catch (IOException ex) {
-        LOG.error("Failed to close the file after another error", ex);
-      }
     }
 
     ByteBuffer serializedTail = ByteBuffer.allocate(buffer.remaining());
