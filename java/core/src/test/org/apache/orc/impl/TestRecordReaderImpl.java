@@ -1250,10 +1250,8 @@ public class TestRecordReaderImpl {
 
     // filter by rows and groups
     result = RecordReaderImpl.planReadPartialDataStreams(streams, indexes,
-        columns, rowGroups, false, encodings, types, 32768, false);
-    assertThat(result, is(diskRanges(0, 1000, 100, 1000, 400, 1000,
-        1000, 11000 + RecordReaderUtils.WORST_UNCOMPRESSED_SLOP,
-        11000, 21000 + RecordReaderUtils.WORST_UNCOMPRESSED_SLOP,
+        columns, rowGroups, false, encodings, types, 32768, true);
+    assertThat(result, is(diskRanges(0, 21000 + RecordReaderUtils.WORST_UNCOMPRESSED_SLOP,
         41000, 51000 + RecordReaderUtils.WORST_UNCOMPRESSED_SLOP)));
     result = RecordReaderImpl.planReadPartialDataStreams(streams, indexes,
         columns, rowGroups, false, encodings, types, 32768, true);
@@ -1263,15 +1261,15 @@ public class TestRecordReaderImpl {
     // if we read no rows, don't read any bytes
     rowGroups = new boolean[]{false, false, false, false, false, false};
     result = RecordReaderImpl.planReadPartialDataStreams(streams, indexes,
-        columns, rowGroups, false, encodings, types, 32768, false);
+        columns, rowGroups, false, encodings, types, 32768, true);
     assertNull(result);
 
     // all rows, but only columns 0 and 2.
     rowGroups = null;
     columns = new boolean[]{true, false, true};
     result = RecordReaderImpl.planReadPartialDataStreams(streams, indexes,
-        columns, null, false, encodings, types, 32768, false);
-    assertThat(result, is(diskRanges(100000, 102000, 102000, 200000)));
+        columns, null, false, encodings, types, 32768, true);
+    assertThat(result, is(diskRanges(100000, 200000)));
     result = RecordReaderImpl.planReadPartialDataStreams(streams, indexes,
         columns, null, false, encodings, types, 32768, true);
     assertThat(result, is(diskRanges(100000, 200000)));
@@ -1280,7 +1278,7 @@ public class TestRecordReaderImpl {
     indexes[2] = indexes[1];
     indexes[1] = null;
     result = RecordReaderImpl.planReadPartialDataStreams(streams, indexes,
-        columns, rowGroups, false, encodings, types, 32768, false);
+        columns, rowGroups, false, encodings, types, 32768, true);
     assertThat(result, is(diskRanges(100100, 102000,
         112000, 122000 + RecordReaderUtils.WORST_UNCOMPRESSED_SLOP)));
     result = RecordReaderImpl.planReadPartialDataStreams(streams, indexes,
@@ -1292,7 +1290,7 @@ public class TestRecordReaderImpl {
     indexes[1] = indexes[2];
     columns = new boolean[]{true, true, true};
     result = RecordReaderImpl.planReadPartialDataStreams(streams, indexes,
-        columns, rowGroups, false, encodings, types, 32768, false);
+        columns, rowGroups, false, encodings, types, 32768, true);
     assertThat(result, is(diskRanges(500, 1000, 51000, 100000, 100500, 102000,
         152000, 200000)));
     result = RecordReaderImpl.planReadPartialDataStreams(streams, indexes,
@@ -1373,14 +1371,12 @@ public class TestRecordReaderImpl {
 
     // filter by rows and groups
     result = RecordReaderImpl.planReadPartialDataStreams(streams, indexes,
-        columns, rowGroups, true, encodings, types, 32768, false);
-    assertThat(result, is(diskRanges(0, 1000, 100, 1000,
-        400, 1000, 1000, 11000+(2*32771),
-        11000, 21000+(2*32771), 41000, 100000)));
+        columns, rowGroups, true, encodings, types, 32768, true);
+    assertThat(result, is(diskRanges(0, 100000)));
 
     rowGroups = new boolean[]{false, false, false, false, false, true};
     result = RecordReaderImpl.planReadPartialDataStreams(streams, indexes,
-        columns, rowGroups, true, encodings, types, 32768, false);
+        columns, rowGroups, true, encodings, types, 32768, true);
     assertThat(result, is(diskRanges(500, 1000, 51000, 100000)));
   }
 
@@ -1461,11 +1457,10 @@ public class TestRecordReaderImpl {
 
     // filter by rows and groups
     result = RecordReaderImpl.planReadPartialDataStreams(streams, indexes,
-        columns, rowGroups, false, encodings, types, 32768, false);
-    assertThat(result, is(diskRanges(100, 1000, 400, 1000, 500, 1000,
+        columns, rowGroups, false, encodings, types, 32768, true);
+    assertThat(result, is(diskRanges(100, 1000,
         11000, 21000 + RecordReaderUtils.WORST_UNCOMPRESSED_SLOP,
-        41000, 51000 + RecordReaderUtils.WORST_UNCOMPRESSED_SLOP,
-        51000, 95000, 95000, 97000, 97000, 100000)));
+        41000, 100000)));
   }
 
   @Test
