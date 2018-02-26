@@ -19,6 +19,7 @@ package org.apache.orc.impl;
 
 import java.io.EOFException;
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -49,7 +50,6 @@ import org.apache.orc.impl.writer.TimestampTreeWriter;
  * Factory for creating ORC tree readers.
  */
 public class TreeReaderFactory {
-
   public interface Context {
     SchemaEvolution getSchemaEvolution();
 
@@ -977,12 +977,12 @@ public class TreeReaderFactory {
 
       for (int i = 0; i < batchSize; i++) {
         if (result.noNulls || !result.isNull[i]) {
-          long millis = data.next() + base_timestamp;
-          int newNanos = parseNanos(nanos.next());
-          if (millis < 0 && newNanos != 0) {
-            millis -= 1;
+          final int newNanos = parseNanos(nanos.next());
+          long millis = (data.next() + base_timestamp)
+              * TimestampTreeWriter.MILLIS_PER_SECOND + newNanos / 1_000_000;
+          if (millis < 0 && newNanos > 999_999) {
+            millis -= TimestampTreeWriter.MILLIS_PER_SECOND;
           }
-          millis *= TimestampTreeWriter.MILLIS_PER_SECOND;
           long offset = 0;
           // If reader and writer time zones have different rules, adjust the timezone difference
           // between reader and writer taking day light savings into account.
