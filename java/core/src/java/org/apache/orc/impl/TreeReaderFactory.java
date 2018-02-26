@@ -19,6 +19,7 @@ package org.apache.orc.impl;
 
 import java.io.EOFException;
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -49,6 +50,15 @@ import org.apache.orc.impl.writer.TimestampTreeWriter;
  * Factory for creating ORC tree readers.
  */
 public class TreeReaderFactory {
+  // The current JDK has a bug where values of the form:
+  // YYYY-MM-DD HH:MM:SS.000X is off by a second for dates before 1970.
+  public static final boolean TIMESTAMP_BUG;
+  static {
+    Timestamp ts1 = Timestamp.valueOf("1969-12-25 12:34:56.0001");
+    Timestamp ts2 = Timestamp.valueOf("1969-12-25 12:34:56.0011");
+    // Compare the seconds, which should be the same.
+    TIMESTAMP_BUG = ts1.getTime()/1000 != ts2.getTime()/1000;
+  }
 
   public interface Context {
     SchemaEvolution getSchemaEvolution();
@@ -977,12 +987,12 @@ public class TreeReaderFactory {
 
       for (int i = 0; i < batchSize; i++) {
         if (result.noNulls || !result.isNull[i]) {
-          long millis = data.next() + base_timestamp;
-          int newNanos = parseNanos(nanos.next());
-          if (millis < 0 && newNanos != 0) {
-            millis -= 1;
+          final int newNanos = parseNanos(nanos.next());
+          long millis = (data.next() + base_timestamp)
+              * TimestampTreeWriter.MILLIS_PER_SECOND + newNanos / 1_000_000;
+          if (millis < 0 && newNanos > (TIMESTAMP_BUG ? 999_999 : 0)) {
+            millis -= TimestampTreeWriter.MILLIS_PER_SECOND;
           }
-          millis *= TimestampTreeWriter.MILLIS_PER_SECOND;
           long offset = 0;
           // If reader and writer time zones have different rules, adjust the timezone difference
           // between reader and writer taking day light savings into account.
