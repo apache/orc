@@ -1797,11 +1797,16 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
                     int length) throws IOException {
       super.writeBatch(vector, offset, length);
       TimestampColumnVector vec = (TimestampColumnVector) vector;
-      Timestamp val;
       if (vector.isRepeating) {
         if (vector.noNulls || !vector.isNull[0]) {
-          val = vec.asScratchTimestamp(0);
-          long millis = val.getTime();
+          // ignore the bottom three digits from the vec.time field
+          final long secs = vec.time[0] / MILLIS_PER_SECOND;
+          final int newNanos = vec.nanos[0];
+          // set the millis based on the top three digits of the nanos
+          long millis = secs * MILLIS_PER_SECOND + newNanos / 1_000_000;
+          if (millis < 0 && newNanos > 999_999) {
+            millis -= MILLIS_PER_SECOND;
+          }
           long utc = SerializationUtils.convertToUtc(localTimezone, millis);
           indexStatistics.updateTimestamp(utc);
           if (createBloomFilter) {
@@ -1810,22 +1815,26 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
             }
             bloomFilterUtf8.addLong(utc);
           }
-          final long secs = millis / MILLIS_PER_SECOND - baseEpochSecsLocalTz;
-          final long nano = formatNanos(val.getNanos());
+	  final long nano = formatNanos(vec.nanos[0]);
           for(int i=0; i < length; ++i) {
-            seconds.write(secs);
+	      seconds.write(secs - baseEpochSecsLocalTz);
             nanos.write(nano);
           }
         }
       } else {
         for(int i=0; i < length; ++i) {
           if (vec.noNulls || !vec.isNull[i + offset]) {
-            val = vec.asScratchTimestamp(i + offset);
-            long millis = val.getTime();
-            long secs = millis / MILLIS_PER_SECOND - baseEpochSecsLocalTz;
+            // ignore the bottom three digits from the vec.time field
+            final long secs = vec.time[i + offset] / MILLIS_PER_SECOND;
+            final int newNanos = vec.nanos[i + offset];
+            // set the millis based on the top three digits of the nanos
+            long millis = secs * MILLIS_PER_SECOND + newNanos / 1_000_000;
+            if (millis < 0 && newNanos > 999_999) {
+              millis -= MILLIS_PER_SECOND;
+            }
             long utc = SerializationUtils.convertToUtc(localTimezone, millis);
-            seconds.write(secs);
-            nanos.write(formatNanos(val.getNanos()));
+            seconds.write(secs - baseEpochSecsLocalTz);
+            nanos.write(formatNanos(newNanos));
             indexStatistics.updateTimestamp(utc);
             if (createBloomFilter) {
               if (bloomFilter != null) {
