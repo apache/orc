@@ -18,6 +18,7 @@
 package org.apache.orc;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -219,5 +220,87 @@ public class TestTypeDescription {
     assertEquals(2, leaf.getId());
     assertEquals(0, type.getId());
     assertEquals(2, leaf.getId());
+  }
+
+  @Test
+  public void testFindSubtype() {
+    TypeDescription type = TypeDescription.fromString(
+        "struct<a:int," +
+            "b:struct<c:array<int>,d:map<string,struct<e:string>>>," +
+            "f:string," +
+            "g:uniontype<string,int>>");
+    assertEquals(0, type.findSubtype("0").getId());
+    assertEquals(1, type.findSubtype("a").getId());
+    assertEquals(2, type.findSubtype("b").getId());
+    assertEquals(3, type.findSubtype("b.c").getId());
+    assertEquals(4, type.findSubtype("b.c._elem").getId());
+    assertEquals(5, type.findSubtype("b.d").getId());
+    assertEquals(6, type.findSubtype("b.d._key").getId());
+    assertEquals(7, type.findSubtype("b.d._value").getId());
+    assertEquals(8, type.findSubtype("b.d._value.e").getId());
+    assertEquals(9, type.findSubtype("f").getId());
+    assertEquals(10, type.findSubtype("g").getId());
+    assertEquals(11, type.findSubtype("g.0").getId());
+    assertEquals(12, type.findSubtype("g.1").getId());
+  }
+
+  @Test
+  public void testBadFindSubtype() {
+    TypeDescription type = TypeDescription.fromString(
+        "struct<a:int," +
+            "b:struct<c:array<int>,d:map<string,struct<e:string>>>," +
+            "f:string," +
+            "g:uniontype<string,int>>");
+    try {
+      type.findSubtype("13");
+      assertTrue(false);
+    } catch (IllegalArgumentException e) {
+      // PASS
+    }
+    try {
+      type.findSubtype("aa");
+      assertTrue(false);
+    } catch (IllegalArgumentException e) {
+      // PASS
+    }
+    try {
+      type.findSubtype("b.a");
+      assertTrue(false);
+    } catch (IllegalArgumentException e) {
+      // PASS
+    }
+    try {
+      type.findSubtype("g.2");
+      assertTrue(false);
+    } catch (IllegalArgumentException e) {
+      // PASS
+    }
+    try {
+      type.findSubtype("b.c.d");
+      assertTrue(false);
+    } catch (IllegalArgumentException e) {
+      // PASS
+    }
+  }
+
+  @Test
+  public void testFindSubtypes() {
+    TypeDescription type = TypeDescription.fromString(
+        "struct<a:int," +
+            "b:struct<c:array<int>,d:map<string,struct<e:string>>>," +
+            "f:string," +
+            "g:uniontype<string,int>>");
+    List<TypeDescription> results = type.findSubtypes("a");
+    assertEquals(1, results.size());
+    assertEquals(1, results.get(0).getId());
+
+    results = type.findSubtypes("b.d._value.e,3,g.0");
+    assertEquals(3, results.size());
+    assertEquals(8, results.get(0).getId());
+    assertEquals(3, results.get(1).getId());
+    assertEquals(11, results.get(2).getId());
+
+    results = type.findSubtypes("");
+    assertEquals(0, results.size());
   }
 }
