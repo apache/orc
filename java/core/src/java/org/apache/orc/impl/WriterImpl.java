@@ -18,8 +18,6 @@
 
 package org.apache.orc.impl;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -645,8 +643,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     return ReaderImpl.deserializeStats(builder.getStatisticsList());
   }
 
-  // TODO: remove this
-  @VisibleForTesting
+  // TODO: pollutes the interface for tests only - we should remove this.
   public CompressionCodec getCompressionCodec() {
     return physicalWriter.getCompressionCodec();
   }

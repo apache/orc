@@ -17,8 +17,6 @@
  */
 package org.apache.orc.impl;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import org.apache.orc.CompressionKind;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -1353,8 +1351,7 @@ public class RecordReaderImpl implements RecordReader {
     return result;
   }
 
-  // TODO: remove this
-  @VisibleForTesting
+  // TODO: pollutes the interface for tests only - we should remove this.
   public CompressionCodec getCompressionCodec() {
     return dataReader.getCompressionCodec();
   }

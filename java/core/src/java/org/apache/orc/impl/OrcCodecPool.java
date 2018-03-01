@@ -60,10 +60,17 @@ public final class OrcCodecPool {
     return codec;
   }
 
+  /**
+   * Returns the codec to the pool or closes it, suppressing exceptions.
+   * @param kind Compression kind.
+   * @param codec Codec.
+   * @param observedError Whether the caller has definitely observed an error with the codec.
+   *                      The pool will also do basic correctness check on the codec itself.
+   */
   public static void returnCodecSafely(
-      CompressionKind kind, CompressionCodec codec, boolean hasError) {
+      CompressionKind kind, CompressionCodec codec, boolean observedError) {
     try {
-      if (!hasError) {
+      if (!observedError) {
         returnCodec(kind, codec);
       } else {
         codec.close();
@@ -73,6 +80,12 @@ public final class OrcCodecPool {
     }
   }
 
+  /**
+   * Returns the codec to the pool, potentially failing if the codec cannot be reused, or if
+   * the codec is unneeded and cannot be closed.
+   * @param kind Compression kind.
+   * @param codec Codec.
+   */
   public static void returnCodec(CompressionKind kind, CompressionCodec codec) {
     if (codec == null) {
       return;
