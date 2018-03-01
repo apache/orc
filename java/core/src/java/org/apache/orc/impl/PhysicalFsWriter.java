@@ -46,7 +46,7 @@ public class PhysicalFsWriter implements PhysicalWriter {
   private static final int HDFS_BUFFER_SIZE = 256 * 1024;
   private static final HadoopShims shims = HadoopShimsFactory.get();
 
-  private final FSDataOutputStream rawWriter;
+  private FSDataOutputStream rawWriter;
   // the compressed metadata information outStream
   private OutStream writer = null;
   // a protobuf outStream around streamFactory
@@ -58,7 +58,7 @@ public class PhysicalFsWriter implements PhysicalWriter {
   private final double paddingTolerance;
   private final long defaultStripeSize;
   private final CompressionKind compress;
-  private final CompressionCodec codec;
+  private CompressionCodec codec;
   private final boolean addBlockPadding;
 
   // the streams that make up the current stripe
@@ -225,8 +225,14 @@ public class PhysicalFsWriter implements PhysicalWriter {
 
   @Override
   public void close() throws IOException {
+    // We don't use the codec directly but do give it out codec in getCompressionCodec;
+    // that is used in tests, for boolean checks, and in StreamFactory. Some of the changes that
+    // would get rid of this pattern require cross-project interface changes, so just return the
+    // codec for now.
     OrcCodecPool.returnCodec(compress, codec);
+    codec = null;
     rawWriter.close();
+    rawWriter = null;
   }
 
   @Override

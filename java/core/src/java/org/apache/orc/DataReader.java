@@ -79,7 +79,10 @@ public interface DataReader extends AutoCloseable, Cloneable {
   @Override
   public void close() throws IOException;
 
-  /** Returns the compression codec used by this datareader. 
-   * @return */
+  /**
+   * Returns the compression codec used by this datareader.
+   * We should consider removing this from the interface.
+   * @return the compression codec
+   */
   CompressionCodec getCompressionCodec();
 }

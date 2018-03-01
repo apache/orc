@@ -18,10 +18,8 @@
 package org.apache.orc.impl;
 
 import java.util.concurrent.ConcurrentHashMap;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.CompressionKind;
 import org.slf4j.Logger;
@@ -62,26 +60,35 @@ public final class OrcCodecPool {
     return codec;
   }
 
+  /**
+   * Returns the codec to the pool or closes it, suppressing exceptions.
+   * @param kind Compression kind.
+   * @param codec Codec.
+   */
   public static void returnCodec(CompressionKind kind, CompressionCodec codec) {
     if (codec == null) {
       return;
     }
     assert kind != CompressionKind.NONE;
-    codec.reset();
-    List<CompressionCodec> list = POOL.get(kind);
-    if (list == null) {
-      List<CompressionCodec> newList = new ArrayList<>();
-      List<CompressionCodec> oldList = POOL.putIfAbsent(kind, newList);
-      list = (oldList == null) ? newList : oldList;
-    }
-    synchronized (list) {
-      if (list.size() < MAX_PER_KIND) {
-        list.add(codec);
-        return;
+    try {
+      codec.reset();
+      List<CompressionCodec> list = POOL.get(kind);
+      if (list == null) {
+        List<CompressionCodec> newList = new ArrayList<>();
+        List<CompressionCodec> oldList = POOL.putIfAbsent(kind, newList);
+        list = (oldList == null) ? newList : oldList;
       }
+      synchronized (list) {
+        if (list.size() < MAX_PER_KIND) {
+          list.add(codec);
+          return;
+        }
+      }
+      // We didn't add the codec to the list.
+      codec.close();
+    } catch (Exception ex) {
+      LOG.error("Ignoring codec cleanup error", ex);
     }
-    // We didn't add the codec to the list.
-    codec.close();
   }
 
   public static int getPoolSize(CompressionKind kind) {

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,13 +17,15 @@
  */
 package org.apache.orc.impl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -35,7 +37,6 @@ import org.apache.orc.CompressionKind;
 import org.apache.orc.DataReader;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
-
 import org.apache.orc.StripeInformation;
 import org.apache.orc.TypeDescription;
 
@@ -44,6 +45,7 @@ import org.apache.orc.TypeDescription;
  */
 public class RecordReaderUtils {
   private static final HadoopShims SHIMS = HadoopShimsFactory.get();
+  private static final Logger LOG = LoggerFactory.getLogger(RecordReaderUtils.class);
 
   static boolean hadBadBloomFilters(TypeDescription.Category category,
                                     OrcFile.WriterVersion version) {
@@ -143,12 +145,12 @@ public class RecordReaderUtils {
 
   private static class DefaultDataReader implements DataReader {
     private FSDataInputStream file = null;
-    private final ByteBufferAllocatorPool pool;
+    private ByteBufferAllocatorPool pool;
     private HadoopShims.ZeroCopyReaderShim zcr = null;
     private final FileSystem fs;
     private final Path path;
     private final boolean useZeroCopy;
-    private final CompressionCodec codec;
+    private CompressionCodec codec;
     private final int bufferSize;
     private final int typeCount;
     private CompressionKind compressionKind;
@@ -161,17 +163,14 @@ public class RecordReaderUtils {
       this.codec = OrcCodecPool.getCodec(compressionKind);
       this.bufferSize = properties.getBufferSize();
       this.typeCount = properties.getTypeCount();
-      if (useZeroCopy) {
-        this.pool = new ByteBufferAllocatorPool();
-      } else {
-        this.pool = null;
-      }
     }
 
     @Override
     public void open() throws IOException {
       this.file = fs.open(path);
       if (useZeroCopy) {
+        // ZCR only uses codec for boolean checks.
+        pool = new ByteBufferAllocatorPool();
         zcr = RecordReaderUtils.createZeroCopyShim(file, codec, pool);
       } else {
         zcr = null;
@@ -231,8 +230,7 @@ public class RecordReaderUtils {
                 indexes[column] = OrcProto.RowIndex.parseFrom(
                     InStream.createCodedInputStream("index",
                         ReaderImpl.singleton(new BufferChunk(bb, 0)),
-                        stream.getLength(),
-                    codec, bufferSize));
+                        stream.getLength(), codec, bufferSize));
               }
               break;
             case BLOOM_FILTER:
@@ -267,9 +265,9 @@ public class RecordReaderUtils {
       // read the footer
       ByteBuffer tailBuf = ByteBuffer.allocate(tailLength);
       file.readFully(offset, tailBuf.array(), tailBuf.arrayOffset(), tailLength);
-      return OrcProto.StripeFooter.parseFrom(InStream.createCodedInputStream("footer",
-          ReaderImpl.singleton(new BufferChunk(tailBuf, 0)),
-          tailLength, codec, bufferSize));
+      return OrcProto.StripeFooter.parseFrom(
+          InStream.createCodedInputStream("footer", ReaderImpl.singleton(
+              new BufferChunk(tailBuf, 0)), tailLength, codec, bufferSize));
     }
 
     @Override
@@ -282,6 +280,7 @@ public class RecordReaderUtils {
     public void close() throws IOException {
       if (codec != null) {
         OrcCodecPool.returnCodec(compressionKind, codec);
+        codec = null;
       }
       if (pool != null) {
         pool.clear();
@@ -290,6 +289,7 @@ public class RecordReaderUtils {
       try (HadoopShims.ZeroCopyReaderShim myZcr = zcr) {
         if (file != null) {
           file.close();
+          file = null;
         }
       }
     }
@@ -306,8 +306,18 @@ public class RecordReaderUtils {
 
     @Override
     public DataReader clone() {
+      if (this.file != null) {
+        // We should really throw here, but that will cause failures in Hive.
+        // While Hive uses clone, just log a warning.
+        LOG.warn("Cloning an opened DataReader; the stream will be reused and closed twice");
+      }
       try {
-        return (DataReader) super.clone();
+        DefaultDataReader clone = (DefaultDataReader) super.clone();
+        if (codec != null) {
+          // Make sure we don't share the same codec between two readers.
+          clone.codec = OrcCodecPool.getCodec(clone.compressionKind);
+        }
+        return clone;
       } catch (CloneNotSupportedException e) {
         throw new UnsupportedOperationException("uncloneable", e);
       }
