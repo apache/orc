@@ -18,10 +18,8 @@
 package org.apache.orc.impl;
 
 import java.util.concurrent.ConcurrentHashMap;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.CompressionKind;
 import org.slf4j.Logger;
@@ -60,6 +58,19 @@ public final class OrcCodecPool {
       LOG.debug("Got recycled codec");
     }
     return codec;
+  }
+
+  public static void returnCodecSafely(
+      CompressionKind kind, CompressionCodec codec, boolean hasError) {
+    try {
+      if (!hasError) {
+        returnCodec(kind, codec);
+      } else {
+        codec.close();
+      }
+    } catch (Exception ex) {
+      LOG.error("Ignoring codec cleanup error", ex);
+    }
   }
 
   public static void returnCodec(CompressionKind kind, CompressionCodec codec) {

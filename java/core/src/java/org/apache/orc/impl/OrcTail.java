@@ -107,11 +107,13 @@ public final class OrcTail {
     if (serializedTail == null) return null;
     if (metadata == null) {
       CompressionCodec codec = OrcCodecPool.getCodec(getCompressionKind());
+      boolean isCodecError = true;
       try {
         metadata = extractMetadata(serializedTail, 0,
             (int) fileTail.getPostscript().getMetadataLength(), codec, getCompressionBufferSize());
+        isCodecError = false;
       } finally {
-        OrcCodecPool.returnCodec(getCompressionKind(), codec);
+        OrcCodecPool.returnCodecSafely(getCompressionKind(), codec, isCodecError);
       }
       // clear does not clear the contents but sets position to 0 and limit = capacity
       serializedTail.clear();

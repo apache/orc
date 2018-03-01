@@ -149,6 +149,7 @@ public class RecordReaderUtils {
     private final Path path;
     private final boolean useZeroCopy;
     private final CompressionCodec codec;
+    private boolean hasCodecError = false;
     private final int bufferSize;
     private final int typeCount;
     private CompressionKind compressionKind;
@@ -172,6 +173,7 @@ public class RecordReaderUtils {
     public void open() throws IOException {
       this.file = fs.open(path);
       if (useZeroCopy) {
+        // ZCR only uses codec for boolean checks.
         zcr = RecordReaderUtils.createZeroCopyShim(file, codec, pool);
       } else {
         zcr = null;
@@ -228,11 +230,18 @@ public class RecordReaderUtils {
                 ByteBuffer bb = range.getData().duplicate();
                 bb.position((int) (offset - range.getOffset()));
                 bb.limit((int) (bb.position() + stream.getLength()));
-                indexes[column] = OrcProto.RowIndex.parseFrom(
-                    InStream.createCodedInputStream("index",
-                        ReaderImpl.singleton(new BufferChunk(bb, 0)),
-                        stream.getLength(),
-                    codec, bufferSize));
+                boolean isOk = false;
+                try {
+                  indexes[column] = OrcProto.RowIndex.parseFrom(
+                      InStream.createCodedInputStream("index",
+                          ReaderImpl.singleton(new BufferChunk(bb, 0)),
+                          stream.getLength(), codec, bufferSize));
+                  isOk = true;
+                } finally {
+                  if (!isOk) {
+                    hasCodecError = true;
+                  }
+                }
               }
               break;
             case BLOOM_FILTER:
@@ -241,10 +250,18 @@ public class RecordReaderUtils {
                 ByteBuffer bb = range.getData().duplicate();
                 bb.position((int) (offset - range.getOffset()));
                 bb.limit((int) (bb.position() + stream.getLength()));
-                bloomFilterIndices[column] = OrcProto.BloomFilterIndex.parseFrom
-                    (InStream.createCodedInputStream("bloom_filter",
-                        ReaderImpl.singleton(new BufferChunk(bb, 0)),
-                    stream.getLength(), codec, bufferSize));
+                boolean isOk = false;
+                try {
+                  bloomFilterIndices[column] = OrcProto.BloomFilterIndex.parseFrom
+                      (InStream.createCodedInputStream("bloom_filter",
+                          ReaderImpl.singleton(new BufferChunk(bb, 0)),
+                      stream.getLength(), codec, bufferSize));
+                  isOk = true;
+                } finally {
+                  if (!isOk) {
+                    hasCodecError = true;
+                  }
+                }
               }
               break;
             default:
@@ -267,9 +284,18 @@ public class RecordReaderUtils {
       // read the footer
       ByteBuffer tailBuf = ByteBuffer.allocate(tailLength);
       file.readFully(offset, tailBuf.array(), tailBuf.arrayOffset(), tailLength);
-      return OrcProto.StripeFooter.parseFrom(InStream.createCodedInputStream("footer",
-          ReaderImpl.singleton(new BufferChunk(tailBuf, 0)),
-          tailLength, codec, bufferSize));
+      boolean isOk = false;
+      try {
+        OrcProto.StripeFooter result = OrcProto.StripeFooter.parseFrom(
+            InStream.createCodedInputStream("footer", ReaderImpl.singleton(
+                new BufferChunk(tailBuf, 0)), tailLength, codec, bufferSize));
+        isOk = true;
+        return result;
+      } finally {
+        if (!isOk) {
+          hasCodecError = true;
+        }
+      }
     }
 
     @Override
@@ -281,7 +307,7 @@ public class RecordReaderUtils {
     @Override
     public void close() throws IOException {
       if (codec != null) {
-        OrcCodecPool.returnCodec(compressionKind, codec);
+        OrcCodecPool.returnCodecSafely(compressionKind, codec, hasCodecError);
       }
       if (pool != null) {
         pool.clear();
@@ -315,6 +341,8 @@ public class RecordReaderUtils {
 
     @Override
     public CompressionCodec getCompressionCodec() {
+      // Note: see comments in PhysicalFsWriter; we should probably get rid of this usage
+      //       pattern to make error handling for codec pool more robust.
       return codec;
     }
   }
