@@ -94,6 +94,12 @@ namespace orc {
     uint64_t columnId;
     MemoryPool& memoryPool;
 
+    /**
+     * Check whether all streams/RleDecoders are initialize correctly.
+     * If not, throw ParseError.
+     */
+    virtual inline void checkStreams() {};
+
   public:
     ColumnReader(const Type& type, StripeStreams& stipe);
 

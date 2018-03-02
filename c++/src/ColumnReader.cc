@@ -62,6 +62,7 @@ namespace orc {
   }
 
   uint64_t ColumnReader::skip(uint64_t numValues) {
+    checkStreams();
     ByteRleDecoder* decoder = notNullDecoder.get();
     if (decoder) {
       // page through the values that we want to skip
@@ -90,6 +91,7 @@ namespace orc {
   void ColumnReader::next(ColumnVectorBatch& rowBatch,
                           uint64_t numValues,
                           char* incomingMask) {
+    checkStreams();
     if (numValues > rowBatch.capacity) {
       rowBatch.resize(numValues);
     }
@@ -132,6 +134,11 @@ namespace orc {
   private:
     std::unique_ptr<orc::ByteRleDecoder> rle;
 
+    inline void checkStreams() {
+      if (rle == nullptr)
+        throw ParseError("DATA stream not found in corrupt StripeFooter");
+    }
+
   public:
     BooleanColumnReader(const Type& type, StripeStreams& stipe);
     ~BooleanColumnReader() override;
@@ -146,9 +153,9 @@ namespace orc {
   BooleanColumnReader::BooleanColumnReader(const Type& type,
                                            StripeStreams& stripe
                                            ): ColumnReader(type, stripe){
-    rle = createBooleanRleDecoder(stripe.getStream(columnId,
-                                                   proto::Stream_Kind_DATA,
-                                                   true));
+    std::unique_ptr<SeekableInputStream> stream =
+        stripe.getStream(columnId, proto::Stream_Kind_DATA, true);
+    rle = stream.get() ? createBooleanRleDecoder(std::move(stream)) : nullptr;
   }
 
   BooleanColumnReader::~BooleanColumnReader() {
@@ -177,6 +184,11 @@ namespace orc {
   private:
     std::unique_ptr<orc::ByteRleDecoder> rle;
 
+    inline void checkStreams() {
+      if (rle == nullptr)
+        throw ParseError("DATA stream not found in corrupt StripeFooter");
+    }
+
   public:
     ByteColumnReader(const Type& type, StripeStreams& stipe);
     ~ByteColumnReader() override;
@@ -191,9 +203,9 @@ namespace orc {
   ByteColumnReader::ByteColumnReader(const Type& type,
                                            StripeStreams& stripe
                                            ): ColumnReader(type, stripe){
-    rle = createByteRleDecoder(stripe.getStream(columnId,
-                                                proto::Stream_Kind_DATA,
-                                                true));
+    std::unique_ptr<SeekableInputStream> stream =
+        stripe.getStream(columnId, proto::Stream_Kind_DATA, true);
+    rle = stream.get() ? createByteRleDecoder(std::move(stream)) : nullptr;
   }
 
   ByteColumnReader::~ByteColumnReader() {
@@ -222,6 +234,11 @@ namespace orc {
   protected:
     std::unique_ptr<orc::RleDecoder> rle;
 
+    inline void checkStreams() {
+      if (rle == nullptr)
+        throw ParseError("DATA stream not found in corrupt StripeFooter");
+    }
+
   public:
     IntegerColumnReader(const Type& type, StripeStreams& stripe);
     ~IntegerColumnReader() override;
@@ -237,10 +254,10 @@ namespace orc {
                                            StripeStreams& stripe
                                            ): ColumnReader(type, stripe) {
     RleVersion vers = convertRleVersion(stripe.getEncoding(columnId).kind());
-    rle = createRleDecoder(stripe.getStream(columnId,
-                                            proto::Stream_Kind_DATA,
-                                            true),
-                           true, vers, memoryPool);
+    std::unique_ptr<SeekableInputStream> stream =
+        stripe.getStream(columnId, proto::Stream_Kind_DATA, true);
+    rle = stream.get() ?
+          createRleDecoder(std::move(stream), true, vers, memoryPool) : nullptr;
   }
 
   IntegerColumnReader::~IntegerColumnReader() {
@@ -268,6 +285,13 @@ namespace orc {
     const Timezone& writerTimezone;
     const int64_t epochOffset;
 
+    inline void checkStreams() {
+      if (secondsRle == nullptr)
+        throw ParseError("DATA stream not found in corrupt StripeFooter");
+      if (nanoRle == nullptr)
+        throw ParseError("SECONDARY stream not found in corrupt StripeFooter");
+    }
+
   public:
     TimestampColumnReader(const Type& type, StripeStreams& stripe);
     ~TimestampColumnReader() override;
@@ -286,14 +310,13 @@ namespace orc {
                                   writerTimezone(stripe.getWriterTimezone()),
                                   epochOffset(writerTimezone.getEpoch()) {
     RleVersion vers = convertRleVersion(stripe.getEncoding(columnId).kind());
-    secondsRle = createRleDecoder(stripe.getStream(columnId,
-                                                   proto::Stream_Kind_DATA,
-                                                   true),
-                                  true, vers, memoryPool);
-    nanoRle = createRleDecoder(stripe.getStream(columnId,
-                                                proto::Stream_Kind_SECONDARY,
-                                                true),
-                               false, vers, memoryPool);
+    std::unique_ptr<SeekableInputStream> stream =
+        stripe.getStream(columnId, proto::Stream_Kind_DATA, true);
+    secondsRle = stream.get() ?
+        createRleDecoder(std::move(stream), true, vers, memoryPool) : nullptr;
+    stream = stripe.getStream(columnId, proto::Stream_Kind_SECONDARY, true);
+    nanoRle = stream.get() ?
+        createRleDecoder(std::move(stream), false, vers, memoryPool) : nullptr;
   }
 
   TimestampColumnReader::~TimestampColumnReader() {
@@ -358,6 +381,8 @@ namespace orc {
     const char *bufferEnd;
 
     unsigned char readByte() {
+      if (inputStream == nullptr)
+        throw ParseError("DATA stream not found in corrupt StripeFooter");
       if (bufferPointer == bufferEnd) {
         int length;
         if (!inputStream->Next
@@ -413,11 +438,10 @@ namespace orc {
 
     if (static_cast<size_t>(bufferEnd - bufferPointer) >=
         bytesPerValue * numValues) {
-      bufferPointer+= bytesPerValue*numValues;
+      bufferPointer += bytesPerValue * numValues;
     } else {
-      inputStream->Skip(static_cast<int>(bytesPerValue*numValues -
-                                         static_cast<size_t>(bufferEnd -
-                                                             bufferPointer)));
+      inputStream->Skip(static_cast<int>(bytesPerValue * numValues -
+          static_cast<size_t>(bufferEnd - bufferPointer)));
       bufferEnd = nullptr;
       bufferPointer = nullptr;
     }
@@ -482,6 +506,16 @@ namespace orc {
     DataBuffer<int64_t> dictionaryOffset;
     std::unique_ptr<RleDecoder> rle;
     uint64_t dictionaryCount;
+    bool missingDictionaryLength = false;
+    bool missingDictionaryData = false;
+
+    inline void checkStreams() {
+      if (rle == nullptr) throw ParseError("DATA stream not found");
+      if (missingDictionaryLength)
+        throw ParseError("DICTIONARY LENGTH stream not found");
+      if (missingDictionaryData)
+        throw ParseError("DICTIONARY_DATA stream not found");
+    }
 
   public:
     StringDictionaryColumnReader(const Type& type, StripeStreams& stipe);
@@ -503,29 +537,35 @@ namespace orc {
     RleVersion rleVersion = convertRleVersion(stripe.getEncoding(columnId)
                                                 .kind());
     dictionaryCount = stripe.getEncoding(columnId).dictionarysize();
-    rle = createRleDecoder(stripe.getStream(columnId,
-                                            proto::Stream_Kind_DATA,
-                                            true),
-                           false, rleVersion, memoryPool);
-    std::unique_ptr<RleDecoder> lengthDecoder =
-      createRleDecoder(stripe.getStream(columnId,
-                                        proto::Stream_Kind_LENGTH,
-                                        false),
-                       false, rleVersion, memoryPool);
-    dictionaryOffset.resize(dictionaryCount+1);
-    int64_t* lengthArray = dictionaryOffset.data();
-    lengthDecoder->next(lengthArray + 1, dictionaryCount, nullptr);
-    lengthArray[0] = 0;
-    for(uint64_t i=1; i < dictionaryCount + 1; ++i) {
-      if (lengthArray[i] < 0)
-        throw ParseError("Negative dictionary entry length");
-      lengthArray[i] += lengthArray[i-1];
+    std::unique_ptr<SeekableInputStream> stream =
+        stripe.getStream(columnId, proto::Stream_Kind_DATA, true);
+    rle = stream.get() ? createRleDecoder(
+        std::move(stream), false, rleVersion, memoryPool) : nullptr;
+    stream = stripe.getStream(columnId, proto::Stream_Kind_LENGTH, false);
+    if (dictionaryCount > 0 && stream == nullptr) {
+      missingDictionaryLength = true;
+    } else {
+      std::unique_ptr<RleDecoder> lengthDecoder =
+          createRleDecoder(std::move(stream), false, rleVersion, memoryPool);
+      dictionaryOffset.resize(dictionaryCount+1);
+      int64_t* lengthArray = dictionaryOffset.data();
+      lengthDecoder->next(lengthArray + 1, dictionaryCount, nullptr);
+      lengthArray[0] = 0;
+      for (uint64_t i = 1; i < dictionaryCount + 1; ++i) {
+        if (lengthArray[i] < 0)
+          throw ParseError("Negative dictionary entry length");
+        lengthArray[i] += lengthArray[i - 1];
+      }
+      int64_t blobSize = lengthArray[dictionaryCount];
+      dictionaryBlob.resize(static_cast<uint64_t>(blobSize));
+      std::unique_ptr<SeekableInputStream> blobStream =
+          stripe.getStream(columnId, proto::Stream_Kind_DICTIONARY_DATA, false);
+      if (blobSize > 0 && blobStream == nullptr) {
+        missingDictionaryData = true;
+      } else {
+        readFully(dictionaryBlob.data(), blobSize, blobStream.get());
+      }
     }
-    int64_t blobSize = lengthArray[dictionaryCount];
-    dictionaryBlob.resize(static_cast<uint64_t>(blobSize));
-    std::unique_ptr<SeekableInputStream> blobStream =
-      stripe.getStream(columnId, proto::Stream_Kind_DICTIONARY_DATA, false);
-    readFully(dictionaryBlob.data(), blobSize, blobStream.get());
   }
 
   StringDictionaryColumnReader::~StringDictionaryColumnReader() {
@@ -583,6 +623,11 @@ namespace orc {
     const char *lastBuffer;
     size_t lastBufferLength;
 
+    inline void checkStreams() {
+      if (lengthRle == nullptr) throw ParseError("LENGTH stream not found");
+      if (blobStream == nullptr) throw ParseError("DATA stream not found");
+    }
+
     /**
      * Compute the total length of the values.
      * @param lengths the array of lengths
@@ -611,10 +656,10 @@ namespace orc {
                      blobBuffer(stripe.getMemoryPool()) {
     RleVersion rleVersion = convertRleVersion(stripe.getEncoding(columnId)
                                                 .kind());
-    lengthRle = createRleDecoder(stripe.getStream(columnId,
-                                                  proto::Stream_Kind_LENGTH,
-                                                  true),
-                                 false, rleVersion, memoryPool);
+    std::unique_ptr<SeekableInputStream> stream =
+        stripe.getStream(columnId, proto::Stream_Kind_LENGTH, true);
+    lengthRle = stream.get() ? createRleDecoder(
+        std::move(stream), false, rleVersion, memoryPool) : nullptr;
     blobStream = stripe.getStream(columnId, proto::Stream_Kind_DATA, true);
     lastBuffer = nullptr;
     lastBufferLength = 0;
@@ -830,6 +875,11 @@ namespace orc {
     std::unique_ptr<ColumnReader> child;
     std::unique_ptr<RleDecoder> rle;
 
+    inline void checkStreams() {
+      if (rle == nullptr)
+        throw ParseError("LENGTH stream not found in corrupt StripeFooter");
+    }
+
   public:
     ListColumnReader(const Type& type, StripeStreams& stipe);
     ~ListColumnReader() override;
@@ -847,10 +897,10 @@ namespace orc {
     // count the number of selected sub-columns
     const std::vector<bool> selectedColumns = stripe.getSelectedColumns();
     RleVersion vers = convertRleVersion(stripe.getEncoding(columnId).kind());
-    rle = createRleDecoder(stripe.getStream(columnId,
-                                            proto::Stream_Kind_LENGTH,
-                                            true),
-                           false, vers, memoryPool);
+    std::unique_ptr<SeekableInputStream> stream =
+        stripe.getStream(columnId, proto::Stream_Kind_LENGTH, true);
+    rle = stream.get() ? createRleDecoder(
+        std::move(stream), false, vers, memoryPool) : nullptr;
     const Type& childType = *type.getSubtype(0);
     if (selectedColumns[static_cast<uint64_t>(childType.getColumnId())]) {
       child = buildReader(childType, stripe);
@@ -923,6 +973,11 @@ namespace orc {
     std::unique_ptr<ColumnReader> elementReader;
     std::unique_ptr<RleDecoder> rle;
 
+    inline void checkStreams() {
+      if (rle == nullptr)
+        throw ParseError("LENGTH stream not found in corrupt StripeFooter");
+    }
+
   public:
     MapColumnReader(const Type& type, StripeStreams& stipe);
     ~MapColumnReader() override;
@@ -940,10 +995,10 @@ namespace orc {
     // Determine if the key and/or value columns are selected
     const std::vector<bool> selectedColumns = stripe.getSelectedColumns();
     RleVersion vers = convertRleVersion(stripe.getEncoding(columnId).kind());
-    rle = createRleDecoder(stripe.getStream(columnId,
-                                            proto::Stream_Kind_LENGTH,
-                                            true),
-                           false, vers, memoryPool);
+    std::unique_ptr<SeekableInputStream> stream =
+        stripe.getStream(columnId, proto::Stream_Kind_LENGTH, true);
+    rle = stream.get() ? createRleDecoder(
+        std::move(stream), false, vers, memoryPool) : nullptr;
     const Type& keyType = *type.getSubtype(0);
     if (selectedColumns[static_cast<uint64_t>(keyType.getColumnId())]) {
       keyReader = buildReader(keyType, stripe);
@@ -1031,6 +1086,11 @@ namespace orc {
     std::vector<int64_t> childrenCounts;
     uint64_t numChildren;
 
+    inline void checkStreams() {
+      if (rle == nullptr)
+        throw ParseError("LENGTH stream not found in corrupt StripeFooter");
+    }
+
   public:
     UnionColumnReader(const Type& type, StripeStreams& stipe);
     ~UnionColumnReader() override;
@@ -1049,9 +1109,9 @@ namespace orc {
     childrenReader.resize(numChildren);
     childrenCounts.resize(numChildren);
 
-    rle = createByteRleDecoder(stripe.getStream(columnId,
-                                                proto::Stream_Kind_DATA,
-                                                true));
+    std::unique_ptr<SeekableInputStream> stream =
+        stripe.getStream(columnId, proto::Stream_Kind_DATA, true);
+    rle = stream.get() ? createByteRleDecoder(std::move(stream)) : nullptr;
     // figure out which types are selected
     const std::vector<bool> selectedColumns = stripe.getSelectedColumns();
     for(unsigned int i=0; i < numChildren; ++i) {
@@ -1154,10 +1214,17 @@ namespace orc {
 
     std::unique_ptr<RleDecoder> scaleDecoder;
 
+    inline void checkStreams() {
+      if (scaleDecoder == nullptr)
+        throw ParseError("SECONDARY stream not found in StripeFooter");
+    }
+
     /**
      * Read the valueStream for more bytes.
      */
     void readBuffer() {
+      if (valueStream == nullptr)
+        throw ParseError("DATA stream not found in corrupt StripeFooter");
       while (buffer == bufferEnd) {
         int length;
         if (!valueStream->Next(reinterpret_cast<const void**>(&buffer),
@@ -1231,11 +1298,10 @@ namespace orc {
     buffer = nullptr;
     bufferEnd = nullptr;
     RleVersion vers = convertRleVersion(stripe.getEncoding(columnId).kind());
-    scaleDecoder = createRleDecoder(stripe.getStream
-                                    (columnId,
-                                     proto::Stream_Kind_SECONDARY,
-                                     true),
-                                    true, vers, memoryPool);
+    std::unique_ptr<SeekableInputStream> stream =
+        stripe.getStream(columnId, proto::Stream_Kind_SECONDARY, true);
+    scaleDecoder = stream.get() ? createRleDecoder(
+        std::move(stream), true, vers, memoryPool) : nullptr;
   }
 
   Decimal64ColumnReader::~Decimal64ColumnReader() {
