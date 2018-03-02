@@ -1362,18 +1362,34 @@ public class TestVectorOrcFile {
             .blockPadding(false));
     VectorizedRowBatch batch = schema.createRowBatch();
     batch.size = 1000;
+    TimestampColumnVector timestampColVector = (TimestampColumnVector) batch.cols[0];
     for (int year = minYear; year < maxYear; ++year) {
-      for (int ms = 1000; ms < 2000; ++ms) {
-        TimestampColumnVector timestampColVector = (TimestampColumnVector) batch.cols[0];
-        timestampColVector.set(ms - 1000,
-            Timestamp.valueOf(year +
-                "-05-05 12:34:56." + ms));
-        ((LongColumnVector) batch.cols[1]).vector[ms - 1000] =
-            new DateWritable(new Date(year - 1900, 11, 25)).getDays();
+      for (int row = 0; row < 1000; ++row) {
+        String timeStr = String.format("%04d-05-05 12:34:56.%04d", year, 2*row);
+        timestampColVector.set(row, Timestamp.valueOf(timeStr));
       }
+      ((LongColumnVector) batch.cols[1]).vector[0] =
+          new DateWritable(new Date(year - 1900, 11, 25)).getDays();
+      batch.cols[1].isRepeating = true;
       writer.addRowBatch(batch);
     }
+
+    // add one more row to check the statistics for the jvm bug case
+    batch.size = 1;
+    String timeStr = String.format("%04d-12-12 12:34:56.0001", maxYear-1);
+    timestampColVector.set(0, Timestamp.valueOf(timeStr));
+    writer.addRowBatch(batch);
     writer.close();
+
+    // check the stats to make sure they match up to the millisecond
+    ColumnStatistics[] stats = writer.getStatistics();
+    TimestampColumnStatistics tsStat = (TimestampColumnStatistics) stats[1];
+    assertEquals(String.format("%04d-12-12 12:34:56.0", maxYear - 1),
+        tsStat.getMaximum().toString());
+    assertEquals(String.format("%04d-05-05 12:34:56.0", minYear),
+        tsStat.getMinimum().toString());
+
+    // read back the rows
     Reader reader = OrcFile.createReader(file,
         OrcFile.readerOptions(conf));
     RecordReader rows = reader.rows();
@@ -1383,27 +1399,20 @@ public class TestVectorOrcFile {
     for (int year = minYear; year < maxYear; ++year) {
       rows.nextBatch(batch);
       assertEquals(1000, batch.size);
-      for(int ms = 1000; ms < 2000; ++ms) {
-        StringBuilder buffer = new StringBuilder();
-        times.stringifyValue(buffer, ms - 1000);
-        String expected = Integer.toString(year) + "-05-05 12:34:56.";
-        // suppress the final zeros on the string by dividing by the largest
-        // power of 10 that divides evenly.
-        int roundedMs = ms;
-        for(int round = 1000; round > 0; round /= 10) {
-          if (ms % round == 0) {
-            roundedMs = ms / round;
-            break;
-          }
-        }
-        expected += roundedMs;
-        assertEquals(expected, buffer.toString());
-        assertEquals(Integer.toString(year) + "-12-25",
-            new DateWritable((int) dates.vector[ms - 1000]).toString());
+      for(int row = 0; row < 1000; ++row) {
+        Timestamp expected = Timestamp.valueOf(
+            String.format("%04d-05-05 12:34:56.%04d", year, 2*row));
+        assertEquals("ms row " + row + " " + expected, expected.getTime(),
+            times.time[row]);
+        assertEquals("nanos row " + row + " " + expected, expected.getNanos(),
+            times.nanos[row]);
+        assertEquals("year " + year + " row " + row,
+            Integer.toString(year) + "-12-25",
+            new DateWritable((int) dates.vector[row]).toString());
       }
     }
     rows.nextBatch(batch);
-    assertEquals(0, batch.size);
+    assertEquals(1, batch.size);
   }
 
   @Test
