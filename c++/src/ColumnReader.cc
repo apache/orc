@@ -134,7 +134,7 @@ namespace orc {
   private:
     std::unique_ptr<orc::ByteRleDecoder> rle;
 
-    inline void checkStreams() {
+    inline void checkStreams() override {
       if (rle == nullptr)
         throw ParseError("DATA stream not found in corrupt StripeFooter");
     }
@@ -184,7 +184,7 @@ namespace orc {
   private:
     std::unique_ptr<orc::ByteRleDecoder> rle;
 
-    inline void checkStreams() {
+    inline void checkStreams() override {
       if (rle == nullptr)
         throw ParseError("DATA stream not found in corrupt StripeFooter");
     }
@@ -234,7 +234,7 @@ namespace orc {
   protected:
     std::unique_ptr<orc::RleDecoder> rle;
 
-    inline void checkStreams() {
+    inline void checkStreams() override {
       if (rle == nullptr)
         throw ParseError("DATA stream not found in corrupt StripeFooter");
     }
@@ -285,7 +285,7 @@ namespace orc {
     const Timezone& writerTimezone;
     const int64_t epochOffset;
 
-    inline void checkStreams() {
+    inline void checkStreams() override {
       if (secondsRle == nullptr)
         throw ParseError("DATA stream not found in corrupt StripeFooter");
       if (nanoRle == nullptr)
@@ -509,7 +509,7 @@ namespace orc {
     bool missingDictionaryLength = false;
     bool missingDictionaryData = false;
 
-    inline void checkStreams() {
+    inline void checkStreams() override {
       if (rle == nullptr) throw ParseError("DATA stream not found");
       if (missingDictionaryLength)
         throw ParseError("DICTIONARY LENGTH stream not found");
@@ -623,7 +623,7 @@ namespace orc {
     const char *lastBuffer;
     size_t lastBufferLength;
 
-    inline void checkStreams() {
+    inline void checkStreams() override {
       if (lengthRle == nullptr) throw ParseError("LENGTH stream not found");
       if (blobStream == nullptr) throw ParseError("DATA stream not found");
     }
@@ -875,7 +875,7 @@ namespace orc {
     std::unique_ptr<ColumnReader> child;
     std::unique_ptr<RleDecoder> rle;
 
-    inline void checkStreams() {
+    inline void checkStreams() override {
       if (rle == nullptr)
         throw ParseError("LENGTH stream not found in corrupt StripeFooter");
     }
@@ -973,7 +973,7 @@ namespace orc {
     std::unique_ptr<ColumnReader> elementReader;
     std::unique_ptr<RleDecoder> rle;
 
-    inline void checkStreams() {
+    inline void checkStreams() override {
       if (rle == nullptr)
         throw ParseError("LENGTH stream not found in corrupt StripeFooter");
     }
@@ -1086,7 +1086,7 @@ namespace orc {
     std::vector<int64_t> childrenCounts;
     uint64_t numChildren;
 
-    inline void checkStreams() {
+    inline void checkStreams() override {
       if (rle == nullptr)
         throw ParseError("LENGTH stream not found in corrupt StripeFooter");
     }
@@ -1214,7 +1214,7 @@ namespace orc {
 
     std::unique_ptr<RleDecoder> scaleDecoder;
 
-    inline void checkStreams() {
+    inline void checkStreams() override {
       if (scaleDecoder == nullptr)
         throw ParseError("SECONDARY stream not found in StripeFooter");
     }
