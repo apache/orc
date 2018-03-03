@@ -18,6 +18,7 @@
 
 #include "Adaptor.hh"
 #include "OrcTest.hh"
+#include "orc/Exceptions.hh"
 #include "orc/Type.hh"
 #include "wrap/gtest-wrapper.h"
 
@@ -296,5 +297,46 @@ namespace orc {
       "struct<a:bigint,b:struct<a:binary,b:timestamp>,c:map<double,tinyint>>";
     type = Type::buildTypeFromString(typeStr);
     EXPECT_EQ(typeStr, type->toString());
+  }
+
+  void testCorruptHelper(const proto::Type& type,
+                         const proto::Footer& footer,
+                         const char* errMsg) {
+    try {
+      convertType(type, footer);
+      FAIL() << "Should throw ParseError for ill types";
+    } catch (ParseError& e) {
+      EXPECT_EQ(e.what(), std::string(errMsg));
+    } catch (...) {
+      FAIL() << "Should only throw ParseError for ill types";
+    }
+  }
+
+  TEST(TestType, testCorruptNestType) {
+    proto::Footer footer; // not used
+
+    proto::Type illListType;
+    illListType.set_kind(proto::Type_Kind_LIST);
+    testCorruptHelper(illListType, footer,
+        "Illegal LIST type that doesn't contain one subtype");
+    illListType.add_subtypes(2);
+    illListType.add_subtypes(3);
+    testCorruptHelper(illListType, footer,
+        "Illegal LIST type that doesn't contain one subtype");
+
+    proto::Type illMapType;
+    illMapType.set_kind(proto::Type_Kind_MAP);
+    illMapType.add_subtypes(2);
+    testCorruptHelper(illMapType, footer,
+        "Illegal MAP type that doesn't contain two subtypes");
+    illMapType.add_subtypes(3);
+    illMapType.add_subtypes(4);
+    testCorruptHelper(illMapType, footer,
+        "Illegal MAP type that doesn't contain two subtypes");
+
+    proto::Type illUnionType;
+    illUnionType.set_kind(proto::Type_Kind_UNION);
+    testCorruptHelper(illUnionType, footer,
+        "Illegal UNION type that doesn't contain any subtypes");
   }
 }

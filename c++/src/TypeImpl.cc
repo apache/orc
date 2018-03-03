@@ -379,6 +379,12 @@ namespace orc {
     case proto::Type_Kind_MAP:
     case proto::Type_Kind_UNION: {
       TypeImpl* result = new TypeImpl(static_cast<TypeKind>(type.kind()));
+      if (type.kind() == proto::Type_Kind_LIST && type.subtypes_size() != 1)
+        throw ParseError("Illegal LIST type that doesn't contain one subtype");
+      if (type.kind() == proto::Type_Kind_MAP && type.subtypes_size() != 2)
+        throw ParseError("Illegal MAP type that doesn't contain two subtypes");
+      if (type.kind() == proto::Type_Kind_UNION && type.subtypes_size() == 0)
+        throw ParseError("Illegal UNION type that doesn't contain any subtypes");
       for(int i=0; i < type.subtypes_size(); ++i) {
         result->addUnionChild(convertType(footer.types(static_cast<int>
                                                        (type.subtypes(i))),
