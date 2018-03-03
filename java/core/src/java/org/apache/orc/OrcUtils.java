@@ -458,7 +458,8 @@ public class OrcUtils {
    */
   public static
         TypeDescription convertTypeFromProtobuf(List<OrcProto.Type> types,
-                                                int rootColumn) {
+                                                int rootColumn)
+          throws FileFormatException {
     OrcProto.Type type = types.get(rootColumn);
     switch (type.getKind()) {
       case BOOLEAN:
@@ -503,9 +504,17 @@ public class OrcUtils {
         return result;
       }
       case LIST:
+        if (type.getSubtypesCount() != 1) {
+          throw new FileFormatException("LIST type should contains exactly " +
+                  "one subtype but has " + type.getSubtypesCount());
+        }
         return TypeDescription.createList(
             convertTypeFromProtobuf(types, type.getSubtypes(0)));
       case MAP:
+        if (type.getSubtypesCount() != 2) {
+          throw new FileFormatException("MAP type should contains exactly " +
+                  "two subtypes but has " + type.getSubtypesCount());
+        }
         return TypeDescription.createMap(
             convertTypeFromProtobuf(types, type.getSubtypes(0)),
             convertTypeFromProtobuf(types, type.getSubtypes(1)));
@@ -518,6 +527,10 @@ public class OrcUtils {
         return result;
       }
       case UNION: {
+        if (type.getSubtypesCount() == 0) {
+          throw new FileFormatException("UNION type should contains at least" +
+                  " one subtype but has none");
+        }
         TypeDescription result = TypeDescription.createUnion();
         for(int f=0; f < type.getSubtypesCount(); ++f) {
           result.addUnionChild(
