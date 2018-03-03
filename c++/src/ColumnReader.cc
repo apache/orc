@@ -552,7 +552,7 @@ namespace orc {
       for(uint64_t i=0; i < numValues; ++i) {
         if (notNull[i]) {
           int64_t entry = outputLengths[i];
-          if (entry < 0 || (uint64_t)entry >= dictionaryCount) {
+          if (entry < 0 || static_cast<uint64_t>(entry) >= dictionaryCount) {
             throw ParseError("Entry index out of range in StringDictionaryColumn");
           }
           outputStarts[i] = blob + dictionaryOffsets[entry];
@@ -563,7 +563,7 @@ namespace orc {
     } else {
       for(uint64_t i=0; i < numValues; ++i) {
         int64_t entry = outputLengths[i];
-        if (entry < 0 || (uint64_t)entry >= dictionaryCount) {
+        if (entry < 0 || static_cast<uint64_t>(entry) >= dictionaryCount) {
           throw ParseError("Entry index out of range in StringDictionaryColumn");
         }
         outputStarts[i] = blob + dictionaryOffsets[entry];
