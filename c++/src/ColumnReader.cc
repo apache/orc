@@ -468,6 +468,9 @@ namespace orc {
       if (!stream->Next(&chunk, &length)) {
         throw ParseError("bad read in readFully");
       }
+      if (posn + length > bufferSize) {
+        throw ParseError("Corrupt dictionary blob in StringDictionaryColumn");
+      }
       memcpy(buffer + posn, chunk, static_cast<size_t>(length));
       posn += length;
     }
@@ -514,6 +517,8 @@ namespace orc {
     lengthDecoder->next(lengthArray + 1, dictionaryCount, nullptr);
     lengthArray[0] = 0;
     for(uint64_t i=1; i < dictionaryCount + 1; ++i) {
+      if (lengthArray[i] < 0)
+        throw ParseError("Negative dictionary entry length");
       lengthArray[i] += lengthArray[i-1];
     }
     int64_t blobSize = lengthArray[dictionaryCount];
@@ -549,6 +554,9 @@ namespace orc {
       for(uint64_t i=0; i < numValues; ++i) {
         if (notNull[i]) {
           int64_t entry = outputLengths[i];
+          if (entry < 0 || static_cast<uint64_t>(entry) >= dictionaryCount) {
+            throw ParseError("Entry index out of range in StringDictionaryColumn");
+          }
           outputStarts[i] = blob + dictionaryOffsets[entry];
           outputLengths[i] = dictionaryOffsets[entry+1] -
             dictionaryOffsets[entry];
@@ -557,6 +565,9 @@ namespace orc {
     } else {
       for(uint64_t i=0; i < numValues; ++i) {
         int64_t entry = outputLengths[i];
+        if (entry < 0 || static_cast<uint64_t>(entry) >= dictionaryCount) {
+          throw ParseError("Entry index out of range in StringDictionaryColumn");
+        }
         outputStarts[i] = blob + dictionaryOffsets[entry];
         outputLengths[i] = dictionaryOffsets[entry+1] -
           dictionaryOffsets[entry];
