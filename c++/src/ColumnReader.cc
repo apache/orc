@@ -1177,7 +1177,7 @@ namespace orc {
       } else if (scale < currentScale &&
           static_cast<uint64_t>(currentScale - scale) <= MAX_PRECISION_64) {
         value /= POWERS_OF_TEN[currentScale - scale];
-      } else {
+      } else if (scale != currentScale) {
         throw ParseError("Decimal scale out of range");
       }
     }
