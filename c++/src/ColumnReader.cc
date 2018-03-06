@@ -517,6 +517,8 @@ namespace orc {
     lengthDecoder->next(lengthArray + 1, dictionaryCount, nullptr);
     lengthArray[0] = 0;
     for(uint64_t i=1; i < dictionaryCount + 1; ++i) {
+      if (lengthArray[i] < 0)
+        throw ParseError("Negative dictionary entry length");
       lengthArray[i] += lengthArray[i-1];
     }
     int64_t blobSize = lengthArray[dictionaryCount];
