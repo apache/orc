@@ -1182,10 +1182,14 @@ namespace orc {
         }
       }
       value = unZigZag(static_cast<uint64_t>(value));
-      if (scale > currentScale) {
+      if (scale > currentScale &&
+          static_cast<uint64_t>(scale - currentScale) <= MAX_PRECISION_64) {
         value *= POWERS_OF_TEN[scale - currentScale];
-      } else if (scale < currentScale) {
+      } else if (scale < currentScale &&
+          static_cast<uint64_t>(currentScale - scale) <= MAX_PRECISION_64) {
         value /= POWERS_OF_TEN[currentScale - scale];
+      } else if (scale != currentScale) {
+        throw ParseError("Decimal scale out of range");
       }
     }
 
