@@ -23,6 +23,10 @@ import org.apache.hadoop.fs.FSDataInputStream;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.security.Key;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 /**
  * Shims for versions of Hadoop up to and including 2.2.x
@@ -64,9 +68,30 @@ public class HadoopShimsPre2_3 implements HadoopShims {
   }
 
   @Override
-  public KeyProvider getKeyProvider(Configuration conf) {
-    // Not supported
-    return null;
+  public KeyProvider getKeyProvider(Configuration conf, Random random) {
+    return new NullKeyProvider();
   }
 
+  static class NullKeyProvider implements KeyProvider {
+
+    @Override
+    public List<String> getKeyNames() {
+      return new ArrayList<>();
+    }
+
+    @Override
+    public KeyMetadata getCurrentKeyVersion(String keyName) {
+      throw new IllegalArgumentException("Unknown key " + keyName);
+    }
+
+    @Override
+    public LocalKey createLocalKey(KeyMetadata key) {
+      throw new IllegalArgumentException("Unknown key " + key);
+    }
+
+    @Override
+    public Key decryptLocalKey(KeyMetadata key, byte[] encryptedKey) {
+      return null;
+    }
+  }
 }

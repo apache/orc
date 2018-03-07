@@ -22,6 +22,7 @@ import org.apache.orc.impl.HadoopShims;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
@@ -29,11 +30,13 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.TreeMap;
 
 /**
@@ -43,10 +46,13 @@ import java.util.TreeMap;
  * Hadoop KMS running and wishes to use encryption. It is also useful for
  * testing.
  *
+ * The local keys for this class are encrypted/decrypted using the cipher
+ * in CBC/NoPadding mode and a constant IV. Since the key is random, the
+ * constant IV is not a problem.
+ *
  * This class is not thread safe.
  */
 public class InMemoryKeystore implements HadoopShims.KeyProvider {
-
   /**
    * Support AES 256 ?
    */
@@ -60,6 +66,10 @@ public class InMemoryKeystore implements HadoopShims.KeyProvider {
     }
   }
 
+  private static final String LOCAL_KEY_CIPHER = "/CBC/NoPadding";
+
+  private final Random random;
+
   /**
    * A map that stores the 'keyName@version'
    * and 'metadata + material' mapping.
@@ -71,19 +81,19 @@ public class InMemoryKeystore implements HadoopShims.KeyProvider {
    */
   private final Map<String, Integer> currentVersion = new HashMap<>();
 
-  /* Create an instance */
+  /**
+   * Create a new InMemoryKeystore.
+   */
   public InMemoryKeystore() {
-    super();
+    this.random = new SecureRandom();
   }
 
   /**
-   * Create an instance populating the given keys.
-   *
-   * @param keys a list of keys that will be added initially
+   * Create an InMemoryKeystore with the given random generator.
+   * Except for testing, this must be a SecureRandom.
    */
-  public InMemoryKeystore(final Map<String, KeyVersion> keys) {
-    super();
-    this.keys.putAll(keys);
+  public InMemoryKeystore(Random random) {
+    this.random = random;
   }
 
   /**
@@ -118,37 +128,63 @@ public class InMemoryKeystore implements HadoopShims.KeyProvider {
    */
   @Override
   public HadoopShims.KeyMetadata getCurrentKeyVersion(final String keyName) {
-    return keys.get(buildVersionName(keyName, currentVersion.get(keyName)));
+    String versionName = buildVersionName(keyName, currentVersion.get(keyName));
+    if (keys.containsKey(versionName)) {
+      return keys.get(versionName);
+    } else {
+      throw new IllegalArgumentException("Unknown key " + keyName);
+    }
   }
 
   /**
-   * Create a metadata object while reading.
+   * Create a local key for the given key version.
    *
-   * @param keyName   the name of the key
-   * @param version   the version of the key to use
-   * @param algorithm the algorithm for that version of the key
-   * @return the metadata for the key version
+   * @param key the master key version
+   * @return the local key's material
    */
   @Override
-  public HadoopShims.KeyMetadata getKeyVersion(final String keyName,
-      final int version, final EncryptionAlgorithm algorithm) {
-    return new HadoopShims.KeyMetadata() {
+  public HadoopShims.LocalKey createLocalKey(final HadoopShims.KeyMetadata key) {
+    final String keyVersion = buildVersionName(key.getKeyName(), key.getVersion());
+    if (!keys.containsKey(keyVersion)) {
+      throw new IllegalArgumentException("Unknown key " + key);
+    }
+    final KeyVersion secret = keys.get(keyVersion);
+    final EncryptionAlgorithm algorithm = secret.getAlgorithm();
+    byte[] unecryptedKey = new byte[algorithm.keyLength()];
+    random.nextBytes(unecryptedKey);
+    byte[] iv = new byte[algorithm.getIvLength()];
+    String cipherName = algorithm.getAlgorithm() + LOCAL_KEY_CIPHER;
+    Cipher localCipher;
 
-      @Override
-      public String getKeyName() {
-        return keyName;
-      }
+    try {
+      localCipher = Cipher.getInstance(cipherName);
+      localCipher.init(Cipher.ENCRYPT_MODE,
+          new SecretKeySpec(secret.getMaterial(),
+          algorithm.getAlgorithm()), new IvParameterSpec(iv));
+    } catch (NoSuchPaddingException e) {
+      throw new IllegalStateException( "ORC bad padding for " + cipherName, e);
+    } catch (NoSuchAlgorithmException e) {
+      throw new IllegalStateException( "ORC bad algorithm for " + cipherName, e);
+    } catch (final InvalidKeyException e) {
+      throw new IllegalStateException(
+          "ORC bad encryption key for " + keyVersion, e);
+    } catch (final InvalidAlgorithmParameterException e) {
+      throw new IllegalStateException(
+          "ORC bad encryption parameter for " + keyVersion, e);
+    }
 
-      @Override
-      public EncryptionAlgorithm getAlgorithm() {
-        return algorithm;
-      }
-
-      @Override
-      public int getVersion() {
-        return version;
-      }
-    };
+    try {
+      byte[] encryptedKey = localCipher.doFinal(unecryptedKey);
+      return new HadoopShims.LocalKey(new SecretKeySpec(unecryptedKey,
+          algorithm.getAlgorithm()),
+          encryptedKey);
+    } catch (final IllegalBlockSizeException e) {
+      throw new IllegalStateException(
+          "ORC bad block size for " + keyVersion, e);
+    } catch (final BadPaddingException e) {
+      throw new IllegalStateException(
+          "ORC bad padding for " + keyVersion, e);
+    }
   }
 
   /**
@@ -162,41 +198,49 @@ public class InMemoryKeystore implements HadoopShims.KeyProvider {
    * of the appropriate length.
    *
    * @param key the master key version
-   * @param iv  the unique initialization vector
+   * @param encryptedKey  the unique initialization vector
    * @return the local key's material
    */
   @Override
-  public Key getLocalKey(final HadoopShims.KeyMetadata key, final byte[] iv) {
-
-    final KeyVersion secret = keys
-        .get(buildVersionName(key.getKeyName(), key.getVersion()));
+  public Key decryptLocalKey(HadoopShims.KeyMetadata key,
+                             byte[] encryptedKey) {
+    final String keyVersion = buildVersionName(key.getKeyName(), key.getVersion());
+    if (!keys.containsKey(keyVersion)) {
+      return null;
+    }
+    final KeyVersion secret = keys.get(keyVersion);
     final EncryptionAlgorithm algorithm = secret.getAlgorithm();
-    final Cipher cipher = algorithm.createCipher();
+    byte[] iv = new byte[algorithm.getIvLength()];
+    String cipherName = algorithm.getAlgorithm() + LOCAL_KEY_CIPHER;
+    Cipher localCipher;
 
     try {
-      cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(secret.getMaterial(),
+      localCipher = Cipher.getInstance(cipherName);
+      localCipher.init(Cipher.DECRYPT_MODE,
+          new SecretKeySpec(secret.getMaterial(),
           algorithm.getAlgorithm()), new IvParameterSpec(iv));
+    } catch (NoSuchPaddingException e) {
+      throw new IllegalStateException( "ORC bad padding for " + cipherName, e);
+    } catch (NoSuchAlgorithmException e) {
+      throw new IllegalStateException( "ORC bad algorithm for " + cipherName, e);
     } catch (final InvalidKeyException e) {
       throw new IllegalStateException(
-          "ORC bad encryption key for " + key.getKeyName(), e);
+          "ORC bad encryption key for " + keyVersion, e);
     } catch (final InvalidAlgorithmParameterException e) {
       throw new IllegalStateException(
-          "ORC bad encryption parameter for " + key.getKeyName(), e);
+          "ORC bad encryption parameter for " + keyVersion, e);
     }
-
-    byte[] buffer = new byte[algorithm.keyLength()];
 
     try {
-      buffer = cipher.doFinal(buffer);
+      byte[] decryptedKey = localCipher.doFinal(encryptedKey);
+      return new SecretKeySpec(decryptedKey, algorithm.getAlgorithm());
     } catch (final IllegalBlockSizeException e) {
       throw new IllegalStateException(
-          "ORC bad block size for " + key.getKeyName(), e);
+          "ORC bad block size for " + keyVersion, e);
     } catch (final BadPaddingException e) {
       throw new IllegalStateException(
-          "ORC bad padding for " + key.getKeyName(), e);
+          "ORC bad padding for " + keyVersion, e);
     }
-
-    return new SecretKeySpec(buffer, algorithm.getAlgorithm());
   }
 
   /**
@@ -272,48 +316,14 @@ public class InMemoryKeystore implements HadoopShims.KeyProvider {
   /**
    * This class contains the meta-data and the material for the key.
    */
-  static class KeyVersion implements HadoopShims.KeyMetadata {
+  static class KeyVersion extends HadoopShims.KeyMetadata {
 
-    private final String keyName;
-    private final int version;
-    private final EncryptionAlgorithm algorithm;
     private final byte[] material;
 
     public KeyVersion(final String keyName, final int version,
         final EncryptionAlgorithm algorithm, final byte[] material) {
-      super();
-      this.keyName = keyName;
-      this.version = version;
-      this.algorithm = algorithm;
+      super(keyName, version, algorithm);
       this.material = material;
-    }
-
-    /**
-     * Get the name of the key.
-     */
-    @Override
-    public String getKeyName() {
-      return keyName;
-    }
-
-    /**
-     * Get the encryption algorithm for this key.
-     *
-     * @return the algorithm
-     */
-    @Override
-    public EncryptionAlgorithm getAlgorithm() {
-      return algorithm;
-    }
-
-    /**
-     * Get the version of this key.
-     *
-     * @return the version
-     */
-    @Override
-    public int getVersion() {
-      return version;
     }
 
     /**
