@@ -879,7 +879,7 @@ DIAGNOSTIC_POP
     int result = LZ4_decompress_safe(input, output, static_cast<int>(length),
                                      static_cast<int>(maxOutputLength));
     if (result < 0) {
-      throw new ParseError(getName() + " - failed to decompress");
+      throw ParseError(getName() + " - failed to decompress");
     }
     return static_cast<uint64_t>(result);
   }
