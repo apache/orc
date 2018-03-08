@@ -410,8 +410,39 @@ public class ReaderImpl implements Reader {
       int footerSize, CompressionCodec codec, int bufferSize) throws IOException {
     bb.position(footerAbsPos);
     bb.limit(footerAbsPos + footerSize);
-    return OrcProto.Footer.parseFrom(InStream.createCodedInputStream("footer",
-        singleton(new BufferChunk(bb, 0)), footerSize, codec, bufferSize));
+    OrcProto.Footer footer = OrcProto.Footer.parseFrom(InStream.createCodedInputStream(
+            "footer", singleton(new BufferChunk(bb, 0)), footerSize, codec, bufferSize));
+    checkTypes(0, footer);
+    return footer;
+  }
+
+  private static int checkTypes(int index, OrcProto.Footer footer) throws FileFormatException {
+    if (index >= footer.getTypesCount()) {
+      throw new FileFormatException("Footer is corrupt that it lost types(" + index + ")");
+    }
+    OrcProto.Type type = footer.getTypes(index);
+
+    // ORC-313: check subtype count of LIST and MAP
+    if (type.getKind() == OrcProto.Type.Kind.LIST && type.getSubtypesCount() != 1) {
+      throw new FileFormatException("LIST type should contains exactly " +
+              "one subtype but has " + type.getSubtypesCount());
+    }
+    if (type.getKind() == OrcProto.Type.Kind.MAP && type.getSubtypesCount() != 2) {
+      throw new FileFormatException("MAP type should contains exactly " +
+              "two subtypes but has " + type.getSubtypesCount());
+    }
+
+    // ORC-317: check that indices in the type tree are valid
+    int origin_index = index;
+    for (int i = 0; i < type.getSubtypesCount(); ++i) {
+      if (++index != type.getSubtypes(i)) {
+        throw new FileFormatException(String.format(
+                "Footer is corrupt: subType(%d) should be %d but was %d in types(%d)",
+                i, index, type.getSubtypes(i), origin_index));
+      }
+      index = checkTypes(index, footer);
+    }
+    return index;
   }
 
   public static OrcProto.Metadata extractMetadata(ByteBuffer bb, int metadataAbsPos,
@@ -537,7 +568,7 @@ public class ReaderImpl implements Reader {
         return buildEmptyTail();
       } else if (size <= OrcFile.MAGIC.length()) {
         // Anything smaller than MAGIC header cannot be valid (valid ORC files
-	// are actually around 40 bytes, this is more conservative)
+        // are actually around 40 bytes, this is more conservative)
         throw new FileFormatException("Not a valid ORC file " + path
           + " (maxFileLength= " + maxFileLength + ")");
       }
