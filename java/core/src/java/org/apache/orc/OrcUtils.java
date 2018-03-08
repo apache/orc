@@ -458,8 +458,7 @@ public class OrcUtils {
    */
   public static
         TypeDescription convertTypeFromProtobuf(List<OrcProto.Type> types,
-                                                int rootColumn)
-          throws FileFormatException {
+                                                int rootColumn) {
     OrcProto.Type type = types.get(rootColumn);
     switch (type.getKind()) {
       case BOOLEAN:
@@ -504,17 +503,9 @@ public class OrcUtils {
         return result;
       }
       case LIST:
-        if (type.getSubtypesCount() != 1) {
-          throw new FileFormatException("LIST type should contains exactly " +
-                  "one subtype but has " + type.getSubtypesCount());
-        }
         return TypeDescription.createList(
             convertTypeFromProtobuf(types, type.getSubtypes(0)));
       case MAP:
-        if (type.getSubtypesCount() != 2) {
-          throw new FileFormatException("MAP type should contains exactly " +
-                  "two subtypes but has " + type.getSubtypesCount());
-        }
         return TypeDescription.createMap(
             convertTypeFromProtobuf(types, type.getSubtypes(0)),
             convertTypeFromProtobuf(types, type.getSubtypes(1)));
