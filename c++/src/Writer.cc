@@ -38,6 +38,7 @@ namespace orc {
     FileVersion fileVersion;
     double dictionaryKeySizeThreshold;
     bool enableIndex;
+    RleVersion rleVersion;
 
     WriterOptionsPrivate() :
                             fileVersion(FileVersion::v_0_11()) { // default to Hive_0_11
@@ -84,6 +85,15 @@ namespace orc {
     // PASS
   }
 
+  WriterOptions& WriterOptions::setRleVersion(RleVersion version) {
+    privateBits->rleVersion = version;
+    return *this;
+  }
+
+  RleVersion WriterOptions::getRleVersion() const {
+    return privateBits->rleVersion;
+  }
+
   WriterOptions& WriterOptions::setStripeSize(uint64_t size) {
     privateBits->stripeSize = size;
     return *this;
@@ -122,8 +132,8 @@ namespace orc {
   }
 
   WriterOptions& WriterOptions::setFileVersion(const FileVersion& version) {
-    // Only Hive_0_11 version is supported currently
-    if (version.getMajor() == 0 && version.getMinor() == 11) {
+    // Only Hive_0_11 and Hive_0_12 version are supported currently
+    if (version.getMajor() == 0 && (version.getMinor() == 11 || version.getMinor() == 12)) {
       privateBits->fileVersion = version;
       return *this;
     }

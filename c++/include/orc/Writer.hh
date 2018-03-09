@@ -38,6 +38,11 @@ namespace orc {
     CompressionStrategy_COMPRESSION
   };
 
+  enum RleVersion {
+    RleVersion_1,
+    RleVersion_2
+  };
+
   class Timezone;
 
   /**
@@ -163,6 +168,16 @@ namespace orc {
      * @return if not set, return std::err.
      */
     std::ostream * getErrorStream() const;
+
+    /**
+     * Set the RLE version.
+     */
+    WriterOptions& setRleVersion(RleVersion version);
+
+    /**
+     * Get the RLE version.
+     */
+    RleVersion getRleVersion() const;
 
     /**
      * Get whether or not to write row group index

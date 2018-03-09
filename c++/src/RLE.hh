@@ -26,11 +26,6 @@
 
 namespace orc {
 
-  enum RleVersion {
-    RleVersion_1,
-    RleVersion_2
-  };
-
   inline int64_t zigZag(int64_t value) {
     return (value << 1) ^ (value >> 63);
   }
@@ -44,6 +39,17 @@ namespace orc {
     // must be non-inline!
     virtual ~RleEncoder();
 
+    RleEncoder(
+            std::unique_ptr<BufferedOutputStream> outStream,
+            bool hasSigned):
+            outputStream(std::move(outStream)),
+            bufferPosition(0),
+            bufferLength(0),
+            numLiterals(0),
+            isSigned(hasSigned){
+      //pass
+    }
+
     /**
      * Encode the next batch of values.
      * @param data the array to read from
@@ -52,12 +58,14 @@ namespace orc {
      *    pointer is not null, positions that are false are skipped.
      */
     virtual void add(const int64_t* data, uint64_t numValues,
-                      const char* notNull) = 0;
+                      const char* notNull);
 
     /**
      * Get size of buffer used so far.
      */
-    virtual uint64_t getBufferSize() const = 0;
+    uint64_t getBufferSize() const {
+        return outputStream->getSize();
+    }
 
     /**
      * Flushing underlying BufferedOutputStream
@@ -68,7 +76,24 @@ namespace orc {
      * record current position
      * @param recorder use the recorder to record current positions
      */
-    virtual void recordPosition(PositionRecorder* recorder) const = 0;
+    virtual void recordPosition(PositionRecorder* recorder) const;
+
+  protected:
+    std::unique_ptr<BufferedOutputStream> outputStream;
+    size_t bufferPosition;
+    size_t bufferLength;
+    size_t numLiterals;
+    int64_t* literals;
+    bool isSigned;
+    char* buffer;
+
+    virtual void write(int64_t val) = 0;
+
+    virtual void writeByte(char c);
+
+    virtual void writeVulong(int64_t val);
+
+    virtual void writeVslong(int64_t val);  protected:
   };
 
   class RleDecoder {

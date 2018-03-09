@@ -1,10 +1,10 @@
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
+ * distributed with option work for additional information
+ * regarding copyright ownership.  The ASF licenses option file
  * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
+ * "License"); you may not use option file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
@@ -19,67 +19,9 @@
 #include "Adaptor.hh"
 #include "Compression.hh"
 #include "RLEv2.hh"
-
-#define MIN_REPEAT 3
+#include "RLEV2Util.hh"
 
 namespace orc {
-
-struct FixedBitSizes {
-  enum FBS {
-    ONE = 0, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE, TEN, ELEVEN, TWELVE,
-    THIRTEEN, FOURTEEN, FIFTEEN, SIXTEEN, SEVENTEEN, EIGHTEEN, NINETEEN,
-    TWENTY, TWENTYONE, TWENTYTWO, TWENTYTHREE, TWENTYFOUR, TWENTYSIX,
-    TWENTYEIGHT, THIRTY, THIRTYTWO, FORTY, FORTYEIGHT, FIFTYSIX, SIXTYFOUR
-  };
-};
-
-inline uint32_t decodeBitWidth(uint32_t n) {
-  if (n <= FixedBitSizes::TWENTYFOUR) {
-    return n + 1;
-  } else if (n == FixedBitSizes::TWENTYSIX) {
-    return 26;
-  } else if (n == FixedBitSizes::TWENTYEIGHT) {
-    return 28;
-  } else if (n == FixedBitSizes::THIRTY) {
-    return 30;
-  } else if (n == FixedBitSizes::THIRTYTWO) {
-    return 32;
-  } else if (n == FixedBitSizes::FORTY) {
-    return 40;
-  } else if (n == FixedBitSizes::FORTYEIGHT) {
-    return 48;
-  } else if (n == FixedBitSizes::FIFTYSIX) {
-    return 56;
-  } else {
-    return 64;
-  }
-}
-
-inline uint32_t getClosestFixedBits(uint32_t n) {
-  if (n == 0) {
-    return 1;
-  }
-
-  if (n >= 1 && n <= 24) {
-    return n;
-  } else if (n > 24 && n <= 26) {
-    return 26;
-  } else if (n > 26 && n <= 28) {
-    return 28;
-  } else if (n > 28 && n <= 30) {
-    return 30;
-  } else if (n > 30 && n <= 32) {
-    return 32;
-  } else if (n > 32 && n <= 40) {
-    return 40;
-  } else if (n > 40 && n <= 48) {
-    return 48;
-  } else if (n > 48 && n <= 56) {
-    return 56;
-  } else {
-    return 64;
-  }
-}
 
 int64_t RleDecoderV2::readLongBE(uint64_t bsz) {
   int64_t ret = 0, val;

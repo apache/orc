@@ -399,7 +399,7 @@ namespace orc {
                            const StreamsFactory& factory,
                            const WriterOptions& options) :
                              ColumnWriter(type, factory, options),
-                             rleVersion(RleVersion_1) {
+                             rleVersion(options.getRleVersion()) {
     std::unique_ptr<BufferedOutputStream> dataStream =
       factory.createStream(proto::Stream_Kind_DATA);
     rleEncoder = createRleEncoder(
@@ -840,7 +840,7 @@ namespace orc {
                           const StreamsFactory& factory,
                           const WriterOptions& options) :
                               ColumnWriter(type, factory, options),
-                              rleVersion(RleVersion_1) {
+                              rleVersion(options.getRleVersion()) {
     std::unique_ptr<BufferedOutputStream> lengthStream =
         factory.createStream(proto::Stream_Kind_LENGTH);
     lengthEncoder = createRleEncoder(std::move(lengthStream),
@@ -1131,7 +1131,7 @@ namespace orc {
                              const StreamsFactory& factory,
                              const WriterOptions& options) :
                                  ColumnWriter(type, factory, options),
-                                 rleVersion(RleVersion_1),
+                                 rleVersion(options.getRleVersion()),
                                  timezone(getTimezoneByName("GMT")){
     std::unique_ptr<BufferedOutputStream> dataStream =
         factory.createStream(proto::Stream_Kind_DATA);
@@ -1344,7 +1344,7 @@ namespace orc {
                              const StreamsFactory& factory,
                              const WriterOptions& options) :
                                  ColumnWriter(type, factory, options),
-                                 rleVersion(RleVersion_1),
+                                 rleVersion(options.getRleVersion()),
                                  precision(type.getPrecision()),
                                  scale(type.getScale()) {
     valueStream.reset(new AppendOnlyBufferedStream(
@@ -1435,7 +1435,9 @@ namespace orc {
   void Decimal64ColumnWriter::getColumnEncoding(
     std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
-    encoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
+    encoding.set_kind(rleVersion == RleVersion_1 ?
+                      proto::ColumnEncoding_Kind_DIRECT :
+                      proto::ColumnEncoding_Kind_DIRECT_V2);
     encoding.set_dictionarysize(0);
     encodings.push_back(encoding);
   }
@@ -1575,7 +1577,7 @@ namespace orc {
                                      const StreamsFactory& factory,
                                      const WriterOptions& options) :
                                        ColumnWriter(type, factory, options),
-                                       rleVersion(RleVersion_1){
+                                       rleVersion(options.getRleVersion()){
 
     std::unique_ptr<BufferedOutputStream> lengthStream =
       factory.createStream(proto::Stream_Kind_LENGTH);
@@ -1675,7 +1677,9 @@ namespace orc {
   void ListColumnWriter::getColumnEncoding(
                     std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
-    encoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
+    encoding.set_kind(rleVersion == RleVersion_1 ?
+                      proto::ColumnEncoding_Kind_DIRECT :
+                      proto::ColumnEncoding_Kind_DIRECT_V2);
     encoding.set_dictionarysize(0);
     encodings.push_back(encoding);
     if (child.get()) {
@@ -1771,7 +1775,7 @@ namespace orc {
                                    const StreamsFactory& factory,
                                    const WriterOptions& options) :
                                      ColumnWriter(type, factory, options),
-                                     rleVersion(RleVersion_1){
+                                     rleVersion(options.getRleVersion()){
     std::unique_ptr<BufferedOutputStream> lengthStream =
       factory.createStream(proto::Stream_Kind_LENGTH);
     lengthEncoder = createRleEncoder(std::move(lengthStream),
@@ -1888,7 +1892,9 @@ namespace orc {
   void MapColumnWriter::getColumnEncoding(
                    std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
-    encoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
+    encoding.set_kind(rleVersion == RleVersion_1 ?
+                      proto::ColumnEncoding_Kind_DIRECT :
+                      proto::ColumnEncoding_Kind_DIRECT_V2);
     encoding.set_dictionarysize(0);
     encodings.push_back(encoding);
     if (keyWriter.get()) {
