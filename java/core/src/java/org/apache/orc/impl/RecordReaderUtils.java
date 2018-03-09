@@ -143,12 +143,12 @@ public class RecordReaderUtils {
 
   private static class DefaultDataReader implements DataReader {
     private FSDataInputStream file = null;
-    private final ByteBufferAllocatorPool pool;
+    private ByteBufferAllocatorPool pool;
     private HadoopShims.ZeroCopyReaderShim zcr = null;
     private final FileSystem fs;
     private final Path path;
     private final boolean useZeroCopy;
-    private final CompressionCodec codec;
+    private CompressionCodec codec;
     private boolean hasCodecError = false;
     private final int bufferSize;
     private final int typeCount;
@@ -162,11 +162,6 @@ public class RecordReaderUtils {
       this.codec = OrcCodecPool.getCodec(compressionKind);
       this.bufferSize = properties.getBufferSize();
       this.typeCount = properties.getTypeCount();
-      if (useZeroCopy) {
-        this.pool = new ByteBufferAllocatorPool();
-      } else {
-        this.pool = null;
-      }
     }
 
     @Override
@@ -174,6 +169,7 @@ public class RecordReaderUtils {
       this.file = fs.open(path);
       if (useZeroCopy) {
         // ZCR only uses codec for boolean checks.
+        pool = new ByteBufferAllocatorPool();
         zcr = RecordReaderUtils.createZeroCopyShim(file, codec, pool);
       } else {
         zcr = null;
@@ -308,6 +304,7 @@ public class RecordReaderUtils {
     public void close() throws IOException {
       if (codec != null) {
         OrcCodecPool.returnCodecSafely(compressionKind, codec, hasCodecError);
+        codec = null;
       }
       if (pool != null) {
         pool.clear();
@@ -316,6 +313,7 @@ public class RecordReaderUtils {
       try (HadoopShims.ZeroCopyReaderShim myZcr = zcr) {
         if (file != null) {
           file.close();
+          file = null;
         }
       }
     }
@@ -332,8 +330,15 @@ public class RecordReaderUtils {
 
     @Override
     public DataReader clone() {
+      if (this.file != null) {
+        throw new UnsupportedOperationException(
+            "Cannot clone a DataReader that is already opened");
+      }
       try {
-        return (DataReader) super.clone();
+        DefaultDataReader clone = (DefaultDataReader) super.clone();
+        // Make sure we don't share the same codec between two readers.
+        clone.codec = OrcCodecPool.getCodec(clone.compressionKind);
+        return clone;
       } catch (CloneNotSupportedException e) {
         throw new UnsupportedOperationException("uncloneable", e);
       }

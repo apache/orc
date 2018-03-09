@@ -69,6 +69,9 @@ public final class OrcCodecPool {
    */
   public static void returnCodecSafely(
       CompressionKind kind, CompressionCodec codec, boolean observedError) {
+    if (codec == null) {
+      return;
+    }
     try {
       if (!observedError) {
         returnCodec(kind, codec);
