@@ -25,13 +25,89 @@
 
 #include <vector>
 
+#define MIN_REPEAT 3
+#define HIST_LEN 32
 namespace orc {
+
+struct FixedBitSizes {
+    enum FBS {
+        ONE = 0, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE, TEN, ELEVEN, TWELVE,
+        THIRTEEN, FOURTEEN, FIFTEEN, SIXTEEN, SEVENTEEN, EIGHTEEN, NINETEEN,
+        TWENTY, TWENTYONE, TWENTYTWO, TWENTYTHREE, TWENTYFOUR, TWENTYSIX,
+        TWENTYEIGHT, THIRTY, THIRTYTWO, FORTY, FORTYEIGHT, FIFTYSIX, SIXTYFOUR, SIZE
+    };
+};
+
+enum EncodingType { SHORT_REPEAT=0, DIRECT=1, PATCHED_BASE=2, DELTA=3 };
+
+struct EncodingOption {
+  EncodingType encoding;
+  int64_t fixedDelta;
+  int64_t gapVsPatchListCount;
+  int64_t zigzagLiteralsCount;
+  int64_t baseRedLiteralsCount;
+  int64_t adjDeltasCount;
+  uint32_t zzBits90p;
+  uint32_t zzBits100p;
+  uint32_t brBits95p;
+  uint32_t brBits100p;
+  uint32_t bitsDeltaMax;
+  uint32_t patchWidth;
+  uint32_t patchGapWidth;
+  uint32_t patchLength;
+  int64_t min;
+  bool isFixedDelta;
+};
+
+class RleEncoderV2 : public RleEncoder {
+public:
+    RleEncoderV2(std::unique_ptr<BufferedOutputStream> outStream, bool hasSigned, bool alignBitPacking = true);
+
+    ~RleEncoderV2() override {
+      delete [] literals;
+      delete [] gapVsPatchList;
+      delete [] zigzagLiterals;
+      delete [] baseRedLiterals;
+      delete [] adjDeltas;
+    }
+    /**
+     * Flushing underlying BufferedOutputStream
+     */
+    uint64_t flush() override;
+
+private:
+
+    const bool alignedBitPacking;
+    uint32_t fixedRunLength;
+    uint32_t variableRunLength;
+    int64_t prevDelta;
+    int32_t histgram[HIST_LEN];
+
+    // The four list below should actually belong to EncodingOption since it only holds temporal values in write(int64_t val),
+    // it is move here for performance consideration.
+    int64_t* gapVsPatchList;
+    int64_t*  zigzagLiterals;
+    int64_t*  baseRedLiterals;
+    int64_t*  adjDeltas;
+
+    uint32_t getOpCode(EncodingType encoding);
+    void determineEncoding(EncodingOption& option);
+    void computeZigZagLiterals(EncodingOption& option);
+    void preparePatchedBlob(EncodingOption& option);
+
+    void write(int64_t val) override ;
+    void writeInts(int64_t* input, uint32_t offset, size_t len, uint32_t bitSize);
+    void initializeLiterals(int64_t val);
+    void writeValues(EncodingOption& option);
+    void writeShortRepeatValues(EncodingOption& option);
+    void writeDirectValues(EncodingOption& option);
+    void writePatchedBasedValues(EncodingOption& option);
+    void writeDeltaValues(EncodingOption& option);
+    uint32_t percentileBits(int64_t* data, size_t offset, size_t length, double p, bool reuseHist = false);
+};
 
 class RleDecoderV2 : public RleDecoder {
 public:
-
-  enum EncodingType { SHORT_REPEAT=0, DIRECT=1, PATCHED_BASE=2, DELTA=3 };
-
   RleDecoderV2(std::unique_ptr<SeekableInputStream> input,
                bool isSigned, MemoryPool& pool);
 
@@ -133,7 +209,6 @@ private:
 
   return ret;
 }
-
 
   uint64_t nextShortRepeats(int64_t* data, uint64_t offset, uint64_t numValues,
                             const char* notNull);

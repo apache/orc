@@ -37,8 +37,8 @@ add_executable (orc-test
   TestDriver.cc
   TestInt128.cc
   TestReader.cc
-  TestRle.cc
-  TestRLEv1Encoder.cc
+  TestRleDecoder.cc
+  TestRleEncoder.cc
   TestStripeIndexStatistics.cc
   TestTimestampStatistics.cc
   TestTimezone.cc

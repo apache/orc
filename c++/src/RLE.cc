@@ -34,13 +34,16 @@ namespace orc {
                          (std::unique_ptr<BufferedOutputStream> output,
                           bool isSigned,
                           RleVersion version,
-                          MemoryPool&) {
+                          MemoryPool&,
+                          bool alignedBitpacking) {
     switch (static_cast<int64_t>(version)) {
     case RleVersion_1:
       // We don't have std::make_unique() yet.
       return std::unique_ptr<RleEncoder>(new RleEncoderV1(std::move(output),
                                                           isSigned));
     case RleVersion_2:
+      return std::unique_ptr<RleEncoder>(new RleEncoderV2(std::move(output),
+                                                            isSigned, alignedBitpacking));
     default:
       throw NotImplementedYet("Not implemented yet");
     }
@@ -62,6 +65,57 @@ namespace orc {
     default:
       throw NotImplementedYet("Not implemented yet");
     }
+  }
+
+  void RleEncoder::add(const int64_t* data, uint64_t numValues,
+                         const char* notNull) {
+    for (uint64_t i = 0; i < numValues; ++i) {
+      if (!notNull || notNull[i]) {
+        write(data[i]);
+      }
+    }
+  }
+
+  void RleEncoder::writeVslong(int64_t val) {
+    writeVulong((val << 1) ^ (val >> 63));
+  }
+
+  void RleEncoder::writeVulong(int64_t val) {
+    while (true) {
+      if ((val & ~0x7f) == 0) {
+        writeByte(static_cast<char>(val));
+        return;
+      } else {
+        writeByte(static_cast<char>(0x80 | (val & 0x7f)));
+        // cast val to unsigned so as to force 0-fill right shift
+        val = (static_cast<uint64_t>(val) >> 7);
+      }
+    }
+  }
+
+  void RleEncoder::writeByte(char c) {
+    if (bufferPosition == bufferLength) {
+      int addedSize = 0;
+      if (!outputStream->Next(reinterpret_cast<void **>(&buffer), &addedSize)) {
+        throw std::bad_alloc();
+      }
+      bufferPosition = 0;
+      bufferLength = static_cast<size_t>(addedSize);
+    }
+    buffer[bufferPosition++] = c;
+  }
+
+  void RleEncoder::recordPosition(PositionRecorder* recorder) const {
+    uint64_t flushedSize = outputStream->getSize();
+    uint64_t unflushedSize = static_cast<uint64_t>(bufferPosition);
+    if (outputStream->isCompressed()) {
+      recorder->add(flushedSize);
+      recorder->add(unflushedSize);
+    } else {
+      flushedSize -= static_cast<uint64_t>(bufferLength);
+      recorder->add(flushedSize + unflushedSize);
+    }
+    recorder->add(static_cast<uint64_t>(numLiterals));
   }
 
 }  // namespace orc

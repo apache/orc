@@ -29,7 +29,14 @@
 #include <ctime>
 #include <sstream>
 
+#ifdef __clang__
+  DIAGNOSTIC_IGNORE("-Wmissing-variable-declarations")
+#endif
+
 namespace orc {
+
+  using ::testing::TestWithParam;
+  using ::testing::Values;
 
   const int DEFAULT_MEM_STREAM_SIZE = 100 * 1024 * 1024; // 100M
 
@@ -40,7 +47,7 @@ namespace orc {
                                       const Type& type,
                                       MemoryPool* memoryPool,
                                       OutputStream* stream,
-                                      FileVersion version = FileVersion(0, 11)){
+                                      FileVersion version){
     WriterOptions options;
     options.setStripeSize(stripeSize);
     options.setCompressionBlockSize(compresionblockSize);
@@ -64,43 +71,21 @@ namespace orc {
     return reader->createRowReader(rowReaderOpts);
   }
 
-  TEST(Writer, writeEmptyFile) {
-    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    MemoryPool* pool = getDefaultPool();
-    ORC_UNIQUE_PTR<Type> type(Type::buildTypeFromString("struct<col1:int>"));
+  class WriterTest : public TestWithParam<FileVersion> {
+    // You can implement all the usual fixture class members here.
+    // To access the test parameter, call GetParam() from class
+    // TestWithParam<T>.
+    virtual void SetUp();
 
-    uint64_t stripeSize = 16 * 1024; // 16K
-    uint64_t compressionBlockSize = 1024; // 1k
+    protected:
+      FileVersion fileVersion = FileVersion::v_0_11();
+  };
 
-    std::unique_ptr<Writer> writer = createWriter(
-                                      stripeSize,
-                                      compressionBlockSize,
-                                      CompressionKind_ZLIB,
-                                      *type,
-                                      pool,
-                                      &memStream);
-    writer->close();
-
-    std::unique_ptr<InputStream> inStream(
-            new MemoryInputStream (memStream.getData(), memStream.getLength()));
-    std::unique_ptr<Reader> reader = createReader(
-                                                pool,
-                                                std::move(inStream));
-    std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
-    EXPECT_EQ(FileVersion(0, 11), reader->getFormatVersion());
-    EXPECT_EQ("0.11", reader->getFormatVersion().toString());
-    EXPECT_EQ(WriterVersion_ORC_135, reader->getWriterVersion());
-    EXPECT_EQ(0, reader->getNumberOfRows());
-
-    WriterId writerId = WriterId::ORC_CPP_WRITER;
-    EXPECT_EQ(writerId, reader->getWriterId());
-    EXPECT_EQ(1, reader->getWriterIdValue());
-
-    std::unique_ptr<ColumnVectorBatch> batch = rowReader->createRowBatch(1024);
-    EXPECT_FALSE(rowReader->next(*batch));
+  void WriterTest::SetUp() {
+    fileVersion = GetParam();
   }
 
-  TEST(Writer, writeIntFileOneStripe) {
+  TEST_P(WriterTest, writeEmptyFile) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
     ORC_UNIQUE_PTR<Type> type(Type::buildTypeFromString("struct<col1:int>"));
@@ -115,7 +100,43 @@ namespace orc {
                                       *type,
                                       pool,
                                       &memStream,
-                                      FileVersion(0, 11));
+                                      fileVersion);
+    writer->close();
+
+    std::unique_ptr<InputStream> inStream(
+            new MemoryInputStream (memStream.getData(), memStream.getLength()));
+    std::unique_ptr<Reader> reader = createReader(
+                                                pool,
+                                                std::move(inStream));
+    std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
+    EXPECT_EQ(fileVersion, reader->getFormatVersion());
+    EXPECT_EQ(WriterVersion_ORC_135, reader->getWriterVersion());
+    EXPECT_EQ(0, reader->getNumberOfRows());
+
+    WriterId writerId = WriterId::ORC_CPP_WRITER;
+    EXPECT_EQ(writerId, reader->getWriterId());
+    EXPECT_EQ(1, reader->getWriterIdValue());
+
+    std::unique_ptr<ColumnVectorBatch> batch = rowReader->createRowBatch(1024);
+    EXPECT_FALSE(rowReader->next(*batch));
+  }
+
+  TEST_P(WriterTest, writeIntFileOneStripe) {
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    MemoryPool* pool = getDefaultPool();
+    ORC_UNIQUE_PTR<Type> type(Type::buildTypeFromString("struct<col1:int>"));
+
+    uint64_t stripeSize = 16 * 1024; // 16K
+    uint64_t compressionBlockSize = 1024; // 1k
+
+    std::unique_ptr<Writer> writer = createWriter(
+                                      stripeSize,
+                                      compressionBlockSize,
+                                      CompressionKind_ZLIB,
+                                      *type,
+                                      pool,
+                                      &memStream,
+                                      fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(1024);
     StructVectorBatch* structBatch =
       dynamic_cast<StructVectorBatch *>(batch.get());
@@ -159,7 +180,7 @@ namespace orc {
     }
   }
 
-  TEST(Writer, writeIntFileMultipleStripes) {
+  TEST_P(WriterTest, writeIntFileMultipleStripes) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
     ORC_UNIQUE_PTR<Type> type(Type::buildTypeFromString("struct<col1:int>"));
@@ -173,7 +194,8 @@ namespace orc {
                                       CompressionKind_ZLIB,
                                       *type,
                                       pool,
-                                      &memStream);
+                                      &memStream,
+                                      fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(65535);
     StructVectorBatch* structBatch =
       dynamic_cast<StructVectorBatch*>(batch.get());
@@ -214,7 +236,7 @@ namespace orc {
     EXPECT_FALSE(rowReader->next(*batch));
   }
 
-  TEST(Writer, writeStringAndBinaryColumn) {
+  TEST_P(WriterTest, writeStringAndBinaryColumn) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool * pool = getDefaultPool();
     std::unique_ptr<Type> type(Type::buildTypeFromString(
@@ -231,7 +253,8 @@ namespace orc {
                                                   CompressionKind_ZLIB,
                                                   *type,
                                                   pool,
-                                                  &memStream);
+                                                  &memStream,
+                                                  fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(65535);
     StructVectorBatch * structBatch =
       dynamic_cast<StructVectorBatch *>(batch.get());
@@ -286,7 +309,7 @@ namespace orc {
     EXPECT_FALSE(rowReader->next(*batch));
   }
 
-  TEST(Writer, writeFloatAndDoubleColumn) {
+  TEST_P(WriterTest, writeFloatAndDoubleColumn) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool * pool = getDefaultPool();
     std::unique_ptr<Type> type(Type::buildTypeFromString(
@@ -306,7 +329,8 @@ namespace orc {
                                                   CompressionKind_ZLIB,
                                                   *type,
                                                   pool,
-                                                  &memStream);
+                                                  &memStream,
+                                                  fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch * structBatch =
       dynamic_cast<StructVectorBatch *>(batch.get());
@@ -348,7 +372,7 @@ namespace orc {
     EXPECT_FALSE(rowReader->next(*batch));
   }
 
-  TEST(Writer, writeShortIntLong) {
+  TEST_P(WriterTest, writeShortIntLong) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool * pool = getDefaultPool();
     std::unique_ptr<Type> type(Type::buildTypeFromString(
@@ -363,7 +387,8 @@ namespace orc {
                                                   CompressionKind_ZLIB,
                                                   *type,
                                                   pool,
-                                                  &memStream);
+                                                  &memStream,
+                                                  fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch * structBatch =
       dynamic_cast<StructVectorBatch *>(batch.get());
@@ -407,7 +432,7 @@ namespace orc {
     }
   }
 
-  TEST(Writer, writeTinyint) {
+  TEST_P(WriterTest, writeTinyint) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool * pool = getDefaultPool();
     std::unique_ptr<Type> type(Type::buildTypeFromString(
@@ -422,7 +447,8 @@ namespace orc {
                                                   CompressionKind_ZLIB,
                                                   *type,
                                                   pool,
-                                                  &memStream);
+                                                  &memStream,
+                                                  fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch * structBatch =
       dynamic_cast<StructVectorBatch *>(batch.get());
@@ -454,7 +480,7 @@ namespace orc {
     }
   }
 
-  TEST(Writer, writeBooleanColumn) {
+  TEST_P(WriterTest, writeBooleanColumn) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
     std::unique_ptr<Type> type(Type::buildTypeFromString("struct<col1:boolean>"));
@@ -468,7 +494,8 @@ namespace orc {
                                                   CompressionKind_ZLIB,
                                                   *type,
                                                   pool,
-                                                  &memStream);
+                                                  &memStream,
+                                                  fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch * structBatch =
       dynamic_cast<StructVectorBatch *>(batch.get());
@@ -500,7 +527,7 @@ namespace orc {
     }
   }
 
-  TEST(Writer, writeDate) {
+  TEST_P(WriterTest, writeDate) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
     std::unique_ptr<Type> type(Type::buildTypeFromString("struct<col1:date>"));
@@ -514,7 +541,8 @@ namespace orc {
                                                   CompressionKind_ZLIB,
                                                   *type,
                                                   pool,
-                                                  &memStream);
+                                                  &memStream,
+                                                  fileVersion);
 
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch * structBatch =
@@ -547,7 +575,7 @@ namespace orc {
     }
   }
 
-  TEST(Writer, writeTimestamp) {
+  TEST_P(WriterTest, writeTimestamp) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
     std::unique_ptr<Type> type(Type::buildTypeFromString("struct<col1:timestamp>"));
@@ -561,7 +589,8 @@ namespace orc {
                                                   CompressionKind_ZLIB,
                                                   *type,
                                                   pool,
-                                                  &memStream);
+                                                  &memStream,
+                                                  fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch * structBatch =
       dynamic_cast<StructVectorBatch *>(batch.get());
@@ -598,7 +627,7 @@ namespace orc {
     }
   }
 
-  TEST(Writer, writeCharAndVarcharColumn) {
+  TEST_P(WriterTest, writeCharAndVarcharColumn) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool * pool = getDefaultPool();
     std::unique_ptr<Type> type(Type::buildTypeFromString(
@@ -616,7 +645,8 @@ namespace orc {
                                                   CompressionKind_ZLIB,
                                                   *type,
                                                   pool,
-                                                  &memStream);
+                                                  &memStream,
+                                                  fileVersion);
 
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch * structBatch =
@@ -688,7 +718,7 @@ namespace orc {
     EXPECT_FALSE(rowReader->next(*batch));
   }
 
-  TEST(Writer, writeDecimal64Column) {
+  TEST_P(WriterTest, writeDecimal64Column) {
     const uint64_t maxPrecision = 18;
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
@@ -704,7 +734,8 @@ namespace orc {
                                                   CompressionKind_ZLIB,
                                                   *type,
                                                   pool,
-                                                  &memStream);
+                                                  &memStream,
+                                                  fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch * structBatch =
       dynamic_cast<StructVectorBatch *>(batch.get());
@@ -771,7 +802,7 @@ namespace orc {
     }
   }
 
-  TEST(Writer, writeDecimal128Column) {
+  TEST_P(WriterTest, writeDecimal128Column) {
     const uint64_t maxPrecision = 38;
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
@@ -787,7 +818,8 @@ namespace orc {
                                                   CompressionKind_ZLIB,
                                                   *type,
                                                   pool,
-                                                  &memStream);
+                                                  &memStream,
+                                                  fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch * structBatch =
       dynamic_cast<StructVectorBatch *>(batch.get());
@@ -864,7 +896,7 @@ namespace orc {
     }
   }
 
-  TEST(Writer, writeListColumn) {
+  TEST_P(WriterTest, writeListColumn) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool * pool = getDefaultPool();
 
@@ -882,7 +914,8 @@ namespace orc {
                                                   CompressionKind_ZLIB,
                                                   *type,
                                                   pool,
-                                                  &memStream);
+                                                  &memStream,
+                                                  fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch =
       writer->createRowBatch(rowCount * maxListLength);
 
@@ -935,7 +968,7 @@ namespace orc {
     }
   }
 
-  TEST(Writer, writeMapColumn) {
+  TEST_P(WriterTest, writeMapColumn) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool * pool = getDefaultPool();
     std::unique_ptr<Type> type(
@@ -950,7 +983,8 @@ namespace orc {
                                                   CompressionKind_ZLIB,
                                                   *type,
                                                   pool,
-                                                  &memStream);
+                                                  &memStream,
+                                                  fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch =
       writer->createRowBatch(rowCount * maxListLength);
     StructVectorBatch * structBatch =
@@ -1027,7 +1061,7 @@ namespace orc {
     }
   }
 
-  TEST(Writer, writeUnionColumn) {
+  TEST_P(WriterTest, writeUnionColumn) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool * pool = getDefaultPool();
     std::unique_ptr<Type> type(Type::buildTypeFromString(
@@ -1042,7 +1076,8 @@ namespace orc {
                                                   CompressionKind_ZLIB,
                                                   *type,
                                                   pool,
-                                                  &memStream);
+                                                  &memStream,
+                                                  fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch * structBatch =
       dynamic_cast<StructVectorBatch *>(batch.get());
@@ -1134,4 +1169,6 @@ namespace orc {
       }
     }
   }
+
+  INSTANTIATE_TEST_CASE_P(OrcTest, WriterTest, Values(FileVersion::v_0_11(), FileVersion::v_0_12()));
 }

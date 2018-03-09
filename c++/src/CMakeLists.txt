@@ -179,15 +179,15 @@ set(SOURCE_FILES
   OrcFile.cc
   Reader.cc
   RLEv1.cc
-  RLEv2.cc
+  RleDecoderV2.cc
+  RleEncoderV2.cc
   RLE.cc
   Statistics.cc
   StripeStream.cc
   Timezone.cc
   TypeImpl.cc
   Vector.cc
-  Writer.cc
-  )
+  Writer.cc)
 
 if(ORC_CXX_HAS_THREAD_LOCAL AND BUILD_LIBHDFSPP)
   set(SOURCE_FILES ${SOURCE_FILES} OrcHdfsFile.cc)

@@ -38,6 +38,11 @@ namespace orc {
     CompressionStrategy_COMPRESSION
   };
 
+  enum RleVersion {
+    RleVersion_1 = 0,
+    RleVersion_2 = 1
+  };
+
   class Timezone;
 
   /**
@@ -132,6 +137,12 @@ namespace orc {
     CompressionStrategy getCompressionStrategy() const;
 
     /**
+     * Get if the bitpacking should be aligned.
+     * @return true if should be aligned, return false otherwise
+     */
+    bool getAlignedBitpacking() const;
+
+    /**
      * Set the padding tolerance.
      */
     WriterOptions& setPaddingTolerance(double tolerance);
@@ -163,6 +174,11 @@ namespace orc {
      * @return if not set, return std::err.
      */
     std::ostream * getErrorStream() const;
+
+    /**
+     * Get the RLE version.
+     */
+    RleVersion getRleVersion() const;
 
     /**
      * Get whether or not to write row group index

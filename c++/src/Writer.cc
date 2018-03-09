@@ -40,7 +40,7 @@ namespace orc {
     bool enableIndex;
 
     WriterOptionsPrivate() :
-                            fileVersion(FileVersion::v_0_11()) { // default to Hive_0_11
+                            fileVersion(FileVersion::v_0_12()) { // default to Hive_0_11
       stripeSize = 64 * 1024 * 1024; // 64M
       compressionBlockSize = 64 * 1024; // 64K
       rowIndexStride = 10000;
@@ -83,6 +83,14 @@ namespace orc {
   WriterOptions::~WriterOptions() {
     // PASS
   }
+  RleVersion WriterOptions::getRleVersion() const {
+    if(privateBits->fileVersion == FileVersion::v_0_11())
+    {
+      return RleVersion_1;
+    }
+
+    return RleVersion_2;
+  }
 
   WriterOptions& WriterOptions::setStripeSize(uint64_t size) {
     privateBits->stripeSize = size;
@@ -122,8 +130,8 @@ namespace orc {
   }
 
   WriterOptions& WriterOptions::setFileVersion(const FileVersion& version) {
-    // Only Hive_0_11 version is supported currently
-    if (version.getMajor() == 0 && version.getMinor() == 11) {
+    // Only Hive_0_11 and Hive_0_12 version are supported currently
+    if (version.getMajor() == 0 && (version.getMinor() == 11 || version.getMinor() == 12)) {
       privateBits->fileVersion = version;
       return *this;
     }
@@ -151,6 +159,10 @@ namespace orc {
 
   CompressionStrategy WriterOptions::getCompressionStrategy() const {
     return privateBits->compressionStrategy;
+  }
+
+  bool WriterOptions::getAlignedBitpacking() const {
+    return privateBits->compressionStrategy == CompressionStrategy ::CompressionStrategy_SPEED;
   }
 
   WriterOptions& WriterOptions::setPaddingTolerance(double tolerance) {
