@@ -905,11 +905,13 @@ namespace orc {
 
     // ORC-313: check subtype count of LIST and MAP
     if (type.kind() == proto::Type_Kind_LIST && type.subtypes_size() != 1)
-      throw ParseError("LIST type should contains exactly one subtype but has " +
+      throw ParseError("LIST type should contain exactly one subtype but has " +
           std::to_string(type.subtypes_size()));
     if (type.kind() == proto::Type_Kind_MAP && type.subtypes_size() != 2)
-      throw ParseError("MAP type should contains exactly two subtypes but has " +
+      throw ParseError("MAP type should contain exactly two subtypes but has " +
           std::to_string(type.subtypes_size()));
+    if (type.kind() == proto::Type_Kind_UNION && type.subtypes_size() == 0)
+      throw ParseError("UNION type should contain subtypes but has none");
 
     // ORC-317: check that indices in the type tree are valid
     int origin_index = index;

@@ -431,6 +431,9 @@ public class ReaderImpl implements Reader {
       throw new FileFormatException("MAP type should contains exactly " +
               "two subtypes but has " + type.getSubtypesCount());
     }
+    if (type.getKind() == OrcProto.Type.Kind.UNION && type.getSubtypesCount() == 0) {
+      throw new FileFormatException("UNION type should contain subtypes but has none");
+    }
 
     // ORC-317: check that indices in the type tree are valid
     int origin_index = index;
