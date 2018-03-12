@@ -17,13 +17,15 @@
  */
 package org.apache.orc.impl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -35,7 +37,6 @@ import org.apache.orc.CompressionKind;
 import org.apache.orc.DataReader;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
-
 import org.apache.orc.StripeInformation;
 import org.apache.orc.TypeDescription;
 
@@ -44,6 +45,7 @@ import org.apache.orc.TypeDescription;
  */
 public class RecordReaderUtils {
   private static final HadoopShims SHIMS = HadoopShimsFactory.get();
+  private static final Logger LOG = LoggerFactory.getLogger(RecordReaderUtils.class);
 
   static boolean hadBadBloomFilters(TypeDescription.Category category,
                                     OrcFile.WriterVersion version) {
@@ -331,13 +333,16 @@ public class RecordReaderUtils {
     @Override
     public DataReader clone() {
       if (this.file != null) {
-        throw new UnsupportedOperationException(
-            "Cannot clone a DataReader that is already opened");
+        // We should really throw here, but that will cause failures in Hive.
+        // While Hive uses clone, just log a warning.
+        LOG.warn("Cloning an opened DataReader; the stream will be reused and closed twice");
       }
       try {
         DefaultDataReader clone = (DefaultDataReader) super.clone();
-        // Make sure we don't share the same codec between two readers.
-        clone.codec = OrcCodecPool.getCodec(clone.compressionKind);
+        if (codec != null) {
+          // Make sure we don't share the same codec between two readers.
+          clone.codec = OrcCodecPool.getCodec(clone.compressionKind);
+        }
         return clone;
       } catch (CloneNotSupportedException e) {
         throw new UnsupportedOperationException("uncloneable", e);
