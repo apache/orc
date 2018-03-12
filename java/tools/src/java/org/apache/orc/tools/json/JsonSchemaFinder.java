@@ -31,6 +31,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.orc.TypeDescription;
+import org.apache.orc.TypeDescriptionPrettyPrint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -335,6 +336,8 @@ public class JsonSchemaFinder {
       result.mergedType.printFlat(System.out, "root");
     } else if (cli.hasOption('t')) {
       printAsTable(System.out, (StructType) result.mergedType);
+    } else if (cli.hasOption('p')) {
+      TypeDescriptionPrettyPrint.print(System.out, result.getSchema());
     } else {
       System.out.println(result.getSchema());
     }
@@ -349,6 +352,8 @@ public class JsonSchemaFinder {
         .desc("Print types as flat list of types").build());
     options.addOption(Option.builder("t").longOpt("table")
         .desc("Print types as Hive table declaration").build());
+    options.addOption(Option.builder("p").longOpt("pretty")
+        .desc("Pretty print the schema").build());
     CommandLine cli = new GnuParser().parse(options, args);
     if (cli.hasOption('h') || cli.getArgs().length == 0) {
       HelpFormatter formatter = new HelpFormatter();
