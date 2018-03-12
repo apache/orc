@@ -505,14 +505,14 @@ public class OrcUtils {
       }
       case LIST:
         if (type.getSubtypesCount() != 1) {
-          throw new FileFormatException("LIST type should contains exactly " +
+          throw new FileFormatException("LIST type should contain exactly " +
                   "one subtype but has " + type.getSubtypesCount());
         }
         return TypeDescription.createList(
             convertTypeFromProtobuf(types, type.getSubtypes(0)));
       case MAP:
         if (type.getSubtypesCount() != 2) {
-          throw new FileFormatException("MAP type should contains exactly " +
+          throw new FileFormatException("MAP type should contain exactly " +
                   "two subtypes but has " + type.getSubtypesCount());
         }
         return TypeDescription.createMap(
@@ -528,7 +528,7 @@ public class OrcUtils {
       }
       case UNION: {
         if (type.getSubtypesCount() == 0) {
-          throw new FileFormatException("UNION type should contains at least" +
+          throw new FileFormatException("UNION type should contain at least" +
                   " one subtype but has none");
         }
         TypeDescription result = TypeDescription.createUnion();
