@@ -18,7 +18,6 @@
 package org.apache.orc.impl;
 
 import org.apache.orc.CompressionKind;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Date;
@@ -29,7 +28,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
-
 import org.apache.orc.OrcFile;
 import org.apache.orc.util.BloomFilter;
 import org.apache.orc.util.BloomFilterIO;
@@ -1353,6 +1351,7 @@ public class RecordReaderImpl implements RecordReader {
     return result;
   }
 
+  // TODO: pollutes the interface for tests only - we should remove this.
   public CompressionCodec getCompressionCodec() {
     return dataReader.getCompressionCodec();
   }

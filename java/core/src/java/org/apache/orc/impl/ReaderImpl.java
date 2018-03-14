@@ -473,7 +473,7 @@ public class ReaderImpl implements Reader {
         .setFooter(footer)
         .setFileLength(fileLength);
     } finally {
-      OrcCodecPool.returnCodec(kind, codec);
+      OrcCodecPool.returnCodecSafely(kind, codec);
     }
     // clear does not clear the contents but sets position to 0 and limit = capacity
     buffer.clear();
@@ -596,7 +596,7 @@ public class ReaderImpl implements Reader {
       try {
         footer = extractFooter(footerBuffer, 0, footerSize, codec, bufferSize);
       } finally {
-        OrcCodecPool.returnCodec(compressionKind, codec);
+        OrcCodecPool.returnCodecSafely(compressionKind, codec);
       }
       fileTailBuilder.setFooter(footer);
     }
@@ -785,7 +785,7 @@ public class ReaderImpl implements Reader {
       try {
         metadata = extractMetadata(tail.getSerializedTail(), 0, metadataSize, codec, bufferSize);
       } finally {
-        OrcCodecPool.returnCodec(compressionKind, codec);
+        OrcCodecPool.returnCodecSafely(compressionKind, codec);
       }
     }
     if (stripeStats == null) {

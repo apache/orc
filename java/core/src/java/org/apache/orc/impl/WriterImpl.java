@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.TreeMap;
-
 import io.airlift.compress.lz4.Lz4Compressor;
 import io.airlift.compress.lz4.Lz4Decompressor;
 import io.airlift.compress.lzo.LzoCompressor;
@@ -50,7 +49,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
-
 import com.google.protobuf.ByteString;
 
 /**
@@ -645,6 +643,7 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
     return ReaderImpl.deserializeStats(builder.getStatisticsList());
   }
 
+  // TODO: pollutes the interface for tests only - we should remove this.
   public CompressionCodec getCompressionCodec() {
     return physicalWriter.getCompressionCodec();
   }
