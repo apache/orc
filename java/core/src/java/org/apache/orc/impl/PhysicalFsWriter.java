@@ -228,9 +228,8 @@ public class PhysicalFsWriter implements PhysicalWriter {
     // We don't use the codec directly but do give it out codec in getCompressionCodec;
     // that is used in tests, for boolean checks, and in StreamFactory. Some of the changes that
     // would get rid of this pattern require cross-project interface changes, so just return the
-    // codec for now. If the codec is broken, reset will usually throw, so this is still the
-    // correct thing to do.
-    OrcCodecPool.returnCodecSafely(compress, codec, false);
+    // codec for now.
+    OrcCodecPool.returnCodecSafely(compress, codec);
     codec = null;
     rawWriter.close();
     rawWriter = null;

@@ -151,7 +151,6 @@ public class RecordReaderUtils {
     private final Path path;
     private final boolean useZeroCopy;
     private CompressionCodec codec;
-    private boolean hasCodecError = false;
     private final int bufferSize;
     private final int typeCount;
     private CompressionKind compressionKind;
@@ -228,18 +227,10 @@ public class RecordReaderUtils {
                 ByteBuffer bb = range.getData().duplicate();
                 bb.position((int) (offset - range.getOffset()));
                 bb.limit((int) (bb.position() + stream.getLength()));
-                boolean isOk = false;
-                try {
-                  indexes[column] = OrcProto.RowIndex.parseFrom(
-                      InStream.createCodedInputStream("index",
-                          ReaderImpl.singleton(new BufferChunk(bb, 0)),
-                          stream.getLength(), codec, bufferSize));
-                  isOk = true;
-                } finally {
-                  if (!isOk) {
-                    hasCodecError = true;
-                  }
-                }
+                indexes[column] = OrcProto.RowIndex.parseFrom(
+                    InStream.createCodedInputStream("index",
+                        ReaderImpl.singleton(new BufferChunk(bb, 0)),
+                        stream.getLength(), codec, bufferSize));
               }
               break;
             case BLOOM_FILTER:
@@ -248,18 +239,10 @@ public class RecordReaderUtils {
                 ByteBuffer bb = range.getData().duplicate();
                 bb.position((int) (offset - range.getOffset()));
                 bb.limit((int) (bb.position() + stream.getLength()));
-                boolean isOk = false;
-                try {
-                  bloomFilterIndices[column] = OrcProto.BloomFilterIndex.parseFrom
-                      (InStream.createCodedInputStream("bloom_filter",
-                          ReaderImpl.singleton(new BufferChunk(bb, 0)),
-                      stream.getLength(), codec, bufferSize));
-                  isOk = true;
-                } finally {
-                  if (!isOk) {
-                    hasCodecError = true;
-                  }
-                }
+                bloomFilterIndices[column] = OrcProto.BloomFilterIndex.parseFrom
+                    (InStream.createCodedInputStream("bloom_filter",
+                        ReaderImpl.singleton(new BufferChunk(bb, 0)),
+                    stream.getLength(), codec, bufferSize));
               }
               break;
             default:
@@ -282,18 +265,9 @@ public class RecordReaderUtils {
       // read the footer
       ByteBuffer tailBuf = ByteBuffer.allocate(tailLength);
       file.readFully(offset, tailBuf.array(), tailBuf.arrayOffset(), tailLength);
-      boolean isOk = false;
-      try {
-        OrcProto.StripeFooter result = OrcProto.StripeFooter.parseFrom(
-            InStream.createCodedInputStream("footer", ReaderImpl.singleton(
-                new BufferChunk(tailBuf, 0)), tailLength, codec, bufferSize));
-        isOk = true;
-        return result;
-      } finally {
-        if (!isOk) {
-          hasCodecError = true;
-        }
-      }
+      return OrcProto.StripeFooter.parseFrom(
+          InStream.createCodedInputStream("footer", ReaderImpl.singleton(
+              new BufferChunk(tailBuf, 0)), tailLength, codec, bufferSize));
     }
 
     @Override
@@ -305,7 +279,7 @@ public class RecordReaderUtils {
     @Override
     public void close() throws IOException {
       if (codec != null) {
-        OrcCodecPool.returnCodecSafely(compressionKind, codec, hasCodecError);
+        OrcCodecPool.returnCodecSafely(compressionKind, codec);
         codec = null;
       }
       if (pool != null) {

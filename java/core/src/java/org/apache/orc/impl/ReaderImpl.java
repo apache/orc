@@ -463,7 +463,6 @@ public class ReaderImpl implements Reader {
     CompressionKind kind = CompressionKind.valueOf(ps.getCompression().name());
     OrcProto.FileTail.Builder fileTailBuilder;
     CompressionCodec codec = OrcCodecPool.getCodec(kind);
-    boolean isCodecError = true;
     try {
       OrcProto.Footer footer = extractFooter(buffer,
         (int) (buffer.position() + ps.getMetadataLength()),
@@ -473,9 +472,8 @@ public class ReaderImpl implements Reader {
         .setPostscript(ps)
         .setFooter(footer)
         .setFileLength(fileLength);
-      isCodecError = false;
     } finally {
-      OrcCodecPool.returnCodecSafely(kind, codec, isCodecError);
+      OrcCodecPool.returnCodecSafely(kind, codec);
     }
     // clear does not clear the contents but sets position to 0 and limit = capacity
     buffer.clear();
@@ -595,12 +593,10 @@ public class ReaderImpl implements Reader {
       buffer.reset();
       OrcProto.Footer footer;
       CompressionCodec codec = OrcCodecPool.getCodec(compressionKind);
-      boolean isCodecError = true;
       try {
         footer = extractFooter(footerBuffer, 0, footerSize, codec, bufferSize);
-        isCodecError = false;
       } finally {
-        OrcCodecPool.returnCodecSafely(compressionKind, codec, isCodecError);
+        OrcCodecPool.returnCodecSafely(compressionKind, codec);
       }
       fileTailBuilder.setFooter(footer);
     }
@@ -786,12 +782,10 @@ public class ReaderImpl implements Reader {
   public List<StripeStatistics> getStripeStatistics() throws IOException {
     if (metadata == null) {
       CompressionCodec codec = OrcCodecPool.getCodec(compressionKind);
-      boolean isCodecError = true;
       try {
         metadata = extractMetadata(tail.getSerializedTail(), 0, metadataSize, codec, bufferSize);
-        isCodecError = false;
       } finally {
-        OrcCodecPool.returnCodecSafely(compressionKind, codec, isCodecError);
+        OrcCodecPool.returnCodecSafely(compressionKind, codec);
       }
     }
     if (stripeStats == null) {
