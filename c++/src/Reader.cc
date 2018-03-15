@@ -897,6 +897,36 @@ namespace orc {
     return REDUNDANT_MOVE(postscript);
   }
 
+  void checkTypes(int& index, const proto::Footer& footer) {
+    if (index >= footer.types_size())
+      throw ParseError(std::string("Footer is corrupt that it lost types(") +
+          std::to_string(index) + ")");
+    const proto::Type& type = footer.types(index);
+
+    // ORC-313: check subtype count of LIST and MAP
+    if (type.kind() == proto::Type_Kind_LIST && type.subtypes_size() != 1)
+      throw ParseError("LIST type should contain exactly one subtype but has " +
+          std::to_string(type.subtypes_size()));
+    if (type.kind() == proto::Type_Kind_MAP && type.subtypes_size() != 2)
+      throw ParseError("MAP type should contain exactly two subtypes but has " +
+          std::to_string(type.subtypes_size()));
+    if (type.kind() == proto::Type_Kind_UNION && type.subtypes_size() == 0)
+      throw ParseError("UNION type should contain subtypes but has none");
+
+    // ORC-317: check that indices in the type tree are valid
+    int origin_index = index;
+    for (int i = 0; i < type.subtypes_size(); ++i) {
+      int proto_index = static_cast<int>(type.subtypes(i));
+      if (++index != proto_index) {
+        std::stringstream msg;
+        msg << "Footer is corrupt: subType(" << i << ") should be " << index
+            << " but was " << proto_index << " in types(" << origin_index << ")";
+        throw ParseError(msg.str());
+      }
+      checkTypes(index, footer);
+    }
+  }
+
   /**
    * Parse the footer from the given buffer.
    * @param stream the file's stream
@@ -926,6 +956,9 @@ namespace orc {
       throw ParseError("Failed to parse the footer from " +
                        stream->getName());
     }
+
+    int index = 0;
+    checkTypes(index, *footer);
     return REDUNDANT_MOVE(footer);
   }
 
