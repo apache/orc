@@ -897,6 +897,27 @@ namespace orc {
     return REDUNDANT_MOVE(postscript);
   }
 
+  // ORC-317: check that indices in the type tree are valid, so we won't crash
+  // when we convert the proto::Types to TypeImpls.
+  void checkProtoTypeIds(int &index, const proto::Footer &footer) {
+    if (index >= footer.types_size())
+      throw ParseError(std::string("Footer is corrupt that it lost types(") +
+          std::to_string(index) + ")");
+    const proto::Type& type = footer.types(index);
+
+    int origin_index = index;
+    for (int i = 0; i < type.subtypes_size(); ++i) {
+      int proto_index = static_cast<int>(type.subtypes(i));
+      if (++index != proto_index) {
+        std::stringstream msg;
+        msg << "Footer is corrupt: subType(" << i << ") should be " << index
+            << " but was " << proto_index << " in types(" << origin_index << ")";
+        throw ParseError(msg.str());
+      }
+      checkProtoTypeIds(index, footer);
+    }
+  }
+
   /**
    * Parse the footer from the given buffer.
    * @param stream the file's stream
@@ -926,6 +947,9 @@ namespace orc {
       throw ParseError("Failed to parse the footer from " +
                        stream->getName());
     }
+
+    int index = 0;
+    checkProtoTypeIds(index, *footer);
     return REDUNDANT_MOVE(footer);
   }
 

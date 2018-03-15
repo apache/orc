@@ -23,6 +23,7 @@
 #include "wrap/gtest-wrapper.h"
 
 #include "TypeImpl.hh"
+#include "Reader.cc"
 
 namespace orc {
 
@@ -338,5 +339,56 @@ namespace orc {
     illUnionType.set_kind(proto::Type_Kind_UNION);
     testCorruptHelper(illUnionType, footer,
         "Illegal UNION type that doesn't contain any subtypes");
+  }
+
+  void expectParseError(const proto::Footer &footer, const char* errMsg) {
+    try {
+      int index = 0;
+      checkProtoTypeIds(index, footer);
+      FAIL() << "Should throw ParseError for ill ids";
+    } catch (ParseError& e) {
+      EXPECT_EQ(e.what(), std::string(errMsg));
+    } catch (...) {
+      FAIL() << "Should only throw ParseError for ill ids";
+    }
+  }
+
+  TEST(TestType, testCheckProtoTypeIds) {
+    proto::Footer footer;
+    proto::Type rootType;
+    rootType.set_kind(proto::Type_Kind_STRUCT);
+    rootType.add_subtypes(1); // add a non existent type id
+    *(footer.add_types()) = rootType;
+    expectParseError(footer, "Footer is corrupt that it lost types(1)");
+
+    footer.clear_types();
+    rootType.clear_subtypes();
+    proto::Type structType;
+    structType.set_kind(proto::Type_Kind_STRUCT);
+    structType.add_subtypes(0);  // construct a loop back to root
+    rootType.add_subtypes(1);
+    *(footer.add_types()) = rootType;
+    *(footer.add_types()) = structType;
+    expectParseError(footer,
+        "Footer is corrupt: subType(0) should be 2 but was 0 in types(1)");
+
+    footer.clear_types();
+    rootType.clear_subtypes();
+    proto::Type listType;
+    listType.set_kind(proto::Type_Kind_LIST);
+    proto::Type mapType;
+    mapType.set_kind(proto::Type_Kind_MAP);
+    proto::Type unionType;
+    unionType.set_kind(proto::Type_Kind_UNION);
+    rootType.add_subtypes(1);   // 0 -> 1
+    listType.add_subtypes(2);   // 1 -> 2
+    mapType.add_subtypes(3);    // 2 -> 3
+    unionType.add_subtypes(1);  // 3 -> 1
+    *(footer.add_types()) = rootType;   // 0
+    *(footer.add_types()) = listType;   // 1
+    *(footer.add_types()) = mapType;    // 2
+    *(footer.add_types()) = unionType;  // 3
+    expectParseError(footer,
+        "Footer is corrupt: subType(0) should be 4 but was 1 in types(3)");
   }
 }
