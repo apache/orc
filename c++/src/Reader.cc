@@ -898,6 +898,36 @@ namespace orc {
   }
 
   /**
+   * Check that indices in the type tree are valid, so we won't crash
+   * when we convert the proto::Types to TypeImpls.
+   */
+  void checkProtoTypeIds(const proto::Footer &footer) {
+    std::stringstream msg;
+    int maxId = footer.types_size();
+    for (int i = 0; i < maxId; ++i) {
+      const proto::Type& type = footer.types(i);
+      for (int j = 0; j < type.subtypes_size(); ++j) {
+        int subTypeId = static_cast<int>(type.subtypes(j));
+        if (subTypeId <= i) {
+          msg << "Footer is corrupt: malformed link from type " << i << " to "
+              << subTypeId;
+          throw ParseError(msg.str());
+        }
+        if (subTypeId >= maxId) {
+          msg << "Footer is corrupt: types(" << subTypeId << ") not exists";
+          throw ParseError(msg.str());
+        }
+        if (j > 0 && static_cast<int>(type.subtypes(j - 1)) >= subTypeId) {
+          msg << "Footer is corrupt: subType(" << (j-1) << ") >= subType(" << j
+              << ") in types(" << i << "). (" << type.subtypes(j - 1) << " >= "
+              << subTypeId << ")";
+          throw ParseError(msg.str());
+        }
+      }
+    }
+  }
+
+  /**
    * Parse the footer from the given buffer.
    * @param stream the file's stream
    * @param buffer the buffer to parse the footer from
@@ -926,6 +956,8 @@ namespace orc {
       throw ParseError("Failed to parse the footer from " +
                        stream->getName());
     }
+
+    checkProtoTypeIds(*footer);
     return REDUNDANT_MOVE(footer);
   }
 
