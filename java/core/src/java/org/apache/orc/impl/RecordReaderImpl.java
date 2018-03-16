@@ -109,16 +109,29 @@ public class RecordReaderImpl implements RecordReader {
    */
   static int findColumns(SchemaEvolution evolution,
                          String columnName) {
-    TypeDescription readerSchema = evolution.getReaderBaseSchema();
+
+    TypeDescription result = evolution.getFileType(findColumns(evolution.getReaderBaseSchema(),columnName));
+    return result == null ? -1 : result.getId();
+  }
+
+  static TypeDescription findColumns(TypeDescription readerSchema,String columnName)
+  {
+    TypeDescription result = null;
     List<String> fieldNames = readerSchema.getFieldNames();
     List<TypeDescription> children = readerSchema.getChildren();
     for (int i = 0; i < fieldNames.size(); ++i) {
       if (columnName.equals(fieldNames.get(i))) {
-        TypeDescription result = evolution.getFileType(children.get(i));
-        return result == null ? -1 : result.getId();
+          return children.get(i);
+      }
+      if(children.get(i).getChildren() != null) {
+        result = findColumns(children.get(i),columnName);
+        if(result != null)
+        {
+          return result;
+        }
       }
     }
-    return -1;
+    return result;
   }
 
   /**

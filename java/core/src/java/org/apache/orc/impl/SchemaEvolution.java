@@ -242,15 +242,20 @@ public class SchemaEvolution {
     boolean[] result = new boolean[readerSchema.getMaximumId() + 1];
     boolean safePpd = validatePPDConversion(fileSchema, readerSchema);
     result[readerSchema.getId()] = safePpd;
-    List<TypeDescription> children = readerSchema.getChildren();
+    return populatePpdSafeConversionForChildern(result,readerSchema.getChildren());
+  }
+
+  private boolean[] populatePpdSafeConversionForChildern(boolean[] ppdSafeConversion,List<TypeDescription> children ){
+    boolean safePpd;
     if (children != null) {
       for (TypeDescription child : children) {
         TypeDescription fileType = getFileType(child.getId());
         safePpd = validatePPDConversion(fileType, child);
-        result[child.getId()] = safePpd;
+        ppdSafeConversion[child.getId()] = safePpd;
+        populatePpdSafeConversionForChildern(ppdSafeConversion,child.getChildren());
       }
     }
-    return result;
+    return  ppdSafeConversion;
   }
 
   private boolean validatePPDConversion(final TypeDescription fileType,
