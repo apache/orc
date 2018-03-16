@@ -382,7 +382,9 @@ namespace orc {
       *stripeFooter.add_columns() = encodings[i];
     }
 
-    // TODO: ORC-205 Include writer timezone in stripe footer
+    // use GMT to guarantee TimestampVectorBatch from reader can write
+    // same wall clock time
+    stripeFooter.set_writertimezone("GMT");
 
     // add stripe statistics to metadata
     proto::StripeStatistics* stripeStats = metadata.add_stripestats();

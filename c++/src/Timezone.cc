@@ -605,6 +605,10 @@ namespace orc {
       return epoch;
     }
 
+    int64_t convertToUTC(int64_t clk) const override {
+      return clk + getVariant(clk).gmtOffset;
+    }
+
   private:
     void parseTimeVariants(const unsigned char* ptr,
                            uint64_t variantOffset,

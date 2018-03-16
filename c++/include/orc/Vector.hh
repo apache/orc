@@ -258,6 +258,9 @@ namespace orc {
     uint64_t getMemoryUsage();
 
     // the number of seconds past 1 Jan 1970 00:00 UTC (aka time_t)
+    // Note that we always assume data is in GMT timezone; therefore it is
+    // user's responsibility to convert wall clock time in local timezone
+    // to GMT.
     DataBuffer<int64_t> data;
 
     // the nanoseconds of each value

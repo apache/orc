@@ -76,6 +76,11 @@ namespace orc {
      * Get the version of the zone file.
      */
     virtual uint64_t getVersion() const =0;
+
+    /**
+     * Convert wall clock time of current timezone to UTC timezone
+     */
+    virtual int64_t convertToUTC(int64_t clk) const = 0;
   };
 
   /**
