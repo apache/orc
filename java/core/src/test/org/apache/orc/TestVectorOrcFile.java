@@ -931,6 +931,16 @@ public class TestVectorOrcFile {
         .addField("string1", TypeDescription.createString());
   }
 
+  private static TypeDescription createComplexInnerSchema()
+  {
+    return TypeDescription.createStruct()
+            .addField("int1", TypeDescription.createInt())
+            .addField("complex",
+                      TypeDescription.createStruct()
+                              .addField("int2", TypeDescription.createInt())
+                              .addField("String1",TypeDescription.createString()));
+  }
+
   private static TypeDescription createBigRowSchema() {
     return TypeDescription.createStruct()
         .addField("boolean1", TypeDescription.createBoolean())
@@ -3474,4 +3484,112 @@ public class TestVectorOrcFile {
     assertFalse(rows.nextBatch(batch));
     rows.close();
   }
+
+  @Test
+  public void testPredicatePushdownForComplex() throws Exception {
+    TypeDescription schema = createComplexInnerSchema();
+    Writer writer = OrcFile.createWriter(testFilePath,
+            OrcFile.writerOptions(conf)
+                    .setSchema(schema)
+                    .stripeSize(400000L)
+                    .compress(CompressionKind.NONE)
+                    .bufferSize(500)
+                    .rowIndexStride(1000));
+    VectorizedRowBatch batch = schema.createRowBatch();
+    batch.ensureSize(3500);
+    batch.size = 3500;
+    for(int i=0; i < 3500; ++i) {
+      ((LongColumnVector) batch.cols[0]).vector[i] = i;
+      ((LongColumnVector)((StructColumnVector) batch.cols[1]).fields[0]).vector[i] = i * 300;
+      ((BytesColumnVector)((StructColumnVector) batch.cols[1]).fields[1]).setVal(i,
+              Integer.toHexString(10*i).getBytes());
+    }
+    writer.addRowBatch(batch);
+    writer.close();
+    Reader reader = OrcFile.createReader(testFilePath,
+            OrcFile.readerOptions(conf).filesystem(fs));
+    assertEquals(3500, reader.getNumberOfRows());
+
+    SearchArgument sarg = SearchArgumentFactory.newBuilder()
+            .startAnd()
+            .startNot()
+            .lessThan("complex.int2", PredicateLeaf.Type.LONG, 300000L)
+            .end()
+            .lessThan("complex.int2", PredicateLeaf.Type.LONG, 600000L)
+            .end()
+            .build();
+
+    RecordReader rows = reader.rows(reader.options()
+            .range(0L, Long.MAX_VALUE)
+            .include(new boolean[]{true, true, true, true, true})
+            .searchArgument(sarg, new String[]{null, "int1", "complex","int2","string1"}));
+    batch = reader.getSchema().createRowBatch(2000);
+    LongColumnVector ints1 = (LongColumnVector) batch.cols[0];
+    StructColumnVector struct1 = (StructColumnVector) batch.cols[1];
+    LongColumnVector ints2 = (LongColumnVector) struct1.fields[0];
+    BytesColumnVector strs = (BytesColumnVector) struct1.fields[1];
+
+    System.out.println("------------------------------------------------------------------------------------------------------------------------");
+    System.out.println(rows.getRowNumber());
+
+    Assert.assertEquals(1000L, rows.getRowNumber());
+    Assert.assertEquals(true, rows.nextBatch(batch));
+    assertEquals(1000, batch.size);
+
+    for(int i=1000; i < 2000; ++i) {
+      assertEquals(i,ints1.vector[i-1000]);
+      assertEquals(300 * i, ints2.vector[i - 1000]);
+      assertEquals(Integer.toHexString(10*i), strs.toString(i - 1000));
+    }
+    Assert.assertEquals(false, rows.nextBatch(batch));
+    Assert.assertEquals(3500, rows.getRowNumber());
+
+
+    // look through the file with no rows selected
+    sarg = SearchArgumentFactory.newBuilder()
+            .startAnd()
+            .lessThan("complex.int2", PredicateLeaf.Type.LONG, 0L)
+            .end()
+            .build();
+    rows = reader.rows(reader.options()
+            .range(0L, Long.MAX_VALUE)
+            .include(new boolean[]{true, true, true, true, true})
+            .searchArgument(sarg, new String[]{null, "int1",null,"int2","string1"}));
+    Assert.assertEquals(3500L, rows.getRowNumber());
+    assertTrue(!rows.nextBatch(batch));
+
+    // select first 100 and last 100 rows
+    sarg = SearchArgumentFactory.newBuilder()
+            .startOr()
+            .lessThan("complex.int2", PredicateLeaf.Type.LONG, 300L * 100)
+            .startNot()
+            .lessThan("complex.int2", PredicateLeaf.Type.LONG, 300L * 3400)
+            .end()
+            .end()
+            .build();
+    rows = reader.rows(reader.options()
+            .range(0L, Long.MAX_VALUE)
+            .include(new boolean[]{true, true,true,true, true})
+            .searchArgument(sarg, new String[]{null, "int1",null, "int2","string1"}));
+    Assert.assertEquals(0, rows.getRowNumber());
+    Assert.assertEquals(true, rows.nextBatch(batch));
+    assertEquals(1000, batch.size);
+    Assert.assertEquals(3000, rows.getRowNumber());
+
+    for(int i=0; i < 1000; ++i) {
+      assertEquals(300 * i, ints2.vector[i]);
+      assertEquals(Integer.toHexString(10*i), strs.toString(i));
+    }
+
+    Assert.assertEquals(true, rows.nextBatch(batch));
+    assertEquals(500, batch.size);
+    Assert.assertEquals(3500, rows.getRowNumber());
+    for(int i=3000; i < 3500; ++i) {
+      assertEquals(300 * i, ints2.vector[i - 3000]);
+      assertEquals(Integer.toHexString(10*i), strs.toString(i - 3000));
+    }
+    Assert.assertEquals(false, rows.nextBatch(batch));
+    Assert.assertEquals(3500, rows.getRowNumber());
+  }
+
 }

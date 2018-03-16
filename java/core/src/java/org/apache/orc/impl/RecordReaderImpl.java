@@ -104,21 +104,16 @@ public class RecordReaderImpl implements RecordReader {
    * Given a list of column names, find the given column and return the index.
    *
    * @param evolution the mapping from reader to file schema
-   * @param columnName  the column name to look for
+   * @param columnName  the fully qualified column name to look for
    * @return the file column number or -1 if the column wasn't found
    */
   static int findColumns(SchemaEvolution evolution,
                          String columnName) {
-    TypeDescription readerSchema = evolution.getReaderBaseSchema();
-    List<String> fieldNames = readerSchema.getFieldNames();
-    List<TypeDescription> children = readerSchema.getChildren();
-    for (int i = 0; i < fieldNames.size(); ++i) {
-      if (columnName.equals(fieldNames.get(i))) {
-        TypeDescription result = evolution.getFileType(children.get(i));
-        return result == null ? -1 : result.getId();
-      }
+    try {
+      return evolution.getFileSchema().findSubtype(columnName).getId();
+    } catch (IllegalArgumentException e) {
+      return -1;
     }
-    return -1;
   }
 
   /**
@@ -128,8 +123,9 @@ public class RecordReaderImpl implements RecordReader {
    * @return an array mapping the sarg leaves to concrete column numbers in the
    * file
    */
-  public static int[] mapSargColumnsToOrcInternalColIdx(List<PredicateLeaf> sargLeaves,
-                             SchemaEvolution evolution) {
+  public static int[] mapSargColumnsToOrcInternalColIdx(
+                            List<PredicateLeaf> sargLeaves,
+                            SchemaEvolution evolution) {
     int[] result = new int[sargLeaves.size()];
     Arrays.fill(result, -1);
     for(int i=0; i < result.length; ++i) {
