@@ -22,6 +22,7 @@
 #include "orc/orc-config.hh"
 #include "MemoryPool.hh"
 #include "Int128.hh"
+#include "Timezone.hh"
 
 #include <list>
 #include <memory>
@@ -257,11 +258,19 @@ namespace orc {
     void resize(uint64_t capacity);
     uint64_t getMemoryUsage();
 
+    // return the second unit of timestamp in local timezone
+    inline int64_t getSecondLocalTz(uint64_t rowId) {
+      return data[rowId] + timezone->getVariant(data[rowId]).gmtOffset;
+    }
+
     // the number of seconds past 1 Jan 1970 00:00 UTC (aka time_t)
     DataBuffer<int64_t> data;
 
     // the nanoseconds of each value
     DataBuffer<int64_t> nanoseconds;
+
+    // only used for printing timestamps
+    const Timezone* timezone;
   };
 
 }

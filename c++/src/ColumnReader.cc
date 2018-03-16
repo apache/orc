@@ -324,6 +324,7 @@ namespace orc {
     secondsRle->next(secsBuffer, numValues, notNull);
     int64_t *nanoBuffer = timestampBatch.nanoseconds.data();
     nanoRle->next(nanoBuffer, numValues, notNull);
+    timestampBatch.timezone = &writerTimezone;
 
     // Construct the values
     for(uint64_t i=0; i < numValues; i++) {
@@ -335,9 +336,10 @@ namespace orc {
             nanoBuffer[i] *= 10;
           }
         }
-        int64_t writerTime = secsBuffer[i] + epochOffset;
-        secsBuffer[i] = writerTime +
-          writerTimezone.getVariant(writerTime).gmtOffset;
+        // we should obtain same value as written on the writer's side;
+        // otherwise if we read a batch of timestamp from an ORC file and
+        // then directly write to another ORC file, the values will be wrong.
+        secsBuffer[i] += epochOffset;
         if (secsBuffer[i] < 0 && nanoBuffer[i] != 0) {
           secsBuffer[i] -= 1;
         }

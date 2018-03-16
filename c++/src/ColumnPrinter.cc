@@ -20,6 +20,7 @@
 #include "orc/orc-config.hh"
 
 #include "Adaptor.hh"
+#include "Timezone.hh"
 
 #include <limits>
 #include <sstream>
@@ -77,6 +78,7 @@ namespace orc {
   private:
     const int64_t* seconds;
     const int64_t* nanoseconds;
+    const Timezone* timezone;
 
   public:
     TimestampColumnPrinter(std::string&);
@@ -710,7 +712,10 @@ namespace orc {
       writeString(buffer, "null");
     } else {
       int64_t nanos = nanoseconds[rowId];
-      time_t secs = static_cast<time_t>(seconds[rowId]);
+      // adjust the second to gmt timezone so that we can print same value
+      // in writer's timezone
+      time_t secs = static_cast<time_t>(seconds[rowId] +
+        timezone->getVariant(seconds[rowId]).gmtOffset);
       struct tm tmValue;
       gmtime_r(&secs, &tmValue);
       char timeBuffer[20];
@@ -743,5 +748,6 @@ namespace orc {
       dynamic_cast<const TimestampVectorBatch&>(batch);
     seconds = ts.data.data();
     nanoseconds = ts.nanoseconds.data();
+    timezone = ts.timezone;
   }
 }

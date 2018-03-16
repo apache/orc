@@ -554,7 +554,7 @@ namespace orc {
 
     uint64_t stripeSize = 16 * 1024;
     uint64_t compressionBlockSize = 1024;
-    uint64_t rowCount = 1024;
+    uint64_t rowCount = 102400;
 
     std::unique_ptr<Writer> writer = createWriter(stripeSize,
                                                   compressionBlockSize,
