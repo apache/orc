@@ -78,7 +78,7 @@ namespace orc {
   private:
     const int64_t* seconds;
     const int64_t* nanoseconds;
-    const Timezone* timezone;
+    const Timezone* writerTimezone;
 
   public:
     TimestampColumnPrinter(std::string&);
@@ -702,7 +702,8 @@ namespace orc {
   TimestampColumnPrinter::TimestampColumnPrinter(std::string& buffer
                                                  ): ColumnPrinter(buffer),
                                                     seconds(nullptr),
-                                                    nanoseconds(nullptr) {
+                                                    nanoseconds(nullptr),
+                                                    writerTimezone(&getLocalTimezone()) {
     // PASS
   }
 
@@ -715,7 +716,7 @@ namespace orc {
       // adjust the second to gmt timezone so that we can print same value
       // in writer's timezone
       time_t secs = static_cast<time_t>(seconds[rowId] +
-        timezone->getVariant(seconds[rowId]).gmtOffset);
+        writerTimezone->getVariant(seconds[rowId]).gmtOffset);
       struct tm tmValue;
       gmtime_r(&secs, &tmValue);
       char timeBuffer[20];
@@ -748,6 +749,6 @@ namespace orc {
       dynamic_cast<const TimestampVectorBatch&>(batch);
     seconds = ts.data.data();
     nanoseconds = ts.nanoseconds.data();
-    timezone = ts.timezone;
+    writerTimezone = ts.writerTimezone;
   }
 }

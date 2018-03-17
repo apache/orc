@@ -324,7 +324,7 @@ namespace orc {
     secondsRle->next(secsBuffer, numValues, notNull);
     int64_t *nanoBuffer = timestampBatch.nanoseconds.data();
     nanoRle->next(nanoBuffer, numValues, notNull);
-    timestampBatch.timezone = &writerTimezone;
+    timestampBatch.writerTimezone = &writerTimezone;
 
     // Construct the values
     for(uint64_t i=0; i < numValues; i++) {

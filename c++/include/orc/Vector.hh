@@ -22,7 +22,6 @@
 #include "orc/orc-config.hh"
 #include "MemoryPool.hh"
 #include "Int128.hh"
-#include "Timezone.hh"
 
 #include <list>
 #include <memory>
@@ -246,6 +245,7 @@ namespace orc {
     friend class Decimal128ColumnWriter;
   };
 
+  class Timezone;
   /**
    * A column vector batch for storing timestamp values.
    * The timestamps are stored split into the time_t value (seconds since
@@ -258,10 +258,8 @@ namespace orc {
     void resize(uint64_t capacity);
     uint64_t getMemoryUsage();
 
-    // return the second unit of timestamp in local timezone
-    inline int64_t getSecondLocalTz(uint64_t rowId) {
-      return data[rowId] + timezone->getVariant(data[rowId]).gmtOffset;
-    }
+    // get the second portion of timestamp and convert it to writer timezone for printing
+    int64_t getSecondInWriterTZ(uint64_t rowId);
 
     // the number of seconds past 1 Jan 1970 00:00 UTC (aka time_t)
     DataBuffer<int64_t> data;
@@ -269,8 +267,8 @@ namespace orc {
     // the nanoseconds of each value
     DataBuffer<int64_t> nanoseconds;
 
-    // only used for printing timestamps
-    const Timezone* timezone;
+    // writer timezone, only used for printing timestamps
+    const Timezone* writerTimezone;
   };
 
 }

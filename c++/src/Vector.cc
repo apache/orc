@@ -20,6 +20,7 @@
 
 #include "Adaptor.hh"
 #include "orc/Exceptions.hh"
+#include "Timezone.hh"
 
 #include <iostream>
 #include <sstream>
@@ -409,7 +410,8 @@ namespace orc {
                                              ): ColumnVectorBatch(capacity,
                                                                   pool),
                                                 data(pool, capacity),
-                                                nanoseconds(pool, capacity) {
+                                                nanoseconds(pool, capacity),
+                                                writerTimezone(&getLocalTimezone()) {
     // PASS
   }
 
@@ -435,5 +437,9 @@ namespace orc {
     return ColumnVectorBatch::getMemoryUsage()
           + static_cast<uint64_t>(
               (data.capacity() + nanoseconds.capacity()) * sizeof(int64_t));
+  }
+
+  int64_t TimestampVectorBatch::getSecondInWriterTZ(uint64_t rowId) {
+    return data[rowId] + writerTimezone->getVariant(data[rowId]).gmtOffset;
   }
 }
