@@ -715,8 +715,8 @@ namespace orc {
       int64_t nanos = nanoseconds[rowId];
       // adjust the second to gmt timezone so that we can print same value
       // in writer's timezone
-      time_t secs = static_cast<time_t>(seconds[rowId] +
-        writerTimezone->getVariant(seconds[rowId]).gmtOffset);
+      time_t secs =
+        static_cast<time_t>(writerTimezone->getLocalSecond(seconds[rowId]));
       struct tm tmValue;
       gmtime_r(&secs, &tmValue);
       char timeBuffer[20];

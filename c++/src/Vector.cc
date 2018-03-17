@@ -440,6 +440,6 @@ namespace orc {
   }
 
   int64_t TimestampVectorBatch::getSecondInWriterTZ(uint64_t rowId) {
-    return data[rowId] + writerTimezone->getVariant(data[rowId]).gmtOffset;
+    return writerTimezone->getLocalSecond(data[rowId]);
   }
 }

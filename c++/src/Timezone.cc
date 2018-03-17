@@ -593,7 +593,7 @@ namespace orc {
     /**
      * Get the variant for the given time (time_t).
      */
-    const TimezoneVariant& getVariant(int64_t clk) const override;
+    const TimezoneVariant& getVariant(int64_t gmtSecond) const override;
 
     void print(std::ostream&) const override;
 
@@ -603,6 +603,10 @@ namespace orc {
 
     int64_t getEpoch() const override {
       return epoch;
+    }
+
+    int64_t getLocalSecond(int64_t gmtSecond) const override {
+      return gmtSecond + getVariant(gmtSecond).gmtOffset;
     }
 
   private:

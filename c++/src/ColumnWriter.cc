@@ -1195,7 +1195,7 @@ namespace orc {
     for (uint64_t i = 0; i < numValues; ++i) {
       if (notNull == nullptr || notNull[i]) {
         int64_t millsUTC =
-          (secs[i] + timezone.getVariant(secs[i]).gmtOffset) * 1000 + nanos[i] / 1000000;
+          timezone.getLocalSecond(secs[i]) * 1000 + nanos[i] / 1000000;
         tsStats->increase(1);
         tsStats->update(millsUTC);
 

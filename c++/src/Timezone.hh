@@ -57,7 +57,7 @@ namespace orc {
     /**
      * Get the variant for the given time (time_t).
      */
-    virtual const TimezoneVariant& getVariant(int64_t clk) const = 0;
+    virtual const TimezoneVariant& getVariant(int64_t gmtSecond) const = 0;
 
     /**
      * Get the number of seconds between the ORC epoch in this timezone
@@ -75,7 +75,12 @@ namespace orc {
     /**
      * Get the version of the zone file.
      */
-    virtual uint64_t getVersion() const =0;
+    virtual uint64_t getVersion() const = 0;
+
+    /**
+     * Transform timestamp (second) from GMT to current timezone
+     */
+    virtual int64_t getLocalSecond(int64_t gmtSecond) const = 0;
   };
 
   /**
