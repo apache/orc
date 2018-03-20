@@ -242,6 +242,7 @@ public class PrintData {
           System.out.println(FileDump.SEPARATOR);
         } catch (Exception e) {
           System.err.println("Unable to dump data for file: " + file);
+          e.printStackTrace();
           continue;
         }
       }
