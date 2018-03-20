@@ -240,7 +240,7 @@
         <plugin>
           <groupId>com.github.os72</groupId>
           <artifactId>protoc-jar-maven-plugin</artifactId>
-          <version>3.0.0-a3</version>
+          <version>3.5.1.1</version>
           <executions>
             <execution>
               <phase>generate-sources</phase>
@@ -248,6 +248,7 @@
                 <goal>run</goal>
               </goals>
               <configuration>
+                 <protocArtifact>com.google.protobuf:protoc:2.5.0</protocArtifact>
                  <protocVersion>2.5.0</protocVersion>
                 <addSources>none</addSources>
                 <includeDirectories>
