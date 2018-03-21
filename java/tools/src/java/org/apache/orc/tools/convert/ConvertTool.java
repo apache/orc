@@ -47,6 +47,8 @@ import java.util.zip.GZIPInputStream;
  * A conversion tool to convert CSV or JSON files into ORC files.
  */
 public class ConvertTool {
+  static final String DEFAULT_TIMESTAMP_FORMAT = "yyyy[[-][/]]MM[[-][/]]dd[['T'][ ]]HH:mm:ss[ ][XXX][X]";
+
   private final List<FileInformation> fileList;
   private final TypeDescription schema;
   private final char csvSeparator;
@@ -54,6 +56,7 @@ public class ConvertTool {
   private final char csvEscape;
   private final int csvHeaderLines;
   private final String csvNullString;
+  private final String timestampFormat;
   private final Writer writer;
   private final VectorizedRowBatch batch;
 
@@ -148,7 +151,7 @@ public class ConvertTool {
         case CSV: {
           FSDataInputStream underlying = filesystem.open(path);
           return new CsvReader(getReader(underlying), underlying, size, schema,
-              csvSeparator, csvQuote, csvEscape, csvHeaderLines, csvNullString);
+              csvSeparator, csvQuote, csvEscape, csvHeaderLines, csvNullString, timestampFormat);
         }
         default:
           throw new IllegalArgumentException("Unhandled format " + format +
@@ -186,6 +189,7 @@ public class ConvertTool {
     this.csvSeparator = getCharOption(opts, 'S', ',');
     this.csvHeaderLines = getIntOption(opts, 'H', 0);
     this.csvNullString = opts.getOptionValue('n', "");
+    this.timestampFormat = opts.getOptionValue("t", DEFAULT_TIMESTAMP_FORMAT);
     String outFilename = opts.hasOption('o')
         ? opts.getOptionValue('o') : "output.orc";
     writer = OrcFile.createWriter(new Path(outFilename),
@@ -246,6 +250,9 @@ public class ConvertTool {
             .hasArg().build());
     options.addOption(
         Option.builder("H").longOpt("header").desc("CSV header lines")
+            .hasArg().build());
+    options.addOption(
+            Option.builder("t").longOpt("timestampformat").desc("Timestamp Format")
             .hasArg().build());
     CommandLine cli = new DefaultParser().parse(options, args);
     if (cli.hasOption('h') || cli.getArgs().length == 0) {
