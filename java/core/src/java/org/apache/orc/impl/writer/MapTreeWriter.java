@@ -132,7 +132,6 @@ public class MapTreeWriter extends TreeWriterBase {
                           OrcProto.StripeStatistics.Builder stats,
                           int requiredIndexEntries) throws IOException {
     super.writeStripe(builder, stats, requiredIndexEntries);
-    lengths.flush();
     keyWriter.writeStripe(builder, stats, requiredIndexEntries);
     valueWriter.writeStripe(builder, stats, requiredIndexEntries);
     if (rowIndexPosition != null) {
@@ -169,5 +168,13 @@ public class MapTreeWriter extends TreeWriterBase {
     super.writeFileStatistics(footer);
     keyWriter.writeFileStatistics(footer);
     valueWriter.writeFileStatistics(footer);
+  }
+
+  @Override
+  public void flushStreams() throws IOException {
+    super.flushStreams();
+    lengths.flush();
+    keyWriter.flushStreams();
+    valueWriter.flushStreams();
   }
 }

@@ -123,7 +123,6 @@ public class ListTreeWriter extends TreeWriterBase {
                           OrcProto.StripeStatistics.Builder stats,
                           int requiredIndexEntries) throws IOException {
     super.writeStripe(builder, stats, requiredIndexEntries);
-    lengths.flush();
     childWriter.writeStripe(builder, stats, requiredIndexEntries);
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
@@ -157,5 +156,12 @@ public class ListTreeWriter extends TreeWriterBase {
   public void writeFileStatistics(OrcProto.Footer.Builder footer) {
     super.writeFileStatistics(footer);
     childWriter.writeFileStatistics(footer);
+  }
+
+  @Override
+  public void flushStreams() throws IOException {
+    super.flushStreams();
+    lengths.flush();
+    childWriter.flushStreams();
   }
 }

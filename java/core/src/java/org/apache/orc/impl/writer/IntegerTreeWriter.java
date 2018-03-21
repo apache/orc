@@ -101,7 +101,6 @@ public class IntegerTreeWriter extends TreeWriterBase {
                           OrcProto.StripeStatistics.Builder stats,
                           int requiredIndexEntries) throws IOException {
     super.writeStripe(builder, stats, requiredIndexEntries);
-    writer.flush();
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
     }
@@ -123,5 +122,11 @@ public class IntegerTreeWriter extends TreeWriterBase {
     JavaDataModel jdm = JavaDataModel.get();
     long num = fileStatistics.getNumberOfValues();
     return num * (isLong ? jdm.primitive2() : jdm.primitive1());
+  }
+
+  @Override
+  public void flushStreams() throws IOException {
+    super.flushStreams();
+    writer.flush();
   }
 }

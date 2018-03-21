@@ -132,4 +132,11 @@ public interface PhysicalWriter {
 
   /** Gets a compression codec used by this writer. */
   CompressionCodec getCompressionCodec();
+
+  /**
+   * Get the number of bytes for a file in a givem column.
+   * @param column column from which to get file size
+   * @return number of bytes for the given column
+   */
+  long getFileBytes(int column);
 }

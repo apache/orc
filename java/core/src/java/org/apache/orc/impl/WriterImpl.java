@@ -384,6 +384,16 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       return version;
     }
 
+    /**
+     * Get the PhysicalWriter.
+     *
+     * @return the file's physical writer.
+     */
+    @Override
+    public PhysicalWriter getPhysicalWriter() {
+      return physicalWriter;
+    }
+
     public OrcFile.BloomFilterVersion getBloomFilterVersion() {
       return bloomFilterVersion;
     }
@@ -430,12 +440,16 @@ public class WriterImpl implements Writer, MemoryManager.Callback {
       }
       OrcProto.StripeStatistics.Builder stats =
           OrcProto.StripeStatistics.newBuilder();
+
+      treeWriter.flushStreams();
       treeWriter.writeStripe(builder, stats, requiredIndexEntries);
-      fileMetadata.addStripeStats(stats.build());
+
       OrcProto.StripeInformation.Builder dirEntry =
           OrcProto.StripeInformation.newBuilder()
               .setNumberOfRows(rowsInStripe);
       physicalWriter.finalizeStripe(builder, dirEntry);
+
+      fileMetadata.addStripeStats(stats.build());
       stripes.add(dirEntry.build());
       rowCount += rowsInStripe;
       rowsInStripe = 0;

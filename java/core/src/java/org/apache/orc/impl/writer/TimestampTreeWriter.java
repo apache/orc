@@ -130,8 +130,6 @@ public class TimestampTreeWriter extends TreeWriterBase {
                           OrcProto.StripeStatistics.Builder stats,
                           int requiredIndexEntries) throws IOException {
     super.writeStripe(builder, stats, requiredIndexEntries);
-    seconds.flush();
-    nanos.flush();
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
     }
@@ -170,5 +168,12 @@ public class TimestampTreeWriter extends TreeWriterBase {
   public long getRawDataSize() {
     return fileStatistics.getNumberOfValues() *
         JavaDataModel.get().lengthOfTimestamp();
+  }
+
+  @Override
+  public void flushStreams() throws IOException {
+    super.flushStreams();
+    seconds.flush();
+    nanos.flush();
   }
 }

@@ -164,8 +164,6 @@ public class DecimalTreeWriter extends TreeWriterBase {
                           OrcProto.StripeStatistics.Builder stats,
                           int requiredIndexEntries) throws IOException {
     super.writeStripe(builder, stats, requiredIndexEntries);
-    valueStream.flush();
-    scaleStream.flush();
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
     }
@@ -188,5 +186,12 @@ public class DecimalTreeWriter extends TreeWriterBase {
   public long getRawDataSize() {
     return fileStatistics.getNumberOfValues() *
         JavaDataModel.get().lengthOfDecimal();
+  }
+
+  @Override
+  public void flushStreams() throws IOException {
+    super.flushStreams();
+    valueStream.flush();
+    scaleStream.flush();
   }
 }

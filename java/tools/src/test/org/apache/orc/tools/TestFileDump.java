@@ -19,7 +19,6 @@
 package org.apache.orc.tools;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.BufferedReader;
@@ -29,7 +28,6 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
-import java.sql.Date;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -37,12 +35,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.TimeZone;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
@@ -294,6 +290,7 @@ public class TestFileDump {
         m,
         Arrays.asList(100, 200),
         10, "foo");
+
     m.clear();
     m.put("k3", "v3");
     appendAllTypes(

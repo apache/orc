@@ -109,4 +109,10 @@ public class DoubleTreeWriter extends TreeWriterBase {
     long num = fileStatistics.getNumberOfValues();
     return num * JavaDataModel.get().primitive2();
   }
+
+  @Override
+  public void flushStreams() throws IOException {
+    super.flushStreams();
+    stream.flush();
+  }
 }

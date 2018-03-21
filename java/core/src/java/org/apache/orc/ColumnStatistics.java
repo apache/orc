@@ -33,4 +33,10 @@ public interface ColumnStatistics {
    * @return true if null present else false
    */
   boolean hasNull();
+
+  /**
+   * Get the number of bytes for this column.
+   * @return the number of bytes
+   */
+  long getBytesOnDisk();
 }

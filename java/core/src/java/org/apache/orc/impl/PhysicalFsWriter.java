@@ -104,6 +104,32 @@ public class PhysicalFsWriter implements PhysicalWriter {
     return codec;
   }
 
+  /**
+   * Get the number of bytes for a file in a given column
+   * by finding all the streams (not suppressed)
+   * for a given column and returning the sum of their sizes.
+   * excludes index
+   *
+   * @param column column from which to get file size
+   * @return number of bytes for the given column
+   */
+  @Override
+  public long getFileBytes(final int column) {
+    long size = 0;
+    for (final Map.Entry<StreamName, BufferedStream> pair: streams.entrySet()) {
+      final BufferedStream receiver = pair.getValue();
+      if(!receiver.isSuppressed) {
+
+        final StreamName name = pair.getKey();
+        if(name.getColumn() == column && name.getArea() != StreamName.Area.INDEX ) {
+          size += receiver.getOutputSize();
+        }
+      }
+
+    }
+    return size;
+  }
+
   private void padStripe(long indexSize, long dataSize, int footerSize) throws IOException {
     this.stripeStart = rawWriter.getPos();
     final long currentStripeSize = indexSize + dataSize + footerSize;
