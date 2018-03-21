@@ -17,9 +17,9 @@
  */
 
 #include "orc/ColumnPrinter.hh"
+
 #include "orc/Exceptions.hh"
 #include "wrap/gtest-wrapper.h"
-#include "Timezone.hh"
 
 namespace orc {
 
@@ -131,21 +131,20 @@ namespace orc {
     std::unique_ptr<ColumnPrinter> printer =
       createColumnPrinter(line, type.get());
     TimestampVectorBatch batch(1024, *getDefaultPool());
-    batch.writerTimezone = &getTimezoneByName("America/Los_Angeles");
     batch.numElements = 12;
     batch.hasNulls = false;
-    batch.data[0]  = 1420099200;
-    batch.data[1]  =  963298800;
-    batch.data[2]  = 1426197659;
-    batch.data[3]  = 1426197659;
-    batch.data[4]  = 1426197659;
-    batch.data[5]  = 1426197659;
-    batch.data[6]  = 1426197659;
-    batch.data[7]  = 1426197659;
-    batch.data[8]  = 1426197659;
-    batch.data[9]  = 1426197659;
-    batch.data[10] = 1426197659;
-    batch.data[11] = 1426197659;
+    batch.data[0]  = 1420070400;
+    batch.data[1]  =  963273600;
+    batch.data[2]  = 1426172459;
+    batch.data[3]  = 1426172459;
+    batch.data[4]  = 1426172459;
+    batch.data[5]  = 1426172459;
+    batch.data[6]  = 1426172459;
+    batch.data[7]  = 1426172459;
+    batch.data[8]  = 1426172459;
+    batch.data[9]  = 1426172459;
+    batch.data[10] = 1426172459;
+    batch.data[11] = 1426172459;
     batch.nanoseconds[0]  = 0;
     batch.nanoseconds[1]  = 0;
     batch.nanoseconds[2]  = 0;

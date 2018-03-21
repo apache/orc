@@ -1194,11 +1194,12 @@ namespace orc {
     bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (notNull == nullptr || notNull[i]) {
-        int64_t millsUTC =
-          timezone.getLocalSecond(secs[i]) * 1000 + nanos[i] / 1000000;
+        // TimestampVectorBatch already stores data in UTC
+        int64_t millsUTC = secs[i] * 1000 + nanos[i] / 1000000;
         tsStats->increase(1);
         tsStats->update(millsUTC);
 
+        secs[i] -= timezone.getVariant(secs[i]).gmtOffset;
         secs[i] -= timezone.getEpoch();
         nanos[i] = formatNano(nanos[i]);
       } else if (!hasNull) {

@@ -317,10 +317,10 @@ namespace orc {
 "QRFQAUFNUAFBXVABQUFQAAAAAAAEAAAAAAQpQU1Q4UERULE0zLjIuMCxNMTEuMS4wCg==");
 
   const std::string& getVariantFromZone(const Timezone& zone,
-                                        const std::string& gmtDate) {
+                                        const std::string& date) {
     tm timeStruct;
-    if (strptime(gmtDate.c_str(), "%F %H:%M:%S", &timeStruct) == nullptr) {
-      throw TimezoneError("bad time " + gmtDate);
+    if (strptime(date.c_str(), "%F %H:%M:%S", &timeStruct) == nullptr) {
+      throw TimezoneError("bad time " + date);
     }
     return zone.getVariant(timegm(&timeStruct)).name;
   }

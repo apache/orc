@@ -245,7 +245,6 @@ namespace orc {
     friend class Decimal128ColumnWriter;
   };
 
-  class Timezone;
   /**
    * A column vector batch for storing timestamp values.
    * The timestamps are stored split into the time_t value (seconds since
@@ -258,17 +257,11 @@ namespace orc {
     void resize(uint64_t capacity);
     uint64_t getMemoryUsage();
 
-    // get the second portion of timestamp and convert it to writer timezone for printing
-    int64_t getSecondInWriterTZ(uint64_t rowId);
-
     // the number of seconds past 1 Jan 1970 00:00 UTC (aka time_t)
     DataBuffer<int64_t> data;
 
     // the nanoseconds of each value
     DataBuffer<int64_t> nanoseconds;
-
-    // writer timezone, only used for printing timestamps
-    const Timezone* writerTimezone;
   };
 
 }

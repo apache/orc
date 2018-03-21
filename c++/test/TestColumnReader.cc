@@ -2716,7 +2716,7 @@ TEST(TestColumnReader, testTimestampSkipWithNulls) {
       EXPECT_EQ(0, longBatch->notNull[i]);
     } else {
       EXPECT_EQ(1, longBatch->notNull[i]);
-      time_t time = static_cast<time_t>(longBatch->getSecondInWriterTZ(i));
+      time_t time = static_cast<time_t>(longBatch->data[i]);
       tm timeStruct;
       ASSERT_PRED1(isNotNull, gmtime_r(&time, &timeStruct));
       char buffer[30];
@@ -2739,7 +2739,7 @@ TEST(TestColumnReader, testTimestampSkipWithNulls) {
       EXPECT_EQ(0, longBatch->notNull[i]);
     } else {
       EXPECT_EQ(1, longBatch->notNull[i]);
-      time_t time = static_cast<time_t>(longBatch->getSecondInWriterTZ(i));
+      time_t time = static_cast<time_t>(longBatch->data[i]);
       tm timeStruct;
       ASSERT_PRED1(isNotNull, gmtime_r(&time, &timeStruct));
       char buffer[30];
@@ -2840,7 +2840,7 @@ TEST(TestColumnReader, testTimestamp) {
   ASSERT_EQ(true, !longBatch->hasNulls);
 
   for (size_t i = 0; i < batch.numElements; ++i) {
-    time_t time = static_cast<time_t>(longBatch->getSecondInWriterTZ(i));
+    time_t time = static_cast<time_t>(longBatch->data[i]);
     EXPECT_EQ(expectedNano[i], longBatch->nanoseconds[i]);
 #ifndef HAS_PRE_1970
     if (time < 0) continue;
