@@ -74,7 +74,6 @@ public class BooleanTreeWriter extends TreeWriterBase {
                           OrcProto.StripeStatistics.Builder stats,
                           int requiredIndexEntries) throws IOException {
     super.writeStripe(builder, stats, requiredIndexEntries);
-    writer.flush();
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
     }
@@ -95,5 +94,11 @@ public class BooleanTreeWriter extends TreeWriterBase {
   public long getRawDataSize() {
     long num = fileStatistics.getNumberOfValues();
     return num * JavaDataModel.get().primitive1();
+  }
+
+  @Override
+  public void flushStreams() throws IOException {
+    super.flushStreams();
+    writer.flush();
   }
 }

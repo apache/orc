@@ -8,25 +8,25 @@ Type: struct<bytes1:binary,string1:string>
 Stripe Statistics:
   Stripe 1:
     Column 0: count: 5000 hasNull: false
-    Column 1: count: 5000 hasNull: false sum: 15000
-    Column 2: count: 2000 hasNull: true min: RG1 max: RG3 sum: 6000
+    Column 1: count: 5000 hasNull: false bytesOnDisk: 174 sum: 15000
+    Column 2: count: 2000 hasNull: true bytesOnDisk: 46 min: RG1 max: RG3 sum: 6000
   Stripe 2:
     Column 0: count: 5000 hasNull: false
-    Column 1: count: 5000 hasNull: false sum: 15000
-    Column 2: count: 0 hasNull: true
+    Column 1: count: 5000 hasNull: false bytesOnDisk: 174 sum: 15000
+    Column 2: count: 0 hasNull: true bytesOnDisk: 11
   Stripe 3:
     Column 0: count: 5000 hasNull: false
-    Column 1: count: 5000 hasNull: false sum: 15000
-    Column 2: count: 5000 hasNull: false min: STRIPE-3 max: STRIPE-3 sum: 40000
+    Column 1: count: 5000 hasNull: false bytesOnDisk: 174 sum: 15000
+    Column 2: count: 5000 hasNull: false bytesOnDisk: 32 min: STRIPE-3 max: STRIPE-3 sum: 40000
   Stripe 4:
     Column 0: count: 5000 hasNull: false
-    Column 1: count: 5000 hasNull: false sum: 15000
-    Column 2: count: 0 hasNull: true
+    Column 1: count: 5000 hasNull: false bytesOnDisk: 174 sum: 15000
+    Column 2: count: 0 hasNull: true bytesOnDisk: 11
 
 File Statistics:
   Column 0: count: 20000 hasNull: false
-  Column 1: count: 20000 hasNull: false sum: 60000
-  Column 2: count: 7000 hasNull: true min: RG1 max: STRIPE-3 sum: 46000
+  Column 1: count: 20000 hasNull: false bytesOnDisk: 696 sum: 60000
+  Column 2: count: 7000 hasNull: true bytesOnDisk: 100 min: RG1 max: STRIPE-3 sum: 46000
 
 Stripes:
   Stripe: offset: 3 data: 220 rows: 5000 tail: 65 index: 154
@@ -105,7 +105,7 @@ Stripes:
       Entry 3: count: 0 hasNull: true positions: 0,4,115,0,0,0,0
       Entry 4: count: 0 hasNull: true positions: 0,6,110,0,0,0,0
 
-File length: 1825 bytes
+File length: 1842 bytes
 Padding length: 0 bytes
 Padding ratio: 0%
 ________________________________________________________________________________________________________________________

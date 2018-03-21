@@ -88,7 +88,6 @@ public class DateTreeWriter extends TreeWriterBase {
                           OrcProto.StripeStatistics.Builder stats,
                           int requiredIndexEntries) throws IOException {
     super.writeStripe(builder, stats, requiredIndexEntries);
-    writer.flush();
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
     }
@@ -121,4 +120,11 @@ public class DateTreeWriter extends TreeWriterBase {
     return fileStatistics.getNumberOfValues() *
         JavaDataModel.get().lengthOfDate();
   }
+
+  @Override
+  public void flushStreams() throws IOException {
+    super.flushStreams();
+    writer.flush();
+  }
+
 }

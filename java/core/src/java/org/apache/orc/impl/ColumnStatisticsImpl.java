@@ -58,6 +58,9 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     if (hasNull != that.hasNull) {
       return false;
     }
+    if (bytesOnDisk != that.bytesOnDisk) {
+      return false;
+    }
 
     return true;
   }
@@ -1257,11 +1260,14 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
   private long count = 0;
   private boolean hasNull = false;
+  private long bytesOnDisk = 0;
 
   ColumnStatisticsImpl(OrcProto.ColumnStatistics stats) {
     if (stats.hasNumberOfValues()) {
       count = stats.getNumberOfValues();
     }
+
+    bytesOnDisk = stats.hasBytesOnDisk() ? stats.getBytesOnDisk() : 0;
 
     if (stats.hasHasNull()) {
       hasNull = stats.getHasNull();
@@ -1279,6 +1285,10 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
   public void increment(int count) {
     this.count += count;
+  }
+
+  public void updateByteCount(long size) {
+    this.bytesOnDisk += size;
   }
 
   public void setNull() {
@@ -1342,10 +1352,12 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
   public void merge(ColumnStatisticsImpl stats) {
     count += stats.count;
     hasNull |= stats.hasNull;
+    bytesOnDisk += stats.bytesOnDisk;
   }
 
   public void reset() {
     count = 0;
+    bytesOnDisk = 0;
     hasNull = false;
   }
 
@@ -1359,9 +1371,20 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     return hasNull;
   }
 
+  /**
+   * Get the number of bytes for this column.
+   *
+   * @return the number of bytes
+   */
+  @Override
+  public long getBytesOnDisk() {
+    return bytesOnDisk;
+  }
+
   @Override
   public String toString() {
-    return "count: " + count + " hasNull: " + hasNull;
+    return "count: " + count + " hasNull: " + hasNull +
+        (bytesOnDisk != 0 ? " bytesOnDisk: " + bytesOnDisk : "");
   }
 
   public OrcProto.ColumnStatistics.Builder serialize() {
@@ -1369,6 +1392,9 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       OrcProto.ColumnStatistics.newBuilder();
     builder.setNumberOfValues(count);
     builder.setHasNull(hasNull);
+    if (bytesOnDisk != 0) {
+      builder.setBytesOnDisk(bytesOnDisk);
+    }
     return builder;
   }
 

@@ -295,6 +295,9 @@ public class JsonFileDump {
     if (cs != null) {
       writer.key("count").value(cs.getNumberOfValues());
       writer.key("hasNull").value(cs.hasNull());
+      if (cs.getBytesOnDisk() != 0) {
+        writer.key("bytesOnDisk").value(cs.getBytesOnDisk());
+      }
       if (cs instanceof BinaryColumnStatistics) {
         writer.key("totalLength").value(((BinaryColumnStatistics) cs).getSum());
         writer.key("type").value(OrcProto.Type.Kind.BINARY);

@@ -153,4 +153,13 @@ public class StructTreeWriter extends TreeWriterBase {
       child.writeFileStatistics(footer);
     }
   }
+
+  @Override
+  public void flushStreams() throws IOException {
+    super.flushStreams();
+    for (TreeWriter child : childrenWriters) {
+      child.flushStreams();
+    }
+
+  }
 }

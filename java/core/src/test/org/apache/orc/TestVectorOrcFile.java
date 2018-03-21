@@ -450,13 +450,13 @@ public class TestVectorOrcFile {
 
     assertEquals(3, stats[1].getNumberOfValues());
     assertEquals(15, ((BinaryColumnStatistics) stats[1]).getSum());
-    assertEquals("count: 3 hasNull: true sum: 15", stats[1].toString());
+    assertEquals("count: 3 hasNull: true bytesOnDisk: 28 sum: 15", stats[1].toString());
 
     assertEquals(3, stats[2].getNumberOfValues());
     assertEquals("bar", ((StringColumnStatistics) stats[2]).getMinimum());
     assertEquals("hi", ((StringColumnStatistics) stats[2]).getMaximum());
     assertEquals(8, ((StringColumnStatistics) stats[2]).getSum());
-    assertEquals("count: 3 hasNull: true min: bar max: hi sum: 8",
+    assertEquals("count: 3 hasNull: true bytesOnDisk: 22 min: bar max: hi sum: 8",
         stats[2].toString());
 
     // check the inspectors
@@ -1034,13 +1034,13 @@ public class TestVectorOrcFile {
     assertEquals(2, stats[1].getNumberOfValues());
     assertEquals(1, ((BooleanColumnStatistics) stats[1]).getFalseCount());
     assertEquals(1, ((BooleanColumnStatistics) stats[1]).getTrueCount());
-    assertEquals("count: 2 hasNull: false true: 1", stats[1].toString());
+    assertEquals("count: 2 hasNull: false bytesOnDisk: 5 true: 1", stats[1].toString());
 
     assertEquals(2048, ((IntegerColumnStatistics) stats[3]).getMaximum());
     assertEquals(1024, ((IntegerColumnStatistics) stats[3]).getMinimum());
     assertEquals(true, ((IntegerColumnStatistics) stats[3]).isSumDefined());
     assertEquals(3072, ((IntegerColumnStatistics) stats[3]).getSum());
-    assertEquals("count: 2 hasNull: false min: 1024 max: 2048 sum: 3072",
+    assertEquals("count: 2 hasNull: false bytesOnDisk: 9 min: 1024 max: 2048 sum: 3072",
         stats[3].toString());
 
     StripeStatistics ss = reader.getStripeStatistics().get(0);
@@ -1052,10 +1052,10 @@ public class TestVectorOrcFile {
     assertEquals(-15.0, ((DoubleColumnStatistics) stats[7]).getMinimum(), 0.0001);
     assertEquals(-5.0, ((DoubleColumnStatistics) stats[7]).getMaximum(), 0.0001);
     assertEquals(-20.0, ((DoubleColumnStatistics) stats[7]).getSum(), 0.00001);
-    assertEquals("count: 2 hasNull: false min: -15.0 max: -5.0 sum: -20.0",
+    assertEquals("count: 2 hasNull: false bytesOnDisk: 15 min: -15.0 max: -5.0 sum: -20.0",
         stats[7].toString());
 
-    assertEquals("count: 2 hasNull: false min: bye max: hi sum: 5", stats[9].toString());
+    assertEquals("count: 2 hasNull: false bytesOnDisk: 14 min: bye max: hi sum: 5", stats[9].toString());
 
     // check the schema
     TypeDescription readerSchema = reader.getSchema();
