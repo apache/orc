@@ -18,10 +18,6 @@
 
 package org.apache.orc.tools.convert;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.StringReader;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
@@ -34,6 +30,11 @@ import org.apache.orc.RecordReader;
 import org.apache.orc.TypeDescription;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.io.StringReader;
+
+import static org.apache.orc.tools.convert.ConvertTool.DEFAULT_TIMESTAMP_FORMAT;
+import static org.junit.Assert.assertEquals;
 
 public class TestCsvReader {
 
@@ -60,7 +61,7 @@ public class TestCsvReader {
     TypeDescription schema = TypeDescription.fromString(
         "struct<a:int,b:double,c:decimal(10,2),d:string,e:boolean,e:timestamp>");
     RecordReader reader = new CsvReader(input, null, 1, schema, ',', '\'',
-        '\\', 0, "");
+        '\\', 0, "", DEFAULT_TIMESTAMP_FORMAT);
     VectorizedRowBatch batch = schema.createRowBatch(5);
     assertEquals(true, reader.nextBatch(batch));
     assertEquals(5, batch.size);
@@ -98,7 +99,7 @@ public class TestCsvReader {
     TypeDescription schema = TypeDescription.fromString(
         "struct<a:int,b:double,c:decimal(10,2),d:string>");
     RecordReader reader = new CsvReader(input, null, 1, schema, ',', '\'',
-        '\\', 0, "null");
+        '\\', 0, "null", DEFAULT_TIMESTAMP_FORMAT);
     VectorizedRowBatch batch = schema.createRowBatch();
     assertEquals(true, reader.nextBatch(batch));
     assertEquals(3, batch.size);
@@ -139,7 +140,7 @@ public class TestCsvReader {
     TypeDescription schema = TypeDescription.fromString(
         "struct<a:int,b:struct<c:int,d:int>,e:int>");
     RecordReader reader = new CsvReader(input, null, 1, schema, ',', '\'',
-        '\\', 0, "null");
+        '\\', 0, "null", DEFAULT_TIMESTAMP_FORMAT);
     VectorizedRowBatch batch = schema.createRowBatch();
     assertEquals(true, reader.nextBatch(batch));
     assertEquals(2, batch.size);
@@ -162,7 +163,7 @@ public class TestCsvReader {
     TypeDescription schema = TypeDescription.fromString(
             "struct<a:int,b:int,d:bigint,e:bigint>");
     RecordReader reader = new CsvReader(input, null, 1, schema, ',', '\'',
-            '\\', 0, "null");
+            '\\', 0, "null", DEFAULT_TIMESTAMP_FORMAT);
     VectorizedRowBatch batch = schema.createRowBatch();
     assertEquals(true, reader.nextBatch(batch));
     assertEquals(1, batch.size);
@@ -171,5 +172,23 @@ public class TestCsvReader {
     assertEquals(9223372036854775806L, ((LongColumnVector) batch.cols[2]).vector[0]);
     assertEquals(-9223372036854775807L, ((LongColumnVector) batch.cols[3]).vector[0]);
     assertEquals(false, reader.nextBatch(batch));
+  }
+
+  @Test
+  public void testCustomTimestampFormat() throws Exception {
+    String tsFormat = "d[d] MMM yyyy HH:mm:ss";
+    StringReader input = new StringReader(
+            "'21 Mar 2018 12:23:34'\n" +
+                    "'3 Feb 2018 18:04:51'\n"
+    );
+    TypeDescription schema = TypeDescription.fromString(
+            "struct<a:timestamp>");
+    RecordReader reader = new CsvReader(input, null, 1, schema, ',', '\'',
+            '\\', 0, "", tsFormat);
+    VectorizedRowBatch batch = schema.createRowBatch(2);
+    assertEquals(true, reader.nextBatch(batch));
+    assertEquals(2, batch.size);
+    assertEquals(1521660214000L, ((TimestampColumnVector) batch.cols[0]).getTime(0));
+    assertEquals(1517709891000L, ((TimestampColumnVector) batch.cols[0]).getTime(1));
   }
 }
