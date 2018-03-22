@@ -605,6 +605,19 @@ namespace orc {
       return epoch;
     }
 
+    int64_t convertToUTC(int64_t clk) const override {
+      return clk + getVariant(clk).gmtOffset;
+    }
+
+    int64_t convertFromUTC(int64_t clk) const override {
+      int64_t ret = clk - getVariant(clk).gmtOffset;
+      if (ret + getVariant(ret).gmtOffset != clk) {
+        // fall into daylight saving rules
+        ret -= 3600;
+      }
+      return ret;
+    }
+
   private:
     void parseTimeVariants(const unsigned char* ptr,
                            uint64_t variantOffset,

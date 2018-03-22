@@ -368,4 +368,14 @@ namespace orc {
     EXPECT_EQ("GMT", getVariantFromZone(*gmt, "1974-01-06 09:59:59"));
     EXPECT_EQ("GMT", getVariantFromZone(*gmt, "2015-06-06 12:34:56"));
   }
+
+  TEST(TestTimezone, testOffset) {
+    const Timezone& tz = getTimezoneByName("America/Los_Angeles");
+
+    for (int64_t localTime = 1520700000; localTime != 1520799999; ++localTime) {
+      int64_t utc = tz.convertToUTC(localTime);
+      int64_t reconstructedLocalTime = tz.convertFromUTC(utc);
+      EXPECT_EQ(localTime, reconstructedLocalTime);
+    }
+  }
 }  // namespace orc

@@ -1199,8 +1199,7 @@ namespace orc {
         tsStats->increase(1);
         tsStats->update(millsUTC);
 
-        secs[i] -= timezone.getVariant(secs[i]).gmtOffset;
-        secs[i] -= timezone.getEpoch();
+        secs[i] = timezone.convertFromUTC(secs[i]) - timezone.getEpoch();
         nanos[i] = formatNano(nanos[i]);
       } else if (!hasNull) {
         hasNull = true;
