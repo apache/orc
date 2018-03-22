@@ -246,7 +246,7 @@ void fillTimestampValues(const std::vector<std::string>& data,
     } else {
       batch->notNull[i] = 1;
       int64_t sec = atoll(col.c_str());
-      tsBatch->data[i] = sec + localTZ.getVariant(sec).gmtOffset;
+      tsBatch->data[i] = localTZ.convertToUTC(sec);
       tsBatch->nanoseconds[i] = 0;
     }
   }
