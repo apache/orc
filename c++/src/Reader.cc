@@ -901,11 +901,11 @@ namespace orc {
   // when we convert the proto::Types to TypeImpls.
   void checkProtoTypeIds(const proto::Footer &footer) {
     std::stringstream msg;
-    uint32_t maxId = footer.types_size();
-    for (uint32_t i = 0; i < maxId; ++i) {
+    int maxId = footer.types_size();
+    for (int i = 0; i < maxId; ++i) {
       const proto::Type& type = footer.types(i);
       for (int j = 0; j < type.subtypes_size(); ++j) {
-        uint32_t subTypeId = type.subtypes(j);
+        int subTypeId = static_cast<int>(type.subtypes(j));
         if (subTypeId <= i) {
           msg << "Footer is corrupt: malformed link from type " << i << " to "
               << subTypeId;
@@ -915,7 +915,7 @@ namespace orc {
           msg << "Footer is corrupt: types(" << subTypeId << ") not exists";
           throw ParseError(msg.str());
         }
-        if (j > 0 && type.subtypes(j - 1) >= subTypeId) {
+        if (j > 0 && static_cast<int>(type.subtypes(j - 1)) >= subTypeId) {
           msg << "Footer is corrupt: subType(" << (j-1) << ") >= subType(" << j
               << ") in types(" << i << "). (" << type.subtypes(j - 1) << " >= "
               << subTypeId << ")";
