@@ -78,14 +78,14 @@ namespace orc {
     virtual uint64_t getVersion() const =0;
 
     /**
-     * Convert local timestamp to UTC timezone
+     * Convert wall clock time of current timezone to UTC timezone
      */
     virtual int64_t convertToUTC(int64_t clk) const = 0;
 
     /**
-     * Convert UTC timestamp to local timezone
+     * Convert wall clock time from UTC to local timezone
      */
-    virtual int64_t convertFromUTC(int64_t clk) const = 0;
+    static int64_t convertUTCToLocalTZ(int64_t clk);
   };
 
   /**

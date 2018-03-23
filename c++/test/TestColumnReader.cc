@@ -2718,7 +2718,7 @@ TEST(TestColumnReader, testTimestampSkipWithNulls) {
       EXPECT_EQ(1, longBatch->notNull[i]);
       time_t time = static_cast<time_t>(longBatch->data[i]);
       tm timeStruct;
-      ASSERT_PRED1(isNotNull, gmtime_r(&time, &timeStruct));
+      ASSERT_PRED1(isNotNull, localtime_r(&time, &timeStruct));
       char buffer[30];
       asctime_r(&timeStruct, buffer);
       EXPECT_STREQ(expected[vals_ix], buffer);
@@ -2741,7 +2741,7 @@ TEST(TestColumnReader, testTimestampSkipWithNulls) {
       EXPECT_EQ(1, longBatch->notNull[i]);
       time_t time = static_cast<time_t>(longBatch->data[i]);
       tm timeStruct;
-      ASSERT_PRED1(isNotNull, gmtime_r(&time, &timeStruct));
+      ASSERT_PRED1(isNotNull, localtime_r(&time, &timeStruct));
       char buffer[30];
       asctime_r(&timeStruct, buffer);
       EXPECT_STREQ(expected[vals_ix], buffer);
@@ -2846,7 +2846,7 @@ TEST(TestColumnReader, testTimestamp) {
     if (time < 0) continue;
 #endif
     tm timeStruct;
-    ASSERT_PRED1(isNotNull, gmtime_r(&time, &timeStruct));
+    ASSERT_PRED1(isNotNull, localtime_r(&time, &timeStruct));
     char buffer[30];
     asctime_r(&timeStruct, buffer);
     EXPECT_STREQ(expected[i], buffer) << "Wrong value at " << i;

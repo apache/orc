@@ -584,6 +584,14 @@ namespace orc {
     // PASS
   }
 
+  int64_t Timezone::convertUTCToLocalTZ(int64_t clk) {
+    time_t second = static_cast<int64_t>(clk);
+    struct tm timeInfo;
+    gmtime_r(&second, &timeInfo);
+    timeInfo.tm_isdst = -1;
+    return static_cast<int64_t>(mktime(&timeInfo));
+  }
+
   class TimezoneImpl: public Timezone {
   public:
     TimezoneImpl(const std::string& name,
@@ -607,15 +615,6 @@ namespace orc {
 
     int64_t convertToUTC(int64_t clk) const override {
       return clk + getVariant(clk).gmtOffset;
-    }
-
-    int64_t convertFromUTC(int64_t clk) const override {
-      int64_t ret = clk - getVariant(clk).gmtOffset;
-      if (ret + getVariant(ret).gmtOffset != clk) {
-        // fall into daylight saving rules
-        ret -= 3600;
-      }
-      return ret;
     }
 
   private:

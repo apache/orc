@@ -335,8 +335,9 @@ namespace orc {
             nanoBuffer[i] *= 10;
           }
         }
-        int64_t writerTime = secsBuffer[i] + epochOffset;
-        secsBuffer[i] = writerTimezone.convertToUTC(writerTime);
+        int64_t utcTime =
+          writerTimezone.convertToUTC(secsBuffer[i] + epochOffset);
+        secsBuffer[i] = Timezone::convertUTCToLocalTZ(utcTime);
         if (secsBuffer[i] < 0 && nanoBuffer[i] != 0) {
           secsBuffer[i] -= 1;
         }

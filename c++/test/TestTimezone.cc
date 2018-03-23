@@ -369,13 +369,12 @@ namespace orc {
     EXPECT_EQ("GMT", getVariantFromZone(*gmt, "2015-06-06 12:34:56"));
   }
 
-  TEST(TestTimezone, testOffset) {
-    const Timezone& tz = getTimezoneByName("America/Los_Angeles");
-
-    for (int64_t localTime = 1520700000; localTime != 1520799999; ++localTime) {
-      int64_t utc = tz.convertToUTC(localTime);
-      int64_t reconstructedLocalTime = tz.convertFromUTC(utc);
-      EXPECT_EQ(localTime, reconstructedLocalTime);
+  TEST(TestTimezone, testTimezoneConversion) {
+    const Timezone& localTZ = getLocalTimezone();
+    for (int64_t expected = 1514764799; expected != 1546300799; expected += 3600) {
+      int64_t utc = localTZ.convertToUTC(expected);
+      int64_t localTime = Timezone::convertUTCToLocalTZ(utc);
+      EXPECT_EQ(localTime, expected);
     }
   }
 }  // namespace orc

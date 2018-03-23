@@ -712,7 +712,7 @@ namespace orc {
       int64_t nanos = nanoseconds[rowId];
       time_t secs = static_cast<time_t>(seconds[rowId]);
       struct tm tmValue;
-      gmtime_r(&secs, &tmValue);
+      localtime_r(&secs, &tmValue);
       char timeBuffer[20];
       strftime(timeBuffer, sizeof(timeBuffer), "%Y-%m-%d %H:%M:%S", &tmValue);
       writeChar(buffer, '"');
