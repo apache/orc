@@ -37,6 +37,8 @@ message StringStatistics {
   optional string maximum = 2;
   // sum will store the total length of all strings in a stripe
   optional sint64 sum = 3;
+  optional bool isMinimumTrimmed = 4;
+  optional bool isMaximumTrimmed = 5;
 }
 
 message BucketStatistics {
