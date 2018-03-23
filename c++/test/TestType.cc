@@ -343,8 +343,7 @@ namespace orc {
 
   void expectParseError(const proto::Footer &footer, const char* errMsg) {
     try {
-      int index = 0;
-      checkProtoTypeIds(index, footer);
+      checkProtoTypeIds(footer);
       FAIL() << "Should throw ParseError for ill ids";
     } catch (ParseError& e) {
       EXPECT_EQ(e.what(), std::string(errMsg));
@@ -359,7 +358,7 @@ namespace orc {
     rootType.set_kind(proto::Type_Kind_STRUCT);
     rootType.add_subtypes(1); // add a non existent type id
     *(footer.add_types()) = rootType;
-    expectParseError(footer, "Footer is corrupt that it lost types(1)");
+    expectParseError(footer, "Footer is corrupt: types(1) not exists");
 
     footer.clear_types();
     rootType.clear_subtypes();
@@ -370,7 +369,7 @@ namespace orc {
     *(footer.add_types()) = rootType;
     *(footer.add_types()) = structType;
     expectParseError(footer,
-        "Footer is corrupt: subType(0) should be 2 but was 0 in types(1)");
+        "Footer is corrupt: malformed link from type 1 to 0");
 
     footer.clear_types();
     rootType.clear_subtypes();
@@ -389,6 +388,20 @@ namespace orc {
     *(footer.add_types()) = mapType;    // 2
     *(footer.add_types()) = unionType;  // 3
     expectParseError(footer,
-        "Footer is corrupt: subType(0) should be 4 but was 1 in types(3)");
+        "Footer is corrupt: malformed link from type 3 to 1");
+
+    footer.clear_types();
+    rootType.clear_subtypes();
+    proto::Type intType;
+    intType.set_kind(proto::Type_Kind_INT);
+    proto::Type strType;
+    strType.set_kind(proto::Type_Kind_STRING);
+    rootType.add_subtypes(2);
+    rootType.add_subtypes(1);
+    *(footer.add_types()) = rootType;
+    *(footer.add_types()) = intType;
+    *(footer.add_types()) = strType;
+    expectParseError(footer,
+        "Footer is corrupt: subType(0) >= subType(1) in types(0). (2 >= 1)");
   }
 }

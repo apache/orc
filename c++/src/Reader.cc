@@ -899,22 +899,29 @@ namespace orc {
 
   // ORC-317: check that indices in the type tree are valid, so we won't crash
   // when we convert the proto::Types to TypeImpls.
-  void checkProtoTypeIds(int &index, const proto::Footer &footer) {
-    if (index >= footer.types_size())
-      throw ParseError(std::string("Footer is corrupt that it lost types(") +
-          std::to_string(index) + ")");
-    const proto::Type& type = footer.types(index);
-
-    int origin_index = index;
-    for (int i = 0; i < type.subtypes_size(); ++i) {
-      int proto_index = static_cast<int>(type.subtypes(i));
-      if (++index != proto_index) {
-        std::stringstream msg;
-        msg << "Footer is corrupt: subType(" << i << ") should be " << index
-            << " but was " << proto_index << " in types(" << origin_index << ")";
-        throw ParseError(msg.str());
+  void checkProtoTypeIds(const proto::Footer &footer) {
+    std::stringstream msg;
+    uint32_t maxId = footer.types_size();
+    for (uint32_t i = 0; i < maxId; ++i) {
+      const proto::Type& type = footer.types(i);
+      for (int j = 0; j < type.subtypes_size(); ++j) {
+        uint32_t subTypeId = type.subtypes(j);
+        if (subTypeId <= i) {
+          msg << "Footer is corrupt: malformed link from type " << i << " to "
+              << subTypeId;
+          throw ParseError(msg.str());
+        }
+        if (subTypeId >= maxId) {
+          msg << "Footer is corrupt: types(" << subTypeId << ") not exists";
+          throw ParseError(msg.str());
+        }
+        if (j > 0 && type.subtypes(j - 1) >= subTypeId) {
+          msg << "Footer is corrupt: subType(" << (j-1) << ") >= subType(" << j
+              << ") in types(" << i << "). (" << type.subtypes(j - 1) << " >= "
+              << subTypeId << ")";
+          throw ParseError(msg.str());
+        }
       }
-      checkProtoTypeIds(index, footer);
     }
   }
 
@@ -948,8 +955,7 @@ namespace orc {
                        stream->getName());
     }
 
-    int index = 0;
-    checkProtoTypeIds(index, *footer);
+    checkProtoTypeIds(*footer);
     return REDUNDANT_MOVE(footer);
   }
 
