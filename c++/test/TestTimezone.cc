@@ -368,13 +368,4 @@ namespace orc {
     EXPECT_EQ("GMT", getVariantFromZone(*gmt, "1974-01-06 09:59:59"));
     EXPECT_EQ("GMT", getVariantFromZone(*gmt, "2015-06-06 12:34:56"));
   }
-
-  TEST(TestTimezone, testTimezoneConversion) {
-    const Timezone& localTZ = getLocalTimezone();
-    for (int64_t expected = 1514764799; expected != 1546300799; expected += 3600) {
-      int64_t utc = localTZ.convertToUTC(expected);
-      int64_t localTime = Timezone::convertUTCToLocalTZ(utc);
-      EXPECT_EQ(localTime, expected);
-    }
-  }
 }  // namespace orc

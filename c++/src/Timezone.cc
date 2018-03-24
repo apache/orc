@@ -584,14 +584,6 @@ namespace orc {
     // PASS
   }
 
-  int64_t Timezone::convertUTCToLocalTZ(int64_t clk) {
-    time_t second = static_cast<int64_t>(clk);
-    struct tm timeInfo;
-    gmtime_r(&second, &timeInfo);
-    timeInfo.tm_isdst = -1;
-    return static_cast<int64_t>(mktime(&timeInfo));
-  }
-
   class TimezoneImpl: public Timezone {
   public:
     TimezoneImpl(const std::string& name,

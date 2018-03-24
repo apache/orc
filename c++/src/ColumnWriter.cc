@@ -1132,7 +1132,7 @@ namespace orc {
                              const WriterOptions& options) :
                                  ColumnWriter(type, factory, options),
                                  rleVersion(RleVersion_1),
-                                 timezone(getLocalTimezone()){
+                                 timezone(getTimezoneByName("GMT")){
     std::unique_ptr<BufferedOutputStream> dataStream =
         factory.createStream(proto::Stream_Kind_DATA);
     std::unique_ptr<BufferedOutputStream> secondaryStream =
@@ -1194,9 +1194,8 @@ namespace orc {
     bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (notNull == nullptr || notNull[i]) {
-        // TimestampVectorBatch stores data in local timezone
-        int64_t millsUTC =
-          timezone.convertToUTC(secs[i]) * 1000 + nanos[i] / 1000000;
+        // TimestampVectorBatch stores data in UTC timezone
+        int64_t millsUTC = secs[i] * 1000 + nanos[i] / 1000000;
         tsStats->increase(1);
         tsStats->update(millsUTC);
 

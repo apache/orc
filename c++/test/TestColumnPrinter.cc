@@ -17,9 +17,9 @@
  */
 
 #include "orc/ColumnPrinter.hh"
+
 #include "orc/Exceptions.hh"
 #include "wrap/gtest-wrapper.h"
-#include "Timezone.hh"
 
 namespace orc {
 
@@ -133,18 +133,18 @@ namespace orc {
     TimestampVectorBatch batch(1024, *getDefaultPool());
     batch.numElements = 12;
     batch.hasNulls = false;
-    batch.data[0]  = Timezone::convertUTCToLocalTZ(1420070400);
-    batch.data[1]  = Timezone::convertUTCToLocalTZ( 963273600);
-    batch.data[2]  = Timezone::convertUTCToLocalTZ(1426172459);
-    batch.data[3]  = Timezone::convertUTCToLocalTZ(1426172459);
-    batch.data[4]  = Timezone::convertUTCToLocalTZ(1426172459);
-    batch.data[5]  = Timezone::convertUTCToLocalTZ(1426172459);
-    batch.data[6]  = Timezone::convertUTCToLocalTZ(1426172459);
-    batch.data[7]  = Timezone::convertUTCToLocalTZ(1426172459);
-    batch.data[8]  = Timezone::convertUTCToLocalTZ(1426172459);
-    batch.data[9]  = Timezone::convertUTCToLocalTZ(1426172459);
-    batch.data[10] = Timezone::convertUTCToLocalTZ(1426172459);
-    batch.data[11] = Timezone::convertUTCToLocalTZ(1426172459);
+    batch.data[0]  = 1420070400;
+    batch.data[1]  =  963273600;
+    batch.data[2]  = 1426172459;
+    batch.data[3]  = 1426172459;
+    batch.data[4]  = 1426172459;
+    batch.data[5]  = 1426172459;
+    batch.data[6]  = 1426172459;
+    batch.data[7]  = 1426172459;
+    batch.data[8]  = 1426172459;
+    batch.data[9]  = 1426172459;
+    batch.data[10] = 1426172459;
+    batch.data[11] = 1426172459;
     batch.nanoseconds[0]  = 0;
     batch.nanoseconds[1]  = 0;
     batch.nanoseconds[2]  = 0;
