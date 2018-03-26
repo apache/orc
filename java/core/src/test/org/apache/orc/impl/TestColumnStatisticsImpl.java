@@ -30,6 +30,7 @@ import org.apache.orc.TypeDescription;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.TimeZone;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -72,6 +73,8 @@ public class TestColumnStatisticsImpl {
 
   @Test
   public void testOldTimestamps() throws IOException {
+    TimeZone original = TimeZone.getDefault();
+    TimeZone.setDefault(TimeZone.getTimeZone("America/Los_Angeles"));
     Path exampleDir = new Path(System.getProperty("example.dir"));
     Path file = new Path(exampleDir, "TestOrcFile.testTimestamp.orc");
     Configuration conf = new Configuration();
@@ -80,5 +83,6 @@ public class TestColumnStatisticsImpl {
         (TimestampColumnStatistics) reader.getStatistics()[0];
     assertEquals("1995-01-01 00:00:00.688", stats.getMinimum().toString());
     assertEquals("2037-01-01 00:00:00.0", stats.getMaximum().toString());
+    TimeZone.setDefault(original);
   }
 }

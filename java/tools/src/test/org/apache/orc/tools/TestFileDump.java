@@ -31,11 +31,13 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.TimeZone;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -262,6 +264,7 @@ public class TestFileDump {
   @Test
   public void testDataDump() throws Exception {
     TypeDescription schema = getAllTypesType();
+    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     Writer writer = OrcFile.createWriter(testFilePath,
         OrcFile.writerOptions(conf)
             .fileSystem(fs)
@@ -282,8 +285,9 @@ public class TestFileDump {
         4.0f,
         20.0,
         new HiveDecimalWritable("4.2222"),
-        new Timestamp(1416967764000L),
-        new DateWritable(new Date(1416967764000L)),
+        new Timestamp(format.parse("2014-11-25 18:09:24").getTime()),
+        new DateWritable(DateWritable.millisToDays(
+            format.parse("2014-11-25 00:00:00").getTime())),
         "string",
         "hello",
        "hello",
@@ -302,8 +306,9 @@ public class TestFileDump {
         8.0f,
         40.0,
         new HiveDecimalWritable("2.2222"),
-        new Timestamp(1416967364000L),
-        new DateWritable(new Date(1411967764000L)),
+        new Timestamp(format.parse("2014-11-25 18:02:44").getTime()),
+        new DateWritable(DateWritable.millisToDays(
+            format.parse("2014-09-28 00:00:00").getTime())),
         "abcd",
         "world",
         "world",
