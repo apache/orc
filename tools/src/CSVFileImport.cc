@@ -45,7 +45,7 @@ std::string extractColumn(std::string s, uint64_t colIndex) {
 
 static const char* GetDate(void) {
   static char buf[200];
-  time_t t = time(NULL);
+  time_t t = time(nullptr);
   struct tm* p = localtime(&t);
   strftime(buf, sizeof(buf), "[%Y-%m-%d %H:%M:%S]", p);
   return buf;
@@ -439,13 +439,13 @@ int main(int argc, char* argv[]) {
       }
 
       struct timeval t_start, t_end;
-      gettimeofday(&t_start, NULL);
+      gettimeofday(&t_start, nullptr);
       clock_t c_start = clock();
 
       writer->add(*rowBatch);
 
       totalCPUTime += (clock() - c_start);
-      gettimeofday(&t_end, NULL);
+      gettimeofday(&t_end, nullptr);
       totalElapsedTime +=
         (static_cast<double>(t_end.tv_sec - t_start.tv_sec) * 1000000.0
           + static_cast<double>(t_end.tv_usec - t_start.tv_usec)) / 1000000.0;
@@ -453,13 +453,13 @@ int main(int argc, char* argv[]) {
   }
 
   struct timeval t_start, t_end;
-  gettimeofday(&t_start, NULL);
+  gettimeofday(&t_start, nullptr);
   clock_t c_start = clock();
 
   writer->close();
 
   totalCPUTime += (clock() - c_start);
-  gettimeofday(&t_end, NULL);
+  gettimeofday(&t_end, nullptr);
   totalElapsedTime +=
     (static_cast<double>(t_end.tv_sec - t_start.tv_sec) * 1000000.0
      + static_cast<double>(t_end.tv_usec - t_start.tv_usec)) / 1000000.0;
