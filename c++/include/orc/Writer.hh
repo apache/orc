@@ -169,6 +169,12 @@ namespace orc {
      * @return if not set, the default is false
      */
     bool getEnableIndex() const;
+
+    /**
+     * Get the writer timezone
+     * @return "GMT" because TimestampVectorBatch enforces GMT.
+     */
+    std::string getWriterTimezone() const;
   };
 
   class Writer {
