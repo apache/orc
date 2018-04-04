@@ -38,6 +38,7 @@ namespace orc {
     FileVersion fileVersion;
     double dictionaryKeySizeThreshold;
     bool enableIndex;
+    std::string writerTimezone;
 
     WriterOptionsPrivate() :
                             fileVersion(0, 11) { // default to Hive_0_11
@@ -51,6 +52,7 @@ namespace orc {
       errorStream = &std::cerr;
       dictionaryKeySizeThreshold = 0.0;
       enableIndex = true;
+      writerTimezone = "GMT";
     }
   };
 
@@ -182,6 +184,10 @@ namespace orc {
 
   bool WriterOptions::getEnableIndex() const {
     return privateBits->enableIndex;
+  }
+
+  std::string WriterOptions::getWriterTimezone() const {
+    return privateBits->writerTimezone;
   }
 
   Writer::~Writer() {
@@ -382,7 +388,9 @@ namespace orc {
       *stripeFooter.add_columns() = encodings[i];
     }
 
-    // TODO: ORC-205 Include writer timezone in stripe footer
+    // use GMT to guarantee TimestampVectorBatch from reader can write
+    // same wall clock time
+    stripeFooter.set_writertimezone(options.getWriterTimezone());
 
     // add stripe statistics to metadata
     proto::StripeStatistics* stripeStats = metadata.add_stripestats();

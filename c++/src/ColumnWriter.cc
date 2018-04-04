@@ -1132,7 +1132,7 @@ namespace orc {
                              const WriterOptions& options) :
                                  ColumnWriter(type, factory, options),
                                  rleVersion(RleVersion_1),
-                                 timezone(getLocalTimezone()){
+                                 timezone(getTimezoneByName("GMT")){
     std::unique_ptr<BufferedOutputStream> dataStream =
         factory.createStream(proto::Stream_Kind_DATA);
     std::unique_ptr<BufferedOutputStream> secondaryStream =
@@ -1199,7 +1199,6 @@ namespace orc {
         tsStats->increase(1);
         tsStats->update(millsUTC);
 
-        secs[i] -= timezone.getVariant(secs[i]).gmtOffset;
         secs[i] -= timezone.getEpoch();
         nanos[i] = formatNano(nanos[i]);
       } else if (!hasNull) {
