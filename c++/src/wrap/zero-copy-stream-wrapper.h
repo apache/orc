@@ -19,9 +19,11 @@
 
 DIAGNOSTIC_PUSH
 
-DIAGNOSTIC_IGNORE("-Wdeprecated")
-DIAGNOSTIC_IGNORE("-Wpadded")
-DIAGNOSTIC_IGNORE("-Wunused-parameter")
+#if defined(__GNUC__) || defined(__clang__)
+  DIAGNOSTIC_IGNORE("-Wdeprecated")
+  DIAGNOSTIC_IGNORE("-Wpadded")
+  DIAGNOSTIC_IGNORE("-Wunused-parameter")
+#endif
 
 #ifdef __clang__
   DIAGNOSTIC_IGNORE("-Wreserved-id-macro")

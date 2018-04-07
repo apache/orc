@@ -266,7 +266,10 @@ namespace orc {
   }
 
 DIAGNOSTIC_PUSH
-DIAGNOSTIC_IGNORE("-Wold-style-cast")
+
+#if defined(__GNUC__) || defined(__clang__)
+  DIAGNOSTIC_IGNORE("-Wold-style-cast")
+#endif
 
   void ZlibCompressionStream::init() {
     strm.zalloc = nullptr;
@@ -370,7 +373,10 @@ DIAGNOSTIC_PUSH
   };
 
 DIAGNOSTIC_PUSH
-DIAGNOSTIC_IGNORE("-Wold-style-cast")
+
+#if defined(__GNUC__) || defined(__clang__)
+  DIAGNOSTIC_IGNORE("-Wold-style-cast")
+#endif
 
   ZlibDecompressionStream::ZlibDecompressionStream
                    (std::unique_ptr<SeekableInputStream> inStream,

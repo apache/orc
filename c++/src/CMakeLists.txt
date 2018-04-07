@@ -51,6 +51,10 @@ CHECK_CXX_SOURCE_COMPILES("
       #pragma GCC diagnostic push
       #pragma GCC diagnostic ignored \"-Wdeprecated\"
       #pragma GCC diagnostic pop
+   #elif defined(_MSC_VER)
+      #pragma warning( push )
+      #pragma warning( disable : 4996 )
+      #pragma warning( pop )
    #else
      unknownCompiler!
    #endif
