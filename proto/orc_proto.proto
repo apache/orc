@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+syntax = "proto2";
+
 package orc.proto;
 
 option java_package = "org.apache.orc";
