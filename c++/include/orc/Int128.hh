@@ -285,9 +285,9 @@ namespace orc {
     bool fitsInLong() const {
       switch (highbits) {
       case 0:
-        return !(lowbits & LONG_SIGN_BIT);
+        return 0 == (lowbits & LONG_SIGN_BIT);
       case -1:
-        return lowbits & LONG_SIGN_BIT;
+        return 0 != (lowbits & LONG_SIGN_BIT);
       default:
         return false;
       }

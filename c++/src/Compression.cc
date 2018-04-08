@@ -545,7 +545,7 @@ DIAGNOSTIC_POP
 
   void ZlibDecompressionStream::seek(PositionProvider& position) {
     input->seek(position);
-    bytesReturned = input->ByteCount();
+    bytesReturned = static_cast<off_t>(input->ByteCount());
     if (!Skip(static_cast<int>(position.next()))) {
       throw ParseError("Bad skip in ZlibDecompressionStream::seek");
     }
@@ -673,7 +673,7 @@ DIAGNOSTIC_POP
       *data = outputBufferPtr;
       *size = static_cast<int>(outputBufferLength);
       outputBufferPtr += outputBufferLength;
-      bytesReturned += outputBufferLength;
+      bytesReturned += static_cast<off_t>(outputBufferLength);
       outputBufferLength = 0;
       return true;
     }

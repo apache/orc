@@ -208,11 +208,11 @@ TEST(TestColumnReader, testByteWithNulls) {
 
   // range(256)
   char buffer[258];
-  buffer[0] = static_cast<char>(0x80);
+  buffer[0] = '\x80';
   for (unsigned int i = 0; i < 128; ++i) {
     buffer[i + 1] = static_cast<char>(i);
   }
-  buffer[129] = static_cast<char>(0x80);
+  buffer[129] = '\x80';
   for (unsigned int i = 128; i < 256; ++i) {
     buffer[i + 2] = static_cast<char>(i);
   }
@@ -271,11 +271,11 @@ TEST(TestColumnReader, testByteSkipsWithNulls) {
 
   // range(256)
   char buffer[258];
-  buffer[0] = static_cast<char>(0x80);
+  buffer[0] = '\x80';
   for (unsigned int i = 0; i < 128; ++i) {
     buffer[i + 1] = static_cast<char>(i);
   }
-  buffer[129] = static_cast<char>(0x80);
+  buffer[129] = '\x80';
   for (unsigned int i = 128; i < 256; ++i) {
     buffer[i + 2] = static_cast<char>(i);
   }

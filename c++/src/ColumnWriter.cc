@@ -649,7 +649,7 @@ namespace orc {
     for (uint64_t i = 0; i < numValues; ++i) {
       if (notNull == nullptr || notNull[i]) {
         boolStats->increase(1);
-        boolStats->update(byteData[i], 1);
+        boolStats->update(byteData[i] != 0, 1);
       } else if (!hasNull) {
         hasNull = true;
       }
