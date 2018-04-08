@@ -476,7 +476,7 @@ namespace orc {
       dynamic_cast<LongVectorBatch *>(structBatch->fields[0]);
 
     for (uint64_t i = 0; i < rowCount; ++i) {
-      byteBatch->data[i] = (i % 3) == 0;
+      byteBatch->data[i] = (i % 3) == 0 ? 1 : 0;
     }
     structBatch->numElements = rowCount;
     byteBatch->numElements = rowCount;
@@ -496,7 +496,7 @@ namespace orc {
     structBatch = dynamic_cast<StructVectorBatch *>(batch.get());
     byteBatch = dynamic_cast<LongVectorBatch *>(structBatch->fields[0]);
     for (uint64_t i = 0; i < rowCount; ++i) {
-      EXPECT_EQ((i % 3) == 0, byteBatch->data[i]);
+      EXPECT_EQ((i % 3) == 0 ? 1 : 0, byteBatch->data[i]);
     }
   }
 
@@ -1033,7 +1033,7 @@ namespace orc {
           break;
         case 2:
           offsets[i] = boolOffset;
-          boolData[boolOffset++] = (i % 2 == 0);
+          boolData[boolOffset++] = (i % 2 == 0) ? 1 : 0;
           break;
       }
       tag = (tag + 1) % 3;
@@ -1087,7 +1087,7 @@ namespace orc {
             std::abs(static_cast<double>(i) + 0.5 - doubleData[offset]) < 0.000001);
           break;
         case 2:
-          EXPECT_EQ(i % 2 == 0, boolData[offset]);
+          EXPECT_EQ(i % 2 == 0 ? 1 : 0, boolData[offset]);
           break;
       }
     }
