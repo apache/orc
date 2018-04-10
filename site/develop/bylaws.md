@@ -224,8 +224,9 @@ those who have binding votes over the action.
 #### Code Change
 
 A change made to a codebase of the project requires *lazy consensus*
-of active committers other than the author of the patch. The code can
-be committed after the first +1.
+of active committers other than the author of the patch. We can commit
+changes before they have been reviewed, although we prefer to get
+reviews first.
 
 #### Product Release
 

@@ -1,6 +1,6 @@
 ---
 layout: page
-title: Making a Release
+title: How To Release ORC
 ---
 
 ## Preparing for release

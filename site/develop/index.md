@@ -4,67 +4,21 @@ title: Developing
 ---
 
 Information about the ORC project that is most important for
-developers working on the project. The project has created
-[bylaws](bylaws.html) for itself.
+developers working on the project.
 
-## Project Members
+## Development community
 
-{% comment %}
-please sort by Apache Id
-{% endcomment %}
-Name                    | Apache Id    | Role
-:---------------------- | :----------- | :---
-Aliaksei Sandryhaila    | asandryh     | PMC
-Chris Douglas           | cdouglas     | PMC
-Chinna Rao Lalam        | chinnaraol   | Committer
-Chaoyu Tang             | ctang        | Committer
-Carl Steinbach          | cws          | Committer
-Daniel Dai              | daijy        | Committer
-Deepak Majeti           | mdeepak      | PMC
-Eugene Koifman          | ekoifman     | PMC
-Alan Gates              | gates        | PMC
-Gopal Vijayaraghavan    | gopalv       | PMC
-Gunther Hagleitner      | gunther      | Committer
-Ashutosh Chauhan        | hashutosh    | Committer
-Jesus Camacho Rodriguez | jcamacho     | Committer
-Jason Dere              | jdere        | Committer
-Jimmy Xiang             | jxiang       | Committer
-Kevin Wilfong           | kevinwilfong | Committer
-Lars Francke            | larsfrancke  | Committer
-Lefty Leverenz          | leftyl       | PMC
-Rui Li                  | lirui        | Committer
-Mithun Radhakrishnan    | mithun       | Committer
-Matthew McCline         | mmccline     | Committer
-Naveen Gangam           | ngangam      | Committer
-Owen O'Malley           | omalley      | PMC
-Prasanth Jayachandran   | prasanthj    | PMC
-Pengcheng Xiong         | pxiong       | Committer
-Rajesh Balamohan        | rbalamohan   | Committer
-Sergey Shelukhin        | sershe       | Committer
-Sergio Pena             | spena        | Committer
-Siddharth Seth          | sseth        | Committer
-Stephen Walkauskas      | swalkaus     | Committer
-Vaibhav Gumashta        | vgumashta    | Committer
-Wei Zheng               | weiz         | Committer
-Xuefu Zhang             | xuefu        | Committer
-Ferdinand Xu            | xuf          | Committer
-Yongzhi Chen            | ychena       | Committer
-Aihua Xu                | zihuaxu      | Committer
-
-Companies with employees that are committers:
-
-* Cloudera
-* Facebook
-* Hewlett Packard Enterprise
-* Hortonworks
-* Intel
-* LinkedIn
-* Microsoft
-* Yahoo
+We have committers from many different companies. The full
+list of [ORC committers](committers.html) is available.
 
 ## Mailing Lists
 
-There are several development mailing lists for ORC:
+The most important communication mechanism for the project are its
+mailing lists.  The mailing lists have the advantage that they are
+publicly archived and work well asynchronously across timezones.
+
+Beside the user mailing list, there are several development mailing
+lists for ORC:
 
 * [dev@orc.apache.org](mailto:dev@orc.apache.org) - Development discussions
   with archive [here](https://mail-archives.apache.org/mod_mbox/orc-dev/)
@@ -77,26 +31,152 @@ You can subscribe to the lists by sending email to
 *list*-subscribe@orc.apache.org and unsubscribe by sending email to
 *list*-unsubscribe@orc.apache.org.
 
+## Bug reports
+
+Each code change requires a [jira](/jira) to track the discussion of the change.
+
 ## Source code
 
-ORC uses git for version control. Get the source code:
+ORC uses git for version control. Get the source code and configure it
+to fetch the pull requests also:
 
-`% git clone https://git-wip-us.apache.org/repos/asf/orc.git`
+~~~~
+% git clone -o apache git@github.com:apache/orc.git
+% cd orc
+% git config --add remote.apache.fetch '+refs/pull/*/head:refs/remotes/apache/pr/*'
+~~~~
+
+Pull requests will be named "apache/pr/999" for pull request 999.
+
+If you are a committer, add the push url:
+
+~~~~
+% git remote set-url --push apache https://git-wip-us.apache.org/repos/asf/orc.git
+~~~~
 
 The important branches are:
 
 * [master](https://github.com/apache/orc/tree/master) -
-  The trunk for all developement
+  The master branch for all development
+* branch-X.Y - The release branches
 * [asf-site](https://github.com/apache/orc/tree/asf-site) -
-  The pages that are deployed to https://orc.apache.org/
+  The generated html pages that are deployed as https://orc.apache.org/
 
-Please check our [coding guidelines](/develop/coding.html).
+Releases are tagged as "rel/release-X.Y.Z". Apache's git repository
+guarantees that tags in the "rel/*" namespace are never deleted or
+changed.
+
+Please check our [coding guidelines](coding.html).
 
 ## Reviews
 
 ORC uses Commit-Then-Review, so patches can be committed without a
 committer's review. However, most changes should be reviewed first.
 
+## Approving a pull request
+
+Fetch the current state of the project:
+
+~~~~
+% git fetch apache
+~~~~
+
+Switch to the branch:
+
+~~~~
+% git checkout apache/pr/999
+~~~~
+
+You'll want to rebase it and make it a single commit by squashing
+the commits into a single commit.
+
+~~~~
+% git rebase -i apache/master
+~~~~
+
+Update the commit message to sign it using your GPG key and close the
+pull request:
+
+~~~~
+% git commit --amend -s -S
+~~~~
+
+Ensure the first line of the commit starts with the jira number
+(eg. ORC-123) and includes a description of what was changed. Also add
+a line such as "Fixes #999", which asks the Apache infrastructure to
+close pull request 999. If you wish you close a pull request without
+claiming to have fixed the problem, the form "Closes #999" also works.
+
+Finally, push the result to Apache:
+
+~~~~
+% git push apache HEAD:master
+~~~~
+
+## Creating a GPG key
+
+When you become a committer, you should create a 4096 bit GPG key.
+
+~~~~
+% gpg --full-gen-key
+~~~~
+
+Use 4096 bits and your Apache email address. Once it is created,
+you'll need to get your key fingerprint. Avoid using the short
+fingerprint (eg. 3D0C92B9), because it is possible to generate fake
+keys that have the same short fingerprint as the real key.
+
+~~~~
+% gpg --list-secret-keys --keyid-format LONG
+~~~~
+
+Your key fingerprint is the string after "rsa4096/". Example output
+for the key with fingerprint 1209E7F13D0C92B9 looks like:
+
+~~~~
+/Users/owen/.gnupg/pubring.gpg
+------------------------------
+sec   rsa4096/1209E7F13D0C92B9 2010-02-23 [SC]
+      47660BC98BC433F01E5C90581209E7F13D0C92B9
+uid                 [ultimate] Owen O'Malley <omalley@apache.org>
+~~~~
+
+Now publish your public key to one of the public keyservers. I usually use
+hkp://pgp.mit.edu, although any of them will work.
+
+~~~~
+gpg --send-key <your key fingerprint>
+~~~~
+
+Next, you need to update the [Apache account
+database](https://id.apache.org) with your new key. Login to add your
+new key's fingerprint and your github id. It is also good to update
+your github profile with your GPG public key as well at
+[https://github.com/settings/keys](https://github.com/settings/keys).
+
+After you've created your key, it is good to get someone in the ORC
+community to sign it for you. Contact someone directly or send email
+to dev@orc.apache.org asking for someone to sign it.
+
 ## Making a Release
 
-The process to make a release is documented [here](/develop/make-release.html).
+The release process for ORC is driven by a Release Manager. They should
+discuss their intention to start the process on the dev list and then
+follow the steps of [how to release ORC](make-release.html).
+
+## Dist Directory
+
+Apache expects the projects to manage their current release artifact
+distribution using subversion. It should be limited to the latest
+release in each of the active release branches.
+
+The ORC dist directory is managed via
+[https://dist.apache.org/repos/dist/release/orc](https://dist.apache.org/repos/dist/release/orc).
+The release artifacts are pushed to many mirrors. Files in the dist
+directory are available forever via the [Apache dist
+archive](https://archive.apache.org/dist/orc/).
+
+## Bylaws
+
+ORC has a set of [bylaws](bylaws.html) that describe the rules for the different
+votes within our project.
