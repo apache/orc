@@ -33,7 +33,8 @@ You can subscribe to the lists by sending email to
 
 ## Bug reports
 
-Each code change requires a [jira](/jira) to track the discussion of the change.
+Each code change requires a [jira]({{ site.jira }}/ORC) to track the
+discussion of the change.
 
 ## Source code
 
@@ -67,6 +68,18 @@ guarantees that tags in the "rel/*" namespace are never deleted or
 changed.
 
 Please check our [coding guidelines](coding.html).
+
+## Website shortcuts
+
+We've added several shortcuts to various relevant pages:
+
+From our website, you can use:
+
+* [/bugs](/bugs) to jump to our bug database
+* [/downloads](/downloads) to jump to our downloads page
+* [/releases](/releases) to jump to our releases page
+* [/src](/src) to jump to our source code
+* [/web-src](/web-src) to jump to our site source code
 
 ## Reviews
 
