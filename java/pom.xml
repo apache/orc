@@ -66,7 +66,6 @@
     <test.tmp.dir>${project.build.directory}/testing-tmp</test.tmp.dir>
     <example.dir>${project.basedir}/../../examples</example.dir>
 
-    <avro.version>1.8.1</avro.version>
     <hadoop.version>2.6.4</hadoop.version>
     <storage-api.version>2.2.1</storage-api.version>
     <zookeeper.version>3.4.6</zookeeper.version>
@@ -391,17 +390,6 @@
         </exclusions>
       </dependency>
       <dependency>
-        <groupId>org.apache.avro</groupId>
-        <artifactId>avro</artifactId>
-        <version>${avro.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.avro</groupId>
-        <artifactId>avro-mapred</artifactId>
-        <classifier>hadoop2</classifier>
-        <version>${avro.version}</version>
-      </dependency>
-      <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-csv</artifactId>
         <version>1.4</version>
@@ -583,11 +571,6 @@
             <artifactId>netty</artifactId>
           </exclusion>
         </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.parquet</groupId>
-        <artifactId>parquet-hadoop-bundle</artifactId>
-        <version>1.8.2</version>
       </dependency>
       <dependency>
         <groupId>org.codehaus.jettison</groupId>
