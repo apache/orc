@@ -22,11 +22,8 @@ value is null.
 ~~~ cpp
 namespace orc {
   struct ColumnVectorBatch {
-    // the number of current occupied slots
     uint64_t numElements;
-    // an array of capacity length marking non-null values
     DataBuffer<char> notNull;
-    // whether there are any null values
     bool hasNulls;
     ...
   }
@@ -149,12 +146,7 @@ the data as a buffer of integers for the offsets and a
 
 ~~~ cpp
   struct ListVectorBatch: public ColumnVectorBatch {
-    /**
-     * The offset of the first element of each list.
-     * The length of list i is startOffset[i+1] - startOffset[i].
-     */
     DataBuffer<int64_t> offsets;
-    // the concatenated elements
     ORC_UNIQUE_PTR<ColumnVectorBatch> elements;
     ...
   };
@@ -166,10 +158,6 @@ for the keys and values.
 
 ~~~ cpp
   struct MapVectorBatch: public ColumnVectorBatch {
-    /**
-     * The offset of the first element of each list.
-     * The length of list i is startOffset[i+1] - startOffset[i].
-     */
     DataBuffer<int64_t> offsets;
     ORC_UNIQUE_PTR<ColumnVectorBatch> keys;
     ORC_UNIQUE_PTR<ColumnVectorBatch> elements;
