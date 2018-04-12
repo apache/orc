@@ -82,6 +82,7 @@ namespace orc {
     EXPECT_TRUE(other->hasNull());
     EXPECT_EQ(9999, other->getMaximum());
     EXPECT_EQ(-9999, other->getMinimum());
+    EXPECT_TRUE(other->hasSum());
     EXPECT_EQ(100000, other->getSum());
 
     intStats->merge(*other);
