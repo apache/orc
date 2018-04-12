@@ -167,6 +167,18 @@ namespace orc {
     // PASS
   }
 
+  void IntegerColumnStatisticsImpl::update(int64_t value, int repetitions) {
+    _stats.updateMinMax(value);
+
+    if (_stats.hasSum()) {
+      bool wasPositive = _stats.getSum() >= 0;
+      _stats.setSum(value * repetitions + _stats.getSum());
+      if ((value >= 0) == wasPositive) {
+        _stats.setHasSum((_stats.getSum() >= 0) == wasPositive);
+      }
+    }
+  }
+
   StringColumnStatisticsImpl::~StringColumnStatisticsImpl() {
     // PASS
   }
