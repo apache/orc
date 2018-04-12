@@ -116,13 +116,13 @@ representation of the value as an unbounded length zigzag encoded base
 128 varint. The scale is stored in the SECONDARY stream as an signed
 integer.
 
-In ORC 2.0, DECIMAL encoding is introduced and totally remove scale
-stream as all decimal values use the same scale. When precision is
-no greater than 18, decimal values can be fully represented by DATA
-stream which stores 64-bit signed integers. When precision is greater
-than 18, we use a 128-bit signed integer to store the decimal value.
-DATA stream stores the higher 64 bits and SECONDARY stream holds the
-lower 64 bits. Both streams use signed integer RLE v2.
+In ORC 2.0, DECIMAL_V1 and DECIMAL_V2 encodins are introduced and
+totally remove scale stream as all decimal values use the same scale.
+When precision is no greater than 18, decimal values can be fully
+represented by DATA stream which stores 64-bit signed integers. When
+precision is greater than 18, we use a 128-bit signed integer to store
+the decimal value. DATA stream stores the higher 64 bits and SECONDARY
+stream holds the lower 64 bits. Both streams use signed integer RLE.
 
 Encoding      | Stream Kind     | Optional | Contents
 :------------ | :-------------- | :------- | :-------
@@ -132,7 +132,10 @@ DIRECT        | PRESENT         | Yes      | Boolean RLE
 DIRECT_V2     | PRESENT         | Yes      | Boolean RLE
               | DATA            | No       | Unbounded base 128 varints
               | SECONDARY       | No       | Unsigned Integer RLE v2
-DECIMAL       | PRESENT         | Yes      | Boolean RLE
+DECIMAL_V1    | PRESENT         | Yes      | Boolean RLE
+              | DATA            | No       | Signed Integer RLE v1
+              | SECONDARY       | Yes      | Signed Integer RLE v1
+DECIMAL_V2    | PRESENT         | Yes      | Boolean RLE
               | DATA            | No       | Signed Integer RLE v2
               | SECONDARY       | Yes      | Signed Integer RLE v2
 
