@@ -948,17 +948,7 @@ namespace orc {
       _stats.setSum(sum);
     }
 
-    void update(int64_t value, int repetitions) {
-      _stats.updateMinMax(value);
-
-      if (_stats.hasSum()) {
-        bool wasPositive = _stats.getSum() >= 0;
-        _stats.setSum(value * repetitions + _stats.getSum());
-        if ((value >= 0) == wasPositive) {
-          _stats.setHasSum((_stats.getSum() >= 0) == wasPositive);
-        }
-      }
-    }
+    void update(int64_t value, int repetitions);
 
     void merge(const MutableColumnStatistics& other) override {
       const IntegerColumnStatisticsImpl& intStats =
