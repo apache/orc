@@ -250,7 +250,7 @@ For booleans, the statistics include the count of false and true values.
 ```
 
 For decimals, the minimum, maximum, and sum are stored. In ORC 2.0,
-string represetion is deprecated and DecimalStatistics uses integers
+string representation is deprecated and DecimalStatistics uses integers
 which have better performance.
 
 ```message DecimalStatistics {
