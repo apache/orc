@@ -258,8 +258,8 @@ which have better performance.
  optional string maximum = 2;
  optional string sum = 3;
   message Int128 {
-   repeated sint64 highBits = 1;
-   repeated uint64 lowBits = 2;
+   required sint64 highBits = 1;
+   required uint64 lowBits = 2;
  }
  optional Int128 sum128 = 4;
  // for precision <= 18
