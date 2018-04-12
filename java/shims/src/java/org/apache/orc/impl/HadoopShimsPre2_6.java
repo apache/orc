@@ -26,6 +26,7 @@ import org.apache.hadoop.io.compress.zlib.ZlibDecompressor;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.util.Random;
 
 /**
  * Shims for versions of Hadoop less than 2.6
@@ -129,8 +130,7 @@ public class HadoopShimsPre2_6 implements HadoopShims {
   }
 
   @Override
-  public KeyProvider getKeyProvider(Configuration conf) {
-    // not supported
-    return null;
+  public KeyProvider getKeyProvider(Configuration conf, Random random) {
+    return new HadoopShimsPre2_3.NullKeyProvider();
   }
 }

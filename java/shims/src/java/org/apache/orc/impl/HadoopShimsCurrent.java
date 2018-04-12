@@ -25,6 +25,7 @@ import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.EnumSet;
+import java.util.Random;
 
 /**
  * Shims for recent versions of Hadoop
@@ -60,9 +61,8 @@ public class HadoopShimsCurrent implements HadoopShims {
   }
 
   @Override
-  public KeyProvider getKeyProvider(Configuration conf) throws IOException {
-    return new HadoopShimsPre2_7.KeyProviderImpl(conf);
+  public KeyProvider getKeyProvider(Configuration conf,
+                                    Random random) throws IOException {
+    return HadoopShimsPre2_7.createKeyProvider(conf, random);
   }
-
-
 }

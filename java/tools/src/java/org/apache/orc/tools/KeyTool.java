@@ -34,6 +34,7 @@ import org.codehaus.jettison.json.JSONWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.security.SecureRandom;
 
 /**
  * Print the information about the encryption keys.
@@ -55,7 +56,7 @@ public class KeyTool {
     writer.key("version");
     writer.value(meta.getVersion());
     byte[] iv = new byte[algorithm.getIvLength()];
-    byte[] key = provider.getLocalKey(meta, iv).getEncoded();
+    byte[] key = provider.decryptLocalKey(meta, iv).getEncoded();
     writer.key("key 0");
     writer.value(new BytesWritable(key).toString());
     writer.endObject();
@@ -79,7 +80,7 @@ public class KeyTool {
 
   void run() throws IOException, JSONException {
     HadoopShims.KeyProvider provider =
-        HadoopShimsFactory.get().getKeyProvider(conf);
+        HadoopShimsFactory.get().getKeyProvider(conf, new SecureRandom());
     if (provider == null) {
       System.err.println("No key provider available.");
       System.exit(1);
