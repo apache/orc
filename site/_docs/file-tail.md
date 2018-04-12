@@ -249,12 +249,26 @@ For booleans, the statistics include the count of false and true values.
 }
 ```
 
-For decimals, the minimum, maximum, and sum are stored.
+For decimals, the minimum, maximum, and sum are stored. In ORC 2.0,
+string represetion is deprecated and DecimalStatistics uses integers
+which have better performance.
 
 ```message DecimalStatistics {
  optional string minimum = 1;
  optional string maximum = 2;
  optional string sum = 3;
+ // for precision <= 18 
+ optional sint64 minimum64 = 4;
+ optional sint64 maximum64 = 5;
+ optional sint64 sum64 = 6;
+ // for precision > 18
+ message Int128 {
+   repeated sint64 highBits = 1;
+   repeated uint64 lowBits = 2;
+ }
+ optional Int128 minimum128 = 7;
+ optional Int128 maximum128 = 8;
+ optional Int128 sum128 = 9;
 }
 ```
 

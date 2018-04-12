@@ -109,10 +109,14 @@ DIRECT_V2     | PRESENT         | Yes      | Boolean RLE
 Decimal was introduced in Hive 0.11 with infinite precision (the total
 number of digits). In Hive 0.13, the definition was change to limit
 the precision to a maximum of 38 digits, which conveniently uses 127
-bits plus a sign bit. The current encoding of decimal columns stores
-the integer representation of the value as an unbounded length zigzag
-encoded base 128 varint. The scale is stored in the SECONDARY stream
-as an signed integer.
+bits plus a sign bit.
+
+### Legacy Decimal Encoding
+
+DIRECT and DIRECT_V2 encodings of decimal columns stores the integer
+representation of the value as an unbounded length zigzag encoded base
+128 varint. The scale is stored in the SECONDARY stream as an signed
+integer.
 
 Encoding      | Stream Kind     | Optional | Contents
 :------------ | :-------------- | :------- | :-------
@@ -121,6 +125,41 @@ DIRECT        | PRESENT         | Yes      | Boolean RLE
               | SECONDARY       | No       | Unsigned Integer RLE v1
 DIRECT_V2     | PRESENT         | Yes      | Boolean RLE
               | DATA            | No       | Unbounded base 128 varints
+              | SECONDARY       | No       | Unsigned Integer RLE v2
+
+In ORC 2.0, DECIMAL and DECIMAL_V2 encodings are introduced and scale
+stream is totally removed as all decimal values use the same scale.
+There are two difference cases: precision<=18 and precision>18.
+
+### Decimal Encoding for precision <= 18
+
+When precision is no greater than 18, decimal values can be fully
+represented by 64-bit signed integers which are stored in DATA stream
+and use signed integer RLE.
+
+Encoding      | Stream Kind     | Optional | Contents
+:------------ | :-------------- | :------- | :-------
+DECIMAL       | PRESENT         | Yes      | Boolean RLE
+              | DATA            | No       | Signed Integer RLE v1
+DECIMAL_V2    | PRESENT         | Yes      | Boolean RLE
+              | DATA            | No       | Signed Integer RLE v2
+
+### Decimal Encoding for precision > 18
+
+When precision is greater than 18, decimal value is split into two
+parts: a signed integer stores higher 64 bits and an unsigned integer
+stores lower 64 bits. Therefore, a DATA stream is utilized to store
+the higher 64-bit signed integer of decimal values and a SECONDARY
+stream holds the lower 64-bit unsigned integer of decimal values.
+Both streams use RLE and are not optional in this case.
+
+Encoding      | Stream Kind     | Optional | Contents
+:------------ | :-------------- | :------- | :-------
+DECIMAL       | PRESENT         | Yes      | Boolean RLE
+              | DATA            | No       | Signed Integer RLE v1
+              | SECONDARY       | No       | Unsigned Integer RLE v1
+DECIMAL_V2    | PRESENT         | Yes      | Boolean RLE
+              | DATA            | No       | Signed Integer RLE v1
               | SECONDARY       | No       | Unsigned Integer RLE v2
 
 ## Date Columns
