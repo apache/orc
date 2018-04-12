@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>Hive DDL</title>
+  <title>Using Core C++</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="generator" content="Jekyll v2.4.0">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
@@ -1240,44 +1240,335 @@
 
       <div class="unit four-fifths">
         <article>
-          <h1>Hive DDL</h1>
-          <p>ORC is well integrated into Hive, so storing your istari table as ORC
-is done by adding “STORED AS ORC”.</p>
+          <h1>Using Core C++</h1>
+          <p>The C++ Core ORC API reads and writes ORC files into its own
+orc::ColumnVectorBatch vectorized classes.</p>
 
-<p><code>CREATE TABLE istari (
-  name STRING,
-  color STRING
-) STORED AS ORC;
-</code></p>
+<h2 id="vectorized-row-batch">Vectorized Row Batch</h2>
 
-<p>To modify a table so that new partitions of the istari table are
-stored as ORC files:</p>
+<p>Data is passed to ORC as instances of orc::ColumnVectorBatch
+that contain the data a batch of rows. The focus is on speed and
+accessing the data fields directly. <code>numElements</code> is the number
+of rows. ColumnVectorBatch is the parent type of the different
+kinds of columns and has some fields that are shared across
+all of the column types. In particular, the <code>hasNulls</code> flag
+if there is any null in this column for this batch. For columns
+where <code>hasNulls == true</code> the <code>notNull</code> buffer is false if that
+value is null.</p>
 
-<p><code>ALTER TABLE istari SET FILEFORMAT ORC;
-</code></p>
+<pre><code class="language-cpp">namespace orc {
+  struct ColumnVectorBatch {
+    uint64_t numElements;
+    DataBuffer&lt;char&gt; notNull;
+    bool hasNulls;
+    ...
+  }
+}
+</code></pre>
 
-<p>As of Hive 0.14, users can request an efficient merge of small ORC files
-together by issuing a CONCATENATE command on their table or partition. The
-files will be merged at the stripe level without reserialization.</p>
+<p>The subtypes of ColumnVectorBatch are:</p>
 
-<p><code>ALTER TABLE istari [PARTITION partition_spec] CONCATENATE;
-</code></p>
+<table>
+  <thead>
+    <tr>
+      <th>ORC Type</th>
+      <th>ColumnVectorBatch</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>array</td>
+      <td>ListVectorBatch</td>
+    </tr>
+    <tr>
+      <td>binary</td>
+      <td>StringVectorBatch</td>
+    </tr>
+    <tr>
+      <td>bigint</td>
+      <td>LongVectorBatch</td>
+    </tr>
+    <tr>
+      <td>boolean</td>
+      <td>LongVectorBatch</td>
+    </tr>
+    <tr>
+      <td>char</td>
+      <td>StringVectorBatch</td>
+    </tr>
+    <tr>
+      <td>date</td>
+      <td>LongVectorBatch</td>
+    </tr>
+    <tr>
+      <td>decimal</td>
+      <td>Decimal64VectorBatch, Decimal128VectorBatch</td>
+    </tr>
+    <tr>
+      <td>double</td>
+      <td>DoubleVectorBatch</td>
+    </tr>
+    <tr>
+      <td>float</td>
+      <td>DoubleVectorBatch</td>
+    </tr>
+    <tr>
+      <td>int</td>
+      <td>LongVectorBatch</td>
+    </tr>
+    <tr>
+      <td>map</td>
+      <td>MapVectorBatch</td>
+    </tr>
+    <tr>
+      <td>smallint</td>
+      <td>LongVectorBatch</td>
+    </tr>
+    <tr>
+      <td>string</td>
+      <td>StringVectorBatch</td>
+    </tr>
+    <tr>
+      <td>struct</td>
+      <td>StructVectorBatch</td>
+    </tr>
+    <tr>
+      <td>timestamp</td>
+      <td>TimestampVectorBatch</td>
+    </tr>
+    <tr>
+      <td>tinyint</td>
+      <td>LongVectorBatch</td>
+    </tr>
+    <tr>
+      <td>uniontype</td>
+      <td>UnionVectorBatch</td>
+    </tr>
+    <tr>
+      <td>varchar</td>
+      <td>StringVectorBatch</td>
+    </tr>
+  </tbody>
+</table>
 
-<p>To get information about an ORC file, use the orcfiledump command.</p>
+<p>LongVectorBatch handles all of the integer types (boolean, bigint,
+date, int, smallint, and tinyint). The data is represented as a
+buffer of int64_t where each value is sign-extended as necessary.</p>
 
-<p><code>% hive --orcfiledump &lt;path_to_file&gt;
-</code></p>
+<pre><code class="language-cpp">  struct LongVectorBatch: public ColumnVectorBatch {
+    DataBuffer&lt;int64_t&gt; data;
+    ...
+  };
+</code></pre>
 
-<p>As of Hive 1.1, to display the data in the ORC file, use:</p>
+<p>TimestampVectorBatch handles timestamp values. The data is
+represented as two buffers of int64_t for seconds and nanoseconds
+respectively. Note that we always assume data is in GMT timezone;
+therefore it is user’s responsibility to convert wall clock time
+from local timezone to GMT.</p>
 
-<p><code>% hive --orcfiledump -d &lt;path_to_file&gt;
-</code></p>
+<pre><code class="language-cpp">  struct TimestampVectorBatch: public ColumnVectorBatch {
+    DataBuffer&lt;int64_t&gt; data;
+    DataBuffer&lt;int64_t&gt; nanoseconds;
+    ...
+  };
+</code></pre>
+
+<p>DoubleVectorBatch handles all of the floating point types
+(double, and float). The data is represented as a buffer of doubles.</p>
+
+<pre><code class="language-cpp">  struct DoubleVectorBatch: public ColumnVectorBatch {
+    DataBuffer&lt;double&gt; data;
+    ...
+  };
+</code></pre>
+
+<p>Decimal64VectorBatch handles decimal columns with precision no
+greater than 18. Decimal128VectorBatch handles the others. The data
+is represented as a buffer of int64_t and orc::Int128 respectively.</p>
+
+<pre><code class="language-cpp">  struct Decimal64VectorBatch: public ColumnVectorBatch {
+    DataBuffer&lt;int64_t&gt; values;
+    ...
+  };
+
+  struct Decimal128VectorBatch: public ColumnVectorBatch {
+    DataBuffer&lt;Int128&gt; values;
+    ...
+  };
+</code></pre>
+
+<p>StringVectorBatch handles all of the binary types (binary,
+char, string, and varchar). The data is represented as a char* buffer,
+and a length buffer.</p>
+
+<pre><code class="language-cpp">  struct StringVectorBatch: public ColumnVectorBatch {
+    DataBuffer&lt;char*&gt; data;
+    DataBuffer&lt;int64_t&gt; length;
+    ...
+  };
+</code></pre>
+
+<p>StructVectorBatch handles the struct columns and represents
+the data as a buffer of <code>ColumnVectorBatch</code>.</p>
+
+<pre><code class="language-cpp">  struct StructVectorBatch: public ColumnVectorBatch {
+    std::vector&lt;ColumnVectorBatch*&gt; fields;
+    ...
+  };
+</code></pre>
+
+<p>UnionVectorBatch handles the union columns. It uses <code>tags</code>
+to indicate which subtype has the value and <code>offsets</code> indicates
+the offset in child batch of that subtype. A individual
+<code>ColumnVectorBatch</code> is used for each subtype.</p>
+
+<pre><code class="language-cpp">  struct UnionVectorBatch: public ColumnVectorBatch {
+    DataBuffer&lt;unsigned char&gt; tags;
+    DataBuffer&lt;uint64_t&gt; offsets;
+    std::vector&lt;ColumnVectorBatch*&gt; children;
+    ...
+  };
+</code></pre>
+
+<p>ListVectorBatch handles the array columns and represents
+the data as a buffer of integers for the offsets and a
+<code>ColumnVectorBatch</code> for the children values.</p>
+
+<pre><code class="language-cpp">  struct ListVectorBatch: public ColumnVectorBatch {
+    DataBuffer&lt;int64_t&gt; offsets;
+    ORC_UNIQUE_PTR&lt;ColumnVectorBatch&gt; elements;
+    ...
+  };
+</code></pre>
+
+<p>MapVectorBatch handles the map columns and represents the data
+as two arrays of integers for the offsets and two <code>ColumnVectorBatch</code>s
+for the keys and values.</p>
+
+<pre><code class="language-cpp">  struct MapVectorBatch: public ColumnVectorBatch {
+    DataBuffer&lt;int64_t&gt; offsets;
+    ORC_UNIQUE_PTR&lt;ColumnVectorBatch&gt; keys;
+    ORC_UNIQUE_PTR&lt;ColumnVectorBatch&gt; elements;
+    ...
+  };
+</code></pre>
+
+<h2 id="writing-orc-files">Writing ORC Files</h2>
+
+<p>To write an ORC file, you need to include <code>OrcFile.hh</code> and define
+the schema; then use <code>orc::OutputStream</code> and <code>orc::WriterOptions</code>
+to create a <code>orc::Writer</code> with the desired filename. This example
+sets the required schema parameter, but there are many other
+options to control the ORC writer.</p>
+
+<pre><code class="language-cpp">ORC_UNIQUE_PTR&lt;OutputStream&gt; outStream =
+  writeLocalFile("my-file.orc");
+ORC_UNIQUE_PTR&lt;Type&gt; schema(
+  Type::buildTypeFromString("struct&lt;x:int,y:int&gt;"));
+WriterOptions options;
+ORC_UNIQUE_PTR&lt;Writer&gt; writer =
+  createWriter(*schema, outStream.get(), options);
+</code></pre>
+
+<p>Now you need to create a row batch, set the data, and write it to the file
+as the batch fills up. When the file is done, close the <code>Writer</code>.</p>
+
+<pre><code class="language-cpp">uint64_t batchSize = 1024, rowCount = 10000;
+ORC_UNIQUE_PTR&lt;ColumnVectorBatch&gt; batch =
+  writer-&gt;createRowBatch(batchSize);
+StructVectorBatch *root =
+  dynamic_cast&lt;StructVectorBatch *&gt;(batch.get());
+LongVectorBatch *x =
+  dynamic_cast&lt;LongVectorBatch *&gt;(root-&gt;fields[0]);
+LongVectorBatch *y =
+  dynamic_cast&lt;LongVectorBatch *&gt;(root-&gt;fields[1]);
+
+uint64_t rows = 0;
+for (uint64_t i = 0; i &lt; rowCount; ++i) {
+  x-&gt;data[rows] = i;
+  y-&gt;data[rows] = i * 3;
+  rows++;
+
+  if (rows == batchSize) {
+    root-&gt;numElements = rows;
+    x-&gt;numElements = rows;
+    y-&gt;numElements = rows;
+
+    writer-&gt;add(*batch);
+    rows = 0;
+  }
+}
+
+if (rows != 0) {
+  root-&gt;numElements = rows;
+  x-&gt;numElements = rows;
+  y-&gt;numElements = rows;
+
+  writer-&gt;add(*batch);
+  rows = 0;
+}
+
+writer-&gt;close();
+</code></pre>
+
+<h2 id="reading-orc-files">Reading ORC Files</h2>
+
+<p>To read ORC files, include <code>OrcFile.hh</code> file to create a <code>orc::Reader</code>
+that contains the metadata about the file. There are a few options to
+the <code>orc::Reader</code>, but far fewer than the writer and none of them are
+required. The reader has methods for getting the number of rows,
+schema, compression, etc. from the file.</p>
+
+<pre><code class="language-cpp">ORC_UNIQUE_PTR&lt;InputStream&gt; inStream =
+  readLocalFile("my-file.orc");
+ReaderOptions options;
+ORC_UNIQUE_PTR&lt;Reader&gt; reader =
+  createReader(inStream, options);
+</code></pre>
+
+<p>To get the data, create a <code>orc::RowReader</code> object. By default,
+the RowReader reads all rows and all columns, but there are
+options to control the data that is read.</p>
+
+<pre><code class="language-cpp">RowReaderOptions rowReaderOptions;
+ORC_UNIQUE_PTR&lt;RowReader&gt; rowReader =
+  reader-&gt;createRowReader(rowReaderOptions);
+ORC_UNIQUE_PTR&lt;ColumnVectorBatch&gt; batch =
+  rowReader-&gt;createRowBatch(1024);
+</code></pre>
+
+<p>With a <code>orc::RowReader</code> the user can ask for the next batch until there
+are no more left. The reader will stop the batch at certain boundaries,
+so the returned batch may not be full, but it will always contain some rows.</p>
+
+<pre><code class="language-cpp">while (rowReader-&gt;next(*batch)) {
+  for (uint64_t r = 0; r &lt; batch-&gt;numElements; ++r) {
+    ... process row r from batch
+  }
+}
+</code></pre>
 
           
 
 
 
 
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
 
   
   
@@ -1307,14 +1598,14 @@ files will be merged at the stripe level without reserialization.</p>
           
             
             
-            <a href="/docs/releases.html" class="prev">Back</a>
+            <a href="/docs/core-java.html" class="prev">Back</a>
           
       </div>
       <div class="right align-left">
           
             
             
-            <a href="/docs/hive-config.html" class="next">Next</a>
+            <a href="/docs/cpp-tools.html" class="next">Next</a>
           
       </div>
     </div>
@@ -1586,7 +1877,7 @@ files will be merged at the stripe level without reserialization.</p>
     
   
     
-      <li class="current"><a href="/docs/hive-ddl.html">Hive DDL</a></li>
+      <li class=""><a href="/docs/hive-ddl.html">Hive DDL</a></li>
       
 
 
@@ -1756,7 +2047,7 @@ files will be merged at the stripe level without reserialization.</p>
     
   
     
-      <li class=""><a href="/docs/core-cpp.html">Using Core C++</a></li>
+      <li class="current"><a href="/docs/core-cpp.html">Using Core C++</a></li>
       
 
 
