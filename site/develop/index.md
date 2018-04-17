@@ -6,6 +6,9 @@ title: Developing
 Information about the ORC project that is most important for
 developers working on the project.
 
+The [ORC format specification](/specification) defines the format
+to promote compatibility between implementations.
+
 ## Development community
 
 We have committers from many different companies. The full
