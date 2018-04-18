@@ -401,7 +401,7 @@ public class RecordReaderImpl implements RecordReader {
                                            OrcProto.BloomFilter bloomFilter,
                                            OrcFile.WriterVersion writerVersion,
                                            TypeDescription.Category type) {
-    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(statsProto);
+    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null, statsProto);
     Object minValue = getMin(cs);
     Object maxValue = getMax(cs);
     // files written before ORC-135 stores timestamp wrt to local timezone causing issues with PPD.

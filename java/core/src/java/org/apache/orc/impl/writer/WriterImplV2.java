@@ -593,7 +593,7 @@ public class WriterImplV2 implements WriterInternal, MemoryManager.Callback {
 
     // add the column statistics
     writeFileStatistics(builder, treeWriter);
-    return ReaderImpl.deserializeStats(builder.getStatisticsList());
+    return ReaderImpl.deserializeStats(schema, builder.getStatisticsList());
   }
 
   public CompressionCodec getCompressionCodec() {

@@ -95,7 +95,7 @@ public class GenerateVariants {
     }
   }
 
-  static class RecursiveReader implements BatchReader {
+  public static class RecursiveReader implements BatchReader {
     private final RemoteIterator<LocatedFileStatus> filenames;
     private final String format;
     private final TypeDescription schema;
@@ -103,7 +103,7 @@ public class GenerateVariants {
     private final CompressionKind compress;
     private BatchReader current = null;
 
-    RecursiveReader(Path root,
+    public RecursiveReader(Path root,
                     String format,
                     TypeDescription schema,
                     Configuration conf,
