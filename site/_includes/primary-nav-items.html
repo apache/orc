@@ -6,6 +6,10 @@
     <a href="/docs/"><span class="show-on-mobiles">Docs</span>
                      <span class="hide-on-mobiles">Documentation</span></a>
   </li>
+  <li class="{% if page.url contains '/specification/' %}current{% endif %}">
+    <a href="/specification/"><span class="show-on-mobiles">Specs</span>
+                              <span class="hide-on-mobiles">Specification</span></a>
+  </li>
   <li class="{% if page.url contains '/talks/' %}current{% endif %}">
     <a href="/talks/">Talks</a>
   </li>
