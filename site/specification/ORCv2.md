@@ -295,12 +295,23 @@ For booleans, the statistics include the count of false and true values.
 }
 ```
 
-For decimals, the minimum, maximum, and sum are stored.
+For decimals, the minimum, maximum, and sum are stored. These values of string
+types are deprecated and readers should read them correctly. Writers should
+write them using uint64 types. Minimum is represented in combination of minLow
+and minHigh. If precision <= 18, minLow = zigzag(minimum) and minHigh = 0 thus
+omitted; if precision > 18, then minLow = lower 64 bits of zigzag(minimum) and
+minHigh = higher 64 bits of zigzag(minimum). Same for maximum and sum.
 
 ```message DecimalStatistics {
  optional string minimum = 1;
  optional string maximum = 2;
  optional string sum = 3;
+ optional uint64 minLow = 4;
+ optional uint64 minHigh = 5;
+ optional uint64 maxLow = 6;
+ optional uint64 maxHigh = 7;
+ optional uint64 sumLow = 8;
+ optional uint64 sumHigh = 9;
 }
 ```
 
@@ -824,10 +835,17 @@ DIRECT_V2     | PRESENT         | Yes      | Boolean RLE
 Decimal was introduced in Hive 0.11 with infinite precision (the total
 number of digits). In Hive 0.13, the definition was change to limit
 the precision to a maximum of 38 digits, which conveniently uses 127
-bits plus a sign bit. The current encoding of decimal columns stores
-the integer representation of the value as an unbounded length zigzag
-encoded base 128 varint. The scale is stored in the SECONDARY stream
-as an signed integer.
+bits plus a sign bit.
+
+DIRECT and DIRECT_V2 encodings of decimal columns stores the integer
+representation of the value as an unbounded length zigzag encoded base
+128 varint. The scale is stored in the SECONDARY stream as an signed
+integer.
+
+DECIMAL_V1 encoding is introduced to totally eliminate SECONDARY stream
+as all decimal values use the same scale. Only DATA stream is used to
+encode decimal values. Here we use RLE v1 only for its compatibility to
+128-bit integers.
 
 Encoding      | Stream Kind     | Optional | Contents
 :------------ | :-------------- | :------- | :-------
@@ -837,6 +855,8 @@ DIRECT        | PRESENT         | Yes      | Boolean RLE
 DIRECT_V2     | PRESENT         | Yes      | Boolean RLE
               | DATA            | No       | Unbounded base 128 varints
               | SECONDARY       | No       | Unsigned Integer RLE v2
+DECIMAL_V1    | PRESENT         | Yes      | Boolean RLE
+              | DATA            | No       | Signed Integer RLE v1
 
 ## Date Columns
 
