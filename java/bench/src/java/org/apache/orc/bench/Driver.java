@@ -47,6 +47,7 @@ public class Driver {
       System.err.println("  scan      - Scan data variants");
       System.err.println("  read-all  - Full table scan benchmark");
       System.err.println("  read-some - Column projection benchmark");
+      System.err.println("  decimal   - Decimal benchmark");
       System.exit(1);
     }
     return result;
@@ -69,6 +70,9 @@ public class Driver {
         break;
       case "read-some":
         ColumnProjectionBenchmark.main(args);
+        break;
+      case "decimal":
+        DecimalBench.main(args);
         break;
       default:
         System.err.println("Unknown command " + command);

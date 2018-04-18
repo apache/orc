@@ -37,7 +37,7 @@ public class StripeStatistics {
   public ColumnStatistics[] getColumnStatistics() {
     ColumnStatistics[] result = new ColumnStatistics[cs.size()];
     for (int i = 0; i < result.length; ++i) {
-      result[i] = ColumnStatisticsImpl.deserialize(cs.get(i));
+      result[i] = ColumnStatisticsImpl.deserialize(null, cs.get(i));
     }
     return result;
   }

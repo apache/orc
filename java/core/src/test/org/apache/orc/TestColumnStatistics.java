@@ -209,7 +209,7 @@ public class TestColumnStatistics {
     // serialize and read back in with phoenix timezone
     OrcProto.ColumnStatistics serial = stats2.serialize().build();
     TimeZone.setDefault(TimeZone.getTimeZone("America/Phoenix"));
-    ColumnStatisticsImpl stats3 = ColumnStatisticsImpl.deserialize(serial);
+    ColumnStatisticsImpl stats3 = ColumnStatisticsImpl.deserialize(schema, serial);
     assertEquals("2000-10-29 01:30:00.0",
         ((TimestampColumnStatistics) stats3).getMinimum().toString());
     assertEquals("2000-10-29 03:30:00.0",

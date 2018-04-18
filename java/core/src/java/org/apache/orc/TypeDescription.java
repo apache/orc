@@ -47,6 +47,8 @@ public class TypeDescription
   private static final int DEFAULT_PRECISION = 38;
   private static final int DEFAULT_SCALE = 10;
   public static final int MAX_DECIMAL64_PRECISION = 18;
+  public static final long MAX_DECIMAL64 = 999_999_999_999_999_999L;
+  public static final long MIN_DECIMAL64 = -MAX_DECIMAL64;
   private static final int DEFAULT_LENGTH = 256;
   static final Pattern UNQUOTED_NAMES = Pattern.compile("^[a-zA-Z0-9_]+$");
 
@@ -681,12 +683,12 @@ public class TypeDescription
   /**
    * Specify the version of the VectorizedRowBatch that the user desires.
    */
-  enum RowBatchVersion {
+  public enum RowBatchVersion {
     ORIGINAL,
     USE_DECIMAL64;
   }
 
-  VectorizedRowBatch createRowBatch(RowBatchVersion version, int size) {
+  public VectorizedRowBatch createRowBatch(RowBatchVersion version, int size) {
     VectorizedRowBatch result;
     if (category == Category.STRUCT) {
       result = new VectorizedRowBatch(children.size(), size);

@@ -22,6 +22,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.serde2.io.DateWritable;
 import org.apache.orc.ColumnStatistics;
+import org.apache.orc.DecimalColumnStatistics;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
 import org.apache.orc.Reader;
@@ -84,5 +85,67 @@ public class TestColumnStatisticsImpl {
     assertEquals("1995-01-01 00:00:00.688", stats.getMinimum().toString());
     assertEquals("2037-01-01 00:00:00.0", stats.getMaximum().toString());
     TimeZone.setDefault(original);
+  }
+
+  @Test
+  public void testDecimal64Overflow() throws IOException {
+    TypeDescription schema = TypeDescription.fromString("decimal(18,6)");
+    OrcProto.ColumnStatistics.Builder pb =
+        OrcProto.ColumnStatistics.newBuilder();
+    OrcProto.DecimalStatistics.Builder decimalBuilder =
+        OrcProto.DecimalStatistics.newBuilder();
+    decimalBuilder.setMaximum("1000.0");
+    decimalBuilder.setMinimum("1.010");
+    decimalBuilder.setSum("123456789.123456");
+    pb.setDecimalStatistics(decimalBuilder);
+    pb.setHasNull(false);
+    pb.setNumberOfValues(3);
+
+    // the base case doesn't overflow
+    DecimalColumnStatistics stats1 = (DecimalColumnStatistics)
+        ColumnStatisticsImpl.deserialize(schema, pb.build());
+    ColumnStatisticsImpl updateStats1 = (ColumnStatisticsImpl) stats1;
+    assertEquals("1.01", stats1.getMinimum().toString());
+    assertEquals("1000", stats1.getMaximum().toString());
+    assertEquals("123456789.123456", stats1.getSum().toString());
+    assertEquals(3, stats1.getNumberOfValues());
+
+    // Now set the sum to something that overflows Decimal64.
+    decimalBuilder.setSum("1234567890123.45");
+    pb.setDecimalStatistics(decimalBuilder);
+    DecimalColumnStatistics stats2 = (DecimalColumnStatistics)
+        ColumnStatisticsImpl.deserialize(schema, pb.build());
+    assertEquals(null, stats2.getSum());
+
+    // merge them together
+    updateStats1.merge((ColumnStatisticsImpl) stats2);
+    assertEquals(null, stats1.getSum());
+
+    updateStats1.reset();
+    assertEquals("0", stats1.getSum().toString());
+    updateStats1.increment();
+    updateStats1.updateDecimal64(10000, 6);
+    assertEquals("0.01", stats1.getSum().toString());
+    updateStats1.updateDecimal64(1, 4);
+    assertEquals("0.0101", stats1.getSum().toString());
+    updateStats1.updateDecimal64(TypeDescription.MAX_DECIMAL64, 6);
+    assertEquals(null, stats1.getSum());
+    updateStats1.reset();
+    updateStats1.updateDecimal64(TypeDescription.MAX_DECIMAL64, 6);
+    assertEquals("999999999999.999999", stats1.getSum().toString());
+    updateStats1.updateDecimal64(1, 6);
+    assertEquals(null, stats1.getSum());
+
+    updateStats1.reset();
+    ColumnStatisticsImpl updateStats2 = (ColumnStatisticsImpl) stats2;
+    updateStats2.reset();
+    updateStats1.increment();
+    updateStats2.increment();
+    updateStats1.updateDecimal64(TypeDescription.MAX_DECIMAL64, 6);
+    updateStats2.updateDecimal64(TypeDescription.MAX_DECIMAL64, 6);
+    assertEquals("999999999999.999999", stats1.getSum().toString());
+    assertEquals("999999999999.999999", stats2.getSum().toString());
+    updateStats1.merge(updateStats2);
+    assertEquals(null, stats1.getSum());
   }
 }

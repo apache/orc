@@ -275,23 +275,26 @@ public class TestRecordReaderImpl {
   @Test
   public void testGetMin() throws Exception {
     assertEquals(10L, RecordReaderImpl.getMin(
-      ColumnStatisticsImpl.deserialize(createIntStats(10L, 100L))));
+      ColumnStatisticsImpl.deserialize(null, createIntStats(10L, 100L))));
     assertEquals(10.0d, RecordReaderImpl.getMin(ColumnStatisticsImpl.deserialize(
+      null,
       OrcProto.ColumnStatistics.newBuilder()
         .setDoubleStatistics(OrcProto.DoubleStatistics.newBuilder()
           .setMinimum(10.0d).setMaximum(100.0d).build()).build())));
     assertEquals(null, RecordReaderImpl.getMin(ColumnStatisticsImpl.deserialize(
+      null,
       OrcProto.ColumnStatistics.newBuilder()
         .setStringStatistics(OrcProto.StringStatistics.newBuilder().build())
         .build())));
     assertEquals("a", RecordReaderImpl.getMin(ColumnStatisticsImpl.deserialize(
+      null,
       OrcProto.ColumnStatistics.newBuilder()
         .setStringStatistics(OrcProto.StringStatistics.newBuilder()
           .setMinimum("a").setMaximum("b").build()).build())));
     assertEquals("hello", RecordReaderImpl.getMin(ColumnStatisticsImpl
-      .deserialize(createStringStats("hello", "world"))));
+      .deserialize(null, createStringStats("hello", "world"))));
     assertEquals(HiveDecimal.create("111.1"), RecordReaderImpl.getMin(ColumnStatisticsImpl
-      .deserialize(createDecimalStats("111.1", "112.1"))));
+      .deserialize(null, createDecimalStats("111.1", "112.1"))));
   }
 
   private static OrcProto.ColumnStatistics createIntStats(Long min,
@@ -379,23 +382,27 @@ public class TestRecordReaderImpl {
 
   @Test
   public void testGetMax() throws Exception {
-    assertEquals(100L, RecordReaderImpl.getMax(ColumnStatisticsImpl.deserialize(createIntStats(10L, 100L))));
+    assertEquals(100L, RecordReaderImpl.getMax(ColumnStatisticsImpl.deserialize(
+        null, createIntStats(10L, 100L))));
     assertEquals(100.0d, RecordReaderImpl.getMax(ColumnStatisticsImpl.deserialize(
+        null,
         OrcProto.ColumnStatistics.newBuilder()
             .setDoubleStatistics(OrcProto.DoubleStatistics.newBuilder()
                 .setMinimum(10.0d).setMaximum(100.0d).build()).build())));
     assertEquals(null, RecordReaderImpl.getMax(ColumnStatisticsImpl.deserialize(
+        null,
         OrcProto.ColumnStatistics.newBuilder()
             .setStringStatistics(OrcProto.StringStatistics.newBuilder().build())
             .build())));
     assertEquals("b", RecordReaderImpl.getMax(ColumnStatisticsImpl.deserialize(
+        null,
         OrcProto.ColumnStatistics.newBuilder()
             .setStringStatistics(OrcProto.StringStatistics.newBuilder()
                 .setMinimum("a").setMaximum("b").build()).build())));
     assertEquals("world", RecordReaderImpl.getMax(ColumnStatisticsImpl
-      .deserialize(createStringStats("hello", "world"))));
+      .deserialize(null, createStringStats("hello", "world"))));
     assertEquals(HiveDecimal.create("112.1"), RecordReaderImpl.getMax(ColumnStatisticsImpl
-      .deserialize(createDecimalStats("111.1", "112.1"))));
+      .deserialize(null, createDecimalStats("111.1", "112.1"))));
   }
 
   static TruthValue evaluateBoolean(OrcProto.ColumnStatistics stats,
@@ -1471,7 +1478,7 @@ public class TestRecordReaderImpl {
     for (int i = 20; i < 1000; i++) {
       bf.addLong(i);
     }
-    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(createIntStats(10, 100));
+    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null, createIntStats(10, 100));
     assertEquals(TruthValue.NO, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
 
     bf.addLong(15);
@@ -1486,7 +1493,7 @@ public class TestRecordReaderImpl {
     for (int i = 20; i < 1000; i++) {
       bf.addLong(i);
     }
-    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(createIntStats(10, 100));
+    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null, createIntStats(10, 100));
     assertEquals(TruthValue.NO_NULL, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
 
     bf.addLong(15);
@@ -1505,7 +1512,7 @@ public class TestRecordReaderImpl {
     for (int i = 20; i < 1000; i++) {
       bf.addLong(i);
     }
-    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(createIntStats(10, 100));
+    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null, createIntStats(10, 100));
     assertEquals(TruthValue.NO_NULL, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
 
     bf.addLong(19);
@@ -1523,7 +1530,7 @@ public class TestRecordReaderImpl {
     for (int i = 20; i < 1000; i++) {
       bf.addDouble(i);
     }
-    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(createDoubleStats(10.0, 100.0));
+    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null, createDoubleStats(10.0, 100.0));
     assertEquals(TruthValue.NO, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
 
     bf.addDouble(15.0);
@@ -1538,7 +1545,7 @@ public class TestRecordReaderImpl {
     for (int i = 20; i < 1000; i++) {
       bf.addDouble(i);
     }
-    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(createDoubleStats(10.0, 100.0));
+    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null, createDoubleStats(10.0, 100.0));
     assertEquals(TruthValue.NO_NULL, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
 
     bf.addDouble(15.0);
@@ -1557,7 +1564,7 @@ public class TestRecordReaderImpl {
     for (int i = 20; i < 1000; i++) {
       bf.addDouble(i);
     }
-    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(createDoubleStats(10.0, 100.0));
+    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null, createDoubleStats(10.0, 100.0));
     assertEquals(TruthValue.NO_NULL, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
 
     bf.addDouble(19.0);
@@ -1575,7 +1582,7 @@ public class TestRecordReaderImpl {
     for (int i = 20; i < 1000; i++) {
       bf.addString("str_" + i);
     }
-    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(createStringStats("str_10", "str_200"));
+    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null, createStringStats("str_10", "str_200"));
     assertEquals(TruthValue.NO, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
 
     bf.addString("str_15");
@@ -1590,7 +1597,7 @@ public class TestRecordReaderImpl {
     for (int i = 20; i < 1000; i++) {
       bf.addString("str_" + i);
     }
-    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(createStringStats("str_10", "str_200"));
+    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null, createStringStats("str_10", "str_200"));
     assertEquals(TruthValue.NO_NULL, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
 
     bf.addString("str_15");
@@ -1609,7 +1616,7 @@ public class TestRecordReaderImpl {
     for (int i = 20; i < 1000; i++) {
       bf.addString("str_" + i);
     }
-    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(createStringStats("str_10", "str_200"));
+    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null, createStringStats("str_10", "str_200"));
     assertEquals(TruthValue.NO_NULL, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
 
     bf.addString("str_19");
@@ -1628,7 +1635,7 @@ public class TestRecordReaderImpl {
     for (int i = 20; i < 1000; i++) {
       bf.addLong((new DateWritable(i)).getDays());
     }
-    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(createDateStats(10, 100));
+    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null, createDateStats(10, 100));
     assertEquals(TruthValue.NO, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
 
     bf.addLong((new DateWritable(15)).getDays());
@@ -1644,7 +1651,7 @@ public class TestRecordReaderImpl {
     for (int i = 20; i < 1000; i++) {
       bf.addLong((new DateWritable(i)).getDays());
     }
-    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(createDateStats(10, 100));
+    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null, createDateStats(10, 100));
     assertEquals(TruthValue.NO_NULL, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
 
     bf.addLong((new DateWritable(15)).getDays());
@@ -1663,7 +1670,7 @@ public class TestRecordReaderImpl {
     for (int i = 20; i < 1000; i++) {
       bf.addLong((new DateWritable(i)).getDays());
     }
-    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(createDateStats(10, 100));
+    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null, createDateStats(10, 100));
     assertEquals(TruthValue.NO_NULL, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
 
     bf.addLong((new DateWritable(19)).getDays());
@@ -1683,7 +1690,7 @@ public class TestRecordReaderImpl {
     for (int i = 20; i < 1000; i++) {
       bf.addString(HiveDecimal.create(i).toString());
     }
-    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(createDecimalStats("10", "200"));
+    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null, createDecimalStats("10", "200"));
     assertEquals(TruthValue.NO_NULL, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
 
     bf.addString(HiveDecimal.create(15).toString());
@@ -1702,7 +1709,7 @@ public class TestRecordReaderImpl {
     for (int i = 20; i < 1000; i++) {
       bf.addString(HiveDecimal.create(i).toString());
     }
-    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(createDecimalStats("10", "200"));
+    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null, createDecimalStats("10", "200"));
     assertEquals(TruthValue.NO_NULL, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
 
     bf.addString(HiveDecimal.create(19).toString());
@@ -1725,11 +1732,11 @@ public class TestRecordReaderImpl {
     for (int i = 20; i < 1000; i++) {
       bf.addString(HiveDecimal.create(i).toString());
     }
-    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(createDecimalStats("10", "200", false));
+    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null, createDecimalStats("10", "200", false));
     // hasNull is false, so bloom filter should return NO
     assertEquals(TruthValue.NO, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
 
-    cs = ColumnStatisticsImpl.deserialize(createDecimalStats("10", "200", true));
+    cs = ColumnStatisticsImpl.deserialize(null, createDecimalStats("10", "200", true));
     // hasNull is true, so bloom filter should return YES_NO_NULL
     assertEquals(TruthValue.YES_NO_NULL, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
 
