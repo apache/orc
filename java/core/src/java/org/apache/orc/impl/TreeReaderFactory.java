@@ -31,6 +31,7 @@ import java.util.TimeZone;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.Decimal64ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ListColumnVector;
@@ -1096,19 +1097,31 @@ public class TreeReaderFactory {
   }
 
   public static class DecimalTreeReader extends TreeReader {
+    protected final int precision;
+    protected final int scale;
     protected InStream valueStream;
     protected IntegerReader scaleReader = null;
     private int[] scratchScaleVector;
     private byte[] scratchBytes;
 
-    DecimalTreeReader(int columnId, Context context) throws IOException {
-      this(columnId, null, null, null, null, context);
+    DecimalTreeReader(int columnId,
+                      int precision,
+                      int scale,
+                      Context context) throws IOException {
+      this(columnId, null, null, null, null, precision, scale, context);
     }
 
-    protected DecimalTreeReader(int columnId, InStream present,
-        InStream valueStream, InStream scaleStream, OrcProto.ColumnEncoding encoding, Context context)
-        throws IOException {
+    protected DecimalTreeReader(int columnId,
+                                InStream present,
+                                InStream valueStream,
+                                InStream scaleStream,
+                                OrcProto.ColumnEncoding encoding,
+                                int precision,
+                                int scale,
+                                Context context) throws IOException {
       super(columnId, present, context);
+      this.precision = precision;
+      this.scale = scale;
       this.scratchScaleVector = new int[VectorizedRowBatch.DEFAULT_SIZE];
       this.valueStream = valueStream;
       this.scratchBytes = new byte[HiveDecimal.SCRATCH_BUFFER_LEN_SERIALIZATION_UTILS_READ];
@@ -1150,14 +1163,9 @@ public class TreeReaderFactory {
       scaleReader.seek(index);
     }
 
-    @Override
-    public void nextVector(ColumnVector previousVector,
-                           boolean[] isNull,
-                           final int batchSize) throws IOException {
-      final DecimalColumnVector result = (DecimalColumnVector) previousVector;
-      // Read present/isNull stream
-      super.nextVector(result, isNull, batchSize);
-
+    private void nextVector(DecimalColumnVector result,
+                            boolean[] isNull,
+                            final int batchSize) throws IOException {
       if (batchSize > scratchScaleVector.length) {
         scratchScaleVector = new int[(int) batchSize];
       }
@@ -1190,6 +1198,53 @@ public class TreeReaderFactory {
             }
           }
         }
+      }
+    }
+
+    private void nextVector(Decimal64ColumnVector result,
+                            boolean[] isNull,
+                            final int batchSize) throws IOException {
+      if (precision > TypeDescription.MAX_DECIMAL64_PRECISION) {
+        throw new IllegalArgumentException("Reading large precision type into" +
+            " Decimal64ColumnVector.");
+      }
+
+      if (batchSize > scratchScaleVector.length) {
+        scratchScaleVector = new int[(int) batchSize];
+      }
+      // read the scales
+      scaleReader.nextVector(result, scratchScaleVector, batchSize);
+      if (result.noNulls) {
+        for (int r=0; r < batchSize; ++r) {
+          result.vector[r] = SerializationUtils.readVslong(valueStream);
+          for(int s=scratchScaleVector[r]; s < scale; ++s) {
+            result.vector[r] *= 10;
+          }
+        }
+      } else if (!result.isRepeating || !result.isNull[0]) {
+        for (int r=0; r < batchSize; ++r) {
+          if (!result.isNull[r]) {
+            result.vector[r] = SerializationUtils.readVslong(valueStream);
+            for(int s=scratchScaleVector[r]; s < scale; ++s) {
+              result.vector[r] *= 10;
+            }
+          }
+        }
+      }
+      result.precision = (short) precision;
+      result.scale = (short) scale;
+    }
+
+    @Override
+    public void nextVector(ColumnVector result,
+                           boolean[] isNull,
+                           final int batchSize) throws IOException {
+      // Read present/isNull stream
+      super.nextVector(result, isNull, batchSize);
+      if (result instanceof Decimal64ColumnVector) {
+        nextVector((Decimal64ColumnVector) result, isNull, batchSize);
+      } else {
+        nextVector((DecimalColumnVector) result, isNull, batchSize);
       }
     }
 
@@ -2186,7 +2241,8 @@ public class TreeReaderFactory {
       case DATE:
         return new DateTreeReader(fileType.getId(), context);
       case DECIMAL:
-        return new DecimalTreeReader(fileType.getId(), context);
+        return new DecimalTreeReader(fileType.getId(), fileType.getPrecision(),
+            fileType.getScale(), context);
       case STRUCT:
         return new StructTreeReader(fileType.getId(), readerType, context);
       case LIST:
