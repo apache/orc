@@ -20,6 +20,7 @@ package org.apache.orc;
 
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.Decimal64ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ListColumnVector;
@@ -45,6 +46,7 @@ public class TypeDescription
   private static final int MAX_SCALE = 38;
   private static final int DEFAULT_PRECISION = 38;
   private static final int DEFAULT_SCALE = 10;
+  public static final int MAX_DECIMAL64_PRECISION = 18;
   private static final int DEFAULT_LENGTH = 256;
   static final Pattern UNQUOTED_NAMES = Pattern.compile("^[a-zA-Z0-9_]+$");
 
@@ -622,7 +624,7 @@ public class TypeDescription
     return maxId;
   }
 
-  private ColumnVector createColumn(int maxSize) {
+  private ColumnVector createColumn(RowBatchVersion version, int maxSize) {
     switch (category) {
       case BOOLEAN:
       case BYTE:
@@ -637,7 +639,12 @@ public class TypeDescription
       case DOUBLE:
         return new DoubleColumnVector(maxSize);
       case DECIMAL:
-        return new DecimalColumnVector(maxSize, precision, scale);
+        if (version == RowBatchVersion.ORIGINAL ||
+            precision > MAX_DECIMAL64_PRECISION) {
+          return new DecimalColumnVector(maxSize, precision, scale);
+        } else {
+          return new Decimal64ColumnVector(maxSize, precision, scale);
+        }
       case STRING:
       case BINARY:
       case CHAR:
@@ -646,7 +653,7 @@ public class TypeDescription
       case STRUCT: {
         ColumnVector[] fieldVector = new ColumnVector[children.size()];
         for(int i=0; i < fieldVector.length; ++i) {
-          fieldVector[i] = children.get(i).createColumn(maxSize);
+          fieldVector[i] = children.get(i).createColumn(version, maxSize);
         }
         return new StructColumnVector(maxSize,
                 fieldVector);
@@ -654,40 +661,72 @@ public class TypeDescription
       case UNION: {
         ColumnVector[] fieldVector = new ColumnVector[children.size()];
         for(int i=0; i < fieldVector.length; ++i) {
-          fieldVector[i] = children.get(i).createColumn(maxSize);
+          fieldVector[i] = children.get(i).createColumn(version, maxSize);
         }
         return new UnionColumnVector(maxSize,
             fieldVector);
       }
       case LIST:
         return new ListColumnVector(maxSize,
-            children.get(0).createColumn(maxSize));
+            children.get(0).createColumn(version, maxSize));
       case MAP:
         return new MapColumnVector(maxSize,
-            children.get(0).createColumn(maxSize),
-            children.get(1).createColumn(maxSize));
+            children.get(0).createColumn(version, maxSize),
+            children.get(1).createColumn(version, maxSize));
       default:
         throw new IllegalArgumentException("Unknown type " + category);
     }
   }
 
-  public VectorizedRowBatch createRowBatch(int maxSize) {
+  /**
+   * Specify the version of the VectorizedRowBatch that the user desires.
+   */
+  enum RowBatchVersion {
+    ORIGINAL,
+    USE_DECIMAL64;
+  }
+
+  VectorizedRowBatch createRowBatch(RowBatchVersion version, int size) {
     VectorizedRowBatch result;
     if (category == Category.STRUCT) {
-      result = new VectorizedRowBatch(children.size(), maxSize);
+      result = new VectorizedRowBatch(children.size(), size);
       for(int i=0; i < result.cols.length; ++i) {
-        result.cols[i] = children.get(i).createColumn(maxSize);
+        result.cols[i] = children.get(i).createColumn(version, size);
       }
     } else {
-      result = new VectorizedRowBatch(1, maxSize);
-      result.cols[0] = createColumn(maxSize);
+      result = new VectorizedRowBatch(1, size);
+      result.cols[0] = createColumn(version, size);
     }
     result.reset();
     return result;
   }
 
+  /**
+   * Create a VectorizedRowBatch that uses Decimal64ColumnVector for
+   * short (p <= 18) decimals.
+   * @return a new VectorizedRowBatch
+   */
+  public VectorizedRowBatch createRowBatchV2() {
+    return createRowBatch(RowBatchVersion.USE_DECIMAL64,
+        VectorizedRowBatch.DEFAULT_SIZE);
+  }
+
+  /**
+   * Create a VectorizedRowBatch with the original ColumnVector types
+   * @param maxSize the maximum size of the batch
+   * @return a new VectorizedRowBatch
+   */
+  public VectorizedRowBatch createRowBatch(int maxSize) {
+    return createRowBatch(RowBatchVersion.ORIGINAL, maxSize);
+  }
+
+  /**
+   * Create a VectorizedRowBatch with the original ColumnVector types
+   * @return a new VectorizedRowBatch
+   */
   public VectorizedRowBatch createRowBatch() {
-    return createRowBatch(VectorizedRowBatch.DEFAULT_SIZE);
+    return createRowBatch(RowBatchVersion.ORIGINAL,
+        VectorizedRowBatch.DEFAULT_SIZE);
   }
 
   /**

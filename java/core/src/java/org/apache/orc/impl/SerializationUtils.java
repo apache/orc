@@ -38,15 +38,17 @@ public final class SerializationUtils {
 
   public void writeVulong(OutputStream output,
                           long value) throws IOException {
+    int posn = 0;
     while (true) {
       if ((value & ~0x7f) == 0) {
-        output.write((byte) value);
-        return;
+        writeBuffer[posn++] = (byte) value;
+        break;
       } else {
-        output.write((byte) (0x80 | (value & 0x7f)));
+        writeBuffer[posn++] = (byte)(0x80 | (value & 0x7f));
         value >>>= 7;
       }
     }
+    output.write(writeBuffer, 0, posn);
   }
 
   public void writeVslong(OutputStream output,
@@ -55,7 +57,7 @@ public final class SerializationUtils {
   }
 
 
-  public long readVulong(InputStream in) throws IOException {
+  public static long readVulong(InputStream in) throws IOException {
     long result = 0;
     long b;
     int offset = 0;
@@ -70,7 +72,7 @@ public final class SerializationUtils {
     return result;
   }
 
-  public long readVslong(InputStream in) throws IOException {
+  public static long readVslong(InputStream in) throws IOException {
     long result = readVulong(in);
     return (result >>> 1) ^ -(result & 1);
   }

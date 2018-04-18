@@ -20,6 +20,7 @@ package org.apache.orc.impl.writer;
 
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.Decimal64ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
 import org.apache.hadoop.hive.ql.util.JavaDataModel;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
@@ -28,11 +29,13 @@ import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.IntegerWriter;
 import org.apache.orc.impl.PositionRecorder;
 import org.apache.orc.impl.PositionedOutputStream;
+import org.apache.orc.impl.SerializationUtils;
 
 import java.io.IOException;
 
 public class DecimalTreeWriter extends TreeWriterBase {
   private final PositionedOutputStream valueStream;
+  private final SerializationUtils utils = new SerializationUtils();
 
   // These scratch buffers allow us to serialize decimals much faster.
   private final long[] scratchLongs;
@@ -68,14 +71,11 @@ public class DecimalTreeWriter extends TreeWriterBase {
     return result;
   }
 
-  @Override
-  public void writeBatch(ColumnVector vector, int offset,
+  private void writeBatch(DecimalColumnVector vector, int offset,
                          int length) throws IOException {
-    super.writeBatch(vector, offset, length);
-    DecimalColumnVector vec = (DecimalColumnVector) vector;
     if (vector.isRepeating) {
       if (vector.noNulls || !vector.isNull[0]) {
-        HiveDecimalWritable value = vec.vector[0];
+        HiveDecimalWritable value = vector.vector[0];
         indexStatistics.updateDecimal(value);
         if (createBloomFilter) {
           String str = value.toString(scratchBuffer);
@@ -92,8 +92,8 @@ public class DecimalTreeWriter extends TreeWriterBase {
       }
     } else {
       for (int i = 0; i < length; ++i) {
-        if (vec.noNulls || !vec.isNull[i + offset]) {
-          HiveDecimalWritable value = vec.vector[i + offset];
+        if (vector.noNulls || !vector.isNull[i + offset]) {
+          HiveDecimalWritable value = vector.vector[i + offset];
           value.serializationUtilsWrite(valueStream, scratchLongs);
           scaleStream.write(value.scale());
           indexStatistics.updateDecimal(value);
@@ -106,6 +106,56 @@ public class DecimalTreeWriter extends TreeWriterBase {
           }
         }
       }
+    }
+  }
+
+  private void writeBatch(Decimal64ColumnVector vector, int offset,
+                          int length) throws IOException {
+    if (vector.isRepeating) {
+      if (vector.noNulls || !vector.isNull[0]) {
+        HiveDecimalWritable value = vector.getScratchWritable();
+        value.setFromLongAndScale(vector.vector[0], vector.scale);
+        indexStatistics.updateDecimal(value);
+        if (createBloomFilter) {
+          String str = value.toString(scratchBuffer);
+          if (bloomFilter != null) {
+            bloomFilter.addString(str);
+          }
+          bloomFilterUtf8.addString(str);
+        }
+        for (int i = 0; i < length; ++i) {
+          utils.writeVslong(valueStream, vector.vector[0]);
+          scaleStream.write(vector.scale);
+        }
+      }
+    } else {
+      HiveDecimalWritable value = vector.getScratchWritable();
+      for (int i = 0; i < length; ++i) {
+        if (vector.noNulls || !vector.isNull[i + offset]) {
+          utils.writeVslong(valueStream, vector.vector[i + offset]);
+          scaleStream.write(vector.scale);
+          value.setFromLongAndScale(vector.vector[i + offset], vector.scale);
+          indexStatistics.updateDecimal(value);
+          if (createBloomFilter) {
+            String str = value.toString(scratchBuffer);
+            if (bloomFilter != null) {
+              bloomFilter.addString(str);
+            }
+            bloomFilterUtf8.addString(str);
+          }
+        }
+      }
+    }
+  }
+
+  @Override
+  public void writeBatch(ColumnVector vector, int offset,
+                         int length) throws IOException {
+    super.writeBatch(vector, offset, length);
+    if (vector instanceof Decimal64ColumnVector) {
+      writeBatch((Decimal64ColumnVector) vector, offset, length);
+    } else {
+      writeBatch((DecimalColumnVector) vector, offset, length);
     }
   }
 
