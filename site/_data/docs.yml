@@ -24,17 +24,10 @@
 - title: Using ORC Core
   docs:
   - core-java
+  - core-cpp
 
 - title: Tools
   docs:
-  - tools
+  - cpp-tools
+  - java-tools
 
-- title: Format Specification
-  docs:
-  - spec-intro
-  - file-tail
-  - compression
-  - run-length
-  - stripes
-  - encodings
-  - spec-index

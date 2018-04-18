@@ -1,90 +1,11 @@
 ---
 layout: docs
-title: Tools
-permalink: /docs/tools.html
+title: Java Tools
+permalink: /docs/java-tools.html
 ---
 
-## orc-contents
-
-Displays the contents of the ORC file as a JSON document. With the
-`columns` argument only the selected columns are printed.
-
-~~~ shell
-% orc-contents  [--columns=1,2,...] <filename>
-~~~
-
-If you run it on the example file TestOrcFile.test1.orc, you'll see (without
-the line breaks within each record):
-
-~~~ shell
-% orc-contents examples/TestOrcFile.test1.orc
-{"boolean1": false, "byte1": 1, "short1": 1024, "int1": 65536, \\
- "long1": 9223372036854775807, "float1": 1, "double1": -15, \\
- "bytes1": [0, 1, 2, 3, 4], "string1": "hi", "middle": \\
-    {"list": [{"int1": 1, "string1": "bye"}, \\
-              {"int1": 2, "string1": "sigh"}]}, \\
- "list": [{"int1": 3, "string1": "good"}, \\
-          {"int1": 4, "string1": "bad"}], \\
- "map": []}
-{"boolean1": true, "byte1": 100, "short1": 2048, "int1": 65536,
- "long1": 9223372036854775807, "float1": 2, "double1": -5, \\
- "bytes1": [], "string1": "bye", \\
- "middle": {"list": [{"int1": 1, "string1": "bye"}, \\
-                     {"int1": 2, "string1": "sigh"}]}, \\
- "list": [{"int1": 100000000, "string1": "cat"}, \\
-          {"int1": -100000, "string1": "in"}, \\
-          {"int1": 1234, "string1": "hat"}], \\
- "map": [{"key": "chani", "value": {"int1": 5, "string1": "chani"}}, \\
-         {"key": "mauddib", \\
-          "value": {"int1": 1, "string1": "mauddib"}}]}
-~~~
-
-## orc-metadata
-
-Displays the metadata of the ORC file as a JSON document. With the
-`verbose` option additional information about the layout of the file
-is also printed.
-
-For diagnosing problems, it is useful to use the '--raw' option that
-prints the protocol buffers from the ORC file directly rather than
-interpreting them.
-
-~~~ shell
-% orc-metadata [-v] [--raw] <filename>
-~~~
-
-If you run it on the example file TestOrcFile.test1.orc, you'll see:
-
-~~~ shell
-% orc-metadata examples/TestOrcFile.test1.orc
-{ "name": "../examples/TestOrcFile.test1.orc",
-  "type": "struct<boolean1:boolean,byte1:tinyint,short1:smallint,
-int1:int,long1:bigint,float1:float,double1:double,bytes1:binary,
-string1:string,middle:struct<list:array<struct<int1:int,string1:
-string>>>,list:array<struct<int1:int,string1:string>>,map:map<
-string,struct<int1:int,string1:string>>>",
-  "rows": 2,
-  "stripe count": 1,
-  "format": "0.12", "writer version": "HIVE-8732",
-  "compression": "zlib", "compression block": 10000,
-  "file length": 1711,
-  "content": 1015, "stripe stats": 250, "footer": 421, "postscript": 24,
-  "row index stride": 10000,
-  "user metadata": {
-  },
-  "stripes": [
-    { "stripe": 0, "rows": 2,
-      "offset": 3, "length": 1012,
-      "index": 570, "data": 243, "footer": 199
-    }
-  ]
-}
-~~~
-
-## Java ORC Tools
-
-In addition to the C++ tools above, there is an ORC tools jar that
-packages several useful utilities and the necessary Java dependencies
+In addition to the C++ tools, there is an ORC tools jar that packages
+several useful utilities and the necessary Java dependencies
 (including Hadoop) into a single package. The Java ORC tool jar
 supports both the local file system and HDFS.
 
@@ -102,7 +23,7 @@ The command line looks like:
 % java -jar orc-tools-X.Y.Z-uber.jar <sub-command> <args>
 ~~~
 
-### Java Meta
+## Java Meta
 
 The meta command prints the metadata about the given ORC file and is
 equivalent to the Hive ORC File Dump command.
@@ -280,19 +201,19 @@ Padding ratio: 0%
 ______________________________________________________________________
 ~~~
 
-### Java Data
+## Java Data
 
 The data command prints the data in an ORC file as a JSON document. Each
 record is printed as a JSON object on a line. Each record is annotated with
 the fieldnames and a JSON representation that depends on the field's type.
 
-### Java Scan
+## Java Scan
 
 The scan command reads the contents of the file without printing anything. It
 is primarily intendend for benchmarking the Java reader without including the
 cost of printing the data out.
 
-### Java Convert
+## Java Convert
 
 The convert command reads several JSON files and converts them into a
 single ORC file.
@@ -309,7 +230,7 @@ single ORC file.
 The automatic JSON schema discovery is equivalent to the json-schema tool
 below.
 
-### Java JSON Schema
+## Java JSON Schema
 
 The JSON Schema discovery tool processes a set of JSON documents and
 produces a schema that encompasses all of the records in all of the

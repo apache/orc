@@ -28,6 +28,7 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.security.Key;
 import java.util.List;
+import java.util.Random;
 
 public interface HadoopShims {
 
@@ -129,72 +130,115 @@ public interface HadoopShims {
     /**
      * Get the list of key names from the key provider.
      * @return a list of key names
-     * @throws IOException
      */
     List<String> getKeyNames() throws IOException;
 
     /**
      * Get the current metadata for a given key. This is used when encrypting
      * new data.
+     *
      * @param keyName the name of a key
      * @return metadata for the current version of the key
+     * @throws IllegalArgumentException if the key is unknown
      */
     KeyMetadata getCurrentKeyVersion(String keyName) throws IOException;
 
     /**
-     * Create a metadata object while reading.
-     * @param keyName the name of the key
-     * @param version the version of the key to use
-     * @param algorithm the algorithm for that version of the key
-     * @return the metadata for the key version
-     */
-    KeyMetadata getKeyVersion(String keyName, int version,
-                              EncryptionAlgorithm algorithm);
-
-    /**
-     * Create a local key for the given key version and initialization vector.
-     * Given a probabilistically unique iv, it will generate a unique key
-     * with the master key at the specified version. This allows the encryption
-     * to use this local key for the encryption and decryption without ever
-     * having access to the master key.
-     *
-     * This uses KeyProviderCryptoExtension.decryptEncryptedKey with a fixed key
-     * of the appropriate length.
+     * Create a local key for the given key version. This local key will be
+     * randomly generated and encrypted with the given version of the master
+     * key. The encryption and decryption is done with the local key and the
+     * user process never has access to the master key, because it stays on the
+     * Ranger KMS.
      *
      * @param key the master key version
-     * @param iv the unique initialization vector
-     * @return the local key's material
+     * @return the local key's material both encrypted and unencrypted
      */
-    Key getLocalKey(KeyMetadata key, byte[] iv) throws IOException;
+    LocalKey createLocalKey(KeyMetadata key) throws IOException;
+
+    /**
+     * Decrypt a local key for reading a file.
+     *
+     * @param key the master key version
+     * @param encryptedKey the encrypted key
+     * @return the decrypted local key's material or null if the key is not
+     * available
+     */
+    Key decryptLocalKey(KeyMetadata key, byte[] encryptedKey) throws IOException;
   }
 
   /**
-   * Information about a crypto key.
+   * When a local key is created, the user gets both the encrypted and
+   * unencrypted versions. The decrypted key is used to write the file,
+   * while the encrypted key is stored in the metadata. Thus, readers need
+   * to decrypt the local key in order to use it.
    */
-  interface KeyMetadata {
+  class LocalKey {
+    public final Key decryptedKey;
+    public final byte[] encryptedKey;
+
+    public LocalKey(Key decryptedKey, byte[] encryptedKey) {
+      this.decryptedKey = decryptedKey;
+      this.encryptedKey = encryptedKey;
+    }
+  }
+
+  /**
+   * Information about a crypto key including the key name, version, and the
+   * algorithm.
+   */
+  class KeyMetadata {
+    private final String keyName;
+    private final int version;
+    private final EncryptionAlgorithm algorithm;
+
+    public KeyMetadata(String key, int version, EncryptionAlgorithm algorithm) {
+      this.keyName = key;
+      this.version = version;
+      this.algorithm = algorithm;
+    }
+
     /**
      * Get the name of the key.
      */
-    String getKeyName();
+    public String getKeyName() {
+      return keyName;
+    }
 
     /**
      * Get the encryption algorithm for this key.
      * @return the algorithm
      */
-    EncryptionAlgorithm getAlgorithm();
+    public EncryptionAlgorithm getAlgorithm() {
+      return algorithm;
+    }
 
     /**
      * Get the version of this key.
      * @return the version
      */
-    int getVersion();
+    public int getVersion() {
+      return version;
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder buffer = new StringBuilder();
+      buffer.append(keyName);
+      buffer.append('@');
+      buffer.append(version);
+      buffer.append('-');
+      buffer.append(algorithm);
+      return buffer.toString();
+    }
   }
 
   /**
-   * Create a random key for encrypting.
+   * Create a KeyProvider to get encryption keys.
    * @param conf the configuration
+   * @param random a secure random number generator
    * @return a key provider or null if none was provided
    */
-  KeyProvider getKeyProvider(Configuration conf) throws IOException;
+  KeyProvider getKeyProvider(Configuration conf,
+                             Random random) throws IOException;
 
 }
