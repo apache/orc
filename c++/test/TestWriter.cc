@@ -570,8 +570,8 @@ namespace orc {
 
     std::vector<std::time_t> times(rowCount);
     for (uint64_t i = 0; i < rowCount; ++i) {
-      time_t currTime = std::time(nullptr);
-      times[i] = static_cast<int64_t>(currTime) - static_cast<int64_t >(i * 60);
+      time_t currTime = -14210715; // 1969-07-20 12:34:45
+      times[i] = static_cast<int64_t>(currTime) + static_cast<int64_t >(i * 3660);
       tsBatch->data[i] = times[i];
       tsBatch->nanoseconds[i] = static_cast<int64_t>(i * 1000);
     }

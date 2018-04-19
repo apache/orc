@@ -1199,6 +1199,10 @@ namespace orc {
         tsStats->increase(1);
         tsStats->update(millsUTC);
 
+        if (secs[i] < 0 && nanos[i] != 0) {
+          secs[i] += 1;
+        }
+
         secs[i] -= timezone.getEpoch();
         nanos[i] = formatNano(nanos[i]);
       } else if (!hasNull) {
