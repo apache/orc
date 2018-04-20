@@ -35,3 +35,6 @@ default. The stripes in a file are independent of each other and form
 the natural unit of distributed work. Within each stripe, the columns
 are separated from each other so the reader can read just the columns
 that are required.
+
+For details on the specifics of the ORC format, please see the [ORC
+format specification](/specification/).
