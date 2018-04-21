@@ -1332,7 +1332,7 @@ namespace orc {
     std::unique_ptr<RleEncoder> scaleEncoder;
 
   private:
-    char buffer[8];
+    char buffer[10];
   };
 
   Decimal64ColumnWriter::Decimal64ColumnWriter(
@@ -1453,7 +1453,7 @@ namespace orc {
                      uint64_t numValues) override;
 
   private:
-    char buffer[16];
+    char buffer[20];
   };
 
   Decimal128ColumnWriter::Decimal128ColumnWriter(
