@@ -689,10 +689,11 @@ namespace orc {
   }
 
   TEST(Writer, writeDecimal64Column) {
+    const uint64_t maxPrecision = 18;
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
     std::unique_ptr<Type> type(Type::buildTypeFromString(
-      "struct<col1:decimal(16,5)>"));
+      "struct<col1:decimal(18,5)>"));
 
     uint64_t stripeSize = 16 * 1024; // 16K
     uint64_t compressionBlockSize = 1024; // 1k
@@ -724,13 +725,23 @@ namespace orc {
     structBatch->numElements = decBatch->numElements = rowCount;
     writer->add(*batch);
 
+    // write all precision decimals
+    int64_t dec;
+    for (uint64_t i = dec = 0; i < maxPrecision; ++i) {
+      dec = dec * 10 + 9;
+      decBatch->values[i] = dec;
+      decBatch->values[i + maxPrecision] = -dec;
+    }
+    structBatch->numElements = decBatch->numElements = 2 * maxPrecision;
+    writer->add(*batch);
+
     writer->close();
 
     std::unique_ptr<InputStream> inStream(
       new MemoryInputStream (memStream.getData(), memStream.getLength()));
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
-    EXPECT_EQ(rowCount * 2, reader->getNumberOfRows());
+    EXPECT_EQ((rowCount + maxPrecision) * 2, reader->getNumberOfRows());
 
     // test reading positive decimals
     batch = rowReader->createRowBatch(rowCount);
@@ -748,13 +759,24 @@ namespace orc {
     for (uint64_t i = 0; i < rowCount; ++i) {
       EXPECT_EQ(static_cast<int64_t>(i - 10000), decBatch->values[i]);
     }
+
+    // test reading all precision decimals
+    EXPECT_EQ(true, rowReader->next(*batch));
+    structBatch = dynamic_cast<StructVectorBatch *>(batch.get());
+    decBatch = dynamic_cast<Decimal64VectorBatch *>(structBatch->fields[0]);
+    for (uint64_t i = dec = 0; i < maxPrecision; ++i) {
+      dec = dec * 10 + 9;
+      EXPECT_EQ(dec, decBatch->values[i]);
+      EXPECT_EQ(-dec, decBatch->values[i + maxPrecision]);
+    }
   }
 
   TEST(Writer, writeDecimal128Column) {
+    const uint64_t maxPrecision = 38;
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
     std::unique_ptr<Type> type(Type::buildTypeFromString(
-      "struct<col1:decimal(30,10)>"));
+      "struct<col1:decimal(38,10)>"));
 
     uint64_t stripeSize = 16 * 1024;
     uint64_t compressionBlockSize = 1024;
@@ -792,13 +814,23 @@ namespace orc {
     structBatch->numElements = rowCount;
     decBatch->numElements = rowCount;
     writer->add(*batch);
+
+    // write all precision decimals
+    for (uint64_t i = 0; i < maxPrecision; ++i) {
+      std::string expected = std::string(i + 1, '9');
+      decBatch->values[i] = Int128(expected);
+      decBatch->values[i + maxPrecision] = Int128("-" + expected);
+    }
+    structBatch->numElements = decBatch->numElements = 2 * maxPrecision;
+    writer->add(*batch);
+
     writer->close();
 
     std::unique_ptr<InputStream> inStream(
       new MemoryInputStream (memStream.getData(), memStream.getLength()));
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
-    EXPECT_EQ(rowCount * 2, reader->getNumberOfRows());
+    EXPECT_EQ((rowCount + maxPrecision) * 2, reader->getNumberOfRows());
 
     // test reading positive decimals
     batch = rowReader->createRowBatch(rowCount);
@@ -811,7 +843,7 @@ namespace orc {
       EXPECT_EQ(base + os.str(), decBatch->values[i].toString());
     }
 
-    // test reading negative decimals and different scales
+    // test reading negative decimals
     EXPECT_EQ(true, rowReader->next(*batch));
     structBatch = dynamic_cast<StructVectorBatch *>(batch.get());
     decBatch = dynamic_cast<Decimal128VectorBatch *>(structBatch->fields[0]);
@@ -819,6 +851,16 @@ namespace orc {
       std::ostringstream os;
       os << i;
       EXPECT_EQ(nbase + os.str(), decBatch->values[i].toString());
+    }
+
+    // test reading all precision decimals
+    EXPECT_EQ(true, rowReader->next(*batch));
+    structBatch = dynamic_cast<StructVectorBatch *>(batch.get());
+    decBatch = dynamic_cast<Decimal128VectorBatch *>(structBatch->fields[0]);
+    for (uint64_t i = 0; i < maxPrecision; ++i) {
+      std::string expected = std::string(i + 1, '9');
+      EXPECT_EQ(expected, decBatch->values[i].toString());
+      EXPECT_EQ("-" + expected, decBatch->values[i + maxPrecision].toString());
     }
   }
 
