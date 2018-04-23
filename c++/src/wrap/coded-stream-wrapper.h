@@ -24,7 +24,9 @@ DIAGNOSTIC_PUSH
   DIAGNOSTIC_IGNORE("-Wreserved-id-macro")
 #endif
 
-DIAGNOSTIC_IGNORE("-Wconversion")
+#if defined(__GNUC__) || defined(__clang__)
+  DIAGNOSTIC_IGNORE("-Wconversion")
+#endif
 
 #include <google/protobuf/io/coded_stream.h>
 

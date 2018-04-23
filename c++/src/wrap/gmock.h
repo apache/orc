@@ -21,12 +21,15 @@
 #include "Adaptor.hh"
 
 DIAGNOSTIC_PUSH
-DIAGNOSTIC_IGNORE("-Wdeprecated")
-DIAGNOSTIC_IGNORE("-Wmissing-noreturn")
-DIAGNOSTIC_IGNORE("-Wpadded")
-DIAGNOSTIC_IGNORE("-Wsign-compare")
-DIAGNOSTIC_IGNORE("-Wsign-conversion")
-DIAGNOSTIC_IGNORE("-Wundef")
+
+#if defined(__GNUC__) || defined(__clang__)
+  DIAGNOSTIC_IGNORE("-Wdeprecated")
+  DIAGNOSTIC_IGNORE("-Wmissing-noreturn")
+  DIAGNOSTIC_IGNORE("-Wpadded")
+  DIAGNOSTIC_IGNORE("-Wsign-compare")
+  DIAGNOSTIC_IGNORE("-Wsign-conversion")
+  DIAGNOSTIC_IGNORE("-Wundef")
+#endif
 
 #ifdef __clang__
   DIAGNOSTIC_IGNORE("-Wnull-dereference")
