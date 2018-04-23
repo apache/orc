@@ -3372,26 +3372,31 @@ public class TestVectorOrcFile {
     SearchArgument sarg = SearchArgumentFactory.newBuilder()
             .startAnd()
             .startNot()
-            .lessThan("int2", PredicateLeaf.Type.LONG, 300000L)
+            .lessThan("complex.int2", PredicateLeaf.Type.LONG, 300000L)
             .end()
-            .lessThan("int2", PredicateLeaf.Type.LONG, 600000L)
+            .lessThan("complex.int2", PredicateLeaf.Type.LONG, 600000L)
             .end()
             .build();
+
     RecordReader rows = reader.rows(reader.options()
             .range(0L, Long.MAX_VALUE)
             .include(new boolean[]{true, true, true, true, true})
-            .searchArgument(sarg, new String[]{null, "int1", null,"int2","string1"}));
+            .searchArgument(sarg, new String[]{null, "int1", "complex","int2","string1"}));
     batch = reader.getSchema().createRowBatch(2000);
     LongColumnVector ints1 = (LongColumnVector) batch.cols[0];
     StructColumnVector struct1 = (StructColumnVector) batch.cols[1];
     LongColumnVector ints2 = (LongColumnVector) struct1.fields[0];
     BytesColumnVector strs = (BytesColumnVector) struct1.fields[1];
 
+    System.out.println("------------------------------------------------------------------------------------------------------------------------");
+    System.out.println(rows.getRowNumber());
+
     Assert.assertEquals(1000L, rows.getRowNumber());
     Assert.assertEquals(true, rows.nextBatch(batch));
     assertEquals(1000, batch.size);
 
     for(int i=1000; i < 2000; ++i) {
+      assertEquals(i,ints1.vector[i-1000]);
       assertEquals(300 * i, ints2.vector[i - 1000]);
       assertEquals(Integer.toHexString(10*i), strs.toString(i - 1000));
     }
@@ -3402,7 +3407,7 @@ public class TestVectorOrcFile {
     // look through the file with no rows selected
     sarg = SearchArgumentFactory.newBuilder()
             .startAnd()
-            .lessThan("int2", PredicateLeaf.Type.LONG, 0L)
+            .lessThan("complex.int2", PredicateLeaf.Type.LONG, 0L)
             .end()
             .build();
     rows = reader.rows(reader.options()
@@ -3415,9 +3420,9 @@ public class TestVectorOrcFile {
     // select first 100 and last 100 rows
     sarg = SearchArgumentFactory.newBuilder()
             .startOr()
-            .lessThan("int2", PredicateLeaf.Type.LONG, 300L * 100)
+            .lessThan("complex.int2", PredicateLeaf.Type.LONG, 300L * 100)
             .startNot()
-            .lessThan("int2", PredicateLeaf.Type.LONG, 300L * 3400)
+            .lessThan("complex.int2", PredicateLeaf.Type.LONG, 300L * 3400)
             .end()
             .end()
             .build();

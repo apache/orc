@@ -110,28 +110,30 @@ public class RecordReaderImpl implements RecordReader {
   static int findColumns(SchemaEvolution evolution,
                          String columnName) {
 
-    TypeDescription result = evolution.getFileType(findColumns(evolution.getReaderBaseSchema(),columnName));
+    String[] columnNamePath = columnName.split("\\.");
+    TypeDescription result = evolution.getFileType(findColumns(evolution.getReaderBaseSchema(),columnNamePath,0));
     return result == null ? -1 : result.getId();
   }
 
-  static TypeDescription findColumns(TypeDescription readerSchema,String columnName)
+  static TypeDescription findColumns(TypeDescription readerSchema,String[] columnNamePath,int position)
   {
     TypeDescription result = null;
-    List<String> fieldNames = readerSchema.getFieldNames();
-    List<TypeDescription> children = readerSchema.getChildren();
-    for (int i = 0; i < fieldNames.size(); ++i) {
-      if (columnName.equals(fieldNames.get(i))) {
-          return children.get(i);
-      }
-      if(children.get(i).getChildren() != null) {
-        result = findColumns(children.get(i),columnName);
-        if(result != null)
-        {
-          return result;
+    if(position == columnNamePath.length)
+    {
+      return readerSchema;
+    }
+    else {
+      String columnName = columnNamePath[position];
+      List<TypeDescription> children = readerSchema.getChildren();
+      List<String> fieldNames = readerSchema.getFieldNames();
+      for (int i = 0; i < readerSchema.getChildren().size(); ++i) {
+        if (columnName.equalsIgnoreCase(fieldNames.get(i))) {
+          result = findColumns(children.get(i), columnNamePath, ++position);
+          break;
         }
       }
+      return result;
     }
-    return result;
   }
 
   /**
