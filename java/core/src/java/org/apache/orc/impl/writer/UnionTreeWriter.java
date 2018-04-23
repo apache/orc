@@ -124,7 +124,6 @@ public class UnionTreeWriter extends TreeWriterBase {
                           OrcProto.StripeStatistics.Builder stats,
                           int requiredIndexEntries) throws IOException {
     super.writeStripe(builder, stats, requiredIndexEntries);
-    tags.flush();
     for (TreeWriter child : childrenWriters) {
       child.writeStripe(builder, stats, requiredIndexEntries);
     }
@@ -170,6 +169,15 @@ public class UnionTreeWriter extends TreeWriterBase {
     super.writeFileStatistics(footer);
     for (TreeWriter child : childrenWriters) {
       child.writeFileStatistics(footer);
+    }
+  }
+
+  @Override
+  public void flushStreams() throws IOException {
+    super.flushStreams();
+    tags.flush();
+    for (TreeWriter child : childrenWriters) {
+      child.flushStreams();
     }
   }
 }

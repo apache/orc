@@ -88,7 +88,6 @@ public class FloatTreeWriter extends TreeWriterBase {
                           OrcProto.StripeStatistics.Builder stats,
                           int requiredIndexEntries) throws IOException {
     super.writeStripe(builder, stats, requiredIndexEntries);
-    stream.flush();
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
     }
@@ -109,5 +108,11 @@ public class FloatTreeWriter extends TreeWriterBase {
   public long getRawDataSize() {
     long num = fileStatistics.getNumberOfValues();
     return num * JavaDataModel.get().primitive1();
+  }
+
+  @Override
+  public void flushStreams() throws IOException {
+    super.flushStreams();
+    stream.flush();
   }
 }

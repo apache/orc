@@ -229,22 +229,33 @@ public abstract class TreeWriterBase implements TreeWriter {
     }
   }
 
-  public void writeStripe(OrcProto.StripeFooter.Builder builder,
-                          OrcProto.StripeStatistics.Builder stats,
-                          int requiredIndexEntries) throws IOException {
+  @Override
+  public void flushStreams() throws IOException {
+
     if (isPresent != null) {
       isPresent.flush();
-
-      // if no nulls are found in a stream, then suppress the stream
-      if(!foundNulls) {
-        isPresentOutStream.suppress();
-        // since isPresent bitstream is suppressed, update the index to
-        // remove the positions of the isPresent stream
-        if (rowIndex != null) {
-          removeIsPresentPositions();
-        }
-      }
     }
+
+  }
+
+  @Override
+  public void writeStripe(OrcProto.StripeFooter.Builder builder,
+      OrcProto.StripeStatistics.Builder stats, int requiredIndexEntries) throws IOException {
+
+    // if no nulls are found in a stream, then suppress the stream
+    if (isPresent != null && !foundNulls) {
+      isPresentOutStream.suppress();
+      // since isPresent bitstream is suppressed, update the index to
+      // remove the positions of the isPresent stream
+      if (rowIndex != null) {
+        removeIsPresentPositions();
+      }
+
+    }
+
+    /* Update byte count */
+    final long byteCount = streamFactory.getPhysicalWriter().getFileBytes(id);
+    stripeColStatistics.updateByteCount(byteCount);
 
     // merge stripe-level column statistics to file statistics and write it to
     // stripe statistics
@@ -259,8 +270,8 @@ public abstract class TreeWriterBase implements TreeWriter {
     if (rowIndex != null) {
       if (rowIndex.getEntryCount() != requiredIndexEntries) {
         throw new IllegalArgumentException("Column has wrong number of " +
-             "index entries found: " + rowIndex.getEntryCount() + " expected: " +
-             requiredIndexEntries);
+            "index entries found: " + rowIndex.getEntryCount() + " expected: " +
+            requiredIndexEntries);
       }
       streamFactory.writeIndex(new StreamName(id, OrcProto.Stream.Kind.ROW_INDEX), rowIndex);
       rowIndex.clear();
@@ -279,6 +290,7 @@ public abstract class TreeWriterBase implements TreeWriter {
           OrcProto.Stream.Kind.BLOOM_FILTER_UTF8), bloomFilterIndexUtf8);
       bloomFilterIndexUtf8.clear();
     }
+
   }
 
   /**

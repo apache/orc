@@ -81,6 +81,7 @@ message ColumnStatistics {
   optional BinaryStatistics binaryStatistics = 8;
   optional TimestampStatistics timestampStatistics = 9;
   optional bool hasNull = 10;
+  optional uint64 bytesOnDisk = 11;
 }
 
 message RowIndexEntry {

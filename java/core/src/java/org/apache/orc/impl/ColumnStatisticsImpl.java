@@ -58,6 +58,9 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     if (hasNull != that.hasNull) {
       return false;
     }
+    if(bytesOnDisk != that.bytesOnDisk) {
+      return false;
+    }
 
     return true;
   }
@@ -1257,10 +1260,15 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
   private long count = 0;
   private boolean hasNull = false;
+  private long bytesOnDisk = 0;
 
   ColumnStatisticsImpl(OrcProto.ColumnStatistics stats) {
     if (stats.hasNumberOfValues()) {
       count = stats.getNumberOfValues();
+    }
+
+    if(stats.hasBytesOnDisk()) {
+      bytesOnDisk = stats.getBytesOnDisk();
     }
 
     if (stats.hasHasNull()) {
@@ -1279,6 +1287,10 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
   public void increment(int count) {
     this.count += count;
+  }
+
+  public void updateByteCount(long size) {
+    this.bytesOnDisk += size;
   }
 
   public void setNull() {
@@ -1342,10 +1354,12 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
   public void merge(ColumnStatisticsImpl stats) {
     count += stats.count;
     hasNull |= stats.hasNull;
+    bytesOnDisk += stats.bytesOnDisk;
   }
 
   public void reset() {
     count = 0;
+    bytesOnDisk = 0;
     hasNull = false;
   }
 
@@ -1359,9 +1373,19 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     return hasNull;
   }
 
+  /**
+   * Get the number of bytes for this column.
+   *
+   * @return the number of bytes
+   */
+  @Override
+  public long getBytesOnDisk() {
+    return 0;
+  }
+
   @Override
   public String toString() {
-    return "count: " + count + " hasNull: " + hasNull;
+    return "count: " + count + " hasNull: " + hasNull + " bytesOnDisk: " + bytesOnDisk;
   }
 
   public OrcProto.ColumnStatistics.Builder serialize() {
@@ -1369,6 +1393,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       OrcProto.ColumnStatistics.newBuilder();
     builder.setNumberOfValues(count);
     builder.setHasNull(hasNull);
+    builder.setBytesOnDisk(bytesOnDisk);
     return builder;
   }
 

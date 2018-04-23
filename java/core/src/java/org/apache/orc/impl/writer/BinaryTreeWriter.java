@@ -108,8 +108,6 @@ public class BinaryTreeWriter extends TreeWriterBase {
                           OrcProto.StripeStatistics.Builder stats,
                           int requiredIndexEntries) throws IOException {
     super.writeStripe(builder, stats, requiredIndexEntries);
-    stream.flush();
-    length.flush();
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
     }
@@ -134,4 +132,13 @@ public class BinaryTreeWriter extends TreeWriterBase {
     BinaryColumnStatistics bcs = (BinaryColumnStatistics) fileStatistics;
     return bcs.getSum();
   }
+
+  @Override
+  public void flushStreams() throws IOException {
+    super.flushStreams();
+    stream.flush();
+    length.flush();
+  }
+
+
 }

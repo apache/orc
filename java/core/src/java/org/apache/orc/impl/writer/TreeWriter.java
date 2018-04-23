@@ -70,6 +70,12 @@ public interface TreeWriter {
   void createRowIndexEntry() throws IOException;
 
   /**
+   * Flush the TreeWriter stream
+   * @throws IOException
+   */
+  void flushStreams() throws IOException;
+
+  /**
    * Write the stripe out to the file.
    * @param stripeFooter the stripe footer that contains the information about the
    *                layout of the stripe. The TreeWriterBase is required to update
