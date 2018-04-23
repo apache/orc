@@ -10,13 +10,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set (LZ4_VERSION "1.7.5")
-set (SNAPPY_VERSION "1.1.4")
-set (ZLIB_VERSION "1.2.11")
-set (GTEST_VERSION "1.8.0")
-set (PROTOBUF_VERSION "2.6.0")
+set(LZ4_VERSION "1.7.5")
+set(SNAPPY_VERSION "1.1.7")
+set(ZLIB_VERSION "1.2.11")
+set(GTEST_VERSION "1.8.0")
+set(PROTOBUF_VERSION "3.5.1")
 
-set (THIRDPARTY_DIR "${CMAKE_BINARY_DIR}/c++/libs/thirdparty")
+set(THIRDPARTY_DIR "${CMAKE_BINARY_DIR}/c++/libs/thirdparty")
+set(THIRDPARTY_LOG_OPTIONS LOG_CONFIGURE 1
+                           LOG_BUILD 1
+                           LOG_INSTALL 1
+                           LOG_DOWNLOAD 1)
+set(THIRDPARTY_CONFIGURE_COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}")
+if (CMAKE_GENERATOR_TOOLSET)
+  list(APPEND THIRDPARTY_CONFIGURE_COMMAND -T "${CMAKE_GENERATOR_TOOLSET}")
+endif ()
 
 string(TOUPPER ${CMAKE_BUILD_TYPE} UPPERCASE_BUILD_TYPE)
 
@@ -47,29 +55,19 @@ if (NOT "${SNAPPY_HOME}" STREQUAL "")
   find_package (Snappy REQUIRED)
   set(SNAPPY_VENDORED FALSE)
 else ()
-  set (SNAPPY_PREFIX "${THIRDPARTY_DIR}/snappy_ep-install")
-  set (SNAPPY_HOME "${SNAPPY_PREFIX}")
-  set (SNAPPY_INCLUDE_DIR "${SNAPPY_PREFIX}/include")
-  set (SNAPPY_STATIC_LIB_NAME snappy)
-  set (SNAPPY_STATIC_LIB "${SNAPPY_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${SNAPPY_STATIC_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}")
-  set (SNAPPY_SRC_URL "https://github.com/google/snappy/releases/download/${SNAPPY_VERSION}/snappy-${SNAPPY_VERSION}.tar.gz")
-  if (${UPPERCASE_BUILD_TYPE} EQUAL "RELEASE")
-     set (SNAPPY_CXXFLAGS "CXXFLAGS='-DNDEBUG -O2'")
-  endif ()
+  set(SNAPPY_HOME "${THIRDPARTY_DIR}/snappy_ep-install")
+  set(SNAPPY_INCLUDE_DIR "${SNAPPY_HOME}/include")
+  set(SNAPPY_STATIC_LIB "${SNAPPY_HOME}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}snappy${CMAKE_STATIC_LIBRARY_SUFFIX}")
+  set(SNAPPY_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${SNAPPY_HOME}
+                        -DBUILD_SHARED_LIBS=OFF)
 
   ExternalProject_Add (snappy_ep
-    CONFIGURE_COMMAND "./configure" "--disable-shared" "--prefix=${SNAPPY_PREFIX}" ${SNAPPY_CXXFLAGS}
-    BUILD_COMMAND ${MAKE}
-    BUILD_IN_SOURCE 1
-    INSTALL_DIR ${SNAPPY_PREFIX}
-    URL ${SNAPPY_SRC_URL}
-    LOG_DOWNLOAD 1
-    LOG_CONFIGURE 1
-    LOG_BUILD 1
-    LOG_INSTALL 1
+    URL "https://github.com/google/snappy/archive/${SNAPPY_VERSION}.tar.gz"
+    CMAKE_ARGS ${SNAPPY_CMAKE_ARGS}
+    ${THIRDPARTY_LOG_OPTIONS}
     BUILD_BYPRODUCTS "${SNAPPY_STATIC_LIB}")
 
-  set (SNAPPY_VENDORED TRUE)
+  set(SNAPPY_VENDORED TRUE)
 endif ()
 
 include_directories (SYSTEM ${SNAPPY_INCLUDE_DIR})
@@ -89,29 +87,29 @@ endif ()
 
 if (NOT "${ZLIB_HOME}" STREQUAL "")
   find_package (ZLIB REQUIRED)
-  set (ZLIB_VENDORED FALSE)
+  set(ZLIB_VENDORED FALSE)
 else ()
-  set (ZLIB_PREFIX "${THIRDPARTY_DIR}/zlib_ep-install")
-  set (ZLIB_HOME "${ZLIB_PREFIX}")
-  set (ZLIB_INCLUDE_DIR "${ZLIB_PREFIX}/include")
-  set (ZLIB_STATIC_LIB_NAME z)
-  set (ZLIB_STATIC_LIB "${ZLIB_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${ZLIB_STATIC_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}")
-  set (ZLIB_SRC_URL "http://zlib.net/fossils/zlib-${ZLIB_VERSION}.tar.gz")
-  set (ZLIB_CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                       -DCMAKE_INSTALL_PREFIX=${ZLIB_PREFIX}
-                       -DCMAKE_C_FLAGS=${EP_C_FLAGS}
-                       -DBUILD_SHARED_LIBS=OFF)
+  set(ZLIB_PREFIX "${THIRDPARTY_DIR}/zlib_ep-install")
+  set(ZLIB_INCLUDE_DIR "${ZLIB_PREFIX}/include")
+  if (MSVC)
+    set(ZLIB_STATIC_LIB_NAME zlibstatic)
+    if (${UPPERCASE_BUILD_TYPE} STREQUAL "DEBUG")
+      set(ZLIB_STATIC_LIB_NAME ${ZLIB_STATIC_LIB_NAME}d)
+    endif ()
+  else ()
+    set(ZLIB_STATIC_LIB_NAME z)
+  endif ()
+  set(ZLIB_STATIC_LIB "${ZLIB_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${ZLIB_STATIC_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+  set(ZLIB_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${ZLIB_PREFIX}
+                      -DBUILD_SHARED_LIBS=OFF)
 
   ExternalProject_Add (zlib_ep
-    URL ${ZLIB_SRC_URL}
-    LOG_DOWNLOAD 1
-    LOG_CONFIGURE 1
-    LOG_BUILD 1
-    LOG_INSTALL 1
-    BUILD_BYPRODUCTS "${ZLIB_STATIC_LIB}"
-    CMAKE_ARGS ${ZLIB_CMAKE_ARGS})
+    URL "http://zlib.net/fossils/zlib-${ZLIB_VERSION}.tar.gz"
+    CMAKE_ARGS ${ZLIB_CMAKE_ARGS}
+    ${THIRDPARTY_LOG_OPTIONS}
+    BUILD_BYPRODUCTS "${ZLIB_STATIC_LIB}")
 
-  set (ZLIB_VENDORED TRUE)
+  set(ZLIB_VENDORED TRUE)
 endif ()
 
 include_directories (SYSTEM ${ZLIB_INCLUDE_DIR})
@@ -131,28 +129,28 @@ endif ()
 
 if (NOT "${LZ4_HOME}" STREQUAL "")
   find_package (LZ4 REQUIRED)
-  set (LZ4_VENDORED FALSE)
+  set(LZ4_VENDORED FALSE)
 else ()
-  set (LZ4_PREFIX "${THIRDPARTY_DIR}/lz4_ep-install")
-  set (LZ4_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/lz4_ep-prefix/src/lz4_ep")
-  set (LZ4_INCLUDE_DIR "${LZ4_PREFIX}/include")
-  set (LZ4_STATIC_LIB_NAME lz4)
-  set (LZ4_STATIC_LIB "${LZ4_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${LZ4_STATIC_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}")
-  set (LZ4_SRC_URL "https://github.com/lz4/lz4/archive/v${LZ4_VERSION}.tar.gz")
+  set(LZ4_PREFIX "${THIRDPARTY_DIR}/lz4_ep-install")
+  set(LZ4_INCLUDE_DIR "${LZ4_PREFIX}/include")
+  set(LZ4_STATIC_LIB "${LZ4_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lz4${CMAKE_STATIC_LIBRARY_SUFFIX}")
+  set(LZ4_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${LZ4_PREFIX}
+                     -DBUILD_SHARED_LIBS=OFF)
+
+  if (CMAKE_VERSION VERSION_GREATER "3.7")
+    set(LZ4_CONFIGURE SOURCE_SUBDIR "contrib/cmake_unofficial" CMAKE_ARGS ${LZ4_CMAKE_ARGS})
+  else()
+    set(LZ4_CONFIGURE CONFIGURE_COMMAND "${THIRDPARTY_CONFIGURE_COMMAND}" ${LZ4_CMAKE_ARGS}
+                                        "${CMAKE_CURRENT_BINARY_DIR}/lz4_ep-prefix/src/lz4_ep/contrib/cmake_unofficial")
+  endif()
 
   ExternalProject_Add(lz4_ep
-    CONFIGURE_COMMAND ""
-    INSTALL_COMMAND make "PREFIX=${LZ4_PREFIX}" install
-    BUILD_IN_SOURCE 1
-    BUILD_COMMAND ${MAKE}
-    URL ${LZ4_SRC_URL}
-    LOG_DOWNLOAD 1
-    LOG_BUILD 1
-    LOG_INSTALL 1
-    BUILD_BYPRODUCTS ${LZ4_STATIC_LIB}
-    )
+    URL "https://github.com/lz4/lz4/archive/v${LZ4_VERSION}.tar.gz"
+    ${LZ4_CONFIGURE}
+    ${THIRDPARTY_LOG_OPTIONS}
+    BUILD_BYPRODUCTS ${LZ4_STATIC_LIB})
 
-  set (LZ4_VENDORED TRUE)
+  set(LZ4_VENDORED TRUE)
 endif ()
 
 include_directories (SYSTEM ${LZ4_INCLUDE_DIR})
@@ -175,11 +173,10 @@ if (BUILD_CPP_TESTS)
     find_package (GTest REQUIRED)
     set (GTEST_VENDORED FALSE)
   else ()
-    set (GTEST_PREFIX "${THIRDPARTY_DIR}/googletest_ep-install")
-    set (GTEST_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/googletest_ep-prefix/src/googletest_ep")
-    set (GTEST_INCLUDE_DIR "${GTEST_PREFIX}/include")
-    set (GMOCK_STATIC_LIB "${GTEST_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}gmock${CMAKE_STATIC_LIBRARY_SUFFIX}")
-    set (GTEST_SRC_URL "https://github.com/google/googletest/archive/release-${GTEST_VERSION}.tar.gz")
+    set(GTEST_PREFIX "${THIRDPARTY_DIR}/googletest_ep-install")
+    set(GTEST_INCLUDE_DIR "${GTEST_PREFIX}/include")
+    set(GMOCK_STATIC_LIB "${GTEST_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}gmock${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    set(GTEST_SRC_URL "https://github.com/google/googletest/archive/release-${GTEST_VERSION}.tar.gz")
     if(APPLE)
       set(GTEST_CMAKE_CXX_FLAGS " -DGTEST_USE_OWN_TR1_TUPLE=1 -Wno-unused-value -Wno-ignored-attributes")
     else()
@@ -194,15 +191,11 @@ if (BUILD_CPP_TESTS)
     ExternalProject_Add(googletest_ep
       BUILD_IN_SOURCE 1
       URL ${GTEST_SRC_URL}
-      LOG_DOWNLOAD 1
-      LOG_CONFIGURE 1
-      LOG_BUILD 1
-      LOG_INSTALL 1
-      BUILD_BYPRODUCTS "${GMOCK_STATIC_LIB}"
+      ${THIRDPARTY_LOG_OPTIONS}
       CMAKE_ARGS ${GTEST_CMAKE_ARGS}
-      )
+      BUILD_BYPRODUCTS "${GMOCK_STATIC_LIB}")
 
-    set (GTEST_VENDORED TRUE)
+    set(GTEST_VENDORED TRUE)
   endif ()
 
   include_directories (SYSTEM ${GTEST_INCLUDE_DIR})
@@ -214,7 +207,7 @@ if (BUILD_CPP_TESTS)
     add_dependencies (gmock googletest_ep)
   endif ()
 
-  set (GTEST_LIBRARIES gmock)
+  set(GTEST_LIBRARIES gmock)
   if (NOT APPLE AND NOT MSVC)
     list (APPEND GTEST_LIBRARIES pthread)
   endif ()
@@ -225,28 +218,38 @@ endif ()
 
 if (NOT "${PROTOBUF_HOME}" STREQUAL "")
   find_package (Protobuf REQUIRED)
-  set (PROTOBUF_VENDORED FALSE)
+  set(PROTOBUF_VENDORED FALSE)
 else ()
-  set (PROTOBUF_PREFIX "${THIRDPARTY_DIR}/protobuf_ep-install")
-  set (PROTOBUF_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/protobuf_ep-prefix/src/protobuf_ep")
-  set (PROTOBUF_INCLUDE_DIR "${PROTOBUF_PREFIX}/include")
-  set (PROTOBUF_STATIC_LIB "${PROTOBUF_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}protobuf${CMAKE_STATIC_LIBRARY_SUFFIX}")
-  set (PROTOC_STATIC_LIB "${PROTOBUF_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}protoc${CMAKE_STATIC_LIBRARY_SUFFIX}")
-  set (PROTOBUF_EXECUTABLE "${PROTOBUF_PREFIX}/bin/protoc")
-  set (PROTOBUF_SRC_URL "https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protobuf-${PROTOBUF_VERSION}.tar.gz")
+  set(PROTOBUF_PREFIX "${THIRDPARTY_DIR}/protobuf_ep-install")
+  set(PROTOBUF_INCLUDE_DIR "${PROTOBUF_PREFIX}/include")
+  set(PROTOBUF_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROTOBUF_PREFIX}
+                          -DBUILD_SHARED_LIBS=OFF
+                          -Dprotobuf_BUILD_TESTS=OFF)
+  if (MSVC)
+    set(PROTOBUF_STATIC_LIB_PREFIX lib)
+    list(APPEND PROTOBUF_CMAKE_ARGS -Dprotobuf_MSVC_STATIC_RUNTIME=OFF
+                                    -Dprotobuf_DEBUG_POSTFIX=)
+  else ()
+    set(PROTOBUF_STATIC_LIB_PREFIX ${CMAKE_STATIC_LIBRARY_PREFIX})
+  endif ()
+  set(PROTOBUF_STATIC_LIB "${PROTOBUF_PREFIX}/lib/${PROTOBUF_STATIC_LIB_PREFIX}protobuf${CMAKE_STATIC_LIBRARY_SUFFIX}")
+  set(PROTOC_STATIC_LIB "${PROTOBUF_PREFIX}/lib/${PROTOBUF_STATIC_LIB_PREFIX}protoc${CMAKE_STATIC_LIBRARY_SUFFIX}")
+  set(PROTOBUF_EXECUTABLE "${PROTOBUF_PREFIX}/bin/protoc${CMAKE_EXECUTABLE_SUFFIX}")
+
+  if (CMAKE_VERSION VERSION_GREATER "3.7")
+    set(PROTOBUF_CONFIGURE SOURCE_SUBDIR "cmake" CMAKE_ARGS ${PROTOBUF_CMAKE_ARGS})
+  else()
+    set(PROTOBUF_CONFIGURE CONFIGURE_COMMAND "${THIRDPARTY_CONFIGURE_COMMAND}" ${PROTOBUF_CMAKE_ARGS}
+                                             "${CMAKE_CURRENT_BINARY_DIR}/protobuf_ep-prefix/src/protobuf_ep/cmake")
+  endif()
 
   ExternalProject_Add(protobuf_ep
-    CONFIGURE_COMMAND "./configure" "--disable-shared" "--prefix=${PROTOBUF_PREFIX}"
-    BUILD_IN_SOURCE 1
-    URL ${PROTOBUF_SRC_URL}
-    LOG_DOWNLOAD 1
-    LOG_CONFIGURE 1
-    LOG_BUILD 1
-    LOG_INSTALL 1
-    BUILD_BYPRODUCTS "${PROTOBUF_STATIC_LIB}" "${PROTOC_STATIC_LIB}"
-    )
+    URL "https://github.com/google/protobuf/archive/v${PROTOBUF_VERSION}.tar.gz"
+    ${PROTOBUF_CONFIGURE}
+    ${THIRDPARTY_LOG_OPTIONS}
+    BUILD_BYPRODUCTS "${PROTOBUF_STATIC_LIB}" "${PROTOC_STATIC_LIB}")
 
-  set (PROTOBUF_VENDORED TRUE)
+  set(PROTOBUF_VENDORED TRUE)
 endif ()
 
 include_directories (SYSTEM ${PROTOBUF_INCLUDE_DIR})
