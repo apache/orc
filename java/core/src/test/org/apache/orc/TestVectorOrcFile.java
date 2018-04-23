@@ -18,6 +18,7 @@
 
 package org.apache.orc;
 
+import org.apache.hadoop.hive.ql.exec.vector.Decimal64ColumnVector;
 import org.apache.orc.impl.OrcCodecPool;
 
 import org.apache.orc.impl.WriterImpl;
@@ -1465,6 +1466,146 @@ public class TestVectorOrcFile {
       batch.cols[2].isNull[rowId] = true;
       batch.cols[2].noNulls = false;
     }
+  }
+
+  /**
+   * Test writing with the new decimal and reading with the new and old.
+   */
+  @Test
+  public void testDecimal64Writing() throws Exception {
+    TypeDescription schema = TypeDescription.fromString("struct<d:decimal(18,3)>");
+    VectorizedRowBatch batch = schema.createRowBatchV2();
+    Writer writer = OrcFile.createWriter(testFilePath,
+        OrcFile.writerOptions(conf)
+            .setSchema(schema)
+            .compress(CompressionKind.NONE));
+    Decimal64ColumnVector cv = (Decimal64ColumnVector) batch.cols[0];
+    cv.precision = 18;
+    cv.scale = 3;
+    cv.vector[0] = 1;
+    for(int r=1; r < 18; r++) {
+      cv.vector[r] = cv.vector[r-1] * 10;
+    }
+    cv.vector[18] = -2000;
+    batch.size = 19;
+    writer.addRowBatch(batch);
+    writer.close();
+
+    Reader reader = OrcFile.createReader(testFilePath,
+        OrcFile.readerOptions(conf).filesystem(fs));
+    RecordReader rows = reader.rows();
+    batch = schema.createRowBatchV2();
+    cv = (Decimal64ColumnVector) batch.cols[0];
+    assertTrue(rows.nextBatch(batch));
+    assertEquals(19, batch.size);
+    assertEquals(18, cv.precision);
+    assertEquals(3, cv.scale);
+    assertEquals("row 0", 1, cv.vector[0]);
+    for(int r=1; r < 18; ++r) {
+      assertEquals("row " + r, 10 * cv.vector[r-1], cv.vector[r]);
+    }
+    assertEquals(-2000, cv.vector[18]);
+    assertFalse(rows.nextBatch(batch));
+
+    // test with old batch
+    rows = reader.rows();
+    batch = schema.createRowBatch();
+    DecimalColumnVector oldCv = (DecimalColumnVector) batch.cols[0];
+    assertTrue(rows.nextBatch(batch));
+    assertEquals(19, batch.size);
+    assertEquals(18, oldCv.precision);
+    assertEquals(3, oldCv.scale);
+    assertEquals("0.001", oldCv.vector[0].toString());
+    assertEquals("0.01", oldCv.vector[1].toString());
+    assertEquals("0.1", oldCv.vector[2].toString());
+    assertEquals("1", oldCv.vector[3].toString());
+    assertEquals("10", oldCv.vector[4].toString());
+    assertEquals("100", oldCv.vector[5].toString());
+    assertEquals("1000", oldCv.vector[6].toString());
+    assertEquals("10000", oldCv.vector[7].toString());
+    assertEquals("100000", oldCv.vector[8].toString());
+    assertEquals("1000000", oldCv.vector[9].toString());
+    assertEquals("10000000", oldCv.vector[10].toString());
+    assertEquals("100000000", oldCv.vector[11].toString());
+    assertEquals("1000000000", oldCv.vector[12].toString());
+    assertEquals("10000000000", oldCv.vector[13].toString());
+    assertEquals("100000000000", oldCv.vector[14].toString());
+    assertEquals("1000000000000", oldCv.vector[15].toString());
+    assertEquals("10000000000000", oldCv.vector[16].toString());
+    assertEquals("100000000000000", oldCv.vector[17].toString());
+    assertEquals("-2", oldCv.vector[18].toString());
+    assertFalse(rows.nextBatch(batch));
+  }
+
+  /**
+   * Test writing with the old decimal and reading with the new and old.
+   */
+  @Test
+  public void testDecimal64Reading() throws Exception {
+    TypeDescription schema = TypeDescription.fromString("struct<d:decimal(18,4)>");
+    VectorizedRowBatch batch = schema.createRowBatch();
+    Writer writer = OrcFile.createWriter(testFilePath,
+        OrcFile.writerOptions(conf)
+            .setSchema(schema)
+            .compress(CompressionKind.NONE));
+    DecimalColumnVector cv = (DecimalColumnVector) batch.cols[0];
+    cv.precision = 18;
+    cv.scale = 3;
+    long base = 1;
+    for(int r=0; r < 18; r++) {
+      cv.vector[r].setFromLongAndScale(base, 4);
+      base *= 10;
+    }
+    cv.vector[18].setFromLong(-2);
+    batch.size = 19;
+    writer.addRowBatch(batch);
+    writer.close();
+
+    // test with new batch
+    Reader reader = OrcFile.createReader(testFilePath,
+        OrcFile.readerOptions(conf).filesystem(fs));
+    RecordReader rows = reader.rows();
+    batch = schema.createRowBatchV2();
+    Decimal64ColumnVector newCv = (Decimal64ColumnVector) batch.cols[0];
+    assertTrue(rows.nextBatch(batch));
+    assertEquals(19, batch.size);
+    assertEquals(18, newCv.precision);
+    assertEquals(4, newCv.scale);
+    assertEquals("row 0", 1, newCv.vector[0]);
+    for(int r=1; r < 18; ++r) {
+      assertEquals("row " + r, 10 * newCv.vector[r-1], newCv.vector[r]);
+    }
+    assertEquals(-20000, newCv.vector[18]);
+    assertFalse(rows.nextBatch(batch));
+
+    // test with old batch
+    rows = reader.rows();
+    batch = schema.createRowBatch();
+    cv = (DecimalColumnVector) batch.cols[0];
+    assertTrue(rows.nextBatch(batch));
+    assertEquals(19, batch.size);
+    assertEquals(18, cv.precision);
+    assertEquals(4, cv.scale);
+    assertEquals("0.0001", cv.vector[0].toString());
+    assertEquals("0.001", cv.vector[1].toString());
+    assertEquals("0.01", cv.vector[2].toString());
+    assertEquals("0.1", cv.vector[3].toString());
+    assertEquals("1", cv.vector[4].toString());
+    assertEquals("10", cv.vector[5].toString());
+    assertEquals("100", cv.vector[6].toString());
+    assertEquals("1000", cv.vector[7].toString());
+    assertEquals("10000", cv.vector[8].toString());
+    assertEquals("100000", cv.vector[9].toString());
+    assertEquals("1000000", cv.vector[10].toString());
+    assertEquals("10000000", cv.vector[11].toString());
+    assertEquals("100000000", cv.vector[12].toString());
+    assertEquals("1000000000", cv.vector[13].toString());
+    assertEquals("10000000000", cv.vector[14].toString());
+    assertEquals("100000000000", cv.vector[15].toString());
+    assertEquals("1000000000000", cv.vector[16].toString());
+    assertEquals("10000000000000", cv.vector[17].toString());
+    assertEquals("-2", cv.vector[18].toString());
+    assertFalse(rows.nextBatch(batch));
   }
 
   /**
