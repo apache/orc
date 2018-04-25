@@ -245,6 +245,14 @@ public class SchemaEvolution {
     return populatePpdSafeConversionForChildern(result,readerSchema.getChildren());
   }
 
+  /**
+   * Recursion to check the conversion of nested field.
+   *
+   * @param ppdSafeConversion boolean array to specify which column are safe.
+   * @param children reader schema children.
+   *
+   * @return boolean array to represent list of column safe or not.
+   */
   private boolean[] populatePpdSafeConversionForChildern(boolean[] ppdSafeConversion,List<TypeDescription> children ){
     boolean safePpd;
     if (children != null) {

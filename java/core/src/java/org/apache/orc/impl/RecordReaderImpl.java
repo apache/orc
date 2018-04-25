@@ -104,7 +104,7 @@ public class RecordReaderImpl implements RecordReader {
    * Given a list of column names, find the given column and return the index.
    *
    * @param evolution the mapping from reader to file schema
-   * @param columnName  the column name to look for
+   * @param columnName  the Fully qualified column name to look for
    * @return the file column number or -1 if the column wasn't found
    */
   static int findColumns(SchemaEvolution evolution,
@@ -115,6 +115,14 @@ public class RecordReaderImpl implements RecordReader {
     return result == null ? -1 : result.getId();
   }
 
+  /**
+   * Recursion to match column name to columnId
+   *
+   * @param readerSchema schema to parse to generate ColumnId
+   * @param columnNamePath fully qualified Column name
+   * @param position position in columnNamePath
+   * @return
+   */
   static TypeDescription findColumns(TypeDescription readerSchema,String[] columnNamePath,int position)
   {
     TypeDescription result = null;
