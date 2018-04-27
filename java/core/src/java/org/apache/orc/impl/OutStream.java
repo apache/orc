@@ -108,7 +108,7 @@ public class OutStream extends PositionedOutputStream {
    * @param bufferSize The ORC compression buffer size being checked.
    * @throws IllegalArgumentException If bufferSize value exceeds threshold.
    */
-  static void assertBufferSizeValid(int bufferSize) throws IllegalArgumentException {
+  public static void assertBufferSizeValid(int bufferSize) throws IllegalArgumentException {
     if (bufferSize >= (1 << 23)) {
       throw new IllegalArgumentException("Illegal value of ORC compression buffer size: " + bufferSize);
     }
