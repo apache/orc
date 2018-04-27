@@ -10,7 +10,7 @@ developers on the project.
 
 The list of things that we plan to change:
 
-* Create a decimal representation with fixed scale using rle.
+* Move decimal encoding to RLEv3 and remove variable length encoding.
 * Create a better float/double encoding that splits mantissa and
   exponent.
 * Create a dictionary encoding for float, double, and decimal.
@@ -821,22 +821,19 @@ DIRECT_V2     | PRESENT         | Yes      | Boolean RLE
 
 ## Decimal Columns
 
-Decimal was introduced in Hive 0.11 with infinite precision (the total
-number of digits). In Hive 0.13, the definition was change to limit
-the precision to a maximum of 38 digits, which conveniently uses 127
-bits plus a sign bit. The current encoding of decimal columns stores
-the integer representation of the value as an unbounded length zigzag
-encoded base 128 varint. The scale is stored in the SECONDARY stream
-as an signed integer.
+Since Hive 0.13, all decimals have had fixed precision and scale.
+The goal is to use RLEv3 for the value and use the fixed scale from
+the type. As an interim solution, we are using RLE v2 for short decimals
+(precision <= 18) and the old encoding for long decimals.
 
 Encoding      | Stream Kind     | Optional | Contents
 :------------ | :-------------- | :------- | :-------
 DIRECT        | PRESENT         | Yes      | Boolean RLE
-              | DATA            | No       | Unbounded base 128 varints
-              | SECONDARY       | No       | Unsigned Integer RLE v1
+              | DATA            | No       | Signed Integer RLE v2
 DIRECT_V2     | PRESENT         | Yes      | Boolean RLE
               | DATA            | No       | Unbounded base 128 varints
               | SECONDARY       | No       | Unsigned Integer RLE v2
+
 
 ## Date Columns
 

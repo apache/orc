@@ -224,7 +224,8 @@ public class ReaderImpl implements Reader {
     return deserializeStats(fileStats);
   }
 
-  static ColumnStatistics[] deserializeStats(List<OrcProto.ColumnStatistics> fileStats){
+  public static ColumnStatistics[] deserializeStats(
+      List<OrcProto.ColumnStatistics> fileStats) {
     ColumnStatistics[] result = new ColumnStatistics[fileStats.size()];
     for(int i=0; i < result.length; ++i) {
       result[i] = ColumnStatisticsImpl.deserialize(fileStats.get(i));

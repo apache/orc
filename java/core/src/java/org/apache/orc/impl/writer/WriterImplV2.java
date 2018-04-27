@@ -16,21 +16,13 @@
  * limitations under the License.
  */
 
-package org.apache.orc.impl;
+package org.apache.orc.impl.writer;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
-import java.util.TreeMap;
-
-import io.airlift.compress.lz4.Lz4Compressor;
-import io.airlift.compress.lz4.Lz4Decompressor;
-import io.airlift.compress.lzo.LzoCompressor;
-import io.airlift.compress.lzo.LzoDecompressor;
+import com.google.protobuf.ByteString;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.ColumnStatistics;
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.CompressionKind;
@@ -42,19 +34,26 @@ import org.apache.orc.PhysicalWriter;
 import org.apache.orc.StripeInformation;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
-import org.apache.orc.impl.writer.TreeWriter;
-import org.apache.orc.impl.writer.WriterContext;
+import org.apache.orc.impl.OutStream;
+import org.apache.orc.impl.PhysicalFsWriter;
+import org.apache.orc.impl.ReaderImpl;
+import org.apache.orc.impl.StreamName;
+import org.apache.orc.impl.WriterImpl;
+import org.apache.orc.impl.WriterInternal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 
-import com.google.protobuf.ByteString;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
+import java.util.TreeMap;
 
 /**
- * An ORC file writer. The file is divided into stripes, which is the natural
+ * An ORCv2 file writer. The file is divided into stripes, which is the natural
  * unit of work when reading. Each stripe is buffered in memory until the
  * memory reaches the stripe size and then it is written out broken down by
  * columns. Each column is written by a TreeWriter that is specific to that
@@ -72,9 +71,9 @@ import com.google.protobuf.ByteString;
  * to be confined to a single thread as well.
  *
  */
-public class WriterImpl implements WriterInternal, MemoryManager.Callback {
+public class WriterImplV2 implements WriterInternal, MemoryManager.Callback {
 
-  private static final Logger LOG = LoggerFactory.getLogger(WriterImpl.class);
+  private static final Logger LOG = LoggerFactory.getLogger(WriterImplV2.class);
 
   private static final int MIN_ROW_INDEX_STRIDE = 1000;
 
@@ -113,9 +112,9 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
   private final OrcFile.BloomFilterVersion bloomFilterVersion;
   private final boolean writeTimeZone;
 
-  public WriterImpl(FileSystem fs,
-                    Path path,
-                    OrcFile.WriterOptions opts) throws IOException {
+  public WriterImplV2(FileSystem fs,
+                      Path path,
+                      OrcFile.WriterOptions opts) throws IOException {
     this.path = path;
     this.conf = opts.getConfiguration();
     this.callback = opts.getCallback();
@@ -127,7 +126,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
 
         @Override
         public Writer getWriter() {
-          return WriterImpl.this;
+          return WriterImplV2.this;
         }
       };
     } else {
@@ -147,7 +146,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
       OutStream.assertBufferSizeValid(opts.getBufferSize());
       this.bufferSize = opts.getBufferSize();
     } else {
-      this.bufferSize = getEstimatedBufferSize(adjustedStripeSize,
+      this.bufferSize = WriterImpl.getEstimatedBufferSize(adjustedStripeSize,
           numColumns, opts.getBufferSize());
     }
     if (version == OrcFile.Version.FUTURE) {
@@ -179,70 +178,6 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     LOG.info("ORC writer created for path: {} with stripeSize: {} blockSize: {}" +
         " compression: {} bufferSize: {}", path, adjustedStripeSize, opts.getBlockSize(),
         compress, bufferSize);
-  }
-
-  //@VisibleForTesting
-  public static int getEstimatedBufferSize(long stripeSize, int numColumns,
-                                           int bs) {
-    // The worst case is that there are 2 big streams per a column and
-    // we want to guarantee that each stream gets ~10 buffers.
-    // This keeps buffers small enough that we don't get really small stripe
-    // sizes.
-    int estBufferSize = (int) (stripeSize / (20L * numColumns));
-    estBufferSize = getClosestBufferSize(estBufferSize);
-    return estBufferSize > bs ? bs : estBufferSize;
-  }
-
-  @Override
-  public void increaseCompressionSize(int newSize) {
-    if (newSize > bufferSize) {
-      bufferSize = newSize;
-    }
-  }
-
-  private static int getClosestBufferSize(int estBufferSize) {
-    final int kb4 = 4 * 1024;
-    final int kb8 = 8 * 1024;
-    final int kb16 = 16 * 1024;
-    final int kb32 = 32 * 1024;
-    final int kb64 = 64 * 1024;
-    final int kb128 = 128 * 1024;
-    final int kb256 = 256 * 1024;
-    if (estBufferSize <= kb4) {
-      return kb4;
-    } else if (estBufferSize <= kb8) {
-      return kb8;
-    } else if (estBufferSize <= kb16) {
-      return kb16;
-    } else if (estBufferSize <= kb32) {
-      return kb32;
-    } else if (estBufferSize <= kb64) {
-      return kb64;
-    } else if (estBufferSize <= kb128) {
-      return kb128;
-    } else {
-      return kb256;
-    }
-  }
-
-  public static CompressionCodec createCodec(CompressionKind kind) {
-    switch (kind) {
-      case NONE:
-        return null;
-      case ZLIB:
-        return new ZlibCodec();
-      case SNAPPY:
-        return new SnappyCodec();
-      case LZO:
-        return new AircompressorCodec(new LzoCompressor(),
-            new LzoDecompressor());
-      case LZ4:
-        return new AircompressorCodec(new Lz4Compressor(),
-            new Lz4Decompressor());
-      default:
-        throw new IllegalArgumentException("Unknown compression codec: " +
-            kind);
-    }
   }
 
   @Override
@@ -294,6 +229,13 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
       }
     }
     return result;
+  }
+
+  @Override
+  public void increaseCompressionSize(int newSize) {
+    if (newSize > bufferSize) {
+      bufferSize = newSize;
+    }
   }
 
   /**
