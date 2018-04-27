@@ -23,7 +23,7 @@ set(ORC_JARS
 )
 
 if (ANALYZE_JAVA)
-  set(JAVA_PROFILE "-Pcmake,analyze")
+  set(JAVA_PROFILE "-Pcmake,analyze,benchmark")
 else()
   set(JAVA_PROFILE "-Pcmake")
 endif()

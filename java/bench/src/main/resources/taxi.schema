@@ -1,0 +1,21 @@
+struct<
+  vendor_id:int,
+  pickup_time: timestamp,
+  dropoff_time: timestamp,
+  passenger_count: int,
+  trip_distance: double,
+  pickup_longitude: double,
+  pickup_latitude: double,
+  ratecode_id: int,
+  store_and_fwd_flag: string,
+  dropoff_longitude: double,
+  dropoff_latitude: double,
+  payment_type: int,
+  fare_amount: decimal(8,2),
+  extra: decimal(8,2),
+  mta_tax: decimal(8,2),
+  tip_amount: decimal(8,2),
+  tolls_amount: decimal(8,2),
+  improvement_surcharge : decimal(8,2),
+  total_amount: decimal(8,2)
+>
