@@ -234,7 +234,7 @@ void fillTimestampValues(const std::vector<std::string>& data,
                          orc::ColumnVectorBatch* batch,
                          uint64_t numValues,
                          uint64_t colIndex) {
-  const orc::Timezone& localTZ = orc::getLocalTimezone();
+  struct tm timeStruct;
   orc::TimestampVectorBatch* tsBatch =
     dynamic_cast<orc::TimestampVectorBatch*>(batch);
   bool hasNull = false;
@@ -244,10 +244,21 @@ void fillTimestampValues(const std::vector<std::string>& data,
       batch->notNull[i] = 0;
       hasNull = true;
     } else {
-      batch->notNull[i] = 1;
-      // data is in local timezone
-      tsBatch->data[i] = localTZ.convertToUTC(atoll(col.c_str()));
-      tsBatch->nanoseconds[i] = 0;
+      memset(&timeStruct, 0, sizeof(timeStruct));
+      char *left=strptime(col.c_str(), "%Y-%m-%d %H:%M:%S", &timeStruct);
+      if (left == nullptr) {
+	batch->notNull[i] = 0;
+      } else {
+	batch->notNull[i] = 1;
+	tsBatch->data[i] = timegm(&timeStruct);
+	char *tail;
+	double d = strtod(left, &tail);
+	if (tail != left) {
+          tsBatch->nanoseconds[i] = static_cast<long>(d * 1000000000.0);
+	} else {
+          tsBatch->nanoseconds[i] = 0;
+	}
+      }
     }
   }
   tsBatch->hasNulls = hasNull;
