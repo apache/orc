@@ -49,22 +49,9 @@ public class HadoopShimsPre2_3 implements HadoopShims {
     return null;
   }
 
-  private static final int BUFFER_SIZE = 256  * 1024;
-
-  static long padStream(OutputStream output,
-                        long padding) throws IOException {
-    byte[] pad = new byte[(int) Math.min(BUFFER_SIZE, padding)]; // always clear
-    while (padding > 0) {
-      int writeLen = (int) Math.min(padding, pad.length);
-      output.write(pad, 0, writeLen);
-      padding -= writeLen;
-    }
-    return padding;
-  }
-
   @Override
-  public long padStreamToBlock(OutputStream output, long padding) throws IOException {
-    return padStream(output, padding);
+  public boolean endVariableLengthBlock(OutputStream output) {
+    return false;
   }
 
   @Override

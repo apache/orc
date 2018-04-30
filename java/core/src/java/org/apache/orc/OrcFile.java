@@ -30,6 +30,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.orc.impl.HadoopShims;
+import org.apache.orc.impl.HadoopShimsFactory;
 import org.apache.orc.impl.MemoryManagerImpl;
 import org.apache.orc.impl.OrcTail;
 import org.apache.orc.impl.ReaderImpl;
@@ -389,6 +391,8 @@ public class OrcFile {
     private PhysicalWriter physicalWriter;
     private WriterVersion writerVersion = CURRENT_WRITER;
     private boolean overwrite;
+    private boolean writeVariableLengthBlocks;
+    private HadoopShims shims;
 
     protected WriterOptions(Properties tableProperties, Configuration conf) {
       configuration = conf;
@@ -428,6 +432,9 @@ public class OrcFile {
           BloomFilterVersion.fromString(
               OrcConf.BLOOM_FILTER_WRITE_VERSION.getString(tableProperties,
                   conf));
+      shims = HadoopShimsFactory.get();
+      writeVariableLengthBlocks =
+          OrcConf.WRITE_VARIABLE_LENGTH_BLOCKS.getBoolean(tableProperties,conf);
     }
 
     /**
@@ -622,6 +629,28 @@ public class OrcFile {
     }
 
     /**
+     * Should the ORC file writer use HDFS variable length blocks, if they
+     * are available?
+     * @param value the new value
+     * @return this
+     */
+    public WriterOptions writeVariableLengthBlocks(boolean value) {
+      writeVariableLengthBlocks = value;
+      return this;
+    }
+
+    /**
+     * Set the HadoopShims to use.
+     * This is only for testing.
+     * @param value the new value
+     * @return this
+     */
+    public WriterOptions setShims(HadoopShims value) {
+      this.shims = value;
+      return this;
+    }
+
+    /**
      * Manually set the writer version.
      * This is an internal API.
      * @param version the version to write
@@ -721,6 +750,14 @@ public class OrcFile {
 
     public WriterVersion getWriterVersion() {
       return writerVersion;
+    }
+
+    public boolean getWriteVariableLengthBlocks() {
+      return writeVariableLengthBlocks;
+    }
+
+    public HadoopShims getHadoopShims() {
+      return shims;
     }
   }
 

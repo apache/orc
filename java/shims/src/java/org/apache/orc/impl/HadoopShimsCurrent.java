@@ -49,15 +49,13 @@ public class HadoopShimsCurrent implements HadoopShims {
   }
 
   @Override
-  public long padStreamToBlock(OutputStream output,
-                               long padding) throws IOException {
+  public boolean endVariableLengthBlock(OutputStream output) throws IOException {
     if (output instanceof HdfsDataOutputStream) {
-      ((HdfsDataOutputStream) output).hsync(
-          EnumSet.of(HdfsDataOutputStream.SyncFlag.END_BLOCK));
-      return 0; // no padding
-    } else {
-      return HadoopShimsPre2_3.padStream(output, padding);
+      HdfsDataOutputStream hdfs = (HdfsDataOutputStream) output;
+      hdfs.hsync(EnumSet.of(HdfsDataOutputStream.SyncFlag.END_BLOCK));
+      return true;
     }
+    return false;
   }
 
   @Override

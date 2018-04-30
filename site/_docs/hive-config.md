@@ -179,4 +179,11 @@ There are many Hive configuration properties related to ORC files:
       the compression level of higher level compression codec. Value can be
       SPEED or COMPRESSION.</td>
 </tr>
+<tr>
+  <td>orc.write.variable.length.blocks</td>
+  <td>false</td>
+  <td>Should the ORC writer use HDFS variable length blocks, if they are
+      available? If the new stripe would straddle a block, Hadoop is &ge; 2.7,
+      and this is enabled, it will end the block before the new stripe.</td>
+</tr>
 </table>

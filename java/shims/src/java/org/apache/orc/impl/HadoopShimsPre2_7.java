@@ -60,9 +60,8 @@ public class HadoopShimsPre2_7 implements HadoopShims {
   }
 
   @Override
-  public long padStreamToBlock(OutputStream output,
-                               long padding) throws IOException {
-    return HadoopShimsPre2_3.padStream(output, padding);
+  public boolean endVariableLengthBlock(OutputStream output) {
+    return false;
   }
 
   static String buildKeyVersionName(KeyMetadata key) {

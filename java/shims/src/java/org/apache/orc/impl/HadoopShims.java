@@ -116,11 +116,12 @@ public interface HadoopShims {
   }
 
   /**
-   * Allow block boundaries to be reached by zero-fill or variable length block
-   * markers (in HDFS).
-   * @return the number of bytes written
+   * End the OutputStream's current block at the current location.
+   * This is only available on HDFS on Hadoop >= 2.7, but will return false
+   * otherwise.
+   * @return was a variable length block created?
    */
-  long padStreamToBlock(OutputStream output, long padding) throws IOException;
+  boolean endVariableLengthBlock(OutputStream output) throws IOException;
 
   /**
    * A source of crypto keys. This is usually backed by a Ranger KMS.
