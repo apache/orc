@@ -100,6 +100,13 @@ public final class OrcCodecPool {
     }
   }
 
+  /**
+   * Clear the codec pool. Mostly used for testing.
+   */
+  public static void clear() {
+    POOL.clear();
+  }
+
   private OrcCodecPool() {
     // prevent instantiation
   }

@@ -36,6 +36,8 @@ import org.apache.orc.impl.MemoryManagerImpl;
 import org.apache.orc.impl.OrcTail;
 import org.apache.orc.impl.ReaderImpl;
 import org.apache.orc.impl.WriterImpl;
+import org.apache.orc.impl.WriterInternal;
+import org.apache.orc.impl.writer.WriterImplV2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -810,8 +812,16 @@ public class OrcFile {
                                     ) throws IOException {
     FileSystem fs = opts.getFileSystem() == null ?
         path.getFileSystem(opts.getConfiguration()) : opts.getFileSystem();
-
-    return new WriterImpl(fs, path, opts);
+    switch (opts.getVersion()) {
+      case V_0_11:
+      case V_0_12:
+        return new WriterImpl(fs, path, opts);
+      case UNSTABLE_PRE_2_0:
+        return new WriterImplV2(fs, path, opts);
+      default:
+        throw new IllegalArgumentException("Unknown version " +
+            opts.getVersion());
+    }
   }
 
   /**
@@ -964,7 +974,7 @@ public class OrcFile {
           mergeMetadata(userMetadata, reader);
           if (bufferSize < reader.getCompressionSize()) {
             bufferSize = reader.getCompressionSize();
-            ((WriterImpl) output).increaseCompressionSize(bufferSize);
+            ((WriterInternal) output).increaseCompressionSize(bufferSize);
           }
         }
         List<OrcProto.StripeStatistics> statList =

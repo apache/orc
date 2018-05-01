@@ -363,9 +363,13 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
   public void nextVector(ColumnVector previous,
                          long[] data,
                          int previousLen) throws IOException {
+    // if all nulls, just return
+    if (previous.isRepeating && !previous.noNulls && previous.isNull[0]) {
+      return;
+    }
     previous.isRepeating = true;
     for (int i = 0; i < previousLen; i++) {
-      if (!previous.isNull[i]) {
+      if (previous.noNulls || !previous.isNull[i]) {
         data[i] = next();
       } else {
         // The default value of null for int type in vectorized

@@ -43,6 +43,7 @@ import org.apache.hadoop.hive.ql.exec.vector.UnionColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.ql.exec.vector.expressions.StringExpr;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
+import org.apache.orc.OrcFile;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.OrcProto;
 import org.apache.orc.impl.writer.TimestampTreeWriter;
@@ -57,12 +58,15 @@ public class TreeReaderFactory {
     boolean isSkipCorrupt();
 
     String getWriterTimezone();
+
+    OrcFile.Version getFileFormat();
   }
 
   public static class ReaderContext implements Context {
     private SchemaEvolution evolution;
     private boolean skipCorrupt = false;
     private String writerTimezone;
+    private OrcFile.Version fileFormat;
 
     public ReaderContext setSchemaEvolution(SchemaEvolution evolution) {
       this.evolution = evolution;
@@ -79,6 +83,11 @@ public class TreeReaderFactory {
       return this;
     }
 
+    public ReaderContext fileFormat(OrcFile.Version version) {
+      this.fileFormat = version;
+      return this;
+    }
+
     @Override
     public SchemaEvolution getSchemaEvolution() {
       return evolution;
@@ -92,6 +101,11 @@ public class TreeReaderFactory {
     @Override
     public String getWriterTimezone() {
       return writerTimezone;
+    }
+
+    @Override
+    public OrcFile.Version getFileFormat() {
+      return fileFormat;
     }
   }
 
@@ -1259,6 +1273,107 @@ public class TreeReaderFactory {
     }
   }
 
+  public static class Decimal64TreeReader extends TreeReader {
+    protected final int precision;
+    protected final int scale;
+    protected final boolean skipCorrupt;
+    protected RunLengthIntegerReaderV2 valueReader;
+
+    Decimal64TreeReader(int columnId,
+                      int precision,
+                      int scale,
+                      Context context) throws IOException {
+      this(columnId, null, null, null, precision, scale, context);
+    }
+
+    protected Decimal64TreeReader(int columnId,
+                                InStream present,
+                                InStream valueStream,
+                                OrcProto.ColumnEncoding encoding,
+                                int precision,
+                                int scale,
+                                Context context) throws IOException {
+      super(columnId, present, context);
+      this.precision = precision;
+      this.scale = scale;
+      valueReader = new RunLengthIntegerReaderV2(valueStream, true,
+          context.isSkipCorrupt());
+      skipCorrupt = context.isSkipCorrupt();
+    }
+
+    @Override
+    void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
+      if ((encoding.getKind() != OrcProto.ColumnEncoding.Kind.DIRECT)) {
+        throw new IOException("Unknown encoding " + encoding + " in column " +
+            columnId);
+      }
+    }
+
+    @Override
+    void startStripe(Map<StreamName, InStream> streams,
+                     OrcProto.StripeFooter stripeFooter
+    ) throws IOException {
+      super.startStripe(streams, stripeFooter);
+      InStream stream = streams.get(new StreamName(columnId,
+          OrcProto.Stream.Kind.DATA));
+      valueReader = new RunLengthIntegerReaderV2(stream, true, skipCorrupt);
+    }
+
+    @Override
+    public void seek(PositionProvider[] index) throws IOException {
+      seek(index[columnId]);
+    }
+
+    @Override
+    public void seek(PositionProvider index) throws IOException {
+      super.seek(index);
+      valueReader.seek(index);
+    }
+
+    private void nextVector(DecimalColumnVector result,
+                            final int batchSize) throws IOException {
+      if (result.noNulls) {
+        for (int r=0; r < batchSize; ++r) {
+          result.vector[r].setFromLongAndScale(valueReader.next(), scale);
+        }
+      } else if (!result.isRepeating || !result.isNull[0]) {
+        for (int r=0; r < batchSize; ++r) {
+          if (result.noNulls || !result.isNull[r]) {
+            result.vector[r].setFromLongAndScale(valueReader.next(), scale);
+          }
+        }
+      }
+      result.precision = (short) precision;
+      result.scale = (short) scale;
+    }
+
+    private void nextVector(Decimal64ColumnVector result,
+                            final int batchSize) throws IOException {
+      valueReader.nextVector(result, result.vector, batchSize);
+      result.precision = (short) precision;
+      result.scale = (short) scale;
+    }
+
+    @Override
+    public void nextVector(ColumnVector result,
+                           boolean[] isNull,
+                           final int batchSize) throws IOException {
+      // Read present/isNull stream
+      super.nextVector(result, isNull, batchSize);
+      if (result instanceof Decimal64ColumnVector) {
+        nextVector((Decimal64ColumnVector) result, batchSize);
+      } else {
+        nextVector((DecimalColumnVector) result, batchSize);
+      }
+    }
+
+    @Override
+    void skipRows(long items) throws IOException {
+      items = countNonNulls(items);
+      valueReader.skip(items);
+    }
+  }
+
   /**
    * A tree reader that will read string columns. At the start of the
    * stripe, it creates an internal reader based on whether a direct or
@@ -1352,6 +1467,8 @@ public class TreeReaderFactory {
         LongColumnVector scratchlcv,
         BytesColumnVector result, final int batchSize) throws IOException {
       // Read lengths
+      scratchlcv.isRepeating = result.isRepeating;
+      scratchlcv.noNulls = result.noNulls;
       scratchlcv.isNull = result.isNull;  // Notice we are replacing the isNull vector here...
       lengths.nextVector(scratchlcv, scratchlcv.vector, batchSize);
       int totalLength = 0;
@@ -1645,6 +1762,8 @@ public class TreeReaderFactory {
         }
 
         // Read string offsets
+        scratchlcv.isRepeating = result.isRepeating;
+        scratchlcv.noNulls = result.noNulls;
         scratchlcv.isNull = result.isNull;
         scratchlcv.ensureSize((int) batchSize, false);
         reader.nextVector(scratchlcv, scratchlcv.vector, batchSize);
@@ -2199,6 +2318,7 @@ public class TreeReaderFactory {
   public static TreeReader createTreeReader(TypeDescription readerType,
                                             Context context
                                             ) throws IOException {
+    OrcFile.Version version = context.getFileFormat();
     final SchemaEvolution evolution = context.getSchemaEvolution();
     TypeDescription fileType = evolution.getFileType(readerType);
     if (fileType == null || !evolution.includeReaderColumn(readerType.getId())){
@@ -2241,6 +2361,11 @@ public class TreeReaderFactory {
       case DATE:
         return new DateTreeReader(fileType.getId(), context);
       case DECIMAL:
+        if (version == OrcFile.Version.UNSTABLE_PRE_2_0 &&
+            fileType.getPrecision() <= TypeDescription.MAX_DECIMAL64_PRECISION){
+          return new Decimal64TreeReader(fileType.getId(), fileType.getPrecision(),
+              fileType.getScale(), context);
+        }
         return new DecimalTreeReader(fileType.getId(), fileType.getPrecision(),
             fileType.getScale(), context);
       case STRUCT:

@@ -20,6 +20,7 @@ package org.apache.orc.impl.writer;
 
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
 import org.apache.orc.TypeDescription;
 
@@ -45,7 +46,7 @@ public interface TreeWriter {
   long getRawDataSize();
 
   /**
-   * Write a VectorizedRowBath to the file. This is called by the WriterImpl
+   * Write a VectorizedRowBath to the file. This is called by the WriterImplV2
    * at the top level.
    * @param batch the list of all of the columns
    * @param offset the first row from the batch to write
@@ -101,10 +102,11 @@ public interface TreeWriter {
    */
   void writeFileStatistics(OrcProto.Footer.Builder footer);
 
-  public class Factory {
+  class Factory {
     public static TreeWriter create(TypeDescription schema,
                                     WriterContext streamFactory,
                                     boolean nullable) throws IOException {
+      OrcFile.Version version = streamFactory.getVersion();
       switch (schema.getCategory()) {
         case BOOLEAN:
           return new BooleanTreeWriter(schema.getId(),
@@ -142,6 +144,11 @@ public interface TreeWriter {
           return new DateTreeWriter(schema.getId(),
               schema, streamFactory, nullable);
         case DECIMAL:
+          if (version == OrcFile.Version.UNSTABLE_PRE_2_0 &&
+              schema.getPrecision() <= TypeDescription.MAX_DECIMAL64_PRECISION) {
+            return new Decimal64TreeWriter(schema.getId(),
+                schema, streamFactory, nullable);
+          }
           return new DecimalTreeWriter(schema.getId(),
               schema, streamFactory, nullable);
         case STRUCT:
