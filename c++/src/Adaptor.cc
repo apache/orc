@@ -16,13 +16,28 @@
 * limitations under the License.
 */
 
-#include "orc/C09Adapter.hh"
+#include "Adaptor.hh"
 #include <sstream>
+#include <iomanip>
 
-int64_t std::stoll(std::string str) {
-  int64_t val = 0;
-  stringstream ss ;
-  ss << str ;
-  ss >> val ;
-  return val;
+#ifndef HAS_STOLL
+namespace std {
+  int64_t std::stoll(std::string str) {
+    int64_t val = 0;
+    stringstream ss;
+    ss << str;
+    ss >> val;
+    return val;
+  }
 }
+#endif
+
+#ifndef HAS_STRPTIME
+char* strptime(const char* s, const char* f, struct tm* tm) {
+  std::istringstream input(s);
+  input.imbue(std::locale(setlocale(LC_ALL, nullptr)));
+  input >> std::get_time(tm, f);
+  if (input.fail()) return nullptr;
+  return (char*)(s + input.tellg());
+}
+#endif
