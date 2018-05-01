@@ -21,7 +21,6 @@
 #include "wrap/gtest-wrapper.h"
 
 #include <iostream>
-#include <unistd.h>
 #include <vector>
 
 namespace orc {
@@ -123,7 +122,7 @@ namespace orc {
   const std::string& getZoneFromRule(FutureRule *rule,
                                      const std::string& date) {
     tm timeStruct;
-    if (strptime(date.c_str(), "%F %H:%M:%S", &timeStruct) == nullptr) {
+    if (strptime(date.c_str(), "%Y-%m-%d %H:%M:%S", &timeStruct) == nullptr) {
       throw TimezoneError("bad time " + date);
     }
     return rule->getVariant(timegm(&timeStruct)).name;
@@ -319,7 +318,7 @@ namespace orc {
   const std::string& getVariantFromZone(const Timezone& zone,
                                         const std::string& date) {
     tm timeStruct;
-    if (strptime(date.c_str(), "%F %H:%M:%S", &timeStruct) == nullptr) {
+    if (strptime(date.c_str(), "%Y-%m-%d %H:%M:%S", &timeStruct) == nullptr) {
       throw TimezoneError("bad time " + date);
     }
     return zone.getVariant(timegm(&timeStruct)).name;
