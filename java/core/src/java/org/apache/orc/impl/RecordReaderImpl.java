@@ -104,21 +104,44 @@ public class RecordReaderImpl implements RecordReader {
    * Given a list of column names, find the given column and return the index.
    *
    * @param evolution the mapping from reader to file schema
-   * @param columnName  the column name to look for
+   * @param columnName  the Fully qualified column name to look for
    * @return the file column number or -1 if the column wasn't found
    */
   static int findColumns(SchemaEvolution evolution,
                          String columnName) {
-    TypeDescription readerSchema = evolution.getReaderBaseSchema();
-    List<String> fieldNames = readerSchema.getFieldNames();
-    List<TypeDescription> children = readerSchema.getChildren();
-    for (int i = 0; i < fieldNames.size(); ++i) {
-      if (columnName.equals(fieldNames.get(i))) {
-        TypeDescription result = evolution.getFileType(children.get(i));
-        return result == null ? -1 : result.getId();
-      }
+
+    String[] columnNamePath = columnName.split("\\.");
+    TypeDescription result = evolution.getFileType(findColumns(evolution.getReaderBaseSchema(),columnNamePath,0));
+    return result == null ? -1 : result.getId();
+  }
+
+  /**
+   * Recursion to match column name to columnId
+   *
+   * @param readerSchema schema to parse to generate ColumnId
+   * @param columnNamePath fully qualified Column name
+   * @param position position in columnNamePath
+   * @return
+   */
+  static TypeDescription findColumns(TypeDescription readerSchema,String[] columnNamePath,int position)
+  {
+    TypeDescription result = null;
+    if(position == columnNamePath.length)
+    {
+      return readerSchema;
     }
-    return -1;
+    else {
+      String columnName = columnNamePath[position];
+      List<TypeDescription> children = readerSchema.getChildren();
+      List<String> fieldNames = readerSchema.getFieldNames();
+      for (int i = 0; i < readerSchema.getChildren().size(); ++i) {
+        if (columnName.equalsIgnoreCase(fieldNames.get(i))) {
+          result = findColumns(children.get(i), columnNamePath, ++position);
+          break;
+        }
+      }
+      return result;
+    }
   }
 
   /**
