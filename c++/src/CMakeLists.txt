@@ -26,6 +26,15 @@ CHECK_CXX_SOURCE_COMPILES("
 )
 
 CHECK_CXX_SOURCE_COMPILES("
+    #include<time.h>
+    int main(int,char*[]){
+      struct tm time2020;
+      return !strptime(\"2020-02-02 12:34:56\", \"%Y-%m-%d %H:%M:%S\", &time2020);
+    }"
+  HAS_STRPTIME
+)
+
+CHECK_CXX_SOURCE_COMPILES("
     #include<string>
     int main(int,char* argv[]){
       return static_cast<int>(std::stoll(argv[0]));
@@ -156,6 +165,7 @@ set(SOURCE_FILES
   io/InputStream.cc
   io/OutputStream.cc
   wrap/orc-proto-wrapper.cc
+  Adaptor.cc
   ByteRLE.cc
   ColumnPrinter.cc
   ColumnReader.cc

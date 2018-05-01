@@ -21,6 +21,7 @@
 
 #cmakedefine INT64_IS_LL
 #cmakedefine HAS_PREAD
+#cmakedefine HAS_STRPTIME
 #cmakedefine HAS_STOLL
 #cmakedefine HAS_DIAGNOSTIC_PUSH
 #cmakedefine HAS_PRE_1970
@@ -38,6 +39,10 @@
   namespace std {
     int64_t stoll(std::string str);
   }
+#endif
+
+#ifndef HAS_STRPTIME
+  char* strptime(const char* buf, const char* format, struct tm* tm);
 #endif
 
 #ifndef HAS_PREAD
