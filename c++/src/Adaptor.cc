@@ -16,13 +16,17 @@
 * limitations under the License.
 */
 
-#include "orc/C09Adapter.hh"
+#include "Adaptor.hh"
 #include <sstream>
 
-int64_t std::stoll(std::string str) {
-  int64_t val = 0;
-  stringstream ss ;
-  ss << str ;
-  ss >> val ;
-  return val;
+#ifndef HAS_STOLL
+namespace std {
+  int64_t std::stoll(std::string str) {
+    int64_t val = 0;
+    stringstream ss;
+    ss << str;
+    ss >> val;
+    return val;
+  }
 }
+#endif

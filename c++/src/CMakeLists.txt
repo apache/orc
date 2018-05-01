@@ -156,6 +156,7 @@ set(SOURCE_FILES
   io/InputStream.cc
   io/OutputStream.cc
   wrap/orc-proto-wrapper.cc
+  Adaptor.cc
   ByteRLE.cc
   ColumnPrinter.cc
   ColumnReader.cc
