@@ -1430,6 +1430,16 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     }
 
     @Override
+    public Timestamp getMinimumUTC() {
+      return minimum == null ? null : new Timestamp(minimum);
+    }
+
+    @Override
+    public Timestamp getMaximumUTC() {
+      return maximum == null ? null : new Timestamp(maximum);
+    }
+
+    @Override
     public String toString() {
       StringBuilder buf = new StringBuilder(super.toString());
       if (minimum != null || maximum != null) {
@@ -1437,6 +1447,10 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
         buf.append(getMinimum());
         buf.append(" max: ");
         buf.append(getMaximum());
+        buf.append(" min UTC: ");
+        buf.append(getMinimumUTC());
+        buf.append(" max UTC: ");
+        buf.append(getMaximumUTC());
       }
       return buf.toString();
     }

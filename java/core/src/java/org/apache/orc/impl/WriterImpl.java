@@ -112,6 +112,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
   private final double bloomFilterFpp;
   private final OrcFile.BloomFilterVersion bloomFilterVersion;
   private final boolean writeTimeZone;
+  private final boolean useUTCTimeZone;
 
   public WriterImpl(FileSystem fs,
                     Path path,
@@ -133,7 +134,8 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     } else {
       callbackContext = null;
     }
-    writeTimeZone = hasTimestamp(schema);
+    this.writeTimeZone = hasTimestamp(schema);
+    this.useUTCTimeZone = opts.getUseUTCTimestamp();
     this.adjustedStripeSize = opts.getStripeSize();
     this.version = opts.getVersion();
     this.encodingStrategy = opts.getEncodingStrategy();
@@ -404,6 +406,10 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
       physicalWriter.writeBloomFilter(name, bloom,
           getCustomizedCodec(name.getKind()));
     }
+
+    public boolean getUseUTCTimestamp() {
+      return useUTCTimeZone;
+    }
   }
 
 
@@ -431,7 +437,11 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
       OrcProto.StripeFooter.Builder builder =
           OrcProto.StripeFooter.newBuilder();
       if (writeTimeZone) {
-        builder.setWriterTimezone(TimeZone.getDefault().getID());
+        if (useUTCTimeZone) {
+          builder.setWriterTimezone("UTC");
+        } else {
+          builder.setWriterTimezone(TimeZone.getDefault().getID());
+        }
       }
       OrcProto.StripeStatistics.Builder stats =
           OrcProto.StripeStatistics.newBuilder();

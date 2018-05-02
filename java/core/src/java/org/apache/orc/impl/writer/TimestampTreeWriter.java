@@ -28,7 +28,9 @@ import org.apache.orc.impl.PositionRecorder;
 import org.apache.orc.impl.SerializationUtils;
 
 import java.io.IOException;
-import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 
 public class TimestampTreeWriter extends TreeWriterBase {
@@ -38,8 +40,10 @@ public class TimestampTreeWriter extends TreeWriterBase {
   private final IntegerWriter seconds;
   private final IntegerWriter nanos;
   private final boolean isDirectV2;
+  private boolean useUTCTimestamp;
   private final TimeZone localTimezone;
   private final long baseEpochSecsLocalTz;
+  private final long baseEpochSecsUTC;
 
   public TimestampTreeWriter(int columnId,
                              TypeDescription schema,
@@ -54,9 +58,25 @@ public class TimestampTreeWriter extends TreeWriterBase {
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
     }
+    this.useUTCTimestamp = writer.getUseUTCTimestamp();
+    DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     this.localTimezone = TimeZone.getDefault();
-    // for unit tests to set different time zones
-    this.baseEpochSecsLocalTz = Timestamp.valueOf(BASE_TIMESTAMP_STRING).getTime() / MILLIS_PER_SECOND;
+    dateFormat.setTimeZone(this.localTimezone);
+    try {
+      this.baseEpochSecsLocalTz = dateFormat
+          .parse(TimestampTreeWriter.BASE_TIMESTAMP_STRING).getTime() /
+          TimestampTreeWriter.MILLIS_PER_SECOND;
+    } catch (ParseException e) {
+      throw new IOException("Unable to create base timestamp tree writer", e);
+    }
+    dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+    try {
+      this.baseEpochSecsUTC = dateFormat
+          .parse(TimestampTreeWriter.BASE_TIMESTAMP_STRING).getTime() /
+          TimestampTreeWriter.MILLIS_PER_SECOND;
+    } catch (ParseException e) {
+      throw new IOException("Unable to create base timestamp tree writer", e);
+    }
   }
 
   @Override
@@ -85,7 +105,8 @@ public class TimestampTreeWriter extends TreeWriterBase {
         if (millis < 0 && newNanos > 999_999) {
           millis -= MILLIS_PER_SECOND;
         }
-        long utc = SerializationUtils.convertToUtc(localTimezone, millis);
+        long utc = vec.isUTC() ?
+            millis : SerializationUtils.convertToUtc(localTimezone, millis);
         indexStatistics.updateTimestamp(utc);
         if (createBloomFilter) {
           if (bloomFilter != null) {
@@ -95,7 +116,7 @@ public class TimestampTreeWriter extends TreeWriterBase {
         }
         final long nano = formatNanos(vec.nanos[0]);
         for (int i = 0; i < length; ++i) {
-          seconds.write(secs - baseEpochSecsLocalTz);
+          seconds.write(secs - (useUTCTimestamp ? baseEpochSecsUTC : baseEpochSecsLocalTz));
           nanos.write(nano);
         }
       }
@@ -110,8 +131,13 @@ public class TimestampTreeWriter extends TreeWriterBase {
           if (millis < 0 && newNanos > 999_999) {
             millis -= MILLIS_PER_SECOND;
           }
-          long utc = SerializationUtils.convertToUtc(localTimezone, millis);
-          seconds.write(secs - baseEpochSecsLocalTz);
+          long utc = vec.isUTC() ?
+              millis : SerializationUtils.convertToUtc(localTimezone, millis);
+          if (useUTCTimestamp) {
+            seconds.write(secs - baseEpochSecsUTC);
+          } else {
+            seconds.write(secs - baseEpochSecsLocalTz);
+          }
           nanos.write(formatNanos(newNanos));
           indexStatistics.updateTimestamp(utc);
           if (createBloomFilter) {

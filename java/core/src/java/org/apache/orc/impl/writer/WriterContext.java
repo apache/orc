@@ -101,4 +101,6 @@ public interface WriterContext {
     void writeBloomFilter(StreamName name,
                           OrcProto.BloomFilterIndex.Builder bloom
                           ) throws IOException;
+
+    boolean getUseUTCTimestamp();
 }
