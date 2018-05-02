@@ -259,7 +259,8 @@ public class RecordReaderImpl implements RecordReader {
         new TreeReaderFactory.ReaderContext()
           .setSchemaEvolution(evolution)
           .skipCorrupt(skipCorrupt)
-          .fileFormat(fileReader.getFileVersion());
+          .fileFormat(fileReader.getFileVersion())
+          .useUTCTimestamp(fileReader.useUTCTimestamp);
     reader = TreeReaderFactory.createTreeReader(evolution.getReaderSchema(),
         readerContext);
 

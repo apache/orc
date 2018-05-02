@@ -28,7 +28,9 @@ import org.apache.orc.impl.PositionRecorder;
 import org.apache.orc.impl.SerializationUtils;
 
 import java.io.IOException;
-import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 
 public class TimestampTreeWriter extends TreeWriterBase {
@@ -39,6 +41,7 @@ public class TimestampTreeWriter extends TreeWriterBase {
   private final IntegerWriter nanos;
   private final boolean isDirectV2;
   private final TimeZone localTimezone;
+  private final DateFormat localDateFormat;
   private final long baseEpochSecsLocalTz;
 
   public TimestampTreeWriter(int columnId,
@@ -54,9 +57,20 @@ public class TimestampTreeWriter extends TreeWriterBase {
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
     }
-    this.localTimezone = TimeZone.getDefault();
-    // for unit tests to set different time zones
-    this.baseEpochSecsLocalTz = Timestamp.valueOf(BASE_TIMESTAMP_STRING).getTime() / MILLIS_PER_SECOND;
+    if (writer.isUseUTCTimestamp()) {
+      this.localTimezone = TimeZone.getTimeZone("UTC");
+    } else {
+      this.localTimezone = TimeZone.getDefault();
+    }
+    this.localDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    this.localDateFormat.setTimeZone(this.localTimezone);
+    try {
+      this.baseEpochSecsLocalTz = this.localDateFormat
+          .parse(TimestampTreeWriter.BASE_TIMESTAMP_STRING).getTime() /
+          TimestampTreeWriter.MILLIS_PER_SECOND;
+    } catch (ParseException e) {
+      throw new IOException("Unable to create base timestamp tree writer", e);
+    }
   }
 
   @Override

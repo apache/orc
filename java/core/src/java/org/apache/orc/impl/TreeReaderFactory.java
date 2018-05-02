@@ -57,6 +57,8 @@ public class TreeReaderFactory {
 
     boolean isSkipCorrupt();
 
+    boolean isUseUTCTimestamp();
+
     String getWriterTimezone();
 
     OrcFile.Version getFileFormat();
@@ -65,6 +67,7 @@ public class TreeReaderFactory {
   public static class ReaderContext implements Context {
     private SchemaEvolution evolution;
     private boolean skipCorrupt = false;
+    private boolean useUTCTimestamp = false;
     private String writerTimezone;
     private OrcFile.Version fileFormat;
 
@@ -75,6 +78,11 @@ public class TreeReaderFactory {
 
     public ReaderContext skipCorrupt(boolean skipCorrupt) {
       this.skipCorrupt = skipCorrupt;
+      return this;
+    }
+
+    public ReaderContext useUTCTimestamp(boolean useUTCTimestamp) {
+      this.useUTCTimestamp = useUTCTimestamp;
       return this;
     }
 
@@ -96,6 +104,11 @@ public class TreeReaderFactory {
     @Override
     public boolean isSkipCorrupt() {
       return skipCorrupt;
+    }
+
+    @Override
+    public boolean isUseUTCTimestamp() {
+      return useUTCTimestamp;
     }
 
     @Override
@@ -900,7 +913,11 @@ public class TreeReaderFactory {
       this.threadLocalDateFormat = new ThreadLocal<>();
       this.threadLocalDateFormat.set(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
       this.baseTimestampMap = new HashMap<>();
-      this.readerTimeZone = TimeZone.getDefault();
+      if (context.isUseUTCTimestamp()) {
+        this.readerTimeZone = TimeZone.getTimeZone("UTC");
+      } else {
+        this.readerTimeZone = TimeZone.getDefault();
+      }
       if (context.getWriterTimezone() == null || context.getWriterTimezone().isEmpty()) {
         this.writerTimeZone = readerTimeZone;
       } else {
@@ -989,6 +1006,10 @@ public class TreeReaderFactory {
                            final int batchSize) throws IOException {
       TimestampColumnVector result = (TimestampColumnVector) previousVector;
       super.nextVector(previousVector, isNull, batchSize);
+
+      if (context.isUseUTCTimestamp()) {
+        result.setIsUTC(true);
+      }
 
       for (int i = 0; i < batchSize; i++) {
         if (result.noNulls || !result.isNull[i]) {
