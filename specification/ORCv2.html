@@ -92,7 +92,7 @@ developers on the project.</p>
 <p>The list of things that we plan to change:</p>
 
 <ul>
-  <li>Create a decimal representation with fixed scale using rle.</li>
+  <li>Move decimal encoding to RLEv3 and remove variable length encoding.</li>
   <li>Create a better float/double encoding that splits mantissa and
 exponent.</li>
   <li>Create a dictionary encoding for float, double, and decimal.</li>
@@ -1283,13 +1283,10 @@ value.</p>
 
 <h2 id="decimal-columns">Decimal Columns</h2>
 
-<p>Decimal was introduced in Hive 0.11 with infinite precision (the total
-number of digits). In Hive 0.13, the definition was change to limit
-the precision to a maximum of 38 digits, which conveniently uses 127
-bits plus a sign bit. The current encoding of decimal columns stores
-the integer representation of the value as an unbounded length zigzag
-encoded base 128 varint. The scale is stored in the SECONDARY stream
-as an signed integer.</p>
+<p>Since Hive 0.13, all decimals have had fixed precision and scale.
+The goal is to use RLEv3 for the value and use the fixed scale from
+the type. As an interim solution, we are using RLE v2 for short decimals
+(precision &lt;= 18) and the old encoding for long decimals.</p>
 
 <table>
   <thead>
@@ -1311,13 +1308,7 @@ as an signed integer.</p>
       <td style="text-align: left"> </td>
       <td style="text-align: left">DATA</td>
       <td style="text-align: left">No</td>
-      <td style="text-align: left">Unbounded base 128 varints</td>
-    </tr>
-    <tr>
-      <td style="text-align: left"> </td>
-      <td style="text-align: left">SECONDARY</td>
-      <td style="text-align: left">No</td>
-      <td style="text-align: left">Unsigned Integer RLE v1</td>
+      <td style="text-align: left">Signed Integer RLE v2</td>
     </tr>
     <tr>
       <td style="text-align: left">DIRECT_V2</td>
