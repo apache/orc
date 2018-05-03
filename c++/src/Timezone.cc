@@ -745,7 +745,7 @@ namespace orc {
       variants[variant].gmtOffset =
         static_cast<int32_t>(decode32(ptr + variantOffset + 6 * variant));
       variants[variant].isDst = ptr[variantOffset + 6 * variant + 4];
-      uint nameStart = ptr[variantOffset + 6 * variant + 5];
+      unsigned nameStart = ptr[variantOffset + 6 * variant + 5];
       if (nameStart >= nameCount) {
         std::stringstream buffer;
         buffer << "name out of range in variant " << variant
