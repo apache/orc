@@ -710,7 +710,11 @@ namespace orc {
    * Get the local timezone.
    */
   const Timezone& getLocalTimezone() {
+#ifdef _MSC_VER
+    return getTimezoneByName("UTC");
+#else
     return getTimezoneByFilename(LOCAL_TIMEZONE);
+#endif
   }
 
   /**
