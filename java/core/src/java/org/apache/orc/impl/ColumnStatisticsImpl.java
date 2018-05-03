@@ -835,6 +835,13 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     }
 
     @Override
+    public void updateDecimal64(long value, int scale) {
+      HiveDecimalWritable dValue = new HiveDecimalWritable();
+      dValue.setFromLongAndScale(value, scale);
+      updateDecimal(dValue);
+    }
+
+    @Override
     public void merge(ColumnStatisticsImpl other) {
       if (other instanceof DecimalStatisticsImpl) {
         DecimalStatisticsImpl dec = (DecimalStatisticsImpl) other;
@@ -944,6 +951,215 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       result = 31 * result + (minimum != null ? minimum.hashCode() : 0);
       result = 31 * result + (maximum != null ? maximum.hashCode() : 0);
       result = 31 * result + (sum != null ? sum.hashCode() : 0);
+      return result;
+    }
+  }
+
+  private static final class Decimal64StatisticsImpl extends ColumnStatisticsImpl
+      implements DecimalColumnStatistics {
+
+    private final int scale;
+    private long minimum;
+    private long maximum;
+    private boolean hasSum = true;
+    private long sum = 0;
+    private final HiveDecimalWritable scratch = new HiveDecimalWritable();
+
+    Decimal64StatisticsImpl(int scale) {
+      this.scale = scale;
+    }
+
+    Decimal64StatisticsImpl(int scale, OrcProto.ColumnStatistics stats) {
+      super(stats);
+      this.scale = scale;
+      OrcProto.DecimalStatistics dec = stats.getDecimalStatistics();
+      if (dec.hasMaximum()) {
+        maximum = new HiveDecimalWritable(dec.getMaximum()).serialize64(scale);
+      }
+      if (dec.hasMinimum()) {
+        minimum = new HiveDecimalWritable(dec.getMinimum()).serialize64(scale);
+      }
+      if (dec.hasSum()) {
+        hasSum = true;
+        HiveDecimalWritable sumTmp = new HiveDecimalWritable(dec.getSum());
+        if (sumTmp.getHiveDecimal().integerDigitCount() + scale <=
+            TypeDescription.MAX_DECIMAL64_PRECISION) {
+          hasSum = true;
+          sum = sumTmp.serialize64(scale);
+          return;
+        }
+      }
+      hasSum = false;
+    }
+
+    @Override
+    public void reset() {
+      super.reset();
+      minimum = 0;
+      maximum = 0;
+      hasSum = true;
+      sum = 0;
+    }
+
+    @Override
+    public void updateDecimal(HiveDecimalWritable value) {
+      updateDecimal64(value.serialize64(scale), scale);
+    }
+
+    @Override
+    public void updateDecimal64(long value, int valueScale) {
+      // normalize the scale to our desired level
+      while (valueScale != scale) {
+        if (valueScale > scale) {
+          value /= 10;
+          valueScale -= 1;
+        } else {
+          value *= 10;
+          valueScale += 1;
+        }
+      }
+      if (value < TypeDescription.MIN_DECIMAL64 ||
+          value > TypeDescription.MAX_DECIMAL64) {
+        throw new IllegalArgumentException("Out of bounds decimal64 " + value);
+      }
+      if (getNumberOfValues() == 0) {
+        minimum = value;
+        maximum = value;
+      } else if (minimum > value) {
+        minimum = value;
+      } else if (maximum < value) {
+        maximum = value;
+      }
+      if (hasSum) {
+        sum += value;
+        hasSum = sum <= TypeDescription.MAX_DECIMAL64 &&
+              sum >= TypeDescription.MIN_DECIMAL64;
+      }
+    }
+
+    @Override
+    public void merge(ColumnStatisticsImpl other) {
+      if (other instanceof Decimal64StatisticsImpl) {
+        Decimal64StatisticsImpl dec = (Decimal64StatisticsImpl) other;
+        if (getNumberOfValues() == 0) {
+          minimum = dec.minimum;
+          maximum = dec.maximum;
+          sum = dec.sum;
+        } else {
+          if (minimum > dec.minimum) {
+            minimum = dec.minimum;
+          }
+          if (maximum < dec.maximum) {
+            maximum = dec.maximum;
+          }
+          if (hasSum && dec.hasSum) {
+            sum += dec.sum;
+            hasSum = sum <= TypeDescription.MAX_DECIMAL64 &&
+                  sum >= TypeDescription.MIN_DECIMAL64;
+          } else {
+            hasSum = false;
+          }
+        }
+      } else {
+        if (getNumberOfValues() != 0) {
+          throw new IllegalArgumentException("Incompatible merging of decimal column statistics");
+        }
+      }
+      super.merge(other);
+    }
+
+    @Override
+    public OrcProto.ColumnStatistics.Builder serialize() {
+      OrcProto.ColumnStatistics.Builder result = super.serialize();
+      OrcProto.DecimalStatistics.Builder dec =
+          OrcProto.DecimalStatistics.newBuilder();
+      if (getNumberOfValues() != 0) {
+        scratch.setFromLongAndScale(minimum, scale);
+        dec.setMinimum(scratch.toString());
+        scratch.setFromLongAndScale(maximum, scale);
+        dec.setMaximum(scratch.toString());
+      }
+      // Check hasSum for overflow.
+      if (hasSum) {
+        scratch.setFromLongAndScale(sum, scale);
+        dec.setSum(scratch.toString());
+      }
+      result.setDecimalStatistics(dec);
+      return result;
+    }
+
+    @Override
+    public HiveDecimal getMinimum() {
+      if (getNumberOfValues() > 0) {
+        scratch.setFromLongAndScale(minimum, scale);
+        return scratch.getHiveDecimal();
+      }
+      return null;
+    }
+
+    @Override
+    public HiveDecimal getMaximum() {
+      if (getNumberOfValues() > 0) {
+        scratch.setFromLongAndScale(maximum, scale);
+        return scratch.getHiveDecimal();
+      }
+      return null;
+    }
+
+    @Override
+    public HiveDecimal getSum() {
+      if (hasSum) {
+        scratch.setFromLongAndScale(sum, scale);
+        return scratch.getHiveDecimal();
+      }
+      return null;
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder buf = new StringBuilder(super.toString());
+      if (getNumberOfValues() != 0) {
+        buf.append(" min: ");
+        buf.append(minimum);
+        buf.append(" max: ");
+        buf.append(maximum);
+        if (hasSum) {
+          buf.append(" sum: ");
+          buf.append(sum);
+        }
+      }
+      return buf.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (!(o instanceof Decimal64StatisticsImpl)) {
+        return false;
+      }
+      if (!super.equals(o)) {
+        return false;
+      }
+
+      Decimal64StatisticsImpl that = (Decimal64StatisticsImpl) o;
+
+      if (minimum != that.minimum ||
+          maximum != that.maximum ||
+          hasSum != that.hasSum) {
+        return false;
+      }
+      return !hasSum || (sum == that.sum);
+    }
+
+    @Override
+    public int hashCode() {
+      int result = super.hashCode();
+      boolean hasValues = getNumberOfValues() > 0;
+      result = 31 * result + (hasValues ? (int) minimum : 0);
+      result = 31 * result + (hasValues ? (int) maximum : 0);
+      result = 31 * result + (hasSum ? (int) sum : 0);
       return result;
     }
   }
@@ -1329,6 +1545,10 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     throw new UnsupportedOperationException("Can't update decimal");
   }
 
+  public void updateDecimal64(long value, int scale) {
+    throw new UnsupportedOperationException("Can't update decimal");
+  }
+
   public void updateDate(DateWritable value) {
     throw new UnsupportedOperationException("Can't update date");
   }
@@ -1415,7 +1635,11 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       case VARCHAR:
         return new StringStatisticsImpl();
       case DECIMAL:
-        return new DecimalStatisticsImpl();
+        if (schema.getPrecision() <= TypeDescription.MAX_DECIMAL64_PRECISION) {
+          return new Decimal64StatisticsImpl(schema.getScale());
+        } else {
+          return new DecimalStatisticsImpl();
+        }
       case DATE:
         return new DateStatisticsImpl();
       case TIMESTAMP:
@@ -1427,7 +1651,8 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     }
   }
 
-  public static ColumnStatisticsImpl deserialize(OrcProto.ColumnStatistics stats) {
+  public static ColumnStatisticsImpl deserialize(TypeDescription schema,
+                                                 OrcProto.ColumnStatistics stats) {
     if (stats.hasBucketStatistics()) {
       return new BooleanStatisticsImpl(stats);
     } else if (stats.hasIntStatistics()) {
@@ -1437,7 +1662,12 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     } else if (stats.hasStringStatistics()) {
       return new StringStatisticsImpl(stats);
     } else if (stats.hasDecimalStatistics()) {
-      return new DecimalStatisticsImpl(stats);
+      if (schema != null &&
+          schema.getPrecision() <= TypeDescription.MAX_DECIMAL64_PRECISION) {
+        return new Decimal64StatisticsImpl(schema.getScale(), stats);
+      } else {
+        return new DecimalStatisticsImpl(stats);
+      }
     } else if (stats.hasDateStatistics()) {
       return new DateStatisticsImpl(stats);
     } else if (stats.hasTimestampStatistics()) {

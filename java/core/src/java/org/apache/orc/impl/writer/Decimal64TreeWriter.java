@@ -58,7 +58,7 @@ public class Decimal64TreeWriter extends TreeWriterBase {
       if (vector.noNulls || !vector.isNull[0]) {
         HiveDecimalWritable value = vector.vector[0];
         long lg = value.serialize64(scale);
-        indexStatistics.updateDecimal(value);
+        indexStatistics.updateDecimal64(lg, scale);
         if (createBloomFilter) {
           bloomFilterUtf8.addLong(lg);
         }
@@ -72,7 +72,7 @@ public class Decimal64TreeWriter extends TreeWriterBase {
           HiveDecimalWritable value = vector.vector[i + offset];
           long lg = value.serialize64(scale);
           valueWriter.write(lg);
-          indexStatistics.updateDecimal(value);
+          indexStatistics.updateDecimal64(lg, scale);
           if (createBloomFilter) {
             bloomFilterUtf8.addLong(lg);
           }
@@ -86,10 +86,8 @@ public class Decimal64TreeWriter extends TreeWriterBase {
     assert(scale == vector.scale);
     if (vector.isRepeating) {
       if (vector.noNulls || !vector.isNull[0]) {
-        HiveDecimalWritable value = vector.getScratchWritable();
         long lg = vector.vector[0];
-        value.setFromLongAndScale(lg, vector.scale);
-        indexStatistics.updateDecimal(value);
+        indexStatistics.updateDecimal64(lg, scale);
         if (createBloomFilter) {
           bloomFilterUtf8.addLong(lg);
         }
@@ -98,13 +96,11 @@ public class Decimal64TreeWriter extends TreeWriterBase {
         }
       }
     } else {
-      HiveDecimalWritable value = vector.getScratchWritable();
       for (int i = 0; i < length; ++i) {
         if (vector.noNulls || !vector.isNull[i + offset]) {
           long lg = vector.vector[i + offset];
           valueWriter.write(lg);
-          value.setFromLongAndScale(lg, vector.scale);
-          indexStatistics.updateDecimal(value);
+          indexStatistics.updateDecimal64(lg, scale);
           if (createBloomFilter) {
             bloomFilterUtf8.addLong(lg);
           }

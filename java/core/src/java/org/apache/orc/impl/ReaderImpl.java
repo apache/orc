@@ -221,14 +221,15 @@ public class ReaderImpl implements Reader {
 
   @Override
   public ColumnStatistics[] getStatistics() {
-    return deserializeStats(fileStats);
+    return deserializeStats(schema, fileStats);
   }
 
   public static ColumnStatistics[] deserializeStats(
+      TypeDescription schema,
       List<OrcProto.ColumnStatistics> fileStats) {
     ColumnStatistics[] result = new ColumnStatistics[fileStats.size()];
     for(int i=0; i < result.length; ++i) {
-      result[i] = ColumnStatisticsImpl.deserialize(fileStats.get(i));
+      result[i] = ColumnStatisticsImpl.deserialize(schema, fileStats.get(i));
     }
     return result;
   }

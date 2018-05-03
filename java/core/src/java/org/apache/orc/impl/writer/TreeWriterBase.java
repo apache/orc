@@ -64,6 +64,7 @@ public abstract class TreeWriterBase implements TreeWriter {
   private boolean foundNulls;
   private OutStream isPresentOutStream;
   private final WriterContext streamFactory;
+  private final TypeDescription schema;
 
   /**
    * Create a tree writer.
@@ -76,6 +77,7 @@ public abstract class TreeWriterBase implements TreeWriter {
                  TypeDescription schema,
                  WriterContext streamFactory,
                  boolean nullable) throws IOException {
+    this.schema = schema;
     this.streamFactory = streamFactory;
     this.isCompressed = streamFactory.isCompressed();
     this.id = columnId;
@@ -340,7 +342,8 @@ public abstract class TreeWriterBase implements TreeWriter {
 
   @Override
   public void updateFileStatistics(OrcProto.StripeStatistics stats) {
-    fileStatistics.merge(ColumnStatisticsImpl.deserialize(stats.getColStats(id)));
+    fileStatistics.merge(ColumnStatisticsImpl.deserialize(schema,
+        stats.getColStats(id)));
   }
 
   /**

@@ -113,10 +113,10 @@ public class DecimalTreeWriter extends TreeWriterBase {
                           int length) throws IOException {
     if (vector.isRepeating) {
       if (vector.noNulls || !vector.isNull[0]) {
-        HiveDecimalWritable value = vector.getScratchWritable();
-        value.setFromLongAndScale(vector.vector[0], vector.scale);
-        indexStatistics.updateDecimal(value);
+        indexStatistics.updateDecimal64(vector.vector[0], vector.scale);
         if (createBloomFilter) {
+          HiveDecimalWritable value = vector.getScratchWritable();
+          value.setFromLongAndScale(vector.vector[0], vector.scale);
           String str = value.toString(scratchBuffer);
           if (bloomFilter != null) {
             bloomFilter.addString(str);
@@ -132,11 +132,12 @@ public class DecimalTreeWriter extends TreeWriterBase {
       HiveDecimalWritable value = vector.getScratchWritable();
       for (int i = 0; i < length; ++i) {
         if (vector.noNulls || !vector.isNull[i + offset]) {
-          utils.writeVslong(valueStream, vector.vector[i + offset]);
+          long num = vector.vector[i + offset];
+          utils.writeVslong(valueStream, num);
           scaleStream.write(vector.scale);
-          value.setFromLongAndScale(vector.vector[i + offset], vector.scale);
-          indexStatistics.updateDecimal(value);
+          indexStatistics.updateDecimal64(num, vector.scale);
           if (createBloomFilter) {
+            value.setFromLongAndScale(num, vector.scale);
             String str = value.toString(scratchBuffer);
             if (bloomFilter != null) {
               bloomFilter.addString(str);
