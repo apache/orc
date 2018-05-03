@@ -276,6 +276,7 @@ public class OrcFile {
     // and remove this class altogether. Both footer caching and llap caching just needs OrcTail.
     // For now keeping this around to avoid complex surgery
     private FileMetadata fileMetadata;
+    private boolean useUTCTimestamp;
 
     public ReaderOptions(Configuration conf) {
       this.conf = conf;
@@ -320,6 +321,16 @@ public class OrcFile {
     public FileMetadata getFileMetadata() {
       return fileMetadata;
     }
+
+    public ReaderOptions useUTCTimestamp(boolean value) {
+      useUTCTimestamp = value;
+      return this;
+    }
+
+    public boolean isUseUTCTimestamp() {
+      return useUTCTimestamp;
+    }
+
   }
 
   public static ReaderOptions readerOptions(Configuration conf) {
@@ -392,6 +403,7 @@ public class OrcFile {
     private BloomFilterVersion bloomFilterVersion;
     private PhysicalWriter physicalWriter;
     private WriterVersion writerVersion = CURRENT_WRITER;
+    private boolean useUTCTimestamp;
     private boolean overwrite;
     private boolean writeVariableLengthBlocks;
     private HadoopShims shims;
@@ -666,6 +678,15 @@ public class OrcFile {
       return this;
     }
 
+    /**
+     * Manually set the time zone for the writer to utc.
+     * If not defined, system time zone is assumed.
+     */
+    public WriterOptions useUTCTimestamp(boolean value) {
+      useUTCTimestamp = value;
+      return this;
+    }
+
     public boolean getBlockPadding() {
       return blockPaddingValue;
     }
@@ -760,6 +781,10 @@ public class OrcFile {
 
     public HadoopShims getHadoopShims() {
       return shims;
+    }
+
+    public boolean isUseUTCTimestamp() {
+      return useUTCTimestamp;
     }
   }
 

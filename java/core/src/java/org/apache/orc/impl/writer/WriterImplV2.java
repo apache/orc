@@ -111,6 +111,7 @@ public class WriterImplV2 implements WriterInternal, MemoryManager.Callback {
   private final double bloomFilterFpp;
   private final OrcFile.BloomFilterVersion bloomFilterVersion;
   private final boolean writeTimeZone;
+  private final boolean useUTCTimeZone;
 
   public WriterImplV2(FileSystem fs,
                       Path path,
@@ -132,7 +133,8 @@ public class WriterImplV2 implements WriterInternal, MemoryManager.Callback {
     } else {
       callbackContext = null;
     }
-    writeTimeZone = hasTimestamp(schema);
+    this.writeTimeZone = hasTimestamp(schema);
+    this.useUTCTimeZone = opts.isUseUTCTimestamp();
     this.adjustedStripeSize = opts.getStripeSize();
     this.version = opts.getVersion();
     this.encodingStrategy = opts.getEncodingStrategy();
@@ -346,6 +348,10 @@ public class WriterImplV2 implements WriterInternal, MemoryManager.Callback {
       physicalWriter.writeBloomFilter(name, bloom,
           getCustomizedCodec(name.getKind()));
     }
+
+    public boolean isUseUTCTimestamp() {
+      return useUTCTimeZone;
+    }
   }
 
 
@@ -373,7 +379,11 @@ public class WriterImplV2 implements WriterInternal, MemoryManager.Callback {
       OrcProto.StripeFooter.Builder builder =
           OrcProto.StripeFooter.newBuilder();
       if (writeTimeZone) {
-        builder.setWriterTimezone(TimeZone.getDefault().getID());
+        if (useUTCTimeZone) {
+          builder.setWriterTimezone(TimeZone.getTimeZone("UTC").getID());
+        } else {
+          builder.setWriterTimezone(TimeZone.getDefault().getID());
+        }
       }
       OrcProto.StripeStatistics.Builder stats =
           OrcProto.StripeStatistics.newBuilder();

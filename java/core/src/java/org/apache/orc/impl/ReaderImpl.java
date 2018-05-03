@@ -77,6 +77,7 @@ public class ReaderImpl implements Reader {
 
   private long deserializedSize = -1;
   protected final Configuration conf;
+  protected final boolean useUTCTimestamp;
   private final List<Integer> versionList;
   private final OrcFile.WriterVersion writerVersion;
 
@@ -344,6 +345,7 @@ public class ReaderImpl implements Reader {
     this.path = path;
     this.conf = options.getConfiguration();
     this.maxLength = options.getMaxLength();
+    this.useUTCTimestamp = options.isUseUTCTimestamp();
     FileMetadata fileMetadata = options.getFileMetadata();
     if (fileMetadata != null) {
       this.compressionKind = fileMetadata.getCompressionKind();
