@@ -36,6 +36,14 @@
 #include "orc/orc-config.hh"
 #include <string>
 
+#ifdef _MSC_VER
+#include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
+#define timegm(tm) _mkgmtime(tm)
+#define gmtime_r(timep, result) (gmtime_s(result, timep) ? NULL : result)
+#define asctime_r(tm, buf) (asctime_s(buf, 26, tm) ? NULL : buf)
+#endif
+
 #ifndef HAS_STOLL
   // A poor man's stoll that converts str to a long long int base 10
   namespace std {

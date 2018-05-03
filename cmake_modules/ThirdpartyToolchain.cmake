@@ -167,6 +167,18 @@ if (LZ4_VENDORED)
 endif ()
 
 # ----------------------------------------------------------------------
+# IANA - Time Zone Database
+
+if (WIN32)
+  ExternalProject_Add(tzdata_ep
+    URL "ftp://cygwin.osuosl.org/pub/cygwin/noarch/release/tzdata/tzdata-2018c-1.tar.xz"
+    URL_HASH MD5=F69FCA5C906FAFF02462D3D06F28267C
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND "")
+endif ()
+
+# ----------------------------------------------------------------------
 # GoogleTest (gtest now includes gmock)
 
 if (BUILD_CPP_TESTS)

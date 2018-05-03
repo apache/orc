@@ -710,7 +710,11 @@ namespace orc {
    * Get the local timezone.
    */
   const Timezone& getLocalTimezone() {
+#ifdef _MSC_VER
+    return getTimezoneByName("UTC");
+#else
     return getTimezoneByFilename(LOCAL_TIMEZONE);
+#endif
   }
 
   /**
@@ -744,8 +748,8 @@ namespace orc {
     for(uint64_t variant=0; variant < variantCount; ++variant) {
       variants[variant].gmtOffset =
         static_cast<int32_t>(decode32(ptr + variantOffset + 6 * variant));
-      variants[variant].isDst = ptr[variantOffset + 6 * variant + 4];
-      uint nameStart = ptr[variantOffset + 6 * variant + 5];
+      variants[variant].isDst = ptr[variantOffset + 6 * variant + 4] != 0;
+      uint64_t nameStart = ptr[variantOffset + 6 * variant + 5];
       if (nameStart >= nameCount) {
         std::stringstream buffer;
         buffer << "name out of range in variant " << variant

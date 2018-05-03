@@ -31,8 +31,8 @@
 void writeCustomOrcFile(const std::string& filename,
                         const orc::proto::Metadata& metadata,
                         const orc::proto::Footer& footer,
-                        const std::vector<uint>& version,
-                        uint writerVersion) {
+                        const std::vector<std::uint32_t>& version,
+                        std::uint32_t writerVersion) {
   std::fstream output(filename.c_str(),
                       std::ios::out | std::ios::trunc | std::ios::binary);
   output << "ORC";
@@ -48,7 +48,7 @@ void writeCustomOrcFile(const std::string& filename,
   ps.set_footerlength(static_cast<uint64_t>(footer.ByteSize()));
   ps.set_compression(orc::proto::NONE);
   ps.set_compressionblocksize(64*1024);
-  for(uint i=0; i < version.size(); ++i) {
+  for(size_t i=0; i < version.size(); ++i) {
     ps.add_version(version[i]);
   }
   ps.set_metadatalength(static_cast<uint64_t>(metadata.ByteSize()));
@@ -76,7 +76,7 @@ void writeVersion1999() {
   orc::proto::ColumnStatistics* stats = footer.add_statistics();
   stats->set_numberofvalues(0);
   stats->set_hasnull(false);
-  std::vector<uint> version;
+  std::vector<std::uint32_t> version;
   version.push_back(19);
   version.push_back(99);
   writeCustomOrcFile("version1999.orc", meta, footer, version, 1);
