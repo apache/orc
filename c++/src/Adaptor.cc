@@ -41,3 +41,26 @@ char* strptime(const char* s, const char* f, struct tm* tm) {
   return (char*)(s + input.tellg());
 }
 #endif
+
+#ifndef HAS_PREAD
+  #ifdef _WIN32
+#include <Windows.h>
+#include <io.h>
+ssize_t pread(int fd, void* buf, size_t size, off_t offset) {
+  auto handle = reinterpret_cast<HANDLE>(_get_osfhandle(fd));
+
+  OVERLAPPED ol;
+  memset(&ol, 0, sizeof(OVERLAPPED));
+  ol.Offset = offset;
+
+  DWORD rt;
+  if (!ReadFile(handle, buf, static_cast<DWORD>(size), &rt, &ol)) {
+    errno = GetLastError();
+    return -1;
+  }
+  return static_cast<ssize_t>(rt);
+}
+  #else
+    #error("pread() undefined: unknown environment")
+  #endif
+#endif
