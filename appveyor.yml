@@ -35,7 +35,7 @@ build_script:
   - cd build
   - if "%platform%"=="x64" set CMAKE_GENERATOR=%CMAKE_GENERATOR% Win64
   - cmake .. -G "%CMAKE_GENERATOR%"
-      -DBUILD_TYPE=%CONFIGURATION%
+      -DCMAKE_BUILD_TYPE=%CONFIGURATION%
       -DBUILD_CPP_TESTS=ON
       -DBUILD_LIBHDFSPP=OFF
       -DBUILD_TOOLS=OFF
