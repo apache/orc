@@ -123,16 +123,29 @@ public class TestColumnStatisticsImpl {
 
     updateStats1.reset();
     assertEquals("0", stats1.getSum().toString());
+    updateStats1.increment();
     updateStats1.updateDecimal64(10000, 6);
     assertEquals("0.01", stats1.getSum().toString());
     updateStats1.updateDecimal64(1, 4);
     assertEquals("0.0101", stats1.getSum().toString());
-    updateStats1.updateDecimal64(Long.MAX_VALUE, 6);
+    updateStats1.updateDecimal64(TypeDescription.MAX_DECIMAL64, 6);
     assertEquals(null, stats1.getSum());
     updateStats1.reset();
     updateStats1.updateDecimal64(TypeDescription.MAX_DECIMAL64, 6);
     assertEquals("999999999999.999999", stats1.getSum().toString());
     updateStats1.updateDecimal64(1, 6);
+    assertEquals(null, stats1.getSum());
+
+    updateStats1.reset();
+    ColumnStatisticsImpl updateStats2 = (ColumnStatisticsImpl) stats2;
+    updateStats2.reset();
+    updateStats1.increment();
+    updateStats2.increment();
+    updateStats1.updateDecimal64(TypeDescription.MAX_DECIMAL64, 6);
+    updateStats2.updateDecimal64(TypeDescription.MAX_DECIMAL64, 6);
+    assertEquals("999999999999.999999", stats1.getSum().toString());
+    assertEquals("999999999999.999999", stats2.getSum().toString());
+    updateStats1.merge(updateStats2);
     assertEquals(null, stats1.getSum());
   }
 }

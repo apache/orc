@@ -230,6 +230,8 @@ public class DecimalBench {
     VectorizedRowBatch batch;
     Path path;
     boolean[] include;
+    Reader reader;
+    OrcFile.ReaderOptions options;
 
     @Setup
     public void setup() throws IOException {
@@ -244,16 +246,16 @@ public class DecimalBench {
           include[child.getId()] = true;
         }
       }
+      reader = OrcFile.createReader(path,
+          OrcFile.readerOptions(conf).filesystem(fs));
+      // just read the decimal columns from the first stripe
+      reader.options().include(include).range(0, 1000);
     }
   }
 
   @Benchmark
   public void read(Blackhole blackhole, InputState state) throws Exception {
-    Reader reader = OrcFile.createReader(state.path,
-        OrcFile.readerOptions(state.conf).filesystem(state.fs));
-    RecordReader rows = reader.rows(reader.options()
-        .include(state.include)
-        .range(0, 1000));
+    RecordReader rows = state.reader.rows();
     while (rows.nextBatch(state.batch)) {
       blackhole.consume(state.batch);
     }

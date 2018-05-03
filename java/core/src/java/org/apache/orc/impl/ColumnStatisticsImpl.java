@@ -1018,6 +1018,10 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
           valueScale += 1;
         }
       }
+      if (value < TypeDescription.MIN_DECIMAL64 ||
+          value > TypeDescription.MAX_DECIMAL64) {
+        throw new IllegalArgumentException("Out of bounds decimal64 " + value);
+      }
       if (getNumberOfValues() == 0) {
         minimum = value;
         maximum = value;
@@ -1027,13 +1031,9 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
         maximum = value;
       }
       if (hasSum) {
-        boolean oldPlus = sum >= 0;
         sum += value;
-        if (oldPlus == (value >= 0)) {
-          hasSum = (oldPlus == (sum >= 0)) &&
-              sum <= TypeDescription.MAX_DECIMAL64 &&
+        hasSum = sum <= TypeDescription.MAX_DECIMAL64 &&
               sum >= TypeDescription.MIN_DECIMAL64;
-        }
       }
     }
 
@@ -1053,13 +1053,9 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
             maximum = dec.maximum;
           }
           if (hasSum && dec.hasSum) {
-            boolean oldSign = sum >= 0;
             sum += dec.sum;
-            if (oldSign == (dec.sum >= 0)) {
-              hasSum = oldSign == (sum >= 0) &&
-                  sum <= TypeDescription.MAX_DECIMAL64 &&
+            hasSum = sum <= TypeDescription.MAX_DECIMAL64 &&
                   sum >= TypeDescription.MIN_DECIMAL64;
-            }
           } else {
             hasSum = false;
           }

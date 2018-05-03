@@ -3615,9 +3615,6 @@ public class TestVectorOrcFile {
     LongColumnVector ints2 = (LongColumnVector) struct1.fields[0];
     BytesColumnVector strs = (BytesColumnVector) struct1.fields[1];
 
-    System.out.println("------------------------------------------------------------------------------------------------------------------------");
-    System.out.println(rows.getRowNumber());
-
     Assert.assertEquals(1000L, rows.getRowNumber());
     Assert.assertEquals(true, rows.nextBatch(batch));
     assertEquals(1000, batch.size);
