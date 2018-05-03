@@ -16,32 +16,37 @@
  * limitations under the License.
  */
 
-#include "orc/OrcFile.hh"
-
 #include "Adaptor.hh"
+#include "orc/OrcFile.hh"
 #include "orc/Exceptions.hh"
 
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
-#include <sys/mman.h>
 #include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
 #include <string.h>
+
+#ifdef _MSC_VER
+#include <io.h>
+#define S_IRUSR _S_IREAD
+#define S_IWUSR _S_IWRITE
+#else
+#include <unistd.h>
+#define O_BINARY 0
+#endif
 
 namespace orc {
 
   class FileInputStream : public InputStream {
   private:
-    std::string filename ;
+    std::string filename;
     int file;
     uint64_t totalLength;
 
   public:
     FileInputStream(std::string _filename) {
-      filename = _filename ;
-      file = open(filename.c_str(), O_RDONLY);
+      filename = _filename;
+      file = open(filename.c_str(), O_BINARY | O_RDONLY);
       if (file == -1) {
         throw ParseError("Can't open " + filename);
       }
@@ -121,7 +126,7 @@ namespace orc {
       closed = false;
       file = open(
                   filename.c_str(),
-                  O_CREAT | O_WRONLY | O_TRUNC,
+                  O_BINARY | O_CREAT | O_WRONLY | O_TRUNC,
                   S_IRUSR | S_IWUSR);
       if (file == -1) {
         throw ParseError("Can't open " + filename);
@@ -175,17 +180,3 @@ namespace orc {
     return std::unique_ptr<OutputStream>(new FileOutputStream(path));
   }
 }
-
-#ifndef HAS_STOLL
-
-  #include <sstream>
-
-  int64_t std::stoll(std::string str) {
-    int64_t val = 0;
-    stringstream ss ;
-    ss << str ;
-    ss >> val ;
-    return val;
-  }
-
-#endif
