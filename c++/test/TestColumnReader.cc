@@ -4302,7 +4302,7 @@ TEST(TestColumnReader, testUnionWithManyVariants) {
   // for variant in range(0, 130):
   //   [variant & 0x3f, (variant & 0x3f) + 1, (variant & 0x3f) + 2]
   unsigned char buffer[3 * 130];
-  for(unsigned variant = 0; variant < 130; ++variant) {
+  for(size_t variant = 0; variant < 130; ++variant) {
     buffer[3 * variant] = 0x00;
     buffer[3 * variant + 1] = 0x01;
     buffer[3 * variant + 2] = static_cast<unsigned char>((variant * 2) & 0x7f);
