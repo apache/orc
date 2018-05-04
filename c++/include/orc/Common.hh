@@ -76,7 +76,7 @@ namespace orc {
     CompressionKind_LZO = 3,
     CompressionKind_LZ4 = 4,
     CompressionKind_ZSTD = 5,
-    CompressionKind_MAX = INT_MAX
+    CompressionKind_MAX = INT32_MAX
   };
 
   /**
@@ -92,7 +92,7 @@ namespace orc {
     WriterVersion_HIVE_13083 = 4,
     WriterVersion_ORC_101 = 5,
     WriterVersion_ORC_135 = 6,
-    WriterVersion_MAX = INT_MAX
+    WriterVersion_MAX = INT32_MAX
   };
 
   /**
