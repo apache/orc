@@ -38,6 +38,7 @@ import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -433,7 +434,8 @@ public class TestRecordReaderImpl {
 
   static TruthValue evaluateTimestamp(OrcProto.ColumnStatistics stats,
                                       PredicateLeaf predicate,
-                                      boolean include135) {
+                                      boolean include135,
+                                      boolean useUTCTimestamp) {
     OrcProto.ColumnEncoding encoding =
         OrcProto.ColumnEncoding.newBuilder()
             .setKind(OrcProto.ColumnEncoding.Kind.DIRECT)
@@ -441,13 +443,14 @@ public class TestRecordReaderImpl {
     return RecordReaderImpl.evaluatePredicateProto(stats, predicate, null,
         encoding, null,
         include135 ? OrcFile.WriterVersion.ORC_135: OrcFile.WriterVersion.ORC_101,
-        TypeDescription.Category.TIMESTAMP);
+        TypeDescription.Category.TIMESTAMP, useUTCTimestamp);
   }
 
   static TruthValue evaluateTimestampBloomfilter(OrcProto.ColumnStatistics stats,
                                                  PredicateLeaf predicate,
                                                  BloomFilter bloom,
-                                                 OrcFile.WriterVersion version) {
+                                                 OrcFile.WriterVersion version,
+                                                 boolean useUTCTimestamp) {
     OrcProto.ColumnEncoding.Builder encoding =
         OrcProto.ColumnEncoding.newBuilder()
             .setKind(OrcProto.ColumnEncoding.Kind.DIRECT);
@@ -463,7 +466,7 @@ public class TestRecordReaderImpl {
     BloomFilterIO.serialize(builder, bloom);
     return RecordReaderImpl.evaluatePredicateProto(stats, predicate, kind,
         encoding.build(), builder.build(), version,
-        TypeDescription.Category.TIMESTAMP);
+        TypeDescription.Category.TIMESTAMP, useUTCTimestamp);
   }
 
   @Test
@@ -749,44 +752,44 @@ public class TestRecordReaderImpl {
         "x", Timestamp.valueOf("2017-01-01 00:00:00"), null);
     assertEquals(TruthValue.YES_NO,
         evaluateTimestamp(createTimestampStats("2017-01-01 00:00:00",
-            "2018-01-01 00:00:00"), pred, true));
+            "2018-01-01 00:00:00"), pred, true, false));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.FLOAT, "x", 15.0, null);
     assertEquals(TruthValue.YES_NO_NULL,
         evaluateTimestamp(createTimestampStats("2017-01-01 00:00:00", "2018-01-01 00:00:00"),
-            pred, true));
+            pred, true, false));
     assertEquals(TruthValue.YES_NO_NULL,
         evaluateTimestamp(createTimestampStats("2017-01-01 00:00:00", "2018-01-01 00:00:00"),
-            pred, true));
+            pred, true, false));
 
     // pre orc-135 should always be yes_no_null.
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.TIMESTAMP, "x",  Timestamp.valueOf("2017-01-01 00:00:00"), null);
     assertEquals(TruthValue.YES_NO_NULL,
         evaluateTimestamp(createTimestampStats("2017-01-01 00:00:00", "2017-01-01 00:00:00"),
-            pred, false));
+            pred, false, false));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.STRING, "x", Timestamp.valueOf("2017-01-01 00:00:00").toString(), null);
     assertEquals(TruthValue.YES_NO,
         evaluateTimestamp(createTimestampStats("2017-01-01 00:00:00", "2018-01-01 00:00:00"),
-            pred, true));
+            pred, true, false));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.DATE, "x", Date.valueOf("2016-01-01"), null);
     assertEquals(TruthValue.NO,
         evaluateTimestamp(createTimestampStats("2017-01-01 00:00:00", "2017-01-01 00:00:00"),
-            pred, true));
+            pred, true, false));
     assertEquals(TruthValue.YES_NO,
         evaluateTimestamp(createTimestampStats("2015-01-01 00:00:00", "2016-01-01 00:00:00"),
-            pred, true));
+            pred, true, false));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
         PredicateLeaf.Type.DECIMAL, "x", new HiveDecimalWritable("15"), null);
     assertEquals(TruthValue.YES_NO_NULL,
         evaluateTimestamp(createTimestampStats("2015-01-01 00:00:00", "2016-01-01 00:00:00"),
-            pred, true));
+            pred, true, false));
   }
 
   @Test
@@ -1068,13 +1071,50 @@ public class TestRecordReaderImpl {
         "x", Timestamp.valueOf("2000-01-01 00:00:00"), null);
     OrcProto.ColumnStatistics cs = createTimestampStats("2000-01-01 00:00:00", "2001-01-01 00:00:00");
     assertEquals(TruthValue.YES_NO_NULL,
-      evaluateTimestampBloomfilter(cs, pred, new BloomFilterUtf8(10000, 0.01), OrcFile.WriterVersion.ORC_101));
+      evaluateTimestampBloomfilter(cs, pred, new BloomFilterUtf8(10000, 0.01), OrcFile.WriterVersion.ORC_101, false));
     BloomFilterUtf8 bf = new BloomFilterUtf8(10, 0.05);
     bf.addLong(getUtcTimestamp("2000-06-01 00:00:00"));
     assertEquals(TruthValue.NO_NULL,
-      evaluateTimestampBloomfilter(cs, pred, bf, OrcFile.WriterVersion.ORC_135));
+      evaluateTimestampBloomfilter(cs, pred, bf, OrcFile.WriterVersion.ORC_135, false));
     assertEquals(TruthValue.YES_NO_NULL,
-      evaluateTimestampBloomfilter(cs, pred, bf, OrcFile.WriterVersion.ORC_101));
+      evaluateTimestampBloomfilter(cs, pred, bf, OrcFile.WriterVersion.ORC_101, false));
+  }
+
+  @Test
+  public void testTimestampUTC() throws Exception {
+    DateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    f.setTimeZone(TimeZone.getTimeZone("UTC"));
+    PredicateLeaf pred = createPredicateLeaf
+        (PredicateLeaf.Operator.EQUALS, PredicateLeaf.Type.TIMESTAMP,
+            "x", new Timestamp(f.parse("2015-01-01 00:00:00").getTime()), null);
+    PredicateLeaf pred2 = createPredicateLeaf
+        (PredicateLeaf.Operator.EQUALS, PredicateLeaf.Type.TIMESTAMP,
+            "x", new Timestamp(f.parse("2014-12-31 23:59:59").getTime()), null);
+    PredicateLeaf pred3 = createPredicateLeaf
+        (PredicateLeaf.Operator.EQUALS, PredicateLeaf.Type.TIMESTAMP,
+            "x", new Timestamp(f.parse("2016-01-01 00:00:01").getTime()), null);
+    OrcProto.ColumnStatistics cs = createTimestampStats("2015-01-01 00:00:00", "2016-01-01 00:00:00");
+
+    assertEquals(TruthValue.YES_NO_NULL,
+        evaluateTimestamp(cs, pred, true, true));
+    assertEquals(TruthValue.NO_NULL,
+        evaluateTimestamp(cs, pred2, true, true));
+    assertEquals(TruthValue.NO_NULL,
+        evaluateTimestamp(cs, pred3, true, true));
+
+    assertEquals(TruthValue.NO_NULL,
+        evaluateTimestampBloomfilter(cs, pred, new BloomFilterUtf8(10000, 0.01), OrcFile.WriterVersion.ORC_135, true));
+    assertEquals(TruthValue.NO_NULL,
+        evaluateTimestampBloomfilter(cs, pred2, new BloomFilterUtf8(10000, 0.01), OrcFile.WriterVersion.ORC_135, true));
+
+    BloomFilterUtf8 bf = new BloomFilterUtf8(10, 0.05);
+    bf.addLong(getUtcTimestamp("2015-06-01 00:00:00"));
+    assertEquals(TruthValue.NO_NULL,
+        evaluateTimestampBloomfilter(cs, pred, bf, OrcFile.WriterVersion.ORC_135, true));
+
+    bf.addLong(getUtcTimestamp("2015-01-01 00:00:00"));
+    assertEquals(TruthValue.YES_NO_NULL,
+        evaluateTimestampBloomfilter(cs, pred, bf, OrcFile.WriterVersion.ORC_135, true));
   }
 
   private static long getUtcTimestamp(String ts)  {
@@ -1971,7 +2011,7 @@ public class TestRecordReaderImpl {
             .end().build();
     RecordReaderImpl.SargApplier applier =
         new RecordReaderImpl.SargApplier(sarg, 1000, evolution,
-            OrcFile.WriterVersion.ORC_135);
+            OrcFile.WriterVersion.ORC_135, false);
     OrcProto.StripeInformation stripe =
         OrcProto.StripeInformation.newBuilder().setNumberOfRows(4000).build();
     OrcProto.RowIndex[] indexes = new OrcProto.RowIndex[3];
@@ -2019,7 +2059,7 @@ public class TestRecordReaderImpl {
             .end().build();
     RecordReaderImpl.SargApplier applier =
         new RecordReaderImpl.SargApplier(sarg, 1000, evolution,
-            OrcFile.WriterVersion.ORC_135);
+            OrcFile.WriterVersion.ORC_135, false);
     OrcProto.StripeInformation stripe =
         OrcProto.StripeInformation.newBuilder().setNumberOfRows(3000).build();
     OrcProto.RowIndex[] indexes = new OrcProto.RowIndex[3];

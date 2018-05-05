@@ -35,4 +35,16 @@ public interface TimestampColumnStatistics extends ColumnStatistics {
    * @return maximum value
    */
   Timestamp getMaximum();
+
+  /**
+   * Get the minimum value for the column in UTC.
+   * @return minimum value in UTC
+   */
+  Timestamp getMinimumUTC();
+
+  /**
+   * Get the maximum value for the column in UTC.
+   * @return maximum value in UTC
+   */
+  Timestamp getMaximumUTC();
 }

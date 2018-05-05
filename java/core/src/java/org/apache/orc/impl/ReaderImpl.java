@@ -344,7 +344,7 @@ public class ReaderImpl implements Reader {
     this.path = path;
     this.conf = options.getConfiguration();
     this.maxLength = options.getMaxLength();
-    this.useUTCTimestamp = options.isUseUTCTimestamp();
+    this.useUTCTimestamp = options.getUseUTCTimestamp();
     FileMetadata fileMetadata = options.getFileMetadata();
     if (fileMetadata != null) {
       this.compressionKind = fileMetadata.getCompressionKind();

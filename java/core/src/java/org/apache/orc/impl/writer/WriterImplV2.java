@@ -134,7 +134,7 @@ public class WriterImplV2 implements WriterInternal, MemoryManager.Callback {
       callbackContext = null;
     }
     this.writeTimeZone = hasTimestamp(schema);
-    this.useUTCTimeZone = opts.isUseUTCTimestamp();
+    this.useUTCTimeZone = opts.getUseUTCTimestamp();
     this.adjustedStripeSize = opts.getStripeSize();
     this.version = opts.getVersion();
     this.encodingStrategy = opts.getEncodingStrategy();
@@ -349,7 +349,7 @@ public class WriterImplV2 implements WriterInternal, MemoryManager.Callback {
           getCustomizedCodec(name.getKind()));
     }
 
-    public boolean isUseUTCTimestamp() {
+    public boolean getUseUTCTimestamp() {
       return useUTCTimeZone;
     }
   }
@@ -380,7 +380,7 @@ public class WriterImplV2 implements WriterInternal, MemoryManager.Callback {
           OrcProto.StripeFooter.newBuilder();
       if (writeTimeZone) {
         if (useUTCTimeZone) {
-          builder.setWriterTimezone(TimeZone.getTimeZone("UTC").getID());
+          builder.setWriterTimezone("UTC");
         } else {
           builder.setWriterTimezone(TimeZone.getDefault().getID());
         }

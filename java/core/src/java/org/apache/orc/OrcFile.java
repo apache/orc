@@ -327,7 +327,7 @@ public class OrcFile {
       return this;
     }
 
-    public boolean isUseUTCTimestamp() {
+    public boolean getUseUTCTimestamp() {
       return useUTCTimestamp;
     }
 
@@ -783,7 +783,7 @@ public class OrcFile {
       return shims;
     }
 
-    public boolean isUseUTCTimestamp() {
+    public boolean getUseUTCTimestamp() {
       return useUTCTimestamp;
     }
   }

@@ -19,7 +19,6 @@ package org.apache.orc.impl;
 
 import java.io.EOFException;
 import java.io.IOException;
-import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -57,7 +56,7 @@ public class TreeReaderFactory {
 
     boolean isSkipCorrupt();
 
-    boolean isUseUTCTimestamp();
+    boolean getUseUTCTimestamp();
 
     String getWriterTimezone();
 
@@ -107,7 +106,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public boolean isUseUTCTimestamp() {
+    public boolean getUseUTCTimestamp() {
       return useUTCTimestamp;
     }
 
@@ -913,7 +912,7 @@ public class TreeReaderFactory {
       this.threadLocalDateFormat = new ThreadLocal<>();
       this.threadLocalDateFormat.set(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
       this.baseTimestampMap = new HashMap<>();
-      if (context.isUseUTCTimestamp()) {
+      if (context.getUseUTCTimestamp()) {
         this.readerTimeZone = TimeZone.getTimeZone("UTC");
       } else {
         this.readerTimeZone = TimeZone.getDefault();
@@ -1007,9 +1006,7 @@ public class TreeReaderFactory {
       TimestampColumnVector result = (TimestampColumnVector) previousVector;
       super.nextVector(previousVector, isNull, batchSize);
 
-      if (context.isUseUTCTimestamp()) {
-        result.setIsUTC(true);
-      }
+      result.setIsUTC(context.getUseUTCTimestamp());
 
       for (int i = 0; i < batchSize; i++) {
         if (result.noNulls || !result.isNull[i]) {

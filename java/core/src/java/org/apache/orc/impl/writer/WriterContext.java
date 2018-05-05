@@ -102,5 +102,5 @@ public interface WriterContext {
                           OrcProto.BloomFilterIndex.Builder bloom
                           ) throws IOException;
 
-    boolean isUseUTCTimestamp();
+    boolean getUseUTCTimestamp();
 }
