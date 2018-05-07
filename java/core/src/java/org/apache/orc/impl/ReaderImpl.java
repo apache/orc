@@ -387,6 +387,7 @@ public class ReaderImpl implements Reader {
       this.stripes = tail.getStripes();
       this.stripeStats = tail.getStripeStatisticsProto();
     }
+    OrcUtils.isValidTypeTree(this.types, 0);
     this.schema = OrcUtils.convertTypeFromProtobuf(this.types, 0);
   }
 
