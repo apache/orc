@@ -55,8 +55,8 @@ public class TestRunLengthIntegerReader {
     collect.buffer.setByteBuffer(inBuf, 0, collect.buffer.size());
     inBuf.flip();
     RunLengthIntegerReader in = new RunLengthIntegerReader(InStream.create
-        ("test", new ByteBuffer[]{inBuf}, new long[]{0}, inBuf.remaining(),
-            codec, 1000), true);
+        ("test", new BufferChunk(inBuf, 0), inBuf.remaining(),
+            InStream.options().withCodec(codec).withBufferSize(1000)), true);
     for(int i=0; i < 2048; ++i) {
       int x = (int) in.next();
       if (i < 1024) {
@@ -107,8 +107,7 @@ public class TestRunLengthIntegerReader {
     collect.buffer.setByteBuffer(inBuf, 0, collect.buffer.size());
     inBuf.flip();
     RunLengthIntegerReader in = new RunLengthIntegerReader(InStream.create
-        ("test", new ByteBuffer[]{inBuf}, new long[]{0}, inBuf.remaining(),
-            null, 100), true);
+        ("test", new BufferChunk(inBuf, 0), inBuf.remaining()), true);
     for(int i=0; i < 2048; i += 10) {
       int x = (int) in.next();
       if (i < 1024) {

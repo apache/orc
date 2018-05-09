@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -55,10 +55,9 @@ public class TestIntegerCompressionReader {
     collect.buffer.setByteBuffer(inBuf, 0, collect.buffer.size());
     inBuf.flip();
     RunLengthIntegerReaderV2 in =
-      new RunLengthIntegerReaderV2(InStream.create
-                                   ("test", new ByteBuffer[]{inBuf},
-                                    new long[]{0}, inBuf.remaining(),
-                                    codec, 1000), true, false);
+      new RunLengthIntegerReaderV2(InStream.create("test",
+          new BufferChunk(inBuf, 0), inBuf.remaining(),
+          InStream.options().withCodec(codec).withBufferSize(1000)), true, false);
     for(int i=0; i < 2048; ++i) {
       int x = (int) in.next();
       if (i < 1024) {
@@ -110,10 +109,8 @@ public class TestIntegerCompressionReader {
     inBuf.flip();
     RunLengthIntegerReaderV2 in =
       new RunLengthIntegerReaderV2(InStream.create("test",
-                                                   new ByteBuffer[]{inBuf},
-                                                   new long[]{0},
-                                                   inBuf.remaining(),
-                                                   null, 100), true, false);
+                                                   new BufferChunk(inBuf, 0),
+                                                   inBuf.remaining()), true, false);
     for(int i=0; i < 2048; i += 10) {
       int x = (int) in.next();
       if (i < 1024) {
