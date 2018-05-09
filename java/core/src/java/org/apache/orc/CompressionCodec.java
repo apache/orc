@@ -69,4 +69,9 @@ public interface CompressionCodec {
 
   /** Closes the codec, releasing the resources. */
   void close();
+
+  /**
+   * Get the compression kind.
+   */
+  CompressionKind getKind();
 }

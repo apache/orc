@@ -21,16 +21,20 @@ package org.apache.orc.impl;
 import io.airlift.compress.Compressor;
 import io.airlift.compress.Decompressor;
 import org.apache.orc.CompressionCodec;
+import org.apache.orc.CompressionKind;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.EnumSet;
 
 public class AircompressorCodec implements CompressionCodec {
+  private final CompressionKind kind;
   private final Compressor compressor;
   private final Decompressor decompressor;
 
-  AircompressorCodec(Compressor compressor, Decompressor decompressor) {
+  AircompressorCodec(CompressionKind kind, Compressor compressor,
+                     Decompressor decompressor) {
+    this.kind = kind;
     this.compressor = compressor;
     this.decompressor = decompressor;
   }
@@ -108,5 +112,10 @@ public class AircompressorCodec implements CompressionCodec {
   @Override
   public void close() {
     // Nothing to do.
+  }
+
+  @Override
+  public CompressionKind getKind() {
+    return kind;
   }
 }
