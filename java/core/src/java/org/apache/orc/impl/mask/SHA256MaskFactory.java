@@ -30,29 +30,35 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 /**
+ * <p>
  * Masking strategy that masks String, Varchar, Char and Binary types
  * as SHA 256 hash.
+ * </p>
  * <p>
- * <b>For String type:</b><br/>
+ * <b>For String type:</b>
  * All string type of any length will be converted to 64 character length
- * SHA256 hash encoded in hexadecimal.<br/><br/>
+ * SHA256 hash encoded in hexadecimal.
+ * </p>
  * <p>
- * <b>For Varchar type:</b><br/>
+ * <b>For Varchar type:</b>
  * For Varchar type, max-length property will be honored i.e.
  * if the length is less than max-length then the SHA256 hash will be truncated
  * to max-length. If max-length is greater than 64 then the output is the
- * sha256 length, which is 64.<br/><br/>
+ * sha256 length, which is 64.
+ * </p>
  * <p>
- * <b>For Char type:</b><br/>
+ * <b>For Char type:</b>
  * For Char type, the length of mask will always be equal to specified
  * max-length. If the given length (max-length) is less than SHA256 hash
  * length (64) the mask will be truncated.
  * If the given length (max-length) is greater than SHA256 hash length (64)
- * then the mask will be padded by blank spaces.<br/><br/>
+ * then the mask will be padded by blank spaces.
+ * </p>
  * <p>
- * <b>For Binary type:</b><br/>
+ * <b>For Binary type:</b>
  * All Binary type of any length will be converted to 32 byte length SHA256
- * hash.<br/>
+ * hash.
+ * </p>
  */
 public class SHA256MaskFactory extends MaskFactory {
 
