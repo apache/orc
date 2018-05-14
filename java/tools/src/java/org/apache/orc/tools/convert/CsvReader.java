@@ -63,7 +63,6 @@ public class CsvReader implements RecordReader {
    * @param escapeChar the escape character
    * @param headerLines the number of header lines
    * @param nullString the string that is translated to null
-   * @throws IOException
    */
   public CsvReader(java.io.Reader reader,
                    FSDataInputStream input,

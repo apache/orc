@@ -705,7 +705,7 @@ public class TypeDescription
 
   /**
    * Create a VectorizedRowBatch that uses Decimal64ColumnVector for
-   * short (p <= 18) decimals.
+   * short (p &le; 18) decimals.
    * @return a new VectorizedRowBatch
    */
   public VectorizedRowBatch createRowBatchV2() {
