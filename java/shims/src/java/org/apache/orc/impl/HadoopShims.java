@@ -117,7 +117,7 @@ public interface HadoopShims {
 
   /**
    * End the OutputStream's current block at the current location.
-   * This is only available on HDFS on Hadoop >= 2.7, but will return false
+   * This is only available on HDFS on Hadoop &ge; 2.7, but will return false
    * otherwise.
    * @return was a variable length block created?
    */
