@@ -423,6 +423,11 @@ public class OrcFile {
       compressValue =
           CompressionKind.valueOf(OrcConf.COMPRESS.getString(tableProperties,
               conf).toUpperCase());
+      // Zstd compression is not supported currently
+      // Will enable this once it's released through aircompressor lib
+      if (compressValue == CompressionKind.ZSTD) {
+          throw new IllegalArgumentException("Zstd compressor is not supported.");
+      }
       enforceBufferSize = OrcConf.ENFORCE_COMPRESSION_BUFFER_SIZE.getBoolean(tableProperties, conf);
       String versionName = OrcConf.WRITE_FORMAT.getString(tableProperties,
           conf);
@@ -581,6 +586,11 @@ public class OrcFile {
      * Sets the generic compression that is used to compress the data.
      */
     public WriterOptions compress(CompressionKind value) {
+      // Zstd compression is not supported currently
+      // Will enable this once it's released through aircompressor lib
+      if (value == CompressionKind.ZSTD) {
+          throw new IllegalArgumentException("Zstd compressor is not supported.");
+      }
       compressValue = value;
       return this;
     }

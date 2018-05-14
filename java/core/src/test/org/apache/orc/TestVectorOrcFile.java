@@ -372,6 +372,49 @@ public class TestVectorOrcFile {
   }
 
   @Test
+  public void testReadZstd() throws Exception {
+    Path filePath =
+        new Path(getFileFromClasspath("orc-file-zstd.orc"));
+    Reader reader = OrcFile.createReader(filePath,
+        OrcFile.readerOptions(conf).filesystem(fs));
+
+    int stripeCount = 0;
+    int rowCount = 0;
+    long currentOffset = -1;
+    for(StripeInformation stripe : reader.getStripes()) {
+      stripeCount += 1;
+      rowCount += stripe.getNumberOfRows();
+    }
+    Assert.assertEquals(reader.getNumberOfRows(), rowCount);
+    assertEquals(1, stripeCount);
+
+    // check schema and read file contents
+    TypeDescription schema = reader.getSchema();
+    assertEquals(TypeDescription.Category.STRUCT, schema.getCategory());
+    assertEquals(
+                 "struct<c1:bigint,c2:string,c3:bigint,c4:string>",
+                 schema.toString());
+    VectorizedRowBatch batch = schema.createRowBatch();
+    RecordReader rows = reader.rows();
+    Assert.assertEquals(true, rows.nextBatch(batch));
+    assertEquals(25, batch.size);
+
+    // check the contents of the first row
+    assertEquals(0, ((LongColumnVector)batch.cols[0]).vector[0]);
+    assertEquals(
+                 "ALGERIA",
+                 getText((BytesColumnVector)batch.cols[1], 0).toString());
+    assertEquals(0, ((LongColumnVector)batch.cols[2]).vector[0]);
+    assertEquals(
+                 " haggle. carefully final deposits detect slyly agai",
+                 getText((BytesColumnVector)batch.cols[3], 0).toString());
+
+    // handle the close up
+    Assert.assertEquals(false, rows.nextBatch(batch));
+    rows.close();
+  }
+
+  @Test
   public void testTimestamp() throws Exception {
     TypeDescription schema = TypeDescription.createTimestamp();
     Writer writer = OrcFile.createWriter(testFilePath,

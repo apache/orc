@@ -23,6 +23,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileAlreadyExistsException;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.orc.CompressionKind;
 import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
 import org.apache.orc.TypeDescription;
@@ -69,5 +70,17 @@ public class TestWriterImpl {
     conf.set(OrcConf.OVERWRITE_OUTPUT_FILE.getAttribute(), "true");
     Writer w = OrcFile.createWriter(testFilePath, OrcFile.writerOptions(conf).setSchema(schema));
     w.close();
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testZstdConfThrowsException() throws Exception {
+    conf.set(OrcConf.COMPRESS.getAttribute(), "ZSTD");
+    Writer w = OrcFile.createWriter(testFilePath, OrcFile.writerOptions(conf).setSchema(schema));
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testZstdWriterOptionThrowsException() throws Exception {
+    OrcFile.WriterOptions options = OrcFile.writerOptions(conf);
+    options.compress(CompressionKind.ZSTD);
   }
 }
