@@ -1,3 +1,5 @@
 org.apache.orc
 org.apache.orc.impl
+org.apache.orc.impl.mask
+org.apache.orc.impl.writer
 org.apache.orc.util
