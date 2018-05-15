@@ -374,7 +374,7 @@ namespace orc {
   TEST_F(TestDecompression, testLzoLong) {
     // set up a framed lzo buffer with 100,000 'a'
     unsigned char buffer[482];
-    bzero(buffer, ARRAY_SIZE(buffer));
+    memset(buffer, 0, ARRAY_SIZE(buffer));
     // header
     buffer[0] = 190;
     buffer[1] = 3;
