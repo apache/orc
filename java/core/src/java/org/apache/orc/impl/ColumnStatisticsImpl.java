@@ -1447,10 +1447,6 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
         buf.append(getMinimum());
         buf.append(" max: ");
         buf.append(getMaximum());
-        buf.append(" min UTC: ");
-        buf.append(getMinimumUTC());
-        buf.append(" max UTC: ");
-        buf.append(getMaximumUTC());
       }
       return buf.toString();
     }
