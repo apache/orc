@@ -176,6 +176,8 @@ if (WIN32)
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND "")
+  ExternalProject_Get_Property(tzdata_ep SOURCE_DIR)
+  set(TZDATA_DIR ${SOURCE_DIR}/share/zoneinfo)
 endif ()
 
 # ----------------------------------------------------------------------
