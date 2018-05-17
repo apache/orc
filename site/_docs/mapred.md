@@ -7,7 +7,7 @@ permalink: /docs/mapred.html
 This page describes how to read and write ORC files from Hadoop's
 older org.apache.hadoop.mapred MapReduce APIs. If you want to use the
 new org.apache.hadoop.mapreduce API, please look at the [next
-page]({{site.url}}/docs/mapreduce.html).
+page](/docs/mapreduce.html).
 
 ## Reading ORC files
 
@@ -30,7 +30,7 @@ Add ORC and your desired version of Hadoop to your `pom.xml`:
 
 Set the minimal properties in your JobConf:
 
-* **mapreduce.job.inputformat.class** = [org.apache.orc.mapred.OrcInputFormat]({{site.url}}/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcInputFormat.html)
+* **mapreduce.job.inputformat.class** = [org.apache.orc.mapred.OrcInputFormat](/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcInputFormat.html)
 * **mapreduce.input.fileinputformat.inputdir** = your input directory
 
 ORC files contain a series of values of the same type and that type
@@ -44,23 +44,23 @@ the key and a value based on the table below expanded recursively.
 
 | ORC Type | Writable Type |
 | -------- | ------------- |
-| array | [org.apache.orc.mapred.OrcList]({{site.url}}/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcStruct.html) |
+| array | [org.apache.orc.mapred.OrcList](/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcStruct.html) |
 | binary | org.apache.hadoop.io.BytesWritable |
 | bigint | org.apache.hadoop.io.LongWritable |
 | boolean | org.apache.hadoop.io.BooleanWritable |
 | char | org.apache.hadoop.io.Text |
-| date | [org.apache.hadoop.hive.serde2.io.DateWritable]({{site.url}}/api/hive-storage-api/index.html?org/apache/hadoop/hive/serde2/io/DateWritable.html) |
-| decimal | [org.apache.hadoop.hive.serde2.io.HiveDecimalWritable]({{site.url}}/api/hive-storage-api/index.html?org/apache/hadoop/hive/serde2/io/HiveDecimalWritable.html) |
+| date | [org.apache.hadoop.hive.serde2.io.DateWritable](/api/hive-storage-api/index.html?org/apache/hadoop/hive/serde2/io/DateWritable.html) |
+| decimal | [org.apache.hadoop.hive.serde2.io.HiveDecimalWritable](/api/hive-storage-api/index.html?org/apache/hadoop/hive/serde2/io/HiveDecimalWritable.html) |
 | double | org.apache.hadoop.io.DoubleWritable |
 | float | org.apache.hadoop.io.FloatWritable |
 | int | org.apache.hadoop.io.IntWritable |
-| map | [org.apache.orc.mapred.OrcMap]({{site.url}}/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcMap.html) |
+| map | [org.apache.orc.mapred.OrcMap](/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcMap.html) |
 | smallint | org.apache.hadoop.io.ShortWritable |
 | string | org.apache.hadoop.io.Text |
-| struct | [org.apache.orc.mapred.OrcStruct]({{site.url}}/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcStruct.html) |
-| timestamp | [org.apache.orc.mapred.OrcTimestamp]({{site.url}}/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcTimestamp.html) |
+| struct | [org.apache.orc.mapred.OrcStruct](/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcStruct.html) |
+| timestamp | [org.apache.orc.mapred.OrcTimestamp](/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcTimestamp.html) |
 | tinyint | org.apache.hadoop.io.ByteWritable |
-| uniontype | [org.apache.orc.mapred.OrcUnion]({{site.url}}/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcUnion.html) |
+| uniontype | [org.apache.orc.mapred.OrcUnion](/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcUnion.html) |
 | varchar | org.apache.hadoop.io.Text |
 
 Let's assume that your input directory contains ORC files with the
@@ -90,7 +90,7 @@ public class MyMapper
 
 To write ORC files from your MapReduce job, you'll need to set
 
-* **mapreduce.job.outputformat.class** = [org.apache.orc.mapred.OrcOutputFormat]({{site.url}}/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcOutputFormat.html)
+* **mapreduce.job.outputformat.class** = [org.apache.orc.mapred.OrcOutputFormat](/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcOutputFormat.html)
 * **mapreduce.output.fileoutputformat.outputdir** = your output directory
 * **orc.mapred.output.schema** = the schema to write to the ORC file
 
@@ -140,9 +140,9 @@ MapReduce shuffle. The complex ORC types, since they are generic
 types, need to have their full type information provided to create the
 object. To enable MapReduce to properly instantiate the OrcStruct and
 other ORC types, we need to wrap it in either an
-[OrcKey]({{site.url}}/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcKey.html)
+[OrcKey](/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcKey.html)
 for the shuffle key or
-[OrcValue]({{site.url}}/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcValue.html)
+[OrcValue](/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcValue.html)
 for the shuffle value.
 
 To send two OrcStructs through the shuffle, define the following properties

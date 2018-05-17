@@ -59,5 +59,5 @@ file would form the given tree.
 );
 ```
 
-![ORC column structure]({{ site.url }}/img/TreeWriters.png)
+![ORC column structure](/img/TreeWriters.png)
 
