@@ -12,7 +12,7 @@ to promote compatibility between implementations.
 ## Development community
 
 We have committers from many different companies. The full
-list of [ORC committers](committers.html) is available.
+list of [ORC committers](committers) is available.
 
 ## Mailing Lists
 
@@ -70,7 +70,7 @@ Releases are tagged as "rel/release-X.Y.Z". Apache's git repository
 guarantees that tags in the "rel/*" namespace are never deleted or
 changed.
 
-Please check our [coding guidelines](coding.html).
+Please check our [coding guidelines](coding).
 
 ## Website shortcuts
 
@@ -178,7 +178,7 @@ to dev@orc.apache.org asking for someone to sign it.
 
 The release process for ORC is driven by a Release Manager. They should
 discuss their intention to start the process on the dev list and then
-follow the steps of [how to release ORC](make-release.html).
+follow the steps of [how to release ORC](make-release).
 
 ## Dist Directory
 
@@ -194,5 +194,5 @@ archive](https://archive.apache.org/dist/orc/).
 
 ## Bylaws
 
-ORC has a set of [bylaws](bylaws.html) that describe the rules for the different
+ORC has a set of [bylaws](bylaws) that describe the rules for the different
 votes within our project.
