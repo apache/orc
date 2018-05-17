@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>ORC Adopters</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="generator" content="Jekyll v2.4.0">
+  <meta name="generator" content="Jekyll v3.7.3">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
   <link rel="stylesheet" href="/css/screen.css">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -109,7 +109,7 @@
     
   
     
-      <option value="/docs/index.html">Background</option>
+      <option value="http://localhost:4000/docs/index.html">Background</option>
     
   
     
@@ -131,7 +131,7 @@
     
   
     
-      <option value="/docs/adopters.html">ORC Adopters</option>
+      <option value="http://localhost:4000/docs/adopters.html">ORC Adopters</option>
     
   
     
@@ -158,42 +158,6 @@
   
     
   
-    
-  
-
-  
-
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-      <option value="/docs/types.html">Types</option>
     
   
 
@@ -219,7 +183,43 @@
     
   
     
-      <option value="/docs/indexes.html">Indexes</option>
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="http://localhost:4000/docs/types.html">Types</option>
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="http://localhost:4000/docs/indexes.html">Indexes</option>
     
   
     
@@ -237,7 +237,7 @@
 
   
     
-      <option value="/docs/acid.html">ACID support</option>
+      <option value="http://localhost:4000/docs/acid.html">ACID support</option>
     
   
     
@@ -284,7 +284,7 @@
     
   
     
-      <option value="/docs/building.html">Building ORC</option>
+      <option value="http://localhost:4000/docs/building.html">Building ORC</option>
     
   
     
@@ -342,7 +342,7 @@
     
   
     
-      <option value="/docs/releases.html">Releases</option>
+      <option value="http://localhost:4000/docs/releases.html">Releases</option>
     
   
     
@@ -373,7 +373,7 @@
     
   
     
-      <option value="/docs/hive-ddl.html">Hive DDL</option>
+      <option value="http://localhost:4000/docs/hive-ddl.html">Hive DDL</option>
     
   
     
@@ -407,7 +407,7 @@
     
   
     
-      <option value="/docs/hive-config.html">Hive Configuration</option>
+      <option value="http://localhost:4000/docs/hive-config.html">Hive Configuration</option>
     
   
     
@@ -460,7 +460,7 @@
     
   
     
-      <option value="/docs/mapred.html">Using in MapRed</option>
+      <option value="http://localhost:4000/docs/mapred.html">Using in MapRed</option>
     
   
     
@@ -498,7 +498,7 @@
     
   
     
-      <option value="/docs/mapreduce.html">Using in MapReduce</option>
+      <option value="http://localhost:4000/docs/mapreduce.html">Using in MapReduce</option>
     
   
     
@@ -525,7 +525,7 @@
     
   
     
-      <option value="/docs/core-java.html">Using Core Java</option>
+      <option value="http://localhost:4000/docs/core-java.html">Using Core Java</option>
     
   
     
@@ -559,7 +559,7 @@
     
   
     
-      <option value="/docs/core-cpp.html">Using Core C++</option>
+      <option value="http://localhost:4000/docs/core-cpp.html">Using Core C++</option>
     
   
     
@@ -606,7 +606,7 @@
     
   
     
-      <option value="/docs/cpp-tools.html">C++ Tools</option>
+      <option value="http://localhost:4000/docs/cpp-tools.html">C++ Tools</option>
     
   
     
@@ -652,7 +652,7 @@
     
   
     
-      <option value="/docs/java-tools.html">Java Tools</option>
+      <option value="http://localhost:4000/docs/java-tools.html">Java Tools</option>
     
   
     
@@ -677,14 +677,14 @@
           <p>If your company or tool uses ORC, please let us know so that we can update
 this page.</p>
 
-<h3 id="apache-hadoophttpshadoopapacheorg"><a href="https://hadoop.apache.org/">Apache Hadoop</a></h3>
+<h3 id="apache-hadoop"><a href="https://hadoop.apache.org/">Apache Hadoop</a></h3>
 
 <p>ORC files have always supporting reading and writing from Hadoop’s MapReduce,
 but with the ORC 1.1.0 release it is now easier than ever without pulling in
 Hive’s exec jar and all of its dependencies. OrcStruct now also implements
 WritableComparable and can be serialized through the MapReduce shuffle.</p>
 
-<h3 id="apache-hivehttpshiveapacheorg"><a href="https://hive.apache.org/">Apache Hive</a></h3>
+<h3 id="apache-hive"><a href="https://hive.apache.org/">Apache Hive</a></h3>
 
 <p>Apache Hive was the original use case and home for ORC.  ORC’s strong
 type system, advanced compression, column projection, predicate push
@@ -692,25 +692,25 @@ down, and vectorization support make Hive <a href="https://hortonworks.com/blog/
 better</a>
 than any other format for your data.</p>
 
-<h3 id="apache-nifihttpsnifiapacheorg"><a href="https://nifi.apache.org/">Apache Nifi</a></h3>
+<h3 id="apache-nifi"><a href="https://nifi.apache.org/">Apache Nifi</a></h3>
 
 <p>Apache Nifi is <a href="https://issues.apache.org/jira/browse/NIFI-1663">adding
 support</a> for writing
 ORC files.</p>
 
-<h3 id="apache-pighttpspigapacheorg"><a href="https://pig.apache.org/">Apache Pig</a></h3>
+<h3 id="apache-pig"><a href="https://pig.apache.org/">Apache Pig</a></h3>
 
 <p>Apache Pig added support for reading and writing ORC files in <a href="https://hortonworks.com/blog/announcing-apache-pig-0-14-0/">Pig
 14.0</a>.</p>
 
-<h3 id="apache-sparkhttpssparkapacheorg"><a href="https://spark.apache.org/">Apache Spark</a></h3>
+<h3 id="apache-spark"><a href="https://spark.apache.org/">Apache Spark</a></h3>
 
 <p>Apache Spark has <a href="https://hortonworks.com/blog/bringing-orc-support-into-apache-spark/">added
 support</a>
 for reading and writing ORC files with support for column project and
 predicate push down.</p>
 
-<h3 id="eelhttpsgithubcom51zeroeel-sdk"><a href="https://github.com/51zero/eel-sdk">EEL</a></h3>
+<h3 id="eel"><a href="https://github.com/51zero/eel-sdk">EEL</a></h3>
 
 <p>EEL is a Scala BigData API that supports reading and writing data for
 various file formats and storage systems including to and from ORC. It
@@ -723,23 +723,23 @@ complex types such as maps, lists or nested structs. A typical use
 case would be to extract data from JDBC to ORC files housed in HDFS,
 or directly into Hive tables backed by an ORC file format.</p>
 
-<h3 id="facebookhttpsfacebookcom"><a href="https://facebook.com">Facebook</a></h3>
+<h3 id="facebook"><a href="https://facebook.com">Facebook</a></h3>
 
 <p>With more than 300 PB of data, Facebook was an <a href="https://code.facebook.com/posts/229861827208629/scaling-the-facebook-data-warehouse-to-300-pb/">early adopter of
 ORC</a> and quickly put it into production.</p>
 
-<h3 id="prestohttpsprestodbio"><a href="https://prestodb.io/">Presto</a></h3>
+<h3 id="presto"><a href="https://prestodb.io/">Presto</a></h3>
 
 <p>The Presto team has done a lot of work <a href="https://code.facebook.com/posts/370832626374903/even-faster-data-at-the-speed-of-presto-orc/">integrating
 ORC</a> into their SQL engine.</p>
 
-<h3 id="timberhttpstimberio"><a href="https://timber.io/">Timber</a></h3>
+<h3 id="timber"><a href="https://timber.io/">Timber</a></h3>
 
 <p>Timber adopted ORC for it’s S3 based logging platform that stores
 petabytes of log data. ORC has been key in ensuring a fast,
 cost-effective strategy for persisting and querying that data.</p>
 
-<h3 id="verticahttpwww8hpcomusensoftware-solutionsadvanced-sql-big-data-analytics"><a href="http://www8.hp.com/us/en/software-solutions/advanced-sql-big-data-analytics/">Vertica</a></h3>
+<h3 id="vertica"><a href="http://www8.hp.com/us/en/software-solutions/advanced-sql-big-data-analytics/">Vertica</a></h3>
 
 <p>HPE Vertica has contributed significantly to the ORC C++ library. ORC
 is a significant part of Vertica SQL-on-Hadoop (VSQLoH) which brings
@@ -790,8 +790,6 @@ Analytic Database to the Hadoop ecosystem.</p>
   
 
   
-    
-  
 
   
     
@@ -811,29 +809,25 @@ Analytic Database to the Hadoop ecosystem.</p>
     
   
     
-      <li class=""><a href="/docs/index.html">Background</a></li>
+      <li class=""><a href="http://localhost:4000/docs/index.html">Background</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
   
     
-      <li class="current"><a href="/docs/adopters.html">ORC Adopters</a></li>
+      <li class="current"><a href="http://localhost:4000/docs/adopters.html">ORC Adopters</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -865,15 +859,13 @@ Analytic Database to the Hadoop ecosystem.</p>
     
   
     
-      <li class=""><a href="/docs/types.html">Types</a></li>
+      <li class=""><a href="http://localhost:4000/docs/types.html">Types</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -895,19 +887,17 @@ Analytic Database to the Hadoop ecosystem.</p>
     
   
     
-      <li class=""><a href="/docs/indexes.html">Indexes</a></li>
+      <li class=""><a href="http://localhost:4000/docs/indexes.html">Indexes</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
-      <li class=""><a href="/docs/acid.html">ACID support</a></li>
+      <li class=""><a href="http://localhost:4000/docs/acid.html">ACID support</a></li>
       
 
 
@@ -922,8 +912,6 @@ Analytic Database to the Hadoop ecosystem.</p>
   
 
   
-    
-  
 
   
     
@@ -931,15 +919,13 @@ Analytic Database to the Hadoop ecosystem.</p>
     
   
     
-      <li class=""><a href="/docs/building.html">Building ORC</a></li>
+      <li class=""><a href="http://localhost:4000/docs/building.html">Building ORC</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -969,7 +955,7 @@ Analytic Database to the Hadoop ecosystem.</p>
     
   
     
-      <li class=""><a href="/docs/releases.html">Releases</a></li>
+      <li class=""><a href="http://localhost:4000/docs/releases.html">Releases</a></li>
       
 
 
@@ -984,8 +970,6 @@ Analytic Database to the Hadoop ecosystem.</p>
   
 
   
-    
-  
 
   
     
@@ -1003,15 +987,13 @@ Analytic Database to the Hadoop ecosystem.</p>
     
   
     
-      <li class=""><a href="/docs/hive-ddl.html">Hive DDL</a></li>
+      <li class=""><a href="http://localhost:4000/docs/hive-ddl.html">Hive DDL</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1027,7 +1009,7 @@ Analytic Database to the Hadoop ecosystem.</p>
     
   
     
-      <li class=""><a href="/docs/hive-config.html">Hive Configuration</a></li>
+      <li class=""><a href="http://localhost:4000/docs/hive-config.html">Hive Configuration</a></li>
       
 
 
@@ -1042,8 +1024,6 @@ Analytic Database to the Hadoop ecosystem.</p>
   
 
   
-    
-  
 
   
     
@@ -1069,15 +1049,13 @@ Analytic Database to the Hadoop ecosystem.</p>
     
   
     
-      <li class=""><a href="/docs/mapred.html">Using in MapRed</a></li>
+      <li class=""><a href="http://localhost:4000/docs/mapred.html">Using in MapRed</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1105,7 +1083,7 @@ Analytic Database to the Hadoop ecosystem.</p>
     
   
     
-      <li class=""><a href="/docs/mapreduce.html">Using in MapReduce</a></li>
+      <li class=""><a href="http://localhost:4000/docs/mapreduce.html">Using in MapReduce</a></li>
       
 
 
@@ -1120,8 +1098,6 @@ Analytic Database to the Hadoop ecosystem.</p>
   
 
   
-    
-  
 
   
     
@@ -1133,15 +1109,13 @@ Analytic Database to the Hadoop ecosystem.</p>
     
   
     
-      <li class=""><a href="/docs/core-java.html">Using Core Java</a></li>
+      <li class=""><a href="http://localhost:4000/docs/core-java.html">Using Core Java</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1151,7 +1125,7 @@ Analytic Database to the Hadoop ecosystem.</p>
     
   
     
-      <li class=""><a href="/docs/core-cpp.html">Using Core C++</a></li>
+      <li class=""><a href="http://localhost:4000/docs/core-cpp.html">Using Core C++</a></li>
       
 
 
@@ -1166,8 +1140,6 @@ Analytic Database to the Hadoop ecosystem.</p>
   
 
   
-    
-  
 
   
     
@@ -1181,15 +1153,13 @@ Analytic Database to the Hadoop ecosystem.</p>
     
   
     
-      <li class=""><a href="/docs/cpp-tools.html">C++ Tools</a></li>
+      <li class=""><a href="http://localhost:4000/docs/cpp-tools.html">C++ Tools</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1213,7 +1183,7 @@ Analytic Database to the Hadoop ecosystem.</p>
     
   
     
-      <li class=""><a href="/docs/java-tools.html">Java Tools</a></li>
+      <li class=""><a href="http://localhost:4000/docs/java-tools.html">Java Tools</a></li>
       
 
 

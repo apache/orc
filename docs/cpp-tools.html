@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>C++ Tools</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="generator" content="Jekyll v2.4.0">
+  <meta name="generator" content="Jekyll v3.7.3">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
   <link rel="stylesheet" href="/css/screen.css">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -109,7 +109,7 @@
     
   
     
-      <option value="/docs/index.html">Background</option>
+      <option value="http://localhost:4000/docs/index.html">Background</option>
     
   
     
@@ -131,7 +131,7 @@
     
   
     
-      <option value="/docs/adopters.html">ORC Adopters</option>
+      <option value="http://localhost:4000/docs/adopters.html">ORC Adopters</option>
     
   
     
@@ -158,42 +158,6 @@
   
     
   
-    
-  
-
-  
-
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-      <option value="/docs/types.html">Types</option>
     
   
 
@@ -219,7 +183,43 @@
     
   
     
-      <option value="/docs/indexes.html">Indexes</option>
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="http://localhost:4000/docs/types.html">Types</option>
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="http://localhost:4000/docs/indexes.html">Indexes</option>
     
   
     
@@ -237,7 +237,7 @@
 
   
     
-      <option value="/docs/acid.html">ACID support</option>
+      <option value="http://localhost:4000/docs/acid.html">ACID support</option>
     
   
     
@@ -284,7 +284,7 @@
     
   
     
-      <option value="/docs/building.html">Building ORC</option>
+      <option value="http://localhost:4000/docs/building.html">Building ORC</option>
     
   
     
@@ -342,7 +342,7 @@
     
   
     
-      <option value="/docs/releases.html">Releases</option>
+      <option value="http://localhost:4000/docs/releases.html">Releases</option>
     
   
     
@@ -373,7 +373,7 @@
     
   
     
-      <option value="/docs/hive-ddl.html">Hive DDL</option>
+      <option value="http://localhost:4000/docs/hive-ddl.html">Hive DDL</option>
     
   
     
@@ -407,7 +407,7 @@
     
   
     
-      <option value="/docs/hive-config.html">Hive Configuration</option>
+      <option value="http://localhost:4000/docs/hive-config.html">Hive Configuration</option>
     
   
     
@@ -460,7 +460,7 @@
     
   
     
-      <option value="/docs/mapred.html">Using in MapRed</option>
+      <option value="http://localhost:4000/docs/mapred.html">Using in MapRed</option>
     
   
     
@@ -498,7 +498,7 @@
     
   
     
-      <option value="/docs/mapreduce.html">Using in MapReduce</option>
+      <option value="http://localhost:4000/docs/mapreduce.html">Using in MapReduce</option>
     
   
     
@@ -525,7 +525,7 @@
     
   
     
-      <option value="/docs/core-java.html">Using Core Java</option>
+      <option value="http://localhost:4000/docs/core-java.html">Using Core Java</option>
     
   
     
@@ -559,7 +559,7 @@
     
   
     
-      <option value="/docs/core-cpp.html">Using Core C++</option>
+      <option value="http://localhost:4000/docs/core-cpp.html">Using Core C++</option>
     
   
     
@@ -606,7 +606,7 @@
     
   
     
-      <option value="/docs/cpp-tools.html">C++ Tools</option>
+      <option value="http://localhost:4000/docs/cpp-tools.html">C++ Tools</option>
     
   
     
@@ -652,7 +652,7 @@
     
   
     
-      <option value="/docs/java-tools.html">Java Tools</option>
+      <option value="http://localhost:4000/docs/java-tools.html">Java Tools</option>
     
   
     
@@ -677,143 +677,143 @@
           <h2 id="orc-contents">orc-contents</h2>
 
 <p>Displays the contents of the ORC file as a JSON document. With the
-<code>columns</code> argument only the selected columns are printed.</p>
+<code class="highlighter-rouge">columns</code> argument only the selected columns are printed.</p>
 
-<pre><code class="language-shell">% orc-contents  [--columns=1,2,...] &lt;filename&gt;
-</code></pre>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% orc-contents  <span class="o">[</span><span class="nt">--columns</span><span class="o">=</span>1,2,...] &lt;filename&gt;
+</code></pre></div></div>
 
 <p>If you run it on the example file TestOrcFile.test1.orc, you’ll see (without
 the line breaks within each record):</p>
 
-<pre><code class="language-shell">% orc-contents examples/TestOrcFile.test1.orc
-{"boolean1": false, "byte1": 1, "short1": 1024, "int1": 65536, \\
- "long1": 9223372036854775807, "float1": 1, "double1": -15, \\
- "bytes1": [0, 1, 2, 3, 4], "string1": "hi", "middle": \\
-    {"list": [{"int1": 1, "string1": "bye"}, \\
-              {"int1": 2, "string1": "sigh"}]}, \\
- "list": [{"int1": 3, "string1": "good"}, \\
-          {"int1": 4, "string1": "bad"}], \\
- "map": []}
-{"boolean1": true, "byte1": 100, "short1": 2048, "int1": 65536,
- "long1": 9223372036854775807, "float1": 2, "double1": -5, \\
- "bytes1": [], "string1": "bye", \\
- "middle": {"list": [{"int1": 1, "string1": "bye"}, \\
-                     {"int1": 2, "string1": "sigh"}]}, \\
- "list": [{"int1": 100000000, "string1": "cat"}, \\
-          {"int1": -100000, "string1": "in"}, \\
-          {"int1": 1234, "string1": "hat"}], \\
- "map": [{"key": "chani", "value": {"int1": 5, "string1": "chani"}}, \\
-         {"key": "mauddib", \\
-          "value": {"int1": 1, "string1": "mauddib"}}]}
-</code></pre>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% orc-contents examples/TestOrcFile.test1.orc
+<span class="o">{</span><span class="s2">"boolean1"</span>: <span class="nb">false</span>, <span class="s2">"byte1"</span>: 1, <span class="s2">"short1"</span>: 1024, <span class="s2">"int1"</span>: 65536, <span class="se">\\</span>
+ <span class="s2">"long1"</span>: 9223372036854775807, <span class="s2">"float1"</span>: 1, <span class="s2">"double1"</span>: <span class="nt">-15</span>, <span class="se">\\</span>
+ <span class="s2">"bytes1"</span>: <span class="o">[</span>0, 1, 2, 3, 4], <span class="s2">"string1"</span>: <span class="s2">"hi"</span>, <span class="s2">"middle"</span>: <span class="se">\\</span>
+    <span class="o">{</span><span class="s2">"list"</span>: <span class="o">[{</span><span class="s2">"int1"</span>: 1, <span class="s2">"string1"</span>: <span class="s2">"bye"</span><span class="o">}</span>, <span class="se">\\</span>
+              <span class="o">{</span><span class="s2">"int1"</span>: 2, <span class="s2">"string1"</span>: <span class="s2">"sigh"</span><span class="o">}]}</span>, <span class="se">\\</span>
+ <span class="s2">"list"</span>: <span class="o">[{</span><span class="s2">"int1"</span>: 3, <span class="s2">"string1"</span>: <span class="s2">"good"</span><span class="o">}</span>, <span class="se">\\</span>
+          <span class="o">{</span><span class="s2">"int1"</span>: 4, <span class="s2">"string1"</span>: <span class="s2">"bad"</span><span class="o">}]</span>, <span class="se">\\</span>
+ <span class="s2">"map"</span>: <span class="o">[]}</span>
+<span class="o">{</span><span class="s2">"boolean1"</span>: <span class="nb">true</span>, <span class="s2">"byte1"</span>: 100, <span class="s2">"short1"</span>: 2048, <span class="s2">"int1"</span>: 65536,
+ <span class="s2">"long1"</span>: 9223372036854775807, <span class="s2">"float1"</span>: 2, <span class="s2">"double1"</span>: <span class="nt">-5</span>, <span class="se">\\</span>
+ <span class="s2">"bytes1"</span>: <span class="o">[]</span>, <span class="s2">"string1"</span>: <span class="s2">"bye"</span>, <span class="se">\\</span>
+ <span class="s2">"middle"</span>: <span class="o">{</span><span class="s2">"list"</span>: <span class="o">[{</span><span class="s2">"int1"</span>: 1, <span class="s2">"string1"</span>: <span class="s2">"bye"</span><span class="o">}</span>, <span class="se">\\</span>
+                     <span class="o">{</span><span class="s2">"int1"</span>: 2, <span class="s2">"string1"</span>: <span class="s2">"sigh"</span><span class="o">}]}</span>, <span class="se">\\</span>
+ <span class="s2">"list"</span>: <span class="o">[{</span><span class="s2">"int1"</span>: 100000000, <span class="s2">"string1"</span>: <span class="s2">"cat"</span><span class="o">}</span>, <span class="se">\\</span>
+          <span class="o">{</span><span class="s2">"int1"</span>: <span class="nt">-100000</span>, <span class="s2">"string1"</span>: <span class="s2">"in"</span><span class="o">}</span>, <span class="se">\\</span>
+          <span class="o">{</span><span class="s2">"int1"</span>: 1234, <span class="s2">"string1"</span>: <span class="s2">"hat"</span><span class="o">}]</span>, <span class="se">\\</span>
+ <span class="s2">"map"</span>: <span class="o">[{</span><span class="s2">"key"</span>: <span class="s2">"chani"</span>, <span class="s2">"value"</span>: <span class="o">{</span><span class="s2">"int1"</span>: 5, <span class="s2">"string1"</span>: <span class="s2">"chani"</span><span class="o">}}</span>, <span class="se">\\</span>
+         <span class="o">{</span><span class="s2">"key"</span>: <span class="s2">"mauddib"</span>, <span class="se">\\</span>
+          <span class="s2">"value"</span>: <span class="o">{</span><span class="s2">"int1"</span>: 1, <span class="s2">"string1"</span>: <span class="s2">"mauddib"</span><span class="o">}}]}</span>
+</code></pre></div></div>
 
 <h2 id="orc-metadata">orc-metadata</h2>
 
 <p>Displays the metadata of the ORC file as a JSON document. With the
-<code>verbose</code> option additional information about the layout of the file
+<code class="highlighter-rouge">verbose</code> option additional information about the layout of the file
 is also printed.</p>
 
 <p>For diagnosing problems, it is useful to use the ‘–raw’ option that
 prints the protocol buffers from the ORC file directly rather than
 interpreting them.</p>
 
-<pre><code class="language-shell">% orc-metadata [-v] [--raw] &lt;filename&gt;
-</code></pre>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% orc-metadata <span class="o">[</span><span class="nt">-v</span><span class="o">]</span> <span class="o">[</span><span class="nt">--raw</span><span class="o">]</span> &lt;filename&gt;
+</code></pre></div></div>
 
 <p>If you run it on the example file TestOrcFile.test1.orc, you’ll see:</p>
 
-<pre><code class="language-shell">% orc-metadata examples/TestOrcFile.test1.orc
-{ "name": "../examples/TestOrcFile.test1.orc",
-  "type": "struct&lt;boolean1:boolean,byte1:tinyint,short1:smallint,
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% orc-metadata examples/TestOrcFile.test1.orc
+<span class="o">{</span> <span class="s2">"name"</span>: <span class="s2">"../examples/TestOrcFile.test1.orc"</span>,
+  <span class="s2">"type"</span>: <span class="s2">"struct&lt;boolean1:boolean,byte1:tinyint,short1:smallint,
 int1:int,long1:bigint,float1:float,double1:double,bytes1:binary,
 string1:string,middle:struct&lt;list:array&lt;struct&lt;int1:int,string1:
 string&gt;&gt;&gt;,list:array&lt;struct&lt;int1:int,string1:string&gt;&gt;,map:map&lt;
-string,struct&lt;int1:int,string1:string&gt;&gt;&gt;",
-  "rows": 2,
-  "stripe count": 1,
-  "format": "0.12", "writer version": "HIVE-8732",
-  "compression": "zlib", "compression block": 10000,
-  "file length": 1711,
-  "content": 1015, "stripe stats": 250, "footer": 421, "postscript": 24,
-  "row index stride": 10000,
-  "user metadata": {
-  },
-  "stripes": [
-    { "stripe": 0, "rows": 2,
-      "offset": 3, "length": 1012,
-      "index": 570, "data": 243, "footer": 199
-    }
-  ]
-}
-</code></pre>
+string,struct&lt;int1:int,string1:string&gt;&gt;&gt;"</span>,
+  <span class="s2">"rows"</span>: 2,
+  <span class="s2">"stripe count"</span>: 1,
+  <span class="s2">"format"</span>: <span class="s2">"0.12"</span>, <span class="s2">"writer version"</span>: <span class="s2">"HIVE-8732"</span>,
+  <span class="s2">"compression"</span>: <span class="s2">"zlib"</span>, <span class="s2">"compression block"</span>: 10000,
+  <span class="s2">"file length"</span>: 1711,
+  <span class="s2">"content"</span>: 1015, <span class="s2">"stripe stats"</span>: 250, <span class="s2">"footer"</span>: 421, <span class="s2">"postscript"</span>: 24,
+  <span class="s2">"row index stride"</span>: 10000,
+  <span class="s2">"user metadata"</span>: <span class="o">{</span>
+  <span class="o">}</span>,
+  <span class="s2">"stripes"</span>: <span class="o">[</span>
+    <span class="o">{</span> <span class="s2">"stripe"</span>: 0, <span class="s2">"rows"</span>: 2,
+      <span class="s2">"offset"</span>: 3, <span class="s2">"length"</span>: 1012,
+      <span class="s2">"index"</span>: 570, <span class="s2">"data"</span>: 243, <span class="s2">"footer"</span>: 199
+    <span class="o">}</span>
+  <span class="o">]</span>
+<span class="o">}</span>
+</code></pre></div></div>
 
 <h2 id="csv-import">csv-import</h2>
 
 <p>Imports CSV file into an Orc file using the specified schema.
-Compound types are not yet supported. <code>delimiter</code> option indicates
-the delimiter in the input CSV file and by default is <code>,</code>. <code>stripe</code>
-option means the stripe size and set to 128MB by default. <code>block</code>
-option is compression block size which is 64KB by default. <code>batch</code>
+Compound types are not yet supported. <code class="highlighter-rouge">delimiter</code> option indicates
+the delimiter in the input CSV file and by default is <code class="highlighter-rouge">,</code>. <code class="highlighter-rouge">stripe</code>
+option means the stripe size and set to 128MB by default. <code class="highlighter-rouge">block</code>
+option is compression block size which is 64KB by default. <code class="highlighter-rouge">batch</code>
 option is by default 1024 rows for one batch.</p>
 
-<pre><code class="language-shell">% csv-import [--delimiter=&lt;character&gt;] [--stripe=&lt;size&gt;]
-             [--block=&lt;size&gt;] [--batch=&lt;size&gt;]
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% csv-import <span class="o">[</span><span class="nt">--delimiter</span><span class="o">=</span>&lt;character&gt;] <span class="o">[</span><span class="nt">--stripe</span><span class="o">=</span>&lt;size&gt;]
+             <span class="o">[</span><span class="nt">--block</span><span class="o">=</span>&lt;size&gt;] <span class="o">[</span><span class="nt">--batch</span><span class="o">=</span>&lt;size&gt;]
              &lt;schema&gt; &lt;inputCSVFile&gt; &lt;outputORCFile&gt;
-</code></pre>
+</code></pre></div></div>
 
 <p>If you run it on the example file TestCSVFileImport.test10rows.csv,
 you’ll see:</p>
 
-<pre><code class="language-shell">% csv-import "struct&lt;a:bigint,b:string,c:double&gt;"
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% csv-import <span class="s2">"struct&lt;a:bigint,b:string,c:double&gt;"</span>
              examples/TestCSVFileImport.test10rows.csv /tmp/test.orc
-[2018-04-11 11:12:16] Start importing Orc file...
-[2018-04-11 11:12:16] Finish importing Orc file.
-[2018-04-11 11:12:16] Total writer elasped time: 0.001352s.
-[2018-04-11 11:12:16] Total writer CPU time: 0.001339s.
-</code></pre>
+<span class="o">[</span>2018-04-11 11:12:16] Start importing Orc file...
+<span class="o">[</span>2018-04-11 11:12:16] Finish importing Orc file.
+<span class="o">[</span>2018-04-11 11:12:16] Total writer elasped <span class="nb">time</span>: 0.001352s.
+<span class="o">[</span>2018-04-11 11:12:16] Total writer CPU <span class="nb">time</span>: 0.001339s.
+</code></pre></div></div>
 
 <h2 id="orc-scan">orc-scan</h2>
 
-<p>Scans and displays the row count of the ORC file. With the <code>batch</code> option
+<p>Scans and displays the row count of the ORC file. With the <code class="highlighter-rouge">batch</code> option
 to set the batch size which is 1024 rows by default. It is useful to check
 if the ORC file is damaged.</p>
 
-<pre><code class="language-shell">% orc-scan [--batch=&lt;size&gt;] &lt;filename&gt;
-</code></pre>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% orc-scan <span class="o">[</span><span class="nt">--batch</span><span class="o">=</span>&lt;size&gt;] &lt;filename&gt;
+</code></pre></div></div>
 
 <p>If you run it on the example file TestOrcFile.test1.orc, you’ll see:</p>
 
-<pre><code class="language-shell">% orc-scan examples/TestOrcFile.test1.orc
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% orc-scan examples/TestOrcFile.test1.orc
 Rows: 2
 Batches: 1
-</code></pre>
+</code></pre></div></div>
 
 <h2 id="orc-statistics">orc-statistics</h2>
 
 <p>Displays the file-level and stripe-level column statistics of the ORC file.
-With the <code>withIndex</code> option to include column statistics in each row group.</p>
+With the <code class="highlighter-rouge">withIndex</code> option to include column statistics in each row group.</p>
 
-<pre><code class="language-shell">% orc-statistics [--withIndex] &lt;filename&gt;
-</code></pre>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% orc-statistics <span class="o">[</span><span class="nt">--withIndex</span><span class="o">]</span> &lt;filename&gt;
+</code></pre></div></div>
 
 <p>If you run it on the example file TestOrcFile.TestOrcFile.columnProjection.orc
 you’ll see:</p>
 
-<pre><code class="language-shell">% orc-statistics examples/TestOrcFile.columnProjection.orc
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% orc-statistics examples/TestOrcFile.columnProjection.orc
 File examples/TestOrcFile.columnProjection.orc has 3 columns
-*** Column 0 ***
+<span class="k">***</span> Column 0 <span class="k">***</span>
 Column has 21000 values and has null value: no
 
-*** Column 1 ***
-Data type: Integer
+<span class="k">***</span> Column 1 <span class="k">***</span>
+Data <span class="nb">type</span>: Integer
 Values: 21000
 Has null: no
-Minimum: -2147439072
+Minimum: <span class="nt">-2147439072</span>
 Maximum: 2147257982
 Sum: 268482658568
 
-*** Column 2 ***
-Data type: String
+<span class="k">***</span> Column 2 <span class="k">***</span>
+Data <span class="nb">type</span>: String
 Values: 21000
 Has null: no
 Minimum: 100119c272d7db89
@@ -821,111 +821,111 @@ Maximum: fffe9f6f23b287f3
 Total length: 334559
 
 File examples/TestOrcFile.columnProjection.orc has 5 stripes
-*** Stripe 0 ***
+<span class="k">***</span> Stripe 0 <span class="k">***</span>
 
---- Column 0 ---
+<span class="nt">---</span> Column 0 <span class="nt">---</span>
 Column has 5000 values and has null value: no
 
---- Column 1 ---
-Data type: Integer
+<span class="nt">---</span> Column 1 <span class="nt">---</span>
+Data <span class="nb">type</span>: Integer
 Values: 5000
 Has null: no
-Minimum: -2145365268
+Minimum: <span class="nt">-2145365268</span>
 Maximum: 2147025027
-Sum: -29841423854
+Sum: <span class="nt">-29841423854</span>
 
---- Column 2 ---
-Data type: String
+<span class="nt">---</span> Column 2 <span class="nt">---</span>
+Data <span class="nb">type</span>: String
 Values: 5000
 Has null: no
 Minimum: 1005350489418be2
 Maximum: fffbb8718c92b09f
 Total length: 79644
 
-*** Stripe 1 ***
+<span class="k">***</span> Stripe 1 <span class="k">***</span>
 
---- Column 0 ---
+<span class="nt">---</span> Column 0 <span class="nt">---</span>
 Column has 5000 values and has null value: no
 
---- Column 1 ---
-Data type: Integer
+<span class="nt">---</span> Column 1 <span class="nt">---</span>
+Data <span class="nb">type</span>: Integer
 Values: 5000
 Has null: no
-Minimum: -2147115959
+Minimum: <span class="nt">-2147115959</span>
 Maximum: 2147257982
 Sum: 108604887785
 
---- Column 2 ---
-Data type: String
+<span class="nt">---</span> Column 2 <span class="nt">---</span>
+Data <span class="nb">type</span>: String
 Values: 5000
 Has null: no
 Minimum: 100119c272d7db89
 Maximum: fff0ae41d41e6afc
 Total length: 79640
 
-*** Stripe 2 ***
+<span class="k">***</span> Stripe 2 <span class="k">***</span>
 
---- Column 0 ---
+<span class="nt">---</span> Column 0 <span class="nt">---</span>
 Column has 5000 values and has null value: no
 
---- Column 1 ---
-Data type: Integer
+<span class="nt">---</span> Column 1 <span class="nt">---</span>
+Data <span class="nb">type</span>: Integer
 Values: 5000
 Has null: no
-Minimum: -2145932387
+Minimum: <span class="nt">-2145932387</span>
 Maximum: 2145877119
 Sum: 70064190848
 
---- Column 2 ---
-Data type: String
+<span class="nt">---</span> Column 2 <span class="nt">---</span>
+Data <span class="nb">type</span>: String
 Values: 5000
 Has null: no
 Minimum: 10130af874ae036c
 Maximum: fffe9f6f23b287f3
 Total length: 79645
 
-*** Stripe 3 ***
+<span class="k">***</span> Stripe 3 <span class="k">***</span>
 
---- Column 0 ---
+<span class="nt">---</span> Column 0 <span class="nt">---</span>
 Column has 5000 values and has null value: no
 
---- Column 1 ---
-Data type: Integer
+<span class="nt">---</span> Column 1 <span class="nt">---</span>
+Data <span class="nb">type</span>: Integer
 Values: 5000
 Has null: no
-Minimum: -2147439072
+Minimum: <span class="nt">-2147439072</span>
 Maximum: 2147074354
 Sum: 104681356482
 
---- Column 2 ---
-Data type: String
+<span class="nt">---</span> Column 2 <span class="nt">---</span>
+Data <span class="nb">type</span>: String
 Values: 5000
 Has null: no
 Minimum: 102547d48ed06518
 Maximum: fffa47c57dc7b69a
 Total length: 79689
 
-*** Stripe 4 ***
+<span class="k">***</span> Stripe 4 <span class="k">***</span>
 
---- Column 0 ---
+<span class="nt">---</span> Column 0 <span class="nt">---</span>
 Column has 1000 values and has null value: no
 
---- Column 1 ---
-Data type: Integer
+<span class="nt">---</span> Column 1 <span class="nt">---</span>
+Data <span class="nb">type</span>: Integer
 Values: 1000
 Has null: no
-Minimum: -2141222223
+Minimum: <span class="nt">-2141222223</span>
 Maximum: 2145816096
 Sum: 14973647307
 
---- Column 2 ---
-Data type: String
+<span class="nt">---</span> Column 2 <span class="nt">---</span>
+Data <span class="nb">type</span>: String
 Values: 1000
 Has null: no
 Minimum: 1059d81c9025a217
 Maximum: ffc17f0e35e1a6c0
 Total length: 15941
-</code></pre>
+</code></pre></div></div>
 
           
 
@@ -1007,8 +1007,6 @@ Total length: 15941
   
 
   
-    
-  
 
   
     
@@ -1028,29 +1026,25 @@ Total length: 15941
     
   
     
-      <li class=""><a href="/docs/index.html">Background</a></li>
+      <li class=""><a href="http://localhost:4000/docs/index.html">Background</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
   
     
-      <li class=""><a href="/docs/adopters.html">ORC Adopters</a></li>
+      <li class=""><a href="http://localhost:4000/docs/adopters.html">ORC Adopters</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1082,15 +1076,13 @@ Total length: 15941
     
   
     
-      <li class=""><a href="/docs/types.html">Types</a></li>
+      <li class=""><a href="http://localhost:4000/docs/types.html">Types</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1112,19 +1104,17 @@ Total length: 15941
     
   
     
-      <li class=""><a href="/docs/indexes.html">Indexes</a></li>
+      <li class=""><a href="http://localhost:4000/docs/indexes.html">Indexes</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
-      <li class=""><a href="/docs/acid.html">ACID support</a></li>
+      <li class=""><a href="http://localhost:4000/docs/acid.html">ACID support</a></li>
       
 
 
@@ -1139,8 +1129,6 @@ Total length: 15941
   
 
   
-    
-  
 
   
     
@@ -1148,15 +1136,13 @@ Total length: 15941
     
   
     
-      <li class=""><a href="/docs/building.html">Building ORC</a></li>
+      <li class=""><a href="http://localhost:4000/docs/building.html">Building ORC</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1186,7 +1172,7 @@ Total length: 15941
     
   
     
-      <li class=""><a href="/docs/releases.html">Releases</a></li>
+      <li class=""><a href="http://localhost:4000/docs/releases.html">Releases</a></li>
       
 
 
@@ -1201,8 +1187,6 @@ Total length: 15941
   
 
   
-    
-  
 
   
     
@@ -1220,15 +1204,13 @@ Total length: 15941
     
   
     
-      <li class=""><a href="/docs/hive-ddl.html">Hive DDL</a></li>
+      <li class=""><a href="http://localhost:4000/docs/hive-ddl.html">Hive DDL</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1244,7 +1226,7 @@ Total length: 15941
     
   
     
-      <li class=""><a href="/docs/hive-config.html">Hive Configuration</a></li>
+      <li class=""><a href="http://localhost:4000/docs/hive-config.html">Hive Configuration</a></li>
       
 
 
@@ -1259,8 +1241,6 @@ Total length: 15941
   
 
   
-    
-  
 
   
     
@@ -1286,15 +1266,13 @@ Total length: 15941
     
   
     
-      <li class=""><a href="/docs/mapred.html">Using in MapRed</a></li>
+      <li class=""><a href="http://localhost:4000/docs/mapred.html">Using in MapRed</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1322,7 +1300,7 @@ Total length: 15941
     
   
     
-      <li class=""><a href="/docs/mapreduce.html">Using in MapReduce</a></li>
+      <li class=""><a href="http://localhost:4000/docs/mapreduce.html">Using in MapReduce</a></li>
       
 
 
@@ -1337,8 +1315,6 @@ Total length: 15941
   
 
   
-    
-  
 
   
     
@@ -1350,15 +1326,13 @@ Total length: 15941
     
   
     
-      <li class=""><a href="/docs/core-java.html">Using Core Java</a></li>
+      <li class=""><a href="http://localhost:4000/docs/core-java.html">Using Core Java</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1368,7 +1342,7 @@ Total length: 15941
     
   
     
-      <li class=""><a href="/docs/core-cpp.html">Using Core C++</a></li>
+      <li class=""><a href="http://localhost:4000/docs/core-cpp.html">Using Core C++</a></li>
       
 
 
@@ -1383,8 +1357,6 @@ Total length: 15941
   
 
   
-    
-  
 
   
     
@@ -1398,15 +1370,13 @@ Total length: 15941
     
   
     
-      <li class="current"><a href="/docs/cpp-tools.html">C++ Tools</a></li>
+      <li class="current"><a href="http://localhost:4000/docs/cpp-tools.html">C++ Tools</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1430,7 +1400,7 @@ Total length: 15941
     
   
     
-      <li class=""><a href="/docs/java-tools.html">Java Tools</a></li>
+      <li class=""><a href="http://localhost:4000/docs/java-tools.html">Java Tools</a></li>
       
 
 

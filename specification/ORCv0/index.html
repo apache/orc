@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>ORC Specification v0</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="generator" content="Jekyll v2.4.0">
+  <meta name="generator" content="Jekyll v3.7.3">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
   <link rel="stylesheet" href="/css/screen.css">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -108,7 +108,7 @@ include the minimum and maximum values for each column in each set of
 file reader can skip entire sets of rows that aren’t important for
 this query.</p>
 
-<p><img src="/img/OrcFileLayout.png" alt="ORC file structure" /></p>
+<p><img src="http://localhost:4000/img/OrcFileLayout.png" alt="ORC file structure" /></p>
 
 <h1 id="file-tail">File Tail</h1>
 
@@ -146,7 +146,7 @@ than 256 bytes. Once the Postscript is parsed, the compressed
 serialized length of the Footer is known and it can be decompressed
 and parsed.</p>
 
-<p><code>message PostScript {
+<p>```message PostScript {
  // the length of the footer section in bytes
  optional uint64 footerLength = 1;
  // the kind of generic compression used
@@ -157,12 +157,11 @@ and parsed.</p>
  repeated uint32 version = 4 [packed = true];
  // the length of the metadata section in bytes
  optional uint64 metadataLength = 5;
- // the fixed string "ORC"
+ // the fixed string “ORC”
  optional string magic = 8000;
-}
-</code></p>
-
-<p><code>enum CompressionKind {
+}</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+```enum CompressionKind {
  NONE = 0;
  ZLIB = 1;
  SNAPPY = 2;
@@ -170,7 +169,7 @@ and parsed.</p>
  LZ4 = 4;
  ZSTD = 5;
 }
-</code></p>
+</code></pre></div></div>
 
 <h2 id="footer">Footer</h2>
 
@@ -184,7 +183,7 @@ scan the front of the file to determine the type of the file. The Body
 contains the rows and indexes, and the Tail gives the file level
 information as described in this section.</p>
 
-<p><code>message Footer {
+<p>```message Footer {
  // the length of the file header in bytes (always 3)
  optional uint64 headerLength = 1;
  // the length of the file header and body in bytes
@@ -201,21 +200,20 @@ information as described in this section.</p>
  repeated ColumnStatistics statistics = 7;
  // the maximum number of rows in each index entry
  optional uint32 rowIndexStride = 8;
-}
-</code></p>
+}</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+### Stripe Information
 
-<h3 id="stripe-information">Stripe Information</h3>
-
-<p>The body of the file is divided into stripes. Each stripe is self
+The body of the file is divided into stripes. Each stripe is self
 contained and may be read using only its own bytes combined with the
-file’s Footer and Postscript. Each stripe contains only entire rows so
+file's Footer and Postscript. Each stripe contains only entire rows so
 that rows never straddle stripe boundaries. Stripes have three
 sections: a set of indexes for the rows within the stripe, the data
 itself, and a stripe footer. Both the indexes and the data sections
 are divided by columns so that only the data for the required columns
-needs to be read.</p>
+needs to be read.
 
-<p><code>message StripeInformation {
+```message StripeInformation {
  // the start of the stripe within the file
  optional uint64 offset = 1;
  // the length of the indexes in bytes
@@ -227,7 +225,7 @@ needs to be read.</p>
  // the number of rows in the stripe
  optional uint64 numberOfRows = 5;
 }
-</code></p>
+</code></pre></div></div>
 
 <h3 id="type-information">Type Information</h3>
 
@@ -235,25 +233,24 @@ needs to be read.</p>
 the schema is expressed as a tree as in the figure below, where
 the compound types have subcolumns under them.</p>
 
-<p><img src="/img/TreeWriters.png" alt="ORC column structure" /></p>
+<p><img src="http://localhost:4000/img/TreeWriters.png" alt="ORC column structure" /></p>
 
 <p>The equivalent Hive DDL would be:</p>
 
-<p><code>create table Foobar (
+<p>```create table Foobar (
  myInt int,
  myMap map&lt;string,
  struct&lt;myString : string,
- myDouble: double&gt;&gt;,
+ myDouble: double»,
  myTime timestamp
-);
-</code></p>
-
-<p>The type tree is flattened in to a list via a pre-order traversal
+);</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+The type tree is flattened in to a list via a pre-order traversal
 where each type is assigned the next id. Clearly the root of the type
 tree is always type id 0. Compound types have a field named subtypes
-that contains the list of their children’s type ids.</p>
+that contains the list of their children's type ids.
 
-<p><code>message Type {
+```message Type {
  enum Kind {
  BOOLEAN = 0;
  BYTE = 1;
@@ -286,7 +283,7 @@ that contains the list of their children’s type ids.</p>
  optional uint32 precision = 5;
  optional uint32 scale = 6;
 }
-</code></p>
+</code></pre></div></div>
 
 <h3 id="column-statistics">Column Statistics</h3>
 
@@ -299,7 +296,7 @@ there are any null values within the row group by setting the hasNull flag.
 The hasNull flag is used by ORC’s predicate pushdown to better answer
 ‘IS NULL’ queries.</p>
 
-<p><code>message ColumnStatistics {
+<p>```message ColumnStatistics {
  // the number of values
  optional uint64 numberOfValues = 1;
  // At most one of these has a value for any column
@@ -312,103 +309,98 @@ The hasNull flag is used by ORC’s predicate pushdown to better answer
  optional BinaryStatistics binaryStatistics = 8;
  optional TimestampStatistics timestampStatistics = 9;
  optional bool hasNull = 10;
-}
-</code></p>
-
-<p>For integer types (tinyint, smallint, int, bigint), the column
+}</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+For integer types (tinyint, smallint, int, bigint), the column
 statistics includes the minimum, maximum, and sum. If the sum
 overflows long at any point during the calculation, no sum is
-recorded.</p>
+recorded.
 
-<p><code>message IntegerStatistics {
+```message IntegerStatistics {
  optional sint64 minimum = 1;
  optional sint64 maximum = 2;
  optional sint64 sum = 3;
 }
-</code></p>
+</code></pre></div></div>
 
 <p>For floating point types (float, double), the column statistics
 include the minimum, maximum, and sum. If the sum overflows a double,
 no sum is recorded.</p>
 
-<p><code>message DoubleStatistics {
+<p>```message DoubleStatistics {
  optional double minimum = 1;
  optional double maximum = 2;
  optional double sum = 3;
-}
-</code></p>
+}</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+For strings, the minimum value, maximum value, and the sum of the
+lengths of the values are recorded.
 
-<p>For strings, the minimum value, maximum value, and the sum of the
-lengths of the values are recorded.</p>
-
-<p><code>message StringStatistics {
+```message StringStatistics {
  optional string minimum = 1;
  optional string maximum = 2;
  // sum will store the total length of all strings
  optional sint64 sum = 3;
 }
-</code></p>
+</code></pre></div></div>
 
 <p>For booleans, the statistics include the count of false and true values.</p>
 
-<p><code>message BucketStatistics {
+<p>```message BucketStatistics {
  repeated uint64 count = 1 [packed=true];
-}
-</code></p>
+}</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+For decimals, the minimum, maximum, and sum are stored.
 
-<p>For decimals, the minimum, maximum, and sum are stored.</p>
-
-<p><code>message DecimalStatistics {
+```message DecimalStatistics {
  optional string minimum = 1;
  optional string maximum = 2;
  optional string sum = 3;
 }
-</code></p>
+</code></pre></div></div>
 
 <p>Date columns record the minimum and maximum values as the number of
 days since the epoch (1/1/2015).</p>
 
-<p><code>message DateStatistics {
+<p>```message DateStatistics {
  // min,max values saved as days since epoch
  optional sint32 minimum = 1;
  optional sint32 maximum = 2;
-}
-</code></p>
+}</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+Timestamp columns record the minimum and maximum values as the number of
+milliseconds since the epoch (1/1/2015).
 
-<p>Timestamp columns record the minimum and maximum values as the number of
-milliseconds since the epoch (1/1/2015).</p>
-
-<p><code>message TimestampStatistics {
+```message TimestampStatistics {
  // min,max values saved as milliseconds since epoch
  optional sint64 minimum = 1;
  optional sint64 maximum = 2;
 }
-</code></p>
+</code></pre></div></div>
 
 <p>Binary columns store the aggregate number of bytes across all of the values.</p>
 
-<p><code>message BinaryStatistics {
+<p>```message BinaryStatistics {
  // sum will store the total binary blob length
  optional sint64 sum = 1;
-}
-</code></p>
+}</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+### User Metadata
 
-<h3 id="user-metadata">User Metadata</h3>
-
-<p>The user can add arbitrary key/value pairs to an ORC file as it is
+The user can add arbitrary key/value pairs to an ORC file as it is
 written. The contents of the keys and values are completely
 application defined, but the key is a string and the value is
 binary. Care should be taken by applications to make sure that their
 keys are unique and in general should be prefixed with an organization
-code.</p>
+code.
 
-<p><code>message UserMetadataItem {
+```message UserMetadataItem {
  // the user defined key
  required string name = 1;
  // the user defined binary value
  required bytes value = 2;
 }
-</code></p>
+</code></pre></div></div>
 
 <h3 id="file-metadata">File Metadata</h3>
 
@@ -416,15 +408,14 @@ code.</p>
 level granularity. These statistics enable input split elimination
 based on the predicate push-down evaluated per a stripe.</p>
 
-<p><code>message StripeStatistics {
+<p>```message StripeStatistics {
  repeated ColumnStatistics colStats = 1;
-}
-</code></p>
-
-<p><code>message Metadata {
+}</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+```message Metadata {
  repeated StripeStatistics stripeStats = 1;
 }
-</code></p>
+</code></pre></div></div>
 
 <h1 id="compression">Compression</h1>
 
@@ -444,7 +435,7 @@ for a chunk that compressed to 100,000 bytes would be [0x40, 0x0d,
 that as long as a decompressor starts at the top of a header, it can
 start decompressing without the previous bytes.</p>
 
-<p><img src="/img/CompressionStream.png" alt="compression streams" /></p>
+<p><img src="http://localhost:4000/img/CompressionStream.png" alt="compression streams" /></p>
 
 <p>The default compression chunk size is 256K, but writers can choose
 their own value. Larger chunks lead to better compression, but require
@@ -628,19 +619,18 @@ following subsections.</p>
 <p>The stripe footer contains the encoding of each column and the
 directory of the streams including their location.</p>
 
-<p><code>message StripeFooter {
+<p>```message StripeFooter {
  // the location of each stream
  repeated Stream streams = 1;
  // the encoding of each column
  repeated ColumnEncoding columns = 2;
-}
-</code></p>
+}</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+To describe each stream, ORC stores the kind of stream, the column id,
+and the stream's size in bytes. The details of what is stored in each stream
+depends on the type and encoding of the column.
 
-<p>To describe each stream, ORC stores the kind of stream, the column id,
-and the stream’s size in bytes. The details of what is stored in each stream
-depends on the type and encoding of the column.</p>
-
-<p><code>message Stream {
+```message Stream {
  enum Kind {
  // boolean stream of whether the next value is non-null
  PRESENT = 0;
@@ -665,13 +655,13 @@ depends on the type and encoding of the column.</p>
  // the number of bytes in the file
  optional uint64 length = 3;
 }
-</code></p>
+</code></pre></div></div>
 
 <p>Depending on their type several options for encoding are possible. The
 encodings are divided into direct or dictionary-based categories and
 further refined as to whether they use RLE v1 or v2.</p>
 
-<p><code>message ColumnEncoding {
+<p>```message ColumnEncoding {
  enum Kind {
  // the encoding is mapped directly to the stream using RLE v1
  DIRECT = 0;
@@ -682,505 +672,209 @@ further refined as to whether they use RLE v1 or v2.</p>
  required Kind kind = 1;
  // for dictionary encodings, record the size of the dictionary
  optional uint32 dictionarySize = 2;
-}
-</code></p>
+}</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+# Column Encodings
 
-<h1 id="column-encodings">Column Encodings</h1>
+## SmallInt, Int, and BigInt Columns
 
-<h2 id="smallint-int-and-bigint-columns">SmallInt, Int, and BigInt Columns</h2>
-
-<p>All of the 16, 32, and 64 bit integer column types use the same set of
+All of the 16, 32, and 64 bit integer column types use the same set of
 potential encodings, which is basically whether they use RLE v1 or
 v2. If the PRESENT stream is not included, all of the values are
 present. For values that have false bits in the present stream, no
-values are included in the data stream.</p>
+values are included in the data stream.
 
-<table>
-  <thead>
-    <tr>
-      <th style="text-align: left">Encoding</th>
-      <th style="text-align: left">Stream Kind</th>
-      <th style="text-align: left">Optional</th>
-      <th style="text-align: left">Contents</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="text-align: left">DIRECT</td>
-      <td style="text-align: left">PRESENT</td>
-      <td style="text-align: left">Yes</td>
-      <td style="text-align: left">Boolean RLE</td>
-    </tr>
-    <tr>
-      <td style="text-align: left"> </td>
-      <td style="text-align: left">DATA</td>
-      <td style="text-align: left">No</td>
-      <td style="text-align: left">Signed Integer RLE v1</td>
-    </tr>
-  </tbody>
-</table>
+Encoding  | Stream Kind | Optional | Contents
+:-------- | :---------- | :------- | :-------
+DIRECT    | PRESENT     | Yes      | Boolean RLE
+          | DATA        | No       | Signed Integer RLE v1
 
-<h2 id="float-and-double-columns">Float and Double Columns</h2>
+## Float and Double Columns
 
-<p>Floating point types are stored using IEEE 754 floating point bit
+Floating point types are stored using IEEE 754 floating point bit
 layout. Float columns use 4 bytes per value and double columns use 8
-bytes.</p>
+bytes.
 
-<table>
-  <thead>
-    <tr>
-      <th style="text-align: left">Encoding</th>
-      <th style="text-align: left">Stream Kind</th>
-      <th style="text-align: left">Optional</th>
-      <th style="text-align: left">Contents</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="text-align: left">DIRECT</td>
-      <td style="text-align: left">PRESENT</td>
-      <td style="text-align: left">Yes</td>
-      <td style="text-align: left">Boolean RLE</td>
-    </tr>
-    <tr>
-      <td style="text-align: left"> </td>
-      <td style="text-align: left">DATA</td>
-      <td style="text-align: left">No</td>
-      <td style="text-align: left">IEEE 754 floating point representation</td>
-    </tr>
-  </tbody>
-</table>
+Encoding  | Stream Kind | Optional | Contents
+:-------- | :---------- | :------- | :-------
+DIRECT    | PRESENT     | Yes      | Boolean RLE
+          | DATA        | No       | IEEE 754 floating point representation
 
-<h2 id="string-char-and-varchar-columns">String, Char, and VarChar Columns</h2>
+## String, Char, and VarChar Columns
 
-<p>String, char, and varchar columns may be encoded either using a
+String, char, and varchar columns may be encoded either using a
 dictionary encoding or a direct encoding. A direct encoding should be
 preferred when there are many distinct values. In all of the
 encodings, the PRESENT stream encodes whether the value is null. The
 Java ORC writer automatically picks the encoding after the first row
-group (10,000 rows).</p>
+group (10,000 rows).
 
-<p>For direct encoding the UTF-8 bytes are saved in the DATA stream and
+For direct encoding the UTF-8 bytes are saved in the DATA stream and
 the length of each value is written into the LENGTH stream. In direct
-encoding, if the values were [“Nevada”, “California”]; the DATA
-would be “NevadaCalifornia” and the LENGTH would be [6, 10].</p>
+encoding, if the values were ["Nevada", "California"]; the DATA
+would be "NevadaCalifornia" and the LENGTH would be [6, 10].
 
-<p>For dictionary encodings the dictionary is sorted and UTF-8 bytes of
+For dictionary encodings the dictionary is sorted and UTF-8 bytes of
 each unique value are placed into DICTIONARY_DATA. The length of each
 item in the dictionary is put into the LENGTH stream. The DATA stream
-consists of the sequence of references to the dictionary elements.</p>
+consists of the sequence of references to the dictionary elements.
 
-<p>In dictionary encoding, if the values were [“Nevada”,
-“California”, “Nevada”, “California”, and “Florida”]; the
-DICTIONARY_DATA would be “CaliforniaFloridaNevada” and LENGTH would
-be [10, 7, 6]. The DATA would be [2, 0, 2, 0, 1].</p>
+In dictionary encoding, if the values were ["Nevada",
+"California", "Nevada", "California", and "Florida"]; the
+DICTIONARY_DATA would be "CaliforniaFloridaNevada" and LENGTH would
+be [10, 7, 6]. The DATA would be [2, 0, 2, 0, 1].
 
-<table>
-  <thead>
-    <tr>
-      <th style="text-align: left">Encoding</th>
-      <th style="text-align: left">Stream Kind</th>
-      <th style="text-align: left">Optional</th>
-      <th style="text-align: left">Contents</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="text-align: left">DIRECT</td>
-      <td style="text-align: left">PRESENT</td>
-      <td style="text-align: left">Yes</td>
-      <td style="text-align: left">Boolean RLE</td>
-    </tr>
-    <tr>
-      <td style="text-align: left"> </td>
-      <td style="text-align: left">DATA</td>
-      <td style="text-align: left">No</td>
-      <td style="text-align: left">String contents</td>
-    </tr>
-    <tr>
-      <td style="text-align: left"> </td>
-      <td style="text-align: left">LENGTH</td>
-      <td style="text-align: left">No</td>
-      <td style="text-align: left">Unsigned Integer RLE v1</td>
-    </tr>
-    <tr>
-      <td style="text-align: left">DICTIONARY</td>
-      <td style="text-align: left">PRESENT</td>
-      <td style="text-align: left">Yes</td>
-      <td style="text-align: left">Boolean RLE</td>
-    </tr>
-    <tr>
-      <td style="text-align: left"> </td>
-      <td style="text-align: left">DATA</td>
-      <td style="text-align: left">No</td>
-      <td style="text-align: left">Unsigned Integer RLE v1</td>
-    </tr>
-    <tr>
-      <td style="text-align: left"> </td>
-      <td style="text-align: left">DICTIONARY_DATA</td>
-      <td style="text-align: left">No</td>
-      <td style="text-align: left">String contents</td>
-    </tr>
-    <tr>
-      <td style="text-align: left"> </td>
-      <td style="text-align: left">LENGTH</td>
-      <td style="text-align: left">No</td>
-      <td style="text-align: left">Unsigned Integer RLE v1</td>
-    </tr>
-  </tbody>
-</table>
+Encoding      | Stream Kind     | Optional | Contents
+:------------ | :-------------- | :------- | :-------
+DIRECT        | PRESENT         | Yes      | Boolean RLE
+              | DATA            | No       | String contents
+              | LENGTH          | No       | Unsigned Integer RLE v1
+DICTIONARY    | PRESENT         | Yes      | Boolean RLE
+              | DATA            | No       | Unsigned Integer RLE v1
+              | DICTIONARY_DATA | No       | String contents
+              | LENGTH          | No       | Unsigned Integer RLE v1
 
-<h2 id="boolean-columns">Boolean Columns</h2>
+## Boolean Columns
 
-<p>Boolean columns are rare, but have a simple encoding.</p>
+Boolean columns are rare, but have a simple encoding.
 
-<table>
-  <thead>
-    <tr>
-      <th style="text-align: left">Encoding</th>
-      <th style="text-align: left">Stream Kind</th>
-      <th style="text-align: left">Optional</th>
-      <th style="text-align: left">Contents</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="text-align: left">DIRECT</td>
-      <td style="text-align: left">PRESENT</td>
-      <td style="text-align: left">Yes</td>
-      <td style="text-align: left">Boolean RLE</td>
-    </tr>
-    <tr>
-      <td style="text-align: left"> </td>
-      <td style="text-align: left">DATA</td>
-      <td style="text-align: left">No</td>
-      <td style="text-align: left">Boolean RLE</td>
-    </tr>
-  </tbody>
-</table>
+Encoding      | Stream Kind     | Optional | Contents
+:------------ | :-------------- | :------- | :-------
+DIRECT        | PRESENT         | Yes      | Boolean RLE
+              | DATA            | No       | Boolean RLE
 
-<h2 id="tinyint-columns">TinyInt Columns</h2>
+## TinyInt Columns
 
-<p>TinyInt (byte) columns use byte run length encoding.</p>
+TinyInt (byte) columns use byte run length encoding.
 
-<table>
-  <thead>
-    <tr>
-      <th style="text-align: left">Encoding</th>
-      <th style="text-align: left">Stream Kind</th>
-      <th style="text-align: left">Optional</th>
-      <th style="text-align: left">Contents</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="text-align: left">DIRECT</td>
-      <td style="text-align: left">PRESENT</td>
-      <td style="text-align: left">Yes</td>
-      <td style="text-align: left">Boolean RLE</td>
-    </tr>
-    <tr>
-      <td style="text-align: left"> </td>
-      <td style="text-align: left">DATA</td>
-      <td style="text-align: left">No</td>
-      <td style="text-align: left">Byte RLE</td>
-    </tr>
-  </tbody>
-</table>
+Encoding      | Stream Kind     | Optional | Contents
+:------------ | :-------------- | :------- | :-------
+DIRECT        | PRESENT         | Yes      | Boolean RLE
+              | DATA            | No       | Byte RLE
 
-<h2 id="binary-columns">Binary Columns</h2>
+## Binary Columns
 
-<p>Binary data is encoded with a PRESENT stream, a DATA stream that records
+Binary data is encoded with a PRESENT stream, a DATA stream that records
 the contents, and a LENGTH stream that records the number of bytes per a
-value.</p>
+value.
 
-<table>
-  <thead>
-    <tr>
-      <th style="text-align: left">Encoding</th>
-      <th style="text-align: left">Stream Kind</th>
-      <th style="text-align: left">Optional</th>
-      <th style="text-align: left">Contents</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="text-align: left">DIRECT</td>
-      <td style="text-align: left">PRESENT</td>
-      <td style="text-align: left">Yes</td>
-      <td style="text-align: left">Boolean RLE</td>
-    </tr>
-    <tr>
-      <td style="text-align: left"> </td>
-      <td style="text-align: left">DATA</td>
-      <td style="text-align: left">No</td>
-      <td style="text-align: left">String contents</td>
-    </tr>
-    <tr>
-      <td style="text-align: left"> </td>
-      <td style="text-align: left">LENGTH</td>
-      <td style="text-align: left">No</td>
-      <td style="text-align: left">Unsigned Integer RLE v1</td>
-    </tr>
-  </tbody>
-</table>
+Encoding      | Stream Kind     | Optional | Contents
+:------------ | :-------------- | :------- | :-------
+DIRECT        | PRESENT         | Yes      | Boolean RLE
+              | DATA            | No       | String contents
+              | LENGTH          | No       | Unsigned Integer RLE v1
 
-<h2 id="decimal-columns">Decimal Columns</h2>
+## Decimal Columns
 
-<p>Decimal was introduced in Hive 0.11 with infinite precision (the total
+Decimal was introduced in Hive 0.11 with infinite precision (the total
 number of digits). In Hive 0.13, the definition was change to limit
 the precision to a maximum of 38 digits, which conveniently uses 127
 bits plus a sign bit. The current encoding of decimal columns stores
 the integer representation of the value as an unbounded length zigzag
 encoded base 128 varint. The scale is stored in the SECONDARY stream
-as an signed integer.</p>
+as an signed integer.
 
-<table>
-  <thead>
-    <tr>
-      <th style="text-align: left">Encoding</th>
-      <th style="text-align: left">Stream Kind</th>
-      <th style="text-align: left">Optional</th>
-      <th style="text-align: left">Contents</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="text-align: left">DIRECT</td>
-      <td style="text-align: left">PRESENT</td>
-      <td style="text-align: left">Yes</td>
-      <td style="text-align: left">Boolean RLE</td>
-    </tr>
-    <tr>
-      <td style="text-align: left"> </td>
-      <td style="text-align: left">DATA</td>
-      <td style="text-align: left">No</td>
-      <td style="text-align: left">Unbounded base 128 varints</td>
-    </tr>
-    <tr>
-      <td style="text-align: left"> </td>
-      <td style="text-align: left">SECONDARY</td>
-      <td style="text-align: left">No</td>
-      <td style="text-align: left">Unsigned Integer RLE v1</td>
-    </tr>
-  </tbody>
-</table>
+Encoding      | Stream Kind     | Optional | Contents
+:------------ | :-------------- | :------- | :-------
+DIRECT        | PRESENT         | Yes      | Boolean RLE
+              | DATA            | No       | Unbounded base 128 varints
+              | SECONDARY       | No       | Unsigned Integer RLE v1
 
-<h2 id="date-columns">Date Columns</h2>
+## Date Columns
 
-<p>Date data is encoded with a PRESENT stream, a DATA stream that records
-the number of days after January 1, 1970 in UTC.</p>
+Date data is encoded with a PRESENT stream, a DATA stream that records
+the number of days after January 1, 1970 in UTC.
 
-<table>
-  <thead>
-    <tr>
-      <th style="text-align: left">Encoding</th>
-      <th style="text-align: left">Stream Kind</th>
-      <th style="text-align: left">Optional</th>
-      <th style="text-align: left">Contents</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="text-align: left">DIRECT</td>
-      <td style="text-align: left">PRESENT</td>
-      <td style="text-align: left">Yes</td>
-      <td style="text-align: left">Boolean RLE</td>
-    </tr>
-    <tr>
-      <td style="text-align: left"> </td>
-      <td style="text-align: left">DATA</td>
-      <td style="text-align: left">No</td>
-      <td style="text-align: left">Signed Integer RLE v1</td>
-    </tr>
-  </tbody>
-</table>
+Encoding      | Stream Kind     | Optional | Contents
+:------------ | :-------------- | :------- | :-------
+DIRECT        | PRESENT         | Yes      | Boolean RLE
+              | DATA            | No       | Signed Integer RLE v1
 
-<h2 id="timestamp-columns">Timestamp Columns</h2>
+## Timestamp Columns
 
-<p>Timestamp records times down to nanoseconds as a PRESENT stream that
+Timestamp records times down to nanoseconds as a PRESENT stream that
 records non-null values, a DATA stream that records the number of
 seconds after 1 January 2015, and a SECONDARY stream that records the
-number of nanoseconds.</p>
+number of nanoseconds.
 
-<p>Because the number of nanoseconds often has a large number of trailing
+Because the number of nanoseconds often has a large number of trailing
 zeros, the number has trailing decimal zero digits removed and the
 last three bits are used to record how many zeros were removed. Thus
 1000 nanoseconds would be serialized as 0x0b and 100000 would be
-serialized as 0x0d.</p>
+serialized as 0x0d.
 
-<table>
-  <thead>
-    <tr>
-      <th style="text-align: left">Encoding</th>
-      <th style="text-align: left">Stream Kind</th>
-      <th style="text-align: left">Optional</th>
-      <th style="text-align: left">Contents</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="text-align: left">DIRECT</td>
-      <td style="text-align: left">PRESENT</td>
-      <td style="text-align: left">Yes</td>
-      <td style="text-align: left">Boolean RLE</td>
-    </tr>
-    <tr>
-      <td style="text-align: left"> </td>
-      <td style="text-align: left">DATA</td>
-      <td style="text-align: left">No</td>
-      <td style="text-align: left">Signed Integer RLE v1</td>
-    </tr>
-    <tr>
-      <td style="text-align: left"> </td>
-      <td style="text-align: left">SECONDARY</td>
-      <td style="text-align: left">No</td>
-      <td style="text-align: left">Unsigned Integer RLE v1</td>
-    </tr>
-  </tbody>
-</table>
+Encoding      | Stream Kind     | Optional | Contents
+:------------ | :-------------- | :------- | :-------
+DIRECT        | PRESENT         | Yes      | Boolean RLE
+              | DATA            | No       | Signed Integer RLE v1
+              | SECONDARY       | No       | Unsigned Integer RLE v1
 
-<h2 id="struct-columns">Struct Columns</h2>
+## Struct Columns
 
-<p>Structs have no data themselves and delegate everything to their child
+Structs have no data themselves and delegate everything to their child
 columns except for their PRESENT stream. They have a child column
-for each of the fields.</p>
+for each of the fields.
 
-<table>
-  <thead>
-    <tr>
-      <th style="text-align: left">Encoding</th>
-      <th style="text-align: left">Stream Kind</th>
-      <th style="text-align: left">Optional</th>
-      <th style="text-align: left">Contents</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="text-align: left">DIRECT</td>
-      <td style="text-align: left">PRESENT</td>
-      <td style="text-align: left">Yes</td>
-      <td style="text-align: left">Boolean RLE</td>
-    </tr>
-  </tbody>
-</table>
+Encoding      | Stream Kind     | Optional | Contents
+:------------ | :-------------- | :------- | :-------
+DIRECT        | PRESENT         | Yes      | Boolean RLE
 
-<h2 id="list-columns">List Columns</h2>
+## List Columns
 
-<p>Lists are encoded as the PRESENT stream and a length stream with
+Lists are encoded as the PRESENT stream and a length stream with
 number of items in each list. They have a single child column for the
-element values.</p>
+element values.
 
-<table>
-  <thead>
-    <tr>
-      <th style="text-align: left">Encoding</th>
-      <th style="text-align: left">Stream Kind</th>
-      <th style="text-align: left">Optional</th>
-      <th style="text-align: left">Contents</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="text-align: left">DIRECT</td>
-      <td style="text-align: left">PRESENT</td>
-      <td style="text-align: left">Yes</td>
-      <td style="text-align: left">Boolean RLE</td>
-    </tr>
-    <tr>
-      <td style="text-align: left"> </td>
-      <td style="text-align: left">LENGTH</td>
-      <td style="text-align: left">No</td>
-      <td style="text-align: left">Unsigned Integer RLE v1</td>
-    </tr>
-  </tbody>
-</table>
+Encoding      | Stream Kind     | Optional | Contents
+:------------ | :-------------- | :------- | :-------
+DIRECT        | PRESENT         | Yes      | Boolean RLE
+              | LENGTH          | No       | Unsigned Integer RLE v1
 
-<h2 id="map-columns">Map Columns</h2>
+## Map Columns
 
-<p>Maps are encoded as the PRESENT stream and a length stream with number
+Maps are encoded as the PRESENT stream and a length stream with number
 of items in each list. They have a child column for the key and
-another child column for the value.</p>
+another child column for the value.
 
-<table>
-  <thead>
-    <tr>
-      <th style="text-align: left">Encoding</th>
-      <th style="text-align: left">Stream Kind</th>
-      <th style="text-align: left">Optional</th>
-      <th style="text-align: left">Contents</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="text-align: left">DIRECT</td>
-      <td style="text-align: left">PRESENT</td>
-      <td style="text-align: left">Yes</td>
-      <td style="text-align: left">Boolean RLE</td>
-    </tr>
-    <tr>
-      <td style="text-align: left"> </td>
-      <td style="text-align: left">LENGTH</td>
-      <td style="text-align: left">No</td>
-      <td style="text-align: left">Unsigned Integer RLE v1</td>
-    </tr>
-  </tbody>
-</table>
+Encoding      | Stream Kind     | Optional | Contents
+:------------ | :-------------- | :------- | :-------
+DIRECT        | PRESENT         | Yes      | Boolean RLE
+              | LENGTH          | No       | Unsigned Integer RLE v1
 
-<h2 id="union-columns">Union Columns</h2>
+## Union Columns
 
-<p>Unions are encoded as the PRESENT stream and a tag stream that controls which
+Unions are encoded as the PRESENT stream and a tag stream that controls which
 potential variant is used. They have a child column for each variant of the
 union. Currently ORC union types are limited to 256 variants, which matches
-the Hive type model.</p>
+the Hive type model.
 
-<table>
-  <thead>
-    <tr>
-      <th style="text-align: left">Encoding</th>
-      <th style="text-align: left">Stream Kind</th>
-      <th style="text-align: left">Optional</th>
-      <th style="text-align: left">Contents</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="text-align: left">DIRECT</td>
-      <td style="text-align: left">PRESENT</td>
-      <td style="text-align: left">Yes</td>
-      <td style="text-align: left">Boolean RLE</td>
-    </tr>
-    <tr>
-      <td style="text-align: left"> </td>
-      <td style="text-align: left">DIRECT</td>
-      <td style="text-align: left">No</td>
-      <td style="text-align: left">Byte RLE</td>
-    </tr>
-  </tbody>
-</table>
+Encoding      | Stream Kind     | Optional | Contents
+:------------ | :-------------- | :------- | :-------
+DIRECT        | PRESENT         | Yes      | Boolean RLE
+              | DIRECT          | No       | Byte RLE
 
-<h1 id="indexes">Indexes</h1>
+# Indexes
 
-<h2 id="row-group-index">Row Group Index</h2>
+## Row Group Index
 
-<p>The row group indexes consist of a ROW_INDEX stream for each primitive
+The row group indexes consist of a ROW_INDEX stream for each primitive
 column that has an entry for each row group. Row groups are controlled
 by the writer and default to 10,000 rows. Each RowIndexEntry gives the
 position of each stream for the column and the statistics for that row
-group.</p>
+group.
 
-<p>The index streams are placed at the front of the stripe, because in
+The index streams are placed at the front of the stripe, because in
 the default case of streaming they do not need to be read. They are
 only loaded when either predicate push down is being used or the
-reader seeks to a particular row.</p>
+reader seeks to a particular row.
 
-<p><code>message RowIndexEntry {
+```message RowIndexEntry {
  repeated uint64 positions = 1 [packed=true];
  optional ColumnStatistics statistics = 2;
 }
-</code></p>
+</code></pre></div></div>
 
-<p><code>message RowIndex {
+<p><code class="highlighter-rouge">message RowIndex {
  repeated RowIndexEntry entry = 1;
 }
 </code></p>

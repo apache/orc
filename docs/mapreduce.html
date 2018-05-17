@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Using in MapReduce</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="generator" content="Jekyll v2.4.0">
+  <meta name="generator" content="Jekyll v3.7.3">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
   <link rel="stylesheet" href="/css/screen.css">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -109,7 +109,7 @@
     
   
     
-      <option value="/docs/index.html">Background</option>
+      <option value="http://localhost:4000/docs/index.html">Background</option>
     
   
     
@@ -131,7 +131,7 @@
     
   
     
-      <option value="/docs/adopters.html">ORC Adopters</option>
+      <option value="http://localhost:4000/docs/adopters.html">ORC Adopters</option>
     
   
     
@@ -158,42 +158,6 @@
   
     
   
-    
-  
-
-  
-
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-      <option value="/docs/types.html">Types</option>
     
   
 
@@ -219,7 +183,43 @@
     
   
     
-      <option value="/docs/indexes.html">Indexes</option>
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="http://localhost:4000/docs/types.html">Types</option>
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="http://localhost:4000/docs/indexes.html">Indexes</option>
     
   
     
@@ -237,7 +237,7 @@
 
   
     
-      <option value="/docs/acid.html">ACID support</option>
+      <option value="http://localhost:4000/docs/acid.html">ACID support</option>
     
   
     
@@ -284,7 +284,7 @@
     
   
     
-      <option value="/docs/building.html">Building ORC</option>
+      <option value="http://localhost:4000/docs/building.html">Building ORC</option>
     
   
     
@@ -342,7 +342,7 @@
     
   
     
-      <option value="/docs/releases.html">Releases</option>
+      <option value="http://localhost:4000/docs/releases.html">Releases</option>
     
   
     
@@ -373,7 +373,7 @@
     
   
     
-      <option value="/docs/hive-ddl.html">Hive DDL</option>
+      <option value="http://localhost:4000/docs/hive-ddl.html">Hive DDL</option>
     
   
     
@@ -407,7 +407,7 @@
     
   
     
-      <option value="/docs/hive-config.html">Hive Configuration</option>
+      <option value="http://localhost:4000/docs/hive-config.html">Hive Configuration</option>
     
   
     
@@ -460,7 +460,7 @@
     
   
     
-      <option value="/docs/mapred.html">Using in MapRed</option>
+      <option value="http://localhost:4000/docs/mapred.html">Using in MapRed</option>
     
   
     
@@ -498,7 +498,7 @@
     
   
     
-      <option value="/docs/mapreduce.html">Using in MapReduce</option>
+      <option value="http://localhost:4000/docs/mapreduce.html">Using in MapReduce</option>
     
   
     
@@ -525,7 +525,7 @@
     
   
     
-      <option value="/docs/core-java.html">Using Core Java</option>
+      <option value="http://localhost:4000/docs/core-java.html">Using Core Java</option>
     
   
     
@@ -559,7 +559,7 @@
     
   
     
-      <option value="/docs/core-cpp.html">Using Core C++</option>
+      <option value="http://localhost:4000/docs/core-cpp.html">Using Core C++</option>
     
   
     
@@ -606,7 +606,7 @@
     
   
     
-      <option value="/docs/cpp-tools.html">C++ Tools</option>
+      <option value="http://localhost:4000/docs/cpp-tools.html">C++ Tools</option>
     
   
     
@@ -652,7 +652,7 @@
     
   
     
-      <option value="/docs/java-tools.html">Java Tools</option>
+      <option value="http://localhost:4000/docs/java-tools.html">Java Tools</option>
     
   
     
@@ -676,31 +676,31 @@
           <h1>Using in MapReduce</h1>
           <p>This page describes how to read and write ORC files from Hadoop’s
 newer org.apache.hadoop.mapreduce MapReduce APIs. If you want to use the
-older org.apache.hadoop.mapred API, please look at the <a href="/docs/mapred.html">previous
+older org.apache.hadoop.mapred API, please look at the <a href="http://localhost:4000/docs/mapred.html">previous
 page</a>.</p>
 
 <h2 id="reading-orc-files">Reading ORC files</h2>
 
-<p>Add ORC and your desired version of Hadoop to your <code>pom.xml</code>:</p>
+<p>Add ORC and your desired version of Hadoop to your <code class="highlighter-rouge">pom.xml</code>:</p>
 
-<pre><code class="language-xml">&lt;dependencies&gt;
-  &lt;dependency&gt;
-    &lt;groupId&gt;org.apache.orc&lt;/groupId&gt;
-    &lt;artifactId&gt;orc-mapreduce&lt;/artifactId&gt;
-    &lt;version&gt;1.1.0&lt;/version&gt;
-  &lt;/dependency&gt;
-  &lt;dependency&gt;
-    &lt;groupId&gt;org.apache.hadoop&lt;/groupId&gt;
-    &lt;artifactId&gt;hadoop-mapreduce-client-core&lt;/artifactId&gt;
-    &lt;version&gt;2.7.0&lt;/version&gt;
-  &lt;/dependency&gt;
-&lt;/dependencies&gt;
-</code></pre>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;dependencies&gt;</span>
+  <span class="nt">&lt;dependency&gt;</span>
+    <span class="nt">&lt;groupId&gt;</span>org.apache.orc<span class="nt">&lt;/groupId&gt;</span>
+    <span class="nt">&lt;artifactId&gt;</span>orc-mapreduce<span class="nt">&lt;/artifactId&gt;</span>
+    <span class="nt">&lt;version&gt;</span>1.1.0<span class="nt">&lt;/version&gt;</span>
+  <span class="nt">&lt;/dependency&gt;</span>
+  <span class="nt">&lt;dependency&gt;</span>
+    <span class="nt">&lt;groupId&gt;</span>org.apache.hadoop<span class="nt">&lt;/groupId&gt;</span>
+    <span class="nt">&lt;artifactId&gt;</span>hadoop-mapreduce-client-core<span class="nt">&lt;/artifactId&gt;</span>
+    <span class="nt">&lt;version&gt;</span>2.7.0<span class="nt">&lt;/version&gt;</span>
+  <span class="nt">&lt;/dependency&gt;</span>
+<span class="nt">&lt;/dependencies&gt;</span>
+</code></pre></div></div>
 
 <p>Set the minimal properties in your JobConf:</p>
 
 <ul>
-  <li><strong>mapreduce.job.inputformat.class</strong> = <a href="/api/orc-mapreduce/index.html?org/apache/orc/mapreduce/OrcInputFormat.html">org.apache.orc.mapreduce.OrcInputFormat</a></li>
+  <li><strong>mapreduce.job.inputformat.class</strong> = <a href="http://localhost:4000/api/orc-mapreduce/index.html?org/apache/orc/mapreduce/OrcInputFormat.html">org.apache.orc.mapreduce.OrcInputFormat</a></li>
   <li><strong>mapreduce.input.fileinputformat.inputdir</strong> = your input directory</li>
 </ul>
 
@@ -723,7 +723,7 @@ the key and a value based on the table below expanded recursively.</p>
   <tbody>
     <tr>
       <td>array</td>
-      <td><a href="/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcStruct.html">org.apache.orc.mapred.OrcList</a></td>
+      <td><a href="http://localhost:4000/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcStruct.html">org.apache.orc.mapred.OrcList</a></td>
     </tr>
     <tr>
       <td>binary</td>
@@ -743,11 +743,11 @@ the key and a value based on the table below expanded recursively.</p>
     </tr>
     <tr>
       <td>date</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/serde2/io/DateWritable.html">org.apache.hadoop.hive.serde2.io.DateWritable</a></td>
+      <td><a href="http://localhost:4000/api/hive-storage-api/index.html?org/apache/hadoop/hive/serde2/io/DateWritable.html">org.apache.hadoop.hive.serde2.io.DateWritable</a></td>
     </tr>
     <tr>
       <td>decimal</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/serde2/io/HiveDecimalWritable.html">org.apache.hadoop.hive.serde2.io.HiveDecimalWritable</a></td>
+      <td><a href="http://localhost:4000/api/hive-storage-api/index.html?org/apache/hadoop/hive/serde2/io/HiveDecimalWritable.html">org.apache.hadoop.hive.serde2.io.HiveDecimalWritable</a></td>
     </tr>
     <tr>
       <td>double</td>
@@ -763,7 +763,7 @@ the key and a value based on the table below expanded recursively.</p>
     </tr>
     <tr>
       <td>map</td>
-      <td><a href="/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcMap.html">org.apache.orc.mapred.OrcMap</a></td>
+      <td><a href="http://localhost:4000/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcMap.html">org.apache.orc.mapred.OrcMap</a></td>
     </tr>
     <tr>
       <td>smallint</td>
@@ -775,11 +775,11 @@ the key and a value based on the table below expanded recursively.</p>
     </tr>
     <tr>
       <td>struct</td>
-      <td><a href="/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcStruct.html">org.apache.orc.mapred.OrcStruct</a></td>
+      <td><a href="http://localhost:4000/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcStruct.html">org.apache.orc.mapred.OrcStruct</a></td>
     </tr>
     <tr>
       <td>timestamp</td>
-      <td><a href="/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcTimestamp.html">org.apache.orc.mapred.OrcTimestamp</a></td>
+      <td><a href="http://localhost:4000/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcTimestamp.html">org.apache.orc.mapred.OrcTimestamp</a></td>
     </tr>
     <tr>
       <td>tinyint</td>
@@ -787,7 +787,7 @@ the key and a value based on the table below expanded recursively.</p>
     </tr>
     <tr>
       <td>uniontype</td>
-      <td><a href="/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcUnion.html">org.apache.orc.mapred.OrcUnion</a></td>
+      <td><a href="http://localhost:4000/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcUnion.html">org.apache.orc.mapred.OrcUnion</a></td>
     </tr>
     <tr>
       <td>varchar</td>
@@ -797,29 +797,29 @@ the key and a value based on the table below expanded recursively.</p>
 </table>
 
 <p>Let’s assume that your input directory contains ORC files with the
-schema <code>struct&lt;s:string,i:int&gt;</code> and you want to use the string field
+schema <code class="highlighter-rouge">struct&lt;s:string,i:int&gt;</code> and you want to use the string field
 as the key to the MapReduce shuffle and the integer as the value. The
 mapper code would look like:</p>
 
-<pre><code class="language-java">public static class MyMapper
-    extends Mapper&lt;NullWritable,OrcStruct,Text,IntWritable&gt; {
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">class</span> <span class="nc">MyMapper</span>
+    <span class="kd">extends</span> <span class="n">Mapper</span><span class="o">&lt;</span><span class="n">NullWritable</span><span class="o">,</span><span class="n">OrcStruct</span><span class="o">,</span><span class="n">Text</span><span class="o">,</span><span class="n">IntWritable</span><span class="o">&gt;</span> <span class="o">{</span>
 
-  // Assume the ORC file has type: struct&lt;s:string,i:int&gt;
-  public void map(NullWritable key, OrcStruct value,
-                  Context output) throws IOException, InterruptedException {
-    // take the first field as the key and the second field as the value
-    output.write((Text) value.getFieldValue(0),
-                 (IntWritable) value.getFieldValue(1));
-  }
-}
-</code></pre>
+  <span class="c1">// Assume the ORC file has type: struct&lt;s:string,i:int&gt;</span>
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">map</span><span class="o">(</span><span class="n">NullWritable</span> <span class="n">key</span><span class="o">,</span> <span class="n">OrcStruct</span> <span class="n">value</span><span class="o">,</span>
+                  <span class="n">Context</span> <span class="n">output</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span><span class="o">,</span> <span class="n">InterruptedException</span> <span class="o">{</span>
+    <span class="c1">// take the first field as the key and the second field as the value</span>
+    <span class="n">output</span><span class="o">.</span><span class="na">write</span><span class="o">((</span><span class="n">Text</span><span class="o">)</span> <span class="n">value</span><span class="o">.</span><span class="na">getFieldValue</span><span class="o">(</span><span class="mi">0</span><span class="o">),</span>
+                 <span class="o">(</span><span class="n">IntWritable</span><span class="o">)</span> <span class="n">value</span><span class="o">.</span><span class="na">getFieldValue</span><span class="o">(</span><span class="mi">1</span><span class="o">));</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
 
 <h2 id="writing-orc-files">Writing ORC files</h2>
 
 <p>To write ORC files from your MapReduce job, you’ll need to set</p>
 
 <ul>
-  <li><strong>mapreduce.job.outputformat.class</strong> = <a href="/api/orc-mapreduce/index.html?org/apache/orc/mapreduce/OrcOutputFormat.html">org.apache.orc.mapreduce.OrcOutputFormat</a></li>
+  <li><strong>mapreduce.job.outputformat.class</strong> = <a href="http://localhost:4000/api/orc-mapreduce/index.html?org/apache/orc/mapreduce/OrcOutputFormat.html">org.apache.orc.mapreduce.OrcOutputFormat</a></li>
   <li><strong>mapreduce.output.fileoutputformat.outputdir</strong> = your output directory</li>
   <li><strong>orc.mapred.output.schema</strong> = the schema to write to the ORC file</li>
 </ul>
@@ -829,34 +829,34 @@ file and typically uses the OrcStruct.createValue(TypeDescription)
 function. For our example, let’s assume that the shuffle types are
 (Text, IntWritable) from the previous section and the reduce should
 gather the integer for each key together and write them as a list. The
-output schema would be <code>struct&lt;key:string,ints:array&lt;int&gt;&gt;</code>. As always
+output schema would be <code class="highlighter-rouge">struct&lt;key:string,ints:array&lt;int&gt;&gt;</code>. As always
 with MapReduce, if your method stores the values, you need to copy their
 value before getting the next.</p>
 
-<pre><code class="language-java">public static class MyReducer
-  extends Reducer&lt;Text,IntWritable,NullWritable,OrcStruct&gt; {
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">class</span> <span class="nc">MyReducer</span>
+  <span class="kd">extends</span> <span class="n">Reducer</span><span class="o">&lt;</span><span class="n">Text</span><span class="o">,</span><span class="n">IntWritable</span><span class="o">,</span><span class="n">NullWritable</span><span class="o">,</span><span class="n">OrcStruct</span><span class="o">&gt;</span> <span class="o">{</span>
 
-  private TypeDescription schema =
-    TypeDescription.fromString("struct&lt;key:string,ints:array&lt;int&gt;&gt;");
-  // createValue creates the correct value type for the schema
-  private OrcStruct pair = (OrcStruct) OrcStruct.createValue(schema);
-  // get a handle to the list of ints
-  private OrcList&lt;IntWritable&gt; valueList =
-    (OrcList&lt;IntWritable&gt;) pair.getFieldValue(1);
-  private final NullWritable nada = NullWritable.get();
+  <span class="kd">private</span> <span class="n">TypeDescription</span> <span class="n">schema</span> <span class="o">=</span>
+    <span class="n">TypeDescription</span><span class="o">.</span><span class="na">fromString</span><span class="o">(</span><span class="s">"struct&lt;key:string,ints:array&lt;int&gt;&gt;"</span><span class="o">);</span>
+  <span class="c1">// createValue creates the correct value type for the schema</span>
+  <span class="kd">private</span> <span class="n">OrcStruct</span> <span class="n">pair</span> <span class="o">=</span> <span class="o">(</span><span class="n">OrcStruct</span><span class="o">)</span> <span class="n">OrcStruct</span><span class="o">.</span><span class="na">createValue</span><span class="o">(</span><span class="n">schema</span><span class="o">);</span>
+  <span class="c1">// get a handle to the list of ints</span>
+  <span class="kd">private</span> <span class="n">OrcList</span><span class="o">&lt;</span><span class="n">IntWritable</span><span class="o">&gt;</span> <span class="n">valueList</span> <span class="o">=</span>
+    <span class="o">(</span><span class="n">OrcList</span><span class="o">&lt;</span><span class="n">IntWritable</span><span class="o">&gt;)</span> <span class="n">pair</span><span class="o">.</span><span class="na">getFieldValue</span><span class="o">(</span><span class="mi">1</span><span class="o">);</span>
+  <span class="kd">private</span> <span class="kd">final</span> <span class="n">NullWritable</span> <span class="n">nada</span> <span class="o">=</span> <span class="n">NullWritable</span><span class="o">.</span><span class="na">get</span><span class="o">();</span>
 
-  public void reduce(Text key, Iterable&lt;IntWritable&gt; values,
-                     Context output
-                     ) throws IOException, InterruptedException {
-    pair.setFieldValue(0, key);
-    valueList.clear();
-    for(IntWritable val: values) {
-      valueList.add(new IntWritable(val.get()));
-    }
-    output.write(nada, pair);
-  }
-}
-</code></pre>
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">reduce</span><span class="o">(</span><span class="n">Text</span> <span class="n">key</span><span class="o">,</span> <span class="n">Iterable</span><span class="o">&lt;</span><span class="n">IntWritable</span><span class="o">&gt;</span> <span class="n">values</span><span class="o">,</span>
+                     <span class="n">Context</span> <span class="n">output</span>
+                     <span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span><span class="o">,</span> <span class="n">InterruptedException</span> <span class="o">{</span>
+    <span class="n">pair</span><span class="o">.</span><span class="na">setFieldValue</span><span class="o">(</span><span class="mi">0</span><span class="o">,</span> <span class="n">key</span><span class="o">);</span>
+    <span class="n">valueList</span><span class="o">.</span><span class="na">clear</span><span class="o">();</span>
+    <span class="k">for</span><span class="o">(</span><span class="n">IntWritable</span> <span class="nl">val:</span> <span class="n">values</span><span class="o">)</span> <span class="o">{</span>
+      <span class="n">valueList</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="n">IntWritable</span><span class="o">(</span><span class="n">val</span><span class="o">.</span><span class="na">get</span><span class="o">()));</span>
+    <span class="o">}</span>
+    <span class="n">output</span><span class="o">.</span><span class="na">write</span><span class="o">(</span><span class="n">nada</span><span class="o">,</span> <span class="n">pair</span><span class="o">);</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
 
 <h2 id="sending-orcstruct-orclist-orcmap-or-orcunion-through-the-shuffle">Sending OrcStruct, OrcList, OrcMap, or OrcUnion through the Shuffle</h2>
 
@@ -865,9 +865,9 @@ MapReduce shuffle. The complex ORC types, since they are generic
 types, need to have their full type information provided to create the
 object. To enable MapReduce to properly instantiate the OrcStruct and
 other ORC types, we need to wrap it in either an
-<a href="/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcKey.html">OrcKey</a>
+<a href="http://localhost:4000/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcKey.html">OrcKey</a>
 for the shuffle key or
-<a href="/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcValue.html">OrcValue</a>
+<a href="http://localhost:4000/api/orc-mapreduce/index.html?org/apache/orc/mapred/OrcValue.html">OrcValue</a>
 for the shuffle value.</p>
 
 <p>To send two OrcStructs through the shuffle, define the following properties
@@ -884,27 +884,27 @@ in the JobConf:</p>
 respectively. These objects should be created once and reused as the mapper
 runs.</p>
 
-<pre><code class="language-java">public static class MyMapperShuffle
-    extends Mapper&lt;NullWritable,OrcStruct,OrcKey,OrcValue&gt; {
-  private OrcKey keyWrapper = new OrcKey();
-  private OrcValue valueWrapper = new OrcValue();
-  private OrcStruct outStruct = (OrcStruct) OrcStruct.createValue
-    (TypeDescription.fromString("struct&lt;i:int,j:int&gt;"));
-  private IntWritable i = (IntWritable) outStruct.getFieldValue("i");
-  private IntWritable j = (IntWritable) outStruct.getFieldValue("j");
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">class</span> <span class="nc">MyMapperShuffle</span>
+    <span class="kd">extends</span> <span class="n">Mapper</span><span class="o">&lt;</span><span class="n">NullWritable</span><span class="o">,</span><span class="n">OrcStruct</span><span class="o">,</span><span class="n">OrcKey</span><span class="o">,</span><span class="n">OrcValue</span><span class="o">&gt;</span> <span class="o">{</span>
+  <span class="kd">private</span> <span class="n">OrcKey</span> <span class="n">keyWrapper</span> <span class="o">=</span> <span class="k">new</span> <span class="n">OrcKey</span><span class="o">();</span>
+  <span class="kd">private</span> <span class="n">OrcValue</span> <span class="n">valueWrapper</span> <span class="o">=</span> <span class="k">new</span> <span class="n">OrcValue</span><span class="o">();</span>
+  <span class="kd">private</span> <span class="n">OrcStruct</span> <span class="n">outStruct</span> <span class="o">=</span> <span class="o">(</span><span class="n">OrcStruct</span><span class="o">)</span> <span class="n">OrcStruct</span><span class="o">.</span><span class="na">createValue</span>
+    <span class="o">(</span><span class="n">TypeDescription</span><span class="o">.</span><span class="na">fromString</span><span class="o">(</span><span class="s">"struct&lt;i:int,j:int&gt;"</span><span class="o">));</span>
+  <span class="kd">private</span> <span class="n">IntWritable</span> <span class="n">i</span> <span class="o">=</span> <span class="o">(</span><span class="n">IntWritable</span><span class="o">)</span> <span class="n">outStruct</span><span class="o">.</span><span class="na">getFieldValue</span><span class="o">(</span><span class="s">"i"</span><span class="o">);</span>
+  <span class="kd">private</span> <span class="n">IntWritable</span> <span class="n">j</span> <span class="o">=</span> <span class="o">(</span><span class="n">IntWritable</span><span class="o">)</span> <span class="n">outStruct</span><span class="o">.</span><span class="na">getFieldValue</span><span class="o">(</span><span class="s">"j"</span><span class="o">);</span>
 
-  // Assume the input has type: struct&lt;s:string,i:int&gt;
-  public void map(NullWritable key, OrcStruct value,
-                  Context output) throws IOException, InterruptedException {
-    keyWrapper.key = value;
-    valueWrapper.value = outStruct;
-    int val = ((IntWritable) value.getFieldValue("i")).get();
-    i.set(val * 2);
-    j.set(val * val);
-    output.write(keyWrapper, valueWrapper);
-  }
-}
-</code></pre>
+  <span class="c1">// Assume the input has type: struct&lt;s:string,i:int&gt;</span>
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">map</span><span class="o">(</span><span class="n">NullWritable</span> <span class="n">key</span><span class="o">,</span> <span class="n">OrcStruct</span> <span class="n">value</span><span class="o">,</span>
+                  <span class="n">Context</span> <span class="n">output</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span><span class="o">,</span> <span class="n">InterruptedException</span> <span class="o">{</span>
+    <span class="n">keyWrapper</span><span class="o">.</span><span class="na">key</span> <span class="o">=</span> <span class="n">value</span><span class="o">;</span>
+    <span class="n">valueWrapper</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">outStruct</span><span class="o">;</span>
+    <span class="kt">int</span> <span class="n">val</span> <span class="o">=</span> <span class="o">((</span><span class="n">IntWritable</span><span class="o">)</span> <span class="n">value</span><span class="o">.</span><span class="na">getFieldValue</span><span class="o">(</span><span class="s">"i"</span><span class="o">)).</span><span class="na">get</span><span class="o">();</span>
+    <span class="n">i</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="n">val</span> <span class="o">*</span> <span class="mi">2</span><span class="o">);</span>
+    <span class="n">j</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="n">val</span> <span class="o">*</span> <span class="n">val</span><span class="o">);</span>
+    <span class="n">output</span><span class="o">.</span><span class="na">write</span><span class="o">(</span><span class="n">keyWrapper</span><span class="o">,</span> <span class="n">valueWrapper</span><span class="o">);</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
 
 <p>The reducer code accesses the underlying OrcStructs by using the
 OrcKey.key and OrcValue.value fields.</p>
@@ -980,8 +980,6 @@ OrcKey.key and OrcValue.value fields.</p>
   
 
   
-    
-  
 
   
     
@@ -1001,29 +999,25 @@ OrcKey.key and OrcValue.value fields.</p>
     
   
     
-      <li class=""><a href="/docs/index.html">Background</a></li>
+      <li class=""><a href="http://localhost:4000/docs/index.html">Background</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
   
     
-      <li class=""><a href="/docs/adopters.html">ORC Adopters</a></li>
+      <li class=""><a href="http://localhost:4000/docs/adopters.html">ORC Adopters</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1055,15 +1049,13 @@ OrcKey.key and OrcValue.value fields.</p>
     
   
     
-      <li class=""><a href="/docs/types.html">Types</a></li>
+      <li class=""><a href="http://localhost:4000/docs/types.html">Types</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1085,19 +1077,17 @@ OrcKey.key and OrcValue.value fields.</p>
     
   
     
-      <li class=""><a href="/docs/indexes.html">Indexes</a></li>
+      <li class=""><a href="http://localhost:4000/docs/indexes.html">Indexes</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
-      <li class=""><a href="/docs/acid.html">ACID support</a></li>
+      <li class=""><a href="http://localhost:4000/docs/acid.html">ACID support</a></li>
       
 
 
@@ -1112,8 +1102,6 @@ OrcKey.key and OrcValue.value fields.</p>
   
 
   
-    
-  
 
   
     
@@ -1121,15 +1109,13 @@ OrcKey.key and OrcValue.value fields.</p>
     
   
     
-      <li class=""><a href="/docs/building.html">Building ORC</a></li>
+      <li class=""><a href="http://localhost:4000/docs/building.html">Building ORC</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1159,7 +1145,7 @@ OrcKey.key and OrcValue.value fields.</p>
     
   
     
-      <li class=""><a href="/docs/releases.html">Releases</a></li>
+      <li class=""><a href="http://localhost:4000/docs/releases.html">Releases</a></li>
       
 
 
@@ -1174,8 +1160,6 @@ OrcKey.key and OrcValue.value fields.</p>
   
 
   
-    
-  
 
   
     
@@ -1193,15 +1177,13 @@ OrcKey.key and OrcValue.value fields.</p>
     
   
     
-      <li class=""><a href="/docs/hive-ddl.html">Hive DDL</a></li>
+      <li class=""><a href="http://localhost:4000/docs/hive-ddl.html">Hive DDL</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1217,7 +1199,7 @@ OrcKey.key and OrcValue.value fields.</p>
     
   
     
-      <li class=""><a href="/docs/hive-config.html">Hive Configuration</a></li>
+      <li class=""><a href="http://localhost:4000/docs/hive-config.html">Hive Configuration</a></li>
       
 
 
@@ -1232,8 +1214,6 @@ OrcKey.key and OrcValue.value fields.</p>
   
 
   
-    
-  
 
   
     
@@ -1259,15 +1239,13 @@ OrcKey.key and OrcValue.value fields.</p>
     
   
     
-      <li class=""><a href="/docs/mapred.html">Using in MapRed</a></li>
+      <li class=""><a href="http://localhost:4000/docs/mapred.html">Using in MapRed</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1295,7 +1273,7 @@ OrcKey.key and OrcValue.value fields.</p>
     
   
     
-      <li class="current"><a href="/docs/mapreduce.html">Using in MapReduce</a></li>
+      <li class="current"><a href="http://localhost:4000/docs/mapreduce.html">Using in MapReduce</a></li>
       
 
 
@@ -1310,8 +1288,6 @@ OrcKey.key and OrcValue.value fields.</p>
   
 
   
-    
-  
 
   
     
@@ -1323,15 +1299,13 @@ OrcKey.key and OrcValue.value fields.</p>
     
   
     
-      <li class=""><a href="/docs/core-java.html">Using Core Java</a></li>
+      <li class=""><a href="http://localhost:4000/docs/core-java.html">Using Core Java</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1341,7 +1315,7 @@ OrcKey.key and OrcValue.value fields.</p>
     
   
     
-      <li class=""><a href="/docs/core-cpp.html">Using Core C++</a></li>
+      <li class=""><a href="http://localhost:4000/docs/core-cpp.html">Using Core C++</a></li>
       
 
 
@@ -1356,8 +1330,6 @@ OrcKey.key and OrcValue.value fields.</p>
   
 
   
-    
-  
 
   
     
@@ -1371,15 +1343,13 @@ OrcKey.key and OrcValue.value fields.</p>
     
   
     
-      <li class=""><a href="/docs/cpp-tools.html">C++ Tools</a></li>
+      <li class=""><a href="http://localhost:4000/docs/cpp-tools.html">C++ Tools</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1403,7 +1373,7 @@ OrcKey.key and OrcValue.value fields.</p>
     
   
     
-      <li class=""><a href="/docs/java-tools.html">Java Tools</a></li>
+      <li class=""><a href="http://localhost:4000/docs/java-tools.html">Java Tools</a></li>
       
 
 

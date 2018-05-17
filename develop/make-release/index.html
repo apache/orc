@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>How To Release ORC</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="generator" content="Jekyll v2.4.0">
+  <meta name="generator" content="Jekyll v3.7.3">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
   <link rel="stylesheet" href="/css/screen.css">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -88,39 +88,39 @@
 
 <p>Set version so that it isn’t a SNAPSHOT.</p>
 
-<pre><code>% git checkout branch-X.Y
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git checkout branch-X.Y
 % edit CMakeLists.txt
 % (mkdir build; cd build; cmake ..)
-</code></pre>
+</code></pre></div></div>
 
 <p>Commit the changes back to Apache along with a tag for the release candidate.</p>
 
-<pre><code>% git commit -s -S -am 'Preparing for release X.Y.Z'
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git commit -s -S -am 'Preparing for release X.Y.Z'
 % git remote add apache https://git-wip-us.apache.org/repos/asf/orc.git
 % git push apache branch-X.Y
 % git tag release-X.Y.Zrc0
 % git push apache release-X.Y.Zrc0
-</code></pre>
+</code></pre></div></div>
 
 <p>Generate the source tarball and checksums for the release.</p>
 
-<pre><code>% wget https://github.com/apache/orc/archive/release-X.Y.Zrc0.tar.gz
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% wget https://github.com/apache/orc/archive/release-X.Y.Zrc0.tar.gz
 % tar xzf release-X.Y.Zrc0.tar.gz
 % mv orc-release-X.Y.Zrc0 orc-X.Y.Z
 % tar czf orc-X.Y.Zrc0.tar.gz orc-X.Y.Z
 % shasum -a 256 orc-X.Y.Zrc0.tar.gz &gt; orc-X.Y.Zrc0.tar.gz.sha256
 % gpg --detach-sig --armor orc-X.Y.Zrc0.tar.gz
-</code></pre>
+</code></pre></div></div>
 
 <p>Copy the artifacts into your personal Apache website.</p>
 
-<pre><code>% sftp &lt;apacheid&gt;@home.apache.org
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% sftp &lt;apacheid&gt;@home.apache.org
 sftp&gt; cd public_html
 sftp&gt; mkdir orc-X.Y.Zrc0
 sftp&gt; cd orc-X.Y.Zrc0
 sftp&gt; put orc-X.Y.Zrc0*
 sftp&gt; quit
-</code></pre>
+</code></pre></div></div>
 
 <p>Make sure your GPG key exists <a href="https://dist.apache.org/repos/dist/release/orc/KEYS">here</a> for others to verify signature in RC</p>
 
@@ -129,7 +129,7 @@ to get the list of jiras that are fixed in X.Y.Z</p>
 
 <p>Send email with the vote:</p>
 
-<pre><code>To: dev@orc.apache.org
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>To: dev@orc.apache.org
 Subject: [VOTE] Should we release ORC X.Y.Zrc0?
 
 All,
@@ -141,22 +141,22 @@ tag: https://github.com/apache/orc/releases/tag/release-X.Y.Zrc0
 jiras: https://issues.apache.org/jira/browse/ORC/fixforversion/&lt;fixid&gt;
 
 Thanks!
-</code></pre>
+</code></pre></div></div>
 
 <h2 id="to-promote-a-release-candidate-rc-to-a-real-release">To promote a release candidate (RC) to a real release.</h2>
 
 <p>Update the final tag and remove the rc tag.</p>
 
-<pre><code>% git tag rel/release-X.Y.Z -s
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git tag rel/release-X.Y.Z -s
 % git push apache rel/release-X.Y.Z
 % git push apache :release-X.Y.Zrc0
-</code></pre>
+</code></pre></div></div>
 
 <p>Publish the artifacts to Maven central staging. Make sure to have this <a href="http://www.apache.org/dev/publishing-maven-artifacts.html#dev-env">setup</a> for Apache releases</p>
 
-<pre><code>% cd java
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% cd java
 % mvn -Papache-release clean deploy
-</code></pre>
+</code></pre></div></div>
 
 <p>Publish from the staging area:</p>
 
@@ -169,7 +169,7 @@ Thanks!
 
 <p>Publish the artifacts to Apache’s dist area.</p>
 
-<pre><code>In a svn clone of https://dist.apache.org/repos/dist/release/orc
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In a svn clone of https://dist.apache.org/repos/dist/release/orc
 % mkdir orc-X.Y.Z
 % cd orc-X.Y.Z
 copy release artifacts with a rename from orc-X.Y.Zrc0* to orc-X.Y.Z*
@@ -182,16 +182,16 @@ extra releases (say I.J.K) from the Apache dist area.
 % cd ..
 % svn rm orc-I.J.K
 % svn commit --username &lt;apacheid&gt; -m "Removed old release ORC I.J.K"
-</code></pre>
+</code></pre></div></div>
 
 <p>Update the release branch with the version for the next release.</p>
 
-<pre><code>edit CMakeLists.txt to change version to X.Y.(Z+1)-SNAPSHOT
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>edit CMakeLists.txt to change version to X.Y.(Z+1)-SNAPSHOT
 % cd build
 % cmake ..
 % git commit -a -s -S -am 'Preparing branch for post X.Y.Z development'
 % git push apache branch-X.Y
-</code></pre>
+</code></pre></div></div>
 
 <p>Update the site with the new release.</p>
 
@@ -199,7 +199,7 @@ extra releases (say I.J.K) from the Apache dist area.
   <li>Check out the master branch (git co apache/master)</li>
 </ul>
 
-<pre><code>Change directory in to site.
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Change directory in to site.
 % pwd
 &lt;path-to-master-src&gt;
 % cd site
@@ -212,7 +212,7 @@ Set up site/target to be a separate git workspace that tracks the asf-site branc
 % git checkout asf-site
 % cd ..
 % bundle install
-</code></pre>
+</code></pre></div></div>
 <ul>
   <li>edit site/_data/releases.yml to add new release
     <ul>
@@ -231,11 +231,11 @@ Set up site/target to be a separate git workspace that tracks the asf-site branc
   <li>If it looks good, use git add (from within site directory) to add the new files and commit to master with a message of “update site for X.Y.Z”.</li>
 </ul>
 
-<pre><code>% pwd
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% pwd
 &lt;path-to-master-src&gt;/site
 % git commit -am "Update site for X.Y.Z"
 % git push origin master
-</code></pre>
+</code></pre></div></div>
 
 <ul>
   <li>Change directory into site/target for publishing the site.</li>
@@ -247,12 +247,12 @@ Set up site/target to be a separate git workspace that tracks the asf-site branc
   <li>Commit to asf-site to publish the updated site.</li>
 </ul>
 
-<pre><code>% cd target
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% cd target
 % pwd
 &lt;path-to-master-src&gt;/site/target
 % git commit -am "Publish site for X.Y.Z"
 % git push origin asf-site
-</code></pre>
+</code></pre></div></div>
 
 <p>Update ORC’s jira to reflect the released version.</p>
 

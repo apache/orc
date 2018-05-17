@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Using Core C++</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="generator" content="Jekyll v2.4.0">
+  <meta name="generator" content="Jekyll v3.7.3">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
   <link rel="stylesheet" href="/css/screen.css">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -109,7 +109,7 @@
     
   
     
-      <option value="/docs/index.html">Background</option>
+      <option value="http://localhost:4000/docs/index.html">Background</option>
     
   
     
@@ -131,7 +131,7 @@
     
   
     
-      <option value="/docs/adopters.html">ORC Adopters</option>
+      <option value="http://localhost:4000/docs/adopters.html">ORC Adopters</option>
     
   
     
@@ -158,42 +158,6 @@
   
     
   
-    
-  
-
-  
-
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-      <option value="/docs/types.html">Types</option>
     
   
 
@@ -219,7 +183,43 @@
     
   
     
-      <option value="/docs/indexes.html">Indexes</option>
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="http://localhost:4000/docs/types.html">Types</option>
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="http://localhost:4000/docs/indexes.html">Indexes</option>
     
   
     
@@ -237,7 +237,7 @@
 
   
     
-      <option value="/docs/acid.html">ACID support</option>
+      <option value="http://localhost:4000/docs/acid.html">ACID support</option>
     
   
     
@@ -284,7 +284,7 @@
     
   
     
-      <option value="/docs/building.html">Building ORC</option>
+      <option value="http://localhost:4000/docs/building.html">Building ORC</option>
     
   
     
@@ -342,7 +342,7 @@
     
   
     
-      <option value="/docs/releases.html">Releases</option>
+      <option value="http://localhost:4000/docs/releases.html">Releases</option>
     
   
     
@@ -373,7 +373,7 @@
     
   
     
-      <option value="/docs/hive-ddl.html">Hive DDL</option>
+      <option value="http://localhost:4000/docs/hive-ddl.html">Hive DDL</option>
     
   
     
@@ -407,7 +407,7 @@
     
   
     
-      <option value="/docs/hive-config.html">Hive Configuration</option>
+      <option value="http://localhost:4000/docs/hive-config.html">Hive Configuration</option>
     
   
     
@@ -460,7 +460,7 @@
     
   
     
-      <option value="/docs/mapred.html">Using in MapRed</option>
+      <option value="http://localhost:4000/docs/mapred.html">Using in MapRed</option>
     
   
     
@@ -498,7 +498,7 @@
     
   
     
-      <option value="/docs/mapreduce.html">Using in MapReduce</option>
+      <option value="http://localhost:4000/docs/mapreduce.html">Using in MapReduce</option>
     
   
     
@@ -525,7 +525,7 @@
     
   
     
-      <option value="/docs/core-java.html">Using Core Java</option>
+      <option value="http://localhost:4000/docs/core-java.html">Using Core Java</option>
     
   
     
@@ -559,7 +559,7 @@
     
   
     
-      <option value="/docs/core-cpp.html">Using Core C++</option>
+      <option value="http://localhost:4000/docs/core-cpp.html">Using Core C++</option>
     
   
     
@@ -606,7 +606,7 @@
     
   
     
-      <option value="/docs/cpp-tools.html">C++ Tools</option>
+      <option value="http://localhost:4000/docs/cpp-tools.html">C++ Tools</option>
     
   
     
@@ -652,7 +652,7 @@
     
   
     
-      <option value="/docs/java-tools.html">Java Tools</option>
+      <option value="http://localhost:4000/docs/java-tools.html">Java Tools</option>
     
   
     
@@ -681,23 +681,23 @@ orc::ColumnVectorBatch vectorized classes.</p>
 
 <p>Data is passed to ORC as instances of orc::ColumnVectorBatch
 that contain the data a batch of rows. The focus is on speed and
-accessing the data fields directly. <code>numElements</code> is the number
+accessing the data fields directly. <code class="highlighter-rouge">numElements</code> is the number
 of rows. ColumnVectorBatch is the parent type of the different
 kinds of columns and has some fields that are shared across
-all of the column types. In particular, the <code>hasNulls</code> flag
+all of the column types. In particular, the <code class="highlighter-rouge">hasNulls</code> flag
 if there is any null in this column for this batch. For columns
-where <code>hasNulls == true</code> the <code>notNull</code> buffer is false if that
+where <code class="highlighter-rouge">hasNulls == true</code> the <code class="highlighter-rouge">notNull</code> buffer is false if that
 value is null.</p>
 
-<pre><code class="language-cpp">namespace orc {
-  struct ColumnVectorBatch {
-    uint64_t numElements;
-    DataBuffer&lt;char&gt; notNull;
-    bool hasNulls;
-    ...
-  }
-}
-</code></pre>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">namespace</span> <span class="n">orc</span> <span class="p">{</span>
+  <span class="k">struct</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
+    <span class="kt">uint64_t</span> <span class="n">numElements</span><span class="p">;</span>
+    <span class="n">DataBuffer</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">&gt;</span> <span class="n">notNull</span><span class="p">;</span>
+    <span class="kt">bool</span> <span class="n">hasNulls</span><span class="p">;</span>
+    <span class="p">...</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
 
 <p>The subtypes of ColumnVectorBatch are:</p>
 
@@ -788,11 +788,11 @@ value is null.</p>
 date, int, smallint, and tinyint). The data is represented as a
 buffer of int64_t where each value is sign-extended as necessary.</p>
 
-<pre><code class="language-cpp">  struct LongVectorBatch: public ColumnVectorBatch {
-    DataBuffer&lt;int64_t&gt; data;
-    ...
-  };
-</code></pre>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">struct</span> <span class="n">LongVectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
+    <span class="n">DataBuffer</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="o">&gt;</span> <span class="n">data</span><span class="p">;</span>
+    <span class="p">...</span>
+  <span class="p">};</span>
+</code></pre></div></div>
 
 <p>TimestampVectorBatch handles timestamp values. The data is
 represented as two buffers of int64_t for seconds and nanoseconds
@@ -800,187 +800,187 @@ respectively. Note that we always assume data is in GMT timezone;
 therefore it is user’s responsibility to convert wall clock time
 from local timezone to GMT.</p>
 
-<pre><code class="language-cpp">  struct TimestampVectorBatch: public ColumnVectorBatch {
-    DataBuffer&lt;int64_t&gt; data;
-    DataBuffer&lt;int64_t&gt; nanoseconds;
-    ...
-  };
-</code></pre>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">struct</span> <span class="n">TimestampVectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
+    <span class="n">DataBuffer</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="o">&gt;</span> <span class="n">data</span><span class="p">;</span>
+    <span class="n">DataBuffer</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="o">&gt;</span> <span class="n">nanoseconds</span><span class="p">;</span>
+    <span class="p">...</span>
+  <span class="p">};</span>
+</code></pre></div></div>
 
 <p>DoubleVectorBatch handles all of the floating point types
 (double, and float). The data is represented as a buffer of doubles.</p>
 
-<pre><code class="language-cpp">  struct DoubleVectorBatch: public ColumnVectorBatch {
-    DataBuffer&lt;double&gt; data;
-    ...
-  };
-</code></pre>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">struct</span> <span class="n">DoubleVectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
+    <span class="n">DataBuffer</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span> <span class="n">data</span><span class="p">;</span>
+    <span class="p">...</span>
+  <span class="p">};</span>
+</code></pre></div></div>
 
 <p>Decimal64VectorBatch handles decimal columns with precision no
 greater than 18. Decimal128VectorBatch handles the others. The data
 is represented as a buffer of int64_t and orc::Int128 respectively.</p>
 
-<pre><code class="language-cpp">  struct Decimal64VectorBatch: public ColumnVectorBatch {
-    DataBuffer&lt;int64_t&gt; values;
-    ...
-  };
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">struct</span> <span class="n">Decimal64VectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
+    <span class="n">DataBuffer</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="o">&gt;</span> <span class="n">values</span><span class="p">;</span>
+    <span class="p">...</span>
+  <span class="p">};</span>
 
-  struct Decimal128VectorBatch: public ColumnVectorBatch {
-    DataBuffer&lt;Int128&gt; values;
-    ...
-  };
-</code></pre>
+  <span class="k">struct</span> <span class="n">Decimal128VectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
+    <span class="n">DataBuffer</span><span class="o">&lt;</span><span class="n">Int128</span><span class="o">&gt;</span> <span class="n">values</span><span class="p">;</span>
+    <span class="p">...</span>
+  <span class="p">};</span>
+</code></pre></div></div>
 
 <p>StringVectorBatch handles all of the binary types (binary,
 char, string, and varchar). The data is represented as a char* buffer,
 and a length buffer.</p>
 
-<pre><code class="language-cpp">  struct StringVectorBatch: public ColumnVectorBatch {
-    DataBuffer&lt;char*&gt; data;
-    DataBuffer&lt;int64_t&gt; length;
-    ...
-  };
-</code></pre>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">struct</span> <span class="n">StringVectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
+    <span class="n">DataBuffer</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">*&gt;</span> <span class="n">data</span><span class="p">;</span>
+    <span class="n">DataBuffer</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="o">&gt;</span> <span class="n">length</span><span class="p">;</span>
+    <span class="p">...</span>
+  <span class="p">};</span>
+</code></pre></div></div>
 
 <p>StructVectorBatch handles the struct columns and represents
-the data as a buffer of <code>ColumnVectorBatch</code>.</p>
+the data as a buffer of <code class="highlighter-rouge">ColumnVectorBatch</code>.</p>
 
-<pre><code class="language-cpp">  struct StructVectorBatch: public ColumnVectorBatch {
-    std::vector&lt;ColumnVectorBatch*&gt; fields;
-    ...
-  };
-</code></pre>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">struct</span> <span class="n">StructVectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">ColumnVectorBatch</span><span class="o">*&gt;</span> <span class="n">fields</span><span class="p">;</span>
+    <span class="p">...</span>
+  <span class="p">};</span>
+</code></pre></div></div>
 
-<p>UnionVectorBatch handles the union columns. It uses <code>tags</code>
-to indicate which subtype has the value and <code>offsets</code> indicates
+<p>UnionVectorBatch handles the union columns. It uses <code class="highlighter-rouge">tags</code>
+to indicate which subtype has the value and <code class="highlighter-rouge">offsets</code> indicates
 the offset in child batch of that subtype. A individual
-<code>ColumnVectorBatch</code> is used for each subtype.</p>
+<code class="highlighter-rouge">ColumnVectorBatch</code> is used for each subtype.</p>
 
-<pre><code class="language-cpp">  struct UnionVectorBatch: public ColumnVectorBatch {
-    DataBuffer&lt;unsigned char&gt; tags;
-    DataBuffer&lt;uint64_t&gt; offsets;
-    std::vector&lt;ColumnVectorBatch*&gt; children;
-    ...
-  };
-</code></pre>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">struct</span> <span class="n">UnionVectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
+    <span class="n">DataBuffer</span><span class="o">&lt;</span><span class="kt">unsigned</span> <span class="kt">char</span><span class="o">&gt;</span> <span class="n">tags</span><span class="p">;</span>
+    <span class="n">DataBuffer</span><span class="o">&lt;</span><span class="kt">uint64_t</span><span class="o">&gt;</span> <span class="n">offsets</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">ColumnVectorBatch</span><span class="o">*&gt;</span> <span class="n">children</span><span class="p">;</span>
+    <span class="p">...</span>
+  <span class="p">};</span>
+</code></pre></div></div>
 
 <p>ListVectorBatch handles the array columns and represents
 the data as a buffer of integers for the offsets and a
-<code>ColumnVectorBatch</code> for the children values.</p>
+<code class="highlighter-rouge">ColumnVectorBatch</code> for the children values.</p>
 
-<pre><code class="language-cpp">  struct ListVectorBatch: public ColumnVectorBatch {
-    DataBuffer&lt;int64_t&gt; offsets;
-    ORC_UNIQUE_PTR&lt;ColumnVectorBatch&gt; elements;
-    ...
-  };
-</code></pre>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">struct</span> <span class="n">ListVectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
+    <span class="n">DataBuffer</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="o">&gt;</span> <span class="n">offsets</span><span class="p">;</span>
+    <span class="n">ORC_UNIQUE_PTR</span><span class="o">&lt;</span><span class="n">ColumnVectorBatch</span><span class="o">&gt;</span> <span class="n">elements</span><span class="p">;</span>
+    <span class="p">...</span>
+  <span class="p">};</span>
+</code></pre></div></div>
 
 <p>MapVectorBatch handles the map columns and represents the data
-as two arrays of integers for the offsets and two <code>ColumnVectorBatch</code>s
+as two arrays of integers for the offsets and two <code class="highlighter-rouge">ColumnVectorBatch</code>s
 for the keys and values.</p>
 
-<pre><code class="language-cpp">  struct MapVectorBatch: public ColumnVectorBatch {
-    DataBuffer&lt;int64_t&gt; offsets;
-    ORC_UNIQUE_PTR&lt;ColumnVectorBatch&gt; keys;
-    ORC_UNIQUE_PTR&lt;ColumnVectorBatch&gt; elements;
-    ...
-  };
-</code></pre>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">struct</span> <span class="n">MapVectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
+    <span class="n">DataBuffer</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="o">&gt;</span> <span class="n">offsets</span><span class="p">;</span>
+    <span class="n">ORC_UNIQUE_PTR</span><span class="o">&lt;</span><span class="n">ColumnVectorBatch</span><span class="o">&gt;</span> <span class="n">keys</span><span class="p">;</span>
+    <span class="n">ORC_UNIQUE_PTR</span><span class="o">&lt;</span><span class="n">ColumnVectorBatch</span><span class="o">&gt;</span> <span class="n">elements</span><span class="p">;</span>
+    <span class="p">...</span>
+  <span class="p">};</span>
+</code></pre></div></div>
 
 <h2 id="writing-orc-files">Writing ORC Files</h2>
 
-<p>To write an ORC file, you need to include <code>OrcFile.hh</code> and define
-the schema; then use <code>orc::OutputStream</code> and <code>orc::WriterOptions</code>
-to create a <code>orc::Writer</code> with the desired filename. This example
+<p>To write an ORC file, you need to include <code class="highlighter-rouge">OrcFile.hh</code> and define
+the schema; then use <code class="highlighter-rouge">orc::OutputStream</code> and <code class="highlighter-rouge">orc::WriterOptions</code>
+to create a <code class="highlighter-rouge">orc::Writer</code> with the desired filename. This example
 sets the required schema parameter, but there are many other
 options to control the ORC writer.</p>
 
-<pre><code class="language-cpp">ORC_UNIQUE_PTR&lt;OutputStream&gt; outStream =
-  writeLocalFile("my-file.orc");
-ORC_UNIQUE_PTR&lt;Type&gt; schema(
-  Type::buildTypeFromString("struct&lt;x:int,y:int&gt;"));
-WriterOptions options;
-ORC_UNIQUE_PTR&lt;Writer&gt; writer =
-  createWriter(*schema, outStream.get(), options);
-</code></pre>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">ORC_UNIQUE_PTR</span><span class="o">&lt;</span><span class="n">OutputStream</span><span class="o">&gt;</span> <span class="n">outStream</span> <span class="o">=</span>
+  <span class="n">writeLocalFile</span><span class="p">(</span><span class="s">"my-file.orc"</span><span class="p">);</span>
+<span class="n">ORC_UNIQUE_PTR</span><span class="o">&lt;</span><span class="n">Type</span><span class="o">&gt;</span> <span class="n">schema</span><span class="p">(</span>
+  <span class="n">Type</span><span class="o">::</span><span class="n">buildTypeFromString</span><span class="p">(</span><span class="s">"struct&lt;x:int,y:int&gt;"</span><span class="p">));</span>
+<span class="n">WriterOptions</span> <span class="n">options</span><span class="p">;</span>
+<span class="n">ORC_UNIQUE_PTR</span><span class="o">&lt;</span><span class="n">Writer</span><span class="o">&gt;</span> <span class="n">writer</span> <span class="o">=</span>
+  <span class="n">createWriter</span><span class="p">(</span><span class="o">*</span><span class="n">schema</span><span class="p">,</span> <span class="n">outStream</span><span class="p">.</span><span class="n">get</span><span class="p">(),</span> <span class="n">options</span><span class="p">);</span>
+</code></pre></div></div>
 
 <p>Now you need to create a row batch, set the data, and write it to the file
-as the batch fills up. When the file is done, close the <code>Writer</code>.</p>
+as the batch fills up. When the file is done, close the <code class="highlighter-rouge">Writer</code>.</p>
 
-<pre><code class="language-cpp">uint64_t batchSize = 1024, rowCount = 10000;
-ORC_UNIQUE_PTR&lt;ColumnVectorBatch&gt; batch =
-  writer-&gt;createRowBatch(batchSize);
-StructVectorBatch *root =
-  dynamic_cast&lt;StructVectorBatch *&gt;(batch.get());
-LongVectorBatch *x =
-  dynamic_cast&lt;LongVectorBatch *&gt;(root-&gt;fields[0]);
-LongVectorBatch *y =
-  dynamic_cast&lt;LongVectorBatch *&gt;(root-&gt;fields[1]);
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">uint64_t</span> <span class="n">batchSize</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">,</span> <span class="n">rowCount</span> <span class="o">=</span> <span class="mi">10000</span><span class="p">;</span>
+<span class="n">ORC_UNIQUE_PTR</span><span class="o">&lt;</span><span class="n">ColumnVectorBatch</span><span class="o">&gt;</span> <span class="n">batch</span> <span class="o">=</span>
+  <span class="n">writer</span><span class="o">-&gt;</span><span class="n">createRowBatch</span><span class="p">(</span><span class="n">batchSize</span><span class="p">);</span>
+<span class="n">StructVectorBatch</span> <span class="o">*</span><span class="n">root</span> <span class="o">=</span>
+  <span class="k">dynamic_cast</span><span class="o">&lt;</span><span class="n">StructVectorBatch</span> <span class="o">*&gt;</span><span class="p">(</span><span class="n">batch</span><span class="p">.</span><span class="n">get</span><span class="p">());</span>
+<span class="n">LongVectorBatch</span> <span class="o">*</span><span class="n">x</span> <span class="o">=</span>
+  <span class="k">dynamic_cast</span><span class="o">&lt;</span><span class="n">LongVectorBatch</span> <span class="o">*&gt;</span><span class="p">(</span><span class="n">root</span><span class="o">-&gt;</span><span class="n">fields</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+<span class="n">LongVectorBatch</span> <span class="o">*</span><span class="n">y</span> <span class="o">=</span>
+  <span class="k">dynamic_cast</span><span class="o">&lt;</span><span class="n">LongVectorBatch</span> <span class="o">*&gt;</span><span class="p">(</span><span class="n">root</span><span class="o">-&gt;</span><span class="n">fields</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
 
-uint64_t rows = 0;
-for (uint64_t i = 0; i &lt; rowCount; ++i) {
-  x-&gt;data[rows] = i;
-  y-&gt;data[rows] = i * 3;
-  rows++;
+<span class="kt">uint64_t</span> <span class="n">rows</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="k">for</span> <span class="p">(</span><span class="kt">uint64_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">rowCount</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">x</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">[</span><span class="n">rows</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span><span class="p">;</span>
+  <span class="n">y</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">[</span><span class="n">rows</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span> <span class="o">*</span> <span class="mi">3</span><span class="p">;</span>
+  <span class="n">rows</span><span class="o">++</span><span class="p">;</span>
 
-  if (rows == batchSize) {
-    root-&gt;numElements = rows;
-    x-&gt;numElements = rows;
-    y-&gt;numElements = rows;
+  <span class="k">if</span> <span class="p">(</span><span class="n">rows</span> <span class="o">==</span> <span class="n">batchSize</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">root</span><span class="o">-&gt;</span><span class="n">numElements</span> <span class="o">=</span> <span class="n">rows</span><span class="p">;</span>
+    <span class="n">x</span><span class="o">-&gt;</span><span class="n">numElements</span> <span class="o">=</span> <span class="n">rows</span><span class="p">;</span>
+    <span class="n">y</span><span class="o">-&gt;</span><span class="n">numElements</span> <span class="o">=</span> <span class="n">rows</span><span class="p">;</span>
 
-    writer-&gt;add(*batch);
-    rows = 0;
-  }
-}
+    <span class="n">writer</span><span class="o">-&gt;</span><span class="n">add</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">);</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
 
-if (rows != 0) {
-  root-&gt;numElements = rows;
-  x-&gt;numElements = rows;
-  y-&gt;numElements = rows;
+<span class="k">if</span> <span class="p">(</span><span class="n">rows</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">root</span><span class="o">-&gt;</span><span class="n">numElements</span> <span class="o">=</span> <span class="n">rows</span><span class="p">;</span>
+  <span class="n">x</span><span class="o">-&gt;</span><span class="n">numElements</span> <span class="o">=</span> <span class="n">rows</span><span class="p">;</span>
+  <span class="n">y</span><span class="o">-&gt;</span><span class="n">numElements</span> <span class="o">=</span> <span class="n">rows</span><span class="p">;</span>
 
-  writer-&gt;add(*batch);
-  rows = 0;
-}
+  <span class="n">writer</span><span class="o">-&gt;</span><span class="n">add</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">);</span>
+  <span class="n">rows</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
 
-writer-&gt;close();
-</code></pre>
+<span class="n">writer</span><span class="o">-&gt;</span><span class="n">close</span><span class="p">();</span>
+</code></pre></div></div>
 
 <h2 id="reading-orc-files">Reading ORC Files</h2>
 
-<p>To read ORC files, include <code>OrcFile.hh</code> file to create a <code>orc::Reader</code>
+<p>To read ORC files, include <code class="highlighter-rouge">OrcFile.hh</code> file to create a <code class="highlighter-rouge">orc::Reader</code>
 that contains the metadata about the file. There are a few options to
-the <code>orc::Reader</code>, but far fewer than the writer and none of them are
+the <code class="highlighter-rouge">orc::Reader</code>, but far fewer than the writer and none of them are
 required. The reader has methods for getting the number of rows,
 schema, compression, etc. from the file.</p>
 
-<pre><code class="language-cpp">ORC_UNIQUE_PTR&lt;InputStream&gt; inStream =
-  readLocalFile("my-file.orc");
-ReaderOptions options;
-ORC_UNIQUE_PTR&lt;Reader&gt; reader =
-  createReader(inStream, options);
-</code></pre>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">ORC_UNIQUE_PTR</span><span class="o">&lt;</span><span class="n">InputStream</span><span class="o">&gt;</span> <span class="n">inStream</span> <span class="o">=</span>
+  <span class="n">readLocalFile</span><span class="p">(</span><span class="s">"my-file.orc"</span><span class="p">);</span>
+<span class="n">ReaderOptions</span> <span class="n">options</span><span class="p">;</span>
+<span class="n">ORC_UNIQUE_PTR</span><span class="o">&lt;</span><span class="n">Reader</span><span class="o">&gt;</span> <span class="n">reader</span> <span class="o">=</span>
+  <span class="n">createReader</span><span class="p">(</span><span class="n">inStream</span><span class="p">,</span> <span class="n">options</span><span class="p">);</span>
+</code></pre></div></div>
 
-<p>To get the data, create a <code>orc::RowReader</code> object. By default,
+<p>To get the data, create a <code class="highlighter-rouge">orc::RowReader</code> object. By default,
 the RowReader reads all rows and all columns, but there are
 options to control the data that is read.</p>
 
-<pre><code class="language-cpp">RowReaderOptions rowReaderOptions;
-ORC_UNIQUE_PTR&lt;RowReader&gt; rowReader =
-  reader-&gt;createRowReader(rowReaderOptions);
-ORC_UNIQUE_PTR&lt;ColumnVectorBatch&gt; batch =
-  rowReader-&gt;createRowBatch(1024);
-</code></pre>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">RowReaderOptions</span> <span class="n">rowReaderOptions</span><span class="p">;</span>
+<span class="n">ORC_UNIQUE_PTR</span><span class="o">&lt;</span><span class="n">RowReader</span><span class="o">&gt;</span> <span class="n">rowReader</span> <span class="o">=</span>
+  <span class="n">reader</span><span class="o">-&gt;</span><span class="n">createRowReader</span><span class="p">(</span><span class="n">rowReaderOptions</span><span class="p">);</span>
+<span class="n">ORC_UNIQUE_PTR</span><span class="o">&lt;</span><span class="n">ColumnVectorBatch</span><span class="o">&gt;</span> <span class="n">batch</span> <span class="o">=</span>
+  <span class="n">rowReader</span><span class="o">-&gt;</span><span class="n">createRowBatch</span><span class="p">(</span><span class="mi">1024</span><span class="p">);</span>
+</code></pre></div></div>
 
-<p>With a <code>orc::RowReader</code> the user can ask for the next batch until there
+<p>With a <code class="highlighter-rouge">orc::RowReader</code> the user can ask for the next batch until there
 are no more left. The reader will stop the batch at certain boundaries,
 so the returned batch may not be full, but it will always contain some rows.</p>
 
-<pre><code class="language-cpp">while (rowReader-&gt;next(*batch)) {
-  for (uint64_t r = 0; r &lt; batch-&gt;numElements; ++r) {
-    ... process row r from batch
-  }
-}
-</code></pre>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">while</span> <span class="p">(</span><span class="n">rowReader</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">))</span> <span class="p">{</span>
+  <span class="k">for</span> <span class="p">(</span><span class="kt">uint64_t</span> <span class="n">r</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">r</span> <span class="o">&lt;</span> <span class="n">batch</span><span class="o">-&gt;</span><span class="n">numElements</span><span class="p">;</span> <span class="o">++</span><span class="n">r</span><span class="p">)</span> <span class="p">{</span>
+    <span class="p">...</span> <span class="n">process</span> <span class="n">row</span> <span class="n">r</span> <span class="n">from</span> <span class="n">batch</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
 
           
 
@@ -1059,8 +1059,6 @@ so the returned batch may not be full, but it will always contain some rows.</p>
   
 
   
-    
-  
 
   
     
@@ -1080,29 +1078,25 @@ so the returned batch may not be full, but it will always contain some rows.</p>
     
   
     
-      <li class=""><a href="/docs/index.html">Background</a></li>
+      <li class=""><a href="http://localhost:4000/docs/index.html">Background</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
   
     
-      <li class=""><a href="/docs/adopters.html">ORC Adopters</a></li>
+      <li class=""><a href="http://localhost:4000/docs/adopters.html">ORC Adopters</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1134,15 +1128,13 @@ so the returned batch may not be full, but it will always contain some rows.</p>
     
   
     
-      <li class=""><a href="/docs/types.html">Types</a></li>
+      <li class=""><a href="http://localhost:4000/docs/types.html">Types</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1164,19 +1156,17 @@ so the returned batch may not be full, but it will always contain some rows.</p>
     
   
     
-      <li class=""><a href="/docs/indexes.html">Indexes</a></li>
+      <li class=""><a href="http://localhost:4000/docs/indexes.html">Indexes</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
-      <li class=""><a href="/docs/acid.html">ACID support</a></li>
+      <li class=""><a href="http://localhost:4000/docs/acid.html">ACID support</a></li>
       
 
 
@@ -1191,8 +1181,6 @@ so the returned batch may not be full, but it will always contain some rows.</p>
   
 
   
-    
-  
 
   
     
@@ -1200,15 +1188,13 @@ so the returned batch may not be full, but it will always contain some rows.</p>
     
   
     
-      <li class=""><a href="/docs/building.html">Building ORC</a></li>
+      <li class=""><a href="http://localhost:4000/docs/building.html">Building ORC</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1238,7 +1224,7 @@ so the returned batch may not be full, but it will always contain some rows.</p>
     
   
     
-      <li class=""><a href="/docs/releases.html">Releases</a></li>
+      <li class=""><a href="http://localhost:4000/docs/releases.html">Releases</a></li>
       
 
 
@@ -1253,8 +1239,6 @@ so the returned batch may not be full, but it will always contain some rows.</p>
   
 
   
-    
-  
 
   
     
@@ -1272,15 +1256,13 @@ so the returned batch may not be full, but it will always contain some rows.</p>
     
   
     
-      <li class=""><a href="/docs/hive-ddl.html">Hive DDL</a></li>
+      <li class=""><a href="http://localhost:4000/docs/hive-ddl.html">Hive DDL</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1296,7 +1278,7 @@ so the returned batch may not be full, but it will always contain some rows.</p>
     
   
     
-      <li class=""><a href="/docs/hive-config.html">Hive Configuration</a></li>
+      <li class=""><a href="http://localhost:4000/docs/hive-config.html">Hive Configuration</a></li>
       
 
 
@@ -1311,8 +1293,6 @@ so the returned batch may not be full, but it will always contain some rows.</p>
   
 
   
-    
-  
 
   
     
@@ -1338,15 +1318,13 @@ so the returned batch may not be full, but it will always contain some rows.</p>
     
   
     
-      <li class=""><a href="/docs/mapred.html">Using in MapRed</a></li>
+      <li class=""><a href="http://localhost:4000/docs/mapred.html">Using in MapRed</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1374,7 +1352,7 @@ so the returned batch may not be full, but it will always contain some rows.</p>
     
   
     
-      <li class=""><a href="/docs/mapreduce.html">Using in MapReduce</a></li>
+      <li class=""><a href="http://localhost:4000/docs/mapreduce.html">Using in MapReduce</a></li>
       
 
 
@@ -1389,8 +1367,6 @@ so the returned batch may not be full, but it will always contain some rows.</p>
   
 
   
-    
-  
 
   
     
@@ -1402,15 +1378,13 @@ so the returned batch may not be full, but it will always contain some rows.</p>
     
   
     
-      <li class=""><a href="/docs/core-java.html">Using Core Java</a></li>
+      <li class=""><a href="http://localhost:4000/docs/core-java.html">Using Core Java</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1420,7 +1394,7 @@ so the returned batch may not be full, but it will always contain some rows.</p>
     
   
     
-      <li class="current"><a href="/docs/core-cpp.html">Using Core C++</a></li>
+      <li class="current"><a href="http://localhost:4000/docs/core-cpp.html">Using Core C++</a></li>
       
 
 
@@ -1435,8 +1409,6 @@ so the returned batch may not be full, but it will always contain some rows.</p>
   
 
   
-    
-  
 
   
     
@@ -1450,15 +1422,13 @@ so the returned batch may not be full, but it will always contain some rows.</p>
     
   
     
-      <li class=""><a href="/docs/cpp-tools.html">C++ Tools</a></li>
+      <li class=""><a href="http://localhost:4000/docs/cpp-tools.html">C++ Tools</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1482,7 +1452,7 @@ so the returned batch may not be full, but it will always contain some rows.</p>
     
   
     
-      <li class=""><a href="/docs/java-tools.html">Java Tools</a></li>
+      <li class=""><a href="http://localhost:4000/docs/java-tools.html">Java Tools</a></li>
       
 
 

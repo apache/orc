@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Developing</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="generator" content="Jekyll v2.4.0">
+  <meta name="generator" content="Jekyll v3.7.3">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
   <link rel="stylesheet" href="/css/screen.css">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -105,11 +105,11 @@ publicly archived and work well asynchronously across timezones.</p>
 lists for ORC:</p>
 
 <ul>
-  <li><a href="&#109;&#097;&#105;&#108;&#116;&#111;:&#100;&#101;&#118;&#064;&#111;&#114;&#099;&#046;&#097;&#112;&#097;&#099;&#104;&#101;&#046;&#111;&#114;&#103;">&#100;&#101;&#118;&#064;&#111;&#114;&#099;&#046;&#097;&#112;&#097;&#099;&#104;&#101;&#046;&#111;&#114;&#103;</a> - Development discussions
+  <li><a href="mailto:dev@orc.apache.org">dev@orc.apache.org</a> - Development discussions
 with archive <a href="https://mail-archives.apache.org/mod_mbox/orc-dev/">here</a></li>
-  <li><a href="&#109;&#097;&#105;&#108;&#116;&#111;:&#105;&#115;&#115;&#117;&#101;&#115;&#064;&#111;&#114;&#099;&#046;&#097;&#112;&#097;&#099;&#104;&#101;&#046;&#111;&#114;&#103;">&#105;&#115;&#115;&#117;&#101;&#115;&#064;&#111;&#114;&#099;&#046;&#097;&#112;&#097;&#099;&#104;&#101;&#046;&#111;&#114;&#103;</a> - Bug tracking
+  <li><a href="mailto:issues@orc.apache.org">issues@orc.apache.org</a> - Bug tracking
 with archive <a href="https://mail-archives.apache.org/mod_mbox/orc-issues/">here</a></li>
-  <li><a href="&#109;&#097;&#105;&#108;&#116;&#111;:&#099;&#111;&#109;&#109;&#105;&#116;&#115;&#064;&#111;&#114;&#099;&#046;&#097;&#112;&#097;&#099;&#104;&#101;&#046;&#111;&#114;&#103;">&#099;&#111;&#109;&#109;&#105;&#116;&#115;&#064;&#111;&#114;&#099;&#046;&#097;&#112;&#097;&#099;&#104;&#101;&#046;&#111;&#114;&#103;</a> - Git tracking
+  <li><a href="mailto:commits@orc.apache.org">commits@orc.apache.org</a> - Git tracking
 with archive <a href="https://mail-archives.apache.org/mod_mbox/orc-commits/">here</a></li>
 </ul>
 
@@ -127,17 +127,17 @@ discussion of the change.</p>
 <p>ORC uses git for version control. Get the source code and configure it
 to fetch the pull requests also:</p>
 
-<pre><code>% git clone -o apache git@github.com:apache/orc.git
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git clone -o apache git@github.com:apache/orc.git
 % cd orc
 % git config --add remote.apache.fetch '+refs/pull/*/head:refs/remotes/apache/pr/*'
-</code></pre>
+</code></pre></div></div>
 
 <p>Pull requests will be named “apache/pr/999” for pull request 999.</p>
 
 <p>If you are a committer, add the push url:</p>
 
-<pre><code>% git remote set-url --push apache https://git-wip-us.apache.org/repos/asf/orc.git
-</code></pre>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git remote set-url --push apache https://git-wip-us.apache.org/repos/asf/orc.git
+</code></pre></div></div>
 
 <p>The important branches are:</p>
 
@@ -178,25 +178,25 @@ committer’s review. However, most changes should be reviewed first.</p>
 
 <p>Fetch the current state of the project:</p>
 
-<pre><code>% git fetch apache
-</code></pre>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git fetch apache
+</code></pre></div></div>
 
 <p>Switch to the branch:</p>
 
-<pre><code>% git checkout apache/pr/999
-</code></pre>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git checkout apache/pr/999
+</code></pre></div></div>
 
 <p>You’ll want to rebase it and make it a single commit by squashing
 the commits into a single commit.</p>
 
-<pre><code>% git rebase -i apache/master
-</code></pre>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git rebase -i apache/master
+</code></pre></div></div>
 
 <p>Update the commit message to sign it using your GPG key and close the
 pull request:</p>
 
-<pre><code>% git commit --amend -s -S
-</code></pre>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git commit --amend -s -S
+</code></pre></div></div>
 
 <p>Ensure the first line of the commit starts with the jira number
 (eg. ORC-123) and includes a description of what was changed. Also add
@@ -206,39 +206,39 @@ claiming to have fixed the problem, the form “Closes #999” also works.</p>
 
 <p>Finally, push the result to Apache:</p>
 
-<pre><code>% git push apache HEAD:master
-</code></pre>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git push apache HEAD:master
+</code></pre></div></div>
 
 <h2 id="creating-a-gpg-key">Creating a GPG key</h2>
 
 <p>When you become a committer, you should create a 4096 bit GPG key.</p>
 
-<pre><code>% gpg --full-gen-key
-</code></pre>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% gpg --full-gen-key
+</code></pre></div></div>
 
 <p>Use 4096 bits and your Apache email address. Once it is created,
 you’ll need to get your key fingerprint. Avoid using the short
 fingerprint (eg. 3D0C92B9), because it is possible to generate fake
 keys that have the same short fingerprint as the real key.</p>
 
-<pre><code>% gpg --list-secret-keys --keyid-format LONG
-</code></pre>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% gpg --list-secret-keys --keyid-format LONG
+</code></pre></div></div>
 
 <p>Your key fingerprint is the string after “rsa4096/”. Example output
 for the key with fingerprint 1209E7F13D0C92B9 looks like:</p>
 
-<pre><code>/Users/owen/.gnupg/pubring.gpg
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/Users/owen/.gnupg/pubring.gpg
 ------------------------------
 sec   rsa4096/1209E7F13D0C92B9 2010-02-23 [SC]
       47660BC98BC433F01E5C90581209E7F13D0C92B9
 uid                 [ultimate] Owen O'Malley &lt;omalley@apache.org&gt;
-</code></pre>
+</code></pre></div></div>
 
 <p>Now publish your public key to one of the public keyservers. I usually use
 hkp://pgp.mit.edu, although any of them will work.</p>
 
-<pre><code>gpg --send-key &lt;your key fingerprint&gt;
-</code></pre>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gpg --send-key &lt;your key fingerprint&gt;
+</code></pre></div></div>
 
 <p>Next, you need to update the <a href="https://id.apache.org">Apache account
 database</a> with your new key. Login to add your

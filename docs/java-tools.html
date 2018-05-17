@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Java Tools</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="generator" content="Jekyll v2.4.0">
+  <meta name="generator" content="Jekyll v3.7.3">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
   <link rel="stylesheet" href="/css/screen.css">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -109,7 +109,7 @@
     
   
     
-      <option value="/docs/index.html">Background</option>
+      <option value="http://localhost:4000/docs/index.html">Background</option>
     
   
     
@@ -131,7 +131,7 @@
     
   
     
-      <option value="/docs/adopters.html">ORC Adopters</option>
+      <option value="http://localhost:4000/docs/adopters.html">ORC Adopters</option>
     
   
     
@@ -158,42 +158,6 @@
   
     
   
-    
-  
-
-  
-
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-      <option value="/docs/types.html">Types</option>
     
   
 
@@ -219,7 +183,43 @@
     
   
     
-      <option value="/docs/indexes.html">Indexes</option>
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="http://localhost:4000/docs/types.html">Types</option>
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="http://localhost:4000/docs/indexes.html">Indexes</option>
     
   
     
@@ -237,7 +237,7 @@
 
   
     
-      <option value="/docs/acid.html">ACID support</option>
+      <option value="http://localhost:4000/docs/acid.html">ACID support</option>
     
   
     
@@ -284,7 +284,7 @@
     
   
     
-      <option value="/docs/building.html">Building ORC</option>
+      <option value="http://localhost:4000/docs/building.html">Building ORC</option>
     
   
     
@@ -342,7 +342,7 @@
     
   
     
-      <option value="/docs/releases.html">Releases</option>
+      <option value="http://localhost:4000/docs/releases.html">Releases</option>
     
   
     
@@ -373,7 +373,7 @@
     
   
     
-      <option value="/docs/hive-ddl.html">Hive DDL</option>
+      <option value="http://localhost:4000/docs/hive-ddl.html">Hive DDL</option>
     
   
     
@@ -407,7 +407,7 @@
     
   
     
-      <option value="/docs/hive-config.html">Hive Configuration</option>
+      <option value="http://localhost:4000/docs/hive-config.html">Hive Configuration</option>
     
   
     
@@ -460,7 +460,7 @@
     
   
     
-      <option value="/docs/mapred.html">Using in MapRed</option>
+      <option value="http://localhost:4000/docs/mapred.html">Using in MapRed</option>
     
   
     
@@ -498,7 +498,7 @@
     
   
     
-      <option value="/docs/mapreduce.html">Using in MapReduce</option>
+      <option value="http://localhost:4000/docs/mapreduce.html">Using in MapReduce</option>
     
   
     
@@ -525,7 +525,7 @@
     
   
     
-      <option value="/docs/core-java.html">Using Core Java</option>
+      <option value="http://localhost:4000/docs/core-java.html">Using Core Java</option>
     
   
     
@@ -559,7 +559,7 @@
     
   
     
-      <option value="/docs/core-cpp.html">Using Core C++</option>
+      <option value="http://localhost:4000/docs/core-cpp.html">Using Core C++</option>
     
   
     
@@ -606,7 +606,7 @@
     
   
     
-      <option value="/docs/cpp-tools.html">C++ Tools</option>
+      <option value="http://localhost:4000/docs/cpp-tools.html">C++ Tools</option>
     
   
     
@@ -652,7 +652,7 @@
     
   
     
-      <option value="/docs/java-tools.html">Java Tools</option>
+      <option value="http://localhost:4000/docs/java-tools.html">Java Tools</option>
     
   
     
@@ -691,8 +691,8 @@ supports both the local file system and HDFS.</p>
 
 <p>The command line looks like:</p>
 
-<pre><code class="language-shell">% java -jar orc-tools-X.Y.Z-uber.jar &lt;sub-command&gt; &lt;args&gt;
-</code></pre>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% java <span class="nt">-jar</span> orc-tools-X.Y.Z-uber.jar &lt;sub-command&gt; &lt;args&gt;
+</code></pre></div></div>
 
 <h2 id="java-meta">Java Meta</h2>
 
@@ -718,9 +718,9 @@ equivalent to the Hive ORC File Dump command.</p>
 
 <p>An example of the output is given below:</p>
 
-<pre><code class="language-shell">% java -jar orc-tools-X.Y.Z-uber.jar meta examples/TestOrcFile.test1.orc
-Processing data file examples/TestOrcFile.test1.orc [length: 1711]
-Structure for examples/TestOrcFile.test1.orc
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% java <span class="nt">-jar</span> orc-tools-X.Y.Z-uber.jar meta examples/TestOrcFile.test1.orc
+Processing data file examples/TestOrcFile.test1.orc <span class="o">[</span>length: 1711]
+Structure <span class="k">for </span>examples/TestOrcFile.test1.orc
 File Version: 0.12 with HIVE_8732
 Rows: 2
 Compression: ZLIB
@@ -733,56 +733,56 @@ string&gt;&gt;&gt;
 
 Stripe Statistics:
   Stripe 1:
-    Column 0: count: 2 hasNull: false
-    Column 1: count: 2 hasNull: false true: 1
-    Column 2: count: 2 hasNull: false min: 1 max: 100 sum: 101
-    Column 3: count: 2 hasNull: false min: 1024 max: 2048 sum: 3072
-    Column 4: count: 2 hasNull: false min: 65536 max: 65536 sum: 131072
-    Column 5: count: 2 hasNull: false min: 9223372036854775807 max: 9223372036854775807
-    Column 6: count: 2 hasNull: false min: 1.0 max: 2.0 sum: 3.0
-    Column 7: count: 2 hasNull: false min: -15.0 max: -5.0 sum: -20.0
-    Column 8: count: 2 hasNull: false sum: 5
-    Column 9: count: 2 hasNull: false min: bye max: hi sum: 5
-    Column 10: count: 2 hasNull: false
-    Column 11: count: 2 hasNull: false
-    Column 12: count: 4 hasNull: false
-    Column 13: count: 4 hasNull: false min: 1 max: 2 sum: 6
-    Column 14: count: 4 hasNull: false min: bye max: sigh sum: 14
-    Column 15: count: 2 hasNull: false
-    Column 16: count: 5 hasNull: false
-    Column 17: count: 5 hasNull: false min: -100000 max: 100000000 sum: 99901241
-    Column 18: count: 5 hasNull: false min: bad max: in sum: 15
-    Column 19: count: 2 hasNull: false
-    Column 20: count: 2 hasNull: false min: chani max: mauddib sum: 12
-    Column 21: count: 2 hasNull: false
-    Column 22: count: 2 hasNull: false min: 1 max: 5 sum: 6
-    Column 23: count: 2 hasNull: false min: chani max: mauddib sum: 12
+    Column 0: count: 2 hasNull: <span class="nb">false
+    </span>Column 1: count: 2 hasNull: <span class="nb">false true</span>: 1
+    Column 2: count: 2 hasNull: <span class="nb">false </span>min: 1 max: 100 sum: 101
+    Column 3: count: 2 hasNull: <span class="nb">false </span>min: 1024 max: 2048 sum: 3072
+    Column 4: count: 2 hasNull: <span class="nb">false </span>min: 65536 max: 65536 sum: 131072
+    Column 5: count: 2 hasNull: <span class="nb">false </span>min: 9223372036854775807 max: 9223372036854775807
+    Column 6: count: 2 hasNull: <span class="nb">false </span>min: 1.0 max: 2.0 sum: 3.0
+    Column 7: count: 2 hasNull: <span class="nb">false </span>min: <span class="nt">-15</span>.0 max: <span class="nt">-5</span>.0 sum: <span class="nt">-20</span>.0
+    Column 8: count: 2 hasNull: <span class="nb">false </span>sum: 5
+    Column 9: count: 2 hasNull: <span class="nb">false </span>min: bye max: hi sum: 5
+    Column 10: count: 2 hasNull: <span class="nb">false
+    </span>Column 11: count: 2 hasNull: <span class="nb">false
+    </span>Column 12: count: 4 hasNull: <span class="nb">false
+    </span>Column 13: count: 4 hasNull: <span class="nb">false </span>min: 1 max: 2 sum: 6
+    Column 14: count: 4 hasNull: <span class="nb">false </span>min: bye max: sigh sum: 14
+    Column 15: count: 2 hasNull: <span class="nb">false
+    </span>Column 16: count: 5 hasNull: <span class="nb">false
+    </span>Column 17: count: 5 hasNull: <span class="nb">false </span>min: <span class="nt">-100000</span> max: 100000000 sum: 99901241
+    Column 18: count: 5 hasNull: <span class="nb">false </span>min: bad max: <span class="k">in </span>sum: 15
+    Column 19: count: 2 hasNull: <span class="nb">false
+    </span>Column 20: count: 2 hasNull: <span class="nb">false </span>min: chani max: mauddib sum: 12
+    Column 21: count: 2 hasNull: <span class="nb">false
+    </span>Column 22: count: 2 hasNull: <span class="nb">false </span>min: 1 max: 5 sum: 6
+    Column 23: count: 2 hasNull: <span class="nb">false </span>min: chani max: mauddib sum: 12
 
 File Statistics:
-  Column 0: count: 2 hasNull: false
-  Column 1: count: 2 hasNull: false true: 1
-  Column 2: count: 2 hasNull: false min: 1 max: 100 sum: 101
-  Column 3: count: 2 hasNull: false min: 1024 max: 2048 sum: 3072
-  Column 4: count: 2 hasNull: false min: 65536 max: 65536 sum: 131072
-  Column 5: count: 2 hasNull: false min: 9223372036854775807 max: 9223372036854775807
-  Column 6: count: 2 hasNull: false min: 1.0 max: 2.0 sum: 3.0
-  Column 7: count: 2 hasNull: false min: -15.0 max: -5.0 sum: -20.0
-  Column 8: count: 2 hasNull: false sum: 5
-  Column 9: count: 2 hasNull: false min: bye max: hi sum: 5
-  Column 10: count: 2 hasNull: false
-  Column 11: count: 2 hasNull: false
-  Column 12: count: 4 hasNull: false
-  Column 13: count: 4 hasNull: false min: 1 max: 2 sum: 6
-  Column 14: count: 4 hasNull: false min: bye max: sigh sum: 14
-  Column 15: count: 2 hasNull: false
-  Column 16: count: 5 hasNull: false
-  Column 17: count: 5 hasNull: false min: -100000 max: 100000000 sum: 99901241
-  Column 18: count: 5 hasNull: false min: bad max: in sum: 15
-  Column 19: count: 2 hasNull: false
-  Column 20: count: 2 hasNull: false min: chani max: mauddib sum: 12
-  Column 21: count: 2 hasNull: false
-  Column 22: count: 2 hasNull: false min: 1 max: 5 sum: 6
-  Column 23: count: 2 hasNull: false min: chani max: mauddib sum: 12
+  Column 0: count: 2 hasNull: <span class="nb">false
+  </span>Column 1: count: 2 hasNull: <span class="nb">false true</span>: 1
+  Column 2: count: 2 hasNull: <span class="nb">false </span>min: 1 max: 100 sum: 101
+  Column 3: count: 2 hasNull: <span class="nb">false </span>min: 1024 max: 2048 sum: 3072
+  Column 4: count: 2 hasNull: <span class="nb">false </span>min: 65536 max: 65536 sum: 131072
+  Column 5: count: 2 hasNull: <span class="nb">false </span>min: 9223372036854775807 max: 9223372036854775807
+  Column 6: count: 2 hasNull: <span class="nb">false </span>min: 1.0 max: 2.0 sum: 3.0
+  Column 7: count: 2 hasNull: <span class="nb">false </span>min: <span class="nt">-15</span>.0 max: <span class="nt">-5</span>.0 sum: <span class="nt">-20</span>.0
+  Column 8: count: 2 hasNull: <span class="nb">false </span>sum: 5
+  Column 9: count: 2 hasNull: <span class="nb">false </span>min: bye max: hi sum: 5
+  Column 10: count: 2 hasNull: <span class="nb">false
+  </span>Column 11: count: 2 hasNull: <span class="nb">false
+  </span>Column 12: count: 4 hasNull: <span class="nb">false
+  </span>Column 13: count: 4 hasNull: <span class="nb">false </span>min: 1 max: 2 sum: 6
+  Column 14: count: 4 hasNull: <span class="nb">false </span>min: bye max: sigh sum: 14
+  Column 15: count: 2 hasNull: <span class="nb">false
+  </span>Column 16: count: 5 hasNull: <span class="nb">false
+  </span>Column 17: count: 5 hasNull: <span class="nb">false </span>min: <span class="nt">-100000</span> max: 100000000 sum: 99901241
+  Column 18: count: 5 hasNull: <span class="nb">false </span>min: bad max: <span class="k">in </span>sum: 15
+  Column 19: count: 2 hasNull: <span class="nb">false
+  </span>Column 20: count: 2 hasNull: <span class="nb">false </span>min: chani max: mauddib sum: 12
+  Column 21: count: 2 hasNull: <span class="nb">false
+  </span>Column 22: count: 2 hasNull: <span class="nb">false </span>min: 1 max: 5 sum: 6
+  Column 23: count: 2 hasNull: <span class="nb">false </span>min: chani max: mauddib sum: 12
 
 Stripes:
   Stripe: offset: 3 data: 243 rows: 2 tail: 199 index: 570
@@ -865,7 +865,7 @@ File length: 1711 bytes
 Padding length: 0 bytes
 Padding ratio: 0%
 ______________________________________________________________________
-</code></pre>
+</code></pre></div></div>
 
 <h2 id="java-data">Java Data</h2>
 
@@ -993,8 +993,6 @@ to include all of the observed values.</p>
   
 
   
-    
-  
 
   
     
@@ -1014,29 +1012,25 @@ to include all of the observed values.</p>
     
   
     
-      <li class=""><a href="/docs/index.html">Background</a></li>
+      <li class=""><a href="http://localhost:4000/docs/index.html">Background</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
   
     
-      <li class=""><a href="/docs/adopters.html">ORC Adopters</a></li>
+      <li class=""><a href="http://localhost:4000/docs/adopters.html">ORC Adopters</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1068,15 +1062,13 @@ to include all of the observed values.</p>
     
   
     
-      <li class=""><a href="/docs/types.html">Types</a></li>
+      <li class=""><a href="http://localhost:4000/docs/types.html">Types</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1098,19 +1090,17 @@ to include all of the observed values.</p>
     
   
     
-      <li class=""><a href="/docs/indexes.html">Indexes</a></li>
+      <li class=""><a href="http://localhost:4000/docs/indexes.html">Indexes</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
-      <li class=""><a href="/docs/acid.html">ACID support</a></li>
+      <li class=""><a href="http://localhost:4000/docs/acid.html">ACID support</a></li>
       
 
 
@@ -1125,8 +1115,6 @@ to include all of the observed values.</p>
   
 
   
-    
-  
 
   
     
@@ -1134,15 +1122,13 @@ to include all of the observed values.</p>
     
   
     
-      <li class=""><a href="/docs/building.html">Building ORC</a></li>
+      <li class=""><a href="http://localhost:4000/docs/building.html">Building ORC</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1172,7 +1158,7 @@ to include all of the observed values.</p>
     
   
     
-      <li class=""><a href="/docs/releases.html">Releases</a></li>
+      <li class=""><a href="http://localhost:4000/docs/releases.html">Releases</a></li>
       
 
 
@@ -1187,8 +1173,6 @@ to include all of the observed values.</p>
   
 
   
-    
-  
 
   
     
@@ -1206,15 +1190,13 @@ to include all of the observed values.</p>
     
   
     
-      <li class=""><a href="/docs/hive-ddl.html">Hive DDL</a></li>
+      <li class=""><a href="http://localhost:4000/docs/hive-ddl.html">Hive DDL</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1230,7 +1212,7 @@ to include all of the observed values.</p>
     
   
     
-      <li class=""><a href="/docs/hive-config.html">Hive Configuration</a></li>
+      <li class=""><a href="http://localhost:4000/docs/hive-config.html">Hive Configuration</a></li>
       
 
 
@@ -1245,8 +1227,6 @@ to include all of the observed values.</p>
   
 
   
-    
-  
 
   
     
@@ -1272,15 +1252,13 @@ to include all of the observed values.</p>
     
   
     
-      <li class=""><a href="/docs/mapred.html">Using in MapRed</a></li>
+      <li class=""><a href="http://localhost:4000/docs/mapred.html">Using in MapRed</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1308,7 +1286,7 @@ to include all of the observed values.</p>
     
   
     
-      <li class=""><a href="/docs/mapreduce.html">Using in MapReduce</a></li>
+      <li class=""><a href="http://localhost:4000/docs/mapreduce.html">Using in MapReduce</a></li>
       
 
 
@@ -1323,8 +1301,6 @@ to include all of the observed values.</p>
   
 
   
-    
-  
 
   
     
@@ -1336,15 +1312,13 @@ to include all of the observed values.</p>
     
   
     
-      <li class=""><a href="/docs/core-java.html">Using Core Java</a></li>
+      <li class=""><a href="http://localhost:4000/docs/core-java.html">Using Core Java</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1354,7 +1328,7 @@ to include all of the observed values.</p>
     
   
     
-      <li class=""><a href="/docs/core-cpp.html">Using Core C++</a></li>
+      <li class=""><a href="http://localhost:4000/docs/core-cpp.html">Using Core C++</a></li>
       
 
 
@@ -1369,8 +1343,6 @@ to include all of the observed values.</p>
   
 
   
-    
-  
 
   
     
@@ -1384,15 +1356,13 @@ to include all of the observed values.</p>
     
   
     
-      <li class=""><a href="/docs/cpp-tools.html">C++ Tools</a></li>
+      <li class=""><a href="http://localhost:4000/docs/cpp-tools.html">C++ Tools</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1416,7 +1386,7 @@ to include all of the observed values.</p>
     
   
     
-      <li class="current"><a href="/docs/java-tools.html">Java Tools</a></li>
+      <li class="current"><a href="http://localhost:4000/docs/java-tools.html">Java Tools</a></li>
       
 
 

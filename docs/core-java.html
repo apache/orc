@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Using Core Java</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="generator" content="Jekyll v2.4.0">
+  <meta name="generator" content="Jekyll v3.7.3">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
   <link rel="stylesheet" href="/css/screen.css">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -109,7 +109,7 @@
     
   
     
-      <option value="/docs/index.html">Background</option>
+      <option value="http://localhost:4000/docs/index.html">Background</option>
     
   
     
@@ -131,7 +131,7 @@
     
   
     
-      <option value="/docs/adopters.html">ORC Adopters</option>
+      <option value="http://localhost:4000/docs/adopters.html">ORC Adopters</option>
     
   
     
@@ -158,42 +158,6 @@
   
     
   
-    
-  
-
-  
-
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-      <option value="/docs/types.html">Types</option>
     
   
 
@@ -219,7 +183,43 @@
     
   
     
-      <option value="/docs/indexes.html">Indexes</option>
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="http://localhost:4000/docs/types.html">Types</option>
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="http://localhost:4000/docs/indexes.html">Indexes</option>
     
   
     
@@ -237,7 +237,7 @@
 
   
     
-      <option value="/docs/acid.html">ACID support</option>
+      <option value="http://localhost:4000/docs/acid.html">ACID support</option>
     
   
     
@@ -284,7 +284,7 @@
     
   
     
-      <option value="/docs/building.html">Building ORC</option>
+      <option value="http://localhost:4000/docs/building.html">Building ORC</option>
     
   
     
@@ -342,7 +342,7 @@
     
   
     
-      <option value="/docs/releases.html">Releases</option>
+      <option value="http://localhost:4000/docs/releases.html">Releases</option>
     
   
     
@@ -373,7 +373,7 @@
     
   
     
-      <option value="/docs/hive-ddl.html">Hive DDL</option>
+      <option value="http://localhost:4000/docs/hive-ddl.html">Hive DDL</option>
     
   
     
@@ -407,7 +407,7 @@
     
   
     
-      <option value="/docs/hive-config.html">Hive Configuration</option>
+      <option value="http://localhost:4000/docs/hive-config.html">Hive Configuration</option>
     
   
     
@@ -460,7 +460,7 @@
     
   
     
-      <option value="/docs/mapred.html">Using in MapRed</option>
+      <option value="http://localhost:4000/docs/mapred.html">Using in MapRed</option>
     
   
     
@@ -498,7 +498,7 @@
     
   
     
-      <option value="/docs/mapreduce.html">Using in MapReduce</option>
+      <option value="http://localhost:4000/docs/mapreduce.html">Using in MapReduce</option>
     
   
     
@@ -525,7 +525,7 @@
     
   
     
-      <option value="/docs/core-java.html">Using Core Java</option>
+      <option value="http://localhost:4000/docs/core-java.html">Using Core Java</option>
     
   
     
@@ -559,7 +559,7 @@
     
   
     
-      <option value="/docs/core-cpp.html">Using Core C++</option>
+      <option value="http://localhost:4000/docs/core-cpp.html">Using Core C++</option>
     
   
     
@@ -606,7 +606,7 @@
     
   
     
-      <option value="/docs/cpp-tools.html">C++ Tools</option>
+      <option value="http://localhost:4000/docs/cpp-tools.html">C++ Tools</option>
     
   
     
@@ -652,7 +652,7 @@
     
   
     
-      <option value="/docs/java-tools.html">Java Tools</option>
+      <option value="http://localhost:4000/docs/java-tools.html">Java Tools</option>
     
   
     
@@ -681,46 +681,46 @@ read and write the data.</p>
 <h2 id="vectorized-row-batch">Vectorized Row Batch</h2>
 
 <p>Data is passed to ORC as instances of
-<a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/VectorizedRowBatch.html">VectorizedRowBatch</a>
+<a href="http://localhost:4000/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/VectorizedRowBatch.html">VectorizedRowBatch</a>
 that contain the data for 1024 rows. The focus is on speed and
-accessing the data fields directly. <code>cols</code> is an array of
-<a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/ColumnVector.html">ColumnVector</a>
-and <code>size</code> is the number of rows.</p>
+accessing the data fields directly. <code class="highlighter-rouge">cols</code> is an array of
+<a href="http://localhost:4000/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/ColumnVector.html">ColumnVector</a>
+and <code class="highlighter-rouge">size</code> is the number of rows.</p>
 
-<pre><code class="language-java">package org.apache.hadoop.hive.ql.exec.vector;
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">package</span> <span class="n">org</span><span class="o">.</span><span class="na">apache</span><span class="o">.</span><span class="na">hadoop</span><span class="o">.</span><span class="na">hive</span><span class="o">.</span><span class="na">ql</span><span class="o">.</span><span class="na">exec</span><span class="o">.</span><span class="na">vector</span><span class="o">;</span>
 
-public class VectorizedRowBatch {
-  public ColumnVector[] cols;
-  public int size;
-  ...
-}
-</code></pre>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">VectorizedRowBatch</span> <span class="o">{</span>
+  <span class="kd">public</span> <span class="n">ColumnVector</span><span class="o">[]</span> <span class="n">cols</span><span class="o">;</span>
+  <span class="kd">public</span> <span class="kt">int</span> <span class="n">size</span><span class="o">;</span>
+  <span class="o">...</span>
+<span class="o">}</span>
+</code></pre></div></div>
 
-<p><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/ColumnVector.html">ColumnVector</a>
+<p><a href="http://localhost:4000/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/ColumnVector.html">ColumnVector</a>
 is the parent type of the different kinds of columns and has some
 fields that are shared across all of the column types. In particular,
-the <code>noNulls</code> flag if there are no nulls in this column for this batch
-and the <code>isRepeating</code> flag for columns were the entire batch is the
-same value. For columns where <code>noNulls == false</code> the <code>isNull</code> array is
+the <code class="highlighter-rouge">noNulls</code> flag if there are no nulls in this column for this batch
+and the <code class="highlighter-rouge">isRepeating</code> flag for columns were the entire batch is the
+same value. For columns where <code class="highlighter-rouge">noNulls == false</code> the <code class="highlighter-rouge">isNull</code> array is
 true if that value is null.</p>
 
-<pre><code class="language-java">public abstract class ColumnVector {
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">ColumnVector</span> <span class="o">{</span>
 
-  // If the whole column vector has no nulls, this is true, otherwise false.
-  public boolean noNulls;
+  <span class="c1">// If the whole column vector has no nulls, this is true, otherwise false.</span>
+  <span class="kd">public</span> <span class="kt">boolean</span> <span class="n">noNulls</span><span class="o">;</span>
 
-  // If hasNulls is true, then this array contains true if the value is
-  // is null, otherwise false.
-  public boolean[] isNull;
+  <span class="c1">// If hasNulls is true, then this array contains true if the value is</span>
+  <span class="c1">// is null, otherwise false.</span>
+  <span class="kd">public</span> <span class="kt">boolean</span><span class="o">[]</span> <span class="n">isNull</span><span class="o">;</span>
 
-  /*
+  <span class="cm">/*
    * True if same value repeats for whole column vector.
    * If so, vector[0] holds the repeating value.
-   */
-  public boolean isRepeating;
-  ...
-}
-</code></pre>
+   */</span>
+  <span class="kd">public</span> <span class="kt">boolean</span> <span class="n">isRepeating</span><span class="o">;</span>
+  <span class="o">...</span>
+<span class="o">}</span>
+</code></pre></div></div>
 
 <p>The subtypes of ColumnVector are:</p>
 
@@ -734,240 +734,240 @@ true if that value is null.</p>
   <tbody>
     <tr>
       <td>array</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/ListColumnVector.html">ListColumnVector</a></td>
+      <td><a href="http://localhost:4000/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/ListColumnVector.html">ListColumnVector</a></td>
     </tr>
     <tr>
       <td>binary</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html">BytesColumnVector</a></td>
+      <td><a href="http://localhost:4000/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html">BytesColumnVector</a></td>
     </tr>
     <tr>
       <td>bigint</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a></td>
+      <td><a href="http://localhost:4000/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a></td>
     </tr>
     <tr>
       <td>boolean</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a></td>
+      <td><a href="http://localhost:4000/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a></td>
     </tr>
     <tr>
       <td>char</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html">BytesColumnVector</a></td>
+      <td><a href="http://localhost:4000/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html">BytesColumnVector</a></td>
     </tr>
     <tr>
       <td>date</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a></td>
+      <td><a href="http://localhost:4000/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a></td>
     </tr>
     <tr>
       <td>decimal</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/DecimalColumnVector.html">DecimalColumnVector</a></td>
+      <td><a href="http://localhost:4000/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/DecimalColumnVector.html">DecimalColumnVector</a></td>
     </tr>
     <tr>
       <td>double</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/DoubleColumnVector.html">DoubleColumnVector</a></td>
+      <td><a href="http://localhost:4000/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/DoubleColumnVector.html">DoubleColumnVector</a></td>
     </tr>
     <tr>
       <td>float</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/DoubleColumnVector.html">DoubleColumnVector</a></td>
+      <td><a href="http://localhost:4000/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/DoubleColumnVector.html">DoubleColumnVector</a></td>
     </tr>
     <tr>
       <td>int</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a></td>
+      <td><a href="http://localhost:4000/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a></td>
     </tr>
     <tr>
       <td>map</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/MapColumnVector.html">MapColumnVector</a></td>
+      <td><a href="http://localhost:4000/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/MapColumnVector.html">MapColumnVector</a></td>
     </tr>
     <tr>
       <td>smallint</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a></td>
+      <td><a href="http://localhost:4000/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a></td>
     </tr>
     <tr>
       <td>string</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html">BytesColumnVector</a></td>
+      <td><a href="http://localhost:4000/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html">BytesColumnVector</a></td>
     </tr>
     <tr>
       <td>struct</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/StructColumnVector.html">StructColumnVector</a></td>
+      <td><a href="http://localhost:4000/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/StructColumnVector.html">StructColumnVector</a></td>
     </tr>
     <tr>
       <td>timestamp</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/TimestampColumnVector.html">TimestampColumnVector</a></td>
+      <td><a href="http://localhost:4000/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/TimestampColumnVector.html">TimestampColumnVector</a></td>
     </tr>
     <tr>
       <td>tinyint</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a></td>
+      <td><a href="http://localhost:4000/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a></td>
     </tr>
     <tr>
       <td>uniontype</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/UnionColumnVector.html">UnionColumnVector</a></td>
+      <td><a href="http://localhost:4000/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/UnionColumnVector.html">UnionColumnVector</a></td>
     </tr>
     <tr>
       <td>varchar</td>
-      <td><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html">BytesColumnVector</a></td>
+      <td><a href="http://localhost:4000/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html">BytesColumnVector</a></td>
     </tr>
   </tbody>
 </table>
 
-<p><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a> handles all of the integer types (boolean, bigint,
+<p><a href="http://localhost:4000/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/LongColumnVector.html">LongColumnVector</a> handles all of the integer types (boolean, bigint,
 date, int, smallint, and tinyint). The data is represented as an array of
 longs where each value is sign-extended as necessary.</p>
 
-<pre><code class="language-java">public class LongColumnVector extends ColumnVector {
-  public long[] vector;
-  ...
-}
-</code></pre>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">LongColumnVector</span> <span class="kd">extends</span> <span class="n">ColumnVector</span> <span class="o">{</span>
+  <span class="kd">public</span> <span class="kt">long</span><span class="o">[]</span> <span class="n">vector</span><span class="o">;</span>
+  <span class="o">...</span>
+<span class="o">}</span>
+</code></pre></div></div>
 
-<p><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/TimestampColumnVector.html">TimestampColumnVector</a>
+<p><a href="http://localhost:4000/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/TimestampColumnVector.html">TimestampColumnVector</a>
 handles timestamp values. The data is represented as an array of longs
 and an array of ints.</p>
 
-<pre><code class="language-java">public class TimestampColumnVector extends ColumnVector {
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TimestampColumnVector</span> <span class="kd">extends</span> <span class="n">ColumnVector</span> <span class="o">{</span>
 
-  // the number of milliseconds since 1 Jan 1970 00:00 GMT
-  public long[] time;
+  <span class="c1">// the number of milliseconds since 1 Jan 1970 00:00 GMT</span>
+  <span class="kd">public</span> <span class="kt">long</span><span class="o">[]</span> <span class="n">time</span><span class="o">;</span>
 
-  // the number of nanoseconds within the second
-  public int[] nanos
-  ...
-}
-</code></pre>
+  <span class="c1">// the number of nanoseconds within the second</span>
+  <span class="kd">public</span> <span class="kt">int</span><span class="o">[]</span> <span class="n">nanos</span>
+  <span class="o">...</span>
+<span class="o">}</span>
+</code></pre></div></div>
 
-<p><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/DoubleColumnVector.html">DoubleColumnVector</a>
+<p><a href="http://localhost:4000/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/DoubleColumnVector.html">DoubleColumnVector</a>
 handles all of the floating point types (double, and float). The data
 is represented as an array of doubles.</p>
 
-<pre><code class="language-java">public class DoubleColumnVector extends ColumnVector {
-  public double[] vector;
-  ...
-}
-</code></pre>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">DoubleColumnVector</span> <span class="kd">extends</span> <span class="n">ColumnVector</span> <span class="o">{</span>
+  <span class="kd">public</span> <span class="kt">double</span><span class="o">[]</span> <span class="n">vector</span><span class="o">;</span>
+  <span class="o">...</span>
+<span class="o">}</span>
+</code></pre></div></div>
 
-<p><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/DecimalColumnVector.html">DecimalColumnVector</a>
+<p><a href="http://localhost:4000/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/DecimalColumnVector.html">DecimalColumnVector</a>
 handles decimal columns. The data is represented as an array of
 HiveDecimalWritable. Note that this implementation is not performant
 and will likely be replaced.</p>
 
-<pre><code class="language-java">public class DecimalColumnVector extends ColumnVector {
-  public HiveDecimalWritable[] vector;
-  ...
-}
-</code></pre>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">DecimalColumnVector</span> <span class="kd">extends</span> <span class="n">ColumnVector</span> <span class="o">{</span>
+  <span class="kd">public</span> <span class="n">HiveDecimalWritable</span><span class="o">[]</span> <span class="n">vector</span><span class="o">;</span>
+  <span class="o">...</span>
+<span class="o">}</span>
+</code></pre></div></div>
 
-<p><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html">BytesColumnVector</a>
+<p><a href="http://localhost:4000/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/BytesColumnVector.html">BytesColumnVector</a>
 handles all of the binary types (binary, char, string, and
 varchar). The data is represented as a byte array, offset, and
 length. The byte arrays may or may not be shared between values.</p>
 
-<pre><code class="language-java">public class BytesColumnVector extends ColumnVector {
-  public byte[][] vector;
-  public int[] start;
-  public int[] length;
-  ...
-}
-</code></pre>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">BytesColumnVector</span> <span class="kd">extends</span> <span class="n">ColumnVector</span> <span class="o">{</span>
+  <span class="kd">public</span> <span class="kt">byte</span><span class="o">[][]</span> <span class="n">vector</span><span class="o">;</span>
+  <span class="kd">public</span> <span class="kt">int</span><span class="o">[]</span> <span class="n">start</span><span class="o">;</span>
+  <span class="kd">public</span> <span class="kt">int</span><span class="o">[]</span> <span class="n">length</span><span class="o">;</span>
+  <span class="o">...</span>
+<span class="o">}</span>
+</code></pre></div></div>
 
-<p><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/StructColumnVector.html">StructColumnVector</a>
+<p><a href="http://localhost:4000/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/StructColumnVector.html">StructColumnVector</a>
 handles the struct columns and represents the data as an array of
-<code>ColumnVector</code>. The value for row 5 consists of the fifth value from
-each of the <code>fields</code> values.</p>
+<code class="highlighter-rouge">ColumnVector</code>. The value for row 5 consists of the fifth value from
+each of the <code class="highlighter-rouge">fields</code> values.</p>
 
-<pre><code class="language-java">public class StructColumnVector extends ColumnVector {
-  public ColumnVector[] fields;
-  ...
-}
-</code></pre>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">StructColumnVector</span> <span class="kd">extends</span> <span class="n">ColumnVector</span> <span class="o">{</span>
+  <span class="kd">public</span> <span class="n">ColumnVector</span><span class="o">[]</span> <span class="n">fields</span><span class="o">;</span>
+  <span class="o">...</span>
+<span class="o">}</span>
+</code></pre></div></div>
 
-<p><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/UnionColumnVector.html">UnionColumnVector</a>
+<p><a href="http://localhost:4000/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/UnionColumnVector.html">UnionColumnVector</a>
 handles the union columns and represents the data as an array of
-integers that pick the subtype and a <code>fields</code> array one per a
-subtype. Only the value of the <code>fields</code> that corresponds to
-<code>tags[row]</code> is set.</p>
+integers that pick the subtype and a <code class="highlighter-rouge">fields</code> array one per a
+subtype. Only the value of the <code class="highlighter-rouge">fields</code> that corresponds to
+<code class="highlighter-rouge">tags[row]</code> is set.</p>
 
-<pre><code class="language-java">public class UnionColumnVector extends ColumnVector {
-  public int[] tags;
-  public ColumnVector[] fields;
-  ...
-}
-</code></pre>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">UnionColumnVector</span> <span class="kd">extends</span> <span class="n">ColumnVector</span> <span class="o">{</span>
+  <span class="kd">public</span> <span class="kt">int</span><span class="o">[]</span> <span class="n">tags</span><span class="o">;</span>
+  <span class="kd">public</span> <span class="n">ColumnVector</span><span class="o">[]</span> <span class="n">fields</span><span class="o">;</span>
+  <span class="o">...</span>
+<span class="o">}</span>
+</code></pre></div></div>
 
-<p><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/ListColumnVector.html">ListColumnVector</a>
+<p><a href="http://localhost:4000/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/ListColumnVector.html">ListColumnVector</a>
 handles the array columns and represents the data as two arrays of
-integers for the offset and lengths and a <code>ColumnVector</code> for the
+integers for the offset and lengths and a <code class="highlighter-rouge">ColumnVector</code> for the
 children values.</p>
 
-<pre><code class="language-java">public class ListColumnVector extends ColumnVector {
-  // for each row, the first offset of the child
-  public long[] offsets;
-  // for each row, the number of elements in the array
-  public long[] lengths;
-  // the offset in the child that should be used for new values
-  public int childCount;
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">ListColumnVector</span> <span class="kd">extends</span> <span class="n">ColumnVector</span> <span class="o">{</span>
+  <span class="c1">// for each row, the first offset of the child</span>
+  <span class="kd">public</span> <span class="kt">long</span><span class="o">[]</span> <span class="n">offsets</span><span class="o">;</span>
+  <span class="c1">// for each row, the number of elements in the array</span>
+  <span class="kd">public</span> <span class="kt">long</span><span class="o">[]</span> <span class="n">lengths</span><span class="o">;</span>
+  <span class="c1">// the offset in the child that should be used for new values</span>
+  <span class="kd">public</span> <span class="kt">int</span> <span class="n">childCount</span><span class="o">;</span>
 
-  // the values of the children
-  public ColumnVector child;
-  ...
-}
-</code></pre>
+  <span class="c1">// the values of the children</span>
+  <span class="kd">public</span> <span class="n">ColumnVector</span> <span class="n">child</span><span class="o">;</span>
+  <span class="o">...</span>
+<span class="o">}</span>
+</code></pre></div></div>
 
-<p><a href="/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/MapColumnVector.html">MapColumnVector</a>
+<p><a href="http://localhost:4000/api/hive-storage-api/index.html?org/apache/hadoop/hive/ql/exec/vector/MapColumnVector.html">MapColumnVector</a>
 handles the map columns and represents the data as two arrays of
-integers for the offset and lengths and two <code>ColumnVector</code>s for the
+integers for the offset and lengths and two <code class="highlighter-rouge">ColumnVector</code>s for the
 keys and values.</p>
 
-<pre><code class="language-java">public class MapColumnVector extends ColumnVector {
-  // for each row, the first offset of the child
-  public long[] offsets;
-  // for each row, the number of elements in the array
-  public long[] lengths;
-  // the offset in the child that should be used for new values
-  public int childCount;
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">MapColumnVector</span> <span class="kd">extends</span> <span class="n">ColumnVector</span> <span class="o">{</span>
+  <span class="c1">// for each row, the first offset of the child</span>
+  <span class="kd">public</span> <span class="kt">long</span><span class="o">[]</span> <span class="n">offsets</span><span class="o">;</span>
+  <span class="c1">// for each row, the number of elements in the array</span>
+  <span class="kd">public</span> <span class="kt">long</span><span class="o">[]</span> <span class="n">lengths</span><span class="o">;</span>
+  <span class="c1">// the offset in the child that should be used for new values</span>
+  <span class="kd">public</span> <span class="kt">int</span> <span class="n">childCount</span><span class="o">;</span>
 
-  // the values of the keys and values
-  public ColumnVector keys;
-  public ColumnVector values;
-  ...
-}
-</code></pre>
+  <span class="c1">// the values of the keys and values</span>
+  <span class="kd">public</span> <span class="n">ColumnVector</span> <span class="n">keys</span><span class="o">;</span>
+  <span class="kd">public</span> <span class="n">ColumnVector</span> <span class="n">values</span><span class="o">;</span>
+  <span class="o">...</span>
+<span class="o">}</span>
+</code></pre></div></div>
 
 <h2 id="writing-orc-files">Writing ORC Files</h2>
 
 <h3 id="simple-example">Simple Example</h3>
 <p>To write an ORC file, you need to define the schema and use the
-<a href="/api/orc-core/index.html?org/apache/orc/OrcFile.html">OrcFile</a>
+<a href="http://localhost:4000/api/orc-core/index.html?org/apache/orc/OrcFile.html">OrcFile</a>
 class to create a
-<a href="/api/orc-core/index.html?org/apache/orc/Writer.html">Writer</a>
+<a href="http://localhost:4000/api/orc-core/index.html?org/apache/orc/Writer.html">Writer</a>
 with the desired filename. This example sets the required schema
 parameter, but there are many other options to control the ORC writer.</p>
 
-<pre><code class="language-java">Configuration conf = new Configuration();
-TypeDescription schema = TypeDescription.fromString("struct&lt;x:int,y:int&gt;");
-Writer writer = OrcFile.createWriter(new Path("my-file.orc"),
-                  OrcFile.writerOptions(conf)
-                         .setSchema(schema));
-</code></pre>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Configuration</span> <span class="n">conf</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Configuration</span><span class="o">();</span>
+<span class="n">TypeDescription</span> <span class="n">schema</span> <span class="o">=</span> <span class="n">TypeDescription</span><span class="o">.</span><span class="na">fromString</span><span class="o">(</span><span class="s">"struct&lt;x:int,y:int&gt;"</span><span class="o">);</span>
+<span class="n">Writer</span> <span class="n">writer</span> <span class="o">=</span> <span class="n">OrcFile</span><span class="o">.</span><span class="na">createWriter</span><span class="o">(</span><span class="k">new</span> <span class="n">Path</span><span class="o">(</span><span class="s">"my-file.orc"</span><span class="o">),</span>
+                  <span class="n">OrcFile</span><span class="o">.</span><span class="na">writerOptions</span><span class="o">(</span><span class="n">conf</span><span class="o">)</span>
+                         <span class="o">.</span><span class="na">setSchema</span><span class="o">(</span><span class="n">schema</span><span class="o">));</span>
+</code></pre></div></div>
 
 <p>Now you need to create a row batch, set the data, and write it to the file
-as the batch fills up. When the file is done, close the <code>Writer</code>.</p>
+as the batch fills up. When the file is done, close the <code class="highlighter-rouge">Writer</code>.</p>
 
-<pre><code class="language-java">VectorizedRowBatch batch = schema.createRowBatch();
-LongColumnVector x = (LongColumnVector) batch.cols[0];
-LongColumnVector y = (LongColumnVector) batch.cols[1];
-for(int r=0; r &lt; 10000; ++r) {
-  int row = batch.size++;
-  x.vector[row] = r;
-  y.vector[row] = r * 3;
-  // If the batch is full, write it out and start over.
-  if (batch.size == batch.getMaxSize()) {
-    writer.addRowBatch(batch);
-    batch.reset();
-  }
-}
-if (batch.size != 0) {
-  writer.addRowBatch(batch);
-  batch.reset();
-}
-writer.close();
-</code></pre>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">VectorizedRowBatch</span> <span class="n">batch</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="na">createRowBatch</span><span class="o">();</span>
+<span class="n">LongColumnVector</span> <span class="n">x</span> <span class="o">=</span> <span class="o">(</span><span class="n">LongColumnVector</span><span class="o">)</span> <span class="n">batch</span><span class="o">.</span><span class="na">cols</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span>
+<span class="n">LongColumnVector</span> <span class="n">y</span> <span class="o">=</span> <span class="o">(</span><span class="n">LongColumnVector</span><span class="o">)</span> <span class="n">batch</span><span class="o">.</span><span class="na">cols</span><span class="o">[</span><span class="mi">1</span><span class="o">];</span>
+<span class="k">for</span><span class="o">(</span><span class="kt">int</span> <span class="n">r</span><span class="o">=</span><span class="mi">0</span><span class="o">;</span> <span class="n">r</span> <span class="o">&lt;</span> <span class="mi">10000</span><span class="o">;</span> <span class="o">++</span><span class="n">r</span><span class="o">)</span> <span class="o">{</span>
+  <span class="kt">int</span> <span class="n">row</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="na">size</span><span class="o">++;</span>
+  <span class="n">x</span><span class="o">.</span><span class="na">vector</span><span class="o">[</span><span class="n">row</span><span class="o">]</span> <span class="o">=</span> <span class="n">r</span><span class="o">;</span>
+  <span class="n">y</span><span class="o">.</span><span class="na">vector</span><span class="o">[</span><span class="n">row</span><span class="o">]</span> <span class="o">=</span> <span class="n">r</span> <span class="o">*</span> <span class="mi">3</span><span class="o">;</span>
+  <span class="c1">// If the batch is full, write it out and start over.</span>
+  <span class="k">if</span> <span class="o">(</span><span class="n">batch</span><span class="o">.</span><span class="na">size</span> <span class="o">==</span> <span class="n">batch</span><span class="o">.</span><span class="na">getMaxSize</span><span class="o">())</span> <span class="o">{</span>
+    <span class="n">writer</span><span class="o">.</span><span class="na">addRowBatch</span><span class="o">(</span><span class="n">batch</span><span class="o">);</span>
+    <span class="n">batch</span><span class="o">.</span><span class="na">reset</span><span class="o">();</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+<span class="k">if</span> <span class="o">(</span><span class="n">batch</span><span class="o">.</span><span class="na">size</span> <span class="o">!=</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+  <span class="n">writer</span><span class="o">.</span><span class="na">addRowBatch</span><span class="o">(</span><span class="n">batch</span><span class="o">);</span>
+  <span class="n">batch</span><span class="o">.</span><span class="na">reset</span><span class="o">();</span>
+<span class="o">}</span>
+<span class="n">writer</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</code></pre></div></div>
 
 <h3 id="advanced-example">Advanced Example</h3>
 
@@ -975,99 +975,99 @@ writer.close();
 columns and a map column. Each row’s map has 5 elements with keys
 ranging from “&lt;row&gt;.0” to “&lt;row&gt;.4”.</p>
 
-<pre><code class="language-java">Path testFilePath = new Path("advanced-example.orc");
-Configuration conf = new Configuration();
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Path</span> <span class="n">testFilePath</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Path</span><span class="o">(</span><span class="s">"advanced-example.orc"</span><span class="o">);</span>
+<span class="n">Configuration</span> <span class="n">conf</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Configuration</span><span class="o">();</span>
 
-TypeDescription schema =
-    TypeDescription.fromString("struct&lt;first:int," +
-                               "second:int,third:map&lt;string,int&gt;&gt;");
+<span class="n">TypeDescription</span> <span class="n">schema</span> <span class="o">=</span>
+    <span class="n">TypeDescription</span><span class="o">.</span><span class="na">fromString</span><span class="o">(</span><span class="s">"struct&lt;first:int,"</span> <span class="o">+</span>
+                               <span class="s">"second:int,third:map&lt;string,int&gt;&gt;"</span><span class="o">);</span>
 
-Writer writer =
-    OrcFile.createWriter(testFilePath,
-        OrcFile.writerOptions(conf).setSchema(schema));
+<span class="n">Writer</span> <span class="n">writer</span> <span class="o">=</span>
+    <span class="n">OrcFile</span><span class="o">.</span><span class="na">createWriter</span><span class="o">(</span><span class="n">testFilePath</span><span class="o">,</span>
+        <span class="n">OrcFile</span><span class="o">.</span><span class="na">writerOptions</span><span class="o">(</span><span class="n">conf</span><span class="o">).</span><span class="na">setSchema</span><span class="o">(</span><span class="n">schema</span><span class="o">));</span>
 
-VectorizedRowBatch batch = schema.createRowBatch();
-LongColumnVector first = (LongColumnVector) batch.cols[0];
-LongColumnVector second = (LongColumnVector) batch.cols[1];
+<span class="n">VectorizedRowBatch</span> <span class="n">batch</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="na">createRowBatch</span><span class="o">();</span>
+<span class="n">LongColumnVector</span> <span class="n">first</span> <span class="o">=</span> <span class="o">(</span><span class="n">LongColumnVector</span><span class="o">)</span> <span class="n">batch</span><span class="o">.</span><span class="na">cols</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span>
+<span class="n">LongColumnVector</span> <span class="n">second</span> <span class="o">=</span> <span class="o">(</span><span class="n">LongColumnVector</span><span class="o">)</span> <span class="n">batch</span><span class="o">.</span><span class="na">cols</span><span class="o">[</span><span class="mi">1</span><span class="o">];</span>
 
-//Define map. You need also to cast the key and value vectors
-MapColumnVector map = (MapColumnVector) batch.cols[2];
-BytesColumnVector mapKey = (BytesColumnVector) map.keys;
-LongColumnVector mapValue = (LongColumnVector) map.values;
+<span class="c1">//Define map. You need also to cast the key and value vectors</span>
+<span class="n">MapColumnVector</span> <span class="n">map</span> <span class="o">=</span> <span class="o">(</span><span class="n">MapColumnVector</span><span class="o">)</span> <span class="n">batch</span><span class="o">.</span><span class="na">cols</span><span class="o">[</span><span class="mi">2</span><span class="o">];</span>
+<span class="n">BytesColumnVector</span> <span class="n">mapKey</span> <span class="o">=</span> <span class="o">(</span><span class="n">BytesColumnVector</span><span class="o">)</span> <span class="n">map</span><span class="o">.</span><span class="na">keys</span><span class="o">;</span>
+<span class="n">LongColumnVector</span> <span class="n">mapValue</span> <span class="o">=</span> <span class="o">(</span><span class="n">LongColumnVector</span><span class="o">)</span> <span class="n">map</span><span class="o">.</span><span class="na">values</span><span class="o">;</span>
 
-// Each map has 5 elements
-final int MAP_SIZE = 5;
-final int BATCH_SIZE = batch.getMaxSize();
+<span class="c1">// Each map has 5 elements</span>
+<span class="kd">final</span> <span class="kt">int</span> <span class="n">MAP_SIZE</span> <span class="o">=</span> <span class="mi">5</span><span class="o">;</span>
+<span class="kd">final</span> <span class="kt">int</span> <span class="n">BATCH_SIZE</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="na">getMaxSize</span><span class="o">();</span>
 
-// Ensure the map is big enough
-mapKey.ensureSize(BATCH_SIZE * MAP_SIZE, false);
-mapValue.ensureSize(BATCH_SIZE * MAP_SIZE, false);
+<span class="c1">// Ensure the map is big enough</span>
+<span class="n">mapKey</span><span class="o">.</span><span class="na">ensureSize</span><span class="o">(</span><span class="n">BATCH_SIZE</span> <span class="o">*</span> <span class="n">MAP_SIZE</span><span class="o">,</span> <span class="kc">false</span><span class="o">);</span>
+<span class="n">mapValue</span><span class="o">.</span><span class="na">ensureSize</span><span class="o">(</span><span class="n">BATCH_SIZE</span> <span class="o">*</span> <span class="n">MAP_SIZE</span><span class="o">,</span> <span class="kc">false</span><span class="o">);</span>
 
-// add 1500 rows to file
-for(int r=0; r &lt; 1500; ++r) {
-  int row = batch.size++;
+<span class="c1">// add 1500 rows to file</span>
+<span class="k">for</span><span class="o">(</span><span class="kt">int</span> <span class="n">r</span><span class="o">=</span><span class="mi">0</span><span class="o">;</span> <span class="n">r</span> <span class="o">&lt;</span> <span class="mi">1500</span><span class="o">;</span> <span class="o">++</span><span class="n">r</span><span class="o">)</span> <span class="o">{</span>
+  <span class="kt">int</span> <span class="n">row</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="na">size</span><span class="o">++;</span>
 
-  first.vector[row] = r;
-  second.vector[row] = r * 3;
+  <span class="n">first</span><span class="o">.</span><span class="na">vector</span><span class="o">[</span><span class="n">row</span><span class="o">]</span> <span class="o">=</span> <span class="n">r</span><span class="o">;</span>
+  <span class="n">second</span><span class="o">.</span><span class="na">vector</span><span class="o">[</span><span class="n">row</span><span class="o">]</span> <span class="o">=</span> <span class="n">r</span> <span class="o">*</span> <span class="mi">3</span><span class="o">;</span>
 
-  map.offsets[row] = map.childCount;
-  map.lengths[row] = MAP_SIZE;
-  map.childCount += MAP_SIZE;
+  <span class="n">map</span><span class="o">.</span><span class="na">offsets</span><span class="o">[</span><span class="n">row</span><span class="o">]</span> <span class="o">=</span> <span class="n">map</span><span class="o">.</span><span class="na">childCount</span><span class="o">;</span>
+  <span class="n">map</span><span class="o">.</span><span class="na">lengths</span><span class="o">[</span><span class="n">row</span><span class="o">]</span> <span class="o">=</span> <span class="n">MAP_SIZE</span><span class="o">;</span>
+  <span class="n">map</span><span class="o">.</span><span class="na">childCount</span> <span class="o">+=</span> <span class="n">MAP_SIZE</span><span class="o">;</span>
 
-  for (int mapElem = (int) map.offsets[row];
-       mapElem &lt; map.offsets[row] + MAP_SIZE; ++mapElem) {
-    String key = "row " + r + "." + (mapElem - map.offsets[row]);
-    mapKey.setVal(mapElem, key.getBytes(StandardCharsets.UTF_8));
-    mapValue.vector[mapElem] = mapElem;
-  }
-  if (row == BATCH_SIZE - 1) {
-    writer.addRowBatch(batch);
-    batch.reset();
-  }
-}
-if (batch.size != 0) {
-  writer.addRowBatch(batch);
-  batch.reset();
-}
-writer.close();
+  <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">mapElem</span> <span class="o">=</span> <span class="o">(</span><span class="kt">int</span><span class="o">)</span> <span class="n">map</span><span class="o">.</span><span class="na">offsets</span><span class="o">[</span><span class="n">row</span><span class="o">];</span>
+       <span class="n">mapElem</span> <span class="o">&lt;</span> <span class="n">map</span><span class="o">.</span><span class="na">offsets</span><span class="o">[</span><span class="n">row</span><span class="o">]</span> <span class="o">+</span> <span class="n">MAP_SIZE</span><span class="o">;</span> <span class="o">++</span><span class="n">mapElem</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">String</span> <span class="n">key</span> <span class="o">=</span> <span class="s">"row "</span> <span class="o">+</span> <span class="n">r</span> <span class="o">+</span> <span class="s">"."</span> <span class="o">+</span> <span class="o">(</span><span class="n">mapElem</span> <span class="o">-</span> <span class="n">map</span><span class="o">.</span><span class="na">offsets</span><span class="o">[</span><span class="n">row</span><span class="o">]);</span>
+    <span class="n">mapKey</span><span class="o">.</span><span class="na">setVal</span><span class="o">(</span><span class="n">mapElem</span><span class="o">,</span> <span class="n">key</span><span class="o">.</span><span class="na">getBytes</span><span class="o">(</span><span class="n">StandardCharsets</span><span class="o">.</span><span class="na">UTF_8</span><span class="o">));</span>
+    <span class="n">mapValue</span><span class="o">.</span><span class="na">vector</span><span class="o">[</span><span class="n">mapElem</span><span class="o">]</span> <span class="o">=</span> <span class="n">mapElem</span><span class="o">;</span>
+  <span class="o">}</span>
+  <span class="k">if</span> <span class="o">(</span><span class="n">row</span> <span class="o">==</span> <span class="n">BATCH_SIZE</span> <span class="o">-</span> <span class="mi">1</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">writer</span><span class="o">.</span><span class="na">addRowBatch</span><span class="o">(</span><span class="n">batch</span><span class="o">);</span>
+    <span class="n">batch</span><span class="o">.</span><span class="na">reset</span><span class="o">();</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+<span class="k">if</span> <span class="o">(</span><span class="n">batch</span><span class="o">.</span><span class="na">size</span> <span class="o">!=</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+  <span class="n">writer</span><span class="o">.</span><span class="na">addRowBatch</span><span class="o">(</span><span class="n">batch</span><span class="o">);</span>
+  <span class="n">batch</span><span class="o">.</span><span class="na">reset</span><span class="o">();</span>
+<span class="o">}</span>
+<span class="n">writer</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
 
-</code></pre>
+</code></pre></div></div>
 
 <h2 id="reading-orc-files">Reading ORC Files</h2>
 
 <p>To read ORC files, use the
-<a href="/api/orc-core/index.html?org/apache/orc/OrcFile.html">OrcFile</a>
+<a href="http://localhost:4000/api/orc-core/index.html?org/apache/orc/OrcFile.html">OrcFile</a>
 class to create a
-<a href="/api/orc-core/index.html?org/apache/orc/Reader.html">Reader</a>
+<a href="http://localhost:4000/api/orc-core/index.html?org/apache/orc/Reader.html">Reader</a>
 that contains the metadata about the file. There are a few options to
 the ORC reader, but far fewer than the writer and none of them are
 required. The reader has methods for getting the number of rows,
 schema, compression, etc. from the file.</p>
 
-<pre><code class="language-java">Reader reader = OrcFile.createReader(new Path("my-file.orc"),
-                  OrcFile.readerOptions(conf));
-</code></pre>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Reader</span> <span class="n">reader</span> <span class="o">=</span> <span class="n">OrcFile</span><span class="o">.</span><span class="na">createReader</span><span class="o">(</span><span class="k">new</span> <span class="n">Path</span><span class="o">(</span><span class="s">"my-file.orc"</span><span class="o">),</span>
+                  <span class="n">OrcFile</span><span class="o">.</span><span class="na">readerOptions</span><span class="o">(</span><span class="n">conf</span><span class="o">));</span>
+</code></pre></div></div>
 
 <p>To get the data, create a
-<a href="/api/orc-core/index.html?org/apache/orc/RecordReader.html">RecordReader</a>
+<a href="http://localhost:4000/api/orc-core/index.html?org/apache/orc/RecordReader.html">RecordReader</a>
 object. By default, the RecordReader reads all rows and all columns,
 but there are options to control the data that is read.</p>
 
-<pre><code class="language-java">RecordReader rows = reader.rows();
-VectorizedRowBatch batch = reader.getSchema().createRowBatch();
-</code></pre>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">RecordReader</span> <span class="n">rows</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="na">rows</span><span class="o">();</span>
+<span class="n">VectorizedRowBatch</span> <span class="n">batch</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="na">getSchema</span><span class="o">().</span><span class="na">createRowBatch</span><span class="o">();</span>
+</code></pre></div></div>
 
-<p>With a <code>RecordReader</code> the user can ask for the next batch until there
+<p>With a <code class="highlighter-rouge">RecordReader</code> the user can ask for the next batch until there
 are no more left. The reader will stop the batch at certain boundaries, so the
 returned batch may not be full, but it will always contain some rows.</p>
 
-<pre><code class="language-java">while (rows.nextBatch(batch)) {
-  for(int r=0; r &lt; batch.size; ++r) {
-    ... process row r from batch
-  }
-}
-rows.close();
-</code></pre>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">while</span> <span class="o">(</span><span class="n">rows</span><span class="o">.</span><span class="na">nextBatch</span><span class="o">(</span><span class="n">batch</span><span class="o">))</span> <span class="o">{</span>
+  <span class="k">for</span><span class="o">(</span><span class="kt">int</span> <span class="n">r</span><span class="o">=</span><span class="mi">0</span><span class="o">;</span> <span class="n">r</span> <span class="o">&lt;</span> <span class="n">batch</span><span class="o">.</span><span class="na">size</span><span class="o">;</span> <span class="o">++</span><span class="n">r</span><span class="o">)</span> <span class="o">{</span>
+    <span class="o">...</span> <span class="n">process</span> <span class="n">row</span> <span class="n">r</span> <span class="n">from</span> <span class="n">batch</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+<span class="n">rows</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</code></pre></div></div>
 
           
 
@@ -1143,8 +1143,6 @@ rows.close();
   
 
   
-    
-  
 
   
     
@@ -1164,29 +1162,25 @@ rows.close();
     
   
     
-      <li class=""><a href="/docs/index.html">Background</a></li>
+      <li class=""><a href="http://localhost:4000/docs/index.html">Background</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
   
     
-      <li class=""><a href="/docs/adopters.html">ORC Adopters</a></li>
+      <li class=""><a href="http://localhost:4000/docs/adopters.html">ORC Adopters</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1218,15 +1212,13 @@ rows.close();
     
   
     
-      <li class=""><a href="/docs/types.html">Types</a></li>
+      <li class=""><a href="http://localhost:4000/docs/types.html">Types</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1248,19 +1240,17 @@ rows.close();
     
   
     
-      <li class=""><a href="/docs/indexes.html">Indexes</a></li>
+      <li class=""><a href="http://localhost:4000/docs/indexes.html">Indexes</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
-      <li class=""><a href="/docs/acid.html">ACID support</a></li>
+      <li class=""><a href="http://localhost:4000/docs/acid.html">ACID support</a></li>
       
 
 
@@ -1275,8 +1265,6 @@ rows.close();
   
 
   
-    
-  
 
   
     
@@ -1284,15 +1272,13 @@ rows.close();
     
   
     
-      <li class=""><a href="/docs/building.html">Building ORC</a></li>
+      <li class=""><a href="http://localhost:4000/docs/building.html">Building ORC</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1322,7 +1308,7 @@ rows.close();
     
   
     
-      <li class=""><a href="/docs/releases.html">Releases</a></li>
+      <li class=""><a href="http://localhost:4000/docs/releases.html">Releases</a></li>
       
 
 
@@ -1337,8 +1323,6 @@ rows.close();
   
 
   
-    
-  
 
   
     
@@ -1356,15 +1340,13 @@ rows.close();
     
   
     
-      <li class=""><a href="/docs/hive-ddl.html">Hive DDL</a></li>
+      <li class=""><a href="http://localhost:4000/docs/hive-ddl.html">Hive DDL</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1380,7 +1362,7 @@ rows.close();
     
   
     
-      <li class=""><a href="/docs/hive-config.html">Hive Configuration</a></li>
+      <li class=""><a href="http://localhost:4000/docs/hive-config.html">Hive Configuration</a></li>
       
 
 
@@ -1395,8 +1377,6 @@ rows.close();
   
 
   
-    
-  
 
   
     
@@ -1422,15 +1402,13 @@ rows.close();
     
   
     
-      <li class=""><a href="/docs/mapred.html">Using in MapRed</a></li>
+      <li class=""><a href="http://localhost:4000/docs/mapred.html">Using in MapRed</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1458,7 +1436,7 @@ rows.close();
     
   
     
-      <li class=""><a href="/docs/mapreduce.html">Using in MapReduce</a></li>
+      <li class=""><a href="http://localhost:4000/docs/mapreduce.html">Using in MapReduce</a></li>
       
 
 
@@ -1473,8 +1451,6 @@ rows.close();
   
 
   
-    
-  
 
   
     
@@ -1486,15 +1462,13 @@ rows.close();
     
   
     
-      <li class="current"><a href="/docs/core-java.html">Using Core Java</a></li>
+      <li class="current"><a href="http://localhost:4000/docs/core-java.html">Using Core Java</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1504,7 +1478,7 @@ rows.close();
     
   
     
-      <li class=""><a href="/docs/core-cpp.html">Using Core C++</a></li>
+      <li class=""><a href="http://localhost:4000/docs/core-cpp.html">Using Core C++</a></li>
       
 
 
@@ -1519,8 +1493,6 @@ rows.close();
   
 
   
-    
-  
 
   
     
@@ -1534,15 +1506,13 @@ rows.close();
     
   
     
-      <li class=""><a href="/docs/cpp-tools.html">C++ Tools</a></li>
+      <li class=""><a href="http://localhost:4000/docs/cpp-tools.html">C++ Tools</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1566,7 +1536,7 @@ rows.close();
     
   
     
-      <li class=""><a href="/docs/java-tools.html">Java Tools</a></li>
+      <li class=""><a href="http://localhost:4000/docs/java-tools.html">Java Tools</a></li>
       
 
 

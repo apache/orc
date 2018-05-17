@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Building ORC</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="generator" content="Jekyll v2.4.0">
+  <meta name="generator" content="Jekyll v3.7.3">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
   <link rel="stylesheet" href="/css/screen.css">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -109,7 +109,7 @@
     
   
     
-      <option value="/docs/index.html">Background</option>
+      <option value="http://localhost:4000/docs/index.html">Background</option>
     
   
     
@@ -131,7 +131,7 @@
     
   
     
-      <option value="/docs/adopters.html">ORC Adopters</option>
+      <option value="http://localhost:4000/docs/adopters.html">ORC Adopters</option>
     
   
     
@@ -158,42 +158,6 @@
   
     
   
-    
-  
-
-  
-
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-      <option value="/docs/types.html">Types</option>
     
   
 
@@ -219,7 +183,43 @@
     
   
     
-      <option value="/docs/indexes.html">Indexes</option>
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="http://localhost:4000/docs/types.html">Types</option>
+    
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="http://localhost:4000/docs/indexes.html">Indexes</option>
     
   
     
@@ -237,7 +237,7 @@
 
   
     
-      <option value="/docs/acid.html">ACID support</option>
+      <option value="http://localhost:4000/docs/acid.html">ACID support</option>
     
   
     
@@ -284,7 +284,7 @@
     
   
     
-      <option value="/docs/building.html">Building ORC</option>
+      <option value="http://localhost:4000/docs/building.html">Building ORC</option>
     
   
     
@@ -342,7 +342,7 @@
     
   
     
-      <option value="/docs/releases.html">Releases</option>
+      <option value="http://localhost:4000/docs/releases.html">Releases</option>
     
   
     
@@ -373,7 +373,7 @@
     
   
     
-      <option value="/docs/hive-ddl.html">Hive DDL</option>
+      <option value="http://localhost:4000/docs/hive-ddl.html">Hive DDL</option>
     
   
     
@@ -407,7 +407,7 @@
     
   
     
-      <option value="/docs/hive-config.html">Hive Configuration</option>
+      <option value="http://localhost:4000/docs/hive-config.html">Hive Configuration</option>
     
   
     
@@ -460,7 +460,7 @@
     
   
     
-      <option value="/docs/mapred.html">Using in MapRed</option>
+      <option value="http://localhost:4000/docs/mapred.html">Using in MapRed</option>
     
   
     
@@ -498,7 +498,7 @@
     
   
     
-      <option value="/docs/mapreduce.html">Using in MapReduce</option>
+      <option value="http://localhost:4000/docs/mapreduce.html">Using in MapReduce</option>
     
   
     
@@ -525,7 +525,7 @@
     
   
     
-      <option value="/docs/core-java.html">Using Core Java</option>
+      <option value="http://localhost:4000/docs/core-java.html">Using Core Java</option>
     
   
     
@@ -559,7 +559,7 @@
     
   
     
-      <option value="/docs/core-cpp.html">Using Core C++</option>
+      <option value="http://localhost:4000/docs/core-cpp.html">Using Core C++</option>
     
   
     
@@ -606,7 +606,7 @@
     
   
     
-      <option value="/docs/cpp-tools.html">C++ Tools</option>
+      <option value="http://localhost:4000/docs/cpp-tools.html">C++ Tools</option>
     
   
     
@@ -652,7 +652,7 @@
     
   
     
-      <option value="/docs/java-tools.html">Java Tools</option>
+      <option value="http://localhost:4000/docs/java-tools.html">Java Tools</option>
     
   
     
@@ -710,14 +710,14 @@ is in the docker subdirectory, for the list of packages required to build ORC:</
 
 <p>To build a normal release:</p>
 
-<pre><code class="language-shell">% mkdir build
-% cd build
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% mkdir build
+% <span class="nb">cd </span>build
 % cmake ..
 % make package test-out
-</code></pre>
+</code></pre></div></div>
 
 <p>ORC’s C++ build supports three build types, which are controlled by adding
-<code>-DCMAKE_BUILD_TYPE=&lt;type&gt;</code> to the cmake command.</p>
+<code class="highlighter-rouge">-DCMAKE_BUILD_TYPE=&lt;type&gt;</code> to the cmake command.</p>
 
 <ul>
   <li><strong>RELWITHDEBINFO</strong> (default) - Optimized with debug information</li>
@@ -728,8 +728,8 @@ is in the docker subdirectory, for the list of packages required to build ORC:</
 <p>If your make command fails, it is useful to see the actual commands that make
 is invoking:</p>
 
-<pre><code class="language-shell">% make package test-out VERBOSE=1
-</code></pre>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% make package test-out <span class="nv">VERBOSE</span><span class="o">=</span>1
+</code></pre></div></div>
 
 <h2 id="building-just-java">Building just Java</h2>
 
@@ -742,29 +742,29 @@ is invoking:</p>
 
 <p>To build:</p>
 
-<pre><code class="language-shell">% cd java
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% <span class="nb">cd </span>java
 % mvn package
-</code></pre>
+</code></pre></div></div>
 
 <h2 id="building-just-c">Building just C++</h2>
 
-<pre><code class="language-shell">% mkdir build
-% cd build
-% cmake .. -DBUILD_JAVA=OFF
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% mkdir build
+% <span class="nb">cd </span>build
+% cmake .. <span class="nt">-DBUILD_JAVA</span><span class="o">=</span>OFF
 % make package test-out
-</code></pre>
+</code></pre></div></div>
 
 <h2 id="specify-third-party-libraries-for-c-build">Specify third-party libraries for C++ build</h2>
 
-<pre><code class="language-shell">% mkdir build
-% cd build
-% cmake .. -DSNAPPY_HOME=&lt;PATH&gt; \
-           -DZLIB_HOME=&lt;PATH&gt; \
-           -DLZ4_HOME=&lt;PATH&gt; \
-           -DGTEST_HOME=&lt;PATH&gt; \
-           -DPROTOBUF_HOME=&lt;PATH&gt;
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% mkdir build
+% <span class="nb">cd </span>build
+% cmake .. <span class="nt">-DSNAPPY_HOME</span><span class="o">=</span>&lt;PATH&gt; <span class="se">\</span>
+           <span class="nt">-DZLIB_HOME</span><span class="o">=</span>&lt;PATH&gt; <span class="se">\</span>
+           <span class="nt">-DLZ4_HOME</span><span class="o">=</span>&lt;PATH&gt; <span class="se">\</span>
+           <span class="nt">-DGTEST_HOME</span><span class="o">=</span>&lt;PATH&gt; <span class="se">\</span>
+           <span class="nt">-DPROTOBUF_HOME</span><span class="o">=</span>&lt;PATH&gt;
 % make package test-out
-</code></pre>
+</code></pre></div></div>
 
           
 
@@ -822,8 +822,6 @@ is invoking:</p>
   
 
   
-    
-  
 
   
     
@@ -843,29 +841,25 @@ is invoking:</p>
     
   
     
-      <li class=""><a href="/docs/index.html">Background</a></li>
+      <li class=""><a href="http://localhost:4000/docs/index.html">Background</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
   
     
-      <li class=""><a href="/docs/adopters.html">ORC Adopters</a></li>
+      <li class=""><a href="http://localhost:4000/docs/adopters.html">ORC Adopters</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -897,15 +891,13 @@ is invoking:</p>
     
   
     
-      <li class=""><a href="/docs/types.html">Types</a></li>
+      <li class=""><a href="http://localhost:4000/docs/types.html">Types</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -927,19 +919,17 @@ is invoking:</p>
     
   
     
-      <li class=""><a href="/docs/indexes.html">Indexes</a></li>
+      <li class=""><a href="http://localhost:4000/docs/indexes.html">Indexes</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
-      <li class=""><a href="/docs/acid.html">ACID support</a></li>
+      <li class=""><a href="http://localhost:4000/docs/acid.html">ACID support</a></li>
       
 
 
@@ -954,8 +944,6 @@ is invoking:</p>
   
 
   
-    
-  
 
   
     
@@ -963,15 +951,13 @@ is invoking:</p>
     
   
     
-      <li class="current"><a href="/docs/building.html">Building ORC</a></li>
+      <li class="current"><a href="http://localhost:4000/docs/building.html">Building ORC</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1001,7 +987,7 @@ is invoking:</p>
     
   
     
-      <li class=""><a href="/docs/releases.html">Releases</a></li>
+      <li class=""><a href="http://localhost:4000/docs/releases.html">Releases</a></li>
       
 
 
@@ -1016,8 +1002,6 @@ is invoking:</p>
   
 
   
-    
-  
 
   
     
@@ -1035,15 +1019,13 @@ is invoking:</p>
     
   
     
-      <li class=""><a href="/docs/hive-ddl.html">Hive DDL</a></li>
+      <li class=""><a href="http://localhost:4000/docs/hive-ddl.html">Hive DDL</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1059,7 +1041,7 @@ is invoking:</p>
     
   
     
-      <li class=""><a href="/docs/hive-config.html">Hive Configuration</a></li>
+      <li class=""><a href="http://localhost:4000/docs/hive-config.html">Hive Configuration</a></li>
       
 
 
@@ -1074,8 +1056,6 @@ is invoking:</p>
   
 
   
-    
-  
 
   
     
@@ -1101,15 +1081,13 @@ is invoking:</p>
     
   
     
-      <li class=""><a href="/docs/mapred.html">Using in MapRed</a></li>
+      <li class=""><a href="http://localhost:4000/docs/mapred.html">Using in MapRed</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1137,7 +1115,7 @@ is invoking:</p>
     
   
     
-      <li class=""><a href="/docs/mapreduce.html">Using in MapReduce</a></li>
+      <li class=""><a href="http://localhost:4000/docs/mapreduce.html">Using in MapReduce</a></li>
       
 
 
@@ -1152,8 +1130,6 @@ is invoking:</p>
   
 
   
-    
-  
 
   
     
@@ -1165,15 +1141,13 @@ is invoking:</p>
     
   
     
-      <li class=""><a href="/docs/core-java.html">Using Core Java</a></li>
+      <li class=""><a href="http://localhost:4000/docs/core-java.html">Using Core Java</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1183,7 +1157,7 @@ is invoking:</p>
     
   
     
-      <li class=""><a href="/docs/core-cpp.html">Using Core C++</a></li>
+      <li class=""><a href="http://localhost:4000/docs/core-cpp.html">Using Core C++</a></li>
       
 
 
@@ -1198,8 +1172,6 @@ is invoking:</p>
   
 
   
-    
-  
 
   
     
@@ -1213,15 +1185,13 @@ is invoking:</p>
     
   
     
-      <li class=""><a href="/docs/cpp-tools.html">C++ Tools</a></li>
+      <li class=""><a href="http://localhost:4000/docs/cpp-tools.html">C++ Tools</a></li>
       
 
 
   
 
   
-    
-  
 
   
     
@@ -1245,7 +1215,7 @@ is invoking:</p>
     
   
     
-      <li class=""><a href="/docs/java-tools.html">Java Tools</a></li>
+      <li class=""><a href="http://localhost:4000/docs/java-tools.html">Java Tools</a></li>
       
 
 
