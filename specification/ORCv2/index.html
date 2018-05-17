@@ -133,7 +133,7 @@ include the minimum and maximum values for each column in each set of
 file reader can skip entire sets of rows that aren’t important for
 this query.</p>
 
-<p><img src="http://localhost:4000/img/OrcFileLayout.png" alt="ORC file structure" /></p>
+<p><img src="/img/OrcFileLayout.png" alt="ORC file structure" /></p>
 
 <h1 id="file-tail">File Tail</h1>
 
@@ -258,7 +258,7 @@ needs to be read.
 the schema is expressed as a tree as in the figure below, where
 the compound types have subcolumns under them.</p>
 
-<p><img src="http://localhost:4000/img/TreeWriters.png" alt="ORC column structure" /></p>
+<p><img src="/img/TreeWriters.png" alt="ORC column structure" /></p>
 
 <p>The equivalent Hive DDL would be:</p>
 
@@ -460,7 +460,7 @@ for a chunk that compressed to 100,000 bytes would be [0x40, 0x0d,
 that as long as a decompressor starts at the top of a header, it can
 start decompressing without the previous bytes.</p>
 
-<p><img src="http://localhost:4000/img/CompressionStream.png" alt="compression streams" /></p>
+<p><img src="/img/CompressionStream.png" alt="compression streams" /></p>
 
 <p>The default compression chunk size is 256K, but writers can choose
 their own value. Larger chunks lead to better compression, but require
@@ -1280,7 +1280,7 @@ within bitset and bit position within the long uses little endian order.
 makes it convenient to read the bloom filter stream and row index stream
 together in single read operation.</p>
 
-<p><img src="http://localhost:4000/img/BloomFilter.png" alt="bloom filter" /></p>
+<p><img src="/img/BloomFilter.png" alt="bloom filter" /></p>
 
       </article>
     </div>
