@@ -42,4 +42,4 @@ An overview of the vulnerability handling process is:
 
 ## Fixed CVEs
 
-None.
+* [CVE-2018-8015](CVE-2018-8015) - ORC files with malformed types cause stack overflow.
