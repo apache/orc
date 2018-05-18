@@ -5,7 +5,7 @@
 
   {% for p in site.docs %}
     {% if p.url == item_url %}
-      <option value="{{ site.url }}{{ p.url }}">{{ p.title }}</option>
+      <option value="{{ p.url }}">{{ p.title }}</option>
     {% endif %}
   {% endfor %}
 {% endfor %}
