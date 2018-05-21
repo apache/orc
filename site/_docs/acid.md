@@ -73,7 +73,8 @@ are the operation (insert, update, or delete), the triple that
 uniquely identifies the row (originalTransaction, bucket, rowId), and
 the current transaction.
 
-```struct<
+```
+struct<
   operation: int,
   originalTransaction: bigInt,
   bucket: int,

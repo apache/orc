@@ -182,7 +182,8 @@ the compound types have subcolumns under them.
 
 The equivalent Hive DDL would be:
 
-```create table Foobar (
+```
+create table Foobar (
  myInt int,
  myMap map<string,
  struct<myString : string,

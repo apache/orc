@@ -22,7 +22,8 @@ orc.bloom.filter.fpp     | 0.05        | bloom filter false positive rate
 
 For example, to create an ORC table without high level compression:
 
-```CREATE TABLE istari (
+```
+CREATE TABLE istari (
   name STRING,
   color STRING
 ) STORED AS ORC TBLPROPERTIES ("orc.compress"="NONE");
