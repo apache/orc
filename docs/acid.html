@@ -811,14 +811,15 @@ are the operation (insert, update, or delete), the triple that
 uniquely identifies the row (originalTransaction, bucket, rowId), and
 the current transaction.</p>
 
-<pre><code class="language-struct&lt;">  operation: int,
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>struct&lt;
+  operation: int,
   originalTransaction: bigInt,
   bucket: int,
   rowId: bigInt,
   currentTransaction: bigInt,
   row: struct&lt;...&gt;
 &gt;
-</code></pre>
+</code></pre></div></div>
 
 <p>The serialization for the operation codes is:</p>
 

@@ -740,14 +740,14 @@ columns have one child column for each of the variants.</p>
 <p>Given the following definition of the table Foobar, the columns in the
 file would form the given tree.</p>
 
-<p><code class="highlighter-rouge">create table Foobar (
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>create table Foobar (
  myInt int,
  myMap map&lt;string,
  struct&lt;myString : string,
  myDouble: double&gt;&gt;,
  myTime timestamp
 );
-</code></p>
+</code></pre></div></div>
 
 <p><img src="/img/TreeWriters.png" alt="ORC column structure" /></p>
 

@@ -677,32 +677,34 @@
           <p>ORC is well integrated into Hive, so storing your istari table as ORC
 is done by adding “STORED AS ORC”.</p>
 
-<p>```CREATE TABLE istari (
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CREATE TABLE istari (
   name STRING,
   color STRING
-) STORED AS ORC;</p>
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
-To modify a table so that new partitions of the istari table are
-stored as ORC files:
+) STORED AS ORC;
+</code></pre></div></div>
 
-```ALTER TABLE istari SET FILEFORMAT ORC;
+<p>To modify a table so that new partitions of the istari table are
+stored as ORC files:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ALTER TABLE istari SET FILEFORMAT ORC;
 </code></pre></div></div>
 
 <p>As of Hive 0.14, users can request an efficient merge of small ORC files
 together by issuing a CONCATENATE command on their table or partition. The
 files will be merged at the stripe level without reserialization.</p>
 
-<p>```ALTER TABLE istari [PARTITION partition_spec] CONCATENATE;</p>
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
-To get information about an ORC file, use the orcfiledump command.
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ALTER TABLE istari [PARTITION partition_spec] CONCATENATE;
+</code></pre></div></div>
 
-```% hive --orcfiledump &lt;path_to_file&gt;
+<p>To get information about an ORC file, use the orcfiledump command.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% hive --orcfiledump &lt;path_to_file&gt;
 </code></pre></div></div>
 
 <p>As of Hive 1.1, to display the data in the ORC file, use:</p>
 
-<p><code class="highlighter-rouge">% hive --orcfiledump -d &lt;path_to_file&gt;
-</code></p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% hive --orcfiledump -d &lt;path_to_file&gt;
+</code></pre></div></div>
 
           
 
