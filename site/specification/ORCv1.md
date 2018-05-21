@@ -65,7 +65,8 @@ than 256 bytes. Once the Postscript is parsed, the compressed
 serialized length of the Footer is known and it can be decompressed
 and parsed.
 
-```message PostScript {
+```
+message PostScript {
  // the length of the footer section in bytes
  optional uint64 footerLength = 1;
  // the kind of generic compression used
@@ -81,7 +82,8 @@ and parsed.
 }
 ```
 
-```enum CompressionKind {
+```
+enum CompressionKind {
  NONE = 0;
  ZLIB = 1;
  SNAPPY = 2;
@@ -103,7 +105,8 @@ scan the front of the file to determine the type of the file. The Body
 contains the rows and indexes, and the Tail gives the file level
 information as described in this section.
 
-```message Footer {
+```
+message Footer {
  // the length of the file header in bytes (always 3)
  optional uint64 headerLength = 1;
  // the length of the file header and body in bytes
@@ -134,7 +137,8 @@ itself, and a stripe footer. Both the indexes and the data sections
 are divided by columns so that only the data for the required columns
 needs to be read.
 
-```message StripeInformation {
+```
+message StripeInformation {
  // the start of the stripe within the file
  optional uint64 offset = 1;
  // the length of the indexes in bytes
@@ -172,7 +176,8 @@ where each type is assigned the next id. Clearly the root of the type
 tree is always type id 0. Compound types have a field named subtypes
 that contains the list of their children's type ids.
 
-```message Type {
+```
+message Type {
  enum Kind {
  BOOLEAN = 0;
  BYTE = 1;
@@ -218,7 +223,8 @@ there are any null values within the row group by setting the hasNull flag.
 The hasNull flag is used by ORC's predicate pushdown to better answer
 'IS NULL' queries.
 
-```message ColumnStatistics {
+```
+message ColumnStatistics {
  // the number of values
  optional uint64 numberOfValues = 1;
  // At most one of these has a value for any column
@@ -239,7 +245,8 @@ statistics includes the minimum, maximum, and sum. If the sum
 overflows long at any point during the calculation, no sum is
 recorded.
 
-```message IntegerStatistics {
+```
+message IntegerStatistics {
  optional sint64 minimum = 1;
  optional sint64 maximum = 2;
  optional sint64 sum = 3;
@@ -250,7 +257,8 @@ For floating point types (float, double), the column statistics
 include the minimum, maximum, and sum. If the sum overflows a double,
 no sum is recorded.
 
-```message DoubleStatistics {
+```
+message DoubleStatistics {
  optional double minimum = 1;
  optional double maximum = 2;
  optional double sum = 3;
@@ -260,7 +268,8 @@ no sum is recorded.
 For strings, the minimum value, maximum value, and the sum of the
 lengths of the values are recorded.
 
-```message StringStatistics {
+```
+message StringStatistics {
  optional string minimum = 1;
  optional string maximum = 2;
  // sum will store the total length of all strings
@@ -270,14 +279,16 @@ lengths of the values are recorded.
 
 For booleans, the statistics include the count of false and true values.
 
-```message BucketStatistics {
+```
+message BucketStatistics {
  repeated uint64 count = 1 [packed=true];
 }
 ```
 
 For decimals, the minimum, maximum, and sum are stored.
 
-```message DecimalStatistics {
+```
+message DecimalStatistics {
  optional string minimum = 1;
  optional string maximum = 2;
  optional string sum = 3;
@@ -287,7 +298,8 @@ For decimals, the minimum, maximum, and sum are stored.
 Date columns record the minimum and maximum values as the number of
 days since the epoch (1/1/2015).
 
-```message DateStatistics {
+```
+message DateStatistics {
  // min,max values saved as days since epoch
  optional sint32 minimum = 1;
  optional sint32 maximum = 2;
@@ -297,7 +309,8 @@ days since the epoch (1/1/2015).
 Timestamp columns record the minimum and maximum values as the number of
 milliseconds since the epoch (1/1/2015).
 
-```message TimestampStatistics {
+```
+message TimestampStatistics {
  // min,max values saved as milliseconds since epoch
  optional sint64 minimum = 1;
  optional sint64 maximum = 2;
@@ -306,7 +319,8 @@ milliseconds since the epoch (1/1/2015).
 
 Binary columns store the aggregate number of bytes across all of the values.
 
-```message BinaryStatistics {
+```
+message BinaryStatistics {
  // sum will store the total binary blob length
  optional sint64 sum = 1;
 }
@@ -321,7 +335,8 @@ binary. Care should be taken by applications to make sure that their
 keys are unique and in general should be prefixed with an organization
 code.
 
-```message UserMetadataItem {
+```
+message UserMetadataItem {
  // the user defined key
  required string name = 1;
  // the user defined binary value
@@ -335,12 +350,14 @@ The file Metadata section contains column statistics at the stripe
 level granularity. These statistics enable input split elimination
 based on the predicate push-down evaluated per a stripe.
 
-```message StripeStatistics {
+```
+message StripeStatistics {
  repeated ColumnStatistics colStats = 1;
 }
 ```
 
-```message Metadata {
+```
+message Metadata {
  repeated StripeStatistics stripeStats = 1;
 }
 ```
@@ -633,7 +650,8 @@ following subsections.
 The stripe footer contains the encoding of each column and the
 directory of the streams including their location.
 
-```message StripeFooter {
+```
+message StripeFooter {
  // the location of each stream
  repeated Stream streams = 1;
  // the encoding of each column
@@ -645,7 +663,8 @@ To describe each stream, ORC stores the kind of stream, the column id,
 and the stream's size in bytes. The details of what is stored in each stream
 depends on the type and encoding of the column.
 
-```message Stream {
+```
+message Stream {
  enum Kind {
  // boolean stream of whether the next value is non-null
  PRESENT = 0;
@@ -680,7 +699,8 @@ Depending on their type several options for encoding are possible. The
 encodings are divided into direct or dictionary-based categories and
 further refined as to whether they use RLE v1 or v2.
 
-```message ColumnEncoding {
+```
+message ColumnEncoding {
  enum Kind {
  // the encoding is mapped directly to the stream using RLE v1
  DIRECT = 0;
@@ -915,13 +935,15 @@ the default case of streaming they do not need to be read. They are
 only loaded when either predicate push down is being used or the
 reader seeks to a particular row.
 
-```message RowIndexEntry {
+```
+message RowIndexEntry {
  repeated uint64 positions = 1 [packed=true];
  optional ColumnStatistics statistics = 2;
 }
 ```
 
-```message RowIndex {
+```
+message RowIndex {
  repeated RowIndexEntry entry = 1;
 }
 ```
@@ -962,14 +984,16 @@ sequence of longs in the bitset field with a little endian encoding
 (0x1 is bit 0 and 0x2 is bit 1.) After ORC-101, the encoding is a
 sequence of bytes with a little endian encoding in the utf8bitset field.
 
-```message BloomFilter {
+```
+message BloomFilter {
  optional uint32 numHashFunctions = 1;
  repeated fixed64 bitset = 2;
  optional bytes utf8bitset = 3;
 }
 ```
 
-```message BloomFilterIndex {
+```
+message BloomFilterIndex {
  repeated BloomFilter bloomFilter = 1;
 }
 ```
