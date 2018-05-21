@@ -171,7 +171,7 @@ than 256 bytes. Once the Postscript is parsed, the compressed
 serialized length of the Footer is known and it can be decompressed
 and parsed.</p>
 
-<p>```message PostScript {
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>message PostScript {
  // the length of the footer section in bytes
  optional uint64 footerLength = 1;
  // the kind of generic compression used
@@ -182,11 +182,12 @@ and parsed.</p>
  repeated uint32 version = 4 [packed = true];
  // the length of the metadata section in bytes
  optional uint64 metadataLength = 5;
- // the fixed string “ORC”
+ // the fixed string "ORC"
  optional string magic = 8000;
-}</p>
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
-```enum CompressionKind {
+}
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>enum CompressionKind {
  NONE = 0;
  ZLIB = 1;
  SNAPPY = 2;
@@ -208,7 +209,7 @@ scan the front of the file to determine the type of the file. The Body
 contains the rows and indexes, and the Tail gives the file level
 information as described in this section.</p>
 
-<p>```message Footer {
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>message Footer {
  // the length of the file header in bytes (always 3)
  optional uint64 headerLength = 1;
  // the length of the file header and body in bytes
@@ -225,20 +226,21 @@ information as described in this section.</p>
  repeated ColumnStatistics statistics = 7;
  // the maximum number of rows in each index entry
  optional uint32 rowIndexStride = 8;
-}</p>
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
-### Stripe Information
+}
+</code></pre></div></div>
 
-The body of the file is divided into stripes. Each stripe is self
+<h3 id="stripe-information">Stripe Information</h3>
+
+<p>The body of the file is divided into stripes. Each stripe is self
 contained and may be read using only its own bytes combined with the
-file's Footer and Postscript. Each stripe contains only entire rows so
+file’s Footer and Postscript. Each stripe contains only entire rows so
 that rows never straddle stripe boundaries. Stripes have three
 sections: a set of indexes for the rows within the stripe, the data
 itself, and a stripe footer. Both the indexes and the data sections
 are divided by columns so that only the data for the required columns
-needs to be read.
+needs to be read.</p>
 
-```message StripeInformation {
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>message StripeInformation {
  // the start of the stripe within the file
  optional uint64 offset = 1;
  // the length of the indexes in bytes
@@ -275,7 +277,8 @@ where each type is assigned the next id. Clearly the root of the type
 tree is always type id 0. Compound types have a field named subtypes
 that contains the list of their children's type ids.
 
-```message Type {
+</code></pre></div></div>
+<p>message Type {
  enum Kind {
  BOOLEAN = 0;
  BYTE = 1;
@@ -307,21 +310,21 @@ that contains the list of their children's type ids.
  // the precision and scale for decimal
  optional uint32 precision = 5;
  optional uint32 scale = 6;
-}
-</code></pre></div></div>
+}</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+### Column Statistics
 
-<h3 id="column-statistics">Column Statistics</h3>
-
-<p>The goal of the column statistics is that for each column, the writer
+The goal of the column statistics is that for each column, the writer
 records the count and depending on the type other useful fields. For
 most of the primitive types, it records the minimum and maximum
 values; and for numeric types it additionally stores the sum.
 From Hive 1.1.0 onwards, the column statistics will also record if
 there are any null values within the row group by setting the hasNull flag.
-The hasNull flag is used by ORC’s predicate pushdown to better answer
-‘IS NULL’ queries.</p>
+The hasNull flag is used by ORC's predicate pushdown to better answer
+'IS NULL' queries.
 
-<p>```message ColumnStatistics {
+</code></pre></div></div>
+<p>message ColumnStatistics {
  // the number of values
  optional uint64 numberOfValues = 1;
  // At most one of these has a value for any column
@@ -341,18 +344,19 @@ statistics includes the minimum, maximum, and sum. If the sum
 overflows long at any point during the calculation, no sum is
 recorded.
 
-```message IntegerStatistics {
+</code></pre></div></div>
+<p>message IntegerStatistics {
  optional sint64 minimum = 1;
  optional sint64 maximum = 2;
  optional sint64 sum = 3;
-}
-</code></pre></div></div>
-
-<p>For floating point types (float, double), the column statistics
+}</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+For floating point types (float, double), the column statistics
 include the minimum, maximum, and sum. If the sum overflows a double,
-no sum is recorded.</p>
+no sum is recorded.
 
-<p>```message DoubleStatistics {
+</code></pre></div></div>
+<p>message DoubleStatistics {
  optional double minimum = 1;
  optional double maximum = 2;
  optional double sum = 3;
@@ -361,33 +365,35 @@ no sum is recorded.</p>
 For strings, the minimum value, maximum value, and the sum of the
 lengths of the values are recorded.
 
-```message StringStatistics {
+</code></pre></div></div>
+<p>message StringStatistics {
  optional string minimum = 1;
  optional string maximum = 2;
  // sum will store the total length of all strings
  optional sint64 sum = 3;
-}
+}</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+For booleans, the statistics include the count of false and true values.
+
 </code></pre></div></div>
-
-<p>For booleans, the statistics include the count of false and true values.</p>
-
-<p>```message BucketStatistics {
+<p>message BucketStatistics {
  repeated uint64 count = 1 [packed=true];
 }</p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
 For decimals, the minimum, maximum, and sum are stored.
 
-```message DecimalStatistics {
+</code></pre></div></div>
+<p>message DecimalStatistics {
  optional string minimum = 1;
  optional string maximum = 2;
  optional string sum = 3;
-}
+}</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+Date columns record the minimum and maximum values as the number of
+days since the epoch (1/1/2015).
+
 </code></pre></div></div>
-
-<p>Date columns record the minimum and maximum values as the number of
-days since the epoch (1/1/2015).</p>
-
-<p>```message DateStatistics {
+<p>message DateStatistics {
  // min,max values saved as days since epoch
  optional sint32 minimum = 1;
  optional sint32 maximum = 2;
@@ -396,16 +402,17 @@ days since the epoch (1/1/2015).</p>
 Timestamp columns record the minimum and maximum values as the number of
 milliseconds since the epoch (1/1/2015).
 
-```message TimestampStatistics {
+</code></pre></div></div>
+<p>message TimestampStatistics {
  // min,max values saved as milliseconds since epoch
  optional sint64 minimum = 1;
  optional sint64 maximum = 2;
-}
+}</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+Binary columns store the aggregate number of bytes across all of the values.
+
 </code></pre></div></div>
-
-<p>Binary columns store the aggregate number of bytes across all of the values.</p>
-
-<p>```message BinaryStatistics {
+<p>message BinaryStatistics {
  // sum will store the total binary blob length
  optional sint64 sum = 1;
 }</p>
@@ -419,32 +426,33 @@ binary. Care should be taken by applications to make sure that their
 keys are unique and in general should be prefixed with an organization
 code.
 
-```message UserMetadataItem {
+</code></pre></div></div>
+<p>message UserMetadataItem {
  // the user defined key
  required string name = 1;
  // the user defined binary value
  required bytes value = 2;
-}
-</code></pre></div></div>
+}</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+### File Metadata
 
-<h3 id="file-metadata">File Metadata</h3>
-
-<p>The file Metadata section contains column statistics at the stripe
+The file Metadata section contains column statistics at the stripe
 level granularity. These statistics enable input split elimination
-based on the predicate push-down evaluated per a stripe.</p>
+based on the predicate push-down evaluated per a stripe.
 
-<p>```message StripeStatistics {
+</code></pre></div></div>
+<p>message StripeStatistics {
  repeated ColumnStatistics colStats = 1;
 }</p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
-```message Metadata {
- repeated StripeStatistics stripeStats = 1;
-}
 </code></pre></div></div>
+<p>message Metadata {
+ repeated StripeStatistics stripeStats = 1;
+}</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+# Compression
 
-<h1 id="compression">Compression</h1>
-
-<p>If the ORC file writer selects a generic compression codec (zlib or
+If the ORC file writer selects a generic compression codec (zlib or
 snappy), every part of the ORC file except for the Postscript is
 compressed with that codec. However, one of the requirements for ORC
 is that the reader be able to skip over compressed bytes without
@@ -458,381 +466,220 @@ for a chunk that compressed to 100,000 bytes would be [0x40, 0x0d,
 0x03]. The header for 5 bytes that did not compress would be [0x0b,
 0x00, 0x00]. Each compression chunk is compressed independently so
 that as long as a decompressor starts at the top of a header, it can
-start decompressing without the previous bytes.</p>
+start decompressing without the previous bytes.
 
-<p><img src="/img/CompressionStream.png" alt="compression streams" /></p>
+![compression streams](/img/CompressionStream.png)
 
-<p>The default compression chunk size is 256K, but writers can choose
+The default compression chunk size is 256K, but writers can choose
 their own value. Larger chunks lead to better compression, but require
 more memory. The chunk size is recorded in the Postscript so that
 readers can allocate appropriately sized buffers. Readers are
 guaranteed that no chunk will expand to more than the compression chunk
-size.</p>
+size.
 
-<p>ORC files without generic compression write each stream directly
-with no headers.</p>
+ORC files without generic compression write each stream directly
+with no headers.
 
-<h1 id="run-length-encoding">Run Length Encoding</h1>
+# Run Length Encoding
 
-<h2 id="base-128-varint">Base 128 Varint</h2>
+## Base 128 Varint
 
-<p>Variable width integer encodings take advantage of the fact that most
+Variable width integer encodings take advantage of the fact that most
 numbers are small and that having smaller encodings for small numbers
 shrinks the overall size of the data. ORC uses the varint format from
 Protocol Buffers, which writes data in little endian format using the
 low 7 bits of each byte. The high bit in each byte is set if the
-number continues into the next byte.</p>
+number continues into the next byte.
 
-<table>
-  <thead>
-    <tr>
-      <th style="text-align: left">Unsigned Original</th>
-      <th style="text-align: left">Serialized</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="text-align: left">0</td>
-      <td style="text-align: left">0x00</td>
-    </tr>
-    <tr>
-      <td style="text-align: left">1</td>
-      <td style="text-align: left">0x01</td>
-    </tr>
-    <tr>
-      <td style="text-align: left">127</td>
-      <td style="text-align: left">0x7f</td>
-    </tr>
-    <tr>
-      <td style="text-align: left">128</td>
-      <td style="text-align: left">0x80, 0x01</td>
-    </tr>
-    <tr>
-      <td style="text-align: left">129</td>
-      <td style="text-align: left">0x81, 0x01</td>
-    </tr>
-    <tr>
-      <td style="text-align: left">16,383</td>
-      <td style="text-align: left">0xff, 0x7f</td>
-    </tr>
-    <tr>
-      <td style="text-align: left">16,384</td>
-      <td style="text-align: left">0x80, 0x80, 0x01</td>
-    </tr>
-    <tr>
-      <td style="text-align: left">16,385</td>
-      <td style="text-align: left">0x81, 0x80, 0x01</td>
-    </tr>
-  </tbody>
-</table>
+Unsigned Original | Serialized
+:---------------- | :---------
+0                 | 0x00
+1                 | 0x01
+127               | 0x7f
+128               | 0x80, 0x01
+129               | 0x81, 0x01
+16,383            | 0xff, 0x7f
+16,384            | 0x80, 0x80, 0x01
+16,385            | 0x81, 0x80, 0x01
 
-<p>For signed integer types, the number is converted into an unsigned
+For signed integer types, the number is converted into an unsigned
 number using a zigzag encoding. Zigzag encoding moves the sign bit to
-the least significant bit using the expression (val « 1) ^ (val »
+the least significant bit using the expression (val &lt;&lt; 1) ^ (val &gt;&gt;
 63) and derives its name from the fact that positive and negative
 numbers alternate once encoded. The unsigned number is then serialized
-as above.</p>
+as above.
 
-<table>
-  <thead>
-    <tr>
-      <th style="text-align: left">Signed Original</th>
-      <th style="text-align: left">Unsigned</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="text-align: left">0</td>
-      <td style="text-align: left">0</td>
-    </tr>
-    <tr>
-      <td style="text-align: left">-1</td>
-      <td style="text-align: left">1</td>
-    </tr>
-    <tr>
-      <td style="text-align: left">1</td>
-      <td style="text-align: left">2</td>
-    </tr>
-    <tr>
-      <td style="text-align: left">-2</td>
-      <td style="text-align: left">3</td>
-    </tr>
-    <tr>
-      <td style="text-align: left">2</td>
-      <td style="text-align: left">4</td>
-    </tr>
-  </tbody>
-</table>
+Signed Original | Unsigned
+:-------------- | :-------
+0               | 0
+-1              | 1
+1               | 2
+-2              | 3
+2               | 4
 
-<h2 id="byte-run-length-encoding">Byte Run Length Encoding</h2>
+## Byte Run Length Encoding
 
-<p>For byte streams, ORC uses a very light weight encoding of identical
-values.</p>
+For byte streams, ORC uses a very light weight encoding of identical
+values.
 
-<ul>
-  <li>Run - a sequence of at least 3 identical values</li>
-  <li>Literals - a sequence of non-identical values</li>
-</ul>
+* Run - a sequence of at least 3 identical values
+* Literals - a sequence of non-identical values
 
-<p>The first byte of each group of values is a header than determines
+The first byte of each group of values is a header than determines
 whether it is a run (value between 0 to 127) or literal list (value
 between -128 to -1). For runs, the control byte is the length of the
 run minus the length of the minimal run (3) and the control byte for
 literal lists is the negative length of the list. For example, a
-hundred 0’s is encoded as [0x61, 0x00] and the sequence 0x44, 0x45
+hundred 0's is encoded as [0x61, 0x00] and the sequence 0x44, 0x45
 would be encoded as [0xfe, 0x44, 0x45]. The next group can choose
-either of the encodings.</p>
+either of the encodings.
 
-<h2 id="boolean-run-length-encoding">Boolean Run Length Encoding</h2>
+## Boolean Run Length Encoding
 
-<p>For encoding boolean types, the bits are put in the bytes from most
+For encoding boolean types, the bits are put in the bytes from most
 significant to least significant. The bytes are encoded using byte run
 length encoding as described in the previous section. For example,
 the byte sequence [0xff, 0x80] would be one true followed by
-seven false values.</p>
+seven false values.
 
-<h2 id="integer-run-length-encoding-version-1">Integer Run Length Encoding, version 1</h2>
+## Integer Run Length Encoding, version 1
 
-<p>In Hive 0.11 ORC files used Run Length Encoding version 1 (RLEv1),
+In Hive 0.11 ORC files used Run Length Encoding version 1 (RLEv1),
 which provides a lightweight compression of signed or unsigned integer
-sequences. RLEv1 has two sub-encodings:</p>
+sequences. RLEv1 has two sub-encodings:
 
-<ul>
-  <li>Run - a sequence of values that differ by a small fixed delta</li>
-  <li>Literals - a sequence of varint encoded values</li>
-</ul>
+* Run - a sequence of values that differ by a small fixed delta
+* Literals - a sequence of varint encoded values
 
-<p>Runs start with an initial byte of 0x00 to 0x7f, which encodes the
+Runs start with an initial byte of 0x00 to 0x7f, which encodes the
 length of the run - 3. A second byte provides the fixed delta in the
 range of -128 to 127. Finally, the first value of the run is encoded
-as a base 128 varint.</p>
+as a base 128 varint.
 
-<p>For example, if the sequence is 100 instances of 7 the encoding would
+For example, if the sequence is 100 instances of 7 the encoding would
 start with 100 - 3, followed by a delta of 0, and a varint of 7 for
 an encoding of [0x61, 0x00, 0x07]. To encode the sequence of numbers
 running from 100 to 1, the first byte is 100 - 3, the delta is -1,
-and the varint is 100 for an encoding of [0x61, 0xff, 0x64].</p>
+and the varint is 100 for an encoding of [0x61, 0xff, 0x64].
 
-<p>Literals start with an initial byte of 0x80 to 0xff, which corresponds
+Literals start with an initial byte of 0x80 to 0xff, which corresponds
 to the negative of number of literals in the sequence. Following the
 header byte, the list of N varints is encoded. Thus, if there are
 no runs, the overhead is 1 byte for each 128 integers. The first 5
 prime numbers [2, 3, 4, 7, 11] would encoded as [0xfb, 0x02, 0x03,
-0x04, 0x07, 0xb].</p>
+0x04, 0x07, 0xb].
 
-<h2 id="integer-run-length-encoding-version-2">Integer Run Length Encoding, version 2</h2>
+## Integer Run Length Encoding, version 2
 
-<p>In Hive 0.12, ORC introduced Run Length Encoding version 2 (RLEv2),
+In Hive 0.12, ORC introduced Run Length Encoding version 2 (RLEv2),
 which has improved compression and fixed bit width encodings for
-faster expansion. RLEv2 uses four sub-encodings based on the data:</p>
+faster expansion. RLEv2 uses four sub-encodings based on the data:
 
-<ul>
-  <li>Short Repeat - used for short sequences with repeated values</li>
-  <li>Direct - used for random sequences with a fixed bit width</li>
-  <li>Patched Base - used for random sequences with a variable bit width</li>
-  <li>Delta - used for monotonically increasing or decreasing sequences</li>
-</ul>
+* Short Repeat - used for short sequences with repeated values
+* Direct - used for random sequences with a fixed bit width
+* Patched Base - used for random sequences with a variable bit width
+* Delta - used for monotonically increasing or decreasing sequences
 
-<h3 id="short-repeat">Short Repeat</h3>
+### Short Repeat
 
-<p>The short repeat encoding is used for short repeating integer
+The short repeat encoding is used for short repeating integer
 sequences with the goal of minimizing the overhead of the header. All
 of the bits listed in the header are from the first byte to the last
 and from most significant bit to least significant bit. If the type is
-signed, the value is zigzag encoded.</p>
+signed, the value is zigzag encoded.
 
-<ul>
-  <li>1 byte header
-    <ul>
-      <li>2 bits for encoding type (0)</li>
-      <li>3 bits for width (W) of repeating value (1 to 8 bytes)</li>
-      <li>3 bits for repeat count (3 to 10 values)</li>
-    </ul>
-  </li>
-  <li>W bytes in big endian format, which is zigzag encoded if they type
-is signed</li>
-</ul>
+* 1 byte header
+  * 2 bits for encoding type (0)
+  * 3 bits for width (W) of repeating value (1 to 8 bytes)
+  * 3 bits for repeat count (3 to 10 values)
+* W bytes in big endian format, which is zigzag encoded if they type
+  is signed
 
-<p>The unsigned sequence of [10000, 10000, 10000, 10000, 10000] would be
+The unsigned sequence of [10000, 10000, 10000, 10000, 10000] would be
 serialized with short repeat encoding (0), a width of 2 bytes (1), and
-repeat count of 5 (2) as [0x0a, 0x27, 0x10].</p>
+repeat count of 5 (2) as [0x0a, 0x27, 0x10].
 
-<h3 id="direct">Direct</h3>
+### Direct
 
-<p>The direct encoding is used for integer sequences whose values have a
+The direct encoding is used for integer sequences whose values have a
 relatively constant bit width. It encodes the values directly using a
 fixed width big endian encoding. The width of the values is encoded
-using the table below.</p>
+using the table below.
+ 
+The 5 bit width encoding table for RLEv2:
 
-<p>The 5 bit width encoding table for RLEv2:</p>
+Width in Bits | Encoded Value | Notes
+:------------ | :------------ | :----
+0             | 0             | for delta encoding
+1             | 0             | for non-delta encoding
+2             | 1
+4             | 3
+8             | 7
+16            | 15
+24            | 23
+32            | 27
+40            | 28
+48            | 29
+56            | 30
+64            | 31
+3             | 2             | deprecated
+5 &lt;= x &lt;= 7   | x - 1         | deprecated
+9 &lt;= x &lt;= 15  | x - 1         | deprecated
+17 &lt;= x &lt;= 21 | x - 1         | deprecated
+26            | 24            | deprecated
+28            | 25            | deprecated
+30            | 26            | deprecated
 
-<table>
-  <thead>
-    <tr>
-      <th style="text-align: left">Width in Bits</th>
-      <th style="text-align: left">Encoded Value</th>
-      <th style="text-align: left">Notes</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="text-align: left">0</td>
-      <td style="text-align: left">0</td>
-      <td style="text-align: left">for delta encoding</td>
-    </tr>
-    <tr>
-      <td style="text-align: left">1</td>
-      <td style="text-align: left">0</td>
-      <td style="text-align: left">for non-delta encoding</td>
-    </tr>
-    <tr>
-      <td style="text-align: left">2</td>
-      <td style="text-align: left">1</td>
-      <td style="text-align: left"> </td>
-    </tr>
-    <tr>
-      <td style="text-align: left">4</td>
-      <td style="text-align: left">3</td>
-      <td style="text-align: left"> </td>
-    </tr>
-    <tr>
-      <td style="text-align: left">8</td>
-      <td style="text-align: left">7</td>
-      <td style="text-align: left"> </td>
-    </tr>
-    <tr>
-      <td style="text-align: left">16</td>
-      <td style="text-align: left">15</td>
-      <td style="text-align: left"> </td>
-    </tr>
-    <tr>
-      <td style="text-align: left">24</td>
-      <td style="text-align: left">23</td>
-      <td style="text-align: left"> </td>
-    </tr>
-    <tr>
-      <td style="text-align: left">32</td>
-      <td style="text-align: left">27</td>
-      <td style="text-align: left"> </td>
-    </tr>
-    <tr>
-      <td style="text-align: left">40</td>
-      <td style="text-align: left">28</td>
-      <td style="text-align: left"> </td>
-    </tr>
-    <tr>
-      <td style="text-align: left">48</td>
-      <td style="text-align: left">29</td>
-      <td style="text-align: left"> </td>
-    </tr>
-    <tr>
-      <td style="text-align: left">56</td>
-      <td style="text-align: left">30</td>
-      <td style="text-align: left"> </td>
-    </tr>
-    <tr>
-      <td style="text-align: left">64</td>
-      <td style="text-align: left">31</td>
-      <td style="text-align: left"> </td>
-    </tr>
-    <tr>
-      <td style="text-align: left">3</td>
-      <td style="text-align: left">2</td>
-      <td style="text-align: left">deprecated</td>
-    </tr>
-    <tr>
-      <td style="text-align: left">5 &lt;= x &lt;= 7</td>
-      <td style="text-align: left">x - 1</td>
-      <td style="text-align: left">deprecated</td>
-    </tr>
-    <tr>
-      <td style="text-align: left">9 &lt;= x &lt;= 15</td>
-      <td style="text-align: left">x - 1</td>
-      <td style="text-align: left">deprecated</td>
-    </tr>
-    <tr>
-      <td style="text-align: left">17 &lt;= x &lt;= 21</td>
-      <td style="text-align: left">x - 1</td>
-      <td style="text-align: left">deprecated</td>
-    </tr>
-    <tr>
-      <td style="text-align: left">26</td>
-      <td style="text-align: left">24</td>
-      <td style="text-align: left">deprecated</td>
-    </tr>
-    <tr>
-      <td style="text-align: left">28</td>
-      <td style="text-align: left">25</td>
-      <td style="text-align: left">deprecated</td>
-    </tr>
-    <tr>
-      <td style="text-align: left">30</td>
-      <td style="text-align: left">26</td>
-      <td style="text-align: left">deprecated</td>
-    </tr>
-  </tbody>
-</table>
+* 2 bytes header
+  * 2 bits for encoding type (1)
+  * 5 bits for encoded width (W) of values (1 to 64 bits) using the 5 bit
+    width encoding table
+  * 9 bits for length (L) (1 to 512 values)
+* W * L bits (padded to the next byte) encoded in big endian format, which is
+  zigzag encoding if the type is signed
 
-<ul>
-  <li>2 bytes header
-    <ul>
-      <li>2 bits for encoding type (1)</li>
-      <li>5 bits for encoded width (W) of values (1 to 64 bits) using the 5 bit
-width encoding table</li>
-      <li>9 bits for length (L) (1 to 512 values)</li>
-    </ul>
-  </li>
-  <li>W * L bits (padded to the next byte) encoded in big endian format, which is
-zigzag encoding if the type is signed</li>
-</ul>
-
-<p>The unsigned sequence of [23713, 43806, 57005, 48879] would be
+The unsigned sequence of [23713, 43806, 57005, 48879] would be
 serialized with direct encoding (1), a width of 16 bits (15), and
 length of 4 (3) as [0x5e, 0x03, 0x5c, 0xa1, 0xab, 0x1e, 0xde, 0xad,
-0xbe, 0xef].</p>
+0xbe, 0xef].
 
-<h3 id="patched-base">Patched Base</h3>
+### Patched Base
 
-<p>The patched base encoding is used for integer sequences whose bit
+The patched base encoding is used for integer sequences whose bit
 widths varies a lot. The minimum signed value of the sequence is found
 and subtracted from the other values. The bit width of those adjusted
 values is analyzed and the 90 percentile of the bit width is chosen
 as W. The 10\% of values larger than W use patches from a patch list
 to set the additional bits. Patches are encoded as a list of gaps in
-the index values and the additional value bits.</p>
+the index values and the additional value bits.
 
-<ul>
-  <li>4 bytes header
-    <ul>
-      <li>2 bits for encoding type (2)</li>
-      <li>5 bits for encoded width (W) of values (1 to 64 bits) using the 5 bit
-  width encoding table</li>
-      <li>9 bits for length (L) (1 to 512 values)</li>
-      <li>3 bits for base value width (BW) (1 to 8 bytes)</li>
-      <li>5 bits for patch width (PW) (1 to 64 bits) using  the 5 bit width
-encoding table</li>
-      <li>3 bits for patch gap width (PGW) (1 to 8 bits)</li>
-      <li>5 bits for patch list length (PLL) (0 to 31 patches)</li>
-    </ul>
-  </li>
-  <li>Base value (BW bytes) - The base value is stored as a big endian value
-with negative values marked by the most significant bit set. If it that
-bit is set, the entire value is negated.</li>
-  <li>Data values (W * L bits padded to the byte) - A sequence of W bit positive
-values that are added to the base value.</li>
-  <li>Data values (W * L bits padded to the byte) - A sequence of W bit positive
-values that are added to the base value.</li>
-  <li>Patch list (PLL * (PGW + PW) bytes) - A list of patches for values
-that didn’t fit within W bits. Each entry in the list consists of a
-gap, which is the number of elements skipped from the previous
-patch, and a patch value. Patches are applied by logically or’ing
-the data values with the relevant patch shifted W bits left. If a
-patch is 0, it was introduced to skip over more than 255 items. The
-combined length of each patch (PGW + PW) must be less or equal to
-64.</li>
-</ul>
+* 4 bytes header
+  * 2 bits for encoding type (2)
+  * 5 bits for encoded width (W) of values (1 to 64 bits) using the 5 bit
+      width encoding table
+  * 9 bits for length (L) (1 to 512 values)
+  * 3 bits for base value width (BW) (1 to 8 bytes)
+  * 5 bits for patch width (PW) (1 to 64 bits) using  the 5 bit width
+    encoding table
+  * 3 bits for patch gap width (PGW) (1 to 8 bits)
+  * 5 bits for patch list length (PLL) (0 to 31 patches)
+* Base value (BW bytes) - The base value is stored as a big endian value
+  with negative values marked by the most significant bit set. If it that
+  bit is set, the entire value is negated.
+* Data values (W * L bits padded to the byte) - A sequence of W bit positive
+  values that are added to the base value.
+* Data values (W * L bits padded to the byte) - A sequence of W bit positive
+  values that are added to the base value.
+* Patch list (PLL * (PGW + PW) bytes) - A list of patches for values
+  that didn't fit within W bits. Each entry in the list consists of a
+  gap, which is the number of elements skipped from the previous
+  patch, and a patch value. Patches are applied by logically or'ing
+  the data values with the relevant patch shifted W bits left. If a
+  patch is 0, it was introduced to skip over more than 255 items. The
+  combined length of each patch (PGW + PW) must be less or equal to
+  64.
 
-<p>The unsigned sequence of [2030, 2000, 2020, 1000000, 2040, 2050, 2060, 2070,
+The unsigned sequence of [2030, 2000, 2020, 1000000, 2040, 2050, 2060, 2070,
 2080, 2090, 2100, 2110, 2120, 2130, 2140, 2150, 2160, 2170, 2180, 2190]
 has a minimum of 2000, which makes the adjusted
 sequence [30, 0, 20, 998000, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140,
@@ -842,61 +689,57 @@ encoding of patched base (2), a bit width of 8 (7), a length of 20
 patch gap width of 2 bits (1), and a patch list length of 1 (1). The
 base value is 2000 and the combined result is [0x8e, 0x13, 0x2b, 0x21, 0x07,
 0xd0, 0x1e, 0x00, 0x14, 0x70, 0x28, 0x32, 0x3c, 0x46, 0x50, 0x5a, 0x64, 0x6e,
-0x78, 0x82, 0x8c, 0x96, 0xa0, 0xaa, 0xb4, 0xbe, 0xfc, 0xe8]</p>
+0x78, 0x82, 0x8c, 0x96, 0xa0, 0xaa, 0xb4, 0xbe, 0xfc, 0xe8]
 
-<h3 id="delta">Delta</h3>
+### Delta
 
-<p>The Delta encoding is used for monotonically increasing or decreasing
+The Delta encoding is used for monotonically increasing or decreasing
 sequences. The first two numbers in the sequence can not be identical,
 because the encoding is using the sign of the first delta to determine
-if the series is increasing or decreasing.</p>
+if the series is increasing or decreasing.
 
-<ul>
-  <li>2 bytes header
-    <ul>
-      <li>2 bits for encoding type (3)</li>
-      <li>5 bits for encoded width (W) of deltas (0 to 64 bits) using the 5 bit
-width encoding table</li>
-      <li>9 bits for run length (L) (1 to 512 values)</li>
-    </ul>
-  </li>
-  <li>Base value - encoded as (signed or unsigned) varint</li>
-  <li>Delta base - encoded as signed varint</li>
-  <li>Delta values $W * (L - 2)$ bytes - encode each delta after the first
-one. If the delta base is positive, the sequence is increasing and if it is
-negative the sequence is decreasing.</li>
-</ul>
+* 2 bytes header
+  * 2 bits for encoding type (3)
+  * 5 bits for encoded width (W) of deltas (0 to 64 bits) using the 5 bit
+    width encoding table
+  * 9 bits for run length (L) (1 to 512 values)
+* Base value - encoded as (signed or unsigned) varint
+* Delta base - encoded as signed varint
+* Delta values $W * (L - 2)$ bytes - encode each delta after the first
+  one. If the delta base is positive, the sequence is increasing and if it is
+  negative the sequence is decreasing.
 
-<p>The unsigned sequence of [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] would be
+The unsigned sequence of [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] would be
 serialized with delta encoding (3), a width of 4 bits (3), length of
 10 (9), a base of 2 (2), and first delta of 1 (2). The resulting
-sequence is [0xc6, 0x09, 0x02, 0x02, 0x22, 0x42, 0x42, 0x46].</p>
+sequence is [0xc6, 0x09, 0x02, 0x02, 0x22, 0x42, 0x42, 0x46].
 
-<h1 id="stripes">Stripes</h1>
+# Stripes
 
-<p>The body of ORC files consists of a series of stripes. Stripes are
+The body of ORC files consists of a series of stripes. Stripes are
 large (typically ~200MB) and independent of each other and are often
 processed by different tasks. The defining characteristic for columnar
 storage formats is that the data for each column is stored separately
 and that reading data out of the file should be proportional to the
-number of columns read.</p>
+number of columns read.
 
-<p>In ORC files, each column is stored in several streams that are stored
+In ORC files, each column is stored in several streams that are stored
 next to each other in the file. For example, an integer column is
 represented as two streams PRESENT, which uses one with a bit per
 value recording if the value is non-null, and DATA, which records the
-non-null values. If all of a column’s values in a stripe are non-null,
+non-null values. If all of a column's values in a stripe are non-null,
 the PRESENT stream is omitted from the stripe. For binary data, ORC
 uses three streams PRESENT, DATA, and LENGTH, which stores the length
 of each value. The details of each type will be presented in the
-following subsections.</p>
+following subsections.
 
-<h2 id="stripe-footer">Stripe Footer</h2>
+## Stripe Footer
 
-<p>The stripe footer contains the encoding of each column and the
-directory of the streams including their location.</p>
+The stripe footer contains the encoding of each column and the
+directory of the streams including their location.
 
-<p>```message StripeFooter {
+</code></pre></div></div>
+<p>message StripeFooter {
  // the location of each stream
  repeated Stream streams = 1;
  // the encoding of each column
@@ -907,7 +750,8 @@ To describe each stream, ORC stores the kind of stream, the column id,
 and the stream's size in bytes. The details of what is stored in each stream
 depends on the type and encoding of the column.
 
-```message Stream {
+</code></pre></div></div>
+<p>message Stream {
  enum Kind {
  // boolean stream of whether the next value is non-null
  PRESENT = 0;
@@ -916,7 +760,7 @@ depends on the type and encoding of the column.
  // the length of each value for variable length data
  LENGTH = 2;
  // the dictionary blob
- DICTIONARY\_DATA = 3;
+ DICTIONARY_DATA = 3;
  // deprecated prior to Hive 0.11
  // It was used to store the number of instances of each value in the
  // dictionary
@@ -935,14 +779,14 @@ depends on the type and encoding of the column.
  optional uint32 column = 2;
  // the number of bytes in the file
  optional uint64 length = 3;
-}
-</code></pre></div></div>
-
-<p>Depending on their type several options for encoding are possible. The
+}</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+Depending on their type several options for encoding are possible. The
 encodings are divided into direct or dictionary-based categories and
-further refined as to whether they use RLE v1 or v2.</p>
+further refined as to whether they use RLE v1 or v2.
 
-<p>```message ColumnEncoding {
+</code></pre></div></div>
+<p>message ColumnEncoding {
  enum Kind {
  // the encoding is mapped directly to the stream using RLE v1
  DIRECT = 0;
@@ -1173,13 +1017,14 @@ the default case of streaming they do not need to be read. They are
 only loaded when either predicate push down is being used or the
 reader seeks to a particular row.
 
-```message RowIndexEntry {
+</code></pre></div></div>
+<p>message RowIndexEntry {
  repeated uint64 positions = 1 [packed=true];
  optional ColumnStatistics statistics = 2;
-}
+}</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
 </code></pre></div></div>
-
-<p>```message RowIndex {
+<p>message RowIndex {
  repeated RowIndexEntry entry = 1;
 }</p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
@@ -1219,17 +1064,18 @@ sequence of longs in the bitset field with a little endian encoding
 (0x1 is bit 0 and 0x2 is bit 1.) After ORC-101, the encoding is a
 sequence of bytes with a little endian encoding in the utf8bitset field.
 
-```message BloomFilter {
+</code></pre></div></div>
+<p>message BloomFilter {
  optional uint32 numHashFunctions = 1;
  repeated fixed64 bitset = 2;
  optional bytes utf8bitset = 3;
-}
+}</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
 </code></pre></div></div>
-
-<p><code class="highlighter-rouge">message BloomFilterIndex {
+<p>message BloomFilterIndex {
  repeated BloomFilter bloomFilter = 1;
 }
-</code></p>
+```</p>
 
 <p>Bloom filter internally uses two different hash functions to map a key
 to a position in the bit set. For tinyint, smallint, int, bigint, float
