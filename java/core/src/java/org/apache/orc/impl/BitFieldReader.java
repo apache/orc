@@ -24,9 +24,8 @@ import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 
 public final class BitFieldReader {
   private final RunLengthByteReader input;
-  /** The number of bits in one item. Non-test code always uses 1. */
   private int current;
-  private byte currentIdx;
+  private byte currentIdx = 8;
 
   public BitFieldReader(InStream input) {
     this.input = new RunLengthByteReader(input);
@@ -42,8 +41,7 @@ public final class BitFieldReader {
   }
 
   public int next() throws IOException {
-    // mod 8
-    if ((currentIdx & 7) == 0) {
+    if (currentIdx > 7) {
       readByte();
     }
 
@@ -86,7 +84,7 @@ public final class BitFieldReader {
       readByte();
       currentIdx = (byte) consumed;
     } else {
-      currentIdx = 0;
+      currentIdx = 8;
     }
   }
 

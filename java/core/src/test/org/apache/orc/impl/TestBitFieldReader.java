@@ -111,4 +111,39 @@ public class TestBitFieldReader {
       in.skip(0);
     }
   }
+
+  @Test
+  public void testSeekSkip() throws Exception {
+    TestInStream.OutputCollector collect = new TestInStream.OutputCollector();
+    BitFieldWriter out = new BitFieldWriter(
+        new OutStream("test", 100, null, collect), 1);
+    final int COUNT = 256;
+    TestInStream.PositionCollector posn = new TestInStream.PositionCollector();
+    for(int i=0; i < COUNT; ++i) {
+      if (i == 200) {
+        out.getPosition(posn);
+      }
+      if (i < COUNT/2) {
+        out.write(i & 1);
+      } else {
+        out.write((i/3) & 1);
+      }
+    }
+    out.flush();
+    ByteBuffer inBuf = ByteBuffer.allocate(collect.buffer.size());
+    collect.buffer.setByteBuffer(inBuf, 0, collect.buffer.size());
+    inBuf.flip();
+    BitFieldReader in = new BitFieldReader(InStream.create("test", new ByteBuffer[]{inBuf},
+        new long[]{0}, inBuf.remaining(), null, 100));
+    in.seek(posn);
+    in.skip(10);
+    for(int r = 210; r < COUNT; ++r) {
+      int x = (int) in.next();
+      if (r < COUNT/2) {
+        assertEquals(r & 1, x);
+      } else {
+        assertEquals((r/3) & 1, x);
+      }
+    }
+  }
 }
