@@ -65,3 +65,11 @@ target_link_libraries (create-test-files
 )
 
 add_test (NAME orc-test COMMAND orc-test)
+
+if (WIN32)
+  set_property(
+    TEST orc-test
+    PROPERTY
+      ENVIRONMENT "TZDIR=${TZDATA_DIR}"
+    )
+endif ()

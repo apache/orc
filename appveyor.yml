@@ -15,9 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# Operating system (build VM template)
-# os: Visual Studio 2017
-
 environment:
   matrix:
     - JOB: Visual Studio 2015
@@ -40,6 +37,5 @@ build_script:
       -DBUILD_LIBHDFSPP=OFF
       -DBUILD_TOOLS=OFF
       -DBUILD_JAVA=OFF
-  - set TZDIR=C:/projects/orc/build/tzdata_ep-prefix/src/tzdata_ep/share/zoneinfo
   - cmake --build . --config %CONFIGURATION%
   - ctest -VV -C %CONFIGURATION%
