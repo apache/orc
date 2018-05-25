@@ -32,6 +32,9 @@ namespace orc {
     uint32_t majorVersion;
     uint32_t minorVersion;
   public:
+    static const FileVersion& v_0_11();
+    static const FileVersion& v_0_12();
+
     FileVersion(uint32_t major, uint32_t minor) :
                 majorVersion(major), minorVersion(minor) {
     }
