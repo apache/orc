@@ -1,13 +1,22 @@
 # List the releases in reverse logical order
 # Only one release should be tagged latest
 
+1.5.1:
+  date: 2018-05-25
+  state: latest
+  tar: orc-1.5.1.tar.gz
+  signed-by: Owen O’Malley (3D0C92B9)
+  sha256: 14b93916ac6dce659845766edbeee2d9cdb9648a8761011bf713d36bb36f0eaa
+  known-issues:
+
 1.5.0:
   date: 2018-05-14
-  state: latest
+  state: archived
   tar: orc-1.5.0.tar.gz
   signed-by: Owen O’Malley (3D0C92B9)
   sha256: 28369ea8e24cac6d46c72f91a877b3a526017490aea936d0f689e45b6e8dd603
   known-issues:
+    ORC-367: Boolean columns are read incorrectly when using seek.
 
 1.4.4:
   date: 2018-05-14
@@ -58,7 +67,7 @@
 
 1.3.4:
   date: 2017-10-16
-  state: stable
+  state: archived
   tar: orc-1.3.4.tar.gz
   signed-by: Prasanth Jayachandran (65C468A3)
   sha256: 55269430aea7b825e9bd67a75d41c808dd649bda962c6a040ef9137ddfe993c0
