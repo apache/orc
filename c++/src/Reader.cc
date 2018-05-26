@@ -406,7 +406,7 @@ namespace orc {
 
   FileVersion ReaderImpl::getFormatVersion() const {
     if (contents->postscript->version_size() != 2) {
-      throw std::logic_error("Unrecognized file version.");
+      return FileVersion::v_0_11();
     }
     return FileVersion(
                 contents->postscript->version(0),

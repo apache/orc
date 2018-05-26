@@ -205,3 +205,35 @@ TEST (TestFileMetadata, testJson) {
   EXPECT_EQ("", error);
 }
 
+
+
+TEST (TestFileMetadata, testNoFormat) {
+  const std::string pgm = findProgram("tools/src/orc-metadata");
+  const std::string file = findExample("orc_no_format.orc");
+  const std::string expected =
+    "{ \"name\": \"" + file + "\",\n"
+    "  \"type\": \"struct<_col0:array<string>,_col1:map<int,string>,_col2:struct<name:string,score:int>>\",\n"
+    "  \"rows\": 5,\n"
+    "  \"stripe count\": 1,\n"
+    "  \"format\": \"0.11\", \"writer version\": \"original\",\n"
+    "  \"compression\": \"zlib\", \"compression block\": 262144,\n"
+    "  \"file length\": 745,\n"
+    "  \"content\": 525, \"stripe stats\": 0, \"footer\": 210, \"postscript\": 9,\n"
+    "  \"row index stride\": 10000,\n"
+    "  \"user metadata\": {\n"
+    "  },\n"
+    "  \"stripes\": [\n"
+    "    { \"stripe\": 0, \"rows\": 5,\n"
+    "      \"offset\": 3, \"length\": 522,\n"
+    "      \"index\": 224, \"data\": 187, \"footer\": 111\n"
+    "    }\n"
+    "  ]\n"
+    "}\n";
+
+  std::string output;
+  std::string error;
+  std::cout << expected;
+  EXPECT_EQ(0, runProgram({pgm, file}, output, error));
+  EXPECT_EQ(expected, output);
+  EXPECT_EQ("", error);
+}

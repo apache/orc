@@ -109,4 +109,14 @@ namespace orc {
     ss << getMajor() << '.' << getMinor();
     return ss.str();
   }
+  
+  const FileVersion& FileVersion::v_0_11(){
+    static FileVersion version(0,11);
+    return version;
+  }
+  
+  const FileVersion& FileVersion::v_0_12(){
+    static FileVersion version(0,12);
+    return version;
+  }
 }
