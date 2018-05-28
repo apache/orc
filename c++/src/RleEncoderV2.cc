@@ -184,7 +184,7 @@ void RleEncoderV2::computeZigZagLiterals(EncodingOption &option) {
 
 void RleEncoderV2::preparePatchedBlob(EncodingOption& option) {
     // mask will be max value beyond which patch will be generated
-    int64_t mask = static_cast<int64_t>(1LU << option.brBits95p) - 1;
+    int64_t mask = static_cast<int64_t>(static_cast<uint64_t>(1) << option.brBits95p) - 1;
 
     // since we are considering only 95 percentile, the size of gap and
     // patch array can contain only be 5% values
@@ -200,7 +200,7 @@ void RleEncoderV2::preparePatchedBlob(EncodingOption& option) {
     if (option.patchWidth == 64) {
         option.patchWidth = 56;
         option.brBits95p = 8;
-        mask = static_cast<int64_t>(1LU << option.brBits95p) - 1;
+        mask = static_cast<int64_t>(static_cast<uint64_t>(1) << option.brBits95p) - 1;
     }
 
     uint32_t gapIdx = 0;
@@ -732,7 +732,7 @@ void RleEncoderV2::writeInts(int64_t* input, uint32_t offset, size_t len, uint32
   uint32_t bitsLeft = 8;
   char current = 0;
   for(uint32_t i = offset; i < (offset + len); i++) {
-    long value = input[i];
+    int64_t value = input[i];
     uint32_t bitsToWrite = bitSize;
     while (bitsToWrite > bitsLeft) {
       // add the bits to the bottom of the current word
@@ -740,7 +740,7 @@ void RleEncoderV2::writeInts(int64_t* input, uint32_t offset, size_t len, uint32
       // subtract out the bits we just added
       bitsToWrite -= bitsLeft;
       // zero out the bits above bitsToWrite
-      value &= (1L << bitsToWrite) - 1;
+      value &= (static_cast<uint64_t>(1) << bitsToWrite) - 1;
       writeByte(current);
       current = 0;
       bitsLeft = 8;

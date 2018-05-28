@@ -93,7 +93,7 @@ namespace orc {
 
     virtual void writeVulong(int64_t val);
 
-    virtual void writeVslong(int64_t val);  protected:
+    virtual void writeVslong(int64_t val);
   };
 
   class RleDecoder {

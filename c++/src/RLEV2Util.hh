@@ -133,7 +133,7 @@ namespace orc {
     return getClosestFixedBits(count);
   }
 
-  inline bool isSafeSubtract(long left, long right) {
+  inline bool isSafeSubtract(int64_t left, int64_t right) {
     return ((left ^ right) >= 0) | ((left ^ (left - right)) >= 0);
   }
 
