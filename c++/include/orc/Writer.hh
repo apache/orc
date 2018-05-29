@@ -172,7 +172,7 @@ namespace orc {
     /**
      * Set the RLE version.
      */
-    WriterOptions& setRleVersion(RleVersion version);
+    WriterOptions& setRleVersion(const RleVersion version);
 
     /**
      * Get the RLE version.

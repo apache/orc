@@ -85,7 +85,7 @@ namespace orc {
     // PASS
   }
 
-  WriterOptions& WriterOptions::setRleVersion(RleVersion version) {
+  WriterOptions& WriterOptions::setRleVersion(const RleVersion version) {
     privateBits->rleVersion = version;
     return *this;
   }

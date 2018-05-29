@@ -29,7 +29,7 @@ namespace orc {
 /**
  * Compute the bits required to represent pth percentile value
  * @param data - array
- * @param p - percentile value (&gt;=0.0 to &lt;=1.0)
+ * @param p - percentile value (>=0.0 to <=1.0)
  * @return pth percentile bits
  */
 uint32_t RleEncoderV2::percentileBits(int64_t* data, size_t offset, size_t length, double p, bool reuseHist) {
@@ -57,7 +57,6 @@ uint32_t RleEncoderV2::percentileBits(int64_t* data, size_t offset, size_t lengt
             return decodeBitWidth(static_cast<uint32_t>(i));
         }
     }
-
     return 0;
 }
 
