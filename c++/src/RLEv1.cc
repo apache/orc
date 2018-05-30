@@ -39,13 +39,9 @@ RleEncoderV1::RleEncoderV1(
                           bool hasSigned):
                           RleEncoder(std::move(outStream), hasSigned) {
   literals = new int64_t[MAX_LITERAL_SIZE];
-  numLiterals = 0;
   delta = 0;
   repeat = false;
   tailRunLength = 0;
-  bufferPosition = 0;
-  bufferLength = 0;
-  buffer = nullptr;
 }
 
 RleEncoderV1::~RleEncoderV1() {

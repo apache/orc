@@ -46,7 +46,8 @@ namespace orc {
             bufferPosition(0),
             bufferLength(0),
             numLiterals(0),
-            isSigned(hasSigned){
+            isSigned(hasSigned),
+            buffer(nullptr){
       //pass
     }
 

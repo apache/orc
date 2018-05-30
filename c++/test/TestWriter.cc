@@ -47,8 +47,7 @@ namespace orc {
                                       const Type& type,
                                       MemoryPool* memoryPool,
                                       OutputStream* stream,
-                                      RleVersion rleVersion,
-                                      FileVersion version = FileVersion(0, 12)){
+                                      FileVersion version){
     WriterOptions options;
     options.setStripeSize(stripeSize);
     options.setCompressionBlockSize(compresionblockSize);
@@ -56,7 +55,6 @@ namespace orc {
     options.setMemoryPool(memoryPool);
     options.setRowIndexStride(0);
     options.setFileVersion(version);
-    options.setRleVersion(rleVersion);
     return createWriter(type, stream, options);
   }
 
@@ -73,18 +71,18 @@ namespace orc {
     return reader->createRowReader(rowReaderOpts);
   }
 
-  class WriterTest : public TestWithParam<RleVersion> {
+  class WriterTest : public TestWithParam<FileVersion> {
     // You can implement all the usual fixture class members here.
     // To access the test parameter, call GetParam() from class
     // TestWithParam<T>.
     virtual void SetUp();
 
     protected:
-      RleVersion rleVersion;
+      FileVersion fileVersion = FileVersion::v_0_11();
   };
 
   void WriterTest::SetUp() {
-    rleVersion = GetParam();
+    fileVersion = GetParam();
   }
 
   TEST_P(WriterTest, writeEmptyFile) {
@@ -102,7 +100,7 @@ namespace orc {
                                       *type,
                                       pool,
                                       &memStream,
-                                      rleVersion);
+                                      fileVersion);
     writer->close();
 
     std::unique_ptr<InputStream> inStream(
@@ -111,8 +109,7 @@ namespace orc {
                                                 pool,
                                                 std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
-    EXPECT_EQ(FileVersion(0, 12), reader->getFormatVersion());
-    EXPECT_EQ("0.12", reader->getFormatVersion().toString());
+    EXPECT_EQ(fileVersion, reader->getFormatVersion());
     EXPECT_EQ(WriterVersion_ORC_135, reader->getWriterVersion());
     EXPECT_EQ(0, reader->getNumberOfRows());
 
@@ -139,8 +136,7 @@ namespace orc {
                                       *type,
                                       pool,
                                       &memStream,
-                                      rleVersion,
-                                      FileVersion(0, 11));
+                                      fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(1024);
     StructVectorBatch* structBatch =
       dynamic_cast<StructVectorBatch *>(batch.get());
@@ -199,7 +195,7 @@ namespace orc {
                                       *type,
                                       pool,
                                       &memStream,
-                                      rleVersion);
+                                      fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(65535);
     StructVectorBatch* structBatch =
       dynamic_cast<StructVectorBatch*>(batch.get());
@@ -258,7 +254,7 @@ namespace orc {
                                                   *type,
                                                   pool,
                                                   &memStream,
-                                                  rleVersion);
+                                                  fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(65535);
     StructVectorBatch * structBatch =
       dynamic_cast<StructVectorBatch *>(batch.get());
@@ -334,7 +330,7 @@ namespace orc {
                                                   *type,
                                                   pool,
                                                   &memStream,
-                                                  rleVersion);
+                                                  fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch * structBatch =
       dynamic_cast<StructVectorBatch *>(batch.get());
@@ -392,7 +388,7 @@ namespace orc {
                                                   *type,
                                                   pool,
                                                   &memStream,
-                                                  rleVersion);
+                                                  fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch * structBatch =
       dynamic_cast<StructVectorBatch *>(batch.get());
@@ -452,7 +448,7 @@ namespace orc {
                                                   *type,
                                                   pool,
                                                   &memStream,
-                                                  rleVersion);
+                                                  fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch * structBatch =
       dynamic_cast<StructVectorBatch *>(batch.get());
@@ -499,7 +495,7 @@ namespace orc {
                                                   *type,
                                                   pool,
                                                   &memStream,
-                                                  rleVersion);
+                                                  fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch * structBatch =
       dynamic_cast<StructVectorBatch *>(batch.get());
@@ -546,7 +542,7 @@ namespace orc {
                                                   *type,
                                                   pool,
                                                   &memStream,
-                                                  rleVersion);
+                                                  fileVersion);
 
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch * structBatch =
@@ -594,7 +590,7 @@ namespace orc {
                                                   *type,
                                                   pool,
                                                   &memStream,
-                                                  rleVersion);
+                                                  fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch * structBatch =
       dynamic_cast<StructVectorBatch *>(batch.get());
@@ -650,7 +646,7 @@ namespace orc {
                                                   *type,
                                                   pool,
                                                   &memStream,
-                                                  rleVersion);
+                                                  fileVersion);
 
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch * structBatch =
@@ -739,7 +735,7 @@ namespace orc {
                                                   *type,
                                                   pool,
                                                   &memStream,
-                                                  rleVersion);
+                                                  fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch * structBatch =
       dynamic_cast<StructVectorBatch *>(batch.get());
@@ -823,7 +819,7 @@ namespace orc {
                                                   *type,
                                                   pool,
                                                   &memStream,
-                                                  rleVersion);
+                                                  fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch * structBatch =
       dynamic_cast<StructVectorBatch *>(batch.get());
@@ -919,7 +915,7 @@ namespace orc {
                                                   *type,
                                                   pool,
                                                   &memStream,
-                                                  rleVersion);
+                                                  fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch =
       writer->createRowBatch(rowCount * maxListLength);
 
@@ -988,7 +984,7 @@ namespace orc {
                                                   *type,
                                                   pool,
                                                   &memStream,
-                                                  rleVersion);
+                                                  fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch =
       writer->createRowBatch(rowCount * maxListLength);
     StructVectorBatch * structBatch =
@@ -1081,7 +1077,7 @@ namespace orc {
                                                   *type,
                                                   pool,
                                                   &memStream,
-                                                  rleVersion);
+                                                  fileVersion);
     std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
     StructVectorBatch * structBatch =
       dynamic_cast<StructVectorBatch *>(batch.get());
@@ -1174,5 +1170,5 @@ namespace orc {
     }
   }
 
-  INSTANTIATE_TEST_CASE_P(OrcTest, WriterTest, Values(RleVersion_1, RleVersion_2));
+  INSTANTIATE_TEST_CASE_P(OrcTest, WriterTest, Values(FileVersion::v_0_11(), FileVersion::v_0_12()));
 }

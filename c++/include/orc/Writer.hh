@@ -39,8 +39,8 @@ namespace orc {
   };
 
   enum RleVersion {
-    RleVersion_1,
-    RleVersion_2
+    RleVersion_1 = 0,
+    RleVersion_2 = 1
   };
 
   class Timezone;
@@ -168,11 +168,6 @@ namespace orc {
      * @return if not set, return std::err.
      */
     std::ostream * getErrorStream() const;
-
-    /**
-     * Set the RLE version.
-     */
-    WriterOptions& setRleVersion(const RleVersion version);
 
     /**
      * Get the RLE version.

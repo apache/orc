@@ -72,6 +72,19 @@ namespace orc {
     // PASS
   }
 
+  proto::ColumnEncoding_Kind RleVersionMapper(RleVersion rleVersion)
+  {
+    switch (rleVersion)
+    {
+      case RleVersion_1:
+        return proto::ColumnEncoding_Kind_DIRECT;
+      case RleVersion_2:
+        return proto::ColumnEncoding_Kind_DIRECT_V2;
+      default:
+        throw InvalidArgument("Invalid param");
+    }
+  }
+
   ColumnWriter::ColumnWriter(
                              const Type& type,
                              const StreamsFactory& factory,
@@ -469,9 +482,7 @@ namespace orc {
   void IntegerColumnWriter::getColumnEncoding(
                        std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
-    encoding.set_kind(rleVersion == RleVersion_1 ?
-                                proto::ColumnEncoding_Kind_DIRECT :
-                                proto::ColumnEncoding_Kind_DIRECT_V2);
+    encoding.set_kind(RleVersionMapper(rleVersion));
     encoding.set_dictionarysize(0);
     encodings.push_back(encoding);
   }
@@ -916,9 +927,7 @@ namespace orc {
   void StringColumnWriter::getColumnEncoding(
     std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
-    encoding.set_kind(rleVersion == RleVersion_1 ?
-                      proto::ColumnEncoding_Kind_DIRECT :
-                      proto::ColumnEncoding_Kind_DIRECT_V2);
+    encoding.set_kind(RleVersionMapper(rleVersion));
     encoding.set_dictionarysize(0);
     encodings.push_back(encoding);
   }
@@ -1241,9 +1250,7 @@ namespace orc {
   void TimestampColumnWriter::getColumnEncoding(
     std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
-    encoding.set_kind(rleVersion == RleVersion_1 ?
-                      proto::ColumnEncoding_Kind_DIRECT :
-                      proto::ColumnEncoding_Kind_DIRECT_V2);
+    encoding.set_kind(RleVersionMapper(rleVersion));
     encoding.set_dictionarysize(0);
     encodings.push_back(encoding);
   }
@@ -1435,9 +1442,7 @@ namespace orc {
   void Decimal64ColumnWriter::getColumnEncoding(
     std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
-    encoding.set_kind(rleVersion == RleVersion_1 ?
-                      proto::ColumnEncoding_Kind_DIRECT :
-                      proto::ColumnEncoding_Kind_DIRECT_V2);
+    encoding.set_kind(RleVersionMapper(rleVersion));
     encoding.set_dictionarysize(0);
     encodings.push_back(encoding);
   }
@@ -1677,9 +1682,7 @@ namespace orc {
   void ListColumnWriter::getColumnEncoding(
                     std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
-    encoding.set_kind(rleVersion == RleVersion_1 ?
-                      proto::ColumnEncoding_Kind_DIRECT :
-                      proto::ColumnEncoding_Kind_DIRECT_V2);
+    encoding.set_kind(RleVersionMapper(rleVersion));
     encoding.set_dictionarysize(0);
     encodings.push_back(encoding);
     if (child.get()) {
@@ -1892,9 +1895,7 @@ namespace orc {
   void MapColumnWriter::getColumnEncoding(
                    std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
-    encoding.set_kind(rleVersion == RleVersion_1 ?
-                      proto::ColumnEncoding_Kind_DIRECT :
-                      proto::ColumnEncoding_Kind_DIRECT_V2);
+    encoding.set_kind(RleVersionMapper(rleVersion));
     encoding.set_dictionarysize(0);
     encodings.push_back(encoding);
     if (keyWriter.get()) {
