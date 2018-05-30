@@ -40,7 +40,7 @@ uint32_t RleEncoderV2::percentileBits(int64_t* data, size_t offset, size_t lengt
     if (!reuseHist) {
         // histogram that store the encoded bit requirement for each values.
         // maximum number of bits that can encoded is 32 (refer FixedBitSizes)
-        memset(histgram, 0, 32 * sizeof(int32_t));
+        memset(histgram, 0, FixedBitSizes::SIZE * sizeof(int32_t));
         // compute the histogram
         for(size_t i = offset; i < (offset + length); i++) {
             uint32_t idx = encodeBitWidth(findClosestNumBits(data[i]));
