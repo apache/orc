@@ -36,8 +36,8 @@ import org.junit.Test;
 
 public class TestInStream {
 
-  static class OutputCollector implements PhysicalWriter.OutputReceiver {
-    DynamicByteArray buffer = new DynamicByteArray();
+  public static class OutputCollector implements PhysicalWriter.OutputReceiver {
+    public DynamicByteArray buffer = new DynamicByteArray();
 
     @Override
     public void output(ByteBuffer buffer) throws IOException {

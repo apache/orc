@@ -20,6 +20,11 @@ package org.apache.orc;
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 import org.apache.hadoop.conf.Configuration;
@@ -28,7 +33,16 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 
+import org.apache.orc.impl.OutStream;
 import org.apache.orc.impl.RecordReaderImpl;
+import org.apache.orc.impl.RunLengthIntegerWriter;
+import org.apache.orc.impl.StreamName;
+import org.apache.orc.impl.TestInStream;
+import org.apache.orc.impl.WriterImpl;
+import org.apache.orc.impl.writer.StringTreeWriter;
+import org.apache.orc.impl.writer.TreeWriter;
+import org.apache.orc.impl.writer.WriterContext;
+import org.apache.orc.impl.writer.WriterImplV2;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -124,7 +138,8 @@ public class TestStringDictionary {
     writer.addRowBatch(batch);
     writer.close();
 
-    Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf).filesystem(fs));
+    Reader reader = OrcFile.createReader(testFilePath,
+        OrcFile.readerOptions(conf).filesystem(fs));
     RecordReader rows = reader.rows();
     batch = reader.getSchema().createRowBatch();
     col = (BytesColumnVector) batch.cols[0];
@@ -145,6 +160,113 @@ public class TestStringDictionary {
         assertEquals(OrcProto.ColumnEncoding.Kind.DICTIONARY_V2, encoding.getKind());
       }
     }
+  }
+
+  static class WriterContextImpl implements WriterContext {
+    private final TypeDescription schema;
+    private final Configuration conf;
+    private final Map<StreamName, TestInStream.OutputCollector> streams =
+        new HashMap<>();
+
+    WriterContextImpl(TypeDescription schema, Configuration conf) {
+      this.schema = schema;
+      this.conf = conf;
+    }
+
+    @Override
+    public OutStream createStream(int column, OrcProto.Stream.Kind kind) throws IOException {
+      TestInStream.OutputCollector collect = new TestInStream.OutputCollector();
+      streams.put(new StreamName(column, kind), collect);
+      return new OutStream("test", 1000, null, collect);
+    }
+
+    @Override
+    public int getRowIndexStride() {
+      return 10000;
+    }
+
+    @Override
+    public boolean buildIndex() {
+      return OrcConf.ENABLE_INDEXES.getBoolean(conf);
+    }
+
+    @Override
+    public boolean isCompressed() {
+      return false;
+    }
+
+    @Override
+    public OrcFile.EncodingStrategy getEncodingStrategy() {
+      return OrcFile.EncodingStrategy.SPEED;
+    }
+
+    @Override
+    public boolean[] getBloomFilterColumns() {
+      return new boolean[schema.getMaximumId() + 1];
+    }
+
+    @Override
+    public double getBloomFilterFPP() {
+      return 0;
+    }
+
+    @Override
+    public Configuration getConfiguration() {
+      return conf;
+    }
+
+    @Override
+    public OrcFile.Version getVersion() {
+      return OrcFile.Version.V_0_12;
+    }
+
+    @Override
+    public PhysicalWriter getPhysicalWriter() {
+      return null;
+    }
+
+    @Override
+    public OrcFile.BloomFilterVersion getBloomFilterVersion() {
+      return OrcFile.BloomFilterVersion.UTF8;
+    }
+
+    @Override
+    public void writeIndex(StreamName name, OrcProto.RowIndex.Builder index) {
+
+    }
+
+    @Override
+    public void writeBloomFilter(StreamName name,
+                                 OrcProto.BloomFilterIndex.Builder bloom) {
+
+    }
+
+    @Override
+    public boolean getUseUTCTimestamp() {
+      return true;
+    }
+  }
+
+  @Test
+  public void testNonDistinctDisabled() throws Exception {
+    TypeDescription schema = TypeDescription.createString();
+
+    conf.set(OrcConf.DICTIONARY_KEY_SIZE_THRESHOLD.getAttribute(), "0.0");
+    WriterContextImpl writerContext = new WriterContextImpl(schema, conf);
+    StringTreeWriter writer = (StringTreeWriter)
+        TreeWriter.Factory.create(schema, writerContext, true);
+
+    VectorizedRowBatch batch = schema.createRowBatch();
+    BytesColumnVector col = (BytesColumnVector) batch.cols[0];
+    batch.size = 1024;
+    col.isRepeating = true;
+    col.setVal(0, "foobar".getBytes(StandardCharsets.UTF_8));
+    writer.writeBatch(col, 0, batch.size);
+    TestInStream.OutputCollector output = writerContext.streams.get(
+        new StreamName(0, OrcProto.Stream.Kind.DATA));
+    // Check to make sure that the strings are being written to the stream,
+    // even before we get to the first rowGroup. (6 * 1024 / 1000 * 1000)
+    assertEquals(6000, output.buffer.size());
   }
 
   @Test
