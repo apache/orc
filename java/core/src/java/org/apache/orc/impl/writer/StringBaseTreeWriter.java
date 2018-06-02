@@ -81,6 +81,10 @@ public abstract class StringBaseTreeWriter extends TreeWriterBase {
     strideDictionaryCheck =
         OrcConf.ROW_INDEX_STRIDE_DICTIONARY_CHECK.getBoolean(conf);
     doneDictionaryCheck = false;
+    if (dictionaryKeySizeThreshold <= 0.0) {
+      useDictionaryEncoding = false;
+      doneDictionaryCheck = true;
+    }
   }
 
   private void checkDictionaryEncoding() {
