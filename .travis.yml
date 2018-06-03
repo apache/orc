@@ -1,12 +1,21 @@
 language: cpp
 sudo: false
 dist: trusty
+addons:
+  apt:
+    packages:
+    - valgrind
 
 matrix:
   fast_finish: true
   include:
   - compiler: gcc
     os: linux
+    script:
+    - mkdir build
+    - cd build
+    - cmake -DANALYZE_JAVA=ON -DTEST_VALGRIND_MEMCHECK=ON ..
+    - make package test-out
   - compiler: clang
     os: linux
     addons:
