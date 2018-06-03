@@ -15,7 +15,7 @@ matrix:
     - mkdir build
     - cd build
     - cmake -DANALYZE_JAVA=ON -DTEST_VALGRIND_MEMCHECK=ON ..
-    - make package test-out
+    - travis_wait make package test-out
   - compiler: clang
     os: linux
     addons:
