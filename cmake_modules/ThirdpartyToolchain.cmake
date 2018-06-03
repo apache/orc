@@ -291,50 +291,60 @@ if(BUILD_LIBHDFSPP)
     find_package(CyrusSASL)
     find_package(OpenSSL)
     find_package(Threads)
+    if (CYRUS_SASL_SHARED_LIB AND OPENSSL_LIBRARIES)
+      set (LIBHDFSPP_PREFIX "${THIRDPARTY_DIR}/libhdfspp_ep-install")
+      set (LIBHDFSPP_INCLUDE_DIR "${LIBHDFSPP_PREFIX}/include")
+      set (LIBHDFSPP_STATIC_LIB_NAME hdfspp_static)
+      set (LIBHDFSPP_STATIC_LIB "${LIBHDFSPP_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${LIBHDFSPP_STATIC_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+      set (LIBHDFSPP_SRC_URL "${CMAKE_SOURCE_DIR}/c++/libs/libhdfspp/libhdfspp.tar.gz")
+      set (LIBHDFSPP_CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+                                -DCMAKE_INSTALL_PREFIX=${LIBHDFSPP_PREFIX}
+                                -DPROTOBUF_INCLUDE_DIR=${PROTOBUF_INCLUDE_DIR}
+                                -DPROTOBUF_LIBRARY=${PROTOBUF_STATIC_LIB}
+                                -DPROTOBUF_PROTOC_LIBRARY=${PROTOC_STATIC_LIB}
+                                -DPROTOBUF_PROTOC_EXECUTABLE=${PROTOBUF_EXECUTABLE}
+                                -DOPENSSL_ROOT_DIR=${OPENSSL_ROOT_DIR}
+                                -DCMAKE_C_FLAGS=${EP_C_FLAGS}
+                                -DBUILD_SHARED_LIBS=OFF
+                                -DHDFSPP_LIBRARY_ONLY=TRUE
+                                -DBUILD_SHARED_HDFSPP=FALSE)
 
-    set (LIBHDFSPP_PREFIX "${THIRDPARTY_DIR}/libhdfspp_ep-install")
-    set (LIBHDFSPP_INCLUDE_DIR "${LIBHDFSPP_PREFIX}/include")
-    set (LIBHDFSPP_STATIC_LIB_NAME hdfspp_static)
-    set (LIBHDFSPP_STATIC_LIB "${LIBHDFSPP_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${LIBHDFSPP_STATIC_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}")
-    set (LIBHDFSPP_SRC_URL "${CMAKE_SOURCE_DIR}/c++/libs/libhdfspp/libhdfspp.tar.gz")
-    set (LIBHDFSPP_CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                              -DCMAKE_INSTALL_PREFIX=${LIBHDFSPP_PREFIX}
-                              -DPROTOBUF_INCLUDE_DIR=${PROTOBUF_INCLUDE_DIR}
-                              -DPROTOBUF_LIBRARY=${PROTOBUF_STATIC_LIB}
-                              -DPROTOBUF_PROTOC_LIBRARY=${PROTOC_STATIC_LIB}
-                              -DPROTOBUF_PROTOC_EXECUTABLE=${PROTOBUF_EXECUTABLE}
-                              -DOPENSSL_ROOT_DIR=${OPENSSL_ROOT_DIR}
-                              -DCMAKE_C_FLAGS=${EP_C_FLAGS}
-                              -DBUILD_SHARED_LIBS=OFF
-                              -DHDFSPP_LIBRARY_ONLY=TRUE
-                              -DBUILD_SHARED_HDFSPP=FALSE)
+      ExternalProject_Add (libhdfspp_ep
+        DEPENDS protobuf
+        URL ${LIBHDFSPP_SRC_URL}
+        LOG_DOWNLOAD 0
+        LOG_CONFIGURE 0
+        LOG_BUILD 0
+        LOG_INSTALL 0
+        BUILD_BYPRODUCTS "${LIBHDFSPP_STATIC_LIB}"
+        CMAKE_ARGS ${LIBHDFSPP_CMAKE_ARGS})
 
-    ExternalProject_Add (libhdfspp_ep
-      DEPENDS protobuf
-      URL ${LIBHDFSPP_SRC_URL}
-      LOG_DOWNLOAD 0
-      LOG_CONFIGURE 0
-      LOG_BUILD 0
-      LOG_INSTALL 0
-      BUILD_BYPRODUCTS "${LIBHDFSPP_STATIC_LIB}"
-      CMAKE_ARGS ${LIBHDFSPP_CMAKE_ARGS})
+      include_directories (SYSTEM ${LIBHDFSPP_INCLUDE_DIR})
 
-    include_directories (SYSTEM ${LIBHDFSPP_INCLUDE_DIR})
+      add_library (libhdfspp STATIC IMPORTED)
+      set_target_properties (libhdfspp PROPERTIES IMPORTED_LOCATION ${LIBHDFSPP_STATIC_LIB})
+      add_dependencies (libhdfspp libhdfspp_ep)
+      if (INSTALL_VENDORED_LIBS)
+        install(FILES "${LIBHDFSPP_STATIC_LIB}"
+                DESTINATION "lib")
+      endif ()
 
-    add_library (libhdfspp STATIC IMPORTED)
-    set_target_properties (libhdfspp PROPERTIES IMPORTED_LOCATION ${LIBHDFSPP_STATIC_LIB})
-    add_dependencies (libhdfspp libhdfspp_ep)
-    if (INSTALL_VENDORED_LIBS)
-      install(FILES "${LIBHDFSPP_STATIC_LIB}"
-              DESTINATION "lib")
-    endif ()
+      set (LIBHDFSPP_LIBRARIES
+           libhdfspp
+           ${CYRUS_SASL_SHARED_LIB}
+           ${OPENSSL_LIBRARIES}
+           ${CMAKE_THREAD_LIBS_INIT})
 
-    set (LIBHDFSPP_LIBRARIES
-         libhdfspp
-         ${CYRUS_SASL_SHARED_LIB}
-         ${OPENSSL_LIBRARIES}
-         ${CMAKE_THREAD_LIBS_INIT})
-
+    elseif(CYRUS_SASL_SHARED_LIB)
+      message(STATUS
+      "WARNING: Libhdfs++ library was not built because the required OpenSSL library was not found")
+    elseif(OPENSSL_LIBRARIES)
+      message(STATUS
+      "WARNING: Libhdfs++ library was not built because the required CyrusSASL library was not found")
+    else ()
+      message(STATUS
+      "WARNING: Libhdfs++ library was not built because the required CyrusSASL and OpenSSL libraries were not found")
+    endif(CYRUS_SASL_SHARED_LIB AND OPENSSL_LIBRARIES)
   else(ORC_CXX_HAS_THREAD_LOCAL)
     message(STATUS
     "WARNING: Libhdfs++ library was not built because the required feature
