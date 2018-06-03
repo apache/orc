@@ -588,9 +588,9 @@ namespace orc {
   }
 
   Type* TypeImpl::parseCategory(std::string category,
-                                               const std::string &input,
-                                               size_t start,
-                                               size_t end) {
+                                const std::string &input,
+                                size_t start,
+                                size_t end) {
     if (category == "boolean") {
       return new TypeImpl(BOOLEAN);
     } else if (category == "tinyint") {
