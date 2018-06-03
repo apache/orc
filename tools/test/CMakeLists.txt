@@ -42,4 +42,8 @@ target_link_libraries (tool-test
   ${GTEST_LIBRARIES}
 )
 
-add_test (tool-test tool-test ${EXAMPLE_DIRECTORY} ${PROJECT_BINARY_DIR})
+if (TEST_VALGRIND_MEMCHECK)
+  add_test (tool-test valgrind --tool=memcheck --leak-check=full --error-exitcode=1 ./tool-test ${EXAMPLE_DIRECTORY} ${PROJECT_BINARY_DIR})
+else ()
+  add_test (tool-test tool-test ${EXAMPLE_DIRECTORY} ${PROJECT_BINARY_DIR})
+endif ()

@@ -199,6 +199,10 @@ namespace orc {
                           uint64_t blockSize,
                           MemoryPool& pool);
 
+    virtual ~ZlibCompressionStream() override {
+      end();
+    }
+
     virtual std::string getName() const override;
 
   protected:
@@ -206,6 +210,7 @@ namespace orc {
 
   private:
     void init();
+    void end();
     z_stream strm;
   };
 
@@ -280,6 +285,10 @@ DIAGNOSTIC_PUSH
         != Z_OK) {
       throw std::runtime_error("Error while calling deflateInit2() for zlib.");
     }
+  }
+
+  void ZlibCompressionStream::end() {
+    (void)deflateEnd(&strm);
   }
 
 DIAGNOSTIC_PUSH
