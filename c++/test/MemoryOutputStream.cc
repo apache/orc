@@ -21,7 +21,7 @@
 namespace orc {
 
   MemoryOutputStream::~MemoryOutputStream() {
-    // PASS
+    delete[] data;
   }
 
   void MemoryOutputStream::write(const void* buf, size_t size) {

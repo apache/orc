@@ -41,6 +41,10 @@ option(BUILD_TOOLS
     "Build the tools"
     ON)
 
+option(TEST_VALGRIND_MEMCHECK
+    "Run the test suite using valgrind --tool=memcheck"
+    OFF)
+
 option(INSTALL_VENDORED_LIBS
     "Install vendored thirdparty libraries along with liborc"
     ON)

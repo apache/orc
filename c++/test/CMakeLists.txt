@@ -64,4 +64,17 @@ target_link_libraries (create-test-files
   protobuf
 )
 
-add_test (NAME orc-test COMMAND orc-test)
+if (TEST_VALGRIND_MEMCHECK)
+  add_test (orc-test
+          valgrind --tool=memcheck --leak-check=full --error-exitcode=1 ./orc-test)
+else ()
+  add_test (NAME orc-test COMMAND orc-test)
+endif ()
+
+if (WIN32)
+  set_property(
+    TEST orc-test
+    PROPERTY
+      ENVIRONMENT "TZDIR=${TZDATA_DIR}"
+    )
+endif ()
