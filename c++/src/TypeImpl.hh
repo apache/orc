@@ -98,7 +98,7 @@ namespace orc {
      */
     void addChildType(std::unique_ptr<Type> childType);
 
-    static std::vector<std::pair<std::string, Type *> > parseType(
+    static std::vector<std::pair<std::string, std::unique_ptr<Type> > > parseType(
       const std::string &input,
       size_t start,
       size_t end);
