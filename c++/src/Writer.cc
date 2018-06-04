@@ -161,6 +161,10 @@ namespace orc {
     return privateBits->compressionStrategy;
   }
 
+  bool WriterOptions::getAlignedBitpacking() const {
+    return privateBits->compressionStrategy == CompressionStrategy ::CompressionStrategy_SPEED;
+  }
+
   WriterOptions& WriterOptions::setPaddingTolerance(double tolerance) {
     privateBits->paddingTolerance = tolerance;
     return *this;

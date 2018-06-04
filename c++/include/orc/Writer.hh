@@ -137,6 +137,12 @@ namespace orc {
     CompressionStrategy getCompressionStrategy() const;
 
     /**
+     * Get if the bitpacking should be aligned.
+     * @return true if should be aligned, return false otherwise
+     */
+    bool getAlignedBitpacking() const;
+
+    /**
      * Set the padding tolerance.
      */
     WriterOptions& setPaddingTolerance(double tolerance);

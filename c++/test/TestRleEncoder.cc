@@ -93,7 +93,7 @@ namespace orc {
     return createRleEncoder(
             std::unique_ptr<BufferedOutputStream>(
                     new BufferedOutputStream(*pool, &memStream, 500 * 1024, 1024)),
-            isSigned, version, *pool);
+            isSigned, version, *pool, true);
   }
 
   void runExampleTest(int64_t* inputData,

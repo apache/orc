@@ -134,7 +134,8 @@ namespace orc {
                          (std::unique_ptr<BufferedOutputStream> output,
                           bool isSigned,
                           RleVersion version,
-                          MemoryPool& pool);
+                          MemoryPool& pool,
+                          bool alignedBitpacking);
 
   /**
    * Create an RLE decoder.

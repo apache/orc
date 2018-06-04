@@ -419,7 +419,8 @@ namespace orc {
                                   std::move(dataStream),
                                   true,
                                   rleVersion,
-                                  memPool);
+                                  memPool,
+                                  options.getAlignedBitpacking());
 
     if (enableIndex) {
       recordPosition();
@@ -857,7 +858,8 @@ namespace orc {
     lengthEncoder = createRleEncoder(std::move(lengthStream),
                                      false,
                                      rleVersion,
-                                     memPool);
+                                     memPool,
+                                     options.getAlignedBitpacking());
     dataStream.reset(new AppendOnlyBufferedStream(
         factory.createStream(proto::Stream_Kind_DATA)));
 
@@ -1149,11 +1151,13 @@ namespace orc {
     secRleEncoder = createRleEncoder(std::move(dataStream),
                                      true,
                                      rleVersion,
-                                     memPool);
+                                     memPool,
+                                     options.getAlignedBitpacking());
     nanoRleEncoder = createRleEncoder(std::move(secondaryStream),
                                       false,
                                       rleVersion,
-                                      memPool);
+                                      memPool,
+                                      options.getAlignedBitpacking());
 
     if (enableIndex) {
       recordPosition();
@@ -1361,7 +1365,8 @@ namespace orc {
     scaleEncoder = createRleEncoder(std::move(scaleStream),
                                     true,
                                     rleVersion,
-                                    memPool);
+                                    memPool,
+                                    options.getAlignedBitpacking());
 
     if (enableIndex) {
       recordPosition();
@@ -1589,7 +1594,8 @@ namespace orc {
     lengthEncoder = createRleEncoder(std::move(lengthStream),
                                      false,
                                      rleVersion,
-                                     memPool);
+                                     memPool,
+                                     options.getAlignedBitpacking());
 
     if (type.getSubtypeCount() == 1) {
       child = buildWriter(*type.getSubtype(0), factory, options);
@@ -1784,7 +1790,8 @@ namespace orc {
     lengthEncoder = createRleEncoder(std::move(lengthStream),
                                      false,
                                      rleVersion,
-                                     memPool);
+                                     memPool,
+                                     options.getAlignedBitpacking());
 
     if (type.getSubtypeCount() > 0) {
       keyWriter = buildWriter(*type.getSubtype(0), factory, options);

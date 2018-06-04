@@ -34,7 +34,8 @@ namespace orc {
                          (std::unique_ptr<BufferedOutputStream> output,
                           bool isSigned,
                           RleVersion version,
-                          MemoryPool&) {
+                          MemoryPool&,
+                          bool alignedBitpacking) {
     switch (static_cast<int64_t>(version)) {
     case RleVersion_1:
       // We don't have std::make_unique() yet.
@@ -42,7 +43,7 @@ namespace orc {
                                                           isSigned));
     case RleVersion_2:
       return std::unique_ptr<RleEncoder>(new RleEncoderV2(std::move(output),
-                                                            isSigned));
+                                                            isSigned, alignedBitpacking));
     default:
       throw NotImplementedYet("Not implemented yet");
     }
