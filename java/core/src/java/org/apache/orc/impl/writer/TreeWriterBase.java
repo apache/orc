@@ -18,6 +18,9 @@
 
 package org.apache.orc.impl.writer;
 
+import java.io.IOException;
+import java.util.List;
+
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.OrcFile;
@@ -35,9 +38,6 @@ import org.apache.orc.impl.StreamName;
 import org.apache.orc.util.BloomFilter;
 import org.apache.orc.util.BloomFilterIO;
 import org.apache.orc.util.BloomFilterUtf8;
-
-import java.io.IOException;
-import java.util.List;
 
 /**
  * The parent class of all of the writers for each column. Each column
@@ -65,6 +65,7 @@ public abstract class TreeWriterBase implements TreeWriter {
   private OutStream isPresentOutStream;
   private final WriterContext streamFactory;
   private final TypeDescription schema;
+  protected int dictionaryFlushCount = 0;
 
   /**
    * Create a tree writer.
@@ -384,5 +385,9 @@ public abstract class TreeWriterBase implements TreeWriter {
     public void addPosition(long position) {
       builder.addPositions(position);
     }
+  }
+
+  public int getDictionaryFlushCount() {
+    return dictionaryFlushCount;
   }
 }

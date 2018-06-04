@@ -81,6 +81,10 @@ public abstract class StringBaseTreeWriter extends TreeWriterBase {
     strideDictionaryCheck =
         OrcConf.ROW_INDEX_STRIDE_DICTIONARY_CHECK.getBoolean(conf);
     doneDictionaryCheck = false;
+    if (dictionaryKeySizeThreshold <= 0.0) {
+      useDictionaryEncoding = false;
+      doneDictionaryCheck = true;
+    }
   }
 
   private void checkDictionaryEncoding() {
@@ -128,6 +132,7 @@ public abstract class StringBaseTreeWriter extends TreeWriterBase {
     final int[] dumpOrder = new int[dictionary.size()];
 
     if (useDictionaryEncoding) {
+      dictionaryFlushCount++;
       // Write the dictionary by traversing the red-black tree writing out
       // the bytes and lengths; and creating the map from the original order
       // to the final sorted order.

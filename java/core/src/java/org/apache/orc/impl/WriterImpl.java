@@ -43,6 +43,7 @@ import org.apache.orc.StripeInformation;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
 import org.apache.orc.impl.writer.TreeWriter;
+import org.apache.orc.impl.writer.TreeWriterBase;
 import org.apache.orc.impl.writer.WriterContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -681,5 +682,13 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
       }
     }
     return false;
+  }
+
+  // This is just for testing purpose and is not exposed via TreeWriter interface
+  public int getDictionaryFlushCount() {
+    if (treeWriter == null || !(treeWriter instanceof TreeWriterBase)) {
+      return -1;
+    }
+    return ((TreeWriterBase) treeWriter).getDictionaryFlushCount();
   }
 }

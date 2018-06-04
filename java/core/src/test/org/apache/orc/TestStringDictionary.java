@@ -29,6 +29,8 @@ import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 
 import org.apache.orc.impl.RecordReaderImpl;
+import org.apache.orc.impl.WriterImpl;
+import org.apache.orc.impl.writer.WriterImplV2;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -124,6 +126,12 @@ public class TestStringDictionary {
     writer.addRowBatch(batch);
     writer.close();
 
+    if (writer instanceof WriterImplV2) {
+      assertEquals(1, ((WriterImplV2) writer).getDictionaryFlushCount());
+    } else {
+      assertEquals(1, ((WriterImpl) writer).getDictionaryFlushCount());
+    }
+
     Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf).filesystem(fs));
     RecordReader rows = reader.rows();
     batch = reader.getSchema().createRowBatch();
@@ -143,6 +151,62 @@ public class TestStringDictionary {
       for (int i = 0; i < footer.getColumnsCount(); ++i) {
         OrcProto.ColumnEncoding encoding = footer.getColumns(i);
         assertEquals(OrcProto.ColumnEncoding.Kind.DICTIONARY_V2, encoding.getKind());
+      }
+    }
+  }
+
+  @Test
+  public void testHalfDistinctDisabled() throws Exception {
+    TypeDescription schema = TypeDescription.createString();
+
+    conf.set(OrcConf.DICTIONARY_KEY_SIZE_THRESHOLD.getAttribute(), "0.0");
+    Writer writer = OrcFile.createWriter(
+      testFilePath,
+      OrcFile.writerOptions(conf).setSchema(schema).compress(CompressionKind.NONE)
+        .bufferSize(10000));
+    Random rand = new Random(123);
+    int[] input = new int[20000];
+    for (int i = 0; i < 20000; i++) {
+      input[i] = rand.nextInt(10000);
+    }
+
+    VectorizedRowBatch batch = schema.createRowBatch();
+    BytesColumnVector col = (BytesColumnVector) batch.cols[0];
+    for (int i = 0; i < 20000; i++) {
+      if (batch.size == batch.getMaxSize()) {
+        writer.addRowBatch(batch);
+        batch.reset();
+      }
+      col.setVal(batch.size++, String.valueOf(input[i]).getBytes());
+    }
+    writer.addRowBatch(batch);
+    writer.close();
+
+    if (writer instanceof WriterImplV2) {
+      assertEquals(0, ((WriterImplV2) writer).getDictionaryFlushCount());
+    } else {
+      assertEquals(0, ((WriterImpl) writer).getDictionaryFlushCount());
+    }
+
+    Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf).filesystem(fs));
+    RecordReader rows = reader.rows();
+    batch = reader.getSchema().createRowBatch();
+    col = (BytesColumnVector) batch.cols[0];
+    int idx = 0;
+    while (rows.nextBatch(batch)) {
+      for(int r=0; r < batch.size; ++r) {
+        assertEquals(String.valueOf(input[idx++]), col.toString(r));
+      }
+    }
+
+    // make sure the encoding type is correct
+    for (StripeInformation stripe : reader.getStripes()) {
+      // hacky but does the job, this casting will work as long this test resides
+      // within the same package as ORC reader
+      OrcProto.StripeFooter footer = ((RecordReaderImpl) rows).readStripeFooter(stripe);
+      for (int i = 0; i < footer.getColumnsCount(); ++i) {
+        OrcProto.ColumnEncoding encoding = footer.getColumns(i);
+        assertEquals(OrcProto.ColumnEncoding.Kind.DIRECT_V2, encoding.getKind());
       }
     }
   }
