@@ -624,4 +624,12 @@ public class WriterImplV2 implements WriterInternal, MemoryManager.Callback {
     }
     return false;
   }
+
+  // This is just for testing purpose and is not exposed via TreeWriter interface
+  public int getDictionaryFlushCount() {
+    if (treeWriter == null || !(treeWriter instanceof TreeWriterBase)) {
+      return -1;
+    }
+    return ((TreeWriterBase) treeWriter).getDictionaryFlushCount();
+  }
 }
