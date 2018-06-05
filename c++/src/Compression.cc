@@ -199,7 +199,7 @@ namespace orc {
                           uint64_t blockSize,
                           MemoryPool& pool);
 
-    ~ZlibCompressionStream() { end(); }
+    virtual ~ZlibCompressionStream() override { end(); }
 
     virtual std::string getName() const override;
 

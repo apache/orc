@@ -65,7 +65,7 @@ target_link_libraries (create-test-files
 )
 
 if (TEST_VALGRIND_MEMCHECK)
-  add_test (orc-test  
+  add_test (orc-test
           valgrind --tool=memcheck --leak-check=full --error-exitcode=1 ./orc-test)
 else ()
   add_test (NAME orc-test COMMAND orc-test)
