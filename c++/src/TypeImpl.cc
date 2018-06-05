@@ -514,23 +514,25 @@ namespace orc {
     return std::move(res[0].second);
   }
 
-  Type* TypeImpl::parseArrayType(const std::string &input,
-                                 size_t start,
-                                 size_t end) {
+  std::unique_ptr<Type> TypeImpl::parseArrayType(const std::string &input,
+                                                 size_t start,
+                                                 size_t end) {
     TypeImpl* arrayType = new TypeImpl(LIST);
+    std::unique_ptr<Type> return_value = std::unique_ptr<Type>(arrayType);
     std::vector<std::pair<std::string, ORC_UNIQUE_PTR<Type> > > v =
       TypeImpl::parseType(input, start, end);
     if (v.size() != 1) {
       throw std::logic_error("Array type must contain exactly one sub type.");
     }
     arrayType->addChildType(std::move(v[0].second));
-    return arrayType;
+    return return_value;
   }
 
-  Type* TypeImpl::parseMapType(const std::string &input,
-                               size_t start,
-                               size_t end) {
+  std::unique_ptr<Type> TypeImpl::parseMapType(const std::string &input,
+                                               size_t start,
+                                               size_t end) {
     TypeImpl * mapType = new TypeImpl(MAP);
+    std::unique_ptr<Type> return_value = std::unique_ptr<Type>(mapType);
     std::vector<std::pair<std::string, ORC_UNIQUE_PTR<Type> > > v =
       TypeImpl::parseType(input, start, end);
     if (v.size() != 2) {
@@ -539,13 +541,14 @@ namespace orc {
     }
     mapType->addChildType(std::move(v[0].second));
     mapType->addChildType(std::move(v[1].second));
-    return mapType;
+    return return_value;
   }
 
-  Type* TypeImpl::parseStructType(const std::string &input,
-                                  size_t start,
-                                  size_t end) {
+  std::unique_ptr<Type> TypeImpl::parseStructType(const std::string &input,
+                                                  size_t start,
+                                                  size_t end) {
     TypeImpl* structType = new TypeImpl(STRUCT);
+    std::unique_ptr<Type> return_value = std::unique_ptr<Type>(structType);
     std::vector<std::pair<std::string, ORC_UNIQUE_PTR<Type>> > v =
       TypeImpl::parseType(input, start, end);
     if (v.size() == 0) {
@@ -555,13 +558,14 @@ namespace orc {
     for (size_t i = 0; i < v.size(); ++i) {
       structType->addStructField(v[i].first, std::move(v[i].second));
     }
-    return structType;
+    return return_value;
   }
 
-  Type* TypeImpl::parseUnionType(const std::string &input,
-                                 size_t start,
-                                 size_t end) {
+  std::unique_ptr<Type> TypeImpl::parseUnionType(const std::string &input,
+                                                 size_t start,
+                                                 size_t end) {
     TypeImpl* unionType = new TypeImpl(UNION);
+    std::unique_ptr<Type> return_value = std::unique_ptr<Type>(unionType);
     std::vector<std::pair<std::string, ORC_UNIQUE_PTR<Type> > > v =
       TypeImpl::parseType(input, start, end);
     if (v.size() == 0) {
@@ -570,12 +574,12 @@ namespace orc {
     for (size_t i = 0; i < v.size(); ++i) {
       unionType->addChildType(std::move(v[i].second));
     }
-    return unionType;
+    return return_value;
   }
 
-  Type* TypeImpl::parseDecimalType(const std::string &input,
-                                   size_t start,
-                                   size_t end) {
+  std::unique_ptr<Type> TypeImpl::parseDecimalType(const std::string &input,
+                                                   size_t start,
+                                                   size_t end) {
     size_t sep = input.find(',', start);
     if (sep + 1 >= end || sep == std::string::npos) {
       throw std::logic_error("Decimal type must specify precision and scale.");
@@ -584,33 +588,33 @@ namespace orc {
       static_cast<uint64_t>(atoi(input.substr(start, sep - start).c_str()));
     uint64_t scale =
       static_cast<uint64_t>(atoi(input.substr(sep + 1, end - sep - 1).c_str()));
-    return new TypeImpl(DECIMAL, precision, scale);
+    return std::unique_ptr<Type>(new TypeImpl(DECIMAL, precision, scale));
   }
 
-  Type* TypeImpl::parseCategory(std::string category,
-                                const std::string &input,
-                                size_t start,
-                                size_t end) {
+  std::unique_ptr<Type> TypeImpl::parseCategory(std::string category,
+                                                const std::string &input,
+                                                size_t start,
+                                                size_t end) {
     if (category == "boolean") {
-      return new TypeImpl(BOOLEAN);
+      return std::unique_ptr<Type>(new TypeImpl(BOOLEAN));
     } else if (category == "tinyint") {
-      return new TypeImpl(BYTE);
+      return std::unique_ptr<Type>(new TypeImpl(BYTE));
     } else if (category == "smallint") {
-      return new TypeImpl(SHORT);
+      return std::unique_ptr<Type>(new TypeImpl(SHORT));
     } else if (category == "int") {
-      return new TypeImpl(INT);
+      return std::unique_ptr<Type>(new TypeImpl(INT));
     } else if (category == "bigint") {
-      return new TypeImpl(LONG);
+      return std::unique_ptr<Type>(new TypeImpl(LONG));
     } else if (category == "float") {
-      return new TypeImpl(FLOAT);
+      return std::unique_ptr<Type>(new TypeImpl(FLOAT));
     } else if (category == "double") {
-      return new TypeImpl(DOUBLE);
+      return std::unique_ptr<Type>(new TypeImpl(DOUBLE));
     } else if (category == "string") {
-      return new TypeImpl(STRING);
+      return std::unique_ptr<Type>(new TypeImpl(STRING));
     } else if (category == "binary") {
-      return new TypeImpl(BINARY);
+      return std::unique_ptr<Type>(new TypeImpl(BINARY));
     } else if (category == "timestamp") {
-      return new TypeImpl(TIMESTAMP);
+      return std::unique_ptr<Type>(new TypeImpl(TIMESTAMP));
     } else if (category == "array") {
       return parseArrayType(input, start, end);
     } else if (category == "map") {
@@ -622,15 +626,15 @@ namespace orc {
     } else if (category == "decimal") {
       return parseDecimalType(input, start, end);
     } else if (category == "date") {
-      return new TypeImpl(DATE);
+      return std::unique_ptr<Type>(new TypeImpl(DATE));
     } else if (category == "varchar") {
       uint64_t maxLength = static_cast<uint64_t>(
         atoi(input.substr(start, end - start).c_str()));
-      return new TypeImpl(VARCHAR, maxLength);
+      return std::unique_ptr<Type>(new TypeImpl(VARCHAR, maxLength));
     } else if (category == "char") {
       uint64_t maxLength = static_cast<uint64_t>(
         atoi(input.substr(start, end - start).c_str()));
-      return new TypeImpl(CHAR, maxLength);
+      return std::unique_ptr<Type>(new TypeImpl(CHAR, maxLength));
     } else {
       throw std::logic_error("Unknown type " + category);
     }
@@ -688,8 +692,7 @@ namespace orc {
       }
 
       std::string category = types.substr(pos, endPos - pos);
-      Type *type = parseCategory(category, types, endPos + 1, nextPos);
-      res.push_back(std::make_pair(fieldName, std::unique_ptr<Type>(type)));
+      res.push_back(std::make_pair(fieldName, parseCategory(category, types, endPos + 1, nextPos)));
 
       if (nextPos < types.size() && (types[nextPos] == ')' || types[nextPos] == '>')) {
         pos = nextPos + 2;

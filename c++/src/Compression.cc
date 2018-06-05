@@ -289,7 +289,6 @@ DIAGNOSTIC_PUSH
     (void)deflateEnd(&strm);
   }
 
-
 DIAGNOSTIC_PUSH
 
   enum DecompressState { DECOMPRESS_HEADER,

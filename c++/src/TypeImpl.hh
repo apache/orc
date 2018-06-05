@@ -122,9 +122,9 @@ namespace orc {
      * @param start start position of the input string
      * @param end end position of the input string
      */
-    static Type* parseArrayType(const std::string &input,
-                                size_t start,
-                                size_t end);
+    static std::unique_ptr<Type> parseArrayType(const std::string &input,
+                                                size_t start,
+                                                size_t end);
 
     /**
      * Parse map type from string
@@ -132,9 +132,9 @@ namespace orc {
      * @param start start position of the input string
      * @param end end position of the input string
      */
-    static Type* parseMapType(const std::string &input,
-                              size_t start,
-                              size_t end);
+    static std::unique_ptr<Type> parseMapType(const std::string &input,
+                                              size_t start,
+                                              size_t end);
 
     /**
      * Parse struct type from string
@@ -142,9 +142,9 @@ namespace orc {
      * @param start start position of the input string
      * @param end end position of the input string
      */
-    static Type* parseStructType(const std::string &input,
-                                 size_t start,
-                                 size_t end);
+    static std::unique_ptr<Type> parseStructType(const std::string &input,
+                                                 size_t start,
+                                                 size_t end);
 
     /**
      * Parse union type from string
@@ -152,9 +152,9 @@ namespace orc {
      * @param start start position of the input string
      * @param end end position of the input string
      */
-    static Type* parseUnionType(const std::string &input,
-                                size_t start,
-                                size_t end);
+    static std::unique_ptr<Type> parseUnionType(const std::string &input,
+                                                size_t start,
+                                                size_t end);
 
     /**
      * Parse decimal type from string
@@ -162,9 +162,9 @@ namespace orc {
      * @param start start position of the input string
      * @param end end position of the input string
      */
-    static Type* parseDecimalType(const std::string &input,
-                                  size_t start,
-                                  size_t end);
+    static std::unique_ptr<Type> parseDecimalType(const std::string &input,
+                                                  size_t start,
+                                                  size_t end);
 
     /**
      * Parse type for a category
@@ -173,10 +173,10 @@ namespace orc {
      * @param start start position of the input string
      * @param end end position of the input string
      */
-    static Type* parseCategory(std::string category,
-                               const std::string &input,
-                               size_t start,
-                               size_t end);
+    static std::unique_ptr<Type> parseCategory(std::string category,
+                                               const std::string &input,
+                                               size_t start,
+                                               size_t end);
   };
 
   std::unique_ptr<Type> convertType(const proto::Type& type,
