@@ -72,6 +72,19 @@ namespace orc {
     // PASS
   }
 
+  proto::ColumnEncoding_Kind RleVersionMapper(RleVersion rleVersion)
+  {
+    switch (rleVersion)
+    {
+      case RleVersion_1:
+        return proto::ColumnEncoding_Kind_DIRECT;
+      case RleVersion_2:
+        return proto::ColumnEncoding_Kind_DIRECT_V2;
+      default:
+        throw InvalidArgument("Invalid param");
+    }
+  }
+
   ColumnWriter::ColumnWriter(
                              const Type& type,
                              const StreamsFactory& factory,
@@ -399,14 +412,15 @@ namespace orc {
                            const StreamsFactory& factory,
                            const WriterOptions& options) :
                              ColumnWriter(type, factory, options),
-                             rleVersion(RleVersion_1) {
+                             rleVersion(options.getRleVersion()) {
     std::unique_ptr<BufferedOutputStream> dataStream =
       factory.createStream(proto::Stream_Kind_DATA);
     rleEncoder = createRleEncoder(
                                   std::move(dataStream),
                                   true,
                                   rleVersion,
-                                  memPool);
+                                  memPool,
+                                  options.getAlignedBitpacking());
 
     if (enableIndex) {
       recordPosition();
@@ -469,9 +483,7 @@ namespace orc {
   void IntegerColumnWriter::getColumnEncoding(
                        std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
-    encoding.set_kind(rleVersion == RleVersion_1 ?
-                                proto::ColumnEncoding_Kind_DIRECT :
-                                proto::ColumnEncoding_Kind_DIRECT_V2);
+    encoding.set_kind(RleVersionMapper(rleVersion));
     encoding.set_dictionarysize(0);
     encodings.push_back(encoding);
   }
@@ -840,13 +852,14 @@ namespace orc {
                           const StreamsFactory& factory,
                           const WriterOptions& options) :
                               ColumnWriter(type, factory, options),
-                              rleVersion(RleVersion_1) {
+                              rleVersion(options.getRleVersion()) {
     std::unique_ptr<BufferedOutputStream> lengthStream =
         factory.createStream(proto::Stream_Kind_LENGTH);
     lengthEncoder = createRleEncoder(std::move(lengthStream),
                                      false,
                                      rleVersion,
-                                     memPool);
+                                     memPool,
+                                     options.getAlignedBitpacking());
     dataStream.reset(new AppendOnlyBufferedStream(
         factory.createStream(proto::Stream_Kind_DATA)));
 
@@ -916,9 +929,7 @@ namespace orc {
   void StringColumnWriter::getColumnEncoding(
     std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
-    encoding.set_kind(rleVersion == RleVersion_1 ?
-                      proto::ColumnEncoding_Kind_DIRECT :
-                      proto::ColumnEncoding_Kind_DIRECT_V2);
+    encoding.set_kind(RleVersionMapper(rleVersion));
     encoding.set_dictionarysize(0);
     encodings.push_back(encoding);
   }
@@ -1131,7 +1142,7 @@ namespace orc {
                              const StreamsFactory& factory,
                              const WriterOptions& options) :
                                  ColumnWriter(type, factory, options),
-                                 rleVersion(RleVersion_1),
+                                 rleVersion(options.getRleVersion()),
                                  timezone(getTimezoneByName("GMT")){
     std::unique_ptr<BufferedOutputStream> dataStream =
         factory.createStream(proto::Stream_Kind_DATA);
@@ -1140,11 +1151,13 @@ namespace orc {
     secRleEncoder = createRleEncoder(std::move(dataStream),
                                      true,
                                      rleVersion,
-                                     memPool);
+                                     memPool,
+                                     options.getAlignedBitpacking());
     nanoRleEncoder = createRleEncoder(std::move(secondaryStream),
                                       false,
                                       rleVersion,
-                                      memPool);
+                                      memPool,
+                                      options.getAlignedBitpacking());
 
     if (enableIndex) {
       recordPosition();
@@ -1241,9 +1254,7 @@ namespace orc {
   void TimestampColumnWriter::getColumnEncoding(
     std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
-    encoding.set_kind(rleVersion == RleVersion_1 ?
-                      proto::ColumnEncoding_Kind_DIRECT :
-                      proto::ColumnEncoding_Kind_DIRECT_V2);
+    encoding.set_kind(RleVersionMapper(rleVersion));
     encoding.set_dictionarysize(0);
     encodings.push_back(encoding);
   }
@@ -1344,7 +1355,7 @@ namespace orc {
                              const StreamsFactory& factory,
                              const WriterOptions& options) :
                                  ColumnWriter(type, factory, options),
-                                 rleVersion(RleVersion_1),
+                                 rleVersion(options.getRleVersion()),
                                  precision(type.getPrecision()),
                                  scale(type.getScale()) {
     valueStream.reset(new AppendOnlyBufferedStream(
@@ -1354,7 +1365,8 @@ namespace orc {
     scaleEncoder = createRleEncoder(std::move(scaleStream),
                                     true,
                                     rleVersion,
-                                    memPool);
+                                    memPool,
+                                    options.getAlignedBitpacking());
 
     if (enableIndex) {
       recordPosition();
@@ -1435,7 +1447,7 @@ namespace orc {
   void Decimal64ColumnWriter::getColumnEncoding(
     std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
-    encoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
+    encoding.set_kind(RleVersionMapper(rleVersion));
     encoding.set_dictionarysize(0);
     encodings.push_back(encoding);
   }
@@ -1575,14 +1587,15 @@ namespace orc {
                                      const StreamsFactory& factory,
                                      const WriterOptions& options) :
                                        ColumnWriter(type, factory, options),
-                                       rleVersion(RleVersion_1){
+                                       rleVersion(options.getRleVersion()){
 
     std::unique_ptr<BufferedOutputStream> lengthStream =
       factory.createStream(proto::Stream_Kind_LENGTH);
     lengthEncoder = createRleEncoder(std::move(lengthStream),
                                      false,
                                      rleVersion,
-                                     memPool);
+                                     memPool,
+                                     options.getAlignedBitpacking());
 
     if (type.getSubtypeCount() == 1) {
       child = buildWriter(*type.getSubtype(0), factory, options);
@@ -1675,7 +1688,7 @@ namespace orc {
   void ListColumnWriter::getColumnEncoding(
                     std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
-    encoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
+    encoding.set_kind(RleVersionMapper(rleVersion));
     encoding.set_dictionarysize(0);
     encodings.push_back(encoding);
     if (child.get()) {
@@ -1771,13 +1784,14 @@ namespace orc {
                                    const StreamsFactory& factory,
                                    const WriterOptions& options) :
                                      ColumnWriter(type, factory, options),
-                                     rleVersion(RleVersion_1){
+                                     rleVersion(options.getRleVersion()){
     std::unique_ptr<BufferedOutputStream> lengthStream =
       factory.createStream(proto::Stream_Kind_LENGTH);
     lengthEncoder = createRleEncoder(std::move(lengthStream),
                                      false,
                                      rleVersion,
-                                     memPool);
+                                     memPool,
+                                     options.getAlignedBitpacking());
 
     if (type.getSubtypeCount() > 0) {
       keyWriter = buildWriter(*type.getSubtype(0), factory, options);
@@ -1888,7 +1902,7 @@ namespace orc {
   void MapColumnWriter::getColumnEncoding(
                    std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
-    encoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
+    encoding.set_kind(RleVersionMapper(rleVersion));
     encoding.set_dictionarysize(0);
     encodings.push_back(encoding);
     if (keyWriter.get()) {
