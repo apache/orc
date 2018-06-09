@@ -521,6 +521,10 @@
             <artifactId>jsr305</artifactId>
           </exclusion>
           <exclusion>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-server</artifactId>
+          </exclusion>
+          <exclusion>
             <groupId>commons-daemon</groupId>
             <artifactId>commons-daemon</artifactId>
           </exclusion>
