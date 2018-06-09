@@ -779,6 +779,57 @@ DIAGNOSTIC_POP
     }
   }
 
+  class SnappyCompressionStream: public CompressionStream {
+  public:
+    SnappyCompressionStream(OutputStream * outStream,
+                          int compressionLevel,
+                          uint64_t capacity,
+                          uint64_t blockSize,
+                          MemoryPool& pool);
+
+    virtual std::string getName() const override;
+
+  protected:
+    virtual uint64_t doStreamingCompression() override;
+
+  private:
+    void init();
+  };
+
+  SnappyCompressionStream::SnappyCompressionStream(
+                        OutputStream * outStream,
+                        int compressionLevel,
+                        uint64_t capacity,
+                        uint64_t blockSize,
+                        MemoryPool& pool)
+                        : CompressionStream(outStream,
+                                            compressionLevel,
+                                            capacity,
+                                            blockSize,
+                                            pool) {
+    init();
+  }
+
+  uint64_t SnappyCompressionStream::doStreamingCompression() {
+    size_t compressedSize;
+    void *data = rawInputBuffer.data();
+    size_t size = static_cast<size_t>(rawInputBuffer.size());
+    snappy::RawCompress(static_cast<const char *>(data), 
+                        size, 
+                        outputBuffer, 
+                        &compressedSize);
+    outputPosition += static_cast<int>(compressedSize);
+    return compressedSize;
+  }
+
+  std::string SnappyCompressionStream::getName() const {
+    return "SnappyCompressionStream";
+  }
+
+  void SnappyCompressionStream::init() {
+
+  }
+
   class SnappyDecompressionStream: public BlockDecompressionStream {
   public:
     SnappyDecompressionStream(std::unique_ptr<SeekableInputStream> inStream,
@@ -912,6 +963,12 @@ DIAGNOSTIC_POP
                 outStream, level, bufferCapacity, compressionBlockSize, pool));
     }
     case CompressionKind_SNAPPY:
+    {
+      int level=0;
+      return std::unique_ptr<BufferedOutputStream>
+        (new SnappyCompressionStream(
+                outStream, level, bufferCapacity, compressionBlockSize, pool));
+    }
     case CompressionKind_LZO:
     case CompressionKind_LZ4:
     default:
