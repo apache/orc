@@ -128,10 +128,15 @@ public class TestNewIntegerEncoding {
     batch = reader.getSchema().createRowBatch();
     while (rows.nextBatch(batch)) {
       for(int r=0; r < batch.size; ++r) {
-        assertEquals(111, ((LongColumnVector) batch.cols[0]).vector[r]);
-        assertEquals(1111, ((LongColumnVector) batch.cols[1]).vector[r]);
+        assertEquals(111, getLongValue(batch, 0, r));
+        assertEquals(1111, getLongValue(batch, 1, r));
       }
     }
+  }
+
+  private static long getLongValue(VectorizedRowBatch batch, int colIx, int valIx) {
+    LongColumnVector lcv = (LongColumnVector) batch.cols[colIx];
+    return lcv.isRepeating ? lcv.vector[0] : lcv.vector[valIx];
   }
 
   @Test
@@ -165,7 +170,7 @@ public class TestNewIntegerEncoding {
     while (rows.nextBatch(batch)) {
       for(int r=0; r < batch.size; ++r) {
         assertEquals(input.get(idx++).longValue(),
-            ((LongColumnVector) batch.cols[0]).vector[r]);
+            getLongValue(batch, 0, r));
       }
     }
   }
@@ -203,7 +208,7 @@ public class TestNewIntegerEncoding {
     while (rows.nextBatch(batch)) {
       for(int r=0; r < batch.size; ++r) {
         assertEquals(input.get(idx++).longValue(),
-            ((LongColumnVector) batch.cols[0]).vector[r]);
+            getLongValue(batch, 0, r));
       }
     }
   }
@@ -237,7 +242,7 @@ public class TestNewIntegerEncoding {
     while (rows.nextBatch(batch)) {
       for(int r=0; r < batch.size; ++r) {
         assertEquals(input.get(idx++).longValue(),
-            ((LongColumnVector) batch.cols[0]).vector[r]);
+            getLongValue(batch, 0, r));
       }
     }
   }
@@ -271,7 +276,7 @@ public class TestNewIntegerEncoding {
     while (rows.nextBatch(batch)) {
       for(int r=0; r < batch.size; ++r) {
         assertEquals(input.get(idx++).longValue(),
-            ((LongColumnVector) batch.cols[0]).vector[r]);
+            getLongValue(batch, 0, r));
       }
     }
   }
@@ -305,7 +310,7 @@ public class TestNewIntegerEncoding {
     while (rows.nextBatch(batch)) {
       for(int r=0; r < batch.size; ++r) {
         assertEquals(input.get(idx++).longValue(),
-            ((LongColumnVector) batch.cols[0]).vector[r]);
+            getLongValue(batch, 0, r));
       }
     }
   }
@@ -339,7 +344,7 @@ public class TestNewIntegerEncoding {
     while (rows.nextBatch(batch)) {
       for(int r=0; r < batch.size; ++r) {
         assertEquals(input.get(idx++).longValue(),
-            ((LongColumnVector) batch.cols[0]).vector[r]);
+            getLongValue(batch, 0, r));
       }
     }
   }
@@ -372,7 +377,7 @@ public class TestNewIntegerEncoding {
     while (rows.nextBatch(batch)) {
       for(int r=0; r < batch.size; ++r) {
         assertEquals(input.get(idx++).longValue(),
-            ((LongColumnVector) batch.cols[0]).vector[r]);
+            getLongValue(batch, 0, r));
       }
     }
   }
@@ -405,7 +410,7 @@ public class TestNewIntegerEncoding {
     while (rows.nextBatch(batch)) {
       for(int r=0; r < batch.size; ++r) {
         assertEquals(input.get(idx++).longValue(),
-            ((LongColumnVector) batch.cols[0]).vector[r]);
+            getLongValue(batch, 0, r));
       }
     }
   }
@@ -437,7 +442,7 @@ public class TestNewIntegerEncoding {
     while (rows.nextBatch(batch)) {
       for(int r=0; r < batch.size; ++r) {
         assertEquals(input.get(idx++).longValue(),
-            ((LongColumnVector) batch.cols[0]).vector[r]);
+            getLongValue(batch, 0, r));
       }
     }
   }
@@ -470,7 +475,7 @@ public class TestNewIntegerEncoding {
     while (rows.nextBatch(batch)) {
       for(int r=0; r < batch.size; ++r) {
         assertEquals(input.get(idx++).longValue(),
-            ((LongColumnVector) batch.cols[0]).vector[r]);
+            getLongValue(batch, 0, r));
       }
     }
   }
@@ -504,7 +509,7 @@ public class TestNewIntegerEncoding {
     while (rows.nextBatch(batch)) {
       for(int r=0; r < batch.size; ++r) {
         assertEquals(input.get(idx++).longValue(),
-            ((LongColumnVector) batch.cols[0]).vector[r]);
+            getLongValue(batch, 0, r));
       }
     }
   }
@@ -538,7 +543,7 @@ public class TestNewIntegerEncoding {
     while (rows.nextBatch(batch)) {
       for(int r=0; r < batch.size; ++r) {
         assertEquals(input.get(idx++).longValue(),
-            ((LongColumnVector) batch.cols[0]).vector[r]);
+            getLongValue(batch, 0, r));
       }
     }
   }
@@ -572,7 +577,7 @@ public class TestNewIntegerEncoding {
     while (rows.nextBatch(batch)) {
       for(int r=0; r < batch.size; ++r) {
         assertEquals(input.get(idx++).longValue(),
-            ((LongColumnVector) batch.cols[0]).vector[r]);
+            getLongValue(batch, 0, r));
       }
     }
   }
@@ -609,7 +614,7 @@ public class TestNewIntegerEncoding {
     while (rows.nextBatch(batch)) {
       for(int r=0; r < batch.size; ++r) {
         assertEquals(input.get(idx++).longValue(),
-            ((LongColumnVector) batch.cols[0]).vector[r]);
+            getLongValue(batch, 0, r));
       }
     }
   }
@@ -646,7 +651,7 @@ public class TestNewIntegerEncoding {
     while (rows.nextBatch(batch)) {
       for(int r=0; r < batch.size; ++r) {
         assertEquals(input.get(idx++).longValue(),
-            ((LongColumnVector) batch.cols[0]).vector[r]);
+            getLongValue(batch, 0, r));
       }
     }
   }
@@ -691,7 +696,7 @@ public class TestNewIntegerEncoding {
     while (rows.nextBatch(batch)) {
       for(int r=0; r < batch.size; ++r) {
         assertEquals(input.get(idx++).longValue(),
-            ((LongColumnVector) batch.cols[0]).vector[r]);
+            getLongValue(batch, 0, r));
       }
     }
   }
@@ -736,7 +741,7 @@ public class TestNewIntegerEncoding {
     while (rows.nextBatch(batch)) {
       for(int r=0; r < batch.size; ++r) {
         assertEquals(input.get(idx++).longValue(),
-            ((LongColumnVector) batch.cols[0]).vector[r]);
+            getLongValue(batch, 0, r));
       }
     }
   }
@@ -781,7 +786,7 @@ public class TestNewIntegerEncoding {
     while (rows.nextBatch(batch)) {
       for(int r=0; r < batch.size; ++r) {
         assertEquals(input.get(idx++).longValue(),
-            ((LongColumnVector) batch.cols[0]).vector[r]);
+            getLongValue(batch, 0, r));
       }
     }
   }
@@ -817,7 +822,7 @@ public class TestNewIntegerEncoding {
     while (rows.nextBatch(batch)) {
       for(int r=0; r < batch.size; ++r) {
         assertEquals(input.get(idx++).longValue(),
-            ((LongColumnVector) batch.cols[0]).vector[r]);
+            getLongValue(batch, 0, r));
       }
     }
   }
@@ -855,7 +860,7 @@ public class TestNewIntegerEncoding {
     while (rows.nextBatch(batch)) {
       for(int r=0; r < batch.size; ++r) {
         assertEquals(input.get(idx++).longValue(),
-            ((LongColumnVector) batch.cols[0]).vector[r]);
+            getLongValue(batch, 0, r));
       }
     }
   }
@@ -892,7 +897,7 @@ public class TestNewIntegerEncoding {
     while (rows.nextBatch(batch)) {
       for(int r=0; r < batch.size; ++r) {
         assertEquals(input.get(idx++).longValue(),
-            ((LongColumnVector) batch.cols[0]).vector[r]);
+            getLongValue(batch, 0, r));
       }
     }
   }
@@ -929,7 +934,7 @@ public class TestNewIntegerEncoding {
     while (rows.nextBatch(batch)) {
       for(int r=0; r < batch.size; ++r) {
         assertEquals(input.get(idx++).longValue(),
-            ((LongColumnVector) batch.cols[0]).vector[r]);
+            getLongValue(batch, 0, r));
       }
     }
   }
@@ -966,7 +971,7 @@ public class TestNewIntegerEncoding {
     while (rows.nextBatch(batch)) {
       for(int r=0; r < batch.size; ++r) {
         assertEquals(input.get(idx++).longValue(),
-            ((LongColumnVector) batch.cols[0]).vector[r]);
+            getLongValue(batch, 0, r));
       }
     }
   }
@@ -1003,7 +1008,7 @@ public class TestNewIntegerEncoding {
     while (rows.nextBatch(batch)) {
       for(int r=0; r < batch.size; ++r) {
         assertEquals(input.get(idx++).longValue(),
-            ((LongColumnVector) batch.cols[0]).vector[r]);
+            getLongValue(batch, 0, r));
       }
     }
   }
@@ -1040,7 +1045,7 @@ public class TestNewIntegerEncoding {
     while (rows.nextBatch(batch)) {
       for(int r=0; r < batch.size; ++r) {
         assertEquals(input.get(idx++).longValue(),
-            ((LongColumnVector) batch.cols[0]).vector[r]);
+            getLongValue(batch, 0, r));
       }
     }
   }
@@ -1077,7 +1082,7 @@ public class TestNewIntegerEncoding {
     while (rows.nextBatch(batch)) {
       for(int r=0; r < batch.size; ++r) {
         assertEquals(input.get(idx++).longValue(),
-            ((LongColumnVector) batch.cols[0]).vector[r]);
+            getLongValue(batch, 0, r));
       }
     }
   }
@@ -1116,7 +1121,7 @@ public class TestNewIntegerEncoding {
     while (rows.nextBatch(batch)) {
       for(int r=0; r < batch.size; ++r) {
         assertEquals(input.get(idx++).longValue(),
-            ((LongColumnVector) batch.cols[0]).vector[r]);
+            getLongValue(batch, 0, r));
       }
     }
   }
@@ -1167,7 +1172,7 @@ public class TestNewIntegerEncoding {
     while (rows.nextBatch(batch)) {
       for(int r=0; r < batch.size; ++r) {
         assertEquals(input.get(idx++).longValue(),
-            ((LongColumnVector) batch.cols[0]).vector[r]);
+            getLongValue(batch, 0, r));
       }
     }
   }
@@ -1222,7 +1227,7 @@ public class TestNewIntegerEncoding {
     while (rows.nextBatch(batch)) {
       for(int r=0; r < batch.size; ++r) {
         assertEquals(input.get(idx++).longValue(),
-            ((LongColumnVector) batch.cols[0]).vector[r]);
+            getLongValue(batch, 0, r));
       }
     }
   }
@@ -1321,15 +1326,15 @@ public class TestNewIntegerEncoding {
     assertEquals(true, rows.nextBatch(batch));
     assertEquals(5, batch.size);
     assertEquals(-7486502418706614742L,
-        ((LongColumnVector) batch.cols[0]).vector[0]);
+        getLongValue(batch, 0, 0));
     assertEquals(0L,
-        ((LongColumnVector) batch.cols[0]).vector[1]);
+        getLongValue(batch, 0, 1));
     assertEquals(1L,
-        ((LongColumnVector) batch.cols[0]).vector[2]);
+        getLongValue(batch, 0, 2));
     assertEquals(1L,
-        ((LongColumnVector) batch.cols[0]).vector[3]);
+        getLongValue(batch, 0, 3));
     assertEquals(-5535739865598783616L,
-        ((LongColumnVector) batch.cols[0]).vector[4]);
+        getLongValue(batch, 0, 4));
     assertEquals(false, rows.nextBatch(batch));
   }
 
@@ -1366,7 +1371,7 @@ public class TestNewIntegerEncoding {
     while (rows.nextBatch(batch)) {
       for(int r=0; r < batch.size; ++r) {
         assertEquals(input.get(idx++).longValue(),
-            ((LongColumnVector) batch.cols[0]).vector[r]);
+            getLongValue(batch, 0, r));
       }
     }
   }
