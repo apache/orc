@@ -219,7 +219,7 @@ public class TestOrcNullOptimization {
     assertEquals(1, cColumn.vector[1]);
     assertEquals(1, dColumn.offsets[1]);
     assertEquals(1, dColumn.lengths[1]);
-    assertEquals(100, dElements.vector[1]);
+    assertEquals(100, dElements.vector[dElements.isRepeating ? 0 : 1]);
 
     assertEquals(false, rows.nextBatch(batch));
     rows.close();
@@ -323,7 +323,7 @@ public class TestOrcNullOptimization {
     assertEquals(1, cColumn.vector[1]);
     assertEquals(1, dColumn.offsets[1]);
     assertEquals(1, dColumn.lengths[1]);
-    assertEquals(100, dElements.vector[1]);
+    assertEquals(100, dElements.vector[dElements.isRepeating ? 0 : 1]);
     rows.close();
   }
 
@@ -414,7 +414,7 @@ public class TestOrcNullOptimization {
     assertEquals(1, cColumn.vector[1]);
     assertEquals(1, dColumn.offsets[1]);
     assertEquals(1, dColumn.lengths[1]);
-    assertEquals(100, dElements.vector[1]);
+    assertEquals(100, dElements.vector[dElements.isRepeating ? 0 : 1]);
 
     // row 3
     assertEquals(3, aColumn.vector[2]);
@@ -422,7 +422,7 @@ public class TestOrcNullOptimization {
     assertEquals(0, cColumn.vector[2]);
     assertEquals(2, dColumn.offsets[2]);
     assertEquals(1, dColumn.lengths[2]);
-    assertEquals(100, dElements.vector[2]);
+    assertEquals(100, dElements.vector[dElements.isRepeating ? 0 :2]);
 
     rows.close();
   }

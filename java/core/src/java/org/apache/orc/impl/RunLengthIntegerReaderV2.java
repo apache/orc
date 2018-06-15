@@ -403,8 +403,10 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
     previous.isRepeating = true;
     // First read literals remaining from previous read.
     int dataIx = nextVectorReadLeftovers(previous, data, previousLen);
+
     // We will do optimized reads from delta and short-repeat segments until we decide to give up.
-    boolean isBatching = previous.isRepeating;
+    // We will not do it for !noNulls case; if there are nulls, we cannot be repeating.
+    boolean isBatching = previous.isRepeating && previous.noNulls;
 
     if (isBatching) {
       batchStruct.value = data[0];
@@ -518,8 +520,11 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
    */
   private int nextVectorConsumeLiteralsWithNullsAfterRead(
       ColumnVector previous, long[] data, int previousLen, int ix) {
-    while (ix < previousLen && used < numLiterals) {
+    while (ix < previousLen) {
       if (!previous.isNull[ix]) {
+        if (used == numLiterals) {
+          break;
+        }
         data[ix] = literals[used++];
       } else {
         // The default value of null for int type in vectorized

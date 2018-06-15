@@ -18,16 +18,14 @@
 
 package org.apache.orc;
 
+import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
+
 import org.apache.hadoop.hive.ql.exec.vector.Decimal64ColumnVector;
 import org.apache.orc.impl.OrcCodecPool;
-
 import org.apache.orc.impl.PhysicalFsWriter;
 import org.apache.orc.impl.WriterImpl;
-
 import org.apache.orc.OrcFile.WriterOptions;
-
 import com.google.common.collect.Lists;
-
 import org.apache.orc.impl.ReaderImpl;
 import org.junit.Assert;
 import org.apache.hadoop.conf.Configuration;
@@ -63,7 +61,6 @@ import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.mockito.Mockito;
-
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -80,7 +77,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-
 import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.*;
 
@@ -309,22 +305,22 @@ public class TestVectorOrcFile {
     assertEquals(false, middle.isNull[0]);
     assertEquals(2, midList.lengths[0]);
     int start = (int) midList.offsets[0];
-    assertEquals(1, midListInt.vector[start]);
+    assertEquals(1, midListInt.vector[getIndex(midListInt, start)]);
     assertEquals("bye", midListStr.toString(start));
-    assertEquals(2, midListInt.vector[start + 1]);
+    assertEquals(2, midListInt.vector[getIndex(midListInt, start + 1)]);
     assertEquals("sigh", midListStr.toString(start + 1));
 
     assertEquals(2, list.lengths[0]);
     start = (int) list.offsets[0];
-    assertEquals(3, listInts.vector[start]);
+    assertEquals(3, listInts.vector[getIndex(listInts, start)]);
     assertEquals("good", listStrs.toString(start));
-    assertEquals(4, listInts.vector[start + 1]);
+    assertEquals(4, listInts.vector[getIndex(listInts, start + 1)]);
     assertEquals("bad", listStrs.toString(start + 1));
     assertEquals(0, map.lengths[0]);
     assertEquals(Timestamp.valueOf("2000-03-12 15:00:00"),
         timestamp.asScratchTimestamp(0));
     assertEquals(new HiveDecimalWritable(HiveDecimal.create("12345678.6547456")),
-        decs.vector[0]);
+        decs.vector[getIndex(decs, 0)]);
 
     // check the contents of row 7499
     rows.seekToRow(7499);
@@ -341,30 +337,30 @@ public class TestVectorOrcFile {
     assertEquals(false, middle.isNull[0]);
     assertEquals(2, midList.lengths[0]);
     start = (int) midList.offsets[0];
-    assertEquals(1, midListInt.vector[start]);
+    assertEquals(1, midListInt.vector[getIndex(midListInt, start)]);
     assertEquals("bye", midListStr.toString(start));
-    assertEquals(2, midListInt.vector[start + 1]);
+    assertEquals(2, midListInt.vector[getIndex(midListInt, start + 1)]);
     assertEquals("sigh", midListStr.toString(start + 1));
     assertEquals(3, list.lengths[0]);
     start = (int) list.offsets[0];
-    assertEquals(100000000, listInts.vector[start]);
+    assertEquals(100000000, listInts.vector[getIndex(listInts, start)]);
     assertEquals("cat", listStrs.toString(start));
-    assertEquals(-100000, listInts.vector[start + 1]);
+    assertEquals(-100000, listInts.vector[getIndex(listInts, start + 1)]);
     assertEquals("in", listStrs.toString(start + 1));
-    assertEquals(1234, listInts.vector[start + 2]);
+    assertEquals(1234, listInts.vector[getIndex(listInts, start + 2)]);
     assertEquals("hat", listStrs.toString(start + 2));
     assertEquals(2, map.lengths[0]);
     start = (int) map.offsets[0];
     assertEquals("chani", mapKey.toString(start));
-    assertEquals(5, mapValueInts.vector[start]);
+    assertEquals(5, mapValueInts.vector[getIndex(mapValueInts, start)]);
     assertEquals("chani", mapValueStrs.toString(start));
     assertEquals("mauddib", mapKey.toString(start + 1));
-    assertEquals(1, mapValueInts.vector[start + 1]);
+    assertEquals(1, mapValueInts.vector[getIndex(mapValueInts, start + 1)]);
     assertEquals("mauddib", mapValueStrs.toString(start + 1));
     assertEquals(Timestamp.valueOf("2000-03-12 15:00:01"),
         timestamp.asScratchTimestamp(0));
     assertEquals(new HiveDecimalWritable(HiveDecimal.create("12345678.6547457")),
-        decs.vector[0]);
+        decs.vector[getIndex(decs, 0)]);
 
     // handle the close up
     Assert.assertEquals(false, rows.nextBatch(batch));
@@ -821,7 +817,7 @@ public class TestVectorOrcFile {
       assertEquals("row " + rowId, b3.getLength(), bytes.length[rowInBatch]);
       for(int i=0; i < b3.getLength(); ++i) {
         assertEquals("row " + rowId + " byte " + i, b3.getBytes()[i],
-            bytes.vector[rowInBatch][bytes.start[rowInBatch] + i]);
+            bytes.vector[getIndex(bytes, rowInBatch)][bytes.start[rowInBatch] + i]);
       }
     } else {
       assertEquals("row " + rowId, true, batch.cols[7].isNull[rowInBatch]);
@@ -872,7 +868,7 @@ public class TestVectorOrcFile {
       rowId = 0;
     }
     if (column.noNulls || !column.isNull[rowId]) {
-      return new BytesWritable(Arrays.copyOfRange(column.vector[rowId],
+      return new BytesWritable(Arrays.copyOfRange(column.vector[getIndex(column, rowId)],
           column.start[rowId], column.start[rowId] + column.length[rowId]));
     } else {
       return null;
@@ -888,7 +884,7 @@ public class TestVectorOrcFile {
       rowId = 0;
     }
     if (vector.noNulls || !vector.isNull[rowId]) {
-      return new Text(Arrays.copyOfRange(vector.vector[rowId],
+      return new Text(Arrays.copyOfRange(vector.vector[getIndex(vector, rowId)],
           vector.start[rowId], vector.start[rowId] + vector.length[rowId]));
     } else {
       return null;
@@ -1457,7 +1453,7 @@ public class TestVectorOrcFile {
             times.nanos[row]);
         assertEquals("year " + year + " row " + row,
             Integer.toString(year) + "-12-25",
-            new DateWritable((int) dates.vector[row]).toString());
+            new DateWritable((int) dates.vector[getIndex(dates, row)]).toString());
       }
     }
     rows.nextBatch(batch);
@@ -1531,11 +1527,11 @@ public class TestVectorOrcFile {
     Decimal64ColumnVector cv = (Decimal64ColumnVector) batch.cols[0];
     cv.precision = 18;
     cv.scale = 3;
-    cv.vector[0] = 1;
+    cv.vector[getIndex(cv, 0)] = 1;
     for(int r=1; r < 18; r++) {
-      cv.vector[r] = cv.vector[r-1] * 10;
+      cv.vector[getIndex(cv, r)] = cv.vector[getIndex(cv, r-1)] * 10;
     }
-    cv.vector[18] = -2000;
+    cv.vector[getIndex(cv, 18)] = -2000;
     batch.size = 19;
     writer.addRowBatch(batch);
     writer.close();
@@ -1556,11 +1552,11 @@ public class TestVectorOrcFile {
     assertEquals(19, batch.size);
     assertEquals(18, cv.precision);
     assertEquals(3, cv.scale);
-    assertEquals("row 0", 1, cv.vector[0]);
+    assertEquals("row 0", 1, cv.vector[getIndex(cv, 0)]);
     for(int r=1; r < 18; ++r) {
-      assertEquals("row " + r, 10 * cv.vector[r-1], cv.vector[r]);
+      assertEquals("row " + r, 10 * cv.vector[getIndex(cv, r-1)], cv.vector[getIndex(cv, r)]);
     }
-    assertEquals(-2000, cv.vector[18]);
+    assertEquals(-2000, cv.vector[getIndex(cv, 18)]);
     assertFalse(rows.nextBatch(batch));
 
     // test with old batch
@@ -1571,25 +1567,25 @@ public class TestVectorOrcFile {
     assertEquals(19, batch.size);
     assertEquals(18, oldCv.precision);
     assertEquals(3, oldCv.scale);
-    assertEquals("0.001", oldCv.vector[0].toString());
-    assertEquals("0.01", oldCv.vector[1].toString());
-    assertEquals("0.1", oldCv.vector[2].toString());
-    assertEquals("1", oldCv.vector[3].toString());
-    assertEquals("10", oldCv.vector[4].toString());
-    assertEquals("100", oldCv.vector[5].toString());
-    assertEquals("1000", oldCv.vector[6].toString());
-    assertEquals("10000", oldCv.vector[7].toString());
-    assertEquals("100000", oldCv.vector[8].toString());
-    assertEquals("1000000", oldCv.vector[9].toString());
-    assertEquals("10000000", oldCv.vector[10].toString());
-    assertEquals("100000000", oldCv.vector[11].toString());
-    assertEquals("1000000000", oldCv.vector[12].toString());
-    assertEquals("10000000000", oldCv.vector[13].toString());
-    assertEquals("100000000000", oldCv.vector[14].toString());
-    assertEquals("1000000000000", oldCv.vector[15].toString());
-    assertEquals("10000000000000", oldCv.vector[16].toString());
-    assertEquals("100000000000000", oldCv.vector[17].toString());
-    assertEquals("-2", oldCv.vector[18].toString());
+    assertEquals("0.001", oldCv.vector[getIndex(oldCv, 0)].toString());
+    assertEquals("0.01", oldCv.vector[getIndex(oldCv, 1)].toString());
+    assertEquals("0.1", oldCv.vector[getIndex(oldCv, 2)].toString());
+    assertEquals("1", oldCv.vector[getIndex(oldCv, 3)].toString());
+    assertEquals("10", oldCv.vector[getIndex(oldCv, 4)].toString());
+    assertEquals("100", oldCv.vector[getIndex(oldCv, 5)].toString());
+    assertEquals("1000", oldCv.vector[getIndex(oldCv, 6)].toString());
+    assertEquals("10000", oldCv.vector[getIndex(oldCv, 7)].toString());
+    assertEquals("100000", oldCv.vector[getIndex(oldCv, 8)].toString());
+    assertEquals("1000000", oldCv.vector[getIndex(oldCv, 9)].toString());
+    assertEquals("10000000", oldCv.vector[getIndex(oldCv, 10)].toString());
+    assertEquals("100000000", oldCv.vector[getIndex(oldCv, 11)].toString());
+    assertEquals("1000000000", oldCv.vector[getIndex(oldCv, 12)].toString());
+    assertEquals("10000000000", oldCv.vector[getIndex(oldCv, 13)].toString());
+    assertEquals("100000000000", oldCv.vector[getIndex(oldCv, 14)].toString());
+    assertEquals("1000000000000", oldCv.vector[getIndex(oldCv, 15)].toString());
+    assertEquals("10000000000000", oldCv.vector[getIndex(oldCv, 16)].toString());
+    assertEquals("100000000000000", oldCv.vector[getIndex(oldCv, 17)].toString());
+    assertEquals("-2", oldCv.vector[getIndex(oldCv, 18)].toString());
     assertFalse(rows.nextBatch(batch));
   }
 
@@ -1610,10 +1606,10 @@ public class TestVectorOrcFile {
     cv.scale = 3;
     long base = 1;
     for(int r=0; r < 18; r++) {
-      cv.vector[r].setFromLongAndScale(base, 4);
+      cv.vector[getIndex(cv, r)].setFromLongAndScale(base, 4);
       base *= 10;
     }
-    cv.vector[18].setFromLong(-2);
+    cv.vector[getIndex(cv, 18)].setFromLong(-2);
     batch.size = 19;
     writer.addRowBatch(batch);
     writer.close();
@@ -1636,11 +1632,11 @@ public class TestVectorOrcFile {
     assertEquals(19, batch.size);
     assertEquals(18, newCv.precision);
     assertEquals(4, newCv.scale);
-    assertEquals("row 0", 1, newCv.vector[0]);
+    assertEquals("row 0", 1, newCv.vector[getIndex(newCv, 0)]);
     for(int r=1; r < 18; ++r) {
-      assertEquals("row " + r, 10 * newCv.vector[r-1], newCv.vector[r]);
+      assertEquals("row " + r, 10 * newCv.vector[getIndex(newCv, r-1)], newCv.vector[getIndex(newCv, r)]);
     }
-    assertEquals(-20000, newCv.vector[18]);
+    assertEquals(-20000, newCv.vector[getIndex(newCv, 18)]);
     assertFalse(rows.nextBatch(batch));
 
     // test with old batch
@@ -1651,25 +1647,25 @@ public class TestVectorOrcFile {
     assertEquals(19, batch.size);
     assertEquals(18, cv.precision);
     assertEquals(4, cv.scale);
-    assertEquals("0.0001", cv.vector[0].toString());
-    assertEquals("0.001", cv.vector[1].toString());
-    assertEquals("0.01", cv.vector[2].toString());
-    assertEquals("0.1", cv.vector[3].toString());
-    assertEquals("1", cv.vector[4].toString());
-    assertEquals("10", cv.vector[5].toString());
-    assertEquals("100", cv.vector[6].toString());
-    assertEquals("1000", cv.vector[7].toString());
-    assertEquals("10000", cv.vector[8].toString());
-    assertEquals("100000", cv.vector[9].toString());
-    assertEquals("1000000", cv.vector[10].toString());
-    assertEquals("10000000", cv.vector[11].toString());
-    assertEquals("100000000", cv.vector[12].toString());
-    assertEquals("1000000000", cv.vector[13].toString());
-    assertEquals("10000000000", cv.vector[14].toString());
-    assertEquals("100000000000", cv.vector[15].toString());
-    assertEquals("1000000000000", cv.vector[16].toString());
-    assertEquals("10000000000000", cv.vector[17].toString());
-    assertEquals("-2", cv.vector[18].toString());
+    assertEquals("0.0001", cv.vector[getIndex(cv, 0)].toString());
+    assertEquals("0.001", cv.vector[getIndex(cv, 1)].toString());
+    assertEquals("0.01", cv.vector[getIndex(cv, 2)].toString());
+    assertEquals("0.1", cv.vector[getIndex(cv, 3)].toString());
+    assertEquals("1", cv.vector[getIndex(cv, 4)].toString());
+    assertEquals("10", cv.vector[getIndex(cv, 5)].toString());
+    assertEquals("100", cv.vector[getIndex(cv, 6)].toString());
+    assertEquals("1000", cv.vector[getIndex(cv, 7)].toString());
+    assertEquals("10000", cv.vector[getIndex(cv, 8)].toString());
+    assertEquals("100000", cv.vector[getIndex(cv, 9)].toString());
+    assertEquals("1000000", cv.vector[getIndex(cv, 10)].toString());
+    assertEquals("10000000", cv.vector[getIndex(cv, 11)].toString());
+    assertEquals("100000000", cv.vector[getIndex(cv, 12)].toString());
+    assertEquals("1000000000", cv.vector[getIndex(cv, 13)].toString());
+    assertEquals("10000000000", cv.vector[getIndex(cv, 14)].toString());
+    assertEquals("100000000000", cv.vector[getIndex(cv, 15)].toString());
+    assertEquals("1000000000000", cv.vector[getIndex(cv, 16)].toString());
+    assertEquals("10000000000000", cv.vector[getIndex(cv, 17)].toString());
+    assertEquals("-2", cv.vector[getIndex(cv, 18)].toString());
     assertFalse(rows.nextBatch(batch));
   }
 
@@ -1812,13 +1808,13 @@ public class TestVectorOrcFile {
         schema.toString());
     assertEquals("2000-03-12 15:00:00.0", ts.asScratchTimestamp(0).toString());
     assertEquals(0, union.tags[0]);
-    assertEquals(42, longs.vector[0]);
-    assertEquals("12345678.6547456", decs.vector[0].toString());
+    assertEquals(42, longs.vector[getIndex(longs, 0)]);
+    assertEquals("12345678.6547456", decs.vector[getIndex(decs, 0)].toString());
 
     assertEquals("2000-03-20 12:00:00.123456789", ts.asScratchTimestamp(1).toString());
     assertEquals(1, union.tags[1]);
     assertEquals("hello", strs.toString(1));
-    assertEquals("-5643.234", decs.vector[1].toString());
+    assertEquals("-5643.234", decs.vector[getIndex(decs, 1)].toString());
 
     assertEquals(false, ts.noNulls);
     assertEquals(false, union.noNulls);
@@ -1844,9 +1840,9 @@ public class TestVectorOrcFile {
     assertEquals(false, union.isNull[5]);
     assertEquals(0, union.tags[5]);
     assertEquals(false, longs.isNull[5]);
-    assertEquals(200000, longs.vector[5]);
+    assertEquals(200000, longs.vector[getIndex(longs, 5)]);
     assertEquals(false, decs.isNull[5]);
-    assertEquals("10000000000000000000", decs.vector[5].toString());
+    assertEquals("10000000000000000000", decs.vector[getIndex(decs, 5)].toString());
 
     rand = new Random(42);
     for(int i=1970; i < 2038; ++i) {
@@ -1855,13 +1851,13 @@ public class TestVectorOrcFile {
           ts.asScratchTimestamp(row));
       if ((i & 1) == 0) {
         assertEquals(0, union.tags[row]);
-        assertEquals(i*i, longs.vector[row]);
+        assertEquals(i*i, longs.vector[getIndex(longs, row)]);
       } else {
         assertEquals(1, union.tags[row]);
         assertEquals(Integer.toString(i * i), strs.toString(row));
       }
       assertEquals(new HiveDecimalWritable(HiveDecimal.create(new BigInteger(64, rand),
-                                   rand.nextInt(18))), decs.vector[row]);
+                                   rand.nextInt(18))), decs.vector[getIndex(decs, row)]);
     }
 
     // rebuild the row batch, so that we can read by 1000 rows
@@ -1881,17 +1877,17 @@ public class TestVectorOrcFile {
         assertEquals("bad tag at " + i + "." +r, 0, union.tags[r]);
       }
       assertEquals("batch " + i, true, longs.isRepeating);
-      assertEquals("batch " + i, 1732050807, longs.vector[0]);
+      assertEquals("batch " + i, 1732050807, longs.vector[getIndex(longs, 0)]);
     }
 
     rows.nextBatch(batch);
     assertEquals(3, batch.size);
     assertEquals(0, union.tags[0]);
-    assertEquals(0, longs.vector[0]);
+    assertEquals(0, longs.vector[getIndex(longs, 0)]);
     assertEquals(0, union.tags[1]);
-    assertEquals(10, longs.vector[1]);
+    assertEquals(10, longs.vector[getIndex(longs, 1)]);
     assertEquals(0, union.tags[2]);
-    assertEquals(138, longs.vector[2]);
+    assertEquals(138, longs.vector[getIndex(longs, 2)]);
 
     rows.nextBatch(batch);
     assertEquals(0, batch.size);
@@ -1903,7 +1899,7 @@ public class TestVectorOrcFile {
     assertEquals(Timestamp.valueOf("2000-03-20 12:00:00.123456789"), ts.asScratchTimestamp(0));
     assertEquals(1, union.tags[0]);
     assertEquals("hello", strs.toString(0));
-    assertEquals(new HiveDecimalWritable(HiveDecimal.create("-5643.234")), decs.vector[0]);
+    assertEquals(new HiveDecimalWritable(HiveDecimal.create("-5643.234")), decs.vector[getIndex(decs, 0)]);
     rows.close();
   }
 
@@ -1937,7 +1933,7 @@ public class TestVectorOrcFile {
       rows.nextBatch(batch);
       assertEquals(1000, batch.size);
       for(int r=0; r < batch.size; ++r) {
-        assertEquals(rand.nextInt(), longs.vector[r]);
+        assertEquals(rand.nextInt(), longs.vector[getIndex(longs, r)]);
         assertEquals(Integer.toHexString(rand.nextInt()), strs.toString(r));
       }
     }
@@ -2185,7 +2181,7 @@ public class TestVectorOrcFile {
         int intVal = rand.nextInt();
         String strVal = Integer.toBinaryString(rand.nextInt());
         for (int k = 0; k < 5; ++k) {
-          assertEquals(intVal, longs.vector[j * 5 + k]);
+          assertEquals(intVal, longs.vector[getIndex(longs, j * 5 + k)]);
           assertEquals(strVal, strs.toString(j * 5 + k));
         }
       }
@@ -2501,7 +2497,7 @@ public class TestVectorOrcFile {
     assertEquals(1000, batch.size);
 
     for(int i=1000; i < 2000; ++i) {
-      assertEquals(300 * i, ints.vector[i - 1000]);
+      assertEquals(300 * i, ints.vector[getIndex(ints, i - 1000)]);
       assertEquals(Integer.toHexString(10*i), strs.toString(i - 1000));
     }
     Assert.assertEquals(false, rows.nextBatch(batch));
@@ -2538,7 +2534,7 @@ public class TestVectorOrcFile {
     assertEquals(1000, batch.size);
     Assert.assertEquals(3000, rows.getRowNumber());
     for(int i=0; i < 1000; ++i) {
-      assertEquals(300 * i, ints.vector[i]);
+      assertEquals(300 * i, ints.vector[getIndex(ints, i)]);
       assertEquals(Integer.toHexString(10*i), strs.toString(i));
     }
 
@@ -2546,7 +2542,7 @@ public class TestVectorOrcFile {
     assertEquals(500, batch.size);
     Assert.assertEquals(3500, rows.getRowNumber());
     for(int i=3000; i < 3500; ++i) {
-      assertEquals(300 * i, ints.vector[i - 3000]);
+      assertEquals(300 * i, ints.vector[getIndex(ints, i - 3000)]);
       assertEquals(Integer.toHexString(10*i), strs.toString(i - 3000));
     }
     Assert.assertEquals(false, rows.nextBatch(batch));
@@ -2781,25 +2777,25 @@ public class TestVectorOrcFile {
     assertEquals(1024, batch.size);
     for(int r=0; r < 1024; ++r) {
       assertEquals("row " + r, "Horton", bins.toString(r));
-      assertEquals("row " + r, 1, bools.vector[r]);
-      assertEquals("row " + r, -126, bytes.vector[r]);
-      assertEquals("row " + r, 1311768467463790320L, longs.vector[r]);
-      assertEquals("row " + r, 1.125, floats.vector[r], 0.00001);
-      assertEquals("row " + r, 9.765625E-4, doubles.vector[r], 0.000001);
+      assertEquals("row " + r, 1, bools.vector[getIndex(bools, r)]);
+      assertEquals("row " + r, -126, bytes.vector[getIndex(bytes, r)]);
+      assertEquals("row " + r, 1311768467463790320L, longs.vector[getIndex(longs, r)]);
+      assertEquals("row " + r, 1.125, floats.vector[getIndex(floats, r)], 0.00001);
+      assertEquals("row " + r, 9.765625E-4, doubles.vector[getIndex(doubles, r)], 0.000001);
       assertEquals("row " + r, "2011-07-01",
-          new DateWritable((int) dates.vector[r]).toString());
+          new DateWritable((int) dates.vector[getIndex(dates, r)]).toString());
       assertEquals("row " + r, "2015-10-23 10:11:59.999999999",
           times.asScratchTimestamp(r).toString());
-      assertEquals("row " + r, "1.234567", decs.vector[r].toString());
+      assertEquals("row " + r, "1.234567", decs.vector[getIndex(decs, r)].toString());
       assertEquals("row " + r, "Echelon", strs.toString(r));
       assertEquals("row " + r, "Juggernaut", chars.toString(r));
       assertEquals("row " + r, "Dreadnaugh", vcs.toString(r));
-      assertEquals("row " + r, 123, structInts.vector[r]);
+      assertEquals("row " + r, 123, structInts.vector[getIndex(structInts, r)]);
       assertEquals("row " + r, 1, unions.tags[r]);
-      assertEquals("row " + r, 1234, unionInts.vector[r]);
+      assertEquals("row " + r, 1234, unionInts.vector[getIndex(unionInts, r)]);
       assertEquals("row " + r, 3, lists.lengths[r]);
       assertEquals("row " + r, true, listInts.isRepeating);
-      assertEquals("row " + r, 31415, listInts.vector[0]);
+      assertEquals("row " + r, 31415, listInts.vector[getIndex(listInts, 0)]);
       assertEquals("row " + r, 3, maps.lengths[r]);
       assertEquals("row " + r, "ORC", mapKeys.toString((int) maps.offsets[r]));
       assertEquals("row " + r, "Hive", mapKeys.toString((int) maps.offsets[r] + 1));
@@ -2827,23 +2823,23 @@ public class TestVectorOrcFile {
       String hex = Integer.toHexString(r);
 
       assertEquals("row " + r, hex, bins.toString(r));
-      assertEquals("row " + r, r % 2 == 1 ? 1 : 0, bools.vector[r]);
-      assertEquals("row " + r, (byte) (r % 255), bytes.vector[r]);
-      assertEquals("row " + r, 31415L * r, longs.vector[r]);
-      assertEquals("row " + r, 1.125F * r, floats.vector[r], 0.0001);
-      assertEquals("row " + r, 0.0009765625 * r, doubles.vector[r], 0.000001);
+      assertEquals("row " + r, r % 2 == 1 ? 1 : 0, bools.vector[getIndex(bools, r)]);
+      assertEquals("row " + r, (byte) (r % 255), bytes.vector[getIndex(bytes, r)]);
+      assertEquals("row " + r, 31415L * r, longs.vector[getIndex(longs, r)]);
+      assertEquals("row " + r, 1.125F * r, floats.vector[getIndex(floats, r)], 0.0001);
+      assertEquals("row " + r, 0.0009765625 * r, doubles.vector[getIndex(doubles, r)], 0.000001);
       assertEquals("row " + r, new DateWritable(new Date(111, 6, 1 + r)),
-          new DateWritable((int) dates.vector[r]));
+          new DateWritable((int) dates.vector[getIndex(dates, r)]));
       assertEquals("row " + r,
           new Timestamp(115, 9, 25, 10, 11, 59 + r, 999999999),
           times.asScratchTimestamp(r));
-      assertEquals("row " + r, "1.234567", decs.vector[r].toString());
+      assertEquals("row " + r, "1.234567", decs.vector[getIndex(decs, r)].toString());
       assertEquals("row " + r, Integer.toString(r), strs.toString(r));
       assertEquals("row " + r, Integer.toHexString(r), chars.toString(r));
       assertEquals("row " + r, Integer.toHexString(r * 128), vcs.toString(r));
-      assertEquals("row " + r, r + 13, structInts.vector[r]);
+      assertEquals("row " + r, r + 13, structInts.vector[getIndex(structInts, r)]);
       assertEquals("row " + r, 1, unions.tags[r]);
-      assertEquals("row " + r, r + 42, unionInts.vector[r]);
+      assertEquals("row " + r, r + 42, unionInts.vector[getIndex(unionInts, r)]);
       assertEquals("row " + r, 3, lists.lengths[r]);
       assertEquals("row " + r, 31415, listInts.vector[(int) lists.offsets[r]]);
       assertEquals("row " + r, 31416, listInts.vector[(int) lists.offsets[r] + 1]);
@@ -2866,7 +2862,7 @@ public class TestVectorOrcFile {
       row = 0;
     }
     if (vector.noNulls || !vector.isNull[row]) {
-      return new String(vector.vector[row], vector.start[row],
+      return new String(vector.vector[getIndex(vector, row)], vector.start[row],
           vector.length[row]);
     } else {
       return null;
@@ -2999,7 +2995,7 @@ public class TestVectorOrcFile {
         assertEquals("row " + r, true, inner.isNull[r]);
       } else {
         assertEquals("row " + r, false, inner.isNull[r]);
-        assertEquals("row " + r, r, vec.vector[r]);
+        assertEquals("row " + r, r, vec.vector[getIndex(vec, r)]);
       }
     }
     rows.nextBatch(batch);
@@ -3058,26 +3054,30 @@ public class TestVectorOrcFile {
       } else if (r < 300) {
         assertEquals("row " + r, false, union.isNull[r]);
         assertEquals("row " + r, 0, union.tags[r]);
-        assertEquals("row " + r, r, ints.vector[r]);
+        assertEquals("row " + r, r, ints.vector[getIndex(ints, r)]);
       } else if (r < 400) {
         assertEquals("row " + r, false, union.isNull[r]);
         assertEquals("row " + r, 1, union.tags[r]);
-        assertEquals("row " + r, -r, longs.vector[r]);
+        assertEquals("row " + r, -r, longs.vector[getIndex(longs, r)]);
       } else if (r < 600) {
         assertEquals("row " + r, true, union.isNull[r]);
       } else if (r < 800) {
         assertEquals("row " + r, false, union.isNull[r]);
         assertEquals("row " + r, 1, union.tags[r]);
-        assertEquals("row " + r, -r, longs.vector[r]);
+        assertEquals("row " + r, -r, longs.vector[getIndex(longs, r)]);
       } else if (r < 1000) {
         assertEquals("row " + r, true, union.isNull[r]);
       } else {
         assertEquals("row " + r, false, union.isNull[r]);
         assertEquals("row " + r, 1, union.tags[r]);
-        assertEquals("row " + r, -r, longs.vector[r]);
+        assertEquals("row " + r, -r, longs.vector[getIndex(longs, r)]);
       }
     }
     Assert.assertEquals(false, rows.nextBatch(batch));
+  }
+
+  private static final int getIndex(ColumnVector v, int i) {
+    return v.isRepeating ? 0 : i;
   }
 
   /**

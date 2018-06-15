@@ -17,6 +17,8 @@
  */
 package org.apache.orc.impl;
 
+import java.util.Arrays;
+
 import java.io.EOFException;
 import java.io.IOException;
 import java.text.DateFormat;
@@ -26,7 +28,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
-
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
@@ -2185,6 +2186,9 @@ public class TreeReaderFactory {
       if (result.noNulls || !(result.isRepeating && result.isNull[0])) {
         lengths.nextVector(result, result.lengths, batchSize);
         // even with repeating lengths, the list doesn't repeat
+        if (result.isRepeating) {
+          Arrays.fill(result.lengths, 0, batchSize, result.lengths[0]);
+        }
         result.isRepeating = false;
         // build the offsets vector and figure out how many children to read
         result.childCount = 0;
@@ -2280,6 +2284,9 @@ public class TreeReaderFactory {
       if (result.noNulls || !(result.isRepeating && result.isNull[0])) {
         lengths.nextVector(result, result.lengths, batchSize);
         // even with repeating lengths, the map doesn't repeat
+        if (result.isRepeating) {
+          Arrays.fill(result.lengths, 0, batchSize, result.lengths[0]);
+        }
         result.isRepeating = false;
         // build the offsets vector and figure out how many children to read
         result.childCount = 0;
