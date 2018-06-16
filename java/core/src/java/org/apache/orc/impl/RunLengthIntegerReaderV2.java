@@ -36,13 +36,13 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
   private final boolean signed;
   private final long[] literals = new long[RunLengthIntegerWriterV2.MAX_SCOPE];
   // Note: isRepeating flag in this reader was never used; this flag only refers to nextVector opti
-  private boolean isNvLeftoversRepeating = false;
+  private boolean areBatchLiteralsRepeating = false;
   private int numLiterals = 0;
   private int used = 0;
   private final boolean skipCorrupt;
   private final SerializationUtils utils;
   private RunLengthIntegerWriterV2.EncodingType currentEncoding;
-  private final BatchStruct batchStruct = new BatchStruct();
+  private final LookaheadStruct ls = new LookaheadStruct();
 
   public RunLengthIntegerReaderV2(InStream input, boolean signed,
       boolean skipCorrupt) throws IOException {
@@ -69,7 +69,7 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
   }
 
   private boolean handleFirstByte(boolean ignoreEof, int firstByte) throws EOFException {
-    isNvLeftoversRepeating = false;
+    areBatchLiteralsRepeating = false;
     if (firstByte < 0) {
       if (!ignoreEof) {
         throw new EOFException("Read past end of RLE integer from " + input);
@@ -82,7 +82,7 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
   }
 
   private boolean readDeltaValues(
-      int firstByte, BatchStruct expected) throws IOException {
+      int firstByte, LookaheadStruct expected) throws IOException {
 
     // extract the number of fixed bits
     int fb = (firstByte >>> 1) & 0x1f;
@@ -293,7 +293,7 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
   }
 
   private boolean readShortRepeatValues(
-      int firstByte, BatchStruct expected) throws IOException {
+      int firstByte, LookaheadStruct expected) throws IOException {
     // read the run length
     int len = firstByte & 0x07;
     // run lengths values are stored only after MIN_REPEAT value is met
@@ -348,7 +348,7 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
     return result;
   }
 
-  private static final class BatchStruct {
+  private static final class LookaheadStruct {
     public long value;
     public int repeats;
   }
@@ -401,18 +401,95 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
     //       nulls, so by definition we cannot be repeating, or that our caller is lazy and
     //       didn't set noNulls or isRepeating properly.
     previous.isRepeating = true;
-    // First read literals remaining from previous read.
-    int dataIx = nextVectorReadLeftovers(previous, data, previousLen);
-
-    // We will do optimized reads from delta and short-repeat segments until we decide to give up.
-    // We will not do it for !noNulls case; if there are nulls, we cannot be repeating.
-    boolean isBatching = previous.isRepeating && previous.noNulls;
-
-    if (isBatching) {
-      batchStruct.value = data[0];
-      batchStruct.repeats = dataIx; // 0 would make the value irrelevant.
+    if (!previous.noNulls) {
+      // We assume that if there are some nulls, but not all nulls, this is unlikely to be
+      // repeating, so just take the standard path.
+      int dataIx = 0;
+      if (used < numLiterals) {
+        // 1) Flatten the literals for the general case.
+        if (areBatchLiteralsRepeating) {
+          Arrays.fill(literals, used, numLiterals, literals[0]);
+          areBatchLiteralsRepeating = false;
+        }
+        // 2) Populate vector from these literals.
+        dataIx = nextVectorConsumeLiteralsWithNullsAfterRead(previous, data, previousLen, 0);
+      }
+      // 3) Go back to the general case.
+      nextVectorGeneralCase(previous, data, previousLen, dataIx);
+      return;
     }
-    while (dataIx < previousLen) {
+
+    // Read literals remaining from previous read and see if they are repeating.
+    ls.repeats = nextVectorReadLeftoversForLookahead(previous, data, previousLen);
+    if (!previous.isRepeating) {
+      // We are only here if areBatchLiteralsRepeating was false (otherwise we'd definitely
+      // still be isRepeating); the literals were already copied into data. Back to general case.
+      nextVectorGeneralCase(previous, data, previousLen, ls.repeats);
+      return;
+    }
+
+    ls.value = data[0]; // repeats == 0 would make the value irrelevant.
+    while (ls.repeats < previousLen) {
+      assert numLiterals == used;
+      numLiterals = used = 0;
+      // read the first 2 bits and determine the encoding type
+      int firstByte = input.read();
+      boolean hasMore = handleFirstByte(false, firstByte);
+      assert hasMore; // Would have thrown otherwise.
+      boolean doContinueLookahead = true;
+
+      switch (currentEncoding) {
+      case DIRECT: {
+        doContinueLookahead = false;
+        readDirectValues(firstByte);
+        break;
+      }
+      case PATCHED_BASE: {
+        doContinueLookahead = false;
+        readPatchedBaseValues(firstByte);
+        break;
+      }
+      case DELTA: {
+        doContinueLookahead = readDeltaValues(firstByte, ls);
+        break;
+      }
+      case SHORT_REPEAT: {
+        doContinueLookahead = readShortRepeatValues(firstByte, ls);
+        break;
+      }
+      default: throw new IOException("Unknown encoding " + currentEncoding);
+      }
+      if (!doContinueLookahead) {
+        // We just gave up on the lookeahead.
+        // 1) Fill the start of the vector with values, like next() would have done.
+        if (ls.repeats > 0) {
+          Arrays.fill(data, 0, ls.repeats, ls.value);
+        }
+        // 2) Finish with the literals we've read above.
+        int ix = nextVectorConsumeLiteralsNoNullAfterRead(previous, data, previousLen, ls.repeats);
+        // 3) Return to the general case.
+        nextVectorGeneralCase(previous, data, previousLen, ix);
+        return;
+      }
+
+      data[0] = ls.value; // We are still trying the lookahead.
+    }
+    int tooFarAheadSize = ls.repeats - previousLen;
+    assert tooFarAheadSize >= 0;
+    assert used == numLiterals;
+    if (tooFarAheadSize == 0) return;
+    // There are more repeating values than we need for this vector. Save into literals.
+    // nextVector MUST be called to handle areBatchLiteralsRepeating; "next()" will not work.
+    used = 0;
+    numLiterals = tooFarAheadSize;
+    literals[0] = ls.value;
+    areBatchLiteralsRepeating = true;
+  }
+
+  private void nextVectorGeneralCase(
+      ColumnVector previous, long[] data, int previousLen, int ix) throws IOException {
+    // Repeatedly fill and drain literals until we are done. Assumes no current literals.
+    while (ix < previousLen) {
       assert numLiterals == used;
       numLiterals = used = 0;
       // read the first 2 bits and determine the encoding type
@@ -420,96 +497,48 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
       boolean hasMore = handleFirstByte(false, firstByte);
       assert hasMore; // Would have thrown otherwise.
 
-      if (!isBatching) {
-        // Just do the regular old path.
-        switch (currentEncoding) {
-        case DIRECT: readDirectValues(firstByte); break;
-        case PATCHED_BASE: readPatchedBaseValues(firstByte); break;
-        case DELTA: readDeltaValues(firstByte, null); break;
-        case SHORT_REPEAT: readShortRepeatValues(firstByte, null); break;
-        default: throw new IOException("Unknown encoding " + currentEncoding);
-        }
-        // Consume some literals after read, and put them into data, as usual.
-        dataIx = nextVectorConsumeLiteralsAfterRead(previous, data, previousLen, dataIx);
+      switch (currentEncoding) {
+      case DIRECT: readDirectValues(firstByte); break;
+      case PATCHED_BASE: readPatchedBaseValues(firstByte); break;
+      case DELTA: readDeltaValues(firstByte, null); break;
+      case SHORT_REPEAT: readShortRepeatValues(firstByte, null); break;
+      default: throw new IOException("Unknown encoding " + currentEncoding);
+      }
 
+      // Consume some literals after read, and put them into data, as usual.
+      if (previous.noNulls) {
+        ix =  nextVectorConsumeLiteralsNoNullAfterRead(previous, data, previousLen, ix);
       } else {
-
-        switch (currentEncoding) {
-        case DIRECT: {
-          isBatching = false; // Give up on repeating optimization.
-          readDirectValues(firstByte);
-          break;
-        }
-        case PATCHED_BASE: {
-          isBatching = false; // Give up on repeating optimization.
-          readPatchedBaseValues(firstByte);
-          break;
-        }
-        case DELTA: {
-          // May give up on repeating optimization.
-          isBatching = readDeltaValues(firstByte, batchStruct);
-          break;
-        }
-        case SHORT_REPEAT: {
-          // May give up on repeating optimization.
-          isBatching = readShortRepeatValues(firstByte, batchStruct);
-          break;
-        }
-        default: throw new IOException("Unknown encoding " + currentEncoding);
-        }
-        if (!isBatching) {
-          // We just gave up on batching. Fill the start of vector with values, like the
-          // nextVectorConsumeLiteralsAfterRead would have done, and then keep processing
-          // literals like nothing happened.
-          Arrays.fill(data, 0, dataIx, batchStruct.value);
-          dataIx = nextVectorConsumeLiteralsAfterRead(previous, data, previousLen, dataIx);
-        } else {
-          int leftoversSize = batchStruct.repeats - previousLen;
-          if (leftoversSize > 0) {
-            // There are more repeating values than we need for this vector. Save into literals.
-            numLiterals = leftoversSize;
-            // nextVector MUST be called to handle isNvLeftoversRepeating; "next()" will not work.
-            isNvLeftoversRepeating = true;
-            literals[0] = batchStruct.value;
-            break;
-          }
-          data[0] = batchStruct.value;
-          dataIx = batchStruct.repeats;
-        }
+        ix = nextVectorConsumeLiteralsWithNullsAfterRead(previous, data, previousLen, ix);
       }
     }
   }
 
   /**
-   * After reading some literals, move them from literals to data.
+   * After reading some literals, move them from literals to data, not checking isNull.
    * Assumes we have already given up on isRepeating optimization.
    * @return The next unfilled index in the data array.
    */
-  private int nextVectorConsumeLiteralsAfterRead(
+  private int nextVectorConsumeLiteralsNoNullAfterRead(
       ColumnVector previous, long[] data, int previousLen, int ix) {
-    assert used == 0;
-    if (previous.noNulls) {
-      if (!previous.isRepeating) {
-        // No nulls, not repeating - just copy. TODO: shortcut even earlier? read into data?
-        int toCopy = Math.min(numLiterals, previousLen - ix);
-        System.arraycopy(literals, 0, data, ix, toCopy);
-        used = toCopy;
-        return ix + toCopy;
-      } else {
-        // This method is called when not batching, so isRepeating is very unlikely to be true.
-        // TODO: We could just set isRepeating to false and arraycopy.
-        // Same as nextVectorConsumeLiteralsWithNullsAfterRead, minus the nulls.
-        while (ix < previousLen && used < numLiterals) {
-          data[ix] = literals[used++];
-          if (previous.isRepeating && ix > 0 && (data[0] != data[ix])) {
-            previous.isRepeating = false;
-          }
-          ++ix;
-        }
-        return ix;
-      }
+    if (!previous.isRepeating) {
+      // No nulls, not repeating - just copy. TODO: shortcut even earlier? read into data?
+      int toCopy = Math.min(numLiterals - used, previousLen - ix);
+      System.arraycopy(literals, used, data, ix, toCopy);
+      used += toCopy;
+      return ix + toCopy;
     } else {
-      return nextVectorConsumeLiteralsWithNullsAfterRead(previous, data, previousLen, ix);
+      // This method is called when not batching, so isRepeating is very unlikely to be true.
+      // TODO: We could just set isRepeating to false and arraycopy.
+      // Same as nextVectorConsumeLiteralsWithNullsAfterRead, minus the nulls.
+      while (ix < previousLen && used < numLiterals) {
+        data[ix] = literals[used++];
+        if (previous.isRepeating && ix > 0 && (data[0] != data[ix])) {
+          previous.isRepeating = false;
+        }
+        ++ix;
+      }
+      return ix;
     }
   }
 
@@ -546,44 +575,34 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
    * about isRepeating handling in nextVector.
    * @return The next unfilled index in the data array.
    */
-  private int nextVectorReadLeftovers(ColumnVector previous, long[] data, int previousLen) {
+  private int nextVectorReadLeftoversForLookahead(
+      ColumnVector previous, long[] data, int previousLen) {
     // Copy remaining literals from the previous read.
+    assert previous.noNulls;
     int leftOver = Math.min(previousLen, numLiterals - used);
     if (leftOver == 0) return 0;
-    if (previous.noNulls) {
-      long repeatingValue = literals[0];
-      if (!isNvLeftoversRepeating) {
-        // If leftovers are not repeating, verify them element by element.
-        repeatingValue = literals[used];
-        for (int i = 1; i < leftOver; ++i) {
-          if (literals[used + i] != repeatingValue) {
-            previous.isRepeating = false;
-            // Leftovers are not repeating, copy literals to data.
-            System.arraycopy(literals, used, data, 0, leftOver);
-            break;
-          }
+    long repeatingValue = literals[0];
+    if (!areBatchLiteralsRepeating) {
+      // If leftovers are not repeating, verify them element by element.
+      repeatingValue = literals[used];
+      for (int i = 1; i < leftOver; ++i) {
+        if (literals[used + i] != repeatingValue) {
+          previous.isRepeating = false;
+          // Just copy the literals into data; the caller will fall back to general case.
+          System.arraycopy(literals, used, data, 0, leftOver);
+          break;
         }
       }
-      used += leftOver;
-      if (used == numLiterals) {
-        isNvLeftoversRepeating = false; // Done with repeating literals, if any.
-      }
-      if (previous.isRepeating) {
-        // Initialize the 0th element, if we still hope for isRepeating.
-        data[0] = repeatingValue;
-      }
-      return leftOver;
-    } else {
-      if (isNvLeftoversRepeating) {
-        // We could have an extra version of isNull/etc loop here, but let's just give up
-        // and fill the literals array, just like the old path used to do.
-        Arrays.fill(literals, used, numLiterals, literals[0]);
-        isNvLeftoversRepeating = false;
-      }
-      // We assume that if there are some nulls, but not all nulls, this is unlikely to be
-      // repeating, so just take the standard path.
-      return nextVectorConsumeLiteralsWithNullsAfterRead(previous, data, previousLen, 0);
     }
+    used += leftOver;
+    if (used == numLiterals) {
+      areBatchLiteralsRepeating = false; // Done with repeating literals, if any.
+    }
+    if (previous.isRepeating) {
+      // Initialize the 0th element, if we still hope for isRepeating.
+      data[0] = repeatingValue;
+    }
+    return leftOver;
   }
 
   @Override
