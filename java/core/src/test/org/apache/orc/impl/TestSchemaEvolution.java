@@ -36,9 +36,13 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.io.DiskRange;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.Decimal64ColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
 import org.apache.orc.Reader;
@@ -178,6 +182,332 @@ public class TestSchemaEvolution {
     batch = schemaOnRead.createRowBatch();
     rows.nextBatch(batch);
     assertEquals(74.72, ((DoubleColumnVector) batch.cols[0]).vector[0], 0.00000000001);
+    rows.close();
+  }
+
+  @Test
+  public void testFloatToDecimalEvolution() throws Exception {
+    testFilePath = new Path(workDir, "TestOrcFile." +
+      testCaseName.getMethodName() + ".orc");
+    TypeDescription schema = TypeDescription.createFloat();
+    Writer writer = OrcFile.createWriter(testFilePath,
+      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+        .bufferSize(10000));
+    VectorizedRowBatch batch = new VectorizedRowBatch(1, 1024);
+    DoubleColumnVector dcv = new DoubleColumnVector(1024);
+    batch.cols[0] = dcv;
+    batch.reset();
+    batch.size = 1;
+    dcv.vector[0] = 74.72f;
+    writer.addRowBatch(batch);
+    writer.close();
+
+    Reader reader = OrcFile.createReader(testFilePath,
+      OrcFile.readerOptions(conf).filesystem(fs));
+    TypeDescription schemaOnRead = TypeDescription.createDecimal().withPrecision(38).withScale(2);
+    RecordReader rows = reader.rows(reader.options().schema(schemaOnRead));
+    batch = schemaOnRead.createRowBatch();
+    rows.nextBatch(batch);
+    assertEquals("74.72", ((DecimalColumnVector) batch.cols[0]).vector[0].toString());
+    rows.close();
+  }
+
+  @Test
+  public void testFloatToDecimal64Evolution() throws Exception {
+    testFilePath = new Path(workDir, "TestOrcFile." +
+      testCaseName.getMethodName() + ".orc");
+    TypeDescription schema = TypeDescription.createFloat();
+    Writer writer = OrcFile.createWriter(testFilePath,
+      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+        .bufferSize(10000));
+    VectorizedRowBatch batch = new VectorizedRowBatch(1, 1024);
+    DoubleColumnVector dcv = new DoubleColumnVector(1024);
+    batch.cols[0] = dcv;
+    batch.reset();
+    batch.size = 1;
+    dcv.vector[0] = 74.72f;
+    writer.addRowBatch(batch);
+    writer.close();
+
+    Reader reader = OrcFile.createReader(testFilePath,
+      OrcFile.readerOptions(conf).filesystem(fs));
+    TypeDescription schemaOnRead = TypeDescription.createDecimal().withPrecision(10).withScale(2);
+    RecordReader rows = reader.rows(reader.options().schema(schemaOnRead));
+    batch = schemaOnRead.createRowBatchV2();
+    rows.nextBatch(batch);
+    assertEquals("74.72", ((Decimal64ColumnVector) batch.cols[0]).getScratchWritable().toString());
+    rows.close();
+  }
+
+  @Test
+  public void testDoubleToDecimalEvolution() throws Exception {
+    testFilePath = new Path(workDir, "TestOrcFile." +
+      testCaseName.getMethodName() + ".orc");
+    TypeDescription schema = TypeDescription.createDouble();
+    Writer writer = OrcFile.createWriter(testFilePath,
+      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+        .bufferSize(10000));
+    VectorizedRowBatch batch = new VectorizedRowBatch(1, 1024);
+    DoubleColumnVector dcv = new DoubleColumnVector(1024);
+    batch.cols[0] = dcv;
+    batch.reset();
+    batch.size = 1;
+    dcv.vector[0] = 74.72d;
+    writer.addRowBatch(batch);
+    writer.close();
+
+    Reader reader = OrcFile.createReader(testFilePath,
+      OrcFile.readerOptions(conf).filesystem(fs));
+    TypeDescription schemaOnRead = TypeDescription.createDecimal().withPrecision(38).withScale(2);
+    RecordReader rows = reader.rows(reader.options().schema(schemaOnRead));
+    batch = schemaOnRead.createRowBatch();
+    rows.nextBatch(batch);
+    assertEquals("74.72", ((DecimalColumnVector) batch.cols[0]).vector[0].toString());
+    rows.close();
+  }
+
+  @Test
+  public void testDoubleToDecimal64Evolution() throws Exception {
+    testFilePath = new Path(workDir, "TestOrcFile." +
+      testCaseName.getMethodName() + ".orc");
+    TypeDescription schema = TypeDescription.createDouble();
+    Writer writer = OrcFile.createWriter(testFilePath,
+      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+        .bufferSize(10000));
+    VectorizedRowBatch batch = new VectorizedRowBatch(1, 1024);
+    DoubleColumnVector dcv = new DoubleColumnVector(1024);
+    batch.cols[0] = dcv;
+    batch.reset();
+    batch.size = 1;
+    dcv.vector[0] = 74.72d;
+    writer.addRowBatch(batch);
+    writer.close();
+
+    Reader reader = OrcFile.createReader(testFilePath,
+      OrcFile.readerOptions(conf).filesystem(fs));
+    TypeDescription schemaOnRead = TypeDescription.createDecimal().withPrecision(10).withScale(2);
+    RecordReader rows = reader.rows(reader.options().schema(schemaOnRead));
+    batch = schemaOnRead.createRowBatchV2();
+    rows.nextBatch(batch);
+    assertEquals("74.72", ((Decimal64ColumnVector) batch.cols[0]).getScratchWritable().toString());
+    rows.close();
+  }
+
+  @Test
+  public void testLongToDecimalEvolution() throws Exception {
+    testFilePath = new Path(workDir, "TestOrcFile." +
+      testCaseName.getMethodName() + ".orc");
+    TypeDescription schema = TypeDescription.createLong();
+    Writer writer = OrcFile.createWriter(testFilePath,
+      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+        .bufferSize(10000));
+    VectorizedRowBatch batch = new VectorizedRowBatch(1, 1024);
+    LongColumnVector lcv = new LongColumnVector(1024);
+    batch.cols[0] = lcv;
+    batch.reset();
+    batch.size = 1;
+    lcv.vector[0] = 74L;
+    writer.addRowBatch(batch);
+    writer.close();
+
+    Reader reader = OrcFile.createReader(testFilePath,
+      OrcFile.readerOptions(conf).filesystem(fs));
+    TypeDescription schemaOnRead = TypeDescription.createDecimal().withPrecision(38).withScale(2);
+    RecordReader rows = reader.rows(reader.options().schema(schemaOnRead));
+    batch = schemaOnRead.createRowBatch();
+    rows.nextBatch(batch);
+    assertEquals("74", ((DecimalColumnVector) batch.cols[0]).vector[0].toString());
+    rows.close();
+  }
+
+  @Test
+  public void testLongToDecimal64Evolution() throws Exception {
+    testFilePath = new Path(workDir, "TestOrcFile." +
+      testCaseName.getMethodName() + ".orc");
+    TypeDescription schema = TypeDescription.createLong();
+    Writer writer = OrcFile.createWriter(testFilePath,
+      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+        .bufferSize(10000));
+    VectorizedRowBatch batch = new VectorizedRowBatch(1, 1024);
+    LongColumnVector lcv = new LongColumnVector(1024);
+    batch.cols[0] = lcv;
+    batch.reset();
+    batch.size = 1;
+    lcv.vector[0] = 74L;
+    writer.addRowBatch(batch);
+    writer.close();
+
+    Reader reader = OrcFile.createReader(testFilePath,
+      OrcFile.readerOptions(conf).filesystem(fs));
+    TypeDescription schemaOnRead = TypeDescription.createDecimal().withPrecision(10).withScale(2);
+    RecordReader rows = reader.rows(reader.options().schema(schemaOnRead));
+    batch = schemaOnRead.createRowBatchV2();
+    rows.nextBatch(batch);
+    assertEquals("74", ((Decimal64ColumnVector) batch.cols[0]).getScratchWritable().toString());
+    rows.close();
+  }
+
+  @Test
+  public void testDecimalToDecimalEvolution() throws Exception {
+    testFilePath = new Path(workDir, "TestOrcFile." +
+      testCaseName.getMethodName() + ".orc");
+    TypeDescription schema = TypeDescription.createDecimal().withPrecision(38).withScale(0);
+    Writer writer = OrcFile.createWriter(testFilePath,
+      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+        .bufferSize(10000));
+    VectorizedRowBatch batch = new VectorizedRowBatch(1, 1024);
+    DecimalColumnVector dcv = new DecimalColumnVector(1024, 38, 2);
+    batch.cols[0] = dcv;
+    batch.reset();
+    batch.size = 1;
+    dcv.vector[0] = new HiveDecimalWritable("74.19");
+    writer.addRowBatch(batch);
+    writer.close();
+
+    Reader reader = OrcFile.createReader(testFilePath,
+      OrcFile.readerOptions(conf).filesystem(fs));
+    TypeDescription schemaOnRead = TypeDescription.createDecimal().withPrecision(38).withScale(1);
+    RecordReader rows = reader.rows(reader.options().schema(schemaOnRead));
+    batch = schemaOnRead.createRowBatch();
+    rows.nextBatch(batch);
+    assertEquals("74.2", ((DecimalColumnVector) batch.cols[0]).vector[0].toString());
+    rows.close();
+  }
+
+  @Test
+  public void testDecimalToDecimal64Evolution() throws Exception {
+    testFilePath = new Path(workDir, "TestOrcFile." +
+      testCaseName.getMethodName() + ".orc");
+    TypeDescription schema = TypeDescription.createDecimal().withPrecision(38).withScale(2);
+    Writer writer = OrcFile.createWriter(testFilePath,
+      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+        .bufferSize(10000));
+    VectorizedRowBatch batch = new VectorizedRowBatch(1, 1024);
+    DecimalColumnVector dcv = new DecimalColumnVector(1024, 38, 0);
+    batch.cols[0] = dcv;
+    batch.reset();
+    batch.size = 1;
+    dcv.vector[0] = new HiveDecimalWritable("74.19");
+    writer.addRowBatch(batch);
+    writer.close();
+
+    Reader reader = OrcFile.createReader(testFilePath,
+      OrcFile.readerOptions(conf).filesystem(fs));
+    TypeDescription schemaOnRead = TypeDescription.createDecimal().withPrecision(10).withScale(1);
+    RecordReader rows = reader.rows(reader.options().schema(schemaOnRead));
+    batch = schemaOnRead.createRowBatchV2();
+    rows.nextBatch(batch);
+    assertEquals(742, ((Decimal64ColumnVector) batch.cols[0]).vector[0]);
+    rows.close();
+  }
+
+  @Test
+  public void testStringToDecimalEvolution() throws Exception {
+    testFilePath = new Path(workDir, "TestOrcFile." +
+      testCaseName.getMethodName() + ".orc");
+    TypeDescription schema = TypeDescription.createString();
+    Writer writer = OrcFile.createWriter(testFilePath,
+      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+        .bufferSize(10000));
+    VectorizedRowBatch batch = new VectorizedRowBatch(1, 1024);
+    BytesColumnVector bcv = new BytesColumnVector(1024);
+    batch.cols[0] = bcv;
+    batch.reset();
+    batch.size = 1;
+    bcv.vector[0] = "74.19".getBytes();
+    bcv.length[0] = "74.19".getBytes().length;
+    writer.addRowBatch(batch);
+    writer.close();
+
+    Reader reader = OrcFile.createReader(testFilePath,
+      OrcFile.readerOptions(conf).filesystem(fs));
+    TypeDescription schemaOnRead = TypeDescription.createDecimal().withPrecision(38).withScale(1);
+    RecordReader rows = reader.rows(reader.options().schema(schemaOnRead));
+    batch = schemaOnRead.createRowBatch();
+    rows.nextBatch(batch);
+    assertEquals("74.2", ((DecimalColumnVector) batch.cols[0]).vector[0].toString());
+    rows.close();
+  }
+
+  @Test
+  public void testStringToDecimal64Evolution() throws Exception {
+    testFilePath = new Path(workDir, "TestOrcFile." +
+      testCaseName.getMethodName() + ".orc");
+    TypeDescription schema = TypeDescription.createString();
+    Writer writer = OrcFile.createWriter(testFilePath,
+      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+        .bufferSize(10000));
+    VectorizedRowBatch batch = new VectorizedRowBatch(1, 1024);
+    BytesColumnVector bcv = new BytesColumnVector(1024);
+    batch.cols[0] = bcv;
+    batch.reset();
+    batch.size = 1;
+    bcv.vector[0] = "74.19".getBytes();
+    bcv.length[0] = "74.19".getBytes().length;
+    writer.addRowBatch(batch);
+    writer.close();
+
+    Reader reader = OrcFile.createReader(testFilePath,
+      OrcFile.readerOptions(conf).filesystem(fs));
+    TypeDescription schemaOnRead = TypeDescription.createDecimal().withPrecision(10).withScale(1);
+    RecordReader rows = reader.rows(reader.options().schema(schemaOnRead));
+    batch = schemaOnRead.createRowBatchV2();
+    rows.nextBatch(batch);
+    assertEquals(742, ((Decimal64ColumnVector) batch.cols[0]).vector[0]);
+    rows.close();
+  }
+
+  @Test
+  public void testTimestampToDecimalEvolution() throws Exception {
+    testFilePath = new Path(workDir, "TestOrcFile." +
+      testCaseName.getMethodName() + ".orc");
+    TypeDescription schema = TypeDescription.createTimestamp();
+    Writer writer = OrcFile.createWriter(testFilePath,
+      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+        .bufferSize(10000));
+    VectorizedRowBatch batch = new VectorizedRowBatch(1, 1024);
+    TimestampColumnVector tcv = new TimestampColumnVector(1024);
+    batch.cols[0] = tcv;
+    batch.reset();
+    batch.size = 1;
+    tcv.time[0] = 74000L;
+    writer.addRowBatch(batch);
+    writer.close();
+
+    Reader reader = OrcFile.createReader(testFilePath,
+      OrcFile.readerOptions(conf).filesystem(fs));
+    TypeDescription schemaOnRead = TypeDescription.createDecimal().withPrecision(38).withScale(1);
+    RecordReader rows = reader.rows(reader.options().schema(schemaOnRead));
+    batch = schemaOnRead.createRowBatch();
+    rows.nextBatch(batch);
+    assertEquals("74", ((DecimalColumnVector) batch.cols[0]).vector[0].toString());
+    rows.close();
+  }
+
+  @Test
+  public void testTimestampToDecimal64Evolution() throws Exception {
+    testFilePath = new Path(workDir, "TestOrcFile." +
+      testCaseName.getMethodName() + ".orc");
+    TypeDescription schema = TypeDescription.createTimestamp();
+    Writer writer = OrcFile.createWriter(testFilePath,
+      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+        .bufferSize(10000));
+    VectorizedRowBatch batch = new VectorizedRowBatch(1, 1024);
+    TimestampColumnVector tcv = new TimestampColumnVector(1024);
+    batch.cols[0] = tcv;
+    batch.reset();
+    batch.size = 1;
+    tcv.time[0] = 74000L;
+    writer.addRowBatch(batch);
+    writer.close();
+
+    Reader reader = OrcFile.createReader(testFilePath,
+      OrcFile.readerOptions(conf).filesystem(fs));
+    TypeDescription schemaOnRead = TypeDescription.createDecimal().withPrecision(10).withScale(1);
+    RecordReader rows = reader.rows(reader.options().schema(schemaOnRead));
+    batch = schemaOnRead.createRowBatchV2();
+    rows.nextBatch(batch);
+    assertEquals(740, ((Decimal64ColumnVector) batch.cols[0]).vector[0]);
     rows.close();
   }
 
