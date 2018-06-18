@@ -27,6 +27,7 @@ import java.util.Map;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.Decimal64ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
@@ -1162,7 +1163,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     private AnyIntegerTreeReader anyIntegerAsLongTreeReader;
 
     private LongColumnVector longColVector;
-    private DecimalColumnVector decimalColVector;
+    private ColumnVector decimalColVector;
 
     DecimalFromAnyIntegerTreeReader(int columnId, TypeDescription fileType, Context context)
         throws IOException {
@@ -1177,7 +1178,11 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       long longValue = longColVector.vector[elementNum];
       HiveDecimalWritable hiveDecimalWritable = new HiveDecimalWritable(longValue);
       // The DecimalColumnVector will enforce precision and scale and set the entry to null when out of bounds.
-      decimalColVector.set(elementNum, hiveDecimalWritable);
+      if (decimalColVector instanceof Decimal64ColumnVector) {
+        ((Decimal64ColumnVector) decimalColVector).set(elementNum, hiveDecimalWritable);
+      } else {
+        ((DecimalColumnVector) decimalColVector).set(elementNum, hiveDecimalWritable);
+      }
     }
 
     @Override
@@ -1187,7 +1192,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       if (longColVector == null) {
         // Allocate column vector for file; cast column vector for reader.
         longColVector = new LongColumnVector();
-        decimalColVector = (DecimalColumnVector) previousVector;
+        decimalColVector = previousVector;
       }
       // Read present/isNull stream
       anyIntegerAsLongTreeReader.nextVector(longColVector, isNull, batchSize);
@@ -1201,7 +1206,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     private FloatTreeReader floatTreeReader;
 
     private DoubleColumnVector doubleColVector;
-    private DecimalColumnVector decimalColVector;
+    private ColumnVector decimalColVector;
 
     DecimalFromFloatTreeReader(int columnId, TypeDescription readerType)
         throws IOException {
@@ -1218,7 +1223,11 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
             HiveDecimal.create(Float.toString(floatValue));
         if (decimalValue != null) {
           // The DecimalColumnVector will enforce precision and scale and set the entry to null when out of bounds.
-          decimalColVector.set(elementNum, decimalValue);
+          if (decimalColVector instanceof Decimal64ColumnVector) {
+            ((Decimal64ColumnVector) decimalColVector).set(elementNum, decimalValue);
+          } else {
+            ((DecimalColumnVector) decimalColVector).set(elementNum, decimalValue);
+          }
         } else {
           decimalColVector.noNulls = false;
           decimalColVector.isNull[elementNum] = true;
@@ -1236,7 +1245,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       if (doubleColVector == null) {
         // Allocate column vector for file; cast column vector for reader.
         doubleColVector = new DoubleColumnVector();
-        decimalColVector = (DecimalColumnVector) previousVector;
+        decimalColVector = previousVector;
       }
       // Read present/isNull stream
       floatTreeReader.nextVector(doubleColVector, isNull, batchSize);
@@ -1250,7 +1259,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     private DoubleTreeReader doubleTreeReader;
 
     private DoubleColumnVector doubleColVector;
-    private DecimalColumnVector decimalColVector;
+    private ColumnVector decimalColVector;
 
     DecimalFromDoubleTreeReader(int columnId, TypeDescription readerType)
         throws IOException {
@@ -1264,7 +1273,11 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       HiveDecimal value =
           HiveDecimal.create(Double.toString(doubleColVector.vector[elementNum]));
       if (value != null) {
-        decimalColVector.set(elementNum, value);
+        if (decimalColVector instanceof Decimal64ColumnVector) {
+          ((Decimal64ColumnVector) decimalColVector).set(elementNum, value);
+        } else {
+          ((DecimalColumnVector) decimalColVector).set(elementNum, value);
+        }
       } else {
         decimalColVector.noNulls = false;
         decimalColVector.isNull[elementNum] = true;
@@ -1278,7 +1291,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       if (doubleColVector == null) {
         // Allocate column vector for file; cast column vector for reader.
         doubleColVector = new DoubleColumnVector();
-        decimalColVector = (DecimalColumnVector) previousVector;
+        decimalColVector = previousVector;
       }
       // Read present/isNull stream
       doubleTreeReader.nextVector(doubleColVector, isNull, batchSize);
@@ -1292,7 +1305,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     private TreeReader stringGroupTreeReader;
 
     private BytesColumnVector bytesColVector;
-    private DecimalColumnVector decimalColVector;
+    private ColumnVector decimalColVector;
 
     DecimalFromStringGroupTreeReader(int columnId, TypeDescription fileType,
         TypeDescription readerType, Context context) throws IOException {
@@ -1307,7 +1320,11 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       HiveDecimal value = parseDecimalFromString(string);
       if (value != null) {
         // The DecimalColumnVector will enforce precision and scale and set the entry to null when out of bounds.
-        decimalColVector.set(elementNum, value);
+        if (decimalColVector instanceof Decimal64ColumnVector) {
+          ((Decimal64ColumnVector) decimalColVector).set(elementNum, value);
+        } else {
+          ((DecimalColumnVector) decimalColVector).set(elementNum, value);
+        }
       } else {
         decimalColVector.noNulls = false;
         decimalColVector.isNull[elementNum] = true;
@@ -1321,7 +1338,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       if (bytesColVector == null) {
         // Allocate column vector for file; cast column vector for reader.
         bytesColVector = new BytesColumnVector();
-        decimalColVector = (DecimalColumnVector) previousVector;
+        decimalColVector = previousVector;
       }
       // Read present/isNull stream
       stringGroupTreeReader.nextVector(bytesColVector, isNull, batchSize);
@@ -1335,7 +1352,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     private TimestampTreeReader timestampTreeReader;
 
     private TimestampColumnVector timestampColVector;
-    private DecimalColumnVector decimalColVector;
+    private ColumnVector decimalColVector;
 
     DecimalFromTimestampTreeReader(int columnId, Context context) throws IOException {
       super(columnId);
@@ -1350,7 +1367,11 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       HiveDecimal value = HiveDecimal.create(Double.toString(doubleValue));
       if (value != null) {
         // The DecimalColumnVector will enforce precision and scale and set the entry to null when out of bounds.
-        decimalColVector.set(elementNum, value);
+        if (decimalColVector instanceof Decimal64ColumnVector) {
+          ((Decimal64ColumnVector) decimalColVector).set(elementNum, value);
+        } else {
+          ((DecimalColumnVector) decimalColVector).set(elementNum, value);
+        }
       } else {
         decimalColVector.noNulls = false;
         decimalColVector.isNull[elementNum] = true;
@@ -1364,7 +1385,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       if (timestampColVector == null) {
         // Allocate column vector for file; cast column vector for reader.
         timestampColVector = new TimestampColumnVector();
-        decimalColVector = (DecimalColumnVector) previousVector;
+        decimalColVector = previousVector;
       }
       // Read present/isNull stream
       timestampTreeReader.nextVector(timestampColVector, isNull, batchSize);
@@ -1380,7 +1401,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     private DecimalColumnVector fileDecimalColVector;
     private int filePrecision;
     private int fileScale;
-    private DecimalColumnVector decimalColVector;
+    private ColumnVector decimalColVector;
 
     DecimalFromDecimalTreeReader(int columnId, TypeDescription fileType, TypeDescription readerType, Context context)
         throws IOException {
@@ -1394,7 +1415,11 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     @Override
     public void setConvertVectorElement(int elementNum) throws IOException {
 
-      decimalColVector.set(elementNum, fileDecimalColVector.vector[elementNum]);
+      if (decimalColVector instanceof Decimal64ColumnVector) {
+        ((Decimal64ColumnVector) decimalColVector).set(elementNum, fileDecimalColVector.vector[elementNum]);
+      } else {
+        ((DecimalColumnVector) decimalColVector).set(elementNum, fileDecimalColVector.vector[elementNum]);
+      }
 
     }
 
@@ -1405,7 +1430,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       if (fileDecimalColVector == null) {
         // Allocate column vector for file; cast column vector for reader.
         fileDecimalColVector = new DecimalColumnVector(filePrecision, fileScale);
-        decimalColVector = (DecimalColumnVector) previousVector;
+        decimalColVector = previousVector;
       }
       // Read present/isNull stream
       decimalTreeReader.nextVector(fileDecimalColVector, isNull, batchSize);
