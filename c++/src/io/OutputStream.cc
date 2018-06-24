@@ -86,12 +86,20 @@ namespace orc {
     return result.str();
   }
 
+  std::string BufferedOutputStream::getData() {
+    return dataBuffer->data();
+  }
+
   uint64_t BufferedOutputStream::getSize() const {
     return dataBuffer->size();
   }
 
   uint64_t BufferedOutputStream::flush() {
     uint64_t dataSize = dataBuffer->size();
+    std::cout << "flush" << dataBuffer->size() << std::endl;
+    for (unsigned int i=0; i< dataBuffer->size();i++){
+      std::cout << dataBuffer->data()[i] << "=";
+    }
     outputStream->write(dataBuffer->data(), dataBuffer->size());
     dataBuffer->resize(0);
     return dataSize;

@@ -62,7 +62,7 @@ namespace orc {
     virtual std::string getName() const;
     virtual uint64_t getSize() const;
     virtual uint64_t flush();
-
+    virtual std::string getData();
     virtual bool isCompressed() const { return false; }
   };
 

@@ -32,6 +32,10 @@
 #include "wrap/snappy-wrapper.h"
 
 namespace orc {
+  char* string_as_array(std::string* str) {
+  return str->empty() ? NULL : &*str->begin();
+}
+
 
   class CompressionStreamBase: public BufferedOutputStream {
   public:
@@ -150,6 +154,7 @@ namespace orc {
   }
 
   bool CompressionStream::Next(void** data, int*size) {
+    std::cout << " in |  outputsize->" << outputSize << std::endl;
     if (bufferSize != 0) {
       // adjust 3 bytes for the compression header
       if (outputPosition + 3 >= outputSize) {
@@ -167,20 +172,29 @@ namespace orc {
 
       uint64_t totalCompressedSize = doStreamingCompression();
 
+      // std::cout<< rawInputBuffer.data() << " in next " << static_cast<size_t>(bufferSize) << std::endl;
+      // uint64_t headeroffset = outputPosition - totalCompressedSize - 3;
+      // if (headeroffset < 0) { headeroffset += outputSize;}
       char * header = outputBuffer + outputPosition - totalCompressedSize - 3;
+      std::cout << "header offset" << outputPosition - totalCompressedSize - 3 << std::endl;
       if (totalCompressedSize >= static_cast<unsigned long>(bufferSize)) {
         writeHeader(header, static_cast<size_t>(bufferSize), true);
         memcpy(
           header + 3,
           rawInputBuffer.data(),
           static_cast<size_t>(bufferSize));
-
+        std::cout << totalCompressedSize << " <-compressed |  buffer->" << bufferSize << std::endl;
         int backup = static_cast<int>(totalCompressedSize) - bufferSize;
+        // if (outputPosition > outputSize){
+        //      outputPosition -= outputSize;
+        // }
         BufferedOutputStream::BackUp(backup);
         outputPosition -= backup;
         outputSize -= backup;
+        std::cout << "write origin once  pos" << outputPosition << " backup" << backup<< " "<< bufferSize<<std::endl;
       } else {
         writeHeader(header, totalCompressedSize, false);
+        std::cout << "write once\n";
       }
     }
 
@@ -229,8 +243,9 @@ namespace orc {
     }
 
     strm.avail_in = static_cast<unsigned int>(bufferSize);
+    // std::cout << "in:----" << strm.avail_in <<" "<< static_cast<unsigned char*>(rawInputBuffer.data())<<std::endl;
     strm.next_in = rawInputBuffer.data();
-
+    // std::cout<< "---------------size:" << outputSize << std::endl;
     do {
       if (outputPosition >= outputSize) {
         if (!BufferedOutputStream::Next(
@@ -248,7 +263,7 @@ namespace orc {
 
       int ret = deflate(&strm, Z_FINISH);
       outputPosition = outputSize - static_cast<int>(strm.avail_out);
-
+      std::cout << "position zlib:" <<outputPosition << " "<< strm.total_out << std::endl;
       if (ret == Z_STREAM_END) {
         break;
       } else if (ret == Z_OK) {
@@ -697,6 +712,7 @@ DIAGNOSTIC_POP
       outputBufferLength = 0;
       inputBufferPtr += availSize;
       remainingLength -= availSize;
+      std::cout << "read origin once\n" ;  
     } else if (state == DECOMPRESS_START) {
       // Get contiguous bytes of compressed block.
       const char *compressed = inputBufferPtr;
@@ -710,7 +726,6 @@ DIAGNOSTIC_POP
         ::memcpy(inputBuffer.data(), inputBufferPtr, availSize);
         inputBufferPtr += availSize;
         compressed = inputBuffer.data();
-
         for (size_t pos = availSize; pos < remainingLength; ) {
           readBuffer(true);
           size_t avail =
@@ -723,6 +738,7 @@ DIAGNOSTIC_POP
         }
       }
 
+      //    decompress, I need to know where the compressed  comes from
       outputBufferLength = decompress(compressed, remainingLength,
                                       outputBuffer.data(),
                                       outputBuffer.capacity());
@@ -812,13 +828,38 @@ DIAGNOSTIC_POP
 
   uint64_t SnappyCompressionStream::doStreamingCompression() {
     size_t compressedSize;
+    // if (outputPosition >= outputSize) {
+    //   if (!BufferedOutputStream::Next(
+    //     reinterpret_cast<void **>(&outputBuffer),
+    //     &outputSize)) {
+    //     throw std::runtime_error(
+    //       "Failed to get next output buffer from output stream.");
+    //   }
+    //   std::cout << "alert\n";
+    //   outputPosition = 0;
+    // }
+
     void *data = rawInputBuffer.data();
-    size_t size = static_cast<size_t>(rawInputBuffer.size());
+    // size_t size = static_cast<size_t>(strlen(static_cast<const char *>(data)));
+    // size_t size = static_cast<size_t>(rawInputBuffer.size());
     snappy::RawCompress(static_cast<const char *>(data), 
-                        size, 
-                        outputBuffer, 
+                        bufferSize, 
+                        outputBuffer + outputPosition, 
                         &compressedSize);
     outputPosition += static_cast<int>(compressedSize);
+    std::cout << "pos:---" << outputPosition << " output size" <<outputSize <<std::endl;
+
+   if (outputPosition >= outputSize){
+    outputPosition -= outputSize;
+    if (!BufferedOutputStream::Next(
+        reinterpret_cast<void **>(&outputBuffer),
+        &outputSize)) {
+        throw std::runtime_error(
+          "Failed to get next output buffer from output stream.");
+      }
+      std::cout << "alert\n";
+      
+   }
     return compressedSize;
   }
 
@@ -858,20 +899,23 @@ DIAGNOSTIC_POP
                                                  uint64_t length,
                                                  char *output,
                                                  size_t maxOutputLength) {
+    // std::cout << "entered"<<std::endl << input << std::endl;
     size_t outLength;
     if (!snappy::GetUncompressedLength(input, length, &outLength)) {
-      throw ParseError("SnappyDecompressionStream choked on corrupt input");
+      throw ParseError("SnappyDecompressionStream choked on corrupt input1");
     }
-
+    // std::cout << std::endl << outLength << " <- outLength " << " " << length << std::endl;
     if (outLength > maxOutputLength) {
       throw std::logic_error("Snappy length exceeds block size");
     }
 
     if (!snappy::RawUncompress(input, length, output)) {
-      throw ParseError("SnappyDecompressionStream choked on corrupt input");
+      throw ParseError("SnappyDecompressionStream choked on corrupt input2");
     }
     return outLength;
   }
+
+
 
   class LzoDecompressionStream: public BlockDecompressionStream {
   public:
@@ -969,8 +1013,14 @@ DIAGNOSTIC_POP
         (new SnappyCompressionStream(
                 outStream, level, bufferCapacity, compressionBlockSize, pool));
     }
+    case CompressionKind_LZ4:{
+      std::cout << "lz4";
+      int level=0;
+      return std::unique_ptr<BufferedOutputStream>
+        (new SnappyCompressionStream(
+                outStream, level, bufferCapacity, compressionBlockSize, pool));
+    }
     case CompressionKind_LZO:
-    case CompressionKind_LZ4:
     default:
       throw NotImplementedYet("compression codec");
     }

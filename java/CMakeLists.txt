@@ -37,10 +37,10 @@ add_custom_command(
 
 add_custom_target(java_build ALL DEPENDS ${ORC_JARS})
 
-add_test(
-  NAME java-test
-  COMMAND mvn -Pcmake -Dbuild.dir=${CMAKE_CURRENT_BINARY_DIR} test
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+# add_test(
+#   NAME java-test
+#   COMMAND mvn -Pcmake -Dbuild.dir=${CMAKE_CURRENT_BINARY_DIR} test
+#   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 install(
   FILES ${ORC_JARS}

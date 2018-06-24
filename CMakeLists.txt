@@ -31,7 +31,7 @@ option (ANALYZE_JAVA
 
 option (BUILD_LIBHDFSPP
     "Include LIBHDFSPP library in the build process"
-     ON)
+     OFF)
 
 option(BUILD_CPP_TESTS
     "Build the googletest unit tests"

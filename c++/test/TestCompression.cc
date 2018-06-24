@@ -37,6 +37,7 @@ namespace orc {
         bool capitalized = std::rand() % 2 == 0;
         data[i] = capitalized ? static_cast<char>('A' + std::rand() % 26)
                               : static_cast<char>('a' + std::rand() % 26);
+        std::cout << data[i] << "+";
       } else {
         data[i] = static_cast<char>(std::rand() % 256);
       }
@@ -61,6 +62,7 @@ namespace orc {
     while (decompressStream->Next(
       reinterpret_cast<const void**>(&decompressedBuffer),
       &decompressedSize)) {
+      // std::cout << "in decompressAndVerify " << decompressedBuffer << std::endl;
       for (int i = 0; i < decompressedSize; ++i) {
         EXPECT_LT(static_cast<size_t>(pos), size);
         EXPECT_EQ(data[pos], decompressedBuffer[i]);
@@ -95,6 +97,7 @@ namespace orc {
       size_t copy_size = std::min(
         static_cast<size_t>(compressBufferSize),
         dataSize);
+      // std::cout<< "copy_size" << copy_size << " " << data+pos <<std::endl;
       memcpy(compressBuffer, data + pos, copy_size);
 
       if (copy_size == dataSize) {
@@ -107,6 +110,7 @@ namespace orc {
 
     EXPECT_EQ(0, dataSize);
     compressStream->flush();
+
   }
 
   void compress_original_string(orc::CompressionKind kind) {
@@ -133,9 +137,12 @@ namespace orc {
                         *pool);
   }
 
-  TEST(TestCompression, zlib_compress_original_string) {
-    compress_original_string(CompressionKind_ZLIB);
-  }
+  // TEST(TestCompression, zlib_compress_original_string) {
+  //   compress_original_string(CompressionKind_ZLIB);
+  // }
+  // TEST(TestCompression, snappy_compress_original_string) {
+  //   compress_original_string(CompressionKind_SNAPPY);
+  // }
 
   void zlib_compress_simple_repeated_string(orc::CompressionKind kind) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
@@ -145,7 +152,7 @@ namespace orc {
     uint64_t block = 128;
 
     // simple repeated string (50 'a's) which should be compressed
-    char testData [] = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    char testData [] = "aaaaaaaaaaaaaaaaaaaaaaaaaaasdfaaaaaaaaaaaaaaaaaaaa";
     compressAndVerify(kind,
                       &memStream,
                       CompressionStrategy_SPEED,
@@ -161,9 +168,12 @@ namespace orc {
                         *pool);
   }
 
-  TEST(TestCompression, zlib_compress_simple_repeated_string) {
-    zlib_compress_simple_repeated_string(CompressionKind_ZLIB);
-  }
+  // TEST(TestCompression, zlib_compress_simple_repeated_string) {
+  //   zlib_compress_simple_repeated_string(CompressionKind_ZLIB);
+  // }
+  // TEST(TestCompression, snappy_compress_simple_repeated_string) {
+  //   zlib_compress_simple_repeated_string(CompressionKind_SNAPPY);
+  // }
 
   void compress_two_blocks(orc::CompressionKind kind) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
@@ -175,7 +185,7 @@ namespace orc {
     // testData will be compressed in two blocks
     char testData [170];
     for (int i = 0; i < 170; ++i) {
-      testData[i] = 'a';
+      testData[i] = 'b';
     }
     compressAndVerify(kind,
                       &memStream,
@@ -192,21 +202,27 @@ namespace orc {
                         *pool);
   }
 
-  TEST(TestCompression, zlib_compress_two_blocks) {
-    compress_two_blocks(CompressionKind_ZLIB);
-  }
+  // TEST(TestCompression, zlib_compress_two_blocks) {
+  //   compress_two_blocks(CompressionKind_ZLIB);
+  // }
+
+  // TEST(TestCompression, snappy_compress_two_blocks) {
+  //   compress_two_blocks(CompressionKind_SNAPPY);
+  // }
 
   void compress_random_letters(orc::CompressionKind kind) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool * pool = getDefaultPool();
 
-    uint64_t capacity = 4096;
-    uint64_t block = 1024;
-    size_t dataSize = 1024 * 1024; // 1M
+    uint64_t capacity = 1024;
+    uint64_t block = 64;
+    size_t dataSize = 1024 ; // 1M
 
     // testData will be compressed in two blocks
     char * testData = new char [dataSize];
+
     generateRandomData(testData, dataSize, true);
+        std::cout << "outputData -> " << testData << std::endl;
     compressAndVerify(kind,
                       &memStream,
                       CompressionStrategy_SPEED,
@@ -225,6 +241,10 @@ namespace orc {
 
   TEST(TestCompression, zlib_compress_random_letters) {
     compress_random_letters(CompressionKind_ZLIB);
+  }
+
+  TEST(TestCompression, snappy_compress_random_letters) {
+    compress_random_letters(CompressionKind_SNAPPY);
   }
 
   void compress_random_bytes(orc::CompressionKind kind) {
@@ -254,9 +274,13 @@ namespace orc {
     delete [] testData;
   }
 
-  TEST(TestCompression, zlib_compress_random_bytes) {
-    compress_random_bytes(CompressionKind_ZLIB);
-  }
+  // TEST(TestCompression, zlib_compress_random_bytes) {
+  //   compress_random_bytes(CompressionKind_ZLIB);
+  // }
+
+  // TEST(TestCompression, snappy_compress_random_bytes) {
+  //   compress_random_bytes(CompressionKind_SNAPPY);
+  // }
 
   void protobuff_compression(orc::CompressionKind kind,
                              proto::CompressionKind protoKind) {
@@ -309,7 +333,11 @@ namespace orc {
     }
   }
 
-  TEST(TestCompression, zlib_protobuff_compression) {
-    protobuff_compression(CompressionKind_ZLIB, proto::ZLIB);
-  }
+  // TEST(TestCompression, zlib_protobuff_compression) {
+  //   protobuff_compression(CompressionKind_ZLIB, proto::ZLIB);
+  // }
+
+  // TEST(TestCompression, snappy_protobuff_compression) {
+  //   protobuff_compression(CompressionKind_SNAPPY, proto::SNAPPY);
+  // }
 }

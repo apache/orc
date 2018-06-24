@@ -281,9 +281,9 @@ int main(int argc, char* argv[]) {
   std::string output;
   std::string schema;
   uint64_t stripeSize = (128 << 20); // 128M
-  uint64_t blockSize = 64 << 10;     // 64K
+  uint64_t blockSize = 64 << 2;     // 64K
   uint64_t batchSize = 1024;
-  orc::CompressionKind compression = orc::CompressionKind_ZLIB;
+  orc::CompressionKind compression = orc::CompressionKind_SNAPPY;
 
   static struct option longOptions[] = {
     {"help", no_argument, ORC_NULLPTR, 'h'},
@@ -457,7 +457,7 @@ int main(int argc, char* argv[]) {
       clock_t c_start = clock();
 
       writer->add(*rowBatch);
-
+      std::cout << "add succeeded" << std::endl;
       totalCPUTime += (clock() - c_start);
       gettimeofday(&t_end, nullptr);
       totalElapsedTime +=

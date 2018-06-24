@@ -42,4 +42,4 @@ target_link_libraries (tool-test
   ${GTEST_LIBRARIES}
 )
 
-add_test (tool-test tool-test ${EXAMPLE_DIRECTORY} ${PROJECT_BINARY_DIR})
+# add_test (tool-test tool-test ${EXAMPLE_DIRECTORY} ${PROJECT_BINARY_DIR})
