@@ -212,6 +212,7 @@
               <exclude>**/*.orc</exclude>
               <exclude>**/*.out</exclude>
               <exclude>**/*.schema</exclude>
+              <exclude>**/*.md</exclude>
               <exclude>**/target/**</exclude>
               <exclude>.idea/**</exclude>
             </excludes>
