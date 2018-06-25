@@ -54,3 +54,5 @@ script:
   - cd build
   - cmake -DANALYZE_JAVA=ON ..
   - make package test-out
+  - cd ../java
+  - mvn apache-rat:check
