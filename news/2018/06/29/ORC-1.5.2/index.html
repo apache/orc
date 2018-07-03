@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>ORC 1.0.0 Released</title>
+  <title>ORC 1.5.2 Released</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="generator" content="Jekyll v3.7.3">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
@@ -155,8 +155,8 @@
       <div class="unit four-fifths">
         <article>
   <h2>
-    ORC 1.0.0 Released
-    <a href="/news/2016/01/25/ORC-1.0.0/" class="permalink" title="Permalink">∞</a>
+    ORC 1.5.2 Released
+    <a href="/news/2018/06/29/ORC-1.5.2/" class="permalink" title="Permalink">∞</a>
   </h2>
   <span class="post-category">
     <span class="label">
@@ -165,58 +165,43 @@
   </span>
   <div class="post-meta">
     <span class="post-date">
-      25 Jan 2016
+      29 Jun 2018
     </span>
-    <a href="https://people.apache.org/~omalley" class="post-author">
-      <img src="https://people.apache.org/~omalley/omalley.png"
-           class="avatar" alt="omalley avatar"
+    <a href="https://people.apache.org/~prasanthj" class="post-author">
+      <img src="https://people.apache.org/~prasanthj/prasanthj.png"
+           class="avatar" alt="prasanthj avatar"
            width="24" height="24">
-      omalley
+      prasanthj
     </a>
   </div>
   <div class="post-content">
-    <p>The ORC team is excited to announce the release of ORC v1.0.0. This release
-contains the native C++ ORC reader and some tools.</p>
+    <p>The ORC team is excited to announce the release of ORC v1.5.2.</p>
 
 <ul>
-  <li>Released: 25 January 2016</li>
-  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-1.0.0/orc-1.0.0.tgz">orc-1.0.0.tgz</a></li>
-  <li><a href="https://archive.apache.org/dist/orc/orc-1.0.0/orc-1.0.0.tgz.asc">GPG Signature</a>
-signed by <a href="https://dist.apache.org/repos/dist/release/orc/KEYS">Owen O’Malley (3D0C92B9)</a></li>
-  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.0.0">rel/release-1.0.0</a></li>
-  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.0.0%22">ORC 1.0.0</a></li>
-  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-1.0.0/orc-1.0.0.tgz.sha256">8ad5111f0ca3b72f…</a></li>
-  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.0.0%22&amp;tempMax=500">ORC-1.0.0</a></li>
+  <li>Released: 29 June 2018</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.5.2/orc-1.5.2.tar.gz">orc-1.5.2.tar.gz</a></li>
+  <li><a href="https://dist.apache.org/repos/dist/release/orc/orc-1.5.2/orc-1.5.2.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://dist.apache.org/repos/dist/release/orc/KEYS">Prasanth Jayachandran (65C468A3)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.5.2">rel/release-1.5.2</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.5.2%22">ORC 1.5.2</a></li>
+  <li>SHA 256: <a href="https://dist.apache.org/repos/dist/release/orc/orc-1.5.2/orc-1.5.2.tar.gz.sha256">4b73de720f54448d…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.5.2%22&amp;tempMax=500">ORC-1.5.2</a></li>
 </ul>
 
-<p>The major features:</p>
+<p>The new features of ORC 1.5:</p>
 
 <ul>
-  <li>Portable pure C++ ORC reader</li>
-  <li>The C++ reader is known to work on:
-    <ul>
-      <li>CentOS and RHEL 5, 6, and 7</li>
-      <li>Debian 6 and 7</li>
-      <li>Ubuntu 12 and 14</li>
-      <li>Mac OS 10.10 and 10.11</li>
-    </ul>
-  </li>
-  <li>A file-contents command that prints the contents of the file as json records.</li>
-  <li>A file-metadata command that prints the metadata of the file.</li>
-  <li>Docker files for building and testing on various Linux distributions.</li>
-  <li>Memory estimation for the reader.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-179">ORC-179</a> Add ORC C++ Writer</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-91">ORC-91</a> Support for variable length blocks in HDFS.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-199">ORC-199</a> Implement a CSV to ORC converter</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-344">ORC-344</a> Support for using Decimal64ColumnVector</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-345">ORC-345</a> Adding Decimal64StatisticsImpl</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-331">ORC-331</a> Support for building C++ under MSVC.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-234">ORC-234</a> Support for older versions of Hadoop (&gt;= 2.2.x)</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-305">ORC-305</a> Added statistics for size on disk</li>
 </ul>
 
 <p>Known issues:</p>
-
-<ul>
-  <li>
-    <p><a href="/security/CVE-2018-8015">CVE-2018-8015</a> ORC files with malformed types cause stack overflow.</p>
-  </li>
-  <li>
-    <p><a href="https://issues.apache.org/jira/browse/ORC-10">ORC-10</a> When moving ORC files between timezones, different daylight savings rules will cause timestamps to shift in the C++ reader.</p>
-  </li>
-</ul>
 
 
   </div>
@@ -237,7 +222,7 @@ signed by <a href="https://dist.apache.org/repos/dist/release/orc/KEYS">Owen O�
     <h4>Recent Releases</h4>
     <ul>
       
-      <li class="">
+      <li class="current">
         <a href="/news/2018/06/29/ORC-1.5.2/">Version 1.5.2</a>
       </li>
       
