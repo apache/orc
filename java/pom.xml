@@ -209,6 +209,7 @@
               <exclude>**/data/**</exclude>
               <exclude>**/*.json</exclude>
               <exclude>**/*.json.gz</exclude>
+	      <exclude>**/*.md</exclude>
               <exclude>**/*.orc</exclude>
               <exclude>**/*.out</exclude>
               <exclude>**/*.schema</exclude>
