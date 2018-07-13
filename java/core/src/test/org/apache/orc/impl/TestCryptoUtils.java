@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,29 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.orc.impl;
 
-import java.util.List;
+import org.apache.orc.EncryptionAlgorithm;
+import org.apache.orc.OrcProto;
+import org.junit.Test;
 
-import org.apache.hadoop.hive.common.DiskRangeInfo;
-import org.apache.hadoop.hive.common.io.DiskRange;
+import java.util.Arrays;
 
-/**
- * An uncompressed stream whose underlying byte buffer can be set.
- */
-public class SettableUncompressedStream extends InStream.UncompressedStream {
+import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
-  public SettableUncompressedStream(String name, List<DiskRange> input, long length) {
-    super(name, input, length);
-    setOffset(input);
-  }
+public class TestCryptoUtils {
 
-  public void setBuffers(DiskRangeInfo diskRangeInfo) {
-    reset(diskRangeInfo.getDiskRanges(), diskRangeInfo.getTotalLength());
-    setOffset(diskRangeInfo.getDiskRanges());
-  }
-
-  private void setOffset(List<DiskRange> list) {
-    currentOffset = list.isEmpty() ? 0 : list.get(0).getOffset();
+  @Test
+  public void testCreateStreamIv() throws Exception {
+    byte[] iv = CryptoUtils.createIvForStream(EncryptionAlgorithm.AES_128,
+        new StreamName(0x234567,
+        OrcProto.Stream.Kind.BLOOM_FILTER_UTF8), 0x123456);
+    assertEquals(16, iv.length);
+    assertEquals(0x23, iv[0]);
+    assertEquals(0x45, iv[1]);
+    assertEquals(0x67, iv[2]);
+    assertEquals(0x0, iv[3]);
+    assertEquals(0x8, iv[4]);
+    assertEquals(0x12, iv[5]);
+    assertEquals(0x34, iv[6]);
+    assertEquals(0x56, iv[7]);
   }
 }

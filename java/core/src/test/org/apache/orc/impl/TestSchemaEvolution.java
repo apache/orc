@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -34,7 +34,6 @@ import java.util.Map;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.common.io.DiskRange;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.Decimal64ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
@@ -1543,14 +1542,13 @@ public class TestSchemaEvolution {
                            OrcProto.Stream.Kind kind,
                            int... values) throws IOException {
     StreamName name = new StreamName(id, kind);
-    List<DiskRange> ranges = new ArrayList<>();
+    BufferChunkList ranges = new BufferChunkList();
     byte[] buffer = new byte[values.length];
     for(int i=0; i < values.length; ++i) {
       buffer[i] = (byte) values[i];
     }
     ranges.add(new BufferChunk(ByteBuffer.wrap(buffer), 0));
-    streams.put(name, InStream.create(name.toString(), ranges, values.length, null,
-        values.length));
+    streams.put(name, InStream.create(name.toString(), ranges.get(), values.length));
   }
 
   @Test

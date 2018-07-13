@@ -47,7 +47,7 @@ public class TestRunLengthByteReader {
     collect.buffer.setByteBuffer(inBuf, 0, collect.buffer.size());
     inBuf.flip();
     RunLengthByteReader in = new RunLengthByteReader(InStream.create("test",
-        new ByteBuffer[]{inBuf}, new long[]{0}, inBuf.remaining(), null, 100));
+        new BufferChunk(inBuf, 0), inBuf.remaining()));
     for(int i=0; i < 2048; ++i) {
       int x = in.next() & 0xff;
       if (i < 1024) {
@@ -89,7 +89,8 @@ public class TestRunLengthByteReader {
     collect.buffer.setByteBuffer(inBuf, 0, collect.buffer.size());
     inBuf.flip();
     RunLengthByteReader in = new RunLengthByteReader(InStream.create("test",
-        new ByteBuffer[]{inBuf}, new long[]{0}, inBuf.remaining(), codec, 500));
+        new BufferChunk(inBuf, 0), inBuf.remaining(),
+        InStream.options().withCodec(codec).withBufferSize(500)));
     for(int i=0; i < 2048; ++i) {
       int x = in.next() & 0xff;
       if (i < 1024) {
@@ -126,7 +127,7 @@ public class TestRunLengthByteReader {
     collect.buffer.setByteBuffer(inBuf, 0, collect.buffer.size());
     inBuf.flip();
     RunLengthByteReader in = new RunLengthByteReader(InStream.create("test",
-        new ByteBuffer[]{inBuf}, new long[]{0}, inBuf.remaining(), null, 100));
+        new BufferChunk(inBuf, 0), inBuf.remaining()));
     for(int i=0; i < 2048; i += 10) {
       int x = in.next() & 0xff;
       if (i < 1024) {

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,13 +18,26 @@
 package org.apache.orc.impl;
 
 import org.apache.orc.CompressionCodec;
+import org.apache.orc.EncryptionAlgorithm;
 import org.apache.orc.PhysicalWriter;
+import org.apache.orc.impl.writer.StreamOptions;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.ShortBufferException;
+import javax.crypto.spec.IvParameterSpec;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.Key;
 
+/**
+ * The output stream for writing to ORC files.
+ * It handles both compression and encryption.
+ */
 public class OutStream extends PositionedOutputStream {
-
   public static final int HEADER_SIZE = 3;
   private final String name;
   private final PhysicalWriter.OutputReceiver receiver;
@@ -55,19 +68,89 @@ public class OutStream extends PositionedOutputStream {
   private final CompressionCodec codec;
   private long compressedBytes = 0;
   private long uncompressedBytes = 0;
+  private final Cipher cipher;
+  private final Key key;
 
   public OutStream(String name,
                    int bufferSize,
                    CompressionCodec codec,
-                   PhysicalWriter.OutputReceiver receiver) throws IOException {
-    this.name = name;
-    this.bufferSize = bufferSize;
-    this.codec = codec;
-    this.receiver = receiver;
+                   PhysicalWriter.OutputReceiver receiver) {
+    this(name, new StreamOptions(bufferSize).withCodec(codec), receiver);
   }
 
-  public void clear() throws IOException {
-    flush();
+  public OutStream(String name,
+                   StreamOptions options,
+                   PhysicalWriter.OutputReceiver receiver) {
+    this.name = name;
+    this.bufferSize = options.getBufferSize();
+    this.codec = options.getCodec();
+    this.receiver = receiver;
+    if (options.isEncrypted()) {
+      this.cipher = options.getAlgorithm().createCipher();
+      this.key = options.getKey();
+      changeIv(options.getIv());
+    } else {
+      this.cipher = null;
+      this.key = null;
+    }
+  }
+
+  /**
+   * Change the current Initialization Vector (IV) for the encryption.
+   */
+  void changeIv(byte[] newIv) {
+    try {
+      cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(newIv));
+    } catch (InvalidKeyException e) {
+      throw new IllegalStateException("ORC bad encryption key for " +
+          toString(), e);
+    } catch (InvalidAlgorithmParameterException e) {
+      throw new IllegalStateException("ORC bad encryption parameter for " +
+          toString(), e);
+    }
+  }
+
+  /**
+   * When a buffer is done, we send it to the receiver to store.
+   * If we are encrypting, encrypt the buffer before we pass it on.
+   * @param buffer the buffer to store
+   */
+  void outputBuffer(ByteBuffer buffer) throws IOException {
+    if (cipher != null) {
+      ByteBuffer output = buffer.duplicate();
+      int len = buffer.remaining();
+      try {
+        int encrypted = cipher.update(buffer, output);
+        output.flip();
+        receiver.output(output);
+        if (encrypted != len) {
+          throw new IllegalArgumentException("Encryption of incomplete buffer "
+              + len + " -> " + encrypted + " in " + toString());
+        }
+      } catch (ShortBufferException e) {
+        throw new IOException("Short buffer in encryption in " + toString(), e);
+      }
+    } else {
+      receiver.output(buffer);
+    }
+  }
+
+  /**
+   * Ensure that the cipher didn't save any data.
+   * The next call should be to changeIv to restart the encryption on a new IV.
+   */
+  void finishEncryption() {
+    try {
+      byte[] finalBytes = cipher.doFinal();
+      if (finalBytes != null && finalBytes.length != 0) {
+        throw new IllegalStateException("We shouldn't have remaining bytes " +
+            toString());
+      }
+    } catch (IllegalBlockSizeException e) {
+      throw new IllegalArgumentException("Bad block size", e);
+    } catch (BadPaddingException e) {
+      throw new IllegalArgumentException("Bad padding", e);
+    }
   }
 
   /**
@@ -90,7 +173,7 @@ public class OutStream extends PositionedOutputStream {
     buffer.put(position + 2, (byte) (val >> 15));
   }
 
-  private void getNewInputBuffer() throws IOException {
+  private void getNewInputBuffer() {
     if (codec == null) {
       current = ByteBuffer.allocate(bufferSize);
     } else {
@@ -117,11 +200,11 @@ public class OutStream extends PositionedOutputStream {
   /**
    * Allocate a new output buffer if we are compressing.
    */
-  private ByteBuffer getNewOutputBuffer() throws IOException {
+  private ByteBuffer getNewOutputBuffer() {
     return ByteBuffer.allocate(bufferSize + HEADER_SIZE);
   }
 
-  private void flip() throws IOException {
+  private void flip() {
     current.limit(current.position());
     current.position(codec == null ? 0 : HEADER_SIZE);
   }
@@ -165,7 +248,7 @@ public class OutStream extends PositionedOutputStream {
     }
     flip();
     if (codec == null) {
-      receiver.output(current);
+      outputBuffer(current);
       getNewInputBuffer();
     } else {
       if (compressed == null) {
@@ -190,7 +273,7 @@ public class OutStream extends PositionedOutputStream {
         // if we have less than the next header left, spill it.
         if (compressed.remaining() < HEADER_SIZE) {
           compressed.flip();
-          receiver.output(compressed);
+          outputBuffer(compressed);
           compressed = overflow;
           overflow = null;
         }
@@ -203,7 +286,7 @@ public class OutStream extends PositionedOutputStream {
         if (sizePosn != 0) {
           compressed.position(sizePosn);
           compressed.flip();
-          receiver.output(compressed);
+          outputBuffer(compressed);
           compressed = null;
           // if we have an overflow, clear it and make it the new compress
           // buffer
@@ -223,14 +306,14 @@ public class OutStream extends PositionedOutputStream {
         current.position(0);
         // update the header with the current length
         writeHeader(current, 0, current.limit() - HEADER_SIZE, true);
-        receiver.output(current);
+        outputBuffer(current);
         getNewInputBuffer();
       }
     }
   }
 
   @Override
-  public void getPosition(PositionRecorder recorder) throws IOException {
+  public void getPosition(PositionRecorder recorder) {
     if (codec == null) {
       recorder.addPosition(uncompressedBytes);
     } else {
@@ -244,7 +327,10 @@ public class OutStream extends PositionedOutputStream {
     spill();
     if (compressed != null && compressed.position() != 0) {
       compressed.flip();
-      receiver.output(compressed);
+      outputBuffer(compressed);
+    }
+    if (cipher != null) {
+      finishEncryption();
     }
     compressed = null;
     uncompressedBytes = 0;
