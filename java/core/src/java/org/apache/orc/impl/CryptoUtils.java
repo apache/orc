@@ -31,13 +31,14 @@ public class CryptoUtils {
   private static final int STRIPE_ID_LENGTH = 3;
   private static final int MIN_COUNT_BYTES = 8;
 
-  private static final SecureRandom random = new SecureRandom();
   static final int MAX_COLUMN = 0xffffff;
   static final int MAX_KIND = 0xffff;
   static final int MAX_STRIPE = 0xffffff;
 
   /**
    * Create a unique IV for each stream within a single key.
+   * The top bytes are set with the column, stream kind, and stripe id and the
+   * lower 8 bytes are always 0.
    * @param name the stream name
    * @param stripeId the stripe id
    * @return the iv for the stream

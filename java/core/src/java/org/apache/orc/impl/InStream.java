@@ -120,6 +120,8 @@ public abstract class InStream extends InputStream {
       currentRange = newRange;
       if (newRange != null) {
         decrypted = newRange.getData().slice();
+        // Move the position in the ByteBuffer to match the currentOffset,
+        // which is relative to the stream.
         decrypted.position((int) (currentOffset - newRange.getOffset()));
       }
     }
