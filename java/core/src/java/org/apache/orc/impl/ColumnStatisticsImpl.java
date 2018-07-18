@@ -17,13 +17,9 @@
  */
 package org.apache.orc.impl;
 
-import java.sql.Date;
-import java.sql.Timestamp;
-import java.util.TimeZone;
-
-import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.serde2.io.DateWritable;
+import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparator;
@@ -38,6 +34,14 @@ import org.apache.orc.OrcProto;
 import org.apache.orc.StringColumnStatistics;
 import org.apache.orc.TimestampColumnStatistics;
 import org.apache.orc.TypeDescription;
+
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
+import java.sql.Date;
+import java.sql.Timestamp;
+import java.util.Arrays;
+import java.util.TimeZone;
 
 public class ColumnStatisticsImpl implements ColumnStatistics {
 
@@ -517,9 +521,13 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
   protected static final class StringStatisticsImpl extends ColumnStatisticsImpl
       implements StringColumnStatistics {
+    public static final int MAX_BYTES_RECORDED = 1024;
     private Text minimum = null;
     private Text maximum = null;
     private long sum = 0;
+
+    private boolean isLowerBoundSet = false;
+    private boolean isUpperBoundSet = false;
 
     StringStatisticsImpl() {
     }
@@ -543,35 +551,73 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       super.reset();
       minimum = null;
       maximum = null;
+      isLowerBoundSet = false;
+      isUpperBoundSet = false;
       sum = 0;
     }
 
     @Override
     public void updateString(Text value) {
       if (minimum == null) {
-        maximum = minimum = new Text(value);
+        if(value.getLength() > MAX_BYTES_RECORDED) {
+         minimum = truncateLowerBound(value);
+         maximum = truncateUpperBound(value);
+         isLowerBoundSet = true;
+         isUpperBoundSet = true;
+        } else {
+          maximum = minimum = new Text(value);
+        }
       } else if (minimum.compareTo(value) > 0) {
-        minimum = new Text(value);
+        if(value.getLength() > MAX_BYTES_RECORDED) {
+          minimum = truncateLowerBound(value);
+          isLowerBoundSet = true;
+        }else {
+          minimum = new Text(value);
+        }
       } else if (maximum.compareTo(value) < 0) {
-        maximum = new Text(value);
+        if(value.getLength() > MAX_BYTES_RECORDED) {
+          maximum = truncateUpperBound(value);
+          isUpperBoundSet = true;
+        } else {
+          maximum = new Text(value);
+        }
       }
       sum += value.getLength();
     }
 
+
     @Override
     public void updateString(byte[] bytes, int offset, int length,
                              int repetitions) {
+      byte[] input = Arrays.copyOfRange(bytes, offset, offset+(length));
       if (minimum == null) {
-        maximum = minimum = new Text();
-        maximum.set(bytes, offset, length);
+        if(length > MAX_BYTES_RECORDED) {
+          minimum = truncateLowerBound(input);
+          maximum = truncateUpperBound(input);
+          isLowerBoundSet = true;
+          isUpperBoundSet = true;
+        } else {
+          maximum = minimum = new Text();
+          maximum.set(bytes, offset, length);
+        }
       } else if (WritableComparator.compareBytes(minimum.getBytes(), 0,
           minimum.getLength(), bytes, offset, length) > 0) {
-        minimum = new Text();
-        minimum.set(bytes, offset, length);
+        if(length > MAX_BYTES_RECORDED) {
+          minimum = truncateLowerBound(input);
+          isLowerBoundSet = true;
+        } else {
+          minimum = new Text();
+          minimum.set(bytes, offset, length);
+        }
       } else if (WritableComparator.compareBytes(maximum.getBytes(), 0,
           maximum.getLength(), bytes, offset, length) < 0) {
-        maximum = new Text();
-        maximum.set(bytes, offset, length);
+        if(length > MAX_BYTES_RECORDED) {
+          maximum = truncateUpperBound(input);
+          isUpperBoundSet = true;
+        } else {
+          maximum = new Text();
+          maximum.set(bytes, offset, length);
+        }
       }
       sum += (long)length * repetitions;
     }
@@ -584,16 +630,40 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
           if (str.minimum != null) {
             maximum = new Text(str.getMaximum());
             minimum = new Text(str.getMinimum());
-          } else {
+          }
+          /* str.minimum == null when lower bound set */
+          else if (str.isLowerBoundSet) {
+            minimum = new Text(str.getLowerBound());
+            isLowerBoundSet = true;
+
+            /* check for upper bound before setting max */
+            if (str.isUpperBoundSet) {
+              maximum = new Text(str.getUpperBound());
+              isUpperBoundSet = true;
+            } else {
+              maximum = new Text(str.getMaximum());
+            }
+          }
+          else {
           /* both are empty */
             maximum = minimum = null;
           }
         } else if (str.minimum != null) {
           if (minimum.compareTo(str.minimum) > 0) {
-            minimum = new Text(str.getMinimum());
+            if(str.isLowerBoundSet) {
+              minimum = new Text(str.getLowerBound());
+              isLowerBoundSet = true;
+            } else {
+              minimum = new Text(str.getMinimum());
+            }
           }
           if (maximum.compareTo(str.maximum) < 0) {
-            maximum = new Text(str.getMaximum());
+            if(str.isUpperBoundSet) {
+              maximum = new Text(str.getUpperBound());
+              isUpperBoundSet = true;
+            }else {
+              maximum = new Text(str.getMaximum());
+            }
           }
         }
         sum += str.sum;
@@ -621,11 +691,45 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
     @Override
     public String getMinimum() {
-      return minimum == null ? null : minimum.toString();
+      /* if we have lower bound set (in case of truncation)
+      getMinimum will be null */
+      if(isLowerBoundSet) {
+        return null;
+      } else {
+        return minimum == null ? null : minimum.toString();
+      }
     }
 
     @Override
     public String getMaximum() {
+      /* if we have upper bound is set (in case of truncation)
+      getMaximum will be null */
+      if(isUpperBoundSet) {
+        return null;
+      } else {
+        return maximum == null ? null : maximum.toString();
+      }
+    }
+
+    /**
+     * Get the string with
+     * length = Min(StringStatisticsImpl.MAX_BYTES_RECORDED, getMinimum())
+     *
+     * @return lower bound
+     */
+    @Override
+    public String getLowerBound() {
+      return minimum == null ? null : minimum.toString();
+    }
+
+    /**
+     * Get the string with
+     * length = Min(StringStatisticsImpl.MAX_BYTES_RECORDED, getMaximum())
+     *
+     * @return upper bound
+     */
+    @Override
+    public String getUpperBound() {
       return maximum == null ? null : maximum.toString();
     }
 
@@ -682,6 +786,150 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       result = 31 * result + (maximum != null ? maximum.hashCode() : 0);
       result = 31 * result + (int) (sum ^ (sum >>> 32));
       return result;
+    }
+
+    /**
+     * A helper function that truncates the {@link Text} input
+     * based on {@link #MAX_BYTES_RECORDED} and increments
+     * the last codepoint by 1.
+     * @param text
+     * @return truncated Text value
+     */
+    private static Text truncateUpperBound(final Text text) {
+
+      if(text.getBytes().length > MAX_BYTES_RECORDED) {
+        return truncateUpperBound(text.getBytes());
+      } else {
+        return text;
+      }
+
+    }
+
+    /**
+     * A helper function that truncates the {@link byte[]} input
+     * based on {@link #MAX_BYTES_RECORDED} and increments
+     * the last codepoint by 1.
+     * @param text
+     * @return truncated Text value
+     */
+    private static Text truncateUpperBound(final byte[] text) {
+      if(text.length > MAX_BYTES_RECORDED) {
+        final Text truncated = truncateLowerBound(text);
+        final byte[] data = truncated.getBytes();
+
+        int lastCharPosition = data.length - 1;
+        int offset = 0;
+
+        /* we don't expect characters more than 5 bytes */
+        for (int i = 0; i < 5; i++) {
+          final byte b = data[lastCharPosition];
+          offset = getCharLength(b);
+
+          /* found beginning of a valid char */
+          if (offset > 0) {
+            final byte[] lastCharBytes = Arrays
+                .copyOfRange(text, lastCharPosition, lastCharPosition + offset);
+            /* last character */
+            final String s = new String(lastCharBytes, Charset.forName("UTF-8"));
+
+            /* increment the codepoint of last character */
+            int codePoint = s.codePointAt(s.length() - 1);
+            codePoint++;
+            final char[] incrementedChars = Character.toChars(codePoint);
+
+            /* convert char array to byte array */
+            final CharBuffer charBuffer = CharBuffer.wrap(incrementedChars);
+            final ByteBuffer byteBuffer = Charset.forName("UTF-8").encode(charBuffer);
+            final byte[] bytes = Arrays.copyOfRange(byteBuffer.array(), byteBuffer.position(),
+                byteBuffer.limit());
+
+            final byte[] result = new byte[lastCharPosition + bytes.length];
+
+            /* copy truncated array minus last char */
+            System.arraycopy(text, 0, result, 0, lastCharPosition);
+            /* copy last char */
+            System.arraycopy(bytes, 0, result, lastCharPosition, bytes.length);
+
+            return new Text(result);
+
+          } /* not found keep looking for a beginning byte */ else {
+            --lastCharPosition;
+          }
+
+        }
+        /* beginning of a valid char not found */
+        throw new IllegalArgumentException(
+            "Could not truncate string, beginning of a valid char not found");
+      } else {
+        return new Text(text);
+      }
+    }
+
+    private static Text truncateLowerBound(final Text text) {
+      if(text.getBytes().length > MAX_BYTES_RECORDED) {
+        return truncateLowerBound(text.getBytes());
+      } else {
+        return text;
+      }
+    }
+
+
+    private static Text truncateLowerBound(final byte[] text) {
+
+      if(text.length > MAX_BYTES_RECORDED) {
+
+        int truncateLen = MAX_BYTES_RECORDED;
+        int offset = 0;
+
+        for(int i=0; i<5; i++) {
+
+          byte b = text[truncateLen];
+          /* check for the beginning of 1,2,3,4,5 bytes long char */
+          offset = getCharLength(b);
+
+          /* found beginning of a valid char */
+          if(offset > 0) {
+            byte[] truncated = Arrays.copyOfRange(text, 0, (truncateLen));
+            return new Text(truncated);
+          } else {
+            /* beginning of a valid char not found decrease the
+            length of array by 1 and loop */
+            --truncateLen;
+          }
+
+        }
+        /* beginning of a valid char not found */
+        throw new IllegalArgumentException("Could not truncate string, beginning of a valid char not found");
+
+      } else {
+        return new Text(text);
+      }
+
+    }
+
+    /**
+     * A helper function that returns the length of the UTF-8 character
+     * IF the given byte is beginning of a valid char.
+     * In case it is a beginning byte, a value greater than 0
+     * is returned (length of character in bytes).
+     * Else 0 is returned
+     * @param b
+     * @return 0 if not beginning of char else length of char in bytes
+     */
+    private static int getCharLength(byte b) {
+      int len = 0;
+      if((b & 0b10000000) == 0b00000000 ) {
+        len = 1;
+      } else if ((b & 0b11100000) == 0b11000000 ) {
+        len = 2;
+      } else if ((b & 0b11110000) == 0b11100000 ) {
+        len = 3;
+      } else if ((b & 0b11111000) == 0b11110000 ) {
+        len = 4;
+      } else if ((b & 0b11111100) == 0b11111000 ) {
+        len = 5;
+      }
+      return len;
     }
   }
 
