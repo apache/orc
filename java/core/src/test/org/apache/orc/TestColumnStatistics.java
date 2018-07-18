@@ -18,33 +18,30 @@
 
 package org.apache.orc;
 
-import static junit.framework.Assert.assertEquals;
-import static org.junit.Assume.assumeTrue;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
-import java.sql.Timestamp;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.List;
-import java.util.TimeZone;
-
+import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
-import org.apache.hadoop.hive.common.type.HiveDecimal;
-import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.serde2.io.DateWritable;
-import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.orc.impl.ColumnStatisticsImpl;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
+
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.TimeZone;
+
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertTrue;
 
 /**
  * Test ColumnStatisticsImpl for ORC.
@@ -120,6 +117,245 @@ public class TestColumnStatistics {
     assertEquals("aaa", typed.getMinimum());
     assertEquals("zzz", typed.getMaximum());
   }
+
+  @Test
+  public void testUpperAndLowerBounds() throws Exception {
+    final TypeDescription schema = TypeDescription.createString();
+
+    final String test = RandomStringUtils.random(1024+10);
+    final String fragment = "foo"+test;
+    final String fragmentLowerBound = "bar"+test;
+
+
+    final ColumnStatisticsImpl stats1 = ColumnStatisticsImpl.create(schema);
+    final ColumnStatisticsImpl stats2 = ColumnStatisticsImpl.create(schema);
+
+    /* test a scenario for the first max string */
+    stats1.updateString(new Text(test));
+
+    final StringColumnStatistics typed = (StringColumnStatistics) stats1;
+    final StringColumnStatistics typed2 = (StringColumnStatistics) stats2;
+
+    assertTrue("Upperbound cannot be more than 1024 bytes",1024 >= typed.getUpperBound().getBytes().length);
+    assertTrue("Lowerbound cannot be more than 1024 bytes",1024 >= typed.getLowerBound().getBytes().length);
+
+    assertEquals(null, typed.getMinimum());
+    assertEquals(null, typed.getMaximum());
+
+    stats1.reset();
+
+    /* test a scenario for the first max bytes */
+    stats1.updateString(test.getBytes(), 0, test.getBytes().length, 0);
+
+    assertTrue("Lowerbound cannot be more than 1024 bytes", 1024 >= typed.getLowerBound().getBytes().length);
+    assertTrue("Upperbound cannot be more than 1024 bytes", 1024 >= typed.getUpperBound().getBytes().length);
+
+    assertEquals(null, typed.getMinimum());
+    assertEquals(null, typed.getMaximum());
+
+    stats1.reset();
+    /* test upper bound - merging  */
+    stats1.updateString(new Text("bob"));
+    stats1.updateString(new Text("david"));
+    stats1.updateString(new Text("charles"));
+
+    stats2.updateString(new Text("anne"));
+    stats2.updateString(new Text(fragment));
+
+    assertEquals("anne", typed2.getMinimum());
+    assertEquals(null, typed2.getMaximum());
+
+    stats1.merge(stats2);
+
+    assertEquals("anne", typed.getMinimum());
+    assertEquals(null, typed.getMaximum());
+
+
+    /* test lower bound - merging  */
+    stats1.reset();
+    stats2.reset();
+
+    stats1.updateString(new Text("david"));
+    stats1.updateString(new Text("charles"));
+
+    stats2.updateString(new Text("jane"));
+    stats2.updateString(new Text(fragmentLowerBound));
+
+    stats1.merge(stats2);
+
+    assertEquals(null, typed.getMinimum());
+    assertEquals("jane", typed.getMaximum());
+  }
+
+  /**
+   * Test the string truncation with 1 byte characters. The last character
+   * of the truncated string is 0x7f so that it will expand into a 2 byte
+   * utf-8 character.
+   */
+  @Test
+  public void testBoundsAscii() {
+    StringBuilder buffer = new StringBuilder();
+    for(int i=0; i < 256; ++i) {
+      buffer.append("Owe\u007fn");
+    }
+    ColumnStatisticsImpl stats = ColumnStatisticsImpl.create(
+            TypeDescription.createString());
+    stats.increment();
+    stats.updateString(new Text(buffer.toString()));
+    StringColumnStatistics stringStats = (StringColumnStatistics) stats;
+
+    // make sure that the min/max are null
+    assertEquals(null, stringStats.getMinimum());
+    assertEquals(null, stringStats.getMaximum());
+    assertEquals(5 * 256, stringStats.getSum());
+
+    // and that the lower and upper bound are correct
+    assertEquals(buffer.substring(0, 1024), stringStats.getLowerBound());
+    assertEquals("Owe\u0080", stringStats.getUpperBound().substring(1020));
+    assertEquals("count: 1 hasNull: false lower: " + stringStats.getLowerBound()
+            + " upper: " + stringStats.getUpperBound() + " sum: 1280",
+        stringStats.toString());
+
+    // make sure that when we replace the min & max the flags get cleared.
+    stats.increment();
+    stats.updateString(new Text("xxx"));
+    assertEquals("xxx", stringStats.getMaximum());
+    assertEquals("xxx", stringStats.getUpperBound());
+    stats.increment();
+    stats.updateString(new Text("A"));
+    assertEquals("A", stringStats.getMinimum());
+    assertEquals("A", stringStats.getLowerBound());
+    assertEquals("count: 3 hasNull: false min: A max: xxx sum: 1284",
+        stats.toString());
+  }
+
+  /**
+   * Test truncation with 2 byte utf-8 characters.
+   */
+  @Test
+  public void testBoundsTwoByte() {
+    StringBuilder buffer = new StringBuilder();
+    final String PATTERN = "\u0080\u07ff\u0432\u0246\u0123";
+    for(int i=0; i < 256; ++i) {
+      buffer.append(PATTERN);
+    }
+    ColumnStatisticsImpl stats = ColumnStatisticsImpl.create(
+        TypeDescription.createString());
+    stats.increment();
+    stats.updateString(new Text(buffer.toString()));
+    StringColumnStatistics stringStats = (StringColumnStatistics) stats;
+
+    // make sure that the min/max are null
+    assertEquals(null, stringStats.getMinimum());
+    assertEquals(null, stringStats.getMaximum());
+    assertEquals(2 * 5 * 256, stringStats.getSum());
+
+    // and that the lower and upper bound are correct
+    // 512 two byte characters fit in 1024 bytes
+    assertEquals(buffer.substring(0, 512), stringStats.getLowerBound());
+    assertEquals(buffer.substring(0, 511),
+        stringStats.getUpperBound().substring(0, 511));
+    assertEquals("\u0800", stringStats.getUpperBound().substring(511));
+  }
+
+  /**
+   * Test truncation with 3 byte utf-8 characters.
+   */
+  @Test
+  public void testBoundsThreeByte() {
+    StringBuilder buffer = new StringBuilder();
+    final String PATTERN = "\uffff\u0800\u4321\u1234\u3137";
+    for(int i=0; i < 256; ++i) {
+      buffer.append(PATTERN);
+    }
+    ColumnStatisticsImpl stats = ColumnStatisticsImpl.create(
+        TypeDescription.createString());
+    stats.increment();
+    stats.updateString(new Text(buffer.toString()));
+    StringColumnStatistics stringStats = (StringColumnStatistics) stats;
+
+    // make sure that the min/max are null
+    assertEquals(null, stringStats.getMinimum());
+    assertEquals(null, stringStats.getMaximum());
+    assertEquals(3 * 5 * 256, stringStats.getSum());
+
+    // and that the lower and upper bound are correct
+    // 341 three byte characters fit in 1024 bytes
+    assertEquals(buffer.substring(0, 341), stringStats.getLowerBound());
+    assertEquals(buffer.substring(0, 340),
+        stringStats.getUpperBound().substring(0,340));
+    assertEquals("\ud800\udc00", stringStats.getUpperBound().substring(340));
+  }
+
+  /**
+   * Test truncation with 4 byte utf-8 characters.
+   */
+  @Test
+  public void testBoundsFourByte() {
+    StringBuilder buffer = new StringBuilder();
+    final String PATTERN = "\ud800\udc00\ud801\udc01\ud802\udc02\ud803\udc03\ud804\udc04";
+    for(int i=0; i < 256; ++i) {
+      buffer.append(PATTERN);
+    }
+    ColumnStatisticsImpl stats = ColumnStatisticsImpl.create(
+        TypeDescription.createString());
+    stats.increment();
+    stats.updateString(new Text(buffer.toString()));
+    StringColumnStatistics stringStats = (StringColumnStatistics) stats;
+
+    // make sure that the min/max are null
+    assertEquals(null, stringStats.getMinimum());
+    assertEquals(null, stringStats.getMaximum());
+    assertEquals(4 * 5 * 256, stringStats.getSum());
+
+    // and that the lower and upper bound are correct
+    // 256 four byte characters fit in 1024 bytes
+    assertEquals(buffer.substring(0, 512), stringStats.getLowerBound());
+    assertEquals(buffer.substring(0, 510),
+        stringStats.getUpperBound().substring(0, 510));
+    assertEquals("\\uD800\\uDC01",
+        StringEscapeUtils.escapeJava(stringStats.getUpperBound().substring(510)));
+  }
+
+  @Test
+  public void testUpperBoundCodepointIncrement() {
+    /* test with characters that use more than one byte */
+    final String fragment =  "載記応存環敢辞月発併際岩。外現抱疑曲旧持九柏先済索。"
+        + "富扁件戒程少交文相修宮由改価苦。位季供幾日本求知集機所江取号均下犯変第勝。"
+        + "管今文図石職常暮海営感覧果賞挙。難加判郵年太願会周面市害成産。"
+        + "内分載函取片領披見復来車必教。元力理関未法会伊団万球幕点帳幅為都話間。"
+        + "親禁感栗合開注読月島月紀間卒派伏闘。幕経阿刊間都紹知禁追半業。"
+        + "根案協話射格治位相機遇券外野何。話第勝平当降負京複掲書変痛。"
+        + "博年群辺軽妻止和真権暑着要質在破応。"
+        + "नीचे मुक्त बिन्दुओ समस्याओ आंतरकार्यक्षमता सुना प्रति सभीकुछ यायेका दिनांक वातावरण ";
+
+    final String input = fragment
+            + "मुश्किले केन्द्रिय "
+            + "लगती नवंबर प्रमान गयेगया समस्याओ विश्व लिये समजते आपके एकत्रित विकेन्द्रित स्वतंत्र "
+            + "व्याख्यान भेदनक्षमता शीघ्र होभर मुखय करता। दर्शाता वातावरण विस्तरणक्षमता दोषसके प्राप्त समाजो "
+            + "।क तकनीकी दर्शाता कार्यकर्ता बाधा औषधिक समस्याओ समस्याए गोपनीयता प्राण पसंद "
+            + "भीयह नवंबर दोषसके अनुवादक सोफ़तवेर समस्याए क्षमता। कार्य होभर\n";
+
+    final String lowerBound = fragment +
+        "मुश्किले केन्द्रिय लगती नवंबर प्रमान गयेगया समस्याओ विश्व लिये ";
+
+    final String upperbound = fragment +
+        "मुश्किले केन्द्रिय लगती नवंबर प्रमान गयेगया समस्याओ विश्व लिये!";
+
+    final TypeDescription schema = TypeDescription.createString();
+    final ColumnStatisticsImpl stats1 = ColumnStatisticsImpl.create(schema);
+    byte[] utf8 = input.getBytes(StandardCharsets.UTF_8);
+    stats1.updateString(utf8, 0, utf8.length, 1);
+
+    final StringColumnStatistics typed = (StringColumnStatistics) stats1;
+
+    assertEquals(354, typed.getUpperBound().length());
+    assertEquals(354, typed.getLowerBound().length());
+
+    assertEquals(upperbound, typed.getUpperBound());
+    assertEquals(lowerBound, typed.getLowerBound());
+  }
+
 
   @Test
   public void testDateMerge() throws Exception {

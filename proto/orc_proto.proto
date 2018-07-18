@@ -39,6 +39,10 @@ message StringStatistics {
   optional string maximum = 2;
   // sum will store the total length of all strings in a stripe
   optional sint64 sum = 3;
+  // If the minimum or maximum value was longer than 1024 bytes, store a lower or upper
+  // bound instead of the minimum or maximum values above.
+  optional string lowerBound = 4;
+  optional string upperBound = 5;
 }
 
 message BucketStatistics {

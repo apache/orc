@@ -34,6 +34,22 @@ public interface StringColumnStatistics extends ColumnStatistics {
   String getMaximum();
 
   /**
+   * Get the lower bound of the values in this column.
+   * The value may be truncated to at most
+   * MAX_BYTES_RECORDED.
+   * @return lower bound
+   */
+  String getLowerBound();
+
+  /**
+   * Get the upper bound of the values in this column.
+   * The value may be truncated to at most
+   * MAX_BYTES_RECORDED.
+   * @return upper bound
+   */
+  String getUpperBound();
+
+  /**
    * Get the total length of all strings
    * @return the sum (total length)
    */
