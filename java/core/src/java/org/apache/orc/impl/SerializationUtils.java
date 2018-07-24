@@ -1309,7 +1309,7 @@ public final class SerializationUtils {
   // Do not want to use Guava LongMath.checkedSubtract() here as it will throw
   // ArithmeticException in case of overflow
   public boolean isSafeSubtract(long left, long right) {
-    return (left ^ right) >= 0 | (left ^ (left - right)) >= 0;
+    return (left ^ right) >= 0 || (left ^ (left - right)) >= 0;
   }
 
   public static long convertFromUtc(TimeZone local, long time) {
