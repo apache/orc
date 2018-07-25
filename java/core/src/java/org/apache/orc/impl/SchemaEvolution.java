@@ -50,6 +50,11 @@ public class SchemaEvolution {
   private boolean isOnlyImplicitConversion;
   private final boolean isAcid;
   private final boolean isSchemaEvolutionCaseAware;
+  /**
+   * {@code true} if acid metadata columns should be decoded otherwise they will
+   * be set to {@code null}.  {@link #acidEventFieldNames}.
+   */
+  private final boolean includeAcidColumns;
 
   // indexed by reader column id
   private final boolean[] ppdSafeConversion;
@@ -65,7 +70,6 @@ public class SchemaEvolution {
       super(msg);
     }
   }
-
   public SchemaEvolution(TypeDescription fileSchema,
                          TypeDescription readerSchema,
                          Reader.Options options) {
@@ -79,6 +83,7 @@ public class SchemaEvolution {
     this.isOnlyImplicitConversion = true;
     this.fileSchema = fileSchema;
     isAcid = checkAcidSchema(fileSchema);
+    includeAcidColumns = options.getIncludeAcidColumns();
     this.readerColumnOffset = isAcid ? acidEventFieldNames.size() : 0;
     if (readerSchema != null) {
       if (isAcid) {
@@ -402,9 +407,18 @@ public class SchemaEvolution {
    * @return true if the column should be read
    */
   public boolean includeReaderColumn(int readerId) {
-    return readerIncluded == null ||
-        readerId <= readerColumnOffset ||
-        readerIncluded[readerId - readerColumnOffset];
+    if(readerId == 0) {
+      //always want top level struct - everything is its child
+      return true;
+    }
+    if(isAcid) {
+      if(readerId < readerColumnOffset) {
+        return includeAcidColumns;
+      }
+      return readerIncluded == null ||
+          readerIncluded[readerId - readerColumnOffset];
+    }
+    return readerIncluded == null || readerIncluded[readerId];
   }
 
   /**

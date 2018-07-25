@@ -18,9 +18,7 @@
 package org.apache.orc.impl;
 
 import static junit.framework.TestCase.assertSame;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -1444,6 +1442,41 @@ public class TestSchemaEvolution {
     }
     // the file doesn't have z
     assertEquals(null, evo.getFileType(9));
+  }
+
+  @Test
+  public void testAcidPositionEvolutionSkipAcid() {
+    TypeDescription fileType = TypeDescription.fromString(
+        "struct<operation:int,originalTransaction:bigint,bucket:int," +
+            "rowId:bigint,currentTransaction:bigint," +
+            "row:struct<_col0:int,_col1:string,_col2:double>>");
+    TypeDescription readerType = TypeDescription.fromString(
+        "struct<x:int,y:string>");
+    SchemaEvolution evo = new SchemaEvolution(fileType, readerType,
+        options.includeAcidColumns(false));
+    assertTrue(evo.isAcid());
+    assertEquals("struct<operation:int,originalTransaction:bigint,bucket:int," +
+        "rowId:bigint,currentTransaction:bigint," +
+        "row:struct<x:int,y:string>>", evo.getReaderSchema().toString());
+    assertEquals("struct<x:int,y:string>",
+        evo.getReaderBaseSchema().toString());
+    // the first stuff should be an identity
+    boolean[] fileInclude = evo.getFileIncluded();
+
+    //get top level struct col
+    assertEquals("column " + 0, 0, evo.getFileType(0).getId());
+    assertTrue("column " + 0, fileInclude[0]);
+    for(int c=1; c < 6; ++c) {
+      assertNull("column " + c, evo.getFileType(c));
+      //skip all acid metadata columns
+      assertFalse("column " + c, fileInclude[c]);
+    }
+    for(int c=6; c < 9; ++c) {
+      assertEquals("column " + c, c, evo.getFileType(c).getId());
+      assertTrue("column " + c, fileInclude[c]);
+    }
+    // don't read the last column
+    assertFalse(fileInclude[9]);
   }
 
   @Test
