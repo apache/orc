@@ -162,6 +162,7 @@ public interface Reader {
     private boolean forcePositionalEvolution;
     private boolean isSchemaEvolutionCaseAware =
         (boolean) OrcConf.IS_SCHEMA_EVOLUTION_CASE_SENSITIVE.getDefaultValue();
+    private boolean includeAcidColumns = true;
 
     public Options() {
       // PASS
@@ -276,7 +277,14 @@ public interface Reader {
       this.isSchemaEvolutionCaseAware = value;
       return this;
     }
-
+    /**
+     * {@code true} if acid metadata columns should be decoded otherwise they will
+     * be set to {@code null}.
+     */
+    public Options includeAcidColumns(boolean includeAcidColumns) {
+      this.includeAcidColumns = includeAcidColumns;
+      return this;
+    }
     public boolean[] getInclude() {
       return include;
     }
@@ -329,6 +337,10 @@ public interface Reader {
       return isSchemaEvolutionCaseAware;
     }
 
+    public boolean getIncludeAcidColumns() {
+      return includeAcidColumns;
+    }
+
     public Options clone() {
       try {
         Options result = (Options) super.clone();
@@ -379,6 +391,7 @@ public interface Reader {
         buffer.append(", schema: ");
         schema.printToBuffer(buffer);
       }
+      buffer.append(", includeAcidColumns: ").append(includeAcidColumns);
       buffer.append("}");
       return buffer.toString();
     }
