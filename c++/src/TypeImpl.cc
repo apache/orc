@@ -650,7 +650,7 @@ namespace orc {
 
     while (pos < types.size()) {
       size_t endPos = pos;
-      while (endPos < types.size() && isalnum(types[endPos])) {
+      while (endPos < types.size() && (isalnum(types[endPos]) || types[endPos] == '_')) {
         ++endPos;
       }
 
