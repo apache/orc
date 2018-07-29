@@ -8,7 +8,7 @@ categories: [talk]
 
 I gave a talk at Hadoop Summit San Jose 2016 about a file format
 benchmark that I've contributed as [ORC-72]({{site.jira}}/ORC-72). The
-benchmark focuses on real data sets that are publically available. The data
+benchmark focuses on real data sets that are publicly available. The data
 sets represent a wide variety of use cases:
 
 * *NYC Taxi Data* - very dense data with mostly numeric types

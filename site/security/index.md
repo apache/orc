@@ -38,7 +38,7 @@ An overview of the vulnerability handling process is:
 * The reporter sends email to the project privately.
 * The project works privately with the reporter to resolve the vulnerability.
 * The project releases a new version that includes the fix.
-* The vulnerability is publically announced via a [CVE](https://cve.mitre.org/) to the mailing lists and the original reporter.
+* The vulnerability is publicly announced via a [CVE](https://cve.mitre.org/) to the mailing lists and the original reporter.
 
 The full process can be found on the
 [Apache Security Process](https://www.apache.org/security/committers.html#vulnerability-handling) page.
