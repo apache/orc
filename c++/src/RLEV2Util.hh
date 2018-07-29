@@ -134,7 +134,7 @@ namespace orc {
   }
 
   inline bool isSafeSubtract(int64_t left, int64_t right) {
-    return ((left ^ right) >= 0) | ((left ^ (left - right)) >= 0);
+    return ((left ^ right) >= 0) || ((left ^ (left - right)) >= 0);
   }
 
   inline uint32_t RleEncoderV2::getOpCode(EncodingType encoding) {
