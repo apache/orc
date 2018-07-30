@@ -53,3 +53,33 @@ TEST (TestCSVFileImport, test10rows) {
   EXPECT_EQ(expected, output);
   EXPECT_EQ("", error);
 }
+
+TEST (TestCSVFileImport, test10rows_underscore) {
+  // create an ORC file from importing the CSV file
+  const std::string pgm1 = findProgram("tools/src/csv-import");
+  const std::string csvFile = findExample("TestCSVFileImport.test10rows.csv");
+  const std::string orcFile = "/tmp/test_csv_import_test_10_rows.orc";
+  const std::string schema = "struct<_a:bigint,b_:string,c:double>";
+  std::string output;
+  std::string error;
+
+  EXPECT_EQ(0, runProgram({pgm1, schema, csvFile, orcFile}, output, error));
+  EXPECT_EQ("", error);
+
+  // verify the ORC file content
+  const std::string pgm2 = findProgram("tools/src/orc-contents");
+  const std::string expected =
+    "{\"_a\": 0, \"b_\": \"a\", \"c\": 0}\n"
+    "{\"_a\": 1, \"b_\": \"b\", \"c\": 1.1}\n"
+    "{\"_a\": 2, \"b_\": \"c\", \"c\": 2.2}\n"
+    "{\"_a\": 3, \"b_\": \"d\", \"c\": null}\n"
+    "{\"_a\": 4, \"b_\": null, \"c\": 4.4}\n"
+    "{\"_a\": null, \"b_\": \"f\", \"c\": 5.5}\n"
+    "{\"_a\": null, \"b_\": null, \"c\": null}\n"
+    "{\"_a\": 7, \"b_\": \"h\", \"c\": 7.7}\n"
+    "{\"_a\": 8, \"b_\": \"i\", \"c\": 8.8}\n"
+    "{\"_a\": 9, \"b_\": \"j\", \"c\": 9.9}\n";
+  EXPECT_EQ(0, runProgram({pgm2, orcFile}, output, error));
+  EXPECT_EQ(expected, output);
+  EXPECT_EQ("", error);
+}
