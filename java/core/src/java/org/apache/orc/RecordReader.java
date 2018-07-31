@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,6 +17,7 @@
  */
 package org.apache.orc;
 
+import java.io.Closeable;
 import java.io.IOException;
 
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
@@ -24,7 +25,7 @@ import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 /**
  * A row-by-row iterator for ORC files.
  */
-public interface RecordReader extends AutoCloseable {
+public interface RecordReader extends Closeable {
   /**
    * Read the next row batch. The size of the batch to read cannot be
    * controlled by the callers. Caller need to look at
