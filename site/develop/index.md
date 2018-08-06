@@ -186,7 +186,7 @@ Apache expects the projects to manage their current release artifact
 distribution using subversion. It should be limited to the latest
 release in each of the active release branches.
 
-The ORC dist directory is managed via
+The ORC dist directory is managed via svn in
 [https://dist.apache.org/repos/dist/release/orc](https://dist.apache.org/repos/dist/release/orc).
 The release artifacts are pushed to many mirrors. Files in the dist
 directory are available forever via the [Apache dist

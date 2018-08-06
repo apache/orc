@@ -5,7 +5,7 @@ excerpt_separator: ""
 
 repository: https://github.com/apache/orc
 jira: https://issues.apache.org/jira/browse
-dist: https://dist.apache.org/repos/dist/release/orc
+dist: https://www.apache.org/dist/orc
 dist_mirror: https://www.apache.org/dyn/closer.cgi/orc
 tag_url: https://github.com/apache/orc/releases/tag/rel
 dist_archive: https://archive.apache.org/dist/orc
