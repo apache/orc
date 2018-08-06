@@ -122,7 +122,11 @@ sftp&gt; put orc-X.Y.Zrc0*
 sftp&gt; quit
 </code></pre></div></div>
 
-<p>Make sure your GPG key exists <a href="https://dist.apache.org/repos/dist/release/orc/KEYS">here</a> for others to verify signature in RC</p>
+<p>Make sure your GPG key is present in <a href="https://id.apache.org">Apache
+LDAP</a> and the ORC <a href="https://dist.apache.org/repos/dist/release/orc/KEYS">svn dist
+area</a>. That will
+be necessary for others to verify the signatures on the release
+candidate.</p>
 
 <p>Click the version to release (X.Y.Z) <a href="https://issues.apache.org/jira/projects/ORC?selectedItem=com.atlassian.jira.jira-projects-plugin:release-page">here</a>
 to get the list of jiras that are fixed in X.Y.Z</p>
