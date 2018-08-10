@@ -158,6 +158,8 @@ namespace orc {
     longBatch->numElements = 2000 - 1024;
 
     writer->add(*batch);
+    writer->addUserMetadata("name0","value0");
+    writer->addUserMetadata("name1","value1");
     writer->close();
 
     std::unique_ptr<InputStream> inStream(
@@ -172,6 +174,15 @@ namespace orc {
     EXPECT_TRUE(rowReader->next(*batch));
     EXPECT_EQ(2000, batch->numElements);
     EXPECT_FALSE(rowReader->next(*batch));
+    
+    std::list<std::string> keys = reader->getMetadataKeys();
+    EXPECT_EQ(keys.size(), 2);
+    std::list<std::string>::const_iterator itr = keys.begin();
+    EXPECT_EQ(*itr, "name0");
+    EXPECT_EQ(reader->getMetadataValue(*itr), "value0");
+    itr++;
+    EXPECT_EQ(*itr, "name1");
+    EXPECT_EQ(reader->getMetadataValue(*itr), "value1");
 
     for (uint64_t i = 0; i < 2000; ++i) {
       structBatch = dynamic_cast<StructVectorBatch *>(batch.get());
