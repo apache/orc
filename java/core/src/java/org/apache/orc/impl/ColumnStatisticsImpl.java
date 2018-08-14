@@ -566,6 +566,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
          isUpperBoundSet = true;
         } else {
           maximum = minimum = new Text(value);
+          isLowerBoundSet = isUpperBoundSet = false;
         }
       } else if (minimum.compareTo(value) > 0) {
         if(value.getLength() > MAX_BYTES_RECORDED) {
@@ -573,6 +574,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
           isLowerBoundSet = true;
         }else {
           minimum = new Text(value);
+          isLowerBoundSet = false;
         }
       } else if (maximum.compareTo(value) < 0) {
         if(value.getLength() > MAX_BYTES_RECORDED) {
@@ -580,6 +582,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
           isUpperBoundSet = true;
         } else {
           maximum = new Text(value);
+          isUpperBoundSet = false;
         }
       }
       sum += value.getLength();
@@ -589,34 +592,37 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     @Override
     public void updateString(byte[] bytes, int offset, int length,
                              int repetitions) {
-      byte[] input = Arrays.copyOfRange(bytes, offset, offset+(length));
       if (minimum == null) {
         if(length > MAX_BYTES_RECORDED) {
-          minimum = truncateLowerBound(input);
-          maximum = truncateUpperBound(input);
+          minimum = truncateLowerBound(bytes, offset, length);
+          maximum = truncateUpperBound(bytes, offset, length);
           isLowerBoundSet = true;
           isUpperBoundSet = true;
         } else {
           maximum = minimum = new Text();
           maximum.set(bytes, offset, length);
+          isLowerBoundSet = false;
+          isUpperBoundSet = false;
         }
       } else if (WritableComparator.compareBytes(minimum.getBytes(), 0,
           minimum.getLength(), bytes, offset, length) > 0) {
         if(length > MAX_BYTES_RECORDED) {
-          minimum = truncateLowerBound(input);
+          minimum = truncateLowerBound(bytes, offset, length);
           isLowerBoundSet = true;
         } else {
           minimum = new Text();
           minimum.set(bytes, offset, length);
+          isLowerBoundSet = false;
         }
       } else if (WritableComparator.compareBytes(maximum.getBytes(), 0,
           maximum.getLength(), bytes, offset, length) < 0) {
         if(length > MAX_BYTES_RECORDED) {
-          maximum = truncateUpperBound(input);
+          maximum = truncateUpperBound(bytes, offset, length);
           isUpperBoundSet = true;
         } else {
           maximum = new Text();
           maximum.set(bytes, offset, length);
+          isUpperBoundSet = false;
         }
       }
       sum += (long)length * repetitions;
@@ -634,12 +640,12 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
           /* str.minimum == null when lower bound set */
           else if (str.isLowerBoundSet) {
             minimum = new Text(str.getLowerBound());
-            isLowerBoundSet = true;
+            isLowerBoundSet = str.isLowerBoundSet;
 
             /* check for upper bound before setting max */
             if (str.isUpperBoundSet) {
               maximum = new Text(str.getUpperBound());
-              isUpperBoundSet = true;
+              isUpperBoundSet = str.isUpperBoundSet;
             } else {
               maximum = new Text(str.getMaximum());
             }
@@ -652,7 +658,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
           if (minimum.compareTo(str.minimum) > 0) {
             if(str.isLowerBoundSet) {
               minimum = new Text(str.getLowerBound());
-              isLowerBoundSet = true;
+              isLowerBoundSet = str.isLowerBoundSet;
             } else {
               minimum = new Text(str.getMinimum());
             }
@@ -660,7 +666,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
           if (maximum.compareTo(str.maximum) < 0) {
             if(str.isUpperBoundSet) {
               maximum = new Text(str.getUpperBound());
-              isUpperBoundSet = true;
+              isUpperBoundSet = str.isUpperBoundSet;
             }else {
               maximum = new Text(str.getMaximum());
             }
@@ -798,7 +804,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     private static Text truncateUpperBound(final Text text) {
 
       if(text.getBytes().length > MAX_BYTES_RECORDED) {
-        return truncateUpperBound(text.getBytes());
+        return truncateUpperBound(text.getBytes(), 0, text.getBytes().length);
       } else {
         return text;
       }
@@ -812,9 +818,9 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
      * @param text
      * @return truncated Text value
      */
-    private static Text truncateUpperBound(final byte[] text) {
-      if(text.length > MAX_BYTES_RECORDED) {
-        final Text truncated = truncateLowerBound(text);
+    private static Text truncateUpperBound(final byte[] text, final int from, final int len) {
+      if(len > MAX_BYTES_RECORDED) {
+        final Text truncated = truncateLowerBound(text, from, len);
         final byte[] data = truncated.getBytes();
 
         int lastCharPosition = data.length - 1;
@@ -828,7 +834,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
           /* found beginning of a valid char */
           if (offset > 0) {
             final byte[] lastCharBytes = Arrays
-                .copyOfRange(text, lastCharPosition, lastCharPosition + offset);
+                .copyOfRange(text, from + lastCharPosition, lastCharPosition + offset);
             /* last character */
             final String s = new String(lastCharBytes, Charset.forName("UTF-8"));
 
@@ -843,14 +849,12 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
             final byte[] bytes = Arrays.copyOfRange(byteBuffer.array(), byteBuffer.position(),
                 byteBuffer.limit());
 
-            final byte[] result = new byte[lastCharPosition + bytes.length];
-
+            final Text textResult = new Text();
             /* copy truncated array minus last char */
-            System.arraycopy(text, 0, result, 0, lastCharPosition);
+            textResult.set(text, from, lastCharPosition);
             /* copy last char */
-            System.arraycopy(bytes, 0, result, lastCharPosition, bytes.length);
-
-            return new Text(result);
+            textResult.append(bytes, 0, bytes.length);
+            return textResult;
 
           } /* not found keep looking for a beginning byte */ else {
             --lastCharPosition;
@@ -867,30 +871,37 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
     private static Text truncateLowerBound(final Text text) {
       if(text.getBytes().length > MAX_BYTES_RECORDED) {
-        return truncateLowerBound(text.getBytes());
+        return truncateLowerBound(text.getBytes(), 0, text.getBytes().length);
       } else {
         return text;
       }
     }
 
+    /**
+     *
+     * @param text Byte array to truncate
+     * @param from This is the initial index to be copied, inclusive.
+     * @param len length of the data.
+     * @return truncated {@link Text}
+     */
+    private static Text truncateLowerBound(final byte[] text, final int from, final int len) {
 
-    private static Text truncateLowerBound(final byte[] text) {
-
-      if(text.length > MAX_BYTES_RECORDED) {
+      if(len > MAX_BYTES_RECORDED) {
 
         int truncateLen = MAX_BYTES_RECORDED;
         int offset = 0;
 
         for(int i=0; i<5; i++) {
 
-          byte b = text[truncateLen];
+          byte b = text[from + truncateLen];
           /* check for the beginning of 1,2,3,4,5 bytes long char */
           offset = getCharLength(b);
 
           /* found beginning of a valid char */
           if(offset > 0) {
-            byte[] truncated = Arrays.copyOfRange(text, 0, (truncateLen));
-            return new Text(truncated);
+            final Text result = new Text();
+            result.set(text, from, truncateLen);
+            return result;
           } else {
             /* beginning of a valid char not found decrease the
             length of array by 1 and loop */
@@ -902,7 +913,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
         throw new IllegalArgumentException("Could not truncate string, beginning of a valid char not found");
 
       } else {
-        return new Text(text);
+        return new Text(Arrays.copyOfRange(text, from, from + len));
       }
 
     }
