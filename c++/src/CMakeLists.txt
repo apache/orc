@@ -150,6 +150,7 @@ include_directories (
   ${SNAPPY_INCLUDE_DIR}
   ${LZ4_INCLUDE_DIR}
   ${LIBHDFSPP_INCLUDE_DIR}
+  ${ZSTD_INCLUDE_DIR}
   )
 
 add_custom_command(OUTPUT orc_proto.pb.h orc_proto.pb.cc
@@ -201,6 +202,7 @@ target_link_libraries (orc
   zlib
   snappy
   lz4
+  zstd
   ${LIBHDFSPP_LIBRARIES}
   )
 
