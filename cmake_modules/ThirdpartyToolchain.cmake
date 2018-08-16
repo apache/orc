@@ -130,6 +130,55 @@ if (ZLIB_VENDORED)
 endif ()
 
 # ----------------------------------------------------------------------
+# Zstd
+
+if (NOT "${ZSTD_HOME}" STREQUAL "")
+  find_package (zstd REQUIRED)
+  set(ZSTD_VENDORED FALSE)
+else ()
+  set(ZSTD_HOME "${THIRDPARTY_DIR}/zstd_ep-install")
+  set(ZSTD_INCLUDE_DIR "${ZSTD_HOME}/include")
+  if (MSVC)
+    set(ZSTD_STATIC_LIB_NAME zstd_static)
+    if (${UPPERCASE_BUILD_TYPE} STREQUAL "DEBUG")
+      set(ZSTD_STATIC_LIB_NAME ${ZSTD_STATIC_LIB_NAME})
+    endif ()
+  else ()
+    set(ZSTD_STATIC_LIB_NAME zstd)
+  endif ()
+  set(ZSTD_STATIC_LIB "${ZSTD_HOME}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${ZSTD_STATIC_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+  set(ZSTD_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${ZSTD_HOME}
+          -DBUILD_SHARED_LIBS=OFF)
+
+  if (CMAKE_VERSION VERSION_GREATER "3.7")
+    set(ZSTD_CONFIGURE SOURCE_SUBDIR "build/cmake" CMAKE_ARGS ${ZSTD_CMAKE_ARGS})
+  else()
+    set(ZSTD_CONFIGURE CONFIGURE_COMMAND "${THIRDPARTY_CONFIGURE_COMMAND}" ${ZSTD_CMAKE_ARGS}
+            "${CMAKE_CURRENT_BINARY_DIR}/zstd_ep-prefix/src/zstd_ep/build/cmake")
+  endif()
+
+  ExternalProject_Add(zstd_ep
+          URL "https://github.com/facebook/zstd/archive/v${ZSTD_VERSION}.tar.gz"
+          ${ZSTD_CONFIGURE}
+          ${THIRDPARTY_LOG_OPTIONS}
+          BUILD_BYPRODUCTS ${ZSTD_STATIC_LIB})
+
+  set(ZSTD_VENDORED TRUE)
+endif ()
+
+include_directories (SYSTEM ${ZSTD_INCLUDE_DIR})
+add_library (zstd STATIC IMPORTED)
+set_target_properties (zstd PROPERTIES IMPORTED_LOCATION ${ZSTD_STATIC_LIB})
+
+if (ZSTD_VENDORED)
+  add_dependencies (zstd zstd_ep)
+  if (INSTALL_VENDORED_LIBS)
+    install(FILES "${ZSTD_STATIC_LIB}"
+            DESTINATION "lib")
+  endif ()
+endif ()
+
+# ----------------------------------------------------------------------
 # LZ4
 
 if (NOT "${LZ4_HOME}" STREQUAL "")
@@ -360,52 +409,3 @@ if(BUILD_LIBHDFSPP)
     Clang (version for iOS 9 and later), Clang (version for Xcode 8 and later)")
   endif(ORC_CXX_HAS_THREAD_LOCAL)
 endif(BUILD_LIBHDFSPP)
-
-# ----------------------------------------------------------------------
-# Zstd
-
-if (NOT "${ZSTD_HOME}" STREQUAL "")
-  find_package (Zstd REQUIRED)
-  set(ZSTD_VENDORED FALSE)
-else ()
-  set(ZSTD_HOME "${THIRDPARTY_DIR}/zstd_ep-install")
-  set(ZSTD_INCLUDE_DIR "${ZSTD_HOME}/include")
-  if (MSVC)
-    set(ZSTD_STATIC_LIB_NAME zstdstatic)
-    if (${UPPERCASE_BUILD_TYPE} STREQUAL "DEBUG")
-      set(ZSTD_STATIC_LIB_NAME ${ZSTD_STATIC_LIB_NAME}d)
-    endif ()
-  else ()
-    set(ZSTD_STATIC_LIB_NAME zstd)
-  endif ()
-  set(ZSTD_STATIC_LIB "${ZSTD_HOME}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${ZSTD_STATIC_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}")
-  set(ZSTD_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${ZSTD_HOME}
-          -DBUILD_SHARED_LIBS=OFF)
-
-  if (CMAKE_VERSION VERSION_GREATER "3.7")
-    set(ZSTD_CONFIGURE SOURCE_SUBDIR "build/cmake" CMAKE_ARGS ${ZSTD_CMAKE_ARGS})
-  else()
-    set(ZSTD_CONFIGURE CONFIGURE_COMMAND "${THIRDPARTY_CONFIGURE_COMMAND}" ${ZSTD_CMAKE_ARGS}
-            "${CMAKE_CURRENT_BINARY_DIR}/zstd_ep-prefix/src/zstd_ep/build/cmake")
-  endif()
-
-  ExternalProject_Add(zstd_ep
-          URL "https://github.com/facebook/zstd/archive/v${ZSTD_VERSION}.tar.gz"
-          ${ZSTD_CONFIGURE}
-          ${THIRDPARTY_LOG_OPTIONS}
-          BUILD_BYPRODUCTS ${ZSTD_STATIC_LIB})
-
-  set(ZSTD_VENDORED TRUE)
-endif ()
-
-include_directories (SYSTEM ${ZSTD_INCLUDE_DIR})
-add_library (zstd STATIC IMPORTED)
-set_target_properties (zstd PROPERTIES IMPORTED_LOCATION ${ZSTD_STATIC_LIB})
-
-if (ZSTD_VENDORED)
-  add_dependencies (zstd zstd_ep)
-  if (INSTALL_VENDORED_LIBS)
-    install(FILES "${ZSTD_STATIC_LIB}"
-            DESTINATION "lib")
-  endif ()
-endif ()
