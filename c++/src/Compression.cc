@@ -58,6 +58,9 @@ namespace orc {
       buffer[2] = static_cast<char>(compressedSize >> 15);
     }
 
+    // ensure enough room for compression block header
+    void ensureHeader();
+
     // Buffer to hold uncompressed data until user calls Next()
     DataBuffer<unsigned char> rawInputBuffer;
 
@@ -118,6 +121,22 @@ namespace orc {
            static_cast<uint64_t>(outputSize - outputPosition);
   }
 
+  void CompressionStreamBase::ensureHeader() {
+    // adjust 3 bytes for the compression header
+    if (outputPosition + 3 >= outputSize) {
+      int newPosition = outputPosition + 3 - outputSize;
+      if (!BufferedOutputStream::Next(
+        reinterpret_cast<void **>(&outputBuffer),
+        &outputSize)) {
+        throw std::runtime_error(
+          "Failed to get next output buffer from output stream.");
+      }
+      outputPosition = newPosition;
+    } else {
+      outputPosition += 3;
+    }
+  }
+
   /**
    * Streaming compression base class
    */
@@ -152,19 +171,7 @@ namespace orc {
 
   bool CompressionStream::Next(void** data, int*size) {
     if (bufferSize != 0) {
-      // adjust 3 bytes for the compression header
-      if (outputPosition + 3 >= outputSize) {
-        int newPosition = outputPosition + 3 - outputSize;
-        if (!BufferedOutputStream::Next(
-          reinterpret_cast<void **>(&outputBuffer),
-          &outputSize)) {
-          throw std::runtime_error(
-            "Failed to get next output buffer from output stream.");
-        }
-        outputPosition = newPosition;
-      } else {
-        outputPosition += 3;
-      }
+      ensureHeader();
 
       uint64_t totalCompressedSize = doStreamingCompression();
 
@@ -936,18 +943,7 @@ DIAGNOSTIC_POP
 
   bool BlockCompressionStream::Next(void** data, int*size) {
     if (bufferSize != 0) {
-      // adjust 3 bytes for the compression header
-      if (outputPosition + 3 >= outputSize) {
-        int newPosition = outputPosition + 3 - outputSize;
-        if (!BufferedOutputStream::Next(reinterpret_cast<void **>(&outputBuffer),
-                                        &outputSize)) {
-          throw std::logic_error(
-            "Failed to get next output buffer from output stream.");
-        }
-        outputPosition = newPosition;
-      } else {
-        outputPosition += 3;
-      }
+      ensureHeader();
 
       // perform compression
       size_t totalCompressedSize = doBlockCompression();
