@@ -17,8 +17,9 @@
  */
 package org.apache.orc.impl;
 
-import org.apache.orc.CompressionKind;
+import org.apache.orc.StripeStatistics;
 
+import org.apache.orc.CompressionKind;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Date;
@@ -29,7 +30,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
-
 import org.apache.orc.OrcFile;
 import org.apache.orc.util.BloomFilter;
 import org.apache.orc.util.BloomFilterIO;
@@ -262,7 +262,12 @@ public class RecordReaderImpl implements RecordReader {
           .setSchemaEvolution(evolution)
           .skipCorrupt(skipCorrupt)
           .fileFormat(fileReader.getFileVersion())
-          .useUTCTimestamp(fileReader.useUTCTimestamp);
+          .useUTCTimestamp(fileReader.useUTCTimestamp)
+          .repeatedIntReaderDvThreshold(
+              (int)OrcConf.REPEATED_INT_READER_DV_THRESHOLD.getLong(fileReader.conf))
+          .stripeStats(fileReader.getOrcProtoStripeStatistics());
+    // Note: we don't set the context stripe ID here; that means the repeated integer
+    //       will never be created via this path. 
     reader = TreeReaderFactory.createTreeReader(evolution.getReaderSchema(),
         readerContext);
 
@@ -1056,7 +1061,10 @@ public class RecordReaderImpl implements RecordReader {
       } else {
         readPartialDataStreams(stripe);
       }
+      // Pass stripe ID to the reader via context so it could use stats.
+      reader.context.setStripeId(currentStripe);
       reader.startStripe(streams, stripeFooter);
+      reader.context.setStripeId(null);
       // if we skipped the first row group, move the pointers forward
       if (rowInStripe != 0) {
         seekToRowEntry(reader, (int) (rowInStripe / rowIndexStride));

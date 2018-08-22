@@ -17,8 +17,11 @@
  */
 package org.apache.orc.impl;
 
-import java.util.Arrays;
+import org.apache.orc.ColumnStatistics;
 
+import org.apache.orc.impl.TreeReaderFactory.ReaderContext;
+import org.apache.orc.OrcProto.StripeStatistics;
+import java.util.Arrays;
 import java.io.EOFException;
 import java.io.IOException;
 import java.text.DateFormat;
@@ -55,6 +58,10 @@ public class TreeReaderFactory {
   public interface Context {
     SchemaEvolution getSchemaEvolution();
 
+    int getRepeatedIntReaderDvThreshold();
+
+    List<StripeStatistics> getStripeStats();
+
     boolean isSkipCorrupt();
 
     boolean getUseUTCTimestamp();
@@ -62,6 +69,10 @@ public class TreeReaderFactory {
     String getWriterTimezone();
 
     OrcFile.Version getFileFormat();
+
+    void setStripeId(Integer currentStripe);
+
+    Integer getStripeId();
   }
 
   public static class ReaderContext implements Context {
@@ -70,6 +81,9 @@ public class TreeReaderFactory {
     private boolean useUTCTimestamp = false;
     private String writerTimezone;
     private OrcFile.Version fileFormat;
+    private List<StripeStatistics> stripeStats;
+    private int repeatedIntReaderDvThreshold;
+    private Integer stripeId;
 
     public ReaderContext setSchemaEvolution(SchemaEvolution evolution) {
       this.evolution = evolution;
@@ -120,6 +134,37 @@ public class TreeReaderFactory {
     public OrcFile.Version getFileFormat() {
       return fileFormat;
     }
+
+    public ReaderContext stripeStats(List<StripeStatistics> stripeStats) {
+      this.stripeStats = stripeStats;
+      return this;
+    }
+
+    @Override
+    public List<StripeStatistics> getStripeStats() {
+      return stripeStats;
+    }
+
+    public ReaderContext repeatedIntReaderDvThreshold(int val) {
+      this.repeatedIntReaderDvThreshold = val;
+      return this;
+    }
+
+
+    @Override
+    public int getRepeatedIntReaderDvThreshold() {
+      return repeatedIntReaderDvThreshold;
+    }
+
+    @Override
+    public void setStripeId(Integer currentStripe) {
+      this.stripeId = currentStripe;
+    }
+
+    @Override
+    public Integer getStripeId() {
+      return stripeId;
+    }
   }
 
   public abstract static class TreeReader {
@@ -154,14 +199,22 @@ public class TreeReaderFactory {
       }
     }
 
-    protected static IntegerReader createIntegerReader(OrcProto.ColumnEncoding.Kind kind,
+    protected final IntegerReader createIntegerReader(OrcProto.ColumnEncoding.Kind kind,
         InStream in,
         boolean signed,
         Context context) throws IOException {
+      return createIntegerReader(kind, in, signed, context, this);
+    }
+
+    protected static IntegerReader createIntegerReader(OrcProto.ColumnEncoding.Kind kind,
+        InStream in,
+        boolean signed,
+        Context context,
+        TreeReader src) throws IOException {
       switch (kind) {
         case DIRECT_V2:
         case DICTIONARY_V2:
-          return new RunLengthIntegerReaderV2(in, signed, context == null ? false : context.isSkipCorrupt());
+        return createV2Reader(in, signed, context, src);
         case DIRECT:
         case DICTIONARY:
           return new RunLengthIntegerReader(in, signed);
@@ -170,9 +223,32 @@ public class TreeReaderFactory {
       }
     }
 
+    private static IntegerReader createV2Reader(
+        InStream in, boolean signed, Context context, TreeReader src) throws IOException {
+      boolean skipCorrupt = context == null ? false : context.isSkipCorrupt();
+      int dvThreshold = context == null ? 0 : context.getRepeatedIntReaderDvThreshold();
+      if (dvThreshold > 0) {
+        OrcProto.ColumnStatistics c = getCurrentColStat(context, src);
+        if (c != null && c.hasNumberOfValues() && c.getNumberOfValues() <= dvThreshold) {
+          return new RunLengthIntegerReaderV2Repeated(in, signed, skipCorrupt);
+        }
+      }
+      return new RunLengthIntegerReaderV2(in, signed, skipCorrupt);
+    }
+
+    private static OrcProto.ColumnStatistics getCurrentColStat(
+        Context context, TreeReader src) {
+      if (context.getStripeStats() == null || context.getStripeId() == null
+          || context.getStripeStats().size() <= context.getStripeId()) {
+        return null;
+      }
+      StripeStatistics stat = context.getStripeStats().get(context.getStripeId());
+      return (stat != null && stat.getColStatsCount() > src.columnId)
+          ? stat.getColStats(src.columnId) : null;
+    }
+
     void startStripe(Map<StreamName, InStream> streams,
-        OrcProto.StripeFooter stripeFooter
-    ) throws IOException {
+        OrcProto.StripeFooter stripeFooter) throws IOException {
       checkEncoding(stripeFooter.getColumnsList().get(columnId));
       InStream in = streams.get(new StreamName(columnId,
           OrcProto.Stream.Kind.PRESENT));

@@ -84,6 +84,11 @@ public enum OrcConf {
       "If ORC reader encounters corrupt data, this value will be used to\n" +
           "determine whether to skip the corrupt data or throw exception.\n" +
           "The default behavior is to throw exception."),
+  REPEATED_INT_READER_DV_THRESHOLD("orc.repeated.reader.threshold", null,
+      10,
+      "The maximum number of distinct values for an integral column after\n" +
+      "which the reader optimized for repeated values would be used. Set\n" +
+      "to 0 to disable"),
   TOLERATE_MISSING_SCHEMA("orc.tolerate.missing.schema",
       "hive.exec.orc.tolerate.missing.schema",
       true,
