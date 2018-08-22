@@ -150,8 +150,7 @@ public class RecordReaderUtils {
     private final FileSystem fs;
     private final Path path;
     private final boolean useZeroCopy;
-    private CompressionCodec codec;
-    private final int bufferSize;
+    private InStream.StreamOptions options = InStream.options();
     private final int typeCount;
     private CompressionKind compressionKind;
 
@@ -160,8 +159,8 @@ public class RecordReaderUtils {
       this.path = properties.getPath();
       this.useZeroCopy = properties.getZeroCopy();
       this.compressionKind = properties.getCompression();
-      this.codec = OrcCodecPool.getCodec(compressionKind);
-      this.bufferSize = properties.getBufferSize();
+      options.withCodec(OrcCodecPool.getCodec(compressionKind))
+          .withBufferSize(properties.getBufferSize());
       this.typeCount = properties.getTypeCount();
     }
 
@@ -171,7 +170,7 @@ public class RecordReaderUtils {
       if (useZeroCopy) {
         // ZCR only uses codec for boolean checks.
         pool = new ByteBufferAllocatorPool();
-        zcr = RecordReaderUtils.createZeroCopyShim(file, codec, pool);
+        zcr = RecordReaderUtils.createZeroCopyShim(file, options.getCodec(), pool);
       } else {
         zcr = null;
       }
@@ -228,9 +227,9 @@ public class RecordReaderUtils {
                 bb.position((int) (offset - range.getOffset()));
                 bb.limit((int) (bb.position() + stream.getLength()));
                 indexes[column] = OrcProto.RowIndex.parseFrom(
-                    InStream.createCodedInputStream("index",
-                        ReaderImpl.singleton(new BufferChunk(bb, 0)),
-                        stream.getLength(), codec, bufferSize));
+                    InStream.createCodedInputStream(InStream.create("index",
+                        new BufferChunk(bb, 0),
+                        stream.getLength(), options)));
               }
               break;
             case BLOOM_FILTER:
@@ -240,9 +239,9 @@ public class RecordReaderUtils {
                 bb.position((int) (offset - range.getOffset()));
                 bb.limit((int) (bb.position() + stream.getLength()));
                 bloomFilterIndices[column] = OrcProto.BloomFilterIndex.parseFrom
-                    (InStream.createCodedInputStream("bloom_filter",
-                        ReaderImpl.singleton(new BufferChunk(bb, 0)),
-                    stream.getLength(), codec, bufferSize));
+                    (InStream.createCodedInputStream(InStream.create(
+                        "bloom_filter", new BufferChunk(bb, 0),
+                        stream.getLength(), options)));
               }
               break;
             default:
@@ -266,8 +265,8 @@ public class RecordReaderUtils {
       ByteBuffer tailBuf = ByteBuffer.allocate(tailLength);
       file.readFully(offset, tailBuf.array(), tailBuf.arrayOffset(), tailLength);
       return OrcProto.StripeFooter.parseFrom(
-          InStream.createCodedInputStream("footer", ReaderImpl.singleton(
-              new BufferChunk(tailBuf, 0)), tailLength, codec, bufferSize));
+          InStream.createCodedInputStream(InStream.create("footer",
+              new BufferChunk(tailBuf, 0), tailLength, options)));
     }
 
     @Override
@@ -278,9 +277,9 @@ public class RecordReaderUtils {
 
     @Override
     public void close() throws IOException {
-      if (codec != null) {
-        OrcCodecPool.returnCodec(compressionKind, codec);
-        codec = null;
+      if (options.getCodec() != null) {
+        OrcCodecPool.returnCodec(compressionKind, options.getCodec());
+        options.withCodec(null);
       }
       if (pool != null) {
         pool.clear();
@@ -313,9 +312,9 @@ public class RecordReaderUtils {
       }
       try {
         DefaultDataReader clone = (DefaultDataReader) super.clone();
-        if (codec != null) {
+        if (options.getCodec() != null) {
           // Make sure we don't share the same codec between two readers.
-          clone.codec = OrcCodecPool.getCodec(clone.compressionKind);
+          clone.options = options.clone();
         }
         return clone;
       } catch (CloneNotSupportedException e) {
@@ -325,7 +324,7 @@ public class RecordReaderUtils {
 
     @Override
     public CompressionCodec getCompressionCodec() {
-      return codec;
+      return options.getCodec();
     }
   }
 
@@ -572,42 +571,49 @@ public class RecordReaderUtils {
   }
 
 
-  static List<DiskRange> getStreamBuffers(DiskRangeList range, long offset, long length) {
+  static DiskRangeList getStreamBuffers(DiskRangeList range, long offset,
+                                        long length) {
     // This assumes sorted ranges (as do many other parts of ORC code.
-    ArrayList<DiskRange> buffers = new ArrayList<DiskRange>();
-    if (length == 0) return buffers;
-    long streamEnd = offset + length;
-    boolean inRange = false;
-    while (range != null) {
-      if (!inRange) {
-        if (range.getEnd() <= offset) {
-          range = range.next;
-          continue; // Skip until we are in range.
+    BufferChunkList result = new BufferChunkList();
+    if (length != 0) {
+      long streamEnd = offset + length;
+      boolean inRange = false;
+      while (range != null) {
+        if (!inRange) {
+          if (range.getEnd() <= offset) {
+            range = range.next;
+            continue; // Skip until we are in range.
+          }
+          inRange = true;
+          if (range.getOffset() < offset) {
+            // Partial first buffer, add a slice of it.
+            result.add((BufferChunk) range.sliceAndShift(offset,
+                Math.min(streamEnd, range.getEnd()), -offset));
+            if (range.getEnd() >= streamEnd)
+              break; // Partial first buffer is also partial last buffer.
+            range = range.next;
+            continue;
+          }
+        } else if (range.getOffset() >= streamEnd) {
+          break;
         }
-        inRange = true;
-        if (range.getOffset() < offset) {
-          // Partial first buffer, add a slice of it.
-          buffers.add(range.sliceAndShift(offset, Math.min(streamEnd, range.getEnd()), -offset));
-          if (range.getEnd() >= streamEnd) break; // Partial first buffer is also partial last buffer.
-          range = range.next;
-          continue;
+        if (range.getEnd() > streamEnd) {
+          // Partial last buffer (may also be the first buffer), add a slice of it.
+          result.add((BufferChunk) range.sliceAndShift(range.getOffset(),
+              streamEnd, -offset));
+          break;
         }
-      } else if (range.getOffset() >= streamEnd) {
-        break;
+        // Buffer that belongs entirely to one stream.
+        // TODO: ideally we would want to reuse the object and remove it from
+        //       the list, but we cannot because bufferChunks is also used by
+        //       clearStreams for zcr. Create a useless dup.
+        result.add((BufferChunk) range.sliceAndShift(range.getOffset(),
+            range.getEnd(), -offset));
+        if (range.getEnd() == streamEnd) break;
+        range = range.next;
       }
-      if (range.getEnd() > streamEnd) {
-        // Partial last buffer (may also be the first buffer), add a slice of it.
-        buffers.add(range.sliceAndShift(range.getOffset(), streamEnd, -offset));
-        break;
-      }
-      // Buffer that belongs entirely to one stream.
-      // TODO: ideally we would want to reuse the object and remove it from the list, but we cannot
-      //       because bufferChunks is also used by clearStreams for zcr. Create a useless dup.
-      buffers.add(range.sliceAndShift(range.getOffset(), range.getEnd(), -offset));
-      if (range.getEnd() == streamEnd) break;
-      range = range.next;
     }
-    return buffers;
+    return result.get();
   }
 
   static HadoopShims.ZeroCopyReaderShim createZeroCopyShim(FSDataInputStream file,

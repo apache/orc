@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -48,8 +48,8 @@ public class TestBitFieldReader {
     collect.buffer.setByteBuffer(inBuf, 0, collect.buffer.size());
     inBuf.flip();
     BitFieldReader in = new BitFieldReader(InStream.create("test",
-        new ByteBuffer[]{inBuf}, new long[]{0}, inBuf.remaining(),
-        codec, 500));
+        new BufferChunk(inBuf, 0), inBuf.remaining(),
+        InStream.options().withCodec(codec).withBufferSize(500)));
     for(int i=0; i < COUNT; ++i) {
       int x = in.next();
       if (i < COUNT / 2) {
@@ -96,8 +96,8 @@ public class TestBitFieldReader {
     ByteBuffer inBuf = ByteBuffer.allocate(collect.buffer.size());
     collect.buffer.setByteBuffer(inBuf, 0, collect.buffer.size());
     inBuf.flip();
-    BitFieldReader in = new BitFieldReader(InStream.create("test", new ByteBuffer[]{inBuf},
-        new long[]{0}, inBuf.remaining(), null, 100));
+    BitFieldReader in = new BitFieldReader(InStream.create("test",
+        new BufferChunk(inBuf, 0), inBuf.remaining()));
     for(int i=0; i < COUNT; i += 5) {
       int x = (int) in.next();
       if (i < COUNT/2) {
@@ -133,8 +133,8 @@ public class TestBitFieldReader {
     ByteBuffer inBuf = ByteBuffer.allocate(collect.buffer.size());
     collect.buffer.setByteBuffer(inBuf, 0, collect.buffer.size());
     inBuf.flip();
-    BitFieldReader in = new BitFieldReader(InStream.create("test", new ByteBuffer[]{inBuf},
-        new long[]{0}, inBuf.remaining(), null, 100));
+    BitFieldReader in = new BitFieldReader(InStream.create("test",
+        new BufferChunk(inBuf, 0), inBuf.remaining()));
     in.seek(posn);
     in.skip(10);
     for(int r = 210; r < COUNT; ++r) {

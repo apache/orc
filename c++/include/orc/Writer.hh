@@ -209,6 +209,11 @@ namespace orc {
      * Close the write and flush any pending data to the output stream.
      */
     virtual void close() = 0;
+
+    /**
+     * Add user metadata to the writer.
+     */
+    virtual void addUserMetadata(const std::string name, const std::string value) = 0;
   };
 }
 

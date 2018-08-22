@@ -46,9 +46,15 @@ public class SchemaEvolution {
   private final boolean[] fileIncluded;
   private final TypeDescription fileSchema;
   private final TypeDescription readerSchema;
-  private boolean hasConversion = false;
+  private boolean hasConversion;
+  private boolean isOnlyImplicitConversion;
   private final boolean isAcid;
   private final boolean isSchemaEvolutionCaseAware;
+  /**
+   * {@code true} if acid metadata columns should be decoded otherwise they will
+   * be set to {@code null}.  {@link #acidEventFieldNames}.
+   */
+  private final boolean includeAcidColumns;
 
   // indexed by reader column id
   private final boolean[] ppdSafeConversion;
@@ -64,7 +70,6 @@ public class SchemaEvolution {
       super(msg);
     }
   }
-
   public SchemaEvolution(TypeDescription fileSchema,
                          TypeDescription readerSchema,
                          Reader.Options options) {
@@ -75,8 +80,10 @@ public class SchemaEvolution {
       Arrays.copyOf(includedCols, includedCols.length);
     this.fileIncluded = new boolean[fileSchema.getMaximumId() + 1];
     this.hasConversion = false;
+    this.isOnlyImplicitConversion = true;
     this.fileSchema = fileSchema;
     isAcid = checkAcidSchema(fileSchema);
+    includeAcidColumns = options.getIncludeAcidColumns();
     this.readerColumnOffset = isAcid ? acidEventFieldNames.size() : 0;
     if (readerSchema != null) {
       if (isAcid) {
@@ -186,6 +193,17 @@ public class SchemaEvolution {
     return hasConversion;
   }
 
+  /**
+   * When there Schema Evolution data type conversion i.e. hasConversion() returns true,
+   * is the conversion only the implicit kind?
+   *
+   * (see aaa).
+   * @return
+   */
+  public boolean isOnlyImplicitConversion() {
+    return isOnlyImplicitConversion;
+  }
+
   public TypeDescription getFileSchema() {
     return fileSchema;
   }
@@ -217,6 +235,59 @@ public class SchemaEvolution {
    */
   public boolean[] getFileIncluded() {
     return fileIncluded;
+  }
+
+  /**
+   * Determine if there is implicit conversion from a file to reader type.
+   *
+   * Implicit conversions are:
+   *   Small to larger integer (e.g. INT to LONG)
+   *   FLOAT to DOUBLE
+   *   Some String Family conversions.
+   *
+   * NOTE: This check is independent of the PPD conversion checks.
+   * @return
+   */
+  private boolean typesAreImplicitConversion(final TypeDescription fileType,
+      final TypeDescription readerType) {
+    switch (fileType.getCategory()) {
+    case BYTE:
+        if (readerType.getCategory().equals(TypeDescription.Category.SHORT) ||
+            readerType.getCategory().equals(TypeDescription.Category.INT) ||
+            readerType.getCategory().equals(TypeDescription.Category.LONG)) {
+          return true;
+        }
+        break;
+    case SHORT:
+        if (readerType.getCategory().equals(TypeDescription.Category.INT) ||
+            readerType.getCategory().equals(TypeDescription.Category.LONG)) {
+          return true;
+        }
+        break;
+    case INT:
+        if (readerType.getCategory().equals(TypeDescription.Category.LONG)) {
+          return true;
+        }
+        break;
+    case FLOAT:
+        if (readerType.getCategory().equals(TypeDescription.Category.DOUBLE)) {
+          return true;
+        }
+        break;
+    case CHAR:
+    case VARCHAR:
+        if (readerType.getCategory().equals(TypeDescription.Category.STRING)) {
+          return true;
+        }
+        if (readerType.getCategory().equals(TypeDescription.Category.CHAR) ||
+            readerType.getCategory().equals(TypeDescription.Category.VARCHAR)) {
+          return (fileType.getMaxLength() <= readerType.getMaxLength());
+        }
+        break;
+    default:
+        break;
+    }
+    return false;
   }
 
   /**
@@ -336,9 +407,18 @@ public class SchemaEvolution {
    * @return true if the column should be read
    */
   public boolean includeReaderColumn(int readerId) {
-    return readerIncluded == null ||
-        readerId <= readerColumnOffset ||
-        readerIncluded[readerId - readerColumnOffset];
+    if(readerId == 0) {
+      //always want top level struct - everything is its child
+      return true;
+    }
+    if(isAcid) {
+      if(readerId < readerColumnOffset) {
+        return includeAcidColumns;
+      }
+      return readerIncluded == null ||
+          readerIncluded[readerId - readerColumnOffset];
+    }
+    return readerIncluded == null || readerIncluded[readerId];
   }
 
   /**
@@ -382,6 +462,9 @@ public class SchemaEvolution {
           // maxLength.
           if (fileType.getMaxLength() != readerType.getMaxLength()) {
             hasConversion = true;
+            if (!typesAreImplicitConversion(fileType, readerType)) {
+              isOnlyImplicitConversion = false;
+            }
           }
           break;
         case DECIMAL:
@@ -390,6 +473,7 @@ public class SchemaEvolution {
           if (fileType.getPrecision() != readerType.getPrecision() ||
               fileType.getScale() != readerType.getScale()) {
             hasConversion = true;
+            isOnlyImplicitConversion = false;
           }
           break;
         case UNION:
@@ -413,6 +497,8 @@ public class SchemaEvolution {
           List<TypeDescription> fileChildren = fileType.getChildren();
           if (fileChildren.size() != readerChildren.size()) {
             hasConversion = true;
+            // UNDONE: Does LLAP detect fewer columns and NULL them out????
+            isOnlyImplicitConversion = false;
           }
 
           if (positionalLevels == 0) {
@@ -461,6 +547,9 @@ public class SchemaEvolution {
 
       isOk = ConvertTreeReaderFactory.canConvert(fileType, readerType);
       hasConversion = true;
+      if (!typesAreImplicitConversion(fileType, readerType)) {
+        isOnlyImplicitConversion = false;
+      }
     }
     if (isOk) {
       readerFileTypes[readerType.getId()] = fileType;

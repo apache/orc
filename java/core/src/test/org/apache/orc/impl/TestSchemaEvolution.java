@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,9 +18,7 @@
 package org.apache.orc.impl;
 
 import static junit.framework.TestCase.assertSame;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,7 +32,6 @@ import java.util.Map;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.common.io.DiskRange;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.Decimal64ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
@@ -97,6 +94,7 @@ public class TestSchemaEvolution {
         .addField("f3", TypeDescription.createDecimal().withPrecision(38).withScale(10));
     SchemaEvolution both1diff = new SchemaEvolution(fileStruct1, readerStruct1diff, options);
     assertTrue(both1diff.hasConversion());
+    assertTrue(both1diff.isOnlyImplicitConversion());
     TypeDescription readerStruct1diffPrecision = TypeDescription.createStruct()
         .addField("f1", TypeDescription.createInt())
         .addField("f2", TypeDescription.createString())
@@ -104,6 +102,7 @@ public class TestSchemaEvolution {
     SchemaEvolution both1diffPrecision = new SchemaEvolution(fileStruct1,
         readerStruct1diffPrecision, options);
     assertTrue(both1diffPrecision.hasConversion());
+    assertFalse(both1diffPrecision.isOnlyImplicitConversion());
   }
 
   @Test
@@ -144,6 +143,7 @@ public class TestSchemaEvolution {
         .addField("f6", TypeDescription.createChar().withMaxLength(100));
     SchemaEvolution both2diff = new SchemaEvolution(fileStruct2, readerStruct2diff, options);
     assertTrue(both2diff.hasConversion());
+    assertFalse(both2diff.isOnlyImplicitConversion());
     TypeDescription readerStruct2diffChar = TypeDescription.createStruct()
         .addField("f1", TypeDescription.createUnion()
             .addUnionChild(TypeDescription.createByte())
@@ -156,6 +156,175 @@ public class TestSchemaEvolution {
         .addField("f6", TypeDescription.createChar().withMaxLength(80));
     SchemaEvolution both2diffChar = new SchemaEvolution(fileStruct2, readerStruct2diffChar, options);
     assertTrue(both2diffChar.hasConversion());
+    assertFalse(both2diffChar.isOnlyImplicitConversion());
+  }
+
+  @Test
+  public void testIntegerImplicitConversion() throws IOException {
+    TypeDescription fileStructByte = TypeDescription.createStruct()
+        .addField("f1", TypeDescription.createByte())
+        .addField("f2", TypeDescription.createString());
+    SchemaEvolution sameByte = new SchemaEvolution(fileStructByte, null, options);
+    assertFalse(sameByte.hasConversion());
+    TypeDescription readerStructByte = TypeDescription.createStruct()
+        .addField("f1", TypeDescription.createByte())
+        .addField("f2", TypeDescription.createString());
+    SchemaEvolution bothByte = new SchemaEvolution(fileStructByte, readerStructByte, options);
+    assertFalse(bothByte.hasConversion());
+    TypeDescription readerStructByte1diff = TypeDescription.createStruct()
+        .addField("f1", TypeDescription.createShort())
+        .addField("f2", TypeDescription.createString());
+    SchemaEvolution bothByte1diff = new SchemaEvolution(fileStructByte, readerStructByte1diff, options);
+    assertTrue(bothByte1diff.hasConversion());
+    assertTrue(bothByte1diff.isOnlyImplicitConversion());
+    TypeDescription readerStructByte2diff = TypeDescription.createStruct()
+        .addField("f1", TypeDescription.createInt())
+        .addField("f2", TypeDescription.createString());
+    SchemaEvolution bothByte2diff = new SchemaEvolution(fileStructByte, readerStructByte2diff, options);
+    assertTrue(bothByte2diff.hasConversion());
+    assertTrue(bothByte2diff.isOnlyImplicitConversion());
+    TypeDescription readerStruct3diff = TypeDescription.createStruct()
+        .addField("f1", TypeDescription.createLong())
+        .addField("f2", TypeDescription.createString());
+    SchemaEvolution bothByte3diff = new SchemaEvolution(fileStructByte, readerStruct3diff, options);
+    assertTrue(bothByte3diff.hasConversion());
+    assertTrue(bothByte3diff.isOnlyImplicitConversion());
+
+    TypeDescription fileStructShort = TypeDescription.createStruct()
+        .addField("f1", TypeDescription.createShort())
+        .addField("f2", TypeDescription.createString());
+    SchemaEvolution sameShort = new SchemaEvolution(fileStructShort, null, options);
+    assertFalse(sameShort.hasConversion());
+    TypeDescription readerStructShort = TypeDescription.createStruct()
+        .addField("f1", TypeDescription.createShort())
+        .addField("f2", TypeDescription.createString());
+    SchemaEvolution bothShort = new SchemaEvolution(fileStructShort, readerStructShort, options);
+    assertFalse(bothShort.hasConversion());
+    TypeDescription readerStructShort1diff = TypeDescription.createStruct()
+        .addField("f1", TypeDescription.createInt())
+        .addField("f2", TypeDescription.createString());
+    SchemaEvolution bothShort1diff = new SchemaEvolution(fileStructShort, readerStructShort1diff, options);
+    assertTrue(bothShort1diff.hasConversion());
+    assertTrue(bothShort1diff.isOnlyImplicitConversion());
+    TypeDescription readerStructShort2diff = TypeDescription.createStruct()
+        .addField("f1", TypeDescription.createLong())
+        .addField("f2", TypeDescription.createString());
+    SchemaEvolution bothShort2diff = new SchemaEvolution(fileStructShort, readerStructShort2diff, options);
+    assertTrue(bothShort2diff.hasConversion());
+    assertTrue(bothShort2diff.isOnlyImplicitConversion());
+
+    TypeDescription fileStructInt = TypeDescription.createStruct()
+        .addField("f1", TypeDescription.createInt())
+        .addField("f2", TypeDescription.createString());
+    SchemaEvolution sameInt = new SchemaEvolution(fileStructInt, null, options);
+    assertFalse(sameInt.hasConversion());
+    TypeDescription readerStructInt = TypeDescription.createStruct()
+        .addField("f1", TypeDescription.createInt())
+        .addField("f2", TypeDescription.createString());
+    SchemaEvolution bothInt = new SchemaEvolution(fileStructInt, readerStructInt, options);
+    assertFalse(bothInt.hasConversion());
+    TypeDescription readerStructInt1diff = TypeDescription.createStruct()
+        .addField("f1", TypeDescription.createLong())
+        .addField("f2", TypeDescription.createString());
+    SchemaEvolution bothInt1diff = new SchemaEvolution(fileStructInt, readerStructInt1diff, options);
+    assertTrue(bothInt1diff.hasConversion());
+    assertTrue(bothInt1diff.isOnlyImplicitConversion());
+  }
+
+  @Test
+  public void testFloatImplicitConversion() throws IOException {
+    TypeDescription fileStructFloat = TypeDescription.createStruct()
+        .addField("f1", TypeDescription.createFloat())
+        .addField("f2", TypeDescription.createString());
+    SchemaEvolution sameFloat = new SchemaEvolution(fileStructFloat, null, options);
+    assertFalse(sameFloat.hasConversion());
+    TypeDescription readerStructFloat = TypeDescription.createStruct()
+        .addField("f1", TypeDescription.createFloat())
+        .addField("f2", TypeDescription.createString());
+    SchemaEvolution bothFloat = new SchemaEvolution(fileStructFloat, readerStructFloat, options);
+    assertFalse(bothFloat.hasConversion());
+    TypeDescription readerStructFloat1diff = TypeDescription.createStruct()
+        .addField("f1", TypeDescription.createDouble())
+        .addField("f2", TypeDescription.createString());
+    SchemaEvolution bothFloat1diff = new SchemaEvolution(fileStructFloat, readerStructFloat1diff, options);
+    assertTrue(bothFloat1diff.hasConversion());
+    assertTrue(bothFloat1diff.isOnlyImplicitConversion());
+  }
+
+  @Test
+  public void testCharImplicitConversion() throws IOException {
+    TypeDescription fileStructChar = TypeDescription.createStruct()
+        .addField("f1", TypeDescription.createChar().withMaxLength(15))
+        .addField("f2", TypeDescription.createString());
+    SchemaEvolution sameChar = new SchemaEvolution(fileStructChar, null, options);
+    assertFalse(sameChar.hasConversion());
+    TypeDescription readerStructChar = TypeDescription.createStruct()
+        .addField("f1", TypeDescription.createChar().withMaxLength(15))
+        .addField("f2", TypeDescription.createString());
+    SchemaEvolution bothChar = new SchemaEvolution(fileStructChar, readerStructChar, options);
+    assertFalse(bothChar.hasConversion());
+    TypeDescription readerStructChar1diff = TypeDescription.createStruct()
+        .addField("f1", TypeDescription.createString())
+        .addField("f2", TypeDescription.createString());
+    SchemaEvolution bothChar1diff = new SchemaEvolution(fileStructChar, readerStructChar1diff, options);
+    assertTrue(bothChar1diff.hasConversion());
+    assertTrue(bothChar1diff.isOnlyImplicitConversion());
+    TypeDescription readerStructChar2diff = TypeDescription.createStruct()
+        .addField("f1", TypeDescription.createChar().withMaxLength(14))
+        .addField("f2", TypeDescription.createString());
+    SchemaEvolution bothChar2diff = new SchemaEvolution(fileStructChar, readerStructChar2diff, options);
+    assertTrue(bothChar2diff.hasConversion());
+    assertFalse(bothChar2diff.isOnlyImplicitConversion());
+    TypeDescription readerStructChar3diff = TypeDescription.createStruct()
+        .addField("f1", TypeDescription.createVarchar().withMaxLength(15))
+        .addField("f2", TypeDescription.createString());
+    SchemaEvolution bothChar3diff = new SchemaEvolution(fileStructChar, readerStructChar3diff, options);
+    assertTrue(bothChar3diff.hasConversion());
+    assertTrue(bothChar3diff.isOnlyImplicitConversion());
+    TypeDescription readerStructChar4diff = TypeDescription.createStruct()
+        .addField("f1", TypeDescription.createVarchar().withMaxLength(14))
+        .addField("f2", TypeDescription.createString());
+    SchemaEvolution bothChar4diff = new SchemaEvolution(fileStructChar, readerStructChar4diff, options);
+    assertTrue(bothChar4diff.hasConversion());
+    assertFalse(bothChar4diff.isOnlyImplicitConversion());
+  }
+
+  @Test
+  public void testVarcharImplicitConversion() throws IOException {
+    TypeDescription fileStructVarchar = TypeDescription.createStruct()
+        .addField("f1", TypeDescription.createVarchar().withMaxLength(15))
+        .addField("f2", TypeDescription.createString());
+    SchemaEvolution sameVarchar = new SchemaEvolution(fileStructVarchar, null, options);
+    assertFalse(sameVarchar.hasConversion());
+    TypeDescription readerStructVarchar = TypeDescription.createStruct()
+        .addField("f1", TypeDescription.createVarchar().withMaxLength(15))
+        .addField("f2", TypeDescription.createString());
+    SchemaEvolution bothVarchar = new SchemaEvolution(fileStructVarchar, readerStructVarchar, options);
+    assertFalse(bothVarchar.hasConversion());
+    TypeDescription readerStructVarchar1diff = TypeDescription.createStruct()
+        .addField("f1", TypeDescription.createString())
+        .addField("f2", TypeDescription.createString());
+    SchemaEvolution bothVarchar1diff = new SchemaEvolution(fileStructVarchar, readerStructVarchar1diff, options);
+    assertTrue(bothVarchar1diff.hasConversion());
+    assertTrue(bothVarchar1diff.isOnlyImplicitConversion());
+    TypeDescription readerStructVarchar2diff = TypeDescription.createStruct()
+        .addField("f1", TypeDescription.createVarchar().withMaxLength(14))
+        .addField("f2", TypeDescription.createString());
+    SchemaEvolution bothVarchar2diff = new SchemaEvolution(fileStructVarchar, readerStructVarchar2diff, options);
+    assertTrue(bothVarchar2diff.hasConversion());
+    assertFalse(bothVarchar2diff.isOnlyImplicitConversion());
+    TypeDescription readerStructVarchar3diff = TypeDescription.createStruct()
+        .addField("f1", TypeDescription.createChar().withMaxLength(15))
+        .addField("f2", TypeDescription.createString());
+    SchemaEvolution bothVarchar3diff = new SchemaEvolution(fileStructVarchar, readerStructVarchar3diff, options);
+    assertTrue(bothVarchar3diff.hasConversion());
+    assertTrue(bothVarchar3diff.isOnlyImplicitConversion());
+    TypeDescription readerStructVarchar4diff = TypeDescription.createStruct()
+        .addField("f1", TypeDescription.createChar().withMaxLength(14))
+        .addField("f2", TypeDescription.createString());
+    SchemaEvolution bothVarchar4diff = new SchemaEvolution(fileStructVarchar, readerStructVarchar4diff, options);
+    assertTrue(bothVarchar4diff.hasConversion());
+    assertFalse(bothVarchar4diff.isOnlyImplicitConversion());
   }
 
   @Test
@@ -1276,6 +1445,41 @@ public class TestSchemaEvolution {
   }
 
   @Test
+  public void testAcidPositionEvolutionSkipAcid() {
+    TypeDescription fileType = TypeDescription.fromString(
+        "struct<operation:int,originalTransaction:bigint,bucket:int," +
+            "rowId:bigint,currentTransaction:bigint," +
+            "row:struct<_col0:int,_col1:string,_col2:double>>");
+    TypeDescription readerType = TypeDescription.fromString(
+        "struct<x:int,y:string>");
+    SchemaEvolution evo = new SchemaEvolution(fileType, readerType,
+        options.includeAcidColumns(false));
+    assertTrue(evo.isAcid());
+    assertEquals("struct<operation:int,originalTransaction:bigint,bucket:int," +
+        "rowId:bigint,currentTransaction:bigint," +
+        "row:struct<x:int,y:string>>", evo.getReaderSchema().toString());
+    assertEquals("struct<x:int,y:string>",
+        evo.getReaderBaseSchema().toString());
+    // the first stuff should be an identity
+    boolean[] fileInclude = evo.getFileIncluded();
+
+    //get top level struct col
+    assertEquals("column " + 0, 0, evo.getFileType(0).getId());
+    assertTrue("column " + 0, fileInclude[0]);
+    for(int c=1; c < 6; ++c) {
+      assertNull("column " + c, evo.getFileType(c));
+      //skip all acid metadata columns
+      assertFalse("column " + c, fileInclude[c]);
+    }
+    for(int c=6; c < 9; ++c) {
+      assertEquals("column " + c, c, evo.getFileType(c).getId());
+      assertTrue("column " + c, fileInclude[c]);
+    }
+    // don't read the last column
+    assertFalse(fileInclude[9]);
+  }
+
+  @Test
   public void testAcidPositionEvolutionRemoveField() {
     TypeDescription fileType = TypeDescription.fromString(
         "struct<operation:int,originalTransaction:bigint,bucket:int," +
@@ -1371,14 +1575,13 @@ public class TestSchemaEvolution {
                            OrcProto.Stream.Kind kind,
                            int... values) throws IOException {
     StreamName name = new StreamName(id, kind);
-    List<DiskRange> ranges = new ArrayList<>();
+    BufferChunkList ranges = new BufferChunkList();
     byte[] buffer = new byte[values.length];
     for(int i=0; i < values.length; ++i) {
       buffer[i] = (byte) values[i];
     }
     ranges.add(new BufferChunk(ByteBuffer.wrap(buffer), 0));
-    streams.put(name, InStream.create(name.toString(), ranges, values.length, null,
-        values.length));
+    streams.put(name, InStream.create(name.toString(), ranges.get(), values.length));
   }
 
   @Test

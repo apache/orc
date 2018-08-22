@@ -232,6 +232,8 @@ namespace orc {
 
     void close() override;
 
+    void addUserMetadata(const std::string name, const std::string value) override;
+
   private:
     void init();
     void initStripe();
@@ -321,6 +323,12 @@ namespace orc {
     writeFileFooter();
     writePostscript();
     outStream->close();
+  }
+
+  void WriterImpl::addUserMetadata(const std::string name, const std::string value){
+    proto::UserMetadataItem* userMetadataItem = fileFooter.add_metadata();
+    userMetadataItem->set_name(name);
+    userMetadataItem->set_value(value);
   }
 
   void WriterImpl::init() {

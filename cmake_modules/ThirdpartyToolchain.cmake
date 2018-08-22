@@ -287,11 +287,13 @@ endif ()
 # LIBHDFSPP
 
 if(BUILD_LIBHDFSPP)
+  set (BUILD_LIBHDFSPP FALSE)
   if(ORC_CXX_HAS_THREAD_LOCAL)
     find_package(CyrusSASL)
     find_package(OpenSSL)
     find_package(Threads)
     if (CYRUS_SASL_SHARED_LIB AND OPENSSL_LIBRARIES)
+      set (BUILD_LIBHDFSPP TRUE)
       set (LIBHDFSPP_PREFIX "${THIRDPARTY_DIR}/libhdfspp_ep-install")
       set (LIBHDFSPP_INCLUDE_DIR "${LIBHDFSPP_PREFIX}/include")
       set (LIBHDFSPP_STATIC_LIB_NAME hdfspp_static)

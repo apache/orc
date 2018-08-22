@@ -109,7 +109,8 @@ public final class OrcTail {
       CompressionCodec codec = OrcCodecPool.getCodec(getCompressionKind());
       try {
         metadata = extractMetadata(serializedTail, 0,
-            (int) fileTail.getPostscript().getMetadataLength(), codec, getCompressionBufferSize());
+            (int) fileTail.getPostscript().getMetadataLength(),
+            InStream.options().withCodec(codec).withBufferSize(getCompressionBufferSize()));
       } finally {
         OrcCodecPool.returnCodec(getCompressionKind(), codec);
       }

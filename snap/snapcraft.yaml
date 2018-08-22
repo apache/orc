@@ -1,0 +1,53 @@
+name: orc
+version: '1.5.2'
+summary: Apache ORC is the fastest columnar file format for big data.
+description: |
+  Apache ORC is the smallest, fastest columnar file format for Spark
+  or Hadoop workloads. This snap includes the command line tools to
+  inspect, read, and write ORC files.
+
+grade: stable
+confinement: strict
+
+parts:
+  orc:
+    source: https://github.com/apache/orc.git
+    source-type: git
+    source-tag: rel/release-1.5.2
+    plugin: cmake
+    configflags:
+      - -DLZ4_HOME=/usr
+      - -DPROTOBUF_HOME=/usr
+      - -DSNAPPY_HOME=/usr
+      - -DZLIB_HOME=/usr
+    build-packages:
+      - build-essential
+      - cmake
+      - liblz4-dev
+      - make
+      - libprotobuf-dev
+      - libprotoc-dev
+      - libsasl2-dev
+      - libsnappy-dev
+      - maven
+      - openjdk-8-jdk-headless
+      - protobuf-compiler
+      - zlib1g-dev
+    stage-packages:
+      - libdb5.3
+      - libsasl2-2
+      - openjdk-8-jre-headless
+
+apps:
+  contents:
+    command: bin/orc-contents
+    plugs: [home, network, removable-media]
+  java:
+    command: usr/lib/jvm/java-8-openjdk-amd64/bin/java -jar "$(ls $SNAP/share/orc-tools*.jar)"
+    plugs: [home, network, removable-media]
+  metadata:
+    command: bin/orc-metadata
+    plugs: [home, network, removable-media]
+  statistics:
+    command: bin/orc-statistics
+    plugs: [home, network, removable-media]

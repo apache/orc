@@ -863,10 +863,10 @@ namespace orc {
     if (memcmp(magicStart, MAGIC.c_str(), magicLength) != 0) {
       // If there is no magic string at the end, check the beginning.
       // Only files written by Hive 0.11.0 don't have the tail ORC string.
-      char *frontBuffer = new char[magicLength];
-      stream->read(frontBuffer, magicLength, 0);
-      bool foundMatch = memcmp(frontBuffer, MAGIC.c_str(), magicLength) == 0;
-      delete[] frontBuffer;
+      std::unique_ptr<char[]> frontBuffer( new char[magicLength] );
+      stream->read(frontBuffer.get(), magicLength, 0);
+      bool foundMatch = memcmp(frontBuffer.get(), MAGIC.c_str(), magicLength) == 0;
+
       if (!foundMatch) {
         throw ParseError("Not an ORC file");
       }
@@ -936,11 +936,11 @@ namespace orc {
    * @param memoryPool the memory pool to use
    */
   std::unique_ptr<proto::Footer> readFooter(InputStream* stream,
-                                            DataBuffer<char> *&buffer,
+                                            const DataBuffer<char> *buffer,
                                             uint64_t footerOffset,
                                             const proto::PostScript& ps,
                                             MemoryPool& memoryPool) {
-    char *footerPtr = buffer->data() + footerOffset;
+    const char *footerPtr = buffer->data() + footerOffset;
 
     std::unique_ptr<SeekableInputStream> pbStream =
       createDecompressor(convertCompressionKind(ps),
@@ -989,12 +989,12 @@ namespace orc {
       if (readSize < 4) {
         throw ParseError("File size too small");
       }
-      DataBuffer<char> *buffer = new DataBuffer<char>(*contents->pool, readSize);
+      std::unique_ptr<DataBuffer<char>> buffer( new DataBuffer<char>(*contents->pool, readSize) );
       stream->read(buffer->data(), readSize, fileLength - readSize);
 
       postscriptLength = buffer->data()[readSize - 1] & 0xff;
       contents->postscript = REDUNDANT_MOVE(readPostscript(stream.get(),
-        buffer, postscriptLength));
+        buffer.get(), postscriptLength));
       uint64_t footerSize = contents->postscript->footerlength();
       uint64_t tailSize = 1 + postscriptLength + footerSize;
       uint64_t footerOffset;
@@ -1007,9 +1007,8 @@ namespace orc {
         footerOffset = readSize - tailSize;
       }
 
-      contents->footer = REDUNDANT_MOVE(readFooter(stream.get(), buffer,
+      contents->footer = REDUNDANT_MOVE(readFooter(stream.get(), buffer.get(),
         footerOffset, *contents->postscript,  *contents->pool));
-      delete buffer;
     }
     contents->stream = std::move(stream);
     return std::unique_ptr<Reader>(new ReaderImpl(std::move(contents),

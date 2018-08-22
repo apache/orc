@@ -45,7 +45,11 @@ sftp> put orc-X.Y.Zrc0*
 sftp> quit
 ~~~
 
-Make sure your GPG key exists [here](https://dist.apache.org/repos/dist/release/orc/KEYS) for others to verify signature in RC
+Make sure your GPG key is present in [Apache
+LDAP](https://id.apache.org) and the ORC [svn dist
+area](https://dist.apache.org/repos/dist/release/orc/KEYS). That will
+be necessary for others to verify the signatures on the release
+candidate.
 
 Click the version to release (X.Y.Z) [here](https://issues.apache.org/jira/projects/ORC?selectedItem=com.atlassian.jira.jira-projects-plugin:release-page)
 to get the list of jiras that are fixed in X.Y.Z
