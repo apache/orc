@@ -55,7 +55,7 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
     this.utils = new SerializationUtils();
   }
 
-  protected final static RunLengthIntegerWriterV2.EncodingType[] encodings =
+  final static RunLengthIntegerWriterV2.EncodingType[] encodings =
       RunLengthIntegerWriterV2.EncodingType.values();
 
   protected void readValues(boolean ignoreEof) throws IOException {
