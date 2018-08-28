@@ -407,6 +407,7 @@ public class OrcFile {
     private boolean overwrite;
     private boolean writeVariableLengthBlocks;
     private HadoopShims shims;
+    private String directEncodingColumns;
 
     protected WriterOptions(Properties tableProperties, Configuration conf) {
       configuration = conf;
@@ -449,6 +450,8 @@ public class OrcFile {
       shims = HadoopShimsFactory.get();
       writeVariableLengthBlocks =
           OrcConf.WRITE_VARIABLE_LENGTH_BLOCKS.getBoolean(tableProperties,conf);
+      directEncodingColumns = OrcConf.DIRECT_ENCODING_COLUMNS.getString(
+          tableProperties, conf);
     }
 
     /**
@@ -687,6 +690,16 @@ public class OrcFile {
       return this;
     }
 
+    /**
+     * Set the comma-separated list of columns that should be direct encoded.
+     * @param value the value to set
+     * @return this
+     */
+    public WriterOptions directEncodingColumns(String value) {
+      directEncodingColumns = value;
+      return this;
+    }
+
     public boolean getBlockPadding() {
       return blockPaddingValue;
     }
@@ -785,6 +798,10 @@ public class OrcFile {
 
     public boolean getUseUTCTimestamp() {
       return useUTCTimestamp;
+    }
+
+    public String getDirectEncodingColumns() {
+      return directEncodingColumns;
     }
   }
 

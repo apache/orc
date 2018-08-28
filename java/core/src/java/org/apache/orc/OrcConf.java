@@ -155,7 +155,9 @@ public enum OrcConf {
           "A boolean flag to determine if the comparision of field names in schema evolution is case sensitive .\n"),
   WRITE_VARIABLE_LENGTH_BLOCKS("orc.write.variable.length.blocks", null, false,
       "A boolean flag as to whether the ORC writer should write variable length\n"
-      + "HDFS blocks.")
+      + "HDFS blocks."),
+  DIRECT_ENCODING_COLUMNS("orc.column.encoding.direct", "orc.column.encoding.direct", "",
+      "Comma-separated list of columns for which dictionary encoding is to be skipped."),
   ;
 
   private final String attribute;
