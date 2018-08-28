@@ -103,4 +103,6 @@ public interface WriterContext {
                           ) throws IOException;
 
     boolean getUseUTCTimestamp();
+
+    double getDictionaryKeySizeThreshold(int column);
 }

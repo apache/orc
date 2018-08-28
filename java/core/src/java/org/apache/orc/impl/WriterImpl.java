@@ -35,6 +35,7 @@ import org.apache.orc.ColumnStatistics;
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.CompressionKind;
 import org.apache.orc.MemoryManager;
+import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
 import org.apache.orc.OrcUtils;
@@ -113,6 +114,8 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
   private final OrcFile.BloomFilterVersion bloomFilterVersion;
   private final boolean writeTimeZone;
   private final boolean useUTCTimeZone;
+  private final double dictionaryKeySizeThreshold;
+  private final boolean[] directEncodingColumns;
 
   public WriterImpl(FileSystem fs,
                     Path path,
@@ -123,6 +126,10 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     this.schema = opts.getSchema();
     this.writerVersion = opts.getWriterVersion();
     bloomFilterVersion = opts.getBloomFilterVersion();
+    this.directEncodingColumns = OrcUtils.includeColumns(
+        opts.getDirectEncodingColumns(), opts.getSchema());
+    dictionaryKeySizeThreshold =
+        OrcConf.DICTIONARY_KEY_SIZE_THRESHOLD.getDouble(conf);
     if (callback != null) {
       callbackContext = new OrcFile.WriterContext(){
 
@@ -409,6 +416,10 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
 
     public boolean getUseUTCTimestamp() {
       return useUTCTimeZone;
+    }
+
+    public double getDictionaryKeySizeThreshold(int columnId) {
+      return directEncodingColumns[columnId] ? 0.0 : dictionaryKeySizeThreshold;
     }
   }
 

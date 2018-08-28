@@ -76,8 +76,7 @@ public abstract class StringBaseTreeWriter extends TreeWriterBase {
     rowIndexValueCount.add(0L);
     buildIndex = writer.buildIndex();
     Configuration conf = writer.getConfiguration();
-    dictionaryKeySizeThreshold =
-        OrcConf.DICTIONARY_KEY_SIZE_THRESHOLD.getDouble(conf);
+    dictionaryKeySizeThreshold = writer.getDictionaryKeySizeThreshold(columnId);
     strideDictionaryCheck =
         OrcConf.ROW_INDEX_STRIDE_DICTIONARY_CHECK.getBoolean(conf);
     if (dictionaryKeySizeThreshold <= 0.0) {
