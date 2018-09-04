@@ -25,6 +25,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.util.Progressable;
 import org.apache.orc.CompressionKind;
 import org.apache.orc.OrcFile;
@@ -277,6 +278,11 @@ public class TestPhysicalFsWriter {
 
     @Override
     public KeyProvider getKeyProvider(Configuration conf, Random random) throws IOException {
+      return null;
+    }
+
+    @Override
+    public CompressionCodec createZstdCodec() {
       return null;
     }
   }

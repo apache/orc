@@ -30,6 +30,8 @@ public class HadoopShimsFactory {
       "org.apache.orc.impl.HadoopShimsPre2_6";
   private static final String PRE_2_7_SHIM_NAME =
       "org.apache.orc.impl.HadoopShimsPre2_7";
+  private static final String PRE_2_9_SHIM_NAME =
+      "org.apache.orc.impl.HadoopShimsPre2_9";
 
   private static HadoopShims SHIMS = null;
 
@@ -58,6 +60,8 @@ public class HadoopShimsFactory {
         SHIMS = createShimByName(PRE_2_6_SHIM_NAME);
       } else if (major == 2 && minor < 7) {
         SHIMS = createShimByName(PRE_2_7_SHIM_NAME);
+      } else if (major == 2 && minor < 9) {
+        SHIMS = createShimByName(PRE_2_9_SHIM_NAME);
       } else {
         SHIMS = createShimByName(CURRENT_SHIM_NAME);
       }

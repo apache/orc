@@ -20,65 +20,26 @@ package org.apache.orc.impl;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
 import org.apache.hadoop.io.compress.CompressionCodec;
-import org.apache.hadoop.io.compress.ZStandardCodec;
-import org.apache.hadoop.io.compress.zstd.ZStandardDecompressor;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
+import java.util.EnumSet;
 import java.util.Random;
 
 /**
- * Shims for recent versions of Hadoop
+ * Shims for versions of Hadoop less than 2.9.
  *
  * Adds support for:
  * <ul>
  *   <li>Variable length HDFS blocks</li>
  * </ul>
  */
-public class HadoopShimsCurrent implements HadoopShims {
-
-  static class ZstdDirectDecompressWrapper implements DirectDecompressor {
-    private final ZStandardDecompressor.ZStandardDirectDecompressor root;
-    private boolean isFirstCall = true;
-
-    ZstdDirectDecompressWrapper(ZStandardDecompressor.ZStandardDirectDecompressor root) {
-      this.root = root;
-    }
-
-    public void decompress(ByteBuffer input, ByteBuffer output) throws IOException {
-      if (!isFirstCall) {
-        root.reset();
-      } else {
-        isFirstCall = false;
-      }
-      root.decompress(input, output);
-    }
-
-    @Override
-    public void reset() {
-      root.reset();
-    }
-
-    @Override
-    public void end() {
-      root.end();
-    }
-  }
-
-  static DirectDecompressor getDecompressor(DirectCompressionType codec) {
-    switch (codec) {
-      case ZSTD:
-        return new ZstdDirectDecompressWrapper
-                (new ZStandardDecompressor.ZStandardDirectDecompressor(0));
-      default:
-        return HadoopShimsPre2_6.getDecompressor(codec);
-    }
-  }
+public class HadoopShimsPre2_9 implements HadoopShims {
 
   public DirectDecompressor getDirectDecompressor(DirectCompressionType codec) {
-    return getDecompressor(codec);
+    return HadoopShimsPre2_6.getDecompressor(codec);
   }
 
   @Override
@@ -88,9 +49,18 @@ public class HadoopShimsCurrent implements HadoopShims {
     return ZeroCopyShims.getZeroCopyReader(in, pool);
   }
 
+  static boolean endVariableLengthBlocks(OutputStream output) throws IOException {
+    if (output instanceof HdfsDataOutputStream) {
+      HdfsDataOutputStream hdfs = (HdfsDataOutputStream) output;
+      hdfs.hsync(EnumSet.of(HdfsDataOutputStream.SyncFlag.END_BLOCK));
+      return true;
+    }
+    return false;
+  }
+
   @Override
   public boolean endVariableLengthBlock(OutputStream output) throws IOException {
-    return HadoopShimsPre2_9.endVariableLengthBlocks(output);
+    return endVariableLengthBlocks(output);
   }
 
   @Override
@@ -101,8 +71,6 @@ public class HadoopShimsCurrent implements HadoopShims {
 
   @Override
   public CompressionCodec createZstdCodec() {
-    // check if native zstd library is loaded; otherwise RuntimeException will be thrown
-    ZStandardCodec.checkNativeCodeLoaded();
-    return new ZStandardCodec();
+    return null;
   }
 }

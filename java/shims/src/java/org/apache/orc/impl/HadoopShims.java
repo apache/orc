@@ -20,6 +20,7 @@ package org.apache.orc.impl;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.orc.EncryptionAlgorithm;
 
 import java.io.Closeable;
@@ -37,6 +38,7 @@ public interface HadoopShims {
     ZLIB_NOHEADER,
     ZLIB,
     SNAPPY,
+    ZSTD
   }
 
   interface DirectDecompressor {
@@ -242,4 +244,9 @@ public interface HadoopShims {
   KeyProvider getKeyProvider(Configuration conf,
                              Random random) throws IOException;
 
+  /**
+   * Create a ZstdCodec
+   * @return ZstdCodec
+   */
+  CompressionCodec createZstdCodec();
 }

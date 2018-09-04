@@ -20,6 +20,7 @@ package org.apache.orc.impl;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.io.compress.CompressionCodec;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -80,5 +81,10 @@ public class HadoopShimsPre2_3 implements HadoopShims {
     public Key decryptLocalKey(KeyMetadata key, byte[] encryptedKey) {
       return null;
     }
+  }
+
+  @Override
+  public CompressionCodec createZstdCodec() {
+    return null;
   }
 }

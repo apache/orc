@@ -411,6 +411,7 @@ public class ReaderImpl implements Reader {
       case SNAPPY:
       case LZO:
       case LZ4:
+      case ZSTD:
         break;
       default:
         throw new IllegalArgumentException("Unknown compression");

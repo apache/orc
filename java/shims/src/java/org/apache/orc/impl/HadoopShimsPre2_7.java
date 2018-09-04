@@ -22,6 +22,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.key.KeyProviderCryptoExtension;
 import org.apache.hadoop.crypto.key.KeyProviderFactory;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.orc.EncryptionAlgorithm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -220,5 +221,10 @@ public class HadoopShimsPre2_7 implements HadoopShims {
   public KeyProvider getKeyProvider(Configuration conf,
                                     Random random) throws IOException {
     return createKeyProvider(conf, random);
+  }
+
+  @Override
+  public CompressionCodec createZstdCodec() {
+    return null;
   }
 }

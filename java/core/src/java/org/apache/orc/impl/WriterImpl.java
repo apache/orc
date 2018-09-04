@@ -249,6 +249,8 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
       case LZ4:
         return new AircompressorCodec(kind, new Lz4Compressor(),
             new Lz4Decompressor());
+      case ZSTD:
+        return new ZstdCodec();
       default:
         throw new IllegalArgumentException("Unknown compression codec: " +
             kind);

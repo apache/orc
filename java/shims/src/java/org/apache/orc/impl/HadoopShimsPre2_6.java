@@ -20,6 +20,7 @@ package org.apache.orc.impl;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.snappy.SnappyDecompressor.SnappyDirectDecompressor;
 import org.apache.hadoop.io.compress.zlib.ZlibDecompressor;
 
@@ -131,5 +132,10 @@ public class HadoopShimsPre2_6 implements HadoopShims {
   @Override
   public KeyProvider getKeyProvider(Configuration conf, Random random) {
     return new HadoopShimsPre2_3.NullKeyProvider();
+  }
+
+  @Override
+  public CompressionCodec createZstdCodec() {
+    return null;
   }
 }
