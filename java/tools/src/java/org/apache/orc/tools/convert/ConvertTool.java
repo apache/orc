@@ -51,6 +51,7 @@ public class ConvertTool {
 
   private final List<FileInformation> fileList;
   private final TypeDescription schema;
+  private final TypeDescription lowerSchema;
   private final char csvSeparator;
   private final char csvQuote;
   private final char csvEscape;
@@ -181,8 +182,10 @@ public class ConvertTool {
     fileList = buildFileList(opts.getArgs(), conf);
     if (opts.hasOption('s')) {
       this.schema = TypeDescription.fromString(opts.getOptionValue('s'));
+      this.lowerSchema = TypeDescription.fromString(opts.getOptionValue('s').toLowerCase());
     } else {
       this.schema = buildSchema(fileList, conf);
+      this.lowerSchema = this.schema;
     }
     this.csvQuote = getCharOption(opts, 'q', '"');
     this.csvEscape = getCharOption(opts, 'e', '\\');
@@ -193,8 +196,8 @@ public class ConvertTool {
     String outFilename = opts.hasOption('o')
         ? opts.getOptionValue('o') : "output.orc";
     writer = OrcFile.createWriter(new Path(outFilename),
-        OrcFile.writerOptions(conf).setSchema(schema));
-    batch = schema.createRowBatch();
+        OrcFile.writerOptions(conf).setSchema(lowerSchema));
+    batch = lowerSchema.createRowBatch();
   }
 
   void run() throws IOException {
