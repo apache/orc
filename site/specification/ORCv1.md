@@ -674,7 +674,7 @@ message Stream {
  // the length of each value for variable length data
  LENGTH = 2;
  // the dictionary blob
- DICTIONARY\_DATA = 3;
+ DICTIONARY_DATA = 3;
  // deprecated prior to Hive 0.11
  // It was used to store the number of instances of each value in the
  // dictionary
@@ -708,9 +708,9 @@ message ColumnEncoding {
  // the encoding uses a dictionary of unique values using RLE v1
  DICTIONARY = 1;
  // the encoding is direct using RLE v2
- DIRECT\_V2 = 2;
+ DIRECT_V2 = 2;
  // the encoding is dictionary-based using RLE v2
- DICTIONARY\_V2 = 3;
+ DICTIONARY_V2 = 3;
  }
  required Kind kind = 1;
  // for dictionary encodings, record the size of the dictionary
