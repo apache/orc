@@ -25,13 +25,16 @@
 
 namespace orc {
 
-  StripeStreamsImpl::StripeStreamsImpl(const RowReaderImpl& _reader,
+  StripeStreamsImpl::StripeStreamsImpl(const RowReaderImpl& _reader, uint64_t _index,
+                                       const proto::StripeInformation& _stripeInfo,
                                        const proto::StripeFooter& _footer,
                                        uint64_t _stripeStart,
                                        InputStream& _input,
                                        const Timezone& _writerTimezone
                                        ): reader(_reader),
+                                          stripeInfo(_stripeInfo),
                                           footer(_footer),
+                                          stripeIndex(_index),
                                           stripeStart(_stripeStart),
                                           input(_input),
                                           writerTimezone(_writerTimezone) {
@@ -77,14 +80,23 @@ namespace orc {
                                proto::Stream_Kind kind,
                                bool shouldStream) const {
     uint64_t offset = stripeStart;
+    uint64_t dataEnd = stripeInfo.offset() + stripeInfo.indexlength() + stripeInfo.datalength();
     MemoryPool *pool = reader.getFileContents().pool;
     for(int i = 0; i < footer.streams_size(); ++i) {
       const proto::Stream& stream = footer.streams(i);
       if (stream.has_kind() &&
           stream.kind() == kind &&
           stream.column() == static_cast<uint64_t>(columnId)) {
-        uint64_t myBlock = shouldStream ? input.getNaturalReadSize():
-          stream.length();
+        uint64_t streamLength = stream.length();
+        uint64_t myBlock = shouldStream ? input.getNaturalReadSize(): streamLength;
+        if (offset + streamLength > dataEnd) {
+          std::stringstream msg;
+          msg << "Malformed stream meta at stream index " << i << " in stripe " << stripeIndex
+              << ": streamOffset=" << offset << ", streamLength=" << streamLength
+              << ", stripeOffset=" << stripeInfo.offset() << ", stripeIndexLength="
+              << stripeInfo.indexlength() << ", stripeDataLength=" << stripeInfo.datalength();
+          throw ParseError(msg.str());
+        }
         return createDecompressor(reader.getCompression(),
                                   std::unique_ptr<SeekableInputStream>
                                   (new SeekableFileInputStream
