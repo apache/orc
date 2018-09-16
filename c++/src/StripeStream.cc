@@ -83,8 +83,15 @@ namespace orc {
       if (stream.has_kind() &&
           stream.kind() == kind &&
           stream.column() == static_cast<uint64_t>(columnId)) {
-        uint64_t myBlock = shouldStream ? input.getNaturalReadSize():
-          stream.length();
+        uint64_t streamLength = stream.length();
+        uint64_t myBlock = shouldStream ? input.getNaturalReadSize(): streamLength;
+        if (offset + streamLength > input.getLength()) {
+          std::stringstream msg;
+          msg << "Malformed stream meta at stream index " << i
+              << ": streamOffset=" << offset << ", streamLength=" << streamLength
+              << ", fileLength=" << input.getLength();
+          throw ParseError(msg.str());
+        }
         return createDecompressor(reader.getCompression(),
                                   std::unique_ptr<SeekableInputStream>
                                   (new SeekableFileInputStream
