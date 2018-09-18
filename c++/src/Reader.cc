@@ -489,15 +489,24 @@ namespace orc {
     throw std::range_error("key not found");
   }
 
-  void ReaderImpl::getRowIndexStatistics(
-           uint64_t stripeOffset, const proto::StripeFooter& currentStripeFooter,
-           std::vector<std::vector<proto::ColumnStatistics> >* indexStats) const {
+  void ReaderImpl::getRowIndexStatistics(const proto::StripeInformation& stripeInfo,
+      uint64_t stripeIndex, const proto::StripeFooter& currentStripeFooter,
+      std::vector<std::vector<proto::ColumnStatistics> >* indexStats) const {
     int num_streams = currentStripeFooter.streams_size();
-    uint64_t offset = stripeOffset;
+    uint64_t offset = stripeInfo.offset();
+    uint64_t indexEnd = stripeInfo.offset() + stripeInfo.indexlength();
     for (int i = 0; i < num_streams; i++) {
       const proto::Stream& stream = currentStripeFooter.streams(i);
       uint64_t length = static_cast<uint64_t>(stream.length());
       if (static_cast<StreamKind>(stream.kind()) == StreamKind::StreamKind_ROW_INDEX) {
+        if (offset + length > indexEnd) {
+          std::stringstream msg;
+          msg << "Malformed RowIndex stream meta in stripe " << stripeIndex
+              << ": streamOffset=" << offset << ", streamLength=" << length
+              << ", stripeOffset=" << stripeInfo.offset() << ", stripeIndexLength="
+              << stripeInfo.indexlength();
+          throw ParseError(msg.str());
+        }
         std::unique_ptr<SeekableInputStream> pbStream =
           createDecompressor(contents->compression,
                   std::unique_ptr<SeekableInputStream>
@@ -554,7 +563,7 @@ namespace orc {
     proto::StripeFooter currentStripeFooter =
         getStripeFooter(currentStripeInfo, *contents.get());
 
-    getRowIndexStatistics(currentStripeInfo.offset(), currentStripeFooter, &indexStats);
+    getRowIndexStatistics(currentStripeInfo, stripeIndex, currentStripeFooter, &indexStats);
 
     const Timezone& writerTZ =
       currentStripeFooter.has_writertimezone() ?
@@ -586,8 +595,15 @@ namespace orc {
 
   void ReaderImpl::readMetadata() const {
     uint64_t metadataSize = contents->postscript->metadatalength();
-    uint64_t metadataStart = fileLength - metadataSize
-      - contents->postscript->footerlength() - postscriptLength - 1;
+    uint64_t footerLength = contents->postscript->footerlength();
+    if (fileLength < metadataSize + footerLength + postscriptLength + 1) {
+      std::stringstream msg;
+      msg << "Invalid Metadata length: fileLength=" << fileLength
+          << ", metadataLength=" << metadataSize << ", footerLength=" << footerLength
+          << ", postscriptLength=" << postscriptLength;
+      throw ParseError(msg.str());
+    }
+    uint64_t metadataStart = fileLength - metadataSize - footerLength - postscriptLength - 1;
     if (metadataSize != 0) {
       std::unique_ptr<SeekableInputStream> pbStream =
         createDecompressor(contents->compression,
@@ -798,13 +814,24 @@ namespace orc {
   void RowReaderImpl::startNextStripe() {
     reader.reset(); // ColumnReaders use lots of memory; free old memory first
     currentStripeInfo = footer->stripes(static_cast<int>(currentStripe));
+    uint64_t fileLength = contents->stream->getLength();
+    if (currentStripeInfo.offset() + currentStripeInfo.indexlength() +
+        currentStripeInfo.datalength() + currentStripeInfo.footerlength() >= fileLength) {
+      std::stringstream msg;
+      msg << "Malformed StripeInformation at stripe index " << currentStripe << ": fileLength="
+          << fileLength << ", StripeInfo=(offset=" << currentStripeInfo.offset() << ", indexLength="
+          << currentStripeInfo.indexlength() << ", dataLength=" << currentStripeInfo.datalength()
+          << ", footerLength=" << currentStripeInfo.footerlength() << ")";
+      throw ParseError(msg.str());
+    }
     currentStripeFooter = getStripeFooter(currentStripeInfo, *contents.get());
     rowsInCurrentStripe = currentStripeInfo.numberofrows();
     const Timezone& writerTimezone =
       currentStripeFooter.has_writertimezone() ?
         getTimezoneByName(currentStripeFooter.writertimezone()) :
         localTimezone;
-    StripeStreamsImpl stripeStreams(*this, currentStripeFooter,
+    StripeStreamsImpl stripeStreams(*this, currentStripe, currentStripeInfo,
+                                    currentStripeFooter,
                                     currentStripeInfo.offset(),
                                     *(contents->stream.get()),
                                     writerTimezone);
@@ -889,6 +916,12 @@ namespace orc {
 
     std::unique_ptr<proto::PostScript> postscript =
       std::unique_ptr<proto::PostScript>(new proto::PostScript());
+    if (readSize < 1 + postscriptSize) {
+      std::stringstream msg;
+      msg << "Invalid ORC postscript length: " << postscriptSize << ", file length = "
+          << stream->getLength();
+      throw ParseError(msg.str());
+    }
     if (!postscript->ParseFromArray(ptr + readSize - 1 - postscriptSize,
                                    static_cast<int>(postscriptSize))) {
       throw ParseError("Failed to parse the postscript from " +
@@ -997,6 +1030,11 @@ namespace orc {
         buffer.get(), postscriptLength));
       uint64_t footerSize = contents->postscript->footerlength();
       uint64_t tailSize = 1 + postscriptLength + footerSize;
+      if (tailSize >= fileLength) {
+        std::stringstream msg;
+        msg << "Invalid ORC tailSize=" << tailSize << ", fileLength=" << fileLength;
+        throw ParseError(msg.str());
+      }
       uint64_t footerOffset;
 
       if (tailSize > readSize) {
