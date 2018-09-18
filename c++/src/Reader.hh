@@ -190,7 +190,7 @@ namespace orc {
     // internal methods
     void readMetadata() const;
     void checkOrcVersion();
-    void getRowIndexStatistics(uint64_t stripeOffset,
+    void getRowIndexStatistics(const proto::StripeInformation& stripeInfo, uint64_t stripeIndex,
                                const proto::StripeFooter& currentStripeFooter,
                                std::vector<std::vector<proto::ColumnStatistics> >* indexStats) const;
 

@@ -489,19 +489,22 @@ namespace orc {
     throw std::range_error("key not found");
   }
 
-  void ReaderImpl::getRowIndexStatistics(
-           uint64_t stripeOffset, const proto::StripeFooter& currentStripeFooter,
-           std::vector<std::vector<proto::ColumnStatistics> >* indexStats) const {
+  void ReaderImpl::getRowIndexStatistics(const proto::StripeInformation& stripeInfo,
+      uint64_t stripeIndex, const proto::StripeFooter& currentStripeFooter,
+      std::vector<std::vector<proto::ColumnStatistics> >* indexStats) const {
     int num_streams = currentStripeFooter.streams_size();
-    uint64_t offset = stripeOffset;
+    uint64_t offset = stripeInfo.offset();
+    uint64_t indexEnd = stripeInfo.offset() + stripeInfo.indexlength();
     for (int i = 0; i < num_streams; i++) {
       const proto::Stream& stream = currentStripeFooter.streams(i);
       uint64_t length = static_cast<uint64_t>(stream.length());
       if (static_cast<StreamKind>(stream.kind()) == StreamKind::StreamKind_ROW_INDEX) {
-        if (offset + length > fileLength) {
+        if (offset + length > indexEnd) {
           std::stringstream msg;
-          msg << "Malformed RowIndex stream meta: streamOffset=" << offset
-              << ", streamLength=" << length << ", fileLength=" << fileLength;
+          msg << "Malformed RowIndex stream meta in stripe " << stripeIndex
+              << ": streamOffset=" << offset << ", streamLength=" << length
+              << ", stripeOffset=" << stripeInfo.offset() << ", stripeIndexLength="
+              << stripeInfo.indexlength();
           throw ParseError(msg.str());
         }
         std::unique_ptr<SeekableInputStream> pbStream =
@@ -560,7 +563,7 @@ namespace orc {
     proto::StripeFooter currentStripeFooter =
         getStripeFooter(currentStripeInfo, *contents.get());
 
-    getRowIndexStatistics(currentStripeInfo.offset(), currentStripeFooter, &indexStats);
+    getRowIndexStatistics(currentStripeInfo, stripeIndex, currentStripeFooter, &indexStats);
 
     const Timezone& writerTZ =
       currentStripeFooter.has_writertimezone() ?
@@ -827,7 +830,8 @@ namespace orc {
       currentStripeFooter.has_writertimezone() ?
         getTimezoneByName(currentStripeFooter.writertimezone()) :
         localTimezone;
-    StripeStreamsImpl stripeStreams(*this, currentStripeFooter,
+    StripeStreamsImpl stripeStreams(*this, currentStripe, currentStripeInfo,
+                                    currentStripeFooter,
                                     currentStripeInfo.offset(),
                                     *(contents->stream.get()),
                                     writerTimezone);
