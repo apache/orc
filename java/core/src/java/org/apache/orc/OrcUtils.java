@@ -602,4 +602,53 @@ public class OrcUtils {
     }
     return result;
   }
+
+  public static final class Utf8Utils {
+
+    public static int charLength(byte[] data, int offset, int length) {
+      int chars = 0;
+      for (int i = 0; i < length; i++) {
+        if (isUtfStartByte(data[offset +i ])) {
+          chars++;
+        }
+      }
+      return chars;
+    }
+
+    /**
+     * Return the number of bytes required to read at most 
+     * maxLength characters in full from a utf-8 encoded byte array provided 
+     * by data[offset:offset+length]. This does not validate utf-8 data, but
+     * operates correctly on already valid utf-8 data.
+     * 
+     * @param maxCharLength
+     * @param data
+     * @param offset
+     * @param length
+     */
+    public static int truncateBytesTo(int maxCharLength, byte[] data, int offset, int length) {
+      int chars = 0;
+      if (length <= maxCharLength) {
+        return length;
+      }
+      for (int i = 0; i < length; i++) {
+        if (isUtfStartByte(data[offset +i ])) {
+          chars++;
+        }
+        if (chars > maxCharLength) {
+          return i;
+        }
+      }
+      // everything fits
+      return length;
+    }
+
+    /**
+     * Checks if b is the first byte of a UTF-8 character.
+     *
+     */
+    public static boolean isUtfStartByte(byte b) {
+      return (b & 0xC0) != 0x80;
+    }
+  }
 }
