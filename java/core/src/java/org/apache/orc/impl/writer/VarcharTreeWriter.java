@@ -21,6 +21,7 @@ package org.apache.orc.impl.writer;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.orc.TypeDescription;
+import org.apache.orc.impl.Utf8Utils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -46,58 +47,42 @@ public class VarcharTreeWriter extends StringBaseTreeWriter {
     BytesColumnVector vec = (BytesColumnVector) vector;
     if (vector.isRepeating) {
       if (vector.noNulls || !vector.isNull[0]) {
-        int itemLength = Math.min(vec.length[0], maxLength);
-        if (useDictionaryEncoding) {
-          int id = dictionary.add(vec.vector[0], vec.start[0], itemLength);
-          for(int i=0; i < length; ++i) {
-            rows.add(id);
-          }
-        } else {
-          for(int i=0; i < length; ++i) {
-            directStreamOutput.write(vec.vector[0], vec.start[0],
-                itemLength);
-            lengthOutput.write(itemLength);
-          }
-        }
-        indexStatistics.updateString(vec.vector[0], vec.start[0],
-            itemLength, length);
-        if (createBloomFilter) {
-          if (bloomFilter != null) {
-            // translate from UTF-8 to the default charset
-            bloomFilter.addString(new String(vec.vector[0],
-                vec.start[0], itemLength,
-                StandardCharsets.UTF_8));
-          }
-          bloomFilterUtf8.addBytes(vec.vector[0],
-              vec.start[0], itemLength);
-        }
+        // 0, length times
+        writeTruncated(vec, 0, length);
       }
     } else {
       for(int i=0; i < length; ++i) {
         if (vec.noNulls || !vec.isNull[i + offset]) {
-          int itemLength = Math.min(vec.length[offset + i], maxLength);
-          if (useDictionaryEncoding) {
-            rows.add(dictionary.add(vec.vector[offset + i],
-                vec.start[offset + i], itemLength));
-          } else {
-            directStreamOutput.write(vec.vector[offset + i],
-                vec.start[offset + i], itemLength);
-            lengthOutput.write(itemLength);
-          }
-          indexStatistics.updateString(vec.vector[offset + i],
-              vec.start[offset + i], itemLength, 1);
-          if (createBloomFilter) {
-            if (bloomFilter != null) {
-              // translate from UTF-8 to the default charset
-              bloomFilter.addString(new String(vec.vector[offset + i],
-                  vec.start[offset + i], itemLength,
-                  StandardCharsets.UTF_8));
-            }
-            bloomFilterUtf8.addBytes(vec.vector[offset + i],
-                vec.start[offset + i], itemLength);
-          }
+          // offset + i, once per loop
+          writeTruncated(vec, i + offset, 1);
         }
       }
+    }
+  }
+
+  private void writeTruncated(BytesColumnVector vec, int row, int repeats)
+      throws IOException {
+    int itemLength =
+        Utf8Utils.truncateBytesTo(maxLength, vec.vector[row], vec.start[row], vec.length[row]);
+    if (useDictionaryEncoding) {
+      int id = dictionary.add(vec.vector[row], vec.start[row], itemLength);
+      for (int i = 0; i < repeats; ++i) {
+        rows.add(id);
+      }
+    } else {
+      for (int i = 0; i < repeats; ++i) {
+        directStreamOutput.write(vec.vector[row], vec.start[row], itemLength);
+        lengthOutput.write(itemLength);
+      }
+    }
+    indexStatistics.updateString(vec.vector[row], vec.start[row], itemLength, repeats);
+    if (createBloomFilter) {
+      if (bloomFilter != null) {
+        // translate from UTF-8 to the default charset
+        bloomFilter.addString(new String(vec.vector[row], vec.start[row], itemLength,
+            StandardCharsets.UTF_8));
+      }
+      bloomFilterUtf8.addBytes(vec.vector[row], vec.start[row], itemLength);
     }
   }
 }
