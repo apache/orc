@@ -775,32 +775,6 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       return result;
     }
 
-    /**
-     * Find the start of the last character that ends in the current string.
-     * @param text the bytes of the utf-8
-     * @param from the first byte location
-     * @param until the last byte location
-     * @return the index of the last character
-     */
-    private static int findLastCharacter(byte[] text, int from, int until) {
-      int posn = until;
-      /* we don't expect characters more than 5 bytes */
-      while (posn >= from) {
-        if (getCharLength(text[posn]) > 0) {
-          return posn;
-        }
-        posn -= 1;
-      }
-      /* beginning of a valid char not found */
-      throw new IllegalArgumentException(
-          "Could not truncate string, beginning of a valid char not found");
-    }
-
-    private static int getCodePoint(byte[] source, int from, int len) {
-      return new String(source, from, len, StandardCharsets.UTF_8)
-          .codePointAt(0);
-    }
-
     private static void appendCodePoint(Text result, int codepoint) {
       if (codepoint < 0 || codepoint > 0x1f_ffff) {
         throw new IllegalArgumentException("Codepoint out of range " +
@@ -837,13 +811,13 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
      * @return truncated Text value
      */
     private static Text truncateUpperBound(final byte[] text, final int from) {
-      int followingChar = findLastCharacter(text, from,
+      int followingChar = Utf8Utils.findLastCharacter(text, from,
           from + MAX_BYTES_RECORDED);
-      int lastChar = findLastCharacter(text, from, followingChar - 1);
+      int lastChar = Utf8Utils.findLastCharacter(text, from, followingChar - 1);
       Text result = new Text();
       result.set(text, from, lastChar - from);
       appendCodePoint(result,
-          getCodePoint(text, lastChar, followingChar - lastChar) + 1);
+          Utf8Utils.getCodePoint(text, lastChar, followingChar - lastChar) + 1);
       return result;
     }
 
@@ -857,35 +831,11 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
      */
     private static Text truncateLowerBound(final byte[] text, final int from) {
 
-      int lastChar = findLastCharacter(text, from, from + MAX_BYTES_RECORDED);
+      int lastChar = Utf8Utils.findLastCharacter(text, from,
+          from + MAX_BYTES_RECORDED);
       Text result = new Text();
       result.set(text, from, lastChar - from);
       return result;
-    }
-
-    /**
-     * A helper function that returns the length of the UTF-8 character
-     * IF the given byte is beginning of a valid char.
-     * In case it is a beginning byte, a value greater than 0
-     * is returned (length of character in bytes).
-     * Else 0 is returned
-     * @param b
-     * @return 0 if not beginning of char else length of char in bytes
-     */
-    private static int getCharLength(byte b) {
-      int len = 0;
-      if((b & 0b10000000) == 0b00000000 ) {
-        len = 1;
-      } else if ((b & 0b11100000) == 0b11000000 ) {
-        len = 2;
-      } else if ((b & 0b11110000) == 0b11100000 ) {
-        len = 3;
-      } else if ((b & 0b11111000) == 0b11110000 ) {
-        len = 4;
-      } else if ((b & 0b11111100) == 0b11111000 ) {
-        len = 5;
-      }
-      return len;
     }
   }
 
