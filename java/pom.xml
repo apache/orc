@@ -21,7 +21,7 @@
   </parent>
   <groupId>org.apache.orc</groupId>
   <artifactId>orc</artifactId>
-  <version>1.5.3-SNAPSHOT</version>
+  <version>1.5.3</version>
   <packaging>pom</packaging>
 
   <name>Apache ORC</name>
@@ -350,7 +350,7 @@
       <dependency>
         <groupId>org.apache.orc</groupId>
         <artifactId>orc-shims</artifactId>
-        <version>1.5.3-SNAPSHOT</version>
+        <version>1.5.3</version>
         <exclusions>
           <exclusion>
             <groupId>org.apache.hadoop</groupId>
@@ -365,17 +365,17 @@
       <dependency>
         <groupId>org.apache.orc</groupId>
         <artifactId>orc-core</artifactId>
-        <version>1.5.3-SNAPSHOT</version>
+        <version>1.5.3</version>
       </dependency>
       <dependency>
         <groupId>org.apache.orc</groupId>
         <artifactId>orc-mapreduce</artifactId>
-        <version>1.5.3-SNAPSHOT</version>
+        <version>1.5.3</version>
       </dependency>
       <dependency>
         <groupId>org.apache.orc</groupId>
         <artifactId>orc-tools</artifactId>
-        <version>1.5.3-SNAPSHOT</version>
+        <version>1.5.3</version>
       </dependency>
 
       <!-- inter-project depedencies -->
