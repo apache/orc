@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Building ORC</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="generator" content="Jekyll v3.7.3">
+  <meta name="generator" content="Jekyll v3.8.4">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
   <link rel="stylesheet" href="/css/screen.css">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -710,7 +710,7 @@ is in the docker subdirectory, for the list of packages required to build ORC:</
 
 <p>To build a normal release:</p>
 
-<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% mkdir build
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% <span class="nb">mkdir </span>build
 % <span class="nb">cd </span>build
 % cmake ..
 % make package test-out
@@ -748,7 +748,7 @@ is invoking:</p>
 
 <h2 id="building-just-c">Building just C++</h2>
 
-<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% mkdir build
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% <span class="nb">mkdir </span>build
 % <span class="nb">cd </span>build
 % cmake .. <span class="nt">-DBUILD_JAVA</span><span class="o">=</span>OFF
 % make package test-out
@@ -756,7 +756,7 @@ is invoking:</p>
 
 <h2 id="specify-third-party-libraries-for-c-build">Specify third-party libraries for C++ build</h2>
 
-<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% mkdir build
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% <span class="nb">mkdir </span>build
 % <span class="nb">cd </span>build
 % cmake .. <span class="nt">-DSNAPPY_HOME</span><span class="o">=</span>&lt;PATH&gt; <span class="se">\</span>
            <span class="nt">-DZLIB_HOME</span><span class="o">=</span>&lt;PATH&gt; <span class="se">\</span>
