@@ -999,7 +999,7 @@ public class OrcFile {
           rowIndexStride = reader.getRowIndexStride();
           fileVersion = reader.getFileVersion();
           writerVersion = reader.getWriterVersion();
-          options.blockSize(bufferSize)
+          options.bufferSize(bufferSize)
               .version(fileVersion)
               .writerVersion(writerVersion)
               .compress(compression)
