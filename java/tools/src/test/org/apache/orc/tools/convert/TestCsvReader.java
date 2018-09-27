@@ -28,10 +28,12 @@ import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.RecordReader;
 import org.apache.orc.TypeDescription;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.StringReader;
+import java.util.Locale;
 
 import static org.apache.orc.tools.convert.ConvertTool.DEFAULT_TIMESTAMP_FORMAT;
 import static org.junit.Assert.assertEquals;
@@ -39,10 +41,22 @@ import static org.junit.Assert.assertEquals;
 public class TestCsvReader {
 
   Configuration conf;
+  Locale defaultLocale;
 
   @Before
   public void openFileSystem () throws Exception {
     conf = new Configuration();
+  }
+
+  @Before
+  public void storeDefaultLocale() {
+    defaultLocale = Locale.getDefault();
+    Locale.setDefault(Locale.US);
+  }
+
+  @After
+  public void restoreDefaultLocale() {
+    Locale.setDefault(defaultLocale);
   }
 
   @Test
