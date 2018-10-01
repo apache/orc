@@ -201,10 +201,10 @@ public class MemoryManagerImpl implements MemoryManager {
    * @param isAllocate is this an allocation?
    */
   private void updateScale(boolean isAllocate) throws IOException {
-    if (totalAllocation <= totalMemoryPool) {
+    if (totalAllocation <= getTotalMemoryPool()) {
       currentScale = 1;
     } else {
-      currentScale = (double) totalMemoryPool / totalAllocation;
+      currentScale = (double) getTotalMemoryPool() / totalAllocation;
     }
   }
 }
