@@ -109,7 +109,7 @@ There are many Hive configuration properties related to ORC files:
       available size within the block is more than 3.2Mb, a new
       smaller stripe will be inserted to fit within that space. This
       will make sure that no stripe written will cross block
-      boundaries and cause remote reads within a node local task.</t>
+      boundaries and cause remote reads within a node local task.</td>
 </tr>
 <tr>
   <td>hive.exec.orc.default.compress</td>
