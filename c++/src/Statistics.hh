@@ -418,6 +418,8 @@ namespace orc {
       proto::BucketStatistics* bucketStats = pbStats.mutable_bucketstatistics();
       if (_hasCount) {
         bucketStats->add_count(_trueCount);
+      } else {
+        bucketStats->clear_count();
       }
     }
 
@@ -519,11 +521,14 @@ namespace orc {
       pbStats.set_hasnull(_stats.hasNull());
       pbStats.set_numberofvalues(_stats.getNumberOfValues());
 
+      proto::DateStatistics* dateStatistics =
+        pbStats.mutable_datestatistics();
       if (_stats.hasMinimum()) {
-        proto::DateStatistics* dateStatistics =
-          pbStats.mutable_datestatistics();
         dateStatistics->set_maximum(_stats.getMaximum());
         dateStatistics->set_minimum(_stats.getMinimum());
+      } else {
+        dateStatistics->clear_minimum();
+        dateStatistics->clear_maximum();
       }
     }
 
@@ -662,9 +667,14 @@ namespace orc {
       if (_stats.hasMinimum()) {
         decStats->set_minimum(_stats.getMinimum().toString());
         decStats->set_maximum(_stats.getMaximum().toString());
+      } else {
+        decStats->clear_minimum();
+        decStats->clear_maximum();
       }
       if (_stats.hasSum()) {
         decStats->set_sum(_stats.getSum().toString());
+      } else {
+        decStats->clear_sum();
       }
     }
 
@@ -836,9 +846,14 @@ namespace orc {
       if (_stats.hasMinimum()) {
         doubleStats->set_minimum(_stats.getMinimum());
         doubleStats->set_maximum(_stats.getMaximum());
+      } else {
+        doubleStats->clear_minimum();
+        doubleStats->clear_maximum();
       }
       if (_stats.hasSum()) {
         doubleStats->set_sum(_stats.getSum());
+      } else {
+        doubleStats->clear_sum();
       }
     }
 
@@ -980,9 +995,14 @@ namespace orc {
       if (_stats.hasMinimum()) {
         intStats->set_minimum(_stats.getMinimum());
         intStats->set_maximum(_stats.getMaximum());
+      } else {
+        intStats->clear_minimum();
+        intStats->clear_maximum();
       }
       if (_stats.hasSum()) {
         intStats->set_sum(_stats.getSum());
+      } else {
+        intStats->clear_sum();
       }
     }
 
@@ -1148,9 +1168,14 @@ namespace orc {
       if (_stats.hasMinimum()) {
         strStats->set_minimum(_stats.getMinimum());
         strStats->set_maximum(_stats.getMaximum());
+      } else {
+        strStats->clear_minimum();
+        strStats->clear_maximum();
       }
       if (_stats.hasTotalLength()) {
         strStats->set_sum(static_cast<int64_t>(_stats.getTotalLength()));
+      } else {
+        strStats->clear_sum();
       }
     }
 
@@ -1267,11 +1292,14 @@ namespace orc {
       pbStats.set_hasnull(_stats.hasNull());
       pbStats.set_numberofvalues(_stats.getNumberOfValues());
 
+      proto::TimestampStatistics* tsStats =
+        pbStats.mutable_timestampstatistics();
       if (_stats.hasMinimum()) {
-        proto::TimestampStatistics* tsStats =
-          pbStats.mutable_timestampstatistics();
         tsStats->set_minimumutc(_stats.getMinimum());
         tsStats->set_maximumutc(_stats.getMaximum());
+      } else {
+        tsStats->clear_minimumutc();
+        tsStats->clear_maximumutc();
       }
     }
 
