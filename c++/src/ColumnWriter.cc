@@ -940,16 +940,90 @@ namespace orc {
     lengthEncoder->recordPosition(rowIndexPosition.get());
   }
 
+  struct Utf8Utils {
+    /**
+     * Counts how many utf-8 chars of the inout data
+     */
+    static uint64_t charLength(const char * data, uint64_t offset, uint64_t length) {
+      uint64_t chars = 0;
+      for (uint64_t i = 0; i < length; i++) {
+        if (isUtfStartByte(data[offset + i])) {
+          chars++;
+        }
+      }
+      return chars;
+    }
+
+    /**
+     * Return the number of bytes required to read at most
+     * maxLength characters in full from a utf-8 encoded byte array provided
+     * by data[offset:offset+length]. This does not validate utf-8 data, but
+     * operates correctly on already valid utf-8 data.
+     *
+     * @param maxCharLength number of bytes required
+     * @param data the bytes of UTF-8
+     * @param offset the first byte location
+     * @param length the length of data to truncate
+     */
+    static uint64_t truncateBytesTo(uint64_t maxCharLength,
+                                    const char * data,
+                                    uint64_t offset,
+                                    uint64_t length) {
+      uint64_t chars = 0;
+      if (length <= maxCharLength) {
+        return length;
+      }
+      for (uint64_t i = 0; i < length; i++) {
+        if (isUtfStartByte(data[offset + i])) {
+          chars++;
+        }
+        if (chars > maxCharLength) {
+          return i;
+        }
+      }
+      // everything fits
+      return length;
+    }
+
+    /**
+     * Checks if b is the first byte of a UTF-8 character.
+     */
+    static bool isUtfStartByte(char b) {
+      return (b & 0xC0) != 0x80;
+    }
+
+    /**
+     * Find the start of the last character that ends in the current string.
+     * @param text the bytes of the utf-8
+     * @param from the first byte location
+     * @param until the last byte location
+     * @return the index of the last character
+    */
+    static uint64_t findLastCharacter(const char * text, uint64_t from, uint64_t until) {
+      uint64_t posn = until;
+      /* we don't expect characters more than 5 bytes */
+      while (posn >= from) {
+        if (isUtfStartByte(text[posn])) {
+          return posn;
+        }
+        posn -= 1;
+      }
+      /* beginning of a valid char not found */
+      throw std::logic_error(
+        "Could not truncate string, beginning of a valid char not found");
+    }
+  };
+
   class CharColumnWriter : public StringColumnWriter {
   public:
     CharColumnWriter(const Type& type,
                      const StreamsFactory& factory,
                      const WriterOptions& options) :
                          StringColumnWriter(type, factory, options),
-                         fixedLength(type.getMaximumLength()),
-                         padBuffer(*options.getMemoryPool(),
-                                   type.getMaximumLength()) {
-      // PASS
+                         maxLength(type.getMaximumLength()),
+                         padBuffer(*options.getMemoryPool()) {
+      // utf-8 is currently 4 bytes long, but it could be up to 6
+      padBuffer.resize(maxLength * 6);
     }
 
     virtual void add(ColumnVectorBatch& rowBatch,
@@ -957,7 +1031,7 @@ namespace orc {
                      uint64_t numValues) override;
 
   private:
-    uint64_t fixedLength;
+    uint64_t maxLength;
     DataBuffer<char> padBuffer;
   };
 
@@ -984,17 +1058,24 @@ namespace orc {
 
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!notNull || notNull[i]) {
-        char *charData = data[i];
-        uint64_t oriLength = static_cast<uint64_t>(length[i]);
-        if (oriLength < fixedLength) {
-          memcpy(padBuffer.data(), data[i], oriLength);
-          memset(padBuffer.data() + oriLength, ' ', fixedLength - oriLength);
+        const char * charData = nullptr;
+        uint64_t originLength = static_cast<uint64_t>(length[i]);
+        uint64_t charLength = Utf8Utils::charLength(data[i], 0, originLength);
+        if (charLength >= maxLength) {
+          charData = data[i];
+          length[i] = static_cast<int64_t>(
+            Utf8Utils::truncateBytesTo(maxLength, data[i], 0, originLength));
+        } else {
           charData = padBuffer.data();
+          // the padding is exactly 1 byte per char
+          length[i] = length[i] + static_cast<int64_t>(maxLength - charLength);
+          memcpy(padBuffer.data(), data[i], originLength);
+          memset(padBuffer.data() + originLength,
+                 ' ',
+                 static_cast<size_t>(length[i]) - originLength);
         }
-        length[i] = static_cast<int64_t>(fixedLength);
-        dataStream->write(charData, fixedLength);
-
-        strStats->update(charData, fixedLength);
+        dataStream->write(charData, static_cast<size_t>(length[i]));
+        strStats->update(charData, static_cast<size_t>(length[i]));
         strStats->increase(1);
       } else if (!hasNull) {
         hasNull = true;
@@ -1045,9 +1126,10 @@ namespace orc {
 
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!notNull || notNull[i]) {
-        if (length[i] > static_cast<int64_t>(maxLength)) {
-          length[i] = static_cast<int64_t>(maxLength);
-        }
+        uint64_t itemLength = Utf8Utils::truncateBytesTo(
+          maxLength, data[i], 0, static_cast<uint64_t>(length[i]));
+
+        length[i] = static_cast<int64_t>(itemLength);
         dataStream->write(data[i], static_cast<size_t>(length[i]));
 
         strStats->update(data[i], static_cast<size_t>(length[i]));
