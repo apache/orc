@@ -942,12 +942,12 @@ namespace orc {
 
   struct Utf8Utils {
     /**
-     * Counts how many utf-8 chars of the inout data
+     * Counts how many utf-8 chars of the input data
      */
-    static uint64_t charLength(const char * data, uint64_t offset, uint64_t length) {
+    static uint64_t charLength(const char * data, uint64_t length) {
       uint64_t chars = 0;
       for (uint64_t i = 0; i < length; i++) {
-        if (isUtfStartByte(data[offset + i])) {
+        if (isUtfStartByte(data[i])) {
           chars++;
         }
       }
@@ -962,19 +962,17 @@ namespace orc {
      *
      * @param maxCharLength number of bytes required
      * @param data the bytes of UTF-8
-     * @param offset the first byte location
      * @param length the length of data to truncate
      */
     static uint64_t truncateBytesTo(uint64_t maxCharLength,
                                     const char * data,
-                                    uint64_t offset,
                                     uint64_t length) {
       uint64_t chars = 0;
       if (length <= maxCharLength) {
         return length;
       }
       for (uint64_t i = 0; i < length; i++) {
-        if (isUtfStartByte(data[offset + i])) {
+        if (isUtfStartByte(data[i])) {
           chars++;
         }
         if (chars > maxCharLength) {
@@ -988,7 +986,7 @@ namespace orc {
     /**
      * Checks if b is the first byte of a UTF-8 character.
      */
-    static bool isUtfStartByte(char b) {
+    inline static bool isUtfStartByte(char b) {
       return (b & 0xC0) != 0x80;
     }
 
@@ -1060,11 +1058,11 @@ namespace orc {
       if (!notNull || notNull[i]) {
         const char * charData = nullptr;
         uint64_t originLength = static_cast<uint64_t>(length[i]);
-        uint64_t charLength = Utf8Utils::charLength(data[i], 0, originLength);
+        uint64_t charLength = Utf8Utils::charLength(data[i], originLength);
         if (charLength >= maxLength) {
           charData = data[i];
           length[i] = static_cast<int64_t>(
-            Utf8Utils::truncateBytesTo(maxLength, data[i], 0, originLength));
+            Utf8Utils::truncateBytesTo(maxLength, data[i], originLength));
         } else {
           charData = padBuffer.data();
           // the padding is exactly 1 byte per char
@@ -1127,7 +1125,7 @@ namespace orc {
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!notNull || notNull[i]) {
         uint64_t itemLength = Utf8Utils::truncateBytesTo(
-          maxLength, data[i], 0, static_cast<uint64_t>(length[i]));
+          maxLength, data[i], static_cast<uint64_t>(length[i]));
 
         length[i] = static_cast<int64_t>(itemLength);
         dataStream->write(data[i], static_cast<size_t>(length[i]));
