@@ -39,7 +39,7 @@ RUN yum install -y \
   zlib-devel
 
 WORKDIR /root
-RUN wget http://apache.mesi.com.ar/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz -O maven.tgz
+RUN wget "https://www.apache.org/dyn/closer.lua?action=download&filename=/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz" -O maven.tgz
 RUN tar xzf maven.tgz
 RUN ln -s /root/apache-maven-3.3.9/bin/mvn /usr/bin/mvn
 
