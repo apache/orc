@@ -269,7 +269,14 @@ public class RecordReaderImpl implements RecordReader {
     indexes = new OrcProto.RowIndex[types.size()];
     bloomFilterIndices = new OrcProto.BloomFilterIndex[types.size()];
     bloomFilterKind = new OrcProto.Stream.Kind[types.size()];
-    advanceToNextRow(reader, 0L, true);
+
+    try {
+      advanceToNextRow(reader, 0L, true);
+    } catch (IOException e) {
+      // Try to close since this happens in constructor.
+      close();
+      throw e;
+    }
   }
 
   public static final class PositionProviderImpl implements PositionProvider {
