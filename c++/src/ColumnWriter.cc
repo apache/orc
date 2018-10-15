@@ -955,12 +955,12 @@ namespace orc {
     }
 
     /**
-     * Return the number of bytes required to read at most
-     * maxLength characters in full from a utf-8 encoded byte array provided
-     * by data[offset:offset+length]. This does not validate utf-8 data, but
+     * Return the number of bytes required to read at most maxCharLength
+     * characters in full from a utf-8 encoded byte array provided
+     * by data. This does not validate utf-8 data, but
      * operates correctly on already valid utf-8 data.
      *
-     * @param maxCharLength number of bytes required
+     * @param maxCharLength number of characters required
      * @param data the bytes of UTF-8
      * @param length the length of data to truncate
      */
