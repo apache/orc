@@ -290,8 +290,10 @@ namespace orc {
           colIndexStatistics->increase(1);
         } else if (!hasNull) {
           hasNull = true;
-          colIndexStatistics->setHasNull(true);
         }
+      }
+      if (hasNull) {
+        colIndexStatistics->setHasNull(true);
       }
     }
   }
@@ -452,13 +454,17 @@ namespace orc {
       throw InvalidArgument("Failed to cast to IntegerColumnStatisticsImpl");
     }
 
+    bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (notNull == nullptr || notNull[i]) {
         intStats->increase(1);
         intStats->update(data[i], 1);
-      } else if (!intStats->hasNull()) {
-        intStats->setHasNull(true);
+      } else if (!hasNull) {
+        hasNull = true;
       }
+    }
+    if (hasNull) {
+      intStats->setHasNull(true);
     }
   }
 
@@ -553,13 +559,17 @@ namespace orc {
     if (intStats == nullptr) {
       throw InvalidArgument("Failed to cast to IntegerColumnStatisticsImpl");
     }
+    bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (notNull == nullptr || notNull[i]) {
         intStats->increase(1);
         intStats->update(static_cast<int64_t>(byteData[i]), 1);
-      } else if (!intStats->hasNull()) {
-        intStats->setHasNull(true);
+      } else if (!hasNull) {
+        hasNull = true;
       }
+    }
+    if (hasNull) {
+      intStats->setHasNull(true);
     }
   }
 
@@ -653,13 +663,17 @@ namespace orc {
     if (boolStats == nullptr) {
       throw InvalidArgument("Failed to cast to BooleanColumnStatisticsImpl");
     }
+    bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (notNull == nullptr || notNull[i]) {
         boolStats->increase(1);
         boolStats->update(byteData[i] != 0, 1);
-      } else if (!boolStats->hasNull()) {
-        boolStats->setHasNull(true);
+      } else if (!hasNull) {
+        hasNull = true;
       }
+    }
+    if (hasNull) {
+      boolStats->setHasNull(true);
     }
   }
 
@@ -767,7 +781,7 @@ namespace orc {
 
     size_t bytes = isFloat ? 4 : 8;
     char* data = buffer.data();
-
+    bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!notNull || notNull[i]) {
         if (isFloat) {
@@ -779,9 +793,12 @@ namespace orc {
 
         doubleStats->increase(1);
         doubleStats->update(doubleData[i]);
-      } else if (!doubleStats->hasNull()) {
-        doubleStats->setHasNull(true);
+      } else if (!hasNull) {
+        hasNull = true;
       }
+    }
+    if (hasNull) {
+      doubleStats->setHasNull(true);
     }
   }
 
@@ -882,14 +899,18 @@ namespace orc {
     if (strStats == nullptr) {
       throw InvalidArgument("Failed to cast to StringColumnStatisticsImpl");
     }
+    bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!notNull || notNull[i]) {
         dataStream->write(data[i], static_cast<size_t>(length[i]));
         strStats->update(data[i], static_cast<size_t>(length[i]));
         strStats->increase(1);
-      } else if (!strStats->hasNull()) {
-        strStats->setHasNull(true);
+      } else if (!hasNull) {
+        hasNull = true;
       }
+    }
+    if (hasNull) {
+      strStats->setHasNull(true);
     }
   }
 
@@ -971,6 +992,7 @@ namespace orc {
       throw InvalidArgument("Failed to cast to StringColumnStatisticsImpl");
     }
 
+    bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!notNull || notNull[i]) {
         char *charData = data[i];
@@ -985,11 +1007,14 @@ namespace orc {
 
         strStats->update(charData, fixedLength);
         strStats->increase(1);
-      } else if (!strStats->hasNull()) {
-        strStats->setHasNull(true);
+      } else if (!hasNull) {
+        hasNull = true;
       }
     }
     lengthEncoder->add(length, numValues, notNull);
+    if (hasNull) {
+      strStats->setHasNull(true);
+    }
   }
 
   class VarCharColumnWriter : public StringColumnWriter {
@@ -1030,6 +1055,7 @@ namespace orc {
       throw InvalidArgument("Failed to cast to StringColumnStatisticsImpl");
     }
 
+    bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!notNull || notNull[i]) {
         if (length[i] > static_cast<int64_t>(maxLength)) {
@@ -1039,11 +1065,14 @@ namespace orc {
 
         strStats->update(data[i], static_cast<size_t>(length[i]));
         strStats->increase(1);
-      } else if (!strStats->hasNull()) {
-        strStats->setHasNull(true);
+      } else if (!hasNull) {
+        hasNull = true;
       }
     }
     lengthEncoder->add(length, numValues, notNull);
+    if (hasNull) {
+      strStats->setHasNull(true);
+    }
   }
 
   class BinaryColumnWriter : public StringColumnWriter {
@@ -1080,6 +1109,7 @@ namespace orc {
       throw InvalidArgument("Failed to cast to BinaryColumnStatisticsImpl");
     }
 
+    bool hasNull = true;
     for (uint64_t i = 0; i < numValues; ++i) {
       uint64_t unsignedLength = static_cast<uint64_t>(length[i]);
       if (!notNull || notNull[i]) {
@@ -1087,11 +1117,14 @@ namespace orc {
 
         binStats->update(unsignedLength);
         binStats->increase(1);
-      } else if (!binStats->hasNull()) {
-        binStats->setHasNull(true);
+      } else if (!hasNull) {
+        hasNull = true;
       }
     }
     lengthEncoder->add(length, numValues, notNull);
+    if (hasNull) {
+      binStats->setHasNull(true);
+    }
   }
 
   class TimestampColumnWriter : public ColumnWriter {
@@ -1188,6 +1221,7 @@ namespace orc {
     if (tsStats == nullptr) {
       throw InvalidArgument("Failed to cast to TimestampColumnStatisticsImpl");
     }
+    bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (notNull == nullptr || notNull[i]) {
         // TimestampVectorBatch already stores data in UTC
@@ -1201,9 +1235,12 @@ namespace orc {
 
         secs[i] -= timezone.getEpoch();
         nanos[i] = formatNano(nanos[i]);
-      } else if (!tsStats->hasNull()) {
-        tsStats->setHasNull(true);
+      } else if (!hasNull) {
+        hasNull = true;
       }
+    }
+    if (hasNull) {
+      tsStats->setHasNull(true);
     }
 
     secRleEncoder->add(secs, numValues, notNull);
@@ -1287,13 +1324,17 @@ namespace orc {
     if (dateStats == nullptr) {
       throw InvalidArgument("Failed to cast to DateColumnStatisticsImpl");
     }
+    bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!notNull || notNull[i]) {
         dateStats->increase(1);
         dateStats->update(static_cast<int32_t>(data[i]));
-      } else if (!dateStats->hasNull()) {
-        dateStats->setHasNull(true);
+      } else if (!hasNull) {
+        hasNull = true;
       }
+    }
+    if (hasNull) {
+      dateStats->setHasNull(true);
     }
   }
 
@@ -1372,6 +1413,7 @@ namespace orc {
       throw InvalidArgument("Failed to cast to DecimalColumnStatisticsImpl");
     }
 
+    bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!notNull || notNull[i]) {
         int64_t val = zigZag(values[i]);
@@ -1390,9 +1432,12 @@ namespace orc {
 
         decStats->increase(1);
         decStats->update(Decimal(values[i], static_cast<int32_t>(scale)));
-      } else if (!decStats->hasNull()) {
-        decStats->setHasNull(true);
+      } else if (!hasNull) {
+        hasNull = true;
       }
+    }
+    if (hasNull) {
+      decStats->setHasNull(true);
     }
     std::vector<int64_t> scales(numValues, static_cast<int64_t>(scale));
     scaleEncoder->add(scales.data(), numValues, notNull);
@@ -1491,6 +1536,7 @@ namespace orc {
 
     // The current encoding of decimal columns stores the integer representation
     // of the value as an unbounded length zigzag encoded base 128 varint.
+    bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!notNull || notNull[i]) {
         Int128 val = zigZagInt128(values[i]);
@@ -1508,9 +1554,12 @@ namespace orc {
 
         decStats->increase(1);
         decStats->update(Decimal(values[i], static_cast<int32_t>(scale)));
-      } else if (!decStats->hasNull()) {
-        decStats->setHasNull(true);
+      } else if (!hasNull) {
+        hasNull = true;
       }
+    }
+    if (hasNull) {
+      decStats->setHasNull(true);
     }
     std::vector<int64_t> scales(numValues, static_cast<int64_t>(scale));
     scaleEncoder->add(scales.data(), numValues, notNull);
@@ -1622,8 +1671,10 @@ namespace orc {
             colIndexStatistics->increase(1);
           } else if (!hasNull) {
             hasNull = true;
-            colIndexStatistics->setHasNull(true);
           }
+        }
+        if (hasNull) {
+          colIndexStatistics->setHasNull(true);
         }
       }
     }
@@ -1826,8 +1877,10 @@ namespace orc {
             colIndexStatistics->increase(1);
           } else if (!hasNull) {
             hasNull = true;
-            colIndexStatistics->setHasNull(true);
           }
+        }
+        if (hasNull) {
+          colIndexStatistics->setHasNull(true);
         }
       }
     }
@@ -2056,8 +2109,10 @@ namespace orc {
             colIndexStatistics->increase(1);
           } else if (!hasNull) {
             hasNull = true;
-            colIndexStatistics->setHasNull(true);
           }
+        }
+        if (hasNull) {
+          colIndexStatistics->setHasNull(true);
         }
       }
     }
