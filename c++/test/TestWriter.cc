@@ -1181,5 +1181,86 @@ namespace orc {
     }
   }
 
+  TEST_P(WriterTest, writeUTF8CharAndVarcharColumn) {
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    MemoryPool * pool = getDefaultPool();
+    std::unique_ptr<Type> type(Type::buildTypeFromString(
+      "struct<col1:char(2),col2:varchar(2)>"));
+
+    uint64_t stripeSize = 1024;
+    uint64_t compressionBlockSize = 1024;
+    uint64_t rowCount = 3;
+    std::unique_ptr<Writer> writer = createWriter(stripeSize,
+                                                  compressionBlockSize,
+                                                  CompressionKind_ZLIB,
+                                                  *type,
+                                                  pool,
+                                                  &memStream,
+                                                  fileVersion);
+    std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
+    StructVectorBatch * structBatch =
+      dynamic_cast<StructVectorBatch *>(batch.get());
+    StringVectorBatch * charBatch =
+      dynamic_cast<StringVectorBatch *>(structBatch->fields[0]);
+    StringVectorBatch * varcharBatch =
+      dynamic_cast<StringVectorBatch *>(structBatch->fields[1]);
+    std::vector<std::vector<char>> strs;
+
+    // input character is 'à' (0xC3, 0xA0)
+    // in total 3 rows, each has 1, 2, and 3 'à' respectively
+    std::vector<char> vec;
+    for (uint64_t i = 0; i != rowCount; ++i) {
+      vec.push_back(static_cast<char>(0xC3));
+      vec.push_back(static_cast<char>(0xA0));
+      strs.push_back(vec);
+      charBatch->data[i] = varcharBatch->data[i] = strs.back().data();
+      charBatch->length[i] = varcharBatch->length[i] = static_cast<int64_t>(strs.back().size());
+    }
+
+    structBatch->numElements = rowCount;
+    charBatch->numElements = rowCount;
+    varcharBatch->numElements = rowCount;
+
+    writer->add(*batch);
+    writer->close();
+
+    // read and verify data
+    std::unique_ptr<InputStream> inStream(
+      new MemoryInputStream (memStream.getData(), memStream.getLength()));
+    std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
+    std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
+    EXPECT_EQ(rowCount, reader->getNumberOfRows());
+
+    batch = rowReader->createRowBatch(rowCount);
+    structBatch = dynamic_cast<StructVectorBatch *>(batch.get());
+    charBatch = dynamic_cast<StringVectorBatch *>(structBatch->fields[0]);
+    varcharBatch = dynamic_cast<StringVectorBatch *>(structBatch->fields[1]);
+
+    EXPECT_EQ(true, rowReader->next(*batch));
+    EXPECT_EQ(rowCount, batch->numElements);
+
+    char expectedPadded[3] = {static_cast<char>(0xC3), static_cast<char>(0xA0), ' '};
+    char expectedOneChar[2] = {static_cast<char>(0xC3), static_cast<char>(0xA0)};
+    char expectedTwoChars[4] = {static_cast<char>(0xC3), static_cast<char>(0xA0),
+                                static_cast<char>(0xC3), static_cast<char>(0xA0)};
+
+    EXPECT_EQ(3, charBatch->length[0]);
+    EXPECT_EQ(4, charBatch->length[1]);
+    EXPECT_EQ(4, charBatch->length[2]);
+    EXPECT_TRUE(memcmp(charBatch->data[0], expectedPadded, 3) == 0);
+    EXPECT_TRUE(memcmp(charBatch->data[1], expectedTwoChars, 4) == 0);
+    EXPECT_TRUE(memcmp(charBatch->data[2], expectedTwoChars, 4) == 0);
+
+    EXPECT_EQ(2, varcharBatch->length[0]);
+    EXPECT_EQ(4, varcharBatch->length[1]);
+    EXPECT_EQ(4, varcharBatch->length[2]);
+    EXPECT_TRUE(memcmp(varcharBatch->data[0], expectedOneChar, 2) == 0);
+    EXPECT_TRUE(memcmp(varcharBatch->data[1], expectedTwoChars, 4) == 0);
+    EXPECT_TRUE(memcmp(varcharBatch->data[2], expectedTwoChars, 4) == 0);
+
+    EXPECT_FALSE(rowReader->next(*batch));
+  }
+
+
   INSTANTIATE_TEST_CASE_P(OrcTest, WriterTest, Values(FileVersion::v_0_11(), FileVersion::v_0_12()));
 }
