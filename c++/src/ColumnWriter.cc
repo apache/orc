@@ -1109,7 +1109,7 @@ namespace orc {
       throw InvalidArgument("Failed to cast to BinaryColumnStatisticsImpl");
     }
 
-    bool hasNull = true;
+    bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       uint64_t unsignedLength = static_cast<uint64_t>(length[i]);
       if (!notNull || notNull[i]) {
