@@ -40,7 +40,7 @@ namespace orc {
     bool enableIndex;
 
     WriterOptionsPrivate() :
-                            fileVersion(FileVersion::v_0_12()) { // default to Hive_0_11
+                            fileVersion(FileVersion::v_0_12()) { // default to Hive_0_12
       stripeSize = 64 * 1024 * 1024; // 64M
       compressionBlockSize = 64 * 1024; // 64K
       rowIndexStride = 10000;
