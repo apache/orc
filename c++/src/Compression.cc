@@ -964,7 +964,7 @@ DIAGNOSTIC_POP
 
       char * dst = header + 3;
       while (totalSizeToWrite > 0) {
-        if (outputPosition >= outputSize) {
+        if (outputPosition == outputSize) {
           if (!BufferedOutputStream::Next(reinterpret_cast<void **>(&outputBuffer),
                                           &outputSize)) {
             throw std::logic_error(
@@ -972,6 +972,9 @@ DIAGNOSTIC_POP
           }
           outputPosition = 0;
           dst = outputBuffer;
+        } else if (outputPosition > outputSize) {
+          // this will unlikely happen, but we have seen a few on zstd v1.1.0
+          throw std::logic_error("Write to an out-of-bound place!");
         }
 
         int sizeToWrite = std::min(totalSizeToWrite, outputSize - outputPosition);
