@@ -37,12 +37,13 @@ public:
      */
     uint64_t flush() override;
 
+    void write(int64_t val) override;
+
 private:
     int64_t delta;
     bool repeat;
     uint64_t tailRunLength;
 
-    void write(int64_t val) override;
     void writeValues();
 };
 

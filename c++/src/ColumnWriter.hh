@@ -165,6 +165,11 @@ namespace orc {
      */
     virtual void reset();
 
+    /**
+     * Write dictionary to streams for string columns
+     */
+    virtual void writeDictionary();
+
   protected:
     /**
      * Utility function to translate ColumnStatistics into protobuf form and

@@ -204,6 +204,10 @@ namespace orc {
     }
   }
 
+  void ColumnWriter::writeDictionary() {
+    // PASS
+  }
+
   class StructColumnWriter : public ColumnWriter {
   public:
     StructColumnWriter(
@@ -236,6 +240,8 @@ namespace orc {
 
     virtual void writeIndex(
       std::vector<proto::Stream> &streams) const override;
+
+    virtual void writeDictionary() override;
 
     virtual void reset() override;
 
@@ -379,6 +385,12 @@ namespace orc {
 
     for (uint32_t i = 0; i < children.size(); ++i) {
       children[i]->reset();
+    }
+  }
+
+  void StructColumnWriter::writeDictionary() {
+    for (uint32_t i = 0; i < children.size(); ++i) {
+      children[i]->writeDictionary();
     }
   }
 
@@ -831,6 +843,137 @@ namespace orc {
     dataStream->recordPosition(rowIndexPosition.get());
   }
 
+  /**
+   * Implementation of increasing sorted string dictionary
+   */
+  class StringDictionary {
+  public:
+    struct DictEntry {
+      DictEntry(const char * str, size_t len):data(str),length(len) {}
+      const char * data;
+      size_t length;
+    };
+
+    StringDictionary():totalLength(0) {}
+
+    // insert a new string into dictionary, return its insertion order
+    size_t insert(const char * data, size_t len);
+
+    // write dictionary data & length to output buffer
+    void flush(AppendOnlyBufferedStream * dataStream,
+               RleEncoder * lengthEncoder) const;
+
+    // reorder input index buffer from insertion order to dictionary order
+    void reorder(std::vector<int64_t>& idxBuffer) const;
+
+    // get dict entries in insertion order
+    void getEntriesInInsertionOrder(std::vector<const DictEntry *>&) const;
+
+    // return count of entries
+    size_t size() const;
+
+    // return total length of strings in the dictioanry
+    uint64_t length() const;
+
+    void clear();
+
+  private:
+    struct LessThan {
+      bool operator()(const DictEntry& left, const DictEntry& right) const {
+        int ret = memcmp(left.data, right.data, std::min(left.length, right.length));
+        if (ret != 0) {
+          return ret < 0;
+        }
+        return left.length < right.length;
+      }
+    };
+
+    std::map<DictEntry, size_t, LessThan> dict;
+    std::vector<std::vector<char>> data;
+    uint64_t totalLength;
+
+    // use friend class here to avoid being bothered by const function calls
+    friend class StringColumnWriter;
+    friend class CharColumnWriter;
+    friend class VarCharColumnWriter;
+    // store indexes of insertion order in the dictionary for not-null rows
+    std::vector<int64_t> idxInDictBuffer;
+  };
+
+  // insert a new string into dictionary, return its insertion order
+  size_t StringDictionary::insert(const char * str, size_t len) {
+    auto ret = dict.insert({DictEntry(str, len), dict.size()});
+    if (ret.second) {
+      // make a copy to internal storage
+      data.push_back(std::vector<char>(len));
+      memcpy(data.back().data(), str, len);
+      // update dictionary entry to link pointer to internal storage
+      DictEntry * entry = const_cast<DictEntry *>(&(ret.first->first));
+      entry->data = data.back().data();
+      totalLength += len;
+    }
+    return ret.first->second;
+  }
+
+  // write dictionary data & length to output buffer
+  void StringDictionary::flush(AppendOnlyBufferedStream * dataStream,
+                               RleEncoder * lengthEncoder) const {
+    for (auto it = dict.cbegin(); it != dict.cend(); ++it) {
+      dataStream->write(it->first.data, it->first.length);
+      lengthEncoder->write(static_cast<int64_t>(it->first.length));
+    }
+  }
+
+  /**
+   * Reorder input index buffer from insertion order to dictionary order
+   *
+   * We require this function because string values are buffered by indexes
+   * in their insertion order. Until the entire dictionary is complete can
+   * we get their sorted indexes in the dictionary in that ORC specification
+   * demands dictionary should be ordered. Therefore this function transforms
+   * the indexes from insertion order to dictionary value order for final
+   * output.
+   */
+  void StringDictionary::reorder(std::vector<int64_t>& idxBuffer) const {
+    // iterate the dictionary to get mapping from insertion order to value order
+    std::vector<size_t> mapping(dict.size());
+    size_t dictIdx = 0;
+    for (auto it = dict.cbegin(); it != dict.cend(); ++it) {
+      mapping[it->second] = dictIdx++;
+    }
+
+    // do the transformation
+    for (size_t i = 0; i != idxBuffer.size(); ++i) {
+      idxBuffer[i] = static_cast<int64_t>(
+        mapping[static_cast<size_t>(idxBuffer[i])]);
+    }
+  }
+
+  // get dict entries in insertion order
+  void StringDictionary::getEntriesInInsertionOrder(
+                    std::vector<const DictEntry *>& entries) const {
+    entries.resize(dict.size());
+    for (auto it = dict.cbegin(); it != dict.cend(); ++it) {
+      entries[it->second] = &(it->first);
+    }
+  }
+
+  // return count of entries
+  size_t StringDictionary::size() const {
+    return dict.size();
+  }
+
+  // return total length of strings in the dictioanry
+  uint64_t StringDictionary::length() const {
+    return totalLength;
+  }
+
+  void StringDictionary::clear()  {
+    totalLength = 0;
+    data.clear();
+    dict.clear();
+  }
+
   class StringColumnWriter : public ColumnWriter {
   public:
     StringColumnWriter(const Type& type,
@@ -850,10 +993,50 @@ namespace orc {
 
     virtual void recordPosition() const override;
 
+    virtual void createRowIndexEntry() override;
+
+    virtual void writeDictionary() override;
+
+    virtual void reset() override;
+
+  private:
+    /**
+     * dictionary related functions
+     */
+    bool checkDictionaryKeyRatio();
+    void createDirectStreams();
+    void createDictStreams();
+    void deleteDictStreams();
+    void fallbackToDirectEncoding();
+
   protected:
-    std::unique_ptr<RleEncoder> lengthEncoder;
-    std::unique_ptr<AppendOnlyBufferedStream> dataStream;
     RleVersion rleVersion;
+    bool useCompression;
+    const StreamsFactory& streamsFactory;
+    bool alignedBitPacking;
+
+    // direct encoding streams
+    std::unique_ptr<RleEncoder> directLengthEncoder;
+    std::unique_ptr<AppendOnlyBufferedStream> directDataStream;
+
+    // dictionary encoding streams
+    std::unique_ptr<RleEncoder> dictDataEncoder;
+    std::unique_ptr<RleEncoder> dictLengthEncoder;
+    std::unique_ptr<AppendOnlyBufferedStream> dictStream;
+
+    /**
+     * dictionary related variables
+     */
+    StringDictionary dictionary;
+    // whether or not dictionary checking is done
+    bool doneDictionaryCheck;
+    // whether or not it should be used
+    bool useDictionary;
+    // keys in the dictionary should not exceed this ratio
+    double dictSizeThreshold;
+
+    // record start row of each row group; null rows are skipped
+    mutable std::vector<size_t> startOfRowGroups;
   };
 
   StringColumnWriter::StringColumnWriter(
@@ -861,16 +1044,24 @@ namespace orc {
                           const StreamsFactory& factory,
                           const WriterOptions& options) :
                               ColumnWriter(type, factory, options),
-                              rleVersion(options.getRleVersion()) {
-    std::unique_ptr<BufferedOutputStream> lengthStream =
-        factory.createStream(proto::Stream_Kind_LENGTH);
-    lengthEncoder = createRleEncoder(std::move(lengthStream),
-                                     false,
-                                     rleVersion,
-                                     memPool,
-                                     options.getAlignedBitpacking());
-    dataStream.reset(new AppendOnlyBufferedStream(
-        factory.createStream(proto::Stream_Kind_DATA)));
+                              rleVersion(options.getRleVersion()),
+                              useCompression(options.getCompression() != CompressionKind_NONE),
+                              streamsFactory(factory),
+                              alignedBitPacking(options.getAlignedBitpacking()),
+                              doneDictionaryCheck(false),
+                              useDictionary(options.getEnableDictionary()),
+                              dictSizeThreshold(options.getDictionaryKeySizeThreshold()){
+    if (type.getKind() == TypeKind::BINARY) {
+      useDictionary = false;
+      doneDictionaryCheck = true;
+    }
+
+    if (useDictionary) {
+      createDictStreams();
+    } else {
+      doneDictionaryCheck = true;
+      createDirectStreams();
+    }
 
     if (enableIndex) {
       recordPosition();
@@ -892,7 +1083,9 @@ namespace orc {
     const char* notNull = stringBatch->hasNulls ?
                           stringBatch->notNull.data() + offset : nullptr;
 
-    lengthEncoder->add(length, numValues, notNull);
+    if (!useDictionary){
+      directLengthEncoder->add(length, numValues, notNull);
+    }
 
     StringColumnStatisticsImpl* strStats =
       dynamic_cast<StringColumnStatisticsImpl*>(colIndexStatistics.get());
@@ -902,7 +1095,12 @@ namespace orc {
     bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!notNull || notNull[i]) {
-        dataStream->write(data[i], static_cast<size_t>(length[i]));
+        if (useDictionary) {
+          size_t index = dictionary.insert(data[i], static_cast<size_t>(length[i]));
+          dictionary.idxInDictBuffer.push_back(static_cast<int64_t>(index));
+        } else {
+          directDataStream->write(data[i], static_cast<size_t>(length[i]));
+        }
         strStats->update(data[i], static_cast<size_t>(length[i]));
         strStats->increase(1);
       } else if (!hasNull) {
@@ -917,38 +1115,225 @@ namespace orc {
   void StringColumnWriter::flush(std::vector<proto::Stream>& streams) {
     ColumnWriter::flush(streams);
 
-    proto::Stream length;
-    length.set_kind(proto::Stream_Kind_LENGTH);
-    length.set_column(static_cast<uint32_t>(columnId));
-    length.set_length(lengthEncoder->flush());
-    streams.push_back(length);
+    if (useDictionary) {
+      proto::Stream data;
+      data.set_kind(proto::Stream_Kind_DATA);
+      data.set_column(static_cast<uint32_t>(columnId));
+      data.set_length(dictDataEncoder->flush());
+      streams.push_back(data);
 
-    proto::Stream data;
-    data.set_kind(proto::Stream_Kind_DATA);
-    data.set_column(static_cast<uint32_t>(columnId));
-    data.set_length(dataStream->flush());
-    streams.push_back(data);
+      proto::Stream dict;
+      dict.set_kind(proto::Stream_Kind_DICTIONARY_DATA);
+      dict.set_column(static_cast<uint32_t>(columnId));
+      dict.set_length(dictStream->flush());
+      streams.push_back(dict);
+
+      proto::Stream length;
+      length.set_kind(proto::Stream_Kind_LENGTH);
+      length.set_column(static_cast<uint32_t>(columnId));
+      length.set_length(dictLengthEncoder->flush());
+      streams.push_back(length);
+    } else {
+      proto::Stream length;
+      length.set_kind(proto::Stream_Kind_LENGTH);
+      length.set_column(static_cast<uint32_t>(columnId));
+      length.set_length(directLengthEncoder->flush());
+      streams.push_back(length);
+
+      proto::Stream data;
+      data.set_kind(proto::Stream_Kind_DATA);
+      data.set_column(static_cast<uint32_t>(columnId));
+      data.set_length(directDataStream->flush());
+      streams.push_back(data);
+    }
   }
 
   uint64_t StringColumnWriter::getEstimatedSize() const {
     uint64_t size = ColumnWriter::getEstimatedSize();
-    size += lengthEncoder->getBufferSize();
-    size += dataStream->getSize();
+    if (!useDictionary) {
+      size += directLengthEncoder->getBufferSize();
+      size += directDataStream->getSize();
+    } else {
+      size += dictionary.length();
+      size += dictionary.size() * sizeof(int32_t);
+      size += dictionary.idxInDictBuffer.size() * sizeof(int32_t);
+      if (useCompression) {
+        size /= 3;  // estimated ratio is 3:1
+      }
+    }
     return size;
   }
 
   void StringColumnWriter::getColumnEncoding(
     std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
-    encoding.set_kind(RleVersionMapper(rleVersion));
-    encoding.set_dictionarysize(0);
+    if (!useDictionary) {
+      encoding.set_kind(rleVersion == RleVersion_1 ?
+                        proto::ColumnEncoding_Kind_DIRECT :
+                        proto::ColumnEncoding_Kind_DIRECT_V2);
+    } else {
+      encoding.set_kind(rleVersion == RleVersion_1 ?
+                        proto::ColumnEncoding_Kind_DICTIONARY :
+                        proto::ColumnEncoding_Kind_DICTIONARY_V2);
+    }
+    encoding.set_dictionarysize(static_cast<uint32_t>(dictionary.size()));
     encodings.push_back(encoding);
   }
 
   void StringColumnWriter::recordPosition() const {
     ColumnWriter::recordPosition();
-    dataStream->recordPosition(rowIndexPosition.get());
-    lengthEncoder->recordPosition(rowIndexPosition.get());
+    if (!useDictionary) {
+      directDataStream->recordPosition(rowIndexPosition.get());
+      directLengthEncoder->recordPosition(rowIndexPosition.get());
+    } else {
+      if (enableIndex) {
+        startOfRowGroups.push_back(dictionary.idxInDictBuffer.size());
+      }
+    }
+  }
+
+  bool StringColumnWriter::checkDictionaryKeyRatio() {
+    if (!doneDictionaryCheck) {
+      useDictionary = dictionary.size() <= static_cast<size_t>(
+        static_cast<double>(dictionary.idxInDictBuffer.size()) * dictSizeThreshold);
+      doneDictionaryCheck = true;
+    }
+
+    return useDictionary;
+  }
+
+  void StringColumnWriter::createRowIndexEntry() {
+    if (useDictionary && !doneDictionaryCheck) {
+      if (!checkDictionaryKeyRatio()) {
+        fallbackToDirectEncoding();
+      }
+    }
+    ColumnWriter::createRowIndexEntry();
+  }
+
+  void StringColumnWriter::reset() {
+    ColumnWriter::reset();
+
+    dictionary.clear();
+    dictionary.idxInDictBuffer.resize(0);
+    startOfRowGroups.clear();
+    startOfRowGroups.push_back(0);
+  }
+
+  void StringColumnWriter::createDirectStreams() {
+    std::unique_ptr<BufferedOutputStream> directLengthStream =
+      streamsFactory.createStream(proto::Stream_Kind_LENGTH);
+    directLengthEncoder = createRleEncoder(std::move(directLengthStream),
+                                           false,
+                                           rleVersion,
+                                           memPool,
+                                           alignedBitPacking);
+    directDataStream.reset(new AppendOnlyBufferedStream(
+      streamsFactory.createStream(proto::Stream_Kind_DATA)));
+  }
+
+  void StringColumnWriter::createDictStreams() {
+    std::unique_ptr<BufferedOutputStream> dictDataStream =
+      streamsFactory.createStream(proto::Stream_Kind_DATA);
+    dictDataEncoder = createRleEncoder(std::move(dictDataStream),
+                                       false,
+                                       rleVersion,
+                                       memPool,
+                                       alignedBitPacking);
+    std::unique_ptr<BufferedOutputStream> dictLengthStream =
+      streamsFactory.createStream(proto::Stream_Kind_LENGTH);
+    dictLengthEncoder = createRleEncoder(std::move(dictLengthStream),
+                                         false,
+                                         rleVersion,
+                                         memPool,
+                                         alignedBitPacking);
+    dictStream.reset(new AppendOnlyBufferedStream(
+      streamsFactory.createStream(proto::Stream_Kind_DICTIONARY_DATA)));
+  }
+
+  void StringColumnWriter::deleteDictStreams() {
+    dictDataEncoder.reset(nullptr);
+    dictLengthEncoder.reset(nullptr);
+    dictStream.reset(nullptr);
+
+    dictionary.clear();
+    dictionary.idxInDictBuffer.clear();
+    startOfRowGroups.clear();
+  }
+
+  void StringColumnWriter::writeDictionary() {
+    if (useDictionary  && !doneDictionaryCheck) {
+      // when index is disabled, dictionary check happens while writing 1st stripe
+      if (!checkDictionaryKeyRatio()) {
+        fallbackToDirectEncoding();
+        return;
+      }
+    }
+
+    if (useDictionary) {
+      // flush dictionary data & length streams
+      dictionary.flush(dictStream.get(), dictLengthEncoder.get());
+
+      // convert index from insertion order to dictionary order
+      dictionary.reorder(dictionary.idxInDictBuffer);
+
+      // write data sequences
+      int64_t * data = dictionary.idxInDictBuffer.data();
+      if (enableIndex) {
+        size_t prevOffset = 0;
+        for (size_t i = 0; i < startOfRowGroups.size(); ++i) {
+          // write sequences in batch for a row group stride
+          size_t offset = startOfRowGroups[i];
+          dictDataEncoder->add(data + prevOffset, offset - prevOffset, nullptr);
+
+          // update index positions
+          int rowGroupId = static_cast<int>(i);
+          proto::RowIndexEntry* indexEntry =
+            (rowGroupId < rowIndex->entry_size()) ?
+            rowIndex->mutable_entry(rowGroupId) : rowIndexEntry.get();
+
+          // add positions for direct streams
+          RowIndexPositionRecorder recorder(*indexEntry);
+          dictDataEncoder->recordPosition(&recorder);
+
+          prevOffset = offset;
+        }
+
+        dictDataEncoder->add(data + prevOffset,
+                             dictionary.idxInDictBuffer.size() - prevOffset,
+                             nullptr);
+      } else {
+        dictDataEncoder->add(data, dictionary.idxInDictBuffer.size(), nullptr);
+      }
+    }
+  }
+
+  void StringColumnWriter::fallbackToDirectEncoding() {
+    createDirectStreams();
+
+    if (enableIndex) {
+      // fallback happens at the 1st row group;
+      // simply complete positions for direct streams
+      proto::RowIndexEntry * indexEntry = rowIndexEntry.get();
+      RowIndexPositionRecorder recorder(*indexEntry);
+      directDataStream->recordPosition(&recorder);
+      directLengthEncoder->recordPosition(&recorder);
+    }
+
+    // get dictionary entries in insertion order
+    std::vector<const StringDictionary::DictEntry *> entries;
+    dictionary.getEntriesInInsertionOrder(entries);
+
+    // store each length of the data into a vector
+    const StringDictionary::DictEntry * dictEntry = nullptr;
+    for (uint64_t i = 0; i != dictionary.idxInDictBuffer.size(); ++i) {
+      // write one row data in direct encoding
+      dictEntry = entries[static_cast<size_t>(dictionary.idxInDictBuffer[i])];
+      directDataStream->write(dictEntry->data, dictEntry->length);
+      directLengthEncoder->write(static_cast<int64_t>(dictEntry->length));
+    }
+
+    deleteDictStreams();
   }
 
   struct Utf8Utils {
@@ -1083,14 +1468,25 @@ namespace orc {
                  ' ',
                  static_cast<size_t>(length[i]) - originLength);
         }
-        dataStream->write(charData, static_cast<size_t>(length[i]));
+
+        if (useDictionary) {
+          size_t index = dictionary.insert(charData, static_cast<size_t>(length[i]));
+          dictionary.idxInDictBuffer.push_back(static_cast<int64_t>(index));
+        } else {
+          directDataStream->write(charData, static_cast<size_t>(length[i]));
+        }
+
         strStats->update(charData, static_cast<size_t>(length[i]));
         strStats->increase(1);
       } else if (!hasNull) {
         hasNull = true;
       }
     }
-    lengthEncoder->add(length, numValues, notNull);
+
+    if (!useDictionary) {
+      directLengthEncoder->add(length, numValues, notNull);
+    }
+
     if (hasNull) {
       strStats->setHasNull(true);
     }
@@ -1139,9 +1535,14 @@ namespace orc {
       if (!notNull || notNull[i]) {
         uint64_t itemLength = Utf8Utils::truncateBytesTo(
           maxLength, data[i], static_cast<uint64_t>(length[i]));
-
         length[i] = static_cast<int64_t>(itemLength);
-        dataStream->write(data[i], static_cast<size_t>(length[i]));
+
+        if (useDictionary) {
+          size_t index = dictionary.insert(data[i], static_cast<size_t>(length[i]));
+          dictionary.idxInDictBuffer.push_back(static_cast<int64_t>(index));
+        } else {
+          directDataStream->write(data[i], static_cast<size_t>(length[i]));
+        }
 
         strStats->update(data[i], static_cast<size_t>(length[i]));
         strStats->increase(1);
@@ -1149,7 +1550,11 @@ namespace orc {
         hasNull = true;
       }
     }
-    lengthEncoder->add(length, numValues, notNull);
+
+    if (!useDictionary) {
+      directLengthEncoder->add(length, numValues, notNull);
+    }
+
     if (hasNull) {
       strStats->setHasNull(true);
     }
@@ -1193,7 +1598,7 @@ namespace orc {
     for (uint64_t i = 0; i < numValues; ++i) {
       uint64_t unsignedLength = static_cast<uint64_t>(length[i]);
       if (!notNull || notNull[i]) {
-        dataStream->write(data[i], unsignedLength);
+        directDataStream->write(data[i], unsignedLength);
 
         binStats->update(unsignedLength);
         binStats->increase(1);
@@ -1201,7 +1606,7 @@ namespace orc {
         hasNull = true;
       }
     }
-    lengthEncoder->add(length, numValues, notNull);
+    directLengthEncoder->add(length, numValues, notNull);
     if (hasNull) {
       binStats->setHasNull(true);
     }
@@ -1680,6 +2085,10 @@ namespace orc {
 
     virtual void recordPosition() const override;
 
+    virtual void writeDictionary() override;
+
+    virtual void reset() override;
+
   private:
     std::unique_ptr<RleEncoder> lengthEncoder;
     RleVersion rleVersion;
@@ -1843,6 +2252,19 @@ namespace orc {
     lengthEncoder->recordPosition(rowIndexPosition.get());
   }
 
+  void ListColumnWriter::reset() {
+    ColumnWriter::reset();
+    if (child) {
+      child->reset();
+    }
+  }
+
+  void ListColumnWriter::writeDictionary() {
+    if (child) {
+      child->writeDictionary();
+    }
+  }
+
   class MapColumnWriter : public ColumnWriter {
   public:
     MapColumnWriter(const Type& type,
@@ -1877,6 +2299,10 @@ namespace orc {
       std::vector<proto::Stream> &streams) const override;
 
     virtual void recordPosition() const override;
+
+    virtual void writeDictionary() override;
+
+    virtual void reset() override;
 
   private:
     std::unique_ptr<ColumnWriter> keyWriter;
@@ -2077,6 +2503,25 @@ namespace orc {
     lengthEncoder->recordPosition(rowIndexPosition.get());
   }
 
+  void MapColumnWriter::reset() {
+    ColumnWriter::reset();
+    if (keyWriter) {
+      keyWriter->reset();
+    }
+    if (elemWriter) {
+      elemWriter->reset();
+    }
+  }
+
+  void MapColumnWriter::writeDictionary() {
+    if (keyWriter) {
+      keyWriter->writeDictionary();
+    }
+    if (elemWriter) {
+      elemWriter->writeDictionary();
+    }
+  }
+
   class UnionColumnWriter : public ColumnWriter {
   public:
     UnionColumnWriter(const Type& type,
@@ -2111,6 +2556,10 @@ namespace orc {
       std::vector<proto::Stream> &streams) const override;
 
     virtual void recordPosition() const override;
+
+    virtual void writeDictionary() override;
+
+    virtual void reset() override;
 
   private:
     std::unique_ptr<ByteRleEncoder> rleEncoder;
@@ -2279,6 +2728,19 @@ namespace orc {
   void UnionColumnWriter::recordPosition() const {
     ColumnWriter::recordPosition();
     rleEncoder->recordPosition(rowIndexPosition.get());
+  }
+
+  void UnionColumnWriter::reset() {
+    ColumnWriter::reset();
+    for (uint32_t i = 0; i < children.size(); ++i) {
+      children[i]->reset();
+    }
+  }
+
+  void UnionColumnWriter::writeDictionary() {
+    for (uint32_t i = 0; i < children.size(); ++i) {
+      children[i]->writeDictionary();
+    }
   }
 
   std::unique_ptr<ColumnWriter> buildWriter(
