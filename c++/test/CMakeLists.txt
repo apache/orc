@@ -34,6 +34,7 @@ add_executable (orc-test
   TestCompression.cc
   TestDecompression.cc
   TestDecimal.cc
+  TestDictionaryEncoding.cc
   TestDriver.cc
   TestInt128.cc
   TestReader.cc

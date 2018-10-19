@@ -79,6 +79,8 @@ namespace orc {
      */
     virtual void recordPosition(PositionRecorder* recorder) const;
 
+    virtual void write(int64_t val) = 0;
+
   protected:
     std::unique_ptr<BufferedOutputStream> outputStream;
     size_t bufferPosition;
@@ -87,8 +89,6 @@ namespace orc {
     int64_t* literals;
     bool isSigned;
     char* buffer;
-
-    virtual void write(int64_t val) = 0;
 
     virtual void writeByte(char c);
 

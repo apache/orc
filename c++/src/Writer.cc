@@ -196,6 +196,10 @@ namespace orc {
     return privateBits->enableIndex;
   }
 
+  bool WriterOptions::getEnableDictionary() const {
+    return privateBits->dictionaryKeySizeThreshold > 0.0;
+  }
+
   Writer::~Writer() {
     // PASS
   }
@@ -380,6 +384,9 @@ namespace orc {
     } else {
       columnWriter->mergeRowGroupStatsIntoStripeStats();
     }
+
+    // dictionary should be written before any stream is flushed
+    columnWriter->writeDictionary();
 
     std::vector<proto::Stream> streams;
     // write ROW_INDEX streams

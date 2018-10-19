@@ -75,6 +75,8 @@ public:
      */
     uint64_t flush() override;
 
+    void write(int64_t val) override;
+
 private:
 
     const bool alignedBitPacking;
@@ -95,7 +97,6 @@ private:
     void computeZigZagLiterals(EncodingOption& option);
     void preparePatchedBlob(EncodingOption& option);
 
-    void write(int64_t val) override ;
     void writeInts(int64_t* input, uint32_t offset, size_t len, uint32_t bitSize);
     void initializeLiterals(int64_t val);
     void writeValues(EncodingOption& option);

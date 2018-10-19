@@ -185,6 +185,12 @@ namespace orc {
      * @return if not set, the default is false
      */
     bool getEnableIndex() const;
+
+    /**
+     * Get whether or not to enable dictionary encoding
+     * @return if not set, the default is false
+     */
+    bool getEnableDictionary() const;
   };
 
   class Writer {
