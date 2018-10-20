@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -39,6 +39,7 @@ import org.apache.orc.OrcFile;
 import org.apache.orc.PhysicalWriter;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
+import org.apache.orc.impl.writer.StreamOptions;
 import org.apache.orc.tools.FileDump;
 import org.junit.Before;
 import org.junit.Rule;
@@ -346,8 +347,8 @@ public class TestRLEv2 {
                                     boolean signed) throws IOException {
     TestOutputCatcher catcher = new TestOutputCatcher();
     RunLengthIntegerWriterV2 writer =
-        new RunLengthIntegerWriterV2(new OutStream("test", 10000, null,
-            catcher), signed);
+        new RunLengthIntegerWriterV2(new OutStream("test",
+            new StreamOptions(10000), catcher), signed);
     for(long x: input) {
       writer.write(x);
     }

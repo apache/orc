@@ -29,6 +29,7 @@ import java.util.Random;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.orc.impl.writer.StreamOptions;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -101,7 +102,7 @@ public class TestBitPack {
     SerializationUtils utils = new SerializationUtils();
     int fixedWidth = utils.findClosestNumBits(rangeInput);
     TestInStream.OutputCollector collect = new TestInStream.OutputCollector();
-    OutStream output = new OutStream("test", SIZE, null, collect);
+    OutStream output = new OutStream("test", new StreamOptions(SIZE), collect);
     utils.writeInts(deltaEncoded, 0, deltaEncoded.length, fixedWidth, output);
     output.flush();
     ByteBuffer inBuf = ByteBuffer.allocate(collect.buffer.size());

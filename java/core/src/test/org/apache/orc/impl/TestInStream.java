@@ -92,7 +92,7 @@ public class TestInStream {
   @Test
   public void testUncompressed() throws Exception {
     OutputCollector collect = new OutputCollector();
-    OutStream out = new OutStream("test", 100, null, collect);
+    OutStream out = new OutStream("test", new StreamOptions(100), collect);
     PositionCollector[] positions = new PositionCollector[1024];
     for(int i=0; i < 1024; ++i) {
       positions[i] = new PositionCollector();
@@ -189,8 +189,9 @@ public class TestInStream {
     Key decryptKey = new SecretKeySpec(rawKey, algorithm.getAlgorithm());
     StreamName name = new StreamName(0, OrcProto.Stream.Kind.DATA);
     byte[] iv = CryptoUtils.createIvForStream(algorithm, name, 0);
+    CompressionCodec codec = new ZlibCodec();
     StreamOptions writerOptions = new StreamOptions(500)
-        .withCodec(new ZlibCodec())
+        .withCodec(codec, codec.createOptions())
         .withEncryption(algorithm, decryptKey, iv);
     OutStream out = new OutStream("test", writerOptions, collect);
     PositionCollector[] positions = new PositionCollector[ROW_COUNT];
@@ -241,7 +242,9 @@ public class TestInStream {
   public void testCompressed() throws Exception {
     OutputCollector collect = new OutputCollector();
     CompressionCodec codec = new ZlibCodec();
-    OutStream out = new OutStream("test", 300, codec, collect);
+    StreamOptions options = new StreamOptions(300)
+        .withCodec(codec, codec.createOptions());
+    OutStream out = new OutStream("test", options, collect);
     PositionCollector[] positions = new PositionCollector[1024];
     for(int i=0; i < 1024; ++i) {
       positions[i] = new PositionCollector();
@@ -275,7 +278,9 @@ public class TestInStream {
   public void testCorruptStream() throws Exception {
     OutputCollector collect = new OutputCollector();
     CompressionCodec codec = new ZlibCodec();
-    OutStream out = new OutStream("test", 500, codec, collect);
+    StreamOptions options = new StreamOptions(500)
+                                .withCodec(codec, codec.createOptions());
+    OutStream out = new OutStream("test", options, collect);
     PositionCollector[] positions = new PositionCollector[1024];
     for(int i=0; i < 1024; ++i) {
       positions[i] = new PositionCollector();
@@ -319,7 +324,9 @@ public class TestInStream {
   public void testDisjointBuffers() throws Exception {
     OutputCollector collect = new OutputCollector();
     CompressionCodec codec = new ZlibCodec();
-    OutStream out = new OutStream("test", 400, codec, collect);
+    StreamOptions options = new StreamOptions(400)
+                                .withCodec(codec, codec.createOptions());
+    OutStream out = new OutStream("test", options, collect);
     PositionCollector[] positions = new PositionCollector[1024];
     DataOutput stream = new DataOutputStream(out);
     for(int i=0; i < 1024; ++i) {
@@ -345,9 +352,9 @@ public class TestInStream {
       buffers.add(new BufferChunk(buffer, offset));
       offset += buffer.remaining();
     }
-    InStream.StreamOptions options = InStream.options()
+    InStream.StreamOptions inOptions = InStream.options()
         .withCodec(codec).withBufferSize(400);
-    InStream in = InStream.create("test", buffers.get(), 1674, options);
+    InStream in = InStream.create("test", buffers.get(), 1674, inOptions);
     assertEquals("compressed stream test position: 0 length: 1674 range: 0" +
                  " offset: 0 limit: 483 range 0 = 0 to 483;" +
                  "  range 1 = 483 to 1625;  range 2 = 1625 to 1674",
@@ -366,7 +373,7 @@ public class TestInStream {
     buffers.clear();
     buffers.add(new BufferChunk(inBuf[1], 483));
     buffers.add(new BufferChunk(inBuf[2], 1625));
-    in = InStream.create("test", buffers.get(), 1674, options);
+    in = InStream.create("test", buffers.get(), 1674, inOptions);
     inStream = new DataInputStream(in);
     positions[303].reset();
     in.seek(positions[303]);
@@ -377,7 +384,7 @@ public class TestInStream {
     buffers.clear();
     buffers.add(new BufferChunk(inBuf[0], 0));
     buffers.add(new BufferChunk(inBuf[2], 1625));
-    in = InStream.create("test", buffers.get(), 1674, options);
+    in = InStream.create("test", buffers.get(), 1674, inOptions);
     inStream = new DataInputStream(in);
     positions[1001].reset();
     for(int i=0; i < 300; ++i) {
@@ -392,7 +399,7 @@ public class TestInStream {
   @Test
   public void testUncompressedDisjointBuffers() throws Exception {
     OutputCollector collect = new OutputCollector();
-    OutStream out = new OutStream("test", 400, null, collect);
+    OutStream out = new OutStream("test", new StreamOptions(400), collect);
     PositionCollector[] positions = new PositionCollector[1024];
     DataOutput stream = new DataOutputStream(out);
     for(int i=0; i < 1024; ++i) {

@@ -66,17 +66,11 @@ public class OutStream extends PositionedOutputStream {
   private ByteBuffer overflow = null;
   private final int bufferSize;
   private final CompressionCodec codec;
+  private final CompressionCodec.Options options;
   private long compressedBytes = 0;
   private long uncompressedBytes = 0;
   private final Cipher cipher;
   private final Key key;
-
-  public OutStream(String name,
-                   int bufferSize,
-                   CompressionCodec codec,
-                   PhysicalWriter.OutputReceiver receiver) {
-    this(name, new StreamOptions(bufferSize).withCodec(codec), receiver);
-  }
 
   public OutStream(String name,
                    StreamOptions options,
@@ -84,6 +78,7 @@ public class OutStream extends PositionedOutputStream {
     this.name = name;
     this.bufferSize = options.getBufferSize();
     this.codec = options.getCodec();
+    this.options = options.getCodecOptions();
     this.receiver = receiver;
     if (options.isEncrypted()) {
       this.cipher = options.getAlgorithm().createCipher();
@@ -258,7 +253,7 @@ public class OutStream extends PositionedOutputStream {
       }
       int sizePosn = compressed.position();
       compressed.position(compressed.position() + HEADER_SIZE);
-      if (codec.compress(current, compressed, overflow)) {
+      if (codec.compress(current, compressed, overflow, options)) {
         uncompressedBytes = 0;
         // move position back to after the header
         current.position(HEADER_SIZE);
