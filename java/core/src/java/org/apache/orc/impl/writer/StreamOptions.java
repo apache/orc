@@ -27,6 +27,7 @@ import java.security.Key;
  */
 public class StreamOptions {
   private CompressionCodec codec;
+  private CompressionCodec.Options options;
   private final int bufferSize;
   private EncryptionAlgorithm algorithm;
   private Key key;
@@ -45,8 +46,10 @@ public class StreamOptions {
    * @param codec the codec to compress with
    * @return this
    */
-  public StreamOptions withCodec(CompressionCodec codec) {
+  public StreamOptions withCodec(CompressionCodec codec,
+                                 CompressionCodec.Options options) {
     this.codec = codec;
+    this.options = options;
     return this;
   }
 
@@ -61,6 +64,10 @@ public class StreamOptions {
 
   public CompressionCodec getCodec() {
     return codec;
+  }
+
+  public CompressionCodec.Options getCodecOptions() {
+    return options;
   }
 
   public int getBufferSize() {

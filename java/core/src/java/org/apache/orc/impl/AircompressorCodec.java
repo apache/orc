@@ -25,7 +25,6 @@ import org.apache.orc.CompressionKind;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.EnumSet;
 
 public class AircompressorCodec implements CompressionCodec {
   private final CompressionKind kind;
@@ -59,7 +58,8 @@ public class AircompressorCodec implements CompressionCodec {
 
   @Override
   public boolean compress(ByteBuffer in, ByteBuffer out,
-                          ByteBuffer overflow) throws IOException {
+                          ByteBuffer overflow,
+                          Options options) {
     int inBytes = in.remaining();
     // I should work on a patch for Snappy to support an overflow buffer
     // to prevent the extra buffer copy.
@@ -98,10 +98,24 @@ public class AircompressorCodec implements CompressionCodec {
     out.flip();
   }
 
+  /**
+   * Return an options object that doesn't do anything
+   * @return a new options object
+   */
   @Override
-  public CompressionCodec modify(EnumSet<Modifier> modifiers) {
-    // snappy allows no modifications
-    return this;
+  public Options createOptions() {
+    return new Options() {
+
+      @Override
+      public Options setSpeed(SpeedModifier newValue) {
+        return this;
+      }
+
+      @Override
+      public Options setData(DataKind newValue) {
+        return this;
+      }
+    };
   }
 
   @Override

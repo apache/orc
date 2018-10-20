@@ -36,6 +36,7 @@ import org.apache.orc.CompressionKind;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
 import org.apache.orc.PhysicalWriter;
+import org.apache.orc.impl.writer.StreamOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,6 +58,7 @@ public class PhysicalFsWriter implements PhysicalWriter {
   private final int bufferSize;
   private final int maxPadding;
   private final CompressionKind compress;
+  private final OrcFile.CompressionStrategy compressionStrategy;
   private CompressionCodec codec;
   private final boolean addBlockPadding;
   private final boolean writeVariableLengthBlocks;
@@ -87,6 +89,7 @@ public class PhysicalFsWriter implements PhysicalWriter {
           opts.getBufferSize());
     }
     this.compress = opts.getCompress();
+    this.compressionStrategy = opts.getCompressionStrategy();
     this.maxPadding = (int) (opts.getPaddingTolerance() * defaultStripeSize);
     this.blockSize = opts.getBlockSize();
     LOG.info("ORC writer created for path: {} with stripeSize: {} blockSize: {}" +
@@ -96,7 +99,11 @@ public class PhysicalFsWriter implements PhysicalWriter {
         fs.getDefaultReplication(path), blockSize);
     blockOffset = 0;
     codec = OrcCodecPool.getCodec(compress);
-    writer = new OutStream("metadata", bufferSize, codec,
+    StreamOptions options = new StreamOptions(bufferSize);
+    if (codec != null) {
+      options.withCodec(codec, codec.createOptions());
+    }
+    writer = new OutStream("metadata", options,
         new DirectStream(rawWriter));
     protobufWriter = CodedOutputStream.newInstance(writer);
     writeVariableLengthBlocks = opts.getWriteVariableLengthBlocks();
@@ -392,22 +399,30 @@ public class PhysicalFsWriter implements PhysicalWriter {
     return result;
   }
 
+  StreamOptions getOptions(OrcProto.Stream.Kind kind) {
+    StreamOptions options = new StreamOptions(bufferSize);
+    if (codec != null) {
+      options.withCodec(codec, WriterImpl.getCustomizedCodec(codec,
+          compressionStrategy, kind));
+    }
+    return options;
+  }
+
   @Override
   public void writeIndex(StreamName name,
-                         OrcProto.RowIndex.Builder index,
-                         CompressionCodec codec) throws IOException {
-    OutputStream stream = new OutStream(path.toString(), bufferSize, codec,
-        createDataStream(name));
+                         OrcProto.RowIndex.Builder index) throws IOException {
+    OutputStream stream = new OutStream(path.toString(),
+        getOptions(name.getKind()), createDataStream(name));
     index.build().writeTo(stream);
     stream.flush();
   }
 
   @Override
   public void writeBloomFilter(StreamName name,
-                               OrcProto.BloomFilterIndex.Builder bloom,
-                               CompressionCodec codec) throws IOException {
-    OutputStream stream = new OutStream(path.toString(), bufferSize, codec,
-        createDataStream(name));
+                               OrcProto.BloomFilterIndex.Builder bloom
+                               ) throws IOException {
+    OutputStream stream = new OutStream(path.toString(),
+        getOptions(name.getKind()), createDataStream(name));
     bloom.build().writeTo(stream);
     stream.flush();
   }

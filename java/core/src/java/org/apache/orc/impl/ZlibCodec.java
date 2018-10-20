@@ -33,27 +33,69 @@ public class ZlibCodec implements CompressionCodec, DirectDecompressionCodec {
   private HadoopShims.DirectDecompressor decompressShim = null;
   private Boolean direct = null;
 
-  private int level;
-  private int strategy;
+  static class ZlibOptions implements Options {
+    private int level;
+    private int strategy;
 
-  public ZlibCodec() {
-    level = Deflater.DEFAULT_COMPRESSION;
-    strategy = Deflater.DEFAULT_STRATEGY;
+    ZlibOptions(int level, int strategy) {
+      this.level = level;
+      this.strategy = strategy;
+    }
+
+    @Override
+    public ZlibOptions setSpeed(SpeedModifier newValue) {
+      switch (newValue) {
+        case FAST:
+          // deflate_fast looking for 16 byte patterns
+          level = Deflater.BEST_SPEED + 1;
+          break;
+        case DEFAULT:
+          // deflate_slow looking for 128 byte patterns
+          level = Deflater.DEFAULT_COMPRESSION;
+          break;
+        case FASTEST:
+          // deflate_fast looking for 8 byte patterns
+          level = Deflater.BEST_SPEED;
+          break;
+        default:
+          break;
+      }
+      return this;
+    }
+
+    @Override
+    public ZlibOptions setData(DataKind newValue) {
+      switch (newValue) {
+        case BINARY:
+          /* filtered == less LZ77, more huffman */
+          strategy = Deflater.FILTERED;
+          break;
+        case TEXT:
+          strategy = Deflater.DEFAULT_STRATEGY;
+          break;
+        default:
+          break;
+      }
+      return this;
+    }
   }
 
-  private ZlibCodec(int level, int strategy) {
-    this.level = level;
-    this.strategy = strategy;
+  @Override
+  public Options createOptions() {
+    return new ZlibOptions(Deflater.DEFAULT_COMPRESSION,
+        Deflater.DEFAULT_STRATEGY);
   }
 
   @Override
   public boolean compress(ByteBuffer in, ByteBuffer out,
-                          ByteBuffer overflow) throws IOException {
+                          ByteBuffer overflow,
+                          Options options) {
+    ZlibOptions zlo = (ZlibOptions) options;
     int length = in.remaining();
     int outSize = 0;
-    Deflater deflater = new Deflater(level, true);
+    Deflater deflater = new Deflater(zlo.level, true);
     try {
-      deflater.setStrategy(strategy);
+      deflater.setStrategy(zlo.strategy);
       deflater.setInput(in.array(), in.arrayOffset() + in.position(), length);
       deflater.finish();
       int offset = out.arrayOffset() + out.position();
@@ -136,47 +178,7 @@ public class ZlibCodec implements CompressionCodec, DirectDecompressionCodec {
   }
 
   @Override
-  public CompressionCodec modify(/* @Nullable */ EnumSet<Modifier> modifiers) {
-
-    if (modifiers == null) {
-      return this;
-    }
-
-    int l = this.level;
-    int s = this.strategy;
-
-    for (Modifier m : modifiers) {
-      switch (m) {
-      case BINARY:
-        /* filtered == less LZ77, more huffman */
-        s = Deflater.FILTERED;
-        break;
-      case TEXT:
-        s = Deflater.DEFAULT_STRATEGY;
-        break;
-      case FASTEST:
-        // deflate_fast looking for 8 byte patterns
-        l = Deflater.BEST_SPEED;
-        break;
-      case FAST:
-        // deflate_fast looking for 16 byte patterns
-        l = Deflater.BEST_SPEED + 1;
-        break;
-      case DEFAULT:
-        // deflate_slow looking for 128 byte patterns
-        l = Deflater.DEFAULT_COMPRESSION;
-        break;
-      default:
-        break;
-      }
-    }
-    return new ZlibCodec(l, s);
-  }
-
-  @Override
   public void reset() {
-    level = Deflater.DEFAULT_COMPRESSION;
-    strategy = Deflater.DEFAULT_STRATEGY;
     if (decompressShim != null) {
       decompressShim.reset();
     }

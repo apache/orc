@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,20 +17,21 @@
  */
 package org.apache.orc.impl;
 
-import static junit.framework.Assert.assertEquals;
-
 import java.nio.ByteBuffer;
 
 import org.apache.orc.CompressionCodec;
+import org.apache.orc.impl.writer.StreamOptions;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 public class TestRunLengthByteReader {
 
   @Test
   public void testUncompressedSeek() throws Exception {
     TestInStream.OutputCollector collect = new TestInStream.OutputCollector();
-    RunLengthByteWriter out = new RunLengthByteWriter(new OutStream("test", 100,
-        null, collect));
+    RunLengthByteWriter out = new RunLengthByteWriter(new OutStream("test",
+        new StreamOptions(100), collect));
     TestInStream.PositionCollector[] positions =
         new TestInStream.PositionCollector[2048];
     for(int i=0; i < 2048; ++i) {
@@ -70,9 +71,11 @@ public class TestRunLengthByteReader {
   @Test
   public void testCompressedSeek() throws Exception {
     CompressionCodec codec = new SnappyCodec();
+    StreamOptions options = new StreamOptions(500)
+                                .withCodec(codec, codec.createOptions());
     TestInStream.OutputCollector collect = new TestInStream.OutputCollector();
-    RunLengthByteWriter out = new RunLengthByteWriter(new OutStream("test", 500,
-        codec, collect));
+    RunLengthByteWriter out = new RunLengthByteWriter(
+        new OutStream("test", options, collect));
     TestInStream.PositionCollector[] positions =
         new TestInStream.PositionCollector[2048];
     for(int i=0; i < 2048; ++i) {
@@ -113,8 +116,8 @@ public class TestRunLengthByteReader {
   @Test
   public void testSkips() throws Exception {
     TestInStream.OutputCollector collect = new TestInStream.OutputCollector();
-    RunLengthByteWriter out = new RunLengthByteWriter(new OutStream("test", 100,
-        null, collect));
+    RunLengthByteWriter out = new RunLengthByteWriter(new OutStream("test",
+        new StreamOptions(100), collect));
     for(int i=0; i < 2048; ++i) {
       if (i < 1024) {
         out.write((byte) (i/16));

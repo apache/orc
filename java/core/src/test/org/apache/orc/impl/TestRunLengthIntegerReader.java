@@ -23,14 +23,19 @@ import java.nio.ByteBuffer;
 import java.util.Random;
 
 import org.apache.orc.CompressionCodec;
+import org.apache.orc.impl.writer.StreamOptions;
 import org.junit.Test;
 
 public class TestRunLengthIntegerReader {
 
   public void runSeekTest(CompressionCodec codec) throws Exception {
     TestInStream.OutputCollector collect = new TestInStream.OutputCollector();
+    StreamOptions options = new StreamOptions(1000);
+    if (codec != null) {
+      options.withCodec(codec, codec.createOptions());
+    }
     RunLengthIntegerWriter out = new RunLengthIntegerWriter(
-        new OutStream("test", 1000, codec, collect), true);
+        new OutStream("test", options, collect), true);
     TestInStream.PositionCollector[] positions =
         new TestInStream.PositionCollector[4096];
     Random random = new Random(99);
@@ -94,7 +99,7 @@ public class TestRunLengthIntegerReader {
   public void testSkips() throws Exception {
     TestInStream.OutputCollector collect = new TestInStream.OutputCollector();
     RunLengthIntegerWriter out = new RunLengthIntegerWriter(
-        new OutStream("test", 100, null, collect), true);
+        new OutStream("test", new StreamOptions(100), collect), true);
     for(int i=0; i < 2048; ++i) {
       if (i < 1024) {
         out.write(i);
