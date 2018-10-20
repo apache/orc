@@ -1179,8 +1179,8 @@ namespace orc {
 
   bool StringColumnWriter::checkDictionaryKeyRatio() {
     if (!doneDictionaryCheck) {
-      useDictionary =
-        dictionary.size() <= idxInDictBuffer.size() * dictSizeThreshold;
+      useDictionary = dictionary.size() <= static_cast<size_t>(
+        static_cast<double>(idxInDictBuffer.size()) * dictSizeThreshold);
       doneDictionaryCheck = true;
     }
 
