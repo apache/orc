@@ -30,16 +30,27 @@ RUN yum install -y \
   gcc-c++ \
   gettext-devel \
   git \
-  java-1.7.0-openjdk \
-  java-1.7.0-openjdk-devel \
+  java-1.8.0-openjdk \
+  java-1.8.0-openjdk-devel \
+  libtool \
   make \
   maven \
   openssl-devel \
+  tar \
+  wget \
   which \
   zlib-devel
 
 ENV TZ=America/Los_Angeles
 WORKDIR /root
+# install a local build of snappy
+RUN wget "https://github.com/google/snappy/archive/1.1.3.tar.gz" \
+  -O snappy.tgz
+RUN tar xzf snappy.tgz
+RUN cd snappy-1.1.3 && \
+    ./autogen.sh && \
+    ./configure && \
+    make install
 
 CMD git clone https://github.com/apache/orc.git -b master && \
   mkdir orc/build && \

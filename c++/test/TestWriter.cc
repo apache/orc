@@ -78,7 +78,9 @@ namespace orc {
     virtual void SetUp();
 
     protected:
-      FileVersion fileVersion = FileVersion::v_0_11();
+      FileVersion fileVersion;
+    public:
+      WriterTest(): fileVersion(FileVersion::v_0_11()) {}
   };
 
   void WriterTest::SetUp() {

@@ -9,3 +9,7 @@ To run the docker scripts:
 1. cd $os
 2. docker build -t orc-$os .
 3. docker run orc-$os
+
+To clean up docker:
+1. docker container prune
+2. docker image prune

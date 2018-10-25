@@ -21,16 +21,40 @@ FROM ubuntu:12.04
 MAINTAINER Owen O'Malley <owen@hortonworks.com>
 
 RUN apt-get update
+RUN apt-get install -y python-software-properties
+RUN add-apt-repository -y ppa:openjdk-r/ppa
+RUN apt-get update
 RUN apt-get install -y \
+  autoconf \
   cmake \
   gcc \
   g++ \
   git \
+  libtool \
   make \
   maven \
-  openjdk-7-jdk
+  openjdk-8-jdk \
+  pkg-config \
+  tar \
+  wget
 
 WORKDIR /root
+# install a local build of protobuf
+RUN wget "https://github.com/protocolbuffers/protobuf/archive/v2.5.0.tar.gz" \
+  -O protobuf.tgz
+RUN tar xzf protobuf.tgz
+RUN cd protobuf-2.5.0 && \
+    autoreconf -f -i -Wall,no-obsolete && \
+    ./configure --enable-shared=no&& \
+    make install
+# install a local build of snappy
+RUN wget "https://github.com/google/snappy/archive/1.1.3.tar.gz" \
+  -O snappy.tgz
+RUN tar xzf snappy.tgz
+RUN cd snappy-1.1.3 && \
+    ./autogen.sh && \
+    ./configure && \
+    make install
 
 CMD git clone https://github.com/apache/orc.git -b master && \
   mkdir orc/build && \

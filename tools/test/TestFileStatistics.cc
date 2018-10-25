@@ -183,8 +183,11 @@ TEST (TestFileStatistics, testOptions) {
 
   std::string output;
   std::string error;
-
-  EXPECT_EQ(0, runProgram({pgm, "-i", file}, output, error));
+  std::vector<std::string> args;
+  args.push_back(pgm);
+  args.push_back("-i");
+  args.push_back(file);
+  EXPECT_EQ(0, runProgram(args, output, error));
   EXPECT_EQ(expected, output);
   EXPECT_EQ("", error);
 }

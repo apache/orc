@@ -40,7 +40,7 @@ public:
 private:
     int64_t delta;
     bool repeat;
-    int tailRunLength;
+    uint64_t tailRunLength;
 
     void write(int64_t val) override;
     void writeValues();

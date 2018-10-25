@@ -21,18 +21,33 @@ FROM ubuntu:14.04
 MAINTAINER Owen O'Malley <owen@hortonworks.com>
 
 RUN apt-get update
+RUN apt-get install -y software-properties-common
+RUN add-apt-repository -y ppa:openjdk-r/ppa
+RUN apt-get update
 RUN apt-get install -y \
+  autoconf \
   cmake \
   gcc \
   g++ \
   git \
   libsasl2-dev \
   libssl-dev \
+  libtool \
   make \
   maven \
-  openjdk-7-jdk
+  openjdk-8-jdk \
+  pkg-config \
+  wget
 
 WORKDIR /root
+# install a local build of snappy
+RUN wget "https://github.com/google/snappy/archive/1.1.3.tar.gz" \
+  -O snappy.tgz
+RUN tar xzf snappy.tgz
+RUN cd snappy-1.1.3 && \
+    ./autogen.sh && \
+    ./configure && \
+    make install
 
 CMD git clone https://github.com/apache/orc.git -b master && \
   mkdir orc/build && \
