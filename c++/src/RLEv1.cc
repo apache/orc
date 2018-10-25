@@ -25,14 +25,14 @@
 
 namespace orc {
 
-const int MINIMUM_REPEAT = 3;
-const int MAXIMUM_REPEAT = 127 + MINIMUM_REPEAT;
+const uint64_t MINIMUM_REPEAT = 3;
+const uint64_t MAXIMUM_REPEAT = 127 + MINIMUM_REPEAT;
 
 const int64_t BASE_128_MASK = 0x7f;
 
-const int MAX_DELTA = 127;
-const int MIN_DELTA = -128;
-const int MAX_LITERAL_SIZE = 128;
+const int64_t MAX_DELTA = 127;
+const int64_t MIN_DELTA = -128;
+const uint64_t MAX_LITERAL_SIZE = 128;
 
 RleEncoderV1::RleEncoderV1(
                           std::unique_ptr<BufferedOutputStream> outStream,
@@ -87,7 +87,7 @@ void RleEncoderV1::writeValues() {
       }
     } else {
       writeByte(static_cast<char>(-numLiterals));
-      for(int i=0; i < numLiterals; ++i) {
+      for(uint64_t i=0; i < numLiterals; ++i) {
         if (isSigned) {
           writeVslong(literals[i]);
         } else {
@@ -114,7 +114,7 @@ void RleEncoderV1::write(int64_t value) {
     literals[numLiterals++] = value;
     tailRunLength = 1;
   } else if (repeat) {
-    if (value == literals[0] + delta * numLiterals) {
+    if (value == literals[0] + delta * static_cast<int64_t>(numLiterals)) {
       numLiterals += 1;
       if (numLiterals == MAXIMUM_REPEAT) {
         writeValues();

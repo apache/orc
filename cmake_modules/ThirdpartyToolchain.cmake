@@ -135,6 +135,7 @@ else ()
   set(LZ4_INCLUDE_DIR "${LZ4_PREFIX}/include")
   set(LZ4_STATIC_LIB "${LZ4_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lz4${CMAKE_STATIC_LIBRARY_SUFFIX}")
   set(LZ4_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${LZ4_PREFIX}
+                     -DCMAKE_INSTALL_LIBDIR=lib
                      -DBUILD_SHARED_LIBS=OFF)
 
   if (CMAKE_VERSION VERSION_GREATER "3.7")
@@ -223,6 +224,7 @@ else ()
   set(PROTOBUF_PREFIX "${THIRDPARTY_DIR}/protobuf_ep-install")
   set(PROTOBUF_INCLUDE_DIR "${PROTOBUF_PREFIX}/include")
   set(PROTOBUF_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROTOBUF_PREFIX}
+                          -DCMAKE_INSTALL_LIBDIR=lib
                           -DBUILD_SHARED_LIBS=OFF
                           -Dprotobuf_BUILD_TESTS=OFF)
   if (MSVC)

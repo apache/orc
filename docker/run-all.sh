@@ -19,11 +19,35 @@ GITHUB_USER=$1
 URL=https://github.com/$GITHUB_USER/orc.git
 BRANCH=$2
 
+CLONE="git clone $URL -b $BRANCH"
+MAKEDIR="mkdir orc/build && cd orc/build"
+mkdir -p logs
+
 start=`date`
-for os in centos6 centos7 debian7 debian8 ubuntu12 ubuntu14 ubuntu16; do
-  echo "Testing $os"
-  ( cd $os && docker build -t "orc-$os" . )
-  docker run "orc-$os" /bin/bash -c "git clone $URL -b $BRANCH && mkdir orc/build && cd orc/build && cmake .. && make package test-out" || exit 1
+for os in `cat os-list.txt`; do
+  echo "Building $os"
+  ( cd $os && docker build -t "orc-$os" . ) > logs/$os-build.log 2>&1 || exit 1
 done
-echo "Start: $start"
+testStart=`date`
+
+for os in `cat os-list.txt`; do
+  echo "Testing $os"
+  case $os in
+  centos6|ubuntu12)
+     OPTS="-DSNAPPY_HOME=/usr/local -DPROTOBUF_HOME=/usr/local"
+     ;;
+  centos7|debian8|ubuntu14)
+     OPTS="-DSNAPPY_HOME=/usr/local"
+     ;;
+  *)
+     OPTS=""
+     ;;
+  esac
+  docker run "orc-$os" /bin/bash -c \
+	 "$CLONE && $MAKEDIR && cmake $OPTS .. && make package test-out" \
+         > logs/$os-test.log 2>&1 || exit 1
+done
+
+echo "Build start: $start"
+echo "Test start: $testStart"
 echo "End:" `date`

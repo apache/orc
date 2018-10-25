@@ -24,6 +24,8 @@
 #cmakedefine HAS_STRPTIME
 #cmakedefine HAS_STOLL
 #cmakedefine HAS_DIAGNOSTIC_PUSH
+#cmakedefine HAS_DOUBLE_TO_STRING
+#cmakedefine HAS_INT64_TO_STRING
 #cmakedefine HAS_PRE_1970
 #cmakedefine HAS_POST_2038
 #cmakedefine HAS_STD_ISNAN

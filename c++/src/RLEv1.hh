@@ -64,10 +64,10 @@ private:
     std::unique_ptr<BufferedOutputStream> outputStream;
     bool isSigned;
     int64_t* literals;
-    int numLiterals;
+    uint64_t numLiterals;
     int64_t delta;
     bool repeat;
-    int tailRunLength;
+    uint64_t tailRunLength;
     int bufferPosition;
     int bufferLength;
     char* buffer;

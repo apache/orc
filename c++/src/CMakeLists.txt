@@ -98,6 +98,25 @@ CHECK_CXX_SOURCE_COMPILES("
   NEEDS_REDUNDANT_MOVE
 )
 
+CHECK_CXX_SOURCE_COMPILES("
+    #include<string>
+    int main(int, char *[]) {
+      double d = 5;
+      std::to_string(d);
+    }"
+  HAS_DOUBLE_TO_STRING
+)
+
+CHECK_CXX_SOURCE_COMPILES("
+    #include<cstdint>
+    #include<string>
+    int main(int, char *[]) {
+      int64_t d = 5;
+      std::to_string(d);
+    }"
+  HAS_INT64_TO_STRING
+)
+
 INCLUDE(CheckCXXSourceRuns)
 
 CHECK_CXX_SOURCE_RUNS("

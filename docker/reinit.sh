@@ -1,3 +1,4 @@
+#!/bin/bash
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -14,26 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# ORC compile for Debian 7
-#
-
-FROM debian:7
-MAINTAINER Owen O'Malley <owen@hortonworks.com>
-
-RUN apt-get update
-RUN apt-get install -y \
-  cmake \
-  gcc \
-  g++ \
-  git \
-  make \
-  maven \
-  openjdk-7-jdk
-
-WORKDIR /root
-
-CMD git clone https://github.com/apache/orc.git -b master && \
-  mkdir orc/build && \
-  cd orc/build && \
-  cmake .. && \ 
-  make package test-out
+start=`date`
+for os in `cat os-list.txt`; do
+  echo "Re-initialize $os"
+  ( cd $os && docker build --no-cache -t "orc-$os" . )
+done
+echo "Start: $start"
+echo "End:" `date`
