@@ -20,19 +20,36 @@
 FROM debian:8
 MAINTAINER Owen O'Malley <owen@hortonworks.com>
 
+RUN echo "deb http://ftp.debian.org/debian jessie-backports main" \
+  >> /etc/apt/sources.list
+
 RUN apt-get update
 RUN apt-get install -y \
+  autoconf \
   cmake \
   gcc \
   g++ \
   git \
   libsasl2-dev \
   libssl-dev \
+  libtool \
   make \
   maven \
-  openjdk-7-jdk
+  pkg-config \
+  wget
+RUN apt-get -t jessie-backports install -y openjdk-8-jdk
+RUN update-alternatives --set java \
+  /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java
 
 WORKDIR /root
+# install a local build of snappy
+RUN wget "https://github.com/google/snappy/archive/1.1.3.tar.gz" \
+  -O snappy.tgz
+RUN tar xzf snappy.tgz
+RUN cd snappy-1.1.3 && \
+    ./autogen.sh && \
+    ./configure && \
+    make install
 
 CMD git clone https://github.com/apache/orc.git -b master && \
   mkdir orc/build && \

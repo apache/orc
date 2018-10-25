@@ -1,0 +1,6 @@
+centos6
+centos7
+debian8
+ubuntu12
+ubuntu14
+ubuntu16

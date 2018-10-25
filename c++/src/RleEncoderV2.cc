@@ -26,6 +26,26 @@
 
 namespace orc {
 
+#ifdef HAS_DOUBLE_TO_STRING
+  std::string to_string(double val) {
+    return std::to_string(val);
+  }
+#else
+  std::string to_string(double val) {
+    return std::to_string(static_cast<long double>(val));
+  }
+#endif
+
+#ifdef HAS_INT64_TO_STRING
+  std::string to_string(int64_t val) {
+    return std::to_string(val);
+  }
+#else
+  std::string to_string(int64_t val) {
+    return std::to_string(static_cast<long long int>(val));
+  }
+#endif
+
 /**
  * Compute the bits required to represent pth percentile value
  * @param data - array
@@ -34,7 +54,7 @@ namespace orc {
  */
 uint32_t RleEncoderV2::percentileBits(int64_t* data, size_t offset, size_t length, double p, bool reuseHist) {
     if ((p > 1.0) || (p <= 0.0)) {
-        throw InvalidArgument("Invalid p value: " + std::to_string(p));
+        throw InvalidArgument("Invalid p value: " + to_string(p));
     }
 
     if (!reuseHist) {
@@ -342,11 +362,13 @@ void RleEncoderV2::determineEncoding(EncodingOption& option) {
     // fixed values run >10 which cannot be encoded with SHORT_REPEAT
     if (option.min == max) {
         if (!option.isFixedDelta) {
-            throw InvalidArgument(std::to_string(option.min) + "==" + std::to_string(max) + ", isFixedDelta cannot be false");
+            throw InvalidArgument(to_string(option.min) + "==" +
+              to_string(max) + ", isFixedDelta cannot be false");
         }
 
         if(currDelta != 0) {
-            throw InvalidArgument(std::to_string(option.min) + "==" + std::to_string(max) + ", currDelta should be zero");
+            throw InvalidArgument(to_string(option.min) + "==" +
+            to_string(max) + ", currDelta should be zero");
         }
         option.fixedDelta = 0;
         option.encoding = DELTA;

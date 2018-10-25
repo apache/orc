@@ -29,8 +29,9 @@ RUN yum install -y \
   gcc-c++ \
   gettext-devel \
   git \
-  java-1.7.0-openjdk \
-  java-1.7.0-openjdk-devel \
+  java-1.8.0-openjdk \
+  java-1.8.0-openjdk-devel \
+  libtool \
   make \
   openssl-devel \
   tar \
@@ -42,6 +43,22 @@ WORKDIR /root
 RUN wget "https://www.apache.org/dyn/closer.lua?action=download&filename=/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz" -O maven.tgz
 RUN tar xzf maven.tgz
 RUN ln -s /root/apache-maven-3.3.9/bin/mvn /usr/bin/mvn
+# install a local build of protobuf
+RUN wget "https://github.com/protocolbuffers/protobuf/archive/v2.5.0.tar.gz" \
+  -O protobuf.tgz
+RUN tar xzf protobuf.tgz
+RUN cd protobuf-2.5.0 && \
+    autoreconf -f -i -Wall,no-obsolete && \
+    ./configure && \
+    make install
+# install a local build of snappy
+RUN wget "https://github.com/google/snappy/archive/1.1.3.tar.gz" \
+  -O snappy.tgz
+RUN tar xzf snappy.tgz
+RUN cd snappy-1.1.3 && \
+    ./autogen.sh && \
+    ./configure && \
+    make install
 
 CMD git clone https://github.com/apache/orc.git -b master && \
   mkdir orc/build && \

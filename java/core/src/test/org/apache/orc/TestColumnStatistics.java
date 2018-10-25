@@ -136,8 +136,9 @@ public class TestColumnStatistics {
     final StringColumnStatistics typed = (StringColumnStatistics) stats1;
     final StringColumnStatistics typed2 = (StringColumnStatistics) stats2;
 
-    assertTrue("Upperbound cannot be more than 1024 bytes",1024 >= typed.getUpperBound().getBytes().length);
-    assertTrue("Lowerbound cannot be more than 1024 bytes",1024 >= typed.getLowerBound().getBytes().length);
+    assertTrue("Upperbound cannot be more than 1024 bytes",
+        1024 >= typed.getUpperBound().getBytes(StandardCharsets.UTF_8).length);
+    assertTrue("Lowerbound cannot be more than 1024 bytes",1024 >= typed.getLowerBound().getBytes(StandardCharsets.UTF_8).length);
 
     assertEquals(null, typed.getMinimum());
     assertEquals(null, typed.getMaximum());
@@ -145,10 +146,11 @@ public class TestColumnStatistics {
     stats1.reset();
 
     /* test a scenario for the first max bytes */
-    stats1.updateString(test.getBytes(), 0, test.getBytes().length, 0);
+    stats1.updateString(test.getBytes(StandardCharsets.UTF_8), 0,
+        test.getBytes(StandardCharsets.UTF_8).length, 0);
 
-    assertTrue("Lowerbound cannot be more than 1024 bytes", 1024 >= typed.getLowerBound().getBytes().length);
-    assertTrue("Upperbound cannot be more than 1024 bytes", 1024 >= typed.getUpperBound().getBytes().length);
+    assertTrue("Lowerbound cannot be more than 1024 bytes", 1024 >= typed.getLowerBound().getBytes(StandardCharsets.UTF_8).length);
+    assertTrue("Upperbound cannot be more than 1024 bytes", 1024 >= typed.getUpperBound().getBytes(StandardCharsets.UTF_8).length);
 
     assertEquals(null, typed.getMinimum());
     assertEquals(null, typed.getMaximum());

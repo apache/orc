@@ -30,7 +30,7 @@ namespace orc {
   public:
     explicit NotImplementedYet(const std::string& what_arg);
     explicit NotImplementedYet(const char* what_arg);
-    virtual ~NotImplementedYet() noexcept;
+    virtual ~NotImplementedYet() ORC_NOEXCEPT;
     NotImplementedYet(const NotImplementedYet&);
   private:
     NotImplementedYet& operator=(const NotImplementedYet&);
@@ -40,7 +40,7 @@ namespace orc {
   public:
     explicit ParseError(const std::string& what_arg);
     explicit ParseError(const char* what_arg);
-    virtual ~ParseError() noexcept;
+    virtual ~ParseError() ORC_NOEXCEPT;
     ParseError(const ParseError&);
   private:
     ParseError& operator=(const ParseError&);
@@ -50,7 +50,7 @@ namespace orc {
   public:
     explicit InvalidArgument(const std::string& what_arg);
     explicit InvalidArgument(const char* what_arg);
-    virtual ~InvalidArgument() noexcept;
+    virtual ~InvalidArgument() ORC_NOEXCEPT;
     InvalidArgument(const InvalidArgument&);
   private:
     InvalidArgument& operator=(const InvalidArgument&);

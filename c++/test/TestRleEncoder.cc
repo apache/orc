@@ -40,7 +40,7 @@ namespace orc {
     virtual void SetUp();
 
   protected:
-    bool alignBitpacking = true;
+    bool alignBitpacking;
     std::unique_ptr<RleEncoder> getEncoder(RleVersion version,
                                            MemoryOutputStream& memStream,
                                            bool isSigned);

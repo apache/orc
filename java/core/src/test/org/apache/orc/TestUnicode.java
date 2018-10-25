@@ -20,6 +20,7 @@ package org.apache.orc;
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -171,7 +172,7 @@ public class TestUnicode {
         writer.addRowBatch(batch);
         batch.reset();
       }
-      col.setVal(batch.size++, inputs[i].getBytes());
+      col.setVal(batch.size++, inputs[i].getBytes(StandardCharsets.UTF_8));
     }
     writer.addRowBatch(batch);
     writer.close();
@@ -185,10 +186,21 @@ public class TestUnicode {
     while (rows.nextBatch(batch)) {
       for (int r = 0; r < batch.size; ++r) {
         assertEquals(String.format("test for %s:%d", schema, maxLength), expected[idx],
-            col.toString(r));
+            toString(col, r));
         idx++;
       }
     }
     fs.delete(testFilePath, false);
+  }
+
+  static String toString(BytesColumnVector vector, int row) {
+    if (vector.isRepeating) {
+      row = 0;
+    }
+    if (!vector.noNulls && vector.isNull[row]) {
+      return null;
+    }
+    return new String(vector.vector[row], vector.start[row], vector.length[row],
+        StandardCharsets.UTF_8);
   }
 }
