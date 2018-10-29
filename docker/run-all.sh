@@ -39,6 +39,10 @@ for os in `cat os-list.txt`; do
   centos7|debian8|ubuntu14)
      OPTS="-DSNAPPY_HOME=/usr/local"
      ;;
+  debian9)
+     # there is a bug in debian 9 that causes surefire to fail
+     OPTS="-DBUILD_JAVA=OFF"
+     ;;
   *)
      OPTS=""
      ;;

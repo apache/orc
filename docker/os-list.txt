@@ -1,6 +1,7 @@
 centos6
 centos7
 debian8
-ubuntu12
+debian9
 ubuntu14
 ubuntu16
+ubuntu18
