@@ -40,13 +40,13 @@ namespace orc {
     virtual uint64_t getNumberOfValues() const = 0;
 
     /**
-     * Check whether column has null value
+     * Check whether column has null value.
      * @return true if has null value
      */
     virtual bool hasNull() const = 0;
 
     /**
-     * print out statistics of column if any
+     * Print out statistics of column if any.
      */
     virtual std::string toString() const = 0;
   };
@@ -59,7 +59,7 @@ namespace orc {
     virtual ~BinaryColumnStatistics();
 
     /**
-     * check whether column has total length
+     * Check whether column has total length.
      * @return true if has total length
      */
     virtual bool hasTotalLength() const = 0;
@@ -75,7 +75,7 @@ namespace orc {
     virtual ~BooleanColumnStatistics();
 
     /**
-     * check whether column has true/false count
+     * Check whether column has true/false count.
      * @return true if has true/false count
      */
     virtual bool hasCount() const = 0;
@@ -92,13 +92,13 @@ namespace orc {
     virtual ~DateColumnStatistics();
 
     /**
-     * check whether column has minimum
+     * Check whether column has minimum.
      * @return true if has minimum
      */
     virtual bool hasMinimum() const = 0;
 
     /**
-     * check whether column has maximum
+     * Check whether column has maximum.
      * @return true if has maximum
      */
     virtual bool hasMaximum() const = 0;
@@ -124,19 +124,19 @@ namespace orc {
     virtual ~DecimalColumnStatistics();
 
     /**
-     * check whether column has minimum
+     * Check whether column has minimum.
      * @return true if has minimum
      */
     virtual bool hasMinimum() const = 0;
 
     /**
-     * check whether column has maximum
+     * Check whether column has maximum.
      * @return true if has maximum
      */
     virtual bool hasMaximum() const = 0;
 
     /**
-     * check whether column has sum
+     * Check whether column has sum.
      * @return true if has sum
      */
     virtual bool hasSum() const = 0;
@@ -168,19 +168,19 @@ namespace orc {
     virtual ~DoubleColumnStatistics();
 
     /**
-     * check whether column has minimum
+     * Check whether column has minimum.
      * @return true if has minimum
      */
     virtual bool hasMinimum() const = 0;
 
     /**
-     * check whether column has maximum
+     * Check whether column has maximum.
      * @return true if has maximum
      */
     virtual bool hasMaximum() const = 0;
 
     /**
-     * check whether column has sum
+     * Check whether column has sum.
      * @return true if has sum
      */
     virtual bool hasSum() const = 0;
@@ -215,19 +215,19 @@ namespace orc {
     virtual ~IntegerColumnStatistics();
 
     /**
-     * check whether column has minimum
+     * Check whether column has minimum.
      * @return true if has minimum
      */
     virtual bool hasMinimum() const = 0;
 
     /**
-     * check whether column has maximum
+     * Check whether column has maximum.
      * @return true if has maximum
      */
     virtual bool hasMaximum() const = 0;
 
     /**
-     * check whether column has sum
+     * Check whether column has sum.
      * @return true if has sum
      */
     virtual bool hasSum() const = 0;
@@ -261,20 +261,20 @@ namespace orc {
     virtual ~StringColumnStatistics();
 
     /**
-     * check whether column has minimum
+     * Check whether column has minimum.
      * @return true if has minimum
      */
     virtual bool hasMinimum() const = 0;
 
     /**
-     * check whether column has maximum
+     * Check whether column has maximum.
      * @return true if has maximum
      */
     virtual bool hasMaximum() const = 0;
 
     /**
-     * check whether column
-     * @return true if has maximum
+     * Check whether column has total length.
+     * @return true if has total length
      */
     virtual bool hasTotalLength() const = 0;
 
@@ -305,13 +305,13 @@ namespace orc {
     virtual ~TimestampColumnStatistics();
 
     /**
-     * check whether column minimum
+     * Check whether column minimum.
      * @return true if has minimum
      */
     virtual bool hasMinimum() const = 0;
 
     /**
-     * check whether column maximum
+     * Check whether column maximum.
      * @return true if has maximum
      */
     virtual bool hasMaximum() const = 0;
@@ -329,13 +329,13 @@ namespace orc {
     virtual int64_t getMaximum() const = 0;
 
     /**
-     * check whether column has a lowerBound
+     * Check whether column has a lowerBound.
      * @return true if column has a lowerBound
      */
     virtual bool hasLowerBound() const = 0;
 
     /**
-     * check whether column has an upperBound
+     * Check whether column has an upperBound.
      * @return true if column has an upperBound
      */
     virtual bool hasUpperBound() const = 0;
@@ -360,14 +360,15 @@ namespace orc {
     virtual ~Statistics();
 
     /**
-     * Get the statistics of colId column.
+     * Get the statistics of the given column.
+     * @param colId id of the column
      * @return one column's statistics
      */
     virtual const ColumnStatistics* getColumnStatistics(uint32_t colId
                                                         ) const = 0;
 
     /**
-     * Get the number of columns
+     * Get the number of columns.
      * @return the number of columns
      */
     virtual uint32_t getNumberOfColumns() const = 0;
@@ -378,16 +379,19 @@ namespace orc {
     virtual ~StripeStatistics();
 
     /**
-     * Get the RowIndex statistics of a column id.
-     * @return one stripe RowIndex statistics
+     * Get the statistics of a given RowIndex entry in a given column.
+     * @param columnId id of the column
+     * @param rowIndexId RowIndex entry id
+     * @return statistics of the given RowIndex entry
      */
     virtual const ColumnStatistics*
                       getRowIndexStatistics(
-                          uint32_t columnId, uint32_t IndexId) const = 0;
+                          uint32_t columnId, uint32_t rowIndexId) const = 0;
 
     /**
-     * Get the number of RowIndexes
-     * @return the number of RowIndex Statistics
+     * Get the number of RowIndex statistics in a given column.
+     * @param columnId id of the column
+     * @return the number of RowIndex statistics
      */
     virtual uint32_t getNumberOfRowIndexStats(uint32_t columnId) const = 0;
   };

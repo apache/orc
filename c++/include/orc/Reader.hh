@@ -55,7 +55,7 @@ namespace orc {
     ReaderOptions& setErrorStream(std::ostream& stream);
 
     /**
-     * Open the file used a serialized copy of the file tail.
+     * Set a serialized copy of the file tail to be used when opening the file.
      *
      * When one process opens the file and other processes need to read
      * the rows, we want to enable clients to just read the tail once.
@@ -236,7 +236,7 @@ namespace orc {
 
   /**
    * The interface for reading ORC file meta-data and constructing RowReaders.
-   * This is an an abstract class that will subclassed as necessary.
+   * This is an an abstract class that will be subclassed as necessary.
    */
   class Reader {
   public:
@@ -257,7 +257,7 @@ namespace orc {
 
     /**
      * Get the user metadata keys.
-     * @return the set of metadata keys
+     * @return the set of user metadata keys
      */
     virtual std::list<std::string> getMetadataKeys() const = 0;
 
@@ -306,7 +306,7 @@ namespace orc {
     virtual WriterVersion getWriterVersion() const = 0;
 
     /**
-     * Get the number of rows per a entry in the row index.
+     * Get the number of rows per an entry in the row index.
      * @return the number of rows per an entry in the row index or 0 if there
      * is no row index.
      */
@@ -320,7 +320,7 @@ namespace orc {
 
     /**
      * Get the information about a stripe.
-     * @param stripeIndex the stripe 0 to N-1 to get information about
+     * @param stripeIndex the index of the stripe (0 to N-1) to get information about
      * @return the information about that stripe
      */
     virtual ORC_UNIQUE_PTR<StripeInformation>
@@ -334,7 +334,7 @@ namespace orc {
 
     /**
      * Get the statistics about a stripe.
-     * @param stripeIndex the stripe 0 to N-1 to get statistics about
+     * @param stripeIndex the index of the stripe (0 to N-1) to get statistics about
      * @return the statistics about that stripe
      */
     virtual ORC_UNIQUE_PTR<StripeStatistics>
@@ -347,19 +347,19 @@ namespace orc {
     virtual uint64_t getContentLength() const = 0;
 
     /**
-     * Get the length of the file stripe statistics
+     * Get the length of the file stripe statistics.
      * @return the number of compressed bytes in the file stripe statistics
      */
     virtual uint64_t getStripeStatisticsLength() const = 0;
 
     /**
-     * Get the length of the file footer
+     * Get the length of the file footer.
      * @return the number of compressed bytes in the file footer
      */
     virtual uint64_t getFileFooterLength() const = 0;
 
     /**
-     * Get the length of the file postscript
+     * Get the length of the file postscript.
      * @return the number of bytes in the file postscript
      */
     virtual uint64_t getFilePostscriptLength() const = 0;
@@ -378,13 +378,14 @@ namespace orc {
 
     /**
      * Get the statistics about a single column in the file.
+     * @param columnId id of the column
      * @return the information about the column
      */
     virtual ORC_UNIQUE_PTR<ColumnStatistics>
     getColumnStatistics(uint32_t columnId) const = 0;
 
     /**
-     * check file has correct column statistics
+     * Check if the file has correct column statistics.
      */
     virtual bool hasCorrectStatistics() const = 0;
 
@@ -443,17 +444,17 @@ namespace orc {
     virtual uint64_t getMemoryUseByFieldId(const std::list<uint64_t>& include, int stripeIx=-1) = 0;
 
     /**
+     * @param names Column Names
      * @param stripeIx index of the stripe to be read (if not specified,
      *        all stripes are considered).
-     * @param names Column Names
      * @return upper bound on memory use by selected columns
      */
     virtual uint64_t getMemoryUseByName(const std::list<std::string>& names, int stripeIx=-1) = 0;
 
     /**
+     * @param include Column Type Ids
      * @param stripeIx index of the stripe to be read (if not specified,
      *        all stripes are considered).
-     * @param include Column Type Ids
      * @return upper bound on memory use by selected columns
      */
     virtual uint64_t getMemoryUseByTypeId(const std::list<uint64_t>& include, int stripeIx=-1) = 0;
@@ -462,7 +463,7 @@ namespace orc {
 
   /**
    * The interface for reading rows in ORC files.
-   * This is an an abstract class that will subclassed as necessary.
+   * This is an an abstract class that will be subclassed as necessary.
    */
   class RowReader {
   public:
