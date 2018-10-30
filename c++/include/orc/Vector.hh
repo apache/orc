@@ -134,7 +134,7 @@ namespace orc {
 
     /**
      * The offset of the first element of each list.
-     * The length of list i is startOffset[i+1] - startOffset[i].
+     * The length of list i is offsets[i+1] - offsets[i].
      */
     DataBuffer<int64_t> offsets;
 
@@ -151,8 +151,8 @@ namespace orc {
     bool hasVariableLength();
 
     /**
-     * The offset of the first element of each list.
-     * The length of list i is startOffset[i+1] - startOffset[i].
+     * The offset of the first element of each map.
+     * The size of map i is offsets[i+1] - offsets[i].
      */
     DataBuffer<int64_t> offsets;
 

@@ -82,12 +82,12 @@ namespace orc {
     uint64_t getCompressionBlockSize() const;
 
     /**
-     * Set row index stride. Use value 0 to disable row index.
+     * Set row index stride (the number of rows per an entry in the row index). Use value 0 to disable row index.
      */
     WriterOptions& setRowIndexStride(uint64_t stride);
 
     /**
-     * Get the index stride size.
+     * Get the row index stride (the number of rows per an entry in the row index).
      * @return if not set, return default value.
      */
     uint64_t getRowIndexStride() const;
@@ -159,7 +159,7 @@ namespace orc {
     WriterOptions& setMemoryPool(MemoryPool * memoryPool);
 
     /**
-     * Get the strip size.
+     * Get the memory pool.
      * @return if not set, return default memory pool.
      */
     MemoryPool * getMemoryPool() const;
@@ -193,8 +193,8 @@ namespace orc {
 
     /**
      * Create a row batch for writing the columns into this file.
-     * @param size the number of rows to read
-     * @return a new ColumnVectorBatch to write into
+     * @param size the number of rows to write.
+     * @return a new ColumnVectorBatch to write into.
      */
     virtual ORC_UNIQUE_PTR<ColumnVectorBatch> createRowBatch(uint64_t size
                                                              ) const = 0;
@@ -206,7 +206,7 @@ namespace orc {
     virtual void add(ColumnVectorBatch& rowsToAdd) = 0;
 
     /**
-     * Close the write and flush any pending data to the output stream.
+     * Close the writer and flush any pending data to the output stream.
      */
     virtual void close() = 0;
 
