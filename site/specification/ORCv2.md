@@ -601,8 +601,6 @@ the index values and the additional value bits.
   bit is set, the entire value is negated.
 * Data values (W * L bits padded to the byte) - A sequence of W bit positive
   values that are added to the base value.
-* Data values (W * L bits padded to the byte) - A sequence of W bit positive
-  values that are added to the base value.
 * Patch list (PLL * (PGW + PW) bytes) - A list of patches for values
   that didn't fit within W bits. Each entry in the list consists of a
   gap, which is the number of elements skipped from the previous
