@@ -584,11 +584,11 @@ namespace orc {
     return static_cast<proto::CompressionKind>(kind);
   }
 
-  std::unique_ptr<Writer> createWriter(
+    ORC_UNIQUE_PTR<Writer> createWriter(
                                        const Type& type,
                                        OutputStream* stream,
                                        const WriterOptions& options) {
-    return std::unique_ptr<Writer>(
+    return ORC_UNIQUE_PTR<Writer>(
                                    new WriterImpl(
                                             type,
                                             stream,

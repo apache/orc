@@ -167,7 +167,7 @@ namespace orc {
   HdfsFileInputStream::~HdfsFileInputStream() {
   }
 
-  std::unique_ptr<InputStream> readHdfsFile(const std::string& path) {
-    return std::unique_ptr<InputStream>(new HdfsFileInputStream(path));
+  ORC_UNIQUE_PTR<InputStream> readHdfsFile(const std::string& path) {
+    return ORC_UNIQUE_PTR<InputStream>(new HdfsFileInputStream(path));
   }
 }

@@ -104,8 +104,8 @@ namespace orc {
 #endif
   }
 
-  std::unique_ptr<InputStream> readLocalFile(const std::string& path) {
-      return std::unique_ptr<InputStream>(new FileInputStream(path));
+  ORC_UNIQUE_PTR<InputStream> readLocalFile(const std::string& path) {
+      return ORC_UNIQUE_PTR<InputStream>(new FileInputStream(path));
   }
 
   OutputStream::~OutputStream() {
@@ -176,7 +176,7 @@ namespace orc {
     }
   }
 
-  std::unique_ptr<OutputStream> writeLocalFile(const std::string& path) {
-    return std::unique_ptr<OutputStream>(new FileOutputStream(path));
+  ORC_UNIQUE_PTR<OutputStream> writeLocalFile(const std::string& path) {
+    return ORC_UNIQUE_PTR<OutputStream>(new FileOutputStream(path));
   }
 }
