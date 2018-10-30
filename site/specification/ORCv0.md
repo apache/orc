@@ -725,7 +725,7 @@ DIRECT        | PRESENT         | Yes      | Boolean RLE
 ## Map Columns
 
 Maps are encoded as the PRESENT stream and a length stream with number
-of items in each list. They have a child column for the key and
+of items in each map. They have a child column for the key and
 another child column for the value.
 
 Encoding      | Stream Kind     | Optional | Contents
