@@ -10,15 +10,15 @@ dockerUrl: https://github.com/apache/orc/blob/master/docker
 The C++ library is supported on the following operating systems:
 
 * CentOS 6 or 7
-* Debian 7 or 8
-* MacOS 10.10 or 10.11
-* Ubuntu 12.04, 14.04, or 16.04
+* Debian 8 or 9
+* MacOS 10.10 to 10.13
+* Ubuntu 14.04, 16.04, or 18.04
 
 You'll want to install the usual set of developer tools, but at least:
 
 * cmake
 * g++ or clang++
-* java ( >= 1.7)
+* java ( >= 1.8)
 * make
 * maven ( >= 3)
 
@@ -27,11 +27,11 @@ is in the docker subdirectory, for the list of packages required to build ORC:
 
 * [CentOS 6]({{ page.dockerUrl }}/centos6/Dockerfile)
 * [CentOS 7]({{ page.dockerUrl }}/centos7/Dockerfile)
-* [Debian 7]({{ page.dockerUrl }}/debian7/Dockerfile)
 * [Debian 8]({{ page.dockerUrl }}/debian8/Dockerfile)
-* [Ubuntu 12]({{ page.dockerUrl }}/ubuntu12/Dockerfile)
+* [Debian 9]({{ page.dockerUrl }}/debian9/Dockerfile)
 * [Ubuntu 14]({{ page.dockerUrl }}/ubuntu14/Dockerfile)
 * [Ubuntu 16]({{ page.dockerUrl }}/ubuntu16/Dockerfile)
+* [Ubuntu 18]({{ page.dockerUrl }}/ubuntu18/Dockerfile)
 
 To build a normal release:
 
