@@ -135,7 +135,7 @@ namespace orc {
       privateBits->fileVersion = version;
       return *this;
     }
-    throw std::logic_error("Unpoorted file version specified.");
+    throw std::logic_error("Unsupported file version specified.");
   }
 
   FileVersion WriterOptions::getFileVersion() const {
@@ -571,7 +571,8 @@ namespace orc {
     *footer.add_types() = protoType;
 
     for (uint64_t i = 0; i < t.getSubtypeCount(); ++i) {
-      if (t.getKind() != LIST && t.getKind() != MAP && t.getKind() != UNION) {
+      // only add subtypes' field names if this type is STRUCT
+      if (t.getKind() == STRUCT) {
         footer.mutable_types(pos)->add_fieldnames(t.getFieldName(i));
       }
       footer.mutable_types(pos)->add_subtypes(++index);
