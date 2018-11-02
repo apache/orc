@@ -10,9 +10,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set(NO_DOWNLOAD_MSG
+  --batch-mode
+  -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn)
+
 # set the version in the POM file to match the CMake version string
 execute_process(COMMAND mvn versions:set -DnewVersion=${ORC_VERSION}
                                          -DgenerateBackupPoms=false
+                                         ${NO_DOWNLOAD_MSG}
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 set(ORC_JARS
@@ -30,7 +35,8 @@ endif()
 
 add_custom_command(
    OUTPUT ${ORC_JARS}
-   COMMAND mvn ${JAVA_PROFILE} -Dbuild.dir=${CMAKE_CURRENT_BINARY_DIR} -DskipTests package
+   COMMAND mvn ${NO_DOWNLOAD_MSG} ${JAVA_PROFILE}
+             -Dbuild.dir=${CMAKE_CURRENT_BINARY_DIR} -DskipTests package
    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
    COMMENT "Build the java directory"
    VERBATIM)
@@ -39,7 +45,8 @@ add_custom_target(java_build ALL DEPENDS ${ORC_JARS})
 
 add_test(
   NAME java-test
-  COMMAND mvn -Pcmake -Dbuild.dir=${CMAKE_CURRENT_BINARY_DIR} test
+  COMMAND mvn ${NO_DOWNLOAD_MSG} -Pcmake
+           -Dbuild.dir=${CMAKE_CURRENT_BINARY_DIR} test
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 install(
