@@ -28,6 +28,7 @@
 #include <sstream>
 
 #include "zlib.h"
+#include "zstd.h"
 
 #include "wrap/snappy-wrapper.h"
 
@@ -56,6 +57,9 @@ namespace orc {
       buffer[1] = static_cast<char>(compressedSize >> 7);
       buffer[2] = static_cast<char>(compressedSize >> 15);
     }
+
+    // ensure enough room for compression block header
+    void ensureHeader();
 
     // Buffer to hold uncompressed data until user calls Next()
     DataBuffer<unsigned char> rawInputBuffer;
@@ -117,6 +121,22 @@ namespace orc {
            static_cast<uint64_t>(outputSize - outputPosition);
   }
 
+  void CompressionStreamBase::ensureHeader() {
+    // adjust 3 bytes for the compression header
+    if (outputPosition + 3 >= outputSize) {
+      int newPosition = outputPosition + 3 - outputSize;
+      if (!BufferedOutputStream::Next(
+        reinterpret_cast<void **>(&outputBuffer),
+        &outputSize)) {
+        throw std::runtime_error(
+          "Failed to get next output buffer from output stream.");
+      }
+      outputPosition = newPosition;
+    } else {
+      outputPosition += 3;
+    }
+  }
+
   /**
    * Streaming compression base class
    */
@@ -151,19 +171,7 @@ namespace orc {
 
   bool CompressionStream::Next(void** data, int*size) {
     if (bufferSize != 0) {
-      // adjust 3 bytes for the compression header
-      if (outputPosition + 3 >= outputSize) {
-        int newPosition = outputPosition + 3 - outputSize;
-        if (!BufferedOutputStream::Next(
-          reinterpret_cast<void **>(&outputBuffer),
-          &outputSize)) {
-          throw std::runtime_error(
-            "Failed to get next output buffer from output stream.");
-        }
-        outputPosition = newPosition;
-      } else {
-        outputPosition += 3;
-      }
+      ensureHeader();
 
       uint64_t totalCompressedSize = doStreamingCompression();
 
@@ -899,6 +907,169 @@ DIAGNOSTIC_POP
     return static_cast<uint64_t>(result);
   }
 
+  /**
+   * Block compression base class
+   */
+  class BlockCompressionStream: public CompressionStreamBase {
+  public:
+    BlockCompressionStream(OutputStream * outStream,
+                           int compressionLevel,
+                           uint64_t capacity,
+                           uint64_t blockSize,
+                           MemoryPool& pool)
+                           : CompressionStreamBase(outStream,
+                                                   compressionLevel,
+                                                   capacity,
+                                                   blockSize,
+                                                   pool)
+                           , compressorBuffer(pool) {
+      // PASS
+    }
+
+    virtual bool Next(void** data, int*size) override;
+    virtual std::string getName() const override = 0;
+
+  protected:
+    // compresses a block and returns the compressed size
+    virtual uint64_t doBlockCompression() = 0;
+
+    // return maximum possible compression size for allocating space for
+    // compressorBuffer below
+    virtual uint64_t estimateMaxCompressionSize() = 0;
+
+    // should allocate max possible compressed size
+    DataBuffer<unsigned char> compressorBuffer;
+  };
+
+  bool BlockCompressionStream::Next(void** data, int*size) {
+    if (bufferSize != 0) {
+      ensureHeader();
+
+      // perform compression
+      size_t totalCompressedSize = doBlockCompression();
+
+      const unsigned char * dataToWrite = nullptr;
+      int totalSizeToWrite = 0;
+      char * header = outputBuffer + outputPosition - 3;
+
+      if (totalCompressedSize >= static_cast<size_t>(bufferSize)) {
+        writeHeader(header, static_cast<size_t>(bufferSize), true);
+        dataToWrite = rawInputBuffer.data();
+        totalSizeToWrite = bufferSize;
+      } else {
+        writeHeader(header, totalCompressedSize, false);
+        dataToWrite = compressorBuffer.data();
+        totalSizeToWrite = static_cast<int>(totalCompressedSize);
+      }
+
+      char * dst = header + 3;
+      while (totalSizeToWrite > 0) {
+        if (outputPosition == outputSize) {
+          if (!BufferedOutputStream::Next(reinterpret_cast<void **>(&outputBuffer),
+                                          &outputSize)) {
+            throw std::logic_error(
+              "Failed to get next output buffer from output stream.");
+          }
+          outputPosition = 0;
+          dst = outputBuffer;
+        } else if (outputPosition > outputSize) {
+          // this will unlikely happen, but we have seen a few on zstd v1.1.0
+          throw std::logic_error("Write to an out-of-bound place!");
+        }
+
+        int sizeToWrite = std::min(totalSizeToWrite, outputSize - outputPosition);
+        std::memcpy(dst, dataToWrite, static_cast<size_t>(sizeToWrite));
+
+        outputPosition += sizeToWrite;
+        dataToWrite += sizeToWrite;
+        totalSizeToWrite -= sizeToWrite;
+        dst += sizeToWrite;
+      }
+    }
+
+    *data = rawInputBuffer.data();
+    *size = static_cast<int>(rawInputBuffer.size());
+    bufferSize = *size;
+    compressorBuffer.resize(estimateMaxCompressionSize());
+
+    return true;
+  }
+
+  /**
+   * ZSTD block compression
+   */
+  class ZSTDCompressionStream: public BlockCompressionStream {
+  public:
+    ZSTDCompressionStream(OutputStream * outStream,
+                          int compressionLevel,
+                          uint64_t capacity,
+                          uint64_t blockSize,
+                          MemoryPool& pool)
+                          : BlockCompressionStream(outStream,
+                                                   compressionLevel,
+                                                   capacity,
+                                                   blockSize,
+                                                   pool) {
+      // PASS
+    }
+
+    virtual std::string getName() const override {
+      return "ZstdCompressionStream";
+    }
+
+  protected:
+    virtual uint64_t doBlockCompression() override;
+
+    virtual uint64_t estimateMaxCompressionSize() override {
+      return ZSTD_compressBound(static_cast<size_t>(bufferSize));
+    }
+  };
+
+  uint64_t ZSTDCompressionStream::doBlockCompression() {
+    return ZSTD_compress(compressorBuffer.data(),
+                         compressorBuffer.size(),
+                         rawInputBuffer.data(),
+                         static_cast<size_t>(bufferSize),
+                         level);
+  }
+
+  /**
+   * ZSTD block decompression
+   */
+  class ZSTDDecompressionStream: public BlockDecompressionStream {
+  public:
+    ZSTDDecompressionStream(std::unique_ptr<SeekableInputStream> inStream,
+                            size_t blockSize,
+                            MemoryPool& pool)
+                            : BlockDecompressionStream(std::move(inStream),
+                                                       blockSize,
+                                                       pool) {
+      // PASS
+    }
+
+    std::string getName() const override {
+      std::ostringstream result;
+      result << "zstd(" << getStreamName() << ")";
+      return result.str();
+    }
+
+  protected:
+    virtual uint64_t decompress(const char *input,
+                                uint64_t length,
+                                char *output,
+                                size_t maxOutputLength) override;
+  };
+
+  uint64_t ZSTDDecompressionStream::decompress(const char *input,
+                                               uint64_t length,
+                                               char *output,
+                                               size_t maxOutputLength) {
+    return static_cast<uint64_t>(ZSTD_decompress(output,
+                                                 maxOutputLength,
+                                                 input,
+                                                 length));
+  }
+
   std::unique_ptr<BufferedOutputStream>
      createCompressor(
                       CompressionKind kind,
@@ -919,6 +1090,13 @@ DIAGNOSTIC_POP
       return std::unique_ptr<BufferedOutputStream>
         (new ZlibCompressionStream(
                 outStream, level, bufferCapacity, compressionBlockSize, pool));
+    }
+    case CompressionKind_ZSTD: {
+      int level = (strategy == CompressionStrategy_SPEED) ?
+              1 : ZSTD_CLEVEL_DEFAULT;
+      return std::unique_ptr<BufferedOutputStream>
+        (new ZSTDCompressionStream(
+          outStream, level, bufferCapacity, compressionBlockSize, pool));
     }
     case CompressionKind_SNAPPY:
     case CompressionKind_LZO:
@@ -948,6 +1126,9 @@ DIAGNOSTIC_POP
     case CompressionKind_LZ4:
       return std::unique_ptr<SeekableInputStream>
         (new Lz4DecompressionStream(std::move(input), blockSize, pool));
+    case CompressionKind_ZSTD:
+      return std::unique_ptr<SeekableInputStream>
+        (new ZSTDDecompressionStream(std::move(input), blockSize, pool));
     default: {
       std::ostringstream buffer;
       buffer << "Unknown compression codec " << kind;

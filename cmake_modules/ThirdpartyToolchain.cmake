@@ -15,6 +15,7 @@ set(SNAPPY_VERSION "1.1.7")
 set(ZLIB_VERSION "1.2.11")
 set(GTEST_VERSION "1.8.0")
 set(PROTOBUF_VERSION "3.5.1")
+set(ZSTD_VERSION "1.3.5")
 
 set(THIRDPARTY_DIR "${CMAKE_BINARY_DIR}/c++/libs/thirdparty")
 set(THIRDPARTY_LOG_OPTIONS LOG_CONFIGURE 1
@@ -42,6 +43,10 @@ endif ()
 
 if (DEFINED ENV{PROTOBUF_HOME})
   set (PROTOBUF_HOME "$ENV{PROTOBUF_HOME}")
+endif ()
+
+if (DEFINED ENV{ZSTD_HOME})
+  set (ZSTD_HOME "$ENV{ZSTD_HOME}")
 endif ()
 
 if (DEFINED ENV{GTEST_HOME})
@@ -120,6 +125,55 @@ if (ZLIB_VENDORED)
   add_dependencies (zlib zlib_ep)
   if (INSTALL_VENDORED_LIBS)
     install(FILES "${ZLIB_STATIC_LIB}"
+            DESTINATION "lib")
+  endif ()
+endif ()
+
+# ----------------------------------------------------------------------
+# Zstd
+
+if (NOT "${ZSTD_HOME}" STREQUAL "")
+  find_package (zstd REQUIRED)
+  set(ZSTD_VENDORED FALSE)
+else ()
+  set(ZSTD_HOME "${THIRDPARTY_DIR}/zstd_ep-install")
+  set(ZSTD_INCLUDE_DIR "${ZSTD_HOME}/include")
+  if (MSVC)
+    set(ZSTD_STATIC_LIB_NAME zstd_static)
+    if (${UPPERCASE_BUILD_TYPE} STREQUAL "DEBUG")
+      set(ZSTD_STATIC_LIB_NAME ${ZSTD_STATIC_LIB_NAME})
+    endif ()
+  else ()
+    set(ZSTD_STATIC_LIB_NAME zstd)
+  endif ()
+  set(ZSTD_STATIC_LIB "${ZSTD_HOME}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${ZSTD_STATIC_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+  set(ZSTD_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${ZSTD_HOME}
+          -DBUILD_SHARED_LIBS=OFF)
+
+  if (CMAKE_VERSION VERSION_GREATER "3.7")
+    set(ZSTD_CONFIGURE SOURCE_SUBDIR "build/cmake" CMAKE_ARGS ${ZSTD_CMAKE_ARGS})
+  else()
+    set(ZSTD_CONFIGURE CONFIGURE_COMMAND "${THIRDPARTY_CONFIGURE_COMMAND}" ${ZSTD_CMAKE_ARGS}
+            "${CMAKE_CURRENT_BINARY_DIR}/zstd_ep-prefix/src/zstd_ep/build/cmake")
+  endif()
+
+  ExternalProject_Add(zstd_ep
+          URL "https://github.com/facebook/zstd/archive/v${ZSTD_VERSION}.tar.gz"
+          ${ZSTD_CONFIGURE}
+          ${THIRDPARTY_LOG_OPTIONS}
+          BUILD_BYPRODUCTS ${ZSTD_STATIC_LIB})
+
+  set(ZSTD_VENDORED TRUE)
+endif ()
+
+include_directories (SYSTEM ${ZSTD_INCLUDE_DIR})
+add_library (zstd STATIC IMPORTED)
+set_target_properties (zstd PROPERTIES IMPORTED_LOCATION ${ZSTD_STATIC_LIB})
+
+if (ZSTD_VENDORED)
+  add_dependencies (zstd zstd_ep)
+  if (INSTALL_VENDORED_LIBS)
+    install(FILES "${ZSTD_STATIC_LIB}"
             DESTINATION "lib")
   endif ()
 endif ()

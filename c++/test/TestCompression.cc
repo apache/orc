@@ -137,7 +137,7 @@ namespace orc {
     compress_original_string(CompressionKind_ZLIB);
   }
 
-  void zlib_compress_simple_repeated_string(orc::CompressionKind kind) {
+  void compress_simple_repeated_string(orc::CompressionKind kind) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool * pool = getDefaultPool();
 
@@ -161,8 +161,8 @@ namespace orc {
                         *pool);
   }
 
-  TEST(TestCompression, zlib_compress_simple_repeated_string) {
-    zlib_compress_simple_repeated_string(CompressionKind_ZLIB);
+  TEST(TestCompression, compress_simple_repeated_string) {
+    compress_simple_repeated_string(CompressionKind_ZLIB);
   }
 
   void compress_two_blocks(orc::CompressionKind kind) {
@@ -311,5 +311,29 @@ namespace orc {
 
   TEST(TestCompression, zlib_protobuff_compression) {
     protobuff_compression(CompressionKind_ZLIB, proto::ZLIB);
+  }
+
+  TEST(Compression, zstd_compress_original_string) {
+    compress_original_string(CompressionKind_ZSTD);
+  }
+
+  TEST(Compression, zstd_compress_simple_repeated_string) {
+    compress_simple_repeated_string(CompressionKind_ZSTD);
+  }
+
+  TEST(Compression, zstd_compress_two_blocks) {
+    compress_two_blocks(CompressionKind_ZSTD);
+  }
+
+  TEST(Compression, zstd_compress_random_letters) {
+    compress_random_letters(CompressionKind_ZSTD);
+  }
+
+  TEST(Compression, zstd_compress_random_bytes) {
+    compress_random_bytes(CompressionKind_ZSTD);
+  }
+
+  TEST(Compression, zstd_protobuff_compression) {
+    protobuff_compression(CompressionKind_ZSTD, proto::ZSTD);
   }
 }
