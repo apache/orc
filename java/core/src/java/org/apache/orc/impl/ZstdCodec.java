@@ -25,13 +25,31 @@ import org.apache.orc.CompressionCodec;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.EnumSet;
 
 public class ZstdCodec implements DirectDecompressionCodec {
   private static final HadoopShims SHIMS = HadoopShimsFactory.get();
   // Note: shim path does not care about levels and strategies (only used for decompression).
   private HadoopShims.DirectDecompressor decompressShim = null;
   private Boolean direct = null;
+
+  /**
+   * Return an options object that doesn't do anything
+   * @return a new options object
+   */
+  @Override
+  public Options createOptions() {
+    return new Options() {
+      @Override
+      public Options setSpeed(SpeedModifier newValue) {
+        return this;
+      }
+
+      @Override
+      public Options setData(DataKind newValue) {
+        return this;
+      }
+    };
+  }
 
   private final org.apache.hadoop.io.compress.CompressionCodec zstdCodec;
 
@@ -41,7 +59,8 @@ public class ZstdCodec implements DirectDecompressionCodec {
   }
 
   @Override
-  public boolean compress(ByteBuffer in, ByteBuffer out, ByteBuffer overflow)
+  public boolean compress(ByteBuffer in, ByteBuffer out, ByteBuffer overflow,
+                          Options options)
           throws IOException {
     int length = in.remaining();
     int outSize = 0;
@@ -136,12 +155,6 @@ public class ZstdCodec implements DirectDecompressionCodec {
     if (decompressShim != null) {
       decompressShim.end();
     }
-  }
-
-  @Override
-  public CompressionCodec modify(EnumSet<Modifier> modifiers) {
-    // zstd allows no modifications
-    return this;
   }
 
   @Override
