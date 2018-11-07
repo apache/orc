@@ -867,7 +867,7 @@ namespace orc {
     void reorder(std::vector<int64_t>& idxBuffer) const;
 
     // get dict entries in insertion order
-    std::vector<const DictEntry *> entriesInInsertionOrder() const;
+    void getEntriesInInsertionOrder(std::vector<const DictEntry *>&) const;
 
     // return count of entries
     size_t size() const;
@@ -891,6 +891,13 @@ namespace orc {
     std::map<DictEntry, size_t, LessThan> dict;
     std::vector<std::vector<char>> data;
     uint64_t totalLength;
+
+    // use friend class here to avoid being bothered by const function calls
+    friend class StringColumnWriter;
+    friend class CharColumnWriter;
+    friend class VarCharColumnWriter;
+    // store indexes of insertion order in the dictionary for not-null rows
+    std::vector<int64_t> idxInDictBuffer;
   };
 
   // insert a new string into dictionary, return its insertion order
@@ -917,15 +924,25 @@ namespace orc {
     }
   }
 
-  // reorder input index buffer from insertion order to dictionary order
+  /**
+   * Reorder input index buffer from insertion order to dictionary order
+   *
+   * We require this function because string values are buffered by indexes
+   * in their insertion order. Until the entire dictionary is complete can
+   * we get their sorted indexes in the dictionary in that ORC specification
+   * demands dictionary should be ordered. Therefore this function transforms
+   * the indexes from insertion order to dictionary value order for final
+   * output.
+   */
   void StringDictionary::reorder(std::vector<int64_t>& idxBuffer) const {
-    // map from insertion order to dict order
+    // iterate the dictionary to get mapping from insertion order to value order
     std::vector<size_t> mapping(dict.size());
     size_t dictIdx = 0;
     for (auto it = dict.cbegin(); it != dict.cend(); ++it) {
       mapping[it->second] = dictIdx++;
     }
 
+    // do the transformation
     for (size_t i = 0; i != idxBuffer.size(); ++i) {
       idxBuffer[i] = static_cast<int64_t>(
         mapping[static_cast<size_t>(idxBuffer[i])]);
@@ -933,13 +950,12 @@ namespace orc {
   }
 
   // get dict entries in insertion order
-  std::vector<const StringDictionary::DictEntry *>
-  StringDictionary::entriesInInsertionOrder() const {
-    std::vector<const DictEntry *> entries(dict.size());
+  void StringDictionary::getEntriesInInsertionOrder(
+                    std::vector<const DictEntry *>& entries) const {
+    entries.resize(dict.size());
     for (auto it = dict.cbegin(); it != dict.cend(); ++it) {
       entries[it->second] = &(it->first);
     }
-    return entries;
   }
 
   // return count of entries
@@ -1018,8 +1034,7 @@ namespace orc {
     bool useDictionary;
     // keys in the dictionary should not exceed this ratio
     double dictSizeThreshold;
-    // record index of insertion order in the dictionary for not-null rows
-    std::vector<int64_t> idxInDictBuffer;
+
     // record start row of each row group; null rows are skipped
     mutable std::vector<size_t> startOfRowGroups;
   };
@@ -1082,7 +1097,7 @@ namespace orc {
       if (!notNull || notNull[i]) {
         if (useDictionary) {
           size_t index = dictionary.insert(data[i], static_cast<size_t>(length[i]));
-          idxInDictBuffer.push_back(static_cast<int64_t>(index));
+          dictionary.idxInDictBuffer.push_back(static_cast<int64_t>(index));
         } else {
           directDataStream->write(data[i], static_cast<size_t>(length[i]));
         }
@@ -1141,7 +1156,7 @@ namespace orc {
     } else {
       size += dictionary.length();
       size += dictionary.size() * sizeof(int32_t);
-      size += idxInDictBuffer.size() * sizeof(int32_t);
+      size += dictionary.idxInDictBuffer.size() * sizeof(int32_t);
       if (useCompression) {
         size /= 3;  // estimated ratio is 3:1
       }
@@ -1172,7 +1187,7 @@ namespace orc {
       directLengthEncoder->recordPosition(rowIndexPosition.get());
     } else {
       if (enableIndex) {
-        startOfRowGroups.push_back(idxInDictBuffer.size());
+        startOfRowGroups.push_back(dictionary.idxInDictBuffer.size());
       }
     }
   }
@@ -1180,7 +1195,7 @@ namespace orc {
   bool StringColumnWriter::checkDictionaryKeyRatio() {
     if (!doneDictionaryCheck) {
       useDictionary = dictionary.size() <= static_cast<size_t>(
-        static_cast<double>(idxInDictBuffer.size()) * dictSizeThreshold);
+        static_cast<double>(dictionary.idxInDictBuffer.size()) * dictSizeThreshold);
       doneDictionaryCheck = true;
     }
 
@@ -1200,7 +1215,7 @@ namespace orc {
     ColumnWriter::reset();
 
     dictionary.clear();
-    idxInDictBuffer.resize(0);
+    dictionary.idxInDictBuffer.resize(0);
     startOfRowGroups.clear();
     startOfRowGroups.push_back(0);
   }
@@ -1242,7 +1257,7 @@ namespace orc {
     dictStream.reset(nullptr);
 
     dictionary.clear();
-    idxInDictBuffer.clear();
+    dictionary.idxInDictBuffer.clear();
     startOfRowGroups.clear();
   }
 
@@ -1260,10 +1275,10 @@ namespace orc {
       dictionary.flush(dictStream.get(), dictLengthEncoder.get());
 
       // convert index from insertion order to dictionary order
-      dictionary.reorder(idxInDictBuffer);
+      dictionary.reorder(dictionary.idxInDictBuffer);
 
       // write data sequences
-      int64_t * data = idxInDictBuffer.data();
+      int64_t * data = dictionary.idxInDictBuffer.data();
       if (enableIndex) {
         size_t prevOffset = 0;
         for (size_t i = 0; i < startOfRowGroups.size(); ++i) {
@@ -1285,10 +1300,10 @@ namespace orc {
         }
 
         dictDataEncoder->add(data + prevOffset,
-                             idxInDictBuffer.size() - prevOffset,
+                             dictionary.idxInDictBuffer.size() - prevOffset,
                              nullptr);
       } else {
-        dictDataEncoder->add(data, idxInDictBuffer.size(), nullptr);
+        dictDataEncoder->add(data, dictionary.idxInDictBuffer.size(), nullptr);
       }
     }
   }
@@ -1306,14 +1321,14 @@ namespace orc {
     }
 
     // get dictionary entries in insertion order
-    std::vector<const StringDictionary::DictEntry *> entries =
-      dictionary.entriesInInsertionOrder();
+    std::vector<const StringDictionary::DictEntry *> entries;
+    dictionary.getEntriesInInsertionOrder(entries);
 
     // store each length of the data into a vector
     const StringDictionary::DictEntry * dictEntry = nullptr;
-    for (uint64_t i = 0; i != idxInDictBuffer.size(); ++i) {
+    for (uint64_t i = 0; i != dictionary.idxInDictBuffer.size(); ++i) {
       // write one row data in direct encoding
-      dictEntry = entries[static_cast<size_t>(idxInDictBuffer[i])];
+      dictEntry = entries[static_cast<size_t>(dictionary.idxInDictBuffer[i])];
       directDataStream->write(dictEntry->data, dictEntry->length);
       directLengthEncoder->write(static_cast<int64_t>(dictEntry->length));
     }
@@ -1456,7 +1471,7 @@ namespace orc {
 
         if (useDictionary) {
           size_t index = dictionary.insert(charData, static_cast<size_t>(length[i]));
-          idxInDictBuffer.push_back(static_cast<int64_t>(index));
+          dictionary.idxInDictBuffer.push_back(static_cast<int64_t>(index));
         } else {
           directDataStream->write(charData, static_cast<size_t>(length[i]));
         }
@@ -1524,7 +1539,7 @@ namespace orc {
 
         if (useDictionary) {
           size_t index = dictionary.insert(data[i], static_cast<size_t>(length[i]));
-          idxInDictBuffer.push_back(static_cast<int64_t>(index));
+          dictionary.idxInDictBuffer.push_back(static_cast<int64_t>(index));
         } else {
           directDataStream->write(data[i], static_cast<size_t>(length[i]));
         }
