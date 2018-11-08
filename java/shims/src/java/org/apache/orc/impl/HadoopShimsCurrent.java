@@ -103,6 +103,8 @@ public class HadoopShimsCurrent implements HadoopShims {
   public CompressionCodec createZstdCodec() {
     // check if native zstd library is loaded; otherwise RuntimeException will be thrown
     ZStandardCodec.checkNativeCodeLoaded();
-    return new ZStandardCodec();
+    ZStandardCodec zStandardCodec = new ZStandardCodec();
+    zStandardCodec.setConf(new Configuration());
+    return zStandardCodec;
   }
 }
