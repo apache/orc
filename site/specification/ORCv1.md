@@ -297,7 +297,7 @@ message DecimalStatistics {
 ```
 
 Date columns record the minimum and maximum values as the number of
-days since the epoch (1/1/2015).
+days since the UNIX epoch (1/1/1970 in UTC).
 
 ```
 message DateStatistics {
@@ -308,13 +308,19 @@ message DateStatistics {
 ```
 
 Timestamp columns record the minimum and maximum values as the number of
-milliseconds since the epoch (1/1/2015).
+milliseconds since the UNIX epoch (1/1/1970 00:00:00). Before ORC-135, the
+local timezone offset was included and they were stored as `minimum` and
+`maximum`. After ORC-135, the timestamp is adjusted to UTC before being
+converted to milliseconds and stored in `minimumUtc` and `maximumUtc`.
 
 ```
 message TimestampStatistics {
  // min,max values saved as milliseconds since epoch
  optional sint64 minimum = 1;
  optional sint64 maximum = 2;
+ // min,max values saved as milliseconds since UNIX epoch
+ optional sint64 minimumUtc = 3;
+ optional sint64 maximumUtc = 4;
 }
 ```
 
