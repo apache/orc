@@ -29,6 +29,7 @@ public final class DataReaderProperties {
   private final boolean zeroCopy;
   private final int typeCount;
   private final int bufferSize;
+  private final int maxDiskRangeChunkLimit;
 
   private DataReaderProperties(Builder builder) {
     this.fileSystem = builder.fileSystem;
@@ -37,6 +38,7 @@ public final class DataReaderProperties {
     this.zeroCopy = builder.zeroCopy;
     this.typeCount = builder.typeCount;
     this.bufferSize = builder.bufferSize;
+    this.maxDiskRangeChunkLimit = builder.maxDiskRangeChunkLimit;
   }
 
   public FileSystem getFileSystem() {
@@ -63,6 +65,10 @@ public final class DataReaderProperties {
     return bufferSize;
   }
 
+  public int getMaxDiskRangeChunkLimit() {
+    return maxDiskRangeChunkLimit;
+  }
+
   public static Builder builder() {
     return new Builder();
   }
@@ -75,6 +81,7 @@ public final class DataReaderProperties {
     private boolean zeroCopy;
     private int typeCount;
     private int bufferSize;
+    private int maxDiskRangeChunkLimit;
 
     private Builder() {
 
@@ -107,6 +114,11 @@ public final class DataReaderProperties {
 
     public Builder withBufferSize(int value) {
       this.bufferSize = value;
+      return this;
+    }
+
+    public Builder withMaxDiskRangeChunkLimit(int value) {
+      this.maxDiskRangeChunkLimit = value;
       return this;
     }
 

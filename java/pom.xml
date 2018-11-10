@@ -151,7 +151,7 @@
         <version>2.21.0</version>
         <configuration>
           <reuseForks>false</reuseForks>
-          <argLine>-Xmx2048m</argLine>
+          <argLine>-Xmx4096m</argLine>
           <environmentVariables>
             <TZ>US/Pacific</TZ>
             <LANG>en_US.UTF-8</LANG>
