@@ -138,7 +138,7 @@ public class TestOrcLargeStripe {
     }
   }
 
-  @Test
+  // @Test travis cannot run this test as this requires >2GB heap, so commenting out
   public void testStringDirectGreaterThan2GB() throws IOException {
     TypeDescription schema = TypeDescription.createString();
 
