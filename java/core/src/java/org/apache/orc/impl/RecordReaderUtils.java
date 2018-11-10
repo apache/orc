@@ -153,6 +153,7 @@ public class RecordReaderUtils {
     private InStream.StreamOptions options = InStream.options();
     private final int typeCount;
     private CompressionKind compressionKind;
+    private final int maxDiskRangeChunkLimit;
 
     private DefaultDataReader(DataReaderProperties properties) {
       this.fs = properties.getFileSystem();
@@ -162,6 +163,7 @@ public class RecordReaderUtils {
       options.withCodec(OrcCodecPool.getCodec(compressionKind))
           .withBufferSize(properties.getBufferSize());
       this.typeCount = properties.getTypeCount();
+      this.maxDiskRangeChunkLimit = properties.getMaxDiskRangeChunkLimit();
     }
 
     @Override
@@ -206,7 +208,7 @@ public class RecordReaderUtils {
       DiskRangeList ranges = planIndexReading(fileSchema, footer,
           ignoreNonUtf8BloomFilter, included, sargColumns, version,
           bloomFilterKinds);
-      ranges = readDiskRanges(file, zcr, stripe.getOffset(), ranges, false);
+      ranges = readDiskRanges(file, zcr, stripe.getOffset(), ranges, false, maxDiskRangeChunkLimit);
       long offset = 0;
       DiskRangeList range = ranges;
       for(OrcProto.Stream stream: footer.getStreamsList()) {
@@ -272,7 +274,7 @@ public class RecordReaderUtils {
     @Override
     public DiskRangeList readFileData(
         DiskRangeList range, long baseOffset, boolean doForceDirect) throws IOException {
-      return RecordReaderUtils.readDiskRanges(file, zcr, baseOffset, range, doForceDirect);
+      return RecordReaderUtils.readDiskRanges(file, zcr, baseOffset, range, doForceDirect, maxDiskRangeChunkLimit);
     }
 
     @Override
@@ -520,8 +522,9 @@ public class RecordReaderUtils {
                                       HadoopShims.ZeroCopyReaderShim zcr,
                                  long base,
                                  DiskRangeList range,
-                                 boolean doForceDirect) throws IOException {
-    if (range == null) return null;
+                                 boolean doForceDirect, int maxChunkLimit) throws IOException {
+    if (range == null)
+      return null;
     DiskRangeList prev = range.prev;
     if (prev == null) {
       prev = new DiskRangeList.MutateHelper(range);
@@ -531,39 +534,47 @@ public class RecordReaderUtils {
         range = range.next;
         continue;
       }
-      int len = (int) (range.getEnd() - range.getOffset());
+      boolean firstRead = true;
+      long len = range.getEnd() - range.getOffset();
       long off = range.getOffset();
-      if (zcr != null) {
-        file.seek(base + off);
-        boolean hasReplaced = false;
-        while (len > 0) {
-          ByteBuffer partial = zcr.readBuffer(len, false);
-          BufferChunk bc = new BufferChunk(partial, off);
-          if (!hasReplaced) {
-            range.replaceSelfWith(bc);
-            hasReplaced = true;
-          } else {
-            range.insertAfter(bc);
+      while (len > 0) {
+        // Stripe could be too large to read fully into a single buffer and
+        // will need to be chunked
+        int readSize = (len >= maxChunkLimit) ? maxChunkLimit : (int) len;
+        ByteBuffer partial;
+
+        // create chunk
+        if (zcr != null) {
+          if (firstRead) {
+            file.seek(base + off);
           }
-          range = bc;
-          int read = partial.remaining();
-          len -= read;
-          off += read;
-        }
-      } else {
-        // Don't use HDFS ByteBuffer API because it has no readFully, and is buggy and pointless.
-        byte[] buffer = new byte[len];
-        file.readFully((base + off), buffer, 0, buffer.length);
-        ByteBuffer bb = null;
-        if (doForceDirect) {
-          bb = ByteBuffer.allocateDirect(len);
-          bb.put(buffer);
-          bb.position(0);
-          bb.limit(len);
+
+          partial = zcr.readBuffer(readSize, false);
+          readSize = partial.remaining();
         } else {
-          bb = ByteBuffer.wrap(buffer);
+          // Don't use HDFS ByteBuffer API because it has no readFully, and is
+          // buggy and pointless.
+          byte[] buffer = new byte[readSize];
+          file.readFully((base + off), buffer, 0, buffer.length);
+          if (doForceDirect) {
+            partial = ByteBuffer.allocateDirect(readSize);
+            partial.put(buffer);
+            partial.position(0);
+            partial.limit(readSize);
+          } else {
+            partial = ByteBuffer.wrap(buffer);
+          }
         }
-        range = range.replaceSelfWith(new BufferChunk(bb, range.getOffset()));
+        BufferChunk bc = new BufferChunk(partial, off);
+        if (firstRead) {
+          range.replaceSelfWith(bc);
+        } else {
+          range.insertAfter(bc);
+        }
+        firstRead = false;
+        range = bc;
+        len -= readSize;
+        off += readSize;
       }
       range = range.next;
     }
