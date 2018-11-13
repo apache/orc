@@ -20,6 +20,7 @@ package org.apache.orc.impl;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.orc.CompressionKind;
+import org.apache.orc.OrcConf;
 
 public final class DataReaderProperties {
 
@@ -81,7 +82,7 @@ public final class DataReaderProperties {
     private boolean zeroCopy;
     private int typeCount;
     private int bufferSize;
-    private int maxDiskRangeChunkLimit;
+    private int maxDiskRangeChunkLimit = (int) OrcConf.ORC_MAX_DISK_RANGE_CHUNK_LIMIT.getDefaultValue();
 
     private Builder() {
 
