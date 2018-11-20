@@ -584,9 +584,15 @@ public class SchemaEvolution {
   private static boolean checkAcidSchema(TypeDescription type) {
     if (type.getCategory().equals(TypeDescription.Category.STRUCT)) {
       List<String> rootFields = type.getFieldNames();
-      if (acidEventFieldNames.equals(rootFields)) {
-        return true;
+      if (rootFields.size() != acidEventFieldNames.size()) {
+        return false;
       }
+      for (int i = 0; i < rootFields.size(); i++) {
+        if (!acidEventFieldNames.get(i).equalsIgnoreCase(rootFields.get(i))) {
+          return false;
+        }
+      }
+      return true;
     }
     return false;
   }
