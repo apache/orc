@@ -52,11 +52,13 @@ to fetch the pull requests also:
 
 Pull requests will be named "apache/pr/999" for pull request 999.
 
-If you are a committer, add the push url:
+If you are a committer, you need to register your Github id with Apache:
 
-~~~~
-% git remote set-url --push apache https://git-wip-us.apache.org/repos/asf/orc.git
-~~~~
+* Visit [id.apache.org](https://id.apache.org) and add your Github id.
+* Visit [Apache gitbox](https://gitbox.apache.org/setup/) and get authorization for the projects that use Apache gitbox, which includes ORC.
+
+Once this is done, your Github account will be placed in the ORC github team,
+so you'll be able to close PRs, etc.
 
 The important branches are:
 
