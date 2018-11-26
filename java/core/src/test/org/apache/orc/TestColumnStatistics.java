@@ -98,11 +98,14 @@ public class TestColumnStatistics {
 
     ColumnStatisticsImpl stats1 = ColumnStatisticsImpl.create(schema);
     ColumnStatisticsImpl stats2 = ColumnStatisticsImpl.create(schema);
+    stats1.increment(3);
     stats1.updateString(new Text("bob"));
     stats1.updateString(new Text("david"));
     stats1.updateString(new Text("charles"));
+    stats2.increment(2);
     stats2.updateString(new Text("anne"));
     byte[] erin = new byte[]{0, 1, 2, 3, 4, 5, 101, 114, 105, 110};
+    stats2.increment();
     stats2.updateString(erin, 6, 4, 5);
     assertEquals(24, ((StringColumnStatistics)stats2).getSum());
     stats1.merge(stats2);
@@ -111,6 +114,7 @@ public class TestColumnStatistics {
     assertEquals("erin", typed.getMaximum());
     assertEquals(39, typed.getSum());
     stats1.reset();
+    stats1.increment(2);
     stats1.updateString(new Text("aaa"));
     stats1.updateString(new Text("zzz"));
     stats1.merge(stats2);
@@ -131,6 +135,7 @@ public class TestColumnStatistics {
     final ColumnStatisticsImpl stats2 = ColumnStatisticsImpl.create(schema);
 
     /* test a scenario for the first max string */
+    stats1.increment();
     stats1.updateString(new Text(test));
 
     final StringColumnStatistics typed = (StringColumnStatistics) stats1;
@@ -146,6 +151,7 @@ public class TestColumnStatistics {
     stats1.reset();
 
     /* test a scenario for the first max bytes */
+    stats1.increment();
     stats1.updateString(test.getBytes(StandardCharsets.UTF_8), 0,
         test.getBytes(StandardCharsets.UTF_8).length, 0);
 
@@ -157,10 +163,12 @@ public class TestColumnStatistics {
 
     stats1.reset();
     /* test upper bound - merging  */
+    stats1.increment(3);
     stats1.updateString(new Text("bob"));
     stats1.updateString(new Text("david"));
     stats1.updateString(new Text("charles"));
 
+    stats2.increment(2);
     stats2.updateString(new Text("anne"));
     stats2.updateString(new Text(fragment));
 
@@ -177,9 +185,10 @@ public class TestColumnStatistics {
     stats1.reset();
     stats2.reset();
 
+    stats1.increment(2);
     stats1.updateString(new Text("david"));
     stats1.updateString(new Text("charles"));
-
+    stats2.increment(2);
     stats2.updateString(new Text("jane"));
     stats2.updateString(new Text(fragmentLowerBound));
 
