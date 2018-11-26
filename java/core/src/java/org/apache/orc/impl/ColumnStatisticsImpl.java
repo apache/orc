@@ -605,27 +605,15 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     public void merge(ColumnStatisticsImpl other) {
       if (other instanceof StringStatisticsImpl) {
         StringStatisticsImpl str = (StringStatisticsImpl) other;
-        if (minimum == null) {
-          if (str.minimum != null) {
-            maximum = new Text(str.getMaximum());
-            minimum = new Text(str.getMinimum());
-          }
-          /* str.minimum == null when lower bound set */
-          else if (str.isLowerBoundSet) {
-            minimum = new Text(str.getLowerBound());
+        if (count == 0) {
+          if (str.count != 0) {
+            minimum = new Text(str.minimum);
             isLowerBoundSet = str.isLowerBoundSet;
-
-            /* check for upper bound before setting max */
-            if (str.isUpperBoundSet) {
-              maximum = new Text(str.getUpperBound());
-              isUpperBoundSet = str.isUpperBoundSet;
-            } else {
-              maximum = new Text(str.getMaximum());
-            }
-          }
-          else {
+            maximum = new Text(str.maximum);
+            isUpperBoundSet = str.isUpperBoundSet;
+          } else {
           /* both are empty */
-            maximum = minimum = null;
+          maximum = minimum = null;
           }
         } else if (str.minimum != null) {
           if (minimum.compareTo(str.minimum) > 0) {
@@ -660,8 +648,10 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       OrcProto.StringStatistics.Builder str =
         OrcProto.StringStatistics.newBuilder();
       if (getNumberOfValues() != 0) {
-        str.setMinimum(getMinimum());
-        str.setMaximum(getMaximum());
+        /* getLowerBound() will ALWAYS return min value */
+        str.setMinimum(getLowerBound());
+        /* getUpperBound() will ALWAYS return max value */
+        str.setMaximum(getUpperBound());
         str.setSum(sum);
       }
       result.setStringStatistics(str);
@@ -1638,7 +1628,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     }
   }
 
-  private long count = 0;
+  protected long count = 0;
   private boolean hasNull = false;
   private long bytesOnDisk = 0;
 
