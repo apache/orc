@@ -357,14 +357,24 @@ public class TestColumnStatistics {
     final ColumnStatisticsImpl stats1 = ColumnStatisticsImpl.create(schema);
     byte[] utf8 = input.getBytes(StandardCharsets.UTF_8);
     stats1.updateString(utf8, 0, utf8.length, 1);
-
+    stats1.increment();
     final StringColumnStatistics typed = (StringColumnStatistics) stats1;
 
     assertEquals(354, typed.getUpperBound().length());
     assertEquals(354, typed.getLowerBound().length());
+    assertEquals(1764L, typed.getSum());
 
     assertEquals(upperbound, typed.getUpperBound());
     assertEquals(lowerBound, typed.getLowerBound());
+    OrcProto.ColumnStatistics serial = stats1.serialize().build();
+    ColumnStatisticsImpl stats2 =
+        ColumnStatisticsImpl.deserialize(schema, serial);
+    StringColumnStatistics typed2 = (StringColumnStatistics) stats2;
+    assertEquals(null, typed2.getMinimum());
+    assertEquals(null, typed2.getMaximum());
+    assertEquals(lowerBound, typed2.getLowerBound());
+    assertEquals(upperbound, typed2.getUpperBound());
+    assertEquals(1764L, typed2.getSum());
   }
 
 
