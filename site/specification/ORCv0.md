@@ -308,7 +308,7 @@ message DateStatistics {
 ```
 
 Timestamp columns record the minimum and maximum values as the number of
-milliseconds since the UNIX epoch (1/1/1970 00:00:00 in UTC).
+milliseconds since the epoch (1/1/2015).
 
 ```
 message TimestampStatistics {

@@ -308,13 +308,18 @@ message DateStatistics {
 ```
 
 Timestamp columns record the minimum and maximum values as the number of
-milliseconds since the UNIX epoch (1/1/1970 00:00:00 in UTC).
+milliseconds since the epoch (1/1/2015) before ORC-135. After ORC-135
+Timestamp columns record the minimumUtc and maximumUtc values as
+the number of milliseconds since the UNIX epoch (1/1/1970 00:00:00 in UTC).
 
 ```
 message TimestampStatistics {
  // min,max values saved as milliseconds since epoch
  optional sint64 minimum = 1;
  optional sint64 maximum = 2;
+ // min,max values saved as milliseconds since UNIX epoch
+ optional sint64 minimumUtc = 3;
+ optional sint64 maximumUtc = 4;
 }
 ```
 
