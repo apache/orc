@@ -43,7 +43,7 @@ namespace orc {
    * @param outStream the output stream that is the underlying target
    * @param strategy compression strategy
    * @param bufferCapacity compression stream buffer total capacity
-   * @param compressionBlockSize compresssion buffer block size
+   * @param compressionBlockSize compression buffer block size
    * @param pool the memory pool
    */
   std::unique_ptr<BufferedOutputStream>

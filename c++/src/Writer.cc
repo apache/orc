@@ -333,8 +333,9 @@ namespace orc {
 
   void WriterImpl::init() {
     // Write file header
-    outStream->write(WriterImpl::magicId, strlen(WriterImpl::magicId));
-    currentOffset += strlen(WriterImpl::magicId);
+    const static size_t magicIdLength = strlen(WriterImpl::magicId);
+    outStream->write(WriterImpl::magicId, magicIdLength);
+    currentOffset += magicIdLength;
 
     // Initialize file footer
     fileFooter.set_headerlength(currentOffset);

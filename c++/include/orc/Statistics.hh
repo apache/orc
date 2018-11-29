@@ -34,7 +34,7 @@ namespace orc {
 
     /**
      * Get the number of values in this column. It will differ from the number
-     * of rows because of NULL values and repeated values.
+     * of rows because of NULL values.
      * @return the number of values
      */
     virtual uint64_t getNumberOfValues() const = 0;
