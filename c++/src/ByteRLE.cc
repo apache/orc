@@ -56,7 +56,7 @@ namespace orc {
 
     /**
      * Flush underlying BufferedOutputStream.
-    */
+     */
     virtual uint64_t flush() override;
 
     virtual void recordPosition(PositionRecorder* recorder) const override;

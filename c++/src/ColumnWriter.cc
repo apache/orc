@@ -776,7 +776,7 @@ namespace orc {
       throw InvalidArgument("Failed to cast to DoubleVectorBatch");
     }
     DoubleColumnStatisticsImpl* doubleStats =
-        dynamic_cast<DoubleColumnStatisticsImpl*>(colIndexStatistics.get());
+      dynamic_cast<DoubleColumnStatisticsImpl*>(colIndexStatistics.get());
     if (doubleStats == nullptr) {
       throw InvalidArgument("Failed to cast to DoubleColumnStatisticsImpl");
     }
@@ -1515,7 +1515,7 @@ namespace orc {
     }
 
     DecimalColumnStatisticsImpl* decStats =
-        dynamic_cast<DecimalColumnStatisticsImpl*>(colIndexStatistics.get());
+      dynamic_cast<DecimalColumnStatisticsImpl*>(colIndexStatistics.get());
     if (decStats == nullptr) {
       throw InvalidArgument("Failed to cast to DecimalColumnStatisticsImpl");
     }
