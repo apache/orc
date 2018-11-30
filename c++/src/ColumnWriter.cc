@@ -1639,7 +1639,7 @@ namespace orc {
     }
 
     DecimalColumnStatisticsImpl* decStats =
-        dynamic_cast<DecimalColumnStatisticsImpl*>(colIndexStatistics.get());
+      dynamic_cast<DecimalColumnStatisticsImpl*>(colIndexStatistics.get());
     if (decStats == nullptr) {
       throw InvalidArgument("Failed to cast to DecimalColumnStatisticsImpl");
     }
