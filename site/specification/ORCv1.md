@@ -622,7 +622,7 @@ if the series is increasing or decreasing.
   * 9 bits for run length (L) (1 to 512 values)
 * Base value - encoded as (signed or unsigned) varint
 * Delta base - encoded as signed varint
-* Delta values $W * (L - 2)$ bytes - encode each delta after the first
+* Delta values (W * (L - 2)) bytes - encode each delta after the first
   one. If the delta base is positive, the sequence is increasing and if it is
   negative the sequence is decreasing.
 
