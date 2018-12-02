@@ -167,7 +167,7 @@ namespace orc {
    };
 
   typedef InternalStatisticsImpl<char> InternalCharStatistics;
-  typedef InternalStatisticsImpl<uint64_t> InternalBooleanStatistics;
+  typedef InternalStatisticsImpl<char> InternalBooleanStatistics;
   typedef InternalStatisticsImpl<int64_t> InternalIntegerStatistics;
   typedef InternalStatisticsImpl<int32_t> InternalDateStatistics;
   typedef InternalStatisticsImpl<double> InternalDoubleStatistics;
@@ -433,7 +433,7 @@ namespace orc {
                << getFalseCount() << ")" << std::endl;
       } else {
         buffer << "(true: not defined; false: not defined)" << std::endl;
-        buffer << "True and false count are not defined" << std::endl;
+        buffer << "True and false counts are not defined" << std::endl;
       }
       return buffer.str();
     }
@@ -1119,8 +1119,9 @@ namespace orc {
     void update(const char* value, size_t length) {
       if (value != nullptr) {
         if (!_stats.hasMinimum()) {
-          setMinimum(std::string(value, value + length));
-          setMaximum(std::string(value, value + length));
+          std::string tempStr(value, value + length);
+          setMinimum(tempStr);
+          setMaximum(tempStr);
         } else {
           // update min
           int minCmp = strncmp(_stats.getMinimum().c_str(),
@@ -1385,7 +1386,7 @@ namespace orc {
 
   class StatisticsImpl: public Statistics {
   private:
-    std::list<ColumnStatistics*> colStats;
+    std::vector<ColumnStatistics*> colStats;
 
     // DELIBERATELY NOT IMPLEMENTED
     StatisticsImpl(const StatisticsImpl&);
@@ -1399,9 +1400,7 @@ namespace orc {
 
     virtual const ColumnStatistics* getColumnStatistics(uint32_t columnId
                                                         ) const override {
-      std::list<ColumnStatistics*>::const_iterator it = colStats.begin();
-      std::advance(it, static_cast<int64_t>(columnId));
-      return *it;
+      return colStats[columnId];
     }
 
     virtual ~StatisticsImpl() override;

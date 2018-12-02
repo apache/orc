@@ -64,7 +64,7 @@ namespace orc {
   }
 
   StatisticsImpl::~StatisticsImpl() {
-    for(std::list<ColumnStatistics*>::iterator ptr = colStats.begin();
+    for(std::vector<ColumnStatistics*>::iterator ptr = colStats.begin();
         ptr != colStats.end();
         ++ptr) {
       delete *ptr;
