@@ -22,26 +22,10 @@
 #include "RLEv2.hh"
 
 namespace orc {
+  extern const uint32_t FBSToBitWidthMap[FixedBitSizes::SIZE];
+
   inline uint32_t decodeBitWidth(uint32_t n) {
-    if (n <= FixedBitSizes::TWENTYFOUR) {
-      return n + 1;
-    } else if (n == FixedBitSizes::TWENTYSIX) {
-      return 26;
-    } else if (n == FixedBitSizes::TWENTYEIGHT) {
-      return 28;
-    } else if (n == FixedBitSizes::THIRTY) {
-      return 30;
-    } else if (n == FixedBitSizes::THIRTYTWO) {
-      return 32;
-    } else if (n == FixedBitSizes::FORTY) {
-      return 40;
-    } else if (n == FixedBitSizes::FORTYEIGHT) {
-      return 48;
-    } else if (n == FixedBitSizes::FIFTYSIX) {
-      return 56;
-    } else {
-      return 64;
-    }
+    return FBSToBitWidthMap[n];
   }
 
   inline uint32_t getClosestFixedBits(uint32_t n) {

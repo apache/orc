@@ -438,7 +438,7 @@ values.
 * Run - a sequence of at least 3 identical values
 * Literals - a sequence of non-identical values
 
-The first byte of each group of values is a header than determines
+The first byte of each group of values is a header that determines
 whether it is a run (value between 0 to 127) or literal list (value
 between -128 to -1). For runs, the control byte is the length of the
 run minus the length of the minimal run (3) and the control byte for

@@ -199,6 +199,7 @@ set(SOURCE_FILES
   OrcFile.cc
   Reader.cc
   RLEv1.cc
+  RLEV2Util.cc
   RleDecoderV2.cc
   RleEncoderV2.cc
   RLE.cc
