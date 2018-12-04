@@ -32,6 +32,10 @@
 
 #include "wrap/snappy-wrapper.h"
 
+#ifndef ZSTD_CLEVEL_DEFAULT
+#define ZSTD_CLEVEL_DEFAULT 3
+#endif
+
 namespace orc {
 
   class CompressionStreamBase: public BufferedOutputStream {
