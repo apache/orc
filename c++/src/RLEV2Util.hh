@@ -32,11 +32,19 @@ namespace orc {
   }
 
   inline uint32_t getClosestFixedBits(uint32_t n) {
-    return ClosestFixedBitsMap[n];
+    if (n <= 64) {
+      return ClosestFixedBitsMap[n];
+    } else {
+      return 64;
+    }
   }
 
   inline uint32_t getClosestAlignedFixedBits(uint32_t n) {
-    return ClosestAlignedFixedBitsMap[n];
+    if (n <= 64) {
+      return ClosestAlignedFixedBitsMap[n];
+    } else {
+      return 64;
+    }
   }
 
   inline uint32_t encodeBitWidth(uint32_t n) {
