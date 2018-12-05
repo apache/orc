@@ -22,11 +22,12 @@
 #include "RLEv2.hh"
 
 namespace orc {
-  extern const uint32_t FBSToBitWidthMap[FixedBitSizes::SIZE];
-  extern const uint32_t ClosestFixedBitsMap[65];
-  extern const uint32_t ClosestAlignedFixedBitsMap[65];
-  extern const uint32_t BitWidthToFBSMap[65];
+  extern const uint8_t FBSToBitWidthMap[FixedBitSizes::SIZE];
+  extern const uint8_t ClosestFixedBitsMap[65];
+  extern const uint8_t ClosestAlignedFixedBitsMap[65];
+  extern const uint8_t BitWidthToFBSMap[65];
 
+  // The input n must be less than FixedBitSizes::SIZE.
   inline uint32_t decodeBitWidth(uint32_t n) {
     return FBSToBitWidthMap[n];
   }
@@ -48,7 +49,11 @@ namespace orc {
   }
 
   inline uint32_t encodeBitWidth(uint32_t n) {
-    return BitWidthToFBSMap[getClosestFixedBits(n)];
+    if (n <= 64) {
+      return BitWidthToFBSMap[n];
+    } else {
+      return FixedBitSizes::SIXTYFOUR;
+    }
   }
 
   inline uint32_t findClosestNumBits(int64_t value) {

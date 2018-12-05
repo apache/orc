@@ -40,6 +40,7 @@ add_executable (orc-test
   TestReader.cc
   TestRleDecoder.cc
   TestRleEncoder.cc
+  TestRLEV2Util.cc
   TestStripeIndexStatistics.cc
   TestTimestampStatistics.cc
   TestTimezone.cc
