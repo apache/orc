@@ -22,83 +22,35 @@
 #include "RLEv2.hh"
 
 namespace orc {
-  extern const uint32_t FBSToBitWidthMap[FixedBitSizes::SIZE];
+  extern const uint8_t FBSToBitWidthMap[FixedBitSizes::SIZE];
+  extern const uint8_t ClosestFixedBitsMap[65];
+  extern const uint8_t ClosestAlignedFixedBitsMap[65];
+  extern const uint8_t BitWidthToFBSMap[65];
 
+  // The input n must be less than FixedBitSizes::SIZE.
   inline uint32_t decodeBitWidth(uint32_t n) {
     return FBSToBitWidthMap[n];
   }
 
   inline uint32_t getClosestFixedBits(uint32_t n) {
-    if (n == 0) {
-      return 1;
-    }
-
-    if (n >= 1 && n <= 24) {
-      return n;
-    } else if (n <= 26) {
-      return 26;
-    } else if (n <= 28) {
-      return 28;
-    } else if (n <= 30) {
-      return 30;
-    } else if (n <= 32) {
-      return 32;
-    } else if (n <= 40) {
-      return 40;
-    } else if (n <= 48) {
-      return 48;
-    } else if (n <= 56) {
-      return 56;
+    if (n <= 64) {
+      return ClosestFixedBitsMap[n];
     } else {
       return 64;
     }
   }
 
   inline uint32_t getClosestAlignedFixedBits(uint32_t n) {
-    if (n == 0 ||  n == 1) {
-      return 1;
-    } else if (n <= 2) {
-      return 2;
-    } else if (n <= 4) {
-      return 4;
-    } else if (n <= 8) {
-      return 8;
-    } else if (n <= 16) {
-      return 16;
-    } else if (n <= 24) {
-      return 24;
-    } else if (n <= 32) {
-      return 32;
-    } else if (n <= 40) {
-      return 40;
-    } else if (n <= 48) {
-      return 48;
-    } else if (n <= 56) {
-      return 56;
+    if (n <= 64) {
+      return ClosestAlignedFixedBitsMap[n];
     } else {
       return 64;
     }
   }
 
   inline uint32_t encodeBitWidth(uint32_t n) {
-    n = getClosestFixedBits(n);
-
-    if (n >= 1 && n <= 24) {
-      return n - 1;
-    } else if (n <= 26) {
-      return FixedBitSizes::TWENTYSIX;
-    } else if (n <= 28) {
-      return FixedBitSizes::TWENTYEIGHT;
-    } else if (n <= 30) {
-      return FixedBitSizes::THIRTY;
-    } else if (n <= 32) {
-      return FixedBitSizes::THIRTYTWO;
-    } else if (n <= 40) {
-      return FixedBitSizes::FORTY;
-    } else if (n <= 48) {
-      return FixedBitSizes::FORTYEIGHT;
-    } else if (n <= 56) {
-      return FixedBitSizes::FIFTYSIX;
+    if (n <= 64) {
+      return BitWidthToFBSMap[n];
     } else {
       return FixedBitSizes::SIXTYFOUR;
     }
