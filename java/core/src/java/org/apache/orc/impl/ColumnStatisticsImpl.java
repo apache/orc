@@ -677,7 +677,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
     @Override
     public String getMaximum() {
-      /* if we have upper bound is set (in case of truncation)
+      /* if we have upper bound set (in case of truncation)
       getMaximum will be null */
       if(isUpperBoundSet) {
         return null;

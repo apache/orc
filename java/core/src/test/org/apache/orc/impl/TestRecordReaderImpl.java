@@ -36,6 +36,7 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.text.DateFormat;
@@ -47,6 +48,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.TimeZone;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -221,61 +223,61 @@ public class TestRecordReaderImpl {
   @Test
   public void testCompareToRangeInt() throws Exception {
     assertEquals(Location.BEFORE,
-      RecordReaderImpl.compareToRange(19L, 20L, 40L));
+      RecordReaderImpl.compareToRange(19L, 20L, 40L, null, null));
     assertEquals(Location.AFTER,
-      RecordReaderImpl.compareToRange(41L, 20L, 40L));
+      RecordReaderImpl.compareToRange(41L, 20L, 40L, null, null));
     assertEquals(Location.MIN,
-        RecordReaderImpl.compareToRange(20L, 20L, 40L));
+        RecordReaderImpl.compareToRange(20L, 20L, 40L, null, null));
     assertEquals(Location.MIDDLE,
-        RecordReaderImpl.compareToRange(21L, 20L, 40L));
+        RecordReaderImpl.compareToRange(21L, 20L, 40L, null, null));
     assertEquals(Location.MAX,
-      RecordReaderImpl.compareToRange(40L, 20L, 40L));
+      RecordReaderImpl.compareToRange(40L, 20L, 40L, null, null));
     assertEquals(Location.BEFORE,
-      RecordReaderImpl.compareToRange(0L, 1L, 1L));
+      RecordReaderImpl.compareToRange(0L, 1L, 1L, null, null));
     assertEquals(Location.MIN,
-      RecordReaderImpl.compareToRange(1L, 1L, 1L));
+      RecordReaderImpl.compareToRange(1L, 1L, 1L, null, null));
     assertEquals(Location.AFTER,
-      RecordReaderImpl.compareToRange(2L, 1L, 1L));
+      RecordReaderImpl.compareToRange(2L, 1L, 1L, null, null));
   }
 
   @Test
   public void testCompareToRangeString() throws Exception {
     assertEquals(Location.BEFORE,
-        RecordReaderImpl.compareToRange("a", "b", "c"));
+        RecordReaderImpl.compareToRange("a", "b", "c", null, null));
     assertEquals(Location.AFTER,
-        RecordReaderImpl.compareToRange("d", "b", "c"));
+        RecordReaderImpl.compareToRange("d", "b", "c", null, null));
     assertEquals(Location.MIN,
-        RecordReaderImpl.compareToRange("b", "b", "c"));
+        RecordReaderImpl.compareToRange("b", "b", "c", null, null));
     assertEquals(Location.MIDDLE,
-        RecordReaderImpl.compareToRange("bb", "b", "c"));
+        RecordReaderImpl.compareToRange("bb", "b", "c", null, null));
     assertEquals(Location.MAX,
-        RecordReaderImpl.compareToRange("c", "b", "c"));
+        RecordReaderImpl.compareToRange("c", "b", "c", null, null));
     assertEquals(Location.BEFORE,
-        RecordReaderImpl.compareToRange("a", "b", "b"));
+        RecordReaderImpl.compareToRange("a", "b", "b", null, null));
     assertEquals(Location.MIN,
-        RecordReaderImpl.compareToRange("b", "b", "b"));
+        RecordReaderImpl.compareToRange("b", "b", "b", null, null));
     assertEquals(Location.AFTER,
-        RecordReaderImpl.compareToRange("c", "b", "b"));
+        RecordReaderImpl.compareToRange("c", "b", "b", null, null));
   }
 
   @Test
   public void testCompareToCharNeedConvert() throws Exception {
     assertEquals(Location.BEFORE,
-      RecordReaderImpl.compareToRange("apple", "hello", "world"));
+      RecordReaderImpl.compareToRange("apple", "hello", "world", null, null));
     assertEquals(Location.AFTER,
-      RecordReaderImpl.compareToRange("zombie", "hello", "world"));
+      RecordReaderImpl.compareToRange("zombie", "hello", "world", null, null));
     assertEquals(Location.MIN,
-        RecordReaderImpl.compareToRange("hello", "hello", "world"));
+        RecordReaderImpl.compareToRange("hello", "hello", "world", null, null));
     assertEquals(Location.MIDDLE,
-        RecordReaderImpl.compareToRange("pilot", "hello", "world"));
+        RecordReaderImpl.compareToRange("pilot", "hello", "world", null, null));
     assertEquals(Location.MAX,
-      RecordReaderImpl.compareToRange("world", "hello", "world"));
+      RecordReaderImpl.compareToRange("world", "hello", "world", null, null));
     assertEquals(Location.BEFORE,
-      RecordReaderImpl.compareToRange("apple", "hello", "hello"));
+      RecordReaderImpl.compareToRange("apple", "hello", "hello", null, null));
     assertEquals(Location.MIN,
-      RecordReaderImpl.compareToRange("hello", "hello", "hello"));
+      RecordReaderImpl.compareToRange("hello", "hello", "hello", null, null));
     assertEquals(Location.AFTER,
-      RecordReaderImpl.compareToRange("zombie", "hello", "hello"));
+      RecordReaderImpl.compareToRange("zombie", "hello", "hello", null, null));
   }
 
   @Test
@@ -338,6 +340,7 @@ public class TestRecordReaderImpl {
     return OrcProto.ColumnStatistics.newBuilder().setDoubleStatistics(dblStats.build()).build();
   }
 
+  //fixme
   private static OrcProto.ColumnStatistics createStringStats(String min, String max,
       boolean hasNull) {
     OrcProto.StringStatistics.Builder strStats = OrcProto.StringStatistics.newBuilder();
