@@ -47,6 +47,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.TimeZone;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -351,6 +352,22 @@ public class TestRecordReaderImpl {
     OrcProto.StringStatistics.Builder strStats = OrcProto.StringStatistics.newBuilder();
     strStats.setMinimum(min);
     strStats.setMaximum(max);
+    return OrcProto.ColumnStatistics.newBuilder().setStringStatistics(strStats.build()).build();
+  }
+
+  /* used for testing, simulate setting of upper and lower bounds */
+  private static OrcProto.ColumnStatistics createStringStatsUpperLowerBounds(String lowerbound, String upperbound) {
+    OrcProto.StringStatistics.Builder strStats = OrcProto.StringStatistics.newBuilder();
+    if(upperbound.length() > 1024) {
+      strStats.setUpperBound(upperbound);
+    } else {
+      strStats.setMaximum(upperbound);
+    }
+    if(lowerbound.length() > 1024) {
+      strStats.setLowerBound(lowerbound);
+    } else {
+      strStats.setMinimum(lowerbound);
+    }
     return OrcProto.ColumnStatistics.newBuilder().setStringStatistics(strStats.build()).build();
   }
 
@@ -1648,6 +1665,26 @@ public class TestRecordReaderImpl {
     bf.addString("str_15");
     assertEquals(TruthValue.YES_NO_NULL, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
   }
+
+  /* Test predicate push down when upper and lower bounds are set */
+  @Test
+  public void testStringBounds() throws Exception {
+    final String inputString = StringUtils.repeat("a", 1100);
+    final String testString  = inputString+"_"+"15";
+
+    PredicateLeaf pred = createPredicateLeaf(
+        PredicateLeaf.Operator.EQUALS, PredicateLeaf.Type.STRING, "x", testString, null);
+    BloomFilter bf = new BloomFilter(10000);
+    for (int i = 20; i < 1000; i++) {
+      bf.addString(inputString+"_"+i);
+    }
+    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null, createStringStatsUpperLowerBounds(inputString+"_"+"10", inputString+"_"+"500"));
+    assertEquals(TruthValue.NO_NULL, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
+
+    bf.addString(testString);
+    assertEquals(TruthValue.YES_NO_NULL, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
+  }
+
 
   @Test
   public void testStringInBloomFilter() throws Exception {

@@ -52,7 +52,6 @@ import org.apache.orc.TypeDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.common.io.DiskRange;
 import org.apache.hadoop.hive.common.io.DiskRangeList;
 import org.apache.hadoop.hive.common.io.DiskRangeList.CreateHelper;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
@@ -359,7 +358,7 @@ public class RecordReaderImpl implements RecordReader {
     } else if (index instanceof DoubleColumnStatistics) {
       return ((DoubleColumnStatistics) index).getMaximum();
     } else if (index instanceof StringColumnStatistics) {
-      return ((StringColumnStatistics) index).getMaximum();
+      return ((StringColumnStatistics) index).getUpperBound();
     } else if (index instanceof DateColumnStatistics) {
       return ((DateColumnStatistics) index).getMaximum();
     } else if (index instanceof DecimalColumnStatistics) {
@@ -406,7 +405,7 @@ public class RecordReaderImpl implements RecordReader {
     } else if (index instanceof DoubleColumnStatistics) {
       return ((DoubleColumnStatistics) index).getMinimum();
     } else if (index instanceof StringColumnStatistics) {
-      return ((StringColumnStatistics) index).getMinimum();
+      return ((StringColumnStatistics) index).getLowerBound();
     } else if (index instanceof DateColumnStatistics) {
       return ((DateColumnStatistics) index).getMinimum();
     } else if (index instanceof DecimalColumnStatistics) {

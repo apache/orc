@@ -37,7 +37,6 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.TimeZone;
 
 import static junit.framework.Assert.assertEquals;
