@@ -286,6 +286,8 @@ public class JsonSchemaFinder {
         return new StringType(HiveType.Kind.STRING);
       case TIMESTAMP:
         return new StringType(HiveType.Kind.TIMESTAMP);
+      case TIMESTAMP_INSTANT:
+        return new StringType(HiveType.Kind.TIMESTAMP_INSTANT);
       case DATE:
         return new StringType(HiveType.Kind.DATE);
       case BINARY:

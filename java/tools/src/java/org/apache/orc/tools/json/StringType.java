@@ -38,6 +38,8 @@ class StringType extends HiveType {
         return "string";
       case TIMESTAMP:
         return "timestamp";
+      case TIMESTAMP_INSTANT:
+        return "timestamp with local time zone";
       case DATE:
         return "date";
       default:
@@ -67,6 +69,8 @@ class StringType extends HiveType {
         return TypeDescription.createString();
       case TIMESTAMP:
         return TypeDescription.createTimestamp();
+      case TIMESTAMP_INSTANT:
+        return TypeDescription.createTimestampInstant();
       case DATE:
         return TypeDescription.createDate();
       default:

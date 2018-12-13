@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,6 +18,7 @@
 
 package org.apache.orc.impl;
 
+import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
@@ -30,6 +31,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
+import java.sql.Date;
 import java.util.TimeZone;
 
 public final class SerializationUtils {
@@ -1320,6 +1323,17 @@ public final class SerializationUtils {
     return (left ^ right) >= 0 || (left ^ (left - right)) >= 0;
   }
 
+  /**
+   * Convert a UTC time to a local timezone
+   * @param local the local timezone
+   * @param time the number of seconds since 1970
+   * @return the converted timestamp
+   */
+  public static double convertFromUtc(TimeZone local, double time) {
+    int offset = local.getOffset((long) (time*1000) - local.getRawOffset());
+    return time - offset / 1000.0;
+  }
+
   public static long convertFromUtc(TimeZone local, long time) {
     int offset = local.getOffset(time - local.getRawOffset());
     return time - offset;
@@ -1376,5 +1390,59 @@ public final class SerializationUtils {
       }
     }
     return base;
+  }
+
+  /**
+   * Find the relative offset when moving between timezones at a particular
+   * point in time.
+   *
+   * This is a function of ORC v0 and v1 writing timestamps relative to the
+   * local timezone. Therefore, when we read, we need to convert from the
+   * writer's timezone to the reader's timezone.
+   *
+   * @param writer the timezone we are moving from
+   * @param reader the timezone we are moving to
+   * @param millis the point in time
+   * @return the change in milliseconds
+   */
+  public static long convertBetweenTimezones(TimeZone writer, TimeZone reader,
+                                             long millis) {
+    final long writerOffset = writer.getOffset(millis);
+    final long readerOffset = reader.getOffset(millis);
+    long adjustedMillis = millis + writerOffset - readerOffset;
+    // If the timezone adjustment moves the millis across a DST boundary, we
+    // need to reevaluate the offsets.
+    long adjustedReader = reader.getOffset(adjustedMillis);
+    return writerOffset - adjustedReader;
+  }
+
+  /**
+   * Convert a bytes vector element into a String.
+   * @param vector the vector to use
+   * @param elementNum the element number to stringify
+   * @return a string or null if the value was null
+   */
+  public static String bytesVectorToString(BytesColumnVector vector,
+                                           int elementNum) {
+    if (vector.isRepeating) {
+      elementNum = 0;
+    }
+    return vector.noNulls || !vector.isNull[elementNum] ?
+               new String(vector.vector[elementNum], vector.start[elementNum],
+                   vector.length[elementNum], StandardCharsets.UTF_8) : null;
+  }
+
+  /**
+   * Parse a date from a string.
+   * @param string the date to parse (YYYY-MM-DD)
+   * @return the Date parsed, or null if there was a parse error.
+   */
+  public static Date parseDateFromString(String string) {
+    try {
+      Date value = Date.valueOf(string);
+      return value;
+    } catch (IllegalArgumentException e) {
+      return null;
+    }
   }
 }

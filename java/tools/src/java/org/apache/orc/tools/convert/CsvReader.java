@@ -315,6 +315,7 @@ public class CsvReader implements RecordReader {
       case VARCHAR:
         return new BytesConverter(startOffset);
       case TIMESTAMP:
+      case TIMESTAMP_INSTANT:
         return new TimestampConverter(startOffset);
       case STRUCT:
         return new StructConverter(startOffset, schema);
