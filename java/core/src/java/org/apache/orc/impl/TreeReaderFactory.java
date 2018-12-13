@@ -893,33 +893,36 @@ public class TreeReaderFactory {
     private Map<String, Long> baseTimestampMap;
     protected long base_timestamp;
     private final TimeZone readerTimeZone;
+    private final boolean instantType;
     private TimeZone writerTimeZone;
     private boolean hasSameTZRules;
     private ThreadLocal<DateFormat> threadLocalDateFormat;
 
-    TimestampTreeReader(int columnId, Context context) throws IOException {
-      this(columnId, null, null, null, null, context);
+    TimestampTreeReader(int columnId, Context context,
+                        boolean instantType) throws IOException {
+      this(columnId, null, null, null, null, context, instantType);
     }
 
     protected TimestampTreeReader(int columnId, InStream presentStream, InStream dataStream,
-        InStream nanosStream, OrcProto.ColumnEncoding encoding, Context context)
-        throws IOException {
+                                  InStream nanosStream,
+                                  OrcProto.ColumnEncoding encoding,
+                                  Context context,
+                                  boolean instantType) throws IOException {
       super(columnId, presentStream, context);
+      this.instantType = instantType;
       this.threadLocalDateFormat = new ThreadLocal<>();
       this.threadLocalDateFormat.set(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
       this.baseTimestampMap = new HashMap<>();
-      if (context.getUseUTCTimestamp()) {
+      if (instantType || context.getUseUTCTimestamp()) {
         this.readerTimeZone = TimeZone.getTimeZone("UTC");
       } else {
         this.readerTimeZone = TimeZone.getDefault();
       }
       if (context.getWriterTimezone() == null || context.getWriterTimezone().isEmpty()) {
-        this.writerTimeZone = readerTimeZone;
+        this.base_timestamp = getBaseTimestamp(readerTimeZone.getID());
       } else {
-        this.writerTimeZone = TimeZone.getTimeZone(context.getWriterTimezone());
+        this.base_timestamp = getBaseTimestamp(context.getWriterTimezone());
       }
-      this.hasSameTZRules = writerTimeZone.hasSameRules(readerTimeZone);
-      this.base_timestamp = getBaseTimestamp(readerTimeZone.getID());
       if (encoding != null) {
         checkEncoding(encoding);
 
@@ -930,7 +933,6 @@ public class TreeReaderFactory {
         if (nanosStream != null) {
           this.nanos = createIntegerReader(encoding.getKind(), nanosStream, false, context);
         }
-        base_timestamp = getBaseTimestamp(context.getWriterTimezone());
       }
     }
 
@@ -953,7 +955,9 @@ public class TreeReaderFactory {
       nanos = createIntegerReader(kind,
           planner.getStream(new StreamName(columnId,
               OrcProto.Stream.Kind.SECONDARY)), false, context);
-      base_timestamp = getBaseTimestamp(planner.getWriterTimezone());
+      if (!instantType) {
+        base_timestamp = getBaseTimestamp(planner.getWriterTimezone());
+      }
     }
 
     protected long getBaseTimestamp(String timeZoneId) throws IOException {
@@ -962,24 +966,28 @@ public class TreeReaderFactory {
         timeZoneId = readerTimeZone.getID();
       }
 
-      if (!baseTimestampMap.containsKey(timeZoneId)) {
+      if (writerTimeZone == null || !timeZoneId.equals(writerTimeZone.getID())) {
         writerTimeZone = TimeZone.getTimeZone(timeZoneId);
         hasSameTZRules = writerTimeZone.hasSameRules(readerTimeZone);
-        threadLocalDateFormat.get().setTimeZone(writerTimeZone);
-        try {
-          long epoch = threadLocalDateFormat.get()
-            .parse(TimestampTreeWriter.BASE_TIMESTAMP_STRING).getTime() /
-              TimestampTreeWriter.MILLIS_PER_SECOND;
-          baseTimestampMap.put(timeZoneId, epoch);
-          return epoch;
-        } catch (ParseException e) {
-          throw new IOException("Unable to create base timestamp", e);
-        } finally {
-          threadLocalDateFormat.get().setTimeZone(readerTimeZone);
+        if (!baseTimestampMap.containsKey(timeZoneId)) {
+          threadLocalDateFormat.get().setTimeZone(writerTimeZone);
+          try {
+            long epoch = threadLocalDateFormat.get()
+                             .parse(TimestampTreeWriter.BASE_TIMESTAMP_STRING).getTime() /
+                             TimestampTreeWriter.MILLIS_PER_SECOND;
+            baseTimestampMap.put(timeZoneId, epoch);
+            return epoch;
+          } catch (ParseException e) {
+            throw new IOException("Unable to create base timestamp", e);
+          } finally {
+            threadLocalDateFormat.get().setTimeZone(readerTimeZone);
+          }
+        } else {
+          return baseTimestampMap.get(timeZoneId);
         }
       }
 
-      return baseTimestampMap.get(timeZoneId);
+      return base_timestamp;
     }
 
     @Override
@@ -1015,19 +1023,10 @@ public class TreeReaderFactory {
           // If reader and writer time zones have different rules, adjust the timezone difference
           // between reader and writer taking day light savings into account.
           if (!hasSameTZRules) {
-            offset = writerTimeZone.getOffset(millis) - readerTimeZone.getOffset(millis);
+            offset = SerializationUtils.convertBetweenTimezones(writerTimeZone,
+                readerTimeZone, millis);
           }
-          long adjustedMillis = millis + offset;
-          // Sometimes the reader timezone might have changed after adding the adjustedMillis.
-          // To account for that change, check for any difference in reader timezone after
-          // adding adjustedMillis. If so use the new offset (offset at adjustedMillis point of time).
-          if (!hasSameTZRules &&
-              (readerTimeZone.getOffset(millis) != readerTimeZone.getOffset(adjustedMillis))) {
-            long newOffset =
-                writerTimeZone.getOffset(millis) - readerTimeZone.getOffset(adjustedMillis);
-            adjustedMillis = millis + newOffset;
-          }
-          result.time[i] = adjustedMillis;
+          result.time[i] = millis + offset;
           result.nanos[i] = newNanos;
           if (result.isRepeating && i != 0 &&
               (result.time[0] != result.time[i] ||
@@ -2351,7 +2350,9 @@ public class TreeReaderFactory {
       case BINARY:
         return new BinaryTreeReader(fileType.getId(), context);
       case TIMESTAMP:
-        return new TimestampTreeReader(fileType.getId(), context);
+        return new TimestampTreeReader(fileType.getId(), context, false);
+      case TIMESTAMP_INSTANT:
+        return new TimestampTreeReader(fileType.getId(), context, true);
       case DATE:
         return new DateTreeReader(fileType.getId(), context);
       case DECIMAL:

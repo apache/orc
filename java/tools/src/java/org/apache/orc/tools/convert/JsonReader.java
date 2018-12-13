@@ -276,6 +276,7 @@ public class JsonReader implements RecordReader {
       case DECIMAL:
         return new DecimalColumnConverter();
       case TIMESTAMP:
+      case TIMESTAMP_INSTANT:
         return new TimestampColumnConverter();
       case BINARY:
         return new BinaryColumnConverter();

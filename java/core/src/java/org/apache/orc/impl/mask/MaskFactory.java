@@ -59,6 +59,7 @@ public abstract class MaskFactory {
       case VARCHAR:
         return buildStringMask(schema);
       case TIMESTAMP:
+      case TIMESTAMP_INSTANT:
         return buildTimestampMask(schema);
       case DATE:
         return buildDateMask(schema);

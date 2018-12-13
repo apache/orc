@@ -221,6 +221,7 @@ public class OrcMapredRecordWriter<V extends Writable>
           setLongValue(vector, row, ((DateWritable) value).getDays());
           break;
         case TIMESTAMP:
+        case TIMESTAMP_INSTANT:
           ((TimestampColumnVector) vector).set(row, (OrcTimestamp) value);
           break;
         case DECIMAL:

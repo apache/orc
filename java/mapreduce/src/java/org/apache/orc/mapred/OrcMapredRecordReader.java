@@ -543,6 +543,7 @@ public class OrcMapredRecordReader<V extends WritableComparable>
       case DATE:
         return nextDate(vector, row, previous);
       case TIMESTAMP:
+      case TIMESTAMP_INSTANT:
         return nextTimestamp(vector, row, previous);
       case STRUCT:
         return nextStruct(vector, row, schema, previous);

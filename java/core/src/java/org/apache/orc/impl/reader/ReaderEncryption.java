@@ -40,8 +40,12 @@ public class ReaderEncryption {
   // A value of variants.length means no encryption
   private final ReaderEncryptionVariant[] columnVariants;
 
-  public ReaderEncryption() throws IOException {
-    this(null, null, null, null, null);
+  public ReaderEncryption() {
+    keyProvider = null;
+    keys = new ReaderEncryptionKey[0];
+    masks = new MaskDescriptionImpl[0];
+    variants = new ReaderEncryptionVariant[0];
+    columnVariants = null;
   }
 
   public ReaderEncryption(OrcProto.Footer footer,

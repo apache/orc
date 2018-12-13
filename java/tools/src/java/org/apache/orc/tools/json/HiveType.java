@@ -31,7 +31,7 @@ abstract class HiveType {
     NULL(0),
     BOOLEAN(1),
     BYTE(1), SHORT(2), INT(3), LONG(4), DECIMAL(5), FLOAT(6), DOUBLE(7),
-    BINARY(1), DATE(1), TIMESTAMP(1), STRING(2),
+    BINARY(1), DATE(1), TIMESTAMP(1), TIMESTAMP_INSTANT(1), STRING(2),
     STRUCT(1, false),
     LIST(1, false),
     UNION(8, false);

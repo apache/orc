@@ -157,6 +157,9 @@ public class OrcUtils {
     case TIMESTAMP:
       type.setKind(OrcProto.Type.Kind.TIMESTAMP);
       break;
+    case TIMESTAMP_INSTANT:
+        type.setKind(OrcProto.Type.Kind.TIMESTAMP_INSTANT);
+        break;
     case DATE:
       type.setKind(OrcProto.Type.Kind.DATE);
       break;
@@ -304,6 +307,9 @@ public class OrcUtils {
         break;
       case TIMESTAMP:
         result = TypeDescription.createTimestamp();
+        break;
+      case TIMESTAMP_INSTANT:
+        result = TypeDescription.createTimestampInstant();
         break;
       case DATE:
         result = TypeDescription.createDate();

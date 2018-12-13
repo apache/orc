@@ -29,6 +29,7 @@ ORC provides a rich set of scalar and compound types:
   * binary
 * Date/time
   * timestamp
+  * timestamp with local time zone
   * date
 * Compound types
   * struct
@@ -62,3 +63,20 @@ create table Foobar (
 
 ![ORC column structure](/img/TreeWriters.png)
 
+# Timestamps
+
+ORC includes two different forms of timestamps from the SQL world:
+
+* **Timestamp** is a date and time without a time zone, which does not change based on the time zone of the reader.
+* **Timestamp with local time zone** is a fixed instant in time, which does change based on the time zone of the reader.
+
+Unless your application uses UTC consistently, **timestamp with
+local time zone** is strongly preferred over **timestamp** for most
+use cases. When users say an event is at 10:00, it is always in
+reference to a certain timezone and means a point in time, rather than
+10:00 in an arbitrary time zone.
+
+| Type        | Value in America/Los_Angeles | Value in America/New_York |
+| ----------- | ---------------------------- | ------------------------- |
+| **timestamp** | 2014-12-12 6:00:00           | 2014-12-12 6:00:00        |
+| **timestamp with local time zone** | 2014-12-12 9:00:00 | 2014-12-12 6:00:00 |

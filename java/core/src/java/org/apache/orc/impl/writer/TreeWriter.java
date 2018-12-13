@@ -164,7 +164,9 @@ public interface TreeWriter {
       case BINARY:
         return new BinaryTreeWriter(schema, encryption, streamFactory);
       case TIMESTAMP:
-        return new TimestampTreeWriter(schema, encryption, streamFactory);
+        return new TimestampTreeWriter(schema, encryption, streamFactory, false);
+      case TIMESTAMP_INSTANT:
+        return new TimestampTreeWriter(schema, encryption, streamFactory, true);
       case DATE:
         return new DateTreeWriter(schema, encryption, streamFactory);
       case DECIMAL:
