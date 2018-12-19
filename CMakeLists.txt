@@ -12,7 +12,7 @@
 
 cmake_minimum_required (VERSION 2.6)
 
-project(ORC)
+project(ORC C CXX)
 
 # Version number of package
 SET(CPACK_PACKAGE_VERSION_MAJOR "1")
