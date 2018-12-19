@@ -21,6 +21,7 @@ BRANCH=$2
 
 CLONE="git clone $URL -b $BRANCH"
 MAKEDIR="mkdir orc/build && cd orc/build"
+VOLUME="--volume m2cache:/root/.m2/repository"
 mkdir -p logs
 
 start=`date`
@@ -43,7 +44,7 @@ for os in `cat os-list.txt`; do
      OPTS=""
      ;;
   esac
-  docker run "orc-$os" /bin/bash -c \
+  docker run $VOLUME "orc-$os" /bin/bash -c \
 	 "$CLONE && $MAKEDIR && cmake $OPTS .. && make package test-out" \
          > logs/$os-test.log 2>&1 || exit 1
 done
