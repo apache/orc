@@ -104,7 +104,7 @@ namespace orc {
       EXPECT_EQ(i % dictionarySize, static_cast<uint64_t>(atoi(str.c_str())));
     }
 
-    EXPECT_EQ(false, rowReader->next(*batch));
+    EXPECT_FALSE(rowReader->next(*batch));
   }
 
   void testVarcharDictionary(bool enableIndex, double threshold) {
@@ -170,7 +170,7 @@ namespace orc {
       EXPECT_EQ(varcharRead, varcharExpected);
     }
 
-    EXPECT_EQ(false, rowReader->next(*batch));
+    EXPECT_FALSE(rowReader->next(*batch));
   }
 
   void testCharDictionary(bool enableIndex, double threshold) {
@@ -238,7 +238,7 @@ namespace orc {
       EXPECT_EQ(charsExpected, charsRead);
     }
 
-    EXPECT_EQ(false, rowReader->next(*batch));
+    EXPECT_FALSE(rowReader->next(*batch));
   }
 
   void testStringDictionaryWithNull(double threshold, bool enableIndex) {
@@ -311,7 +311,7 @@ namespace orc {
       }
     }
 
-    EXPECT_EQ(false, rowReader->next(*batch));
+    EXPECT_FALSE(rowReader->next(*batch));
   }
 
   void testDictionaryMultipleStripes(double threshold, bool enableIndex) {
@@ -381,7 +381,7 @@ namespace orc {
         EXPECT_EQ(i % dictionarySize, static_cast<uint64_t>(atoi(str.c_str())));
       }
     }
-    EXPECT_EQ(false, rowReader->next(*batch));
+    EXPECT_FALSE(rowReader->next(*batch));
 
     // test seeking to check positions
     batch = rowReader->createRowBatch(1);

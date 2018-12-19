@@ -33,6 +33,7 @@ add_executable (orc-contents
 
 target_link_libraries (orc-contents
   orc
+  ${CMAKE_THREAD_LIBS_INIT}
   )
 
 add_executable (orc-scan
@@ -41,6 +42,7 @@ add_executable (orc-scan
 
 target_link_libraries (orc-scan
   orc
+  ${CMAKE_THREAD_LIBS_INIT}
   )
 
 add_executable (orc-metadata
@@ -50,6 +52,7 @@ add_executable (orc-metadata
 target_link_libraries (orc-metadata
   orc
   protobuf
+  ${CMAKE_THREAD_LIBS_INIT}
   )
 
  add_executable (orc-statistics
@@ -58,6 +61,7 @@ target_link_libraries (orc-metadata
 
 target_link_libraries (orc-statistics
   orc
+  ${CMAKE_THREAD_LIBS_INIT}
   )
 
 add_executable (orc-memory
@@ -66,6 +70,7 @@ add_executable (orc-memory
 
 target_link_libraries (orc-memory
   orc
+  ${CMAKE_THREAD_LIBS_INIT}
   )
 
 add_executable (timezone-dump
@@ -74,6 +79,7 @@ add_executable (timezone-dump
 
 target_link_libraries (timezone-dump
   orc
+  ${CMAKE_THREAD_LIBS_INIT}
   )
 
 add_executable (csv-import
@@ -82,6 +88,7 @@ add_executable (csv-import
 
 target_link_libraries (csv-import
   orc
+  ${CMAKE_THREAD_LIBS_INIT}
   )
 
 install(TARGETS
