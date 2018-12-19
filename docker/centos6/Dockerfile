@@ -60,6 +60,8 @@ RUN cd snappy-1.1.3 && \
     ./configure && \
     make install
 
+VOLUME /root/.m2/repository
+
 CMD git clone https://github.com/apache/orc.git -b master && \
   mkdir orc/build && \
   cd orc/build && \

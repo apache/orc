@@ -34,6 +34,7 @@ RUN apt-get install -y \
   tzdata
 
 WORKDIR /root
+VOLUME /root/.m2/repository
 
 CMD git clone https://github.com/apache/orc.git -b master && \
   mkdir orc/build && \

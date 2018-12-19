@@ -40,6 +40,7 @@ ENV CC=clang-5.0
 ENV CXX=clang++-5.0
 
 WORKDIR /root
+VOLUME /root/.m2/repository
 
 CMD git clone https://github.com/apache/orc.git -b master && \
   mkdir orc/build && \
