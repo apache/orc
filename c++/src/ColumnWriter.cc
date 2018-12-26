@@ -290,17 +290,14 @@ namespace orc {
       colIndexStatistics->increase(numValues);
     } else {
       uint64_t count = 0;
-      bool hasNull = false;
       const char* notNull = structBatch->notNull.data() + offset;
       for (uint64_t i = 0; i < numValues; ++i) {
         if (notNull[i]) {
           ++count;
-        } else if (!hasNull) {
-          hasNull = true;
         }
       }
       colIndexStatistics->increase(count);
-      if (hasNull) {
+      if (count < numValues) {
         colIndexStatistics->setHasNull(true);
       }
     }
@@ -468,17 +465,14 @@ namespace orc {
 
     // update stats
     uint64_t count = 0;
-    bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (notNull == nullptr || notNull[i]) {
         ++count;
         intStats->update(data[i], 1);
-      } else if (!hasNull) {
-        hasNull = true;
       }
     }
     intStats->increase(count);
-    if (hasNull) {
+    if (count < numValues) {
       intStats->setHasNull(true);
     }
   }
@@ -575,17 +569,14 @@ namespace orc {
     byteRleEncoder->add(byteData, numValues, notNull);
 
     uint64_t count = 0;
-    bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (notNull == nullptr || notNull[i]) {
         ++count;
         intStats->update(static_cast<int64_t>(byteData[i]), 1);
-      } else if (!hasNull) {
-        hasNull = true;
       }
     }
     intStats->increase(count);
-    if (hasNull) {
+    if (count < numValues) {
       intStats->setHasNull(true);
     }
   }
@@ -682,17 +673,14 @@ namespace orc {
     rleEncoder->add(byteData, numValues, notNull);
 
     uint64_t count = 0;
-    bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (notNull == nullptr || notNull[i]) {
         ++count;
         boolStats->update(byteData[i] != 0, 1);
-      } else if (!hasNull) {
-        hasNull = true;
       }
     }
     boolStats->increase(count);
-    if (hasNull) {
+    if (count < numValues) {
       boolStats->setHasNull(true);
     }
   }
@@ -802,7 +790,6 @@ namespace orc {
     size_t bytes = isFloat ? 4 : 8;
     char* data = buffer.data();
     uint64_t count = 0;
-    bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!notNull || notNull[i]) {
         if (isFloat) {
@@ -813,12 +800,10 @@ namespace orc {
         dataStream->write(data, bytes);
         ++count;
         doubleStats->update(doubleData[i]);
-      } else if (!hasNull) {
-        hasNull = true;
       }
     }
     doubleStats->increase(count);
-    if (hasNull) {
+    if (count < numValues) {
       doubleStats->setHasNull(true);
     }
   }
@@ -1104,7 +1089,6 @@ namespace orc {
     }
 
     uint64_t count = 0;
-    bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!notNull || notNull[i]) {
         const size_t len = static_cast<size_t>(length[i]);
@@ -1116,12 +1100,10 @@ namespace orc {
         }
         strStats->update(data[i], len);
         ++count;
-      } else if (!hasNull) {
-        hasNull = true;
       }
     }
     strStats->increase(count);
-    if (hasNull) {
+    if (count < numValues) {
       strStats->setHasNull(true);
     }
   }
@@ -1465,7 +1447,6 @@ namespace orc {
                           charsBatch->notNull.data() + offset : nullptr;
 
     uint64_t count = 0;
-    bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!notNull || notNull[i]) {
         const char * charData = nullptr;
@@ -1494,8 +1475,6 @@ namespace orc {
 
         strStats->update(charData, static_cast<size_t>(length[i]));
         ++count;
-      } else if (!hasNull) {
-        hasNull = true;
       }
     }
 
@@ -1504,7 +1483,7 @@ namespace orc {
     }
 
     strStats->increase(count);
-    if (hasNull) {
+    if (count < numValues) {
       strStats->setHasNull(true);
     }
   }
@@ -1549,7 +1528,6 @@ namespace orc {
                           charsBatch->notNull.data() + offset : nullptr;
 
     uint64_t count = 0;
-    bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!notNull || notNull[i]) {
         uint64_t itemLength = Utf8Utils::truncateBytesTo(
@@ -1565,8 +1543,6 @@ namespace orc {
 
         strStats->update(data[i], static_cast<size_t>(length[i]));
         ++count;
-      } else if (!hasNull) {
-        hasNull = true;
       }
     }
 
@@ -1575,7 +1551,7 @@ namespace orc {
     }
 
     strStats->increase(count);
-    if (hasNull) {
+    if (count < numValues) {
       strStats->setHasNull(true);
     }
   }
@@ -1616,7 +1592,6 @@ namespace orc {
                           binBatch->notNull.data() + offset : nullptr;
 
     uint64_t count = 0;
-    bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       uint64_t unsignedLength = static_cast<uint64_t>(length[i]);
       if (!notNull || notNull[i]) {
@@ -1624,13 +1599,11 @@ namespace orc {
 
         binStats->update(unsignedLength);
         ++count;
-      } else if (!hasNull) {
-        hasNull = true;
       }
     }
     directLengthEncoder->add(length, numValues, notNull);
     binStats->increase(count);
-    if (hasNull) {
+    if (count < numValues) {
       binStats->setHasNull(true);
     }
   }
@@ -1732,7 +1705,6 @@ namespace orc {
     int64_t *nanos = tsBatch->nanoseconds.data() + offset;
 
     uint64_t count = 0;
-    bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (notNull == nullptr || notNull[i]) {
         // TimestampVectorBatch already stores data in UTC
@@ -1746,12 +1718,10 @@ namespace orc {
 
         secs[i] -= timezone.getEpoch();
         nanos[i] = formatNano(nanos[i]);
-      } else if (!hasNull) {
-        hasNull = true;
       }
     }
     tsStats->increase(count);
-    if (hasNull) {
+    if (count < numValues) {
       tsStats->setHasNull(true);
     }
 
@@ -1839,17 +1809,14 @@ namespace orc {
     rleEncoder->add(data, numValues, notNull);
 
     uint64_t count = 0;
-    bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!notNull || notNull[i]) {
         ++count;
         dateStats->update(static_cast<int32_t>(data[i]));
-      } else if (!hasNull) {
-        hasNull = true;
       }
     }
     dateStats->increase(count);
-    if (hasNull) {
+    if (count < numValues) {
       dateStats->setHasNull(true);
     }
   }
@@ -1932,7 +1899,6 @@ namespace orc {
     const int64_t* values = decBatch->values.data() + offset;
 
     uint64_t count = 0;
-    bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!notNull || notNull[i]) {
         int64_t val = zigZag(values[i]);
@@ -1950,12 +1916,10 @@ namespace orc {
         valueStream->write(buffer, static_cast<size_t>(data - buffer));
         ++count;
         decStats->update(Decimal(values[i], static_cast<int32_t>(scale)));
-      } else if (!hasNull) {
-        hasNull = true;
       }
     }
     decStats->increase(count);
-    if (hasNull) {
+    if (count < numValues) {
       decStats->setHasNull(true);
     }
     std::vector<int64_t> scales(numValues, static_cast<int64_t>(scale));
@@ -2058,7 +2022,6 @@ namespace orc {
     // The current encoding of decimal columns stores the integer representation
     // of the value as an unbounded length zigzag encoded base 128 varint.
     uint64_t count = 0;
-    bool hasNull = false;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!notNull || notNull[i]) {
         Int128 val = zigZagInt128(values[i]);
@@ -2076,12 +2039,10 @@ namespace orc {
 
         ++count;
         decStats->update(Decimal(values[i], static_cast<int32_t>(scale)));
-      } else if (!hasNull) {
-        hasNull = true;
       }
     }
     decStats->increase(count);
-    if (hasNull) {
+    if (count < numValues) {
       decStats->setHasNull(true);
     }
     std::vector<int64_t> scales(numValues, static_cast<int64_t>(scale));
@@ -2193,16 +2154,13 @@ namespace orc {
         colIndexStatistics->increase(numValues);
       } else {
         uint64_t count = 0;
-        bool hasNull = false;
         for (uint64_t i = 0; i < numValues; ++i) {
           if (notNull[i]) {
             ++count;
-          } else if (!hasNull) {
-            hasNull = true;
           }
         }
         colIndexStatistics->increase(count);
-        if (hasNull) {
+        if (count < numValues) {
           colIndexStatistics->setHasNull(true);
         }
       }
@@ -2418,16 +2376,13 @@ namespace orc {
         colIndexStatistics->increase(numValues);
       } else {
         uint64_t count = 0;
-        bool hasNull = false;
         for (uint64_t i = 0; i < numValues; ++i) {
           if (notNull[i]) {
             ++count;
-          } else if (!hasNull) {
-            hasNull = true;
           }
         }
         colIndexStatistics->increase(count);
-        if (hasNull) {
+        if (count < numValues) {
           colIndexStatistics->setHasNull(true);
         }
       }
@@ -2675,16 +2630,13 @@ namespace orc {
         colIndexStatistics->increase(numValues);
       } else {
         uint64_t count = 0;
-        bool hasNull = false;
         for (uint64_t i = 0; i < numValues; ++i) {
           if (notNull[i]) {
             ++count;
-          } else if (!hasNull) {
-            hasNull = true;
           }
         }
         colIndexStatistics->increase(count);
-        if (hasNull) {
+        if (count < numValues) {
           colIndexStatistics->setHasNull(true);
         }
       }
