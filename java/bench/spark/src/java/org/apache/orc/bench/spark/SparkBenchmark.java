@@ -28,6 +28,7 @@ import org.apache.orc.bench.core.OrcBenchmark;
 import org.apache.orc.bench.core.ReadCounters;
 import org.apache.orc.bench.core.Utilities;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.avro.AvroFileFormat;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.execution.datasources.FileFormat;
 import org.apache.spark.sql.execution.datasources.PartitionedFile;
@@ -133,7 +134,7 @@ public class SparkBenchmark implements OrcBenchmark {
       }
       switch (format) {
         case "avro":
-          formatObject = new com.databricks.spark.avro.DefaultSource();
+          formatObject = new AvroFileFormat();
           break;
         case "orc":
           formatObject = new OrcFileFormat();
