@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>News</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="generator" content="Jekyll v3.8.4">
+  <meta name="generator" content="Jekyll v3.8.5">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
   <link rel="stylesheet" href="/css/screen.css">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -87,6 +87,8 @@
     <option value="/news/">Home</option>
     <optgroup label="v1.x">
       
+      <option value="/news/2018/12/21/ORC-1.5.4/">ORC 1.5.4 Released</option>
+      
       <option value="/news/2018/09/25/ORC-1.5.3/">ORC 1.5.3 Released</option>
       
       <option value="/news/2018/06/29/ORC-1.5.2/">ORC 1.5.2 Released</option>
@@ -158,6 +160,62 @@
         
   <article>
   <h2>
+    <a href="/news/2018/12/21/ORC-1.5.4/">
+      ORC 1.5.4 Released
+    </a>
+  </h2>
+  <span class="post-category">
+    <span class="label">
+      release
+    </span>
+  </span>
+  <div class="post-meta">
+    <span class="post-date">
+      21 Dec 2018
+    </span>
+    <a href="https://people.apache.org/~vgumashta" class="post-author">
+      <img src="https://people.apache.org/~vgumashta//vgumashta.png"
+           class="avatar" alt="vgumashta avatar"
+           width="24" height="24">
+      vgumashta
+    </a>
+  </div>
+  <div class="post-content">
+    <p>The ORC team is excited to announce the release of ORC v1.5.4.</p>
+
+<ul>
+  <li>Released: 21 December 2018</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.5.4/orc-1.5.4.tar.gz">orc-1.5.4.tar.gz</a></li>
+  <li><a href="https://www.apache.org/dist/orc/orc-1.5.4/orc-1.5.4.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://www.apache.org/dist/orc/KEYS">Vaibhav Gumashta (F60037FB)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.5.4">rel/release-1.5.4</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.5.4%22">ORC 1.5.4</a></li>
+  <li>SHA 256: <a href="https://www.apache.org/dist/orc/orc-1.5.4/orc-1.5.4.tar.gz.sha256">75cfba40d3574c14…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.5.4%22&amp;tempMax=500">ORC-1.5.4</a></li>
+</ul>
+
+<p>The new features of ORC 1.5:</p>
+
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-179">ORC-179</a> Add ORC C++ Writer</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-91">ORC-91</a> Support for variable length blocks in HDFS.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-199">ORC-199</a> Implement a CSV to ORC converter</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-344">ORC-344</a> Support for using Decimal64ColumnVector</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-345">ORC-345</a> Adding Decimal64StatisticsImpl</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-331">ORC-331</a> Support for building C++ under MSVC.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-234">ORC-234</a> Support for older versions of Hadoop (&gt;= 2.2.x)</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-305">ORC-305</a> Added statistics for size on disk</li>
+</ul>
+
+<p>Known issues:</p>
+
+
+  </div>
+</article>
+
+
+  <article>
+  <h2>
     <a href="/news/2018/09/25/ORC-1.5.3/">
       ORC 1.5.3 Released
     </a>
@@ -183,12 +241,12 @@
 
 <ul>
   <li>Released: 25 September 2018</li>
-  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.5.3/orc-1.5.3.tar.gz">orc-1.5.3.tar.gz</a></li>
-  <li><a href="https://www.apache.org/dist/orc/orc-1.5.3/orc-1.5.3.tar.gz.asc">GPG Signature</a>
+  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-1.5.3/orc-1.5.3.tar.gz">orc-1.5.3.tar.gz</a></li>
+  <li><a href="https://archive.apache.org/dist/orc/orc-1.5.3/orc-1.5.3.tar.gz.asc">GPG Signature</a>
 signed by <a href="https://www.apache.org/dist/orc/KEYS">Owen O’Malley (3D0C92B9)</a></li>
   <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.5.3">rel/release-1.5.3</a></li>
   <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.5.3%22">ORC 1.5.3</a></li>
-  <li>SHA 256: <a href="https://www.apache.org/dist/orc/orc-1.5.3/orc-1.5.3.tar.gz.sha256">96da3cccd2b396dc…</a></li>
+  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-1.5.3/orc-1.5.3.tar.gz.sha256">96da3cccd2b396dc…</a></li>
   <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.5.3%22&amp;tempMax=500">ORC-1.5.3</a></li>
 </ul>
 
@@ -1972,6 +2030,10 @@ of the website.</p>
     <ul>
       
       <li class="">
+        <a href="/news/2018/12/21/ORC-1.5.4/">Version 1.5.4</a>
+      </li>
+      
+      <li class="">
         <a href="/news/2018/09/25/ORC-1.5.3/">Version 1.5.3</a>
       </li>
       
@@ -1987,13 +2049,11 @@ of the website.</p>
         <a href="/news/2018/05/14/ORC-1.5.0/">Version 1.5.0</a>
       </li>
       
-      <li class="">
-        <a href="/news/2018/05/14/ORC-1.4.4/">Version 1.4.4</a>
-      </li>
-      
     </ul>
     <h4>Other News</h4>
     <ul>
+        
+        
         
         
         
@@ -2105,7 +2165,7 @@ of the website.</p>
 
 
   <footer role="contentinfo">
-  <p>The contents of this website are &copy;&nbsp;2018
+  <p>The contents of this website are &copy;&nbsp;2019
      <a href="https://www.apache.org/">Apache Software Foundation</a>
      under the terms of the <a
       href="https://www.apache.org/licenses/LICENSE-2.0.html">
