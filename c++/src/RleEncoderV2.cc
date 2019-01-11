@@ -133,16 +133,14 @@ void RleEncoderV2::write(int64_t val) {
             numLiterals -= MIN_REPEAT;
             variableRunLength -= (MIN_REPEAT - 1);
 
-            int64_t tailVals[MIN_REPEAT] = {0};
-
-            memcpy(tailVals, literals + numLiterals, sizeof(int64_t) * MIN_REPEAT);
             determineEncoding(option);
             writeValues(option);
 
             // shift tail fixed runs to beginning of the buffer
             for (size_t i = 0; i < MIN_REPEAT; ++i) {
-                literals[numLiterals++] = tailVals[i];
+                literals[i] = val;
             }
+            numLiterals = MIN_REPEAT;
         }
 
         if (fixedRunLength == MAX_LITERAL_SIZE) {;
