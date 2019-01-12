@@ -58,8 +58,6 @@ import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
 public class JsonReader implements RecordReader {
-  private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern(
-    "yyyy[[-][/]]MM[[-][/]]dd[['T'][ ]]HH:mm:ss[ ][XXX][X]");
 
   private final TypeDescription schema;
   private final Iterator<JsonElement> parser;
@@ -67,6 +65,7 @@ public class JsonReader implements RecordReader {
   private final long totalSize;
   private final FSDataInputStream input;
   private long rowNumber = 0;
+  private final DateTimeFormatter dateTimeFormatter;
 
   interface JsonConverter {
     void convert(JsonElement value, ColumnVector vect, int row);
@@ -138,14 +137,14 @@ public class JsonReader implements RecordReader {
     }
   }
 
-  static class TimestampColumnConverter implements JsonConverter {
+  class TimestampColumnConverter implements JsonConverter {
     public void convert(JsonElement value, ColumnVector vect, int row) {
       if (value == null || value.isJsonNull()) {
         vect.noNulls = false;
         vect.isNull[row] = true;
       } else {
         TimestampColumnVector vector = (TimestampColumnVector) vect;
-        TemporalAccessor temporalAccessor = DATE_TIME_FORMATTER.parseBest(value.getAsString(),
+        TemporalAccessor temporalAccessor = dateTimeFormatter.parseBest(value.getAsString(),
           ZonedDateTime.FROM, LocalDateTime.FROM);
         if (temporalAccessor instanceof ZonedDateTime) {
           vector.set(row, new Timestamp(((ZonedDateTime) temporalAccessor).toEpochSecond() * 1000L));
@@ -171,7 +170,7 @@ public class JsonReader implements RecordReader {
     }
   }
 
-  static class StructColumnConverter implements JsonConverter {
+  class StructColumnConverter implements JsonConverter {
     private JsonConverter[] childrenConverters;
     private List<String> fieldNames;
 
@@ -199,7 +198,7 @@ public class JsonReader implements RecordReader {
     }
   }
 
-  static class ListColumnConverter implements JsonConverter {
+  class ListColumnConverter implements JsonConverter {
     private JsonConverter childrenConverter;
 
     public ListColumnConverter(TypeDescription schema) {
@@ -225,7 +224,7 @@ public class JsonReader implements RecordReader {
     }
   }
 
-  static class MapColumnConverter implements JsonConverter {
+  class MapColumnConverter implements JsonConverter {
     private JsonConverter keyConverter;
     private JsonConverter valueConverter;
 
@@ -259,7 +258,7 @@ public class JsonReader implements RecordReader {
     }
   }
 
-  static JsonConverter createConverter(TypeDescription schema) {
+  JsonConverter createConverter(TypeDescription schema) {
     switch (schema.getCategory()) {
       case BYTE:
       case SHORT:
@@ -296,14 +295,16 @@ public class JsonReader implements RecordReader {
   public JsonReader(Reader reader,
                     FSDataInputStream underlying,
                     long size,
-                    TypeDescription schema) throws IOException {
-    this(new JsonStreamParser(reader), underlying, size, schema);
+                    TypeDescription schema,
+                    String timestampFormat) throws IOException {
+    this(new JsonStreamParser(reader), underlying, size, schema, timestampFormat);
   }
 
   public JsonReader(Iterator<JsonElement> parser,
                     FSDataInputStream underlying,
                     long size,
-                    TypeDescription schema) throws IOException {
+                    TypeDescription schema,
+                    String timestampFormat) throws IOException {
     this.schema = schema;
     if (schema.getCategory() != TypeDescription.Category.STRUCT) {
       throw new IllegalArgumentException("Root must be struct - " + schema);
@@ -311,6 +312,7 @@ public class JsonReader implements RecordReader {
     this.input = underlying;
     this.totalSize = size;
     this.parser = parser;
+    this.dateTimeFormatter = DateTimeFormatter.ofPattern(timestampFormat);
     List<TypeDescription> fieldTypes = schema.getChildren();
     converters = new JsonConverter[fieldTypes.size()];
     for(int c = 0; c < converters.length; ++c) {
