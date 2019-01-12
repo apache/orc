@@ -146,7 +146,7 @@ public class ConvertTool {
         }
         case JSON: {
           FSDataInputStream underlying = filesystem.open(path);
-          return new JsonReader(getReader(underlying), underlying, size, schema);
+          return new JsonReader(getReader(underlying), underlying, size, schema, timestampFormat);
         }
         case CSV: {
           FSDataInputStream underlying = filesystem.open(path);
