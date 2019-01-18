@@ -17,7 +17,7 @@ Commit the changes back to Apache along with a tag for the release candidate.
 
 ~~~
 % git commit -s -S -am 'Preparing for release X.Y.Z'
-% git remote add apache https://git-wip-us.apache.org/repos/asf/orc.git
+% git remote add apache https://gitbox.apache.org/repos/asf/orc.git
 % git push apache branch-X.Y
 % git tag release-X.Y.Zrc0
 % git push apache release-X.Y.Zrc0
@@ -136,7 +136,7 @@ Change directory in to site.
 % cd target
 Set up site/target to be a separate git workspace that tracks the asf-site branch.
 % git init
-% git remote add origin https://git-wip-us.apache.org/repos/asf/orc.git -t asf-site
+% git remote add origin https://gitbox.apache.org/repos/asf/orc.git -t asf-site
 % git fetch origin
 % git checkout asf-site
 % cd ..
