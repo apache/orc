@@ -51,7 +51,7 @@ the values that are required for the current query.</description>
     </release>
     <repository>
       <GitRepository>
-        <location rdf:resource="https://git-wip-us.apache.org/repos/asf/orc.git"/>
+        <location rdf:resource="https://gitbox.apache.org/repos/asf/orc.git"/>
         <browse rdf:resource="https://github.com/apache/orc"/>
       </GitRepository>
     </repository>
