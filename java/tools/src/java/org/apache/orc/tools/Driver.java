@@ -86,6 +86,7 @@ public class Driver {
           " [--define X=Y] <command> <args>");
       System.err.println();
       System.err.println("Commands:");
+      System.err.println("   version - print the version of this ORC tool");
       System.err.println("   meta - print the metadata about the ORC file");
       System.err.println("   data - print the data from the ORC file");
       System.err.println("   scan - scan the ORC file");
@@ -101,7 +102,9 @@ public class Driver {
     for(Map.Entry pair: confSettings.entrySet()) {
       conf.set(pair.getKey().toString(), pair.getValue().toString());
     }
-    if ("meta".equals(options.command)) {
+    if ("version".equals(options.command)) {
+      PrintVersion.main(conf, options.commandArgs);
+    } else if ("meta".equals(options.command)) {
       FileDump.main(conf, options.commandArgs);
     } else if ("data".equals(options.command)) {
       PrintData.main(conf, options.commandArgs);
