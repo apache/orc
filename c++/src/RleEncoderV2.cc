@@ -302,14 +302,16 @@ void RleEncoderV2::preparePatchedBlob(EncodingOption& option) {
 }
 
 void RleEncoderV2::determineEncoding(EncodingOption& option) {
-    // we need to compute zigzag values for DIRECT encoding if we decide to
-    // break early for delta overflows or for shorter runs
-    computeZigZagLiterals(option);
-
-    option.zzBits100p = percentileBits(zigzagLiterals, 0, numLiterals, 1.0);
+    // We need to compute zigzag values for DIRECT and PATCHED_BASE encodings,
+    // but not for SHORT_REPEAT or DELTA. So we only perform the zigzag
+    // computation when it's determined to be necessary.
 
     // not a big win for shorter runs to determine encoding
     if (numLiterals <= MIN_REPEAT) {
+        // we need to compute zigzag values for DIRECT encoding if we decide to
+        // break early for delta overflows or for shorter runs
+        computeZigZagLiterals(option);
+        option.zzBits100p = percentileBits(zigzagLiterals, 0, numLiterals, 1.0);
         option.encoding = DIRECT;
         return;
     }
@@ -349,6 +351,8 @@ void RleEncoderV2::determineEncoding(EncodingOption& option) {
     // PATCHED_BASE condition as encoding using DIRECT is faster and has less
     // overhead than PATCHED_BASE
     if (!isSafeSubtract(max, option.min)) {
+        computeZigZagLiterals(option);
+        option.zzBits100p = percentileBits(zigzagLiterals, 0, numLiterals, 1.0);
         option.encoding = DIRECT;
         return;
     }
@@ -404,6 +408,8 @@ void RleEncoderV2::determineEncoding(EncodingOption& option) {
     // beyond a threshold then we need to patch the values. if the variation
     // is not significant then we can use direct encoding
 
+    computeZigZagLiterals(option);
+    option.zzBits100p = percentileBits(zigzagLiterals, 0, numLiterals, 1.0);
     option.zzBits90p = percentileBits(zigzagLiterals, 0, numLiterals, 0.9, true);
     uint32_t diffBitsLH = option.zzBits100p - option.zzBits90p;
 
