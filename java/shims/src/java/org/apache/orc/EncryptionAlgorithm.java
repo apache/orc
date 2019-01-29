@@ -60,7 +60,7 @@ public enum EncryptionAlgorithm {
     } catch (NoSuchAlgorithmException e) {
       throw new IllegalArgumentException("Bad algorithm " + algorithm);
     } catch (NoSuchPaddingException e) {
-      throw new IllegalArgumentException("Bad padding " + algorithm);
+      throw new IllegalArgumentException("Bad padding " + mode);
     }
   }
 
