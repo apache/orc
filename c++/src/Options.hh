@@ -129,6 +129,7 @@ namespace orc {
     uint64_t dataLength;
     bool throwOnHive11DecimalOverflow;
     int32_t forcedScaleOnHive11Decimal;
+    bool enableLazyDecoding;
 
     RowReaderOptionsPrivate() {
       selection = ColumnSelection_NONE;
@@ -136,6 +137,7 @@ namespace orc {
       dataLength = std::numeric_limits<uint64_t>::max();
       throwOnHive11DecimalOverflow = true;
       forcedScaleOnHive11Decimal = 6;
+      enableLazyDecoding = false;
     }
   };
 
@@ -241,6 +243,15 @@ namespace orc {
 
   int32_t RowReaderOptions::getForcedScaleOnHive11Decimal() const {
     return privateBits->forcedScaleOnHive11Decimal;
+  }
+
+  bool RowReaderOptions::getEnableLazyDecoding() const {
+    return privateBits->enableLazyDecoding;
+  }
+
+  RowReaderOptions& RowReaderOptions::setEnableLazyDecoding(bool enable) {
+    privateBits->enableLazyDecoding = enable;
+    return *this;
   }
 }
 

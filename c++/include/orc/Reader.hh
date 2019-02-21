@@ -181,6 +181,16 @@ namespace orc {
     RowReaderOptions& forcedScaleOnHive11Decimal(int32_t forcedScale);
 
     /**
+     * Set enable encoding block mode.
+     */
+    RowReaderOptions& setEnableLazyDecoding(bool enable);
+
+    /**
+     * Should enable encoding block mode
+     */
+    bool getEnableLazyDecoding() const;
+
+    /**
      * Were the field ids set?
      */
     bool getIndexesSet() const;

@@ -136,6 +136,7 @@ namespace orc {
     proto::StripeFooter currentStripeFooter;
     std::unique_ptr<ColumnReader> reader;
 
+    bool enableEncodedBlock;
     // internal methods
     void startNextStripe();
 

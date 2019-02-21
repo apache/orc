@@ -229,7 +229,8 @@ namespace orc {
 
   std::unique_ptr<ColumnVectorBatch>
   TypeImpl::createRowBatch(uint64_t capacity,
-                           MemoryPool& memoryPool) const {
+                           MemoryPool& memoryPool,
+                           bool encoded) const {
     switch (static_cast<int64_t>(kind)) {
     case BOOLEAN:
     case BYTE:
@@ -249,7 +250,10 @@ namespace orc {
     case BINARY:
     case CHAR:
     case VARCHAR:
-      return std::unique_ptr<ColumnVectorBatch>
+      return encoded ?
+      std::unique_ptr<ColumnVectorBatch>
+        (new EncodedStringVectorBatch(capacity, memoryPool))
+      : std::unique_ptr<ColumnVectorBatch>
         (new StringVectorBatch(capacity, memoryPool));
 
     case TIMESTAMP:

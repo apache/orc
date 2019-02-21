@@ -51,6 +51,8 @@ namespace orc {
     // whether there are any null values
     bool hasNulls;
 
+    bool isEncoded;
+
     // custom memory pool
     MemoryPool& memoryPool;
 
@@ -111,6 +113,36 @@ namespace orc {
     DataBuffer<char*> data;
     // the length of each string
     DataBuffer<int64_t> length;
+  };
+
+  struct StringDictionary {
+    StringDictionary(MemoryPool& pool);
+    DataBuffer<char> dictionaryBlob;
+
+    // Offset for each dictionary key entry.
+    DataBuffer<int64_t> dictionaryOffset;
+
+    void getValueByIndex(int64_t index, char*& valPtr, int64_t& length)
+    {
+      if (index < 0 || static_cast<uint64_t>(index) >= dictionaryOffset.size())
+      {
+        throw std::out_of_range("index out of range.");
+      }
+
+      int64_t* offsetPtr = dictionaryOffset.data();
+
+      valPtr = dictionaryBlob.data() + offsetPtr[index];
+      length = offsetPtr[index + 1] - offsetPtr[index];
+    }
+  };
+
+  struct EncodedStringVectorBatch : public ColumnVectorBatch{
+    EncodedStringVectorBatch(uint64_t capacity, MemoryPool& pool);
+    virtual ~EncodedStringVectorBatch();
+    std::string toString() const;
+    std::shared_ptr<StringDictionary> dictionary;
+
+    DataBuffer<int64_t> index;
   };
 
   struct StructVectorBatch: public ColumnVectorBatch {

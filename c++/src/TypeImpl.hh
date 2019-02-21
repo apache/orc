@@ -85,7 +85,8 @@ namespace orc {
     Type* addUnionChild(std::unique_ptr<Type> fieldType) override;
 
     std::unique_ptr<ColumnVectorBatch> createRowBatch(uint64_t size,
-                                                      MemoryPool& memoryPool
+                                                      MemoryPool& memoryPool,
+                                                      bool encoded = false
                                                       ) const override;
 
     /**

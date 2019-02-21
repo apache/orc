@@ -479,10 +479,8 @@ namespace orc {
 
   class StringDictionaryColumnReader: public ColumnReader {
   private:
-    DataBuffer<char> dictionaryBlob;
-    DataBuffer<int64_t> dictionaryOffset;
+    std::shared_ptr<StringDictionary> dictionary;
     std::unique_ptr<RleDecoder> rle;
-    uint64_t dictionaryCount;
 
   public:
     StringDictionaryColumnReader(const Type& type, StripeStreams& stipe);
@@ -493,46 +491,44 @@ namespace orc {
     void next(ColumnVectorBatch& rowBatch,
               uint64_t numValues,
               char *notNull) override;
+
+    void nextEncoded(ColumnVectorBatch& rowBatch,
+                      uint64_t numValues,
+                      char* notNull) override;
   };
 
   StringDictionaryColumnReader::StringDictionaryColumnReader
              (const Type& type,
               StripeStreams& stripe
               ): ColumnReader(type, stripe),
-                 dictionaryBlob(stripe.getMemoryPool()),
-                 dictionaryOffset(stripe.getMemoryPool()) {
+                 dictionary(new StringDictionary(stripe.getMemoryPool())) {
     RleVersion rleVersion = convertRleVersion(stripe.getEncoding(columnId)
                                                 .kind());
-    dictionaryCount = stripe.getEncoding(columnId).dictionarysize();
-    std::unique_ptr<SeekableInputStream> stream =
-        stripe.getStream(columnId, proto::Stream_Kind_DATA, true);
-    if (stream == nullptr)
-      throw ParseError("DATA stream not found in StringDictionaryColumn");
-    rle = createRleDecoder(std::move(stream), false, rleVersion, memoryPool);
-    stream = stripe.getStream(columnId, proto::Stream_Kind_LENGTH, false);
-    if (dictionaryCount > 0 && stream == nullptr) {
-      throw ParseError("LENGTH stream not found in StringDictionaryColumn");
-    }
+    uint32_t dictSize = stripe.getEncoding(columnId).dictionarysize();
+    rle = createRleDecoder(stripe.getStream(columnId,
+                                            proto::Stream_Kind_DATA,
+                                            true),
+                           false, rleVersion, memoryPool);
     std::unique_ptr<RleDecoder> lengthDecoder =
-        createRleDecoder(std::move(stream), false, rleVersion, memoryPool);
-    dictionaryOffset.resize(dictionaryCount+1);
-    int64_t* lengthArray = dictionaryOffset.data();
-    lengthDecoder->next(lengthArray + 1, dictionaryCount, nullptr);
+            createRleDecoder(stripe.getStream(columnId,
+                                        proto::Stream_Kind_LENGTH,
+                                        false),
+                       false, rleVersion, memoryPool);
+    dictionary->dictionaryOffset.resize(dictSize + 1);
+    int64_t* lengthArray = dictionary->dictionaryOffset.data();
+    lengthDecoder->next(lengthArray + 1, dictSize, nullptr);
     lengthArray[0] = 0;
-    for (uint64_t i = 1; i < dictionaryCount + 1; ++i) {
-      if (lengthArray[i] < 0)
-        throw ParseError("Negative dictionary entry length");
+    for(uint32_t i = 1; i < dictSize + 1; ++i) {
       lengthArray[i] += lengthArray[i - 1];
     }
-    int64_t blobSize = lengthArray[dictionaryCount];
-    dictionaryBlob.resize(static_cast<uint64_t>(blobSize));
+    dictionary->dictionaryBlob.resize(
+                                static_cast<uint64_t>(lengthArray[dictSize]));
     std::unique_ptr<SeekableInputStream> blobStream =
-        stripe.getStream(columnId, proto::Stream_Kind_DICTIONARY_DATA, false);
-    if (blobSize > 0 && blobStream == nullptr) {
-      throw ParseError(
-          "DICTIONARY_DATA stream not found in StringDictionaryColumn");
-    }
-    readFully(dictionaryBlob.data(), blobSize, blobStream.get());
+      stripe.getStream(columnId, proto::Stream_Kind_DICTIONARY_DATA, false);
+    readFully(
+              dictionary->dictionaryBlob.data(),
+              lengthArray[dictSize],
+              blobStream.get());
   }
 
   StringDictionaryColumnReader::~StringDictionaryColumnReader() {
@@ -552,16 +548,17 @@ namespace orc {
     // update the notNull from the parent class
     notNull = rowBatch.hasNulls ? rowBatch.notNull.data() : nullptr;
     StringVectorBatch& byteBatch = dynamic_cast<StringVectorBatch&>(rowBatch);
-    char *blob = dictionaryBlob.data();
-    int64_t *dictionaryOffsets = dictionaryOffset.data();
+    char *blob = dictionary->dictionaryBlob.data();
+    int64_t *dictionaryOffsets = dictionary->dictionaryOffset.data();
     char **outputStarts = byteBatch.data.data();
     int64_t *outputLengths = byteBatch.length.data();
     rle->next(outputLengths, numValues, notNull);
+    uint64_t dictionaryCount = dictionary->dictionaryOffset.size() - 1;
     if (notNull) {
       for(uint64_t i=0; i < numValues; ++i) {
         if (notNull[i]) {
           int64_t entry = outputLengths[i];
-          if (entry < 0 || static_cast<uint64_t>(entry) >= dictionaryCount) {
+          if (entry < 0 || static_cast<uint64_t>(entry) >= dictionaryCount ) {
             throw ParseError("Entry index out of range in StringDictionaryColumn");
           }
           outputStarts[i] = blob + dictionaryOffsets[entry];
@@ -580,6 +577,20 @@ namespace orc {
           dictionaryOffsets[entry];
       }
     }
+  }
+
+  void StringDictionaryColumnReader::nextEncoded(ColumnVectorBatch& rowBatch,
+                                                  uint64_t numValues,
+                                                  char* notNull) {
+    ColumnReader::next(rowBatch, numValues, notNull);
+    notNull = rowBatch.hasNulls ? rowBatch.notNull.data() : nullptr;
+    rowBatch.isEncoded = true;
+
+    EncodedStringVectorBatch& batch = dynamic_cast<EncodedStringVectorBatch&>(rowBatch);
+    batch.dictionary = this->dictionary;
+
+    // Length buffer is reused to save dictionary entry ids
+    rle->next(batch.index.data(), numValues, notNull);
   }
 
   class StringDirectColumnReader: public ColumnReader {
@@ -785,6 +796,16 @@ namespace orc {
     void next(ColumnVectorBatch& rowBatch,
               uint64_t numValues,
               char *notNull) override;
+
+    void nextEncoded(ColumnVectorBatch& rowBatch,
+              uint64_t numValues,
+              char *notNull) override;
+
+  private:
+    template<bool encoded>
+    void nextInternal(ColumnVectorBatch& rowBatch,
+                      uint64_t numValues,
+                      char *notNull);
   };
 
   StructColumnReader::StructColumnReader(const Type& type,
@@ -826,15 +847,34 @@ namespace orc {
   void StructColumnReader::next(ColumnVectorBatch& rowBatch,
                                 uint64_t numValues,
                                 char *notNull) {
+    nextInternal<false>(rowBatch, numValues, notNull);
+  }
+
+  void StructColumnReader::nextEncoded(ColumnVectorBatch& rowBatch,
+                                uint64_t numValues,
+                                char *notNull) {
+    nextInternal<true>(rowBatch, numValues, notNull);
+  }
+
+  template<bool encoded>
+  void StructColumnReader::nextInternal(ColumnVectorBatch& rowBatch,
+                                uint64_t numValues,
+                                char *notNull) {
     ColumnReader::next(rowBatch, numValues, notNull);
     uint64_t i=0;
     notNull = rowBatch.hasNulls? rowBatch.notNull.data() : nullptr;
     for(std::vector<ColumnReader*>::iterator ptr=children.begin();
         ptr != children.end(); ++ptr, ++i) {
-      (*ptr)->next(*(dynamic_cast<StructVectorBatch&>(rowBatch).fields[i]),
-                   numValues, notNull);
+      if (encoded) {
+        (*ptr)->nextEncoded(*(dynamic_cast<StructVectorBatch&>(rowBatch).fields[i]),
+                    numValues, notNull);
+      } else {
+        (*ptr)->next(*(dynamic_cast<StructVectorBatch&>(rowBatch).fields[i]),
+                    numValues, notNull);
+      }
     }
   }
+
 
   class ListColumnReader: public ColumnReader {
   private:
@@ -850,6 +890,16 @@ namespace orc {
     void next(ColumnVectorBatch& rowBatch,
               uint64_t numValues,
               char *notNull) override;
+
+    void nextEncoded(ColumnVectorBatch& rowBatch,
+              uint64_t numValues,
+              char *notNull) override;
+
+  private:
+    template<bool encoded>
+    void nextInternal(ColumnVectorBatch& rowBatch,
+                      uint64_t numValues,
+                      char *notNull);
   };
 
   ListColumnReader::ListColumnReader(const Type& type,
@@ -897,6 +947,19 @@ namespace orc {
   }
 
   void ListColumnReader::next(ColumnVectorBatch& rowBatch,
+                                      uint64_t numValues,
+                                      char *notNull) {
+    nextInternal<false>(rowBatch, numValues, notNull);
+  }
+
+  void ListColumnReader::nextEncoded(ColumnVectorBatch& rowBatch,
+                                      uint64_t numValues,
+                                      char *notNull) {
+    nextInternal<true>(rowBatch, numValues, notNull);
+  }
+
+  template<bool encoded>
+  void ListColumnReader::nextInternal(ColumnVectorBatch& rowBatch,
                               uint64_t numValues,
                               char *notNull) {
     ColumnReader::next(rowBatch, numValues, notNull);
@@ -925,7 +988,11 @@ namespace orc {
     offsets[numValues] = static_cast<int64_t>(totalChildren);
     ColumnReader *childReader = child.get();
     if (childReader) {
-      childReader->next(*(listBatch.elements.get()), totalChildren, nullptr);
+      if (encoded) {
+        childReader->nextEncoded(*(listBatch.elements.get()), totalChildren, nullptr);
+      } else {
+        childReader->next(*(listBatch.elements.get()), totalChildren, nullptr);
+      }
     }
   }
 
@@ -944,6 +1011,16 @@ namespace orc {
     void next(ColumnVectorBatch& rowBatch,
               uint64_t numValues,
               char *notNull) override;
+
+    void nextEncoded(ColumnVectorBatch& rowBatch,
+                     uint64_t numValues,
+                     char *notNull) override;
+
+  private:
+    template<bool encoded>
+    void nextInternal(ColumnVectorBatch& rowBatch,
+                      uint64_t numValues,
+                      char *notNull);
   };
 
   MapColumnReader::MapColumnReader(const Type& type,
@@ -1002,6 +1079,21 @@ namespace orc {
 
   void MapColumnReader::next(ColumnVectorBatch& rowBatch,
                              uint64_t numValues,
+                             char *notNull)
+  {
+    nextInternal<false>(rowBatch, numValues, notNull);
+  }
+
+  void MapColumnReader::nextEncoded(ColumnVectorBatch& rowBatch,
+                             uint64_t numValues,
+                             char *notNull)
+  {
+    nextInternal<true>(rowBatch, numValues, notNull);
+  }
+
+  template<bool encoded>
+  void MapColumnReader::nextInternal(ColumnVectorBatch& rowBatch,
+                             uint64_t numValues,
                              char *notNull) {
     ColumnReader::next(rowBatch, numValues, notNull);
     MapVectorBatch &mapBatch = dynamic_cast<MapVectorBatch&>(rowBatch);
@@ -1029,11 +1121,19 @@ namespace orc {
     offsets[numValues] = static_cast<int64_t>(totalChildren);
     ColumnReader *rawKeyReader = keyReader.get();
     if (rawKeyReader) {
-      rawKeyReader->next(*(mapBatch.keys.get()), totalChildren, nullptr);
+      if (encoded) {
+        rawKeyReader->nextEncoded(*(mapBatch.keys.get()), totalChildren, nullptr);
+      } else {
+        rawKeyReader->next(*(mapBatch.keys.get()), totalChildren, nullptr);
+      }
     }
     ColumnReader *rawElementReader = elementReader.get();
     if (rawElementReader) {
-      rawElementReader->next(*(mapBatch.elements.get()), totalChildren, nullptr);
+      if (encoded) {
+        rawElementReader->nextEncoded(*(mapBatch.elements.get()), totalChildren, nullptr);
+      } else {
+        rawElementReader->next(*(mapBatch.elements.get()), totalChildren, nullptr);
+      }
     }
   }
 
@@ -1053,6 +1153,16 @@ namespace orc {
     void next(ColumnVectorBatch& rowBatch,
               uint64_t numValues,
               char *notNull) override;
+
+    void nextEncoded(ColumnVectorBatch& rowBatch,
+                     uint64_t numValues,
+                     char *notNull) override;
+
+  private:
+    template<bool encoded>
+    void nextInternal(ColumnVectorBatch& rowBatch,
+                      uint64_t numValues,
+                      char *notNull);
   };
 
   UnionColumnReader::UnionColumnReader(const Type& type,
@@ -1108,6 +1218,19 @@ namespace orc {
   }
 
   void UnionColumnReader::next(ColumnVectorBatch& rowBatch,
+                              uint64_t numValues,
+                              char *notNull) {
+    nextInternal<false>(rowBatch, numValues, notNull);
+  }
+
+  void UnionColumnReader::nextEncoded(ColumnVectorBatch& rowBatch,
+                              uint64_t numValues,
+                              char *notNull) {
+    nextInternal<true>(rowBatch, numValues, notNull);
+  }
+
+  template<bool encoded>
+  void UnionColumnReader::nextInternal(ColumnVectorBatch& rowBatch,
                                uint64_t numValues,
                                char *notNull) {
     ColumnReader::next(rowBatch, numValues, notNull);
@@ -1135,8 +1258,13 @@ namespace orc {
     // read the right number of each child column
     for(size_t i=0; i < numChildren; ++i) {
       if (childrenReader[i] != nullptr) {
-        childrenReader[i]->next(*(unionBatch.children[i]),
-                                static_cast<uint64_t>(counts[i]), nullptr);
+        if (encoded) {
+          childrenReader[i]->nextEncoded(*(unionBatch.children[i]),
+                                  static_cast<uint64_t>(counts[i]), nullptr);
+        } else {
+          childrenReader[i]->next(*(unionBatch.children[i]),
+                                  static_cast<uint64_t>(counts[i]), nullptr);
+        }
       }
     }
   }
