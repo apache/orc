@@ -19,6 +19,8 @@
 #include "Adaptor.hh"
 #include "ByteRLE.hh"
 #include "Compression.hh"
+#include "MemoryInputStream.hh"
+#include "MemoryOutputStream.hh"
 #include "OrcTest.hh"
 #include "wrap/gtest-wrapper.h"
 
@@ -1423,29 +1425,41 @@ TEST(BooleanRle, seekBoolAndByteRLE) {
   }
 
   TEST(BooleanRle, seekAndSkipToEnd) {
-    const unsigned char buffer[] = {
-      0x26, 0x00, 0x00, 0x28, 0xb5, 0x2f, 0xfd, 0x00,
-      0x48, 0x55, 0x00, 0x00, 0x20, 0x7f, 0xff, 0x03,
-      0xff, 0x01, 0x00, 0x39, 0x0e, 0x0b
-    };
+    // in total 1024 boolean values which are all true
+    constexpr uint64_t numValues = 1024;
+    char data[numValues];
+    memset(data, 0x01, sizeof(data));
 
-    std::unique_ptr<SeekableInputStream> stream =
+    // create BooleanRleEncoder and encode all 1024 values
+    constexpr uint64_t blockSize = 1024, capacity = 1024 * 1024;
+    MemoryOutputStream memStream(capacity);
+    std::unique_ptr<ByteRleEncoder> encoder = createBooleanRleEncoder
+      (createCompressor(CompressionKind_ZSTD,
+                        &memStream,
+                        CompressionStrategy_COMPRESSION,
+                        capacity,
+                        blockSize,
+                        *getDefaultPool()));
+    encoder->add(data, numValues, nullptr);
+    encoder->flush();
+
+    // create BooleanRleDecoder and prepare decoding
+    std::unique_ptr<ByteRleDecoder> decoder = createBooleanRleDecoder(
       createDecompressor(CompressionKind_ZSTD,
                          std::unique_ptr<SeekableInputStream>(
-                           new SeekableArrayInputStream(buffer,
-                                                        ARRAY_SIZE(buffer))),
-                         1024 * 1024,
-                         *getDefaultPool());
-    std::unique_ptr<ByteRleDecoder> rle =
-      createBooleanRleDecoder(std::move(stream));
+                           new SeekableArrayInputStream(memStream.getData(),
+                                                        memStream.getLength())),
+                         blockSize,
+                         *getDefaultPool()));
 
-    // seek to location of last 1995 boolean values
-    std::list<uint64_t> positions = {0, 32, 16, 5};
-    PositionProvider location(positions);
-    rle->seek(location);
+    // before fix of ORC-470, skip all remaining boolean values will get an
+    // exception since BooleanRLEDecoder still tries to read one last byte from
+    // underlying input stream even if the requested number of bits are multiple
+    // of 8 and then it reads over the end of stream.
+    decoder->skip(numValues);
 
-    // skip should expect no exception
-    rle->skip(1995);
+    // as we have reached the end of stream, try to read any data will get exception
+    EXPECT_ANY_THROW(decoder->next(data, 1, nullptr));
   }
 
 }  // namespace orc
