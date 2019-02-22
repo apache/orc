@@ -880,9 +880,9 @@ number of nanoseconds.
 
 Because the number of nanoseconds often has a large number of trailing
 zeros, the number has trailing decimal zero digits removed and the
-last three bits are used to record how many zeros were removed. Thus
-1000 nanoseconds would be serialized as 0x0b and 100000 would be
-serialized as 0x0d.
+last three bits are used to record how many zeros were removed. if the
+trailing zeros are more than 2. Thus 1000 nanoseconds would be
+serialized as 0x0a and 100000 would be serialized as 0x0c.
 
 Encoding      | Stream Kind     | Optional | Contents
 :------------ | :-------------- | :------- | :-------
