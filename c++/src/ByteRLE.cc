@@ -537,8 +537,12 @@ namespace orc {
       numValues -= remainingBits;
       uint64_t bytesSkipped = numValues / 8;
       ByteRleDecoderImpl::skip(bytesSkipped);
-      ByteRleDecoderImpl::next(&lastByte, 1, nullptr);
-      remainingBits = 8 - (numValues % 8);
+      if (numValues % 8 != 0) {
+        ByteRleDecoderImpl::next(&lastByte, 1, nullptr);
+        remainingBits = 8 - (numValues % 8);
+      } else {
+        remainingBits = 0;
+      }
     }
   }
 

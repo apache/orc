@@ -18,6 +18,7 @@
 
 #include "Adaptor.hh"
 #include "ByteRLE.hh"
+#include "Compression.hh"
 #include "OrcTest.hh"
 #include "wrap/gtest-wrapper.h"
 
@@ -1420,4 +1421,31 @@ TEST(BooleanRle, seekBoolAndByteRLE) {
   rle->next(value, 1, nullptr);
   EXPECT_EQ(num[45], value[0]);
   }
+
+  TEST(BooleanRle, seekAndSkipToEnd) {
+    const unsigned char buffer[] = {
+      0x26, 0x00, 0x00, 0x28, 0xb5, 0x2f, 0xfd, 0x00,
+      0x48, 0x55, 0x00, 0x00, 0x20, 0x7f, 0xff, 0x03,
+      0xff, 0x01, 0x00, 0x39, 0x0e, 0x0b
+    };
+
+    std::unique_ptr<SeekableInputStream> stream =
+      createDecompressor(CompressionKind_ZSTD,
+                         std::unique_ptr<SeekableInputStream>(
+                           new SeekableArrayInputStream(buffer,
+                                                        ARRAY_SIZE(buffer))),
+                         1024 * 1024,
+                         *getDefaultPool());
+    std::unique_ptr<ByteRleDecoder> rle =
+      createBooleanRleDecoder(std::move(stream));
+
+    // seek to location of last 1995 boolean values
+    std::list<uint64_t> positions = {0, 32, 16, 5};
+    PositionProvider location(positions);
+    rle->seek(location);
+
+    // skip should expect no exception
+    rle->skip(1995);
+  }
+
 }  // namespace orc
