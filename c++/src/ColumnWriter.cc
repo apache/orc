@@ -840,7 +840,7 @@ namespace orc {
   /**
    * Implementation of increasing sorted string dictionary
    */
-  class StringDictionaryImpl {
+  class SortedStringDictionary {
   public:
     struct DictEntry {
       DictEntry(const char * str, size_t len):data(str),length(len) {}
@@ -848,7 +848,7 @@ namespace orc {
       size_t length;
     };
 
-    StringDictionaryImpl():totalLength(0) {}
+    SortedStringDictionary():totalLength(0) {}
 
     // insert a new string into dictionary, return its insertion order
     size_t insert(const char * data, size_t len);
@@ -895,7 +895,7 @@ namespace orc {
   };
 
   // insert a new string into dictionary, return its insertion order
-  size_t StringDictionaryImpl::insert(const char * str, size_t len) {
+  size_t SortedStringDictionary::insert(const char * str, size_t len) {
     auto ret = dict.insert({DictEntry(str, len), dict.size()});
     if (ret.second) {
       // make a copy to internal storage
@@ -910,7 +910,7 @@ namespace orc {
   }
 
   // write dictionary data & length to output buffer
-  void StringDictionaryImpl::flush(AppendOnlyBufferedStream * dataStream,
+  void SortedStringDictionary::flush(AppendOnlyBufferedStream * dataStream,
                                RleEncoder * lengthEncoder) const {
     for (auto it = dict.cbegin(); it != dict.cend(); ++it) {
       dataStream->write(it->first.data, it->first.length);
@@ -928,7 +928,7 @@ namespace orc {
    * the indexes from insertion order to dictionary value order for final
    * output.
    */
-  void StringDictionaryImpl::reorder(std::vector<int64_t>& idxBuffer) const {
+  void SortedStringDictionary::reorder(std::vector<int64_t>& idxBuffer) const {
     // iterate the dictionary to get mapping from insertion order to value order
     std::vector<size_t> mapping(dict.size());
     size_t dictIdx = 0;
@@ -944,7 +944,7 @@ namespace orc {
   }
 
   // get dict entries in insertion order
-  void StringDictionaryImpl::getEntriesInInsertionOrder(
+  void SortedStringDictionary::getEntriesInInsertionOrder(
                     std::vector<const DictEntry *>& entries) const {
     entries.resize(dict.size());
     for (auto it = dict.cbegin(); it != dict.cend(); ++it) {
@@ -953,16 +953,16 @@ namespace orc {
   }
 
   // return count of entries
-  size_t StringDictionaryImpl::size() const {
+  size_t SortedStringDictionary::size() const {
     return dict.size();
   }
 
   // return total length of strings in the dictioanry
-  uint64_t StringDictionaryImpl::length() const {
+  uint64_t SortedStringDictionary::length() const {
     return totalLength;
   }
 
-  void StringDictionaryImpl::clear()  {
+  void SortedStringDictionary::clear()  {
     totalLength = 0;
     data.clear();
     dict.clear();
@@ -1021,7 +1021,7 @@ namespace orc {
     /**
      * dictionary related variables
      */
-    StringDictionaryImpl dictionary;
+    SortedStringDictionary dictionary;
     // whether or not dictionary checking is done
     bool doneDictionaryCheck;
     // whether or not it should be used
@@ -1317,11 +1317,11 @@ namespace orc {
     }
 
     // get dictionary entries in insertion order
-    std::vector<const StringDictionaryImpl::DictEntry *> entries;
+    std::vector<const SortedStringDictionary::DictEntry *> entries;
     dictionary.getEntriesInInsertionOrder(entries);
 
     // store each length of the data into a vector
-    const StringDictionaryImpl::DictEntry * dictEntry = nullptr;
+    const SortedStringDictionary::DictEntry * dictEntry = nullptr;
     for (uint64_t i = 0; i != dictionary.idxInDictBuffer.size(); ++i) {
       // write one row data in direct encoding
       dictEntry = entries[static_cast<size_t>(dictionary.idxInDictBuffer[i])];
