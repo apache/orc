@@ -19,7 +19,7 @@ Daniel Dai              | daijy        | Committer
 Dongjoon Hyun           | dongjoon     | Committer
 Deepak Majeti           | mdeepak      | PMC
 Eugene Koifman          | ekoifman     | PMC
-Gang Wu                 | gangwu       | Committer
+Gang Wu                 | gangwu       | PMC
 Alan Gates              | gates        | PMC
 Gopal Vijayaraghavan    | gopalv       | PMC
 Gunther Hagleitner      | gunther      | Committer
