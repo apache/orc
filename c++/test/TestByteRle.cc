@@ -18,6 +18,9 @@
 
 #include "Adaptor.hh"
 #include "ByteRLE.hh"
+#include "Compression.hh"
+#include "MemoryInputStream.hh"
+#include "MemoryOutputStream.hh"
 #include "OrcTest.hh"
 #include "wrap/gtest-wrapper.h"
 
@@ -1420,4 +1423,43 @@ TEST(BooleanRle, seekBoolAndByteRLE) {
   rle->next(value, 1, nullptr);
   EXPECT_EQ(num[45], value[0]);
   }
+
+  TEST(BooleanRle, seekAndSkipToEnd) {
+    // in total 1024 boolean values which are all true
+    constexpr uint64_t numValues = 1024;
+    char data[numValues];
+    memset(data, 0x01, sizeof(data));
+
+    // create BooleanRleEncoder and encode all 1024 values
+    constexpr uint64_t blockSize = 1024, capacity = 1024 * 1024;
+    MemoryOutputStream memStream(capacity);
+    std::unique_ptr<ByteRleEncoder> encoder = createBooleanRleEncoder
+      (createCompressor(CompressionKind_ZSTD,
+                        &memStream,
+                        CompressionStrategy_COMPRESSION,
+                        capacity,
+                        blockSize,
+                        *getDefaultPool()));
+    encoder->add(data, numValues, nullptr);
+    encoder->flush();
+
+    // create BooleanRleDecoder and prepare decoding
+    std::unique_ptr<ByteRleDecoder> decoder = createBooleanRleDecoder(
+      createDecompressor(CompressionKind_ZSTD,
+                         std::unique_ptr<SeekableInputStream>(
+                           new SeekableArrayInputStream(memStream.getData(),
+                                                        memStream.getLength())),
+                         blockSize,
+                         *getDefaultPool()));
+
+    // before fix of ORC-470, skip all remaining boolean values will get an
+    // exception since BooleanRLEDecoder still tries to read one last byte from
+    // underlying input stream even if the requested number of bits are multiple
+    // of 8 and then it reads over the end of stream.
+    decoder->skip(numValues);
+
+    // as we have reached the end of stream, try to read any data will get exception
+    EXPECT_ANY_THROW(decoder->next(data, 1, nullptr));
+  }
+
 }  // namespace orc
