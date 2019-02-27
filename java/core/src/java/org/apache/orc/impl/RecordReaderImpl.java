@@ -17,7 +17,39 @@
  */
 package org.apache.orc.impl;
 
-import org.apache.orc.CompressionKind;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.common.io.DiskRangeList;
+import org.apache.hadoop.hive.common.io.DiskRangeList.CreateHelper;
+import org.apache.hadoop.hive.common.type.HiveDecimal;
+import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
+import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
+import org.apache.hadoop.hive.ql.io.sarg.SearchArgument.TruthValue;
+import org.apache.hadoop.hive.ql.util.TimestampUtils;
+import org.apache.hadoop.hive.serde2.io.DateWritable;
+import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.orc.BooleanColumnStatistics;
+import org.apache.orc.ColumnStatistics;
+import org.apache.orc.CompressionCodec;
+import org.apache.orc.DataReader;
+import org.apache.orc.DateColumnStatistics;
+import org.apache.orc.DecimalColumnStatistics;
+import org.apache.orc.DoubleColumnStatistics;
+import org.apache.orc.IntegerColumnStatistics;
+import org.apache.orc.OrcConf;
+import org.apache.orc.OrcFile;
+import org.apache.orc.OrcProto;
+import org.apache.orc.Reader;
+import org.apache.orc.RecordReader;
+import org.apache.orc.StringColumnStatistics;
+import org.apache.orc.StripeInformation;
+import org.apache.orc.TimestampColumnStatistics;
+import org.apache.orc.TypeDescription;
+import org.apache.orc.util.BloomFilter;
+import org.apache.orc.util.BloomFilterIO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -29,40 +61,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
-
-import org.apache.orc.OrcFile;
-import org.apache.orc.util.BloomFilter;
-import org.apache.orc.util.BloomFilterIO;
-import org.apache.orc.BooleanColumnStatistics;
-import org.apache.orc.ColumnStatistics;
-import org.apache.orc.CompressionCodec;
-import org.apache.orc.DataReader;
-import org.apache.orc.DateColumnStatistics;
-import org.apache.orc.DecimalColumnStatistics;
-import org.apache.orc.DoubleColumnStatistics;
-import org.apache.orc.IntegerColumnStatistics;
-import org.apache.orc.OrcConf;
-import org.apache.orc.OrcProto;
-import org.apache.orc.Reader;
-import org.apache.orc.RecordReader;
-import org.apache.orc.StringColumnStatistics;
-import org.apache.orc.StripeInformation;
-import org.apache.orc.TimestampColumnStatistics;
-import org.apache.orc.TypeDescription;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.common.io.DiskRangeList;
-import org.apache.hadoop.hive.common.io.DiskRangeList.CreateHelper;
-import org.apache.hadoop.hive.common.type.HiveDecimal;
-import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
-import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
-import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
-import org.apache.hadoop.hive.ql.io.sarg.SearchArgument.TruthValue;
-import org.apache.hadoop.hive.serde2.io.DateWritable;
-import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
-import org.apache.hadoop.hive.ql.util.TimestampUtils;
-import org.apache.hadoop.io.Text;
 
 public class RecordReaderImpl implements RecordReader {
   static final Logger LOG = LoggerFactory.getLogger(RecordReaderImpl.class);
@@ -317,15 +315,24 @@ public class RecordReaderImpl implements RecordReader {
    * @param <T> the type of the comparision
    * @return the location of the point
    */
-  static <T> Location compareToRange(Comparable<T> point, T min, T max) {
+  static <T> Location compareToRange(Comparable<T> point, T min, T max, boolean isLowerBoundSet, boolean isUpperBoundSet) {
+
     int minCompare = point.compareTo(min);
     if (minCompare < 0) {
+      return Location.BEFORE;
+    }
+    /* since min value is truncated when we have compare=0, it means the predicate string is BEFORE the min value*/
+    else if (minCompare == 0 && isLowerBoundSet) {
       return Location.BEFORE;
     } else if (minCompare == 0) {
       return Location.MIN;
     }
     int maxCompare = point.compareTo(max);
     if (maxCompare > 0) {
+      return Location.AFTER;
+    }
+    /* if upperbound is set then location here will be AFTER */
+    else if (maxCompare == 0 && isUpperBoundSet) {
       return Location.AFTER;
     } else if (maxCompare == 0) {
       return Location.MAX;
@@ -340,7 +347,7 @@ public class RecordReaderImpl implements RecordReader {
    * @return the object for the maximum value or null if there isn't one
    */
   static Object getMax(ColumnStatistics index) {
-    return getMax(index, false);
+    return getMax(index, false, null);
   }
 
   /**
@@ -352,13 +359,31 @@ public class RecordReaderImpl implements RecordReader {
    * @param useUTCTimestamp
    * @return the object for the maximum value or null if there isn't one
    */
-  static Object getMax(ColumnStatistics index, boolean useUTCTimestamp) {
+  static Object getMax(ColumnStatistics index, boolean useUTCTimestamp, PredicateLeaf predicate) {
     if (index instanceof IntegerColumnStatistics) {
       return ((IntegerColumnStatistics) index).getMaximum();
     } else if (index instanceof DoubleColumnStatistics) {
       return ((DoubleColumnStatistics) index).getMaximum();
     } else if (index instanceof StringColumnStatistics) {
+
+      /*
+      final boolean isUpperBoundSet = ((StringColumnStatistics) index).getMaximum() == null
+          && ((StringColumnStatistics) index).getUpperBound() != null;
+
+      // if the literal is bigger than the stats we won't be able to properly determine if is in the given stats.
+      if((predicate.getLiteral().toString().getBytes().length > 1024)) {
+        return UNKNOWN_VALUE;
+      }
+      // if the literal is 1024 bytes then check the bounds
+      else if (predicate.getLiteral().toString().getBytes().length == 1024 && isUpperBoundSet) {
+        // We won't be able to correctly check for equality
+        if( (predicate.getOperator() == PredicateLeaf.Operator.EQUALS) || (predicate.getOperator() == PredicateLeaf.Operator.LESS_THAN_EQUALS) ) {
+          return UNKNOWN_VALUE;
+        }
+      }
+      */
       return ((StringColumnStatistics) index).getUpperBound();
+
     } else if (index instanceof DateColumnStatistics) {
       return ((DateColumnStatistics) index).getMaximum();
     } else if (index instanceof DecimalColumnStatistics) {
@@ -387,7 +412,7 @@ public class RecordReaderImpl implements RecordReader {
    * @return the object for the minimum value or null if there isn't one
    */
   static Object getMin(ColumnStatistics index) {
-    return getMin(index, false);
+    return getMin(index, false, null);
   }
 
   /**
@@ -399,13 +424,30 @@ public class RecordReaderImpl implements RecordReader {
    * @param useUTCTimestamp
    * @return the object for the minimum value or null if there isn't one
    */
-  static Object getMin(ColumnStatistics index, boolean useUTCTimestamp) {
+  static Object getMin(ColumnStatistics index, boolean useUTCTimestamp, PredicateLeaf predicate) {
     if (index instanceof IntegerColumnStatistics) {
       return ((IntegerColumnStatistics) index).getMinimum();
     } else if (index instanceof DoubleColumnStatistics) {
       return ((DoubleColumnStatistics) index).getMinimum();
     } else if (index instanceof StringColumnStatistics) {
+      /*
+      final boolean isLowerBoundSet = ((StringColumnStatistics) index).getMinimum() == null
+          && ((StringColumnStatistics) index).getLowerBound() != null;
+
+      // if the literal is bigger than the stats we won't be able to properly determine if is in the given stats.
+      if((predicate.getLiteral().toString().getBytes().length > 1024)) {
+        return UNKNOWN_VALUE;
+      }
+      // if the literal is 1024 bytes then check the bounds
+      else if (predicate.getLiteral().toString().getBytes().length == 1024 && isLowerBoundSet) {
+        // We won't be able to correctly check for equality
+        if( (predicate.getOperator() == PredicateLeaf.Operator.EQUALS) || (predicate.getOperator() == PredicateLeaf.Operator.LESS_THAN_EQUALS) ) {
+          return UNKNOWN_VALUE;
+        }
+      }
+      */
       return ((StringColumnStatistics) index).getLowerBound();
+
     } else if (index instanceof DateColumnStatistics) {
       return ((DateColumnStatistics) index).getMinimum();
     } else if (index instanceof DecimalColumnStatistics) {
@@ -463,6 +505,7 @@ public class RecordReaderImpl implements RecordReader {
    * @return the set of truth values that may be returned for the given
    *   predicate.
    */
+
   static TruthValue evaluatePredicateProto(OrcProto.ColumnStatistics statsProto,
                                            PredicateLeaf predicate,
                                            OrcProto.Stream.Kind kind,
@@ -472,8 +515,8 @@ public class RecordReaderImpl implements RecordReader {
                                            TypeDescription.Category type,
                                            boolean useUTCTimestamp) {
     ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null, statsProto);
-    Object minValue = getMin(cs, useUTCTimestamp);
-    Object maxValue = getMax(cs, useUTCTimestamp);
+    Object minValue = getMin(cs, useUTCTimestamp, predicate);
+    Object maxValue = getMax(cs, useUTCTimestamp, predicate);
     // files written before ORC-135 stores timestamp wrt to local timezone causing issues with PPD.
     // disable PPD for timestamp for all old files
     if (type.equals(TypeDescription.Category.TIMESTAMP)) {
@@ -489,9 +532,20 @@ public class RecordReaderImpl implements RecordReader {
         return TruthValue.YES_NO_NULL;
       }
     }
+
+    boolean isLowerBoundSet = false;
+    boolean isUpperBoundSet = false;
+    if(cs instanceof StringColumnStatistics) {
+      isLowerBoundSet = ((StringColumnStatistics) cs).getMinimum() == null
+          && ((StringColumnStatistics) cs).getLowerBound() != null;
+
+      isUpperBoundSet = ((StringColumnStatistics) cs).getMaximum() == null
+          && ((StringColumnStatistics) cs).getUpperBound() != null;
+    }
+
     return evaluatePredicateRange(predicate, minValue, maxValue, cs.hasNull(),
         BloomFilterIO.deserialize(kind, encoding, writerVersion, type, bloomFilter),
-        useUTCTimestamp);
+        useUTCTimestamp, isLowerBoundSet, isUpperBoundSet);
   }
 
   /**
@@ -524,13 +578,24 @@ public class RecordReaderImpl implements RecordReader {
                                              PredicateLeaf predicate,
                                              BloomFilter bloomFilter,
                                              boolean useUTCTimestamp) {
-    Object minValue = getMin(stats, useUTCTimestamp);
-    Object maxValue = getMax(stats, useUTCTimestamp);
-    return evaluatePredicateRange(predicate, minValue, maxValue, stats.hasNull(), bloomFilter, useUTCTimestamp);
+    Object minValue = getMin(stats, useUTCTimestamp, predicate);
+    Object maxValue = getMax(stats, useUTCTimestamp, predicate);
+
+    boolean isLowerBoundSet = false;
+    boolean isUpperBoundSet = false;
+    if(stats instanceof StringColumnStatistics) {
+      isLowerBoundSet = ((StringColumnStatistics) stats).getMinimum() == null
+          && ((StringColumnStatistics) stats).getLowerBound() != null;
+
+      isUpperBoundSet = ((StringColumnStatistics) stats).getMaximum() == null
+          && ((StringColumnStatistics) stats).getUpperBound() != null;
+    }
+
+    return evaluatePredicateRange(predicate, minValue, maxValue, stats.hasNull(), bloomFilter, useUTCTimestamp, isLowerBoundSet, isUpperBoundSet);
   }
 
   static TruthValue evaluatePredicateRange(PredicateLeaf predicate, Object min,
-      Object max, boolean hasNull, BloomFilter bloomFilter, boolean useUTCTimestamp) {
+      Object max, boolean hasNull, BloomFilter bloomFilter, boolean useUTCTimestamp, boolean isLowerBoundSet, boolean isUpperBoundSet) {
     // if we didn't have any values, everything must have been null
     if (min == null) {
       if (predicate.getOperator() == PredicateLeaf.Operator.IS_NULL) {
@@ -542,6 +607,10 @@ public class RecordReaderImpl implements RecordReader {
       return TruthValue.YES_NO_NULL;
     }
 
+    if(max == UNKNOWN_VALUE) {
+      return TruthValue.YES_NO;
+    }
+
     TruthValue result;
     Object baseObj = predicate.getLiteral();
     // Predicate object and stats objects are converted to the type of the predicate object.
@@ -549,7 +618,7 @@ public class RecordReaderImpl implements RecordReader {
     Object maxValue = getBaseObjectForComparison(predicate.getType(), max);
     Object predObj = getBaseObjectForComparison(predicate.getType(), baseObj);
 
-    result = evaluatePredicateMinMax(predicate, predObj, minValue, maxValue, hasNull);
+    result = evaluatePredicateMinMax(predicate, predObj, minValue, maxValue, hasNull, isLowerBoundSet, isUpperBoundSet);
     if (shouldEvaluateBloomFilter(predicate, result, bloomFilter)) {
       return evaluatePredicateBloomFilter(predicate, predObj, bloomFilter, hasNull, useUTCTimestamp);
     } else {
@@ -576,19 +645,21 @@ public class RecordReaderImpl implements RecordReader {
   private static TruthValue evaluatePredicateMinMax(PredicateLeaf predicate, Object predObj,
       Object minValue,
       Object maxValue,
-      boolean hasNull) {
+      boolean hasNull,
+      boolean isLowerBoundSet,
+      boolean isUpperBoundSet) {
     Location loc;
 
     switch (predicate.getOperator()) {
       case NULL_SAFE_EQUALS:
-        loc = compareToRange((Comparable) predObj, minValue, maxValue);
+        loc = compareToRange((Comparable) predObj, minValue, maxValue, isLowerBoundSet, isUpperBoundSet);
         if (loc == Location.BEFORE || loc == Location.AFTER) {
           return TruthValue.NO;
         } else {
           return TruthValue.YES_NO;
         }
       case EQUALS:
-        loc = compareToRange((Comparable) predObj, minValue, maxValue);
+        loc = compareToRange((Comparable) predObj, minValue, maxValue, isLowerBoundSet, isUpperBoundSet);
         if (minValue.equals(maxValue) && loc == Location.MIN) {
           return hasNull ? TruthValue.YES_NULL : TruthValue.YES;
         } else if (loc == Location.BEFORE || loc == Location.AFTER) {
@@ -597,7 +668,7 @@ public class RecordReaderImpl implements RecordReader {
           return hasNull ? TruthValue.YES_NO_NULL : TruthValue.YES_NO;
         }
       case LESS_THAN:
-        loc = compareToRange((Comparable) predObj, minValue, maxValue);
+        loc = compareToRange((Comparable) predObj, minValue, maxValue, isLowerBoundSet, isUpperBoundSet);
         if (loc == Location.AFTER) {
           return hasNull ? TruthValue.YES_NULL : TruthValue.YES;
         } else if (loc == Location.BEFORE || loc == Location.MIN) {
@@ -606,7 +677,7 @@ public class RecordReaderImpl implements RecordReader {
           return hasNull ? TruthValue.YES_NO_NULL : TruthValue.YES_NO;
         }
       case LESS_THAN_EQUALS:
-        loc = compareToRange((Comparable) predObj, minValue, maxValue);
+        loc = compareToRange((Comparable) predObj, minValue, maxValue, isLowerBoundSet, isUpperBoundSet);
         if (loc == Location.AFTER || loc == Location.MAX) {
           return hasNull ? TruthValue.YES_NULL : TruthValue.YES;
         } else if (loc == Location.BEFORE) {
@@ -620,7 +691,7 @@ public class RecordReaderImpl implements RecordReader {
           // set
           for (Object arg : predicate.getLiteralList()) {
             predObj = getBaseObjectForComparison(predicate.getType(), arg);
-            loc = compareToRange((Comparable) predObj, minValue, maxValue);
+            loc = compareToRange((Comparable) predObj, minValue, maxValue, isLowerBoundSet, isUpperBoundSet);
             if (loc == Location.MIN) {
               return hasNull ? TruthValue.YES_NULL : TruthValue.YES;
             }
@@ -630,7 +701,7 @@ public class RecordReaderImpl implements RecordReader {
           // are all of the values outside of the range?
           for (Object arg : predicate.getLiteralList()) {
             predObj = getBaseObjectForComparison(predicate.getType(), arg);
-            loc = compareToRange((Comparable) predObj, minValue, maxValue);
+            loc = compareToRange((Comparable) predObj, minValue, maxValue, isLowerBoundSet, isUpperBoundSet);
             if (loc == Location.MIN || loc == Location.MIDDLE ||
                 loc == Location.MAX) {
               return hasNull ? TruthValue.YES_NO_NULL : TruthValue.YES_NO;
@@ -645,10 +716,10 @@ public class RecordReaderImpl implements RecordReader {
         }
         Object predObj1 = getBaseObjectForComparison(predicate.getType(), args.get(0));
 
-        loc = compareToRange((Comparable) predObj1, minValue, maxValue);
+        loc = compareToRange((Comparable) predObj1, minValue, maxValue, isLowerBoundSet, isUpperBoundSet);
         if (loc == Location.BEFORE || loc == Location.MIN) {
           Object predObj2 = getBaseObjectForComparison(predicate.getType(), args.get(1));
-          Location loc2 = compareToRange((Comparable) predObj2, minValue, maxValue);
+          Location loc2 = compareToRange((Comparable) predObj2, minValue, maxValue, isLowerBoundSet, isUpperBoundSet);
           if (loc2 == Location.AFTER || loc2 == Location.MAX) {
             return hasNull ? TruthValue.YES_NULL : TruthValue.YES;
           } else if (loc2 == Location.BEFORE) {

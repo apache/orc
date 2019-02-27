@@ -36,6 +36,7 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.text.DateFormat;
@@ -222,61 +223,61 @@ public class TestRecordReaderImpl {
   @Test
   public void testCompareToRangeInt() throws Exception {
     assertEquals(Location.BEFORE,
-      RecordReaderImpl.compareToRange(19L, 20L, 40L));
+      RecordReaderImpl.compareToRange(19L, 20L, 40L, false, false));
     assertEquals(Location.AFTER,
-      RecordReaderImpl.compareToRange(41L, 20L, 40L));
+      RecordReaderImpl.compareToRange(41L, 20L, 40L, false, false));
     assertEquals(Location.MIN,
-        RecordReaderImpl.compareToRange(20L, 20L, 40L));
+        RecordReaderImpl.compareToRange(20L, 20L, 40L, false, false));
     assertEquals(Location.MIDDLE,
-        RecordReaderImpl.compareToRange(21L, 20L, 40L));
+        RecordReaderImpl.compareToRange(21L, 20L, 40L, false, false));
     assertEquals(Location.MAX,
-      RecordReaderImpl.compareToRange(40L, 20L, 40L));
+      RecordReaderImpl.compareToRange(40L, 20L, 40L, false, false));
     assertEquals(Location.BEFORE,
-      RecordReaderImpl.compareToRange(0L, 1L, 1L));
+      RecordReaderImpl.compareToRange(0L, 1L, 1L, false, false));
     assertEquals(Location.MIN,
-      RecordReaderImpl.compareToRange(1L, 1L, 1L));
+      RecordReaderImpl.compareToRange(1L, 1L, 1L, false, false));
     assertEquals(Location.AFTER,
-      RecordReaderImpl.compareToRange(2L, 1L, 1L));
+      RecordReaderImpl.compareToRange(2L, 1L, 1L, false, false));
   }
 
   @Test
   public void testCompareToRangeString() throws Exception {
     assertEquals(Location.BEFORE,
-        RecordReaderImpl.compareToRange("a", "b", "c"));
+        RecordReaderImpl.compareToRange("a", "b", "c", false, false));
     assertEquals(Location.AFTER,
-        RecordReaderImpl.compareToRange("d", "b", "c"));
+        RecordReaderImpl.compareToRange("d", "b", "c", false, false));
     assertEquals(Location.MIN,
-        RecordReaderImpl.compareToRange("b", "b", "c"));
+        RecordReaderImpl.compareToRange("b", "b", "c", false, false));
     assertEquals(Location.MIDDLE,
-        RecordReaderImpl.compareToRange("bb", "b", "c"));
+        RecordReaderImpl.compareToRange("bb", "b", "c", false, false));
     assertEquals(Location.MAX,
-        RecordReaderImpl.compareToRange("c", "b", "c"));
+        RecordReaderImpl.compareToRange("c", "b", "c", false, false));
     assertEquals(Location.BEFORE,
-        RecordReaderImpl.compareToRange("a", "b", "b"));
+        RecordReaderImpl.compareToRange("a", "b", "b", false, false));
     assertEquals(Location.MIN,
-        RecordReaderImpl.compareToRange("b", "b", "b"));
+        RecordReaderImpl.compareToRange("b", "b", "b", false, false));
     assertEquals(Location.AFTER,
-        RecordReaderImpl.compareToRange("c", "b", "b"));
+        RecordReaderImpl.compareToRange("c", "b", "b", false, false));
   }
 
   @Test
   public void testCompareToCharNeedConvert() throws Exception {
     assertEquals(Location.BEFORE,
-      RecordReaderImpl.compareToRange("apple", "hello", "world"));
+      RecordReaderImpl.compareToRange("apple", "hello", "world", false, false));
     assertEquals(Location.AFTER,
-      RecordReaderImpl.compareToRange("zombie", "hello", "world"));
+      RecordReaderImpl.compareToRange("zombie", "hello", "world", false, false));
     assertEquals(Location.MIN,
-        RecordReaderImpl.compareToRange("hello", "hello", "world"));
+        RecordReaderImpl.compareToRange("hello", "hello", "world", false, false));
     assertEquals(Location.MIDDLE,
-        RecordReaderImpl.compareToRange("pilot", "hello", "world"));
+        RecordReaderImpl.compareToRange("pilot", "hello", "world", false, false));
     assertEquals(Location.MAX,
-      RecordReaderImpl.compareToRange("world", "hello", "world"));
+      RecordReaderImpl.compareToRange("world", "hello", "world", false, false));
     assertEquals(Location.BEFORE,
-      RecordReaderImpl.compareToRange("apple", "hello", "hello"));
+      RecordReaderImpl.compareToRange("apple", "hello", "hello", false, false));
     assertEquals(Location.MIN,
-      RecordReaderImpl.compareToRange("hello", "hello", "hello"));
+      RecordReaderImpl.compareToRange("hello", "hello", "hello", false, false));
     assertEquals(Location.AFTER,
-      RecordReaderImpl.compareToRange("zombie", "hello", "hello"));
+      RecordReaderImpl.compareToRange("zombie", "hello", "hello", false, false));
   }
 
   @Test
@@ -339,6 +340,7 @@ public class TestRecordReaderImpl {
     return OrcProto.ColumnStatistics.newBuilder().setDoubleStatistics(dblStats.build()).build();
   }
 
+  //fixme
   private static OrcProto.ColumnStatistics createStringStats(String min, String max,
       boolean hasNull) {
     OrcProto.StringStatistics.Builder strStats = OrcProto.StringStatistics.newBuilder();
@@ -352,22 +354,6 @@ public class TestRecordReaderImpl {
     OrcProto.StringStatistics.Builder strStats = OrcProto.StringStatistics.newBuilder();
     strStats.setMinimum(min);
     strStats.setMaximum(max);
-    return OrcProto.ColumnStatistics.newBuilder().setStringStatistics(strStats.build()).build();
-  }
-
-  /* used for testing, simulate setting of upper and lower bounds */
-  private static OrcProto.ColumnStatistics createStringStatsUpperLowerBounds(String lowerbound, String upperbound) {
-    OrcProto.StringStatistics.Builder strStats = OrcProto.StringStatistics.newBuilder();
-    if(upperbound.length() > 1024) {
-      strStats.setUpperBound(upperbound);
-    } else {
-      strStats.setMaximum(upperbound);
-    }
-    if(lowerbound.length() > 1024) {
-      strStats.setLowerBound(lowerbound);
-    } else {
-      strStats.setMinimum(lowerbound);
-    }
     return OrcProto.ColumnStatistics.newBuilder().setStringStatistics(strStats.build()).build();
   }
 
@@ -1665,26 +1651,6 @@ public class TestRecordReaderImpl {
     bf.addString("str_15");
     assertEquals(TruthValue.YES_NO_NULL, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
   }
-
-  /* Test predicate push down when upper and lower bounds are set */
-  @Test
-  public void testStringBounds() throws Exception {
-    final String inputString = StringUtils.repeat("a", 1100);
-    final String testString  = inputString+"_"+"15";
-
-    PredicateLeaf pred = createPredicateLeaf(
-        PredicateLeaf.Operator.EQUALS, PredicateLeaf.Type.STRING, "x", testString, null);
-    BloomFilter bf = new BloomFilter(10000);
-    for (int i = 20; i < 1000; i++) {
-      bf.addString(inputString+"_"+i);
-    }
-    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null, createStringStatsUpperLowerBounds(inputString+"_"+"10", inputString+"_"+"500"));
-    assertEquals(TruthValue.NO_NULL, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
-
-    bf.addString(testString);
-    assertEquals(TruthValue.YES_NO_NULL, RecordReaderImpl.evaluatePredicate(cs, pred, bf));
-  }
-
 
   @Test
   public void testStringInBloomFilter() throws Exception {
