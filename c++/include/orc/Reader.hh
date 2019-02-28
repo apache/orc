@@ -182,6 +182,9 @@ namespace orc {
 
     /**
      * Set enable encoding block mode.
+     * By enable encoding block mode, Row Reader will not decode
+     * dictionary encoded string vector, but instead return an index array with
+     * reference to corresponding dictionary.
      */
     RowReaderOptions& setEnableLazyDecoding(bool enable);
 

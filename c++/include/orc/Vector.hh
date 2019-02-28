@@ -134,6 +134,11 @@ namespace orc {
     }
   };
 
+  /**
+   * Include a index array with reference to corresponding dictionary.
+   * User first obtain index from index array and retrieve string pointer
+   * and length by calling getValueByIndex() from dictionary.
+   */
   struct EncodedStringVectorBatch : public ColumnVectorBatch {
     EncodedStringVectorBatch(uint64_t capacity, MemoryPool& pool);
     virtual ~EncodedStringVectorBatch();
