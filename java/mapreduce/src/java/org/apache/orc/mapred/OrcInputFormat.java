@@ -90,7 +90,9 @@ public class OrcInputFormat<V extends WritableComparable>
   public static void setSearchArgument(Configuration conf,
                                        SearchArgument sarg,
                                        String[] columnNames) {
-    Output out = new Output(100000);
+    int bufferSize = (int)OrcConf.KRYO_SARG_BUFFER.getLong(conf);
+    int maxBufferSize = (int)OrcConf.KRYO_SARG_MAX_BUFFER.getLong(conf);
+    Output out = new Output(bufferSize, maxBufferSize);
     new Kryo().writeObject(out, sarg);
     OrcConf.KRYO_SARG.setString(conf, Base64.encodeBase64String(out.toBytes()));
     StringBuilder buffer = new StringBuilder();
