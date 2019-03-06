@@ -58,9 +58,10 @@ public class ReaderImpl implements Reader {
 
   private static final int DIRECTORY_SIZE_GUESS = 16 * 1024;
 
-  protected final FileSystem fileSystem;
+  protected FileSystem fileSystem;
   private final long maxLength;
   protected final Path path;
+  protected final OrcFile.ReaderOptions options;
   protected final org.apache.orc.CompressionKind compressionKind;
   protected int bufferSize;
   protected OrcProto.Metadata metadata;
@@ -311,12 +312,8 @@ public class ReaderImpl implements Reader {
    * @param options options for reading
    */
   public ReaderImpl(Path path, OrcFile.ReaderOptions options) throws IOException {
-    FileSystem fs = options.getFilesystem();
-    if (fs == null) {
-      fs = path.getFileSystem(options.getConfiguration());
-    }
-    this.fileSystem = fs;
     this.path = path;
+    this.options = options;
     this.conf = options.getConfiguration();
     this.maxLength = options.getMaxLength();
     this.useUTCTimestamp = options.getUseUTCTimestamp();
@@ -341,7 +338,7 @@ public class ReaderImpl implements Reader {
     } else {
       OrcTail orcTail = options.getOrcTail();
       if (orcTail == null) {
-        tail = extractFileTail(fs, path, options.getMaxLength());
+        tail = extractFileTail(getFileSystem(), path, options.getMaxLength());
         options.orcTail(tail);
       } else {
         checkOrcVersion(path, orcTail.getPostScript());
@@ -363,6 +360,15 @@ public class ReaderImpl implements Reader {
     }
     OrcUtils.isValidTypeTree(this.types, 0);
     this.schema = OrcUtils.convertTypeFromProtobuf(this.types, 0);
+  }
+
+  protected FileSystem getFileSystem() throws IOException {
+    this.fileSystem = options.getFilesystem();
+    if (this.fileSystem == null) {
+      this.fileSystem = path.getFileSystem(options.getConfiguration());
+      options.filesystem(fileSystem);
+    }
+    return this.fileSystem;
   }
 
   /**
