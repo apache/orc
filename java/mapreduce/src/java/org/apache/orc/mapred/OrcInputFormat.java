@@ -51,6 +51,8 @@ import org.apache.orc.TypeDescription;
 public class OrcInputFormat<V extends WritableComparable>
     extends FileInputFormat<NullWritable, V> {
 
+  private final static int KRYO_SARG_MAX_BUFFER = 16777216;
+
   /**
    * Convert a string with a comma separated list of column ids into the
    * array of boolean that match the schemas.
@@ -90,7 +92,8 @@ public class OrcInputFormat<V extends WritableComparable>
   public static void setSearchArgument(Configuration conf,
                                        SearchArgument sarg,
                                        String[] columnNames) {
-    Output out = new Output(100000);
+    int bufferSize = (int)OrcConf.KRYO_SARG_BUFFER.getLong(conf);
+    Output out = new Output(bufferSize, KRYO_SARG_MAX_BUFFER);
     new Kryo().writeObject(out, sarg);
     OrcConf.KRYO_SARG.setString(conf, Base64.encodeBase64String(out.toBytes()));
     StringBuilder buffer = new StringBuilder();
