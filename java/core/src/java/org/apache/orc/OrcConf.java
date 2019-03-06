@@ -138,6 +138,8 @@ public enum OrcConf {
           "being the first column, 1 being the next, and so on. ."),
   KRYO_SARG("orc.kryo.sarg", "orc.kryo.sarg", null,
       "The kryo and base64 encoded SearchArgument for predicate pushdown."),
+  KRYO_SARG_BUFFER("orc.kryo.sarg.buffer", null, 8192,
+      "The kryo buffer size for SearchArgument for predicate pushdown."),
   SARG_COLUMNS("orc.sarg.column.names", "org.sarg.column.names", null,
       "The list of column names for the SearchArgument."),
   FORCE_POSITIONAL_EVOLUTION("orc.force.positional.evolution",
