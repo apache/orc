@@ -338,9 +338,7 @@ public class ReaderImpl implements Reader {
     } else {
       OrcTail orcTail = options.getOrcTail();
       if (orcTail == null) {
-        this.fileSystem = getFileSystem();
-        options.filesystem(fileSystem);
-        tail = extractFileTail(fileSystem, path, options.getMaxLength());
+        tail = extractFileTail(getFileSystem(), path, options.getMaxLength());
         options.orcTail(tail);
       } else {
         checkOrcVersion(path, orcTail.getPostScript());
@@ -365,11 +363,12 @@ public class ReaderImpl implements Reader {
   }
 
   protected FileSystem getFileSystem() throws IOException {
-    FileSystem fs = options.getFilesystem();
-    if (fs == null) {
-      fs = path.getFileSystem(options.getConfiguration());
+    this.fileSystem = options.getFilesystem();
+    if (this.fileSystem == null) {
+      this.fileSystem = path.getFileSystem(options.getConfiguration());
+      options.filesystem(fileSystem);
     }
-    return fs;
+    return this.fileSystem;
   }
 
   /**
