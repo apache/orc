@@ -565,6 +565,14 @@ DIAGNOSTIC_POP
   }
 
   void ZlibDecompressionStream::seek(PositionProvider& position) {
+    // clear state to force seek to read from the right position
+    state = DECOMPRESS_HEADER;
+    outputBuffer = nullptr;
+    outputBufferLength = 0;
+    remainingLength = 0;
+    inputBuffer = nullptr;
+    inputBufferEnd = nullptr;
+
     input->seek(position);
     bytesReturned = static_cast<off_t>(input->ByteCount());
     if (!Skip(static_cast<int>(position.next()))) {
@@ -794,6 +802,14 @@ DIAGNOSTIC_POP
   }
 
   void BlockDecompressionStream::seek(PositionProvider& position) {
+    // clear state to force seek to read from the right position
+    state = DECOMPRESS_HEADER;
+    outputBufferPtr = nullptr;
+    outputBufferLength = 0;
+    remainingLength = 0;
+    inputBufferPtr = nullptr;
+    inputBufferPtrEnd = nullptr;
+
     input->seek(position);
     if (!Skip(static_cast<int>(position.next()))) {
       throw ParseError("Bad skip in " + getName());
