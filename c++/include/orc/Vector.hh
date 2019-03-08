@@ -139,7 +139,7 @@ namespace orc {
    * User first obtain index from index array and retrieve string pointer
    * and length by calling getValueByIndex() from dictionary.
    */
-  struct EncodedStringVectorBatch : public ColumnVectorBatch {
+  struct EncodedStringVectorBatch : public StringVectorBatch {
     EncodedStringVectorBatch(uint64_t capacity, MemoryPool& pool);
     virtual ~EncodedStringVectorBatch();
     std::string toString() const;

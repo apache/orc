@@ -120,7 +120,7 @@ namespace orc {
   }
 
   EncodedStringVectorBatch::EncodedStringVectorBatch(uint64_t capacity, MemoryPool& pool)
-                      : ColumnVectorBatch(capacity, pool),
+                      : StringVectorBatch(capacity, pool),
                         dictionary(nullptr),
                         index(pool, capacity) {
     // PASS

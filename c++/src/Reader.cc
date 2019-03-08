@@ -875,7 +875,7 @@ namespace orc {
 
   std::unique_ptr<ColumnVectorBatch> RowReaderImpl::createRowBatch
                                               (uint64_t capacity) const {
-    return getSelectedType().createRowBatch(capacity, *contents->pool);
+    return getSelectedType().createRowBatch(capacity, *contents->pool, enableEncodedBlock);
   }
 
   void ensureOrcFooter(InputStream* stream,
