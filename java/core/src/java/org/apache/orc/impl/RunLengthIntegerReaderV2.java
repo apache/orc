@@ -33,15 +33,19 @@ import org.slf4j.LoggerFactory;
 public class RunLengthIntegerReaderV2 implements IntegerReader {
   public static final Logger LOG = LoggerFactory.getLogger(RunLengthIntegerReaderV2.class);
 
-  private InStream input;
+  protected InStream input;
   private final boolean signed;
-  private final long[] literals = new long[RunLengthIntegerWriterV2.MAX_SCOPE];
-  private boolean isRepeating = false;
-  private int numLiterals = 0;
-  private int used = 0;
+  protected final long[] literals = new long[RunLengthIntegerWriterV2.MAX_SCOPE];
+  protected int numLiterals = 0;
+  protected int used = 0;
   private final boolean skipCorrupt;
   private final SerializationUtils utils;
-  private RunLengthIntegerWriterV2.EncodingType currentEncoding;
+  protected RunLengthIntegerWriterV2.EncodingType currentEncoding;
+
+  protected static final class LookaheadStruct {
+    public long value;
+    public int repeats;
+  }
 
   public RunLengthIntegerReaderV2(InStream input, boolean signed,
       boolean skipCorrupt) throws IOException {
@@ -51,30 +55,43 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
     this.utils = new SerializationUtils();
   }
 
-  private final static RunLengthIntegerWriterV2.EncodingType[] encodings = RunLengthIntegerWriterV2.EncodingType.values();
-  private void readValues(boolean ignoreEof) throws IOException {
+  private final static RunLengthIntegerWriterV2.EncodingType[] encodings =
+      RunLengthIntegerWriterV2.EncodingType.values();
+
+  protected void readValues(boolean ignoreEof) throws IOException {
     // read the first 2 bits and determine the encoding type
-    isRepeating = false;
     int firstByte = input.read();
+    if (!handleFirstByte(ignoreEof, firstByte)) {
+      return;
+    }
+    readValuesFromEncoding(firstByte);
+  }
+
+  protected final boolean handleFirstByte(
+      boolean ignoreEof, int firstByte) throws EOFException {
     if (firstByte < 0) {
       if (!ignoreEof) {
         throw new EOFException("Read past end of RLE integer from " + input);
       }
       used = numLiterals = 0;
-      return;
+      return false;
     }
     currentEncoding = encodings[(firstByte >>> 6) & 0x03];
+    return true;
+  }
+
+  protected final void readValuesFromEncoding(int firstByte) throws IOException {
     switch (currentEncoding) {
-    case SHORT_REPEAT: readShortRepeatValues(firstByte); break;
+    case SHORT_REPEAT: readShortRepeatValues(firstByte, null); break;
     case DIRECT: readDirectValues(firstByte); break;
     case PATCHED_BASE: readPatchedBaseValues(firstByte); break;
-    case DELTA: readDeltaValues(firstByte); break;
+    case DELTA: readDeltaValues(firstByte, null); break;
     default: throw new IOException("Unknown encoding " + currentEncoding);
     }
   }
 
-  private void readDeltaValues(int firstByte) throws IOException {
-
+  protected final boolean readDeltaValues(
+      int firstByte, LookaheadStruct expected) throws IOException {
     // extract the number of fixed bits
     int fb = (firstByte >>> 1) & 0x1f;
     if (fb != 0) {
@@ -88,9 +105,9 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
     // read the first value stored as vint
     long firstVal = 0;
     if (signed) {
-      firstVal = utils.readVslong(input);
+      firstVal = SerializationUtils.readVslong(input);
     } else {
-      firstVal = utils.readVulong(input);
+      firstVal = SerializationUtils.readVulong(input);
     }
 
     // store first value to result buffer
@@ -101,9 +118,15 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
     if (fb == 0) {
       // read the fixed delta value stored as vint (deltas can be negative even
       // if all number are positive)
-      long fd = utils.readVslong(input);
+      long fd = SerializationUtils.readVslong(input);
       if (fd == 0) {
-        isRepeating = true;
+        if (expected != null && (expected.value == firstVal || expected.repeats == 0)) {
+          // Don't fill literals; the values are still repeating.
+          expected.value = firstVal;
+          expected.repeats += (len + 1);
+          numLiterals = used = 0;
+          return true;
+        }
         assert numLiterals == 1;
         Arrays.fill(literals, numLiterals, numLiterals + len, literals[0]);
         numLiterals += len;
@@ -114,7 +137,7 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
         }
       }
     } else {
-      long deltaBase = utils.readVslong(input);
+      long deltaBase = SerializationUtils.readVslong(input);
       // add delta base and first value
       literals[numLiterals++] = firstVal + deltaBase;
       prevVal = literals[numLiterals - 1];
@@ -135,9 +158,10 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
         numLiterals++;
       }
     }
+    return false;
   }
 
-  private void readPatchedBaseValues(int firstByte) throws IOException {
+  protected final void readPatchedBaseValues(int firstByte) throws IOException {
 
     // extract the number of fixed bits
     int fbo = (firstByte >>> 1) & 0x1f;
@@ -252,7 +276,7 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
 
   }
 
-  private void readDirectValues(int firstByte) throws IOException {
+  protected final void readDirectValues(int firstByte) throws IOException {
 
     // extract the number of fixed bits
     int fbo = (firstByte >>> 1) & 0x1f;
@@ -276,17 +300,17 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
     }
   }
 
-  private void readShortRepeatValues(int firstByte) throws IOException {
+  protected final boolean readShortRepeatValues(
+      int firstByte, LookaheadStruct expected) throws IOException {
+    // read the run length
+    int len = firstByte & 0x07;
+    // run lengths values are stored only after MIN_REPEAT value is met
+    len += RunLengthIntegerWriterV2.MIN_REPEAT;
 
     // read the number of bytes occupied by the value
     int size = (firstByte >>> 3) & 0x07;
     // #bytes are one off
     size += 1;
-
-    // read the run length
-    int len = firstByte & 0x07;
-    // run lengths values are stored only after MIN_REPEAT value is met
-    len += RunLengthIntegerWriterV2.MIN_REPEAT;
 
     // read the repeated value which is store using fixed bytes
     long val = utils.bytesToLongBE(input, size);
@@ -295,18 +319,24 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
       val = utils.zigzagDecode(val);
     }
 
+    if (expected != null && (expected.value == val || expected.repeats == 0)) {
+      expected.value = val;
+      expected.repeats += len;
+      numLiterals = used = 0;
+      return true;
+    }
+
     if (numLiterals != 0) {
       // Currently this always holds, which makes peekNextAvailLength simpler.
       // If this changes, peekNextAvailLength should be adjusted accordingly.
       throw new AssertionError("readValues called with existing values present");
     }
     // repeat the value for length times
-    isRepeating = true;
-    // TODO: this is not so useful and V1 reader doesn't do that. Fix? Same if delta == 0
     for(int i = 0; i < len; i++) {
       literals[i] = val;
     }
     numLiterals = len;
+    return false;
   }
 
   @Override
