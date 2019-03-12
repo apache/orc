@@ -70,6 +70,7 @@ namespace orc {
                       currentCapacity(buffer.currentCapacity)  {
     buffer.buf = nullptr;
     buffer.currentSize = 0;
+    buffer.currentCapacity = 0;
   }
 
   template <class T>
