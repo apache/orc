@@ -62,6 +62,18 @@ namespace orc {
   }
 
   template <class T>
+  DataBuffer<T>::DataBuffer(DataBuffer<T>&& buffer
+                      ) noexcept:
+                      memoryPool(buffer.memoryPool),
+                      buf(buffer.buf),
+                      currentSize(buffer.currentSize),
+                      currentCapacity(buffer.currentCapacity)  {
+    buffer.buf = nullptr;
+    buffer.currentSize = 0;
+    buffer.currentCapacity = 0;
+  }
+
+  template <class T>
   DataBuffer<T>::~DataBuffer(){
     for(uint64_t i=currentSize; i > 0; --i) {
       (buf + i - 1)->~T();
