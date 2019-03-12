@@ -298,7 +298,7 @@ namespace orc {
       while (pos < rowsToAdd.numElements) {
         chunkSize = std::min(rowsToAdd.numElements - pos,
                              rowIndexStride - indexRows);
-        columnWriter->add(rowsToAdd, pos, chunkSize);
+        columnWriter->add(rowsToAdd, pos, chunkSize, nullptr);
 
         pos += chunkSize;
         indexRows += chunkSize;
@@ -311,7 +311,7 @@ namespace orc {
       }
     } else {
       stripeRows += rowsToAdd.numElements;
-      columnWriter->add(rowsToAdd, 0, rowsToAdd.numElements);
+      columnWriter->add(rowsToAdd, 0, rowsToAdd.numElements, nullptr);
     }
 
     if (columnWriter->getEstimatedSize() >= options.getStripeSize()) {
