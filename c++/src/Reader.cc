@@ -187,7 +187,8 @@ namespace orc {
                             throwOnHive11DecimalOverflow(opts.getThrowOnHive11DecimalOverflow()),
                             forcedScaleOnHive11Decimal(opts.getForcedScaleOnHive11Decimal()),
                             footer(contents->footer.get()),
-                            firstRowOfStripe(*contents->pool, 0) {
+                            firstRowOfStripe(*contents->pool, 0),
+                            enableEncodedBlock(opts.getEnableLazyDecoding()) {
     uint64_t numberOfStripes;
     numberOfStripes = static_cast<uint64_t>(footer->stripes_size());
     currentStripe = numberOfStripes;
@@ -856,7 +857,12 @@ namespace orc {
       std::min(static_cast<uint64_t>(data.capacity),
                rowsInCurrentStripe - currentRowInStripe);
     data.numElements = rowsToRead;
-    reader->next(data, rowsToRead, nullptr);
+    if (enableEncodedBlock) {
+      reader->nextEncoded(data, rowsToRead, nullptr);
+    }
+    else {
+      reader->next(data, rowsToRead, nullptr);
+    }
     // update row number
     previousRow = firstRowOfStripe[currentStripe] + currentRowInStripe;
     currentRowInStripe += rowsToRead;
@@ -869,7 +875,7 @@ namespace orc {
 
   std::unique_ptr<ColumnVectorBatch> RowReaderImpl::createRowBatch
                                               (uint64_t capacity) const {
-    return getSelectedType().createRowBatch(capacity, *contents->pool);
+    return getSelectedType().createRowBatch(capacity, *contents->pool, enableEncodedBlock);
   }
 
   void ensureOrcFooter(InputStream* stream,

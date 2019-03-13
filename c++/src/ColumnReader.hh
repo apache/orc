@@ -20,6 +20,7 @@
 #define ORC_COLUMN_READER_HH
 
 #include "orc/Vector.hh"
+
 #include "ByteRLE.hh"
 #include "Compression.hh"
 #include "Timezone.hh"
@@ -117,6 +118,23 @@ namespace orc {
     virtual void next(ColumnVectorBatch& rowBatch,
                       uint64_t numValues,
                       char* notNull);
+
+    /**
+     * Read the next group of values without decoding
+     * @param rowBatch the memory to read into.
+     * @param numValues the number of values to read
+     * @param notNull if null, all values are not null. Otherwise, it is
+     *           a mask (with at least numValues bytes) for which values to
+     *           set.
+     */
+    virtual void nextEncoded(ColumnVectorBatch& rowBatch,
+                      uint64_t numValues,
+                      char* notNull)
+    {
+      rowBatch.isEncoded = false;
+      next(rowBatch, numValues, notNull);
+    }
+
   };
 
   /**

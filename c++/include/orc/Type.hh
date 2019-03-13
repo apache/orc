@@ -64,7 +64,8 @@ namespace orc {
      * Create a row batch for this type.
      */
     virtual ORC_UNIQUE_PTR<ColumnVectorBatch> createRowBatch(uint64_t size,
-                                                             MemoryPool& pool
+                                                             MemoryPool& pool,
+                                                             bool encoded = false
                                                              ) const = 0;
 
     /**

@@ -229,7 +229,8 @@ namespace orc {
 
   std::unique_ptr<ColumnVectorBatch>
   TypeImpl::createRowBatch(uint64_t capacity,
-                           MemoryPool& memoryPool) const {
+                           MemoryPool& memoryPool,
+                           bool encoded) const {
     switch (static_cast<int64_t>(kind)) {
     case BOOLEAN:
     case BYTE:
@@ -249,7 +250,10 @@ namespace orc {
     case BINARY:
     case CHAR:
     case VARCHAR:
-      return std::unique_ptr<ColumnVectorBatch>
+      return encoded ?
+      std::unique_ptr<ColumnVectorBatch>
+        (new EncodedStringVectorBatch(capacity, memoryPool))
+      : std::unique_ptr<ColumnVectorBatch>
         (new StringVectorBatch(capacity, memoryPool));
 
     case TIMESTAMP:
@@ -262,7 +266,7 @@ namespace orc {
       for(uint64_t i=0; i < getSubtypeCount(); ++i) {
           result->fields.push_back(getSubtype(i)->
                                    createRowBatch(capacity,
-                                                  memoryPool).release());
+                                                  memoryPool, encoded).release());
       }
       return return_value;
     }
@@ -271,7 +275,7 @@ namespace orc {
       ListVectorBatch* result = new ListVectorBatch(capacity, memoryPool);
       std::unique_ptr<ColumnVectorBatch> return_value = std::unique_ptr<ColumnVectorBatch>(result);
       if (getSubtype(0) != nullptr) {
-        result->elements = getSubtype(0)->createRowBatch(capacity, memoryPool);
+        result->elements = getSubtype(0)->createRowBatch(capacity, memoryPool, encoded);
       }
       return return_value;
     }
@@ -280,10 +284,10 @@ namespace orc {
       MapVectorBatch* result = new MapVectorBatch(capacity, memoryPool);
       std::unique_ptr<ColumnVectorBatch> return_value = std::unique_ptr<ColumnVectorBatch>(result);
       if (getSubtype(0) != nullptr) {
-        result->keys = getSubtype(0)->createRowBatch(capacity, memoryPool);
+        result->keys = getSubtype(0)->createRowBatch(capacity, memoryPool, encoded);
       }
       if (getSubtype(1) != nullptr) {
-        result->elements = getSubtype(1)->createRowBatch(capacity, memoryPool);
+        result->elements = getSubtype(1)->createRowBatch(capacity, memoryPool, encoded);
       }
       return return_value;
     }
@@ -303,7 +307,7 @@ namespace orc {
       std::unique_ptr<ColumnVectorBatch> return_value = std::unique_ptr<ColumnVectorBatch>(result);
       for(uint64_t i=0; i < getSubtypeCount(); ++i) {
           result->children.push_back(getSubtype(i)->createRowBatch(capacity,
-                                                                   memoryPool)
+                                                                   memoryPool, encoded)
                                      .release());
       }
       return return_value;

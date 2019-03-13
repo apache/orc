@@ -33,6 +33,7 @@ namespace orc {
                                           numElements(0),
                                           notNull(pool, cap),
                                           hasNulls(false),
+                                          isEncoded(false),
                                           memoryPool(pool) {
     std::memset(notNull.data(), 1, capacity);
   }
@@ -110,6 +111,29 @@ namespace orc {
   uint64_t DoubleVectorBatch::getMemoryUsage() {
     return ColumnVectorBatch::getMemoryUsage()
           + static_cast<uint64_t>(data.capacity() * sizeof(double));
+  }
+
+  StringDictionary::StringDictionary(MemoryPool& pool)
+              : dictionaryBlob(pool),
+                dictionaryOffset(pool) {
+    // PASS
+  }
+
+  EncodedStringVectorBatch::EncodedStringVectorBatch(uint64_t capacity, MemoryPool& pool)
+                      : StringVectorBatch(capacity, pool),
+                        dictionary(nullptr),
+                        index(pool, capacity) {
+    // PASS
+  }
+
+  EncodedStringVectorBatch::~EncodedStringVectorBatch() {
+    // PASS
+  }
+
+  std::string EncodedStringVectorBatch::toString() const {
+    std::ostringstream buffer;
+    buffer << "Encoded string vector <" << numElements << " of " << capacity << ">";
+    return buffer.str();
   }
 
   StringVectorBatch::StringVectorBatch(uint64_t capacity, MemoryPool& pool
