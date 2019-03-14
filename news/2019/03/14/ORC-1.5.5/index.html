@@ -1,0 +1,413 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <title>ORC 1.5.5 Released</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="generator" content="Jekyll v3.8.5">
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
+  <link rel="stylesheet" href="/css/screen.css">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <!--[if lt IE 9]>
+  <script src="/js/html5shiv.min.js"></script>
+  <script src="/js/respond.min.js"></script>
+  <![endif]-->
+</head>
+
+
+<body class="wrap">
+  <header role="banner">
+  <nav class="mobile-nav show-on-mobiles">
+    <ul>
+  <li class="">
+    <a href="/">Home</a>
+  </li>
+  <li class="">
+    <a href="/docs/"><span class="show-on-mobiles">Docs</span>
+                     <span class="hide-on-mobiles">Documentation</span></a>
+  </li>
+  <li class="">
+    <a href="/talks/">Talks</a>
+  </li>
+  <li class="current">
+    <a href="/news/">News</a>
+  </li>
+  <li class="">
+    <a href="/help/">Help</a>
+  </li>
+  <li class="">
+    <a href="/develop/">Develop</a>
+  </li>
+</ul>
+
+  </nav>
+  <div class="grid">
+    <div class="unit one-third center-on-mobiles">
+      <h1>
+        <a href="/">
+          <span class="sr-only">Apache ORC</span>
+          <img src="/img/logo.png" width="249" height="101" alt="ORC Logo">
+        </a>
+      </h1>
+    </div>
+    <nav class="main-nav unit two-thirds hide-on-mobiles">
+      <ul>
+  <li class="">
+    <a href="/">Home</a>
+  </li>
+  <li class="">
+    <a href="/docs/"><span class="show-on-mobiles">Docs</span>
+                     <span class="hide-on-mobiles">Documentation</span></a>
+  </li>
+  <li class="">
+    <a href="/talks/">Talks</a>
+  </li>
+  <li class="current">
+    <a href="/news/">News</a>
+  </li>
+  <li class="">
+    <a href="/help/">Help</a>
+  </li>
+  <li class="">
+    <a href="/develop/">Develop</a>
+  </li>
+</ul>
+
+    </nav>
+  </div>
+</header>
+
+
+    <section class="news">
+    <div class="grid">
+
+      <div class="docs-nav-mobile unit whole show-on-mobiles">
+  <select onchange="if (this.value) window.location.href=this.value">
+    <option value="">Navigate the blog…</option>
+    <option value="/news/">Home</option>
+    <optgroup label="v1.x">
+      
+      <option value="/news/2019/03/14/ORC-1.5.5/">ORC 1.5.5 Released</option>
+      
+      <option value="/news/2018/12/21/ORC-1.5.4/">ORC 1.5.4 Released</option>
+      
+      <option value="/news/2018/09/25/ORC-1.5.3/">ORC 1.5.3 Released</option>
+      
+      <option value="/news/2018/06/29/ORC-1.5.2/">ORC 1.5.2 Released</option>
+      
+      <option value="/news/2018/05/25/ORC-1.5.1/">ORC 1.5.1 Released</option>
+      
+      <option value="/news/2018/05/14/ORC-1.5.0/">ORC 1.5.0 Released</option>
+      
+      <option value="/news/2018/05/14/ORC-1.4.4/">ORC 1.4.4 Released</option>
+      
+      <option value="/news/2018/02/09/ORC-1.4.3/">ORC 1.4.3 Released</option>
+      
+      <option value="/news/2018/01/23/ORC-1.4.2/">ORC 1.4.2 Released</option>
+      
+      <option value="/news/2017/10/16/ORC-1.4.1/">ORC 1.4.1 Released</option>
+      
+      <option value="/news/2017/10/16/ORC-1.3.4/">ORC 1.3.4 Released</option>
+      
+      <option value="/news/2017/09/06/new-pmc/">ORC adds Eugene and Deepak to PMC</option>
+      
+      <option value="/news/2017/05/16/new-committer/">Deepak Majeti added as committer</option>
+      
+      <option value="/news/2017/05/08/ORC-1.4.0/">ORC 1.4.0 Released</option>
+      
+      <option value="/news/2017/02/21/ORC-1.3.3/">ORC 1.3.3 Released</option>
+      
+      <option value="/news/2017/02/13/ORC-1.3.2/">ORC 1.3.2 Released</option>
+      
+      <option value="/news/2017/02/03/ORC-1.3.1/">ORC 1.3.1 Released</option>
+      
+      <option value="/news/2017/01/23/ORC-1.3.0/">ORC 1.3.0 Released</option>
+      
+      <option value="/news/2017/01/04/gopal-on-pmc/">ORC adds Gopal Vijayaraghavan to PMC</option>
+      
+      <option value="/news/2016/12/15/new-committers/">ORC adds new committers</option>
+      
+      <option value="/news/2016/12/12/ORC-1.2.3/">ORC 1.2.3 Released</option>
+      
+      <option value="/news/2016/12/01/ORC-1.2.2/">ORC 1.2.2 Released</option>
+      
+      <option value="/news/2016/10/05/ORC-1.2.1/">ORC 1.2.1 Released</option>
+      
+      <option value="/news/2016/08/25/ORC-1.2.0/">ORC 1.2.0 Released</option>
+      
+      <option value="/news/2016/07/08/ORC-1.1.2/">ORC 1.1.2 Released</option>
+      
+      <option value="/news/2016/06/28/file-format-talk/">File format benchmark</option>
+      
+      <option value="/news/2016/06/13/ORC-1.1.1/">ORC 1.1.1 Released</option>
+      
+      <option value="/news/2016/06/10/ORC-1.1.0/">ORC 1.1.0 Released</option>
+      
+      <option value="/news/2016/01/25/ORC-1.0.0/">ORC 1.0.0 Released</option>
+      
+      <option value="/news/2015/11/19/aliaksei-on-pmc/">ORC adds Aliaksei Sandryhaila to PMC</option>
+      
+      <option value="/news/2015/06/26/new-logo/">ORC adopts new logo</option>
+      
+      <option value="/news/2015/05/11/new-committers/">ORC adds 7 committers</option>
+      
+      <option value="/news/2015/04/22/orc-as-tlp/">ORC becomes an Apache Top Level Project</option>
+      
+    </optgroup>
+  </select>
+</div>
+
+
+      <div class="unit four-fifths">
+        <article>
+  <h2>
+    ORC 1.5.5 Released
+    <a href="/news/2019/03/14/ORC-1.5.5/" class="permalink" title="Permalink">∞</a>
+  </h2>
+  <span class="post-category">
+    <span class="label">
+      release
+    </span>
+  </span>
+  <div class="post-meta">
+    <span class="post-date">
+      14 Mar 2019
+    </span>
+    <a href="https://people.apache.org/~omalley" class="post-author">
+      <img src="https://people.apache.org/~omalley/omalley.png"
+           class="avatar" alt="omalley avatar"
+           width="24" height="24">
+      omalley
+    </a>
+  </div>
+  <div class="post-content">
+    <p>The ORC team is excited to announce the release of ORC v1.5.5.</p>
+
+<ul>
+  <li>Released: 14 March 2019</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.5.5/orc-1.5.5.tar.gz">orc-1.5.5.tar.gz</a></li>
+  <li><a href="https://www.apache.org/dist/orc/orc-1.5.5/orc-1.5.5.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://www.apache.org/dist/orc/KEYS">Owen O’Malley (3D0C92B9)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.5.5">rel/release-1.5.5</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.5.5%22">ORC 1.5.5</a></li>
+  <li>SHA 256: <a href="https://www.apache.org/dist/orc/orc-1.5.5/orc-1.5.5.tar.gz.sha256">486bbf0765a5b8c2…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.5.5%22&amp;tempMax=500">ORC-1.5.5</a></li>
+</ul>
+
+<p>The new features of ORC 1.5:</p>
+
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-179">ORC-179</a> Add ORC C++ Writer</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-91">ORC-91</a> Support for variable length blocks in HDFS.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-199">ORC-199</a> Implement a CSV to ORC converter</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-344">ORC-344</a> Support for using Decimal64ColumnVector</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-345">ORC-345</a> Adding Decimal64StatisticsImpl</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-331">ORC-331</a> Support for building C++ under MSVC.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-234">ORC-234</a> Support for older versions of Hadoop (&gt;= 2.2.x)</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-305">ORC-305</a> Added statistics for size on disk</li>
+</ul>
+
+<p>Known issues:</p>
+
+
+  </div>
+</article>
+
+      </div>
+
+      <div class="unit one-fifth hide-on-mobiles">
+  <aside>
+    <ul>
+      <li class="">
+        <a href="/news/">All News</a>
+      </li>
+      <li class="">
+        <a href="/news/releases/">ORC Releases</a>
+      </li>
+    </ul>
+    <h4>Recent Releases</h4>
+    <ul>
+      
+      <li class="current">
+        <a href="/news/2019/03/14/ORC-1.5.5/">Version 1.5.5</a>
+      </li>
+      
+      <li class="">
+        <a href="/news/2018/12/21/ORC-1.5.4/">Version 1.5.4</a>
+      </li>
+      
+      <li class="">
+        <a href="/news/2018/09/25/ORC-1.5.3/">Version 1.5.3</a>
+      </li>
+      
+      <li class="">
+        <a href="/news/2018/06/29/ORC-1.5.2/">Version 1.5.2</a>
+      </li>
+      
+      <li class="">
+        <a href="/news/2018/05/25/ORC-1.5.1/">Version 1.5.1</a>
+      </li>
+      
+    </ul>
+    <h4>Other News</h4>
+    <ul>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        <li class="">
+          <a href="/news/2017/09/06/new-pmc/">ORC adds Eugene and Deepak to PMC</a>
+        </li>
+        
+        
+        
+        <li class="">
+          <a href="/news/2017/05/16/new-committer/">Deepak Majeti added as committer</a>
+        </li>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        <li class="">
+          <a href="/news/2017/01/04/gopal-on-pmc/">ORC adds Gopal Vijayaraghavan to PMC</a>
+        </li>
+        
+        
+        
+        <li class="">
+          <a href="/news/2016/12/15/new-committers/">ORC adds new committers</a>
+        </li>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        <li class="">
+          <a href="/news/2016/06/28/file-format-talk/">File format benchmark</a>
+        </li>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        <li class="">
+          <a href="/news/2015/11/19/aliaksei-on-pmc/">ORC adds Aliaksei Sandryhaila to PMC</a>
+        </li>
+        
+        
+        
+        <li class="">
+          <a href="/news/2015/06/26/new-logo/">ORC adopts new logo</a>
+        </li>
+        
+        
+        
+        <li class="">
+          <a href="/news/2015/05/11/new-committers/">ORC adds 7 committers</a>
+        </li>
+        
+        
+        
+        <li class="">
+          <a href="/news/2015/04/22/orc-as-tlp/">ORC becomes an Apache Top Level Project</a>
+        </li>
+        
+        
+    </ul>
+  </aside>
+</div>
+
+
+      <div class="clear"></div>
+
+    </div>
+  </section>
+
+
+  <footer role="contentinfo">
+  <p>The contents of this website are &copy;&nbsp;2019
+     <a href="https://www.apache.org/">Apache Software Foundation</a>
+     under the terms of the <a
+      href="https://www.apache.org/licenses/LICENSE-2.0.html">
+      Apache&nbsp;License&nbsp;v2</a>. Apache ORC and its logo are trademarks
+      of the Apache Software Foundation.</p>
+</footer>
+
+  <script>
+  var anchorForId = function (id) {
+    var anchor = document.createElement("a");
+    anchor.className = "header-link";
+    anchor.href      = "#" + id;
+    anchor.innerHTML = "<span class=\"sr-only\">Permalink</span><i class=\"fa fa-link\"></i>";
+    anchor.title = "Permalink";
+    return anchor;
+  };
+
+  var linkifyAnchors = function (level, containingElement) {
+    var headers = containingElement.getElementsByTagName("h" + level);
+    for (var h = 0; h < headers.length; h++) {
+      var header = headers[h];
+
+      if (typeof header.id !== "undefined" && header.id !== "") {
+        header.appendChild(anchorForId(header.id));
+      }
+    }
+  };
+
+  document.onreadystatechange = function () {
+    if (this.readyState === "complete") {
+      var contentBlock = document.getElementsByClassName("docs")[0] || document.getElementsByClassName("news")[0];
+      if (!contentBlock) {
+        return;
+      }
+      for (var level = 1; level <= 6; level++) {
+        linkifyAnchors(level, contentBlock);
+      }
+    }
+  };
+</script>
+
+
+</body>
+</html>
