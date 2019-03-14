@@ -125,8 +125,9 @@ namespace orc {
 
   void ColumnWriter::add(ColumnVectorBatch& batch,
                          uint64_t offset,
-                         uint64_t numValues) {
-    notNullEncoder->add(batch.notNull.data() + offset, numValues, nullptr);
+                         uint64_t numValues,
+                         const char* incomingMask) {
+    notNullEncoder->add(batch.notNull.data() + offset, numValues, incomingMask);
   }
 
   void ColumnWriter::flush(std::vector<proto::Stream>& streams) {
@@ -218,7 +219,8 @@ namespace orc {
 
     virtual void add(ColumnVectorBatch& rowBatch,
                      uint64_t offset,
-                     uint64_t numValues) override;
+                     uint64_t numValues,
+                     const char* incomingMask) override;
 
     virtual void flush(std::vector<proto::Stream>& streams) override;
 
@@ -273,24 +275,26 @@ namespace orc {
   void StructColumnWriter::add(
                                ColumnVectorBatch& rowBatch,
                                uint64_t offset,
-                               uint64_t numValues) {
+                               uint64_t numValues,
+                               const char* incomingMask) {
     const StructVectorBatch* structBatch =
       dynamic_cast<const StructVectorBatch *>(&rowBatch);
     if (structBatch == nullptr) {
       throw InvalidArgument("Failed to cast to StructVectorBatch");
     }
 
-    ColumnWriter::add(rowBatch, offset, numValues);
+    ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
+    const char* notNull = structBatch->hasNulls ?
+                          structBatch->notNull.data() + offset : nullptr;
     for (uint32_t i = 0; i < children.size(); ++i) {
-      children[i]->add(*structBatch->fields[i], offset, numValues);
+      children[i]->add(*structBatch->fields[i], offset, numValues, notNull);
     }
 
     // update stats
-    if (!structBatch->hasNulls) {
+    if (!notNull) {
       colIndexStatistics->increase(numValues);
     } else {
       uint64_t count = 0;
-      const char* notNull = structBatch->notNull.data() + offset;
       for (uint64_t i = 0; i < numValues; ++i) {
         if (notNull[i]) {
           ++count;
@@ -402,7 +406,8 @@ namespace orc {
 
     virtual void add(ColumnVectorBatch& rowBatch,
                      uint64_t offset,
-                     uint64_t numValues) override;
+                     uint64_t numValues,
+                     const char* incomingMask) override;
 
     virtual void flush(std::vector<proto::Stream>& streams) override;
 
@@ -443,7 +448,8 @@ namespace orc {
   void IntegerColumnWriter::add(
                                 ColumnVectorBatch& rowBatch,
                                 uint64_t offset,
-                                uint64_t numValues) {
+                                uint64_t numValues,
+                                const char* incomingMask) {
     const LongVectorBatch* longBatch =
       dynamic_cast<const LongVectorBatch*>(&rowBatch);
     if (longBatch == nullptr) {
@@ -455,7 +461,7 @@ namespace orc {
       throw InvalidArgument("Failed to cast to IntegerColumnStatisticsImpl");
     }
 
-    ColumnWriter::add(rowBatch, offset, numValues);
+    ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
     const int64_t* data = longBatch->data.data() + offset;
     const char* notNull = longBatch->hasNulls ?
@@ -514,7 +520,8 @@ namespace orc {
 
     virtual void add(ColumnVectorBatch& rowBatch,
                      uint64_t offset,
-                     uint64_t numValues) override;
+                     uint64_t numValues,
+                     const char* incomingMask) override;
 
     virtual void flush(std::vector<proto::Stream>& streams) override;
 
@@ -545,7 +552,8 @@ namespace orc {
 
   void ByteColumnWriter::add(ColumnVectorBatch& rowBatch,
                              uint64_t offset,
-                             uint64_t numValues) {
+                             uint64_t numValues,
+                             const char* incomingMask) {
     LongVectorBatch* byteBatch = dynamic_cast<LongVectorBatch*>(&rowBatch);
     if (byteBatch == nullptr) {
       throw InvalidArgument("Failed to cast to LongVectorBatch");
@@ -556,7 +564,7 @@ namespace orc {
       throw InvalidArgument("Failed to cast to IntegerColumnStatisticsImpl");
     }
 
-    ColumnWriter::add(rowBatch, offset, numValues);
+    ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
     int64_t* data = byteBatch->data.data() + offset;
     const char* notNull = byteBatch->hasNulls ?
@@ -618,7 +626,8 @@ namespace orc {
 
     virtual void add(ColumnVectorBatch& rowBatch,
                      uint64_t offset,
-                     uint64_t numValues) override;
+                     uint64_t numValues,
+                     const char* incomingMask) override;
 
     virtual void flush(std::vector<proto::Stream>& streams) override;
 
@@ -649,7 +658,8 @@ namespace orc {
 
   void BooleanColumnWriter::add(ColumnVectorBatch& rowBatch,
                                 uint64_t offset,
-                                uint64_t numValues) {
+                                uint64_t numValues,
+                                const char* incomingMask) {
     LongVectorBatch* byteBatch = dynamic_cast<LongVectorBatch*>(&rowBatch);
     if (byteBatch == nullptr) {
       throw InvalidArgument("Failed to cast to LongVectorBatch");
@@ -660,7 +670,7 @@ namespace orc {
       throw InvalidArgument("Failed to cast to BooleanColumnStatisticsImpl");
     }
 
-    ColumnWriter::add(rowBatch, offset, numValues);
+    ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
     int64_t* data = byteBatch->data.data() + offset;
     const char* notNull = byteBatch->hasNulls ?
@@ -723,7 +733,8 @@ namespace orc {
 
     virtual void add(ColumnVectorBatch& rowBatch,
                      uint64_t offset,
-                     uint64_t numValues) override;
+                     uint64_t numValues,
+                     const char* incomingMask) override;
 
     virtual void flush(std::vector<proto::Stream>& streams) override;
 
@@ -769,7 +780,8 @@ namespace orc {
 
   void DoubleColumnWriter::add(ColumnVectorBatch& rowBatch,
                                uint64_t offset,
-                               uint64_t numValues) {
+                               uint64_t numValues,
+                               const char* incomingMask) {
     const DoubleVectorBatch* dblBatch =
       dynamic_cast<const DoubleVectorBatch*>(&rowBatch);
     if (dblBatch == nullptr) {
@@ -781,7 +793,7 @@ namespace orc {
       throw InvalidArgument("Failed to cast to DoubleColumnStatisticsImpl");
     }
 
-    ColumnWriter::add(rowBatch, offset, numValues);
+    ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
     const double* doubleData = dblBatch->data.data() + offset;
     const char* notNull = dblBatch->hasNulls ?
@@ -976,7 +988,8 @@ namespace orc {
 
     virtual void add(ColumnVectorBatch& rowBatch,
                      uint64_t offset,
-                     uint64_t numValues) override;
+                     uint64_t numValues,
+                     const char* incomingMask) override;
 
     virtual void flush(std::vector<proto::Stream>& streams) override;
 
@@ -1064,7 +1077,8 @@ namespace orc {
 
   void StringColumnWriter::add(ColumnVectorBatch& rowBatch,
                                uint64_t offset,
-                               uint64_t numValues) {
+                               uint64_t numValues,
+                               const char* incomingMask) {
     const StringVectorBatch* stringBatch =
       dynamic_cast<const StringVectorBatch*>(&rowBatch);
     if (stringBatch == nullptr) {
@@ -1077,7 +1091,7 @@ namespace orc {
       throw InvalidArgument("Failed to cast to StringColumnStatisticsImpl");
     }
 
-    ColumnWriter::add(rowBatch, offset, numValues);
+    ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
     char *const * data = stringBatch->data.data() + offset;
     const int64_t* length = stringBatch->length.data() + offset;
@@ -1418,7 +1432,8 @@ namespace orc {
 
     virtual void add(ColumnVectorBatch& rowBatch,
                      uint64_t offset,
-                     uint64_t numValues) override;
+                     uint64_t numValues,
+                     const char* incomingMask) override;
 
   private:
     uint64_t maxLength;
@@ -1427,7 +1442,8 @@ namespace orc {
 
   void CharColumnWriter::add(ColumnVectorBatch& rowBatch,
                              uint64_t offset,
-                             uint64_t numValues) {
+                             uint64_t numValues,
+                             const char* incomingMask) {
     StringVectorBatch* charsBatch = dynamic_cast<StringVectorBatch*>(&rowBatch);
     if (charsBatch == nullptr) {
       throw InvalidArgument("Failed to cast to StringVectorBatch");
@@ -1439,7 +1455,7 @@ namespace orc {
       throw InvalidArgument("Failed to cast to StringColumnStatisticsImpl");
     }
 
-    ColumnWriter::add(rowBatch, offset, numValues);
+    ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
     char** data = charsBatch->data.data() + offset;
     int64_t* length = charsBatch->length.data() + offset;
@@ -1500,7 +1516,8 @@ namespace orc {
 
     virtual void add(ColumnVectorBatch& rowBatch,
                      uint64_t offset,
-                     uint64_t numValues) override;
+                     uint64_t numValues,
+                     const char* incomingMask) override;
 
   private:
     uint64_t maxLength;
@@ -1508,7 +1525,8 @@ namespace orc {
 
   void VarCharColumnWriter::add(ColumnVectorBatch& rowBatch,
                                 uint64_t offset,
-                                uint64_t numValues) {
+                                uint64_t numValues,
+                                const char* incomingMask) {
     StringVectorBatch* charsBatch = dynamic_cast<StringVectorBatch*>(&rowBatch);
     if (charsBatch == nullptr) {
       throw InvalidArgument("Failed to cast to StringVectorBatch");
@@ -1520,7 +1538,7 @@ namespace orc {
       throw InvalidArgument("Failed to cast to StringColumnStatisticsImpl");
     }
 
-    ColumnWriter::add(rowBatch, offset, numValues);
+    ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
     char* const* data = charsBatch->data.data() + offset;
     int64_t* length = charsBatch->length.data() + offset;
@@ -1567,12 +1585,14 @@ namespace orc {
 
     virtual void add(ColumnVectorBatch& rowBatch,
                      uint64_t offset,
-                     uint64_t numValues) override;
+                     uint64_t numValues,
+                     const char* incomingMask) override;
   };
 
   void BinaryColumnWriter::add(ColumnVectorBatch& rowBatch,
                                uint64_t offset,
-                               uint64_t numValues) {
+                               uint64_t numValues,
+                               const char* incomingMask) {
     StringVectorBatch* binBatch = dynamic_cast<StringVectorBatch*>(&rowBatch);
     if (binBatch == nullptr) {
       throw InvalidArgument("Failed to cast to StringVectorBatch");
@@ -1584,7 +1604,7 @@ namespace orc {
       throw InvalidArgument("Failed to cast to BinaryColumnStatisticsImpl");
     }
 
-    ColumnWriter::add(rowBatch, offset, numValues);
+    ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
     char** data = binBatch->data.data() + offset;
     int64_t* length = binBatch->length.data() + offset;
@@ -1616,7 +1636,8 @@ namespace orc {
 
     virtual void add(ColumnVectorBatch& rowBatch,
                      uint64_t offset,
-                     uint64_t numValues) override;
+                     uint64_t numValues,
+                     const char* incomingMask) override;
 
     virtual void flush(std::vector<proto::Stream>& streams) override;
 
@@ -1685,7 +1706,8 @@ namespace orc {
 
   void TimestampColumnWriter::add(ColumnVectorBatch& rowBatch,
                                   uint64_t offset,
-                                  uint64_t numValues) {
+                                  uint64_t numValues,
+                                  const char* incomingMask) {
     TimestampVectorBatch* tsBatch =
       dynamic_cast<TimestampVectorBatch*>(&rowBatch);
     if (tsBatch == nullptr) {
@@ -1698,7 +1720,7 @@ namespace orc {
       throw InvalidArgument("Failed to cast to TimestampColumnStatisticsImpl");
     }
 
-    ColumnWriter::add(rowBatch, offset, numValues);
+    ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
     const char* notNull = tsBatch->hasNulls ?
                           tsBatch->notNull.data() + offset : nullptr;
@@ -1775,7 +1797,8 @@ namespace orc {
 
     virtual void add(ColumnVectorBatch& rowBatch,
                      uint64_t offset,
-                     uint64_t numValues) override;
+                     uint64_t numValues,
+                     const char* incomingMask) override;
   };
 
   DateColumnWriter::DateColumnWriter(
@@ -1788,7 +1811,8 @@ namespace orc {
 
   void DateColumnWriter::add(ColumnVectorBatch& rowBatch,
                              uint64_t offset,
-                             uint64_t numValues) {
+                             uint64_t numValues,
+                             const char* incomingMask) {
     const LongVectorBatch* longBatch =
       dynamic_cast<const LongVectorBatch*>(&rowBatch);
     if (longBatch == nullptr) {
@@ -1801,7 +1825,7 @@ namespace orc {
       throw InvalidArgument("Failed to cast to DateColumnStatisticsImpl");
     }
 
-    ColumnWriter::add(rowBatch, offset, numValues);
+    ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
     const int64_t* data = longBatch->data.data() + offset;
     const char* notNull = longBatch->hasNulls ?
@@ -1833,7 +1857,8 @@ namespace orc {
 
     virtual void add(ColumnVectorBatch& rowBatch,
                      uint64_t offset,
-                     uint64_t numValues) override;
+                     uint64_t numValues,
+                     const char* incomingMask) override;
 
     virtual void flush(std::vector<proto::Stream>& streams) override;
 
@@ -1880,7 +1905,8 @@ namespace orc {
 
   void Decimal64ColumnWriter::add(ColumnVectorBatch& rowBatch,
                                   uint64_t offset,
-                                  uint64_t numValues) {
+                                  uint64_t numValues,
+                                  const char* incomingMask) {
     const Decimal64VectorBatch* decBatch =
       dynamic_cast<const Decimal64VectorBatch*>(&rowBatch);
     if (decBatch == nullptr) {
@@ -1893,7 +1919,7 @@ namespace orc {
       throw InvalidArgument("Failed to cast to DecimalColumnStatisticsImpl");
     }
 
-    ColumnWriter::add(rowBatch, offset, numValues);
+    ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
     const char* notNull = decBatch->hasNulls ?
                           decBatch->notNull.data() + offset : nullptr;
@@ -1972,7 +1998,8 @@ namespace orc {
 
     virtual void add(ColumnVectorBatch& rowBatch,
                      uint64_t offset,
-                     uint64_t numValues) override;
+                     uint64_t numValues,
+                     const char* incomingMask) override;
 
   private:
     char buffer[20];
@@ -2001,7 +2028,8 @@ namespace orc {
 
   void Decimal128ColumnWriter::add(ColumnVectorBatch& rowBatch,
                                    uint64_t offset,
-                                   uint64_t numValues) {
+                                   uint64_t numValues,
+                                   const char* incomingMask) {
     const Decimal128VectorBatch* decBatch =
       dynamic_cast<const Decimal128VectorBatch*>(&rowBatch);
     if (decBatch == nullptr) {
@@ -2014,7 +2042,7 @@ namespace orc {
       throw InvalidArgument("Failed to cast to DecimalColumnStatisticsImpl");
     }
 
-    ColumnWriter::add(rowBatch, offset, numValues);
+    ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
     const char* notNull = decBatch->hasNulls ?
                           decBatch->notNull.data() + offset : nullptr;
@@ -2059,7 +2087,8 @@ namespace orc {
 
     virtual void add(ColumnVectorBatch& rowBatch,
                      uint64_t offset,
-                     uint64_t numValues) override;
+                     uint64_t numValues,
+                     const char* incomingMask) override;
 
     virtual void flush(std::vector<proto::Stream>& streams) override;
 
@@ -2124,13 +2153,14 @@ namespace orc {
 
   void ListColumnWriter::add(ColumnVectorBatch& rowBatch,
                              uint64_t offset,
-                             uint64_t numValues) {
+                             uint64_t numValues,
+                             const char* incomingMask) {
     ListVectorBatch* listBatch = dynamic_cast<ListVectorBatch*>(&rowBatch);
     if (listBatch == nullptr) {
       throw InvalidArgument("Failed to cast to ListVectorBatch");
     }
 
-    ColumnWriter::add(rowBatch, offset, numValues);
+    ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
     int64_t* offsets = listBatch->offsets.data() + offset;
     const char* notNull = listBatch->hasNulls ?
@@ -2146,7 +2176,7 @@ namespace orc {
 
     // unnecessary to deal with null as elements are packed together
     if (child.get()) {
-      child->add(*listBatch->elements, elemOffset, totalNumValues);
+      child->add(*listBatch->elements, elemOffset, totalNumValues, nullptr);
     }
     lengthEncoder->add(offsets, numValues, notNull);
 
@@ -2273,7 +2303,8 @@ namespace orc {
 
     virtual void add(ColumnVectorBatch& rowBatch,
                      uint64_t offset,
-                     uint64_t numValues) override;
+                     uint64_t numValues,
+                     const char* incomingMask) override;
 
     virtual void flush(std::vector<proto::Stream>& streams) override;
 
@@ -2342,13 +2373,14 @@ namespace orc {
 
   void MapColumnWriter::add(ColumnVectorBatch& rowBatch,
                             uint64_t offset,
-                            uint64_t numValues) {
+                            uint64_t numValues,
+                            const char* incomingMask) {
     MapVectorBatch* mapBatch = dynamic_cast<MapVectorBatch*>(&rowBatch);
     if (mapBatch == nullptr) {
       throw InvalidArgument("Failed to cast to MapVectorBatch");
     }
 
-    ColumnWriter::add(rowBatch, offset, numValues);
+    ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
     int64_t* offsets = mapBatch->offsets.data() + offset;
     const char* notNull = mapBatch->hasNulls ?
@@ -2366,10 +2398,10 @@ namespace orc {
 
     // unnecessary to deal with null as keys and values are packed together
     if (keyWriter.get()) {
-      keyWriter->add(*mapBatch->keys, elemOffset, totalNumValues);
+      keyWriter->add(*mapBatch->keys, elemOffset, totalNumValues, nullptr);
     }
     if (elemWriter.get()) {
-      elemWriter->add(*mapBatch->elements, elemOffset, totalNumValues);
+      elemWriter->add(*mapBatch->elements, elemOffset, totalNumValues, nullptr);
     }
 
     if (enableIndex) {
@@ -2529,7 +2561,8 @@ namespace orc {
 
     virtual void add(ColumnVectorBatch& rowBatch,
                      uint64_t offset,
-                     uint64_t numValues) override;
+                     uint64_t numValues,
+                     const char* incomingMask) override;
 
     virtual void flush(std::vector<proto::Stream>& streams) override;
 
@@ -2592,13 +2625,14 @@ namespace orc {
 
   void UnionColumnWriter::add(ColumnVectorBatch& rowBatch,
                               uint64_t offset,
-                              uint64_t numValues) {
+                              uint64_t numValues,
+                              const char* incomingMask) {
     UnionVectorBatch* unionBatch = dynamic_cast<UnionVectorBatch*>(&rowBatch);
     if (unionBatch == nullptr) {
       throw InvalidArgument("Failed to cast to UnionVectorBatch");
     }
 
-    ColumnWriter::add(rowBatch, offset, numValues);
+    ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
     const char* notNull = unionBatch->hasNulls ?
                           unionBatch->notNull.data() + offset : nullptr;
@@ -2621,7 +2655,7 @@ namespace orc {
       if (childLength[i] > 0) {
         children[i]->add(*unionBatch->children[i],
                          static_cast<uint64_t>(childOffset[i]),
-                         childLength[i]);
+                         childLength[i], nullptr);
       }
     }
 

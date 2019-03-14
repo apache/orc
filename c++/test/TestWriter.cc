@@ -47,13 +47,14 @@ namespace orc {
                                       const Type& type,
                                       MemoryPool* memoryPool,
                                       OutputStream* stream,
-                                      FileVersion version){
+                                      FileVersion version,
+                                      uint64_t stride = 0){
     WriterOptions options;
     options.setStripeSize(stripeSize);
     options.setCompressionBlockSize(compresionblockSize);
     options.setCompression(compression);
     options.setMemoryPool(memoryPool);
-    options.setRowIndexStride(0);
+    options.setRowIndexStride(stride);
     options.setFileVersion(version);
     return createWriter(type, stream, options);
   }
@@ -1263,6 +1264,342 @@ namespace orc {
     EXPECT_FALSE(rowReader->next(*batch));
   }
 
+  TEST_P(WriterTest, testWriteListColumnWithNull) {
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    MemoryPool * pool = getDefaultPool();
+    std::unique_ptr<Type> type(Type::buildTypeFromString(
+      "struct<col1:array<tinyint>>"));
+
+    uint64_t stripeSize = 1024;
+    uint64_t compressionBlockSize = 1024;
+
+    std::unique_ptr<Writer> writer = createWriter(stripeSize,
+                                      compressionBlockSize,
+                                      CompressionKind_ZLIB,
+                                      *type,
+                                      pool,
+                                      &memStream,
+                                      fileVersion);
+
+    std::unique_ptr<ColumnVectorBatch> batch =
+      writer->createRowBatch(4);
+    StructVectorBatch * structBatch =
+      dynamic_cast<StructVectorBatch *>(batch.get());
+    ListVectorBatch * listBatch =
+      dynamic_cast<ListVectorBatch *>(structBatch->fields[0]);
+    LongVectorBatch * intBatch =
+      dynamic_cast<LongVectorBatch *>(listBatch->elements.get());
+
+    // test data looks like below -
+    // {[1, 2]}
+    // null
+    // {[3, 4]}
+    // {[5, 6]}
+    int64_t * offsets = listBatch->offsets.data();
+    offsets[0] = 0;
+    offsets[1] = 2;
+    offsets[2] = 2;
+    offsets[3] = 4;
+    offsets[4] = 6;
+
+    intBatch->resize(6);
+    for (uint64_t i = 0; i < 6; ++i) {
+      intBatch->notNull[i] = 1;
+    }
+
+    int64_t * data = intBatch->data.data();
+    for (int8_t i = 1; i < 7; ++i) {
+      data[i - 1] = i;
+    }
+
+    structBatch->numElements = 4;
+
+    listBatch->notNull[1] = 0;
+    listBatch->hasNulls = true;
+    listBatch->numElements = 4;
+
+    writer->add(*batch);
+    writer->close();
+
+    std::unique_ptr<InputStream> inStream(
+      new MemoryInputStream (memStream.getData(), memStream.getLength()));
+    std::unique_ptr<Reader> reader = createReader(
+      pool,
+      std::move(inStream));
+    std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
+    EXPECT_EQ(4, reader->getNumberOfRows());
+
+    batch = rowReader->createRowBatch(4 * 2);
+    EXPECT_EQ(true, rowReader->next(*batch));
+
+    structBatch = dynamic_cast<StructVectorBatch *>(batch.get());
+    listBatch = dynamic_cast<ListVectorBatch *>(structBatch->fields[0]);
+    intBatch = dynamic_cast<LongVectorBatch *>(listBatch->elements.get());
+
+    data = intBatch->data.data();
+    offsets = listBatch->offsets.data();
+
+    EXPECT_EQ(4, structBatch->numElements);
+    EXPECT_EQ(4, listBatch->numElements);
+    EXPECT_EQ(1, listBatch->notNull[0]);
+    EXPECT_EQ(0, listBatch->notNull[1]);
+    EXPECT_EQ(1, listBatch->notNull[2]);
+    EXPECT_EQ(1, listBatch->notNull[3]);
+
+    EXPECT_EQ(0, offsets[0]);
+    EXPECT_EQ(2, offsets[1]);
+    EXPECT_EQ(2, offsets[2]);
+    EXPECT_EQ(4, offsets[3]);
+    EXPECT_EQ(6, offsets[4]);
+
+    for (int8_t i = 1; i < 7; ++i) {
+      EXPECT_EQ(i, data[i - 1]);
+    }
+  }
+
+  TEST_P(WriterTest, testWriteNestedStructWithNull) {
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    MemoryPool * pool = getDefaultPool();
+    std::unique_ptr<Type> type(Type::buildTypeFromString(
+      "struct<struct<bigint>>"));
+
+    uint64_t stripeSize = 1024;
+    uint64_t compressionBlockSize = 1024;
+
+    std::unique_ptr<Writer> writer = createWriter(stripeSize,
+                                      compressionBlockSize,
+                                      CompressionKind_ZLIB,
+                                      *type,
+                                      pool,
+                                      &memStream,
+                                      fileVersion);
+
+    // test data looks like below -
+    // {0}
+    // null
+    // {1}
+    // {2}
+    // {3}
+    std::unique_ptr<ColumnVectorBatch> batch =
+      writer->createRowBatch(5);
+    StructVectorBatch * structBatch =
+      dynamic_cast<StructVectorBatch *>(batch.get());
+    StructVectorBatch * structBatch2 =
+      dynamic_cast<StructVectorBatch *>(structBatch->fields[0]);
+    LongVectorBatch * intBatch =
+      dynamic_cast<LongVectorBatch *>(structBatch2->fields[0]);
+
+    structBatch->numElements = 5;
+    structBatch2->numElements = 5;
+    structBatch2->hasNulls = true;
+    structBatch2->notNull[1] = 0;
+
+    intBatch->resize(5);
+    for (int64_t i = 0; i < 5; ++i) {
+      intBatch->data.data()[i] = i;
+    }
+    intBatch->notNull[1] = 0;
+    intBatch->hasNulls = true;
+
+    writer->add(*batch);
+    writer->close();
+
+    std::unique_ptr<InputStream> inStream(
+      new MemoryInputStream (memStream.getData(), memStream.getLength()));
+    std::unique_ptr<Reader> reader = createReader(
+      pool,
+      std::move(inStream));
+    std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
+    EXPECT_EQ(5, reader->getNumberOfRows());
+
+    batch = rowReader->createRowBatch(5);
+    EXPECT_EQ(true, rowReader->next(*batch));
+
+    structBatch = dynamic_cast<StructVectorBatch *>(batch.get());
+    structBatch2 = dynamic_cast<StructVectorBatch *>(structBatch->fields[0]);
+    intBatch = dynamic_cast<LongVectorBatch *>(structBatch2->fields[0]);
+
+    for (uint64_t i = 0; i < 5; ++i) {
+      EXPECT_EQ(1, structBatch->notNull[i]);
+    }
+
+    for (uint64_t i = 0; i < 5; ++i) {
+      if (i == 1) {
+        EXPECT_EQ(0, structBatch2->notNull[i]);
+      } else {
+        EXPECT_EQ(1, structBatch2->notNull[i]);
+      }
+    }
+
+    for (uint64_t i = 0; i < 5; ++i) {
+      if (i == 1) {
+       EXPECT_EQ(0, intBatch->notNull[i]);
+      } else {
+       EXPECT_EQ(1, intBatch->notNull[i]);
+      }
+    }
+
+    int64_t * data = intBatch->data.data();
+    for (int8_t i = 0; i < 5; ++i) {
+      if (i != 1) {
+        EXPECT_EQ(i, data[i]);
+      }
+    }
+  }
+
+  TEST_P(WriterTest, testWriteNestedStructWithNullIndex) {
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    MemoryPool * pool = getDefaultPool();
+    std::unique_ptr<Type> type(Type::buildTypeFromString(
+      "struct<struct<bigint>>"));
+
+    uint64_t stripeSize = 1024;
+    uint64_t compressionBlockSize = 1024;
+
+    // 10000 rows with every 1000 row as an RG
+    // Each RG has 100 null rows except that the 5th RG is all null
+    std::unique_ptr<Writer> writer = createWriter(stripeSize,
+                                      compressionBlockSize,
+                                      CompressionKind_ZLIB,
+                                      *type,
+                                      pool,
+                                      &memStream,
+                                      fileVersion,
+                                      1000);
+
+    std::unique_ptr<ColumnVectorBatch> batch =
+      writer->createRowBatch(10000);
+    StructVectorBatch * structBatch =
+      dynamic_cast<StructVectorBatch *>(batch.get());
+    StructVectorBatch * structBatch2 =
+      dynamic_cast<StructVectorBatch *>(structBatch->fields[0]);
+    LongVectorBatch * intBatch =
+      dynamic_cast<LongVectorBatch *>(structBatch2->fields[0]);
+
+    structBatch->numElements = 10000;
+    structBatch2->numElements = 10000;
+    structBatch2->hasNulls = true;
+
+    intBatch->resize(10000);
+    intBatch->hasNulls = true;
+    for (uint64_t i = 0; i < 10; ++i) {
+      for (uint64_t j = i * 1000 + 100 * i; j < i * 1000 + 100 * i + 100; ++j) {
+        structBatch2->notNull[j] = 0;
+        intBatch->notNull[j] = 0;
+      }
+    }
+
+    for (uint64_t i = 5000; i < 6000; ++i) {
+      structBatch2->notNull[i] = 0;
+      intBatch->notNull[i] = 0;
+    }
+
+    for (int64_t i = 0; i < 10000; ++i) {
+      intBatch->data.data()[i] = i;
+    }
+
+    writer->add(*batch);
+    writer->close();
+
+    std::unique_ptr<InputStream> inStream(
+      new MemoryInputStream (memStream.getData(), memStream.getLength()));
+    std::unique_ptr<Reader> reader = createReader(
+      pool,
+      std::move(inStream));
+    std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
+    EXPECT_EQ(10000, reader->getNumberOfRows());
+
+    batch = rowReader->createRowBatch(1000);
+    structBatch = dynamic_cast<StructVectorBatch *>(batch.get());
+    structBatch2 = dynamic_cast<StructVectorBatch *>(structBatch->fields[0]);
+    intBatch = dynamic_cast<LongVectorBatch *>(structBatch2->fields[0]);
+
+    // Read rows 0 - 1000
+    EXPECT_EQ(true, rowReader->next(*batch));
+    for (uint64_t i = 0; i < 1000; ++i) {
+      EXPECT_EQ(1, structBatch->notNull[i]);
+    }
+
+    for (uint64_t i = 0; i < 1000; ++i) {
+      if (i < 100) {
+        EXPECT_EQ(0, structBatch2->notNull[i]);
+      } else {
+        EXPECT_EQ(1, structBatch2->notNull[i]);
+      }
+    }
+
+    for (uint64_t i = 0; i < 1000; ++i) {
+      if (i < 100) {
+       EXPECT_EQ(0, intBatch->notNull[i]);
+      } else {
+       EXPECT_EQ(1, intBatch->notNull[i]);
+       EXPECT_EQ(i, intBatch->data.data()[i]);
+      }
+    }
+
+    // Read rows 1800 - 2800, in which 2200 - 2300 are nulls
+    rowReader->seekToRow(1800);
+    EXPECT_EQ(true, rowReader->next(*batch));
+    for (uint64_t i = 0; i < 1000; ++i) {
+      EXPECT_EQ(1, structBatch->notNull[i]);
+    }
+
+    for (uint64_t i = 0; i < 1000; ++i) {
+      if (i >= 400 && i < 500) {
+        EXPECT_EQ(0, structBatch2->notNull[i]);
+      } else {
+        EXPECT_EQ(1, structBatch2->notNull[i]);
+      }
+    }
+
+    for (uint64_t i = 0; i < 1000; ++i) {
+      if (i >= 400 && i < 500) {
+       EXPECT_EQ(0, intBatch->notNull[i]);
+      } else {
+       EXPECT_EQ(1, intBatch->notNull[i]);
+       EXPECT_EQ(i + 1800, intBatch->data.data()[i]);
+      }
+    }
+
+    // Read rows 5000 - 6000, all nulls
+    rowReader->seekToRow(5000);
+    EXPECT_EQ(true, rowReader->next(*batch));
+    for (uint64_t i = 0; i < 1000; ++i) {
+      EXPECT_EQ(1, structBatch->notNull[i]);
+    }
+
+    for (uint64_t i = 0; i < 1000; ++i) {
+      EXPECT_EQ(0, structBatch2->notNull[i]);
+    }
+
+    for (uint64_t i = 0; i < 1000; ++i) {
+     EXPECT_EQ(0, intBatch->notNull[i]);
+    }
+
+    // Read rows 7200 - 8200, in which 7700 - 7800 are null
+    rowReader->seekToRow(7200);
+    EXPECT_EQ(true, rowReader->next(*batch));
+    for (uint64_t i = 0; i < 1000; ++i) {
+      EXPECT_EQ(1, structBatch->notNull[i]);
+    }
+
+    for (uint64_t i = 0; i < 1000; ++i) {
+      if (i >= 500 && i < 600) {
+        EXPECT_EQ(0, structBatch2->notNull[i]);
+      } else {
+        EXPECT_EQ(1, structBatch2->notNull[i]);
+      }
+    }
+
+    for (uint64_t i = 0; i < 1000; ++i) {
+      if (i >= 500 && i < 600) {
+       EXPECT_EQ(0, intBatch->notNull[i]);
+      } else {
+       EXPECT_EQ(1, intBatch->notNull[i]);
+       EXPECT_EQ(i + 7200, intBatch->data.data()[i]);
+      }
+    }
+  }
 
   INSTANTIATE_TEST_CASE_P(OrcTest, WriterTest, Values(FileVersion::v_0_11(), FileVersion::v_0_12()));
 }
