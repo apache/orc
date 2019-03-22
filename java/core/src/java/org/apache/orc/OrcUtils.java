@@ -18,11 +18,14 @@
 package org.apache.orc;
 
 import org.apache.orc.impl.ReaderImpl;
+import org.apache.orc.impl.SchemaEvolution;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import static org.apache.hadoop.util.StringUtils.COMMA_STR;
 
 public class OrcUtils {
 
@@ -51,14 +54,16 @@ public class OrcUtils {
       Arrays.fill(results, true);
       return results;
     }
+    TypeDescription baseSchema = SchemaEvolution.checkAcidSchema(schema) ?
+        SchemaEvolution.getBaseRow(schema) : schema;
+
     if (selectedColumns != null &&
-        schema.getCategory() == TypeDescription.Category.STRUCT) {
-      List<String> fieldNames = schema.getFieldNames();
-      List<TypeDescription> fields = schema.getChildren();
-      for (String column: selectedColumns.split((","))) {
-        TypeDescription col = findColumn(column, fieldNames, fields);
-        if (col != null) {
-          for(int i=col.getId(); i <= col.getMaximumId(); ++i) {
+        baseSchema.getCategory() == TypeDescription.Category.STRUCT) {
+
+      for (String columnName : selectedColumns.split(COMMA_STR)) {
+        TypeDescription column = findColumn(baseSchema, columnName.trim());
+        if (column != null) {
+          for (int i = column.getId(); i <= column.getMaximumId(); ++i) {
             results[i] = true;
           }
         }
@@ -67,18 +72,33 @@ public class OrcUtils {
     return results;
   }
 
-  private static TypeDescription findColumn(String columnName,
-                                            List<String> fieldNames,
-                                            List<TypeDescription> fields) {
-    int i = 0;
-    for(String fieldName: fieldNames) {
-      if (fieldName.equalsIgnoreCase(columnName)) {
-        return fields.get(i);
-      } else {
-        i += 1;
+  private static TypeDescription findColumn(TypeDescription schema, String column) {
+    TypeDescription result = schema;
+    String[] columnMatcher = column.split("\\.");
+
+    int index = 0;
+    while (index < columnMatcher.length &&
+        result.getCategory() == TypeDescription.Category.STRUCT) {
+
+      String columnName = columnMatcher[index];
+      int prevIndex = index;
+
+      List<TypeDescription> fields = result.getChildren();
+      List<String> fieldNames = result.getFieldNames();
+
+      for (int i = 0; i < fields.size(); i++) {
+        if (columnName.equalsIgnoreCase(fieldNames.get(i))) {
+          result = fields.get(i);
+          index++;
+
+          break;
+        }
+      }
+      if (prevIndex == index) {
+        return null;
       }
     }
-    return null;
+    return result;
   }
 
   public static List<OrcProto.Type> getOrcTypes(TypeDescription typeDescr) {
