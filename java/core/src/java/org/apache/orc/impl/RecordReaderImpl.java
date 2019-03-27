@@ -315,19 +315,24 @@ public class RecordReaderImpl implements RecordReader {
    * @param <T> the type of the comparision
    * @return the location of the point
    */
-  static <T> Location compareToRange(Comparable<T> point, T min, T max, boolean isLowerBoundSet, boolean isUpperBoundSet) {
+  static <T> Location compareToRange(Comparable<T> point, T min, T max, T lowerBound, T upperBound) {
 
-    int minCompare = point.compareTo(min);
+    final boolean isLowerBoundSet = (min == null && lowerBound != null) ? true : false;
+    final boolean isUpperBoundSet = (max == null && upperBound != null) ? true : false;
+
+    final int minCompare = isLowerBoundSet ? point.compareTo(lowerBound) : point.compareTo(min);
     if (minCompare < 0) {
       return Location.BEFORE;
     }
+
     /* since min value is truncated when we have compare=0, it means the predicate string is BEFORE the min value*/
     else if (minCompare == 0 && isLowerBoundSet) {
       return Location.BEFORE;
     } else if (minCompare == 0) {
       return Location.MIN;
     }
-    int maxCompare = point.compareTo(max);
+
+    int maxCompare = isUpperBoundSet ? point.compareTo(upperBound) : point.compareTo(max);
     if (maxCompare > 0) {
       return Location.AFTER;
     }
@@ -347,7 +352,7 @@ public class RecordReaderImpl implements RecordReader {
    * @return the object for the maximum value or null if there isn't one
    */
   static Object getMax(ColumnStatistics index) {
-    return getMax(index, false, null);
+    return getMax(index, false);
   }
 
   /**
@@ -359,31 +364,13 @@ public class RecordReaderImpl implements RecordReader {
    * @param useUTCTimestamp
    * @return the object for the maximum value or null if there isn't one
    */
-  static Object getMax(ColumnStatistics index, boolean useUTCTimestamp, PredicateLeaf predicate) {
+  static Object getMax(ColumnStatistics index, boolean useUTCTimestamp) {
     if (index instanceof IntegerColumnStatistics) {
       return ((IntegerColumnStatistics) index).getMaximum();
     } else if (index instanceof DoubleColumnStatistics) {
       return ((DoubleColumnStatistics) index).getMaximum();
     } else if (index instanceof StringColumnStatistics) {
-
-      /*
-      final boolean isUpperBoundSet = ((StringColumnStatistics) index).getMaximum() == null
-          && ((StringColumnStatistics) index).getUpperBound() != null;
-
-      // if the literal is bigger than the stats we won't be able to properly determine if is in the given stats.
-      if((predicate.getLiteral().toString().getBytes().length > 1024)) {
-        return UNKNOWN_VALUE;
-      }
-      // if the literal is 1024 bytes then check the bounds
-      else if (predicate.getLiteral().toString().getBytes().length == 1024 && isUpperBoundSet) {
-        // We won't be able to correctly check for equality
-        if( (predicate.getOperator() == PredicateLeaf.Operator.EQUALS) || (predicate.getOperator() == PredicateLeaf.Operator.LESS_THAN_EQUALS) ) {
-          return UNKNOWN_VALUE;
-        }
-      }
-      */
       return ((StringColumnStatistics) index).getUpperBound();
-
     } else if (index instanceof DateColumnStatistics) {
       return ((DateColumnStatistics) index).getMaximum();
     } else if (index instanceof DecimalColumnStatistics) {
@@ -412,7 +399,7 @@ public class RecordReaderImpl implements RecordReader {
    * @return the object for the minimum value or null if there isn't one
    */
   static Object getMin(ColumnStatistics index) {
-    return getMin(index, false, null);
+    return getMin(index, false);
   }
 
   /**
@@ -424,30 +411,13 @@ public class RecordReaderImpl implements RecordReader {
    * @param useUTCTimestamp
    * @return the object for the minimum value or null if there isn't one
    */
-  static Object getMin(ColumnStatistics index, boolean useUTCTimestamp, PredicateLeaf predicate) {
+  static Object getMin(ColumnStatistics index, boolean useUTCTimestamp) {
     if (index instanceof IntegerColumnStatistics) {
       return ((IntegerColumnStatistics) index).getMinimum();
     } else if (index instanceof DoubleColumnStatistics) {
       return ((DoubleColumnStatistics) index).getMinimum();
     } else if (index instanceof StringColumnStatistics) {
-      /*
-      final boolean isLowerBoundSet = ((StringColumnStatistics) index).getMinimum() == null
-          && ((StringColumnStatistics) index).getLowerBound() != null;
-
-      // if the literal is bigger than the stats we won't be able to properly determine if is in the given stats.
-      if((predicate.getLiteral().toString().getBytes().length > 1024)) {
-        return UNKNOWN_VALUE;
-      }
-      // if the literal is 1024 bytes then check the bounds
-      else if (predicate.getLiteral().toString().getBytes().length == 1024 && isLowerBoundSet) {
-        // We won't be able to correctly check for equality
-        if( (predicate.getOperator() == PredicateLeaf.Operator.EQUALS) || (predicate.getOperator() == PredicateLeaf.Operator.LESS_THAN_EQUALS) ) {
-          return UNKNOWN_VALUE;
-        }
-      }
-      */
       return ((StringColumnStatistics) index).getLowerBound();
-
     } else if (index instanceof DateColumnStatistics) {
       return ((DateColumnStatistics) index).getMinimum();
     } else if (index instanceof DecimalColumnStatistics) {
@@ -515,8 +485,8 @@ public class RecordReaderImpl implements RecordReader {
                                            TypeDescription.Category type,
                                            boolean useUTCTimestamp) {
     ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null, statsProto);
-    Object minValue = getMin(cs, useUTCTimestamp, predicate);
-    Object maxValue = getMax(cs, useUTCTimestamp, predicate);
+    Object minValue = getMin(cs, useUTCTimestamp);
+    Object maxValue = getMax(cs, useUTCTimestamp);
     // files written before ORC-135 stores timestamp wrt to local timezone causing issues with PPD.
     // disable PPD for timestamp for all old files
     if (type.equals(TypeDescription.Category.TIMESTAMP)) {
@@ -533,19 +503,20 @@ public class RecordReaderImpl implements RecordReader {
       }
     }
 
-    boolean isLowerBoundSet = false;
-    boolean isUpperBoundSet = false;
-    if(cs instanceof StringColumnStatistics) {
-      isLowerBoundSet = ((StringColumnStatistics) cs).getMinimum() == null
-          && ((StringColumnStatistics) cs).getLowerBound() != null;
+    String lowerBound = null;
+    String upperBound = null;
 
-      isUpperBoundSet = ((StringColumnStatistics) cs).getMaximum() == null
-          && ((StringColumnStatistics) cs).getUpperBound() != null;
+    if(cs instanceof StringColumnStatistics) {
+      lowerBound = ((StringColumnStatistics) cs).getLowerBound();
+      minValue = ((StringColumnStatistics) cs).getMinimum();
+
+      upperBound = ((StringColumnStatistics) cs).getUpperBound();
+      maxValue = ((StringColumnStatistics) cs).getMaximum();
     }
 
     return evaluatePredicateRange(predicate, minValue, maxValue, cs.hasNull(),
         BloomFilterIO.deserialize(kind, encoding, writerVersion, type, bloomFilter),
-        useUTCTimestamp, isLowerBoundSet, isUpperBoundSet);
+        useUTCTimestamp, lowerBound, upperBound);
   }
 
   /**
@@ -578,26 +549,28 @@ public class RecordReaderImpl implements RecordReader {
                                              PredicateLeaf predicate,
                                              BloomFilter bloomFilter,
                                              boolean useUTCTimestamp) {
-    Object minValue = getMin(stats, useUTCTimestamp, predicate);
-    Object maxValue = getMax(stats, useUTCTimestamp, predicate);
+    Object minValue = getMin(stats, useUTCTimestamp);
+    Object maxValue = getMax(stats, useUTCTimestamp);
 
-    boolean isLowerBoundSet = false;
-    boolean isUpperBoundSet = false;
+    String lowerBound = null;
+    String upperBound = null;
+
     if(stats instanceof StringColumnStatistics) {
-      isLowerBoundSet = ((StringColumnStatistics) stats).getMinimum() == null
-          && ((StringColumnStatistics) stats).getLowerBound() != null;
+      lowerBound = ((StringColumnStatistics) stats).getLowerBound();
+      minValue = ((StringColumnStatistics) stats).getMinimum();
 
-      isUpperBoundSet = ((StringColumnStatistics) stats).getMaximum() == null
-          && ((StringColumnStatistics) stats).getUpperBound() != null;
+      upperBound = ((StringColumnStatistics) stats).getUpperBound();
+      maxValue = ((StringColumnStatistics) stats).getMaximum();
     }
 
-    return evaluatePredicateRange(predicate, minValue, maxValue, stats.hasNull(), bloomFilter, useUTCTimestamp, isLowerBoundSet, isUpperBoundSet);
+    return evaluatePredicateRange(predicate, minValue, maxValue, stats.hasNull(), bloomFilter, useUTCTimestamp, lowerBound, upperBound);
   }
 
   static TruthValue evaluatePredicateRange(PredicateLeaf predicate, Object min,
-      Object max, boolean hasNull, BloomFilter bloomFilter, boolean useUTCTimestamp, boolean isLowerBoundSet, boolean isUpperBoundSet) {
+      Object max, boolean hasNull, BloomFilter bloomFilter,
+      boolean useUTCTimestamp, Object lowerBound, Object upperBound) {
     // if we didn't have any values, everything must have been null
-    if (min == null) {
+    if (min == null && lowerBound == null) {
       if (predicate.getOperator() == PredicateLeaf.Operator.IS_NULL) {
         return TruthValue.YES;
       } else {
@@ -618,7 +591,7 @@ public class RecordReaderImpl implements RecordReader {
     Object maxValue = getBaseObjectForComparison(predicate.getType(), max);
     Object predObj = getBaseObjectForComparison(predicate.getType(), baseObj);
 
-    result = evaluatePredicateMinMax(predicate, predObj, minValue, maxValue, hasNull, isLowerBoundSet, isUpperBoundSet);
+    result = evaluatePredicateMinMax(predicate, predObj, minValue, maxValue, hasNull, lowerBound, upperBound);
     if (shouldEvaluateBloomFilter(predicate, result, bloomFilter)) {
       return evaluatePredicateBloomFilter(predicate, predObj, bloomFilter, hasNull, useUTCTimestamp);
     } else {
@@ -646,21 +619,21 @@ public class RecordReaderImpl implements RecordReader {
       Object minValue,
       Object maxValue,
       boolean hasNull,
-      boolean isLowerBoundSet,
-      boolean isUpperBoundSet) {
+      Object lowerBound,
+      Object upperBound) {
     Location loc;
 
     switch (predicate.getOperator()) {
       case NULL_SAFE_EQUALS:
-        loc = compareToRange((Comparable) predObj, minValue, maxValue, isLowerBoundSet, isUpperBoundSet);
+        loc = compareToRange((Comparable) predObj, minValue, maxValue, lowerBound, upperBound);
         if (loc == Location.BEFORE || loc == Location.AFTER) {
           return TruthValue.NO;
         } else {
           return TruthValue.YES_NO;
         }
       case EQUALS:
-        loc = compareToRange((Comparable) predObj, minValue, maxValue, isLowerBoundSet, isUpperBoundSet);
-        if (minValue.equals(maxValue) && loc == Location.MIN) {
+        loc = compareToRange((Comparable) predObj, minValue, maxValue, lowerBound, upperBound);
+        if (minValue != null && minValue.equals(maxValue) && loc == Location.MIN) {
           return hasNull ? TruthValue.YES_NULL : TruthValue.YES;
         } else if (loc == Location.BEFORE || loc == Location.AFTER) {
           return hasNull ? TruthValue.NO_NULL : TruthValue.NO;
@@ -668,7 +641,7 @@ public class RecordReaderImpl implements RecordReader {
           return hasNull ? TruthValue.YES_NO_NULL : TruthValue.YES_NO;
         }
       case LESS_THAN:
-        loc = compareToRange((Comparable) predObj, minValue, maxValue, isLowerBoundSet, isUpperBoundSet);
+        loc = compareToRange((Comparable) predObj, minValue, maxValue, lowerBound, upperBound);
         if (loc == Location.AFTER) {
           return hasNull ? TruthValue.YES_NULL : TruthValue.YES;
         } else if (loc == Location.BEFORE || loc == Location.MIN) {
@@ -677,7 +650,7 @@ public class RecordReaderImpl implements RecordReader {
           return hasNull ? TruthValue.YES_NO_NULL : TruthValue.YES_NO;
         }
       case LESS_THAN_EQUALS:
-        loc = compareToRange((Comparable) predObj, minValue, maxValue, isLowerBoundSet, isUpperBoundSet);
+        loc = compareToRange((Comparable) predObj, minValue, maxValue, lowerBound, upperBound);
         if (loc == Location.AFTER || loc == Location.MAX) {
           return hasNull ? TruthValue.YES_NULL : TruthValue.YES;
         } else if (loc == Location.BEFORE) {
@@ -686,12 +659,17 @@ public class RecordReaderImpl implements RecordReader {
           return hasNull ? TruthValue.YES_NO_NULL : TruthValue.YES_NO;
         }
       case IN:
-        if (minValue.equals(maxValue)) {
+        boolean minEqualsMax = predicate.getType()
+            .equals(PredicateLeaf.Type.STRING) ?
+            lowerBound.equals(upperBound) :
+            minValue.equals(maxValue);
+
+        if (minEqualsMax) {
           // for a single value, look through to see if that value is in the
           // set
           for (Object arg : predicate.getLiteralList()) {
             predObj = getBaseObjectForComparison(predicate.getType(), arg);
-            loc = compareToRange((Comparable) predObj, minValue, maxValue, isLowerBoundSet, isUpperBoundSet);
+            loc = compareToRange((Comparable) predObj, minValue, maxValue, lowerBound, upperBound);
             if (loc == Location.MIN) {
               return hasNull ? TruthValue.YES_NULL : TruthValue.YES;
             }
@@ -701,7 +679,7 @@ public class RecordReaderImpl implements RecordReader {
           // are all of the values outside of the range?
           for (Object arg : predicate.getLiteralList()) {
             predObj = getBaseObjectForComparison(predicate.getType(), arg);
-            loc = compareToRange((Comparable) predObj, minValue, maxValue, isLowerBoundSet, isUpperBoundSet);
+            loc = compareToRange((Comparable) predObj, minValue, maxValue, lowerBound, upperBound);
             if (loc == Location.MIN || loc == Location.MIDDLE ||
                 loc == Location.MAX) {
               return hasNull ? TruthValue.YES_NO_NULL : TruthValue.YES_NO;
@@ -716,10 +694,10 @@ public class RecordReaderImpl implements RecordReader {
         }
         Object predObj1 = getBaseObjectForComparison(predicate.getType(), args.get(0));
 
-        loc = compareToRange((Comparable) predObj1, minValue, maxValue, isLowerBoundSet, isUpperBoundSet);
+        loc = compareToRange((Comparable) predObj1, minValue, maxValue, lowerBound, upperBound);
         if (loc == Location.BEFORE || loc == Location.MIN) {
           Object predObj2 = getBaseObjectForComparison(predicate.getType(), args.get(1));
-          Location loc2 = compareToRange((Comparable) predObj2, minValue, maxValue, isLowerBoundSet, isUpperBoundSet);
+          Location loc2 = compareToRange((Comparable) predObj2, minValue, maxValue, lowerBound, upperBound);
           if (loc2 == Location.AFTER || loc2 == Location.MAX) {
             return hasNull ? TruthValue.YES_NULL : TruthValue.YES;
           } else if (loc2 == Location.BEFORE) {
