@@ -68,6 +68,12 @@ namespace orc {
     virtual void resize(uint64_t capacity);
 
     /**
+     * Empties the vector from all its elements, recursively.
+     * Do not alter the current capacity.
+     */
+    virtual void clear();
+
+    /**
      * Heap memory used by the batch.
      */
     virtual uint64_t getMemoryUsage();
@@ -89,6 +95,7 @@ namespace orc {
     DataBuffer<int64_t> data;
     std::string toString() const;
     void resize(uint64_t capacity);
+    void clear();
     uint64_t getMemoryUsage();
   };
 
@@ -97,6 +104,7 @@ namespace orc {
     virtual ~DoubleVectorBatch();
     std::string toString() const;
     void resize(uint64_t capacity);
+    void clear();
     uint64_t getMemoryUsage();
 
     DataBuffer<double> data;
@@ -107,6 +115,7 @@ namespace orc {
     virtual ~StringVectorBatch();
     std::string toString() const;
     void resize(uint64_t capacity);
+    void clear();
     uint64_t getMemoryUsage();
 
     // pointers to the start of each string
@@ -154,6 +163,7 @@ namespace orc {
     virtual ~StructVectorBatch();
     std::string toString() const;
     void resize(uint64_t capacity);
+    void clear();
     uint64_t getMemoryUsage();
     bool hasVariableLength();
 
@@ -165,6 +175,7 @@ namespace orc {
     virtual ~ListVectorBatch();
     std::string toString() const;
     void resize(uint64_t capacity);
+    void clear();
     uint64_t getMemoryUsage();
     bool hasVariableLength();
 
@@ -183,6 +194,7 @@ namespace orc {
     virtual ~MapVectorBatch();
     std::string toString() const;
     void resize(uint64_t capacity);
+    void clear();
     uint64_t getMemoryUsage();
     bool hasVariableLength();
 
@@ -203,6 +215,7 @@ namespace orc {
     virtual ~UnionVectorBatch();
     std::string toString() const;
     void resize(uint64_t capacity);
+    void clear();
     uint64_t getMemoryUsage();
     bool hasVariableLength();
 
@@ -235,6 +248,7 @@ namespace orc {
     virtual ~Decimal64VectorBatch();
     std::string toString() const;
     void resize(uint64_t capacity);
+    void clear();
     uint64_t getMemoryUsage();
 
     // total number of digits
@@ -260,6 +274,7 @@ namespace orc {
     virtual ~Decimal128VectorBatch();
     std::string toString() const;
     void resize(uint64_t capacity);
+    void clear();
     uint64_t getMemoryUsage();
 
     // total number of digits
@@ -291,6 +306,7 @@ namespace orc {
     virtual ~TimestampVectorBatch();
     std::string toString() const;
     void resize(uint64_t capacity);
+    void clear();
     uint64_t getMemoryUsage();
 
     // the number of seconds past 1 Jan 1970 00:00 UTC (aka time_t)
