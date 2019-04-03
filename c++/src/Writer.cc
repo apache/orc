@@ -38,6 +38,9 @@ namespace orc {
     FileVersion fileVersion;
     double dictionaryKeySizeThreshold;
     bool enableIndex;
+    std::set<uint64_t> columnsUseBloomFilter;
+    double bloomFilterFalsePositiveProb;
+    BloomFilterVersion bloomFilterVersion;
 
     WriterOptionsPrivate() :
                             fileVersion(FileVersion::v_0_12()) { // default to Hive_0_12
@@ -51,6 +54,8 @@ namespace orc {
       errorStream = &std::cerr;
       dictionaryKeySizeThreshold = 0.0;
       enableIndex = true;
+      bloomFilterFalsePositiveProb = 0.05;
+      bloomFilterVersion = UTF8;
     }
   };
 
@@ -198,6 +203,32 @@ namespace orc {
 
   bool WriterOptions::getEnableDictionary() const {
     return privateBits->dictionaryKeySizeThreshold > 0.0;
+  }
+
+  WriterOptions& WriterOptions::setColumnsUseBloomFilter(
+    const std::set<uint64_t>& columns) {
+    privateBits->columnsUseBloomFilter = columns;
+    return *this;
+  }
+
+  bool WriterOptions::isColumnUseBloomFilter(uint64_t column) const {
+    return privateBits->columnsUseBloomFilter.find(column) !=
+           privateBits->columnsUseBloomFilter.end();
+  }
+
+  WriterOptions& WriterOptions::setBloomFilterFPP(double fpp) {
+    privateBits->bloomFilterFalsePositiveProb = fpp;
+    return *this;
+  }
+
+  double WriterOptions::getBloomFilterFPP() const {
+    return privateBits->bloomFilterFalsePositiveProb;
+  }
+
+  // delibrately not provide setter to write bloom filter version because
+  // we only support UTF8 for now.
+  BloomFilterVersion WriterOptions::getBloomFilterVersion() const {
+    return privateBits->bloomFilterVersion;
   }
 
   Writer::~Writer() {

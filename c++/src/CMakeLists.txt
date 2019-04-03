@@ -186,6 +186,7 @@ set(SOURCE_FILES
   io/OutputStream.cc
   wrap/orc-proto-wrapper.cc
   Adaptor.cc
+  BloomFilter.cc
   ByteRLE.cc
   ColumnPrinter.cc
   ColumnReader.cc
@@ -196,6 +197,7 @@ set(SOURCE_FILES
   Int128.cc
   LzoDecompressor.cc
   MemoryPool.cc
+  Murmur3.cc
   OrcFile.cc
   Reader.cc
   RLEv1.cc

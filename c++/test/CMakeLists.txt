@@ -26,6 +26,7 @@ add_executable (orc-test
   MemoryInputStream.cc
   MemoryOutputStream.cc
   TestBufferedOutputStream.cc
+  TestBloomFilter.cc
   TestByteRle.cc
   TestByteRLEEncoder.cc
   TestColumnPrinter.cc

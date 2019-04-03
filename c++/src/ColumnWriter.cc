@@ -97,8 +97,10 @@ namespace orc {
                                 rowIndex(),
                                 rowIndexEntry(),
                                 rowIndexPosition(),
+                                enableBloomFilter(false),
                                 memPool(*options.getMemoryPool()),
-                                indexStream() {
+                                indexStream(),
+                                bloomFilterStream() {
 
     std::unique_ptr<BufferedOutputStream> presentStream =
         factory.createStream(proto::Stream_Kind_PRESENT);
@@ -116,6 +118,16 @@ namespace orc {
                      new RowIndexPositionRecorder(*rowIndexEntry));
       indexStream =
         factory.createStream(proto::Stream_Kind_ROW_INDEX);
+
+      // BloomFilters for non-UTF8 strings and non-UTC timestamps are not supported
+      if (options.isColumnUseBloomFilter(columnId)
+          && options.getBloomFilterVersion() == BloomFilterVersion::UTF8) {
+        enableBloomFilter = true;
+        bloomFilter.reset(new BloomFilterImpl(
+          options.getRowIndexStride(), options.getBloomFilterFPP()));
+        bloomFilterIndex.reset(new proto::BloomFilterIndex());
+        bloomFilterStream = factory.createStream(proto::Stream_Kind_BLOOM_FILTER_UTF8);
+      }
     }
   }
 
@@ -174,7 +186,16 @@ namespace orc {
     colStripeStatistics->merge(*colIndexStatistics);
     colIndexStatistics->reset();
 
+    addBloomFilterEntry();
+
     recordPosition();
+  }
+
+  void ColumnWriter::addBloomFilterEntry() {
+    if (enableBloomFilter) {
+      BloomFilterUTF8Utils::serialize(*bloomFilter, *bloomFilterIndex->add_bloomfilter());
+      bloomFilter->reset();
+    }
   }
 
   void ColumnWriter::writeIndex(std::vector<proto::Stream> &streams) const {
@@ -187,6 +208,17 @@ namespace orc {
     stream.set_column(static_cast<uint32_t>(columnId));
     stream.set_length(indexStream->flush());
     streams.push_back(stream);
+
+    // write BLOOM_FILTER_UTF8 stream
+    if (enableBloomFilter) {
+      if (!bloomFilterIndex->SerializeToZeroCopyStream(bloomFilterStream.get())) {
+        throw std::logic_error("Failed to write bloom filter stream.");
+      }
+      stream.set_kind(proto::Stream_Kind_BLOOM_FILTER_UTF8);
+      stream.set_column(static_cast<uint32_t>(columnId));
+      stream.set_length(bloomFilterStream->flush());
+      streams.push_back(stream);
+    }
   }
 
   void ColumnWriter::recordPosition() const {
@@ -202,6 +234,11 @@ namespace orc {
 
       // write current positions
       recordPosition();
+    }
+
+    if (enableBloomFilter) {
+      bloomFilter->reset();
+      bloomFilterIndex->clear_bloomfilter();
     }
   }
 
@@ -474,6 +511,9 @@ namespace orc {
     for (uint64_t i = 0; i < numValues; ++i) {
       if (notNull == nullptr || notNull[i]) {
         ++count;
+        if (enableBloomFilter) {
+          bloomFilter->addLong(data[i]);
+        }
         intStats->update(data[i], 1);
       }
     }
@@ -504,6 +544,9 @@ namespace orc {
     proto::ColumnEncoding encoding;
     encoding.set_kind(RleVersionMapper(rleVersion));
     encoding.set_dictionarysize(0);
+    if (enableBloomFilter) {
+      encoding.set_bloomencoding(BloomFilterVersion::UTF8);
+    }
     encodings.push_back(encoding);
   }
 
@@ -580,6 +623,9 @@ namespace orc {
     for (uint64_t i = 0; i < numValues; ++i) {
       if (notNull == nullptr || notNull[i]) {
         ++count;
+        if (enableBloomFilter) {
+          bloomFilter->addLong(data[i]);
+        }
         intStats->update(static_cast<int64_t>(byteData[i]), 1);
       }
     }
@@ -610,6 +656,9 @@ namespace orc {
     proto::ColumnEncoding encoding;
     encoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
     encoding.set_dictionarysize(0);
+    if (enableBloomFilter) {
+      encoding.set_bloomencoding(BloomFilterVersion::UTF8);
+    }
     encodings.push_back(encoding);
   }
 
@@ -686,6 +735,9 @@ namespace orc {
     for (uint64_t i = 0; i < numValues; ++i) {
       if (notNull == nullptr || notNull[i]) {
         ++count;
+        if (enableBloomFilter) {
+          bloomFilter->addLong(data[i]);
+        }
         boolStats->update(byteData[i] != 0, 1);
       }
     }
@@ -716,6 +768,9 @@ namespace orc {
     proto::ColumnEncoding encoding;
     encoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
     encoding.set_dictionarysize(0);
+    if (enableBloomFilter) {
+      encoding.set_bloomencoding(BloomFilterVersion::UTF8);
+    }
     encodings.push_back(encoding);
   }
 
@@ -811,6 +866,9 @@ namespace orc {
         }
         dataStream->write(data, bytes);
         ++count;
+        if (enableBloomFilter) {
+          bloomFilter->addDouble(doubleData[i]);
+        }
         doubleStats->update(doubleData[i]);
       }
     }
@@ -841,6 +899,9 @@ namespace orc {
     proto::ColumnEncoding encoding;
     encoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
     encoding.set_dictionarysize(0);
+    if (enableBloomFilter) {
+      encoding.set_bloomencoding(BloomFilterVersion::UTF8);
+    }
     encodings.push_back(encoding);
   }
 
@@ -1112,6 +1173,9 @@ namespace orc {
         } else {
           directDataStream->write(data[i], len);
         }
+        if (enableBloomFilter) {
+          bloomFilter->addBytes(data[i], static_cast<int64_t>(len));
+        }
         strStats->update(data[i], len);
         ++count;
       }
@@ -1187,6 +1251,9 @@ namespace orc {
                         proto::ColumnEncoding_Kind_DICTIONARY_V2);
     }
     encoding.set_dictionarysize(static_cast<uint32_t>(dictionary.size()));
+    if (enableBloomFilter) {
+      encoding.set_bloomencoding(BloomFilterVersion::UTF8);
+    }
     encodings.push_back(encoding);
   }
 
@@ -1489,6 +1556,9 @@ namespace orc {
           directDataStream->write(charData, static_cast<size_t>(length[i]));
         }
 
+        if (enableBloomFilter) {
+          bloomFilter->addBytes(data[i], length[i]);
+        }
         strStats->update(charData, static_cast<size_t>(length[i]));
         ++count;
       }
@@ -1559,6 +1629,9 @@ namespace orc {
           directDataStream->write(data[i], static_cast<size_t>(length[i]));
         }
 
+        if (enableBloomFilter) {
+          bloomFilter->addBytes(data[i], length[i]);
+        }
         strStats->update(data[i], static_cast<size_t>(length[i]));
         ++count;
       }
@@ -1733,6 +1806,9 @@ namespace orc {
         // TimestampVectorBatch already stores data in UTC
         int64_t millsUTC = secs[i] * 1000 + nanos[i] / 1000000;
         ++count;
+        if (enableBloomFilter) {
+          bloomFilter->addLong(millsUTC);
+        }
         tsStats->update(millsUTC);
 
         if (secs[i] < 0 && nanos[i] != 0) {
@@ -1780,6 +1856,9 @@ namespace orc {
     proto::ColumnEncoding encoding;
     encoding.set_kind(RleVersionMapper(rleVersion));
     encoding.set_dictionarysize(0);
+    if (enableBloomFilter) {
+      encoding.set_bloomencoding(BloomFilterVersion::UTF8);
+    }
     encodings.push_back(encoding);
   }
 
@@ -1838,6 +1917,9 @@ namespace orc {
       if (!notNull || notNull[i]) {
         ++count;
         dateStats->update(static_cast<int32_t>(data[i]));
+        if (enableBloomFilter) {
+          bloomFilter->addLong(data[i]);
+        }
       }
     }
     dateStats->increase(count);
@@ -1942,6 +2024,12 @@ namespace orc {
         }
         valueStream->write(buffer, static_cast<size_t>(data - buffer));
         ++count;
+        if (enableBloomFilter) {
+          std::string decimal = Decimal(
+            values[i], static_cast<int32_t>(scale)).toString();
+          bloomFilter->addBytes(
+            decimal.c_str(), static_cast<int64_t>(decimal.size()));
+        }
         decStats->update(Decimal(values[i], static_cast<int32_t>(scale)));
       }
     }
@@ -1981,6 +2069,9 @@ namespace orc {
     proto::ColumnEncoding encoding;
     encoding.set_kind(RleVersionMapper(rleVersion));
     encoding.set_dictionarysize(0);
+    if (enableBloomFilter) {
+      encoding.set_bloomencoding(BloomFilterVersion::UTF8);
+    }
     encodings.push_back(encoding);
   }
 
@@ -2067,6 +2158,12 @@ namespace orc {
         valueStream->write(buffer, static_cast<size_t>(data - buffer));
 
         ++count;
+        if (enableBloomFilter) {
+          std::string decimal = Decimal(
+            values[i], static_cast<int32_t>(scale)).toString();
+          bloomFilter->addBytes(
+            decimal.c_str(), static_cast<int64_t>(decimal.size()));
+        }
         decStats->update(Decimal(values[i], static_cast<int32_t>(scale)));
       }
     }
@@ -2188,6 +2285,9 @@ namespace orc {
         for (uint64_t i = 0; i < numValues; ++i) {
           if (notNull[i]) {
             ++count;
+            if (enableBloomFilter) {
+              bloomFilter->addLong(offsets[i]);
+            }
           }
         }
         colIndexStatistics->increase(count);
@@ -2233,6 +2333,9 @@ namespace orc {
     proto::ColumnEncoding encoding;
     encoding.set_kind(RleVersionMapper(rleVersion));
     encoding.set_dictionarysize(0);
+    if (enableBloomFilter) {
+      encoding.set_bloomencoding(BloomFilterVersion::UTF8);
+    }
     encodings.push_back(encoding);
     if (child.get()) {
       child->getColumnEncoding(encodings);
@@ -2412,6 +2515,9 @@ namespace orc {
         for (uint64_t i = 0; i < numValues; ++i) {
           if (notNull[i]) {
             ++count;
+            if (enableBloomFilter) {
+              bloomFilter->addLong(offsets[i]);
+            }
           }
         }
         colIndexStatistics->increase(count);
@@ -2467,6 +2573,9 @@ namespace orc {
     proto::ColumnEncoding encoding;
     encoding.set_kind(RleVersionMapper(rleVersion));
     encoding.set_dictionarysize(0);
+    if (enableBloomFilter) {
+      encoding.set_bloomencoding(BloomFilterVersion::UTF8);
+    }
     encodings.push_back(encoding);
     if (keyWriter.get()) {
       keyWriter->getColumnEncoding(encodings);
@@ -2668,6 +2777,9 @@ namespace orc {
         for (uint64_t i = 0; i < numValues; ++i) {
           if (notNull[i]) {
             ++count;
+            if (enableBloomFilter) {
+              bloomFilter->addLong(tags[i]);
+            }
           }
         }
         colIndexStatistics->increase(count);
@@ -2713,6 +2825,9 @@ namespace orc {
     proto::ColumnEncoding encoding;
     encoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
     encoding.set_dictionarysize(0);
+    if (enableBloomFilter) {
+      encoding.set_bloomencoding(BloomFilterVersion::UTF8);
+    }
     encodings.push_back(encoding);
     for (uint32_t i = 0; i < children.size(); ++i) {
       children[i]->getColumnEncoding(encodings);

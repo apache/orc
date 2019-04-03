@@ -286,6 +286,9 @@ namespace orc {
     uint64_t getMemoryUseByName(const std::list<std::string>& names, int stripeIx=-1) override;
 
     uint64_t getMemoryUseByTypeId(const std::list<uint64_t>& include, int stripeIx=-1) override;
+
+    std::map<uint32_t, BloomFilterIndex>
+    getBloomFilters(uint32_t stripeIndex, const std::set<uint32_t>& included) const override;
   };
 
 }// namespace
