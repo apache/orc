@@ -220,89 +220,135 @@ public class TestRecordReaderImpl {
     Reader reader = OrcFile.createReader(p, options);
   }
 
-  @Test
-  public void testCompareToRangeInt() throws Exception {
-    assertEquals(Location.BEFORE,
-      RecordReaderImpl.compareToRange(19L, 20L, 40L, null, null));
-    assertEquals(Location.AFTER,
-      RecordReaderImpl.compareToRange(41L, 20L, 40L, null, null));
-    assertEquals(Location.MIN,
-        RecordReaderImpl.compareToRange(20L, 20L, 40L, null, null));
-    assertEquals(Location.MIDDLE,
-        RecordReaderImpl.compareToRange(21L, 20L, 40L, null, null));
-    assertEquals(Location.MAX,
-      RecordReaderImpl.compareToRange(40L, 20L, 40L, null, null));
-    assertEquals(Location.BEFORE,
-      RecordReaderImpl.compareToRange(0L, 1L, 1L, null, null));
-    assertEquals(Location.MIN,
-      RecordReaderImpl.compareToRange(1L, 1L, 1L, null, null));
-    assertEquals(Location.AFTER,
-      RecordReaderImpl.compareToRange(2L, 1L, 1L, null, null));
+  static class StubPredicate implements PredicateLeaf {
+    final PredicateLeaf.Type type;
+
+    StubPredicate(PredicateLeaf.Type type) {
+      this.type = type;
+    }
+
+    @Override
+    public Operator getOperator() {
+      return null;
+    }
+
+    @Override
+    public Type getType() {
+      return type;
+    }
+
+    @Override
+    public String getColumnName() {
+      return null;
+    }
+
+    @Override
+    public Object getLiteral() {
+      return null;
+    }
+
+    @Override
+    public List<Object> getLiteralList() {
+      return null;
+    }
+  }
+
+  static Location compareToRange(PredicateLeaf.Type type, Comparable point,
+                                 Comparable min, Comparable max) {
+    PredicateLeaf predicate = new StubPredicate(type);
+    return new RecordReaderImpl.ValueRange(predicate, min, max, true)
+               .compare(point);
   }
 
   @Test
-  public void testCompareToRangeString() throws Exception {
+  public void testCompareToRangeInt() {
     assertEquals(Location.BEFORE,
-        RecordReaderImpl.compareToRange("a", "b", "c", null, null));
+        compareToRange(PredicateLeaf.Type.LONG, 19L, 20L, 40L));
     assertEquals(Location.AFTER,
-        RecordReaderImpl.compareToRange("d", "b", "c", null, null));
+        compareToRange(PredicateLeaf.Type.LONG, 41L, 20L, 40L));
     assertEquals(Location.MIN,
-        RecordReaderImpl.compareToRange("b", "b", "c", null, null));
+        compareToRange(PredicateLeaf.Type.LONG, 20L, 20L, 40L));
     assertEquals(Location.MIDDLE,
-        RecordReaderImpl.compareToRange("bb", "b", "c", null, null));
+        compareToRange(PredicateLeaf.Type.LONG, 21L, 20L, 40L));
     assertEquals(Location.MAX,
-        RecordReaderImpl.compareToRange("c", "b", "c", null, null));
+        compareToRange(PredicateLeaf.Type.LONG, 40L, 20L, 40L));
     assertEquals(Location.BEFORE,
-        RecordReaderImpl.compareToRange("a", "b", "b", null, null));
+        compareToRange(PredicateLeaf.Type.LONG, 0L, 1L, 1L));
     assertEquals(Location.MIN,
-        RecordReaderImpl.compareToRange("b", "b", "b", null, null));
+        compareToRange(PredicateLeaf.Type.LONG, 1L, 1L, 1L));
     assertEquals(Location.AFTER,
-        RecordReaderImpl.compareToRange("c", "b", "b", null, null));
+        compareToRange(PredicateLeaf.Type.LONG, 2L, 1L, 1L));
   }
 
   @Test
-  public void testCompareToCharNeedConvert() throws Exception {
+  public void testCompareToRangeString() {
     assertEquals(Location.BEFORE,
-      RecordReaderImpl.compareToRange("apple", "hello", "world", null, null));
+        compareToRange(PredicateLeaf.Type.STRING, "a", "b", "c"));
     assertEquals(Location.AFTER,
-      RecordReaderImpl.compareToRange("zombie", "hello", "world", null, null));
+        compareToRange(PredicateLeaf.Type.STRING, "d", "b", "c"));
     assertEquals(Location.MIN,
-        RecordReaderImpl.compareToRange("hello", "hello", "world", null, null));
+        compareToRange(PredicateLeaf.Type.STRING, "b", "b", "c"));
     assertEquals(Location.MIDDLE,
-        RecordReaderImpl.compareToRange("pilot", "hello", "world", null, null));
+        compareToRange(PredicateLeaf.Type.STRING, "bb", "b", "c"));
     assertEquals(Location.MAX,
-      RecordReaderImpl.compareToRange("world", "hello", "world", null, null));
+        compareToRange(PredicateLeaf.Type.STRING, "c", "b", "c"));
     assertEquals(Location.BEFORE,
-      RecordReaderImpl.compareToRange("apple", "hello", "hello", null, null));
+        compareToRange(PredicateLeaf.Type.STRING, "a", "b", "b"));
     assertEquals(Location.MIN,
-      RecordReaderImpl.compareToRange("hello", "hello", "hello", null, null));
+        compareToRange(PredicateLeaf.Type.STRING, "b", "b", "b"));
     assertEquals(Location.AFTER,
-      RecordReaderImpl.compareToRange("zombie", "hello", "hello", null, null));
+        compareToRange(PredicateLeaf.Type.STRING, "c", "b", "b"));
+  }
+
+  @Test
+  public void testCompareToCharNeedConvert() {
+    assertEquals(Location.BEFORE,
+        compareToRange(PredicateLeaf.Type.STRING, "apple", "hello", "world"));
+    assertEquals(Location.AFTER,
+        compareToRange(PredicateLeaf.Type.STRING, "zombie", "hello", "world"));
+    assertEquals(Location.MIN,
+        compareToRange(PredicateLeaf.Type.STRING, "hello", "hello", "world"));
+    assertEquals(Location.MIDDLE,
+        compareToRange(PredicateLeaf.Type.STRING, "pilot", "hello", "world"));
+    assertEquals(Location.MAX,
+        compareToRange(PredicateLeaf.Type.STRING, "world", "hello", "world"));
+    assertEquals(Location.BEFORE,
+        compareToRange(PredicateLeaf.Type.STRING, "apple", "hello", "hello"));
+    assertEquals(Location.MIN,
+        compareToRange(PredicateLeaf.Type.STRING, "hello", "hello", "hello"));
+    assertEquals(Location.AFTER,
+        compareToRange(PredicateLeaf.Type.STRING, "zombie", "hello", "hello"));
   }
 
   @Test
   public void testGetMin() throws Exception {
-    assertEquals(10L, RecordReaderImpl.getMin(
-      ColumnStatisticsImpl.deserialize(null, createIntStats(10L, 100L))));
-    assertEquals(10.0d, RecordReaderImpl.getMin(ColumnStatisticsImpl.deserialize(
-      null,
-      OrcProto.ColumnStatistics.newBuilder()
-        .setDoubleStatistics(OrcProto.DoubleStatistics.newBuilder()
-          .setMinimum(10.0d).setMaximum(100.0d).build()).build())));
-    assertEquals(null, RecordReaderImpl.getMin(ColumnStatisticsImpl.deserialize(
-      null,
-      OrcProto.ColumnStatistics.newBuilder()
-        .setStringStatistics(OrcProto.StringStatistics.newBuilder().build())
-        .build())));
-    assertEquals("a", RecordReaderImpl.getMin(ColumnStatisticsImpl.deserialize(
-      null,
-      OrcProto.ColumnStatistics.newBuilder()
-        .setStringStatistics(OrcProto.StringStatistics.newBuilder()
-          .setMinimum("a").setMaximum("b").build()).build())));
-    assertEquals("hello", RecordReaderImpl.getMin(ColumnStatisticsImpl
-      .deserialize(null, createStringStats("hello", "world"))));
-    assertEquals(HiveDecimal.create("111.1"), RecordReaderImpl.getMin(ColumnStatisticsImpl
-      .deserialize(null, createDecimalStats("111.1", "112.1"))));
+    assertEquals(10L, RecordReaderImpl.getValueRange(
+      ColumnStatisticsImpl.deserialize(null, createIntStats(10L, 100L)),
+        new StubPredicate(PredicateLeaf.Type.LONG), true).lower);
+    assertEquals(10.0d, RecordReaderImpl.getValueRange(
+        ColumnStatisticsImpl.deserialize(null,
+           OrcProto.ColumnStatistics.newBuilder()
+             .setDoubleStatistics(OrcProto.DoubleStatistics.newBuilder()
+              .setMinimum(10.0d).setMaximum(100.0d).build()).build()),
+        new StubPredicate(PredicateLeaf.Type.FLOAT), true).lower);
+    assertEquals(null, RecordReaderImpl.getValueRange(
+        ColumnStatisticsImpl.deserialize(null,
+          OrcProto.ColumnStatistics.newBuilder()
+              .setStringStatistics(OrcProto.StringStatistics.newBuilder().build())
+              .build()), new StubPredicate(PredicateLeaf.Type.STRING),true).lower);
+    assertEquals("a", RecordReaderImpl.getValueRange(
+        ColumnStatisticsImpl.deserialize(null,
+          OrcProto.ColumnStatistics.newBuilder()
+            .setStringStatistics(OrcProto.StringStatistics.newBuilder()
+            .setMinimum("a").setMaximum("b").build()).build()),
+        new StubPredicate(PredicateLeaf.Type.STRING), true).lower);
+    assertEquals("hello", RecordReaderImpl.getValueRange(
+        ColumnStatisticsImpl.deserialize(null, createStringStats("hello", "world")),
+        new StubPredicate(PredicateLeaf.Type.STRING), true).lower);
+    assertEquals(new HiveDecimalWritable("111.1"), RecordReaderImpl.getValueRange(
+        ColumnStatisticsImpl.deserialize(null,
+            createDecimalStats("111.1", "112.1")),
+        new StubPredicate(PredicateLeaf.Type.DECIMAL), true).lower);
   }
 
   private static OrcProto.ColumnStatistics createIntStats(Long min,
@@ -322,7 +368,8 @@ public class TestRecordReaderImpl {
   private static OrcProto.ColumnStatistics createBooleanStats(int n, int trueCount) {
     OrcProto.BucketStatistics.Builder boolStats = OrcProto.BucketStatistics.newBuilder();
     boolStats.addCount(trueCount);
-    return OrcProto.ColumnStatistics.newBuilder().setNumberOfValues(n).setBucketStatistics(
+    return OrcProto.ColumnStatistics.newBuilder()
+               .setNumberOfValues(n).setBucketStatistics(
       boolStats.build()).build();
   }
 
@@ -330,14 +377,16 @@ public class TestRecordReaderImpl {
     OrcProto.IntegerStatistics.Builder intStats = OrcProto.IntegerStatistics.newBuilder();
     intStats.setMinimum(min);
     intStats.setMaximum(max);
-    return OrcProto.ColumnStatistics.newBuilder().setIntStatistics(intStats.build()).build();
+    return OrcProto.ColumnStatistics.newBuilder()
+               .setIntStatistics(intStats.build()).build();
   }
 
   private static OrcProto.ColumnStatistics createDoubleStats(double min, double max) {
     OrcProto.DoubleStatistics.Builder dblStats = OrcProto.DoubleStatistics.newBuilder();
     dblStats.setMinimum(min);
     dblStats.setMaximum(max);
-    return OrcProto.ColumnStatistics.newBuilder().setDoubleStatistics(dblStats.build()).build();
+    return OrcProto.ColumnStatistics.newBuilder()
+               .setDoubleStatistics(dblStats.build()).build();
   }
 
   //fixme
@@ -354,14 +403,16 @@ public class TestRecordReaderImpl {
     OrcProto.StringStatistics.Builder strStats = OrcProto.StringStatistics.newBuilder();
     strStats.setMinimum(min);
     strStats.setMaximum(max);
-    return OrcProto.ColumnStatistics.newBuilder().setStringStatistics(strStats.build()).build();
+    return OrcProto.ColumnStatistics.newBuilder().setStringStatistics(strStats.build())
+               .build();
   }
 
   private static OrcProto.ColumnStatistics createDateStats(int min, int max) {
     OrcProto.DateStatistics.Builder dateStats = OrcProto.DateStatistics.newBuilder();
     dateStats.setMinimum(min);
     dateStats.setMaximum(max);
-    return OrcProto.ColumnStatistics.newBuilder().setDateStatistics(dateStats.build()).build();
+    return OrcProto.ColumnStatistics.newBuilder()
+               .setDateStatistics(dateStats.build()).build();
   }
 
   private static final TimeZone utcTz = TimeZone.getTimeZone("UTC");
@@ -370,14 +421,12 @@ public class TestRecordReaderImpl {
     OrcProto.TimestampStatistics.Builder tsStats = OrcProto.TimestampStatistics.newBuilder();
     tsStats.setMinimumUtc(getUtcTimestamp(min));
     tsStats.setMaximumUtc(getUtcTimestamp(max));
-    return OrcProto.ColumnStatistics.newBuilder().setTimestampStatistics(tsStats.build()).build();
+    return OrcProto.ColumnStatistics.newBuilder()
+               .setTimestampStatistics(tsStats.build()).build();
   }
 
   private static OrcProto.ColumnStatistics createDecimalStats(String min, String max) {
-    OrcProto.DecimalStatistics.Builder decStats = OrcProto.DecimalStatistics.newBuilder();
-    decStats.setMinimum(min);
-    decStats.setMaximum(max);
-    return OrcProto.ColumnStatistics.newBuilder().setDecimalStatistics(decStats.build()).build();
+    return createDecimalStats(min, max, true);
   }
 
   private static OrcProto.ColumnStatistics createDecimalStats(String min, String max,
@@ -390,28 +439,35 @@ public class TestRecordReaderImpl {
   }
 
   @Test
-  public void testGetMax() throws Exception {
-    assertEquals(100L, RecordReaderImpl.getMax(ColumnStatisticsImpl.deserialize(
-        null, createIntStats(10L, 100L))));
-    assertEquals(100.0d, RecordReaderImpl.getMax(ColumnStatisticsImpl.deserialize(
-        null,
-        OrcProto.ColumnStatistics.newBuilder()
+  public void testGetMax() {
+    assertEquals(100L, RecordReaderImpl.getValueRange(
+        ColumnStatisticsImpl.deserialize(null, createIntStats(10L, 100L)),
+        new StubPredicate(PredicateLeaf.Type.LONG), true).upper);
+    assertEquals(100.0d, RecordReaderImpl.getValueRange(
+        ColumnStatisticsImpl.deserialize(null,
+          OrcProto.ColumnStatistics.newBuilder()
             .setDoubleStatistics(OrcProto.DoubleStatistics.newBuilder()
-                .setMinimum(10.0d).setMaximum(100.0d).build()).build())));
-    assertEquals(null, RecordReaderImpl.getMax(ColumnStatisticsImpl.deserialize(
-        null,
-        OrcProto.ColumnStatistics.newBuilder()
+                .setMinimum(10.0d).setMaximum(100.0d).build()).build()),
+        new StubPredicate(PredicateLeaf.Type.FLOAT), true).upper);
+    assertEquals(null, RecordReaderImpl.getValueRange(
+        ColumnStatisticsImpl.deserialize(null,
+          OrcProto.ColumnStatistics.newBuilder()
             .setStringStatistics(OrcProto.StringStatistics.newBuilder().build())
-            .build())));
-    assertEquals("b", RecordReaderImpl.getMax(ColumnStatisticsImpl.deserialize(
-        null,
-        OrcProto.ColumnStatistics.newBuilder()
+            .build()), new StubPredicate(PredicateLeaf.Type.STRING), true).upper);
+    assertEquals("b", RecordReaderImpl.getValueRange(
+        ColumnStatisticsImpl.deserialize(null,
+          OrcProto.ColumnStatistics.newBuilder()
             .setStringStatistics(OrcProto.StringStatistics.newBuilder()
-                .setMinimum("a").setMaximum("b").build()).build())));
-    assertEquals("world", RecordReaderImpl.getMax(ColumnStatisticsImpl
-      .deserialize(null, createStringStats("hello", "world"))));
-    assertEquals(HiveDecimal.create("112.1"), RecordReaderImpl.getMax(ColumnStatisticsImpl
-      .deserialize(null, createDecimalStats("111.1", "112.1"))));
+                .setMinimum("a").setMaximum("b").build()).build()),
+        new StubPredicate(PredicateLeaf.Type.STRING), true).upper);
+    assertEquals("world", RecordReaderImpl.getValueRange(
+        ColumnStatisticsImpl.deserialize(null,
+            createStringStats("hello", "world")),
+        new StubPredicate(PredicateLeaf.Type.STRING), true).upper);
+    assertEquals(new HiveDecimalWritable("112.1"), RecordReaderImpl.getValueRange(
+        ColumnStatisticsImpl.deserialize(null,
+            createDecimalStats("111.1", "112.1")),
+        new StubPredicate(PredicateLeaf.Type.DECIMAL), true).upper);
   }
 
   static TruthValue evaluateBoolean(OrcProto.ColumnStatistics stats,
@@ -925,18 +981,18 @@ public class TestRecordReaderImpl {
     pred = createPredicateLeaf
         (PredicateLeaf.Operator.BETWEEN, PredicateLeaf.Type.LONG,
             "x", null, args);
-    assertEquals(TruthValue.YES_NO,
+    assertEquals(TruthValue.YES_NO_NULL,
         evaluateInteger(createIntStats(0L, 5L), pred));
-    assertEquals(TruthValue.YES_NO,
+    assertEquals(TruthValue.YES_NO_NULL,
         evaluateInteger(createIntStats(30L, 40L), pred));
-    assertEquals(TruthValue.YES_NO,
+    assertEquals(TruthValue.YES_NO_NULL,
         evaluateInteger(createIntStats(5L, 15L), pred));
-    assertEquals(TruthValue.YES_NO,
+    assertEquals(TruthValue.YES_NO_NULL,
         evaluateInteger(createIntStats(10L, 20L), pred));
   }
 
   @Test
-  public void testIsNull() throws Exception {
+  public void testIsNull() {
     PredicateLeaf pred = createPredicateLeaf
         (PredicateLeaf.Operator.IS_NULL, PredicateLeaf.Type.LONG,
             "x", null, null);

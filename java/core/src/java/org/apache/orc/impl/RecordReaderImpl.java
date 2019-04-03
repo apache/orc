@@ -65,7 +65,6 @@ import java.util.TimeZone;
 public class RecordReaderImpl implements RecordReader {
   static final Logger LOG = LoggerFactory.getLogger(RecordReaderImpl.class);
   private static final boolean isLogDebugEnabled = LOG.isDebugEnabled();
-  private static final Object UNKNOWN_VALUE = new Object();
   protected final Path path;
   private final long firstRow;
   private final List<StripeInformation> stripes =
@@ -306,136 +305,138 @@ public class RecordReaderImpl implements RecordReader {
     BEFORE, MIN, MIDDLE, MAX, AFTER
   }
 
-  /**
-   * Given a point and min and max, determine if the point is before, at the
-   * min, in the middle, at the max, or after the range.
-   * @param point the point to test
-   * @param min the minimum point
-   * @param max the maximum point
-   * @param <T> the type of the comparision
-   * @return the location of the point
-   */
-  static <T> Location compareToRange(Comparable<T> point, T min, T max, T lowerBound, T upperBound) {
+  static class ValueRange<T extends Comparable> {
+    final Comparable lower;
+    final Comparable upper;
+    final boolean onlyLowerBound;
+    final boolean onlyUpperBound;
+    final boolean hasNulls;
 
-    final boolean isLowerBoundSet = (min == null && lowerBound != null) ? true : false;
-    final boolean isUpperBoundSet = (max == null && upperBound != null) ? true : false;
-
-    final int minCompare = isLowerBoundSet ? point.compareTo(lowerBound) : point.compareTo(min);
-    if (minCompare < 0) {
-      return Location.BEFORE;
+    ValueRange(PredicateLeaf predicate,
+               T lower, T upper,
+               boolean hasNulls,
+               boolean onlyLowerBound,
+               boolean onlyUpperBound) {
+      PredicateLeaf.Type type = predicate.getType();
+      this.lower = getBaseObjectForComparison(type, lower);
+      this.upper = getBaseObjectForComparison(type, upper);
+      this.hasNulls = hasNulls;
+      this.onlyLowerBound = onlyLowerBound;
+      this.onlyUpperBound = onlyUpperBound;
     }
 
-    /* since min value is truncated when we have compare=0, it means the predicate string is BEFORE the min value*/
-    else if (minCompare == 0 && isLowerBoundSet) {
-      return Location.BEFORE;
-    } else if (minCompare == 0) {
-      return Location.MIN;
+    ValueRange(PredicateLeaf predicate, T lower, T upper,
+               boolean hasNulls) {
+      this(predicate, lower, upper, hasNulls, false, false);
     }
 
-    int maxCompare = isUpperBoundSet ? point.compareTo(upperBound) : point.compareTo(max);
-    if (maxCompare > 0) {
-      return Location.AFTER;
+    boolean hasValues() {
+      return lower != null;
     }
-    /* if upperbound is set then location here will be AFTER */
-    else if (maxCompare == 0 && isUpperBoundSet) {
-      return Location.AFTER;
-    } else if (maxCompare == 0) {
-      return Location.MAX;
-    }
-    return Location.MIDDLE;
-  }
 
-  /**
-   * Get the maximum value out of an index entry.
-   * @param index
-   *          the index entry
-   * @return the object for the maximum value or null if there isn't one
-   */
-  static Object getMax(ColumnStatistics index) {
-    return getMax(index, false);
+    /**
+     * Given a point and min and max, determine if the point is before, at the
+     * min, in the middle, at the max, or after the range.
+     * @param point the point to test
+     * @return the location of the point
+     */
+    Location compare(Comparable point) {
+      int minCompare = point.compareTo(lower);
+      if (minCompare < 0) {
+        return Location.BEFORE;
+      } else if (minCompare == 0) {
+        return onlyLowerBound ? Location.BEFORE : Location.MIN;
+      }
+      int maxCompare = point.compareTo(upper);
+      if (maxCompare > 0) {
+        return Location.AFTER;
+      } else if (maxCompare == 0) {
+        return onlyUpperBound ? Location.AFTER : Location.MAX;
+      }
+      return Location.MIDDLE;
+    }
+
+    /**
+     * Is this range a single point?
+     * @return true if min == max
+     */
+    boolean isSingleton() {
+      return lower != null && !onlyLowerBound && !onlyUpperBound &&
+                 lower.equals(upper);
+    }
+
+    /**
+     * Add the null option to the truth value, if the range includes nulls.
+     * @param value the original truth value
+     * @return the truth value extended with null if appropriate
+     */
+    TruthValue addNull(TruthValue value) {
+      if (hasNulls) {
+        switch (value) {
+        case YES:
+          return TruthValue.YES_NULL;
+        case NO:
+          return TruthValue.NO_NULL;
+        case YES_NO:
+          return TruthValue.YES_NO_NULL;
+        default:
+          return value;
+        }
+      } else {
+        return value;
+      }
+    }
   }
 
   /**
    * Get the maximum value out of an index entry.
    * Includes option to specify if timestamp column stats values
    * should be in UTC.
-   * @param index
-   *          the index entry
-   * @param useUTCTimestamp
+   * @param index the index entry
+   * @param predicate the kind of predicate
+   * @param useUTCTimestamp use UTC for timestamps
    * @return the object for the maximum value or null if there isn't one
    */
-  static Object getMax(ColumnStatistics index, boolean useUTCTimestamp) {
+  static ValueRange getValueRange(ColumnStatistics index,
+                                  PredicateLeaf predicate,
+                                  boolean useUTCTimestamp) {
     if (index instanceof IntegerColumnStatistics) {
-      return ((IntegerColumnStatistics) index).getMaximum();
+      IntegerColumnStatistics stats = (IntegerColumnStatistics) index;
+      Long min = stats.getMinimum();
+      Long max = stats.getMaximum();
+      return new ValueRange<>(predicate, min, max, stats.hasNull());
     } else if (index instanceof DoubleColumnStatistics) {
-      return ((DoubleColumnStatistics) index).getMaximum();
+      DoubleColumnStatistics stats = (DoubleColumnStatistics) index;
+      Double min = stats.getMinimum();
+      Double max = stats.getMaximum();
+      return new ValueRange<>(predicate, min, max, stats.hasNull());
     } else if (index instanceof StringColumnStatistics) {
-      return ((StringColumnStatistics) index).getUpperBound();
+      StringColumnStatistics stats = (StringColumnStatistics) index;
+      return new ValueRange<>(predicate, stats.getLowerBound(),
+          stats.getUpperBound(), stats.hasNull(), stats.getMinimum() == null,
+          stats.getMaximum() == null);
     } else if (index instanceof DateColumnStatistics) {
-      return ((DateColumnStatistics) index).getMaximum();
+      DateColumnStatistics stats = (DateColumnStatistics) index;
+      java.util.Date min = stats.getMinimum();
+      java.util.Date max = stats.getMaximum();
+      return new ValueRange<>(predicate, min, max, stats.hasNull());
     } else if (index instanceof DecimalColumnStatistics) {
-      return ((DecimalColumnStatistics) index).getMaximum();
+      DecimalColumnStatistics stats = (DecimalColumnStatistics) index;
+      HiveDecimal min = stats.getMinimum();
+      HiveDecimal max = stats.getMaximum();
+      return new ValueRange<>(predicate, min, max, stats.hasNull());
     } else if (index instanceof TimestampColumnStatistics) {
-      if (useUTCTimestamp) {
-        return ((TimestampColumnStatistics) index).getMaximumUTC();
-      } else {
-        return ((TimestampColumnStatistics) index).getMaximum();
-      }
+      TimestampColumnStatistics stats = (TimestampColumnStatistics) index;
+      Timestamp min = useUTCTimestamp ? stats.getMinimumUTC() : stats.getMinimum();
+      Timestamp max = useUTCTimestamp ? stats.getMaximumUTC() : stats.getMaximum();
+      return new ValueRange<>(predicate, min, max, stats.hasNull());
     } else if (index instanceof BooleanColumnStatistics) {
-      if (((BooleanColumnStatistics)index).getTrueCount()!=0) {
-        return Boolean.TRUE;
-      } else {
-        return Boolean.FALSE;
-      }
+      BooleanColumnStatistics stats = (BooleanColumnStatistics) index;
+      Boolean min = stats.getFalseCount() == 0;
+      Boolean max = stats.getTrueCount() != 0;
+      return new ValueRange<>(predicate, min, max, stats.hasNull());
     } else {
-      return null;
-    }
-  }
-
-  /**
-   * Get the minimum value out of an index entry.
-   * @param index
-   *          the index entry
-   * @return the object for the minimum value or null if there isn't one
-   */
-  static Object getMin(ColumnStatistics index) {
-    return getMin(index, false);
-  }
-
-  /**
-   * Get the minimum value out of an index entry.
-   * Includes option to specify if timestamp column stats values
-   * should be in UTC.
-   * @param index
-   *          the index entry
-   * @param useUTCTimestamp
-   * @return the object for the minimum value or null if there isn't one
-   */
-  static Object getMin(ColumnStatistics index, boolean useUTCTimestamp) {
-    if (index instanceof IntegerColumnStatistics) {
-      return ((IntegerColumnStatistics) index).getMinimum();
-    } else if (index instanceof DoubleColumnStatistics) {
-      return ((DoubleColumnStatistics) index).getMinimum();
-    } else if (index instanceof StringColumnStatistics) {
-      return ((StringColumnStatistics) index).getLowerBound();
-    } else if (index instanceof DateColumnStatistics) {
-      return ((DateColumnStatistics) index).getMinimum();
-    } else if (index instanceof DecimalColumnStatistics) {
-      return ((DecimalColumnStatistics) index).getMinimum();
-    } else if (index instanceof TimestampColumnStatistics) {
-      if (useUTCTimestamp) {
-        return ((TimestampColumnStatistics) index).getMinimumUTC();
-      } else {
-        return ((TimestampColumnStatistics) index).getMinimum();
-      }
-    } else if (index instanceof BooleanColumnStatistics) {
-      if (((BooleanColumnStatistics)index).getFalseCount()!=0) {
-        return Boolean.FALSE;
-      } else {
-        return Boolean.TRUE;
-      }
-    } else {
-      return UNKNOWN_VALUE; // null is not safe here
+      return new ValueRange(predicate, null, null, true);
     }
   }
 
@@ -485,8 +486,8 @@ public class RecordReaderImpl implements RecordReader {
                                            TypeDescription.Category type,
                                            boolean useUTCTimestamp) {
     ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null, statsProto);
-    Object minValue = getMin(cs, useUTCTimestamp);
-    Object maxValue = getMax(cs, useUTCTimestamp);
+    ValueRange range = getValueRange(cs, predicate, useUTCTimestamp);
+
     // files written before ORC-135 stores timestamp wrt to local timezone causing issues with PPD.
     // disable PPD for timestamp for all old files
     if (type.equals(TypeDescription.Category.TIMESTAMP)) {
@@ -494,29 +495,18 @@ public class RecordReaderImpl implements RecordReader {
         LOG.debug("Not using predication pushdown on {} because it doesn't " +
                   "include ORC-135. Writer version: {}",
             predicate.getColumnName(), writerVersion);
-        return TruthValue.YES_NO_NULL;
+        return range.addNull(TruthValue.YES_NO);
       }
       if (predicate.getType() != PredicateLeaf.Type.TIMESTAMP &&
           predicate.getType() != PredicateLeaf.Type.DATE &&
           predicate.getType() != PredicateLeaf.Type.STRING) {
-        return TruthValue.YES_NO_NULL;
+        return range.addNull(TruthValue.YES_NO);
       }
     }
 
-    String lowerBound = null;
-    String upperBound = null;
-
-    if(cs instanceof StringColumnStatistics) {
-      lowerBound = ((StringColumnStatistics) cs).getLowerBound();
-      minValue = ((StringColumnStatistics) cs).getMinimum();
-
-      upperBound = ((StringColumnStatistics) cs).getUpperBound();
-      maxValue = ((StringColumnStatistics) cs).getMaximum();
-    }
-
-    return evaluatePredicateRange(predicate, minValue, maxValue, cs.hasNull(),
+    return evaluatePredicateRange(predicate, range,
         BloomFilterIO.deserialize(kind, encoding, writerVersion, type, bloomFilter),
-        useUTCTimestamp, lowerBound, upperBound);
+        useUTCTimestamp);
   }
 
   /**
@@ -549,51 +539,32 @@ public class RecordReaderImpl implements RecordReader {
                                              PredicateLeaf predicate,
                                              BloomFilter bloomFilter,
                                              boolean useUTCTimestamp) {
-    Object minValue = getMin(stats, useUTCTimestamp);
-    Object maxValue = getMax(stats, useUTCTimestamp);
+    ValueRange range = getValueRange(stats, predicate, useUTCTimestamp);
 
-    String lowerBound = null;
-    String upperBound = null;
-
-    if(stats instanceof StringColumnStatistics) {
-      lowerBound = ((StringColumnStatistics) stats).getLowerBound();
-      minValue = ((StringColumnStatistics) stats).getMinimum();
-
-      upperBound = ((StringColumnStatistics) stats).getUpperBound();
-      maxValue = ((StringColumnStatistics) stats).getMaximum();
-    }
-
-    return evaluatePredicateRange(predicate, minValue, maxValue, stats.hasNull(), bloomFilter, useUTCTimestamp, lowerBound, upperBound);
+    return evaluatePredicateRange(predicate, range, bloomFilter, useUTCTimestamp);
   }
 
-  static TruthValue evaluatePredicateRange(PredicateLeaf predicate, Object min,
-      Object max, boolean hasNull, BloomFilter bloomFilter,
-      boolean useUTCTimestamp, Object lowerBound, Object upperBound) {
+  static TruthValue evaluatePredicateRange(PredicateLeaf predicate,
+                                           ValueRange range,
+                                           BloomFilter bloomFilter,
+                                           boolean useUTCTimestamp) {
     // if we didn't have any values, everything must have been null
-    if (min == null && lowerBound == null) {
+    if (!range.hasValues()) {
       if (predicate.getOperator() == PredicateLeaf.Operator.IS_NULL) {
         return TruthValue.YES;
       } else {
         return TruthValue.NULL;
       }
-    } else if (min == UNKNOWN_VALUE) {
-      return TruthValue.YES_NO_NULL;
-    }
-
-    if(max == UNKNOWN_VALUE) {
-      return TruthValue.YES_NO;
     }
 
     TruthValue result;
-    Object baseObj = predicate.getLiteral();
+    Comparable baseObj = (Comparable) predicate.getLiteral();
     // Predicate object and stats objects are converted to the type of the predicate object.
-    Object minValue = getBaseObjectForComparison(predicate.getType(), min);
-    Object maxValue = getBaseObjectForComparison(predicate.getType(), max);
-    Object predObj = getBaseObjectForComparison(predicate.getType(), baseObj);
+    Comparable predObj = getBaseObjectForComparison(predicate.getType(), baseObj);
 
-    result = evaluatePredicateMinMax(predicate, predObj, minValue, maxValue, hasNull, lowerBound, upperBound);
+    result = evaluatePredicateMinMax(predicate, predObj, range);
     if (shouldEvaluateBloomFilter(predicate, result, bloomFilter)) {
-      return evaluatePredicateBloomFilter(predicate, predObj, bloomFilter, hasNull, useUTCTimestamp);
+      return evaluatePredicateBloomFilter(predicate, predObj, bloomFilter, range.hasNulls, useUTCTimestamp);
     } else {
       return result;
     }
@@ -615,106 +586,98 @@ public class RecordReaderImpl implements RecordReader {
     return false;
   }
 
-  private static TruthValue evaluatePredicateMinMax(PredicateLeaf predicate, Object predObj,
-      Object minValue,
-      Object maxValue,
-      boolean hasNull,
-      Object lowerBound,
-      Object upperBound) {
+  private static TruthValue evaluatePredicateMinMax(PredicateLeaf predicate,
+                                                    Comparable predObj,
+                                                    ValueRange range) {
     Location loc;
 
     switch (predicate.getOperator()) {
       case NULL_SAFE_EQUALS:
-        loc = compareToRange((Comparable) predObj, minValue, maxValue, lowerBound, upperBound);
+        loc = range.compare(predObj);
         if (loc == Location.BEFORE || loc == Location.AFTER) {
           return TruthValue.NO;
         } else {
           return TruthValue.YES_NO;
         }
       case EQUALS:
-        loc = compareToRange((Comparable) predObj, minValue, maxValue, lowerBound, upperBound);
-        if (minValue != null && minValue.equals(maxValue) && loc == Location.MIN) {
-          return hasNull ? TruthValue.YES_NULL : TruthValue.YES;
+        loc = range.compare(predObj);
+        if (range.isSingleton() && loc == Location.MIN) {
+          return range.addNull(TruthValue.YES);
         } else if (loc == Location.BEFORE || loc == Location.AFTER) {
-          return hasNull ? TruthValue.NO_NULL : TruthValue.NO;
+          return range.addNull(TruthValue.NO);
         } else {
-          return hasNull ? TruthValue.YES_NO_NULL : TruthValue.YES_NO;
+          return range.addNull(TruthValue.YES_NO);
         }
       case LESS_THAN:
-        loc = compareToRange((Comparable) predObj, minValue, maxValue, lowerBound, upperBound);
+        loc = range.compare(predObj);
         if (loc == Location.AFTER) {
-          return hasNull ? TruthValue.YES_NULL : TruthValue.YES;
+          return range.addNull(TruthValue.YES);
         } else if (loc == Location.BEFORE || loc == Location.MIN) {
-          return hasNull ? TruthValue.NO_NULL : TruthValue.NO;
+          return range.addNull(TruthValue.NO);
         } else {
-          return hasNull ? TruthValue.YES_NO_NULL : TruthValue.YES_NO;
+          return range.addNull(TruthValue.YES_NO);
         }
       case LESS_THAN_EQUALS:
-        loc = compareToRange((Comparable) predObj, minValue, maxValue, lowerBound, upperBound);
+        loc = range.compare(predObj);
         if (loc == Location.AFTER || loc == Location.MAX) {
-          return hasNull ? TruthValue.YES_NULL : TruthValue.YES;
+          return range.addNull(TruthValue.YES);
         } else if (loc == Location.BEFORE) {
-          return hasNull ? TruthValue.NO_NULL : TruthValue.NO;
+          return range.addNull(TruthValue.NO);
         } else {
-          return hasNull ? TruthValue.YES_NO_NULL : TruthValue.YES_NO;
+          return range.addNull(TruthValue.YES_NO);
         }
       case IN:
-        boolean minEqualsMax = predicate.getType()
-            .equals(PredicateLeaf.Type.STRING) ?
-            lowerBound.equals(upperBound) :
-            minValue.equals(maxValue);
-
-        if (minEqualsMax) {
+        if (range.isSingleton()) {
           // for a single value, look through to see if that value is in the
           // set
           for (Object arg : predicate.getLiteralList()) {
-            predObj = getBaseObjectForComparison(predicate.getType(), arg);
-            loc = compareToRange((Comparable) predObj, minValue, maxValue, lowerBound, upperBound);
-            if (loc == Location.MIN) {
-              return hasNull ? TruthValue.YES_NULL : TruthValue.YES;
+            if (range.compare((Comparable) arg) == Location.MIN) {
+              return range.addNull(TruthValue.YES);
             }
           }
-          return hasNull ? TruthValue.NO_NULL : TruthValue.NO;
+          return range.addNull(TruthValue.NO);
         } else {
           // are all of the values outside of the range?
           for (Object arg : predicate.getLiteralList()) {
-            predObj = getBaseObjectForComparison(predicate.getType(), arg);
-            loc = compareToRange((Comparable) predObj, minValue, maxValue, lowerBound, upperBound);
+            predObj = getBaseObjectForComparison(predicate.getType(), (Comparable) arg);
+            loc = range.compare(predObj);
             if (loc == Location.MIN || loc == Location.MIDDLE ||
                 loc == Location.MAX) {
-              return hasNull ? TruthValue.YES_NO_NULL : TruthValue.YES_NO;
+              return range.addNull(TruthValue.YES_NO);
             }
           }
-          return hasNull ? TruthValue.NO_NULL : TruthValue.NO;
+          return range.addNull(TruthValue.NO);
         }
       case BETWEEN:
         List<Object> args = predicate.getLiteralList();
         if (args == null || args.isEmpty()) {
-          return TruthValue.YES_NO;
+          return range.addNull(TruthValue.YES_NO);
         }
-        Object predObj1 = getBaseObjectForComparison(predicate.getType(), args.get(0));
+        Comparable predObj1 = getBaseObjectForComparison(predicate.getType(),
+            (Comparable) args.get(0));
 
-        loc = compareToRange((Comparable) predObj1, minValue, maxValue, lowerBound, upperBound);
+        loc = range.compare(predObj1);
         if (loc == Location.BEFORE || loc == Location.MIN) {
-          Object predObj2 = getBaseObjectForComparison(predicate.getType(), args.get(1));
-          Location loc2 = compareToRange((Comparable) predObj2, minValue, maxValue, lowerBound, upperBound);
+          Comparable predObj2 = getBaseObjectForComparison(predicate.getType(),
+              (Comparable) args.get(1));
+          Location loc2 = range.compare(predObj2);
           if (loc2 == Location.AFTER || loc2 == Location.MAX) {
-            return hasNull ? TruthValue.YES_NULL : TruthValue.YES;
+            return range.addNull(TruthValue.YES);
           } else if (loc2 == Location.BEFORE) {
-            return hasNull ? TruthValue.NO_NULL : TruthValue.NO;
+            return range.addNull(TruthValue.NO);
           } else {
-            return hasNull ? TruthValue.YES_NO_NULL : TruthValue.YES_NO;
+            return range.addNull(TruthValue.YES_NO);
           }
         } else if (loc == Location.AFTER) {
-          return hasNull ? TruthValue.NO_NULL : TruthValue.NO;
+          return range.addNull(TruthValue.NO);
         } else {
-          return hasNull ? TruthValue.YES_NO_NULL : TruthValue.YES_NO;
+          return range.addNull(TruthValue.YES_NO);
         }
       case IS_NULL:
         // min = null condition above handles the all-nulls YES case
-        return hasNull ? TruthValue.YES_NO : TruthValue.NO;
+        return range.hasNulls ? TruthValue.YES_NO : TruthValue.NO;
       default:
-        return hasNull ? TruthValue.YES_NO_NULL : TruthValue.YES_NO;
+        return range.addNull(TruthValue.YES_NO);
     }
   }
 
@@ -729,7 +692,7 @@ public class RecordReaderImpl implements RecordReader {
       case IN:
         for (Object arg : predicate.getLiteralList()) {
           // if atleast one value in IN list exist in bloom filter, qualify the row group/stripe
-          Object predObjItem = getBaseObjectForComparison(predicate.getType(), arg);
+          Object predObjItem = getBaseObjectForComparison(predicate.getType(), (Comparable) arg);
           TruthValue result = checkInBloomFilter(bloomFilter, predObjItem, hasNull, useUTCTimestamp);
           if (result == TruthValue.YES_NO_NULL || result == TruthValue.YES_NO) {
             return result;
@@ -741,7 +704,10 @@ public class RecordReaderImpl implements RecordReader {
     }
   }
 
-  private static TruthValue checkInBloomFilter(BloomFilter bf, Object predObj, boolean hasNull, boolean useUTCTimestamp) {
+  private static TruthValue checkInBloomFilter(BloomFilter bf,
+                                               Object predObj,
+                                               boolean hasNull,
+                                               boolean useUTCTimestamp) {
     TruthValue result = hasNull ? TruthValue.NO_NULL : TruthValue.NO;
 
     if (predObj instanceof Long) {
@@ -802,7 +768,8 @@ public class RecordReaderImpl implements RecordReader {
     }
   }
 
-  private static Object getBaseObjectForComparison(PredicateLeaf.Type type, Object obj) {
+  private static Comparable getBaseObjectForComparison(PredicateLeaf.Type type,
+                                                       Comparable obj) {
     if (obj == null) {
       return null;
     }
