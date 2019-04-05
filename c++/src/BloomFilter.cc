@@ -178,8 +178,12 @@ namespace orc {
 
   DIAGNOSTIC_PUSH
 
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(__clang__)
   DIAGNOSTIC_IGNORE("-Wundefined-reinterpret-cast")
+#endif
+
+#if defined(__GNUC__)
+  DIAGNOSTIC_IGNORE("-Wstrict-aliasing")
 #endif
 
   // caller should make sure input proto::BloomFilter is valid since

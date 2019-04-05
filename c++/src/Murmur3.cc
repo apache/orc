@@ -42,7 +42,7 @@ namespace orc {
 
   DIAGNOSTIC_PUSH
 
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(__clang__)
     DIAGNOSTIC_IGNORE("-Wimplicit-fallthrough")
 #endif
 
