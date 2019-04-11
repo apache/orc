@@ -303,4 +303,26 @@ public class TestTypeDescription {
     results = type.findSubtypes("");
     assertEquals(0, results.size());
   }
+
+  @Test
+  public void testFindSubtypesAcid() {
+    TypeDescription type = TypeDescription.fromString(
+        "struct<operation:int,originalTransaction:bigint,bucket:int," +
+            "rowId:bigint,currentTransaction:bigint," +
+            "row:struct<col0:int,col1:struct<z:int,x:double,y:string>," +
+            "col2:double>>");
+    List<TypeDescription> results = type.findSubtypes("col0");
+    assertEquals(1, results.size());
+    assertEquals(7, results.get(0).getId());
+
+    results = type.findSubtypes("col1,col2,col1.x,col1.z");
+    assertEquals(4, results.size());
+    assertEquals(8, results.get(0).getId());
+    assertEquals(12, results.get(1).getId());
+    assertEquals(10, results.get(2).getId());
+    assertEquals(9, results.get(3).getId());
+
+    results = type.findSubtypes("");
+    assertEquals(0, results.size());
+  }
 }
