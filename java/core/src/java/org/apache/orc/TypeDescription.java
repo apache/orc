@@ -30,6 +30,7 @@ import org.apache.hadoop.hive.ql.exec.vector.StructColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.UnionColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.orc.impl.SchemaEvolution;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -987,7 +988,8 @@ public class TypeDescription
     if (names.size() == 1 && INTEGER_PATTERN.matcher(names.get(0)).matches()) {
       return findSubtype(Integer.parseInt(names.get(0)));
     }
-    TypeDescription current = this;
+    TypeDescription current = SchemaEvolution.checkAcidSchema(this)
+        ? SchemaEvolution.getBaseRow(this) : this;
     while (names.size() > 0) {
       String first = names.remove(0);
       switch (current.category) {
