@@ -120,6 +120,14 @@ message Stream {
     ROW_INDEX = 6;
     BLOOM_FILTER = 7;
     BLOOM_FILTER_UTF8 = 8;
+    // Virtual stream kinds to allocate space for encrypted index and data.
+    ENCRYPTED_INDEX = 9;
+    ENCRYPTED_DATA = 10;
+
+    // stripe statistics streams
+    STRIPE_STATISTICS = 100;
+    // A virtual stream kind that is used for setting the encryption IV.
+    FILE_STATISTICS = 101;
   }
   optional Kind kind = 1;
   optional uint32 column = 2;
@@ -142,11 +150,34 @@ message ColumnEncoding {
   optional uint32 bloomEncoding = 3;
 }
 
+message StripeEncryptionVariant {
+  repeated Stream streams = 1;
+  repeated ColumnEncoding encoding = 2;
+}
+
+// each stripe looks like:
+//   index streams
+//     unencrypted
+//     variant 1..N
+//   data streams
+//     unencrypted
+//     variant 1..N
+//   footer
+
 message StripeFooter {
   repeated Stream streams = 1;
   repeated ColumnEncoding columns = 2;
   optional string writerTimezone = 3;
+  // one for each column encryption variant
+  repeated StripeEncryptionVariant encryption = 4;
 }
+
+// the file tail looks like:
+//   encrypted stripe statistics: ColumnarStripeStatistics (order by variant)
+//   stripe statistics: Metadata
+//   footer: Footer
+//   postscript: PostScript
+//   psLen: byte
 
 message Type {
   enum Kind {
@@ -178,11 +209,29 @@ message Type {
 }
 
 message StripeInformation {
+  // the global file offset of the start of the stripe
   optional uint64 offset = 1;
+  // the number of bytes of index
   optional uint64 indexLength = 2;
+  // the number of bytes of data
   optional uint64 dataLength = 3;
+  // the number of bytes in the stripe footer
   optional uint64 footerLength = 4;
+  // the number of rows in this stripe
   optional uint64 numberOfRows = 5;
+  // If this is present, the reader should use this value for the encryption
+  // stripe id for setting the encryption IV. Otherwise, the reader should
+  // use one larger than the previous stripe's encryptStripeId.
+  // For unmerged ORC files, the first stripe will use 1 and the rest of the
+  // stripes won't have it set. For merged files, the stripe information
+  // will be copied from their original files and thus the first stripe of
+  // each of the input files will reset it to 1.
+  // Note that 1 was choosen, because protobuf v3 doesn't serialize
+  // primitive types that are the default (eg. 0).
+  optional uint64 encryptStripeId = 6;
+  // For each encryption variant, the new encrypted local key to use
+  // until we find a replacement.
+  repeated bytes encryptedLocalKeys = 7;
 }
 
 message UserMetadataItem {
@@ -190,12 +239,90 @@ message UserMetadataItem {
   optional bytes value = 2;
 }
 
+// StripeStatistics (1 per a stripe), which each contain the
+// ColumnStatistics for each column.
+// This message type is only used in ORC v0 and v1.
 message StripeStatistics {
   repeated ColumnStatistics colStats = 1;
 }
 
+// This message type is only used in ORC v0 and v1.
 message Metadata {
   repeated StripeStatistics stripeStats = 1;
+}
+
+// In ORC v2 (and for encrypted columns in v1), each column has
+// their column statistics written separately.
+message ColumnarStripeStatistics {
+  // one value for each stripe in the file
+  repeated ColumnStatistics colStats = 1;
+}
+
+enum EncryptionAlgorithm {
+  UNKNOWN_ENCRYPTION = 0;  // used for detecting future algorithms
+  AES_CTR_128 = 1;
+  AES_CTR_256 = 2;
+}
+
+message FileStatistics {
+  repeated ColumnStatistics column = 1;
+}
+
+// How was the data masked? This isn't necessary for reading the file, but
+// is documentation about how the file was written.
+message DataMask {
+  // the kind of masking, which may include third party masks
+  optional string name = 1;
+  // parameters for the mask
+  repeated string maskParameters = 2;
+  // the unencrypted column roots this mask was applied to
+  repeated uint32 columns = 3 [packed = true];
+}
+
+// Information about the encryption keys.
+message EncryptionKey {
+  optional string keyName = 1;
+  optional uint32 keyVersion = 2;
+  optional EncryptionAlgorithm algorithm = 3;
+}
+
+// The description of an encryption variant.
+// Each variant is a single subtype that is encrypted with a single key.
+message EncryptionVariant {
+  // the column id of the root
+  optional uint32 root = 1;
+  // The master key that was used to encrypt the local key, referenced as
+  // an index into the Encryption.key list.
+  optional uint32 key = 2;
+  // the encrypted key for the file footer
+  optional bytes encryptedKey = 3;
+  // the stripe statistics for this variant
+  repeated Stream stripeStatistics = 4;
+  // encrypted file statistics as a FileStatistics
+  optional bytes fileStatistics = 5;
+}
+
+// Which KeyProvider encrypted the local keys.
+enum KeyProviderKind {
+  UNKNOWN = 0;
+  HADOOP = 1;
+  AWS = 2;
+  GCP = 3;
+  AZURE = 4;
+}
+
+message Encryption {
+  // all of the masks used in this file
+  repeated DataMask mask = 1;
+  // all of the keys used in this file
+  repeated EncryptionKey key = 2;
+  // The encrypted variants.
+  // Readers should prefer the first variant that the user has access to
+  // the corresponding key. If they don't have access to any of the keys,
+  // they should get the unencrypted masked data.
+  repeated EncryptionVariant variants = 3;
+  // How are the local keys encrypted?
+  optional KeyProviderKind keyProvider = 4;
 }
 
 message Footer {
@@ -214,6 +341,12 @@ message Footer {
   // 2 = Presto
   // 3 = Scritchley Go from https://github.com/scritchley/orc
   optional uint32 writer = 9;
+
+  // information about the encryption in this file
+  optional Encryption encryption = 10;
+
+  // the number of bytes in the encrypted stripe statistics
+  optional uint64 stripeStatisticsLength = 11;
 }
 
 enum CompressionKind {
@@ -249,10 +382,11 @@ message PostScript {
   //   1 = HIVE-8732 fixed (fixed stripe/file maximum statistics &
   //                        string statistics use utf8 for min/max)
   //   2 = HIVE-4243 fixed (use real column names from Hive tables)
-  //   3 = HIVE-12055 fixed (vectorized writer implementation)
+  //   3 = HIVE-12055 added (vectorized writer implementation)
   //   4 = HIVE-13083 fixed (decimals write present stream correctly)
   //   5 = ORC-101 fixed (bloom filters use utf8 consistently)
   //   6 = ORC-135 fixed (timestamp statistics use utc)
+  //   7 = ORC-14 added (column encryption)
   //
   // Version of the ORC C++ writer:
   //   6 = original

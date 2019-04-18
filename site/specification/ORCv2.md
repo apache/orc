@@ -65,6 +65,13 @@ incorporates the Protobuf definition from the
 reader is encouraged to review the Protobuf encoding if they need to
 understand the byte-level encoding
 
+The sections of the file tail are (and their protobuf message type):
+* encrypted stripe statistics: list of ColumnarStripeStatistics
+* stripe statistics: Metadata
+* footer: Footer
+* postscript: PostScript
+* psLen: byte
+
 ## Postscript
 
 The Postscript section provides the necessary information to interpret
@@ -143,6 +150,16 @@ message Footer {
  repeated ColumnStatistics statistics = 7;
  // the maximum number of rows in each index entry
  optional uint32 rowIndexStride = 8;
+ // Each implementation that writes ORC files should register for a code
+ // 0 = ORC Java
+ // 1 = ORC C++
+ // 2 = Presto
+ // 3 = Scritchley Go from https://github.com/scritchley/orc
+ optional uint32 writer = 9;
+ // information about the encryption in this file
+ optional Encryption encryption = 10;
+ // the number of bytes in the encrypted stripe statistics
+ optional uint64 stripeStatisticsLength = 11;
 }
 ```
 
@@ -157,6 +174,17 @@ itself, and a stripe footer. Both the indexes and the data sections
 are divided by columns so that only the data for the required columns
 needs to be read.
 
+The encryptStripeId and encryptedLocalKeys support column
+encryption. They are set on the first stripe of each ORC file with
+column encryption and not set after that. For a stripe with the values
+set, the reader should use those values for that stripe. Subsequent
+stripes use the previous encryptStripeId + 1 and the same keys.
+
+The current ORC merging code merges entire files, and thus the reader
+will get the correct values on what was the first stripe and continue
+on. If we develop a merge tool that reorders stripes or does partial
+merges, these values will need to be set correctly by that tool.
+
 ```
 message StripeInformation {
  // the start of the stripe within the file
@@ -169,6 +197,19 @@ message StripeInformation {
  optional uint64 footerLength = 4;
  // the number of rows in the stripe
  optional uint64 numberOfRows = 5;
+ // If this is present, the reader should use this value for the encryption
+ // stripe id for setting the encryption IV. Otherwise, the reader should
+ // use one larger than the previous stripe's encryptStripeId.
+ // For unmerged ORC files, the first stripe will use 1 and the rest of the
+ // stripes won't have it set. For merged files, the stripe information
+ // will be copied from their original files and thus the first stripe of
+ // each of the input files will reset it to 1.
+ // Note that 1 was choosen, because protobuf v3 doesn't serialize
+ // primitive types that are the default (eg. 0).
+ optional uint64 encryptStripeId = 6;
+ // For each encryption variant, the new encrypted local key to use until we
+ // find a replacement.
+ repeated bytes encryptedLocalKeys = 7;
 }
 ```
 
@@ -388,6 +429,195 @@ message Metadata {
 }
 ```
 
+# Column Encryption
+
+ORC as of Apache ORC 1.6 supports column encryption where the data and
+statistics of specific columns are encrypted on disk. Column
+encryption provides fine-grain column level security even when many
+users have access to the file itself. The encryption is transparent to
+the user and the writer only needs to define which columns and
+encryption keys to use. When reading an ORC file, if the user has
+access to the keys, they will get the real data. If they do not have
+the keys, they will get the masked data.
+
+```
+message Encryption {
+  // all of the masks used in this file
+  repeated DataMask mask = 1;
+  // all of the keys used in this file
+  repeated EncryptionKey key = 2;
+  // The encrypted variants.
+  // Readers should prefer the first variant that the user has access to
+  // the corresponding key. If they don't have access to any of the keys,
+  // they should get the unencrypted masked data.
+  repeated EncryptionVariant variants = 3;
+  // How are the local keys encrypted?
+  optional KeyProviderKind keyProvider = 4;
+}
+```
+
+Each encrypted column in each file will have a random local key
+generated for it. Thus, even though all of the decryption happens
+locally in the reader, a malicious user that stores the key only
+enables access that column in that file. The local keys are encrypted
+by the Hadoop or Ranger Key Management Server (KMS). The encrypted
+local keys are stored in the file footer's StripeInformation.
+
+```
+enum KeyProviderKind {
+  UNKNOWN = 0;
+  HADOOP = 1;
+  AWS = 2;
+  GCP = 3;
+  AZURE = 4;
+}
+```
+
+When ORC is using the Hadoop or Ranger KMS, it generates a random encrypted
+local key (16 or 32 bytes for 128 or 256 bit AES respectively). Using the
+first 16 bytes as the IV, it uses AES/CTR to decrypt the local key.
+
+With the AWS KMS, the GenerateDataKey method is used to create a new local
+key and the Decrypt method is used to decrypt it.
+
+## Data Masks
+
+The user's data is statically masked before writing the unencrypted
+variant. Because the masking was done statically when the file was
+written, the information about the masking is just informational.
+
+The three standard masks are:
+
+* nullify - all values become null
+* redact - replace characters with constants such as X or 9
+* sha256 - replace string with the SHA 256 of the value
+
+The default is nullify, but masks may be defined by the user. Masks
+are not allowed to change the type of the column, just the values.
+
+```
+message DataMask {
+  // the kind of masking, which may include third party masks
+  optional string name = 1;
+  // parameters for the mask
+  repeated string maskParameters = 2;
+  // the unencrypted column roots this mask was applied to
+  repeated uint32 columns = 3 [packed = true];
+}
+```
+
+## Encryption Keys
+
+In addition to the encrypted local keys, which are stored in the
+footer's StripeInformation, the file also needs to describe the master
+key that was used to encrypt the local keys. The master keys are
+described by name, their version, and the encryption algorithm.
+
+```
+message EncryptionKey {
+  optional string keyName = 1;
+  optional uint32 keyVersion = 2;
+  optional EncryptionAlgorithm algorithm = 3;
+}
+```
+
+The encryption algorithm is stored using an enumeration and since
+ProtoBuf uses the 0 value as a default, we added an unused value. That
+ensures that if we add a new algorithm that old readers will get
+UNKNOWN_ENCRYPTION instead of a real value.
+
+```
+enum EncryptionAlgorithm {
+  // used for detecting future algorithms
+  UNKNOWN_ENCRYPTION = 0;
+  // 128 bit AES/CTR
+  AES_CTR_128 = 1;
+  // 256 bit AES/CTR
+  AES_CTR_256 = 2;
+}
+```
+
+## Encryption Variants
+
+Each encrypted column is written as two variants:
+
+* encrypted unmasked - for users with access to the key
+* unencrypted masked - for all other users
+
+The changes to the format were done so that old ORC readers will read
+the masked unencrypted data. Encryption variants encrypt a subtree of
+columns and use a single local key. The initial version of encryption
+support only allows the two variants, but this may be extended later
+and thus readers should use the first variant of a column that the
+reader has access to.
+
+```
+message EncryptionVariant {
+  // the column id of the root column that is encrypted in this variant
+  optional uint32 root = 1;
+  // the key that encrypted this variant
+  optional uint32 key = 2;
+  // The master key that was used to encrypt the local key, referenced as
+  // an index into the Encryption.key list.
+  optional bytes encryptedKey = 3;
+  // the stripe statistics for this variant
+  repeated Stream stripeStatistics = 4;
+  // encrypted file statistics as a FileStatistics
+  optional bytes fileStatistics = 5;
+}
+```
+
+Each variant stores stripe and file statistics separately. The file
+statistics are serialized as a FileStatistics, compressed, encrypted
+and stored in the EncryptionVariant.fileStatistics.
+
+```
+message FileStatistics {
+  repeated ColumnStatistics column = 1;
+}
+```
+
+The stripe statistics for each column are serialized as
+ColumnarStripeStatistics, compressed, encrypted and stored in a stream
+of kind STRIPE_STATISTICS. By making the column stripe statistics
+independent of each other, the reader only reads and parses the
+columns contained in the SARG.
+
+```
+message ColumnarStripeStatistics {
+  // one value for each stripe in the file
+  repeated ColumnStatistics colStats = 1;
+}
+```
+
+## Stream Encryption
+
+Our encryption is done using AES/CTR. CTR is a mode that has some very
+nice properties for us:
+
+* It is seeded so that identical data is encrypted differently.
+* It does not require padding the stream to the cipher length.
+* It allows readers to seek in to a stream.
+* The IV does not need to be randomly generated.
+
+To ensure that we don't reuse IV, we set the IV as:
+
+* bytes 0 to 2  - column id
+* bytes 3 to 4  - stream kind
+* bytes 5 to 7  - stripe id
+* bytes 8 to 15 - cipher block counter
+
+However, it is critical for CTR that we never reuse an initialization
+vector (IV) with the same local key.
+
+For data in the footer, use the number of stripes in the file as the
+stripe id. This guarantees when we write an intermediate footer in to
+a file that we don't use the same IV.
+
+Additionally, we never reuse a local key for new data. For example, when
+merging files, we don't reuse local key from the input files for the new
+file tail, but always generate a new local key.
+
 # Compression
 
 If the ORC file writer selects a generic compression codec (zlib or
@@ -543,7 +773,7 @@ The direct encoding is used for integer sequences whose values have a
 relatively constant bit width. It encodes the values directly using a
 fixed width big endian encoding. The width of the values is encoded
 using the table below.
- 
+
 The 5 bit width encoding table for RLEv2:
 
 Width in Bits | Encoded Value | Notes
@@ -669,6 +899,15 @@ uses three streams PRESENT, DATA, and LENGTH, which stores the length
 of each value. The details of each type will be presented in the
 following subsections.
 
+The layout of each stripe looks like:
+* index streams
+   * unencrypted
+   * encryption variant 1..N
+* data streams
+   * unencrypted
+   * encryption variant 1..N
+* stripe footer
+
 ## Stripe Footer
 
 The stripe footer contains the encoding of each column and the
@@ -680,6 +919,23 @@ message StripeFooter {
  repeated Stream streams = 1;
  // the encoding of each column
  repeated ColumnEncoding columns = 2;
+ optional string writerTimezone = 3;
+ // one for each column encryption variant
+ repeated StripeEncryptionVariant encryption = 4;
+}
+```
+
+If the file includes encrypted columns, those streams and column
+encodings are stored separately in a StripeEncryptionVariant per an
+encryption variant. Additionally, the StripeFooter will contain two
+additional virtual streams ENCRYPTED_INDEX and ENCRYPTED_DATA that
+allocate the space that is used by the encryption variants to store
+the encrypted index and data streams.
+
+```
+message StripeEncryptionVariant {
+  repeated Stream streams = 1;
+  repeated ColumnEncoding encoding = 2;
 }
 ```
 
@@ -690,26 +946,35 @@ depends on the type and encoding of the column.
 ```
 message Stream {
  enum Kind {
- // boolean stream of whether the next value is non-null
- PRESENT = 0;
- // the primary data stream
- DATA = 1;
- // the length of each value for variable length data
- LENGTH = 2;
- // the dictionary blob
- DICTIONARY_DATA = 3;
- // deprecated prior to Hive 0.11
- // It was used to store the number of instances of each value in the
- // dictionary
- DICTIONARY_COUNT = 4;
- // a secondary data stream
- SECONDARY = 5;
- // the index for seeking to particular row groups
- ROW_INDEX = 6;
- // original bloom filters used before ORC-101
- BLOOM_FILTER = 7;
- // bloom filters that consistently use utf8
- BLOOM_FILTER_UTF8 = 8;
+   // boolean stream of whether the next value is non-null
+   PRESENT = 0;
+   // the primary data stream
+   DATA = 1;
+   // the length of each value for variable length data
+   LENGTH = 2;
+   // the dictionary blob
+   DICTIONARY_DATA = 3;
+   // deprecated prior to Hive 0.11
+   // It was used to store the number of instances of each value in the
+   // dictionary
+   DICTIONARY_COUNT = 4;
+   // a secondary data stream
+   SECONDARY = 5;
+   // the index for seeking to particular row groups
+   ROW_INDEX = 6;
+   // original bloom filters used before ORC-101
+   BLOOM_FILTER = 7;
+   // bloom filters that consistently use utf8
+   BLOOM_FILTER_UTF8 = 8;
+
+   // Virtual stream kinds to allocate space for encrypted index and data.
+   ENCRYPTED_INDEX = 9;
+   ENCRYPTED_DATA = 10;
+
+   // stripe statistics streams
+   STRIPE_STATISTICS = 100;
+   // A virtual stream kind that is used for setting the encryption IV.
+   FILE_STATISTICS = 101;
  }
  required Kind kind = 1;
  // the column id
