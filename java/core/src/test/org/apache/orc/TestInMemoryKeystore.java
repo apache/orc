@@ -45,9 +45,9 @@ public class TestInMemoryKeystore {
     Random random = new Random(2);
     memoryKeystore =
         new InMemoryKeystore(random)
-            .addKey("key128", EncryptionAlgorithm.AES_128, "123".getBytes())
-            .addKey("key256", EncryptionAlgorithm.AES_256, "secret123".getBytes())
-            .addKey("key256short", EncryptionAlgorithm.AES_256, "5".getBytes());
+            .addKey("key128", EncryptionAlgorithm.AES_CTR_128, "123".getBytes())
+            .addKey("key256", EncryptionAlgorithm.AES_CTR_256, "secret123".getBytes())
+            .addKey("key256short", EncryptionAlgorithm.AES_CTR_256, "5".getBytes());
 
   }
 
@@ -72,9 +72,9 @@ public class TestInMemoryKeystore {
 
     Assert.assertEquals("key256", metadata.getKeyName());
     if (InMemoryKeystore.SUPPORTS_AES_256) {
-      Assert.assertEquals(EncryptionAlgorithm.AES_256, metadata.getAlgorithm());
+      Assert.assertEquals(EncryptionAlgorithm.AES_CTR_256, metadata.getAlgorithm());
     } else {
-      Assert.assertEquals(EncryptionAlgorithm.AES_128, metadata.getAlgorithm());
+      Assert.assertEquals(EncryptionAlgorithm.AES_CTR_128, metadata.getAlgorithm());
     }
 
     Assert.assertEquals(0, metadata.getVersion());
@@ -133,7 +133,7 @@ public class TestInMemoryKeystore {
 
     Assert.assertEquals(0,
         memoryKeystore.getCurrentKeyVersion("key128").getVersion());
-    memoryKeystore.addKey("key128", 1, EncryptionAlgorithm.AES_128, "NewSecret".getBytes());
+    memoryKeystore.addKey("key128", 1, EncryptionAlgorithm.AES_CTR_128, "NewSecret".getBytes());
     Assert.assertEquals(1,
         memoryKeystore.getCurrentKeyVersion("key128").getVersion());
   }
@@ -141,7 +141,7 @@ public class TestInMemoryKeystore {
   @Test
   public void testDuplicateKeyNames() {
     try {
-      memoryKeystore.addKey("key128", 0, EncryptionAlgorithm.AES_128,
+      memoryKeystore.addKey("key128", 0, EncryptionAlgorithm.AES_CTR_128,
           "exception".getBytes());
       Assert.fail("Keys with same name cannot be added.");
     } catch (IOException e) {
@@ -161,32 +161,32 @@ public class TestInMemoryKeystore {
   public void testMultipleVersion() throws IOException {
     Assert.assertEquals(0,
         memoryKeystore.getCurrentKeyVersion("key256").getVersion());
-    memoryKeystore.addKey("key256", 1, EncryptionAlgorithm.AES_256, "NewSecret".getBytes());
+    memoryKeystore.addKey("key256", 1, EncryptionAlgorithm.AES_CTR_256, "NewSecret".getBytes());
     Assert.assertEquals(1,
         memoryKeystore.getCurrentKeyVersion("key256").getVersion());
 
     try {
-      memoryKeystore.addKey("key256", 1, EncryptionAlgorithm.AES_256,
+      memoryKeystore.addKey("key256", 1, EncryptionAlgorithm.AES_CTR_256,
           "BadSecret".getBytes());
       Assert.fail("Keys with smaller version should not be added.");
     } catch (final IOException e) {
       Assert.assertTrue(e.toString().contains("equal or higher version"));
     }
 
-    memoryKeystore.addKey("key256", 2, EncryptionAlgorithm.AES_256,
+    memoryKeystore.addKey("key256", 2, EncryptionAlgorithm.AES_CTR_256,
         "NewerSecret".getBytes());
     Assert.assertEquals(2,
         memoryKeystore.getCurrentKeyVersion("key256").getVersion());
 
     // make sure that all 3 versions of key256 exist and have different secrets
     Key key0 = memoryKeystore.decryptLocalKey(
-        new HadoopShims.KeyMetadata("key256", 0, EncryptionAlgorithm.AES_256),
+        new HadoopShims.KeyMetadata("key256", 0, EncryptionAlgorithm.AES_CTR_256),
         new byte[16]);
     Key key1 = memoryKeystore.decryptLocalKey(
-        new HadoopShims.KeyMetadata("key256", 1, EncryptionAlgorithm.AES_256),
+        new HadoopShims.KeyMetadata("key256", 1, EncryptionAlgorithm.AES_CTR_256),
         new byte[16]);
     Key key2 = memoryKeystore.decryptLocalKey(
-        new HadoopShims.KeyMetadata("key256", 2, EncryptionAlgorithm.AES_256),
+        new HadoopShims.KeyMetadata("key256", 2, EncryptionAlgorithm.AES_CTR_256),
         new byte[16]);
     Assert.assertNotEquals(new BytesWritable(key0.getEncoded()).toString(),
         new BytesWritable(key1.getEncoded()).toString());

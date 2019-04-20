@@ -147,6 +147,23 @@ public interface Reader extends Closeable {
   OrcProto.FileTail getFileTail();
 
   /**
+   * Get the list of encryption keys for column encryption.
+   * @return the set of encryption keys
+   */
+  EncryptionKey[] getColumnEncryptionKeys();
+
+  /**
+   * Get the data masks for the unencrypted variant of the data.
+   * @return the lists of data masks
+   */
+  DataMaskDescription[] getDataMasks();
+
+  /**
+   * Get the list of encryption variants for the data.
+   */
+  EncryptionVariant[] getEncryptionVariants();
+
+  /**
    * Options for creating a RecordReader.
    */
   public static class Options implements Cloneable {

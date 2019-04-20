@@ -28,6 +28,9 @@ import java.util.Set;
 
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.orc.CompressionKind;
+import org.apache.orc.DataMaskDescription;
+import org.apache.orc.EncryptionKey;
+import org.apache.orc.EncryptionVariant;
 import org.apache.orc.FileMetadata;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcUtils;
@@ -214,6 +217,24 @@ public class ReaderImpl implements Reader {
   @Override
   public OrcProto.FileTail getFileTail() {
     return tail.getFileTail();
+  }
+
+  @Override
+  public EncryptionKey[] getColumnEncryptionKeys() {
+    // TODO
+    return new EncryptionKey[0];
+  }
+
+  @Override
+  public DataMaskDescription[] getDataMasks() {
+    // TODO
+    return new DataMaskDescription[0];
+  }
+
+  @Override
+  public EncryptionVariant[] getEncryptionVariants() {
+    // TODO
+    return new EncryptionVariant[0];
   }
 
   @Override

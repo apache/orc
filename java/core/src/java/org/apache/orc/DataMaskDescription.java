@@ -16,32 +16,28 @@
  * limitations under the License.
  */
 
-package org.apache.orc.impl;
+package org.apache.orc;
 
-import org.apache.orc.EncryptionAlgorithm;
-import org.apache.orc.OrcProto;
-import org.junit.Test;
+/**
+ * Information about the DataMask used to mask the unencrypted data.
+ */
+public interface DataMaskDescription {
 
-import java.util.Arrays;
+  /**
+   * The name of the mask.
+   * @return the name
+   */
+  String getName();
 
-import static junit.framework.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+  /**
+   * The parameters for the mask
+   * @return the array of parameters
+   */
+  String[] getParameters();
 
-public class TestCryptoUtils {
-
-  @Test
-  public void testCreateStreamIv() throws Exception {
-    byte[] iv = CryptoUtils.createIvForStream(EncryptionAlgorithm.AES_CTR_128,
-        new StreamName(0x234567,
-        OrcProto.Stream.Kind.BLOOM_FILTER_UTF8), 0x123456);
-    assertEquals(16, iv.length);
-    assertEquals(0x23, iv[0]);
-    assertEquals(0x45, iv[1]);
-    assertEquals(0x67, iv[2]);
-    assertEquals(0x0, iv[3]);
-    assertEquals(0x8, iv[4]);
-    assertEquals(0x12, iv[5]);
-    assertEquals(0x34, iv[6]);
-    assertEquals(0x56, iv[7]);
-  }
+  /**
+   * Get the list of columns that use this mask.
+   * @return the list of columns
+   */
+  TypeDescription[] getColumns();
 }

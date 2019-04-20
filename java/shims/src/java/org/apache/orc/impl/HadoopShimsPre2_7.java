@@ -203,13 +203,13 @@ public class HadoopShimsPre2_7 implements HadoopShims {
     if (cipher.startsWith("AES/")) {
       int bitLength = meta.getBitLength();
       if (bitLength == 128) {
-        return EncryptionAlgorithm.AES_128;
+        return EncryptionAlgorithm.AES_CTR_128;
       } else {
         if (bitLength != 256) {
           LOG.info("ORC column encryption does not support " + bitLength +
               " bit keys. Using 256 bits instead.");
         }
-        return EncryptionAlgorithm.AES_256;
+        return EncryptionAlgorithm.AES_CTR_256;
       }
     }
     throw new IllegalArgumentException("ORC column encryption only supports" +
