@@ -114,7 +114,7 @@ public interface Reader extends Closeable {
    * Get the statistics about the columns in the file.
    * @return the information about the column
    */
-  ColumnStatistics[] getStatistics();
+  ColumnStatistics[] getStatistics() throws IOException;
 
   /**
    * Get the type of rows in this ORC file.
@@ -145,6 +145,23 @@ public interface Reader extends Closeable {
    * @return - file tail
    */
   OrcProto.FileTail getFileTail();
+
+  /**
+   * Get the list of encryption keys for column encryption.
+   * @return the set of encryption keys
+   */
+  EncryptionKey[] getColumnEncryptionKeys();
+
+  /**
+   * Get the data masks for the unencrypted variant of the data.
+   * @return the lists of data masks
+   */
+  DataMaskDescription[] getDataMasks();
+
+  /**
+   * Get the list of encryption variants for the data.
+   */
+  EncryptionVariant[] getEncryptionVariants();
 
   /**
    * Options for creating a RecordReader.

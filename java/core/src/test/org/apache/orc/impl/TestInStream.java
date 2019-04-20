@@ -127,7 +127,7 @@ public class TestInStream {
     final long DATA_CONST = 0x1_0000_0003L;
     final int ROW_COUNT = 1024;
     OutputCollector collect = new OutputCollector();
-    EncryptionAlgorithm algorithm = EncryptionAlgorithm.AES_128;
+    EncryptionAlgorithm algorithm = EncryptionAlgorithm.AES_CTR_128;
     byte[] rawKey = new byte[algorithm.keyLength()];
     for(int i=0; i < rawKey.length; ++i) {
       rawKey[i] = (byte) i;
@@ -181,7 +181,7 @@ public class TestInStream {
     final long DATA_CONST = 0x1_0000_0003L;
     final int ROW_COUNT = 1024;
     OutputCollector collect = new OutputCollector();
-    EncryptionAlgorithm algorithm = EncryptionAlgorithm.AES_128;
+    EncryptionAlgorithm algorithm = EncryptionAlgorithm.AES_CTR_128;
     byte[] rawKey = new byte[algorithm.keyLength()];
     for(int i=0; i < rawKey.length; ++i) {
       rawKey[i] = (byte) i;

@@ -18,6 +18,7 @@
 package org.apache.orc;
 
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
+import org.apache.orc.impl.MaskDescriptionImpl;
 
 import java.util.ServiceLoader;
 
@@ -47,12 +48,21 @@ public interface DataMask {
 
     private final String name;
 
+    /**
+     * Get the name of the predefined data mask.
+     * @return the standard name
+     */
     public String getName() {
       return name;
     }
 
-    public DataMask build(TypeDescription schema, String... params) {
-      return Factory.build(name, schema, params);
+    /**
+     * Build a DataMaskDescription given the name and a set of parameters.
+     * @param params the paramters
+     * @return a MaskDescription with the given parameters
+     */
+    public DataMaskDescription getDescription(String... params) {
+      return new MaskDescriptionImpl(name, params);
     }
   }
 
@@ -68,6 +78,18 @@ public interface DataMask {
 
 
   /**
+   * An interface to provide override data masks for sub-columns.
+   */
+  interface MaskOverrides {
+    /**
+     * Should the current mask be overridden on a sub-column?
+     * @param type the subfield
+     * @return the new mask description or null to continue using the same one
+     */
+    DataMaskDescription hasOverride(TypeDescription type);
+  }
+
+  /**
    * Providers can provide one or more kinds of data masks.
    * Because they are discovered using a service loader, they may be added
    * by third party jars.
@@ -75,12 +97,14 @@ public interface DataMask {
   interface Provider {
     /**
      * Build a mask with the given parameters.
-     * @param name the kind of masking
+     * @param description the description of the data mask
      * @param schema the type of the field
-     * @param params the list of parameters with the name in params[0]
+     * @param overrides a function to override this mask on a sub-column
      * @return the new data mask or null if this name is unknown
      */
-    DataMask build(String name, TypeDescription schema, String... params);
+    DataMask build(DataMaskDescription description,
+                   TypeDescription schema,
+                   MaskOverrides overrides);
   }
 
   /**
@@ -95,31 +119,24 @@ public interface DataMask {
 
     /**
      * Build a new DataMask instance.
-     * @param name the name of the mask
+     * @param mask the description of the data mask
      * @param schema the type of the field
-     * @param params a list of parameters to the mask
+     * @param overrides sub-columns where the mask is overridden
      * @return a new DataMask
      * @throws IllegalArgumentException if no such kind of data mask was found
      *
      * @see org.apache.orc.impl.mask.MaskProvider for the standard provider
      */
-    public static DataMask build(String name,
-                           TypeDescription schema,
-                           String... params) {
+    public static DataMask build(DataMaskDescription mask,
+                                 TypeDescription schema,
+                                 MaskOverrides overrides) {
       for(Provider provider: LOADER) {
-        DataMask result = provider.build(name, schema, params);
+        DataMask result = provider.build(mask, schema, overrides);
         if (result != null) {
           return result;
         }
       }
-      StringBuilder msg = new StringBuilder();
-      msg.append("Can't find data mask - ");
-      msg.append(name);
-      for(int i=0; i < params.length; ++i) {
-        msg.append(", ");
-        msg.append(params[i]);
-      }
-      throw new IllegalArgumentException(msg.toString());
+      throw new IllegalArgumentException("Can't find data mask - " + mask);
     }
   }
 }

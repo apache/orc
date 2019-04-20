@@ -82,7 +82,7 @@ public class TestOutStream {
   @Test
   public void testEncryption() throws Exception {
     TestInStream.OutputCollector receiver = new TestInStream.OutputCollector();
-    EncryptionAlgorithm aes128 = EncryptionAlgorithm.AES_128;
+    EncryptionAlgorithm aes128 = EncryptionAlgorithm.AES_CTR_128;
     byte[] keyBytes = new byte[aes128.keyLength()];
     for(int i=0; i < keyBytes.length; ++i) {
       keyBytes[i] = (byte) i;
@@ -177,7 +177,7 @@ public class TestOutStream {
     // disable test if AES_256 is not available
     Assume.assumeTrue(TEST_AES_256);
     TestInStream.OutputCollector receiver = new TestInStream.OutputCollector();
-    EncryptionAlgorithm aes256 = EncryptionAlgorithm.AES_256;
+    EncryptionAlgorithm aes256 = EncryptionAlgorithm.AES_CTR_256;
     byte[] keyBytes = new byte[aes256.keyLength()];
     for(int i=0; i < keyBytes.length; ++i) {
       keyBytes[i] = (byte) (i * 13);

@@ -282,8 +282,8 @@ public class InMemoryKeystore implements HadoopShims.KeyProvider {
                                  byte[] masterKey) throws IOException {
 
     /* Test weather platform supports the algorithm */
-    if (!SUPPORTS_AES_256 && (algorithm != EncryptionAlgorithm.AES_128)) {
-      algorithm = EncryptionAlgorithm.AES_128;
+    if (!SUPPORTS_AES_256 && (algorithm != EncryptionAlgorithm.AES_CTR_128)) {
+      algorithm = EncryptionAlgorithm.AES_CTR_128;
     }
 
     final byte[] buffer = new byte[algorithm.keyLength()];

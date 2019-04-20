@@ -18,6 +18,7 @@
 package org.apache.orc.impl.mask;
 
 import org.apache.orc.DataMask;
+import org.apache.orc.DataMaskDescription;
 import org.apache.orc.TypeDescription;
 
 import java.util.List;
@@ -38,7 +39,8 @@ public abstract class MaskFactory {
   protected abstract DataMask buildTimestampMask(TypeDescription schema);
   protected abstract DataMask buildBinaryMask(TypeDescription schema);
 
-  public DataMask build(TypeDescription schema) {
+  public DataMask build(TypeDescription schema,
+                        DataMask.MaskOverrides overrides) {
     switch(schema.getCategory()) {
       case BOOLEAN:
         return buildBooleanMask(schema);
@@ -63,39 +65,50 @@ public abstract class MaskFactory {
       case BINARY:
         return buildBinaryMask(schema);
       case UNION:
-        return buildUnionMask(schema);
+        return buildUnionMask(schema, overrides);
       case STRUCT:
-        return buildStructMask(schema);
+        return buildStructMask(schema, overrides);
       case LIST:
-        return buildListMask(schema);
+        return buildListMask(schema, overrides);
       case MAP:
-        return buildMapMask(schema);
+        return buildMapMask(schema, overrides);
       default:
         throw new IllegalArgumentException("Unhandled type " + schema);
     }
   }
 
-  protected DataMask[] buildChildren(List<TypeDescription> children) {
+  protected DataMask[] buildChildren(List<TypeDescription> children,
+                                     DataMask.MaskOverrides overrides) {
     DataMask[] result = new DataMask[children.size()];
     for(int i = 0; i < result.length; ++i) {
-      result[i] = build(children.get(i));
+      TypeDescription child = children.get(i);
+      DataMaskDescription over = overrides.hasOverride(child);
+      if (over != null) {
+        result[i] = DataMask.Factory.build(over, child, overrides);
+      } else {
+        result[i] = build(child, overrides);
+      }
     }
     return result;
   }
 
-  protected DataMask buildStructMask(TypeDescription schema) {
-    return new StructIdentity(buildChildren(schema.getChildren()));
+  protected DataMask buildStructMask(TypeDescription schema,
+                                     DataMask.MaskOverrides overrides) {
+    return new StructIdentity(buildChildren(schema.getChildren(), overrides));
   }
 
-  DataMask buildListMask(TypeDescription schema) {
-    return new ListIdentity(buildChildren(schema.getChildren()));
+  DataMask buildListMask(TypeDescription schema,
+                         DataMask.MaskOverrides overrides) {
+    return new ListIdentity(buildChildren(schema.getChildren(), overrides));
   }
 
-  DataMask buildMapMask(TypeDescription schema) {
-    return new MapIdentity(buildChildren(schema.getChildren()));
+  DataMask buildMapMask(TypeDescription schema,
+                        DataMask.MaskOverrides overrides) {
+    return new MapIdentity(buildChildren(schema.getChildren(), overrides));
   }
 
-  DataMask buildUnionMask(TypeDescription schema) {
-    return new UnionIdentity(buildChildren(schema.getChildren()));
+  DataMask buildUnionMask(TypeDescription schema,
+                          DataMask.MaskOverrides overrides) {
+    return new UnionIdentity(buildChildren(schema.getChildren(), overrides));
   }
 }

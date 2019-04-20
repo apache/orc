@@ -28,8 +28,8 @@ import java.security.NoSuchAlgorithmException;
  * This class can't reference any of the newer Hadoop classes.
  */
 public enum EncryptionAlgorithm {
-  AES_128("AES", "CTR/NoPadding", 16, 1),
-  AES_256("AES", "CTR/NoPadding", 32, 2);
+  AES_CTR_128("AES", "CTR/NoPadding", 16, 1),
+  AES_CTR_256("AES", "CTR/NoPadding", 32, 2);
 
   private final String algorithm;
   private final String mode;

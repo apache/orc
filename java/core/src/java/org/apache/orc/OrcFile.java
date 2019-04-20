@@ -172,6 +172,7 @@ public class OrcFile {
     ORC_101(WriterImplementation.ORC_JAVA, 5),   // bloom filters use utf8
     ORC_135(WriterImplementation.ORC_JAVA, 6),   // timestamp stats use utc
     ORC_203(WriterImplementation.ORC_JAVA, 7),   // trim long strings & record they were trimmed
+    ORC_14(WriterImplementation.ORC_JAVA, 8),    // column encryption added
 
     // C++ ORC Writer
     ORC_CPP_ORIGINAL(WriterImplementation.ORC_CPP, 6),
@@ -255,7 +256,7 @@ public class OrcFile {
   /**
    * The WriterVersion for this version of the software.
    */
-  public static final WriterVersion CURRENT_WRITER = WriterVersion.ORC_203;
+  public static final WriterVersion CURRENT_WRITER = WriterVersion.ORC_14;
 
   public enum EncodingStrategy {
     SPEED, COMPRESSION
@@ -273,6 +274,7 @@ public class OrcFile {
     private FileSystem filesystem;
     private long maxLength = Long.MAX_VALUE;
     private OrcTail orcTail;
+    private HadoopShims.KeyProvider keyProvider;
     // TODO: We can generalize FileMetada interface. Make OrcTail implement FileMetadata interface
     // and remove this class altogether. Both footer caching and llap caching just needs OrcTail.
     // For now keeping this around to avoid complex surgery
@@ -298,6 +300,16 @@ public class OrcFile {
       return this;
     }
 
+    /**
+     * Set the KeyProvider to override the default for getting keys.
+     * @param provider
+     * @return
+     */
+    public ReaderOptions setKeyProvider(HadoopShims.KeyProvider provider) {
+      this.keyProvider = provider;
+      return this;
+    }
+
     public Configuration getConfiguration() {
       return conf;
     }
@@ -312,6 +324,10 @@ public class OrcFile {
 
     public OrcTail getOrcTail() {
       return orcTail;
+    }
+
+    public HadoopShims.KeyProvider getKeyProvider() {
+      return keyProvider;
     }
 
     public ReaderOptions fileMetadata(final FileMetadata metadata) {
@@ -380,6 +396,40 @@ public class OrcFile {
   }
 
   /**
+   * An internal class that describes how to encrypt a column.
+   */
+  public static class EncryptionOption {
+    private final String columnNames;
+    private final String keyName;
+    private final String mask;
+    private final String[] maskParameters;
+
+    EncryptionOption(String columnNames, String keyName, String mask,
+                     String... maskParams) {
+      this.columnNames = columnNames;
+      this.keyName = keyName;
+      this.mask = mask;
+      this.maskParameters = maskParams;
+    }
+
+    public String getColumnNames() {
+      return columnNames;
+    }
+
+    public String getKeyName() {
+      return keyName;
+    }
+
+    public String getMask() {
+      return mask;
+    }
+
+    public String[] getMaskParameters() {
+      return maskParameters;
+    }
+  }
+
+  /**
    * Options for creating ORC file writers.
    */
   public static class WriterOptions implements Cloneable {
@@ -409,6 +459,8 @@ public class OrcFile {
     private boolean writeVariableLengthBlocks;
     private HadoopShims shims;
     private String directEncodingColumns;
+    private List<EncryptionOption> encryption = new ArrayList<>();
+    private HadoopShims.KeyProvider provider;
 
     protected WriterOptions(Properties tableProperties, Configuration conf) {
       configuration = conf;
@@ -461,8 +513,7 @@ public class OrcFile {
     public WriterOptions clone() {
       try {
         return (WriterOptions) super.clone();
-      }
-      catch(CloneNotSupportedException ex) {
+      } catch (CloneNotSupportedException ex) {
         throw new AssertionError("Expected super.clone() to work");
       }
     }
@@ -573,6 +624,7 @@ public class OrcFile {
 
     /**
      * Specify the false positive probability for bloom filter.
+     *
      * @param fpp - false positive probability
      * @return this
      */
@@ -591,6 +643,7 @@ public class OrcFile {
 
     /**
      * Set the schema for the file. This is a required parameter.
+     *
      * @param schema the schema for the file.
      * @return this
      */
@@ -609,6 +662,7 @@ public class OrcFile {
 
     /**
      * Add a listener for when the stripe and file are about to be closed.
+     *
      * @param callback the object to be called when the stripe is closed
      * @return this
      */
@@ -627,7 +681,7 @@ public class OrcFile {
 
     /**
      * Change the physical writer of the ORC file.
-     *
+     * <p>
      * SHOULD ONLY BE USED BY LLAP.
      *
      * @param writer the writer to control the layout and persistence
@@ -671,6 +725,7 @@ public class OrcFile {
     /**
      * Manually set the writer version.
      * This is an internal API.
+     *
      * @param version the version to write
      * @return this
      */
@@ -699,6 +754,67 @@ public class OrcFile {
     public WriterOptions directEncodingColumns(String value) {
       directEncodingColumns = value;
       return this;
+    }
+
+    /*
+     * Encrypt a set of columns with a key.
+     * For readers without access to the key, they will read nulls.
+     * @param columnNames the columns to encrypt
+     * @param keyName the key name to encrypt the data with
+     * @return this
+     */
+    public WriterOptions encryptColumn(String columnNames,
+                                       String keyName) {
+      return encryptColumn(columnNames, keyName,
+          DataMask.Standard.NULLIFY.getName());
+    }
+
+    /**
+     * Encrypt a set of columns with a key.
+     * The data is also masked and stored unencrypted in the file. Readers
+     * without access to the key will instead get the masked data.
+     * @param columnNames the column names to encrypt
+     * @param keyName the key name to encrypt the data with
+     * @param mask the kind of masking
+     * @param maskParameters the parameters to the mask
+     * @return this
+     */
+    public WriterOptions encryptColumn(String columnNames,
+                                       String keyName,
+                                       String mask,
+                                       String... maskParameters) {
+      encryption.add(new EncryptionOption(columnNames, keyName, mask,
+          maskParameters));
+      return this;
+    }
+
+    /**
+     * Set a different mask on a subtree that is already being encrypted.
+     * @param columnNames the column names to change the mask on
+     * @param mask the name of the mask
+     * @param maskParameters the parameters for the mask
+     * @return this
+     */
+    public WriterOptions maskColumn(String columnNames,
+                                    String mask,
+                                    String... maskParameters) {
+      encryption.add(new EncryptionOption(columnNames, null,
+          mask, maskParameters));
+      return this;
+    }
+
+    /**
+     * Set the key provider for
+     * @param provider
+     * @return
+     */
+    public WriterOptions setKeyProvider(HadoopShims.KeyProvider provider) {
+      this.provider = provider;
+      return this;
+    }
+
+    public HadoopShims.KeyProvider getKeyProvider() {
+      return provider;
     }
 
     public boolean getBlockPadding() {
@@ -803,6 +919,10 @@ public class OrcFile {
 
     public String getDirectEncodingColumns() {
       return directEncodingColumns;
+    }
+
+    public List<EncryptionOption> getEncryption() {
+      return encryption;
     }
   }
 

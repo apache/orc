@@ -16,32 +16,34 @@
  * limitations under the License.
  */
 
-package org.apache.orc.impl;
+package org.apache.orc;
 
-import org.apache.orc.EncryptionAlgorithm;
-import org.apache.orc.OrcProto;
-import org.junit.Test;
+/**
+ * Information about a key used for column encryption in an ORC file.
+ */
+public interface EncryptionKey extends Comparable<EncryptionKey> {
 
-import java.util.Arrays;
+  /**
+   * The name of the key.
+   * @return the name
+   */
+  String getKeyName();
 
-import static junit.framework.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+  /**
+   * The version of the key.
+   * @return the version, which for most KeyProviders start at 0.
+   */
+  int getKeyVersion();
 
-public class TestCryptoUtils {
+  /**
+   * The encryption algorithm for this key.
+   * @return the encryption algorithm
+   */
+  EncryptionAlgorithm getAlgorithm();
 
-  @Test
-  public void testCreateStreamIv() throws Exception {
-    byte[] iv = CryptoUtils.createIvForStream(EncryptionAlgorithm.AES_CTR_128,
-        new StreamName(0x234567,
-        OrcProto.Stream.Kind.BLOOM_FILTER_UTF8), 0x123456);
-    assertEquals(16, iv.length);
-    assertEquals(0x23, iv[0]);
-    assertEquals(0x45, iv[1]);
-    assertEquals(0x67, iv[2]);
-    assertEquals(0x0, iv[3]);
-    assertEquals(0x8, iv[4]);
-    assertEquals(0x12, iv[5]);
-    assertEquals(0x34, iv[6]);
-    assertEquals(0x56, iv[7]);
-  }
+  /**
+   * The columns that are encrypted with this key.
+   * @return the list of columns
+   */
+  EncryptionVariant[] getEncryptionRoots();
 }
