@@ -49,7 +49,7 @@ public interface CompressionCodec {
   /**
    * Compress the in buffer to the out buffer.
    * @param in the bytes to compress
-   * @param out the uncompressed bytes
+   * @param out the compressed bytes
    * @param overflow put any additional bytes here
    * @param options the options to control compression
    * @return true if the output is smaller than input
