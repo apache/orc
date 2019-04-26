@@ -417,8 +417,14 @@ namespace orc {
         bytesPerValue * numValues) {
       bufferPointer += bytesPerValue * numValues;
     } else {
-      inputStream->Skip(static_cast<int>(bytesPerValue * numValues -
-          static_cast<size_t>(bufferEnd - bufferPointer)));
+      size_t sizeToSkip = bytesPerValue * numValues -
+                          static_cast<size_t>(bufferEnd - bufferPointer);
+      const size_t cap = static_cast<size_t>(std::numeric_limits<int>::max());
+      while (sizeToSkip != 0) {
+        size_t step = sizeToSkip > cap ? cap : sizeToSkip;
+        inputStream->Skip(static_cast<int>(step));
+        sizeToSkip -= step;
+      }
       bufferEnd = nullptr;
       bufferPointer = nullptr;
     }
@@ -667,7 +673,12 @@ namespace orc {
     } else {
       // move the stream forward after accounting for the buffered bytes
       totalBytes -= lastBufferLength;
-      blobStream->Skip(static_cast<int>(totalBytes));
+      const size_t cap = static_cast<size_t>(std::numeric_limits<int>::max());
+      while (totalBytes != 0) {
+        size_t step = totalBytes > cap ? cap : totalBytes;
+        blobStream->Skip(static_cast<int>(step));
+        totalBytes -= step;
+      }
       lastBufferLength = 0;
       lastBuffer = nullptr;
     }
