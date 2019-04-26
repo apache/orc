@@ -157,7 +157,7 @@ namespace orc {
 
     uint64_t sizeInBytes() const;
     uint64_t getBitSize() const;
-    uint64_t getNumHashFunctions() const;
+    int32_t getNumHashFunctions() const;
 
     void merge(const BloomFilterImpl& other);
 
@@ -179,7 +179,7 @@ namespace orc {
   private:
     static constexpr double DEFAULT_FPP = 0.05;
     uint64_t mNumBits;
-    uint64_t mNumHashFunctions;
+    int32_t mNumHashFunctions;
     std::unique_ptr<BitSet> mBitSet;
   };
 

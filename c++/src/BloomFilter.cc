@@ -90,15 +90,15 @@ namespace orc {
     }
   }
 
-  uint64_t optimalNumOfHashFunctions(uint64_t expectedEntries, uint64_t numBits) {
+  int32_t optimalNumOfHashFunctions(uint64_t expectedEntries, uint64_t numBits) {
     double n = static_cast<double>(expectedEntries);
-    return std::max<uint64_t>(1ull, static_cast<uint64_t>(
+    return std::max<int32_t>(1, static_cast<int32_t>(
       std::round(static_cast<double>(numBits) / n * std::log(2.0))));
   }
 
-  uint64_t optimalNumOfBits(uint64_t expectedEntries, double fpp) {
+  int32_t optimalNumOfBits(uint64_t expectedEntries, double fpp) {
     double n = static_cast<double>(expectedEntries);
-    return static_cast<uint64_t>(-n * std::log(fpp) / (std::log(2.0) * std::log(2.0)));
+    return static_cast<int32_t>(-n * std::log(fpp) / (std::log(2.0) * std::log(2.0)));
   }
 
   // Thomas Wang's integer hash function
@@ -139,7 +139,7 @@ namespace orc {
     checkArgument(fpp > 0.0 && fpp < 1.0,
                   "False positive probability should be > 0.0 & < 1.0");
 
-    uint64_t nb = optimalNumOfBits(expectedEntries, fpp);
+    uint64_t nb = static_cast<uint64_t>(optimalNumOfBits(expectedEntries, fpp));
     // make 'mNumBits' multiple of 64
     mNumBits = nb + (BITS_OF_LONG - (nb % BITS_OF_LONG));
     mNumHashFunctions = optimalNumOfHashFunctions(expectedEntries, mNumBits);
@@ -172,7 +172,7 @@ namespace orc {
     return mBitSet->bitSize();
   }
 
-  uint64_t BloomFilterImpl::getNumHashFunctions() const {
+  int32_t BloomFilterImpl::getNumHashFunctions() const {
     return mNumHashFunctions;
   }
 
@@ -189,7 +189,7 @@ namespace orc {
   // caller should make sure input proto::BloomFilter is valid since
   // no check will be performed in the following constructor
   BloomFilterImpl::BloomFilterImpl(const proto::BloomFilter& bloomFilter) {
-    mNumHashFunctions = bloomFilter.numhashfunctions();
+    mNumHashFunctions = static_cast<int32_t>(bloomFilter.numhashfunctions());
 
     const std::string& bitsetStr = bloomFilter.utf8bitset();
     mNumBits = bitsetStr.size() << SHIFT_3_BITS;
@@ -227,7 +227,7 @@ namespace orc {
     int32_t hash1 = static_cast<int32_t>(hash64 & 0xffffffff);
     int32_t hash2 = static_cast<int32_t>(hash64 >> 32);
 
-    for (int32_t i = 1; i <= static_cast<int32_t>(mNumHashFunctions); ++i) {
+    for (int32_t i = 1; i <= mNumHashFunctions; ++i) {
       int32_t combinedHash = hash1 + i * hash2;
       // hashcode should be positive, flip all the bits if it's negative
       if (combinedHash < 0) {
@@ -242,8 +242,8 @@ namespace orc {
     int32_t hash1 = static_cast<int32_t>(hash64 & 0xffffffff);
     int32_t hash2 = static_cast<int32_t>(hash64 >> 32);
 
-    for (int32_t i = 1; i <= static_cast<int32_t>(mNumHashFunctions); ++i) {
-      int32_t combinedHash = hash1 + static_cast<int32_t>(i) * hash2;
+    for (int32_t i = 1; i <= mNumHashFunctions; ++i) {
+      int32_t combinedHash = hash1 + i * hash2;
       // hashcode should be positive, flip all the bits if it's negative
       if (combinedHash < 0) {
         combinedHash = ~combinedHash;
