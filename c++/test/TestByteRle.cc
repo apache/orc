@@ -1462,4 +1462,53 @@ TEST(BooleanRle, seekBoolAndByteRLE) {
     EXPECT_ANY_THROW(decoder->next(data, 1, nullptr));
   }
 
+
+
+  TEST(BooleanRle, testSeekWithRemainBitNotZero) {
+    MemoryOutputStream memStream(1024 * 1024);
+
+    uint64_t capacity = 500 * 1024;
+    uint64_t block = 1024;
+    std::unique_ptr<BufferedOutputStream> outStream(
+            new BufferedOutputStream(*getDefaultPool(), &memStream, capacity, block));
+
+    std::unique_ptr<ByteRleEncoder> encoder =
+            createBooleanRleEncoder(std::move(outStream));
+
+    uint64_t numValues = 1779;
+    char * data = new char[numValues];
+    for (uint64_t i = 0; i < numValues; ++i) {
+      data[i] = static_cast<char>(i % 2);
+    }
+    encoder->add(data, numValues, nullptr);
+    encoder->flush();
+
+    std::unique_ptr<SeekableInputStream> inStream(
+            new SeekableArrayInputStream(memStream.getData(), memStream.getLength()));
+
+    std::unique_ptr<ByteRleDecoder> decoder =
+            createBooleanRleDecoder(std::move(inStream));
+
+    char* decodedData = new char[numValues];
+    decoder->next(decodedData, 9, nullptr);
+
+    for (uint64_t i = 0; i < 9; ++i) {
+      bool expect = data[i] != 0;
+      bool actual = decodedData[i] != 0;
+      EXPECT_EQ(expect, actual) << "Output wrong at " << i;
+    }
+
+    std::list<uint64_t> positions = {0, 0, 0};
+    PositionProvider positionProvider(positions);
+    decoder->seek(positionProvider);
+    decoder->next(decodedData, numValues, nullptr);
+    for (uint64_t i = 0; i < numValues; ++i) {
+      bool expect = data[i] != 0;
+      bool actual = decodedData[i] != 0;
+      EXPECT_EQ(expect, actual)
+                    << "Output wrong at " << i;
+    }
+
+    delete [] decodedData;
+  }
 }  // namespace orc
