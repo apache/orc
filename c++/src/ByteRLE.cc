@@ -521,6 +521,7 @@ namespace orc {
   void BooleanRleDecoderImpl::seek(PositionProvider& location) {
     ByteRleDecoderImpl::seek(location);
     uint64_t consumed = location.next();
+    remainingBits = 0;
     if (consumed > 8) {
       throw ParseError("bad position");
     }
