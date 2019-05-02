@@ -21,6 +21,7 @@
 
 #include "orc/Vector.hh"
 
+#include "BloomFilter.hh"
 #include "ByteRLE.hh"
 #include "Compression.hh"
 #include "orc/Exceptions.hh"
@@ -81,6 +82,11 @@ namespace orc {
     std::unique_ptr<proto::RowIndex> rowIndex;
     std::unique_ptr<proto::RowIndexEntry> rowIndexEntry;
     std::unique_ptr<RowIndexPositionRecorder> rowIndexPosition;
+
+    // bloom filters are recorded per row group
+    bool enableBloomFilter;
+    std::unique_ptr<BloomFilterImpl> bloomFilter;
+    std::unique_ptr<proto::BloomFilterIndex> bloomFilterIndex;
 
   public:
     ColumnWriter(const Type& type, const StreamsFactory& factory,
@@ -153,6 +159,11 @@ namespace orc {
     virtual void createRowIndexEntry();
 
     /**
+     * Create a new BloomFilter entry and add the previous one to BloomFilterIndex
+     */
+    virtual void addBloomFilterEntry();
+
+    /**
      * Write row index streams for this column.
      * @param streams output list of ROW_INDEX streams
      */
@@ -195,6 +206,7 @@ namespace orc {
   protected:
     MemoryPool& memPool;
     std::unique_ptr<BufferedOutputStream> indexStream;
+    std::unique_ptr<BufferedOutputStream> bloomFilterStream;
   };
 
   /**

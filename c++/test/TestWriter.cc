@@ -1601,5 +1601,83 @@ namespace orc {
     }
   }
 
+  TEST_P(WriterTest, testBloomFilter) {
+    WriterOptions options;
+    options.setStripeSize(1024)
+      .setCompressionBlockSize(64)
+      .setCompression(CompressionKind_ZSTD)
+      .setMemoryPool(getDefaultPool())
+      .setRowIndexStride(10000)
+      .setFileVersion(fileVersion)
+      .setColumnsUseBloomFilter({1, 2});
+
+    // write 65535 rows of data
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    MemoryPool * pool = getDefaultPool();
+    std::unique_ptr<Type> type(Type::buildTypeFromString(
+      "struct<c1:bigint,c2:string>"));
+
+    char dataBuffer[327675]; // 300k
+    uint64_t offset = 0;
+    uint64_t rowCount = 65535;
+
+    std::unique_ptr<Writer> writer = createWriter(*type, &memStream, options);
+    std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
+    StructVectorBatch& structBatch = dynamic_cast<StructVectorBatch&>(*batch);
+    LongVectorBatch& longBatch = dynamic_cast<LongVectorBatch&>(*structBatch.fields[0]);
+    StringVectorBatch& strBatch = dynamic_cast<StringVectorBatch&>(*structBatch.fields[1]);
+
+    for (uint64_t i = 0; i < rowCount; ++i) {
+      // each row group has a unique value
+      uint64_t data = (i / options.getRowIndexStride());
+
+      // c1
+      longBatch.data[i] = static_cast<int64_t>(data);
+
+      // c2
+      std::ostringstream os;
+      os << data;
+      strBatch.data[i] = dataBuffer + offset;
+      strBatch.length[i] = static_cast<int64_t>(os.str().size());
+      memcpy(dataBuffer + offset, os.str().c_str(), os.str().size());
+      offset += os.str().size();
+    }
+
+    structBatch.numElements = rowCount;
+    longBatch.numElements = rowCount;
+    strBatch.numElements = rowCount;
+    writer->add(*batch);
+    writer->close();
+
+    // verify bloomfilters
+    std::unique_ptr<InputStream> inStream(new MemoryInputStream(
+      memStream.getData(), memStream.getLength()));
+    std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
+    EXPECT_EQ(rowCount, reader->getNumberOfRows());
+
+    EXPECT_EQ(2, reader->getBloomFilters(0).size());
+    EXPECT_EQ(1, reader->getBloomFilters(0, {1}).size());
+    EXPECT_EQ(1, reader->getBloomFilters(0, {2}).size());
+
+    std::map<uint32_t, BloomFilterIndex> bfs = reader->getBloomFilters(0, {1, 2});
+    EXPECT_EQ(2, bfs.size());
+    EXPECT_EQ(7, bfs[1].entries.size());
+    EXPECT_EQ(7, bfs[2].entries.size());
+
+    // test bloomfilters
+    for (uint64_t rg = 0; rg <= rowCount / options.getRowIndexStride(); ++rg) {
+      for (uint64_t value = 0; value <= 100; ++value) {
+        std::string str = std::to_string(value);
+        if (value == rg) {
+          EXPECT_TRUE(bfs[1].entries[rg]->testLong(static_cast<int64_t>(value)));
+          EXPECT_TRUE(bfs[2].entries[rg]->testBytes(str.c_str(), static_cast<int64_t>(str.size())));
+        } else {
+          EXPECT_FALSE(bfs[1].entries[rg]->testLong(static_cast<int64_t>(value)));
+          EXPECT_FALSE(bfs[2].entries[rg]->testBytes(str.c_str(), static_cast<int64_t>(str.size())));
+        }
+      }
+    }
+  }
+
   INSTANTIATE_TEST_CASE_P(OrcTest, WriterTest, Values(FileVersion::v_0_11(), FileVersion::v_0_12()));
 }

@@ -262,6 +262,17 @@ namespace orc {
     }
     return false;
   }
+
+  enum BloomFilterVersion {
+    // Include both the BLOOM_FILTER and BLOOM_FILTER_UTF8 streams to support
+    // both old and new readers.
+    ORIGINAL = 0,
+    // Only include the BLOOM_FILTER_UTF8 streams that consistently use UTF8.
+    // See ORC-101
+    UTF8 = 1,
+    FUTURE = INT64_MAX
+  };
+
 }
 
 #endif

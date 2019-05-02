@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-
+#include "BloomFilter.hh"
 #include "Options.hh"
 #include "Reader.hh"
 #include "Statistics.hh"
@@ -1059,6 +1059,64 @@ namespace orc {
                                                   options,
                                                   fileLength,
                                                   postscriptLength));
+  }
+
+  std::map<uint32_t, BloomFilterIndex>
+  ReaderImpl::getBloomFilters(uint32_t stripeIndex,
+                              const std::set<uint32_t>& included) const {
+    std::map<uint32_t, BloomFilterIndex> ret;
+
+    // find stripe info
+    if (stripeIndex >= static_cast<uint32_t>(footer->stripes_size())) {
+      throw std::logic_error("Illegal stripe index: " + std::to_string(stripeIndex));
+    }
+    const proto::StripeInformation currentStripeInfo =
+      footer->stripes(static_cast<int>(stripeIndex));
+    const proto::StripeFooter currentStripeFooter =
+      getStripeFooter(currentStripeInfo, *contents);
+
+    // iterate stripe footer to get stream of bloomfilter
+    uint64_t offset = static_cast<uint64_t>(currentStripeInfo.offset());
+    for (int i = 0; i < currentStripeFooter.streams_size(); i++) {
+      const proto::Stream& stream = currentStripeFooter.streams(i);
+      uint32_t column = static_cast<uint32_t>(stream.column());
+      uint64_t length = static_cast<uint64_t>(stream.length());
+
+      // a bloom filter stream from a selected column is found
+      if (stream.kind() == proto::Stream_Kind_BLOOM_FILTER_UTF8 &&
+          (included.empty() || included.find(column) != included.end())) {
+
+        std::unique_ptr<SeekableInputStream> pbStream =
+          createDecompressor(contents->compression,
+                             std::unique_ptr<SeekableInputStream>
+                               (new SeekableFileInputStream(contents->stream.get(),
+                                                            offset,
+                                                            length,
+                                                            *contents->pool)),
+                             contents->blockSize,
+                             *(contents->pool));
+
+        proto::BloomFilterIndex pbBFIndex;
+        if (!pbBFIndex.ParseFromZeroCopyStream(pbStream.get())) {
+          throw ParseError("Failed to parse BloomFilterIndex");
+        }
+
+        BloomFilterIndex bfIndex;
+        for (int j = 0; j < pbBFIndex.bloomfilter_size(); j++) {
+          bfIndex.entries.push_back(BloomFilterUTF8Utils::deserialize(
+            stream.kind(),
+            currentStripeFooter.columns(static_cast<int>(stream.column())),
+            pbBFIndex.bloomfilter(j)));
+        }
+
+        // add bloom filters to result for one column
+        ret[column] = bfIndex;
+      }
+
+      offset += length;
+    }
+
+    return ret;
   }
 
   RowReader::~RowReader() {

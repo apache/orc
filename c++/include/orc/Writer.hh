@@ -25,6 +25,7 @@
 #include "orc/Vector.hh"
 
 #include <memory>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -191,6 +192,31 @@ namespace orc {
      * @return if not set, the default is false
      */
     bool getEnableDictionary() const;
+
+    /**
+     * Set columns that use BloomFilter
+     */
+    WriterOptions& setColumnsUseBloomFilter(const std::set<uint64_t>& columns);
+
+    /**
+     * Get whether this column uses BloomFilter
+     */
+    bool isColumnUseBloomFilter(uint64_t column) const;
+
+    /**
+     * Set false positive probability of BloomFilter
+     */
+    WriterOptions& setBloomFilterFPP(double fpp);
+
+    /**
+     * Get false positive probability of BloomFilter
+     */
+    double getBloomFilterFPP() const;
+
+    /**
+     * Get version of BloomFilter
+     */
+    BloomFilterVersion getBloomFilterVersion() const;
   };
 
   class Writer {

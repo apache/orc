@@ -19,13 +19,16 @@
 #ifndef ORC_READER_HH
 #define ORC_READER_HH
 
+#include "orc/BloomFilter.hh"
 #include "orc/Common.hh"
 #include "orc/orc-config.hh"
 #include "orc/Statistics.hh"
 #include "orc/Type.hh"
 #include "orc/Vector.hh"
 
+#include <map>
 #include <memory>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -472,6 +475,15 @@ namespace orc {
      */
     virtual uint64_t getMemoryUseByTypeId(const std::list<uint64_t>& include, int stripeIx=-1) = 0;
 
+    /**
+     * Get BloomFiters of all selected columns in the specified stripe
+     * @param stripeIndex index of the stripe to be read for bloom filters.
+     * @param included index of selected columns to return (if not specified,
+     *        all columns that have bloom filters are considered).
+     * @return map of bloom filters with the key standing for the index of column.
+     */
+    virtual std::map<uint32_t, BloomFilterIndex>
+    getBloomFilters(uint32_t stripeIndex, const std::set<uint32_t>& included = {}) const = 0;
   };
 
   /**
