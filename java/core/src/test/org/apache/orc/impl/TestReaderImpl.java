@@ -17,15 +17,26 @@ package org.apache.orc.impl;
 
 import java.io.ByteArrayInputStream;
 import java.io.EOFException;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PositionedReadable;
 import org.apache.hadoop.fs.Seekable;
+import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.util.Progressable;
 import org.apache.orc.FileFormatException;
 import org.apache.hadoop.io.Text;
 import org.apache.orc.OrcFile;
@@ -167,5 +178,147 @@ public class TestReaderImpl {
             throws IOException {
       readFully(position, buffer, 0, buffer.length);
     }
+  }
+
+  static class MockInputStream extends FSDataInputStream {
+    MockFileSystem fs;
+
+    public MockInputStream(MockFileSystem fs) {
+      super(new SeekableByteArrayInputStream(new byte[0]));
+      this.fs = fs;
+    }
+
+    public void close() {
+      fs.removeStream(this);
+    }
+  }
+
+  static class MockFileSystem extends FileSystem {
+    final List<MockInputStream> streams = new ArrayList<>();
+
+    public MockFileSystem(Configuration conf) {
+      setConf(conf);
+    }
+
+    @Override
+    public URI getUri() {
+      try {
+        return new URI("mock:///");
+      } catch (URISyntaxException e) {
+        throw new IllegalArgumentException("bad uri", e);
+      }
+    }
+
+    @Override
+    public FSDataInputStream open(Path path, int i) {
+      MockInputStream result = new MockInputStream(this);
+      streams.add(result);
+      return result;
+    }
+
+    void removeStream(MockInputStream stream) {
+      streams.remove(stream);
+    }
+
+    int streamCount() {
+      return streams.size();
+    }
+
+    @Override
+    public FSDataOutputStream create(Path path, FsPermission fsPermission,
+                                     boolean b, int i, short i1, long l,
+                                     Progressable progressable) throws IOException {
+      throw new IOException("Can't create");
+    }
+
+    @Override
+    public FSDataOutputStream append(Path path, int i,
+                                     Progressable progressable) throws IOException {
+      throw new IOException("Can't append");
+    }
+
+    @Override
+    public boolean rename(Path path, Path path1) {
+      return false;
+    }
+
+    @Override
+    public boolean delete(Path path, boolean b) {
+      return false;
+    }
+
+    @Override
+    public FileStatus[] listStatus(Path path) {
+      return new FileStatus[0];
+    }
+
+    @Override
+    public void setWorkingDirectory(Path path) {
+      // ignore
+    }
+
+    @Override
+    public Path getWorkingDirectory() {
+      return new Path("/");
+    }
+
+    @Override
+    public boolean mkdirs(Path path, FsPermission fsPermission) {
+      return false;
+    }
+
+    @Override
+    public FileStatus getFileStatus(Path path) {
+      return new FileStatus();
+    }
+  }
+
+  @Test
+  public void testClosingRowsFirst() throws Exception {
+    Configuration conf = new Configuration();
+    MockFileSystem fs = new MockFileSystem(conf);
+    Reader reader = OrcFile.createReader(new Path("/foo"),
+        OrcFile.readerOptions(conf).filesystem(fs));
+    assertEquals(1, fs.streamCount());
+    RecordReader rows = reader.rows();
+    assertEquals(1, fs.streamCount());
+    RecordReader rows2 = reader.rows();
+    assertEquals(2, fs.streamCount());
+    rows.close();
+    assertEquals(1, fs.streamCount());
+    rows2.close();
+    assertEquals(0, fs.streamCount());
+    reader.close();
+    assertEquals(0, fs.streamCount());
+  }
+
+  @Test
+  public void testClosingReaderFirst() throws Exception {
+    Configuration conf = new Configuration();
+    MockFileSystem fs = new MockFileSystem(conf);
+    Reader reader = OrcFile.createReader(new Path("/foo"),
+        OrcFile.readerOptions(conf).filesystem(fs));
+    assertEquals(1, fs.streamCount());
+    RecordReader rows = reader.rows();
+    assertEquals(1, fs.streamCount());
+    reader.close();
+    assertEquals(1, fs.streamCount());
+    rows.close();
+    assertEquals(0, fs.streamCount());
+  }
+
+  @Test
+  public void testClosingMultiple() throws Exception {
+    Configuration conf = new Configuration();
+    MockFileSystem fs = new MockFileSystem(conf);
+    Reader reader = OrcFile.createReader(new Path("/foo"),
+        OrcFile.readerOptions(conf).filesystem(fs));
+    Reader reader2 = OrcFile.createReader(new Path("/bar"),
+        OrcFile.readerOptions(conf).filesystem(fs));
+    assertEquals(2, fs.streamCount());
+    reader.close();
+    assertEquals(1, fs.streamCount());
+    reader2.close();
+    assertEquals(0, fs.streamCount());
   }
 }
