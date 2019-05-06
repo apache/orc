@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -30,7 +29,6 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.common.io.DiskRange;
 import org.apache.hadoop.hive.common.io.DiskRangeList;
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.CompressionKind;
@@ -144,7 +142,7 @@ public class RecordReaderUtils {
   }
 
   private static class DefaultDataReader implements DataReader {
-    private FSDataInputStream file = null;
+    private FSDataInputStream file;
     private ByteBufferAllocatorPool pool;
     private HadoopShims.ZeroCopyReaderShim zcr = null;
     private final FileSystem fs;
@@ -154,10 +152,12 @@ public class RecordReaderUtils {
     private final int typeCount;
     private CompressionKind compressionKind;
     private final int maxDiskRangeChunkLimit;
+    private boolean isOpen = false;
 
     private DefaultDataReader(DataReaderProperties properties) {
       this.fs = properties.getFileSystem();
       this.path = properties.getPath();
+      this.file = properties.getFile();
       this.useZeroCopy = properties.getZeroCopy();
       this.compressionKind = properties.getCompression();
       options.withCodec(OrcCodecPool.getCodec(compressionKind))
@@ -168,7 +168,9 @@ public class RecordReaderUtils {
 
     @Override
     public void open() throws IOException {
-      this.file = fs.open(path);
+      if (file == null) {
+        this.file = fs.open(path);
+      }
       if (useZeroCopy) {
         // ZCR only uses codec for boolean checks.
         pool = new ByteBufferAllocatorPool();
@@ -176,6 +178,7 @@ public class RecordReaderUtils {
       } else {
         zcr = null;
       }
+      isOpen = true;
     }
 
     @Override
@@ -190,7 +193,7 @@ public class RecordReaderUtils {
                                  OrcProto.Stream.Kind[] bloomFilterKinds,
                                  OrcProto.BloomFilterIndex[] bloomFilterIndices
                                  ) throws IOException {
-      if (file == null) {
+      if (!isOpen) {
         open();
       }
       if (footer == null) {
@@ -257,7 +260,7 @@ public class RecordReaderUtils {
 
     @Override
     public OrcProto.StripeFooter readStripeFooter(StripeInformation stripe) throws IOException {
-      if (file == null) {
+      if (!isOpen) {
         open();
       }
       long offset = stripe.getOffset() + stripe.getIndexLength() + stripe.getDataLength();

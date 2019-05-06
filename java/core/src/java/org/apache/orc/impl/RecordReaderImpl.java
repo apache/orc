@@ -17,6 +17,7 @@
  */
 package org.apache.orc.impl;
 
+import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.io.DiskRangeList;
 import org.apache.hadoop.hive.common.io.DiskRangeList.CreateHelper;
@@ -236,16 +237,21 @@ public class RecordReaderImpl implements RecordReader {
     if (options.getDataReader() != null) {
       this.dataReader = options.getDataReader().clone();
     } else {
-      this.dataReader = RecordReaderUtils.createDefaultDataReader(
+      DataReaderProperties.Builder builder =
           DataReaderProperties.builder()
               .withBufferSize(bufferSize)
               .withCompression(fileReader.compressionKind)
               .withFileSystem(fileReader.getFileSystem())
               .withPath(fileReader.path)
               .withTypeCount(types.size())
-              .withZeroCopy(zeroCopy)
               .withMaxDiskRangeChunkLimit(maxDiskRangeChunkLimit)
-              .build());
+              .withZeroCopy(zeroCopy);
+      FSDataInputStream file = fileReader.takeFile();
+      if (file != null) {
+        builder.withFile(file);
+      }
+      this.dataReader = RecordReaderUtils.createDefaultDataReader(
+          builder.build());
     }
     firstRow = skippedRows;
     totalRowCount = rows;
