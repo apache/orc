@@ -64,6 +64,7 @@ public class ReaderImpl implements Reader {
   protected final Path path;
   protected final OrcFile.ReaderOptions options;
   protected final org.apache.orc.CompressionKind compressionKind;
+  protected FSDataInputStream file;
   protected int bufferSize;
   protected OrcProto.Metadata metadata;
   private List<OrcProto.StripeStatistics> stripeStats;
@@ -531,7 +532,8 @@ public class ReaderImpl implements Reader {
     OrcProto.PostScript ps;
     OrcProto.FileTail.Builder fileTailBuilder = OrcProto.FileTail.newBuilder();
     long modificationTime;
-    try (FSDataInputStream file = fs.open(path)) {
+    file = fs.open(path);
+    try {
       // figure out the size of the file using the option or filesystem
       long size;
       if (maxFileLength == Long.MAX_VALUE) {
@@ -548,9 +550,9 @@ public class ReaderImpl implements Reader {
         return buildEmptyTail();
       } else if (size <= OrcFile.MAGIC.length()) {
         // Anything smaller than MAGIC header cannot be valid (valid ORC files
-	// are actually around 40 bytes, this is more conservative)
+        // are actually around 40 bytes, this is more conservative)
         throw new FileFormatException("Not a valid ORC file " + path
-          + " (maxFileLength= " + maxFileLength + ")");
+                                          + " (maxFileLength= " + maxFileLength + ")");
       }
       fileTailBuilder.setFileLength(size);
 
@@ -610,6 +612,14 @@ public class ReaderImpl implements Reader {
         OrcCodecPool.returnCodec(compressionKind, codec);
       }
       fileTailBuilder.setFooter(footer);
+    } catch (Throwable thr) {
+      try {
+        close();
+      } catch (IOException ignore) {
+        LOG.info("Ignoring secondary exception in close of " + path, ignore);
+      }
+      throw thr instanceof IOException ? (IOException) thr :
+                new IOException("Problem reading file footer " + path, thr);
     }
 
     ByteBuffer serializedTail = ByteBuffer.allocate(buffer.remaining());
@@ -834,5 +844,24 @@ public class ReaderImpl implements Reader {
     }
     buffer.append(")");
     return buffer.toString();
+  }
+
+  @Override
+  public void close() throws IOException {
+    if (file != null) {
+      file.close();
+    }
+  }
+
+  /**
+   * Take the file from the reader.
+   * This allows the first RecordReader to use the same file, but additional
+   * RecordReaders will open new handles.
+   * @return a file handle, if one is available
+   */
+  FSDataInputStream takeFile() {
+    FSDataInputStream result = file;
+    file = null;
+    return result;
   }
 }
