@@ -90,7 +90,13 @@ void fillStringValues(const std::vector<std::string>& data,
     } else {
       batch->notNull[i] = 1;
       if (buffer.size() - offset < col.size()) {
-        buffer.reserve(buffer.size() * 2);
+        char* old_buffer = buffer.data();
+        buffer.resize(buffer.size() * 2);
+        char* new_buffer = buffer.data();
+        for (uint64_t refill_index = 0; refill_index < i; ++refill_index){
+          stringBatch->data[refill_index] = stringBatch->data[refill_index] - old_buffer + new_buffer;
+        }
+        std::cout << std::endl;
       }
       memcpy(buffer.data() + offset,
              col.c_str(),
