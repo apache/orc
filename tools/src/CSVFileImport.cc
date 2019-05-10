@@ -95,7 +95,7 @@ void fillStringValues(const std::vector<std::string>& data,
         buffer.resize(buffer.size() * 2);
       }
       char* newBufferAddress = buffer.data();
-      // Refill the new address to the stringBatch->data, if buffer's address has changed.
+      // Refill stringBatch->data with the new address, if buffer's address has changed.
       if (newBufferAddress != oldBufferAddress){
         for (uint64_t refillIndex = 0; refillIndex < i; ++refillIndex){
         stringBatch->data[refillIndex] = stringBatch->data[refillIndex] - oldBufferAddress + newBufferAddress;
