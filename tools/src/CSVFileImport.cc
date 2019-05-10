@@ -89,14 +89,17 @@ void fillStringValues(const std::vector<std::string>& data,
       hasNull = true;
     } else {
       batch->notNull[i] = 1;
-      if (buffer.size() - offset < col.size()) {
-        char* old_buffer = buffer.data();
+      char* oldBufferAddress = buffer.data();
+      // Resize the buffer in case buffer does not have remaining space to store the next string.
+      while (buffer.size() - offset < col.size()) {
         buffer.resize(buffer.size() * 2);
-        char* new_buffer = buffer.data();
-        for (uint64_t refill_index = 0; refill_index < i; ++refill_index){
-          stringBatch->data[refill_index] = stringBatch->data[refill_index] - old_buffer + new_buffer;
+      }
+      char* newBufferAddress = buffer.data();
+      // Refill the new address to the stringBatch->data, if buffer's address has changed.
+      if (newBufferAddress != oldBufferAddress){
+        for (uint64_t refillIndex = 0; refillIndex < i; ++refillIndex){
+        stringBatch->data[refillIndex] = stringBatch->data[refillIndex] - oldBufferAddress + newBufferAddress;
         }
-        std::cout << std::endl;
       }
       memcpy(buffer.data() + offset,
              col.c_str(),
