@@ -723,7 +723,6 @@ namespace orc {
     byteBatch.blob.resize(totalLength);
     char *ptr= byteBatch.blob.data();
     while (bytesBuffered + lastBufferLength < totalLength) {
-      byteBatch.blob.resize(bytesBuffered + lastBufferLength);
       memcpy(ptr + bytesBuffered, lastBuffer, lastBufferLength);
       bytesBuffered += lastBufferLength;
       const void* readBuffer;
@@ -735,58 +734,27 @@ namespace orc {
       lastBufferLength = static_cast<size_t>(readLength);
     }
 
-    // Set up the start pointers for the ones that will come out of the buffer.
-    size_t filledSlots = 0;
-    size_t usedBytes = 0;
-    ptr = byteBatch.blob.data();
-    if (notNull) {
-      while (filledSlots < numValues &&
-             (!notNull[filledSlots] ||
-              usedBytes + static_cast<size_t>(lengthPtr[filledSlots]) <=
-              bytesBuffered)) {
-        if (notNull[filledSlots]) {
-          startPtr[filledSlots] = ptr + usedBytes;
-          usedBytes += static_cast<size_t>(lengthPtr[filledSlots]);
-        }
-        filledSlots += 1;
-      }
-    } else {
-      while (filledSlots < numValues &&
-             (usedBytes + static_cast<size_t>(lengthPtr[filledSlots]) <=
-              bytesBuffered)) {
-        startPtr[filledSlots] = ptr + usedBytes;
-        usedBytes += static_cast<size_t>(lengthPtr[filledSlots]);
-        filledSlots += 1;
-      }
-    }
-
-    // do we need to complete the last value in the blob buffer?
-    if (usedBytes < bytesBuffered) {
-      size_t moreBytes = static_cast<size_t>(lengthPtr[filledSlots]) -
-        (bytesBuffered - usedBytes);
-      byteBatch.blob.resize(bytesBuffered + moreBytes);
-      ptr = byteBatch.blob.data();
+    if (bytesBuffered < totalLength) {
+      size_t moreBytes = totalLength - bytesBuffered;
       memcpy(ptr + bytesBuffered, lastBuffer, moreBytes);
       lastBuffer += moreBytes;
       lastBufferLength -= moreBytes;
-      startPtr[filledSlots++] = ptr + usedBytes;
     }
 
-    // Finally, set up any remaining entries into the stream buffer
+    size_t filledSlots = 0;
+    ptr = byteBatch.blob.data();
     if (notNull) {
       while (filledSlots < numValues) {
         if (notNull[filledSlots]) {
-          startPtr[filledSlots] = const_cast<char*>(lastBuffer);
-          lastBuffer += lengthPtr[filledSlots];
-          lastBufferLength -= static_cast<size_t>(lengthPtr[filledSlots]);
+          startPtr[filledSlots] = const_cast<char*>(ptr);
+          ptr += lengthPtr[filledSlots];
         }
         filledSlots += 1;
       }
     } else {
       while (filledSlots < numValues) {
-        startPtr[filledSlots] = const_cast<char*>(lastBuffer);
-        lastBuffer += lengthPtr[filledSlots];
-        lastBufferLength -= static_cast<size_t>(lengthPtr[filledSlots]);
+        startPtr[filledSlots] = const_cast<char*>(ptr);
+        ptr += lengthPtr[filledSlots];
         filledSlots += 1;
       }
     }
