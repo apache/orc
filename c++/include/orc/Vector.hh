@@ -122,6 +122,8 @@ namespace orc {
     DataBuffer<char*> data;
     // the length of each string
     DataBuffer<int64_t> length;
+    // string blob
+    DataBuffer<char> blob;
   };
 
   struct StringDictionary {

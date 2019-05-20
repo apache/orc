@@ -601,7 +601,6 @@ namespace orc {
 
   class StringDirectColumnReader: public ColumnReader {
   private:
-    DataBuffer<char> blobBuffer;
     std::unique_ptr<RleDecoder> lengthRle;
     std::unique_ptr<SeekableInputStream> blobStream;
     const char *lastBuffer;
@@ -631,8 +630,7 @@ namespace orc {
   StringDirectColumnReader::StringDirectColumnReader
                  (const Type& type,
                   StripeStreams& stripe
-                  ): ColumnReader(type, stripe),
-                     blobBuffer(stripe.getMemoryPool()) {
+                  ): ColumnReader(type, stripe) {
     RleVersion rleVersion = convertRleVersion(stripe.getEncoding(columnId)
                                                 .kind());
     std::unique_ptr<SeekableInputStream> stream =
@@ -722,10 +720,10 @@ namespace orc {
     // Load data from the blob stream into our buffer until we have enough
     // to get the rest directly out of the stream's buffer.
     size_t bytesBuffered = 0;
-    blobBuffer.resize(totalLength);
-    char *ptr= blobBuffer.data();
+    byteBatch.blob.resize(totalLength);
+    char *ptr= byteBatch.blob.data();
     while (bytesBuffered + lastBufferLength < totalLength) {
-      blobBuffer.resize(bytesBuffered + lastBufferLength);
+      byteBatch.blob.resize(bytesBuffered + lastBufferLength);
       memcpy(ptr + bytesBuffered, lastBuffer, lastBufferLength);
       bytesBuffered += lastBufferLength;
       const void* readBuffer;
@@ -740,7 +738,7 @@ namespace orc {
     // Set up the start pointers for the ones that will come out of the buffer.
     size_t filledSlots = 0;
     size_t usedBytes = 0;
-    ptr = blobBuffer.data();
+    ptr = byteBatch.blob.data();
     if (notNull) {
       while (filledSlots < numValues &&
              (!notNull[filledSlots] ||
@@ -766,8 +764,8 @@ namespace orc {
     if (usedBytes < bytesBuffered) {
       size_t moreBytes = static_cast<size_t>(lengthPtr[filledSlots]) -
         (bytesBuffered - usedBytes);
-      blobBuffer.resize(bytesBuffered + moreBytes);
-      ptr = blobBuffer.data();
+      byteBatch.blob.resize(bytesBuffered + moreBytes);
+      ptr = byteBatch.blob.data();
       memcpy(ptr + bytesBuffered, lastBuffer, moreBytes);
       lastBuffer += moreBytes;
       lastBufferLength -= moreBytes;
