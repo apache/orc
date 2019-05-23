@@ -1213,8 +1213,8 @@ namespace orc {
     // in total 3 rows, each has 1, 2, and 3 'à' respectively
     std::vector<char> vec;
     for (uint64_t i = 0; i != rowCount; ++i) {
-      vec.push_back(static_cast<char>(0xC3));
-      vec.push_back(static_cast<char>(0xA0));
+      vec.push_back('\xC3');
+      vec.push_back('\xA0');
       strs.push_back(vec);
       charBatch->data[i] = varcharBatch->data[i] = strs.back().data();
       charBatch->length[i] = varcharBatch->length[i] = static_cast<int64_t>(strs.back().size());
@@ -1242,10 +1242,9 @@ namespace orc {
     EXPECT_EQ(true, rowReader->next(*batch));
     EXPECT_EQ(rowCount, batch->numElements);
 
-    char expectedPadded[3] = {static_cast<char>(0xC3), static_cast<char>(0xA0), ' '};
-    char expectedOneChar[2] = {static_cast<char>(0xC3), static_cast<char>(0xA0)};
-    char expectedTwoChars[4] = {static_cast<char>(0xC3), static_cast<char>(0xA0),
-                                static_cast<char>(0xC3), static_cast<char>(0xA0)};
+    char expectedPadded[3] = {'\xC3', '\xA0', ' '};
+    char expectedOneChar[2] = {'\xC3', '\xA0'};
+    char expectedTwoChars[4] = {'\xC3', '\xA0', '\xC3', '\xA0'};
 
     EXPECT_EQ(3, charBatch->length[0]);
     EXPECT_EQ(4, charBatch->length[1]);

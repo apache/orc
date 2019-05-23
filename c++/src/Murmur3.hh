@@ -25,8 +25,8 @@ namespace orc {
 
   class Murmur3 {
   public:
-    enum { DEFAULT_SEED = 104729 };
-    enum { NULL_HASHCODE = 2862933555777941757LL };
+    static const uint32_t DEFAULT_SEED = 104729;
+    static const uint64_t NULL_HASHCODE = 2862933555777941757LL;
 
     static uint64_t hash64(const uint8_t *data, uint32_t len);
 
