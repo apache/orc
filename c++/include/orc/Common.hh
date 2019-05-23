@@ -270,7 +270,7 @@ namespace orc {
     // Only include the BLOOM_FILTER_UTF8 streams that consistently use UTF8.
     // See ORC-101
     UTF8 = 1,
-    FUTURE = INT64_MAX
+    FUTURE = INT32_MAX
   };
 
 }
