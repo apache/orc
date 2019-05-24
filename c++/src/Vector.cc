@@ -151,7 +151,8 @@ namespace orc {
   StringVectorBatch::StringVectorBatch(uint64_t capacity, MemoryPool& pool
                ): ColumnVectorBatch(capacity, pool),
                   data(pool, capacity),
-                  length(pool, capacity) {
+                  length(pool, capacity),
+                  blob(pool) {
     // PASS
   }
 
