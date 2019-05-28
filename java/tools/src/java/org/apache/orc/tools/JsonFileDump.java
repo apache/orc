@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.orc.CollectionColumnStatistics;
 import org.apache.orc.CompressionKind;
 import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
@@ -352,6 +353,14 @@ public class JsonFileDump {
           writer.key("sum").value(((DecimalColumnStatistics) cs).getSum());
         }
         writer.key("type").value(OrcProto.Type.Kind.DECIMAL);
+      } else if (cs instanceof CollectionColumnStatistics) {
+        writer.key("minCollectionLength").value(((CollectionColumnStatistics) cs).getMinimum());
+        writer.key("maxCollectionLength").value(((CollectionColumnStatistics) cs).getMaximum());
+        if (((CollectionColumnStatistics) cs).isSumDefined()) {
+          writer.key("childCount").value(((CollectionColumnStatistics) cs).getSum());
+        }
+        /* What about MAP Type ? */
+        writer.key("type").value(OrcProto.Type.Kind.LIST);
       }
     }
   }

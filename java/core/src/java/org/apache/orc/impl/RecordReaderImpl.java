@@ -31,6 +31,7 @@ import org.apache.hadoop.hive.serde2.io.DateWritable;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.orc.BooleanColumnStatistics;
+import org.apache.orc.CollectionColumnStatistics;
 import org.apache.orc.ColumnStatistics;
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.DataReader;
@@ -411,7 +412,12 @@ public class RecordReaderImpl implements RecordReader {
       Long min = stats.getMinimum();
       Long max = stats.getMaximum();
       return new ValueRange<>(predicate, min, max, stats.hasNull());
-    } else if (index instanceof DoubleColumnStatistics) {
+    } else if (index instanceof CollectionColumnStatistics) {
+      CollectionColumnStatistics stats = (CollectionColumnStatistics) index;
+      Long min = stats.getMinimum();
+      Long max = stats.getMaximum();
+      return new ValueRange<>(predicate, min, max, stats.hasNull());
+    }else if (index instanceof DoubleColumnStatistics) {
       DoubleColumnStatistics stats = (DoubleColumnStatistics) index;
       Double min = stats.getMinimum();
       Double max = stats.getMaximum();

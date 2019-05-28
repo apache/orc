@@ -68,6 +68,9 @@ public class ListTreeWriter extends TreeWriterBase {
                          int length) throws IOException {
     super.writeBatch(vector, offset, length);
     ListColumnVector vec = (ListColumnVector) vector;
+    /* update aggregate statistics */
+    indexStatistics.updateCollectionLength(vec.lengths.length);
+
     if (vector.isRepeating) {
       if (vector.noNulls || !vector.isNull[0]) {
         int childOffset = (int) vec.offsets[0];

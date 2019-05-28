@@ -18,9 +18,32 @@
 package org.apache.orc;
 
 /**
- * Statistics for all of the integer columns, such as byte, short, int, and
- * long.
+ * Define aggregate statistics, Min, Max and Sum.
  */
-public interface IntegerColumnStatistics extends AggregateStatistics {
+public interface AggregateStatistics extends ColumnStatistics {
+  /**
+   * Get the smallest value in the column. Only defined if getNumberOfValues
+   * is non-zero.
+   * @return the minimum
+   */
+  long getMinimum();
 
+  /**
+   * Get the largest value in the column. Only defined if getNumberOfValues
+   * is non-zero.
+   * @return the maximum
+   */
+  long getMaximum();
+
+  /**
+   * Is the childCount defined? If the childCount overflowed the counter this will be false.
+   * @return is the childCount available
+   */
+  boolean isSumDefined();
+
+  /**
+   * Get the childCount of the column. Only valid if isSumDefined returns true.
+   * @return the childCount of the column
+   */
+  long getSum();
 }

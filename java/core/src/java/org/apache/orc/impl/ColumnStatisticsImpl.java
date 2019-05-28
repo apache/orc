@@ -23,8 +23,10 @@ import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparator;
+import org.apache.orc.AggregateStatistics;
 import org.apache.orc.BinaryColumnStatistics;
 import org.apache.orc.BooleanColumnStatistics;
+import org.apache.orc.CollectionColumnStatistics;
 import org.apache.orc.ColumnStatistics;
 import org.apache.orc.DateColumnStatistics;
 import org.apache.orc.DecimalColumnStatistics;
@@ -35,13 +37,8 @@ import org.apache.orc.StringColumnStatistics;
 import org.apache.orc.TimestampColumnStatistics;
 import org.apache.orc.TypeDescription;
 
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.Timestamp;
-import java.util.Arrays;
 import java.util.TimeZone;
 
 public class ColumnStatisticsImpl implements ColumnStatistics {
@@ -66,7 +63,6 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     if (bytesOnDisk != that.bytesOnDisk) {
       return false;
     }
-
     return true;
   }
 
@@ -170,19 +166,19 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     }
   }
 
-  private static final class IntegerStatisticsImpl extends ColumnStatisticsImpl
-      implements IntegerColumnStatistics {
+  private static class AggregateStatisticsImpl extends ColumnStatisticsImpl implements
+      AggregateStatistics {
 
-    private long minimum = Long.MAX_VALUE;
-    private long maximum = Long.MIN_VALUE;
-    private long sum = 0;
-    private boolean hasMinimum = false;
-    private boolean overflow = false;
+    protected long minimum = Long.MAX_VALUE;
+    protected long maximum = Long.MIN_VALUE;
+    protected long sum = 0;
+    protected boolean hasMinimum = false;
+    protected boolean overflow = false;
 
-    IntegerStatisticsImpl() {
+    AggregateStatisticsImpl() {
     }
 
-    IntegerStatisticsImpl(OrcProto.ColumnStatistics stats) {
+    AggregateStatisticsImpl(OrcProto.ColumnStatistics stats) {
       super(stats);
       OrcProto.IntegerStatistics intStat = stats.getIntStatistics();
       if (intStat.hasMinimum()) {
@@ -231,8 +227,8 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
     @Override
     public void merge(ColumnStatisticsImpl other) {
-      if (other instanceof IntegerStatisticsImpl) {
-        IntegerStatisticsImpl otherInt = (IntegerStatisticsImpl) other;
+      if (other instanceof AggregateStatisticsImpl) {
+        AggregateStatisticsImpl otherInt = (AggregateStatisticsImpl) other;
         if (!hasMinimum) {
           hasMinimum = otherInt.hasMinimum;
           minimum = otherInt.minimum;
@@ -260,22 +256,6 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
         }
       }
       super.merge(other);
-    }
-
-    @Override
-    public OrcProto.ColumnStatistics.Builder serialize() {
-      OrcProto.ColumnStatistics.Builder builder = super.serialize();
-      OrcProto.IntegerStatistics.Builder intb =
-        OrcProto.IntegerStatistics.newBuilder();
-      if (hasMinimum) {
-        intb.setMinimum(minimum);
-        intb.setMaximum(maximum);
-      }
-      if (!overflow) {
-        intb.setSum(sum);
-      }
-      builder.setIntStatistics(intb);
-      return builder;
     }
 
     @Override
@@ -319,14 +299,14 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       if (this == o) {
         return true;
       }
-      if (!(o instanceof IntegerStatisticsImpl)) {
+      if (!(o instanceof AggregateStatisticsImpl)) {
         return false;
       }
       if (!super.equals(o)) {
         return false;
       }
 
-      IntegerStatisticsImpl that = (IntegerStatisticsImpl) o;
+      AggregateStatisticsImpl that = (AggregateStatisticsImpl) o;
 
       if (minimum != that.minimum) {
         return false;
@@ -356,6 +336,160 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       result = 31 * result + (hasMinimum ? 1 : 0);
       result = 31 * result + (overflow ? 1 : 0);
       return result;
+    }
+  }
+
+  /**
+   * Column statistics for List and Map types.
+   */
+  private static final class CollectionColumnStatisticsImpl extends
+      AggregateStatisticsImpl implements CollectionColumnStatistics {
+
+    CollectionColumnStatisticsImpl() {
+      super();
+    }
+
+    CollectionColumnStatisticsImpl(final OrcProto.ColumnStatistics stats) {
+      super(stats);
+    }
+
+    @Override
+    public void updateCollectionLength(final long length) {
+      /*
+      * Here, minimum = minCollectionLength
+      * maximum = maxCollectionLength
+      * sum = childCount
+      */
+      if (!hasMinimum) {
+        hasMinimum = true;
+        minimum = length;
+        maximum = length;
+      } else if (length < minimum) {
+        minimum = length;
+      } else if (length > maximum) {
+        maximum = length;
+      }
+
+      this.sum += length;
+    }
+
+    @Override
+    public long getMinimum() {
+      return super.getMinimum();
+    }
+
+    @Override
+    public long getMaximum() {
+      return super.getMaximum();
+    }
+
+    @Override
+    public boolean isSumDefined() {
+      return super.isSumDefined();
+    }
+
+    @Override
+    public long getSum() {
+      return super.getSum();
+    }
+
+    @Override
+    public long getNumberOfValues() {
+      return super.getNumberOfValues();
+    }
+
+    @Override
+    public boolean hasNull() {
+      return super.hasNull();
+    }
+
+    @Override
+    public long getBytesOnDisk() {
+      return super.getBytesOnDisk();
+    }
+
+    @Override
+    public OrcProto.ColumnStatistics.Builder serialize() {
+      OrcProto.ColumnStatistics.Builder builder = super.serialize();
+      OrcProto.CollectionStatistics.Builder collectionStats =
+          OrcProto.CollectionStatistics.newBuilder();
+      if (hasMinimum) {
+        collectionStats.setMinCollectionLength(minimum);
+        collectionStats.setMaxCollectionLength(maximum);
+      }
+      if (!overflow) {
+        collectionStats.setChildCount(sum);
+      }
+      builder.setCollectionStatistics(collectionStats);
+      return builder;
+    }
+  }
+
+  /**
+   * Implementation of IntegerColumnStatistics, most of the functionality is
+   * inherited from AggregateStatisticsImpl class.
+   */
+  private static final class IntegerColumnStatisticsImpl extends AggregateStatisticsImpl
+      implements IntegerColumnStatistics {
+
+
+    IntegerColumnStatisticsImpl() {
+      super();
+    }
+
+    IntegerColumnStatisticsImpl(final OrcProto.ColumnStatistics stats) {
+      super(stats);
+    }
+
+    @Override
+    public long getMinimum() {
+      return super.getMinimum();
+    }
+
+    @Override
+    public long getMaximum() {
+      return super.getMaximum();
+    }
+
+    @Override
+    public boolean isSumDefined() {
+      return super.isSumDefined();
+    }
+
+    @Override
+    public long getSum() {
+      return super.getSum();
+    }
+
+    @Override
+    public long getNumberOfValues() {
+      return super.getNumberOfValues();
+    }
+
+    @Override
+    public boolean hasNull() {
+      return super.hasNull();
+    }
+
+    @Override
+    public long getBytesOnDisk() {
+      return super.getBytesOnDisk();
+    }
+
+    @Override
+    public OrcProto.ColumnStatistics.Builder serialize() {
+      OrcProto.ColumnStatistics.Builder builder = super.serialize();
+      OrcProto.IntegerStatistics.Builder intb =
+          OrcProto.IntegerStatistics.newBuilder();
+      if (hasMinimum) {
+        intb.setMinimum(minimum);
+        intb.setMaximum(maximum);
+      }
+      if (!overflow) {
+        intb.setSum(sum);
+      }
+      builder.setIntStatistics(intb);
+      return builder;
     }
   }
 
@@ -1643,7 +1777,9 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       count = stats.getNumberOfValues();
     }
 
-    bytesOnDisk = stats.hasBytesOnDisk() ? stats.getBytesOnDisk() : 0;
+    if(stats.hasBytesOnDisk()) {
+      bytesOnDisk = stats.getBytesOnDisk();
+    }
 
     if (stats.hasHasNull()) {
       hasNull = stats.getHasNull();
@@ -1669,6 +1805,15 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
   public void setNull() {
     hasNull = true;
+  }
+
+  /**
+   * Update the collection length for Map and List type.
+   * @param value length of collection
+   */
+  public void updateCollectionLength(final long value) {
+    throw new UnsupportedOperationException(
+        "Can't update collection count");
   }
 
   public void updateBoolean(boolean value, int repetitions) {
@@ -1786,7 +1931,10 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       case SHORT:
       case INT:
       case LONG:
-        return new IntegerStatisticsImpl();
+        return new IntegerColumnStatisticsImpl();
+      case LIST:
+      case MAP:
+        return new CollectionColumnStatisticsImpl();
       case FLOAT:
       case DOUBLE:
         return new DoubleStatisticsImpl();
@@ -1816,7 +1964,9 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     if (stats.hasBucketStatistics()) {
       return new BooleanStatisticsImpl(stats);
     } else if (stats.hasIntStatistics()) {
-      return new IntegerStatisticsImpl(stats);
+      return new IntegerColumnStatisticsImpl(stats);
+    } else if (stats.hasCollectionStatistics()) {
+      return new CollectionColumnStatisticsImpl(stats);
     } else if (stats.hasDoubleStatistics()) {
       return new DoubleStatisticsImpl(stats);
     } else if (stats.hasStringStatistics()) {

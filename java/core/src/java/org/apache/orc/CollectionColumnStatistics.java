@@ -18,9 +18,8 @@
 package org.apache.orc;
 
 /**
- * Statistics for all of the integer columns, such as byte, short, int, and
- * long.
+ * Statistics for all of collections such as Map and List.
  */
-public interface IntegerColumnStatistics extends AggregateStatistics {
+public interface CollectionColumnStatistics extends AggregateStatistics {
 
 }
