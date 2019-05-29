@@ -20,8 +20,7 @@
 FROM debian:8
 MAINTAINER Owen O'Malley <owen@hortonworks.com>
 
-RUN echo "deb http://ftp.debian.org/debian jessie-backports main" \
-  >> /etc/apt/sources.list
+ADD sources.list apt.conf /etc/apt/
 
 RUN apt-get update
 RUN apt-get install -y \
@@ -37,6 +36,7 @@ RUN apt-get install -y \
   maven \
   pkg-config \
   wget
+
 RUN apt-get -t jessie-backports install -y openjdk-8-jdk
 RUN update-alternatives --set java \
   /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java
