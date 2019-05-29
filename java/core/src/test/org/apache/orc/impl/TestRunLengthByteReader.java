@@ -72,7 +72,7 @@ public class TestRunLengthByteReader {
   public void testCompressedSeek() throws Exception {
     CompressionCodec codec = new SnappyCodec();
     StreamOptions options = new StreamOptions(500)
-                                .withCodec(codec, codec.createOptions());
+                                .withCodec(codec, codec.getDefaultOptions());
     TestInStream.OutputCollector collect = new TestInStream.OutputCollector();
     RunLengthByteWriter out = new RunLengthByteWriter(
         new OutStream("test", options, collect));

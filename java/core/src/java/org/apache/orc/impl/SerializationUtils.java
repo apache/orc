@@ -18,6 +18,13 @@
 
 package org.apache.orc.impl;
 
+import org.apache.orc.CompressionCodec;
+import org.apache.orc.OrcFile;
+import org.apache.orc.OrcProto;
+import org.apache.orc.impl.writer.StreamOptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,6 +33,7 @@ import java.math.BigInteger;
 import java.util.TimeZone;
 
 public final class SerializationUtils {
+  private static final Logger LOG = LoggerFactory.getLogger(SerializationUtils.class);
 
   private final static int BUFFER_SIZE = 64;
   private final byte[] readBuffer;
@@ -1320,5 +1328,53 @@ public final class SerializationUtils {
   public static long convertToUtc(TimeZone local, long time) {
     int offset = local.getOffset(time);
     return time + offset;
+  }
+
+  /**
+   * Get the stream options with the compression tuned for the particular
+   * kind of stream.
+   * @param base the original options
+   * @param strategy the compression strategy
+   * @param kind the stream kind
+   * @return the tuned options or the original if it is the same
+   */
+  public static
+  StreamOptions getCustomizedCodec(StreamOptions base,
+                                   OrcFile.CompressionStrategy strategy,
+                                   OrcProto.Stream.Kind kind) {
+    if (base.getCodec() != null) {
+      CompressionCodec.Options options = base.getCodecOptions();
+      switch (kind) {
+      case BLOOM_FILTER:
+      case DATA:
+      case DICTIONARY_DATA:
+      case BLOOM_FILTER_UTF8:
+        options = options.copy().setData(CompressionCodec.DataKind.TEXT);
+        if (strategy == OrcFile.CompressionStrategy.SPEED) {
+          options.setSpeed(CompressionCodec.SpeedModifier.FAST);
+        } else {
+          options.setSpeed(CompressionCodec.SpeedModifier.DEFAULT);
+        }
+        break;
+      case LENGTH:
+      case DICTIONARY_COUNT:
+      case PRESENT:
+      case ROW_INDEX:
+      case SECONDARY:
+        options = options.copy()
+                      .setSpeed(CompressionCodec.SpeedModifier.FASTEST)
+                      .setData(CompressionCodec.DataKind.BINARY);
+        break;
+      default:
+        LOG.info("Missing ORC compression modifiers for " + kind);
+        break;
+      }
+      if (!base.getCodecOptions().equals(options)) {
+        StreamOptions result = new StreamOptions(base)
+                                   .withCodec(base.getCodec(), options);
+        return result;
+      }
+    }
+    return base;
   }
 }

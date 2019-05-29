@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,7 +19,6 @@ package org.apache.orc.impl;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.EnumSet;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
@@ -36,14 +35,24 @@ public class ZlibCodec implements CompressionCodec, DirectDecompressionCodec {
   static class ZlibOptions implements Options {
     private int level;
     private int strategy;
+    private final boolean FIXED;
 
-    ZlibOptions(int level, int strategy) {
+    ZlibOptions(int level, int strategy, boolean fixed) {
       this.level = level;
       this.strategy = strategy;
+      FIXED = fixed;
+    }
+
+    @Override
+    public ZlibOptions copy() {
+      return new ZlibOptions(level, strategy, false);
     }
 
     @Override
     public ZlibOptions setSpeed(SpeedModifier newValue) {
+      if (FIXED) {
+        throw new IllegalStateException("Attempt to modify the default options");
+      }
       switch (newValue) {
         case FAST:
           // deflate_fast looking for 16 byte patterns
@@ -65,6 +74,9 @@ public class ZlibCodec implements CompressionCodec, DirectDecompressionCodec {
 
     @Override
     public ZlibOptions setData(DataKind newValue) {
+      if (FIXED) {
+        throw new IllegalStateException("Attempt to modify the default options");
+      }
       switch (newValue) {
         case BINARY:
           /* filtered == less LZ77, more huffman */
@@ -78,12 +90,31 @@ public class ZlibCodec implements CompressionCodec, DirectDecompressionCodec {
       }
       return this;
     }
+
+    @Override
+    public boolean equals(Object other) {
+      if (other == null || getClass() != other.getClass()) {
+        return false;
+      } else if (this == other) {
+        return true;
+      } else {
+        ZlibOptions otherOpts = (ZlibOptions) other;
+        return level == otherOpts.level && strategy == otherOpts.strategy;
+      }
+    }
+
+    @Override
+    public int hashCode() {
+      return level + strategy * 101;
+    }
   }
 
+  private static final ZlibOptions DEFAULT_OPTIONS =
+      new ZlibOptions(Deflater.DEFAULT_COMPRESSION, Deflater.DEFAULT_STRATEGY, true);
+
   @Override
-  public Options createOptions() {
-    return new ZlibOptions(Deflater.DEFAULT_COMPRESSION,
-        Deflater.DEFAULT_STRATEGY);
+  public Options getDefaultOptions() {
+    return DEFAULT_OPTIONS;
   }
 
   @Override
@@ -157,10 +188,10 @@ public class ZlibCodec implements CompressionCodec, DirectDecompressionCodec {
         ensureShim();
         direct = (decompressShim != null);
       } catch (UnsatisfiedLinkError ule) {
-        direct = Boolean.valueOf(false);
+        direct = false;
       }
     }
-    return direct.booleanValue();
+    return direct;
   }
 
   private void ensureShim() {
@@ -185,7 +216,7 @@ public class ZlibCodec implements CompressionCodec, DirectDecompressionCodec {
   }
 
   @Override
-  public void close() {
+  public void destroy() {
     if (decompressShim != null) {
       decompressShim.end();
     }
@@ -194,5 +225,10 @@ public class ZlibCodec implements CompressionCodec, DirectDecompressionCodec {
   @Override
   public CompressionKind getKind() {
     return CompressionKind.ZLIB;
+  }
+
+  @Override
+  public void close() {
+    OrcCodecPool.returnCodec(CompressionKind.ZLIB, this);
   }
 }

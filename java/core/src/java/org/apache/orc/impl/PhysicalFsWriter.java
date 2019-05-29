@@ -32,7 +32,6 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.orc.CompressionCodec;
-import org.apache.orc.CompressionKind;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
 import org.apache.orc.PhysicalWriter;
@@ -55,11 +54,9 @@ public class PhysicalFsWriter implements PhysicalWriter {
   private final Path path;
   private final HadoopShims shims;
   private final long blockSize;
-  private final int bufferSize;
   private final int maxPadding;
-  private final CompressionKind compress;
+  private final StreamOptions compress;
   private final OrcFile.CompressionStrategy compressionStrategy;
-  private CompressionCodec codec;
   private final boolean addBlockPadding;
   private final boolean writeVariableLengthBlocks;
 
@@ -82,28 +79,26 @@ public class PhysicalFsWriter implements PhysicalWriter {
     long defaultStripeSize = opts.getStripeSize();
     this.addBlockPadding = opts.getBlockPadding();
     if (opts.isEnforceBufferSize()) {
-      this.bufferSize = opts.getBufferSize();
+      this.compress = new StreamOptions(opts.getBufferSize());
     } else {
-      this.bufferSize = WriterImpl.getEstimatedBufferSize(defaultStripeSize,
+      this.compress = new StreamOptions(
+          WriterImpl.getEstimatedBufferSize(defaultStripeSize,
           opts.getSchema().getMaximumId() + 1,
-          opts.getBufferSize());
+          opts.getBufferSize()));
     }
-    this.compress = opts.getCompress();
+    CompressionCodec codec = OrcCodecPool.getCodec(opts.getCompress());
+    if (codec != null){
+      compress.withCodec(codec, codec.getDefaultOptions());
+    }
     this.compressionStrategy = opts.getCompressionStrategy();
     this.maxPadding = (int) (opts.getPaddingTolerance() * defaultStripeSize);
     this.blockSize = opts.getBlockSize();
     LOG.info("ORC writer created for path: {} with stripeSize: {} blockSize: {}" +
-        " compression: {} bufferSize: {}", path, defaultStripeSize, blockSize,
-        compress, bufferSize);
+        " compression: {}", path, defaultStripeSize, blockSize, compress);
     rawWriter = fs.create(path, opts.getOverwrite(), HDFS_BUFFER_SIZE,
         fs.getDefaultReplication(path), blockSize);
     blockOffset = 0;
-    codec = OrcCodecPool.getCodec(compress);
-    StreamOptions options = new StreamOptions(bufferSize);
-    if (codec != null) {
-      options.withCodec(codec, codec.createOptions());
-    }
-    writer = new OutStream("metadata", options,
+    writer = new OutStream("metadata", compress,
         new DirectStream(rawWriter));
     protobufWriter = CodedOutputStream.newInstance(writer);
     writeVariableLengthBlocks = opts.getWriteVariableLengthBlocks();
@@ -112,7 +107,7 @@ public class PhysicalFsWriter implements PhysicalWriter {
 
   @Override
   public CompressionCodec getCompressionCodec() {
-    return codec;
+    return compress.getCodec();
   }
 
   /**
@@ -258,8 +253,11 @@ public class PhysicalFsWriter implements PhysicalWriter {
     // that is used in tests, for boolean checks, and in StreamFactory. Some of the changes that
     // would get rid of this pattern require cross-project interface changes, so just return the
     // codec for now.
-    OrcCodecPool.returnCodec(compress, codec);
-    codec = null;
+    CompressionCodec codec = compress.getCodec();
+    if (codec != null) {
+      OrcCodecPool.returnCodec(codec.getKind(), codec);
+    }
+    compress.withCodec(null, null);
     rawWriter.close();
     rawWriter = null;
   }
@@ -399,13 +397,9 @@ public class PhysicalFsWriter implements PhysicalWriter {
     return result;
   }
 
-  StreamOptions getOptions(OrcProto.Stream.Kind kind) {
-    StreamOptions options = new StreamOptions(bufferSize);
-    if (codec != null) {
-      options.withCodec(codec, WriterImpl.getCustomizedCodec(codec,
-          compressionStrategy, kind));
-    }
-    return options;
+  private StreamOptions getOptions(OrcProto.Stream.Kind kind) {
+    return SerializationUtils.getCustomizedCodec(compress, compressionStrategy,
+        kind);
   }
 
   @Override

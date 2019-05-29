@@ -17,8 +17,6 @@
  */
 package org.apache.orc.impl;
 
-import static junit.framework.Assert.assertEquals;
-
 import java.nio.ByteBuffer;
 import java.util.Random;
 
@@ -26,13 +24,15 @@ import org.apache.orc.CompressionCodec;
 import org.apache.orc.impl.writer.StreamOptions;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+
 public class TestIntegerCompressionReader {
 
   public void runSeekTest(CompressionCodec codec) throws Exception {
     TestInStream.OutputCollector collect = new TestInStream.OutputCollector();
     StreamOptions options = new StreamOptions(1000);
     if (codec != null) {
-      options.withCodec(codec, codec.createOptions());
+      options.withCodec(codec, codec.getDefaultOptions());
     }
     RunLengthIntegerWriterV2 out = new RunLengthIntegerWriterV2(
         new OutStream("test", options, collect), true);

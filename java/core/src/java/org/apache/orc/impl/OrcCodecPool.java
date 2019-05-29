@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -85,7 +85,7 @@ public final class OrcCodecPool {
         }
       }
       // We didn't add the codec to the list.
-      codec.close();
+      codec.destroy();
     } catch (Exception ex) {
       LOG.error("Ignoring codec cleanup error", ex);
     }

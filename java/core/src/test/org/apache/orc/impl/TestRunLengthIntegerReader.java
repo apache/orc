@@ -32,7 +32,7 @@ public class TestRunLengthIntegerReader {
     TestInStream.OutputCollector collect = new TestInStream.OutputCollector();
     StreamOptions options = new StreamOptions(1000);
     if (codec != null) {
-      options.withCodec(codec, codec.createOptions());
+      options.withCodec(codec, codec.getDefaultOptions());
     }
     RunLengthIntegerWriter out = new RunLengthIntegerWriter(
         new OutStream("test", options, collect), true);

@@ -81,8 +81,8 @@ public class SnappyCodec extends AircompressorCodec
   }
 
   @Override
-  public void close() {
-    super.close();
+  public void destroy() {
+    super.destroy();
     if (decompressShim != null) {
       decompressShim.end();
     }

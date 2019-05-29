@@ -24,8 +24,8 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.fail;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class TestZlib {
 
@@ -37,7 +37,7 @@ public class TestZlib {
     in.flip();
     CompressionCodec codec = new ZlibCodec();
     assertEquals(false, codec.compress(in, out, null,
-        codec.createOptions()));
+        codec.getDefaultOptions()));
   }
 
   @Test

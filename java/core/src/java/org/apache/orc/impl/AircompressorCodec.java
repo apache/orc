@@ -98,24 +98,36 @@ public class AircompressorCodec implements CompressionCodec {
     out.flip();
   }
 
-  /**
-   * Return an options object that doesn't do anything
-   * @return a new options object
-   */
+  private static final Options NULL_OPTION = new Options() {
+    @Override
+    public Options copy() {
+      return this;
+    }
+
+    @Override
+    public Options setSpeed(SpeedModifier newValue) {
+      return this;
+    }
+
+    @Override
+    public Options setData(DataKind newValue) {
+      return this;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+      return other != null && getClass() == other.getClass();
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+  };
+
   @Override
-  public Options createOptions() {
-    return new Options() {
-
-      @Override
-      public Options setSpeed(SpeedModifier newValue) {
-        return this;
-      }
-
-      @Override
-      public Options setData(DataKind newValue) {
-        return this;
-      }
-    };
+  public Options getDefaultOptions() {
+    return NULL_OPTION;
   }
 
   @Override
@@ -124,12 +136,17 @@ public class AircompressorCodec implements CompressionCodec {
   }
 
   @Override
-  public void close() {
+  public void destroy() {
     // Nothing to do.
   }
 
   @Override
   public CompressionKind getKind() {
     return kind;
+  }
+
+  @Override
+  public void close() {
+    OrcCodecPool.returnCodec(kind, this);
   }
 }

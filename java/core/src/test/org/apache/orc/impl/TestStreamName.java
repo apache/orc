@@ -38,7 +38,6 @@ public class TestStreamName {
     assertEquals(false, s1.equals(s2));
     assertEquals(false, s1.equals(s3));
     assertEquals(true, s1.equals(s1p));
-    assertEquals(true, s1.compareTo(null) < 0);
     assertEquals(false, s1.equals(null));
     assertEquals(true, s1.compareTo(s2) < 0);
     assertEquals(true, s2.compareTo(s3) < 0);

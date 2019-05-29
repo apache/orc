@@ -57,7 +57,7 @@ public class TestOutStream {
         Mockito.mock(PhysicalWriter.OutputReceiver.class);
     CompressionCodec codec = new ZlibCodec();
     StreamOptions options = new StreamOptions(128 * 1024)
-        .withCodec(codec, codec.createOptions());
+        .withCodec(codec, codec.getDefaultOptions());
     OutStream stream = new OutStream("test", options, receiver);
     assertEquals(0L, stream.getBufferSize());
     stream.write(new byte[]{0, 1, 2});
@@ -88,15 +88,20 @@ public class TestOutStream {
       keyBytes[i] = (byte) i;
     }
     Key material = new SecretKeySpec(keyBytes, aes128.getAlgorithm());
-    StreamName name = new StreamName(0x34, OrcProto.Stream.Kind.DATA);
     // test out stripe 18
-    byte[] iv = CryptoUtils.createIvForStream(aes128, name, 18);
     StreamOptions options = new StreamOptions(50)
-        .withEncryption(aes128, material, iv);
+        .withEncryption(aes128, material);
+    options.modifyIv(CryptoUtils.modifyIvForStream(0x34,
+        OrcProto.Stream.Kind.DATA, 18));
     OutStream stream = new OutStream("test", options, receiver);
     byte[] data = new byte[210];
     for(int i=0; i < data.length; ++i) {
       data[i] = (byte) (i+3);
+    }
+
+    // make 17 empty stripes for the stream
+    for(int i=0; i < 18; ++i) {
+      stream.flush();
     }
 
     stream.write(data);
@@ -159,7 +164,7 @@ public class TestOutStream {
     }
 
     receiver.buffer.clear();
-    stream.changeIv(CryptoUtils.createIvForStream(aes128, name, 19));
+    stream.changeIv(CryptoUtils.modifyIvForStripe(19));
 
     data = new byte[]{0x47, 0x77, 0x65, 0x6e};
     stream.write(data);
@@ -183,12 +188,11 @@ public class TestOutStream {
       keyBytes[i] = (byte) (i * 13);
     }
     Key material = new SecretKeySpec(keyBytes, aes256.getAlgorithm());
-    StreamName name = new StreamName(0x1, OrcProto.Stream.Kind.DATA);
-    byte[] iv = CryptoUtils.createIvForStream(aes256, name, 0);
     CompressionCodec codec = new ZlibCodec();
     StreamOptions options = new StreamOptions(1024)
-        .withCodec(codec, codec.createOptions())
-        .withEncryption(aes256, material, iv);
+        .withCodec(codec, codec.getDefaultOptions())
+        .withEncryption(aes256, material)
+        .modifyIv(CryptoUtils.modifyIvForStream(0x1, OrcProto.Stream.Kind.DATA, 1));
     OutStream stream = new OutStream("test", options, receiver);
     for(int i=0; i < 10000; ++i) {
       stream.write(("The Cheesy Poofs " + i + "\n")
@@ -200,13 +204,14 @@ public class TestOutStream {
 
     // decrypt it
     Cipher decrypt = aes256.createCipher();
-    decrypt.init(Cipher.DECRYPT_MODE, material, new IvParameterSpec(iv));
+    decrypt.init(Cipher.DECRYPT_MODE, material,
+        new IvParameterSpec(options.getIv()));
     byte[] compressed = decrypt.doFinal(encrypted);
 
     // use InStream to decompress it
     BufferChunkList ranges = new BufferChunkList();
     ranges.add(new BufferChunk(ByteBuffer.wrap(compressed), 0));
-    InStream decompressedStream = InStream.create(name.toString(), ranges.get(),
+    InStream decompressedStream = InStream.create("test", ranges.get(),
         compressed.length,
         InStream.options().withCodec(new ZlibCodec()).withBufferSize(1024));
 
