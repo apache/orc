@@ -19,6 +19,7 @@ package org.apache.orc;
 
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.orc.impl.HadoopShims;
+import org.apache.orc.impl.LocalKey;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -87,44 +88,44 @@ public class TestInMemoryKeystore {
     HadoopShims.KeyMetadata metadata128 = memoryKeystore
         .getCurrentKeyVersion("key128");
 
-    HadoopShims.LocalKey key128 = memoryKeystore.createLocalKey(metadata128);
+    LocalKey key128 = memoryKeystore.createLocalKey(metadata128);
     // we are sure the key is the same because of the random generator.
     Assert.assertEquals("39 72 2c bb f8 b9 1a 4b 90 45 c5 e6 17 5f 10 01",
-        stringify(key128.decryptedKey.getEncoded()));
+        stringify(key128.getEncryptedKey()));
+    Assert.assertEquals("46 33 66 fd 79 57 66 9a ba 4a 28 df bf 16 f2 88",
+        stringify(key128.getDecryptedKey().getEncoded()));
     // used online aes/cbc calculator to encrypt key
-    Assert.assertEquals("7f 41 4a 46 81 ee 7c d1 2a 0f ed 39 a8 49 e2 89",
-        stringify(key128.encryptedKey));
-    Assert.assertEquals("AES", key128.decryptedKey.getAlgorithm());
+    Assert.assertEquals("AES", key128.getDecryptedKey().getAlgorithm());
 
     // now decrypt the key again
     Key decryptKey = memoryKeystore.decryptLocalKey(metadata128,
-        key128.encryptedKey);
-    Assert.assertEquals(stringify(key128.decryptedKey.getEncoded()),
+        key128.getEncryptedKey());
+    Assert.assertEquals(stringify(key128.getDecryptedKey().getEncoded()),
         stringify(decryptKey.getEncoded()));
 
     HadoopShims.KeyMetadata metadata256 = memoryKeystore
         .getCurrentKeyVersion("key256");
-    HadoopShims.LocalKey key256 = memoryKeystore.createLocalKey(metadata256);
+    LocalKey key256 = memoryKeystore.createLocalKey(metadata256);
     // this is forced by the fixed Random in the keystore for this test
     if (InMemoryKeystore.SUPPORTS_AES_256) {
-      Assert.assertEquals("ea c3 2f 7f cd 5e cc da 5c 6e 62 fc 4e 63 85 08 0f 7b" +
-              " 6c db 79 e5 51 ec 9c 9c c7 fc bd 60 ee 73",
-          stringify(key256.decryptedKey.getEncoded()));
-      // used online aes/cbc calculator to encrypt key
-      Assert.assertEquals("ea 73 33 5b 14 5d 70 d8 3f e9 d1 05 2b 2d 62 a0 86 16"+
-              " ad a0 2a d6 8a 20 46 1d 00 ce f9 2a 31 48",
-          stringify(key256.encryptedKey));
+      Assert.assertEquals("ea c3 2f 7f cd 5e cc da 5c 6e 62 fc 4e 63 85 08 0f " +
+                              "7b 6c db 79 e5 51 ec 9c 9c c7 fc bd 60 ee 73",
+          stringify(key256.getEncryptedKey()));
+       // used online aes/cbc calculator to encrypt key
+      Assert.assertEquals("00 b0 1c 24 d9 03 bc 02 63 87 b3 f9 65 4e e7 a8 b8" +
+                              " 58 eb a0 81 06 b3 61 cf f8 06 ba 30 d4 c5 36",
+          stringify(key256.getDecryptedKey().getEncoded()));
     } else {
       Assert.assertEquals("ea c3 2f 7f cd 5e cc da 5c 6e 62 fc 4e 63 85 08",
-          stringify(key256.decryptedKey.getEncoded()));
-      Assert.assertEquals("87 df d0 2a 68 1a b9 cb a7 88 ec f4 83 49 95 e0",
-          stringify(key256.encryptedKey));
+          stringify(key256.getEncryptedKey()));
+      Assert.assertEquals("6d 1c ff 55 a5 44 75 11 fb e6 8e 08 cd 2a 10 e8",
+          stringify(key256.getDecryptedKey().getEncoded()));
     }
-    Assert.assertEquals("AES", key256.decryptedKey.getAlgorithm());
+    Assert.assertEquals("AES", key256.getDecryptedKey().getAlgorithm());
 
     // now decrypt the key again
-    decryptKey = memoryKeystore.decryptLocalKey(metadata256, key256.encryptedKey);
-    Assert.assertEquals(stringify(key256.decryptedKey.getEncoded()),
+    decryptKey = memoryKeystore.decryptLocalKey(metadata256, key256.getEncryptedKey());
+    Assert.assertEquals(stringify(key256.getDecryptedKey().getEncoded()),
         stringify(decryptKey.getEncoded()));
   }
 

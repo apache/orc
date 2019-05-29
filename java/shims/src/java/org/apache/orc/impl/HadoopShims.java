@@ -103,9 +103,8 @@ public interface HadoopShims {
                           boolean verifyChecksums) throws IOException;
 
     /**
-     * Release a ByteBuffer obtained from a read on the
-     * Also move the in stream by that amount. The data read can be small than
-     * maxLength.
+     * Release a ByteBuffer obtained from a readBuffer on this
+     * ZeroCopyReaderShim.
      */
     void releaseBuffer(ByteBuffer buffer);
 
@@ -122,6 +121,28 @@ public interface HadoopShims {
    * @return was a variable length block created?
    */
   boolean endVariableLengthBlock(OutputStream output) throws IOException;
+
+  /**
+   * The known KeyProviders for column encryption.
+   * These are identical to OrcProto.KeyProviderKind.
+   */
+  enum KeyProviderKind {
+    UNKNOWN(0),
+    HADOOP(1),
+    AWS(2),
+    GCP(3),
+    AZURE(4);
+
+    private final int value;
+
+    KeyProviderKind(int value) {
+      this.value = value;
+    }
+
+    public int getValue() {
+      return value;
+    }
+  }
 
   /**
    * A source of crypto keys. This is usually backed by a Ranger KMS.
@@ -165,22 +186,11 @@ public interface HadoopShims {
      * available
      */
     Key decryptLocalKey(KeyMetadata key, byte[] encryptedKey) throws IOException;
-  }
 
-  /**
-   * When a local key is created, the user gets both the encrypted and
-   * unencrypted versions. The decrypted key is used to write the file,
-   * while the encrypted key is stored in the metadata. Thus, readers need
-   * to decrypt the local key in order to use it.
-   */
-  class LocalKey {
-    public final Key decryptedKey;
-    public final byte[] encryptedKey;
-
-    public LocalKey(Key decryptedKey, byte[] encryptedKey) {
-      this.decryptedKey = decryptedKey;
-      this.encryptedKey = encryptedKey;
-    }
+    /**
+     * Get the kind of this provider.
+     */
+    KeyProviderKind getKind();
   }
 
   /**
@@ -227,7 +237,7 @@ public interface HadoopShims {
       buffer.append(keyName);
       buffer.append('@');
       buffer.append(version);
-      buffer.append('-');
+      buffer.append(' ');
       buffer.append(algorithm);
       return buffer.toString();
     }

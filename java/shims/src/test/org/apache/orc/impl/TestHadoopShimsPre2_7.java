@@ -81,9 +81,16 @@ public class TestHadoopShimsPre2_7 {
     assertEquals(true, keyNames.contains("secret"));
     HadoopShims.KeyMetadata piiKey = provider.getCurrentKeyVersion("pii");
     assertEquals(1, piiKey.getVersion());
-    HadoopShims.LocalKey localKey = provider.createLocalKey(piiKey);
-    Key key = provider.decryptLocalKey(piiKey, localKey.encryptedKey);
-    assertEquals(new BytesWritable(localKey.decryptedKey.getEncoded()).toString(),
+    LocalKey localKey = provider.createLocalKey(piiKey);
+    byte[] encrypted = localKey.getEncryptedKey();
+    // make sure that we get exactly what we expect to test the encryption
+    assertEquals("c7 ab 4f bb 38 f4 de ad d0 b3 59 e2 21 2a 95 32",
+        new BytesWritable(encrypted).toString());
+    // now check to make sure that we get the expected bytes back
+    assertEquals("c7 a1 d0 41 7b 24 72 44 1a 58 c7 72 4a d4 be b3",
+        new BytesWritable(localKey.getDecryptedKey().getEncoded()).toString());
+    Key key = provider.decryptLocalKey(piiKey, encrypted);
+    assertEquals(new BytesWritable(localKey.getDecryptedKey().getEncoded()).toString(),
         new BytesWritable(key.getEncoded()).toString());
   }
 

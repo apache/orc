@@ -93,4 +93,9 @@ public enum EncryptionAlgorithm {
     throw new IllegalArgumentException("Unknown code in encryption algorithm " +
         serialization);
   }
+
+  @Override
+  public String toString() {
+    return algorithm + (keyLength * 8);
+  }
 }
