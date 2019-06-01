@@ -20,6 +20,7 @@
 #define ADAPTER_HH
 
 #cmakedefine INT64_IS_LL
+#cmakedefine HAS_CONSTEXPR
 #cmakedefine HAS_PREAD
 #cmakedefine HAS_STRPTIME
 #cmakedefine HAS_STOLL
@@ -165,6 +166,15 @@ typedef SSIZE_T ssize_t;
 
 #ifdef NEEDS_Z_PREFIX
 #define Z_PREFIX 1
+#endif
+
+namespace orc {
+  std::string to_string(double val);
+  std::string to_string(int64_t val);
+}
+
+#ifndef HAS_CONSTEXPR
+#define constexpr const
 #endif
 
 #endif /* ADAPTER_HH */

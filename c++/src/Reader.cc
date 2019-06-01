@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include "Adaptor.hh"
 #include "BloomFilter.hh"
 #include "Options.hh"
 #include "Reader.hh"
@@ -1068,7 +1069,7 @@ namespace orc {
 
     // find stripe info
     if (stripeIndex >= static_cast<uint32_t>(footer->stripes_size())) {
-      throw std::logic_error("Illegal stripe index: " + std::to_string(stripeIndex));
+      throw std::logic_error("Illegal stripe index: " + to_string(static_cast<int64_t>(stripeIndex)));
     }
     const proto::StripeInformation currentStripeInfo =
       footer->stripes(static_cast<int>(stripeIndex));
@@ -1103,10 +1104,11 @@ namespace orc {
 
         BloomFilterIndex bfIndex;
         for (int j = 0; j < pbBFIndex.bloomfilter_size(); j++) {
-          bfIndex.entries.push_back(BloomFilterUTF8Utils::deserialize(
+	  std::unique_ptr<BloomFilter> entry = BloomFilterUTF8Utils::deserialize(
             stream.kind(),
             currentStripeFooter.columns(static_cast<int>(stream.column())),
-            pbBFIndex.bloomfilter(j)));
+            pbBFIndex.bloomfilter(j));
+          bfIndex.entries.push_back(std::shared_ptr<BloomFilter>(std::move(entry)));
         }
 
         // add bloom filters to result for one column

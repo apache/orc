@@ -483,7 +483,7 @@ namespace orc {
      * @return map of bloom filters with the key standing for the index of column.
      */
     virtual std::map<uint32_t, BloomFilterIndex>
-    getBloomFilters(uint32_t stripeIndex, const std::set<uint32_t>& included = {}) const = 0;
+    getBloomFilters(uint32_t stripeIndex, const std::set<uint32_t>& included) const = 0;
   };
 
   /**

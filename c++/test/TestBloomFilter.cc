@@ -201,7 +201,7 @@ namespace orc {
     BloomFilterUTF8Utils::serialize(srcBloomFilter, pbBloomFilter);
 
     // deserialize
-    std::shared_ptr<BloomFilter> dstBloomFilter = BloomFilterUTF8Utils::deserialize(
+    std::unique_ptr<BloomFilter> dstBloomFilter = BloomFilterUTF8Utils::deserialize(
       proto::Stream_Kind_BLOOM_FILTER_UTF8, encoding, pbBloomFilter);
 
     EXPECT_TRUE(srcBloomFilter == dynamic_cast<BloomFilterImpl&>(*dstBloomFilter));

@@ -133,7 +133,7 @@ namespace orc {
 
   EncodedStringVectorBatch::EncodedStringVectorBatch(uint64_t capacity, MemoryPool& pool)
                       : StringVectorBatch(capacity, pool),
-                        dictionary(nullptr),
+                        dictionary(),
                         index(pool, capacity) {
     // PASS
   }

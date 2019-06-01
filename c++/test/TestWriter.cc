@@ -1654,7 +1654,7 @@ namespace orc {
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     EXPECT_EQ(rowCount, reader->getNumberOfRows());
 
-    EXPECT_EQ(2, reader->getBloomFilters(0).size());
+    EXPECT_EQ(2, reader->getBloomFilters(0, {}).size());
     EXPECT_EQ(1, reader->getBloomFilters(0, {1}).size());
     EXPECT_EQ(1, reader->getBloomFilters(0, {2}).size());
 
@@ -1666,7 +1666,7 @@ namespace orc {
     // test bloomfilters
     for (uint64_t rg = 0; rg <= rowCount / options.getRowIndexStride(); ++rg) {
       for (uint64_t value = 0; value <= 100; ++value) {
-        std::string str = std::to_string(value);
+        std::string str = to_string(static_cast<int64_t>(value));
         if (value == rg) {
           EXPECT_TRUE(bfs[1].entries[rg]->testLong(static_cast<int64_t>(value)));
           EXPECT_TRUE(bfs[2].entries[rg]->testBytes(str.c_str(), static_cast<int64_t>(str.size())));

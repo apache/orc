@@ -127,12 +127,7 @@ namespace orc {
      * @param expectedEntries - number of entries it will hold
      * @param fpp - false positive probability
      */
-    BloomFilterImpl(uint64_t expectedEntries, double fpp);
-
-    BloomFilterImpl(uint64_t expectedEntries)
-                   :BloomFilterImpl(expectedEntries, DEFAULT_FPP) {
-      // PASS
-    }
+    BloomFilterImpl(uint64_t expectedEntries, double fpp=DEFAULT_FPP);
 
     /**
      * Creates a BloomFilter by deserializing the proto-buf version

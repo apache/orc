@@ -26,26 +26,6 @@
 
 namespace orc {
 
-#ifdef HAS_DOUBLE_TO_STRING
-  std::string to_string(double val) {
-    return std::to_string(val);
-  }
-#else
-  std::string to_string(double val) {
-    return std::to_string(static_cast<long double>(val));
-  }
-#endif
-
-#ifdef HAS_INT64_TO_STRING
-  std::string to_string(int64_t val) {
-    return std::to_string(val);
-  }
-#else
-  std::string to_string(int64_t val) {
-    return std::to_string(static_cast<long long int>(val));
-  }
-#endif
-
 /**
  * Compute the bits required to represent pth percentile value
  * @param data - array

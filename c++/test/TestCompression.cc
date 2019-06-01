@@ -353,7 +353,7 @@ namespace orc {
     RowIndexPositionRecorder recorder1(rowIndexEntry1), recorder2(rowIndexEntry2);
     for (size_t repeat = 0; repeat != 3; ++repeat) {
       for (size_t i = 0; i != batchSize; ++i) {
-        std::string data = std::to_string(row++);
+        std::string data = to_string(static_cast<int64_t>(row++));
         outStream.write(data.c_str(), data.size());
       }
       if (repeat == 0) {

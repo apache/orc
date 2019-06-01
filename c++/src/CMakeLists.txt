@@ -117,6 +117,16 @@ CHECK_CXX_SOURCE_COMPILES("
   HAS_INT64_TO_STRING
 )
 
+CHECK_CXX_SOURCE_COMPILES("
+  constexpr int foo(int x, int y) {
+    return x+y;
+  }
+  int main(int, char*[]) {
+    return foo(1,3);
+  }"
+  HAS_CONSTEXPR
+)
+
 INCLUDE(CheckCXXSourceRuns)
 
 CHECK_CXX_SOURCE_RUNS("
