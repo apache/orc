@@ -27,10 +27,12 @@ import java.security.Key;
 public interface EncryptionVariant extends Comparable<EncryptionVariant> {
 
   /**
-   * Get the encryption key for this column.
-   * @return the encryption key.
+   * Get the key description for this column. This description is global to the
+   * file and is passed to the KeyProvider along with various encrypted local
+   * keys for the stripes or file footer so that it can decrypt them.
+   * @return the encryption key description
    */
-  EncryptionKey getKey();
+  EncryptionKey getKeyDescription();
 
   /**
    * Get the root column for this encryption.
@@ -47,10 +49,10 @@ public interface EncryptionVariant extends Comparable<EncryptionVariant> {
    * Get the local key for the footer.
    * @return the local decrypted key or null if it isn't available
    */
-  Key getFooterKey() throws IOException;
+  Key getFileFooterKey() throws IOException;
 
   /**
-   * Get the local key for a stripe.
+   * Get the local key for a stripe's data or footer.
    * @param stripe the stripe within the file (0 to N-1)
    * @return the local decrypted key or null if it isn't available
    */

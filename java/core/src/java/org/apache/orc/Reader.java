@@ -114,7 +114,7 @@ public interface Reader extends Closeable {
    * Get the statistics about the columns in the file.
    * @return the information about the column
    */
-  ColumnStatistics[] getStatistics() throws IOException;
+  ColumnStatistics[] getStatistics();
 
   /**
    * Get the type of rows in this ORC file.
