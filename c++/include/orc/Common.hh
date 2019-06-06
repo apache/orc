@@ -111,7 +111,8 @@ namespace orc {
     StreamKind_DICTIONARY_COUNT = 4,
     StreamKind_SECONDARY = 5,
     StreamKind_ROW_INDEX = 6,
-    StreamKind_BLOOM_FILTER = 7
+    StreamKind_BLOOM_FILTER = 7,
+    StreamKind_BLOOM_FILTER_UTF8 = 8
   };
 
   /**
