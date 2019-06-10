@@ -530,8 +530,7 @@ namespace orc {
           const proto::RowIndexEntry& entry = rowIndex.entry(j);
           (*indexStats)[column].push_back(entry.statistics());
         }
-      }
-      if (streamKind != StreamKind::StreamKind_ROW_INDEX) {
+      } else {
         indexEnd += length;
       }
       offset += length;
