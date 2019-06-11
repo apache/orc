@@ -76,9 +76,9 @@ message BinaryStatistics {
 
 // ORC-398: Statistics for list and map
 message CollectionStatistics {
-  optional uint64 minCollectionLength = 1;
-  optional uint64 maxCollectionLength = 2;
-  optional uint64 childCount = 3;
+  optional uint64 minChildren = 1;
+  optional uint64 maxChildren = 2;
+  optional uint64 totalChildren = 3;
 }
 
 message ColumnStatistics {

@@ -169,9 +169,9 @@ public class TestColumnStatisticsImpl {
     final OrcProto.ColumnStatistics.Builder builder = statList.serialize();
     final OrcProto.CollectionStatistics collectionStatistics = builder.getCollectionStatistics();
 
-    assertEquals(10, collectionStatistics.getMinCollectionLength());
-    assertEquals(40, collectionStatistics.getMaxCollectionLength());
-    assertEquals(100, collectionStatistics.getChildCount());
+    assertEquals(10, collectionStatistics.getMinChildren());
+    assertEquals(40, collectionStatistics.getMaxChildren());
+    assertEquals(100, collectionStatistics.getTotalChildren());
 
   }
 }

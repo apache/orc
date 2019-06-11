@@ -354,10 +354,10 @@ public class JsonFileDump {
         }
         writer.key("type").value(OrcProto.Type.Kind.DECIMAL);
       } else if (cs instanceof CollectionColumnStatistics) {
-        writer.key("minCollectionLength").value(((CollectionColumnStatistics) cs).getMinimum());
-        writer.key("maxCollectionLength").value(((CollectionColumnStatistics) cs).getMaximum());
-        if (((CollectionColumnStatistics) cs).isSumDefined()) {
-          writer.key("childCount").value(((CollectionColumnStatistics) cs).getSum());
+        writer.key("minChildren").value(((CollectionColumnStatistics) cs).getMinimumChildren());
+        writer.key("maxChildren").value(((CollectionColumnStatistics) cs).getMaximumChildren());
+        if (((CollectionColumnStatistics) cs).isTotalDefined()) {
+          writer.key("totalChildren").value(((CollectionColumnStatistics) cs).getTotalChildren());
         }
         /* What about MAP Type ? */
         writer.key("type").value(OrcProto.Type.Kind.LIST);

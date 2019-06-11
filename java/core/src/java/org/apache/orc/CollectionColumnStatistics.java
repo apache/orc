@@ -20,6 +20,28 @@ package org.apache.orc;
 /**
  * Statistics for all of collections such as Map and List.
  */
-public interface CollectionColumnStatistics extends AggregateStatistics {
+public interface CollectionColumnStatistics extends ColumnStatistics {
+  /**
+   * Get minimum number of children in the collection.
+   * @return the minimum children count
+   */
+  long getMinimumChildren();
 
+  /**
+   * Get maximum number of children in the collection.
+   * @return the maximum children count
+   */
+  long getMaximumChildren();
+
+  /**
+   * Is the total defined? If the sum overflowed the counter this will be false.
+   * @return is the total no. of children available
+   */
+  boolean isTotalDefined();
+
+  /**
+   * Get the total number of children in the collection.
+   * @return the total number of children
+   */
+  long getTotalChildren();
 }

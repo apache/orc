@@ -414,8 +414,8 @@ public class RecordReaderImpl implements RecordReader {
       return new ValueRange<>(predicate, min, max, stats.hasNull());
     } else if (index instanceof CollectionColumnStatistics) {
       CollectionColumnStatistics stats = (CollectionColumnStatistics) index;
-      Long min = stats.getMinimum();
-      Long max = stats.getMaximum();
+      Long min = stats.getMinimumChildren();
+      Long max = stats.getMaximumChildren();
       return new ValueRange<>(predicate, min, max, stats.hasNull());
     }else if (index instanceof DoubleColumnStatistics) {
       DoubleColumnStatistics stats = (DoubleColumnStatistics) index;

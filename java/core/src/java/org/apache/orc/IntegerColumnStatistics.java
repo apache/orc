@@ -21,6 +21,30 @@ package org.apache.orc;
  * Statistics for all of the integer columns, such as byte, short, int, and
  * long.
  */
-public interface IntegerColumnStatistics extends AggregateStatistics {
+public interface IntegerColumnStatistics extends ColumnStatistics {
+  /**
+   * Get the smallest value in the column. Only defined if getNumberOfValues
+   * is non-zero.
+   * @return the minimum
+   */
+  long getMinimum();
 
+  /**
+   * Get the largest value in the column. Only defined if getNumberOfValues
+   * is non-zero.
+   * @return the maximum
+   */
+  long getMaximum();
+
+  /**
+   * Is the sum defined? If the sum overflowed the counter this will be false.
+   * @return is the sum available
+   */
+  boolean isSumDefined();
+
+  /**
+   * Get the sum of the column. Only valid if isSumDefined returns true.
+   * @return the sum of the column
+   */
+  long getSum();
 }
