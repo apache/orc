@@ -530,7 +530,10 @@ namespace orc {
           const proto::RowIndexEntry& entry = rowIndex.entry(j);
           (*indexStats)[column].push_back(entry.statistics());
         }
-      } else {
+      } else if (streamKind == StreamKind::StreamKind_BLOOM_FILTER_UTF8) {
+        // ORC-514
+        // Stream BLOOM_FILTER_UTF8 can be included to indexLength or dataLength,
+        // increase indexEnd to avoid Malformed RowIndex exception in second case.
         indexEnd += length;
       }
       offset += length;

@@ -464,10 +464,13 @@ namespace orc {
     uint64_t dataLength = 0;
     uint64_t indexLength = 0;
     for (uint32_t i = 0; i < streams.size(); ++i) {
-      if (streams[i].kind() == proto::Stream_Kind_ROW_INDEX) {
-        indexLength += streams[i].length();
-      } else {
-        dataLength += streams[i].length();
+      switch (streams[i].kind()) {
+        case proto::Stream_Kind_ROW_INDEX:
+        case proto::Stream_Kind_BLOOM_FILTER_UTF8:
+          indexLength += streams[i].length();
+          break;
+        default:
+          dataLength += streams[i].length();
       }
     }
 
