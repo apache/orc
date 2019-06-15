@@ -292,7 +292,75 @@ namespace orc {
     currentRowInStripe = rowNumber - firstRowOfStripe[currentStripe];
     previousRow = rowNumber;
     startNextStripe();
-    reader->skip(currentRowInStripe);
+
+    uint64_t rowsToSkip = currentRowInStripe;
+
+    if (footer->rowindexstride() > 0 &&
+        currentStripeInfo.indexlength() > 0) {
+      uint32_t rowGroupId =
+        static_cast<uint32_t>(currentRowInStripe / footer->rowindexstride());
+      rowsToSkip -= rowGroupId * footer->rowindexstride();
+
+      if (rowGroupId != 0) {
+        seekToRowGroup(rowGroupId);
+      }
+    }
+
+    reader->skip(rowsToSkip);
+  }
+
+  void RowReaderImpl::seekToRowGroup(uint32_t rowGroupEntryId) {
+    // reset all previous row indexes
+    rowIndexes.clear();
+
+    // obtain row indexes for selected columns
+    uint64_t offset = currentStripeInfo.offset();
+    for (int i = 0; i < currentStripeFooter.streams_size(); ++i) {
+      const proto::Stream& pbStream = currentStripeFooter.streams(i);
+      uint64_t colId = pbStream.column();
+      if (selectedColumns[colId] && pbStream.has_kind()
+          && pbStream.kind() == proto::Stream_Kind_ROW_INDEX) {
+        std::unique_ptr<SeekableInputStream> inStream =
+          createDecompressor(getCompression(),
+                             std::unique_ptr<SeekableInputStream>
+                               (new SeekableFileInputStream
+                                  (contents->stream.get(),
+                                   offset,
+                                   pbStream.length(),
+                                   *contents->pool)),
+                             getCompressionSize(),
+                             *contents->pool);
+
+        proto::RowIndex rowIndex;
+        if (!rowIndex.ParseFromZeroCopyStream(inStream.get())) {
+          throw ParseError("Failed to parse the row index");
+        }
+
+        rowIndexes[colId] = rowIndex;
+      }
+      offset += pbStream.length();
+    }
+
+    // store positions for selected columns
+    std::vector<std::list<uint64_t>> positions;
+    // store position providers for selected colimns
+    std::unordered_map<uint64_t, PositionProvider> positionProviders;
+
+    for (const auto& rowIndex : rowIndexes) {
+      uint64_t colId = rowIndex.first;
+      const proto::RowIndexEntry& entry =
+        rowIndex.second.entry(static_cast<int32_t>(rowGroupEntryId));
+
+      // copy index positions for a specific column
+      positions.push_back({});
+      auto& position = positions.back();
+      for (int pos = 0; pos != entry.positions_size(); ++pos) {
+        position.push_back(entry.positions(pos));
+      }
+      positionProviders.emplace(std::make_pair(colId, PositionProvider(position)));
+    }
+
+    reader->seekToRowGroup(positionProviders);
   }
 
   const FileContents& RowReaderImpl::getFileContents() const {

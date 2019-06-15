@@ -135,6 +135,13 @@ namespace orc {
       next(rowBatch, numValues, notNull);
     }
 
+    /**
+     * Seek to beginning of a row group in the current stripe
+     * @param positions a list of PositionProviders storing the positions
+     */
+    virtual void seekToRowGroup(
+      std::unordered_map<uint64_t, PositionProvider>& positions);
+
   };
 
   /**
