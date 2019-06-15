@@ -140,6 +140,15 @@ namespace orc {
     // internal methods
     void startNextStripe();
 
+    // row index of current stripe with column id as the key
+    std::unordered_map<uint64_t, proto::RowIndex> rowIndexes;
+
+    /**
+     * Seek to the start of a row group in the current stripe
+     * @param rowGroupEntryId the row group id to seek to
+     */
+    void seekToRowGroup(uint32_t rowGroupEntryId);
+
   public:
    /**
     * Constructor that lets the user specify additional options.

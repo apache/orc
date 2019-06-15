@@ -114,6 +114,13 @@ namespace orc {
     rowBatch.hasNulls = false;
   }
 
+  void ColumnReader::seekToRowGroup(
+    std::unordered_map<uint64_t, PositionProvider>& positions) {
+    if (notNullDecoder.get()) {
+      notNullDecoder->seek(positions.at(columnId));
+    }
+  }
+
   /**
    * Expand an array of bytes in place to the corresponding array of longs.
    * Has to work backwards so that they data isn't clobbered during the
@@ -141,6 +148,9 @@ namespace orc {
     void next(ColumnVectorBatch& rowBatch,
               uint64_t numValues,
               char* notNull) override;
+
+    void seekToRowGroup(
+      std::unordered_map<uint64_t, PositionProvider>& positions) override;
   };
 
   BooleanColumnReader::BooleanColumnReader(const Type& type,
@@ -175,6 +185,12 @@ namespace orc {
     expandBytesToLongs(ptr, numValues);
   }
 
+  void BooleanColumnReader::seekToRowGroup(
+    std::unordered_map<uint64_t, PositionProvider>& positions) {
+    ColumnReader::seekToRowGroup(positions);
+    rle->seek(positions.at(columnId));
+  }
+
   class ByteColumnReader: public ColumnReader {
   private:
     std::unique_ptr<orc::ByteRleDecoder> rle;
@@ -188,6 +204,9 @@ namespace orc {
     void next(ColumnVectorBatch& rowBatch,
               uint64_t numValues,
               char* notNull) override;
+
+    void seekToRowGroup(
+      std::unordered_map<uint64_t, PositionProvider>& positions) override;
   };
 
   ByteColumnReader::ByteColumnReader(const Type& type,
@@ -222,6 +241,12 @@ namespace orc {
     expandBytesToLongs(ptr, numValues);
   }
 
+  void ByteColumnReader::seekToRowGroup(
+    std::unordered_map<uint64_t, PositionProvider>& positions) {
+    ColumnReader::seekToRowGroup(positions);
+    rle->seek(positions.at(columnId));
+  }
+
   class IntegerColumnReader: public ColumnReader {
   protected:
     std::unique_ptr<orc::RleDecoder> rle;
@@ -235,6 +260,9 @@ namespace orc {
     void next(ColumnVectorBatch& rowBatch,
               uint64_t numValues,
               char* notNull) override;
+
+    void seekToRowGroup(
+      std::unordered_map<uint64_t, PositionProvider>& positions) override;
   };
 
   IntegerColumnReader::IntegerColumnReader(const Type& type,
@@ -266,6 +294,12 @@ namespace orc {
               numValues, rowBatch.hasNulls ? rowBatch.notNull.data() : nullptr);
   }
 
+  void IntegerColumnReader::seekToRowGroup(
+    std::unordered_map<uint64_t, PositionProvider>& positions) {
+    ColumnReader::seekToRowGroup(positions);
+    rle->seek(positions.at(columnId));
+  }
+
   class TimestampColumnReader: public ColumnReader {
   private:
     std::unique_ptr<orc::RleDecoder> secondsRle;
@@ -282,6 +316,9 @@ namespace orc {
     void next(ColumnVectorBatch& rowBatch,
               uint64_t numValues,
               char* notNull) override;
+
+    void seekToRowGroup(
+      std::unordered_map<uint64_t, PositionProvider>& positions) override;
   };
 
 
@@ -344,6 +381,13 @@ namespace orc {
     }
   }
 
+  void TimestampColumnReader::seekToRowGroup(
+    std::unordered_map<uint64_t, PositionProvider>& positions) {
+    ColumnReader::seekToRowGroup(positions);
+    secondsRle->seek(positions.at(columnId));
+    nanoRle->seek(positions.at(columnId));
+  }
+
   class DoubleColumnReader: public ColumnReader {
   public:
     DoubleColumnReader(const Type& type, StripeStreams& stripe);
@@ -354,6 +398,9 @@ namespace orc {
     void next(ColumnVectorBatch& rowBatch,
               uint64_t numValues,
               char* notNull) override;
+
+    void seekToRowGroup(
+      std::unordered_map<uint64_t, PositionProvider>& positions) override;
 
   private:
     std::unique_ptr<SeekableInputStream> inputStream;
@@ -483,6 +530,12 @@ namespace orc {
     }
   }
 
+  void DoubleColumnReader::seekToRowGroup(
+    std::unordered_map<uint64_t, PositionProvider>& positions) {
+    ColumnReader::seekToRowGroup(positions);
+    inputStream->seek(positions.at(columnId));
+  }
+
   class StringDictionaryColumnReader: public ColumnReader {
   private:
     std::shared_ptr<StringDictionary> dictionary;
@@ -501,6 +554,9 @@ namespace orc {
     void nextEncoded(ColumnVectorBatch& rowBatch,
                       uint64_t numValues,
                       char* notNull) override;
+
+    void seekToRowGroup(
+      std::unordered_map<uint64_t, PositionProvider>& positions) override;
   };
 
   StringDictionaryColumnReader::StringDictionaryColumnReader
@@ -599,6 +655,13 @@ namespace orc {
     rle->next(batch.index.data(), numValues, notNull);
   }
 
+  void StringDictionaryColumnReader::seekToRowGroup(
+    std::unordered_map<uint64_t, PositionProvider>& positions) {
+    ColumnReader::seekToRowGroup(positions);
+    rle->seek(positions.at(columnId));
+  }
+
+
   class StringDirectColumnReader: public ColumnReader {
   private:
     std::unique_ptr<RleDecoder> lengthRle;
@@ -625,6 +688,9 @@ namespace orc {
     void next(ColumnVectorBatch& rowBatch,
               uint64_t numValues,
               char *notNull) override;
+
+    void seekToRowGroup(
+      std::unordered_map<uint64_t, PositionProvider>& positions) override;
   };
 
   StringDirectColumnReader::StringDirectColumnReader
@@ -760,6 +826,13 @@ namespace orc {
     }
   }
 
+  void StringDirectColumnReader::seekToRowGroup(
+    std::unordered_map<uint64_t, PositionProvider>& positions) {
+    ColumnReader::seekToRowGroup(positions);
+    blobStream->seek(positions.at(columnId));
+    lengthRle->seek(positions.at(columnId));
+  }
+
   class StructColumnReader: public ColumnReader {
   private:
     std::vector<ColumnReader*> children;
@@ -777,6 +850,9 @@ namespace orc {
     void nextEncoded(ColumnVectorBatch& rowBatch,
               uint64_t numValues,
               char *notNull) override;
+
+    void seekToRowGroup(
+      std::unordered_map<uint64_t, PositionProvider>& positions) override;
 
   private:
     template<bool encoded>
@@ -852,6 +928,16 @@ namespace orc {
     }
   }
 
+  void StructColumnReader::seekToRowGroup(
+    std::unordered_map<uint64_t, PositionProvider>& positions) {
+    ColumnReader::seekToRowGroup(positions);
+
+    for(std::vector<ColumnReader*>::iterator ptr = children.begin();
+        ptr != children.end();
+        ++ptr) {
+      (*ptr)->seekToRowGroup(positions);
+    }
+  }
 
   class ListColumnReader: public ColumnReader {
   private:
@@ -871,6 +957,9 @@ namespace orc {
     void nextEncoded(ColumnVectorBatch& rowBatch,
               uint64_t numValues,
               char *notNull) override;
+
+    void seekToRowGroup(
+      std::unordered_map<uint64_t, PositionProvider>& positions) override;
 
   private:
     template<bool encoded>
@@ -973,6 +1062,15 @@ namespace orc {
     }
   }
 
+  void ListColumnReader::seekToRowGroup(
+    std::unordered_map<uint64_t, PositionProvider>& positions) {
+    ColumnReader::seekToRowGroup(positions);
+    rle->seek(positions.at(columnId));
+    if (child.get()) {
+      child->seekToRowGroup(positions);
+    }
+  }
+
   class MapColumnReader: public ColumnReader {
   private:
     std::unique_ptr<ColumnReader> keyReader;
@@ -992,6 +1090,9 @@ namespace orc {
     void nextEncoded(ColumnVectorBatch& rowBatch,
                      uint64_t numValues,
                      char *notNull) override;
+
+    void seekToRowGroup(
+      std::unordered_map<uint64_t, PositionProvider>& positions) override;
 
   private:
     template<bool encoded>
@@ -1114,6 +1215,18 @@ namespace orc {
     }
   }
 
+  void MapColumnReader::seekToRowGroup(
+    std::unordered_map<uint64_t, PositionProvider>& positions) {
+    ColumnReader::seekToRowGroup(positions);
+    rle->seek(positions.at(columnId));
+    if (keyReader.get()) {
+      keyReader->seekToRowGroup(positions);
+    }
+    if (elementReader.get()) {
+      elementReader->seekToRowGroup(positions);
+    }
+  }
+
   class UnionColumnReader: public ColumnReader {
   private:
     std::unique_ptr<ByteRleDecoder> rle;
@@ -1134,6 +1247,9 @@ namespace orc {
     void nextEncoded(ColumnVectorBatch& rowBatch,
                      uint64_t numValues,
                      char *notNull) override;
+
+    void seekToRowGroup(
+      std::unordered_map<uint64_t, PositionProvider>& positions) override;
 
   private:
     template<bool encoded>
@@ -1246,6 +1362,17 @@ namespace orc {
     }
   }
 
+  void UnionColumnReader::seekToRowGroup(
+    std::unordered_map<uint64_t, PositionProvider>& positions) {
+    ColumnReader::seekToRowGroup(positions);
+    rle->seek(positions.at(columnId));
+    for(size_t i = 0; i < numChildren; ++i) {
+      if (childrenReader[i] != nullptr) {
+        childrenReader[i]->seekToRowGroup(positions);
+      }
+    }
+  }
+
   /**
    * Destructively convert the number from zigzag encoding to the
    * natural signed representation.
@@ -1322,6 +1449,9 @@ namespace orc {
     void next(ColumnVectorBatch& rowBatch,
               uint64_t numValues,
               char *notNull) override;
+
+    void seekToRowGroup(
+      std::unordered_map<uint64_t, PositionProvider>& positions) override;
   };
   const uint32_t Decimal64ColumnReader::MAX_PRECISION_64;
   const uint32_t Decimal64ColumnReader::MAX_PRECISION_128;
@@ -1427,6 +1557,13 @@ namespace orc {
         currentScale -= scaleAdjust;
       }
     }
+  }
+
+  void Decimal64ColumnReader::seekToRowGroup(
+    std::unordered_map<uint64_t, PositionProvider>& positions) {
+    ColumnReader::seekToRowGroup(positions);
+    valueStream->seek(positions.at(columnId));
+    scaleDecoder->seek(positions.at(columnId));
   }
 
   class Decimal128ColumnReader: public Decimal64ColumnReader {
