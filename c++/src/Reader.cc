@@ -499,8 +499,9 @@ namespace orc {
     uint64_t indexEnd = stripeInfo.offset() + stripeInfo.indexlength();
     for (int i = 0; i < num_streams; i++) {
       const proto::Stream& stream = currentStripeFooter.streams(i);
+      StreamKind streamKind = static_cast<StreamKind>(stream.kind());
       uint64_t length = static_cast<uint64_t>(stream.length());
-      if (static_cast<StreamKind>(stream.kind()) == StreamKind::StreamKind_ROW_INDEX) {
+      if (streamKind == StreamKind::StreamKind_ROW_INDEX) {
         if (offset + length > indexEnd) {
           std::stringstream msg;
           msg << "Malformed RowIndex stream meta in stripe " << stripeIndex
