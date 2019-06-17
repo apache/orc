@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import org.apache.orc.impl.StreamName;
+import org.apache.orc.impl.writer.StreamOptions;
+import org.apache.orc.impl.writer.WriterEncryptionVariant;
 
 /**
  * This interface separates the physical layout of ORC files from the higher
@@ -39,7 +41,6 @@ public interface PhysicalWriter {
      * Output the given buffer to the final destination
      *
      * @param buffer the buffer to output
-     * @throws IOException
      */
     void output(ByteBuffer buffer) throws IOException;
 
@@ -48,16 +49,15 @@ public interface PhysicalWriter {
      */
     void suppress();
   }
+
   /**
    * Writes the header of the file, which consists of the magic "ORC" bytes.
-   * @throws IOException
    */
   void writeHeader() throws IOException;
 
   /**
    * Create an OutputReceiver for the given name.
    * @param name the name of the stream
-   * @throws IOException
    */
   OutputReceiver createDataStream(StreamName name) throws IOException;
 
@@ -65,7 +65,6 @@ public interface PhysicalWriter {
    * Write an index in the given stream name.
    * @param name the name of the stream
    * @param index the bloom filter to write
-   * @param codec the compression codec to use
    */
   void writeIndex(StreamName name,
                   OrcProto.RowIndex.Builder index) throws IOException;
@@ -74,7 +73,6 @@ public interface PhysicalWriter {
    * Write a bloom filter index in the given stream name.
    * @param name the name of the stream
    * @param bloom the bloom filter to write
-   * @param codec the compression codec to use
    */
   void writeBloomFilter(StreamName name,
                         OrcProto.BloomFilterIndex.Builder bloom) throws IOException;
@@ -88,6 +86,16 @@ public interface PhysicalWriter {
    */
   void finalizeStripe(OrcProto.StripeFooter.Builder footer,
                       OrcProto.StripeInformation.Builder dirEntry) throws IOException;
+
+  /**
+   * Write a stripe or file statistics to the file.
+   * @param name the name of the stream
+   * @param statistics the statistics to write
+   * @throws IOException
+   */
+  void writeStatistics(StreamName name,
+                       OrcProto.ColumnStatistics.Builder statistics
+                       ) throws IOException;
 
   /**
    * Writes out the file metadata.
@@ -122,19 +130,24 @@ public interface PhysicalWriter {
    * @param stripe Stripe data buffer.
    * @param dirEntry File metadata entry for the stripe, to be updated with
    *                 relevant data.
-   * @throws IOException
    */
   void appendRawStripe(ByteBuffer stripe,
                        OrcProto.StripeInformation.Builder dirEntry
                        ) throws IOException;
 
-  /** Gets a compression codec used by this writer. */
-  CompressionCodec getCompressionCodec();
-
   /**
    * Get the number of bytes for a file in a givem column.
    * @param column column from which to get file size
+   * @param variant the encryption variant to check
    * @return number of bytes for the given column
    */
-  long getFileBytes(int column);
+  long getFileBytes(int column, WriterEncryptionVariant variant);
+
+  /**
+   * Get the unencrypted stream options for this file. This class needs the
+   * stream options to write the indexes and footers.
+   *
+   * Additionally, the LLAP CacheWriter wants to disable the generic compression.
+   */
+  StreamOptions getStreamOptions();
 }

@@ -21,6 +21,7 @@ package org.apache.orc.impl.writer;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.StructColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.orc.ColumnStatistics;
 import org.apache.orc.OrcProto;
 import org.apache.orc.TypeDescription;
 
@@ -147,10 +148,10 @@ public class StructTreeWriter extends TreeWriterBase {
   }
 
   @Override
-  public void writeFileStatistics(OrcProto.Footer.Builder footer) {
-    super.writeFileStatistics(footer);
+  public void writeFileStatistics() throws IOException {
+    super.writeFileStatistics();
     for (TreeWriter child : childrenWriters) {
-      child.writeFileStatistics(footer);
+      child.writeFileStatistics();
     }
   }
 
@@ -160,6 +161,13 @@ public class StructTreeWriter extends TreeWriterBase {
     for (TreeWriter child : childrenWriters) {
       child.flushStreams();
     }
+  }
 
+  @Override
+  public void getCurrentStatistics(ColumnStatistics[] output) {
+    super.getCurrentStatistics(output);
+    for (TreeWriter child: childrenWriters) {
+      child.getCurrentStatistics(output);
+    }
   }
 }

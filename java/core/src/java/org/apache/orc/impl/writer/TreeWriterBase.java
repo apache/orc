@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.orc.ColumnStatistics;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
 import org.apache.orc.TypeDescription;
@@ -256,12 +257,15 @@ public abstract class TreeWriterBase implements TreeWriter {
     }
 
     /* Update byte count */
-    final long byteCount = streamFactory.getPhysicalWriter().getFileBytes(id);
+    final long byteCount = streamFactory.getPhysicalWriter().getFileBytes(id, null);
     stripeColStatistics.updateByteCount(byteCount);
 
     // merge stripe-level column statistics to file statistics and write it to
     // stripe statistics
     fileStatistics.merge(stripeColStatistics);
+    streamFactory.writeStatistics(
+        new StreamName(id, OrcProto.Stream.Kind.STRIPE_STATISTICS, null),
+        stripeColStatistics.serialize());
     stats.addColStats(stripeColStatistics.serialize());
     stripeColStatistics.reset();
 
@@ -369,8 +373,10 @@ public abstract class TreeWriterBase implements TreeWriter {
   }
 
   @Override
-  public void writeFileStatistics(OrcProto.Footer.Builder footer) {
-    footer.addStatistics(fileStatistics.serialize());
+  public void writeFileStatistics() throws IOException {
+    streamFactory.writeStatistics(new StreamName(id,
+                                      OrcProto.Stream.Kind.FILE_STATISTICS, null),
+                                  fileStatistics.serialize());
   }
 
   static class RowIndexPositionRecorder implements PositionRecorder {
@@ -384,5 +390,10 @@ public abstract class TreeWriterBase implements TreeWriter {
     public void addPosition(long position) {
       builder.addPositions(position);
     }
+  }
+
+  @Override
+  public void getCurrentStatistics(ColumnStatistics[] output) {
+    output[id] = fileStatistics;
   }
 }

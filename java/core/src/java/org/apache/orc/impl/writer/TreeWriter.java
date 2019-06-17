@@ -20,6 +20,7 @@ package org.apache.orc.impl.writer;
 
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.orc.ColumnStatistics;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
 import org.apache.orc.TypeDescription;
@@ -98,9 +99,15 @@ public interface TreeWriter {
 
   /**
    * Add the file statistics to the file footer.
-   * @param footer the file footer builder
    */
-  void writeFileStatistics(OrcProto.Footer.Builder footer);
+  void writeFileStatistics() throws IOException;
+
+  /**
+   * Get the current file statistics for each column. If a column is encrypted,
+   * the encrypted variant statistics are used.
+   * @param output an array that is filled in with the results
+   */
+  void getCurrentStatistics(ColumnStatistics[] output);
 
   class Factory {
     public static TreeWriter create(TypeDescription schema,

@@ -102,6 +102,15 @@ public interface WriterContext {
                           OrcProto.BloomFilterIndex.Builder bloom
                           ) throws IOException;
 
+    /**
+     * Set the column statistics for the stripe or file.
+     * @param name the name of the statistics stream
+     * @param stats the statistics for this column in this stripe
+     */
+    void writeStatistics(StreamName name,
+                         OrcProto.ColumnStatistics.Builder stats
+                         ) throws IOException;
+
     boolean getUseUTCTimestamp();
 
     double getDictionaryKeySizeThreshold(int column);
