@@ -25,11 +25,14 @@ import org.apache.hadoop.hive.ql.util.JavaDataModel;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.orc.OrcProto;
 import org.apache.orc.TypeDescription;
+import org.apache.orc.impl.CryptoUtils;
 import org.apache.orc.impl.OutStream;
 import org.apache.orc.impl.PositionRecorder;
 import org.apache.orc.impl.RunLengthIntegerWriterV2;
+import org.apache.orc.impl.StreamName;
 
 import java.io.IOException;
+import java.util.function.Consumer;
 
 /**
  * Writer for short decimals in ORCv2.
@@ -38,12 +41,12 @@ public class Decimal64TreeWriter extends TreeWriterBase {
   private final RunLengthIntegerWriterV2 valueWriter;
   private final int scale;
 
-  public Decimal64TreeWriter(int columnId,
-                             TypeDescription schema,
-                             WriterContext writer,
-                             boolean nullable) throws IOException {
-    super(columnId, schema, writer, nullable);
-    OutStream stream = writer.createStream(id, OrcProto.Stream.Kind.DATA);
+  public Decimal64TreeWriter(TypeDescription schema,
+                             WriterEncryptionVariant encryption,
+                             WriterContext writer) throws IOException {
+    super(schema, encryption, writer);
+    OutStream stream = writer.createStream(
+        new StreamName(id, OrcProto.Stream.Kind.DATA));
     // Use RLEv2 until we have the new RLEv3.
     valueWriter = new RunLengthIntegerWriterV2(stream, true, true);
     scale = schema.getScale();
@@ -121,10 +124,8 @@ public class Decimal64TreeWriter extends TreeWriterBase {
   }
 
   @Override
-  public void writeStripe(OrcProto.StripeFooter.Builder builder,
-                          OrcProto.StripeStatistics.Builder stats,
-                          int requiredIndexEntries) throws IOException {
-    super.writeStripe(builder, stats, requiredIndexEntries);
+  public void writeStripe(int requiredIndexEntries) throws IOException {
+    super.writeStripe(requiredIndexEntries);
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
     }
@@ -150,5 +151,11 @@ public class Decimal64TreeWriter extends TreeWriterBase {
   public void flushStreams() throws IOException {
     super.flushStreams();
     valueWriter.flush();
+  }
+
+  @Override
+  public void prepareStripe(int stripeId) {
+    super.prepareStripe(stripeId);
+    valueWriter.changeIv(CryptoUtils.modifyIvForStripe(stripeId));
   }
 }

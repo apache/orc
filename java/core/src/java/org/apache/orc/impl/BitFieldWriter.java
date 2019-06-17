@@ -18,6 +18,7 @@
 package org.apache.orc.impl;
 
 import java.io.IOException;
+import java.util.function.Consumer;
 
 public class BitFieldWriter {
   private RunLengthByteWriter output;
@@ -69,5 +70,9 @@ public class BitFieldWriter {
 
   public long estimateMemory() {
     return output.estimateMemory();
+  }
+
+  public void changeIv(Consumer<byte[]> modifier) {
+    output.changeIv(modifier);
   }
 }

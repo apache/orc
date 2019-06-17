@@ -23,15 +23,18 @@ import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.ql.util.JavaDataModel;
 import org.apache.orc.OrcProto;
 import org.apache.orc.TypeDescription;
+import org.apache.orc.impl.CryptoUtils;
 import org.apache.orc.impl.IntegerWriter;
 import org.apache.orc.impl.PositionRecorder;
 import org.apache.orc.impl.SerializationUtils;
+import org.apache.orc.impl.StreamName;
 
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
+import java.util.function.Consumer;
 
 public class TimestampTreeWriter extends TreeWriterBase {
   public static final int MILLIS_PER_SECOND = 1000;
@@ -45,16 +48,17 @@ public class TimestampTreeWriter extends TreeWriterBase {
   private final long baseEpochSecsLocalTz;
   private final long baseEpochSecsUTC;
 
-  public TimestampTreeWriter(int columnId,
-                             TypeDescription schema,
-                             WriterContext writer,
-                             boolean nullable) throws IOException {
-    super(columnId, schema, writer, nullable);
+  public TimestampTreeWriter(TypeDescription schema,
+                             WriterEncryptionVariant encryption,
+                             WriterContext writer) throws IOException {
+    super(schema, encryption, writer);
     this.isDirectV2 = isNewWriteFormat(writer);
-    this.seconds = createIntegerWriter(writer.createStream(id,
-        OrcProto.Stream.Kind.DATA), true, isDirectV2, writer);
-    this.nanos = createIntegerWriter(writer.createStream(id,
-        OrcProto.Stream.Kind.SECONDARY), false, isDirectV2, writer);
+    this.seconds = createIntegerWriter(writer.createStream(
+        new StreamName(id, OrcProto.Stream.Kind.DATA, encryption)),
+        true, isDirectV2, writer);
+    this.nanos = createIntegerWriter(writer.createStream(
+        new StreamName(id, OrcProto.Stream.Kind.SECONDARY, encryption)),
+        false, isDirectV2, writer);
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
     }
@@ -152,10 +156,8 @@ public class TimestampTreeWriter extends TreeWriterBase {
   }
 
   @Override
-  public void writeStripe(OrcProto.StripeFooter.Builder builder,
-                          OrcProto.StripeStatistics.Builder stats,
-                          int requiredIndexEntries) throws IOException {
-    super.writeStripe(builder, stats, requiredIndexEntries);
+  public void writeStripe(int requiredIndexEntries) throws IOException {
+    super.writeStripe(requiredIndexEntries);
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
     }
@@ -201,5 +203,13 @@ public class TimestampTreeWriter extends TreeWriterBase {
     super.flushStreams();
     seconds.flush();
     nanos.flush();
+  }
+
+  @Override
+  public void prepareStripe(int stripeId) {
+    super.prepareStripe(stripeId);
+    Consumer<byte[]> updater = CryptoUtils.modifyIvForStripe(stripeId);
+    seconds.changeIv(updater);
+    nanos.changeIv(updater);
   }
 }

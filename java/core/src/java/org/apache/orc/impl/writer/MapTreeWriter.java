@@ -22,8 +22,10 @@ import org.apache.hadoop.hive.ql.exec.vector.MapColumnVector;
 import org.apache.orc.ColumnStatistics;
 import org.apache.orc.OrcProto;
 import org.apache.orc.TypeDescription;
+import org.apache.orc.impl.CryptoUtils;
 import org.apache.orc.impl.IntegerWriter;
 import org.apache.orc.impl.PositionRecorder;
+import org.apache.orc.impl.StreamName;
 
 import java.io.IOException;
 import java.util.List;
@@ -34,17 +36,17 @@ public class MapTreeWriter extends TreeWriterBase {
   private final TreeWriter keyWriter;
   private final TreeWriter valueWriter;
 
-  MapTreeWriter(int columnId,
-                TypeDescription schema,
-                WriterContext writer,
-                boolean nullable) throws IOException {
-    super(columnId, schema, writer, nullable);
+  MapTreeWriter(TypeDescription schema,
+                WriterEncryptionVariant encryption,
+                WriterContext writer) throws IOException {
+    super(schema, encryption, writer);
     this.isDirectV2 = isNewWriteFormat(writer);
     List<TypeDescription> children = schema.getChildren();
-    keyWriter = Factory.create(children.get(0), writer, true);
-    valueWriter = Factory.create(children.get(1), writer, true);
-    lengths = createIntegerWriter(writer.createStream(columnId,
-        OrcProto.Stream.Kind.LENGTH), false, isDirectV2, writer);
+    keyWriter = Factory.create(children.get(0), encryption, writer);
+    valueWriter = Factory.create(children.get(1), encryption, writer);
+    lengths = createIntegerWriter(writer.createStream(
+        new StreamName(id, OrcProto.Stream.Kind.LENGTH, encryption)),
+        false, isDirectV2, writer);
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
     }
@@ -129,12 +131,10 @@ public class MapTreeWriter extends TreeWriterBase {
   }
 
   @Override
-  public void writeStripe(OrcProto.StripeFooter.Builder builder,
-                          OrcProto.StripeStatistics.Builder stats,
-                          int requiredIndexEntries) throws IOException {
-    super.writeStripe(builder, stats, requiredIndexEntries);
-    keyWriter.writeStripe(builder, stats, requiredIndexEntries);
-    valueWriter.writeStripe(builder, stats, requiredIndexEntries);
+  public void writeStripe(int requiredIndexEntries) throws IOException {
+    super.writeStripe(requiredIndexEntries);
+    keyWriter.writeStripe(requiredIndexEntries);
+    valueWriter.writeStripe(requiredIndexEntries);
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
     }
@@ -184,5 +184,13 @@ public class MapTreeWriter extends TreeWriterBase {
     super.getCurrentStatistics(output);
     keyWriter.getCurrentStatistics(output);
     valueWriter.getCurrentStatistics(output);
+  }
+
+  @Override
+  public void prepareStripe(int stripeId) {
+    super.prepareStripe(stripeId);
+    lengths.changeIv(CryptoUtils.modifyIvForStripe(stripeId));
+    keyWriter.prepareStripe(stripeId);
+    valueWriter.prepareStripe(stripeId);
   }
 }

@@ -19,9 +19,12 @@
 package org.apache.orc.impl.writer;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.orc.CompressionCodec;
+import org.apache.orc.DataMask;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
 import org.apache.orc.PhysicalWriter;
+import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.OutStream;
 import org.apache.orc.impl.StreamName;
 
@@ -30,88 +33,115 @@ import java.io.IOException;
 public interface WriterContext {
 
   /**
-     * Create a stream to store part of a column.
-     * @param column the column id for the stream
-     * @param kind the kind of stream
-     * @return The output outStream that the section needs to be written to.
-     */
-    OutStream createStream(int column,
-                           OrcProto.Stream.Kind kind
-                           ) throws IOException;
+   * Create a stream to store part of a column.
+   * @param name the name of the stream
+   * @return The output outStream that the section needs to be written to.
+   */
+  OutStream createStream(StreamName name) throws IOException;
 
-    /**
-     * Get the stride rate of the row index.
-     */
-    int getRowIndexStride();
+  /**
+   * Get the stride rate of the row index.
+   */
+  int getRowIndexStride();
 
-    /**
-     * Should be building the row index.
-     * @return true if we are building the index
-     */
-    boolean buildIndex();
+  /**
+   * Should be building the row index.
+   * @return true if we are building the index
+   */
+  boolean buildIndex();
 
-    /**
-     * Is the ORC file compressed?
-     * @return are the streams compressed
-     */
-    boolean isCompressed();
+  /**
+   * Is the ORC file compressed?
+   * @return are the streams compressed
+   */
+  boolean isCompressed();
 
-    /**
-     * Get the encoding strategy to use.
-     * @return encoding strategy
-     */
-    OrcFile.EncodingStrategy getEncodingStrategy();
+  /**
+   * Get the encoding strategy to use.
+   * @return encoding strategy
+   */
+  OrcFile.EncodingStrategy getEncodingStrategy();
 
-    /**
-     * Get the bloom filter columns
-     * @return bloom filter columns
-     */
-    boolean[] getBloomFilterColumns();
+  /**
+   * Get the bloom filter columns
+   * @return bloom filter columns
+   */
+  boolean[] getBloomFilterColumns();
 
-    /**
-     * Get bloom filter false positive percentage.
-     * @return fpp
-     */
-    double getBloomFilterFPP();
+  /**
+   * Get bloom filter false positive percentage.
+   * @return fpp
+   */
+  double getBloomFilterFPP();
 
-    /**
-     * Get the writer's configuration.
-     * @return configuration
-     */
-    Configuration getConfiguration();
+  /**
+   * Get the writer's configuration.
+   * @return configuration
+   */
+  Configuration getConfiguration();
 
-    /**
-     * Get the version of the file to write.
-     */
-    OrcFile.Version getVersion();
+  /**
+   * Get the version of the file to write.
+   */
+  OrcFile.Version getVersion();
 
-    /**
-     * Get the PhysicalWriter.
-     *
-     * @return the file's physical writer.
-     */
-    PhysicalWriter getPhysicalWriter();
+  OrcFile.BloomFilterVersion getBloomFilterVersion();
 
+  void writeIndex(StreamName name,
+                  OrcProto.RowIndex.Builder index) throws IOException;
 
-    OrcFile.BloomFilterVersion getBloomFilterVersion();
+  void writeBloomFilter(StreamName name,
+                        OrcProto.BloomFilterIndex.Builder bloom
+                        ) throws IOException;
 
-    void writeIndex(StreamName name,
-                    OrcProto.RowIndex.Builder index) throws IOException;
+  /**
+   * Get the mask for the unencrypted variant.
+   * @param columnId the column id
+   * @return the mask to apply to the unencrypted data or null if there is none
+   */
+  DataMask getUnencryptedMask(int columnId);
 
-    void writeBloomFilter(StreamName name,
-                          OrcProto.BloomFilterIndex.Builder bloom
-                          ) throws IOException;
+  /**
+   * Get the encryption for the given column.
+   * @param columnId the root column id
+   * @return the column encryption or null if it isn't encrypted
+   */
+  WriterEncryptionVariant getEncryption(int columnId);
 
-    /**
-     * Set the column statistics for the stripe or file.
-     * @param name the name of the statistics stream
-     * @param stats the statistics for this column in this stripe
-     */
-    void writeStatistics(StreamName name,
-                         OrcProto.ColumnStatistics.Builder stats
-                         ) throws IOException;
+  /**
+   * Get the PhysicalWriter.
+   * @return the file's physical writer.
+   */
+  PhysicalWriter getPhysicalWriter();
 
-    boolean getUseUTCTimestamp();
+  /**
+   * Set the encoding for the current stripe.
+   * @param column the column identifier
+   * @param variant the encryption variant
+   * @param encoding the encoding for this stripe
+   */
+  void setEncoding(int column, WriterEncryptionVariant variant,
+                   OrcProto.ColumnEncoding encoding);
 
-    double getDictionaryKeySizeThreshold(int column);
+  /**
+   * Set the column statistics for the stripe or file.
+   * @param name the name of the statistics stream
+   * @param stats the statistics for this column in this stripe
+   */
+  void writeStatistics(StreamName name,
+                       OrcProto.ColumnStatistics.Builder stats
+                     ) throws IOException;
+
+  /**
+   * Should the writer use UTC as the timezone?
+   */
+  boolean getUseUTCTimestamp();
+
+  /**
+   * Get the dictionary key size threshold.
+   * @param columnId the column id
+   * @return the minimum ratio for using a dictionary
+   */
+  double getDictionaryKeySizeThreshold(int columnId);
+
 }

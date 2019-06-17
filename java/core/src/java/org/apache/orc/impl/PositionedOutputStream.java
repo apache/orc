@@ -19,6 +19,7 @@ package org.apache.orc.impl;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.function.Consumer;
 
 public abstract class PositionedOutputStream extends OutputStream {
 
@@ -36,4 +37,11 @@ public abstract class PositionedOutputStream extends OutputStream {
    * @return the number of bytes used by buffers.
    */
   public abstract long getBufferSize();
+
+  /**
+   * Change the current Initialization Vector (IV) for the encryption.
+   * Has no effect if the stream is not encrypted.
+   * @param modifier a function to modify the IV in place
+   */
+  public abstract void changeIv(Consumer<byte[]> modifier);
 }

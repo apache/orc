@@ -34,11 +34,10 @@ public class CharTreeWriter extends StringBaseTreeWriter {
   private final int maxLength;
   private final byte[] padding;
 
-  CharTreeWriter(int columnId,
-                 TypeDescription schema,
-                 WriterContext writer,
-                 boolean nullable) throws IOException {
-    super(columnId, schema, writer, nullable);
+  CharTreeWriter(TypeDescription schema,
+                 WriterEncryptionVariant encryption,
+                 WriterContext writer) throws IOException {
+    super(schema, encryption, writer);
     maxLength = schema.getMaxLength();
     // utf-8 is currently 4 bytes long, but it could be upto 6
     padding = new byte[6*maxLength];

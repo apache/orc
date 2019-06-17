@@ -23,27 +23,30 @@ import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.orc.BinaryColumnStatistics;
 import org.apache.orc.OrcProto;
 import org.apache.orc.TypeDescription;
+import org.apache.orc.impl.CryptoUtils;
 import org.apache.orc.impl.IntegerWriter;
 import org.apache.orc.impl.PositionRecorder;
 import org.apache.orc.impl.PositionedOutputStream;
+import org.apache.orc.impl.StreamName;
 
 import java.io.IOException;
+import java.util.function.Consumer;
 
 public class BinaryTreeWriter extends TreeWriterBase {
   private final PositionedOutputStream stream;
   private final IntegerWriter length;
   private boolean isDirectV2 = true;
 
-  public BinaryTreeWriter(int columnId,
-                          TypeDescription schema,
-                          WriterContext writer,
-                          boolean nullable) throws IOException {
-    super(columnId, schema, writer, nullable);
-    this.stream = writer.createStream(id,
-        OrcProto.Stream.Kind.DATA);
+  public BinaryTreeWriter(TypeDescription schema,
+                          WriterEncryptionVariant encryption,
+                          WriterContext writer) throws IOException {
+    super(schema, encryption, writer);
+    this.stream = writer.createStream(
+        new StreamName(id, OrcProto.Stream.Kind.DATA, encryption));
     this.isDirectV2 = isNewWriteFormat(writer);
-    this.length = createIntegerWriter(writer.createStream(id,
-        OrcProto.Stream.Kind.LENGTH), false, isDirectV2, writer);
+    this.length = createIntegerWriter(writer.createStream(
+        new StreamName(id, OrcProto.Stream.Kind.LENGTH, encryption)),
+        false, isDirectV2, writer);
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
     }
@@ -104,10 +107,8 @@ public class BinaryTreeWriter extends TreeWriterBase {
 
 
   @Override
-  public void writeStripe(OrcProto.StripeFooter.Builder builder,
-                          OrcProto.StripeStatistics.Builder stats,
-                          int requiredIndexEntries) throws IOException {
-    super.writeStripe(builder, stats, requiredIndexEntries);
+  public void writeStripe(int requiredIndexEntries) throws IOException {
+    super.writeStripe(requiredIndexEntries);
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
     }
@@ -141,4 +142,11 @@ public class BinaryTreeWriter extends TreeWriterBase {
   }
 
 
+  @Override
+  public void prepareStripe(int stripeId) {
+    super.prepareStripe(stripeId);
+    Consumer<byte[]> updater = CryptoUtils.modifyIvForStripe(stripeId);
+    stream.changeIv(updater);
+    length.changeIv(updater);
+  }
 }

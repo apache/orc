@@ -26,12 +26,15 @@ import org.apache.hadoop.hive.ql.util.JavaDataModel;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.orc.OrcProto;
 import org.apache.orc.TypeDescription;
+import org.apache.orc.impl.CryptoUtils;
 import org.apache.orc.impl.IntegerWriter;
 import org.apache.orc.impl.PositionRecorder;
 import org.apache.orc.impl.PositionedOutputStream;
 import org.apache.orc.impl.SerializationUtils;
+import org.apache.orc.impl.StreamName;
 
 import java.io.IOException;
+import java.util.function.Consumer;
 
 public class DecimalTreeWriter extends TreeWriterBase {
   private final PositionedOutputStream valueStream;
@@ -44,17 +47,18 @@ public class DecimalTreeWriter extends TreeWriterBase {
   private final IntegerWriter scaleStream;
   private final boolean isDirectV2;
 
-  public DecimalTreeWriter(int columnId,
-                           TypeDescription schema,
-                           WriterContext writer,
-                           boolean nullable) throws IOException {
-    super(columnId, schema, writer, nullable);
+  public DecimalTreeWriter(TypeDescription schema,
+                           WriterEncryptionVariant encryption,
+                           WriterContext writer) throws IOException {
+    super(schema, encryption, writer);
     this.isDirectV2 = isNewWriteFormat(writer);
-    valueStream = writer.createStream(id, OrcProto.Stream.Kind.DATA);
+    valueStream = writer.createStream(
+        new StreamName(id, OrcProto.Stream.Kind.DATA, encryption));
     scratchLongs = new long[HiveDecimal.SCRATCH_LONGS_LEN];
     scratchBuffer = new byte[HiveDecimal.SCRATCH_BUFFER_LEN_TO_BYTES];
-    this.scaleStream = createIntegerWriter(writer.createStream(id,
-        OrcProto.Stream.Kind.SECONDARY), true, isDirectV2, writer);
+    this.scaleStream = createIntegerWriter(writer.createStream(
+        new StreamName(id, OrcProto.Stream.Kind.SECONDARY, encryption)),
+        true, isDirectV2, writer);
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
     }
@@ -161,10 +165,8 @@ public class DecimalTreeWriter extends TreeWriterBase {
   }
 
   @Override
-  public void writeStripe(OrcProto.StripeFooter.Builder builder,
-                          OrcProto.StripeStatistics.Builder stats,
-                          int requiredIndexEntries) throws IOException {
-    super.writeStripe(builder, stats, requiredIndexEntries);
+  public void writeStripe(int requiredIndexEntries) throws IOException {
+    super.writeStripe(requiredIndexEntries);
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
     }
@@ -194,5 +196,13 @@ public class DecimalTreeWriter extends TreeWriterBase {
     super.flushStreams();
     valueStream.flush();
     scaleStream.flush();
+  }
+
+  @Override
+  public void prepareStripe(int stripeId) {
+    super.prepareStripe(stripeId);
+    Consumer<byte[]> updater = CryptoUtils.modifyIvForStripe(stripeId);
+    valueStream.changeIv(updater);
+    scaleStream.changeIv(updater);
   }
 }

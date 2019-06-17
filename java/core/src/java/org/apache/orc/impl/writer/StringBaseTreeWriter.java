@@ -25,16 +25,19 @@ import org.apache.orc.OrcConf;
 import org.apache.orc.OrcProto;
 import org.apache.orc.StringColumnStatistics;
 import org.apache.orc.TypeDescription;
+import org.apache.orc.impl.CryptoUtils;
 import org.apache.orc.impl.DynamicIntArray;
 import org.apache.orc.impl.IntegerWriter;
 import org.apache.orc.impl.OutStream;
 import org.apache.orc.impl.PositionRecorder;
 import org.apache.orc.impl.PositionedOutputStream;
+import org.apache.orc.impl.StreamName;
 import org.apache.orc.impl.StringRedBlackTree;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 public abstract class StringBaseTreeWriter extends TreeWriterBase {
   private static final int INITIAL_DICTIONARY_SIZE = 4096;
@@ -57,17 +60,18 @@ public abstract class StringBaseTreeWriter extends TreeWriterBase {
   private boolean doneDictionaryCheck;
   private final boolean strideDictionaryCheck;
 
-  StringBaseTreeWriter(int columnId,
-                       TypeDescription schema,
-                       WriterContext writer,
-                       boolean nullable) throws IOException {
-    super(columnId, schema, writer, nullable);
+  StringBaseTreeWriter(TypeDescription schema,
+                       WriterEncryptionVariant encryption,
+                       WriterContext writer) throws IOException {
+    super(schema, encryption, writer);
     this.isDirectV2 = isNewWriteFormat(writer);
-    directStreamOutput = writer.createStream(id, OrcProto.Stream.Kind.DATA);
-    stringOutput = writer.createStream(id,
-        OrcProto.Stream.Kind.DICTIONARY_DATA);
-    lengthOutput = createIntegerWriter(writer.createStream(id,
-        OrcProto.Stream.Kind.LENGTH), false, isDirectV2, writer);
+    directStreamOutput = writer.createStream(
+        new StreamName(id, OrcProto.Stream.Kind.DATA, encryption));
+    stringOutput = writer.createStream(
+        new StreamName(id, OrcProto.Stream.Kind.DICTIONARY_DATA, encryption));
+    lengthOutput = createIntegerWriter(writer.createStream(
+        new StreamName(id, OrcProto.Stream.Kind.LENGTH, encryption)),
+        false, isDirectV2, writer);
     rowOutput = createIntegerWriter(directStreamOutput, false, isDirectV2,
         writer);
     if (rowIndexPosition != null) {
@@ -76,7 +80,7 @@ public abstract class StringBaseTreeWriter extends TreeWriterBase {
     rowIndexValueCount.add(0L);
     buildIndex = writer.buildIndex();
     Configuration conf = writer.getConfiguration();
-    dictionaryKeySizeThreshold = writer.getDictionaryKeySizeThreshold(columnId);
+    dictionaryKeySizeThreshold = writer.getDictionaryKeySizeThreshold(id);
     strideDictionaryCheck =
         OrcConf.ROW_INDEX_STRIDE_DICTIONARY_CHECK.getBoolean(conf);
     if (dictionaryKeySizeThreshold <= 0.0) {
@@ -99,9 +103,10 @@ public abstract class StringBaseTreeWriter extends TreeWriterBase {
   }
 
   @Override
-  public void writeStripe(OrcProto.StripeFooter.Builder builder,
-                          OrcProto.StripeStatistics.Builder stats,
-                          int requiredIndexEntries) throws IOException {
+  public void writeStripe(int requiredIndexEntries) throws IOException {
+    // if rows in stripe is less than dictionaryCheckAfterRows, dictionary
+    // checking would not have happened. So do it again here.
+    checkDictionaryEncoding();
 
     checkDictionaryEncoding();
     if (!useDictionaryEncoding) {
@@ -110,8 +115,7 @@ public abstract class StringBaseTreeWriter extends TreeWriterBase {
 
     // we need to build the rowindex before calling super, since it
     // writes it out.
-    super.writeStripe(builder, stats, requiredIndexEntries);
-
+    super.writeStripe(requiredIndexEntries);
     // reset all of the fields to be ready for the next stripe.
     dictionary.clear();
     savedRowIndex.clear();
@@ -297,7 +301,16 @@ public abstract class StringBaseTreeWriter extends TreeWriterBase {
       directStreamOutput.flush();
       lengthOutput.flush();
     }
+  }
 
+  @Override
+  public void prepareStripe(int stripeId) {
+    super.prepareStripe(stripeId);
+    Consumer<byte[]> updater = CryptoUtils.modifyIvForStripe(stripeId);
+    stringOutput.changeIv(updater);
+    lengthOutput.changeIv(updater);
+    rowOutput.changeIv(updater);
+    directStreamOutput.changeIv(updater);
   }
 
 }

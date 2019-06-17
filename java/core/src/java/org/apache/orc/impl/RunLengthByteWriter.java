@@ -18,6 +18,7 @@
 package org.apache.orc.impl;
 
 import java.io.IOException;
+import java.util.function.Consumer;
 
 /**
  * A streamFactory that writes a sequence of bytes. A control byte is written before
@@ -106,5 +107,9 @@ public class RunLengthByteWriter {
 
   public long estimateMemory() {
     return output.getBufferSize() + MAX_LITERAL_SIZE;
+  }
+
+  public void changeIv(Consumer<byte[]> modifier) {
+    output.changeIv(modifier);
   }
 }

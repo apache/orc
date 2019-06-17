@@ -23,9 +23,11 @@ import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
 import org.apache.hadoop.hive.ql.util.JavaDataModel;
 import org.apache.orc.OrcProto;
 import org.apache.orc.TypeDescription;
+import org.apache.orc.impl.CryptoUtils;
 import org.apache.orc.impl.PositionRecorder;
 import org.apache.orc.impl.PositionedOutputStream;
 import org.apache.orc.impl.SerializationUtils;
+import org.apache.orc.impl.StreamName;
 
 import java.io.IOException;
 
@@ -33,13 +35,12 @@ public class FloatTreeWriter extends TreeWriterBase {
   private final PositionedOutputStream stream;
   private final SerializationUtils utils;
 
-  public FloatTreeWriter(int columnId,
-                         TypeDescription schema,
-                         WriterContext writer,
-                         boolean nullable) throws IOException {
-    super(columnId, schema, writer, nullable);
-    this.stream = writer.createStream(id,
-        OrcProto.Stream.Kind.DATA);
+  public FloatTreeWriter(TypeDescription schema,
+                         WriterEncryptionVariant encryption,
+                         WriterContext writer) throws IOException {
+    super(schema, encryption, writer);
+    this.stream = writer.createStream(
+        new StreamName(id, OrcProto.Stream.Kind.DATA, encryption));
     this.utils = new SerializationUtils();
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
@@ -84,10 +85,8 @@ public class FloatTreeWriter extends TreeWriterBase {
 
 
   @Override
-  public void writeStripe(OrcProto.StripeFooter.Builder builder,
-                          OrcProto.StripeStatistics.Builder stats,
-                          int requiredIndexEntries) throws IOException {
-    super.writeStripe(builder, stats, requiredIndexEntries);
+  public void writeStripe(int requiredIndexEntries) throws IOException {
+    super.writeStripe(requiredIndexEntries);
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
     }
@@ -114,5 +113,11 @@ public class FloatTreeWriter extends TreeWriterBase {
   public void flushStreams() throws IOException {
     super.flushStreams();
     stream.flush();
+  }
+
+  @Override
+  public void prepareStripe(int stripeId) {
+    super.prepareStripe(stripeId);
+    stream.changeIv(CryptoUtils.modifyIvForStripe(stripeId));
   }
 }

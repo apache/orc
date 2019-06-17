@@ -29,6 +29,7 @@ import org.apache.orc.OrcProto;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.BitFieldWriter;
 import org.apache.orc.impl.ColumnStatisticsImpl;
+import org.apache.orc.impl.CryptoUtils;
 import org.apache.orc.impl.IntegerWriter;
 import org.apache.orc.impl.OutStream;
 import org.apache.orc.impl.PositionRecorder;
@@ -49,6 +50,8 @@ import org.apache.orc.util.BloomFilterUtf8;
 public abstract class TreeWriterBase implements TreeWriter {
   protected final int id;
   protected final BitFieldWriter isPresent;
+  protected final TypeDescription schema;
+  protected final WriterEncryptionVariant encryption;
   private final boolean isCompressed;
   protected final ColumnStatisticsImpl indexStatistics;
   protected final ColumnStatisticsImpl stripeColStatistics;
@@ -64,37 +67,31 @@ public abstract class TreeWriterBase implements TreeWriter {
   protected final OrcProto.BloomFilter.Builder bloomFilterEntry;
   private boolean foundNulls;
   private OutStream isPresentOutStream;
-  private final WriterContext streamFactory;
-  private final TypeDescription schema;
+  protected final WriterContext context;
 
   /**
    * Create a tree writer.
-   * @param columnId the column id of the column to write
    * @param schema the row schema
-   * @param streamFactory limited access to the Writer's data.
-   * @param nullable can the value be null?
+   * @param encryption the encryption variant or null if it is unencrypted
+   * @param context limited access to the Writer's data.
    */
-  TreeWriterBase(int columnId,
-                 TypeDescription schema,
-                 WriterContext streamFactory,
-                 boolean nullable) throws IOException {
+  TreeWriterBase(TypeDescription schema,
+                 WriterEncryptionVariant encryption,
+                 WriterContext context) throws IOException {
     this.schema = schema;
-    this.streamFactory = streamFactory;
-    this.isCompressed = streamFactory.isCompressed();
-    this.id = columnId;
-    if (nullable) {
-      isPresentOutStream = streamFactory.createStream(id,
-          OrcProto.Stream.Kind.PRESENT);
-      isPresent = new BitFieldWriter(isPresentOutStream, 1);
-    } else {
-      isPresent = null;
-    }
+    this.encryption = encryption;
+    this.context = context;
+    this.isCompressed = context.isCompressed();
+    this.id = schema.getId();
+    isPresentOutStream = context.createStream(new StreamName(id,
+          OrcProto.Stream.Kind.PRESENT, encryption));
+    isPresent = new BitFieldWriter(isPresentOutStream, 1);
     this.foundNulls = false;
-    createBloomFilter = streamFactory.getBloomFilterColumns()[columnId];
+    createBloomFilter = context.getBloomFilterColumns()[id];
     indexStatistics = ColumnStatisticsImpl.create(schema);
     stripeColStatistics = ColumnStatisticsImpl.create(schema);
     fileStatistics = ColumnStatisticsImpl.create(schema);
-    if (streamFactory.buildIndex()) {
+    if (context.buildIndex()) {
       rowIndex = OrcProto.RowIndex.newBuilder();
       rowIndexEntry = OrcProto.RowIndexEntry.newBuilder();
       rowIndexPosition = new RowIndexPositionRecorder(rowIndexEntry);
@@ -105,16 +102,16 @@ public abstract class TreeWriterBase implements TreeWriter {
     }
     if (createBloomFilter) {
       bloomFilterEntry = OrcProto.BloomFilter.newBuilder();
-      if (streamFactory.getBloomFilterVersion() == OrcFile.BloomFilterVersion.ORIGINAL) {
-        bloomFilter = new BloomFilter(streamFactory.getRowIndexStride(),
-            streamFactory.getBloomFilterFPP());
+      if (context.getBloomFilterVersion() == OrcFile.BloomFilterVersion.ORIGINAL) {
+        bloomFilter = new BloomFilter(context.getRowIndexStride(),
+            context.getBloomFilterFPP());
         bloomFilterIndex = OrcProto.BloomFilterIndex.newBuilder();
       } else {
         bloomFilter = null;
         bloomFilterIndex = null;
       }
-      bloomFilterUtf8 = new BloomFilterUtf8(streamFactory.getRowIndexStride(),
-          streamFactory.getBloomFilterFPP());
+      bloomFilterUtf8 = new BloomFilterUtf8(context.getRowIndexStride(),
+          context.getBloomFilterFPP());
       bloomFilterIndexUtf8 = OrcProto.BloomFilterIndex.newBuilder();
     } else {
       bloomFilterEntry = null;
@@ -233,17 +230,21 @@ public abstract class TreeWriterBase implements TreeWriter {
   }
 
   @Override
-  public void flushStreams() throws IOException {
-
+  public void prepareStripe(int stripeId) {
     if (isPresent != null) {
-      isPresent.flush();
+      isPresent.changeIv(CryptoUtils.modifyIvForStripe(stripeId));
     }
-
   }
 
   @Override
-  public void writeStripe(OrcProto.StripeFooter.Builder builder,
-      OrcProto.StripeStatistics.Builder stats, int requiredIndexEntries) throws IOException {
+  public void flushStreams() throws IOException {
+    if (isPresent != null) {
+      isPresent.flush();
+    }
+  }
+
+  @Override
+  public void writeStripe(int requiredIndexEntries) throws IOException {
 
     // if no nulls are found in a stream, then suppress the stream
     if (isPresent != null && !foundNulls) {
@@ -253,50 +254,47 @@ public abstract class TreeWriterBase implements TreeWriter {
       if (rowIndex != null) {
         removeIsPresentPositions();
       }
-
     }
 
     /* Update byte count */
-    final long byteCount = streamFactory.getPhysicalWriter().getFileBytes(id, null);
+    final long byteCount = context.getPhysicalWriter().getFileBytes(id, encryption);
     stripeColStatistics.updateByteCount(byteCount);
 
     // merge stripe-level column statistics to file statistics and write it to
     // stripe statistics
     fileStatistics.merge(stripeColStatistics);
-    streamFactory.writeStatistics(
-        new StreamName(id, OrcProto.Stream.Kind.STRIPE_STATISTICS, null),
+    context.writeStatistics(
+        new StreamName(id, OrcProto.Stream.Kind.STRIPE_STATISTICS, encryption),
         stripeColStatistics.serialize());
-    stats.addColStats(stripeColStatistics.serialize());
     stripeColStatistics.reset();
 
     // reset the flag for next stripe
     foundNulls = false;
 
-    builder.addColumns(getEncoding());
+    context.setEncoding(id, encryption, getEncoding().build());
     if (rowIndex != null) {
       if (rowIndex.getEntryCount() != requiredIndexEntries) {
         throw new IllegalArgumentException("Column has wrong number of " +
             "index entries found: " + rowIndex.getEntryCount() + " expected: " +
             requiredIndexEntries);
       }
-      streamFactory.writeIndex(new StreamName(id, OrcProto.Stream.Kind.ROW_INDEX), rowIndex);
+      context.writeIndex(new StreamName(id, OrcProto.Stream.Kind.ROW_INDEX), rowIndex);
       rowIndex.clear();
       rowIndexEntry.clear();
     }
 
     // write the bloom filter to out stream
     if (bloomFilterIndex != null) {
-      streamFactory.writeBloomFilter(new StreamName(id,
+      context.writeBloomFilter(new StreamName(id,
           OrcProto.Stream.Kind.BLOOM_FILTER), bloomFilterIndex);
       bloomFilterIndex.clear();
     }
     // write the bloom filter to out stream
     if (bloomFilterIndexUtf8 != null) {
-      streamFactory.writeBloomFilter(new StreamName(id,
+      context.writeBloomFilter(new StreamName(id,
           OrcProto.Stream.Kind.BLOOM_FILTER_UTF8), bloomFilterIndexUtf8);
       bloomFilterIndexUtf8.clear();
     }
-
   }
 
   /**
@@ -374,9 +372,9 @@ public abstract class TreeWriterBase implements TreeWriter {
 
   @Override
   public void writeFileStatistics() throws IOException {
-    streamFactory.writeStatistics(new StreamName(id,
-                                      OrcProto.Stream.Kind.FILE_STATISTICS, null),
-                                  fileStatistics.serialize());
+    context.writeStatistics(new StreamName(id,
+            OrcProto.Stream.Kind.FILE_STATISTICS, encryption),
+        fileStatistics.serialize());
   }
 
   static class RowIndexPositionRecorder implements PositionRecorder {

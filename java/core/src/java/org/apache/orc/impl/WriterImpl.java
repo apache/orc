@@ -20,11 +20,15 @@ package org.apache.orc.impl;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.SortedSet;
 import java.util.TimeZone;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import io.airlift.compress.lz4.Lz4Compressor;
 import io.airlift.compress.lz4.Lz4Decompressor;
@@ -33,6 +37,7 @@ import io.airlift.compress.lzo.LzoDecompressor;
 import org.apache.orc.ColumnStatistics;
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.CompressionKind;
+import org.apache.orc.DataMask;
 import org.apache.orc.MemoryManager;
 import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
@@ -41,7 +46,8 @@ import org.apache.orc.OrcUtils;
 import org.apache.orc.PhysicalWriter;
 import org.apache.orc.StripeInformation;
 import org.apache.orc.TypeDescription;
-import org.apache.orc.Writer;
+import org.apache.orc.impl.writer.WriterEncryptionKey;
+import org.apache.orc.impl.writer.WriterEncryptionVariant;
 import org.apache.orc.impl.writer.StreamOptions;
 import org.apache.orc.impl.writer.TreeWriter;
 import org.apache.orc.impl.writer.WriterContext;
@@ -76,16 +82,17 @@ import com.google.protobuf.ByteString;
 public class WriterImpl implements WriterInternal, MemoryManager.Callback {
 
   private static final Logger LOG = LoggerFactory.getLogger(WriterImpl.class);
+  private static final HadoopShims SHIMS = HadoopShimsFactory.get();
 
   private static final int MIN_ROW_INDEX_STRIDE = 1000;
 
   private final Path path;
   private long adjustedStripeSize;
   private final int rowIndexStride;
-  private final StreamOptions compress;
   private final TypeDescription schema;
   private final PhysicalWriter physicalWriter;
   private final OrcFile.WriterVersion writerVersion;
+  private final StreamOptions unencryptedOptions;
 
   private long rowCount = 0;
   private long rowsInStripe = 0;
@@ -95,8 +102,6 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
   private int stripesAtLastFlush = -1;
   private final List<OrcProto.StripeInformation> stripes =
     new ArrayList<>();
-  private final OrcProto.Metadata.Builder fileMetadata =
-      OrcProto.Metadata.newBuilder();
   private final Map<String, ByteString> userMetadata =
     new TreeMap<>();
   private final TreeWriter treeWriter;
@@ -115,14 +120,55 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
   private final boolean useUTCTimeZone;
   private final double dictionaryKeySizeThreshold;
   private final boolean[] directEncodingColumns;
+  private final List<OrcProto.ColumnEncoding> unencryptedEncodings =
+      new ArrayList<>();
+
+  // the list of maskDescriptions, keys, and variants
+  private SortedSet<MaskDescriptionImpl> maskDescriptions = new TreeSet<>();
+  private SortedMap<String, WriterEncryptionKey> keys = new TreeMap<>();
+  private final WriterEncryptionVariant[] encryption;
+  // the mapping of columns to maskDescriptions
+  private final MaskDescriptionImpl[] columnMaskDescriptions;
+  // the mapping of columns to EncryptionVariants
+  private final WriterEncryptionVariant[] columnEncryption;
+  private HadoopShims.KeyProvider keyProvider;
+  // do we need to include the current encryption keys in the next stripe
+  // information
+  private boolean needKeyFlush;
 
   public WriterImpl(FileSystem fs,
                     Path path,
                     OrcFile.WriterOptions opts) throws IOException {
+    this.schema = opts.getSchema();
+    int numColumns = schema.getMaximumId() + 1;
+    if (!opts.isEnforceBufferSize()) {
+      opts.bufferSize(getEstimatedBufferSize(opts.getStripeSize(), numColumns,
+          opts.getBufferSize()));
+    }
+
+    // Do we have column encryption?
+    List<OrcFile.EncryptionOption> encryptionOptions = opts.getEncryption();
+    columnEncryption = new WriterEncryptionVariant[numColumns];
+    if (encryptionOptions.isEmpty()) {
+      columnMaskDescriptions = null;
+      encryption = new WriterEncryptionVariant[0];
+      needKeyFlush = false;
+    } else {
+      columnMaskDescriptions = new MaskDescriptionImpl[numColumns];
+      encryption = setupEncryption(opts.getKeyProvider(), encryptionOptions);
+      needKeyFlush = true;
+    }
+
+    // Set up the physical writer
+    this.physicalWriter = opts.getPhysicalWriter() == null ?
+                              new PhysicalFsWriter(fs, path, opts, encryption) :
+                              opts.getPhysicalWriter();
+    unencryptedOptions = physicalWriter.getStreamOptions();
+    OutStream.assertBufferSizeValid(unencryptedOptions.getBufferSize());
+
     this.path = path;
     this.conf = opts.getConfiguration();
     this.callback = opts.getCallback();
-    this.schema = opts.getSchema();
     this.writerVersion = opts.getWriterVersion();
     bloomFilterVersion = opts.getBloomFilterVersion();
     this.directEncodingColumns = OrcUtils.includeColumns(
@@ -130,13 +176,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     dictionaryKeySizeThreshold =
         OrcConf.DICTIONARY_KEY_SIZE_THRESHOLD.getDouble(conf);
     if (callback != null) {
-      callbackContext = new OrcFile.WriterContext(){
-
-        @Override
-        public Writer getWriter() {
-          return WriterImpl.this;
-        }
-      };
+      callbackContext = () -> WriterImpl.this;
     } else {
       callbackContext = null;
     }
@@ -149,22 +189,6 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     this.rowIndexStride = opts.getRowIndexStride();
     this.memoryManager = opts.getMemoryManager();
     buildIndex = rowIndexStride > 0;
-    int numColumns = schema.getMaximumId() + 1;
-    if (opts.isEnforceBufferSize()) {
-      OutStream.assertBufferSizeValid(opts.getBufferSize());
-      compress = new StreamOptions(opts.getBufferSize());
-    } else {
-      compress = new StreamOptions(getEstimatedBufferSize(adjustedStripeSize,
-          numColumns, opts.getBufferSize()));
-    }
-    this.physicalWriter = opts.getPhysicalWriter() == null
-                              ? new PhysicalFsWriter(fs, path, opts)
-                              : opts.getPhysicalWriter();
-    physicalWriter.writeHeader();
-    CompressionCodec codec = physicalWriter.getStreamOptions().getCodec();
-    if (codec != null) {
-      compress.withCodec(codec, codec.getDefaultOptions());
-    }
     if (version == OrcFile.Version.FUTURE) {
       throw new IllegalArgumentException("Can not write in a unknown version.");
     } else if (version == OrcFile.Version.UNSTABLE_PRE_2_0) {
@@ -180,17 +204,17 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
           OrcUtils.includeColumns(opts.getBloomFilterColumns(), schema);
     }
     this.bloomFilterFpp = opts.getBloomFilterFpp();
-    treeWriter = TreeWriter.Factory.create(schema, new StreamFactory(), false);
+    physicalWriter.writeHeader();
+
+    treeWriter = TreeWriter.Factory.create(schema, null, new StreamFactory());
     if (buildIndex && rowIndexStride < MIN_ROW_INDEX_STRIDE) {
       throw new IllegalArgumentException("Row stride must be at least " +
           MIN_ROW_INDEX_STRIDE);
     }
-
     // ensure that we are able to handle callbacks before we register ourselves
     memoryManager.addWriter(path, opts.getStripeSize(), this);
-    LOG.info("ORC writer created for path: {} with stripeSize: {} blockSize: {}" +
-        " compression: {}", path, adjustedStripeSize, opts.getBlockSize(),
-        compress);
+    LOG.info("ORC writer created for path: {} with stripeSize: {} options: {}",
+        path, adjustedStripeSize, unencryptedOptions);
   }
 
   //@VisibleForTesting
@@ -207,8 +231,8 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
 
   @Override
   public void increaseCompressionSize(int newSize) {
-    if (newSize > compress.getBufferSize()) {
-      compress.bufferSize(newSize);
+    if (newSize > unencryptedOptions.getBufferSize()) {
+      unencryptedOptions.bufferSize(newSize);
     }
   }
 
@@ -277,19 +301,26 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
    * that the TreeWriters have into the Writer.
    */
   private class StreamFactory implements WriterContext {
+
     /**
      * Create a stream to store part of a column.
-     * @param column the column id for the stream
-     * @param kind the kind of stream
+     * @param name the name for the stream
      * @return The output outStream that the section needs to be written to.
      */
-    public OutStream createStream(int column,
-                                  OrcProto.Stream.Kind kind
-                                  ) throws IOException {
-      final StreamName name = new StreamName(column, kind);
-      return new OutStream(physicalWriter.toString(),
-          SerializationUtils.getCustomizedCodec(compress, compressionStrategy, kind),
-          physicalWriter.createDataStream(name));
+    public OutStream createStream(StreamName name) throws IOException {
+      StreamOptions options = SerializationUtils.getCustomizedCodec(
+          unencryptedOptions, compressionStrategy, name.getKind());
+      WriterEncryptionVariant encryption =
+          (WriterEncryptionVariant) name.getEncryption();
+      if (encryption != null) {
+        if (options == unencryptedOptions) {
+          options = new StreamOptions(options);
+        }
+        options.withEncryption(encryption.getKeyDescription().getAlgorithm(),
+            encryption.getFileFooterKey())
+            .modifyIv(CryptoUtils.modifyIvForStream(name, 1));
+      }
+      return new OutStream(name, options, physicalWriter.createDataStream(name));
     }
 
     /**
@@ -312,7 +343,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
      * @return are the streams compressed
      */
     public boolean isCompressed() {
-      return physicalWriter.getStreamOptions().getCodec() != null;
+      return unencryptedOptions.getCodec() != null;
     }
 
     /**
@@ -380,6 +411,30 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     }
 
     @Override
+    public WriterEncryptionVariant getEncryption(int columnId) {
+      return columnId < columnEncryption.length ?
+                 columnEncryption[columnId] : null;
+    }
+
+    @Override
+    public DataMask getUnencryptedMask(int columnId) {
+      MaskDescriptionImpl descr = columnMaskDescriptions[columnId];
+      return descr == null ? null :
+                 DataMask.Factory.build(descr, schema.findSubtype(columnId),
+                     (type) -> columnMaskDescriptions[type.getId()]);
+    }
+
+    @Override
+    public void setEncoding(int column, WriterEncryptionVariant encryption,
+                            OrcProto.ColumnEncoding encoding) {
+      if (encryption == null) {
+        unencryptedEncodings.add(encoding);
+      } else {
+        encryption.addEncoding(encoding);
+      }
+    }
+
+    @Override
     public void writeStatistics(StreamName name,
                                 OrcProto.ColumnStatistics.Builder stats
                                 ) throws IOException {
@@ -406,6 +461,19 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     rowsInIndex = 0;
   }
 
+  /**
+   * Write the encrypted keys into the StripeInformation along with the
+   * stripe id, so that the readers can decrypt the data.
+   * @param dirEntry the entry to modify
+   */
+  private void addEncryptedKeys(OrcProto.StripeInformation.Builder dirEntry) {
+    for(WriterEncryptionVariant variant: encryption) {
+      dirEntry.addEncryptedLocalKeys(ByteString.copyFrom(
+          variant.getMaterial().getEncryptedKey()));
+    }
+    dirEntry.setEncryptStripeId(1 + stripes.size());
+  }
+
   private void flushStripe() throws IOException {
     if (buildIndex && rowsInIndex != 0) {
       createRowIndexEntry();
@@ -426,18 +494,27 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
           builder.setWriterTimezone(TimeZone.getDefault().getID());
         }
       }
-      OrcProto.StripeStatistics.Builder stats =
-          OrcProto.StripeStatistics.newBuilder();
-
       treeWriter.flushStreams();
-      treeWriter.writeStripe(builder, stats, requiredIndexEntries);
-
+      treeWriter.writeStripe(requiredIndexEntries);
+      // update the encodings
+      builder.addAllColumns(unencryptedEncodings);
+      unencryptedEncodings.clear();
+      for (WriterEncryptionVariant writerEncryptionVariant : encryption) {
+        OrcProto.StripeEncryptionVariant.Builder encrypt =
+            OrcProto.StripeEncryptionVariant.newBuilder();
+        encrypt.addAllEncoding(writerEncryptionVariant.getEncodings());
+        writerEncryptionVariant.clearEncodings();
+        builder.addEncryption(encrypt);
+      }
       OrcProto.StripeInformation.Builder dirEntry =
           OrcProto.StripeInformation.newBuilder()
               .setNumberOfRows(rowsInStripe);
+      if (encryption.length > 0 && needKeyFlush) {
+        addEncryptedKeys(dirEntry);
+        needKeyFlush = false;
+      }
       physicalWriter.finalizeStripe(builder, dirEntry);
 
-      fileMetadata.addStripeStats(stats.build());
       stripes.add(dirEntry.build());
       rowCount += rowsInStripe;
       rowsInStripe = 0;
@@ -460,29 +537,71 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     }
   }
 
-  private void writeFileStatistics(TreeWriter writer) throws IOException {
-    writer.writeFileStatistics();
-  }
-
   private void writeMetadata() throws IOException {
-    physicalWriter.writeFileMetadata(fileMetadata);
+    // The physical writer now has the stripe statistics, so we pass a
+    // new builder in here.
+    physicalWriter.writeFileMetadata(OrcProto.Metadata.newBuilder());
   }
 
   private long writePostScript() throws IOException {
-    CompressionCodec codec = compress.getCodec();
     OrcProto.PostScript.Builder builder =
         OrcProto.PostScript.newBuilder()
-            .setCompression(writeCompressionKind(codec == null
-                                                     ? CompressionKind.NONE
-                                                     : codec.getKind()))
             .setMagic(OrcFile.MAGIC)
             .addVersion(version.getMajor())
             .addVersion(version.getMinor())
             .setWriterVersion(writerVersion.getId());
-    if (compress.getCodec() != null) {
-      builder.setCompressionBlockSize(compress.getBufferSize());
+    CompressionCodec codec = unencryptedOptions.getCodec();
+    if (codec == null) {
+      builder.setCompression(OrcProto.CompressionKind.NONE);
+    } else {
+      builder.setCompression(writeCompressionKind(codec.getKind()))
+             .setCompressionBlockSize(unencryptedOptions.getBufferSize());
     }
     return physicalWriter.writePostScript(builder);
+  }
+
+  private OrcProto.EncryptionKey.Builder writeEncryptionKey(WriterEncryptionKey key) {
+    OrcProto.EncryptionKey.Builder result = OrcProto.EncryptionKey.newBuilder();
+    HadoopShims.KeyMetadata meta = key.getMetadata();
+    result.setKeyName(meta.getKeyName());
+    result.setKeyVersion(meta.getVersion());
+    result.setAlgorithm(OrcProto.EncryptionAlgorithm.valueOf(
+        meta.getAlgorithm().getSerialization()));
+    return result;
+  }
+
+  private OrcProto.EncryptionVariant.Builder
+      writeEncryptionVariant(WriterEncryptionVariant variant) {
+    OrcProto.EncryptionVariant.Builder result =
+        OrcProto.EncryptionVariant.newBuilder();
+    result.setRoot(variant.getRoot().getId());
+    result.setKey(variant.getKeyDescription().getId());
+    result.setEncryptedKey(ByteString.copyFrom(variant.getMaterial().getEncryptedKey()));
+    return result;
+  }
+
+  private OrcProto.Encryption.Builder writeEncryptionFooter() {
+    OrcProto.Encryption.Builder encrypt = OrcProto.Encryption.newBuilder();
+    for(MaskDescriptionImpl mask: maskDescriptions) {
+      OrcProto.DataMask.Builder maskBuilder = OrcProto.DataMask.newBuilder();
+      maskBuilder.setName(mask.getName());
+      for(String param: mask.getParameters()) {
+        maskBuilder.addMaskParameters(param);
+      }
+      for(TypeDescription column: mask.getColumns()) {
+        maskBuilder.addColumns(column.getId());
+      }
+      encrypt.addMask(maskBuilder);
+    }
+    for(WriterEncryptionKey key: keys.values()) {
+      encrypt.addKey(writeEncryptionKey(key));
+    }
+    for(WriterEncryptionVariant variant: encryption) {
+      encrypt.addVariants(writeEncryptionVariant(variant));
+    }
+    encrypt.setKeyProvider(OrcProto.KeyProviderKind.valueOf(
+        keyProvider.getKind().getValue()));
+    return encrypt;
   }
 
   private long writeFooter() throws IOException {
@@ -498,11 +617,14 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
       builder.addStripes(stripe);
     }
     // add the column statistics
-    writeFileStatistics(treeWriter);
+    treeWriter.writeFileStatistics();
     // add all of the user metadata
     for(Map.Entry<String, ByteString> entry: userMetadata.entrySet()) {
       builder.addMetadata(OrcProto.UserMetadataItem.newBuilder()
         .setName(entry.getKey()).setValue(entry.getValue()));
+    }
+    if (encryption.length > 0) {
+      builder.setEncryption(writeEncryptionFooter());
     }
     builder.setWriter(OrcFile.WriterImplementation.ORC_JAVA.getId());
     physicalWriter.writeFileFooter(builder);
@@ -521,6 +643,11 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
 
   @Override
   public void addRowBatch(VectorizedRowBatch batch) throws IOException {
+    // If this is the first set of rows in this stripe, tell the tree writers
+    // to prepare the stripe.
+    if (batch.size != 0 && rowsInStripe == 0) {
+      treeWriter.prepareStripe(stripes.size() + 1);
+    }
     if (buildIndex) {
       // Batch the writes up to the rowIndexStride so that we can get the
       // right size indexes.
@@ -607,6 +734,10 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     checkArgument(stripeStatistics != null,
         "Stripe statistics must not be null");
 
+    // If we have buffered rows, flush them
+    if (rowsInStripe > 0) {
+      flushStripe();
+    }
     rowsInStripe = stripeInfo.getNumberOfRows();
     // update stripe information
     OrcProto.StripeInformation.Builder dirEntry = OrcProto.StripeInformation
@@ -620,13 +751,13 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
 
     // since we have already written the stripe, just update stripe statistics
     treeWriter.updateFileStatistics(stripeStatistics);
-    fileMetadata.addStripeStats(stripeStatistics);
 
     stripes.add(dirEntry.build());
 
     // reset it after writing the stripe
     rowCount += rowsInStripe;
     rowsInStripe = 0;
+    needKeyFlush = encryption.length > 0;
   }
 
   @Override
@@ -649,7 +780,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
   }
 
   public CompressionCodec getCompressionCodec() {
-    return physicalWriter.getStreamOptions().getCodec();
+    return unencryptedOptions.getCodec();
   }
 
   private static boolean hasTimestamp(TypeDescription schema) {
@@ -665,5 +796,80 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
       }
     }
     return false;
+  }
+
+  WriterEncryptionKey getKey(String keyName,
+                             HadoopShims.KeyProvider provider) throws IOException {
+    WriterEncryptionKey result = keys.get(keyName);
+    if (result == null) {
+      result = new WriterEncryptionKey(provider.getCurrentKeyVersion(keyName));
+      keys.put(keyName, result);
+    }
+    return result;
+  }
+
+  MaskDescriptionImpl getMask(OrcFile.EncryptionOption opt) {
+    MaskDescriptionImpl result = new MaskDescriptionImpl(opt.getMask(),
+        opt.getMaskParameters());
+    // if it is already there, get the earlier object
+    if (!maskDescriptions.add(result)) {
+      result = maskDescriptions.tailSet(result).first();
+    }
+    return result;
+  }
+
+  /**
+   * Iterate through the encryption options given by the user and set up
+   * our data structures.
+   * @param provider the KeyProvider to use to generate keys
+   * @param options the options from the user
+   */
+  WriterEncryptionVariant[] setupEncryption(HadoopShims.KeyProvider provider,
+                                            List<OrcFile.EncryptionOption> options
+                                            ) throws IOException {
+    keyProvider = provider != null ? provider :
+                      SHIMS.getKeyProvider(conf, new SecureRandom());
+    if (keyProvider == null) {
+      throw new IllegalArgumentException("Encryption requires a KeyProvider.");
+    }
+    // fill out the primary encryption keys
+    int variantCount = 0;
+    for(OrcFile.EncryptionOption option: options) {
+      MaskDescriptionImpl mask = getMask(option);
+      for(TypeDescription col: schema.findSubtypes(option.getColumnNames())) {
+        mask.addColumn(col);
+      }
+      if (option.getKeyName() != null) {
+        WriterEncryptionKey key = getKey(option.getKeyName(), keyProvider);
+        HadoopShims.KeyMetadata metadata = key.getMetadata();
+        for(TypeDescription rootType: schema.findSubtypes(option.getColumnNames())) {
+          WriterEncryptionVariant variant = new WriterEncryptionVariant(key,
+              rootType, keyProvider.createLocalKey(metadata));
+          key.addRoot(variant);
+          variantCount += 1;
+        }
+      }
+    }
+    // Now that we have de-duped the keys and maskDescriptions, make the arrays
+    int nextId = 0;
+    for (MaskDescriptionImpl mask: maskDescriptions) {
+      mask.setId(nextId++);
+      for(TypeDescription column: mask.getColumns()) {
+        this.columnMaskDescriptions[column.getId()] = mask;
+      }
+    }
+    nextId = 0;
+    int nextVariantId = 0;
+    WriterEncryptionVariant[] result = new WriterEncryptionVariant[variantCount];
+    for(WriterEncryptionKey key: keys.values()) {
+      key.setId(nextId++);
+      key.sortRoots();
+      for(WriterEncryptionVariant variant: key.getEncryptionRoots()) {
+        result[nextVariantId] = variant;
+        columnEncryption[variant.getRoot().getId()] = variant;
+        variant.setId(nextVariantId++);
+      }
+    }
+    return result;
   }
 }
