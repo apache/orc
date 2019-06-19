@@ -23,7 +23,6 @@ import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparator;
-import org.apache.orc.AggregateStatistics;
 import org.apache.orc.BinaryColumnStatistics;
 import org.apache.orc.BooleanColumnStatistics;
 import org.apache.orc.CollectionColumnStatistics;
@@ -184,16 +183,16 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
     CollectionColumnStatisticsImpl(OrcProto.ColumnStatistics stats) {
       super(stats);
-      OrcProto.IntegerStatistics intStat = stats.getIntStatistics();
-      if (intStat.hasMinimum()) {
+      OrcProto.CollectionStatistics collStat = stats.getCollectionStatistics();
+      if (collStat.hasMinChildren()) {
         hasMinimum = true;
-        minimum = intStat.getMinimum();
+        minimum = collStat.getMinChildren();
       }
-      if (intStat.hasMaximum()) {
-        maximum = intStat.getMaximum();
+      if (collStat.hasMaxChildren()) {
+        maximum = collStat.getMaxChildren();
       }
-      if (intStat.hasSum()) {
-        sum = intStat.getSum();
+      if (collStat.hasTotalChildren()) {
+        sum = collStat.getTotalChildren();
       } else {
         overflow = true;
       }
@@ -232,31 +231,31 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     @Override
     public void merge(ColumnStatisticsImpl other) {
       if (other instanceof CollectionColumnStatisticsImpl) {
-        CollectionColumnStatisticsImpl otherInt = (CollectionColumnStatisticsImpl) other;
+        CollectionColumnStatisticsImpl otherColl = (CollectionColumnStatisticsImpl) other;
         if (!hasMinimum) {
-          hasMinimum = otherInt.hasMinimum;
-          minimum = otherInt.minimum;
-          maximum = otherInt.maximum;
-        } else if (otherInt.hasMinimum) {
-          if (otherInt.minimum < minimum) {
-            minimum = otherInt.minimum;
+          hasMinimum = otherColl.hasMinimum;
+          minimum = otherColl.minimum;
+          maximum = otherColl.maximum;
+        } else if (otherColl.hasMinimum) {
+          if (otherColl.minimum < minimum) {
+            minimum = otherColl.minimum;
           }
-          if (otherInt.maximum > maximum) {
-            maximum = otherInt.maximum;
+          if (otherColl.maximum > maximum) {
+            maximum = otherColl.maximum;
           }
         }
 
-        overflow |= otherInt.overflow;
+        overflow |= otherColl.overflow;
         if (!overflow) {
           boolean wasPositive = sum >= 0;
-          sum += otherInt.sum;
-          if ((otherInt.sum >= 0) == wasPositive) {
+          sum += otherColl.sum;
+          if ((otherColl.sum >= 0) == wasPositive) {
             overflow = (sum >= 0) != wasPositive;
           }
         }
       } else {
         if (isStatsExists() && hasMinimum) {
-          throw new IllegalArgumentException("Incompatible merging of integer column statistics");
+          throw new IllegalArgumentException("Incompatible merging of collection column statistics");
         }
       }
       super.merge(other);
@@ -270,11 +269,6 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     @Override
     public long getMaximumChildren() {
       return maximum;
-    }
-
-    @Override
-    public boolean isTotalDefined() {
-      return !overflow;
     }
 
     @Override
@@ -365,11 +359,11 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
   private static final class IntegerColumnStatisticsImpl extends ColumnStatisticsImpl
       implements IntegerColumnStatistics {
 
-    protected long minimum = Long.MAX_VALUE;
-    protected long maximum = Long.MIN_VALUE;
-    protected long sum = 0;
-    protected boolean hasMinimum = false;
-    protected boolean overflow = false;
+    private long minimum = Long.MAX_VALUE;
+    private long maximum = Long.MIN_VALUE;
+    private long sum = 0;
+    private boolean hasMinimum = false;
+    private boolean overflow = false;
 
     IntegerColumnStatisticsImpl() {
     }

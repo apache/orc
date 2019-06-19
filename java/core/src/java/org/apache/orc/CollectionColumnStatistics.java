@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -32,12 +32,6 @@ public interface CollectionColumnStatistics extends ColumnStatistics {
    * @return the maximum children count
    */
   long getMaximumChildren();
-
-  /**
-   * Is the total defined? If the sum overflowed the counter this will be false.
-   * @return is the total no. of children available
-   */
-  boolean isTotalDefined();
 
   /**
    * Get the total number of children in the collection.
