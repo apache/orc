@@ -13,6 +13,7 @@
 # set the version in the POM file to match the CMake version string
 execute_process(COMMAND mvn versions:set -DnewVersion=${ORC_VERSION}
                                          -DgenerateBackupPoms=false
+                                         -Pbenchmark
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 set(ORC_JARS

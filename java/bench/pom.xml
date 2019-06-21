@@ -25,7 +25,7 @@
 
   <groupId>org.apache.orc</groupId>
   <artifactId>orc-benchmarks</artifactId>
-  <version>1.5.4-SNAPSHOT</version>
+  <version>1.5.6</version>
   <packaging>jar</packaging>
   <name>ORC Benchmarks</name>
   <description>
@@ -40,7 +40,7 @@
     <hadoop.version>2.7.3</hadoop.version>
     <hive.version>2.3.3</hive.version>
     <jmh.version>1.20</jmh.version>
-    <orc.version>1.5.3</orc.version>
+    <orc.version>1.5.6</orc.version>
     <parquet.version>1.9.0</parquet.version>
     <storage-api.version>2.5.0</storage-api.version>
     <zookeeper.version>3.4.6</zookeeper.version>
