@@ -171,8 +171,9 @@ public class OrcFile {
     HIVE_13083(WriterImplementation.ORC_JAVA, 4), // decimals write present stream correctly
     ORC_101(WriterImplementation.ORC_JAVA, 5),   // bloom filters use utf8
     ORC_135(WriterImplementation.ORC_JAVA, 6),   // timestamp stats use utc
-    ORC_203(WriterImplementation.ORC_JAVA, 7),   // trim long strings & record they were trimmed
-    ORC_14(WriterImplementation.ORC_JAVA, 8),    // column encryption added
+    ORC_517(WriterImplementation.ORC_JAVA, 7),   // decimal64 min/max are fixed
+    ORC_203(WriterImplementation.ORC_JAVA, 8),   // trim long strings & record they were trimmed
+    ORC_14(WriterImplementation.ORC_JAVA, 9),    // column encryption added
 
     // C++ ORC Writer
     ORC_CPP_ORIGINAL(WriterImplementation.ORC_CPP, 6),

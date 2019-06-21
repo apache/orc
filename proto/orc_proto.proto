@@ -386,7 +386,9 @@ message PostScript {
   //   4 = HIVE-13083 fixed (decimals write present stream correctly)
   //   5 = ORC-101 fixed (bloom filters use utf8 consistently)
   //   6 = ORC-135 fixed (timestamp statistics use utc)
-  //   7 = ORC-14 added (column encryption)
+  //   7 = ORC-517 fixed (decimal64 min/max incorrect)
+  //   8 = ORC-203 added (trim very long string statistics)
+  //   9 = ORC-14 added (column encryption)
   //
   // Version of the ORC C++ writer:
   //   6 = original

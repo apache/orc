@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -1109,8 +1109,8 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       implements DecimalColumnStatistics {
 
     private final int scale;
-    private long minimum;
-    private long maximum;
+    private long minimum = Long.MAX_VALUE;
+    private long maximum = Long.MIN_VALUE;
     private boolean hasSum = true;
     private long sum = 0;
     private final HiveDecimalWritable scratch = new HiveDecimalWritable();
@@ -1125,9 +1125,13 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       OrcProto.DecimalStatistics dec = stats.getDecimalStatistics();
       if (dec.hasMaximum()) {
         maximum = new HiveDecimalWritable(dec.getMaximum()).serialize64(scale);
+      } else {
+        maximum = Long.MIN_VALUE;
       }
       if (dec.hasMinimum()) {
         minimum = new HiveDecimalWritable(dec.getMinimum()).serialize64(scale);
+      } else {
+        minimum = Long.MAX_VALUE;
       }
       if (dec.hasSum()) {
         hasSum = true;
@@ -1145,8 +1149,8 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     @Override
     public void reset() {
       super.reset();
-      minimum = 0;
-      maximum = 0;
+      minimum = Long.MAX_VALUE;
+      maximum = Long.MIN_VALUE;
       hasSum = true;
       sum = 0;
     }
@@ -1172,12 +1176,10 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
           value > TypeDescription.MAX_DECIMAL64) {
         throw new IllegalArgumentException("Out of bounds decimal64 " + value);
       }
-      if (getNumberOfValues() == 0) {
+      if (minimum > value) {
         minimum = value;
-        maximum = value;
-      } else if (minimum > value) {
-        minimum = value;
-      } else if (maximum < value) {
+      }
+      if (maximum < value) {
         maximum = value;
       }
       if (hasSum) {
@@ -1211,7 +1213,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
           }
         }
       } else {
-        if (getNumberOfValues() != 0) {
+        if (other.getNumberOfValues() != 0) {
           throw new IllegalArgumentException("Incompatible merging of decimal column statistics");
         }
       }
