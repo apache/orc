@@ -41,7 +41,6 @@ import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -420,7 +419,7 @@ public class TestRecordReaderImpl {
             .build();
     return RecordReaderImpl.evaluatePredicateProto(stats, predicate, null,
         encoding, null,
-        OrcFile.WriterVersion.ORC_135, TypeDescription.Category.BOOLEAN);
+        OrcFile.WriterVersion.ORC_135, TypeDescription.createBoolean());
   }
 
   static TruthValue evaluateInteger(OrcProto.ColumnStatistics stats,
@@ -431,7 +430,7 @@ public class TestRecordReaderImpl {
             .build();
     return RecordReaderImpl.evaluatePredicateProto(stats, predicate, null,
         encoding, null,
-        OrcFile.WriterVersion.ORC_135, TypeDescription.Category.LONG);
+        OrcFile.WriterVersion.ORC_135, TypeDescription.createLong());
   }
 
   static TruthValue evaluateDouble(OrcProto.ColumnStatistics stats,
@@ -442,7 +441,7 @@ public class TestRecordReaderImpl {
             .build();
     return RecordReaderImpl.evaluatePredicateProto(stats, predicate, null,
         encoding, null,
-        OrcFile.WriterVersion.ORC_135, TypeDescription.Category.DOUBLE);
+        OrcFile.WriterVersion.ORC_135, TypeDescription.createDouble());
   }
 
   static TruthValue evaluateTimestamp(OrcProto.ColumnStatistics stats,
@@ -456,7 +455,7 @@ public class TestRecordReaderImpl {
     return RecordReaderImpl.evaluatePredicateProto(stats, predicate, null,
         encoding, null,
         include135 ? OrcFile.WriterVersion.ORC_135: OrcFile.WriterVersion.ORC_101,
-        TypeDescription.Category.TIMESTAMP, useUTCTimestamp);
+        TypeDescription.createTimestamp(), useUTCTimestamp);
   }
 
   static TruthValue evaluateTimestampBloomfilter(OrcProto.ColumnStatistics stats,
@@ -479,7 +478,7 @@ public class TestRecordReaderImpl {
     BloomFilterIO.serialize(builder, bloom);
     return RecordReaderImpl.evaluatePredicateProto(stats, predicate, kind,
         encoding.build(), builder.build(), version,
-        TypeDescription.Category.TIMESTAMP, useUTCTimestamp);
+        TypeDescription.createTimestamp(), useUTCTimestamp);
   }
 
   @Test

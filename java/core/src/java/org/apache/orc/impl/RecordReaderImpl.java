@@ -451,7 +451,7 @@ public class RecordReaderImpl implements RecordReader {
                                            OrcProto.ColumnEncoding encoding,
                                            OrcProto.BloomFilter bloomFilter,
                                            OrcFile.WriterVersion writerVersion,
-                                           TypeDescription.Category type) {
+                                           TypeDescription type) {
     return evaluatePredicateProto(statsProto, predicate, kind, encoding, bloomFilter,
         writerVersion, type, false);
   }
@@ -476,14 +476,15 @@ public class RecordReaderImpl implements RecordReader {
                                            OrcProto.ColumnEncoding encoding,
                                            OrcProto.BloomFilter bloomFilter,
                                            OrcFile.WriterVersion writerVersion,
-                                           TypeDescription.Category type,
+                                           TypeDescription type,
                                            boolean useUTCTimestamp) {
     ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null, statsProto);
     Object minValue = getMin(cs, useUTCTimestamp);
     Object maxValue = getMax(cs, useUTCTimestamp);
     // files written before ORC-135 stores timestamp wrt to local timezone causing issues with PPD.
     // disable PPD for timestamp for all old files
-    if (type.equals(TypeDescription.Category.TIMESTAMP)) {
+    TypeDescription.Category category = type.getCategory();
+    if (category == TypeDescription.Category.TIMESTAMP) {
       if (!writerVersion.includes(OrcFile.WriterVersion.ORC_135)) {
         LOG.debug("Not using predication pushdown on {} because it doesn't " +
                   "include ORC-135. Writer version: {}",
@@ -495,10 +496,19 @@ public class RecordReaderImpl implements RecordReader {
           predicate.getType() != PredicateLeaf.Type.STRING) {
         return TruthValue.YES_NO_NULL;
       }
+    } else if (writerVersion == OrcFile.WriterVersion.ORC_135 &&
+               category == TypeDescription.Category.DECIMAL &&
+               type.getPrecision() <= TypeDescription.MAX_DECIMAL64_PRECISION) {
+      // ORC 1.5.0 to 1.5.5, which use WriterVersion.ORC_135, have broken
+      // min and max values for decimal64. See ORC-517.
+      LOG.debug("Not using predicate push down on {}, because the file doesn't"+
+                   " include ORC-517. Writer version: {}",
+          predicate.getColumnName(), writerVersion);
+      return TruthValue.YES_NO_NULL;
     }
     return evaluatePredicateRange(predicate, minValue, maxValue, cs.hasNull(),
-        BloomFilterIO.deserialize(kind, encoding, writerVersion, type, bloomFilter),
-        useUTCTimestamp);
+        BloomFilterIO.deserialize(kind, encoding, writerVersion, type.getCategory(),
+            bloomFilter), useUTCTimestamp);
   }
 
   /**
@@ -953,7 +963,7 @@ public class RecordReaderImpl implements RecordReader {
                 leafValues[pred] = evaluatePredicateProto(stats,
                     predicate, bfk, encodings.get(columnIx), bf,
                     writerVersion, evolution.getFileSchema().
-                    findSubtype(columnIx).getCategory(),
+                    findSubtype(columnIx),
                     useUTCTimestamp);
               } catch (Exception e) {
                 exceptionCount[pred] += 1;

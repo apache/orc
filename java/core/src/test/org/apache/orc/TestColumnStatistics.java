@@ -24,6 +24,7 @@ import static org.junit.Assume.assumeTrue;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -33,6 +34,7 @@ import java.util.TimeZone;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
@@ -238,6 +240,28 @@ public class TestColumnStatistics {
     stats1.merge(stats2);
     assertEquals(-10, typed.getMinimum().longValue());
     assertEquals(10000, typed.getMaximum().longValue());
+  }
+
+  @Test
+  public void testDecimalMinMaxStatistics() throws Exception {
+    TypeDescription schema = TypeDescription.fromString("decimal(7,2)");
+
+    Writer writer = OrcFile.createWriter(testFilePath,
+        OrcFile.writerOptions(conf).setSchema(schema));
+    VectorizedRowBatch batch = schema.createRowBatch();
+    DecimalColumnVector decimalColumnVector = (DecimalColumnVector) batch.cols[0];
+    batch.size = 2;
+
+    decimalColumnVector.set(0, new HiveDecimalWritable("-99999.99"));
+    decimalColumnVector.set(1, new HiveDecimalWritable("-88888.88"));
+    writer.addRowBatch(batch);
+    writer.close();
+
+    Reader reader = OrcFile.createReader(testFilePath,
+        OrcFile.readerOptions(conf).filesystem(fs));
+    DecimalColumnStatistics statistics = (DecimalColumnStatistics) reader.getStatistics()[0];
+    assertEquals("Incorrect maximum value", new BigDecimal("-99999.99"), statistics.getMinimum().bigDecimalValue());
+    assertEquals("Incorrect minimum value", new BigDecimal("-88888.88"), statistics.getMaximum().bigDecimalValue());
   }
 
 
