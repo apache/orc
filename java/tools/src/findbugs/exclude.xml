@@ -16,4 +16,11 @@
   <Match>
     <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2,DM_EXIT"/>
   </Match>
+  <!-- Java's try with resources causes a false positive.
+       See https://github.com/SERG-Delft/jpacman/pull/27 . -->
+  <Match>
+    <Bug pattern="RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE"/>
+    <Class name="org.apache.orc.tools.PrintVersion"/>
+    <Method name="main"/>
+  </Match>
 </FindBugsFilter>
