@@ -31,4 +31,11 @@
     <Bug pattern="MS_PKGPROTECT"/>
     <Class name="org.apache.orc.impl.RecordReaderImpl$SargApplier"/>
   </Match>
+  <!-- Java's try with resources causes a false positive.
+       See https://github.com/SERG-Delft/jpacman/pull/27 . -->
+  <Match>
+    <Bug pattern="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"/>
+    <Class name="org.apache.orc.impl.OrcAcidUtils"/>
+    <Method name="getLastFlushLength"/>
+  </Match>
 </FindBugsFilter>
