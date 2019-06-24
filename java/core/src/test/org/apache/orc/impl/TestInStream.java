@@ -108,7 +108,7 @@ public class TestInStream {
     collect.buffer.setByteBuffer(inBuf, 0, collect.buffer.size());
     inBuf.flip();
     InStream in = InStream.create("test", new BufferChunk(inBuf, 0),
-        inBuf.remaining());
+        0, inBuf.remaining());
     assertEquals("uncompressed stream test position: 0 length: 1024" +
                  " range: 0 offset: 0 limit: 1024",
                  in.toString());
@@ -161,7 +161,7 @@ public class TestInStream {
       offset += size;
     }
 
-    InStream in = InStream.create("test", list.get(), collect.buffer.size(),
+    InStream in = InStream.create("test", list.get(), 0, collect.buffer.size(),
         InStream.options().withEncryption(algorithm, decryptKey,
             writerOptions.getIv()));
     assertEquals("encrypted uncompressed stream test position: 0 length: 8192" +
@@ -219,7 +219,7 @@ public class TestInStream {
       offset += size;
     }
 
-    InStream in = InStream.create("test", list.get(), collect.buffer.size(),
+    InStream in = InStream.create("test", list.get(), 0, collect.buffer.size(),
         InStream.options()
             .withCodec(new ZlibCodec()).withBufferSize(500)
             .withEncryption(algorithm, decryptKey, writerOptions.getIv()));
@@ -258,7 +258,7 @@ public class TestInStream {
     ByteBuffer inBuf = ByteBuffer.allocate(collect.buffer.size());
     collect.buffer.setByteBuffer(inBuf, 0, collect.buffer.size());
     inBuf.flip();
-    InStream in = InStream.create("test", new BufferChunk(inBuf, 0),
+    InStream in = InStream.create("test", new BufferChunk(inBuf, 0), 0,
         inBuf.remaining(),
         InStream.options().withCodec(codec).withBufferSize(300));
     assertEquals("compressed stream test position: 0 length: 961 range: 0" +
@@ -294,7 +294,7 @@ public class TestInStream {
     ByteBuffer inBuf = ByteBuffer.allocate(collect.buffer.size());
     collect.buffer.setByteBuffer(inBuf, 0, collect.buffer.size());
     inBuf.flip();
-    InStream in = InStream.create("test", new BufferChunk(inBuf, 0),
+    InStream in = InStream.create("test", new BufferChunk(inBuf, 0), 0,
         inBuf.remaining(),
         InStream.options().withCodec(codec).withBufferSize(100));
     byte[] contents = new byte[1024];
@@ -310,7 +310,7 @@ public class TestInStream {
     inBuf.put((byte) 32);
     inBuf.put((byte) 0);
     inBuf.flip();
-    in = InStream.create("test2", new BufferChunk(inBuf, 0),
+    in = InStream.create("test2", new BufferChunk(inBuf, 0), 0,
         inBuf.remaining(),
         InStream.options().withCodec(codec).withBufferSize(300));
     try {
@@ -354,7 +354,7 @@ public class TestInStream {
     }
     InStream.StreamOptions inOptions = InStream.options()
         .withCodec(codec).withBufferSize(400);
-    InStream in = InStream.create("test", buffers.get(), 1674, inOptions);
+    InStream in = InStream.create("test", buffers.get(), 0, 1674, inOptions);
     assertEquals("compressed stream test position: 0 length: 1674 range: 0" +
                  " offset: 0 limit: 483 range 0 = 0 to 483;" +
                  "  range 1 = 483 to 1625;  range 2 = 1625 to 1674",
@@ -373,7 +373,7 @@ public class TestInStream {
     buffers.clear();
     buffers.add(new BufferChunk(inBuf[1], 483));
     buffers.add(new BufferChunk(inBuf[2], 1625));
-    in = InStream.create("test", buffers.get(), 1674, inOptions);
+    in = InStream.create("test", buffers.get(), 0, 1674, inOptions);
     inStream = new DataInputStream(in);
     positions[303].reset();
     in.seek(positions[303]);
@@ -384,7 +384,7 @@ public class TestInStream {
     buffers.clear();
     buffers.add(new BufferChunk(inBuf[0], 0));
     buffers.add(new BufferChunk(inBuf[2], 1625));
-    in = InStream.create("test", buffers.get(), 1674, inOptions);
+    in = InStream.create("test", buffers.get(), 0, 1674, inOptions);
     inStream = new DataInputStream(in);
     positions[1001].reset();
     for(int i=0; i < 300; ++i) {
@@ -424,7 +424,7 @@ public class TestInStream {
     buffers.add(new BufferChunk(inBuf[0], 0));
     buffers.add(new BufferChunk(inBuf[1], 1024));
     buffers.add(new BufferChunk(inBuf[2], 3072));
-    InStream in = InStream.create("test", buffers.get(), 4096);
+    InStream in = InStream.create("test", buffers.get(), 0, 4096);
     assertEquals("uncompressed stream test position: 0 length: 4096" +
                  " range: 0 offset: 0 limit: 1024",
                  in.toString());
@@ -442,7 +442,7 @@ public class TestInStream {
     buffers.clear();
     buffers.add(new BufferChunk(inBuf[1], 1024));
     buffers.add(new BufferChunk(inBuf[2], 3072));
-    in = InStream.create("test", buffers.get(), 4096);
+    in = InStream.create("test", buffers.get(), 0, 4096);
     inStream = new DataInputStream(in);
     positions[256].reset();
     in.seek(positions[256]);
@@ -453,7 +453,7 @@ public class TestInStream {
     buffers.clear();
     buffers.add(new BufferChunk(inBuf[0], 0));
     buffers.add(new BufferChunk(inBuf[2], 3072));
-    in = InStream.create("test", buffers.get(), 4096);
+    in = InStream.create("test", buffers.get(), 0, 4096);
     inStream = new DataInputStream(in);
     positions[768].reset();
     for(int i=0; i < 256; ++i) {
@@ -468,7 +468,7 @@ public class TestInStream {
   @Test
   public void testEmptyDiskRange() throws IOException {
     DiskRangeList range = new BufferChunk(ByteBuffer.allocate(0), 0);
-    InStream stream = new InStream.UncompressedStream("test", range, 0);
+    InStream stream = new InStream.UncompressedStream("test", range, 0, 0);
     assertEquals(0, stream.available());
     stream.seek(new PositionProvider() {
       @Override

@@ -32,12 +32,26 @@ public class BufferChunkList {
     } else {
       tail.next = value;
       value.prev = tail;
+      value.next = null;
       tail = value;
     }
   }
 
   public BufferChunk get() {
     return head;
+  }
+
+  /**
+   * Get the nth element of the list
+   * @param chunk the element number to get from 0
+   * @return the given element number
+   */
+  public BufferChunk get(int chunk) {
+    BufferChunk ptr = head;
+    for(int i=0; i < chunk; ++i) {
+      ptr = ptr == null ? null : (BufferChunk) ptr.next;
+    }
+    return ptr;
   }
 
   public void clear() {

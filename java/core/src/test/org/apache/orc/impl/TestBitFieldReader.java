@@ -53,7 +53,7 @@ public class TestBitFieldReader {
     collect.buffer.setByteBuffer(inBuf, 0, collect.buffer.size());
     inBuf.flip();
     BitFieldReader in = new BitFieldReader(InStream.create("test",
-        new BufferChunk(inBuf, 0), inBuf.remaining(),
+        new BufferChunk(inBuf, 0), 0, inBuf.remaining(),
         InStream.options().withCodec(codec).withBufferSize(500)));
     for(int i=0; i < COUNT; ++i) {
       int x = in.next();
@@ -102,7 +102,7 @@ public class TestBitFieldReader {
     collect.buffer.setByteBuffer(inBuf, 0, collect.buffer.size());
     inBuf.flip();
     BitFieldReader in = new BitFieldReader(InStream.create("test",
-        new BufferChunk(inBuf, 0), inBuf.remaining()));
+        new BufferChunk(inBuf, 0), 0, inBuf.remaining()));
     for(int i=0; i < COUNT; i += 5) {
       int x = in.next();
       if (i < COUNT/2) {
@@ -139,7 +139,7 @@ public class TestBitFieldReader {
     collect.buffer.setByteBuffer(inBuf, 0, collect.buffer.size());
     inBuf.flip();
     BitFieldReader in = new BitFieldReader(InStream.create("test",
-        new BufferChunk(inBuf, 0), inBuf.remaining()));
+        new BufferChunk(inBuf, 0), 0, inBuf.remaining()));
     in.seek(posn);
     in.skip(10);
     for(int r = 210; r < COUNT; ++r) {

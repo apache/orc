@@ -61,7 +61,7 @@ public class TestIntegerCompressionReader {
     inBuf.flip();
     RunLengthIntegerReaderV2 in =
       new RunLengthIntegerReaderV2(InStream.create("test",
-          new BufferChunk(inBuf, 0), inBuf.remaining(),
+          new BufferChunk(inBuf, 0), 0, inBuf.remaining(),
           InStream.options().withCodec(codec).withBufferSize(1000)), true, false);
     for(int i=0; i < 2048; ++i) {
       int x = (int) in.next();
@@ -114,7 +114,7 @@ public class TestIntegerCompressionReader {
     inBuf.flip();
     RunLengthIntegerReaderV2 in =
       new RunLengthIntegerReaderV2(InStream.create("test",
-                                                   new BufferChunk(inBuf, 0),
+                                                   new BufferChunk(inBuf, 0), 0,
                                                    inBuf.remaining()), true, false);
     for(int i=0; i < 2048; i += 10) {
       int x = (int) in.next();
