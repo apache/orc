@@ -616,9 +616,17 @@ public class OrcUtils {
 
   public static List<StripeInformation> convertProtoStripesToStripes(
       List<OrcProto.StripeInformation> stripes) {
-    List<StripeInformation> result = new ArrayList<StripeInformation>(stripes.size());
-    for (OrcProto.StripeInformation info : stripes) {
-      result.add(new ReaderImpl.StripeInformationImpl(info));
+    List<StripeInformation> result = new ArrayList<>(stripes.size());
+    long previousStripeId = -1;
+    byte[][] previousKeys = null;
+    long stripeId = 0;
+    for (OrcProto.StripeInformation stripeProto: stripes) {
+      ReaderImpl.StripeInformationImpl stripe =
+          new ReaderImpl.StripeInformationImpl(stripeProto, stripeId++,
+              previousStripeId, previousKeys);
+      result.add(stripe);
+      previousStripeId = stripe.getEncryptionStripeId();
+      previousKeys = stripe.getEncryptedLocalKeys();
     }
     return result;
   }
