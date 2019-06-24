@@ -1,6 +1,4 @@
-package org.apache.orc.impl;
-
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,6 +16,8 @@ package org.apache.orc.impl;
  * limitations under the License.
  */
 
+package org.apache.orc.impl;
+
 import org.apache.hadoop.hive.common.io.DiskRange;
 import org.apache.hadoop.hive.common.io.DiskRangeList;
 import org.slf4j.Logger;
@@ -34,15 +34,20 @@ public class BufferChunk extends DiskRangeList {
 
   private static final Logger LOG =
       LoggerFactory.getLogger(BufferChunk.class);
-  final ByteBuffer chunk;
+  private ByteBuffer chunk;
+
+  public BufferChunk(long offset, int length) {
+    super(offset, offset + length);
+    chunk = null;
+  }
 
   public BufferChunk(ByteBuffer chunk, long offset) {
     super(offset, offset + chunk.remaining());
     this.chunk = chunk;
   }
 
-  public ByteBuffer getChunk() {
-    return chunk;
+  public void setChunk(ByteBuffer chunk) {
+    this.chunk = chunk;
   }
 
   @Override
@@ -52,10 +57,14 @@ public class BufferChunk extends DiskRangeList {
 
   @Override
   public final String toString() {
-    boolean makesSense = chunk.remaining() == (end - offset);
-    return "data range [" + offset + ", " + end + "), size: " + chunk.remaining()
-        + (makesSense ? "" : "(!)") + " type: " +
-        (chunk.isDirect() ? "direct" : "array-backed");
+    if (chunk == null) {
+      return "data range[" + offset + ", " + end +")";
+    } else {
+      boolean makesSense = chunk.remaining() == (end - offset);
+      return "data range [" + offset + ", " + end + "), size: " + chunk.remaining()
+                 + (makesSense ? "" : "(!)") + " type: " +
+                 (chunk.isDirect() ? "direct" : "array-backed");
+    }
   }
 
   @Override

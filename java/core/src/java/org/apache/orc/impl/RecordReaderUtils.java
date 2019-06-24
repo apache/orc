@@ -234,7 +234,7 @@ public class RecordReaderUtils {
                 indexes[column] = OrcProto.RowIndex.parseFrom(
                     InStream.createCodedInputStream(InStream.create("index",
                         new BufferChunk(bb, 0),
-                        stream.getLength(), options)));
+                        0, stream.getLength(), options)));
               }
               break;
             case BLOOM_FILTER:
@@ -246,7 +246,7 @@ public class RecordReaderUtils {
                 bloomFilterIndices[column] = OrcProto.BloomFilterIndex.parseFrom
                     (InStream.createCodedInputStream(InStream.create(
                         "bloom_filter", new BufferChunk(bb, 0),
-                        stream.getLength(), options)));
+                        0, stream.getLength(), options)));
               }
               break;
             default:
@@ -271,7 +271,7 @@ public class RecordReaderUtils {
       file.readFully(offset, tailBuf.array(), tailBuf.arrayOffset(), tailLength);
       return OrcProto.StripeFooter.parseFrom(
           InStream.createCodedInputStream(InStream.create("footer",
-              new BufferChunk(tailBuf, 0), tailLength, options)));
+              new BufferChunk(tailBuf, 0), 0, tailLength, options)));
     }
 
     @Override

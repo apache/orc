@@ -412,7 +412,7 @@ public class ReaderImpl implements Reader {
     bb.position(footerAbsPos);
     bb.limit(footerAbsPos + footerSize);
     return OrcProto.Footer.parseFrom(InStream.createCodedInputStream(
-        InStream.create("footer", new BufferChunk(bb, 0), footerSize, options)));
+        InStream.create("footer", new BufferChunk(bb, 0), 0, footerSize, options)));
   }
 
   public static OrcProto.Metadata extractMetadata(ByteBuffer bb, int metadataAbsPos,
@@ -420,7 +420,7 @@ public class ReaderImpl implements Reader {
     bb.position(metadataAbsPos);
     bb.limit(metadataAbsPos + metadataSize);
     return OrcProto.Metadata.parseFrom(InStream.createCodedInputStream(
-        InStream.create("metadata", new BufferChunk(bb, 0), metadataSize, options)));
+        InStream.create("metadata", new BufferChunk(bb, 0), 0, metadataSize, options)));
   }
 
   private static OrcProto.PostScript extractPostScript(ByteBuffer bb, Path path,

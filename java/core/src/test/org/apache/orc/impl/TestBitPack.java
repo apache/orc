@@ -110,7 +110,7 @@ public class TestBitPack {
     inBuf.flip();
     long[] buff = new long[SIZE];
     utils.readInts(buff, 0, SIZE, fixedWidth,
-        InStream.create("test", new BufferChunk(inBuf,0),
+        InStream.create("test", new BufferChunk(inBuf,0), 0,
         inBuf.remaining()));
     for (int i = 0; i < SIZE; i++) {
       buff[i] = utils.zigzagDecode(buff[i]);

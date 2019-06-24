@@ -20,6 +20,7 @@ package org.apache.orc.impl;
 
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.EncryptionAlgorithm;
+import org.apache.orc.InMemoryKeystore;
 import org.apache.orc.OrcProto;
 import org.apache.orc.PhysicalWriter;
 import org.apache.orc.impl.writer.StreamOptions;
@@ -35,21 +36,11 @@ import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
-import java.security.NoSuchAlgorithmException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 public class TestOutStream {
-
-  public static final boolean TEST_AES_256;
-  static {
-    try {
-      TEST_AES_256 = Cipher.getMaxAllowedKeyLength("AES") != 128;
-    } catch (NoSuchAlgorithmException e) {
-      throw new IllegalArgumentException("Unknown algorithm", e);
-    }
-  }
 
   @Test
   public void testFlush() throws Exception {
@@ -180,7 +171,7 @@ public class TestOutStream {
   @Test
   public void testCompression256Encryption() throws Exception {
     // disable test if AES_256 is not available
-    Assume.assumeTrue(TEST_AES_256);
+    Assume.assumeTrue(InMemoryKeystore.SUPPORTS_AES_256);
     TestInStream.OutputCollector receiver = new TestInStream.OutputCollector();
     EncryptionAlgorithm aes256 = EncryptionAlgorithm.AES_CTR_256;
     byte[] keyBytes = new byte[aes256.keyLength()];
@@ -211,7 +202,7 @@ public class TestOutStream {
     // use InStream to decompress it
     BufferChunkList ranges = new BufferChunkList();
     ranges.add(new BufferChunk(ByteBuffer.wrap(compressed), 0));
-    InStream decompressedStream = InStream.create("test", ranges.get(),
+    InStream decompressedStream = InStream.create("test", ranges.get(), 0,
         compressed.length,
         InStream.options().withCodec(new ZlibCodec()).withBufferSize(1024));
 

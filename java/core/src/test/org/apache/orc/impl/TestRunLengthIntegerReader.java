@@ -17,14 +17,14 @@
  */
 package org.apache.orc.impl;
 
-import static junit.framework.Assert.assertEquals;
-
 import java.nio.ByteBuffer;
 import java.util.Random;
 
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.impl.writer.StreamOptions;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 public class TestRunLengthIntegerReader {
 
@@ -60,7 +60,7 @@ public class TestRunLengthIntegerReader {
     collect.buffer.setByteBuffer(inBuf, 0, collect.buffer.size());
     inBuf.flip();
     RunLengthIntegerReader in = new RunLengthIntegerReader(InStream.create
-        ("test", new BufferChunk(inBuf, 0), inBuf.remaining(),
+        ("test", new BufferChunk(inBuf, 0), 0, inBuf.remaining(),
             InStream.options().withCodec(codec).withBufferSize(1000)), true);
     for(int i=0; i < 2048; ++i) {
       int x = (int) in.next();
@@ -112,7 +112,7 @@ public class TestRunLengthIntegerReader {
     collect.buffer.setByteBuffer(inBuf, 0, collect.buffer.size());
     inBuf.flip();
     RunLengthIntegerReader in = new RunLengthIntegerReader(InStream.create
-        ("test", new BufferChunk(inBuf, 0), inBuf.remaining()), true);
+        ("test", new BufferChunk(inBuf, 0), 0, inBuf.remaining()), true);
     for(int i=0; i < 2048; i += 10) {
       int x = (int) in.next();
       if (i < 1024) {
