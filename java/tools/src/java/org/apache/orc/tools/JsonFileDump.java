@@ -277,6 +277,14 @@ public class JsonFileDump {
       if (type.hasMaximumLength()) {
         writer.key("maxLength").value(type.getMaximumLength());
       }
+
+      if (type.getAttributesCount() > 0) {
+        writer.key("attributes").object();
+        for(OrcProto.StringPair pair: type.getAttributesList()) {
+          writer.key(pair.getKey()).value(pair.getValue());
+        }
+        writer.endObject();
+      }
       writer.endObject();
     }
   }

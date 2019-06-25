@@ -187,6 +187,11 @@ message StripeFooter {
 //   postscript: PostScript
 //   psLen: byte
 
+message StringPair {
+  optional string key = 1;
+  optional string value = 2;
+}
+
 message Type {
   enum Kind {
     BOOLEAN = 0;
@@ -214,6 +219,7 @@ message Type {
   optional uint32 maximumLength = 4;
   optional uint32 precision = 5;
   optional uint32 scale = 6;
+  repeated StringPair attributes = 7;
 }
 
 message StripeInformation {

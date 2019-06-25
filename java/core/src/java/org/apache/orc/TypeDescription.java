@@ -35,7 +35,9 @@ import org.apache.orc.impl.SchemaEvolution;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
@@ -448,6 +450,17 @@ public class TypeDescription
     return this;
   }
 
+  /**
+   * Set an attribute on this type
+   * @param key the attribute name
+   * @param value the attribute value
+   * @return this for method chaining
+   */
+  public TypeDescription setAttribute(String key, String value) {
+    attributes.put(key, value);
+    return this;
+  }
+
   public static TypeDescription createVarchar() {
     return new TypeDescription(Category.VARCHAR);
   }
@@ -773,6 +786,26 @@ public class TypeDescription
   }
 
   /**
+   * Get the list of attribute names defined on this type.
+   * @return a list of sorted attribute names
+   */
+  public List<String> getAttributeNames() {
+    List<String> result = new ArrayList<>(attributes.size());
+    result.addAll(attributes.keySet());
+    Collections.sort(result);
+    return result;
+  }
+
+  /**
+   * Get the value of a given attribute.
+   * @param attributeName the name of the attribute
+   * @return the value of the attribute or null if it isn't set
+   */
+  public String getAttributeValue(String attributeName) {
+    return attributes.get(attributeName);
+  }
+
+  /**
    * Get the subtypes of this type.
    * @return the list of children types
    */
@@ -816,6 +849,7 @@ public class TypeDescription
   private final Category category;
   private final List<TypeDescription> children;
   private final List<String> fieldNames;
+  private final Map<String,String> attributes = new HashMap<>();
   private int maxLength = DEFAULT_LENGTH;
   private int precision = DEFAULT_PRECISION;
   private int scale = DEFAULT_SCALE;
