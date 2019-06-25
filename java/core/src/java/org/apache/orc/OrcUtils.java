@@ -17,7 +17,6 @@
  */
 package org.apache.orc;
 
-import org.apache.orc.impl.ReaderImpl;
 import org.apache.orc.impl.SchemaEvolution;
 
 import java.io.IOException;
@@ -42,6 +41,7 @@ public class OrcUtils {
    * corresponds to columns a and b. Index 3,4 correspond to column c which is list&lt;string&gt; and
    * index 5 correspond to column d. After flattening list&lt;string&gt; gets 2 columns.
    *
+   * Column names that aren't found are ignored.
    * @param selectedColumns - comma separated list of selected column names
    * @param schema       - object schema
    * @return - boolean array with true value set for the specified column names
@@ -110,6 +110,13 @@ public class OrcUtils {
   private static void appendOrcTypes(List<OrcProto.Type> result, TypeDescription typeDescr) {
     OrcProto.Type.Builder type = OrcProto.Type.newBuilder();
     List<TypeDescription> children = typeDescr.getChildren();
+    // save the attributes
+    for(String key: typeDescr.getAttributeNames()) {
+      type.addAttributes(
+          OrcProto.StringPair.newBuilder()
+              .setKey(key).setValue(typeDescr.getAttributeValue(key))
+              .build());
+    }
     switch (typeDescr.getCategory()) {
     case BOOLEAN:
       type.setKind(OrcProto.Type.Kind.BOOLEAN);
@@ -195,283 +202,6 @@ public class OrcUtils {
   }
 
   /**
-   * NOTE: This method ignores the subtype numbers in the TypeDescription rebuilds the subtype
-   * numbers based on the length of the result list being appended.
-   *
-   * @param result
-   * @param typeDescr
-   */
-  public static void appendOrcTypesRebuildSubtypes(List<OrcProto.Type> result,
-      TypeDescription typeDescr) {
-
-    int subtype = result.size();
-    OrcProto.Type.Builder type = OrcProto.Type.newBuilder();
-    boolean needsAdd = true;
-    List<TypeDescription> children = typeDescr.getChildren();
-    switch (typeDescr.getCategory()) {
-    case BOOLEAN:
-      type.setKind(OrcProto.Type.Kind.BOOLEAN);
-      break;
-    case BYTE:
-      type.setKind(OrcProto.Type.Kind.BYTE);
-      break;
-    case SHORT:
-      type.setKind(OrcProto.Type.Kind.SHORT);
-      break;
-    case INT:
-      type.setKind(OrcProto.Type.Kind.INT);
-      break;
-    case LONG:
-      type.setKind(OrcProto.Type.Kind.LONG);
-      break;
-    case FLOAT:
-      type.setKind(OrcProto.Type.Kind.FLOAT);
-      break;
-    case DOUBLE:
-      type.setKind(OrcProto.Type.Kind.DOUBLE);
-      break;
-    case STRING:
-      type.setKind(OrcProto.Type.Kind.STRING);
-      break;
-    case CHAR:
-      type.setKind(OrcProto.Type.Kind.CHAR);
-      type.setMaximumLength(typeDescr.getMaxLength());
-      break;
-    case VARCHAR:
-      type.setKind(OrcProto.Type.Kind.VARCHAR);
-      type.setMaximumLength(typeDescr.getMaxLength());
-      break;
-    case BINARY:
-      type.setKind(OrcProto.Type.Kind.BINARY);
-      break;
-    case TIMESTAMP:
-      type.setKind(OrcProto.Type.Kind.TIMESTAMP);
-      break;
-    case DATE:
-      type.setKind(OrcProto.Type.Kind.DATE);
-      break;
-    case DECIMAL:
-      type.setKind(OrcProto.Type.Kind.DECIMAL);
-      type.setPrecision(typeDescr.getPrecision());
-      type.setScale(typeDescr.getScale());
-      break;
-    case LIST:
-      type.setKind(OrcProto.Type.Kind.LIST);
-      type.addSubtypes(++subtype);
-      result.add(type.build());
-      needsAdd = false;
-      appendOrcTypesRebuildSubtypes(result, children.get(0));
-      break;
-    case MAP:
-      {
-        // Make room for MAP type.
-        result.add(null);
-
-        // Add MAP type pair in order to determine their subtype values.
-        appendOrcTypesRebuildSubtypes(result, children.get(0));
-        int subtype2 = result.size();
-        appendOrcTypesRebuildSubtypes(result, children.get(1));
-        type.setKind(OrcProto.Type.Kind.MAP);
-        type.addSubtypes(subtype + 1);
-        type.addSubtypes(subtype2);
-        result.set(subtype, type.build());
-        needsAdd = false;
-      }
-      break;
-    case STRUCT:
-      {
-        List<String> fieldNames = typeDescr.getFieldNames();
-
-        // Make room for STRUCT type.
-        result.add(null);
-
-        List<Integer> fieldSubtypes = new ArrayList<Integer>(fieldNames.size());
-        for(TypeDescription child: children) {
-          int fieldSubtype = result.size();
-          fieldSubtypes.add(fieldSubtype);
-          appendOrcTypesRebuildSubtypes(result, child);
-        }
-
-        type.setKind(OrcProto.Type.Kind.STRUCT);
-
-        for (int i = 0 ; i < fieldNames.size(); i++) {
-          type.addSubtypes(fieldSubtypes.get(i));
-          type.addFieldNames(fieldNames.get(i));
-        }
-        result.set(subtype, type.build());
-        needsAdd = false;
-      }
-      break;
-    case UNION:
-      {
-        // Make room for UNION type.
-        result.add(null);
-
-        List<Integer> unionSubtypes = new ArrayList<Integer>(children.size());
-        for(TypeDescription child: children) {
-          int unionSubtype = result.size();
-          unionSubtypes.add(unionSubtype);
-          appendOrcTypesRebuildSubtypes(result, child);
-        }
-
-        type.setKind(OrcProto.Type.Kind.UNION);
-        for (int i = 0 ; i < children.size(); i++) {
-          type.addSubtypes(unionSubtypes.get(i));
-        }
-        result.set(subtype, type.build());
-        needsAdd = false;
-      }
-      break;
-    default:
-      throw new IllegalArgumentException("Unknown category: " + typeDescr.getCategory());
-    }
-    if (needsAdd) {
-      result.add(type.build());
-    }
-  }
-
-  /**
-   * NOTE: This method ignores the subtype numbers in the OrcProto.Type rebuilds the subtype
-   * numbers based on the length of the result list being appended.
-   *
-   * @param result
-   * @param types
-   * @param columnId
-   */
-  public static int appendOrcTypesRebuildSubtypes(List<OrcProto.Type> result,
-      List<OrcProto.Type> types, int columnId) {
-
-    OrcProto.Type oldType = types.get(columnId++);
-
-    int subtype = result.size();
-    OrcProto.Type.Builder builder = OrcProto.Type.newBuilder();
-    boolean needsAdd = true;
-    switch (oldType.getKind()) {
-    case BOOLEAN:
-      builder.setKind(OrcProto.Type.Kind.BOOLEAN);
-      break;
-    case BYTE:
-      builder.setKind(OrcProto.Type.Kind.BYTE);
-      break;
-    case SHORT:
-      builder.setKind(OrcProto.Type.Kind.SHORT);
-      break;
-    case INT:
-      builder.setKind(OrcProto.Type.Kind.INT);
-      break;
-    case LONG:
-      builder.setKind(OrcProto.Type.Kind.LONG);
-      break;
-    case FLOAT:
-      builder.setKind(OrcProto.Type.Kind.FLOAT);
-      break;
-    case DOUBLE:
-      builder.setKind(OrcProto.Type.Kind.DOUBLE);
-      break;
-    case STRING:
-      builder.setKind(OrcProto.Type.Kind.STRING);
-      break;
-    case CHAR:
-      builder.setKind(OrcProto.Type.Kind.CHAR);
-      builder.setMaximumLength(oldType.getMaximumLength());
-      break;
-    case VARCHAR:
-      builder.setKind(OrcProto.Type.Kind.VARCHAR);
-      builder.setMaximumLength(oldType.getMaximumLength());
-      break;
-    case BINARY:
-      builder.setKind(OrcProto.Type.Kind.BINARY);
-      break;
-    case TIMESTAMP:
-      builder.setKind(OrcProto.Type.Kind.TIMESTAMP);
-      break;
-    case DATE:
-      builder.setKind(OrcProto.Type.Kind.DATE);
-      break;
-    case DECIMAL:
-      builder.setKind(OrcProto.Type.Kind.DECIMAL);
-      builder.setPrecision(oldType.getPrecision());
-      builder.setScale(oldType.getScale());
-      break;
-    case LIST:
-      builder.setKind(OrcProto.Type.Kind.LIST);
-      builder.addSubtypes(++subtype);
-      result.add(builder.build());
-      needsAdd = false;
-      columnId = appendOrcTypesRebuildSubtypes(result, types, columnId);
-      break;
-    case MAP:
-      {
-        // Make room for MAP type.
-        result.add(null);
-
-        // Add MAP type pair in order to determine their subtype values.
-        columnId = appendOrcTypesRebuildSubtypes(result, types, columnId);
-        int subtype2 = result.size();
-        columnId = appendOrcTypesRebuildSubtypes(result, types, columnId);
-        builder.setKind(OrcProto.Type.Kind.MAP);
-        builder.addSubtypes(subtype + 1);
-        builder.addSubtypes(subtype2);
-        result.set(subtype, builder.build());
-        needsAdd = false;
-      }
-      break;
-    case STRUCT:
-      {
-        List<String> fieldNames = oldType.getFieldNamesList();
-
-        // Make room for STRUCT type.
-        result.add(null);
-
-        List<Integer> fieldSubtypes = new ArrayList<Integer>(fieldNames.size());
-        for(int i = 0 ; i < fieldNames.size(); i++) {
-          int fieldSubtype = result.size();
-          fieldSubtypes.add(fieldSubtype);
-          columnId = appendOrcTypesRebuildSubtypes(result, types, columnId);
-        }
-
-        builder.setKind(OrcProto.Type.Kind.STRUCT);
-
-        for (int i = 0 ; i < fieldNames.size(); i++) {
-          builder.addSubtypes(fieldSubtypes.get(i));
-          builder.addFieldNames(fieldNames.get(i));
-        }
-        result.set(subtype, builder.build());
-        needsAdd = false;
-      }
-      break;
-    case UNION:
-      {
-        int subtypeCount = oldType.getSubtypesCount();
-
-        // Make room for UNION type.
-        result.add(null);
-
-        List<Integer> unionSubtypes = new ArrayList<Integer>(subtypeCount);
-        for(int i = 0 ; i < subtypeCount; i++) {
-          int unionSubtype = result.size();
-          unionSubtypes.add(unionSubtype);
-          columnId = appendOrcTypesRebuildSubtypes(result, types, columnId);
-        }
-
-        builder.setKind(OrcProto.Type.Kind.UNION);
-        for (int i = 0 ; i < subtypeCount; i++) {
-          builder.addSubtypes(unionSubtypes.get(i));
-        }
-        result.set(subtype, builder.build());
-        needsAdd = false;
-      }
-      break;
-    default:
-      throw new IllegalArgumentException("Unknown category: " + oldType.getKind());
-    }
-    if (needsAdd) {
-      result.add(builder.build());
-    }
-    return columnId;
-  }
-
-  /**
    * Checks whether the list of protobuf types from the file are valid or not.
    * @param types the list of types from the protobuf
    * @param root the top of the tree to check
@@ -533,94 +263,104 @@ public class OrcUtils {
                                                 int rootColumn)
           throws FileFormatException {
     OrcProto.Type type = types.get(rootColumn);
+    TypeDescription result;
     switch (type.getKind()) {
       case BOOLEAN:
-        return TypeDescription.createBoolean();
+        result = TypeDescription.createBoolean();
+        break;
       case BYTE:
-        return TypeDescription.createByte();
+        result = TypeDescription.createByte();
+        break;
       case SHORT:
-        return TypeDescription.createShort();
+        result = TypeDescription.createShort();
+        break;
       case INT:
-        return TypeDescription.createInt();
+        result = TypeDescription.createInt();
+        break;
       case LONG:
-        return TypeDescription.createLong();
+        result = TypeDescription.createLong();
+        break;
       case FLOAT:
-        return TypeDescription.createFloat();
+        result = TypeDescription.createFloat();
+        break;
       case DOUBLE:
-        return TypeDescription.createDouble();
+        result = TypeDescription.createDouble();
+        break;
       case STRING:
-        return TypeDescription.createString();
+        result = TypeDescription.createString();
+        break;
       case CHAR:
       case VARCHAR: {
-        TypeDescription result = type.getKind() == OrcProto.Type.Kind.CHAR ?
-            TypeDescription.createChar() : TypeDescription.createVarchar();
-        if (type.hasMaximumLength()) {
-          result.withMaxLength(type.getMaximumLength());
+          result = type.getKind() == OrcProto.Type.Kind.CHAR ?
+              TypeDescription.createChar() : TypeDescription.createVarchar();
+          if (type.hasMaximumLength()) {
+            result.withMaxLength(type.getMaximumLength());
+          }
         }
-        return result;
-      }
+        break;
       case BINARY:
-        return TypeDescription.createBinary();
+        result = TypeDescription.createBinary();
+        break;
       case TIMESTAMP:
-        return TypeDescription.createTimestamp();
+        result = TypeDescription.createTimestamp();
+        break;
       case DATE:
-        return TypeDescription.createDate();
+        result = TypeDescription.createDate();
+        break;
       case DECIMAL: {
-        TypeDescription result = TypeDescription.createDecimal();
-        if (type.hasScale()) {
-          result.withScale(type.getScale());
+          result = TypeDescription.createDecimal();
+          if (type.hasScale()) {
+            result.withScale(type.getScale());
+          }
+          if (type.hasPrecision()) {
+            result.withPrecision(type.getPrecision());
+          }
         }
-        if (type.hasPrecision()) {
-          result.withPrecision(type.getPrecision());
-        }
-        return result;
-      }
+        break;
       case LIST:
         if (type.getSubtypesCount() != 1) {
           throw new FileFormatException("LIST type should contain exactly " +
                   "one subtype but has " + type.getSubtypesCount());
         }
-        return TypeDescription.createList(
+        result = TypeDescription.createList(
             convertTypeFromProtobuf(types, type.getSubtypes(0)));
+        break;
       case MAP:
         if (type.getSubtypesCount() != 2) {
           throw new FileFormatException("MAP type should contain exactly " +
                   "two subtypes but has " + type.getSubtypesCount());
         }
-        return TypeDescription.createMap(
+        result = TypeDescription.createMap(
             convertTypeFromProtobuf(types, type.getSubtypes(0)),
             convertTypeFromProtobuf(types, type.getSubtypes(1)));
+        break;
       case STRUCT: {
-        TypeDescription result = TypeDescription.createStruct();
-        for(int f=0; f < type.getSubtypesCount(); ++f) {
-          result.addField(type.getFieldNames(f),
-              convertTypeFromProtobuf(types, type.getSubtypes(f)));
+          result = TypeDescription.createStruct();
+          for(int f=0; f < type.getSubtypesCount(); ++f) {
+            result.addField(type.getFieldNames(f),
+                convertTypeFromProtobuf(types, type.getSubtypes(f)));
+          }
         }
-        return result;
-      }
+        break;
       case UNION: {
-        if (type.getSubtypesCount() == 0) {
-          throw new FileFormatException("UNION type should contain at least" +
+          if (type.getSubtypesCount() == 0) {
+            throw new FileFormatException("UNION type should contain at least" +
                   " one subtype but has none");
+          }
+          result = TypeDescription.createUnion();
+          for(int f=0; f < type.getSubtypesCount(); ++f) {
+            result.addUnionChild(
+                convertTypeFromProtobuf(types, type.getSubtypes(f)));
+          }
         }
-        TypeDescription result = TypeDescription.createUnion();
-        for(int f=0; f < type.getSubtypesCount(); ++f) {
-          result.addUnionChild(
-              convertTypeFromProtobuf(types, type.getSubtypes(f)));
-        }
-        return result;
-      }
+        break;
+      default:
+        throw new IllegalArgumentException("Unknown ORC type " + type.getKind());
     }
-    throw new IllegalArgumentException("Unknown ORC type " + type.getKind());
-  }
-
-  public static List<StripeInformation> convertProtoStripesToStripes(
-      List<OrcProto.StripeInformation> stripes) {
-    List<StripeInformation> result = new ArrayList<StripeInformation>(stripes.size());
-    for (OrcProto.StripeInformation info : stripes) {
-      result.add(new ReaderImpl.StripeInformationImpl(info));
+    for(int i = 0; i < type.getAttributesCount(); ++i) {
+      OrcProto.StringPair pair = type.getAttributes(i);
+      result.setAttribute(pair.getKey(), pair.getValue());
     }
     return result;
   }
-
 }

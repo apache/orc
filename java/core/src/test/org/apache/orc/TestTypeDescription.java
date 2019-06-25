@@ -17,13 +17,18 @@
  */
 package org.apache.orc;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 public class TestTypeDescription {
@@ -324,5 +329,42 @@ public class TestTypeDescription {
 
     results = type.findSubtypes("");
     assertEquals(0, results.size());
+  }
+
+  @Test
+  public void testAttributes() throws IOException {
+    TypeDescription schema = TypeDescription.fromString(
+        "struct<" +
+            "name:struct<first:string,last:string>," +
+            "address:struct<street:string,city:string,country:string,post_code:string>," +
+            "credit_cards:array<struct<card_number:string,expire:date,ccv:string>>>");
+    // set some attributes
+    schema.findSubtype("name").setAttribute("iceberg.id", "12");
+    schema.findSubtype("address.street").setAttribute("mask", "nullify")
+        .setAttribute("encrypt", "pii");
+
+    // write a file with those attributes
+    Path path = new Path(System.getProperty("test.tmp.dir",
+        "target" + File.separator + "test" + File.separator + "tmp"), "attribute.orc");
+    Configuration conf = new Configuration();
+    Writer writer = OrcFile.createWriter(path,
+        OrcFile.writerOptions(conf).setSchema(schema).overwrite(true));
+    writer.close();
+
+    // read the file back again
+    Reader reader = OrcFile.createReader(path, OrcFile.readerOptions(conf));
+    TypeDescription readerSchema = reader.getSchema();
+
+    // make sure that the read types have the attributes
+    TypeDescription nameCol = readerSchema.findSubtype("name");
+    assertArrayEquals(new Object[]{"iceberg.id"},
+        nameCol.getAttributeNames().toArray());
+    assertEquals("12", nameCol.getAttributeValue("iceberg.id"));
+    TypeDescription street = readerSchema.findSubtype("address.street");
+    assertArrayEquals(new Object[]{"encrypt", "mask"},
+        street.getAttributeNames().toArray());
+    assertEquals("pii", street.getAttributeValue("encrypt"));
+    assertEquals("nullify", street.getAttributeValue("mask"));
+    assertEquals(null, street.getAttributeValue("foobar"));
   }
 }
