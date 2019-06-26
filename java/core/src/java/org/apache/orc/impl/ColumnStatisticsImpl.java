@@ -1798,9 +1798,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       count = stats.getNumberOfValues();
     }
 
-    if(stats.hasBytesOnDisk()) {
-      bytesOnDisk = stats.getBytesOnDisk();
-    }
+    bytesOnDisk = stats.hasBytesOnDisk() ? stats.getBytesOnDisk() : 0;
 
     if (stats.hasHasNull()) {
       hasNull = stats.getHasNull();
