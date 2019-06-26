@@ -357,8 +357,6 @@ public class JsonFileDump {
         writer.key("minChildren").value(((CollectionColumnStatistics) cs).getMinimumChildren());
         writer.key("maxChildren").value(((CollectionColumnStatistics) cs).getMaximumChildren());
         writer.key("totalChildren").value(((CollectionColumnStatistics) cs).getTotalChildren());
-        /* What about MAP Type ? */
-        writer.key("type").value(OrcProto.Type.Kind.LIST);
       }
     }
   }

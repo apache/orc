@@ -74,7 +74,7 @@ message BinaryStatistics {
   optional sint64 sum = 1;
 }
 
-// ORC-398: Statistics for list and map
+// Statistics for list and map
 message CollectionStatistics {
   optional uint64 minChildren = 1;
   optional uint64 maxChildren = 2;

@@ -172,10 +172,8 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       implements CollectionColumnStatistics {
 
     protected long minimum = Long.MAX_VALUE;
-    protected long maximum = Long.MIN_VALUE;
+    protected long maximum = 0;
     protected long sum = 0;
-    protected boolean hasMinimum = false;
-    protected boolean overflow = false;
 
     CollectionColumnStatisticsImpl() {
       super();
@@ -184,18 +182,10 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     CollectionColumnStatisticsImpl(OrcProto.ColumnStatistics stats) {
       super(stats);
       OrcProto.CollectionStatistics collStat = stats.getCollectionStatistics();
-      if (collStat.hasMinChildren()) {
-        hasMinimum = true;
-        minimum = collStat.getMinChildren();
-      }
-      if (collStat.hasMaxChildren()) {
-        maximum = collStat.getMaxChildren();
-      }
-      if (collStat.hasTotalChildren()) {
-        sum = collStat.getTotalChildren();
-      } else {
-        overflow = true;
-      }
+
+      minimum = collStat.hasMinChildren() ? collStat.getMinChildren() : Long.MAX_VALUE;
+      maximum = collStat.hasMaxChildren() ? collStat.getMaxChildren() : 0;
+      sum = collStat.hasTotalChildren() ? collStat.getTotalChildren() : 0;
     }
 
     @Override
@@ -205,13 +195,10 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
        * maximum = maxCollectionLength
        * sum = childCount
        */
-      if (!hasMinimum) {
-        hasMinimum = true;
+      if (length < minimum) {
         minimum = length;
-        maximum = length;
-      } else if (length < minimum) {
-        minimum = length;
-      } else if (length > maximum) {
+      }
+      if (length > maximum) {
         maximum = length;
       }
 
@@ -221,22 +208,20 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     @Override
     public void reset() {
       super.reset();
-      hasMinimum = false;
       minimum = Long.MAX_VALUE;
-      maximum = Long.MIN_VALUE;
+      maximum = 0;
       sum = 0;
-      overflow = false;
     }
 
     @Override
     public void merge(ColumnStatisticsImpl other) {
       if (other instanceof CollectionColumnStatisticsImpl) {
         CollectionColumnStatisticsImpl otherColl = (CollectionColumnStatisticsImpl) other;
-        if (!hasMinimum) {
-          hasMinimum = otherColl.hasMinimum;
+
+        if(count == 0) {
           minimum = otherColl.minimum;
           maximum = otherColl.maximum;
-        } else if (otherColl.hasMinimum) {
+        } else {
           if (otherColl.minimum < minimum) {
             minimum = otherColl.minimum;
           }
@@ -244,17 +229,9 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
             maximum = otherColl.maximum;
           }
         }
-
-        overflow |= otherColl.overflow;
-        if (!overflow) {
-          boolean wasPositive = sum >= 0;
-          sum += otherColl.sum;
-          if ((otherColl.sum >= 0) == wasPositive) {
-            overflow = (sum >= 0) != wasPositive;
-          }
-        }
+        sum += otherColl.sum;
       } else {
-        if (isStatsExists() && hasMinimum) {
+        if (isStatsExists()) {
           throw new IllegalArgumentException("Incompatible merging of collection column statistics");
         }
       }
@@ -279,15 +256,15 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     @Override
     public String toString() {
       StringBuilder buf = new StringBuilder(super.toString());
-      if (hasMinimum) {
+      if (count != 0) {
         buf.append(" minChildren: ");
         buf.append(minimum);
         buf.append(" maxChildren: ");
         buf.append(maximum);
-      }
-      if (!overflow) {
-        buf.append(" totalChildren: ");
-        buf.append(sum);
+        if (sum != 0) {
+          buf.append(" totalChildren: ");
+          buf.append(sum);
+        }
       }
       return buf.toString();
     }
@@ -315,12 +292,6 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       if (sum != that.sum) {
         return false;
       }
-      if (hasMinimum != that.hasMinimum) {
-        return false;
-      }
-      if (overflow != that.overflow) {
-        return false;
-      }
 
       return true;
     }
@@ -328,11 +299,9 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     @Override
     public int hashCode() {
       int result = super.hashCode();
-      result = 31 * result + (int) (minimum ^ (minimum >>> 32));
-      result = 31 * result + (int) (maximum ^ (maximum >>> 32));
-      result = 31 * result + (int) (sum ^ (sum >>> 32));
-      result = 31 * result + (hasMinimum ? 1 : 0);
-      result = 31 * result + (overflow ? 1 : 0);
+      result = 31 * result + (count != 0 ? (int) (minimum ^ (minimum >>> 32)): 0) ;
+      result = 31 * result + (count != 0 ? (int) (maximum ^ (maximum >>> 32)): 0);
+      result = 31 * result + (sum != 0 ? (int) (sum ^ (sum >>> 32)): 0);
       return result;
     }
 
@@ -341,11 +310,11 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       OrcProto.ColumnStatistics.Builder builder = super.serialize();
       OrcProto.CollectionStatistics.Builder collectionStats =
           OrcProto.CollectionStatistics.newBuilder();
-      if (hasMinimum) {
+      if (count != 0) {
         collectionStats.setMinChildren(minimum);
         collectionStats.setMaxChildren(maximum);
       }
-      if (!overflow) {
+      if (sum != 0) {
         collectionStats.setTotalChildren(sum);
       }
       builder.setCollectionStatistics(collectionStats);
@@ -356,7 +325,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
   /**
    * Implementation of IntegerColumnStatistics
    */
-  private static final class IntegerColumnStatisticsImpl extends ColumnStatisticsImpl
+  private static final class IntegerStatisticsImpl extends ColumnStatisticsImpl
       implements IntegerColumnStatistics {
 
     private long minimum = Long.MAX_VALUE;
@@ -365,10 +334,10 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     private boolean hasMinimum = false;
     private boolean overflow = false;
 
-    IntegerColumnStatisticsImpl() {
+    IntegerStatisticsImpl() {
     }
 
-    IntegerColumnStatisticsImpl(OrcProto.ColumnStatistics stats) {
+    IntegerStatisticsImpl(OrcProto.ColumnStatistics stats) {
       super(stats);
       OrcProto.IntegerStatistics intStat = stats.getIntStatistics();
       if (intStat.hasMinimum()) {
@@ -417,8 +386,8 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
     @Override
     public void merge(ColumnStatisticsImpl other) {
-      if (other instanceof IntegerColumnStatisticsImpl) {
-        IntegerColumnStatisticsImpl otherInt = (IntegerColumnStatisticsImpl) other;
+      if (other instanceof IntegerStatisticsImpl) {
+        IntegerStatisticsImpl otherInt = (IntegerStatisticsImpl) other;
         if (!hasMinimum) {
           hasMinimum = otherInt.hasMinimum;
           minimum = otherInt.minimum;
@@ -446,6 +415,22 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
         }
       }
       super.merge(other);
+    }
+
+    @Override
+    public OrcProto.ColumnStatistics.Builder serialize() {
+      OrcProto.ColumnStatistics.Builder builder = super.serialize();
+      OrcProto.IntegerStatistics.Builder intb =
+          OrcProto.IntegerStatistics.newBuilder();
+      if (hasMinimum) {
+        intb.setMinimum(minimum);
+        intb.setMaximum(maximum);
+      }
+      if (!overflow) {
+        intb.setSum(sum);
+      }
+      builder.setIntStatistics(intb);
+      return builder;
     }
 
     @Override
@@ -489,14 +474,14 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       if (this == o) {
         return true;
       }
-      if (!(o instanceof IntegerColumnStatisticsImpl)) {
+      if (!(o instanceof IntegerStatisticsImpl)) {
         return false;
       }
       if (!super.equals(o)) {
         return false;
       }
 
-      IntegerColumnStatisticsImpl that = (IntegerColumnStatisticsImpl) o;
+      IntegerStatisticsImpl that = (IntegerStatisticsImpl) o;
 
       if (minimum != that.minimum) {
         return false;
@@ -526,22 +511,6 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       result = 31 * result + (hasMinimum ? 1 : 0);
       result = 31 * result + (overflow ? 1 : 0);
       return result;
-    }
-
-    @Override
-    public OrcProto.ColumnStatistics.Builder serialize() {
-      OrcProto.ColumnStatistics.Builder builder = super.serialize();
-      OrcProto.IntegerStatistics.Builder intb =
-          OrcProto.IntegerStatistics.newBuilder();
-      if (hasMinimum) {
-        intb.setMinimum(minimum);
-        intb.setMaximum(maximum);
-      }
-      if (!overflow) {
-        intb.setSum(sum);
-      }
-      builder.setIntStatistics(intb);
-      return builder;
     }
   }
 
@@ -1983,7 +1952,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       case SHORT:
       case INT:
       case LONG:
-        return new IntegerColumnStatisticsImpl();
+        return new IntegerStatisticsImpl();
       case LIST:
       case MAP:
         return new CollectionColumnStatisticsImpl();
@@ -2016,7 +1985,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     if (stats.hasBucketStatistics()) {
       return new BooleanStatisticsImpl(stats);
     } else if (stats.hasIntStatistics()) {
-      return new IntegerColumnStatisticsImpl(stats);
+      return new IntegerStatisticsImpl(stats);
     } else if (stats.hasCollectionStatistics()) {
       return new CollectionColumnStatisticsImpl(stats);
     } else if (stats.hasDoubleStatistics()) {
