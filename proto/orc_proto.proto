@@ -74,6 +74,13 @@ message BinaryStatistics {
   optional sint64 sum = 1;
 }
 
+// Statistics for list and map
+message CollectionStatistics {
+  optional uint64 minChildren = 1;
+  optional uint64 maxChildren = 2;
+  optional uint64 totalChildren = 3;
+}
+
 message ColumnStatistics {
   optional uint64 numberOfValues = 1;
   optional IntegerStatistics intStatistics = 2;
@@ -86,6 +93,7 @@ message ColumnStatistics {
   optional TimestampStatistics timestampStatistics = 9;
   optional bool hasNull = 10;
   optional uint64 bytesOnDisk = 11;
+  optional CollectionStatistics collectionStatistics = 12;
 }
 
 message RowIndexEntry {

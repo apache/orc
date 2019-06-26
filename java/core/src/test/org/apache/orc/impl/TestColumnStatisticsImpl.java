@@ -148,4 +148,30 @@ public class TestColumnStatisticsImpl {
     updateStats1.merge(updateStats2);
     assertEquals(null, stats1.getSum());
   }
+
+  @Test
+  public void testCollectionColumnStats() throws Exception {
+    /* test List */
+    final ColumnStatisticsImpl statList = ColumnStatisticsImpl.create(TypeDescription.createList(TypeDescription.createInt()));
+
+    statList.increment();
+    statList.updateCollectionLength(10);
+
+    statList.increment();
+    statList.updateCollectionLength(20);
+
+    statList.increment();
+    statList.updateCollectionLength(30);
+
+    statList.increment();
+    statList.updateCollectionLength(40);
+
+    final OrcProto.ColumnStatistics.Builder builder = statList.serialize();
+    final OrcProto.CollectionStatistics collectionStatistics = builder.getCollectionStatistics();
+
+    assertEquals(10, collectionStatistics.getMinChildren());
+    assertEquals(40, collectionStatistics.getMaxChildren());
+    assertEquals(100, collectionStatistics.getTotalChildren());
+
+  }
 }

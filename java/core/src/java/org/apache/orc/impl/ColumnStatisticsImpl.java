@@ -25,6 +25,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparator;
 import org.apache.orc.BinaryColumnStatistics;
 import org.apache.orc.BooleanColumnStatistics;
+import org.apache.orc.CollectionColumnStatistics;
 import org.apache.orc.ColumnStatistics;
 import org.apache.orc.DateColumnStatistics;
 import org.apache.orc.DecimalColumnStatistics;
@@ -35,13 +36,8 @@ import org.apache.orc.StringColumnStatistics;
 import org.apache.orc.TimestampColumnStatistics;
 import org.apache.orc.TypeDescription;
 
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.Timestamp;
-import java.util.Arrays;
 import java.util.TimeZone;
 
 public class ColumnStatisticsImpl implements ColumnStatistics {
@@ -66,7 +62,6 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     if (bytesOnDisk != that.bytesOnDisk) {
       return false;
     }
-
     return true;
   }
 
@@ -170,6 +165,166 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     }
   }
 
+  /**
+   * Column statistics for List and Map types.
+   */
+  private static final class CollectionColumnStatisticsImpl extends ColumnStatisticsImpl
+      implements CollectionColumnStatistics {
+
+    protected long minimum = Long.MAX_VALUE;
+    protected long maximum = 0;
+    protected long sum = 0;
+
+    CollectionColumnStatisticsImpl() {
+      super();
+    }
+
+    CollectionColumnStatisticsImpl(OrcProto.ColumnStatistics stats) {
+      super(stats);
+      OrcProto.CollectionStatistics collStat = stats.getCollectionStatistics();
+
+      minimum = collStat.hasMinChildren() ? collStat.getMinChildren() : Long.MAX_VALUE;
+      maximum = collStat.hasMaxChildren() ? collStat.getMaxChildren() : 0;
+      sum = collStat.hasTotalChildren() ? collStat.getTotalChildren() : 0;
+    }
+
+    @Override
+    public void updateCollectionLength(final long length) {
+      /*
+       * Here, minimum = minCollectionLength
+       * maximum = maxCollectionLength
+       * sum = childCount
+       */
+      if (length < minimum) {
+        minimum = length;
+      }
+      if (length > maximum) {
+        maximum = length;
+      }
+
+      this.sum += length;
+    }
+
+    @Override
+    public void reset() {
+      super.reset();
+      minimum = Long.MAX_VALUE;
+      maximum = 0;
+      sum = 0;
+    }
+
+    @Override
+    public void merge(ColumnStatisticsImpl other) {
+      if (other instanceof CollectionColumnStatisticsImpl) {
+        CollectionColumnStatisticsImpl otherColl = (CollectionColumnStatisticsImpl) other;
+
+        if(count == 0) {
+          minimum = otherColl.minimum;
+          maximum = otherColl.maximum;
+        } else {
+          if (otherColl.minimum < minimum) {
+            minimum = otherColl.minimum;
+          }
+          if (otherColl.maximum > maximum) {
+            maximum = otherColl.maximum;
+          }
+        }
+        sum += otherColl.sum;
+      } else {
+        if (isStatsExists()) {
+          throw new IllegalArgumentException("Incompatible merging of collection column statistics");
+        }
+      }
+      super.merge(other);
+    }
+
+    @Override
+    public long getMinimumChildren() {
+      return minimum;
+    }
+
+    @Override
+    public long getMaximumChildren() {
+      return maximum;
+    }
+
+    @Override
+    public long getTotalChildren() {
+      return sum;
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder buf = new StringBuilder(super.toString());
+      if (count != 0) {
+        buf.append(" minChildren: ");
+        buf.append(minimum);
+        buf.append(" maxChildren: ");
+        buf.append(maximum);
+        if (sum != 0) {
+          buf.append(" totalChildren: ");
+          buf.append(sum);
+        }
+      }
+      return buf.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (!(o instanceof CollectionColumnStatisticsImpl)) {
+        return false;
+      }
+      if (!super.equals(o)) {
+        return false;
+      }
+
+      CollectionColumnStatisticsImpl that = (CollectionColumnStatisticsImpl) o;
+
+      if (minimum != that.minimum) {
+        return false;
+      }
+      if (maximum != that.maximum) {
+        return false;
+      }
+      if (sum != that.sum) {
+        return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      int result = super.hashCode();
+      result = 31 * result + (count != 0 ? (int) (minimum ^ (minimum >>> 32)): 0) ;
+      result = 31 * result + (count != 0 ? (int) (maximum ^ (maximum >>> 32)): 0);
+      result = 31 * result + (sum != 0 ? (int) (sum ^ (sum >>> 32)): 0);
+      return result;
+    }
+
+    @Override
+    public OrcProto.ColumnStatistics.Builder serialize() {
+      OrcProto.ColumnStatistics.Builder builder = super.serialize();
+      OrcProto.CollectionStatistics.Builder collectionStats =
+          OrcProto.CollectionStatistics.newBuilder();
+      if (count != 0) {
+        collectionStats.setMinChildren(minimum);
+        collectionStats.setMaxChildren(maximum);
+      }
+      if (sum != 0) {
+        collectionStats.setTotalChildren(sum);
+      }
+      builder.setCollectionStatistics(collectionStats);
+      return builder;
+    }
+  }
+
+  /**
+   * Implementation of IntegerColumnStatistics
+   */
   private static final class IntegerStatisticsImpl extends ColumnStatisticsImpl
       implements IntegerColumnStatistics {
 
@@ -266,7 +421,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     public OrcProto.ColumnStatistics.Builder serialize() {
       OrcProto.ColumnStatistics.Builder builder = super.serialize();
       OrcProto.IntegerStatistics.Builder intb =
-        OrcProto.IntegerStatistics.newBuilder();
+          OrcProto.IntegerStatistics.newBuilder();
       if (hasMinimum) {
         intb.setMinimum(minimum);
         intb.setMaximum(maximum);
@@ -1673,6 +1828,15 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     hasNull = true;
   }
 
+  /**
+   * Update the collection length for Map and List type.
+   * @param value length of collection
+   */
+  public void updateCollectionLength(final long value) {
+    throw new UnsupportedOperationException(
+        "Can't update collection count");
+  }
+
   public void updateBoolean(boolean value, int repetitions) {
     throw new UnsupportedOperationException("Can't update boolean");
   }
@@ -1789,6 +1953,9 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       case INT:
       case LONG:
         return new IntegerStatisticsImpl();
+      case LIST:
+      case MAP:
+        return new CollectionColumnStatisticsImpl();
       case FLOAT:
       case DOUBLE:
         return new DoubleStatisticsImpl();
@@ -1819,6 +1986,8 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       return new BooleanStatisticsImpl(stats);
     } else if (stats.hasIntStatistics()) {
       return new IntegerStatisticsImpl(stats);
+    } else if (stats.hasCollectionStatistics()) {
+      return new CollectionColumnStatisticsImpl(stats);
     } else if (stats.hasDoubleStatistics()) {
       return new DoubleStatisticsImpl(stats);
     } else if (stats.hasStringStatistics()) {
