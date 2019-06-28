@@ -1,8 +1,16 @@
 # List the releases in reverse logical order
 # Only one release should be tagged latest
+1.5.6:
+  date: 2019-06-27
+  state: latest
+  tar: orc-1.5.6.tar.gz
+  signed-by: Owen O’Malley (3D0C92B9)
+  sha256: e0588bfd96103bc1904166c63c84e769bf7259eee99f409629ad871ea5600e77
+  known-issues:
+
 1.5.5:
   date: 2019-03-14
-  state: latest
+  state: archived
   tar: orc-1.5.5.tar.gz
   signed-by: Owen O’Malley (3D0C92B9)
   sha256: 486bbf0765a5b8c2e0155d3b1b8e3e1bd182dc597cb09d559d736d9881021d86
