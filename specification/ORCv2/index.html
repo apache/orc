@@ -1932,10 +1932,9 @@ sequence of bytes with a little endian encoding in the utf8bitset field.</p>
 <p>Bloom filter internally uses two different hash functions to map a key
 to a position in the bit set. For tinyint, smallint, int, bigint, float
 and double types, Thomas Wang’s 64-bit integer hash function is used.
-Floats are converted to IEEE-754 32 bit representation
-(using Java’s Float.floatToIntBits(float)). Similary, Doubles are
-converted to IEEE-754 64 bit representation (using Java’s
-Double.doubleToLongBits(double)). All these primitive types
+Doubles are converted to IEEE-754 64 bit representation (using Java’s
+Double.doubleToLongBits(double)). Floats are as converted to double
+(using Java’s float to double cast).  All these primitive types
 are cast to long base type before being passed on to the hash function.
 For strings and binary types, Murmur3 64 bit hash algorithm is used.
 The 64 bit variant of Murmur3 considers only the most significant
