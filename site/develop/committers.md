@@ -33,11 +33,13 @@ Lefty Leverenz          | leftyl       | PMC
 Rui Li                  | lirui        | Committer
 Mithun Radhakrishnan    | mithun       | Committer
 Matthew McCline         | mmccline     | Committer
+Sandeep More            | moresandeep  | Committer
 Naveen Gangam           | ngangam      | Committer
 Owen O'Malley           | omalley      | PMC
 Prasanth Jayachandran   | prasanthj    | PMC
 Pengcheng Xiong         | pxiong       | Committer
 Rajesh Balamohan        | rbalamohan   | Committer
+Renat Valiullin         | reval        | Committer
 Sergey Shelukhin        | sershe       | Committer
 Sergio Pena             | spena        | Committer
 Siddharth Seth          | sseth        | Committer
@@ -53,11 +55,16 @@ Aihua Xu                | zihuaxu      | Committer
 Companies with employees that are committers:
 
 * Alibaba
+* Amazon
+* Apple
 * Cloudera
+* Confluent
 * Facebook
 * Hortonworks
 * Intel
 * LinkedIn
 * Microsoft
+* Uber
 * Vertica
+* Workday
 * Yahoo
