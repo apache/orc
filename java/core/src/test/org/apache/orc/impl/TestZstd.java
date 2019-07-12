@@ -16,12 +16,30 @@
  * limitations under the License.
  */
 
-package org.apache.orc;
+package org.apache.orc.impl;
 
-/**
- * An enumeration that lists the generic compression algorithms that
- * can be applied to ORC files.
- */
-public enum CompressionKind {
-  NONE, ZLIB, SNAPPY, LZO, LZ4, ZSTD
+import io.airlift.compress.zstd.ZstdCompressor;
+import io.airlift.compress.zstd.ZstdDecompressor;
+import org.apache.orc.CompressionCodec;
+import org.apache.orc.CompressionKind;
+import org.junit.Test;
+
+import java.nio.ByteBuffer;
+
+import static org.junit.Assert.assertEquals;
+
+public class TestZstd {
+
+  @Test
+  public void testNoOverflow() throws Exception {
+    ByteBuffer in = ByteBuffer.allocate(10);
+    ByteBuffer out = ByteBuffer.allocate(10);
+    in.put(new byte[]{1,2,3,4,5,6,7,10});
+    in.flip();
+    CompressionCodec codec = new AircompressorCodec(
+        CompressionKind.ZSTD, new ZstdCompressor(), new ZstdDecompressor());
+    assertEquals(false, codec.compress(in, out, null,
+        codec.getDefaultOptions()));
+  }
+
 }
