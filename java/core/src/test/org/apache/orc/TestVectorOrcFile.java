@@ -2051,7 +2051,7 @@ public class TestVectorOrcFile {
   }
 
   /**
-   * Read and write a randomly generated lzo file.
+   * Read and write a randomly generated lz4 file.
    * @throws Exception
    */
   @Test
@@ -2098,6 +2098,54 @@ public class TestVectorOrcFile {
     rows.nextBatch(batch);
     assertEquals(0, batch.size);
     rows.close();
+  }
+
+  /**
+   * Read and write a randomly generated zstd file.
+   */
+  @Test
+  public void testZstd() throws Exception {
+    TypeDescription schema =
+        TypeDescription.fromString("struct<x:bigint,y:int,z:bigint>");
+    try (Writer writer = OrcFile.createWriter(testFilePath,
+        OrcFile.writerOptions(conf)
+            .setSchema(schema)
+            .compress(CompressionKind.ZSTD)
+            .bufferSize(1000)
+            .version(fileFormat))) {
+      VectorizedRowBatch batch = schema.createRowBatch();
+      Random rand = new Random(3);
+      batch.size = 1000;
+      for (int b = 0; b < 10; ++b) {
+        for (int r = 0; r < 1000; ++r) {
+          ((LongColumnVector) batch.cols[0]).vector[r] = rand.nextInt();
+          ((LongColumnVector) batch.cols[1]).vector[r] = b * 1000 + r;
+          ((LongColumnVector) batch.cols[2]).vector[r] = rand.nextLong();
+        }
+        writer.addRowBatch(batch);
+      }
+    }
+    try (Reader reader = OrcFile.createReader(testFilePath,
+           OrcFile.readerOptions(conf).filesystem(fs));
+         RecordReader rows = reader.rows()) {
+      assertEquals(CompressionKind.ZSTD, reader.getCompressionKind());
+      VectorizedRowBatch batch = reader.getSchema().createRowBatch(1000);
+      Random rand = new Random(3);
+      for (int b = 0; b < 10; ++b) {
+        rows.nextBatch(batch);
+        assertEquals(1000, batch.size);
+        for (int r = 0; r < batch.size; ++r) {
+          assertEquals(rand.nextInt(),
+              ((LongColumnVector) batch.cols[0]).vector[r]);
+          assertEquals(b * 1000 + r,
+              ((LongColumnVector) batch.cols[1]).vector[r]);
+          assertEquals(rand.nextLong(),
+              ((LongColumnVector) batch.cols[2]).vector[r]);
+        }
+      }
+      rows.nextBatch(batch);
+      assertEquals(0, batch.size);
+    }
   }
 
   /**

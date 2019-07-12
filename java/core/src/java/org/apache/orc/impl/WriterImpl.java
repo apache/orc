@@ -32,6 +32,8 @@ import io.airlift.compress.lz4.Lz4Compressor;
 import io.airlift.compress.lz4.Lz4Decompressor;
 import io.airlift.compress.lzo.LzoCompressor;
 import io.airlift.compress.lzo.LzoDecompressor;
+import io.airlift.compress.zstd.ZstdCompressor;
+import io.airlift.compress.zstd.ZstdDecompressor;
 import org.apache.orc.ColumnStatistics;
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.CompressionKind;
@@ -273,6 +275,9 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
       case LZ4:
         return new AircompressorCodec(kind, new Lz4Compressor(),
             new Lz4Decompressor());
+      case ZSTD:
+        return new AircompressorCodec(kind, new ZstdCompressor(),
+            new ZstdDecompressor());
       default:
         throw new IllegalArgumentException("Unknown compression codec: " +
             kind);
@@ -534,6 +539,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
       case SNAPPY: return OrcProto.CompressionKind.SNAPPY;
       case LZO: return OrcProto.CompressionKind.LZO;
       case LZ4: return OrcProto.CompressionKind.LZ4;
+      case ZSTD: return OrcProto.CompressionKind.ZSTD;
       default:
         throw new IllegalArgumentException("Unknown compression " + kind);
     }

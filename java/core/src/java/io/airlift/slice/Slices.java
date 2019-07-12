@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,12 +16,11 @@
  * limitations under the License.
  */
 
-package org.apache.orc;
+package io.airlift.slice;
 
 /**
- * An enumeration that lists the generic compression algorithms that
- * can be applied to ORC files.
+ * A stub to avoid the jol-core dependency of slice.
  */
-public enum CompressionKind {
-  NONE, ZLIB, SNAPPY, LZO, LZ4, ZSTD
+public final class Slices {
+  public static final Slice EMPTY_SLICE = new Slice();
 }
