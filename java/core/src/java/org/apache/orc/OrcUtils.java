@@ -374,7 +374,7 @@ public class OrcUtils {
   public static List<StripeInformation> convertProtoStripesToStripes(
       List<OrcProto.StripeInformation> stripes) {
     List<StripeInformation> result = new ArrayList<>(stripes.size());
-    long previousStripeId = -1;
+    long previousStripeId = 0;
     byte[][] previousKeys = null;
     long stripeId = 0;
     for (OrcProto.StripeInformation stripeProto: stripes) {

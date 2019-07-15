@@ -26,6 +26,7 @@ import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.ColumnStatistics;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
+import org.apache.orc.StripeStatistics;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.BitFieldWriter;
 import org.apache.orc.impl.ColumnStatisticsImpl;
@@ -343,9 +344,25 @@ public abstract class TreeWriterBase implements TreeWriter {
   }
 
   @Override
-  public void updateFileStatistics(OrcProto.StripeStatistics stats) {
-    fileStatistics.merge(ColumnStatisticsImpl.deserialize(schema,
-        stats.getColStats(id)));
+  public void addStripeStatistics(StripeStatistics[] stats
+                                  ) throws IOException {
+    // pick out the correct statistics for this writer
+    int variantId;
+    int relativeColumn;
+    if (encryption == null) {
+      variantId = stats.length - 1;
+      relativeColumn = id;
+    } else {
+      variantId = encryption.getVariantId();
+      relativeColumn = id - encryption.getRoot().getId();
+    }
+    OrcProto.ColumnStatistics colStats = stats[variantId].getColumn(relativeColumn);
+    // update the file statistics
+    fileStatistics.merge(ColumnStatisticsImpl.deserialize(schema, colStats));
+    // write them out to the file
+    context.writeStatistics(
+        new StreamName(id, OrcProto.Stream.Kind.STRIPE_STATISTICS, encryption),
+        colStats.toBuilder());
   }
 
   /**

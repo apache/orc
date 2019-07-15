@@ -22,7 +22,14 @@ import java.io.IOException;
 import java.security.Key;
 
 /**
- * Information about a key used for column encryption in an ORC file.
+ * Information about a column encryption variant.
+ *
+ * Column encryption is done by encoding multiple variants of the same column.
+ * Each encrypted column ends up in two variants:
+ * <ul>
+ *   <li>Encrypted original</li>
+ *   <li>Unencrypted masked</li>
+ * </ul>
  */
 public interface EncryptionVariant extends Comparable<EncryptionVariant> {
 
@@ -35,7 +42,7 @@ public interface EncryptionVariant extends Comparable<EncryptionVariant> {
   EncryptionKey getKeyDescription();
 
   /**
-   * Get the root column for this encryption.
+   * Get the root column for this variant.
    * @return the root column type
    */
   TypeDescription getRoot();

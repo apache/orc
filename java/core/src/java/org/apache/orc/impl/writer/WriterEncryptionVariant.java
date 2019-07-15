@@ -81,10 +81,6 @@ public class WriterEncryptionVariant implements EncryptionVariant {
     fileStats.clearColumn();
   }
 
-  public void addFileStatistics(OrcProto.ColumnStatistics column) {
-    fileStats.addColumn(column);
-  }
-
   public OrcProto.FileStatistics getFileStatistics() {
     return fileStats.build();
   }

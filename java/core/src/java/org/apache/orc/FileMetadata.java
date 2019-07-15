@@ -24,6 +24,7 @@ import java.util.List;
  * Cached file metadata. Right now, it caches everything; we don't have to store all the
  * protobuf structs actually, we could just store what we need, but that would require that
  * ORC stop depending on them too. Luckily, they shouldn't be very big.
+ * @deprecated Use {@link org.apache.orc.impl.OrcTail} instead
  */
 public interface FileMetadata {
   boolean isOriginalFormat();

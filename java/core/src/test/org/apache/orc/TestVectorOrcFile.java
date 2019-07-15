@@ -19,6 +19,7 @@
 package org.apache.orc;
 
 import org.apache.orc.impl.InStream;
+import org.apache.orc.impl.KeyProvider;
 import org.apache.orc.impl.OrcCodecPool;
 
 import org.apache.orc.impl.WriterImpl;
@@ -66,12 +67,16 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.mockito.Mockito;
 
+import javax.xml.bind.DatatypeConverter;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyStore;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.format.DateTimeFormatter;
@@ -2305,7 +2310,7 @@ public class TestVectorOrcFile {
             .withZeroCopy(false)
             .build());
     StripePlanner planner = new StripePlanner(schema, new ReaderEncryption(),
-        options, meta, reader.getWriterVersion(), true, Integer.MAX_VALUE);
+        meta, reader.getWriterVersion(), true, Integer.MAX_VALUE);
     boolean[] columns = new boolean[schema.getMaximumId() + 1];
     Arrays.fill(columns, true);
     OrcIndex index = planner.parseStripe(reader.getStripes().get(0), columns)
@@ -3413,8 +3418,8 @@ public class TestVectorOrcFile {
     return ByteBuffer.wrap(s.getBytes(StandardCharsets.UTF_8));
   }
 
-  static byte[] fromInt(int x) {
-    return Integer.toHexString(x).getBytes(StandardCharsets.UTF_8);
+  static byte[] fromLong(long x) {
+    return Long.toHexString(x).getBytes(StandardCharsets.UTF_8);
   }
 
   @Test
@@ -3445,7 +3450,7 @@ public class TestVectorOrcFile {
     batch.size = 1024;
     for(int r=0; r < 1024; ++r) {
       ((LongColumnVector) batch.cols[0]).vector[r] = r;
-      ((BytesColumnVector) batch.cols[1]).setVal(r, fromInt(r));
+      ((BytesColumnVector) batch.cols[1]).setVal(r, fromLong(r));
     }
     writer.addRowBatch(batch);
     writer.addUserMetadata("a", fromString("foo"));
@@ -3458,7 +3463,7 @@ public class TestVectorOrcFile {
     batch.size = 1024;
     for(int r=0; r < 1024; ++r) {
       ((LongColumnVector) batch.cols[0]).vector[r] = 2 * r;
-      ((BytesColumnVector) batch.cols[1]).setVal(r, fromInt(2 * r));
+      ((BytesColumnVector) batch.cols[1]).setVal(r, fromLong(2 * r));
     }
     writer.addRowBatch(batch);
     writer.addUserMetadata("a", fromString("foo"));
@@ -3471,7 +3476,7 @@ public class TestVectorOrcFile {
     batch.size = 1024;
     for(int r=0; r < 1024; ++r) {
       ((LongColumnVector) batch.cols[0]).vector[r] = 3 * r;
-      ((BytesColumnVector) batch.cols[1]).setVal(r, fromInt(3 * r));
+      ((BytesColumnVector) batch.cols[1]).setVal(r, fromLong(3 * r));
     }
     writer.addRowBatch(batch);
     writer.addUserMetadata("c", fromString("baz"));
@@ -3523,7 +3528,7 @@ public class TestVectorOrcFile {
     batch.size = 1024;
     for(int r=0; r < 1024; ++r) {
       ((LongColumnVector) batch.cols[0]).vector[r] = 4 * r;
-      ((BytesColumnVector) batch.cols[1]).setVal(r, fromInt(5 * r));
+      ((BytesColumnVector) batch.cols[1]).setVal(r, fromLong(5 * r));
     }
     writer.addRowBatch(batch);
     writer.close();
@@ -3549,11 +3554,299 @@ public class TestVectorOrcFile {
     assertEquals(fromString("bat"), reader.getMetadataValue("d"));
   }
 
+  /**
+   * Write a mergeable file to test merging files with column encryption.
+   * @param path the path to write to
+   * @param provider the key provider
+   * @param startValue the base value for the columns
+   * @param stripes the number of stripes to write
+   * @param bufferSize the buffer size to use for the compression
+   * @param encrypt the encryption string
+   * @param mask the mask string
+   * @return the locations of the intermediate stripes
+   * @throws IOException
+   */
+  private long[] writeMergeableFile(Path path,
+                                    KeyProvider provider,
+                                    long startValue,
+                                    int stripes,
+                                    int bufferSize,
+                                    String encrypt,
+                                    String mask) throws IOException {
+    fs.delete(path, false);
+    TypeDescription schema = TypeDescription.fromString(
+        "struct<a:int,b:struct<c:string,d:string>>");
+
+    // change all of the options away from default to find anything we
+    // don't copy to the merged file
+    OrcFile.WriterOptions opts = OrcFile.writerOptions(conf)
+                                     .setSchema(schema)
+                                     .rowIndexStride(1000)
+                                     .version(fileFormat)
+                                     .bufferSize(bufferSize)
+                                     .enforceBufferSize()
+                                     .setKeyProvider(provider)
+                                     .encrypt(encrypt)
+                                     .masks(mask);
+    long[] intermediateFooters = new long[stripes];
+
+    Writer writer = OrcFile.createWriter(path, opts);
+    VectorizedRowBatch batch = schema.createRowBatch();
+    LongColumnVector a = (LongColumnVector) batch.cols[0];
+    StructColumnVector b = (StructColumnVector) batch.cols[1];
+    BytesColumnVector c = (BytesColumnVector) b.fields[0];
+    BytesColumnVector d = (BytesColumnVector) b.fields[1];
+    batch.size = 1024;
+    for(int btch=0; btch < 3; ++btch) {
+      for (int r = 0; r < 1024; ++r) {
+        long value = startValue + btch * 1024 + r;
+        a.vector[r] = value;
+        c.setVal(r, fromLong(value));
+        d.setVal(r, String.format("%010x", value * 1_000_001)
+                        .getBytes(StandardCharsets.UTF_8));
+      }
+      writer.addRowBatch(batch);
+      // write an intermediate footer to force a stripe
+      intermediateFooters[btch] = writer.writeIntermediateFooter();
+    }
+    writer.close();
+    return intermediateFooters;
+  }
+
+  static String computeSha(String value) {
+    try {
+      MessageDigest md = MessageDigest.getInstance("SHA-256");
+      byte[] digest = md.digest(value.getBytes(StandardCharsets.UTF_8));
+      return DatatypeConverter.printHexBinary(digest);
+    } catch (NoSuchAlgorithmException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Test
+  public void testEncryptMerge() throws Exception {
+    Assume.assumeTrue(fileFormat != OrcFile.Version.V_0_11);
+    Path input1 = new Path(workDir, "TestVectorOrcFile.testEncryptMerge1-" +
+                                        fileFormat.getName() + ".orc");
+    Path input2 = new Path(workDir, "TestVectorOrcFile.testEncryptMerge2-" +
+                                        fileFormat.getName() + ".orc");
+    Path input3 = new Path(workDir, "TestVectorOrcFile.testEncryptMerge3-" +
+                                        fileFormat.getName() + ".orc");
+    Path input4 = new Path(workDir, "TestVectorOrcFile.testEncryptMerge4-" +
+                                        fileFormat.getName() + ".orc");
+    Path input5 = new Path(workDir, "TestVectorOrcFile.testEncryptMerge5-" +
+                                        fileFormat.getName() + ".orc");
+    Random random = new Random(169);
+    InMemoryKeystore keystore = new InMemoryKeystore(random);
+    EncryptionAlgorithm algorithm = EncryptionAlgorithm.AES_CTR_128;
+    byte[] piiKey = new byte[algorithm.keyLength()];
+    byte[] topSecretKey = new byte[algorithm.keyLength()];
+    random.nextBytes(piiKey);
+    random.nextBytes(topSecretKey);
+    keystore.addKey("pii", algorithm, piiKey)
+            .addKey("top_secret", algorithm, topSecretKey);
+    String encryption = "pii:a;top_secret:b";
+    String mask = "sha256,`don't worry`:b";
+
+    // write three files that should merge, each with 3 stripes of 1024 rows.
+    long[] cuts = writeMergeableFile(input1, keystore, 0, 3, 0x400, encryption, mask);
+    writeMergeableFile(input2, keystore, 3 * 1024, 3, 0x800, encryption, mask);
+    writeMergeableFile(input3, keystore, 6 * 1024, 3, 0xc00, encryption, mask);
+    // two files that aren't mergeable
+    writeMergeableFile(input4, keystore, 9 * 1024, 3, 0x400, encryption, null);
+    writeMergeableFile(input5, keystore, 12 * 1024, 3, 0x400, null, null);
+
+    // make sure that we can read up to the intermediate footers
+    try (Reader reader = OrcFile.createReader(input1, OrcFile.readerOptions(conf)
+                                                     .maxLength(cuts[0]))) {
+      assertEquals(1024, reader.getNumberOfRows());
+    }
+    try (Reader reader = OrcFile.createReader(input1, OrcFile.readerOptions(conf)
+                                                          .maxLength(cuts[1]))) {
+      assertEquals(2 * 1024, reader.getNumberOfRows());
+    }
+    try (Reader reader = OrcFile.createReader(input1, OrcFile.readerOptions(conf)
+                                                          .maxLength(cuts[2]))) {
+      assertEquals(3 * 1024, reader.getNumberOfRows());
+    }
+
+    // make a new version of the pii key
+    keystore.addKey("pii", 1, algorithm, new byte[algorithm.keyLength()]);
+    Path merge1 = new Path(workDir, "TestVectorOrcFile.testEncryptMerge.merge1-" +
+                                         fileFormat.getName() + ".orc");
+
+    // merge all three files together
+    fs.delete(merge1, false);
+    List<Path> paths = OrcFile.mergeFiles(merge1,
+        OrcFile.writerOptions(conf).setKeyProvider(keystore),
+        Arrays.asList(input1, input2, input3));
+    assertEquals(3, paths.size());
+
+    // test reading with no keys
+    Reader reader = OrcFile.createReader(merge1, OrcFile.readerOptions(conf));
+    assertEquals(9 * 1024, reader.getNumberOfRows());
+    assertEquals(CompressionKind.ZLIB, reader.getCompressionKind());
+    assertEquals(1000, reader.getRowIndexStride());
+    assertEquals(0xc00, reader.getCompressionSize());
+    assertEquals(fileFormat, reader.getFileVersion());
+    assertEquals(9, reader.getStripes().size());
+    EncryptionKey[] keys = reader.getColumnEncryptionKeys();
+    assertEquals(2, keys.length);
+    assertEquals("pii", keys[0].getKeyName());
+    assertEquals(0, keys[0].getKeyVersion());
+    assertEquals(false, keys[0].isAvailable());
+    assertEquals("top_secret", keys[1].getKeyName());
+    assertEquals(0, keys[1].getKeyVersion());
+    assertEquals(false, keys[1].isAvailable());
+    // check the file stats
+    ColumnStatistics[] stats = reader.getStatistics();
+    assertEquals(9 * 1024, stats[0].getNumberOfValues());
+    assertEquals(0, stats[1].getNumberOfValues());
+    assertEquals(9 * 1024, stats[2].getNumberOfValues());
+    assertEquals(9 * 1024, stats[3].getNumberOfValues());
+    assertEquals("00037F39CF870A1F49129F9C82D935665D352FFD25EA3296208F6F7B16FD654F",
+        ((StringColumnStatistics) stats[3]).getMinimum());
+    assertEquals("FFF60CF25C8E227396BC77DD808773DA69D767D6B0417ADB1A0CAC51CC168797",
+        ((StringColumnStatistics) stats[3]).getMaximum());
+    assertEquals(9 * 1024, stats[4].getNumberOfValues());
+    assertEquals("001277C7986C02D9CDA490756055C6A81F3838D3394F18806DD3359AAD59862A",
+        ((StringColumnStatistics) stats[4]).getMinimum());
+    assertEquals("FFFF1E62E46263E623F704AC22C2F27E5BBDED8693546A2A11F011251A53D23D",
+        ((StringColumnStatistics) stats[4]).getMaximum());
+    // check the stripe stats
+    List<StripeStatistics> stripeStats = reader.getStripeStatistics();
+    for(int s=0; s < stripeStats.size(); ++s) {
+      ColumnStatistics[] cs = stripeStats.get(s).getColumnStatistics();
+      assertEquals("stripe " + s, 1024, cs[0].getNumberOfValues());
+      assertEquals("stripe " + s, 0, cs[1].getNumberOfValues());
+      assertEquals("stripe " + s, 1024, cs[2].getNumberOfValues());
+      assertEquals("stripe " + s, 1024, cs[3].getNumberOfValues());
+      assertEquals("stripe " + s, 64, ((StringColumnStatistics) cs[3]).getMinimum().length());
+      assertEquals("stripe " + s, 64, ((StringColumnStatistics) cs[3]).getMaximum().length());
+      assertEquals("stripe " + s, 1024, cs[4].getNumberOfValues());
+      assertEquals("stripe " + s, 64, ((StringColumnStatistics) cs[4]).getMinimum().length());
+      assertEquals("stripe " + s, 64, ((StringColumnStatistics) cs[4]).getMaximum().length());
+    }
+    // check the file contents
+    RecordReader rows = reader.rows();
+    VectorizedRowBatch batch = reader.getSchema().createRowBatchV2();
+    LongColumnVector a = (LongColumnVector) batch.cols[0];
+    StructColumnVector b = (StructColumnVector) batch.cols[1];
+    BytesColumnVector c = (BytesColumnVector) b.fields[0];
+    BytesColumnVector d = (BytesColumnVector) b.fields[1];
+    for(int btch=0; btch < 9; ++btch) {
+      assertEquals(true, rows.nextBatch(batch));
+      assertEquals(1024, batch.size);
+      for(int r=0; r < batch.size; ++r) {
+        long value = btch * 1024 + r;
+        assertEquals("batch " + btch + " row " + r, true, a.isNull[r]);
+        assertEquals("batch " + btch + " row " + r,
+            computeSha(Long.toHexString(value)), c.toString(r));
+        assertEquals("batch " + btch + " row " + r,
+            computeSha(String.format("%010x", value * 1_000_001)),
+            d.toString(r));
+      }
+    }
+    assertEquals(false, rows.nextBatch(batch));
+    rows.close();
+    reader.close();
+
+    // test reading with keys
+    reader = OrcFile.createReader(merge1,
+        OrcFile.readerOptions(conf).setKeyProvider(keystore));
+    assertEquals(9 * 1024, reader.getNumberOfRows());
+    keys = reader.getColumnEncryptionKeys();
+    assertEquals(2, keys.length);
+    assertEquals("pii", keys[0].getKeyName());
+    assertEquals(0, keys[0].getKeyVersion());
+    assertEquals(true, keys[0].isAvailable());
+    assertEquals("top_secret", keys[1].getKeyName());
+    assertEquals(0, keys[1].getKeyVersion());
+    assertEquals(true, keys[1].isAvailable());
+    // check the file stats
+    stats = reader.getStatistics();
+    assertEquals(9 * 1024, stats[0].getNumberOfValues());
+    assertEquals(9 * 1024, stats[1].getNumberOfValues());
+    assertEquals(0, ((IntegerColumnStatistics) stats[1]).getMinimum());
+    assertEquals(9 * 1024 - 1, ((IntegerColumnStatistics) stats[1]).getMaximum());
+    assertEquals(9 * 1024, stats[2].getNumberOfValues());
+    assertEquals(9 * 1024, stats[3].getNumberOfValues());
+    assertEquals("0", ((StringColumnStatistics) stats[3]).getMinimum());
+    assertEquals("fff", ((StringColumnStatistics) stats[3]).getMaximum());
+    assertEquals(9 * 1024, stats[4].getNumberOfValues());
+    assertEquals("0000000000", ((StringColumnStatistics) stats[4]).getMinimum());
+    assertEquals("022541e1bf", ((StringColumnStatistics) stats[4]).getMaximum());
+    // check the stripe stats
+    stripeStats = reader.getStripeStatistics();
+    for(int s=0; s < stripeStats.size(); ++s) {
+      long low = s * 1024;
+      long high = s * 1024 + 1023;
+      ColumnStatistics[] cs = stripeStats.get(s).getColumnStatistics();
+      assertEquals("stripe " + s, 1024, cs[0].getNumberOfValues());
+      assertEquals("stripe " + s, 1024, cs[1].getNumberOfValues());
+      assertEquals("stripe " + s, low, ((IntegerColumnStatistics) cs[1]).getMinimum());
+      assertEquals("stripe " + s, high, ((IntegerColumnStatistics) cs[1]).getMaximum());
+      assertEquals("stripe " + s, 1024, cs[2].getNumberOfValues());
+      assertEquals("stripe " + s, 1024, cs[3].getNumberOfValues());
+      assertEquals("stripe " + s, Long.toHexString(low),
+          ((StringColumnStatistics) cs[3]).getMinimum());
+      assertEquals("stripe " + s, s == 0 ? "ff" : Long.toHexString(high),
+          ((StringColumnStatistics) cs[3]).getMaximum());
+      assertEquals("stripe " + s, 1024, cs[4].getNumberOfValues());
+      assertEquals("stripe " + s, String.format("%010x", 1_000_001 * low),
+          ((StringColumnStatistics) cs[4]).getMinimum());
+      assertEquals("stripe " + s, String.format("%010x", 1_000_001 * high),
+          ((StringColumnStatistics) cs[4]).getMaximum());
+    }
+    // check the file contents
+    rows = reader.rows();
+    for(int btch=0; btch < 9; ++btch) {
+      assertEquals(true, rows.nextBatch(batch));
+      assertEquals(1024, batch.size);
+      for(int r=0; r < batch.size; ++r) {
+        long value = btch * 1024 + r;
+        assertEquals("batch " + btch + " row " + r, value, a.vector[r]);
+        assertEquals("batch " + btch + " row " + r, Long.toHexString(value),
+            c.toString(r));
+        assertEquals("batch " + btch + " row " + r,
+            String.format("%010x", value * 1_000_001), d.toString(r));
+      }
+    }
+    assertEquals(false, rows.nextBatch(batch));
+    rows.close();
+    reader.close();
+
+    Path merge2 = new Path(workDir, "TestVectorOrcFile.testEncryptMerge.merge2-" +
+                                         fileFormat.getName() + ".orc");
+    fs.delete(merge2, false);
+    paths = OrcFile.mergeFiles(merge2,
+        OrcFile.writerOptions(conf).setKeyProvider(keystore),
+        Arrays.asList(input2, input4, input1, input5));
+
+    // make sure only input1 & input2 were merged
+    assertEquals(2, paths.size());
+    assertEquals(true, paths.contains(input1));
+    assertEquals(true, paths.contains(input2));
+
+    reader = OrcFile.createReader(merge2, OrcFile.readerOptions(conf));
+    assertEquals(2 * 3 * 1024, reader.getNumberOfRows());
+    assertEquals(CompressionKind.ZLIB, reader.getCompressionKind());
+    assertEquals(0x800, reader.getCompressionSize());
+    assertEquals(1000, reader.getRowIndexStride());
+    assertEquals(fileFormat, reader.getFileVersion());
+    assertEquals(6, reader.getStripes().size());
+    assertEquals(2, reader.getColumnEncryptionKeys().length);
+    assertEquals(2, reader.getDataMasks().length);
+    assertEquals(2, reader.getEncryptionVariants().length);
+    reader.close();
+  }
+
   Path exampleDir = new Path(System.getProperty("example.dir",
       "../../examples/"));
 
   @Test
   public void testZeroByteOrcFile() throws Exception {
+    // we only have to run this test once, since it is a 0 byte file.
     Assume.assumeTrue(fileFormat == OrcFile.Version.V_0_11);
     Path zeroFile = new Path(exampleDir, "zero.orc");
     Reader reader = OrcFile.createReader(zeroFile, OrcFile.readerOptions(conf));
@@ -3744,7 +4037,7 @@ public class TestVectorOrcFile {
     random.nextBytes(piiKey);
     byte[] creditKey = new byte[32];
     random.nextBytes(creditKey);
-    InMemoryKeystore keys = new InMemoryKeystore()
+    InMemoryKeystore keys = new InMemoryKeystore(random)
         .addKey("pii", EncryptionAlgorithm.AES_CTR_128, piiKey)
         .addKey("credit", EncryptionAlgorithm.AES_CTR_256, creditKey);
     Writer writer = OrcFile.createWriter(testFilePath,

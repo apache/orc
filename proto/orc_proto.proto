@@ -359,9 +359,6 @@ message Footer {
 
   // information about the encryption in this file
   optional Encryption encryption = 10;
-
-  // the number of bytes in the encrypted stripe statistics
-  optional uint64 stripeStatisticsLength = 11;
 }
 
 enum CompressionKind {
@@ -415,6 +412,9 @@ message PostScript {
   //   6 = original
   //
   optional uint32 writerVersion = 6;
+
+  // the number of bytes in the encrypted stripe statistics
+  optional uint64 stripeStatisticsLength = 7;
 
   // Leave this last in the record
   optional string magic = 8000;

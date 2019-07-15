@@ -24,6 +24,7 @@ import org.apache.orc.OrcProto;
 import org.apache.orc.impl.HadoopShims;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -89,7 +90,7 @@ public class ReaderEncryptionKey implements EncryptionKey {
     state = State.FAILURE;
   }
 
-  public void setSucess() {
+  public void setSuccess() {
     if (state == State.FAILURE) {
       throw new IllegalStateException("Key " + name + " had already failed.");
     }
@@ -128,5 +129,21 @@ public class ReaderEncryptionKey implements EncryptionKey {
   @Override
   public String toString() {
     return name + "@" + version + " w/ " + algorithm;
+  }
+
+  @Override
+  public boolean isAvailable() {
+    if (getState() == ReaderEncryptionKey.State.SUCCESS) {
+      return true;
+    } else if (getState() == ReaderEncryptionKey.State.UNTRIED &&
+               roots.size() > 0) {
+      // Check to see if we can decrypt the footer key of the first variant.
+      try {
+        return roots.get(0).getFileFooterKey() != null;
+      } catch (IOException ioe) {
+        setFailure();
+      }
+    }
+    return false;
   }
 }

@@ -89,25 +89,45 @@ public interface Writer extends Closeable {
    * stripe in binary form along with stripe information and stripe statistics.
    * After appending last stripe of a file, use appendUserMetadata() to append
    * any user metadata.
+   *
+   * This form only supports files with no column encryption. Use {@link
+   * #appendStripe(byte[], int, int, StripeInformation, StripeStatistics[])}
+   * for files with encryption.
+   *
    * @param stripe - stripe as byte array
    * @param offset - offset within byte array
    * @param length - length of stripe within byte array
    * @param stripeInfo - stripe information
-   * @param stripeStatistics - stripe statistics (Protobuf objects can be
-   *                         merged directly)
-   * @throws IOException
+   * @param stripeStatistics - unencrypted stripe statistics
    */
-  public void appendStripe(byte[] stripe, int offset, int length,
+  void appendStripe(byte[] stripe, int offset, int length,
       StripeInformation stripeInfo,
       OrcProto.StripeStatistics stripeStatistics) throws IOException;
 
   /**
-   * When fast stripe append is used for merging ORC stripes, after appending
-   * the last stripe from a file, this interface must be used to merge any
-   * user metadata.
-   * @param userMetadata - user metadata
+   * Fast stripe append to ORC file. This interface is used for fast ORC file
+   * merge with other ORC files. When merging, the file to be merged should pass
+   * stripe in binary form along with stripe information and stripe statistics.
+   * After appending last stripe of a file, use {@link #addUserMetadata(String,
+   * ByteBuffer)} to append any user metadata.
+   * @param stripe - stripe as byte array
+   * @param offset - offset within byte array
+   * @param length - length of stripe within byte array
+   * @param stripeInfo - stripe information
+   * @param stripeStatistics - stripe statistics with the last one being
+   *                         for the unencrypted data and the others being for
+   *                         each encryption variant.
    */
-  public void appendUserMetadata(List<OrcProto.UserMetadataItem> userMetadata);
+  void appendStripe(byte[] stripe, int offset, int length,
+                    StripeInformation stripeInfo,
+                    StripeStatistics[] stripeStatistics) throws IOException;
+
+  /**
+   * Update the current user metadata with a list of new values.
+   * @param userMetadata - user metadata
+   * @deprecated use {@link #addUserMetadata(String, ByteBuffer)} instead
+   */
+  void appendUserMetadata(List<OrcProto.UserMetadataItem> userMetadata);
 
   /**
    * Get the statistics about the columns in the file. The output of this is

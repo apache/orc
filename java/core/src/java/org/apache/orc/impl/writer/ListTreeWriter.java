@@ -22,6 +22,7 @@ import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ListColumnVector;
 import org.apache.orc.ColumnStatistics;
 import org.apache.orc.OrcProto;
+import org.apache.orc.StripeStatistics;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.CryptoUtils;
 import org.apache.orc.impl.IntegerWriter;
@@ -140,9 +141,10 @@ public class ListTreeWriter extends TreeWriterBase {
   }
 
   @Override
-  public void updateFileStatistics(OrcProto.StripeStatistics stats) {
-    super.updateFileStatistics(stats);
-    childWriter.updateFileStatistics(stats);
+  public void addStripeStatistics(StripeStatistics[] stats
+                                  ) throws IOException {
+    super.addStripeStatistics(stats);
+    childWriter.addStripeStatistics(stats);
   }
 
   @Override

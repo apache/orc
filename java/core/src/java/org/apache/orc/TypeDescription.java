@@ -32,6 +32,7 @@ import org.apache.hadoop.hive.ql.exec.vector.UnionColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.impl.ParserUtils;
 import org.apache.orc.impl.SchemaEvolution;
+import org.apache.orc.impl.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
@@ -464,61 +465,6 @@ public class TypeDescription
     return maxId;
   }
 
-  private ColumnVector createColumn(RowBatchVersion version, int maxSize) {
-    switch (category) {
-      case BOOLEAN:
-      case BYTE:
-      case SHORT:
-      case INT:
-      case LONG:
-      case DATE:
-        return new LongColumnVector(maxSize);
-      case TIMESTAMP:
-      case TIMESTAMP_INSTANT:
-        return new TimestampColumnVector(maxSize);
-      case FLOAT:
-      case DOUBLE:
-        return new DoubleColumnVector(maxSize);
-      case DECIMAL:
-        if (version == RowBatchVersion.ORIGINAL ||
-            precision > MAX_DECIMAL64_PRECISION) {
-          return new DecimalColumnVector(maxSize, precision, scale);
-        } else {
-          return new Decimal64ColumnVector(maxSize, precision, scale);
-        }
-      case STRING:
-      case BINARY:
-      case CHAR:
-      case VARCHAR:
-        return new BytesColumnVector(maxSize);
-      case STRUCT: {
-        ColumnVector[] fieldVector = new ColumnVector[children.size()];
-        for(int i=0; i < fieldVector.length; ++i) {
-          fieldVector[i] = children.get(i).createColumn(version, maxSize);
-        }
-        return new StructColumnVector(maxSize,
-                fieldVector);
-      }
-      case UNION: {
-        ColumnVector[] fieldVector = new ColumnVector[children.size()];
-        for(int i=0; i < fieldVector.length; ++i) {
-          fieldVector[i] = children.get(i).createColumn(version, maxSize);
-        }
-        return new UnionColumnVector(maxSize,
-            fieldVector);
-      }
-      case LIST:
-        return new ListColumnVector(maxSize,
-            children.get(0).createColumn(version, maxSize));
-      case MAP:
-        return new MapColumnVector(maxSize,
-            children.get(0).createColumn(version, maxSize),
-            children.get(1).createColumn(version, maxSize));
-      default:
-        throw new IllegalArgumentException("Unknown type " + category);
-    }
-  }
-
   /**
    * Specify the version of the VectorizedRowBatch that the user desires.
    */
@@ -532,11 +478,11 @@ public class TypeDescription
     if (category == Category.STRUCT) {
       result = new VectorizedRowBatch(children.size(), size);
       for(int i=0; i < result.cols.length; ++i) {
-        result.cols[i] = children.get(i).createColumn(version, size);
+        result.cols[i] = TypeUtils.createColumn(children.get(i), version, size);
       }
     } else {
       result = new VectorizedRowBatch(1, size);
-      result.cols[0] = createColumn(version, size);
+      result.cols[0] = TypeUtils.createColumn(this, version, size);
     }
     result.reset();
     return result;

@@ -23,7 +23,9 @@ import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.ColumnStatistics;
 import org.apache.orc.DataMask;
 import org.apache.orc.OrcProto;
+import org.apache.orc.StripeStatistics;
 import org.apache.orc.TypeDescription;
+import org.apache.orc.impl.TypeUtils;
 
 import java.io.IOException;
 
@@ -37,14 +39,20 @@ public class EncryptionTreeWriter implements TreeWriter {
   private final TreeWriter[] childrenWriters;
   private final DataMask[] masks;
   // a column vector that we use to apply the masks
-  private final VectorizedRowBatch scratch;
+  private final ColumnVector scratch;
+  private final VectorizedRowBatch scratchBatch;
 
   EncryptionTreeWriter(TypeDescription schema,
-                              WriterEncryptionVariant encryption,
-                              WriterContext context) throws IOException {
-    scratch = schema.createRowBatch();
+                       WriterEncryptionVariant encryption,
+                       WriterContext context) throws IOException {
+    scratch = TypeUtils.createColumn(schema, TypeDescription.RowBatchVersion.USE_DECIMAL64, 1024);
     childrenWriters = new TreeWriterBase[2];
     masks = new DataMask[childrenWriters.length];
+    if (schema.getCategory() == TypeDescription.Category.STRUCT) {
+      scratchBatch = new VectorizedRowBatch(schema.getChildren().size(), 1024);
+    } else {
+      scratchBatch = new VectorizedRowBatch(1, 1024);
+    }
 
     // no mask, encrypted data
     masks[0] = null;
@@ -58,15 +66,15 @@ public class EncryptionTreeWriter implements TreeWriter {
   @Override
   public void writeRootBatch(VectorizedRowBatch batch, int offset,
                              int length) throws IOException {
-    scratch.ensureSize(length);
+    scratchBatch.ensureSize(offset + length);
     for(int alt=0; alt < childrenWriters.length; ++alt) {
       // if there is a mask, apply it to each column
       if (masks[alt] != null) {
-        for(int col=0; col < scratch.cols.length; ++col) {
-          masks[alt].maskData(batch.cols[col], scratch.cols[col], offset,
+        for(int col=0; col < scratchBatch.cols.length; ++col) {
+          masks[alt].maskData(batch.cols[col], scratchBatch.cols[col], offset,
               length);
         }
-        childrenWriters[alt].writeRootBatch(scratch, offset, length);
+        childrenWriters[alt].writeRootBatch(scratchBatch, offset, length);
       } else {
         childrenWriters[alt].writeRootBatch(batch, offset, length);
       }
@@ -76,11 +84,12 @@ public class EncryptionTreeWriter implements TreeWriter {
   @Override
   public void writeBatch(ColumnVector vector, int offset,
                          int length) throws IOException {
+    scratch.ensureSize(length, false);
     for(int alt=0; alt < childrenWriters.length; ++alt) {
       // if there is a mask, apply it to each column
       if (masks[alt] != null) {
-        masks[alt].maskData(vector, scratch.cols[0], offset, length);
-        childrenWriters[alt].writeBatch(scratch.cols[0], offset, length);
+        masks[alt].maskData(vector, scratch, offset, length);
+        childrenWriters[alt].writeBatch(scratch, offset, length);
       } else {
         childrenWriters[alt].writeBatch(vector, offset, length);
       }
@@ -109,9 +118,10 @@ public class EncryptionTreeWriter implements TreeWriter {
   }
 
   @Override
-  public void updateFileStatistics(OrcProto.StripeStatistics stats) {
+  public void addStripeStatistics(StripeStatistics[] stripeStatistics
+                                  ) throws IOException {
     for(TreeWriter child: childrenWriters) {
-      child.updateFileStatistics(stats);
+      child.addStripeStatistics(stripeStatistics);
     }
   }
 

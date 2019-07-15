@@ -20,7 +20,6 @@ package org.apache.orc.impl.writer;
 
 import org.apache.orc.EncryptionAlgorithm;
 import org.apache.orc.EncryptionKey;
-import org.apache.orc.EncryptionVariant;
 import org.apache.orc.impl.HadoopShims;
 import org.jetbrains.annotations.NotNull;
 
@@ -66,6 +65,11 @@ public class WriterEncryptionKey implements EncryptionKey {
   @Override
   public WriterEncryptionVariant[] getEncryptionRoots() {
     return roots.toArray(new WriterEncryptionVariant[roots.size()]);
+  }
+
+  @Override
+  public boolean isAvailable() {
+    return true;
   }
 
   public int getId() {

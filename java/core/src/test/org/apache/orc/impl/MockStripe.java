@@ -122,6 +122,11 @@ public class MockStripe implements StripeInformation {
   }
 
   @Override
+  public boolean hasEncryptionStripeId() {
+    return false;
+  }
+
+  @Override
   public long getEncryptionStripeId() {
     return stripeId;
   }

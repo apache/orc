@@ -91,7 +91,6 @@ public interface PhysicalWriter {
    * Write a stripe or file statistics to the file.
    * @param name the name of the stream
    * @param statistics the statistics to write
-   * @throws IOException
    */
   void writeStatistics(StreamName name,
                        OrcProto.ColumnStatistics.Builder statistics

@@ -150,8 +150,8 @@ public class RecordReaderUtils {
     }
 
     @Override
-    public CompressionCodec getCompressionCodec() {
-      return options.getCodec();
+    public InStream.StreamOptions getCompressionOptions() {
+      return options;
     }
   }
 
@@ -174,7 +174,8 @@ public class RecordReaderUtils {
     return rightB >= leftA;
   }
 
-  public static long estimateRgEndOffset(InStream.StreamOptions unencryptedOptions,
+  public static long estimateRgEndOffset(boolean isCompressed,
+                                         int bufferSize,
                                          boolean isLast,
                                          long nextGroupOffset,
                                          long streamLength) {
@@ -182,8 +183,8 @@ public class RecordReaderUtils {
     // if adjacent groups have the same compressed block offset then stretch the slop
     // by factor of 2 to safely accommodate the next compression block.
     // One for the current compression block and another for the next compression block.
-    long slop = unencryptedOptions.isCompressed()
-                    ? 2 * (OutStream.HEADER_SIZE + unencryptedOptions.getBufferSize())
+    long slop = isCompressed
+                    ? 2 * (OutStream.HEADER_SIZE + bufferSize)
                     : WORST_UNCOMPRESSED_SLOP;
     return isLast ? streamLength : Math.min(streamLength, nextGroupOffset + slop);
   }
@@ -247,6 +248,7 @@ public class RecordReaderUtils {
         }
         return base + BYTE_STREAM_POSITIONS + compressionValue;
       case TIMESTAMP:
+      case TIMESTAMP_INSTANT:
         if (streamType == OrcProto.Stream.Kind.DATA) {
           return base;
         }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -47,7 +47,7 @@ public interface Reader extends Closeable {
 
   /**
    * Get the deserialized data size of the specified columns
-   * @param colNames
+   * @param colNames the list of column names
    * @return raw data size of columns
    */
   long getRawDataSizeOfColumns(List<String> colNames);
@@ -164,9 +164,21 @@ public interface Reader extends Closeable {
   EncryptionVariant[] getEncryptionVariants();
 
   /**
+   * Get the stripe statistics for a given variant. The StripeStatistics will
+   * have 1 entry for each column in the variant. This enables the user to
+   * get the stripe statistics for each variant regardless of which keys are
+   * available.
+   * @param variant the encryption variant or null for unencrypted
+   * @return a list of stripe statistics (one per a stripe)
+   * @throws IOException if the required key is not available
+   */
+  List<StripeStatistics> getVariantStripeStatistics(EncryptionVariant variant
+                                                    ) throws IOException;
+
+  /**
    * Options for creating a RecordReader.
    */
-  public static class Options implements Cloneable {
+  class Options implements Cloneable {
     private boolean[] include;
     private long offset = 0;
     private long length = Long.MAX_VALUE;
@@ -289,7 +301,7 @@ public interface Reader extends Closeable {
      * Set boolean flag to determine if the comparision of field names in schema
      * evolution is case sensitive
      * @param value the flag for schema evolution is case sensitive or not.
-     * @return
+     * @return this
      */
     public Options isSchemaEvolutionCaseAware(boolean value) {
       this.isSchemaEvolutionCaseAware = value;
@@ -303,6 +315,7 @@ public interface Reader extends Closeable {
       this.includeAcidColumns = includeAcidColumns;
       return this;
     }
+
     public boolean[] getInclude() {
       return include;
     }
@@ -430,7 +443,6 @@ public interface Reader extends Closeable {
   /**
    * Create a RecordReader that reads everything with the default options.
    * @return a new RecordReader
-   * @throws IOException
    */
   RecordReader rows() throws IOException;
 
@@ -440,7 +452,6 @@ public interface Reader extends Closeable {
    * before the rows() method was introduced.
    * @param options the options to read with
    * @return a new RecordReader
-   * @throws IOException
    */
   RecordReader rows(Options options) throws IOException;
 
@@ -456,16 +467,27 @@ public interface Reader extends Closeable {
 
   /**
    * @return Stripe statistics, in original protobuf form.
+   * @deprecated Use {@link #getStripeStatistics()} instead.
    */
   List<OrcProto.StripeStatistics> getOrcProtoStripeStatistics();
 
   /**
-   * @return Stripe statistics.
+   * Get the stripe statistics for all of the columns.
+   * @return a list of the statistics for each stripe in the file
    */
   List<StripeStatistics> getStripeStatistics() throws IOException;
 
   /**
+   * Get the stripe statistics from the file.
+   * @param include null for all columns or an array where the required columns
+   *                are selected
+   * @return a list of the statistics for each stripe in the file
+   */
+  List<StripeStatistics> getStripeStatistics(boolean[] include) throws IOException;
+
+  /**
    * @return File statistics, in original protobuf form.
+   * @deprecated Use {@link #getStatistics()} instead.
    */
   List<OrcProto.ColumnStatistics> getOrcProtoFileStatistics();
 

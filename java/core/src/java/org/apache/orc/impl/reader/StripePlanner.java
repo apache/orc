@@ -61,7 +61,6 @@ public class StripePlanner {
   private final OrcProto.ColumnEncoding[] encodings;
   private final ReaderEncryption encryption;
   private final DataReader dataReader;
-  private final InStream.StreamOptions compression;
   private final boolean ignoreNonUtf8BloomFilter;
   private final long maxBufferSize;
 
@@ -74,7 +73,6 @@ public class StripePlanner {
   private final List<StreamInformation> indexStreams = new ArrayList<>();
   // the data streams sorted by offset
   private final List<StreamInformation> dataStreams = new ArrayList<>();
-  private final boolean[] usedVariants;
   private final OrcProto.Stream.Kind[] bloomFilterKinds;
   // does each column have a null stream?
   private final boolean[] hasNull;
@@ -83,7 +81,6 @@ public class StripePlanner {
    * Create a stripe parser.
    * @param schema the file schema
    * @param encryption the encryption information
-   * @param compression the options to handle the compression
    * @param dataReader the underlying data reader
    * @param version the file writer version
    * @param ignoreNonUtf8BloomFilter ignore old non-utf8 bloom filters
@@ -91,7 +88,6 @@ public class StripePlanner {
    */
   public StripePlanner(TypeDescription schema,
                        ReaderEncryption encryption,
-                       InStream.StreamOptions compression,
                        DataReader dataReader,
                        OrcFile.WriterVersion version,
                        boolean ignoreNonUtf8BloomFilter,
@@ -99,9 +95,7 @@ public class StripePlanner {
     this.schema = schema;
     this.version = version;
     encodings = new OrcProto.ColumnEncoding[schema.getMaximumId()+1];
-    usedVariants = new boolean[encryption.getVariants().length];
     this.encryption = encryption;
-    this.compression = compression;
     this.dataReader = dataReader;
     this.ignoreNonUtf8BloomFilter = ignoreNonUtf8BloomFilter;
     bloomFilterKinds = new OrcProto.Stream.Kind[schema.getMaximumId() + 1];
@@ -110,8 +104,8 @@ public class StripePlanner {
   }
 
   public StripePlanner(StripePlanner old) {
-    this(old.schema, old.encryption, old.compression, old.dataReader,
-        old.version, old.ignoreNonUtf8BloomFilter, old.maxBufferSize);
+    this(old.schema, old.encryption, old.dataReader, old.version,
+        old.ignoreNonUtf8BloomFilter, old.maxBufferSize);
   }
 
   /**
@@ -173,8 +167,8 @@ public class StripePlanner {
   public InStream getStream(StreamName name) throws IOException {
     StreamInformation stream = streams.get(name);
     return stream == null ? null
-      : InStream.create(name, stream.firstChunk, stream.offset,
-          stream.length,  getStreamOptions(stream.column, stream.kind));
+      : InStream.create(name, stream.firstChunk, stream.offset, stream.length,
+            getStreamOptions(stream.column, stream.kind));
   }
 
   /**
@@ -204,6 +198,7 @@ public class StripePlanner {
                                                   OrcProto.Stream.Kind kind
                                                   ) throws IOException {
     ReaderEncryptionVariant variant = encryption.getVariant(column);
+    InStream.StreamOptions compression = dataReader.getCompressionOptions();
     if (variant == null) {
       return compression;
     } else {
@@ -221,14 +216,13 @@ public class StripePlanner {
   }
 
   private void buildEncodings(OrcProto.StripeFooter footer,
-                              boolean[] columnInclude) throws IOException {
+                              boolean[] columnInclude) {
     for(int c=0; c < encodings.length; ++c) {
       if (columnInclude == null || columnInclude[c]) {
         ReaderEncryptionVariant variant = encryption.getVariant(c);
         if (variant == null) {
           encodings[c] = footer.getColumns(c);
         } else {
-          usedVariants[variant.getVariantId()] = true;
           int subColumn = c - variant.getRoot().getId();
           encodings[c] = footer.getEncryption(variant.getVariantId())
                              .getEncoding(subColumn);
@@ -248,7 +242,7 @@ public class StripePlanner {
   private long handleStream(long offset,
                             boolean[] columnInclude,
                             OrcProto.Stream stream,
-                            ReaderEncryptionVariant variant) throws IOException {
+                            ReaderEncryptionVariant variant) {
     int column = stream.getColumn();
     if (stream.hasKind()) {
       OrcProto.Stream.Kind kind = stream.getKind();
@@ -454,8 +448,10 @@ public class StripePlanner {
                                                  @NotNull boolean[] includedRowGroups) {
     BufferChunkList result = new BufferChunkList();
     if (hasSomeRowGroups(includedRowGroups)) {
+      InStream.StreamOptions compression = dataReader.getCompressionOptions();
+      boolean isCompressed = compression.getCodec() != null;
+      int bufferSize = compression.getBufferSize();
       OrcProto.RowIndex[] rowIndex = index.getRowGroupIndex();
-      boolean isCompressed = compression.isCompressed();
       for (StreamInformation stream : dataStreams) {
         if (RecordReaderUtils.isDictionary(stream.kind, encodings[stream.column])) {
           addChunk(result, stream, stream.offset, stream.length);
@@ -482,8 +478,8 @@ public class StripePlanner {
                 end += stream.length;
               } else {
                 long nextGroupOffset = ri.getEntry(endGroup + 1).getPositions(posn);
-                end += RecordReaderUtils.estimateRgEndOffset(
-                    compression, false, nextGroupOffset, stream.length);
+                end += RecordReaderUtils.estimateRgEndOffset(isCompressed,
+                    bufferSize, false, nextGroupOffset, stream.length);
               }
               if (alreadyRead < end) {
                 addChunk(result, stream, start, end - start);

@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 
 import org.apache.hadoop.hive.common.io.DiskRangeList;
 import org.apache.orc.impl.BufferChunkList;
+import org.apache.orc.impl.InStream;
 import org.apache.orc.impl.OrcIndex;
 
 /** An abstract data reader that IO formats can use to read bytes from underlying storage. */
@@ -42,10 +43,10 @@ public interface DataReader extends AutoCloseable, Cloneable {
    *
    * @param range List of disk ranges to read. Ranges with data will be ignored.
    * @param doForceDirect Whether the data should be read into direct buffers.
-   * @return New or modified list of DiskRange-s, where all the ranges are filled with data.
+   * @return The list range with buffers filled in
    */
   BufferChunkList readFileData(BufferChunkList range,
-                             boolean doForceDirect) throws IOException;
+                               boolean doForceDirect) throws IOException;
 
   /**
    * Whether the user should release buffers created by readFileData. See readFileData javadoc.
@@ -70,9 +71,10 @@ public interface DataReader extends AutoCloseable, Cloneable {
   void close() throws IOException;
 
   /**
-   * Returns the compression codec used by this datareader.
-   * We should consider removing this from the interface.
-   * @return the compression codec
+   * Returns the compression options used by this DataReader.
+   * The codec if present is owned by the DataReader and should not be returned
+   * to the OrcCodecPool.
+   * @return the compression options
    */
-  CompressionCodec getCompressionCodec();
+  InStream.StreamOptions getCompressionOptions();
 }

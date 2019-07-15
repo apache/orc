@@ -64,9 +64,15 @@ public interface StripeInformation {
   long getStripeId();
 
   /**
+   * Does this stripe have an explicit encryption stripe id set?
+   * @return true if this stripe was the first stripe of a merge
+   */
+  boolean hasEncryptionStripeId();
+
+  /**
    * Get the original stripe id that was used when the stripe was originally
    * written. This is only different that getStripeId in merged files.
-   * @return the original stripe id
+   * @return the original stripe id + 1
    */
   long getEncryptionStripeId();
 

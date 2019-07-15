@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,11 +22,25 @@ import org.apache.orc.impl.ColumnStatisticsImpl;
 
 import java.util.List;
 
+/**
+ * The statistics for a stripe.
+ */
 public class StripeStatistics {
-  private final List<OrcProto.ColumnStatistics> cs;
+  protected final List<OrcProto.ColumnStatistics> cs;
+  protected final TypeDescription schema;
 
   public StripeStatistics(List<OrcProto.ColumnStatistics> list) {
+    this(null, list);
+  }
+
+  public StripeStatistics(TypeDescription schema,
+                          List<OrcProto.ColumnStatistics> list) {
+    this.schema = schema;
     this.cs = list;
+  }
+
+  private int getBase() {
+    return schema == null ? 0 : schema.getId();
   }
 
   /**
@@ -36,9 +50,15 @@ public class StripeStatistics {
    */
   public ColumnStatistics[] getColumnStatistics() {
     ColumnStatistics[] result = new ColumnStatistics[cs.size()];
-    for (int i = 0; i < result.length; ++i) {
-      result[i] = ColumnStatisticsImpl.deserialize(null, cs.get(i));
+    int base = getBase();
+    for (int c = 0; c < result.length; ++c) {
+      TypeDescription column = schema == null ? null : schema.findSubtype(base + c);
+      result[c] = ColumnStatisticsImpl.deserialize(column, cs.get(c));
     }
     return result;
+  }
+
+  public OrcProto.ColumnStatistics getColumn(int column) {
+    return cs.get(column);
   }
 }

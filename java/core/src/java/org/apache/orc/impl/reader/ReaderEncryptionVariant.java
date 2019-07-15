@@ -20,18 +20,25 @@ package org.apache.orc.impl.reader;
 
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.orc.EncryptionAlgorithm;
+import org.apache.orc.EncryptionKey;
 import org.apache.orc.EncryptionVariant;
 import org.apache.orc.OrcProto;
 import org.apache.orc.StripeInformation;
+import org.apache.orc.StripeStatistics;
 import org.apache.orc.TypeDescription;
+import org.apache.orc.impl.CryptoUtils;
+import org.apache.orc.impl.InStream;
 import org.apache.orc.impl.KeyProvider;
+import org.apache.orc.impl.BufferChunk;
 import org.apache.orc.impl.LocalKey;
+import org.apache.orc.impl.StripeStatisticsImpl;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.Key;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,8 +53,12 @@ public class ReaderEncryptionVariant implements EncryptionVariant {
   private final ReaderEncryptionKey key;
   private final TypeDescription column;
   private final int variantId;
+  private final BufferChunk tailBuffer;
+  private final List<OrcProto.Stream> stripeStats;
   private final LocalKey[] localKeys;
   private final LocalKey footerKey;
+  private final int stripeCount;
+  private final long stripeStatsOffset;
 
   /**
    * Create a reader's view of an encryption variant.
@@ -56,32 +67,43 @@ public class ReaderEncryptionVariant implements EncryptionVariant {
    * @param proto the serialized description of the variant
    * @param schema the file schema
    * @param stripes the stripe information
+   * @param stripeStatsOffset the offset of the stripe statistics
+   * @param tailBuffer the serialized file tail
    * @param provider the key provider
    */
-  public ReaderEncryptionVariant(ReaderEncryptionKey key,
-                                 int variantId,
-                                 OrcProto.EncryptionVariant proto,
-                                 TypeDescription schema,
-                                 List<StripeInformation> stripes,
-                                 KeyProvider provider) {
+  ReaderEncryptionVariant(ReaderEncryptionKey key,
+                          int variantId,
+                          OrcProto.EncryptionVariant proto,
+                          TypeDescription schema,
+                          List<StripeInformation> stripes,
+                          long stripeStatsOffset,
+                          BufferChunk tailBuffer,
+                          KeyProvider provider) {
     this.key = key;
     this.variantId = variantId;
     this.provider = provider;
-    this.column = proto.hasRoot() ? schema.findSubtype(proto.getRoot()) : null;
+    this.column = proto == null || !proto.hasRoot() ? schema :
+                      schema.findSubtype(proto.getRoot());
     this.localKeys = new LocalKey[stripes.size()];
     HashMap<BytesWritable, LocalKey> cache = new HashMap<>();
-    for(int s=0; s < localKeys.length; ++s) {
-      StripeInformation stripe = stripes.get(s);
-      localKeys[s] = getCachedKey(cache, key.getAlgorithm(),
-          stripe.getEncryptedLocalKeys()[variantId]);
-    }
-    if (proto.hasEncryptedKey()) {
+    stripeCount = stripes.size();
+    this.stripeStatsOffset = stripeStatsOffset;
+    if (proto != null && proto.hasEncryptedKey()) {
+      for (int s = 0; s < localKeys.length; ++s) {
+        StripeInformation stripe = stripes.get(s);
+        localKeys[s] = getCachedKey(cache, key.getAlgorithm(),
+            stripe.getEncryptedLocalKeys()[variantId]);
+      }
       footerKey = getCachedKey(cache, key.getAlgorithm(),
           proto.getEncryptedKey().toByteArray());
+      key.addVariant(this);
+      stripeStats = proto.getStripeStatisticsList();
+      this.tailBuffer = tailBuffer;
     } else {
       footerKey = null;
+      stripeStats = null;
+      this.tailBuffer = null;
     }
-    key.addVariant(this);
   }
 
   @Override
@@ -131,7 +153,7 @@ public class ReaderEncryptionVariant implements EncryptionVariant {
         }
         if (result != null) {
           localKey.setDecryptedKey(result);
-          key.setSucess();
+          key.setSuccess();
         } else {
           key.setFailure();
         }
@@ -153,12 +175,12 @@ public class ReaderEncryptionVariant implements EncryptionVariant {
 
   @Override
   public Key getFileFooterKey() throws IOException {
-    return getDecryptedKey(footerKey);
+    return key == null ? null : getDecryptedKey(footerKey);
   }
 
   @Override
   public Key getStripeKey(long stripe) throws IOException {
-    return getDecryptedKey(localKeys[(int) stripe]);
+    return key == null ? null : getDecryptedKey(localKeys[(int) stripe]);
   }
 
   @Override
@@ -179,12 +201,69 @@ public class ReaderEncryptionVariant implements EncryptionVariant {
   public int compareTo(@NotNull EncryptionVariant other) {
     if (other == this) {
       return 0;
-    } else if (key == other.getKeyDescription()) {
+    }
+    EncryptionKey otherKey = other.getKeyDescription();
+    if (key == otherKey) {
       return Integer.compare(column.getId(), other.getRoot().getId());
     } else if (key == null) {
       return -1;
+    } else if (otherKey == null) {
+      return 1;
     } else {
       return key.compareTo(other.getKeyDescription());
     }
+  }
+
+  public long getStripeStatisticsLength() {
+    long result = 0;
+    for(OrcProto.Stream stream: stripeStats) {
+      result += stream.getLength();
+    }
+    return result;
+  }
+
+  /**
+   * Decrypt the raw data and return the list of the stripe statistics for this
+   * variant.
+   * @param columns true for the columns that should be included
+   * @param compression the compression options
+   * @return the stripe statistics for this variant.
+   */
+  public List<StripeStatistics> getStripeStatistics(boolean[] columns,
+                                                    InStream.StreamOptions compression
+                                                    ) throws IOException {
+    StripeStatisticsImpl[] result = new StripeStatisticsImpl[stripeCount];
+    for(int s=0; s < result.length; ++s) {
+      result[s] = new StripeStatisticsImpl(column);
+    }
+    // create the objects
+    long offset = stripeStatsOffset;
+    Key fileKey = getFileFooterKey();
+    if (fileKey == null) {
+      throw new IOException("Can't get file footer key for " + key.getKeyName());
+    }
+    int root = column.getId();
+    for(OrcProto.Stream stream: stripeStats){
+      long length = stream.getLength();
+      int column = stream.getColumn();
+      OrcProto.Stream.Kind kind = stream.getKind();
+      if (kind == OrcProto.Stream.Kind.STRIPE_STATISTICS &&
+          (columns == null || columns[column])) {
+        byte[] iv = new byte[key.getAlgorithm().getIvLength()];
+        CryptoUtils.modifyIvForStream(column, kind, stripeCount + 1).accept(iv);
+        InStream.StreamOptions options = new InStream.StreamOptions(compression)
+            .withEncryption(key.getAlgorithm(), fileKey, iv);
+        OrcProto.ColumnarStripeStatistics stat =
+            OrcProto.ColumnarStripeStatistics.parseFrom(
+                InStream.createCodedInputStream(
+                    InStream.create(stream, tailBuffer, offset,
+                        length, options)));
+        for(int s=0; s < result.length; ++s) {
+          result[s].updateColumn(column - root, stat.getColStats(s));
+        }
+      }
+      offset += length;
+    }
+    return Arrays.asList(result);
   }
 }

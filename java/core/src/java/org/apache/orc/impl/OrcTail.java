@@ -16,44 +16,79 @@
 
 package org.apache.orc.impl;
 
-import static org.apache.orc.impl.ReaderImpl.extractMetadata;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.orc.CompressionCodec;
 import org.apache.orc.CompressionKind;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
 import org.apache.orc.OrcUtils;
 import org.apache.orc.StripeInformation;
-import org.apache.orc.StripeStatistics;
+import org.apache.orc.TypeDescription;
 
 // TODO: Make OrcTail implement FileMetadata or Reader interface
 public final class OrcTail {
   // postscript + footer - Serialized in OrcSplit
   private final OrcProto.FileTail fileTail;
   // serialized representation of metadata, footer and postscript
-  private final ByteBuffer serializedTail;
+  private final BufferChunk serializedTail;
+  private final TypeDescription schema;
   // used to invalidate cache entries
   private final long fileModificationTime;
-  // lazily deserialized
-  private OrcProto.Metadata metadata;
 
-  public OrcTail(OrcProto.FileTail fileTail, ByteBuffer serializedTail) {
+  public OrcTail(OrcProto.FileTail fileTail,
+                 ByteBuffer serializedTail) throws IOException {
     this(fileTail, serializedTail, -1);
   }
 
-  public OrcTail(OrcProto.FileTail fileTail, ByteBuffer serializedTail, long fileModificationTime) {
+  public OrcTail(OrcProto.FileTail fileTail, ByteBuffer serializedTail,
+                 long fileModificationTime) throws IOException {
+    this(fileTail,
+        new BufferChunk(serializedTail, getStripeStatisticsOffset(fileTail)),
+        fileModificationTime);
+  }
+
+  public OrcTail(OrcProto.FileTail fileTail, BufferChunk serializedTail,
+    long fileModificationTime) throws IOException {
     this.fileTail = fileTail;
     this.serializedTail = serializedTail;
     this.fileModificationTime = fileModificationTime;
-    this.metadata = null;
+    List<OrcProto.Type> types = getTypes();
+    OrcUtils.isValidTypeTree(types, 0);
+    this.schema = OrcUtils.convertTypeFromProtobuf(types, 0);
   }
 
   public ByteBuffer getSerializedTail() {
+    if (serializedTail.next == null) {
+      return serializedTail.getData();
+    } else {
+      // make a single buffer...
+      int len = 0;
+      for(BufferChunk chunk=serializedTail;
+          chunk != null;
+          chunk = (BufferChunk) chunk.next) {
+        len += chunk.getLength();
+      }
+      ByteBuffer result = ByteBuffer.allocate(len);
+      for(BufferChunk chunk=serializedTail;
+          chunk != null;
+          chunk = (BufferChunk) chunk.next) {
+        ByteBuffer tmp = chunk.getData();
+        result.put(tmp.array(), tmp.arrayOffset() + tmp.position(),
+            tmp.remaining());
+      }
+      result.flip();
+      return result;
+    }
+  }
+
+  /**
+   * Gets the buffer chunks that correspond to the stripe statistics,
+   * file tail, and post script.
+   * @return the shared buffers with the contents of the file tail
+   */
+  public BufferChunk getTailBuffer() {
     return serializedTail;
   }
 
@@ -89,29 +124,6 @@ public final class OrcTail {
     return (int) fileTail.getPostscript().getCompressionBlockSize();
   }
 
-  public List<StripeStatistics> getStripeStatistics(InStream.StreamOptions options) throws IOException {
-    List<StripeStatistics> result = new ArrayList<>();
-    List<OrcProto.StripeStatistics> ssProto = getStripeStatisticsProto(options);
-    if (ssProto != null) {
-      for (OrcProto.StripeStatistics ss : ssProto) {
-        result.add(new StripeStatistics(ss.getColStatsList()));
-      }
-    }
-    return result;
-  }
-
-  public List<OrcProto.StripeStatistics> getStripeStatisticsProto(InStream.StreamOptions options) throws IOException {
-    if (serializedTail == null) return null;
-    if (metadata == null) {
-      metadata = extractMetadata(serializedTail, 0,
-          (int) fileTail.getPostscript().getMetadataLength(),
-          options);
-      // clear does not clear the contents but sets position to 0 and limit = capacity
-      serializedTail.clear();
-    }
-    return metadata.getStripeStatsList();
-  }
-
   public int getMetadataSize() {
     return (int) getPostScript().getMetadataLength();
   }
@@ -120,8 +132,50 @@ public final class OrcTail {
     return getFooter().getTypesList();
   }
 
+  public TypeDescription getSchema() {
+    return schema;
+  }
+
   public OrcProto.FileTail getFileTail() {
     return fileTail;
+  }
+
+  static long getMetadataOffset(OrcProto.FileTail tail) {
+    OrcProto.PostScript ps = tail.getPostscript();
+    return tail.getFileLength()
+        - 1
+        - tail.getPostscriptLength()
+        - ps.getFooterLength()
+        - ps.getMetadataLength();
+  }
+
+  static long getStripeStatisticsOffset(OrcProto.FileTail tail) {
+    OrcProto.PostScript ps = tail.getPostscript();
+    return getMetadataOffset(tail) - ps.getStripeStatisticsLength();
+  }
+
+  /**
+   * Get the file offset of the metadata section of footer.
+   * @return the byte offset of the start of the metadata
+   */
+  public long getMetadataOffset() {
+    return getMetadataOffset(fileTail);
+  }
+
+  /**
+   * Get the file offset of the stripe statistics.
+   * @return the byte offset of the start of the stripe statistics
+   */
+  public long getStripeStatisticsOffset() {
+    return getStripeStatisticsOffset(fileTail);
+  }
+
+  /**
+   * Get the position of the end of the file.
+   * @return the byte length of the file
+   */
+  public long getFileLength() {
+    return fileTail.getFileLength();
   }
 
   public OrcProto.FileTail getMinimalFileTail() {

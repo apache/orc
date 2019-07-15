@@ -22,6 +22,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.orc.OrcProto;
 import org.apache.orc.StripeInformation;
 import org.apache.orc.TypeDescription;
+import org.apache.orc.impl.BufferChunk;
 import org.apache.orc.impl.CryptoUtils;
 import org.apache.orc.impl.KeyProvider;
 import org.apache.orc.impl.MaskDescriptionImpl;
@@ -49,6 +50,8 @@ public class ReaderEncryption {
 
   public ReaderEncryption(OrcProto.Footer footer,
                           TypeDescription schema,
+                          long stripeStatisticsOffset,
+                          BufferChunk serializedTail,
                           List<StripeInformation> stripes,
                           KeyProvider provider,
                           Configuration conf) throws IOException {
@@ -71,17 +74,20 @@ public class ReaderEncryption {
         keys[k] = new ReaderEncryptionKey(encrypt.getKey(k));
       }
       variants = new ReaderEncryptionVariant[encrypt.getVariantsCount()];
+      long offset = stripeStatisticsOffset;
       for(int v=0; v < variants.length; ++v) {
         OrcProto.EncryptionVariant variant = encrypt.getVariants(v);
         variants[v] = new ReaderEncryptionVariant(keys[variant.getKey()], v,
-            variant, schema, stripes, keyProvider);
+            variant, schema, stripes, offset, serializedTail, keyProvider);
+        offset += variants[v].getStripeStatisticsLength();
       }
       columnVariants = new ReaderEncryptionVariant[schema.getMaximumId() + 1];
-      for(int v = 0; v < variants.length; ++v) {
-        TypeDescription root = variants[v].getRoot();
-        for(int c = root.getId(); c <= root.getMaximumId(); ++c) {
+      for (ReaderEncryptionVariant variant : variants) {
+        TypeDescription root = variant.getRoot();
+        for (int c = root.getId(); c <= root.getMaximumId(); ++c) {
+          // set the variant if it is the first one that we've found
           if (columnVariants[c] == null) {
-            columnVariants[c] = variants[v];
+            columnVariants[c] = variant;
           }
         }
       }
@@ -104,7 +110,7 @@ public class ReaderEncryption {
    * Find the next possible variant in this file for the given column.
    * @param column the column to find a variant for
    * @param lastVariant the previous variant that we looked at
-   * @return the next variant or null if there are none
+   * @return the next variant or null if there isn't one
    */
   private ReaderEncryptionVariant findNextVariant(int column,
                                                   int lastVariant) {
@@ -123,26 +129,20 @@ public class ReaderEncryption {
    * to see if the KeyProvider will give it to us. If not, continue to the
    * next variant.
    * @param column the column id
-   * @return null for no encryption or the encryption variant
+   * @return the encryption variant or null if there isn't one
    */
-  public ReaderEncryptionVariant getVariant(int column) throws IOException {
-    if (keyProvider != null) {
-      while (columnVariants[column] != null) {
-        ReaderEncryptionVariant result = columnVariants[column];
-        switch (result.getKeyDescription().getState()) {
-        case FAILURE:
-          break;
-        case SUCCESS:
-          return result;
-        case UNTRIED:
-          // try to get the footer key, to see if we have access
-          if (result.getFileFooterKey() != null) {
-            return result;
-          }
+  public ReaderEncryptionVariant getVariant(int column) {
+    if (columnVariants == null) {
+      return null;
+    } else {
+      while (columnVariants[column] != null &&
+                 !columnVariants[column].getKeyDescription().isAvailable()) {
+        if (keyProvider != null) {
+          columnVariants[column] =
+              findNextVariant(column, columnVariants[column].getVariantId());
         }
-        columnVariants[column] = findNextVariant(column, result.getVariantId());
       }
+      return columnVariants[column];
     }
-    return null;
   }
 }

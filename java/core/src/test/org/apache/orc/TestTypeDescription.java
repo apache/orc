@@ -344,7 +344,7 @@ public class TestTypeDescription {
     // set some attributes
     schema.findSubtype("name").setAttribute("iceberg.id", "12");
     schema.findSubtype("address.street").setAttribute("mask", "nullify")
-        .setAttribute("encrypt", "pii");
+        .setAttribute("context", "pii");
 
     TypeDescription clone = schema.clone();
     assertEquals("12", clone.findSubtype("name").getAttributeValue("iceberg.id"));
@@ -370,9 +370,9 @@ public class TestTypeDescription {
         nameCol.getAttributeNames().toArray());
     assertEquals("12", nameCol.getAttributeValue("iceberg.id"));
     TypeDescription street = readerSchema.findSubtype("address.street");
-    assertArrayEquals(new Object[]{"encrypt", "mask"},
+    assertArrayEquals(new Object[]{"context", "mask"},
         street.getAttributeNames().toArray());
-    assertEquals("pii", street.getAttributeValue("encrypt"));
+    assertEquals("pii", street.getAttributeValue("context"));
     assertEquals("nullify", street.getAttributeValue("mask"));
     assertEquals(null, street.getAttributeValue("foobar"));
   }
