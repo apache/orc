@@ -29,7 +29,7 @@ TEST (TestCSVFileImport, test10rows) {
   const std::string pgm1 = findProgram("tools/src/csv-import");
   const std::string csvFile = findExample("TestCSVFileImport.test10rows.csv");
   const std::string orcFile = "/tmp/test_csv_import_test_10_rows.orc";
-  const std::string schema = "struct<_a:bigint,b_:string,c_col:double>";
+  const std::string schema = "'struct<_a:bigint,b_:string,c_col:double>'";
   std::string output;
   std::string error;
 

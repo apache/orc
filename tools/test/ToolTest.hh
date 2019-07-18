@@ -24,9 +24,9 @@
  * the output on each of the streams. The return code of the program is
  * returned as the result.
  */
-int runProgram(const std::vector<std::string>& command,
-               std::string &stdout,
-               std::string &stderr);
+int runProgram(const std::vector<std::string> &command,
+               std::string &out,
+               std::string &err);
 
 /**
  * Get the name of the given example file.
