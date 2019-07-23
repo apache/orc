@@ -60,7 +60,7 @@ public class BloomFilter {
   }
 
   public BloomFilter(long expectedEntries, double fpp) {
-    checkArgument(expectedEntries > 0, "expectedEntries should be > 0");
+    expectedEntries = Math.max(expectedEntries, 1);
     checkArgument(fpp > 0.0 && fpp < 1.0, "False positive probability should be > 0.0 & < 1.0");
     int nb = optimalNumOfBits(expectedEntries, fpp);
     // make 'm' multiple of 64

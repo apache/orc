@@ -70,4 +70,15 @@ public class TestWriterImpl {
     Writer w = OrcFile.createWriter(testFilePath, OrcFile.writerOptions(conf).setSchema(schema));
     w.close();
   }
+
+  @Test
+  public void testNoBFIfNoIndex() throws Exception {
+    // overriding the flag should result in a successful write (no exception)
+    conf.set(OrcConf.OVERWRITE_OUTPUT_FILE.getAttribute(), "true");
+    // Enable bloomfilter, but disable index
+    conf.set(OrcConf.ROW_INDEX_STRIDE.getAttribute(), "0");
+    conf.set(OrcConf.BLOOM_FILTER_COLUMNS.getAttribute(), "*");
+    Writer w = OrcFile.createWriter(testFilePath, OrcFile.writerOptions(conf).setSchema(schema));
+    w.close();
+  }
 }

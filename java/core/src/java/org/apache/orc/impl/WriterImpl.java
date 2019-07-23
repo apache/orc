@@ -166,8 +166,12 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
           " readable by other versions of the software. It is only for" +
           " developer testing.");
     }
+    boolean buildBloomFilter = buildIndex;
     if (version == OrcFile.Version.V_0_11) {
       /* do not write bloom filters for ORC v11 */
+      buildBloomFilter = false;
+    }
+    if (!buildBloomFilter) {
       this.bloomFilterColumns = new boolean[schema.getMaximumId() + 1];
     } else {
       this.bloomFilterColumns =
