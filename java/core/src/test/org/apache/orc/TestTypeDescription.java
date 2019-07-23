@@ -19,6 +19,7 @@ package org.apache.orc;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import org.apache.hadoop.conf.Configuration;
@@ -374,5 +375,85 @@ public class TestTypeDescription {
     assertEquals("pii", street.getAttributeValue("encrypt"));
     assertEquals("nullify", street.getAttributeValue("mask"));
     assertEquals(null, street.getAttributeValue("foobar"));
+  }
+
+  static int clearAttributes(TypeDescription schema) {
+    int result = 0;
+    for(String attribute: schema.getAttributeNames()) {
+      schema.removeAttribute(attribute);
+      result += 1;
+    }
+    List<TypeDescription> children = schema.getChildren();
+    if (children != null) {
+      for (TypeDescription child : children) {
+        result += clearAttributes(child);
+      }
+    }
+    return result;
+  }
+
+  @Test
+  public void testEncryption() {
+    String schemaString =  "struct<" +
+        "name:struct<first:string,last:string>," +
+        "address:struct<street:string,city:string,country:string,post_code:string>," +
+        "credit_cards:array<struct<card_number:string,expire:date,ccv:string>>>";
+    TypeDescription schema = TypeDescription.fromString(schemaString);
+    TypeDescription copy = TypeDescription.fromString(schemaString);
+    assertEquals(copy, schema);
+
+    // set some encryption
+    schema.annotateEncryption("pii:name,address.street;credit:credit_cards", null);
+    assertEquals("pii",
+        schema.findSubtype("name").getAttributeValue(TypeDescription.ENCRYPT_ATTRIBUTE));
+    assertEquals("pii",
+        schema.findSubtype("address.street").getAttributeValue(TypeDescription.ENCRYPT_ATTRIBUTE));
+    assertEquals("credit",
+        schema.findSubtype("credit_cards").getAttributeValue(TypeDescription.ENCRYPT_ATTRIBUTE));
+    assertNotEquals(copy, schema);
+    assertEquals(3, clearAttributes(schema));
+    assertEquals(copy, schema);
+
+    schema.annotateEncryption("pii:name.first", "redact,Yy:name.first");
+    // check that we ignore if already set
+    schema.annotateEncryption("pii:name.first", "redact,Yy:name.first,credit_cards");
+    assertEquals("pii",
+        schema.findSubtype("name.first").getAttributeValue(TypeDescription.ENCRYPT_ATTRIBUTE));
+    assertEquals("redact,Yy",
+        schema.findSubtype("name.first").getAttributeValue(TypeDescription.MASK_ATTRIBUTE));
+    assertEquals("redact,Yy",
+        schema.findSubtype("credit_cards").getAttributeValue(TypeDescription.MASK_ATTRIBUTE));
+    assertEquals(3, clearAttributes(schema));
+
+    schema.annotateEncryption("pii:name", "redact:name.first;nullify:name.last");
+    assertEquals("pii",
+        schema.findSubtype("name").getAttributeValue(TypeDescription.ENCRYPT_ATTRIBUTE));
+    assertEquals("redact",
+        schema.findSubtype("name.first").getAttributeValue(TypeDescription.MASK_ATTRIBUTE));
+    assertEquals("nullify",
+        schema.findSubtype("name.last").getAttributeValue(TypeDescription.MASK_ATTRIBUTE));
+    assertEquals(3, clearAttributes(schema));
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testEncryptionConflict() {
+    TypeDescription schema = TypeDescription.fromString(
+        "struct<" +
+            "name:struct<first:string,last:string>," +
+            "address:struct<street:string,city:string,country:string,post_code:string>," +
+            "credit_cards:array<struct<card_number:string,expire:date,ccv:string>>>");
+    // set some encryption
+    schema.annotateEncryption("pii:address,personal:address",null);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testMaskConflict() {
+    TypeDescription schema = TypeDescription.fromString(
+        "struct<" +
+            "name:struct<first:string,last:string>," +
+            "address:struct<street:string,city:string,country:string,post_code:string>," +
+            "credit_cards:array<struct<card_number:string,expire:date,ccv:string>>>");
+    // set some encryption
+    schema.annotateEncryption(null,"nullify:name;sha256:name");
   }
 }

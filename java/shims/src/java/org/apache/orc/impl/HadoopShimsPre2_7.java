@@ -238,8 +238,8 @@ public class HadoopShimsPre2_7 implements HadoopShims {
   }
 
   @Override
-  public KeyProvider getKeyProvider(Configuration conf,
-                                    Random random) throws IOException {
+  public KeyProvider getHadoopKeyProvider(Configuration conf,
+                                          Random random) throws IOException {
     return createKeyProvider(conf, random);
   }
 }

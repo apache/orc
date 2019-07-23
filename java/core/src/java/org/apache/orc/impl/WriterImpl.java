@@ -25,10 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
-import java.util.SortedSet;
 import java.util.TimeZone;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 import io.airlift.compress.lz4.Lz4Compressor;
 import io.airlift.compress.lz4.Lz4Decompressor;
@@ -124,14 +122,14 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
       new ArrayList<>();
 
   // the list of maskDescriptions, keys, and variants
-  private SortedSet<MaskDescriptionImpl> maskDescriptions = new TreeSet<>();
+  private SortedMap<String, MaskDescriptionImpl> maskDescriptions = new TreeMap<>();
   private SortedMap<String, WriterEncryptionKey> keys = new TreeMap<>();
   private final WriterEncryptionVariant[] encryption;
   // the mapping of columns to maskDescriptions
   private final MaskDescriptionImpl[] columnMaskDescriptions;
   // the mapping of columns to EncryptionVariants
   private final WriterEncryptionVariant[] columnEncryption;
-  private HadoopShims.KeyProvider keyProvider;
+  private KeyProvider keyProvider;
   // do we need to include the current encryption keys in the next stripe
   // information
   private boolean needKeyFlush;
@@ -139,23 +137,24 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
   public WriterImpl(FileSystem fs,
                     Path path,
                     OrcFile.WriterOptions opts) throws IOException {
-    this.schema = opts.getSchema();
+    // clone it so that we can annotate it with encryption
+    this.schema = opts.getSchema().clone();
     int numColumns = schema.getMaximumId() + 1;
     if (!opts.isEnforceBufferSize()) {
       opts.bufferSize(getEstimatedBufferSize(opts.getStripeSize(), numColumns,
           opts.getBufferSize()));
     }
 
-    // Do we have column encryption?
-    List<OrcFile.EncryptionOption> encryptionOptions = opts.getEncryption();
+    // Annotate the schema with the column encryption
+    schema.annotateEncryption(opts.getEncryption(), opts.getMasks());
     columnEncryption = new WriterEncryptionVariant[numColumns];
-    if (encryptionOptions.isEmpty()) {
+    if (opts.getEncryption() == null) {
       columnMaskDescriptions = null;
       encryption = new WriterEncryptionVariant[0];
       needKeyFlush = false;
     } else {
       columnMaskDescriptions = new MaskDescriptionImpl[numColumns];
-      encryption = setupEncryption(opts.getKeyProvider(), encryptionOptions);
+      encryption = setupEncryption(opts.getKeyProvider(), schema);
       needKeyFlush = true;
     }
 
@@ -582,7 +581,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
 
   private OrcProto.Encryption.Builder writeEncryptionFooter() {
     OrcProto.Encryption.Builder encrypt = OrcProto.Encryption.newBuilder();
-    for(MaskDescriptionImpl mask: maskDescriptions) {
+    for(MaskDescriptionImpl mask: maskDescriptions.values()) {
       OrcProto.DataMask.Builder maskBuilder = OrcProto.DataMask.newBuilder();
       maskBuilder.setName(mask.getName());
       for(String param: mask.getParameters()) {
@@ -799,7 +798,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
   }
 
   WriterEncryptionKey getKey(String keyName,
-                             HadoopShims.KeyProvider provider) throws IOException {
+                             KeyProvider provider) throws IOException {
     WriterEncryptionKey result = keys.get(keyName);
     if (result == null) {
       result = new WriterEncryptionKey(provider.getCurrentKeyVersion(keyName));
@@ -808,12 +807,43 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     return result;
   }
 
-  MaskDescriptionImpl getMask(OrcFile.EncryptionOption opt) {
-    MaskDescriptionImpl result = new MaskDescriptionImpl(opt.getMask(),
-        opt.getMaskParameters());
+  MaskDescriptionImpl getMask(String maskString) {
+    MaskDescriptionImpl result = maskDescriptions.get(maskString);
     // if it is already there, get the earlier object
-    if (!maskDescriptions.add(result)) {
-      result = maskDescriptions.tailSet(result).first();
+    if (result == null) {
+      result = ParserUtils.buildMaskDescription(maskString);
+      maskDescriptions.put(maskString, result);
+    }
+    return result;
+  }
+
+  int visitTypeTree(TypeDescription schema,
+                    boolean encrypted,
+                    KeyProvider provider) throws IOException {
+    int result = 0;
+    String keyName = schema.getAttributeValue(TypeDescription.ENCRYPT_ATTRIBUTE);
+    String maskName = schema.getAttributeValue(TypeDescription.MASK_ATTRIBUTE);
+    if (keyName != null) {
+      if (encrypted) {
+        throw new IllegalArgumentException("Nested encryption type: " + schema);
+      }
+      encrypted = true;
+      result += 1;
+      WriterEncryptionKey key = getKey(keyName, provider);
+      HadoopShims.KeyMetadata metadata = key.getMetadata();
+      WriterEncryptionVariant variant = new WriterEncryptionVariant(key,
+          schema, keyProvider.createLocalKey(metadata));
+      key.addRoot(variant);
+    }
+    if (encrypted && (keyName != null || maskName != null)) {
+      MaskDescriptionImpl mask = getMask(maskName == null ? "nullify" : maskName);
+      mask.addColumn(schema);
+    }
+    List<TypeDescription> children = schema.getChildren();
+    if (children != null) {
+      for(TypeDescription child: children) {
+        result += visitTypeTree(child, encrypted, provider);
+      }
     }
     return result;
   }
@@ -822,37 +852,21 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
    * Iterate through the encryption options given by the user and set up
    * our data structures.
    * @param provider the KeyProvider to use to generate keys
-   * @param options the options from the user
+   * @param schema the a
    */
-  WriterEncryptionVariant[] setupEncryption(HadoopShims.KeyProvider provider,
-                                            List<OrcFile.EncryptionOption> options
+  WriterEncryptionVariant[] setupEncryption(KeyProvider provider,
+                                            TypeDescription schema
                                             ) throws IOException {
     keyProvider = provider != null ? provider :
-                      SHIMS.getKeyProvider(conf, new SecureRandom());
+                      CryptoUtils.getKeyProvider(conf, new SecureRandom());
     if (keyProvider == null) {
       throw new IllegalArgumentException("Encryption requires a KeyProvider.");
     }
-    // fill out the primary encryption keys
-    int variantCount = 0;
-    for(OrcFile.EncryptionOption option: options) {
-      MaskDescriptionImpl mask = getMask(option);
-      for(TypeDescription col: schema.findSubtypes(option.getColumnNames())) {
-        mask.addColumn(col);
-      }
-      if (option.getKeyName() != null) {
-        WriterEncryptionKey key = getKey(option.getKeyName(), keyProvider);
-        HadoopShims.KeyMetadata metadata = key.getMetadata();
-        for(TypeDescription rootType: schema.findSubtypes(option.getColumnNames())) {
-          WriterEncryptionVariant variant = new WriterEncryptionVariant(key,
-              rootType, keyProvider.createLocalKey(metadata));
-          key.addRoot(variant);
-          variantCount += 1;
-        }
-      }
-    }
+    int variantCount = visitTypeTree(schema, false, provider);
+
     // Now that we have de-duped the keys and maskDescriptions, make the arrays
     int nextId = 0;
-    for (MaskDescriptionImpl mask: maskDescriptions) {
+    for (MaskDescriptionImpl mask: maskDescriptions.values()) {
       mask.setId(nextId++);
       for(TypeDescription column: mask.getColumns()) {
         this.columnMaskDescriptions[column.getId()] = mask;

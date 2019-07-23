@@ -24,7 +24,7 @@ import org.apache.orc.EncryptionVariant;
 import org.apache.orc.OrcProto;
 import org.apache.orc.StripeInformation;
 import org.apache.orc.TypeDescription;
-import org.apache.orc.impl.HadoopShims;
+import org.apache.orc.impl.KeyProvider;
 import org.apache.orc.impl.LocalKey;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -42,7 +42,7 @@ import java.util.Map;
 public class ReaderEncryptionVariant implements EncryptionVariant {
   private static final Logger LOG =
       LoggerFactory.getLogger(ReaderEncryptionVariant.class);
-  private final HadoopShims.KeyProvider provider;
+  private final KeyProvider provider;
   private final ReaderEncryptionKey key;
   private final TypeDescription column;
   private final int variantId;
@@ -63,7 +63,7 @@ public class ReaderEncryptionVariant implements EncryptionVariant {
                                  OrcProto.EncryptionVariant proto,
                                  TypeDescription schema,
                                  List<StripeInformation> stripes,
-                                 HadoopShims.KeyProvider provider) {
+                                 KeyProvider provider) {
     this.key = key;
     this.variantId = variantId;
     this.provider = provider;

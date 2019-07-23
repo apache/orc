@@ -22,17 +22,16 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.orc.OrcProto;
 import org.apache.orc.StripeInformation;
 import org.apache.orc.TypeDescription;
-import org.apache.orc.impl.HadoopShims;
-import org.apache.orc.impl.HadoopShimsFactory;
+import org.apache.orc.impl.CryptoUtils;
+import org.apache.orc.impl.KeyProvider;
 import org.apache.orc.impl.MaskDescriptionImpl;
 
 import java.io.IOException;
 import java.security.SecureRandom;
-import java.util.Arrays;
 import java.util.List;
 
 public class ReaderEncryption {
-  private final HadoopShims.KeyProvider keyProvider;
+  private final KeyProvider keyProvider;
   private final ReaderEncryptionKey[] keys;
   private final MaskDescriptionImpl[] masks;
   private final ReaderEncryptionVariant[] variants;
@@ -51,7 +50,7 @@ public class ReaderEncryption {
   public ReaderEncryption(OrcProto.Footer footer,
                           TypeDescription schema,
                           List<StripeInformation> stripes,
-                          HadoopShims.KeyProvider provider,
+                          KeyProvider provider,
                           Configuration conf) throws IOException {
     if (footer == null || !footer.hasEncryption()) {
       keyProvider = null;
@@ -61,7 +60,7 @@ public class ReaderEncryption {
       columnVariants = null;
     } else {
       keyProvider = provider != null ? provider :
-          HadoopShimsFactory.get().getKeyProvider(conf, new SecureRandom());
+          CryptoUtils.getKeyProvider(conf, new SecureRandom());
       OrcProto.Encryption encrypt = footer.getEncryption();
       masks = new MaskDescriptionImpl[encrypt.getMaskCount()];
       for(int m=0; m < masks.length; ++m) {

@@ -18,8 +18,16 @@
 
 package org.apache.orc.impl;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.orc.InMemoryKeystore;
+import org.apache.orc.OrcConf;
 import org.apache.orc.OrcProto;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
+import java.util.ServiceLoader;
 import java.util.function.Consumer;
 
 /**
@@ -108,6 +116,50 @@ public class CryptoUtils {
   public static void clearCounter(byte[] iv) {
     for(int i= COLUMN_ID_LENGTH + KIND_LENGTH + STRIPE_ID_LENGTH; i < iv.length; ++i) {
       iv[i] = 0;
+    }
+  }
+
+  /** A cache for the key providers */
+  private static final Map<String, KeyProvider> keyProviderCache = new HashMap<>();
+
+  /**
+   * Create a KeyProvider.
+   * It will cache the result, so that only one provider of each kind will be
+   * created.
+   *
+   * @param random the random generator to use
+   * @return the new KeyProvider
+   */
+  public static KeyProvider getKeyProvider(Configuration conf,
+                                           Random random) throws IOException {
+    String kind = OrcConf.KEY_PROVIDER.getString(conf);
+    String cacheKey = kind + "." + random.getClass().getName();
+    KeyProvider result = keyProviderCache.get(cacheKey);
+    if (result == null) {
+      ServiceLoader<KeyProvider.Factory> loader = ServiceLoader.load(KeyProvider.Factory.class);
+      for (KeyProvider.Factory factory : loader) {
+        result = factory.create(kind, conf, random);
+        if (result != null) {
+          keyProviderCache.put(cacheKey, result);
+          break;
+        }
+      }
+    }
+    return result;
+  }
+
+  public static class HadoopKeyProviderFactory implements KeyProvider.Factory {
+
+    @Override
+    public KeyProvider create(String kind,
+                              Configuration conf,
+                              Random random) throws IOException {
+      if ("hadoop".equals(kind)) {
+        return HadoopShimsFactory.get().getHadoopKeyProvider(conf, random);
+      } else if ("memory".equals(kind)) {
+        return new InMemoryKeystore(random);
+      }
+      return null;
     }
   }
 }

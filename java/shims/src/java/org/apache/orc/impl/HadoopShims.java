@@ -26,8 +26,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.security.Key;
-import java.util.List;
 import java.util.Random;
 
 public interface HadoopShims {
@@ -145,55 +143,6 @@ public interface HadoopShims {
   }
 
   /**
-   * A source of crypto keys. This is usually backed by a Ranger KMS.
-   */
-  interface KeyProvider {
-
-    /**
-     * Get the list of key names from the key provider.
-     * @return a list of key names
-     */
-    List<String> getKeyNames() throws IOException;
-
-    /**
-     * Get the current metadata for a given key. This is used when encrypting
-     * new data.
-     *
-     * @param keyName the name of a key
-     * @return metadata for the current version of the key
-     * @throws IllegalArgumentException if the key is unknown
-     */
-    KeyMetadata getCurrentKeyVersion(String keyName) throws IOException;
-
-    /**
-     * Create a local key for the given key version. This local key will be
-     * randomly generated and encrypted with the given version of the master
-     * key. The encryption and decryption is done with the local key and the
-     * user process never has access to the master key, because it stays on the
-     * Ranger KMS.
-     *
-     * @param key the master key version
-     * @return the local key's material both encrypted and unencrypted
-     */
-    LocalKey createLocalKey(KeyMetadata key) throws IOException;
-
-    /**
-     * Decrypt a local key for reading a file.
-     *
-     * @param key the master key version
-     * @param encryptedKey the encrypted key
-     * @return the decrypted local key's material or null if the key is not
-     * available
-     */
-    Key decryptLocalKey(KeyMetadata key, byte[] encryptedKey) throws IOException;
-
-    /**
-     * Get the kind of this provider.
-     */
-    KeyProviderKind getKind();
-  }
-
-  /**
    * Information about a crypto key including the key name, version, and the
    * algorithm.
    */
@@ -233,23 +182,17 @@ public interface HadoopShims {
 
     @Override
     public String toString() {
-      StringBuilder buffer = new StringBuilder();
-      buffer.append(keyName);
-      buffer.append('@');
-      buffer.append(version);
-      buffer.append(' ');
-      buffer.append(algorithm);
-      return buffer.toString();
+      return keyName + '@' + version + ' ' + algorithm;
     }
   }
 
   /**
-   * Create a KeyProvider to get encryption keys.
+   * Create a Hadoop KeyProvider to get encryption keys.
    * @param conf the configuration
    * @param random a secure random number generator
    * @return a key provider or null if none was provided
    */
-  KeyProvider getKeyProvider(Configuration conf,
-                             Random random) throws IOException;
+  KeyProvider getHadoopKeyProvider(Configuration conf,
+                                   Random random) throws IOException;
 
 }
