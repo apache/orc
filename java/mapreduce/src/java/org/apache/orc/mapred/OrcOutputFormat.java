@@ -61,7 +61,9 @@ public class OrcOutputFormat<V extends Writable>
         .stripeSize(OrcConf.STRIPE_SIZE.getLong(conf))
         .rowIndexStride((int) OrcConf.ROW_INDEX_STRIDE.getLong(conf))
         .bufferSize((int) OrcConf.BUFFER_SIZE.getLong(conf))
-        .paddingTolerance(OrcConf.BLOCK_PADDING_TOLERANCE.getDouble(conf));
+        .paddingTolerance(OrcConf.BLOCK_PADDING_TOLERANCE.getDouble(conf))
+        .encrypt(OrcConf.ENCRYPTION.getString(conf))
+        .masks(OrcConf.DATA_MASK.getString(conf));
   }
 
   @Override

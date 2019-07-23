@@ -30,6 +30,7 @@ import org.apache.hadoop.hive.ql.exec.vector.StructColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.UnionColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.orc.impl.ParserUtils;
 import org.apache.orc.impl.SchemaEvolution;
 import org.jetbrains.annotations.NotNull;
 
@@ -55,6 +56,10 @@ public class TypeDescription
   public static final long MIN_DECIMAL64 = -MAX_DECIMAL64;
   private static final int DEFAULT_LENGTH = 256;
   static final Pattern UNQUOTED_NAMES = Pattern.compile("^[a-zA-Z0-9_]+$");
+
+  // type attributes
+  public static final String ENCRYPT_ATTRIBUTE = "encrypt";
+  public static final String MASK_ATTRIBUTE = "mask";
 
   @Override
   public int compareTo(TypeDescription other) {
@@ -193,231 +198,6 @@ public class TypeDescription
     return new TypeDescription(Category.DECIMAL);
   }
 
-  static class StringPosition {
-    final String value;
-    int position;
-    final int length;
-
-    StringPosition(String value) {
-      this.value = value;
-      position = 0;
-      length = value.length();
-    }
-
-    @Override
-    public String toString() {
-      StringBuilder buffer = new StringBuilder();
-      buffer.append('\'');
-      buffer.append(value.substring(0, position));
-      buffer.append('^');
-      buffer.append(value.substring(position));
-      buffer.append('\'');
-      return buffer.toString();
-    }
-  }
-
-  static Category parseCategory(StringPosition source) {
-    StringBuilder word = new StringBuilder();
-    boolean hadSpace = true;
-    while (source.position < source.length) {
-      char ch = source.value.charAt(source.position);
-      if (Character.isLetter(ch)) {
-        word.append(Character.toLowerCase(ch));
-        hadSpace = false;
-      } else if (ch == ' ') {
-        if (!hadSpace) {
-          hadSpace = true;
-          word.append(ch);
-        }
-      } else {
-        break;
-      }
-      source.position += 1;
-    }
-    String catString = word.toString();
-    // if there were trailing spaces, remove them.
-    if (hadSpace) {
-      catString = catString.trim();
-    }
-    if (!catString.isEmpty()) {
-      for (Category cat : Category.values()) {
-        if (cat.getName().equals(catString)) {
-          return cat;
-        }
-      }
-    }
-    throw new IllegalArgumentException("Can't parse category at " + source);
-  }
-
-  static int parseInt(StringPosition source) {
-    int start = source.position;
-    int result = 0;
-    while (source.position < source.length) {
-      char ch = source.value.charAt(source.position);
-      if (!Character.isDigit(ch)) {
-        break;
-      }
-      result = result * 10 + (ch - '0');
-      source.position += 1;
-    }
-    if (source.position == start) {
-      throw new IllegalArgumentException("Missing integer at " + source);
-    }
-    return result;
-  }
-
-  static String parseName(StringPosition source) {
-    if (source.position == source.length) {
-      throw new IllegalArgumentException("Missing name at " + source);
-    }
-    final int start = source.position;
-    if (source.value.charAt(source.position) == '`') {
-      source.position += 1;
-      StringBuilder buffer = new StringBuilder();
-      boolean closed = false;
-      while (source.position < source.length) {
-        char ch = source.value.charAt(source.position);
-        source.position += 1;
-        if (ch == '`') {
-          if (source.position < source.length &&
-              source.value.charAt(source.position) == '`') {
-            source.position += 1;
-            buffer.append('`');
-          } else {
-            closed = true;
-            break;
-          }
-        } else {
-          buffer.append(ch);
-        }
-      }
-      if (!closed) {
-        source.position = start;
-        throw new IllegalArgumentException("Unmatched quote at " + source);
-      } else if (buffer.length() == 0) {
-        throw new IllegalArgumentException("Empty quoted field name at " + source);
-      }
-      return buffer.toString();
-    } else {
-      while (source.position < source.length) {
-        char ch = source.value.charAt(source.position);
-        if (!Character.isLetterOrDigit(ch) && ch != '_') {
-          break;
-        }
-        source.position += 1;
-      }
-      if (source.position == start) {
-        throw new IllegalArgumentException("Missing name at " + source);
-      }
-      return source.value.substring(start, source.position);
-    }
-  }
-
-  static void requireChar(StringPosition source, char required) {
-    if (source.position >= source.length ||
-        source.value.charAt(source.position) != required) {
-      throw new IllegalArgumentException("Missing required char '" +
-          required + "' at " + source);
-    }
-    source.position += 1;
-  }
-
-  static boolean consumeChar(StringPosition source, char ch) {
-    boolean result = source.position < source.length &&
-        source.value.charAt(source.position) == ch;
-    if (result) {
-      source.position += 1;
-    }
-    return result;
-  }
-
-  static void parseUnion(TypeDescription type, StringPosition source) {
-    requireChar(source, '<');
-    do {
-      type.addUnionChild(parseType(source));
-    } while (consumeChar(source, ','));
-    requireChar(source, '>');
-  }
-
-  static void parseStruct(TypeDescription type, StringPosition source) {
-    requireChar(source, '<');
-    boolean needComma = false;
-    while (!consumeChar(source, '>')) {
-      if (needComma) {
-        requireChar(source, ',');
-      } else {
-        needComma = true;
-      }
-      String fieldName = parseName(source);
-      requireChar(source, ':');
-      type.addField(fieldName, parseType(source));
-    }
-  }
-
-  static TypeDescription parseType(StringPosition source) {
-    TypeDescription result = new TypeDescription(parseCategory(source));
-    switch (result.getCategory()) {
-      case BINARY:
-      case BOOLEAN:
-      case BYTE:
-      case DATE:
-      case DOUBLE:
-      case FLOAT:
-      case INT:
-      case LONG:
-      case SHORT:
-      case STRING:
-      case TIMESTAMP:
-      case TIMESTAMP_INSTANT:
-        break;
-      case CHAR:
-      case VARCHAR:
-        requireChar(source, '(');
-        result.withMaxLength(parseInt(source));
-        requireChar(source, ')');
-        break;
-      case DECIMAL: {
-        requireChar(source, '(');
-        int precision = parseInt(source);
-        requireChar(source, ',');
-        result.withScale(parseInt(source));
-        result.withPrecision(precision);
-        requireChar(source, ')');
-        break;
-      }
-      case LIST: {
-        requireChar(source, '<');
-        TypeDescription child = parseType(source);
-        result.children.add(child);
-        child.parent = result;
-        requireChar(source, '>');
-        break;
-      }
-      case MAP: {
-        requireChar(source, '<');
-        TypeDescription keyType = parseType(source);
-        result.children.add(keyType);
-        keyType.parent = result;
-        requireChar(source, ',');
-        TypeDescription valueType = parseType(source);
-        result.children.add(valueType);
-        valueType.parent = result;
-        requireChar(source, '>');
-        break;
-      }
-      case UNION:
-        parseUnion(result, source);
-        break;
-      case STRUCT:
-        parseStruct(result, source);
-        break;
-      default:
-        throw new IllegalArgumentException("Unknown type " +
-            result.getCategory() + " at " + source);
-    }
-    return result;
-  }
-
   /**
    * Parse TypeDescription from the Hive type names. This is the inverse
    * of TypeDescription.toString()
@@ -429,9 +209,9 @@ public class TypeDescription
     if (typeName == null) {
       return null;
     }
-    StringPosition source = new StringPosition(typeName);
-    TypeDescription result = parseType(source);
-    if (source.position != source.length) {
+    ParserUtils.StringPosition source = new ParserUtils.StringPosition(typeName);
+    TypeDescription result = ParserUtils.parseType(source);
+    if (source.hasCharactersLeft()) {
       throw new IllegalArgumentException("Extra characters at " + source);
     }
     return result;
@@ -473,7 +253,7 @@ public class TypeDescription
   /**
    * Set an attribute on this type.
    * @param key the attribute name
-   * @param value the attribute value
+   * @param value the attribute value or null to clear the value
    * @return this for method chaining
    */
   public TypeDescription setAttribute(@NotNull String key,
@@ -549,8 +329,7 @@ public class TypeDescription
       throw new IllegalArgumentException("Can only add types to union type" +
           " and not " + category);
     }
-    children.add(child);
-    child.parent = this;
+    addChild(child);
     return this;
   }
 
@@ -566,8 +345,7 @@ public class TypeDescription
           " and not " + category);
     }
     fieldNames.add(field);
-    children.add(fieldType);
-    fieldType.parent = this;
+    addChild(fieldType);
     return this;
   }
 
@@ -876,6 +654,30 @@ public class TypeDescription
     return startId;
   }
 
+  /**
+   * Add a child to a type.
+   * @param child the child to add
+   */
+  public void addChild(TypeDescription child) {
+    switch (category) {
+      case LIST:
+        if (children.size() >= 1) {
+          throw new IllegalArgumentException("Can't add more children to list");
+        }
+      case MAP:
+        if (children.size() >= 2) {
+          throw new IllegalArgumentException("Can't add more children to map");
+        }
+      case UNION:
+      case STRUCT:
+        children.add(child);
+        child.parent = this;
+        break;
+      default:
+        throw new IllegalArgumentException("Can't add children to " + category);
+    }
+  }
+
   public TypeDescription(Category category) {
     this.category = category;
     if (category.isPrimitive) {
@@ -1050,79 +852,6 @@ public class TypeDescription
   }
 
   /**
-   * Split a compound name into parts separated by '.'.
-   * @param source the string to parse into simple names
-   * @return a list of simple names from the source
-   */
-  private static List<String> splitName(StringPosition source) {
-    List<String> result = new ArrayList<>();
-    do {
-      result.add(parseName(source));
-    } while (consumeChar(source, '.'));
-    return result;
-  }
-
-  private static final Pattern INTEGER_PATTERN = Pattern.compile("^[0-9]+$");
-
-  private TypeDescription findSubtype(StringPosition source) {
-    List<String> names = splitName(source);
-    if (names.size() == 1 && INTEGER_PATTERN.matcher(names.get(0)).matches()) {
-      return findSubtype(Integer.parseInt(names.get(0)));
-    }
-    TypeDescription current = SchemaEvolution.checkAcidSchema(this)
-        ? SchemaEvolution.getBaseRow(this) : this;
-    while (names.size() > 0) {
-      String first = names.remove(0);
-      switch (current.category) {
-        case STRUCT: {
-          int posn = current.fieldNames.indexOf(first);
-          if (posn == -1) {
-            throw new IllegalArgumentException("Field " + first +
-                " not found in " + current.toString());
-          }
-          current = current.children.get(posn);
-          break;
-        }
-        case LIST:
-          if (first.equals("_elem")) {
-            current = current.getChildren().get(0);
-          } else {
-            throw new IllegalArgumentException("Field " + first +
-                "not found in " + current.toString());
-          }
-          break;
-        case MAP:
-          if (first.equals("_key")) {
-            current = current.getChildren().get(0);
-          } else if (first.equals("_value")) {
-            current = current.getChildren().get(1);
-          } else {
-            throw new IllegalArgumentException("Field " + first +
-                "not found in " + current.toString());
-          }
-          break;
-        case UNION: {
-          try {
-            int posn = Integer.parseInt(first);
-            if (posn < 0 || posn >= current.getChildren().size()) {
-              throw new NumberFormatException("off end of union");
-            }
-            current = current.getChildren().get(posn);
-          } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Field " + first +
-                "not found in " + current.toString(), e);
-          }
-          break;
-        }
-        default:
-          throw new IllegalArgumentException("Field " + first +
-              "not found in " + current.toString());
-      }
-    }
-    return current;
-  }
-
-  /**
    * Find a subtype of this schema by name.
    * If the name is a simple integer, it will be used as a column number.
    * Otherwise, this routine will recursively search for the name.
@@ -1137,9 +866,9 @@ public class TypeDescription
    * @return the subtype
    */
   public TypeDescription findSubtype(String columnName) {
-    StringPosition source = new StringPosition(columnName);
-    TypeDescription result = findSubtype(source);
-    if (source.position != source.length) {
+    ParserUtils.StringPosition source = new ParserUtils.StringPosition(columnName);
+    TypeDescription result = ParserUtils.findSubtype(this, source);
+    if (source.hasCharactersLeft()) {
       throw new IllegalArgumentException("Remaining text in parsing field name "
           + source);
     }
@@ -1154,20 +883,32 @@ public class TypeDescription
    * @return the list of subtypes that correspond to the column names
    */
   public List<TypeDescription> findSubtypes(String columnNameList) {
-    StringPosition source = new StringPosition(columnNameList);
-    List<TypeDescription> result = new ArrayList<>();
-    boolean needComma = false;
-    while (source.position != source.length) {
-      if (needComma) {
-        if (!consumeChar(source, ',')) {
-          throw new IllegalArgumentException("Comma expected in list of column"
-              + " names at " + source);
-        }
-      } else {
-        needComma = true;
-      }
-      result.add(findSubtype(source));
+    ParserUtils.StringPosition source = new ParserUtils.StringPosition(columnNameList);
+    List<TypeDescription> result = ParserUtils.findSubtypeList(this, source);
+    if (source.hasCharactersLeft()) {
+      throw new IllegalArgumentException("Remaining text in parsing field name "
+          + source);
     }
     return result;
+  }
+
+  /**
+   * Annotate a schema with the encryption keys and masks.
+   * @param encryption the encryption keys and the fields
+   * @param masks the encryption masks and the fields
+   */
+  public void annotateEncryption(String encryption, String masks) {
+    ParserUtils.StringPosition source = new ParserUtils.StringPosition(encryption);
+    ParserUtils.parseKeys(source, this);
+    if (source.hasCharactersLeft()) {
+      throw new IllegalArgumentException("Remaining text in parsing encryption keys "
+          + source);
+    }
+    source = new ParserUtils.StringPosition(masks);
+    ParserUtils.parseMasks(source, this);
+    if (source.hasCharactersLeft()) {
+      throw new IllegalArgumentException("Remaining text in parsing encryption masks "
+          + source);
+    }
   }
 }

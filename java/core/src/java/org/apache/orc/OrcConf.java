@@ -162,7 +162,10 @@ public enum OrcConf {
       "Comma-separated list of columns for which dictionary encoding is to be skipped."),
   // some JVM doesn't allow array creation of size Integer.MAX_VALUE, so chunk size is slightly less than max int
   ORC_MAX_DISK_RANGE_CHUNK_LIMIT("orc.max.disk.range.chunk.limit", "hive.exec.orc.max.disk.range.chunk.limit",
-    Integer.MAX_VALUE - 1024, "When reading stripes >2GB, specify max limit for the chunk size.")
+    Integer.MAX_VALUE - 1024, "When reading stripes >2GB, specify max limit for the chunk size."),
+  ENCRYPTION("orc.encrypt", "orc.encrypt", null, "The list of keys and columns to encrypt with"),
+  DATA_MASK("orc.mask", "orc.mask", null, "The masks to apply to the encrypted columns"),
+  KEY_PROVIDER("orc.key.provider", "orc.key.provider", "hadoop", "The kind of KeyProvider to use for encryption.")
   ;
 
   private final String attribute;
