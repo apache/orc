@@ -293,6 +293,39 @@ public final class FileDump {
     }
   }
 
+  static void printTypeAnnotations(TypeDescription type, String prefix) {
+    List<String> attributes = type.getAttributeNames();
+    if (attributes.size() > 0) {
+      System.out.println("Attributes on " + prefix);
+      for(String attr: attributes) {
+        System.out.println("  " + attr + ": " + type.getAttributeValue(attr));
+      }
+    }
+    List<TypeDescription> children = type.getChildren();
+    if (children != null) {
+      switch (type.getCategory()) {
+        case STRUCT:
+          List<String> fields = type.getFieldNames();
+          for(int c = 0; c < children.size(); ++c) {
+            printTypeAnnotations(children.get(c), prefix + "." + fields.get(c));
+          }
+          break;
+        case MAP:
+          printTypeAnnotations(children.get(0), prefix + "._key");
+          printTypeAnnotations(children.get(1), prefix + "._value");
+          break;
+        case LIST:
+          printTypeAnnotations(children.get(0), prefix + "._elem");
+          break;
+        case UNION:
+          for(int c = 0; c < children.size(); ++c) {
+            printTypeAnnotations(children.get(c), prefix + "._" + c);
+          }
+          break;
+      }
+    }
+  }
+
   private static void printMetaDataImpl(final String filename,
       final Configuration conf, List<Integer> rowIndexCols, final boolean printTimeZone,
       final List<String> corruptFiles) throws IOException {
@@ -313,6 +346,7 @@ public final class FileDump {
       System.out.println("Compression size: " + reader.getCompressionSize());
     }
     System.out.println("Type: " + reader.getSchema().toString());
+    printTypeAnnotations(reader.getSchema(), "root");
     System.out.println("\nStripe Statistics:");
     List<StripeStatistics> stripeStats = reader.getStripeStatistics();
     for (int n = 0; n < stripeStats.size(); n++) {

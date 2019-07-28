@@ -6,34 +6,28 @@
   "compression": "ZLIB",
   "compressionBufferSize": 4096,
   "schemaString": "struct<i:int,l:bigint,s:string>",
-  "schema": [
-    {
-      "columnId": 0,
-      "columnType": "STRUCT",
-      "childColumnNames": [
-        "i",
-        "l",
-        "s"
-      ],
-      "childColumnIds": [
-        1,
-        2,
-        3
-      ]
-    },
-    {
-      "columnId": 1,
-      "columnType": "INT"
-    },
-    {
-      "columnId": 2,
-      "columnType": "LONG"
-    },
-    {
-      "columnId": 3,
-      "columnType": "STRING"
+  "schema": {
+    "columnId": 0,
+    "columnType": "STRUCT",
+    "children": {
+      "i": {
+        "columnId": 1,
+        "columnType": "INT"
+      },
+      "l": {
+        "columnId": 2,
+        "columnType": "LONG",
+        "attributes": {
+          "test1": "value1",
+          "test2": "value2"
+        }
+      },
+      "s": {
+        "columnId": 3,
+        "columnType": "STRING"
+      }
     }
-  ],
+  },
   "stripeStatistics": [
     {
       "stripeNumber": 1,
@@ -1366,7 +1360,7 @@
       }]
     }
   ],
-  "fileLength": 272486,
+  "fileLength": 272511,
   "paddingLength": 0,
   "paddingRatio": 0,
   "status": "OK"

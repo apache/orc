@@ -85,10 +85,11 @@ public class TestJsonFileDump {
 
   @Test
   public void testJsonDump() throws Exception {
-    TypeDescription schema = TypeDescription.createStruct()
-        .addField("i", TypeDescription.createInt())
-        .addField("l", TypeDescription.createLong())
-        .addField("s", TypeDescription.createString());
+    TypeDescription schema =
+        TypeDescription.fromString("struct<i:int,l:bigint,s:string>");
+    schema.findSubtype("l")
+        .setAttribute("test1", "value1")
+        .setAttribute("test2","value2");
     conf.set(OrcConf.ENCODING_STRATEGY.getAttribute(), "COMPRESSION");
     OrcFile.WriterOptions options = OrcFile.writerOptions(conf)
         .fileSystem(fs)

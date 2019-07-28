@@ -345,6 +345,12 @@ public class TestTypeDescription {
     schema.findSubtype("address.street").setAttribute("mask", "nullify")
         .setAttribute("encrypt", "pii");
 
+    TypeDescription clone = schema.clone();
+    assertEquals("12", clone.findSubtype("name").getAttributeValue("iceberg.id"));
+    clone.findSubtype("name").removeAttribute("iceberg.id");
+    assertEquals(0, clone.findSubtype("name").getAttributeNames().size());
+    assertEquals(1, schema.findSubtype("name").getAttributeNames().size());
+
     // write a file with those attributes
     Path path = new Path(System.getProperty("test.tmp.dir",
         "target" + File.separator + "test" + File.separator + "tmp"), "attribute.orc");

@@ -4,6 +4,11 @@ Rows: 21000
 Compression: ZLIB
 Compression size: 4096
 Type: struct<i:int,l:bigint,s:string>
+Attributes on root
+  test1: value1
+Attributes on root.s
+  test2: value2
+  test3: value3
 
 Stripe Statistics:
   Stripe 1:
@@ -172,7 +177,7 @@ Stripes:
       Entry 0: numHashFunctions: 4 bitCount: 6272 popCount: 138 loadFactor: 0.022 expectedFpp: 2.343647E-7
       Stripe level merge: numHashFunctions: 4 bitCount: 6272 popCount: 138 loadFactor: 0.022 expectedFpp: 2.343647E-7
 
-File length: 272503 bytes
+File length: 272533 bytes
 Padding length: 0 bytes
 Padding ratio: 0%
 ________________________________________________________________________________________________________________________

@@ -98,9 +98,8 @@ public class JsonFileDump {
           writer.key("compressionBufferSize").value(reader.getCompressionSize());
         }
         writer.key("schemaString").value(reader.getSchema().toString());
-        writer.key("schema").array();
-        writeSchema(writer, reader.getTypes());
-        writer.endArray();
+        writer.key("schema");
+        writeSchema(writer, reader.getSchema());
 
         writer.key("stripeStatistics").array();
         List<StripeStatistics> stripeStatistics = reader.getStripeStatistics();
@@ -247,46 +246,67 @@ public class JsonFileDump {
     }
   }
 
-  private static void writeSchema(JSONStringer writer, List<OrcProto.Type> types)
+  private static void writeSchema(JSONStringer writer, TypeDescription type)
       throws JSONException {
-    int i = 0;
-    for(OrcProto.Type type : types) {
-      writer.object();
-      writer.key("columnId").value(i++);
-      writer.key("columnType").value(type.getKind());
-      if (type.getFieldNamesCount() > 0) {
-        writer.key("childColumnNames").array();
-        for (String field : type.getFieldNamesList()) {
-          writer.value(field);
-        }
-        writer.endArray();
-        writer.key("childColumnIds").array();
-        for (Integer colId : type.getSubtypesList()) {
-          writer.value(colId);
-        }
-        writer.endArray();
-      }
-      if (type.hasPrecision()) {
-        writer.key("precision").value(type.getPrecision());
-      }
-
-      if (type.hasScale()) {
-        writer.key("scale").value(type.getScale());
-      }
-
-      if (type.hasMaximumLength()) {
-        writer.key("maxLength").value(type.getMaximumLength());
-      }
-
-      if (type.getAttributesCount() > 0) {
-        writer.key("attributes").object();
-        for(OrcProto.StringPair pair: type.getAttributesList()) {
-          writer.key(pair.getKey()).value(pair.getValue());
-        }
-        writer.endObject();
+    writer.object();
+    writer.key("columnId").value(type.getId());
+    writer.key("columnType").value(type.getCategory());
+    List<String> attributes = type.getAttributeNames();
+    if (attributes.size() > 0) {
+      writer.key("attributes").object();
+      for (String name : attributes) {
+        writer.key(name).value(type.getAttributeValue(name));
       }
       writer.endObject();
     }
+    switch (type.getCategory()) {
+      case DECIMAL:
+        writer.key("precision").value(type.getPrecision());
+        writer.key("scale").value(type.getScale());
+        break;
+      case VARCHAR:
+      case CHAR:
+        writer.key("maxLength").value(type.getMaxLength());
+        break;
+      default:
+        break;
+    }
+    List<TypeDescription> children = type.getChildren();
+    if (children != null) {
+      writer.key("children");
+      switch (type.getCategory()) {
+        case STRUCT:
+          writer.object();
+          List<String> fields = type.getFieldNames();
+          for (int c = 0; c < fields.size(); ++c) {
+            writer.key(fields.get(c));
+            writeSchema(writer, children.get(c));
+          }
+          writer.endObject();
+          break;
+        case LIST:
+          writer.array();
+          writeSchema(writer, children.get(0));
+          writer.endArray();
+          break;
+        case MAP:
+          writer.array();
+          writeSchema(writer, children.get(0));
+          writeSchema(writer, children.get(1));
+          writer.endArray();
+          break;
+        case UNION:
+          writer.array();
+          for (TypeDescription child : children) {
+            writeSchema(writer, child);
+          }
+          writer.endArray();
+          break;
+        default:
+          break;
+      }
+    }
+    writer.endObject();
   }
 
   private static void writeStripeInformation(JSONWriter writer, StripeInformation stripe)

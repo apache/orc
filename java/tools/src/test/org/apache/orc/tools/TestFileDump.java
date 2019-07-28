@@ -396,6 +396,10 @@ public class TestFileDump {
   @Test
   public void testBloomFilter() throws Exception {
     TypeDescription schema = getMyRecordType();
+    schema.setAttribute("test1", "value1");
+    schema.findSubtype("s")
+        .setAttribute("test2", "value2")
+        .setAttribute("test3", "value3");
     conf.set(OrcConf.ENCODING_STRATEGY.getAttribute(), "COMPRESSION");
     OrcFile.WriterOptions options = OrcFile.writerOptions(conf)
         .fileSystem(fs)
