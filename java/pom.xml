@@ -206,7 +206,7 @@
             </execution>
           </executions>
           <configuration>
-            <excludeSubProject>false</excludeSubProject>
+            <excludeSubProjects>false</excludeSubProjects>
             <excludes>
               <exclude>**/data/**</exclude>
               <exclude>**/*.json</exclude>
