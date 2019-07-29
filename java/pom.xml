@@ -206,9 +206,10 @@
             </execution>
           </executions>
           <configuration>
-            <excludeSubProject>false</excludeSubProject>
+            <excludeSubProjects>false</excludeSubProjects>
             <excludes>
               <exclude>**/data/**</exclude>
+              <exclude>**/*.iml</exclude>
               <exclude>**/*.json</exclude>
               <exclude>**/*.json.gz</exclude>
               <exclude>**/*.orc</exclude>
