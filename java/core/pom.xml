@@ -97,11 +97,6 @@
       <artifactId>mockito-core</artifactId>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>io.airlift</groupId>
-      <artifactId>slice</artifactId>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
 
   <build>

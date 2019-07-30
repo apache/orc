@@ -537,6 +537,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
       case SNAPPY: return OrcProto.CompressionKind.SNAPPY;
       case LZO: return OrcProto.CompressionKind.LZO;
       case LZ4: return OrcProto.CompressionKind.LZ4;
+      case ZSTD: return OrcProto.CompressionKind.ZSTD;
       default:
         throw new IllegalArgumentException("Unknown compression " + kind);
     }
