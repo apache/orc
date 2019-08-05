@@ -97,8 +97,17 @@ public class RecordReaderImpl implements RecordReader {
   static int findColumns(SchemaEvolution evolution,
                          String columnName) {
     try {
-      return evolution.getFileSchema().findSubtype(columnName).getId();
+      final TypeDescription targetSchema;
+      if (evolution.getPositionalColumns()) {
+        targetSchema = evolution.getReaderBaseSchema();
+      } else {
+        targetSchema = evolution.getFileSchema();
+      }
+      return targetSchema.findSubtype(columnName).getId();
     } catch (IllegalArgumentException e) {
+      if (LOG.isDebugEnabled()){
+        LOG.debug("{}", e.getMessage());
+      }
       return -1;
     }
   }
