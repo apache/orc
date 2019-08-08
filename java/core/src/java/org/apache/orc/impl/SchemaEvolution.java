@@ -59,6 +59,9 @@ public class SchemaEvolution {
   // indexed by reader column id
   private final boolean[] ppdSafeConversion;
 
+  // columns are indexed, not named between Reader & File schema
+  private final boolean positionalColumns;
+
   private static final Logger LOG =
     LoggerFactory.getLogger(SchemaEvolution.class);
   private static final Pattern missingMetadataPattern =
@@ -82,8 +85,8 @@ public class SchemaEvolution {
     this.hasConversion = false;
     this.isOnlyImplicitConversion = true;
     this.fileSchema = fileSchema;
-    isAcid = checkAcidSchema(fileSchema);
-    includeAcidColumns = options.getIncludeAcidColumns();
+    this.isAcid = checkAcidSchema(fileSchema);
+    this.includeAcidColumns = options.getIncludeAcidColumns();
     this.readerColumnOffset = isAcid ? acidEventFieldNames.size() : 0;
     if (readerSchema != null) {
       if (isAcid) {
@@ -134,6 +137,7 @@ public class SchemaEvolution {
       }
       buildIdentityConversion(this.readerSchema);
     }
+    this.positionalColumns = options.getForcePositionalEvolution();
     this.ppdSafeConversion = populatePpdSafeConversion();
   }
 
@@ -235,6 +239,13 @@ public class SchemaEvolution {
    */
   public boolean[] getFileIncluded() {
     return fileIncluded;
+  }
+
+  /**
+   * Get whether the columns are handled via position or name
+   */
+  public boolean getPositionalColumns() {
+    return this.positionalColumns;
   }
 
   /**
