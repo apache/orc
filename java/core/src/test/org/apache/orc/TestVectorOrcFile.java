@@ -72,6 +72,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1445,16 +1446,17 @@ public class TestVectorOrcFile {
     batch = reader.getSchema().createRowBatch(1000);
     TimestampColumnVector times = (TimestampColumnVector) batch.cols[0];
     LongColumnVector dates = (LongColumnVector) batch.cols[1];
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSS");
     for (int year = minYear; year < maxYear; ++year) {
       rows.nextBatch(batch);
       assertEquals(1000, batch.size);
       for(int row = 0; row < 1000; ++row) {
-        Timestamp expected = Timestamp.valueOf(
-            String.format("%04d-05-05 12:34:56.%04d", year, 2*row));
-        assertEquals("ms row " + row + " " + expected, expected.getTime(),
-            times.time[row]);
-        assertEquals("nanos row " + row + " " + expected, expected.getNanos(),
-            times.nanos[row]);
+        String expectedStr = String.format("%04d-05-05 12:34:56.%04d", year, 2*row);
+        assertEquals("row " + row, expectedStr,
+            formatter.format(times.asScratchTimestamp(row).toLocalDateTime()));
+        assertEquals(0, times.time[row] % 1000);
+        assertTrue("nano " + row + " = " + times.nanos[row],
+            times.nanos[row] >= 0 && times.nanos[row] < 1_000_000_000);
         assertEquals("year " + year + " row " + row,
             Integer.toString(year) + "-12-25",
             new DateWritable((int) dates.vector[row]).toString());
