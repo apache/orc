@@ -975,9 +975,9 @@ public class TreeReaderFactory {
 
       for (int i = 0; i < batchSize; i++) {
         if (result.noNulls || !result.isNull[i]) {
-          final int newNanos = parseNanos(nanos.next());
+          int newNanos = parseNanos(nanos.next());
           long millis = (data.next() + base_timestamp)
-              * WriterImpl.MILLIS_PER_SECOND + newNanos / 1_000_000;
+              * WriterImpl.MILLIS_PER_SECOND;
           if (millis < 0 && newNanos > 999_999) {
             millis -= WriterImpl.MILLIS_PER_SECOND;
           }
