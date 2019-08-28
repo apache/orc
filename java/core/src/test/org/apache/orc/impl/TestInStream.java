@@ -89,11 +89,9 @@ public class TestInStream {
     }
   }
 
-  @Test
-  public void testUncompressed() throws Exception {
+  static byte[] getUncompressed(PositionCollector[] positions) throws IOException {
     OutputCollector collect = new OutputCollector();
     OutStream out = new OutStream("test", new StreamOptions(100), collect);
-    PositionCollector[] positions = new PositionCollector[1024];
     for(int i=0; i < 1024; ++i) {
       positions[i] = new PositionCollector();
       out.getPosition(positions[i]);
@@ -104,13 +102,21 @@ public class TestInStream {
     for(int i=0; i < 1024; ++i) {
       assertEquals((byte) i, collect.buffer.get(i));
     }
-    ByteBuffer inBuf = ByteBuffer.allocate(collect.buffer.size());
-    collect.buffer.setByteBuffer(inBuf, 0, collect.buffer.size());
-    inBuf.flip();
+    return collect.buffer.get();
+  }
+
+  @Test
+  public void testUncompressed() throws Exception {
+    PositionCollector[] positions = new PositionCollector[1024];
+    byte[] bytes = getUncompressed(positions);
+    for(int i=0; i < 1024; ++i) {
+      assertEquals((byte) i, bytes[i]);
+    }
+    ByteBuffer inBuf = ByteBuffer.wrap(bytes);
     InStream in = InStream.create("test", new BufferChunk(inBuf, 0),
         0, inBuf.remaining());
     assertEquals("uncompressed stream test position: 0 length: 1024" +
-                 " range: 0 offset: 0 limit: 1024",
+                 " range: 0 offset: 0 position: 0 limit: 1024",
                  in.toString());
     for(int i=0; i < 1024; ++i) {
       int x = in.read();
@@ -123,22 +129,45 @@ public class TestInStream {
   }
 
   @Test
-  public void testEncrypted() throws Exception {
-    final long DATA_CONST = 0x1_0000_0003L;
-    final int ROW_COUNT = 1024;
-    OutputCollector collect = new OutputCollector();
-    EncryptionAlgorithm algorithm = EncryptionAlgorithm.AES_CTR_128;
-    byte[] rawKey = new byte[algorithm.keyLength()];
-    for(int i=0; i < rawKey.length; ++i) {
-      rawKey[i] = (byte) i;
+  public void testUncompressedPartial() throws Exception {
+    PositionCollector[] positions = new PositionCollector[1024];
+    byte[] bytes = getUncompressed(positions);
+    ByteBuffer inBuf = ByteBuffer.allocate(3 * 1024);
+    inBuf.position(123);
+    inBuf.put(bytes);
+    inBuf.clear();
+    InStream in = InStream.create("test", new BufferChunk(inBuf, 33),
+        156, 1024);
+    assertEquals("uncompressed stream test position: 0 length: 1024" +
+                     " range: 0 offset: 33 position: 123 limit: 1147",
+        in.toString());
+    for(int i=0; i < 1024; ++i) {
+      int x = in.read();
+      assertEquals("value " + i, i & 0xff, x);
     }
-    Key decryptKey = new SecretKeySpec(rawKey, algorithm.getAlgorithm());
+    for(int i=1023; i >= 0; --i) {
+      in.seek(positions[i]);
+      assertEquals("value " + i, i & 0xff, in.read());
+    }
+  }
+
+  static byte[] getEncrypted(PositionCollector[] positions,
+                             byte[] key,
+                             byte[] iv,
+                             EncryptionAlgorithm algorithm,
+                             int ROW_COUNT,
+                             long DATA_CONST) throws IOException {
+    OutputCollector collect = new OutputCollector();
+    for(int i=0; i < key.length; ++i) {
+      key[i] = (byte) i;
+    }
+    Key decryptKey = new SecretKeySpec(key, algorithm.getAlgorithm());
     StreamOptions writerOptions = new StreamOptions(100)
-        .withEncryption(algorithm, decryptKey);
+                                      .withEncryption(algorithm, decryptKey);
     writerOptions.modifyIv(CryptoUtils.modifyIvForStream(0,
         OrcProto.Stream.Kind.DATA, 1));
+    System.arraycopy(writerOptions.getIv(), 0, iv, 0, iv.length);
     OutStream out = new OutStream("test", writerOptions, collect);
-    PositionCollector[] positions = new PositionCollector[ROW_COUNT];
     DataOutputStream outStream = new DataOutputStream(out);
     for(int i=0; i < ROW_COUNT; ++i) {
       positions[i] = new PositionCollector();
@@ -146,7 +175,21 @@ public class TestInStream {
       outStream.writeLong(i * DATA_CONST);
     }
     out.flush();
-    assertEquals(ROW_COUNT * 8, collect.buffer.size());
+    byte[] result = collect.buffer.get();
+    assertEquals(ROW_COUNT * 8, result.length);
+    return result;
+  }
+
+  @Test
+  public void testEncrypted() throws Exception {
+    final long DATA_CONST = 0x1_0000_0003L;
+    final int ROW_COUNT = 1024;
+    PositionCollector[] positions = new PositionCollector[ROW_COUNT];
+    EncryptionAlgorithm algorithm = EncryptionAlgorithm.AES_CTR_128;
+    byte[] rawKey = new byte[algorithm.keyLength()];
+    byte[] iv = new byte[algorithm.getIvLength()];
+    byte[] bytes = getEncrypted(positions, rawKey, iv, algorithm, ROW_COUNT,
+        DATA_CONST);
 
     // Allocate the stream into three ranges. making sure that they don't fall
     // on the 16 byte aes boundaries.
@@ -155,17 +198,17 @@ public class TestInStream {
     BufferChunkList list = new BufferChunkList();
     for(int size: rangeSizes) {
       ByteBuffer buffer = ByteBuffer.allocate(size);
-      collect.buffer.setByteBuffer(buffer, offset, size);
+      buffer.put(bytes, offset, size);
       buffer.flip();
       list.add(new BufferChunk(buffer, offset));
       offset += size;
     }
 
-    InStream in = InStream.create("test", list.get(), 0, collect.buffer.size(),
-        InStream.options().withEncryption(algorithm, decryptKey,
-            writerOptions.getIv()));
+    InStream in = InStream.create("test", list.get(), 0, bytes.length,
+        InStream.options().withEncryption(EncryptionAlgorithm.AES_CTR_128,
+            new SecretKeySpec(rawKey, algorithm.getAlgorithm()), iv));
     assertEquals("encrypted uncompressed stream test position: 0 length: 8192" +
-            " range: 0 offset: 0 limit: 1965",
+            " range: 0 offset: 0 position: 0 limit: 1965",
         in.toString());
     DataInputStream inputStream = new DataInputStream(in);
     for(int i=0; i < ROW_COUNT; ++i) {
@@ -178,24 +221,71 @@ public class TestInStream {
   }
 
   @Test
-  public void testCompressedEncrypted() throws Exception {
+  public void testEncryptedPartial() throws Exception {
     final long DATA_CONST = 0x1_0000_0003L;
     final int ROW_COUNT = 1024;
-    OutputCollector collect = new OutputCollector();
+    PositionCollector[] positions = new PositionCollector[ROW_COUNT];
     EncryptionAlgorithm algorithm = EncryptionAlgorithm.AES_CTR_128;
     byte[] rawKey = new byte[algorithm.keyLength()];
-    for(int i=0; i < rawKey.length; ++i) {
-      rawKey[i] = (byte) i;
+    byte[] iv = new byte[algorithm.getIvLength()];
+    byte[] bytes = getEncrypted(positions, rawKey, iv, algorithm, ROW_COUNT,
+        DATA_CONST);
+
+    // Allocate the stream into three ranges. making sure that they don't fall
+    // on the 16 byte aes boundaries.
+    BufferChunkList list = new BufferChunkList();
+    ByteBuffer buffer = ByteBuffer.allocate(2000);
+    buffer.position(35);
+    buffer.put(bytes, 0, 1965);
+    buffer.clear();
+    list.add(new BufferChunk(buffer, 0));
+
+    int SECOND_SIZE = ROW_COUNT * 8 - 1965 - 15;
+    buffer = ByteBuffer.allocate(SECOND_SIZE);
+    buffer.put(bytes, 1965, buffer.remaining());
+    buffer.clear();
+    list.add(new BufferChunk(buffer, 2000));
+
+    buffer = ByteBuffer.allocate(2000);
+    buffer.put(bytes, 1965 + SECOND_SIZE, 15);
+    buffer.clear();
+    list.add(new BufferChunk(buffer, 2000 + SECOND_SIZE));
+
+    InStream in = InStream.create("test", list.get(), 35, bytes.length,
+        InStream.options().withEncryption(EncryptionAlgorithm.AES_CTR_128,
+            new SecretKeySpec(rawKey, algorithm.getAlgorithm()), iv));
+    assertEquals("encrypted uncompressed stream test position: 0 length: 8192" +
+                     " range: 0 offset: 0 position: 0 limit: 1965",
+        in.toString());
+    DataInputStream inputStream = new DataInputStream(in);
+    for(int i=0; i < ROW_COUNT; ++i) {
+      assertEquals("row " + i, i * DATA_CONST, inputStream.readLong());
     }
-    Key decryptKey = new SecretKeySpec(rawKey, algorithm.getAlgorithm());
+    for(int i=ROW_COUNT - 1; i >= 0; --i) {
+      in.seek(positions[i]);
+      assertEquals("row " + i, i * DATA_CONST, inputStream.readLong());
+    }
+  }
+
+  static byte[] getCompressedEncrypted(byte[] key,
+                                       byte[] iv,
+                                       PositionCollector[] positions,
+                                       EncryptionAlgorithm algorithm,
+                                       int ROW_COUNT,
+                                       long DATA_CONST) throws IOException {
+    OutputCollector collect = new OutputCollector();
+    for(int i=0; i < key.length; ++i) {
+      key[i] = (byte) i;
+    }
+    Key decryptKey = new SecretKeySpec(key, algorithm.getAlgorithm());
     CompressionCodec codec = new ZlibCodec();
     StreamOptions writerOptions = new StreamOptions(500)
-        .withCodec(codec, codec.getDefaultOptions())
-        .withEncryption(algorithm, decryptKey);
+                                      .withCodec(codec, codec.getDefaultOptions())
+                                      .withEncryption(algorithm, decryptKey);
     writerOptions.modifyIv(CryptoUtils.modifyIvForStream(0,
         OrcProto.Stream.Kind.DATA, 1));
+    System.arraycopy(writerOptions.getIv(), 0, iv, 0, iv.length);
     OutStream out = new OutStream("test", writerOptions, collect);
-    PositionCollector[] positions = new PositionCollector[ROW_COUNT];
     DataOutputStream outStream = new DataOutputStream(out);
     for(int i=0; i < ROW_COUNT; ++i) {
       positions[i] = new PositionCollector();
@@ -203,31 +293,44 @@ public class TestInStream {
       outStream.writeLong(i * DATA_CONST);
     }
     out.flush();
+    return collect.buffer.get();
+  }
+
+  @Test
+  public void testCompressedEncrypted() throws Exception {
+    final long DATA_CONST = 0x1_0000_0003L;
+    final int ROW_COUNT = 1024;
+    EncryptionAlgorithm algorithm = EncryptionAlgorithm.AES_CTR_128;
+    byte[] key = new byte[algorithm.keyLength()];
+    byte[] iv = new byte[algorithm.getIvLength()];
+    PositionCollector[] positions = new PositionCollector[ROW_COUNT];
+    byte[] bytes= getCompressedEncrypted(key, iv, positions, algorithm, ROW_COUNT, DATA_CONST);
+
     // currently 3957 bytes
-    int compressedSize = collect.buffer.size();
+    assertEquals(3957, bytes.length);
 
     // Allocate the stream into three ranges. making sure that they don't fall
     // on the 16 byte aes boundaries.
-    int[] rangeSizes = {1998, compressedSize - 1998 - 15, 15};
+    int[] rangeSizes = {1998, bytes.length - 1998 - 15, 15};
     int offset = 0;
     BufferChunkList list = new BufferChunkList();
     for(int size: rangeSizes) {
       ByteBuffer buffer = ByteBuffer.allocate(size);
-      collect.buffer.setByteBuffer(buffer, offset, size);
+      buffer.put(bytes, offset, size);
       buffer.flip();
       list.add(new BufferChunk(buffer, offset));
       offset += size;
     }
 
-    InStream in = InStream.create("test", list.get(), 0, collect.buffer.size(),
+    InStream in = InStream.create("test", list.get(), 0, bytes.length,
         InStream.options()
             .withCodec(new ZlibCodec()).withBufferSize(500)
-            .withEncryption(algorithm, decryptKey, writerOptions.getIv()));
+            .withEncryption(algorithm, new SecretKeySpec(key, algorithm.getAlgorithm()), iv));
     assertEquals("encrypted compressed stream test position: 0 length: " +
-            compressedSize + " range: 0 offset: 0 limit: 1998 range 0 = 0 to" +
-            " 1998;  range 1 = 1998 to " + (compressedSize - 15) +
+            bytes.length + " range: 0 offset: 0 limit: 1998 range 0 = 0 to" +
+            " 1998;  range 1 = 1998 to " + (bytes.length - 15) +
             ";  range 2 = " +
-            (compressedSize - 15) + " to " + compressedSize,
+            (bytes.length - 15) + " to " + bytes.length,
         in.toString());
     DataInputStream inputStream = new DataInputStream(in);
     for(int i=0; i < ROW_COUNT; ++i) {
@@ -240,13 +343,62 @@ public class TestInStream {
   }
 
   @Test
-  public void testCompressed() throws Exception {
-    OutputCollector collect = new OutputCollector();
+  public void testCompressedEncryptedPartial() throws Exception {
+    final long DATA_CONST = 0x1_0000_0003L;
+    final int ROW_COUNT = 1024;
+    EncryptionAlgorithm algorithm = EncryptionAlgorithm.AES_CTR_128;
+    byte[] key = new byte[algorithm.keyLength()];
+    byte[] iv = new byte[algorithm.getIvLength()];
+    PositionCollector[] positions = new PositionCollector[ROW_COUNT];
+    byte[] bytes= getCompressedEncrypted(key, iv, positions, algorithm, ROW_COUNT, DATA_CONST);
+
+    // currently 3957 bytes
+    assertEquals(3957, bytes.length);
+
+    // Allocate the stream into three ranges. making sure that they don't fall
+    // on the 16 byte aes boundaries.
+    BufferChunkList list = new BufferChunkList();
+    ByteBuffer buffer = ByteBuffer.allocate(2000);
+    buffer.position(2);
+    buffer.put(bytes, 0 , 1998);
+    buffer.clear();
+    list.add(new BufferChunk(buffer, 100));
+
+    int SECOND_SIZE = bytes.length - 1998 - 15;
+    buffer = ByteBuffer.allocate(SECOND_SIZE);
+    buffer.put(bytes, 1998, SECOND_SIZE);
+    buffer.clear();
+    list.add(new BufferChunk(buffer, 2100));
+
+    buffer = ByteBuffer.allocate(1000);
+    buffer.put(bytes, 1998 + SECOND_SIZE, 15);
+    buffer.clear();
+    list.add(new BufferChunk(buffer, 2100 + SECOND_SIZE));
+
+    InStream in = InStream.create("test", list.get(), 102, bytes.length,
+        InStream.options()
+            .withCodec(new ZlibCodec()).withBufferSize(500)
+            .withEncryption(algorithm, new SecretKeySpec(key, algorithm.getAlgorithm()), iv));
+    assertEquals("encrypted compressed stream test position: 0 length: " +
+                     bytes.length + " range: 0 offset: 0 limit: 1998 range 0 = 100 to 2100;" +
+                     "  range 1 = 2100 to 4044;  range 2 = 4044 to 5044",
+        in.toString());
+    DataInputStream inputStream = new DataInputStream(in);
+    for(int i=0; i < ROW_COUNT; ++i) {
+      assertEquals("row " + i, i * DATA_CONST, inputStream.readLong());
+    }
+    for(int i=ROW_COUNT - 1; i >= 0; --i) {
+      in.seek(positions[i]);
+      assertEquals("row " + i, i * DATA_CONST, inputStream.readLong());
+    }
+  }
+
+  byte[] getCompressed(PositionCollector[] positions) throws IOException {
     CompressionCodec codec = new ZlibCodec();
     StreamOptions options = new StreamOptions(300)
-        .withCodec(codec, codec.getDefaultOptions());
+                                .withCodec(codec, codec.getDefaultOptions());
+    OutputCollector collect = new OutputCollector();
     OutStream out = new OutStream("test", options, collect);
-    PositionCollector[] positions = new PositionCollector[1024];
     for(int i=0; i < 1024; ++i) {
       positions[i] = new PositionCollector();
       out.getPosition(positions[i]);
@@ -254,16 +406,47 @@ public class TestInStream {
     }
     out.flush();
     assertEquals("test", out.toString());
-    assertEquals(961, collect.buffer.size());
-    ByteBuffer inBuf = ByteBuffer.allocate(collect.buffer.size());
-    collect.buffer.setByteBuffer(inBuf, 0, collect.buffer.size());
-    inBuf.flip();
-    InStream in = InStream.create("test", new BufferChunk(inBuf, 0), 0,
-        inBuf.remaining(),
-        InStream.options().withCodec(codec).withBufferSize(300));
+    return collect.buffer.get();
+  }
+
+  @Test
+  public void testCompressed() throws Exception {
+    PositionCollector[] positions = new PositionCollector[1024];
+    byte[] bytes = getCompressed(positions);
+
+    assertEquals(961, bytes.length);
+    InStream in = InStream.create("test", new BufferChunk(ByteBuffer.wrap(bytes), 0), 0,
+        bytes.length, InStream.options().withCodec(new ZlibCodec()).withBufferSize(300));
     assertEquals("compressed stream test position: 0 length: 961 range: 0" +
                  " offset: 0 limit: 961 range 0 = 0 to 961",
                  in.toString());
+    for(int i=0; i < 1024; ++i) {
+      int x = in.read();
+      assertEquals(i & 0xff, x);
+    }
+    assertEquals(0, in.available());
+    for(int i=1023; i >= 0; --i) {
+      in.seek(positions[i]);
+      assertEquals(i & 0xff, in.read());
+    }
+  }
+
+  @Test
+  public void testCompressedPartial() throws Exception {
+    PositionCollector[] positions = new PositionCollector[1024];
+    byte[] bytes = getCompressed(positions);
+
+    assertEquals(961, bytes.length);
+    ByteBuffer buffer = ByteBuffer.allocate(1500);
+    buffer.position(39);
+    buffer.put(bytes, 0, bytes.length);
+    buffer.clear();
+
+    InStream in = InStream.create("test", new BufferChunk(buffer, 100), 139,
+        bytes.length, InStream.options().withCodec(new ZlibCodec()).withBufferSize(300));
+    assertEquals("compressed stream test position: 0 length: 961 range: 0" +
+                     " offset: 39 limit: 1000 range 0 = 100 to 1600",
+        in.toString());
     for(int i=0; i < 1024; ++i) {
       int x = in.read();
       assertEquals(i & 0xff, x);
@@ -426,7 +609,7 @@ public class TestInStream {
     buffers.add(new BufferChunk(inBuf[2], 3072));
     InStream in = InStream.create("test", buffers.get(), 0, 4096);
     assertEquals("uncompressed stream test position: 0 length: 4096" +
-                 " range: 0 offset: 0 limit: 1024",
+                 " range: 0 offset: 0 position: 0 limit: 1024",
                  in.toString());
     DataInputStream inStream = new DataInputStream(in);
     for(int i=0; i < 1024; ++i) {
