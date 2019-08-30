@@ -19,6 +19,8 @@
 #ifndef ORC_COLUMN_READER_HH
 #define ORC_COLUMN_READER_HH
 
+#include <unordered_map>
+
 #include "orc/Vector.hh"
 
 #include "ByteRLE.hh"
