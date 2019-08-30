@@ -17,6 +17,7 @@ set(NO_DOWNLOAD_MSG
 # set the version in the POM file to match the CMake version string
 execute_process(COMMAND mvn versions:set -DnewVersion=${ORC_VERSION}
                                          -DgenerateBackupPoms=false
+                                         -Pbenchmark
                                          ${NO_DOWNLOAD_MSG}
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
