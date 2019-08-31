@@ -147,9 +147,15 @@ public class JsonReader implements RecordReader {
         TemporalAccessor temporalAccessor = dateTimeFormatter.parseBest(value.getAsString(),
           ZonedDateTime.FROM, LocalDateTime.FROM);
         if (temporalAccessor instanceof ZonedDateTime) {
-          vector.set(row, new Timestamp(((ZonedDateTime) temporalAccessor).toEpochSecond() * 1000L));
+          ZonedDateTime zonedDateTime = ((ZonedDateTime) temporalAccessor);
+          Timestamp timestamp = new Timestamp(zonedDateTime.toEpochSecond() * 1000L);
+          timestamp.setNanos(zonedDateTime.getNano());
+          vector.set(row, timestamp);
         } else if (temporalAccessor instanceof LocalDateTime) {
-          vector.set(row, new Timestamp(((LocalDateTime) temporalAccessor).atZone(ZoneId.systemDefault()).toEpochSecond() * 1000L));
+          ZonedDateTime tz = ((LocalDateTime) temporalAccessor).atZone(ZoneId.systemDefault());
+          Timestamp timestamp = new Timestamp(tz.toEpochSecond() * 1000L);
+          timestamp.setNanos(tz.getNano());
+          vector.set(row, timestamp);
         } else {
           vect.noNulls = false;
           vect.isNull[row] = true;
