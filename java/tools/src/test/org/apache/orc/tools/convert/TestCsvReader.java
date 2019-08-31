@@ -183,10 +183,11 @@ public class TestCsvReader {
 
   @Test
   public void testCustomTimestampFormat() throws Exception {
-    String tsFormat = "d[d] MMM yyyy HH:mm:ss";
+    String tsFormat = "d[d] MMM yyyy HH:mm:ss.SSSSSS";
+
     StringReader input = new StringReader(
-            "'21 Mar 2018 12:23:34'\n" +
-                    "'3 Feb 2018 18:04:51'\n"
+            "'21 Mar 2018 12:23:34.123456'\n" +
+                    "'3 Feb 2018 18:04:51.456789'\n"
     );
     TypeDescription schema = TypeDescription.fromString(
             "struct<a:timestamp>");
@@ -196,7 +197,7 @@ public class TestCsvReader {
     assertEquals(true, reader.nextBatch(batch));
     assertEquals(2, batch.size);
     TimestampColumnVector cv = (TimestampColumnVector) batch.cols[0];
-    assertEquals("2018-03-21 12:23:34.0", cv.asScratchTimestamp(0).toString());
-    assertEquals("2018-02-03 18:04:51.0", cv.asScratchTimestamp(1).toString());
+    assertEquals("2018-03-21 12:23:34.123456", cv.asScratchTimestamp(0).toString());
+    assertEquals("2018-02-03 18:04:51.456789", cv.asScratchTimestamp(1).toString());
   }
 }
