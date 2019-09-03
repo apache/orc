@@ -919,7 +919,11 @@ public class TreeReaderFactory {
         this.readerTimeZone = TimeZone.getDefault();
       }
       if (context.getWriterTimezone() == null || context.getWriterTimezone().isEmpty()) {
-        this.base_timestamp = getBaseTimestamp(readerTimeZone.getID());
+        if (instantType) {
+          this.base_timestamp = getBaseTimestamp(readerTimeZone.getID()); // UTC
+        } else {
+          this.base_timestamp = getBaseTimestamp(TimeZone.getDefault().getID());
+        }
       } else {
         this.base_timestamp = getBaseTimestamp(context.getWriterTimezone());
       }
@@ -963,7 +967,7 @@ public class TreeReaderFactory {
     protected long getBaseTimestamp(String timeZoneId) throws IOException {
       // to make sure new readers read old files in the same way
       if (timeZoneId == null || timeZoneId.isEmpty()) {
-        timeZoneId = readerTimeZone.getID();
+        timeZoneId = writerTimeZone.getID();
       }
 
       if (writerTimeZone == null || !timeZoneId.equals(writerTimeZone.getID())) {
