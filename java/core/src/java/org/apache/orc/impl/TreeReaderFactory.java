@@ -918,12 +918,12 @@ public class TreeReaderFactory {
         this.readerTimeZone = TimeZone.getDefault();
       }
       if (context.getWriterTimezone() == null || context.getWriterTimezone().isEmpty()) {
-        this.writerTimeZone = readerTimeZone;
+        this.writerTimeZone = TimeZone.getDefault();
       } else {
         this.writerTimeZone = TimeZone.getTimeZone(context.getWriterTimezone());
       }
       this.hasSameTZRules = writerTimeZone.hasSameRules(readerTimeZone);
-      this.base_timestamp = getBaseTimestamp(readerTimeZone.getID());
+      this.base_timestamp = getBaseTimestamp(writerTimeZone.getID());
       if (encoding != null) {
         checkEncoding(encoding);
 
@@ -964,7 +964,7 @@ public class TreeReaderFactory {
     protected long getBaseTimestamp(String timeZoneId) throws IOException {
       // to make sure new readers read old files in the same way
       if (timeZoneId == null || timeZoneId.isEmpty()) {
-        timeZoneId = readerTimeZone.getID();
+        timeZoneId = writerTimeZone.getID();
       }
 
       if (!baseTimestampMap.containsKey(timeZoneId)) {
