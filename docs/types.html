@@ -713,6 +713,7 @@ correctly interpret the file’s contents.</p>
   <li>Date/time
     <ul>
       <li>timestamp</li>
+      <li>timestamp with local time zone</li>
       <li>date</li>
     </ul>
   </li>
@@ -751,6 +752,42 @@ file would form the given tree.</p>
 
 <p><img src="/img/TreeWriters.png" alt="ORC column structure" /></p>
 
+<h1 id="timestamps">Timestamps</h1>
+
+<p>ORC includes two different forms of timestamps from the SQL world:</p>
+
+<ul>
+  <li><strong>Timestamp</strong> is a date and time without a time zone, which does not change based on the time zone of the reader.</li>
+  <li><strong>Timestamp with local time zone</strong> is a fixed instant in time, which does change based on the time zone of the reader.</li>
+</ul>
+
+<p>Unless your application uses UTC consistently, <strong>timestamp with
+local time zone</strong> is strongly preferred over <strong>timestamp</strong> for most
+use cases. When users say an event is at 10:00, it is always in
+reference to a certain timezone and means a point in time, rather than
+10:00 in an arbitrary time zone.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Value in America/Los_Angeles</th>
+      <th>Value in America/New_York</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>timestamp</strong></td>
+      <td>2014-12-12 6:00:00</td>
+      <td>2014-12-12 6:00:00</td>
+    </tr>
+    <tr>
+      <td><strong>timestamp with local time zone</strong></td>
+      <td>2014-12-12 9:00:00</td>
+      <td>2014-12-12 6:00:00</td>
+    </tr>
+  </tbody>
+</table>
 
           
 

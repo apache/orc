@@ -675,41 +675,35 @@
         <article>
           <h1>Releases</h1>
           
-<h2 id="current-release---156">Current Release - 1.5.6:</h2>
+<h2 id="current-release---160">Current Release - 1.6.0:</h2>
 
-<p>ORC 1.5.6 contains both the Java reader and writer and the C++
-reader for ORC files. It also contains tools for working with ORC
+<p>ORC 1.6.0 contains both the Java and C++ reader and writer
+for ORC files. It also contains tools for working with ORC
 files and looking at their contents and metadata.</p>
 
 <ul>
-  <li>Released: 27 June 2019</li>
-  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.5.6/orc-1.5.6.tar.gz">orc-1.5.6.tar.gz</a></li>
-  <li><a href="https://www.apache.org/dist/orc/orc-1.5.6/orc-1.5.6.tar.gz.asc">GPG Signature</a>
+  <li>Released: 3 September 2019</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.6.0/orc-1.6.0.tar.gz">orc-1.6.0.tar.gz</a></li>
+  <li><a href="https://www.apache.org/dist/orc/orc-1.6.0/orc-1.6.0.tar.gz.asc">GPG Signature</a>
 signed by <a href="https://www.apache.org/dist/orc/KEYS">Owen O’Malley (3D0C92B9)</a></li>
-  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.5.6">rel/release-1.5.6</a></li>
-  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.5.6%22">ORC 1.5.6</a></li>
-  <li>SHA 256: <a href="https://www.apache.org/dist/orc/orc-1.5.6/orc-1.5.6.tar.gz.sha256">e0588bfd96103bc1…</a></li>
-  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.5.6%22&amp;tempMax=500">ORC-1.5.6</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.6.0">rel/release-1.6.0</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.6.0%22">ORC 1.6.0</a></li>
+  <li>SHA 256: <a href="https://www.apache.org/dist/orc/orc-1.6.0/orc-1.6.0.tar.gz.sha256">2d864000c60025f5…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.6.0%22&amp;tempMax=500">ORC-1.6.0</a></li>
 </ul>
 
-<p>The new features of ORC 1.5:</p>
+<p>The new features of ORC 1.6:</p>
 
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-179">ORC-179</a> Add ORC C++ Writer</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-91">ORC-91</a> Support for variable length blocks in HDFS.</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-199">ORC-199</a> Implement a CSV to ORC converter</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-344">ORC-344</a> Support for using Decimal64ColumnVector</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-345">ORC-345</a> Adding Decimal64StatisticsImpl</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-331">ORC-331</a> Support for building C++ under MSVC.</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-234">ORC-234</a> Support for older versions of Hadoop (&gt;= 2.2.x)</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-305">ORC-305</a> Added statistics for size on disk</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-14">ORC-14</a> Add column encryption.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-189">ORC-189</a> Add timestamp with local timezone</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-203">ORC-203</a> Trim minimum and maximum string values</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-363">ORC-363</a> Add zstd support in Java</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-397">ORC-397</a> Support selectively disabling dictionaries</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-522">ORC-522</a> Add type annotations</li>
 </ul>
 
 <p>Known issues:</p>
-
-<ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-525">ORC-525</a> Users must close ORC Readers after use</li>
-</ul>
 
 <h2 id="checking-signatures">Checking signatures</h2>
 
@@ -736,9 +730,19 @@ committers’ <a href="https://www.apache.org/dist/orc/KEYS">key list</a>.</p>
     
       
       <tr>
+        <td style="text-align: center">1.6.0</td>
+        <td style="text-align: center">2019-09-03</td>
+        <td style="text-align: center">latest</td>
+        <td style="text-align: center">
+          <a href="/news/2019/09/03/ORC-1.6.0/">
+          ORC-1.6.0</a></td>
+      </tr>
+    
+      
+      <tr>
         <td style="text-align: center">1.5.6</td>
         <td style="text-align: center">2019-06-27</td>
-        <td style="text-align: center">latest</td>
+        <td style="text-align: center">stable</td>
         <td style="text-align: center">
           <a href="/news/2019/06/27/ORC-1.5.6/">
           ORC-1.5.6</a></td>
