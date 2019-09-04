@@ -15,18 +15,19 @@
  */
 package org.apache.orc.impl;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.io.ByteArrayInputStream;
 import java.io.EOFException;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -36,19 +37,18 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PositionedReadable;
 import org.apache.hadoop.fs.Seekable;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.util.Progressable;
 import org.apache.orc.FileFormatException;
-import org.apache.hadoop.io.Text;
 import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
 import org.apache.orc.TestVectorOrcFile;
-import org.junit.Test;
 import org.junit.Before;
 import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import static org.junit.Assert.assertEquals;
 
 public class TestReaderImpl {
 
@@ -67,14 +67,14 @@ public class TestReaderImpl {
 
   @Test
   public void testEnsureOrcFooterSmallTextFile() throws IOException {
-    prepareTestCase("1".getBytes());
+    prepareTestCase("1".getBytes(StandardCharsets.UTF_8));
     thrown.expect(FileFormatException.class);
     ReaderImpl.ensureOrcFooter(in, path, psLen, buffer);
   }
 
   @Test
   public void testEnsureOrcFooterLargeTextFile() throws IOException {
-    prepareTestCase("This is Some Text File".getBytes());
+    prepareTestCase("This is Some Text File".getBytes(StandardCharsets.UTF_8));
     thrown.expect(FileFormatException.class);
     ReaderImpl.ensureOrcFooter(in, path, psLen, buffer);
   }
@@ -98,8 +98,13 @@ public class TestReaderImpl {
     Configuration conf = new Configuration();
     Path path = new Path(TestVectorOrcFile.getFileFromClasspath
         ("orc-file-11-format.orc"));
-    Reader reader = OrcFile.createReader(path, OrcFile.readerOptions(conf));
-    RecordReader rows = reader.rows(options);
+    try (Reader reader = OrcFile.createReader(path, OrcFile.readerOptions(conf));
+         RecordReader rows = reader.rows(options)) {
+      VectorizedRowBatch batch = reader.getSchema().createRowBatchV2();
+      while (rows.nextBatch(batch)) {
+        assertTrue(batch.size > 0);
+      }
+    }
     assertEquals(expected, options.toString());
   }
 

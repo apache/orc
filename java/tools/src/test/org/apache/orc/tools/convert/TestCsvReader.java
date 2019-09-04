@@ -18,7 +18,6 @@
 
 package org.apache.orc.tools.convert;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
@@ -40,13 +39,7 @@ import static org.junit.Assert.assertEquals;
 
 public class TestCsvReader {
 
-  Configuration conf;
   Locale defaultLocale;
-
-  @Before
-  public void openFileSystem () throws Exception {
-    conf = new Configuration();
-  }
 
   @Before
   public void storeDefaultLocale() {

@@ -67,10 +67,8 @@ public class TestIntegerCompressionReader {
       int x = (int) in.next();
       if (i < 1024) {
         assertEquals(i/4, x);
-      } else if (i < 2048) {
-        assertEquals(2*i, x);
       } else {
-        assertEquals(junk[i-2048], x);
+        assertEquals(2*i, x);
       }
     }
     for(int i=2047; i >= 0; --i) {
@@ -78,10 +76,8 @@ public class TestIntegerCompressionReader {
       int x = (int) in.next();
       if (i < 1024) {
         assertEquals(i/4, x);
-      } else if (i < 2048) {
-        assertEquals(2*i, x);
       } else {
-        assertEquals(junk[i-2048], x);
+        assertEquals(2*i, x);
       }
     }
   }

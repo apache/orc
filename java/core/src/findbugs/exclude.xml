@@ -31,11 +31,40 @@
     <Bug pattern="MS_PKGPROTECT"/>
     <Class name="org.apache.orc.impl.RecordReaderImpl$SargApplier"/>
   </Match>
+  <Match>
+    <Bug pattern="CNT_ROUGH_CONSTANT_VALUE,IM_BAD_CHECK_FOR_ODD"/>
+    <Class name="org.apache.orc.TestVectorOrcFile"/>
+  </Match>
+  <Match>
+    <Bug pattern="RR_NOT_CHECKED"/>
+    <Class name="org.apache.orc.impl.TestInStream"/>
+    <Method name="testCorruptStream"/>
+  </Match>
   <!-- Java's try with resources causes a false positive.
        See https://github.com/SERG-Delft/jpacman/pull/27 . -->
   <Match>
     <Bug pattern="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"/>
     <Class name="org.apache.orc.impl.OrcAcidUtils"/>
     <Method name="getLastFlushLength"/>
+  </Match>
+  <Match>
+    <Bug pattern="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"/>
+    <Class name="org.apache.orc.impl.TestReaderImpl"/>
+    <Method name="testOptionSafety"/>
+  </Match>
+  <Match>
+    <Bug pattern="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"/>
+    <Class name="org.apache.orc.TestVectorOrcFile"/>
+    <Method name="testZstd"/>
+  </Match>
+  <Match>
+    <Bug pattern="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"/>
+    <Class name="org.apache.orc.impl.TestSchemaEvolution"/>
+    <Method name="testEvolutionFromTimestamp"/>
+  </Match>
+  <Match>
+    <Bug pattern="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"/>
+    <Class name="org.apache.orc.impl.TestSchemaEvolution"/>
+    <Method name="testEvolutionToTimestamp"/>
   </Match>
 </FindBugsFilter>

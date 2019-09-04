@@ -207,7 +207,6 @@ public class TestOrcOutputFormat {
     final String typeStr = "bigint";
     OrcConf.MAPRED_OUTPUT_SCHEMA.setString(conf, typeStr);
     FileOutputFormat.setOutputPath(conf, workDir);
-    TypeDescription type = TypeDescription.fromString(typeStr);
     LongWritable value = new LongWritable();
     NullWritable nada = NullWritable.get();
     RecordWriter<NullWritable, LongWritable> writer =

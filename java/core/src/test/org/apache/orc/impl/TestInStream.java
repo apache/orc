@@ -18,6 +18,9 @@
 
 package org.apache.orc.impl;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
@@ -27,7 +30,7 @@ import java.security.Key;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
+import javax.crypto.spec.SecretKeySpec;
 import org.apache.hadoop.hive.common.io.DiskRangeList;
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.EncryptionAlgorithm;
@@ -35,11 +38,6 @@ import org.apache.orc.OrcProto;
 import org.apache.orc.PhysicalWriter;
 import org.apache.orc.impl.writer.StreamOptions;
 import org.junit.Test;
-
-import javax.crypto.spec.SecretKeySpec;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 public class TestInStream {
 
@@ -92,13 +90,14 @@ public class TestInStream {
 
   static byte[] getUncompressed(PositionCollector[] positions) throws IOException {
     OutputCollector collect = new OutputCollector();
-    OutStream out = new OutStream("test", new StreamOptions(100), collect);
-    for(int i=0; i < 1024; ++i) {
-      positions[i] = new PositionCollector();
-      out.getPosition(positions[i]);
-      out.write(i);
+    try (OutStream out = new OutStream("test", new StreamOptions(100), collect)) {
+      for (int i = 0; i < 1024; ++i) {
+        positions[i] = new PositionCollector();
+        out.getPosition(positions[i]);
+        out.write(i);
+      }
+      out.flush();
     }
-    out.flush();
     assertEquals(1024, collect.buffer.size());
     for(int i=0; i < 1024; ++i) {
       assertEquals((byte) i, collect.buffer.get(i));
@@ -168,16 +167,17 @@ public class TestInStream {
     writerOptions.modifyIv(CryptoUtils.modifyIvForStream(0,
         OrcProto.Stream.Kind.DATA, 1));
     System.arraycopy(writerOptions.getIv(), 0, iv, 0, iv.length);
-    OutStream out = new OutStream("test", writerOptions, collect);
-    DataOutputStream outStream = new DataOutputStream(out);
-    for(int i=0; i < ROW_COUNT; ++i) {
-      positions[i] = new PositionCollector();
-      out.getPosition(positions[i]);
-      outStream.writeLong(i * DATA_CONST);
+    try (OutStream out = new OutStream("test", writerOptions, collect);
+         DataOutputStream outStream = new DataOutputStream(out)) {
+      for (int i = 0; i < ROW_COUNT; ++i) {
+        positions[i] = new PositionCollector();
+        out.getPosition(positions[i]);
+        outStream.writeLong(i * DATA_CONST);
+      }
+      out.flush();
     }
-    out.flush();
     byte[] result = collect.buffer.get();
-    assertEquals(ROW_COUNT * 8, result.length);
+    assertEquals(ROW_COUNT * 8L, result.length);
     return result;
   }
 
@@ -205,19 +205,20 @@ public class TestInStream {
       offset += size;
     }
 
-    InStream in = InStream.create("test", list.get(), 0, bytes.length,
-        InStream.options().withEncryption(EncryptionAlgorithm.AES_CTR_128,
-            new SecretKeySpec(rawKey, algorithm.getAlgorithm()), iv));
-    assertEquals("encrypted uncompressed stream test position: 0 length: 8192" +
-            " range: 0 offset: 0 position: 0 limit: 1965",
-        in.toString());
-    DataInputStream inputStream = new DataInputStream(in);
-    for(int i=0; i < ROW_COUNT; ++i) {
-      assertEquals("row " + i, i * DATA_CONST, inputStream.readLong());
-    }
-    for(int i=ROW_COUNT - 1; i >= 0; --i) {
-      in.seek(positions[i]);
-      assertEquals("row " + i, i * DATA_CONST, inputStream.readLong());
+    try (InStream in = InStream.create("test", list.get(), 0, bytes.length,
+            InStream.options().withEncryption(EncryptionAlgorithm.AES_CTR_128,
+                new SecretKeySpec(rawKey, algorithm.getAlgorithm()), iv));
+         DataInputStream inputStream = new DataInputStream(in)) {
+      assertEquals("encrypted uncompressed stream test position: 0 length: 8192" +
+                       " range: 0 offset: 0 position: 0 limit: 1965",
+          in.toString());
+      for (int i = 0; i < ROW_COUNT; ++i) {
+        assertEquals("row " + i, i * DATA_CONST, inputStream.readLong());
+      }
+      for (int i = ROW_COUNT - 1; i >= 0; --i) {
+        in.seek(positions[i]);
+        assertEquals("row " + i, i * DATA_CONST, inputStream.readLong());
+      }
     }
   }
 
@@ -252,19 +253,20 @@ public class TestInStream {
     buffer.clear();
     list.add(new BufferChunk(buffer, 2000 + SECOND_SIZE));
 
-    InStream in = InStream.create("test", list.get(), 35, bytes.length,
-        InStream.options().withEncryption(EncryptionAlgorithm.AES_CTR_128,
-            new SecretKeySpec(rawKey, algorithm.getAlgorithm()), iv));
-    assertEquals("encrypted uncompressed stream test position: 0 length: 8192" +
-                     " range: 0 offset: 0 position: 0 limit: 1965",
-        in.toString());
-    DataInputStream inputStream = new DataInputStream(in);
-    for(int i=0; i < ROW_COUNT; ++i) {
-      assertEquals("row " + i, i * DATA_CONST, inputStream.readLong());
-    }
-    for(int i=ROW_COUNT - 1; i >= 0; --i) {
-      in.seek(positions[i]);
-      assertEquals("row " + i, i * DATA_CONST, inputStream.readLong());
+    try (InStream in = InStream.create("test", list.get(), 35, bytes.length,
+            InStream.options().withEncryption(EncryptionAlgorithm.AES_CTR_128,
+                new SecretKeySpec(rawKey, algorithm.getAlgorithm()), iv));
+         DataInputStream inputStream = new DataInputStream(in)) {
+      assertEquals("encrypted uncompressed stream test position: 0 length: 8192" +
+                       " range: 0 offset: 0 position: 0 limit: 1965",
+          in.toString());
+      for (int i = 0; i < ROW_COUNT; ++i) {
+        assertEquals("row " + i, i * DATA_CONST, inputStream.readLong());
+      }
+      for (int i = ROW_COUNT - 1; i >= 0; --i) {
+        in.seek(positions[i]);
+        assertEquals("row " + i, i * DATA_CONST, inputStream.readLong());
+      }
     }
   }
 
@@ -286,14 +288,15 @@ public class TestInStream {
     writerOptions.modifyIv(CryptoUtils.modifyIvForStream(0,
         OrcProto.Stream.Kind.DATA, 1));
     System.arraycopy(writerOptions.getIv(), 0, iv, 0, iv.length);
-    OutStream out = new OutStream("test", writerOptions, collect);
-    DataOutputStream outStream = new DataOutputStream(out);
-    for(int i=0; i < ROW_COUNT; ++i) {
-      positions[i] = new PositionCollector();
-      out.getPosition(positions[i]);
-      outStream.writeLong(i * DATA_CONST);
+    try (OutStream out = new OutStream("test", writerOptions, collect);
+         DataOutputStream outStream = new DataOutputStream(out)) {
+      for (int i = 0; i < ROW_COUNT; ++i) {
+        positions[i] = new PositionCollector();
+        out.getPosition(positions[i]);
+        outStream.writeLong(i * DATA_CONST);
+      }
+      out.flush();
     }
-    out.flush();
     return collect.buffer.get();
   }
 
@@ -323,23 +326,26 @@ public class TestInStream {
       offset += size;
     }
 
-    InStream in = InStream.create("test", list.get(), 0, bytes.length,
-        InStream.options()
-            .withCodec(new ZlibCodec()).withBufferSize(500)
-            .withEncryption(algorithm, new SecretKeySpec(key, algorithm.getAlgorithm()), iv));
-    assertEquals("encrypted compressed stream test position: 0 length: " +
-            bytes.length + " range: 0 offset: 0 limit: 1998 range 0 = 0 to" +
-            " 1998;  range 1 = 1998 to " + (bytes.length - 15) +
-            ";  range 2 = " +
-            (bytes.length - 15) + " to " + bytes.length,
-        in.toString());
-    DataInputStream inputStream = new DataInputStream(in);
-    for(int i=0; i < ROW_COUNT; ++i) {
-      assertEquals("row " + i, i * DATA_CONST, inputStream.readLong());
-    }
-    for(int i=ROW_COUNT - 1; i >= 0; --i) {
-      in.seek(positions[i]);
-      assertEquals("row " + i, i * DATA_CONST, inputStream.readLong());
+    try (InStream in = InStream.create("test", list.get(), 0, bytes.length,
+            InStream.options()
+              .withCodec(new ZlibCodec()).withBufferSize(500)
+              .withEncryption(algorithm, new SecretKeySpec(key,
+                  algorithm.getAlgorithm()), iv));
+         DataInputStream inputStream = new DataInputStream(in)) {
+      assertEquals("encrypted compressed stream test position: 0 length: " +
+                       bytes.length +
+                       " range: 0 offset: 0 limit: 1998 range 0 = 0 to" +
+                       " 1998;  range 1 = 1998 to " + (bytes.length - 15) +
+                       ";  range 2 = " +
+                       (bytes.length - 15) + " to " + bytes.length,
+          in.toString());
+      for (int i = 0; i < ROW_COUNT; ++i) {
+        assertEquals("row " + i, i * DATA_CONST, inputStream.readLong());
+      }
+      for (int i = ROW_COUNT - 1; i >= 0; --i) {
+        in.seek(positions[i]);
+        assertEquals("row " + i, i * DATA_CONST, inputStream.readLong());
+      }
     }
   }
 
@@ -376,21 +382,24 @@ public class TestInStream {
     buffer.clear();
     list.add(new BufferChunk(buffer, 2100 + SECOND_SIZE));
 
-    InStream in = InStream.create("test", list.get(), 102, bytes.length,
-        InStream.options()
-            .withCodec(new ZlibCodec()).withBufferSize(500)
-            .withEncryption(algorithm, new SecretKeySpec(key, algorithm.getAlgorithm()), iv));
-    assertEquals("encrypted compressed stream test position: 0 length: " +
-                     bytes.length + " range: 0 offset: 0 limit: 1998 range 0 = 100 to 2100;" +
-                     "  range 1 = 2100 to 4044;  range 2 = 4044 to 5044",
-        in.toString());
-    DataInputStream inputStream = new DataInputStream(in);
-    for(int i=0; i < ROW_COUNT; ++i) {
-      assertEquals("row " + i, i * DATA_CONST, inputStream.readLong());
-    }
-    for(int i=ROW_COUNT - 1; i >= 0; --i) {
-      in.seek(positions[i]);
-      assertEquals("row " + i, i * DATA_CONST, inputStream.readLong());
+    try (InStream in = InStream.create("test", list.get(), 102, bytes.length,
+            InStream.options()
+               .withCodec(new ZlibCodec()).withBufferSize(500)
+                .withEncryption(algorithm, new SecretKeySpec(key,
+                    algorithm.getAlgorithm()), iv));
+         DataInputStream inputStream = new DataInputStream(in)) {
+      assertEquals("encrypted compressed stream test position: 0 length: " +
+                       bytes.length +
+                       " range: 0 offset: 0 limit: 1998 range 0 = 100 to 2100;" +
+                       "  range 1 = 2100 to 4044;  range 2 = 4044 to 5044",
+          in.toString());
+      for (int i = 0; i < ROW_COUNT; ++i) {
+        assertEquals("row " + i, i * DATA_CONST, inputStream.readLong());
+      }
+      for (int i = ROW_COUNT - 1; i >= 0; --i) {
+        in.seek(positions[i]);
+        assertEquals("row " + i, i * DATA_CONST, inputStream.readLong());
+      }
     }
   }
 
@@ -399,14 +408,15 @@ public class TestInStream {
     StreamOptions options = new StreamOptions(300)
                                 .withCodec(codec, codec.getDefaultOptions());
     OutputCollector collect = new OutputCollector();
-    OutStream out = new OutStream("test", options, collect);
-    for(int i=0; i < 1024; ++i) {
-      positions[i] = new PositionCollector();
-      out.getPosition(positions[i]);
-      out.write(i);
+    try (OutStream out = new OutStream("test", options, collect)) {
+      for (int i = 0; i < 1024; ++i) {
+        positions[i] = new PositionCollector();
+        out.getPosition(positions[i]);
+        out.write(i);
+      }
+      out.flush();
+      assertEquals("test", out.toString());
     }
-    out.flush();
-    assertEquals("test", out.toString());
     return collect.buffer.get();
   }
 
@@ -465,14 +475,12 @@ public class TestInStream {
     CompressionCodec codec = new ZlibCodec();
     StreamOptions options = new StreamOptions(500)
                                 .withCodec(codec, codec.getDefaultOptions());
-    OutStream out = new OutStream("test", options, collect);
-    PositionCollector[] positions = new PositionCollector[1024];
-    for(int i=0; i < 1024; ++i) {
-      positions[i] = new PositionCollector();
-      out.getPosition(positions[i]);
-      out.write(i);
+    try (OutStream out = new OutStream("test", options, collect)) {
+      for (int i = 0; i < 1024; ++i) {
+        out.write(i);
+      }
+      out.flush();
     }
-    out.flush();
 
     // now try to read the stream with a buffer that is too small
     ByteBuffer inBuf = ByteBuffer.allocate(collect.buffer.size());
@@ -511,15 +519,17 @@ public class TestInStream {
     CompressionCodec codec = new ZlibCodec();
     StreamOptions options = new StreamOptions(400)
                                 .withCodec(codec, codec.getDefaultOptions());
-    OutStream out = new OutStream("test", options, collect);
     PositionCollector[] positions = new PositionCollector[1024];
-    DataOutput stream = new DataOutputStream(out);
-    for(int i=0; i < 1024; ++i) {
-      positions[i] = new PositionCollector();
-      out.getPosition(positions[i]);
-      stream.writeInt(i);
+    try (OutStream out = new OutStream("test", options, collect);
+         DataOutputStream stream = new DataOutputStream(out)) {
+
+      for (int i = 0; i < 1024; ++i) {
+        positions[i] = new PositionCollector();
+        out.getPosition(positions[i]);
+        stream.writeInt(i);
+      }
+      out.flush();
     }
-    out.flush();
     assertEquals(1674, collect.buffer.size());
     ByteBuffer[] inBuf = new ByteBuffer[3];
     inBuf[0] = ByteBuffer.allocate(500);
@@ -538,60 +548,62 @@ public class TestInStream {
     }
     InStream.StreamOptions inOptions = InStream.options()
         .withCodec(codec).withBufferSize(400);
-    InStream in = InStream.create("test", buffers.get(), 0, 1674, inOptions);
-    assertEquals("compressed stream test position: 0 length: 1674 range: 0" +
-                 " offset: 0 limit: 483 range 0 = 0 to 483;" +
-                 "  range 1 = 483 to 1625;  range 2 = 1625 to 1674",
-                 in.toString());
-    DataInputStream inStream = new DataInputStream(in);
-    for(int i=0; i < 1024; ++i) {
-      int x = inStream.readInt();
-      assertEquals(i, x);
+    try (InStream in = InStream.create("test", buffers.get(), 0, 1674, inOptions);
+         DataInputStream inStream = new DataInputStream(in)) {
+      assertEquals("compressed stream test position: 0 length: 1674 range: 0" +
+                       " offset: 0 limit: 483 range 0 = 0 to 483;" +
+                       "  range 1 = 483 to 1625;  range 2 = 1625 to 1674",
+          in.toString());
+      for (int i = 0; i < 1024; ++i) {
+        int x = inStream.readInt();
+        assertEquals(i, x);
+      }
+      assertEquals(0, in.available());
+      for (int i = 1023; i >= 0; --i) {
+        in.seek(positions[i]);
+        assertEquals(i, inStream.readInt());
+      }
     }
-    assertEquals(0, in.available());
-    for(int i=1023; i >= 0; --i) {
-      in.seek(positions[i]);
-      assertEquals(i, inStream.readInt());
-    }
-
     buffers.clear();
     buffers.add(new BufferChunk(inBuf[1], 483));
     buffers.add(new BufferChunk(inBuf[2], 1625));
-    in = InStream.create("test", buffers.get(), 0, 1674, inOptions);
-    inStream = new DataInputStream(in);
-    positions[303].reset();
-    in.seek(positions[303]);
-    for(int i=303; i < 1024; ++i) {
-      assertEquals(i, inStream.readInt());
+    try (InStream in = InStream.create("test", buffers.get(), 0, 1674, inOptions);
+         DataInputStream inStream = new DataInputStream(in)) {
+      positions[303].reset();
+      in.seek(positions[303]);
+      for (int i = 303; i < 1024; ++i) {
+        assertEquals(i, inStream.readInt());
+      }
     }
-
     buffers.clear();
     buffers.add(new BufferChunk(inBuf[0], 0));
     buffers.add(new BufferChunk(inBuf[2], 1625));
-    in = InStream.create("test", buffers.get(), 0, 1674, inOptions);
-    inStream = new DataInputStream(in);
-    positions[1001].reset();
-    for(int i=0; i < 300; ++i) {
-      assertEquals(i, inStream.readInt());
-    }
-    in.seek(positions[1001]);
-    for(int i=1001; i < 1024; ++i) {
-      assertEquals(i, inStream.readInt());
+    try (InStream in = InStream.create("test", buffers.get(), 0, 1674, inOptions);
+         DataInputStream inStream = new DataInputStream(in)) {
+      positions[1001].reset();
+      for (int i = 0; i < 300; ++i) {
+        assertEquals(i, inStream.readInt());
+      }
+      in.seek(positions[1001]);
+      for (int i = 1001; i < 1024; ++i) {
+        assertEquals(i, inStream.readInt());
+      }
     }
   }
 
   @Test
   public void testUncompressedDisjointBuffers() throws Exception {
     OutputCollector collect = new OutputCollector();
-    OutStream out = new OutStream("test", new StreamOptions(400), collect);
     PositionCollector[] positions = new PositionCollector[1024];
-    DataOutput stream = new DataOutputStream(out);
-    for(int i=0; i < 1024; ++i) {
-      positions[i] = new PositionCollector();
-      out.getPosition(positions[i]);
-      stream.writeInt(i);
+    try (OutStream out = new OutStream("test", new StreamOptions(400), collect);
+         DataOutputStream stream = new DataOutputStream(out)) {
+      for (int i = 0; i < 1024; ++i) {
+        positions[i] = new PositionCollector();
+        out.getPosition(positions[i]);
+        stream.writeInt(i);
+      }
+      out.flush();
     }
-    out.flush();
     assertEquals(4096, collect.buffer.size());
     ByteBuffer[] inBuf = new ByteBuffer[3];
     inBuf[0] = ByteBuffer.allocate(1100);
@@ -608,59 +620,63 @@ public class TestInStream {
     buffers.add(new BufferChunk(inBuf[0], 0));
     buffers.add(new BufferChunk(inBuf[1], 1024));
     buffers.add(new BufferChunk(inBuf[2], 3072));
-    InStream in = InStream.create("test", buffers.get(), 0, 4096);
-    assertEquals("uncompressed stream test position: 0 length: 4096" +
-                 " range: 0 offset: 0 position: 0 limit: 1024",
-                 in.toString());
-    DataInputStream inStream = new DataInputStream(in);
-    for(int i=0; i < 1024; ++i) {
-      int x = inStream.readInt();
-      assertEquals(i, x);
-    }
-    assertEquals(0, in.available());
-    for(int i=1023; i >= 0; --i) {
-      in.seek(positions[i]);
-      assertEquals(i, inStream.readInt());
+    try (InStream in = InStream.create("test", buffers.get(), 0, 4096);
+         DataInputStream inStream = new DataInputStream(in)) {
+      assertEquals("uncompressed stream test position: 0 length: 4096" +
+                       " range: 0 offset: 0 position: 0 limit: 1024",
+          in.toString());
+      for (int i = 0; i < 1024; ++i) {
+        int x = inStream.readInt();
+        assertEquals(i, x);
+      }
+      assertEquals(0, in.available());
+      for (int i = 1023; i >= 0; --i) {
+        in.seek(positions[i]);
+        assertEquals(i, inStream.readInt());
+      }
     }
 
     buffers.clear();
     buffers.add(new BufferChunk(inBuf[1], 1024));
     buffers.add(new BufferChunk(inBuf[2], 3072));
-    in = InStream.create("test", buffers.get(), 0, 4096);
-    inStream = new DataInputStream(in);
-    positions[256].reset();
-    in.seek(positions[256]);
-    for(int i=256; i < 1024; ++i) {
-      assertEquals(i, inStream.readInt());
+    try (InStream in = InStream.create("test", buffers.get(), 0, 4096);
+         DataInputStream inStream = new DataInputStream(in)) {
+      positions[256].reset();
+      in.seek(positions[256]);
+      for (int i = 256; i < 1024; ++i) {
+        assertEquals(i, inStream.readInt());
+      }
     }
 
     buffers.clear();
     buffers.add(new BufferChunk(inBuf[0], 0));
     buffers.add(new BufferChunk(inBuf[2], 3072));
-    in = InStream.create("test", buffers.get(), 0, 4096);
-    inStream = new DataInputStream(in);
-    positions[768].reset();
-    for(int i=0; i < 256; ++i) {
-      assertEquals(i, inStream.readInt());
-    }
-    in.seek(positions[768]);
-    for(int i=768; i < 1024; ++i) {
-      assertEquals(i, inStream.readInt());
+    try (InStream in = InStream.create("test", buffers.get(), 0, 4096);
+         DataInputStream inStream = new DataInputStream(in)) {
+      positions[768].reset();
+      for (int i = 0; i < 256; ++i) {
+        assertEquals(i, inStream.readInt());
+      }
+      in.seek(positions[768]);
+      for (int i = 768; i < 1024; ++i) {
+        assertEquals(i, inStream.readInt());
+      }
     }
   }
 
   @Test
   public void testEmptyDiskRange() throws IOException {
     DiskRangeList range = new BufferChunk(ByteBuffer.allocate(0), 0);
-    InStream stream = new InStream.UncompressedStream("test", range, 0, 0);
-    assertEquals(0, stream.available());
-    stream.seek(new PositionProvider() {
-      @Override
-      public long getNext() {
-        return 0;
-      }
-    });
-    assertEquals(0, stream.available());
+    try (InStream stream = new InStream.UncompressedStream("test", range, 0, 0)) {
+      assertEquals(0, stream.available());
+      stream.seek(new PositionProvider() {
+        @Override
+        public long getNext() {
+          return 0;
+        }
+      });
+      assertEquals(0, stream.available());
+    }
   }
 
   private static byte[] input(int... data) {

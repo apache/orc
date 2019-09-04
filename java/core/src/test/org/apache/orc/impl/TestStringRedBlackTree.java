@@ -18,15 +18,13 @@
 
 package org.apache.orc.impl;
 
-import org.apache.hadoop.io.DataOutputBuffer;
-import org.apache.hadoop.io.IntWritable;
-import org.apache.orc.impl.RedBlackTree;
-import org.apache.orc.impl.StringRedBlackTree;
-import org.junit.Test;
+import static junit.framework.Assert.assertEquals;
 
 import java.io.IOException;
-
-import static junit.framework.Assert.assertEquals;
+import java.nio.charset.StandardCharsets;
+import org.apache.hadoop.io.DataOutputBuffer;
+import org.apache.hadoop.io.IntWritable;
+import org.junit.Test;
 
 /**
  * Test the red-black tree with string keys.
@@ -130,7 +128,7 @@ public class TestStringRedBlackTree {
         context.getOriginalPosition());
       buffer.reset();
       context.writeBytes(buffer);
-      assertEquals(word, new String(buffer.getData(),0,buffer.getLength()));
+      assertEquals(word, new String(buffer.getData(),0,buffer.getLength(), StandardCharsets.UTF_8));
       current += 1;
     }
   }

@@ -13,4 +13,8 @@
   limitations under the License.
 -->
 <FindBugsFilter>
+  <Match>
+    <Bug pattern="CNT_ROUGH_CONSTANT_VALUE"/>
+    <Class name="org.apache.orc.mapred.TestOrcFileEvolution"/>
+  </Match>
 </FindBugsFilter>

@@ -59,14 +59,6 @@ public class TestNewIntegerEncoding {
     return Arrays.asList(data);
   }
 
-  public static class TSRow {
-    Timestamp ts;
-
-    public TSRow(Timestamp ts) {
-      this.ts = ts;
-    }
-  }
-
   public static TypeDescription getRowSchema() {
     return TypeDescription.createStruct()
         .addField("int1", TypeDescription.createInt())
