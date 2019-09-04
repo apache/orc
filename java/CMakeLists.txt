@@ -47,7 +47,7 @@ add_custom_target(java_build ALL DEPENDS ${ORC_JARS})
 add_test(
   NAME java-test
   COMMAND mvn ${NO_DOWNLOAD_MSG} -Pcmake
-           -Dbuild.dir=${CMAKE_CURRENT_BINARY_DIR} test verify
+           -Dbuild.dir=${CMAKE_CURRENT_BINARY_DIR} test
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 install(
