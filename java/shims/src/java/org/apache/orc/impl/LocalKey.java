@@ -24,7 +24,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.security.Key;
 
 /**
- * Local keys are random keys that are generated for each file & column.
+ * Local keys are random keys that are generated for each file and column.
  * The file's metadata includes the encryptedKey and the reader needs to
  * use the KeyProvider to get the decryptedKey.
  */
