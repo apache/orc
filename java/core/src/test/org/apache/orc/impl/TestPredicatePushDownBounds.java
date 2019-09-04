@@ -276,12 +276,6 @@ public class TestPredicatePushDownBounds {
     assertEquals(SearchArgument.TruthValue.NO,
         RecordReaderImpl.evaluatePredicate(stat, predicateLowerBoundSet, null));
 
-    /* Test for a case LESS_THAN_EQUALS where only upperbound is set */
-    final PredicateLeaf predicateUpperBoundLessThanEquals = TestRecordReaderImpl
-        .createPredicateLeaf(PredicateLeaf.Operator.IN,
-            PredicateLeaf.Type.STRING, "x", null, args);
-
-
     /* Test the case were both upper and lower bounds are set */
     args.clear();
     args.add(lowerboundString);

@@ -195,11 +195,12 @@
             <excludeFilterFile>${basedir}/src/findbugs/exclude.xml</excludeFilterFile>
             <xmlOutput>true</xmlOutput>
             <findbugsXmlOutputDirectory>${project.build.directory}/findbugs</findbugsXmlOutputDirectory>
+            <includeTests>true</includeTests>
           </configuration>
           <executions>
             <execution>
               <id>analyze-compile</id>
-              <phase>compile</phase>
+              <phase>test</phase>
               <goals>
                 <goal>check</goal>
               </goals>

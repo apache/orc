@@ -24,11 +24,12 @@ import static org.junit.Assert.assertNull;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.PrintStream;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Random;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -69,10 +70,14 @@ public class TestJsonFileDump {
 
   static void checkOutput(String expected,
                                   String actual) throws Exception {
-    BufferedReader eStream =
-        new BufferedReader(new FileReader(getFileFromClasspath(expected)));
-    BufferedReader aStream =
-        new BufferedReader(new FileReader(actual));
+//    BufferedReader eStream =
+//        new BufferedReader(new FileReader(getFileFromClasspath(expected)));
+//    new BufferedReader(new FileReader(getFileFromClasspath(expected)));
+    BufferedReader eStream  = Files
+        .newBufferedReader(Paths.get(getFileFromClasspath(expected)), StandardCharsets.UTF_8);
+//    BufferedReader aStream =
+//        new BufferedReader(new FileReader(actual));
+    BufferedReader aStream = Files.newBufferedReader(Paths.get(actual), StandardCharsets.UTF_8);
     String expectedLine = eStream.readLine();
     while (expectedLine != null) {
       String actualLine = aStream.readLine();
@@ -121,7 +126,7 @@ public class TestJsonFileDump {
         batch.cols[2].isNull[batch.size] = true;
       } else {
         ((BytesColumnVector) batch.cols[2]).setVal(batch.size,
-            words[r1.nextInt(words.length)].getBytes());
+            words[r1.nextInt(words.length)].getBytes(StandardCharsets.UTF_8));
       }
       batch.size += 1;
       if (batch.size == batch.getMaxSize()) {
@@ -139,7 +144,7 @@ public class TestJsonFileDump {
     FileOutputStream myOut = new FileOutputStream(workDir + File.separator + outputFilename);
 
     // replace stdout and run command
-    System.setOut(new PrintStream(myOut));
+    System.setOut(new PrintStream(myOut, true, StandardCharsets.UTF_8.toString()));
     FileDump.main(new String[]{testFilePath.toString(), "-j", "-p", "--rowindex=3"});
     System.out.flush();
     System.setOut(origOut);

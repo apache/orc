@@ -17,6 +17,7 @@
  */
 package org.apache.orc;
 
+import java.nio.charset.StandardCharsets;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.orc.impl.HadoopShims;
 import org.apache.orc.impl.LocalKey;
@@ -46,9 +47,9 @@ public class TestInMemoryKeystore {
     Random random = new Random(2);
     memoryKeystore =
         new InMemoryKeystore(random)
-            .addKey("key128", EncryptionAlgorithm.AES_CTR_128, "123".getBytes())
-            .addKey("key256", EncryptionAlgorithm.AES_CTR_256, "secret123".getBytes())
-            .addKey("key256short", EncryptionAlgorithm.AES_CTR_256, "5".getBytes());
+            .addKey("key128", EncryptionAlgorithm.AES_CTR_128, "123".getBytes(StandardCharsets.UTF_8))
+            .addKey("key256", EncryptionAlgorithm.AES_CTR_256, "secret123".getBytes(StandardCharsets.UTF_8))
+            .addKey("key256short", EncryptionAlgorithm.AES_CTR_256, "5".getBytes(StandardCharsets.UTF_8));
 
   }
 
@@ -134,7 +135,7 @@ public class TestInMemoryKeystore {
 
     Assert.assertEquals(0,
         memoryKeystore.getCurrentKeyVersion("key128").getVersion());
-    memoryKeystore.addKey("key128", 1, EncryptionAlgorithm.AES_CTR_128, "NewSecret".getBytes());
+    memoryKeystore.addKey("key128", 1, EncryptionAlgorithm.AES_CTR_128, "NewSecret".getBytes(StandardCharsets.UTF_8));
     Assert.assertEquals(1,
         memoryKeystore.getCurrentKeyVersion("key128").getVersion());
   }
@@ -143,7 +144,7 @@ public class TestInMemoryKeystore {
   public void testDuplicateKeyNames() {
     try {
       memoryKeystore.addKey("key128", 0, EncryptionAlgorithm.AES_CTR_128,
-          "exception".getBytes());
+          "exception".getBytes(StandardCharsets.UTF_8));
       Assert.fail("Keys with same name cannot be added.");
     } catch (IOException e) {
       Assert.assertTrue(e.toString().contains("equal or higher version"));
@@ -162,20 +163,21 @@ public class TestInMemoryKeystore {
   public void testMultipleVersion() throws IOException {
     Assert.assertEquals(0,
         memoryKeystore.getCurrentKeyVersion("key256").getVersion());
-    memoryKeystore.addKey("key256", 1, EncryptionAlgorithm.AES_CTR_256, "NewSecret".getBytes());
+    memoryKeystore.addKey("key256", 1, EncryptionAlgorithm.AES_CTR_256,
+        "NewSecret".getBytes(StandardCharsets.UTF_8));
     Assert.assertEquals(1,
         memoryKeystore.getCurrentKeyVersion("key256").getVersion());
 
     try {
       memoryKeystore.addKey("key256", 1, EncryptionAlgorithm.AES_CTR_256,
-          "BadSecret".getBytes());
+          "BadSecret".getBytes(StandardCharsets.UTF_8));
       Assert.fail("Keys with smaller version should not be added.");
     } catch (final IOException e) {
       Assert.assertTrue(e.toString().contains("equal or higher version"));
     }
 
     memoryKeystore.addKey("key256", 2, EncryptionAlgorithm.AES_CTR_256,
-        "NewerSecret".getBytes());
+        "NewerSecret".getBytes(StandardCharsets.UTF_8));
     Assert.assertEquals(2,
         memoryKeystore.getCurrentKeyVersion("key256").getVersion());
 

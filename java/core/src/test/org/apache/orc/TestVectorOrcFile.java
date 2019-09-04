@@ -453,11 +453,11 @@ public class TestVectorOrcFile {
     field1.setVal(2, bytesArray(0, 1, 2, 3, 4, 5));
     field1.noNulls = false;
     field1.isNull[3] = true;
-    field2.setVal(0, "foo".getBytes());
-    field2.setVal(1, "bar".getBytes());
+    field2.setVal(0, "foo".getBytes(StandardCharsets.UTF_8));
+    field2.setVal(1, "bar".getBytes(StandardCharsets.UTF_8));
     field2.noNulls = false;
     field2.isNull[2] = true;
-    field2.setVal(3, "hi".getBytes());
+    field2.setVal(3, "hi".getBytes(StandardCharsets.UTF_8));
     writer.addRowBatch(batch);
     writer.close();
     schema = writer.getSchema();
@@ -577,14 +577,14 @@ public class TestVectorOrcFile {
       if (b >= 5) {
         if (b >= 10) {
           field1.vector[0] = 3;
-          field2.setVal(0, "three".getBytes());
+          field2.setVal(0, "three".getBytes(StandardCharsets.UTF_8));
         } else {
           field1.vector[0] = 2;
-          field2.setVal(0, "two".getBytes());
+          field2.setVal(0, "two".getBytes(StandardCharsets.UTF_8));
         }
       } else {
         field1.vector[0] = 1;
-        field2.setVal(0, "one".getBytes());
+        field2.setVal(0, "one".getBytes(StandardCharsets.UTF_8));
       }
       writer.addRowBatch(batch);
     }
@@ -658,7 +658,7 @@ public class TestVectorOrcFile {
                                int i, String value) {
     ((LongColumnVector) inner.fields[0]).vector[rowId] = i;
     if (value != null) {
-      ((BytesColumnVector) inner.fields[1]).setVal(rowId, value.getBytes());
+      ((BytesColumnVector) inner.fields[1]).setVal(rowId, value.getBytes(StandardCharsets.UTF_8));
     } else {
       inner.fields[1].isNull[rowId] = true;
       inner.fields[1].noNulls = false;
@@ -727,7 +727,7 @@ public class TestVectorOrcFile {
       map.offsets[rowId] = offset;
 
       for (Map.Entry<String, InnerStruct> entry : value.entrySet()) {
-        ((BytesColumnVector) map.keys).setVal(offset, entry.getKey().getBytes());
+        ((BytesColumnVector) map.keys).setVal(offset, entry.getKey().getBytes(StandardCharsets.UTF_8));
         InnerStruct inner = entry.getValue();
         setInner((StructColumnVector) map.values, offset, inner.int1,
             inner.string1.toString());
@@ -800,7 +800,7 @@ public class TestVectorOrcFile {
       batch.cols[7].noNulls = false;
     }
     if (s2 != null) {
-      ((BytesColumnVector) batch.cols[8]).setVal(rowId, s2.getBytes());
+      ((BytesColumnVector) batch.cols[8]).setVal(rowId, s2.getBytes(StandardCharsets.UTF_8));
     } else {
       batch.cols[8].isNull[rowId] = true;
       batch.cols[8].noNulls = false;
@@ -1260,7 +1260,7 @@ public class TestVectorOrcFile {
         }
         first = false;
         ((LongColumnVector) batch.cols[0]).vector[r] = x;
-        ((BytesColumnVector) batch.cols[1]).setVal(r, y.getBytes());
+        ((BytesColumnVector) batch.cols[1]).setVal(r, y.getBytes(StandardCharsets.UTF_8));
       }
       writer.addRowBatch(batch);
     }
@@ -1500,7 +1500,7 @@ public class TestVectorOrcFile {
         }
       } else if (tag == 1) {
         if (s != null) {
-          ((BytesColumnVector) union.fields[tag]).setVal(rowId, s.getBytes());
+          ((BytesColumnVector) union.fields[tag]).setVal(rowId, s.getBytes(StandardCharsets.UTF_8));
         } else {
           union.fields[tag].isNull[rowId] = true;
           union.fields[tag].noNulls = false;
@@ -2232,7 +2232,7 @@ public class TestVectorOrcFile {
       for (int r=0; r < size; ++r) {
         ((LongColumnVector) batch.cols[0]).vector[r] = rand.nextInt();
         ((BytesColumnVector) batch.cols[1]).setVal(r,
-            Integer.toHexString(rand.nextInt()).getBytes());
+            Integer.toHexString(rand.nextInt()).getBytes(StandardCharsets.UTF_8));
       }
       writer.addRowBatch(batch);
     }
@@ -2262,7 +2262,7 @@ public class TestVectorOrcFile {
     for(int i=0; i < 10000; ++i) {
       ((LongColumnVector) batch.cols[0]).vector[0] = rand.nextInt();
       ((BytesColumnVector) batch.cols[1])
-          .setVal(0, Integer.toBinaryString(rand.nextInt()).getBytes());
+          .setVal(0, Integer.toBinaryString(rand.nextInt()).getBytes(StandardCharsets.UTF_8));
       writer.addRowBatch(batch);
     }
     writer.close();
@@ -2452,7 +2452,6 @@ public class TestVectorOrcFile {
   private static class MyMemoryManager implements MemoryManager {
     double rate;
     Path path = null;
-    long lastAllocation = 0;
     int rows = 0;
     Callback callback;
 
@@ -2464,14 +2463,12 @@ public class TestVectorOrcFile {
     public void addWriter(Path path, long requestedAllocation,
                    Callback callback) {
       this.path = path;
-      this.lastAllocation = requestedAllocation;
       this.callback = callback;
     }
 
     @Override
     public synchronized void removeWriter(Path path) {
       this.path = null;
-      this.lastAllocation = 0;
     }
 
 
@@ -2505,7 +2502,7 @@ public class TestVectorOrcFile {
     for(int i=0; i < 2500; ++i) {
       ((LongColumnVector) batch.cols[0]).vector[0] = i * 300;
       ((BytesColumnVector) batch.cols[1]).setVal(0,
-          Integer.toHexString(10*i).getBytes());
+          Integer.toHexString(10*i).getBytes(StandardCharsets.UTF_8));
       writer.addRowBatch(batch);
     }
     writer.close();
@@ -2542,7 +2539,7 @@ public class TestVectorOrcFile {
     for(int i=0; i < 2500; ++i) {
       ((LongColumnVector) batch.cols[0]).vector[0] = i * 300;
       ((BytesColumnVector) batch.cols[1]).setVal(0,
-          Integer.toHexString(10*i).getBytes());
+          Integer.toHexString(10*i).getBytes(StandardCharsets.UTF_8));
       writer.addRowBatch(batch);
     }
     writer.close();
@@ -2579,7 +2576,7 @@ public class TestVectorOrcFile {
     for(int i=0; i < 3500; ++i) {
       ((LongColumnVector) batch.cols[0]).vector[i] = i * 300;
       ((BytesColumnVector) batch.cols[1]).setVal(i,
-          Integer.toHexString(10*i).getBytes());
+          Integer.toHexString(10*i).getBytes(StandardCharsets.UTF_8));
     }
     writer.addRowBatch(batch);
     writer.close();
@@ -2713,7 +2710,7 @@ public class TestVectorOrcFile {
     for(int c =0; c < batch.cols.length; ++c) {
       batch.cols[c].isNull[0] = false;
     }
-    ((BytesColumnVector) batch.cols[0]).setVal(0, "Horton".getBytes());
+    ((BytesColumnVector) batch.cols[0]).setVal(0, "Horton".getBytes(StandardCharsets.UTF_8));
     ((LongColumnVector) batch.cols[1]).vector[0] = 1;
     ((LongColumnVector) batch.cols[2]).vector[0] = 130;
     ((LongColumnVector) batch.cols[3]).vector[0] = 0x123456789abcdef0L;
@@ -2726,9 +2723,9 @@ public class TestVectorOrcFile {
             999999999));
     ((DecimalColumnVector) batch.cols[8]).vector[0] =
         new HiveDecimalWritable("1.234567");
-    ((BytesColumnVector) batch.cols[9]).setVal(0, "Echelon".getBytes());
-    ((BytesColumnVector) batch.cols[10]).setVal(0, "Juggernaut".getBytes());
-    ((BytesColumnVector) batch.cols[11]).setVal(0, "Dreadnaught".getBytes());
+    ((BytesColumnVector) batch.cols[9]).setVal(0, "Echelon".getBytes(StandardCharsets.UTF_8));
+    ((BytesColumnVector) batch.cols[10]).setVal(0, "Juggernaut".getBytes(StandardCharsets.UTF_8));
+    ((BytesColumnVector) batch.cols[11]).setVal(0, "Dreadnaught".getBytes(StandardCharsets.UTF_8));
     ((LongColumnVector) ((StructColumnVector) batch.cols[12]).fields[0])
         .vector[0] = 123;
     ((UnionColumnVector) batch.cols[13]).tags[0] = 1;
@@ -2743,13 +2740,13 @@ public class TestVectorOrcFile {
     ((MapColumnVector) batch.cols[15]).lengths[0] = 3;
     ((MapColumnVector) batch.cols[15]).values.isRepeating = true;
     ((BytesColumnVector) ((MapColumnVector) batch.cols[15]).keys)
-        .setVal(0, "ORC".getBytes());
+        .setVal(0, "ORC".getBytes(StandardCharsets.UTF_8));
     ((BytesColumnVector) ((MapColumnVector) batch.cols[15]).keys)
-        .setVal(1, "Hive".getBytes());
+        .setVal(1, "Hive".getBytes(StandardCharsets.UTF_8));
     ((BytesColumnVector) ((MapColumnVector) batch.cols[15]).keys)
-        .setVal(2, "LLAP".getBytes());
+        .setVal(2, "LLAP".getBytes(StandardCharsets.UTF_8));
     ((BytesColumnVector) ((MapColumnVector) batch.cols[15]).values)
-        .setVal(0, "fast".getBytes());
+        .setVal(0, "fast".getBytes(StandardCharsets.UTF_8));
     writer.addRowBatch(batch);
 
     // write 1024 null without repeat
@@ -2768,7 +2765,7 @@ public class TestVectorOrcFile {
     ((MapColumnVector) batch.cols[15]).values.ensureSize(3 * 1024, false);
     for(int r=0; r < 1024; ++r) {
       ((BytesColumnVector) batch.cols[0]).setVal(r,
-          Integer.toHexString(r).getBytes());
+          Integer.toHexString(r).getBytes(StandardCharsets.UTF_8));
       ((LongColumnVector) batch.cols[1]).vector[r] = r % 2;
       ((LongColumnVector) batch.cols[2]).vector[r] = (r % 255);
       ((LongColumnVector) batch.cols[3]).vector[r] = 31415L * r;
@@ -2782,11 +2779,11 @@ public class TestVectorOrcFile {
       ((DecimalColumnVector) batch.cols[8]).vector[r] =
           new HiveDecimalWritable("1.234567");
       ((BytesColumnVector) batch.cols[9]).setVal(r,
-          Integer.toString(r).getBytes());
+          Integer.toString(r).getBytes(StandardCharsets.UTF_8));
       ((BytesColumnVector) batch.cols[10]).setVal(r,
-          Integer.toHexString(r).getBytes());
+          Integer.toHexString(r).getBytes(StandardCharsets.UTF_8));
       ((BytesColumnVector) batch.cols[11]).setVal(r,
-          Integer.toHexString(r * 128).getBytes());
+          Integer.toHexString(r * 128).getBytes(StandardCharsets.UTF_8));
       ((LongColumnVector) ((StructColumnVector) batch.cols[12]).fields[0])
           .vector[r] = r + 13;
       ((UnionColumnVector) batch.cols[13]).tags[r] = 1;
@@ -2802,9 +2799,9 @@ public class TestVectorOrcFile {
       ((MapColumnVector) batch.cols[15]).lengths[r] = 3;
       for(int i=0; i < 3; ++i) {
         ((BytesColumnVector) ((MapColumnVector) batch.cols[15]).keys)
-            .setVal(3 * r + i, Integer.toHexString(3 * r + i).getBytes());
+            .setVal(3 * r + i, Integer.toHexString(3 * r + i).getBytes(StandardCharsets.UTF_8));
         ((BytesColumnVector) ((MapColumnVector) batch.cols[15]).values)
-            .setVal(3 * r + i, Integer.toString(3 * r + i).getBytes());
+            .setVal(3 * r + i, Integer.toString(3 * r + i).getBytes(StandardCharsets.UTF_8));
       }
     }
     writer.addRowBatch(batch);
@@ -2974,7 +2971,7 @@ public class TestVectorOrcFile {
     }
     if (vector.noNulls || !vector.isNull[row]) {
       return new String(vector.vector[row], vector.start[row],
-          vector.length[row]);
+          vector.length[row], StandardCharsets.UTF_8);
     } else {
       return null;
     }
@@ -2994,11 +2991,11 @@ public class TestVectorOrcFile {
     VectorizedRowBatch batch = schema.createRowBatch();
     batch.size = 4;
     for(int c=0; c < batch.cols.length; ++c) {
-      ((BytesColumnVector) batch.cols[c]).setVal(0, "".getBytes());
-      ((BytesColumnVector) batch.cols[c]).setVal(1, "xyz".getBytes());
-      ((BytesColumnVector) batch.cols[c]).setVal(2, "0123456789".getBytes());
+      ((BytesColumnVector) batch.cols[c]).setVal(0, "".getBytes(StandardCharsets.UTF_8));
+      ((BytesColumnVector) batch.cols[c]).setVal(1, "xyz".getBytes(StandardCharsets.UTF_8));
+      ((BytesColumnVector) batch.cols[c]).setVal(2, "0123456789".getBytes(StandardCharsets.UTF_8));
       ((BytesColumnVector) batch.cols[c]).setVal(3,
-          "0123456789abcdef".getBytes());
+          "0123456789abcdef".getBytes(StandardCharsets.UTF_8));
     }
     writer.addRowBatch(batch);
     writer.close();
@@ -3047,11 +3044,11 @@ public class TestVectorOrcFile {
     batch.size = 1024;
     for(int r=0; r < batch.size; ++r) {
       ((BytesColumnVector) batch.cols[0]).setVal(r,
-          Integer.toString(r * 10001).getBytes());
+          Integer.toString(r * 10001).getBytes(StandardCharsets.UTF_8));
     }
     writer.addRowBatch(batch);
     batch.cols[0].isRepeating = true;
-    ((BytesColumnVector) batch.cols[0]).setVal(0, "Halloween".getBytes());
+    ((BytesColumnVector) batch.cols[0]).setVal(0, "Halloween".getBytes(StandardCharsets.UTF_8));
     writer.addRowBatch(batch);
     writer.close();
 
@@ -3360,7 +3357,7 @@ public class TestVectorOrcFile {
     list2.offsets[1] = 2000;
     list2.lengths[1] = 3000;
     for(int v=0; v < 5000; ++v) {
-      byte[] bytes = Long.toHexString(v).getBytes();
+      byte[] bytes = Long.toHexString(v).getBytes(StandardCharsets.UTF_8);
       str.setVal(v, bytes);
       bin.setVal(v, bytes);
     }
@@ -3920,8 +3917,8 @@ public class TestVectorOrcFile {
     Assume.assumeTrue(fileFormat == OrcFile.Version.V_0_11);
     Path zeroFile = new Path(exampleDir, "version1999.orc");
     try {
-      Reader reader = OrcFile.createReader(zeroFile, OrcFile.readerOptions(conf));
-      assertTrue("no exception for bad verion", false);
+      OrcFile.createReader(zeroFile, OrcFile.readerOptions(conf));
+      assertTrue("no exception for bad version", false);
     } catch (UnknownFormatException uf) {
       assertEquals("path is correct", "version1999.orc", uf.getPath().getName());
       assertEquals("19.99", uf.getVersionString());
@@ -3984,7 +3981,7 @@ public class TestVectorOrcFile {
       ((LongColumnVector) batch.cols[0]).vector[i] = i;
       ((LongColumnVector)((StructColumnVector) batch.cols[1]).fields[0]).vector[i] = i * 300;
       ((BytesColumnVector)((StructColumnVector) batch.cols[1]).fields[1]).setVal(i,
-              Integer.toHexString(10*i).getBytes());
+              Integer.toHexString(10*i).getBytes(StandardCharsets.UTF_8));
     }
     writer.addRowBatch(batch);
     writer.close();
@@ -4315,7 +4312,7 @@ public class TestVectorOrcFile {
             expected = Long.toString(b % 2);
             actual = row -> Long.toString(((LongColumnVector) batch.cols[4]).vector[row]);
             break;
-          case 5:
+          default:
             expected = Integer.toString(b);
             actual = row -> ((BytesColumnVector) batch.cols[5]).toString(row);
             break;

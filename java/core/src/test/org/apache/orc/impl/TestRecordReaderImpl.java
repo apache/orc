@@ -1893,11 +1893,12 @@ public class TestRecordReaderImpl {
           new PhysicalFsWriter.BufferedStream();
       StreamOptions writerOptions = new StreamOptions(options.getBufferSize())
           .withCodec(codec, codec.getDefaultOptions());
-      OutStream out = new OutStream("row index", writerOptions, buffer);
-      out.write(uncompressed.array(),
-          uncompressed.arrayOffset() + uncompressed.position(),
-          uncompressed.remaining());
-      out.flush();
+      try (OutStream out = new OutStream("row index", writerOptions, buffer)) {
+        out.write(uncompressed.array(),
+            uncompressed.arrayOffset() + uncompressed.position(),
+            uncompressed.remaining());
+        out.flush();
+      }
       return buffer.getByteBuffer();
     } else {
       return uncompressed;
@@ -1962,7 +1963,7 @@ public class TestRecordReaderImpl {
   }
 
   @Test
-  public void TestOldBloomFilters() throws Exception {
+  public void testOldBloomFilters() throws Exception {
     TypeDescription schema = TypeDescription.fromString("struct<x:int,y:decimal(10,2),z:string>");
     MockDataReader dataReader = createOldBlooms(schema);
     MockStripe stripe = dataReader.getStripe(0);
@@ -2035,7 +2036,7 @@ public class TestRecordReaderImpl {
   }
 
   @Test
-  public void TestCompatibleBloomFilters() throws Exception {
+  public void testCompatibleBloomFilters() throws Exception {
     TypeDescription schema = TypeDescription.fromString("struct<x:int,y:decimal(10,2),z:string>");
     MockDataReader dataReader = createMixedBlooms(schema);
     MockStripe stripe = dataReader.getStripe(0);
@@ -2080,7 +2081,7 @@ public class TestRecordReaderImpl {
   }
 
   @Test
-  public void TestNewBloomFilters() throws Exception {
+  public void testNewBloomFilters() throws Exception {
     TypeDescription schema = TypeDescription.fromString("struct<x:int,y:decimal(10,2),z:string>");
     MockDataReader dataReader = createNewBlooms(schema);
     MockStripe stripe = dataReader.getStripe(0);

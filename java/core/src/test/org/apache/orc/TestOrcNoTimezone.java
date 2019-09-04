@@ -67,9 +67,6 @@ public class TestOrcNoTimezone {
     return result;
   }
 
-  @Rule
-  public TestName testCaseName = new TestName();
-
   @Before
   public void openFileSystem() throws Exception {
     conf = new Configuration();
