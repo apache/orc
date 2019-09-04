@@ -187,7 +187,7 @@
           <executions>
             <execution>
               <id>analyze-compile</id>
-              <phase>test</phase>
+              <phase>verify</phase>
               <goals>
                 <goal>check</goal>
                 <goal>findbugs</goal>
