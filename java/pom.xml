@@ -182,6 +182,7 @@
             <excludeFilterFile>${basedir}/src/findbugs/exclude.xml</excludeFilterFile>
             <xmlOutput>true</xmlOutput>
             <findbugsXmlOutputDirectory>${project.build.directory}/findbugs</findbugsXmlOutputDirectory>
+            <includeTests>true</includeTests>
           </configuration>
           <executions>
             <execution>
