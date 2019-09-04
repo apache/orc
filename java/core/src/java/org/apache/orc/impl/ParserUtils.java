@@ -354,7 +354,7 @@ public class ParserUtils {
    *
    * @param source the string to parse
    * @param schema the top level schema
-   * @throw IllegalArgumentException if there are conflicting keys for a field
+   * @throws IllegalArgumentException if there are conflicting keys for a field
    */
   public static void parseKeys(StringPosition source, TypeDescription schema) {
     if (source.hasCharactersLeft()) {
@@ -387,7 +387,7 @@ public class ParserUtils {
    *
    * @param source the string to parse
    * @param schema the top level schema
-   * @throw IllegalArgumentException if there are conflicting masks for a field
+   * @throws IllegalArgumentException if there are conflicting masks for a field
    */
   public static void parseMasks(StringPosition source, TypeDescription schema) {
     if (source.hasCharactersLeft()) {

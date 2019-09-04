@@ -772,7 +772,7 @@ public class OrcFile {
 
     /**
      * For users that need to override the current version of a key, this
-     * method allows them to define the version & algorithm for a given key.
+     * method allows them to define the version and algorithm for a given key.
      *
      * This will mostly be used for ORC file merging where the writer has to
      * use the same version of the key that the original files used.
