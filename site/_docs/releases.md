@@ -12,12 +12,12 @@ permalink: /docs/releases.html
 
 ## Current Release - {{ releaseName }}:
 
-ORC {{ releaseName }} contains both the Java reader and writer and the C++
-reader for ORC files. It also contains tools for working with ORC
+ORC {{ releaseName }} contains both the Java and C++ reader and writer
+for ORC files. It also contains tools for working with ORC
 files and looking at their contents and metadata.
 
 {% include release_description.md %}
-{% include orc_1.5.md %}
+{% include orc_1.6.md %}
 {% include known_issues.md %}
 
 ## Checking signatures
