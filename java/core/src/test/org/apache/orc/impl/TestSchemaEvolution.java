@@ -2263,4 +2263,105 @@ public class TestSchemaEvolution {
       TimeZone.setDefault(oldDefault);
     }
   }
+
+  @Test
+  public void doubleToTimeStampOverflow() throws Exception {
+    floatAndDoubleToTimeStampOverflow("double",
+        340282347000000000000000000000000000000000.0,
+        1e16,
+        9223372036854775.0,
+        9000000000000000.1,
+        10000000000.0,
+        10000000.123,
+        -1000000.123,
+        -10000000000.0,
+        -9000000000000000.1,
+        -9223372036854775.0,
+        -1e16,
+        -340282347000000000000000000000000000000000.0);
+  }
+
+  @Test
+  public void floatToTimeStampPositiveOverflow() throws Exception {
+    floatAndDoubleToTimeStampOverflow("float",
+        340282347000000000000000000000000000000000.0,
+        1e16,
+        9223372036854775.0,
+        9000000000000000.1,
+        10000000000.0,
+        10000000.123,
+        -1000000.123,
+        -10000000000.0,
+        -9000000000000000.1,
+        -9223372036854775.0,
+        -1e16,
+        -340282347000000000000000000000000000000000.0);
+  }
+
+  private void floatAndDoubleToTimeStampOverflow(String typeInFileSchema,
+                                                 double... values) throws Exception {
+    boolean isFloat = typeInFileSchema.equals("float");
+    TypeDescription fileSchema =
+        TypeDescription.fromString(String.format("struct<c1:%s>", typeInFileSchema));
+    Writer writer = OrcFile.createWriter(testFilePath,
+        OrcFile.writerOptions(conf)
+            .setSchema(fileSchema)
+            .stripeSize(10000)
+            .useUTCTimestamp(true));
+
+    VectorizedRowBatch batch = fileSchema.createRowBatchV2();
+    DoubleColumnVector fl1 = (DoubleColumnVector) batch.cols[0];
+
+    for (double v : values) {
+      int row = batch.size++;
+      fl1.vector[row] = v;
+
+      if (batch.size == batch.getMaxSize()) {
+        writer.addRowBatch(batch);
+        batch.reset();
+      }
+    }
+    if (batch.size != 0) {
+      writer.addRowBatch(batch);
+    }
+    writer.close();
+
+    TypeDescription readerSchema = TypeDescription.fromString("struct<c1:timestamp>");
+    VectorizedRowBatch batchTimeStamp = readerSchema.createRowBatchV2();
+    TimestampColumnVector t1 = (TimestampColumnVector) batchTimeStamp.cols[0];
+
+    OrcFile.ReaderOptions options = OrcFile
+                                        .readerOptions(conf)
+                                        .useUTCTimestamp(true);
+
+    try (Reader reader = OrcFile.createReader(testFilePath, options);
+         RecordReader rows = reader.rows(reader.options().schema(readerSchema))) {
+      int value = 0;
+      while (value < values.length) {
+        assertTrue("value " + value, rows.nextBatch(batchTimeStamp));
+        for(int row=0; row < batchTimeStamp.size; ++row) {
+          double expected = values[value + row];
+          String rowName = String.format("value %d", value + row);
+          boolean isPositive = ((long)Math.floor(expected) * 1000) >= 0;
+          if (expected * 1000 < Long.MIN_VALUE ||
+                  expected * 1000 > Long.MAX_VALUE ||
+                  ((expected >= 0) != isPositive)) {
+            assertFalse(rowName, t1.noNulls);
+            assertTrue(rowName, t1.isNull[row]);
+          } else {
+            double actual = t1.time[row] / 1000.0 + t1.nanos[row] / 1_000_000_000.0;
+            assertEquals(rowName, expected, actual,
+                Math.abs(expected * (isFloat ? 0.000001 : 0.0000000000000001)));
+            assertFalse(rowName, t1.isNull[row]);
+            assertTrue(String.format(
+                "%s nanos should be 0 to 1,000,000,000 instead it's: %d",
+                rowName, t1.nanos[row]),
+                t1.nanos[row] >= 0 && t1.nanos[row] < 1_000_000_000);
+          }
+        }
+        value += batchTimeStamp.size;
+      }
+      assertFalse(rows.nextBatch(batchTimeStamp));
+    }
+  }
 }

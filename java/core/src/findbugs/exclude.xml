@@ -60,11 +60,5 @@
   <Match>
     <Bug pattern="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"/>
     <Class name="org.apache.orc.impl.TestSchemaEvolution"/>
-    <Method name="testEvolutionFromTimestamp"/>
-  </Match>
-  <Match>
-    <Bug pattern="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"/>
-    <Class name="org.apache.orc.impl.TestSchemaEvolution"/>
-    <Method name="testEvolutionToTimestamp"/>
   </Match>
 </FindBugsFilter>
