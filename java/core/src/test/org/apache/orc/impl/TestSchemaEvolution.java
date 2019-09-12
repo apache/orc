@@ -2287,4 +2287,57 @@ public class TestSchemaEvolution {
       TimeZone.setDefault(oldDefault);
     }
   }
+
+  @Test
+  public void testFloatToTimestampSample() throws IOException {
+    String timeString = "2015-11-29 12:34:56.1";
+    final ZoneId READER_ZONE = ZoneId.of("Australia/Sydney");
+
+    TypeDescription fileSchema = TypeDescription.fromString("struct<c1:float>");
+    DateTimeFormatter UTC_FORMAT =
+        ConvertTreeReaderFactory.TIMESTAMP_FORMAT.withZone(ZoneId.of("UTC"));
+    Writer writer = OrcFile.createWriter(testFilePath,
+        OrcFile.writerOptions(conf).setSchema(fileSchema).stripeSize(10000));
+
+    VectorizedRowBatch batch = fileSchema.createRowBatchV2();
+    DoubleColumnVector fl1 = (DoubleColumnVector) batch.cols[0];
+
+    Instant utcTime = Instant.from(UTC_FORMAT.parse(timeString));
+    int batchSize = batch.getMaxSize();
+
+    for (int r = 0; r < 1024; ++r) {
+      int row = batch.size++;
+      fl1.vector[row] = utcTime.toEpochMilli() / 1000.0;
+
+      if (batch.size == batchSize) {
+        writer.addRowBatch(batch);
+        batch.reset();
+      }
+    }
+    if (batch.size != 0) {
+      writer.addRowBatch(batch);
+    }
+    writer.close();
+
+    final TimeZone oldDefault = TimeZone.getDefault();
+    TimeZone.setDefault(TimeZone.getTimeZone(READER_ZONE));
+
+    TypeDescription readerSchema = TypeDescription.fromString("struct<c1:timestamp>");
+    VectorizedRowBatch batchTimeStamp = readerSchema.createRowBatchV2();
+    TimestampColumnVector t1 = (TimestampColumnVector) batchTimeStamp.cols[0];
+
+    OrcFile.ReaderOptions options = OrcFile.readerOptions(conf);
+    Reader.Options rowOptions = new Reader.Options().schema(readerSchema);
+
+    try (Reader reader = OrcFile.createReader(testFilePath, options);
+      RecordReader rows = reader.rows(rowOptions)) {
+      assertTrue(rows.nextBatch(batchTimeStamp));
+
+      String expected = timeString + " " + READER_ZONE.getId();
+
+      assertEquals("row " + 0, expected,
+          timestampToString(t1.time[0] / 1000, t1.nanos[0], READER_ZONE));
+    }
+    TimeZone.setDefault(oldDefault);
+  }
 }
