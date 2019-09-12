@@ -2364,4 +2364,21 @@ public class TestSchemaEvolution {
       assertFalse(rows.nextBatch(batchTimeStamp));
     }
   }
+
+  public void testCheckAcidSchema() {
+    String ccSchema = "struct<operation:int,originalTransaction:bigint,bucket:int," +
+        "rowId:bigint,currentTransaction:bigint," +
+        "row:struct<a:int,b:int>>";
+    String lcSchema = "struct<operation:int,originaltransaction:bigint,bucket:int," +
+        "rowid:bigint,currenttransaction:bigint," +
+        "row:struct<a:int,b:int>>";
+
+    TypeDescription typeCamelCaseColumns = TypeDescription.fromString(ccSchema);
+    TypeDescription typeLowerCaseColumns = TypeDescription.fromString(lcSchema);
+    SchemaEvolution evoCc = new SchemaEvolution(typeCamelCaseColumns, null, options);
+    SchemaEvolution evoLc = new SchemaEvolution(typeLowerCaseColumns, null, options);
+
+    assertTrue("Schema (" + ccSchema +") was found to be non-acid ", evoCc.isAcid());
+    assertTrue("Schema (" + lcSchema +") was found to be non-acid ", evoLc.isAcid());
+  }
 }
