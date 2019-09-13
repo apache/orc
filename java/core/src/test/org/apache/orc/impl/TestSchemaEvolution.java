@@ -2340,4 +2340,50 @@ public class TestSchemaEvolution {
     }
     TimeZone.setDefault(oldDefault);
   }
+
+  @Test
+  public void testFloatToTimestampSampleNegativeNano() throws IOException {
+    final ZoneId READER_ZONE = ZoneId.of("Australia/Sydney");
+
+    TypeDescription fileSchema = TypeDescription.fromString("struct<c1:float>");
+    Writer writer = OrcFile.createWriter(testFilePath,
+        OrcFile.writerOptions(conf).setSchema(fileSchema).stripeSize(10000));
+
+    VectorizedRowBatch batch = fileSchema.createRowBatchV2();
+    DoubleColumnVector fl1 = (DoubleColumnVector) batch.cols[0];
+
+    int batchSize = batch.getMaxSize();
+
+    for (int r = 0; r < 1024; ++r) {
+      int row = batch.size++;
+      fl1.vector[row] = 340282347000000000000000000000000000000000.0;
+
+      if (batch.size == batchSize) {
+        writer.addRowBatch(batch);
+        batch.reset();
+      }
+    }
+    if (batch.size != 0) {
+      writer.addRowBatch(batch);
+    }
+    writer.close();
+
+    final TimeZone oldDefault = TimeZone.getDefault();
+    TimeZone.setDefault(TimeZone.getTimeZone(READER_ZONE));
+
+    TypeDescription readerSchema = TypeDescription.fromString("struct<c1:timestamp>");
+    VectorizedRowBatch batchTimeStamp = readerSchema.createRowBatchV2();
+    TimestampColumnVector t1 = (TimestampColumnVector) batchTimeStamp.cols[0];
+
+    OrcFile.ReaderOptions options = OrcFile.readerOptions(conf);
+    Reader.Options rowOptions = new Reader.Options().schema(readerSchema);
+
+    try (Reader reader = OrcFile.createReader(testFilePath, options);
+      RecordReader rows = reader.rows(rowOptions)) {
+      assertTrue(rows.nextBatch(batchTimeStamp));
+
+      assertTrue(String.format("nanos should be > 0, instead it's: %d", t1.nanos[0]), t1.nanos[0] > 0);
+    }
+    TimeZone.setDefault(oldDefault);
+  }
 }
