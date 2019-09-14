@@ -34,7 +34,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
 import java.util.Arrays;
 import java.util.TimeZone;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -590,8 +589,8 @@ public class TestSchemaEvolution {
     batch.cols[0] = bcv;
     batch.reset();
     batch.size = 1;
-    bcv.vector[0] = "74.19".getBytes();
-    bcv.length[0] = "74.19".getBytes().length;
+    bcv.vector[0] = "74.19".getBytes(StandardCharsets.UTF_8);
+    bcv.length[0] = "74.19".getBytes(StandardCharsets.UTF_8).length;
     writer.addRowBatch(batch);
     writer.close();
 
@@ -618,7 +617,7 @@ public class TestSchemaEvolution {
     batch.cols[0] = bcv;
     batch.reset();
     batch.size = 1;
-    bcv.vector[0] = "74.19".getBytes();
+    bcv.vector[0] = "74.19".getBytes(StandardCharsets.UTF_8);
     bcv.length[0] = "74.19".getBytes().length;
     writer.addRowBatch(batch);
     writer.close();
@@ -1400,8 +1399,7 @@ public class TestSchemaEvolution {
     TypeDescription readerType = TypeDescription.fromString("struct<a:date>");
     boolean[] included = includeAll(readerType);
     options.tolerateMissingSchema(false);
-    SchemaEvolution transition =
-        new SchemaEvolution(fileType, readerType, options.include(included));
+    new SchemaEvolution(fileType, readerType, options.include(included));
   }
 
   @Test

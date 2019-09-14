@@ -18,6 +18,9 @@
 
 package org.apache.orc.impl;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
@@ -26,7 +29,7 @@ import java.nio.ByteBuffer;
 import java.security.Key;
 import java.util.ArrayList;
 import java.util.List;
-
+import javax.crypto.spec.SecretKeySpec;
 import org.apache.hadoop.hive.common.io.DiskRangeList;
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.EncryptionAlgorithm;
@@ -34,11 +37,6 @@ import org.apache.orc.OrcProto;
 import org.apache.orc.PhysicalWriter;
 import org.apache.orc.impl.writer.StreamOptions;
 import org.junit.Test;
-
-import javax.crypto.spec.SecretKeySpec;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 public class TestInStream {
 
@@ -176,7 +174,7 @@ public class TestInStream {
     }
     out.flush();
     byte[] result = collect.buffer.get();
-    assertEquals(ROW_COUNT * 8, result.length);
+    assertEquals(ROW_COUNT * 8L, result.length);
     return result;
   }
 

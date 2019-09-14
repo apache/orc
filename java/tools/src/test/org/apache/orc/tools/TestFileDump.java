@@ -25,9 +25,10 @@ import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -35,7 +36,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -97,7 +97,7 @@ public class TestFileDump {
       batch.cols[2].isNull[batch.size] = true;
     } else {
       ((BytesColumnVector) batch.cols[2]).setVal(batch.size,
-          str.getBytes());
+          str.getBytes(StandardCharsets.UTF_8));
     }
     batch.size += 1;
   }
@@ -155,9 +155,9 @@ public class TestFileDump {
     ((DecimalColumnVector) batch.cols[7]).vector[row].set(de);
     ((TimestampColumnVector) batch.cols[8]).set(row, t);
     ((LongColumnVector) batch.cols[9]).vector[row] = dt.getDays();
-    ((BytesColumnVector) batch.cols[10]).setVal(row, str.getBytes());
-    ((BytesColumnVector) batch.cols[11]).setVal(row, c.getBytes());
-    ((BytesColumnVector) batch.cols[12]).setVal(row, vc.getBytes());
+    ((BytesColumnVector) batch.cols[10]).setVal(row, str.getBytes(StandardCharsets.UTF_8));
+    ((BytesColumnVector) batch.cols[11]).setVal(row, c.getBytes(StandardCharsets.UTF_8));
+    ((BytesColumnVector) batch.cols[12]).setVal(row, vc.getBytes(StandardCharsets.UTF_8));
     MapColumnVector map = (MapColumnVector) batch.cols[13];
     int offset = map.childCount;
     map.offsets[row] = offset;
@@ -183,11 +183,8 @@ public class TestFileDump {
 
   public static void checkOutput(String expected,
                                  String actual) throws Exception {
-    BufferedReader eStream =
-        new BufferedReader(new FileReader
-            (TestJsonFileDump.getFileFromClasspath(expected)));
-    BufferedReader aStream =
-        new BufferedReader(new FileReader(actual));
+    BufferedReader eStream = Files.newBufferedReader(Paths.get(TestJsonFileDump.getFileFromClasspath(expected)), StandardCharsets.UTF_8);
+    BufferedReader aStream = Files.newBufferedReader(Paths.get(actual), StandardCharsets.UTF_8);
     String expectedLine = eStream.readLine().trim();
     while (expectedLine != null) {
       String actualLine = aStream.readLine().trim();
@@ -248,7 +245,7 @@ public class TestFileDump {
     FileOutputStream myOut = new FileOutputStream(workDir + File.separator + outputFilename);
 
     // replace stdout and run command
-    System.setOut(new PrintStream(myOut));
+    System.setOut(new PrintStream(myOut, false, StandardCharsets.UTF_8.toString()));
     FileDump.main(new String[]{testFilePath.toString(), "--rowindex=1,2,3"});
     System.out.flush();
     System.setOut(origOut);
@@ -321,11 +318,11 @@ public class TestFileDump {
     ByteArrayOutputStream myOut = new ByteArrayOutputStream();
 
     // replace stdout and run command
-    System.setOut(new PrintStream(myOut));
+    System.setOut(new PrintStream(myOut, false, "UTF-8"));
     FileDump.main(new String[]{testFilePath.toString(), "-d"});
     System.out.flush();
     System.setOut(origOut);
-    String[] lines = myOut.toString().split("\n");
+    String[] lines = myOut.toString(StandardCharsets.UTF_8.toString()).split("\n");
     Assert.assertEquals("{\"b\":true,\"bt\":10,\"s\":100,\"i\":1000,\"l\":10000,\"f\":4,\"d\":20,\"de\":\"4.2222\",\"t\":\"2014-11-25 18:09:24.0\",\"dt\":\"2014-11-25\",\"str\":\"string\",\"c\":\"hello\",\"vc\":\"hello\",\"m\":[{\"_key\":\"k1\",\"_value\":\"v1\"}],\"a\":[100,200],\"st\":{\"i\":10,\"s\":\"foo\"}}", lines[0]);
     Assert.assertEquals("{\"b\":false,\"bt\":20,\"s\":200,\"i\":2000,\"l\":20000,\"f\":8,\"d\":40,\"de\":\"2.2222\",\"t\":\"2014-11-25 18:02:44.0\",\"dt\":\"2014-09-28\",\"str\":\"abcd\",\"c\":\"world\",\"vc\":\"world\",\"m\":[{\"_key\":\"k3\",\"_value\":\"v3\"}],\"a\":[200,300],\"st\":{\"i\":20,\"s\":\"bar\"}}", lines[1]);
   }
@@ -385,7 +382,7 @@ public class TestFileDump {
     FileOutputStream myOut = new FileOutputStream(workDir + File.separator + outputFilename);
 
     // replace stdout and run command
-    System.setOut(new PrintStream(myOut));
+    System.setOut(new PrintStream(myOut, false, StandardCharsets.UTF_8.toString()));
     FileDump.main(new String[]{testFilePath.toString(), "--rowindex=1,2,3"});
     System.out.flush();
     System.setOut(origOut);
@@ -440,7 +437,7 @@ public class TestFileDump {
     FileOutputStream myOut = new FileOutputStream(workDir + File.separator + outputFilename);
 
     // replace stdout and run command
-    System.setOut(new PrintStream(myOut));
+    System.setOut(new PrintStream(myOut, false, StandardCharsets.UTF_8.toString()));
     FileDump.main(new String[]{testFilePath.toString(), "--rowindex=3"});
     System.out.flush();
     System.setOut(origOut);
@@ -494,7 +491,7 @@ public class TestFileDump {
     FileOutputStream myOut = new FileOutputStream(workDir + File.separator + outputFilename);
 
     // replace stdout and run command
-    System.setOut(new PrintStream(myOut));
+    System.setOut(new PrintStream(myOut, false, StandardCharsets.UTF_8.toString()));
     FileDump.main(new String[]{testFilePath.toString(), "--rowindex=2"});
     System.out.flush();
     System.setOut(origOut);
@@ -525,7 +522,7 @@ public class TestFileDump {
       batch.cols[1].noNulls = false;
       batch.cols[1].isNull[row] = true;
     } else {
-      ((BytesColumnVector) batch.cols[1]).setVal(row, str.getBytes());
+      ((BytesColumnVector) batch.cols[1]).setVal(row, str.getBytes(StandardCharsets.UTF_8));
     }
   }
 
@@ -648,7 +645,7 @@ public class TestFileDump {
     FileOutputStream myOut = new FileOutputStream(workDir + File.separator + outputFilename);
 
     // replace stdout and run command
-    System.setOut(new PrintStream(myOut));
+    System.setOut(new PrintStream(myOut, false, StandardCharsets.UTF_8.toString()));
     FileDump.main(new String[]{testFilePath.toString(), "--rowindex=2"});
     System.out.flush();
     System.setOut(origOut);
