@@ -302,7 +302,7 @@ public class TestRLEv2 {
 
     PrintStream origOut = System.out;
     ByteArrayOutputStream myOut = new ByteArrayOutputStream();
-    System.setOut(new PrintStream(myOut), false, StandardCharsets.UTF_8.toString());
+    System.setOut(new PrintStream(myOut, false, StandardCharsets.UTF_8.toString()));
     FileDump.main(new String[]{testFilePath.toUri().toString()});
     System.out.flush();
     String outDump = new String(myOut.toByteArray(), StandardCharsets.UTF_8);

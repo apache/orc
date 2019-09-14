@@ -22,14 +22,12 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
-
-import org.apache.orc.util.Murmur3;
-import org.junit.Test;
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Random;
+import org.junit.Test;
 
 /**
  * Tests for Murmur3 variants.
@@ -41,7 +39,7 @@ public class TestMurmur3 {
     String key = "test";
     int seed = 123;
     HashFunction hf = Hashing.murmur3_32(seed);
-    int hc1 = hf.hashBytes(key.getBytes()).asInt();
+    int hc1 = hf.hashBytes(key.getBytes(StandardCharsets.UTF_8)).asInt();
     int hc2 = Murmur3.hash32(key.getBytes(), key.getBytes().length, seed);
     assertEquals(hc1, hc2);
 
@@ -100,7 +98,7 @@ public class TestMurmur3 {
     HashFunction hf = Hashing.murmur3_128(seed);
     // guava stores the hashcodes in little endian order
     ByteBuffer buf = ByteBuffer.allocate(16).order(ByteOrder.LITTLE_ENDIAN);
-    buf.put(hf.hashBytes(key.getBytes()).asBytes());
+    buf.put(hf.hashBytes(key.getBytes(StandardCharsets.UTF_8)).asBytes());
     buf.flip();
     long gl1 = buf.getLong();
     long gl2 = buf.getLong(8);
@@ -140,7 +138,7 @@ public class TestMurmur3 {
         " it was the spring of hope, it was the winter of despair," +
         " we had everything before us, we had nothing before us," +
         " we were all going direct to Heaven," +
-        " we were all going direct the other way.").getBytes();
+        " we were all going direct the other way.").getBytes(StandardCharsets.UTF_8);
     long hash = Murmur3.hash64(origin, 0, origin.length);
     assertEquals(305830725663368540L, hash);
 

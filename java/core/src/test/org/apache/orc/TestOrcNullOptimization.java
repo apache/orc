@@ -23,6 +23,7 @@ import static org.junit.Assert.assertArrayEquals;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Random;
 
@@ -80,7 +81,7 @@ public class TestOrcNullOptimization {
       bColumn.noNulls = false;
       bColumn.isNull[row] = true;
     } else {
-      bColumn.setVal(row, b.getBytes());
+      bColumn.setVal(row, b.getBytes(StandardCharsets.UTF_8));
     }
     if (c == null) {
       cColumn.noNulls = false;

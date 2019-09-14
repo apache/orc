@@ -618,7 +618,7 @@ public class TestSchemaEvolution {
     batch.reset();
     batch.size = 1;
     bcv.vector[0] = "74.19".getBytes(StandardCharsets.UTF_8);
-    bcv.length[0] = "74.19".getBytes().length;
+    bcv.length[0] = "74.19".getBytes(StandardCharsets.UTF_8).length;
     writer.addRowBatch(batch);
     writer.close();
 

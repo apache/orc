@@ -164,9 +164,9 @@ public class TestFileDump {
     map.lengths[row] = m.size();
     map.childCount += map.lengths[row];
     for(Map.Entry<String, String> entry: m.entrySet()) {
-      ((BytesColumnVector) map.keys).setVal(offset, entry.getKey().getBytes());
+      ((BytesColumnVector) map.keys).setVal(offset, entry.getKey().getBytes(StandardCharsets.UTF_8));
       ((BytesColumnVector) map.values).setVal(offset++,
-          entry.getValue().getBytes());
+          entry.getValue().getBytes(StandardCharsets.UTF_8));
     }
     ListColumnVector list = (ListColumnVector) batch.cols[14];
     offset = list.childCount;

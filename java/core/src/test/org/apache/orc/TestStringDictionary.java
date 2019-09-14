@@ -83,7 +83,7 @@ public class TestStringDictionary {
         writer.addRowBatch(batch);
         batch.reset();
       }
-      col.setVal(batch.size++, String.valueOf(i).getBytes());
+      col.setVal(batch.size++, String.valueOf(i).getBytes(StandardCharsets.UTF_8));
     }
     writer.addRowBatch(batch);
     writer.close();
@@ -132,7 +132,7 @@ public class TestStringDictionary {
         writer.addRowBatch(batch);
         batch.reset();
       }
-      col.setVal(batch.size++, String.valueOf(input[i]).getBytes());
+      col.setVal(batch.size++, String.valueOf(input[i]).getBytes(StandardCharsets.UTF_8));
     }
     writer.addRowBatch(batch);
     writer.close();
@@ -309,7 +309,7 @@ public class TestStringDictionary {
         writer.addRowBatch(batch);
         batch.reset();
       }
-      string.setVal(batch.size++, String.valueOf(i).getBytes());
+      string.setVal(batch.size++, String.valueOf(i).getBytes(StandardCharsets.UTF_8));
     }
     writer.addRowBatch(batch);
     writer.close();
@@ -360,7 +360,7 @@ public class TestStringDictionary {
         writer.addRowBatch(batch);
         batch.reset();
       }
-      string.setVal(batch.size++, String.valueOf(input[i]).getBytes());
+      string.setVal(batch.size++, String.valueOf(input[i]).getBytes(StandardCharsets.UTF_8));
     }
     writer.addRowBatch(batch);
     writer.close();
@@ -404,7 +404,7 @@ public class TestStringDictionary {
         writer.addRowBatch(batch);
         batch.reset();
       }
-      string.setVal(batch.size++, String.valueOf(i).getBytes());
+      string.setVal(batch.size++, String.valueOf(i).getBytes(StandardCharsets.UTF_8));
     }
     writer.addRowBatch(batch);
     writer.close();
@@ -462,7 +462,7 @@ public class TestStringDictionary {
         writer.addRowBatch(batch);
         batch.reset();
       }
-      shortStringColumnVector.setVal(batch.size, SHORT_STRING_VALUE.getBytes());
+      shortStringColumnVector.setVal(batch.size, SHORT_STRING_VALUE.getBytes(StandardCharsets.UTF_8));
       longStringColumnVector.setVal( batch.size, LONG_STRING_VALUE.getBytes());
       ++batch.size;
     }

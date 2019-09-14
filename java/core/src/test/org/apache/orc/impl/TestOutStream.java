@@ -18,6 +18,17 @@
 
 package org.apache.orc.impl;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.security.Key;
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.EncryptionAlgorithm;
 import org.apache.orc.InMemoryKeystore;
@@ -27,18 +38,6 @@ import org.apache.orc.impl.writer.StreamOptions;
 import org.junit.Assume;
 import org.junit.Test;
 import org.mockito.Mockito;
-
-import javax.crypto.Cipher;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.security.Key;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 public class TestOutStream {
 
@@ -208,7 +207,7 @@ public class TestOutStream {
 
     // check the contents of the decompressed stream
     BufferedReader reader
-        = new BufferedReader(new InputStreamReader(decompressedStream));
+        = new BufferedReader(new InputStreamReader(decompressedStream, StandardCharsets.UTF_8));
     for(int i=0; i < 10000; ++i) {
       assertEquals("i = " + i, "The Cheesy Poofs " + i, reader.readLine());
     }
