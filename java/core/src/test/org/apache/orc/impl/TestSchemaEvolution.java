@@ -2045,7 +2045,6 @@ public class TestSchemaEvolution {
     TypeDescription fileSchema =
         TypeDescription.fromString("struct<l1:bigint,l2:bigint," +
                                        "d1:decimal(14,2),d2:decimal(14,2)," +
-                                       "fl1:float,fl2:float," +
                                        "dbl1:double,dbl2:double," +
                                        "dt1:date,dt2:date," +
                                        "s1:string,s2:string>");
@@ -2064,14 +2063,12 @@ public class TestSchemaEvolution {
     LongColumnVector l2 = (LongColumnVector) batch.cols[1];
     Decimal64ColumnVector d1 = (Decimal64ColumnVector) batch.cols[2];
     Decimal64ColumnVector d2 = (Decimal64ColumnVector) batch.cols[3];
-    DoubleColumnVector fl1 = (DoubleColumnVector) batch.cols[4];
-    DoubleColumnVector fl2 = (DoubleColumnVector) batch.cols[5];
-    DoubleColumnVector dbl1 = (DoubleColumnVector) batch.cols[6];
-    DoubleColumnVector dbl2 = (DoubleColumnVector) batch.cols[7];
-    LongColumnVector dt1 = (LongColumnVector) batch.cols[8];
-    LongColumnVector dt2 = (LongColumnVector) batch.cols[9];
-    BytesColumnVector s1 = (BytesColumnVector) batch.cols[10];
-    BytesColumnVector s2 = (BytesColumnVector) batch.cols[11];
+    DoubleColumnVector dbl1 = (DoubleColumnVector) batch.cols[4];
+    DoubleColumnVector dbl2 = (DoubleColumnVector) batch.cols[5];
+    LongColumnVector dt1 = (LongColumnVector) batch.cols[6];
+    LongColumnVector dt2 = (LongColumnVector) batch.cols[7];
+    BytesColumnVector s1 = (BytesColumnVector) batch.cols[8];
+    BytesColumnVector s2 = (BytesColumnVector) batch.cols[9];
     for (int r = 0; r < values.length; ++r) {
       int row = batch.size++;
       Instant utcTime = Instant.from(UTC_FORMAT.parse(values[r]));
@@ -2081,9 +2078,6 @@ public class TestSchemaEvolution {
       // balance out the 2 digits of scale
       d1.vector[row] = utcTime.toEpochMilli() / 10;
       d2.vector[row] = writerTime.toEpochMilli() / 10;
-      // convert to float
-      fl1.vector[row] = (float)(utcTime.toEpochMilli() / 1000.0);
-      fl2.vector[row] = (float)(writerTime.toEpochMilli() / 1000.0);
       // convert to double
       dbl1.vector[row] = utcTime.toEpochMilli() / 1000.0;
       dbl2.vector[row] = writerTime.toEpochMilli() / 1000.0;
@@ -2149,8 +2143,6 @@ public class TestSchemaEvolution {
               "l2:timestamp with local time zone," +
               "d1:timestamp," +
               "d2:timestamp with local time zone," +
-              "fl1:timestamp," +
-              "fl2:timestamp with local time zone," +
               "dbl1:timestamp," +
               "dbl2:timestamp with local time zone," +
               "dt1:timestamp," +
@@ -2162,14 +2154,12 @@ public class TestSchemaEvolution {
       TimestampColumnVector l2 = (TimestampColumnVector) batch.cols[1];
       TimestampColumnVector d1 = (TimestampColumnVector) batch.cols[2];
       TimestampColumnVector d2 = (TimestampColumnVector) batch.cols[3];
-      TimestampColumnVector fl1 = (TimestampColumnVector) batch.cols[4];
-      TimestampColumnVector fl2 = (TimestampColumnVector) batch.cols[5];
-      TimestampColumnVector dbl1 = (TimestampColumnVector) batch.cols[6];
-      TimestampColumnVector dbl2 = (TimestampColumnVector) batch.cols[7];
-      TimestampColumnVector dt1 = (TimestampColumnVector) batch.cols[8];
-      TimestampColumnVector dt2 = (TimestampColumnVector) batch.cols[9];
-      TimestampColumnVector s1 = (TimestampColumnVector) batch.cols[10];
-      TimestampColumnVector s2 = (TimestampColumnVector) batch.cols[11];
+      TimestampColumnVector dbl1 = (TimestampColumnVector) batch.cols[4];
+      TimestampColumnVector dbl2 = (TimestampColumnVector) batch.cols[5];
+      TimestampColumnVector dt1 = (TimestampColumnVector) batch.cols[6];
+      TimestampColumnVector dt2 = (TimestampColumnVector) batch.cols[7];
+      TimestampColumnVector s1 = (TimestampColumnVector) batch.cols[8];
+      TimestampColumnVector s2 = (TimestampColumnVector) batch.cols[9];
       OrcFile.ReaderOptions options = OrcFile.readerOptions(conf);
       Reader.Options rowOptions = new Reader.Options().schema(readerSchema);
 
@@ -2199,12 +2189,6 @@ public class TestSchemaEvolution {
 
           assertEquals("row " + r, expected2,
               timestampToString(d2.time[current] / 1000, d2.nanos[current], WRITER_ZONE));
-
-          assertEquals("row " + r, expected1,
-              timestampToString(fl1.time[current] / 1000, fl1.nanos[current], READER_ZONE));
-
-          assertEquals("row " + r, expected2,
-              timestampToString(fl2.time[current] / 1000, fl2.nanos[current], WRITER_ZONE));
 
           assertEquals("row " + r, expected1,
               timestampToString(dbl1.time[current] / 1000, dbl1.nanos[current], READER_ZONE));
@@ -2255,12 +2239,6 @@ public class TestSchemaEvolution {
 
           assertEquals("row " + r, expected2,
               timestampToString(d2.time[current] / 1000, d2.nanos[current], WRITER_ZONE));
-
-          assertEquals("row " + r, expected1,
-              timestampToString(fl1.time[current] / 1000, fl1.nanos[current], UTC));
-
-          assertEquals("row " + r, expected2,
-              timestampToString(fl2.time[current] / 1000, fl2.nanos[current], WRITER_ZONE));
 
           assertEquals("row " + r, expected1,
               timestampToString(dbl1.time[current] / 1000, dbl1.nanos[current], UTC));
