@@ -2308,7 +2308,7 @@ public class TestSchemaEvolution {
       assertTrue(rows.nextBatch(batchTimeStamp));
 
       assertTrue(String.format("nanos should be > 0, instead it's: %d", t1.nanos[0]),
-          t1.nanos[0] > 0);
+          t1.nanos[0] >= 0);
     }
     TimeZone.setDefault(oldDefault);
   }

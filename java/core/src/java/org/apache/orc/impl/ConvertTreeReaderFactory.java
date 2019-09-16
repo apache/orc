@@ -1411,7 +1411,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       long wholeSec = (long) Math.floor(seconds);
       timestampColVector.time[elementNum] = wholeSec * 1000;
       timestampColVector.nanos[elementNum] =
-          Math.min(0, 1_000_000 * (int) Math.round((seconds - wholeSec) * 1000));
+          Math.max(0, 1_000_000 * (int) Math.round((seconds - wholeSec) * 1000));
     }
 
     @Override
