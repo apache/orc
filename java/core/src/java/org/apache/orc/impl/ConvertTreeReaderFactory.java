@@ -1409,9 +1409,16 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
         seconds = SerializationUtils.convertFromUtc(local, seconds);
       }
       long wholeSec = (long) Math.floor(seconds);
-      timestampColVector.time[elementNum] = wholeSec * 1000;
-      timestampColVector.nanos[elementNum] =
-          Math.max(0, 1_000_000 * (int) Math.round((seconds - wholeSec) * 1000));
+
+      if (seconds >= Long.MAX_VALUE || seconds <= Long.MIN_VALUE) { // overflow
+        timestampColVector.time[elementNum] = 0L;
+        timestampColVector.nanos[elementNum] = 0;
+        timestampColVector.isNull[elementNum] = true;
+      } else {
+        timestampColVector.time[elementNum] = wholeSec * 1000;
+        timestampColVector.nanos[elementNum] =
+            1_000_000 * (int) Math.round((seconds - wholeSec) * 1000);
+      }
     }
 
     @Override

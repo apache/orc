@@ -2267,10 +2267,31 @@ public class TestSchemaEvolution {
   }
 
   @Test
-  public void testFloatToTimestampSampleNegativeNano() throws IOException {
+  public void doubleToTimeStampPositiveOverflow() throws Exception {
+    floatAndDoubleToTimeStampOverflow(340282347000000000000000000000000000000000.0, "double");
+  }
+
+  @Test
+  public void floatToTimeStampPositiveOverflow() throws Exception {
+    floatAndDoubleToTimeStampOverflow(340282347000000000000000000000000000000000.0, "float");
+  }
+
+  @Test
+  public void doubleToTimeStampNegativeOverflow() throws Exception {
+    floatAndDoubleToTimeStampOverflow(-340282347000000000000000000000000000000000.0, "double");
+  }
+
+  @Test
+  public void floatToTimeStampNegativeOverflow() throws Exception {
+    floatAndDoubleToTimeStampOverflow(-340282347000000000000000000000000000000000.0, "float");
+  }
+
+  private void floatAndDoubleToTimeStampOverflow(double value, String typeInFileSchema)
+      throws Exception {
     final ZoneId READER_ZONE = ZoneId.of("Australia/Sydney");
 
-    TypeDescription fileSchema = TypeDescription.fromString("struct<c1:float>");
+    TypeDescription fileSchema =
+        TypeDescription.fromString(String.format("struct<c1:%s>", typeInFileSchema));
     Writer writer = OrcFile.createWriter(testFilePath,
         OrcFile.writerOptions(conf).setSchema(fileSchema).stripeSize(10000));
 
@@ -2281,7 +2302,7 @@ public class TestSchemaEvolution {
 
     for (int r = 0; r < 1024; ++r) {
       int row = batch.size++;
-      fl1.vector[row] = 340282347000000000000000000000000000000000.0;
+      fl1.vector[row] = value;
 
       if (batch.size == batchSize) {
         writer.addRowBatch(batch);
