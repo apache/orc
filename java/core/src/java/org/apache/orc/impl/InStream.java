@@ -432,6 +432,11 @@ public abstract class InStream extends InputStream {
      */
     void reset(DiskRangeList input) {
       bytes = input;
+      while (input != null &&
+                 (input.getEnd() <= offset ||
+                      input.getOffset() > offset + length)) {
+        input = input.next;
+      }
       if (input == null || input.getOffset() <= offset) {
         position = 0;
       } else {
@@ -456,43 +461,45 @@ public abstract class InStream extends InputStream {
       }
     }
 
-    private void readHeader() throws IOException {
-      if (compressed == null || compressed.remaining() <= 0) {
+    private int readHeaderByte() {
+      while (currentRange != null &&
+                 (compressed == null || compressed.remaining() <= 0)) {
         setCurrent(currentRange.next, false);
       }
-      if (compressed.remaining() > OutStream.HEADER_SIZE) {
-        int b0 = compressed.get() & 0xff;
-        int b1 = compressed.get() & 0xff;
-        int b2 = compressed.get() & 0xff;
-        boolean isOriginal = (b0 & 0x01) == 1;
-        int chunkLength = (b2 << 15) | (b1 << 7) | (b0 >> 1);
-
-        if (chunkLength > bufferSize) {
-          throw new IllegalArgumentException("Buffer size too small. size = " +
-              bufferSize + " needed = " + chunkLength + " in " + name);
-        }
-        // read 3 bytes, which should be equal to OutStream.HEADER_SIZE always
-        assert OutStream.HEADER_SIZE == 3 : "The Orc HEADER_SIZE must be the same in OutStream and InStream";
-        position += OutStream.HEADER_SIZE;
-
-        ByteBuffer slice = this.slice(chunkLength);
-
-        if (isOriginal) {
-          uncompressed = slice;
-          isUncompressedOriginal = true;
-        } else {
-          if (isUncompressedOriginal) {
-            allocateForUncompressed(bufferSize, slice.isDirect());
-            isUncompressedOriginal = false;
-          } else if (uncompressed == null) {
-            allocateForUncompressed(bufferSize, slice.isDirect());
-          } else {
-            uncompressed.clear();
-          }
-          codec.decompress(slice, uncompressed);
-         }
+      if (compressed != null && compressed.remaining() > 0) {
+        position += 1;
+        return compressed.get() & 0xff;
       } else {
         throw new IllegalStateException("Can't read header at " + this);
+      }
+    }
+
+    private void readHeader() throws IOException {
+      int b0 = readHeaderByte();
+      int b1 = readHeaderByte();
+      int b2 = readHeaderByte();
+      boolean isOriginal = (b0 & 0x01) == 1;
+      int chunkLength = (b2 << 15) | (b1 << 7) | (b0 >> 1);
+
+      if (chunkLength > bufferSize) {
+        throw new IllegalArgumentException("Buffer size too small. size = " +
+                                               bufferSize + " needed = " + chunkLength + " in " + name);
+      }
+      ByteBuffer slice = this.slice(chunkLength);
+
+      if (isOriginal) {
+        uncompressed = slice;
+        isUncompressedOriginal = true;
+      } else {
+        if (isUncompressedOriginal) {
+          allocateForUncompressed(bufferSize, slice.isDirect());
+          isUncompressedOriginal = false;
+        } else if (uncompressed == null) {
+          allocateForUncompressed(bufferSize, slice.isDirect());
+        } else {
+          uncompressed.clear();
+        }
+        codec.decompress(slice, uncompressed);
       }
     }
 
