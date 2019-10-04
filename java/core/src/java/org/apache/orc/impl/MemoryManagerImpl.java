@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * dynamic partitions, it is easy to end up with many writers in the same task.
  * By managing the size of each allocation, we try to cut down the size of each
  * allocation and keep the task from running out of memory.
- * 
+ *
  * This class is not thread safe, but is re-entrant - ensure creation and all
  * invocations are triggered from the same thread.
  */
@@ -77,7 +77,7 @@ public class MemoryManagerImpl implements MemoryManager {
    * @param requestedAllocation the requested buffer size
    */
   public synchronized void addWriter(Path path, long requestedAllocation,
-                              Callback callback) {
+                              Callback callback) throws IOException {
     WriterInfo oldVal = writerList.get(path);
     // this should always be null, but we handle the case where the memory
     // manager wasn't told that a writer wasn't still in use and the task
@@ -97,7 +97,7 @@ public class MemoryManagerImpl implements MemoryManager {
    * Remove the given writer from the pool.
    * @param path the file that has been closed
    */
-  public synchronized void removeWriter(Path path) {
+  public synchronized void removeWriter(Path path) throws IOException {
     WriterInfo val = writerList.get(path);
     if (val != null) {
       writerList.remove(path);
@@ -125,7 +125,15 @@ public class MemoryManagerImpl implements MemoryManager {
   }
 
   @Override
-  public void addedRow(int rows) {
+  public void addedRow(int rows) throws IOException {
+    // PASS
+  }
+
+  /**
+   * Obsolete method left for Hive, which extends this class.
+   * @deprecated remove this method
+   */
+  public void notifyWriters() throws IOException {
     // PASS
   }
 
