@@ -87,7 +87,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
   private static final int MIN_ROW_INDEX_STRIDE = 1000;
 
   private final Path path;
-  private long adjustedStripeSize;
+  private final long stripeSize;
   private final int rowIndexStride;
   private final TypeDescription schema;
   private final PhysicalWriter physicalWriter;
@@ -107,6 +107,10 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
   private final TreeWriter treeWriter;
   private final boolean buildIndex;
   private final MemoryManager memoryManager;
+  private long previousAllocation = -1;
+  private long memoryLimit;
+  private final long ROWS_PER_CHECK;
+  private long rowsSinceCheck = 0;
   private final OrcFile.Version version;
   private final Configuration conf;
   private final OrcFile.WriterCallback callback;
@@ -178,7 +182,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     }
     this.writeTimeZone = hasTimestamp(schema);
     this.useUTCTimeZone = opts.getUseUTCTimestamp();
-    this.adjustedStripeSize = opts.getStripeSize();
+    this.stripeSize = opts.getStripeSize();
     this.version = opts.getVersion();
     this.encodingStrategy = opts.getEncodingStrategy();
     this.compressionStrategy = opts.getCompressionStrategy();
@@ -212,9 +216,11 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
           MIN_ROW_INDEX_STRIDE);
     }
     // ensure that we are able to handle callbacks before we register ourselves
-    memoryManager.addWriter(path, opts.getStripeSize(), this);
+    ROWS_PER_CHECK = OrcConf.ROWS_BETWEEN_CHECKS.getLong(conf);
+    memoryLimit = stripeSize;
+    memoryManager.addWriter(path, stripeSize, this);
     LOG.info("ORC writer created for path: {} with stripeSize: {} options: {}",
-        path, adjustedStripeSize, unencryptedOptions);
+        path, stripeSize, unencryptedOptions);
   }
 
   //@VisibleForTesting
@@ -226,7 +232,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     // sizes.
     int estBufferSize = (int) (stripeSize / (20L * numColumns));
     estBufferSize = getClosestBufferSize(estBufferSize);
-    return estBufferSize > bs ? bs : estBufferSize;
+    return Math.min(estBufferSize, bs);
   }
 
   @Override
@@ -286,15 +292,22 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
 
   @Override
   public boolean checkMemory(double newScale) throws IOException {
-    long limit = Math.round(adjustedStripeSize * newScale);
-    long size = treeWriter.estimateMemory();
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("ORC writer " + physicalWriter + " size = " + size +
-          " limit = " + limit);
-    }
-    if (size > limit) {
-      flushStripe();
-      return true;
+    memoryLimit = Math.round(stripeSize * newScale);
+    return checkMemory();
+  }
+
+  private boolean checkMemory() throws IOException {
+    if (rowsSinceCheck >= ROWS_PER_CHECK) {
+      rowsSinceCheck = 0;
+      long size = treeWriter.estimateMemory();
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("ORC writer " + physicalWriter + " size = " + size +
+                      " limit = " + memoryLimit);
+      }
+      if (size > memoryLimit) {
+        flushStripe();
+        return true;
+      }
     }
     return false;
   }
@@ -676,7 +689,9 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
         rowsInStripe += batch.size;
         treeWriter.writeRootBatch(batch, 0, batch.size);
       }
-      memoryManager.addedRow(batch.size);
+      rowsSinceCheck += batch.size;
+      previousAllocation = memoryManager.checkMemory(previousAllocation, this);
+      checkMemory();
     } catch (Throwable t) {
       try {
         close();
