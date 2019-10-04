@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,8 +20,6 @@ package org.apache.orc.impl;
 
 import org.apache.orc.MemoryManager;
 import org.apache.orc.OrcConf;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 
@@ -29,7 +27,7 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Implements a memory manager that keeps a global context of how many ORC
@@ -37,40 +35,20 @@ import java.util.concurrent.locks.ReentrantLock;
  * dynamic partitions, it is easy to end up with many writers in the same task.
  * By managing the size of each allocation, we try to cut down the size of each
  * allocation and keep the task from running out of memory.
- * 
+ *
  * This class is not thread safe, but is re-entrant - ensure creation and all
  * invocations are triggered from the same thread.
  */
 public class MemoryManagerImpl implements MemoryManager {
 
-  private static final Logger LOG = LoggerFactory.getLogger(MemoryManagerImpl.class);
-
-  /**
-   * How often should we check the memory sizes? Measured in rows added
-   * to all of the writers.
-   */
-  final long ROWS_BETWEEN_CHECKS;
   private final long totalMemoryPool;
-  private final Map<Path, WriterInfo> writerList =
-      new HashMap<Path, WriterInfo>();
-  private long totalAllocation = 0;
-  private double currentScale = 1;
-  private int rowsAddedSinceCheck = 0;
-  private final OwnedLock ownerLock = new OwnedLock();
-
-  @SuppressWarnings("serial")
-  private static class OwnedLock extends ReentrantLock {
-    public Thread getOwner() {
-      return super.getOwner();
-    }
-  }
+  private final Map<Path, WriterInfo> writerList = new HashMap<>();
+  private final AtomicLong totalAllocation = new AtomicLong(0);
 
   private static class WriterInfo {
     long allocation;
-    Callback callback;
-    WriterInfo(long allocation, Callback callback) {
+    WriterInfo(long allocation) {
       this.allocation = allocation;
-      this.callback = callback;
     }
   }
 
@@ -80,26 +58,16 @@ public class MemoryManagerImpl implements MemoryManager {
    *             pool.
    */
   public MemoryManagerImpl(Configuration conf) {
-    double maxLoad = OrcConf.MEMORY_POOL.getDouble(conf);
-    ROWS_BETWEEN_CHECKS = OrcConf.ROWS_BETWEEN_CHECKS.getLong(conf);
-    LOG.info(OrcConf.ROWS_BETWEEN_CHECKS.getAttribute() + "=" + ROWS_BETWEEN_CHECKS);
-    if(ROWS_BETWEEN_CHECKS < 1 || ROWS_BETWEEN_CHECKS > 10000) {
-      throw new IllegalArgumentException(OrcConf.ROWS_BETWEEN_CHECKS.getAttribute() + "="
-        + ROWS_BETWEEN_CHECKS + " is outside valid range [1,10000].");
-    }
-    totalMemoryPool = Math.round(ManagementFactory.getMemoryMXBean().
-        getHeapMemoryUsage().getMax() * maxLoad);
-    ownerLock.lock();
+    this(Math.round(ManagementFactory.getMemoryMXBean().
+        getHeapMemoryUsage().getMax() * OrcConf.MEMORY_POOL.getDouble(conf)));
   }
 
   /**
-   * Light weight thread-safety check for multi-threaded access patterns
+   * Create the memory manager
+   * @param poolSize the size of memory to use
    */
-  private void checkOwner() {
-    if (!ownerLock.isHeldByCurrentThread()) {
-      LOG.warn("Owner thread expected {}, got {}",
-          ownerLock.getOwner(), Thread.currentThread());
-    }
+  public MemoryManagerImpl(long poolSize) {
+    totalMemoryPool = poolSize;
   }
 
   /**
@@ -108,43 +76,32 @@ public class MemoryManagerImpl implements MemoryManager {
    * @param path the file that is being written
    * @param requestedAllocation the requested buffer size
    */
-  public void addWriter(Path path, long requestedAllocation,
+  public synchronized void addWriter(Path path, long requestedAllocation,
                               Callback callback) throws IOException {
-    checkOwner();
     WriterInfo oldVal = writerList.get(path);
     // this should always be null, but we handle the case where the memory
     // manager wasn't told that a writer wasn't still in use and the task
     // starts writing to the same path.
     if (oldVal == null) {
-      oldVal = new WriterInfo(requestedAllocation, callback);
+      oldVal = new WriterInfo(requestedAllocation);
       writerList.put(path, oldVal);
-      totalAllocation += requestedAllocation;
+      totalAllocation.addAndGet(requestedAllocation);
     } else {
       // handle a new writer that is writing to the same path
-      totalAllocation += requestedAllocation - oldVal.allocation;
+      totalAllocation.addAndGet(requestedAllocation - oldVal.allocation);
       oldVal.allocation = requestedAllocation;
-      oldVal.callback = callback;
     }
-    updateScale(true);
   }
 
   /**
    * Remove the given writer from the pool.
    * @param path the file that has been closed
    */
-  public void removeWriter(Path path) throws IOException {
-    checkOwner();
+  public synchronized void removeWriter(Path path) throws IOException {
     WriterInfo val = writerList.get(path);
     if (val != null) {
       writerList.remove(path);
-      totalAllocation -= val.allocation;
-      if (writerList.isEmpty()) {
-        rowsAddedSinceCheck = 0;
-      }
-      updateScale(false);
-    }
-    if(writerList.isEmpty()) {
-      rowsAddedSinceCheck = 0;
+      totalAllocation.addAndGet(-val.allocation);
     }
   }
 
@@ -163,48 +120,29 @@ public class MemoryManagerImpl implements MemoryManager {
    * available for each writer.
    */
   public double getAllocationScale() {
-    return currentScale;
+    long alloc = totalAllocation.get();
+    return alloc <= totalMemoryPool ? 1.0 : (double) totalMemoryPool / alloc;
   }
 
-  /**
-   * Give the memory manager an opportunity for doing a memory check.
-   * @param rows number of rows added
-   * @throws IOException
-   */
   @Override
   public void addedRow(int rows) throws IOException {
-    rowsAddedSinceCheck += rows;
-    if (rowsAddedSinceCheck >= ROWS_BETWEEN_CHECKS) {
-      notifyWriters();
-    }
+    // PASS
   }
 
   /**
-   * Notify all of the writers that they should check their memory usage.
-   * @throws IOException
+   * Obsolete method left for Hive, which extends this class.
+   * @deprecated remove this method
    */
   public void notifyWriters() throws IOException {
-    checkOwner();
-    LOG.debug("Notifying writers after " + rowsAddedSinceCheck);
-    for(WriterInfo writer: writerList.values()) {
-      boolean flushed = writer.callback.checkMemory(currentScale);
-      if (LOG.isDebugEnabled() && flushed) {
-        LOG.debug("flushed " + writer.toString());
-      }
-    }
-    rowsAddedSinceCheck = 0;
+    // PASS
   }
 
-  /**
-   * Update the currentScale based on the current allocation and pool size.
-   * This also updates the notificationTrigger.
-   * @param isAllocate is this an allocation?
-   */
-  private void updateScale(boolean isAllocate) throws IOException {
-    if (totalAllocation <= getTotalMemoryPool()) {
-      currentScale = 1;
-    } else {
-      currentScale = (double) getTotalMemoryPool() / totalAllocation;
+  @Override
+  public long checkMemory(long previous, Callback writer) throws IOException {
+    long current = totalAllocation.get();
+    if (current != previous) {
+      writer.checkMemory(getAllocationScale());
     }
+    return current;
   }
 }

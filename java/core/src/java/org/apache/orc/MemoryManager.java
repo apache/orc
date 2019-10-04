@@ -36,10 +36,10 @@ public interface MemoryManager {
 
   interface Callback {
     /**
-     * The writer needs to check its memory usage
+     * The scale factor for the stripe size has changed and thus the
+     * writer should adjust their desired size appropriately.
      * @param newScale the current scale factor for memory allocations
      * @return true if the writer was over the limit
-     * @throws IOException
      */
     boolean checkMemory(double newScale) throws IOException;
   }
@@ -63,6 +63,21 @@ public interface MemoryManager {
    * Give the memory manager an opportunity for doing a memory check.
    * @param rows number of rows added
    * @throws IOException
+   * @deprecated Use {@link MemoryManager#checkMemory} instead
    */
   void addedRow(int rows) throws IOException;
+
+  /**
+   * As part of adding rows, the writer calls this method to determine
+   * if the scale factor has changed. If it has changed, the Callback will be
+   * called.
+   * @param previousAllocation the previous allocation
+   * @param writer the callback to call back into if we need to
+   * @return the current allocation
+   */
+  default long checkMemory(long previousAllocation,
+                           Callback writer) throws IOException {
+    addedRow(1024);
+    return previousAllocation;
+  }
 }
