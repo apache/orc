@@ -942,19 +942,14 @@ public class OrcFile {
     return new WriterOptions(tableProperties, conf);
   }
 
-  private static ThreadLocal<MemoryManager> memoryManager = null;
+  private static MemoryManager memoryManager = null;
 
-  private static synchronized MemoryManager getStaticMemoryManager(
-      final Configuration conf) {
+  private static synchronized
+  MemoryManager getStaticMemoryManager(Configuration conf) {
     if (memoryManager == null) {
-      memoryManager = new ThreadLocal<MemoryManager>() {
-        @Override
-        protected MemoryManager initialValue() {
-          return new MemoryManagerImpl(conf);
-        }
-      };
+      memoryManager = new MemoryManagerImpl(conf);
     }
-    return memoryManager.get();
+    return memoryManager;
   }
 
   /**

@@ -79,18 +79,12 @@ public class TestMemoryManager {
     Configuration conf = new Configuration();
     conf.set("hive.exec.orc.memory.pool", "0.9");
     MemoryManagerImpl mgr = new MemoryManagerImpl(conf);
-    assertEquals("Wrong default ",
-      OrcConf.ROWS_BETWEEN_CHECKS.getLong(conf), mgr.ROWS_BETWEEN_CHECKS);
     long mem =
         ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getMax();
     System.err.print("Memory = " + mem);
     long pool = mgr.getTotalMemoryPool();
     assertTrue("Pool too small: " + pool, mem * 0.899 < pool);
     assertTrue("Pool too big: " + pool, pool < mem * 0.901);
-
-    conf.setLong(OrcConf.ROWS_BETWEEN_CHECKS.getAttribute(), 1234);
-    mgr = new MemoryManagerImpl(conf);
-    assertEquals("Wrong default ", 1234, mgr.ROWS_BETWEEN_CHECKS);
   }
 
   private static class DoubleMatcher extends BaseMatcher<Double> {
@@ -128,12 +122,12 @@ public class TestMemoryManager {
       calls[i] = Mockito.mock(MemoryManager.Callback.class);
       mgr.addWriter(new Path(Integer.toString(i)), pool/4, calls[i]);
     }
-    // add enough rows to get the memory manager to check the limits
-    for(int i=0; i < 10000; ++i) {
-      mgr.addedRow(1);
+    // check to make sure that they get scaled down
+    for(int i=0; i < calls.length; ++i) {
+      mgr.checkMemory(0, calls[i]);
     }
     for(int call=0; call < calls.length; ++call) {
-      Mockito.verify(calls[call], Mockito.times(2))
+      Mockito.verify(calls[call])
           .checkMemory(Matchers.doubleThat(closeTo(0.2, ERROR)));
     }
   }
