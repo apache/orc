@@ -130,7 +130,7 @@ public abstract class InStream extends InputStream {
         currentOffset = newRange.getOffset();
         // Move the position in the ByteBuffer to match the currentOffset,
         // which is relative to the stream.
-        int start = (int) (position + offset - currentOffset);
+        int start = Math.min((int) (position + offset - currentOffset), decrypted.limit());
         decrypted.position(start);
         // make sure the end of the buffer doesn't go past our stream
         decrypted.limit(start + (int) Math.min(decrypted.remaining(),
