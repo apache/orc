@@ -56,9 +56,9 @@ namespace orc {
     return false;
   }
 
-  LongVectorBatch::LongVectorBatch(uint64_t capacity, MemoryPool& pool
-                     ): ColumnVectorBatch(capacity, pool),
-                        data(pool, capacity) {
+  LongVectorBatch::LongVectorBatch(uint64_t _capacity, MemoryPool& pool
+                     ): ColumnVectorBatch(_capacity, pool),
+                        data(pool, _capacity) {
     // PASS
   }
 
@@ -84,9 +84,9 @@ namespace orc {
         static_cast<uint64_t>(data.capacity() * sizeof(int64_t));
   }
 
-  DoubleVectorBatch::DoubleVectorBatch(uint64_t capacity, MemoryPool& pool
-                   ): ColumnVectorBatch(capacity, pool),
-                      data(pool, capacity) {
+  DoubleVectorBatch::DoubleVectorBatch(uint64_t _capacity, MemoryPool& pool
+                   ): ColumnVectorBatch(_capacity, pool),
+                      data(pool, _capacity) {
     // PASS
   }
 
@@ -112,10 +112,10 @@ namespace orc {
           + static_cast<uint64_t>(data.capacity() * sizeof(double));
   }
 
-  StringVectorBatch::StringVectorBatch(uint64_t capacity, MemoryPool& pool
-               ): ColumnVectorBatch(capacity, pool),
-                  data(pool, capacity),
-                  length(pool, capacity) {
+  StringVectorBatch::StringVectorBatch(uint64_t _capacity, MemoryPool& pool
+               ): ColumnVectorBatch(_capacity, pool),
+                  data(pool, _capacity),
+                  length(pool, _capacity) {
     // PASS
   }
 
@@ -404,12 +404,12 @@ namespace orc {
     return value.toDecimalString(scale);
   }
 
-  TimestampVectorBatch::TimestampVectorBatch(uint64_t capacity,
+  TimestampVectorBatch::TimestampVectorBatch(uint64_t _capacity,
                                              MemoryPool& pool
-                                             ): ColumnVectorBatch(capacity,
+                                             ): ColumnVectorBatch(_capacity,
                                                                   pool),
-                                                data(pool, capacity),
-                                                nanoseconds(pool, capacity) {
+                                                data(pool, _capacity),
+                                                nanoseconds(pool, _capacity) {
     // PASS
   }
 

@@ -59,7 +59,7 @@ else ()
   set(SNAPPY_INCLUDE_DIR "${SNAPPY_HOME}/include")
   set(SNAPPY_STATIC_LIB "${SNAPPY_HOME}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}snappy${CMAKE_STATIC_LIBRARY_SUFFIX}")
   set(SNAPPY_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${SNAPPY_HOME}
-                        -DBUILD_SHARED_LIBS=OFF)
+                        -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_LIBDIR=lib)
 
   ExternalProject_Add (snappy_ep
     URL "https://github.com/google/snappy/archive/${SNAPPY_VERSION}.tar.gz"
