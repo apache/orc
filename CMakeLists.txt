@@ -81,7 +81,12 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set (WARN_FLAGS "${WARN_FLAGS} -Wno-covered-switch-default")
   set (WARN_FLAGS "${WARN_FLAGS} -Wno-missing-noreturn -Wno-unknown-pragmas")
   set (WARN_FLAGS "${WARN_FLAGS} -Wno-gnu-zero-variadic-macro-arguments")
-  set (WARN_FLAGS "${WARN_FLAGS} -Wconversion -Werror")
+  set (WARN_FLAGS "${WARN_FLAGS} -Wconversion")
+  if ((NOT CMAKE_CXX_COMPILER_VERSION STREQUAL "") AND
+      CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "11.0")
+    set (WARN_FLAGS "${WARN_FLAGS} -Wno-c++2a-compat")
+  endif ()
+  set (WARN_FLAGS "${WARN_FLAGS} -Werror")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set (WARN_FLAGS "-Wall -Wno-unknown-pragmas -Wconversion -Werror")
   if (CMAKE_CXX_COMPILER_VERSION STREQUAL "" OR
