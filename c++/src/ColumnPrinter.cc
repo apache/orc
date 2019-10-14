@@ -289,8 +289,8 @@ namespace orc {
     return std::unique_ptr<ColumnPrinter>(result);
   }
 
-  VoidColumnPrinter::VoidColumnPrinter(std::string& buffer
-                                       ): ColumnPrinter(buffer) {
+  VoidColumnPrinter::VoidColumnPrinter(std::string& _buffer
+                                       ): ColumnPrinter(_buffer) {
     // PASS
   }
 
@@ -302,8 +302,8 @@ namespace orc {
     writeString(buffer, "null");
   }
 
-  LongColumnPrinter::LongColumnPrinter(std::string& buffer
-                                       ): ColumnPrinter(buffer),
+  LongColumnPrinter::LongColumnPrinter(std::string& _buffer
+                                       ): ColumnPrinter(_buffer),
                                           data(nullptr) {
     // PASS
   }
@@ -324,9 +324,9 @@ namespace orc {
     }
   }
 
-  DoubleColumnPrinter::DoubleColumnPrinter(std::string& buffer,
+  DoubleColumnPrinter::DoubleColumnPrinter(std::string& _buffer,
                                            const Type& type
-                                           ): ColumnPrinter(buffer),
+                                           ): ColumnPrinter(_buffer),
                                               data(nullptr),
                                               isFloat(type.getKind() == FLOAT){
     // PASS
@@ -348,8 +348,8 @@ namespace orc {
     }
   }
 
-  Decimal64ColumnPrinter::Decimal64ColumnPrinter(std::string& buffer
-                                                 ): ColumnPrinter(buffer),
+  Decimal64ColumnPrinter::Decimal64ColumnPrinter(std::string& _buffer
+                                                 ): ColumnPrinter(_buffer),
                                                     data(nullptr),
                                                     scale(0) {
     // PASS
@@ -398,8 +398,8 @@ namespace orc {
     }
   }
 
-  Decimal128ColumnPrinter::Decimal128ColumnPrinter(std::string& buffer
-                                                   ): ColumnPrinter(buffer),
+  Decimal128ColumnPrinter::Decimal128ColumnPrinter(std::string& _buffer
+                                                   ): ColumnPrinter(_buffer),
                                                       data(nullptr),
                                                       scale(0) {
      // PASS
@@ -419,8 +419,8 @@ namespace orc {
      }
    }
 
-  StringColumnPrinter::StringColumnPrinter(std::string& buffer
-                                           ): ColumnPrinter(buffer),
+  StringColumnPrinter::StringColumnPrinter(std::string& _buffer
+                                           ): ColumnPrinter(_buffer),
                                               start(nullptr),
                                               length(nullptr) {
     // PASS
@@ -470,9 +470,9 @@ namespace orc {
     }
   }
 
-  ListColumnPrinter::ListColumnPrinter(std::string& buffer,
+  ListColumnPrinter::ListColumnPrinter(std::string& _buffer,
                                        const Type& type
-                                       ): ColumnPrinter(buffer),
+                                       ): ColumnPrinter(_buffer),
                                           offsets(nullptr) {
     elementPrinter = createColumnPrinter(buffer, type.getSubtype(0));
   }
@@ -499,9 +499,9 @@ namespace orc {
     }
   }
 
-  MapColumnPrinter::MapColumnPrinter(std::string& buffer,
+  MapColumnPrinter::MapColumnPrinter(std::string& _buffer,
                                      const Type& type
-                                     ): ColumnPrinter(buffer),
+                                     ): ColumnPrinter(_buffer),
                                         offsets(nullptr) {
     keyPrinter = createColumnPrinter(buffer, type.getSubtype(0));
     elementPrinter = createColumnPrinter(buffer, type.getSubtype(1));
@@ -534,9 +534,9 @@ namespace orc {
     }
   }
 
-  UnionColumnPrinter::UnionColumnPrinter(std::string& buffer,
+  UnionColumnPrinter::UnionColumnPrinter(std::string& _buffer,
                                            const Type& type
-                                         ): ColumnPrinter(buffer),
+                                         ): ColumnPrinter(_buffer),
                                             tags(nullptr),
                                             offsets(nullptr) {
     for(unsigned int i=0; i < type.getSubtypeCount(); ++i) {
@@ -577,9 +577,9 @@ namespace orc {
     }
   }
 
-  StructColumnPrinter::StructColumnPrinter(std::string& buffer,
+  StructColumnPrinter::StructColumnPrinter(std::string& _buffer,
                                            const Type& type
-                                           ): ColumnPrinter(buffer) {
+                                           ): ColumnPrinter(_buffer) {
     for(unsigned int i=0; i < type.getSubtypeCount(); ++i) {
       fieldNames.push_back(type.getFieldName(i));
       fieldPrinter.push_back(createColumnPrinter(buffer,
@@ -621,8 +621,8 @@ namespace orc {
     }
   }
 
-  DateColumnPrinter::DateColumnPrinter(std::string& buffer
-                                       ): ColumnPrinter(buffer),
+  DateColumnPrinter::DateColumnPrinter(std::string& _buffer
+                                       ): ColumnPrinter(_buffer),
                                           data(nullptr) {
     // PASS
   }
@@ -647,8 +647,8 @@ namespace orc {
     data = dynamic_cast<const LongVectorBatch&>(batch).data.data();
   }
 
-  BooleanColumnPrinter::BooleanColumnPrinter(std::string& buffer
-                                             ): ColumnPrinter(buffer),
+  BooleanColumnPrinter::BooleanColumnPrinter(std::string& _buffer
+                                             ): ColumnPrinter(_buffer),
                                                 data(nullptr) {
     // PASS
   }
@@ -666,8 +666,8 @@ namespace orc {
     data = dynamic_cast<const LongVectorBatch&>(batch).data.data();
   }
 
-  BinaryColumnPrinter::BinaryColumnPrinter(std::string& buffer
-                                           ): ColumnPrinter(buffer),
+  BinaryColumnPrinter::BinaryColumnPrinter(std::string& _buffer
+                                           ): ColumnPrinter(_buffer),
                                               start(nullptr),
                                               length(nullptr) {
     // PASS
@@ -697,8 +697,8 @@ namespace orc {
     length = dynamic_cast<const StringVectorBatch&>(batch).length.data();
   }
 
-  TimestampColumnPrinter::TimestampColumnPrinter(std::string& buffer
-                                                 ): ColumnPrinter(buffer),
+  TimestampColumnPrinter::TimestampColumnPrinter(std::string& _buffer
+                                                 ): ColumnPrinter(_buffer),
                                                     seconds(nullptr),
                                                     nanoseconds(nullptr) {
     // PASS

@@ -33,6 +33,7 @@ DIAGNOSTIC_IGNORE("-Wsign-compare")
 
 DIAGNOSTIC_PUSH
 
+DIAGNOSTIC_IGNORE("-Wconversion")
 DIAGNOSTIC_IGNORE("-Wdeprecated")
 DIAGNOSTIC_IGNORE("-Wmissing-noreturn")
 DIAGNOSTIC_IGNORE("-Wpadded")

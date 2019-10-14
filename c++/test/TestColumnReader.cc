@@ -32,6 +32,9 @@
 #ifdef __clang__
   DIAGNOSTIC_IGNORE("-Winconsistent-missing-override")
 #endif
+#ifdef __GNUC__
+  DIAGNOSTIC_IGNORE("-Wparentheses")
+#endif
 
 namespace orc {
 
