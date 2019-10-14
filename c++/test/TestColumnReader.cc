@@ -33,6 +33,9 @@
   DIAGNOSTIC_IGNORE("-Winconsistent-missing-override")
   DIAGNOSTIC_IGNORE("-Wmissing-variable-declarations")
 #endif
+#ifdef __GNUC__
+  DIAGNOSTIC_IGNORE("-Wparentheses")
+#endif
 
 namespace orc {
   using ::testing::TestWithParam;
