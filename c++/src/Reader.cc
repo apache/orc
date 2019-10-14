@@ -346,10 +346,11 @@ namespace orc {
     // store position providers for selected colimns
     std::unordered_map<uint64_t, PositionProvider> positionProviders;
 
-    for (const auto& rowIndex : rowIndexes) {
-      uint64_t colId = rowIndex.first;
+    for (auto rowIndex = rowIndexes.cbegin();
+         rowIndex != rowIndexes.cend(); ++rowIndex) {
+      uint64_t colId = rowIndex->first;
       const proto::RowIndexEntry& entry =
-        rowIndex.second.entry(static_cast<int32_t>(rowGroupEntryId));
+        rowIndex->second.entry(static_cast<int32_t>(rowGroupEntryId));
 
       // copy index positions for a specific column
       positions.push_back({});
@@ -357,7 +358,7 @@ namespace orc {
       for (int pos = 0; pos != entry.positions_size(); ++pos) {
         position.push_back(entry.positions(pos));
       }
-      positionProviders.emplace(std::make_pair(colId, PositionProvider(position)));
+      positionProviders.insert(std::make_pair(colId, PositionProvider(position)));
     }
 
     reader->seekToRowGroup(positionProviders);
