@@ -18,38 +18,31 @@
 GITHUB_USER=$1
 URL=https://github.com/$GITHUB_USER/orc.git
 BRANCH=$2
+OS=$3
+
+function failure {
+    echo "FAILED $OS"
+    exit 1
+}
 
 CLONE="git clone $URL -b $BRANCH"
 MAKEDIR="mkdir orc/build && cd orc/build"
 VOLUME="--volume m2cache:/root/.m2/repository"
-mkdir -p logs
 
-function failure {
-    echo "Failed tests"
-    grep -h "FAILED " logs/*-test.log
-    exit 1
-}
+echo "Started $GITHUB_USER/$BRANCH on $OS at $(date)"
 
-start=`date`
-for os in `cat os-list.txt`; do
-  echo "Building $os"
-  ( cd $os && docker build -t "orc-$os" . ) > logs/$os-build.log 2>&1 || exit 1
-done
-testStart=`date`
-rm -f logs/pids.txt
-
-for os in `cat os-list.txt`; do
-    ./run-one.sh $1 $2 $os > logs/$os-test.log 2>&1 &
-    echo "$!" >> logs/pids.txt
-    echo "Launching $os as $!"
-done
-
-for job in `cat logs/pids.txt`; do
-    echo "Waiting for $job"
-    wait $job || failure
-done
-
-echo ""
-echo "Build start: $start"
-echo "Test start: $testStart"
-echo "End:" `date`
+case $OS in
+centos6|ubuntu12)
+   OPTS="-DSNAPPY_HOME=/usr/local -DPROTOBUF_HOME=/usr/local"
+   ;;
+centos7|debian8|ubuntu14)
+   OPTS="-DSNAPPY_HOME=/usr/local"
+   ;;
+*)
+   OPTS=""
+   ;;
+esac
+docker run $VOLUME "orc-$OS" /bin/bash -c \
+	 "$CLONE && $MAKEDIR && cmake $OPTS .. && make package test-out" \
+         || failure
+echo "Finished $OS at $(date)"
