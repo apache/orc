@@ -346,8 +346,8 @@ namespace orc {
     // store position providers for selected colimns
     std::unordered_map<uint64_t, PositionProvider> positionProviders;
 
-    for (auto rowIndex = rowIndexes.begin();
-         rowIndex != rowIndexes.end(); ++rowIndex) {
+    for (auto rowIndex = rowIndexes.cbegin();
+         rowIndex != rowIndexes.cend(); ++rowIndex) {
       uint64_t colId = rowIndex->first;
       const proto::RowIndexEntry& entry =
         rowIndex->second.entry(static_cast<int32_t>(rowGroupEntryId));
