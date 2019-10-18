@@ -45,6 +45,9 @@ public abstract class InStream extends InputStream {
   protected final Object name;
   protected final long offset;
   protected final long length;
+  protected DiskRangeList bytes;
+  // position in the stream (0..length)
+  protected long position;
 
   public InStream(Object name, long offset, long length) {
     this.name = name;
@@ -58,6 +61,32 @@ public abstract class InStream extends InputStream {
 
   @Override
   public abstract void close();
+
+  /**
+   * Set the current range
+   * @param newRange the block that is current
+   * @param isJump if this was a seek instead of a natural read
+   */
+  abstract protected void setCurrent(DiskRangeList newRange,
+                                     boolean isJump);
+    /**
+     * Reset the input to a new set of data.
+     * @param input the input data
+     */
+  protected void reset(DiskRangeList input) {
+    bytes = input;
+    while (input != null &&
+               (input.getEnd() <= offset ||
+                    input.getOffset() > offset + length)) {
+      input = input.next;
+    }
+    if (input == null || input.getOffset() <= offset) {
+      position = 0;
+    } else {
+      position = input.getOffset() - offset;
+    }
+    setCurrent(input, true);
+  }
 
   public abstract void changeIv(Consumer<byte[]> modifier);
 
@@ -75,9 +104,6 @@ public abstract class InStream extends InputStream {
    * Implements a stream over an uncompressed stream.
    */
   public static class UncompressedStream extends InStream {
-    private DiskRangeList bytes;
-    // position in the stream (0..length)
-    protected long position;
     protected ByteBuffer decrypted;
     protected DiskRangeList currentRange;
     protected long currentOffset;
@@ -98,16 +124,6 @@ public abstract class InStream extends InputStream {
                               long length) {
       super(name, offset, length);
       reset(input);
-    }
-
-    protected void reset(DiskRangeList input) {
-      this.bytes = input;
-      if (input == null || input.getOffset() <= offset) {
-        position = 0;
-      } else {
-        position = input.getOffset() - offset;
-      }
-      setCurrent(input, true);
     }
 
     @Override
@@ -230,7 +246,6 @@ public abstract class InStream extends InputStream {
    */
   static class EncryptionState {
     private final Object name;
-    private final EncryptionAlgorithm algorithm;
     private final Key key;
     private final byte[] iv;
     private final Cipher cipher;
@@ -240,7 +255,7 @@ public abstract class InStream extends InputStream {
     EncryptionState(Object name, long offset, StreamOptions options) {
       this.name = name;
       this.offset = offset;
-      algorithm = options.getAlgorithm();
+      EncryptionAlgorithm algorithm = options.getAlgorithm();
       key = options.getKey();
       iv = options.getIv();
       cipher = algorithm.createCipher();
@@ -347,9 +362,8 @@ public abstract class InStream extends InputStream {
         // what is the position of the start of the newRange?
         currentOffset = newRange.getOffset();
         ByteBuffer encrypted = newRange.getData().slice();
-        int ignoreBytes = 0;
         if (currentOffset < offset) {
-          ignoreBytes = (int) (offset - currentOffset);
+          int ignoreBytes = (int) (offset - currentOffset);
           encrypted.position(ignoreBytes);
           currentOffset = offset;
         }
@@ -382,12 +396,10 @@ public abstract class InStream extends InputStream {
   }
 
   private static class CompressedStream extends InStream {
-    private DiskRangeList bytes;
     private final int bufferSize;
     private ByteBuffer uncompressed;
     private final CompressionCodec codec;
     protected ByteBuffer compressed;
-    protected long position;
     protected DiskRangeList currentRange;
     private boolean isUncompressedOriginal;
 
@@ -424,25 +436,6 @@ public abstract class InStream extends InputStream {
       this.codec = options.codec;
       this.bufferSize = options.bufferSize;
       reset(input);
-    }
-
-    /**
-     * Reset the input to a new set of data.
-     * @param input the input data
-     */
-    void reset(DiskRangeList input) {
-      bytes = input;
-      while (input != null &&
-                 (input.getEnd() <= offset ||
-                      input.getOffset() > offset + length)) {
-        input = input.next;
-      }
-      if (input == null || input.getOffset() <= offset) {
-        position = 0;
-      } else {
-        position = input.getOffset() - offset;
-      }
-      setCurrent(input, true);
     }
 
     private void allocateForUncompressed(int size, boolean isDirect) {
