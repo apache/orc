@@ -738,6 +738,58 @@ public class TestInStream {
   }
 
   @Test
+  public void testExtraFrontUncompressed() throws IOException {
+    // Set up a stream that starts at START, which is divided in to regions
+    // of CHUNK_LENGTH. There are two EXTRA_FRONT byte buffers in front of the
+    // stream.
+    final long START = 1_000_000_000;
+    final int EXTRA_FRONT = 3_000;
+    final int CHUNK_LENGTH = 100;
+    final int STREAM_LENGTH = 4096;
+
+    BufferChunkList list = new BufferChunkList();
+    list.add(new BufferChunk(ByteBuffer.allocate(EXTRA_FRONT),
+        START - 2 * EXTRA_FRONT));
+    byte[] extraFront = new byte[EXTRA_FRONT + CHUNK_LENGTH];
+    Arrays.fill(extraFront, (byte) -1);
+    for(int i=0; i < CHUNK_LENGTH; ++i) {
+      extraFront[EXTRA_FRONT + i] = (byte) i;
+    }
+    list.add(new BufferChunk(ByteBuffer.wrap(extraFront), START - EXTRA_FRONT));
+    byte[] expected = new byte[STREAM_LENGTH];
+    for(int i=CHUNK_LENGTH; i < expected.length; ++i) {
+      expected[i] = (byte) i;
+    }
+    int posn = CHUNK_LENGTH;
+    while (posn <= expected.length) {
+      list.add(new BufferChunk(
+          ByteBuffer.wrap(expected, posn,
+              Math.min(CHUNK_LENGTH, expected.length - posn)),
+          START + posn));
+      posn += CHUNK_LENGTH;
+    }
+
+    // now set up the stream to read it
+    InStream.StreamOptions options = InStream.options();
+    InStream inStream = InStream.create("test", list.get(), START, STREAM_LENGTH,
+        options);
+
+    // ensure the data is correct
+    byte[] inBuffer = new byte[STREAM_LENGTH];
+    posn = 0;
+    int read = inStream.read(inBuffer);
+    while (read != -1) {
+      assertEquals("Read length at " + posn,
+          Math.min(STREAM_LENGTH - posn, CHUNK_LENGTH), read);
+      for(int i=0; i < read; ++i) {
+        assertEquals("posn " + posn + " + " + i, (byte)(posn + i), inBuffer[i]);
+      }
+      posn += read;
+      read = inStream.read(inBuffer);
+    }
+  }
+
+  @Test
   public void testExtraFrontCompressed() throws IOException {
     // Set up a stream that starts at START, which is divided in to regions
     // of CHUNK_LENGTH. There are two EXTRA_FRONT byte buffers in front of the
