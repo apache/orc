@@ -937,6 +937,9 @@ namespace orc {
   void checkProtoTypeIds(const proto::Footer &footer) {
     std::stringstream msg;
     int maxId = footer.types_size();
+    if (maxId <= 0) {
+      throw ParseError("Footer is corrupt: no types found");
+    }
     for (int i = 0; i < maxId; ++i) {
       const proto::Type& type = footer.types(i);
       for (int j = 0; j < type.subtypes_size(); ++j) {
