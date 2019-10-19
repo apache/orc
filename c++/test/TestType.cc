@@ -355,6 +355,8 @@ namespace orc {
   TEST(TestType, testCheckProtoTypeIds) {
     proto::Footer footer;
     proto::Type rootType;
+    expectParseError(footer, "Footer is corrupt: no types found");
+
     rootType.set_kind(proto::Type_Kind_STRUCT);
     rootType.add_subtypes(1); // add a non existent type id
     *(footer.add_types()) = rootType;
