@@ -24,6 +24,10 @@ option (BUILD_JAVA
     "Include ORC Java library in the build process"
      ON)
 
+option(STOP_BUILD_ON_WARNING
+    "Fail the build on C++ warnings"
+    ON)
+
 # Make sure that a build type is selected
 if (NOT CMAKE_BUILD_TYPE)
   message(STATUS "No build type selected, default to ReleaseWithDebugInfo")
@@ -82,9 +86,18 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set (WARN_FLAGS "${WARN_FLAGS} -Wno-c++98-compat-pedantic -Wno-padded")
   set (WARN_FLAGS "${WARN_FLAGS} -Wno-covered-switch-default")
   set (WARN_FLAGS "${WARN_FLAGS} -Wno-missing-noreturn -Wno-unknown-pragmas")
-  set (WARN_FLAGS "${WARN_FLAGS} -Wconversion -Werror")
+  set (WARN_FLAGS "${WARN_FLAGS} -Wconversion")
+  if (CMAKE_HOST_APPLE AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "11.0")
+    set (WARN_FLAGS "${WARN_FLAGS} -Wno-c++2a-compat")
+  endif ()
+  if (STOP_BUILD_ON_WARNING)
+    set (WARN_FLAGS "${WARN_FLAGS} -Werror")
+  endif ()
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  set (WARN_FLAGS "-Wall -Wno-unknown-pragmas -Wconversion -Werror")
+  set (WARN_FLAGS "-Wall -Wno-unknown-pragmas -Wconversion")
+  if (STOP_BUILD_ON_WARNING)
+    set (WARN_FLAGS "${WARN_FLAGS} -Werror")
+  endif ()
   if (CMAKE_CXX_COMPILER_VERSION STREQUAL "" OR
       CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.7")
     set (CXX11_FLAGS "-std=c++0x")
