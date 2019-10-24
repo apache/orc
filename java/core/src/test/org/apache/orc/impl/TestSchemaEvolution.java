@@ -2381,4 +2381,24 @@ public class TestSchemaEvolution {
     assertTrue("Schema (" + ccSchema +") was found to be non-acid ", evoCc.isAcid());
     assertTrue("Schema (" + lcSchema +") was found to be non-acid ", evoLc.isAcid());
   }
+
+  @Test
+  public void testAcidReaderSchema() {
+    String acidSchema = "struct<operation:int,originalTransaction:bigint,bucket:int," +
+        "rowId:bigint,currentTransaction:bigint," +
+        "row:struct<a:int,b:int>>";
+
+    TypeDescription fileSchema = TypeDescription.fromString(acidSchema);
+    TypeDescription readerSchema = TypeDescription.fromString(acidSchema);
+    SchemaEvolution schemaEvolution = new SchemaEvolution(fileSchema, readerSchema, options);
+
+    assertEquals(String.format("Reader schema %s is not acid", schemaEvolution.getReaderSchema().toString()),
+        acidSchema, schemaEvolution.getReaderSchema().toString());
+
+    String notAcidSchema ="struct<a:int,b:int>";
+    readerSchema = TypeDescription.fromString(notAcidSchema);
+    schemaEvolution = new SchemaEvolution(fileSchema, readerSchema, options);
+    assertEquals(String.format("Reader schema %s is not acid", schemaEvolution.getReaderSchema().toString()),
+        acidSchema, schemaEvolution.getReaderSchema().toString());
+  }
 }
