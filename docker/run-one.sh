@@ -25,24 +25,30 @@ function failure {
     exit 1
 }
 
-CLONE="git clone $URL -b $BRANCH"
-MAKEDIR="mkdir orc/build && cd orc/build"
 VOLUME="--volume m2cache:/root/.m2/repository"
+if [ $GITHUB_USER == "local" ]; then
+  BRANCH=`git status| head -1 | sed -e 's/On branch //'`
+  echo "Started local run for $BRANCH on $OS at $(date)"
+  docker run $VOLUME -v`pwd`/..:/root/orc "orc-$OS" || failure
+else
+  CLONE="git clone $URL -b $BRANCH"
+  MAKEDIR="mkdir orc/build && cd orc/build"
 
-echo "Started $GITHUB_USER/$BRANCH on $OS at $(date)"
+  echo "Started $GITHUB_USER/$BRANCH on $OS at $(date)"
 
-case $OS in
-centos6|ubuntu12)
-   OPTS="-DSNAPPY_HOME=/usr/local -DPROTOBUF_HOME=/usr/local"
-   ;;
-centos7|debian8|ubuntu14)
-   OPTS="-DSNAPPY_HOME=/usr/local"
-   ;;
-*)
-   OPTS=""
-   ;;
-esac
-docker run $VOLUME "orc-$OS" /bin/bash -c \
+  case $OS in
+  centos6|ubuntu12)
+     OPTS="-DSNAPPY_HOME=/usr/local -DPROTOBUF_HOME=/usr/local"
+     ;;
+  centos7|debian8|ubuntu14)
+     OPTS="-DSNAPPY_HOME=/usr/local"
+     ;;
+  *)
+     OPTS=""
+     ;;
+  esac
+  docker run $VOLUME "orc-$OS" /bin/bash -c \
 	 "$CLONE && $MAKEDIR && cmake $OPTS .. && make package test-out" \
-         || failure
+      || failure
+fi
 echo "Finished $OS at $(date)"

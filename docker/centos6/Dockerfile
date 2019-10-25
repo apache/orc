@@ -62,8 +62,10 @@ RUN cd snappy-1.1.3 && \
 
 VOLUME /root/.m2/repository
 
-CMD git clone https://github.com/apache/orc.git -b master && \
-  mkdir orc/build && \
-  cd orc/build && \
-  cmake .. && \ 
-  make package test-out
+CMD if [ ! -d orc ]; then \
+      git clone https://github.com/apache/orc.git -b master; \
+    fi && \
+    mkdir build && \
+    cd build && \
+    cmake -DSNAPPY_HOME=/usr/local -DPROTOBUF_HOME=/usr/local ../orc && \
+    make package test-out
