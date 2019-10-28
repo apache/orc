@@ -74,10 +74,15 @@ else ()
   add_test (NAME orc-test COMMAND orc-test)
 endif ()
 
+set_property(TEST orc-test
+    PROPERTY
+      ENVIRONMENT "ORC_EXAMPLE_DIR=${EXAMPLE_DIRECTORY}"
+    )
+
 if (WIN32)
   set_property(
     TEST orc-test
-    PROPERTY
+    APPEND PROPERTY
       ENVIRONMENT "TZDIR=${TZDATA_DIR}"
     )
 endif ()
