@@ -1,21 +1,40 @@
 # List the releases in reverse logical order
 # Only one release should be tagged latest
+1.6.1:
+  date: 2019-10-26
+  state: latest
+  tar: orc-1.6.1.tar.gz
+  signed-by: Owen O’Malley (3D0C92B9)
+  sha256: 56a7622629f0101f12bf9470065c8283390a1967e4969975756b8d2dc03383c8
+  known-issues:
+
 1.6.0:
   date: 2019-09-03
-  state: latest
+  state: archived
   tar: orc-1.6.0.tar.gz
   signed-by: Owen O’Malley (3D0C92B9)
   sha256: 2d864000c60025f54631e0dff1a943380e7578277688a4e333ad7d9ac7d29747
   known-issues:
+    ORC-555: IllegalArgumentException when reading files with large footers
+    ORC-414: ORC files with malformed protobuf objects can crash C++ reader
+
+1.5.7:
+  date: 2019-10-26
+  state: stable
+  tar: orc-1.5.7.tar.gz
+  signed-by: Owen O’Malley (3D0C92B9)
+  sha256: 0fbc5c6da16be89e5429376c0f75e64ddd5ab9425eb1d43d16c0d25281dde5b7
+  known-issues:
 
 1.5.6:
   date: 2019-06-27
-  state: stable
+  state: archived
   tar: orc-1.5.6.tar.gz
   signed-by: Owen O’Malley (3D0C92B9)
   sha256: e0588bfd96103bc1904166c63c84e769bf7259eee99f409629ad871ea5600e77
   known-issues:
     ORC-525: Users must close ORC Readers after use
+    ORC-414: ORC files with malformed protobuf objects can crash C++ reader
 
 1.5.5:
   date: 2019-03-14
@@ -24,6 +43,7 @@
   signed-by: Owen O’Malley (3D0C92B9)
   sha256: 486bbf0765a5b8c2e0155d3b1b8e3e1bd182dc597cb09d559d736d9881021d86
   known-issues:
+    ORC-414: ORC files with malformed protobuf objects can crash C++ reader
 
 1.5.4:
   date: 2018-12-21
@@ -32,6 +52,7 @@
   signed-by: Vaibhav Gumashta (F60037FB)
   sha256: 75cfba40d3574c144afb4a6b0ad2e947520fd471a699f35da2357b5b1e6d85df
   known-issues:
+    ORC-414: ORC files with malformed protobuf objects can crash C++ reader
 
 1.5.3:
   date: 2018-09-25
@@ -40,6 +61,7 @@
   signed-by: Owen O’Malley (3D0C92B9)
   sha256: 96da3cccd2b396dc7813949d3c459a5d6995778928d344f4553cf890f171521c
   known-issues:
+    ORC-414: ORC files with malformed protobuf objects can crash C++ reader
 
 1.5.2:
   date: 2018-06-29
@@ -48,6 +70,7 @@
   signed-by: Prasanth Jayachandran (65C468A3)
   sha256: 4b73de720f54448d84aa0fc8b5fddf69f5cc41990ee65e9ae4a976eb86daa161
   known-issues:
+    ORC-414: ORC files with malformed protobuf objects can crash C++ reader
 
 1.5.1:
   date: 2018-05-25
@@ -56,6 +79,7 @@
   signed-by: Owen O’Malley (3D0C92B9)
   sha256: 14b93916ac6dce659845766edbeee2d9cdb9648a8761011bf713d36bb36f0eaa
   known-issues:
+    ORC-414: ORC files with malformed protobuf objects can crash C++ reader
 
 1.5.0:
   date: 2018-05-14
@@ -65,10 +89,11 @@
   sha256: 28369ea8e24cac6d46c72f91a877b3a526017490aea936d0f689e45b6e8dd603
   known-issues:
     ORC-367: Boolean columns are read incorrectly when using seek.
+    ORC-414: ORC files with malformed protobuf objects can crash C++ reader
 
 1.4.4:
   date: 2018-05-14
-  state: stable
+  state: archived
   tar: orc-1.4.4.tar.gz
   signed-by: Owen O’Malley (3D0C92B9)
   sha256: 9df0f59ba4046d2a565e740d04c70a16ed15152ed98b34cf5d6f494a6e26f6d7
