@@ -1,26 +1,34 @@
 # Apache ORC docs site
 
 This directory contains the code for the Apache ORC web site,
-[orc.apache.org](https://orc.apache.org/).
+[orc.apache.org](https://orc.apache.org/). The easiest way to build
+the site is to use docker to use a standard environment.
 
 ## Setup
 
 1. `cd site`
 2. `git clone https://gitbox.apache.org/repos/asf/orc.git -b asf-site target`
-3. `sudo gem install bundler`
-4. `sudo gem install github-pages jekyll`
-4. `bundle install`
 
-## Running locally
+## Run the docker container with the preview of the site.
 
-You can preview your contributions before opening a pull request by running from within the directory:
+1. `docker build -t orc-site .`
+2. `docker run -d -p 4000:4000 orc-site`
 
-1. `bundle exec jekyll serve`
+## Browsing
+
+Look at the site by navigating to
+[http://0.0.0.0:4000/](http://0.0.0.0:4000/) .
 
 ## Pushing to site
 
-1. `cd site/target`
-2. `git status`
-3. You'll need to `git add` any new files
-4. `git commit -a`
-5. `git push origin asf-site`
+You'll copy the files from the container to the site/target directory and
+commit those to the asf-site branch.
+
+1. Find the name of the container using `docker ps`.
+2. `docker cp $CONTAINER:/home/orc/site/target .`
+3. `cd target`
+4. Commit the files and push to Apache.
+
+## Shutting down the docker container
+
+1. `docker stop $CONTAINER`
