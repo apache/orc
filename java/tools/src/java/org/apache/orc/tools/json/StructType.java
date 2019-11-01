@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,6 +21,7 @@ package org.apache.orc.tools.json;
 import org.apache.orc.TypeDescription;
 
 import java.io.PrintStream;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -28,7 +29,31 @@ import java.util.TreeMap;
  * Model structs.
  */
 class StructType extends HiveType {
-  final Map<String, HiveType> fields = new TreeMap<String, HiveType>();
+  private static final String COL_PREFIX = "_col";
+  private final static Comparator<String> FIELD_COMPARATOR = (left, right) -> {
+    if (left == null) {
+      return right == null ? 0 : -1;
+    } else if (right == null) {
+      return 1;
+    } else if (left.startsWith(COL_PREFIX)) {
+      if (right.startsWith(COL_PREFIX)) {
+        try {
+          int leftInt = Integer.parseInt(left.substring(COL_PREFIX.length()));
+          int rightInt = Integer.parseInt(right.substring(COL_PREFIX.length()));
+          return Integer.compare(leftInt, rightInt);
+        } catch (Exception e) {
+          // fall back to the normal rules
+        }
+      } else {
+        return 1;
+      }
+    } else if (right.startsWith(COL_PREFIX)) {
+      return 1;
+    }
+    return left.compareTo(right);
+  };
+
+  final Map<String, HiveType> fields = new TreeMap<>(FIELD_COMPARATOR);
 
   StructType() {
     super(Kind.STRUCT);
