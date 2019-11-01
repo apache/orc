@@ -47,6 +47,8 @@ WORKDIR /root
 VOLUME /root/.m2/repository
 
 CMD if [ ! -d orc ]; then \
+      echo "No volume provided, building from apache master."; \
+      echo "Pass '-v`pwd`:/root/orc' to docker run to build local source."; \
       git clone https://github.com/apache/orc.git -b master; \
     fi && \
     mkdir build && \
