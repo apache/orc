@@ -299,7 +299,7 @@ namespace orc {
         currentStripeInfo.indexlength() > 0) {
       uint32_t rowGroupId =
         static_cast<uint32_t>(currentRowInStripe / footer->rowindexstride());
-      rowsToSkip -= rowGroupId * footer->rowindexstride();
+      rowsToSkip -= static_cast<uint64_t>(rowGroupId) * footer->rowindexstride();
 
       if (rowGroupId != 0) {
         seekToRowGroup(rowGroupId);
