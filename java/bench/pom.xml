@@ -38,7 +38,7 @@
 
     <avro.version>1.8.2</avro.version>
     <hadoop.version>2.7.3</hadoop.version>
-    <hive.version>2.3.3</hive.version>
+    <hive.version>3.1.2</hive.version>
     <iceberg.version>0.1.3</iceberg.version>
     <jmh.version>1.20</jmh.version>
     <orc.version>1.5.2</orc.version>
