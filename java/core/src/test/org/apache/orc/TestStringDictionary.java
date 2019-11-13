@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,8 +18,10 @@
 package org.apache.orc;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.Random;
 
 import org.apache.hadoop.conf.Configuration;
@@ -28,6 +30,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 
+import org.apache.orc.impl.OrcIndex;
+import org.apache.orc.impl.OutStream;
 import org.apache.orc.impl.RecordReaderImpl;
 import org.junit.Before;
 import org.junit.Rule;
@@ -36,12 +40,12 @@ import org.junit.rules.TestName;
 
 public class TestStringDictionary {
 
-  Path workDir = new Path(System.getProperty("test.tmp.dir", "target" + File.separator + "test"
+  private Path workDir = new Path(System.getProperty("test.tmp.dir", "target" + File.separator + "test"
       + File.separator + "tmp"));
 
-  Configuration conf;
-  FileSystem fs;
-  Path testFilePath;
+  private Configuration conf;
+  private FileSystem fs;
+  private Path testFilePath;
 
   @Rule
   public TestName testCaseName = new TestName();
@@ -50,7 +54,7 @@ public class TestStringDictionary {
   public void openFileSystem() throws Exception {
     conf = new Configuration();
     fs = FileSystem.getLocal(conf);
-    testFilePath = new Path(workDir, "TestOrcFile." + testCaseName.getMethodName() + ".orc");
+    testFilePath = new Path(workDir, "TestStringDictionary." + testCaseName.getMethodName() + ".orc");
     fs.delete(testFilePath, false);
   }
 
@@ -287,4 +291,56 @@ public class TestStringDictionary {
 
   }
 
+  @Test
+  public void testForcedNonDictionary() throws Exception {
+    // Set the row stride to 16k so that it is a multiple of the batch size
+    final int INDEX_STRIDE = 16 * 1024;
+    final int NUM_BATCHES = 50;
+    // Explicitly turn off dictionary encoding.
+    OrcConf.DICTIONARY_KEY_SIZE_THRESHOLD.setDouble(conf, 0);
+    TypeDescription schema = TypeDescription.fromString("struct<str:string>");
+    try (Writer writer = OrcFile.createWriter(testFilePath,
+           OrcFile.writerOptions(conf)
+               .setSchema(schema)
+               .rowIndexStride(INDEX_STRIDE))) {
+      // Write 50 batches where each batch has a single value for str.
+      VectorizedRowBatch batch = schema.createRowBatch();
+      BytesColumnVector col = (BytesColumnVector) batch.cols[0];
+      for(int b=0; b < NUM_BATCHES; ++b) {
+        batch.reset();
+        batch.size = 1024;
+        col.setVal(0, ("Value for " + b).getBytes(StandardCharsets.UTF_8));
+        col.isRepeating = true;
+        writer.addRowBatch(batch);
+      }
+    }
+
+    try (Reader reader = OrcFile.createReader(testFilePath,
+                                              OrcFile.readerOptions(conf));
+         RecordReaderImpl rows = (RecordReaderImpl) reader.rows()) {
+      VectorizedRowBatch batch = reader.getSchema().createRowBatch();
+      BytesColumnVector col = (BytesColumnVector) batch.cols[0];
+
+      // Get the index for the str column
+      OrcProto.RowIndex index = rows.readRowIndex(0, null, null)
+                                      .getRowGroupIndex()[1];
+      // We assume that it fits in a single stripe
+      assertEquals(1, reader.getStripes().size());
+      // There are 4 entries, because ceil(NUM_BATCHES * 1024 / INDEX_STRIDE) = 4.
+      assertEquals(4, index.getEntryCount());
+      for(int e=0; e < index.getEntryCount(); ++e) {
+        OrcProto.RowIndexEntry entry = index.getEntry(e);
+        // For a string column with direct encoding, compression & no nulls, we
+        // should have 5 positions in each entry.
+        assertEquals("position count entry " + e, 5, entry.getPositionsCount());
+        // make sure we can seek and get the right data
+        int row = e * INDEX_STRIDE;
+        rows.seekToRow(row);
+        assertTrue("entry " + e, rows.nextBatch(batch));
+        assertEquals("entry " + e, 1024, batch.size);
+        assertEquals("entry " + e, true, col.noNulls);
+        assertEquals("entry " + e, "Value for " + (row / 1024), col.toString(0));
+      }
+    }
+  }
 }
