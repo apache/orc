@@ -47,7 +47,7 @@ public class Driver {
     result.addOption(OptionBuilder
         .withLongOpt("define")
         .withDescription("Set a configuration property")
-        .hasArg()
+        .hasArgs(2)
         .withValueSeparator()
         .create('D'));
     return result;

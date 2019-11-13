@@ -82,6 +82,7 @@ public abstract class StringBaseTreeWriter extends TreeWriterBase {
     if (dictionaryKeySizeThreshold <= 0.0) {
       useDictionaryEncoding = false;
       doneDictionaryCheck = true;
+      recordDirectStreamPosition();
     } else {
       doneDictionaryCheck = false;
     }
