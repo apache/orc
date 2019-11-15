@@ -72,6 +72,7 @@ import org.apache.orc.TestVectorOrcFile;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
 import org.apache.orc.impl.RecordReaderImpl.Location;
+import org.apache.orc.impl.RecordReaderImpl.SargApplier;
 import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument.TruthValue;
 import org.apache.hadoop.hive.serde2.io.DateWritable;
@@ -2219,6 +2220,49 @@ public class TestRecordReaderImpl {
     assertEquals(true, rows[2]);
     assertEquals(1, applier.getExceptionCount()[0]);
     assertEquals(0, applier.getExceptionCount()[1]);
+  }
+
+  @Test
+  public void testPositionalEvolutionAddColumnPPD() throws IOException {
+    Reader.Options opts = new Reader.Options();
+    opts.forcePositionalEvolution(true);
+
+    TypeDescription file = TypeDescription.fromString("struct<x:int>");
+    // new column added on reader side
+    TypeDescription read = TypeDescription.fromString("struct<x:int,y:boolean>");
+    opts.include(includeAll(read));
+
+    SchemaEvolution evo = new SchemaEvolution(file, read, opts);
+
+    SearchArgument sarg = SearchArgumentFactory.newBuilder().startAnd()
+        .equals("y", PredicateLeaf.Type.BOOLEAN, true).end().build();
+
+    RecordReaderImpl.SargApplier applier =
+        new RecordReaderImpl.SargApplier(sarg, 1000, evo, OrcFile.WriterVersion.ORC_135, false);
+
+    OrcProto.StripeInformation stripe =
+        OrcProto.StripeInformation.newBuilder().setNumberOfRows(2000).build();
+
+    OrcProto.RowIndex[] indexes = new OrcProto.RowIndex[3];
+    indexes[1] = OrcProto.RowIndex.newBuilder() // index for original x column
+        .addEntry(createIndexEntry(0L, 10L))
+        .addEntry(createIndexEntry(100L, 200L))
+        .build();
+    indexes[2] = null; // no-op, just for clarifying that new reader column doesn't have an index
+
+    List<OrcProto.ColumnEncoding> encodings = new ArrayList<>();
+    encodings.add(OrcProto.ColumnEncoding.newBuilder().setKind(OrcProto.ColumnEncoding.Kind.DIRECT).build());
+
+    boolean[] rows = applier.pickRowGroups(new ReaderImpl.StripeInformationImpl(stripe,  1, -1, null),
+        indexes, null, encodings, null, false);
+    assertEquals(SargApplier.READ_ALL_RGS, rows); //cannot filter for new column, return all rows
+  }
+
+  private boolean[] includeAll(TypeDescription readerType) {
+    int numColumns = readerType.getMaximumId() + 1;
+    boolean[] result = new boolean[numColumns];
+    Arrays.fill(result, true);
+    return result;
   }
 
   @Test
