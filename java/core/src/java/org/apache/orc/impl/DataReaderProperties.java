@@ -20,10 +20,15 @@ package org.apache.orc.impl;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.orc.CompressionKind;
+import org.apache.orc.FileSystemSuplier;
+import org.apache.orc.OrcConf;
+
+import java.io.IOException;
 
 public final class DataReaderProperties {
 
-  private final FileSystem fileSystem;
+  private final FileSystemSuplier fsSupplier;
   private final Path path;
   private final FSDataInputStream file;
   private final InStream.StreamOptions compression;
@@ -31,7 +36,7 @@ public final class DataReaderProperties {
   private final int maxDiskRangeChunkLimit;
 
   private DataReaderProperties(Builder builder) {
-    this.fileSystem = builder.fileSystem;
+    this.fsSupplier = builder.fsSupplier;
     this.path = builder.path;
     this.file = builder.file;
     this.compression = builder.compression;
@@ -39,8 +44,12 @@ public final class DataReaderProperties {
     this.maxDiskRangeChunkLimit = builder.maxDiskRangeChunkLimit;
   }
 
-  public FileSystem getFileSystem() {
-    return fileSystem;
+  public FileSystem getFileSystem() throws IOException {
+    return fsSupplier != null ? fsSupplier.get(): null;
+  }
+
+  public FileSystemSuplier getFileSystemSupplier() {
+    return fsSupplier;
   }
 
   public Path getPath() {
@@ -69,7 +78,7 @@ public final class DataReaderProperties {
 
   public static class Builder {
 
-    private FileSystem fileSystem;
+    private FileSystemSuplier fsSupplier;
     private Path path;
     private FSDataInputStream file;
     private InStream.StreamOptions compression;
@@ -80,8 +89,17 @@ public final class DataReaderProperties {
 
     }
 
-    public Builder withFileSystem(FileSystem fileSystem) {
-      this.fileSystem = fileSystem;
+    public Builder withFileSystem(final FileSystem fileSystem) {
+      return withFileSystem(new FileSystemSuplier() {
+        @Override
+        public FileSystem get() throws IOException {
+          return fileSystem;
+        }
+      });
+    }
+
+    public Builder withFileSystem(FileSystemSuplier fsSupplier) {
+      this.fsSupplier = fsSupplier;
       return this;
     }
 
@@ -111,9 +129,9 @@ public final class DataReaderProperties {
     }
 
     public DataReaderProperties build() {
-      if (fileSystem == null || path == null) {
-        throw new NullPointerException("Filesystem = " + fileSystem +
-                                           ", path = " + path);
+      if (fsSupplier == null || path == null) {
+        throw new NullPointerException("fsSupplier = " + fsSupplier +
+                                        ", path = " + path);
       }
 
       return new DataReaderProperties(this);

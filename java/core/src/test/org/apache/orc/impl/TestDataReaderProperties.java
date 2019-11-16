@@ -21,7 +21,10 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.CompressionKind;
+import org.apache.orc.FileSystemSuplier;
 import org.junit.Test;
+
+import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -34,8 +37,15 @@ public class TestDataReaderProperties {
   private Path mockedPath = mock(Path.class);
   private boolean mockedZeroCopy = false;
 
+  private FileSystemSuplier mockFSSupplier = new FileSystemSuplier() {
+    @Override
+    public FileSystem get() throws IOException {
+      return mockedFileSystem;
+    }
+  };
+
   @Test
-  public void testCompleteBuild() {
+  public void testCompleteBuild() throws IOException {
     InStream.StreamOptions options = InStream.options()
         .withCodec(OrcCodecPool.getCodec(CompressionKind.ZLIB));
     DataReaderProperties properties = DataReaderProperties.builder()
@@ -52,7 +62,30 @@ public class TestDataReaderProperties {
   }
 
   @Test
-  public void testMissingNonRequiredArgs() {
+  public void testFileSystemSupplier() throws IOException {
+
+    DataReaderProperties properties = DataReaderProperties.builder()
+        .withFileSystem(mockFSSupplier)
+        .withPath(mockedPath)
+        .build();
+
+    assertEquals(mockFSSupplier, properties.getFileSystemSupplier());
+    assertEquals(mockedFileSystem, properties.getFileSystem());
+  }
+
+  @Test
+  public void testWhenFilesystemIsProvidedGetFileSystemSupplierReturnsSupplier() throws IOException {
+    DataReaderProperties properties = DataReaderProperties.builder()
+        .withFileSystem(mockedFileSystem)
+        .withPath(mockedPath)
+        .build();
+
+    FileSystemSuplier supplierFromProperties = properties.getFileSystemSupplier();
+    assertEquals(mockedFileSystem, supplierFromProperties.get());
+  }
+
+  @Test
+  public void testMissingNonRequiredArgs() throws IOException {
     DataReaderProperties properties = DataReaderProperties.builder()
       .withFileSystem(mockedFileSystem)
       .withPath(mockedPath)

@@ -274,7 +274,7 @@ public class OrcFile {
 
   public static class ReaderOptions {
     private final Configuration conf;
-    private FileSystem filesystem;
+    private FileSystemSuplier fsSuplier;
     private long maxLength = Long.MAX_VALUE;
     private OrcTail orcTail;
     private KeyProvider keyProvider;
@@ -288,8 +288,17 @@ public class OrcFile {
       this.conf = conf;
     }
 
-    public ReaderOptions filesystem(FileSystem fs) {
-      this.filesystem = fs;
+    public ReaderOptions filesystem(final FileSystem fs) {
+      return filesystem(new FileSystemSuplier() {
+        @Override
+        public FileSystem get() throws IOException {
+          return fs;
+        }
+      });
+    }
+
+    public ReaderOptions filesystem(FileSystemSuplier fs) {
+      this.fsSuplier = fs;
       return this;
     }
 
@@ -317,8 +326,8 @@ public class OrcFile {
       return conf;
     }
 
-    public FileSystem getFilesystem() {
-      return filesystem;
+    public FileSystem getFilesystem() throws IOException {
+      return fsSuplier != null ? fsSuplier.get(): null;
     }
 
     public long getMaxLength() {

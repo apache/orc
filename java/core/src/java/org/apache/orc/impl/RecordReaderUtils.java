@@ -17,6 +17,7 @@
  */
 package org.apache.orc.impl;
 
+import org.apache.orc.FileSystemSuplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,14 +50,14 @@ public class RecordReaderUtils {
     private FSDataInputStream file;
     private ByteBufferAllocatorPool pool;
     private HadoopShims.ZeroCopyReaderShim zcr = null;
-    private final FileSystem fs;
+    private final FileSystemSuplier fsSuplier;
     private final Path path;
     private final boolean useZeroCopy;
     private InStream.StreamOptions options;
     private boolean isOpen = false;
 
     private DefaultDataReader(DataReaderProperties properties) {
-      this.fs = properties.getFileSystem();
+      this.fsSuplier = properties.getFileSystemSupplier();
       this.path = properties.getPath();
       this.file = properties.getFile();
       this.useZeroCopy = properties.getZeroCopy();
@@ -66,7 +67,7 @@ public class RecordReaderUtils {
     @Override
     public void open() throws IOException {
       if (file == null) {
-        this.file = fs.open(path);
+        this.file = getFileSystem().open(path);
       }
       if (useZeroCopy) {
         // ZCR only uses codec for boolean checks.
@@ -152,6 +153,10 @@ public class RecordReaderUtils {
     @Override
     public InStream.StreamOptions getCompressionOptions() {
       return options;
+    }
+
+    private FileSystem getFileSystem() throws IOException {
+      return fsSuplier != null ? fsSuplier.get(): null;
     }
   }
 
