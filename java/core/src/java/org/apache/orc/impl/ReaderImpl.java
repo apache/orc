@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.orc.CompressionKind;
@@ -396,6 +397,16 @@ public class ReaderImpl implements Reader {
       options.filesystem(fileSystem);
     }
     return this.fileSystem;
+  }
+
+  protected Supplier<FileSystem> getFileSystemSupplier() {
+    return () -> {
+      try {
+        return getFileSystem();
+      } catch (IOException e) {
+        throw new RuntimeException("Can't create filesystem", e);
+      }
+    };
   }
 
   /**

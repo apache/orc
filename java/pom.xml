@@ -208,6 +208,7 @@
             <excludeSubProject>false</excludeSubProject>
             <excludes>
               <exclude>**/data/**</exclude>
+              <exclude>**/*.iml</exclude>
               <exclude>**/*.json</exclude>
               <exclude>**/*.json.gz</exclude>
 	      <exclude>**/*.md</exclude>
