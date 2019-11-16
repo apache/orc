@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 import java.security.Key;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.apache.orc.EncryptionAlgorithm;
 import org.apache.orc.EncryptionKey;
@@ -528,6 +529,16 @@ public class ReaderImpl implements Reader {
       options.filesystem(fileSystem);
     }
     return fileSystem;
+  }
+
+  protected Supplier<FileSystem> getFileSystemSupplier() {
+    return () -> {
+      try {
+        return getFileSystem();
+      } catch (IOException e) {
+        throw new RuntimeException("Can't create filesystem", e);
+      }
+    };
   }
 
   /**

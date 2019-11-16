@@ -199,7 +199,7 @@ public class RecordReaderImpl implements RecordReader {
       DataReaderProperties.Builder builder =
           DataReaderProperties.builder()
               .withCompression(unencryptedOptions)
-              .withFileSystem(fileReader.getFileSystem())
+              .withFileSystemSupplier(fileReader.getFileSystemSupplier())
               .withPath(fileReader.path)
               .withMaxDiskRangeChunkLimit(maxDiskRangeChunkLimit)
               .withZeroCopy(zeroCopy);

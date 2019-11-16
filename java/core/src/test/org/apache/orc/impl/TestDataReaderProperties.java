@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,9 +19,11 @@ package org.apache.orc.impl;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.orc.CompressionCodec;
 import org.apache.orc.CompressionKind;
 import org.junit.Test;
+
+import java.io.IOException;
+import java.util.function.Supplier;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -30,21 +32,21 @@ import static org.mockito.Mockito.mock;
 
 public class TestDataReaderProperties {
 
-  private FileSystem mockedFileSystem = mock(FileSystem.class);
+  private Supplier<FileSystem> mockedSupplier = mock(Supplier.class);
   private Path mockedPath = mock(Path.class);
   private boolean mockedZeroCopy = false;
 
   @Test
-  public void testCompleteBuild() {
+  public void testCompleteBuild() throws IOException {
     InStream.StreamOptions options = InStream.options()
         .withCodec(OrcCodecPool.getCodec(CompressionKind.ZLIB));
     DataReaderProperties properties = DataReaderProperties.builder()
-      .withFileSystem(mockedFileSystem)
+      .withFileSystemSupplier(mockedSupplier)
       .withPath(mockedPath)
       .withCompression(options)
       .withZeroCopy(mockedZeroCopy)
       .build();
-    assertEquals(mockedFileSystem, properties.getFileSystem());
+    assertEquals(mockedSupplier, properties.getFileSystemSupplier());
     assertEquals(mockedPath, properties.getPath());
     assertEquals(CompressionKind.ZLIB,
         properties.getCompression().getCodec().getKind());
@@ -52,12 +54,34 @@ public class TestDataReaderProperties {
   }
 
   @Test
-  public void testMissingNonRequiredArgs() {
+  public void testFileSystemSupplier() throws IOException {
+
     DataReaderProperties properties = DataReaderProperties.builder()
-      .withFileSystem(mockedFileSystem)
+        .withFileSystemSupplier(mockedSupplier)
+        .withPath(mockedPath)
+        .build();
+
+    assertEquals(mockedSupplier, properties.getFileSystemSupplier());
+  }
+
+  @Test
+  public void testWhenFilesystemIsProvidedGetFileSystemSupplierReturnsSupplier() throws IOException {
+    DataReaderProperties properties = DataReaderProperties.builder()
+        .withFileSystemSupplier(mockedSupplier)
+        .withPath(mockedPath)
+        .build();
+
+    Supplier<FileSystem> supplierFromProperties = properties.getFileSystemSupplier();
+    assertEquals(mockedSupplier, supplierFromProperties);
+  }
+
+  @Test
+  public void testMissingNonRequiredArgs() throws IOException {
+    DataReaderProperties properties = DataReaderProperties.builder()
+      .withFileSystemSupplier(mockedSupplier)
       .withPath(mockedPath)
       .build();
-    assertEquals(mockedFileSystem, properties.getFileSystem());
+    assertEquals(mockedSupplier, properties.getFileSystemSupplier());
     assertEquals(mockedPath, properties.getPath());
     assertNull(properties.getCompression());
     assertFalse(properties.getZeroCopy());
@@ -71,7 +95,7 @@ public class TestDataReaderProperties {
   @Test(expected = java.lang.NullPointerException.class)
   public void testMissingPath() {
     DataReaderProperties.builder()
-      .withFileSystem(mockedFileSystem)
+      .withFileSystemSupplier(mockedSupplier)
       .withCompression(InStream.options())
       .withZeroCopy(mockedZeroCopy)
       .build();
