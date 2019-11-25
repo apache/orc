@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Using in MapRed</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="generator" content="Jekyll v3.8.5">
+  <meta name="generator" content="Jekyll v3.8.6">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
   <link rel="stylesheet" href="/css/screen.css">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -802,17 +802,17 @@ as the key to the MapReduce shuffle and the integer as the value. The
 mapper code would look like:</p>
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">MyMapper</span>
-    <span class="kd">implements</span> <span class="n">Mapper</span><span class="o">&lt;</span><span class="n">NullWritable</span><span class="o">,</span><span class="n">OrcStruct</span><span class="o">,</span><span class="n">Text</span><span class="o">,</span><span class="n">IntWritable</span><span class="o">&gt;</span> <span class="o">{</span>
+    <span class="kd">implements</span> <span class="nc">Mapper</span><span class="o">&lt;</span><span class="nc">NullWritable</span><span class="o">,</span><span class="nc">OrcStruct</span><span class="o">,</span><span class="nc">Text</span><span class="o">,</span><span class="nc">IntWritable</span><span class="o">&gt;</span> <span class="o">{</span>
 
   <span class="c1">// Input should be: struct&lt;s:string,i:int&gt;</span>
-  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">map</span><span class="o">(</span><span class="n">NullWritable</span> <span class="n">key</span><span class="o">,</span> <span class="n">OrcStruct</span> <span class="n">value</span><span class="o">,</span>
-                  <span class="n">OutputCollector</span><span class="o">&lt;</span><span class="n">Text</span><span class="o">,</span><span class="n">IntWritable</span><span class="o">&gt;</span> <span class="n">output</span><span class="o">,</span>
-                  <span class="n">Reporter</span> <span class="n">reporter</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
-    <span class="n">output</span><span class="o">.</span><span class="na">collect</span><span class="o">((</span><span class="n">Text</span><span class="o">)</span> <span class="n">value</span><span class="o">.</span><span class="na">getFieldValue</span><span class="o">(</span><span class="mi">0</span><span class="o">),</span>
-                   <span class="o">(</span><span class="n">IntWritable</span><span class="o">)</span> <span class="n">value</span><span class="o">.</span><span class="na">getFieldValue</span><span class="o">(</span><span class="mi">1</span><span class="o">));</span>
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">map</span><span class="o">(</span><span class="nc">NullWritable</span> <span class="n">key</span><span class="o">,</span> <span class="nc">OrcStruct</span> <span class="n">value</span><span class="o">,</span>
+                  <span class="nc">OutputCollector</span><span class="o">&lt;</span><span class="nc">Text</span><span class="o">,</span><span class="nc">IntWritable</span><span class="o">&gt;</span> <span class="n">output</span><span class="o">,</span>
+                  <span class="nc">Reporter</span> <span class="n">reporter</span><span class="o">)</span> <span class="kd">throws</span> <span class="nc">IOException</span> <span class="o">{</span>
+    <span class="n">output</span><span class="o">.</span><span class="na">collect</span><span class="o">((</span><span class="nc">Text</span><span class="o">)</span> <span class="n">value</span><span class="o">.</span><span class="na">getFieldValue</span><span class="o">(</span><span class="mi">0</span><span class="o">),</span>
+                   <span class="o">(</span><span class="nc">IntWritable</span><span class="o">)</span> <span class="n">value</span><span class="o">.</span><span class="na">getFieldValue</span><span class="o">(</span><span class="mi">1</span><span class="o">));</span>
   <span class="o">}</span>
 
-  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">configure</span><span class="o">(</span><span class="n">JobConf</span> <span class="n">conf</span><span class="o">)</span> <span class="o">{</span> <span class="o">}</span>
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">configure</span><span class="o">(</span><span class="nc">JobConf</span> <span class="n">conf</span><span class="o">)</span> <span class="o">{</span> <span class="o">}</span>
 
   <span class="kd">public</span> <span class="kt">void</span> <span class="nf">close</span><span class="o">()</span> <span class="o">{</span> <span class="o">}</span>
 <span class="o">}</span>
@@ -838,29 +838,29 @@ with MapReduce, if your method stores the values, you need to copy their
 value before getting the next.</p>
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">class</span> <span class="nc">MyReducer</span>
-  <span class="kd">implements</span> <span class="n">Reducer</span><span class="o">&lt;</span><span class="n">Text</span><span class="o">,</span><span class="n">IntWritable</span><span class="o">,</span><span class="n">NullWritable</span><span class="o">,</span><span class="n">OrcStruct</span><span class="o">&gt;</span> <span class="o">{</span>
+  <span class="kd">implements</span> <span class="nc">Reducer</span><span class="o">&lt;</span><span class="nc">Text</span><span class="o">,</span><span class="nc">IntWritable</span><span class="o">,</span><span class="nc">NullWritable</span><span class="o">,</span><span class="nc">OrcStruct</span><span class="o">&gt;</span> <span class="o">{</span>
 
-  <span class="kd">private</span> <span class="n">TypeDescription</span> <span class="n">schema</span> <span class="o">=</span>
-    <span class="n">TypeDescription</span><span class="o">.</span><span class="na">fromString</span><span class="o">(</span><span class="s">"struct&lt;key:string,ints:array&lt;int&gt;&gt;"</span><span class="o">);</span>
+  <span class="kd">private</span> <span class="nc">TypeDescription</span> <span class="n">schema</span> <span class="o">=</span>
+    <span class="nc">TypeDescription</span><span class="o">.</span><span class="na">fromString</span><span class="o">(</span><span class="s">"struct&lt;key:string,ints:array&lt;int&gt;&gt;"</span><span class="o">);</span>
   <span class="c1">// createValue creates the correct value type for the schema</span>
-  <span class="kd">private</span> <span class="n">OrcStruct</span> <span class="n">pair</span> <span class="o">=</span> <span class="o">(</span><span class="n">OrcStruct</span><span class="o">)</span> <span class="n">OrcStruct</span><span class="o">.</span><span class="na">createValue</span><span class="o">(</span><span class="n">schema</span><span class="o">);</span>
+  <span class="kd">private</span> <span class="nc">OrcStruct</span> <span class="n">pair</span> <span class="o">=</span> <span class="o">(</span><span class="nc">OrcStruct</span><span class="o">)</span> <span class="nc">OrcStruct</span><span class="o">.</span><span class="na">createValue</span><span class="o">(</span><span class="n">schema</span><span class="o">);</span>
   <span class="c1">// get a handle to the list of ints</span>
-  <span class="kd">private</span> <span class="n">OrcList</span><span class="o">&lt;</span><span class="n">IntWritable</span><span class="o">&gt;</span> <span class="n">values</span> <span class="o">=</span>
-    <span class="o">(</span><span class="n">OrcList</span><span class="o">&lt;</span><span class="n">IntWritable</span><span class="o">&gt;)</span> <span class="n">pair</span><span class="o">.</span><span class="na">getFieldValue</span><span class="o">(</span><span class="mi">1</span><span class="o">);</span>
-  <span class="kd">private</span> <span class="kd">final</span> <span class="n">NullWritable</span> <span class="n">nada</span> <span class="o">=</span> <span class="n">NullWritable</span><span class="o">.</span><span class="na">get</span><span class="o">();</span>
+  <span class="kd">private</span> <span class="nc">OrcList</span><span class="o">&lt;</span><span class="nc">IntWritable</span><span class="o">&gt;</span> <span class="n">values</span> <span class="o">=</span>
+    <span class="o">(</span><span class="nc">OrcList</span><span class="o">&lt;</span><span class="nc">IntWritable</span><span class="o">&gt;)</span> <span class="n">pair</span><span class="o">.</span><span class="na">getFieldValue</span><span class="o">(</span><span class="mi">1</span><span class="o">);</span>
+  <span class="kd">private</span> <span class="kd">final</span> <span class="nc">NullWritable</span> <span class="n">nada</span> <span class="o">=</span> <span class="nc">NullWritable</span><span class="o">.</span><span class="na">get</span><span class="o">();</span>
 
-  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">reduce</span><span class="o">(</span><span class="n">Text</span> <span class="n">key</span><span class="o">,</span> <span class="n">Iterator</span><span class="o">&lt;</span><span class="n">IntWritable</span><span class="o">&gt;</span> <span class="n">iterator</span><span class="o">,</span>
-                     <span class="n">OutputCollector</span><span class="o">&lt;</span><span class="n">NullWritable</span><span class="o">,</span> <span class="n">OrcStruct</span><span class="o">&gt;</span> <span class="n">output</span><span class="o">,</span>
-                     <span class="n">Reporter</span> <span class="n">reporter</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">reduce</span><span class="o">(</span><span class="nc">Text</span> <span class="n">key</span><span class="o">,</span> <span class="nc">Iterator</span><span class="o">&lt;</span><span class="nc">IntWritable</span><span class="o">&gt;</span> <span class="n">iterator</span><span class="o">,</span>
+                     <span class="nc">OutputCollector</span><span class="o">&lt;</span><span class="nc">NullWritable</span><span class="o">,</span> <span class="nc">OrcStruct</span><span class="o">&gt;</span> <span class="n">output</span><span class="o">,</span>
+                     <span class="nc">Reporter</span> <span class="n">reporter</span><span class="o">)</span> <span class="kd">throws</span> <span class="nc">IOException</span> <span class="o">{</span>
     <span class="n">pair</span><span class="o">.</span><span class="na">setFieldValue</span><span class="o">(</span><span class="mi">0</span><span class="o">,</span> <span class="n">key</span><span class="o">);</span>
     <span class="n">values</span><span class="o">.</span><span class="na">clear</span><span class="o">();</span>
     <span class="k">while</span> <span class="o">(</span><span class="n">iterator</span><span class="o">.</span><span class="na">hasNext</span><span class="o">())</span> <span class="o">{</span>
-      <span class="n">values</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="n">IntWritable</span><span class="o">(</span><span class="n">iterator</span><span class="o">.</span><span class="na">next</span><span class="o">().</span><span class="na">get</span><span class="o">()));</span>
+      <span class="n">values</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="nc">IntWritable</span><span class="o">(</span><span class="n">iterator</span><span class="o">.</span><span class="na">next</span><span class="o">().</span><span class="na">get</span><span class="o">()));</span>
     <span class="o">}</span>
     <span class="n">output</span><span class="o">.</span><span class="na">collect</span><span class="o">(</span><span class="n">nada</span><span class="o">,</span> <span class="n">pair</span><span class="o">);</span>
   <span class="o">}</span>
 
-  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">configure</span><span class="o">(</span><span class="n">JobConf</span> <span class="n">conf</span><span class="o">)</span> <span class="o">{</span> <span class="o">}</span>
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">configure</span><span class="o">(</span><span class="nc">JobConf</span> <span class="n">conf</span><span class="o">)</span> <span class="o">{</span> <span class="o">}</span>
 
   <span class="kd">public</span> <span class="kt">void</span> <span class="nf">close</span><span class="o">()</span> <span class="o">{</span> <span class="o">}</span>
 <span class="o">}</span>
@@ -893,33 +893,33 @@ respectively. These objects should be created once and reused as the mapper
 runs.</p>
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">class</span> <span class="nc">MyMapperWithShuffle</span>
-  <span class="kd">implements</span> <span class="n">Mapper</span><span class="o">&lt;</span><span class="n">NullWritable</span><span class="o">,</span><span class="n">OrcStruct</span><span class="o">,</span><span class="n">OrcKey</span><span class="o">,</span><span class="n">OrcValue</span><span class="o">&gt;</span> <span class="o">{</span>
+  <span class="kd">implements</span> <span class="nc">Mapper</span><span class="o">&lt;</span><span class="nc">NullWritable</span><span class="o">,</span><span class="nc">OrcStruct</span><span class="o">,</span><span class="nc">OrcKey</span><span class="o">,</span><span class="nc">OrcValue</span><span class="o">&gt;</span> <span class="o">{</span>
 
   <span class="c1">// create wrapper objects</span>
-  <span class="kd">private</span> <span class="n">OrcKey</span> <span class="n">keyWrapper</span> <span class="o">=</span> <span class="k">new</span> <span class="n">OrcKey</span><span class="o">();</span>
-  <span class="kd">private</span> <span class="n">OrcValue</span> <span class="n">valueWrapper</span> <span class="o">=</span> <span class="k">new</span> <span class="n">OrcValue</span><span class="o">();</span>
+  <span class="kd">private</span> <span class="nc">OrcKey</span> <span class="n">keyWrapper</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">OrcKey</span><span class="o">();</span>
+  <span class="kd">private</span> <span class="nc">OrcValue</span> <span class="n">valueWrapper</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">OrcValue</span><span class="o">();</span>
 
   <span class="c1">// create a new structure to pass as the value in the shuffle</span>
-  <span class="kd">private</span> <span class="n">OrcStruct</span> <span class="n">outStruct</span> <span class="o">=</span> <span class="o">(</span><span class="n">OrcStruct</span><span class="o">)</span> <span class="n">OrcStruct</span><span class="o">.</span><span class="na">createValue</span>
-    <span class="o">(</span><span class="n">TypeDescription</span><span class="o">.</span><span class="na">fromString</span><span class="o">(</span><span class="s">"struct&lt;i:int,j:int&gt;"</span><span class="o">));</span>
+  <span class="kd">private</span> <span class="nc">OrcStruct</span> <span class="n">outStruct</span> <span class="o">=</span> <span class="o">(</span><span class="nc">OrcStruct</span><span class="o">)</span> <span class="nc">OrcStruct</span><span class="o">.</span><span class="na">createValue</span>
+    <span class="o">(</span><span class="nc">TypeDescription</span><span class="o">.</span><span class="na">fromString</span><span class="o">(</span><span class="s">"struct&lt;i:int,j:int&gt;"</span><span class="o">));</span>
 
   <span class="c1">// get the two fields of the outStruct</span>
-  <span class="kd">private</span> <span class="n">IntWritable</span> <span class="n">i</span> <span class="o">=</span> <span class="o">(</span><span class="n">IntWritable</span><span class="o">)</span> <span class="n">outStruct</span><span class="o">.</span><span class="na">getFieldValue</span><span class="o">(</span><span class="s">"i"</span><span class="o">);</span>
-  <span class="kd">private</span> <span class="n">IntWritable</span> <span class="n">j</span> <span class="o">=</span> <span class="o">(</span><span class="n">IntWritable</span><span class="o">)</span> <span class="n">outStruct</span><span class="o">.</span><span class="na">getFieldValue</span><span class="o">(</span><span class="s">"j"</span><span class="o">);</span>
+  <span class="kd">private</span> <span class="nc">IntWritable</span> <span class="n">i</span> <span class="o">=</span> <span class="o">(</span><span class="nc">IntWritable</span><span class="o">)</span> <span class="n">outStruct</span><span class="o">.</span><span class="na">getFieldValue</span><span class="o">(</span><span class="s">"i"</span><span class="o">);</span>
+  <span class="kd">private</span> <span class="nc">IntWritable</span> <span class="n">j</span> <span class="o">=</span> <span class="o">(</span><span class="nc">IntWritable</span><span class="o">)</span> <span class="n">outStruct</span><span class="o">.</span><span class="na">getFieldValue</span><span class="o">(</span><span class="s">"j"</span><span class="o">);</span>
 
   <span class="c1">// Assume the input has type: struct&lt;s:string,i:int&gt;</span>
-  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">map</span><span class="o">(</span><span class="n">NullWritable</span> <span class="n">key</span><span class="o">,</span> <span class="n">OrcStruct</span> <span class="n">value</span><span class="o">,</span>
-                  <span class="n">OutputCollector</span><span class="o">&lt;</span><span class="n">OrcKey</span><span class="o">,</span><span class="n">OrcValue</span><span class="o">&gt;</span> <span class="n">output</span><span class="o">,</span>
-                  <span class="n">Reporter</span> <span class="n">reporter</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">map</span><span class="o">(</span><span class="nc">NullWritable</span> <span class="n">key</span><span class="o">,</span> <span class="nc">OrcStruct</span> <span class="n">value</span><span class="o">,</span>
+                  <span class="nc">OutputCollector</span><span class="o">&lt;</span><span class="nc">OrcKey</span><span class="o">,</span><span class="nc">OrcValue</span><span class="o">&gt;</span> <span class="n">output</span><span class="o">,</span>
+                  <span class="nc">Reporter</span> <span class="n">reporter</span><span class="o">)</span> <span class="kd">throws</span> <span class="nc">IOException</span> <span class="o">{</span>
     <span class="n">keyWrapper</span><span class="o">.</span><span class="na">key</span> <span class="o">=</span> <span class="n">value</span><span class="o">;</span>
     <span class="n">valueWrapper</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">outStruct</span><span class="o">;</span>
-    <span class="kt">int</span> <span class="n">val</span> <span class="o">=</span> <span class="o">((</span><span class="n">IntWritable</span><span class="o">)</span> <span class="n">value</span><span class="o">.</span><span class="na">getFieldValue</span><span class="o">(</span><span class="s">"i"</span><span class="o">)).</span><span class="na">get</span><span class="o">();</span>
+    <span class="kt">int</span> <span class="n">val</span> <span class="o">=</span> <span class="o">((</span><span class="nc">IntWritable</span><span class="o">)</span> <span class="n">value</span><span class="o">.</span><span class="na">getFieldValue</span><span class="o">(</span><span class="s">"i"</span><span class="o">)).</span><span class="na">get</span><span class="o">();</span>
     <span class="n">i</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="n">val</span> <span class="o">*</span> <span class="mi">2</span><span class="o">);</span>
     <span class="n">j</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="n">val</span> <span class="o">*</span> <span class="n">val</span><span class="o">);</span>
     <span class="n">output</span><span class="o">.</span><span class="na">collect</span><span class="o">(</span><span class="n">keyWrapper</span><span class="o">,</span> <span class="n">valueWrapper</span><span class="o">);</span>
   <span class="o">}</span>
 
-  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">configure</span><span class="o">(</span><span class="n">JobConf</span> <span class="n">conf</span><span class="o">)</span> <span class="o">{</span> <span class="o">}</span>
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">configure</span><span class="o">(</span><span class="nc">JobConf</span> <span class="n">conf</span><span class="o">)</span> <span class="o">{</span> <span class="o">}</span>
 
   <span class="kd">public</span> <span class="kt">void</span> <span class="nf">close</span><span class="o">()</span> <span class="o">{</span> <span class="o">}</span>
 <span class="o">}</span>

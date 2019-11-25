@@ -1,4 +1,3 @@
-@charset "UTF-8";
 /*! normalize.css v3.0.2 | MIT License | git.io/normalize */
 html {
   font-family: sans-serif;
@@ -173,7 +172,7 @@ td, th {
 .grid .unit:last-child {
   padding-right: 20px; }
 
-/* Nested grids already have padding though, so let’s nuke it */
+/* Nested grids already have padding though, so let's nuke it */
 .unit .unit:first-child {
   padding-left: 0; }
 
@@ -276,7 +275,7 @@ td, th {
 
 /* Responsive Stuff */
 @media screen and (max-width: 568px) {
-  /* Stack anything that isn’t full-width on smaller screens 
+  /* Stack anything that isn't full-width on smaller screens 
      and doesn't provide the no-stacking-on-mobiles class */
   .grid:not(.no-stacking-on-mobiles) > .unit {
     width: 100% !important;

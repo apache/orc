@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Using Core Java</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="generator" content="Jekyll v3.8.5">
+  <meta name="generator" content="Jekyll v3.8.6">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
   <link rel="stylesheet" href="/css/screen.css">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -690,7 +690,7 @@ and <code class="highlighter-rouge">size</code> is the number of rows.</p>
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">package</span> <span class="n">org</span><span class="o">.</span><span class="na">apache</span><span class="o">.</span><span class="na">hadoop</span><span class="o">.</span><span class="na">hive</span><span class="o">.</span><span class="na">ql</span><span class="o">.</span><span class="na">exec</span><span class="o">.</span><span class="na">vector</span><span class="o">;</span>
 
 <span class="kd">public</span> <span class="kd">class</span> <span class="nc">VectorizedRowBatch</span> <span class="o">{</span>
-  <span class="kd">public</span> <span class="n">ColumnVector</span><span class="o">[]</span> <span class="n">cols</span><span class="o">;</span>
+  <span class="kd">public</span> <span class="nc">ColumnVector</span><span class="o">[]</span> <span class="n">cols</span><span class="o">;</span>
   <span class="kd">public</span> <span class="kt">int</span> <span class="n">size</span><span class="o">;</span>
   <span class="o">...</span>
 <span class="o">}</span>
@@ -811,7 +811,7 @@ true if that value is null.</p>
 date, int, smallint, and tinyint). The data is represented as an array of
 longs where each value is sign-extended as necessary.</p>
 
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">LongColumnVector</span> <span class="kd">extends</span> <span class="n">ColumnVector</span> <span class="o">{</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">LongColumnVector</span> <span class="kd">extends</span> <span class="nc">ColumnVector</span> <span class="o">{</span>
   <span class="kd">public</span> <span class="kt">long</span><span class="o">[]</span> <span class="n">vector</span><span class="o">;</span>
   <span class="o">...</span>
 <span class="o">}</span>
@@ -821,7 +821,7 @@ longs where each value is sign-extended as necessary.</p>
 handles timestamp values. The data is represented as an array of longs
 and an array of ints.</p>
 
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TimestampColumnVector</span> <span class="kd">extends</span> <span class="n">ColumnVector</span> <span class="o">{</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TimestampColumnVector</span> <span class="kd">extends</span> <span class="nc">ColumnVector</span> <span class="o">{</span>
 
   <span class="c1">// the number of milliseconds since 1 Jan 1970 00:00 GMT</span>
   <span class="kd">public</span> <span class="kt">long</span><span class="o">[]</span> <span class="n">time</span><span class="o">;</span>
@@ -836,7 +836,7 @@ and an array of ints.</p>
 handles all of the floating point types (double, and float). The data
 is represented as an array of doubles.</p>
 
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">DoubleColumnVector</span> <span class="kd">extends</span> <span class="n">ColumnVector</span> <span class="o">{</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">DoubleColumnVector</span> <span class="kd">extends</span> <span class="nc">ColumnVector</span> <span class="o">{</span>
   <span class="kd">public</span> <span class="kt">double</span><span class="o">[]</span> <span class="n">vector</span><span class="o">;</span>
   <span class="o">...</span>
 <span class="o">}</span>
@@ -847,8 +847,8 @@ handles decimal columns. The data is represented as an array of
 HiveDecimalWritable. Note that this implementation is not performant
 and will likely be replaced.</p>
 
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">DecimalColumnVector</span> <span class="kd">extends</span> <span class="n">ColumnVector</span> <span class="o">{</span>
-  <span class="kd">public</span> <span class="n">HiveDecimalWritable</span><span class="o">[]</span> <span class="n">vector</span><span class="o">;</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">DecimalColumnVector</span> <span class="kd">extends</span> <span class="nc">ColumnVector</span> <span class="o">{</span>
+  <span class="kd">public</span> <span class="nc">HiveDecimalWritable</span><span class="o">[]</span> <span class="n">vector</span><span class="o">;</span>
   <span class="o">...</span>
 <span class="o">}</span>
 </code></pre></div></div>
@@ -858,7 +858,7 @@ handles all of the binary types (binary, char, string, and
 varchar). The data is represented as a byte array, offset, and
 length. The byte arrays may or may not be shared between values.</p>
 
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">BytesColumnVector</span> <span class="kd">extends</span> <span class="n">ColumnVector</span> <span class="o">{</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">BytesColumnVector</span> <span class="kd">extends</span> <span class="nc">ColumnVector</span> <span class="o">{</span>
   <span class="kd">public</span> <span class="kt">byte</span><span class="o">[][]</span> <span class="n">vector</span><span class="o">;</span>
   <span class="kd">public</span> <span class="kt">int</span><span class="o">[]</span> <span class="n">start</span><span class="o">;</span>
   <span class="kd">public</span> <span class="kt">int</span><span class="o">[]</span> <span class="n">length</span><span class="o">;</span>
@@ -871,8 +871,8 @@ handles the struct columns and represents the data as an array of
 <code class="highlighter-rouge">ColumnVector</code>. The value for row 5 consists of the fifth value from
 each of the <code class="highlighter-rouge">fields</code> values.</p>
 
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">StructColumnVector</span> <span class="kd">extends</span> <span class="n">ColumnVector</span> <span class="o">{</span>
-  <span class="kd">public</span> <span class="n">ColumnVector</span><span class="o">[]</span> <span class="n">fields</span><span class="o">;</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">StructColumnVector</span> <span class="kd">extends</span> <span class="nc">ColumnVector</span> <span class="o">{</span>
+  <span class="kd">public</span> <span class="nc">ColumnVector</span><span class="o">[]</span> <span class="n">fields</span><span class="o">;</span>
   <span class="o">...</span>
 <span class="o">}</span>
 </code></pre></div></div>
@@ -883,9 +883,9 @@ integers that pick the subtype and a <code class="highlighter-rouge">fields</cod
 subtype. Only the value of the <code class="highlighter-rouge">fields</code> that corresponds to
 <code class="highlighter-rouge">tags[row]</code> is set.</p>
 
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">UnionColumnVector</span> <span class="kd">extends</span> <span class="n">ColumnVector</span> <span class="o">{</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">UnionColumnVector</span> <span class="kd">extends</span> <span class="nc">ColumnVector</span> <span class="o">{</span>
   <span class="kd">public</span> <span class="kt">int</span><span class="o">[]</span> <span class="n">tags</span><span class="o">;</span>
-  <span class="kd">public</span> <span class="n">ColumnVector</span><span class="o">[]</span> <span class="n">fields</span><span class="o">;</span>
+  <span class="kd">public</span> <span class="nc">ColumnVector</span><span class="o">[]</span> <span class="n">fields</span><span class="o">;</span>
   <span class="o">...</span>
 <span class="o">}</span>
 </code></pre></div></div>
@@ -895,7 +895,7 @@ handles the array columns and represents the data as two arrays of
 integers for the offset and lengths and a <code class="highlighter-rouge">ColumnVector</code> for the
 children values.</p>
 
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">ListColumnVector</span> <span class="kd">extends</span> <span class="n">ColumnVector</span> <span class="o">{</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">ListColumnVector</span> <span class="kd">extends</span> <span class="nc">ColumnVector</span> <span class="o">{</span>
   <span class="c1">// for each row, the first offset of the child</span>
   <span class="kd">public</span> <span class="kt">long</span><span class="o">[]</span> <span class="n">offsets</span><span class="o">;</span>
   <span class="c1">// for each row, the number of elements in the array</span>
@@ -904,7 +904,7 @@ children values.</p>
   <span class="kd">public</span> <span class="kt">int</span> <span class="n">childCount</span><span class="o">;</span>
 
   <span class="c1">// the values of the children</span>
-  <span class="kd">public</span> <span class="n">ColumnVector</span> <span class="n">child</span><span class="o">;</span>
+  <span class="kd">public</span> <span class="nc">ColumnVector</span> <span class="n">child</span><span class="o">;</span>
   <span class="o">...</span>
 <span class="o">}</span>
 </code></pre></div></div>
@@ -914,7 +914,7 @@ handles the map columns and represents the data as two arrays of
 integers for the offset and lengths and two <code class="highlighter-rouge">ColumnVector</code>s for the
 keys and values.</p>
 
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">MapColumnVector</span> <span class="kd">extends</span> <span class="n">ColumnVector</span> <span class="o">{</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">MapColumnVector</span> <span class="kd">extends</span> <span class="nc">ColumnVector</span> <span class="o">{</span>
   <span class="c1">// for each row, the first offset of the child</span>
   <span class="kd">public</span> <span class="kt">long</span><span class="o">[]</span> <span class="n">offsets</span><span class="o">;</span>
   <span class="c1">// for each row, the number of elements in the array</span>
@@ -923,8 +923,8 @@ keys and values.</p>
   <span class="kd">public</span> <span class="kt">int</span> <span class="n">childCount</span><span class="o">;</span>
 
   <span class="c1">// the values of the keys and values</span>
-  <span class="kd">public</span> <span class="n">ColumnVector</span> <span class="n">keys</span><span class="o">;</span>
-  <span class="kd">public</span> <span class="n">ColumnVector</span> <span class="n">values</span><span class="o">;</span>
+  <span class="kd">public</span> <span class="nc">ColumnVector</span> <span class="n">keys</span><span class="o">;</span>
+  <span class="kd">public</span> <span class="nc">ColumnVector</span> <span class="n">values</span><span class="o">;</span>
   <span class="o">...</span>
 <span class="o">}</span>
 </code></pre></div></div>
@@ -939,19 +939,19 @@ class to create a
 with the desired filename. This example sets the required schema
 parameter, but there are many other options to control the ORC writer.</p>
 
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Configuration</span> <span class="n">conf</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Configuration</span><span class="o">();</span>
-<span class="n">TypeDescription</span> <span class="n">schema</span> <span class="o">=</span> <span class="n">TypeDescription</span><span class="o">.</span><span class="na">fromString</span><span class="o">(</span><span class="s">"struct&lt;x:int,y:int&gt;"</span><span class="o">);</span>
-<span class="n">Writer</span> <span class="n">writer</span> <span class="o">=</span> <span class="n">OrcFile</span><span class="o">.</span><span class="na">createWriter</span><span class="o">(</span><span class="k">new</span> <span class="n">Path</span><span class="o">(</span><span class="s">"my-file.orc"</span><span class="o">),</span>
-                  <span class="n">OrcFile</span><span class="o">.</span><span class="na">writerOptions</span><span class="o">(</span><span class="n">conf</span><span class="o">)</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">Configuration</span> <span class="n">conf</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Configuration</span><span class="o">();</span>
+<span class="nc">TypeDescription</span> <span class="n">schema</span> <span class="o">=</span> <span class="nc">TypeDescription</span><span class="o">.</span><span class="na">fromString</span><span class="o">(</span><span class="s">"struct&lt;x:int,y:int&gt;"</span><span class="o">);</span>
+<span class="nc">Writer</span> <span class="n">writer</span> <span class="o">=</span> <span class="nc">OrcFile</span><span class="o">.</span><span class="na">createWriter</span><span class="o">(</span><span class="k">new</span> <span class="nc">Path</span><span class="o">(</span><span class="s">"my-file.orc"</span><span class="o">),</span>
+                  <span class="nc">OrcFile</span><span class="o">.</span><span class="na">writerOptions</span><span class="o">(</span><span class="n">conf</span><span class="o">)</span>
                          <span class="o">.</span><span class="na">setSchema</span><span class="o">(</span><span class="n">schema</span><span class="o">));</span>
 </code></pre></div></div>
 
 <p>Now you need to create a row batch, set the data, and write it to the file
 as the batch fills up. When the file is done, close the <code class="highlighter-rouge">Writer</code>.</p>
 
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">VectorizedRowBatch</span> <span class="n">batch</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="na">createRowBatch</span><span class="o">();</span>
-<span class="n">LongColumnVector</span> <span class="n">x</span> <span class="o">=</span> <span class="o">(</span><span class="n">LongColumnVector</span><span class="o">)</span> <span class="n">batch</span><span class="o">.</span><span class="na">cols</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span>
-<span class="n">LongColumnVector</span> <span class="n">y</span> <span class="o">=</span> <span class="o">(</span><span class="n">LongColumnVector</span><span class="o">)</span> <span class="n">batch</span><span class="o">.</span><span class="na">cols</span><span class="o">[</span><span class="mi">1</span><span class="o">];</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">VectorizedRowBatch</span> <span class="n">batch</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="na">createRowBatch</span><span class="o">();</span>
+<span class="nc">LongColumnVector</span> <span class="n">x</span> <span class="o">=</span> <span class="o">(</span><span class="nc">LongColumnVector</span><span class="o">)</span> <span class="n">batch</span><span class="o">.</span><span class="na">cols</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span>
+<span class="nc">LongColumnVector</span> <span class="n">y</span> <span class="o">=</span> <span class="o">(</span><span class="nc">LongColumnVector</span><span class="o">)</span> <span class="n">batch</span><span class="o">.</span><span class="na">cols</span><span class="o">[</span><span class="mi">1</span><span class="o">];</span>
 <span class="k">for</span><span class="o">(</span><span class="kt">int</span> <span class="n">r</span><span class="o">=</span><span class="mi">0</span><span class="o">;</span> <span class="n">r</span> <span class="o">&lt;</span> <span class="mi">10000</span><span class="o">;</span> <span class="o">++</span><span class="n">r</span><span class="o">)</span> <span class="o">{</span>
   <span class="kt">int</span> <span class="n">row</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="na">size</span><span class="o">++;</span>
   <span class="n">x</span><span class="o">.</span><span class="na">vector</span><span class="o">[</span><span class="n">row</span><span class="o">]</span> <span class="o">=</span> <span class="n">r</span><span class="o">;</span>
@@ -975,33 +975,33 @@ as the batch fills up. When the file is done, close the <code class="highlighter
 columns and a map column. Each row’s map has 5 elements with keys
 ranging from “&lt;row&gt;.0” to “&lt;row&gt;.4”.</p>
 
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Path</span> <span class="n">testFilePath</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Path</span><span class="o">(</span><span class="s">"advanced-example.orc"</span><span class="o">);</span>
-<span class="n">Configuration</span> <span class="n">conf</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Configuration</span><span class="o">();</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">Path</span> <span class="n">testFilePath</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Path</span><span class="o">(</span><span class="s">"advanced-example.orc"</span><span class="o">);</span>
+<span class="nc">Configuration</span> <span class="n">conf</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Configuration</span><span class="o">();</span>
 
-<span class="n">TypeDescription</span> <span class="n">schema</span> <span class="o">=</span>
-    <span class="n">TypeDescription</span><span class="o">.</span><span class="na">fromString</span><span class="o">(</span><span class="s">"struct&lt;first:int,"</span> <span class="o">+</span>
+<span class="nc">TypeDescription</span> <span class="n">schema</span> <span class="o">=</span>
+    <span class="nc">TypeDescription</span><span class="o">.</span><span class="na">fromString</span><span class="o">(</span><span class="s">"struct&lt;first:int,"</span> <span class="o">+</span>
                                <span class="s">"second:int,third:map&lt;string,int&gt;&gt;"</span><span class="o">);</span>
 
-<span class="n">Writer</span> <span class="n">writer</span> <span class="o">=</span>
-    <span class="n">OrcFile</span><span class="o">.</span><span class="na">createWriter</span><span class="o">(</span><span class="n">testFilePath</span><span class="o">,</span>
-        <span class="n">OrcFile</span><span class="o">.</span><span class="na">writerOptions</span><span class="o">(</span><span class="n">conf</span><span class="o">).</span><span class="na">setSchema</span><span class="o">(</span><span class="n">schema</span><span class="o">));</span>
+<span class="nc">Writer</span> <span class="n">writer</span> <span class="o">=</span>
+    <span class="nc">OrcFile</span><span class="o">.</span><span class="na">createWriter</span><span class="o">(</span><span class="n">testFilePath</span><span class="o">,</span>
+        <span class="nc">OrcFile</span><span class="o">.</span><span class="na">writerOptions</span><span class="o">(</span><span class="n">conf</span><span class="o">).</span><span class="na">setSchema</span><span class="o">(</span><span class="n">schema</span><span class="o">));</span>
 
-<span class="n">VectorizedRowBatch</span> <span class="n">batch</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="na">createRowBatch</span><span class="o">();</span>
-<span class="n">LongColumnVector</span> <span class="n">first</span> <span class="o">=</span> <span class="o">(</span><span class="n">LongColumnVector</span><span class="o">)</span> <span class="n">batch</span><span class="o">.</span><span class="na">cols</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span>
-<span class="n">LongColumnVector</span> <span class="n">second</span> <span class="o">=</span> <span class="o">(</span><span class="n">LongColumnVector</span><span class="o">)</span> <span class="n">batch</span><span class="o">.</span><span class="na">cols</span><span class="o">[</span><span class="mi">1</span><span class="o">];</span>
+<span class="nc">VectorizedRowBatch</span> <span class="n">batch</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="na">createRowBatch</span><span class="o">();</span>
+<span class="nc">LongColumnVector</span> <span class="n">first</span> <span class="o">=</span> <span class="o">(</span><span class="nc">LongColumnVector</span><span class="o">)</span> <span class="n">batch</span><span class="o">.</span><span class="na">cols</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span>
+<span class="nc">LongColumnVector</span> <span class="n">second</span> <span class="o">=</span> <span class="o">(</span><span class="nc">LongColumnVector</span><span class="o">)</span> <span class="n">batch</span><span class="o">.</span><span class="na">cols</span><span class="o">[</span><span class="mi">1</span><span class="o">];</span>
 
 <span class="c1">//Define map. You need also to cast the key and value vectors</span>
-<span class="n">MapColumnVector</span> <span class="n">map</span> <span class="o">=</span> <span class="o">(</span><span class="n">MapColumnVector</span><span class="o">)</span> <span class="n">batch</span><span class="o">.</span><span class="na">cols</span><span class="o">[</span><span class="mi">2</span><span class="o">];</span>
-<span class="n">BytesColumnVector</span> <span class="n">mapKey</span> <span class="o">=</span> <span class="o">(</span><span class="n">BytesColumnVector</span><span class="o">)</span> <span class="n">map</span><span class="o">.</span><span class="na">keys</span><span class="o">;</span>
-<span class="n">LongColumnVector</span> <span class="n">mapValue</span> <span class="o">=</span> <span class="o">(</span><span class="n">LongColumnVector</span><span class="o">)</span> <span class="n">map</span><span class="o">.</span><span class="na">values</span><span class="o">;</span>
+<span class="nc">MapColumnVector</span> <span class="n">map</span> <span class="o">=</span> <span class="o">(</span><span class="nc">MapColumnVector</span><span class="o">)</span> <span class="n">batch</span><span class="o">.</span><span class="na">cols</span><span class="o">[</span><span class="mi">2</span><span class="o">];</span>
+<span class="nc">BytesColumnVector</span> <span class="n">mapKey</span> <span class="o">=</span> <span class="o">(</span><span class="nc">BytesColumnVector</span><span class="o">)</span> <span class="n">map</span><span class="o">.</span><span class="na">keys</span><span class="o">;</span>
+<span class="nc">LongColumnVector</span> <span class="n">mapValue</span> <span class="o">=</span> <span class="o">(</span><span class="nc">LongColumnVector</span><span class="o">)</span> <span class="n">map</span><span class="o">.</span><span class="na">values</span><span class="o">;</span>
 
 <span class="c1">// Each map has 5 elements</span>
-<span class="kd">final</span> <span class="kt">int</span> <span class="n">MAP_SIZE</span> <span class="o">=</span> <span class="mi">5</span><span class="o">;</span>
-<span class="kd">final</span> <span class="kt">int</span> <span class="n">BATCH_SIZE</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="na">getMaxSize</span><span class="o">();</span>
+<span class="kd">final</span> <span class="kt">int</span> <span class="no">MAP_SIZE</span> <span class="o">=</span> <span class="mi">5</span><span class="o">;</span>
+<span class="kd">final</span> <span class="kt">int</span> <span class="no">BATCH_SIZE</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="na">getMaxSize</span><span class="o">();</span>
 
 <span class="c1">// Ensure the map is big enough</span>
-<span class="n">mapKey</span><span class="o">.</span><span class="na">ensureSize</span><span class="o">(</span><span class="n">BATCH_SIZE</span> <span class="o">*</span> <span class="n">MAP_SIZE</span><span class="o">,</span> <span class="kc">false</span><span class="o">);</span>
-<span class="n">mapValue</span><span class="o">.</span><span class="na">ensureSize</span><span class="o">(</span><span class="n">BATCH_SIZE</span> <span class="o">*</span> <span class="n">MAP_SIZE</span><span class="o">,</span> <span class="kc">false</span><span class="o">);</span>
+<span class="n">mapKey</span><span class="o">.</span><span class="na">ensureSize</span><span class="o">(</span><span class="no">BATCH_SIZE</span> <span class="o">*</span> <span class="no">MAP_SIZE</span><span class="o">,</span> <span class="kc">false</span><span class="o">);</span>
+<span class="n">mapValue</span><span class="o">.</span><span class="na">ensureSize</span><span class="o">(</span><span class="no">BATCH_SIZE</span> <span class="o">*</span> <span class="no">MAP_SIZE</span><span class="o">,</span> <span class="kc">false</span><span class="o">);</span>
 
 <span class="c1">// add 1500 rows to file</span>
 <span class="k">for</span><span class="o">(</span><span class="kt">int</span> <span class="n">r</span><span class="o">=</span><span class="mi">0</span><span class="o">;</span> <span class="n">r</span> <span class="o">&lt;</span> <span class="mi">1500</span><span class="o">;</span> <span class="o">++</span><span class="n">r</span><span class="o">)</span> <span class="o">{</span>
@@ -1011,16 +1011,16 @@ ranging from “&lt;row&gt;.0” to “&lt;row&gt;.4”.</p>
   <span class="n">second</span><span class="o">.</span><span class="na">vector</span><span class="o">[</span><span class="n">row</span><span class="o">]</span> <span class="o">=</span> <span class="n">r</span> <span class="o">*</span> <span class="mi">3</span><span class="o">;</span>
 
   <span class="n">map</span><span class="o">.</span><span class="na">offsets</span><span class="o">[</span><span class="n">row</span><span class="o">]</span> <span class="o">=</span> <span class="n">map</span><span class="o">.</span><span class="na">childCount</span><span class="o">;</span>
-  <span class="n">map</span><span class="o">.</span><span class="na">lengths</span><span class="o">[</span><span class="n">row</span><span class="o">]</span> <span class="o">=</span> <span class="n">MAP_SIZE</span><span class="o">;</span>
-  <span class="n">map</span><span class="o">.</span><span class="na">childCount</span> <span class="o">+=</span> <span class="n">MAP_SIZE</span><span class="o">;</span>
+  <span class="n">map</span><span class="o">.</span><span class="na">lengths</span><span class="o">[</span><span class="n">row</span><span class="o">]</span> <span class="o">=</span> <span class="no">MAP_SIZE</span><span class="o">;</span>
+  <span class="n">map</span><span class="o">.</span><span class="na">childCount</span> <span class="o">+=</span> <span class="no">MAP_SIZE</span><span class="o">;</span>
 
   <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">mapElem</span> <span class="o">=</span> <span class="o">(</span><span class="kt">int</span><span class="o">)</span> <span class="n">map</span><span class="o">.</span><span class="na">offsets</span><span class="o">[</span><span class="n">row</span><span class="o">];</span>
-       <span class="n">mapElem</span> <span class="o">&lt;</span> <span class="n">map</span><span class="o">.</span><span class="na">offsets</span><span class="o">[</span><span class="n">row</span><span class="o">]</span> <span class="o">+</span> <span class="n">MAP_SIZE</span><span class="o">;</span> <span class="o">++</span><span class="n">mapElem</span><span class="o">)</span> <span class="o">{</span>
-    <span class="n">String</span> <span class="n">key</span> <span class="o">=</span> <span class="s">"row "</span> <span class="o">+</span> <span class="n">r</span> <span class="o">+</span> <span class="s">"."</span> <span class="o">+</span> <span class="o">(</span><span class="n">mapElem</span> <span class="o">-</span> <span class="n">map</span><span class="o">.</span><span class="na">offsets</span><span class="o">[</span><span class="n">row</span><span class="o">]);</span>
-    <span class="n">mapKey</span><span class="o">.</span><span class="na">setVal</span><span class="o">(</span><span class="n">mapElem</span><span class="o">,</span> <span class="n">key</span><span class="o">.</span><span class="na">getBytes</span><span class="o">(</span><span class="n">StandardCharsets</span><span class="o">.</span><span class="na">UTF_8</span><span class="o">));</span>
+       <span class="n">mapElem</span> <span class="o">&lt;</span> <span class="n">map</span><span class="o">.</span><span class="na">offsets</span><span class="o">[</span><span class="n">row</span><span class="o">]</span> <span class="o">+</span> <span class="no">MAP_SIZE</span><span class="o">;</span> <span class="o">++</span><span class="n">mapElem</span><span class="o">)</span> <span class="o">{</span>
+    <span class="nc">String</span> <span class="n">key</span> <span class="o">=</span> <span class="s">"row "</span> <span class="o">+</span> <span class="n">r</span> <span class="o">+</span> <span class="s">"."</span> <span class="o">+</span> <span class="o">(</span><span class="n">mapElem</span> <span class="o">-</span> <span class="n">map</span><span class="o">.</span><span class="na">offsets</span><span class="o">[</span><span class="n">row</span><span class="o">]);</span>
+    <span class="n">mapKey</span><span class="o">.</span><span class="na">setVal</span><span class="o">(</span><span class="n">mapElem</span><span class="o">,</span> <span class="n">key</span><span class="o">.</span><span class="na">getBytes</span><span class="o">(</span><span class="nc">StandardCharsets</span><span class="o">.</span><span class="na">UTF_8</span><span class="o">));</span>
     <span class="n">mapValue</span><span class="o">.</span><span class="na">vector</span><span class="o">[</span><span class="n">mapElem</span><span class="o">]</span> <span class="o">=</span> <span class="n">mapElem</span><span class="o">;</span>
   <span class="o">}</span>
-  <span class="k">if</span> <span class="o">(</span><span class="n">row</span> <span class="o">==</span> <span class="n">BATCH_SIZE</span> <span class="o">-</span> <span class="mi">1</span><span class="o">)</span> <span class="o">{</span>
+  <span class="k">if</span> <span class="o">(</span><span class="n">row</span> <span class="o">==</span> <span class="no">BATCH_SIZE</span> <span class="o">-</span> <span class="mi">1</span><span class="o">)</span> <span class="o">{</span>
     <span class="n">writer</span><span class="o">.</span><span class="na">addRowBatch</span><span class="o">(</span><span class="n">batch</span><span class="o">);</span>
     <span class="n">batch</span><span class="o">.</span><span class="na">reset</span><span class="o">();</span>
   <span class="o">}</span>
@@ -1044,8 +1044,8 @@ the ORC reader, but far fewer than the writer and none of them are
 required. The reader has methods for getting the number of rows,
 schema, compression, etc. from the file.</p>
 
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Reader</span> <span class="n">reader</span> <span class="o">=</span> <span class="n">OrcFile</span><span class="o">.</span><span class="na">createReader</span><span class="o">(</span><span class="k">new</span> <span class="n">Path</span><span class="o">(</span><span class="s">"my-file.orc"</span><span class="o">),</span>
-                  <span class="n">OrcFile</span><span class="o">.</span><span class="na">readerOptions</span><span class="o">(</span><span class="n">conf</span><span class="o">));</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">Reader</span> <span class="n">reader</span> <span class="o">=</span> <span class="nc">OrcFile</span><span class="o">.</span><span class="na">createReader</span><span class="o">(</span><span class="k">new</span> <span class="nc">Path</span><span class="o">(</span><span class="s">"my-file.orc"</span><span class="o">),</span>
+                  <span class="nc">OrcFile</span><span class="o">.</span><span class="na">readerOptions</span><span class="o">(</span><span class="n">conf</span><span class="o">));</span>
 </code></pre></div></div>
 
 <p>To get the data, create a
@@ -1053,8 +1053,8 @@ schema, compression, etc. from the file.</p>
 object. By default, the RecordReader reads all rows and all columns,
 but there are options to control the data that is read.</p>
 
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">RecordReader</span> <span class="n">rows</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="na">rows</span><span class="o">();</span>
-<span class="n">VectorizedRowBatch</span> <span class="n">batch</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="na">getSchema</span><span class="o">().</span><span class="na">createRowBatch</span><span class="o">();</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">RecordReader</span> <span class="n">rows</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="na">rows</span><span class="o">();</span>
+<span class="nc">VectorizedRowBatch</span> <span class="n">batch</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="na">getSchema</span><span class="o">().</span><span class="na">createRowBatch</span><span class="o">();</span>
 </code></pre></div></div>
 
 <p>With a <code class="highlighter-rouge">RecordReader</code> the user can ask for the next batch until there
