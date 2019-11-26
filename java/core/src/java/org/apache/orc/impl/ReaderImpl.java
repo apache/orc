@@ -31,6 +31,7 @@ import org.apache.orc.CompressionKind;
 import org.apache.orc.DataMaskDescription;
 import org.apache.orc.EncryptionVariant;
 import org.apache.orc.FileMetadata;
+import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcUtils;
 import org.apache.orc.Reader;
@@ -299,7 +300,8 @@ public class ReaderImpl implements Reader {
         if (codec != null) {
           compression.withCodec(codec).withBufferSize(bufferSize);
         }
-        return ((ReaderEncryptionVariant) variant).getStripeStatistics(null, compression);
+        return ((ReaderEncryptionVariant) variant).getStripeStatistics(null,
+            compression, this);
       }
     }
   }
@@ -347,10 +349,10 @@ public class ReaderImpl implements Reader {
     return result;
   }
 
-  private static ColumnStatistics[] decryptFileStats(ReaderEncryptionVariant encryption,
-                                                    InStream.StreamOptions compression,
-                                                    OrcProto.Footer footer
-                                                    ) throws IOException {
+  private ColumnStatistics[] decryptFileStats(ReaderEncryptionVariant encryption,
+                                              InStream.StreamOptions compression,
+                                              OrcProto.Footer footer
+                                              ) throws IOException {
     Key key = encryption.getFileFooterKey();
     if (key == null) {
       return null;
@@ -373,19 +375,20 @@ public class ReaderImpl implements Reader {
       TypeDescription root = encryption.getRoot();
       for(int i= 0; i < result.length; ++i){
         result[i] = ColumnStatisticsImpl.deserialize(root.findSubtype(root.getId() + i),
-            decrypted.getColumn(i));
+            decrypted.getColumn(i), this);
       }
       return result;
     }
   }
 
-  public static ColumnStatistics[] deserializeStats(
+  public ColumnStatistics[] deserializeStats(
       TypeDescription schema,
       List<OrcProto.ColumnStatistics> fileStats) {
     ColumnStatistics[] result = new ColumnStatistics[fileStats.size()];
     for(int i=0; i < result.length; ++i) {
       TypeDescription subschema = schema == null ? null : schema.findSubtype(i);
-      result[i] = ColumnStatisticsImpl.deserialize(subschema, fileStats.get(i));
+      result[i] = ColumnStatisticsImpl.deserialize(subschema, fileStats.get(i),
+          this);
     }
     return result;
   }
@@ -737,6 +740,14 @@ public class ReaderImpl implements Reader {
   }
 
   @Override
+  public boolean writerUsedProlepticGregorian() {
+    OrcProto.Footer footer = tail.getFooter();
+    return footer.hasCalendar()
+               ? footer.getCalendar() == OrcProto.CalendarKind.PROLEPTIC_GREGORIAN
+               : OrcConf.PROLEPTIC_GREGORIAN_DEFAULT.getBoolean(conf);
+  }
+
+  @Override
   public Options options() {
     return new Options(conf);
   }
@@ -894,7 +905,7 @@ public class ReaderImpl implements Reader {
       List<StripeStatistics> result = new ArrayList<>(list.size());
       for (OrcProto.StripeStatistics ss : stripeStatistics) {
         result.add(new StripeStatisticsImpl(schema,
-            new ArrayList<>(ss.getColStatsList())));
+            new ArrayList<>(ss.getColStatsList()), this));
       }
       return result;
     }
@@ -926,7 +937,7 @@ public class ReaderImpl implements Reader {
               if (variant != null) {
                 TypeDescription variantType = variant.getRoot();
                 List<StripeStatistics> colStats =
-                    variant.getStripeStatistics(included, options);
+                    variant.getStripeStatistics(included, options, this);
                 for(int sub = c; sub <= variantType.getMaximumId(); ++sub) {
                   if (included == null || included[sub]) {
                     for(int s = 0; s < colStats.size(); ++s) {

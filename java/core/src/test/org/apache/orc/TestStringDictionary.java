@@ -270,6 +270,11 @@ public class TestStringDictionary {
     public double getDictionaryKeySizeThreshold(int column) {
       return OrcConf.DICTIONARY_KEY_SIZE_THRESHOLD.getDouble(conf);
     }
+
+    @Override
+    public boolean getProlepticGregorian() {
+      return false;
+    }
   }
 
   @Test

@@ -139,6 +139,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
   // do we need to include the current encryption keys in the next stripe
   // information
   private boolean needKeyFlush;
+  private final boolean useProlepticGregorian;
 
   public WriterImpl(FileSystem fs,
                     Path path,
@@ -147,6 +148,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     this.conf = opts.getConfiguration();
     // clone it so that we can annotate it with encryption
     this.schema = opts.getSchema().clone();
+    useProlepticGregorian = opts.getProlepticGregorian();
     int numColumns = schema.getMaximumId() + 1;
     if (!opts.isEnforceBufferSize()) {
       opts.bufferSize(getEstimatedBufferSize(opts.getStripeSize(), numColumns,
@@ -468,6 +470,11 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     public double getDictionaryKeySizeThreshold(int columnId) {
       return directEncodingColumns[columnId] ? 0.0 : dictionaryKeySizeThreshold;
     }
+
+    @Override
+    public boolean getProlepticGregorian() {
+      return useProlepticGregorian;
+    }
   }
 
 
@@ -633,6 +640,11 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     rawDataSize = computeRawDataSize();
     // serialize the types
     writeTypes(builder, schema);
+    if (hasDateOrTime(schema)) {
+      builder.setCalendar(useProlepticGregorian
+                              ? OrcProto.CalendarKind.PROLEPTIC_GREGORIAN
+                              : OrcProto.CalendarKind.JULIAN_GREGORIAN);
+    }
     // add the stripe information
     for(OrcProto.StripeInformation stripe: stripes) {
       builder.addStripes(stripe);
@@ -766,7 +778,8 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
                            ) throws IOException {
     appendStripe(stripe, offset, length, stripeInfo,
         new StripeStatistics[]{
-            new StripeStatisticsImpl(schema, stripeStatistics.getColStatsList())});
+            new StripeStatisticsImpl(schema, stripeStatistics.getColStatsList(),
+                null)});
   }
 
   @Override
@@ -846,6 +859,25 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     if (children != null) {
       for (TypeDescription child : children) {
         if (hasTimestamp(child)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  private static boolean hasDateOrTime(TypeDescription schema) {
+    switch (schema.getCategory()) {
+    case TIMESTAMP:
+    case TIMESTAMP_INSTANT:
+    case DATE:
+      return true;
+    default:
+    }
+    List<TypeDescription> children = schema.getChildren();
+    if (children != null) {
+      for(TypeDescription child: children) {
+        if (hasDateOrTime(child)) {
           return true;
         }
       }

@@ -144,4 +144,9 @@ public interface WriterContext {
    */
   double getDictionaryKeySizeThreshold(int columnId);
 
+  /**
+   * Should we write the data using the proleptic Gregorian calendar?
+   * @return true if we should use the proleptic Gregorian calendar
+   */
+  boolean getProlepticGregorian();
 }
