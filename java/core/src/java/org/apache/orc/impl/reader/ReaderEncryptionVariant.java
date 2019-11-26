@@ -31,6 +31,7 @@ import org.apache.orc.impl.InStream;
 import org.apache.orc.impl.KeyProvider;
 import org.apache.orc.impl.BufferChunk;
 import org.apache.orc.impl.LocalKey;
+import org.apache.orc.impl.ReaderImpl;
 import org.apache.orc.impl.StripeStatisticsImpl;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -230,11 +231,12 @@ public class ReaderEncryptionVariant implements EncryptionVariant {
    * @return the stripe statistics for this variant.
    */
   public List<StripeStatistics> getStripeStatistics(boolean[] columns,
-                                                    InStream.StreamOptions compression
+                                                    InStream.StreamOptions compression,
+                                                    ReaderImpl reader
                                                     ) throws IOException {
     StripeStatisticsImpl[] result = new StripeStatisticsImpl[stripeCount];
     for(int s=0; s < result.length; ++s) {
-      result[s] = new StripeStatisticsImpl(column);
+      result[s] = new StripeStatisticsImpl(column, reader);
     }
     // create the objects
     long offset = stripeStatsOffset;

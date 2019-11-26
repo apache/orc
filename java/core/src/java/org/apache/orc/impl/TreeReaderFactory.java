@@ -30,6 +30,7 @@ import java.util.TimeZone;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.DateColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.Decimal64ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
@@ -65,6 +66,10 @@ public class TreeReaderFactory {
     OrcFile.Version getFileFormat();
 
     ReaderEncryption getEncryption();
+
+    boolean useProlepticGregorian();
+
+    boolean fileUsedProlepticGregorian();
   }
 
   public static class ReaderContext implements Context {
@@ -74,6 +79,8 @@ public class TreeReaderFactory {
     private String writerTimezone;
     private OrcFile.Version fileFormat;
     private ReaderEncryption encryption;
+    private boolean useProlepticGregorian;
+    private boolean fileUsedProlepticGregorian;
 
     public ReaderContext setSchemaEvolution(SchemaEvolution evolution) {
       this.evolution = evolution;
@@ -105,6 +112,13 @@ public class TreeReaderFactory {
       return this;
     }
 
+    public ReaderContext setProlepticGregorian(boolean file,
+                                               boolean reader) {
+      this.useProlepticGregorian = reader;
+      this.fileUsedProlepticGregorian = file;
+      return this;
+    }
+
     @Override
     public SchemaEvolution getSchemaEvolution() {
       return evolution;
@@ -133,6 +147,16 @@ public class TreeReaderFactory {
     @Override
     public ReaderEncryption getEncryption() {
       return encryption;
+    }
+
+    @Override
+    public boolean useProlepticGregorian() {
+      return useProlepticGregorian;
+    }
+
+    @Override
+    public boolean fileUsedProlepticGregorian() {
+      return fileUsedProlepticGregorian;
     }
   }
 
@@ -897,6 +921,8 @@ public class TreeReaderFactory {
     private TimeZone writerTimeZone;
     private boolean hasSameTZRules;
     private ThreadLocal<DateFormat> threadLocalDateFormat;
+    private final boolean useProleptic;
+    private final boolean fileUsesProleptic;
 
     TimestampTreeReader(int columnId, Context context,
                         boolean instantType) throws IOException {
@@ -938,6 +964,8 @@ public class TreeReaderFactory {
           this.nanos = createIntegerReader(encoding.getKind(), nanosStream, false, context);
         }
       }
+      fileUsesProleptic = context.fileUsedProlepticGregorian();
+      useProleptic = context.useProlepticGregorian();
     }
 
     @Override
@@ -1011,6 +1039,7 @@ public class TreeReaderFactory {
                            boolean[] isNull,
                            final int batchSize) throws IOException {
       TimestampColumnVector result = (TimestampColumnVector) previousVector;
+      result.changeCalendar(fileUsesProleptic, false);
       super.nextVector(previousVector, isNull, batchSize);
 
       result.setIsUTC(context.getUseUTCTimestamp());
@@ -1039,6 +1068,7 @@ public class TreeReaderFactory {
           }
         }
       }
+      result.changeCalendar(useProleptic, true);
     }
 
     private static int parseNanos(long serialized) {
@@ -1062,6 +1092,9 @@ public class TreeReaderFactory {
 
   public static class DateTreeReader extends TreeReader {
     protected IntegerReader reader = null;
+    private final boolean needsDateColumnVector;
+    private final boolean useProleptic;
+    private final boolean fileUsesProleptic;
 
     DateTreeReader(int columnId, Context context) throws IOException {
       this(columnId, null, null, null, context);
@@ -1070,6 +1103,10 @@ public class TreeReaderFactory {
     protected DateTreeReader(int columnId, InStream present, InStream data,
         OrcProto.ColumnEncoding encoding, Context context) throws IOException {
       super(columnId, present, context);
+      useProleptic = context.useProlepticGregorian();
+      fileUsesProleptic = context.fileUsedProlepticGregorian();
+      // if either side is proleptic, we need a DateColumnVector
+      needsDateColumnVector = useProleptic || fileUsesProleptic;
       if (data != null && encoding != null) {
         checkEncoding(encoding);
         reader = createIntegerReader(encoding.getKind(), data, true, context);
@@ -1110,12 +1147,23 @@ public class TreeReaderFactory {
                            boolean[] isNull,
                            final int batchSize) throws IOException {
       final LongColumnVector result = (LongColumnVector) previousVector;
+      if (needsDateColumnVector) {
+        if (result instanceof DateColumnVector) {
+          ((DateColumnVector) result).changeCalendar(fileUsesProleptic, false);
+        } else {
+          throw new IllegalArgumentException("Can't use LongColumnVector to " +
+                                                 "read proleptic Gregorian dates.");
+        }
+      }
 
       // Read present/isNull stream
       super.nextVector(result, isNull, batchSize);
 
       // Read value entries based on isNull entries
       reader.nextVector(result, result.vector, batchSize);
+      if (needsDateColumnVector) {
+        ((DateColumnVector) result).changeCalendar(useProleptic, true);
+      }
     }
 
     @Override

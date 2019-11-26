@@ -1479,15 +1479,19 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     DateStatisticsImpl() {
     }
 
-    DateStatisticsImpl(OrcProto.ColumnStatistics stats) {
+    DateStatisticsImpl(OrcProto.ColumnStatistics stats,
+                       boolean writerUsedProlepticGregorian,
+                       boolean convertToProlepticGregorian) {
       super(stats);
       OrcProto.DateStatistics dateStats = stats.getDateStatistics();
       // min,max values serialized/deserialized as int (days since epoch)
       if (dateStats.hasMaximum()) {
-        maximum = dateStats.getMaximum();
+        maximum = DateUtils.convertDate(dateStats.getMaximum(),
+            writerUsedProlepticGregorian, convertToProlepticGregorian);
       }
       if (dateStats.hasMinimum()) {
-        minimum = dateStats.getMinimum();
+        minimum = DateUtils.convertDate(dateStats.getMinimum(),
+            writerUsedProlepticGregorian, convertToProlepticGregorian);
       }
     }
 
@@ -1640,23 +1644,31 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     TimestampStatisticsImpl() {
     }
 
-    TimestampStatisticsImpl(OrcProto.ColumnStatistics stats) {
+    TimestampStatisticsImpl(OrcProto.ColumnStatistics stats,
+                            boolean writerUsedProlepticGregorian,
+                            boolean convertToProlepticGregorian) {
       super(stats);
       OrcProto.TimestampStatistics timestampStats = stats.getTimestampStatistics();
       // min,max values serialized/deserialized as int (milliseconds since epoch)
       if (timestampStats.hasMaximum()) {
-        maximum = SerializationUtils.convertToUtc(TimeZone.getDefault(),
-            timestampStats.getMaximum());
+        maximum = DateUtils.convertTime(
+            SerializationUtils.convertToUtc(TimeZone.getDefault(),
+               timestampStats.getMaximum()),
+            writerUsedProlepticGregorian, convertToProlepticGregorian);
       }
       if (timestampStats.hasMinimum()) {
-        minimum = SerializationUtils.convertToUtc(TimeZone.getDefault(),
-            timestampStats.getMinimum());
+        minimum = DateUtils.convertTime(
+            SerializationUtils.convertToUtc(TimeZone.getDefault(),
+                timestampStats.getMinimum()),
+            writerUsedProlepticGregorian, convertToProlepticGregorian);
       }
       if (timestampStats.hasMaximumUtc()) {
-        maximum = timestampStats.getMaximumUtc();
+        maximum = DateUtils.convertTime(timestampStats.getMaximumUtc(),
+            writerUsedProlepticGregorian, convertToProlepticGregorian);
       }
       if (timestampStats.hasMinimumUtc()) {
-        minimum = timestampStats.getMinimumUtc();
+        minimum = DateUtils.convertTime(timestampStats.getMinimumUtc(),
+            writerUsedProlepticGregorian, convertToProlepticGregorian);
       }
     }
 
@@ -1795,8 +1807,10 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     TimestampInstantStatisticsImpl() {
     }
 
-    TimestampInstantStatisticsImpl(OrcProto.ColumnStatistics stats) {
-      super(stats);
+    TimestampInstantStatisticsImpl(OrcProto.ColumnStatistics stats,
+                                   boolean writerUsedProlepticGregorian,
+                                   boolean convertToProlepticGregorian) {
+      super(stats, writerUsedProlepticGregorian, convertToProlepticGregorian);
     }
 
     @Override
@@ -2008,6 +2022,20 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
   public static ColumnStatisticsImpl deserialize(TypeDescription schema,
                                                  OrcProto.ColumnStatistics stats) {
+    return deserialize(schema, stats, false, false);
+  }
+
+  public static ColumnStatisticsImpl deserialize(TypeDescription schema,
+                                                 OrcProto.ColumnStatistics stats,
+                                                 ReaderImpl reader) {
+    return deserialize(schema, stats, reader.writerUsedProlepticGregorian(),
+        reader.options.getConvertToProlepticGregorian());
+  }
+
+  public static ColumnStatisticsImpl deserialize(TypeDescription schema,
+                                                 OrcProto.ColumnStatistics stats,
+                                                 boolean writerUsedProlepticGregorian,
+                                                 boolean convertToProlepticGregorian) {
     if (stats.hasBucketStatistics()) {
       return new BooleanStatisticsImpl(stats);
     } else if (stats.hasIntStatistics()) {
@@ -2026,12 +2054,15 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
         return new DecimalStatisticsImpl(stats);
       }
     } else if (stats.hasDateStatistics()) {
-      return new DateStatisticsImpl(stats);
+      return new DateStatisticsImpl(stats, writerUsedProlepticGregorian,
+          convertToProlepticGregorian);
     } else if (stats.hasTimestampStatistics()) {
       return schema == null ||
                  schema.getCategory() == TypeDescription.Category.TIMESTAMP ?
-                 new TimestampStatisticsImpl(stats) :
-                 new TimestampInstantStatisticsImpl(stats);
+                 new TimestampStatisticsImpl(stats,
+                     writerUsedProlepticGregorian, convertToProlepticGregorian) :
+                 new TimestampInstantStatisticsImpl(stats,
+                     writerUsedProlepticGregorian, convertToProlepticGregorian);
     } else if(stats.hasBinaryStatistics()) {
       return new BinaryStatisticsImpl(stats);
     } else {
