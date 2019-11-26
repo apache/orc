@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -31,6 +31,7 @@ import org.apache.orc.Reader;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.AcidStats;
 import org.apache.orc.impl.OrcAcidUtils;
+import org.apache.orc.impl.ReaderImpl;
 import org.apache.orc.impl.RecordReaderImpl;
 import org.apache.orc.util.BloomFilter;
 import org.codehaus.jettison.json.JSONArray;
@@ -53,15 +54,11 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.codehaus.jettison.json.JSONStringer;
 import org.codehaus.jettison.json.JSONWriter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * File dump tool with json formatted output.
  */
 public class JsonFileDump {
-
-  private static final Logger LOG = LoggerFactory.getLogger(JsonFileDump.class);
 
   public static void printJsonMetaData(List<String> files,
       Configuration conf,
@@ -100,7 +97,9 @@ public class JsonFileDump {
         writer.key("schemaString").value(reader.getSchema().toString());
         writer.key("schema");
         writeSchema(writer, reader.getSchema());
-
+        writer.key("calendar").value(reader.writerUsedProlepticGregorian()
+                                         ? "proleptic Gregorian"
+                                         : "Julian/Gregorian");
         writer.key("stripeStatistics").array();
         List<StripeStatistics> stripeStatistics = reader.getStripeStatistics();
         for (int n = 0; n < stripeStatistics.size(); n++) {
@@ -191,7 +190,7 @@ public class JsonFileDump {
               writer.object();
               writer.key("columnId").value(col);
               writeRowGroupIndexes(writer, col, indices.getRowGroupIndex(),
-                  reader.getSchema());
+                  reader.getSchema(), (ReaderImpl) reader);
               writeBloomFilterIndexes(writer, col, indices,
                   reader.getWriterVersion(),
                   reader.getSchema().findSubtype(col).getCategory(),
@@ -442,9 +441,9 @@ public class JsonFileDump {
   }
 
   private static void writeRowGroupIndexes(JSONWriter writer, int col,
-      OrcProto.RowIndex[] rowGroupIndex, TypeDescription schema)
-      throws JSONException {
-
+                                           OrcProto.RowIndex[] rowGroupIndex,
+                                           TypeDescription schema,
+                                           ReaderImpl reader) throws JSONException {
     OrcProto.RowIndex index;
     if (rowGroupIndex == null || (col >= rowGroupIndex.length) ||
         ((index = rowGroupIndex[col]) == null)) {
@@ -461,7 +460,7 @@ public class JsonFileDump {
       }
       OrcProto.ColumnStatistics colStats = entry.getStatistics();
       writeColumnStatistics(writer, ColumnStatisticsImpl.deserialize(
-          schema.findSubtype(col), colStats));
+          schema.findSubtype(col), colStats, reader));
       writer.key("positions").array();
       for (int posIx = 0; posIx < entry.getPositionsCount(); ++posIx) {
         writer.value(entry.getPositions(posIx));

@@ -38,7 +38,6 @@ import org.apache.orc.impl.OrcTail;
 import org.apache.orc.impl.ReaderImpl;
 import org.apache.orc.impl.WriterImpl;
 import org.apache.orc.impl.WriterInternal;
-import org.apache.orc.impl.reader.ReaderEncryptionVariant;
 import org.apache.orc.impl.writer.WriterImplV2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -283,9 +282,11 @@ public class OrcFile {
     // For now keeping this around to avoid complex surgery
     private FileMetadata fileMetadata;
     private boolean useUTCTimestamp;
+    private boolean useProlepticGregorian;
 
     public ReaderOptions(Configuration conf) {
       this.conf = conf;
+      this.useProlepticGregorian = OrcConf.PROLEPTIC_GREGORIAN.getBoolean(conf);
     }
 
     public ReaderOptions filesystem(FileSystem fs) {
@@ -312,6 +313,18 @@ public class OrcFile {
       this.keyProvider = provider;
       return this;
     }
+
+    /**
+     * Should the reader convert dates and times to the proleptic Gregorian
+     * calendar?
+     * @param newValue should it use the proleptic Gregorian calendar?
+     * @return this
+     */
+    public ReaderOptions convertToProlepticGregorian(boolean newValue) {
+      this.useProlepticGregorian = newValue;
+      return this;
+    }
+
 
     public Configuration getConfiguration() {
       return conf;
@@ -354,6 +367,9 @@ public class OrcFile {
       return useUTCTimestamp;
     }
 
+    public boolean getConvertToProlepticGregorian() {
+      return useProlepticGregorian;
+    }
   }
 
   public static ReaderOptions readerOptions(Configuration conf) {
@@ -434,6 +450,7 @@ public class OrcFile {
     private String encryption;
     private String masks;
     private KeyProvider provider;
+    private boolean useProlepticGregorian;
     private Map<String, HadoopShims.KeyMetadata> keyOverrides = new HashMap<>();
 
     protected WriterOptions(Properties tableProperties, Configuration conf) {
@@ -479,6 +496,7 @@ public class OrcFile {
           OrcConf.WRITE_VARIABLE_LENGTH_BLOCKS.getBoolean(tableProperties,conf);
       directEncodingColumns = OrcConf.DIRECT_ENCODING_COLUMNS.getString(
           tableProperties, conf);
+      useProlepticGregorian = OrcConf.PROLEPTIC_GREGORIAN.getBoolean(conf);
     }
 
     /**
@@ -800,6 +818,17 @@ public class OrcFile {
       return this;
     }
 
+    /**
+     * Should the writer use the proleptic Gregorian calendar for
+     * times and dates.
+     * @param newValue true if we should use the proleptic calendar
+     * @return this
+     */
+    public WriterOptions setProlepticGregorian(boolean newValue) {
+      this.useProlepticGregorian = newValue;
+      return this;
+    }
+
     public KeyProvider getKeyProvider() {
       return provider;
     }
@@ -918,6 +947,10 @@ public class OrcFile {
 
     public Map<String, HadoopShims.KeyMetadata> getKeyOverrides() {
       return keyOverrides;
+    }
+
+    public boolean getProlepticGregorian() {
+      return useProlepticGregorian;
     }
   }
 
@@ -1127,6 +1160,11 @@ public class OrcFile {
     if (!sameVariants(firstReader.getEncryptionVariants(),
                       reader.getEncryptionVariants())) {
       LOG.info("Can't merge {} because it has different encryption variants", path);
+      return false;
+    }
+    if (firstReader.writerUsedProlepticGregorian() !=
+            reader.writerUsedProlepticGregorian()) {
+      LOG.info("Can't merge {} because it uses a different calendar", path);
       return false;
     }
     return true;

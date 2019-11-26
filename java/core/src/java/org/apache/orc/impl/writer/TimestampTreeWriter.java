@@ -47,6 +47,7 @@ public class TimestampTreeWriter extends TreeWriterBase {
   private final boolean alwaysUTC;
   private final TimeZone localTimezone;
   private final long epoch;
+  private final boolean useProleptic;
 
   public TimestampTreeWriter(TypeDescription schema,
                              WriterEncryptionVariant encryption,
@@ -81,6 +82,7 @@ public class TimestampTreeWriter extends TreeWriterBase {
     } catch (ParseException e) {
       throw new IOException("Unable to create base timestamp tree writer", e);
     }
+    useProleptic = writer.getProlepticGregorian();
   }
 
   @Override
@@ -96,6 +98,7 @@ public class TimestampTreeWriter extends TreeWriterBase {
                          int length) throws IOException {
     super.writeBatch(vector, offset, length);
     TimestampColumnVector vec = (TimestampColumnVector) vector;
+    vec.changeCalendar(useProleptic, true);
     if (vector.isRepeating) {
       if (vector.noNulls || !vector.isNull[0]) {
         // ignore the bottom three digits from the vec.time field

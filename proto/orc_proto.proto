@@ -340,6 +340,15 @@ message Encryption {
   optional KeyProviderKind keyProvider = 4;
 }
 
+enum CalendarKind {
+  UNKNOWN_CALENDAR = 0;
+   // The Java default calendar changes from Julian to Gregorian
+   // in 1583.
+  JULIAN_GREGORIAN = 1;
+  // A calendar that extends the Gregorian calendar back forever.
+  PROLEPTIC_GREGORIAN = 2;
+}
+
 message Footer {
   optional uint64 headerLength = 1;
   optional uint64 contentLength = 2;
@@ -359,6 +368,7 @@ message Footer {
 
   // information about the encryption in this file
   optional Encryption encryption = 10;
+  optional CalendarKind calendar = 11;
 }
 
 enum CompressionKind {

@@ -27,12 +27,13 @@ import java.util.List;
 
 public class StripeStatisticsImpl extends StripeStatistics  {
   public StripeStatisticsImpl(TypeDescription schema,
-                              List<OrcProto.ColumnStatistics> list) {
-    super(schema, list);
+                              List<OrcProto.ColumnStatistics> list,
+                              ReaderImpl reader) {
+    super(schema, list, reader);
   }
 
-  public StripeStatisticsImpl(TypeDescription schema) {
-    super(schema, createList(schema));
+  public StripeStatisticsImpl(TypeDescription schema, ReaderImpl reader) {
+    super(schema, createList(schema), reader);
   }
 
   /**

@@ -3,6 +3,7 @@ File Version: 0.12 with ORC_14
 Rows: 21000
 Compression: ZLIB
 Compression size: 4096
+Calendar: Julian/Gregorian
 Type: struct<i:int,l:bigint,s:string>
 
 Stripe Statistics:
