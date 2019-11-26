@@ -105,4 +105,10 @@ public interface WriterContext {
     boolean getUseUTCTimestamp();
 
     double getDictionaryKeySizeThreshold(int column);
+
+  /**
+   * Should we write the data using the proleptic Gregorian calendar?
+   * @return true if we should use the proleptic Gregorian calendar
+   */
+  boolean getProlepticGregorian();
 }

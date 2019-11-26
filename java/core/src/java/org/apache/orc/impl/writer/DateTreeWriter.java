@@ -19,6 +19,7 @@
 package org.apache.orc.impl.writer;
 
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.DateColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.util.JavaDataModel;
 import org.apache.orc.OrcProto;
@@ -32,6 +33,7 @@ import java.io.IOException;
 public class DateTreeWriter extends TreeWriterBase {
   private final IntegerWriter writer;
   private final boolean isDirectV2;
+  private final boolean useProleptic;
 
   public DateTreeWriter(int columnId,
                         TypeDescription schema,
@@ -45,6 +47,7 @@ public class DateTreeWriter extends TreeWriterBase {
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
     }
+    useProleptic = writer.getProlepticGregorian();
   }
 
   @Override
@@ -52,6 +55,12 @@ public class DateTreeWriter extends TreeWriterBase {
                          int length) throws IOException {
     super.writeBatch(vector, offset, length);
     LongColumnVector vec = (LongColumnVector) vector;
+    if (vector instanceof  DateColumnVector) {
+      ((DateColumnVector) vec).changeCalendar(useProleptic, true);
+    } else if (useProleptic) {
+      throw new IllegalArgumentException("Can't use LongColumnVector to write" +
+                                             " proleptic dates");
+    }
     if (vector.isRepeating) {
       if (vector.noNulls || !vector.isNull[0]) {
         int value = (int) vec.vector[0];

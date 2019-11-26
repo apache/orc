@@ -120,12 +120,14 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
   private final boolean useUTCTimeZone;
   private final double dictionaryKeySizeThreshold;
   private final boolean[] directEncodingColumns;
+  private final boolean useProlepticGregorian;
 
   public WriterImpl(FileSystem fs,
                     Path path,
                     OrcFile.WriterOptions opts) throws IOException {
     this.path = path;
     this.conf = opts.getConfiguration();
+    useProlepticGregorian = opts.getProlepticGregorian();
     this.callback = opts.getCallback();
     this.schema = opts.getSchema();
     this.writerVersion = opts.getWriterVersion();
@@ -438,6 +440,11 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     public double getDictionaryKeySizeThreshold(int columnId) {
       return directEncodingColumns[columnId] ? 0.0 : dictionaryKeySizeThreshold;
     }
+
+    @Override
+    public boolean getProlepticGregorian() {
+      return useProlepticGregorian;
+    }
   }
 
 
@@ -536,6 +543,11 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     rawDataSize = computeRawDataSize();
     // serialize the types
     writeTypes(builder, schema);
+    if (hasDateOrTime(schema)) {
+      builder.setCalendar(useProlepticGregorian
+                              ? OrcProto.CalendarKind.PROLEPTIC_GREGORIAN
+                              : OrcProto.CalendarKind.JULIAN_GREGORIAN);
+    }
     // add the stripe information
     for(OrcProto.StripeInformation stripe: stripes) {
       builder.addStripes(stripe);
@@ -643,8 +655,9 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
 
   @Override
   public void appendStripe(byte[] stripe, int offset, int length,
-      StripeInformation stripeInfo,
-      OrcProto.StripeStatistics stripeStatistics) throws IOException {
+                           StripeInformation stripeInfo,
+                           OrcProto.StripeStatistics stripeStatistics
+                           ) throws IOException {
     checkArgument(stripe != null, "Stripe must not be null");
     checkArgument(length <= stripe.length,
         "Specified length must not be greater specified array length");
@@ -691,7 +704,12 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
 
     // add the column statistics
     writeFileStatistics(builder, treeWriter);
-    return ReaderImpl.deserializeStats(schema, builder.getStatisticsList());
+    List<OrcProto.ColumnStatistics> fileStats = builder.getStatisticsList();
+    ColumnStatistics[] result = new ColumnStatistics[fileStats.size()];
+    for(int i=0; i < result.length; ++i) {
+      result[i] = ColumnStatisticsImpl.deserialize(schema, fileStats.get(i));
+    }
+    return result;
   }
 
   public CompressionCodec getCompressionCodec() {
@@ -706,6 +724,24 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     if (children != null) {
       for (TypeDescription child : children) {
         if (hasTimestamp(child)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  private static boolean hasDateOrTime(TypeDescription schema) {
+    switch (schema.getCategory()) {
+    case TIMESTAMP:
+    case DATE:
+      return true;
+    default:
+    }
+    List<TypeDescription> children = schema.getChildren();
+    if (children != null) {
+      for(TypeDescription child: children) {
+        if (hasDateOrTime(child)) {
           return true;
         }
       }

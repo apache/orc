@@ -19,14 +19,22 @@
 package org.apache.orc;
 
 import org.apache.orc.impl.ColumnStatisticsImpl;
+import org.apache.orc.impl.ReaderImpl;
 
 import java.util.List;
 
 public class StripeStatistics {
   private final List<OrcProto.ColumnStatistics> cs;
+  private final ReaderImpl reader;
 
   public StripeStatistics(List<OrcProto.ColumnStatistics> list) {
+    this(list, null);
+  }
+
+  public StripeStatistics(List<OrcProto.ColumnStatistics> list,
+                          ReaderImpl reader) {
     this.cs = list;
+    this.reader = reader;
   }
 
   /**
@@ -37,7 +45,11 @@ public class StripeStatistics {
   public ColumnStatistics[] getColumnStatistics() {
     ColumnStatistics[] result = new ColumnStatistics[cs.size()];
     for (int i = 0; i < result.length; ++i) {
-      result[i] = ColumnStatisticsImpl.deserialize(null, cs.get(i));
+      if (reader == null) {
+        result[i] = ColumnStatisticsImpl.deserialize(null, cs.get(i));
+      } else {
+        result[i] = ColumnStatisticsImpl.deserialize(null, cs.get(i), reader);
+      }
     }
     return result;
   }

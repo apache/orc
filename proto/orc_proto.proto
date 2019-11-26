@@ -194,6 +194,15 @@ message Metadata {
   repeated StripeStatistics stripeStats = 1;
 }
 
+enum CalendarKind {
+  UNKNOWN_CALENDAR = 0;
+   // The Java default calendar changes from Julian to Gregorian
+   // in 1583.
+  JULIAN_GREGORIAN = 1;
+  // A calendar that extends the Gregorian calendar back forever.
+  PROLEPTIC_GREGORIAN = 2;
+}
+
 message Footer {
   optional uint64 headerLength = 1;
   optional uint64 contentLength = 2;
@@ -210,6 +219,8 @@ message Footer {
   // 2 = Presto
   // 3 = Scritchley Go from https://github.com/scritchley/orc
   optional uint32 writer = 9;
+  // encryption is 10
+  optional CalendarKind calendar = 11;
 }
 
 enum CompressionKind {

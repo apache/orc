@@ -20,6 +20,7 @@ package org.apache.orc;
 
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.DateColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.Decimal64ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
@@ -634,8 +635,9 @@ public class TypeDescription
       case SHORT:
       case INT:
       case LONG:
-      case DATE:
         return new LongColumnVector(maxSize);
+      case DATE:
+        return new DateColumnVector(maxSize);
       case TIMESTAMP:
         return new TimestampColumnVector(maxSize);
       case FLOAT:

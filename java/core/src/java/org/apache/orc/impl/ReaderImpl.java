@@ -30,6 +30,7 @@ import java.util.function.Supplier;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.orc.CompressionKind;
 import org.apache.orc.FileMetadata;
+import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcUtils;
 import org.apache.orc.Reader;
@@ -228,12 +229,12 @@ public class ReaderImpl implements Reader {
     return deserializeStats(schema, fileStats);
   }
 
-  public static ColumnStatistics[] deserializeStats(
+  public ColumnStatistics[] deserializeStats(
       TypeDescription schema,
       List<OrcProto.ColumnStatistics> fileStats) {
     ColumnStatistics[] result = new ColumnStatistics[fileStats.size()];
     for(int i=0; i < result.length; ++i) {
-      result[i] = ColumnStatisticsImpl.deserialize(schema, fileStats.get(i));
+      result[i] = ColumnStatisticsImpl.deserialize(schema, fileStats.get(i), this);
     }
     return result;
   }
@@ -645,6 +646,14 @@ public class ReaderImpl implements Reader {
   }
 
   @Override
+  public boolean writerUsedProlepticGregorian() {
+    OrcProto.Footer footer = tail.getFooter();
+    return footer.hasCalendar()
+               ? footer.getCalendar() == OrcProto.CalendarKind.PROLEPTIC_GREGORIAN
+               : OrcConf.PROLEPTIC_GREGORIAN_DEFAULT.getBoolean(conf);
+  }
+
+  @Override
   public Options options() {
     return new Options(conf);
   }
@@ -825,7 +834,7 @@ public class ReaderImpl implements Reader {
     }
     List<StripeStatistics> result = new ArrayList<>();
     for (OrcProto.StripeStatistics ss : stripeStats) {
-      result.add(new StripeStatistics(ss.getColStatsList()));
+      result.add(new StripeStatistics(ss.getColStatsList(), this));
     }
     return result;
   }

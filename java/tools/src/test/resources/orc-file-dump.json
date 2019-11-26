@@ -34,6 +34,7 @@
       "columnType": "STRING"
     }
   ],
+  "calendar": "Julian\/Gregorian",
   "stripeStatistics": [
     {
       "stripeNumber": 1,

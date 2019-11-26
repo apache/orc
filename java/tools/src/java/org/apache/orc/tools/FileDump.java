@@ -39,6 +39,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.apache.orc.impl.ReaderImpl;
 import org.apache.orc.util.BloomFilter;
 import org.apache.orc.util.BloomFilterIO;
 import org.apache.orc.ColumnStatistics;
@@ -47,7 +48,6 @@ import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
-import org.apache.orc.impl.AcidStats;
 import org.apache.orc.impl.ColumnStatisticsImpl;
 import org.apache.orc.impl.OrcAcidUtils;
 import org.apache.orc.impl.OrcIndex;
@@ -312,6 +312,9 @@ public final class FileDump {
     if (reader.getCompressionKind() != CompressionKind.NONE) {
       System.out.println("Compression size: " + reader.getCompressionSize());
     }
+    System.out.println("Calendar: " + (reader.writerUsedProlepticGregorian()
+                           ? "Proleptic Gregorian"
+                           : "Julian/Gregorian"));
     System.out.println("Type: " + reader.getSchema().toString());
     System.out.println("\nStripe Statistics:");
     List<StripeStatistics> stripeStats = reader.getStripeStatistics();
@@ -385,7 +388,7 @@ public final class FileDump {
         for (int col : rowIndexCols) {
           StringBuilder buf = new StringBuilder();
           String rowIdxString = getFormattedRowIndices(col,
-              indices.getRowGroupIndex(), schema);
+              indices.getRowGroupIndex(), schema, (ReaderImpl) reader);
           buf.append(rowIdxString);
           String bloomFilString = getFormattedBloomFilters(col, indices,
               reader.getWriterVersion(),
@@ -664,7 +667,8 @@ public final class FileDump {
 
   private static String getFormattedRowIndices(int col,
                                                OrcProto.RowIndex[] rowGroupIndex,
-                                               TypeDescription schema) {
+                                               TypeDescription schema,
+                                               ReaderImpl reader) {
     StringBuilder buf = new StringBuilder();
     OrcProto.RowIndex index;
     buf.append("    Row group indices for column ").append(col).append(":");
@@ -687,7 +691,7 @@ public final class FileDump {
         buf.append("no stats at ");
       } else {
         ColumnStatistics cs =
-            ColumnStatisticsImpl.deserialize(colSchema, colStats);
+            ColumnStatisticsImpl.deserialize(colSchema, colStats, reader);
         buf.append(cs.toString());
       }
       buf.append(" positions: ");
