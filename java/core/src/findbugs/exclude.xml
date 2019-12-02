@@ -65,4 +65,9 @@
     <Bug pattern="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"/>
     <Class name="org.apache.orc.TestStringDictionary"/>
   </Match>
+  <Match>
+    <Bug pattern="EQ_UNUSUAL"/>
+    <Class name="org.apache.orc.TypeDescription"/>
+    <Method name="equals" />
+  </Match>
 </FindBugsFilter>
