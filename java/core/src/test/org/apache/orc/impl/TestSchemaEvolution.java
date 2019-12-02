@@ -1637,6 +1637,33 @@ public class TestSchemaEvolution {
   }
 
   @Test
+  public void testTypeConversionShouldIgnoreAttributes() throws IOException {
+    TypeDescription fileType = TypeDescription.fromString("struct<x:int,y:smallint>");
+    TypeDescription readType = TypeDescription.fromString("struct<x:int,y:int>");
+    readType.findSubtype("x").setAttribute("iceberg.id", "12");
+    readType.findSubtype("y").setAttribute("iceberg.id", "13");
+    SchemaEvolution evo = new SchemaEvolution(fileType, readType, options);
+
+    // check to make sure the fields are mapped correctly
+    assertEquals(1, evo.getFileType(1).getId());
+    assertEquals(2, evo.getFileType(2).getId());
+
+    TreeReaderFactory.Context treeContext =
+        new TreeReaderFactory.ReaderContext().setSchemaEvolution(evo);
+    TreeReaderFactory.TreeReader reader =
+        TreeReaderFactory.createTreeReader(readType, treeContext);
+
+    // check to make sure the tree reader is built right
+    assertEquals(TreeReaderFactory.StructTreeReader.class, reader.getClass());
+    TreeReaderFactory.TreeReader[] children =
+        ((TreeReaderFactory.StructTreeReader) reader).getChildReaders();
+    assertEquals(2, children.length);
+    assertEquals(TreeReaderFactory.IntTreeReader.class, children[0].getClass());
+    assertEquals(ConvertTreeReaderFactory.AnyIntegerFromAnyIntegerTreeReader.class,
+        children[1].getClass());
+  }
+
+  @Test
   public void testPositionalEvolution() throws IOException {
     options.forcePositionalEvolution(true);
     TypeDescription file = TypeDescription.fromString("struct<x:int,y:int,z:int>");

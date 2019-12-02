@@ -402,6 +402,19 @@ public class TypeDescription
 
   @Override
   public boolean equals(Object other) {
+    return equals(other, true);
+  }
+
+  /**
+   * Determines whether the two object are equal.
+   * This function can either compare or ignore the type attributes as
+   * desired.
+   * @param other the reference object with which to compare.
+   * @param checkAttributes should the type attributes be considered?
+   * @return {@code true} if this object is the same as the other
+   *         argument; {@code false} otherwise.
+   */
+  public boolean equals(Object other, boolean checkAttributes) {
     if (other == null || !(other instanceof TypeDescription)) {
       return false;
     }
@@ -415,15 +428,16 @@ public class TypeDescription
         precision != castOther.precision) {
       return false;
     }
-    // make sure the attributes are the same
-    List<String> attributeNames = getAttributeNames();
-    if (castOther.getAttributeNames().size() != attributeNames.size()) {
-      return false;
-    }
-    for(String attribute: attributeNames) {
-      if (!getAttributeValue(attribute).equals(
-          castOther.getAttributeValue(attribute))) {
+    if (checkAttributes) {
+      // make sure the attributes are the same
+      List<String> attributeNames = getAttributeNames();
+      if (castOther.getAttributeNames().size() != attributeNames.size()) {
         return false;
+      }
+      for (String attribute : attributeNames) {
+        if (!getAttributeValue(attribute).equals(castOther.getAttributeValue(attribute))) {
+          return false;
+        }
       }
     }
     // check the children
@@ -432,7 +446,7 @@ public class TypeDescription
         return false;
       }
       for (int i = 0; i < children.size(); ++i) {
-        if (!children.get(i).equals(castOther.children.get(i))) {
+        if (!children.get(i).equals(castOther.children.get(i), checkAttributes)) {
           return false;
         }
       }
