@@ -402,6 +402,10 @@ public class TypeDescription
 
   @Override
   public boolean equals(Object other) {
+    return equals(other, true);
+  }
+
+  public boolean equals(Object other, boolean checkAttributes) {
     if (other == null || !(other instanceof TypeDescription)) {
       return false;
     }
@@ -415,15 +419,16 @@ public class TypeDescription
         precision != castOther.precision) {
       return false;
     }
-    // make sure the attributes are the same
-    List<String> attributeNames = getAttributeNames();
-    if (castOther.getAttributeNames().size() != attributeNames.size()) {
-      return false;
-    }
-    for(String attribute: attributeNames) {
-      if (!getAttributeValue(attribute).equals(
-          castOther.getAttributeValue(attribute))) {
+    if (checkAttributes) {
+      // make sure the attributes are the same
+      List<String> attributeNames = getAttributeNames();
+      if (castOther.getAttributeNames().size() != attributeNames.size()) {
         return false;
+      }
+      for (String attribute : attributeNames) {
+        if (!getAttributeValue(attribute).equals(castOther.getAttributeValue(attribute))) {
+          return false;
+        }
       }
     }
     // check the children

@@ -2322,7 +2322,7 @@ public class TreeReaderFactory {
       return new NullTreeReader(0);
     }
     TypeDescription.Category readerTypeCategory = readerType.getCategory();
-    if (!fileType.equals(readerType) &&
+    if (!fileType.equals(readerType, false) &&
         (readerTypeCategory != TypeDescription.Category.STRUCT &&
          readerTypeCategory != TypeDescription.Category.MAP &&
          readerTypeCategory != TypeDescription.Category.LIST &&
