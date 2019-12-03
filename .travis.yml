@@ -1,12 +1,24 @@
 language: cpp
 sudo: false
 dist: trusty
+addons:
+  apt:
+    packages:
+    - valgrind
+  homebrew:
+    packages:
+    - openssl
 
 matrix:
   fast_finish: true
   include:
   - compiler: gcc
     os: linux
+    script:
+    - mkdir build
+    - cd build
+    - cmake -DANALYZE_JAVA=ON ..
+    - travis_wait 35 make package test-out
   - compiler: clang
     os: linux
     addons:
@@ -20,11 +32,18 @@ matrix:
       - export CXX=clang++-4.0
   - compiler: clang
     os: osx
-    osx_image: xcode6.4
+    osx_image: xcode7.3
+    script:
+    - brew link --overwrite --force openssl
+    - mkdir build
+    - cd build
+    - cmake -DOPENSSL_ROOT_DIR=`brew --prefix openssl` ..
+    - make package test-out
   - compiler: clang
     os: osx
-    osx_image: xcode9.2
+    osx_image: xcode10.3
     script:
+    - brew link --overwrite --force openssl
     - mkdir build
     - cd build
     - cmake -DOPENSSL_ROOT_DIR=`brew --prefix openssl` ..
@@ -45,3 +64,5 @@ script:
   - cd build
   - cmake -DANALYZE_JAVA=ON ..
   - make package test-out
+  - cd ../java
+  - mvn apache-rat:check
