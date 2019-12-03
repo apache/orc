@@ -405,6 +405,13 @@ public class TypeDescription
     return equals(other, true);
   }
 
+  /**
+   * Indicates whether a {@link TypeDescription} object is "equal to" this one.
+   * @param other the reference object with which to compare.
+   * @param checkAttributes whether to check equality of attributes of the objects being compared
+   * @return {@code true} if this object is the same as the other
+   *         argument; {@code false} otherwise.
+   */
   public boolean equals(Object other, boolean checkAttributes) {
     if (other == null || !(other instanceof TypeDescription)) {
       return false;
@@ -437,7 +444,7 @@ public class TypeDescription
         return false;
       }
       for (int i = 0; i < children.size(); ++i) {
-        if (!children.get(i).equals(castOther.children.get(i))) {
+        if (!children.get(i).equals(castOther.children.get(i), checkAttributes)) {
           return false;
         }
       }

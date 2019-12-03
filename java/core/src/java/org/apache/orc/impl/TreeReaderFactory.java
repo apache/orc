@@ -2322,6 +2322,8 @@ public class TreeReaderFactory {
       return new NullTreeReader(0);
     }
     TypeDescription.Category readerTypeCategory = readerType.getCategory();
+    // We skip attribute checks when comparing types since they are not used to
+    // create the ConvertTreeReaders
     if (!fileType.equals(readerType, false) &&
         (readerTypeCategory != TypeDescription.Category.STRUCT &&
          readerTypeCategory != TypeDescription.Category.MAP &&
