@@ -94,7 +94,7 @@ namespace orc {
     // GET / SET _maximum
     bool hasMaximum() const { return _hasMaximum; }
 
-    T getMaximum() const { return _maximum; }
+    const T & getMaximum() const { return _maximum; }
 
     void setHasMaximum(bool hasMax) { _hasMaximum = hasMax; }
 
@@ -105,7 +105,7 @@ namespace orc {
 
     void setHasMinimum(bool hasMin) { _hasMinimum = hasMin; }
 
-    T getMinimum() const { return _minimum; }
+    const T & getMinimum() const { return _minimum; }
 
     void setMinimum(T min) { _minimum = min; }
 
@@ -1077,7 +1077,7 @@ namespace orc {
       _stats.setHasNull(hasNull);
     }
 
-    std::string getMinimum() const override {
+    const std::string & getMinimum() const override {
       if(hasMinimum()){
         return _stats.getMinimum();
       }else{
@@ -1085,7 +1085,7 @@ namespace orc {
       }
     }
 
-    std::string getMaximum() const override {
+    const std::string & getMaximum() const override {
       if(hasMaximum()){
         return _stats.getMaximum();
       }else{
