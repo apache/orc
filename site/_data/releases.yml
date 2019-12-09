@@ -129,6 +129,14 @@
     ORC-562: Don't wrap the readerSchema with ACID fields, if it already is
     ORC-569: The first index entry may have empty positions
 
+1.4.5:
+  date: 2019-12-09
+  state: stable
+  tar: orc-1.4.5.tar.gz
+  signed-by: Owen O’Malley (3D0C92B9)
+  sha256: 6b30272d4c4cbccc4f019590aa0b770214ff154c8204018a640a61ae0b29e9cb
+  known-issues:
+
 1.4.4:
   date: 2018-05-14
   state: archived
