@@ -16,7 +16,7 @@ Chinna Rao Lalam        | chinnaraol   | Committer
 Chaoyu Tang             | ctang        | Committer
 Carl Steinbach          | cws          | Committer
 Daniel Dai              | daijy        | Committer
-Dongjoon Hyun           | dongjoon     | Committer
+Dongjoon Hyun           | dongjoon     | PMC
 Deepak Majeti           | mdeepak      | PMC
 Eugene Koifman          | ekoifman     | PMC
 Gang Wu                 | gangwu       | PMC
