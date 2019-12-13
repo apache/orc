@@ -1654,21 +1654,21 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
         maximum = DateUtils.convertTime(
             SerializationUtils.convertToUtc(TimeZone.getDefault(),
                timestampStats.getMaximum()),
-            writerUsedProlepticGregorian, convertToProlepticGregorian);
+            writerUsedProlepticGregorian, convertToProlepticGregorian, true);
       }
       if (timestampStats.hasMinimum()) {
         minimum = DateUtils.convertTime(
             SerializationUtils.convertToUtc(TimeZone.getDefault(),
                 timestampStats.getMinimum()),
-            writerUsedProlepticGregorian, convertToProlepticGregorian);
+            writerUsedProlepticGregorian, convertToProlepticGregorian, true);
       }
       if (timestampStats.hasMaximumUtc()) {
         maximum = DateUtils.convertTime(timestampStats.getMaximumUtc(),
-            writerUsedProlepticGregorian, convertToProlepticGregorian);
+            writerUsedProlepticGregorian, convertToProlepticGregorian, true);
       }
       if (timestampStats.hasMinimumUtc()) {
         minimum = DateUtils.convertTime(timestampStats.getMinimumUtc(),
-            writerUsedProlepticGregorian, convertToProlepticGregorian);
+            writerUsedProlepticGregorian, convertToProlepticGregorian, true);
       }
     }
 

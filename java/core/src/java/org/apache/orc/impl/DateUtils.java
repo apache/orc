@@ -17,11 +17,15 @@
  */
 package org.apache.orc.impl;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.TimeZone;
+import org.threeten.extra.chrono.HybridChronology;
+
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.chrono.IsoChronology;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.TemporalAccessor;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -36,41 +40,39 @@ import java.util.concurrent.TimeUnit;
  * old dates.
  */
 public class DateUtils {
-  private static SimpleDateFormat createFormatter(String fmt,
-                                                 GregorianCalendar calendar) {
-    SimpleDateFormat result = new SimpleDateFormat(fmt);
-    result.setCalendar(calendar);
-    return result;
-  }
-
-  private static final String DATE = "yyyy-MM-dd";
-  private static final String TIME = DATE + " HH:mm:ss";
-  private static final TimeZone UTC = TimeZone.getTimeZone("UTC");
-  private static final GregorianCalendar HYBRID = new GregorianCalendar();
-  private static final ThreadLocal<SimpleDateFormat> HYBRID_DATE_FORMAT =
-      ThreadLocal.withInitial(() -> createFormatter(DATE, HYBRID));
-  private static final ThreadLocal<SimpleDateFormat> HYBRID_TIME_FORMAT =
-      ThreadLocal.withInitial(() -> createFormatter(TIME, HYBRID));
+  private static final ZoneId UTC = ZoneId.of("UTC");
+  private static final ZoneId LOCAL = ZoneId.systemDefault();
   private static final long SWITCHOVER_MILLIS;
   private static final long SWITCHOVER_DAYS;
-  private static final GregorianCalendar PROLEPTIC = new GregorianCalendar();
-  private static final ThreadLocal<SimpleDateFormat> PROLEPTIC_DATE_FORMAT =
-      ThreadLocal.withInitial(() -> createFormatter(DATE, PROLEPTIC));
-  private static final ThreadLocal<SimpleDateFormat> PROLEPTIC_TIME_FORMAT =
-      ThreadLocal.withInitial(() -> createFormatter(TIME, PROLEPTIC));
+  private static final DateTimeFormatter HYBRID_DATE_FORMAT =
+      ConvertTreeReaderFactory.DATE_FORMAT
+          .withChronology(HybridChronology.INSTANCE)
+          .withZone(UTC);
+  private static final DateTimeFormatter PROLEPTIC_DATE_FORMAT =
+      DateTimeFormatter.ISO_LOCAL_DATE
+          .withChronology(IsoChronology.INSTANCE)
+          .withZone(UTC);
+  private static final DateTimeFormatter HYBRID_UTC_TIME_FORMAT =
+      ConvertTreeReaderFactory.TIMESTAMP_FORMAT
+          .withChronology(HybridChronology.INSTANCE)
+          .withZone(UTC);
+  private static final DateTimeFormatter HYBRID_LOCAL_TIME_FORMAT =
+      ConvertTreeReaderFactory.TIMESTAMP_FORMAT
+          .withChronology(HybridChronology.INSTANCE)
+          .withZone(LOCAL);
+  private static final DateTimeFormatter PROLEPTIC_UTC_TIME_FORMAT =
+      ConvertTreeReaderFactory.TIMESTAMP_FORMAT
+          .withChronology(IsoChronology.INSTANCE)
+          .withZone(UTC);
+  private static final DateTimeFormatter PROLEPTIC_LOCAL_TIME_FORMAT =
+      ConvertTreeReaderFactory.TIMESTAMP_FORMAT
+          .withChronology(IsoChronology.INSTANCE)
+          .withZone(LOCAL);
 
   static {
-    HYBRID.setTimeZone(UTC);
-    PROLEPTIC.setTimeZone(UTC);
-    PROLEPTIC.setGregorianChange(new Date(Long.MIN_VALUE));
-
     // Get the last day where the two calendars agree with each other.
-    try {
-      SWITCHOVER_MILLIS = HYBRID_DATE_FORMAT.get().parse("1582-10-15").getTime();
-      SWITCHOVER_DAYS = TimeUnit.MILLISECONDS.toDays(SWITCHOVER_MILLIS);
-    } catch (ParseException e) {
-      throw new IllegalArgumentException("Can't parse switch over date", e);
-    }
+    SWITCHOVER_DAYS = LocalDate.from(HYBRID_DATE_FORMAT.parse("1582-10-15")).toEpochDay();
+    SWITCHOVER_MILLIS = TimeUnit.DAYS.toMillis(SWITCHOVER_DAYS);
   }
 
   /**
@@ -82,14 +84,8 @@ public class DateUtils {
   public static int convertDateToProleptic(int hybrid) {
     int proleptic = hybrid;
     if (hybrid < SWITCHOVER_DAYS) {
-      String dateStr = HYBRID_DATE_FORMAT.get().format(
-          new Date(TimeUnit.DAYS.toMillis(hybrid)));
-      try {
-        proleptic = (int) TimeUnit.MILLISECONDS.toDays(
-            PROLEPTIC_DATE_FORMAT.get().parse(dateStr).getTime());
-      } catch (ParseException e) {
-        throw new IllegalArgumentException("Can't parse " + dateStr, e);
-      }
+      String dateStr = HYBRID_DATE_FORMAT.format(LocalDate.ofEpochDay(proleptic));
+      proleptic = (int) LocalDate.from(PROLEPTIC_DATE_FORMAT.parse(dateStr)).toEpochDay();
     }
     return proleptic;
   }
@@ -103,17 +99,54 @@ public class DateUtils {
   public static int convertDateToHybrid(int proleptic) {
     int hyrbid = proleptic;
     if (proleptic < SWITCHOVER_DAYS) {
-      String dateStr = PROLEPTIC_DATE_FORMAT.get().format(
-          new Date(TimeUnit.DAYS.toMillis(proleptic)));
-      try {
-        hyrbid = (int) TimeUnit.MILLISECONDS.toDays(
-            HYBRID_DATE_FORMAT.get().parse(dateStr).getTime());
-      } catch (ParseException e) {
-        throw new IllegalArgumentException("Can't parse " + dateStr, e);
-      }
+      String dateStr = PROLEPTIC_DATE_FORMAT.format(LocalDate.ofEpochDay(proleptic));
+      hyrbid = (int) LocalDate.from(HYBRID_DATE_FORMAT.parse(dateStr)).toEpochDay();
     }
     return hyrbid;
   }
+
+  /**
+   * Convert epoch millis from the hybrid Julian/Gregorian calendar to the
+   * proleptic Gregorian.
+   * @param hybrid millis of epoch in the hybrid Julian/Gregorian
+   * @param useUtc use UTC instead of local
+   * @return millis of epoch in the proleptic Gregorian
+   */
+  public static long convertTimeToProleptic(long hybrid, boolean useUtc) {
+    long proleptic = hybrid;
+    if (hybrid < SWITCHOVER_MILLIS) {
+      if (useUtc) {
+        String dateStr = HYBRID_UTC_TIME_FORMAT.format(Instant.ofEpochMilli(hybrid));
+        proleptic = Instant.from(PROLEPTIC_UTC_TIME_FORMAT.parse(dateStr)).toEpochMilli();
+      } else {
+        String dateStr = HYBRID_LOCAL_TIME_FORMAT.format(Instant.ofEpochMilli(hybrid));
+        proleptic = Instant.from(PROLEPTIC_LOCAL_TIME_FORMAT.parse(dateStr)).toEpochMilli();
+      }
+    }
+    return proleptic;
+  }
+
+  /**
+   * Convert epoch millis from the proleptic Gregorian calendar to the hybrid
+   * Julian/Gregorian.
+   * @param proleptic millis of epoch in the proleptic Gregorian
+   * @param useUtc use UTC instead of local
+   * @return millis of epoch in the hybrid Julian/Gregorian
+   */
+  public static long convertTimeToHybrid(long proleptic, boolean useUtc) {
+    long hybrid = proleptic;
+    if (proleptic < SWITCHOVER_MILLIS) {
+      if (useUtc) {
+        String dateStr = PROLEPTIC_UTC_TIME_FORMAT.format(Instant.ofEpochMilli(hybrid));
+        hybrid = Instant.from(HYBRID_UTC_TIME_FORMAT.parse(dateStr)).toEpochMilli();
+      } else {
+        String dateStr = PROLEPTIC_LOCAL_TIME_FORMAT.format(Instant.ofEpochMilli(hybrid));
+        hybrid = Instant.from(HYBRID_LOCAL_TIME_FORMAT.parse(dateStr)).toEpochMilli();
+      }
+    }
+    return hybrid;
+  }
+
 
   public static int convertDate(int original,
                                 boolean fromProleptic,
@@ -129,51 +162,52 @@ public class DateUtils {
 
   public static long convertTime(long original,
                                  boolean fromProleptic,
-                                 boolean toProleptic) {
+                                 boolean toProleptic,
+                                 boolean useUtc) {
     if (fromProleptic != toProleptic) {
       return toProleptic
-                 ? convertTimeToProleptic(original)
-                 : convertTimeToHybrid(original);
+                 ? convertTimeToProleptic(original, useUtc)
+                 : convertTimeToHybrid(original, useUtc);
     } else {
       return original;
     }
   }
-  /**
-   * Convert epoch millis from the hybrid Julian/Gregorian calendar to the
-   * proleptic Gregorian.
-   * @param hybrid millis of epoch in the hybrid Julian/Gregorian
-   * @return millis of epoch in the proleptic Gregorian
-   */
-  public static long convertTimeToProleptic(long hybrid) {
-    long proleptic = hybrid;
-    if (hybrid < SWITCHOVER_MILLIS) {
-      String dateStr = HYBRID_TIME_FORMAT.get().format(new Date(hybrid));
-      try {
-        proleptic = PROLEPTIC_TIME_FORMAT.get().parse(dateStr).getTime();
-      } catch (ParseException e) {
-        throw new IllegalArgumentException("Can't parse " + dateStr, e);
-      }
+
+  public static Integer parseDate(String date, boolean fromProleptic) {
+    try {
+      TemporalAccessor time = (fromProleptic ? PROLEPTIC_DATE_FORMAT : HYBRID_DATE_FORMAT).parse(date);
+      return (int) LocalDate.from(time).toEpochDay();
+    } catch (DateTimeParseException e) {
+      return null;
     }
-    return proleptic;
   }
 
-  /**
-   * Convert epoch millis from the proleptic Gregorian calendar to the hybrid
-   * Julian/Gregorian.
-   * @param proleptic millis of epoch in the proleptic Gregorian
-   * @return millis of epoch in the hybrid Julian/Gregorian
-   */
-  public static long convertTimeToHybrid(long proleptic) {
-    long hybrid = proleptic;
-    if (proleptic < SWITCHOVER_MILLIS) {
-      String dateStr = PROLEPTIC_TIME_FORMAT.get().format(new Date(proleptic));
-      try {
-        hybrid = HYBRID_TIME_FORMAT.get().parse(dateStr).getTime();
-      } catch (ParseException e) {
-        throw new IllegalArgumentException("Can't parse " + dateStr, e);
-      }
+  public static String printDate(int date, boolean fromProleptic) {
+    return (fromProleptic ? PROLEPTIC_DATE_FORMAT : HYBRID_DATE_FORMAT)
+               .format(LocalDate.ofEpochDay(date));
+  }
+
+  public static DateTimeFormatter getTimeFormat(boolean useProleptic,
+                                                boolean useUtc) {
+    if (useProleptic) {
+      return useUtc ? PROLEPTIC_UTC_TIME_FORMAT : PROLEPTIC_LOCAL_TIME_FORMAT;
+    } else {
+      return useUtc ? HYBRID_UTC_TIME_FORMAT : HYBRID_LOCAL_TIME_FORMAT;
     }
-    return hybrid;
+  }
+
+  public static Long parseTime(String date, boolean fromProleptic, boolean useUtc) {
+    try {
+      TemporalAccessor time = getTimeFormat(fromProleptic, useUtc).parse(date);
+      return Instant.from(time).toEpochMilli();
+    } catch (DateTimeParseException e) {
+      return null;
+    }
+  }
+
+  public static String printTime(long millis, boolean fromProleptic,
+                                 boolean useUtc) {
+    return getTimeFormat(fromProleptic, useUtc).format(Instant.ofEpochMilli(millis));
   }
 
   private DateUtils() {

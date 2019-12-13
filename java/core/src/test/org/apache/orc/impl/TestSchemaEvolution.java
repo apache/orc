@@ -644,18 +644,27 @@ public class TestSchemaEvolution {
     TimestampColumnVector tcv = new TimestampColumnVector(1024);
     batch.cols[0] = tcv;
     batch.reset();
-    batch.size = 1;
+    batch.size = 3;
     tcv.time[0] = 74000L;
+    tcv.nanos[0] = 123456789;
+    tcv.time[1] = 123000L;
+    tcv.nanos[1] = 456000000;
+    tcv.time[2] = 987000;
+    tcv.nanos[2] = 0;
     writer.addRowBatch(batch);
     writer.close();
 
     Reader reader = OrcFile.createReader(testFilePath,
       OrcFile.readerOptions(conf).filesystem(fs));
-    TypeDescription schemaOnRead = TypeDescription.createDecimal().withPrecision(38).withScale(1);
+    TypeDescription schemaOnRead = TypeDescription.createDecimal().withPrecision(38).withScale(9);
     RecordReader rows = reader.rows(reader.options().schema(schemaOnRead));
     batch = schemaOnRead.createRowBatch();
-    rows.nextBatch(batch);
-    assertEquals("74", ((DecimalColumnVector) batch.cols[0]).vector[0].toString());
+    assertEquals(true, rows.nextBatch(batch));
+    assertEquals(3, batch.size);
+    DecimalColumnVector dcv = (DecimalColumnVector) batch.cols[0];
+    assertEquals("74.123456789", dcv.vector[0].toString());
+    assertEquals("123.456", dcv.vector[1].toString());
+    assertEquals("987", dcv.vector[2].toString());
     rows.close();
   }
 
@@ -683,6 +692,40 @@ public class TestSchemaEvolution {
     batch = schemaOnRead.createRowBatchV2();
     rows.nextBatch(batch);
     assertEquals(740, ((Decimal64ColumnVector) batch.cols[0]).vector[0]);
+    rows.close();
+  }
+
+  @Test
+  public void testTimestampToStringEvolution() throws Exception {
+    testFilePath = new Path(workDir, "TestOrcFile." +
+                                         testCaseName.getMethodName() + ".orc");
+    TypeDescription schema = TypeDescription.fromString("timestamp");
+    Writer writer = OrcFile.createWriter(testFilePath,
+        OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+            .bufferSize(10000).useUTCTimestamp(true));
+    VectorizedRowBatch batch = schema.createRowBatchV2();
+    TimestampColumnVector tcv = (TimestampColumnVector) batch.cols[0];
+    batch.size = 3;
+    tcv.time[0] = 74000L;
+    tcv.nanos[0] = 123456789;
+    tcv.time[1] = 123000L;
+    tcv.nanos[1] = 456000000;
+    tcv.time[2] = 987000;
+    tcv.nanos[2] = 0;
+    writer.addRowBatch(batch);
+    writer.close();
+
+    schema = TypeDescription.fromString("string");
+    Reader reader = OrcFile.createReader(testFilePath,
+        OrcFile.readerOptions(conf).filesystem(fs));
+    RecordReader rows = reader.rows(reader.options().schema(schema));
+    batch = schema.createRowBatchV2();
+    BytesColumnVector bcv = (BytesColumnVector) batch.cols[0];
+    assertEquals(true, rows.nextBatch(batch));
+    assertEquals(3, batch.size);
+    assertEquals("1970-01-01 00:01:14.123456789", bcv.toString(0));
+    assertEquals("1970-01-01 00:02:03.456", bcv.toString(1));
+    assertEquals("1970-01-01 00:16:27", bcv.toString(2));
     rows.close();
   }
 
@@ -1224,6 +1267,7 @@ public class TestSchemaEvolution {
     original = fileType.getChildren().get(1);
     assertSame(original, mapped);
   }
+
   @Test
   public void testCaseMismatchInReaderAndWriterSchema() {
     TypeDescription fileType =
@@ -1679,19 +1723,23 @@ public class TestSchemaEvolution {
   // place.
 
   static String decimalTimestampToString(long centiseconds, ZoneId zone) {
-    long sec = centiseconds / 100;
-    int nano = (int) ((centiseconds % 100) * 10_000_000);
-    return timestampToString(sec, nano, zone);
+    int nano = (int) (Math.floorMod(centiseconds, 100) * 10_000_000);
+    return timestampToString(centiseconds * 10, nano, zone);
   }
 
   static String doubleTimestampToString(double seconds, ZoneId zone) {
-    long sec = (long) seconds;
+    long sec = (long) Math.floor(seconds);
     int nano = 1_000_000 * (int) Math.round((seconds - sec) * 1000);
-    return timestampToString(sec, nano, zone);
+    return timestampToString(sec * 1000, nano, zone);
   }
 
-  static String timestampToString(long seconds, int nanos, ZoneId zone) {
-    return timestampToString(Instant.ofEpochSecond(seconds, nanos), zone);
+  static String timestampToString(long millis, int nanos, ZoneId zone) {
+    return timestampToString(Instant.ofEpochSecond(Math.floorDiv(millis, 1000),
+        nanos), zone);
+  }
+
+  static String longTimestampToString(long seconds, ZoneId zone) {
+    return timestampToString(Instant.ofEpochSecond(seconds), zone);
   }
 
   static String timestampToString(Instant time, ZoneId zone) {
@@ -1794,11 +1842,11 @@ public class TestSchemaEvolution {
               current = 0;
             }
             assertEquals("row " + r, (timeStrings[r] + " " +
-                                          READER_ZONE.getId()).replace(".7 ", ".0 "),
-                timestampToString(t1.vector[current], 0, READER_ZONE));
+                                          READER_ZONE.getId()).replace(".7 ", " "),
+                longTimestampToString(t1.vector[current], READER_ZONE));
             assertEquals("row " + r, (timeStrings[r] + " " +
-                                          WRITER_ZONE.getId()).replace(".7 ", ".0 "),
-                timestampToString(t2.vector[current], 0, WRITER_ZONE));
+                                          WRITER_ZONE.getId()).replace(".7 ", " "),
+                longTimestampToString(t2.vector[current], WRITER_ZONE));
             current += 1;
           }
           assertEquals(false, rows.nextBatch(batch));
@@ -1907,10 +1955,10 @@ public class TestSchemaEvolution {
               current = 0;
             }
             assertEquals("row " + r, timeStrings[r] + " " + READER_ZONE.getId(),
-                timestampToString(timeT1.time[current] / 1000, timeT1.nanos[current], READER_ZONE));
+                timestampToString(timeT1.time[current], timeT1.nanos[current], READER_ZONE));
             assertEquals("row " + r,
                 timestampToString(Instant.from(WRITER_FORMAT.parse(timeStrings[r])), READER_ZONE),
-                timestampToString(timeT2.time[current] / 1000, timeT2.nanos[current], READER_ZONE));
+                timestampToString(timeT2.time[current], timeT2.nanos[current], READER_ZONE));
             current += 1;
           }
           assertEquals(false, rows.nextBatch(batch));
@@ -1937,11 +1985,11 @@ public class TestSchemaEvolution {
               current = 0;
             }
             assertEquals("row " + r, (timeStrings[r] + " " +
-                                          UTC.getId()).replace(".7 ", ".0 "),
-                timestampToString(t1.vector[current], 0, UTC));
+                                          UTC.getId()).replace(".7 ", " "),
+                longTimestampToString(t1.vector[current], UTC));
             assertEquals("row " + r, (timeStrings[r] + " " +
-                                          WRITER_ZONE.getId()).replace(".7 ", ".0 "),
-                timestampToString(t2.vector[current], 0, WRITER_ZONE));
+                                          WRITER_ZONE.getId()).replace(".7 ", " "),
+                longTimestampToString(t2.vector[current], WRITER_ZONE));
             current += 1;
           }
           assertEquals(false, rows.nextBatch(batch));
@@ -2049,10 +2097,10 @@ public class TestSchemaEvolution {
               current = 0;
             }
             assertEquals("row " + r, timeStrings[r] + " UTC",
-                timestampToString(timeT1.time[current] / 1000, timeT1.nanos[current], UTC));
+                timestampToString(timeT1.time[current], timeT1.nanos[current], UTC));
             assertEquals("row " + r,
                 timestampToString(Instant.from(WRITER_FORMAT.parse(timeStrings[r])), UTC),
-                timestampToString(timeT2.time[current] / 1000, timeT2.nanos[current], UTC));
+                timestampToString(timeT2.time[current], timeT2.nanos[current], UTC));
             current += 1;
           }
           assertEquals(false, rows.nextBatch(batch));
@@ -2069,6 +2117,7 @@ public class TestSchemaEvolution {
                                         String[] values) throws IOException {
     TypeDescription fileSchema =
         TypeDescription.fromString("struct<l1:bigint,l2:bigint," +
+                                       "t1:tinyint,t2:tinyint," +
                                        "d1:decimal(14,2),d2:decimal(14,2)," +
                                        "dbl1:double,dbl2:double," +
                                        "dt1:date,dt2:date," +
@@ -2086,20 +2135,24 @@ public class TestSchemaEvolution {
     int batchSize = batch.getMaxSize();
     LongColumnVector l1 = (LongColumnVector) batch.cols[0];
     LongColumnVector l2 = (LongColumnVector) batch.cols[1];
-    Decimal64ColumnVector d1 = (Decimal64ColumnVector) batch.cols[2];
-    Decimal64ColumnVector d2 = (Decimal64ColumnVector) batch.cols[3];
-    DoubleColumnVector dbl1 = (DoubleColumnVector) batch.cols[4];
-    DoubleColumnVector dbl2 = (DoubleColumnVector) batch.cols[5];
-    LongColumnVector dt1 = (LongColumnVector) batch.cols[6];
-    LongColumnVector dt2 = (LongColumnVector) batch.cols[7];
-    BytesColumnVector s1 = (BytesColumnVector) batch.cols[8];
-    BytesColumnVector s2 = (BytesColumnVector) batch.cols[9];
+    LongColumnVector t1 = (LongColumnVector) batch.cols[2];
+    LongColumnVector t2 = (LongColumnVector) batch.cols[3];
+    Decimal64ColumnVector d1 = (Decimal64ColumnVector) batch.cols[4];
+    Decimal64ColumnVector d2 = (Decimal64ColumnVector) batch.cols[5];
+    DoubleColumnVector dbl1 = (DoubleColumnVector) batch.cols[6];
+    DoubleColumnVector dbl2 = (DoubleColumnVector) batch.cols[7];
+    LongColumnVector dt1 = (LongColumnVector) batch.cols[8];
+    LongColumnVector dt2 = (LongColumnVector) batch.cols[9];
+    BytesColumnVector s1 = (BytesColumnVector) batch.cols[10];
+    BytesColumnVector s2 = (BytesColumnVector) batch.cols[11];
     for (int r = 0; r < values.length; ++r) {
       int row = batch.size++;
       Instant utcTime = Instant.from(UTC_FORMAT.parse(values[r]));
       Instant writerTime = Instant.from(WRITER_FORMAT.parse(values[r]));
       l1.vector[row] =  utcTime.getEpochSecond();
       l2.vector[row] =  writerTime.getEpochSecond();
+      t1.vector[row] = r % 128;
+      t2.vector[row] = r % 128;
       // balance out the 2 digits of scale
       d1.vector[row] = utcTime.toEpochMilli() / 10;
       d2.vector[row] = writerTime.toEpochMilli() / 10;
@@ -2166,6 +2219,8 @@ public class TestSchemaEvolution {
       TypeDescription readerSchema = TypeDescription.fromString(
           "struct<l1:timestamp," +
               "l2:timestamp with local time zone," +
+              "t1:timestamp," +
+              "t2:timestamp with local time zone," +
               "d1:timestamp," +
               "d2:timestamp with local time zone," +
               "dbl1:timestamp," +
@@ -2177,17 +2232,19 @@ public class TestSchemaEvolution {
       VectorizedRowBatch batch = readerSchema.createRowBatchV2();
       TimestampColumnVector l1 = (TimestampColumnVector) batch.cols[0];
       TimestampColumnVector l2 = (TimestampColumnVector) batch.cols[1];
-      TimestampColumnVector d1 = (TimestampColumnVector) batch.cols[2];
-      TimestampColumnVector d2 = (TimestampColumnVector) batch.cols[3];
-      TimestampColumnVector dbl1 = (TimestampColumnVector) batch.cols[4];
-      TimestampColumnVector dbl2 = (TimestampColumnVector) batch.cols[5];
-      TimestampColumnVector dt1 = (TimestampColumnVector) batch.cols[6];
-      TimestampColumnVector dt2 = (TimestampColumnVector) batch.cols[7];
-      TimestampColumnVector s1 = (TimestampColumnVector) batch.cols[8];
-      TimestampColumnVector s2 = (TimestampColumnVector) batch.cols[9];
+      TimestampColumnVector t1 = (TimestampColumnVector) batch.cols[2];
+      TimestampColumnVector t2 = (TimestampColumnVector) batch.cols[3];
+      TimestampColumnVector d1 = (TimestampColumnVector) batch.cols[4];
+      TimestampColumnVector d2 = (TimestampColumnVector) batch.cols[5];
+      TimestampColumnVector dbl1 = (TimestampColumnVector) batch.cols[6];
+      TimestampColumnVector dbl2 = (TimestampColumnVector) batch.cols[7];
+      TimestampColumnVector dt1 = (TimestampColumnVector) batch.cols[8];
+      TimestampColumnVector dt2 = (TimestampColumnVector) batch.cols[9];
+      TimestampColumnVector s1 = (TimestampColumnVector) batch.cols[10];
+      TimestampColumnVector s2 = (TimestampColumnVector) batch.cols[11];
       OrcFile.ReaderOptions options = OrcFile.readerOptions(conf);
       Reader.Options rowOptions = new Reader.Options().schema(readerSchema);
-
+      int offset = READER_ZONE.getRules().getOffset(Instant.ofEpochSecond(0, 0)).getTotalSeconds();
       try (Reader reader = OrcFile.createReader(testFilePath, options);
            RecordReader rows = reader.rows(rowOptions)) {
         int current = 0;
@@ -2199,39 +2256,45 @@ public class TestSchemaEvolution {
 
           String expected1 = timeStrings[r] + " " + READER_ZONE.getId();
           String expected2 = timeStrings[r] + " " + WRITER_ZONE.getId();
-          String midnight = timeStrings[r].substring(0, 10) + " 00:00:00.0";
+          String midnight = timeStrings[r].substring(0, 10) + " 00:00:00";
           String expectedDate1 = midnight + " " + READER_ZONE.getId();
           String expectedDate2 = midnight + " " + UTC.getId();
 
-          assertEquals("row " + r, expected1.replace(".1 ", ".0 "),
-              timestampToString(l1.time[current] / 1000, l1.nanos[current], READER_ZONE));
+          assertEquals("row " + r, expected1.replace(".1 ", " "),
+              timestampToString(l1.time[current], l1.nanos[current], READER_ZONE));
 
-          assertEquals("row " + r, expected2.replace(".1 ", ".0 "),
-              timestampToString(l2.time[current] / 1000, l2.nanos[current], WRITER_ZONE));
+          assertEquals("row " + r, expected2.replace(".1 ", " "),
+              timestampToString(l2.time[current], l2.nanos[current], WRITER_ZONE));
+
+          assertEquals("row " + r, longTimestampToString(((r % 128) - offset), READER_ZONE),
+              timestampToString(t1.time[current], t1.nanos[current], READER_ZONE));
+
+          assertEquals("row " + r, longTimestampToString((r % 128), WRITER_ZONE),
+              timestampToString(t2.time[current], t2.nanos[current], WRITER_ZONE));
 
           assertEquals("row " + r, expected1,
-              timestampToString(d1.time[current] / 1000, d1.nanos[current], READER_ZONE));
+              timestampToString(d1.time[current], d1.nanos[current], READER_ZONE));
 
           assertEquals("row " + r, expected2,
-              timestampToString(d2.time[current] / 1000, d2.nanos[current], WRITER_ZONE));
+              timestampToString(d2.time[current], d2.nanos[current], WRITER_ZONE));
 
           assertEquals("row " + r, expected1,
-              timestampToString(dbl1.time[current] / 1000, dbl1.nanos[current], READER_ZONE));
+              timestampToString(dbl1.time[current], dbl1.nanos[current], READER_ZONE));
 
           assertEquals("row " + r, expected2,
-              timestampToString(dbl2.time[current] / 1000, dbl2.nanos[current], WRITER_ZONE));
+              timestampToString(dbl2.time[current], dbl2.nanos[current], WRITER_ZONE));
 
           assertEquals("row " + r, expectedDate1,
-              timestampToString(dt1.time[current] / 1000, dt1.nanos[current], READER_ZONE));
+              timestampToString(dt1.time[current], dt1.nanos[current], READER_ZONE));
 
           assertEquals("row " + r, expectedDate2,
-              timestampToString(dt2.time[current] / 1000, dt2.nanos[current], UTC));
+              timestampToString(dt2.time[current], dt2.nanos[current], UTC));
 
           assertEquals("row " + r, expected1,
-              timestampToString(s1.time[current] / 1000, s1.nanos[current], READER_ZONE));
+              timestampToString(s1.time[current], s1.nanos[current], READER_ZONE));
 
           assertEquals("row " + r, expected2,
-              timestampToString(s2.time[current] / 1000, s2.nanos[current], WRITER_ZONE));
+              timestampToString(s2.time[current], s2.nanos[current], WRITER_ZONE));
           current += 1;
         }
         assertEquals(false, rows.nextBatch(batch));
@@ -2250,38 +2313,38 @@ public class TestSchemaEvolution {
 
           String expected1 = timeStrings[r] + " " + UTC.getId();
           String expected2 = timeStrings[r] + " " + WRITER_ZONE.getId();
-          String midnight = timeStrings[r].substring(0, 10) + " 00:00:00.0";
+          String midnight = timeStrings[r].substring(0, 10) + " 00:00:00";
           String expectedDate = midnight + " " + UTC.getId();
 
-          assertEquals("row " + r, expected1.replace(".1 ", ".0 "),
-              timestampToString(l1.time[current] / 1000, l1.nanos[current], UTC));
+          assertEquals("row " + r, expected1.replace(".1 ", " "),
+              timestampToString(l1.time[current], l1.nanos[current], UTC));
 
-          assertEquals("row " + r, expected2.replace(".1 ", ".0 "),
-              timestampToString(l2.time[current] / 1000, l2.nanos[current], WRITER_ZONE));
-
-          assertEquals("row " + r, expected1,
-              timestampToString(d1.time[current] / 1000, d1.nanos[current], UTC));
-
-          assertEquals("row " + r, expected2,
-              timestampToString(d2.time[current] / 1000, d2.nanos[current], WRITER_ZONE));
+          assertEquals("row " + r, expected2.replace(".1 ", " "),
+              timestampToString(l2.time[current], l2.nanos[current], WRITER_ZONE));
 
           assertEquals("row " + r, expected1,
-              timestampToString(dbl1.time[current] / 1000, dbl1.nanos[current], UTC));
+              timestampToString(d1.time[current], d1.nanos[current], UTC));
 
           assertEquals("row " + r, expected2,
-              timestampToString(dbl2.time[current] / 1000, dbl2.nanos[current], WRITER_ZONE));
+              timestampToString(d2.time[current], d2.nanos[current], WRITER_ZONE));
+
+          assertEquals("row " + r, expected1,
+              timestampToString(dbl1.time[current], dbl1.nanos[current], UTC));
+
+          assertEquals("row " + r, expected2,
+              timestampToString(dbl2.time[current], dbl2.nanos[current], WRITER_ZONE));
 
           assertEquals("row " + r, expectedDate,
-              timestampToString(dt1.time[current] / 1000, dt1.nanos[current], UTC));
+              timestampToString(dt1.time[current], dt1.nanos[current], UTC));
 
           assertEquals("row " + r, expectedDate,
-              timestampToString(dt2.time[current] / 1000, dt2.nanos[current], UTC));
+              timestampToString(dt2.time[current], dt2.nanos[current], UTC));
 
           assertEquals("row " + r, expected1,
-              timestampToString(s1.time[current] / 1000, s1.nanos[current], UTC));
+              timestampToString(s1.time[current], s1.nanos[current], UTC));
 
           assertEquals("row " + r, expected2,
-              timestampToString(s2.time[current] / 1000, s2.nanos[current], WRITER_ZONE));
+              timestampToString(s2.time[current], s2.nanos[current], WRITER_ZONE));
           current += 1;
         }
         assertEquals(false, rows.nextBatch(batch));
@@ -2296,14 +2359,14 @@ public class TestSchemaEvolution {
     floatAndDoubleToTimeStampOverflow("double",
         340282347000000000000000000000000000000000.0,
         1e16,
-        9223372036854775.0,
+        9223372036854778.0,
         9000000000000000.1,
         10000000000.0,
         10000000.123,
         -1000000.123,
         -10000000000.0,
         -9000000000000000.1,
-        -9223372036854775.0,
+        -9223372036854778.0,
         -1e16,
         -340282347000000000000000000000000000000000.0);
   }
@@ -2313,14 +2376,14 @@ public class TestSchemaEvolution {
     floatAndDoubleToTimeStampOverflow("float",
         340282347000000000000000000000000000000000.0,
         1e16,
-        9223372036854775.0,
+        9223372036854778.0,
         9000000000000000.1,
         10000000000.0,
         10000000.123,
         -1000000.123,
         -10000000000.0,
         -9000000000000000.1,
-        -9223372036854775.0,
+        -9223372036854778.0,
         -1e16,
         -340282347000000000000000000000000000000000.0);
   }
@@ -2376,7 +2439,8 @@ public class TestSchemaEvolution {
             assertFalse(rowName, t1.noNulls);
             assertTrue(rowName, t1.isNull[row]);
           } else {
-            double actual = t1.time[row] / 1000.0 + t1.nanos[row] / 1_000_000_000.0;
+            double actual = Math.floorDiv(t1.time[row], 1000) +
+                                t1.nanos[row] / 1_000_000_000.0;
             assertEquals(rowName, expected, actual,
                 Math.abs(expected * (isFloat ? 0.000001 : 0.0000000000000001)));
             assertFalse(rowName, t1.isNull[row]);
@@ -2392,6 +2456,7 @@ public class TestSchemaEvolution {
     }
   }
 
+  @Test
   public void testCheckAcidSchema() {
     String ccSchema = "struct<operation:int,originalTransaction:bigint,bucket:int," +
         "rowId:bigint,currentTransaction:bigint," +
