@@ -640,11 +640,9 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     rawDataSize = computeRawDataSize();
     // serialize the types
     writeTypes(builder, schema);
-    if (hasDateOrTime(schema)) {
-      builder.setCalendar(useProlepticGregorian
+    builder.setCalendar(useProlepticGregorian
                               ? OrcProto.CalendarKind.PROLEPTIC_GREGORIAN
                               : OrcProto.CalendarKind.JULIAN_GREGORIAN);
-    }
     // add the stripe information
     for(OrcProto.StripeInformation stripe: stripes) {
       builder.addStripes(stripe);
@@ -859,25 +857,6 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     if (children != null) {
       for (TypeDescription child : children) {
         if (hasTimestamp(child)) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  private static boolean hasDateOrTime(TypeDescription schema) {
-    switch (schema.getCategory()) {
-    case TIMESTAMP:
-    case TIMESTAMP_INSTANT:
-    case DATE:
-      return true;
-    default:
-    }
-    List<TypeDescription> children = schema.getChildren();
-    if (children != null) {
-      for(TypeDescription child: children) {
-        if (hasDateOrTime(child)) {
           return true;
         }
       }
