@@ -18,11 +18,14 @@
 
 package org.apache.orc.impl;
 
+import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
+
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.TimeZone;
 
 public final class SerializationUtils {
@@ -1320,5 +1323,31 @@ public final class SerializationUtils {
   public static long convertToUtc(TimeZone local, long time) {
     int offset = local.getOffset(time);
     return time + offset;
+  }
+  /**
+   * Convert a UTC time to a local timezone
+   * @param local the local timezone
+   * @param time the number of seconds since 1970
+   * @return the converted timestamp
+   */
+  public static double convertFromUtc(TimeZone local, double time) {
+    int offset = local.getOffset((long) (time*1000) - local.getRawOffset());
+    return time - offset / 1000.0;
+  }
+
+  /**
+   * Convert a bytes vector element into a String.
+   * @param vector the vector to use
+   * @param elementNum the element number to stringify
+   * @return a string or null if the value was null
+   */
+  public static String bytesVectorToString(BytesColumnVector vector,
+                                           int elementNum) {
+    if (vector.isRepeating) {
+      elementNum = 0;
+    }
+    return vector.noNulls || !vector.isNull[elementNum] ?
+               new String(vector.vector[elementNum], vector.start[elementNum],
+                   vector.length[elementNum], StandardCharsets.UTF_8) : null;
   }
 }

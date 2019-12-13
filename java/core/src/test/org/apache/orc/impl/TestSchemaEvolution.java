@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,11 +23,19 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -351,7 +359,7 @@ public class TestSchemaEvolution {
     RecordReader rows = reader.rows(reader.options().schema(schemaOnRead));
     batch = schemaOnRead.createRowBatch();
     rows.nextBatch(batch);
-    assertEquals(74.72, ((DoubleColumnVector) batch.cols[0]).vector[0], 0.00000000001);
+    assertEquals(74.72, ((DoubleColumnVector) batch.cols[0]).vector[0], 0.00001);
     rows.close();
   }
 
@@ -639,18 +647,27 @@ public class TestSchemaEvolution {
     TimestampColumnVector tcv = new TimestampColumnVector(1024);
     batch.cols[0] = tcv;
     batch.reset();
-    batch.size = 1;
+    batch.size = 3;
     tcv.time[0] = 74000L;
+    tcv.nanos[0] = 123456789;
+    tcv.time[1] = 123000L;
+    tcv.nanos[1] = 456000000;
+    tcv.time[2] = 987000;
+    tcv.nanos[2] = 0;
     writer.addRowBatch(batch);
     writer.close();
 
     Reader reader = OrcFile.createReader(testFilePath,
       OrcFile.readerOptions(conf).filesystem(fs));
-    TypeDescription schemaOnRead = TypeDescription.createDecimal().withPrecision(38).withScale(1);
+    TypeDescription schemaOnRead = TypeDescription.createDecimal().withPrecision(38).withScale(9);
     RecordReader rows = reader.rows(reader.options().schema(schemaOnRead));
     batch = schemaOnRead.createRowBatch();
-    rows.nextBatch(batch);
-    assertEquals("74", ((DecimalColumnVector) batch.cols[0]).vector[0].toString());
+    assertEquals(true, rows.nextBatch(batch));
+    assertEquals(3, batch.size);
+    DecimalColumnVector dcv = (DecimalColumnVector) batch.cols[0];
+    assertEquals("74.123456789", dcv.vector[0].toString());
+    assertEquals("123.456", dcv.vector[1].toString());
+    assertEquals("987", dcv.vector[2].toString());
     rows.close();
   }
 
@@ -678,6 +695,40 @@ public class TestSchemaEvolution {
     batch = schemaOnRead.createRowBatchV2();
     rows.nextBatch(batch);
     assertEquals(740, ((Decimal64ColumnVector) batch.cols[0]).vector[0]);
+    rows.close();
+  }
+
+  @Test
+  public void testTimestampToStringEvolution() throws Exception {
+    testFilePath = new Path(workDir, "TestOrcFile." +
+                                         testCaseName.getMethodName() + ".orc");
+    TypeDescription schema = TypeDescription.fromString("timestamp");
+    Writer writer = OrcFile.createWriter(testFilePath,
+        OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+            .bufferSize(10000).useUTCTimestamp(true));
+    VectorizedRowBatch batch = schema.createRowBatchV2();
+    TimestampColumnVector tcv = (TimestampColumnVector) batch.cols[0];
+    batch.size = 3;
+    tcv.time[0] = 74000L;
+    tcv.nanos[0] = 123456789;
+    tcv.time[1] = 123000L;
+    tcv.nanos[1] = 456000000;
+    tcv.time[2] = 987000;
+    tcv.nanos[2] = 0;
+    writer.addRowBatch(batch);
+    writer.close();
+
+    schema = TypeDescription.fromString("string");
+    Reader reader = OrcFile.createReader(testFilePath,
+        OrcFile.readerOptions(conf).filesystem(fs));
+    RecordReader rows = reader.rows(reader.options().schema(schema));
+    batch = schema.createRowBatchV2();
+    BytesColumnVector bcv = (BytesColumnVector) batch.cols[0];
+    assertEquals(true, rows.nextBatch(batch));
+    assertEquals(3, batch.size);
+    assertEquals("1970-01-01 00:01:14.123456789", bcv.toString(0));
+    assertEquals("1970-01-01 00:02:03.456", bcv.toString(1));
+    assertEquals("1970-01-01 00:16:27", bcv.toString(2));
     rows.close();
   }
 
@@ -1219,6 +1270,7 @@ public class TestSchemaEvolution {
     original = fileType.getChildren().get(1);
     assertSame(original, mapped);
   }
+
   @Test
   public void testCaseMismatchInReaderAndWriterSchema() {
     TypeDescription fileType =
@@ -1649,6 +1701,622 @@ public class TestSchemaEvolution {
     assertEquals(2, evo.getFileType(2).getId());
     assertEquals(3, evo.getFileType(3).getId());
     assertEquals(null, evo.getFileType(4));
+  }
+
+  // These are helper methods that pull some of the common code into one
+  // place.
+
+  static String decimalTimestampToString(long centiseconds, ZoneId zone) {
+    int nano = (int) (Math.floorMod(centiseconds, 100) * 10_000_000);
+    return timestampToString(centiseconds * 10, nano, zone);
+  }
+
+  static String doubleTimestampToString(double seconds, ZoneId zone) {
+    long sec = (long) Math.floor(seconds);
+    int nano = 1_000_000 * (int) Math.round((seconds - sec) * 1000);
+    return timestampToString(sec * 1000, nano, zone);
+  }
+
+  static String timestampToString(long millis, int nanos, ZoneId zone) {
+    return timestampToString(Instant.ofEpochSecond(Math.floorDiv(millis, 1000),
+        nanos), zone);
+  }
+
+  static String longTimestampToString(long millis, ZoneId zone) {
+    return timestampToString(Instant.ofEpochMilli(millis), zone);
+  }
+
+  static String timestampToString(Instant time, ZoneId zone) {
+    return time.atZone(zone)
+               .format(INSTANT_TIMESTAMP_FORMAT);
+  }
+
+  static void writeTimestampDataFile(Path path,
+                                     Configuration conf,
+                                     ZoneId writerZone,
+                                     DateTimeFormatter formatter,
+                                     String[] values) throws IOException {
+    TimeZone oldDefault = TimeZone.getDefault();
+    try {
+      TimeZone.setDefault(TimeZone.getTimeZone(writerZone));
+      TypeDescription fileSchema =
+          TypeDescription.fromString("struct<t1:timestamp>");
+      Writer writer = OrcFile.createWriter(path,
+          OrcFile.writerOptions(conf).setSchema(fileSchema).stripeSize(10000));
+      VectorizedRowBatch batch = fileSchema.createRowBatch(1024);
+      TimestampColumnVector t1 = (TimestampColumnVector) batch.cols[0];
+      for (int r = 0; r < values.length; ++r) {
+        int row = batch.size++;
+        Instant t = Instant.from(formatter.parse(values[r]));
+        t1.time[row] = t.toEpochMilli();
+        t1.nanos[row] = t.getNano();
+        if (batch.size == 1024) {
+          writer.addRowBatch(batch);
+          batch.reset();
+        }
+      }
+      if (batch.size != 0) {
+        writer.addRowBatch(batch);
+      }
+      writer.close();
+    } finally {
+      TimeZone.setDefault(oldDefault);
+    }
+  }
+
+  /**
+   * Tests the various conversions from timestamp and timestamp with local
+   * timezone.
+   *
+   * It writes an ORC file with timestamp and timestamp with local time zone
+   * and then reads it back in with each of the relevant types.
+   *
+   * This test test both with and without the useUtc flag.
+   *
+   * It uses Australia/Sydney and America/New_York because they both have
+   * DST and they move in opposite directions on different days. Thus, we
+   * end up with four sets of offsets.
+   *
+   * Picking the 27th of the month puts it around when DST changes.
+   */
+  @Test
+  public void testEvolutionFromTimestamp() throws Exception {
+    // The number of rows in the file that we test with.
+    final int VALUES = 1024;
+    // The different timezones that we'll use for this test.
+    final ZoneId UTC = ZoneId.of("UTC");
+    final ZoneId WRITER_ZONE = ZoneId.of("America/New_York");
+    final ZoneId READER_ZONE = ZoneId.of("Australia/Sydney");
+
+    final TimeZone oldDefault = TimeZone.getDefault();
+
+    // generate the timestamps to use
+    String[] timeStrings = new String[VALUES];
+    for(int r=0; r < timeStrings.length; ++r) {
+      timeStrings[r] = String.format("%04d-%02d-27 23:45:56.7",
+          2000 + (r / 12), (r % 12) + 1);
+    }
+
+    final DateTimeFormatter WRITER_FORMAT =
+        ConvertTreeReaderFactory.TIMESTAMP_FORMAT.withZone(WRITER_ZONE);
+
+    writeTimestampDataFile(testFilePath, conf, WRITER_ZONE, WRITER_FORMAT, timeStrings);
+
+    try {
+      TimeZone.setDefault(TimeZone.getTimeZone(READER_ZONE));
+      OrcFile.ReaderOptions options = OrcFile.readerOptions(conf);
+      Reader.Options rowOptions = new Reader.Options();
+
+      try (Reader reader = OrcFile.createReader(testFilePath, options)) {
+
+        // test conversion to long
+        TypeDescription readerSchema = TypeDescription.fromString("struct<t1:bigint>");
+        try (RecordReader rows = reader.rows(rowOptions.schema(readerSchema))) {
+          VectorizedRowBatch batch = readerSchema.createRowBatch(VALUES);
+          LongColumnVector t1 = (LongColumnVector) batch.cols[0];
+          int current = 0;
+          for (int r = 0; r < VALUES; ++r) {
+            if (current == batch.size) {
+              assertEquals("row " + r, true, rows.nextBatch(batch));
+              current = 0;
+            }
+            assertEquals("row " + r, (timeStrings[r] + " " +
+                                          READER_ZONE.getId()).replace(".7 ", " "),
+                longTimestampToString(t1.vector[current] * 1000, READER_ZONE));
+            current += 1;
+          }
+          assertEquals(false, rows.nextBatch(batch));
+        }
+
+        // test conversion to decimal
+        readerSchema = TypeDescription.fromString("struct<t1:decimal(14,2)>");
+        try (RecordReader rows = reader.rows(rowOptions.schema(readerSchema))) {
+          VectorizedRowBatch batch = readerSchema.createRowBatchV2();
+          Decimal64ColumnVector t1 = (Decimal64ColumnVector) batch.cols[0];
+          int current = 0;
+          for (int r = 0; r < VALUES; ++r) {
+            if (current == batch.size) {
+              assertEquals("row " + r, true, rows.nextBatch(batch));
+              current = 0;
+            }
+            assertEquals("row " + r, timeStrings[r] + " " + READER_ZONE.getId(),
+                decimalTimestampToString(t1.vector[current], READER_ZONE));
+            current += 1;
+          }
+          assertEquals(false, rows.nextBatch(batch));
+        }
+
+        // test conversion to double
+        readerSchema = TypeDescription.fromString("struct<t1:double>");
+        try (RecordReader rows = reader.rows(rowOptions.schema(readerSchema))) {
+          VectorizedRowBatch batch = readerSchema.createRowBatchV2();
+          DoubleColumnVector t1 = (DoubleColumnVector) batch.cols[0];
+          int current = 0;
+          for (int r = 0; r < VALUES; ++r) {
+            if (current == batch.size) {
+              assertEquals("row " + r, true, rows.nextBatch(batch));
+              current = 0;
+            }
+            assertEquals("row " + r, timeStrings[r] + " " + READER_ZONE.getId(),
+                doubleTimestampToString(t1.vector[current], READER_ZONE));
+            current += 1;
+          }
+          assertEquals(false, rows.nextBatch(batch));
+        }
+
+        // test conversion to date
+        readerSchema = TypeDescription.fromString("struct<t1:date>");
+        try (RecordReader rows = reader.rows(rowOptions.schema(readerSchema))) {
+          VectorizedRowBatch batch = readerSchema.createRowBatchV2();
+          LongColumnVector t1 = (LongColumnVector) batch.cols[0];
+          int current = 0;
+          for (int r = 0; r < VALUES; ++r) {
+            if (current == batch.size) {
+              assertEquals("row " + r, true, rows.nextBatch(batch));
+              current = 0;
+            }
+            String date = timeStrings[r].substring(0, 10);
+            assertEquals("row " + r, date,
+                ConvertTreeReaderFactory.DATE_FORMAT.format(
+                    LocalDate.ofEpochDay(t1.vector[current])));
+            current += 1;
+          }
+          assertEquals(false, rows.nextBatch(batch));
+        }
+
+        // test conversion to string
+        readerSchema = TypeDescription.fromString("struct<t1:string>");
+        try (RecordReader rows = reader.rows(rowOptions.schema(readerSchema))) {
+          VectorizedRowBatch batch = readerSchema.createRowBatch(VALUES);
+          BytesColumnVector bytesT1 = (BytesColumnVector) batch.cols[0];
+          int current = 0;
+          for (int r = 0; r < VALUES; ++r) {
+            if (current == batch.size) {
+              assertEquals("row " + r, true, rows.nextBatch(batch));
+              current = 0;
+            }
+            assertEquals("row " + r, timeStrings[r], bytesT1.toString(current));
+            current += 1;
+          }
+          assertEquals(false, rows.nextBatch(batch));
+        }
+      }
+
+      // Now test using UTC as local
+      options.useUTCTimestamp(true);
+      try (Reader reader = OrcFile.createReader(testFilePath, options)) {
+        DateTimeFormatter UTC_FORMAT =
+            ConvertTreeReaderFactory.TIMESTAMP_FORMAT.withZone(UTC);
+
+        // test conversion to int in UTC
+        TypeDescription readerSchema =
+            TypeDescription.fromString("struct<t1:bigint>");
+        try (RecordReader rows = reader.rows(rowOptions.schema(readerSchema))) {
+          VectorizedRowBatch batch = readerSchema.createRowBatch(VALUES);
+          LongColumnVector t1 = (LongColumnVector) batch.cols[0];
+          int current = 0;
+          for (int r = 0; r < VALUES; ++r) {
+            if (current == batch.size) {
+              assertEquals("row " + r, true, rows.nextBatch(batch));
+              current = 0;
+            }
+            // differs from master because of the change to standardize
+            assertEquals("row " + r, (timeStrings[r] + " " +
+                                          UTC.getId()).replace(".7 ", " "),
+                longTimestampToString(t1.vector[current] * 1000, UTC));
+            current += 1;
+          }
+          assertEquals(false, rows.nextBatch(batch));
+        }
+
+        // test conversion to decimal
+        readerSchema = TypeDescription.fromString("struct<t1:decimal(14,2)>");
+        try (RecordReader rows = reader.rows(rowOptions.schema(readerSchema))) {
+          VectorizedRowBatch batch = readerSchema.createRowBatchV2();
+          Decimal64ColumnVector t1 = (Decimal64ColumnVector) batch.cols[0];
+          int current = 0;
+          for (int r = 0; r < VALUES; ++r) {
+            if (current == batch.size) {
+              assertEquals("row " + r, true, rows.nextBatch(batch));
+              current = 0;
+            }
+            assertEquals("row " + r, timeStrings[r] + " " + UTC.getId(),
+                decimalTimestampToString(t1.vector[current], UTC));
+            current += 1;
+          }
+          assertEquals(false, rows.nextBatch(batch));
+        }
+
+        // test conversion to double
+        readerSchema = TypeDescription.fromString("struct<t1:double>");
+        try (RecordReader rows = reader.rows(rowOptions.schema(readerSchema))) {
+          VectorizedRowBatch batch = readerSchema.createRowBatchV2();
+          DoubleColumnVector t1 = (DoubleColumnVector) batch.cols[0];
+          int current = 0;
+          for (int r = 0; r < VALUES; ++r) {
+            if (current == batch.size) {
+              assertEquals("row " + r, true, rows.nextBatch(batch));
+              current = 0;
+            }
+            assertEquals("row " + r, timeStrings[r] + " " + UTC.getId(),
+                doubleTimestampToString(t1.vector[current], UTC));
+            current += 1;
+          }
+          assertEquals(false, rows.nextBatch(batch));
+        }
+
+        // test conversion to date
+        readerSchema = TypeDescription.fromString("struct<t1:date>");
+        try (RecordReader rows = reader.rows(rowOptions.schema(readerSchema))) {
+          VectorizedRowBatch batch = readerSchema.createRowBatchV2();
+          LongColumnVector t1 = (LongColumnVector) batch.cols[0];
+          int current = 0;
+          for (int r = 0; r < VALUES; ++r) {
+            if (current == batch.size) {
+              assertEquals("row " + r, true, rows.nextBatch(batch));
+              current = 0;
+            }
+            String date = timeStrings[r].substring(0, 10);
+            assertEquals("row " + r, date,
+                ConvertTreeReaderFactory.DATE_FORMAT.format(
+                    LocalDate.ofEpochDay(t1.vector[current])));
+            current += 1;
+          }
+          assertEquals(false, rows.nextBatch(batch));
+        }
+
+        // test conversion to string in UTC
+        readerSchema = TypeDescription.fromString("struct<t1:string>");
+        try (RecordReader rows = reader.rows(rowOptions.schema(readerSchema))) {
+          VectorizedRowBatch batch = readerSchema.createRowBatch(VALUES);
+          BytesColumnVector bytesT1 = (BytesColumnVector) batch.cols[0];
+          int current = 0;
+          for (int r = 0; r < VALUES; ++r) {
+            if (current == batch.size) {
+              assertEquals("row " + r, true, rows.nextBatch(batch));
+              current = 0;
+            }
+            assertEquals("row " + r, timeStrings[r], bytesT1.toString(current));
+            current += 1;
+          }
+          assertEquals(false, rows.nextBatch(batch));
+        }
+      }
+    } finally {
+      TimeZone.setDefault(oldDefault);
+    }
+  }
+
+  /**
+   * The format for converting from/to string/timestamp with local time zone.
+   * Eg. "2019-07-09 13:11:00 America/Los_Angeles"
+   */
+  static final DateTimeFormatter INSTANT_TIMESTAMP_FORMAT =
+      new DateTimeFormatterBuilder()
+          .append(ConvertTreeReaderFactory.TIMESTAMP_FORMAT)
+          .appendPattern(" VV")
+          .toFormatter();
+
+  static void writeEvolutionToTimestamp(Path path,
+                                        Configuration conf,
+                                        ZoneId writerZone,
+                                        String[] values) throws IOException {
+    TypeDescription fileSchema =
+        TypeDescription.fromString("struct<l1:bigint," +
+                                       "t1:tinyint," +
+                                       "d1:decimal(14,2)," +
+                                       "dbl1:double," +
+                                       "dt1:date," +
+                                       "s1:string>");
+    ZoneId UTC = ZoneId.of("UTC");
+    DateTimeFormatter UTC_FORMAT = ConvertTreeReaderFactory.TIMESTAMP_FORMAT
+                                          .withZone(UTC);
+    DateTimeFormatter UTC_DATE = ConvertTreeReaderFactory.DATE_FORMAT
+                                     .withZone(UTC);
+    Writer writer = OrcFile.createWriter(path,
+        OrcFile.writerOptions(conf).setSchema(fileSchema).stripeSize(10000));
+    VectorizedRowBatch batch = fileSchema.createRowBatchV2();
+    int batchSize = batch.getMaxSize();
+    LongColumnVector l1 = (LongColumnVector) batch.cols[0];
+    LongColumnVector t1 = (LongColumnVector) batch.cols[1];
+    Decimal64ColumnVector d1 = (Decimal64ColumnVector) batch.cols[2];
+    DoubleColumnVector dbl1 = (DoubleColumnVector) batch.cols[3];
+    LongColumnVector dt1 = (LongColumnVector) batch.cols[4];
+    BytesColumnVector s1 = (BytesColumnVector) batch.cols[5];
+    for (int r = 0; r < values.length; ++r) {
+      int row = batch.size++;
+      Instant utcTime = Instant.from(UTC_FORMAT.parse(values[r]));
+      // changed from master for * 1000
+      l1.vector[row] =  utcTime.getEpochSecond() * 1000;
+      t1.vector[row] = r % 128;
+      // balance out the 2 digits of scale
+      d1.vector[row] = utcTime.toEpochMilli() / 10;
+      // convert to double
+      dbl1.vector[row] = utcTime.toEpochMilli() / 1000.0;
+      // convert to date
+      dt1.vector[row] = UTC_DATE.parse(values[r].substring(0, 10))
+                            .getLong(ChronoField.EPOCH_DAY);
+      // set the strings
+      s1.setVal(row, values[r].getBytes(StandardCharsets.UTF_8));
+
+      if (batch.size == batchSize) {
+        writer.addRowBatch(batch);
+        batch.reset();
+      }
+    }
+    if (batch.size != 0) {
+      writer.addRowBatch(batch);
+    }
+    writer.close();
+  }
+
+  /**
+   * Tests the various conversions to timestamp.
+   *
+   * It writes an ORC file with two longs, two decimals, and two strings and
+   * then reads it back with the types converted to timestamp and timestamp
+   * with local time zone.
+   *
+   * This test is run both with and without setting the useUtc flag.
+   *
+   * It uses Australia/Sydney and America/New_York because they both have
+   * DST and they move in opposite directions on different days. Thus, we
+   * end up with four sets of offsets.
+   */
+  @Test
+  public void testEvolutionToTimestamp() throws Exception {
+    // The number of rows in the file that we test with.
+    final int VALUES = 1024;
+    // The different timezones that we'll use for this test.
+    final ZoneId WRITER_ZONE = ZoneId.of("America/New_York");
+    final ZoneId READER_ZONE = ZoneId.of("Australia/Sydney");
+
+    final TimeZone oldDefault = TimeZone.getDefault();
+    final ZoneId UTC = ZoneId.of("UTC");
+
+    // generate the timestamps to use
+    String[] timeStrings = new String[VALUES];
+    for(int r=0; r < timeStrings.length; ++r) {
+      timeStrings[r] = String.format("%04d-%02d-27 12:34:56.1",
+          1960 + (r / 12), (r % 12) + 1);
+    }
+
+    writeEvolutionToTimestamp(testFilePath, conf, WRITER_ZONE, timeStrings);
+
+    try {
+      TimeZone.setDefault(TimeZone.getTimeZone(READER_ZONE));
+
+      // test timestamp, timestamp with local time zone to long
+      TypeDescription readerSchema = TypeDescription.fromString(
+          "struct<l1:timestamp," +
+              "t1:timestamp," +
+              "d1:timestamp," +
+              "dbl1:timestamp," +
+              "dt1:timestamp," +
+              "s1:timestamp>");
+      VectorizedRowBatch batch = readerSchema.createRowBatchV2();
+      TimestampColumnVector l1 = (TimestampColumnVector) batch.cols[0];
+      TimestampColumnVector t1 = (TimestampColumnVector) batch.cols[1];
+      TimestampColumnVector d1 = (TimestampColumnVector) batch.cols[2];
+      TimestampColumnVector dbl1 = (TimestampColumnVector) batch.cols[3];
+      TimestampColumnVector dt1 = (TimestampColumnVector) batch.cols[4];
+      TimestampColumnVector s1 = (TimestampColumnVector) batch.cols[5];
+      OrcFile.ReaderOptions options = OrcFile.readerOptions(conf);
+      Reader.Options rowOptions = new Reader.Options().schema(readerSchema);
+      int offset = READER_ZONE.getRules().getOffset(Instant.ofEpochSecond(0, 0)).getTotalSeconds();
+      try (Reader reader = OrcFile.createReader(testFilePath, options);
+           RecordReader rows = reader.rows(rowOptions)) {
+        int current = 0;
+        for (int r = 0; r < VALUES; ++r) {
+          if (current == batch.size) {
+            assertEquals("row " + r, true, rows.nextBatch(batch));
+            current = 0;
+          }
+
+          String expected1 = timeStrings[r] + " " + READER_ZONE.getId();
+          String midnight = timeStrings[r].substring(0, 10) + " 00:00:00";
+          String expectedDate1 = midnight + " " + READER_ZONE.getId();
+
+          assertEquals("row " + r, expected1.replace(".1 ", " "),
+              timestampToString(l1.time[current], l1.nanos[current], READER_ZONE));
+
+          assertEquals("row " + r, timestampToString(-offset * 1000, (r % 128) * 1000000, READER_ZONE),
+              timestampToString(t1.time[current], t1.nanos[current], READER_ZONE));
+
+          assertEquals("row " + r, expected1,
+              timestampToString(d1.time[current], d1.nanos[current], READER_ZONE));
+
+          assertEquals("row " + r, expected1,
+              timestampToString(dbl1.time[current], dbl1.nanos[current], READER_ZONE));
+
+          assertEquals("row " + r, expectedDate1,
+              timestampToString(dt1.time[current], dt1.nanos[current], READER_ZONE));
+
+          assertEquals("row " + r, expected1,
+              timestampToString(s1.time[current], s1.nanos[current], READER_ZONE));
+
+          current += 1;
+        }
+        assertEquals(false, rows.nextBatch(batch));
+      }
+
+      // try the tests with useUtc set on
+      options.useUTCTimestamp(true);
+      try (Reader reader = OrcFile.createReader(testFilePath, options);
+           RecordReader rows = reader.rows(rowOptions)) {
+        int current = 0;
+        for (int r = 0; r < VALUES; ++r) {
+          if (current == batch.size) {
+            assertEquals("row " + r, true, rows.nextBatch(batch));
+            current = 0;
+          }
+
+          String expected1 = timeStrings[r] + " " + UTC.getId();
+          String expected2 = timeStrings[r] + " " + WRITER_ZONE.getId();
+          String midnight = timeStrings[r].substring(0, 10) + " 00:00:00";
+          String expectedDate = midnight + " " + UTC.getId();
+
+          assertEquals("row " + r, expected1.replace(".1 ", " "),
+              timestampToString(l1.time[current], l1.nanos[current], UTC));
+
+          assertEquals("row " + r, expected1,
+              timestampToString(d1.time[current], d1.nanos[current], UTC));
+
+          assertEquals("row " + r, expected1,
+              timestampToString(dbl1.time[current], dbl1.nanos[current], UTC));
+
+          assertEquals("row " + r, expectedDate,
+              timestampToString(dt1.time[current], dt1.nanos[current], UTC));
+
+          assertEquals("row " + r, expected1,
+              timestampToString(s1.time[current], s1.nanos[current], UTC));
+          current += 1;
+        }
+        assertEquals(false, rows.nextBatch(batch));
+      }
+    } finally {
+      TimeZone.setDefault(oldDefault);
+    }
+  }
+
+  @Test
+  public void doubleToTimeStampOverflow() throws Exception {
+    floatAndDoubleToTimeStampOverflow("double",
+        340282347000000000000000000000000000000000.0,
+        1e16,
+        9223372036854778.0,
+        9000000000000000.1,
+        10000000000.0,
+        10000000.123,
+        -1000000.123,
+        -10000000000.0,
+        -9000000000000000.1,
+        -9223372036854778.0,
+        -1e16,
+        -340282347000000000000000000000000000000000.0);
+  }
+
+  @Test
+  public void floatToTimeStampPositiveOverflow() throws Exception {
+    floatAndDoubleToTimeStampOverflow("float",
+        340282347000000000000000000000000000000000.0,
+        1e16,
+        9223372036854778.0,
+        9000000000000000.1,
+        10000000000.0,
+        10000000.123,
+        -1000000.123,
+        -10000000000.0,
+        -9000000000000000.1,
+        -9223372036854778.0,
+        -1e16,
+        -340282347000000000000000000000000000000000.0);
+  }
+
+  private void floatAndDoubleToTimeStampOverflow(String typeInFileSchema,
+                                                 double... values) throws Exception {
+    boolean isFloat = typeInFileSchema.equals("float");
+    TypeDescription fileSchema =
+        TypeDescription.fromString(String.format("struct<c1:%s>", typeInFileSchema));
+    Writer writer = OrcFile.createWriter(testFilePath,
+        OrcFile.writerOptions(conf)
+            .setSchema(fileSchema)
+            .stripeSize(10000)
+            .useUTCTimestamp(true));
+
+    VectorizedRowBatch batch = fileSchema.createRowBatchV2();
+    DoubleColumnVector fl1 = (DoubleColumnVector) batch.cols[0];
+
+    for (double v : values) {
+      int row = batch.size++;
+      fl1.vector[row] = v;
+
+      if (batch.size == batch.getMaxSize()) {
+        writer.addRowBatch(batch);
+        batch.reset();
+      }
+    }
+    if (batch.size != 0) {
+      writer.addRowBatch(batch);
+    }
+    writer.close();
+
+    TypeDescription readerSchema = TypeDescription.fromString("struct<c1:timestamp>");
+    VectorizedRowBatch batchTimeStamp = readerSchema.createRowBatchV2();
+    TimestampColumnVector t1 = (TimestampColumnVector) batchTimeStamp.cols[0];
+
+    OrcFile.ReaderOptions options = OrcFile
+                                        .readerOptions(conf)
+                                        .useUTCTimestamp(true);
+
+    try (Reader reader = OrcFile.createReader(testFilePath, options);
+         RecordReader rows = reader.rows(reader.options().schema(readerSchema))) {
+      int value = 0;
+      while (value < values.length) {
+        assertTrue("value " + value, rows.nextBatch(batchTimeStamp));
+        for(int row=0; row < batchTimeStamp.size; ++row) {
+          double expected = values[value + row];
+          String rowName = String.format("value %d", value + row);
+          boolean isPositive = ((long)Math.floor(expected) * 1000) >= 0;
+          if (expected * 1000 < Long.MIN_VALUE ||
+                  expected * 1000 > Long.MAX_VALUE ||
+                  ((expected >= 0) != isPositive)) {
+            assertFalse(rowName, t1.noNulls);
+            assertTrue(rowName, t1.isNull[row]);
+          } else {
+            double actual = Math.floorDiv(t1.time[row], 1000) +
+                                t1.nanos[row] / 1_000_000_000.0;
+            assertEquals(rowName, expected, actual,
+                Math.abs(expected * (isFloat ? 0.000001 : 0.0000000000000001)));
+            assertFalse(rowName, t1.isNull[row]);
+            assertTrue(String.format(
+                "%s nanos should be 0 to 1,000,000,000 instead it's: %d",
+                rowName, t1.nanos[row]),
+                t1.nanos[row] >= 0 && t1.nanos[row] < 1_000_000_000);
+          }
+        }
+        value += batchTimeStamp.size;
+      }
+      assertFalse(rows.nextBatch(batchTimeStamp));
+    }
+  }
+
+  @Test
+  public void testCheckAcidSchema() {
+    String ccSchema = "struct<operation:int,originalTransaction:bigint,bucket:int," +
+        "rowId:bigint,currentTransaction:bigint," +
+        "row:struct<a:int,b:int>>";
+    String lcSchema = "struct<operation:int,originaltransaction:bigint,bucket:int," +
+        "rowid:bigint,currenttransaction:bigint," +
+        "row:struct<a:int,b:int>>";
+
+    TypeDescription typeCamelCaseColumns = TypeDescription.fromString(ccSchema);
+    TypeDescription typeLowerCaseColumns = TypeDescription.fromString(lcSchema);
+    SchemaEvolution evoCc = new SchemaEvolution(typeCamelCaseColumns, null, options);
+    SchemaEvolution evoLc = new SchemaEvolution(typeLowerCaseColumns, null, options);
+
+    assertTrue("Schema (" + ccSchema +") was found to be non-acid ", evoCc.isAcid());
+    assertTrue("Schema (" + lcSchema +") was found to be non-acid ", evoLc.isAcid());
   }
 
   @Test
