@@ -625,4 +625,30 @@ namespace orc {
     EXPECT_EQ(Int128(0), num);
   }
 
+  TEST(Int128, testToDecimalStringTrimTrailingZeros) {
+    EXPECT_TRUE(Int128(0).toDecimalString(0, false) == "0");
+    EXPECT_TRUE(Int128(0).toDecimalString(0, true) == "0");
+
+    EXPECT_TRUE(Int128(0).toDecimalString(4, false) == "0.0000");
+    EXPECT_TRUE(Int128(0).toDecimalString(4, true) == "0");
+
+    EXPECT_TRUE(Int128(12340000).toDecimalString(3, false) == "12340.000");
+    EXPECT_TRUE(Int128(12340000).toDecimalString(3, true) == "12340");
+
+    EXPECT_TRUE(Int128(12340000).toDecimalString(10, false) == "0.0012340000");
+    EXPECT_TRUE(Int128(12340000).toDecimalString(10, true) == "0.001234");
+
+    EXPECT_TRUE(Int128(12340000).toDecimalString(8, false) == "0.12340000");
+    EXPECT_TRUE(Int128(12340000).toDecimalString(8, true) == "0.1234");
+
+    EXPECT_TRUE(Int128(-12340000).toDecimalString(3, false) == "-12340.000");
+    EXPECT_TRUE(Int128(-12340000).toDecimalString(3, true) == "-12340");
+
+    EXPECT_TRUE(Int128(-12340000).toDecimalString(10, false) == "-0.0012340000");
+    EXPECT_TRUE(Int128(-12340000).toDecimalString(10, true) == "-0.001234");
+
+    EXPECT_TRUE(Int128(-12340000).toDecimalString(8, false) == "-0.12340000");
+    EXPECT_TRUE(Int128(-12340000).toDecimalString(8, true) == "-0.1234");
+  }
+
 }  // namespace orc

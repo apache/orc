@@ -2026,7 +2026,7 @@ namespace orc {
         ++count;
         if (enableBloomFilter) {
           std::string decimal = Decimal(
-            values[i], static_cast<int32_t>(scale)).toString();
+            values[i], static_cast<int32_t>(scale)).toString(true);
           bloomFilter->addBytes(
             decimal.c_str(), static_cast<int64_t>(decimal.size()));
         }
@@ -2160,7 +2160,7 @@ namespace orc {
         ++count;
         if (enableBloomFilter) {
           std::string decimal = Decimal(
-            values[i], static_cast<int32_t>(scale)).toString();
+            values[i], static_cast<int32_t>(scale)).toString(true);
           bloomFilter->addBytes(
             decimal.c_str(), static_cast<int64_t>(decimal.size()));
         }

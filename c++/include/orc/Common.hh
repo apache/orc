@@ -274,6 +274,30 @@ namespace orc {
     FUTURE = INT32_MAX
   };
 
+  inline bool operator<(const Decimal& lhs, const Decimal& rhs) {
+    return compare(lhs, rhs);
+  }
+
+  inline bool operator>(const Decimal& lhs, const Decimal& rhs) {
+    return rhs < lhs;
+  }
+
+  inline bool operator<=(const Decimal& lhs, const Decimal& rhs) {
+    return !(lhs > rhs);
+  }
+
+  inline bool operator>=(const Decimal& lhs, const Decimal& rhs) {
+    return !(lhs < rhs);
+  }
+
+  inline bool operator!=(const Decimal& lhs, const Decimal& rhs) {
+    return lhs < rhs || rhs < lhs;
+  }
+
+  inline bool operator==(const Decimal& lhs, const Decimal& rhs) {
+    return !(lhs != rhs);
+  }
+
 }
 
 #endif
