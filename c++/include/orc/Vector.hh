@@ -240,7 +240,7 @@ namespace orc {
     explicit Decimal(const std::string& value);
     Decimal();
 
-    std::string toString() const;
+    std::string toString(bool trimTrailingZeros = false) const;
     Int128 value;
     int32_t scale;
   };

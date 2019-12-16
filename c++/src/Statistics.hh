@@ -665,14 +665,14 @@ namespace orc {
 
       proto::DecimalStatistics* decStats = pbStats.mutable_decimalstatistics();
       if (_stats.hasMinimum()) {
-        decStats->set_minimum(_stats.getMinimum().toString());
-        decStats->set_maximum(_stats.getMaximum().toString());
+        decStats->set_minimum(_stats.getMinimum().toString(true));
+        decStats->set_maximum(_stats.getMaximum().toString(true));
       } else {
         decStats->clear_minimum();
         decStats->clear_maximum();
       }
       if (_stats.hasSum()) {
-        decStats->set_sum(_stats.getSum().toString());
+        decStats->set_sum(_stats.getSum().toString(true));
       } else {
         decStats->clear_sum();
       }

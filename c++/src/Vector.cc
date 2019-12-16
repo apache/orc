@@ -475,8 +475,8 @@ namespace orc {
     // PASS
   }
 
-  std::string Decimal::toString() const {
-    return value.toDecimalString(scale);
+  std::string Decimal::toString(bool trimTrailingZeros) const {
+    return value.toDecimalString(scale, trimTrailingZeros);
   }
 
   TimestampVectorBatch::TimestampVectorBatch(uint64_t _capacity,
