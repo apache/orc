@@ -38,10 +38,13 @@ add_executable (orc-test
   TestDictionaryEncoding.cc
   TestDriver.cc
   TestInt128.cc
+  TestPredicateLeaf.cc
   TestReader.cc
   TestRleDecoder.cc
   TestRleEncoder.cc
   TestRLEV2Util.cc
+  TestSargsApplier.cc
+  TestSearchArgument.cc
   TestStripeIndexStatistics.cc
   TestTimestampStatistics.cc
   TestTimezone.cc
