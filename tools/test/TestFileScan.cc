@@ -143,6 +143,6 @@ TEST (TestFileScan, testErrorHandling) {
   std::string error;
   EXPECT_EQ(1, runProgram({pgm, file}, output, error));
   EXPECT_EQ("", output);
-  EXPECT_EQ("Caught exception in ../examples/corrupt/stripe_footer_bad_column_encodings.orc:"
-            " bad number of ColumnEncodings in StripeFooter: expected=6, actual=0\n", error);
+  EXPECT_NE(std::string::npos, error.find(
+      "bad number of ColumnEncodings in StripeFooter: expected=6, actual=0"));
 }
