@@ -18,23 +18,6 @@
 
 package org.apache.orc;
 
-import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.Decimal64ColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.ListColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.MapColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.StructColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.UnionColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
-import org.apache.orc.impl.ParserUtils;
-import org.apache.orc.impl.SchemaEvolution;
-import org.apache.orc.impl.TypeUtils;
-import org.jetbrains.annotations.NotNull;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,6 +25,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+
+import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.orc.impl.ParserUtils;
+import org.apache.orc.impl.TypeUtils;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * This is the description of the types in an ORC file.
@@ -368,7 +356,8 @@ public class TypeDescription
     return id;
   }
 
-  public TypeDescription clone() {
+  @Override
+public TypeDescription clone() {
     TypeDescription result = new TypeDescription(category);
     result.maxLength = maxLength;
     result.precision = precision;
@@ -718,7 +707,8 @@ public class TypeDescription
     }
   }
 
-  public String toString() {
+  @Override
+public String toString() {
     StringBuilder buffer = new StringBuilder();
     printToBuffer(buffer);
     return buffer.toString();
@@ -765,8 +755,10 @@ public class TypeDescription
         buffer.append(", \"fields\": [");
         for(int i=0; i < children.size(); ++i) {
           buffer.append('\n');
+          buffer.append('{');
           children.get(i).printJsonToBuffer("\"" + fieldNames.get(i) + "\": ",
               buffer, indent + 2);
+          buffer.append('}');
           if (i != children.size() - 1) {
             buffer.append(',');
           }

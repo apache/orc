@@ -23,15 +23,15 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
 
 public class TestTypeDescription {
   @Rule
@@ -49,10 +49,15 @@ public class TestTypeDescription {
         .addField("f3", TypeDescription.createDecimal());
     assertEquals("struct<f1:int,f2:string,f3:decimal(38,10)>",
         struct.toString());
-    assertEquals("{\"category\": \"struct\", \"id\": 0, \"max\": 3, \"fields\": [\n"
-            + "  \"f1\": {\"category\": \"int\", \"id\": 1, \"max\": 1},\n"
-            + "  \"f2\": {\"category\": \"string\", \"id\": 2, \"max\": 2},\n"
-            + "  \"f3\": {\"category\": \"decimal\", \"id\": 3, \"max\": 3, \"precision\": 38, \"scale\": 10}]}",
+    assertEquals("{"
+    		+ "\"category\": \"struct\", "
+    		+ "\"id\": 0, \"max\": 3, "
+    		+ "\"fields\": [\n"
+            + "{  \"f1\": {\"category\": \"int\", \"id\": 1, \"max\": 1}},\n"
+            + "{  \"f2\": {\"category\": \"string\", \"id\": 2, \"max\": 2}},\n"
+            + "{  \"f3\": {\"category\": \"decimal\", \"id\": 3, \"max\": 3, \"precision\": 38, \"scale\": 10}}"
+            + "]"
+            + "}",
         struct.toJson());
     struct = TypeDescription.createStruct()
         .addField("f1", TypeDescription.createUnion()
@@ -67,15 +72,18 @@ public class TestTypeDescription {
     assertEquals("struct<f1:uniontype<tinyint,decimal(20,10)>,f2:struct<f3:date,f4:double,f5:boolean>,f6:char(100)>",
         struct.toString());
     assertEquals(
-        "{\"category\": \"struct\", \"id\": 0, \"max\": 8, \"fields\": [\n" +
-            "  \"f1\": {\"category\": \"uniontype\", \"id\": 1, \"max\": 3, \"children\": [\n" +
+        "{\"category\": \"struct\", "
+        + "\"id\": 0, "
+        + "\"max\": 8, "
+        + "\"fields\": [\n" +
+            "{  \"f1\": {\"category\": \"uniontype\", \"id\": 1, \"max\": 3, \"children\": [\n" +
             "    {\"category\": \"tinyint\", \"id\": 2, \"max\": 2},\n" +
-            "    {\"category\": \"decimal\", \"id\": 3, \"max\": 3, \"precision\": 20, \"scale\": 10}]},\n" +
-            "  \"f2\": {\"category\": \"struct\", \"id\": 4, \"max\": 7, \"fields\": [\n" +
-            "    \"f3\": {\"category\": \"date\", \"id\": 5, \"max\": 5},\n" +
-            "    \"f4\": {\"category\": \"double\", \"id\": 6, \"max\": 6},\n" +
-            "    \"f5\": {\"category\": \"boolean\", \"id\": 7, \"max\": 7}]},\n" +
-            "  \"f6\": {\"category\": \"char\", \"id\": 8, \"max\": 8, \"length\": 100}]}",
+            "    {\"category\": \"decimal\", \"id\": 3, \"max\": 3, \"precision\": 20, \"scale\": 10}]}},\n" +
+            "{  \"f2\": {\"category\": \"struct\", \"id\": 4, \"max\": 7, \"fields\": [\n" +
+            "{    \"f3\": {\"category\": \"date\", \"id\": 5, \"max\": 5}},\n" +
+            "{    \"f4\": {\"category\": \"double\", \"id\": 6, \"max\": 6}},\n" +
+            "{    \"f5\": {\"category\": \"boolean\", \"id\": 7, \"max\": 7}}]}},\n" +
+            "{  \"f6\": {\"category\": \"char\", \"id\": 8, \"max\": 8, \"length\": 100}}]}",
         struct.toJson());
   }
 
