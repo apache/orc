@@ -343,7 +343,7 @@ namespace orc {
 
   void expectParseError(const proto::Footer &footer, const char* errMsg) {
     try {
-      checkProtoTypeIds(footer);
+      checkProtoTypes(footer);
       FAIL() << "Should throw ParseError for ill ids";
     } catch (ParseError& e) {
       EXPECT_EQ(e.what(), std::string(errMsg));
@@ -352,22 +352,26 @@ namespace orc {
     }
   }
 
-  TEST(TestType, testCheckProtoTypeIds) {
+  TEST(TestType, testCheckProtoTypes) {
     proto::Footer footer;
     proto::Type rootType;
     expectParseError(footer, "Footer is corrupt: no types found");
 
     rootType.set_kind(proto::Type_Kind_STRUCT);
     rootType.add_subtypes(1); // add a non existent type id
+    rootType.add_fieldnames("f1");
     *(footer.add_types()) = rootType;
     expectParseError(footer, "Footer is corrupt: types(1) not exists");
 
     footer.clear_types();
     rootType.clear_subtypes();
+    rootType.clear_fieldnames();
     proto::Type structType;
     structType.set_kind(proto::Type_Kind_STRUCT);
     structType.add_subtypes(0);  // construct a loop back to root
+    structType.add_fieldnames("root");
     rootType.add_subtypes(1);
+    rootType.add_fieldnames("f1");
     *(footer.add_types()) = rootType;
     *(footer.add_types()) = structType;
     expectParseError(footer,
@@ -375,12 +379,14 @@ namespace orc {
 
     footer.clear_types();
     rootType.clear_subtypes();
+    rootType.clear_fieldnames();
     proto::Type listType;
     listType.set_kind(proto::Type_Kind_LIST);
     proto::Type mapType;
     mapType.set_kind(proto::Type_Kind_MAP);
     proto::Type unionType;
     unionType.set_kind(proto::Type_Kind_UNION);
+    rootType.add_fieldnames("f1");
     rootType.add_subtypes(1);   // 0 -> 1
     listType.add_subtypes(2);   // 1 -> 2
     mapType.add_subtypes(3);    // 2 -> 3
@@ -394,16 +400,35 @@ namespace orc {
 
     footer.clear_types();
     rootType.clear_subtypes();
+    rootType.clear_fieldnames();
     proto::Type intType;
     intType.set_kind(proto::Type_Kind_INT);
     proto::Type strType;
     strType.set_kind(proto::Type_Kind_STRING);
     rootType.add_subtypes(2);
+    rootType.add_fieldnames("f2");
     rootType.add_subtypes(1);
+    rootType.add_fieldnames("f1");
     *(footer.add_types()) = rootType;
     *(footer.add_types()) = intType;
     *(footer.add_types()) = strType;
     expectParseError(footer,
         "Footer is corrupt: subType(0) >= subType(1) in types(0). (2 >= 1)");
+
+    footer.clear_types();
+    rootType.clear_subtypes();
+    rootType.clear_fieldnames();
+    rootType.set_kind(proto::Type_Kind_STRUCT);
+    rootType.add_subtypes(1);
+    *(footer.add_types()) = rootType;
+    *(footer.add_types()) = intType;
+    expectParseError(footer,
+        "Footer is corrupt: STRUCT type 0 has 1 subTypes, but has 0 fieldNames");
+    // Should pass the check after adding the field name
+    footer.clear_types();
+    rootType.add_fieldnames("f1");
+    *(footer.add_types()) = rootType;
+    *(footer.add_types()) = intType;
+    checkProtoTypes(footer);
   }
 }
