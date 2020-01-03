@@ -395,6 +395,13 @@ namespace orc {
       throw ParseError(std::string("bad StripeFooter from ") +
                        pbStream->getName());
     }
+    // Verify StripeFooter in case it's corrupt
+    if (result.columns_size() != contents.footer->types_size()) {
+      std::stringstream msg;
+      msg << "bad number of ColumnEncodings in StripeFooter: expected="
+          << contents.footer->types_size() << ", actual=" << result.columns_size();
+      throw ParseError(msg.str());
+    }
     return result;
   }
 
