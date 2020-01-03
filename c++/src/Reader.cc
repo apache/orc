@@ -1015,10 +1015,11 @@ namespace orc {
   }
 
   /**
-   * Check that indices in the type tree are valid, so we won't crash
-   * when we convert the proto::Types to TypeImpls.
+   * Check that proto Types are valid. Indices in the type tree should be valid,
+   * so we won't crash when we convert the proto::Types to TypeImpls (ORC-317).
+   * For STRUCT types, fieldName size should match subTypes size (ORC-581).
    */
-  void checkProtoTypeIds(const proto::Footer &footer) {
+  void checkProtoTypes(const proto::Footer &footer) {
     std::stringstream msg;
     int maxId = footer.types_size();
     if (maxId <= 0) {
@@ -1026,6 +1027,12 @@ namespace orc {
     }
     for (int i = 0; i < maxId; ++i) {
       const proto::Type& type = footer.types(i);
+      if (type.kind() == proto::Type_Kind_STRUCT
+         && type.subtypes_size() != type.fieldnames_size()) {
+        msg << "Footer is corrupt: STRUCT type " << i << " has " << type.subtypes_size()
+            << " subTypes, but has " << type.fieldnames_size() << " fieldNames";
+        throw ParseError(msg.str());
+      }
       for (int j = 0; j < type.subtypes_size(); ++j) {
         int subTypeId = static_cast<int>(type.subtypes(j));
         if (subTypeId <= i) {
@@ -1077,7 +1084,7 @@ namespace orc {
                        stream->getName());
     }
 
-    checkProtoTypeIds(*footer);
+    checkProtoTypes(*footer);
     return REDUNDANT_MOVE(footer);
   }
 
