@@ -1220,13 +1220,12 @@ namespace orc {
   class UnionColumnReader: public ColumnReader {
   private:
     std::unique_ptr<ByteRleDecoder> rle;
-    std::vector<ColumnReader*> childrenReader;
+    std::vector<std::unique_ptr<ColumnReader>> childrenReader;
     std::vector<int64_t> childrenCounts;
     uint64_t numChildren;
 
   public:
     UnionColumnReader(const Type& type, StripeStreams& stipe);
-    ~UnionColumnReader() override;
 
     uint64_t skip(uint64_t numValues) override;
 
@@ -1265,15 +1264,8 @@ namespace orc {
     for(unsigned int i=0; i < numChildren; ++i) {
       const Type &child = *type.getSubtype(i);
       if (selectedColumns[static_cast<size_t>(child.getColumnId())]) {
-        childrenReader[i] = buildReader(child, stripe).release();
+        childrenReader[i] = buildReader(child, stripe);
       }
-    }
-  }
-
-  UnionColumnReader::~UnionColumnReader() {
-    for(std::vector<ColumnReader*>::iterator itr = childrenReader.begin();
-        itr != childrenReader.end(); ++itr) {
-      delete *itr;
     }
   }
 

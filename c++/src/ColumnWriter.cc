@@ -252,7 +252,6 @@ namespace orc {
                        const Type& type,
                        const StreamsFactory& factory,
                        const WriterOptions& options);
-    ~StructColumnWriter() override;
 
     virtual void add(ColumnVectorBatch& rowBatch,
                      uint64_t offset,
@@ -285,7 +284,7 @@ namespace orc {
     virtual void reset() override;
 
   private:
-    std::vector<ColumnWriter *> children;
+    std::vector<std::unique_ptr<ColumnWriter>> children;
   };
 
   StructColumnWriter::StructColumnWriter(
@@ -295,17 +294,11 @@ namespace orc {
                                          ColumnWriter(type, factory, options) {
     for(unsigned int i = 0; i < type.getSubtypeCount(); ++i) {
       const Type& child = *type.getSubtype(i);
-      children.push_back(buildWriter(child, factory, options).release());
+      children.push_back(buildWriter(child, factory, options));
     }
 
     if (enableIndex) {
       recordPosition();
-    }
-  }
-
-  StructColumnWriter::~StructColumnWriter() {
-    for (uint32_t i = 0; i < children.size(); ++i) {
-      delete children[i];
     }
   }
 
@@ -2666,7 +2659,6 @@ namespace orc {
     UnionColumnWriter(const Type& type,
                       const StreamsFactory& factory,
                       const WriterOptions& options);
-    ~UnionColumnWriter() override;
 
     virtual void add(ColumnVectorBatch& rowBatch,
                      uint64_t offset,
@@ -2703,7 +2695,7 @@ namespace orc {
 
   private:
     std::unique_ptr<ByteRleEncoder> rleEncoder;
-    std::vector<ColumnWriter*> children;
+    std::vector<std::unique_ptr<ColumnWriter>> children;
   };
 
   UnionColumnWriter::UnionColumnWriter(const Type& type,
@@ -2718,17 +2710,11 @@ namespace orc {
     for (uint64_t i = 0; i != type.getSubtypeCount(); ++i) {
       children.push_back(buildWriter(*type.getSubtype(i),
                                      factory,
-                                     options).release());
+                                     options));
     }
 
     if (enableIndex) {
       recordPosition();
-    }
-  }
-
-  UnionColumnWriter::~UnionColumnWriter() {
-    for (uint32_t i = 0; i < children.size(); ++i) {
-      delete children[i];
     }
   }
 
