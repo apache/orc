@@ -61,9 +61,9 @@ public class RunLengthIntegerReader implements IntegerReader {
       // convert from 0 to 255 to -128 to 127 by converting to a signed byte
       delta = (byte) (0 + delta);
       if (signed) {
-        literals[0] = utils.readVslong(input);
+        literals[0] = SerializationUtils.readVslong(input);
       } else {
-        literals[0] = utils.readVulong(input);
+        literals[0] = SerializationUtils.readVulong(input);
       }
     } else {
       repeat = false;
@@ -71,9 +71,9 @@ public class RunLengthIntegerReader implements IntegerReader {
       used = 0;
       for(int i=0; i < numLiterals; ++i) {
         if (signed) {
-          literals[i] = utils.readVslong(input);
+          literals[i] = SerializationUtils.readVslong(input);
         } else {
-          literals[i] = utils.readVulong(input);
+          literals[i] = SerializationUtils.readVulong(input);
         }
       }
     }

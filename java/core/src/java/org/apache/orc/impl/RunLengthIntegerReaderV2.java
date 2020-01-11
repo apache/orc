@@ -88,9 +88,9 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
     // read the first value stored as vint
     long firstVal = 0;
     if (signed) {
-      firstVal = utils.readVslong(input);
+      firstVal = SerializationUtils.readVslong(input);
     } else {
-      firstVal = utils.readVulong(input);
+      firstVal = SerializationUtils.readVulong(input);
     }
 
     // store first value to result buffer
@@ -101,7 +101,7 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
     if (fb == 0) {
       // read the fixed delta value stored as vint (deltas can be negative even
       // if all number are positive)
-      long fd = utils.readVslong(input);
+      long fd = SerializationUtils.readVslong(input);
       if (fd == 0) {
         isRepeating = true;
         assert numLiterals == 1;
@@ -114,7 +114,7 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
         }
       }
     } else {
-      long deltaBase = utils.readVslong(input);
+      long deltaBase = SerializationUtils.readVslong(input);
       // add delta base and first value
       literals[numLiterals++] = firstVal + deltaBase;
       prevVal = literals[numLiterals - 1];
