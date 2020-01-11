@@ -34,12 +34,10 @@ public class RunLengthIntegerReader implements IntegerReader {
   private int delta = 0;
   private int used = 0;
   private boolean repeat = false;
-  private SerializationUtils utils;
 
   public RunLengthIntegerReader(InStream input, boolean signed) throws IOException {
     this.input = input;
     this.signed = signed;
-    this.utils = new SerializationUtils();
   }
 
   private void readValues(boolean ignoreEof) throws IOException {
@@ -61,9 +59,9 @@ public class RunLengthIntegerReader implements IntegerReader {
       // convert from 0 to 255 to -128 to 127 by converting to a signed byte
       delta = (byte) (0 + delta);
       if (signed) {
-        literals[0] = utils.readVslong(input);
+        literals[0] = SerializationUtils.readVslong(input);
       } else {
-        literals[0] = utils.readVulong(input);
+        literals[0] = SerializationUtils.readVulong(input);
       }
     } else {
       repeat = false;
@@ -71,9 +69,9 @@ public class RunLengthIntegerReader implements IntegerReader {
       used = 0;
       for(int i=0; i < numLiterals; ++i) {
         if (signed) {
-          literals[i] = utils.readVslong(input);
+          literals[i] = SerializationUtils.readVslong(input);
         } else {
-          literals[i] = utils.readVulong(input);
+          literals[i] = SerializationUtils.readVulong(input);
         }
       }
     }
