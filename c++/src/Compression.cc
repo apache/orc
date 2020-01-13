@@ -405,8 +405,8 @@ DIAGNOSTIC_PUSH
                     MemoryPool& _pool
                     ): pool(_pool),
                        blockSize(_blockSize),
+                       input(std::move(inStream)),
                        buffer(pool, _blockSize) {
-    input.reset(inStream.release());
     zstream.next_in = nullptr;
     zstream.avail_in = 0;
     zstream.zalloc = nullptr;
@@ -683,7 +683,8 @@ DIAGNOSTIC_POP
                    (std::unique_ptr<SeekableInputStream> inStream,
                     size_t bufferSize,
                     MemoryPool& _pool
-                    ) : pool(_pool),
+                    ) : input(std::move(inStream)),
+                        pool(_pool),
                         inputBuffer(pool, bufferSize),
                         outputBuffer(pool, bufferSize),
                         state(DECOMPRESS_HEADER),
@@ -693,7 +694,6 @@ DIAGNOSTIC_POP
                         inputBufferPtr(nullptr),
                         inputBufferPtrEnd(nullptr),
                         bytesReturned(0) {
-    input.reset(inStream.release());
   }
 
   bool BlockDecompressionStream::Next(const void** data, int*size) {

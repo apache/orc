@@ -34,7 +34,7 @@ namespace orc {
     mutable int64_t columnId;
     mutable int64_t maximumColumnId;
     TypeKind kind;
-    std::vector<Type*> subTypes;
+    std::vector<std::unique_ptr<Type>> subTypes;
     std::vector<std::string> fieldNames;
     uint64_t subtypeCount;
     uint64_t maxLength;
@@ -57,8 +57,6 @@ namespace orc {
      */
     TypeImpl(TypeKind kind, uint64_t precision,
              uint64_t scale);
-
-    virtual ~TypeImpl() override;
 
     uint64_t getColumnId() const override;
 

@@ -835,11 +835,10 @@ namespace orc {
 
   class StructColumnReader: public ColumnReader {
   private:
-    std::vector<ColumnReader*> children;
+    std::vector<std::unique_ptr<ColumnReader>> children;
 
   public:
     StructColumnReader(const Type& type, StripeStreams& stipe);
-    ~StructColumnReader() override;
 
     uint64_t skip(uint64_t numValues) override;
 
@@ -871,7 +870,7 @@ namespace orc {
       for(unsigned int i=0; i < type.getSubtypeCount(); ++i) {
         const Type& child = *type.getSubtype(i);
         if (selectedColumns[static_cast<uint64_t>(child.getColumnId())]) {
-          children.push_back(buildReader(child, stripe).release());
+          children.push_back(buildReader(child, stripe));
         }
       }
       break;
@@ -883,16 +882,10 @@ namespace orc {
     }
   }
 
-  StructColumnReader::~StructColumnReader() {
-    for (size_t i=0; i<children.size(); i++) {
-      delete children[i];
-    }
-  }
-
   uint64_t StructColumnReader::skip(uint64_t numValues) {
     numValues = ColumnReader::skip(numValues);
-    for(std::vector<ColumnReader*>::iterator ptr=children.begin(); ptr != children.end(); ++ptr) {
-      (*ptr)->skip(numValues);
+    for(auto& ptr : children) {
+      ptr->skip(numValues);
     }
     return numValues;
   }
@@ -916,13 +909,12 @@ namespace orc {
     ColumnReader::next(rowBatch, numValues, notNull);
     uint64_t i=0;
     notNull = rowBatch.hasNulls? rowBatch.notNull.data() : nullptr;
-    for(std::vector<ColumnReader*>::iterator ptr=children.begin();
-        ptr != children.end(); ++ptr, ++i) {
+    for(auto iter = children.begin(); iter != children.end(); ++iter, ++i) {
       if (encoded) {
-        (*ptr)->nextEncoded(*(dynamic_cast<StructVectorBatch&>(rowBatch).fields[i]),
+        (*iter)->nextEncoded(*(dynamic_cast<StructVectorBatch&>(rowBatch).fields[i]),
                     numValues, notNull);
       } else {
-        (*ptr)->next(*(dynamic_cast<StructVectorBatch&>(rowBatch).fields[i]),
+        (*iter)->next(*(dynamic_cast<StructVectorBatch&>(rowBatch).fields[i]),
                     numValues, notNull);
       }
     }
@@ -932,10 +924,8 @@ namespace orc {
     std::unordered_map<uint64_t, PositionProvider>& positions) {
     ColumnReader::seekToRowGroup(positions);
 
-    for(std::vector<ColumnReader*>::iterator ptr = children.begin();
-        ptr != children.end();
-        ++ptr) {
-      (*ptr)->seekToRowGroup(positions);
+    for(auto& ptr : children) {
+      ptr->seekToRowGroup(positions);
     }
   }
 
@@ -1230,13 +1220,12 @@ namespace orc {
   class UnionColumnReader: public ColumnReader {
   private:
     std::unique_ptr<ByteRleDecoder> rle;
-    std::vector<ColumnReader*> childrenReader;
+    std::vector<std::unique_ptr<ColumnReader>> childrenReader;
     std::vector<int64_t> childrenCounts;
     uint64_t numChildren;
 
   public:
     UnionColumnReader(const Type& type, StripeStreams& stipe);
-    ~UnionColumnReader() override;
 
     uint64_t skip(uint64_t numValues) override;
 
@@ -1275,15 +1264,8 @@ namespace orc {
     for(unsigned int i=0; i < numChildren; ++i) {
       const Type &child = *type.getSubtype(i);
       if (selectedColumns[static_cast<size_t>(child.getColumnId())]) {
-        childrenReader[i] = buildReader(child, stripe).release();
+        childrenReader[i] = buildReader(child, stripe);
       }
-    }
-  }
-
-  UnionColumnReader::~UnionColumnReader() {
-    for(std::vector<ColumnReader*>::iterator itr = childrenReader.begin();
-        itr != childrenReader.end(); ++itr) {
-      delete *itr;
     }
   }
 

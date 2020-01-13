@@ -67,17 +67,10 @@ namespace orc {
     columnId = static_cast<int64_t>(root);
     uint64_t current = root + 1;
     for(uint64_t i=0; i < subtypeCount; ++i) {
-      current = dynamic_cast<TypeImpl*>(subTypes[i])->assignIds(current);
+      current = dynamic_cast<TypeImpl*>(subTypes[i].get())->assignIds(current);
     }
     maximumColumnId = static_cast<int64_t>(current) - 1;
     return current;
-  }
-
-  TypeImpl::~TypeImpl() {
-    for (std::vector<Type*>::iterator it = subTypes.begin();
-        it != subTypes.end(); it++) {
-      delete (*it) ;
-    }
   }
 
   void TypeImpl::ensureIdAssigned() const {
@@ -109,7 +102,7 @@ namespace orc {
   }
 
   const Type* TypeImpl::getSubtype(uint64_t i) const {
-    return subTypes[i];
+    return subTypes[i].get();
   }
 
   const std::string& TypeImpl::getFieldName(uint64_t i) const {
@@ -134,8 +127,8 @@ namespace orc {
   }
 
   void TypeImpl::addChildType(std::unique_ptr<Type> childType) {
-    TypeImpl* child = dynamic_cast<TypeImpl*>(childType.release());
-    subTypes.push_back(child);
+    TypeImpl* child = dynamic_cast<TypeImpl*>(childType.get());
+    subTypes.push_back(std::move(childType));
     if (child != nullptr) {
       child->parent = this;
     }

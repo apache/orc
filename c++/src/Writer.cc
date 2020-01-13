@@ -73,9 +73,7 @@ namespace orc {
 
   WriterOptions::WriterOptions(WriterOptions& rhs) {
     // swap privateBits with rhs
-    WriterOptionsPrivate* l = privateBits.release();
-    privateBits.reset(rhs.privateBits.release());
-    rhs.privateBits.reset(l);
+    privateBits.swap(rhs.privateBits);
   }
 
   WriterOptions& WriterOptions::operator=(const WriterOptions& rhs) {

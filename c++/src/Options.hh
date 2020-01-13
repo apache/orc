@@ -64,9 +64,7 @@ namespace orc {
 
   ReaderOptions::ReaderOptions(ReaderOptions& rhs) {
     // swap privateBits with rhs
-    ReaderOptionsPrivate* l = privateBits.release();
-    privateBits.reset(rhs.privateBits.release());
-    rhs.privateBits.reset(l);
+    privateBits.swap(rhs.privateBits);
   }
 
   ReaderOptions& ReaderOptions::operator=(const ReaderOptions& rhs) {
@@ -155,9 +153,7 @@ namespace orc {
 
   RowReaderOptions::RowReaderOptions(RowReaderOptions& rhs) {
     // swap privateBits with rhs
-    RowReaderOptionsPrivate* l = privateBits.release();
-    privateBits.reset(rhs.privateBits.release());
-    rhs.privateBits.reset(l);
+    privateBits.swap(rhs.privateBits);
   }
 
   RowReaderOptions& RowReaderOptions::operator=(const RowReaderOptions& rhs) {
