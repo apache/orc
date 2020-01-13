@@ -249,13 +249,13 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     }
 
     @Override
-    void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
+    public void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
       // Pass-thru.
       fromReader.checkEncoding(encoding);
     }
 
     @Override
-    void startStripe(StripePlanner planner) throws IOException {
+    public void startStripe(StripePlanner planner) throws IOException {
       // Pass-thru.
       fromReader.startStripe(planner);
     }
@@ -273,7 +273,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     }
 
     @Override
-    void skipRows(long items) throws IOException {
+    public void skipRows(long items) throws IOException {
       // Pass-thru.
       fromReader.skipRows(items);
     }
