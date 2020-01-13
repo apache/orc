@@ -494,15 +494,14 @@ public class StripePlanner {
     return result;
   }
 
-  private static class StreamInformation {
-    final OrcProto.Stream.Kind kind;
-    final int column;
-    final long offset;
-    final long length;
-    BufferChunk firstChunk;
+  public static class StreamInformation {
+    public final OrcProto.Stream.Kind kind;
+    public final int column;
+    public final long offset;
+    public final long length;
+    public BufferChunk firstChunk;
 
-    StreamInformation(OrcProto.Stream.Kind kind,
-                      int column, long offset, long length) {
+    public StreamInformation(OrcProto.Stream.Kind kind, int column, long offset, long length) {
       this.kind = kind;
       this.column = column;
       this.offset = offset;

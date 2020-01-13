@@ -48,6 +48,10 @@ import org.apache.orc.TypeDescription;
 import org.apache.orc.OrcProto;
 import org.apache.orc.impl.reader.ReaderEncryption;
 import org.apache.orc.impl.reader.StripePlanner;
+import org.apache.orc.impl.reader.tree.BatchReader;
+import org.apache.orc.impl.reader.tree.PrimitiveBatchReader;
+import org.apache.orc.impl.reader.tree.StructBatchReader;
+import org.apache.orc.impl.reader.tree.TypeReader;
 import org.apache.orc.impl.writer.TimestampTreeWriter;
 
 /**
@@ -160,10 +164,9 @@ public class TreeReaderFactory {
     }
   }
 
-  public abstract static class TreeReader {
+  public abstract static class TreeReader implements TypeReader {
     protected final int columnId;
     protected BitFieldReader present = null;
-    protected int vectorColumnCount;
     protected final Context context;
 
     static final long[] powerOfTenTable = {
@@ -200,14 +203,9 @@ public class TreeReaderFactory {
       } else {
         present = new BitFieldReader(in);
       }
-      vectorColumnCount = -1;
     }
 
-    void setVectorColumnCount(int vectorColumnCount) {
-      this.vectorColumnCount = vectorColumnCount;
-    }
-
-    void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
+    public void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
       if (encoding.getKind() != OrcProto.ColumnEncoding.Kind.DIRECT) {
         throw new IOException("Unknown encoding " + encoding + " in column " +
             columnId);
@@ -230,7 +228,7 @@ public class TreeReaderFactory {
       }
     }
 
-    void startStripe(StripePlanner planner) throws IOException {
+    public void startStripe(StripePlanner planner) throws IOException {
       checkEncoding(planner.getEncoding(columnId));
       InStream in = planner.getStream(new StreamName(columnId,
           OrcProto.Stream.Kind.PRESENT));
@@ -269,21 +267,6 @@ public class TreeReaderFactory {
       } else {
         return rows;
       }
-    }
-
-    abstract void skipRows(long rows) throws IOException;
-
-    /**
-     * Called at the top level to read into the given batch.
-     * @param batch the batch to read into
-     * @param batchSize the number of rows to read
-     * @throws IOException
-     */
-    public void nextBatch(VectorizedRowBatch batch,
-                          int batchSize) throws IOException {
-      batch.cols[0].reset();
-      batch.cols[0].ensureSize(batchSize, false);
-      nextVector(batch.cols[0], null, batchSize);
     }
 
     /**
@@ -334,6 +317,7 @@ public class TreeReaderFactory {
       return present;
     }
 
+    @Override
     public int getColumnId() {
       return columnId;
     }
@@ -351,7 +335,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void skipRows(long rows) {
+    public void skipRows(long rows) {
       // PASS
     }
 
@@ -388,7 +372,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(StripePlanner planner) throws IOException {
+    public void startStripe(StripePlanner planner) throws IOException {
       super.startStripe(planner);
       reader = new BitFieldReader(planner.getStream(new StreamName(columnId,
           OrcProto.Stream.Kind.DATA)));
@@ -406,7 +390,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void skipRows(long items) throws IOException {
+    public void skipRows(long items) throws IOException {
       reader.skip(countNonNulls(items));
     }
 
@@ -437,7 +421,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(StripePlanner planner) throws IOException {
+    public void startStripe(StripePlanner planner) throws IOException {
       super.startStripe(planner);
       reader = new RunLengthByteReader(planner.getStream(new StreamName(columnId,
           OrcProto.Stream.Kind.DATA)));
@@ -468,7 +452,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void skipRows(long items) throws IOException {
+    public void skipRows(long items) throws IOException {
       reader.skip(countNonNulls(items));
     }
   }
@@ -491,7 +475,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
+    public void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
       if ((encoding.getKind() != OrcProto.ColumnEncoding.Kind.DIRECT) &&
           (encoding.getKind() != OrcProto.ColumnEncoding.Kind.DIRECT_V2)) {
         throw new IOException("Unknown encoding " + encoding + " in column " +
@@ -500,7 +484,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(StripePlanner planner) throws IOException {
+    public void startStripe(StripePlanner planner) throws IOException {
       super.startStripe(planner);
       StreamName name = new StreamName(columnId,
           OrcProto.Stream.Kind.DATA);
@@ -533,7 +517,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void skipRows(long items) throws IOException {
+    public void skipRows(long items) throws IOException {
       reader.skip(countNonNulls(items));
     }
   }
@@ -556,7 +540,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
+    public void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
       if ((encoding.getKind() != OrcProto.ColumnEncoding.Kind.DIRECT) &&
           (encoding.getKind() != OrcProto.ColumnEncoding.Kind.DIRECT_V2)) {
         throw new IOException("Unknown encoding " + encoding + " in column " +
@@ -565,7 +549,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(StripePlanner planner) throws IOException {
+    public void startStripe(StripePlanner planner) throws IOException {
       super.startStripe(planner);
       StreamName name = new StreamName(columnId,
           OrcProto.Stream.Kind.DATA);
@@ -598,7 +582,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void skipRows(long items) throws IOException {
+    public void skipRows(long items) throws IOException {
       reader.skip(countNonNulls(items));
     }
   }
@@ -622,7 +606,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
+    public void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
       if ((encoding.getKind() != OrcProto.ColumnEncoding.Kind.DIRECT) &&
           (encoding.getKind() != OrcProto.ColumnEncoding.Kind.DIRECT_V2)) {
         throw new IOException("Unknown encoding " + encoding + " in column " +
@@ -631,7 +615,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(StripePlanner planner) throws IOException {
+    public void startStripe(StripePlanner planner) throws IOException {
       super.startStripe(planner);
       StreamName name = new StreamName(columnId,
           OrcProto.Stream.Kind.DATA);
@@ -664,7 +648,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void skipRows(long items) throws IOException {
+    public void skipRows(long items) throws IOException {
       reader.skip(countNonNulls(items));
     }
   }
@@ -684,7 +668,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(StripePlanner planner) throws IOException {
+    public void startStripe(StripePlanner planner) throws IOException {
       super.startStripe(planner);
       StreamName name = new StreamName(columnId,
           OrcProto.Stream.Kind.DATA);
@@ -754,7 +738,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    protected void skipRows(long items) throws IOException {
+    public void skipRows(long items) throws IOException {
       items = countNonNulls(items);
       for (int i = 0; i < items; ++i) {
         utils.readFloat(stream);
@@ -777,7 +761,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(StripePlanner planner) throws IOException {
+    public void startStripe(StripePlanner planner) throws IOException {
       super.startStripe(planner);
       StreamName name =
           new StreamName(columnId,
@@ -847,7 +831,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void skipRows(long items) throws IOException {
+    public void skipRows(long items) throws IOException {
       items = countNonNulls(items);
       long len = items * 8;
       while (len > 0) {
@@ -877,7 +861,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
+    public void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
       if ((encoding.getKind() != OrcProto.ColumnEncoding.Kind.DIRECT) &&
           (encoding.getKind() != OrcProto.ColumnEncoding.Kind.DIRECT_V2)) {
         throw new IOException("Unknown encoding " + encoding + " in column " +
@@ -886,7 +870,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(StripePlanner planner) throws IOException {
+    public void startStripe(StripePlanner planner) throws IOException {
       super.startStripe(planner);
       StreamName name = new StreamName(columnId,
           OrcProto.Stream.Kind.DATA);
@@ -921,7 +905,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void skipRows(long items) throws IOException {
+    public void skipRows(long items) throws IOException {
       items = countNonNulls(items);
       long lengthToSkip = 0;
       for (int i = 0; i < items; ++i) {
@@ -991,7 +975,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
+    public void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
       if ((encoding.getKind() != OrcProto.ColumnEncoding.Kind.DIRECT) &&
           (encoding.getKind() != OrcProto.ColumnEncoding.Kind.DIRECT_V2)) {
         throw new IOException("Unknown encoding " + encoding + " in column " +
@@ -1000,7 +984,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(StripePlanner planner) throws IOException {
+    public void startStripe(StripePlanner planner) throws IOException {
       super.startStripe(planner);
       OrcProto.ColumnEncoding.Kind kind = planner.getEncoding(columnId).getKind();
       data = createIntegerReader(kind,
@@ -1103,7 +1087,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void skipRows(long items) throws IOException {
+    public void skipRows(long items) throws IOException {
       items = countNonNulls(items);
       data.skip(items);
       nanos.skip(items);
@@ -1134,7 +1118,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
+    public void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
       if ((encoding.getKind() != OrcProto.ColumnEncoding.Kind.DIRECT) &&
           (encoding.getKind() != OrcProto.ColumnEncoding.Kind.DIRECT_V2)) {
         throw new IOException("Unknown encoding " + encoding + " in column " +
@@ -1143,7 +1127,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(StripePlanner planner) throws IOException {
+    public void startStripe(StripePlanner planner) throws IOException {
       super.startStripe(planner);
       StreamName name = new StreamName(columnId,
           OrcProto.Stream.Kind.DATA);
@@ -1187,7 +1171,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void skipRows(long items) throws IOException {
+    public void skipRows(long items) throws IOException {
       reader.skip(countNonNulls(items));
     }
   }
@@ -1228,7 +1212,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
+    public void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
       if ((encoding.getKind() != OrcProto.ColumnEncoding.Kind.DIRECT) &&
           (encoding.getKind() != OrcProto.ColumnEncoding.Kind.DIRECT_V2)) {
         throw new IOException("Unknown encoding " + encoding + " in column " +
@@ -1237,7 +1221,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(StripePlanner planner) throws IOException {
+    public void startStripe(StripePlanner planner) throws IOException {
       super.startStripe(planner);
       valueStream = planner.getStream(new StreamName(columnId,
           OrcProto.Stream.Kind.DATA));
@@ -1339,7 +1323,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void skipRows(long items) throws IOException {
+    public void skipRows(long items) throws IOException {
       items = countNonNulls(items);
       HiveDecimalWritable scratchDecWritable = new HiveDecimalWritable();
       for (int i = 0; i < items; i++) {
@@ -1378,7 +1362,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
+    public void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
       if ((encoding.getKind() != OrcProto.ColumnEncoding.Kind.DIRECT)) {
         throw new IOException("Unknown encoding " + encoding + " in column " +
             columnId);
@@ -1386,7 +1370,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(StripePlanner planner) throws IOException {
+    public void startStripe(StripePlanner planner) throws IOException {
       super.startStripe(planner);
       InStream stream = planner.getStream(new StreamName(columnId,
           OrcProto.Stream.Kind.DATA));
@@ -1442,7 +1426,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void skipRows(long items) throws IOException {
+    public void skipRows(long items) throws IOException {
       items = countNonNulls(items);
       valueReader.skip(items);
     }
@@ -1454,7 +1438,7 @@ public class TreeReaderFactory {
    * dictionary encoding was used.
    */
   public static class StringTreeReader extends TreeReader {
-    protected TreeReader reader;
+    protected TypeReader reader;
 
     StringTreeReader(int columnId, Context context) throws IOException {
       super(columnId, context);
@@ -1483,12 +1467,12 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
+    public void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
       reader.checkEncoding(encoding);
     }
 
     @Override
-    void startStripe(StripePlanner planner) throws IOException {
+    public void startStripe(StripePlanner planner) throws IOException {
       // For each stripe, checks the encoding and initializes the appropriate
       // reader
       switch (planner.getEncoding(columnId).getKind()) {
@@ -1525,7 +1509,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void skipRows(long items) throws IOException {
+    public void skipRows(long items) throws IOException {
       reader.skipRows(items);
     }
   }
@@ -1633,7 +1617,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
+    public void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
       if (encoding.getKind() != OrcProto.ColumnEncoding.Kind.DIRECT &&
           encoding.getKind() != OrcProto.ColumnEncoding.Kind.DIRECT_V2) {
         throw new IOException("Unknown encoding " + encoding + " in column " +
@@ -1642,7 +1626,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(StripePlanner planner) throws IOException {
+    public void startStripe(StripePlanner planner) throws IOException {
       super.startStripe(planner);
       StreamName name = new StreamName(columnId,
           OrcProto.Stream.Kind.DATA);
@@ -1680,7 +1664,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void skipRows(long items) throws IOException {
+    public void skipRows(long items) throws IOException {
       items = countNonNulls(items);
       long lengthToSkip = 0;
       for (int i = 0; i < items; ++i) {
@@ -1737,7 +1721,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
+    public void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
       if (encoding.getKind() != OrcProto.ColumnEncoding.Kind.DICTIONARY &&
           encoding.getKind() != OrcProto.ColumnEncoding.Kind.DICTIONARY_V2) {
         throw new IOException("Unknown encoding " + encoding + " in column " +
@@ -1746,7 +1730,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(StripePlanner planner) throws IOException {
+    public void startStripe(StripePlanner planner) throws IOException {
       super.startStripe(planner);
 
       // read the dictionary blob
@@ -1890,7 +1874,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void skipRows(long items) throws IOException {
+    public void skipRows(long items) throws IOException {
       reader.skip(countNonNulls(items));
     }
 
@@ -2011,7 +1995,7 @@ public class TreeReaderFactory {
   }
 
   public static class StructTreeReader extends TreeReader {
-    protected final TreeReader[] fields;
+    public final TypeReader[] fields;
 
     protected StructTreeReader(int columnId,
                                TypeDescription readerSchema,
@@ -2026,14 +2010,14 @@ public class TreeReaderFactory {
       }
     }
 
-    public TreeReader[] getChildReaders() {
+    public TypeReader[] getChildReaders() {
       return fields;
     }
 
     protected StructTreeReader(int columnId, InStream present,
                                Context context,
                                OrcProto.ColumnEncoding encoding,
-                               TreeReader[] childReaders) throws IOException {
+                               TypeReader[] childReaders) throws IOException {
       super(columnId, present, context);
       if (encoding != null) {
         checkEncoding(encoding);
@@ -2044,23 +2028,9 @@ public class TreeReaderFactory {
     @Override
     public void seek(PositionProvider[] index) throws IOException {
       super.seek(index);
-      for (TreeReader kid : fields) {
+      for (TypeReader kid : fields) {
         if (kid != null) {
           kid.seek(index);
-        }
-      }
-    }
-
-    @Override
-    public void nextBatch(VectorizedRowBatch batch,
-                          int batchSize) throws IOException {
-      for(int i=0; i < fields.length &&
-          (vectorColumnCount == -1 || i < vectorColumnCount); ++i) {
-        ColumnVector colVector = batch.cols[i];
-        if (colVector != null) {
-          colVector.reset();
-          colVector.ensureSize((int) batchSize, false);
-          fields[i].nextVector(colVector, null, batchSize);
         }
       }
     }
@@ -2085,9 +2055,9 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(StripePlanner planner) throws IOException {
+    public void startStripe(StripePlanner planner) throws IOException {
       super.startStripe(planner);
-      for (TreeReader field : fields) {
+      for (TypeReader field : fields) {
         if (field != null) {
           field.startStripe(planner);
         }
@@ -2095,9 +2065,9 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void skipRows(long items) throws IOException {
+    public void skipRows(long items) throws IOException {
       items = countNonNulls(items);
-      for (TreeReader field : fields) {
+      for (TypeReader field : fields) {
         if (field != null) {
           field.skipRows(items);
         }
@@ -2106,7 +2076,7 @@ public class TreeReaderFactory {
   }
 
   public static class UnionTreeReader extends TreeReader {
-    protected final TreeReader[] fields;
+    protected final TypeReader[] fields;
     protected RunLengthByteReader tags;
 
     protected UnionTreeReader(int fileColumn,
@@ -2125,7 +2095,7 @@ public class TreeReaderFactory {
     protected UnionTreeReader(int columnId, InStream present,
                               Context context,
                               OrcProto.ColumnEncoding encoding,
-                              TreeReader[] childReaders) throws IOException {
+                              TypeReader[] childReaders) throws IOException {
       super(columnId, present, context);
       if (encoding != null) {
         checkEncoding(encoding);
@@ -2137,7 +2107,7 @@ public class TreeReaderFactory {
     public void seek(PositionProvider[] index) throws IOException {
       super.seek(index);
       tags.seek(index[columnId]);
-      for (TreeReader kid : fields) {
+      for (TypeReader kid : fields) {
         kid.seek(index);
       }
     }
@@ -2165,11 +2135,11 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(StripePlanner planner) throws IOException {
+    public void startStripe(StripePlanner planner) throws IOException {
       super.startStripe(planner);
       tags = new RunLengthByteReader(planner.getStream(new StreamName(columnId,
           OrcProto.Stream.Kind.DATA)));
-      for (TreeReader field : fields) {
+      for (TypeReader field : fields) {
         if (field != null) {
           field.startStripe(planner);
         }
@@ -2177,7 +2147,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void skipRows(long items) throws IOException {
+    public void skipRows(long items) throws IOException {
       items = countNonNulls(items);
       long[] counts = new long[fields.length];
       for (int i = 0; i < items; ++i) {
@@ -2190,7 +2160,7 @@ public class TreeReaderFactory {
   }
 
   public static class ListTreeReader extends TreeReader {
-    protected final TreeReader elementReader;
+    protected final TypeReader elementReader;
     protected IntegerReader lengths = null;
 
     protected ListTreeReader(int fileColumn,
@@ -2206,7 +2176,7 @@ public class TreeReaderFactory {
                              Context context,
                              InStream data,
                              OrcProto.ColumnEncoding encoding,
-                             TreeReader elementReader) throws IOException {
+                             TypeReader elementReader) throws IOException {
       super(columnId, present, context);
       if (data != null && encoding != null) {
         checkEncoding(encoding);
@@ -2247,7 +2217,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
+    public void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
       if ((encoding.getKind() != OrcProto.ColumnEncoding.Kind.DIRECT) &&
           (encoding.getKind() != OrcProto.ColumnEncoding.Kind.DIRECT_V2)) {
         throw new IOException("Unknown encoding " + encoding + " in column " +
@@ -2256,7 +2226,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(StripePlanner planner) throws IOException {
+    public void startStripe(StripePlanner planner) throws IOException {
       super.startStripe(planner);
       lengths = createIntegerReader(planner.getEncoding(columnId).getKind(),
           planner.getStream(new StreamName(columnId,
@@ -2267,7 +2237,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void skipRows(long items) throws IOException {
+    public void skipRows(long items) throws IOException {
       items = countNonNulls(items);
       long childSkip = 0;
       for (long i = 0; i < items; ++i) {
@@ -2278,8 +2248,8 @@ public class TreeReaderFactory {
   }
 
   public static class MapTreeReader extends TreeReader {
-    protected final TreeReader keyReader;
-    protected final TreeReader valueReader;
+    protected final TypeReader keyReader;
+    protected final TypeReader valueReader;
     protected IntegerReader lengths = null;
 
     protected MapTreeReader(int fileColumn,
@@ -2297,8 +2267,8 @@ public class TreeReaderFactory {
                             Context context,
                             InStream data,
                             OrcProto.ColumnEncoding encoding,
-                            TreeReader keyReader,
-                            TreeReader valueReader) throws IOException {
+                            TypeReader keyReader,
+                            TypeReader valueReader) throws IOException {
       super(columnId, present, context);
       if (data != null && encoding != null) {
         checkEncoding(encoding);
@@ -2342,7 +2312,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
+    public void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
       if ((encoding.getKind() != OrcProto.ColumnEncoding.Kind.DIRECT) &&
           (encoding.getKind() != OrcProto.ColumnEncoding.Kind.DIRECT_V2)) {
         throw new IOException("Unknown encoding " + encoding + " in column " +
@@ -2351,7 +2321,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void startStripe(StripePlanner planner) throws IOException {
+    public void startStripe(StripePlanner planner) throws IOException {
       super.startStripe(planner);
       lengths = createIntegerReader(planner.getEncoding(columnId).getKind(),
           planner.getStream(new StreamName(columnId,
@@ -2365,7 +2335,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    void skipRows(long items) throws IOException {
+    public void skipRows(long items) throws IOException {
       items = countNonNulls(items);
       long childSkip = 0;
       for (long i = 0; i < items; ++i) {
@@ -2376,7 +2346,7 @@ public class TreeReaderFactory {
     }
   }
 
-  public static TreeReader createTreeReader(TypeDescription readerType,
+  public static TypeReader createTreeReader(TypeDescription readerType,
                                             Context context
                                             ) throws IOException {
     OrcFile.Version version = context.getFileFormat();
@@ -2444,6 +2414,16 @@ public class TreeReaderFactory {
       default:
         throw new IllegalArgumentException("Unsupported type " +
             readerTypeCategory);
+    }
+  }
+
+  public static BatchReader createRootReader(TypeDescription readerType, Context context)
+          throws IOException {
+    TypeReader reader = createTreeReader(readerType, context);
+    if (reader instanceof StructTreeReader) {
+      return new StructBatchReader((StructTreeReader) reader);
+    } else {
+      return new PrimitiveBatchReader(reader);
     }
   }
 }

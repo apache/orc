@@ -43,12 +43,12 @@ import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.expressions.StringExpr;
-import org.apache.hadoop.hive.ql.util.TimestampUtils;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.orc.OrcProto;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.TypeDescription.Category;
 import org.apache.orc.impl.reader.StripePlanner;
+import org.apache.orc.impl.reader.tree.TypeReader;
 import org.threeten.extra.chrono.HybridChronology;
 
 /**
@@ -61,9 +61,9 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
    */
   public static class ConvertTreeReader extends TreeReader {
 
-    TreeReader fromReader;
+    TypeReader fromReader;
 
-    ConvertTreeReader(int columnId, TreeReader fromReader) throws IOException {
+    ConvertTreeReader(int columnId, TypeReader fromReader) throws IOException {
       super(columnId, null);
       this.fromReader = fromReader;
     }
@@ -249,13 +249,13 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     }
 
     @Override
-    void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
+    public void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
       // Pass-thru.
       fromReader.checkEncoding(encoding);
     }
 
     @Override
-    void startStripe(StripePlanner planner) throws IOException {
+    public void startStripe(StripePlanner planner) throws IOException {
       // Pass-thru.
       fromReader.startStripe(planner);
     }
@@ -273,7 +273,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     }
 
     @Override
-    void skipRows(long items) throws IOException {
+    public void skipRows(long items) throws IOException {
       // Pass-thru.
       fromReader.skipRows(items);
     }
@@ -367,7 +367,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     }
   }
 
-  private static TreeReader createFromInteger(int columnId,
+  private static TypeReader createFromInteger(int columnId,
                                               TypeDescription fileType,
                                               Context context) throws IOException {
     switch (fileType.getCategory()) {
@@ -1744,7 +1744,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     }
   }
 
-  private static TreeReader createAnyIntegerConvertTreeReader(int columnId,
+  private static TypeReader createAnyIntegerConvertTreeReader(int columnId,
                                                               TypeDescription fileType,
                                                               TypeDescription readerType,
                                                               Context context) throws IOException {
@@ -1798,7 +1798,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     }
   }
 
-  private static TreeReader createDoubleConvertTreeReader(int columnId,
+  private static TypeReader createDoubleConvertTreeReader(int columnId,
                                                           TypeDescription fileType,
                                                           TypeDescription readerType,
                                                           Context context) throws IOException {
@@ -1845,7 +1845,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     }
   }
 
-  private static TreeReader createDecimalConvertTreeReader(int columnId,
+  private static TypeReader createDecimalConvertTreeReader(int columnId,
                                                            TypeDescription fileType,
                                                            TypeDescription readerType,
                                                            Context context) throws IOException {
@@ -1891,7 +1891,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     }
   }
 
-  private static TreeReader createStringConvertTreeReader(int columnId,
+  private static TypeReader createStringConvertTreeReader(int columnId,
                                                           TypeDescription fileType,
                                                           TypeDescription readerType,
                                                           Context context) throws IOException {
@@ -1946,7 +1946,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     }
   }
 
-  private static TreeReader createTimestampConvertTreeReader(int columnId,
+  private static TypeReader createTimestampConvertTreeReader(int columnId,
                                                              TypeDescription fileType,
                                                              TypeDescription readerType,
                                                              Context context) throws IOException {
@@ -1995,7 +1995,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     }
   }
 
-  private static TreeReader createDateConvertTreeReader(int columnId,
+  private static TypeReader createDateConvertTreeReader(int columnId,
                                                         TypeDescription readerType,
                                                         Context context) throws IOException {
 
@@ -2036,7 +2036,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     }
   }
 
-  private static TreeReader createBinaryConvertTreeReader(int columnId,
+  private static TypeReader createBinaryConvertTreeReader(int columnId,
                                                           TypeDescription readerType,
                                                           Context context) throws IOException {
 
@@ -2199,7 +2199,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
    * @return
    * @throws IOException
    */
-  public static TreeReader createConvertTreeReader(TypeDescription readerType,
+  public static TypeReader createConvertTreeReader(TypeDescription readerType,
                                                    Context context) throws IOException {
     final SchemaEvolution evolution = context.getSchemaEvolution();
 

@@ -48,6 +48,7 @@ import org.apache.orc.TimestampColumnStatistics;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.reader.ReaderEncryption;
 import org.apache.orc.impl.reader.StripePlanner;
+import org.apache.orc.impl.reader.tree.BatchReader;
 import org.apache.orc.util.BloomFilter;
 import org.apache.orc.util.BloomFilterIO;
 import org.slf4j.Logger;
@@ -78,7 +79,7 @@ public class RecordReaderImpl implements RecordReader {
   private int currentStripe = -1;
   private long rowBaseInStripe = 0;
   private long rowCountInStripe = 0;
-  private final TreeReaderFactory.TreeReader reader;
+  private final BatchReader reader;
   private final OrcIndex indexes;
   private final SargApplier sargApp;
   // an array about which row groups aren't skipped
@@ -227,8 +228,7 @@ public class RecordReaderImpl implements RecordReader {
           .setProlepticGregorian(fileReader.writerUsedProlepticGregorian(),
               fileReader.options.getConvertToProlepticGregorian())
           .setEncryption(encryption);
-    reader = TreeReaderFactory.createTreeReader(evolution.getReaderSchema(),
-        readerContext);
+    reader = TreeReaderFactory.createRootReader(evolution.getReaderSchema(), readerContext);
 
     int columns = evolution.getFileSchema().getMaximumId() + 1;
     indexes = new OrcIndex(new OrcProto.RowIndex[columns],
@@ -1109,7 +1109,7 @@ public class RecordReaderImpl implements RecordReader {
    * @throws IOException
    */
   private boolean advanceToNextRow(
-      TreeReaderFactory.TreeReader reader, long nextRow, boolean canAdvanceStripe)
+    BatchReader reader, long nextRow, boolean canAdvanceStripe)
       throws IOException {
     long nextRowInStripe = nextRow - rowBaseInStripe;
     // check for row skipping
@@ -1166,8 +1166,6 @@ public class RecordReaderImpl implements RecordReader {
       rowInStripe += batchSize;
       reader.setVectorColumnCount(batch.getDataColumnCount());
       reader.nextBatch(batch, batchSize);
-      batch.selectedInUse = false;
-      batch.size = batchSize;
       advanceToNextRow(reader, rowInStripe + rowBaseInStripe, true);
       return batch.size  != 0;
     } catch (IOException e) {
@@ -1261,7 +1259,7 @@ public class RecordReaderImpl implements RecordReader {
     }
   }
 
-  private void seekToRowEntry(TreeReaderFactory.TreeReader reader, int rowEntry)
+  private void seekToRowEntry(BatchReader reader, int rowEntry)
       throws IOException {
     OrcProto.RowIndex[] rowIndices = indexes.getRowGroupIndex();
     PositionProvider[] index = new PositionProvider[rowIndices.length];
