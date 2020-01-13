@@ -25,7 +25,7 @@
 
 namespace orc {
 
-  Literal::Literal(PredicateType type) {
+  Literal::Literal(PredicateDataType type) {
     mType = type;
     mValue.DecimalVal = 0;
     mSize = 0;
@@ -36,7 +36,7 @@ namespace orc {
   }
 
   Literal::Literal(int64_t val) {
-    mType = PredicateType::LONG;
+    mType = PredicateDataType::LONG;
     mValue.IntVal = val;
     mSize = sizeof(val);
     mIsNull = false;
@@ -46,7 +46,7 @@ namespace orc {
   }
 
   Literal::Literal(double val) {
-    mType = PredicateType::FLOAT;
+    mType = PredicateDataType::FLOAT;
     mValue.DoubleVal = val;
     mSize = sizeof(val);
     mIsNull = false;
@@ -56,7 +56,7 @@ namespace orc {
   }
 
   Literal::Literal(bool val) {
-    mType = PredicateType::BOOLEAN;
+    mType = PredicateDataType::BOOLEAN;
     mValue.BooleanVal = val;
     mSize = sizeof(val);
     mIsNull = false;
@@ -65,8 +65,8 @@ namespace orc {
     mHashCode = hashCode();
   }
 
-  Literal::Literal(PredicateType type, int64_t val) {
-    if (type != PredicateType::DATE && type != PredicateType::TIMESTAMP) {
+  Literal::Literal(PredicateDataType type, int64_t val) {
+    if (type != PredicateDataType::DATE && type != PredicateDataType::TIMESTAMP) {
       throw std::invalid_argument("only DATE & TIMESTAMP are supported here!");
     }
     mType = type;
@@ -79,7 +79,7 @@ namespace orc {
   }
 
   Literal::Literal(const char * str, size_t size) {
-    mType = PredicateType::STRING;
+    mType = PredicateDataType::STRING;
     mValue.Buffer = new char[size];
     memcpy(mValue.Buffer, str, size);
     mSize = size;
@@ -90,7 +90,7 @@ namespace orc {
   }
 
   Literal::Literal(Int128 val, int32_t precision, int32_t scale) {
-    mType = PredicateType::DECIMAL;
+    mType = PredicateDataType::DECIMAL;
     mValue.DecimalVal = val;
     mPrecision = precision;
     mScale = scale;
@@ -103,12 +103,12 @@ namespace orc {
                                     , mSize(r.mSize)
                                     , mIsNull(r.mIsNull)
                                     , mHashCode(r.mHashCode) {
-    if (mType == PredicateType::STRING) {
+    if (mType == PredicateDataType::STRING) {
       mValue.Buffer = new char[r.mSize];
       memcpy(mValue.Buffer, r.mValue.Buffer, r.mSize);
       mPrecision = 0;
       mScale = 0;
-    } else if (mType == PredicateType::DECIMAL) {
+    } else if (mType == PredicateDataType::DECIMAL) {
       mPrecision = r.mPrecision;
       mScale = r.mScale;
       mValue = r.mValue;
@@ -120,7 +120,7 @@ namespace orc {
   }
 
   Literal::~Literal() {
-    if (mType == PredicateType::STRING && mValue.Buffer) {
+    if (mType == PredicateDataType::STRING && mValue.Buffer) {
       delete [] mValue.Buffer;
       mValue.Buffer = nullptr;
     }
@@ -128,7 +128,7 @@ namespace orc {
 
   Literal& Literal::operator=(const Literal& r) {
     if (this != &r) {
-      if (mType == PredicateType::STRING && mValue.Buffer) {
+      if (mType == PredicateDataType::STRING && mValue.Buffer) {
         delete [] mValue.Buffer;
         mValue.Buffer = nullptr;
       }
@@ -138,7 +138,7 @@ namespace orc {
       mIsNull = r.mIsNull;
       mPrecision = r.mPrecision;
       mScale = r.mScale;
-      if (mType == PredicateType::STRING) {
+      if (mType == PredicateDataType::STRING) {
         mValue.Buffer = new char[r.mSize];
         memcpy(mValue.Buffer, r.mValue.Buffer, r.mSize);
       } else {
@@ -155,28 +155,26 @@ namespace orc {
     }
 
     std::ostringstream sstream;
-    std::string str;
     switch (mType) {
-      case PredicateType::LONG:
+      case PredicateDataType::LONG:
         sstream << mValue.IntVal;
         break;
-      case PredicateType::DATE:
+      case PredicateDataType::DATE:
         sstream << mValue.DateVal;
         break;
-      case PredicateType::TIMESTAMP:
+      case PredicateDataType::TIMESTAMP:
         sstream << mValue.TimeStampVal;
         break;
-      case PredicateType::FLOAT:
+      case PredicateDataType::FLOAT:
         sstream << mValue.DoubleVal;
         break;
-      case PredicateType::BOOLEAN:
+      case PredicateDataType::BOOLEAN:
         sstream << (mValue.BooleanVal ? "true" : "false");
         break;
-      case PredicateType::STRING:
-        str.assign(mValue.Buffer, mSize);
-        sstream << str;
+      case PredicateDataType::STRING:
+        sstream << std::string(mValue.Buffer, mSize);
         break;
-      case PredicateType::DECIMAL:
+      case PredicateDataType::DECIMAL:
         sstream << mValue.DecimalVal.toDecimalString(mScale);
         break;
     }
@@ -189,20 +187,20 @@ namespace orc {
     }
 
     switch (mType) {
-      case PredicateType::LONG:
+      case PredicateDataType::LONG:
         return std::hash<int64_t>{}(mValue.IntVal);
-      case PredicateType::DATE:
+      case PredicateDataType::DATE:
         return std::hash<int64_t>{}(mValue.DateVal);
-      case PredicateType::TIMESTAMP:
+      case PredicateDataType::TIMESTAMP:
         return std::hash<int64_t>{}(mValue.TimeStampVal);
-      case PredicateType::FLOAT:
+      case PredicateDataType::FLOAT:
         return std::hash<double>{}(mValue.DoubleVal);
-      case PredicateType::BOOLEAN:
+      case PredicateDataType::BOOLEAN:
         return std::hash<bool>{}(mValue.BooleanVal);
-      case PredicateType::STRING:
+      case PredicateDataType::STRING:
         return std::hash<std::string>{}(
           std::string(mValue.Buffer, mSize));
-      case PredicateType::DECIMAL:
+      case PredicateDataType::DECIMAL:
         // current glibc does not support hash<int128_t>
         return std::hash<int64_t>{}(mValue.IntVal);
       default:
@@ -223,21 +221,21 @@ namespace orc {
     }
 
     switch (mType) {
-      case PredicateType::LONG:
+      case PredicateDataType::LONG:
         return mValue.IntVal == r.mValue.IntVal;
-      case PredicateType::DATE:
+      case PredicateDataType::DATE:
         return mValue.DateVal == r.mValue.DateVal;
-      case PredicateType::TIMESTAMP:
+      case PredicateDataType::TIMESTAMP:
         return mValue.TimeStampVal == r.mValue.TimeStampVal;
-      case PredicateType::FLOAT:
+      case PredicateDataType::FLOAT:
         return std::fabs(mValue.DoubleVal - r.mValue.DoubleVal) <
           std::numeric_limits<double>::epsilon();
-      case PredicateType::BOOLEAN:
+      case PredicateDataType::BOOLEAN:
         return mValue.BooleanVal == r.mValue.BooleanVal;
-      case PredicateType::STRING:
+      case PredicateDataType::STRING:
         return mSize == r.mSize && memcmp(
           mValue.Buffer, r.mValue.Buffer, mSize) == 0;
-      case PredicateType::DECIMAL:
+      case PredicateDataType::DECIMAL:
         return mValue.DecimalVal == r.mValue.DecimalVal;
       default:
         return true;
@@ -248,73 +246,49 @@ namespace orc {
     return !(*this == r);
   }
 
+  inline void validate(const bool& isNull,
+                       const PredicateDataType& type,
+                       const PredicateDataType& expected) {
+    if (isNull) {
+      throw std::logic_error("cannot get value when it is null!");
+    }
+    if (type != expected) {
+      throw std::logic_error("predicate type mismatch");
+    }
+  }
+
   int64_t Literal::getLong() const {
-    if (mIsNull) {
-      throw std::logic_error("cannot call getLong for null!");
-    }
-    if (mType != PredicateType::LONG) {
-      throw std::logic_error("cannot call getLong for " + toString());
-    }
+    validate(mIsNull, mType, PredicateDataType::LONG);
     return mValue.IntVal;
   }
 
   int64_t Literal::getDate() const {
-    if (mIsNull) {
-      throw std::logic_error("cannot call getLong for null!");
-    }
-    if (mType != PredicateType::DATE) {
-      throw std::logic_error("cannot call getDate for " + toString());
-    }
+    validate(mIsNull, mType, PredicateDataType::DATE);
     return mValue.DateVal;
   }
 
   int64_t Literal::getTimestamp() const {
-    if (mIsNull) {
-      throw std::logic_error("cannot call getLong for null!");
-    }
-    if (mType != PredicateType::TIMESTAMP) {
-      throw std::logic_error("cannot call getTimestamp for " + toString());
-    }
+    validate(mIsNull, mType, PredicateDataType::TIMESTAMP);
     return mValue.TimeStampVal;
   }
 
   double Literal::getFloat() const {
-    if (mIsNull) {
-      throw std::logic_error("cannot call getLong for null!");
-    }
-    if (mType != PredicateType::FLOAT) {
-      throw std::logic_error("cannot call getFloat for " + toString());
-    }
+    validate(mIsNull, mType, PredicateDataType::FLOAT);
     return mValue.DoubleVal;
   }
 
   std::string Literal::getString() const {
-    if (mIsNull) {
-      throw std::logic_error("cannot call getLong for null!");
-    }
-    if (mType != PredicateType::STRING) {
-      throw std::logic_error("cannot call getString for " + toString());
-    }
+    validate(mIsNull, mType, PredicateDataType::STRING);
     return std::string(mValue.Buffer, mSize);
   }
 
   bool Literal::getBool() const {
-    if (mIsNull) {
-      throw std::logic_error("cannot call getLong for null!");
-    }
-    if (mType != PredicateType::BOOLEAN) {
-      throw std::logic_error("cannot call getBool for " + toString());
-    }
+    validate(mIsNull, mType, PredicateDataType::BOOLEAN);
     return mValue.BooleanVal;
   }
 
   Decimal Literal::getDecimal() const {
-    if (mIsNull) {
-      throw std::logic_error("cannot call getLong for null!");
-    }
-    if (mType != PredicateType::DECIMAL) {
-      throw std::logic_error("cannot call getDecimal for " + toString());
-    }
+    validate(mIsNull, mType, PredicateDataType::DECIMAL);
     return Decimal(mValue.DecimalVal, mScale);
   }
 

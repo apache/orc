@@ -25,9 +25,9 @@
 namespace orc {
 
   /**
-   * Possible types for predicates
+   * Possible data types for predicates
    */
-  enum class PredicateType {
+  enum class PredicateDataType {
     LONG = 0, FLOAT, STRING, DATE, DECIMAL, TIMESTAMP, BOOLEAN
   };
 
@@ -45,7 +45,7 @@ namespace orc {
     /**
      * Create a literal of null value for a specific type
      */
-    Literal(PredicateType type);
+    Literal(PredicateDataType type);
 
     /**
      * Create a literal of LONG type
@@ -65,7 +65,7 @@ namespace orc {
     /**
      * Create a literal of Timestamp or DATE type
      */
-    Literal(PredicateType type, int64_t val);
+    Literal(PredicateDataType type, int64_t val);
 
     /**
      * Create a literal of STRING type
@@ -93,7 +93,7 @@ namespace orc {
      */
     bool isNull() const { return mIsNull; }
 
-    PredicateType getType() const { return mType; }
+    PredicateDataType getType() const { return mType; }
     std::string toString() const;
     size_t getHashCode() const { return mHashCode; }
 
@@ -114,13 +114,13 @@ namespace orc {
     };
 
   private:
-    LiteralVal mValue;     // data value for this literal if not null
-    PredicateType mType;   // data type of the literal
-    size_t mSize;          // size of mValue if it is Buffer
-    int32_t mPrecision;    // precision of decimal type
-    int32_t mScale;        // scale of decimal type
-    bool mIsNull;          // whether this literal is null
-    size_t mHashCode;      // precomputed hash code for the literal
+    LiteralVal mValue;       // data value for this literal if not null
+    PredicateDataType mType; // data type of the literal
+    size_t mSize;            // size of mValue if it is Buffer
+    int32_t mPrecision;      // precision of decimal type
+    int32_t mScale;          // scale of decimal type
+    bool mIsNull;            // whether this literal is null
+    size_t mHashCode;        // precomputed hash code for the literal
   };
 
 } // namespace orc

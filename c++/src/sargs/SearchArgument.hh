@@ -59,7 +59,7 @@ namespace orc {
     /**
      * Evaluate the entire predicate based on the values for the leaf predicates.
      * @param leaves the value of each leaf predicate
-     * @return the value of hte entire predicate
+     * @return the value of the entire predicate
      */
     TruthValue evaluate(const std::vector<TruthValue>& leaves) const override;
 
@@ -111,7 +111,7 @@ namespace orc {
      * @return this
      */
     SearchArgumentBuilder& lessThan(const std::string& column,
-                                    PredicateType type,
+                                    PredicateDataType type,
                                     Literal literal) override;
 
     /**
@@ -122,7 +122,7 @@ namespace orc {
      * @return this
      */
     SearchArgumentBuilder& lessThanEquals(const std::string& column,
-                                          PredicateType type,
+                                          PredicateDataType type,
                                           Literal literal) override;
 
     /**
@@ -133,7 +133,7 @@ namespace orc {
      * @return this
      */
     SearchArgumentBuilder& equals(const std::string& column,
-                                  PredicateType type,
+                                  PredicateDataType type,
                                   Literal literal) override;
 
     /**
@@ -144,7 +144,7 @@ namespace orc {
      * @return this
      */
     SearchArgumentBuilder& nullSafeEquals(const std::string& column,
-                                          PredicateType type,
+                                          PredicateDataType type,
                                           Literal literal) override;
 
     /**
@@ -155,7 +155,7 @@ namespace orc {
      * @return this
      */
     SearchArgumentBuilder& in(const std::string& column,
-                              PredicateType type,
+                              PredicateDataType type,
                               const std::initializer_list<Literal>& literals) override;
 
     /**
@@ -165,7 +165,7 @@ namespace orc {
      * @return this
      */
     SearchArgumentBuilder& isNull(const std::string& column,
-                                  PredicateType type) override;
+                                  PredicateDataType type) override;
 
     /**
      * Add a between leaf to the current item on the stack.
@@ -176,7 +176,7 @@ namespace orc {
      * @return this
      */
     SearchArgumentBuilder& between(const std::string& column,
-                                   PredicateType type,
+                                   PredicateDataType type,
                                    Literal lower,
                                    Literal upper) override;
 
@@ -199,7 +199,7 @@ namespace orc {
     size_t addLeaf(PredicateLeaf leaf);
     SearchArgumentBuilder& compareOperator(PredicateLeaf::Operator op,
                                            const std::string& column,
-                                           PredicateType type,
+                                           PredicateDataType type,
                                            Literal literal);
 
   public:

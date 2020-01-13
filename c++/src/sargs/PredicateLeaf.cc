@@ -29,7 +29,7 @@
 namespace orc {
 
   PredicateLeaf::PredicateLeaf(Operator op,
-                               PredicateType type,
+                               PredicateDataType type,
                                const std::string& colName,
                                Literal literal)
                               : mOperator(op)
@@ -41,7 +41,7 @@ namespace orc {
   }
 
   PredicateLeaf::PredicateLeaf(Operator op,
-                               PredicateType type,
+                               PredicateDataType type,
                                const std::string& colName,
                                const std::initializer_list<Literal>& literals)
                               : mOperator(op)
@@ -54,7 +54,7 @@ namespace orc {
 
   void PredicateLeaf::validate() const {
     switch (mOperator) {
-      case Operator ::IS_NULL:
+      case Operator::IS_NULL:
         if (mColumnName.empty()) {
           throw std::invalid_argument("column name should not be empty");
         }
@@ -109,7 +109,7 @@ namespace orc {
     return mOperator;
   }
 
-  PredicateType PredicateLeaf::getType() const {
+  PredicateDataType PredicateLeaf::getType() const {
     return mType;
   }
 
@@ -155,7 +155,7 @@ namespace orc {
     std::ostringstream sstream;
     sstream << '(';
     switch (mOperator) {
-      case Operator ::IS_NULL:
+      case Operator::IS_NULL:
         sstream << mColumnName << " is null";
         break;
       case Operator::EQUALS:
@@ -368,27 +368,35 @@ namespace orc {
         return hasNull ? TruthValue::YES_NO : TruthValue::NO;
       case PredicateLeaf::Operator::NULL_SAFE_EQUALS: {
         if (literals.at(0).getBool()) {
-           return trueCount == 0 ?
-                  TruthValue::NO : TruthValue::YES_NO;
+          if (trueCount == 0) {
+            return TruthValue::NO;
+          } else if (falseCount == 0) {
+            return TruthValue::YES;
+          }
         } else {
-          return falseCount == 0 ?
-                 TruthValue::NO : TruthValue::YES_NO;
+          if (falseCount == 0) {
+            return TruthValue::NO;
+          } else if (trueCount == 0) {
+            return TruthValue::YES;
+          }
         }
+        return TruthValue::YES_NO;
       }
       case PredicateLeaf::Operator::EQUALS: {
         if (literals.at(0).getBool()) {
           if (trueCount == 0) {
             return hasNull ? TruthValue::NO_NULL : TruthValue::NO;
-          } else {
-            return hasNull ? TruthValue::YES_NO_NULL : TruthValue::YES_NO;
+          } else if (falseCount == 0) {
+            return hasNull ? TruthValue::YES_NULL : TruthValue::YES;
           }
         } else {
           if (falseCount == 0) {
             return hasNull ? TruthValue::NO_NULL : TruthValue::NO;
-          } else {
-            return hasNull ? TruthValue::YES_NO_NULL : TruthValue::YES_NO;
+          } else if (trueCount == 0) {
+            return hasNull ? TruthValue::YES_NULL : TruthValue::YES;
           }
         }
+        return hasNull ? TruthValue::YES_NO_NULL : TruthValue::YES_NO;
       }
       case PredicateLeaf::Operator::LESS_THAN:
       case PredicateLeaf::Operator::LESS_THAN_EQUALS:
@@ -467,7 +475,7 @@ namespace orc {
                                 const proto::ColumnStatistics& colStats) const {
     TruthValue result = TruthValue::YES_NO_NULL;
     switch (mType) {
-      case PredicateType::LONG: {
+      case PredicateDataType::LONG: {
         if (colStats.has_intstatistics() &&
             colStats.intstatistics().has_minimum() &&
             colStats.intstatistics().has_maximum()) {
@@ -481,7 +489,7 @@ namespace orc {
         }
         break;
       }
-      case PredicateType::FLOAT: {
+      case PredicateDataType::FLOAT: {
         if (colStats.has_doublestatistics() &&
             colStats.doublestatistics().has_minimum() &&
             colStats.doublestatistics().has_maximum()) {
@@ -495,7 +503,7 @@ namespace orc {
         }
         break;
       }
-      case PredicateType::STRING: {
+      case PredicateDataType::STRING: {
         if (colStats.has_stringstatistics() &&
             colStats.stringstatistics().has_minimum() &&
             colStats.stringstatistics().has_maximum()) {
@@ -509,7 +517,7 @@ namespace orc {
         }
         break;
       }
-      case PredicateType::DATE: {
+      case PredicateDataType::DATE: {
         if (colStats.has_datestatistics() &&
             colStats.datestatistics().has_minimum() &&
             colStats.datestatistics().has_maximum()) {
@@ -523,7 +531,7 @@ namespace orc {
         }
         break;
       }
-      case PredicateType::TIMESTAMP: {
+      case PredicateDataType::TIMESTAMP: {
         if (colStats.has_timestampstatistics() &&
             colStats.timestampstatistics().has_minimumutc() &&
             colStats.timestampstatistics().has_maximumutc()) {
@@ -537,7 +545,7 @@ namespace orc {
         }
         break;
       }
-      case PredicateType::DECIMAL: {
+      case PredicateDataType::DECIMAL: {
         if (colStats.has_decimalstatistics() &&
             colStats.decimalstatistics().has_minimum() &&
             colStats.decimalstatistics().has_maximum()) {
@@ -551,7 +559,7 @@ namespace orc {
         }
         break;
       }
-      case PredicateType::BOOLEAN:  {
+      case PredicateDataType::BOOLEAN:  {
         if (colStats.has_bucketstatistics()) {
           result = evaluateBoolPredicate(mOperator, mLiterals, colStats);
         }
@@ -594,36 +602,36 @@ namespace orc {
   }
 
   static TruthValue checkInBloomFilter(PredicateLeaf::Operator,
-                                       PredicateType type,
+                                       PredicateDataType type,
                                        const Literal& literal,
                                        const BloomFilter * bf,
                                        bool hasNull) {
     TruthValue result = hasNull ? TruthValue::NO_NULL : TruthValue::NO;
     if (literal.isNull()) {
       result = hasNull ? TruthValue::YES_NO_NULL : TruthValue::NO;
-    } else if (type == PredicateType::LONG) {
+    } else if (type == PredicateDataType::LONG) {
       if (bf->testLong(literal.getLong())) {
         result = TruthValue::YES_NO_NULL;
       }
-    } else if (type == PredicateType::FLOAT) {
+    } else if (type == PredicateDataType::FLOAT) {
       if (bf->testDouble(literal.getFloat())) {
         result = TruthValue::YES_NO_NULL;
       }
-    } else if (type == PredicateType::STRING) {
+    } else if (type == PredicateDataType::STRING) {
       std::string str = literal.getString();
       if (bf->testBytes(str.c_str(), static_cast<int64_t>(str.size()))) {
         result = TruthValue::YES_NO_NULL;
       }
-    } else if (type == PredicateType::DECIMAL) {
+    } else if (type == PredicateDataType::DECIMAL) {
       std::string decimal = literal.getDecimal().toString(true);
       if (bf->testBytes(decimal.c_str(),  static_cast<int64_t>(decimal.size()))) {
         result = TruthValue::YES_NO_NULL;
       }
-    } else if (type == PredicateType::TIMESTAMP) {
+    } else if (type == PredicateDataType::TIMESTAMP) {
       if (bf->testLong(literal.getTimestamp())) {
         result = TruthValue::YES_NO_NULL;
       }
-    } else if (type == PredicateType::DATE) {
+    } else if (type == PredicateDataType::DATE) {
       if (bf->testLong(literal.getDate())) {
         result = TruthValue::YES_NO_NULL;
       }
@@ -675,16 +683,23 @@ namespace orc {
                                      const BloomFilter * bloomFilter) const {
     // files written before ORC-135 stores timestamp wrt to local timezone
     // causing issues with PPD. disable PPD for timestamp for all old files
-    if (mType == PredicateType::TIMESTAMP) {
+    if (mType == PredicateDataType::TIMESTAMP) {
       if (writerVersion < WriterVersion::WriterVersion_ORC_135) {
         return TruthValue::YES_NO_NULL;
       }
     }
 
-    // if we didn't have any values, everything must have been null
-    if (colStats.hasnull() && colStats.numberofvalues() == 0) {
-      return mOperator == Operator::IS_NULL ?
-        TruthValue::YES : TruthValue::IS_NULL;
+    bool allNull = colStats.hasnull() && colStats.numberofvalues() == 0;
+    if (mOperator == Operator::IS_NULL || ((
+        mOperator == Operator::EQUALS ||
+        mOperator == Operator::NULL_SAFE_EQUALS) &&
+        mLiterals.at(0).isNull())) {
+      // IS_NULL operator does not need to check min/max stats and bloom filter
+      return allNull ? TruthValue::YES :
+             (colStats.hasnull() ? TruthValue::YES_NO : TruthValue::NO);
+    } else if (allNull) {
+      // if we don't have any value, everything must have been null
+      return TruthValue::IS_NULL;
     }
 
     TruthValue result = evaluatePredicateMinMax(colStats);

@@ -67,12 +67,12 @@ namespace orc {
     PredicateLeaf() = default;
 
     PredicateLeaf(Operator op,
-                  PredicateType type,
+                  PredicateDataType type,
                   const std::string& colName,
                   Literal literal);
 
     PredicateLeaf(Operator op,
-                  PredicateType type,
+                  PredicateDataType type,
                   const std::string& colName,
                   const std::initializer_list<Literal>& literalList);
 
@@ -84,7 +84,7 @@ namespace orc {
     /**
      * Get the type of the column and literal by the file format.
      */
-    PredicateType getType() const;
+    PredicateDataType getType() const;
 
     /**
      * Get the simple column name.
@@ -127,7 +127,7 @@ namespace orc {
 
   private:
     Operator mOperator;
-    PredicateType mType;
+    PredicateDataType mType;
     std::string mColumnName;
     uint64_t mColumnId;
     std::vector<Literal> mLiterals;

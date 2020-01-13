@@ -112,7 +112,7 @@ namespace orc {
       case Operator::OR:
       {
         result = mChildren.at(0)->evaluate(leaves);
-        for (size_t i = 1; i < mChildren.size(); ++i) {
+        for (size_t i = 1; i < mChildren.size() && !isNeeded(result); ++i) {
           result = mChildren.at(i)->evaluate(leaves) || result;
         }
         return result;
@@ -120,7 +120,7 @@ namespace orc {
       case Operator::AND:
       {
         result = mChildren.at(0)->evaluate(leaves);
-        for (size_t i = 1; i < mChildren.size(); ++i) {
+        for (size_t i = 1; i < mChildren.size() && isNeeded(result); ++i) {
           result = mChildren.at(i)->evaluate(leaves) && result;
         }
         return result;

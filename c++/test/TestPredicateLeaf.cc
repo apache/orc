@@ -165,30 +165,30 @@ namespace orc {
 
   TEST(TestPredicateLeaf, testPredEvalWithColStats) {
     PredicateLeaf pred0(
-      PredicateLeaf::Operator::NULL_SAFE_EQUALS,
-      PredicateType::BOOLEAN,
-      "x",
-      Literal(true));
-    EXPECT_EQ(TruthValue::YES_NO,
+            PredicateLeaf::Operator::NULL_SAFE_EQUALS,
+            PredicateDataType::BOOLEAN,
+            "x",
+            Literal(true));
+    EXPECT_EQ(TruthValue::YES,
               evaluate(pred0, createBooleanStats(10, 10)));
     EXPECT_EQ(TruthValue::NO,
               evaluate(pred0, createBooleanStats(10, 0)));
 
     PredicateLeaf pred1(
-      PredicateLeaf::Operator::NULL_SAFE_EQUALS,
-      PredicateType::BOOLEAN,
-      "x",
-      Literal(false));
+            PredicateLeaf::Operator::NULL_SAFE_EQUALS,
+            PredicateDataType::BOOLEAN,
+            "x",
+            Literal(false));
     EXPECT_EQ(TruthValue::NO,
               evaluate(pred1, createBooleanStats(10, 10)));
-    EXPECT_EQ(TruthValue::YES_NO,
+    EXPECT_EQ(TruthValue::YES,
               evaluate(pred1, createBooleanStats(10, 0)));
 
     PredicateLeaf pred2(
-      PredicateLeaf::Operator::NULL_SAFE_EQUALS,
-      PredicateType::LONG,
-      "x",
-      Literal(static_cast<int64_t>(15)));
+            PredicateLeaf::Operator::NULL_SAFE_EQUALS,
+            PredicateDataType::LONG,
+            "x",
+            Literal(static_cast<int64_t>(15)));
     EXPECT_EQ(TruthValue::YES_NO,
               evaluate(pred2, createIntStats(10, 100)));
     EXPECT_EQ(TruthValue::NO,
@@ -196,70 +196,70 @@ namespace orc {
 
     // delibrately pass column statistics of float type
     PredicateLeaf pred3(
-      PredicateLeaf::Operator::NULL_SAFE_EQUALS,
-      PredicateType::FLOAT,
-      "x",
-      Literal(1.0));
+            PredicateLeaf::Operator::NULL_SAFE_EQUALS,
+            PredicateDataType::FLOAT,
+            "x",
+            Literal(1.0));
     EXPECT_EQ(TruthValue::YES_NO_NULL,
               evaluate(pred3, createIntStats(10, 100)));
 
     PredicateLeaf pred4(
-      PredicateLeaf::Operator::NULL_SAFE_EQUALS,
-      PredicateType::FLOAT,
-      "x",
-      Literal(15.0));
+            PredicateLeaf::Operator::NULL_SAFE_EQUALS,
+            PredicateDataType::FLOAT,
+            "x",
+            Literal(15.0));
     EXPECT_EQ(TruthValue::YES_NO,
               evaluate(pred4, createDoubleStats(10.0, 100.0)));
     EXPECT_EQ(TruthValue::NO,
               evaluate(pred4, createDoubleStats(50.0, 100.0)));
 
     PredicateLeaf pred5(
-      PredicateLeaf::Operator::NULL_SAFE_EQUALS,
-      PredicateType::STRING,
-      "x",
-      Literal("100", 3));
+            PredicateLeaf::Operator::NULL_SAFE_EQUALS,
+            PredicateDataType::STRING,
+            "x",
+            Literal("100", 3));
     EXPECT_EQ(TruthValue::YES_NO,
               evaluate(pred5, createStringStats("10", "1000")));
 
     PredicateLeaf pred6(
-      PredicateLeaf::Operator::NULL_SAFE_EQUALS,
-      PredicateType::DATE,
-      "x",
-      Literal(PredicateType::DATE, 15));
+            PredicateLeaf::Operator::NULL_SAFE_EQUALS,
+            PredicateDataType::DATE,
+            "x",
+            Literal(PredicateDataType::DATE, 15));
     EXPECT_EQ(TruthValue::YES_NO,
               evaluate(pred6, createDateStats(10, 100)));
 
     PredicateLeaf pred7(
-      PredicateLeaf::Operator::NULL_SAFE_EQUALS,
-      PredicateType::DATE,
-      "x",
-      Literal(PredicateType::DATE, 150));
+            PredicateLeaf::Operator::NULL_SAFE_EQUALS,
+            PredicateDataType::DATE,
+            "x",
+            Literal(PredicateDataType::DATE, 150));
     EXPECT_EQ(TruthValue::NO,
               evaluate(pred7, createDateStats(10, 100)));
 
     PredicateLeaf pred8(
-      PredicateLeaf::Operator::NULL_SAFE_EQUALS,
-      PredicateType::TIMESTAMP,
-      "x",
-      Literal(PredicateType::TIMESTAMP, 500L));
+            PredicateLeaf::Operator::NULL_SAFE_EQUALS,
+            PredicateDataType::TIMESTAMP,
+            "x",
+            Literal(PredicateDataType::TIMESTAMP, 500L));
     EXPECT_EQ(TruthValue::NO,
               evaluate(pred8, createTimestampStats(450LL, 490L)));
 
     PredicateLeaf pred9(
-      PredicateLeaf::Operator::NULL_SAFE_EQUALS,
-      PredicateType::DECIMAL,
-      "x",
-      Literal(1500, 4, 2));
+            PredicateLeaf::Operator::NULL_SAFE_EQUALS,
+            PredicateDataType::DECIMAL,
+            "x",
+            Literal(1500, 4, 2));
     EXPECT_EQ(TruthValue::YES_NO, evaluate(pred9,
       createDecimalStats(Decimal("10.0"), Decimal("100.0"))));
   }
 
   TEST(TestPredicateLeaf, testEquals) {
     PredicateLeaf pred(
-      PredicateLeaf::Operator::EQUALS,
-      PredicateType::LONG,
-      "x",
-      Literal(static_cast<int64_t>(15)));
+            PredicateLeaf::Operator::EQUALS,
+            PredicateDataType::LONG,
+            "x",
+            Literal(static_cast<int64_t>(15)));
     EXPECT_EQ(TruthValue::NO_NULL,
               evaluate(pred, createIntStats(20L, 30L, true)));
     EXPECT_EQ(TruthValue::YES_NO_NULL,
@@ -288,10 +288,10 @@ namespace orc {
 
   TEST(TestPredicateLeaf, testNullSafeEquals) {
     PredicateLeaf pred(
-      PredicateLeaf::Operator::NULL_SAFE_EQUALS,
-      PredicateType::LONG,
-      "x",
-      Literal(static_cast<int64_t>(15)));
+            PredicateLeaf::Operator::NULL_SAFE_EQUALS,
+            PredicateDataType::LONG,
+            "x",
+            Literal(static_cast<int64_t>(15)));
     EXPECT_EQ(TruthValue::NO,
               evaluate(pred, createIntStats(20L, 30L, true)));
     EXPECT_EQ(TruthValue::YES_NO,
@@ -308,10 +308,10 @@ namespace orc {
 
   TEST(TestPredicateLeaf, testLessThan) {
     PredicateLeaf pred(
-      PredicateLeaf::Operator::LESS_THAN,
-      PredicateType::LONG,
-      "x",
-      Literal(static_cast<int64_t>(15)));
+            PredicateLeaf::Operator::LESS_THAN,
+            PredicateDataType::LONG,
+            "x",
+            Literal(static_cast<int64_t>(15)));
     EXPECT_EQ(TruthValue::NO_NULL,
               evaluate(pred, createIntStats(20L, 30L, true)));
     EXPECT_EQ(TruthValue::NO_NULL,
@@ -326,10 +326,10 @@ namespace orc {
 
   TEST(TestPredicateLeaf, testLessThanEquals) {
     PredicateLeaf pred(
-      PredicateLeaf::Operator::LESS_THAN_EQUALS,
-      PredicateType::LONG,
-      "x",
-      Literal(static_cast<int64_t>(15)));
+            PredicateLeaf::Operator::LESS_THAN_EQUALS,
+            PredicateDataType::LONG,
+            "x",
+            Literal(static_cast<int64_t>(15)));
     EXPECT_EQ(TruthValue::NO_NULL,
               evaluate(pred, createIntStats(20L, 30L, true)));
     EXPECT_EQ(TruthValue::YES_NO_NULL,
@@ -344,10 +344,10 @@ namespace orc {
 
   TEST(TestPredicateLeaf, testIn) {
     PredicateLeaf pred(
-      PredicateLeaf::Operator::IN,
-      PredicateType::LONG,
-      "x",
-      {Literal(static_cast<int64_t>(10)), Literal(static_cast<int64_t>(20))});
+            PredicateLeaf::Operator::IN,
+            PredicateDataType::LONG,
+            "x",
+            {Literal(static_cast<int64_t>(10)), Literal(static_cast<int64_t>(20))});
     EXPECT_EQ(TruthValue::YES_NULL,
               evaluate(pred, createIntStats(20L, 20L, true)));
     EXPECT_EQ(TruthValue::NO_NULL,
@@ -360,10 +360,10 @@ namespace orc {
 
   TEST(TestPredicateLeaf, testBetween) {
     PredicateLeaf pred(
-      PredicateLeaf::Operator::BETWEEN,
-      PredicateType::LONG,
-      "x",
-      {Literal(static_cast<int64_t>(10)), Literal(static_cast<int64_t>(20))});
+            PredicateLeaf::Operator::BETWEEN,
+            PredicateDataType::LONG,
+            "x",
+            {Literal(static_cast<int64_t>(10)), Literal(static_cast<int64_t>(20))});
     EXPECT_EQ(TruthValue::NO_NULL,
               evaluate(pred, createIntStats(0L, 5L, true)));
     EXPECT_EQ(TruthValue::NO_NULL,
@@ -381,10 +381,10 @@ namespace orc {
 
     // check with empty predicate list
     PredicateLeaf pred1(
-      PredicateLeaf::Operator::BETWEEN,
-      PredicateType::LONG,
-      "x",
-      {});
+            PredicateLeaf::Operator::BETWEEN,
+            PredicateDataType::LONG,
+            "x",
+            {});
     EXPECT_EQ(TruthValue::YES_NO,
               evaluate(pred1, createIntStats(0L, 5L, true)));
     EXPECT_EQ(TruthValue::YES_NO,
@@ -397,20 +397,20 @@ namespace orc {
 
   TEST(TestPredicateLeaf, testIsNull) {
     PredicateLeaf pred(
-      PredicateLeaf::Operator::IS_NULL,
-      PredicateType::LONG,
-      "x",
-      {});
+            PredicateLeaf::Operator::IS_NULL,
+            PredicateDataType::LONG,
+            "x",
+            {});
     EXPECT_EQ(TruthValue::YES_NO,
               evaluate(pred, createIntStats(20L, 30L, true)));
   }
 
   TEST(TestPredicateLeaf, testEqualsWithNullInStats) {
     PredicateLeaf pred(
-      PredicateLeaf::Operator::EQUALS,
-      PredicateType::STRING,
-      "x",
-      Literal("c", 1));
+            PredicateLeaf::Operator::EQUALS,
+            PredicateDataType::STRING,
+            "x",
+            Literal("c", 1));
     EXPECT_EQ(TruthValue::NO_NULL,
               evaluate(pred, createStringStats("d", "e", true)));
     EXPECT_EQ(TruthValue::NO_NULL,
@@ -427,10 +427,10 @@ namespace orc {
 
   TEST(TestPredicateLeaf, testNullSafeEqualsWithNullInStats) {
     PredicateLeaf pred(
-      PredicateLeaf::Operator::NULL_SAFE_EQUALS,
-      PredicateType::STRING,
-      "x",
-      Literal("c", 1));
+            PredicateLeaf::Operator::NULL_SAFE_EQUALS,
+            PredicateDataType::STRING,
+            "x",
+            Literal("c", 1));
     EXPECT_EQ(TruthValue::NO,
               evaluate(pred, createStringStats("d", "e", true)));
     EXPECT_EQ(TruthValue::NO,
@@ -447,10 +447,10 @@ namespace orc {
 
   TEST(TestPredicateLeaf, testLessThanWithNullInStats) {
     PredicateLeaf pred(
-      PredicateLeaf::Operator::LESS_THAN,
-      PredicateType::STRING,
-      "x",
-      Literal("c", 1));
+            PredicateLeaf::Operator::LESS_THAN,
+            PredicateDataType::STRING,
+            "x",
+            Literal("c", 1));
     EXPECT_EQ(TruthValue::NO_NULL,
               evaluate(pred, createStringStats("d", "e", true)));
     EXPECT_EQ(TruthValue::YES_NULL,
@@ -467,10 +467,10 @@ namespace orc {
 
   TEST(TestPredicateLeaf, testLessThanEqualsWithNullInStats) {
     PredicateLeaf pred(
-      PredicateLeaf::Operator::LESS_THAN_EQUALS,
-      PredicateType::STRING,
-      "x",
-      Literal("c", 1));
+            PredicateLeaf::Operator::LESS_THAN_EQUALS,
+            PredicateDataType::STRING,
+            "x",
+            Literal("c", 1));
     EXPECT_EQ(TruthValue::NO_NULL,
               evaluate(pred, createStringStats("d", "e", true)));
     EXPECT_EQ(TruthValue::YES_NULL,
@@ -487,10 +487,10 @@ namespace orc {
 
   TEST(TestPredicateLeaf, testInWithNullInStats) {
     PredicateLeaf pred(
-      PredicateLeaf::Operator::IN,
-      PredicateType::STRING,
-      "x",
-      {Literal("c", 1), Literal("f", 1)});
+            PredicateLeaf::Operator::IN,
+            PredicateDataType::STRING,
+            "x",
+            {Literal("c", 1), Literal("f", 1)});
     EXPECT_EQ(TruthValue::NO_NULL,
               evaluate(pred, createStringStats("d", "e", true)));
     EXPECT_EQ(TruthValue::NO_NULL,
@@ -507,10 +507,10 @@ namespace orc {
 
   TEST(TestPredicateLeaf, testBetweenWithNullInStats) {
     PredicateLeaf pred(
-      PredicateLeaf::Operator::BETWEEN,
-      PredicateType::STRING,
-      "x",
-      {Literal("c", 1), Literal("f", 1)});
+            PredicateLeaf::Operator::BETWEEN,
+            PredicateDataType::STRING,
+            "x",
+            {Literal("c", 1), Literal("f", 1)});
     EXPECT_EQ(TruthValue::YES_NULL,
               evaluate(pred, createStringStats("d", "e", true)));
     EXPECT_EQ(TruthValue::YES_NULL,
@@ -541,10 +541,10 @@ namespace orc {
 
   TEST(TestPredicateLeaf, testIsNullWithNullInStats) {
     PredicateLeaf pred(
-      PredicateLeaf::Operator::IS_NULL,
-      PredicateType::STRING,
-      "x",
-      {});
+            PredicateLeaf::Operator::IS_NULL,
+            PredicateDataType::STRING,
+            "x",
+            {});
     EXPECT_EQ(TruthValue::YES_NO,
               evaluate(pred, createStringStats("c", "d", true)));
     EXPECT_EQ(TruthValue::NO,
@@ -553,10 +553,10 @@ namespace orc {
 
   TEST(TestPredicateLeaf, testIntNullSafeEqualsBloomFilter) {
     PredicateLeaf pred(
-      PredicateLeaf::Operator::NULL_SAFE_EQUALS,
-      PredicateType::LONG,
-      "x",
-      Literal(static_cast<int64_t>(15)));
+            PredicateLeaf::Operator::NULL_SAFE_EQUALS,
+            PredicateDataType::LONG,
+            "x",
+            Literal(static_cast<int64_t>(15)));
     BloomFilterImpl bf(10000);
     for (int64_t i = 20; i < 1000; i++) {
       bf.addLong(i);
@@ -570,10 +570,10 @@ namespace orc {
 
   TEST(TestPredicateLeaf, testIntEqualsBloomFilter) {
     PredicateLeaf pred(
-      PredicateLeaf::Operator::EQUALS,
-      PredicateType::LONG,
-      "x",
-      Literal(static_cast<int64_t>(15)));
+            PredicateLeaf::Operator::EQUALS,
+            PredicateDataType::LONG,
+            "x",
+            Literal(static_cast<int64_t>(15)));
     BloomFilterImpl bf(10000);
     for (int64_t i = 20; i < 1000; i++) {
       bf.addLong(i);
@@ -587,10 +587,10 @@ namespace orc {
 
   TEST(TestPredicateLeaf, testIntInBloomFilter) {
     PredicateLeaf pred(
-      PredicateLeaf::Operator::IN,
-      PredicateType::LONG,
-      "x",
-      {Literal(static_cast<int64_t>(15)), Literal(static_cast<int64_t>(19))});
+            PredicateLeaf::Operator::IN,
+            PredicateDataType::LONG,
+            "x",
+            {Literal(static_cast<int64_t>(15)), Literal(static_cast<int64_t>(19))});
     BloomFilterImpl bf(10000);
     for (int64_t i = 20; i < 1000; i++) {
       bf.addLong(i);
@@ -605,10 +605,10 @@ namespace orc {
 
   TEST(TestPredicateLeaf, testDoubleNullSafeEqualsBloomFilter) {
     PredicateLeaf pred(
-      PredicateLeaf::Operator::NULL_SAFE_EQUALS,
-      PredicateType::FLOAT,
-      "x",
-      Literal(15.0));
+            PredicateLeaf::Operator::NULL_SAFE_EQUALS,
+            PredicateDataType::FLOAT,
+            "x",
+            Literal(15.0));
     BloomFilterImpl bf(10000);
     for (int64_t i = 20; i < 1000; i++) {
       bf.addDouble(static_cast<double>(i));
@@ -622,10 +622,10 @@ namespace orc {
 
   TEST(TestPredicateLeaf, testDoubleEqualsBloomFilter) {
     PredicateLeaf pred(
-      PredicateLeaf::Operator::EQUALS,
-      PredicateType::FLOAT,
-      "x",
-      Literal(15.0));
+            PredicateLeaf::Operator::EQUALS,
+            PredicateDataType::FLOAT,
+            "x",
+            Literal(15.0));
     BloomFilterImpl bf(10000);
     for (int64_t i = 20; i < 1000; i++) {
       bf.addDouble(static_cast<double>(i));
@@ -639,10 +639,10 @@ namespace orc {
 
   TEST(TestPredicateLeaf, testDoubleInBloomFilter) {
     PredicateLeaf pred(
-      PredicateLeaf::Operator::IN,
-      PredicateType::FLOAT,
-      "x",
-      {Literal(15.0), Literal(19.0)});
+            PredicateLeaf::Operator::IN,
+            PredicateDataType::FLOAT,
+            "x",
+            {Literal(15.0), Literal(19.0)});
     BloomFilterImpl bf(10000);
     for (int64_t i = 20; i < 1000; i++) {
       bf.addDouble(static_cast<double>(i));
@@ -657,10 +657,10 @@ namespace orc {
 
   TEST(TestPredicateLeaf, testStringEqualsBloomFilter) {
     PredicateLeaf pred(
-      PredicateLeaf::Operator::EQUALS,
-      PredicateType::STRING,
-      "x",
-      Literal("str_15", 6));
+            PredicateLeaf::Operator::EQUALS,
+            PredicateDataType::STRING,
+            "x",
+            Literal("str_15", 6));
     BloomFilterImpl bf(10000);
     for (int64_t i = 20; i < 1000; i++) {
       std::string str = "str_" + std::to_string(i);
@@ -675,10 +675,10 @@ namespace orc {
 
   TEST(TestPredicateLeaf, testStringInBloomFilter) {
     PredicateLeaf pred(
-      PredicateLeaf::Operator::IN,
-      PredicateType::STRING,
-      "x",
-      {Literal("str_15", 6), Literal("str_19", 6)});
+            PredicateLeaf::Operator::IN,
+            PredicateDataType::STRING,
+            "x",
+            {Literal("str_15", 6), Literal("str_19", 6)});
     BloomFilterImpl bf(10000);
     for (int64_t i = 20; i < 1000; i++) {
       std::string str = "str_" + std::to_string(i);
@@ -696,10 +696,10 @@ namespace orc {
 
   TEST(TestPredicateLeaf, testDateNullSafeEqualsBloomFilter) {
     PredicateLeaf pred(
-      PredicateLeaf::Operator::NULL_SAFE_EQUALS,
-      PredicateType::DATE,
-      "x",
-      Literal(PredicateType::DATE, 15));
+            PredicateLeaf::Operator::NULL_SAFE_EQUALS,
+            PredicateDataType::DATE,
+            "x",
+            Literal(PredicateDataType::DATE, 15));
     BloomFilterImpl bf(10000);
     for (int64_t i = 20; i < 1000; i++) {
       bf.addLong(i);
@@ -713,10 +713,10 @@ namespace orc {
 
   TEST(TestPredicateLeaf, testDateEqualsBloomFilter) {
     PredicateLeaf pred(
-      PredicateLeaf::Operator::EQUALS,
-      PredicateType::DATE,
-      "x",
-      Literal(PredicateType::DATE, 15));
+            PredicateLeaf::Operator::EQUALS,
+            PredicateDataType::DATE,
+            "x",
+            Literal(PredicateDataType::DATE, 15));
     BloomFilterImpl bf(10000);
     for (int64_t i = 20; i < 1000; i++) {
       bf.addLong(i);
@@ -730,10 +730,10 @@ namespace orc {
 
   TEST(TestPredicateLeaf, testDateInBloomFilter) {
     PredicateLeaf pred(
-      PredicateLeaf::Operator::IN,
-      PredicateType::DATE,
-      "x",
-      {Literal(PredicateType::DATE, 15), Literal(PredicateType::DATE, 19)});
+            PredicateLeaf::Operator::IN,
+            PredicateDataType::DATE,
+            "x",
+            {Literal(PredicateDataType::DATE, 15), Literal(PredicateDataType::DATE, 19)});
     BloomFilterImpl bf(10000);
     for (int64_t i = 20; i < 1000; i++) {
       bf.addLong(i);
@@ -750,10 +750,10 @@ namespace orc {
 
   TEST(TestPredicateLeaf, testDecimalEqualsBloomFilter) {
     PredicateLeaf pred(
-      PredicateLeaf::Operator::EQUALS,
-      PredicateType::DECIMAL,
-      "x",
-      Literal(15, 2, 0));
+            PredicateLeaf::Operator::EQUALS,
+            PredicateDataType::DECIMAL,
+            "x",
+            Literal(15, 2, 0));
     BloomFilterImpl bf(10000);
     for (int64_t i = 20; i < 1000; i++) {
       std::string str = Decimal(i, 0).toString(true);
@@ -770,10 +770,10 @@ namespace orc {
 
   TEST(TestPredicateLeaf, testDecimalInBloomFilter) {
     PredicateLeaf pred(
-      PredicateLeaf::Operator::IN,
-      PredicateType::DECIMAL,
-      "x",
-      {Literal(15, 2, 0), Literal(19, 2, 0)});
+            PredicateLeaf::Operator::IN,
+            PredicateDataType::DECIMAL,
+            "x",
+            {Literal(15, 2, 0), Literal(19, 2, 0)});
     BloomFilterImpl bf(10000);
     for (int64_t i = 20; i < 1000; i++) {
       std::string str = Decimal(i, 0).toString(true);
@@ -795,10 +795,10 @@ namespace orc {
 
   TEST(TestPredicateLeaf, testNullsInBloomFilter) {
     PredicateLeaf pred(
-      PredicateLeaf::Operator::IN,
-      PredicateType::DECIMAL,
-      "x",
-      {Literal(15, 2, 0), Literal(19, 2, 0), Literal(PredicateType::DECIMAL)});
+            PredicateLeaf::Operator::IN,
+            PredicateDataType::DECIMAL,
+            "x",
+            {Literal(15, 2, 0), Literal(19, 2, 0), Literal(PredicateDataType::DECIMAL)});
     BloomFilterImpl bf(10000);
     for (int64_t i = 20; i < 1000; i++) {
       std::string str = Decimal(i, 0).toString(true);

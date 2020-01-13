@@ -49,13 +49,13 @@ namespace orc {
     auto sarg = SearchArgumentFactory::newBuilder()
       ->startAnd()
       .equals(
-        "x",
-        PredicateType::LONG,
-        Literal(static_cast<int64_t>(100)))
+              "x",
+              PredicateDataType::LONG,
+              Literal(static_cast<int64_t>(100)))
       .equals(
-        "y",
-        PredicateType::LONG,
-        Literal(static_cast<int64_t>(10)))
+              "y",
+              PredicateDataType::LONG,
+              Literal(static_cast<int64_t>(10)))
       .end()
       .build();
 

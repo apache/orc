@@ -25,28 +25,27 @@ namespace orc {
 
   TEST(TestSearchArgument, literalTest) {
     Literal literal0(static_cast<int64_t>(1234));
-    EXPECT_EQ(PredicateType::LONG, literal0.getType());
+    EXPECT_EQ(PredicateDataType::LONG, literal0.getType());
     EXPECT_TRUE("1234" == literal0.toString());
-    EXPECT_EQ(1234, literal0.getHashCode());
 
     Literal literal1(0.1234);
-    EXPECT_EQ(PredicateType::FLOAT, literal1.getType());
+    EXPECT_EQ(PredicateDataType::FLOAT, literal1.getType());
     EXPECT_TRUE("0.1234" == literal1.toString());
 
     Literal literal2(false);
-    EXPECT_EQ(PredicateType::BOOLEAN, literal2.getType());
+    EXPECT_EQ(PredicateDataType::BOOLEAN, literal2.getType());
     EXPECT_TRUE("false" == literal2.toString());
 
-    Literal literal3(PredicateType::TIMESTAMP, 123456L);
-    EXPECT_EQ(PredicateType::TIMESTAMP, literal3.getType());
+    Literal literal3(PredicateDataType::TIMESTAMP, 123456L);
+    EXPECT_EQ(PredicateDataType::TIMESTAMP, literal3.getType());
     EXPECT_TRUE("123456" == literal3.toString());
 
     Literal literal4(Int128(54321), 6, 2);
-    EXPECT_EQ(PredicateType::DECIMAL, literal4.getType());
+    EXPECT_EQ(PredicateDataType::DECIMAL, literal4.getType());
     EXPECT_TRUE("543.21" == literal4.toString());
 
     Literal literal5("test", 4);
-    EXPECT_EQ(PredicateType::STRING, literal5.getType());
+    EXPECT_EQ(PredicateDataType::STRING, literal5.getType());
     EXPECT_TRUE("test" == literal5.toString());
 
     Literal left(static_cast<int64_t>(123)), right(static_cast<int64_t>(123));
@@ -59,23 +58,23 @@ namespace orc {
 
   TEST(TestSearchArgument, predicateLeafTest) {
     PredicateLeaf leaf1(
-      PredicateLeaf::Operator::EQUALS,
-      PredicateType::LONG,
-      "id",
-      Literal(static_cast<int64_t>(1234)));
+            PredicateLeaf::Operator::EQUALS,
+            PredicateDataType::LONG,
+            "id",
+            Literal(static_cast<int64_t>(1234)));
     EXPECT_EQ(PredicateLeaf::Operator::EQUALS, leaf1.getOperator());
-    EXPECT_EQ(PredicateType::LONG, leaf1.getType());
+    EXPECT_EQ(PredicateDataType::LONG, leaf1.getType());
     EXPECT_EQ("id", leaf1.getColumnName());
     EXPECT_EQ("(id = 1234)", leaf1.toString());
 
     const char * str1 = "aaa", * str2 = "zzz";
     PredicateLeaf leaf2(
-      PredicateLeaf::Operator::BETWEEN,
-      PredicateType::STRING,
-      "name",
-      { Literal(str1, 3), Literal(str2, 3)});
+            PredicateLeaf::Operator::BETWEEN,
+            PredicateDataType::STRING,
+            "name",
+            { Literal(str1, 3), Literal(str2, 3)});
     EXPECT_EQ(PredicateLeaf::Operator::BETWEEN, leaf2.getOperator());
-    EXPECT_EQ(PredicateType::STRING, leaf2.getType());
+    EXPECT_EQ(PredicateDataType::STRING, leaf2.getType());
     EXPECT_EQ("name", leaf2.getColumnName());
     EXPECT_EQ("(name between [aaa, zzz])", leaf2.toString());
 
@@ -84,12 +83,12 @@ namespace orc {
     EXPECT_FALSE(leaf1 == leaf3);
 
     PredicateLeaf leaf4(
-      PredicateLeaf::Operator::LESS_THAN_EQUALS,
-      PredicateType::DECIMAL,
-      "sales",
-      { Literal(111222, 6, 3) });
+            PredicateLeaf::Operator::LESS_THAN_EQUALS,
+            PredicateDataType::DECIMAL,
+            "sales",
+            { Literal(111222, 6, 3) });
     EXPECT_EQ(PredicateLeaf::Operator::LESS_THAN_EQUALS, leaf4.getOperator());
-    EXPECT_EQ(PredicateType::DECIMAL, leaf4.getType());
+    EXPECT_EQ(PredicateDataType::DECIMAL, leaf4.getType());
     EXPECT_EQ("(sales <= 111.222)", leaf4.toString());
   }
 
@@ -367,10 +366,10 @@ namespace orc {
   TEST(TestSearchArgument, testBuilder) {
     auto sarg = SearchArgumentFactory::newBuilder()
         ->startAnd()
-        .lessThan("x", PredicateType::LONG,
-          Literal(static_cast<int64_t>(10)))
-        .lessThanEquals("y", PredicateType::STRING, Literal("hi", 2))
-        .equals("z", PredicateType::FLOAT, Literal(1.1))
+        .lessThan("x", PredicateDataType::LONG,
+                  Literal(static_cast<int64_t>(10)))
+        .lessThanEquals("y", PredicateDataType::STRING, Literal("hi", 2))
+        .equals("z", PredicateDataType::FLOAT, Literal(1.1))
         .end()
         .build();
     EXPECT_EQ("leaf-0 = (x < 10), "
@@ -380,14 +379,14 @@ namespace orc {
     sarg = SearchArgumentFactory::newBuilder()
       ->startNot()
       .startOr()
-      .isNull("x", PredicateType::LONG)
-      .between("y", PredicateType::LONG,
-        Literal(static_cast<int64_t>(10)), Literal(static_cast<int64_t>(20)))
-      .in("z", PredicateType::LONG,
+      .isNull("x", PredicateDataType::LONG)
+      .between("y", PredicateDataType::LONG,
+               Literal(static_cast<int64_t>(10)), Literal(static_cast<int64_t>(20)))
+      .in("z", PredicateDataType::LONG,
           {Literal(static_cast<int64_t>(1)),
            Literal(static_cast<int64_t>(2)), Literal(static_cast<int64_t>(3))})
       .nullSafeEquals(
-        "a", PredicateType::STRING, Literal("stinger", 7))
+              "a", PredicateDataType::STRING, Literal("stinger", 7))
       .end()
       .end()
       .build();
@@ -403,11 +402,11 @@ namespace orc {
   TEST(TestSearchArgument, testBuilderComplexTypes) {
     auto sarg = SearchArgumentFactory::newBuilder()
         ->startAnd()
-        .lessThan("x", PredicateType::DATE,  // 1970-01-11
-                  Literal(PredicateType::DATE, 123456L))
-        .lessThanEquals("y", PredicateType::STRING,
+        .lessThan("x", PredicateDataType::DATE,  // 1970-01-11
+                  Literal(PredicateDataType::DATE, 123456L))
+        .lessThanEquals("y", PredicateDataType::STRING,
                         Literal("hi        ", 10))
-        .equals("z", PredicateType::DECIMAL, Literal(10, 2, 1))
+        .equals("z", PredicateDataType::DECIMAL, Literal(10, 2, 1))
         .end()
         .build();
     EXPECT_EQ("leaf-0 = (x < 123456), "
@@ -418,14 +417,14 @@ namespace orc {
     sarg = SearchArgumentFactory::newBuilder()
       ->startNot()
       .startOr()
-      .isNull("x", PredicateType::LONG)
-      .between("y", PredicateType::DECIMAL,
+      .isNull("x", PredicateDataType::LONG)
+      .between("y", PredicateDataType::DECIMAL,
                Literal(10, 3, 0), Literal(200, 3, 1))
-      .in("z", PredicateType::LONG,
+      .in("z", PredicateDataType::LONG,
           { Literal(static_cast<int64_t>(1)),
             Literal(static_cast<int64_t>(2)),
             Literal(static_cast<int64_t>(3)) })
-      .nullSafeEquals("a", PredicateType::STRING,
+      .nullSafeEquals("a", PredicateDataType::STRING,
                       Literal("stinger", 7))
       .end()
       .end()
@@ -442,11 +441,11 @@ namespace orc {
     auto sarg =
       SearchArgumentFactory::newBuilder()
         ->startAnd()
-        .lessThan("x", PredicateType::DATE,
-                  Literal(PredicateType::DATE, 11111L))  // "2005-3-12"
-        .lessThanEquals("y", PredicateType::STRING,
+        .lessThan("x", PredicateDataType::DATE,
+                  Literal(PredicateDataType::DATE, 11111L))  // "2005-3-12"
+        .lessThanEquals("y", PredicateDataType::STRING,
                         Literal("hi        ", 10))
-        .equals("z", PredicateType::DECIMAL,
+        .equals("z", PredicateDataType::DECIMAL,
                 Literal(10, 2, 1))
         .end()
         .build();
@@ -458,14 +457,14 @@ namespace orc {
     sarg = SearchArgumentFactory::newBuilder()
       ->startNot()
       .startOr()
-      .isNull("x", PredicateType::LONG)
-      .between("y", PredicateType::DECIMAL,
+      .isNull("x", PredicateDataType::LONG)
+      .between("y", PredicateDataType::DECIMAL,
                Literal(10, 2, 0), Literal(200, 3, 1))
-      .in("z", PredicateType::LONG,
+      .in("z", PredicateDataType::LONG,
           { Literal(static_cast<int64_t>(1)),
             Literal(static_cast<int64_t>(2)),
             Literal(static_cast<int64_t>(3)) })
-      .nullSafeEquals("a", PredicateType::STRING,
+      .nullSafeEquals("a", PredicateDataType::STRING,
                       Literal("stinger", 7))
       .end()
       .end()
@@ -481,14 +480,14 @@ namespace orc {
   TEST(TestSearchArgument, testBuilderFloat) {
     auto sarg = SearchArgumentFactory::newBuilder()
       ->startAnd()
-      .lessThan("x", PredicateType::LONG,
-        Literal(static_cast<int64_t>(22)))
-      .lessThan("x1", PredicateType::LONG,
-        Literal(static_cast<int64_t>(22)))
-      .lessThanEquals("y", PredicateType::STRING,
-        Literal("hi        ", 10))
-      .equals("z", PredicateType::FLOAT, Literal(0.22))
-      .equals("z1", PredicateType::FLOAT, Literal(0.22))
+      .lessThan("x", PredicateDataType::LONG,
+                Literal(static_cast<int64_t>(22)))
+      .lessThan("x1", PredicateDataType::LONG,
+                Literal(static_cast<int64_t>(22)))
+      .lessThanEquals("y", PredicateDataType::STRING,
+                      Literal("hi        ", 10))
+      .equals("z", PredicateDataType::FLOAT, Literal(0.22))
+      .equals("z1", PredicateDataType::FLOAT, Literal(0.22))
       .end()
       .build();
     EXPECT_EQ("leaf-0 = (x < 22), "
@@ -504,7 +503,7 @@ namespace orc {
     EXPECT_THROW(
       SearchArgumentFactory::newBuilder()
         ->startAnd()
-        .lessThan("x", PredicateType::LONG, Literal("hi", 2))
+        .lessThan("x", PredicateDataType::LONG, Literal("hi", 2))
         .end()
         .build(),
       std::invalid_argument);
@@ -514,7 +513,7 @@ namespace orc {
     EXPECT_THROW(
       SearchArgumentFactory::newBuilder()
         ->startAnd()
-        .in("x", PredicateType::STRING,
+        .in("x", PredicateDataType::STRING,
             {Literal("hi                     ", 23)})
         .end()
         .build(),

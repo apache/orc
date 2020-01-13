@@ -105,7 +105,7 @@ namespace orc {
   SearchArgumentBuilder&
   SearchArgumentBuilderImpl::compareOperator(PredicateLeaf::Operator op,
                                              const std::string& column,
-                                             PredicateType type,
+                                             PredicateDataType type,
                                              Literal literal) {
     TreeNode parent = mCurrTree.front();
     if (column.empty()) {
@@ -118,26 +118,23 @@ namespace orc {
     return *this;
   }
 
-  SearchArgumentBuilder& SearchArgumentBuilderImpl::lessThan(
-                                                    const std::string& column,
-                                                    PredicateType type,
-                                                    Literal literal) {
+  SearchArgumentBuilder& SearchArgumentBuilderImpl::lessThan(const std::string& column,
+                                                             PredicateDataType type,
+                                                             Literal literal) {
     return compareOperator(
       PredicateLeaf::Operator::LESS_THAN, column, type, literal);
   }
 
-  SearchArgumentBuilder& SearchArgumentBuilderImpl::lessThanEquals(
-                                                    const std::string& column,
-                                                    PredicateType type,
-                                                    Literal literal) {
+    SearchArgumentBuilder& SearchArgumentBuilderImpl::lessThanEquals(const std::string& column,
+                                                                     PredicateDataType type,
+                                                                     Literal literal) {
     return compareOperator(
       PredicateLeaf::Operator::LESS_THAN_EQUALS, column, type, literal);
   }
 
-  SearchArgumentBuilder& SearchArgumentBuilderImpl::equals(
-                                                    const std::string& column,
-                                                    PredicateType type,
-                                                    Literal literal) {
+    SearchArgumentBuilder& SearchArgumentBuilderImpl::equals(const std::string& column,
+                                                             PredicateDataType type,
+                                                             Literal literal) {
     if (literal.isNull()) {
       return isNull(column, type);
     } else {
@@ -146,18 +143,16 @@ namespace orc {
     }
   }
 
-  SearchArgumentBuilder& SearchArgumentBuilderImpl::nullSafeEquals(
-                                                    const std::string& column,
-                                                    PredicateType type,
-                                                    Literal literal) {
+    SearchArgumentBuilder& SearchArgumentBuilderImpl::nullSafeEquals(const std::string& column,
+                                                                     PredicateDataType type,
+                                                                     Literal literal) {
     return compareOperator(
       PredicateLeaf::Operator::NULL_SAFE_EQUALS, column, type, literal);
   }
 
-  SearchArgumentBuilder& SearchArgumentBuilderImpl::in(
-                               const std::string& column,
-                               PredicateType type,
-                               const std::initializer_list<Literal>& literals) {
+    SearchArgumentBuilder& SearchArgumentBuilderImpl::in(const std::string& column,
+                                                         PredicateDataType type,
+                                                         const std::initializer_list<Literal>& literals) {
     TreeNode& parent = mCurrTree.front();
     if (column.empty()) {
       parent->addChild(
@@ -174,9 +169,8 @@ namespace orc {
     return *this;
   }
 
-  SearchArgumentBuilder& SearchArgumentBuilderImpl::isNull(
-                                                     const std::string& column,
-                                                     PredicateType type) {
+    SearchArgumentBuilder& SearchArgumentBuilderImpl::isNull(const std::string& column,
+                                                             PredicateDataType type) {
     TreeNode& parent = mCurrTree.front();
     if (column.empty()) {
       parent->addChild(
@@ -191,11 +185,10 @@ namespace orc {
     return *this;
   }
 
-  SearchArgumentBuilder& SearchArgumentBuilderImpl::between(
-                                                      const std::string& column,
-                                                      PredicateType type,
-                                                      Literal lower,
-                                                      Literal upper) {
+    SearchArgumentBuilder& SearchArgumentBuilderImpl::between(const std::string& column,
+                                                              PredicateDataType type,
+                                                              Literal lower,
+                                                              Literal upper) {
     TreeNode& parent = mCurrTree.front();
     if (column.empty()) {
       parent->addChild(
@@ -225,8 +218,8 @@ namespace orc {
    * @return the next available leaf id
    */
   static size_t compactLeaves(const TreeNode& tree,
-                           size_t next,
-                           size_t leafReorder[]) {
+                              size_t next,
+                              size_t leafReorder[]) {
     if (tree->getOperator() == ExpressionTree::Operator::LEAF) {
       size_t oldLeaf = tree->getLeaf();
       if (leafReorder[oldLeaf] == UNUSED_LEAF) {

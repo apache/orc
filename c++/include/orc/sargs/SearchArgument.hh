@@ -88,7 +88,7 @@ namespace orc {
      * @return this
      */
     virtual SearchArgumentBuilder& lessThan(const std::string& column,
-                                            PredicateType type,
+                                            PredicateDataType type,
                                             Literal literal) = 0;
 
     /**
@@ -99,7 +99,7 @@ namespace orc {
      * @return this
      */
     virtual SearchArgumentBuilder& lessThanEquals(const std::string& column,
-                                                  PredicateType type,
+                                                  PredicateDataType type,
                                                   Literal literal) = 0;
 
     /**
@@ -110,7 +110,7 @@ namespace orc {
      * @return this
      */
     virtual SearchArgumentBuilder& equals(const std::string& column,
-                                          PredicateType type,
+                                          PredicateDataType type,
                                           Literal literal) = 0;
 
     /**
@@ -121,7 +121,7 @@ namespace orc {
      * @return this
      */
     virtual SearchArgumentBuilder& nullSafeEquals(const std::string& column,
-                                                  PredicateType type,
+                                                  PredicateDataType type,
                                                   Literal literal) = 0;
 
     /**
@@ -132,7 +132,7 @@ namespace orc {
      * @return this
      */
     virtual SearchArgumentBuilder& in(const std::string& column,
-                                      PredicateType type,
+                                      PredicateDataType type,
                                       const std::initializer_list<Literal>& literals) = 0;
 
     /**
@@ -142,7 +142,7 @@ namespace orc {
      * @return this
      */
     virtual SearchArgumentBuilder& isNull(const std::string& column,
-                                          PredicateType type) = 0;
+                                          PredicateDataType type) = 0;
 
     /**
      * Add a between leaf to the current item on the stack.
@@ -153,7 +153,7 @@ namespace orc {
      * @return this
      */
     virtual SearchArgumentBuilder& between(const std::string& column,
-                                           PredicateType type,
+                                           PredicateDataType type,
                                            Literal lower,
                                            Literal upper) = 0;
 
