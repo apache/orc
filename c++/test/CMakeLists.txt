@@ -33,7 +33,6 @@ add_executable (orc-test
   TestColumnReader.cc
   TestColumnStatistics.cc
   TestCompression.cc
-  TestCorruptFiles.cc
   TestDecompression.cc
   TestDecimal.cc
   TestDictionaryEncoding.cc

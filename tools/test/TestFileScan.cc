@@ -136,13 +136,18 @@ TEST (TestFileScan, testBadCommand) {
   EXPECT_EQ("The --batch parameter requires an integer option.\n", error);
 }
 
-TEST (TestFileScan, testErrorHandling) {
+void checkForError(const std::string& filename, const std::string& error_msg) {
   const std::string pgm = findProgram("tools/src/orc-scan");
-  const std::string file = findExample("corrupt/stripe_footer_bad_column_encodings.orc");
   std::string output;
   std::string error;
-  EXPECT_EQ(1, runProgram({pgm, file}, output, error));
+  EXPECT_EQ(1, runProgram({pgm, filename}, output, error));
   EXPECT_EQ("", output);
-  EXPECT_NE(std::string::npos, error.find(
-      "bad number of ColumnEncodings in StripeFooter: expected=6, actual=0"));
+  EXPECT_NE(std::string::npos, error.find(error_msg));
+}
+
+TEST (TestFileScan, testErrorHandling) {
+  checkForError(findExample("corrupt/stripe_footer_bad_column_encodings.orc"),
+      "bad number of ColumnEncodings in StripeFooter: expected=6, actual=0");
+  checkForError(findExample("corrupt/negative_dict_entry_lengths.orc"),
+        "Negative dictionary entry length");
 }
