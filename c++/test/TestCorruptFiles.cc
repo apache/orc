@@ -27,7 +27,6 @@
 namespace orc {
 
   TEST(TestCorruptFiles, testNegativeDictEntryLengths) {
-
     std::stringstream ss;
     if(const char* example_dir = std::getenv("ORC_EXAMPLE_DIR")) {
       ss << example_dir;
