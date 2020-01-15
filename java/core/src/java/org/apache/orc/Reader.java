@@ -500,4 +500,9 @@ public interface Reader extends Closeable {
    * Was the file written using the proleptic Gregorian calendar.
    */
   boolean writerUsedProlepticGregorian();
+
+  /**
+   * Should the returned values use the proleptic Gregorian calendar?
+   */
+  boolean getConvertToProlepticGregorian();
 }

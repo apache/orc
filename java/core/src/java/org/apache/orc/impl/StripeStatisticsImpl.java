@@ -28,12 +28,16 @@ import java.util.List;
 public class StripeStatisticsImpl extends StripeStatistics  {
   public StripeStatisticsImpl(TypeDescription schema,
                               List<OrcProto.ColumnStatistics> list,
-                              ReaderImpl reader) {
-    super(schema, list, reader);
+                              boolean writerUsedProlepticGregorian,
+                              boolean convertToProlepticGregorian) {
+    super(schema, list, writerUsedProlepticGregorian, convertToProlepticGregorian);
   }
 
-  public StripeStatisticsImpl(TypeDescription schema, ReaderImpl reader) {
-    super(schema, createList(schema), reader);
+  public StripeStatisticsImpl(TypeDescription schema,
+                              boolean writerUsedProlepticGregorian,
+                              boolean convertToProlepticGregorian) {
+    super(schema, createList(schema), writerUsedProlepticGregorian,
+        convertToProlepticGregorian);
   }
 
   /**

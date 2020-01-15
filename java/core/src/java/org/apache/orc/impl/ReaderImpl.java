@@ -375,7 +375,8 @@ public class ReaderImpl implements Reader {
       TypeDescription root = encryption.getRoot();
       for(int i= 0; i < result.length; ++i){
         result[i] = ColumnStatisticsImpl.deserialize(root.findSubtype(root.getId() + i),
-            decrypted.getColumn(i), this);
+            decrypted.getColumn(i), writerUsedProlepticGregorian(),
+            getConvertToProlepticGregorian());
       }
       return result;
     }
@@ -388,7 +389,8 @@ public class ReaderImpl implements Reader {
     for(int i=0; i < result.length; ++i) {
       TypeDescription subschema = schema == null ? null : schema.findSubtype(i);
       result[i] = ColumnStatisticsImpl.deserialize(subschema, fileStats.get(i),
-          this);
+          writerUsedProlepticGregorian(),
+          getConvertToProlepticGregorian());
     }
     return result;
   }
@@ -558,14 +560,6 @@ public class ReaderImpl implements Reader {
     return OrcFile.WriterVersion.FUTURE;
   }
 
-  private static OrcProto.Footer extractFooter(ByteBuffer bb, int footerAbsPos,
-      int footerSize, InStream.StreamOptions options) throws IOException {
-    bb.position(footerAbsPos);
-    bb.limit(footerAbsPos + footerSize);
-    return OrcProto.Footer.parseFrom(InStream.createCodedInputStream(
-        InStream.create("footer", new BufferChunk(bb, 0), 0, footerSize, options)));
-  }
-
   public static OrcProto.Metadata extractMetadata(ByteBuffer bb, int metadataAbsPos,
       int metadataSize, InStream.StreamOptions options) throws IOException {
     bb.position(metadataAbsPos);
@@ -724,8 +718,8 @@ public class ReaderImpl implements Reader {
     } catch (Throwable thr) {
       try {
         close();
-      } catch (IOException ignore) {
-        LOG.info("Ignoring secondary exception in close of " + path, ignore);
+      } catch (IOException except) {
+        LOG.info("Ignoring secondary exception in close of " + path, except);
       }
       throw thr instanceof IOException ? (IOException) thr :
                 new IOException("Problem reading file footer " + path, thr);
@@ -745,6 +739,11 @@ public class ReaderImpl implements Reader {
     return footer.hasCalendar()
                ? footer.getCalendar() == OrcProto.CalendarKind.PROLEPTIC_GREGORIAN
                : OrcConf.PROLEPTIC_GREGORIAN_DEFAULT.getBoolean(conf);
+  }
+
+  @Override
+  public boolean getConvertToProlepticGregorian() {
+    return options.getConvertToProlepticGregorian();
   }
 
   @Override
@@ -905,7 +904,8 @@ public class ReaderImpl implements Reader {
       List<StripeStatistics> result = new ArrayList<>(list.size());
       for (OrcProto.StripeStatistics ss : stripeStatistics) {
         result.add(new StripeStatisticsImpl(schema,
-            new ArrayList<>(ss.getColStatsList()), this));
+            new ArrayList<>(ss.getColStatsList()), writerUsedProlepticGregorian(),
+            getConvertToProlepticGregorian()));
       }
       return result;
     }

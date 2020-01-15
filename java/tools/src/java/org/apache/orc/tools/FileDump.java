@@ -724,7 +724,9 @@ public final class FileDump {
         buf.append("no stats at ");
       } else {
         ColumnStatistics cs =
-            ColumnStatisticsImpl.deserialize(colSchema, colStats, reader);
+            ColumnStatisticsImpl.deserialize(colSchema, colStats,
+                reader.writerUsedProlepticGregorian(),
+                reader.getConvertToProlepticGregorian());
         buf.append(cs.toString());
       }
       buf.append(" positions: ");
