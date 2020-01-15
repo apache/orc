@@ -581,6 +581,9 @@ namespace orc {
     lengthDecoder->next(lengthArray + 1, dictSize, nullptr);
     lengthArray[0] = 0;
     for(uint32_t i = 1; i < dictSize + 1; ++i) {
+      if (lengthArray[i] < 0) {
+        throw ParseError("Negative dictionary entry length");
+      }
       lengthArray[i] += lengthArray[i - 1];
     }
     dictionary->dictionaryBlob.resize(
