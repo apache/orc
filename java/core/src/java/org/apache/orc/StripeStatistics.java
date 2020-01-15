@@ -19,22 +19,23 @@
 package org.apache.orc;
 
 import org.apache.orc.impl.ColumnStatisticsImpl;
-import org.apache.orc.impl.ReaderImpl;
 
 import java.util.List;
 
 public class StripeStatistics {
   private final List<OrcProto.ColumnStatistics> cs;
-  private final ReaderImpl reader;
+  private final boolean writerUsedProlepticGregorian;
+  private final boolean convertToProlepticGregorian;
 
   public StripeStatistics(List<OrcProto.ColumnStatistics> list) {
-    this(list, null);
+    this(list, false, false);
   }
 
   public StripeStatistics(List<OrcProto.ColumnStatistics> list,
-                          ReaderImpl reader) {
+      boolean writerUsedProlepticGregorian, boolean convertToProlepticGregorian) {
     this.cs = list;
-    this.reader = reader;
+    this.writerUsedProlepticGregorian = writerUsedProlepticGregorian;
+    this.convertToProlepticGregorian = convertToProlepticGregorian;
   }
 
   /**
@@ -45,11 +46,8 @@ public class StripeStatistics {
   public ColumnStatistics[] getColumnStatistics() {
     ColumnStatistics[] result = new ColumnStatistics[cs.size()];
     for (int i = 0; i < result.length; ++i) {
-      if (reader == null) {
-        result[i] = ColumnStatisticsImpl.deserialize(null, cs.get(i));
-      } else {
-        result[i] = ColumnStatisticsImpl.deserialize(null, cs.get(i), reader);
-      }
+      result[i] = ColumnStatisticsImpl.deserialize(
+          null, cs.get(i), writerUsedProlepticGregorian, convertToProlepticGregorian);
     }
     return result;
   }

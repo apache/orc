@@ -834,7 +834,8 @@ public class ReaderImpl implements Reader {
     }
     List<StripeStatistics> result = new ArrayList<>();
     for (OrcProto.StripeStatistics ss : stripeStats) {
-      result.add(new StripeStatistics(ss.getColStatsList(), this));
+      result.add(new StripeStatistics(ss.getColStatsList(), writerUsedProlepticGregorian(),
+          options.getConvertToProlepticGregorian()));
     }
     return result;
   }
