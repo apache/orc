@@ -777,7 +777,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     appendStripe(stripe, offset, length, stripeInfo,
         new StripeStatistics[]{
             new StripeStatisticsImpl(schema, stripeStatistics.getColStatsList(),
-                null)});
+                false, false)});
   }
 
   @Override

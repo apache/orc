@@ -19,7 +19,6 @@
 package org.apache.orc;
 
 import org.apache.orc.impl.ColumnStatisticsImpl;
-import org.apache.orc.impl.ReaderImpl;
 
 import java.util.List;
 
@@ -29,19 +28,21 @@ import java.util.List;
 public class StripeStatistics {
   protected final List<OrcProto.ColumnStatistics> cs;
   protected final TypeDescription schema;
-  private final ReaderImpl reader;
+  private final boolean writerUsedProlepticGregorian;
+  private final boolean convertToProlepticGregorian;
 
-  public StripeStatistics(List<OrcProto.ColumnStatistics> list,
-                          ReaderImpl reader) {
-    this(null, list, reader);
+  public StripeStatistics(List<OrcProto.ColumnStatistics> list) {
+    this(null, list, false, false);
   }
 
   public StripeStatistics(TypeDescription schema,
                           List<OrcProto.ColumnStatistics> list,
-                          ReaderImpl reader) {
+                          boolean writerUsedProlepticGregorian,
+                          boolean convertToProlepticGregorian) {
     this.schema = schema;
     this.cs = list;
-    this.reader = reader;
+    this.writerUsedProlepticGregorian = writerUsedProlepticGregorian;
+    this.convertToProlepticGregorian = convertToProlepticGregorian;
   }
 
   private int getBase() {
@@ -58,9 +59,8 @@ public class StripeStatistics {
     int base = getBase();
     for (int c = 0; c < result.length; ++c) {
       TypeDescription column = schema == null ? null : schema.findSubtype(base + c);
-      result[c] = reader == null
-                      ? ColumnStatisticsImpl.deserialize(column, cs.get(c))
-                      : ColumnStatisticsImpl.deserialize(column, cs.get(c), reader);
+      result[c] = ColumnStatisticsImpl.deserialize(column, cs.get(c),
+          writerUsedProlepticGregorian, convertToProlepticGregorian);
     }
     return result;
   }

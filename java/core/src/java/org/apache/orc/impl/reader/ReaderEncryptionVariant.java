@@ -236,7 +236,8 @@ public class ReaderEncryptionVariant implements EncryptionVariant {
                                                     ) throws IOException {
     StripeStatisticsImpl[] result = new StripeStatisticsImpl[stripeCount];
     for(int s=0; s < result.length; ++s) {
-      result[s] = new StripeStatisticsImpl(column, reader);
+      result[s] = new StripeStatisticsImpl(column, reader.writerUsedProlepticGregorian(),
+          reader.getConvertToProlepticGregorian());
     }
     // create the objects
     long offset = stripeStatsOffset;

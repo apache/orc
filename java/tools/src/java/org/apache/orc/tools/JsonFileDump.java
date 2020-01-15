@@ -460,7 +460,8 @@ public class JsonFileDump {
       }
       OrcProto.ColumnStatistics colStats = entry.getStatistics();
       writeColumnStatistics(writer, ColumnStatisticsImpl.deserialize(
-          schema.findSubtype(col), colStats, reader));
+          schema.findSubtype(col), colStats, reader.writerUsedProlepticGregorian(),
+          reader.getConvertToProlepticGregorian()));
       writer.key("positions").array();
       for (int posIx = 0; posIx < entry.getPositionsCount(); ++posIx) {
         writer.value(entry.getPositions(posIx));

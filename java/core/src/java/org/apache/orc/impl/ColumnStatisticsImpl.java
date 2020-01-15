@@ -2027,13 +2027,6 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
   public static ColumnStatisticsImpl deserialize(TypeDescription schema,
                                                  OrcProto.ColumnStatistics stats,
-                                                 ReaderImpl reader) {
-    return deserialize(schema, stats, reader.writerUsedProlepticGregorian(),
-        reader.options.getConvertToProlepticGregorian());
-  }
-
-  public static ColumnStatisticsImpl deserialize(TypeDescription schema,
-                                                 OrcProto.ColumnStatistics stats,
                                                  boolean writerUsedProlepticGregorian,
                                                  boolean convertToProlepticGregorian) {
     if (stats.hasBucketStatistics()) {
