@@ -48,7 +48,8 @@ public class HadoopShimsPre2_7 implements HadoopShims {
       LoggerFactory.getLogger(HadoopShimsPre2_7.class);
 
 
-  public DirectDecompressor getDirectDecompressor( DirectCompressionType codec) {
+  @Override
+  public DirectDecompressor getDirectDecompressor(DirectCompressionType codec) {
     return HadoopShimsPre2_6.getDecompressor(codec);
  }
 

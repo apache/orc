@@ -36,6 +36,7 @@ public class HadoopShimsPre2_3 implements HadoopShims {
   HadoopShimsPre2_3() {
   }
 
+  @Override
   public DirectDecompressor getDirectDecompressor(
       DirectCompressionType codec) {
     return null;

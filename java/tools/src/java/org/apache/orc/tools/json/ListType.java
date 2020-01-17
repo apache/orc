@@ -76,6 +76,7 @@ class ListType extends HiveType {
     }
   }
 
+  @Override
   public void printFlat(PrintStream out, String prefix) {
     elementType.printFlat(out, prefix + "._list");
   }

@@ -536,6 +536,7 @@ public class PhysicalFsWriter implements PhysicalWriter {
       }
     }
 
+    @Override
     public void suppress() {
       isSuppressed = true;
       output.clear();

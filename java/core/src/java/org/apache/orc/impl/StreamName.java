@@ -47,6 +47,7 @@ public class StreamName implements Comparable<StreamName> {
     this.encryption = encryption;
   }
 
+  @Override
   public boolean equals(Object obj) {
     if (obj instanceof  StreamName) {
       StreamName other = (StreamName) obj;

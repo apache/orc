@@ -65,6 +65,7 @@ public final class FileDump {
   public static final int DEFAULT_BLOCK_SIZE = 256 * 1024 * 1024;
   public static final String DEFAULT_BACKUP_PATH = System.getProperty("java.io.tmpdir");
   public static final PathFilter HIDDEN_AND_SIDE_FILE_FILTER = new PathFilter() {
+    @Override
     public boolean accept(Path p) {
       String name = p.getName();
       return !name.startsWith("_") && !name.startsWith(".") && !name.endsWith(

@@ -121,19 +121,23 @@ public class StringRedBlackTree extends RedBlackTree {
     private int end;
     private final Text text = new Text();
 
+    @Override
     public int getOriginalPosition() {
       return originalPosition;
     }
 
+    @Override
     public Text getText() {
       byteArray.setText(text, start, end - start);
       return text;
     }
 
+    @Override
     public void writeBytes(OutputStream out) throws IOException {
       byteArray.write(out, start, end - start);
     }
 
+    @Override
     public int getLength() {
       return end - start;
     }
@@ -171,6 +175,7 @@ public class StringRedBlackTree extends RedBlackTree {
   /**
    * Reset the table to empty.
    */
+  @Override
   public void clear() {
     super.clear();
     byteArray.clear();
@@ -200,6 +205,7 @@ public class StringRedBlackTree extends RedBlackTree {
    * Calculate the approximate size in memory.
    * @return the number of bytes used in storing the tree.
    */
+  @Override
   public long getSizeInBytes() {
     return byteArray.getSizeInBytes() + keyOffsets.getSizeInBytes() +
       super.getSizeInBytes();

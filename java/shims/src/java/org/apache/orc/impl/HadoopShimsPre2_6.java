@@ -47,6 +47,7 @@ public class HadoopShimsPre2_6 implements HadoopShims {
       this.root = root;
     }
 
+    @Override
     public void decompress(ByteBuffer input, ByteBuffer output) throws IOException {
       if (!isFirstCall) {
         root.reset();
@@ -75,6 +76,7 @@ public class HadoopShimsPre2_6 implements HadoopShims {
       this.root = root;
     }
 
+    @Override
     public void decompress(ByteBuffer input, ByteBuffer output) throws IOException {
       if (!isFirstCall) {
         root.reset();
@@ -112,7 +114,8 @@ public class HadoopShimsPre2_6 implements HadoopShims {
     }
   }
 
-  public DirectDecompressor getDirectDecompressor( DirectCompressionType codec) {
+  @Override
+  public DirectDecompressor getDirectDecompressor(DirectCompressionType codec) {
     return getDecompressor(codec);
  }
 

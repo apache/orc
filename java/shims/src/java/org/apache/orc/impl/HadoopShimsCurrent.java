@@ -37,6 +37,7 @@ import java.util.Random;
  */
 public class HadoopShimsCurrent implements HadoopShims {
 
+  @Override
   public DirectDecompressor getDirectDecompressor(DirectCompressionType codec) {
     return HadoopShimsPre2_6.getDecompressor(codec);
   }
