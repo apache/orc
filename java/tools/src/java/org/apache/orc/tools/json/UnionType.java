@@ -103,6 +103,7 @@ class UnionType extends HiveType {
     }
   }
 
+  @Override
   public void printFlat(PrintStream out, String prefix) {
     prefix = prefix + ".";
     int id = 0;

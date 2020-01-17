@@ -372,6 +372,7 @@ public interface Reader extends Closeable {
       return includeAcidColumns;
     }
 
+    @Override
     public Options clone() {
       try {
         Options result = (Options) super.clone();

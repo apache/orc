@@ -121,6 +121,7 @@ class StructType extends HiveType {
     }
   }
 
+  @Override
   public void printFlat(PrintStream out, String prefix) {
     prefix = prefix + ".";
     for (Map.Entry<String, HiveType> field : fields.entrySet()) {

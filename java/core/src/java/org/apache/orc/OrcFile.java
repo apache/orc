@@ -403,6 +403,7 @@ public class OrcFile {
       this.id = id;
     }
 
+    @Override
     public String toString() {
       return id;
     }
@@ -502,6 +503,7 @@ public class OrcFile {
     /**
      * @return a SHALLOW clone
      */
+    @Override
     public WriterOptions clone() {
       try {
         return (WriterOptions) super.clone();

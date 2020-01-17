@@ -62,6 +62,7 @@ class ZeroCopyShims {
       }
     }
 
+    @Override
     public final ByteBuffer readBuffer(int maxLength, boolean verifyChecksums)
         throws IOException {
       EnumSet<ReadOption> options = NO_CHECK_SUM;
@@ -71,6 +72,7 @@ class ZeroCopyShims {
       return this.in.read(this.pool, maxLength, options);
     }
 
+    @Override
     public final void releaseBuffer(ByteBuffer buffer) {
       this.in.releaseBuffer(buffer);
     }

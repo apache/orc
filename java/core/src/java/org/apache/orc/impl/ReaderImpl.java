@@ -201,6 +201,7 @@ public class ReaderImpl implements Reader {
     throw new IllegalArgumentException("Can't find user metadata " + key);
   }
 
+  @Override
   public boolean hasMetadataValue(String key) {
     for(OrcProto.UserMetadataItem item: userMetadata) {
       if (item.hasName() && item.getName().equals(key)) {

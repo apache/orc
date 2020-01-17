@@ -50,6 +50,7 @@ public class WriterEncryptionVariant implements EncryptionVariant {
     return key;
   }
 
+  @Override
   public TypeDescription getRoot() {
     return root;
   }

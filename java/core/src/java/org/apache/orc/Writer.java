@@ -56,6 +56,7 @@ public interface Writer extends Closeable {
    * should be called afterwards.
    * @throws IOException
    */
+  @Override
   void close() throws IOException;
 
   /**

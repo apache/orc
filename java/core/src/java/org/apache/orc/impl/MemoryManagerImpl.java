@@ -76,8 +76,9 @@ public class MemoryManagerImpl implements MemoryManager {
    * @param path the file that is being written
    * @param requestedAllocation the requested buffer size
    */
+  @Override
   public synchronized void addWriter(Path path, long requestedAllocation,
-                              Callback callback) throws IOException {
+                                     Callback callback) throws IOException {
     WriterInfo oldVal = writerList.get(path);
     // this should always be null, but we handle the case where the memory
     // manager wasn't told that a writer wasn't still in use and the task
@@ -97,6 +98,7 @@ public class MemoryManagerImpl implements MemoryManager {
    * Remove the given writer from the pool.
    * @param path the file that has been closed
    */
+  @Override
   public synchronized void removeWriter(Path path) throws IOException {
     WriterInfo val = writerList.get(path);
     if (val != null) {

@@ -325,6 +325,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
      * @param name the name for the stream
      * @return The output outStream that the section needs to be written to.
      */
+    @Override
     public OutStream createStream(StreamName name) throws IOException {
       StreamOptions options = SerializationUtils.getCustomizedCodec(
           unencryptedOptions, compressionStrategy, name.getKind());
@@ -344,6 +345,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     /**
      * Get the stride rate of the row index.
      */
+    @Override
     public int getRowIndexStride() {
       return rowIndexStride;
     }
@@ -352,6 +354,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
      * Should be building the row index.
      * @return true if we are building the index
      */
+    @Override
     public boolean buildIndex() {
       return buildIndex;
     }
@@ -360,6 +363,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
      * Is the ORC file compressed?
      * @return are the streams compressed
      */
+    @Override
     public boolean isCompressed() {
       return unencryptedOptions.getCodec() != null;
     }
@@ -368,6 +372,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
      * Get the encoding strategy to use.
      * @return encoding strategy
      */
+    @Override
     public OrcFile.EncodingStrategy getEncodingStrategy() {
       return encodingStrategy;
     }
@@ -376,6 +381,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
      * Get the bloom filter columns
      * @return bloom filter columns
      */
+    @Override
     public boolean[] getBloomFilterColumns() {
       return bloomFilterColumns;
     }
@@ -384,6 +390,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
      * Get bloom filter false positive percentage.
      * @return fpp
      */
+    @Override
     public double getBloomFilterFPP() {
       return bloomFilterFpp;
     }
@@ -392,6 +399,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
      * Get the writer's configuration.
      * @return configuration
      */
+    @Override
     public Configuration getConfiguration() {
       return conf;
     }
@@ -399,6 +407,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     /**
      * Get the version of the file to write.
      */
+    @Override
     public OrcFile.Version getVersion() {
       return version;
     }
@@ -413,15 +422,18 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
       return physicalWriter;
     }
 
+    @Override
     public OrcFile.BloomFilterVersion getBloomFilterVersion() {
       return bloomFilterVersion;
     }
 
+    @Override
     public void writeIndex(StreamName name,
                            OrcProto.RowIndex.Builder index) throws IOException {
       physicalWriter.writeIndex(name, index);
     }
 
+    @Override
     public void writeBloomFilter(StreamName name,
                                  OrcProto.BloomFilterIndex.Builder bloom
                                  ) throws IOException {
@@ -463,10 +475,12 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
       physicalWriter.writeStatistics(name, stats);
     }
 
+    @Override
     public boolean getUseUTCTimestamp() {
       return useUTCTimeZone;
     }
 
+    @Override
     public double getDictionaryKeySizeThreshold(int columnId) {
       return directEncodingColumns[columnId] ? 0.0 : dictionaryKeySizeThreshold;
     }

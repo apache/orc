@@ -164,6 +164,7 @@ public class OrcInputFormat<V extends WritableComparable>
    * @return a list of files that need to be read
    * @throws IOException
    */
+  @Override
   protected FileStatus[] listStatus(JobConf job) throws IOException {
     FileStatus[] result = super.listStatus(job);
     List<FileStatus> ok = new ArrayList<>(result.length);

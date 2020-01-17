@@ -163,6 +163,7 @@ public abstract class TreeWriterBase implements TreeWriter {
    * @param offset the row to start on
    * @param length the number of rows to write
    */
+  @Override
   public void writeRootBatch(VectorizedRowBatch batch, int offset,
                              int length) throws IOException {
     writeBatch(batch.cols[0], offset, length);
@@ -318,6 +319,7 @@ public abstract class TreeWriterBase implements TreeWriter {
    * statistics before they are cleared. Finally, it records the start of the
    * next index and ensures all of the children columns also create an entry.
    */
+  @Override
   public void createRowIndexEntry() throws IOException {
     stripeColStatistics.merge(indexStatistics);
     rowIndexEntry.setStatistics(indexStatistics.serialize());
@@ -379,6 +381,7 @@ public abstract class TreeWriterBase implements TreeWriter {
    * Estimate how much memory the writer is consuming excluding the streams.
    * @return the number of bytes.
    */
+  @Override
   public long estimateMemory() {
     long result = 0;
     if (isPresent != null) {

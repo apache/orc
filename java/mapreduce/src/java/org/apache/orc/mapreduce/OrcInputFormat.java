@@ -73,6 +73,7 @@ public class OrcInputFormat<V extends WritableComparable>
             file, split.getStart(), split.getLength()));
   }
 
+  @Override
   protected List<FileStatus> listStatus(JobContext job) throws IOException {
     List<FileStatus> complete = super.listStatus(job);
     List<FileStatus> result = new ArrayList<>(complete.size());

@@ -115,6 +115,7 @@ public class OutStream extends PositionedOutputStream {
    * Change the current Initialization Vector (IV) for the encryption.
    * @param modifier a function to modify the IV in place
    */
+  @Override
   public void changeIv(Consumer<byte[]> modifier) {
     if (iv != null) {
       modifier.accept(iv);

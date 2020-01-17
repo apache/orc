@@ -109,6 +109,7 @@ public interface HadoopShims {
     /**
      * Close the underlying stream.
      */
+    @Override
     void close() throws IOException;
   }
 

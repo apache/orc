@@ -58,6 +58,7 @@ public class WriterEncryptionKey implements EncryptionKey {
     return metadata.getVersion();
   }
 
+  @Override
   public EncryptionAlgorithm getAlgorithm() {
     return metadata.getAlgorithm();
   }

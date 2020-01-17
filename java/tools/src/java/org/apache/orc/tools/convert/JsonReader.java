@@ -72,6 +72,7 @@ public class JsonReader implements RecordReader {
   }
 
   static class BooleanColumnConverter implements JsonConverter {
+    @Override
     public void convert(JsonElement value, ColumnVector vect, int row) {
       if (value == null || value.isJsonNull()) {
         vect.noNulls = false;
@@ -84,6 +85,7 @@ public class JsonReader implements RecordReader {
   }
 
   static class LongColumnConverter implements JsonConverter {
+    @Override
     public void convert(JsonElement value, ColumnVector vect, int row) {
       if (value == null || value.isJsonNull()) {
         vect.noNulls = false;
@@ -96,6 +98,7 @@ public class JsonReader implements RecordReader {
   }
 
   static class DoubleColumnConverter implements JsonConverter {
+    @Override
     public void convert(JsonElement value, ColumnVector vect, int row) {
       if (value == null || value.isJsonNull()) {
         vect.noNulls = false;
@@ -108,6 +111,7 @@ public class JsonReader implements RecordReader {
   }
 
   static class StringColumnConverter implements JsonConverter {
+    @Override
     public void convert(JsonElement value, ColumnVector vect, int row) {
       if (value == null || value.isJsonNull()) {
         vect.noNulls = false;
@@ -121,6 +125,7 @@ public class JsonReader implements RecordReader {
   }
 
   static class BinaryColumnConverter implements JsonConverter {
+    @Override
     public void convert(JsonElement value, ColumnVector vect, int row) {
       if (value == null || value.isJsonNull()) {
         vect.noNulls = false;
@@ -138,6 +143,7 @@ public class JsonReader implements RecordReader {
   }
 
   class TimestampColumnConverter implements JsonConverter {
+    @Override
     public void convert(JsonElement value, ColumnVector vect, int row) {
       if (value == null || value.isJsonNull()) {
         vect.noNulls = false;
@@ -165,6 +171,7 @@ public class JsonReader implements RecordReader {
   }
 
   static class DecimalColumnConverter implements JsonConverter {
+    @Override
     public void convert(JsonElement value, ColumnVector vect, int row) {
       if (value == null || value.isJsonNull()) {
         vect.noNulls = false;
@@ -189,6 +196,7 @@ public class JsonReader implements RecordReader {
       fieldNames = schema.getFieldNames();
     }
 
+    @Override
     public void convert(JsonElement value, ColumnVector vect, int row) {
       if (value == null || value.isJsonNull()) {
         vect.noNulls = false;
@@ -211,6 +219,7 @@ public class JsonReader implements RecordReader {
       childrenConverter = createConverter(schema.getChildren().get(0));
     }
 
+    @Override
     public void convert(JsonElement value, ColumnVector vect, int row) {
       if (value == null || value.isJsonNull()) {
         vect.noNulls = false;
@@ -242,6 +251,7 @@ public class JsonReader implements RecordReader {
       valueConverter = createConverter(schema.getChildren().get(1));
     }
 
+    @Override
     public void convert(JsonElement value, ColumnVector vect, int row) {
       if (value == null || value.isJsonNull()) {
         vect.noNulls = false;
@@ -326,6 +336,7 @@ public class JsonReader implements RecordReader {
     }
   }
 
+  @Override
   public boolean nextBatch(VectorizedRowBatch batch) throws IOException {
     batch.reset();
     int maxSize = batch.getMaxSize();
@@ -360,6 +371,7 @@ public class JsonReader implements RecordReader {
     return totalSize != 0 && pos < totalSize ? (float) pos / totalSize : 1;
   }
 
+  @Override
   public void close() throws IOException {
     input.close();
   }

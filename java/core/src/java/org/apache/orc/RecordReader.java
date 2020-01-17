@@ -56,6 +56,7 @@ public interface RecordReader extends Closeable {
    * Release the resources associated with the given reader.
    * @throws java.io.IOException
    */
+  @Override
   void close() throws IOException;
 
   /**

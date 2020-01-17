@@ -55,6 +55,7 @@ public abstract class InStream extends InputStream {
     this.length = length;
   }
 
+  @Override
   public String toString() {
     return name.toString();
   }
@@ -138,6 +139,7 @@ public abstract class InStream extends InputStream {
       return 0xff & decrypted.get();
     }
 
+    @Override
     protected void setCurrent(DiskRangeList newRange, boolean isJump) {
       currentRange = newRange;
       if (newRange != null) {
@@ -442,6 +444,7 @@ public abstract class InStream extends InputStream {
       uncompressed = allocateBuffer(size, isDirect);
     }
 
+    @Override
     protected void setCurrent(DiskRangeList newRange,
                               boolean isJump) {
       currentRange = newRange;
