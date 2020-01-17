@@ -78,7 +78,7 @@ public class MemoryManagerImpl implements MemoryManager {
    */
   @Override
   public synchronized void addWriter(Path path, long requestedAllocation,
-                                     Callback callback) throws IOException {
+                              Callback callback) throws IOException {
     WriterInfo oldVal = writerList.get(path);
     // this should always be null, but we handle the case where the memory
     // manager wasn't told that a writer wasn't still in use and the task
