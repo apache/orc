@@ -567,15 +567,18 @@ namespace orc {
     RleVersion rleVersion = convertRleVersion(stripe.getEncoding(columnId)
                                                 .kind());
     uint32_t dictSize = stripe.getEncoding(columnId).dictionarysize();
-    rle = createRleDecoder(stripe.getStream(columnId,
-                                            proto::Stream_Kind_DATA,
-                                            true),
-                           false, rleVersion, memoryPool);
+    std::unique_ptr<SeekableInputStream> stream =
+        stripe.getStream(columnId, proto::Stream_Kind_DATA, true);
+    if (stream == nullptr) {
+      throw ParseError("DATA stream not found in StringDictionaryColumn");
+    }
+    rle = createRleDecoder(std::move(stream), false, rleVersion, memoryPool);
+    stream = stripe.getStream(columnId, proto::Stream_Kind_LENGTH, false);
+    if (dictSize > 0 && stream == nullptr) {
+      throw ParseError("LENGTH stream not found in StringDictionaryColumn");
+    }
     std::unique_ptr<RleDecoder> lengthDecoder =
-            createRleDecoder(stripe.getStream(columnId,
-                                        proto::Stream_Kind_LENGTH,
-                                        false),
-                       false, rleVersion, memoryPool);
+        createRleDecoder(std::move(stream), false, rleVersion, memoryPool);
     dictionary->dictionaryOffset.resize(dictSize + 1);
     int64_t* lengthArray = dictionary->dictionaryOffset.data();
     lengthDecoder->next(lengthArray + 1, dictSize, nullptr);
