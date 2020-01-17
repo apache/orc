@@ -34,12 +34,10 @@ public class RunLengthIntegerReader implements IntegerReader {
   private int delta = 0;
   private int used = 0;
   private boolean repeat = false;
-  private SerializationUtils utils;
 
   public RunLengthIntegerReader(InStream input, boolean signed) throws IOException {
     this.input = input;
     this.signed = signed;
-    this.utils = new SerializationUtils();
   }
 
   private void readValues(boolean ignoreEof) throws IOException {
