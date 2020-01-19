@@ -150,4 +150,6 @@ TEST (TestFileScan, testErrorHandling) {
       "bad number of ColumnEncodings in StripeFooter: expected=6, actual=0");
   checkForError(findExample("corrupt/negative_dict_entry_lengths.orc"),
         "Negative dictionary entry length");
+  checkForError(findExample("corrupt/missing_length_stream_in_string_dict.orc"),
+        "LENGTH stream not found in StringDictionaryColumn");
 }
