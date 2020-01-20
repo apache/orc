@@ -589,14 +589,15 @@ namespace orc {
       }
       lengthArray[i] += lengthArray[i - 1];
     }
-    dictionary->dictionaryBlob.resize(
-                                static_cast<uint64_t>(lengthArray[dictSize]));
+    int64_t blobSize = lengthArray[dictSize];
+    dictionary->dictionaryBlob.resize(static_cast<uint64_t>(blobSize));
     std::unique_ptr<SeekableInputStream> blobStream =
       stripe.getStream(columnId, proto::Stream_Kind_DICTIONARY_DATA, false);
-    readFully(
-              dictionary->dictionaryBlob.data(),
-              lengthArray[dictSize],
-              blobStream.get());
+    if (blobSize > 0 && blobStream == nullptr) {
+      throw ParseError(
+          "DICTIONARY_DATA stream not found in StringDictionaryColumn");
+    }
+    readFully(dictionary->dictionaryBlob.data(), blobSize, blobStream.get());
   }
 
   StringDictionaryColumnReader::~StringDictionaryColumnReader() {
