@@ -252,6 +252,14 @@ namespace orc {
             Literal(1500, 4, 2));
     EXPECT_EQ(TruthValue::YES_NO, evaluate(pred9,
       createDecimalStats(Decimal("10.0"), Decimal("100.0"))));
+
+    PredicateLeaf pred10(
+            PredicateLeaf::Operator::NULL_SAFE_EQUALS,
+            PredicateDataType::LONG,
+            "x",
+            Literal(PredicateDataType::LONG));
+    EXPECT_EQ(TruthValue::NO,
+              evaluate(pred2, createIntStats(50, 100)));
   }
 
   TEST(TestPredicateLeaf, testEquals) {
