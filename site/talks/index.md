@@ -38,6 +38,15 @@ Watch some presentations and read through some slide decks about ORC.
 
 ## Slides
 
+* [ORC Deep Dive 2020](https://www.slideshare.net/oom65/orc-deep-dive-2020)
+
+    Owen O'Malley
+
+    <iframe src="//www.slideshare.net/slideshow/embed_code/key/qyYdGz3uKChVM1"
+    width="595" height="485" frameborder="0" marginwidth="0" marginheight="0"
+    scrolling="no" style="border:1px solid #CCC; border-width:1px;
+    margin-bottom:5px; max-width: 100%;" allowfullscreen=""> </iframe>
+
 * [File Format Benchmarks: Avro, JSON, ORC, & Parquet](https://www.slideshare.net/oom65/file-format-benchmarks-avro-json-orc-parquet)
 
     Owen O'Malley at Hadoop Summit San Jose 2016
