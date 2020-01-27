@@ -92,6 +92,24 @@ public final class OrcTail {
     return (int) fileTail.getPostscript().getCompressionBlockSize();
   }
 
+  /**
+   * Get the stripe statistics from the file tail.
+   * This code is for compatibility with ORC 1.5.8, but doesn't handle
+   * proleptic calendar well. In particular, it does not have access to a
+   * Configuration object, so it assumes false for both
+   * writerUsedProlepticGregorian and convertToProlepticGregorian.
+   * @return the stripe statistics
+   * @deprecated the user should use Reader.getStripeStatistics instead.
+   */
+  public List<StripeStatistics> getStripeStatistics() throws IOException {
+    OrcProto.Footer footer = fileTail.getFooter();
+    boolean writerUsedProlepticGregorian =
+        footer.hasCalendar() ?
+            footer.getCalendar() == OrcProto.CalendarKind.PROLEPTIC_GREGORIAN :
+            false;
+    return getStripeStatistics(writerUsedProlepticGregorian, false);
+  }
+
   public List<StripeStatistics> getStripeStatistics(
       boolean writerUsedProlepticGregorian, boolean convertToProlepticGregorian)
       throws IOException {
