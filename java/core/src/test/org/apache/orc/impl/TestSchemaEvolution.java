@@ -1629,6 +1629,29 @@ public class TestSchemaEvolution {
   }
 
   @Test
+  public void testSkipRowsCount() throws IOException {
+    TypeDescription fileType = TypeDescription.fromString("struct<x:int,y:string>");
+    TypeDescription readType = TypeDescription.fromString("struct<z:int,y:string,x:bigint>");
+    SchemaEvolution evo = new SchemaEvolution(fileType, readType, options);
+
+    TreeReaderFactory.Context treeContext =
+        new TreeReaderFactory.ReaderContext().setSchemaEvolution(evo);
+    TreeReaderFactory.TreeReader reader =
+        TreeReaderFactory.createTreeReader(readType, treeContext);
+
+    boolean[] skipRows = new boolean[1024];
+    skipRows[0] = true;
+    skipRows[1023] = true;
+    assertTrue( reader.countRowsToSkip(skipRows, 0, skipRows.length) == 1);
+    assertTrue( reader.countRowsToSkip(skipRows, 1023, skipRows.length) == 1);
+
+    Arrays.fill(skipRows, true);
+    skipRows[3] = false;
+    assertTrue( reader.countRowsToSkip(skipRows, 0, skipRows.length) == 3);
+    assertTrue( reader.countRowsToSkip(skipRows, 4, skipRows.length) == 1020);
+  }
+
+  @Test
   public void testTypeConversion() throws IOException {
     TypeDescription fileType = TypeDescription.fromString("struct<x:int,y:string>");
     TypeDescription readType = TypeDescription.fromString("struct<z:int,y:string,x:bigint>");

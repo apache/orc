@@ -362,6 +362,7 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
   @Override
   public void nextVector(ColumnVector previous,
                          long[] data,
+                         boolean[] skipRows,
                          int previousLen) throws IOException {
     // if all nulls, just return
     if (previous.isRepeating && !previous.noNulls && previous.isNull[0]) {
@@ -370,7 +371,13 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
     previous.isRepeating = true;
     for (int i = 0; i < previousLen; i++) {
       if (previous.noNulls || !previous.isNull[i]) {
-        data[i] = next();
+        if ((skipRows != null) && skipRows[i]) {
+          int skipRowCnt = TreeReaderFactory.TreeReader.countRowsToSkip(skipRows, i, previousLen);
+          this.skip(skipRowCnt);
+          i += skipRowCnt - 1;
+        } else {
+          data[i] = next();
+        }
       } else {
         // The default value of null for int type in vectorized
         // processing is 1, so set that if the value is null
@@ -392,15 +399,28 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
   @Override
   public void nextVector(ColumnVector vector,
                          int[] data,
+                         boolean[] skipRows,
                          int size) throws IOException {
     if (vector.noNulls) {
       for(int r=0; r < data.length && r < size; ++r) {
-        data[r] = (int) next();
+        if ((skipRows != null) && skipRows[r]) {
+          int skipRowCnt = TreeReaderFactory.TreeReader.countRowsToSkip(skipRows, r, size);
+          this.skip(skipRowCnt);
+          r += skipRowCnt - 1;
+        } else {
+          data[r] = (int) next();
+        }
       }
     } else if (!(vector.isRepeating && vector.isNull[0])) {
       for(int r=0; r < data.length && r < size; ++r) {
         if (!vector.isNull[r]) {
-          data[r] = (int) next();
+          if ((skipRows != null) && skipRows[r]) {
+            int skipRowCnt = TreeReaderFactory.TreeReader.countRowsToSkip(skipRows, r, size);
+            this.skip(skipRowCnt);
+            r += skipRowCnt - 1;
+          } else {
+            data[r] = (int) next();
+          }
         } else {
           data[r] = 1;
         }
