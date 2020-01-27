@@ -64,6 +64,7 @@ public interface IntegerReader {
    */
    void nextVector(ColumnVector column,
                    long[] data,
+                   boolean[] skipRows,
                    int length
                    ) throws IOException;
 
@@ -77,6 +78,7 @@ public interface IntegerReader {
    */
   void nextVector(ColumnVector column,
                   int[] data,
+                  boolean[] skipRows,
                   int length
                   ) throws IOException;
 }

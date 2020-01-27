@@ -92,12 +92,15 @@ public class RunLengthByteReader {
     return result;
   }
 
-  public void nextVector(ColumnVector previous, long[] data, long size)
+  public void nextVector(ColumnVector previous, long[] data, boolean[] skipRows, long size)
       throws IOException {
     previous.isRepeating = true;
     for (int i = 0; i < size; i++) {
       if (!previous.isNull[i]) {
-        data[i] = next();
+        if (skipRows!= null && skipRows[i])
+          skip(1);
+        else
+          data[i] = next();
       } else {
         // The default value of null for int types in vectorized
         // processing is 1, so set that if the value is null
