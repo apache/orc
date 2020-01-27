@@ -1600,13 +1600,13 @@ public class TestSchemaEvolution {
     boolean[] skipRows = new boolean[1024];
     skipRows[0] = true;
     skipRows[1023] = true;
-    assertTrue( reader.countRowsToSkip(skipRows, 0) == 1);
-    assertTrue( reader.countRowsToSkip(skipRows, 1023) == 1);
+    assertTrue( reader.countRowsToSkip(skipRows, 0, skipRows.length) == 1);
+    assertTrue( reader.countRowsToSkip(skipRows, 1023, skipRows.length) == 1);
 
     Arrays.fill(skipRows, true);
     skipRows[3] = false;
-    assertTrue( reader.countRowsToSkip(skipRows, 0) == 3);
-    assertTrue( reader.countRowsToSkip(skipRows, 4) == 1020);
+    assertTrue( reader.countRowsToSkip(skipRows, 0, skipRows.length) == 3);
+    assertTrue( reader.countRowsToSkip(skipRows, 4, skipRows.length) == 1020);
   }
 
   @Test

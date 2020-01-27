@@ -198,10 +198,11 @@ public class TreeReaderFactory {
       }
     }
 
-    protected static int countRowsToSkip(boolean[] skipRows, int index) throws IOException {
+    protected static int countRowsToSkip(boolean[] skipRows, int index, int batchSize) throws IOException {
       int currIndex = index;
       int result = 0;
-      while ((currIndex < skipRows.length) && skipRows[currIndex++]) {
+      while ((currIndex < batchSize) && (currIndex < skipRows.length) &&
+          skipRows[currIndex++]) {
         result++;
       }
       return result;
@@ -597,7 +598,7 @@ public class TreeReaderFactory {
       super.nextVector(result, isNull, batchSize);
 
       // Read value entries based on isNull entries
-      reader.nextVector(result, result.vector, null, batchSize);
+      reader.nextVector(result, result.vector, skipRows, batchSize);
 
       // Skipped Rows are pretty much null rows
       System.arraycopy(skipRows, 0, previous.isNull, 0, batchSize);
@@ -680,7 +681,7 @@ public class TreeReaderFactory {
       super.nextVector(result, isNull, batchSize);
 
       // Read value entries based on isNull entries
-      reader.nextVector(result, result.vector, null, batchSize);
+      reader.nextVector(result, result.vector, skipRows, batchSize);
 
       // Skipped Rows are pretty much null rows
       System.arraycopy(skipRows, 0, previous.isNull, 0, batchSize);
@@ -764,12 +765,13 @@ public class TreeReaderFactory {
             // some nulls
             result.isRepeating = false;
             // conditions to ensure bounds checks skips
-            int i;
-            for (i = 0; batchSize <= result.isNull.length
+            for (int i = 0; batchSize <= result.isNull.length
                 && batchSize <= result.vector.length && i < batchSize; i++) {
               if (!result.isNull[i]) {
                 if (skipRows[i]) {
-                  skipRows(1);
+                  int skipRowCnt = countRowsToSkip(skipRows, i, batchSize);
+                  skipRows(skipRowCnt);
+                  i += skipRowCnt - 1;
                 }
                 else
                   result.vector[i] = utils.readFloat(stream);
@@ -782,19 +784,18 @@ public class TreeReaderFactory {
         } else {
           // no nulls & > 1 row (check repeating)
           boolean repeating = (batchSize > 1);
-          float f1 = 0f;
-          if (skipRows[0])
-            this.skipRows(1);
-          else
-            f1 = utils.readFloat(stream);
+          float f1 = utils.readFloat(stream);
           result.vector[0] = f1;
           // conditions to ensure bounds checks skips
           for (int i = 1; i < batchSize && batchSize <= result.vector.length; i++) {
             float f2 = 0f;
-            if (skipRows[i])
-              this.skipRows(1);
-            else
+            if (skipRows[i]) {
+              int skipRowCnt = countRowsToSkip(skipRows, i, batchSize);
+              skipRows(skipRowCnt);
+              i += skipRowCnt - 1;
+            } else {
               f2 = utils.readFloat(stream);
+            }
             repeating = repeating && (f1 == f2);
             result.vector[i] = f2;
           }
@@ -927,10 +928,13 @@ public class TreeReaderFactory {
             for (int i = 0; batchSize <= result.isNull.length
                 && batchSize <= result.vector.length && i < batchSize; i++) {
               if (!result.isNull[i]) {
-                if (skipRows[i])
-                  skipRows(1);
-                else
+                if (skipRows[i]) {
+                  int skipRowCnt = countRowsToSkip(skipRows, i, batchSize);
+                  skipRows(skipRowCnt);
+                  i += skipRowCnt - 1;
+                } else {
                   result.vector[i] = utils.readDouble(stream);
+                  }
               } else {
                 // If the value is not present then set NaN
                 result.vector[i] = Double.NaN;
@@ -940,19 +944,18 @@ public class TreeReaderFactory {
         } else {
           // no nulls
           boolean repeating = (batchSize > 1);
-          double d1 = 0d;
-          if (skipRows[0])
-            skipRows(1);
-          else
-            d1 = utils.readDouble(stream);
+          double d1 = utils.readDouble(stream);
           result.vector[0] = d1;
           // conditions to ensure bounds checks skips
           for (int i = 1; i < batchSize && batchSize <= result.vector.length; i++) {
             double d2 = 0d;
-            if (skipRows[i])
-              skipRows(1);
-            else
+            if (skipRows[i]) {
+              int skipRowCnt = countRowsToSkip(skipRows, i, batchSize);
+              skipRows(skipRowCnt);
+              i += skipRowCnt - 1;
+            } else {
               d2 = utils.readDouble(stream);
+            }
             repeating = repeating && (d1 == d2);
             result.vector[i] = d2;
           }
@@ -1231,7 +1234,9 @@ public class TreeReaderFactory {
       for (int i = 0; i < batchSize; i++) {
         if (result.noNulls || !result.isNull[i]) {
           if (skipRows[i]) {
-            skipRows(1);
+            int skipRowCnt = countRowsToSkip(skipRows, i, batchSize);
+            skipRows(skipRowCnt);
+            i += skipRowCnt - 1;
           } else {
             final int newNanos = parseNanos(nanos.next());
             long millis = (data.next() + base_timestamp) * TimestampTreeWriter.MILLIS_PER_SECOND + newNanos / 1_000_000;
@@ -1494,7 +1499,9 @@ public class TreeReaderFactory {
       if (result.noNulls) {
         for (int r=0; r < batchSize; ++r) {
           if (skipRows[r]) {
-            valueStream.skip(1);
+            int skipRowCnt = countRowsToSkip(skipRows, r, batchSize);
+            valueStream.skip(skipRowCnt);
+            r += skipRowCnt - 1;
           } else {
             decWritable = vector[r];
             if (!decWritable.serializationUtilsRead(valueStream, scratchScaleVector[r], scratchBytes)) {
@@ -1507,7 +1514,9 @@ public class TreeReaderFactory {
         for (int r=0; r < batchSize; ++r) {
           if (!result.isNull[r]) {
             if (skipRows[r]) {
-              valueStream.skip(1);
+              int skipRowCnt = countRowsToSkip(skipRows, r, batchSize);
+              valueStream.skip(skipRowCnt);
+              r += skipRowCnt - 1;
             } else {
               decWritable = vector[r];
               if (!decWritable.serializationUtilsRead(valueStream, scratchScaleVector[r], scratchBytes)) {
@@ -1575,7 +1584,9 @@ public class TreeReaderFactory {
       if (result.noNulls) {
         for (int r=0; r < batchSize; ++r) {
           if (skipRows[r]) {
-            valueStream.skip(1);
+            int skipRowCnt = countRowsToSkip(skipRows, r, batchSize);
+            skipRows(skipRowCnt);
+            r += skipRowCnt - 1;
           } else {
             result.vector[r] = SerializationUtils.readVslong(valueStream);
             for (int s = scratchScaleVector[r]; s < scale; ++s) {
@@ -1587,7 +1598,9 @@ public class TreeReaderFactory {
         for (int r=0; r < batchSize; ++r) {
           if (!result.isNull[r]) {
             if (skipRows[r]) {
-              valueStream.skip(1);
+              int skipRowCnt = countRowsToSkip(skipRows, r, batchSize);
+              skipRows(skipRowCnt);
+              r += skipRowCnt - 1;
             } else {
               result.vector[r] = SerializationUtils.readVslong(valueStream);
               for (int s = scratchScaleVector[r]; s < scale; ++s) {
@@ -1736,18 +1749,25 @@ public class TreeReaderFactory {
         final int batchSize) throws IOException {
       if (result.noNulls) {
         for (int r=0; r < batchSize; ++r) {
-          if (skipRows[r])
-            skipRows(1);
-          else
+          if (skipRows[r]) {
+            int skipRowCnt = countRowsToSkip(skipRows, r, batchSize);
+            skipRows(skipRowCnt);
+            r += skipRowCnt - 1;
+          } else {
             result.vector[r].setFromLongAndScale(valueReader.next(), scale);
+          }
         }
       } else if (!result.isRepeating || !result.isNull[0]) {
         for (int r=0; r < batchSize; ++r) {
           if (result.noNulls || !result.isNull[r]) {
-            if (skipRows[r])
-              skipRows(1);
-            else
+            if (skipRows[r]) {
+              int skipRowCnt = countRowsToSkip(skipRows, r, batchSize);
+              skipRows(skipRowCnt);
+              r += skipRowCnt - 1;
+            }
+            else {
               result.vector[r].setFromLongAndScale(valueReader.next(), scale);
+            }
           }
         }
       }
@@ -2240,9 +2260,11 @@ public class TreeReaderFactory {
           // and set strings one by one
           for (int i = 0; i < batchSize; i++) {
             if (!scratchlcv.isNull[i]) {
-              if(skipRows[i])
-                skipRows(1);
-              else {
+              if(skipRows[i]) {
+                int skipRowCnt = countRowsToSkip(skipRows, i, batchSize);
+                skipRows(skipRowCnt);
+                i += skipRowCnt - 1;
+              } else {
                 offset = dictionaryOffsets[(int) scratchlcv.vector[i]];
                 length = getDictionaryEntryLength((int) scratchlcv.vector[i], offset);
                 result.setRef(i, dictionaryBufferInBytesCache, offset, length);
@@ -2546,10 +2568,13 @@ public class TreeReaderFactory {
         boolean[] mask = result.noNulls ? null : result.isNull;
         for (int f = 0; f < fields.length; f++) {
           if (fields[f] != null) {
-            if (skipRows[f])
-              skipRows(1);
-            else
+            if (skipRows[f]) {
+              int skipRowCnt = countRowsToSkip(skipRows, f, batchSize);
+              skipRows(skipRowCnt);
+              f += skipRowCnt - 1;
+            } else {
               fields[f].nextVector(result.fields[f], mask, batchSize);
+            }
           }
         }
       }

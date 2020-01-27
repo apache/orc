@@ -372,7 +372,9 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
     for (int i = 0; i < previousLen; i++) {
       if (previous.noNulls || !previous.isNull[i]) {
         if ((skipRows != null) && skipRows[i]) {
-          this.skip(1);
+          int skipRowCnt = TreeReaderFactory.TreeReader.countRowsToSkip(skipRows, i, previousLen);
+          this.skip(skipRowCnt);
+          i += skipRowCnt - 1;
         } else {
           data[i] = next();
         }
@@ -402,7 +404,9 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
     if (vector.noNulls) {
       for(int r=0; r < data.length && r < size; ++r) {
         if ((skipRows != null) && skipRows[r]) {
-          this.skip(1);
+          int skipRowCnt = TreeReaderFactory.TreeReader.countRowsToSkip(skipRows, r, size);
+          this.skip(skipRowCnt);
+          r += skipRowCnt - 1;
         } else {
           data[r] = (int) next();
         }
@@ -411,7 +415,9 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
       for(int r=0; r < data.length && r < size; ++r) {
         if (!vector.isNull[r]) {
           if ((skipRows != null) && skipRows[r]) {
-            this.skip(1);
+            int skipRowCnt = TreeReaderFactory.TreeReader.countRowsToSkip(skipRows, r, size);
+            this.skip(skipRowCnt);
+            r += skipRowCnt - 1;
           } else {
             data[r] = (int) next();
           }

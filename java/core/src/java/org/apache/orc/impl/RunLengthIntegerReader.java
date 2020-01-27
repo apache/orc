@@ -134,18 +134,24 @@ public class RunLengthIntegerReader implements IntegerReader {
                          int size) throws IOException {
     if (vector.noNulls) {
       for(int r=0; r < data.length && r < size; ++r) {
-        if (skipRows!= null && skipRows[r])
-          skip(1);
-        else
+        if ((skipRows!= null) && skipRows[r]) {
+          int skipRowCnt = TreeReaderFactory.TreeReader.countRowsToSkip(skipRows, r, size);
+          this.skip(skipRowCnt);
+          r += skipRowCnt - 1;
+        } else {
           data[r] = (int) next();
+        }
       }
     } else if (!(vector.isRepeating && vector.isNull[0])) {
       for(int r=0; r < data.length && r < size; ++r) {
         if (!vector.isNull[r]) {
-          if (skipRows!= null && skipRows[r])
-            skip(1);
-          else
+          if ((skipRows!= null) && skipRows[r]) {
+            int skipRowCnt = TreeReaderFactory.TreeReader.countRowsToSkip(skipRows, r, size);
+            this.skip(skipRowCnt);
+            r += skipRowCnt - 1;
+          } else {
             data[r] = (int) next();
+          }
         } else {
           data[r] = 1;
         }
