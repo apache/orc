@@ -166,7 +166,7 @@ Thanks!
 
 <ul>
   <li>login to <a href="https://repository.apache.org/index.html#stagingRepositories">Maven staging</a></li>
-  <li>find your staging repository (search for org.apache.org)</li>
+  <li>find your staging repository (search for org.apache.orc)</li>
   <li>close it</li>
   <li>release it</li>
 </ul>
@@ -215,7 +215,6 @@ Set up site/target to be a separate git workspace that tracks the asf-site branc
 % git fetch origin
 % git checkout asf-site
 % cd ..
-% bundle install
 </code></pre></div></div>
 <ul>
   <li>edit site/_data/releases.yml to add new release
@@ -230,46 +229,45 @@ Set up site/target to be a separate git workspace that tracks the asf-site branc
     </ul>
   </li>
   <li>create a new file _posts/YYYY-MM-DD-ORC-X.Y.Z.md for the news section</li>
-  <li>Run “bundle exec jekyll serve”</li>
+  <li>Run “docker build -t orc-site .”</li>
+  <li>Run “docker run -d -p 4000:4000 orc-site”</li>
   <li>Check the website on http://0.0.0.0:4000/</li>
-  <li>If it looks good, use git add (from within site directory) to add the new files and commit to master with a message of “update site for X.Y.Z”.</li>
+  <li>If it looks good, copy the results out of docker:
+    <ul>
+      <li>Find the name of the container using “docker ps”.</li>
+      <li>Run “docker cp $CONTAINER:/home/orc/site/target .”</li>
+      <li>Run “docker stop $CONTAINER”
+~~~
+% pwd</li>
+    </ul>
+  </li>
 </ul>
-
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% pwd
-&lt;path-to-master-src&gt;/site
+<path-to-master-src>/site
 % git commit -am "Update site for X.Y.Z"
 % git push origin master
-</code></pre></div></div>
+~~~
 
-<ul>
-  <li>Change directory into site/target for publishing the site.</li>
-  <li>Add the new files that you just generated.
-    <ul>
-      <li>This assumes you’ve set up site/target to be a separate git workspace that tracks the asf-site branch.</li>
-    </ul>
-  </li>
-  <li>Commit to asf-site to publish the updated site.</li>
-</ul>
+* Change directory into site/target for publishing the site.
+* Add the new files that you just generated.
+   * This assumes you've set up site/target to be a separate git workspace that tracks the asf-site branch.
+* Commit to asf-site to publish the updated site.
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% cd target
+~~~
+% cd target
 % pwd
-&lt;path-to-master-src&gt;/site/target
+<path-to-master-src>/site/target
 % git commit -am "Publish site for X.Y.Z"
 % git push origin asf-site
-</code></pre></div></div>
+~~~
 
-<p>Update ORC’s jira to reflect the released version.</p>
+Update ORC's jira to reflect the released version.
 
-<ul>
-  <li>Select the resolved issues and bulk transition them to closed with following query <a href="https://issues.apache.org/jira/issues/?filter=-1">here</a>.
-    <ul>
-      <li>query: project = ORC AND fixVersion = X.Y.Z and status = Resolved ORDER BY created desc</li>
-    </ul>
-  </li>
-  <li>Mark the version as released and set the date <a href="https://issues.apache.org/jira/projects/ORC?selectedItem=com.atlassian.jira.jira-projects-plugin:release-page">here</a>.</li>
-</ul>
+* Select the resolved issues and bulk transition them to closed with following query [here](https://issues.apache.org/jira/issues/?filter=-1).
+   * query: project = ORC AND fixVersion = X.Y.Z and status = Resolved ORDER BY created desc
+* Mark the version as released and set the date [here](https://issues.apache.org/jira/projects/ORC?selectedItem=com.atlassian.jira.jira-projects-plugin:release-page).
 
-<p>It usually take up to 24 hours for the apache dist mirrors and maven central to update with the new release.</p>
+It usually take up to 24 hours for the apache dist mirrors and maven central to update with the new release.
+</path-to-master-src></path-to-master-src>
 
       </article>
     </div>
