@@ -194,6 +194,12 @@ set(SOURCE_FILES
   orc_proto.pb.h
   io/InputStream.cc
   io/OutputStream.cc
+  sargs/ExpressionTree.cc
+  sargs/Literal.cc
+  sargs/PredicateLeaf.cc
+  sargs/SargsApplier.cc
+  sargs/SearchArgument.cc
+  sargs/TruthValue.cc
   wrap/orc-proto-wrapper.cc
   Adaptor.cc
   BloomFilter.cc
