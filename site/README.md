@@ -7,7 +7,7 @@ the site is to use docker to use a standard environment.
 ## Setup
 
 1. `cd site`
-2. `git clone https://gitbox.apache.org/repos/asf/orc.git -b asf-site target`
+2. `git clone git@github.com:apache/orc.git -b asf-site target`
 
 ## Run the docker container with the preview of the site.
 

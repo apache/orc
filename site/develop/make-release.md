@@ -91,7 +91,7 @@ Publish the artifacts to Maven central staging. Make sure to have this [setup](h
 Publish from the staging area:
 
 * login to [Maven staging](https://repository.apache.org/index.html#stagingRepositories)
-* find your staging repository (search for org.apache.org)
+* find your staging repository (search for org.apache.orc)
 * close it
 * release it
 
@@ -140,7 +140,6 @@ Set up site/target to be a separate git workspace that tracks the asf-site branc
 % git fetch origin
 % git checkout asf-site
 % cd ..
-% bundle install
 ~~~
 * edit site/_data/releases.yml to add new release
    * update the state for the releases to match the changes in the Apache dist
@@ -148,10 +147,13 @@ Set up site/target to be a separate git workspace that tracks the asf-site branc
       * stable = other release still in dist
       * archived = removed from dist
 * create a new file _posts/YYYY-MM-DD-ORC-X.Y.Z.md for the news section
-* Run "bundle exec jekyll serve"
+* Run "docker build -t orc-site ."
+* Run "docker run -d -p 4000:4000 orc-site"
 * Check the website on http://0.0.0.0:4000/
-* If it looks good, use git add (from within site directory) to add the new files and commit to master with a message of "update site for X.Y.Z".
-
+* If it looks good, copy the results out of docker:
+   * Find the name of the container using "docker ps".
+   * Run "docker cp $CONTAINER:/home/orc/site/target ."
+   * Run "docker stop $CONTAINER"
 ~~~
 % pwd
 <path-to-master-src>/site
