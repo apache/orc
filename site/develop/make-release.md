@@ -136,7 +136,7 @@ Change directory in to site.
 % cd target
 Set up site/target to be a separate git workspace that tracks the asf-site branch.
 % git init
-% git remote add origin https://gitbox.apache.org/repos/asf/orc.git -t asf-site
+% git remote add origin git@github.com:apache/orc.git -t asf-site
 % git fetch origin
 % git checkout asf-site
 % cd ..
@@ -147,16 +147,14 @@ Set up site/target to be a separate git workspace that tracks the asf-site branc
       * stable = other release still in dist
       * archived = removed from dist
 * create a new file _posts/YYYY-MM-DD-ORC-X.Y.Z.md for the news section
-* Run "docker build -t orc-site ."
-* Run "docker run -d -p 4000:4000 orc-site"
-* Check the website on http://0.0.0.0:4000/
+* Run `docker build -t orc-site .`
+* Run `CONTAINER=$(docker run -d -p 4000:4000 orc-site)`
+* Check the website on [http://0.0.0.0:4000/](http://0.0.0.0:4000/)
 * If it looks good, copy the results out of docker:
-   * Find the name of the container using "docker ps".
-   * Run "docker cp $CONTAINER:/home/orc/site/target ."
-   * Run "docker stop $CONTAINER"
+   * Run `docker cp $CONTAINER:/home/orc/site/target .`
+   * Run `docker stop $CONTAINER`
+
 ~~~
-% pwd
-<path-to-master-src>/site
 % git commit -am "Update site for X.Y.Z"
 % git push origin master
 ~~~
@@ -165,11 +163,8 @@ Set up site/target to be a separate git workspace that tracks the asf-site branc
 * Add the new files that you just generated.
    * This assumes you've set up site/target to be a separate git workspace that tracks the asf-site branch.
 * Commit to asf-site to publish the updated site.
-
 ~~~
 % cd target
-% pwd
-<path-to-master-src>/site/target
 % git commit -am "Publish site for X.Y.Z"
 % git push origin asf-site
 ~~~
