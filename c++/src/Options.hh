@@ -128,6 +128,7 @@ namespace orc {
     bool throwOnHive11DecimalOverflow;
     int32_t forcedScaleOnHive11Decimal;
     bool enableLazyDecoding;
+    std::shared_ptr<SearchArgument> sargs;
 
     RowReaderOptionsPrivate() {
       selection = ColumnSelection_NONE;
@@ -248,6 +249,15 @@ namespace orc {
   RowReaderOptions& RowReaderOptions::setEnableLazyDecoding(bool enable) {
     privateBits->enableLazyDecoding = enable;
     return *this;
+  }
+
+  RowReaderOptions& RowReaderOptions::setSearchArgument(std::unique_ptr<SearchArgument> sargs) {
+    privateBits->sargs = std::move(sargs);
+    return *this;
+  }
+
+  std::shared_ptr<SearchArgument> RowReaderOptions::getSearchArgument() const {
+    return privateBits->sargs;
   }
 }
 

@@ -534,6 +534,8 @@ namespace orc {
     std::unordered_map<uint64_t, PositionProvider>& positions) {
     ColumnReader::seekToRowGroup(positions);
     inputStream->seek(positions.at(columnId));
+    bufferEnd = nullptr;
+    bufferPointer = nullptr;
   }
 
   class StringDictionaryColumnReader: public ColumnReader {
@@ -838,6 +840,9 @@ namespace orc {
     ColumnReader::seekToRowGroup(positions);
     blobStream->seek(positions.at(columnId));
     lengthRle->seek(positions.at(columnId));
+    // clear state for next read
+    lastBuffer = nullptr;
+    lastBufferLength = 0;
   }
 
   class StructColumnReader: public ColumnReader {
@@ -1553,6 +1558,8 @@ namespace orc {
     ColumnReader::seekToRowGroup(positions);
     valueStream->seek(positions.at(columnId));
     scaleDecoder->seek(positions.at(columnId));
+    buffer = nullptr;
+    bufferEnd = nullptr;
   }
 
   class Decimal128ColumnReader: public Decimal64ColumnReader {
