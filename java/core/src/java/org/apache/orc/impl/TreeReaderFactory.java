@@ -1180,6 +1180,28 @@ public class TreeReaderFactory {
     private int[] scratchScaleVector;
     private byte[] scratchBytes;
 
+    private static final long[] powerOfTenTable = {
+        1L,                   // 0
+        10L,
+        100L,
+        1_000L,
+        10_000L,
+        100_000L,
+        1_000_000L,
+        10_000_000L,
+        100_000_000L,           // 8
+        1_000_000_000L,
+        10_000_000_000L,
+        100_000_000_000L,
+        1_000_000_000_000L,
+        10_000_000_000_000L,
+        100_000_000_000_000L,
+        1_000_000_000_000_000L,
+        10_000_000_000_000_000L,   // 16
+        100_000_000_000_000_000L,
+        1_000_000_000_000_000_000L, // 18
+    };
+
     DecimalTreeReader(int columnId,
                       int precision,
                       int scale,
@@ -1290,18 +1312,14 @@ public class TreeReaderFactory {
       scaleReader.nextVector(result, scratchScaleVector, batchSize);
       if (result.noNulls) {
         for (int r=0; r < batchSize; ++r) {
-          result.vector[r] = SerializationUtils.readVslong(valueStream);
-          for(int s=scratchScaleVector[r]; s < scale; ++s) {
-            result.vector[r] *= 10;
-          }
+          final long scaleFactor = powerOfTenTable[scale - scratchScaleVector[r]];
+          result.vector[r] = SerializationUtils.readVslong(valueStream) * scaleFactor;
         }
       } else if (!result.isRepeating || !result.isNull[0]) {
         for (int r=0; r < batchSize; ++r) {
           if (!result.isNull[r]) {
-            result.vector[r] = SerializationUtils.readVslong(valueStream);
-            for(int s=scratchScaleVector[r]; s < scale; ++s) {
-              result.vector[r] *= 10;
-            }
+            final long scaleFactor = powerOfTenTable[scale - scratchScaleVector[r]];
+            result.vector[r] = SerializationUtils.readVslong(valueStream) * scaleFactor;
           }
         }
       }
