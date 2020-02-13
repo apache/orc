@@ -134,21 +134,21 @@ public class TestSerializationUtils {
       LongMath.checkedSubtract(22222222222L, Long.MIN_VALUE);
       fail("expected ArithmeticException for overflow");
     } catch (ArithmeticException ex) {
-      assertEquals(ex.getMessage(), "overflow");
+      assertEquals("overflow: checkedSubtract(22222222222, -9223372036854775808)", ex.getMessage());
     }
 
     try {
       LongMath.checkedSubtract(-22222222222L, Long.MAX_VALUE);
       fail("expected ArithmeticException for overflow");
     } catch (ArithmeticException ex) {
-      assertEquals(ex.getMessage(), "overflow");
+      assertEquals("overflow: checkedSubtract(-22222222222, 9223372036854775807)", ex.getMessage());
     }
 
     try {
       LongMath.checkedSubtract(Long.MIN_VALUE, Long.MAX_VALUE);
       fail("expected ArithmeticException for overflow");
     } catch (ArithmeticException ex) {
-      assertEquals(ex.getMessage(), "overflow");
+      assertEquals("overflow: checkedSubtract(-9223372036854775808, 9223372036854775807)", ex.getMessage());
     }
 
     assertEquals(-8106206116692740190L,
