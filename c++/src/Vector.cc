@@ -149,6 +149,13 @@ namespace orc {
     return buffer.str();
   }
 
+  void EncodedStringVectorBatch::resize(uint64_t cap) {
+    if (capacity < cap) {
+      StringVectorBatch::resize(cap);
+      index.resize(cap);
+    }
+  }
+
   StringVectorBatch::StringVectorBatch(uint64_t _capacity, MemoryPool& pool
                ): ColumnVectorBatch(_capacity, pool),
                   data(pool, _capacity),
