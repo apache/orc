@@ -53,6 +53,7 @@ namespace orc {
     virtual ~SeekableInputStream();
     virtual void seek(PositionProvider& position) = 0;
     virtual std::string getName() const = 0;
+    void throwFrom(const char* class_name);
   };
 
   /**

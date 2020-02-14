@@ -58,6 +58,21 @@ namespace orc {
                               proto::Stream_Kind kind,
                               bool shouldStream) const = 0;
 
+    std::unique_ptr<SeekableInputStream>
+                    getStreamOrThrow(const Type& type,
+                                     proto::Stream_Kind kind,
+                                     bool shouldStream) const {
+      std::unique_ptr<SeekableInputStream> stream =
+          getStream(type.getColumnId(), kind, shouldStream);
+      if (stream == nullptr) {
+        std::stringstream buffer;
+        buffer << Stream_Kind_Name(kind) << " stream not found in column "
+          << type.getColumnId() << " of type " << type.toString();
+        throw ParseError(buffer.str());
+      }
+      return stream;
+    }
+
     /**
      * Get the memory pool for this reader.
      */
