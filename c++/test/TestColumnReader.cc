@@ -4481,6 +4481,94 @@ TEST(TestColumnReader, testUnionWithManyVariants) {
 }
 
 
+TEST(TestColumnReader, testStringDictinoryIndexOverflow) {
+  MockStripeStreams streams;
+
+  // set getSelectedColumns()
+  std::vector<bool> selectedColumns(2, true);
+  EXPECT_CALL(streams, getSelectedColumns())
+      .WillRepeatedly(testing::Return(selectedColumns));
+
+  // set getEncoding
+  proto::ColumnEncoding directEncoding;
+  directEncoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
+  EXPECT_CALL(streams, getEncoding(0))
+      .WillRepeatedly(testing::Return(directEncoding));
+  proto::ColumnEncoding dictionaryEncoding;
+  dictionaryEncoding.set_kind(proto::ColumnEncoding_Kind_DICTIONARY);
+  dictionaryEncoding.set_dictionarysize(2);
+  EXPECT_CALL(streams, getEncoding(1))
+      .WillRepeatedly(testing::Return(dictionaryEncoding));
+
+  // set getStream
+  EXPECT_CALL(streams, getStreamProxy(0, proto::Stream_Kind_PRESENT, true))
+      .WillRepeatedly(testing::Return(nullptr));
+  // [11110000 for 0..127] * 2
+  const unsigned char buffer1[] = { 0x7f, 0xf0, 0x7f, 0xf0 };
+  EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_PRESENT, true))
+      .WillRepeatedly(testing::Return(new SeekableArrayInputStream
+                                      (buffer1, ARRAY_SIZE(buffer1))));
+  // [0 for x in 1..256*2] + [1 for x in 1..256*3]
+  const unsigned char buffer2[] = { 0x7f, 0x00, 0x00,
+                                    0x7f, 0x00, 0x00,
+                                    0x7f, 0x00, 0x01,
+                                    0x7f, 0x00, 0x01,
+                                    0x7f, 0x00, 0x01 };
+  EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_DATA, true))
+      .WillRepeatedly(testing::Return(new SeekableArrayInputStream
+                                      (buffer2, ARRAY_SIZE(buffer2))));
+  const unsigned char buffer3[] = { 0x4f, 0x52, 0x43, 0x4f, 0x77, 0x65, 0x6e };
+  EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_DICTIONARY_DATA,
+                                      false))
+      .WillRepeatedly(testing::Return(new SeekableArrayInputStream
+                                      (buffer3, ARRAY_SIZE(buffer3))));
+  const unsigned char buffer4[] = { 0x02, 0x01, 0x03 };
+  EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_LENGTH, false))
+      .WillRepeatedly(testing::Return(new SeekableArrayInputStream
+                                      (buffer4, ARRAY_SIZE(buffer4))));
+
+  // create the row type
+  std::unique_ptr<Type> rowType = createStructType();
+  rowType->addStructField("myString",createPrimitiveType(STRING));
+  std::unique_ptr<ColumnReader> reader = buildReader(*rowType, streams);
+
+  EncodedStringVectorBatch *encodedStringBatch =
+      new EncodedStringVectorBatch(1024, *getDefaultPool());
+
+  StructVectorBatch batch(1024, *getDefaultPool());
+  batch.fields.push_back(encodedStringBatch);
+  reader->nextEncoded(batch, 8, 0);
+  ASSERT_EQ(8, batch.numElements);
+  ASSERT_EQ(true, !batch.hasNulls);
+  ASSERT_EQ(8, encodedStringBatch->numElements);
+  ASSERT_EQ(true, encodedStringBatch->hasNulls);
+  reader->nextEncoded(batch, 1100, 0);
+  ASSERT_EQ(1100, batch.numElements);
+  ASSERT_EQ(true, !batch.hasNulls);
+  ASSERT_EQ(1100, encodedStringBatch->numElements);
+  ASSERT_EQ(true, encodedStringBatch->hasNulls);
+  for (size_t i = 0; i < batch.numElements; ++i) {
+    if (i & 4) {
+      EXPECT_EQ(0, encodedStringBatch->notNull[i]);
+    } else {
+      EXPECT_EQ(1, encodedStringBatch->notNull[i]);
+      const char* expected = i < 512 ? "ORC" : "Owen";
+      int64_t index = encodedStringBatch->index.data()[i];
+
+      char* actualString;
+      int64_t actualLength;
+      encodedStringBatch->dictionary->getValueByIndex(index, actualString, actualLength);
+      ASSERT_EQ(strlen(expected), actualLength)
+        << "Wrong length at " << i;
+
+      for (size_t letter = 0; letter < strlen(expected); ++letter) {
+        EXPECT_EQ(expected[letter], actualString[letter])
+        << "Wrong contents at " << i << ", " << letter;
+      }
+    }
+  }
+}
+
 INSTANTIATE_TEST_CASE_P(OrcColumnReaderTest, TestColumnReaderEncoded, Values(true, false));
 
 }  // namespace orc

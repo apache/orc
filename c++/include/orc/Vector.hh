@@ -154,6 +154,7 @@ namespace orc {
     EncodedStringVectorBatch(uint64_t capacity, MemoryPool& pool);
     virtual ~EncodedStringVectorBatch();
     std::string toString() const;
+    void resize(uint64_t capacity);
     std::shared_ptr<StringDictionary> dictionary;
 
     // index for dictionary entry
