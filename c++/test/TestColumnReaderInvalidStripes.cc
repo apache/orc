@@ -58,17 +58,22 @@ namespace orc {
     virtual ~TestColumnReaderInvalidStripes();
     MockStripeStreams streams;
   protected:
-    void SetUp() {
+    void SetUp(proto::ColumnEncoding_Kind encoding_kind) {
       // set getSelectedColumns()
       std::vector<bool> selectedColumns(2, true);
       EXPECT_CALL(streams, getSelectedColumns())
           .WillRepeatedly(testing::Return(selectedColumns));
 
       // set getEncoding
-      proto::ColumnEncoding directEncoding;
-      directEncoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
-      EXPECT_CALL(streams, getEncoding(testing::_))
-          .WillRepeatedly(testing::Return(directEncoding));
+      proto::ColumnEncoding col0Encoding; // struct
+      proto::ColumnEncoding col1Encoding; // actual column
+      col0Encoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
+      col1Encoding.set_kind(encoding_kind);
+      col1Encoding.set_dictionarysize(2); // only matters in case of dict
+      EXPECT_CALL(streams, getEncoding(0))
+          .WillRepeatedly(testing::Return(col0Encoding));
+      EXPECT_CALL(streams, getEncoding(1))
+          .WillRepeatedly(testing::Return(col1Encoding));
 
       // set getStream
       EXPECT_CALL(streams, getStreamProxy(0, proto::Stream_Kind_PRESENT, true))
@@ -80,21 +85,26 @@ namespace orc {
       EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_DATA, true))
           .WillRepeatedly(testing::Return(nullptr));
     }
+    void SetUp(){
+      SetUp(proto::ColumnEncoding_Kind_DIRECT);
+    }
 
     void TearDown() {
       ::testing::Mock::VerifyAndClearExpectations(&streams);
     }
 
-    void SetNullLengthExpect() {
-      EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_LENGTH, true))
+    void SetNullLengthExpect(bool shouldPage = true) {
+      EXPECT_CALL(streams,
+                  getStreamProxy(1, proto::Stream_Kind_LENGTH, shouldPage))
           .WillRepeatedly(testing::Return(nullptr));
     }
 
-    void SetNonNullLengthExpect() {
+    void SetNonNullLengthExpect(bool shouldPage = true) {
       const unsigned char buffer4[] =  { 0x02, 0x01, 0x03 };
-      EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_LENGTH, true))
-          .WillRepeatedly(testing::Return(new SeekableArrayInputStream
-                                          (buffer4, ARRAY_SIZE(buffer4))));
+      EXPECT_CALL(streams,
+                  getStreamProxy(1,proto::Stream_Kind_LENGTH, shouldPage))
+          .WillRepeatedly(testing::Return(new SeekableArrayInputStream(
+                                              buffer4, ARRAY_SIZE(buffer4))));
     }
 
     void RunTest(std::unique_ptr<Type> type, const char* msg) {
@@ -140,11 +150,14 @@ TEST_F(TestColumnReaderInvalidStripes, testTimestamp) {
          "DATA stream not found in column 1 of type timestamp");
 }
 
+// Data is OK, but secondary is nullptr.
 TEST_F(TestColumnReaderInvalidStripes, testTimestampSecondary) {
+  // Data should not return null now.
   const unsigned char buffer1[] = { 0x3d };
   EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_DATA, true))
-          .WillRepeatedly(testing::Return(new SeekableArrayInputStream
-                                          (buffer1, ARRAY_SIZE(buffer1))));
+      .WillRepeatedly(testing::Return(new SeekableArrayInputStream
+                                      (buffer1, ARRAY_SIZE(buffer1))));
+  // Setting up empty secondary.
   EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_SECONDARY, true))
           .WillRepeatedly(testing::Return(nullptr));
   RunTest(createPrimitiveType(TIMESTAMP),
@@ -156,14 +169,58 @@ TEST_F(TestColumnReaderInvalidStripes, testDouble) {
          "DATA stream not found in column 1 of type double");
 }
 
+TEST_F(TestColumnReaderInvalidStripes, testStringDictionaryData) {
+  ::testing::Mock::VerifyAndClearExpectations(&streams);
+  SetUp(proto::ColumnEncoding_Kind_DICTIONARY);
+
+  RunTest(createPrimitiveType(STRING),
+         "DATA stream not found in column 1 of type string");
+}
+
+// Data is OK, but length is nullptr.
+TEST_F(TestColumnReaderInvalidStripes, testStringDictionaryLength) {
+  ::testing::Mock::VerifyAndClearExpectations(&streams);
+  SetUp(proto::ColumnEncoding_Kind_DICTIONARY);
+
+  // Data should not return null now.
+  const unsigned char buffer1[] = { 0x3d };
+  EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_DATA, true))
+      .WillRepeatedly(testing::Return(new SeekableArrayInputStream
+                                      (buffer1, ARRAY_SIZE(buffer1))));
+  SetNullLengthExpect(false);
+
+  RunTest(createPrimitiveType(STRING),
+         "LENGTH stream not found in column 1 of type string");
+}
+
+// Data and length is OK, but blob dictionary is not.
+TEST_F(TestColumnReaderInvalidStripes, testStringDictionaryBlob) {
+  ::testing::Mock::VerifyAndClearExpectations(&streams);
+  SetUp(proto::ColumnEncoding_Kind_DICTIONARY);
+
+  // Data should not return null now.
+  const unsigned char buffer1[] = { 0x3d };
+  EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_DATA, true))
+      .WillRepeatedly(testing::Return(new SeekableArrayInputStream
+                                      (buffer1, ARRAY_SIZE(buffer1))));
+  SetNonNullLengthExpect(false);
+
+  EXPECT_CALL(streams,
+              getStreamProxy(1, proto::Stream_Kind_DICTIONARY_DATA, false))
+      .WillRepeatedly(testing::Return(nullptr));
+
+  RunTest(createPrimitiveType(STRING),
+         "DICTIONARY_DATA stream not found in column 1 of type string");
+}
+
 // Length stream is called first.
-TEST_F(TestColumnReaderInvalidStripes, testStringLength) {
+TEST_F(TestColumnReaderInvalidStripes, testStringDirectLength) {
   SetNullLengthExpect();
   RunTest(createPrimitiveType(STRING),
          "LENGTH stream not found in column 1 of type string");
 }
 
-TEST_F(TestColumnReaderInvalidStripes, testStringData) {
+TEST_F(TestColumnReaderInvalidStripes, testStringDirectData) {
   SetNonNullLengthExpect();
   RunTest(createPrimitiveType(STRING),
          "DATA stream not found in column 1 of type string");
