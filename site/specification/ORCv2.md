@@ -1121,7 +1121,7 @@ DIRECT        | PRESENT         | Yes      | Boolean RLE
               | DATA            | No       | Signed Integer RLE v2
 DIRECT_V2     | PRESENT         | Yes      | Boolean RLE
               | DATA            | No       | Unbounded base 128 varints
-              | SECONDARY       | No       | Unsigned Integer RLE v2
+              | SECONDARY       | No       | Signed Integer RLE v2
 
 
 ## Date Columns
