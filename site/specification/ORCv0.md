@@ -664,13 +664,13 @@ the precision to a maximum of 38 digits, which conveniently uses 127
 bits plus a sign bit. The current encoding of decimal columns stores
 the integer representation of the value as an unbounded length zigzag
 encoded base 128 varint. The scale is stored in the SECONDARY stream
-as an signed integer.
+as a signed integer.
 
 Encoding      | Stream Kind     | Optional | Contents
 :------------ | :-------------- | :------- | :-------
 DIRECT        | PRESENT         | Yes      | Boolean RLE
               | DATA            | No       | Unbounded base 128 varints
-              | SECONDARY       | No       | Unsigned Integer RLE v1
+              | SECONDARY       | No       | Signed Integer RLE v1
 
 ## Date Columns
 
