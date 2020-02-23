@@ -36,7 +36,7 @@ Apache Pig added support for reading and writing ORC files in [Pig
 ### [Apache Spark](https://spark.apache.org/)
 
 Apache Spark has [added
-support](https://hortonworks.com/blog/bringing-orc-support-into-apache-spark/)
+support](https://databricks.com/blog/2015/07/16/joint-blog-post-bringing-orc-support-into-apache-spark.html)
 for reading and writing ORC files with support for column project and
 predicate push down.
 
