@@ -32,7 +32,7 @@ matrix:
       - export CXX=clang++-4.0
   - compiler: clang
     os: osx
-    osx_image: xcode7.3
+    osx_image: xcode9.4
     script:
     - brew link --overwrite --force openssl
     - mkdir build
@@ -41,7 +41,7 @@ matrix:
     - make package test-out
   - compiler: clang
     os: osx
-    osx_image: xcode10.3
+    osx_image: xcode11.3
     script:
     - brew link --overwrite --force openssl
     - mkdir build
