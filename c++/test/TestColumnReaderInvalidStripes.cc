@@ -100,11 +100,11 @@ namespace orc {
     }
 
     void SetNonNullLengthExpect(bool shouldPage = true) {
-      const unsigned char buffer4[] =  { 0x02, 0x01, 0x03 };
+      const unsigned char buffer[] = { 0x02, 0x01, 0x03, 0x02, 0x01, 0x03 };
       EXPECT_CALL(streams,
-                  getStreamProxy(1,proto::Stream_Kind_LENGTH, shouldPage))
+                  getStreamProxy(1, proto::Stream_Kind_LENGTH, shouldPage))
           .WillRepeatedly(testing::Return(new SeekableArrayInputStream(
-                                              buffer4, ARRAY_SIZE(buffer4))));
+                                              buffer, ARRAY_SIZE(buffer))));
     }
 
     void RunTest(std::unique_ptr<Type> type, const char* msg) {
@@ -199,7 +199,7 @@ TEST_F(TestColumnReaderInvalidStripes, testStringDictionaryBlob) {
   SetUp(proto::ColumnEncoding_Kind_DICTIONARY);
 
   // Data should not return null now.
-  const unsigned char buffer1[] = { 0x3d };
+  const unsigned char buffer1[] = { 0x2f, 0x00, 0x00, 0x2f, 0x00, 0x01 };
   EXPECT_CALL(streams, getStreamProxy(1, proto::Stream_Kind_DATA, true))
       .WillRepeatedly(testing::Return(new SeekableArrayInputStream
                                       (buffer1, ARRAY_SIZE(buffer1))));

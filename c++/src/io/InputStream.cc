@@ -59,7 +59,7 @@ namespace orc {
   void SeekableInputStream::throwFrom(const char* class_name) {
     std::stringstream msg;
     msg << "Read past end of stream in " << class_name
-        << "or some errors occured: " << this->getName();
+        << " or some errors occured: " << this->getName();
     throw ParseError(msg.str());
   }
 
