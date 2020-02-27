@@ -134,7 +134,7 @@ namespace orc {
     DataBuffer<int64_t> dictionaryOffset;
 
     void getValueByIndex(int64_t index, char*& valPtr, int64_t& length) {
-      if (index < 0 || static_cast<uint64_t>(index) >= dictionaryOffset.size()) {
+      if (index < 0 || static_cast<uint64_t>(index) + 1 >= dictionaryOffset.size()) {
         throw std::out_of_range("index out of range.");
       }
 
