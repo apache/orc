@@ -55,7 +55,7 @@ namespace orc {
     };
 
   public:
-    virtual ~TestColumnReaderInvalidStripes();
+    virtual ~TestColumnReaderInvalidStripes() override;
     MockStripeStreams streams;
   protected:
     void SetUp(proto::ColumnEncoding_Kind encoding_kind) {
