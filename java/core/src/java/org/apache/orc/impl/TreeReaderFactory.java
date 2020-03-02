@@ -166,6 +166,28 @@ public class TreeReaderFactory {
     protected int vectorColumnCount;
     protected final Context context;
 
+    protected static final long[] powerOfTenTable = {
+        1L,                   // 0
+        10L,
+        100L,
+        1_000L,
+        10_000L,
+        100_000L,
+        1_000_000L,
+        10_000_000L,
+        100_000_000L,           // 8
+        1_000_000_000L,
+        10_000_000_000L,
+        100_000_000_000L,
+        1_000_000_000_000L,
+        10_000_000_000_000L,
+        100_000_000_000_000L,
+        1_000_000_000_000_000L,
+        10_000_000_000_000_000L,   // 16
+        100_000_000_000_000_000L,
+        1_000_000_000_000_000_000L, // 18
+    };
+
     TreeReader(int columnId, Context context) throws IOException {
       this(columnId, null, context);
     }
@@ -1075,9 +1097,7 @@ public class TreeReaderFactory {
       int zeros = 7 & (int) serialized;
       int result = (int) (serialized >>> 3);
       if (zeros != 0) {
-        for (int i = 0; i <= zeros; ++i) {
-          result *= 10;
-        }
+        result *= (int) powerOfTenTable[zeros + 1];
       }
       return result;
     }
@@ -1179,28 +1199,6 @@ public class TreeReaderFactory {
     protected IntegerReader scaleReader = null;
     private int[] scratchScaleVector;
     private byte[] scratchBytes;
-
-    private static final long[] powerOfTenTable = {
-        1L,                   // 0
-        10L,
-        100L,
-        1_000L,
-        10_000L,
-        100_000L,
-        1_000_000L,
-        10_000_000L,
-        100_000_000L,           // 8
-        1_000_000_000L,
-        10_000_000_000L,
-        100_000_000_000L,
-        1_000_000_000_000L,
-        10_000_000_000_000L,
-        100_000_000_000_000L,
-        1_000_000_000_000_000L,
-        10_000_000_000_000_000L,   // 16
-        100_000_000_000_000_000L,
-        1_000_000_000_000_000_000L, // 18
-    };
 
     DecimalTreeReader(int columnId,
                       int precision,
