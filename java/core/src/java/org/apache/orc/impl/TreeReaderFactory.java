@@ -166,7 +166,7 @@ public class TreeReaderFactory {
     protected int vectorColumnCount;
     protected final Context context;
 
-    protected static final long[] powerOfTenTable = {
+    static final long[] powerOfTenTable = {
         1L,                   // 0
         10L,
         100L,
@@ -1097,7 +1097,7 @@ public class TreeReaderFactory {
       int zeros = 7 & (int) serialized;
       int result = (int) (serialized >>> 3);
       if (zeros != 0) {
-        result *= (int) TreeReader.powerOfTenTable[zeros + 1];
+        result *= (int) powerOfTenTable[zeros + 1];
       }
       return result;
     }
@@ -1310,13 +1310,13 @@ public class TreeReaderFactory {
       scaleReader.nextVector(result, scratchScaleVector, batchSize);
       if (result.noNulls) {
         for (int r=0; r < batchSize; ++r) {
-          final long scaleFactor = TreeReader.powerOfTenTable[scale - scratchScaleVector[r]];
+          final long scaleFactor = powerOfTenTable[scale - scratchScaleVector[r]];
           result.vector[r] = SerializationUtils.readVslong(valueStream) * scaleFactor;
         }
       } else if (!result.isRepeating || !result.isNull[0]) {
         for (int r=0; r < batchSize; ++r) {
           if (!result.isNull[r]) {
-            final long scaleFactor = TreeReader.powerOfTenTable[scale - scratchScaleVector[r]];
+            final long scaleFactor = powerOfTenTable[scale - scratchScaleVector[r]];
             result.vector[r] = SerializationUtils.readVslong(valueStream) * scaleFactor;
           }
         }
