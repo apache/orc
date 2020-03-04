@@ -76,7 +76,7 @@ public class DecimalBench implements OrcBenchmark {
   /**
    * Abstract out whether we are writing short or long decimals
    */
-  interface Loader {
+  public interface Loader {
     /**
      * Load the data from the values array into the ColumnVector.
      * @param vector the output
@@ -220,7 +220,7 @@ public class DecimalBench implements OrcBenchmark {
     Path path;
     boolean[] include;
     Reader reader;
-    OrcFile.ReaderOptions options;
+    Reader.Options readerOptions;
 
     @Setup
     public void setup() throws IOException {
@@ -238,13 +238,13 @@ public class DecimalBench implements OrcBenchmark {
       reader = OrcFile.createReader(path,
           OrcFile.readerOptions(conf).filesystem(fs));
       // just read the decimal columns from the first stripe
-      reader.options().include(include).range(0, 1000);
+      readerOptions = reader.options().include(include).range(0, 1000);
     }
   }
 
   @Benchmark
   public void read(Blackhole blackhole, InputState state) throws Exception {
-    RecordReader rows = state.reader.rows();
+    RecordReader rows = state.reader.rows(state.readerOptions);
     while (rows.nextBatch(state.batch)) {
       blackhole.consume(state.batch);
     }
