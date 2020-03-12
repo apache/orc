@@ -21,10 +21,10 @@ FROM ubuntu:14.04
 MAINTAINER Owen O'Malley <owen@hortonworks.com>
 
 RUN apt-get update
-RUN apt-get install -y software-properties-common
+RUN apt-get --no-install-recommends install -y software-properties-common
 RUN add-apt-repository -y ppa:openjdk-r/ppa
 RUN apt-get update
-RUN apt-get install -y \
+RUN apt-get --no-install-recommends install -y \
   autoconf \
   cmake \
   gcc \

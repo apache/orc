@@ -23,7 +23,7 @@ MAINTAINER Owen O'Malley <owen@hortonworks.com>
 ADD sources.list apt.conf /etc/apt/
 
 RUN apt-get update
-RUN apt-get install -y \
+RUN apt-get --no-install-recommends install -y \
   autoconf \
   cmake \
   gcc \

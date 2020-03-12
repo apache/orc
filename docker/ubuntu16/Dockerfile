@@ -21,7 +21,7 @@ FROM ubuntu:16.04
 MAINTAINER Owen O'Malley <owen@hortonworks.com>
 
 RUN apt-get update
-RUN apt-get install -y \
+RUN apt-get --no-install-recommends install -y \
   cmake \
   default-jdk \
   gcc \

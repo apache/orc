@@ -21,11 +21,11 @@ FROM ubuntu:16.04
 MAINTAINER Owen O'Malley <owen@hortonworks.com>
 
 RUN apt-get update
-RUN apt-get install -y wget software-properties-common
+RUN apt-get --no-install-recommends install -y wget software-properties-common
 RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
 RUN apt-add-repository "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-5.0 main"
 RUN apt-get update
-RUN apt-get install -y \
+RUN apt-get --no-install-recommends install -y \
   cmake \
   default-jdk \
   clang-5.0 \

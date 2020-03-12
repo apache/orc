@@ -14,6 +14,6 @@
 
 apt-get update
 DEBIAN_FRONTEND=noninteractive apt-get upgrade -y
-apt-get install -y \
+apt-get --no-install-recommends install -y \
    emacs-nox \
    snapcraft

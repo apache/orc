@@ -13,7 +13,7 @@ If you don't use VM, you'll need to install snapcraft, which is the tool to buil
 snaps.
 
 ```bash
-% sudo apt-get install snapcraft
+% sudo apt-get --no-install-recommends install snapcraft
 ```
 
 In both cases, go into the snap directory and build the snap:
