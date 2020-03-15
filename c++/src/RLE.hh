@@ -27,7 +27,8 @@
 namespace orc {
 
   inline int64_t zigZag(int64_t value) {
-    return (value << 1) ^ (value >> 63);
+    // avoid UB with left-shift casting to unsigned
+    return static_cast<int64_t>(static_cast<uint64_t>(value) << 1) ^ (value >> 63);
   }
 
   inline int64_t unZigZag(uint64_t value) {

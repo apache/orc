@@ -172,7 +172,11 @@ namespace orc {
 
     if (_stats.hasSum()) {
       bool wasPositive = _stats.getSum() >= 0;
-      _stats.setSum(value * repetitions + _stats.getSum());
+      // use unsigned types for modulo behaviour without UB
+      _stats.setSum
+        (static_cast<int64_t>
+          (static_cast<uint64_t>(value * repetitions) +
+             static_cast<uint64_t>(_stats.getSum())));
       if ((value >= 0) == wasPositive) {
         _stats.setHasSum((_stats.getSum() >= 0) == wasPositive);
       }

@@ -85,6 +85,7 @@ namespace orc {
       // safe, and since LZO requires an explicit "stop" command, the decoder
       // will still throw a exception.
       //
+      // use memcpy instead of casts to avoid UB with misaligned types
 
       bool firstCommand = true;
       uint32_t lastLiteralLength = 0;
@@ -203,7 +204,9 @@ namespace orc {
           if (input + SIZE_OF_SHORT > inputLimit) {
             throw MalformedInputException(input - inputAddress);
           }
-          uint32_t trailer = *reinterpret_cast<const uint16_t*>(input) & 0xFFFF;
+          uint16_t u16Temp;
+          memcpy(&u16Temp, input, sizeof(uint16_t));
+          uint32_t trailer = u16Temp & 0xFFFFU;
           input += SIZE_OF_SHORT;
 
           // copy offset :: 16 bits :: valid range [32767..49151]
@@ -243,7 +246,9 @@ namespace orc {
           if (input + SIZE_OF_SHORT > inputLimit) {
             throw MalformedInputException(input - inputAddress);
           }
-          int32_t trailer = *reinterpret_cast<const int16_t*>(input) & 0xFFFF;
+          int16_t i16Temp;
+          memcpy(&i16Temp, input, sizeof(int16_t));
+          int32_t trailer = i16Temp & 0xFFFF;
           input += SIZE_OF_SHORT;
 
           // copy offset :: 14 bits :: valid range [0..16383]
@@ -312,13 +317,11 @@ namespace orc {
               output += SIZE_OF_INT;
               matchAddress += increment32;
 
-              *reinterpret_cast<int32_t*>(output) =
-                *reinterpret_cast<int32_t*>(matchAddress);
+              memcpy(output, matchAddress, sizeof(int32_t));
               output += SIZE_OF_INT;
               matchAddress -= decrement64;
             } else {
-              *reinterpret_cast<int64_t*>(output) =
-                *reinterpret_cast<int64_t*>(matchAddress);
+              memcpy(output, matchAddress, sizeof(int64_t));
               matchAddress += SIZE_OF_LONG;
               output += SIZE_OF_LONG;
             }
@@ -329,8 +332,7 @@ namespace orc {
               }
 
               while (output < fastOutputLimit) {
-                *reinterpret_cast<int64_t*>(output) =
-                  *reinterpret_cast<int64_t*>(matchAddress);
+                memcpy(output, matchAddress, sizeof(int64_t));
                 matchAddress += SIZE_OF_LONG;
                 output += SIZE_OF_LONG;
               }
@@ -340,8 +342,7 @@ namespace orc {
               }
             } else {
               while (output < matchOutputLimit) {
-                *reinterpret_cast<int64_t*>(output) =
-                  *reinterpret_cast<int64_t*>(matchAddress);
+                memcpy(output, matchAddress, sizeof(int64_t));
                 matchAddress += SIZE_OF_LONG;
                 output += SIZE_OF_LONG;
               }
@@ -366,8 +367,7 @@ namespace orc {
           // fast copy. We may over-copy but there's enough room in input
           // and output to not overrun them
           do {
-            *reinterpret_cast<int64_t*>(output) =
-              *reinterpret_cast<const int64_t*>(input);
+            memcpy(output, input, sizeof(int64_t));
             input += SIZE_OF_LONG;
             output += SIZE_OF_LONG;
           } while (output < literalOutputLimit);
@@ -377,9 +377,10 @@ namespace orc {
         }
         lastLiteralLength = literalLength;
       }
-
+      
+      int16_t i16Temp;
       if (input + SIZE_OF_SHORT > inputLimit &&
-          *reinterpret_cast<const int16_t*>(input) != 0) {
+          (memcpy(&i16Temp, input, sizeof(int16_t)), i16Temp) != 0) {
         throw MalformedInputException(input - inputAddress);
       }
       input += SIZE_OF_SHORT;

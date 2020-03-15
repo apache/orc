@@ -224,11 +224,12 @@ namespace orc {
   DIAGNOSTIC_POP
 
   void BloomFilterImpl::addHash(uint64_t hash64) {
-    int32_t hash1 = static_cast<int32_t>(hash64 & 0xffffffff);
-    int32_t hash2 = static_cast<int32_t>(hash64 >> 32);
+    // use unsigned type to obtain modulo behaviour without UB
+    uint32_t hash1 = static_cast<uint32_t>(hash64 & 0xffffffffU);
+    uint32_t hash2 = static_cast<uint32_t>(hash64 >> 32);
 
     for (int32_t i = 1; i <= mNumHashFunctions; ++i) {
-      int32_t combinedHash = hash1 + i * hash2;
+      uint32_t combinedHash = hash1 + i * hash2;
       // hashcode should be positive, flip all the bits if it's negative
       if (combinedHash < 0) {
         combinedHash = ~combinedHash;
@@ -239,11 +240,12 @@ namespace orc {
   }
 
   bool BloomFilterImpl::testHash(uint64_t hash64) const{
-    int32_t hash1 = static_cast<int32_t>(hash64 & 0xffffffff);
-    int32_t hash2 = static_cast<int32_t>(hash64 >> 32);
+    // use unsigned type to obtain modulo behaviour without UB
+    uint32_t hash1 = static_cast<uint32_t>(hash64 & 0xffffffffU);
+    uint32_t hash2 = static_cast<uint32_t>(hash64 >> 32);
 
     for (int32_t i = 1; i <= mNumHashFunctions; ++i) {
-      int32_t combinedHash = hash1 + i * hash2;
+      uint32_t combinedHash = hash1 + i * hash2;
       // hashcode should be positive, flip all the bits if it's negative
       if (combinedHash < 0) {
         combinedHash = ~combinedHash;
