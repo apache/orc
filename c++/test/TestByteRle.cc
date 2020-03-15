@@ -1509,6 +1509,7 @@ TEST(BooleanRle, seekBoolAndByteRLE) {
                     << "Output wrong at " << i;
     }
 
+    delete [] data;
     delete [] decodedData;
   }
 }  // namespace orc
