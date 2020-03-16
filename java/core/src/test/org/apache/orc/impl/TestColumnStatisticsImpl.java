@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,7 +21,6 @@ package org.apache.orc.impl;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.serde2.io.DateWritable;
-import org.apache.orc.ColumnStatistics;
 import org.apache.orc.DecimalColumnStatistics;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
@@ -40,7 +39,7 @@ import static org.junit.Assert.assertTrue;
 public class TestColumnStatisticsImpl {
 
   @Test
-  public void testUpdateDate() throws Exception {
+  public void testUpdateDate() {
     ColumnStatisticsImpl stat = ColumnStatisticsImpl.create(TypeDescription.createDate());
     DateWritable date = new DateWritable(16400);
     stat.increment();
@@ -83,12 +82,56 @@ public class TestColumnStatisticsImpl {
     TimestampColumnStatistics stats =
         (TimestampColumnStatistics) reader.getStatistics()[0];
     assertEquals("1995-01-01 00:00:00.688", stats.getMinimum().toString());
-    assertEquals("2037-01-01 00:00:00.0", stats.getMaximum().toString());
+    // ORC-611: add TS stats nanosecond support for older files by using (max TS + 0.999 ms)
+    assertEquals("2037-01-01 00:00:00.000999999", stats.getMaximum().toString());
     TimeZone.setDefault(original);
   }
 
   @Test
-  public void testDecimal64Overflow() throws IOException {
+  public void testTimestamps() {
+    TimeZone original = TimeZone.getDefault();
+    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+    TypeDescription instant = TypeDescription.createTimestampInstant();
+    ColumnStatisticsImpl stats = ColumnStatisticsImpl.create(instant);
+    TimestampColumnStatistics dstats = (TimestampColumnStatistics) stats;
+    assertEquals(null, dstats.getMinimumUTC());
+    assertEquals(null, dstats.getMaximumUTC());
+    stats.updateTimestamp(123, 456789);
+    stats.updateTimestamp(1234, 567890);
+    stats.increment(2);
+    assertEquals("1970-01-01 00:00:00.123456789", dstats.getMinimum().toString());
+    assertEquals("1970-01-01 00:00:01.23456789", dstats.getMaximum().toString());
+    stats.updateTimestamp(123, 400000);
+    stats.updateTimestamp(1234, 600000);
+    assertEquals("1970-01-01 00:00:00.1234", dstats.getMinimum().toString());
+    assertEquals("1970-01-01 00:00:01.2346", dstats.getMaximum().toString());
+    stats.updateTimestamp(122, 300000);
+    stats.updateTimestamp(1235, 400000);
+    assertEquals("1970-01-01 00:00:00.1223", dstats.getMinimum().toString());
+    assertEquals("1970-01-01 00:00:01.2354", dstats.getMaximum().toString());
+    stats.merge(stats);
+    assertEquals("1970-01-01 00:00:00.1223", dstats.getMinimum().toString());
+    assertEquals("1970-01-01 00:00:01.2354", dstats.getMaximum().toString());
+    ColumnStatisticsImpl stats2 = ColumnStatisticsImpl.create(instant);
+    stats2.updateTimestamp(100, 1);
+    stats2.increment(1);
+    TimestampColumnStatistics dstats2 = (TimestampColumnStatistics) stats2;
+    assertEquals("1970-01-01 00:00:00.100000001", dstats2.getMinimum().toString());
+    assertEquals("1970-01-01 00:00:00.100000001", dstats2.getMaximum().toString());
+    stats.merge(stats2);
+    assertEquals("1970-01-01 00:00:00.100000001", dstats.getMinimum().toString());
+    assertEquals("1970-01-01 00:00:01.2354", dstats.getMaximum().toString());
+    stats2.updateTimestamp(2000, 123456);
+    assertEquals("1970-01-01 00:00:00.100000001", dstats2.getMinimum().toString());
+    assertEquals("1970-01-01 00:00:02.000123456", dstats2.getMaximum().toString());
+    stats.merge(stats2);
+    assertEquals("1970-01-01 00:00:00.100000001", dstats.getMinimum().toString());
+    assertEquals("1970-01-01 00:00:02.000123456", dstats.getMaximum().toString());
+    TimeZone.setDefault(original);
+  }
+
+  @Test
+  public void testDecimal64Overflow() {
     TypeDescription schema = TypeDescription.fromString("decimal(18,6)");
     OrcProto.ColumnStatistics.Builder pb =
         OrcProto.ColumnStatistics.newBuilder();
@@ -150,7 +193,7 @@ public class TestColumnStatisticsImpl {
   }
 
   @Test
-  public void testCollectionColumnStats() throws Exception {
+  public void testCollectionColumnStats() {
     /* test List */
     final ColumnStatisticsImpl statList = ColumnStatisticsImpl.create(TypeDescription.createList(TypeDescription.createInt()));
 
