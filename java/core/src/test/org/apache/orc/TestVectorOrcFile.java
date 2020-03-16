@@ -1434,9 +1434,10 @@ public class TestVectorOrcFile {
     writer.close();
 
     // check the stats to make sure they match up to the millisecond
+    // ORC-611 update: nanoseconds are now supported!
     ColumnStatistics[] stats = writer.getStatistics();
     TimestampColumnStatistics tsStat = (TimestampColumnStatistics) stats[1];
-    assertEquals(String.format("%04d-12-12 12:34:56.0", maxYear - 1),
+    assertEquals(String.format("%04d-12-12 12:34:56.0001", maxYear - 1),
         tsStat.getMaximum().toString());
     assertEquals(String.format("%04d-05-05 12:34:56.0", minYear),
         tsStat.getMinimum().toString());
@@ -1784,9 +1785,9 @@ public class TestVectorOrcFile {
         ((TimestampColumnStatistics) stats[1]).getMinimum().toString());
     assertEquals("1969-12-31 19:00:00.0",
         ((TimestampColumnStatistics) stats[1]).getMinimumUTC().toString());
-    assertEquals("2037-05-05 12:34:56.203",
+    assertEquals("2037-05-05 12:34:56.2037",
         ((TimestampColumnStatistics) stats[1]).getMaximum().toString());
-    assertEquals("2037-05-05 08:34:56.203",
+    assertEquals("2037-05-05 08:34:56.2037",
         ((TimestampColumnStatistics) stats[1]).getMaximumUTC().toString());
 
     // check the instant statistics

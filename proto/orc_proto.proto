@@ -67,6 +67,9 @@ message TimestampStatistics {
   optional sint64 maximum = 2;
   optional sint64 minimumUtc = 3;
   optional sint64 maximumUtc = 4;
+  // store the lower 6 TS digits for min/max to achieve nanosecond precision
+  optional int32 minimumNanos = 5;
+  optional int32 maximumNanos = 6;
 }
 
 message BinaryStatistics {
