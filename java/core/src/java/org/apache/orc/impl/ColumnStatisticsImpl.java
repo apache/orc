@@ -1638,8 +1638,14 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
   private static class TimestampStatisticsImpl extends ColumnStatisticsImpl
       implements TimestampColumnStatistics {
-    private Long minimum = null;
-    private Long maximum = null;
+    private static final int DEFAULT_MIN_NANOS = 000_000;
+    private static final int DEFAULT_MAX_NANOS = 999_999;
+
+    private long minimum = Long.MAX_VALUE;
+    private long maximum = Long.MIN_VALUE;
+
+    private int minNanos = DEFAULT_MIN_NANOS;
+    private int maxNanos = DEFAULT_MAX_NANOS;
 
     TimestampStatisticsImpl() {
     }
@@ -1670,31 +1676,51 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
         minimum = DateUtils.convertTime(timestampStats.getMinimumUtc(),
             writerUsedProlepticGregorian, convertToProlepticGregorian, true);
       }
+      if (timestampStats.hasMaximumNanos()) {
+        maxNanos = timestampStats.getMaximumNanos() - 1;
+      }
+      if (timestampStats.hasMinimumNanos()) {
+        minNanos = timestampStats.getMinimumNanos() - 1;
+      }
     }
 
     @Override
     public void reset() {
       super.reset();
-      minimum = null;
-      maximum = null;
+      minimum = Long.MAX_VALUE;
+      maximum = Long.MIN_VALUE;
+      minNanos = DEFAULT_MIN_NANOS;
+      maxNanos = DEFAULT_MAX_NANOS;
     }
 
     @Override
     public void updateTimestamp(Timestamp value) {
       long millis = SerializationUtils.convertToUtc(TimeZone.getDefault(),
           value.getTime());
-      updateTimestamp(millis);
+      // prune the last 6 digits for ns precision
+      updateTimestamp(millis, value.getNanos() % 1_000_000);
     }
 
     @Override
-    public void updateTimestamp(long value) {
-      if (minimum == null) {
+    public void updateTimestamp(long value, int nanos) {
+      if (minimum > maximum) {
         minimum = value;
         maximum = value;
-      } else if (minimum > value) {
-        minimum = value;
-      } else if (maximum < value) {
-        maximum = value;
+        minNanos = nanos;
+        maxNanos = nanos;
+      } else {
+        if (minimum >= value) {
+          if (minimum > value || nanos < minNanos) {
+            minNanos = nanos;
+          }
+          minimum = value;
+        }
+        if (maximum <= value) {
+          if (maximum < value || nanos > maxNanos) {
+            maxNanos = nanos;
+          }
+          maximum = value;
+        }
       }
     }
 
@@ -1702,19 +1728,31 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     public void merge(ColumnStatisticsImpl other) {
       if (other instanceof TimestampStatisticsImpl) {
         TimestampStatisticsImpl timestampStats = (TimestampStatisticsImpl) other;
-        if (minimum == null) {
-          minimum = timestampStats.minimum;
-          maximum = timestampStats.maximum;
-        } else if (timestampStats.minimum != null) {
-          if (minimum > timestampStats.minimum) {
+        if (count == 0) {
+          if (timestampStats.count != 0) {
+            minimum = timestampStats.minimum;
+            maximum = timestampStats.maximum;
+            minNanos = timestampStats.minNanos;
+            maxNanos = timestampStats.maxNanos;
+          }
+        } else if (timestampStats.count != 0) {
+          if (minimum >= timestampStats.minimum) {
+            if (minimum > timestampStats.minimum ||
+                minNanos > timestampStats.minNanos) {
+              minNanos = timestampStats.minNanos;
+            }
             minimum = timestampStats.minimum;
           }
-          if (maximum < timestampStats.maximum) {
+          if (maximum <= timestampStats.maximum) {
+            if (maximum < timestampStats.maximum ||
+                maxNanos < timestampStats.maxNanos) {
+              maxNanos = timestampStats.maxNanos;
+            }
             maximum = timestampStats.maximum;
           }
         }
       } else {
-        if (isStatsExists() && minimum != null) {
+        if (isStatsExists() && count != 0) {
           throw new IllegalArgumentException("Incompatible merging of timestamp column statistics");
         }
       }
@@ -1726,9 +1764,15 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       OrcProto.ColumnStatistics.Builder result = super.serialize();
       OrcProto.TimestampStatistics.Builder timestampStats = OrcProto.TimestampStatistics
           .newBuilder();
-      if (getNumberOfValues() != 0 && minimum != null) {
+      if (getNumberOfValues() != 0) {
         timestampStats.setMinimumUtc(minimum);
         timestampStats.setMaximumUtc(maximum);
+        if (minNanos != DEFAULT_MIN_NANOS) {
+          timestampStats.setMinimumNanos(minNanos + 1);
+        }
+        if (maxNanos != DEFAULT_MAX_NANOS) {
+          timestampStats.setMaximumNanos(maxNanos + 1);
+        }
       }
       result.setTimestampStatistics(timestampStats);
       return result;
@@ -1736,32 +1780,54 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
     @Override
     public Timestamp getMinimum() {
-      return minimum == null ? null :
-          new Timestamp(SerializationUtils.convertFromUtc(TimeZone.getDefault(),
-              minimum));
+      if (minimum > maximum) {
+        return null;
+      } else {
+        Timestamp ts = new Timestamp(SerializationUtils.
+            convertFromUtc(TimeZone.getDefault(), minimum));
+        ts.setNanos(ts.getNanos() + minNanos);
+        return ts;
+      }
     }
 
     @Override
     public Timestamp getMaximum() {
-      return maximum == null ? null :
-          new Timestamp(SerializationUtils.convertFromUtc(TimeZone.getDefault(),
-              maximum));
+      if (minimum > maximum) {
+        return null;
+      } else {
+        Timestamp ts = new Timestamp(SerializationUtils.convertFromUtc(
+            TimeZone.getDefault(), maximum));
+        ts.setNanos(ts.getNanos() + maxNanos);
+        return ts;
+      }
     }
 
     @Override
     public Timestamp getMinimumUTC() {
-      return minimum == null ? null : new Timestamp(minimum);
+      if (minimum > maximum) {
+        return null;
+      } else {
+        Timestamp ts = new Timestamp(minimum);
+        ts.setNanos(ts.getNanos() + minNanos);
+        return ts;
+      }
     }
 
     @Override
     public Timestamp getMaximumUTC() {
-      return maximum == null ? null : new Timestamp(maximum);
+      if (minimum > maximum) {
+        return null;
+      } else {
+        Timestamp ts = new Timestamp(maximum);
+        ts.setNanos(ts.getNanos() + maxNanos);
+        return ts;
+      }
     }
 
     @Override
     public String toString() {
       StringBuilder buf = new StringBuilder(super.toString());
-      if (minimum != null || maximum != null) {
+      if (minimum <= maximum) {
         buf.append(" min: ");
         buf.append(getMinimum());
         buf.append(" max: ");
@@ -1784,21 +1850,15 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
       TimestampStatisticsImpl that = (TimestampStatisticsImpl) o;
 
-      if (minimum != null ? !minimum.equals(that.minimum) : that.minimum != null) {
-        return false;
-      }
-      if (maximum != null ? !maximum.equals(that.maximum) : that.maximum != null) {
-        return false;
-      }
-
-      return true;
+      return minimum == that.minimum && maximum == that.maximum &&
+          minNanos == that.minNanos && maxNanos == that.maxNanos;
     }
 
     @Override
     public int hashCode() {
       int result = super.hashCode();
-      result = 31 * result + (minimum != null ? minimum.hashCode() : 0);
-      result = 31 * result + (maximum != null ? maximum.hashCode() : 0);
+      result = 31 * result + (int) minimum;
+      result = 31 * result + (int) maximum;
       return result;
     }
   }
@@ -1815,7 +1875,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
     @Override
     public void updateTimestamp(Timestamp value) {
-      updateTimestamp(value.getTime());
+      updateTimestamp(value.getTime(), value.getNanos() % 1_000_000);
     }
 
     @Override
@@ -1925,7 +1985,8 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     throw new UnsupportedOperationException("Can't update timestamp");
   }
 
-  public void updateTimestamp(long value) {
+  // has to be extended
+  public void updateTimestamp(long value, int nanos) {
     throw new UnsupportedOperationException("Can't update timestamp");
   }
 

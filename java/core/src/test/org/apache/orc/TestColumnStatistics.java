@@ -414,6 +414,8 @@ public class TestColumnStatistics {
     stats1.updateTimestamp(new Timestamp(100));
     stats2.updateTimestamp(new Timestamp(1));
     stats2.updateTimestamp(new Timestamp(1000));
+    stats1.increment(2);
+    stats2.increment(2);
     stats1.merge(stats2);
     TimestampColumnStatistics typed = (TimestampColumnStatistics) stats1;
     assertEquals(1, typed.getMinimum().getTime());
@@ -421,6 +423,7 @@ public class TestColumnStatistics {
     stats1.reset();
     stats1.updateTimestamp(new Timestamp(-10));
     stats1.updateTimestamp(new Timestamp(10000));
+    stats1.increment(2);
     stats1.merge(stats2);
     assertEquals(-10, typed.getMinimum().getTime());
     assertEquals(10000, typed.getMaximum().getTime());
@@ -461,6 +464,7 @@ public class TestColumnStatistics {
     stats1.reset();
     stats1.updateTimestamp(parseTime(format, "1999-04-04 00:00:00"));
     stats1.updateTimestamp(parseTime(format, "2009-03-08 12:00:00"));
+    stats1.increment(2);
     stats1.merge(stats2);
     assertEquals("1999-04-04 00:00:00.0", typed.getMinimum().toString());
     assertEquals("2009-03-08 12:00:00.0", typed.getMaximum().toString());
@@ -473,6 +477,136 @@ public class TestColumnStatistics {
         ((TimestampColumnStatistics) stats3).getMinimum().toString());
     assertEquals("2000-10-29 03:30:00.0",
         ((TimestampColumnStatistics) stats3).getMaximum().toString());
+    TimeZone.setDefault(original);
+  }
+
+  @Test
+  public void testTimestampNanoPrecision() {
+    TypeDescription schema = TypeDescription.createTimestamp();
+
+    TimeZone original = TimeZone.getDefault();
+    TimeZone.setDefault(TimeZone.getTimeZone("America/Los_Angeles"));
+
+    ColumnStatisticsImpl stats1 = ColumnStatisticsImpl.create(schema);
+    stats1.updateTimestamp(Timestamp.valueOf( "2000-04-02 03:31:00.000"));
+    stats1.increment(1);
+    TimestampColumnStatistics typed = (TimestampColumnStatistics) stats1;
+
+    // Base case no nanos
+    assertEquals("2000-04-02 03:31:00.0", typed.getMinimum().toString());
+    assertEquals("2000-04-02 03:31:00.0", typed.getMaximum().toString());
+
+    // Add nano precision to min
+    stats1.updateTimestamp(Timestamp.valueOf( "2000-04-01 03:30:00.0005"));
+    stats1.increment(1);
+    assertEquals("2000-04-01 03:30:00.0005", typed.getMinimum().toString());
+    assertEquals("2000-04-02 03:31:00.0", typed.getMaximum().toString());
+
+    // Change max with precision
+    stats1.updateTimestamp(Timestamp.valueOf( "2000-04-04 03:30:00.0008"));
+    stats1.increment(1);
+    assertEquals("2000-04-01 03:30:00.0005", typed.getMinimum().toString());
+    assertEquals("2000-04-04 03:30:00.0008", typed.getMaximum().toString());
+
+    // Equal min with nano diff
+    stats1.updateTimestamp(Timestamp.valueOf( "2000-04-04 03:30:00.0009"));
+    stats1.increment(1);
+    assertEquals("2000-04-01 03:30:00.0005", typed.getMinimum().toString());
+    assertEquals("2000-04-04 03:30:00.0009", typed.getMaximum().toString());
+
+    // Test serialisation/deserialisation
+    OrcProto.ColumnStatistics serial = stats1.serialize().build();
+    ColumnStatisticsImpl stats2 =
+        ColumnStatisticsImpl.deserialize(schema, serial);
+    TimestampColumnStatistics typed2 = (TimestampColumnStatistics) stats2;
+    assertEquals("2000-04-01 03:30:00.0005", typed2.getMinimum().toString());
+    assertEquals("2000-04-04 03:30:00.0009", typed2.getMaximum().toString());
+    assertEquals(4L, typed2.getNumberOfValues());
+    TimeZone.setDefault(original);
+  }
+
+  @Test
+  public void testTimestampNanoPrecisionMerge() {
+    TypeDescription schema = TypeDescription.createTimestamp();
+
+    TimeZone original = TimeZone.getDefault();
+    TimeZone.setDefault(TimeZone.getTimeZone("America/Los_Angeles"));
+
+    ColumnStatisticsImpl stats1 = ColumnStatisticsImpl.create(schema);
+    ColumnStatisticsImpl stats2 = ColumnStatisticsImpl.create(schema);
+    stats1.updateTimestamp(Timestamp.valueOf("2000-04-02 03:30:00.0001"));
+    stats1.updateTimestamp(Timestamp.valueOf( "2000-04-02 01:30:00.0009"));
+    stats1.increment(2);
+
+    stats2.updateTimestamp(Timestamp.valueOf( "2000-04-02 01:30:00.00088"));
+    stats2.updateTimestamp(Timestamp.valueOf( "2000-04-02 03:30:00.00001"));
+    stats2.increment(2);
+
+    TimestampColumnStatistics typed = (TimestampColumnStatistics) stats1;
+    assertEquals("2000-04-02 01:30:00.0009", typed.getMinimum().toString());
+    assertEquals("2000-04-02 03:30:00.0001", typed.getMaximum().toString());
+
+    TimestampColumnStatistics typed2 = (TimestampColumnStatistics) stats2;
+    assertEquals("2000-04-02 03:30:00.00001", typed2.getMaximum().toString());
+    assertEquals("2000-04-02 01:30:00.00088", typed2.getMinimum().toString());
+
+    // make sure merge goes down to ns precision
+    stats1.merge(stats2);
+    assertEquals("2000-04-02 01:30:00.00088", typed.getMinimum().toString());
+    assertEquals("2000-04-02 03:30:00.0001", typed.getMaximum().toString());
+
+    stats1.reset();
+    assertEquals(null, typed.getMinimum());
+    assertEquals(null, typed.getMaximum());
+
+    stats1.updateTimestamp(Timestamp.valueOf( "1999-04-04 00:00:00.000231"));
+    stats1.updateTimestamp(Timestamp.valueOf( "2009-03-08 12:00:00.000654"));
+    stats1.increment(2);
+
+    stats1.merge(stats2);
+    assertEquals("1999-04-04 00:00:00.000231", typed.getMinimum().toString());
+    assertEquals("2009-03-08 12:00:00.000654", typed.getMaximum().toString());
+    TimeZone.setDefault(original);
+  }
+
+  @Test
+  public void testNegativeTimestampNanoPrecision() {
+    TypeDescription schema = TypeDescription.createTimestamp();
+
+    TimeZone original = TimeZone.getDefault();
+    TimeZone.setDefault(TimeZone.getTimeZone("America/Los_Angeles"));
+
+    ColumnStatisticsImpl stats1 = ColumnStatisticsImpl.create(schema);
+    ColumnStatisticsImpl stats2 = ColumnStatisticsImpl.create(schema);
+    stats1.updateTimestamp(Timestamp.valueOf("1960-04-02 03:30:00.0001"));
+    stats1.updateTimestamp(Timestamp.valueOf( "1969-12-31 16:00:00.0009"));
+    stats1.increment(2);
+
+    stats2.updateTimestamp(Timestamp.valueOf( "1962-04-02 01:30:00.00088"));
+    stats2.updateTimestamp(Timestamp.valueOf( "1969-12-31 16:00:00.00001"));
+    stats2.increment(2);
+
+    stats1.merge(stats2);
+
+    TimestampColumnStatistics typed = (TimestampColumnStatistics) stats1;
+    assertEquals("1960-04-02 03:30:00.0001", typed.getMinimum().toString());
+    assertEquals("1969-12-31 16:00:00.0009", typed.getMaximum().toString());
+
+    stats1.reset();
+    assertEquals(null, typed.getMinimum());
+    assertEquals(null, typed.getMaximum());
+
+    stats1.updateTimestamp(Timestamp.valueOf("1969-12-31 15:00:00.0005"));
+    stats1.increment(1);
+
+    assertEquals("1969-12-31 15:00:00.0005", typed.getMinimum().toString());
+    assertEquals("1969-12-31 15:00:00.0005", typed.getMaximum().toString());
+
+    stats1.updateTimestamp(Timestamp.valueOf("1969-12-31 15:00:00.00055"));
+    stats1.increment(1);
+
+    assertEquals("1969-12-31 15:00:00.0005", typed.getMinimum().toString());
+    assertEquals("1969-12-31 15:00:00.00055", typed.getMaximum().toString());
     TimeZone.setDefault(original);
   }
 

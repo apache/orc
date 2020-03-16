@@ -111,7 +111,7 @@ public class TimestampTreeWriter extends TreeWriterBase {
         }
         long utc = vec.isUTC() || alwaysUTC ?
             millis : SerializationUtils.convertToUtc(localTimezone, millis);
-        indexStatistics.updateTimestamp(utc);
+        indexStatistics.updateTimestamp(utc, newNanos % 1_000_000);
         if (createBloomFilter) {
           if (bloomFilter != null) {
             bloomFilter.addLong(millis);
@@ -139,7 +139,7 @@ public class TimestampTreeWriter extends TreeWriterBase {
               millis : SerializationUtils.convertToUtc(localTimezone, millis);
           seconds.write(secs - epoch);
           nanos.write(formatNanos(newNanos));
-          indexStatistics.updateTimestamp(utc);
+          indexStatistics.updateTimestamp(utc, newNanos % 1_000_000);
           if (createBloomFilter) {
             if (bloomFilter != null) {
               bloomFilter.addLong(millis);
