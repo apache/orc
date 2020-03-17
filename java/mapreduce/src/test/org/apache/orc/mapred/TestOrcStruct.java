@@ -18,19 +18,38 @@
 
 package org.apache.orc.mapred;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.common.io.FileMetadataCache;
+import org.apache.hadoop.io.BooleanWritable;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.orc.CompressionKind;
+import org.apache.orc.FileMetadata;
+import org.apache.orc.OrcFile;
+import org.apache.orc.OrcProto;
+import org.apache.orc.Reader;
+import org.apache.orc.StripeInformation;
 import org.apache.orc.TypeDescription;
+import org.apache.orc.Writer;
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.io.IOException;
+import com.google.common.io.Files;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+
 
 public class TestOrcStruct {
 
@@ -64,6 +83,74 @@ public class TestOrcStruct {
     assertEquals(111, ((LongWritable) expected.getFieldValue(1)).get());
     TestOrcList.cloneWritable(expected, actual);
     assertEquals(expected, actual);
+  }
+
+  @Test
+  public void testMapredRead() throws Exception {
+    TypeDescription internalStruct_0 = TypeDescription.createStruct()
+        .addField("field0", TypeDescription.createString())
+        .addField("field1", TypeDescription.createBoolean());
+    TypeDescription internalStruct_1 = TypeDescription.createStruct();
+    TypeDescription internalStruct_2 = TypeDescription.createStruct().addField("f0", TypeDescription.createInt());
+
+    TypeDescription unionWithMultipleStruct = TypeDescription.createUnion()
+        .addUnionChild(internalStruct_0)
+        .addUnionChild(internalStruct_1)
+        .addUnionChild(internalStruct_2);
+
+    OrcStruct o1 = new OrcStruct(internalStruct_0);
+    o1.setFieldValue("field0", new Text("key"));
+    o1.setFieldValue("field1", new BooleanWritable(true));
+
+    OrcStruct o2 = new OrcStruct(internalStruct_0);
+    o2.setFieldValue("field0", new Text("key_1"));
+    o2.setFieldValue("field1", new BooleanWritable(false));
+
+    OrcStruct o3 = new OrcStruct(TypeDescription.createStruct());
+
+    OrcStruct o4 = new OrcStruct(internalStruct_2);
+    o4.setFieldValue("f0", new IntWritable(1));
+
+    OrcUnion u1 = new OrcUnion(unionWithMultipleStruct);
+    u1.set(0, o1);
+    OrcUnion u2 = new OrcUnion(unionWithMultipleStruct);
+    u2.set(0, o2);
+    OrcUnion u3 = new OrcUnion(unionWithMultipleStruct);
+    u3.set(1, o3);
+    OrcUnion u4 = new OrcUnion(unionWithMultipleStruct);
+    u4.set(2, o4);
+
+    File testFolder = Files.createTempDir();
+    testFolder.deleteOnExit();
+    Path testFilePath = new Path(testFolder.getAbsolutePath(), "testFile");
+    Configuration conf = new Configuration();
+
+    Writer writer = OrcFile.createWriter(testFilePath,
+        OrcFile.writerOptions(conf).setSchema(unionWithMultipleStruct)
+            .stripeSize(100000).bufferSize(10000)
+            .version(OrcFile.Version.CURRENT));
+
+    OrcMapredRecordWriter<OrcUnion> recordWriter =
+        new OrcMapredRecordWriter<>(writer);
+    recordWriter.write(NullWritable.get(), u1);
+    recordWriter.write(NullWritable.get(), u2);
+    recordWriter.write(NullWritable.get(), u3);
+    recordWriter.write(NullWritable.get(), u4);
+    recordWriter.close(null);
+
+    Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf).filesystem(FileSystem.getLocal(conf)));
+    Reader.Options options = reader.options().schema(unionWithMultipleStruct);
+
+    OrcMapredRecordReader<OrcUnion> recordReader = new OrcMapredRecordReader<>(reader,options);
+    OrcUnion result = recordReader.createValue();
+    recordReader.next(recordReader.createKey(), result);
+    Assert.assertEquals(result, u1);
+    recordReader.next(recordReader.createKey(), result);
+    Assert.assertEquals(result, u2);
+    recordReader.next(recordReader.createKey(), result);
+    Assert.assertEquals(result, u3);
+    recordReader.next(recordReader.createKey(), result);
+    Assert.assertEquals(result, u4);
   }
 
   @Test
