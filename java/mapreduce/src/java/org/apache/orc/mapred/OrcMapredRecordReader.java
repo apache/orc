@@ -394,10 +394,10 @@ public class OrcMapredRecordReader<V extends WritableComparable>
       OrcStruct result;
       List<TypeDescription> childrenTypes = schema.getChildren();
       int numChildren = childrenTypes.size();
-      if (previous == null || previous.getClass() != OrcStruct.class) {
-        result = new OrcStruct(schema);
-      } else {
+      if (isReusable(previous, schema)) {
         result = (OrcStruct) previous;
+      } else {
+        result = new OrcStruct(schema);
       }
       StructColumnVector struct = (StructColumnVector) vector;
       for(int f=0; f < numChildren; ++f) {
@@ -408,6 +408,17 @@ public class OrcMapredRecordReader<V extends WritableComparable>
     } else {
       return null;
     }
+  }
+
+  /**
+   * Determine if a OrcStruct object is reusable.
+   */
+  private static boolean isReusable(Object previous, TypeDescription schema) {
+    if (previous == null || previous.getClass() != OrcStruct.class) {
+      return false;
+    }
+
+    return ((OrcStruct) previous).getSchema().equals(schema);
   }
 
   static OrcUnion nextUnion(ColumnVector vector,
