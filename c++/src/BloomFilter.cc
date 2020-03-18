@@ -229,7 +229,7 @@ namespace orc {
     uint32_t hash2 = static_cast<uint32_t>(hash64 >> 32);
 
     for (int32_t i = 1; i <= mNumHashFunctions; ++i) {
-      uint32_t combinedHash = hash1 + static_cast<uint32_t>(i) * hash2;
+      int32_t combinedHash = static_cast<int32_t>(hash1 + static_cast<uint32_t>(i) * hash2);
       // hashcode should be positive, flip all the bits if it's negative
       if (combinedHash < 0) {
         combinedHash = ~combinedHash;
@@ -245,7 +245,7 @@ namespace orc {
     uint32_t hash2 = static_cast<uint32_t>(hash64 >> 32);
 
     for (int32_t i = 1; i <= mNumHashFunctions; ++i) {
-      uint32_t combinedHash = hash1 + static_cast<uint32_t>(i) * hash2;
+      int32_t combinedHash = static_cast<int32_t>(hash1 + static_cast<uint32_t>(i) * hash2);
       // hashcode should be positive, flip all the bits if it's negative
       if (combinedHash < 0) {
         combinedHash = ~combinedHash;
