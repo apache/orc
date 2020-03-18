@@ -378,11 +378,15 @@ namespace orc {
         lastLiteralLength = literalLength;
       }
       
-      int16_t i16Temp;
-      if (input + SIZE_OF_SHORT > inputLimit &&
-          (memcpy(&i16Temp, input, sizeof(int16_t)), i16Temp) != 0) {
-        throw MalformedInputException(input - inputAddress);
+      if (input + SIZE_OF_SHORT > inputLimit) {
+         int16_t i16Temp;
+         memcpy(&i16Temp, input, sizeof(int16_t));
+
+        if(i16Temp != 0) {
+          throw MalformedInputException(input - inputAddress);
+        }
       }
+
       input += SIZE_OF_SHORT;
     }
 
