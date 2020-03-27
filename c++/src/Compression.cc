@@ -314,8 +314,9 @@ DIAGNOSTIC_PUSH
   class DecompressionStream : public SeekableInputStream {
   public:
     DecompressionStream(std::unique_ptr<SeekableInputStream> inStream,
+                        size_t bufferSize,
                         MemoryPool& pool);
-    virtual ~DecompressionStream() override {};
+    virtual ~DecompressionStream() override {}
     virtual bool Next(const void** data, int*size) override;
     virtual void BackUp(int count) override;
     virtual bool Skip(int count) override;
@@ -335,6 +336,9 @@ DIAGNOSTIC_PUSH
 
     MemoryPool& pool;
     std::unique_ptr<SeekableInputStream> input;
+
+    // uncompressed output
+    DataBuffer<char> outputDataBuffer;
 
     // the current state
     DecompressState state;
@@ -358,9 +362,11 @@ DIAGNOSTIC_PUSH
 
   DecompressionStream::DecompressionStream(
       std::unique_ptr<SeekableInputStream> inStream,
+      size_t bufferSize,
       MemoryPool& _pool
       ) : pool(_pool),
           input(std::move(inStream)),
+          outputDataBuffer(pool, bufferSize),
           state(DECOMPRESS_HEADER),
           outputBuffer(nullptr),
           outputBufferLength(0),
@@ -516,9 +522,7 @@ DIAGNOSTIC_PUSH
                                 int* size,
                                 size_t availableSize) override;
   private:
-    const size_t blockSize;
     z_stream zstream;
-    DataBuffer<char> buffer;
   };
 
 DIAGNOSTIC_PUSH
@@ -529,18 +533,17 @@ DIAGNOSTIC_PUSH
 
   ZlibDecompressionStream::ZlibDecompressionStream
                    (std::unique_ptr<SeekableInputStream> inStream,
-                    size_t _blockSize,
+                    size_t bufferSize,
                     MemoryPool& _pool
-                    ): DecompressionStream(std::move(inStream), _pool),
-                       blockSize(_blockSize),
-                       buffer(pool, _blockSize) {
+                    ): DecompressionStream
+                          (std::move(inStream), bufferSize, _pool) {
     zstream.next_in = nullptr;
     zstream.avail_in = 0;
     zstream.zalloc = nullptr;
     zstream.zfree = nullptr;
     zstream.opaque = nullptr;
-    zstream.next_out = reinterpret_cast<Bytef*>(buffer.data());
-    zstream.avail_out = static_cast<uInt>(blockSize);
+    zstream.next_out = reinterpret_cast<Bytef*>(outputDataBuffer.data());
+    zstream.avail_out = static_cast<uInt>(outputDataBuffer.capacity());
     int64_t result = inflateInit2(&zstream, -15);
     switch (result) {
     case Z_OK:
@@ -571,10 +574,10 @@ DIAGNOSTIC_POP
     zstream.next_in =
       reinterpret_cast<Bytef*>(const_cast<char*>(inputBuffer));
     zstream.avail_in = static_cast<uInt>(availableSize);
-    outputBuffer = buffer.data();
+    outputBuffer = outputDataBuffer.data();
     zstream.next_out =
       reinterpret_cast<Bytef*>(const_cast<char*>(outputBuffer));
-    zstream.avail_out = static_cast<uInt>(blockSize);
+    zstream.avail_out = static_cast<uInt>(outputDataBuffer.capacity());
     if (inflateReset(&zstream) != Z_OK) {
       throw std::logic_error("Bad inflateReset in "
                               "ZlibDecompressionStream::NextDecompress");
@@ -611,7 +614,7 @@ DIAGNOSTIC_POP
                                 "ZlibDecompressionStream::NextDecompress");
       }
     } while (result != Z_STREAM_END);
-    *size = static_cast<int>(blockSize - zstream.avail_out);
+    *size = static_cast<int>(outputDataBuffer.capacity() - zstream.avail_out);
     *data = outputBuffer;
     outputBufferLength = 0;
     outputBuffer += *size;
@@ -645,17 +648,15 @@ DIAGNOSTIC_POP
     // may need to stitch together multiple input buffers;
     // to give snappy a contiguous block
     DataBuffer<char> inputDataBuffer;
-    // uncompressed output
-    DataBuffer<char> outputDataBuffer;
   };
 
   BlockDecompressionStream::BlockDecompressionStream
                    (std::unique_ptr<SeekableInputStream> inStream,
-                    size_t bufferSize,
+                    size_t blockSize,
                     MemoryPool& _pool
-                    ) : DecompressionStream(std::move(inStream), _pool),
-                        inputDataBuffer(pool, bufferSize),
-                        outputDataBuffer(pool, bufferSize) {
+                    ) : DecompressionStream
+                            (std::move(inStream), blockSize, _pool),
+                        inputDataBuffer(pool, blockSize) {
   }
 
 
@@ -700,11 +701,11 @@ DIAGNOSTIC_POP
   public:
     SnappyDecompressionStream(std::unique_ptr<SeekableInputStream> inStream,
                               size_t blockSize,
-                              MemoryPool& pool
+                              MemoryPool& _pool
                               ): BlockDecompressionStream
                                  (std::move(inStream),
                                   blockSize,
-                                  pool) {
+                                  _pool) {
       // PASS
     }
 
@@ -743,11 +744,11 @@ DIAGNOSTIC_POP
   public:
     LzoDecompressionStream(std::unique_ptr<SeekableInputStream> inStream,
                            size_t blockSize,
-                           MemoryPool& pool
+                           MemoryPool& _pool
                            ): BlockDecompressionStream
-                              (std::move(inStream),
-                               blockSize,
-                               pool) {
+                                  (std::move(inStream),
+                                   blockSize,
+                                   _pool) {
       // PASS
     }
 
@@ -763,11 +764,11 @@ DIAGNOSTIC_POP
                                 ) override;
   };
 
-  uint64_t LzoDecompressionStream::decompress(const char *input,
+  uint64_t LzoDecompressionStream::decompress(const char *inputPtr,
                                               uint64_t length,
                                               char *output,
                                               size_t maxOutputLength) {
-    return lzoDecompress(input, input + length, output,
+    return lzoDecompress(inputPtr, inputPtr + length, output,
                          output + maxOutputLength);
   }
 
@@ -775,11 +776,11 @@ DIAGNOSTIC_POP
   public:
     Lz4DecompressionStream(std::unique_ptr<SeekableInputStream> inStream,
                            size_t blockSize,
-                           MemoryPool& pool
+                           MemoryPool& _pool
                            ): BlockDecompressionStream
                               (std::move(inStream),
                                blockSize,
-                               pool) {
+                               _pool) {
       // PASS
     }
 
@@ -795,11 +796,11 @@ DIAGNOSTIC_POP
                                 ) override;
   };
 
-  uint64_t Lz4DecompressionStream::decompress(const char *input,
+  uint64_t Lz4DecompressionStream::decompress(const char *inputPtr,
                                               uint64_t length,
                                               char *output,
                                               size_t maxOutputLength) {
-    int result = LZ4_decompress_safe(input, output, static_cast<int>(length),
+    int result = LZ4_decompress_safe(inputPtr, output, static_cast<int>(length),
                                      static_cast<int>(maxOutputLength));
     if (result < 0) {
       throw ParseError(getName() + " - failed to decompress");
@@ -940,10 +941,10 @@ DIAGNOSTIC_POP
   public:
     ZSTDDecompressionStream(std::unique_ptr<SeekableInputStream> inStream,
                             size_t blockSize,
-                            MemoryPool& pool)
+                            MemoryPool& _pool)
                             : BlockDecompressionStream(std::move(inStream),
                                                        blockSize,
-                                                       pool) {
+                                                       _pool) {
       // PASS
     }
 
@@ -960,13 +961,13 @@ DIAGNOSTIC_POP
                                 size_t maxOutputLength) override;
   };
 
-  uint64_t ZSTDDecompressionStream::decompress(const char *input,
+  uint64_t ZSTDDecompressionStream::decompress(const char *inputPtr,
                                                uint64_t length,
                                                char *output,
                                                size_t maxOutputLength) {
     return static_cast<uint64_t>(ZSTD_decompress(output,
                                                  maxOutputLength,
-                                                 input,
+                                                 inputPtr,
                                                  length));
   }
 
