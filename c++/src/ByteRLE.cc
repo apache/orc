@@ -338,7 +338,7 @@ namespace orc {
     const void* bufferPointer;
     bool result = inputStream->Next(&bufferPointer, &bufferLength);
     if (!result) {
-      inputStream->throwFrom("ByteRleDecoder");
+      inputStream->throwParseErrorFrom("ByteRleDecoder");
     }
     bufferStart = static_cast<const char*>(bufferPointer);
     bufferEnd = bufferStart + bufferLength;

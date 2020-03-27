@@ -405,7 +405,7 @@ namespace orc {
         int length;
         if (!inputStream->Next
             (reinterpret_cast<const void**>(&bufferPointer), &length)) {
-          inputStream->throwFrom("DoubleColumnReader");
+          inputStream->throwParseErrorFrom("DoubleColumnReader");
         }
         bufferEnd = bufferPointer + length;
       }
@@ -509,7 +509,7 @@ namespace orc {
       const void* chunk;
       int length;
       if (!stream->Next(&chunk, &length)) {
-        stream->throwFrom("StringDictionaryColumnReader");
+        stream->throwParseErrorFrom("StringDictionaryColumnReader");
       }
       if (posn + length > bufferSize) {
         std::stringstream msg;
@@ -790,7 +790,7 @@ namespace orc {
       const void* readBuffer;
       int readLength;
       if (!blobStream->Next(&readBuffer, &readLength)) {
-        blobStream->throwFrom("StringDirectColumnReader");
+        blobStream->throwParseErrorFrom("StringDirectColumnReader");
       }
       lastBuffer = static_cast<const char*>(readBuffer);
       lastBufferLength = static_cast<size_t>(readLength);
@@ -1381,7 +1381,7 @@ namespace orc {
         int length;
         if (!valueStream->Next(reinterpret_cast<const void**>(&buffer),
                                &length)) {
-          valueStream->throwFrom("Decimal64ColumnReader");
+          valueStream->throwParseErrorFrom("Decimal64ColumnReader");
         }
         bufferEnd = buffer + length;
       }

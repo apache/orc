@@ -165,7 +165,7 @@ private:
     int bufferLength;
     const void* bufferPointer;
     if (!inputStream->Next(&bufferPointer, &bufferLength)) {
-      inputStream->throwFrom("RleDecoderV2");
+      inputStream->throwParseErrorFrom("RleDecoderV2");
     }
     bufferStart = static_cast<const char*>(bufferPointer);
     bufferEnd = bufferStart + bufferLength;

@@ -142,7 +142,7 @@ signed char RleDecoderV1::readByte() {
     int bufferLength;
     const void* bufferPointer;
     if (!inputStream->Next(&bufferPointer, &bufferLength)) {
-      inputStream->throwFrom("RleDecoderV1");
+      inputStream->throwParseErrorFrom("RleDecoderV1");
     }
     bufferStart = static_cast<const char*>(bufferPointer);
     bufferEnd = bufferStart + bufferLength;
