@@ -29,6 +29,7 @@ function failure {
     grep -h "FAILED " logs/*-test.log
     exit 1
 }
+rm -f logs/pids.txt logs/*.log
 
 start=`date`
 for os in `cat os-list.txt`; do
@@ -36,7 +37,6 @@ for os in `cat os-list.txt`; do
   ( cd $os && docker build -t "orc-$os" . ) > logs/$os-build.log 2>&1 || exit 1
 done
 testStart=`date`
-rm -f logs/pids.txt
 
 for os in `cat os-list.txt`; do
     ./run-one.sh $1 $2 $os > logs/$os-test.log 2>&1 &
