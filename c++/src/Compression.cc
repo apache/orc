@@ -338,7 +338,8 @@ DIAGNOSTIC_PUSH
         inputBufferEnd = nullptr;
       } else {
         inputBufferEnd = inputBuffer + length;
-        inputBufferStartPosition = input->ByteCount() - length;
+        inputBufferStartPosition
+            = static_cast<size_t>(input->ByteCount() - length);
         inputBufferStart = inputBuffer;
       }
     }
@@ -379,7 +380,7 @@ DIAGNOSTIC_PUSH
     DecompressState state;
 
     // The starting and current position of the buffer for the uncompressed
-    // data.
+    // data. It either points to the data buffer or the underlying input stream.
     const char* outputBufferStart;
     const char* outputBuffer;
     // The original (ie. the overall) and the actual length of the uncompressed
@@ -477,8 +478,9 @@ DIAGNOSTIC_POP
     }
     if (state == DECOMPRESS_HEADER || remainingLength == 0) {
       readHeader();
-      headerPosition
-          = inputBufferStartPosition + (inputBuffer - inputBufferStart);
+      // Here we already read the three bytes of the header.
+      headerPosition = inputBufferStartPosition
+          + static_cast<size_t>(inputBuffer - inputBufferStart) - 3;
       saveBufferPositions = true;
     }
     if (state == DECOMPRESS_EOF) {
@@ -549,7 +551,7 @@ DIAGNOSTIC_POP
     }
     inputBuffer += availSize;
     remainingLength -= availSize;
-    bytesReturned += *size;
+    bytesReturned += static_cast<off_t>(*size);
     if (saveBufferPositions) {
       uncompressedBufferLength = *size;
       outputBufferStart = reinterpret_cast<const char*>(*data);
@@ -602,10 +604,10 @@ DIAGNOSTIC_POP
     size_t seekedPosition = position.current();
     // Case 3.: the seeked position is the one that is currently buffered and
     // decompressed. Here we only need to set the output buffer's pointer to the
-    // seeked position. Since headerPos saves the position after reading the
-    // first 3 bytes of the header, it is compared to the looked up pos + 3.
-    if (headerPosition == seekedPosition + 3
-        && inputBufferStartPosition <= headerPosition && inputBufferStart) {
+    // seeked position. Note that after the headerPosition comes the 3 bytes of
+    // the header.
+    if (headerPosition == seekedPosition
+        && inputBufferStartPosition <= headerPosition + 3 && inputBufferStart) {
       position.next(); // Skip the input level position.
       size_t posInChunk = position.next(); // Chunk level position.
       outputBufferLength = uncompressedBufferLength - posInChunk;
@@ -617,7 +619,8 @@ DIAGNOSTIC_POP
     outputBuffer = nullptr;
     outputBufferLength = 0;
     remainingLength = 0;
-    if (seekedPosition < static_cast<uint64_t>(input->ByteCount())) {
+    if (seekedPosition < static_cast<uint64_t>(input->ByteCount()) &&
+        seekedPosition >= inputBufferStartPosition) {
       // Case 2.: The input is buffered, but not yet decompressed. No need to
       // force re-reading the inputBuffer, we just have to move it to the
       // seeked position.
@@ -679,7 +682,8 @@ DIAGNOSTIC_POP
         inputBufferPtrEnd = nullptr;
       } else {
         inputBufferPtrEnd = inputBufferPtr + length;
-        inputBufferStartPosition = input->ByteCount() - length;
+        inputBufferStartPosition
+            = static_cast<size_t>(input->ByteCount() - length);
         inputBufferPtrStart = inputBufferPtr;
       }
     }
@@ -724,7 +728,7 @@ DIAGNOSTIC_POP
     DecompressState state;
 
     // The starting and current position of the buffer for the uncompressed
-    // data.
+    // data. It either points to outputBuffer or the underlying input stream.
     const char* outputBufferPtrStart;
     const char* outputBufferPtr;
     // The original (ie. the overall) and the actual length of the uncompressed
@@ -788,8 +792,9 @@ DIAGNOSTIC_POP
     }
     if (state == DECOMPRESS_HEADER || remainingLength == 0) {
       readHeader();
-      headerPosition
-          = inputBufferStartPosition + (inputBufferPtr - inputBufferPtrStart);
+      // Here we already read the three bytes of the header.
+      headerPosition = inputBufferStartPosition
+          + static_cast<size_t>(inputBufferPtr - inputBufferPtrStart) - 3;
       saveBufferPositions = true;
     }
     if (state == DECOMPRESS_EOF) {
@@ -847,7 +852,7 @@ DIAGNOSTIC_POP
       outputBufferLength = 0;
     }
     if (saveBufferPositions) {
-      uncompressedBufferLength = *size;
+      uncompressedBufferLength = static_cast<size_t>(*size);
       outputBufferPtrStart = reinterpret_cast<const char*>(*data);
     }
     bytesReturned += *size;
@@ -900,8 +905,9 @@ DIAGNOSTIC_POP
     // decompressed. Here we only need to set the output buffer's pointer to the
     // seeked position. Since headerPos saves the position after reading the
     // first 3 bytes of the header, it is compared to the looked up pos + 3.
-    if (headerPosition == seekedPosition + 3
-        && inputBufferStartPosition <= headerPosition && inputBufferPtrStart) {
+    if (headerPosition == seekedPosition
+        && inputBufferStartPosition <= headerPosition + 3
+        && inputBufferPtrStart) {
       position.next(); // Skip the input level position.
       size_t posInChunk = position.next(); // Chunk level position.
       outputBufferLength = uncompressedBufferLength - posInChunk;
@@ -913,7 +919,8 @@ DIAGNOSTIC_POP
     outputBufferPtr = nullptr;
     outputBufferLength = 0;
     remainingLength = 0;
-    if (seekedPosition < static_cast<uint64_t>(input->ByteCount())) {
+    if (seekedPosition < static_cast<uint64_t>(input->ByteCount()) &&
+        seekedPosition >= inputBufferStartPosition) {
       // Case 2.: The input is buffered, but not yet decompressed. No need to
       // force re-reading the inputBuffer, we just have to move it to the
       // seeked position.
