@@ -124,6 +124,7 @@ public class RunLengthIntegerWriterV2 implements IntegerWriter {
 
   static final int MAX_SCOPE = 512;
   static final int MIN_REPEAT = 3;
+  static final long BASE_VALUE_LIMIT = 1l << 56;
   private static final int MAX_SHORT_REPEAT_LENGTH = 10;
   private long prevDelta = 0;
   private int fixedRunLength = 0;
@@ -529,7 +530,7 @@ public class RunLengthIntegerWriterV2 implements IntegerWriter {
       // fallback to DIRECT encoding.
       // The decision to use patched base was based on zigzag values, but the
       // actual patching is done on base reduced literals.
-      if ((brBits100p - brBits95p) != 0) {
+      if ((brBits100p - brBits95p) != 0 && Math.abs(min) < BASE_VALUE_LIMIT) {
         encoding = EncodingType.PATCHED_BASE;
         preparePatchedBlob();
         return;
