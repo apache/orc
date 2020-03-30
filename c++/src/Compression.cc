@@ -721,12 +721,12 @@ DIAGNOSTIC_POP
                                 ) override;
   };
 
-  uint64_t SnappyDecompressionStream::decompress(const char *input,
+  uint64_t SnappyDecompressionStream::decompress(const char *_input,
                                                  uint64_t length,
                                                  char *output,
                                                  size_t maxOutputLength) {
     size_t outLength;
-    if (!snappy::GetUncompressedLength(input, length, &outLength)) {
+    if (!snappy::GetUncompressedLength(_input, length, &outLength)) {
       throw ParseError("SnappyDecompressionStream choked on corrupt input");
     }
 
@@ -734,7 +734,7 @@ DIAGNOSTIC_POP
       throw std::logic_error("Snappy length exceeds block size");
     }
 
-    if (!snappy::RawUncompress(input, length, output)) {
+    if (!snappy::RawUncompress(_input, length, output)) {
       throw ParseError("SnappyDecompressionStream choked on corrupt input");
     }
     return outLength;
