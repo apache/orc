@@ -18,6 +18,7 @@
 package org.apache.orc.impl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertArrayEquals;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -37,6 +38,8 @@ import org.apache.orc.CompressionCodec;
 import org.apache.orc.CompressionKind;
 import org.apache.orc.OrcFile;
 import org.apache.orc.PhysicalWriter;
+import org.apache.orc.Reader;
+import org.apache.orc.RecordReader;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
 import org.apache.orc.tools.FileDump;
@@ -64,7 +67,7 @@ public class TestRLEv2 {
     fs.delete(testFilePath, false);
   }
 
-  private void appendInt(VectorizedRowBatch batch, int i) {
+  private void appendInt(VectorizedRowBatch batch, long i) {
     ((LongColumnVector) batch.cols[0]).vector[batch.size++] = i;
   }
 
@@ -309,6 +312,42 @@ public class TestRLEv2 {
     // use PATCHED_BASE encoding
     assertEquals(true, outDump.contains("Stream: column 0 section DATA start: 3 length 583"));
     System.setOut(origOut);
+  }
+
+  @Test
+  public void testBaseValueLimit() throws Exception {
+    TypeDescription schema = TypeDescription.createInt();
+    Writer w = OrcFile.createWriter(testFilePath,
+            OrcFile.writerOptions(conf)
+                    .compress(CompressionKind.NONE)
+                    .setSchema(schema)
+                    .rowIndexStride(0)
+                    .encodingStrategy(OrcFile.EncodingStrategy.COMPRESSION)
+                    .version(OrcFile.Version.V_0_12)
+    );
+
+    VectorizedRowBatch batch = schema.createRowBatch();
+    //the minimum value is beyond RunLengthIntegerWriterV2.BASE_VALUE_LIMIT
+    long[] input = {-9007199254740992l,-8725724278030337l,-1125762467889153l, -1l,-9007199254740992l,
+        -9007199254740992l, -497l,127l,-1l,-72057594037927936l,-4194304l,-9007199254740992l,-4503599593816065l,
+        -4194304l,-8936830510563329l,-9007199254740992l, -1l, -70334384439312l,-4063233l, -6755399441973249l};
+    for(long data: input) {
+      appendInt(batch, data);
+    }
+    w.addRowBatch(batch);
+    w.close();
+
+    try(Reader reader = OrcFile.createReader(testFilePath,
+            OrcFile.readerOptions(conf).filesystem(fs))) {
+      RecordReader rows = reader.rows();
+      batch = reader.getSchema().createRowBatch();
+      long[] output = null;
+      while (rows.nextBatch(batch)) {
+        output = new long[batch.size];
+        System.arraycopy(((LongColumnVector) batch.cols[0]).vector, 0, output, 0, batch.size);
+      }
+      assertArrayEquals(input, output);
+    }
   }
 
   static class TestOutputCatcher implements PhysicalWriter.OutputReceiver {
