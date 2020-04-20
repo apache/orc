@@ -472,7 +472,7 @@ public class StripePlanner {
                   encodings[stream.column].getKind(), kind, stream.kind,
                   isCompressed, hasNull[column]);
               long start = Math.max(alreadyRead,
-                  stream.offset + ri.getEntry(group).getPositions(posn));
+                  stream.offset + (group == 0 ? 0 : ri.getEntry(group).getPositions(posn)));
               long end = stream.offset;
               if (endGroup == includedRowGroups.length - 1) {
                 end += stream.length;
