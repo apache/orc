@@ -310,6 +310,13 @@ public class RecordReaderImpl implements RecordReader {
     }
   }
 
+  public static final class ZeroPositionProvider implements PositionProvider {
+    @Override
+    public long getNext() {
+      return 0;
+    }
+  }
+
   public OrcProto.StripeFooter readStripeFooter(StripeInformation stripe
                                                 ) throws IOException {
     return dataReader.readStripeFooter(stripe);
@@ -1419,7 +1426,13 @@ public class RecordReaderImpl implements RecordReader {
     PositionProvider[] index = new PositionProvider[indexes.length];
     for (int i = 0; i < indexes.length; ++i) {
       if (indexes[i] != null) {
-        index[i] = new PositionProviderImpl(indexes[i].getEntry(rowEntry));
+        OrcProto.RowIndexEntry entry = indexes[i].getEntry(rowEntry);
+        // This is effectively a test for pre-ORC-569 files.
+        if (rowEntry == 0 && entry.getPositionsCount() == 0) {
+          index[i] = new ZeroPositionProvider();
+        } else {
+          index[i] = new PositionProviderImpl(entry);
+        }
       }
     }
     reader.seek(index);

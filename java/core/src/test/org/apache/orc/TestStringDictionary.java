@@ -33,6 +33,9 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 
+import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
+import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
+import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
 import org.apache.orc.impl.OrcIndex;
 import org.apache.orc.impl.OutStream;
 import org.apache.orc.impl.RecordReaderImpl;
@@ -540,6 +543,88 @@ public class TestStringDictionary {
         assertEquals("entry " + e, 1024, batch.size);
         assertEquals("entry " + e, true, col.noNulls);
         assertEquals("entry " + e, "Value for " + (row / 1024), col.toString(0));
+      }
+    }
+  }
+
+  /**
+   * That when we disable dictionaries, we don't get broken row indexes.
+   */
+  @Test
+  public void testRowIndex() throws Exception {
+    TypeDescription schema =
+        TypeDescription.fromString("struct<str:string>");
+    // turn off the dictionaries
+    OrcConf.DICTIONARY_KEY_SIZE_THRESHOLD.setDouble(conf, 0);
+    Writer writer = OrcFile.createWriter(
+        testFilePath,
+        OrcFile.writerOptions(conf).setSchema(schema).rowIndexStride(4 * 1024));
+
+    VectorizedRowBatch batch = schema.createRowBatch();
+    BytesColumnVector strVector = (BytesColumnVector) batch.cols[0];
+
+    for (int i = 0; i < 32 * 1024; i++) {
+      if (batch.size == batch.getMaxSize()) {
+        writer.addRowBatch(batch);
+        batch.reset();
+      }
+      byte[] value = String.format("row %06d", i).getBytes(StandardCharsets.UTF_8);
+      strVector.setRef(batch.size, value, 0, value.length);
+      ++batch.size;
+    }
+    writer.addRowBatch(batch);
+    writer.close();
+
+    Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf).filesystem(fs));
+    SearchArgument sarg = SearchArgumentFactory.newBuilder(conf)
+        .lessThan("str", PredicateLeaf.Type.STRING, "row 001000")
+        .build();
+    RecordReader recordReader = reader.rows(reader.options().searchArgument(sarg, null));
+    batch = reader.getSchema().createRowBatch();
+    strVector = (BytesColumnVector) batch.cols[0];
+    long base = 0;
+    while (recordReader.nextBatch(batch)) {
+      for(int r=0; r < batch.size; ++r) {
+        String value = String.format("row %06d", r + base);
+        assertEquals("row " + (r + base), value, strVector.toString(r));
+      }
+      base += batch.size;
+    }
+    // We should only read the first row group.
+    assertEquals(4 * 1024, base);
+  }
+
+  /**
+   * Test that files written before ORC-569 are read correctly.
+   */
+  @Test
+  public void testRowIndexPreORC569() throws Exception {
+    testFilePath = new Path(System.getProperty("example.dir"), "TestStringDictionary.testRowIndex.orc");
+    SearchArgument sarg = SearchArgumentFactory.newBuilder(conf)
+        .lessThan("str", PredicateLeaf.Type.STRING, "row 001000")
+        .build();
+    try (Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf).filesystem(fs))) {
+      try (RecordReader recordReader = reader.rows(reader.options().searchArgument(sarg, null))) {
+        VectorizedRowBatch batch = reader.getSchema().createRowBatch();
+        BytesColumnVector strVector = (BytesColumnVector) batch.cols[0];
+        long base = 0;
+        while (recordReader.nextBatch(batch)) {
+          for (int r = 0; r < batch.size; ++r) {
+            String value = String.format("row %06d", r + base);
+            assertEquals("row " + (r + base), value, strVector.toString(r));
+          }
+          base += batch.size;
+        }
+        // We should only read the first row group.
+        assertEquals(4 * 1024, base);
+      }
+
+      try (RecordReader recordReader = reader.rows()) {
+        VectorizedRowBatch batch = reader.getSchema().createRowBatch();
+        recordReader.seekToRow(4 * 1024);
+        assertTrue(recordReader.nextBatch(batch));
+        recordReader.seekToRow(0);
+        assertTrue(recordReader.nextBatch(batch));
       }
     }
   }
