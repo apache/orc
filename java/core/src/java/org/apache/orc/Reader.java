@@ -408,16 +408,6 @@ public interface Reader extends Closeable {
       if (sarg != null) {
         buffer.append(", sarg: ");
         buffer.append(sarg.toString());
-        buffer.append(", columns: [");
-        for(int i=0; i < columnNames.length; ++i) {
-          if (i != 0) {
-            buffer.append(", ");
-          }
-          buffer.append("'");
-          buffer.append(columnNames[i]);
-          buffer.append("'");
-        }
-        buffer.append("]");
       }
       if (schema != null) {
         buffer.append(", schema: ");
