@@ -166,7 +166,6 @@ public class TreeReaderFactory {
   public abstract static class TreeReader implements TypeReader {
     protected final int columnId;
     protected BitFieldReader present = null;
-    protected int vectorColumnCount;
     protected final Context context;
 
     static final long[] powerOfTenTable = {
@@ -203,7 +202,6 @@ public class TreeReaderFactory {
       } else {
         present = new BitFieldReader(in);
       }
-      vectorColumnCount = -1;
     }
 
     public void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
