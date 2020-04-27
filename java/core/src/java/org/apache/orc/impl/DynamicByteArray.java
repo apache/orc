@@ -156,10 +156,26 @@ public final class DynamicByteArray {
    * @return negative for less, 0 for equal, positive for greater
    */
   public int compare(byte[] other, int otherOffset, int otherLength,
-                     int ourOffset, int ourLength) {
+      int ourOffset, int ourLength) {
+    return compare(other, otherOffset, otherLength, ourOffset, ourLength, null);
+  }
+
+  /**
+   * Byte compare a set of bytes against the bytes in this dynamic array.
+   * @param other source of the other bytes
+   * @param otherOffset start offset in the other array
+   * @param otherLength number of bytes in the other array
+   * @param ourOffset the offset in our array
+   * @param ourLength the number of bytes in our array
+   * @param prefixLength the number of common prefix length
+   * @return negative for less, 0 for equal, positive for greater
+   */
+  public int compare(byte[] other, int otherOffset, int otherLength,
+                     int ourOffset, int ourLength, int[] prefixLength) {
     int currentChunk = ourOffset / chunkSize;
     int currentOffset = ourOffset % chunkSize;
     int maxLength = Math.min(otherLength, ourLength);
+    int otherStart = otherOffset;
     while (maxLength > 0 &&
       other[otherOffset] == data[currentChunk][currentOffset]) {
       otherOffset += 1;
@@ -175,6 +191,10 @@ public final class DynamicByteArray {
     }
     int otherByte = 0xff & other[otherOffset];
     int ourByte = 0xff & data[currentChunk][currentOffset];
+    if (prefixLength != null) {
+      prefixLength[0] = otherOffset - otherStart;
+    }
+
     return otherByte > ourByte ? 1 : -1;
   }
 

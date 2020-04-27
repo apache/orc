@@ -106,6 +106,9 @@ abstract class RedBlackTree {
   private void setLeft(int position, int left) {
     int offset = position * ELEMENT_SIZE + LEFT_OFFSET;
     data.set(offset, (left << 1) | (data.get(offset) & 1));
+    if (left >= 0) {
+      reset(left);
+    }
   }
 
   /**
@@ -115,6 +118,9 @@ abstract class RedBlackTree {
   private void setLeft(int position, int left, boolean isRed) {
     int offset = position * ELEMENT_SIZE + LEFT_OFFSET;
     data.set(offset, (left << 1) | (isRed ? 1 : 0));
+    if (left >= 0) {
+      reset(left);
+    }
   }
 
   /**
@@ -122,7 +128,15 @@ abstract class RedBlackTree {
    */
   private void setRight(int position, int right) {
     data.set(position * ELEMENT_SIZE + RIGHT_OFFSET, right);
+    if (right >= 0) {
+      reset(right);
+    }
   }
+
+  /**
+   * Notify node is reset.
+   */
+  protected abstract void reset(int node);
 
   /**
    * Insert or find a given key in the tree and rebalance the tree correctly.

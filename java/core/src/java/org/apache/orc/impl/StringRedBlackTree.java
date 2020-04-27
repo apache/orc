@@ -30,10 +30,13 @@ public class StringRedBlackTree extends RedBlackTree {
   private final DynamicByteArray byteArray = new DynamicByteArray();
   private final DynamicIntArray keyOffsets;
   private final Text newKey = new Text();
+  private final DynamicIntArray keyOverlaps;
+  private int lastPrefix;
 
   public StringRedBlackTree(int initialCapacity) {
     super(initialCapacity);
     keyOffsets = new DynamicIntArray(initialCapacity);
+    keyOverlaps = new DynamicIntArray(initialCapacity);
   }
 
   public int add(String value) {
@@ -42,10 +45,12 @@ public class StringRedBlackTree extends RedBlackTree {
   }
 
   private int addNewKey() {
+    lastPrefix = 0;
     // if the newKey is actually new, add it to our byteArray and store the offset & length
     if (add()) {
       int len = newKey.getLength();
       keyOffsets.add(byteArray.add(newKey.getBytes(), 0, len));
+      keyOverlaps.add(0);
     }
     return lastAdd;
   }
@@ -63,14 +68,38 @@ public class StringRedBlackTree extends RedBlackTree {
   @Override
   protected int compareValue(int position) {
     int start = keyOffsets.get(position);
+    final int overlap = Math.min(keyOverlaps.get(position), lastPrefix);
     int end;
     if (position + 1 == keyOffsets.size()) {
       end = byteArray.size();
     } else {
       end = keyOffsets.get(position+1);
     }
-    return byteArray.compare(newKey.getBytes(), 0, newKey.getLength(),
-                             start, end - start);
+    int[] prefixLength = new int[1];
+    int result = byteArray.compare(newKey.getBytes(), overlap, newKey.getLength() - overlap,
+        start + overlap, end - start - overlap, prefixLength);
+    int prefix = prefixLength[0] + overlap;
+    int newOverlap = Math.min(lastPrefix, prefix);
+    if (keyOverlaps.get(position) < newOverlap) {
+      keyOverlaps.set(position, newOverlap);
+    }
+    lastPrefix = prefix;
+    return result;
+  }
+
+  @Override
+  protected void reset(int node) {
+    if (node >= 0) {
+      keyOverlaps.set(node, 0);
+    }
+    int left = getLeft(node);
+    if (left >= 0 && left < keyOffsets.size()) {
+      keyOverlaps.set(left, 0);
+    }
+    int right = getRight(node);
+    if (right >=0 && right < keyOffsets.size()) {
+      keyOverlaps.set(right, 0);
+    }
   }
 
   /**
@@ -180,6 +209,7 @@ public class StringRedBlackTree extends RedBlackTree {
     super.clear();
     byteArray.clear();
     keyOffsets.clear();
+    keyOverlaps.clear();
   }
 
   public void getText(Text result, int originalPosition) {
