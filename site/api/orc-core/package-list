@@ -5,3 +5,4 @@ org.apache.orc.impl.mask
 org.apache.orc.impl.reader
 org.apache.orc.impl.writer
 org.apache.orc.util
+org.threeten.extra.chrono
