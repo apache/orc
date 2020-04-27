@@ -1,8 +1,16 @@
 # List the releases in reverse logical order
 # Only one release should be tagged latest
+1.6.3:
+  date: 2020-04-26
+  state: latest
+  tar: orc-1.6.3.tar.gz
+  signed-by: Owen O’Malley (AD1C5877)
+  sha256: 38b9da9ca771d26877cae5b8da55aa1d1bf1ed515723f9cfdcba49d619396bc4 
+  known-issues:
+
 1.6.2:
   date: 2019-11-24
-  state: latest
+  state: archived
   tar: orc-1.6.2.tar.gz
   signed-by: Owen O’Malley (3D0C92B9)
   sha256: 5c394603faba3c50a295b44933f2c1b3532da48391d56764a1b2a2d67b610eed
@@ -32,9 +40,17 @@
     ORC-569: The first index entry may have empty positions
     ORC-571: ArrayIndexOutOfBoundsException in StripePlanner.readRowIndex
 
+1.5.10:
+  date: 2020-04-26
+  state: stable
+  tar: orc-1.5.10.tar.gz
+  signed-by: Owen O’Malley (AD1C5877)
+  sha256: c2ca21fd2f77afbe1c09193a66c0272b78e2fd65ebeb39fa29b41f0ed7a4666b
+  known-issues:
+
 1.5.9:
   date: 2020-01-30
-  state: stable
+  state: archived
   tar: orc-1.5.9.tar.gz
   signed-by: Owen O’Malley (3D0C92B9)
   sha256: 75c534555df8a93284e1f4567e7404da12fecb86282e974c678e6ec822c8a504
