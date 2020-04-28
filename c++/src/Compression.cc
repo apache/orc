@@ -553,7 +553,7 @@ DIAGNOSTIC_POP
     remainingLength -= availSize;
     bytesReturned += static_cast<off_t>(*size);
     if (saveBufferPositions) {
-      uncompressedBufferLength = *size;
+      uncompressedBufferLength = static_cast<size_t>(*size);
       outputBufferStart = reinterpret_cast<const char*>(*data);
     }
     return true;
