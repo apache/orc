@@ -182,6 +182,7 @@ public interface Reader extends Closeable {
     private boolean[] include;
     private long offset = 0;
     private long length = Long.MAX_VALUE;
+    private int positionalEvolutionLevel;
     private SearchArgument sarg = null;
     private String[] columnNames = null;
     private Boolean useZeroCopy = null;
@@ -203,6 +204,7 @@ public interface Reader extends Closeable {
       skipCorruptRecords = OrcConf.SKIP_CORRUPT_DATA.getBoolean(conf);
       tolerateMissingSchema = OrcConf.TOLERATE_MISSING_SCHEMA.getBoolean(conf);
       forcePositionalEvolution = OrcConf.FORCE_POSITIONAL_EVOLUTION.getBoolean(conf);
+      positionalEvolutionLevel = OrcConf.FORCE_POSITIONAL_EVOLUTION_LEVEL.getInt(conf);
       isSchemaEvolutionCaseAware =
           OrcConf.IS_SCHEMA_EVOLUTION_CASE_SENSITIVE.getBoolean(conf);
     }
@@ -298,6 +300,18 @@ public interface Reader extends Closeable {
     }
 
     /**
+     * Set no. of levels to force schema evolution to be positional instead of
+     * based on the column names.
+     * @param value force positional evolution
+     * @return this
+     */
+    public Options positionalEvolutionLevel(int value) {
+      this.positionalEvolutionLevel = value;
+      return this;
+    }
+
+
+    /**
      * Set boolean flag to determine if the comparision of field names in schema
      * evolution is case sensitive
      * @param value the flag for schema evolution is case sensitive or not.
@@ -362,6 +376,10 @@ public interface Reader extends Closeable {
 
     public boolean getForcePositionalEvolution() {
       return forcePositionalEvolution;
+    }
+
+    public int getPositionalEvolutionLevel() {
+      return positionalEvolutionLevel;
     }
 
     public boolean getIsSchemaEvolutionCaseAware() {
