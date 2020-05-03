@@ -1719,6 +1719,19 @@ public class TestSchemaEvolution {
     assertEquals(null, evo.getFileType(4));
   }
 
+  @Test
+  public void testPositionalEvolutionLevel() throws IOException {
+    options.forcePositionalEvolution(true);
+    options.positionalEvolutionLevel(2);
+    TypeDescription file = TypeDescription.fromString("struct<a:int,b:struct<y:int,y:int>>");
+    TypeDescription read = TypeDescription.fromString("struct<a:int,b:struct<y:int,y:int>>");
+    SchemaEvolution evo = new SchemaEvolution(file, read, options);
+    assertEquals(1, evo.getFileType(1).getId());
+    assertEquals(2, evo.getFileType(2).getId());
+    assertEquals(3, evo.getFileType(3).getId());
+    assertEquals(4, evo.getFileType(4).getId());
+  }
+
   // These are helper methods that pull some of the common code into one
   // place.
 

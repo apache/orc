@@ -147,6 +147,10 @@ public enum OrcConf {
       "Require schema evolution to match the top level columns using position\n" +
       "rather than column names. This provides backwards compatibility with\n" +
       "Hive 2.1."),
+  FORCE_POSITIONAL_EVOLUTION_LEVEL("orc.force.positional.evolution.level",
+      "orc.force.positional.evolution.level", 1,
+      "Require schema evolution to match the the defined no. of level columns using position\n" +
+          "rather than column names. This provides backwards compatibility with Hive 2.1."),
   ROWS_BETWEEN_CHECKS("orc.rows.between.memory.checks", "orc.rows.between.memory.checks", 5000,
     "How often should MemoryManager check the memory sizes? Measured in rows\n" +
       "added to all of the writers.  Valid range is [1,10000] and is primarily meant for" +

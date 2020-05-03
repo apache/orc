@@ -106,7 +106,7 @@ public class SchemaEvolution {
         new TypeDescription[this.readerSchema.getMaximumId() + 1];
       int positionalLevels = 0;
       if (options.getForcePositionalEvolution()) {
-        positionalLevels = isAcid ? 2 : 1;
+        positionalLevels = isAcid ? 2 : options.getPositionalEvolutionLevel();
         buildConversion(fileSchema, this.readerSchema, positionalLevels);
       } else if (!hasColumnNames(isAcid? getBaseRow(fileSchema) : fileSchema)) {
         if (!this.fileSchema.equals(this.readerSchema)) {
@@ -120,7 +120,7 @@ public class SchemaEvolution {
                 + " caused by a writer earlier than HIVE-4243. The reader will"
                 + " reconcile schemas based on index. File type: " +
                 this.fileSchema + ", reader type: " + this.readerSchema);
-            positionalLevels = isAcid ? 2 : 1;
+            positionalLevels = isAcid ? 2 : options.getPositionalEvolutionLevel();
           }
         }
       }
