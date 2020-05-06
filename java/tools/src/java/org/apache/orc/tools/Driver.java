@@ -86,13 +86,14 @@ public class Driver {
           " [--define X=Y] <command> <args>");
       System.err.println();
       System.err.println("Commands:");
-      System.err.println("   version - print the version of this ORC tool");
-      System.err.println("   meta - print the metadata about the ORC file");
-      System.err.println("   data - print the data from the ORC file");
-      System.err.println("   scan - scan the ORC file");
       System.err.println("   convert - convert CSV and JSON files to ORC");
+      System.err.println("   count - recursively find *.orc and print the number of rows");
+      System.err.println("   data - print the data from the ORC file");
       System.err.println("   json-schema - scan JSON files to determine their schema");
       System.err.println("   key - print information about the keys");
+      System.err.println("   meta - print the metadata about the ORC file");
+      System.err.println("   scan - scan the ORC file");
+      System.err.println("   version - print the version of this ORC tool");
       System.err.println();
       System.err.println("To get more help, provide -h to the command");
       System.exit(1);
@@ -102,23 +103,34 @@ public class Driver {
     for(Map.Entry pair: confSettings.entrySet()) {
       conf.set(pair.getKey().toString(), pair.getValue().toString());
     }
-    if ("version".equals(options.command)) {
-      PrintVersion.main(conf, options.commandArgs);
-    } else if ("meta".equals(options.command)) {
-      FileDump.main(conf, options.commandArgs);
-    } else if ("data".equals(options.command)) {
-      PrintData.main(conf, options.commandArgs);
-    } else if ("scan".equals(options.command)) {
-      ScanData.main(conf, options.commandArgs);
-    } else if ("json-schema".equals(options.command)) {
-      JsonSchemaFinder.main(conf, options.commandArgs);
-    } else if ("convert".equals(options.command)) {
-      ConvertTool.main(conf, options.commandArgs);
-    } else if ("key".equals(options.command)) {
-      KeyTool.main(conf, options.commandArgs);
-    } else {
-      System.err.println("Unknown subcommand: " + options.command);
-      System.exit(1);
+    switch (options.command) {
+      case "convert":
+        ConvertTool.main(conf, options.commandArgs);
+        break;
+      case "count":
+        RowCount.main(conf, options.commandArgs);
+        break;
+      case "data":
+        PrintData.main(conf, options.commandArgs);
+        break;
+      case "json-schema":
+        JsonSchemaFinder.main(conf, options.commandArgs);
+        break;
+      case "key":
+        KeyTool.main(conf, options.commandArgs);
+        break;
+      case "meta":
+        FileDump.main(conf, options.commandArgs);
+        break;
+      case "scan":
+        ScanData.main(conf, options.commandArgs);
+        break;
+      case "version":
+        PrintVersion.main(conf, options.commandArgs);
+        break;
+      default:
+        System.err.println("Unknown subcommand: " + options.command);
+        System.exit(1);
     }
   }
 }
