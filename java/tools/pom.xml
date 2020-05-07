@@ -82,6 +82,12 @@
       <groupId>org.threeten</groupId>
       <artifactId>threetenbp</artifactId>
     </dependency>
+    <!-- orc-tools uber jar needs to include this -->
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <scope>compile</scope>
+    </dependency>
 
     <!-- test inter-project -->
     <dependency>
