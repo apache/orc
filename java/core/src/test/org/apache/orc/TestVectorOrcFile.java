@@ -4004,6 +4004,78 @@ public class TestVectorOrcFile {
     Assert.assertEquals(3500, rows.getRowNumber());
   }
 
+
+  @Test
+  public void testNans(){
+
+    Double nan = Double.NaN;
+    Double myNumber = 2.0;
+    Double myNegNumber = -2.0;
+
+    System.out.println(myNumber.compareTo(nan));
+    System.out.println(nan.compareTo(myNumber));
+
+    System.out.println("---");
+    System.out.println(myNegNumber.compareTo(nan));
+    System.out.println(nan.compareTo(myNegNumber));
+  }
+
+
+  @Test
+  public void testPredicatePushdownWithNan() throws Exception {
+    TypeDescription schema = TypeDescription.createStruct()
+            .addField("double1", TypeDescription.createDouble());
+
+    Writer writer = OrcFile.createWriter(testFilePath,
+            OrcFile.writerOptions(conf)
+                    .setSchema(schema)
+                    .stripeSize(400000L)
+                    .compress(CompressionKind.NONE)
+                    .bufferSize(500)
+                    .rowIndexStride(1000)
+                    .version(fileFormat));
+    VectorizedRowBatch batch = schema.createRowBatch();
+    batch.ensureSize(3500);
+    batch.size = 3500;
+    batch.cols[0].noNulls = true;
+
+    DoubleColumnVector dbcol = ((DoubleColumnVector) batch.cols[0]);
+
+    // first row NaN
+    dbcol.vector[0] = Double.NaN;
+    for (int i=1; i < 3500; ++i) {
+      dbcol.vector[i] = i;
+    }
+    writer.addRowBatch(batch);
+    writer.close();
+
+    Reader reader = OrcFile.createReader(testFilePath,
+            OrcFile.readerOptions(conf).filesystem(fs));
+    assertEquals(3500, reader.getNumberOfRows());
+
+    // Min and max of first stride is NaN (due to the NaN comparison uniqueness)
+    SearchArgument sarg = SearchArgumentFactory.newBuilder()
+            .startAnd()
+            .lessThan("double1", PredicateLeaf.Type.FLOAT, 10d)
+            .end()
+            .build();
+
+    RecordReader rows = reader.rows(reader.options()
+            .range(0L, Long.MAX_VALUE)
+            .searchArgument(sarg, new String[]{"double1"}));
+    batch = reader.getSchema().createRowBatch(3500);
+
+    System.out.println(batch.size);
+
+    rows.nextBatch(batch);
+
+    // Only the first stride should be read
+    assertEquals(1000, batch.size);
+
+    rows.nextBatch(batch);
+    assertEquals(0, batch.size);
+  }
+
   @Test
   public void testColumnEncryption() throws Exception {
     Assume.assumeTrue(fileFormat != OrcFile.Version.V_0_11);

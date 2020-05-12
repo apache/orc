@@ -495,6 +495,13 @@ public class RecordReaderImpl implements RecordReader {
                    " include ORC-517. Writer version: {}",
           predicate.getColumnName(), writerVersion);
       return TruthValue.YES_NO_NULL;
+    } else if (category == TypeDescription.Category.DOUBLE) {
+      DoubleColumnStatistics dstas = (DoubleColumnStatistics) cs;
+      if (!Double.isFinite(dstas.getMinimum()) && !Double.isFinite(dstas.getMaximum())) {
+        LOG.debug("Not using predication pushdown on {} because stats contain NaN values",
+                predicate.getColumnName());
+        return TruthValue.YES_NO;
+      }
     }
     return evaluatePredicateRange(predicate, range,
         BloomFilterIO.deserialize(kind, encoding, writerVersion, type.getCategory(),
@@ -555,6 +562,7 @@ public class RecordReaderImpl implements RecordReader {
     Comparable predObj = getBaseObjectForComparison(predicate.getType(), baseObj);
 
     result = evaluatePredicateMinMax(predicate, predObj, range);
+    System.out.println("Eval result: "+ result);
     if (shouldEvaluateBloomFilter(predicate, result, bloomFilter)) {
       return evaluatePredicateBloomFilter(predicate, predObj, bloomFilter, range.hasNulls, useUTCTimestamp);
     } else {
@@ -583,6 +591,7 @@ public class RecordReaderImpl implements RecordReader {
                                                     ValueRange range) {
     Location loc;
 
+    System.out.println("HRE" +range.lower + " up "+ range.upper);
     switch (predicate.getOperator()) {
       case NULL_SAFE_EQUALS:
         loc = range.compare(predObj);
