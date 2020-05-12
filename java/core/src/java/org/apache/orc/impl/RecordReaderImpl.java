@@ -562,7 +562,6 @@ public class RecordReaderImpl implements RecordReader {
     Comparable predObj = getBaseObjectForComparison(predicate.getType(), baseObj);
 
     result = evaluatePredicateMinMax(predicate, predObj, range);
-    System.out.println("Eval result: "+ result);
     if (shouldEvaluateBloomFilter(predicate, result, bloomFilter)) {
       return evaluatePredicateBloomFilter(predicate, predObj, bloomFilter, range.hasNulls, useUTCTimestamp);
     } else {
@@ -591,7 +590,6 @@ public class RecordReaderImpl implements RecordReader {
                                                     ValueRange range) {
     Location loc;
 
-    System.out.println("HRE" +range.lower + " up "+ range.upper);
     switch (predicate.getOperator()) {
       case NULL_SAFE_EQUALS:
         loc = range.compare(predObj);
