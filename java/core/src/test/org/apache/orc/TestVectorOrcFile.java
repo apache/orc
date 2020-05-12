@@ -4004,23 +4004,6 @@ public class TestVectorOrcFile {
     Assert.assertEquals(3500, rows.getRowNumber());
   }
 
-
-  @Test
-  public void testNans(){
-
-    Double nan = Double.NaN;
-    Double myNumber = 2.0;
-    Double myNegNumber = -2.0;
-
-    System.out.println(myNumber.compareTo(nan));
-    System.out.println(nan.compareTo(myNumber));
-
-    System.out.println("---");
-    System.out.println(myNegNumber.compareTo(nan));
-    System.out.println(nan.compareTo(myNegNumber));
-  }
-
-
   @Test
   public void testPredicatePushdownWithNan() throws Exception {
     TypeDescription schema = TypeDescription.createStruct()
@@ -4064,8 +4047,6 @@ public class TestVectorOrcFile {
             .range(0L, Long.MAX_VALUE)
             .searchArgument(sarg, new String[]{"double1"}));
     batch = reader.getSchema().createRowBatch(3500);
-
-    System.out.println(batch.size);
 
     rows.nextBatch(batch);
 
