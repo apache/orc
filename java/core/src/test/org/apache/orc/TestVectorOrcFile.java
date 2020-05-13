@@ -2705,8 +2705,9 @@ public class TestVectorOrcFile {
       ((LongColumnVector) batch.cols[1]).vector[r] = r % 2;
       ((LongColumnVector) batch.cols[2]).vector[r] = (r % 255);
       ((LongColumnVector) batch.cols[3]).vector[r] = 31415L * r;
-      ((DoubleColumnVector) batch.cols[4]).vector[r] = 1.125 * r;
-      ((DoubleColumnVector) batch.cols[5]).vector[r] = 0.0009765625 * r;
+      // Avoid Zeros here as Double stats will have min -0.0 instead of 0.0
+      ((DoubleColumnVector) batch.cols[4]).vector[r] = 1.125 * r + 0.1;
+      ((DoubleColumnVector) batch.cols[5]).vector[r] = 0.0009765625 * r + 0.1;
       ((LongColumnVector) batch.cols[6]).vector[r] =
           new DateWritable(new Date(111, 6, 1)).getDays() + r;
 
@@ -2870,8 +2871,8 @@ public class TestVectorOrcFile {
       assertEquals("row " + r, r % 2 == 1 ? 1 : 0, bools.vector[r]);
       assertEquals("row " + r, (byte) (r % 255), bytes.vector[r]);
       assertEquals("row " + r, 31415L * r, longs.vector[r]);
-      assertEquals("row " + r, 1.125F * r, floats.vector[r], 0.0001);
-      assertEquals("row " + r, 0.0009765625 * r, doubles.vector[r], 0.000001);
+      assertEquals("row " + r, 1.125F * r + 0.1, floats.vector[r], 0.0001);
+      assertEquals("row " + r, 0.0009765625 * r + 0.1, doubles.vector[r], 0.000001);
       assertEquals("row " + r, new DateWritable(new Date(111, 6, 1 + r)),
           new DateWritable((int) dates.vector[r]));
       assertEquals("row " + r,
