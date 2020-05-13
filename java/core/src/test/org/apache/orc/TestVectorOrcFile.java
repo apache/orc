@@ -2705,10 +2705,8 @@ public class TestVectorOrcFile {
       ((LongColumnVector) batch.cols[1]).vector[r] = r % 2;
       ((LongColumnVector) batch.cols[2]).vector[r] = (r % 255);
       ((LongColumnVector) batch.cols[3]).vector[r] = 31415L * r;
-      // Avoid Zeros values here that cause Double stats to differ between reader and writer
-      // In more detail, reader would have stats min -0.0 because of ORC-629 but writer 0.0
-      ((DoubleColumnVector) batch.cols[4]).vector[r] = 1.125 * r + 0.1;
-      ((DoubleColumnVector) batch.cols[5]).vector[r] = 0.0009765625 * r + 0.1;
+      ((DoubleColumnVector) batch.cols[4]).vector[r] = 1.125 * r;
+      ((DoubleColumnVector) batch.cols[5]).vector[r] = 0.0009765625 * r;
       ((LongColumnVector) batch.cols[6]).vector[r] =
           new DateWritable(new Date(111, 6, 1)).getDays() + r;
 
@@ -2872,8 +2870,8 @@ public class TestVectorOrcFile {
       assertEquals("row " + r, r % 2 == 1 ? 1 : 0, bools.vector[r]);
       assertEquals("row " + r, (byte) (r % 255), bytes.vector[r]);
       assertEquals("row " + r, 31415L * r, longs.vector[r]);
-      assertEquals("row " + r, 1.125F * r + 0.1, floats.vector[r], 0.0001);
-      assertEquals("row " + r, 0.0009765625 * r + 0.1, doubles.vector[r], 0.000001);
+      assertEquals("row " + r, 1.125F * r, floats.vector[r], 0.0001);
+      assertEquals("row " + r, 0.0009765625 * r, doubles.vector[r], 0.000001);
       assertEquals("row " + r, new DateWritable(new Date(111, 6, 1 + r)),
           new DateWritable((int) dates.vector[r]));
       assertEquals("row " + r,
@@ -4026,10 +4024,11 @@ public class TestVectorOrcFile {
 
     DoubleColumnVector dbcol = ((DoubleColumnVector) batch.cols[0]);
 
-    // first row NaN (resulting to both min and max columnStats to be NaN)
+    // first row NaN (resulting to both min and max columnStats of stride to be NaN)
+    // NaN in the middle of a stride causes Sum of last stride to be NaN
     dbcol.vector[0] = Double.NaN;
     for (int i=1; i < 3500; ++i) {
-      dbcol.vector[i] = i;
+      dbcol.vector[i] = i == 3200 ? Double.NaN : i;
     }
     writer.addRowBatch(batch);
     writer.close();
@@ -4051,78 +4050,12 @@ public class TestVectorOrcFile {
     batch = reader.getSchema().createRowBatch(3500);
 
     rows.nextBatch(batch);
-    // Only the first stride should be read when Nans are ignored
+    // First stride should be read as NaN min/max are ignored
     assertEquals(1000, batch.size);
 
     rows.nextBatch(batch);
-    assertEquals(0, batch.size);
-  }
-
-  @Test
-  public void testPredicatePushdownWithZeros() throws Exception {
-    TypeDescription schema = TypeDescription.createStruct()
-            .addField("double1", TypeDescription.createDouble());
-
-    Writer writer = OrcFile.createWriter(testFilePath,
-            OrcFile.writerOptions(conf)
-                    .setSchema(schema)
-                    .stripeSize(400000L)
-                    .compress(CompressionKind.NONE)
-                    .bufferSize(500)
-                    .rowIndexStride(1000)
-                    .version(fileFormat));
-    VectorizedRowBatch batch = schema.createRowBatch();
-    batch.ensureSize(2000);
-    batch.size = 2000;
-    batch.cols[0].noNulls = true;
-
-    DoubleColumnVector dbcol = ((DoubleColumnVector) batch.cols[0]);
-
-    for (int i=0; i < 2000; ++i) {
-      if (i < 1000) {
-        // first stride => min/max -0.0
-        dbcol.vector[i] = -0.0;
-      } else {
-        // second stride => min/max 0.0
-        dbcol.vector[i] = 0.0;
-      }
-    }
-    writer.addRowBatch(batch);
-    writer.close();
-
-    Reader reader = OrcFile.createReader(testFilePath,
-            OrcFile.readerOptions(conf).filesystem(fs));
-    assertEquals(2000, reader.getNumberOfRows());
-
-    // Both strides match the predicate, just need to make sure min/max range is correct (-0.0, 0.0)
-    SearchArgument sarg = SearchArgumentFactory.newBuilder()
-            .startAnd()
-            .equals("double1", PredicateLeaf.Type.FLOAT, 0.0)
-            .end()
-            .build();
-
-    RecordReader rows = reader.rows(reader.options()
-            .range(0L, Long.MAX_VALUE)
-            .searchArgument(sarg, new String[]{"double1"}));
-    batch = reader.getSchema().createRowBatch(2000);
-
-    rows.nextBatch(batch);
-    assertEquals(2000, batch.size);
-
-    // Both strides match the predicate, just need to make sure min/max range is correct (-0.0, 0.0)
-    sarg = SearchArgumentFactory.newBuilder()
-            .startAnd()
-            .equals("double1", PredicateLeaf.Type.FLOAT, -0.0)
-            .end()
-            .build();
-
-    rows = reader.rows(reader.options()
-            .range(0L, Long.MAX_VALUE)
-            .searchArgument(sarg, new String[]{"double1"}));
-    batch = reader.getSchema().createRowBatch(2000);
-
-    rows.nextBatch(batch);
-    assertEquals(2000, batch.size);
+    // Last stride should be read as NaN sum is ignored
+    assertEquals(500, batch.size);
 
     rows.nextBatch(batch);
     assertEquals(0, batch.size);

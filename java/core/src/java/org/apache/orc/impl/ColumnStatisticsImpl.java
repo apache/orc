@@ -517,14 +517,13 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
   private static final class DoubleStatisticsImpl extends ColumnStatisticsImpl
        implements DoubleColumnStatistics {
     private boolean hasMinimum = false;
-    private Double minimum = Double.MAX_VALUE;
-    private Double maximum = Double.MIN_VALUE;
+    private double minimum = Double.MAX_VALUE;
+    private double maximum = Double.MIN_VALUE;
     private double sum = 0;
 
     DoubleStatisticsImpl() {
     }
 
-    // Constructor also handles special cases of Double values like NaN, -0.0, and 0.0
     DoubleStatisticsImpl(OrcProto.ColumnStatistics stats) {
       super(stats);
       OrcProto.DoubleStatistics dbl = stats.getDoubleStatistics();
@@ -537,18 +536,6 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       }
       if (dbl.hasSum()) {
         sum = dbl.getSum();
-      }
-      // Drop min/max values in case of NaN as the sorting order of values is undefined for this case
-      if (minimum.isNaN() || maximum.isNaN()) {
-        minimum = maximum = 0d;
-      } else {
-        // Updating min to -0.0 and max to +0.0 to ensure that no 0.0 values would be skipped
-        if (Double.compare(minimum, 0.0) == 0) {
-          minimum = -0.0;
-        }
-        if (Double.compare(maximum, -0.0) == 0) {
-          maximum = 0.0;
-        }
       }
     }
 
