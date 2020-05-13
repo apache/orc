@@ -495,13 +495,6 @@ public class RecordReaderImpl implements RecordReader {
                    " include ORC-517. Writer version: {}",
           predicate.getColumnName(), writerVersion);
       return TruthValue.YES_NO_NULL;
-    } else if (category == TypeDescription.Category.DOUBLE) {
-      DoubleColumnStatistics dstas = (DoubleColumnStatistics) cs;
-      if (!Double.isFinite(dstas.getMinimum()) && !Double.isFinite(dstas.getMaximum())) {
-        LOG.debug("Not using predication pushdown on {} because stats contain NaN values",
-                predicate.getColumnName());
-        return TruthValue.YES_NO;
-      }
     }
     return evaluatePredicateRange(predicate, range,
         BloomFilterIO.deserialize(kind, encoding, writerVersion, type.getCategory(),
