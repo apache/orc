@@ -2705,7 +2705,8 @@ public class TestVectorOrcFile {
       ((LongColumnVector) batch.cols[1]).vector[r] = r % 2;
       ((LongColumnVector) batch.cols[2]).vector[r] = (r % 255);
       ((LongColumnVector) batch.cols[3]).vector[r] = 31415L * r;
-      // Avoid Zeros here as Double stats will have min -0.0 instead of 0.0
+      // Avoid Zeros values here that cause Double stats to differ between reader and writer
+      // In more detail, Reader would have stats min -0.0 because of ORC-629 but writer 0.0
       ((DoubleColumnVector) batch.cols[4]).vector[r] = 1.125 * r + 0.1;
       ((DoubleColumnVector) batch.cols[5]).vector[r] = 0.0009765625 * r + 0.1;
       ((LongColumnVector) batch.cols[6]).vector[r] =
