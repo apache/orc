@@ -348,6 +348,17 @@ namespace orc {
               evaluate(pred, createIntStats(10L, 15L, true)));
     EXPECT_EQ(TruthValue::YES_NULL,
               evaluate(pred, createIntStats(0L, 10L, true)));
+    // Edge case where stats contain NaN or Inf numbers
+    PredicateLeaf pred4(
+            PredicateLeaf::Operator::LESS_THAN,
+            PredicateDataType::FLOAT,
+            "x",
+            Literal(10.0));
+    const auto& dInf = static_cast<double>(INFINITY);
+    EXPECT_EQ(TruthValue::YES_NO,
+            evaluate(pred4, createDoubleStats(dInf, dInf)));
+    EXPECT_EQ(TruthValue::YES_NO_NULL,
+            evaluate(pred4, createDoubleStats(dInf, dInf, true)));
   }
 
   TEST(TestPredicateLeaf, testIn) {
