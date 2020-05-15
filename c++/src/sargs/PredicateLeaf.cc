@@ -494,12 +494,18 @@ namespace orc {
             colStats.doublestatistics().has_minimum() &&
             colStats.doublestatistics().has_maximum()) {
           const auto& stats = colStats.doublestatistics();
-          result = evaluatePredicateRange(
-            mOperator,
-            literal2Double(mLiterals),
-            stats.minimum(),
-            stats.maximum(),
-            colStats.hasnull());
+          if (!isfinite(stats.minimum()) || !isfinite(stats.maximum()) ||
+              !isfinite(stats.sum())) {
+              result = colStats.hasnull() ?
+                      TruthValue::YES_NO_NULL : TruthValue::YES_NO;
+          } else {
+              result = evaluatePredicateRange(
+                      mOperator,
+                      literal2Double(mLiterals),
+                      stats.minimum(),
+                      stats.maximum(),
+                      colStats.hasnull());
+          }
         }
         break;
       }
