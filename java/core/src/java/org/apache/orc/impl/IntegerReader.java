@@ -67,6 +67,7 @@ public interface IntegerReader {
                    int length
                    ) throws IOException;
 
+
   /**
    * Return the next available vector for values. Does not change the
    * value of column.isRepeating.
