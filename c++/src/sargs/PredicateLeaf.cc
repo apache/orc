@@ -494,8 +494,8 @@ namespace orc {
             colStats.doublestatistics().has_minimum() &&
             colStats.doublestatistics().has_maximum()) {
           const auto& stats = colStats.doublestatistics();
-          if (!isfinite(stats.minimum()) || !isfinite(stats.maximum()) ||
-              !isfinite(stats.sum())) {
+          if (!std::isfinite(stats.minimum()) || !std::isfinite(stats.maximum()) ||
+              !std::isfinite(stats.sum())) {
               result = colStats.hasnull() ?
                       TruthValue::YES_NO_NULL : TruthValue::YES_NO;
           } else {
