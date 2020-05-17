@@ -73,19 +73,4 @@ public class StructBatchReader extends BatchReader {
       }
     }
   }
-
-//  @Override
-//  public void nextBatch(VectorizedRowBatch batch, int batchSize) throws IOException {
-//    TypeReader[] children = ((TreeReaderFactory.StructTreeReader) rootType).fields;
-//    for (int i = 0; i < children.length &&
-//                    (vectorColumnCount == -1 || i < vectorColumnCount); ++i) {
-//      ColumnVector colVector = batch.cols[i];
-//      if (colVector != null) {
-//        colVector.reset();
-//        colVector.ensureSize(batchSize, false);
-//        children[i].nextVector(colVector, null, batchSize);
-//      }
-//    }
-//    resetBatch(batch, batchSize);
-//  }
 }
