@@ -31,7 +31,7 @@ public class PrimitiveBatchReader extends BatchReader {
                         int batchSize) throws IOException {
   batch.cols[0].reset();
   batch.cols[0].ensureSize(batchSize, false);
-  rootType.nextVector(batch.cols[0], null, batchSize);
+  rootType.nextVector(batch.cols[0], null, batchSize, batch);
   resetBatch(batch, batchSize);
   }
 }

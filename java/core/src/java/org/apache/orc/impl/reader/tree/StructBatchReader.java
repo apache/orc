@@ -72,7 +72,6 @@ public class StructBatchReader extends BatchReader {
         readBatchColumn(batch, children, batchSize, i);
       }
     }
-    resetBatch(batch, batchSize);
   }
 
 //  @Override
