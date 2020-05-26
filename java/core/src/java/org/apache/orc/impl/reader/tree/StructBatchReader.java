@@ -22,25 +22,55 @@ import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.impl.TreeReaderFactory;
 
 import java.io.IOException;
+import java.util.Set;
 
 public class StructBatchReader extends BatchReader {
+  // The reader context including row-filtering details
+  private final TreeReaderFactory.Context context;
 
-  public StructBatchReader(TreeReaderFactory.StructTreeReader rowReader) {
+  public StructBatchReader(TreeReaderFactory.StructTreeReader rowReader, TreeReaderFactory.Context context) {
     super(rowReader);
+    this.context = context;
+  }
+
+  private void readBatchColumn(VectorizedRowBatch batch, TypeReader[] children, int batchSize, int index)
+      throws IOException {
+    ColumnVector colVector = batch.cols[index];
+    if (colVector != null) {
+      colVector.reset();
+      colVector.ensureSize(batchSize, false);
+      children[index].nextVector(colVector, null, batchSize, batch);
+    }
   }
 
   @Override
   public void nextBatch(VectorizedRowBatch batch, int batchSize) throws IOException {
     TypeReader[] children = ((TreeReaderFactory.StructTreeReader) rootType).fields;
-    for (int i = 0; i < children.length &&
-                    (vectorColumnCount == -1 || i < vectorColumnCount); ++i) {
-      ColumnVector colVector = batch.cols[i];
-      if (colVector != null) {
-        colVector.reset();
-        colVector.ensureSize(batchSize, false);
-        children[i].nextVector(colVector, null, batchSize);
+    // Early expand fields --> apply filter --> expand remaining fields
+    Set<Integer> earlyExpandCols = context.getColumnFilterIds();
+
+    // Clear selected and early expand columns used in Filter
+    batch.selectedInUse = false;
+    for (int i = 0; i < children.length && !earlyExpandCols.isEmpty() &&
+        (vectorColumnCount == -1 || i < vectorColumnCount); ++i) {
+      if (earlyExpandCols.contains(children[i].getColumnId())) {
+        readBatchColumn(batch, children, batchSize, i);
       }
     }
-    resetBatch(batch, batchSize);
+    // Since we are going to filter rows based on some column values set batch.size earlier here
+    batch.size = batchSize;
+
+    // Apply filter callback to reduce number of # rows selected for decoding in the next TreeReaders
+    if (!earlyExpandCols.isEmpty() && this.context.getColumnFilterCallback() != null) {
+      this.context.getColumnFilterCallback().accept(batch);
+    }
+
+    // Read the remaining columns applying row-level filtering
+    for (int i = 0; i < children.length &&
+        (vectorColumnCount == -1 || i < vectorColumnCount); ++i) {
+      if (!earlyExpandCols.contains(children[i].getColumnId())) {
+        readBatchColumn(batch, children, batchSize, i);
+      }
+    }
   }
 }
