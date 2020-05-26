@@ -284,8 +284,9 @@ public class TreeReaderFactory {
     protected static int countNonNullRowsInRange(boolean[] isNull, int start, int end) {
       int result = 0;
       while (start < end) {
-        if (!isNull[start++])
+        if (!isNull[start++]) {
           result++;
+        }
       }
       return result;
     }
@@ -1806,9 +1807,9 @@ public class TreeReaderFactory {
       // Read present/isNull stream
       super.nextVector(result, isNull, batchSize, filterContext);
       if (result instanceof Decimal64ColumnVector) {
-          nextVector((Decimal64ColumnVector) result, filterContext, batchSize);
+        nextVector((Decimal64ColumnVector) result, filterContext, batchSize);
       } else {
-          nextVector((DecimalColumnVector) result, filterContext, batchSize);
+        nextVector((DecimalColumnVector) result, filterContext, batchSize);
       }
     }
 

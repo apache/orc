@@ -127,7 +127,6 @@ public class TestRowFilteringComplexTypes {
 
     @Test
     // Inner UNION should make use of the filterContext
-    // TODO: selected rows should be combined with ignored rows
     public void testInnerUnionRowFilter() throws Exception {
         // Set the row stride to a multiple of the batch size
         final int INDEX_STRIDE = 16 * ColumnBatchRows;

@@ -49,15 +49,15 @@ public class StructBatchReader extends BatchReader {
     // Early expand fields --> apply filter --> expand remaining fields
     Set<Integer> earlyExpandCols = context.getColumnFilterIds();
 
-    // Early expand columns used in Filter
-    for (int i=0; i < children.length && !earlyExpandCols.isEmpty() &&
+    // Clear selected and early expand columns used in Filter
+    batch.selectedInUse = false;
+    for (int i = 0; i < children.length && !earlyExpandCols.isEmpty() &&
         (vectorColumnCount == -1 || i < vectorColumnCount); ++i) {
       if (earlyExpandCols.contains(children[i].getColumnId())) {
         readBatchColumn(batch, children, batchSize, i);
       }
     }
-    // VectorBatchSize is set by the RecordReaderImpl at the end of evert nextBatch call
-    // Since we are going to filter rows based on some column values set it earlier here
+    // Since we are going to filter rows based on some column values set batch.size earlier here
     batch.size = batchSize;
 
     // Apply filter callback to reduce number of # rows selected for decoding in the next TreeReaders
@@ -66,7 +66,7 @@ public class StructBatchReader extends BatchReader {
     }
 
     // Read the remaining columns applying row-level filtering
-    for (int i=0; i < children.length &&
+    for (int i = 0; i < children.length &&
         (vectorColumnCount == -1 || i < vectorColumnCount); ++i) {
       if (!earlyExpandCols.contains(children[i].getColumnId())) {
         readBatchColumn(batch, children, batchSize, i);

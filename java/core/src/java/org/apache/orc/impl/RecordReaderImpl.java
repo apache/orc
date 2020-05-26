@@ -1190,11 +1190,10 @@ public class RecordReaderImpl implements RecordReader {
 
       int batchSize = computeBatchSize(batch.getMaxSize());
       rowInStripe += batchSize;
-      batch.size = batchSize;
-
       reader.setVectorColumnCount(batch.getDataColumnCount());
       reader.nextBatch(batch, batchSize);
       advanceToNextRow(reader, rowInStripe + rowBaseInStripe, true);
+      // batch.size can be modified by filter so only batchSize can tell if we actually read rows
       return batchSize != 0;
     } catch (IOException e) {
       // Rethrow exception with file name in log message
