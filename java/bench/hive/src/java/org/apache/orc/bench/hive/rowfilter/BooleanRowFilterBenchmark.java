@@ -59,7 +59,6 @@ public class BooleanRowFilterBenchmark extends org.openjdk.jmh.Main {
   @State(Scope.Thread)
   public static class InputState {
 
-    // try Decimal64ColumnVector
     @Param({"ORIGINAL"})
     public TypeDescription.RowBatchVersion version;
 
