@@ -41,6 +41,10 @@ To run decimal/decimal64 benchmark:
 
 ```% java -jar hive/target/orc-benchmarks-hive-*-uber.jar decimal data```
 
+To run row-filter benchmark:
+
+```% java -jar hive/target/orc-benchmarks-hive-*-uber.jar row-filter data```
+
 To run spark benchmark:
 
 ```% java -jar spark/target/orc-benchmarks-spark-*.jar spark data```
