@@ -11,6 +11,9 @@
 # limitations under the License.
 
 cmake_minimum_required (VERSION 2.6)
+if (POLICY CMP0048)
+    cmake_policy(SET CMP0048 NEW)
+endif ()
 
 project(ORC C CXX)
 
@@ -19,7 +22,7 @@ SET(CPACK_PACKAGE_VERSION_MAJOR "1")
 SET(CPACK_PACKAGE_VERSION_MINOR "7")
 SET(CPACK_PACKAGE_VERSION_PATCH "0-SNAPSHOT")
 SET(ORC_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_modules")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake_modules")
 
 option (BUILD_JAVA
     "Include ORC Java library in the build process"
