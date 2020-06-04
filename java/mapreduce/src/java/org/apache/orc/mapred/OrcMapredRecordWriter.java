@@ -169,7 +169,7 @@ public class OrcMapredRecordWriter<V extends Writable>
       vector.keys.ensureSize(vector.childCount * 3, vector.offsets[row] != 0);
     }
     if (vector.values.isNull.length < vector.childCount) {
-      vector.values.ensureSize(vector.childCount, vector.offsets[row] != 0);
+      vector.values.ensureSize(vector.childCount * 3, vector.offsets[row] != 0);
     }
     int e = 0;
     for(Map.Entry<?,?> entry: value.entrySet()) {
