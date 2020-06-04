@@ -146,7 +146,10 @@ public class OrcMapredRecordWriter<V extends Writable>
     vector.offsets[row] = vector.childCount;
     vector.lengths[row] = value.size();
     vector.childCount += vector.lengths[row];
-    vector.child.ensureSize(vector.childCount, vector.offsets[row] != 0);
+    if (vector.child.isNull.length < vector.childCount) {
+      vector.child.ensureSize(vector.childCount * 3, vector.offsets[row] != 0);
+    }
+
     for(int e=0; e < vector.lengths[row]; ++e) {
       setColumn(elemType, vector.child, (int) vector.offsets[row] + e,
           (Writable) value.get(e));
@@ -162,8 +165,12 @@ public class OrcMapredRecordWriter<V extends Writable>
     vector.offsets[row] = vector.childCount;
     vector.lengths[row] = value.size();
     vector.childCount += vector.lengths[row];
-    vector.keys.ensureSize(vector.childCount, vector.offsets[row] != 0);
-    vector.values.ensureSize(vector.childCount, vector.offsets[row] != 0);
+    if (vector.keys.isNull.length < vector.childCount) {
+      vector.keys.ensureSize(vector.childCount * 3, vector.offsets[row] != 0);
+    }
+    if (vector.values.isNull.length < vector.childCount) {
+      vector.values.ensureSize(vector.childCount, vector.offsets[row] != 0);
+    }
     int e = 0;
     for(Map.Entry<?,?> entry: value.entrySet()) {
       setColumn(keyType, vector.keys, (int) vector.offsets[row] + e,
