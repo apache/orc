@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -55,6 +55,8 @@ import java.util.Map;
 
 public class OrcMapredRecordWriter<V extends Writable>
     implements RecordWriter<NullWritable, V> {
+  // The factor that we grow lists and maps by when they are too small.
+  private static final int GROWTH_FACTOR = 3;
   private final Writer writer;
   private final VectorizedRowBatch batch;
   private final TypeDescription schema;
@@ -146,7 +148,11 @@ public class OrcMapredRecordWriter<V extends Writable>
     vector.offsets[row] = vector.childCount;
     vector.lengths[row] = value.size();
     vector.childCount += vector.lengths[row];
-    vector.child.ensureSize(vector.childCount, vector.offsets[row] != 0);
+    if (vector.child.isNull.length < vector.childCount) {
+      vector.child.ensureSize(vector.childCount * GROWTH_FACTOR,
+          vector.offsets[row] != 0);
+    }
+
     for(int e=0; e < vector.lengths[row]; ++e) {
       setColumn(elemType, vector.child, (int) vector.offsets[row] + e,
           (Writable) value.get(e));
@@ -162,8 +168,14 @@ public class OrcMapredRecordWriter<V extends Writable>
     vector.offsets[row] = vector.childCount;
     vector.lengths[row] = value.size();
     vector.childCount += vector.lengths[row];
-    vector.keys.ensureSize(vector.childCount, vector.offsets[row] != 0);
-    vector.values.ensureSize(vector.childCount, vector.offsets[row] != 0);
+    if (vector.keys.isNull.length < vector.childCount) {
+      vector.keys.ensureSize(vector.childCount * GROWTH_FACTOR,
+          vector.offsets[row] != 0);
+    }
+    if (vector.values.isNull.length < vector.childCount) {
+      vector.values.ensureSize(vector.childCount * GROWTH_FACTOR,
+          vector.offsets[row] != 0);
+    }
     int e = 0;
     for(Map.Entry<?,?> entry: value.entrySet()) {
       setColumn(keyType, vector.keys, (int) vector.offsets[row] + e,
