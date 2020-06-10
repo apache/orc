@@ -184,9 +184,9 @@ include_directories (
 
 add_custom_command(OUTPUT orc_proto.pb.h orc_proto.pb.cc
    COMMAND ${PROTOBUF_EXECUTABLE}
-        -I ${CMAKE_SOURCE_DIR}/proto
+        -I ${PROJECT_SOURCE_DIR}/proto
         --cpp_out="${CMAKE_CURRENT_BINARY_DIR}"
-        "${CMAKE_SOURCE_DIR}/proto/orc_proto.proto"
+        "${PROJECT_SOURCE_DIR}/proto/orc_proto.proto"
 )
 
 set(SOURCE_FILES
