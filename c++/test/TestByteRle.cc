@@ -1107,7 +1107,7 @@ TEST(BooleanRle, skipTestWithNulls) {
       rle->skip(4);
     }
     rle->skip(0);
-    data.assign(data.size(), -1);;
+    data.assign(data.size(), -1);
     rle->next(data.data(), data.size(), allNull.data());
     for (size_t j = 0; j < data.size(); ++j) {
       EXPECT_EQ(0, data[j]) << "Output wrong at " << i << ", " << j;

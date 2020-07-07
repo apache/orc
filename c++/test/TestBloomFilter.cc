@@ -152,9 +152,9 @@ namespace orc {
 
     // test strings
     bloomFilter.reset();
-    const char * emptyStr = u8"";
-    const char * enStr = u8"english";
-    const char * cnStr = u8"中国字";
+    const char * emptyStr = "";
+    const char * enStr = "english";
+    const char * cnStr = "中国字";
 
     EXPECT_FALSE(bloomFilter.testBytes(emptyStr,
                                        static_cast<int64_t>(strlen(emptyStr))));
