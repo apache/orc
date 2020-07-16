@@ -48,6 +48,15 @@ matrix:
     - cd build
     - cmake -DOPENSSL_ROOT_DIR=`brew --prefix openssl` ..
     - make package test-out
+  - compiler: clang
+    os: osx
+    osx_image: xcode12
+    script:
+    - brew link --overwrite --force openssl
+    - mkdir build
+    - cd build
+    - cmake -DOPENSSL_ROOT_DIR=`brew --prefix openssl` ..
+    - make package test-out
 
 jdk:
   - openjdk7
