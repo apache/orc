@@ -618,6 +618,7 @@ public class SchemaEvolution {
   private boolean isNestableType(TypeDescription typeDescription) {
     if (TypeDescription.Category.STRUCT == typeDescription.getCategory()
             || TypeDescription.Category.LIST == typeDescription.getCategory()
+            || TypeDescription.Category.MAP == typeDescription.getCategory()
             || TypeDescription.Category.MAP == typeDescription.getCategory()) {
       return true;
     }
