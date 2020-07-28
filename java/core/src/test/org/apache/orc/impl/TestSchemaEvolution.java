@@ -1570,14 +1570,39 @@ public class TestSchemaEvolution {
     assertTrue(evo.isAcid());
     // the first stuff should be an identity
     boolean[] fileInclude = evo.getFileIncluded();
-    for(int c=0; c < 13; ++c) {
+    for(int c=0; c < 9; ++c) {
       assertEquals("column " + c, c, evo.getFileType(c).getId());
     }
 
-//    assertEquals(10, evo.getFileType(9).getId());
-//    assertEquals(11, evo.getFileType(10).getId());
-//    assertEquals(9, evo.getFileType(11).getId());
-//    assertEquals(12, evo.getFileType(12).getId());
+    assertEquals(10, evo.getFileType(9).getId());
+    assertEquals(11, evo.getFileType(10).getId());
+    assertEquals(9, evo.getFileType(11).getId());
+    assertEquals(12, evo.getFileType(12).getId());
+    assertEquals(13, fileInclude.length);
+
+    for(int c=0; c < fileInclude.length; ++c) {
+      assertTrue("column " + c, fileInclude[c]);
+    }
+  }
+
+  @Test
+  public void testAcidPositionMappedAllStructures() {
+    TypeDescription fileType = TypeDescription.fromString(
+            "struct<operation:int,originalTransaction:bigint,bucket:int," +
+                    "rowId:bigint,currentTransaction:bigint," +
+                    "row:struct<_col0:int,_col1:struct<z:int,x:double,y:string>," +
+                    "_col2:double>>");
+    TypeDescription readerType = TypeDescription.fromString(
+            "struct<a:int,b:struct<x:double,y:string,z:int>,c:double>");
+    options.forcePositionalEvolution(true);
+    options.forcePositionalEvolutionNestedTypes(true);
+    SchemaEvolution evo = new SchemaEvolution(fileType, readerType, options);
+    assertTrue(evo.isAcid());
+    // the first stuff should be an identity
+    boolean[] fileInclude = evo.getFileIncluded();
+    for(int c=0; c < 13; ++c) {
+      assertEquals("column " + c, c, evo.getFileType(c).getId());
+    }
     assertEquals(13, fileInclude.length);
 
     for(int c=0; c < fileInclude.length; ++c) {
@@ -1600,11 +1625,34 @@ public class TestSchemaEvolution {
     assertEquals(1, evo.getFileType(1).getId());
     assertEquals(2, evo.getFileType(2).getId());
     assertEquals(3, evo.getFileType(3).getId());
-//    assertEquals(4, evo.getFileType(4).getId());
-//    assertEquals(null, evo.getFileType(5));
-    assertEquals(null, evo.getFileType(4));
+    assertNull(evo.getFileType(4));
     assertEquals(4, evo.getFileType(5).getId());
     assertEquals(5, evo.getFileType(6).getId());
+    assertEquals(6, fileInclude.length);
+    for(int c=0; c < fileInclude.length; ++c) {
+      assertTrue("column " + c, fileInclude[c]);
+    }
+  }
+
+  @Test
+  public void testNonAcidPositionMappedAllStructures() {
+    TypeDescription fileType = TypeDescription.fromString(
+            "struct<_col0:int,_col1:struct<x:double,z:int>," +
+                    "_col2:double>");
+    TypeDescription readerType = TypeDescription.fromString(
+            "struct<a:int,b:struct<x:double,y:string,z:int>,c:double>");
+    options.forcePositionalEvolution(true);
+    options.forcePositionalEvolutionNestedTypes(true);
+    SchemaEvolution evo = new SchemaEvolution(fileType, readerType, options);
+    assertFalse(evo.isAcid());
+    // the first stuff should be an identity
+    boolean[] fileInclude = evo.getFileIncluded();
+    assertEquals(0, evo.getFileType(0).getId());
+    assertEquals(1, evo.getFileType(1).getId());
+    assertEquals(2, evo.getFileType(2).getId());
+    assertEquals(3, evo.getFileType(3).getId());
+    assertEquals(4, evo.getFileType(4).getId());
+    assertNull(evo.getFileType(5));
     assertEquals(6, fileInclude.length);
     for(int c=0; c < fileInclude.length; ++c) {
       assertTrue("column " + c, fileInclude[c]);
@@ -1717,7 +1765,7 @@ public class TestSchemaEvolution {
   }
 
   @Test
-  public void testPositionalEvolution() throws IOException {
+  public void testPositionalEvolution() {
     options.forcePositionalEvolution(true);
     TypeDescription file = TypeDescription.fromString("struct<x:int,y:int,z:int>");
     TypeDescription read = TypeDescription.fromString("struct<z:int,x:int,a:int,b:int>");
@@ -1725,25 +1773,67 @@ public class TestSchemaEvolution {
     assertEquals(1, evo.getFileType(1).getId());
     assertEquals(2, evo.getFileType(2).getId());
     assertEquals(3, evo.getFileType(3).getId());
-    assertEquals(null, evo.getFileType(4));
+    assertNull(evo.getFileType(4));
   }
 
   @Test
-  public void testPositionalEvolutionForStructInArray() throws IOException {
+  public void testStructInArray_EnablePositionEvolutionForTopLevel() {
     options.forcePositionalEvolution(true);
-    TypeDescription file = TypeDescription.fromString("array<struct<x:int,y:int,z:int>>");
-    TypeDescription read = TypeDescription.fromString("array<struct<z:int,x:int,a:int,b:int>>");
+    TypeDescription file = TypeDescription.fromString("struct<top1:int,top1:array<struct<x:int,y:int,z:int>>>");
+    TypeDescription read = TypeDescription.fromString("struct<col1:int,col2:array<struct<z:int,x:int,a:int,b:int>>>");
     SchemaEvolution evo = new SchemaEvolution(file, read, options);
+    assertEquals(0, evo.getFileType(0).getId());
+    assertEquals(1, evo.getFileType(1).getId());
+    assertEquals(2, evo.getFileType(2).getId());
+    assertEquals(3, evo.getFileType(3).getId());
+    assertEquals(6, evo.getFileType(4).getId());
+    assertEquals(4, evo.getFileType(5).getId());
+    assertEquals(4, evo.getFileType(5).getId());
+
+    // a:int in reader schema
+    assertNull(evo.getFileType(6));
+    // b:int in reader schema
+    assertNull(evo.getFileType(7));
+  }
+
+  @Test
+  public void testStructInArray_EnablePositionEvolutionForAll() {
+    options.forcePositionalEvolution(true);
+    options.forcePositionalEvolutionNestedTypes(true);
+    TypeDescription file = TypeDescription.fromString("struct<top1:int,top1:array<struct<x:int,y:int,z:int>>>");
+    TypeDescription read = TypeDescription.fromString("struct<col1:int,col2:array<struct<z:int,x:int,a:int,b:int>>>");
+    SchemaEvolution evo = new SchemaEvolution(file, read, options);
+    assertEquals(0, evo.getFileType(0).getId());
     assertEquals(1, evo.getFileType(1).getId());
     assertEquals(2, evo.getFileType(2).getId());
     assertEquals(3, evo.getFileType(3).getId());
     assertEquals(4, evo.getFileType(4).getId());
-    assertEquals(null, evo.getFileType(5));
+    assertEquals(5, evo.getFileType(5).getId());
+    assertEquals(6, evo.getFileType(6).getId());
+
+    // b:int in reader schema
+    assertNull(evo.getFileType(7));
   }
 
   @Test
-  public void testPositionalEvolutionForTwoLayerNestedStruct() throws IOException {
+  public void testStructInArray_DisablePositionalEvolution_ExpectNameMapping() {
+    options.forcePositionalEvolution(false);
+    options.forcePositionalEvolutionNestedTypes(true);
+    TypeDescription file = TypeDescription.fromString("array<struct<x:int,y:int,z:int>>");
+    TypeDescription read = TypeDescription.fromString("array<struct<z:int,x:int,a:int,b:int>>");
+    SchemaEvolution evo = new SchemaEvolution(file, read, options);
+    assertEquals(0, evo.getFileType(0).getId());
+    assertEquals(1, evo.getFileType(1).getId());
+    assertEquals(4, evo.getFileType(2).getId());
+    assertEquals(2, evo.getFileType(3).getId());
+    assertNull(evo.getFileType(4));
+    assertNull(evo.getFileType(5));
+  }
+
+  @Test
+  public void testPositionalEvolutionForTwoLayerNestedStruct() {
     options.forcePositionalEvolution(true);
+    options.forcePositionalEvolutionNestedTypes(true);
     TypeDescription file = TypeDescription.fromString("struct<s:struct<x:int,y:int,z:int>>");
     TypeDescription read = TypeDescription.fromString("struct<s:struct<z:int,x:int,a:int,b:int>>");
     SchemaEvolution evo = new SchemaEvolution(file, read, options);
@@ -1755,8 +1845,9 @@ public class TestSchemaEvolution {
   }
 
   @Test
-  public void testPositionalEvolutionForThreeLayerNestedStruct() throws IOException {
+  public void testPositionalEvolutionForThreeLayerNestedStruct() {
     options.forcePositionalEvolution(true);
+    options.forcePositionalEvolutionNestedTypes(true);
     TypeDescription file = TypeDescription.fromString("struct<s1:struct<s2:struct<x:int,y:int,z:int>>>");
     TypeDescription read = TypeDescription.fromString("struct<s1:struct<s:struct<z:int,x:int,a:int,b:int>>>");
     SchemaEvolution evo = new SchemaEvolution(file, read, options);

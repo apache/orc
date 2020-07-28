@@ -147,6 +147,11 @@ public enum OrcConf {
       "Require schema evolution to match the top level columns using position\n" +
       "rather than column names. This provides backwards compatibility with\n" +
       "Hive 2.1."),
+  FORCE_POSITIONAL_EVOLUTION_NESTED_TYPES("orc.force.positional.evolution.nested.types",
+          "orc.force.positional.evolution.nested.types", false,
+          "Additional config to positional schema evolution to match the all columns using position\n" +
+                  "rather than only matching top level columns positionally, this config item will take effect only " +
+                  "when orc.force.positional.evolution is set to true."),
   ROWS_BETWEEN_CHECKS("orc.rows.between.memory.checks", "orc.rows.between.memory.checks", 5000,
     "How often should MemoryManager check the memory sizes? Measured in rows\n" +
       "added to all of the writers.  Valid range is [1,10000] and is primarily meant for" +

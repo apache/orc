@@ -194,6 +194,7 @@ public interface Reader extends Closeable {
     private DataReader dataReader = null;
     private Boolean tolerateMissingSchema = null;
     private boolean forcePositionalEvolution;
+    private boolean forcePositionalEvolutionNestedTypes;
     private boolean isSchemaEvolutionCaseAware =
         (boolean) OrcConf.IS_SCHEMA_EVOLUTION_CASE_SENSITIVE.getDefaultValue();
     private boolean includeAcidColumns = true;
@@ -207,6 +208,7 @@ public interface Reader extends Closeable {
       skipCorruptRecords = OrcConf.SKIP_CORRUPT_DATA.getBoolean(conf);
       tolerateMissingSchema = OrcConf.TOLERATE_MISSING_SCHEMA.getBoolean(conf);
       forcePositionalEvolution = OrcConf.FORCE_POSITIONAL_EVOLUTION.getBoolean(conf);
+      forcePositionalEvolutionNestedTypes = OrcConf.FORCE_POSITIONAL_EVOLUTION_NESTED_TYPES.getBoolean(conf);
       isSchemaEvolutionCaseAware =
           OrcConf.IS_SCHEMA_EVOLUTION_CASE_SENSITIVE.getBoolean(conf);
     }
@@ -330,6 +332,17 @@ public interface Reader extends Closeable {
     }
 
     /**
+     * Set whether to force schema evolution to be positional for all columns regardless of levels
+     *
+     * @param value flag to force positional schema evolution for all levels
+     * @return this
+     */
+    public Options forcePositionalEvolutionNestedTypes(boolean value) {
+      this.forcePositionalEvolutionNestedTypes = value;
+      return this;
+    }
+
+    /**
      * Set boolean flag to determine if the comparision of field names in schema
      * evolution is case sensitive
      * @param value the flag for schema evolution is case sensitive or not.
@@ -402,6 +415,10 @@ public interface Reader extends Closeable {
 
     public boolean getForcePositionalEvolution() {
       return forcePositionalEvolution;
+    }
+
+    public boolean isForcePositionalEvolutionNestedTypes() {
+      return forcePositionalEvolutionNestedTypes;
     }
 
     public boolean getIsSchemaEvolutionCaseAware() {

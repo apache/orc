@@ -18,18 +18,18 @@
 
 package org.apache.orc.impl;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.orc.Reader;
+import org.apache.orc.TypeDescription;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
-
-import org.apache.hadoop.conf.Configuration;
-import org.apache.orc.Reader;
-import org.apache.orc.TypeDescription;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Infer and track the evolution between the schema as stored in the file and
@@ -123,7 +123,7 @@ public class SchemaEvolution {
           }
         }
       }
-      buildConversion(fileSchema, this.readerSchema, positionalLevels);
+      buildConversion(fileSchema, this.readerSchema, positionalLevels, options.isForcePositionalEvolutionNestedTypes());
     } else {
       this.readerSchema = fileSchema;
       this.readerFileTypes =
@@ -433,9 +433,12 @@ public class SchemaEvolution {
   }
 
   /**
-   * Build the mapping from the file type to the reader type. For pre-HIVE-4243
-   * ORC files, the top level structure is matched using position within the
-   * row. Otherwise, structs fields are matched by name.
+   * Build the mapping from the file type to the reader type. When both positionalLevels and
+   * isForcePositionalEvolutionNestedTypes are set to true, match all columns by position regardless
+   * of levels. When positionalLevels is set to true and isForcePositionalEvolutionNestedTypes is
+   * set to false, only top level structure columns is matched by position within the row. When
+   * both positionalLevels and isForcePositionalEvolutionNestedTypes are set to false, match all
+   * columns by name.
    *
    * @param fileType         the type in the file
    * @param readerType       the type in the reader
@@ -443,17 +446,12 @@ public class SchemaEvolution {
    *                         mapped by position rather than field name. Pre
    *                         HIVE-4243 files have either 1 or 2 levels matched
    *                         positionally depending on whether they are ACID.
+   * @param isForcePositionalEvolutionNestedTypes whether to map all levels by position
    */
   void buildConversion(TypeDescription fileType,
                        TypeDescription readerType,
-                       int positionalLevels) {
-    buildConversion(fileType, readerType, positionalLevels, false);
-  }
-
-  void buildConversion(TypeDescription fileType,
-                       TypeDescription readerType,
                        int positionalLevels,
-                       boolean positionalAll) {
+                       boolean isForcePositionalEvolutionNestedTypes) {
     // if the column isn't included, don't map it
     if (!includeReaderColumn(readerType.getId())) {
       return;
@@ -504,15 +502,16 @@ public class SchemaEvolution {
           List<TypeDescription> readerChildren = readerType.getChildren();
           if (fileChildren.size() == readerChildren.size()) {
             for (int i = 0; i < fileChildren.size(); ++i) {
-              if (positionalAll
-                      && isNestableType(fileChildren.get(i))
-                      && isNestableType(readerChildren.get(i))) {
-                buildConversion(fileChildren.get(i),
-                        readerChildren.get(i), positionalLevels);
-              } else {
-                buildConversion(fileChildren.get(i),
-                        readerChildren.get(i), 0);
-              }
+              int nextPositionLevel = nextPositionLevel(
+                      isForcePositionalEvolutionNestedTypes,
+                      fileChildren.get(i),
+                      readerChildren.get(i),
+                      positionalLevels);
+              buildConversion(
+                      fileChildren.get(i),
+                      readerChildren.get(i),
+                      nextPositionLevel,
+                      isForcePositionalEvolutionNestedTypes);
             }
           } else {
             isOk = false;
@@ -552,7 +551,7 @@ public class SchemaEvolution {
                 continue;
               }
 
-              buildConversion(fileField, readerField, 0);
+              buildConversion(fileField, readerField, 0, isForcePositionalEvolutionNestedTypes);
             }
           } else {
             int jointSize = Math.min(fileChildren.size(), readerChildren.size());
@@ -560,17 +559,18 @@ public class SchemaEvolution {
               // first Struct for ACID where it stores the transaction metadata
               if (positionalLevels == 2) {
                 buildConversion(fileChildren.get(i), readerChildren.get(i),
-                        positionalLevels - 1);
+                        positionalLevels - 1, isForcePositionalEvolutionNestedTypes);
               } else {
-                if (positionalAll
-                        && isNestableType(fileChildren.get(i))
-                        && isNestableType(readerChildren.get(i))) {
-                  buildConversion(fileChildren.get(i), readerChildren.get(i),
-                          positionalLevels);
-                } else {
-                  buildConversion(fileChildren.get(i), readerChildren.get(i),
-                          0);
-                }
+                int nextPositionLevel = nextPositionLevel(
+                        isForcePositionalEvolutionNestedTypes,
+                        fileChildren.get(i),
+                        readerChildren.get(i),
+                        positionalLevels);
+                buildConversion(
+                        fileChildren.get(i),
+                        readerChildren.get(i),
+                        nextPositionLevel,
+                        isForcePositionalEvolutionNestedTypes);
               }
             }
           }
@@ -600,6 +600,19 @@ public class SchemaEvolution {
                         fileType.toString(), fileType.getId(),
                         readerType.toString(), readerType.getId()));
     }
+  }
+
+  private int nextPositionLevel(
+          boolean isForcePositionalEvolutionNestedTypes,
+          TypeDescription fileType,
+          TypeDescription readerType,
+          int currentPositionLevel) {
+    if (isForcePositionalEvolutionNestedTypes
+            && isNestableType(fileType)
+            && isNestableType(readerType)) {
+      return currentPositionLevel;
+    }
+    return 0;
   }
 
   private boolean isNestableType(TypeDescription typeDescription) {
