@@ -107,7 +107,6 @@ public class SchemaEvolution {
       int positionalLevels = 0;
       if (options.getForcePositionalEvolution()) {
         positionalLevels = isAcid ? 2 : 1;
-        buildConversion(fileSchema, this.readerSchema, positionalLevels);
       } else if (!hasColumnNames(isAcid? getBaseRow(fileSchema) : fileSchema)) {
         if (!this.fileSchema.equals(this.readerSchema)) {
           if (!allowMissingMetadata) {
@@ -437,8 +436,9 @@ public class SchemaEvolution {
    * Build the mapping from the file type to the reader type. For pre-HIVE-4243
    * ORC files, the top level structure is matched using position within the
    * row. Otherwise, structs fields are matched by name.
-   * @param fileType the type in the file
-   * @param readerType the type in the reader
+   *
+   * @param fileType         the type in the file
+   * @param readerType       the type in the reader
    * @param positionalLevels the number of structure levels that must be
    *                         mapped by position rather than field name. Pre
    *                         HIVE-4243 files have either 1 or 2 levels matched
@@ -447,6 +447,13 @@ public class SchemaEvolution {
   void buildConversion(TypeDescription fileType,
                        TypeDescription readerType,
                        int positionalLevels) {
+    buildConversion(fileType, readerType, positionalLevels, false);
+  }
+
+  void buildConversion(TypeDescription fileType,
+                       TypeDescription readerType,
+                       int positionalLevels,
+                       boolean positionalAll) {
     // if the column isn't included, don't map it
     if (!includeReaderColumn(readerType.getId())) {
       return;
@@ -484,7 +491,7 @@ public class SchemaEvolution {
           // We do conversion when same DECIMAL type but different
           // precision/scale.
           if (fileType.getPrecision() != readerType.getPrecision() ||
-              fileType.getScale() != readerType.getScale()) {
+                  fileType.getScale() != readerType.getScale()) {
             hasConversion = true;
             isOnlyImplicitConversion = false;
           }
@@ -496,9 +503,16 @@ public class SchemaEvolution {
           List<TypeDescription> fileChildren = fileType.getChildren();
           List<TypeDescription> readerChildren = readerType.getChildren();
           if (fileChildren.size() == readerChildren.size()) {
-            for(int i=0; i < fileChildren.size(); ++i) {
-              buildConversion(fileChildren.get(i),
-                              readerChildren.get(i), 0);
+            for (int i = 0; i < fileChildren.size(); ++i) {
+              if (positionalAll
+                      && isNestableType(fileChildren.get(i))
+                      && isNestableType(readerChildren.get(i))) {
+                buildConversion(fileChildren.get(i),
+                        readerChildren.get(i), positionalLevels);
+              } else {
+                buildConversion(fileChildren.get(i),
+                        readerChildren.get(i), 0);
+              }
             }
           } else {
             isOk = false;
@@ -541,11 +555,23 @@ public class SchemaEvolution {
               buildConversion(fileField, readerField, 0);
             }
           } else {
-            int jointSize = Math.min(fileChildren.size(),
-                                     readerChildren.size());
+            int jointSize = Math.min(fileChildren.size(), readerChildren.size());
             for (int i = 0; i < jointSize; ++i) {
-              buildConversion(fileChildren.get(i), readerChildren.get(i),
-                  positionalLevels - 1);
+              // first Struct for ACID where it stores the transaction metadata
+              if (positionalLevels == 2) {
+                buildConversion(fileChildren.get(i), readerChildren.get(i),
+                        positionalLevels - 1);
+              } else {
+                if (positionalAll
+                        && isNestableType(fileChildren.get(i))
+                        && isNestableType(readerChildren.get(i))) {
+                  buildConversion(fileChildren.get(i), readerChildren.get(i),
+                          positionalLevels);
+                } else {
+                  buildConversion(fileChildren.get(i), readerChildren.get(i),
+                          0);
+                }
+              }
             }
           }
           break;
@@ -574,6 +600,15 @@ public class SchemaEvolution {
                         fileType.toString(), fileType.getId(),
                         readerType.toString(), readerType.getId()));
     }
+  }
+
+  private boolean isNestableType(TypeDescription typeDescription) {
+    if (TypeDescription.Category.STRUCT == typeDescription.getCategory()
+            || TypeDescription.Category.LIST == typeDescription.getCategory()
+            || TypeDescription.Category.MAP == typeDescription.getCategory()) {
+      return true;
+    }
+    return false;
   }
 
   void buildIdentityConversion(TypeDescription readerType) {

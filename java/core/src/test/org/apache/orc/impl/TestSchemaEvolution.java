@@ -17,23 +17,6 @@
  */
 package org.apache.orc.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoField;
-import java.util.Arrays;
-import java.util.TimeZone;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -60,6 +43,24 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoField;
+import java.util.Arrays;
+import java.util.TimeZone;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 public class TestSchemaEvolution {
 
@@ -1569,14 +1570,16 @@ public class TestSchemaEvolution {
     assertTrue(evo.isAcid());
     // the first stuff should be an identity
     boolean[] fileInclude = evo.getFileIncluded();
-    for(int c=0; c < 9; ++c) {
+    for(int c=0; c < 13; ++c) {
       assertEquals("column " + c, c, evo.getFileType(c).getId());
     }
-    assertEquals(10, evo.getFileType(9).getId());
-    assertEquals(11, evo.getFileType(10).getId());
-    assertEquals(9, evo.getFileType(11).getId());
-    assertEquals(12, evo.getFileType(12).getId());
+
+//    assertEquals(10, evo.getFileType(9).getId());
+//    assertEquals(11, evo.getFileType(10).getId());
+//    assertEquals(9, evo.getFileType(11).getId());
+//    assertEquals(12, evo.getFileType(12).getId());
     assertEquals(13, fileInclude.length);
+
     for(int c=0; c < fileInclude.length; ++c) {
       assertTrue("column " + c, fileInclude[c]);
     }
@@ -1597,6 +1600,8 @@ public class TestSchemaEvolution {
     assertEquals(1, evo.getFileType(1).getId());
     assertEquals(2, evo.getFileType(2).getId());
     assertEquals(3, evo.getFileType(3).getId());
+//    assertEquals(4, evo.getFileType(4).getId());
+//    assertEquals(null, evo.getFileType(5));
     assertEquals(null, evo.getFileType(4));
     assertEquals(4, evo.getFileType(5).getId());
     assertEquals(5, evo.getFileType(6).getId());
@@ -1721,6 +1726,46 @@ public class TestSchemaEvolution {
     assertEquals(2, evo.getFileType(2).getId());
     assertEquals(3, evo.getFileType(3).getId());
     assertEquals(null, evo.getFileType(4));
+  }
+
+  @Test
+  public void testPositionalEvolutionForStructInArray() throws IOException {
+    options.forcePositionalEvolution(true);
+    TypeDescription file = TypeDescription.fromString("array<struct<x:int,y:int,z:int>>");
+    TypeDescription read = TypeDescription.fromString("array<struct<z:int,x:int,a:int,b:int>>");
+    SchemaEvolution evo = new SchemaEvolution(file, read, options);
+    assertEquals(1, evo.getFileType(1).getId());
+    assertEquals(2, evo.getFileType(2).getId());
+    assertEquals(3, evo.getFileType(3).getId());
+    assertEquals(4, evo.getFileType(4).getId());
+    assertEquals(null, evo.getFileType(5));
+  }
+
+  @Test
+  public void testPositionalEvolutionForTwoLayerNestedStruct() throws IOException {
+    options.forcePositionalEvolution(true);
+    TypeDescription file = TypeDescription.fromString("struct<s:struct<x:int,y:int,z:int>>");
+    TypeDescription read = TypeDescription.fromString("struct<s:struct<z:int,x:int,a:int,b:int>>");
+    SchemaEvolution evo = new SchemaEvolution(file, read, options);
+    assertEquals(1, evo.getFileType(1).getId());
+    assertEquals(2, evo.getFileType(2).getId());
+    assertEquals(3, evo.getFileType(3).getId());
+    assertEquals(4, evo.getFileType(4).getId());
+    assertNull(evo.getFileType(5));
+  }
+
+  @Test
+  public void testPositionalEvolutionForThreeLayerNestedStruct() throws IOException {
+    options.forcePositionalEvolution(true);
+    TypeDescription file = TypeDescription.fromString("struct<s1:struct<s2:struct<x:int,y:int,z:int>>>");
+    TypeDescription read = TypeDescription.fromString("struct<s1:struct<s:struct<z:int,x:int,a:int,b:int>>>");
+    SchemaEvolution evo = new SchemaEvolution(file, read, options);
+    assertEquals(1, evo.getFileType(1).getId());
+    assertEquals(2, evo.getFileType(2).getId());
+    assertEquals(3, evo.getFileType(3).getId());
+    assertEquals(4, evo.getFileType(4).getId());
+    assertEquals(5, evo.getFileType(5).getId());
+    assertNull(evo.getFileType(6));
   }
 
   // These are helper methods that pull some of the common code into one
