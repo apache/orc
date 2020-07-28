@@ -332,9 +332,9 @@ public interface Reader extends Closeable {
     }
 
     /**
-     * Set no. of levels to force schema evolution to be positional instead of
+     * Set number of levels to force schema evolution to be positional instead of
      * based on the column names.
-     * @param value force positional evolution
+     * @param value number of levels of positional schema evolution
      * @return this
      */
     public Options positionalEvolutionLevel(int value) {

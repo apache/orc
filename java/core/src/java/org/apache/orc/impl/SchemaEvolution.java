@@ -497,7 +497,7 @@ public class SchemaEvolution {
           if (fileChildren.size() == readerChildren.size()) {
             for(int i=0; i < fileChildren.size(); ++i) {
               buildConversion(fileChildren.get(i),
-                              readerChildren.get(i), 0);
+                              readerChildren.get(i), positionalLevels - 1);
             }
           } else {
             isOk = false;
