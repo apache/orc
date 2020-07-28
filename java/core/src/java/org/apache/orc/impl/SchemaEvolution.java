@@ -107,7 +107,6 @@ public class SchemaEvolution {
       int positionalLevels = 0;
       if (options.getForcePositionalEvolution()) {
         positionalLevels = isAcid ? 2 : 1;
-        buildConversion(fileSchema, this.readerSchema, positionalLevels);
       } else if (!hasColumnNames(isAcid? getBaseRow(fileSchema) : fileSchema)) {
         if (!this.fileSchema.equals(this.readerSchema)) {
           if (!allowMissingMetadata) {
