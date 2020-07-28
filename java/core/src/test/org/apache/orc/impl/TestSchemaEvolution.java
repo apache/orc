@@ -1716,6 +1716,49 @@ public class TestSchemaEvolution {
     assertEquals(4, evo.getFileType(4).getId());
   }
 
+  @Test
+  public void testPositionalEvolutionForStructInArray() throws IOException {
+    options.forcePositionalEvolution(true);
+    options.positionalEvolutionLevel(Integer.MAX_VALUE);
+    TypeDescription file = TypeDescription.fromString("array<struct<x:int,y:int,z:int>>");
+    TypeDescription read = TypeDescription.fromString("array<struct<z:int,x:int,a:int,b:int>>");
+    SchemaEvolution evo = new SchemaEvolution(file, read, options);
+    assertEquals(1, evo.getFileType(1).getId());
+    assertEquals(2, evo.getFileType(2).getId());
+    assertEquals(3, evo.getFileType(3).getId());
+    assertEquals(4, evo.getFileType(4).getId());
+    assertEquals(null, evo.getFileType(5));
+  }
+
+  @Test
+  public void testPositionalEvolutionForTwoLayerNestedStruct() throws IOException {
+    options.forcePositionalEvolution(true);
+    options.positionalEvolutionLevel(Integer.MAX_VALUE);
+    TypeDescription file = TypeDescription.fromString("struct<s:struct<x:int,y:int,z:int>>");
+    TypeDescription read = TypeDescription.fromString("struct<s:struct<z:int,x:int,a:int,b:int>>");
+    SchemaEvolution evo = new SchemaEvolution(file, read, options);
+    assertEquals(1, evo.getFileType(1).getId());
+    assertEquals(2, evo.getFileType(2).getId());
+    assertEquals(3, evo.getFileType(3).getId());
+    assertEquals(4, evo.getFileType(4).getId());
+    assertNull(evo.getFileType(5));
+  }
+
+  @Test
+  public void testPositionalEvolutionForThreeLayerNestedStruct() throws IOException {
+    options.forcePositionalEvolution(true);
+    options.positionalEvolutionLevel(Integer.MAX_VALUE);
+    TypeDescription file = TypeDescription.fromString("struct<s1:struct<s2:struct<x:int,y:int,z:int>>>");
+    TypeDescription read = TypeDescription.fromString("struct<s1:struct<s:struct<z:int,x:int,a:int,b:int>>>");
+    SchemaEvolution evo = new SchemaEvolution(file, read, options);
+    assertEquals(1, evo.getFileType(1).getId());
+    assertEquals(2, evo.getFileType(2).getId());
+    assertEquals(3, evo.getFileType(3).getId());
+    assertEquals(4, evo.getFileType(4).getId());
+    assertEquals(5, evo.getFileType(5).getId());
+    assertNull(evo.getFileType(6));
+  }
+
   // These are helper methods that pull some of the common code into one
   // place.
 
