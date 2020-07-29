@@ -136,7 +136,7 @@ endif ()
 # Zstd
 
 if (NOT "${ZSTD_HOME}" STREQUAL "")
-  find_package (zstd REQUIRED)
+  find_package (ZSTD REQUIRED)
   set(ZSTD_VENDORED FALSE)
 else ()
   set(ZSTD_HOME "${THIRDPARTY_DIR}/zstd_ep-install")
