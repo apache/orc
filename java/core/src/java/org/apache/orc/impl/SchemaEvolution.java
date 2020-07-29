@@ -619,7 +619,7 @@ public class SchemaEvolution {
     if (TypeDescription.Category.STRUCT == typeDescription.getCategory()
             || TypeDescription.Category.LIST == typeDescription.getCategory()
             || TypeDescription.Category.MAP == typeDescription.getCategory()
-            || TypeDescription.Category.MAP == typeDescription.getCategory()) {
+            || TypeDescription.Category.UNION == typeDescription.getCategory()) {
       return true;
     }
     return false;
