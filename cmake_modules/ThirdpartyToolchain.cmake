@@ -15,7 +15,7 @@ set(SNAPPY_VERSION "1.1.7")
 set(ZLIB_VERSION "1.2.11")
 set(GTEST_VERSION "1.8.0")
 set(PROTOBUF_VERSION "3.5.1")
-set(ZSTD_VERSION "1.3.5")
+set(ZSTD_VERSION "1.4.5")
 
 # zstd requires us to add the threads
 FIND_PACKAGE(Threads REQUIRED)
