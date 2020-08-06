@@ -1,0 +1,46 @@
+name: branch-1.6
+
+on:
+  push:
+    branches:
+    - branch-1.6
+  pull_request:
+    branches:
+    - branch-1.6
+
+jobs:
+  build:
+    name: "Build with Java ${{ matrix.java }}"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        java:
+          - 1.8
+          - 11
+    env:
+      MAVEN_OPTS: -Xmx2g
+      MAVEN_SKIP_RC: true
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Cache Maven local repository
+      uses: actions/cache@v2
+      with:
+        path: ~/.m2/repository
+        key: ${{ matrix.java }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ matrix.java }}-maven-
+    - name: Install Java ${{ matrix.java }}
+      uses: actions/setup-java@v1
+      with:
+        java-version: ${{ matrix.java }}
+    - name: "Test"
+      run: |
+        mkdir -p ~/.m2
+        mkdir build
+        cd build
+        cmake ..
+        make package test-out
+        cd ../java
+        mvn apache-rat:check
