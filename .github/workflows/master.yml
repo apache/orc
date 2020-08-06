@@ -1,12 +1,12 @@
-name: master
+name: branch-1.6
 
 on:
   push:
     branches:
-    - master
+    - branch-1.6
   pull_request:
     branches:
-    - master
+    - branch-1.6
 
 jobs:
   build:
