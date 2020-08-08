@@ -100,11 +100,11 @@
       <groupId>org.apache.spark</groupId>
       <artifactId>spark-sql_2.11</artifactId>
     </dependency>
-    <!-- Spark 2.4 uses Parquet 1.10.0 -->
+    <!-- Spark 2.4.6 uses Parquet 1.10.1 -->
     <dependency>
       <groupId>org.apache.parquet</groupId>
       <artifactId>parquet-hadoop</artifactId>
-      <version>1.10.0</version>
+      <version>1.10.1</version>
       <scope>runtime</scope>
     </dependency>
     <dependency>
@@ -150,7 +150,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>3.1.1</version>
+        <version>3.2.1</version>
         <executions>
           <execution>
             <phase>package</phase>
