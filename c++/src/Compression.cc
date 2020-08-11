@@ -280,6 +280,7 @@ DIAGNOSTIC_PUSH
     strm.zalloc = nullptr;
     strm.zfree = nullptr;
     strm.opaque = nullptr;
+    strm.next_in = nullptr;
 
     if (deflateInit2(&strm, level, Z_DEFLATED, -15, 8, Z_DEFAULT_STRATEGY)
         != Z_OK) {
