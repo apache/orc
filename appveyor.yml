@@ -1,0 +1,41 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+environment:
+  matrix:
+    - JOB: Visual Studio 2015
+      CMAKE_GENERATOR: Visual Studio 14 2015
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+
+platform:
+  - x64
+
+configuration:
+  - Debug
+
+build_script:
+  - mkdir build
+  - cd build
+  - if "%platform%"=="x64" set CMAKE_GENERATOR=%CMAKE_GENERATOR% Win64
+  - cmake .. -G "%CMAKE_GENERATOR%"
+      -DCMAKE_BUILD_TYPE=%CONFIGURATION%
+      -DBUILD_CPP_TESTS=ON
+      -DBUILD_LIBHDFSPP=OFF
+      -DBUILD_TOOLS=OFF
+      -DBUILD_JAVA=OFF
+  - cmake --build . --config %CONFIGURATION%
+  - ctest -VV -C %CONFIGURATION%
