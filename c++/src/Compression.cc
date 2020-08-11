@@ -1031,11 +1031,15 @@ DIAGNOSTIC_POP
                                                    capacity,
                                                    blockSize,
                                                    pool) {
-      // PASS
+      this->init();
     }
 
     virtual std::string getName() const override {
       return "ZstdCompressionStream";
+    }
+    
+    virtual ~ZSTDCompressionStream() override {
+      this->end();
     }
 
   protected:
@@ -1044,15 +1048,43 @@ DIAGNOSTIC_POP
     virtual uint64_t estimateMaxCompressionSize() override {
       return ZSTD_compressBound(static_cast<size_t>(bufferSize));
     }
+    
+  private:
+    void init();
+    void end();
+    ZSTD_CCtx *cctx;
   };
 
   uint64_t ZSTDCompressionStream::doBlockCompression() {
-    return ZSTD_compress(compressorBuffer.data(),
-                         compressorBuffer.size(),
-                         rawInputBuffer.data(),
-                         static_cast<size_t>(bufferSize),
-                         level);
+    return ZSTD_compressCCtx(cctx,
+                             compressorBuffer.data(),
+                             compressorBuffer.size(),
+                             rawInputBuffer.data(),
+                             static_cast<size_t>(bufferSize),
+                             level);
   }
+  
+DIAGNOSTIC_PUSH
+
+#if defined(__GNUC__) || defined(__clang__)
+  DIAGNOSTIC_IGNORE("-Wold-style-cast")
+#endif
+
+  void ZSTDCompressionStream::init() {
+
+    cctx = ZSTD_createCCtx();
+    if (!cctx) {
+      throw std::runtime_error("Error while calling ZSTD_createCCtx() for zstd.");
+    }
+  }
+
+
+  void ZSTDCompressionStream::end() {
+    (void)ZSTD_freeCCtx(cctx);
+    cctx = nullptr;
+  }
+
+DIAGNOSTIC_PUSH
 
   /**
    * ZSTD block decompression
@@ -1065,7 +1097,11 @@ DIAGNOSTIC_POP
                             : BlockDecompressionStream(std::move(inStream),
                                                        blockSize,
                                                        pool) {
-      // PASS
+      this->init();
+    }
+
+    virtual ~ZSTDDecompressionStream() override {
+      this->end();
     }
 
     std::string getName() const override {
@@ -1079,17 +1115,45 @@ DIAGNOSTIC_POP
                                 uint64_t length,
                                 char *output,
                                 size_t maxOutputLength) override;
+
+  private:
+    void init();
+    void end();
+    ZSTD_DCtx *dctx;
   };
 
   uint64_t ZSTDDecompressionStream::decompress(const char *input,
                                                uint64_t length,
                                                char *output,
                                                size_t maxOutputLength) {
-    return static_cast<uint64_t>(ZSTD_decompress(output,
-                                                 maxOutputLength,
-                                                 input,
-                                                 length));
+    return static_cast<uint64_t>(ZSTD_decompressDCtx(dctx,
+                                                     output,
+                                                     maxOutputLength,
+                                                     input,
+                                                     length));
   }
+
+DIAGNOSTIC_PUSH
+
+#if defined(__GNUC__) || defined(__clang__)
+  DIAGNOSTIC_IGNORE("-Wold-style-cast")
+#endif
+
+  void ZSTDDecompressionStream::init() {
+
+    dctx = ZSTD_createDCtx();
+    if (!dctx) {
+      throw std::runtime_error("Error while calling ZSTD_createDCtx() for zstd.");
+    }
+  }
+
+
+  void ZSTDDecompressionStream::end() {
+    (void)ZSTD_freeDCtx(dctx);
+    dctx = nullptr;
+  }
+
+DIAGNOSTIC_PUSH
 
   std::unique_ptr<BufferedOutputStream>
      createCompressor(
