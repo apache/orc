@@ -368,7 +368,7 @@ message Footer {
 
   // information about the encryption in this file
   optional Encryption encryption = 10;
-  optional CalendarKind calendar = 11;
+  optional CalendarKind calendar = 12;
 }
 
 enum CompressionKind {
