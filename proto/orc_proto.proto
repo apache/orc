@@ -196,8 +196,7 @@ message Metadata {
 
 enum CalendarKind {
   UNKNOWN_CALENDAR = 0;
-   // The Java default calendar changes from Julian to Gregorian
-   // in 1583.
+   // A hybrid Julian/Gregorian calendar with a cutover point in October 1582.
   JULIAN_GREGORIAN = 1;
   // A calendar that extends the Gregorian calendar back forever.
   PROLEPTIC_GREGORIAN = 2;
