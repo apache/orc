@@ -100,6 +100,7 @@ public class RecordReaderImpl implements RecordReader {
   private final StripePlanner planner;
   private final ReadLevel readLevel;
   private boolean needFollowStripe;
+  private final boolean noSelectedVector;
 
   /**
    * Given a list of column names, find the given column and return the index.
@@ -168,6 +169,8 @@ public class RecordReaderImpl implements RecordReader {
       }
     }
 
+    this.noSelectedVector = options.isAllowSARGToFilter() && !options.isAllowSelected();
+    LOG.info("noSelectedVector={}", this.noSelectedVector);
     this.schema = evolution.getReaderSchema();
     this.path = fileReader.path;
     this.rowIndexStride = fileReader.rowIndexStride;
@@ -234,6 +237,9 @@ public class RecordReaderImpl implements RecordReader {
     if (skipCorrupt == null) {
       skipCorrupt = OrcConf.SKIP_CORRUPT_DATA.getBoolean(fileReader.conf);
     }
+
+    // If possible convert the SArg to a filter
+    options.convertSArgToFilter(evolution.getReaderBaseSchema(), fileReader.getFileVersion());
 
     // Map columnNames to ColumnIds
     SortedSet<Integer> filterColIds = new TreeSet<>();
@@ -1163,12 +1169,12 @@ public class RecordReaderImpl implements RecordReader {
     for (int i = 0; i < currentStripe; ++i) {
       rowBaseInStripe += stripes.get(i).getNumberOfRows();
     }
+
     // reset all of the indexes
     OrcProto.RowIndex[] rowIndex = indexes.getRowGroupIndex();
     for (int i = 0; i < rowIndex.length; ++i) {
       rowIndex[i] = null;
     }
-
     return stripe;
   }
 
@@ -1269,6 +1275,14 @@ public class RecordReaderImpl implements RecordReader {
         advanceToNextRow(reader, rowInStripe + rowBaseInStripe, true);
         // batch.size can be modified by filter so only batchSize can tell if we actually read rows
       } while (batchSize != 0 && batch.size == 0);
+
+      if (noSelectedVector) {
+        // In case selected vector is not supported we leave the size to be read size. In this case
+        // the non filter columns might be read selectively, however the filter after the reader
+        // should eliminate rows that don't match predicate conditions
+        batch.size = batchSize;
+        batch.selectedInUse = false;
+      }
 
       return batchSize != 0;
     } catch (IOException e) {

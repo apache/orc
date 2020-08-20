@@ -44,7 +44,7 @@
     <parquet.version>1.8.3</parquet.version>
     <slf4j.version>1.7.25</slf4j.version>
     <spark.version>2.4.6</spark.version>
-    <storage-api.version>2.7.2</storage-api.version>
+    <storage-api.version>2.7.3-SNAPSHOT</storage-api.version>
     <zookeeper.version>3.4.6</zookeeper.version>
   </properties>
 
@@ -56,6 +56,16 @@
 
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-engine</artifactId>
+        <version>5.7.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.junit.vintage</groupId>
+        <artifactId>junit-vintage-engine</artifactId>
+        <version>5.7.0</version>
+      </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-core</artifactId>
@@ -248,71 +258,79 @@
         <artifactId>hive-exec</artifactId>
         <classifier>core</classifier>
         <version>${hive.version}</version>
-	<exclusions>
-	  <exclusion>
-	    <groupId>org.apache.calcite</groupId>
-	    <artifactId>calcite-core</artifactId>
-	  </exclusion>
-	  <exclusion>
-	    <groupId>org.apache.calcite</groupId>
-	    <artifactId>calcite-druid</artifactId>
-	  </exclusion>
-	  <exclusion>
-	    <groupId>org.apache.calcite.avatica</groupId>
-	    <artifactId>avatica</artifactId>
-	  </exclusion>
-	  <exclusion>
-	    <groupId>org.apache.hadoop</groupId>
-	    <artifactId>hadoop-yarn-server-resourcemanager</artifactId>
-	  </exclusion>
-	  <exclusion>
-	    <groupId>org.apache.logging.log4j</groupId>
-	    <artifactId>log4j-1.2-api</artifactId>
-	  </exclusion>
-	  <exclusion>
-	    <groupId>org.apache.logging.log4j</groupId>
-	    <artifactId>log4j-slf4j-impl</artifactId>
-	  </exclusion>
-	  <exclusion>
-	    <groupId>stax</groupId>
-	    <artifactId>stax-api</artifactId>
-	  </exclusion>
-	</exclusions>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.calcite</groupId>
+            <artifactId>calcite-core</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.calcite</groupId>
+            <artifactId>calcite-druid</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.calcite.avatica</groupId>
+            <artifactId>avatica</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-yarn-server-resourcemanager</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-1.2-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>stax</groupId>
+            <artifactId>stax-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.orc</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.hive</groupId>
         <artifactId>hive-serde</artifactId>
         <version>${hive.version}</version>
-	<exclusions>
-	  <exclusion>
-	    <groupId>javax.servlet</groupId>
-	    <artifactId>servlet-api</artifactId>
-	  </exclusion>
-	  <exclusion>
-	    <groupId>org.apache.logging.log4j</groupId>
-	    <artifactId>log4j-1.2-api</artifactId>
-	  </exclusion>
-	  <exclusion>
-	    <groupId>org.apache.logging.log4j</groupId>
-	    <artifactId>log4j-slf4j-impl</artifactId>
-	  </exclusion>
-	  <exclusion>
-	    <groupId>org.apache.logging.log4j</groupId>
-	    <artifactId>log4j-web</artifactId>
-	  </exclusion>
-	  <exclusion>
-	    <groupId>org.apache.parquet</groupId>
-	    <artifactId>parquet-hadoop-bundle</artifactId>
-	  </exclusion>
-	  <exclusion>
-	    <groupId>org.eclipse.jetty.aggregate</groupId>
-	    <artifactId>jetty-all</artifactId>
-	  </exclusion>
-	  <exclusion>
-	    <groupId>org.eclipse.jetty.orbit</groupId>
-	    <artifactId>javax.servlet</artifactId>
-	  </exclusion>
-	</exclusions>
+        <exclusions>
+          <exclusion>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-1.2-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-web</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.parquet</groupId>
+            <artifactId>parquet-hadoop-bundle</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.eclipse.jetty.aggregate</groupId>
+            <artifactId>jetty-all</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.eclipse.jetty.orbit</groupId>
+            <artifactId>javax.servlet</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.orc</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.hive</groupId>
@@ -441,13 +459,11 @@
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
         <version>${slf4j.version}</version>
-	<scope>runtime</scope>
       </dependency>
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-log4j12</artifactId>
         <version>${slf4j.version}</version>
-	<scope>runtime</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>

@@ -1285,6 +1285,7 @@ public class TestRowFilteringSkip {
     try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
       reader.options()
         .schema(readSchema)
+        .setAllowSelected(true)
         .setRowFilter(new String[]{"missing"}, TestRowFilteringSkip::notNullFilterMissing))) {
       VectorizedRowBatch batch = readSchema.createRowBatchV2();
 

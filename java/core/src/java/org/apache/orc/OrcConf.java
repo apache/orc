@@ -159,6 +159,11 @@ public enum OrcConf {
     "A boolean flag to enable overwriting of the output file if it already exists.\n"),
   IS_SCHEMA_EVOLUTION_CASE_SENSITIVE("orc.schema.evolution.case.sensitive", "orc.schema.evolution.case.sensitive", true,
           "A boolean flag to determine if the comparision of field names in schema evolution is case sensitive .\n"),
+  ALLOW_SARG_TO_FILTER("orc.sarg.to.filter", "org.sarg.to.filter", false,
+                       "A boolean flag to determine if a SArg is allowed to become a filter"),
+  ALLOW_SELECTED_VECTOR("orc.sarg.to.filter.selected", "orc.sarg.to.filter.selected", false,
+                            "A boolean flag to determine if selected vector is supported by reader when SArg conversion to filter is allowed. "
+                            + "If unsure please leave this as false otherwise you might see incorrect results"),
   WRITE_VARIABLE_LENGTH_BLOCKS("orc.write.variable.length.blocks", null, false,
       "A boolean flag as to whether the ORC writer should write variable length\n"
       + "HDFS blocks."),

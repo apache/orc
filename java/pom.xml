@@ -59,6 +59,7 @@
     <module>mapreduce</module>
     <module>tools</module>
     <module>examples</module>
+    <module>gen</module>
   </modules>
 
   <properties>
@@ -268,7 +269,19 @@
               </goals>
               <configuration>
                 <sources>
-                  <source>${project.build.directory}/generated-sources</source>
+                  <source>${project.build.directory}/generated-sources/java</source>
+                </sources>
+              </configuration>
+            </execution>
+            <execution>
+              <id>add-test-sources</id>
+              <phase>generate-test-sources</phase>
+              <goals>
+                <goal>add-test-source</goal>
+              </goals>
+              <configuration>
+                <sources>
+                  <source>${project.build.directory}/generated-test-sources/java</source>
                 </sources>
               </configuration>
             </execution>
@@ -294,6 +307,7 @@
                 <inputDirectories>
                   <include>../../proto</include>
                 </inputDirectories>
+                <outputDirectory>${project.build.directory}/generated-sources/java</outputDirectory>
               </configuration>
             </execution>
           </executions>

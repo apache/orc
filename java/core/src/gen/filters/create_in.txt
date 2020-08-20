@@ -1,0 +1,58 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+  public static LeafFilter create<Not>InFilter(String colName,
+                                              PredicateLeaf.Type type,
+                                              List<Object> inList,
+                                              TypeDescription colType,
+                                              OrcFile.Version version) {
+    switch (type) {
+      case BOOLEAN:
+        return new Long<Not>In(colName,
+                               inList.stream().map((Object v) -> (boolean) v ? 1L : 0L)
+                                 .collect(Collectors.toList()));
+      case DATE:
+        //TODO Fix the predicate to be an Int instead of sql.Date
+        return new Long<Not>In(colName,
+                               inList.stream()
+                                 .map((Object v) -> ((Date) v).toLocalDate().toEpochDay())
+                                 .collect(Collectors.toList()));
+      case DECIMAL:
+        if (isDecimalAsLong(version, colType.getPrecision())) {
+          List<Object> values = new ArrayList<>(inList.size());
+          for (int i = 0; i < inList.size(); i++) {
+            HiveDecimalWritable v = (HiveDecimalWritable) inList.get(i);
+            assert v.scale() <= colType.getScale();
+            values.add(v.serialize64(colType.getScale()));
+          }
+          return new Long<Not>In(colName, values);
+        } else {
+          return new Decimal<Not>In(colName, inList);
+        }
+      case FLOAT:
+        return new Float<Not>In(colName, inList);
+      case LONG:
+        return new Long<Not>In(colName, inList);
+      case STRING:
+        return new String<Not>In(colName, inList);
+      case TIMESTAMP:
+        return new Timestamp<Not>In(colName, inList);
+      default:
+        throw new IllegalArgumentException(String.format("<Not>In does not support type: %s", type));
+    }
+  }

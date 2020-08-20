@@ -37,6 +37,11 @@
       <groupId>org.apache.orc</groupId>
       <artifactId>orc-shims</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.apache.orc</groupId>
+      <artifactId>orc-gen</artifactId>
+      <version>1.7.0-SNAPSHOT</version>
+    </dependency>
 
     <!-- inter-project -->
     <dependency>
@@ -151,12 +156,40 @@
         </configuration>
       </plugin>
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>generate-sources</id>
+            <phase>generate-sources</phase>
+            <configuration>
+              <target>
+                <property name="compile.classpath"
+                          refid="maven.compile.classpath"/>
+                <taskdef name="filtergen"
+                         classname="org.apache.orc.gen.FilterGenerator"
+                         classpath="${compile.classpath}"/>
+                <mkdir dir="${project.build.directory}/generated-sources/java/org/apache/orc/filter/impl"/>
+                <mkdir dir="${project.build.directory}/generated-test-sources/java/org/apache/orc/filter/impl"/>
+                <filtergen templateDir="${basedir}/src/gen/filters"
+                           srcPkgDir="${project.build.directory}/generated-sources/java/org/apache/orc/filter/impl"
+                           testPkgDir="${project.build.directory}/generated-test-sources/java/org/apache/orc/filter/impl"
+                />
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
       </plugin>
     </plugins>
   </build>

@@ -27,6 +27,8 @@ import java.util.function.Consumer;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.orc.filter.OrcFilterContext;
+import org.apache.orc.filter.FilterFactory;
+import org.apache.orc.filter.impl.BatchFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -202,6 +204,8 @@ public interface Reader extends Closeable {
     private boolean isSchemaEvolutionCaseAware =
         (boolean) OrcConf.IS_SCHEMA_EVOLUTION_CASE_SENSITIVE.getDefaultValue();
     private boolean includeAcidColumns = true;
+    private boolean allowSARGToFilter = false;
+    private boolean allowSelected = false;
 
     public Options() {
       // PASS
@@ -215,6 +219,8 @@ public interface Reader extends Closeable {
       positionalEvolutionLevel = OrcConf.FORCE_POSITIONAL_EVOLUTION_LEVEL.getInt(conf);
       isSchemaEvolutionCaseAware =
           OrcConf.IS_SCHEMA_EVOLUTION_CASE_SENSITIVE.getBoolean(conf);
+      allowSARGToFilter = OrcConf.ALLOW_SARG_TO_FILTER.getBoolean(conf);
+      allowSelected = OrcConf.ALLOW_SELECTED_VECTOR.getBoolean(conf);
     }
 
     /**
@@ -285,6 +291,15 @@ public interface Reader extends Closeable {
       this.sarg = sarg;
       this.columnNames = columnNames;
       return this;
+    }
+
+    public Options setAllowSARGToFilter(boolean allowSARGToFilter) {
+      this.allowSARGToFilter = allowSARGToFilter;
+      return this;
+    }
+
+    public boolean isAllowSARGToFilter() {
+      return allowSARGToFilter;
     }
 
     /**
@@ -434,6 +449,24 @@ public interface Reader extends Closeable {
       return includeAcidColumns;
     }
 
+    public Options convertSArgToFilter(TypeDescription readSchema, OrcFile.Version version) {
+      if (sarg == null
+          || preFilterColumns != null
+          || !allowSARGToFilter
+          || skipRowCallback != null) {
+        // Conversion not allowed
+        LOG.info("Unable to convert SArg to Filter using sarg={} and allow={}", sarg, allowSARGToFilter);
+        return this;
+      }
+
+      LOG.info("Converting SArg {} to a filter", sarg);
+      skipRowCallback = FilterFactory.createVectorFilter(sarg, readSchema, version);
+      if (skipRowCallback != null) {
+        preFilterColumns = ((BatchFilter) skipRowCallback).getColNames();
+      }
+      return this;
+    }
+
     @Override
     public Options clone() {
       try {
@@ -476,6 +509,8 @@ public interface Reader extends Closeable {
         schema.printToBuffer(buffer);
       }
       buffer.append(", includeAcidColumns: ").append(includeAcidColumns);
+      buffer.append(", allowSARGToFilter: ").append(allowSARGToFilter);
+      buffer.append(", allowSelected: ").append(allowSelected);
       buffer.append("}");
       return buffer.toString();
     }
@@ -483,6 +518,15 @@ public interface Reader extends Closeable {
     public boolean getTolerateMissingSchema() {
       return tolerateMissingSchema != null ? tolerateMissingSchema :
           (Boolean) OrcConf.TOLERATE_MISSING_SCHEMA.getDefaultValue();
+    }
+
+    public boolean isAllowSelected() {
+      return allowSelected;
+    }
+
+    public Options setAllowSelected(boolean allowSelected) {
+      this.allowSelected = allowSelected;
+      return this;
     }
   }
 
