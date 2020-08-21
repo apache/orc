@@ -17,21 +17,50 @@
  */
 package org.apache.orc;
 
+import java.time.LocalDate;
+import java.time.chrono.ChronoLocalDate;
 import java.util.Date;
 
 /**
  * Statistics for DATE columns.
  */
 public interface DateColumnStatistics extends ColumnStatistics {
+
+  /**
+   * Get the minimum value for the column.
+   * @return minimum value as a LocalDate
+   */
+  ChronoLocalDate getMinimumLocalDate();
+
+  /**
+   * Get the minimum value for the column.
+   * @return minimum value as days since epoch (1 Jan 1970)
+   */
+  long getMinimumDayOfEpoch();
+
+  /**
+   * Get the maximum value for the column.
+   * @return maximum value as a LocalDate
+   */
+  ChronoLocalDate getMaximumLocalDate();
+
+  /**
+   * Get the maximum value for the column.
+   * @return maximum value as days since epoch (1 Jan 1970)
+   */
+  long getMaximumDayOfEpoch();
+
   /**
    * Get the minimum value for the column.
    * @return minimum value
+   * @deprecated Use #getMinimumLocalDate instead
    */
   Date getMinimum();
 
   /**
    * Get the maximum value for the column.
    * @return maximum value
+   * @deprecated Use #getMaximumLocalDate instead
    */
   Date getMaximum();
 }

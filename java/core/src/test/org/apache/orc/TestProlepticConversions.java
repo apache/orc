@@ -17,6 +17,9 @@
  */
 package org.apache.orc;
 
+import java.time.chrono.Chronology;
+import java.time.chrono.IsoChronology;
+import java.time.format.DateTimeFormatter;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -45,6 +48,7 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
+import org.threeten.extra.chrono.HybridChronology;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -126,11 +130,12 @@ public class TestProlepticConversions {
       t.changeCalendar(writerProlepticGregorian, false);
       i.changeCalendar(writerProlepticGregorian, false);
       GregorianCalendar cal = writerProlepticGregorian ? PROLEPTIC : HYBRID;
-      SimpleDateFormat dateFormat = createParser("yyyy-MM-dd", cal);
       SimpleDateFormat timeFormat = createParser("yyyy-MM-dd HH:mm:ss", cal);
+      Chronology writerChronology = writerProlepticGregorian
+          ? IsoChronology.INSTANCE : HybridChronology.INSTANCE;
       for(int r=0; r < batch.size; ++r) {
-        d.vector[r] = TimeUnit.MILLISECONDS.toDays(
-            dateFormat.parse(String.format("%04d-01-23", r * 2 + 1)).getTime());
+        d.vector[r] = writerChronology.date(r * 2 + 1, 1, 23)
+            .toEpochDay();
         Date val = timeFormat.parse(
             String.format("%04d-03-21 %02d:12:34", 2 * r + 1, r % 24));
         t.time[r] = val.getTime();
@@ -151,16 +156,18 @@ public class TestProlepticConversions {
       TimestampColumnVector t = (TimestampColumnVector) batch.cols[1];
       TimestampColumnVector i = (TimestampColumnVector) batch.cols[2];
       GregorianCalendar cal = readerProlepticGregorian ? PROLEPTIC : HYBRID;
-      SimpleDateFormat dateFormat = createParser("yyyy-MM-dd", cal);
       SimpleDateFormat timeFormat = createParser("yyyy-MM-dd HH:mm:ss", cal);
+      Chronology readerChronology = readerProlepticGregorian
+          ? IsoChronology.INSTANCE : HybridChronology.INSTANCE;
+      DateTimeFormatter dateFormat = DateTimeFormatter.ISO_LOCAL_DATE.withChronology(readerChronology);
 
       // Check the file statistics
       ColumnStatistics[] colStats = reader.getStatistics();
       DateColumnStatistics dStats = (DateColumnStatistics) colStats[1];
       TimestampColumnStatistics tStats = (TimestampColumnStatistics) colStats[2];
       TimestampColumnStatistics iStats = (TimestampColumnStatistics) colStats[3];
-      assertEquals("0001-01-23", dateFormat.format(dStats.getMinimum()));
-      assertEquals("2047-01-23", dateFormat.format(dStats.getMaximum()));
+      assertEquals("0001-01-23", dStats.getMinimumLocalDate().format(dateFormat));
+      assertEquals("2047-01-23", dStats.getMaximumLocalDate().format(dateFormat));
       assertEquals("0001-03-21 00:12:34", timeFormat.format(tStats.getMinimum()));
       assertEquals("2047-03-21 15:12:34", timeFormat.format(tStats.getMaximum()));
       assertEquals("0001-03-21 00:12:34", timeFormat.format(iStats.getMinimum()));
@@ -173,8 +180,8 @@ public class TestProlepticConversions {
       dStats = (DateColumnStatistics) colStats[1];
       tStats = (TimestampColumnStatistics) colStats[2];
       iStats = (TimestampColumnStatistics) colStats[3];
-      assertEquals("0001-01-23", dateFormat.format(dStats.getMinimum()));
-      assertEquals("2047-01-23", dateFormat.format(dStats.getMaximum()));
+      assertEquals("0001-01-23", dStats.getMinimumLocalDate().format(dateFormat));
+      assertEquals("2047-01-23", dStats.getMaximumLocalDate().format(dateFormat));
       assertEquals("0001-03-21 00:12:34", timeFormat.format(tStats.getMinimum()));
       assertEquals("2047-03-21 15:12:34", timeFormat.format(tStats.getMaximum()));
       assertEquals("0001-03-21 00:12:34", timeFormat.format(iStats.getMinimum()));
@@ -190,8 +197,8 @@ public class TestProlepticConversions {
       for(int r=0; r < batch.size; ++r) {
         String expectedD = String.format("%04d-01-23", r * 2 + 1);
         String expectedT = String.format("%04d-03-21 %02d:12:34", 2 * r + 1, r % 24);
-        assertEquals("row " + r, expectedD, dateFormat.format(
-            new Date(TimeUnit.DAYS.toMillis(d.vector[r]))));
+        assertEquals("row " + r, expectedD, readerChronology.dateEpochDay(d.vector[r])
+            .format(dateFormat));
         assertEquals("row " + r, expectedT, timeFormat.format(t.asScratchTimestamp(r)));
         assertEquals("row " + r, expectedT, timeFormat.format(i.asScratchTimestamp(r)));
       }

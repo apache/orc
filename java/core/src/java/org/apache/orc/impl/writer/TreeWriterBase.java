@@ -89,9 +89,10 @@ public abstract class TreeWriterBase implements TreeWriter {
     isPresent = new BitFieldWriter(isPresentOutStream, 1);
     this.foundNulls = false;
     createBloomFilter = context.getBloomFilterColumns()[id];
-    indexStatistics = ColumnStatisticsImpl.create(schema);
-    stripeColStatistics = ColumnStatisticsImpl.create(schema);
-    fileStatistics = ColumnStatisticsImpl.create(schema);
+    boolean proleptic = context.getProlepticGregorian();
+    indexStatistics = ColumnStatisticsImpl.create(schema, proleptic);
+    stripeColStatistics = ColumnStatisticsImpl.create(schema, proleptic);
+    fileStatistics = ColumnStatisticsImpl.create(schema, proleptic);
     if (context.buildIndex()) {
       rowIndex = OrcProto.RowIndex.newBuilder();
       rowIndexEntry = OrcProto.RowIndexEntry.newBuilder();
