@@ -17,6 +17,13 @@
  */
 package org.apache.orc.impl;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.chrono.ChronoLocalDate;
+import java.time.format.DateTimeFormatter;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
@@ -25,7 +32,6 @@ import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument.TruthValue;
 import org.apache.hadoop.hive.ql.util.TimestampUtils;
-import org.apache.hadoop.hive.serde2.io.DateWritable;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.orc.BooleanColumnStatistics;
@@ -55,10 +61,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -400,8 +406,8 @@ public class RecordReaderImpl implements RecordReader {
           stats.getMaximum() == null);
     } else if (index instanceof DateColumnStatistics) {
       DateColumnStatistics stats = (DateColumnStatistics) index;
-      java.util.Date min = stats.getMinimum();
-      java.util.Date max = stats.getMaximum();
+      ChronoLocalDate min = stats.getMinimumLocalDate();
+      ChronoLocalDate max = stats.getMaximumLocalDate();
       return new ValueRange<>(predicate, min, max, stats.hasNull());
     } else if (index instanceof DecimalColumnStatistics) {
       DecimalColumnStatistics stats = (DecimalColumnStatistics) index;
@@ -734,8 +740,8 @@ public class RecordReaderImpl implements RecordReader {
           result = TruthValue.YES_NO_NULL;
         }
       }
-    } else if (predObj instanceof Date) {
-      if (bf.testLong(DateWritable.dateToDays((Date) predObj))) {
+    } else if (predObj instanceof ChronoLocalDate) {
+      if (bf.testLong(((ChronoLocalDate) predObj).toEpochDay())) {
         result = TruthValue.YES_NO_NULL;
       }
     } else {
@@ -783,12 +789,17 @@ public class RecordReaderImpl implements RecordReader {
           return Boolean.valueOf(obj.toString());
         }
       case DATE:
-        if (obj instanceof Date) {
+        if (obj instanceof ChronoLocalDate) {
           return obj;
+        } else if (obj instanceof java.sql.Date) {
+          return ((java.sql.Date) obj).toLocalDate();
+        } else if (obj instanceof Date) {
+          return LocalDateTime.ofInstant(((Date) obj).toInstant(),
+              ZoneOffset.UTC).toLocalDate();
         } else if (obj instanceof String) {
-          return Date.valueOf((String) obj);
+          return LocalDate.parse((String) obj);
         } else if (obj instanceof Timestamp) {
-          return DateWritable.timeToDate(((Timestamp) obj).getTime() / 1000L);
+          return ((Timestamp) obj).toLocalDateTime().toLocalDate();
         }
         // always string, but prevent the comparison to numbers (are they days/seconds/milliseconds?)
         break;
@@ -841,6 +852,11 @@ public class RecordReaderImpl implements RecordReader {
         }
         break;
       case STRING:
+        if (obj instanceof ChronoLocalDate) {
+          ChronoLocalDate date = (ChronoLocalDate) obj;
+          return date.format(DateTimeFormatter.ISO_LOCAL_DATE
+              .withChronology(date.getChronology()));
+        }
         return (obj.toString());
       case TIMESTAMP:
         if (obj instanceof Timestamp) {
@@ -857,6 +873,9 @@ public class RecordReaderImpl implements RecordReader {
           return TimestampUtils.decimalToTimestamp(((HiveDecimalWritable) obj).getHiveDecimal());
         } else if (obj instanceof Date) {
           return new Timestamp(((Date) obj).getTime());
+        } else if (obj instanceof ChronoLocalDate) {
+          return new Timestamp(((ChronoLocalDate) obj).atTime(LocalTime.MIDNIGHT)
+              .toInstant(ZoneOffset.UTC).getEpochSecond() * 1000L);
         }
         // float/double conversion to timestamp is interpreted as seconds whereas integer conversion
         // to timestamp is interpreted as milliseconds by default. The integer to timestamp casting

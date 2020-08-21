@@ -17,6 +17,10 @@
  */
 package org.apache.orc.impl;
 
+import java.time.LocalDate;
+import java.time.chrono.ChronoLocalDate;
+import java.time.chrono.Chronology;
+import java.time.chrono.IsoChronology;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.serde2.io.DateWritable;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
@@ -39,6 +43,8 @@ import org.apache.orc.TypeDescription;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.TimeZone;
+import org.threeten.extra.chrono.HybridChronology;
+
 
 public class ColumnStatisticsImpl implements ColumnStatistics {
 
@@ -1473,16 +1479,23 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
   private static final class DateStatisticsImpl extends ColumnStatisticsImpl
       implements DateColumnStatistics {
-    private Integer minimum = null;
-    private Integer maximum = null;
+    private int minimum = Integer.MAX_VALUE;
+    private int maximum = Integer.MIN_VALUE;
+    private final Chronology chronology;
 
-    DateStatisticsImpl() {
+    static Chronology getInstance(boolean proleptic) {
+      return proleptic ? IsoChronology.INSTANCE : HybridChronology.INSTANCE;
+    }
+
+    DateStatisticsImpl(boolean convertToProleptic) {
+      this.chronology = getInstance(convertToProleptic);
     }
 
     DateStatisticsImpl(OrcProto.ColumnStatistics stats,
                        boolean writerUsedProlepticGregorian,
                        boolean convertToProlepticGregorian) {
       super(stats);
+      this.chronology = getInstance(convertToProlepticGregorian);
       OrcProto.DateStatistics dateStats = stats.getDateStatistics();
       // min,max values serialized/deserialized as int (days since epoch)
       if (dateStats.hasMaximum()) {
@@ -1498,30 +1511,26 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     @Override
     public void reset() {
       super.reset();
-      minimum = null;
-      maximum = null;
+      minimum = Integer.MAX_VALUE;
+      maximum = Integer.MIN_VALUE;
     }
 
     @Override
     public void updateDate(DateWritable value) {
-      if (minimum == null) {
+      if (minimum > value.getDays()) {
         minimum = value.getDays();
-        maximum = value.getDays();
-      } else if (minimum > value.getDays()) {
-        minimum = value.getDays();
-      } else if (maximum < value.getDays()) {
+      }
+      if (maximum < value.getDays()) {
         maximum = value.getDays();
       }
     }
 
     @Override
     public void updateDate(int value) {
-      if (minimum == null) {
+      if (minimum > value) {
         minimum = value;
-        maximum = value;
-      } else if (minimum > value) {
-        minimum = value;
-      } else if (maximum < value) {
+      }
+      if (maximum < value) {
         maximum = value;
       }
     }
@@ -1530,19 +1539,10 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     public void merge(ColumnStatisticsImpl other) {
       if (other instanceof DateStatisticsImpl) {
         DateStatisticsImpl dateStats = (DateStatisticsImpl) other;
-        if (minimum == null) {
-          minimum = dateStats.minimum;
-          maximum = dateStats.maximum;
-        } else if (dateStats.minimum != null) {
-          if (minimum > dateStats.minimum) {
-            minimum = dateStats.minimum;
-          }
-          if (maximum < dateStats.maximum) {
-            maximum = dateStats.maximum;
-          }
-        }
+        minimum = Math.min(minimum, dateStats.minimum);
+        maximum = Math.max(maximum, dateStats.maximum);
       } else {
-        if (isStatsExists() && minimum != null) {
+        if (isStatsExists() && count != 0) {
           throw new IllegalArgumentException("Incompatible merging of date column statistics");
         }
       }
@@ -1554,7 +1554,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       OrcProto.ColumnStatistics.Builder result = super.serialize();
       OrcProto.DateStatistics.Builder dateStats =
           OrcProto.DateStatistics.newBuilder();
-      if (getNumberOfValues() != 0 && minimum != null) {
+      if (count != 0) {
         dateStats.setMinimum(minimum);
         dateStats.setMaximum(maximum);
       }
@@ -1562,24 +1562,41 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       return result;
     }
 
-    private transient final DateWritable minDate = new DateWritable();
-    private transient final DateWritable maxDate = new DateWritable();
+    @Override
+    public ChronoLocalDate getMinimumLocalDate() {
+      return count == 0 ? null : chronology.dateEpochDay(minimum);
+    }
+
+    @Override
+    public long getMinimumDayOfEpoch() {
+      return minimum;
+    }
+
+    @Override
+    public ChronoLocalDate getMaximumLocalDate() {
+      return count == 0 ? null : chronology.dateEpochDay(maximum);
+    }
+
+    @Override
+    public long getMaximumDayOfEpoch() {
+      return maximum;
+    }
 
     @Override
     public Date getMinimum() {
-      if (minimum == null) {
+      if (count == 0) {
         return null;
       }
-      minDate.set(minimum);
+      DateWritable minDate = new DateWritable(minimum);
       return minDate.get();
     }
 
     @Override
     public Date getMaximum() {
-      if (maximum == null) {
+      if (count == 0) {
         return null;
       }
-      maxDate.set(maximum);
+      DateWritable maxDate = new DateWritable(maximum);
       return maxDate.get();
     }
 
@@ -1588,9 +1605,9 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       StringBuilder buf = new StringBuilder(super.toString());
       if (getNumberOfValues() != 0) {
         buf.append(" min: ");
-        buf.append(getMinimum());
+        buf.append(getMinimumLocalDate());
         buf.append(" max: ");
-        buf.append(getMaximum());
+        buf.append(getMaximumLocalDate());
       }
       return buf.toString();
     }
@@ -1609,16 +1626,10 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
       DateStatisticsImpl that = (DateStatisticsImpl) o;
 
-      if (minimum != null ? !minimum.equals(that.minimum) : that.minimum != null) {
+      if (minimum != that.minimum) {
         return false;
       }
-      if (maximum != null ? !maximum.equals(that.maximum) : that.maximum != null) {
-        return false;
-      }
-      if (minDate != null ? !minDate.equals(that.minDate) : that.minDate != null) {
-        return false;
-      }
-      if (maxDate != null ? !maxDate.equals(that.maxDate) : that.maxDate != null) {
+      if (maximum != that.maximum) {
         return false;
       }
 
@@ -1628,10 +1639,8 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     @Override
     public int hashCode() {
       int result = super.hashCode();
-      result = 31 * result + (minimum != null ? minimum.hashCode() : 0);
-      result = 31 * result + (maximum != null ? maximum.hashCode() : 0);
-      result = 31 * result + (minDate != null ? minDate.hashCode() : 0);
-      result = 31 * result + (maxDate != null ? maxDate.hashCode() : 0);
+      result = 31 * result + minimum;
+      result = 31 * result + maximum;
       return result;
     }
   }
@@ -1983,6 +1992,11 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
   }
 
   public static ColumnStatisticsImpl create(TypeDescription schema) {
+    return create(schema, false);
+  }
+
+  public static ColumnStatisticsImpl create(TypeDescription schema,
+                                            boolean convertToProleptic) {
     switch (schema.getCategory()) {
       case BOOLEAN:
         return new BooleanStatisticsImpl();
@@ -2008,7 +2022,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
           return new DecimalStatisticsImpl();
         }
       case DATE:
-        return new DateStatisticsImpl();
+        return new DateStatisticsImpl(convertToProleptic);
       case TIMESTAMP:
         return new TimestampStatisticsImpl();
       case TIMESTAMP_INSTANT:
@@ -2022,7 +2036,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
   public static ColumnStatisticsImpl deserialize(TypeDescription schema,
                                                  OrcProto.ColumnStatistics stats) {
-    return deserialize(schema, stats, false, false);
+    return deserialize(schema, stats, true, true);
   }
 
   public static ColumnStatisticsImpl deserialize(TypeDescription schema,

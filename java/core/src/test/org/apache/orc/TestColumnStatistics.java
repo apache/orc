@@ -388,8 +388,10 @@ public class TestColumnStatistics {
     ColumnStatisticsImpl stats2 = ColumnStatisticsImpl.create(schema);
     stats1.updateDate(new DateWritable(1000));
     stats1.updateDate(new DateWritable(100));
+    stats1.increment(2);
     stats2.updateDate(new DateWritable(10));
     stats2.updateDate(new DateWritable(2000));
+    stats2.increment(2);
     stats1.merge(stats2);
     DateColumnStatistics typed = (DateColumnStatistics) stats1;
     assertEquals(new DateWritable(10).get(), typed.getMinimum());
@@ -397,9 +399,35 @@ public class TestColumnStatistics {
     stats1.reset();
     stats1.updateDate(new DateWritable(-10));
     stats1.updateDate(new DateWritable(10000));
+    stats1.increment(2);
     stats1.merge(stats2);
     assertEquals(new DateWritable(-10).get(), typed.getMinimum());
     assertEquals(new DateWritable(10000).get(), typed.getMaximum());
+  }
+
+  @Test
+  public void testLocalDateMerge() throws Exception {
+    TypeDescription schema = TypeDescription.createDate();
+
+    ColumnStatisticsImpl stats1 = ColumnStatisticsImpl.create(schema);
+    ColumnStatisticsImpl stats2 = ColumnStatisticsImpl.create(schema);
+    stats1.updateDate(1000);
+    stats1.updateDate(100);
+    stats1.increment(2);
+    stats2.updateDate(10);
+    stats2.updateDate(2000);
+    stats2.increment(2);
+    stats1.merge(stats2);
+    DateColumnStatistics typed = (DateColumnStatistics) stats1;
+    assertEquals(10, typed.getMinimumDayOfEpoch());
+    assertEquals(2000, typed.getMaximumDayOfEpoch());
+    stats1.reset();
+    stats1.updateDate(-10);
+    stats1.updateDate(10000);
+    stats1.increment(2);
+    stats1.merge(stats2);
+    assertEquals(-10, typed.getMinimumLocalDate().toEpochDay());
+    assertEquals(10000, typed.getMaximumLocalDate().toEpochDay());
   }
 
   @Test
