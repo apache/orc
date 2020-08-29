@@ -14,10 +14,6 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/c++/src
   ${PROJECT_BINARY_DIR}/c++/include
   ${PROJECT_BINARY_DIR}/c++/src
-  ${PROTOBUF_INCLUDE_DIR}
-  ${ZLIB_INCLUDE_DIR}
-  ${SNAPPY_INCLUDE_DIR}
-  ${GTEST_INCLUDE_DIR}
 )
 
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX11_FLAGS} ${WARN_FLAGS}")
@@ -54,11 +50,11 @@ add_executable (orc-test
 
 target_link_libraries (orc-test
   orc
-  lz4
-  protobuf
-  snappy
-  zlib
-  ${GTEST_LIBRARIES}
+  orc::lz4
+  orc::protobuf
+  orc::snappy
+  orc::zlib
+  orc::gmock
 )
 
 add_executable (create-test-files
@@ -67,7 +63,7 @@ add_executable (create-test-files
 
 target_link_libraries (create-test-files
   orc
-  protobuf
+  orc::protobuf
 )
 
 if (TEST_VALGRIND_MEMCHECK)

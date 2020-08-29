@@ -13,8 +13,10 @@
 # GTEST_HOME environmental variable is used to check for GTest headers and static library
 
 # GTEST_INCLUDE_DIR: directory containing headers
-# GTEST_LIBS: directory containing gtest libraries
+# GMOCK_LIBRARY: path to libgmock
+# GTEST_LIBRARY: path to libgtest
 # GMOCK_STATIC_LIB: is set to gmock.a static library
+# GTEST_STATIC_LIB: is set to gtest.a static library
 # GTEST_FOUND is set if GTEST is found
 
 if (NOT "${GTEST_HOME}" STREQUAL "")
@@ -28,24 +30,40 @@ find_path (GTEST_INCLUDE_DIR gmock/gmock.h HINTS
   NO_DEFAULT_PATH
   PATH_SUFFIXES "include")
 
-find_library (GTEST_LIBRARIES NAMES gmock HINTS
+find_library (GMOCK_LIBRARY NAMES gmock HINTS
   ${_gtest_path}
   PATH_SUFFIXES "lib")
 
-if (GTEST_INCLUDE_DIR AND GTEST_LIBRARIES)
+find_library (GTEST_LIBRARY NAMES gtest HINTS
+  ${_gtest_path}
+  PATH_SUFFIXES "lib")
+
+find_library (GMOCK_STATIC_LIB NAMES ${CMAKE_STATIC_LIBRARY_PREFIX}gmock${CMAKE_STATIC_LIBRARY_SUFFIX} HINTS
+  ${_gtest_path}
+  PATH_SUFFIXES "lib")
+
+find_library (GTEST_STATIC_LIB NAMES ${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX} HINTS
+  ${_gtest_path}
+  PATH_SUFFIXES "lib")
+
+if (GTEST_INCLUDE_DIR AND GMOCK_LIBRARY)
   set (GTEST_FOUND TRUE)
-  get_filename_component (GTEST_LIBS ${GTEST_LIBRARIES} PATH )
   set (GTEST_HEADER_NAME gmock/gmock.h)
   set (GTEST_HEADER ${GTEST_INCLUDE_DIR}/${GTEST_HEADER_NAME})
-  set (GTEST_LIB_NAME gmock)
-  set (GMOCK_STATIC_LIB ${GTEST_LIBS}/${CMAKE_STATIC_LIBRARY_PREFIX}${GTEST_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX})
 else ()
   set (GTEST_FOUND FALSE)
 endif ()
 
 if (GTEST_FOUND)
   message (STATUS "Found the GTest header: ${GTEST_HEADER}")
-  message (STATUS "Found the GTest library: ${GMOCK_STATIC_LIB}")
+  message (STATUS "Found the GTest library: ${GTEST_LIBRARY}")
+  message (STATUS "Found the GMock library: ${GMOCK_LIBRARY}")
+  if (GTEST_STATIC_LIB)
+    message (STATUS "Found the GTest static library: ${GTEST_STATIC_LIB}")
+  endif ()
+  if (GMOCK_STATIC_LIB)
+    message (STATUS "Found the GMock static library: ${GMOCK_STATIC_LIB}")
+  endif ()
 else ()
   if (_gtest_path)
     set (GTEST_ERR_MSG "Could not find GTest. Looked in ${_gtest_path}.")
@@ -63,6 +81,7 @@ endif ()
 mark_as_advanced (
   GTEST_INCLUDE_DIR
   GMOCK_STATIC_LIB
-  GTEST_LIBS
-  GTEST_LIBRARIES
+  GTEST_STATIC_LIB
+  GMOCK_LIBRARY
+  GTEST_LIBRARY
 )

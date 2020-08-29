@@ -16,9 +16,6 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/tools-c++/src
   ${PROJECT_BINARY_DIR}/c++/include
   ${PROJECT_BINARY_DIR}/c++/src
-  ${PROTOBUF_INCLUDE_DIR}
-  ${ZLIB_INCLUDE_DIR}
-  ${GTEST_INCLUDE_DIR}
 )
 
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX11_FLAGS} ${WARN_FLAGS}")
@@ -36,10 +33,10 @@ add_executable (tool-test
 
 target_link_libraries (tool-test
   orc
-  protobuf
-  zlib
-  snappy
-  ${GTEST_LIBRARIES}
+  orc::protobuf
+  orc::zlib
+  orc::snappy
+  orc::gmock
 )
 
 if (TEST_VALGRIND_MEMCHECK)
