@@ -333,6 +333,15 @@ public class RecordReaderImpl implements RecordReader {
       this(predicate, lower, upper, hasNulls, false, false);
     }
 
+    /**
+     * A value range where the data is either missing or all null.
+     * @param predicate the predicate to test
+     * @param hasNulls whether there are nulls
+     */
+    ValueRange(PredicateLeaf predicate, boolean hasNulls) {
+      this(predicate, null, null, hasNulls, false, false);
+    }
+
     boolean hasValues() {
       return lower != null;
     }
@@ -403,7 +412,9 @@ public class RecordReaderImpl implements RecordReader {
   static ValueRange getValueRange(ColumnStatistics index,
                                   PredicateLeaf predicate,
                                   boolean useUTCTimestamp) {
-    if (index instanceof IntegerColumnStatistics) {
+    if (index.getNumberOfValues() == 0) {
+      return new ValueRange<>(predicate, index.hasNull());
+    } else if (index instanceof IntegerColumnStatistics) {
       IntegerColumnStatistics stats = (IntegerColumnStatistics) index;
       Long min = stats.getMinimum();
       Long max = stats.getMaximum();
