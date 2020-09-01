@@ -4062,6 +4062,137 @@ public class TestVectorOrcFile {
     assertEquals(0, batch.size);
   }
 
+  /**
+   * Test predicate pushdown on nulls, with different combinations of
+   * values and nulls.
+   */
+  @Test
+  public void testPredicatePushdownAllNulls() throws Exception {
+    TypeDescription schema = createInnerSchema();
+    try (Writer writer = OrcFile.createWriter(testFilePath,
+        OrcFile.writerOptions(conf).setSchema(schema).rowIndexStride(1024).version(fileFormat))) {
+      VectorizedRowBatch batch = schema.createRowBatch();
+      batch.size = 1024;
+
+      // write 1024 rows of (null, "val")
+      batch.cols[0].noNulls = false;
+      batch.cols[0].isNull[0] = true;
+      batch.cols[0].isRepeating = true;
+      batch.cols[1].isRepeating = true;
+      ((BytesColumnVector) batch.cols[1]).setVal(0, "val".getBytes(StandardCharsets.UTF_8));
+      writer.addRowBatch(batch);
+
+      // write 1024 rows of (1, null)
+      batch.cols[0].isNull[0] = false;
+      ((LongColumnVector) batch.cols[0]).vector[0] = 123;
+      batch.cols[1].noNulls = false;
+      batch.cols[1].isNull[0] = true;
+      writer.addRowBatch(batch);
+
+      // write 1024 rows of (null, null)
+      batch.cols[0].isNull[0] = true;
+      writer.addRowBatch(batch);
+    }
+
+    try (Reader reader = OrcFile.createReader(testFilePath,
+        OrcFile.readerOptions(conf).filesystem(fs))) {
+      assertEquals(3072, reader.getNumberOfRows());
+      VectorizedRowBatch batch = reader.getSchema().createRowBatch();
+
+      // int1 is not null
+      SearchArgument sarg =
+          SearchArgumentFactory.newBuilder()
+              .startNot()
+              .isNull("int1", PredicateLeaf.Type.LONG)
+              .end()
+              .build();
+      // should find one row group
+      try (RecordReader rows = reader.rows(reader.options().searchArgument(sarg, new String[]{}))) {
+        rows.nextBatch(batch);
+        assertEquals(1024, batch.size);
+        assertEquals(true, batch.cols[0].isRepeating);
+        assertEquals(123, ((LongColumnVector) batch.cols[0]).vector[0]);
+        assertEquals(false, rows.nextBatch(batch));
+      }
+
+      // string1 is not null
+      sarg = SearchArgumentFactory.newBuilder()
+          .startNot()
+          .isNull("string1", PredicateLeaf.Type.STRING)
+          .end()
+          .build();
+      // should find one row group
+      try (RecordReader rows = reader.rows(reader.options().searchArgument(sarg, new String[]{}))) {
+        rows.nextBatch(batch);
+        assertEquals(1024, batch.size);
+        assertEquals(true, batch.cols[1].isRepeating);
+        assertEquals("val", ((BytesColumnVector) batch.cols[1]).toString(0));
+        assertEquals(false, rows.nextBatch(batch));
+      }
+    }
+  }
+
+  /**
+   * Write three row groups, one with (null, null), one with (1, "val"), and one with
+   * alternating rows.
+   */
+  @Test
+  public void testPredicatePushdownMixedNulls() throws Exception {
+    TypeDescription schema = createInnerSchema();
+    try (Writer writer = OrcFile.createWriter(testFilePath,
+                           OrcFile.writerOptions(conf)
+                                  .setSchema(schema)
+                                  .rowIndexStride(1024)
+                                  .version(fileFormat))) {
+      VectorizedRowBatch batch = schema.createRowBatch();
+      batch.cols[0].noNulls = false;
+      batch.cols[1].noNulls = false;
+      batch.size = 1024;
+      for (int b = 0; b < 3; ++b) {
+        for (int i = 0; i < batch.size; ++i) {
+          if (b == 0 || (b == 2 && i % 2 == 0)) {
+            batch.cols[0].isNull[i] = true; // every other value is null or 1
+            batch.cols[1].isNull[i] = true; // every other value is null or "val"
+          } else {
+            batch.cols[0].isNull[i] = false;
+            ((LongColumnVector) batch.cols[0]).vector[i] = 1;
+            batch.cols[1].isNull[i] = false;
+            ((BytesColumnVector) batch.cols[1]).setVal(i, "val".getBytes(StandardCharsets.UTF_8));
+          }
+        }
+        writer.addRowBatch(batch);
+      }
+    }
+
+    try (Reader reader = OrcFile.createReader(testFilePath,
+                          OrcFile.readerOptions(conf).filesystem(fs))) {
+      assertEquals(3*1024, reader.getNumberOfRows());
+      VectorizedRowBatch batch = reader.getSchema().createRowBatch();
+
+      // int1 is not null -- should select 0 of the row groups
+      SearchArgument sarg =
+          SearchArgumentFactory.newBuilder()
+              .startNot()
+              .in("int1", PredicateLeaf.Type.LONG, 1L)
+              .end().build();
+
+      try (RecordReader rows = reader.rows(reader.options().searchArgument(sarg, new String[]{}))) {
+        assertEquals(false, rows.nextBatch(batch));
+      }
+
+
+      // string1 is not null -- should select 0 of the row groups
+      sarg = SearchArgumentFactory.newBuilder()
+          .startNot()
+          .in("string1", PredicateLeaf.Type.STRING, "val")
+          .end().build();
+
+      try (RecordReader rows = reader.rows(reader.options().searchArgument(sarg, new String[]{}))) {
+        assertEquals(false, rows.nextBatch(batch));
+      }
+    }
+  }
+
   @Test
   public void testColumnEncryption() throws Exception {
     Assume.assumeTrue(fileFormat != OrcFile.Version.V_0_11);
