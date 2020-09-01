@@ -418,7 +418,9 @@ public class RecordReaderImpl implements RecordReader {
    * @return the object for the minimum value or null if there isn't one
    */
   static Object getMin(ColumnStatistics index, boolean useUTCTimestamp) {
-    if (index instanceof IntegerColumnStatistics) {
+    if (index.getNumberOfValues() == 0) {
+      return null;
+    } else if (index instanceof IntegerColumnStatistics) {
       return ((IntegerColumnStatistics) index).getMinimum();
     } else if (index instanceof DoubleColumnStatistics) {
       return ((DoubleColumnStatistics) index).getMinimum();

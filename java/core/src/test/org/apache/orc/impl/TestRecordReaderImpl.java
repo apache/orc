@@ -284,7 +284,7 @@ public class TestRecordReaderImpl {
       ColumnStatisticsImpl.deserialize(null, createIntStats(10L, 100L))));
     assertEquals(10.0d, RecordReaderImpl.getMin(ColumnStatisticsImpl.deserialize(
       null,
-      OrcProto.ColumnStatistics.newBuilder()
+      OrcProto.ColumnStatistics.newBuilder().setNumberOfValues(1)
         .setDoubleStatistics(OrcProto.DoubleStatistics.newBuilder()
           .setMinimum(10.0d).setMaximum(100.0d).build()).build())));
     assertEquals(null, RecordReaderImpl.getMin(ColumnStatisticsImpl.deserialize(
@@ -294,7 +294,7 @@ public class TestRecordReaderImpl {
         .build())));
     assertEquals("a", RecordReaderImpl.getMin(ColumnStatisticsImpl.deserialize(
       null,
-      OrcProto.ColumnStatistics.newBuilder()
+      OrcProto.ColumnStatistics.newBuilder().setNumberOfValues(1)
         .setStringStatistics(OrcProto.StringStatistics.newBuilder()
           .setMinimum("a").setMaximum("b").build()).build())));
     assertEquals("hello", RecordReaderImpl.getMin(ColumnStatisticsImpl
@@ -314,7 +314,7 @@ public class TestRecordReaderImpl {
       intStats.setMaximum(max);
     }
     return OrcProto.ColumnStatistics.newBuilder()
-        .setIntStatistics(intStats.build()).build();
+        .setNumberOfValues(1).setIntStatistics(intStats.build()).build();
   }
 
   private static OrcProto.ColumnStatistics createBooleanStats(int n, int trueCount) {
@@ -328,14 +328,16 @@ public class TestRecordReaderImpl {
     OrcProto.IntegerStatistics.Builder intStats = OrcProto.IntegerStatistics.newBuilder();
     intStats.setMinimum(min);
     intStats.setMaximum(max);
-    return OrcProto.ColumnStatistics.newBuilder().setIntStatistics(intStats.build()).build();
+    return OrcProto.ColumnStatistics.newBuilder().setNumberOfValues(1)
+        .setIntStatistics(intStats.build()).build();
   }
 
   private static OrcProto.ColumnStatistics createDoubleStats(double min, double max) {
     OrcProto.DoubleStatistics.Builder dblStats = OrcProto.DoubleStatistics.newBuilder();
     dblStats.setMinimum(min);
     dblStats.setMaximum(max);
-    return OrcProto.ColumnStatistics.newBuilder().setDoubleStatistics(dblStats.build()).build();
+    return OrcProto.ColumnStatistics.newBuilder().setNumberOfValues(1)
+        .setDoubleStatistics(dblStats.build()).build();
   }
 
   private static OrcProto.ColumnStatistics createStringStats(String min, String max,
@@ -344,21 +346,23 @@ public class TestRecordReaderImpl {
     strStats.setMinimum(min);
     strStats.setMaximum(max);
     return OrcProto.ColumnStatistics.newBuilder().setStringStatistics(strStats.build())
-        .setHasNull(hasNull).build();
+        .setNumberOfValues(1).setHasNull(hasNull).build();
   }
 
   private static OrcProto.ColumnStatistics createStringStats(String min, String max) {
     OrcProto.StringStatistics.Builder strStats = OrcProto.StringStatistics.newBuilder();
     strStats.setMinimum(min);
     strStats.setMaximum(max);
-    return OrcProto.ColumnStatistics.newBuilder().setStringStatistics(strStats.build()).build();
+    return OrcProto.ColumnStatistics.newBuilder().setNumberOfValues(1)
+        .setStringStatistics(strStats.build()).build();
   }
 
   private static OrcProto.ColumnStatistics createDateStats(int min, int max) {
     OrcProto.DateStatistics.Builder dateStats = OrcProto.DateStatistics.newBuilder();
     dateStats.setMinimum(min);
     dateStats.setMaximum(max);
-    return OrcProto.ColumnStatistics.newBuilder().setDateStatistics(dateStats.build()).build();
+    return OrcProto.ColumnStatistics.newBuilder().setNumberOfValues(1)
+        .setDateStatistics(dateStats.build()).build();
   }
 
   private static final TimeZone utcTz = TimeZone.getTimeZone("UTC");
@@ -367,14 +371,16 @@ public class TestRecordReaderImpl {
     OrcProto.TimestampStatistics.Builder tsStats = OrcProto.TimestampStatistics.newBuilder();
     tsStats.setMinimumUtc(getUtcTimestamp(min));
     tsStats.setMaximumUtc(getUtcTimestamp(max));
-    return OrcProto.ColumnStatistics.newBuilder().setTimestampStatistics(tsStats.build()).build();
+    return OrcProto.ColumnStatistics.newBuilder()
+        .setNumberOfValues(1).setTimestampStatistics(tsStats.build()).build();
   }
 
   private static OrcProto.ColumnStatistics createDecimalStats(String min, String max) {
     OrcProto.DecimalStatistics.Builder decStats = OrcProto.DecimalStatistics.newBuilder();
     decStats.setMinimum(min);
     decStats.setMaximum(max);
-    return OrcProto.ColumnStatistics.newBuilder().setDecimalStatistics(decStats.build()).build();
+    return OrcProto.ColumnStatistics.newBuilder()
+        .setNumberOfValues(1).setDecimalStatistics(decStats.build()).build();
   }
 
   private static OrcProto.ColumnStatistics createDecimalStats(String min, String max,
@@ -383,7 +389,7 @@ public class TestRecordReaderImpl {
     decStats.setMinimum(min);
     decStats.setMaximum(max);
     return OrcProto.ColumnStatistics.newBuilder().setDecimalStatistics(decStats.build())
-        .setHasNull(hasNull).build();
+        .setNumberOfValues(1).setHasNull(hasNull).build();
   }
 
   @Test
