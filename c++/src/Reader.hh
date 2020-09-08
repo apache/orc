@@ -201,6 +201,8 @@ namespace orc {
 
     void seekToRow(uint64_t rowNumber) override;
 
+    bool getPPDStats(std::pair<uint64_t, uint64_t>& stats) const override;
+
     const FileContents& getFileContents() const;
     bool getThrowOnHive11DecimalOverflow() const;
     int32_t getForcedScaleOnHive11Decimal() const;
