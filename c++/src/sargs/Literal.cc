@@ -164,19 +164,6 @@ namespace orc {
     return *this;
   }
 
-  std::string Literal::Timestamp::toString() const {
-    time_t secs = static_cast<time_t>(second);
-    struct tm tmValue;
-    gmtime_r(&secs, &tmValue);
-    char timeBuffer[20];
-    strftime(timeBuffer, sizeof(timeBuffer), "%Y-%m-%d %H:%M:%S", &tmValue);
-    char nanoBuffer[10];
-    snprintf(nanoBuffer, sizeof(nanoBuffer), "%.9i", nano);
-    std::ostringstream buffer;
-    buffer << timeBuffer << "." << nanoBuffer;
-    return buffer.str();
-  }
-
   std::string Literal::toString() const {
     if (mIsNull) {
       return "null";
@@ -191,7 +178,8 @@ namespace orc {
         sstream << mValue.DateVal;
         break;
       case PredicateDataType::TIMESTAMP:
-        sstream << mValue.TimeStampVal.toString();
+        sstream << mValue.TimeStampVal.second << "."
+                << mValue.TimeStampVal.nano;
         break;
       case PredicateDataType::FLOAT:
         sstream << mValue.DoubleVal;

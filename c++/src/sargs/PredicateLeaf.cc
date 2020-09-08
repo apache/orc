@@ -549,10 +549,10 @@ namespace orc {
             stats.maximumnanos() - 1 : 999999;
           Literal::Timestamp minTimestamp(
             stats.minimumutc() / 1000,
-            (stats.minimumutc() % 1000) * 1000000 + minNano);
+            static_cast<int32_t>((stats.minimumutc() % 1000) * 1000000) + minNano);
           Literal::Timestamp maxTimestamp(
             stats.maximumutc() / 1000,
-            (stats.maximumutc() % 1000) * 1000000 + maxNano);
+            static_cast<int32_t>((stats.maximumutc() % 1000) * 1000000) + maxNano);
           result = evaluatePredicateRange(
             mOperator,
             literal2Timestamp(mLiterals),

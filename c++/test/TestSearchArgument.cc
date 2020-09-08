@@ -36,9 +36,9 @@ namespace orc {
     EXPECT_EQ(PredicateDataType::BOOLEAN, literal2.getType());
     EXPECT_TRUE("false" == literal2.toString());
 
-    Literal literal3(static_cast<int64_t>(0), 123456789);
+    Literal literal3(static_cast<int64_t>(123456), 123456789);
     EXPECT_EQ(PredicateDataType::TIMESTAMP, literal3.getType());
-    EXPECT_TRUE("1970-01-01 00:00:00.123456789" == literal3.toString());
+    EXPECT_TRUE("123456.123456789" == literal3.toString());
 
     Literal literal4(Int128(54321), 6, 2);
     EXPECT_EQ(PredicateDataType::DECIMAL, literal4.getType());

@@ -59,7 +59,6 @@ namespace orc {
       bool operator>(const Timestamp& r) const { return r < *this; }
       bool operator>=(const Timestamp& r) const { return r <= *this; }
       int64_t getMillis() const { return second * 1000 + nano / 1000000; }
-      std::string toString() const;
       int64_t second;
       int32_t nano;
     };
