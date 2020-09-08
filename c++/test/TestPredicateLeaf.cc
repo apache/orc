@@ -145,6 +145,22 @@ namespace orc {
     return colStats;
   }
 
+  static proto::ColumnStatistics createTimestampStats(
+                                    int64_t minSecond, int32_t minNano,
+                                    int64_t maxSecond, int32_t maxNano,
+                                    bool hasNull = false) {
+    proto::ColumnStatistics colStats;
+    colStats.set_hasnull(hasNull);
+    colStats.set_numberofvalues(10);
+
+    proto::TimestampStatistics * tsStats = colStats.mutable_timestampstatistics();
+    tsStats->set_minimumutc(minSecond * 1000 + minNano / 1000000);
+    tsStats->set_maximumutc(maxSecond * 1000 + maxNano / 1000000);
+    tsStats->set_minimumnanos((minNano % 1000000) + 1);
+    tsStats->set_maximumnanos((maxNano % 1000000) + 1);
+    return colStats;
+  }
+
   static proto::ColumnStatistics createStringStats(
     std::string min, std::string max, bool hasNull = false) {
     proto::ColumnStatistics colStats;
@@ -241,7 +257,7 @@ namespace orc {
             PredicateLeaf::Operator::NULL_SAFE_EQUALS,
             PredicateDataType::TIMESTAMP,
             "x",
-            Literal(PredicateDataType::TIMESTAMP, 500L));
+            Literal(500L, 0));
     EXPECT_EQ(TruthValue::NO,
               evaluate(pred8, createTimestampStats(450LL, 490L)));
 
@@ -841,6 +857,66 @@ namespace orc {
     bf.addBytes(str.c_str(), static_cast<int64_t>(str.size()));
     EXPECT_EQ(TruthValue::YES_NO_NULL, evaluate(
       pred, createDecimalStats(Decimal("10"), Decimal("200"), true), &bf));
+  }
+
+  TEST(TestPredicateLeaf, testTimestampWithNanos) {
+    // 1970-01-01 00:00:00
+    PredicateLeaf pred1(PredicateLeaf::Operator::EQUALS,
+                        PredicateDataType::TIMESTAMP,
+                        "x",
+                        Literal(static_cast<int64_t>(0), 500000));
+    EXPECT_EQ(TruthValue::YES, evaluate(
+      pred1, createTimestampStats(0, 500000, 0, 500000)));
+
+    PredicateLeaf pred2(PredicateLeaf::Operator::LESS_THAN_EQUALS,
+                        PredicateDataType::TIMESTAMP,
+                        "x",
+                        Literal(static_cast<int64_t>(0), 500000));
+    EXPECT_EQ(TruthValue::YES_NO, evaluate(
+      pred2, createTimestampStats(0, 500000, 0, 500000)));
+
+    PredicateLeaf pred3(PredicateLeaf::Operator::LESS_THAN,
+                        PredicateDataType::TIMESTAMP,
+                        "x",
+                        Literal(static_cast<int64_t>(0), 500000));
+    EXPECT_EQ(TruthValue::NO, evaluate(
+      pred3, createTimestampStats(0, 500000, 0, 500000)));
+
+    // 2037-01-01 00:00:00
+    PredicateLeaf pred4(PredicateLeaf::Operator::EQUALS,
+                        PredicateDataType::TIMESTAMP,
+                        "x",
+                        Literal(2114380800, 1109000));
+    EXPECT_EQ(TruthValue::YES_NO, evaluate(
+      pred4, createTimestampStats(2114380800, 1109000, 2114380800, 6789100)));
+
+    PredicateLeaf pred5(PredicateLeaf::Operator::EQUALS,
+                        PredicateDataType::TIMESTAMP,
+                        "x",
+                        Literal(2114380800, 1000000));
+    EXPECT_EQ(TruthValue::NO, evaluate(
+      pred5, createTimestampStats(2114380800, 1109000, 2114380800, 6789100)));
+
+    PredicateLeaf pred6(PredicateLeaf::Operator::LESS_THAN,
+                        PredicateDataType::TIMESTAMP,
+                        "x",
+                        Literal(2114380800, 6789000));
+    EXPECT_EQ(TruthValue::YES_NO, evaluate(
+      pred6, createTimestampStats(2114380800, 1109000, 2114380800, 6789100)));
+
+    PredicateLeaf pred7(PredicateLeaf::Operator::LESS_THAN,
+                        PredicateDataType::TIMESTAMP,
+                        "x",
+                        Literal(2114380800, 2000000));
+    EXPECT_EQ(TruthValue::YES_NO, evaluate(
+      pred7, createTimestampStats(2114380800, 1109000, 2114380800, 6789100)));
+
+    PredicateLeaf pred8(PredicateLeaf::Operator::LESS_THAN,
+                        PredicateDataType::TIMESTAMP,
+                        "x",
+                        Literal(2114380800, 1000000));
+    EXPECT_EQ(TruthValue::NO, evaluate(
+      pred8, createTimestampStats(2114380800, 1109000, 2114380800, 6789100)));
   }
 
 }  // namespace orc

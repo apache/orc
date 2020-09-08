@@ -317,6 +317,8 @@ namespace orc {
       _stats.setMaximum(0);
       _lowerBound = 0;
       _upperBound = 0;
+      _minimumNano = DEFAULT_MIN_NANOS;
+      _maximumNano = DEFAULT_MAX_NANOS;
     }else{
       const proto::TimestampStatistics& stats = pb.timestampstatistics();
       _stats.setHasMinimum(
@@ -327,6 +329,10 @@ namespace orc {
                 (stats.has_maximum() && (statContext.writerTimezone != nullptr)));
       _hasLowerBound = stats.has_minimumutc() || stats.has_minimum();
       _hasUpperBound = stats.has_maximumutc() || stats.has_maximum();
+      _minimumNano = stats.has_minimumnanos() ?
+                     stats.minimumnanos() - 1 : DEFAULT_MIN_NANOS;
+      _maximumNano = stats.has_maximumnanos() ?
+                     stats.maximumnanos() - 1 : DEFAULT_MAX_NANOS;
 
       // Timestamp stats are stored in milliseconds
       if (stats.has_minimumutc()) {

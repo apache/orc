@@ -1214,6 +1214,10 @@ namespace orc {
     bool _hasUpperBound;
     int64_t _lowerBound;
     int64_t _upperBound;
+    int32_t _minimumNano;  // last 6 digits of nanosecond of minimum timestamp
+    int32_t _maximumNano;  // last 6 digits of nanosecond of maximum timestamp
+    static constexpr int32_t DEFAULT_MIN_NANOS = 0;
+    static constexpr int32_t DEFAULT_MAX_NANOS = 999999;
 
   public:
     TimestampColumnStatisticsImpl() { reset(); }
@@ -1279,14 +1283,68 @@ namespace orc {
       _stats.updateMinMax(value);
     }
 
+    void update(int64_t milli, int32_t nano) {
+      if (!_stats.hasMinimum()) {
+        _stats.setHasMinimum(true);
+        _stats.setHasMaximum(true);
+        _stats.setMinimum(milli);
+        _stats.setMaximum(milli);
+        _maximumNano = _minimumNano = nano;
+      } else {
+        if (milli <= _stats.getMinimum()) {
+          if (milli < _stats.getMinimum() || nano < _minimumNano) {
+            _minimumNano = nano;
+          }
+          _stats.setMinimum(milli);
+        }
+
+        if (milli >= _stats.getMaximum()) {
+          if (milli > _stats.getMaximum() || nano > _maximumNano) {
+            _maximumNano = nano;
+          }
+          _stats.setMaximum(milli);
+        }
+      }
+    }
+
     void merge(const MutableColumnStatistics& other) override {
       const TimestampColumnStatisticsImpl& tsStats =
         dynamic_cast<const TimestampColumnStatisticsImpl&>(other);
-      _stats.merge(tsStats._stats);
+
+      _stats.setHasNull(_stats.hasNull() || tsStats.hasNull());
+      _stats.setNumberOfValues(_stats.getNumberOfValues() + tsStats.getNumberOfValues());
+
+      if (tsStats.hasMinimum()) {
+        if (!_stats.hasMinimum()) {
+          _stats.setHasMinimum(true);
+          _stats.setHasMaximum(true);
+          _stats.setMinimum(tsStats.getMinimum());
+          _stats.setMaximum(tsStats.getMaximum());
+          _minimumNano = tsStats.getMinimumNano();
+          _maximumNano = tsStats.getMaximumNano();
+        } else {
+          if (tsStats.getMaximum() >= _stats.getMaximum()) {
+            if (tsStats.getMaximum() > _stats.getMaximum() ||
+                tsStats.getMaximumNano() > _maximumNano) {
+              _maximumNano = tsStats.getMaximumNano();
+            }
+            _stats.setMaximum(tsStats.getMaximum());
+          }
+          if (tsStats.getMinimum() <= _stats.getMinimum()) {
+            if (tsStats.getMinimum() < _stats.getMinimum() ||
+                tsStats.getMinimumNano() < _minimumNano) {
+              _minimumNano = tsStats.getMinimumNano();
+            }
+            _stats.setMinimum(tsStats.getMinimum());
+          }
+        }
+      }
     }
 
     void reset() override {
       _stats.reset();
+      _minimumNano = DEFAULT_MIN_NANOS;
+      _maximumNano = DEFAULT_MAX_NANOS;
     }
 
     void toProtoBuf(proto::ColumnStatistics& pbStats) const override {
@@ -1298,9 +1356,17 @@ namespace orc {
       if (_stats.hasMinimum()) {
         tsStats->set_minimumutc(_stats.getMinimum());
         tsStats->set_maximumutc(_stats.getMaximum());
+        if (_minimumNano != DEFAULT_MIN_NANOS) {
+          tsStats->set_minimumnanos(_minimumNano + 1);
+        }
+        if (_maximumNano != DEFAULT_MAX_NANOS) {
+          tsStats->set_maximumnanos(_maximumNano + 1);
+        }
       } else {
         tsStats->clear_minimumutc();
         tsStats->clear_maximumutc();
+        tsStats->clear_minimumnanos();
+        tsStats->clear_maximumnanos();
       }
     }
 
@@ -1377,6 +1443,22 @@ namespace orc {
         return _upperBound;
       }else{
         throw ParseError("UpperBound is not defined.");
+      }
+    }
+
+    int32_t getMinimumNano() const override {
+      if (hasMinimum()) {
+        return _minimumNano;
+      } else {
+        throw ParseError("Minimum is not defined.");
+      }
+    }
+
+    int32_t getMaximumNano() const override {
+      if (hasMaximum()) {
+        return _maximumNano;
+      } else {
+        throw ParseError("Maximum is not defined.");
       }
     }
   };

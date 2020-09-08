@@ -66,8 +66,8 @@ namespace orc {
   }
 
   Literal::Literal(PredicateDataType type, int64_t val) {
-    if (type != PredicateDataType::DATE && type != PredicateDataType::TIMESTAMP) {
-      throw std::invalid_argument("only DATE & TIMESTAMP are supported here!");
+    if (type != PredicateDataType::DATE) {
+      throw std::invalid_argument("only DATE is supported here!");
     }
     mType = type;
     mValue.IntVal = val;
@@ -99,6 +99,17 @@ namespace orc {
     mHashCode = hashCode();
   }
 
+  Literal::Literal(int64_t second, int32_t nano) {
+    mType = PredicateDataType::TIMESTAMP;
+    mValue.TimeStampVal.second = second;
+    mValue.TimeStampVal.nano = nano;
+    mPrecision = 0;
+    mScale = 0;
+    mSize = sizeof(Timestamp);
+    mIsNull = false;
+    mHashCode = hashCode();
+  }
+
   Literal::Literal(const Literal& r): mType(r.mType)
                                     , mSize(r.mSize)
                                     , mIsNull(r.mIsNull)
@@ -112,6 +123,8 @@ namespace orc {
       mPrecision = r.mPrecision;
       mScale = r.mScale;
       mValue = r.mValue;
+    } else if (mType == PredicateDataType::TIMESTAMP) {
+      mValue.TimeStampVal = r.mValue.TimeStampVal;
     } else {
       mValue = r.mValue;
       mPrecision = 0;
@@ -141,12 +154,27 @@ namespace orc {
       if (mType == PredicateDataType::STRING) {
         mValue.Buffer = new char[r.mSize];
         memcpy(mValue.Buffer, r.mValue.Buffer, r.mSize);
+      } else if (mType == PredicateDataType::TIMESTAMP) {
+        mValue.TimeStampVal = r.mValue.TimeStampVal;
       } else {
         mValue = r.mValue;
       }
       mHashCode = r.mHashCode;
     }
     return *this;
+  }
+
+  std::string Literal::Timestamp::toString() const {
+    time_t secs = static_cast<time_t>(second);
+    struct tm tmValue;
+    gmtime_r(&secs, &tmValue);
+    char timeBuffer[20];
+    strftime(timeBuffer, sizeof(timeBuffer), "%Y-%m-%d %H:%M:%S", &tmValue);
+    char nanoBuffer[10];
+    snprintf(nanoBuffer, sizeof(nanoBuffer), "%.9i", nano);
+    std::ostringstream buffer;
+    buffer << timeBuffer << "." << nanoBuffer;
+    return buffer.str();
   }
 
   std::string Literal::toString() const {
@@ -163,7 +191,7 @@ namespace orc {
         sstream << mValue.DateVal;
         break;
       case PredicateDataType::TIMESTAMP:
-        sstream << mValue.TimeStampVal;
+        sstream << mValue.TimeStampVal.toString();
         break;
       case PredicateDataType::FLOAT:
         sstream << mValue.DoubleVal;
@@ -192,7 +220,8 @@ namespace orc {
       case PredicateDataType::DATE:
         return std::hash<int64_t>{}(mValue.DateVal);
       case PredicateDataType::TIMESTAMP:
-        return std::hash<int64_t>{}(mValue.TimeStampVal);
+        return std::hash<int64_t>{}(mValue.TimeStampVal.second) * 17 +
+          std::hash<int32_t>{}(mValue.TimeStampVal.nano);
       case PredicateDataType::FLOAT:
         return std::hash<double>{}(mValue.DoubleVal);
       case PredicateDataType::BOOLEAN:
@@ -267,7 +296,7 @@ namespace orc {
     return mValue.DateVal;
   }
 
-  int64_t Literal::getTimestamp() const {
+  Literal::Timestamp Literal::getTimestamp() const {
     validate(mIsNull, mType, PredicateDataType::TIMESTAMP);
     return mValue.TimeStampVal;
   }

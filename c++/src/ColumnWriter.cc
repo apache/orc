@@ -1802,7 +1802,7 @@ namespace orc {
         if (enableBloomFilter) {
           bloomFilter->addLong(millsUTC);
         }
-        tsStats->update(millsUTC);
+        tsStats->update(millsUTC, nanos[i] % 1000000);
 
         if (secs[i] < 0 && nanos[i] != 0) {
           secs[i] += 1;
