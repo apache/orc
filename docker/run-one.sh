@@ -37,10 +37,7 @@ else
   echo "Started $GITHUB_USER/$BRANCH on $OS at $(date)"
 
   case $OS in
-  centos6|ubuntu12)
-     OPTS="-DSNAPPY_HOME=/usr/local -DPROTOBUF_HOME=/usr/local"
-     ;;
-  centos7|debian8|ubuntu14)
+  debian8)
      OPTS="-DSNAPPY_HOME=/usr/local"
      ;;
   *)
