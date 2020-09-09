@@ -14,43 +14,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# ORC compile for Debian 8
+# ORC compile for Ubuntu 20
 #
 
-FROM debian:8
-MAINTAINER Owen O'Malley <owen@hortonworks.com>
+FROM ubuntu:20.04
 
-ADD sources.list apt.conf /etc/apt/
-
+RUN ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
 RUN apt-get update
 RUN apt-get install -y \
-  autoconf \
   cmake \
   gcc \
   g++ \
   git \
   libsasl2-dev \
   libssl-dev \
-  libtool \
   make \
   maven \
-  pkg-config \
-  wget
-
-RUN apt-get -t jessie-backports install -y openjdk-8-jdk
-RUN update-alternatives --set java \
-  /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java
+  openjdk-8-jdk \
+  tzdata
+RUN update-java-alternatives --set java-1.8.0-openjdk-amd64
 
 WORKDIR /root
-# install a local build of snappy
-RUN wget "https://github.com/google/snappy/archive/1.1.3.tar.gz" \
-  -O snappy.tgz
-RUN tar xzf snappy.tgz
-RUN cd snappy-1.1.3 && \
-    ./autogen.sh && \
-    ./configure && \
-    make install
-
 VOLUME /root/.m2/repository
 
 CMD if [ ! -d orc ]; then \
@@ -60,5 +44,5 @@ CMD if [ ! -d orc ]; then \
     fi && \
     mkdir build && \
     cd build && \
-    cmake -DSNAPPY_HOME=/usr/local ../orc && \
+    cmake ../orc && \
     make package test-out

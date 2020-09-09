@@ -21,8 +21,9 @@ FROM centos:7
 MAINTAINER Owen O'Malley <owen@hortonworks.com>
 
 RUN yum check-update || true
+RUN yum -y install epel-release
 RUN yum install -y \
-  cmake \
+  cmake3 \
   curl-devel \
   cyrus-sasl-devel \
   expat-devel \
@@ -40,22 +41,19 @@ RUN yum install -y \
   wget \
   which \
   zlib-devel
+# Our scripts assume that cmake is called 'cmake'
+RUN ln -s /usr/bin/cmake3 /usr/bin/cmake
 
 ENV TZ=America/Los_Angeles
 WORKDIR /root
-# install a local build of snappy
-RUN wget "https://github.com/google/snappy/archive/1.1.3.tar.gz" \
-  -O snappy.tgz
-RUN tar xzf snappy.tgz
-RUN cd snappy-1.1.3 && \
-    ./autogen.sh && \
-    ./configure && \
-    make install
-
 VOLUME /root/.m2/repository
 
-CMD git clone https://github.com/apache/orc.git -b master && \
-  mkdir orc/build && \
-  cd orc/build && \
-  cmake .. && \ 
-  make package test-out
+CMD if [ ! -d orc ]; then \
+      echo "No volume provided, building from apache master."; \
+      echo "Pass '-v`pwd`:/root/orc' to docker run to build local source."; \
+      git clone https://github.com/apache/orc.git -b master; \
+    fi && \
+    mkdir build && \
+    cd build && \
+    cmake ../orc && \
+    make package test-out

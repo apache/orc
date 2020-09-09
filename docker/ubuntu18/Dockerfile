@@ -38,8 +38,12 @@ RUN update-java-alternatives --set java-1.8.0-openjdk-amd64
 WORKDIR /root
 VOLUME /root/.m2/repository
 
-CMD git clone https://github.com/apache/orc.git -b master && \
-  mkdir orc/build && \
-  cd orc/build && \
-  cmake .. && \
-  make package test-out
+CMD if [ ! -d orc ]; then \
+      echo "No volume provided, building from apache master."; \
+      echo "Pass '-v`pwd`:/root/orc' to docker run to build local source."; \
+      git clone https://github.com/apache/orc.git -b master; \
+    fi && \
+    mkdir build && \
+    cd build && \
+    cmake ../orc && \
+    make package test-out
