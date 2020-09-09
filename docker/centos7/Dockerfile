@@ -21,8 +21,9 @@ FROM centos:7
 MAINTAINER Owen O'Malley <owen@hortonworks.com>
 
 RUN yum check-update || true
+RUN yum -y install epel-release
 RUN yum install -y \
-  cmake \
+  cmake3 \
   curl-devel \
   cyrus-sasl-devel \
   expat-devel \
@@ -40,18 +41,11 @@ RUN yum install -y \
   wget \
   which \
   zlib-devel
+# Our scripts assume that cmake is called 'cmake'
+RUN ln -s /usr/bin/cmake3 /usr/bin/cmake
 
 ENV TZ=America/Los_Angeles
 WORKDIR /root
-# install a local build of snappy
-RUN wget "https://github.com/google/snappy/archive/1.1.3.tar.gz" \
-  -O snappy.tgz
-RUN tar xzf snappy.tgz
-RUN cd snappy-1.1.3 && \
-    ./autogen.sh && \
-    ./configure && \
-    make install
-
 VOLUME /root/.m2/repository
 
 CMD if [ ! -d orc ]; then \
@@ -61,5 +55,5 @@ CMD if [ ! -d orc ]; then \
     fi && \
     mkdir build && \
     cd build && \
-    cmake -DSNAPPY_HOME=/usr/local ../orc && \
+    cmake ../orc && \
     make package test-out
