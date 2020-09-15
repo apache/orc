@@ -690,7 +690,7 @@ where <code class="highlighter-rouge">hasNulls == true</code> the <code class="h
 value is null.</p>
 
 <div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">namespace</span> <span class="n">orc</span> <span class="p">{</span>
-  <span class="k">struct</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
+  <span class="k">struct</span> <span class="nc">ColumnVectorBatch</span> <span class="p">{</span>
     <span class="kt">uint64_t</span> <span class="n">numElements</span><span class="p">;</span>
     <span class="n">DataBuffer</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">&gt;</span> <span class="n">notNull</span><span class="p">;</span>
     <span class="kt">bool</span> <span class="n">hasNulls</span><span class="p">;</span>
@@ -788,7 +788,7 @@ value is null.</p>
 date, int, smallint, and tinyint). The data is represented as a
 buffer of int64_t where each value is sign-extended as necessary.</p>
 
-<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">struct</span> <span class="n">LongVectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">struct</span> <span class="nc">LongVectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
     <span class="n">DataBuffer</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="o">&gt;</span> <span class="n">data</span><span class="p">;</span>
     <span class="p">...</span>
   <span class="p">};</span>
@@ -800,7 +800,7 @@ respectively. Note that we always assume data is in GMT timezone;
 therefore it is user’s responsibility to convert wall clock time
 from local timezone to GMT.</p>
 
-<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">struct</span> <span class="n">TimestampVectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">struct</span> <span class="nc">TimestampVectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
     <span class="n">DataBuffer</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="o">&gt;</span> <span class="n">data</span><span class="p">;</span>
     <span class="n">DataBuffer</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="o">&gt;</span> <span class="n">nanoseconds</span><span class="p">;</span>
     <span class="p">...</span>
@@ -810,7 +810,7 @@ from local timezone to GMT.</p>
 <p>DoubleVectorBatch handles all of the floating point types
 (double, and float). The data is represented as a buffer of doubles.</p>
 
-<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">struct</span> <span class="n">DoubleVectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">struct</span> <span class="nc">DoubleVectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
     <span class="n">DataBuffer</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span> <span class="n">data</span><span class="p">;</span>
     <span class="p">...</span>
   <span class="p">};</span>
@@ -820,12 +820,12 @@ from local timezone to GMT.</p>
 greater than 18. Decimal128VectorBatch handles the others. The data
 is represented as a buffer of int64_t and orc::Int128 respectively.</p>
 
-<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">struct</span> <span class="n">Decimal64VectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">struct</span> <span class="nc">Decimal64VectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
     <span class="n">DataBuffer</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="o">&gt;</span> <span class="n">values</span><span class="p">;</span>
     <span class="p">...</span>
   <span class="p">};</span>
 
-  <span class="k">struct</span> <span class="n">Decimal128VectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
+  <span class="k">struct</span> <span class="nc">Decimal128VectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
     <span class="n">DataBuffer</span><span class="o">&lt;</span><span class="n">Int128</span><span class="o">&gt;</span> <span class="n">values</span><span class="p">;</span>
     <span class="p">...</span>
   <span class="p">};</span>
@@ -835,7 +835,7 @@ is represented as a buffer of int64_t and orc::Int128 respectively.</p>
 char, string, and varchar). The data is represented as a char* buffer,
 and a length buffer.</p>
 
-<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">struct</span> <span class="n">StringVectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">struct</span> <span class="nc">StringVectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
     <span class="n">DataBuffer</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">*&gt;</span> <span class="n">data</span><span class="p">;</span>
     <span class="n">DataBuffer</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="o">&gt;</span> <span class="n">length</span><span class="p">;</span>
     <span class="p">...</span>
@@ -845,7 +845,7 @@ and a length buffer.</p>
 <p>StructVectorBatch handles the struct columns and represents
 the data as a buffer of <code class="highlighter-rouge">ColumnVectorBatch</code>.</p>
 
-<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">struct</span> <span class="n">StructVectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">struct</span> <span class="nc">StructVectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
     <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">ColumnVectorBatch</span><span class="o">*&gt;</span> <span class="n">fields</span><span class="p">;</span>
     <span class="p">...</span>
   <span class="p">};</span>
@@ -856,7 +856,7 @@ to indicate which subtype has the value and <code class="highlighter-rouge">offs
 the offset in child batch of that subtype. A individual
 <code class="highlighter-rouge">ColumnVectorBatch</code> is used for each subtype.</p>
 
-<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">struct</span> <span class="n">UnionVectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">struct</span> <span class="nc">UnionVectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
     <span class="n">DataBuffer</span><span class="o">&lt;</span><span class="kt">unsigned</span> <span class="kt">char</span><span class="o">&gt;</span> <span class="n">tags</span><span class="p">;</span>
     <span class="n">DataBuffer</span><span class="o">&lt;</span><span class="kt">uint64_t</span><span class="o">&gt;</span> <span class="n">offsets</span><span class="p">;</span>
     <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">ColumnVectorBatch</span><span class="o">*&gt;</span> <span class="n">children</span><span class="p">;</span>
@@ -868,7 +868,7 @@ the offset in child batch of that subtype. A individual
 the data as a buffer of integers for the offsets and a
 <code class="highlighter-rouge">ColumnVectorBatch</code> for the children values.</p>
 
-<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">struct</span> <span class="n">ListVectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">struct</span> <span class="nc">ListVectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
     <span class="n">DataBuffer</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="o">&gt;</span> <span class="n">offsets</span><span class="p">;</span>
     <span class="n">ORC_UNIQUE_PTR</span><span class="o">&lt;</span><span class="n">ColumnVectorBatch</span><span class="o">&gt;</span> <span class="n">elements</span><span class="p">;</span>
     <span class="p">...</span>
@@ -879,7 +879,7 @@ the data as a buffer of integers for the offsets and a
 as two arrays of integers for the offsets and two <code class="highlighter-rouge">ColumnVectorBatch</code>s
 for the keys and values.</p>
 
-<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">struct</span> <span class="n">MapVectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">struct</span> <span class="nc">MapVectorBatch</span><span class="o">:</span> <span class="k">public</span> <span class="n">ColumnVectorBatch</span> <span class="p">{</span>
     <span class="n">DataBuffer</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="o">&gt;</span> <span class="n">offsets</span><span class="p">;</span>
     <span class="n">ORC_UNIQUE_PTR</span><span class="o">&lt;</span><span class="n">ColumnVectorBatch</span><span class="o">&gt;</span> <span class="n">keys</span><span class="p">;</span>
     <span class="n">ORC_UNIQUE_PTR</span><span class="o">&lt;</span><span class="n">ColumnVectorBatch</span><span class="o">&gt;</span> <span class="n">elements</span><span class="p">;</span>

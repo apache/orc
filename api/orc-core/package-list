@@ -1,4 +1,3 @@
-io.airlift.slice
 org.apache.orc
 org.apache.orc.impl
 org.apache.orc.impl.mask
