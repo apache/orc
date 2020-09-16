@@ -1,10 +1,6 @@
-language: cpp
 sudo: false
 dist: trusty
 addons:
-  apt:
-    packages:
-    - valgrind
   homebrew:
     packages:
     - openssl
@@ -12,14 +8,21 @@ addons:
 matrix:
   fast_finish: true
   include:
-  - compiler: gcc
-    os: linux
+  - language: java
+    jdk: openjdk8
+    env:
+    - MAVEN_OPTS=-Xmx2g MAVEN_SKIP_RC=true
     script:
-    - mkdir build
-    - cd build
-    - cmake -DANALYZE_JAVA=ON ..
-    - travis_wait 35 make package test-out
-  - compiler: clang
+    - cd java
+    - mvn -Panalyze clean package
+    - mvn apache-rat:check
+
+  - language: cpp
+    compiler: gcc
+    os: linux
+
+  - language: cpp
+    compiler: clang
     os: linux
     addons:
       apt:
@@ -30,39 +33,28 @@ matrix:
     before_script:
       - export CC=clang-4.0
       - export CXX=clang++-4.0
-  - compiler: clang
-    os: osx
-    osx_image: xcode9.4
-    script:
-    - brew link --overwrite --force openssl
-    - mkdir build
-    - cd build
-    - cmake -DOPENSSL_ROOT_DIR=`brew --prefix openssl` ..
-    - make package test-out
-  - compiler: clang
+
+  - language: cpp
+    compiler: clang
     os: osx
     osx_image: xcode11.3
     script:
     - brew link --overwrite --force openssl
     - mkdir build
     - cd build
-    - cmake -DOPENSSL_ROOT_DIR=`brew --prefix openssl` ..
-    - make package test-out
-  - compiler: clang
+    - cmake -DBUILD_JAVA=OFF -DOPENSSL_ROOT_DIR=`brew --prefix openssl` ..
+    - travis_wait 35 make package test-out
+
+  - language: cpp
+    compiler: clang
     os: osx
     osx_image: xcode12
     script:
     - brew link --overwrite --force openssl
     - mkdir build
     - cd build
-    - cmake -DOPENSSL_ROOT_DIR=`brew --prefix openssl` ..
-    - make package test-out
-
-jdk:
-  - openjdk7
-
-env:
-  - MAVEN_OPTS=-Xmx2g MAVEN_SKIP_RC=true
+    - cmake -DBUILD_JAVA=OFF -DOPENSSL_ROOT_DIR=`brew --prefix openssl` ..
+    - travis_wait 35 make package test-out
 
 cache:
   directories:
@@ -71,7 +63,5 @@ cache:
 script:
   - mkdir build
   - cd build
-  - cmake -DANALYZE_JAVA=ON ..
-  - make package test-out
-  - cd ../java
-  - mvn apache-rat:check
+  - cmake -DBUILD_JAVA=OFF ..
+  - travis_wait 35 make package test-out
