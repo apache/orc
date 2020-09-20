@@ -700,7 +700,7 @@ public class TestSchemaEvolution {
 
   @Test
   public void testTimestampToStringEvolution() throws Exception {
-    testFilePath = new Path(workDir, "TestOrcFile." +
+    testFilePath = new Path(workDir, "TestSchemaEvolution." +
                                          testCaseName.getMethodName() + ".orc");
     TypeDescription schema = TypeDescription.fromString("timestamp");
     Writer writer = OrcFile.createWriter(testFilePath,
