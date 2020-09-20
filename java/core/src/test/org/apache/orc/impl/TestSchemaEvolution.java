@@ -1737,6 +1737,20 @@ public class TestSchemaEvolution {
   }
 
   @Test
+  public void testStructInArrayWithoutPositionalEvolution() throws IOException {
+    options.forcePositionalEvolution(false);
+    options.positionalEvolutionLevel(Integer.MAX_VALUE);
+    TypeDescription file = TypeDescription.fromString("array<struct<x:string,y:int,z:double>>");
+    TypeDescription read = TypeDescription.fromString("array<struct<z:double,x:string,a:int,b:int>>");
+    SchemaEvolution evo = new SchemaEvolution(file, read, options);
+    assertEquals(1, evo.getFileType(1).getId());
+    assertEquals(4, evo.getFileType(2).getId());
+    assertEquals(2, evo.getFileType(3).getId());
+    assertNull(evo.getFileType(4));
+    assertNull(evo.getFileType(5));
+  }
+
+  @Test
   public void testPositionalEvolutionForStructInArray() throws IOException {
     options.forcePositionalEvolution(true);
     options.positionalEvolutionLevel(Integer.MAX_VALUE);
