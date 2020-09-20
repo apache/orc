@@ -513,7 +513,7 @@ public class SchemaEvolution {
             isOnlyImplicitConversion = false;
           }
 
-          if (positionalLevels == 0) {
+          if (positionalLevels <= 0) {
             List<String> readerFieldNames = readerType.getFieldNames();
             List<String> fileFieldNames = fileType.getFieldNames();
 
