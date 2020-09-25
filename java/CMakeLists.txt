@@ -17,9 +17,12 @@ set(NO_DOWNLOAD_MSG
 # set the version in the POM file to match the CMake version string
 execute_process(COMMAND mvn versions:set -DnewVersion=${ORC_VERSION}
                                          -DgenerateBackupPoms=false
-                                         -Pbenchmark
                                          ${NO_DOWNLOAD_MSG}
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+execute_process(COMMAND mvn versions:set -DnewVersion=${ORC_VERSION}
+                                         -DgenerateBackupPoms=false
+                                         ${NO_DOWNLOAD_MSG}
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bench)
 
 set(ORC_JARS
   ${CMAKE_CURRENT_BINARY_DIR}/shims/orc-shims-${ORC_VERSION}.jar
