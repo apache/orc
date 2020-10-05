@@ -49,7 +49,7 @@ public class SchemaEvolution {
   private boolean hasConversion;
   private boolean isOnlyImplicitConversion;
   private final boolean isAcid;
-  private final boolean isSchemaEvolutionCaseAware;
+  final boolean isSchemaEvolutionCaseAware;
   /**
    * {@code true} if acid metadata columns should be decoded otherwise they will
    * be set to {@code null}.  {@link #acidEventFieldNames}.

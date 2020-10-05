@@ -246,6 +246,12 @@ public class ParserUtils {
 
   public static TypeDescription findSubtype(TypeDescription schema,
                                             ParserUtils.StringPosition source) {
+    return findSubtype(schema, source, true);
+  }
+
+  public static TypeDescription findSubtype(TypeDescription schema,
+                                            ParserUtils.StringPosition source,
+                                            boolean isSchemaEvolutionCaseAware) {
     List<String> names = ParserUtils.splitName(source);
     if (names.size() == 1 && INTEGER_PATTERN.matcher(names.get(0)).matches()) {
       return schema.findSubtype(Integer.parseInt(names.get(0)));
@@ -256,7 +262,18 @@ public class ParserUtils {
       String first = names.remove(0);
       switch (current.getCategory()) {
         case STRUCT: {
-          int posn = current.getFieldNames().indexOf(first);
+          int posn = -1;
+          if (isSchemaEvolutionCaseAware) {
+            posn = current.getFieldNames().indexOf(first);
+          } else {
+            // Case-insensitive search like ORC 1.5
+            for (int i = 0; i < current.getFieldNames().size(); i++) {
+              if (current.getFieldNames().get(i).equalsIgnoreCase(first)) {
+                posn = i;
+                break;
+              }
+            }
+          }
           if (posn == -1) {
             throw new IllegalArgumentException("Field " + first +
                 " not found in " + current.toString());

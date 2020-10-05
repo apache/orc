@@ -818,8 +818,14 @@ public class TypeDescription
    * @return the subtype
    */
   public TypeDescription findSubtype(String columnName) {
+    return findSubtype(columnName, true);
+  }
+
+  public TypeDescription findSubtype(String columnName,
+      boolean isSchemaEvolutionCaseAware) {
     ParserUtils.StringPosition source = new ParserUtils.StringPosition(columnName);
-    TypeDescription result = ParserUtils.findSubtype(this, source);
+    TypeDescription result = ParserUtils.findSubtype(this, source,
+        isSchemaEvolutionCaseAware);
     if (source.hasCharactersLeft()) {
       throw new IllegalArgumentException("Remaining text in parsing field name "
           + source);
