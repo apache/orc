@@ -113,6 +113,16 @@ public class TestRecordReaderImpl {
   }
 
   @Test
+  public void testFindColumnCaseInsensitively() throws Exception {
+    Configuration conf = new Configuration();
+    TypeDescription file = TypeDescription.fromString("struct<A:int>");
+    TypeDescription reader = TypeDescription.fromString("struct<a:int>");
+    conf.setBoolean("orc.schema.evolution.case.sensitive", false);
+    SchemaEvolution evo = new SchemaEvolution(file, reader, new Reader.Options(conf));
+    assertEquals(1, RecordReaderImpl.findColumns(evo, "A"));
+  }
+
+  @Test
   public void testForcePositionalEvolution() throws Exception {
     Configuration conf = new Configuration();
 
