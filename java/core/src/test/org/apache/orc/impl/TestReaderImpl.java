@@ -20,6 +20,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.EOFException;
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -42,15 +43,20 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.util.Progressable;
 import org.apache.orc.FileFormatException;
 import org.apache.orc.OrcFile;
+import org.apache.orc.OrcProto;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
+import org.apache.orc.StripeStatistics;
 import org.apache.orc.TestVectorOrcFile;
+import org.apache.orc.TimestampColumnStatistics;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class TestReaderImpl {
+  private Path workDir = new Path(System.getProperty("example.dir",
+      "../../examples/"));
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
@@ -344,5 +350,22 @@ public class TestReaderImpl {
     assertEquals(1, fs.streamCount());
     reader2.close();
     assertEquals(0, fs.streamCount());
+  }
+
+  @Test
+  public void testOrcTailStripeStats() throws Exception {
+    Configuration conf = new Configuration();
+    Path path = new Path(workDir, "orc_split_elim_new.orc");
+    FileSystem fs = path.getFileSystem(conf);
+    try (ReaderImpl reader = (ReaderImpl) OrcFile.createReader(path,
+        OrcFile.readerOptions(conf).filesystem(fs))) {
+      OrcTail tail = reader.extractFileTail(fs, path, Long.MAX_VALUE);
+      List<StripeStatistics> stats = tail.getStripeStatistics();
+      assertEquals(1, stats.size());
+      OrcProto.TimestampStatistics tsStats =
+          stats.get(0).getColumn(5).getTimestampStatistics();
+      assertEquals(-28800000, tsStats.getMinimumUtc());
+      assertEquals(-28550000, tsStats.getMaximumUtc());
+    }
   }
 }
