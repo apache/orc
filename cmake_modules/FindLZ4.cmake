@@ -13,7 +13,7 @@
 # LZ4_HOME environment variable is used to check for LZ4 headers and static library
 
 # LZ4_INCLUDE_DIR: directory containing headers
-# LZ4_LIBS: directory containing LZ4 libraries
+# LZ4_LIBRARY: path to liblz4
 # LZ4_STATIC_LIB: path to lz4.a
 # LZ4_FOUND: whether LZ4 has been found
 
@@ -28,24 +28,28 @@ find_path (LZ4_INCLUDE_DIR lz4.h HINTS
   NO_DEFAULT_PATH
   PATH_SUFFIXES "include")
 
-find_library (LZ4_LIBRARIES NAMES lz4 HINTS
+find_library (LZ4_LIBRARY NAMES lz4 HINTS
   ${_lz4_path}
   PATH_SUFFIXES "lib" "lib64")
 
-if (LZ4_INCLUDE_DIR AND LZ4_LIBRARIES)
+find_library (LZ4_STATIC_LIB NAMES ${CMAKE_STATIC_LIBRARY_PREFIX}${LZ4_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX} HINTS
+  ${_lz4_path}
+  PATH_SUFFIXES "lib" "lib64")
+
+if (LZ4_INCLUDE_DIR AND LZ4_LIBRARY)
   set (LZ4_FOUND TRUE)
-  get_filename_component (LZ4_LIBS ${LZ4_LIBRARIES} PATH)
   set (LZ4_HEADER_NAME lz4.h)
   set (LZ4_HEADER ${LZ4_INCLUDE_DIR}/${LZ4_HEADER_NAME})
-  set (LZ4_LIB_NAME lz4)
-  set (LZ4_STATIC_LIB ${LZ4_LIBS}/${CMAKE_STATIC_LIBRARY_PREFIX}${LZ4_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX})
 else ()
   set (LZ4_FOUND FALSE)
 endif ()
 
 if (LZ4_FOUND)
   message (STATUS "Found the LZ4 header: ${LZ4_HEADER}")
-  message (STATUS "Found the LZ4 library: ${LZ4_STATIC_LIB}")
+  message (STATUS "Found the LZ4 library: ${LZ4_LIBRARY}")
+  if (LZ4_STATIC_LIB)
+    message (STATUS "Found the LZ4 static library: ${LZ4_STATIC_LIB}")
+  endif ()
 else()
   if (_lz4_path)
     set (LZ4_ERR_MSG "Could not find LZ4. Looked in ${_lz4_path}.")
@@ -63,6 +67,5 @@ endif()
 mark_as_advanced (
   LZ4_INCLUDE_DIR
   LZ4_STATIC_LIB
-  LZ4_LIBS
-  LZ4_LIBRARIES
+  LZ4_LIBRARY
 )

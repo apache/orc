@@ -13,7 +13,7 @@
 # ZLIB_HOME environmental variable is used to check for ZLIB headers and static library
 
 # ZLIB_INCLUDE_DIR: directory containing headers
-# ZLIB_LIBS: directory containing ZLIB libraries
+# ZLIB_LIBRARY: path to libz/libzlib
 # ZLIB_STATIC_LIB: path to zlib.a
 # ZLIB_FOUND: whether ZLIB has been found
 
@@ -32,23 +32,28 @@ if (NOT ZLIB_STATIC_LIB_NAME)
   set (ZLIB_STATIC_LIB_NAME z)
 endif()
 
-find_library (ZLIB_LIBRARIES NAMES ${ZLIB_STATIC_LIB_NAME} HINTS
+find_library (ZLIB_LIBRARY NAMES z zlib ${ZLIB_STATIC_LIB_NAME} HINTS
   ${_zlib_path}
   PATH_SUFFIXES "lib")
 
-if (ZLIB_INCLUDE_DIR AND ZLIB_LIBRARIES)
+find_library (ZLIB_STATIC_LIB NAMES ${CMAKE_STATIC_LIBRARY_PREFIX}${ZLIB_STATIC_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX} HINTS
+  ${_zlib_path}
+  PATH_SUFFIXES "lib")
+
+if (ZLIB_INCLUDE_DIR AND ZLIB_LIBRARY)
   set (ZLIB_FOUND TRUE)
-  get_filename_component (ZLIB_LIBS ${ZLIB_LIBRARIES} PATH )
   set (ZLIB_HEADER_NAME zlib.h)
   set (ZLIB_HEADER ${ZLIB_INCLUDE_DIR}/${ZLIB_HEADER_NAME})
-  set (ZLIB_STATIC_LIB ${ZLIB_LIBS}/${CMAKE_STATIC_LIBRARY_PREFIX}${ZLIB_STATIC_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX})
 else ()
   set (ZLIB_FOUND FALSE)
 endif ()
 
 if (ZLIB_FOUND)
   message (STATUS "Found the ZLIB header: ${ZLIB_HEADER}")
-  message (STATUS "Found the ZLIB library: ${ZLIB_STATIC_LIB}")
+  message (STATUS "Found the ZLIB library: ${ZLIB_LIBRARY}")
+  if (ZLIB_STATIC_LIB)
+    message (STATUS "Found the ZLIB static library: ${ZLIB_STATIC_LIB}")
+  endif ()
 else()
   if (_zlib_path)
     set (ZLIB_ERR_MSG "Could not find ZLIB. Looked in ${_zlib_path}.")
@@ -66,6 +71,5 @@ endif()
 mark_as_advanced (
   ZLIB_INCLUDE_DIR
   ZLIB_STATIC_LIB
-  ZLIB_LIBS
-  ZLIB_LIBRARIES
+  ZLIB_LIBRARY
 )

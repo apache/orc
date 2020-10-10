@@ -155,7 +155,7 @@ CHECK_CXX_SOURCE_RUNS("
 )
 
 set(CMAKE_REQUIRED_INCLUDES ${ZLIB_INCLUDE_DIR})
-set(CMAKE_REQUIRED_LIBRARIES zlib)
+set(CMAKE_REQUIRED_LIBRARIES orc_zlib)
 CHECK_CXX_SOURCE_COMPILES("
     #define Z_PREFIX
     #include<zlib.h>
@@ -174,12 +174,7 @@ configure_file (
 include_directories (
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_BINARY_DIR}
-  ${PROTOBUF_INCLUDE_DIR}
-  ${ZLIB_INCLUDE_DIR}
-  ${SNAPPY_INCLUDE_DIR}
-  ${LZ4_INCLUDE_DIR}
   ${LIBHDFSPP_INCLUDE_DIR}
-  ${ZSTD_INCLUDE_DIR}
   )
 
 add_custom_command(OUTPUT orc_proto.pb.h orc_proto.pb.cc
@@ -236,11 +231,11 @@ endif(BUILD_LIBHDFSPP)
 add_library (orc STATIC ${SOURCE_FILES})
 
 target_link_libraries (orc
-  protobuf
-  zlib
-  snappy
-  lz4
-  zstd
+  orc::protobuf
+  orc::zlib
+  orc::snappy
+  orc::lz4
+  orc::zstd
   ${LIBHDFSPP_LIBRARIES}
   )
 

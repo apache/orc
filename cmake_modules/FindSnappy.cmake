@@ -13,7 +13,7 @@
 # SNAPPY_HOME environmental variable is used to check for Snappy headers and static library
 
 # SNAPPY_INCLUDE_DIR: directory containing headers
-# SNAPPY_LIBS: directory containing snappy libraries
+# SNAPPY_LIBRARY: path to libsnappy
 # SNAPPY_STATIC_LIB: path to libsnappy.a
 # SNAPPY_FOUND: whether snappy has been found
 
@@ -28,24 +28,28 @@ find_path (SNAPPY_INCLUDE_DIR snappy.h HINTS
   NO_DEFAULT_PATH
   PATH_SUFFIXES "include")
 
-find_library (SNAPPY_LIBRARIES NAMES snappy HINTS
+find_library (SNAPPY_LIBRARY NAMES snappy HINTS
   ${_snappy_path}
   PATH_SUFFIXES "lib" "lib64")
 
-if (SNAPPY_INCLUDE_DIR AND SNAPPY_LIBRARIES)
+find_library (SNAPPY_STATIC_LIB NAMES ${CMAKE_STATIC_LIBRARY_PREFIX}${SNAPPY_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX} HINTS
+  ${_snappy_path}
+  PATH_SUFFIXES "lib" "lib64")
+
+if (SNAPPY_INCLUDE_DIR AND SNAPPY_LIBRARY)
   set (SNAPPY_FOUND TRUE)
-  get_filename_component (SNAPPY_LIBS ${SNAPPY_LIBRARIES} PATH)
   set (SNAPPY_HEADER_NAME snappy.h)
   set (SNAPPY_HEADER ${SNAPPY_INCLUDE_DIR}/${SNAPPY_HEADER_NAME})
-  set (SNAPPY_LIB_NAME snappy)
-  set (SNAPPY_STATIC_LIB ${SNAPPY_LIBS}/${CMAKE_STATIC_LIBRARY_PREFIX}${SNAPPY_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX})
 else ()
   set (SNAPPY_FOUND FALSE)
 endif ()
 
 if (SNAPPY_FOUND)
   message (STATUS "Found the Snappy header: ${SNAPPY_HEADER}")
-  message (STATUS "Found the Snappy library: ${SNAPPY_STATIC_LIB}")
+  message (STATUS "Found the Snappy library: ${SNAPPY_LIBRARY}")
+  if (SNAPPY_STATIC_LIB)
+      message (STATUS "Found the Snappy static library: ${SNAPPY_STATIC_LIB}")
+  endif()
 else()
   if (_snappy_path)
     set (SNAPPY_ERR_MSG "Could not find Snappy. Looked in ${_snappy_path}.")
@@ -63,6 +67,5 @@ endif()
 mark_as_advanced (
   SNAPPY_INCLUDE_DIR
   SNAPPY_STATIC_LIB
-  SNAPPY_LIBS
-  SNAPPY_LIBRARIES
+  SNAPPY_LIBRARY
 )

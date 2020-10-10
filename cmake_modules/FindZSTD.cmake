@@ -13,7 +13,7 @@
 # ZSTD_HOME environmental variable is used to check for Zstd headers and static library
 
 # ZSTD_INCLUDE_DIR: directory containing headers
-# ZSTD_LIBS: directory containing zstd libraries
+# ZSTD_LIBRARY: path to libzstd
 # ZSTD_STATIC_LIB: path to libzstd.a
 # ZSTD_FOUND: whether zstd has been found
 
@@ -23,32 +23,33 @@ endif()
 
 message (STATUS "ZSTD_HOME: ${ZSTD_HOME}")
 
-if (NOT ZSTD_STATIC_LIB_NAME)
-  set (ZSTD_STATIC_LIB_NAME ${CMAKE_STATIC_LIBRARY_PREFIX}zstd)
-endif()
-
 find_path (ZSTD_INCLUDE_DIR zstd.h HINTS
         ${_zstd_path}
         NO_DEFAULT_PATH
         PATH_SUFFIXES "include")
 
-find_library (ZSTD_LIBRARIES NAMES ${ZSTD_STATIC_LIB_NAME} HINTS
+find_library (ZSTD_LIBRARY NAMES zstd HINTS
         ${_zstd_path}
         PATH_SUFFIXES "lib")
 
-if (ZSTD_INCLUDE_DIR AND ZSTD_LIBRARIES)
+find_library (ZSTD_STATIC_LIB NAMES ${CMAKE_STATIC_LIBRARY_PREFIX}zstd${CMAKE_STATIC_LIBRARY_SUFFIX} HINTS
+        ${_zstd_path}
+        PATH_SUFFIXES "lib")
+
+if (ZSTD_INCLUDE_DIR AND ZSTD_LIBRARY)
   set (ZSTD_FOUND TRUE)
-  get_filename_component (ZSTD_LIBS ${ZSTD_LIBRARIES} PATH)
   set (ZSTD_HEADER_NAME zstd.h)
   set (ZSTD_HEADER ${ZSTD_INCLUDE_DIR}/${ZSTD_HEADER_NAME})
-  set (ZSTD_STATIC_LIB ${ZSTD_LIBS}/${ZSTD_STATIC_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX})
 else ()
   set (ZSTD_FOUND FALSE)
 endif ()
 
 if (ZSTD_FOUND)
   message (STATUS "Found the zstd header: ${ZSTD_HEADER}")
-  message (STATUS "Found the zstd library: ${ZSTD_STATIC_LIB}")
+  message (STATUS "Found the zstd library: ${ZSTD_LIBRARY}")
+  if (ZSTD_STATIC_LIB)
+    message (STATUS "Found the zstd static library: ${ZSTD_STATIC_LIB}")
+  endif ()
 else()
   if (_ZSTD_path)
     set (ZSTD_ERR_MSG "Could not find zstd. Looked in ${_zstd_path}.")
@@ -66,6 +67,5 @@ endif()
 mark_as_advanced (
         ZSTD_INCLUDE_DIR
         ZSTD_STATIC_LIB
-        ZSTD_LIBS
-        ZSTD_LIBRARIES
+        ZSTD_LIBRARY
 )

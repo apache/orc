@@ -17,6 +17,13 @@ set(GTEST_VERSION "1.8.0")
 set(PROTOBUF_VERSION "3.5.1")
 set(ZSTD_VERSION "1.4.5")
 
+option(ORC_PREFER_STATIC_PROTOBUF "Prefer static protobuf library, if available" ON)
+option(ORC_PREFER_STATIC_SNAPPY   "Prefer static snappy library, if available"   ON)
+option(ORC_PREFER_STATIC_LZ4      "Prefer static lz4 library, if available"      ON)
+option(ORC_PREFER_STATIC_ZSTD     "Prefer static zstd library, if available"     ON)
+option(ORC_PREFER_STATIC_ZLIB     "Prefer static zlib library, if available"     ON)
+option(ORC_PREFER_STATIC_GMOCK    "Prefer static gmock library, if available"    ON)
+
 # zstd requires us to add the threads
 FIND_PACKAGE(Threads REQUIRED)
 
@@ -75,15 +82,21 @@ else ()
     ${THIRDPARTY_LOG_OPTIONS}
     BUILD_BYPRODUCTS "${SNAPPY_STATIC_LIB}")
 
+  set(SNAPPY_LIBRARY ${SNAPPY_STATIC_LIB})
   set(SNAPPY_VENDORED TRUE)
 endif ()
 
-include_directories (SYSTEM ${SNAPPY_INCLUDE_DIR})
-add_library (snappy STATIC IMPORTED)
-set_target_properties (snappy PROPERTIES IMPORTED_LOCATION ${SNAPPY_STATIC_LIB})
+add_library (orc_snappy INTERFACE)
+add_library (orc::snappy ALIAS orc_snappy)
+if (ORC_PREFER_STATIC_SNAPPY AND ${SNAPPY_STATIC_LIB})
+  target_link_libraries(orc_snappy INTERFACE ${SNAPPY_STATIC_LIB})
+else ()
+  target_link_libraries(orc_snappy INTERFACE ${SNAPPY_LIBRARY})
+endif ()
+target_include_directories (orc_snappy SYSTEM INTERFACE ${SNAPPY_INCLUDE_DIR})
 
 if (SNAPPY_VENDORED)
-  add_dependencies (snappy snappy_ep)
+  add_dependencies (orc_snappy snappy_ep)
   if (INSTALL_VENDORED_LIBS)
     install(FILES "${SNAPPY_STATIC_LIB}"
             DESTINATION "lib")
@@ -117,15 +130,21 @@ else ()
     ${THIRDPARTY_LOG_OPTIONS}
     BUILD_BYPRODUCTS "${ZLIB_STATIC_LIB}")
 
+  set(ZLIB_LIBRARY ${ZLIB_STATIC_LIB})
   set(ZLIB_VENDORED TRUE)
 endif ()
 
-include_directories (SYSTEM ${ZLIB_INCLUDE_DIR})
-add_library (zlib STATIC IMPORTED)
-set_target_properties (zlib PROPERTIES IMPORTED_LOCATION ${ZLIB_STATIC_LIB})
+add_library (orc_zlib INTERFACE)
+add_library (orc::zlib ALIAS orc_zlib)
+if (ORC_PREFER_STATIC_ZLIB AND ${ZLIB_STATIC_LIB})
+  target_link_libraries (orc_zlib INTERFACE ${ZLIB_LIBRARY})
+else ()
+  target_link_libraries (orc_zlib INTERFACE ${ZLIB_STATIC_LIB})
+endif ()
+target_include_directories (orc_zlib SYSTEM INTERFACE ${ZLIB_INCLUDE_DIR})
 
 if (ZLIB_VENDORED)
-  add_dependencies (zlib zlib_ep)
+  add_dependencies (orc_zlib zlib_ep)
   if (INSTALL_VENDORED_LIBS)
     install(FILES "${ZLIB_STATIC_LIB}"
             DESTINATION "lib")
@@ -166,15 +185,21 @@ else ()
           ${THIRDPARTY_LOG_OPTIONS}
           BUILD_BYPRODUCTS ${ZSTD_STATIC_LIB})
 
+  set(ZSTD_LIBRARY ${ZSTD_STATIC_LIB})
   set(ZSTD_VENDORED TRUE)
 endif ()
 
-include_directories (SYSTEM ${ZSTD_INCLUDE_DIR})
-add_library (zstd STATIC IMPORTED)
-set_target_properties (zstd PROPERTIES IMPORTED_LOCATION ${ZSTD_STATIC_LIB})
+add_library (orc_zstd INTERFACE)
+add_library (orc::zstd ALIAS orc_zstd)
+if (ORC_PREFER_STATIC_ZSTD AND ${ZSTD_STATIC_LIB})
+  target_link_libraries (orc_zstd INTERFACE ${ZSTD_STATIC_LIB})
+else ()
+  target_link_libraries (orc_zstd INTERFACE ${ZSTD_LIBRARY})
+endif ()
+target_include_directories (orc_zstd SYSTEM INTERFACE ${ZSTD_INCLUDE_DIR})
 
 if (ZSTD_VENDORED)
-  add_dependencies (zstd zstd_ep)
+  add_dependencies (orc_zstd zstd_ep)
   if (INSTALL_VENDORED_LIBS)
     install(FILES "${ZSTD_STATIC_LIB}"
             DESTINATION "lib")
@@ -208,15 +233,21 @@ else ()
     ${THIRDPARTY_LOG_OPTIONS}
     BUILD_BYPRODUCTS ${LZ4_STATIC_LIB})
 
+  set(LZ4_LIBRARY ${LZ4_STATIC_LIB})
   set(LZ4_VENDORED TRUE)
 endif ()
 
-include_directories (SYSTEM ${LZ4_INCLUDE_DIR})
-add_library (lz4 STATIC IMPORTED)
-set_target_properties (lz4 PROPERTIES IMPORTED_LOCATION ${LZ4_STATIC_LIB})
+add_library (orc_lz4 INTERFACE)
+add_library (orc::lz4 ALIAS orc_lz4)
+if (ORC_PREFER_STATIC_LZ4 AND ${LZ4_STATIC_LIB})
+  target_link_libraries (orc_lz4 INTERFACE ${LZ4_STATIC_LIB})
+else ()
+  target_link_libraries (orc_lz4 INTERFACE ${LZ4_LIBRARY})
+endif ()
+target_include_directories (orc_lz4 SYSTEM INTERFACE ${LZ4_INCLUDE_DIR})
 
 if (LZ4_VENDORED)
-  add_dependencies (lz4 lz4_ep)
+  add_dependencies (orc_lz4 lz4_ep)
   if (INSTALL_VENDORED_LIBS)
     install(FILES "${LZ4_STATIC_LIB}"
             DESTINATION "lib")
@@ -267,21 +298,33 @@ if (BUILD_CPP_TESTS)
       CMAKE_ARGS ${GTEST_CMAKE_ARGS}
       BUILD_BYPRODUCTS "${GMOCK_STATIC_LIB}")
 
+    set(GMOCK_LIBRARY ${GMOCK_STATIC_LIB})
     set(GTEST_VENDORED TRUE)
   endif ()
 
-  include_directories (SYSTEM ${GTEST_INCLUDE_DIR})
-
-  add_library (gmock STATIC IMPORTED)
-  set_target_properties (gmock PROPERTIES IMPORTED_LOCATION ${GMOCK_STATIC_LIB})
+  # This is a bit special cased because gmock requires gtest and some
+  # distributions statically link gtest inside the gmock shared lib
+  add_library (orc_gmock INTERFACE)
+  add_library (orc::gmock ALIAS orc_gmock)
+  if (ORC_PREFER_STATIC_GMOCK AND ${GMOCK_STATIC_LIB})
+    target_link_libraries (orc_gmock INTERFACE ${GMOCK_STATIC_LIB})
+    if (NOT "${GTEST_STATIC_LIB}" STREQUAL "")
+      target_link_libraries (orc_gmock INTERFACE ${GTEST_STATIC_LIB})
+    endif ()
+  else ()
+    target_link_libraries (orc_gmock INTERFACE ${GMOCK_LIBRARY})
+    if (NOT "${GTEST_LIBRARY}" STREQUAL "")
+      target_link_libraries (orc_gmock INTERFACE ${GTEST_LIBRARY})
+    endif ()
+  endif ()
+  target_include_directories (orc_gmock SYSTEM INTERFACE ${GTEST_INCLUDE_DIR})
 
   if (GTEST_VENDORED)
-    add_dependencies (gmock googletest_ep)
+    add_dependencies (orc_gmock googletest_ep)
   endif ()
 
-  set(GTEST_LIBRARIES gmock)
   if (NOT APPLE AND NOT MSVC)
-    list (APPEND GTEST_LIBRARIES pthread)
+    target_link_libraries (orc_gmock INTERFACE Threads::Threads)
   endif ()
 endif ()
 
@@ -322,20 +365,33 @@ else ()
     ${THIRDPARTY_LOG_OPTIONS}
     BUILD_BYPRODUCTS "${PROTOBUF_STATIC_LIB}" "${PROTOC_STATIC_LIB}")
 
+  set(PROTOBUF_LIBRARY ${PROTOBUF_STATIC_LIB})
+  set(PROTOC_LIBRARY ${PROTOC_STATIC_LIB})
   set(PROTOBUF_VENDORED TRUE)
 endif ()
 
-include_directories (SYSTEM ${PROTOBUF_INCLUDE_DIR})
+add_library (orc_protobuf INTERFACE)
+add_library (orc::protobuf ALIAS orc_protobuf)
+add_library (orc_protoc INTERFACE)
+add_library (orc::protoc ALIAS orc_protoc)
 
-add_library (protobuf STATIC IMPORTED)
-set_target_properties (protobuf PROPERTIES IMPORTED_LOCATION ${PROTOBUF_STATIC_LIB})
+if (ORC_PREFER_STATIC_PROTOBUF AND ${PROTOBUF_STATIC_LIB})
+  target_link_libraries (orc_protobuf INTERFACE ${PROTOBUF_STATIC_LIB})
+else ()
+  target_link_libraries (orc_protobuf INTERFACE ${PROTOBUF_LIBRARY})
+endif()
+target_include_directories (orc_protobuf SYSTEM INTERFACE ${PROTOBUF_INCLUDE_DIR})
 
-add_library (protoc STATIC IMPORTED)
-set_target_properties (protoc PROPERTIES IMPORTED_LOCATION ${PROTOC_STATIC_LIB})
+if (ORC_PREFER_STATIC_PROTOBUF AND ${PROTOC_STATIC_LIB})
+  target_link_libraries (orc_protoc INTERFACE ${PROTOC_STATIC_LIB})
+else ()
+  target_link_libraries (orc_protoc INTERFACE ${PROTOC_LIBRARY})
+endif()
+target_include_directories (orc_protoc SYSTEM INTERFACE ${PROTOBUF_INCLUDE_DIR})
 
 if (PROTOBUF_VENDORED)
-  add_dependencies (protoc protobuf_ep)
-  add_dependencies (protobuf protobuf_ep)
+  add_dependencies (orc_protoc protobuf_ep)
+  add_dependencies (orc_protobuf protobuf_ep)
   if (INSTALL_VENDORED_LIBS)
     install(FILES "${PROTOBUF_STATIC_LIB}" "${PROTOC_STATIC_LIB}"
             DESTINATION "lib")
@@ -371,7 +427,7 @@ if(BUILD_LIBHDFSPP)
                                 -DBUILD_SHARED_HDFSPP=FALSE)
 
       ExternalProject_Add (libhdfspp_ep
-        DEPENDS protobuf
+        DEPENDS orc::protobuf
         URL ${LIBHDFSPP_SRC_URL}
         LOG_DOWNLOAD 0
         LOG_CONFIGURE 0
