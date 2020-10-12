@@ -129,7 +129,7 @@ public class TestOrcTimestampPPD {
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.LESS_THAN_EQUALS, PredicateLeaf.Type.TIMESTAMP, "c",
         Timestamp.valueOf("1970-01-01 00:00:00.0005"), null);
-    Assert.assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[0], pred, null));
+    Assert.assertEquals(SearchArgument.TruthValue.YES, RecordReaderImpl.evaluatePredicate(colStats[0], pred, null));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.LESS_THAN, PredicateLeaf.Type.TIMESTAMP, "c",
         Timestamp.valueOf("1970-01-01 00:00:00.0005"), null);
