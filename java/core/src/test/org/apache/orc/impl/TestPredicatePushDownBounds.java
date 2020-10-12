@@ -20,8 +20,11 @@ package org.apache.orc.impl;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
+import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
+import org.apache.orc.IntegerColumnStatistics;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.util.BloomFilter;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -322,4 +325,50 @@ public class TestPredicatePushDownBounds {
 
   }
 
+  /**
+   * Test for LESS_THAN_EQUALS search arg when upper and lower bounds are the same.
+   *
+   * @throws Exception
+   */
+  @Test
+  public void testLessThanEquals() {
+    final TypeDescription schema = TypeDescription.createInt();
+    final ColumnStatisticsImpl stat = ColumnStatisticsImpl.create(schema);
+
+    stat.increment();
+    stat.updateInteger(1, 100);
+    stat.updateInteger(3, 100);
+
+    IntegerColumnStatistics typed = (IntegerColumnStatistics) stat;
+    Assert.assertEquals(1, typed.getMinimum());
+    Assert.assertEquals(3, typed.getMaximum());
+
+    SearchArgument sArg = SearchArgumentFactory.newBuilder()
+        .startAnd()
+        .lessThanEquals("c", PredicateLeaf.Type.LONG, 3L)
+        .end()
+        .build();
+
+    assertEquals(SearchArgument.TruthValue.YES, RecordReaderImpl
+        .evaluatePredicate(stat, sArg.getLeaves().get(0), null));
+
+    // Corner case where MIN == MAX == 3
+    final ColumnStatisticsImpl newStat = ColumnStatisticsImpl.create(schema);
+
+    newStat.increment();
+    newStat.updateInteger(3, 100);
+
+    typed = (IntegerColumnStatistics) newStat;
+    Assert.assertEquals(3, typed.getMinimum());
+    Assert.assertEquals(3, typed.getMaximum());
+
+    sArg = SearchArgumentFactory.newBuilder()
+        .startAnd()
+        .lessThanEquals("c", PredicateLeaf.Type.LONG, 3L)
+        .end()
+        .build();
+
+    assertEquals(SearchArgument.TruthValue.YES, RecordReaderImpl
+        .evaluatePredicate(newStat, sArg.getLeaves().get(0), null));
+  }
 }

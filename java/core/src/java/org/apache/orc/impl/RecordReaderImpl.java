@@ -636,7 +636,8 @@ public class RecordReaderImpl implements RecordReader {
         }
       case LESS_THAN_EQUALS:
         loc = range.compare(predObj);
-        if (loc == Location.AFTER || loc == Location.MAX) {
+        if (loc == Location.AFTER || loc == Location.MAX ||
+            (loc == Location.MIN && range.isSingleton())) {
           return range.addNull(TruthValue.YES);
         } else if (loc == Location.BEFORE) {
           return range.addNull(TruthValue.NO);
