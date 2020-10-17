@@ -640,7 +640,8 @@ public class RecordReaderImpl implements RecordReader {
         }
       case LESS_THAN_EQUALS:
         loc = compareToRange((Comparable) predObj, minValue, maxValue);
-        if (loc == Location.AFTER || loc == Location.MAX) {
+        if (loc == Location.AFTER || loc == Location.MAX ||
+            (loc == Location.MIN && minValue.equals(maxValue))) {
           return hasNull ? TruthValue.YES_NULL : TruthValue.YES;
         } else if (loc == Location.BEFORE) {
           return hasNull ? TruthValue.NO_NULL : TruthValue.NO;
