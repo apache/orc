@@ -1150,7 +1150,7 @@ public class TestRecordReaderImpl {
         evaluateInteger(createStringStats("c", "d", true), pred)); // min
     assertEquals(TruthValue.YES_NO_NULL,
         evaluateInteger(createStringStats("b", "d", true), pred)); // middle
-    assertEquals(TruthValue.YES_NO_NULL,
+    assertEquals(TruthValue.YES_NULL,
         evaluateInteger(createStringStats("c", "c", true), pred)); // same
   }
 
