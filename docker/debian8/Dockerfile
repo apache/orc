@@ -18,7 +18,7 @@
 #
 
 FROM debian:8
-MAINTAINER Owen O'Malley <owen@hortonworks.com>
+MAINTAINER Apache ORC project <dev@orc.apache.org>
 
 ADD sources.list apt.conf /etc/apt/
 

@@ -25,13 +25,13 @@ You'll want to install the usual set of developer tools, but at least:
 For each version of Linux, please check the corresponding Dockerfile, which
 is in the docker subdirectory, for the list of packages required to build ORC:
 
-* [CentOS 6]({{ page.dockerUrl }}/centos6/Dockerfile)
 * [CentOS 7]({{ page.dockerUrl }}/centos7/Dockerfile)
+* [CentOS 8]({{ page.dockerUrl }}/centos8/Dockerfile)
 * [Debian 8]({{ page.dockerUrl }}/debian8/Dockerfile)
 * [Debian 9]({{ page.dockerUrl }}/debian9/Dockerfile)
-* [Ubuntu 14]({{ page.dockerUrl }}/ubuntu14/Dockerfile)
 * [Ubuntu 16]({{ page.dockerUrl }}/ubuntu16/Dockerfile)
 * [Ubuntu 18]({{ page.dockerUrl }}/ubuntu18/Dockerfile)
+* [Ubuntu 20]({{ page.dockerUrl }}/ubuntu20/Dockerfile)
 
 To build a normal release:
 
