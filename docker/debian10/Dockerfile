@@ -18,7 +18,7 @@
 #
 
 FROM debian:buster
-MAINTAINER Owen O'Malley <omalley@apache.org>
+MAINTAINER Apache ORC project <dev@orc.apache.org>
 
 RUN apt-get update
 RUN apt-get install -y \

@@ -18,7 +18,7 @@
 #
 
 FROM ubuntu:14.04
-MAINTAINER Owen O'Malley <owen@hortonworks.com>
+MAINTAINER Apache ORC project <dev@orc.apache.org>
 
 RUN apt-get update
 RUN apt-get install -y software-properties-common
