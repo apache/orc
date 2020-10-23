@@ -14,30 +14,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# ORC compile for Ubuntu 16 (clang 5)
+# ORC compile for Ubuntu 20 with clang
 #
 
-FROM ubuntu:16.04
-MAINTAINER Owen O'Malley <owen@hortonworks.com>
+FROM ubuntu:20.04
+MAINTAINER Apache ORC project <dev@orc.apache.org>
 
-RUN apt-get update
-RUN apt-get install -y wget software-properties-common
-RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
-RUN apt-add-repository "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-5.0 main"
+RUN ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
 RUN apt-get update
 RUN apt-get install -y \
   cmake \
-  default-jdk \
-  clang-5.0 \
+  clang \
   git \
   libsasl2-dev \
   libssl-dev \
   make \
   maven \
+  openjdk-8-jdk \
   tzdata
+RUN update-java-alternatives --set java-1.8.0-openjdk-amd64
 
-ENV CC=clang-5.0
-ENV CXX=clang++-5.0
+ENV CC=clang
+ENV CXX=clang++
 
 WORKDIR /root
 VOLUME /root/.m2/repository

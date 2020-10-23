@@ -18,7 +18,7 @@
 #
 
 FROM centos:8
-MAINTAINER Owen O'Malley <owen@hortonworks.com>
+MAINTAINER Apache ORC project <dev@orc.apache.org>
 
 RUN yum check-update || true
 RUN yum install -y \
