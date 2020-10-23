@@ -1,8 +1,8 @@
 ## Supported OSes
 
 * CentOS 7, and 8
-* Debian 8, 9, and 10
-* Ubuntu 14, 16, and 18
+* Debian 9, and 10
+* Ubuntu 16, 18, and 20
 
 ## Test
 

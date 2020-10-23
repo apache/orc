@@ -18,7 +18,7 @@
 #
 
 FROM ubuntu:18.04
-MAINTAINER Owen O'Malley <owen@hortonworks.com>
+MAINTAINER Apache ORC project <dev@orc.apache.org>
 
 RUN ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
 RUN apt-get update
