@@ -377,7 +377,7 @@ public class TestReaderImpl {
     Path path = new Path(workDir, "orc_split_elim_new.orc");
     FileSystem fs = path.getFileSystem(conf);
     try (ReaderImpl reader = (ReaderImpl) OrcFile.createReader(path,
-            OrcFile.readerOptions(conf).filesystem(fs))) {
+        OrcFile.readerOptions(conf).filesystem(fs))) {
       TypeDescription schema = reader.getSchema();
       List<OrcProto.Type> types = OrcUtils.getOrcTypes(schema);
       boolean[] include = new boolean[schema.getMaximumId() + 1];
