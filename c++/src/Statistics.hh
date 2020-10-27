@@ -1214,8 +1214,8 @@ namespace orc {
     bool _hasUpperBound;
     int64_t _lowerBound;
     int64_t _upperBound;
-    int32_t _minimumNano;  // last 6 digits of nanosecond of minimum timestamp
-    int32_t _maximumNano;  // last 6 digits of nanosecond of maximum timestamp
+    int32_t _minimumNanos; // last 6 digits of nanosecond of minimum timestamp
+    int32_t _maximumNanos; // last 6 digits of nanosecond of maximum timestamp
     static constexpr int32_t DEFAULT_MIN_NANOS = 0;
     static constexpr int32_t DEFAULT_MAX_NANOS = 999999;
 
@@ -1289,18 +1289,18 @@ namespace orc {
         _stats.setHasMaximum(true);
         _stats.setMinimum(milli);
         _stats.setMaximum(milli);
-        _maximumNano = _minimumNano = nano;
+        _maximumNanos = _minimumNanos = nano;
       } else {
         if (milli <= _stats.getMinimum()) {
-          if (milli < _stats.getMinimum() || nano < _minimumNano) {
-            _minimumNano = nano;
+          if (milli < _stats.getMinimum() || nano < _minimumNanos) {
+            _minimumNanos = nano;
           }
           _stats.setMinimum(milli);
         }
 
         if (milli >= _stats.getMaximum()) {
-          if (milli > _stats.getMaximum() || nano > _maximumNano) {
-            _maximumNano = nano;
+          if (milli > _stats.getMaximum() || nano > _maximumNanos) {
+            _maximumNanos = nano;
           }
           _stats.setMaximum(milli);
         }
@@ -1320,20 +1320,20 @@ namespace orc {
           _stats.setHasMaximum(true);
           _stats.setMinimum(tsStats.getMinimum());
           _stats.setMaximum(tsStats.getMaximum());
-          _minimumNano = tsStats.getMinimumNano();
-          _maximumNano = tsStats.getMaximumNano();
+          _minimumNanos = tsStats.getMinimumNanos();
+          _maximumNanos = tsStats.getMaximumNanos();
         } else {
           if (tsStats.getMaximum() >= _stats.getMaximum()) {
             if (tsStats.getMaximum() > _stats.getMaximum() ||
-                tsStats.getMaximumNano() > _maximumNano) {
-              _maximumNano = tsStats.getMaximumNano();
+                tsStats.getMaximumNanos() > _maximumNanos) {
+              _maximumNanos = tsStats.getMaximumNanos();
             }
             _stats.setMaximum(tsStats.getMaximum());
           }
           if (tsStats.getMinimum() <= _stats.getMinimum()) {
             if (tsStats.getMinimum() < _stats.getMinimum() ||
-                tsStats.getMinimumNano() < _minimumNano) {
-              _minimumNano = tsStats.getMinimumNano();
+                tsStats.getMinimumNanos() < _minimumNanos) {
+              _minimumNanos = tsStats.getMinimumNanos();
             }
             _stats.setMinimum(tsStats.getMinimum());
           }
@@ -1343,8 +1343,8 @@ namespace orc {
 
     void reset() override {
       _stats.reset();
-      _minimumNano = DEFAULT_MIN_NANOS;
-      _maximumNano = DEFAULT_MAX_NANOS;
+      _minimumNanos = DEFAULT_MIN_NANOS;
+      _maximumNanos = DEFAULT_MAX_NANOS;
     }
 
     void toProtoBuf(proto::ColumnStatistics& pbStats) const override {
@@ -1356,11 +1356,11 @@ namespace orc {
       if (_stats.hasMinimum()) {
         tsStats->set_minimumutc(_stats.getMinimum());
         tsStats->set_maximumutc(_stats.getMaximum());
-        if (_minimumNano != DEFAULT_MIN_NANOS) {
-          tsStats->set_minimumnanos(_minimumNano + 1);
+        if (_minimumNanos != DEFAULT_MIN_NANOS) {
+          tsStats->set_minimumnanos(_minimumNanos + 1);
         }
-        if (_maximumNano != DEFAULT_MAX_NANOS) {
-          tsStats->set_maximumnanos(_maximumNano + 1);
+        if (_maximumNanos != DEFAULT_MAX_NANOS) {
+          tsStats->set_maximumnanos(_maximumNanos + 1);
         }
       } else {
         tsStats->clear_minimumutc();
@@ -1446,17 +1446,17 @@ namespace orc {
       }
     }
 
-    int32_t getMinimumNano() const override {
+    int32_t getMinimumNanos() const override {
       if (hasMinimum()) {
-        return _minimumNano;
+        return _minimumNanos;
       } else {
         throw ParseError("Minimum is not defined.");
       }
     }
 
-    int32_t getMaximumNano() const override {
+    int32_t getMaximumNanos() const override {
       if (hasMaximum()) {
-        return _maximumNano;
+        return _maximumNanos;
       } else {
         throw ParseError("Maximum is not defined.");
       }

@@ -510,7 +510,7 @@ namespace orc {
         break;
       }
       case PredicateDataType::STRING: {
-        ///FIXME: check lowerBound and upperBound as well
+        ///TODO: check lowerBound and upperBound as well
         if (colStats.has_stringstatistics() &&
             colStats.stringstatistics().has_minimum() &&
             colStats.stringstatistics().has_maximum()) {

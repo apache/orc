@@ -356,13 +356,13 @@ namespace orc {
      * Get the last 6 digits of nanosecond of minimum timestamp.
      * @return last 6 digits of nanosecond of minimum timestamp.
      */
-    virtual int32_t getMinimumNano() const = 0;
+    virtual int32_t getMinimumNanos() const = 0;
 
     /**
      * Get the last 6 digits of nanosecond of maximum timestamp.
      * @return last 6 digits of nanosecond of maximum timestamp.
      */
-    virtual int32_t getMaximumNano() const = 0;
+    virtual int32_t getMaximumNanos() const = 0;
   };
 
   class Statistics {

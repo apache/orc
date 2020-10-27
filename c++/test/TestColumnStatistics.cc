@@ -257,14 +257,14 @@ namespace orc {
     tsStats->update(100);
     EXPECT_EQ(100, tsStats->getMaximum());
     EXPECT_EQ(100, tsStats->getMinimum());
-    EXPECT_EQ(0, tsStats->getMinimumNano());
-    EXPECT_EQ(999999, tsStats->getMaximumNano());
+    EXPECT_EQ(0, tsStats->getMinimumNanos());
+    EXPECT_EQ(999999, tsStats->getMaximumNanos());
 
     tsStats->update(150);
     EXPECT_EQ(150, tsStats->getMaximum());
     EXPECT_EQ(100, tsStats->getMinimum());
-    EXPECT_EQ(0, tsStats->getMinimumNano());
-    EXPECT_EQ(999999, tsStats->getMaximumNano());
+    EXPECT_EQ(0, tsStats->getMinimumNanos());
+    EXPECT_EQ(999999, tsStats->getMaximumNanos());
 
     // test merge
     std::unique_ptr<TimestampColumnStatisticsImpl> other(
@@ -276,8 +276,8 @@ namespace orc {
     tsStats->merge(*other);
     EXPECT_EQ(160, tsStats->getMaximum());
     EXPECT_EQ(90, tsStats->getMinimum());
-    EXPECT_EQ(0, tsStats->getMinimumNano());
-    EXPECT_EQ(999999, tsStats->getMaximumNano());
+    EXPECT_EQ(0, tsStats->getMinimumNanos());
+    EXPECT_EQ(999999, tsStats->getMaximumNanos());
   }
 
   TEST(ColumnStatistics, dateColumnStatistics) {
@@ -400,9 +400,9 @@ namespace orc {
       tsStats->increase(1);
     }
     EXPECT_EQ(102400, tsStats->getMaximum());
-    EXPECT_EQ(1024000, tsStats->getMaximumNano());
+    EXPECT_EQ(1024000, tsStats->getMaximumNanos());
     EXPECT_EQ(100, tsStats->getMinimum());
-    EXPECT_EQ(1000, tsStats->getMinimumNano());
+    EXPECT_EQ(1000, tsStats->getMinimumNanos());
 
     // update with same milli but different nanos
     tsStats->update(102400, 1024001);
@@ -410,9 +410,9 @@ namespace orc {
     tsStats->update(100, 1001);
     tsStats->update(100, 999);
     EXPECT_EQ(102400, tsStats->getMaximum());
-    EXPECT_EQ(1024001, tsStats->getMaximumNano());
+    EXPECT_EQ(1024001, tsStats->getMaximumNanos());
     EXPECT_EQ(100, tsStats->getMinimum());
-    EXPECT_EQ(999, tsStats->getMinimumNano());
+    EXPECT_EQ(999, tsStats->getMinimumNanos());
 
     // test merge with no change
     std::unique_ptr<TimestampColumnStatisticsImpl> other1(
@@ -423,9 +423,9 @@ namespace orc {
     }
     tsStats->merge(*other1);
     EXPECT_EQ(102400, tsStats->getMaximum());
-    EXPECT_EQ(1024001, tsStats->getMaximumNano());
+    EXPECT_EQ(1024001, tsStats->getMaximumNanos());
     EXPECT_EQ(100, tsStats->getMinimum());
-    EXPECT_EQ(999, tsStats->getMinimumNano());
+    EXPECT_EQ(999, tsStats->getMinimumNanos());
 
     // test merge with min/max change only in nano
     std::unique_ptr<TimestampColumnStatisticsImpl> other2(
@@ -434,9 +434,9 @@ namespace orc {
     other2->update(100, 998);
     tsStats->merge(*other2);
     EXPECT_EQ(102400, tsStats->getMaximum());
-    EXPECT_EQ(1024002, tsStats->getMaximumNano());
+    EXPECT_EQ(1024002, tsStats->getMaximumNanos());
     EXPECT_EQ(100, tsStats->getMinimum());
-    EXPECT_EQ(998, tsStats->getMinimumNano());
+    EXPECT_EQ(998, tsStats->getMinimumNanos());
 
     // test merge with min/max change in milli
     std::unique_ptr<TimestampColumnStatisticsImpl> other3(
@@ -445,9 +445,9 @@ namespace orc {
     other3->update(99, 1);
     tsStats->merge(*other3);
     EXPECT_EQ(102401, tsStats->getMaximum());
-    EXPECT_EQ(1, tsStats->getMaximumNano());
+    EXPECT_EQ(1, tsStats->getMaximumNanos());
     EXPECT_EQ(99, tsStats->getMinimum());
-    EXPECT_EQ(1, tsStats->getMinimumNano());
+    EXPECT_EQ(1, tsStats->getMinimumNanos());
   }
 
   TEST(ColumnStatistics, timestampColumnStatisticsProbubuf) {
@@ -469,8 +469,8 @@ namespace orc {
       new TimestampColumnStatisticsImpl(pbStats, ctx));
     EXPECT_EQ(100, tsStatsFromPb->getMinimum());
     EXPECT_EQ(200, tsStatsFromPb->getMaximum());
-    EXPECT_EQ(0, tsStatsFromPb->getMinimumNano());
-    EXPECT_EQ(999999, tsStatsFromPb->getMaximumNano());
+    EXPECT_EQ(0, tsStatsFromPb->getMinimumNanos());
+    EXPECT_EQ(999999, tsStatsFromPb->getMaximumNanos());
 
     tsStats->update(50, 5555);
     tsStats->update(500, 9999);
@@ -486,8 +486,8 @@ namespace orc {
     tsStatsFromPb.reset(new TimestampColumnStatisticsImpl(pbStats, ctx));
     EXPECT_EQ(50, tsStatsFromPb->getMinimum());
     EXPECT_EQ(500, tsStatsFromPb->getMaximum());
-    EXPECT_EQ(5555, tsStatsFromPb->getMinimumNano());
-    EXPECT_EQ(9999, tsStatsFromPb->getMaximumNano());
+    EXPECT_EQ(5555, tsStatsFromPb->getMinimumNanos());
+    EXPECT_EQ(9999, tsStatsFromPb->getMaximumNanos());
   }
 
 }
