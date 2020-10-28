@@ -44,11 +44,13 @@ import org.apache.hadoop.util.Progressable;
 import org.apache.orc.FileFormatException;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
+import org.apache.orc.OrcUtils;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
 import org.apache.orc.StripeStatistics;
 import org.apache.orc.TestVectorOrcFile;
 import org.apache.orc.TimestampColumnStatistics;
+import org.apache.orc.TypeDescription;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -366,6 +368,28 @@ public class TestReaderImpl {
           stats.get(0).getColumn(5).getTimestampStatistics();
       assertEquals(-28800000, tsStats.getMinimumUtc());
       assertEquals(-28550000, tsStats.getMaximumUtc());
+    }
+  }
+
+  @Test
+  public void testGetRawDataSizeFromColIndices() throws Exception {
+    Configuration conf = new Configuration();
+    Path path = new Path(workDir, "orc_split_elim_new.orc");
+    FileSystem fs = path.getFileSystem(conf);
+    try (ReaderImpl reader = (ReaderImpl) OrcFile.createReader(path,
+        OrcFile.readerOptions(conf).filesystem(fs))) {
+      TypeDescription schema = reader.getSchema();
+      List<OrcProto.Type> types = OrcUtils.getOrcTypes(schema);
+      boolean[] include = new boolean[schema.getMaximumId() + 1];
+      List<Integer> list = new ArrayList<Integer>();
+      for (int i = 0; i < include.length; i++) {
+        include[i] = true;
+        list.add(i);
+      }
+      List<OrcProto.ColumnStatistics> stats = reader.getFileTail().getFooter().getStatisticsList();
+      assertEquals(
+        ReaderImpl.getRawDataSizeFromColIndices(include, schema, stats),
+        ReaderImpl.getRawDataSizeFromColIndices(list, types, stats));
     }
   }
 }
