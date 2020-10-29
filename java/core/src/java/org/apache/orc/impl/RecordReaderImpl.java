@@ -920,6 +920,17 @@ public class RecordReaderImpl implements RecordReader {
     private final boolean writerUsedProlepticGregorian;
     private final boolean convertToProlepticGregorian;
 
+    /**
+     * @deprecated Use the constructor having full parameters. This exists for backward compatibility.
+     */
+    public SargApplier(SearchArgument sarg,
+                       long rowIndexStride,
+                       SchemaEvolution evolution,
+                       OrcFile.WriterVersion writerVersion,
+                       boolean useUTCTimestamp) {
+      this(sarg, rowIndexStride, evolution, writerVersion, useUTCTimestamp, false, false);
+    }
+
     public SargApplier(SearchArgument sarg,
                        long rowIndexStride,
                        SchemaEvolution evolution,

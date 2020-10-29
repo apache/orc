@@ -19,6 +19,7 @@
 package org.apache.orc.impl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
@@ -34,6 +35,7 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.sql.Date;
@@ -2296,7 +2298,7 @@ public class TestRecordReaderImpl {
 
     boolean[] rows = applier.pickRowGroups(new ReaderImpl.StripeInformationImpl(stripe,  1, -1, null),
         indexes, null, encodings, null, false);
-    assertEquals(SargApplier.READ_ALL_RGS, rows); //cannot filter for new column, return all rows
+    assertEquals(true, Arrays.equals(SargApplier.READ_ALL_RGS, rows)); //cannot filter for new column, return all rows
   }
 
   private boolean[] includeAll(TypeDescription readerType) {
@@ -2357,5 +2359,23 @@ public class TestRecordReaderImpl {
     }
     assertTrue(isCalled);
     verify(mockedDataReader, times(1)).close();
+  }
+
+  @Test
+  public void testSargApplier() throws Exception {
+    Configuration conf = new Configuration();
+    TypeDescription schema = TypeDescription.createLong();
+    SearchArgument sarg = SearchArgumentFactory.newBuilder().build();
+    SchemaEvolution evo = new SchemaEvolution(schema, schema, new Reader.Options(conf));
+    RecordReaderImpl.SargApplier applier1 =
+      new RecordReaderImpl.SargApplier(sarg, 0, evo, OrcFile.WriterVersion.ORC_135, false);
+
+    Field f1 = RecordReaderImpl.SargApplier.class.getDeclaredField("writerUsedProlepticGregorian");
+    f1.setAccessible(true);
+    assertFalse((boolean)f1.get(applier1));
+
+    Field f2 = RecordReaderImpl.SargApplier.class.getDeclaredField("convertToProlepticGregorian");
+    f2.setAccessible(true);
+    assertFalse((boolean)f2.get(applier1));
   }
 }
