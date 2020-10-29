@@ -2142,7 +2142,8 @@ public class TestRecordReaderImpl {
 
     boolean[] rows = applier.pickRowGroups(new ReaderImpl.StripeInformationImpl(stripe),
         indexes, null, encodings, null, false);
-    assertEquals(RecordReaderImpl.SargApplier.READ_ALL_RGS, rows); //cannot filter for new column, return all rows
+    // cannot filter for new column, return all rows
+    assertEquals(true, Arrays.equals(RecordReaderImpl.SargApplier.READ_ALL_RGS, rows));
   }
 
   private boolean[] includeAll(TypeDescription readerType) {
