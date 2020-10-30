@@ -18,8 +18,8 @@
 
 #include "orc/BloomFilter.hh"
 #include "orc/Common.hh"
-#include "PredicateLeaf.hh"
 #include "orc/Type.hh"
+#include "PredicateLeaf.hh"
 
 #include <algorithm>
 #include <functional>
@@ -427,9 +427,9 @@ namespace orc {
     return result;
   }
 
-  static std::vector<int64_t> literal2Timestamp(
+  static std::vector<Literal::Timestamp> literal2Timestamp(
                                            const std::vector<Literal>& values) {
-    std::vector<int64_t> result;
+    std::vector<Literal::Timestamp> result;
     std::for_each(values.cbegin(), values.cend(), [&](const Literal& val) {
       if (!val.isNull()) {
         result.emplace_back(val.getTimestamp());
@@ -510,6 +510,7 @@ namespace orc {
         break;
       }
       case PredicateDataType::STRING: {
+        ///TODO: check lowerBound and upperBound as well
         if (colStats.has_stringstatistics() &&
             colStats.stringstatistics().has_minimum() &&
             colStats.stringstatistics().has_maximum()) {
@@ -542,11 +543,23 @@ namespace orc {
             colStats.timestampstatistics().has_minimumutc() &&
             colStats.timestampstatistics().has_maximumutc()) {
           const auto& stats = colStats.timestampstatistics();
+          constexpr int32_t DEFAULT_MIN_NANOS = 0;
+          constexpr int32_t DEFAULT_MAX_NANOS = 999999;
+          int32_t minNano = stats.has_minimumnanos() ?
+            stats.minimumnanos() - 1 : DEFAULT_MIN_NANOS;
+          int32_t maxNano = stats.has_maximumnanos() ?
+            stats.maximumnanos() - 1 : DEFAULT_MAX_NANOS;
+          Literal::Timestamp minTimestamp(
+            stats.minimumutc() / 1000,
+            static_cast<int32_t>((stats.minimumutc() % 1000) * 1000000) + minNano);
+          Literal::Timestamp maxTimestamp(
+            stats.maximumutc() / 1000,
+            static_cast<int32_t>((stats.maximumutc() % 1000) * 1000000) + maxNano);
           result = evaluatePredicateRange(
             mOperator,
             literal2Timestamp(mLiterals),
-            stats.minimumutc(),
-            stats.maximumutc(),
+            minTimestamp,
+            maxTimestamp,
             colStats.hasnull());
         }
         break;
@@ -634,7 +647,7 @@ namespace orc {
         result = TruthValue::YES_NO_NULL;
       }
     } else if (type == PredicateDataType::TIMESTAMP) {
-      if (bf->testLong(literal.getTimestamp())) {
+      if (bf->testLong(literal.getTimestamp().getMillis())) {
         result = TruthValue::YES_NO_NULL;
       }
     } else if (type == PredicateDataType::DATE) {

@@ -305,26 +305,26 @@ namespace orc {
     virtual ~TimestampColumnStatistics();
 
     /**
-     * Check whether column minimum.
+     * Check whether minimum timestamp exists.
      * @return true if has minimum
      */
     virtual bool hasMinimum() const = 0;
 
     /**
-     * Check whether column maximum.
+     * Check whether maximum timestamp exists.
      * @return true if has maximum
      */
     virtual bool hasMaximum() const = 0;
 
     /**
-     * Get the minimum value for the column.
-     * @return minimum value
+     * Get the millisecond of minimum timestamp in UTC.
+     * @return minimum value in millisecond
      */
     virtual int64_t getMinimum() const = 0;
 
     /**
-     * Get the maximum value for the column.
-     * @return maximum value
+     * Get the millisecond of maximum timestamp in UTC.
+     * @return maximum value in millisecond
      */
     virtual int64_t getMaximum() const = 0;
 
@@ -352,7 +352,17 @@ namespace orc {
      */
     virtual int64_t getUpperBound() const = 0;
 
+    /**
+     * Get the last 6 digits of nanosecond of minimum timestamp.
+     * @return last 6 digits of nanosecond of minimum timestamp.
+     */
+    virtual int32_t getMinimumNanos() const = 0;
 
+    /**
+     * Get the last 6 digits of nanosecond of maximum timestamp.
+     * @return last 6 digits of nanosecond of maximum timestamp.
+     */
+    virtual int32_t getMaximumNanos() const = 0;
   };
 
   class Statistics {

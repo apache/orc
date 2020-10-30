@@ -36,6 +36,33 @@ namespace orc {
    */
   class Literal {
   public:
+    struct Timestamp {
+      Timestamp() = default;
+      Timestamp(const Timestamp&) = default;
+      Timestamp(Timestamp&&) = default;
+      ~Timestamp() = default;
+      Timestamp(int64_t second_, int32_t nanos_): second(second_), nanos(nanos_) {
+        // PASS
+      }
+      Timestamp& operator=(const Timestamp&) = default;
+      Timestamp& operator=(Timestamp&&) = default;
+      bool operator==(const Timestamp& r) const {
+        return second == r.second && nanos == r.nanos;
+      }
+      bool operator<(const Timestamp& r) const {
+        return second < r.second || (second == r.second && nanos < r.nanos);
+      }
+      bool operator<=(const Timestamp& r) const {
+        return second < r.second || (second == r.second && nanos <= r.nanos);
+      }
+      bool operator!=(const Timestamp& r) const { return !(*this == r); }
+      bool operator>(const Timestamp& r) const { return r < *this; }
+      bool operator>=(const Timestamp& r) const { return r <= *this; }
+      int64_t getMillis() const { return second * 1000 + nanos / 1000000; }
+      int64_t second;
+      int32_t nanos;
+    };
+
     Literal(const Literal &r);
     ~Literal();
     Literal& operator=(const Literal& r);
@@ -63,9 +90,14 @@ namespace orc {
     Literal(bool val);
 
     /**
-     * Create a literal of Timestamp or DATE type
+     * Create a literal of DATE type
      */
     Literal(PredicateDataType type, int64_t val);
+
+    /**
+     * Create a literal of TIMESTAMP type
+     */
+    Literal(int64_t second, int32_t nanos);
 
     /**
      * Create a literal of STRING type
@@ -82,7 +114,7 @@ namespace orc {
      */
     int64_t getLong() const;
     int64_t getDate() const;
-    int64_t getTimestamp() const;
+    Timestamp getTimestamp() const;
     double getFloat() const;
     std::string getString() const;
     bool getBool() const;
@@ -105,7 +137,7 @@ namespace orc {
       double DoubleVal;
       int64_t DateVal;
       char * Buffer;
-      int64_t TimeStampVal;
+      Timestamp TimeStampVal;
       Int128 DecimalVal;
       bool BooleanVal;
 
