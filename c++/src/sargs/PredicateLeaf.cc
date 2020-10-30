@@ -18,8 +18,8 @@
 
 #include "orc/BloomFilter.hh"
 #include "orc/Common.hh"
-#include "PredicateLeaf.hh"
 #include "orc/Type.hh"
+#include "PredicateLeaf.hh"
 
 #include <algorithm>
 #include <functional>
@@ -543,10 +543,12 @@ namespace orc {
             colStats.timestampstatistics().has_minimumutc() &&
             colStats.timestampstatistics().has_maximumutc()) {
           const auto& stats = colStats.timestampstatistics();
+          constexpr int32_t DEFAULT_MIN_NANOS = 0;
+          constexpr int32_t DEFAULT_MAX_NANOS = 999999;
           int32_t minNano = stats.has_minimumnanos() ?
-            stats.minimumnanos() - 1 : 0;
+            stats.minimumnanos() - 1 : DEFAULT_MIN_NANOS;
           int32_t maxNano = stats.has_maximumnanos() ?
-            stats.maximumnanos() - 1 : 999999;
+            stats.maximumnanos() - 1 : DEFAULT_MAX_NANOS;
           Literal::Timestamp minTimestamp(
             stats.minimumutc() / 1000,
             static_cast<int32_t>((stats.minimumutc() % 1000) * 1000000) + minNano);

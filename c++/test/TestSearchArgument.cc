@@ -39,6 +39,7 @@ namespace orc {
     Literal literal3(static_cast<int64_t>(123456), 123456789);
     EXPECT_EQ(PredicateDataType::TIMESTAMP, literal3.getType());
     EXPECT_TRUE("123456.123456789" == literal3.toString());
+    EXPECT_EQ(123456123, literal3.getTimestamp().getMillis());
 
     Literal literal4(Int128(54321), 6, 2);
     EXPECT_EQ(PredicateDataType::DECIMAL, literal4.getType());

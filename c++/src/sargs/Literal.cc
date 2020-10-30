@@ -99,10 +99,10 @@ namespace orc {
     mHashCode = hashCode();
   }
 
-  Literal::Literal(int64_t second, int32_t nano) {
+  Literal::Literal(int64_t second, int32_t nanos) {
     mType = PredicateDataType::TIMESTAMP;
     mValue.TimeStampVal.second = second;
-    mValue.TimeStampVal.nano = nano;
+    mValue.TimeStampVal.nanos = nanos;
     mPrecision = 0;
     mScale = 0;
     mSize = sizeof(Timestamp);
@@ -179,7 +179,7 @@ namespace orc {
         break;
       case PredicateDataType::TIMESTAMP:
         sstream << mValue.TimeStampVal.second << "."
-                << mValue.TimeStampVal.nano;
+                << mValue.TimeStampVal.nanos;
         break;
       case PredicateDataType::FLOAT:
         sstream << mValue.DoubleVal;
@@ -209,7 +209,7 @@ namespace orc {
         return std::hash<int64_t>{}(mValue.DateVal);
       case PredicateDataType::TIMESTAMP:
         return std::hash<int64_t>{}(mValue.TimeStampVal.second) * 17 +
-          std::hash<int32_t>{}(mValue.TimeStampVal.nano);
+          std::hash<int32_t>{}(mValue.TimeStampVal.nanos);
       case PredicateDataType::FLOAT:
         return std::hash<double>{}(mValue.DoubleVal);
       case PredicateDataType::BOOLEAN:

@@ -41,26 +41,26 @@ namespace orc {
       Timestamp(const Timestamp&) = default;
       Timestamp(Timestamp&&) = default;
       ~Timestamp() = default;
-      Timestamp(int64_t second_, int32_t nano_): second(second_), nano(nano_) {
+      Timestamp(int64_t second_, int32_t nanos_): second(second_), nanos(nanos_) {
         // PASS
       }
       Timestamp& operator=(const Timestamp&) = default;
       Timestamp& operator=(Timestamp&&) = default;
       bool operator==(const Timestamp& r) const {
-        return second == r.second && nano == r.nano;
+        return second == r.second && nanos == r.nanos;
       }
       bool operator<(const Timestamp& r) const {
-        return second < r.second || (second == r.second && nano < r.nano);
+        return second < r.second || (second == r.second && nanos < r.nanos);
       }
       bool operator<=(const Timestamp& r) const {
-        return second < r.second || (second == r.second && nano <= r.nano);
+        return second < r.second || (second == r.second && nanos <= r.nanos);
       }
       bool operator!=(const Timestamp& r) const { return !(*this == r); }
       bool operator>(const Timestamp& r) const { return r < *this; }
       bool operator>=(const Timestamp& r) const { return r <= *this; }
-      int64_t getMillis() const { return second * 1000 + nano / 1000000; }
+      int64_t getMillis() const { return second * 1000 + nanos / 1000000; }
       int64_t second;
-      int32_t nano;
+      int32_t nanos;
     };
 
     Literal(const Literal &r);
@@ -97,7 +97,7 @@ namespace orc {
     /**
      * Create a literal of TIMESTAMP type
      */
-    Literal(int64_t second, int32_t nano);
+    Literal(int64_t second, int32_t nanos);
 
     /**
      * Create a literal of STRING type
