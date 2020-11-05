@@ -186,7 +186,6 @@ public interface Reader extends Closeable {
     private long length = Long.MAX_VALUE;
     private int positionalEvolutionLevel;
     private SearchArgument sarg = null;
-    private String[] columnNames = null;
     private Boolean useZeroCopy = null;
     private Boolean skipCorruptRecords = null;
     private TypeDescription schema = null;
@@ -272,14 +271,24 @@ public interface Reader extends Closeable {
     }
 
     /**
+     *  @deprecated columnNames are no needed for setting search argument. Method exists for backward compatibility.
+     *
      * Set search argument for predicate push down.
      * @param sarg the search argument
      * @param columnNames the column names for
      * @return this
      */
     public Options searchArgument(SearchArgument sarg, String[] columnNames) {
+      return searchArgument(sarg);
+    }
+
+    /**
+     * Set search argument for predicate push down.
+     * @param sarg the search argument
+     * @return this
+     */
+    public Options searchArgument(SearchArgument sarg) {
       this.sarg = sarg;
-      this.columnNames = columnNames;
       return this;
     }
 
@@ -390,8 +399,15 @@ public interface Reader extends Closeable {
       return preFilterColumns;
     }
 
+    /**
+     * Get the column-name mapping of search argument leaves.
+     * @return column names of predicate leaves or NULL when search argument not set
+     */
     public String[] getColumnNames() {
-      return columnNames;
+      if (this.sarg != null) {
+        return sarg.getLeaves().stream().map(l -> l.getColumnName()).toArray(String[]::new);
+      }
+      return null;
     }
 
     public long getMaxOffset() {

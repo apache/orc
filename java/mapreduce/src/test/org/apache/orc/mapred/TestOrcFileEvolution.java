@@ -126,13 +126,12 @@ public class TestOrcFileEvolution {
       .newBuilder()
       .lessThan("c", PredicateLeaf.Type.LONG, 10L)
       .build();
-    String[] sCols = new String[]{null, null, "c"};
 
     checkEvolution("struct<a:int,b:string>", "struct<a:int,b:string,c:int>",
                    struct(1, "foo"),
                    struct(1, "foo", null),
                    (boolean) OrcConf.TOLERATE_MISSING_SCHEMA.getDefaultValue(),
-                   sArg, sCols, false);
+                   sArg, false);
   }
 
   @Test
@@ -357,13 +356,12 @@ public class TestOrcFileEvolution {
         .newBuilder()
         .lessThan("a", PredicateLeaf.Type.LONG, 10L)
         .build();
-      sCols = new String[]{null, "a", null};
     }
 
     checkEvolution(writerType, readerType,
                    inputRow, expectedOutput,
                    tolerateSchema,
-                   sArg, sCols, positional);
+                   sArg, positional);
   }
 
   private void checkEvolution(String writerType, String readerType,
@@ -379,7 +377,7 @@ public class TestOrcFileEvolution {
   private void checkEvolution(String writerType, String readerType,
                               Object inputRow, Object expectedOutput,
                               boolean tolerateSchema, SearchArgument sArg,
-                              String[] sCols, boolean positional) {
+                              boolean positional) {
     TypeDescription readTypeDescr = TypeDescription.fromString(readerType);
     TypeDescription writerTypeDescr = TypeDescription.fromString(writerType);
 
@@ -400,8 +398,8 @@ public class TestOrcFileEvolution {
                                            OrcFile.readerOptions(conf).filesystem(fs));
 
       Reader.Options options = reader.options().schema(readTypeDescr);
-      if (sArg != null && sCols != null) {
-        options.searchArgument(sArg, sCols);
+      if (sArg != null) {
+        options.searchArgument(sArg);
       }
 
       OrcMapredRecordReader<OrcStruct> recordReader =
