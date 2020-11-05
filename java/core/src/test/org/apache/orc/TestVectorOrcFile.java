@@ -4025,7 +4025,7 @@ public class TestVectorOrcFile {
 
     DoubleColumnVector dbcol = ((DoubleColumnVector) batch.cols[0]);
 
-    // first row NaN (resulting to both min and max columnStats of stride to be NaN)
+    // first row NaN (resulting to  min/max and sum columnStats of stride to be NaN)
     // NaN in the middle of a stride causes Sum of last stride to be NaN
     dbcol.vector[0] = Double.NaN;
     for (int i=1; i < 3500; ++i) {
@@ -4051,7 +4051,7 @@ public class TestVectorOrcFile {
     batch = reader.getSchema().createRowBatch(3500);
 
     rows.nextBatch(batch);
-    // First stride should be read as NaN min/max are ignored
+    // First stride should be read as NaN sum is ignored
     assertEquals(1000, batch.size);
 
     rows.nextBatch(batch);
