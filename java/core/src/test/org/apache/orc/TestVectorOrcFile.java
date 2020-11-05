@@ -4025,7 +4025,7 @@ public class TestVectorOrcFile {
 
     DoubleColumnVector dbcol = ((DoubleColumnVector) batch.cols[0]);
 
-    // first row NaN (resulting to  min/max and sum columnStats of stride to be NaN)
+    // first row NaN (resulting to min/max and sum columnStats of stride to be NaN)
     // NaN in the middle of a stride causes Sum of last stride to be NaN
     dbcol.vector[0] = Double.NaN;
     for (int i=1; i < 3500; ++i) {
