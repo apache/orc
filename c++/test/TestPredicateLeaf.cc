@@ -104,8 +104,10 @@ namespace orc {
     colStats.set_numberofvalues(10);
 
     proto::DoubleStatistics * doubleStats = colStats.mutable_doublestatistics();
+    const auto& curr_sum = min + max;
     doubleStats->set_minimum(min);
     doubleStats->set_maximum(max);
+    doubleStats->set_sum(curr_sum);
     return colStats;
   }
 
