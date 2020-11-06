@@ -106,7 +106,7 @@ public class TestProlepticConversions {
     fs.delete(testFilePath, false);
   }
 
-  private SimpleDateFormat createParser(String format, GregorianCalendar calendar) {
+  public static SimpleDateFormat createParser(String format, GregorianCalendar calendar) {
     SimpleDateFormat result = new SimpleDateFormat(format);
     result.setCalendar(calendar);
     return result;
