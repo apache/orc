@@ -62,11 +62,15 @@ public class TestConvertTreeReaderFactory {
   private Configuration conf;
   private FileSystem fs;
   private Path testFilePath;
+  private int LARGE_BATCH_SIZE;
 
-  @Rule public TestName testCaseName = new TestName();
+  @Rule
+  public TestName testCaseName = new TestName();
 
   @Before
   public void setupPath() throws Exception {
+    // Default CV length is 1024
+    this.LARGE_BATCH_SIZE = 1030;
     this.conf = new Configuration();
     this.fs = FileSystem.getLocal(conf);
     this.testFilePath = new Path(workDir, TestWriterImpl.class.getSimpleName() + testCaseName.getMethodName().
@@ -74,10 +78,9 @@ public class TestConvertTreeReaderFactory {
     fs.delete(testFilePath, false);
   }
 
-  public <TExpectedColumnVector extends ColumnVector> TExpectedColumnVector createORCFileWithArraySizeBiggerThan1024(
+  public <TExpectedColumnVector extends ColumnVector> TExpectedColumnVector createORCFileWithLargeArray(
       TypeDescription schema, Class<TExpectedColumnVector> expectedColumnType, boolean useDecimal64)
       throws IOException, ParseException {
-    int largeBatchSize = 1025;
     conf = new Configuration();
     fs = FileSystem.getLocal(conf);
     fs.setWorkingDirectory(workDir);
@@ -86,12 +89,12 @@ public class TestConvertTreeReaderFactory {
     SimpleDateFormat dateFormat = TestProlepticConversions.createParser("yyyy-MM-dd", new GregorianCalendar());
     VectorizedRowBatch batch = schema.createRowBatch(
         useDecimal64 ? TypeDescription.RowBatchVersion.USE_DECIMAL64 : TypeDescription.RowBatchVersion.ORIGINAL,
-        largeBatchSize);
+        LARGE_BATCH_SIZE);
 
     ListColumnVector listCol = (ListColumnVector) batch.cols[0];
     TExpectedColumnVector dcv = (TExpectedColumnVector) (listCol).child;
     batch.size = 1;
-    for (int row = 0; row < largeBatchSize; ++row) {
+    for (int row = 0; row < LARGE_BATCH_SIZE; ++row) {
       if (dcv instanceof DecimalColumnVector) {
         ((DecimalColumnVector) dcv).set(row, HiveDecimal.create(row * 2 + 1));
       } else if (dcv instanceof DoubleColumnVector) {
@@ -111,7 +114,7 @@ public class TestConvertTreeReaderFactory {
     }
 
     listCol.childCount = 1;
-    listCol.lengths[0] = largeBatchSize;
+    listCol.lengths[0] = LARGE_BATCH_SIZE;
     listCol.offsets[0] = 0;
 
     w.addRowBatch(batch);
@@ -120,7 +123,7 @@ public class TestConvertTreeReaderFactory {
     return (TExpectedColumnVector) ((ListColumnVector) batch.cols[0]).child;
   }
 
-  public <TExpectedColumnVector extends ColumnVector> TExpectedColumnVector readORCFileWithArraySizeBiggerThan1024(
+  public <TExpectedColumnVector extends ColumnVector> TExpectedColumnVector readORCFileWithLargeArray(
       String typeString, Class<TExpectedColumnVector> expectedColumnType) throws Exception {
     Reader.Options options = new Reader.Options();
     TypeDescription schema = TypeDescription.fromString("struct<col1:array<" + typeString + ">>");
@@ -143,158 +146,158 @@ public class TestConvertTreeReaderFactory {
     return (TExpectedColumnVector) ((ListColumnVector) batch.cols[0]).child;
   }
 
-  public void testArraySizeBiggerThan1024AndConvertToDecimal() throws Exception {
+  public void testConvertToDecimal() throws Exception {
     Decimal64ColumnVector columnVector =
-        readORCFileWithArraySizeBiggerThan1024("decimal(6,1)", Decimal64ColumnVector.class);
-    assertEquals(1025, columnVector.vector.length);
+        readORCFileWithLargeArray("decimal(6,1)", Decimal64ColumnVector.class);
+    assertEquals(LARGE_BATCH_SIZE, columnVector.vector.length);
   }
 
-  public void testArraySizeBiggerThan1024AndConvertToVarchar() throws Exception {
-    BytesColumnVector columnVector = readORCFileWithArraySizeBiggerThan1024("varchar(10)", BytesColumnVector.class);
-    assertEquals(1025, columnVector.vector.length);
+  public void testConvertToVarchar() throws Exception {
+    BytesColumnVector columnVector = readORCFileWithLargeArray("varchar(10)", BytesColumnVector.class);
+    assertEquals(LARGE_BATCH_SIZE, columnVector.vector.length);
   }
 
-  public void testArraySizeBiggerThan1024AndConvertToDouble() throws Exception {
-    DoubleColumnVector columnVector = readORCFileWithArraySizeBiggerThan1024("double", DoubleColumnVector.class);
-    assertEquals(1025, columnVector.vector.length);
+  public void testConvertToDouble() throws Exception {
+    DoubleColumnVector columnVector = readORCFileWithLargeArray("double", DoubleColumnVector.class);
+    assertEquals(LARGE_BATCH_SIZE, columnVector.vector.length);
   }
 
-  public void testArraySizeBiggerThan1024AndConvertToInteger() throws Exception {
-    LongColumnVector columnVector = readORCFileWithArraySizeBiggerThan1024("int", LongColumnVector.class);
-    assertEquals(1025, columnVector.vector.length);
+  public void testConvertToInteger() throws Exception {
+    LongColumnVector columnVector = readORCFileWithLargeArray("int", LongColumnVector.class);
+    assertEquals(LARGE_BATCH_SIZE, columnVector.vector.length);
   }
 
-  public void testArraySizeBiggerThan1024AndConvertToTimestamp() throws Exception {
+  public void testConvertToTimestamp() throws Exception {
     TimestampColumnVector columnVector =
-        readORCFileWithArraySizeBiggerThan1024("timestamp", TimestampColumnVector.class);
-    assertEquals(columnVector.time.length, 1025);
+        readORCFileWithLargeArray("timestamp", TimestampColumnVector.class);
+    assertEquals(LARGE_BATCH_SIZE, columnVector.time.length);
   }
 
-  public void testArraySizeBiggerThan1024AndConvertToDate() throws Exception {
-    DateColumnVector columnVector = readORCFileWithArraySizeBiggerThan1024("date", DateColumnVector.class);
-    assertEquals(columnVector.vector.length, 1025);
+  public void testConvertToDate() throws Exception {
+    DateColumnVector columnVector = readORCFileWithLargeArray("date", DateColumnVector.class);
+    assertEquals(LARGE_BATCH_SIZE, columnVector.vector.length);
   }
 
   @Test
-  public void testDecimalArrayBiggerThan1023() throws Exception {
+  public void testDecimalArrayBiggerThanDefault() throws Exception {
     String typeStr = "decimal(6,1)";
     Class typeClass = DecimalColumnVector.class;
 
     TypeDescription schema = TypeDescription.fromString("struct<col1:array<" + typeStr + ">>");
-    createORCFileWithArraySizeBiggerThan1024(schema, typeClass, typeClass.equals(Decimal64ColumnVector.class));
+    createORCFileWithLargeArray(schema, typeClass, typeClass.equals(Decimal64ColumnVector.class));
     // Test all possible conversions
-    testArraySizeBiggerThan1024AndConvertToDecimal();
-    testArraySizeBiggerThan1024AndConvertToVarchar();
-    testArraySizeBiggerThan1024AndConvertToDouble();
-    testArraySizeBiggerThan1024AndConvertToInteger();
-    testArraySizeBiggerThan1024AndConvertToTimestamp();
+    testConvertToDecimal();
+    testConvertToVarchar();
+    testConvertToDouble();
+    testConvertToInteger();
+    testConvertToTimestamp();
 
     // Make sure we delete file across tests
     fs.delete(testFilePath, false);
   }
 
   @Test
-  public void testDecimal64ArrayBiggerThan1023() throws Exception {
+  public void testDecimal64ArrayBiggerThanDefault() throws Exception {
     String typeStr = "decimal(6,1)";
     Class typeClass = Decimal64ColumnVector.class;
 
     TypeDescription schema = TypeDescription.fromString("struct<col1:array<" + typeStr + ">>");
-    createORCFileWithArraySizeBiggerThan1024(schema, typeClass, typeClass.equals(Decimal64ColumnVector.class));
+    createORCFileWithLargeArray(schema, typeClass, typeClass.equals(Decimal64ColumnVector.class));
     // Test all possible conversions
-    testArraySizeBiggerThan1024AndConvertToDecimal();
-    testArraySizeBiggerThan1024AndConvertToVarchar();
-    testArraySizeBiggerThan1024AndConvertToDouble();
-    testArraySizeBiggerThan1024AndConvertToInteger();
-    testArraySizeBiggerThan1024AndConvertToTimestamp();
+    testConvertToDecimal();
+    testConvertToVarchar();
+    testConvertToDouble();
+    testConvertToInteger();
+    testConvertToTimestamp();
 
     // Make sure we delete file across tests
     fs.delete(testFilePath, false);
   }
 
   @Test
-  public void testStringArrayBiggerThan1023() throws Exception {
+  public void testStringArrayBiggerThanDefault() throws Exception {
     String typeStr = "varchar(10)";
     Class typeClass = BytesColumnVector.class;
 
     TypeDescription schema = TypeDescription.fromString("struct<col1:array<" + typeStr + ">>");
-    createORCFileWithArraySizeBiggerThan1024(schema, typeClass, typeClass.equals(Decimal64ColumnVector.class));
+    createORCFileWithLargeArray(schema, typeClass, typeClass.equals(Decimal64ColumnVector.class));
     // Test all possible conversions
-    testArraySizeBiggerThan1024AndConvertToDecimal();
-    testArraySizeBiggerThan1024AndConvertToVarchar();
-    testArraySizeBiggerThan1024AndConvertToDouble();
-    testArraySizeBiggerThan1024AndConvertToInteger();
-    testArraySizeBiggerThan1024AndConvertToTimestamp();
-    testArraySizeBiggerThan1024AndConvertToDate();
+    testConvertToDecimal();
+    testConvertToVarchar();
+    testConvertToDouble();
+    testConvertToInteger();
+    testConvertToTimestamp();
+    testConvertToDate();
 
     // Make sure we delete file across tests
     fs.delete(testFilePath, false);
   }
 
   @Test
-  public void testDoubleArrayBiggerThan1023() throws Exception {
+  public void testDoubleArrayBiggerThanDefault() throws Exception {
     String typeStr = "double";
     Class typeClass = DoubleColumnVector.class;
 
     TypeDescription schema = TypeDescription.fromString("struct<col1:array<" + typeStr + ">>");
-    createORCFileWithArraySizeBiggerThan1024(schema, typeClass, typeClass.equals(Decimal64ColumnVector.class));
+    createORCFileWithLargeArray(schema, typeClass, typeClass.equals(Decimal64ColumnVector.class));
     // Test all possible conversions
-    testArraySizeBiggerThan1024AndConvertToDecimal();
-    testArraySizeBiggerThan1024AndConvertToVarchar();
-    testArraySizeBiggerThan1024AndConvertToDouble();
-    testArraySizeBiggerThan1024AndConvertToInteger();
-    testArraySizeBiggerThan1024AndConvertToTimestamp();
+    testConvertToDecimal();
+    testConvertToVarchar();
+    testConvertToDouble();
+    testConvertToInteger();
+    testConvertToTimestamp();
 
     // Make sure we delete file across tests
     fs.delete(testFilePath, false);
   }
 
   @Test
-  public void testIntArrayBiggerThan1023() throws Exception {
+  public void testIntArrayBiggerThanDefault() throws Exception {
     String typeStr = "int";
     Class typeClass = LongColumnVector.class;
 
     TypeDescription schema = TypeDescription.fromString("struct<col1:array<" + typeStr + ">>");
-    createORCFileWithArraySizeBiggerThan1024(schema, typeClass, typeClass.equals(Decimal64ColumnVector.class));
+    createORCFileWithLargeArray(schema, typeClass, typeClass.equals(Decimal64ColumnVector.class));
     // Test all possible conversions
-    testArraySizeBiggerThan1024AndConvertToDecimal();
-    testArraySizeBiggerThan1024AndConvertToVarchar();
-    testArraySizeBiggerThan1024AndConvertToDouble();
-    testArraySizeBiggerThan1024AndConvertToInteger();
-    testArraySizeBiggerThan1024AndConvertToTimestamp();
+    testConvertToDecimal();
+    testConvertToVarchar();
+    testConvertToDouble();
+    testConvertToInteger();
+    testConvertToTimestamp();
 
     // Make sure we delete file across tests
     fs.delete(testFilePath, false);
   }
 
   @Test
-  public void testTimestampArrayBiggerThan1023() throws Exception {
+  public void testTimestampArrayBiggerThanDefault() throws Exception {
     String typeStr = "timestamp";
     Class typeClass = TimestampColumnVector.class;
 
     TypeDescription schema = TypeDescription.fromString("struct<col1:array<" + typeStr + ">>");
-    createORCFileWithArraySizeBiggerThan1024(schema, typeClass, typeClass.equals(Decimal64ColumnVector.class));
+    createORCFileWithLargeArray(schema, typeClass, typeClass.equals(Decimal64ColumnVector.class));
     // Test all possible conversions
-    testArraySizeBiggerThan1024AndConvertToDecimal();
-    testArraySizeBiggerThan1024AndConvertToVarchar();
-    testArraySizeBiggerThan1024AndConvertToDouble();
-    testArraySizeBiggerThan1024AndConvertToInteger();
-    testArraySizeBiggerThan1024AndConvertToTimestamp();
-    testArraySizeBiggerThan1024AndConvertToDate();
+    testConvertToDecimal();
+    testConvertToVarchar();
+    testConvertToDouble();
+    testConvertToInteger();
+    testConvertToTimestamp();
+    testConvertToDate();
 
     // Make sure we delete file across tests
     fs.delete(testFilePath, false);
   }
 
   @Test
-  public void testDateArrayBiggerThan1023() throws Exception {
+  public void testDateArrayBiggerThanDefault() throws Exception {
     String typeStr = "date";
     Class typeClass = DateColumnVector.class;
 
     TypeDescription schema = TypeDescription.fromString("struct<col1:array<" + typeStr + ">>");
-    createORCFileWithArraySizeBiggerThan1024(schema, typeClass, typeClass.equals(Decimal64ColumnVector.class));
+    createORCFileWithLargeArray(schema, typeClass, typeClass.equals(Decimal64ColumnVector.class));
     // Test all possible conversions
-    testArraySizeBiggerThan1024AndConvertToVarchar();
-    testArraySizeBiggerThan1024AndConvertToTimestamp();
+    testConvertToVarchar();
+    testConvertToTimestamp();
 
     // Make sure we delete file across tests
     fs.delete(testFilePath, false);
