@@ -254,6 +254,23 @@ public class TestConvertTreeReaderFactory {
   }
 
   @Test
+  public void testBinaryArrayBiggerThanDefault() throws Exception {
+    String typeStr = "binary";
+    Class typeClass = BytesColumnVector.class;
+
+    TypeDescription schema = TypeDescription.fromString("struct<col1:array<" + typeStr + ">>");
+    createORCFileWithLargeArray(schema, typeClass, typeClass.equals(Decimal64ColumnVector.class));
+    try {
+      // Test all possible conversions
+      // check ConvertTreeReaderFactory.createBinaryConvertTreeReader
+      testConvertToVarchar();
+    } finally {
+      // Make sure we delete file across tests
+      fs.delete(testFilePath, false);
+    }
+  }
+
+  @Test
   public void testDoubleArrayBiggerThanDefault() throws Exception {
     String typeStr = "double";
     Class typeClass = DoubleColumnVector.class;
