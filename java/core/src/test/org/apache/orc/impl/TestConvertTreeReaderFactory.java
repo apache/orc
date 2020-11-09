@@ -17,6 +17,15 @@
  */
 package org.apache.orc.impl;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.GregorianCalendar;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -41,15 +50,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.sql.Timestamp;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.GregorianCalendar;
-import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -157,6 +157,11 @@ public class TestConvertTreeReaderFactory {
     assertEquals(LARGE_BATCH_SIZE, columnVector.vector.length);
   }
 
+  public void testConvertToBinary() throws Exception {
+    BytesColumnVector columnVector = readORCFileWithLargeArray("binary", BytesColumnVector.class);
+    assertEquals(LARGE_BATCH_SIZE, columnVector.vector.length);
+  }
+
   public void testConvertToDouble() throws Exception {
     DoubleColumnVector columnVector = readORCFileWithLargeArray("double", DoubleColumnVector.class);
     assertEquals(LARGE_BATCH_SIZE, columnVector.vector.length);
@@ -164,6 +169,11 @@ public class TestConvertTreeReaderFactory {
 
   public void testConvertToInteger() throws Exception {
     LongColumnVector columnVector = readORCFileWithLargeArray("int", LongColumnVector.class);
+    assertEquals(LARGE_BATCH_SIZE, columnVector.vector.length);
+  }
+
+  public void testConvertToFloat() throws Exception {
+    DoubleColumnVector columnVector = readORCFileWithLargeArray("float", DoubleColumnVector.class);
     assertEquals(LARGE_BATCH_SIZE, columnVector.vector.length);
   }
 
@@ -185,15 +195,18 @@ public class TestConvertTreeReaderFactory {
 
     TypeDescription schema = TypeDescription.fromString("struct<col1:array<" + typeStr + ">>");
     createORCFileWithLargeArray(schema, typeClass, typeClass.equals(Decimal64ColumnVector.class));
-    // Test all possible conversions
-    testConvertToDecimal();
-    testConvertToVarchar();
-    testConvertToDouble();
-    testConvertToInteger();
-    testConvertToTimestamp();
-
-    // Make sure we delete file across tests
-    fs.delete(testFilePath, false);
+    try {
+      // Test all possible conversions
+      // check ConvertTreeReaderFactory.createDecimalConvertTreeReader
+      testConvertToInteger();
+      testConvertToDouble();
+      testConvertToVarchar();
+      testConvertToTimestamp();
+      testConvertToDecimal();
+    } finally {
+      // Make sure we delete file across tests
+      fs.delete(testFilePath, false);
+    }
   }
 
   @Test
@@ -203,15 +216,18 @@ public class TestConvertTreeReaderFactory {
 
     TypeDescription schema = TypeDescription.fromString("struct<col1:array<" + typeStr + ">>");
     createORCFileWithLargeArray(schema, typeClass, typeClass.equals(Decimal64ColumnVector.class));
-    // Test all possible conversions
-    testConvertToDecimal();
-    testConvertToVarchar();
-    testConvertToDouble();
-    testConvertToInteger();
-    testConvertToTimestamp();
-
-    // Make sure we delete file across tests
-    fs.delete(testFilePath, false);
+    try {
+      // Test all possible conversions
+      // check ConvertTreeReaderFactory.createDecimalConvertTreeReader
+      testConvertToInteger();
+      testConvertToDouble();
+      testConvertToVarchar();
+      testConvertToTimestamp();
+      testConvertToDecimal();
+    } finally {
+      // Make sure we delete file across tests
+      fs.delete(testFilePath, false);
+    }
   }
 
   @Test
@@ -221,16 +237,20 @@ public class TestConvertTreeReaderFactory {
 
     TypeDescription schema = TypeDescription.fromString("struct<col1:array<" + typeStr + ">>");
     createORCFileWithLargeArray(schema, typeClass, typeClass.equals(Decimal64ColumnVector.class));
-    // Test all possible conversions
-    testConvertToDecimal();
-    testConvertToVarchar();
-    testConvertToDouble();
-    testConvertToInteger();
-    testConvertToTimestamp();
-    testConvertToDate();
-
-    // Make sure we delete file across tests
-    fs.delete(testFilePath, false);
+    try {
+      // Test all possible conversions
+      // check ConvertTreeReaderFactory.createStringConvertTreeReader
+      testConvertToInteger();
+      testConvertToDouble();
+      testConvertToDecimal();
+      testConvertToVarchar();
+      testConvertToBinary();
+      testConvertToTimestamp();
+      testConvertToDate();
+    } finally {
+      // Make sure we delete file across tests
+      fs.delete(testFilePath, false);
+    }
   }
 
   @Test
@@ -240,15 +260,19 @@ public class TestConvertTreeReaderFactory {
 
     TypeDescription schema = TypeDescription.fromString("struct<col1:array<" + typeStr + ">>");
     createORCFileWithLargeArray(schema, typeClass, typeClass.equals(Decimal64ColumnVector.class));
-    // Test all possible conversions
-    testConvertToDecimal();
-    testConvertToVarchar();
-    testConvertToDouble();
-    testConvertToInteger();
-    testConvertToTimestamp();
-
-    // Make sure we delete file across tests
-    fs.delete(testFilePath, false);
+    try {
+      // Test all possible conversions
+      // check ConvertTreeReaderFactory.createDoubleConvertTreeReader
+      testConvertToDouble();
+      testConvertToInteger();
+      testConvertToFloat();
+      testConvertToDecimal();
+      testConvertToVarchar();
+      testConvertToTimestamp();
+    } finally {
+      // Make sure we delete file across tests
+      fs.delete(testFilePath, false);
+    }
   }
 
   @Test
@@ -258,15 +282,18 @@ public class TestConvertTreeReaderFactory {
 
     TypeDescription schema = TypeDescription.fromString("struct<col1:array<" + typeStr + ">>");
     createORCFileWithLargeArray(schema, typeClass, typeClass.equals(Decimal64ColumnVector.class));
-    // Test all possible conversions
-    testConvertToDecimal();
-    testConvertToVarchar();
-    testConvertToDouble();
-    testConvertToInteger();
-    testConvertToTimestamp();
-
-    // Make sure we delete file across tests
-    fs.delete(testFilePath, false);
+    try {
+      // Test all possible conversions
+      // check ConvertTreeReaderFactory.createAnyIntegerConvertTreeReader
+      testConvertToInteger();
+      testConvertToDouble();
+      testConvertToDecimal();
+      testConvertToVarchar();
+      testConvertToTimestamp();
+    } finally {
+      // Make sure we delete file across tests
+      fs.delete(testFilePath, false);
+    }
   }
 
   @Test
@@ -276,16 +303,19 @@ public class TestConvertTreeReaderFactory {
 
     TypeDescription schema = TypeDescription.fromString("struct<col1:array<" + typeStr + ">>");
     createORCFileWithLargeArray(schema, typeClass, typeClass.equals(Decimal64ColumnVector.class));
-    // Test all possible conversions
-    testConvertToDecimal();
-    testConvertToVarchar();
-    testConvertToDouble();
-    testConvertToInteger();
-    testConvertToTimestamp();
-    testConvertToDate();
-
-    // Make sure we delete file across tests
-    fs.delete(testFilePath, false);
+    try {
+      // Test all possible conversions
+      // check ConvertTreeReaderFactory.createTimestampConvertTreeReader
+      testConvertToInteger();
+      testConvertToDouble();
+      testConvertToDecimal();
+      testConvertToVarchar();
+      testConvertToTimestamp();
+      testConvertToDate();
+    } finally {
+      // Make sure we delete file across tests
+      fs.delete(testFilePath, false);
+    }
   }
 
   @Test
@@ -295,11 +325,14 @@ public class TestConvertTreeReaderFactory {
 
     TypeDescription schema = TypeDescription.fromString("struct<col1:array<" + typeStr + ">>");
     createORCFileWithLargeArray(schema, typeClass, typeClass.equals(Decimal64ColumnVector.class));
-    // Test all possible conversions
-    testConvertToVarchar();
-    testConvertToTimestamp();
-
-    // Make sure we delete file across tests
-    fs.delete(testFilePath, false);
+    try {
+      // Test all possible conversions
+      // check ConvertTreeReaderFactory.createDateConvertTreeReader
+      testConvertToVarchar();
+      testConvertToTimestamp();
+    } finally {
+      // Make sure we delete file across tests
+      fs.delete(testFilePath, false);
+    }
   }
 }
