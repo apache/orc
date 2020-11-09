@@ -109,7 +109,7 @@ public class TestConvertTreeReaderFactory {
         String date = String.format("%04d-01-23", row * 2 + 1);
         ((DateColumnVector) dcv).vector[row] = TimeUnit.MILLISECONDS.toDays(dateFormat.parse(date).getTime());
       } else {
-        throw new IllegalStateException("Writing File with a large array of: "+ expectedColumnType + " not supported!");
+        throw new IllegalStateException("Writing File with a large array of "+ expectedColumnType + " is not supported!");
       }
     }
 
