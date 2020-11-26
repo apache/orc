@@ -436,6 +436,32 @@ public class ReaderImpl implements Reader {
   }
 
   /**
+   * Ensure this is an ORC file to prevent users from trying to read text
+   * files or RC files as ORC files.
+   * @param psLen the postscript length
+   * @param buffer the tail of the file
+   * @deprecated Use {@link ReaderImpl#ensureOrcFooter(FSDataInputStream, Path, int, ByteBuffer)} instead.
+   */
+  protected static void ensureOrcFooter(ByteBuffer buffer, int psLen) throws IOException {
+    int magicLength = OrcFile.MAGIC.length();
+    int fullLength = magicLength + 1;
+    if (psLen < fullLength || buffer.remaining() < fullLength) {
+      throw new FileFormatException("Malformed ORC file. Invalid postscript length " + psLen);
+    }
+
+    int offset = buffer.arrayOffset() + buffer.position() + buffer.limit() - fullLength;
+    byte[] array = buffer.array();
+    // now look for the magic string at the end of the postscript.
+    if (!Text.decode(array, offset, magicLength).equals(OrcFile.MAGIC)) {
+      // if it isn't there, this may be 0.11.0 version of the ORC file.
+      // Read the first 3 bytes from the buffer to check for the header
+      if (!Text.decode(buffer.array(), 0, magicLength).equals(OrcFile.MAGIC)) {
+        throw new FileFormatException("Malformed ORC file. Invalid postscript length " + psLen);
+      }
+    }
+  }
+
+  /**
    * Build a version string out of an array.
    * @param version the version number as a list
    * @return the human readable form of the version string
@@ -640,6 +666,56 @@ public class ReaderImpl implements Reader {
       }
       chunks = (BufferChunk) chunks.next;
     }
+  }
+
+  /**
+   * @deprecated Use {@link ReaderImpl#extractFileTail(FileSystem, Path, long)} instead.
+   * This is for backward compatibility.
+   */
+  public static OrcTail extractFileTail(ByteBuffer buffer)
+      throws IOException {
+    return extractFileTail(buffer, -1,-1);
+  }
+
+  /**
+   * @deprecated Use {@link ReaderImpl#extractFileTail(FileSystem, Path, long)} instead.
+   * This is for backward compatibility.
+   */
+  public static OrcTail extractFileTail(ByteBuffer buffer, long fileLen, long modificationTime)
+      throws IOException {
+    OrcProto.PostScript ps;
+    long readSize = fileLen != -1 ? fileLen : buffer.limit();
+    OrcProto.FileTail.Builder fileTailBuilder = OrcProto.FileTail.newBuilder();
+    fileTailBuilder.setFileLength(readSize);
+
+    int psLen = buffer.get((int) (readSize - 1)) & 0xff;
+    int psOffset = (int) (readSize - 1 - psLen);
+    ensureOrcFooter(buffer, psLen);
+    byte[] psBuffer = new byte[psLen];
+    System.arraycopy(buffer.array(), psOffset, psBuffer, 0, psLen);
+
+    ps = OrcProto.PostScript.parseFrom(psBuffer);
+    int footerSize = (int) ps.getFooterLength();
+    CompressionKind compressionKind =
+        CompressionKind.valueOf(ps.getCompression().name());
+    fileTailBuilder.setPostscriptLength(psLen).setPostscript(ps);
+
+    InStream.StreamOptions compression = new InStream.StreamOptions();
+    try (CompressionCodec codec = OrcCodecPool.getCodec(compressionKind)){
+      if (codec != null) {
+        compression.withCodec(codec)
+            .withBufferSize((int) ps.getCompressionBlockSize());
+      }
+
+      OrcProto.Footer footer =
+          OrcProto.Footer.parseFrom(
+              InStream.createCodedInputStream(
+                  InStream.create("footer", new BufferChunk(buffer, 0), psOffset - footerSize, footerSize, compression)));
+      fileTailBuilder.setPostscriptLength(psLen).setFooter(footer);
+    }
+    // clear does not clear the contents but sets position to 0 and limit = capacity
+    buffer.clear();
+    return new OrcTail(fileTailBuilder.build(), new BufferChunk(buffer.slice(), 0), modificationTime);
   }
 
   protected OrcTail extractFileTail(FileSystem fs, Path path,
