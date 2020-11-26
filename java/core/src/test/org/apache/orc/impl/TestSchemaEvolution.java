@@ -580,6 +580,38 @@ public class TestSchemaEvolution {
   }
 
   @Test
+  public void testCharToStringEvolution() throws IOException {
+    TypeDescription fileType = TypeDescription.fromString("struct<x:char(10)>");
+    TypeDescription readType = TypeDescription.fromString("struct<x:string>");
+    SchemaEvolution evo = new SchemaEvolution(fileType, readType, options);
+
+    TreeReaderFactory.Context treeContext =
+        new TreeReaderFactory.ReaderContext().setSchemaEvolution(evo);
+    TypeReader reader =
+        TreeReaderFactory.createTreeReader(readType, treeContext);
+
+    // Make sure the tree reader is built properly
+    assertEquals(TreeReaderFactory.StructTreeReader.class, reader.getClass());
+    TypeReader[] children =
+        ((TreeReaderFactory.StructTreeReader) reader).getChildReaders();
+    assertEquals(1, children.length);
+    assertEquals(ConvertTreeReaderFactory.StringGroupFromStringGroupTreeReader.class, children[0].getClass());
+
+    // Make sure that varchar behaves the same as char
+    fileType = TypeDescription.fromString("struct<x:varchar(10)>");
+    evo = new SchemaEvolution(fileType, readType, options);
+
+    treeContext = new TreeReaderFactory.ReaderContext().setSchemaEvolution(evo);
+    reader = TreeReaderFactory.createTreeReader(readType, treeContext);
+
+    // Make sure the tree reader is built properly
+    assertEquals(TreeReaderFactory.StructTreeReader.class, reader.getClass());
+    children = ((TreeReaderFactory.StructTreeReader) reader).getChildReaders();
+    assertEquals(1, children.length);
+    assertEquals(ConvertTreeReaderFactory.StringGroupFromStringGroupTreeReader.class, children[0].getClass());
+  }
+
+  @Test
   public void testStringToDecimalEvolution() throws Exception {
     testFilePath = new Path(workDir, "TestSchemaEvolution." +
       testCaseName.getMethodName() + ".orc");
