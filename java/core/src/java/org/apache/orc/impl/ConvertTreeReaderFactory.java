@@ -1914,14 +1914,9 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       return new DecimalFromStringGroupTreeReader(columnId, fileType, readerType, context);
 
     case CHAR:
-      return new StringGroupFromStringGroupTreeReader(columnId, fileType, readerType, context);
-
     case VARCHAR:
-      return new StringGroupFromStringGroupTreeReader(columnId, fileType, readerType, context);
-
     case STRING:
-      throw new IllegalArgumentException("No conversion of type " +
-          readerType.getCategory() + " to self needed");
+      return new StringGroupFromStringGroupTreeReader(columnId, fileType, readerType, context);
 
     case BINARY:
       return new BinaryTreeReader(columnId, context);
