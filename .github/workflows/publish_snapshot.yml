@@ -1,0 +1,24 @@
+name: Publish Snapshot
+
+on:
+  push:
+    branches:
+    - branch-1.6
+
+jobs:
+  publish-snapshot:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+
+    - uses: actions/setup-java@v1
+      with:
+        java-version: 8
+
+    - name: Release Maven package
+      uses: samuelmeuli/action-maven-publish@v1
+      with:
+        directory: java
+        server_id: apache.snapshots.https
+        nexus_username: ${{ secrets.nexus_username }}
+        nexus_password: ${{ secrets.nexus_password }}
