@@ -20,5 +20,5 @@ jobs:
       with:
         directory: java
         server_id: apache.snapshots.https
-        nexus_username: ${{ secrets.nexus_username }}
-        nexus_password: ${{ secrets.nexus_password }}
+        nexus_username: ${{ secrets.NEXUS_USER }}
+        nexus_password: ${{ secrets.NEXUS_PW }}
