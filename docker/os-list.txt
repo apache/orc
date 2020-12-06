@@ -1,8 +1,8 @@
 centos7
 centos8
-debian8
 debian9
 debian10
-ubuntu14
 ubuntu16
 ubuntu18
+ubuntu20
+ubuntu20-clang

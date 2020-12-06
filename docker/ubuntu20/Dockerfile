@@ -18,6 +18,7 @@
 #
 
 FROM ubuntu:20.04
+MAINTAINER Apache ORC project <dev@orc.apache.org>
 
 RUN ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
 RUN apt-get update
