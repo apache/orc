@@ -974,6 +974,16 @@ public class TestVectorOrcFile {
         + "complex:struct<int2:int,String1:string>>");
   }
 
+  private static TypeDescription createQuotedSchema() {
+    return TypeDescription.createStruct()
+        .addField("`int1`", TypeDescription.createInt())
+        .addField("`string1`", TypeDescription.createString());
+  }
+
+  private static TypeDescription createQuotedSchemaFromString() {
+    return TypeDescription.fromString("struct<```int1```:int,```string1```:string>");
+  }
+
   private static TypeDescription createBigRowSchema() {
     return TypeDescription.createStruct()
         .addField("boolean1", TypeDescription.createBoolean())
@@ -2592,6 +2602,99 @@ public class TestVectorOrcFile {
     }
     Assert.assertEquals(false, rows.nextBatch(batch));
     Assert.assertEquals(3500, rows.getRowNumber());
+  }
+
+  @Test
+  public void testQuotedPredicatePushdown() throws Exception {
+    TypeDescription schema = createQuotedSchema();
+    Writer writer = OrcFile.createWriter(testFilePath,
+        OrcFile.writerOptions(conf)
+            .setSchema(schema)
+            .stripeSize(400000L)
+            .compress(CompressionKind.NONE)
+            .bufferSize(500)
+            .rowIndexStride(1000)
+            .version(fileFormat));
+    VectorizedRowBatch batch = schema.createRowBatch();
+    batch.ensureSize(3500);
+    batch.size = 3500;
+    for(int i=0; i < 3500; ++i) {
+      ((LongColumnVector) batch.cols[0]).vector[i] = i * 300;
+      ((BytesColumnVector) batch.cols[1]).setVal(i,
+          Integer.toHexString(10*i).getBytes(StandardCharsets.UTF_8));
+    }
+    writer.addRowBatch(batch);
+    writer.close();
+    Reader reader = OrcFile.createReader(testFilePath,
+        OrcFile.readerOptions(conf).filesystem(fs));
+    assertEquals(3500, reader.getNumberOfRows());
+
+    SearchArgument sarg = SearchArgumentFactory.newBuilder()
+        .startAnd()
+        .startNot()
+        .lessThan("`int1`", PredicateLeaf.Type.LONG, 300000L)
+        .end()
+        .lessThan("`int1`", PredicateLeaf.Type.LONG, 600000L)
+        .end()
+        .build();
+    RecordReader rows = reader.rows(reader.options()
+        .range(0L, Long.MAX_VALUE)
+        .include(new boolean[]{true, true, true})
+        .searchArgument(sarg, new String[]{null, "`int1`", "string1"}));
+    batch = reader.getSchema().createRowBatch(2000);
+
+    Assert.assertEquals(1000L, rows.getRowNumber());
+    Assert.assertEquals(true, rows.nextBatch(batch));
+    assertEquals(1000, batch.size);
+
+    // Validate the same behaviour with schemaFromString
+    fs.delete(testFilePath, false);
+    TypeDescription qSchema = createQuotedSchemaFromString();
+    // [`int1`, `string1`]
+    assertEquals(schema.getFieldNames(), qSchema.getFieldNames());
+
+    Writer writerSchemaFromStr = OrcFile.createWriter(testFilePath,
+        OrcFile.writerOptions(conf)
+            .setSchema(qSchema)
+            .stripeSize(400000L)
+            .compress(CompressionKind.NONE)
+            .bufferSize(500)
+            .rowIndexStride(1000)
+            .version(fileFormat));
+    batch = qSchema.createRowBatch();
+    batch.ensureSize(3500);
+    batch.size = 3500;
+    for(int i=0; i < 3500; ++i) {
+      ((LongColumnVector) batch.cols[0]).vector[i] = i * 300;
+      ((BytesColumnVector) batch.cols[1]).setVal(i,
+          Integer.toHexString(10*i).getBytes(StandardCharsets.UTF_8));
+    }
+    writerSchemaFromStr.addRowBatch(batch);
+    writerSchemaFromStr.close();
+    Reader readerSchemaFromStr = OrcFile.createReader(testFilePath,
+        OrcFile.readerOptions(conf).filesystem(fs));
+    assertEquals(3500, readerSchemaFromStr.getNumberOfRows());
+
+    sarg = SearchArgumentFactory.newBuilder()
+        .startAnd()
+        .startNot()
+        .lessThan("`int1`", PredicateLeaf.Type.LONG, 300000L)
+        .end()
+        .lessThan("`int1`", PredicateLeaf.Type.LONG, 600000L)
+        .end()
+        .build();
+    rows = readerSchemaFromStr.rows(readerSchemaFromStr.options()
+        .range(0L, Long.MAX_VALUE)
+        .include(new boolean[]{true, true, true})
+        .searchArgument(sarg, new String[]{null, "`int1`", "string1"}));
+    batch = readerSchemaFromStr.getSchema().createRowBatch(2000);
+
+    Assert.assertEquals(1000L, rows.getRowNumber());
+    Assert.assertEquals(true, rows.nextBatch(batch));
+    assertEquals(1000, batch.size);
+
+    assertEquals(reader.getSchema(), readerSchemaFromStr.getSchema());
+    assertEquals(writer.getSchema(), writerSchemaFromStr.getSchema());
   }
 
   /**

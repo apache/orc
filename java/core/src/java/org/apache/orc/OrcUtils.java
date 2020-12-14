@@ -17,6 +17,7 @@
  */
 package org.apache.orc;
 
+import org.apache.orc.impl.ParserUtils;
 import org.apache.orc.impl.ReaderImpl;
 import org.apache.orc.impl.SchemaEvolution;
 
@@ -344,8 +345,8 @@ public class OrcUtils {
       case STRUCT: {
           result = TypeDescription.createStruct();
           for(int f=0; f < type.getSubtypesCount(); ++f) {
-            result.addField(type.getFieldNames(f),
-                convertTypeFromProtobuf(types, type.getSubtypes(f)));
+            String fieldName = ParserUtils.parseName(new ParserUtils.StringPosition(type.getFieldNames(f)));
+            result.addField(fieldName, convertTypeFromProtobuf(types, type.getSubtypes(f)));
           }
         }
         break;
