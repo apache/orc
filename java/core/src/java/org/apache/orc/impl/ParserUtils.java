@@ -76,7 +76,7 @@ public class ParserUtils {
     return result;
   }
 
-  static String parseName(ParserUtils.StringPosition source) {
+  public static String parseName(ParserUtils.StringPosition source) {
     if (source.position == source.length) {
       throw new IllegalArgumentException("Missing name at " + source);
     }
