@@ -976,8 +976,8 @@ public class TestVectorOrcFile {
 
   private static TypeDescription createQuotedSchema() {
     return TypeDescription.createStruct()
-        .addField("```int1```", TypeDescription.createInt())
-        .addField("```string1```", TypeDescription.createString());
+        .addField("`int1`", TypeDescription.createInt())
+        .addField("`string1`", TypeDescription.createString());
   }
 
   private static TypeDescription createQuotedSchemaFromString() {
@@ -2632,15 +2632,15 @@ public class TestVectorOrcFile {
     SearchArgument sarg = SearchArgumentFactory.newBuilder()
         .startAnd()
         .startNot()
-        .lessThan("```int1```", PredicateLeaf.Type.LONG, 300000L)
+        .lessThan("`int1`", PredicateLeaf.Type.LONG, 300000L)
         .end()
-        .lessThan("```int1```", PredicateLeaf.Type.LONG, 600000L)
+        .lessThan("`int1`", PredicateLeaf.Type.LONG, 600000L)
         .end()
         .build();
     RecordReader rows = reader.rows(reader.options()
         .range(0L, Long.MAX_VALUE)
         .include(new boolean[]{true, true, true})
-        .searchArgument(sarg, new String[]{null, "```int1```", "string1"}));
+        .searchArgument(sarg, new String[]{null, "`int1`", "string1"}));
     batch = reader.getSchema().createRowBatch(2000);
 
     Assert.assertEquals(1000L, rows.getRowNumber());
@@ -2649,11 +2649,13 @@ public class TestVectorOrcFile {
 
     // Validate the same behaviour with schemaFromString
     fs.delete(testFilePath, false);
-
     TypeDescription qSchema = createQuotedSchemaFromString();
+    // [`int1`, `string1`]
+    assertEquals(schema.getFieldNames(), qSchema.getFieldNames());
+
     Writer writerSchemaFromStr = OrcFile.createWriter(testFilePath,
         OrcFile.writerOptions(conf)
-            .setSchema(schema)
+            .setSchema(qSchema)
             .stripeSize(400000L)
             .compress(CompressionKind.NONE)
             .bufferSize(500)
@@ -2676,15 +2678,15 @@ public class TestVectorOrcFile {
     sarg = SearchArgumentFactory.newBuilder()
         .startAnd()
         .startNot()
-        .lessThan("```int1```", PredicateLeaf.Type.LONG, 300000L)
+        .lessThan("`int1`", PredicateLeaf.Type.LONG, 300000L)
         .end()
-        .lessThan("```int1```", PredicateLeaf.Type.LONG, 600000L)
+        .lessThan("`int1`", PredicateLeaf.Type.LONG, 600000L)
         .end()
         .build();
     rows = readerSchemaFromStr.rows(readerSchemaFromStr.options()
         .range(0L, Long.MAX_VALUE)
         .include(new boolean[]{true, true, true})
-        .searchArgument(sarg, new String[]{null, "```int1```", "string1"}));
+        .searchArgument(sarg, new String[]{null, "`int1`", "string1"}));
     batch = readerSchemaFromStr.getSchema().createRowBatch(2000);
 
     Assert.assertEquals(1000L, rows.getRowNumber());
