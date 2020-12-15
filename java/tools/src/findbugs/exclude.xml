@@ -23,4 +23,9 @@
     <Class name="org.apache.orc.tools.PrintVersion"/>
     <Method name="main"/>
   </Match>
+  <Match>
+    <Bug pattern="REC_CATCH_EXCEPTION"/>
+    <Class name="org.apache.orc.tools.ScanData"/>
+    <Method name="main"/>
+  </Match>
 </FindBugsFilter>
