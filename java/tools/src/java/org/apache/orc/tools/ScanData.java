@@ -92,7 +92,7 @@ public class ScanData {
       firstRow = lastRow;
     }
     return new LocationInfo(reader.getNumberOfRows(),
-        reader.getNumberOfRows(), stripeId, row);
+        reader.getNumberOfRows(), -1, row);
   }
 
   /**
@@ -185,7 +185,12 @@ public class ScanData {
                   e.printStackTrace();
                   findBadColumns(reader, current, batchSize, reader.getSchema(),
                       new boolean[reader.getSchema().getMaximumId() + 1]);
-                  rows.seekToRow(recover.row);
+                  // There are no more rows, so break the loop
+                  if (recover.stripeId == -1) {
+                    break;
+                  } else {
+                    rows.seekToRow(recover.row);
+                  }
                 }
               }
             }
@@ -193,7 +198,7 @@ public class ScanData {
               badFiles.add(file);
             }
             System.out.printf("File: %s, bad batches: %d, rows: %d/%d%n", file,
-                badBatches, goodRows, currentRow);
+                badBatches, goodRows, reader.getNumberOfRows());
           }
         } catch (Exception e) {
           badFiles.add(file);
