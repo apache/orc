@@ -266,10 +266,12 @@ public class RecordReaderImpl implements RecordReader {
 
     try {
       advanceToNextRow(reader, 0L, true);
-    } catch (IOException e) {
+    } catch (Exception e) {
       // Try to close since this happens in constructor.
       close();
-      throw e;
+      long stripeId = stripes.size() == 0 ? 0 : stripes.get(0).getStripeId();
+      throw new IOException(String.format("Problem opening stripe %d footer in %s.",
+          stripeId, path), e);
     }
   }
 
