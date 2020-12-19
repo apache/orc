@@ -19,6 +19,7 @@ package org.apache.orc.tools;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.hadoop.conf.Configuration;
@@ -37,12 +38,13 @@ import java.util.List;
  */
 public class ScanData {
 
+  private static final Options OPTIONS = new Options()
+      .addOption("v", "verbose", false, "Print exceptions")
+      .addOption("s", "schema", false, "Print schema")
+      .addOption("h", "help", false, "Provide help");
 
   static CommandLine parseCommandLine(String[] args) throws ParseException {
-    Options options = new Options()
-        .addOption("s", "schema", false, "Print schema")
-        .addOption("h", "help", false, "Provide help");
-    return new DefaultParser().parse(options, args);
+    return new DefaultParser().parse(OPTIONS, args);
   }
 
   static int calculateBestVectorSize(int indexStride) {
@@ -84,15 +86,15 @@ public class ScanData {
     long firstRow = 0;
     int stripeId = 0;
     for (StripeInformation stripe: reader.getStripes()) {
-      stripeId += 1;
       long lastRow = firstRow + stripe.getNumberOfRows();
       if (firstRow <= row && row < lastRow) {
         return new LocationInfo(firstRow, lastRow, stripeId, row);
       }
       firstRow = lastRow;
+      stripeId += 1;
     }
     return new LocationInfo(reader.getNumberOfRows(),
-        reader.getNumberOfRows(), -1, row);
+        reader.getNumberOfRows(), reader.getStripes().size(), row);
   }
 
   /**
@@ -113,7 +115,8 @@ public class ScanData {
       result = current.followingRow;
     } else {
       long rowInStripe = current.row + batchSize - current.firstRow;
-      result = current.firstRow + (rowInStripe + stride - 1) / stride * stride;
+      result = Math.min(current.followingRow,
+          current.firstRow + (rowInStripe + stride - 1) / stride * stride);
     }
     return findStripeInfo(reader, result);
   }
@@ -149,10 +152,12 @@ public class ScanData {
   static void main(Configuration conf, String[] args) throws ParseException {
     CommandLine cli = parseCommandLine(args);
     if (cli.hasOption('h') || cli.getArgs().length == 0) {
-      System.err.println("usage: java -jar orc-tools-*.jar scan [--schema] [--help] <orc file>*");
+      new HelpFormatter().printHelp("java -jar orc-tools-*.jar scan",
+          OPTIONS);
       System.exit(1);
     } else {
-      boolean printSchema = cli.hasOption('s');
+      final boolean printSchema = cli.hasOption('s');
+      final boolean printExceptions = cli.hasOption('v');
       List<String> badFiles = new ArrayList<>();
       for (String file : cli.getArgs()) {
         try (Reader reader = FileDump.getReader(new Path(file), conf, badFiles)) {
@@ -182,11 +187,13 @@ public class ScanData {
                   LocationInfo recover = findRecoveryPoint(reader, current, batchSize);
                   System.out.println("Unable to read batch at " + current +
                       ", recovery at " + recover);
-                  e.printStackTrace();
+                  if (printExceptions) {
+                    e.printStackTrace();
+                  }
                   findBadColumns(reader, current, batchSize, reader.getSchema(),
                       new boolean[reader.getSchema().getMaximumId() + 1]);
-                  // There are no more rows, so break the loop
-                  if (recover.stripeId == -1) {
+                  // If we are at the end of the file, get out
+                  if (recover.row >= reader.getNumberOfRows()) {
                     break;
                   } else {
                     rows.seekToRow(recover.row);
@@ -203,7 +210,9 @@ public class ScanData {
         } catch (Exception e) {
           badFiles.add(file);
           System.err.println("Unable to open file: " + file);
-          e.printStackTrace();
+          if (printExceptions) {
+            e.printStackTrace();
+          }
         }
       }
       System.exit(badFiles.size());
