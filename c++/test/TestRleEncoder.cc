@@ -280,6 +280,33 @@ namespace orc {
     decodeAndVerify(RleVersion_2, memStream, data, numValues, nullptr, isSigned);
   }
 
+  // This case is used to testing encoding large negative integer.
+  // The minimum is -84742859065569280, it's a 57 bit width integer 
+  // and 8 bytes is used to encoding it.
+  TEST_P(RleTest, RleV2_Patched_large_negative_number) {
+    // write data
+    const int numValues = 30;
+    int64_t data[30] = {
+      -17887939293638656, -15605417571528704, -15605417571528704, -13322895849418752,
+      -13322895849418752, -84742859065569280, -15605417571528704, -13322895849418752,
+      -13322895849418752, -15605417571528704, -13322895849418752, -13322895849418752,
+      -15605417571528704, -15605417571528704, -13322895849418752, -13322895849418752,
+      -15605417571528704, -15605417571528704, -13322895849418752, -13322895849418752,
+      -11040374127308800, -15605417571528704, -13322895849418752, -13322895849418752,
+      -15605417571528704, -15605417571528704, -13322895849418752, -13322895849418752,
+      -15605417571528704, -13322895849418752};
+    // Invoke the encoder.
+    const bool isSigned = true;
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+
+    std::unique_ptr<RleEncoder> encoder = getEncoder(RleVersion_2, memStream, isSigned);
+    encoder->add(data, numValues, nullptr);
+    encoder->flush();
+
+    // Decode and verify.
+    decodeAndVerify(RleVersion_2, memStream, data, numValues, nullptr, isSigned);
+  }
+
   TEST_P(RleTest, RleV2_delta_example) {
     int64_t data[10] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29};
     unsigned char expectedEncoded[8] = {0xc6, 0x09, 0x02, 0x02, 0x22, 0x42, 0x42, 0x46};
