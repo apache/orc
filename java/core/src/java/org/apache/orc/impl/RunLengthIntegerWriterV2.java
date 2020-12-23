@@ -286,9 +286,10 @@ public class RunLengthIntegerWriterV2 implements IntegerWriter {
     // find the number of bytes required for base and shift it by 5 bits
     // to accommodate patch width. The additional bit is used to store the sign
     // of the base value.
-    int baseWidth = utils.findClosestNumBits(min) + 1;
-    if (baseWidth > 64) {
-        baseWidth = 64;
+    int baseWidth = utils.findClosestNumBits(min);
+    if (baseWidth < 64) {
+        // store the sign bit when baseWidth is less than 64
+        baseWidth++;
     }
     final int baseBytes = baseWidth % 8 == 0 ? baseWidth / 8 : (baseWidth / 8) + 1;
     final int bb = (baseBytes - 1) << 5;

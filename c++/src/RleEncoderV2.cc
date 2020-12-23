@@ -577,9 +577,10 @@ void RleEncoderV2::writePatchedBasedValues(EncodingOption& option) {
     // find the number of bytes required for base and shift it by 5 bits
     // to accommodate patch width. The additional bit is used to store the sign
     // of the base value.
-    uint32_t baseWidth = findClosestNumBits(option.min) + 1;
-    if (baseWidth > 64) {
-        baseWidth = 64;
+    uint32_t baseWidth = findClosestNumBits(option.min);
+    if (baseWidth < 64) {
+        // store the sign bit when baseWidth is less than 64
+        baseWidth++;
     } 
     const uint32_t baseBytes = baseWidth % 8 == 0 ? baseWidth / 8 : (baseWidth / 8) + 1;
     const uint32_t bb = (baseBytes - 1) << 5;
