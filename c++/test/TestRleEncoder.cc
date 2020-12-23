@@ -283,7 +283,7 @@ namespace orc {
   // This case is used to testing encoding large negative integer.
   // The minimum is -84742859065569280, it's a 57 bit width integer 
   // and 8 bytes is used to encoding it.
-  TEST_P(RleTest, RleV2_Patched_large_negative_number) {
+  TEST_P(RleTest, RleV2_Patched_large_negative_integer) {
     // write data
     const int numValues = 30;
     int64_t data[30] = {
