@@ -508,7 +508,7 @@ public class RecordReaderImpl implements RecordReader {
                                            TypeDescription type,
                                            boolean writerUsedProlepticGregorian,
                                            boolean useUTCTimestamp) {
-    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null, statsProto, writerUsedProlepticGregorian);
+    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null, statsProto, writerUsedProlepticGregorian, true);
     ValueRange range = getValueRange(cs, predicate, useUTCTimestamp);
 
     // files written before ORC-135 stores timestamp wrt to local timezone causing issues with PPD.
