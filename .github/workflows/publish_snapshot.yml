@@ -17,7 +17,7 @@ jobs:
         java-version: 8
 
     - name: Release Maven package
-      uses: samuelmeuli/action-maven-publish@v1
+      uses: samuelmeuli/action-maven-publish@v1.4.0
       with:
         directory: java
         server_id: apache.snapshots.https
