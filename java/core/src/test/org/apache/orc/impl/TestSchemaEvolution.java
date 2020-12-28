@@ -580,6 +580,37 @@ public class TestSchemaEvolution {
   }
 
   @Test
+  public void testBooleanToStringEvolution() throws Exception {
+    testFilePath = new Path(workDir, "TestSchemaEvolution." +
+            testCaseName.getMethodName() + ".orc");
+    TypeDescription schema = TypeDescription.createBoolean();
+    Writer writer = OrcFile.createWriter(testFilePath,
+            OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+                    .bufferSize(10000));
+    VectorizedRowBatch batch = new VectorizedRowBatch(1, 1024);
+    LongColumnVector lcv = new LongColumnVector(1024);
+    batch.cols[0] = lcv;
+    batch.reset();
+    batch.size = 3;
+    lcv.vector[0] = 1L; // True
+    lcv.vector[1] = 0L; // False
+    lcv.vector[2] = 1L; // True
+    writer.addRowBatch(batch);
+    writer.close();
+
+    Reader reader = OrcFile.createReader(testFilePath,
+            OrcFile.readerOptions(conf).filesystem(fs));
+    TypeDescription schemaOnRead = TypeDescription.createString();
+    RecordReader rows = reader.rows(reader.options().schema(schemaOnRead));
+    batch = schemaOnRead.createRowBatch();
+    rows.nextBatch(batch);
+    assertEquals("TRUE", ((BytesColumnVector) batch.cols[0]).toString(0));
+    assertEquals("FALSE", ((BytesColumnVector) batch.cols[0]).toString(1));
+    assertEquals("TRUE", ((BytesColumnVector) batch.cols[0]).toString(2));
+    rows.close();
+  }
+
+  @Test
   public void testCharToStringEvolution() throws IOException {
     TypeDescription fileType = TypeDescription.fromString("struct<x:char(10)>");
     TypeDescription readType = TypeDescription.fromString("struct<x:string>");
