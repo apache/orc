@@ -1744,12 +1744,64 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     }
   }
 
+  private static TreeReader createBooleanConvertTreeReader(int columnId,
+                                                              TypeDescription fileType,
+                                                              TypeDescription readerType,
+                                                              Context context) throws IOException {
+    // CONVERT from BOOLEAN to schema type.
+    //
+    switch (readerType.getCategory()) {
+
+      case BOOLEAN:
+      case BYTE:
+      case SHORT:
+      case INT:
+      case LONG:
+        if (fileType.getCategory() == readerType.getCategory()) {
+          throw new IllegalArgumentException("No conversion of type " +
+                  readerType.getCategory() + " to self needed");
+        }
+        return new AnyIntegerFromAnyIntegerTreeReader(columnId, fileType, readerType,
+                context);
+
+      case FLOAT:
+      case DOUBLE:
+        return new DoubleFromAnyIntegerTreeReader(columnId, fileType,
+                context);
+
+      case DECIMAL:
+        return new DecimalFromAnyIntegerTreeReader(columnId, fileType, context);
+
+      case STRING:
+      case CHAR:
+      case VARCHAR:
+        return new StringGroupFromBooleanTreeReader(columnId, fileType, readerType,
+                context);
+
+      case TIMESTAMP:
+      case TIMESTAMP_INSTANT:
+        return new TimestampFromAnyIntegerTreeReader(columnId, fileType, context,
+                readerType.getCategory() == Category.TIMESTAMP_INSTANT);
+
+      // Not currently supported conversion(s):
+      case BINARY:
+      case DATE:
+
+      case STRUCT:
+      case LIST:
+      case MAP:
+      case UNION:
+      default:
+        throw new IllegalArgumentException("Unsupported type " +
+                readerType.getCategory());
+    }
+  }
+
   private static TreeReader createAnyIntegerConvertTreeReader(int columnId,
                                                               TypeDescription fileType,
                                                               TypeDescription readerType,
                                                               Context context) throws IOException {
-
-    // CONVERT from (BOOLEAN, BYTE, SHORT, INT, LONG) to schema type.
+    // CONVERT from (BYTE, SHORT, INT, LONG) to schema type.
     //
     switch (readerType.getCategory()) {
 
@@ -1802,7 +1854,6 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
                                                           TypeDescription fileType,
                                                           TypeDescription readerType,
                                                           Context context) throws IOException {
-
     // CONVERT from DOUBLE to schema type.
     switch (readerType.getCategory()) {
 
@@ -1849,7 +1900,6 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
                                                            TypeDescription fileType,
                                                            TypeDescription readerType,
                                                            Context context) throws IOException {
-
     // CONVERT from DECIMAL to schema type.
     switch (readerType.getCategory()) {
 
@@ -1895,7 +1945,6 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
                                                           TypeDescription fileType,
                                                           TypeDescription readerType,
                                                           Context context) throws IOException {
-
     // CONVERT from STRING to schema type.
     switch (readerType.getCategory()) {
 
@@ -1993,7 +2042,6 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
   private static TreeReader createDateConvertTreeReader(int columnId,
                                                         TypeDescription readerType,
                                                         Context context) throws IOException {
-
     // CONVERT from DATE to schema type.
     switch (readerType.getCategory()) {
 
@@ -2034,8 +2082,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
   private static TreeReader createBinaryConvertTreeReader(int columnId,
                                                           TypeDescription readerType,
                                                           Context context) throws IOException {
-
-    // CONVERT from DATE to schema type.
+    // CONVERT from BINARY to schema type.
     switch (readerType.getCategory()) {
 
     case STRING:
@@ -2115,7 +2162,8 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
    *   DecimalFromStringGroupTreeReader (written)
    *
    * To STRING, CHAR, VARCHAR:
-   *   Convert from (BOOLEAN, BYTE, SHORT, INT, LONG) using to string conversion
+   *   Convert from (BYTE, SHORT, INT, LONG) using to string conversion
+   *   Convert from BOOLEAN using boolean (True/False) conversion
    *   Convert from (FLOAT, DOUBLE) using to string conversion
    *   Convert from DECIMAL using HiveDecimal.toString
    *   Convert from CHAR by stripping pads
@@ -2125,6 +2173,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
    *   Convert from BINARY using Text.decode
    *
    *   StringGroupFromAnyIntegerTreeReader (written)
+   *   StringGroupFromBooleanTreeReader (written)
    *   StringGroupFromFloatTreeReader (written)
    *   StringGroupFromDoubleTreeReader (written)
    *   StringGroupFromDecimalTreeReader (written)
@@ -2203,12 +2252,14 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
 
     switch (fileType.getCategory()) {
 
-    case BOOLEAN:
     case BYTE:
     case SHORT:
     case INT:
     case LONG:
       return createAnyIntegerConvertTreeReader(columnId, fileType, readerType, context);
+
+    case BOOLEAN:
+      return createBooleanConvertTreeReader(columnId, fileType, readerType, context);
 
     case FLOAT:
     case DOUBLE:
