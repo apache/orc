@@ -602,13 +602,13 @@ public class TestRecordReaderImpl {
                                                         boolean writerUsedProlepticGregorian,
                                                         boolean useUTCTimestamp) {
     OrcProto.ColumnEncoding encoding =
-            OrcProto.ColumnEncoding.newBuilder()
-                    .setKind(OrcProto.ColumnEncoding.Kind.DIRECT)
-                    .build();
+        OrcProto.ColumnEncoding.newBuilder()
+            .setKind(OrcProto.ColumnEncoding.Kind.DIRECT)
+            .build();
     return RecordReaderImpl.evaluatePredicateProto(stats, predicate, null,
-            encoding, null,
-            include135 ? OrcFile.WriterVersion.ORC_135: OrcFile.WriterVersion.ORC_101,
-            TypeDescription.createTimestamp(), writerUsedProlepticGregorian, useUTCTimestamp);
+        encoding, null,
+        include135 ? OrcFile.WriterVersion.ORC_135: OrcFile.WriterVersion.ORC_101,
+        TypeDescription.createTimestamp(), writerUsedProlepticGregorian, useUTCTimestamp);
   }
 
   static TruthValue evaluateTimestampBloomfilter(OrcProto.ColumnStatistics stats,
@@ -913,35 +913,36 @@ public class TestRecordReaderImpl {
   @Test
   public void testPredEvalTimestampStatsDiffWriter() {
     // Proleptic - NoUTC
-    PredicateLeaf pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
-            PredicateLeaf.Type.TIMESTAMP, "x", Timestamp.valueOf("1017-01-01 00:00:00"), null);
+    PredicateLeaf pred = createPredicateLeaf(
+        PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.TIMESTAMP, "x",
+        Timestamp.valueOf("1017-01-01 00:00:00"), null);
     assertEquals(TruthValue.YES_NO,
-            evaluateTimestampWithWriterCalendar(createTimestampStats("1017-01-01 00:00:00", "1017-01-01 00:00:00"),
-                    pred, true, true, false));
+        evaluateTimestampWithWriterCalendar(createTimestampStats("1017-01-01 00:00:00", "1017-01-01 00:00:00"),
+            pred, true, true, false));
 
     // NoProleptic - NoUTC -> 1016-12-26 00:00:00.0
     long predTime = DateUtils.convertTimeToProleptic(Timestamp.valueOf("1017-01-01 00:00:00").getTime(), false);
-    PredicateLeaf pred2 = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
-            PredicateLeaf.Type.TIMESTAMP, "x", new Timestamp(predTime), null);
+    PredicateLeaf pred2 = createPredicateLeaf(
+        PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.TIMESTAMP, "x", new Timestamp(predTime), null);
     assertEquals(TruthValue.YES_NO,
-            evaluateTimestampWithWriterCalendar(createTimestampStats("1017-01-01 00:00:00", "1017-01-01 00:00:00"),
-                    pred2, true, false, false));
+        evaluateTimestampWithWriterCalendar(createTimestampStats("1017-01-01 00:00:00", "1017-01-01 00:00:00"),
+            pred2, true, false, false));
 
     // NoProleptic - UTC -> 1016-12-25 16:00:00.0
     predTime = DateUtils.convertTimeToProleptic(getUtcTimestamp("1017-01-01 00:00:00"), true);
-    PredicateLeaf pred3 = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
-            PredicateLeaf.Type.TIMESTAMP, "x", new Timestamp(predTime), null);
+    PredicateLeaf pred3 = createPredicateLeaf(
+        PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.TIMESTAMP, "x", new Timestamp(predTime), null);
     assertEquals(TruthValue.YES_NO,
-            evaluateTimestampWithWriterCalendar(createTimestampStats("1017-01-01 00:00:00", "1017-01-01 00:00:00"),
-                    pred3, true, false, true));
+        evaluateTimestampWithWriterCalendar(createTimestampStats("1017-01-01 00:00:00", "1017-01-01 00:00:00"),
+            pred3, true, false, true));
 
     // Proleptic - UTC -> 1016-12-31 16:00:00.0
     predTime = getUtcTimestamp("1017-01-01 00:00:00");
     PredicateLeaf pred4 = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS,
-            PredicateLeaf.Type.TIMESTAMP, "x", new Timestamp(predTime), null);
+        PredicateLeaf.Type.TIMESTAMP, "x", new Timestamp(predTime), null);
     assertEquals(TruthValue.YES_NO,
-            evaluateTimestampWithWriterCalendar(createTimestampStats("1017-01-01 00:00:00", "1017-01-01 00:00:00"),
-                    pred4, true, true, true));
+        evaluateTimestampWithWriterCalendar(createTimestampStats("1017-01-01 00:00:00", "1017-01-01 00:00:00"),
+            pred4, true, true, true));
   }
 
   @Test
