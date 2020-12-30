@@ -58,9 +58,9 @@ or directly into Hive tables backed by an ORC file format.
 With more than 300 PB of data, Facebook was an [early adopter of
 ORC](https://code.facebook.com/posts/229861827208629/scaling-the-facebook-data-warehouse-to-300-pb/) and quickly put it into production.
 
-### [Presto](https://prestosql.io/)
+### [Trino (formerly Presto SQL)](https://trino.io/)
 
-The Presto team has done a lot of work [integrating
+The Trino team has done a lot of work [integrating
 ORC](https://code.facebook.com/posts/370832626374903/even-faster-data-at-the-speed-of-presto-orc/) into their SQL engine.
 
 ### [Timber](https://timber.io/)
