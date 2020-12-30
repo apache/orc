@@ -1783,45 +1783,46 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     //
     switch (readerType.getCategory()) {
 
-      case BOOLEAN:
-      case BYTE:
-      case SHORT:
-      case INT:
-      case LONG:
-        if (fileType.getCategory() == readerType.getCategory()) {
-          throw new IllegalArgumentException("No conversion of type " +
-                  readerType.getCategory() + " to self needed");
-        }
-        return new AnyIntegerFromAnyIntegerTreeReader(columnId, fileType, readerType,
-                context);
+    case BOOLEAN:
+    case BYTE:
+    case SHORT:
+    case INT:
+    case LONG:
+      if (fileType.getCategory() == readerType.getCategory()) {
+        throw new IllegalArgumentException("No conversion of type " +
+            readerType.getCategory() + " to self needed");
+      }
+      return new AnyIntegerFromAnyIntegerTreeReader(columnId, fileType, readerType,
+          context);
 
-      case FLOAT:
-      case DOUBLE:
-        return new DoubleFromAnyIntegerTreeReader(columnId, fileType, context);
+    case FLOAT:
+    case DOUBLE:
+      return new DoubleFromAnyIntegerTreeReader(columnId, fileType, context);
 
-      case DECIMAL:
-        return new DecimalFromAnyIntegerTreeReader(columnId, fileType, context);
+    case DECIMAL:
+      return new DecimalFromAnyIntegerTreeReader(columnId, fileType, context);
 
-      case STRING:
-      case CHAR:
-      case VARCHAR:
-        return new StringGroupFromBooleanTreeReader(columnId, fileType, readerType, context);
+    case STRING:
+    case CHAR:
+    case VARCHAR:
+      return new StringGroupFromBooleanTreeReader(columnId, fileType, readerType,
+          context);
 
-      case TIMESTAMP:
-      case TIMESTAMP_INSTANT:
-        return new TimestampFromAnyIntegerTreeReader(columnId, fileType, context,
-                readerType.getCategory() == Category.TIMESTAMP_INSTANT);
+    case TIMESTAMP:
+    case TIMESTAMP_INSTANT:
+      return new TimestampFromAnyIntegerTreeReader(columnId, fileType, context,
+          readerType.getCategory() == Category.TIMESTAMP_INSTANT);
 
-      // Not currently supported conversion(s):
-      case BINARY:
-      case DATE:
-      case STRUCT:
-      case LIST:
-      case MAP:
-      case UNION:
-      default:
-        throw new IllegalArgumentException("Unsupported type " +
-                readerType.getCategory());
+    // Not currently supported conversion(s):
+    case BINARY:
+    case DATE:
+    case STRUCT:
+    case LIST:
+    case MAP:
+    case UNION:
+    default:
+      throw new IllegalArgumentException("Unsupported type " +
+          readerType.getCategory());
     }
   }
 
