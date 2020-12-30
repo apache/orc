@@ -579,11 +579,11 @@ public class TestSchemaEvolution {
   @Test
   public void testBooleanToStringEvolution() throws Exception {
     testFilePath = new Path(workDir, "TestSchemaEvolution." +
-            testCaseName.getMethodName() + ".orc");
+      testCaseName.getMethodName() + ".orc");
     TypeDescription schema = TypeDescription.createBoolean();
     Writer writer = OrcFile.createWriter(testFilePath,
-            OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
-                    .bufferSize(10000));
+      OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+        .bufferSize(10000));
     VectorizedRowBatch batch = new VectorizedRowBatch(1, 1024);
     LongColumnVector lcv = new LongColumnVector(1024);
     batch.cols[0] = lcv;
@@ -596,7 +596,7 @@ public class TestSchemaEvolution {
     writer.close();
 
     Reader reader = OrcFile.createReader(testFilePath,
-            OrcFile.readerOptions(conf).filesystem(fs));
+      OrcFile.readerOptions(conf).filesystem(fs));
     TypeDescription schemaOnRead = TypeDescription.createString();
     RecordReader rows = reader.rows(reader.options().schema(schemaOnRead));
     batch = schemaOnRead.createRowBatch();
