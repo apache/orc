@@ -480,19 +480,20 @@ public class RecordReaderImpl implements RecordReader {
                                            OrcFile.WriterVersion writerVersion,
                                            TypeDescription type) {
     return evaluatePredicateProto(statsProto, predicate, kind, encoding, bloomFilter,
-        writerVersion, type, false);
+        writerVersion, type, true, false);
   }
 
   /**
    * Evaluate a predicate with respect to the statistics from the column
    * that is referenced in the predicate.
    * Includes option to specify if timestamp column stats values
-   * should be in UTC.
+   * should be in UTC and if the file writer used proleptic Gregorian calendar.
    * @param statsProto the statistics for the column mentioned in the predicate
    * @param predicate the leaf predicate we need to evaluation
    * @param bloomFilter the bloom filter
    * @param writerVersion the version of software that wrote the file
    * @param type what is the kind of this column
+   * @param writerUsedProlepticGregorian file written using the proleptic Gregorian calendar
    * @param useUTCTimestamp
    * @return the set of truth values that may be returned for the given
    *   predicate.
@@ -505,8 +506,9 @@ public class RecordReaderImpl implements RecordReader {
                                            OrcProto.BloomFilter bloomFilter,
                                            OrcFile.WriterVersion writerVersion,
                                            TypeDescription type,
+                                           boolean writerUsedProlepticGregorian,
                                            boolean useUTCTimestamp) {
-    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null, statsProto);
+    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null, statsProto, writerUsedProlepticGregorian, true);
     ValueRange range = getValueRange(cs, predicate, useUTCTimestamp);
 
     // files written before ORC-135 stores timestamp wrt to local timezone causing issues with PPD.
@@ -1031,7 +1033,7 @@ public class RecordReaderImpl implements RecordReader {
                     predicate, bfk, encodings.get(columnIx), bf,
                     writerVersion, evolution.getFileSchema().
                     findSubtype(columnIx),
-                    useUTCTimestamp);
+                    writerUsedProlepticGregorian, useUTCTimestamp);
               } catch (Exception e) {
                 exceptionCount[pred] += 1;
                 if (e instanceof SargCastException) {
