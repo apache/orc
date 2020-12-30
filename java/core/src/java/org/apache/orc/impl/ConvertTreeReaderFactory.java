@@ -1767,8 +1767,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
 
     case FLOAT:
     case DOUBLE:
-      return new DoubleFromAnyIntegerTreeReader(columnId, fileType,
-          context);
+      return new DoubleFromAnyIntegerTreeReader(columnId, fileType, context);
 
     case DECIMAL:
       return new DecimalFromAnyIntegerTreeReader(columnId, fileType, context);
