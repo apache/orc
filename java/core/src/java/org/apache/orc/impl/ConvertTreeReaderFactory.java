@@ -1787,7 +1787,6 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     // Not currently supported conversion(s):
     case BINARY:
     case DATE:
-
     case STRUCT:
     case LIST:
     case MAP:
