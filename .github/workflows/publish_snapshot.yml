@@ -4,11 +4,17 @@ on:
   push:
     branches:
     - master
+  pull_request:
+    branches:
+    - master
 
 jobs:
   publish-snapshot:
     if: github.repository == 'apache/orc'
     runs-on: ubuntu-latest
+    env:
+      ASF_USERNAME: ${{ secrets.NEXUS_USER }}
+      ASF_PASSWORD: ${{ secrets.NEXUS_PW }}
     steps:
     - uses: actions/checkout@master
 
@@ -16,10 +22,8 @@ jobs:
       with:
         java-version: 8
 
-    - name: Release Maven package
-      uses: samuelmeuli/action-maven-publish@v1
-      with:
-        directory: java
-        server_id: apache.snapshots.https
-        nexus_username: ${{ secrets.NEXUS_USER }}
-        nexus_password: ${{ secrets.NEXUS_PW }}
+    - name: Publish snapshot
+      run: |
+        cd java
+        echo "<settings><servers><server><id>apache.snapshots.https</id><username>$ASF_USERNAME</username><password>$ASF_PASSWORD</password></server></servers></settings>" > settings.xml
+        mvn --settings settings.xml -DskipTests deploy
