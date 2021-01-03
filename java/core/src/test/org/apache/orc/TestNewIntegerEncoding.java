@@ -1224,41 +1224,8 @@ public class TestNewIntegerEncoding {
   // and 8 bytes is used to encoding it.
   @Test
   public void testPatchedBaseLargeNegativeInteger() throws Exception {
-    TypeDescription schema = TypeDescription.createLong();
-
-    List<Long> input = Lists.newArrayList();
-    for (int i = 0; i < 30; ++i) {
-      input.add(-17887939293638656L);
-      input.add(-15605417571528704L);
-      input.add(-15605417571528704L);
-      input.add(-13322895849418752L);
-      input.add(-13322895849418752L);
-      input.add(-84742859065569280L);
-      input.add(-15605417571528704L);
-      input.add(-13322895849418752L);
-      input.add(-13322895849418752L);
-      input.add(-15605417571528704L);
-      input.add(-13322895849418752L);
-      input.add(-13322895849418752L);
-      input.add(-15605417571528704L);
-      input.add(-15605417571528704L);
-      input.add(-13322895849418752L);
-      input.add(-13322895849418752L);
-      input.add(-15605417571528704L);
-      input.add(-15605417571528704L);
-      input.add(-13322895849418752L);
-      input.add(-13322895849418752L);
-      input.add(-11040374127308800L);
-      input.add(-15605417571528704L);
-      input.add(-13322895849418752L);
-      input.add(-13322895849418752L);
-      input.add(-15605417571528704L);
-      input.add(-15605417571528704L);
-      input.add(-13322895849418752L);
-      input.add(-13322895849418752L);
-      input.add(-15605417571528704L);
-      input.add(-13322895849418752L);
-    }
+    TypeDescription schema = TypeDescription.createStruct()
+        .addField("int", TypeDescription.createLong());
 
     Writer writer = OrcFile.createWriter(testFilePath,
         OrcFile.writerOptions(conf)
@@ -1266,9 +1233,43 @@ public class TestNewIntegerEncoding {
             .stripeSize(100000)
             .bufferSize(10000)
             .encodingStrategy(encodingStrategy));
-    VectorizedRowBatch batch = schema.createRowBatch(5120);
-    for(Long l : input) {
-      appendLong(batch, l);
+    VectorizedRowBatch batch = schema.createRowBatch();
+
+    List<Long> longList = Lists.newArrayList();
+    for (int i = 0; i < 25; ++i) {
+      longList.add(-17887939293638656L);
+      longList.add(-15605417571528704L);
+      longList.add(-15605417571528704L);
+      longList.add(-13322895849418752L);
+      longList.add(-13322895849418752L);
+      longList.add(-84742859065569280L);
+      longList.add(-15605417571528704L);
+      longList.add(-13322895849418752L);
+      longList.add(-13322895849418752L);
+      longList.add(-15605417571528704L);
+      longList.add(-13322895849418752L);
+      longList.add(-13322895849418752L);
+      longList.add(-15605417571528704L);
+      longList.add(-15605417571528704L);
+      longList.add(-13322895849418752L);
+      longList.add(-13322895849418752L);
+      longList.add(-15605417571528704L);
+      longList.add(-15605417571528704L);
+      longList.add(-13322895849418752L);
+      longList.add(-13322895849418752L);
+      longList.add(-11040374127308800L);
+      longList.add(-15605417571528704L);
+      longList.add(-13322895849418752L);
+      longList.add(-13322895849418752L);
+      longList.add(-15605417571528704L);
+      longList.add(-15605417571528704L);
+      longList.add(-13322895849418752L);
+      longList.add(-13322895849418752L);
+      longList.add(-15605417571528704L);
+      longList.add(-13322895849418752L);
+    }
+    for (Long currLong : longList) {
+      appendLong(batch, currLong);
     }
     writer.addRowBatch(batch);
     writer.close();
@@ -1278,11 +1279,11 @@ public class TestNewIntegerEncoding {
     RecordReader rows = reader.rows();
     batch = reader.getSchema().createRowBatch();
     int idx = 0;
-    while (rows.nextBatch(batch)) {
-      for(int r=0; r < batch.size; ++r) {
-        assertEquals(input.get(idx++).longValue(),
-            ((LongColumnVector) batch.cols[0]).vector[r]);
-      }
+    assertEquals(rows.nextBatch(batch), true);
+    assertEquals(batch.size, longList.size());
+    for (int r = 0; r < batch.size; ++r) {
+      assertEquals(longList.get(idx++).longValue(),
+          ((LongColumnVector) batch.cols[0]).vector[r]);
     }
   }
 
