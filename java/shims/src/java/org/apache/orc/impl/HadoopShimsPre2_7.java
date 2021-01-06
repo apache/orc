@@ -167,7 +167,7 @@ public class HadoopShimsPre2_7 implements HadoopShims {
           KeyProviderCryptoExtension.EncryptedKeyVersion.createForDecryption(
               key.getKeyName(), buildKeyVersionName(key), iv, encryptedKey);
       try {
-        KeyProviderCryptoExtension.KeyVersion decryptedKey = null;
+        KeyProviderCryptoExtension.KeyVersion decryptedKey;
         if (provider instanceof KeyProviderCryptoExtension) {
           decryptedKey = ((KeyProviderCryptoExtension) provider).decryptEncryptedKey(param);
         } else if (provider instanceof CryptoExtension) {
