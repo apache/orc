@@ -11,6 +11,11 @@
   - building
   - releases
 
+- title: Using in Spark
+  docs:
+  - spark-ddl
+  - spark-config
+
 - title: Using in Hive
   docs:
   - hive-ddl
