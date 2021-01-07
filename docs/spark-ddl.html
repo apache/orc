@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>Types</title>
+  <title>Spark DDL</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="generator" content="Jekyll v3.8.6">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
@@ -820,127 +820,46 @@
 
       <div class="unit four-fifths">
         <article>
-          <h1>Types</h1>
-          <p>ORC files are completely self-describing and do not depend on the Hive
-Metastore or any other external metadata. The file includes all of the
-type and encoding information for the objects stored in the file. Because the
-file is self-contained, it does not depend on the user’s environment to
-correctly interpret the file’s contents.</p>
+          <h1>Spark DDL</h1>
+          <p>ORC is well integrated into Spark, so storing your <code class="highlighter-rouge">istari</code> table as ORC
+is done by adding <code class="highlighter-rouge">USING ORC</code>.</p>
 
-<p>ORC provides a rich set of scalar and compound types:</p>
-
-<ul>
-  <li>Integer
-    <ul>
-      <li>boolean (1 bit)</li>
-      <li>tinyint (8 bit)</li>
-      <li>smallint (16 bit)</li>
-      <li>int (32 bit)</li>
-      <li>bigint (64 bit)</li>
-    </ul>
-  </li>
-  <li>Floating point
-    <ul>
-      <li>float</li>
-      <li>double</li>
-    </ul>
-  </li>
-  <li>String types
-    <ul>
-      <li>string</li>
-      <li>char</li>
-      <li>varchar</li>
-    </ul>
-  </li>
-  <li>Binary blobs
-    <ul>
-      <li>binary</li>
-    </ul>
-  </li>
-  <li>Date/time
-    <ul>
-      <li>timestamp</li>
-      <li>timestamp with local time zone</li>
-      <li>date</li>
-    </ul>
-  </li>
-  <li>Compound types
-    <ul>
-      <li>struct</li>
-      <li>list</li>
-      <li>map</li>
-      <li>union</li>
-    </ul>
-  </li>
-</ul>
-
-<p>All ORC file are logically sequences of identically typed objects. Hive
-always uses a struct with a field for each of the top-level columns as
-the root object type, but that is not required. All types in ORC can take
-null values including the compound types.</p>
-
-<p>Compound types have children columns that hold the values for their
-sub-elements. For example, a struct column has one child column for
-each field of the struct. Lists always have a single child column for
-the element values and maps always have two child columns. Union
-columns have one child column for each of the variants.</p>
-
-<p>Given the following definition of the table Foobar, the columns in the
-file would form the given tree.</p>
-
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>create table Foobar (
- myInt int,
- myMap map&lt;string,
- struct&lt;myString : string,
- myDouble: double&gt;&gt;,
- myTime timestamp
-);
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CREATE TABLE istari (
+  name STRING,
+  color STRING
+) USING ORC;
 </code></pre></div></div>
 
-<p><img src="/img/TreeWriters.png" alt="ORC column structure" /></p>
+<p>To get information about an ORC file, use the <code class="highlighter-rouge">orc-tools</code> command.</p>
 
-<h1 id="timestamps">Timestamps</h1>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% orc-tools meta &lt;path_to_file&gt;
+</code></pre></div></div>
 
-<p>ORC includes two different forms of timestamps from the SQL world:</p>
+<p>To display the data in the ORC file, use:</p>
 
-<ul>
-  <li><strong>Timestamp</strong> is a date and time without a time zone, which does not change based on the time zone of the reader.</li>
-  <li><strong>Timestamp with local time zone</strong> is a fixed instant in time, which does change based on the time zone of the reader.</li>
-</ul>
-
-<p>Unless your application uses UTC consistently, <strong>timestamp with
-local time zone</strong> is strongly preferred over <strong>timestamp</strong> for most
-use cases. When users say an event is at 10:00, it is always in
-reference to a certain timezone and means a point in time, rather than
-10:00 in an arbitrary time zone.</p>
-
-<table>
-  <thead>
-    <tr>
-      <th>Type</th>
-      <th>Value in America/Los_Angeles</th>
-      <th>Value in America/New_York</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><strong>timestamp</strong></td>
-      <td>2014-12-12 6:00:00</td>
-      <td>2014-12-12 6:00:00</td>
-    </tr>
-    <tr>
-      <td><strong>timestamp with local time zone</strong></td>
-      <td>2014-12-12 9:00:00</td>
-      <td>2014-12-12 6:00:00</td>
-    </tr>
-  </tbody>
-</table>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% orc-tools data &lt;path_to_file&gt;
+</code></pre></div></div>
 
           
 
 
 
 
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
 
   
   
@@ -955,14 +874,14 @@ reference to a certain timezone and means a point in time, rather than
           
             
             
-            <a href="/docs/adopters.html" class="prev">Back</a>
+            <a href="/docs/releases.html" class="prev">Back</a>
           
       </div>
       <div class="right align-left">
           
             
             
-            <a href="/docs/indexes.html" class="next">Next</a>
+            <a href="/docs/spark-config.html" class="next">Next</a>
           
       </div>
     </div>
@@ -1056,7 +975,7 @@ reference to a certain timezone and means a point in time, rather than
     
   
     
-      <li class="current"><a href="/docs/types.html">Types</a></li>
+      <li class=""><a href="/docs/types.html">Types</a></li>
       
 
 
@@ -1200,7 +1119,7 @@ reference to a certain timezone and means a point in time, rather than
     
   
     
-      <li class=""><a href="/docs/spark-ddl.html">Spark DDL</a></li>
+      <li class="current"><a href="/docs/spark-ddl.html">Spark DDL</a></li>
       
 
 

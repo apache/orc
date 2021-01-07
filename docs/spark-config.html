@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>Types</title>
+  <title>Spark Configuration</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="generator" content="Jekyll v3.8.6">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
@@ -820,118 +820,123 @@
 
       <div class="unit four-fifths">
         <article>
-          <h1>Types</h1>
-          <p>ORC files are completely self-describing and do not depend on the Hive
-Metastore or any other external metadata. The file includes all of the
-type and encoding information for the objects stored in the file. Because the
-file is self-contained, it does not depend on the user’s environment to
-correctly interpret the file’s contents.</p>
+          <h1>Spark Configuration</h1>
+          <h2 id="table-properties">Table properties</h2>
 
-<p>ORC provides a rich set of scalar and compound types:</p>
-
-<ul>
-  <li>Integer
-    <ul>
-      <li>boolean (1 bit)</li>
-      <li>tinyint (8 bit)</li>
-      <li>smallint (16 bit)</li>
-      <li>int (32 bit)</li>
-      <li>bigint (64 bit)</li>
-    </ul>
-  </li>
-  <li>Floating point
-    <ul>
-      <li>float</li>
-      <li>double</li>
-    </ul>
-  </li>
-  <li>String types
-    <ul>
-      <li>string</li>
-      <li>char</li>
-      <li>varchar</li>
-    </ul>
-  </li>
-  <li>Binary blobs
-    <ul>
-      <li>binary</li>
-    </ul>
-  </li>
-  <li>Date/time
-    <ul>
-      <li>timestamp</li>
-      <li>timestamp with local time zone</li>
-      <li>date</li>
-    </ul>
-  </li>
-  <li>Compound types
-    <ul>
-      <li>struct</li>
-      <li>list</li>
-      <li>map</li>
-      <li>union</li>
-    </ul>
-  </li>
-</ul>
-
-<p>All ORC file are logically sequences of identically typed objects. Hive
-always uses a struct with a field for each of the top-level columns as
-the root object type, but that is not required. All types in ORC can take
-null values including the compound types.</p>
-
-<p>Compound types have children columns that hold the values for their
-sub-elements. For example, a struct column has one child column for
-each field of the struct. Lists always have a single child column for
-the element values and maps always have two child columns. Union
-columns have one child column for each of the variants.</p>
-
-<p>Given the following definition of the table Foobar, the columns in the
-file would form the given tree.</p>
-
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>create table Foobar (
- myInt int,
- myMap map&lt;string,
- struct&lt;myString : string,
- myDouble: double&gt;&gt;,
- myTime timestamp
-);
-</code></pre></div></div>
-
-<p><img src="/img/TreeWriters.png" alt="ORC column structure" /></p>
-
-<h1 id="timestamps">Timestamps</h1>
-
-<p>ORC includes two different forms of timestamps from the SQL world:</p>
-
-<ul>
-  <li><strong>Timestamp</strong> is a date and time without a time zone, which does not change based on the time zone of the reader.</li>
-  <li><strong>Timestamp with local time zone</strong> is a fixed instant in time, which does change based on the time zone of the reader.</li>
-</ul>
-
-<p>Unless your application uses UTC consistently, <strong>timestamp with
-local time zone</strong> is strongly preferred over <strong>timestamp</strong> for most
-use cases. When users say an event is at 10:00, it is always in
-reference to a certain timezone and means a point in time, rather than
-10:00 in an arbitrary time zone.</p>
+<p>Tables stored as ORC files use table properties to control their behavior. By
+using table properties, the table owner ensures that all clients store data
+with the same options.</p>
 
 <table>
   <thead>
     <tr>
-      <th>Type</th>
-      <th>Value in America/Los_Angeles</th>
-      <th>Value in America/New_York</th>
+      <th style="text-align: left">Key</th>
+      <th style="text-align: left">Default</th>
+      <th style="text-align: left">Notes</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><strong>timestamp</strong></td>
-      <td>2014-12-12 6:00:00</td>
-      <td>2014-12-12 6:00:00</td>
+      <td style="text-align: left">orc.compress</td>
+      <td style="text-align: left">ZLIB</td>
+      <td style="text-align: left">high level compression = {NONE, ZLIB, SNAPPY, ZSTD}</td>
     </tr>
     <tr>
-      <td><strong>timestamp with local time zone</strong></td>
-      <td>2014-12-12 9:00:00</td>
-      <td>2014-12-12 6:00:00</td>
+      <td style="text-align: left">orc.compress.size</td>
+      <td style="text-align: left">262,144</td>
+      <td style="text-align: left">compression chunk size</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">orc.stripe.size</td>
+      <td style="text-align: left">67,108,864</td>
+      <td style="text-align: left">memory buffer in bytes for writing</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">orc.row.index.stride</td>
+      <td style="text-align: left">10,000</td>
+      <td style="text-align: left">number of rows between index entries</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">orc.create.index</td>
+      <td style="text-align: left">true</td>
+      <td style="text-align: left">create indexes?</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">orc.bloom.filter.columns</td>
+      <td style="text-align: left">””</td>
+      <td style="text-align: left">comma separated list of column names</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">orc.bloom.filter.fpp</td>
+      <td style="text-align: left">0.05</td>
+      <td style="text-align: left">bloom filter false positive rate</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">orc.key.provider</td>
+      <td style="text-align: left">“hadoop”</td>
+      <td style="text-align: left">key provider</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">orc.encrypt</td>
+      <td style="text-align: left">””</td>
+      <td style="text-align: left">list of keys and columns to encrypt with</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">orc.mask</td>
+      <td style="text-align: left">””</td>
+      <td style="text-align: left">masks to apply to the encrypted columns</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>For example, to create an ORC table with Zstandard compression:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CREATE TABLE encrypted (
+  ssn STRING,
+  email STRING,
+  name STRING
+)
+USING ORC
+OPTIONS (
+  hadoop.security.key.provider.path "kms://http@localhost:9600/kms",
+  orc.key.provider "hadoop",
+  orc.encrypt "pii:ssn,email",
+  orc.mask "nullify:ssn;sha256:email"
+)
+</code></pre></div></div>
+
+<h2 id="configuration-properties">Configuration properties</h2>
+
+<p>There are more Spark configuration properties related to ORC files:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Key</th>
+      <th style="text-align: left">Default</th>
+      <th style="text-align: left">Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">spark.sql.orc.impl</td>
+      <td style="text-align: left">native</td>
+      <td style="text-align: left">The name of ORC implementation. It can be one of <code class="highlighter-rouge">native</code> or <code class="highlighter-rouge">hive</code>. <code class="highlighter-rouge">native</code> means the native ORC support. <code class="highlighter-rouge">hive</code> means the ORC library in Hive.</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">spark.sql.orc.enableVectorizedReader</td>
+      <td style="text-align: left">true</td>
+      <td style="text-align: left">Enables vectorized orc decoding in <code class="highlighter-rouge">native</code> implementation.</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">spark.sql.orc.mergeSchema</td>
+      <td style="text-align: left">false</td>
+      <td style="text-align: left">When true, the ORC data source merges schemas collected from all data files, otherwise the schema is picked from a random data file.</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">spark.sql.hive.convertMetastoreOrc</td>
+      <td style="text-align: left">true</td>
+      <td style="text-align: left">Spark SQL will use the Hive SerDe for ORC tables instead of the built-in support.</td>
     </tr>
   </tbody>
 </table>
@@ -950,19 +955,37 @@ reference to a certain timezone and means a point in time, rather than
 
   
   
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
     <div class="section-nav">
       <div class="left align-right">
           
             
             
-            <a href="/docs/adopters.html" class="prev">Back</a>
+            <a href="/docs/spark-ddl.html" class="prev">Back</a>
           
       </div>
       <div class="right align-left">
           
             
             
-            <a href="/docs/indexes.html" class="next">Next</a>
+            <a href="/docs/hive-ddl.html" class="next">Next</a>
           
       </div>
     </div>
@@ -1056,7 +1079,7 @@ reference to a certain timezone and means a point in time, rather than
     
   
     
-      <li class="current"><a href="/docs/types.html">Types</a></li>
+      <li class=""><a href="/docs/types.html">Types</a></li>
       
 
 
@@ -1238,7 +1261,7 @@ reference to a certain timezone and means a point in time, rather than
     
   
     
-      <li class=""><a href="/docs/spark-config.html">Spark Configuration</a></li>
+      <li class="current"><a href="/docs/spark-config.html">Spark Configuration</a></li>
       
 
 
