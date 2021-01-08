@@ -20,6 +20,7 @@ package org.apache.orc.impl;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.key.KeyProviderCryptoExtension;
+import org.apache.hadoop.crypto.key.KeyProviderCryptoExtension.CryptoExtension;
 import org.apache.hadoop.crypto.key.KeyProviderFactory;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.orc.EncryptionAlgorithm;
@@ -166,9 +167,15 @@ public class HadoopShimsPre2_7 implements HadoopShims {
           KeyProviderCryptoExtension.EncryptedKeyVersion.createForDecryption(
               key.getKeyName(), buildKeyVersionName(key), iv, encryptedKey);
       try {
-        KeyProviderCryptoExtension.KeyVersion decryptedKey =
-            ((KeyProviderCryptoExtension) provider)
-                .decryptEncryptedKey(param);
+        KeyProviderCryptoExtension.KeyVersion decryptedKey;
+        if (provider instanceof KeyProviderCryptoExtension) {
+          decryptedKey = ((KeyProviderCryptoExtension) provider).decryptEncryptedKey(param);
+        } else if (provider instanceof CryptoExtension) {
+          decryptedKey = ((CryptoExtension) provider).decryptEncryptedKey(param);
+        } else {
+          throw new UnsupportedOperationException(
+              provider.getClass().getCanonicalName() + " is not supported.");
+        }
         return new LocalKey(algorithm, decryptedKey.getMaterial(),
                             encryptedKey);
       } catch (GeneralSecurityException e) {
@@ -186,10 +193,16 @@ public class HadoopShimsPre2_7 implements HadoopShims {
           KeyProviderCryptoExtension.EncryptedKeyVersion.createForDecryption(
               key.getKeyName(), buildKeyVersionName(key), iv, encryptedKey);
       try {
-        KeyProviderCryptoExtension.KeyVersion decrypted =
-            ((KeyProviderCryptoExtension) provider)
-                .decryptEncryptedKey(param);
-        return new SecretKeySpec(decrypted.getMaterial(),
+        KeyProviderCryptoExtension.KeyVersion decryptedKey;
+        if (provider instanceof KeyProviderCryptoExtension) {
+          decryptedKey = ((KeyProviderCryptoExtension) provider).decryptEncryptedKey(param);
+        } else if (provider instanceof CryptoExtension) {
+          decryptedKey = ((CryptoExtension) provider).decryptEncryptedKey(param);
+        } else {
+          throw new UnsupportedOperationException(
+              provider.getClass().getCanonicalName() + " is not supported.");
+        }
+        return new SecretKeySpec(decryptedKey.getMaterial(),
             algorithm.getAlgorithm());
       } catch (GeneralSecurityException e) {
         return null;
