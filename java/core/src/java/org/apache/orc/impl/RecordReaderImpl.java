@@ -18,7 +18,6 @@
 package org.apache.orc.impl;
 
 import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.orc.CompressionKind;
 
 import java.io.IOException;
 import java.math.BigDecimal;
