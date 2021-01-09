@@ -18,24 +18,13 @@
 
 package org.apache.orc.impl;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.key.KeyProvider;
-import org.apache.hadoop.crypto.key.KeyProviderCryptoExtension;
-import org.apache.hadoop.crypto.key.KeyProviderFactory;
 import org.apache.hadoop.crypto.key.kms.KMSClientProvider;
-import org.apache.hadoop.io.BytesWritable;
 import org.apache.orc.EncryptionAlgorithm;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.net.URI;
-import java.security.Key;
 import java.sql.Date;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
 
 import static junit.framework.Assert.assertEquals;
 

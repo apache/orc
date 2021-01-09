@@ -41,8 +41,6 @@ import org.junit.runners.Parameterized;
 
 import com.google.common.collect.Lists;
 
-import junit.framework.Assert;
-
 /**
  *
  */

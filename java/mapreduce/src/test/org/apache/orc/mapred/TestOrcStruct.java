@@ -20,24 +20,18 @@ package org.apache.orc.mapred;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.common.io.FileMetadataCache;
 import org.apache.hadoop.io.BooleanWritable;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.orc.CompressionKind;
-import org.apache.orc.FileMetadata;
 import org.apache.orc.OrcFile;
-import org.apache.orc.OrcProto;
 import org.apache.orc.Reader;
-import org.apache.orc.StripeInformation;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
 import org.junit.Assert;
