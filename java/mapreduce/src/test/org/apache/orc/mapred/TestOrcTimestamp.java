@@ -18,8 +18,6 @@
 
 package org.apache.orc.mapred;
 
-import org.apache.hadoop.io.DataInputBuffer;
-import org.apache.hadoop.io.DataOutputBuffer;
 import org.junit.Test;
 
 import java.io.IOException;

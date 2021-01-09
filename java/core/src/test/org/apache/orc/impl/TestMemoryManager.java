@@ -20,7 +20,6 @@ package org.apache.orc.impl;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.orc.MemoryManager;
-import org.apache.orc.OrcConf;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.junit.Test;
@@ -31,8 +30,6 @@ import java.lang.management.ManagementFactory;
 
 import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 
 /**
  * Test the ORC memory manager.

@@ -17,7 +17,6 @@
  */
 package org.apache.orc.impl;
 
-import java.time.LocalDate;
 import java.time.chrono.ChronoLocalDate;
 import java.time.chrono.Chronology;
 import java.time.chrono.IsoChronology;

@@ -18,39 +18,14 @@
 
 package org.apache.orc.impl.writer;
 
-import com.google.protobuf.ByteString;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
-import org.apache.orc.ColumnStatistics;
-import org.apache.orc.CompressionCodec;
-import org.apache.orc.CompressionKind;
-import org.apache.orc.MemoryManager;
 import org.apache.orc.OrcFile;
-import org.apache.orc.OrcProto;
-import org.apache.orc.OrcUtils;
-import org.apache.orc.PhysicalWriter;
-import org.apache.orc.StripeInformation;
-import org.apache.orc.TypeDescription;
-import org.apache.orc.Writer;
-import org.apache.orc.impl.OutStream;
-import org.apache.orc.impl.PhysicalFsWriter;
-import org.apache.orc.impl.ReaderImpl;
-import org.apache.orc.impl.StreamName;
 import org.apache.orc.impl.WriterImpl;
-import org.apache.orc.impl.WriterInternal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
-import java.util.TreeMap;
 
 /**
  * An ORCv2 file writer. The file is divided into stripes, which is the natural

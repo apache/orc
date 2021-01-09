@@ -17,7 +17,6 @@
  */
 package org.apache.orc;
 
-import java.time.LocalDate;
 import java.time.chrono.ChronoLocalDate;
 import java.util.Date;
 

@@ -18,7 +18,6 @@
 package org.apache.orc;
 
 import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNotNull;
 
 import java.io.File;
 import java.sql.Timestamp;

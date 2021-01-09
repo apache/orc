@@ -30,7 +30,6 @@ import org.apache.orc.impl.PositionedOutputStream;
 import org.apache.orc.impl.StreamName;
 
 import java.io.IOException;
-import java.util.function.Consumer;
 
 public class BooleanTreeWriter extends TreeWriterBase {
   private final BitFieldWriter writer;
