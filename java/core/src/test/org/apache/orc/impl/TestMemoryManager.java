@@ -23,7 +23,7 @@ import org.apache.orc.MemoryManager;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.junit.Test;
-import org.mockito.Matchers;
+import static org.mockito.ArgumentMatchers.eq;
 import org.mockito.Mockito;
 
 import java.lang.management.ManagementFactory;
@@ -124,8 +124,7 @@ public class TestMemoryManager {
       mgr.checkMemory(0, calls[i]);
     }
     for(int call=0; call < calls.length; ++call) {
-      Mockito.verify(calls[call])
-          .checkMemory(Matchers.doubleThat(closeTo(0.2, ERROR)));
+      Mockito.verify(calls[call]).checkMemory(eq(0.2d));
     }
   }
 }
