@@ -98,7 +98,7 @@ public class SHA256MaskFactory extends MaskFactory {
       case VARCHAR: {
         /* truncate the hash if max length for varchar is less than hash length
          * on the other hand if if the max length is more than hash length (64
-	 * bytes) we use the hash length (64 bytes) always.
+         * bytes) we use the hash length (64 bytes) always.
          */
         if (schema.getMaxLength() < hash.length) {
           targetLength = schema.getMaxLength();
