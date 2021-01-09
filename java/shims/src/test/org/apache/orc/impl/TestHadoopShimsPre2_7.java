@@ -26,7 +26,7 @@ import org.junit.Test;
 import java.sql.Date;
 import java.util.HashMap;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 public class TestHadoopShimsPre2_7 {
 
