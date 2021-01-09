@@ -18,7 +18,7 @@
 
 package org.apache.orc.impl;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

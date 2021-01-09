@@ -17,7 +17,7 @@
  */
 package org.apache.orc;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.sql.Timestamp;
@@ -26,7 +26,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.TimeZone;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;

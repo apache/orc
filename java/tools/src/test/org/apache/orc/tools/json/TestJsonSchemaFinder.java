@@ -25,7 +25,7 @@ import com.google.gson.JsonPrimitive;
 import com.google.gson.internal.LazilyParsedNumber;
 import org.junit.Test;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 public class TestJsonSchemaFinder {
 

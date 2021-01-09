@@ -17,7 +17,7 @@
  */
 package org.apache.orc;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 import static org.apache.orc.TestVectorOrcFile.assertEmptyStats;
 import static org.junit.Assert.assertArrayEquals;
 

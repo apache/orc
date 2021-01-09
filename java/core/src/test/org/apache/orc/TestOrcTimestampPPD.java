@@ -40,7 +40,7 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.TimeZone;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 public class TestOrcTimestampPPD {
   Path workDir =
