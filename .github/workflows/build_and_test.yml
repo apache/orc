@@ -46,3 +46,4 @@ jobs:
         make package test-out
         cd ../java
         mvn apache-rat:check
+        mvn checkstyle:check
