@@ -32,7 +32,6 @@ import org.apache.orc.impl.RunLengthIntegerWriterV2;
 import org.apache.orc.impl.StreamName;
 
 import java.io.IOException;
-import java.util.function.Consumer;
 
 /**
  * Writer for short decimals in ORCv2.

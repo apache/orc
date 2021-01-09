@@ -20,13 +20,9 @@ package org.apache.orc.examples;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.hadoop.conf.Configuration;
-
-import java.util.Map;
-import java.util.Properties;
 
 /**
  * Driver program for the java ORC examples.

@@ -18,7 +18,6 @@
 
 package org.apache.orc.impl;
 
-import org.apache.orc.CompressionCodec;
 import org.apache.orc.DataReader;
 import org.apache.orc.OrcProto;
 import org.apache.orc.StripeInformation;
