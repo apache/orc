@@ -669,7 +669,8 @@ public class RecordReaderImpl implements RecordReader {
           // for a single value, look through to see if that value is in the
           // set
           for (Object arg : predicate.getLiteralList()) {
-            if (range.compare((Comparable) arg) == Location.MIN) {
+            predObj = getBaseObjectForComparison(predicate.getType(), (Comparable) arg);
+            if (range.compare(predObj) == Location.MIN) {
               return range.addNull(TruthValue.YES);
             }
           }
