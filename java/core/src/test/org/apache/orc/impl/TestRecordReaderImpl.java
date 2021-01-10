@@ -1083,6 +1083,23 @@ public class TestRecordReaderImpl {
   }
 
   @Test
+  public void testInDatePredConversion() {
+    List<Object> args = new ArrayList<>();
+    args.add(toDate(LocalDate.ofEpochDay(15)));
+    PredicateLeaf pred = createPredicateLeaf
+        (PredicateLeaf.Operator.IN, PredicateLeaf.Type.DATE,
+            "x", null, args);
+    assertEquals(TruthValue.YES_NULL,
+        evaluateInteger(createDateStats(15, 15), pred));
+    assertEquals(TruthValue.YES_NO_NULL,
+        evaluateInteger(createDateStats(10, 30), pred));
+    assertEquals(TruthValue.NO_NULL,
+        evaluateInteger(createDateStats(5, 10), pred));
+    assertEquals(TruthValue.NO_NULL,
+        evaluateInteger(createDateStats(16, 30), pred));
+  }
+
+  @Test
   public void testBetween() {
     List<Object> args = new ArrayList<Object>();
     args.add(10L);
