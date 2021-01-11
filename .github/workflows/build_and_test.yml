@@ -1,4 +1,4 @@
-name: branch-1.6
+name: Build and test
 
 on:
   push:
