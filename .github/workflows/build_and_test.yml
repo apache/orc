@@ -37,8 +37,8 @@ jobs:
         java-version: ${{ matrix.java }}
     - name: "Test"
       run: |
-        apt-get update
-        apt-get install libsasl2-dev
+        sudo apt-get update
+        sudo apt-get install libsasl2-dev
         mkdir -p ~/.m2
         mkdir build
         cd build
