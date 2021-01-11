@@ -1,0 +1,5 @@
+github:
+  enabled_merge_buttons:
+    merge: false
+    squash: true
+    rebase: true
