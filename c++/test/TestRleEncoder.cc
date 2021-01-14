@@ -23,6 +23,7 @@
 
 #include "wrap/orc-proto-wrapper.hh"
 #include "wrap/gtest-wrapper.h"
+#include <iostream>
 
 #ifdef __clang__
   DIAGNOSTIC_IGNORE("-Wmissing-variable-declarations")
@@ -393,7 +394,7 @@ namespace orc {
     data[511] = std::numeric_limits<int64_t>::max();
 
     // Invoke the encoder.
-    const bool isSigned = false;
+    const bool isSigned = true;
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
 
     std::unique_ptr<RleEncoder> encoder = getEncoder(RleVersion_2, memStream, isSigned);
@@ -416,7 +417,7 @@ namespace orc {
     data[511] = std::numeric_limits<int64_t>::max();
 
     // Invoke the encoder.
-    const bool isSigned = false;
+    const bool isSigned = true;
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
 
     std::unique_ptr<RleEncoder> encoder = getEncoder(RleVersion_2, memStream, isSigned);
@@ -438,7 +439,7 @@ namespace orc {
                                 33333L };
 
     // Invoke the encoder.
-    const bool isSigned = false;
+    const bool isSigned = true;
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
 
     std::unique_ptr<RleEncoder> encoder = getEncoder(RleVersion_2, memStream, isSigned);
@@ -462,7 +463,7 @@ namespace orc {
                                 std::numeric_limits<int64_t>::max() };
 
     // Invoke the encoder.
-    const bool isSigned = false;
+    const bool isSigned = true;
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
 
     std::unique_ptr<RleEncoder> encoder = getEncoder(RleVersion_2, memStream, isSigned);
