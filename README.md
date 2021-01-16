@@ -44,7 +44,7 @@ The subdirectories are:
 
 ### Building
 
-* Install java 1.7 or higher
+* Install java 1.8 or higher
 * Install maven 3 or higher
 * Install cmake
 
