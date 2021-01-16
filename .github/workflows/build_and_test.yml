@@ -11,13 +11,14 @@ on:
 jobs:
   build:
     name: "Build with Java ${{ matrix.java }}"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
         java:
           - 1.8
           - 11
+          - 15
     env:
       MAVEN_OPTS: -Xmx2g
       MAVEN_SKIP_RC: true
