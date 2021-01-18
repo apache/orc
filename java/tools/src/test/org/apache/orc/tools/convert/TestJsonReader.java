@@ -32,10 +32,8 @@ import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class TestJsonReader {
     @Test
@@ -87,19 +85,24 @@ public class TestJsonReader {
         LocalDate date1 = LocalDate.of(2021, 1, 18);
         LocalDate date2 = LocalDate.now();
         String inputString = "{\"dt\": \"" + date1.toString() + "\"}\n" +
-                             "{\"dt\": \"" + date2.toString() + "\"}\n";
+                             "{\"dt\": \"" + date2.toString() + "\"}\n" +
+                             "{\"dt\": \"" + date2.toString() + "\"}\n" +
+                             "{\"dt\": null}";
 
 
         StringReader input = new StringReader(inputString);
 
         TypeDescription schema = TypeDescription.fromString("struct<dt:date>");
         JsonReader reader = new JsonReader(input, null, 1, schema, "");
-        VectorizedRowBatch batch = schema.createRowBatch(2);
+        VectorizedRowBatch batch = schema.createRowBatch(4);
         assertTrue(reader.nextBatch(batch));
-        assertEquals(2, batch.size);
+        assertEquals(4, batch.size);
         DateColumnVector cv = (DateColumnVector) batch.cols[0];
         assertEquals(date1, LocalDate.ofEpochDay(cv.vector[0]));
         assertEquals(date2, LocalDate.ofEpochDay(cv.vector[1]));
+        assertEquals(date2, LocalDate.ofEpochDay(cv.vector[2]));
+        assertFalse(cv.isNull[2]);
+        assertTrue(cv.isNull[3]);
     }
 
     @Test
