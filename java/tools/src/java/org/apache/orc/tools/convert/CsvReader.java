@@ -250,8 +250,7 @@ public class CsvReader implements RecordReader {
       if (values[offset] == null || nullString.equals(values[offset])) {
         column.noNulls = false;
         column.isNull[row] = true;
-      }
-      else {
+      } else {
         DateColumnVector vector = (DateColumnVector) column;
 
         final LocalDate dt = LocalDate.parse(values[offset]);

@@ -143,8 +143,7 @@ public class JsonReader implements RecordReader {
       if (value == null || value.isJsonNull()) {
         vect.noNulls = false;
         vect.isNull[row] = true;
-      }
-      else {
+      } else {
         DateColumnVector vector = (DateColumnVector) vect;
 
         final LocalDate dt = LocalDate.parse(value.getAsString());
