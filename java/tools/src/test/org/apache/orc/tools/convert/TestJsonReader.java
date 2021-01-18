@@ -27,8 +27,15 @@ import org.junit.Test;
 import java.io.IOException;
 import java.io.StringReader;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class TestJsonReader {
     @Test
@@ -88,12 +95,44 @@ public class TestJsonReader {
         TypeDescription schema = TypeDescription.fromString("struct<dt:date>");
         JsonReader reader = new JsonReader(input, null, 1, schema, "");
         VectorizedRowBatch batch = schema.createRowBatch(2);
-        assertEquals(true, reader.nextBatch(batch));
+        assertTrue(reader.nextBatch(batch));
         assertEquals(2, batch.size);
         DateColumnVector cv = (DateColumnVector) batch.cols[0];
         assertEquals(date1, LocalDate.ofEpochDay(cv.vector[0]));
         assertEquals(date2, LocalDate.ofEpochDay(cv.vector[1]));
+    }
 
+    @Test
+    public void testDateTimeTypeSupport() throws IOException {
+        String timestampFormat = "yyyy[[-][/]]MM[[-][/]]dd[['T'][ ]]HH:mm:ss[['.'][ ]][[SSSSSSSSS][SSSSSS][SSS]][[X][Z]['['VV']']]";
+        LocalDateTime datetime1 = LocalDateTime.of(2021, 1, 18, 1, 2, 3, 4);
+        LocalDateTime datetime2 = LocalDateTime.now();
+        OffsetDateTime datetime3 = OffsetDateTime.of(datetime1, ZoneOffset.UTC);
+        OffsetDateTime datetime4 = OffsetDateTime.of(datetime2, ZoneOffset.ofHours(-7));
+        ZonedDateTime datetime5 = ZonedDateTime.of(datetime1, ZoneId.of("UTC"));
+        ZonedDateTime datetime6 = ZonedDateTime.of(datetime2, ZoneId.of("America/New_York"));
+
+        String inputString = "{\"dt\": \"" + datetime1.toString() + "\"}\n" +
+                             "{\"dt\": \"" + datetime2.toString() + "\"}\n" +
+                             "{\"dt\": \"" + datetime3.toString() + "\"}\n" +
+                             "{\"dt\": \"" + datetime4.toString().replace("07:00", "0700") + "\"}\n" +
+                             "{\"dt\": \"" + datetime5.toLocalDateTime().toString() + "[" + datetime5.getZone() + "]\"}\n" +
+                             "{\"dt\": \"" + datetime6.toLocalDateTime().toString() + "[" + datetime6.getZone() + "]\"}\n";
+
+        StringReader input = new StringReader(inputString);
+
+        TypeDescription schema = TypeDescription.fromString("struct<dt:timestamp>");
+        JsonReader reader = new JsonReader(input, null, 1, schema, timestampFormat);
+        VectorizedRowBatch batch = schema.createRowBatch(6);
+        assertTrue(reader.nextBatch(batch));
+        assertEquals(6, batch.size);
+        TimestampColumnVector cv = (TimestampColumnVector) batch.cols[0];
+        assertEquals(datetime1, LocalDateTime.from(cv.asScratchTimestamp(0).toLocalDateTime()));
+        assertEquals(datetime2, LocalDateTime.from(cv.asScratchTimestamp(1).toLocalDateTime()));
+        assertEquals(datetime3.toInstant(), cv.asScratchTimestamp(2).toInstant());
+        assertEquals(datetime4.toInstant(), cv.asScratchTimestamp(3).toInstant());
+        assertEquals(datetime5.toInstant(), cv.asScratchTimestamp(4).toInstant());
+        assertEquals(datetime6.toInstant(), cv.asScratchTimestamp(5).toInstant());
     }
 
 }
