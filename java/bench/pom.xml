@@ -43,8 +43,8 @@
     <orc.version>${project.version}</orc.version>
     <parquet.version>1.8.3</parquet.version>
     <slf4j.version>1.7.25</slf4j.version>
-    <spark.version>2.4.6</spark.version>
-    <storage-api.version>2.7.1</storage-api.version>
+    <spark.version>3.1.0</spark.version>
+    <storage-api.version>2.7.2</storage-api.version>
     <zookeeper.version>3.4.6</zookeeper.version>
   </properties>
 
@@ -358,12 +358,12 @@
       </dependency>
       <dependency>
         <groupId>org.apache.spark</groupId>
-        <artifactId>spark-catalyst_2.11</artifactId>
+        <artifactId>spark-catalyst_2.12</artifactId>
         <version>${spark.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.spark</groupId>
-        <artifactId>spark-core_2.11</artifactId>
+        <artifactId>spark-core_2.12</artifactId>
         <version>${spark.version}</version>
 	<exclusions>
 	  <exclusion>
@@ -386,7 +386,7 @@
       </dependency>
       <dependency>
         <groupId>org.apache.spark</groupId>
-        <artifactId>spark-sql_2.11</artifactId>
+        <artifactId>spark-sql_2.12</artifactId>
         <version>${spark.version}</version>
         <exclusions>
           <exclusion>
@@ -401,7 +401,7 @@
       </dependency>
       <dependency>
         <groupId>org.apache.spark</groupId>
-        <artifactId>spark-avro_2.11</artifactId>
+        <artifactId>spark-avro_2.12</artifactId>
         <version>${spark.version}</version>
       </dependency>
       <dependency>
@@ -435,7 +435,7 @@
       <dependency>
         <groupId>org.scala-lang</groupId>
         <artifactId>scala-library</artifactId>
-        <version>2.11.8</version>
+        <version>2.12.10</version>
       </dependency>
       <dependency>
         <groupId>org.slf4j</groupId>
