@@ -19,7 +19,15 @@ package org.apache.orc.tools.convert;
 
 import com.opencsv.CSVReader;
 import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.hive.ql.exec.vector.*;
+import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.DateColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.StructColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.orc.RecordReader;
@@ -29,7 +37,11 @@ import org.apache.orc.TypeDescription;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
-import java.time.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
 
@@ -246,7 +258,7 @@ public class CsvReader implements RecordReader {
 
         if (dt != null) {
           vector.vector[row] = dt.toEpochDay();
-        }  else {
+        } else {
           column.noNulls = false;
           column.isNull[row] = true;
         }
@@ -273,13 +285,11 @@ public class CsvReader implements RecordReader {
           ZonedDateTime zonedDateTime = ((ZonedDateTime) temporalAccessor);
           Timestamp timestamp = Timestamp.from(zonedDateTime.toInstant());
           vector.set(row, timestamp);
-        }
-        else if (temporalAccessor instanceof OffsetDateTime) {
+        } else if (temporalAccessor instanceof OffsetDateTime) {
           OffsetDateTime offsetDateTime = (OffsetDateTime) temporalAccessor;
           Timestamp timestamp = Timestamp.from(offsetDateTime.toInstant());
           vector.set(row, timestamp);
-        }
-        else if (temporalAccessor instanceof LocalDateTime) {
+        } else if (temporalAccessor instanceof LocalDateTime) {
           ZonedDateTime tz = ((LocalDateTime) temporalAccessor).atZone(ZoneId.systemDefault());
           Timestamp timestamp = Timestamp.from(tz.toInstant());
           vector.set(row, timestamp);
