@@ -24,28 +24,19 @@ import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonStreamParser;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
-import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.ListColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.MapColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.StructColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.hadoop.hive.ql.exec.vector.*;
 import org.apache.orc.RecordReader;
 import org.apache.orc.TypeDescription;
-import org.threeten.bp.LocalDateTime;
-import org.threeten.bp.ZonedDateTime;
-import org.threeten.bp.ZoneId;
-import org.threeten.bp.format.DateTimeFormatter;
-import org.threeten.bp.temporal.TemporalAccessor;
+
+
 
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAccessor;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -135,6 +126,27 @@ public class JsonReader implements RecordReader {
     }
   }
 
+  static class DateColumnConverter implements JsonConverter {
+    public void convert(JsonElement value, ColumnVector vect, int row) {
+      if (value == null || value.isJsonNull()) {
+        vect.noNulls = false;
+        vect.isNull[row] = true;
+      }
+      else {
+        DateColumnVector vector = (DateColumnVector) vect;
+
+        final LocalDate dt = LocalDate.parse(value.getAsString());
+
+        if (dt != null) {
+          vector.vector[row] = dt.toEpochDay();
+        }  else {
+          vect.noNulls = false;
+          vect.isNull[row] = true;
+        }
+      }
+    }
+  }
+
   class TimestampColumnConverter implements JsonConverter {
     @Override
     public void convert(JsonElement value, ColumnVector vect, int row) {
@@ -144,16 +156,20 @@ public class JsonReader implements RecordReader {
       } else {
         TimestampColumnVector vector = (TimestampColumnVector) vect;
         TemporalAccessor temporalAccessor = dateTimeFormatter.parseBest(value.getAsString(),
-          ZonedDateTime.FROM, LocalDateTime.FROM);
+          ZonedDateTime::from, OffsetDateTime::from, LocalDateTime::from);
         if (temporalAccessor instanceof ZonedDateTime) {
           ZonedDateTime zonedDateTime = ((ZonedDateTime) temporalAccessor);
-          Timestamp timestamp = new Timestamp(zonedDateTime.toEpochSecond() * 1000L);
-          timestamp.setNanos(zonedDateTime.getNano());
+          Timestamp timestamp = Timestamp.from(zonedDateTime.toInstant());
           vector.set(row, timestamp);
-        } else if (temporalAccessor instanceof LocalDateTime) {
+        }
+        else if (temporalAccessor instanceof OffsetDateTime) {
+          OffsetDateTime offsetDateTime = (OffsetDateTime) temporalAccessor;
+          Timestamp timestamp = Timestamp.from(offsetDateTime.toInstant());
+          vector.set(row, timestamp);
+        }
+        else if (temporalAccessor instanceof LocalDateTime) {
           ZonedDateTime tz = ((LocalDateTime) temporalAccessor).atZone(ZoneId.systemDefault());
-          Timestamp timestamp = new Timestamp(tz.toEpochSecond() * 1000L);
-          timestamp.setNanos(tz.getNano());
+          Timestamp timestamp = Timestamp.from(tz.toInstant());
           vector.set(row, timestamp);
         } else {
           vect.noNulls = false;
@@ -283,6 +299,8 @@ public class JsonReader implements RecordReader {
         return new StringColumnConverter();
       case DECIMAL:
         return new DecimalColumnConverter();
+      case DATE:
+        return new DateColumnConverter();
       case TIMESTAMP:
       case TIMESTAMP_INSTANT:
         return new TimestampColumnConverter();

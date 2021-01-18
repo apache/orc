@@ -18,12 +18,15 @@
 
 package org.apache.orc.tools.convert;
 
+import org.apache.hadoop.hive.ql.exec.vector.DateColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.TypeDescription;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.io.StringReader;
+import java.time.LocalDate;
 
 import static org.junit.Assert.assertEquals;
 
@@ -70,6 +73,27 @@ public class TestJsonReader {
         assertEquals("1969-12-31 23:59:59.0001", cv.asScratchTimestamp(3).toString());
         assertEquals("1969-12-31 23:59:59.0", cv.asScratchTimestamp(4).toString());
         assertEquals("1969-12-31 23:59:58.9999", cv.asScratchTimestamp(5).toString());
+    }
+
+    @Test
+    public void testDateTypeSupport() throws IOException {
+        LocalDate date1 = LocalDate.of(2021, 1, 18);
+        LocalDate date2 = LocalDate.now();
+        String inputString = "{\"dt\": \"" + date1.toString() + "\"}\n" +
+                             "{\"dt\": \"" + date2.toString() + "\"}\n";
+
+
+        StringReader input = new StringReader(inputString);
+
+        TypeDescription schema = TypeDescription.fromString("struct<dt:date>");
+        JsonReader reader = new JsonReader(input, null, 1, schema, "");
+        VectorizedRowBatch batch = schema.createRowBatch(2);
+        assertEquals(true, reader.nextBatch(batch));
+        assertEquals(2, batch.size);
+        DateColumnVector cv = (DateColumnVector) batch.cols[0];
+        assertEquals(date1, LocalDate.ofEpochDay(cv.vector[0]));
+        assertEquals(date2, LocalDate.ofEpochDay(cv.vector[1]));
+
     }
 
 }
