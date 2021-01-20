@@ -18,14 +18,24 @@
 
 package org.apache.orc.tools.convert;
 
+import org.apache.hadoop.hive.ql.exec.vector.DateColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.TypeDescription;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.io.StringReader;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class TestJsonReader {
     @Test
@@ -70,6 +80,64 @@ public class TestJsonReader {
         assertEquals("1969-12-31 23:59:59.0001", cv.asScratchTimestamp(3).toString());
         assertEquals("1969-12-31 23:59:59.0", cv.asScratchTimestamp(4).toString());
         assertEquals("1969-12-31 23:59:58.9999", cv.asScratchTimestamp(5).toString());
+    }
+
+    @Test
+    public void testDateTypeSupport() throws IOException {
+        LocalDate date1 = LocalDate.of(2021, 1, 18);
+        LocalDate date2 = LocalDate.now();
+        String inputString = "{\"dt\": \"" + date1.toString() + "\"}\n" +
+                             "{\"dt\": \"" + date2.toString() + "\"}\n" +
+                             "{\"dt\": \"" + date2.toString() + "\"}\n" +
+                             "{\"dt\": null}";
+
+
+        StringReader input = new StringReader(inputString);
+
+        TypeDescription schema = TypeDescription.fromString("struct<dt:date>");
+        JsonReader reader = new JsonReader(input, null, 1, schema, "");
+        VectorizedRowBatch batch = schema.createRowBatch(4);
+        assertTrue(reader.nextBatch(batch));
+        assertEquals(4, batch.size);
+        DateColumnVector cv = (DateColumnVector) batch.cols[0];
+        assertEquals(date1, LocalDate.ofEpochDay(cv.vector[0]));
+        assertEquals(date2, LocalDate.ofEpochDay(cv.vector[1]));
+        assertEquals(date2, LocalDate.ofEpochDay(cv.vector[2]));
+        assertFalse(cv.isNull[2]);
+        assertTrue(cv.isNull[3]);
+    }
+
+    @Test
+    public void testDateTimeTypeSupport() throws IOException {
+        String timestampFormat = "yyyy[[-][/]]MM[[-][/]]dd[['T'][ ]]HH:mm:ss[['.'][ ]][[SSSSSSSSS][SSSSSS][SSS]][[X][Z]['['VV']']]";
+        LocalDateTime datetime1 = LocalDateTime.of(2021, 1, 18, 1, 2, 3, 4);
+        LocalDateTime datetime2 = LocalDateTime.now();
+        OffsetDateTime datetime3 = OffsetDateTime.of(datetime1, ZoneOffset.UTC);
+        OffsetDateTime datetime4 = OffsetDateTime.of(datetime2, ZoneOffset.ofHours(-7));
+        ZonedDateTime datetime5 = ZonedDateTime.of(datetime1, ZoneId.of("UTC"));
+        ZonedDateTime datetime6 = ZonedDateTime.of(datetime2, ZoneId.of("America/New_York"));
+
+        String inputString = "{\"dt\": \"" + datetime1.toString() + "\"}\n" +
+                             "{\"dt\": \"" + datetime2.toString() + "\"}\n" +
+                             "{\"dt\": \"" + datetime3.toString() + "\"}\n" +
+                             "{\"dt\": \"" + datetime4.toString().replace("07:00", "0700") + "\"}\n" +
+                             "{\"dt\": \"" + datetime5.toLocalDateTime().toString() + "[" + datetime5.getZone() + "]\"}\n" +
+                             "{\"dt\": \"" + datetime6.toLocalDateTime().toString() + "[" + datetime6.getZone() + "]\"}\n";
+
+        StringReader input = new StringReader(inputString);
+
+        TypeDescription schema = TypeDescription.fromString("struct<dt:timestamp>");
+        JsonReader reader = new JsonReader(input, null, 1, schema, timestampFormat);
+        VectorizedRowBatch batch = schema.createRowBatch(6);
+        assertTrue(reader.nextBatch(batch));
+        assertEquals(6, batch.size);
+        TimestampColumnVector cv = (TimestampColumnVector) batch.cols[0];
+        assertEquals(datetime1, LocalDateTime.from(cv.asScratchTimestamp(0).toLocalDateTime()));
+        assertEquals(datetime2, LocalDateTime.from(cv.asScratchTimestamp(1).toLocalDateTime()));
+        assertEquals(datetime3.toInstant(), cv.asScratchTimestamp(2).toInstant());
+        assertEquals(datetime4.toInstant(), cv.asScratchTimestamp(3).toInstant());
+        assertEquals(datetime5.toInstant(), cv.asScratchTimestamp(4).toInstant());
+        assertEquals(datetime6.toInstant(), cv.asScratchTimestamp(5).toInstant());
     }
 
 }

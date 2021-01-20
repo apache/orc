@@ -21,6 +21,7 @@ import com.opencsv.CSVReader;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.DateColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
@@ -31,15 +32,18 @@ import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.orc.RecordReader;
 import org.apache.orc.TypeDescription;
-import org.threeten.bp.LocalDateTime;
-import org.threeten.bp.ZoneId;
-import org.threeten.bp.ZonedDateTime;
-import org.threeten.bp.format.DateTimeFormatter;
-import org.threeten.bp.temporal.TemporalAccessor;
+
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAccessor;
 
 public class CsvReader implements RecordReader {
   private long rowNumber = 0;
@@ -238,6 +242,29 @@ public class CsvReader implements RecordReader {
     }
   }
 
+  class DateColumnConverter extends ConverterImpl {
+    DateColumnConverter(IntWritable offset) { super(offset); }
+
+    @Override
+    public void convert(String[] values, ColumnVector column, int row) {
+      if (values[offset] == null || nullString.equals(values[offset])) {
+        column.noNulls = false;
+        column.isNull[row] = true;
+      } else {
+        DateColumnVector vector = (DateColumnVector) column;
+
+        final LocalDate dt = LocalDate.parse(values[offset]);
+
+        if (dt != null) {
+          vector.vector[row] = dt.toEpochDay();
+        } else {
+          column.noNulls = false;
+          column.isNull[row] = true;
+        }
+      }
+    }
+  }
+
   class TimestampConverter extends ConverterImpl {
     TimestampConverter(IntWritable offset) {
       super(offset);
@@ -252,16 +279,18 @@ public class CsvReader implements RecordReader {
         TimestampColumnVector vector = (TimestampColumnVector) column;
         TemporalAccessor temporalAccessor =
             dateTimeFormatter.parseBest(values[offset],
-                ZonedDateTime.FROM, LocalDateTime.FROM);
+                ZonedDateTime::from, OffsetDateTime::from, LocalDateTime::from);
         if (temporalAccessor instanceof ZonedDateTime) {
           ZonedDateTime zonedDateTime = ((ZonedDateTime) temporalAccessor);
-          Timestamp timestamp = new Timestamp(zonedDateTime.toEpochSecond() * 1000L);
-          timestamp.setNanos(zonedDateTime.getNano());
+          Timestamp timestamp = Timestamp.from(zonedDateTime.toInstant());
+          vector.set(row, timestamp);
+        } else if (temporalAccessor instanceof OffsetDateTime) {
+          OffsetDateTime offsetDateTime = (OffsetDateTime) temporalAccessor;
+          Timestamp timestamp = Timestamp.from(offsetDateTime.toInstant());
           vector.set(row, timestamp);
         } else if (temporalAccessor instanceof LocalDateTime) {
           ZonedDateTime tz = ((LocalDateTime) temporalAccessor).atZone(ZoneId.systemDefault());
-          Timestamp timestamp = new Timestamp(tz.toEpochSecond() * 1000L);
-          timestamp.setNanos(tz.getNano());
+          Timestamp timestamp = Timestamp.from(tz.toInstant());
           vector.set(row, timestamp);
         } else {
           column.noNulls = false;
@@ -318,6 +347,8 @@ public class CsvReader implements RecordReader {
       case CHAR:
       case VARCHAR:
         return new BytesConverter(startOffset);
+      case DATE:
+        return new DateColumnConverter(startOffset);
       case TIMESTAMP:
       case TIMESTAMP_INSTANT:
         return new TimestampConverter(startOffset);
