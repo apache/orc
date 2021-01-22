@@ -18,15 +18,20 @@
 
 package org.apache.orc.impl;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataInputStream;
+import java.io.OutputStream;
+import java.util.Properties;
+import java.util.ServiceLoader;
+import java.util.function.Supplier;
 import org.apache.orc.EncryptionAlgorithm;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.Random;
+import org.apache.orc.shims.Configuration;
+import org.apache.orc.shims.FileIO;
+import org.apache.orc.shims.SeekableInputStream;
+
 
 public interface HadoopShims {
 
@@ -78,17 +83,17 @@ public interface HadoopShims {
 
   /**
    * Provides an HDFS ZeroCopyReader shim.
-   * @param in FSDataInputStream to read from (where the cached/mmap buffers are
+   * @param in SeekableInputStream to read from (where the cached/mmap buffers are
    *          tied to)
    * @param pool ByteBufferPoolShim to allocate fallback buffers with
    *
    * @return returns null if not supported
    */
-  ZeroCopyReaderShim getZeroCopyReader(FSDataInputStream in,
+  ZeroCopyReaderShim getZeroCopyReader(SeekableInputStream in,
                                        ByteBufferPoolShim pool
                                        ) throws IOException;
 
-  interface ZeroCopyReaderShim extends Closeable {
+  interface ZeroCopyReaderShim extends AutoCloseable, Closeable {
 
     /**
      * Get a ByteBuffer from the FSDataInputStream - this can be either a
@@ -188,12 +193,52 @@ public interface HadoopShims {
   }
 
   /**
-   * Create a Hadoop KeyProvider to get encryption keys.
+   * Create a KeyProvider to get encryption keys.
+   * The checks the factories using the service provider APIs. The
+   * built in factories are:
+   * <ul>
+   *   <li>HadoopKeyProviderFactory (after Hadoop 2.6)</li>
+   *   <li>CoreKeyProviderFactory</li>
+   * </ul>
+   * @param kind the name of the provider desired
    * @param conf the configuration
    * @param random a secure random number generator
-   * @return a key provider or null if none was provided
+   * @return a key provider
    */
-  KeyProvider getHadoopKeyProvider(Configuration conf,
-                                   Random random) throws IOException;
+  default KeyProvider getKeyProvider(String kind,
+                                     Configuration conf,
+                                     Random random) throws IOException {
+    ServiceLoader<KeyProvider.FactoryCore> loader =
+        ServiceLoader.load(KeyProvider.FactoryCore.class);
+    for (KeyProvider.FactoryCore factory : loader) {
+      KeyProvider result = factory.create(kind, conf, random);
+      if (result != null) {
+        return result;
+      }
+    }
+    return new NullKeyProvider();
+  }
 
+  /**
+   * Create a FileIO object to read/write files.
+   * @param fileSystem The supplier for the file system or null for the default
+   * @return a FileIO object for a given file system
+   */
+  FileIO createFileIO(Supplier<Object> fileSystem);
+
+  /**
+   * Create a FileIO object to read or write files at a given path.
+   * @param path The path that we need
+   * @param conf The configuration for the FileIO
+   * @return a FileIO object
+   */
+  FileIO createFileIO(String path, Configuration conf) throws IOException;
+
+  /**
+   * Create a configuration object.
+   * @param tableProperties the table properties
+   * @param hadoopConfig a Hadoop Configuration or null if one is not available
+   * @return the shim configuration object
+   */
+  Configuration createConfiguration(Properties tableProperties, Object hadoopConfig);
 }

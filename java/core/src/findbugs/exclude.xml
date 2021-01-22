@@ -70,4 +70,17 @@
     <Class name="org.apache.orc.TypeDescription"/>
     <Method name="equals" />
   </Match>
+  <Match>
+    <Bug pattern="SF_SWITCH_NO_DEFAULT"/>
+    <Class name="org.apache.orc.impl.util.Text"/>
+    <Method name="bytesToCodePoint" />
+  </Match>
+  <Match>
+    <Bug pattern="NM_SAME_SIMPLE_NAME_AS_INTERFACE"/>
+    <Class name="~org\.apache\.orc\.(Reader|MemoryManager|RecordReader|Writer).*"/>
+  </Match>
+  <Match>
+    <Bug pattern="NM_SAME_SIMPLE_NAME_AS_SUPERCLASS"/>
+    <Class name="~org\.apache\.orc\.(Reader|OrcFile).*"/>
+  </Match>
 </FindBugsFilter>

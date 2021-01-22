@@ -18,7 +18,6 @@
 
 package org.apache.orc.impl.reader;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.orc.OrcProto;
 import org.apache.orc.StripeInformation;
 import org.apache.orc.TypeDescription;
@@ -30,6 +29,8 @@ import org.apache.orc.impl.MaskDescriptionImpl;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.List;
+import org.apache.orc.shims.Configuration;
+
 
 public class ReaderEncryption {
   private final KeyProvider keyProvider;

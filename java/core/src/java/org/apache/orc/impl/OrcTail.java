@@ -22,10 +22,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.orc.CompressionKind;
-import org.apache.orc.OrcFile;
+import org.apache.orc.core.OrcFile;
 import org.apache.orc.OrcProto;
 import org.apache.orc.OrcUtils;
-import org.apache.orc.Reader;
+import org.apache.orc.core.Reader;
 import org.apache.orc.StripeInformation;
 import org.apache.orc.StripeStatistics;
 import org.apache.orc.TypeDescription;

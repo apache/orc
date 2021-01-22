@@ -22,7 +22,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
-import org.apache.hadoop.io.Text;
+import org.apache.orc.impl.util.Text;
 
 /**
  * A class that is a growable array of bytes. Growth is managed in terms of

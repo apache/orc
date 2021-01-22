@@ -1,0 +1,134 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p/>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p/>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.orc.tools;
+
+import java.nio.charset.StandardCharsets;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.orc.EncryptionAlgorithm;
+import org.apache.orc.impl.CryptoUtils;
+import org.apache.orc.impl.HadoopShims;
+import org.apache.orc.impl.HadoopShimsFactory;
+import org.apache.orc.impl.KeyProvider;
+import org.apache.orc.shims.Configuration;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONWriter;
+
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintStream;
+import java.security.SecureRandom;
+
+/**
+ * Print the information about the encryption keys.
+ */
+public class KeyTool {
+
+  static String bytesToString(byte[] value) {
+    StringBuilder builder = new StringBuilder();
+    for(int i=0; i < value.length; ++i) {
+      if (i != 0) {
+        builder.append(' ');
+        builder.append(String.format("%02x", value[i]));
+      }
+    }
+    return builder.toString();
+  }
+
+  static void printKey(JSONWriter writer,
+                       KeyProvider provider,
+                       String keyName) throws JSONException, IOException {
+    HadoopShims.KeyMetadata meta = provider.getCurrentKeyVersion(keyName);
+    writer.object();
+    writer.key("name");
+    writer.value(keyName);
+    EncryptionAlgorithm algorithm = meta.getAlgorithm();
+    writer.key("algorithm");
+    writer.value(algorithm.getAlgorithm());
+    writer.key("keyLength");
+    writer.value(algorithm.keyLength());
+    writer.key("version");
+    writer.value(meta.getVersion());
+    byte[] iv = new byte[algorithm.getIvLength()];
+    byte[] key = provider.decryptLocalKey(meta, iv).getEncoded();
+    writer.key("key 0");
+    writer.value(bytesToString(key));
+    writer.endObject();
+  }
+
+  private final OutputStreamWriter writer;
+  private final Configuration conf;
+
+  public KeyTool(Configuration conf,
+                 String[] args) throws IOException, ParseException {
+    CommandLine opts = parseOptions(args);
+    PrintStream stream;
+    if (opts.hasOption('o')) {
+      stream = new PrintStream(opts.getOptionValue('o'), "UTF-8");
+    } else {
+      stream = System.out;
+    }
+    writer = new OutputStreamWriter(stream, StandardCharsets.UTF_8);
+    this.conf = conf;
+  }
+
+  void run() throws IOException, JSONException {
+    KeyProvider provider =
+        CryptoUtils.getKeyProvider(
+            HadoopShimsFactory.get().createConfiguration(null, conf),
+            new SecureRandom());
+    if (provider == null) {
+      System.err.println("No key provider available.");
+      System.exit(1);
+    }
+    for(String keyName: provider.getKeyNames()) {
+      JSONWriter writer = new JSONWriter(this.writer);
+      printKey(writer, provider, keyName);
+      this.writer.write('\n');
+    }
+    this.writer.close();
+  }
+
+  private static CommandLine parseOptions(String[] args) throws ParseException {
+    Options options = new Options();
+
+    options.addOption(
+        Option.builder("h").longOpt("help").desc("Provide help").build());
+    options.addOption(
+        Option.builder("o").longOpt("output").desc("Output filename")
+            .hasArg().build());
+    CommandLine cli = new DefaultParser().parse(options, args);
+    if (cli.hasOption('h')) {
+      HelpFormatter formatter = new HelpFormatter();
+      formatter.printHelp("key", options);
+      System.exit(1);
+    }
+    return cli;
+  }
+
+  public static void main(Configuration conf,
+                          String[] args
+                          ) throws IOException, ParseException, JSONException {
+    KeyTool tool = new KeyTool(conf, args);
+    tool.run();
+  }
+}

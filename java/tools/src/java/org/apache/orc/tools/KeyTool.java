@@ -17,6 +17,7 @@
  */
 package org.apache.orc.tools;
 
+import java.nio.charset.StandardCharsets;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -28,6 +29,7 @@ import org.apache.hadoop.io.BytesWritable;
 import org.apache.orc.EncryptionAlgorithm;
 import org.apache.orc.impl.CryptoUtils;
 import org.apache.orc.impl.HadoopShims;
+import org.apache.orc.impl.HadoopShimsFactory;
 import org.apache.orc.impl.KeyProvider;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONWriter;
@@ -75,13 +77,15 @@ public class KeyTool {
     } else {
       stream = System.out;
     }
-    writer = new OutputStreamWriter(stream, "UTF-8");
+    writer = new OutputStreamWriter(stream, StandardCharsets.UTF_8);
     this.conf = conf;
   }
 
   void run() throws IOException, JSONException {
     KeyProvider provider =
-        CryptoUtils.getKeyProvider(conf, new SecureRandom());
+        CryptoUtils.getKeyProvider(
+            HadoopShimsFactory.get().createConfiguration(null, conf),
+            new SecureRandom());
     if (provider == null) {
       System.err.println("No key provider available.");
       System.exit(1);

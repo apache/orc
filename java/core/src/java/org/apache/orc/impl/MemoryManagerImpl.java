@@ -18,16 +18,13 @@
 
 package org.apache.orc.impl;
 
+import java.io.IOException;
 import org.apache.orc.MemoryManager;
 import org.apache.orc.OrcConf;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 
-import java.io.IOException;
 import java.lang.management.ManagementFactory;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Implements a memory manager that keeps a global context of how many ORC
@@ -39,18 +36,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * This class is not thread safe, but is re-entrant - ensure creation and all
  * invocations are triggered from the same thread.
  */
-public class MemoryManagerImpl implements MemoryManager {
-
-  private final long totalMemoryPool;
-  private final Map<Path, WriterInfo> writerList = new HashMap<>();
-  private final AtomicLong totalAllocation = new AtomicLong(0);
-
-  private static class WriterInfo {
-    long allocation;
-    WriterInfo(long allocation) {
-      this.allocation = allocation;
-    }
-  }
+public class MemoryManagerImpl extends MemoryManagerImplCore implements MemoryManager {
 
   /**
    * Create the memory manager.
@@ -67,7 +53,7 @@ public class MemoryManagerImpl implements MemoryManager {
    * @param poolSize the size of memory to use
    */
   public MemoryManagerImpl(long poolSize) {
-    totalMemoryPool = poolSize;
+    super(poolSize);
   }
 
   /**
@@ -77,21 +63,9 @@ public class MemoryManagerImpl implements MemoryManager {
    * @param requestedAllocation the requested buffer size
    */
   @Override
-  public synchronized void addWriter(Path path, long requestedAllocation,
-                              Callback callback) throws IOException {
-    WriterInfo oldVal = writerList.get(path);
-    // this should always be null, but we handle the case where the memory
-    // manager wasn't told that a writer wasn't still in use and the task
-    // starts writing to the same path.
-    if (oldVal == null) {
-      oldVal = new WriterInfo(requestedAllocation);
-      writerList.put(path, oldVal);
-      totalAllocation.addAndGet(requestedAllocation);
-    } else {
-      // handle a new writer that is writing to the same path
-      totalAllocation.addAndGet(requestedAllocation - oldVal.allocation);
-      oldVal.allocation = requestedAllocation;
-    }
+  public void addWriter(Path path, long requestedAllocation,
+                              Callback callback) {
+    addWriter(path.toString(), requestedAllocation, callback);
   }
 
   /**
@@ -99,52 +73,7 @@ public class MemoryManagerImpl implements MemoryManager {
    * @param path the file that has been closed
    */
   @Override
-  public synchronized void removeWriter(Path path) throws IOException {
-    WriterInfo val = writerList.get(path);
-    if (val != null) {
-      writerList.remove(path);
-      totalAllocation.addAndGet(-val.allocation);
-    }
-  }
-
-  /**
-   * Get the total pool size that is available for ORC writers.
-   * @return the number of bytes in the pool
-   */
-  public long getTotalMemoryPool() {
-    return totalMemoryPool;
-  }
-
-  /**
-   * The scaling factor for each allocation to ensure that the pool isn't
-   * oversubscribed.
-   * @return a fraction between 0.0 and 1.0 of the requested size that is
-   * available for each writer.
-   */
-  public double getAllocationScale() {
-    long alloc = totalAllocation.get();
-    return alloc <= totalMemoryPool ? 1.0 : (double) totalMemoryPool / alloc;
-  }
-
-  @Override
-  public void addedRow(int rows) throws IOException {
-    // PASS
-  }
-
-  /**
-   * Obsolete method left for Hive, which extends this class.
-   * @deprecated remove this method
-   */
-  public void notifyWriters() throws IOException {
-    // PASS
-  }
-
-  @Override
-  public long checkMemory(long previous, Callback writer) throws IOException {
-    long current = totalAllocation.get();
-    if (current != previous) {
-      writer.checkMemory(getAllocationScale());
-    }
-    return current;
+  public void removeWriter(Path path) throws IOException {
+    removeWriter(path.toString());
   }
 }

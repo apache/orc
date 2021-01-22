@@ -1,0 +1,1368 @@
+{
+  "fileName": "TestFileDump.testDump.orc",
+  "fileVersion": "0.12",
+  "writerVersion": "ORC_14",
+  "numberOfRows": 21000,
+  "compression": "ZLIB",
+  "compressionBufferSize": 4096,
+  "schemaString": "struct<i:int,l:bigint,s:string>",
+  "schema": {
+    "columnId": 0,
+    "columnType": "STRUCT",
+    "children": {
+      "i": {
+        "columnId": 1,
+        "columnType": "INT"
+      },
+      "l": {
+        "columnId": 2,
+        "columnType": "LONG",
+        "attributes": {
+          "test1": "value1",
+          "test2": "value2"
+        }
+      },
+      "s": {
+        "columnId": 3,
+        "columnType": "STRING"
+      }
+    }
+  },
+  "calendar": "Julian\/Gregorian",
+  "stripeStatistics": [
+    {
+      "stripeNumber": 1,
+      "columnStatistics": [
+        {
+          "columnId": 0,
+          "count": 5000,
+          "hasNull": false
+        },
+        {
+          "columnId": 1,
+          "count": 5000,
+          "hasNull": false,
+          "bytesOnDisk": 20035,
+          "min": -2147115959,
+          "max": 2145210552,
+          "sum": 50111854553,
+          "type": "LONG"
+        },
+        {
+          "columnId": 2,
+          "count": 5000,
+          "hasNull": false,
+          "bytesOnDisk": 40050,
+          "min": -9223180583305557329,
+          "max": 9221614132680747961,
+          "type": "LONG"
+        },
+        {
+          "columnId": 3,
+          "count": 4950,
+          "hasNull": true,
+          "bytesOnDisk": 3685,
+          "min": "Darkness,",
+          "max": "worst",
+          "totalLength": 19283,
+          "type": "STRING"
+        }
+      ]
+    },
+    {
+      "stripeNumber": 2,
+      "columnStatistics": [
+        {
+          "columnId": 0,
+          "count": 5000,
+          "hasNull": false
+        },
+        {
+          "columnId": 1,
+          "count": 5000,
+          "hasNull": false,
+          "bytesOnDisk": 20035,
+          "min": -2147390285,
+          "max": 2147224606,
+          "sum": -22290798217,
+          "type": "LONG"
+        },
+        {
+          "columnId": 2,
+          "count": 5000,
+          "hasNull": false,
+          "bytesOnDisk": 40050,
+          "min": -9219295160509160427,
+          "max": 9217571024994660020,
+          "type": "LONG"
+        },
+        {
+          "columnId": 3,
+          "count": 4950,
+          "hasNull": true,
+          "bytesOnDisk": 3678,
+          "min": "Darkness,",
+          "max": "worst",
+          "totalLength": 19397,
+          "type": "STRING"
+        }
+      ]
+    },
+    {
+      "stripeNumber": 3,
+      "columnStatistics": [
+        {
+          "columnId": 0,
+          "count": 5000,
+          "hasNull": false
+        },
+        {
+          "columnId": 1,
+          "count": 5000,
+          "hasNull": false,
+          "bytesOnDisk": 20035,
+          "min": -2146954065,
+          "max": 2146722468,
+          "sum": 20639652136,
+          "type": "LONG"
+        },
+        {
+          "columnId": 2,
+          "count": 5000,
+          "hasNull": false,
+          "bytesOnDisk": 40050,
+          "min": -9214076359988107846,
+          "max": 9222919052987871506,
+          "type": "LONG"
+        },
+        {
+          "columnId": 3,
+          "count": 4950,
+          "hasNull": true,
+          "bytesOnDisk": 3685,
+          "min": "Darkness,",
+          "max": "worst",
+          "totalLength": 19031,
+          "type": "STRING"
+        }
+      ]
+    },
+    {
+      "stripeNumber": 4,
+      "columnStatistics": [
+        {
+          "columnId": 0,
+          "count": 5000,
+          "hasNull": false
+        },
+        {
+          "columnId": 1,
+          "count": 5000,
+          "hasNull": false,
+          "bytesOnDisk": 20035,
+          "min": -2146969085,
+          "max": 2146025044,
+          "sum": -5156814387,
+          "type": "LONG"
+        },
+        {
+          "columnId": 2,
+          "count": 5000,
+          "hasNull": false,
+          "bytesOnDisk": 40050,
+          "min": -9222731174895935707,
+          "max": 9220625004936875965,
+          "type": "LONG"
+        },
+        {
+          "columnId": 3,
+          "count": 4950,
+          "hasNull": true,
+          "bytesOnDisk": 3671,
+          "min": "Darkness,",
+          "max": "worst",
+          "totalLength": 19459,
+          "type": "STRING"
+        }
+      ]
+    },
+    {
+      "stripeNumber": 5,
+      "columnStatistics": [
+        {
+          "columnId": 0,
+          "count": 1000,
+          "hasNull": false
+        },
+        {
+          "columnId": 1,
+          "count": 1000,
+          "hasNull": false,
+          "bytesOnDisk": 4007,
+          "min": -2144303438,
+          "max": 2127599049,
+          "sum": 62841564778,
+          "type": "LONG"
+        },
+        {
+          "columnId": 2,
+          "count": 1000,
+          "hasNull": false,
+          "bytesOnDisk": 8010,
+          "min": -9195133638801798919,
+          "max": 9218626063131504414,
+          "type": "LONG"
+        },
+        {
+          "columnId": 3,
+          "count": 990,
+          "hasNull": true,
+          "bytesOnDisk": 926,
+          "min": "Darkness,",
+          "max": "worst",
+          "totalLength": 3963,
+          "type": "STRING"
+        }
+      ]
+    }
+  ],
+  "fileStatistics": [
+    {
+      "columnId": 0,
+      "count": 21000,
+      "hasNull": false
+    },
+    {
+      "columnId": 1,
+      "count": 21000,
+      "hasNull": false,
+      "bytesOnDisk": 84147,
+      "min": -2147390285,
+      "max": 2147224606,
+      "sum": 106145458863,
+      "type": "LONG"
+    },
+    {
+      "columnId": 2,
+      "count": 21000,
+      "hasNull": false,
+      "bytesOnDisk": 168210,
+      "min": -9223180583305557329,
+      "max": 9222919052987871506,
+      "type": "LONG"
+    },
+    {
+      "columnId": 3,
+      "count": 20790,
+      "hasNull": true,
+      "bytesOnDisk": 15645,
+      "min": "Darkness,",
+      "max": "worst",
+      "totalLength": 81133,
+      "type": "STRING"
+    }
+  ],
+  "stripes": [
+    {
+      "stripeNumber": 1,
+      "stripeInformation": {
+        "offset": 3,
+        "indexLength": 768,
+        "dataLength": 63770,
+        "footerLength": 89,
+        "rowCount": 5000
+      },
+      "streams": [
+        {
+          "columnId": 0,
+          "section": "ROW_INDEX",
+          "startOffset": 3,
+          "length": 17
+        },
+        {
+          "columnId": 1,
+          "section": "ROW_INDEX",
+          "startOffset": 20,
+          "length": 167
+        },
+        {
+          "columnId": 2,
+          "section": "ROW_INDEX",
+          "startOffset": 187,
+          "length": 171
+        },
+        {
+          "columnId": 3,
+          "section": "ROW_INDEX",
+          "startOffset": 358,
+          "length": 103
+        },
+        {
+          "columnId": 3,
+          "section": "BLOOM_FILTER_UTF8",
+          "startOffset": 461,
+          "length": 310
+        },
+        {
+          "columnId": 1,
+          "section": "DATA",
+          "startOffset": 771,
+          "length": 20035
+        },
+        {
+          "columnId": 2,
+          "section": "DATA",
+          "startOffset": 20806,
+          "length": 40050
+        },
+        {
+          "columnId": 3,
+          "section": "PRESENT",
+          "startOffset": 60856,
+          "length": 17
+        },
+        {
+          "columnId": 3,
+          "section": "DATA",
+          "startOffset": 60873,
+          "length": 3510
+        },
+        {
+          "columnId": 3,
+          "section": "LENGTH",
+          "startOffset": 64383,
+          "length": 25
+        },
+        {
+          "columnId": 3,
+          "section": "DICTIONARY_DATA",
+          "startOffset": 64408,
+          "length": 133
+        }
+      ],
+      "encodings": [
+        {
+          "columnId": 0,
+          "kind": "DIRECT"
+        },
+        {
+          "columnId": 1,
+          "kind": "DIRECT_V2"
+        },
+        {
+          "columnId": 2,
+          "kind": "DIRECT_V2"
+        },
+        {
+          "columnId": 3,
+          "kind": "DICTIONARY_V2",
+          "dictionarySize": 35
+        }
+      ],
+      "indexes": [{
+        "columnId": 3,
+        "rowGroupIndexes": [
+          {
+            "entryId": 0,
+            "count": 990,
+            "hasNull": true,
+            "min": "Darkness,",
+            "max": "worst",
+            "totalLength": 3873,
+            "type": "STRING",
+            "positions": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "entryId": 1,
+            "count": 990,
+            "hasNull": true,
+            "min": "Darkness,",
+            "max": "worst",
+            "totalLength": 3861,
+            "type": "STRING",
+            "positions": [
+              0,
+              38,
+              12,
+              0,
+              0,
+              736,
+              23
+            ]
+          },
+          {
+            "entryId": 2,
+            "count": 990,
+            "hasNull": true,
+            "min": "Darkness,",
+            "max": "worst",
+            "totalLength": 3946,
+            "type": "STRING",
+            "positions": [
+              0,
+              78,
+              12,
+              0,
+              0,
+              1473,
+              43
+            ]
+          },
+          {
+            "entryId": 3,
+            "count": 990,
+            "hasNull": true,
+            "min": "Darkness,",
+            "max": "worst",
+            "totalLength": 3774,
+            "type": "STRING",
+            "positions": [
+              0,
+              118,
+              12,
+              0,
+              0,
+              2067,
+              261
+            ]
+          },
+          {
+            "entryId": 4,
+            "count": 990,
+            "hasNull": true,
+            "min": "Darkness,",
+            "max": "worst",
+            "totalLength": 3829,
+            "type": "STRING",
+            "positions": [
+              0,
+              158,
+              12,
+              0,
+              0,
+              2992,
+              35
+            ]
+          }
+        ],
+        "bloomFilterIndexes": [
+          {
+            "entryId": 0,
+            "numHashFunctions": 4,
+            "bitCount": 6272,
+            "popCount": 138,
+            "loadFactor": 0.022002551704645157,
+            "expectedFpp": 2.3436470542037569E-7
+          },
+          {
+            "entryId": 1,
+            "numHashFunctions": 4,
+            "bitCount": 6272,
+            "popCount": 138,
+            "loadFactor": 0.022002551704645157,
+            "expectedFpp": 2.3436470542037569E-7
+          },
+          {
+            "entryId": 2,
+            "numHashFunctions": 4,
+            "bitCount": 6272,
+            "popCount": 138,
+            "loadFactor": 0.022002551704645157,
+            "expectedFpp": 2.3436470542037569E-7
+          },
+          {
+            "entryId": 3,
+            "numHashFunctions": 4,
+            "bitCount": 6272,
+            "popCount": 138,
+            "loadFactor": 0.022002551704645157,
+            "expectedFpp": 2.3436470542037569E-7
+          },
+          {
+            "entryId": 4,
+            "numHashFunctions": 4,
+            "bitCount": 6272,
+            "popCount": 138,
+            "loadFactor": 0.022002551704645157,
+            "expectedFpp": 2.3436470542037569E-7
+          }
+        ],
+        "stripeLevelBloomFilter": {
+          "numHashFunctions": 4,
+          "bitCount": 6272,
+          "popCount": 138,
+          "loadFactor": 0.022002551704645157,
+          "expectedFpp": 2.3436470542037569E-7
+        }
+      }]
+    },
+    {
+      "stripeNumber": 2,
+      "stripeInformation": {
+        "offset": 64630,
+        "indexLength": 759,
+        "dataLength": 63763,
+        "footerLength": 88,
+        "rowCount": 5000
+      },
+      "streams": [
+        {
+          "columnId": 0,
+          "section": "ROW_INDEX",
+          "startOffset": 64630,
+          "length": 17
+        },
+        {
+          "columnId": 1,
+          "section": "ROW_INDEX",
+          "startOffset": 64647,
+          "length": 166
+        },
+        {
+          "columnId": 2,
+          "section": "ROW_INDEX",
+          "startOffset": 64813,
+          "length": 166
+        },
+        {
+          "columnId": 3,
+          "section": "ROW_INDEX",
+          "startOffset": 64979,
+          "length": 100
+        },
+        {
+          "columnId": 3,
+          "section": "BLOOM_FILTER_UTF8",
+          "startOffset": 65079,
+          "length": 310
+        },
+        {
+          "columnId": 1,
+          "section": "DATA",
+          "startOffset": 65389,
+          "length": 20035
+        },
+        {
+          "columnId": 2,
+          "section": "DATA",
+          "startOffset": 85424,
+          "length": 40050
+        },
+        {
+          "columnId": 3,
+          "section": "PRESENT",
+          "startOffset": 125474,
+          "length": 17
+        },
+        {
+          "columnId": 3,
+          "section": "DATA",
+          "startOffset": 125491,
+          "length": 3503
+        },
+        {
+          "columnId": 3,
+          "section": "LENGTH",
+          "startOffset": 128994,
+          "length": 25
+        },
+        {
+          "columnId": 3,
+          "section": "DICTIONARY_DATA",
+          "startOffset": 129019,
+          "length": 133
+        }
+      ],
+      "encodings": [
+        {
+          "columnId": 0,
+          "kind": "DIRECT"
+        },
+        {
+          "columnId": 1,
+          "kind": "DIRECT_V2"
+        },
+        {
+          "columnId": 2,
+          "kind": "DIRECT_V2"
+        },
+        {
+          "columnId": 3,
+          "kind": "DICTIONARY_V2",
+          "dictionarySize": 35
+        }
+      ],
+      "indexes": [{
+        "columnId": 3,
+        "rowGroupIndexes": [
+          {
+            "entryId": 0,
+            "count": 990,
+            "hasNull": true,
+            "min": "Darkness,",
+            "max": "worst",
+            "totalLength": 3946,
+            "type": "STRING",
+            "positions": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "entryId": 1,
+            "count": 990,
+            "hasNull": true,
+            "min": "Darkness,",
+            "max": "worst",
+            "totalLength": 3836,
+            "type": "STRING",
+            "positions": [
+              0,
+              38,
+              12,
+              0,
+              0,
+              746,
+              11
+            ]
+          },
+          {
+            "entryId": 2,
+            "count": 990,
+            "hasNull": true,
+            "min": "Darkness,",
+            "max": "worst",
+            "totalLength": 3791,
+            "type": "STRING",
+            "positions": [
+              0,
+              78,
+              12,
+              0,
+              0,
+              1430,
+              95
+            ]
+          },
+          {
+            "entryId": 3,
+            "count": 990,
+            "hasNull": true,
+            "min": "Darkness,",
+            "max": "worst",
+            "totalLength": 3904,
+            "type": "STRING",
+            "positions": [
+              0,
+              118,
+              12,
+              0,
+              0,
+              2239,
+              23
+            ]
+          },
+          {
+            "entryId": 4,
+            "count": 990,
+            "hasNull": true,
+            "min": "Darkness,",
+            "max": "worst",
+            "totalLength": 3920,
+            "type": "STRING",
+            "positions": [
+              0,
+              158,
+              12,
+              0,
+              0,
+              2994,
+              17
+            ]
+          }
+        ],
+        "bloomFilterIndexes": [
+          {
+            "entryId": 0,
+            "numHashFunctions": 4,
+            "bitCount": 6272,
+            "popCount": 138,
+            "loadFactor": 0.022002551704645157,
+            "expectedFpp": 2.3436470542037569E-7
+          },
+          {
+            "entryId": 1,
+            "numHashFunctions": 4,
+            "bitCount": 6272,
+            "popCount": 138,
+            "loadFactor": 0.022002551704645157,
+            "expectedFpp": 2.3436470542037569E-7
+          },
+          {
+            "entryId": 2,
+            "numHashFunctions": 4,
+            "bitCount": 6272,
+            "popCount": 138,
+            "loadFactor": 0.022002551704645157,
+            "expectedFpp": 2.3436470542037569E-7
+          },
+          {
+            "entryId": 3,
+            "numHashFunctions": 4,
+            "bitCount": 6272,
+            "popCount": 138,
+            "loadFactor": 0.022002551704645157,
+            "expectedFpp": 2.3436470542037569E-7
+          },
+          {
+            "entryId": 4,
+            "numHashFunctions": 4,
+            "bitCount": 6272,
+            "popCount": 138,
+            "loadFactor": 0.022002551704645157,
+            "expectedFpp": 2.3436470542037569E-7
+          }
+        ],
+        "stripeLevelBloomFilter": {
+          "numHashFunctions": 4,
+          "bitCount": 6272,
+          "popCount": 138,
+          "loadFactor": 0.022002551704645157,
+          "expectedFpp": 2.3436470542037569E-7
+        }
+      }]
+    },
+    {
+      "stripeNumber": 3,
+      "stripeInformation": {
+        "offset": 129240,
+        "indexLength": 760,
+        "dataLength": 63770,
+        "footerLength": 89,
+        "rowCount": 5000
+      },
+      "streams": [
+        {
+          "columnId": 0,
+          "section": "ROW_INDEX",
+          "startOffset": 129240,
+          "length": 17
+        },
+        {
+          "columnId": 1,
+          "section": "ROW_INDEX",
+          "startOffset": 129257,
+          "length": 164
+        },
+        {
+          "columnId": 2,
+          "section": "ROW_INDEX",
+          "startOffset": 129421,
+          "length": 167
+        },
+        {
+          "columnId": 3,
+          "section": "ROW_INDEX",
+          "startOffset": 129588,
+          "length": 102
+        },
+        {
+          "columnId": 3,
+          "section": "BLOOM_FILTER_UTF8",
+          "startOffset": 129690,
+          "length": 310
+        },
+        {
+          "columnId": 1,
+          "section": "DATA",
+          "startOffset": 130000,
+          "length": 20035
+        },
+        {
+          "columnId": 2,
+          "section": "DATA",
+          "startOffset": 150035,
+          "length": 40050
+        },
+        {
+          "columnId": 3,
+          "section": "PRESENT",
+          "startOffset": 190085,
+          "length": 17
+        },
+        {
+          "columnId": 3,
+          "section": "DATA",
+          "startOffset": 190102,
+          "length": 3510
+        },
+        {
+          "columnId": 3,
+          "section": "LENGTH",
+          "startOffset": 193612,
+          "length": 25
+        },
+        {
+          "columnId": 3,
+          "section": "DICTIONARY_DATA",
+          "startOffset": 193637,
+          "length": 133
+        }
+      ],
+      "encodings": [
+        {
+          "columnId": 0,
+          "kind": "DIRECT"
+        },
+        {
+          "columnId": 1,
+          "kind": "DIRECT_V2"
+        },
+        {
+          "columnId": 2,
+          "kind": "DIRECT_V2"
+        },
+        {
+          "columnId": 3,
+          "kind": "DICTIONARY_V2",
+          "dictionarySize": 35
+        }
+      ],
+      "indexes": [{
+        "columnId": 3,
+        "rowGroupIndexes": [
+          {
+            "entryId": 0,
+            "count": 990,
+            "hasNull": true,
+            "min": "Darkness,",
+            "max": "worst",
+            "totalLength": 3829,
+            "type": "STRING",
+            "positions": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "entryId": 1,
+            "count": 990,
+            "hasNull": true,
+            "min": "Darkness,",
+            "max": "worst",
+            "totalLength": 3853,
+            "type": "STRING",
+            "positions": [
+              0,
+              38,
+              12,
+              0,
+              0,
+              698,
+              74
+            ]
+          },
+          {
+            "entryId": 2,
+            "count": 990,
+            "hasNull": true,
+            "min": "Darkness,",
+            "max": "worst",
+            "totalLength": 3796,
+            "type": "STRING",
+            "positions": [
+              0,
+              78,
+              12,
+              0,
+              0,
+              1483,
+              39
+            ]
+          },
+          {
+            "entryId": 3,
+            "count": 990,
+            "hasNull": true,
+            "min": "Darkness,",
+            "max": "worst",
+            "totalLength": 3736,
+            "type": "STRING",
+            "positions": [
+              0,
+              118,
+              12,
+              0,
+              0,
+              2148,
+              155
+            ]
+          },
+          {
+            "entryId": 4,
+            "count": 990,
+            "hasNull": true,
+            "min": "Darkness,",
+            "max": "worst",
+            "totalLength": 3817,
+            "type": "STRING",
+            "positions": [
+              0,
+              158,
+              12,
+              0,
+              0,
+              3018,
+              8
+            ]
+          }
+        ],
+        "bloomFilterIndexes": [
+          {
+            "entryId": 0,
+            "numHashFunctions": 4,
+            "bitCount": 6272,
+            "popCount": 138,
+            "loadFactor": 0.022002551704645157,
+            "expectedFpp": 2.3436470542037569E-7
+          },
+          {
+            "entryId": 1,
+            "numHashFunctions": 4,
+            "bitCount": 6272,
+            "popCount": 138,
+            "loadFactor": 0.022002551704645157,
+            "expectedFpp": 2.3436470542037569E-7
+          },
+          {
+            "entryId": 2,
+            "numHashFunctions": 4,
+            "bitCount": 6272,
+            "popCount": 138,
+            "loadFactor": 0.022002551704645157,
+            "expectedFpp": 2.3436470542037569E-7
+          },
+          {
+            "entryId": 3,
+            "numHashFunctions": 4,
+            "bitCount": 6272,
+            "popCount": 138,
+            "loadFactor": 0.022002551704645157,
+            "expectedFpp": 2.3436470542037569E-7
+          },
+          {
+            "entryId": 4,
+            "numHashFunctions": 4,
+            "bitCount": 6272,
+            "popCount": 138,
+            "loadFactor": 0.022002551704645157,
+            "expectedFpp": 2.3436470542037569E-7
+          }
+        ],
+        "stripeLevelBloomFilter": {
+          "numHashFunctions": 4,
+          "bitCount": 6272,
+          "popCount": 138,
+          "loadFactor": 0.022002551704645157,
+          "expectedFpp": 2.3436470542037569E-7
+        }
+      }]
+    },
+    {
+      "stripeNumber": 4,
+      "stripeInformation": {
+        "offset": 193859,
+        "indexLength": 771,
+        "dataLength": 63756,
+        "footerLength": 90,
+        "rowCount": 5000
+      },
+      "streams": [
+        {
+          "columnId": 0,
+          "section": "ROW_INDEX",
+          "startOffset": 193859,
+          "length": 17
+        },
+        {
+          "columnId": 1,
+          "section": "ROW_INDEX",
+          "startOffset": 193876,
+          "length": 166
+        },
+        {
+          "columnId": 2,
+          "section": "ROW_INDEX",
+          "startOffset": 194042,
+          "length": 171
+        },
+        {
+          "columnId": 3,
+          "section": "ROW_INDEX",
+          "startOffset": 194213,
+          "length": 107
+        },
+        {
+          "columnId": 3,
+          "section": "BLOOM_FILTER_UTF8",
+          "startOffset": 194320,
+          "length": 310
+        },
+        {
+          "columnId": 1,
+          "section": "DATA",
+          "startOffset": 194630,
+          "length": 20035
+        },
+        {
+          "columnId": 2,
+          "section": "DATA",
+          "startOffset": 214665,
+          "length": 40050
+        },
+        {
+          "columnId": 3,
+          "section": "PRESENT",
+          "startOffset": 254715,
+          "length": 17
+        },
+        {
+          "columnId": 3,
+          "section": "DATA",
+          "startOffset": 254732,
+          "length": 3496
+        },
+        {
+          "columnId": 3,
+          "section": "LENGTH",
+          "startOffset": 258228,
+          "length": 25
+        },
+        {
+          "columnId": 3,
+          "section": "DICTIONARY_DATA",
+          "startOffset": 258253,
+          "length": 133
+        }
+      ],
+      "encodings": [
+        {
+          "columnId": 0,
+          "kind": "DIRECT"
+        },
+        {
+          "columnId": 1,
+          "kind": "DIRECT_V2"
+        },
+        {
+          "columnId": 2,
+          "kind": "DIRECT_V2"
+        },
+        {
+          "columnId": 3,
+          "kind": "DICTIONARY_V2",
+          "dictionarySize": 35
+        }
+      ],
+      "indexes": [{
+        "columnId": 3,
+        "rowGroupIndexes": [
+          {
+            "entryId": 0,
+            "count": 990,
+            "hasNull": true,
+            "min": "Darkness,",
+            "max": "worst",
+            "totalLength": 3959,
+            "type": "STRING",
+            "positions": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "entryId": 1,
+            "count": 990,
+            "hasNull": true,
+            "min": "Darkness,",
+            "max": "worst",
+            "totalLength": 3816,
+            "type": "STRING",
+            "positions": [
+              0,
+              38,
+              12,
+              0,
+              0,
+              495,
+              338
+            ]
+          },
+          {
+            "entryId": 2,
+            "count": 990,
+            "hasNull": true,
+            "min": "Darkness,",
+            "max": "worst",
+            "totalLength": 3883,
+            "type": "STRING",
+            "positions": [
+              0,
+              78,
+              12,
+              0,
+              0,
+              1449,
+              71
+            ]
+          },
+          {
+            "entryId": 3,
+            "count": 990,
+            "hasNull": true,
+            "min": "Darkness,",
+            "max": "worst",
+            "totalLength": 3938,
+            "type": "STRING",
+            "positions": [
+              0,
+              118,
+              12,
+              0,
+              0,
+              2207,
+              59
+            ]
+          },
+          {
+            "entryId": 4,
+            "count": 990,
+            "hasNull": true,
+            "min": "Darkness,",
+            "max": "worst",
+            "totalLength": 3863,
+            "type": "STRING",
+            "positions": [
+              0,
+              158,
+              12,
+              0,
+              0,
+              2838,
+              223
+            ]
+          }
+        ],
+        "bloomFilterIndexes": [
+          {
+            "entryId": 0,
+            "numHashFunctions": 4,
+            "bitCount": 6272,
+            "popCount": 138,
+            "loadFactor": 0.022002551704645157,
+            "expectedFpp": 2.3436470542037569E-7
+          },
+          {
+            "entryId": 1,
+            "numHashFunctions": 4,
+            "bitCount": 6272,
+            "popCount": 138,
+            "loadFactor": 0.022002551704645157,
+            "expectedFpp": 2.3436470542037569E-7
+          },
+          {
+            "entryId": 2,
+            "numHashFunctions": 4,
+            "bitCount": 6272,
+            "popCount": 138,
+            "loadFactor": 0.022002551704645157,
+            "expectedFpp": 2.3436470542037569E-7
+          },
+          {
+            "entryId": 3,
+            "numHashFunctions": 4,
+            "bitCount": 6272,
+            "popCount": 138,
+            "loadFactor": 0.022002551704645157,
+            "expectedFpp": 2.3436470542037569E-7
+          },
+          {
+            "entryId": 4,
+            "numHashFunctions": 4,
+            "bitCount": 6272,
+            "popCount": 138,
+            "loadFactor": 0.022002551704645157,
+            "expectedFpp": 2.3436470542037569E-7
+          }
+        ],
+        "stripeLevelBloomFilter": {
+          "numHashFunctions": 4,
+          "bitCount": 6272,
+          "popCount": 138,
+          "loadFactor": 0.022002551704645157,
+          "expectedFpp": 2.3436470542037569E-7
+        }
+      }]
+    },
+    {
+      "stripeNumber": 5,
+      "stripeInformation": {
+        "offset": 258476,
+        "indexLength": 376,
+        "dataLength": 12943,
+        "footerLength": 85,
+        "rowCount": 1000
+      },
+      "streams": [
+        {
+          "columnId": 0,
+          "section": "ROW_INDEX",
+          "startOffset": 258476,
+          "length": 12
+        },
+        {
+          "columnId": 1,
+          "section": "ROW_INDEX",
+          "startOffset": 258488,
+          "length": 38
+        },
+        {
+          "columnId": 2,
+          "section": "ROW_INDEX",
+          "startOffset": 258526,
+          "length": 41
+        },
+        {
+          "columnId": 3,
+          "section": "ROW_INDEX",
+          "startOffset": 258567,
+          "length": 41
+        },
+        {
+          "columnId": 3,
+          "section": "BLOOM_FILTER_UTF8",
+          "startOffset": 258608,
+          "length": 244
+        },
+        {
+          "columnId": 1,
+          "section": "DATA",
+          "startOffset": 258852,
+          "length": 4007
+        },
+        {
+          "columnId": 2,
+          "section": "DATA",
+          "startOffset": 262859,
+          "length": 8010
+        },
+        {
+          "columnId": 3,
+          "section": "PRESENT",
+          "startOffset": 270869,
+          "length": 16
+        },
+        {
+          "columnId": 3,
+          "section": "DATA",
+          "startOffset": 270885,
+          "length": 752
+        },
+        {
+          "columnId": 3,
+          "section": "LENGTH",
+          "startOffset": 271637,
+          "length": 25
+        },
+        {
+          "columnId": 3,
+          "section": "DICTIONARY_DATA",
+          "startOffset": 271662,
+          "length": 133
+        }
+      ],
+      "encodings": [
+        {
+          "columnId": 0,
+          "kind": "DIRECT"
+        },
+        {
+          "columnId": 1,
+          "kind": "DIRECT_V2"
+        },
+        {
+          "columnId": 2,
+          "kind": "DIRECT_V2"
+        },
+        {
+          "columnId": 3,
+          "kind": "DICTIONARY_V2",
+          "dictionarySize": 35
+        }
+      ],
+      "indexes": [{
+        "columnId": 3,
+        "rowGroupIndexes": [{
+          "entryId": 0,
+          "count": 990,
+          "hasNull": true,
+          "min": "Darkness,",
+          "max": "worst",
+          "totalLength": 3963,
+          "type": "STRING",
+          "positions": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }],
+        "bloomFilterIndexes": [{
+          "entryId": 0,
+          "numHashFunctions": 4,
+          "bitCount": 6272,
+          "popCount": 138,
+          "loadFactor": 0.022002551704645157,
+          "expectedFpp": 2.3436470542037569E-7
+        }],
+        "stripeLevelBloomFilter": {
+          "numHashFunctions": 4,
+          "bitCount": 6272,
+          "popCount": 138,
+          "loadFactor": 0.022002551704645157,
+          "expectedFpp": 2.3436470542037569E-7
+        }
+      }]
+    }
+  ],
+  "fileLength": 272513,
+  "paddingLength": 0,
+  "paddingRatio": 0,
+  "status": "OK"
+}

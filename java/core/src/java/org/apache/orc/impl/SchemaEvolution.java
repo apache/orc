@@ -25,8 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.orc.Reader;
+import org.apache.orc.core.Reader;
 import org.apache.orc.TypeDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -151,7 +150,8 @@ public class SchemaEvolution {
                          TypeDescription readerSchema,
                          boolean[] readerIncluded) {
     this(fileSchema, readerSchema,
-        new Reader.Options(new Configuration())
+        new Reader
+            .Options(HadoopShimsFactory.get().createConfiguration(null, null))
             .include(readerIncluded));
   }
 

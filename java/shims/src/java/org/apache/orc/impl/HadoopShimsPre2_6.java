@@ -18,15 +18,13 @@
 
 package org.apache.orc.impl;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.io.compress.snappy.SnappyDecompressor.SnappyDirectDecompressor;
 import org.apache.hadoop.io.compress.zlib.ZlibDecompressor;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.util.Random;
+import org.apache.orc.shims.SeekableInputStream;
+
 
 /**
  * Shims for versions of Hadoop less than 2.6
@@ -37,7 +35,7 @@ import java.util.Random;
  *   <li>Zero copy</li>
  * </ul>
  */
-public class HadoopShimsPre2_6 implements HadoopShims {
+public class HadoopShimsPre2_6 extends HadoopShimsPre2_3 {
 
   static class SnappyDirectDecompressWrapper implements DirectDecompressor {
     private final SnappyDirectDecompressor root;
@@ -120,19 +118,9 @@ public class HadoopShimsPre2_6 implements HadoopShims {
  }
 
   @Override
-  public ZeroCopyReaderShim getZeroCopyReader(FSDataInputStream in,
+  public ZeroCopyReaderShim getZeroCopyReader(SeekableInputStream in,
                                               ByteBufferPoolShim pool
-                                              ) throws IOException {
+                                              ) {
     return ZeroCopyShims.getZeroCopyReader(in, pool);
-  }
-
-  @Override
-  public boolean endVariableLengthBlock(OutputStream output) {
-    return false;
-  }
-
-  @Override
-  public KeyProvider getHadoopKeyProvider(Configuration conf, Random random) {
-    return new HadoopShimsPre2_3.NullKeyProvider();
   }
 }

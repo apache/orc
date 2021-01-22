@@ -23,13 +23,28 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import org.apache.hadoop.io.DataOutputBuffer;
-import org.apache.hadoop.io.IntWritable;
 import org.junit.Test;
 
 /**
  * Test the red-black tree with string keys.
  */
 public class TestStringRedBlackTree {
+
+  private static class IntWritable {
+    int value;
+
+    IntWritable(int v) {
+      value = v;
+    }
+
+    void set(int v) {
+      value = v;
+    }
+
+    int get() {
+      return value;
+    }
+  }
 
   /**
    * Checks the red-black tree rules to make sure that we have correctly built

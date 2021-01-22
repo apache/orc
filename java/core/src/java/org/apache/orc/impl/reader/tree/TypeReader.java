@@ -20,6 +20,7 @@ package org.apache.orc.impl.reader.tree;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.io.filter.FilterContext;
 import org.apache.orc.OrcProto;
+import org.apache.orc.impl.BitFieldReader;
 import org.apache.orc.impl.PositionProvider;
 import org.apache.orc.impl.reader.StripePlanner;
 
@@ -42,4 +43,6 @@ public interface TypeReader {
                   FilterContext filterContext) throws IOException;
 
   int getColumnId();
+
+  BitFieldReader getPresent();
 }

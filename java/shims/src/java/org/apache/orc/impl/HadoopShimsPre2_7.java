@@ -18,18 +18,18 @@
 
 package org.apache.orc.impl;
 
-import org.apache.hadoop.conf.Configuration;
+import java.util.ServiceLoader;
+import java.util.function.Supplier;
 import org.apache.hadoop.crypto.key.KeyProviderCryptoExtension;
 import org.apache.hadoop.crypto.key.KeyProviderCryptoExtension.CryptoExtension;
-import org.apache.hadoop.crypto.key.KeyProviderFactory;
-import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.orc.EncryptionAlgorithm;
+import org.apache.orc.shims.Configuration;
+import org.apache.orc.shims.FileIO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.security.GeneralSecurityException;
 import java.security.Key;
 import java.util.List;
@@ -43,28 +43,11 @@ import java.util.Random;
  *   <li>Crypto</li>
  * </ul>
  */
-public class HadoopShimsPre2_7 implements HadoopShims {
+public class HadoopShimsPre2_7 extends HadoopShimsPre2_6 {
 
   private static final Logger LOG =
       LoggerFactory.getLogger(HadoopShimsPre2_7.class);
 
-
-  @Override
-  public DirectDecompressor getDirectDecompressor(DirectCompressionType codec) {
-    return HadoopShimsPre2_6.getDecompressor(codec);
- }
-
-  @Override
-  public ZeroCopyReaderShim getZeroCopyReader(FSDataInputStream in,
-                                              ByteBufferPoolShim pool
-                                              ) throws IOException {
-    return ZeroCopyShims.getZeroCopyReader(in, pool);
-  }
-
-  @Override
-  public boolean endVariableLengthBlock(OutputStream output) {
-    return false;
-  }
 
   static String buildKeyVersionName(KeyMetadata key) {
     return key.getKeyName() + "@" + key.getVersion();
@@ -215,19 +198,6 @@ public class HadoopShimsPre2_7 implements HadoopShims {
     }
   }
 
-  static KeyProvider createKeyProvider(Configuration conf,
-                                       Random random) throws IOException {
-    List<org.apache.hadoop.crypto.key.KeyProvider> result =
-        KeyProviderFactory.getProviders(conf);
-    if (result.size() == 0) {
-      LOG.info("Can't get KeyProvider for ORC encryption from" +
-          " hadoop.security.key.provider.path.");
-      return new HadoopShimsPre2_3.NullKeyProvider();
-    } else {
-      return new KeyProviderImpl(result.get(0), random);
-    }
-  }
-
   /**
    * Find the correct algorithm based on the key's metadata.
    * @param meta the key's metadata
@@ -251,9 +221,37 @@ public class HadoopShimsPre2_7 implements HadoopShims {
         " AES and not " + cipher);
   }
 
+  /**
+   * Look up a KeyProvider using the old Hadoop-based API.
+   * @param kind the name of the key provider
+   * @param conf the hadoop configuration
+   * @param random the random number generator to use
+   * @return the new KeyProvider
+   */
+  KeyProvider lookupHadoopKeyProvider(String kind,
+                                      org.apache.hadoop.conf.Configuration conf,
+                                      Random random) throws IOException {
+    ServiceLoader<KeyProvider.Factory> loader = ServiceLoader.load(KeyProvider.Factory.class);
+    for (KeyProvider.Factory factory : loader) {
+      KeyProvider result = factory.create(kind, conf, random);
+      if (result != null) {
+        return result;
+      }
+    }
+    return null;
+  }
+
   @Override
-  public KeyProvider getHadoopKeyProvider(Configuration conf,
-                                          Random random) throws IOException {
-    return createKeyProvider(conf, random);
+  public KeyProvider getKeyProvider(String kind,
+                                    Configuration conf,
+                                    Random random) throws IOException {
+    KeyProvider result = lookupHadoopKeyProvider(kind,
+        ((HadoopConfiguration) conf).getHadoopConfig(), random);
+    return result != null ? result : super.getKeyProvider(kind, conf, random);
+  }
+
+  @Override
+  public FileIO createFileIO(Supplier<Object> fs) {
+    return new HadoopShimsPre2_3.HadoopFileIO(fs);
   }
 }

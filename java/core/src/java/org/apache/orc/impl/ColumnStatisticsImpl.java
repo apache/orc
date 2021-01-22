@@ -23,9 +23,6 @@ import java.time.chrono.IsoChronology;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.serde2.io.DateWritable;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
-import org.apache.hadoop.io.BytesWritable;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.WritableComparator;
 import org.apache.orc.BinaryColumnStatistics;
 import org.apache.orc.BooleanColumnStatistics;
 import org.apache.orc.CollectionColumnStatistics;
@@ -38,10 +35,12 @@ import org.apache.orc.OrcProto;
 import org.apache.orc.StringColumnStatistics;
 import org.apache.orc.TimestampColumnStatistics;
 import org.apache.orc.TypeDescription;
+import org.apache.orc.impl.util.FastByteComparisons;
 
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.TimeZone;
+import org.apache.orc.impl.util.Text;
 import org.threeten.extra.chrono.HybridChronology;
 
 
@@ -743,7 +742,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
           isLowerBoundSet = false;
           isUpperBoundSet = false;
         }
-      } else if (WritableComparator.compareBytes(minimum.getBytes(), 0,
+      } else if (FastByteComparisons.compareTo(minimum.getBytes(), 0,
           minimum.getLength(), bytes, offset, length) > 0) {
         if(length > MAX_BYTES_RECORDED) {
           minimum = truncateLowerBound(bytes, offset);
@@ -753,7 +752,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
           minimum.set(bytes, offset, length);
           isLowerBoundSet = false;
         }
-      } else if (WritableComparator.compareBytes(maximum.getBytes(), 0,
+      } else if (FastByteComparisons.compareTo(maximum.getBytes(), 0,
           maximum.getLength(), bytes, offset, length) < 0) {
         if(length > MAX_BYTES_RECORDED) {
           maximum = truncateUpperBound(bytes, offset);
@@ -1015,11 +1014,6 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     public void reset() {
       super.reset();
       sum = 0;
-    }
-
-    @Override
-    public void updateBinary(BytesWritable value) {
-      sum += value.getLength();
     }
 
     @Override
@@ -1962,10 +1956,6 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
   public void updateString(byte[] bytes, int offset, int length,
                            int repetitions) {
     throw new UnsupportedOperationException("Can't update string");
-  }
-
-  public void updateBinary(BytesWritable value) {
-    throw new UnsupportedOperationException("Can't update binary");
   }
 
   public void updateBinary(byte[] bytes, int offset, int length,

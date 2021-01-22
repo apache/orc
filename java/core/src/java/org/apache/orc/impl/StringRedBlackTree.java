@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,7 +20,7 @@ package org.apache.orc.impl;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import org.apache.hadoop.io.Text;
+import org.apache.orc.impl.util.Text;
 
 /**
  * A red-black tree that stores strings. The strings are stored as UTF-8 bytes

@@ -20,26 +20,23 @@ package org.apache.orc.impl;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.orc.OrcConf;
 
 import java.util.function.Supplier;
+import org.apache.orc.shims.SeekableInputStream;
 
-public final class DataReaderProperties {
+
+/**
+ * A DataReaderProperties that includes the old Hadoop-based parameters.
+ */
+public final class DataReaderProperties extends DataReaderPropertiesCore {
 
   private final Supplier<FileSystem> fileSystemSupplier;
   private final Path path;
-  private final FSDataInputStream file;
-  private final InStream.StreamOptions compression;
-  private final boolean zeroCopy;
-  private final int maxDiskRangeChunkLimit;
 
   private DataReaderProperties(Builder builder) {
+    super(builder);
     this.fileSystemSupplier = builder.fileSystemSupplier;
     this.path = builder.path;
-    this.file = builder.file;
-    this.compression = builder.compression;
-    this.zeroCopy = builder.zeroCopy;
-    this.maxDiskRangeChunkLimit = builder.maxDiskRangeChunkLimit;
   }
 
   public Supplier<FileSystem> getFileSystemSupplier() {
@@ -50,34 +47,14 @@ public final class DataReaderProperties {
     return path;
   }
 
-  public FSDataInputStream getFile() {
-    return file;
-  }
-
-  public InStream.StreamOptions getCompression() {
-    return compression;
-  }
-
-  public boolean getZeroCopy() {
-    return zeroCopy;
-  }
-
-  public int getMaxDiskRangeChunkLimit() {
-    return maxDiskRangeChunkLimit;
-  }
-
   public static Builder builder() {
     return new Builder();
   }
 
-  public static class Builder {
+  public static class Builder extends DataReaderPropertiesCore.Builder {
 
     private Supplier<FileSystem> fileSystemSupplier;
     private Path path;
-    private FSDataInputStream file;
-    private InStream.StreamOptions compression;
-    private boolean zeroCopy;
-    private int maxDiskRangeChunkLimit = (int) OrcConf.ORC_MAX_DISK_RANGE_CHUNK_LIMIT.getDefaultValue();;
 
     private Builder() {
 
@@ -85,45 +62,43 @@ public final class DataReaderProperties {
 
     public Builder withFileSystemSupplier(Supplier<FileSystem> supplier) {
       this.fileSystemSupplier = supplier;
+      super.withFileIO(HadoopShimsFactory.get().createFileIO((Supplier) supplier));
       return this;
     }
 
     public Builder withFileSystem(FileSystem filesystem) {
-      this.fileSystemSupplier = () -> filesystem;
+      withFileSystemSupplier(() -> filesystem);
       return this;
     }
 
     public Builder withPath(Path path) {
       this.path = path;
+      withFileName(path.toString());
       return this;
     }
 
     public Builder withFile(FSDataInputStream file) {
-      this.file = file;
+      super.withFile(new HadoopShimsPre2_3.HadoopSeekableInputStream(file));
       return this;
     }
 
     public Builder withCompression(InStream.StreamOptions value) {
-      this.compression = value;
+      super.withCompression(value);
       return this;
     }
 
     public Builder withZeroCopy(boolean zeroCopy) {
-      this.zeroCopy = zeroCopy;
+      super.withZeroCopy(zeroCopy);
       return this;
     }
 
     public Builder withMaxDiskRangeChunkLimit(int value) {
-      maxDiskRangeChunkLimit = value;
+      super.withMaxDiskRangeChunkLimit(value);
       return this;
     }
 
     public DataReaderProperties build() {
-      if (fileSystemSupplier == null || path == null) {
-        throw new NullPointerException("Filesystem = " + fileSystemSupplier +
-                                           ", path = " + path);
-      }
-
+      super.build();
       return new DataReaderProperties(this);
     }
 
