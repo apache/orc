@@ -1237,6 +1237,74 @@ public class TestRowFilteringSkip {
   }
 
   @Test
+  public void testSchemaEvolutionMissingColumn() throws Exception {
+    // Set the row stride to a multiple of the batch size
+    final int INDEX_STRIDE = 16 * ColumnBatchRows;
+    final int NUM_BATCHES = 10;
+
+    TypeDescription fileSchema = TypeDescription.createStruct()
+      .addField("int1", TypeDescription.createInt())
+      .addField("ts2", TypeDescription.createTimestamp());
+
+    try (Writer writer = OrcFile.createWriter(testFilePath,
+                                              OrcFile.writerOptions(conf)
+                                                .setSchema(fileSchema)
+                                                .rowIndexStride(INDEX_STRIDE))) {
+      VectorizedRowBatch batch = fileSchema.createRowBatchV2();
+      LongColumnVector col1 = (LongColumnVector) batch.cols[0];
+      TimestampColumnVector col2 = (TimestampColumnVector) batch.cols[1];
+      for (int b=0; b < NUM_BATCHES; ++b) {
+        batch.reset();
+        batch.size = ColumnBatchRows;
+        for (int row = 0; row < batch.size; row++) {
+          col1.vector[row] = row;
+          if ((row % 2) == 0)
+            col2.set(row, Timestamp.valueOf((1900+row)+"-04-01 12:34:56.9"));
+          else {
+            col2.isNull[row] = true;
+            col2.set(row, null);
+          }
+        }
+        col1.isRepeating = true;
+        col1.noNulls = false;
+        col2.noNulls = false;
+        writer.addRowBatch(batch);
+      }
+    }
+
+    TypeDescription readSchema = fileSchema
+      .clone()
+      .addField("missing", TypeDescription.createInt());
+    Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf));
+
+    try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
+      reader.options()
+        .schema(readSchema)
+        .setRowFilter(new String[]{"missing"}, TestRowFilteringSkip::notNullFilterMissing))) {
+      VectorizedRowBatch batch = readSchema.createRowBatchV2();
+
+      long rowCount = 0;
+      while (rows.nextBatch(batch)) {
+        // All rows are selected as NullTreeReader does not support filters
+        Assert.assertFalse(batch.selectedInUse);
+        rowCount += batch.size;
+      }
+      Assert.assertEquals(reader.getNumberOfRows(), rowCount);
+    }
+  }
+
+  private static void notNullFilterMissing(VectorizedRowBatch batch) {
+    int selIdx = 0;
+    for (int i = 0; i < batch.size; i++) {
+      if (!batch.cols[2].isNull[i]) {
+        batch.selected[selIdx++] = i;
+      }
+    }
+    batch.selectedInUse = true;
+    batch.size = selIdx;
+  }
+
+  @Test
   public void testcustomFileTimestampRoundRobbinRowFilterCallback() throws Exception {
     testFilePath = new Path(getClass().getClassLoader().
         getSystemResource("orc_split_elim.orc").getPath());

@@ -30,6 +30,7 @@ import org.apache.hadoop.mapred.Reporter;
 import org.apache.orc.*;
 import org.apache.orc.TypeDescription.Category;
 import org.apache.orc.impl.SchemaEvolution;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -233,9 +234,22 @@ public class TestOrcFileEvolution {
   }
 
   @Test
+  public void testMissingColumnFromReaderSchema() {
+    // Expect failure if the column is missing from the reader schema, as column a that is added
+    // by the SArg is missing from the reader schema
+    Assert.assertThrows("Field a not found in", IllegalArgumentException.class,
+                        () -> checkEvolution("struct<b:int,c:string>",
+                                       "struct<b:int,c:string>",
+                                       struct(1, "foo"),
+                                       struct(1, "foo", null),
+                                       true, true, false));
+
+  }
+
+  @Test
   public void testPreHive4243CheckEqual() {
     // Expect success on equal schemas
-    checkEvolution("struct<_col0:int,_col1:string>",
+    checkEvolutionPosn("struct<_col0:int,_col1:string>",
                    "struct<_col0:int,_col1:string>",
                    struct(1, "foo"),
                    struct(1, "foo", null), false, addSarg, false);
@@ -245,7 +259,7 @@ public class TestOrcFileEvolution {
   public void testPreHive4243Check() {
     // Expect exception on strict compatibility check
     thrown.expectMessage("HIVE-4243");
-    checkEvolution("struct<_col0:int,_col1:string>",
+    checkEvolutionPosn("struct<_col0:int,_col1:string>",
                    "struct<_col0:int,_col1:string,_col2:double>",
                    struct(1, "foo"),
                    struct(1, "foo", null), false, addSarg, false);
@@ -253,7 +267,7 @@ public class TestOrcFileEvolution {
 
   @Test
   public void testPreHive4243AddColumn() {
-    checkEvolution("struct<_col0:int,_col1:string>",
+    checkEvolutionPosn("struct<_col0:int,_col1:string>",
                    "struct<_col0:int,_col1:string,_col2:double>",
                    struct(1, "foo"),
                    struct(1, "foo", null), true, addSarg, false);
@@ -263,7 +277,7 @@ public class TestOrcFileEvolution {
   public void testPreHive4243AddColumnMiddle() {
     // Expect exception on type mismatch
     thrown.expect(SchemaEvolution.IllegalEvolutionException.class);
-    checkEvolution("struct<_col0:int,_col1:double>",
+    checkEvolutionPosn("struct<_col0:int,_col1:double>",
                    "struct<_col0:int,_col1:date,_col2:double>",
                    struct(1, 1.0),
                    null, true, addSarg, false);
@@ -310,6 +324,26 @@ public class TestOrcFileEvolution {
         struct(11, 2, 3),
         struct(11, 2, 3, null),
         false, addSarg, true);
+  }
+
+  private void checkEvolutionPosn(String writerType, String readerType,
+                                  Object inputRow, Object expectedOutput,
+                                  boolean tolerateSchema, boolean addSarg,
+                                  boolean positional) {
+    SearchArgument sArg = null;
+    String[] sCols = null;
+    if (addSarg) {
+      sArg = SearchArgumentFactory
+        .newBuilder()
+        .lessThan("_col0", PredicateLeaf.Type.LONG, 10L)
+        .build();
+      sCols = new String[]{null, "_col0", null};
+    }
+
+    checkEvolution(writerType, readerType,
+                   inputRow, expectedOutput,
+                   tolerateSchema,
+                   sArg, sCols, positional);
   }
 
   private void checkEvolution(String writerType, String readerType,

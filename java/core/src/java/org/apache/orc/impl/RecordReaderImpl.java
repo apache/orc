@@ -100,7 +100,8 @@ public class RecordReaderImpl implements RecordReader {
    *
    * @param evolution the mapping from reader to file schema
    * @param columnName  the fully qualified column name to look for
-   * @return the file column number or -1 if the column wasn't found
+   * @return the file column number or -1 if the column wasn't found in the file schema
+   * @throws IllegalArgumentException if the column was not found in the reader schema
    */
   static int findColumns(SchemaEvolution evolution,
                          String columnName) {
@@ -110,10 +111,9 @@ public class RecordReaderImpl implements RecordReader {
       TypeDescription fileColumn = evolution.getFileType(readerColumn);
       return fileColumn == null ? -1 : fileColumn.getId();
     } catch (IllegalArgumentException e) {
-      if (LOG.isDebugEnabled()){
-        LOG.debug("{}", e.getMessage());
-      }
-      return -1;
+      throw new IllegalArgumentException("Filter could not find column with name: " +
+                                         columnName + " on " + evolution.getReaderBaseSchema(),
+                                         e);
     }
   }
 
@@ -231,11 +231,9 @@ public class RecordReaderImpl implements RecordReader {
     if (options.getPreFilterColumnNames() != null) {
       for (String colName : options.getPreFilterColumnNames()) {
         int expandColId = findColumns(evolution, colName);
+        // If the column is not present in the file then this can be ignored from read.
         if (expandColId != -1) {
           filterColIds.add(expandColId);
-        } else {
-          throw new IllegalArgumentException("Filter could not find column with name: " +
-              colName + " on " + evolution.getReaderBaseSchema());
         }
       }
       LOG.info("Filter Columns: " + filterColIds);
