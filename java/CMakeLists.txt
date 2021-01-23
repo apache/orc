@@ -15,7 +15,7 @@ set(NO_DOWNLOAD_MSG
   -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn)
 
 # set the version in the POM file to match the CMake version string
-execute_process(COMMAND mvn versions:set -DnewVersion=${ORC_VERSION}
+execute_process(COMMAND ./mvnw versions:set -DnewVersion=${ORC_VERSION}
                                          -DgenerateBackupPoms=false
                                          -Pbenchmark
                                          ${NO_DOWNLOAD_MSG}
@@ -36,7 +36,7 @@ endif()
 
 add_custom_command(
    OUTPUT ${ORC_JARS}
-   COMMAND mvn ${NO_DOWNLOAD_MSG} ${JAVA_PROFILE}
+   COMMAND ./mvnw ${NO_DOWNLOAD_MSG} ${JAVA_PROFILE}
              -Dbuild.dir=${CMAKE_CURRENT_BINARY_DIR} -DskipTests package
    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
    COMMENT "Build the java directory"
@@ -46,7 +46,7 @@ add_custom_target(java_build ALL DEPENDS ${ORC_JARS})
 
 add_test(
   NAME java-test
-  COMMAND mvn ${NO_DOWNLOAD_MSG} -Pcmake
+  COMMAND ./mvnw ${NO_DOWNLOAD_MSG} -Pcmake
            -Dbuild.dir=${CMAKE_CURRENT_BINARY_DIR} test
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
