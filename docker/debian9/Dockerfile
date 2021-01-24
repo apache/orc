@@ -30,6 +30,7 @@ RUN apt-get install -y \
   libssl-dev \
   openjdk-8-jdk \
   make \
+  curl \
   maven
 
 WORKDIR /root
