@@ -30,6 +30,7 @@ RUN apt-get install -y \
   libsasl2-dev \
   libssl-dev \
   make \
+  curl \
   maven \
   tzdata
 
