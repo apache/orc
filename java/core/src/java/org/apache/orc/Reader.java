@@ -26,7 +26,9 @@ import java.util.function.Consumer;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
-import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.orc.filter.FilterContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The interface for reading ORC files.
@@ -181,6 +183,8 @@ public interface Reader extends Closeable {
    * Options for creating a RecordReader.
    */
   class Options implements Cloneable {
+    private static final Logger LOG = LoggerFactory.getLogger(Options.class);
+
     private boolean[] include;
     private long offset = 0;
     private long length = Long.MAX_VALUE;
@@ -191,7 +195,7 @@ public interface Reader extends Closeable {
     private Boolean skipCorruptRecords = null;
     private TypeDescription schema = null;
     private String[] preFilterColumns = null;
-    Consumer<VectorizedRowBatch> skipRowCallback = null;
+    Consumer<FilterContext> skipRowCallback = null;
     private DataReader dataReader = null;
     private Boolean tolerateMissingSchema = null;
     private boolean forcePositionalEvolution;
@@ -265,7 +269,7 @@ public interface Reader extends Closeable {
      *
      * @return this
      */
-    public Options setRowFilter(String[] filterColumnNames, Consumer<VectorizedRowBatch> filterCallback) {
+    public Options setRowFilter(String[] filterColumnNames, Consumer<FilterContext> filterCallback) {
       this.preFilterColumns = filterColumnNames;
       this.skipRowCallback =  filterCallback;
       return this;
@@ -382,7 +386,7 @@ public interface Reader extends Closeable {
       return sarg;
     }
 
-    public Consumer<VectorizedRowBatch> getFilterCallback() {
+    public Consumer<FilterContext> getFilterCallback() {
       return skipRowCallback;
     }
 

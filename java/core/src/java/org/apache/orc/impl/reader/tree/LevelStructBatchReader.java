@@ -15,24 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.orc.impl.reader.tree;
 
-import java.io.IOException;
-import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.orc.impl.TreeReaderFactory;
 
-public class PrimitiveBatchReader extends BatchReader {
-
-  public PrimitiveBatchReader(TypeReader rowReader) {
-    super(rowReader);
-  }
-
-  @Override
-  public void nextBatch(VectorizedRowBatch batch,
-                        int batchSize,
-                        ReadLevel rLevel) throws IOException {
-  batch.cols[0].reset();
-  batch.cols[0].ensureSize(batchSize, false);
-  rootType.nextVector(batch.cols[0], null, batchSize, batch, rLevel);
-  resetBatch(batch, batchSize);
+public class LevelStructBatchReader extends StructBatchReader {
+  public LevelStructBatchReader(LevelTypeReader rowReader,
+                                TreeReaderFactory.Context context) {
+    super(rowReader.getReader(), context);
   }
 }

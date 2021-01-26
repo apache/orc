@@ -15,62 +15,81 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.orc.impl.reader.tree;
 
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.orc.filter.FilterContext;
 import org.apache.orc.impl.TreeReaderFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Set;
 
 public class StructBatchReader extends BatchReader {
+  private static final Logger LOG = LoggerFactory.getLogger(StructBatchReader.class);
   // The reader context including row-filtering details
   private final TreeReaderFactory.Context context;
+  private final TreeReaderFactory.StructTreeReader structReader;
+  private final FilterContext fc;
 
-  public StructBatchReader(TreeReaderFactory.StructTreeReader rowReader, TreeReaderFactory.Context context) {
+  public StructBatchReader(TypeReader rowReader,
+                           TreeReaderFactory.Context context) {
     super(rowReader);
     this.context = context;
+    this.fc = new FilterContext(context.getSchemaEvolution().getReaderSchema());
+    if (rowReader instanceof TreeReaderFactory.StructTreeReader) {
+      structReader = (TreeReaderFactory.StructTreeReader) rowReader;
+    } else {
+      structReader = (TreeReaderFactory.StructTreeReader) ((LevelTypeReader)rowReader).getReader();
+    }
   }
 
-  private void readBatchColumn(VectorizedRowBatch batch, TypeReader[] children, int batchSize, int index)
-      throws IOException {
+  private void readBatchColumn(VectorizedRowBatch batch,
+                               TypeReader[] children,
+                               int batchSize,
+                               int index,
+                               ReadLevel rLevel)
+    throws IOException {
     ColumnVector colVector = batch.cols[index];
     if (colVector != null) {
       colVector.reset();
       colVector.ensureSize(batchSize, false);
-      children[index].nextVector(colVector, null, batchSize, batch);
+      children[index].nextVector(colVector, null, batchSize, batch, rLevel);
     }
   }
 
   @Override
-  public void nextBatch(VectorizedRowBatch batch, int batchSize) throws IOException {
-    TypeReader[] children = ((TreeReaderFactory.StructTreeReader) rootType).fields;
-    // Early expand fields --> apply filter --> expand remaining fields
-    Set<Integer> earlyExpandCols = context.getColumnFilterIds();
+  public void nextBatch(VectorizedRowBatch batch, int batchSize, ReadLevel rLevel)
+    throws IOException {
+    nextBatchLevel(batch, batchSize, rLevel);
 
-    // Clear selected and early expand columns used in Filter
-    batch.selectedInUse = false;
-    for (int i = 0; i < children.length && !earlyExpandCols.isEmpty() &&
-        (vectorColumnCount == -1 || i < vectorColumnCount); ++i) {
-      if (earlyExpandCols.contains(children[i].getColumnId())) {
-        readBatchColumn(batch, children, batchSize, i);
+    if (rLevel == ReadLevel.LEAD) {
+      // Apply filter callback to reduce number of # rows selected for decoding in the next
+      // TreeReaders
+      if (this.context.getColumnFilterCallback() != null) {
+        this.context.getColumnFilterCallback().accept(fc.setBatch(batch));
       }
     }
-    // Since we are going to filter rows based on some column values set batch.size earlier here
-    batch.size = batchSize;
+  }
 
-    // Apply filter callback to reduce number of # rows selected for decoding in the next TreeReaders
-    if (!earlyExpandCols.isEmpty() && this.context.getColumnFilterCallback() != null) {
-      this.context.getColumnFilterCallback().accept(batch);
+  private void nextBatchLevel(VectorizedRowBatch batch, int batchSize, ReadLevel rLevel) throws IOException {
+    TypeReader[] children = structReader.fields;
+
+    if (rLevel != ReadLevel.FOLLOW) {
+      // In case of FOLLOW we leave the selectedInUse untouched.
+      batch.selectedInUse = false;
     }
 
-    // Read the remaining columns applying row-level filtering
-    for (int i = 0; i < children.length &&
-        (vectorColumnCount == -1 || i < vectorColumnCount); ++i) {
-      if (!earlyExpandCols.contains(children[i].getColumnId())) {
-        readBatchColumn(batch, children, batchSize, i);
-      }
+    for (int i = 0; i < children.length
+                    && (vectorColumnCount == -1 || i < vectorColumnCount); ++i) {
+      readBatchColumn(batch, children, batchSize, i, rLevel);
+    }
+
+    if (rLevel != ReadLevel.FOLLOW) {
+      // Set the batch size when not dealing with follow columns
+      batch.size = batchSize;
     }
   }
 }

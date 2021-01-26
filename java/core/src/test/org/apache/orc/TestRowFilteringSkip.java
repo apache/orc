@@ -21,6 +21,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.Decimal64ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
@@ -28,6 +29,7 @@ import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
+import org.apache.orc.filter.FilterContext;
 import org.apache.orc.impl.RecordReaderImpl;
 import org.junit.Assert;
 import org.junit.Before;
@@ -43,6 +45,7 @@ import java.text.Format;
 import java.text.SimpleDateFormat;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Types that are skipped at row-level include: Decimal, Decimal64, Double, Float, Char, VarChar, String, Boolean, Timestamp
@@ -77,52 +80,54 @@ public class TestRowFilteringSkip {
   }
 
   // Filter all rows except: 924 and 940
-  public static void intAnyRowFilter(VectorizedRowBatch batch) {
+  public static void intAnyRowFilter(FilterContext batch) {
     // Dummy Filter implementation passing just one Batch row
     int newSize = 2;
-    batch.selected[0] = batch.size-100;
-    batch.selected[1] = 940;
-    batch.selectedInUse = true;
-    batch.size = newSize;
+    batch.getSelected()[0] = batch.getSelectedSize()-100;
+    batch.getSelected()[1] = 940;
+    batch.setSelectedInUse(true);
+    batch.setSelectedSize(newSize);
   }
 
   // Filter all rows except the first one
-  public static void intFirstRowFilter(VectorizedRowBatch batch) {
+  public static void intFirstRowFilter(FilterContext batch) {
     int newSize = 0;
-    for (int row = 0; row <batch.size; ++row) {
+    for (int row = 0; row <batch.getSelectedSize(); ++row) {
       if (row == 0) {
-        batch.selected[newSize++] = row;
+        batch.getSelected()[newSize++] = row;
       }
     }
-    batch.selectedInUse = true;
-    batch.size = newSize;
+    batch.setSelectedInUse(true);
+    batch.setSelectedSize(newSize);
   }
 
   // Filter out rows in a round-robbin fashion starting with a pass
-  public static void intRoundRobbinRowFilter(VectorizedRowBatch batch) {
+  public static void intRoundRobbinRowFilter(FilterContext batch) {
     int newSize = 0;
-    for (int row = 0; row < batch.size; ++row) {
+    int[] selected = batch.getSelected();
+    for (int row = 0; row < batch.getSelectedSize(); ++row) {
       if ((row % 2) == 0) {
-        batch.selected[newSize++] = row;
+        selected[newSize++] = row;
       }
     }
-    batch.selectedInUse = true;
-    batch.size = newSize;
+    batch.setSelectedInUse(true);
+    batch.setSelected(selected);
+    batch.setSelectedSize(newSize);
   }
 
   static int rowCount = 0;
-  public static void intCustomValueFilter(VectorizedRowBatch batch) {
-    LongColumnVector col1 = (LongColumnVector) batch.cols[0];
+  public static void intCustomValueFilter(FilterContext batch) {
+    LongColumnVector col1 = (LongColumnVector) batch.getCols()[0];
     int newSize = 0;
-    for (int row = 0; row <batch.size; ++row) {
+    for (int row = 0; row <batch.getSelectedSize(); ++row) {
       long val = col1.vector[row];
       if ((val == 2) || (val == 5) || (val == 13) || (val == 29) || (val == 70)) {
-        batch.selected[newSize++] = row;
+        batch.getSelected()[newSize++] = row;
       }
       rowCount++;
     }
-    batch.selectedInUse = true;
-    batch.size = newSize;
+    batch.setSelectedInUse(true);
+    batch.setSelectedSize(newSize);
   }
 
   @Test
@@ -1286,22 +1291,32 @@ public class TestRowFilteringSkip {
       long rowCount = 0;
       while (rows.nextBatch(batch)) {
         // All rows are selected as NullTreeReader does not support filters
-        Assert.assertFalse(batch.selectedInUse);
+        Assert.assertTrue(batch.selectedInUse);
         rowCount += batch.size;
       }
-      Assert.assertEquals(reader.getNumberOfRows(), rowCount);
+      Assert.assertEquals(0, rowCount);
     }
   }
 
-  private static void notNullFilterMissing(VectorizedRowBatch batch) {
+  private static void notNullFilterMissing(FilterContext batch) {
     int selIdx = 0;
-    for (int i = 0; i < batch.size; i++) {
-      if (!batch.cols[2].isNull[i]) {
-        batch.selected[selIdx++] = i;
+    ColumnVector cv = batch.getCols()[2];
+    if (cv.isRepeating) {
+      if (!cv.isNull[0]) {
+        for (int i = 0; i < batch.getSelectedSize(); i++) {
+          batch.getSelected()[selIdx++] = i;
+        }
+      }
+    } else {
+      for (int i = 0; i < batch.getSelectedSize(); i++) {
+        if (!batch.getCols()[2].isNull[i]) {
+          batch.getSelected()[selIdx++] = i;
+        }
       }
     }
-    batch.selectedInUse = true;
-    batch.size = selIdx;
+
+    batch.setSelectedInUse(true);
+    batch.setSelectedSize(selIdx);
   }
 
   @Test
@@ -1323,27 +1338,35 @@ public class TestRowFilteringSkip {
       assertEquals(1, reader.getStripes().size());
 
       int noNullCnt = 0;
+
       while (rows.nextBatch(batch)) {
         Assert.assertTrue(batch.selectedInUse);
-        Assert.assertTrue(batch.selected != null);
+        Assert.assertNotNull(batch.selected);
         // Rows are filtered so it should never be 1024
         Assert.assertTrue(batch.size != ColumnBatchRows);
-        assertEquals( true, col1.noNulls);
+        assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (col1.vector[r] != 100)
-            noNullCnt ++;
+          if (col1.vector[r] != 100) noNullCnt ++;
         }
+        // We should always select only one value as the file is spaced such
+        Assert.assertEquals( 1, batch.size);
+        long val = col1.vector[batch.selected[0]] ;
+        // Check that we have read the valid value
+        Assert.assertTrue((val == 2) || (val == 5) || (val == 13) || (val == 29) || (val == 70));
+        if (val == 2) {
+          Assert.assertEquals(0, col5.getTime(batch.selected[0]));
+        } else {
+          Assert.assertNotEquals(0, col5.getTime(batch.selected[0]));
+        }
+
+        // Check that unselected is not populated
+        Assert.assertEquals(0, batch.selected[1]);
       }
 
       // Total rows of the file should be 25k
       Assert.assertEquals(25000, rowCount);
       // Make sure that our filter worked ( 5 rows with userId != 100)
       Assert.assertEquals(5, noNullCnt);
-      Assert.assertEquals(false, col5.isRepeating);
-      Assert.assertEquals(544, batch.selected[0]);
-      Assert.assertEquals(0, batch.selected[1]);
-      Assert.assertTrue(col5.getTime(0) == 0);
-      Assert.assertTrue(col5.getTime(544) != 0);
     }
   }
 }
