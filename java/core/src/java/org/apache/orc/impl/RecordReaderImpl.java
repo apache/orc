@@ -23,6 +23,7 @@ import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.time.chrono.ChronoLocalDate;
 import java.time.format.DateTimeFormatter;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
@@ -54,6 +55,7 @@ import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.reader.ReaderEncryption;
 import org.apache.orc.impl.reader.StripePlanner;
 import org.apache.orc.impl.reader.tree.BatchReader;
+import org.apache.orc.impl.reader.tree.TypeReader;
 import org.apache.orc.util.BloomFilter;
 import org.apache.orc.util.BloomFilterIO;
 import org.slf4j.Logger;
@@ -83,17 +85,25 @@ public class RecordReaderImpl implements RecordReader {
   private final boolean[] fileIncluded;
   private final long rowIndexStride;
   private long rowInStripe = 0;
+  // position of the follow reader within the stripe
+  private long followRowInStripe = 0;
   private int currentStripe = -1;
   private long rowBaseInStripe = 0;
   private long rowCountInStripe = 0;
   private final BatchReader reader;
   private final OrcIndex indexes;
+  // identifies the columns requiring row indexes
+  private final boolean[] rowIndexColsToRead;
   private final SargApplier sargApp;
   // an array about which row groups aren't skipped
   private boolean[] includedRowGroups = null;
   private final DataReader dataReader;
   private final int maxDiskRangeChunkLimit;
   private final StripePlanner planner;
+  // identifies the type of read, ALL(read everything), LEADERS(read only the filter columns)
+  private final TypeReader.ReadPhase startReadPhase;
+  // identifies that follow columns bytes must be read
+  private boolean needsFollowColumnsRead;
 
   /**
    * Given a list of column names, find the given column and return the index.
@@ -105,11 +115,46 @@ public class RecordReaderImpl implements RecordReader {
    */
   static int findColumns(SchemaEvolution evolution,
                          String columnName) {
+    TypeDescription fileColumn = findColumnType(evolution, columnName);
+    return fileColumn == null ? -1 : fileColumn.getId();
+  }
+
+  static TypeDescription findColumnType(SchemaEvolution evolution, String columnName) {
     try {
       TypeDescription readerColumn = evolution.getReaderBaseSchema().findSubtype(
-          columnName, evolution.isSchemaEvolutionCaseAware);
-      TypeDescription fileColumn = evolution.getFileType(readerColumn);
-      return fileColumn == null ? -1 : fileColumn.getId();
+        columnName, evolution.isSchemaEvolutionCaseAware);
+      return evolution.getFileType(readerColumn);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException("Filter could not find column with name: " +
+                                         columnName + " on " + evolution.getReaderBaseSchema(),
+                                         e);
+    }
+  }
+
+  /**
+   * Given a column name such as 'a.b.c', this method returns the column 'a.b.c' if present in the
+   * file. In case 'a.b.c' is not found in file then it tries to look for 'a.b', then 'a'. If none
+   * are present then it shall return null.
+   *
+   * @param evolution the mapping from reader to file schema
+   * @param columnName the fully qualified column name to look for
+   * @return the file column type or null in case none of the branch columns are present in the file
+   * @throws IllegalArgumentException if the column was not found in the reader schema
+   */
+  static TypeDescription findMostCommonColumn(SchemaEvolution evolution, String columnName) {
+    try {
+      TypeDescription readerColumn = evolution.getReaderBaseSchema().findSubtype(
+        columnName, evolution.isSchemaEvolutionCaseAware);
+      TypeDescription fileColumn;
+      do {
+        fileColumn = evolution.getFileType(readerColumn);
+        if (fileColumn == null) {
+          readerColumn = readerColumn.getParent();
+        } else {
+          return fileColumn;
+        }
+      } while (readerColumn != null);
+      return null;
     } catch (IllegalArgumentException e) {
       throw new IllegalArgumentException("Filter could not find column with name: " +
                                          columnName + " on " + evolution.getReaderBaseSchema(),
@@ -166,6 +211,7 @@ public class RecordReaderImpl implements RecordReader {
     ReaderEncryption encryption = fileReader.getEncryption();
     this.fileIncluded = evolution.getFileIncluded();
     SearchArgument sarg = options.getSearchArgument();
+    boolean[] rowIndexCols = new boolean[evolution.getFileIncluded().length];
     if (sarg != null && rowIndexStride != 0) {
       sargApp = new SargApplier(sarg,
           rowIndexStride,
@@ -174,6 +220,7 @@ public class RecordReaderImpl implements RecordReader {
           fileReader.useUTCTimestamp,
           fileReader.writerUsedProlepticGregorian(),
           fileReader.options.getConvertToProlepticGregorian());
+      sargApp.setRowIndexCols(rowIndexCols);
     } else {
       sargApp = null;
     }
@@ -228,15 +275,28 @@ public class RecordReaderImpl implements RecordReader {
     SortedSet<Integer> filterColIds = new TreeSet<>();
     if (options.getPreFilterColumnNames() != null) {
       for (String colName : options.getPreFilterColumnNames()) {
-        int expandColId = findColumns(evolution, colName);
+        TypeDescription expandCol = findColumnType(evolution, colName);
         // If the column is not present in the file then this can be ignored from read.
-        if (expandColId != -1) {
-          filterColIds.add(expandColId);
+        if (expandCol == null || expandCol.getId() == -1) {
+          // Add -1 to filter columns so that the NullTreeReader is invoked during the LEADERS phase
+          filterColIds.add(-1);
+          // Determine the common parent and include these
+          expandCol = findMostCommonColumn(evolution, colName);
+        }
+        while (expandCol != null && expandCol.getId() != -1) {
+          // classify the column and the parent branch as LEAD
+          filterColIds.add(expandCol.getId());
+          rowIndexCols[expandCol.getId()] = true;
+          expandCol = expandCol.getParent();
         }
       }
       LOG.info("Filter Columns: " + filterColIds);
+      this.startReadPhase = TypeReader.ReadPhase.LEADERS;
+    } else {
+      this.startReadPhase = TypeReader.ReadPhase.ALL;
     }
 
+    this.rowIndexColsToRead = ArrayUtils.contains(rowIndexCols, true) ? rowIndexCols : null;
     TreeReaderFactory.ReaderContext readerContext =
         new TreeReaderFactory.ReaderContext()
           .setSchemaEvolution(evolution)
@@ -255,8 +315,8 @@ public class RecordReaderImpl implements RecordReader {
         new OrcProto.BloomFilterIndex[columns]);
 
     planner = new StripePlanner(evolution.getFileSchema(), encryption,
-        dataReader, writerVersion, ignoreNonUtf8BloomFilter,
-        maxDiskRangeChunkLimit);
+                                dataReader, writerVersion, ignoreNonUtf8BloomFilter,
+                                maxDiskRangeChunkLimit, filterColIds);
 
     try {
       advanceToNextRow(reader, 0L, true);
@@ -921,7 +981,6 @@ public class RecordReaderImpl implements RecordReader {
     private final int[] filterColumns;
     private final long rowIndexStride;
     // same as the above array, but indices are set to true
-    private final boolean[] sargColumns;
     private final SchemaEvolution evolution;
     private final long[] exceptionCount;
     private final boolean useUTCTimestamp;
@@ -954,19 +1013,21 @@ public class RecordReaderImpl implements RecordReader {
       filterColumns = mapSargColumnsToOrcInternalColIdx(sargLeaves,
                                                         evolution);
       this.rowIndexStride = rowIndexStride;
+      this.evolution = evolution;
+      exceptionCount = new long[sargLeaves.size()];
+      this.useUTCTimestamp = useUTCTimestamp;
+    }
+
+    public void setRowIndexCols(boolean[] rowIndexCols) {
       // included will not be null, row options will fill the array with
       // trues if null
-      sargColumns = new boolean[evolution.getFileIncluded().length];
       for (int i : filterColumns) {
         // filter columns may have -1 as index which could be partition
         // column in SARG.
         if (i > 0) {
-          sargColumns[i] = true;
+          rowIndexCols[i] = true;
         }
       }
-      this.evolution = evolution;
-      exceptionCount = new long[sargLeaves.size()];
-      this.useUTCTimestamp = useUTCTimestamp;
     }
 
     /**
@@ -1080,11 +1141,15 @@ public class RecordReaderImpl implements RecordReader {
    * @throws IOException
    */
   protected boolean[] pickRowGroups() throws IOException {
-    // if we don't have a sarg or indexes, we read everything
+    // Read the Row Indicies if required
+    if (rowIndexColsToRead != null) {
+      readCurrentStripeRowIndex();
+    }
+
+    // In the absence of SArg all rows groups should be included
     if (sargApp == null) {
       return null;
     }
-    readRowIndex(currentStripe, fileIncluded, sargApp.sargColumns);
     return sargApp.pickRowGroups(stripes.get(currentStripe),
         indexes.getRowGroupIndex(),
         indexes.getBloomFilterKinds(), stripeFooter.getColumnsList(),
@@ -1115,11 +1180,12 @@ public class RecordReaderImpl implements RecordReader {
 
     // if we haven't skipped the whole stripe, read the data
     if (rowInStripe < rowCountInStripe) {
-      planner.readData(indexes, includedRowGroups, false);
-      reader.startStripe(planner);
+      planner.readData(indexes, includedRowGroups, false, startReadPhase);
+      reader.startStripe(planner, startReadPhase);
+      needsFollowColumnsRead = true;
       // if we skipped the first row group, move the pointers forward
       if (rowInStripe != 0) {
-        seekToRowEntry(reader, (int) (rowInStripe / rowIndexStride));
+        seekToRowEntry(reader, (int) (rowInStripe / rowIndexStride), startReadPhase);
       }
     }
   }
@@ -1131,6 +1197,7 @@ public class RecordReaderImpl implements RecordReader {
     // setup the position in the stripe
     rowCountInStripe = stripe.getNumberOfRows();
     rowInStripe = 0;
+    followRowInStripe = 0;
     rowBaseInStripe = 0;
     for (int i = 0; i < currentStripe; ++i) {
       rowBaseInStripe += stripes.get(i).getNumberOfRows();
@@ -1158,21 +1225,29 @@ public class RecordReaderImpl implements RecordReader {
   }
 
   /**
+   * Determine the RowGroup based on the supplied row id.
+   * @param rowIdx Row for which the row group is being determined
+   * @return Id of the RowGroup that the row belongs to
+   */
+  private int computeRGIdx(long rowIdx) {
+    return rowIndexStride == 0 ? 0 : (int) (rowIdx / rowIndexStride);
+  }
+
+  /**
    * Skip over rows that we aren't selecting, so that the next row is
    * one that we will read.
    *
    * @param nextRow the row we want to go to
    * @throws IOException
    */
-  private boolean advanceToNextRow(
-    BatchReader reader, long nextRow, boolean canAdvanceStripe)
+  private boolean advanceToNextRow(BatchReader reader, long nextRow, boolean canAdvanceStripe)
       throws IOException {
     long nextRowInStripe = nextRow - rowBaseInStripe;
     // check for row skipping
     if (rowIndexStride != 0 &&
         includedRowGroups != null &&
         nextRowInStripe < rowCountInStripe) {
-      int rowGroup = (int) (nextRowInStripe / rowIndexStride);
+      int rowGroup = computeRGIdx(nextRowInStripe);
       if (!includedRowGroups[rowGroup]) {
         while (rowGroup < includedRowGroups.length && !includedRowGroups[rowGroup]) {
           rowGroup += 1;
@@ -1195,10 +1270,10 @@ public class RecordReaderImpl implements RecordReader {
     if (nextRowInStripe != rowInStripe) {
       if (rowIndexStride != 0) {
         int rowGroup = (int) (nextRowInStripe / rowIndexStride);
-        seekToRowEntry(reader, rowGroup);
-        reader.skipRows(nextRowInStripe - rowGroup * rowIndexStride);
+        seekToRowEntry(reader, rowGroup, startReadPhase);
+        reader.skipRows(nextRowInStripe - rowGroup * rowIndexStride, startReadPhase);
       } else {
-        reader.skipRows(nextRowInStripe - rowInStripe);
+        reader.skipRows(nextRowInStripe - rowInStripe, startReadPhase);
       }
       rowInStripe = nextRowInStripe;
     }
@@ -1208,27 +1283,110 @@ public class RecordReaderImpl implements RecordReader {
   @Override
   public boolean nextBatch(VectorizedRowBatch batch) throws IOException {
     try {
-      if (rowInStripe >= rowCountInStripe) {
-        currentStripe += 1;
-        if (currentStripe >= stripes.size()) {
-          batch.size = 0;
-          return false;
+      int batchSize;
+      // do...while is required to handle the case where the filter eliminates all rows in the
+      // batch, we never return an empty batch unless the file is exhausted
+      do {
+        if (rowInStripe >= rowCountInStripe) {
+          currentStripe += 1;
+          if (currentStripe >= stripes.size()) {
+            batch.size = 0;
+            return false;
+          }
+          // Read stripe in Memory
+          readStripe();
+          followRowInStripe = rowInStripe;
         }
-        // Read stripe in Memory
-        readStripe();
-      }
 
-      int batchSize = computeBatchSize(batch.getMaxSize());
-      rowInStripe += batchSize;
-      reader.setVectorColumnCount(batch.getDataColumnCount());
-      reader.nextBatch(batch, batchSize);
-      advanceToNextRow(reader, rowInStripe + rowBaseInStripe, true);
-      // batch.size can be modified by filter so only batchSize can tell if we actually read rows
+        batchSize = computeBatchSize(batch.getMaxSize());
+        reader.setVectorColumnCount(batch.getDataColumnCount());
+        reader.nextBatch(batch, batchSize, startReadPhase);
+        if (startReadPhase == TypeReader.ReadPhase.LEADERS && batch.size > 0) {
+          // At least 1 row has been selected and as a result we read the follow columns into the
+          // row batch
+          reader.nextBatch(batch,
+                           batchSize,
+                           prepareFollowReaders(rowInStripe, followRowInStripe));
+          followRowInStripe = rowInStripe + batchSize;
+        }
+        rowInStripe += batchSize;
+        advanceToNextRow(reader, rowInStripe + rowBaseInStripe, true);
+        // batch.size can be modified by filter so only batchSize can tell if we actually read rows
+      } while (batchSize != 0 && batch.size == 0);
       return batchSize != 0;
     } catch (IOException e) {
       // Rethrow exception with file name in log message
       throw new IOException("Error reading file: " + path, e);
     }
+  }
+
+  /**
+   * This method prepares the non-filter column readers for next batch. This involves the following
+   * 1. Determine position
+   * 2. Perform IO if required
+   * 3. Position the non-filter readers
+   *
+   * This method is repositioning the non-filter columns and as such this method shall never have to
+   * deal with navigating the stripe forward or skipping row groups, all of this should have already
+   * taken place based on the filter columns.
+   * @param toFollowRow The rowIdx identifies the required row position within the stripe for
+   *                    follow read
+   * @param fromFollowRow Indicates the current position of the follow read, exclusive
+   * @return the read phase for reading non-filter columns, this shall be FOLLOWERS_AND_PARENTS in
+   * case of a seek otherwise will be FOLLOWERS
+   */
+  private TypeReader.ReadPhase prepareFollowReaders(long toFollowRow, long fromFollowRow)
+    throws IOException {
+    // 1. Determine the required row group and skip rows needed from the RG start
+    int needRG = computeRGIdx(toFollowRow);
+    // The current row is not yet read so we -1 to compute the previously read row group
+    int readRG = computeRGIdx(fromFollowRow - 1);
+    long skipRows;
+    if (needRG == readRG && toFollowRow >= fromFollowRow) {
+      // In case we are skipping forward within the same row group, we compute skip rows from the
+      // current position
+      skipRows = toFollowRow - fromFollowRow;
+    } else {
+      // In all other cases including seeking backwards, we compute the skip rows from the start of
+      // the required row group
+      skipRows = toFollowRow - (needRG * rowIndexStride);
+    }
+
+    // 2. Plan the row group idx for the non-filter columns if this has not already taken place
+    if (needsFollowColumnsRead) {
+      needsFollowColumnsRead = false;
+      planner.readFollowData(indexes, includedRowGroups, needRG, false);
+      reader.startStripe(planner, TypeReader.ReadPhase.FOLLOWERS);
+    }
+
+    // 3. Position the non-filter readers to the required RG and skipRows
+    TypeReader.ReadPhase result = TypeReader.ReadPhase.FOLLOWERS;
+    if (needRG != readRG || toFollowRow < fromFollowRow) {
+      // When having to change a row group or in case of back navigation, seek both the filter
+      // parents and non-filter. This will re-position the parents present vector. This is needed
+      // to determine the number of non-null values to skip on the non-filter columns.
+      seekToRowEntry(reader, needRG, TypeReader.ReadPhase.FOLLOWERS_AND_PARENTS);
+      // skip rows on both the filter parents and non-filter as both have been positioned in the
+      // previous step
+      reader.skipRows(skipRows, TypeReader.ReadPhase.FOLLOWERS_AND_PARENTS);
+      result = TypeReader.ReadPhase.FOLLOWERS_AND_PARENTS;
+    } else if (skipRows > 0) {
+      // in case we are only skipping within the row group, position the filter parents back to the
+      // position of the follow. This is required to determine the non-null values to skip on the
+      // non-filter columns.
+      seekToRowEntry(reader, readRG, TypeReader.ReadPhase.LEADER_PARENTS);
+      reader.skipRows(fromFollowRow - (readRG * rowIndexStride), TypeReader.ReadPhase.LEADER_PARENTS);
+      // Move both the filter parents and non-filter forward, this will compute the correct
+      // non-null skips on follow children
+      reader.skipRows(skipRows, TypeReader.ReadPhase.FOLLOWERS_AND_PARENTS);
+      result = TypeReader.ReadPhase.FOLLOWERS_AND_PARENTS;
+    }
+    // Identifies the read level that should be performed for the read
+    // FOLLOWERS_WITH_PARENTS indicates repositioning identifying both non-filter and filter parents
+    // FOLLOWERS indicates read only of the non-filter level without the parents, which is used during
+    // contiguous read. During a contiguous read no skips are needed and the non-null information of
+    // the parent is available in the column vector for use during non-filter read
+    return result;
   }
 
   private int computeBatchSize(long targetBatchSize) {
@@ -1238,16 +1396,25 @@ public class RecordReaderImpl implements RecordReader {
     // within strip). Batch size computed out of marker position makes sure that batch size is
     // aware of row group boundary and will not cause overflow when reading rows
     // illustration of this case is here https://issues.apache.org/jira/browse/HIVE-6287
-    if (rowIndexStride != 0 && includedRowGroups != null && rowInStripe < rowCountInStripe) {
+    if (rowIndexStride != 0
+        && (includedRowGroups != null || startReadPhase != TypeReader.ReadPhase.ALL)
+        && rowInStripe < rowCountInStripe) {
       int startRowGroup = (int) (rowInStripe / rowIndexStride);
-      if (!includedRowGroups[startRowGroup]) {
+      if (includedRowGroups != null && !includedRowGroups[startRowGroup]) {
         while (startRowGroup < includedRowGroups.length && !includedRowGroups[startRowGroup]) {
           startRowGroup += 1;
         }
       }
 
       int endRowGroup = startRowGroup;
-      while (endRowGroup < includedRowGroups.length && includedRowGroups[endRowGroup]) {
+      // We force row group boundaries when dealing with filters. We adjust the end row group to
+      // be the next row group even if more than one are possible selections.
+      if (includedRowGroups != null && startReadPhase == TypeReader.ReadPhase.ALL) {
+        while (endRowGroup < includedRowGroups.length
+               && includedRowGroups[endRowGroup]) {
+          endRowGroup += 1;
+        }
+      } else {
         endRowGroup += 1;
       }
 
@@ -1296,13 +1463,21 @@ public class RecordReaderImpl implements RecordReader {
     throw new IllegalArgumentException("Seek after the end of reader range");
   }
 
-  public OrcIndex readRowIndex(int stripeIndex, boolean[] included,
-                               boolean[] sargColumns) throws IOException {
-    // if this is the current stripe, use the cached objects.
-    if (stripeIndex == currentStripe) {
-      return planner.readRowIndex(
-          sargColumns != null || sargApp == null
-              ? sargColumns : sargApp.sargColumns, indexes);
+  private void readCurrentStripeRowIndex() throws IOException {
+    planner.readRowIndex(rowIndexColsToRead, indexes);
+  }
+
+  public OrcIndex readRowIndex(int stripeIndex,
+                               boolean[] included,
+                               boolean[] readCols) throws IOException {
+    // Use the cached objects if the read request matches the cached request
+    if (stripeIndex == currentStripe
+            && (readCols == null || Arrays.equals(readCols, rowIndexColsToRead))) {
+      if (rowIndexColsToRead != null) {
+        return indexes;
+      } else {
+        return planner.readRowIndex(readCols, indexes);
+      }
     } else {
       StripePlanner copy = new StripePlanner(planner);
       if (included == null) {
@@ -1310,11 +1485,11 @@ public class RecordReaderImpl implements RecordReader {
         Arrays.fill(included, true);
       }
       copy.parseStripe(stripes.get(stripeIndex), included);
-      return copy.readRowIndex(sargColumns, null);
+      return copy.readRowIndex(readCols, null);
     }
   }
 
-  private void seekToRowEntry(BatchReader reader, int rowEntry)
+  private void seekToRowEntry(BatchReader reader, int rowEntry, TypeReader.ReadPhase readPhase)
       throws IOException {
     OrcProto.RowIndex[] rowIndices = indexes.getRowGroupIndex();
     PositionProvider[] index = new PositionProvider[rowIndices.length];
@@ -1329,7 +1504,7 @@ public class RecordReaderImpl implements RecordReader {
         }
       }
     }
-    reader.seek(index);
+    reader.seek(index, readPhase);
   }
 
   @Override
@@ -1350,7 +1525,10 @@ public class RecordReaderImpl implements RecordReader {
       currentStripe = rightStripe;
       readStripe();
     }
-    readRowIndex(currentStripe, fileIncluded, sargApp == null ? null : sargApp.sargColumns);
+    if (rowIndexColsToRead == null) {
+      // Read the row indexes only if they were not already read as part of readStripe()
+      readCurrentStripeRowIndex();
+    }
 
     // if we aren't to the right row yet, advance in the stripe.
     advanceToNextRow(reader, rowNumber, true);

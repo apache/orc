@@ -404,18 +404,21 @@ public class ParserUtils {
   }
 
   static class ColumnFinder implements TypeVisitor {
+    // top and current are interpreted as a union, only one of them is expected to be set at any
+    // given time.
     private ColumnVector[] top;
     private ColumnVector current = null;
     private final ColumnVector[] result;
     private int resultIdx = 0;
 
     ColumnFinder(TypeDescription schema, VectorizedRowBatch batch, int levels) {
-      top = batch.cols;
       if (schema.getCategory() == TypeDescription.Category.STRUCT) {
+        top = batch.cols;
         result = new ColumnVector[levels];
       } else {
         result = new ColumnVector[levels + 1];
-        current = top[0];
+        current = batch.cols[0];
+        top = null;
         addResult(current);
       }
     }

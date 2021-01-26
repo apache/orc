@@ -23,7 +23,6 @@ import org.apache.orc.impl.reader.StripePlanner;
 
 import java.io.IOException;
 
-
 /**
  * The top level interface that the reader uses to read the columns from the
  * ORC file.
@@ -38,7 +37,8 @@ public abstract class BatchReader {
     this.rootType = rootType;
   }
 
-  public abstract void startStripe(StripePlanner planner) throws IOException;
+  public abstract void startStripe(StripePlanner planner, TypeReader.ReadPhase readPhase)
+    throws IOException;
 
   public void setVectorColumnCount(int vectorColumnCount) {
     this.vectorColumnCount = vectorColumnCount;
@@ -46,19 +46,21 @@ public abstract class BatchReader {
 
   /**
    * Read the next batch of data from the file.
-   * @param batch     the batch to read into
-   * @param batchSize the number of rows to read
+   * @param batch        the batch to read into
+   * @param batchSize    the number of rows to read
+   * @param readPhase    defines the read phase
    * @throws IOException errors reading the file
    */
   public abstract void nextBatch(VectorizedRowBatch batch,
-                                 int batchSize) throws IOException;
+                                 int batchSize,
+                                 TypeReader.ReadPhase readPhase) throws IOException;
 
   protected void resetBatch(VectorizedRowBatch batch, int batchSize) {
     batch.selectedInUse = false;
     batch.size = batchSize;
   }
 
-  public abstract void skipRows(long rows) throws IOException;
+  public abstract void skipRows(long rows, TypeReader.ReadPhase readPhase) throws IOException;
 
-  public abstract void seek(PositionProvider[] index) throws IOException;
+  public abstract void seek(PositionProvider[] index, TypeReader.ReadPhase readPhase) throws IOException;
 }
