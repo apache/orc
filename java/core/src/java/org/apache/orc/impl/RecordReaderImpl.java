@@ -100,14 +100,21 @@ public class RecordReaderImpl implements RecordReader {
    *
    * @param evolution the mapping from reader to file schema
    * @param columnName  the fully qualified column name to look for
-   * @return the file column number or -1 if the column wasn't found
+   * @return the file column number or -1 if the column wasn't found in the file schema
+   * @throws IllegalArgumentException if the column was not found in the reader schema
    */
   static int findColumns(SchemaEvolution evolution,
                          String columnName) {
-    TypeDescription readerColumn = evolution.getReaderBaseSchema().findSubtype(
-        columnName, evolution.isSchemaEvolutionCaseAware);
-    TypeDescription fileColumn = evolution.getFileType(readerColumn);
-    return fileColumn == null ? -1 : fileColumn.getId();
+    try {
+      TypeDescription readerColumn = evolution.getReaderBaseSchema().findSubtype(
+          columnName, evolution.isSchemaEvolutionCaseAware);
+      TypeDescription fileColumn = evolution.getFileType(readerColumn);
+      return fileColumn == null ? -1 : fileColumn.getId();
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException("Filter could not find column with name: " +
+                                         columnName + " on " + evolution.getReaderBaseSchema(),
+                                         e);
+    }
   }
 
   /**

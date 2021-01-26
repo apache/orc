@@ -30,6 +30,7 @@ import org.apache.hadoop.mapred.Reporter;
 import org.apache.orc.*;
 import org.apache.orc.TypeDescription.Category;
 import org.apache.orc.impl.SchemaEvolution;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -233,13 +234,25 @@ public class TestOrcFileEvolution {
   }
 
   @Test
+  public void testMissingColumnFromReaderSchema() {
+    // Expect failure if the column is missing from the reader schema, as column a that is added
+    // by the SArg is missing from the reader schema
+    Assert.assertThrows("Field a not found in", IllegalArgumentException.class,
+                        () -> checkEvolution("struct<b:int,c:string>",
+                                       "struct<b:int,c:string>",
+                                       struct(1, "foo"),
+                                       struct(1, "foo", null),
+                                       true, true, false));
+
+  }
+
+  @Test
   public void testPreHive4243CheckEqual() {
     // Expect success on equal schemas
     checkEvolutionPosn("struct<_col0:int,_col1:string>",
                    "struct<_col0:int,_col1:string>",
                    struct(1, "foo"),
-                   struct(1, "foo", null),
-                   false, addSarg, false);
+                   struct(1, "foo", null), false, addSarg, false);
   }
 
   @Test
@@ -257,8 +270,7 @@ public class TestOrcFileEvolution {
     checkEvolutionPosn("struct<_col0:int,_col1:string>",
                    "struct<_col0:int,_col1:string,_col2:double>",
                    struct(1, "foo"),
-                   struct(1, "foo", null),
-                   true, addSarg, false);
+                   struct(1, "foo", null), true, addSarg, false);
   }
 
   @Test
