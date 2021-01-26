@@ -22,6 +22,14 @@ package org.apache.orc.impl;
  * Builds a list of buffer chunks
  */
 public class BufferChunkList {
+  public BufferChunk getHead() {
+    return head;
+  }
+
+  public BufferChunk getTail() {
+    return tail;
+  }
+
   private BufferChunk head;
   private BufferChunk tail;
 
@@ -58,4 +66,5 @@ public class BufferChunkList {
     head = null;
     tail = null;
   }
+
 }

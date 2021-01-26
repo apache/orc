@@ -23,6 +23,7 @@ import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.time.chrono.ChronoLocalDate;
 import java.time.format.DateTimeFormatter;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
@@ -54,6 +55,7 @@ import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.reader.ReaderEncryption;
 import org.apache.orc.impl.reader.StripePlanner;
 import org.apache.orc.impl.reader.tree.BatchReader;
+import org.apache.orc.impl.reader.tree.ReadLevel;
 import org.apache.orc.util.BloomFilter;
 import org.apache.orc.util.BloomFilterIO;
 import org.slf4j.Logger;
@@ -83,17 +85,21 @@ public class RecordReaderImpl implements RecordReader {
   private final boolean[] fileIncluded;
   private final long rowIndexStride;
   private long rowInStripe = 0;
+  private long followRowInStripe = 0;
   private int currentStripe = -1;
   private long rowBaseInStripe = 0;
   private long rowCountInStripe = 0;
   private final BatchReader reader;
   private final OrcIndex indexes;
+  private final boolean[] rowIndexCols;
   private final SargApplier sargApp;
   // an array about which row groups aren't skipped
   private boolean[] includedRowGroups = null;
   private final DataReader dataReader;
   private final int maxDiskRangeChunkLimit;
   private final StripePlanner planner;
+  private final ReadLevel rLevel;
+  private boolean needFollowStripe;
 
   /**
    * Given a list of column names, find the given column and return the index.
@@ -161,6 +167,7 @@ public class RecordReaderImpl implements RecordReader {
             "file schema:   " + fileReader.getSchema());
       }
     }
+
     this.schema = evolution.getReaderSchema();
     this.path = fileReader.path;
     this.rowIndexStride = fileReader.rowIndexStride;
@@ -168,6 +175,7 @@ public class RecordReaderImpl implements RecordReader {
     ReaderEncryption encryption = fileReader.getEncryption();
     this.fileIncluded = evolution.getFileIncluded();
     SearchArgument sarg = options.getSearchArgument();
+    boolean[] rowIndexCols = new boolean[evolution.getFileIncluded().length];
     if (sarg != null && rowIndexStride != 0) {
       sargApp = new SargApplier(sarg,
           rowIndexStride,
@@ -176,6 +184,7 @@ public class RecordReaderImpl implements RecordReader {
           fileReader.useUTCTimestamp,
           fileReader.writerUsedProlepticGregorian(),
           fileReader.options.getConvertToProlepticGregorian());
+      sargApp.setRowIndexCols(rowIndexCols);
     } else {
       sargApp = null;
     }
@@ -234,10 +243,16 @@ public class RecordReaderImpl implements RecordReader {
         // If the column is not present in the file then this can be ignored from read.
         if (expandColId != -1) {
           filterColIds.add(expandColId);
+          rowIndexCols[expandColId] = true;
         }
       }
       LOG.info("Filter Columns: " + filterColIds);
+      this.rLevel = ReadLevel.LEAD;
+    } else {
+      this.rLevel = ReadLevel.ALL;
     }
+
+    this.rowIndexCols = ArrayUtils.contains(rowIndexCols, true) ? rowIndexCols : null;
 
     TreeReaderFactory.ReaderContext readerContext =
         new TreeReaderFactory.ReaderContext()
@@ -257,8 +272,8 @@ public class RecordReaderImpl implements RecordReader {
         new OrcProto.BloomFilterIndex[columns]);
 
     planner = new StripePlanner(evolution.getFileSchema(), encryption,
-        dataReader, writerVersion, ignoreNonUtf8BloomFilter,
-        maxDiskRangeChunkLimit);
+                                dataReader, writerVersion, ignoreNonUtf8BloomFilter,
+                                maxDiskRangeChunkLimit, filterColIds);
 
     try {
       advanceToNextRow(reader, 0L, true);
@@ -611,14 +626,11 @@ public class RecordReaderImpl implements RecordReader {
     // 1) Bloom filter is available
     // 2) Min/Max evaluation yield YES or MAYBE
     // 3) Predicate is EQUALS or IN list
-    if (bloomFilter != null
-        && result != TruthValue.NO_NULL && result != TruthValue.NO
-        && (predicate.getOperator().equals(PredicateLeaf.Operator.EQUALS)
-            || predicate.getOperator().equals(PredicateLeaf.Operator.NULL_SAFE_EQUALS)
-            || predicate.getOperator().equals(PredicateLeaf.Operator.IN))) {
-      return true;
-    }
-    return false;
+    return bloomFilter != null
+           && result != TruthValue.NO_NULL && result != TruthValue.NO
+           && (predicate.getOperator().equals(PredicateLeaf.Operator.EQUALS)
+               || predicate.getOperator().equals(PredicateLeaf.Operator.NULL_SAFE_EQUALS)
+               || predicate.getOperator().equals(PredicateLeaf.Operator.IN));
   }
 
   private static TruthValue evaluatePredicateMinMax(PredicateLeaf predicate,
@@ -748,11 +760,11 @@ public class RecordReaderImpl implements RecordReader {
     TruthValue result = hasNull ? TruthValue.NO_NULL : TruthValue.NO;
 
     if (predObj instanceof Long) {
-      if (bf.testLong(((Long) predObj).longValue())) {
+      if (bf.testLong((Long) predObj)) {
         result = TruthValue.YES_NO_NULL;
       }
     } else if (predObj instanceof Double) {
-      if (bf.testDouble(((Double) predObj).doubleValue())) {
+      if (bf.testDouble((Double) predObj)) {
         result = TruthValue.YES_NO_NULL;
       }
     } else if (predObj instanceof String || predObj instanceof Text ||
@@ -836,10 +848,10 @@ public class RecordReaderImpl implements RecordReader {
         break;
       case DECIMAL:
         if (obj instanceof Boolean) {
-          return new HiveDecimalWritable(((Boolean) obj).booleanValue() ?
+          return new HiveDecimalWritable((Boolean) obj ?
               HiveDecimal.ONE : HiveDecimal.ZERO);
         } else if (obj instanceof Integer) {
-          return new HiveDecimalWritable(((Integer) obj).intValue());
+          return new HiveDecimalWritable((Integer) obj);
         } else if (obj instanceof Long) {
           return new HiveDecimalWritable(((Long) obj));
         } else if (obj instanceof Float || obj instanceof Double ||
@@ -866,10 +878,6 @@ public class RecordReaderImpl implements RecordReader {
           return Double.valueOf(obj.toString());
         } else if (obj instanceof Timestamp) {
           return TimestampUtils.getDouble((Timestamp) obj);
-        } else if (obj instanceof HiveDecimal) {
-          return ((HiveDecimal) obj).doubleValue();
-        } else if (obj instanceof BigDecimal) {
-          return ((BigDecimal) obj).doubleValue();
         }
         break;
       case LONG:
@@ -897,7 +905,7 @@ public class RecordReaderImpl implements RecordReader {
         } else if (obj instanceof Float) {
           return TimestampUtils.doubleToTimestamp(((Float) obj).doubleValue());
         } else if (obj instanceof Double) {
-          return TimestampUtils.doubleToTimestamp(((Double) obj).doubleValue());
+          return TimestampUtils.doubleToTimestamp((Double) obj);
         } else if (obj instanceof HiveDecimal) {
           return TimestampUtils.decimalToTimestamp((HiveDecimal) obj);
         } else if (obj instanceof HiveDecimalWritable) {
@@ -932,8 +940,7 @@ public class RecordReaderImpl implements RecordReader {
     private final int[] filterColumns;
     private final long rowIndexStride;
     // same as the above array, but indices are set to true
-    private final boolean[] sargColumns;
-    private SchemaEvolution evolution;
+    private final SchemaEvolution evolution;
     private final long[] exceptionCount;
     private final boolean useUTCTimestamp;
     private final boolean writerUsedProlepticGregorian;
@@ -965,19 +972,21 @@ public class RecordReaderImpl implements RecordReader {
       filterColumns = mapSargColumnsToOrcInternalColIdx(sargLeaves,
                                                         evolution);
       this.rowIndexStride = rowIndexStride;
+      this.evolution = evolution;
+      exceptionCount = new long[sargLeaves.size()];
+      this.useUTCTimestamp = useUTCTimestamp;
+    }
+
+    public void setRowIndexCols(boolean[] rowIndexCols) {
       // included will not be null, row options will fill the array with
       // trues if null
-      sargColumns = new boolean[evolution.getFileIncluded().length];
       for (int i : filterColumns) {
         // filter columns may have -1 as index which could be partition
         // column in SARG.
         if (i > 0) {
-          sargColumns[i] = true;
+          rowIndexCols[i] = true;
         }
       }
-      this.evolution = evolution;
-      exceptionCount = new long[sargLeaves.size()];
-      this.useUTCTimestamp = useUTCTimestamp;
     }
 
     /**
@@ -1093,11 +1102,15 @@ public class RecordReaderImpl implements RecordReader {
    * @throws IOException
    */
   protected boolean[] pickRowGroups() throws IOException {
-    // if we don't have a sarg or indexes, we read everything
+    // Read the Row Indicies if required
+    if (rowIndexCols != null) {
+      readCurrentStripeRowIndex();
+    }
+
+    // In the absence of SArg all rows groups should be included
     if (sargApp == null) {
       return null;
     }
-    readRowIndex(currentStripe, fileIncluded, sargApp.sargColumns);
     return sargApp.pickRowGroups(stripes.get(currentStripe),
         indexes.getRowGroupIndex(),
         indexes.getBloomFilterKinds(), stripeFooter.getColumnsList(),
@@ -1129,10 +1142,11 @@ public class RecordReaderImpl implements RecordReader {
     // if we haven't skipped the whole stripe, read the data
     if (rowInStripe < rowCountInStripe) {
       planner.readData(indexes, includedRowGroups, false);
-      reader.startStripe(planner);
+      reader.startStripe(planner, rLevel);
+      needFollowStripe = true;
       // if we skipped the first row group, move the pointers forward
       if (rowInStripe != 0) {
-        seekToRowEntry(reader, (int) (rowInStripe / rowIndexStride));
+        seekToRowEntry(reader, (int) (rowInStripe / rowIndexStride), rLevel);
       }
     }
   }
@@ -1144,6 +1158,7 @@ public class RecordReaderImpl implements RecordReader {
     // setup the position in the stripe
     rowCountInStripe = stripe.getNumberOfRows();
     rowInStripe = 0;
+    followRowInStripe = 0;
     rowBaseInStripe = 0;
     for (int i = 0; i < currentStripe; ++i) {
       rowBaseInStripe += stripes.get(i).getNumberOfRows();
@@ -1153,6 +1168,7 @@ public class RecordReaderImpl implements RecordReader {
     for (int i = 0; i < rowIndex.length; ++i) {
       rowIndex[i] = null;
     }
+
     return stripe;
   }
 
@@ -1170,6 +1186,10 @@ public class RecordReaderImpl implements RecordReader {
     }
   }
 
+  private int computeRGIdx(long rowIdx) {
+    return (int) (rowIdx / rowIndexStride);
+  }
+
   /**
    * Skip over rows that we aren't selecting, so that the next row is
    * one that we will read.
@@ -1185,7 +1205,7 @@ public class RecordReaderImpl implements RecordReader {
     if (rowIndexStride != 0 &&
         includedRowGroups != null &&
         nextRowInStripe < rowCountInStripe) {
-      int rowGroup = (int) (nextRowInStripe / rowIndexStride);
+      int rowGroup = computeRGIdx(nextRowInStripe);
       if (!includedRowGroups[rowGroup]) {
         while (rowGroup < includedRowGroups.length && !includedRowGroups[rowGroup]) {
           rowGroup += 1;
@@ -1208,10 +1228,10 @@ public class RecordReaderImpl implements RecordReader {
     if (nextRowInStripe != rowInStripe) {
       if (rowIndexStride != 0) {
         int rowGroup = (int) (nextRowInStripe / rowIndexStride);
-        seekToRowEntry(reader, rowGroup);
-        reader.skipRows(nextRowInStripe - rowGroup * rowIndexStride);
+        seekToRowEntry(reader, rowGroup, rLevel);
+        reader.skipRows(nextRowInStripe - rowGroup * rowIndexStride, rLevel);
       } else {
-        reader.skipRows(nextRowInStripe - rowInStripe);
+        reader.skipRows(nextRowInStripe - rowInStripe, rLevel);
       }
       rowInStripe = nextRowInStripe;
     }
@@ -1221,26 +1241,79 @@ public class RecordReaderImpl implements RecordReader {
   @Override
   public boolean nextBatch(VectorizedRowBatch batch) throws IOException {
     try {
-      if (rowInStripe >= rowCountInStripe) {
-        currentStripe += 1;
-        if (currentStripe >= stripes.size()) {
-          batch.size = 0;
-          return false;
-        }
-        // Read stripe in Memory
-        readStripe();
-      }
+      int batchSize;
 
-      int batchSize = computeBatchSize(batch.getMaxSize());
-      rowInStripe += batchSize;
-      reader.setVectorColumnCount(batch.getDataColumnCount());
-      reader.nextBatch(batch, batchSize);
-      advanceToNextRow(reader, rowInStripe + rowBaseInStripe, true);
-      // batch.size can be modified by filter so only batchSize can tell if we actually read rows
+      // do...while is required to handle the case where the filter eliminates all rows in the
+      // batch
+      do {
+        if (rowInStripe >= rowCountInStripe) {
+          currentStripe += 1;
+          if (currentStripe >= stripes.size()) {
+            batch.size = 0;
+            return false;
+          }
+          // Read stripe in Memory
+          readStripe();
+          followRowInStripe = rowInStripe;
+        }
+
+        batchSize = computeBatchSize(batch.getMaxSize());
+        reader.setVectorColumnCount(batch.getDataColumnCount());
+        reader.nextBatch(batch, batchSize, rLevel);
+        if (rLevel == ReadLevel.LEAD && batch.size > 0) {
+          prepareFollowingStreams(rowInStripe, followRowInStripe);
+          followRowInStripe = rowInStripe + batchSize;
+          reader.nextBatch(batch, batchSize, ReadLevel.FOLLOW);
+        }
+        rowInStripe += batchSize;
+        advanceToNextRow(reader, rowInStripe + rowBaseInStripe, true);
+        // batch.size can be modified by filter so only batchSize can tell if we actually read rows
+      } while (batchSize != 0 && batch.size == 0);
+
       return batchSize != 0;
     } catch (IOException e) {
       // Rethrow exception with file name in log message
       throw new IOException("Error reading file: " + path, e);
+    }
+  }
+
+  /**
+   * This method plans the follow columns to position them based on the row idx determined by
+   * filtering the lead columns
+   *
+   * Given that this is just repositioning of the follow columns, this method shall never have to
+   * deal with navigating the stripe forward or skipping row groups, all of this should have already
+   * taken place based on the leading columns.
+   * @param currFollowRow The rowIdx that identifies the start of the row batch on the lead columns. This
+   *               is rowIdx within the stripe i.e. without rowBaseInStripe
+   * @param prevFollowRow Indicates the previous follow columns row number
+   */
+  private void prepareFollowingStreams(long currFollowRow, long prevFollowRow) throws IOException {
+    // 1. Determine the row group that this matches in the stripe
+    int needRG = rowIndexStride == 0 ? 0 : computeRGIdx(currFollowRow);
+    // The current row is not yet read so we -1 to compute the previously read row group
+    int readRG = rowIndexStride == 0 ? 0 : computeRGIdx(prevFollowRow - 1);
+    long skipRows;
+    if (needRG == readRG && currFollowRow >= prevFollowRow) {
+      skipRows = currFollowRow - prevFollowRow;
+    } else {
+      skipRows = currFollowRow - (needRG * rowIndexStride);
+    }
+
+    // 2. Plan the row group idx for the following columns, only if the rowgroup has changed,
+    // otherwise we have already read the required bytes
+    if (needFollowStripe) {
+      planner.readFollowData(indexes, includedRowGroups, needRG, false);
+      needFollowStripe = false;
+      reader.startStripe(planner, ReadLevel.FOLLOW);
+    }
+
+    // 3. Seek to the required row group and skip the rows as needed
+    if (needRG != readRG || currFollowRow < prevFollowRow) {
+      seekToRowEntry(reader, needRG, ReadLevel.FOLLOW);
+    }
+    if (skipRows > 0) {
+      reader.skipRows(skipRows, ReadLevel.FOLLOW);
     }
   }
 
@@ -1251,22 +1324,29 @@ public class RecordReaderImpl implements RecordReader {
     // within strip). Batch size computed out of marker position makes sure that batch size is
     // aware of row group boundary and will not cause overflow when reading rows
     // illustration of this case is here https://issues.apache.org/jira/browse/HIVE-6287
-    if (rowIndexStride != 0 && includedRowGroups != null && rowInStripe < rowCountInStripe) {
+    if (rowIndexStride != 0
+        && (includedRowGroups != null || rLevel != ReadLevel.ALL)
+        && rowInStripe < rowCountInStripe) {
       int startRowGroup = (int) (rowInStripe / rowIndexStride);
-      if (!includedRowGroups[startRowGroup]) {
+      if (includedRowGroups != null && !includedRowGroups[startRowGroup]) {
         while (startRowGroup < includedRowGroups.length && !includedRowGroups[startRowGroup]) {
           startRowGroup += 1;
         }
       }
 
       int endRowGroup = startRowGroup;
-      while (endRowGroup < includedRowGroups.length && includedRowGroups[endRowGroup]) {
+      // We force row group boundaries when dealing with filters. We adjust the end row group to
+      // be the next row group even if more than one are possible selections
+      if (includedRowGroups != null && rLevel == ReadLevel.ALL) {
+        while (endRowGroup < includedRowGroups.length
+               && includedRowGroups[endRowGroup]) {
+          endRowGroup += 1;
+        }
+      } else {
         endRowGroup += 1;
       }
 
-      final long markerPosition =
-          (endRowGroup * rowIndexStride) < rowCountInStripe ? (endRowGroup * rowIndexStride)
-              : rowCountInStripe;
+      final long markerPosition = Math.min((endRowGroup * rowIndexStride), rowCountInStripe);
       batchSize = (int) Math.min(targetBatchSize, (markerPosition - rowInStripe));
 
       if (isLogDebugEnabled && batchSize < targetBatchSize) {
@@ -1311,13 +1391,21 @@ public class RecordReaderImpl implements RecordReader {
     throw new IllegalArgumentException("Seek after the end of reader range");
   }
 
-  public OrcIndex readRowIndex(int stripeIndex, boolean[] included,
-                               boolean[] sargColumns) throws IOException {
-    // if this is the current stripe, use the cached objects.
-    if (stripeIndex == currentStripe) {
-      return planner.readRowIndex(
-          sargColumns != null || sargApp == null
-              ? sargColumns : sargApp.sargColumns, indexes);
+  private void readCurrentStripeRowIndex() throws IOException {
+    planner.readRowIndex(rowIndexCols, indexes);
+  }
+
+  public OrcIndex readRowIndex(int stripeIndex,
+                               boolean[] included,
+                               boolean[] readCols) throws IOException {
+    // Use the cached objects if the read request matches the cached request
+    if (stripeIndex == currentStripe
+            && (readCols == null || Arrays.equals(readCols, rowIndexCols))) {
+      if (rowIndexCols != null) {
+        return indexes;
+      } else {
+        return planner.readRowIndex(readCols, indexes);
+      }
     } else {
       StripePlanner copy = new StripePlanner(planner);
       if (included == null) {
@@ -1325,11 +1413,11 @@ public class RecordReaderImpl implements RecordReader {
         Arrays.fill(included, true);
       }
       copy.parseStripe(stripes.get(stripeIndex), included);
-      return copy.readRowIndex(sargColumns, null);
+      return copy.readRowIndex(readCols, null);
     }
   }
 
-  private void seekToRowEntry(BatchReader reader, int rowEntry)
+  private void seekToRowEntry(BatchReader reader, int rowEntry, ReadLevel rLevel)
       throws IOException {
     OrcProto.RowIndex[] rowIndices = indexes.getRowGroupIndex();
     PositionProvider[] index = new PositionProvider[rowIndices.length];
@@ -1344,7 +1432,7 @@ public class RecordReaderImpl implements RecordReader {
         }
       }
     }
-    reader.seek(index);
+    reader.seek(index, rLevel);
   }
 
   @Override
@@ -1365,7 +1453,9 @@ public class RecordReaderImpl implements RecordReader {
       currentStripe = rightStripe;
       readStripe();
     }
-    readRowIndex(currentStripe, fileIncluded, sargApp == null ? null : sargApp.sargColumns);
+    if (rowIndexCols == null) {
+      readCurrentStripeRowIndex();
+    }
 
     // if we aren't to the right row yet, advance in the stripe.
     advanceToNextRow(reader, rowNumber, true);

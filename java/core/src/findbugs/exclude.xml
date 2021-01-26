@@ -70,4 +70,8 @@
     <Class name="org.apache.orc.TypeDescription"/>
     <Method name="equals" />
   </Match>
+  <Match>
+    <Bug pattern="URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD"/>
+    <Class name="org.apache.orc.impl.reader.StripePlanner$StreamInformation"/>
+  </Match>
 </FindBugsFilter>

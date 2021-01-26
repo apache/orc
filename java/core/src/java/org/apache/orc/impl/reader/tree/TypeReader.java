@@ -28,18 +28,20 @@ import java.io.IOException;
 public interface TypeReader {
   void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException;
 
-  void startStripe(StripePlanner planner) throws IOException;
+  void startStripe(StripePlanner planner, ReadLevel rLevel) throws IOException;
 
-  void seek(PositionProvider[] index) throws IOException;
+  void seek(PositionProvider[] index, ReadLevel rLevel) throws IOException;
 
-  void seek(PositionProvider index) throws IOException;
+  void seek(PositionProvider index, ReadLevel rLevel) throws IOException;
 
-  void skipRows(long rows) throws IOException;
+  void skipRows(long rows, ReadLevel rLevel) throws IOException;
 
   void nextVector(ColumnVector previous,
                   boolean[] isNull,
                   int batchSize,
-                  FilterContext filterContext) throws IOException;
+                  FilterContext filterContext, ReadLevel rLevel) throws IOException;
 
   int getColumnId();
+
+  ReadLevel getReadLevel();
 }
