@@ -59,6 +59,7 @@ public class OrcMapredRecordReader<V extends WritableComparable>
   private final RecordReader batchReader;
   private final VectorizedRowBatch batch;
   private int rowInBatch;
+  private final boolean[] included;
 
   public OrcMapredRecordReader(RecordReader reader,
                                TypeDescription schema) throws IOException {
@@ -66,6 +67,7 @@ public class OrcMapredRecordReader<V extends WritableComparable>
     this.batch = schema.createRowBatch();
     this.schema = schema;
     rowInBatch = 0;
+    this.included = null;
   }
 
   protected OrcMapredRecordReader(Reader fileReader,
@@ -84,6 +86,7 @@ public class OrcMapredRecordReader<V extends WritableComparable>
     }
     this.batch = schema.createRowBatch(rowBatchSize);
     rowInBatch = 0;
+    this.included = options.getInclude();
   }
 
   /**
@@ -104,16 +107,22 @@ public class OrcMapredRecordReader<V extends WritableComparable>
     if (!ensureBatch()) {
       return false;
     }
+    int rowIdx = batch.selectedInUse ? batch.selected[rowInBatch] : rowInBatch;
     if (schema.getCategory() == TypeDescription.Category.STRUCT) {
       OrcStruct result = (OrcStruct) value;
       List<TypeDescription> children = schema.getChildren();
       int numberOfChildren = children.size();
       for(int i=0; i < numberOfChildren; ++i) {
-        result.setFieldValue(i, nextValue(batch.cols[i], rowInBatch,
-            children.get(i), result.getFieldValue(i)));
+        TypeDescription child = children.get(i);
+        if (included == null || included[child.getId()]) {
+          result.setFieldValue(i, nextValue(batch.cols[i], rowIdx, child,
+                                            result.getFieldValue(i)));
+        } else {
+          result.setFieldValue(i, null);
+        }
       }
     } else {
-      nextValue(batch.cols[0], rowInBatch, schema, value);
+      nextValue(batch.cols[0], rowIdx, schema, value);
     }
     rowInBatch += 1;
     return true;

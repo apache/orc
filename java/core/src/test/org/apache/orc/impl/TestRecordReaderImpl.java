@@ -70,6 +70,7 @@ import org.apache.orc.CompressionCodec;
 import org.apache.orc.CompressionKind;
 import org.apache.orc.impl.reader.ReaderEncryption;
 import org.apache.orc.impl.reader.StripePlanner;
+import org.apache.orc.impl.reader.tree.TypeReader;
 import org.apache.orc.impl.writer.StreamOptions;
 import org.apache.orc.util.BloomFilter;
 import org.apache.orc.DataReader;
@@ -1476,7 +1477,7 @@ public class TestRecordReaderImpl {
         dataReader, OrcFile.WriterVersion.ORC_14, false, Integer.MAX_VALUE);
     planner.parseStripe(stripe, columns);
     OrcIndex index = planner.readRowIndex(null, null);
-    BufferChunkList result = planner.readData(index, rowGroups, false);
+    BufferChunkList result = planner.readData(index, rowGroups, false, TypeReader.ReadLevel.ALL);
 
     assertEquals(START, result.get(0).getOffset());
     assertEquals(1000, result.get(0).getLength());
@@ -1488,14 +1489,14 @@ public class TestRecordReaderImpl {
 
     // if we read no rows, don't read any bytes
     rowGroups = new boolean[]{false, false, false, false, false, false};
-    result = planner.readData(index, rowGroups, false);
+    result = planner.readData(index, rowGroups, false, TypeReader.ReadLevel.ALL);
     assertEquals(null, result.get(0));
 
     // all rows, but only columns 0 and 2.
     rowGroups = null;
     columns = new boolean[]{true, false, true};
     planner.parseStripe(stripe, columns).readRowIndex(null, index);
-    result = planner.readData(index, rowGroups, false);
+    result = planner.readData(index, rowGroups, false, TypeReader.ReadLevel.ALL);
     assertEquals(START + 100000, result.get(0).getOffset());
     assertEquals(2000, result.get(0).getLength());
     assertEquals(START + 102000, result.get(1).getOffset());
@@ -1503,7 +1504,7 @@ public class TestRecordReaderImpl {
     assertEquals(null, result.get(2));
 
     rowGroups = new boolean[]{false, true, false, false, false, false};
-    result = planner.readData(index, rowGroups, false);
+    result = planner.readData(index, rowGroups, false, TypeReader.ReadLevel.ALL);
     assertEquals(START + 100200, result.get(0).getOffset());
     assertEquals(1800, result.get(0).getLength());
     assertEquals(START + 122000, result.get(1).getOffset());
@@ -1514,7 +1515,7 @@ public class TestRecordReaderImpl {
     rowGroups = new boolean[]{false, false, false, false, false, true};
     columns = new boolean[]{true, true, true};
     planner.parseStripe(stripe, columns).readRowIndex(null, index);
-    result = planner.readData(index, rowGroups, false);
+    result = planner.readData(index, rowGroups, false, TypeReader.ReadLevel.ALL);
     assertEquals(START + 500, result.get(0).getOffset());
     assertEquals(500, result.get(0).getLength());
     assertEquals(START + 51000, result.get(1).getOffset());
@@ -1572,7 +1573,7 @@ public class TestRecordReaderImpl {
     boolean[] rowGroups = new boolean[]{true, true, false, false, true, false};
     planner.parseStripe(stripe, columns);
     OrcIndex index = planner.readRowIndex(null, null);
-    BufferChunkList result = planner.readData(index, rowGroups, false);
+    BufferChunkList result = planner.readData(index, rowGroups, false, TypeReader.ReadLevel.ALL);
     assertEquals(START, result.get(0).getOffset());
     assertEquals(1000, result.get(0).getLength());
     assertEquals(START + 1000, result.get(1).getOffset());
@@ -1582,7 +1583,7 @@ public class TestRecordReaderImpl {
     assertEquals(null, result.get(3));
 
     rowGroups = new boolean[]{false, false, false, false, false, true};
-    result = planner.readData(index, rowGroups, false);
+    result = planner.readData(index, rowGroups, false, TypeReader.ReadLevel.ALL);
     assertEquals(START + 500, result.get(0).getOffset());
     assertEquals(500, result.get(0).getLength());
     assertEquals(START + 51000, result.get(1).getOffset());
@@ -1632,7 +1633,7 @@ public class TestRecordReaderImpl {
     boolean[] rowGroups = new boolean[]{false, true, false, false, true, true};
     planner.parseStripe(stripe, columns);
     OrcIndex index = planner.readRowIndex(null, null);
-    BufferChunkList result = planner.readData(index, rowGroups, false);
+    BufferChunkList result = planner.readData(index, rowGroups, false, TypeReader.ReadLevel.ALL);
 
     assertEquals(START + 100, result.get(0).getOffset());
     assertEquals(900, result.get(0).getLength());
@@ -1649,7 +1650,7 @@ public class TestRecordReaderImpl {
 
     // Don't read anything if no groups are selected
     rowGroups = new boolean[6];
-    result = planner.readData(index, rowGroups, false);
+    result = planner.readData(index, rowGroups, false, TypeReader.ReadLevel.ALL);
     assertEquals(null, result.get(0));
   }
 

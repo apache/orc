@@ -1732,10 +1732,10 @@ public class TestSchemaEvolution {
         dataReader, OrcFile.WriterVersion.ORC_14, true, Integer.MAX_VALUE);
     boolean[] columns = new boolean[]{true, true, true};
     planner.parseStripe(dataReader.getStripe(0), columns)
-        .readData(null, null, false);
-    reader.startStripe(planner);
+        .readData(null, null, false, TypeReader.ReadLevel.ALL);
+    reader.startStripe(planner, TypeReader.ReadLevel.ALL);
     VectorizedRowBatch batch = readType.createRowBatch();
-    reader.nextBatch(batch, 10);
+    reader.nextBatch(batch, 10, TypeReader.ReadLevel.ALL);
     final String EXPECTED = "ABCDEFGHIJ";
     assertEquals(true, batch.cols[0].isRepeating);
     assertEquals(true, batch.cols[0].isNull[0]);

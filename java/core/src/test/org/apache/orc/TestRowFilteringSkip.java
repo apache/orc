@@ -1291,10 +1291,10 @@ public class TestRowFilteringSkip {
       long rowCount = 0;
       while (rows.nextBatch(batch)) {
         // All rows are selected as NullTreeReader does not support filters
-        Assert.assertFalse(batch.selectedInUse);
+        Assert.assertTrue(batch.selectedInUse);
         rowCount += batch.size;
       }
-      Assert.assertEquals(reader.getNumberOfRows(), rowCount);
+      Assert.assertEquals(0, rowCount);
     }
   }
 

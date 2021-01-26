@@ -32,16 +32,22 @@ import org.apache.orc.impl.InStream;
 import org.apache.orc.impl.OrcIndex;
 import org.apache.orc.impl.RecordReaderUtils;
 import org.apache.orc.impl.StreamName;
+import org.apache.orc.impl.reader.tree.TypeReader;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.security.Key;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * This class handles parsing the stripe information and handling the necessary
@@ -55,6 +61,7 @@ import java.util.Map;
  * </ul>
  */
 public class StripePlanner {
+  private static final Logger LOG = LoggerFactory.getLogger(StripePlanner.class);
   // global information
   private final TypeDescription schema;
   private final OrcFile.WriterVersion version;
@@ -76,6 +83,7 @@ public class StripePlanner {
   private final OrcProto.Stream.Kind[] bloomFilterKinds;
   // does each column have a null stream?
   private final boolean[] hasNull;
+  private final Set<Integer> filterColIds;
 
   /**
    * Create a stripe parser.
@@ -85,13 +93,15 @@ public class StripePlanner {
    * @param version the file writer version
    * @param ignoreNonUtf8BloomFilter ignore old non-utf8 bloom filters
    * @param maxBufferSize the largest single buffer to use
+   * @param filterColIds Column Ids that identify the filter columns
    */
   public StripePlanner(TypeDescription schema,
                        ReaderEncryption encryption,
                        DataReader dataReader,
                        OrcFile.WriterVersion version,
                        boolean ignoreNonUtf8BloomFilter,
-                       long maxBufferSize) {
+                       long maxBufferSize,
+                       Set<Integer> filterColIds) {
     this.schema = schema;
     this.version = version;
     encodings = new OrcProto.ColumnEncoding[schema.getMaximumId()+1];
@@ -101,11 +111,22 @@ public class StripePlanner {
     bloomFilterKinds = new OrcProto.Stream.Kind[schema.getMaximumId() + 1];
     hasNull = new boolean[schema.getMaximumId() + 1];
     this.maxBufferSize = maxBufferSize;
+    this.filterColIds = filterColIds;
+  }
+
+  public StripePlanner(TypeDescription schema,
+                       ReaderEncryption encryption,
+                       DataReader dataReader,
+                       OrcFile.WriterVersion version,
+                       boolean ignoreNonUtf8BloomFilter,
+                       long maxBufferSize) {
+    this(schema, encryption, dataReader, version, ignoreNonUtf8BloomFilter, maxBufferSize,
+         Collections.emptySet());
   }
 
   public StripePlanner(StripePlanner old) {
     this(old.schema, old.encryption, old.dataReader, old.version,
-        old.ignoreNonUtf8BloomFilter, old.maxBufferSize);
+         old.ignoreNonUtf8BloomFilter, old.maxBufferSize, old.filterColIds);
   }
 
   /**
@@ -144,10 +165,23 @@ public class StripePlanner {
    * @return the buffers that were read
    */
   public BufferChunkList readData(OrcIndex index,
-                                boolean[] rowGroupInclude,
-                                boolean forceDirect) throws IOException {
+                                  boolean[] rowGroupInclude,
+                                  boolean forceDirect,
+                                  EnumSet<TypeReader.ReadLevel> readLevel) throws IOException {
     BufferChunkList chunks = (index == null || rowGroupInclude == null)
-        ? planDataReading() : planPartialDataReading(index, rowGroupInclude);
+        ? planDataReading(readLevel) : planPartialDataReading(index, rowGroupInclude, readLevel);
+    dataReader.readFileData(chunks, forceDirect);
+    return chunks;
+  }
+
+  public BufferChunkList readFollowData(OrcIndex index,
+                                        boolean[] rowGroupInclude,
+                                        int rgIdx,
+                                        boolean forceDirect)
+    throws IOException {
+    BufferChunkList chunks = (index == null || rowGroupInclude == null)
+      ? planDataReading(TypeReader.ReadLevel.FOLLOWERS)
+      : planPartialDataReading(index, rowGroupInclude, rgIdx, TypeReader.ReadLevel.FOLLOWERS);
     dataReader.readFileData(chunks, forceDirect);
     return chunks;
   }
@@ -400,12 +434,22 @@ public class StripePlanner {
   /**
    * Plans the list of disk ranges that the given stripe needs to read the
    * data.
+   *
+   * @param readLevel Determines the columns that will be planned.
    * @return a list of merged disk ranges to read
    */
-  private BufferChunkList planDataReading() {
+  private BufferChunkList planDataReading(EnumSet<TypeReader.ReadLevel> readLevel) {
     BufferChunkList result = new BufferChunkList();
     for(StreamInformation stream: dataStreams) {
-      addChunk(result, stream, stream.offset, stream.length);
+      if (filterColIds.isEmpty()
+          || (readLevel.contains(TypeReader.ReadLevel.LEAD_CHILD) && filterColIds.contains(stream.column))
+          || (readLevel.contains(TypeReader.ReadLevel.FOLLOW) && !filterColIds.contains(stream.column))) {
+        addChunk(result, stream, stream.offset, stream.length);
+      } else {
+        // In case a filter is present, then don't plan the lazy columns, they will be planned only
+        // as needed.
+        LOG.debug("Skipping planning for lazy column stream {}", stream);
+      }
     }
     return result;
   }
@@ -442,10 +486,29 @@ public class StripePlanner {
    *
    * @param index              the index to use for offsets
    * @param includedRowGroups  which row groups are needed
+   * @param readLevel          Determines the columns that will be planned. If the read level
+   *                           requires LEAD then the filter columns are read, else if the read
+   *                           level requires FOLLOW then the non filter columns are read.
    * @return the list of disk  ranges that will be loaded
    */
   private BufferChunkList planPartialDataReading(OrcIndex index,
-                                                 @NotNull boolean[] includedRowGroups) {
+                                                 @NotNull boolean[] includedRowGroups,
+                                                 EnumSet<TypeReader.ReadLevel> readLevel) {
+    return planPartialDataReading(index, includedRowGroups, 0, readLevel);
+  }
+
+  /**
+   * Plan the ranges of the file that we need to read given the list of
+   * columns and row groups.
+   *
+   * @param index              the index to use for offsets
+   * @param includedRowGroups  which row groups are needed
+   * @return the list of disk  ranges that will be loaded
+   */
+  private BufferChunkList planPartialDataReading(OrcIndex index,
+                                                 @NotNull boolean[] includedRowGroups,
+                                                 int startGroup,
+                                                 EnumSet<TypeReader.ReadLevel> readLevel) {
     BufferChunkList result = new BufferChunkList();
     if (hasSomeRowGroups(includedRowGroups)) {
       InStream.StreamOptions compression = dataReader.getCompressionOptions();
@@ -453,45 +516,68 @@ public class StripePlanner {
       int bufferSize = compression.getBufferSize();
       OrcProto.RowIndex[] rowIndex = index.getRowGroupIndex();
       for (StreamInformation stream : dataStreams) {
-        if (RecordReaderUtils.isDictionary(stream.kind, encodings[stream.column])) {
-          addChunk(result, stream, stream.offset, stream.length);
+        if ((readLevel.contains(TypeReader.ReadLevel.LEAD_CHILD) && filterColIds.contains(stream.column))
+            || (readLevel.contains(TypeReader.ReadLevel.FOLLOW) && !filterColIds.contains(stream.column))) {
+          processStream(stream,
+                        result,
+                        rowIndex,
+                        startGroup,
+                        includedRowGroups,
+                        isCompressed,
+                        bufferSize);
         } else {
-          int column = stream.column;
-          OrcProto.RowIndex ri = rowIndex[column];
-          TypeDescription.Category kind = schema.findSubtype(column).getCategory();
-          long alreadyRead = 0;
-          for (int group = 0; group < includedRowGroups.length; ++group) {
-            if (includedRowGroups[group]) {
-              // find the last group that is selected
-              int endGroup = group;
-              while (endGroup < includedRowGroups.length - 1 &&
-                         includedRowGroups[endGroup + 1]) {
-                endGroup += 1;
-              }
-              int posn = RecordReaderUtils.getIndexPosition(
-                  encodings[stream.column].getKind(), kind, stream.kind,
-                  isCompressed, hasNull[column]);
-              long start = Math.max(alreadyRead,
-                  stream.offset + (group == 0 ? 0 : ri.getEntry(group).getPositions(posn)));
-              long end = stream.offset;
-              if (endGroup == includedRowGroups.length - 1) {
-                end += stream.length;
-              } else {
-                long nextGroupOffset = ri.getEntry(endGroup + 1).getPositions(posn);
-                end += RecordReaderUtils.estimateRgEndOffset(isCompressed,
-                    bufferSize, false, nextGroupOffset, stream.length);
-              }
-              if (alreadyRead < end) {
-                addChunk(result, stream, start, end - start);
-                alreadyRead = end;
-              }
-              group = endGroup;
-            }
-          }
+          // In case a filter is present, then don't plan the lazy columns, they will be planned only
+          // as needed.
+          LOG.debug("Skipping planning for column stream {} at level {}", stream, readLevel);
         }
       }
     }
     return result;
+  }
+
+  private void processStream(StreamInformation stream,
+                             BufferChunkList result,
+                             OrcProto.RowIndex[] rowIndex,
+                             int startGroup,
+                             boolean[] includedRowGroups,
+                             boolean isCompressed,
+                             int bufferSize) {
+    if (RecordReaderUtils.isDictionary(stream.kind, encodings[stream.column])) {
+      addChunk(result, stream, stream.offset, stream.length);
+    } else {
+      int column = stream.column;
+      OrcProto.RowIndex ri = rowIndex[column];
+      TypeDescription.Category kind = schema.findSubtype(column).getCategory();
+      long alreadyRead = 0;
+      for (int group = startGroup; group < includedRowGroups.length; ++group) {
+        if (includedRowGroups[group]) {
+          // find the last group that is selected
+          int endGroup = group;
+          while (endGroup < includedRowGroups.length - 1 &&
+                 includedRowGroups[endGroup + 1]) {
+            endGroup += 1;
+          }
+          int posn = RecordReaderUtils.getIndexPosition(
+            encodings[stream.column].getKind(), kind, stream.kind,
+            isCompressed, hasNull[column]);
+          long start = Math.max(alreadyRead,
+                                stream.offset + (group == 0 ? 0 : ri.getEntry(group).getPositions(posn)));
+          long end = stream.offset;
+          if (endGroup == includedRowGroups.length - 1) {
+            end += stream.length;
+          } else {
+            long nextGroupOffset = ri.getEntry(endGroup + 1).getPositions(posn);
+            end += RecordReaderUtils.estimateRgEndOffset(isCompressed,
+                                                         bufferSize, false, nextGroupOffset, stream.length);
+          }
+          if (alreadyRead < end) {
+            addChunk(result, stream, start, end - start);
+            alreadyRead = end;
+          }
+          group = endGroup;
+        }
+      }
+    }
   }
 
   public static class StreamInformation {

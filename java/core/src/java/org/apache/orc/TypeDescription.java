@@ -580,6 +580,14 @@ public class TypeDescription
   }
 
   /**
+   * Get the parent of the current type
+   * @return null if root else parent
+   */
+  public TypeDescription getParent() {
+    return parent;
+  }
+
+  /**
    * Get the subtypes of this type.
    * @return the list of children types
    */
