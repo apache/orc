@@ -23,9 +23,9 @@ Releases:
 * Downloads: <a href="http://orc.apache.org/downloads">Apache ORC downloads</a>
 
 The current build status:
-* Master branch <a href="https://travis-ci.org/apache/orc/branches">
-![master build status](https://travis-ci.org/apache/orc.svg?branch=master)</a>
-* <a href="https://travis-ci.org/apache/orc/pull_requests">Pull Requests</a>
+* Master branch <a href="https://travis-ci.com/github/apache/orc/branches">
+![master build status](https://travis-ci.com/github/apache/orc.svg?branch=master)</a>
+* <a href="https://travis-ci.com/github/apache/orc/pull_requests">Pull Requests</a>
 
 
 Bug tracking: <a href="http://orc.apache.org/bugs">Apache Jira</a>
