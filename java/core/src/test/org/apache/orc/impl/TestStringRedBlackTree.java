@@ -21,9 +21,9 @@ package org.apache.orc.impl;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import org.apache.hadoop.io.DataOutputBuffer;
+
 import org.apache.hadoop.io.IntWritable;
+import org.apache.orc.StringDictTestingUtils;
 import org.junit.Test;
 
 /**
@@ -108,37 +108,6 @@ public class TestStringRedBlackTree {
     }
   }
 
-  private static class MyVisitor implements Dictionary.Visitor {
-    private final String[] words;
-    private final int[] order;
-    private final DataOutputBuffer buffer = new DataOutputBuffer();
-    int current = 0;
-
-    MyVisitor(String[] args, int[] order) {
-      words = args;
-      this.order = order;
-    }
-
-    @Override
-    public void visit(Dictionary.VisitorContext context
-                     ) throws IOException {
-      String word = context.getText().toString();
-      assertEquals("in word " + current, words[current], word);
-      assertEquals("in word " + current, order[current],
-        context.getOriginalPosition());
-      buffer.reset();
-      context.writeBytes(buffer);
-      assertEquals(word, new String(buffer.getData(),0,buffer.getLength(), StandardCharsets.UTF_8));
-      current += 1;
-    }
-  }
-
-  void checkContents(StringRedBlackTree tree, int[] order,
-                     String... params
-                    ) throws IOException {
-    tree.visit(new MyVisitor(params, order));
-  }
-
   StringRedBlackTree buildTree(String... params) throws IOException {
     StringRedBlackTree result = new StringRedBlackTree(1000);
     for(String word: params) {
@@ -181,7 +150,7 @@ public class TestStringRedBlackTree {
     checkTree(tree);
     assertEquals(9, tree.add("z"));
     checkTree(tree);
-    checkContents(tree, new int[]{2,5,1,4,6,3,7,0,9,8},
+    StringDictTestingUtils.checkContents(tree, new int[]{2,5,1,4,6,3,7,0,9,8},
       "alan", "arun", "ashutosh", "eric", "eric14", "greg",
       "o", "owen", "z", "ziggy");
     assertEquals(32888, tree.getSizeInBytes());
@@ -212,7 +181,7 @@ public class TestStringRedBlackTree {
       buildTree("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l",
         "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z");
     assertEquals(26, tree.size());
-    checkContents(tree, new int[]{0,1,2, 3,4,5, 6,7,8, 9,10,11, 12,13,14,
+    StringDictTestingUtils.checkContents(tree, new int[]{0,1,2, 3,4,5, 6,7,8, 9,10,11, 12,13,14,
       15,16,17, 18,19,20, 21,22,23, 24,25},
       "a", "b", "c", "d", "e", "f", "g", "h", "i", "j","k", "l", "m", "n", "o",
       "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z");
@@ -224,7 +193,7 @@ public class TestStringRedBlackTree {
       buildTree("z", "y", "x", "w", "v", "u", "t", "s", "r", "q", "p", "o", "n",
         "m", "l", "k", "j", "i", "h", "g", "f", "e", "d", "c", "b", "a");
     assertEquals(26, tree.size());
-    checkContents(tree, new int[]{25,24,23, 22,21,20, 19,18,17, 16,15,14,
+    StringDictTestingUtils.checkContents(tree, new int[]{25,24,23, 22,21,20, 19,18,17, 16,15,14,
       13,12,11, 10,9,8, 7,6,5, 4,3,2, 1,0},
       "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o",
       "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z");

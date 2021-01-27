@@ -33,6 +33,9 @@ To run full read benchmark:
 
 ```% java -jar hive/target/orc-benchmarks-hive-*-uber.jar read-all data```
 
+To run a write benchmark: 
+```% java -jar hive/target/orc-benchmarks-hive-*-uber.jar write data```
+
 To run column projection benchmark:
 
 ```% java -jar hive/target/orc-benchmarks-hive-*-uber.jar read-some data```

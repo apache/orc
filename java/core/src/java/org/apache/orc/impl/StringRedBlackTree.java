@@ -18,7 +18,6 @@
 package org.apache.orc.impl;
 
 import java.io.IOException;
-import java.io.OutputStream;
 
 import org.apache.hadoop.io.Text;
 
@@ -74,46 +73,10 @@ public class StringRedBlackTree extends RedBlackTree implements Dictionary {
                              start, end - start);
   }
 
-  private class VisitorContextImpl implements Dictionary.VisitorContext {
-    private int originalPosition;
-    private int start;
-    private int end;
-    private final Text text = new Text();
 
-    @Override
-    public int getOriginalPosition() {
-      return originalPosition;
-    }
 
-    @Override
-    public Text getText() {
-      byteArray.setText(text, start, end - start);
-      return text;
-    }
-
-    @Override
-    public void writeBytes(OutputStream out) throws IOException {
-      byteArray.write(out, start, end - start);
-    }
-
-    @Override
-    public int getLength() {
-      return end - start;
-    }
-
-    void setPosition(int position) {
-      originalPosition = position;
-      start = keyOffsets.get(originalPosition);
-      if (position + 1 == keyOffsets.size()) {
-        end = byteArray.size();
-      } else {
-        end = keyOffsets.get(originalPosition + 1);
-      }
-    }
-  }
-
-  private void recurse(int node, Dictionary.Visitor visitor, VisitorContextImpl context
-                      ) throws IOException {
+  private void recurse(int node, Dictionary.Visitor visitor,
+      VisitorContextImpl context) throws IOException {
     if (node != NULL) {
       recurse(getLeft(node), visitor, context);
       context.setPosition(node);
@@ -129,7 +92,8 @@ public class StringRedBlackTree extends RedBlackTree implements Dictionary {
    */
   @Override
   public void visit(Dictionary.Visitor visitor) throws IOException {
-    recurse(root, visitor, new VisitorContextImpl());
+    recurse(root, visitor,
+        new VisitorContextImpl(this.byteArray, this.keyOffsets));
   }
 
   /**
@@ -144,14 +108,7 @@ public class StringRedBlackTree extends RedBlackTree implements Dictionary {
 
   @Override
   public void getText(Text result, int originalPosition) {
-    int offset = keyOffsets.get(originalPosition);
-    int length;
-    if (originalPosition + 1 == keyOffsets.size()) {
-      length = byteArray.size() - offset;
-    } else {
-      length = keyOffsets.get(originalPosition + 1) - offset;
-    }
-    byteArray.setText(result, offset, length);
+    DictionaryUtils.getTextInternal(result, originalPosition, this.keyOffsets, this.byteArray);
   }
 
   /**

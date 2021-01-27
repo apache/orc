@@ -106,11 +106,11 @@ public enum OrcConf {
           "writing first stripe. In both cases, the decision to use\n" +
           "dictionary or not will be retained thereafter."),
   DICTIONARY_IMPL("orc.dictionary.implementation", "orc.dictionary.implementation",
-      "rbtree",
+      "hash",
       "the implementation for the dictionary used for string-type column encoding.\n" +
           "The choices are:\n"
           + " rbtree - use red-black tree as the implementation for the dictionary.\n"
-          + " hash (yet to be implemented) - use hash table as the implementation for the dictionary."),
+          + " hash - use hash table as the implementation for the dictionary."),
   BLOOM_FILTER_COLUMNS("orc.bloom.filter.columns", "orc.bloom.filter.columns",
       "", "List of columns to create bloom filters for when writing."),
   BLOOM_FILTER_WRITE_VERSION("orc.bloom.filter.write.version",

@@ -90,6 +90,9 @@ public class Utilities {
     if (options.hasOption(BenchmarkOptions.GC)) {
       builder.addProfiler("hs_gc");
     }
+    if (options.hasOption(BenchmarkOptions.STACK_PROFILE)) {
+      builder.addProfiler("stack");
+    }
     builder.measurementIterations(Integer.parseInt(options.getOptionValue(
         BenchmarkOptions.ITERATIONS, "5")));
     builder.warmupIterations(Integer.parseInt(options.getOptionValue(

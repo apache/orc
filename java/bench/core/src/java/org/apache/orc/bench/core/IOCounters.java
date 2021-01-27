@@ -26,20 +26,22 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 
 /**
- * A class to track the number of rows, bytes, and read operations that have
- * been read.
+ * A class to track the number of rows, bytes, and read/write operations that have
+ * been read/write.
+ * The read/write is named as "IO" instead of "RW" to avoid ambiguity as the latter could indicate the
+ * counts including both read and write, instead of either read or write.
  */
 @AuxCounters(AuxCounters.Type.EVENTS)
 @State(Scope.Thread)
-public class ReadCounters {
-  long bytesRead;
-  long reads;
+public class IOCounters {
+  long bytesIO;
+  long io;
   RecordCounters recordCounters;
 
   @Setup(Level.Iteration)
   public void setup(RecordCounters records) {
-    bytesRead = 0;
-    reads = 0;
+    bytesIO = 0;
+    io = 0;
     recordCounters = records;
   }
 
@@ -48,13 +50,13 @@ public class ReadCounters {
     if (recordCounters != null) {
       recordCounters.print();
     }
-    System.out.println("Reads: " + reads);
-    System.out.println("Bytes: " + bytesRead);
+    System.out.println("io: " + io);
+    System.out.println("Bytes: " + bytesIO);
   }
 
   public double bytesPerRecord() {
     return recordCounters == null || recordCounters.records == 0 ?
-        0 : ((double) bytesRead) / recordCounters.records;
+        0 : ((double) bytesIO) / recordCounters.records;
   }
 
   public long records() {
@@ -62,9 +64,12 @@ public class ReadCounters {
         0 : recordCounters.records / recordCounters.invocations;
   }
 
-  public long reads() {
+  /**
+   * Capture the number of I/O on average in each invocation.
+   */
+  public long ops() {
     return recordCounters == null || recordCounters.invocations == 0 ?
-        0 : reads / recordCounters.invocations;
+        0 : io / recordCounters.invocations;
   }
 
   public void addRecords(long value) {
@@ -79,8 +84,8 @@ public class ReadCounters {
     }
   }
 
-  public void addBytes(long newReads, long newBytes) {
-    bytesRead += newBytes;
-    reads += newReads;
+  public void addBytes(long newIOs, long newBytes) {
+    bytesIO += newBytes;
+    io += newIOs;
   }
 }

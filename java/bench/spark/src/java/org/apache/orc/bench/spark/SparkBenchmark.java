@@ -25,7 +25,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.TrackingLocalFileSystem;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.bench.core.OrcBenchmark;
-import org.apache.orc.bench.core.ReadCounters;
+import org.apache.orc.bench.core.IOCounters;
 import org.apache.orc.bench.core.Utilities;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.avro.AvroFileFormat;
@@ -153,7 +153,7 @@ public class SparkBenchmark implements OrcBenchmark {
 
   static void processReader(Iterator<InternalRow> reader,
                             FileSystem.Statistics statistics,
-                            ReadCounters counters,
+                            IOCounters counters,
                             Blackhole blackhole) {
     while (reader.hasNext()) {
       Object row = reader.next();
@@ -170,7 +170,7 @@ public class SparkBenchmark implements OrcBenchmark {
 
   @Benchmark
   public void fullRead(InputSource source,
-                       ReadCounters counters,
+                       IOCounters counters,
                        Blackhole blackhole) {
     FileSystem.Statistics statistics = source.fs.getLocalStatistics();
     statistics.reset();
@@ -199,7 +199,7 @@ public class SparkBenchmark implements OrcBenchmark {
 
   @Benchmark
   public void partialRead(InputSource source,
-                          ReadCounters counters,
+                          IOCounters counters,
                           Blackhole blackhole) {
     FileSystem.Statistics statistics = source.fs.getLocalStatistics();
     statistics.reset();
@@ -246,7 +246,7 @@ public class SparkBenchmark implements OrcBenchmark {
 
   @Benchmark
   public void pushDown(InputSource source,
-                       ReadCounters counters,
+                       IOCounters counters,
                        Blackhole blackhole) {
     FileSystem.Statistics statistics = source.fs.getLocalStatistics();
     statistics.reset();

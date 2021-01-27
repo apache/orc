@@ -22,6 +22,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -49,7 +51,11 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+
+@RunWith(Parameterized.class)
 public class TestStringDictionary {
 
   private Path workDir = new Path(System.getProperty("test.tmp.dir", "target" + File.separator + "test"
@@ -58,6 +64,7 @@ public class TestStringDictionary {
   private Configuration conf;
   private FileSystem fs;
   private Path testFilePath;
+  private String dictImplString;
 
   @Rule
   public TestName testCaseName = new TestName();
@@ -68,6 +75,19 @@ public class TestStringDictionary {
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestStringDictionary." + testCaseName.getMethodName() + ".orc");
     fs.delete(testFilePath, false);
+    OrcConf.DICTIONARY_IMPL.setString(conf, dictImplString);
+  }
+
+  @Parameterized.Parameters
+  public static Collection params() {
+    return Arrays.asList(new Object[][] {
+        { "RBTREE" },
+        { "HASH" }
+    });
+  }
+
+  public TestStringDictionary(String dictImpl) {
+    this.dictImplString = dictImpl;
   }
 
   @Test
@@ -116,21 +136,23 @@ public class TestStringDictionary {
 
   @Test
   public void testHalfDistinct() throws Exception {
-    TypeDescription schema = TypeDescription.createString();
+    final int totalSize = 20000;
+    final int bound = 10000;
 
+    TypeDescription schema = TypeDescription.createString();
     Writer writer = OrcFile.createWriter(
         testFilePath,
         OrcFile.writerOptions(conf).setSchema(schema).compress(CompressionKind.NONE)
-            .bufferSize(10000));
+            .bufferSize(bound));
     Random rand = new Random(123);
-    int[] input = new int[20000];
-    for (int i = 0; i < 20000; i++) {
-      input[i] = rand.nextInt(10000);
+    int[] input = new int[totalSize];
+    for (int i = 0; i < totalSize; i++) {
+      input[i] = rand.nextInt(bound);
     }
 
     VectorizedRowBatch batch = schema.createRowBatch();
     BytesColumnVector col = (BytesColumnVector) batch.cols[0];
-    for (int i = 0; i < 20000; i++) {
+    for (int i = 0; i < totalSize; i++) {
       if (batch.size == batch.getMaxSize()) {
         writer.addRowBatch(batch);
         batch.reset();

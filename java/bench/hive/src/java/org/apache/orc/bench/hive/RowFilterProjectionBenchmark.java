@@ -28,7 +28,7 @@ import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.bench.core.OrcBenchmark;
-import org.apache.orc.bench.core.ReadCounters;
+import org.apache.orc.bench.core.IOCounters;
 import org.apache.orc.bench.core.Utilities;
 import org.apache.orc.OrcFilterContext;
 import org.openjdk.jmh.annotations.Benchmark;
@@ -107,7 +107,7 @@ public class RowFilterProjectionBenchmark implements OrcBenchmark {
   }
 
   @Benchmark
-  public void orcRowFilter(ReadCounters counters) throws Exception {
+  public void orcRowFilter(IOCounters counters) throws Exception {
     Configuration conf = new Configuration();
     TrackingLocalFileSystem fs = new TrackingLocalFileSystem();
     fs.initialize(new URI("file:///"), conf);
@@ -165,7 +165,7 @@ public class RowFilterProjectionBenchmark implements OrcBenchmark {
   }
 
   @Benchmark
-  public void orcNoFilter(ReadCounters counters) throws Exception {
+  public void orcNoFilter(IOCounters counters) throws Exception {
     Configuration conf = new Configuration();
     TrackingLocalFileSystem fs = new TrackingLocalFileSystem();
     fs.initialize(new URI("file:///"), conf);
