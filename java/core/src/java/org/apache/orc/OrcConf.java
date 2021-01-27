@@ -105,6 +105,9 @@ public enum OrcConf {
           "(default 10000 rows) else dictionary check will happen before\n" +
           "writing first stripe. In both cases, the decision to use\n" +
           "dictionary or not will be retained thereafter."),
+  DICTIONARY_FACTORY_CLASS_KEY("orc.dictionary.class.key", null,
+      "org.apache.orc.impl.StringRedBlackTree.StringRBTreeFactory",
+      "Key to specify the factory class in charge of generating dictionary."),
   BLOOM_FILTER_COLUMNS("orc.bloom.filter.columns", "orc.bloom.filter.columns",
       "", "List of columns to create bloom filters for when writing."),
   BLOOM_FILTER_WRITE_VERSION("orc.bloom.filter.write.version",
