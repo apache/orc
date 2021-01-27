@@ -26,7 +26,7 @@ import org.apache.hadoop.io.Text;
  * A red-black tree that stores strings. The strings are stored as UTF-8 bytes
  * and an offset for each entry.
  */
-public class StringRedBlackTree extends RedBlackTree {
+public class StringRedBlackTree extends RedBlackTree implements Dictionary {
   private final DynamicByteArray byteArray = new DynamicByteArray();
   private final DynamicIntArray keyOffsets;
   private final Text newKey = new Text();
@@ -55,6 +55,7 @@ public class StringRedBlackTree extends RedBlackTree {
     return addNewKey();
   }
 
+  @Override
   public int add(byte[] bytes, int offset, int length) {
     newKey.set(bytes, offset, length);
     return addNewKey();
@@ -73,49 +74,7 @@ public class StringRedBlackTree extends RedBlackTree {
                              start, end - start);
   }
 
-  /**
-   * The information about each node.
-   */
-  public interface VisitorContext {
-    /**
-     * Get the position where the key was originally added.
-     * @return the number returned by add.
-     */
-    int getOriginalPosition();
-
-    /**
-     * Write the bytes for the string to the given output stream.
-     * @param out the stream to write to.
-     * @throws IOException
-     */
-    void writeBytes(OutputStream out) throws IOException;
-
-    /**
-     * Get the original string.
-     * @return the string
-     */
-    Text getText();
-
-    /**
-     * Get the number of bytes.
-     * @return the string's length in bytes
-     */
-    int getLength();
-  }
-
-  /**
-   * The interface for visitors.
-   */
-  public interface Visitor {
-    /**
-     * Called once for each node of the tree in sort order.
-     * @param context the information about each node
-     * @throws IOException
-     */
-    void visit(VisitorContext context) throws IOException;
-  }
-
-  private class VisitorContextImpl implements VisitorContext {
+  private class VisitorContextImpl implements Dictionary.VisitorContext {
     private int originalPosition;
     private int start;
     private int end;
@@ -153,7 +112,7 @@ public class StringRedBlackTree extends RedBlackTree {
     }
   }
 
-  private void recurse(int node, Visitor visitor, VisitorContextImpl context
+  private void recurse(int node, Dictionary.Visitor visitor, VisitorContextImpl context
                       ) throws IOException {
     if (node != NULL) {
       recurse(getLeft(node), visitor, context);
@@ -168,7 +127,8 @@ public class StringRedBlackTree extends RedBlackTree {
    * @param visitor the action to be applied to each node
    * @throws IOException
    */
-  public void visit(Visitor visitor) throws IOException {
+  @Override
+  public void visit(Dictionary.Visitor visitor) throws IOException {
     recurse(root, visitor, new VisitorContextImpl());
   }
 
@@ -182,6 +142,7 @@ public class StringRedBlackTree extends RedBlackTree {
     keyOffsets.clear();
   }
 
+  @Override
   public void getText(Text result, int originalPosition) {
     int offset = keyOffsets.get(originalPosition);
     int length;

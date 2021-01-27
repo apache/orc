@@ -26,6 +26,7 @@ import org.apache.orc.OrcProto;
 import org.apache.orc.StringColumnStatistics;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.CryptoUtils;
+import org.apache.orc.impl.Dictionary;
 import org.apache.orc.impl.DynamicIntArray;
 import org.apache.orc.impl.IntegerWriter;
 import org.apache.orc.impl.OutStream;
@@ -39,13 +40,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+import static org.apache.orc.OrcConf.DICTIONARY_IMPL;
+import static org.apache.orc.impl.Dictionary.INITIAL_DICTIONARY_SIZE;
+
+
 public abstract class StringBaseTreeWriter extends TreeWriterBase {
-  private static final int INITIAL_DICTIONARY_SIZE = 4096;
+  // Stream for dictionary's key
   private final OutStream stringOutput;
   protected final IntegerWriter lengthOutput;
+  // Stream for dictionary-encoded value
   private final IntegerWriter rowOutput;
-  protected final StringRedBlackTree dictionary =
-      new StringRedBlackTree(INITIAL_DICTIONARY_SIZE);
   protected final DynamicIntArray rows = new DynamicIntArray();
   protected final PositionedOutputStream directStreamOutput;
   private final List<OrcProto.RowIndexEntry> savedRowIndex =
@@ -55,15 +59,32 @@ public abstract class StringBaseTreeWriter extends TreeWriterBase {
   // If the number of keys in a dictionary is greater than this fraction of
   //the total number of non-null rows, turn off dictionary encoding
   private final double dictionaryKeySizeThreshold;
+  protected Dictionary dictionary;
   protected boolean useDictionaryEncoding = true;
   private boolean isDirectV2 = true;
   private boolean doneDictionaryCheck;
   private final boolean strideDictionaryCheck;
 
+  private static Dictionary createDict(Configuration conf) {
+    String dictImpl = conf.get(DICTIONARY_IMPL.name(),
+        DICTIONARY_IMPL.getDefaultValue().toString()).toUpperCase();
+    switch (Dictionary.IMPL.valueOf(dictImpl)) {
+      case RBTREE:
+        return new StringRedBlackTree(INITIAL_DICTIONARY_SIZE);
+      case HASH:
+        throw new UnsupportedOperationException("hash based implementation is under development(ORC-50).");
+      default:
+        throw new UnsupportedOperationException("Unknown implementation:" + dictImpl);
+    }
+  }
+
   StringBaseTreeWriter(TypeDescription schema,
                        WriterEncryptionVariant encryption,
                        WriterContext writer) throws IOException {
     super(schema, encryption, writer);
+    Configuration conf = writer.getConfiguration();
+
+    this.dictionary = createDict(conf);
     this.isDirectV2 = isNewWriteFormat(writer);
     directStreamOutput = writer.createStream(
         new StreamName(id, OrcProto.Stream.Kind.DATA, encryption));
@@ -79,7 +100,6 @@ public abstract class StringBaseTreeWriter extends TreeWriterBase {
     }
     rowIndexValueCount.add(0L);
     buildIndex = writer.buildIndex();
-    Configuration conf = writer.getConfiguration();
     dictionaryKeySizeThreshold = writer.getDictionaryKeySizeThreshold(id);
     strideDictionaryCheck =
         OrcConf.ROW_INDEX_STRIDE_DICTIONARY_CHECK.getBoolean(conf);
@@ -109,7 +129,6 @@ public abstract class StringBaseTreeWriter extends TreeWriterBase {
     // checking would not have happened. So do it again here.
     checkDictionaryEncoding();
 
-    checkDictionaryEncoding();
     if (!useDictionaryEncoding) {
       stringOutput.suppress();
     }
@@ -140,12 +159,11 @@ public abstract class StringBaseTreeWriter extends TreeWriterBase {
       // Write the dictionary by traversing the red-black tree writing out
       // the bytes and lengths; and creating the map from the original order
       // to the final sorted order.
-
-      dictionary.visit(new StringRedBlackTree.Visitor() {
+      dictionary.visit(new Dictionary.Visitor() {
         private int currentId = 0;
 
         @Override
-        public void visit(StringRedBlackTree.VisitorContext context
+        public void visit(Dictionary.VisitorContext context
         ) throws IOException {
           context.writeBytes(stringOutput);
           lengthOutput.write(context.getLength());
