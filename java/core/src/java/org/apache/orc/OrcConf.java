@@ -37,7 +37,7 @@ public enum OrcConf {
   ROW_INDEX_STRIDE("orc.row.index.stride",
       "hive.exec.orc.default.row.index.stride", 10000,
       "Define the default ORC index stride in number of rows. (Stride is the\n"+
-          " number of rows n index entry represents.)"),
+          " number of rows an index entry represents.)"),
   BUFFER_SIZE("orc.compress.size", "hive.exec.orc.default.buffer.size",
       256 * 1024, "Define the default ORC buffer size, in bytes."),
   BASE_DELTA_RATIO("orc.base.delta.ratio", "hive.exec.orc.base.delta.ratio", 8,
