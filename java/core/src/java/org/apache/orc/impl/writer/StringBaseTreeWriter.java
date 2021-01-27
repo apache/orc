@@ -33,6 +33,7 @@ import org.apache.orc.impl.OutStream;
 import org.apache.orc.impl.PositionRecorder;
 import org.apache.orc.impl.PositionedOutputStream;
 import org.apache.orc.impl.StreamName;
+import org.apache.orc.impl.StringHashTableDictionary;
 import org.apache.orc.impl.StringRedBlackTree;
 
 import java.io.IOException;
@@ -66,13 +67,13 @@ public abstract class StringBaseTreeWriter extends TreeWriterBase {
   private final boolean strideDictionaryCheck;
 
   private static Dictionary createDict(Configuration conf) {
-    String dictImpl = conf.get(DICTIONARY_IMPL.name(),
+    String dictImpl = conf.get(DICTIONARY_IMPL.getAttribute(),
         DICTIONARY_IMPL.getDefaultValue().toString()).toUpperCase();
     switch (Dictionary.IMPL.valueOf(dictImpl)) {
       case RBTREE:
         return new StringRedBlackTree(INITIAL_DICTIONARY_SIZE);
       case HASH:
-        throw new UnsupportedOperationException("hash based implementation is under development(ORC-50).");
+        return new StringHashTableDictionary(INITIAL_DICTIONARY_SIZE);
       default:
         throw new UnsupportedOperationException("Unknown implementation:" + dictImpl);
     }
@@ -156,7 +157,7 @@ public abstract class StringBaseTreeWriter extends TreeWriterBase {
     final int[] dumpOrder = new int[dictionary.size()];
 
     if (useDictionaryEncoding) {
-      // Write the dictionary by traversing the red-black tree writing out
+      // Write the dictionary by traversing the dictionary writing out
       // the bytes and lengths; and creating the map from the original order
       // to the final sorted order.
       dictionary.visit(new Dictionary.Visitor() {

@@ -133,10 +133,10 @@ public class TestStringRedBlackTree {
     }
   }
 
-  void checkContents(StringRedBlackTree tree, int[] order,
+  static void checkContents(Dictionary dict, int[] order,
                      String... params
                     ) throws IOException {
-    tree.visit(new MyVisitor(params, order));
+    dict.visit(new MyVisitor(params, order));
   }
 
   StringRedBlackTree buildTree(String... params) throws IOException {

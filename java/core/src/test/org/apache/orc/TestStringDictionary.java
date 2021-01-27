@@ -17,6 +17,7 @@
  */
 package org.apache.orc;
 
+import static org.apache.orc.OrcConf.DICTIONARY_IMPL;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -58,6 +59,8 @@ public class TestStringDictionary {
   private Configuration conf;
   private FileSystem fs;
   private Path testFilePath;
+
+  private static final String[] DICT_IMPLS = new String[]{"RBTREE", "HASH"};
 
   @Rule
   public TestName testCaseName = new TestName();
@@ -114,10 +117,8 @@ public class TestStringDictionary {
     }
   }
 
-  @Test
-  public void testHalfDistinct() throws Exception {
+  public void testHalfDistinctHelper(Configuration conf) throws Exception {
     TypeDescription schema = TypeDescription.createString();
-
     Writer writer = OrcFile.createWriter(
         testFilePath,
         OrcFile.writerOptions(conf).setSchema(schema).compress(CompressionKind.NONE)
@@ -161,6 +162,17 @@ public class TestStringDictionary {
         OrcProto.ColumnEncoding encoding = footer.getColumns(i);
         assertEquals(OrcProto.ColumnEncoding.Kind.DICTIONARY_V2, encoding.getKind());
       }
+    }
+  }
+
+  @Test
+  public void testHalfDistinct() throws Exception {
+    // For test cases that enables dictionary-encoding, we would like to have all implementation of dictionary being tested.
+    for (String impl: DICT_IMPLS){
+      conf.set(DICTIONARY_IMPL.getAttribute(), impl);
+      testHalfDistinctHelper(conf);
+      // Clean up manually as method annotated by @Before isn't kicked for each iteration here.
+      openFileSystem();
     }
   }
 
