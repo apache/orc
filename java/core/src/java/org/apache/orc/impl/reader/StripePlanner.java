@@ -167,9 +167,9 @@ public class StripePlanner {
   public BufferChunkList readData(OrcIndex index,
                                   boolean[] rowGroupInclude,
                                   boolean forceDirect) throws IOException {
-    ReadLevel rLevel = filterColIds.isEmpty() ? ReadLevel.ALL : ReadLevel.LEAD;
+    ReadLevel readLevel = filterColIds.isEmpty() ? ReadLevel.ALL : ReadLevel.LEAD;
     BufferChunkList chunks = (index == null || rowGroupInclude == null)
-        ? planDataReading(rLevel) : planPartialDataReading(index, rowGroupInclude, rLevel);
+        ? planDataReading(readLevel) : planPartialDataReading(index, rowGroupInclude, readLevel);
     dataReader.readFileData(chunks, forceDirect);
     return chunks;
   }
@@ -452,12 +452,12 @@ public class StripePlanner {
    * data.
    * @return a list of merged disk ranges to read
    */
-  private BufferChunkList planDataReading(ReadLevel rLevel) {
+  private BufferChunkList planDataReading(ReadLevel readLevel) {
     BufferChunkList result = new BufferChunkList();
     for(StreamInformation stream: dataStreams) {
       if (filterColIds.isEmpty()
-          || (rLevel == ReadLevel.LEAD && filterColIds.contains(stream.column))
-          || (rLevel == ReadLevel.FOLLOW && !filterColIds.contains(stream.column))) {
+          || (readLevel == ReadLevel.LEAD && filterColIds.contains(stream.column))
+          || (readLevel == ReadLevel.FOLLOW && !filterColIds.contains(stream.column))) {
         addChunk(result, stream, stream.offset, stream.length);
       } else {
         // In case a filter is present, then don't plan the lazy columns, they will be planned only
@@ -504,8 +504,8 @@ public class StripePlanner {
    */
   private BufferChunkList planPartialDataReading(OrcIndex index,
                                                  @NotNull boolean[] includedRowGroups,
-                                                 ReadLevel rLevel) {
-    return planPartialDataReading(index, includedRowGroups, 0, rLevel);
+                                                 ReadLevel readLevel) {
+    return planPartialDataReading(index, includedRowGroups, 0, readLevel);
   }
 
   /**
@@ -519,7 +519,7 @@ public class StripePlanner {
   private BufferChunkList planPartialDataReading(OrcIndex index,
                                                  @NotNull boolean[] includedRowGroups,
                                                  int startGroup,
-                                                 ReadLevel rLevel) {
+                                                 ReadLevel readLevel) {
     BufferChunkList result = new BufferChunkList();
     if (hasSomeRowGroups(includedRowGroups)) {
       InStream.StreamOptions compression = dataReader.getCompressionOptions();
@@ -527,11 +527,11 @@ public class StripePlanner {
       int bufferSize = compression.getBufferSize();
       OrcProto.RowIndex[] rowIndex = index.getRowGroupIndex();
       for (StreamInformation stream : dataStreams) {
-        if ((rLevel == ReadLevel.FOLLOW && filterColIds.contains(stream.column))
-            || (rLevel == ReadLevel.LEAD && !filterColIds.contains(stream.column))) {
+        if ((readLevel == ReadLevel.FOLLOW && filterColIds.contains(stream.column))
+            || (readLevel == ReadLevel.LEAD && !filterColIds.contains(stream.column))) {
           // In case a filter is present, then don't plan the lazy columns, they will be planned only
           // as needed.
-          LOG.debug("Skipping planning for column stream {} at level {}", stream, rLevel);
+          LOG.debug("Skipping planning for column stream {} at level {}", stream, readLevel);
           continue;
         }
         if (RecordReaderUtils.isDictionary(stream.kind, encodings[stream.column])) {

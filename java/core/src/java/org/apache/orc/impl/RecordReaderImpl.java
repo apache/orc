@@ -98,7 +98,7 @@ public class RecordReaderImpl implements RecordReader {
   private final DataReader dataReader;
   private final int maxDiskRangeChunkLimit;
   private final StripePlanner planner;
-  private final ReadLevel rLevel;
+  private final ReadLevel readLevel;
   private boolean needFollowStripe;
 
   /**
@@ -247,9 +247,9 @@ public class RecordReaderImpl implements RecordReader {
         }
       }
       LOG.info("Filter Columns: " + filterColIds);
-      this.rLevel = ReadLevel.LEAD;
+      this.readLevel = ReadLevel.LEAD;
     } else {
-      this.rLevel = ReadLevel.ALL;
+      this.readLevel = ReadLevel.ALL;
     }
 
     this.rowIndexCols = ArrayUtils.contains(rowIndexCols, true) ? rowIndexCols : null;
@@ -1142,11 +1142,11 @@ public class RecordReaderImpl implements RecordReader {
     // if we haven't skipped the whole stripe, read the data
     if (rowInStripe < rowCountInStripe) {
       planner.readData(indexes, includedRowGroups, false);
-      reader.startStripe(planner, rLevel);
+      reader.startStripe(planner, readLevel);
       needFollowStripe = true;
       // if we skipped the first row group, move the pointers forward
       if (rowInStripe != 0) {
-        seekToRowEntry(reader, (int) (rowInStripe / rowIndexStride), rLevel);
+        seekToRowEntry(reader, (int) (rowInStripe / rowIndexStride), readLevel);
       }
     }
   }
@@ -1228,10 +1228,10 @@ public class RecordReaderImpl implements RecordReader {
     if (nextRowInStripe != rowInStripe) {
       if (rowIndexStride != 0) {
         int rowGroup = (int) (nextRowInStripe / rowIndexStride);
-        seekToRowEntry(reader, rowGroup, rLevel);
-        reader.skipRows(nextRowInStripe - rowGroup * rowIndexStride, rLevel);
+        seekToRowEntry(reader, rowGroup, readLevel);
+        reader.skipRows(nextRowInStripe - rowGroup * rowIndexStride, readLevel);
       } else {
-        reader.skipRows(nextRowInStripe - rowInStripe, rLevel);
+        reader.skipRows(nextRowInStripe - rowInStripe, readLevel);
       }
       rowInStripe = nextRowInStripe;
     }
@@ -1259,8 +1259,8 @@ public class RecordReaderImpl implements RecordReader {
 
         batchSize = computeBatchSize(batch.getMaxSize());
         reader.setVectorColumnCount(batch.getDataColumnCount());
-        reader.nextBatch(batch, batchSize, rLevel);
-        if (rLevel == ReadLevel.LEAD && batch.size > 0) {
+        reader.nextBatch(batch, batchSize, readLevel);
+        if (readLevel == ReadLevel.LEAD && batch.size > 0) {
           prepareFollowingStreams(rowInStripe, followRowInStripe);
           followRowInStripe = rowInStripe + batchSize;
           reader.nextBatch(batch, batchSize, ReadLevel.FOLLOW);
@@ -1325,7 +1325,7 @@ public class RecordReaderImpl implements RecordReader {
     // aware of row group boundary and will not cause overflow when reading rows
     // illustration of this case is here https://issues.apache.org/jira/browse/HIVE-6287
     if (rowIndexStride != 0
-        && (includedRowGroups != null || rLevel != ReadLevel.ALL)
+        && (includedRowGroups != null || readLevel != ReadLevel.ALL)
         && rowInStripe < rowCountInStripe) {
       int startRowGroup = (int) (rowInStripe / rowIndexStride);
       if (includedRowGroups != null && !includedRowGroups[startRowGroup]) {
@@ -1337,7 +1337,7 @@ public class RecordReaderImpl implements RecordReader {
       int endRowGroup = startRowGroup;
       // We force row group boundaries when dealing with filters. We adjust the end row group to
       // be the next row group even if more than one are possible selections
-      if (includedRowGroups != null && rLevel == ReadLevel.ALL) {
+      if (includedRowGroups != null && readLevel == ReadLevel.ALL) {
         while (endRowGroup < includedRowGroups.length
                && includedRowGroups[endRowGroup]) {
           endRowGroup += 1;
@@ -1417,7 +1417,7 @@ public class RecordReaderImpl implements RecordReader {
     }
   }
 
-  private void seekToRowEntry(BatchReader reader, int rowEntry, ReadLevel rLevel)
+  private void seekToRowEntry(BatchReader reader, int rowEntry, ReadLevel readLevel)
       throws IOException {
     OrcProto.RowIndex[] rowIndices = indexes.getRowGroupIndex();
     PositionProvider[] index = new PositionProvider[rowIndices.length];
@@ -1432,7 +1432,7 @@ public class RecordReaderImpl implements RecordReader {
         }
       }
     }
-    reader.seek(index, rLevel);
+    reader.seek(index, readLevel);
   }
 
   @Override

@@ -257,27 +257,27 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     }
 
     @Override
-    public void startStripe(StripePlanner planner, ReadLevel rLevel) throws IOException {
+    public void startStripe(StripePlanner planner, ReadLevel readLevel) throws IOException {
       // Pass-thru.
-      fromReader.startStripe(planner, rLevel);
+      fromReader.startStripe(planner, readLevel);
     }
 
     @Override
-    public void seek(PositionProvider[] index, ReadLevel rLevel) throws IOException {
+    public void seek(PositionProvider[] index, ReadLevel readLevel) throws IOException {
      // Pass-thru.
-      fromReader.seek(index, rLevel);
+      fromReader.seek(index, readLevel);
     }
 
     @Override
-    public void seek(PositionProvider index, ReadLevel rLevel) throws IOException {
+    public void seek(PositionProvider index, ReadLevel readLevel) throws IOException {
       // Pass-thru.
-      fromReader.seek(index, rLevel);
+      fromReader.seek(index, readLevel);
     }
 
     @Override
-    public void skipRows(long items, ReadLevel rLevel) throws IOException {
+    public void skipRows(long items, ReadLevel readLevel) throws IOException {
       // Pass-thru.
-      fromReader.skipRows(items, rLevel);
+      fromReader.skipRows(items, readLevel);
     }
 
     /**
@@ -403,8 +403,8 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
-      fromReader.nextVector(previousVector, isNull, batchSize, filterContext, rLevel);
+                           FilterContext filterContext, ReadLevel readLevel) throws IOException {
+      fromReader.nextVector(previousVector, isNull, batchSize, filterContext, readLevel);
       LongColumnVector resultColVector = (LongColumnVector) previousVector;
       if (downCastNeeded) {
         if (resultColVector.isRepeating) {
@@ -457,14 +457,14 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext, ReadLevel readLevel) throws IOException {
       if (doubleColVector == null) {
         // Allocate column vector for file; cast column vector for reader.
         doubleColVector = new DoubleColumnVector(batchSize);
         longColVector = (LongColumnVector) previousVector;
       }
       // Read present/isNull stream
-      fromReader.nextVector(doubleColVector, isNull, batchSize, filterContext, rLevel);
+      fromReader.nextVector(doubleColVector, isNull, batchSize, filterContext, readLevel);
 
       convertVector(doubleColVector, longColVector, batchSize);
     }
@@ -542,14 +542,14 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext, ReadLevel readLevel) throws IOException {
       if (decimalColVector == null) {
         // Allocate column vector for file; cast column vector for reader.
         decimalColVector = new DecimalColumnVector(batchSize, precision, scale);
         longColVector = (LongColumnVector) previousVector;
       }
       // Read present/isNull stream
-      fromReader.nextVector(decimalColVector, isNull, batchSize, filterContext, rLevel);
+      fromReader.nextVector(decimalColVector, isNull, batchSize, filterContext, readLevel);
 
       convertVector(decimalColVector, longColVector, batchSize);
     }
@@ -582,14 +582,14 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext, ReadLevel readLevel) throws IOException {
       if (bytesColVector == null) {
         // Allocate column vector for file; cast column vector for reader.
         bytesColVector = new BytesColumnVector(batchSize);
         longColVector = (LongColumnVector) previousVector;
       }
       // Read present/isNull stream
-      fromReader.nextVector(bytesColVector, isNull, batchSize, filterContext, rLevel);
+      fromReader.nextVector(bytesColVector, isNull, batchSize, filterContext, readLevel);
 
       convertVector(bytesColVector, longColVector, batchSize);
     }
@@ -618,14 +618,14 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext, ReadLevel readLevel) throws IOException {
       if (timestampColVector == null) {
         // Allocate column vector for file; cast column vector for reader.
         timestampColVector = new TimestampColumnVector(batchSize);
         longColVector = (LongColumnVector) previousVector;
       }
       // Read present/isNull stream
-      fromReader.nextVector(timestampColVector, isNull, batchSize, filterContext, rLevel);
+      fromReader.nextVector(timestampColVector, isNull, batchSize, filterContext, readLevel);
 
       convertVector(timestampColVector, longColVector, batchSize);
     }
@@ -657,14 +657,14 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext, ReadLevel readLevel) throws IOException {
       if (longColVector == null) {
         // Allocate column vector for file; cast column vector for reader.
         longColVector = new LongColumnVector(batchSize);
         doubleColVector = (DoubleColumnVector) previousVector;
       }
       // Read present/isNull stream
-      fromReader.nextVector(longColVector, isNull, batchSize, filterContext, rLevel);
+      fromReader.nextVector(longColVector, isNull, batchSize, filterContext, readLevel);
 
       convertVector(longColVector, doubleColVector, batchSize);
     }
@@ -693,14 +693,14 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext, ReadLevel readLevel) throws IOException {
       if (decimalColVector == null) {
         // Allocate column vector for file; cast column vector for reader.
         decimalColVector = new DecimalColumnVector(batchSize, precision, scale);
         doubleColVector = (DoubleColumnVector) previousVector;
       }
       // Read present/isNull stream
-      fromReader.nextVector(decimalColVector, isNull, batchSize, filterContext, rLevel);
+      fromReader.nextVector(decimalColVector, isNull, batchSize, filterContext, readLevel);
 
       convertVector(decimalColVector, doubleColVector, batchSize);
     }
@@ -731,14 +731,14 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext, ReadLevel readLevel) throws IOException {
       if (bytesColVector == null) {
         // Allocate column vector for file; cast column vector for reader.
         bytesColVector = new BytesColumnVector(batchSize);
         doubleColVector = (DoubleColumnVector) previousVector;
       }
       // Read present/isNull stream
-      fromReader.nextVector(bytesColVector, isNull, batchSize, filterContext, rLevel);
+      fromReader.nextVector(bytesColVector, isNull, batchSize, filterContext, readLevel);
 
       convertVector(bytesColVector, doubleColVector, batchSize);
     }
@@ -768,14 +768,14 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext, ReadLevel readLevel) throws IOException {
       if (timestampColVector == null) {
         // Allocate column vector for file; cast column vector for reader.
         timestampColVector = new TimestampColumnVector(batchSize);
         doubleColVector = (DoubleColumnVector) previousVector;
       }
       // Read present/isNull stream
-      fromReader.nextVector(timestampColVector, isNull, batchSize, filterContext, rLevel);
+      fromReader.nextVector(timestampColVector, isNull, batchSize, filterContext, readLevel);
 
       convertVector(timestampColVector, doubleColVector, batchSize);
     }
@@ -790,9 +790,9 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext, ReadLevel readLevel) throws IOException {
       // Read present/isNull stream
-      fromReader.nextVector(previousVector, isNull, batchSize, filterContext, rLevel);
+      fromReader.nextVector(previousVector, isNull, batchSize, filterContext, readLevel);
       DoubleColumnVector vector = (DoubleColumnVector) previousVector;
       if (previousVector.isRepeating) {
         vector.vector[0] = (float) vector.vector[0];
@@ -829,14 +829,14 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext, ReadLevel readLevel) throws IOException {
       if (longColVector == null) {
         // Allocate column vector for file; cast column vector for reader.
         longColVector = new LongColumnVector(batchSize);
         decimalColVector = previousVector;
       }
       // Read present/isNull stream
-      fromReader.nextVector(longColVector, isNull, batchSize, filterContext, rLevel);
+      fromReader.nextVector(longColVector, isNull, batchSize, filterContext, readLevel);
 
       convertVector(longColVector, decimalColVector, batchSize);
     }
@@ -876,14 +876,14 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext, ReadLevel readLevel) throws IOException {
       if (doubleColVector == null) {
         // Allocate column vector for file; cast column vector for reader.
         doubleColVector = new DoubleColumnVector(batchSize);
         decimalColVector = previousVector;
       }
       // Read present/isNull stream
-      fromReader.nextVector(doubleColVector, isNull, batchSize, filterContext, rLevel);
+      fromReader.nextVector(doubleColVector, isNull, batchSize, filterContext, readLevel);
 
       convertVector(doubleColVector, decimalColVector, batchSize);
     }
@@ -919,14 +919,14 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext, ReadLevel readLevel) throws IOException {
       if (bytesColVector == null) {
         // Allocate column vector for file; cast column vector for reader.
         bytesColVector = new BytesColumnVector(batchSize);
         decimalColVector = previousVector;
       }
       // Read present/isNull stream
-      fromReader.nextVector(bytesColVector, isNull, batchSize, filterContext, rLevel);
+      fromReader.nextVector(bytesColVector, isNull, batchSize, filterContext, readLevel);
 
       convertVector(bytesColVector, decimalColVector, batchSize);
     }
@@ -964,14 +964,14 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext, ReadLevel readLevel) throws IOException {
       if (timestampColVector == null) {
         // Allocate column vector for file; cast column vector for reader.
         timestampColVector = new TimestampColumnVector(batchSize);
         decimalColVector = previousVector;
       }
       // Read present/isNull stream
-      fromReader.nextVector(timestampColVector, isNull, batchSize, filterContext, rLevel);
+      fromReader.nextVector(timestampColVector, isNull, batchSize, filterContext, readLevel);
 
       convertVector(timestampColVector, decimalColVector, batchSize);
     }
@@ -1006,14 +1006,14 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext, ReadLevel readLevel) throws IOException {
       if (fileDecimalColVector == null) {
         // Allocate column vector for file; cast column vector for reader.
         fileDecimalColVector = new DecimalColumnVector(batchSize, filePrecision, fileScale);
         decimalColVector = previousVector;
       }
       // Read present/isNull stream
-      fromReader.nextVector(fileDecimalColVector, isNull, batchSize, filterContext, rLevel);
+      fromReader.nextVector(fileDecimalColVector, isNull, batchSize, filterContext, readLevel);
 
       convertVector(fileDecimalColVector, decimalColVector, batchSize);
     }
@@ -1041,14 +1041,14 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext, ReadLevel readLevel) throws IOException {
       if (longColVector == null) {
         // Allocate column vector for file; cast column vector for reader.
         longColVector = new LongColumnVector(batchSize);
         bytesColVector = (BytesColumnVector) previousVector;
       }
       // Read present/isNull stream
-      fromReader.nextVector(longColVector, isNull, batchSize, filterContext, rLevel);
+      fromReader.nextVector(longColVector, isNull, batchSize, filterContext, readLevel);
 
       convertVector(longColVector, bytesColVector, batchSize);
     }
@@ -1101,14 +1101,14 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext, ReadLevel readLevel) throws IOException {
       if (doubleColVector == null) {
         // Allocate column vector for file; cast column vector for reader.
         doubleColVector = new DoubleColumnVector(batchSize);
         bytesColVector = (BytesColumnVector) previousVector;
       }
       // Read present/isNull stream
-      fromReader.nextVector(doubleColVector, isNull, batchSize, filterContext, rLevel);
+      fromReader.nextVector(doubleColVector, isNull, batchSize, filterContext, readLevel);
 
       convertVector(doubleColVector, bytesColVector, batchSize);
     }
@@ -1150,14 +1150,14 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext, ReadLevel readLevel) throws IOException {
       if (decimalColVector == null) {
         // Allocate column vector for file; cast column vector for reader.
         decimalColVector = new DecimalColumnVector(batchSize, precision, scale);
         bytesColVector = (BytesColumnVector) previousVector;
       }
       // Read present/isNull stream
-      fromReader.nextVector(decimalColVector, isNull, batchSize, filterContext, rLevel);
+      fromReader.nextVector(decimalColVector, isNull, batchSize, filterContext, readLevel);
 
       convertVector(decimalColVector, bytesColVector, batchSize);
     }
@@ -1272,14 +1272,14 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext, ReadLevel readLevel) throws IOException {
       if (timestampColVector == null) {
         // Allocate column vector for file; cast column vector for reader.
         timestampColVector = new TimestampColumnVector(batchSize);
         bytesColVector = (BytesColumnVector) previousVector;
       }
       // Read present/isNull stream
-      fromReader.nextVector(timestampColVector, isNull, batchSize, filterContext, rLevel);
+      fromReader.nextVector(timestampColVector, isNull, batchSize, filterContext, readLevel);
 
       convertVector(timestampColVector, bytesColVector, batchSize);
     }
@@ -1310,14 +1310,14 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext, ReadLevel readLevel) throws IOException {
       if (longColVector == null) {
         // Allocate column vector for file; cast column vector for reader.
         longColVector = new DateColumnVector(batchSize);
         bytesColVector = (BytesColumnVector) previousVector;
       }
       // Read present/isNull stream
-      fromReader.nextVector(longColVector, isNull, batchSize, filterContext, rLevel);
+      fromReader.nextVector(longColVector, isNull, batchSize, filterContext, readLevel);
 
       convertVector(longColVector, bytesColVector, batchSize);
     }
@@ -1336,8 +1336,8 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
-      fromReader.nextVector(previousVector, isNull, batchSize, filterContext, rLevel);
+                           FilterContext filterContext, ReadLevel readLevel) throws IOException {
+      fromReader.nextVector(previousVector, isNull, batchSize, filterContext, readLevel);
 
       BytesColumnVector resultColVector = (BytesColumnVector) previousVector;
 
@@ -1398,14 +1398,14 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext, ReadLevel readLevel) throws IOException {
       if (inBytesColVector == null) {
         // Allocate column vector for file; cast column vector for reader.
         inBytesColVector = new BytesColumnVector(batchSize);
         outBytesColVector = (BytesColumnVector) previousVector;
       }
       // Read present/isNull stream
-      fromReader.nextVector(inBytesColVector, isNull, batchSize, filterContext, rLevel);
+      fromReader.nextVector(inBytesColVector, isNull, batchSize, filterContext, readLevel);
 
       convertVector(inBytesColVector, outBytesColVector, batchSize);
     }
@@ -1442,7 +1442,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext, ReadLevel readLevel) throws IOException {
       if (longColVector == null) {
         // Allocate column vector for file; cast column vector for reader.
         longColVector = new LongColumnVector(batchSize);
@@ -1450,7 +1450,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       }
       timestampColVector.changeCalendar(fileUsedProlepticGregorian, false);
       // Read present/isNull stream
-      fromReader.nextVector(longColVector, isNull, batchSize, filterContext, rLevel);
+      fromReader.nextVector(longColVector, isNull, batchSize, filterContext, readLevel);
 
       convertVector(longColVector, timestampColVector, batchSize);
       timestampColVector.changeCalendar(useProlepticGregorian, true);
@@ -1503,7 +1503,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext, ReadLevel readLevel) throws IOException {
       if (doubleColVector == null) {
         // Allocate column vector for file; cast column vector for reader.
         doubleColVector = new DoubleColumnVector(batchSize);
@@ -1511,7 +1511,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       }
       timestampColVector.changeCalendar(fileUsedProlepticGregorian, false);
       // Read present/isNull stream
-      fromReader.nextVector(doubleColVector, isNull, batchSize, filterContext, rLevel);
+      fromReader.nextVector(doubleColVector, isNull, batchSize, filterContext, readLevel);
 
       convertVector(doubleColVector, timestampColVector, batchSize);
       timestampColVector.changeCalendar(useProlepticGregorian, true);
@@ -1562,7 +1562,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext, ReadLevel readLevel) throws IOException {
       if (decimalColVector == null) {
         // Allocate column vector for file; cast column vector for reader.
         decimalColVector = new DecimalColumnVector(batchSize, precision, scale);
@@ -1570,7 +1570,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       }
       timestampColVector.changeCalendar(fileUsedProlepticGregorian, false);
       // Read present/isNull stream
-      fromReader.nextVector(decimalColVector, isNull, batchSize, filterContext, rLevel);
+      fromReader.nextVector(decimalColVector, isNull, batchSize, filterContext, readLevel);
 
       convertVector(decimalColVector, timestampColVector, batchSize);
       timestampColVector.changeCalendar(useProlepticGregorian, true);
@@ -1620,14 +1620,14 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext, ReadLevel readLevel) throws IOException {
       if (bytesColVector == null) {
         // Allocate column vector for file; cast column vector for reader.
         bytesColVector = new BytesColumnVector(batchSize);
         timestampColVector = (TimestampColumnVector) previousVector;
       }
       // Read present/isNull stream
-      fromReader.nextVector(bytesColVector, isNull, batchSize, filterContext, rLevel);
+      fromReader.nextVector(bytesColVector, isNull, batchSize, filterContext, readLevel);
 
       convertVector(bytesColVector, timestampColVector, batchSize);
       timestampColVector.changeCalendar(useProlepticGregorian, false);
@@ -1663,14 +1663,14 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext, ReadLevel readLevel) throws IOException {
       if (longColVector == null) {
         // Allocate column vector for file; cast column vector for reader.
         longColVector = new DateColumnVector(batchSize);
         timestampColVector = (TimestampColumnVector) previousVector;
       }
       // Read present/isNull stream
-      fromReader.nextVector(longColVector, isNull, batchSize, filterContext, rLevel);
+      fromReader.nextVector(longColVector, isNull, batchSize, filterContext, readLevel);
 
       convertVector(longColVector, timestampColVector, batchSize);
       timestampColVector.changeCalendar(useProlepticGregorian, false);
@@ -1706,7 +1706,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext, ReadLevel readLevel) throws IOException {
       if (bytesColVector == null) {
         // Allocate column vector for file; cast column vector for reader.
         bytesColVector = new BytesColumnVector(batchSize);
@@ -1722,7 +1722,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
         }
       }
       // Read present/isNull stream
-      fromReader.nextVector(bytesColVector, isNull, batchSize, filterContext, rLevel);
+      fromReader.nextVector(bytesColVector, isNull, batchSize, filterContext, readLevel);
 
       convertVector(bytesColVector, longColVector, batchSize);
       if (dateColumnVector != null) {
@@ -1758,7 +1758,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext, ReadLevel readLevel) throws IOException {
       if (timestampColVector == null) {
         // Allocate column vector for file; cast column vector for reader.
         timestampColVector = new TimestampColumnVector(batchSize);
@@ -1769,7 +1769,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
         }
       }
       // Read present/isNull stream
-      fromReader.nextVector(timestampColVector, isNull, batchSize, filterContext, rLevel);
+      fromReader.nextVector(timestampColVector, isNull, batchSize, filterContext, readLevel);
 
       convertVector(timestampColVector, longColVector, batchSize);
       if (longColVector instanceof DateColumnVector) {

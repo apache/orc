@@ -43,39 +43,39 @@ public class LevelTypeReader implements TypeReader {
   }
 
   @Override
-  public void startStripe(StripePlanner planner, ReadLevel rLevel) throws IOException {
-    if (reader.getReadLevel() != rLevel) {
+  public void startStripe(StripePlanner planner, ReadLevel readLevel) throws IOException {
+    if (reader.getReadLevel() != readLevel) {
       return;
     }
 
-    reader.startStripe(planner, rLevel);
+    reader.startStripe(planner, readLevel);
   }
 
   @Override
-  public void seek(PositionProvider[] index, ReadLevel rLevel) throws IOException {
-    if (reader.getReadLevel() != rLevel) {
+  public void seek(PositionProvider[] index, ReadLevel readLevel) throws IOException {
+    if (reader.getReadLevel() != readLevel) {
       return;
     }
 
-    reader.seek(index, rLevel);
+    reader.seek(index, readLevel);
   }
 
   @Override
-  public void seek(PositionProvider index, ReadLevel rLevel) throws IOException {
-    if (reader.getReadLevel() != rLevel) {
+  public void seek(PositionProvider index, ReadLevel readLevel) throws IOException {
+    if (reader.getReadLevel() != readLevel) {
       return;
     }
 
-    reader.seek(index, rLevel);
+    reader.seek(index, readLevel);
   }
 
   @Override
-  public void skipRows(long rows, ReadLevel rLevel) throws IOException {
-    if (reader.getReadLevel() != rLevel) {
+  public void skipRows(long rows, ReadLevel readLevel) throws IOException {
+    if (reader.getReadLevel() != readLevel) {
       return;
     }
 
-    reader.skipRows(rows, rLevel);
+    reader.skipRows(rows, readLevel);
   }
 
   @Override
@@ -83,12 +83,12 @@ public class LevelTypeReader implements TypeReader {
                          boolean[] isNull,
                          int batchSize,
                          FilterContext filterContext,
-                         ReadLevel rLevel) throws IOException {
-    if (reader.getReadLevel() != rLevel) {
+                         ReadLevel readLevel) throws IOException {
+    if (reader.getReadLevel() != readLevel) {
       return;
     }
 
-    reader.nextVector(previous, isNull, batchSize, filterContext, rLevel);
+    reader.nextVector(previous, isNull, batchSize, filterContext, readLevel);
   }
 
   @Override

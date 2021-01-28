@@ -50,22 +50,22 @@ public class StructBatchReader extends BatchReader {
                                TypeReader[] children,
                                int batchSize,
                                int index,
-                               ReadLevel rLevel)
+                               ReadLevel readLevel)
     throws IOException {
     ColumnVector colVector = batch.cols[index];
     if (colVector != null) {
       colVector.reset();
       colVector.ensureSize(batchSize, false);
-      children[index].nextVector(colVector, null, batchSize, batch, rLevel);
+      children[index].nextVector(colVector, null, batchSize, batch, readLevel);
     }
   }
 
   @Override
-  public void nextBatch(VectorizedRowBatch batch, int batchSize, ReadLevel rLevel)
+  public void nextBatch(VectorizedRowBatch batch, int batchSize, ReadLevel readLevel)
     throws IOException {
-    nextBatchLevel(batch, batchSize, rLevel);
+    nextBatchLevel(batch, batchSize, readLevel);
 
-    if (rLevel == ReadLevel.LEAD) {
+    if (readLevel == ReadLevel.LEAD) {
       // Apply filter callback to reduce number of # rows selected for decoding in the next
       // TreeReaders
       if (this.context.getColumnFilterCallback() != null) {
@@ -74,20 +74,20 @@ public class StructBatchReader extends BatchReader {
     }
   }
 
-  private void nextBatchLevel(VectorizedRowBatch batch, int batchSize, ReadLevel rLevel) throws IOException {
+  private void nextBatchLevel(VectorizedRowBatch batch, int batchSize, ReadLevel readLevel) throws IOException {
     TypeReader[] children = structReader.fields;
 
-    if (rLevel != ReadLevel.FOLLOW) {
+    if (readLevel != ReadLevel.FOLLOW) {
       // In case of FOLLOW we leave the selectedInUse untouched.
       batch.selectedInUse = false;
     }
 
     for (int i = 0; i < children.length
                     && (vectorColumnCount == -1 || i < vectorColumnCount); ++i) {
-      readBatchColumn(batch, children, batchSize, i, rLevel);
+      readBatchColumn(batch, children, batchSize, i, readLevel);
     }
 
-    if (rLevel != ReadLevel.FOLLOW) {
+    if (readLevel != ReadLevel.FOLLOW) {
       // Set the batch size when not dealing with follow columns
       batch.size = batchSize;
     }
