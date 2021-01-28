@@ -38,8 +38,8 @@ public abstract class BatchReader {
     this.rootType = rootType;
   }
 
-  public void startStripe(StripePlanner planner, ReadLevel rLevel) throws IOException {
-    rootType.startStripe(planner, rLevel);
+  public void startStripe(StripePlanner planner, ReadLevel readLevel) throws IOException {
+    rootType.startStripe(planner, readLevel);
   }
 
   public void startStripe(StripePlanner planner) throws IOException {
@@ -54,12 +54,12 @@ public abstract class BatchReader {
    * Read the next batch of data from the file.
    * @param batch     the batch to read into
    * @param batchSize the number of rows to read
-   * @param rLevel    defines the read level i.e. ALL, LEAD or FOLLOW
+   * @param readLevel    defines the read level i.e. ALL, LEAD or FOLLOW
    * @throws IOException errors reading the file
    */
   public abstract void nextBatch(VectorizedRowBatch batch,
                                  int batchSize,
-                                 ReadLevel rLevel) throws IOException;
+                                 ReadLevel readLevel) throws IOException;
 
   public void nextBatch(VectorizedRowBatch batch, int batchSize) throws IOException {
     nextBatch(batch, batchSize, ReadLevel.ALL);
@@ -70,11 +70,11 @@ public abstract class BatchReader {
     batch.size = batchSize;
   }
 
-  public void skipRows(long rows, ReadLevel rLevel) throws IOException {
-    rootType.skipRows(rows, rLevel);
+  public void skipRows(long rows, ReadLevel readLevel) throws IOException {
+    rootType.skipRows(rows, readLevel);
   }
 
-  public void seek(PositionProvider[] index, ReadLevel rLevel) throws IOException {
-    rootType.seek(index, rLevel);
+  public void seek(PositionProvider[] index, ReadLevel readLevel) throws IOException {
+    rootType.seek(index, readLevel);
   }
 }

@@ -198,7 +198,7 @@ public class TreeReaderFactory {
     protected BitFieldReader present = null;
     protected final Context context;
 
-    protected final ReadLevel rLevel;
+    protected final ReadLevel readLevel;
 
     static final long[] powerOfTenTable = {
         1L,                   // 0
@@ -235,17 +235,17 @@ public class TreeReaderFactory {
         present = new BitFieldReader(in);
       }
       if (context == null || context.getColumnFilterIds().isEmpty()) {
-        this.rLevel = ReadLevel.ALL;
+        this.readLevel = ReadLevel.ALL;
       } else if (context.getColumnFilterIds().contains(columnId)) {
-        this.rLevel = ReadLevel.LEAD;
+        this.readLevel = ReadLevel.LEAD;
       } else {
-        this.rLevel = ReadLevel.FOLLOW;
+        this.readLevel = ReadLevel.FOLLOW;
       }
     }
 
     @Override
     public ReadLevel getReadLevel() {
-      return rLevel;
+      return readLevel;
     }
 
     public void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
@@ -272,7 +272,7 @@ public class TreeReaderFactory {
       }
     }
 
-    public void startStripe(StripePlanner planner, ReadLevel rLevel) throws IOException {
+    public void startStripe(StripePlanner planner, ReadLevel readLevel) throws IOException {
       checkEncoding(planner.getEncoding(columnId));
       InStream in = planner.getStream(new StreamName(columnId,
           OrcProto.Stream.Kind.PRESENT));
@@ -287,14 +287,14 @@ public class TreeReaderFactory {
      * Seek to the given position.
      *
      * @param index the indexes loaded from the file
-     * @param rLevel the read level
+     * @param readLevel the read level
      * @throws IOException
      */
-    public void seek(PositionProvider[] index, ReadLevel rLevel) throws IOException {
-      seek(index[columnId], rLevel);
+    public void seek(PositionProvider[] index, ReadLevel readLevel) throws IOException {
+      seek(index[columnId], readLevel);
     }
 
-    public void seek(PositionProvider index, ReadLevel rLevel) throws IOException {
+    public void seek(PositionProvider index, ReadLevel readLevel) throws IOException {
       if (present != null) {
         present.seek(index);
       }
@@ -335,13 +335,14 @@ public class TreeReaderFactory {
      * @param batchSize      Size of the column vector
      * @param filterContext the information about the rows that were selected
      *                      by the filter.
-     * @param rLevel The read level
+     * @param readLevel The read level
      * @throws IOException
      */
     public void nextVector(ColumnVector previous,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext,
+                           ReadLevel readLevel) throws IOException {
       if (present != null || isNull != null) {
         // Set noNulls and isNull vector of the ColumnVector based on
         // present stream
@@ -389,28 +390,28 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void startStripe(StripePlanner planner, ReadLevel rLevel) {
+    public void startStripe(StripePlanner planner, ReadLevel readLevel) {
       // PASS
     }
 
     @Override
-    public void skipRows(long rows, ReadLevel rLevel) {
+    public void skipRows(long rows, ReadLevel readLevel) {
       // PASS
     }
 
     @Override
-    public void seek(PositionProvider position, ReadLevel rLevel) {
+    public void seek(PositionProvider position, ReadLevel readLevel) {
       // PASS
     }
 
     @Override
-    public void seek(PositionProvider[] position, ReadLevel rLevel) {
+    public void seek(PositionProvider[] position, ReadLevel readLevel) {
       // PASS
     }
 
     @Override
     public void nextVector(ColumnVector vector, boolean[] isNull, int size,
-                           FilterContext filterContext, ReadLevel rLevel) {
+                           FilterContext filterContext, ReadLevel readLevel) {
       vector.noNulls = false;
       vector.isNull[0] = true;
       vector.isRepeating = true;
@@ -435,25 +436,25 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void startStripe(StripePlanner planner, ReadLevel rLevel) throws IOException {
-      super.startStripe(planner, rLevel);
+    public void startStripe(StripePlanner planner, ReadLevel readLevel) throws IOException {
+      super.startStripe(planner, readLevel);
       reader = new BitFieldReader(planner.getStream(new StreamName(columnId,
           OrcProto.Stream.Kind.DATA)));
     }
 
     @Override
-    public void seek(PositionProvider[] index, ReadLevel rLevel) throws IOException {
-      seek(index[columnId], rLevel);
+    public void seek(PositionProvider[] index, ReadLevel readLevel) throws IOException {
+      seek(index[columnId], readLevel);
     }
 
     @Override
-    public void seek(PositionProvider index, ReadLevel rLevel) throws IOException {
-      super.seek(index, rLevel);
+    public void seek(PositionProvider index, ReadLevel readLevel) throws IOException {
+      super.seek(index, readLevel);
       reader.seek(index);
     }
 
     @Override
-    public void skipRows(long items, ReadLevel rLevel) throws IOException {
+    public void skipRows(long items, ReadLevel readLevel) throws IOException {
       reader.skip(countNonNulls(items));
     }
 
@@ -461,11 +462,12 @@ public class TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext,
+                           ReadLevel readLevel) throws IOException {
       LongColumnVector result = (LongColumnVector) previousVector;
 
       // Read present/isNull stream
-      super.nextVector(result, isNull, batchSize, filterContext, rLevel);
+      super.nextVector(result, isNull, batchSize, filterContext, readLevel);
 
       if (filterContext.isSelectedInUse()) {
         reader.nextVector(result, filterContext, batchSize);
@@ -489,20 +491,20 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void startStripe(StripePlanner planner, ReadLevel rLevel) throws IOException {
-      super.startStripe(planner, rLevel);
+    public void startStripe(StripePlanner planner, ReadLevel readLevel) throws IOException {
+      super.startStripe(planner, readLevel);
       reader = new RunLengthByteReader(planner.getStream(new StreamName(columnId,
           OrcProto.Stream.Kind.DATA)));
     }
 
     @Override
-    public void seek(PositionProvider[] index, ReadLevel rLevel) throws IOException {
-      seek(index[columnId], rLevel);
+    public void seek(PositionProvider[] index, ReadLevel readLevel) throws IOException {
+      seek(index[columnId], readLevel);
     }
 
     @Override
-    public void seek(PositionProvider index, ReadLevel rLevel) throws IOException {
-      super.seek(index, rLevel);
+    public void seek(PositionProvider index, ReadLevel readLevel) throws IOException {
+      super.seek(index, readLevel);
       reader.seek(index);
     }
 
@@ -510,18 +512,19 @@ public class TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext,
+                           ReadLevel readLevel) throws IOException {
       final LongColumnVector result = (LongColumnVector) previousVector;
 
       // Read present/isNull stream
-      super.nextVector(result, isNull, batchSize, filterContext, rLevel);
+      super.nextVector(result, isNull, batchSize, filterContext, readLevel);
 
       // Read value entries based on isNull entries
       reader.nextVector(result, result.vector, batchSize);
     }
 
     @Override
-    public void skipRows(long items, ReadLevel rLevel) throws IOException {
+    public void skipRows(long items, ReadLevel readLevel) throws IOException {
       reader.skip(countNonNulls(items));
     }
   }
@@ -553,8 +556,8 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void startStripe(StripePlanner planner, ReadLevel rLevel) throws IOException {
-      super.startStripe(planner, rLevel);
+    public void startStripe(StripePlanner planner, ReadLevel readLevel) throws IOException {
+      super.startStripe(planner, readLevel);
       StreamName name = new StreamName(columnId,
           OrcProto.Stream.Kind.DATA);
       reader = createIntegerReader(planner.getEncoding(columnId).getKind(),
@@ -562,13 +565,13 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void seek(PositionProvider[] index, ReadLevel rLevel) throws IOException {
-      seek(index[columnId], rLevel);
+    public void seek(PositionProvider[] index, ReadLevel readLevel) throws IOException {
+      seek(index[columnId], readLevel);
     }
 
     @Override
-    public void seek(PositionProvider index, ReadLevel rLevel) throws IOException {
-      super.seek(index, rLevel);
+    public void seek(PositionProvider index, ReadLevel readLevel) throws IOException {
+      super.seek(index, readLevel);
       reader.seek(index);
     }
 
@@ -576,18 +579,19 @@ public class TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext,
+                           ReadLevel readLevel) throws IOException {
       final LongColumnVector result = (LongColumnVector) previousVector;
 
       // Read present/isNull stream
-      super.nextVector(result, isNull, batchSize, filterContext, rLevel);
+      super.nextVector(result, isNull, batchSize, filterContext, readLevel);
 
       // Read value entries based on isNull entries
       reader.nextVector(result, result.vector, batchSize);
     }
 
     @Override
-    public void skipRows(long items, ReadLevel rLevel) throws IOException {
+    public void skipRows(long items, ReadLevel readLevel) throws IOException {
       reader.skip(countNonNulls(items));
     }
   }
@@ -619,8 +623,8 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void startStripe(StripePlanner planner, ReadLevel rLevel) throws IOException {
-      super.startStripe(planner, rLevel);
+    public void startStripe(StripePlanner planner, ReadLevel readLevel) throws IOException {
+      super.startStripe(planner, readLevel);
       StreamName name = new StreamName(columnId,
           OrcProto.Stream.Kind.DATA);
       reader = createIntegerReader(planner.getEncoding(columnId).getKind(),
@@ -628,13 +632,13 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void seek(PositionProvider[] index, ReadLevel rLevel) throws IOException {
-      seek(index[columnId], rLevel);
+    public void seek(PositionProvider[] index, ReadLevel readLevel) throws IOException {
+      seek(index[columnId], readLevel);
     }
 
     @Override
-    public void seek(PositionProvider index, ReadLevel rLevel) throws IOException {
-      super.seek(index, rLevel);
+    public void seek(PositionProvider index, ReadLevel readLevel) throws IOException {
+      super.seek(index, readLevel);
       reader.seek(index);
     }
 
@@ -642,18 +646,19 @@ public class TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext,
+                           ReadLevel readLevel) throws IOException {
       final LongColumnVector result = (LongColumnVector) previousVector;
 
       // Read present/isNull stream
-      super.nextVector(result, isNull, batchSize, filterContext, rLevel);
+      super.nextVector(result, isNull, batchSize, filterContext, readLevel);
 
       // Read value entries based on isNull entries
       reader.nextVector(result, result.vector, batchSize);
     }
 
     @Override
-    public void skipRows(long items, ReadLevel rLevel) throws IOException {
+    public void skipRows(long items, ReadLevel readLevel) throws IOException {
       reader.skip(countNonNulls(items));
     }
   }
@@ -686,9 +691,9 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void startStripe(StripePlanner planner, ReadLevel rLevel) throws IOException {
+    public void startStripe(StripePlanner planner, ReadLevel readLevel) throws IOException {
 
-      super.startStripe(planner, rLevel);
+      super.startStripe(planner, readLevel);
       StreamName name = new StreamName(columnId,
           OrcProto.Stream.Kind.DATA);
       reader = createIntegerReader(planner.getEncoding(columnId).getKind(),
@@ -696,14 +701,14 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void seek(PositionProvider[] index, ReadLevel rLevel) throws IOException {
-      seek(index[columnId], rLevel);
+    public void seek(PositionProvider[] index, ReadLevel readLevel) throws IOException {
+      seek(index[columnId], readLevel);
     }
 
     @Override
-    public void seek(PositionProvider index, ReadLevel rLevel) throws IOException {
+    public void seek(PositionProvider index, ReadLevel readLevel) throws IOException {
 
-      super.seek(index, rLevel);
+      super.seek(index, readLevel);
       reader.seek(index);
     }
 
@@ -711,19 +716,20 @@ public class TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext,
+                           ReadLevel readLevel) throws IOException {
 
       final LongColumnVector result = (LongColumnVector) previousVector;
 
       // Read present/isNull stream
-      super.nextVector(result, isNull, batchSize, filterContext, rLevel);
+      super.nextVector(result, isNull, batchSize, filterContext, readLevel);
 
       // Read value entries based on isNull entries
       reader.nextVector(result, result.vector, batchSize);
     }
 
     @Override
-    public void skipRows(long items, ReadLevel rLevel) throws IOException {
+    public void skipRows(long items, ReadLevel readLevel) throws IOException {
 
       reader.skip(countNonNulls(items));
     }
@@ -747,21 +753,21 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void startStripe(StripePlanner planner, ReadLevel rLevel) throws IOException {
-      super.startStripe(planner, rLevel);
+    public void startStripe(StripePlanner planner, ReadLevel readLevel) throws IOException {
+      super.startStripe(planner, readLevel);
       StreamName name = new StreamName(columnId,
           OrcProto.Stream.Kind.DATA);
       stream = planner.getStream(name);
     }
 
     @Override
-    public void seek(PositionProvider[] index, ReadLevel rLevel) throws IOException {
-      seek(index[columnId], rLevel);
+    public void seek(PositionProvider[] index, ReadLevel readLevel) throws IOException {
+      seek(index[columnId], readLevel);
     }
 
     @Override
-    public void seek(PositionProvider index, ReadLevel rLevel) throws IOException {
-      super.seek(index, rLevel);
+    public void seek(PositionProvider index, ReadLevel readLevel) throws IOException {
+      super.seek(index, readLevel);
       stream.seek(index);
     }
 
@@ -866,11 +872,12 @@ public class TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext,
+                           ReadLevel readLevel) throws IOException {
       final DoubleColumnVector result = (DoubleColumnVector) previousVector;
 
       // Read present/isNull stream
-      super.nextVector(result, isNull, batchSize, filterContext, rLevel);
+      super.nextVector(result, isNull, batchSize, filterContext, readLevel);
 
       if (filterContext.isSelectedInUse()) {
         nextVector(result, isNull, filterContext, batchSize);
@@ -880,7 +887,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void skipRows(long items, ReadLevel rLevel) throws IOException {
+    public void skipRows(long items, ReadLevel readLevel) throws IOException {
       items = countNonNulls(items);
       for (int i = 0; i < items; ++i) {
         utils.readFloat(stream);
@@ -906,8 +913,8 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void startStripe(StripePlanner planner, ReadLevel rLevel) throws IOException {
-      super.startStripe(planner, rLevel);
+    public void startStripe(StripePlanner planner, ReadLevel readLevel) throws IOException {
+      super.startStripe(planner, readLevel);
       StreamName name =
           new StreamName(columnId,
               OrcProto.Stream.Kind.DATA);
@@ -915,13 +922,13 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void seek(PositionProvider[] index, ReadLevel rLevel) throws IOException {
-      seek(index[columnId], rLevel);
+    public void seek(PositionProvider[] index, ReadLevel readLevel) throws IOException {
+      seek(index[columnId], readLevel);
     }
 
     @Override
-    public void seek(PositionProvider index, ReadLevel rLevel) throws IOException {
-      super.seek(index, rLevel);
+    public void seek(PositionProvider index, ReadLevel readLevel) throws IOException {
+      super.seek(index, readLevel);
       stream.seek(index);
     }
 
@@ -1027,11 +1034,12 @@ public class TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext,
+                           ReadLevel readLevel) throws IOException {
       final DoubleColumnVector result = (DoubleColumnVector) previousVector;
 
       // Read present/isNull stream
-      super.nextVector(result, isNull, batchSize, filterContext, rLevel);
+      super.nextVector(result, isNull, batchSize, filterContext, readLevel);
 
       if (filterContext.isSelectedInUse()) {
         nextVector(result, isNull, filterContext, batchSize);
@@ -1041,7 +1049,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void skipRows(long items, ReadLevel rLevel) throws IOException {
+    public void skipRows(long items, ReadLevel readLevel) throws IOException {
       items = countNonNulls(items);
       long len = items * 8;
       while (len > 0) {
@@ -1080,8 +1088,8 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void startStripe(StripePlanner planner, ReadLevel rLevel) throws IOException {
-      super.startStripe(planner, rLevel);
+    public void startStripe(StripePlanner planner, ReadLevel readLevel) throws IOException {
+      super.startStripe(planner, readLevel);
       StreamName name = new StreamName(columnId,
           OrcProto.Stream.Kind.DATA);
       stream = planner.getStream(name);
@@ -1090,13 +1098,13 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void seek(PositionProvider[] index, ReadLevel rLevel) throws IOException {
-      seek(index[columnId], rLevel);
+    public void seek(PositionProvider[] index, ReadLevel readLevel) throws IOException {
+      seek(index[columnId], readLevel);
     }
 
     @Override
-    public void seek(PositionProvider index, ReadLevel rLevel) throws IOException {
-      super.seek(index, rLevel);
+    public void seek(PositionProvider index, ReadLevel readLevel) throws IOException {
+      super.seek(index, readLevel);
       stream.seek(index);
       lengths.seek(index);
     }
@@ -1105,18 +1113,19 @@ public class TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext,
+                           ReadLevel readLevel) throws IOException {
       final BytesColumnVector result = (BytesColumnVector) previousVector;
 
       // Read present/isNull stream
-      super.nextVector(result, isNull, batchSize, filterContext, rLevel);
+      super.nextVector(result, isNull, batchSize, filterContext, readLevel);
 
       scratchlcv.ensureSize(batchSize, false);
       BytesColumnVectorUtil.readOrcByteArrays(stream, lengths, scratchlcv, result, batchSize);
     }
 
     @Override
-    public void skipRows(long items, ReadLevel rLevel) throws IOException {
+    public void skipRows(long items, ReadLevel readLevel) throws IOException {
       items = countNonNulls(items);
       long lengthToSkip = 0;
       for (int i = 0; i < items; ++i) {
@@ -1195,8 +1204,8 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void startStripe(StripePlanner planner, ReadLevel rLevel) throws IOException {
-      super.startStripe(planner, rLevel);
+    public void startStripe(StripePlanner planner, ReadLevel readLevel) throws IOException {
+      super.startStripe(planner, readLevel);
       OrcProto.ColumnEncoding.Kind kind = planner.getEncoding(columnId).getKind();
       data = createIntegerReader(kind,
           planner.getStream(new StreamName(columnId,
@@ -1240,13 +1249,13 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void seek(PositionProvider[] index, ReadLevel rLevel) throws IOException {
-      seek(index[columnId], rLevel);
+    public void seek(PositionProvider[] index, ReadLevel readLevel) throws IOException {
+      seek(index[columnId], readLevel);
     }
 
     @Override
-    public void seek(PositionProvider index, ReadLevel rLevel) throws IOException {
-      super.seek(index, rLevel);
+    public void seek(PositionProvider index, ReadLevel readLevel) throws IOException {
+      super.seek(index, readLevel);
       data.seek(index);
       nanos.seek(index);
     }
@@ -1323,10 +1332,11 @@ public class TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext,
+                           ReadLevel readLevel) throws IOException {
       TimestampColumnVector result = (TimestampColumnVector) previousVector;
       result.changeCalendar(fileUsesProleptic, false);
-      super.nextVector(previousVector, isNull, batchSize, filterContext, rLevel);
+      super.nextVector(previousVector, isNull, batchSize, filterContext, readLevel);
 
       result.setIsUTC(context.getUseUTCTimestamp());
 
@@ -1352,7 +1362,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void skipRows(long items, ReadLevel rLevel) throws IOException {
+    public void skipRows(long items, ReadLevel readLevel) throws IOException {
       items = countNonNulls(items);
       data.skip(items);
       nanos.skip(items);
@@ -1392,8 +1402,8 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void startStripe(StripePlanner planner, ReadLevel rLevel) throws IOException {
-      super.startStripe(planner, rLevel);
+    public void startStripe(StripePlanner planner, ReadLevel readLevel) throws IOException {
+      super.startStripe(planner, readLevel);
       StreamName name = new StreamName(columnId,
           OrcProto.Stream.Kind.DATA);
       reader = createIntegerReader(planner.getEncoding(columnId).getKind(),
@@ -1401,13 +1411,13 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void seek(PositionProvider[] index, ReadLevel rLevel) throws IOException {
-      seek(index[columnId], rLevel);
+    public void seek(PositionProvider[] index, ReadLevel readLevel) throws IOException {
+      seek(index[columnId], readLevel);
     }
 
     @Override
-    public void seek(PositionProvider index, ReadLevel rLevel) throws IOException {
-      super.seek(index, rLevel);
+    public void seek(PositionProvider index, ReadLevel readLevel) throws IOException {
+      super.seek(index, readLevel);
       reader.seek(index);
     }
 
@@ -1415,7 +1425,8 @@ public class TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext,
+                           ReadLevel readLevel) throws IOException {
       final LongColumnVector result = (LongColumnVector) previousVector;
       if (needsDateColumnVector) {
         if (result instanceof DateColumnVector) {
@@ -1427,7 +1438,7 @@ public class TreeReaderFactory {
       }
 
       // Read present/isNull stream
-      super.nextVector(result, isNull, batchSize, filterContext, rLevel);
+      super.nextVector(result, isNull, batchSize, filterContext, readLevel);
 
       // Read value entries based on isNull entries
       reader.nextVector(result, result.vector, batchSize);
@@ -1438,7 +1449,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void skipRows(long items, ReadLevel rLevel) throws IOException {
+    public void skipRows(long items, ReadLevel readLevel) throws IOException {
       reader.skip(countNonNulls(items));
     }
   }
@@ -1488,9 +1499,9 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void startStripe(StripePlanner planner, ReadLevel rLevel) throws IOException {
+    public void startStripe(StripePlanner planner, ReadLevel readLevel) throws IOException {
 
-      super.startStripe(planner, rLevel);
+      super.startStripe(planner, readLevel);
       valueStream = planner.getStream(new StreamName(columnId,
           OrcProto.Stream.Kind.DATA));
       scaleReader = createIntegerReader(planner.getEncoding(columnId).getKind(),
@@ -1498,14 +1509,14 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void seek(PositionProvider[] index, ReadLevel rLevel) throws IOException {
-      seek(index[columnId], rLevel);
+    public void seek(PositionProvider[] index, ReadLevel readLevel) throws IOException {
+      seek(index[columnId], readLevel);
     }
 
     @Override
-    public void seek(PositionProvider index, ReadLevel rLevel) throws IOException {
+    public void seek(PositionProvider index, ReadLevel readLevel) throws IOException {
 
-      super.seek(index, rLevel);
+      super.seek(index, readLevel);
       valueStream.seek(index);
       scaleReader.seek(index);
     }
@@ -1685,9 +1696,10 @@ public class TreeReaderFactory {
     public void nextVector(ColumnVector result,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext,
+                           ReadLevel readLevel) throws IOException {
       // Read present/isNull stream
-      super.nextVector(result, isNull, batchSize, filterContext, rLevel);
+      super.nextVector(result, isNull, batchSize, filterContext, readLevel);
       if (result instanceof Decimal64ColumnVector) {
          if (filterContext.isSelectedInUse()) {
            nextVector((Decimal64ColumnVector) result, isNull, filterContext, batchSize);
@@ -1716,7 +1728,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void skipRows(long items, ReadLevel rLevel) throws IOException {
+    public void skipRows(long items, ReadLevel readLevel) throws IOException {
 
       items = countNonNulls(items);
       HiveDecimalWritable scratchDecWritable = new HiveDecimalWritable();
@@ -1764,21 +1776,21 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void startStripe(StripePlanner planner, ReadLevel rLevel) throws IOException {
-      super.startStripe(planner, rLevel);
+    public void startStripe(StripePlanner planner, ReadLevel readLevel) throws IOException {
+      super.startStripe(planner, readLevel);
       InStream stream = planner.getStream(new StreamName(columnId,
           OrcProto.Stream.Kind.DATA));
       valueReader = new RunLengthIntegerReaderV2(stream, true, skipCorrupt);
     }
 
     @Override
-    public void seek(PositionProvider[] index, ReadLevel rLevel) throws IOException {
-      seek(index[columnId], rLevel);
+    public void seek(PositionProvider[] index, ReadLevel readLevel) throws IOException {
+      seek(index[columnId], readLevel);
     }
 
     @Override
-    public void seek(PositionProvider index, ReadLevel rLevel) throws IOException {
-      super.seek(index, rLevel);
+    public void seek(PositionProvider index, ReadLevel readLevel) throws IOException {
+      super.seek(index, readLevel);
       valueReader.seek(index);
     }
 
@@ -1839,9 +1851,10 @@ public class TreeReaderFactory {
     public void nextVector(ColumnVector result,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext,
+                           ReadLevel readLevel) throws IOException {
       // Read present/isNull stream
-      super.nextVector(result, isNull, batchSize, filterContext, rLevel);
+      super.nextVector(result, isNull, batchSize, filterContext, readLevel);
       if (result instanceof Decimal64ColumnVector) {
         nextVector((Decimal64ColumnVector) result, filterContext, batchSize);
       } else {
@@ -1850,7 +1863,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void skipRows(long items, ReadLevel rLevel) throws IOException {
+    public void skipRows(long items, ReadLevel readLevel) throws IOException {
       items = countNonNulls(items);
       valueReader.skip(items);
     }
@@ -1896,7 +1909,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void startStripe(StripePlanner planner, ReadLevel rLevel) throws IOException {
+    public void startStripe(StripePlanner planner, ReadLevel readLevel) throws IOException {
       // For each stripe, checks the encoding and initializes the appropriate
       // reader
       switch (planner.getEncoding(columnId).getKind()) {
@@ -1912,30 +1925,31 @@ public class TreeReaderFactory {
           throw new IllegalArgumentException("Unsupported encoding " +
               planner.getEncoding(columnId).getKind());
       }
-      reader.startStripe(planner, rLevel);
+      reader.startStripe(planner, readLevel);
     }
 
     @Override
-    public void seek(PositionProvider[] index, ReadLevel rLevel) throws IOException {
-      reader.seek(index, rLevel);
+    public void seek(PositionProvider[] index, ReadLevel readLevel) throws IOException {
+      reader.seek(index, readLevel);
     }
 
     @Override
-    public void seek(PositionProvider index, ReadLevel rLevel) throws IOException {
-      reader.seek(index, rLevel);
+    public void seek(PositionProvider index, ReadLevel readLevel) throws IOException {
+      reader.seek(index, readLevel);
     }
 
     @Override
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
-      reader.nextVector(previousVector, isNull, batchSize, filterContext, rLevel);
+                           FilterContext filterContext,
+                           ReadLevel readLevel) throws IOException {
+      reader.nextVector(previousVector, isNull, batchSize, filterContext, readLevel);
     }
 
     @Override
-    public void skipRows(long items, ReadLevel rLevel) throws IOException {
-      reader.skipRows(items, rLevel);
+    public void skipRows(long items, ReadLevel readLevel) throws IOException {
+      reader.skipRows(items, readLevel);
     }
   }
 
@@ -2055,8 +2069,8 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void startStripe(StripePlanner planner, ReadLevel rLevel) throws IOException {
-      super.startStripe(planner, rLevel);
+    public void startStripe(StripePlanner planner, ReadLevel readLevel) throws IOException {
+      super.startStripe(planner, readLevel);
       StreamName name = new StreamName(columnId,
           OrcProto.Stream.Kind.DATA);
       stream = planner.getStream(name);
@@ -2066,13 +2080,13 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void seek(PositionProvider[] index, ReadLevel rLevel) throws IOException {
-      seek(index[columnId], rLevel);
+    public void seek(PositionProvider[] index, ReadLevel readLevel) throws IOException {
+      seek(index[columnId], readLevel);
     }
 
     @Override
-    public void seek(PositionProvider index, ReadLevel rLevel) throws IOException {
-      super.seek(index, rLevel);
+    public void seek(PositionProvider index, ReadLevel readLevel) throws IOException {
+      super.seek(index, readLevel);
       stream.seek(index);
       // don't seek data stream
       lengths.seek(index);
@@ -2082,11 +2096,12 @@ public class TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext,
+                           ReadLevel readLevel) throws IOException {
       final BytesColumnVector result = (BytesColumnVector) previousVector;
 
       // Read present/isNull stream
-      super.nextVector(result, isNull, batchSize, filterContext, rLevel);
+      super.nextVector(result, isNull, batchSize, filterContext, readLevel);
 
       scratchlcv.ensureSize(batchSize, false);
       BytesColumnVectorUtil.readOrcByteArrays(stream, lengths, scratchlcv,
@@ -2094,7 +2109,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void skipRows(long items, ReadLevel rLevel) throws IOException {
+    public void skipRows(long items, ReadLevel readLevel) throws IOException {
       items = countNonNulls(items);
       long lengthToSkip = 0;
       for (int i = 0; i < items; ++i) {
@@ -2160,8 +2175,8 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void startStripe(StripePlanner planner, ReadLevel rLevel) throws IOException {
-      super.startStripe(planner, rLevel);
+    public void startStripe(StripePlanner planner, ReadLevel readLevel) throws IOException {
+      super.startStripe(planner, readLevel);
 
       // read the dictionary blob
       StreamName name = new StreamName(columnId,
@@ -2216,13 +2231,13 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void seek(PositionProvider[] index, ReadLevel rLevel) throws IOException {
-      seek(index[columnId], rLevel);
+    public void seek(PositionProvider[] index, ReadLevel readLevel) throws IOException {
+      seek(index[columnId], readLevel);
     }
 
     @Override
-    public void seek(PositionProvider index, ReadLevel rLevel) throws IOException {
-      super.seek(index, rLevel);
+    public void seek(PositionProvider index, ReadLevel readLevel) throws IOException {
+      super.seek(index, readLevel);
       reader.seek(index);
     }
 
@@ -2230,11 +2245,12 @@ public class TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext,
+                           ReadLevel readLevel) throws IOException {
       final BytesColumnVector result = (BytesColumnVector) previousVector;
 
       // Read present/isNull stream
-      super.nextVector(result, isNull, batchSize, filterContext, rLevel);
+      super.nextVector(result, isNull, batchSize, filterContext, readLevel);
       readDictionaryByteArray(result, filterContext, batchSize);
     }
 
@@ -2323,7 +2339,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void skipRows(long items, ReadLevel rLevel) throws IOException {
+    public void skipRows(long items, ReadLevel readLevel) throws IOException {
       reader.skip(countNonNulls(items));
     }
 
@@ -2357,10 +2373,11 @@ public class TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext,
+                           ReadLevel readLevel) throws IOException {
       // Get the vector of strings from StringTreeReader, then make a 2nd pass to
       // adjust down the length (right trim and truncate) if necessary.
-      super.nextVector(previousVector, isNull, batchSize, filterContext, rLevel);
+      super.nextVector(previousVector, isNull, batchSize, filterContext, readLevel);
       BytesColumnVector result = (BytesColumnVector) previousVector;
       int adjustedDownLen;
       if (result.isRepeating) {
@@ -2422,10 +2439,11 @@ public class TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext,
+                           ReadLevel readLevel) throws IOException {
       // Get the vector of strings from StringTreeReader, then make a 2nd pass to
       // adjust down the length (truncate) if necessary.
-      super.nextVector(previousVector, isNull, batchSize, filterContext, rLevel);
+      super.nextVector(previousVector, isNull, batchSize, filterContext, readLevel);
       BytesColumnVector result = (BytesColumnVector) previousVector;
 
       int adjustedDownLen;
@@ -2493,11 +2511,11 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void seek(PositionProvider[] index, ReadLevel rLevel) throws IOException {
-      super.seek(index, rLevel);
+    public void seek(PositionProvider[] index, ReadLevel readLevel) throws IOException {
+      super.seek(index, readLevel);
       for (TypeReader kid : fields) {
         if (kid != null) {
-          kid.seek(index, rLevel);
+          kid.seek(index, readLevel);
         }
       }
     }
@@ -2506,8 +2524,9 @@ public class TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
-      super.nextVector(previousVector, isNull, batchSize, filterContext, rLevel);
+                           FilterContext filterContext,
+                           ReadLevel readLevel) throws IOException {
+      super.nextVector(previousVector, isNull, batchSize, filterContext, readLevel);
       StructColumnVector result = (StructColumnVector) previousVector;
       if (result.noNulls || !(result.isRepeating && result.isNull[0])) {
         result.isRepeating = false;
@@ -2516,28 +2535,28 @@ public class TreeReaderFactory {
         boolean[] mask = result.noNulls ? null : result.isNull;
         for (int f = 0; f < fields.length; f++) {
           if (fields[f] != null) {
-            fields[f].nextVector(result.fields[f], mask, batchSize, filterContext, rLevel);
+            fields[f].nextVector(result.fields[f], mask, batchSize, filterContext, readLevel);
           }
         }
       }
     }
 
     @Override
-    public void startStripe(StripePlanner planner, ReadLevel rLevel) throws IOException {
-      super.startStripe(planner, rLevel);
+    public void startStripe(StripePlanner planner, ReadLevel readLevel) throws IOException {
+      super.startStripe(planner, readLevel);
       for (TypeReader field : fields) {
         if (field != null) {
-          field.startStripe(planner, rLevel);
+          field.startStripe(planner, readLevel);
         }
       }
     }
 
     @Override
-    public void skipRows(long items, ReadLevel rLevel) throws IOException {
+    public void skipRows(long items, ReadLevel readLevel) throws IOException {
       items = countNonNulls(items);
       for (TypeReader field : fields) {
         if (field != null) {
-          field.skipRows(items, rLevel);
+          field.skipRows(items, readLevel);
         }
       }
     }
@@ -2572,11 +2591,11 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void seek(PositionProvider[] index, ReadLevel rLevel) throws IOException {
-      super.seek(index, rLevel);
+    public void seek(PositionProvider[] index, ReadLevel readLevel) throws IOException {
+      super.seek(index, readLevel);
       tags.seek(index[columnId]);
       for (TypeReader kid : fields) {
-        kid.seek(index, rLevel);
+        kid.seek(index, readLevel);
       }
     }
 
@@ -2584,9 +2603,10 @@ public class TreeReaderFactory {
     public void nextVector(ColumnVector previousVector,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext,
+                           ReadLevel readLevel) throws IOException {
       UnionColumnVector result = (UnionColumnVector) previousVector;
-      super.nextVector(result, isNull, batchSize, filterContext, rLevel);
+      super.nextVector(result, isNull, batchSize, filterContext, readLevel);
       if (result.noNulls || !(result.isRepeating && result.isNull[0])) {
         result.isRepeating = false;
         tags.nextVector(result.noNulls ? null : result.isNull, result.tags,
@@ -2598,32 +2618,32 @@ public class TreeReaderFactory {
             ignore[r] = (!result.noNulls && result.isNull[r]) ||
                 result.tags[r] != f;
           }
-          fields[f].nextVector(result.fields[f], ignore, batchSize, filterContext, rLevel);
+          fields[f].nextVector(result.fields[f], ignore, batchSize, filterContext, readLevel);
         }
       }
     }
 
     @Override
-    public void startStripe(StripePlanner planner, ReadLevel rLevel) throws IOException {
-      super.startStripe(planner, rLevel);
+    public void startStripe(StripePlanner planner, ReadLevel readLevel) throws IOException {
+      super.startStripe(planner, readLevel);
       tags = new RunLengthByteReader(planner.getStream(new StreamName(columnId,
           OrcProto.Stream.Kind.DATA)));
       for (TypeReader field : fields) {
         if (field != null) {
-          field.startStripe(planner, rLevel);
+          field.startStripe(planner, readLevel);
         }
       }
     }
 
     @Override
-    public void skipRows(long items, ReadLevel rLevel) throws IOException {
+    public void skipRows(long items, ReadLevel readLevel) throws IOException {
       items = countNonNulls(items);
       long[] counts = new long[fields.length];
       for (int i = 0; i < items; ++i) {
         counts[tags.next()] += 1;
       }
       for (int i = 0; i < counts.length; ++i) {
-        fields[i].skipRows(counts[i], rLevel);
+        fields[i].skipRows(counts[i], readLevel);
       }
     }
   }
@@ -2676,19 +2696,20 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void seek(PositionProvider[] index, ReadLevel rLevel) throws IOException {
-      super.seek(index, rLevel);
+    public void seek(PositionProvider[] index, ReadLevel readLevel) throws IOException {
+      super.seek(index, readLevel);
       lengths.seek(index[columnId]);
-      elementReader.seek(index, rLevel);
+      elementReader.seek(index, readLevel);
     }
 
     @Override
     public void nextVector(ColumnVector previous,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext,
+                           ReadLevel readLevel) throws IOException {
       ListColumnVector result = (ListColumnVector) previous;
-      super.nextVector(result, isNull, batchSize, filterContext, rLevel);
+      super.nextVector(result, isNull, batchSize, filterContext, readLevel);
       // if we have some none-null values, then read them
       if (result.noNulls || !(result.isRepeating && result.isNull[0])) {
         lengths.nextVector(result, result.lengths, batchSize);
@@ -2704,7 +2725,7 @@ public class TreeReaderFactory {
         }
         result.child.ensureSize(result.childCount, false);
         // We always read all of the children, because the parent filter wouldn't apply right.
-        elementReader.nextVector(result.child, null, result.childCount, NULL_FILTER, rLevel);
+        elementReader.nextVector(result.child, null, result.childCount, NULL_FILTER, readLevel);
       }
     }
 
@@ -2718,24 +2739,24 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void startStripe(StripePlanner planner, ReadLevel rLevel) throws IOException {
-      super.startStripe(planner, rLevel);
+    public void startStripe(StripePlanner planner, ReadLevel readLevel) throws IOException {
+      super.startStripe(planner, readLevel);
       lengths = createIntegerReader(planner.getEncoding(columnId).getKind(),
           planner.getStream(new StreamName(columnId,
               OrcProto.Stream.Kind.LENGTH)), false, context);
       if (elementReader != null) {
-        elementReader.startStripe(planner, rLevel);
+        elementReader.startStripe(planner, readLevel);
       }
     }
 
     @Override
-    public void skipRows(long items, ReadLevel rLevel) throws IOException {
+    public void skipRows(long items, ReadLevel readLevel) throws IOException {
       items = countNonNulls(items);
       long childSkip = 0;
       for (long i = 0; i < items; ++i) {
         childSkip += lengths.next();
       }
-      elementReader.skipRows(childSkip, rLevel);
+      elementReader.skipRows(childSkip, readLevel);
     }
   }
 
@@ -2771,20 +2792,21 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void seek(PositionProvider[] index, ReadLevel rLevel) throws IOException {
-      super.seek(index, rLevel);
+    public void seek(PositionProvider[] index, ReadLevel readLevel) throws IOException {
+      super.seek(index, readLevel);
       lengths.seek(index[columnId]);
-      keyReader.seek(index, rLevel);
-      valueReader.seek(index, rLevel);
+      keyReader.seek(index, readLevel);
+      valueReader.seek(index, readLevel);
     }
 
     @Override
     public void nextVector(ColumnVector previous,
                            boolean[] isNull,
                            final int batchSize,
-                           FilterContext filterContext, ReadLevel rLevel) throws IOException {
+                           FilterContext filterContext,
+                           ReadLevel readLevel) throws IOException {
       MapColumnVector result = (MapColumnVector) previous;
-      super.nextVector(result, isNull, batchSize, filterContext, rLevel);
+      super.nextVector(result, isNull, batchSize, filterContext, readLevel);
       if (result.noNulls || !(result.isRepeating && result.isNull[0])) {
         lengths.nextVector(result, result.lengths, batchSize);
         // even with repeating lengths, the map doesn't repeat
@@ -2799,8 +2821,8 @@ public class TreeReaderFactory {
         }
         result.keys.ensureSize(result.childCount, false);
         result.values.ensureSize(result.childCount, false);
-        keyReader.nextVector(result.keys, null, result.childCount, NULL_FILTER, rLevel);
-        valueReader.nextVector(result.values, null, result.childCount, NULL_FILTER, rLevel);
+        keyReader.nextVector(result.keys, null, result.childCount, NULL_FILTER, readLevel);
+        valueReader.nextVector(result.values, null, result.childCount, NULL_FILTER, readLevel);
       }
     }
 
@@ -2814,28 +2836,28 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public void startStripe(StripePlanner planner, ReadLevel rLevel) throws IOException {
-      super.startStripe(planner, rLevel);
+    public void startStripe(StripePlanner planner, ReadLevel readLevel) throws IOException {
+      super.startStripe(planner, readLevel);
       lengths = createIntegerReader(planner.getEncoding(columnId).getKind(),
           planner.getStream(new StreamName(columnId,
               OrcProto.Stream.Kind.LENGTH)), false, context);
       if (keyReader != null) {
-        keyReader.startStripe(planner, rLevel);
+        keyReader.startStripe(planner, readLevel);
       }
       if (valueReader != null) {
-        valueReader.startStripe(planner, rLevel);
+        valueReader.startStripe(planner, readLevel);
       }
     }
 
     @Override
-    public void skipRows(long items, ReadLevel rLevel) throws IOException {
+    public void skipRows(long items, ReadLevel readLevel) throws IOException {
       items = countNonNulls(items);
       long childSkip = 0;
       for (long i = 0; i < items; ++i) {
         childSkip += lengths.next();
       }
-      keyReader.skipRows(childSkip, rLevel);
-      valueReader.skipRows(childSkip, rLevel);
+      keyReader.skipRows(childSkip, readLevel);
+      valueReader.skipRows(childSkip, readLevel);
     }
   }
 
