@@ -3423,6 +3423,8 @@ public class TestVectorOrcFile {
         OrcFile.WriterImplementation.from(1));
     assertEquals(OrcFile.WriterImplementation.PRESTO,
         OrcFile.WriterImplementation.from(2));
+    assertEquals(OrcFile.WriterImplementation.TRINO,
+            OrcFile.WriterImplementation.from(4));
     assertEquals(OrcFile.WriterImplementation.UNKNOWN,
         OrcFile.WriterImplementation.from(99));
 
@@ -3439,6 +3441,8 @@ public class TestVectorOrcFile {
         OrcFile.WriterVersion.from(OrcFile.WriterImplementation.ORC_CPP, 6));
     assertEquals(OrcFile.WriterVersion.PRESTO_ORIGINAL,
         OrcFile.WriterVersion.from(OrcFile.WriterImplementation.PRESTO, 6));
+    assertEquals(OrcFile.WriterVersion.TRINO_ORIGINAL,
+            OrcFile.WriterVersion.from(OrcFile.WriterImplementation.TRINO, 6));
     assertEquals(OrcFile.WriterVersion.FUTURE,
         OrcFile.WriterVersion.from(OrcFile.WriterImplementation.UNKNOWN, 0));
 
@@ -3455,6 +3459,8 @@ public class TestVectorOrcFile {
         OrcFile.WriterVersion.HIVE_12055));
     assertTrue(OrcFile.WriterVersion.HIVE_12055.includes(
         OrcFile.WriterVersion.PRESTO_ORIGINAL));
+    assertTrue(OrcFile.WriterVersion.HIVE_12055.includes(
+        OrcFile.WriterVersion.TRINO_ORIGINAL));
   }
 
   @Test(expected=IllegalArgumentException.class)

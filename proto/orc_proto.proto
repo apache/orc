@@ -366,6 +366,7 @@ message Footer {
   // 1 = ORC C++
   // 2 = Presto
   // 3 = Scritchley Go from https://github.com/scritchley/orc
+  // 4 = Trino
   optional uint32 writer = 9;
 
   // information about the encryption in this file
@@ -421,6 +422,9 @@ message PostScript {
   //   6 = original
   //
   // Version of the Scritchley Go writer:
+  //   6 = original
+  //
+  // Version of the Trino writer:
   //   6 = original
   //
   optional uint32 writerVersion = 6;
