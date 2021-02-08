@@ -140,6 +140,13 @@ information as described in this section.
  repeated ColumnStatistics statistics = 7;
  // the maximum number of rows in each index entry
  optional uint32 rowIndexStride = 8;
+ // Each implementation that writes ORC files should register for a code
+ // 0 = ORC Java
+ // 1 = ORC C++
+ // 2 = Presto
+ // 3 = Scritchley Go from https://github.com/scritchley/orc
+ // 4 = Trino
+ optional uint32 writer = 9;
 }
 ```
 

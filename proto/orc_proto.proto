@@ -270,6 +270,9 @@ message PostScript {
   // Version of the Scritchley Go writer:
   //   6 = original
   //
+  // Version of the Trino writer:
+  //   6 = original
+  //
   optional uint32 writerVersion = 6;
 
   // Leave this last in the record
