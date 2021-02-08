@@ -498,7 +498,7 @@ namespace orc {
   WriterId ReaderImpl::getWriterId() const {
     if (footer->has_writer()) {
       uint32_t id = footer->writer();
-      if (id > WriterId::PRESTO_WRITER) {
+      if (id > WriterId::TRINO_WRITER) {
         return WriterId::UNKNOWN_WRITER;
       } else {
 	return static_cast<WriterId>(id);
