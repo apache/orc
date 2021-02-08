@@ -69,6 +69,8 @@ namespace orc {
     ORC_JAVA_WRITER = 0,
     ORC_CPP_WRITER = 1,
     PRESTO_WRITER = 2,
+    SCRITCHLEY_GO = 3,
+    TRINO_WRITER = 4,
     UNKNOWN_WRITER = INT32_MAX
   };
 

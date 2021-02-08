@@ -155,6 +155,7 @@ message Footer {
  // 1 = ORC C++
  // 2 = Presto
  // 3 = Scritchley Go from https://github.com/scritchley/orc
+ // 4 = Trino
  optional uint32 writer = 9;
  // information about the encryption in this file
  optional Encryption encryption = 10;

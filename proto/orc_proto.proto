@@ -423,6 +423,9 @@ message PostScript {
   // Version of the Scritchley Go writer:
   //   6 = original
   //
+  // Version of the Trino writer:
+  //   6 = original
+  //
   optional uint32 writerVersion = 6;
 
   // the number of bytes in the encrypted stripe statistics
