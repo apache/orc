@@ -20,7 +20,6 @@ package org.apache.orc.impl;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 
 /**
@@ -32,18 +31,11 @@ public class StringRedBlackTree extends RedBlackTree implements Dictionary {
   private final DynamicIntArray keyOffsets;
   private final Text newKey = new Text();
 
-  public static class StringRBTreeFactory implements Dictionary.DictionaryFactory {
-    public Dictionary createDict(Configuration conf) {
-      return new StringRedBlackTree(INITIAL_DICTIONARY_SIZE);
-    }
-  }
-
   public StringRedBlackTree(int initialCapacity) {
     super(initialCapacity);
     keyOffsets = new DynamicIntArray(initialCapacity);
   }
 
-  @Override
   public int add(String value) {
     newKey.set(value);
     return addNewKey();

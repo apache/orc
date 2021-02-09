@@ -29,11 +29,12 @@ import org.apache.hadoop.io.Text;
  * Interface to define the dictionary used for encoding value in columns of specific types like string, char, varchar, etc.
  */
 public interface Dictionary {
-  int INITIAL_DICTIONARY_SIZE = 4096;
-
-  interface DictionaryFactory {
-    Dictionary createDict(Configuration conf);
+  enum IMPL {
+    RBTREE,
+    HASH
   }
+
+  int INITIAL_DICTIONARY_SIZE = 4096;
 
   /**
    * Traverse the whole dictionary and apply the action.
@@ -46,8 +47,6 @@ public interface Dictionary {
    * Given the position index, return the original string before being encoded.
    */
   void getText(Text result, int originalPosition);
-
-  int add(String value);
 
   int add(byte[] bytes, int offset, int length);
 

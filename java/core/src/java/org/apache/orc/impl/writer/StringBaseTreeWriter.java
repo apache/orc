@@ -33,11 +33,16 @@ import org.apache.orc.impl.OutStream;
 import org.apache.orc.impl.PositionRecorder;
 import org.apache.orc.impl.PositionedOutputStream;
 import org.apache.orc.impl.StreamName;
+import org.apache.orc.impl.StringRedBlackTree;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+
+import static org.apache.orc.OrcConf.DICTIONARY_IMPL;
+import static org.apache.orc.impl.Dictionary.INITIAL_DICTIONARY_SIZE;
+
 
 public abstract class StringBaseTreeWriter extends TreeWriterBase {
   // Stream for dictionary's key
@@ -60,19 +65,26 @@ public abstract class StringBaseTreeWriter extends TreeWriterBase {
   private boolean doneDictionaryCheck;
   private final boolean strideDictionaryCheck;
 
+  static Dictionary createDict(Configuration conf) {
+    String dictImpl = conf.get(DICTIONARY_IMPL.name(),
+        DICTIONARY_IMPL.getDefaultValue().toString()).toUpperCase();
+    switch (Dictionary.IMPL.valueOf(dictImpl)) {
+      case RBTREE:
+        return new StringRedBlackTree(INITIAL_DICTIONARY_SIZE);
+      case HASH:
+        throw new UnsupportedOperationException("hash based implementation is under development(ORC-50).");
+      default:
+        throw new UnsupportedOperationException("Unknown implementation:" + dictImpl);
+    }
+  }
+
   StringBaseTreeWriter(TypeDescription schema,
                        WriterEncryptionVariant encryption,
                        WriterContext writer) throws IOException {
     super(schema, encryption, writer);
     Configuration conf = writer.getConfiguration();
 
-    String factoryClass = conf.get(OrcConf.DICTIONARY_FACTORY_CLASS_KEY.name());
-    try {
-      this.dictionary =
-          ((Dictionary.DictionaryFactory) Class.forName(factoryClass).newInstance()).createDict(conf);
-    } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-      throw new IllegalStateException("Can't create factory instance for " + factoryClass, e);
-    }
+    this.dictionary = createDict(conf);
     this.isDirectV2 = isNewWriteFormat(writer);
     directStreamOutput = writer.createStream(
         new StreamName(id, OrcProto.Stream.Kind.DATA, encryption));
