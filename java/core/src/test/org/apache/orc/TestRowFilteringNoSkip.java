@@ -43,8 +43,8 @@ import static org.junit.Assert.assertTrue;
  */
 public class TestRowFilteringNoSkip {
 
-  private final Path workDir = new Path(System.getProperty("test.tmp.dir", "target" + File.separator + "test"
-                                                                           + File.separator + "tmp"));
+  private Path workDir = new Path(System.getProperty("test.tmp.dir", "target" + File.separator + "test"
+      + File.separator + "tmp"));
 
   private Configuration conf;
   private FileSystem fs;

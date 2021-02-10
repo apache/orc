@@ -50,6 +50,7 @@ import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.orc.OrcFile;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.OrcProto;
+import org.apache.orc.filter.OrcFilterContext;
 import org.apache.orc.impl.reader.ReaderEncryption;
 import org.apache.orc.impl.reader.StripePlanner;
 import org.apache.orc.impl.reader.tree.BatchReader;
@@ -70,7 +71,7 @@ public class TreeReaderFactory {
 
     Set<Integer> getColumnFilterIds();
 
-    Consumer<org.apache.orc.filter.FilterContext> getColumnFilterCallback();
+    Consumer<OrcFilterContext> getColumnFilterCallback();
 
     boolean isSkipCorrupt();
 
@@ -97,7 +98,7 @@ public class TreeReaderFactory {
     private boolean useProlepticGregorian;
     private boolean fileUsedProlepticGregorian;
     private Set<Integer> filterColumnIds = Collections.emptySet();
-    Consumer<org.apache.orc.filter.FilterContext> filterCallback;
+    Consumer<OrcFilterContext> filterCallback;
 
     public ReaderContext setSchemaEvolution(SchemaEvolution evolution) {
       this.evolution = evolution;
@@ -109,7 +110,7 @@ public class TreeReaderFactory {
       return this;
     }
 
-    public ReaderContext setFilterCallback(Set<Integer> filterColumnsList, Consumer<org.apache.orc.filter.FilterContext> filterCallback) {
+    public ReaderContext setFilterCallback(Set<Integer> filterColumnsList, Consumer<OrcFilterContext> filterCallback) {
       this.filterColumnIds = filterColumnsList;
       this.filterCallback = filterCallback;
       return this;
@@ -153,7 +154,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public Consumer<org.apache.orc.filter.FilterContext> getColumnFilterCallback() {
+    public Consumer<OrcFilterContext> getColumnFilterCallback() {
       return filterCallback;
     }
 
@@ -692,7 +693,6 @@ public class TreeReaderFactory {
 
     @Override
     public void startStripe(StripePlanner planner, ReadLevel readLevel) throws IOException {
-
       super.startStripe(planner, readLevel);
       StreamName name = new StreamName(columnId,
           OrcProto.Stream.Kind.DATA);
@@ -707,7 +707,6 @@ public class TreeReaderFactory {
 
     @Override
     public void seek(PositionProvider index, ReadLevel readLevel) throws IOException {
-
       super.seek(index, readLevel);
       reader.seek(index);
     }
@@ -1500,7 +1499,6 @@ public class TreeReaderFactory {
 
     @Override
     public void startStripe(StripePlanner planner, ReadLevel readLevel) throws IOException {
-
       super.startStripe(planner, readLevel);
       valueStream = planner.getStream(new StreamName(columnId,
           OrcProto.Stream.Kind.DATA));
@@ -1515,7 +1513,6 @@ public class TreeReaderFactory {
 
     @Override
     public void seek(PositionProvider index, ReadLevel readLevel) throws IOException {
-
       super.seek(index, readLevel);
       valueStream.seek(index);
       scaleReader.seek(index);
@@ -1729,7 +1726,6 @@ public class TreeReaderFactory {
 
     @Override
     public void skipRows(long items, ReadLevel readLevel) throws IOException {
-
       items = countNonNulls(items);
       HiveDecimalWritable scratchDecWritable = new HiveDecimalWritable();
       for (int i = 0; i < items; i++) {
@@ -2351,19 +2347,12 @@ public class TreeReaderFactory {
   public static class CharTreeReader extends StringTreeReader {
     int maxLength;
 
-    CharTreeReader(int columnId,
-                   int maxLength,
-                   Context context) throws IOException {
+    CharTreeReader(int columnId, int maxLength, Context context) throws IOException {
       this(columnId, maxLength, null, null, null, null, null, context);
     }
 
-    protected CharTreeReader(int columnId,
-                             int maxLength,
-                             InStream present,
-                             InStream data,
-                             InStream length,
-                             InStream dictionary,
-                             OrcProto.ColumnEncoding encoding,
+    protected CharTreeReader(int columnId, int maxLength, InStream present, InStream data,
+                             InStream length, InStream dictionary, OrcProto.ColumnEncoding encoding,
                              Context context) throws IOException {
       super(columnId, present, data, length, dictionary, encoding, context);
       this.maxLength = maxLength;
@@ -2417,19 +2406,12 @@ public class TreeReaderFactory {
   public static class VarcharTreeReader extends StringTreeReader {
     int maxLength;
 
-    VarcharTreeReader(int columnId,
-                      int maxLength,
-                      Context context) throws IOException {
+    VarcharTreeReader(int columnId, int maxLength, Context context) throws IOException {
       this(columnId, maxLength, null, null, null, null, null, context);
     }
 
-    protected VarcharTreeReader(int columnId,
-                                int maxLength,
-                                InStream present,
-                                InStream data,
-                                InStream length,
-                                InStream dictionary,
-                                OrcProto.ColumnEncoding encoding,
+    protected VarcharTreeReader(int columnId, int maxLength, InStream present, InStream data,
+                                InStream length, InStream dictionary, OrcProto.ColumnEncoding encoding,
                                 Context context) throws IOException {
       super(columnId, present, data, length, dictionary, encoding, context);
       this.maxLength = maxLength;
@@ -2959,5 +2941,4 @@ public class TreeReaderFactory {
       return new PrimitiveBatchReader(reader);
     }
   }
-
 }

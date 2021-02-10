@@ -32,23 +32,23 @@ import java.util.regex.Pattern;
 
 /**
  * This defines the input for any filter operation.
- *
+ * <p>
  * It offers a convenience method for finding the column vector from a given name, that the filters
  * can invoke to get access to the column vector.
  */
-public class FilterContext implements MutableFilterContext {
+public class OrcFilterContext implements MutableFilterContext {
 
   VectorizedRowBatch batch = null;
   // Cache of field to ColumnVector, this is reset everytime the batch reference changes
   private final Map<String, ColumnVector> vectors;
   private final TypeDescription readSchema;
 
-  public FilterContext(TypeDescription readSchema) {
+  public OrcFilterContext(TypeDescription readSchema) {
     this.readSchema = readSchema;
     this.vectors = new HashMap<>();
   }
 
-  public FilterContext setBatch(@NotNull VectorizedRowBatch batch) {
+  public OrcFilterContext setBatch(@NotNull VectorizedRowBatch batch) {
     if (batch != this.batch) {
       this.batch = batch;
       vectors.clear();
@@ -117,7 +117,7 @@ public class FilterContext implements MutableFilterContext {
    * @param name The column name whose vector should be retrieved
    * @return The column vector
    * @throws IllegalArgumentException if the field is not found or if the nested field is not part
-   * of a struct
+   *                                  of a struct
    */
   public ColumnVector findColumnVector(String name) {
     if (!vectors.containsKey(name)) {

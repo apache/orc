@@ -20,7 +20,7 @@ package org.apache.orc.impl.reader.tree;
 
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
-import org.apache.orc.filter.FilterContext;
+import org.apache.orc.filter.OrcFilterContext;
 import org.apache.orc.impl.TreeReaderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,13 +32,12 @@ public class StructBatchReader extends BatchReader {
   // The reader context including row-filtering details
   private final TreeReaderFactory.Context context;
   private final TreeReaderFactory.StructTreeReader structReader;
-  private final FilterContext fc;
+  private final OrcFilterContext fc;
 
-  public StructBatchReader(TypeReader rowReader,
-                           TreeReaderFactory.Context context) {
+  public StructBatchReader(TypeReader rowReader, TreeReaderFactory.Context context) {
     super(rowReader);
     this.context = context;
-    this.fc = new FilterContext(context.getSchemaEvolution().getReaderSchema());
+    this.fc = new OrcFilterContext(context.getSchemaEvolution().getReaderSchema());
     if (rowReader instanceof TreeReaderFactory.StructTreeReader) {
       structReader = (TreeReaderFactory.StructTreeReader) rowReader;
     } else {
