@@ -39,7 +39,8 @@ public interface TypeReader {
   void nextVector(ColumnVector previous,
                   boolean[] isNull,
                   int batchSize,
-                  FilterContext filterContext, ReadLevel readLevel) throws IOException;
+                  FilterContext filterContext,
+                  ReadLevel readLevel) throws IOException;
 
   int getColumnId();
 

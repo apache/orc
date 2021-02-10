@@ -29,7 +29,7 @@ import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
-import org.apache.orc.filter.FilterContext;
+import org.apache.orc.filter.OrcFilterContext;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -346,7 +346,7 @@ public class TestRowFilteringIOSkip {
     Assert.assertEquals(expRowNum + b.getMaxSize(), rr.getRowNumber());
   }
 
-  private static class InFilter implements Consumer<FilterContext> {
+  private static class InFilter implements Consumer<OrcFilterContext> {
     private final Set<Long> ids;
     private final int colIdx;
 
@@ -356,7 +356,7 @@ public class TestRowFilteringIOSkip {
     }
 
     @Override
-    public void accept(FilterContext b) {
+    public void accept(OrcFilterContext b) {
       int newSize = 0;
       for (int i = 0; i < b.getSelectedSize(); i++) {
         if (ids.contains(getValue(b, i))) {
@@ -368,7 +368,7 @@ public class TestRowFilteringIOSkip {
       b.setSelectedSize(newSize);
     }
 
-    private Long getValue(FilterContext b, int rowIdx) {
+    private Long getValue(OrcFilterContext b, int rowIdx) {
       LongColumnVector v = ((LongColumnVector) b.getCols()[colIdx]);
       int valIdx = rowIdx;
       if (v.isRepeating) {
@@ -386,9 +386,9 @@ public class TestRowFilteringIOSkip {
    * Fill odd batches values in a default read
    * if ridx(rowIdx) / 1024 is even then allow otherwise fail
    */
-  private static class AlternateFilter implements Consumer<FilterContext> {
+  private static class AlternateFilter implements Consumer<OrcFilterContext> {
     @Override
-    public void accept(FilterContext b) {
+    public void accept(OrcFilterContext b) {
       LongColumnVector v = (LongColumnVector) b.getCols()[4];
 
       if ((v.vector[0] / 1024) % 2 == 1) {
@@ -398,10 +398,10 @@ public class TestRowFilteringIOSkip {
     }
   }
 
-  private static class AllowAllFilter implements Consumer<FilterContext> {
+  private static class AllowAllFilter implements Consumer<OrcFilterContext> {
 
     @Override
-    public void accept(FilterContext batch) {
+    public void accept(OrcFilterContext batch) {
       // do nothing every row is allowed
     }
 

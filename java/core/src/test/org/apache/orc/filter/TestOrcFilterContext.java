@@ -39,7 +39,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-public class TestFilterContext {
+public class TestOrcFilterContext {
 
   private final TypeDescription schema = TypeDescription.createStruct()
     .addField("f1", TypeDescription.createLong())
@@ -54,7 +54,7 @@ public class TestFilterContext {
   @Test
   public void testSuccessfulRetrieval() {
     VectorizedRowBatch b = createBatch();
-    FilterContext fc = new FilterContext(schema);
+    OrcFilterContext fc = new OrcFilterContext(schema);
     fc.setBatch(b);
 
     validateF1Vector(fc.findColumnVector("f1"), 1);
@@ -69,7 +69,7 @@ public class TestFilterContext {
     VectorizedRowBatch b1 = createBatch();
     VectorizedRowBatch b2 = createBatch();
     ((LongColumnVector) b2.cols[0]).vector[0] = 100;
-    FilterContext fc = new FilterContext(schema);
+    OrcFilterContext fc = new OrcFilterContext(schema);
     fc.setBatch(b1);
     validateF1Vector(fc.findColumnVector("f1"), 1);
     // Change the batch
@@ -80,7 +80,7 @@ public class TestFilterContext {
   @Test
   public void testMissingFieldTopLevel() {
     VectorizedRowBatch b = createBatch();
-    FilterContext fc = new FilterContext(schema);
+    OrcFilterContext fc = new OrcFilterContext(schema);
     fc.setBatch(b);
 
     // Missing field at top level
@@ -92,7 +92,7 @@ public class TestFilterContext {
   @Test
   public void testMissingFieldNestedLevel() {
     VectorizedRowBatch b = createBatch();
-    FilterContext fc = new FilterContext(schema);
+    OrcFilterContext fc = new OrcFilterContext(schema);
     fc.setBatch(b);
 
     // Missing field at top level
@@ -104,7 +104,7 @@ public class TestFilterContext {
   @Test
   public void testNestingNonStructField() {
     VectorizedRowBatch b = createBatch();
-    FilterContext fc = new FilterContext(schema);
+    OrcFilterContext fc = new OrcFilterContext(schema);
     fc.setBatch(b);
 
     // Missing field at top level
@@ -115,7 +115,7 @@ public class TestFilterContext {
 
   @Test
   public void testPropagations() {
-    FilterContext fc = new FilterContext(schema);
+    OrcFilterContext fc = new OrcFilterContext(schema);
     assertNull(fc.batch);
     fc.setBatch(schema.createRowBatch());
     assertNotNull(fc.batch);

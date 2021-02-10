@@ -29,7 +29,7 @@ import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
-import org.apache.orc.filter.FilterContext;
+import org.apache.orc.filter.OrcFilterContext;
 import org.apache.orc.impl.RecordReaderImpl;
 import org.junit.Assert;
 import org.junit.Before;
@@ -80,7 +80,7 @@ public class TestRowFilteringSkip {
   }
 
   // Filter all rows except: 924 and 940
-  public static void intAnyRowFilter(FilterContext batch) {
+  public static void intAnyRowFilter(OrcFilterContext batch) {
     // Dummy Filter implementation passing just one Batch row
     int newSize = 2;
     batch.getSelected()[0] = batch.getSelectedSize()-100;
@@ -90,7 +90,7 @@ public class TestRowFilteringSkip {
   }
 
   // Filter all rows except the first one
-  public static void intFirstRowFilter(FilterContext batch) {
+  public static void intFirstRowFilter(OrcFilterContext batch) {
     int newSize = 0;
     for (int row = 0; row <batch.getSelectedSize(); ++row) {
       if (row == 0) {
@@ -102,7 +102,7 @@ public class TestRowFilteringSkip {
   }
 
   // Filter out rows in a round-robbin fashion starting with a pass
-  public static void intRoundRobbinRowFilter(FilterContext batch) {
+  public static void intRoundRobbinRowFilter(OrcFilterContext batch) {
     int newSize = 0;
     int[] selected = batch.getSelected();
     for (int row = 0; row < batch.getSelectedSize(); ++row) {
@@ -116,7 +116,7 @@ public class TestRowFilteringSkip {
   }
 
   static int rowCount = 0;
-  public static void intCustomValueFilter(FilterContext batch) {
+  public static void intCustomValueFilter(OrcFilterContext batch) {
     LongColumnVector col1 = (LongColumnVector) batch.getCols()[0];
     int newSize = 0;
     for (int row = 0; row <batch.getSelectedSize(); ++row) {
@@ -1298,7 +1298,7 @@ public class TestRowFilteringSkip {
     }
   }
 
-  private static void notNullFilterMissing(FilterContext batch) {
+  private static void notNullFilterMissing(OrcFilterContext batch) {
     int selIdx = 0;
     ColumnVector cv = batch.getCols()[2];
     if (cv.isRepeating) {

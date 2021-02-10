@@ -82,7 +82,6 @@ public class StripePlanner {
   private final OrcProto.Stream.Kind[] bloomFilterKinds;
   // does each column have a null stream?
   private final boolean[] hasNull;
-  // Filter columns ids
   private final Set<Integer> filterColIds;
 
   /**
@@ -93,7 +92,7 @@ public class StripePlanner {
    * @param version the file writer version
    * @param ignoreNonUtf8BloomFilter ignore old non-utf8 bloom filters
    * @param maxBufferSize the largest single buffer to use
-   * @param filterColIds Column Ids that indicate the filter columns
+   * @param filterColIds Column Ids that identify the filter columns
    */
   public StripePlanner(TypeDescription schema,
                        ReaderEncryption encryption,
@@ -175,9 +174,9 @@ public class StripePlanner {
   }
 
   public BufferChunkList readFollowData(OrcIndex index,
-                                          boolean[] rowGroupInclude,
-                                          int rgIdx,
-                                          boolean forceDirect)
+                                        boolean[] rowGroupInclude,
+                                        int rgIdx,
+                                        boolean forceDirect)
     throws IOException {
     BufferChunkList chunks = (index == null || rowGroupInclude == null)
       ? planDataReading(ReadLevel.FOLLOW)
@@ -390,7 +389,6 @@ public class StripePlanner {
 
   private void addChunk(BufferChunkList list, StreamInformation stream,
                         long offset, long length) {
-
     while (length > 0) {
       long thisLen = Math.min(length, maxBufferSize);
       BufferChunk chunk = new BufferChunk(offset, (int) thisLen);

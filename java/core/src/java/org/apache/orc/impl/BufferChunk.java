@@ -69,8 +69,22 @@ public class BufferChunk extends DiskRangeList {
 
   @Override
   public DiskRange sliceAndShift(long offset, long end, long shiftBy) {
-    // Method has no code references
-    throw new UnsupportedOperationException();
+    assert offset <= end && offset >= this.offset && end <= this.end;
+    assert offset + shiftBy >= 0;
+    ByteBuffer sliceBuf = chunk.slice();
+    int newPos = (int) (offset - this.offset);
+    int newLimit = newPos + (int) (end - offset);
+    try {
+      sliceBuf.position(newPos);
+      sliceBuf.limit(newLimit);
+    } catch (Throwable t) {
+      LOG.error("Failed to slice buffer chunk with range" + " [" + this.offset + ", " + this.end
+          + "), position: " + chunk.position() + " limit: " + chunk.limit() + ", "
+          + (chunk.isDirect() ? "direct" : "array") + "; to [" + offset + ", " + end + ") "
+          + t.getClass());
+      throw new RuntimeException(t);
+    }
+    return new BufferChunk(sliceBuf, offset + shiftBy);
   }
 
   @Override

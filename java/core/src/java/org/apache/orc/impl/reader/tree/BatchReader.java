@@ -52,8 +52,8 @@ public abstract class BatchReader {
 
   /**
    * Read the next batch of data from the file.
-   * @param batch     the batch to read into
-   * @param batchSize the number of rows to read
+   * @param batch        the batch to read into
+   * @param batchSize    the number of rows to read
    * @param readLevel    defines the read level i.e. ALL, LEAD or FOLLOW
    * @throws IOException errors reading the file
    */

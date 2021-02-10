@@ -26,7 +26,7 @@ import java.util.function.Consumer;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
-import org.apache.orc.filter.FilterContext;
+import org.apache.orc.filter.OrcFilterContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -195,7 +195,7 @@ public interface Reader extends Closeable {
     private Boolean skipCorruptRecords = null;
     private TypeDescription schema = null;
     private String[] preFilterColumns = null;
-    Consumer<FilterContext> skipRowCallback = null;
+    Consumer<OrcFilterContext> skipRowCallback = null;
     private DataReader dataReader = null;
     private Boolean tolerateMissingSchema = null;
     private boolean forcePositionalEvolution;
@@ -269,7 +269,7 @@ public interface Reader extends Closeable {
      *
      * @return this
      */
-    public Options setRowFilter(String[] filterColumnNames, Consumer<FilterContext> filterCallback) {
+    public Options setRowFilter(String[] filterColumnNames, Consumer<OrcFilterContext> filterCallback) {
       this.preFilterColumns = filterColumnNames;
       this.skipRowCallback =  filterCallback;
       return this;
@@ -386,7 +386,7 @@ public interface Reader extends Closeable {
       return sarg;
     }
 
-    public Consumer<FilterContext> getFilterCallback() {
+    public Consumer<OrcFilterContext> getFilterCallback() {
       return skipRowCallback;
     }
 

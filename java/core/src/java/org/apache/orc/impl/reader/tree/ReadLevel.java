@@ -19,7 +19,7 @@
 package org.apache.orc.impl.reader.tree;
 
 public enum ReadLevel {
-  ALL,        // Read every column
-  LEAD,     // Read only the filter columns
+  ALL,     // Read every column
+  LEAD,    // Read only the filter columns
   FOLLOW   // Read the non-filter columns
 }
