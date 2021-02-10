@@ -277,7 +277,6 @@ public class TestRowFilteringIOSkip {
     }
     FileSystem.Statistics stats = readEnd();
     double readPercentage = readPercentage(stats, fs.getFileStatus(filePath).getLen());
-    System.out.println("Read percentage: " + readPercentage);
     Assert.assertTrue(RowCount > rowCount);
   }
 
