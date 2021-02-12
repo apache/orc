@@ -45,7 +45,7 @@ public interface Dictionary {
   /**
    * Given the position index, return the original string before being encoded.
    */
-  void getText(Text result, int originalPosition);
+  void getText(Text result, int position);
 
   int add(byte[] bytes, int offset, int length);
 
