@@ -134,7 +134,7 @@
     <profile>
       <id>cmake</id>
       <build>
-        <directory>${build.dir}/tools</directory>
+        <directory>${build.dir}/nonhadoop</directory>
       </build>
     </profile>
   </profiles>
