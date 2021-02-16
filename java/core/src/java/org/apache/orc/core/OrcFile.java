@@ -43,7 +43,6 @@ import org.apache.orc.impl.OrcTail;
 import org.apache.orc.impl.ReaderImplCore;
 import org.apache.orc.impl.writer.WriterImplCore;
 import org.apache.orc.impl.WriterInternal;
-import org.apache.orc.impl.writer.WriterImplV2;
 import org.apache.orc.impl.writer.WriterImplV2Core;
 import org.apache.orc.shims.Configuration;
 import org.apache.orc.shims.FileIO;

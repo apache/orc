@@ -19,9 +19,6 @@
 package org.apache.orc.impl;
 
 import java.io.IOException;
-import java.security.Key;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 import org.apache.orc.InMemoryKeystore;
 import org.apache.orc.shims.Configuration;

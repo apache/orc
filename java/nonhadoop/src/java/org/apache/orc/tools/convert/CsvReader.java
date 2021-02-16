@@ -18,7 +18,6 @@
 package org.apache.orc.tools.convert;
 
 import com.opencsv.CSVReader;
-import java.io.InputStream;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DateColumnVector;

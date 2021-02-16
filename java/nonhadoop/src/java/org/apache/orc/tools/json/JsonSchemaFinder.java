@@ -30,7 +30,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.TypeDescriptionPrettyPrint;
-import org.apache.orc.impl.HadoopShims;
 import org.apache.orc.impl.HadoopShimsFactory;
 import org.apache.orc.shims.Configuration;
 import org.slf4j.Logger;

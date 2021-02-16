@@ -18,12 +18,6 @@
 
 package org.apache.orc.shims;
 
-import java.io.Closeable;
-import java.io.Flushable;
-import java.io.IOException;
-import java.io.OutputStream;
-
-
 /**
  * The status of a file or directory.
  */

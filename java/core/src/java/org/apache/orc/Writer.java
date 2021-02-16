@@ -18,13 +18,6 @@
 
 package org.apache.orc;
 
-import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
-
-import java.io.Closeable;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.List;
-
 /**
  * The interface for writing ORC files.
  */

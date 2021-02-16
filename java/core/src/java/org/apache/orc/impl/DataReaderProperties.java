@@ -22,8 +22,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import java.util.function.Supplier;
-import org.apache.orc.shims.SeekableInputStream;
-
 
 /**
  * A DataReaderProperties that includes the old Hadoop-based parameters.
