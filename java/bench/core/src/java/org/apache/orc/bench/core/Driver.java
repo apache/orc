@@ -59,6 +59,7 @@ public class Driver {
     OrcBenchmark bench = benchmarks.get(command);
     if (bench == null) {
       printUsageAndExit(benchmarks);
+      System.exit(1);
     }
     bench.run(args);
   }

@@ -227,6 +227,8 @@ public class SparkBenchmark implements OrcBenchmark {
             "avatar_url:string,gravatar_id:string,id:int,login:string,url:string>," +
             "created_at:timestamp>");
         break;
+      default:
+        throw new IllegalArgumentException("Unknown data set " + source.dataset);
     }
     Seq<Tuple2<String,String>> optionsScala = JavaConverters.asScalaBufferConverter(options).asScala().toSeq();
     @SuppressWarnings("unchecked")
@@ -269,6 +271,8 @@ public class SparkBenchmark implements OrcBenchmark {
             LessThan$.MODULE$.apply("created_at",
                 Timestamp.valueOf("2015-11-01 00:01:00.0"))));
         break;
+      default:
+        throw new IllegalArgumentException("Unknown data set " + source.dataset);
     }
     List<Tuple2<String,String>> options = new ArrayList<>();
     switch (source.format) {
