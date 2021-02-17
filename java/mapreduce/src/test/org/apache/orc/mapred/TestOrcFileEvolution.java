@@ -330,13 +330,11 @@ public class TestOrcFileEvolution {
                                   boolean tolerateSchema, boolean addSarg,
                                   boolean positional) {
     SearchArgument sArg = null;
-    String[] sCols = null;
     if (addSarg) {
       sArg = SearchArgumentFactory
         .newBuilder()
         .lessThan("_col0", PredicateLeaf.Type.LONG, 10L)
         .build();
-      sCols = new String[]{null, "_col0", null};
     }
 
     checkEvolution(writerType, readerType,
