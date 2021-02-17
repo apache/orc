@@ -91,6 +91,7 @@ public class RecordReaderImpl implements RecordReader {
   private long rowCountInStripe = 0;
   private final BatchReader reader;
   private final OrcIndex indexes;
+  // identifies the columns requiring row indexes
   private final boolean[] rowIndexCols;
   private final SargApplier sargApp;
   // an array about which row groups aren't skipped
@@ -98,7 +99,9 @@ public class RecordReaderImpl implements RecordReader {
   private final DataReader dataReader;
   private final int maxDiskRangeChunkLimit;
   private final StripePlanner planner;
+  // identifies the type of read: FULL (no filters), LEAD (filters are present)
   private final ReadLevel readLevel;
+  // identifies if the follow columns bytes have been read or not
   private boolean needFollowStripe;
 
   /**

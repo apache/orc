@@ -275,8 +275,7 @@ public class TestRowFilteringIOSkip {
     try (RecordReader rr = r.rows(options)) {
       rowCount = validateFilteredRecordReader(rr, b);
     }
-    FileSystem.Statistics stats = readEnd();
-    double readPercentage = readPercentage(stats, fs.getFileStatus(filePath).getLen());
+    readEnd();
     Assert.assertTrue(RowCount > rowCount);
   }
 

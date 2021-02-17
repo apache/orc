@@ -76,8 +76,12 @@ public class StructBatchReader extends BatchReader {
   private void nextBatchLevel(VectorizedRowBatch batch, int batchSize, ReadLevel readLevel) throws IOException {
     TypeReader[] children = structReader.fields;
 
+    // selectedInUse indicates partial selections within the batch determined by the selected
+    // vector.
+    // While performing ALL or LEAD the selectedInUse is false as this is the initial read and no
+    // rows are filtered
+    // During FOLLOW, selectedInUse might be set in case rows are filtered
     if (readLevel != ReadLevel.FOLLOW) {
-      // In case of FOLLOW we leave the selectedInUse untouched.
       batch.selectedInUse = false;
     }
 
