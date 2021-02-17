@@ -342,7 +342,7 @@ public class TestOrcFileEvolution {
     checkEvolution(writerType, readerType,
                    inputRow, expectedOutput,
                    tolerateSchema,
-                   sArg, sCols, positional);
+                   sArg, positional);
   }
 
   private void checkEvolution(String writerType, String readerType,
