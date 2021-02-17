@@ -49,21 +49,7 @@
   </Match>
   <Match>
     <Bug pattern="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"/>
-    <Class name="org.apache.orc.impl.TestReaderImpl"/>
-    <Method name="testOptionSafety"/>
-  </Match>
-  <Match>
-    <Bug pattern="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"/>
-    <Class name="org.apache.orc.TestVectorOrcFile"/>
-    <Method name="testZstd"/>
-  </Match>
-  <Match>
-    <Bug pattern="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"/>
-    <Class name="org.apache.orc.impl.TestSchemaEvolution"/>
-  </Match>
-  <Match>
-    <Bug pattern="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"/>
-    <Class name="org.apache.orc.TestStringDictionary"/>
+    <Class name="~org\.apache\.orc.*\.Test.*"/>
   </Match>
   <Match>
     <Bug pattern="EQ_UNUSUAL"/>

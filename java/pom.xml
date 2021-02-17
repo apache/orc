@@ -185,23 +185,6 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>3.1.1</version>
-        <configuration>
-          <checkstyleRules>
-            <module name="Checker">
-              <module name="FileTabCharacter">
-                <property name="eachLine" value="true"></property>
-              </module>
-              <module name="TreeWalker">
-                <module name="UnusedImports"/>
-              </module>
-            </module>
-          </checkstyleRules>
-        </configuration>
-      </plugin>
     </plugins>
     <pluginManagement>
       <plugins>
@@ -253,6 +236,32 @@
               <exclude>.idea/**</exclude>
               <exclude>**/*.iml</exclude>
             </excludes>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <version>3.1.1</version>
+          <executions>
+            <execution>
+              <phase>package</phase>
+              <goals>
+                <goal>check</goal>
+              </goals>
+            </execution>
+          </executions>
+          <configuration>
+            <checkstyleRules>
+              <module name="Checker">
+                <module name="FileTabCharacter">
+                  <property name="eachLine" value="true"></property>
+                </module>
+                <module name="TreeWalker">
+                  <module name="UnusedImports"/>
+                </module>
+              </module>
+            </checkstyleRules>
+            <failOnViolation>true</failOnViolation>
           </configuration>
         </plugin>
         <plugin>
@@ -372,6 +381,10 @@
           <plugin>
             <groupId>org.apache.rat</groupId>
             <artifactId>apache-rat-plugin</artifactId>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-checkstyle-plugin</artifactId>
           </plugin>
         </plugins>
       </build>

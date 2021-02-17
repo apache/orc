@@ -41,8 +41,5 @@ jobs:
         mkdir -p ~/.m2
         mkdir build
         cd build
-        cmake ..
+        cmake -DANALYZE_JAVA=ON ..
         make package test-out
-        cd ../java
-        mvn apache-rat:check
-        mvn checkstyle:check

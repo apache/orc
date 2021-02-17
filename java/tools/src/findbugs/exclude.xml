@@ -20,8 +20,16 @@
        See https://github.com/SERG-Delft/jpacman/pull/27 . -->
   <Match>
     <Bug pattern="RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE"/>
-    <Class name="org.apache.orc.tools.PrintVersion"/>
+    <Class name="~org\.apache\.orc\.tools\.(ScanData|PrintVersion)"/>
     <Method name="main"/>
+  </Match>
+  <Match>
+    <Bug pattern="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"/>
+    <Class name="~org\.apache\.orc.*\.Test.*"/>
+  </Match>
+  <Match>
+    <Bug pattern="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"/>
+    <Class name="~org\.apache\.orc.tools.(RowCount|ScanData)"/>
   </Match>
   <Match>
     <Bug pattern="REC_CATCH_EXCEPTION"/>
