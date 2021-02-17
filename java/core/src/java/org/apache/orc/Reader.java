@@ -400,8 +400,8 @@ public interface Reader extends Closeable {
     }
 
     /**
-     * Get the column-name mapping of search argument leaves.
-     * @return column names of predicate leaves or NULL when search argument not set
+     * Get the search argument leaves' column-name mapping.
+     * @return an array of column names, one for every predicate leave, or NULL when search argument not set
      */
     public String[] getColumnNames() {
       if (this.sarg != null) {
