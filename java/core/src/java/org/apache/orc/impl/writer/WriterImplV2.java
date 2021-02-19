@@ -20,7 +20,7 @@ package org.apache.orc.impl.writer;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.orc.OrcFile;
+import org.apache.orc.core.OrcFile;
 import org.apache.orc.impl.WriterImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

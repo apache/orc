@@ -18,14 +18,11 @@
 
 package org.apache.orc.impl;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataInputStream;
+import java.io.OutputStream;
 import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.EnumSet;
-import java.util.Random;
 
 /**
  * Shims for recent versions of Hadoop
@@ -35,33 +32,15 @@ import java.util.Random;
  *   <li>Variable length HDFS blocks</li>
  * </ul>
  */
-public class HadoopShimsCurrent implements HadoopShims {
-
-  @Override
-  public DirectDecompressor getDirectDecompressor(DirectCompressionType codec) {
-    return HadoopShimsPre2_6.getDecompressor(codec);
-  }
-
-  @Override
-  public ZeroCopyReaderShim getZeroCopyReader(FSDataInputStream in,
-                                              ByteBufferPoolShim pool
-                                              ) throws IOException {
-    return ZeroCopyShims.getZeroCopyReader(in, pool);
-  }
+public class HadoopShimsCurrent extends HadoopShimsPre2_7 {
 
   @Override
   public boolean endVariableLengthBlock(OutputStream output) throws IOException {
     if (output instanceof HdfsDataOutputStream) {
-      HdfsDataOutputStream hdfs = (HdfsDataOutputStream) output;
-      hdfs.hsync(EnumSet.of(HdfsDataOutputStream.SyncFlag.END_BLOCK));
+      ((HdfsDataOutputStream) output).hsync(
+          EnumSet.of(HdfsDataOutputStream.SyncFlag.END_BLOCK));
       return true;
     }
     return false;
-  }
-
-  @Override
-  public KeyProvider getHadoopKeyProvider(Configuration conf,
-                                          Random random) throws IOException {
-    return HadoopShimsPre2_7.createKeyProvider(conf, random);
   }
 }

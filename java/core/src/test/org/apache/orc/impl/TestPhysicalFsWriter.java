@@ -18,6 +18,8 @@
 
 package org.apache.orc.impl;
 
+import java.util.Properties;
+import java.util.function.Supplier;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -27,9 +29,11 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.util.Progressable;
 import org.apache.orc.CompressionKind;
+import org.apache.orc.shims.FileIO;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
 import org.apache.orc.PhysicalWriter;
+import org.apache.orc.shims.SeekableInputStream;
 import org.apache.orc.TypeDescription;
 import org.junit.Test;
 import java.io.IOException;
@@ -262,7 +266,7 @@ public class TestPhysicalFsWriter {
     }
 
     @Override
-    public ZeroCopyReaderShim getZeroCopyReader(FSDataInputStream in,
+    public ZeroCopyReaderShim getZeroCopyReader(SeekableInputStream in,
                                                 ByteBufferPoolShim pool) {
       return null;
     }
@@ -277,7 +281,17 @@ public class TestPhysicalFsWriter {
     }
 
     @Override
-    public KeyProvider getHadoopKeyProvider(Configuration conf, Random random) {
+    public FileIO createFileIO(Supplier<Object> fileSystem) {
+      return new HadoopShimsPre2_3.HadoopFileIO(fileSystem);
+    }
+
+    @Override
+    public FileIO createFileIO(String path, org.apache.orc.shims.Configuration conf) throws IOException {
+      return null;
+    }
+
+    @Override
+    public org.apache.orc.shims.Configuration createConfiguration(Properties tableProperties, Object hadoopConfig) {
       return null;
     }
   }

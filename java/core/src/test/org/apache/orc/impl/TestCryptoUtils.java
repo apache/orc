@@ -18,12 +18,12 @@
 
 package org.apache.orc.impl;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.orc.EncryptionAlgorithm;
 import org.apache.orc.InMemoryKeystore;
 import org.apache.orc.OrcConf;
 import org.apache.orc.OrcProto;
+import org.apache.orc.shims.Configuration;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -54,7 +54,7 @@ public class TestCryptoUtils {
 
   @Test
   public void testMemoryKeyProvider() throws IOException {
-    Configuration conf = new Configuration();
+    Configuration conf = HadoopShimsFactory.get().createConfiguration(null, null);
     OrcConf.KEY_PROVIDER.setString(conf, "memory");
     // Hard code the random so that we know the bytes that will come out.
     InMemoryKeystore provider =

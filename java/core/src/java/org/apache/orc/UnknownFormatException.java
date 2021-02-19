@@ -19,16 +19,15 @@
 package org.apache.orc;
 
 import com.google.protobuf.TextFormat;
-import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
 
 public class UnknownFormatException extends IOException {
-  private final Path path;
+  private final String path;
   private final String versionString;
   private final OrcProto.PostScript postscript;
 
-  public UnknownFormatException(Path path, String versionString,
+  public UnknownFormatException(String path, String versionString,
                                 OrcProto.PostScript postscript) {
     super(path + " was written by a future ORC version " +
         versionString + ". This file is not readable by this version of ORC.\n"+
@@ -38,7 +37,7 @@ public class UnknownFormatException extends IOException {
     this.postscript = postscript;
   }
 
-  public Path getPath() {
+  public String getPath() {
     return path;
   }
 

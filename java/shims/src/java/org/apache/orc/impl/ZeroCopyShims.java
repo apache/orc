@@ -24,6 +24,8 @@ import java.util.EnumSet;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.ReadOption;
 import org.apache.hadoop.io.ByteBufferPool;
+import org.apache.orc.shims.SeekableInputStream;
+
 
 class ZeroCopyShims {
   private static final class ByteBufferPoolAdapter implements ByteBufferPool {
@@ -52,9 +54,9 @@ class ZeroCopyShims {
     private final static EnumSet<ReadOption> NO_CHECK_SUM = EnumSet
         .of(ReadOption.SKIP_CHECKSUMS);
 
-    public ZeroCopyAdapter(FSDataInputStream in,
+    public ZeroCopyAdapter(SeekableInputStream in,
                            HadoopShims.ByteBufferPoolShim poolshim) {
-      this.in = in;
+      this.in = (FSDataInputStream) in.getInputStream();
       if (poolshim != null) {
         pool = new ByteBufferPoolAdapter(poolshim);
       } else {
@@ -83,8 +85,8 @@ class ZeroCopyShims {
     }
   }
 
-  public static HadoopShims.ZeroCopyReaderShim getZeroCopyReader(FSDataInputStream in,
-                                                                 HadoopShims.ByteBufferPoolShim pool) throws IOException {
+  public static HadoopShims.ZeroCopyReaderShim getZeroCopyReader(SeekableInputStream in,
+                                                                 HadoopShims.ByteBufferPoolShim pool) {
     return new ZeroCopyAdapter(in, pool);
   }
 

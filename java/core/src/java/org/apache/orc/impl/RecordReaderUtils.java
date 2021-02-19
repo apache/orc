@@ -17,6 +17,8 @@
  */
 package org.apache.orc.impl;
 
+import org.apache.orc.shims.FileIO;
+import org.apache.orc.shims.SeekableInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,12 +29,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.function.Supplier;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.io.DiskRangeList;
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.DataReader;
@@ -48,18 +46,18 @@ public class RecordReaderUtils {
   private static final Logger LOG = LoggerFactory.getLogger(RecordReaderUtils.class);
 
   private static class DefaultDataReader implements DataReader {
-    private FSDataInputStream file;
+    private SeekableInputStream file;
     private ByteBufferAllocatorPool pool;
     private HadoopShims.ZeroCopyReaderShim zcr = null;
-    private final Supplier<FileSystem> fileSystemSupplier;
-    private final Path path;
+    private final FileIO fileIO;
+    private final String fileName;
     private final boolean useZeroCopy;
     private InStream.StreamOptions options;
     private boolean isOpen = false;
 
-    private DefaultDataReader(DataReaderProperties properties) {
-      this.fileSystemSupplier = properties.getFileSystemSupplier();
-      this.path = properties.getPath();
+    private DefaultDataReader(DataReaderPropertiesCore properties) {
+      this.fileIO = properties.getFileIO();
+      this.fileName = properties.getFileName();
       this.file = properties.getFile();
       this.useZeroCopy = properties.getZeroCopy();
       this.options = properties.getCompression();
@@ -68,7 +66,7 @@ public class RecordReaderUtils {
     @Override
     public void open() throws IOException {
       if (file == null) {
-        this.file = fileSystemSupplier.get().open(path);
+        this.file = fileIO.createInputFile(fileName);
       }
       if (useZeroCopy) {
         // ZCR only uses codec for boolean checks.
@@ -157,7 +155,7 @@ public class RecordReaderUtils {
     }
   }
 
-  public static DataReader createDefaultDataReader(DataReaderProperties properties) {
+  public static DataReader createDefaultDataReader(DataReaderPropertiesCore properties) {
     return new DefaultDataReader(properties);
   }
 
@@ -324,7 +322,7 @@ public class RecordReaderUtils {
    * @param allocateDirect if we need to allocate buffers, should we use direct
    * @throws IOException
    */
-  static void zeroCopyReadRanges(FSDataInputStream file,
+  static void zeroCopyReadRanges(SeekableInputStream file,
                                  HadoopShims.ZeroCopyReaderShim zcr,
                                  BufferChunk first,
                                  BufferChunk last,
@@ -407,7 +405,7 @@ public class RecordReaderUtils {
    * @param last the last range to read
    * @param allocateDirect should we use direct buffers
    */
-  static void readRanges(FSDataInputStream file,
+  static void readRanges(SeekableInputStream file,
                          BufferChunk first,
                          BufferChunk last,
                          boolean allocateDirect) throws IOException {
@@ -469,7 +467,7 @@ public class RecordReaderUtils {
    * @param list the disk ranges within the file to read
    * @param doForceDirect allocate direct buffers
    */
-  static void readDiskRanges(FSDataInputStream file,
+  static void readDiskRanges(SeekableInputStream file,
                              HadoopShims.ZeroCopyReaderShim zcr,
                              BufferChunkList list,
                              boolean doForceDirect) throws IOException {
@@ -488,7 +486,7 @@ public class RecordReaderUtils {
     }
   }
 
-  static HadoopShims.ZeroCopyReaderShim createZeroCopyShim(FSDataInputStream file,
+  static HadoopShims.ZeroCopyReaderShim createZeroCopyShim(SeekableInputStream file,
       CompressionCodec codec, ByteBufferAllocatorPool pool) throws IOException {
     if ((codec == null || ((codec instanceof DirectDecompressionCodec)
             && ((DirectDecompressionCodec) codec).isAvailable()))) {

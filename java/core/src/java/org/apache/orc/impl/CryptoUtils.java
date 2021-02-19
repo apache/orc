@@ -18,17 +18,16 @@
 
 package org.apache.orc.impl;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.orc.InMemoryKeystore;
-import org.apache.orc.OrcConf;
+import org.apache.orc.core.OrcConf;
 import org.apache.orc.OrcProto;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-import java.util.ServiceLoader;
 import java.util.function.Consumer;
+import org.apache.orc.shims.Configuration;
+
 
 /**
  * This class has routines to work with encryption within ORC files.
@@ -136,30 +135,9 @@ public class CryptoUtils {
     String cacheKey = kind + "." + random.getClass().getName();
     KeyProvider result = keyProviderCache.get(cacheKey);
     if (result == null) {
-      ServiceLoader<KeyProvider.Factory> loader = ServiceLoader.load(KeyProvider.Factory.class);
-      for (KeyProvider.Factory factory : loader) {
-        result = factory.create(kind, conf, random);
-        if (result != null) {
-          keyProviderCache.put(cacheKey, result);
-          break;
-        }
-      }
+      result = HadoopShimsFactory.get().getKeyProvider(kind, conf, random);
+      keyProviderCache.put(cacheKey, result);
     }
     return result;
-  }
-
-  public static class HadoopKeyProviderFactory implements KeyProvider.Factory {
-
-    @Override
-    public KeyProvider create(String kind,
-                              Configuration conf,
-                              Random random) throws IOException {
-      if ("hadoop".equals(kind)) {
-        return HadoopShimsFactory.get().getHadoopKeyProvider(conf, random);
-      } else if ("memory".equals(kind)) {
-        return new InMemoryKeystore(random);
-      }
-      return null;
-    }
   }
 }

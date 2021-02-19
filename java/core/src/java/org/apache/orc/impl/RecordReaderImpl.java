@@ -23,8 +23,6 @@ import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.time.chrono.ChronoLocalDate;
 import java.time.format.DateTimeFormatter;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
@@ -32,7 +30,6 @@ import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument.TruthValue;
 import org.apache.hadoop.hive.ql.util.TimestampUtils;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
-import org.apache.hadoop.io.Text;
 import org.apache.orc.BooleanColumnStatistics;
 import org.apache.orc.CollectionColumnStatistics;
 import org.apache.orc.ColumnStatistics;
@@ -42,11 +39,12 @@ import org.apache.orc.DateColumnStatistics;
 import org.apache.orc.DecimalColumnStatistics;
 import org.apache.orc.DoubleColumnStatistics;
 import org.apache.orc.IntegerColumnStatistics;
-import org.apache.orc.OrcConf;
-import org.apache.orc.OrcFile;
+import org.apache.orc.core.OrcConf;
+import org.apache.orc.core.OrcFile;
 import org.apache.orc.OrcProto;
-import org.apache.orc.Reader;
+import org.apache.orc.core.Reader;
 import org.apache.orc.RecordReader;
+import org.apache.orc.shims.SeekableInputStream;
 import org.apache.orc.StringColumnStatistics;
 import org.apache.orc.StripeInformation;
 import org.apache.orc.TimestampColumnStatistics;
@@ -54,6 +52,7 @@ import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.reader.ReaderEncryption;
 import org.apache.orc.impl.reader.StripePlanner;
 import org.apache.orc.impl.reader.tree.BatchReader;
+import org.apache.orc.impl.util.Text;
 import org.apache.orc.util.BloomFilter;
 import org.apache.orc.util.BloomFilterIO;
 import org.slf4j.Logger;
@@ -73,7 +72,7 @@ import java.util.TreeSet;
 public class RecordReaderImpl implements RecordReader {
   static final Logger LOG = LoggerFactory.getLogger(RecordReaderImpl.class);
   private static final boolean isLogDebugEnabled = LOG.isDebugEnabled();
-  protected final Path path;
+  protected final String path;
   private final long firstRow;
   private final List<StripeInformation> stripes = new ArrayList<>();
   private OrcProto.StripeFooter stripeFooter;
@@ -136,7 +135,7 @@ public class RecordReaderImpl implements RecordReader {
     return result;
   }
 
-  protected RecordReaderImpl(ReaderImpl fileReader,
+  protected RecordReaderImpl(ReaderImplCore fileReader,
                              Reader.Options options) throws IOException {
     OrcFile.WriterVersion writerVersion = fileReader.getWriterVersion();
     SchemaEvolution evolution;
@@ -155,7 +154,7 @@ public class RecordReaderImpl implements RecordReader {
                                       options.getSchema(),
                                       options);
       if (LOG.isDebugEnabled() && evolution.hasConversion()) {
-        LOG.debug("ORC file " + fileReader.path.toString() +
+        LOG.debug("ORC file " + fileReader.path +
             " has data type conversion --\n" +
             "reader schema: " + options.getSchema().toString() + "\n" +
             "file schema:   " + fileReader.getSchema());
@@ -205,14 +204,14 @@ public class RecordReaderImpl implements RecordReader {
           InStream.options()
               .withCodec(OrcCodecPool.getCodec(fileReader.getCompressionKind()))
               .withBufferSize(fileReader.getCompressionSize());
-      DataReaderProperties.Builder builder =
-          DataReaderProperties.builder()
+      DataReaderPropertiesCore.Builder builder =
+          DataReaderPropertiesCore.builder()
               .withCompression(unencryptedOptions)
-              .withFileSystemSupplier(fileReader.getFileSystemSupplier())
-              .withPath(fileReader.path)
+              .withFileIO(fileReader.getFileIO())
+              .withFileName(fileReader.path)
               .withMaxDiskRangeChunkLimit(maxDiskRangeChunkLimit)
               .withZeroCopy(zeroCopy);
-      FSDataInputStream file = fileReader.takeFile();
+      SeekableInputStream file = fileReader.takeFile();
       if (file != null) {
         builder.withFile(file);
       }

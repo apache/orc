@@ -35,7 +35,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Random;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
@@ -45,6 +44,7 @@ import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
+import org.apache.orc.shims.SeekableInputStream;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
 import org.junit.Before;
@@ -58,7 +58,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class TestOrcLargeStripe {
 
-  private Path workDir = new Path(System.getProperty("test.tmp.dir", "target" + File.separator + "test"
+  private final Path workDir = new Path(System.getProperty("test.tmp.dir",
+      "target" + File.separator + "test"
     + File.separator + "tmp"));
 
   Configuration conf;
@@ -77,7 +78,7 @@ public class TestOrcLargeStripe {
   }
 
   @Mock
-  private FSDataInputStream mockDataInput;
+  private SeekableInputStream mockDataInput;
 
   static class RangeBuilder {
     BufferChunkList result = new BufferChunkList();

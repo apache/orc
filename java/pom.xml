@@ -58,6 +58,7 @@
     <module>core</module>
     <module>mapreduce</module>
     <module>tools</module>
+    <module>nonhadoop</module>
     <module>examples</module>
   </modules>
 

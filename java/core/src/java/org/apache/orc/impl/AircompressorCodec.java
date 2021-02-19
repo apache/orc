@@ -31,8 +31,7 @@ public class AircompressorCodec implements CompressionCodec {
   private final Compressor compressor;
   private final Decompressor decompressor;
 
-  AircompressorCodec(CompressionKind kind, Compressor compressor,
-                     Decompressor decompressor) {
+  public AircompressorCodec(CompressionKind kind, Compressor compressor, Decompressor decompressor) {
     this.kind = kind;
     this.compressor = compressor;
     this.decompressor = decompressor;

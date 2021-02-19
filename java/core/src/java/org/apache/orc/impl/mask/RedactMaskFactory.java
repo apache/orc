@@ -25,9 +25,9 @@ import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
-import org.apache.hadoop.io.Text;
 import org.apache.orc.DataMask;
 import org.apache.orc.TypeDescription;
+import org.apache.orc.impl.util.Text;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;

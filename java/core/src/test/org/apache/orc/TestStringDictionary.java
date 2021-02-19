@@ -35,6 +35,7 @@ import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
+import org.apache.orc.impl.HadoopShimsFactory;
 import org.apache.orc.impl.OutStream;
 import org.apache.orc.impl.RecordReaderImpl;
 import org.apache.orc.impl.StreamName;
@@ -166,13 +167,13 @@ public class TestStringDictionary {
 
   static class WriterContextImpl implements WriterContext {
     private final TypeDescription schema;
-    private final Configuration conf;
+    private final org.apache.orc.shims.Configuration conf;
     private final Map<StreamName, TestInStream.OutputCollector> streams =
         new HashMap<>();
 
     WriterContextImpl(TypeDescription schema, Configuration conf) {
       this.schema = schema;
-      this.conf = conf;
+      this.conf = HadoopShimsFactory.get().createConfiguration(null, conf);
     }
 
     @Override
@@ -213,7 +214,7 @@ public class TestStringDictionary {
     }
 
     @Override
-    public Configuration getConfiguration() {
+    public org.apache.orc.shims.Configuration getConfiguration() {
       return conf;
     }
 

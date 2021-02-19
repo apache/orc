@@ -17,8 +17,8 @@
  */
 package org.apache.orc.impl;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.BytesWritable;
+import org.apache.orc.shims.Configuration;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -37,7 +37,8 @@ public class TestHadoopKeyProvider {
    */
   @Test
   public void testHadoopKeyProvider() throws IOException {
-    Configuration conf = new Configuration();
+    Configuration conf = HadoopShimsFactory.get()
+        .createConfiguration(null, null);
     conf.set("hadoop.security.key.provider.path", "test:///");
     // Hard code the random so that we know the bytes that will come out.
     KeyProvider provider = CryptoUtils.getKeyProvider(conf, new Random(24));

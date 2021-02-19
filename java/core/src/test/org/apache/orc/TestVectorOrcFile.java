@@ -3965,7 +3965,8 @@ public class TestVectorOrcFile {
       OrcFile.createReader(zeroFile, OrcFile.readerOptions(conf));
       assertTrue("no exception for bad version", false);
     } catch (UnknownFormatException uf) {
-      assertEquals("path is correct", "version1999.orc", uf.getPath().getName());
+      assertTrue("path is correct",
+          uf.getPath().endsWith("version1999.orc"));
       assertEquals("19.99", uf.getVersionString());
       OrcProto.PostScript ps = uf.getPostscript();
       assertEquals("ORC", ps.getMagic());

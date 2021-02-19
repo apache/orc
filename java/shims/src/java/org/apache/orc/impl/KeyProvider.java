@@ -18,12 +18,12 @@
 
 package org.apache.orc.impl;
 
-import org.apache.hadoop.conf.Configuration;
-
 import java.io.IOException;
 import java.security.Key;
 import java.util.List;
 import java.util.Random;
+import org.apache.orc.shims.Configuration;
+
 
 /**
  * A source of crypto keys. This is usually backed by a Ranger KMS.
@@ -74,11 +74,29 @@ public interface KeyProvider {
   HadoopShims.KeyProviderKind getKind();
 
   /**
-   * A service loader factory interface.
+   * The core API for accessing key provider factories
+   * that are discovered as service providers.
    */
-  interface Factory {
+  interface FactoryCore {
+    /**
+     * Create a KeyProvider of a given kind.
+     * @param kind the kind of key provider to create
+     * @param conf the configuration
+     * @param random the random number generator
+     * @return a new KeyProvider or null if the kind isn't known
+     */
     KeyProvider create(String kind,
                        Configuration conf,
                        Random random) throws IOException;
+  }
+
+  /**
+   * The backwards compatible API for accessing key provider factories
+   * that are discovered as service providers.
+   */
+  interface Factory {
+    KeyProvider create(String kind,
+        org.apache.hadoop.conf.Configuration conf,
+        Random random) throws IOException;
   }
 }

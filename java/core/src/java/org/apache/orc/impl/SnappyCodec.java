@@ -32,7 +32,7 @@ public class SnappyCodec extends AircompressorCodec
   Boolean direct = null;
   HadoopShims.DirectDecompressor decompressShim = null;
 
-  SnappyCodec() {
+  public SnappyCodec() {
     super(CompressionKind.SNAPPY, new SnappyCompressor(), new SnappyDecompressor());
   }
 
