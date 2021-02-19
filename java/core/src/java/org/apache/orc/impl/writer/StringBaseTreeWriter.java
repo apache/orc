@@ -65,7 +65,7 @@ public abstract class StringBaseTreeWriter extends TreeWriterBase {
   private boolean doneDictionaryCheck;
   private final boolean strideDictionaryCheck;
 
-  static Dictionary createDict(Configuration conf) {
+  private static Dictionary createDict(Configuration conf) {
     String dictImpl = conf.get(DICTIONARY_IMPL.name(),
         DICTIONARY_IMPL.getDefaultValue().toString()).toUpperCase();
     switch (Dictionary.IMPL.valueOf(dictImpl)) {
