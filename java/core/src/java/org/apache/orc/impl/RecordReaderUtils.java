@@ -545,7 +545,7 @@ public class RecordReaderUtils {
 
     private long currentGeneration = 0;
 
-    private final TreeMap<Key, ByteBuffer> getBufferTree(boolean direct) {
+    private TreeMap<Key, ByteBuffer> getBufferTree(boolean direct) {
       return direct ? directBuffers : buffers;
     }
 

@@ -611,14 +611,11 @@ public class RecordReaderImpl implements RecordReader {
     // 1) Bloom filter is available
     // 2) Min/Max evaluation yield YES or MAYBE
     // 3) Predicate is EQUALS or IN list
-    if (bloomFilter != null
-        && result != TruthValue.NO_NULL && result != TruthValue.NO
-        && (predicate.getOperator().equals(PredicateLeaf.Operator.EQUALS)
-            || predicate.getOperator().equals(PredicateLeaf.Operator.NULL_SAFE_EQUALS)
-            || predicate.getOperator().equals(PredicateLeaf.Operator.IN))) {
-      return true;
-    }
-    return false;
+    return bloomFilter != null
+           && result != TruthValue.NO_NULL && result != TruthValue.NO
+           && (predicate.getOperator().equals(PredicateLeaf.Operator.EQUALS)
+               || predicate.getOperator().equals(PredicateLeaf.Operator.NULL_SAFE_EQUALS)
+               || predicate.getOperator().equals(PredicateLeaf.Operator.IN));
   }
 
   private static TruthValue evaluatePredicateMinMax(PredicateLeaf predicate,
@@ -748,11 +745,11 @@ public class RecordReaderImpl implements RecordReader {
     TruthValue result = hasNull ? TruthValue.NO_NULL : TruthValue.NO;
 
     if (predObj instanceof Long) {
-      if (bf.testLong(((Long) predObj).longValue())) {
+      if (bf.testLong((Long) predObj)) {
         result = TruthValue.YES_NO_NULL;
       }
     } else if (predObj instanceof Double) {
-      if (bf.testDouble(((Double) predObj).doubleValue())) {
+      if (bf.testDouble((Double) predObj)) {
         result = TruthValue.YES_NO_NULL;
       }
     } else if (predObj instanceof String || predObj instanceof Text ||
@@ -836,10 +833,10 @@ public class RecordReaderImpl implements RecordReader {
         break;
       case DECIMAL:
         if (obj instanceof Boolean) {
-          return new HiveDecimalWritable(((Boolean) obj).booleanValue() ?
+          return new HiveDecimalWritable((Boolean) obj ?
               HiveDecimal.ONE : HiveDecimal.ZERO);
         } else if (obj instanceof Integer) {
-          return new HiveDecimalWritable(((Integer) obj).intValue());
+          return new HiveDecimalWritable((Integer) obj);
         } else if (obj instanceof Long) {
           return new HiveDecimalWritable(((Long) obj));
         } else if (obj instanceof Float || obj instanceof Double ||
@@ -866,10 +863,6 @@ public class RecordReaderImpl implements RecordReader {
           return Double.valueOf(obj.toString());
         } else if (obj instanceof Timestamp) {
           return TimestampUtils.getDouble((Timestamp) obj);
-        } else if (obj instanceof HiveDecimal) {
-          return ((HiveDecimal) obj).doubleValue();
-        } else if (obj instanceof BigDecimal) {
-          return ((BigDecimal) obj).doubleValue();
         }
         break;
       case LONG:
@@ -897,7 +890,7 @@ public class RecordReaderImpl implements RecordReader {
         } else if (obj instanceof Float) {
           return TimestampUtils.doubleToTimestamp(((Float) obj).doubleValue());
         } else if (obj instanceof Double) {
-          return TimestampUtils.doubleToTimestamp(((Double) obj).doubleValue());
+          return TimestampUtils.doubleToTimestamp((Double) obj);
         } else if (obj instanceof HiveDecimal) {
           return TimestampUtils.decimalToTimestamp((HiveDecimal) obj);
         } else if (obj instanceof HiveDecimalWritable) {
@@ -933,7 +926,7 @@ public class RecordReaderImpl implements RecordReader {
     private final long rowIndexStride;
     // same as the above array, but indices are set to true
     private final boolean[] sargColumns;
-    private SchemaEvolution evolution;
+    private final SchemaEvolution evolution;
     private final long[] exceptionCount;
     private final boolean useUTCTimestamp;
     private final boolean writerUsedProlepticGregorian;
@@ -1264,9 +1257,7 @@ public class RecordReaderImpl implements RecordReader {
         endRowGroup += 1;
       }
 
-      final long markerPosition =
-          (endRowGroup * rowIndexStride) < rowCountInStripe ? (endRowGroup * rowIndexStride)
-              : rowCountInStripe;
+      final long markerPosition = Math.min((endRowGroup * rowIndexStride), rowCountInStripe);
       batchSize = (int) Math.min(targetBatchSize, (markerPosition - rowInStripe));
 
       if (isLogDebugEnabled && batchSize < targetBatchSize) {
