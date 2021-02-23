@@ -68,7 +68,7 @@ public class StripePlanner {
   private String writerTimezone;
   private long currentStripeId;
   private long originalStripeId;
-  private Map<StreamName, StreamInformation> streams = new HashMap<>();
+  private final Map<StreamName, StreamInformation> streams = new HashMap<>();
   // the index streams sorted by offset
   private final List<StreamInformation> indexStreams = new ArrayList<>();
   // the data streams sorted by offset

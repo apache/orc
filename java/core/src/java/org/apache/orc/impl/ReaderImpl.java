@@ -74,7 +74,7 @@ public class ReaderImpl implements Reader {
   protected List<OrcProto.StripeStatistics> stripeStatistics;
   private final int metadataSize;
   protected final List<OrcProto.Type> types;
-  private TypeDescription schema;
+  private final TypeDescription schema;
   private final List<OrcProto.UserMetadataItem> userMetadata;
   private final List<OrcProto.ColumnStatistics> fileStats;
   private final List<StripeInformation> stripes;
