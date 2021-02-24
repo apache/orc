@@ -50,6 +50,7 @@ import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.orc.OrcFile;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.OrcProto;
+import org.apache.orc.OrcFilterContext;
 import org.apache.orc.impl.reader.ReaderEncryption;
 import org.apache.orc.impl.reader.StripePlanner;
 import org.apache.orc.impl.reader.tree.BatchReader;
@@ -67,7 +68,7 @@ public class TreeReaderFactory {
 
     Set<Integer> getColumnFilterIds();
 
-    Consumer<VectorizedRowBatch> getColumnFilterCallback();
+    Consumer<OrcFilterContext> getColumnFilterCallback();
 
     boolean isSkipCorrupt();
 
@@ -94,7 +95,7 @@ public class TreeReaderFactory {
     private boolean useProlepticGregorian;
     private boolean fileUsedProlepticGregorian;
     private Set<Integer> filterColumnIds = Collections.emptySet();
-    Consumer<VectorizedRowBatch> filterCallback;
+    Consumer<OrcFilterContext> filterCallback;
 
     public ReaderContext setSchemaEvolution(SchemaEvolution evolution) {
       this.evolution = evolution;
@@ -106,7 +107,7 @@ public class TreeReaderFactory {
       return this;
     }
 
-    public ReaderContext setFilterCallback(Set<Integer> filterColumnsList, Consumer<VectorizedRowBatch> filterCallback) {
+    public ReaderContext setFilterCallback(Set<Integer> filterColumnsList, Consumer<OrcFilterContext> filterCallback) {
       this.filterColumnIds = filterColumnsList;
       this.filterCallback = filterCallback;
       return this;
@@ -150,7 +151,7 @@ public class TreeReaderFactory {
     }
 
     @Override
-    public Consumer<VectorizedRowBatch> getColumnFilterCallback() {
+    public Consumer<OrcFilterContext> getColumnFilterCallback() {
       return filterCallback;
     }
 

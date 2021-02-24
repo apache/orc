@@ -19,6 +19,7 @@ package org.apache.orc.impl.reader.tree;
 
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.orc.impl.OrcFilterContextImpl;
 import org.apache.orc.impl.TreeReaderFactory;
 
 import java.io.IOException;
@@ -27,10 +28,12 @@ import java.util.Set;
 public class StructBatchReader extends BatchReader {
   // The reader context including row-filtering details
   private final TreeReaderFactory.Context context;
+  private final OrcFilterContextImpl filterContext;
 
   public StructBatchReader(TreeReaderFactory.StructTreeReader rowReader, TreeReaderFactory.Context context) {
     super(rowReader);
     this.context = context;
+    this.filterContext = new OrcFilterContextImpl(context.getSchemaEvolution().getReaderSchema());
   }
 
   private void readBatchColumn(VectorizedRowBatch batch, TypeReader[] children, int batchSize, int index)
@@ -62,7 +65,7 @@ public class StructBatchReader extends BatchReader {
 
     // Apply filter callback to reduce number of # rows selected for decoding in the next TreeReaders
     if (!earlyExpandCols.isEmpty() && this.context.getColumnFilterCallback() != null) {
-      this.context.getColumnFilterCallback().accept(batch);
+      this.context.getColumnFilterCallback().accept(filterContext.setBatch(batch));
     }
 
     // Read the remaining columns applying row-level filtering

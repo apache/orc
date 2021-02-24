@@ -30,6 +30,7 @@ import org.apache.orc.TypeDescription;
 import org.apache.orc.bench.core.OrcBenchmark;
 import org.apache.orc.bench.core.ReadCounters;
 import org.apache.orc.bench.core.Utilities;
+import org.apache.orc.OrcFilterContext;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Mode;
@@ -93,16 +94,16 @@ public class RowFilterProjectionBenchmark implements OrcBenchmark {
     }
   }
 
-  public static void customIntRowFilter(VectorizedRowBatch batch) {
+  public static void customIntRowFilter(OrcFilterContext batch) {
     int newSize = 0;
-    for (int row = 0; row < batch.size; ++row) {
+    for (int row = 0; row < batch.getSelectedSize(); ++row) {
       // Select ONLY specific keys
       if (filterValues.contains(row)) {
-        batch.selected[newSize++] = row;
+        batch.getSelected()[newSize++] = row;
       }
     }
-    batch.selectedInUse = true;
-    batch.size = newSize;
+    batch.setSelectedInUse(true);
+    batch.setSelectedSize(newSize);
   }
 
   @Benchmark

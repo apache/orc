@@ -18,6 +18,12 @@
 
 package org.apache.orc.impl;
 
+import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.ListColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.MapColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.StructColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.UnionColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.TypeDescription;
 
 import java.util.ArrayList;
@@ -249,63 +255,136 @@ public class ParserUtils {
     return findSubtype(schema, source, true);
   }
 
+
+  public interface TypeVisitor {
+    /**
+     * As we navigate to the column, call this on each level
+     * @param type new level we are moving to
+     * @param posn the position relative to the parent
+     */
+    void visit(TypeDescription type, int posn);
+  }
+
+  public static class TypeFinder implements TypeVisitor {
+    public TypeDescription current;
+
+    public TypeFinder(TypeDescription schema) {
+      current = schema;
+    }
+
+    @Override
+    public void visit(TypeDescription type, int posn) {
+      current = type;
+    }
+  }
+
   public static TypeDescription findSubtype(TypeDescription schema,
                                             ParserUtils.StringPosition source,
                                             boolean isSchemaEvolutionCaseAware) {
-    List<String> names = ParserUtils.splitName(source);
-    if (names.size() == 1 && INTEGER_PATTERN.matcher(names.get(0)).matches()) {
-      return schema.findSubtype(Integer.parseInt(names.get(0)));
-    }
-    TypeDescription current = SchemaEvolution.checkAcidSchema(schema)
+    TypeFinder result = new TypeFinder(removeAcid(schema));
+    findColumn(result.current, source, isSchemaEvolutionCaseAware, result);
+    return result.current;
+  }
+
+  private static TypeDescription removeAcid(TypeDescription schema) {
+    return SchemaEvolution.checkAcidSchema(schema)
         ? SchemaEvolution.getBaseRow(schema) : schema;
+  }
+
+  private static int findCaseInsensitive(List<String> list, String goal) {
+    for (int i = 0; i < list.size(); i++) {
+      if (list.get(i).equalsIgnoreCase(goal)) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  public static void findSubtype(TypeDescription schema,
+                                 int goal,
+                                 TypeVisitor visitor) {
+    TypeDescription current = schema;
+    int id = schema.getId();
+    if (goal < id || goal > schema.getMaximumId()) {
+      throw new IllegalArgumentException("Unknown type id " + id + " in " +
+          current.toJson());
+    }
+    while (id != goal) {
+      List<TypeDescription> children = current.getChildren();
+      for(int i=0; i < children.size(); ++i) {
+        TypeDescription child = children.get(i);
+        if (goal <= child.getMaximumId()) {
+          current = child;
+          visitor.visit(current, i);
+          break;
+        }
+      }
+      id = current.getId();
+    }
+  }
+
+  /**
+   * Find a column in a schema by walking down the type tree to find the right column.
+   * @param schema the schema to look in
+   * @param source the name of the column
+   * @param isSchemaEvolutionCaseAware should the string compare be case sensitive
+   * @param visitor The visitor, which is called on each level
+   */
+  public static void findColumn(TypeDescription schema,
+                                ParserUtils.StringPosition source,
+                                boolean isSchemaEvolutionCaseAware,
+                                TypeVisitor visitor) {
+    findColumn(schema, ParserUtils.splitName(source), isSchemaEvolutionCaseAware, visitor);
+  }
+
+  /**
+   * Find a column in a schema by walking down the type tree to find the right column.
+   * @param schema the schema to look in
+   * @param names the name of the column broken into a list of names per level
+   * @param isSchemaEvolutionCaseAware should the string compare be case sensitive
+   * @param visitor The visitor, which is called on each level
+   */
+  public static void findColumn(TypeDescription schema,
+                                List<String> names,
+                                boolean isSchemaEvolutionCaseAware,
+                                TypeVisitor visitor) {
+    if (names.size() == 1 && INTEGER_PATTERN.matcher(names.get(0)).matches()) {
+      findSubtype(schema, Integer.parseInt(names.get(0)), visitor);
+      return;
+    }
+    TypeDescription current = schema;
+    int posn;
     while (names.size() > 0) {
       String first = names.remove(0);
       switch (current.getCategory()) {
         case STRUCT: {
-          int posn = -1;
-          if (isSchemaEvolutionCaseAware) {
-            posn = current.getFieldNames().indexOf(first);
-          } else {
-            // Case-insensitive search like ORC 1.5
-            for (int i = 0; i < current.getFieldNames().size(); i++) {
-              if (current.getFieldNames().get(i).equalsIgnoreCase(first)) {
-                posn = i;
-                break;
-              }
-            }
-          }
-          if (posn == -1) {
-            throw new IllegalArgumentException("Field " + first +
-                " not found in " + current.toString());
-          }
-          current = current.getChildren().get(posn);
+          posn = isSchemaEvolutionCaseAware
+              ? current.getFieldNames().indexOf(first)
+              : findCaseInsensitive(current.getFieldNames(), first);
           break;
         }
         case LIST:
           if (first.equals("_elem")) {
-            current = current.getChildren().get(0);
+            posn = 0;
           } else {
-            throw new IllegalArgumentException("Field " + first +
-                "not found in " + current.toString());
+            posn = -1;
           }
           break;
         case MAP:
           if (first.equals("_key")) {
-            current = current.getChildren().get(0);
+            posn = 0;
           } else if (first.equals("_value")) {
-            current = current.getChildren().get(1);
+            posn = 1;
           } else {
-            throw new IllegalArgumentException("Field " + first +
-                "not found in " + current.toString());
+            posn = -1;
           }
           break;
         case UNION: {
           try {
-            int posn = Integer.parseInt(first);
+            posn = Integer.parseInt(first);
             if (posn < 0 || posn >= current.getChildren().size()) {
               throw new NumberFormatException("off end of union");
             }
-            current = current.getChildren().get(posn);
           } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Field " + first +
                 "not found in " + current.toString(), e);
@@ -313,11 +392,73 @@ public class ParserUtils {
           break;
         }
         default:
-          throw new IllegalArgumentException("Field " + first +
-              "not found in " + current.toString());
+          posn = -1;
+      }
+      if (posn < 0) {
+        throw new IllegalArgumentException("Field " + first +
+                                           " not found in " + current.toString());
+      }
+      current = current.getChildren().get(posn);
+      visitor.visit(current, posn);
+    }
+  }
+
+  static class ColumnFinder implements TypeVisitor {
+    private ColumnVector[] top;
+    private ColumnVector current = null;
+    private final ColumnVector[] result;
+    private int resultIdx = 0;
+
+    ColumnFinder(TypeDescription schema, VectorizedRowBatch batch, int levels) {
+      top = batch.cols;
+      if (schema.getCategory() == TypeDescription.Category.STRUCT) {
+        result = new ColumnVector[levels];
+      } else {
+        result = new ColumnVector[levels + 1];
+        current = top[0];
+        addResult(current);
       }
     }
-    return current;
+
+    private void addResult(ColumnVector vector) {
+      result[resultIdx] = vector;
+      resultIdx += 1;
+    }
+
+    @Override
+    public void visit(TypeDescription type, int posn) {
+      if (current == null) {
+        current = top[posn];
+        top = null;
+      } else {
+        current = navigate(current, posn);
+      }
+      addResult(current);
+    }
+
+    private ColumnVector navigate(ColumnVector parent, int posn) {
+      if (parent instanceof ListColumnVector) {
+        return ((ListColumnVector) parent).child;
+      } else if (parent instanceof StructColumnVector) {
+        return ((StructColumnVector) parent).fields[posn];
+      } else if (parent instanceof UnionColumnVector) {
+        return ((UnionColumnVector) parent).fields[posn];
+      } else if (parent instanceof MapColumnVector) {
+        MapColumnVector m = (MapColumnVector) parent;
+        return posn == 0 ? m.keys : m.values;
+      }
+      throw new IllegalArgumentException("Unknown complex column vector " + parent.getClass());
+    }
+  }
+
+  public static ColumnVector[] findColumnVectors(TypeDescription schema,
+                                                 StringPosition source,
+                                                 boolean isCaseSensitive,
+                                                 VectorizedRowBatch batch) {
+    List<String> names = ParserUtils.splitName(source);
+    ColumnFinder result = new ColumnFinder(schema, batch, names.size());
+    findColumn(removeAcid(schema), names, isCaseSensitive, result);
+    return result.result;
   }
 
   public static List<TypeDescription> findSubtypeList(TypeDescription schema,
