@@ -18,6 +18,12 @@
 
 package org.apache.orc.impl;
 
+import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.ListColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.MapColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.StructColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.UnionColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.TypeDescription;
 
 import java.util.ArrayList;
@@ -244,9 +250,162 @@ public class ParserUtils {
 
   private static final Pattern INTEGER_PATTERN = Pattern.compile("^[0-9]+$");
 
+  public static ColumnVector[] findBranchVectors(TypeDescription schema,
+                                                 ParserUtils.StringPosition source,
+                                                 VectorizedRowBatch batch) {
+    List<String> names = ParserUtils.splitName(source);
+    return vectorWalker.get().find(schema, names, true, batch).vectorBranch;
+  }
+
   public static TypeDescription findSubtype(TypeDescription schema,
                                             ParserUtils.StringPosition source) {
     return findSubtype(schema, source, true);
+  }
+
+  private static final ThreadLocal<TypeWalker> typeWalker = ThreadLocal.withInitial(TypeWalker::new);
+  private static class TypeWalker {
+    private List<String> names;
+    private boolean caseAware;
+
+    // Walk specific
+    TypeDescription current = null;
+
+    private TypeWalker() {
+    }
+
+    protected void handleLevel(int posn) {
+      this.current = current.getChildren().get(posn);
+    }
+
+    private void findInternal() {
+      while (names.size() > 0) {
+        String first = names.remove(0);
+        switch (current.getCategory()) {
+          case STRUCT: {
+            int posn = -1;
+            if (caseAware) {
+              posn = current.getFieldNames().indexOf(first);
+            } else {
+              // Case-insensitive search like ORC 1.5
+              for (int i = 0; i < current.getFieldNames().size(); i++) {
+                if (current.getFieldNames().get(i).equalsIgnoreCase(first)) {
+                  posn = i;
+                  break;
+                }
+              }
+            }
+            if (posn == -1) {
+              throw new IllegalArgumentException("Field " + first +
+                                                 " not found in " + current.toString());
+            }
+            handleLevel(posn);
+            break;
+          }
+          case LIST:
+            if (first.equals("_elem")) {
+              handleLevel(0);
+            } else {
+              throw new IllegalArgumentException("Field " + first +
+                                                 "not found in " + current.toString());
+            }
+            break;
+          case MAP:
+            if (first.equals("_key")) {
+              handleLevel(0);
+            } else if (first.equals("_value")) {
+              handleLevel(1);
+            } else {
+              throw new IllegalArgumentException("Field " + first +
+                                                 "not found in " + current.toString());
+            }
+            break;
+          case UNION: {
+            try {
+              int posn = Integer.parseInt(first);
+              if (posn < 0 || posn >= current.getChildren().size()) {
+                throw new NumberFormatException("off end of union");
+              }
+              handleLevel(posn);
+            } catch (NumberFormatException e) {
+              throw new IllegalArgumentException("Field " + first +
+                                                 "not found in " + current.toString(), e);
+            }
+            break;
+          }
+          default:
+            throw new IllegalArgumentException("Field " + first +
+                                               "not found in " + current.toString());
+        }
+      }
+    }
+
+    protected TypeWalker find(TypeDescription schema, List<String> names, boolean caseAware) {
+      this.names = names;
+      this.caseAware = caseAware;
+      this.current = SchemaEvolution.checkAcidSchema(schema)
+        ? SchemaEvolution.getBaseRow(schema) : schema;
+      findInternal();
+      return this;
+    }
+  }
+  private static final ThreadLocal<VectorWalker> vectorWalker = ThreadLocal.withInitial(VectorWalker::new);
+  private static class VectorWalker extends TypeWalker {
+    private ColumnVector[] vectorBranch;
+    private int idx;
+    private VectorWalker() {
+      super();
+    }
+    private Object currentVector;
+
+    @Override
+    protected void handleLevel(int posn) {
+      idx += 1;
+
+      // Capture the branch element
+      switch (current.getCategory()) {
+        case STRUCT:
+          vectorBranch[idx] = ((ColumnVector[]) currentVector)[posn];
+          break;
+        case LIST:
+          assert posn == 0;
+          vectorBranch[idx] = ((ListColumnVector) currentVector).child;
+          break;
+        case MAP:
+          assert posn == 0 || posn == 1;
+          MapColumnVector v = (MapColumnVector) currentVector;
+          vectorBranch[idx] = posn == 0 ? v.keys : v.values;
+          break;
+        case UNION:
+          vectorBranch[idx] = ((UnionColumnVector) currentVector).fields[posn];
+          break;
+        default:
+          throw new IllegalArgumentException(String.format("Walk not supported on %s", current));
+      }
+
+      super.handleLevel(posn);
+      if (vectorBranch[idx] instanceof StructColumnVector) {
+        currentVector = ((StructColumnVector) vectorBranch[idx]).fields;
+      } else {
+        currentVector = vectorBranch[idx];
+      }
+    }
+
+    protected VectorWalker find(TypeDescription schema,
+                                List<String> names,
+                                boolean caseAware,
+                                VectorizedRowBatch batch) {
+      idx = -1;
+      if (schema.getCategory() == TypeDescription.Category.STRUCT) {
+        currentVector = batch.cols;
+        vectorBranch = new ColumnVector[names.size()];
+      } else {
+        currentVector = batch.cols[0];
+        vectorBranch = new ColumnVector[names.size() + 1];
+        vectorBranch[++idx] = batch.cols[0];
+      }
+      super.find(schema, names, caseAware);
+      return this;
+    }
   }
 
   public static TypeDescription findSubtype(TypeDescription schema,
@@ -256,68 +415,7 @@ public class ParserUtils {
     if (names.size() == 1 && INTEGER_PATTERN.matcher(names.get(0)).matches()) {
       return schema.findSubtype(Integer.parseInt(names.get(0)));
     }
-    TypeDescription current = SchemaEvolution.checkAcidSchema(schema)
-        ? SchemaEvolution.getBaseRow(schema) : schema;
-    while (names.size() > 0) {
-      String first = names.remove(0);
-      switch (current.getCategory()) {
-        case STRUCT: {
-          int posn = -1;
-          if (isSchemaEvolutionCaseAware) {
-            posn = current.getFieldNames().indexOf(first);
-          } else {
-            // Case-insensitive search like ORC 1.5
-            for (int i = 0; i < current.getFieldNames().size(); i++) {
-              if (current.getFieldNames().get(i).equalsIgnoreCase(first)) {
-                posn = i;
-                break;
-              }
-            }
-          }
-          if (posn == -1) {
-            throw new IllegalArgumentException("Field " + first +
-                " not found in " + current.toString());
-          }
-          current = current.getChildren().get(posn);
-          break;
-        }
-        case LIST:
-          if (first.equals("_elem")) {
-            current = current.getChildren().get(0);
-          } else {
-            throw new IllegalArgumentException("Field " + first +
-                "not found in " + current.toString());
-          }
-          break;
-        case MAP:
-          if (first.equals("_key")) {
-            current = current.getChildren().get(0);
-          } else if (first.equals("_value")) {
-            current = current.getChildren().get(1);
-          } else {
-            throw new IllegalArgumentException("Field " + first +
-                "not found in " + current.toString());
-          }
-          break;
-        case UNION: {
-          try {
-            int posn = Integer.parseInt(first);
-            if (posn < 0 || posn >= current.getChildren().size()) {
-              throw new NumberFormatException("off end of union");
-            }
-            current = current.getChildren().get(posn);
-          } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Field " + first +
-                "not found in " + current.toString(), e);
-          }
-          break;
-        }
-        default:
-          throw new IllegalArgumentException("Field " + first +
-              "not found in " + current.toString());
-      }
-    }
-    return current;
+    return typeWalker.get().find(schema, names, isSchemaEvolutionCaseAware).current;
   }
 
   public static List<TypeDescription> findSubtypeList(TypeDescription schema,
