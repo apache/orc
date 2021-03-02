@@ -23,6 +23,7 @@
 #include "orc/Common.hh"
 #include "orc/orc-config.hh"
 #include "orc/Statistics.hh"
+#include "orc/sargs/SearchArgument.hh"
 #include "orc/Type.hh"
 #include "orc/Vector.hh"
 
@@ -192,6 +193,11 @@ namespace orc {
     RowReaderOptions& setEnableLazyDecoding(bool enable);
 
     /**
+     * Set search argument for predicate push down
+     */
+    RowReaderOptions& searchArgument(std::unique_ptr<SearchArgument> sargs);
+
+    /**
      * Should enable encoding block mode
      */
     bool getEnableLazyDecoding() const;
@@ -245,6 +251,11 @@ namespace orc {
      * What scale should all Hive 0.11 decimals be normalized to?
      */
     int32_t getForcedScaleOnHive11Decimal() const;
+
+    /**
+     * Get search argument for predicate push down
+     */
+    std::shared_ptr<SearchArgument> getSearchArgument() const;
   };
 
 
@@ -537,6 +548,12 @@ namespace orc {
      * @param rowNumber the next row the reader should return
      */
     virtual void seekToRow(uint64_t rowNumber) = 0;
+
+    /**
+     * If PPD is enabled, returns true and store number of selected RGs and
+     * number of evaluated RGs into the stats pair; otherwise returns false.
+     */
+    virtual bool getPPDStats(std::pair<uint64_t, uint64_t>& stats) const = 0;
 
   };
 }

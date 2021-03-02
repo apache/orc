@@ -17,6 +17,7 @@
  */
 
 #include "orc/Reader.hh"
+#include "Reader.hh"
 
 #include "Adaptor.hh"
 
@@ -44,6 +45,60 @@ namespace orc {
     EXPECT_EQ("zstd", compressionKindToString(CompressionKind_ZSTD));
     EXPECT_EQ("unknown - 99",
               compressionKindToString(static_cast<CompressionKind>(99)));
+  }
+
+  TEST(TestRowReader, computeBatchSize) {
+    uint64_t rowIndexStride = 100;
+    uint64_t rowsInCurrentStripe = 100 * 8 + 50;
+    std::vector<bool> includedRowGroups =
+      { false, false, true, true, false, false, true, true, false };
+
+    EXPECT_EQ(0, RowReaderImpl::computeBatchSize(
+      1024, 0, rowsInCurrentStripe, rowIndexStride, includedRowGroups));
+    EXPECT_EQ(0, RowReaderImpl::computeBatchSize(
+      1024, 50, rowsInCurrentStripe, rowIndexStride, includedRowGroups));
+    EXPECT_EQ(200, RowReaderImpl::computeBatchSize(
+      1024, 200, rowsInCurrentStripe, rowIndexStride, includedRowGroups));
+    EXPECT_EQ(150, RowReaderImpl::computeBatchSize(
+      1024, 250, rowsInCurrentStripe, rowIndexStride, includedRowGroups));
+    EXPECT_EQ(0, RowReaderImpl::computeBatchSize(
+      1024, 550, rowsInCurrentStripe, rowIndexStride, includedRowGroups));
+    EXPECT_EQ(100, RowReaderImpl::computeBatchSize(
+      1024, 700, rowsInCurrentStripe, rowIndexStride, includedRowGroups));
+    EXPECT_EQ(50, RowReaderImpl::computeBatchSize(
+      50, 700, rowsInCurrentStripe, rowIndexStride, includedRowGroups));
+    EXPECT_EQ(0, RowReaderImpl::computeBatchSize(
+      50, 810, rowsInCurrentStripe, rowIndexStride, includedRowGroups));
+    EXPECT_EQ(0, RowReaderImpl::computeBatchSize(
+      50, 900, rowsInCurrentStripe, rowIndexStride, includedRowGroups));
+  }
+
+  TEST(TestRowReader, advanceToNextRowGroup) {
+    uint64_t rowIndexStride = 100;
+    uint64_t rowsInCurrentStripe = 100 * 8 + 50;
+    std::vector<bool> includedRowGroups =
+      { false, false, true, true, false, false, true, true, false };
+
+    EXPECT_EQ(200, RowReaderImpl::advanceToNextRowGroup(
+      0, rowsInCurrentStripe, rowIndexStride, includedRowGroups));
+    EXPECT_EQ(200, RowReaderImpl::advanceToNextRowGroup(
+      150, rowsInCurrentStripe, rowIndexStride, includedRowGroups));
+    EXPECT_EQ(250, RowReaderImpl::advanceToNextRowGroup(
+      250, rowsInCurrentStripe, rowIndexStride, includedRowGroups));
+    EXPECT_EQ(350, RowReaderImpl::advanceToNextRowGroup(
+      350, rowsInCurrentStripe, rowIndexStride, includedRowGroups));
+    EXPECT_EQ(350, RowReaderImpl::advanceToNextRowGroup(
+      350, rowsInCurrentStripe, rowIndexStride, includedRowGroups));
+    EXPECT_EQ(600, RowReaderImpl::advanceToNextRowGroup(
+      500, rowsInCurrentStripe, rowIndexStride, includedRowGroups));
+    EXPECT_EQ(699, RowReaderImpl::advanceToNextRowGroup(
+      699, rowsInCurrentStripe, rowIndexStride, includedRowGroups));
+    EXPECT_EQ(799, RowReaderImpl::advanceToNextRowGroup(
+      799, rowsInCurrentStripe, rowIndexStride, includedRowGroups));
+    EXPECT_EQ(850, RowReaderImpl::advanceToNextRowGroup(
+      800, rowsInCurrentStripe, rowIndexStride, includedRowGroups));
+    EXPECT_EQ(850, RowReaderImpl::advanceToNextRowGroup(
+      900, rowsInCurrentStripe, rowIndexStride, includedRowGroups));
   }
 
 }  // namespace

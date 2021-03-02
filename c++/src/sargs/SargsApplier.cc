@@ -17,6 +17,7 @@
  */
 
 #include "SargsApplier.hh"
+#include <numeric>
 
 namespace orc {
 
@@ -25,7 +26,13 @@ namespace orc {
                                     const std::string& colName) {
     for (uint64_t i = 0; i != type.getSubtypeCount(); ++i) {
       if (type.getFieldName(i) == colName) {
-        return type.getSubtype(i)->getColumnId();
+        if (type.getKind() == CHAR || type.getKind() == VARCHAR) {
+          ///FIXME: disable PPD for char and varchar types as their rules
+          // vary among different engines.
+          return INVALID_COLUMN_ID;
+        } else {
+          return type.getSubtype(i)->getColumnId();
+        }
       } else {
         uint64_t ret = findColumn(*type.getSubtype(i), colName);
         if (ret != INVALID_COLUMN_ID) {
@@ -43,7 +50,8 @@ namespace orc {
                              : mType(type)
                              , mSearchArgument(searchArgument)
                              , mRowIndexStride(rowIndexStride)
-                             , mWriterVersion(writerVersion) {
+                             , mWriterVersion(writerVersion)
+                             , mStats(0, 0) {
     const SearchArgumentImpl * sargs =
       dynamic_cast<const SearchArgumentImpl *>(mSearchArgument);
 
@@ -105,6 +113,12 @@ namespace orc {
       mHasSelected = mHasSelected || mRowGroups[rowGroup];
       mHasSkipped = mHasSkipped || (!mRowGroups[rowGroup]);
     }
+
+    // update stats
+    mStats.first = std::accumulate(
+      mRowGroups.cbegin(), mRowGroups.cend(), mStats.first,
+      [](bool rg, uint64_t s) { return rg ? 1 : 0 + s; });
+    mStats.second += groupsInStripe;
 
     return mHasSelected;
   }
