@@ -783,24 +783,9 @@ public class TypeDescription
    * @return the subtype
    */
   public TypeDescription findSubtype(int goal) {
-    // call getId method to make sure the ids are assigned
-    int id = getId();
-    if (goal < id || goal > maxId) {
-      throw new IllegalArgumentException("Unknown type id " + id + " in " +
-          toJson());
-    }
-    if (goal == id) {
-      return this;
-    } else {
-      TypeDescription prev = null;
-      for(TypeDescription next: children) {
-        if (next.id > goal) {
-          return prev.findSubtype(goal);
-        }
-        prev = next;
-      }
-      return prev.findSubtype(goal);
-    }
+    ParserUtils.TypeFinder result = new ParserUtils.TypeFinder(this);
+    ParserUtils.findSubtype(this, goal, result);
+    return result.current;
   }
 
   /**

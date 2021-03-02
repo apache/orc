@@ -112,8 +112,9 @@ public class OrcFilterContextImpl implements OrcFilterContext {
   public ColumnVector[] findColumnVector(String name) {
     if (!vectors.containsKey(name)) {
       vectors.put(name,
-                  ParserUtils.findBranchVectors(readSchema,
+                  ParserUtils.findColumnVectors(readSchema,
                                                 new ParserUtils.StringPosition(name),
+                                                true,
                                                 batch));
     }
     return vectors.get(name);
