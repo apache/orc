@@ -81,7 +81,8 @@ public interface OrcFilterContext extends MutableFilterContext {
           "Found vector: %s in branch. List and Map vectors are not supported in isNull "
           + "determination", v));
       }
-      if (!v.noNulls && (v.isRepeating || v.isNull[idx])) {
+      // v.noNulls = false does not mean that we have at least one null value
+      if (!v.noNulls && v.isNull[v.isRepeating ? 0 : idx]) {
         return true;
       }
     }

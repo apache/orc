@@ -107,9 +107,9 @@ public class TestOrcFilterContextImpl {
   @Test
   public void testPropagations() {
     OrcFilterContextImpl fc = new OrcFilterContextImpl(schema);
-    assertNull(fc.batch);
+    assertNull(fc.getBatch());
     fc.setBatch(schema.createRowBatch());
-    assertNotNull(fc.batch);
+    assertNotNull(fc.getBatch());
     assertFalse(fc.isSelectedInUse());
 
     // Set selections
@@ -118,20 +118,20 @@ public class TestOrcFilterContextImpl {
     fc.setSelectedSize(1);
     assertTrue(fc.isSelectedInUse());
     assertEquals(1, fc.getSelectedSize());
-    assertEquals(fc.batch.getMaxSize(), fc.getSelected().length);
+    assertEquals(fc.getBatch().getMaxSize(), fc.getSelected().length);
     assertArrayEquals(new int[] {5}, Arrays.copyOf(fc.getSelected(), fc.getSelectedSize()));
     assertTrue(fc.validateSelected());
     fc.setSelectedSize(2);
     assertFalse(fc.validateSelected());
 
     // Use a new selected vector
-    fc.setSelected(new int[fc.batch.getMaxSize()]);
+    fc.setSelected(new int[fc.getBatch().getMaxSize()]);
     assertArrayEquals(new int[] {0, 0}, Arrays.copyOf(fc.getSelected(), fc.getSelectedSize()));
 
     // Increase the size of the vector
     fc.reset();
     assertFalse(fc.isSelectedInUse());
-    int currSize = fc.batch.getMaxSize();
+    int currSize = fc.getBatch().getMaxSize();
     assertEquals(currSize, fc.getSelected().length);
     fc.updateSelected(currSize + 1);
     assertEquals(currSize + 1, fc.getSelected().length);
@@ -139,7 +139,7 @@ public class TestOrcFilterContextImpl {
     // Set the filter context
     fc.setFilterContext(true, new int[3], 1);
     assertTrue(fc.isSelectedInUse());
-    assertEquals(3, fc.batch.getMaxSize());
+    assertEquals(3, fc.getBatch().getMaxSize());
     assertEquals(1, fc.getSelectedSize());
   }
 

@@ -35,7 +35,7 @@ import java.util.Map;
  * that the filters can invoke to get access to the column vector.
  */
 public class OrcFilterContextImpl implements OrcFilterContext {
-  VectorizedRowBatch batch = null;
+  private VectorizedRowBatch batch = null;
   // Cache of field to ColumnVector, this is reset everytime the batch reference changes
   private final Map<String, ColumnVector[]> vectors;
   private final TypeDescription readSchema;
@@ -51,6 +51,14 @@ public class OrcFilterContextImpl implements OrcFilterContext {
       vectors.clear();
     }
     return this;
+  }
+
+  /**
+   * For testing only
+   * @return The batch reference against which the cache is maintained
+   */
+  VectorizedRowBatch getBatch() {
+    return batch;
   }
 
   @Override

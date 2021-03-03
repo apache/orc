@@ -214,6 +214,7 @@ public class TestOrcFilterContext {
 
     vectorBranch[0].noNulls = false;
     vectorBranch[0].isRepeating = true;
+    vectorBranch[0].isNull[0] = true;
     vectorBranch[1].noNulls = true;
     assertFalse(OrcFilterContext.noNulls(vectorBranch));
     assertTrue(OrcFilterContext.isNull(vectorBranch, 0));

@@ -409,12 +409,12 @@ public class ParserUtils {
     private final ColumnVector[] result;
     private int resultIdx = 0;
 
-    ColumnFinder(TypeDescription schema, VectorizedRowBatch batch, List<String> levels) {
+    ColumnFinder(TypeDescription schema, VectorizedRowBatch batch, int levels) {
       top = batch.cols;
       if (schema.getCategory() == TypeDescription.Category.STRUCT) {
-        result = new ColumnVector[levels.size()];
+        result = new ColumnVector[levels];
       } else {
-        result = new ColumnVector[levels.size() + 1];
+        result = new ColumnVector[levels + 1];
         current = top[0];
         addResult(current);
       }
@@ -456,7 +456,7 @@ public class ParserUtils {
                                                  boolean isCaseSensitive,
                                                  VectorizedRowBatch batch) {
     List<String> names = ParserUtils.splitName(source);
-    ColumnFinder result = new ColumnFinder(schema, batch, names);
+    ColumnFinder result = new ColumnFinder(schema, batch, names.size());
     findColumn(removeAcid(schema), names, isCaseSensitive, result);
     return result.result;
   }
