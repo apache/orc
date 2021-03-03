@@ -180,6 +180,7 @@ public class TestOrcFilterContext {
     OrcFilterContext fc = new OrcFilterContextImpl(topListSchema)
       .setBatch(topListSchema.createRowBatch());
     ColumnVector[] vectorBranch = fc.findColumnVector("_elem");
+    assertEquals(2, vectorBranch.length);
     assertThat(vectorBranch[0], instanceOf(ListColumnVector.class));
     assertThat(vectorBranch[1], instanceOf(StructColumnVector.class));
   }

@@ -334,32 +334,40 @@ public class ParserUtils {
                                 ParserUtils.StringPosition source,
                                 boolean isSchemaEvolutionCaseAware,
                                 TypeVisitor visitor) {
-    List<String> names = ParserUtils.splitName(source);
+    findColumn(schema, ParserUtils.splitName(source), isSchemaEvolutionCaseAware, visitor);
+  }
+
+  /**
+   * Find a column in a schema by walking down the type tree to find the right column.
+   * @param schema the schema to look in
+   * @param names the name of the column broken into a list of names per level
+   * @param isSchemaEvolutionCaseAware should the string compare be case sensitive
+   * @param visitor The visitor, which is called on each level
+   */
+  public static void findColumn(TypeDescription schema,
+                                List<String> names,
+                                boolean isSchemaEvolutionCaseAware,
+                                TypeVisitor visitor) {
     if (names.size() == 1 && INTEGER_PATTERN.matcher(names.get(0)).matches()) {
       findSubtype(schema, Integer.parseInt(names.get(0)), visitor);
       return;
     }
     TypeDescription current = schema;
+    int posn;
     while (names.size() > 0) {
       String first = names.remove(0);
-      int posn;
       switch (current.getCategory()) {
         case STRUCT: {
           posn = isSchemaEvolutionCaseAware
               ? current.getFieldNames().indexOf(first)
               : findCaseInsensitive(current.getFieldNames(), first);
-           if (posn == -1) {
-            throw new IllegalArgumentException("Field " + first +
-                " not found in " + current.toString());
-          }
           break;
         }
         case LIST:
           if (first.equals("_elem")) {
             posn = 0;
           } else {
-            throw new IllegalArgumentException("Field " + first +
-                "not found in " + current.toString());
+            posn = -1;
           }
           break;
         case MAP:
@@ -368,8 +376,7 @@ public class ParserUtils {
           } else if (first.equals("_value")) {
             posn = 1;
           } else {
-            throw new IllegalArgumentException("Field " + first +
-                "not found in " + current.toString());
+            posn = -1;
           }
           break;
         case UNION: {
@@ -385,8 +392,11 @@ public class ParserUtils {
           break;
         }
         default:
-          throw new IllegalArgumentException("Field " + first +
-              "not found in " + current.toString());
+          posn = -1;
+      }
+      if (posn < 0) {
+        throw new IllegalArgumentException("Field " + first +
+                                           " not found in " + current.toString());
       }
       current = current.getChildren().get(posn);
       visitor.visit(current, posn);
@@ -394,26 +404,36 @@ public class ParserUtils {
   }
 
   static class ColumnFinder implements TypeVisitor {
-    ColumnVector[] top;
-    ColumnVector current = null;
-    List<ColumnVector> result = new ArrayList<>();
+    private ColumnVector[] top;
+    private ColumnVector current = null;
+    private final ColumnVector[] result;
+    private int resultIdx = 0;
 
-    ColumnFinder(TypeDescription schemna, VectorizedRowBatch batch) {
+    ColumnFinder(TypeDescription schema, VectorizedRowBatch batch, List<String> levels) {
       top = batch.cols;
-      if (schemna.getCategory() != TypeDescription.Category.STRUCT) {
+      if (schema.getCategory() == TypeDescription.Category.STRUCT) {
+        result = new ColumnVector[levels.size()];
+      } else {
+        result = new ColumnVector[levels.size() + 1];
         current = top[0];
-        result.add(current);
+        addResult(current);
       }
+    }
+
+    private void addResult(ColumnVector vector) {
+      result[resultIdx] = vector;
+      resultIdx += 1;
     }
 
     @Override
     public void visit(TypeDescription type, int posn) {
       if (current == null) {
         current = top[posn];
+        top = null;
       } else {
         current = navigate(current, posn);
       }
-      result.add(current);
+      addResult(current);
     }
 
     private ColumnVector navigate(ColumnVector parent, int posn) {
@@ -435,9 +455,10 @@ public class ParserUtils {
                                                  StringPosition source,
                                                  boolean isCaseSensitive,
                                                  VectorizedRowBatch batch) {
-    ColumnFinder result = new ColumnFinder(schema, batch);
-    findColumn(removeAcid(schema), source, isCaseSensitive, result);
-    return result.result.toArray(new ColumnVector[result.result.size()]);
+    List<String> names = ParserUtils.splitName(source);
+    ColumnFinder result = new ColumnFinder(schema, batch, names);
+    findColumn(removeAcid(schema), names, isCaseSensitive, result);
+    return result.result;
   }
 
   public static List<TypeDescription> findSubtypeList(TypeDescription schema,
