@@ -86,6 +86,7 @@ public class SchemaEvolution {
     this.isOnlyImplicitConversion = true;
     this.fileSchema = fileSchema;
     this.isAcid = checkAcidSchema(fileSchema);
+    if (null==readerSchema){readerSchema=fileSchema;};
     boolean readerSchemaIsAcid = readerSchema == null ? false : checkAcidSchema(readerSchema);
     this.includeAcidColumns = options.getIncludeAcidColumns();
     this.readerColumnOffset = isAcid && !readerSchemaIsAcid ? acidEventFieldNames.size() : 0;
