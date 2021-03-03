@@ -200,4 +200,24 @@ public class TestOrcFilterContext {
     assertThat(exception.getMessage(), containsString("ListColumnVector"));
     assertThat(exception.getMessage(), containsString("List and Map vectors are not supported"));
   }
+
+  @Test
+  public void testRepeatingVector() {
+    ColumnVector[] vectorBranch = filterContext.findColumnVector("f3.a");
+    vectorBranch[0].noNulls = true;
+    vectorBranch[0].isRepeating = true;
+    vectorBranch[1].noNulls = true;
+    assertTrue(OrcFilterContext.noNulls(vectorBranch));
+    assertFalse(OrcFilterContext.isNull(vectorBranch, 0));
+    assertFalse(OrcFilterContext.isNull(vectorBranch, 1));
+    assertFalse(OrcFilterContext.isNull(vectorBranch, 2));
+
+    vectorBranch[0].noNulls = false;
+    vectorBranch[0].isRepeating = true;
+    vectorBranch[1].noNulls = true;
+    assertFalse(OrcFilterContext.noNulls(vectorBranch));
+    assertTrue(OrcFilterContext.isNull(vectorBranch, 0));
+    assertTrue(OrcFilterContext.isNull(vectorBranch, 1));
+    assertTrue(OrcFilterContext.isNull(vectorBranch, 2));
+  }
 }

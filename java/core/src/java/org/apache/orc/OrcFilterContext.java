@@ -34,10 +34,12 @@ import org.apache.hadoop.hive.ql.io.filter.MutableFilterContext;
 public interface OrcFilterContext extends MutableFilterContext {
   /**
    * Retrieves the column vector that matches the specified name. Allows support for nested struct
-   * references e.g. order.date where data is a field in a struct called order.
+   * references e.g. order.date where date is a field in a struct called order.
    *
    * @param name The column name whose vector should be retrieved
-   * @return The column vector
+   * @return The column vectors from the root to the column name. The array levels match the name
+   * levels with Array[0] referring to the top level, followed by the subsequent levels. For
+   * example of order.date Array[0] refers to order and Array[1] refers to date
    * @throws IllegalArgumentException if the field is not found or if the nested field is not part
    *                                  of a struct
    */
@@ -79,7 +81,7 @@ public interface OrcFilterContext extends MutableFilterContext {
           "Found vector: %s in branch. List and Map vectors are not supported in isNull "
           + "determination", v));
       }
-      if (!v.noNulls && v.isNull[idx]) {
+      if (!v.noNulls && (v.isRepeating || v.isNull[idx])) {
         return true;
       }
     }
