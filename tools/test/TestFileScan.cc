@@ -147,11 +147,11 @@ void checkForError(const std::string& filename, const std::string& error_msg) {
 
 TEST (TestFileScan, testErrorHandling) {
   checkForError(findExample("corrupt/stripe_footer_bad_column_encodings.orc"),
-      "bad number of ColumnEncodings in StripeFooter: expected=6, actual=0");
+      "Bad number of ColumnEncodings in StripeFooter: expected=6, actual=0");
   checkForError(findExample("corrupt/negative_dict_entry_lengths.orc"),
-      "Negative dictionary entry length");
+      "Negative dictionary entry length for column 9");
   checkForError(findExample("corrupt/missing_length_stream_in_string_dict.orc"),
-      "LENGTH stream not found in StringDictionaryColumn");
+      "LENGTH stream not found in column 9 of type string");
   checkForError(findExample("corrupt/missing_blob_stream_in_string_dict.orc"),
-      "DICTIONARY_DATA stream not found in StringDictionaryColumn");
+      "DICTIONARY_DATA stream not found in column 10 of type string");
 }

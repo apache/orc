@@ -173,7 +173,7 @@ namespace orc {
     if (ite != nameIdMap.end()) {
       updateSelectedByTypeId(selectedColumns, ite->second);
     } else {
-      throw ParseError("Invalid column selected " + fieldName);
+      throw ParseError("Invalid column selected: " + fieldName);
     }
   }
 
@@ -333,7 +333,8 @@ namespace orc {
 
         proto::RowIndex rowIndex;
         if (!rowIndex.ParseFromZeroCopyStream(inStream.get())) {
-          throw ParseError("Failed to parse the row index");
+          throw ParseError("Failed to parse the row index from "
+                           + inStream->getName());
         }
 
         rowIndexes[colId] = rowIndex;
@@ -392,14 +393,15 @@ namespace orc {
                          *contents.pool);
     proto::StripeFooter result;
     if (!result.ParseFromZeroCopyStream(pbStream.get())) {
-      throw ParseError(std::string("bad StripeFooter from ") +
-                       pbStream->getName());
+      throw ParseError("Failed to parse StripeFooter from "
+                       + pbStream->getName());
     }
     // Verify StripeFooter in case it's corrupt
     if (result.columns_size() != contents.footer->types_size()) {
       std::stringstream msg;
-      msg << "bad number of ColumnEncodings in StripeFooter: expected="
-          << contents.footer->types_size() << ", actual=" << result.columns_size();
+      msg << "Bad number of ColumnEncodings in StripeFooter: expected="
+          << contents.footer->types_size()
+          << ", actual=" << result.columns_size();
       throw ParseError(msg.str());
     }
     return result;
@@ -567,8 +569,9 @@ namespace orc {
     throw std::range_error("key not found");
   }
 
-  void ReaderImpl::getRowIndexStatistics(const proto::StripeInformation& stripeInfo,
-      uint64_t stripeIndex, const proto::StripeFooter& currentStripeFooter,
+  void ReaderImpl::getRowIndexStatistics(
+      const proto::StripeInformation& stripeInfo, uint64_t stripeIndex,
+      const proto::StripeFooter& currentStripeFooter,
       std::vector<std::vector<proto::ColumnStatistics> >* indexStats) const {
     int num_streams = currentStripeFooter.streams_size();
     uint64_t offset = stripeInfo.offset();
@@ -582,8 +585,8 @@ namespace orc {
           std::stringstream msg;
           msg << "Malformed RowIndex stream meta in stripe " << stripeIndex
               << ": streamOffset=" << offset << ", streamLength=" << length
-              << ", stripeOffset=" << stripeInfo.offset() << ", stripeIndexLength="
-              << stripeInfo.indexlength();
+              << ", stripeOffset=" << stripeInfo.offset()
+              << ", stripeIndexLength=" << stripeInfo.indexlength();
           throw ParseError(msg.str());
         }
         std::unique_ptr<SeekableInputStream> pbStream =
@@ -598,7 +601,8 @@ namespace orc {
 
         proto::RowIndex rowIndex;
         if (!rowIndex.ParseFromZeroCopyStream(pbStream.get())) {
-          throw ParseError("Failed to parse RowIndex from stripe footer");
+          throw ParseError("Failed to parse RowIndex from stripe footer from "
+                           + pbStream->getName());
         }
         int num_entries = rowIndex.entry_size();
         size_t column = static_cast<size_t>(stream.column());
@@ -678,8 +682,8 @@ namespace orc {
     if (fileLength < metadataSize + footerLength + postscriptLength + 1) {
       std::stringstream msg;
       msg << "Invalid Metadata length: fileLength=" << fileLength
-          << ", metadataLength=" << metadataSize << ", footerLength=" << footerLength
-          << ", postscriptLength=" << postscriptLength;
+          << ", metadataLength=" << metadataSize << ", footerLength="
+          << footerLength << ", postscriptLength=" << postscriptLength;
       throw ParseError(msg.str());
     }
     uint64_t metadataStart = fileLength - metadataSize - footerLength - postscriptLength - 1;
@@ -695,7 +699,8 @@ namespace orc {
                            *contents->pool);
       metadata.reset(new proto::Metadata());
       if (!metadata->ParseFromZeroCopyStream(pbStream.get())) {
-        throw ParseError("Failed to parse the metadata");
+        throw ParseError("Failed to parse the metadata from "
+                         + pbStream->getName());
       }
     }
     isMetadataLoaded = true;
@@ -897,9 +902,11 @@ namespace orc {
     if (currentStripeInfo.offset() + currentStripeInfo.indexlength() +
         currentStripeInfo.datalength() + currentStripeInfo.footerlength() >= fileLength) {
       std::stringstream msg;
-      msg << "Malformed StripeInformation at stripe index " << currentStripe << ": fileLength="
-          << fileLength << ", StripeInfo=(offset=" << currentStripeInfo.offset() << ", indexLength="
-          << currentStripeInfo.indexlength() << ", dataLength=" << currentStripeInfo.datalength()
+      msg << "Malformed StripeInformation at stripe index " << currentStripe
+          << ": fileLength=" << fileLength
+          << ", StripeInfo=(offset=" << currentStripeInfo.offset()
+          << ", indexLength=" << currentStripeInfo.indexlength()
+          << ", dataLength=" << currentStripeInfo.datalength()
           << ", footerLength=" << currentStripeInfo.footerlength() << ")";
       throw ParseError(msg.str());
     }
@@ -966,7 +973,10 @@ namespace orc {
     const uint64_t bufferLength = buffer->size();
 
     if (postscriptLength < magicLength || bufferLength < magicLength) {
-      throw ParseError("Invalid ORC postscript length");
+      std::stringstream msg;
+      msg << "Invalid ORC postscript length: read postscript length ="
+          << postscriptLength << ", buffer length = " << bufferLength;
+      throw ParseError(msg.str());
     }
     const char* magicStart = bufferStart + bufferLength - 1 - magicLength;
 
@@ -976,10 +986,8 @@ namespace orc {
       // Only files written by Hive 0.11.0 don't have the tail ORC string.
       std::unique_ptr<char[]> frontBuffer( new char[magicLength] );
       stream->read(frontBuffer.get(), magicLength, 0);
-      bool foundMatch = memcmp(frontBuffer.get(), MAGIC.c_str(), magicLength) == 0;
-
-      if (!foundMatch) {
-        throw ParseError("Not an ORC file");
+      if (memcmp(frontBuffer.get(), MAGIC.c_str(), magicLength) != 0) {
+        throw ParseError("Not an ORC file (magic string not found)");
       }
     }
   }
@@ -1002,14 +1010,14 @@ namespace orc {
       std::unique_ptr<proto::PostScript>(new proto::PostScript());
     if (readSize < 1 + postscriptSize) {
       std::stringstream msg;
-      msg << "Invalid ORC postscript length: " << postscriptSize << ", file length = "
-          << stream->getLength();
+      msg << "Invalid ORC postscript length: " << postscriptSize
+          << ", file length = " << stream->getLength();
       throw ParseError(msg.str());
     }
     if (!postscript->ParseFromArray(ptr + readSize - 1 - postscriptSize,
                                    static_cast<int>(postscriptSize))) {
-      throw ParseError("Failed to parse the postscript from " +
-                       stream->getName());
+      throw ParseError("Failed to parse the postscript from "
+                       + stream->getName());
     }
     return REDUNDANT_MOVE(postscript);
   }
@@ -1080,8 +1088,7 @@ namespace orc {
     std::unique_ptr<proto::Footer> footer =
       std::unique_ptr<proto::Footer>(new proto::Footer());
     if (!footer->ParseFromZeroCopyStream(pbStream.get())) {
-      throw ParseError("Failed to parse the footer from " +
-                       stream->getName());
+      throw ParseError("Failed to parse the footer from " + stream->getName());
     }
 
     checkProtoTypes(*footer);
@@ -1114,7 +1121,9 @@ namespace orc {
       //read last bytes into buffer to get PostScript
       uint64_t readSize = std::min(fileLength, DIRECTORY_SIZE_GUESS);
       if (readSize < 4) {
-        throw ParseError("File size too small");
+        std::stringstream msg;
+        msg << "File size too small: " << readSize << " bytes.";
+        throw ParseError(msg.str());
       }
       std::unique_ptr<DataBuffer<char>> buffer( new DataBuffer<char>(*contents->pool, readSize) );
       stream->read(buffer->data(), readSize, fileLength - readSize);
@@ -1186,7 +1195,8 @@ namespace orc {
 
         proto::BloomFilterIndex pbBFIndex;
         if (!pbBFIndex.ParseFromZeroCopyStream(pbStream.get())) {
-          throw ParseError("Failed to parse BloomFilterIndex");
+          throw ParseError("Failed to parse BloomFilterIndex from "
+                           + pbStream->getName());
         }
 
         BloomFilterIndex bfIndex;
