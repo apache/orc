@@ -977,6 +977,7 @@ namespace orc {
     } while (sargsApplier && currentStripe < lastStripe);
 
     if (currentStripe < lastStripe) {
+      // get writer timezone info from stripe footer to help understand timestamp values.
       const Timezone& writerTimezone =
         currentStripeFooter.has_writertimezone() ?
           getTimezoneByName(currentStripeFooter.writertimezone()) :
@@ -989,7 +990,7 @@ namespace orc {
       reader = buildReader(*contents->schema, stripeStreams);
 
       if (sargsApplier) {
-        // move to the 1st matching row group
+        // move to the 1st selected row group when PPD is enabled.
         currentRowInStripe = advanceToNextRowGroup(currentRowInStripe,
                                                    rowsInCurrentStripe,
                                                    footer->rowindexstride(),
@@ -1070,6 +1071,9 @@ namespace orc {
                                            uint64_t rowsInCurrentStripe,
                                            uint64_t rowIndexStride,
                                            const std::vector<bool>& includedRowGroups) {
+    // In case of PPD, batch size should be aware of row group boundaries. If only a subset of row
+    // groups are selected then marker position is set to the end of range (subset of row groups
+    // within stripe).
     uint64_t endRowInStripe = rowsInCurrentStripe;
     if (!includedRowGroups.empty()) {
       endRowInStripe = currentRowInStripe;

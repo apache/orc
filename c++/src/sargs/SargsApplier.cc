@@ -26,13 +26,7 @@ namespace orc {
                                     const std::string& colName) {
     for (uint64_t i = 0; i != type.getSubtypeCount(); ++i) {
       if (type.getFieldName(i) == colName) {
-        if (type.getKind() == CHAR || type.getKind() == VARCHAR) {
-          ///FIXME: disable PPD for char and varchar types as their rules
-          // vary among different engines.
-          return INVALID_COLUMN_ID;
-        } else {
-          return type.getSubtype(i)->getColumnId();
-        }
+        return type.getSubtype(i)->getColumnId();
       } else {
         uint64_t ret = findColumn(*type.getSubtype(i), colName);
         if (ret != INVALID_COLUMN_ID) {
