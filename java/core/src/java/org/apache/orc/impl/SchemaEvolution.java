@@ -85,58 +85,47 @@ public class SchemaEvolution {
     this.hasConversion = false;
     this.isOnlyImplicitConversion = true;
     this.fileSchema = fileSchema;
+    // Use file schema when reader schema not provided
+    readerSchema =  readerSchema == null ? this.fileSchema : readerSchema;
     this.isAcid = checkAcidSchema(fileSchema);
-    boolean readerSchemaIsAcid = readerSchema == null ? false : checkAcidSchema(readerSchema);
+    boolean readerSchemaIsAcid = checkAcidSchema(readerSchema);
     this.includeAcidColumns = options.getIncludeAcidColumns();
     this.readerColumnOffset = isAcid && !readerSchemaIsAcid ? acidEventFieldNames.size() : 0;
-    if (readerSchema != null) {
-      if (isAcid && !readerSchemaIsAcid) {
-        this.readerSchema = createEventSchema(readerSchema);
-      } else {
-        this.readerSchema = readerSchema;
-      }
-      if (readerIncluded != null &&
-          readerIncluded.length + readerColumnOffset !=
-            this.readerSchema.getMaximumId() + 1) {
-        throw new IllegalArgumentException("Include vector the wrong length: "
-            + this.readerSchema.toJson() + " with include length "
-            + readerIncluded.length);
-      }
-      this.readerFileTypes =
-        new TypeDescription[this.readerSchema.getMaximumId() + 1];
-      int positionalLevels = 0;
-      if (options.getForcePositionalEvolution()) {
-        positionalLevels = isAcid ? 2 : options.getPositionalEvolutionLevel();
-      } else if (!hasColumnNames(isAcid? getBaseRow(fileSchema) : fileSchema)) {
-        if (!this.fileSchema.equals(this.readerSchema)) {
-          if (!allowMissingMetadata) {
-            throw new RuntimeException("Found that schema metadata is missing"
-                + " from file. This is likely caused by"
-                + " a writer earlier than HIVE-4243. Will"
-                + " not try to reconcile schemas");
-          } else {
-            LOG.warn("Column names are missing from this file. This is"
-                + " caused by a writer earlier than HIVE-4243. The reader will"
-                + " reconcile schemas based on index. File type: " +
-                this.fileSchema + ", reader type: " + this.readerSchema);
-            positionalLevels = isAcid ? 2 : options.getPositionalEvolutionLevel();
-          }
+    // Create type conversion using reader schema
+    if (isAcid && !readerSchemaIsAcid) {
+      this.readerSchema = createEventSchema(readerSchema);
+    } else {
+      this.readerSchema = readerSchema;
+    }
+    if (readerIncluded != null &&
+        readerIncluded.length + readerColumnOffset !=
+          this.readerSchema.getMaximumId() + 1) {
+      throw new IllegalArgumentException("Include vector the wrong length: "
+          + this.readerSchema.toJson() + " with include length "
+          + readerIncluded.length);
+    }
+    this.readerFileTypes =
+      new TypeDescription[this.readerSchema.getMaximumId() + 1];
+    int positionalLevels = 0;
+    if (options.getForcePositionalEvolution()) {
+      positionalLevels = isAcid ? 2 : options.getPositionalEvolutionLevel();
+    } else if (!hasColumnNames(isAcid? getBaseRow(fileSchema) : fileSchema)) {
+      if (!this.fileSchema.equals(this.readerSchema)) {
+        if (!allowMissingMetadata) {
+          throw new RuntimeException("Found that schema metadata is missing"
+              + " from file. This is likely caused by"
+              + " a writer earlier than HIVE-4243. Will"
+              + " not try to reconcile schemas");
+        } else {
+          LOG.warn("Column names are missing from this file. This is"
+              + " caused by a writer earlier than HIVE-4243. The reader will"
+              + " reconcile schemas based on index. File type: " +
+              this.fileSchema + ", reader type: " + this.readerSchema);
+          positionalLevels = isAcid ? 2 : options.getPositionalEvolutionLevel();
         }
       }
-      buildConversion(fileSchema, this.readerSchema, positionalLevels);
-    } else {
-      this.readerSchema = fileSchema;
-      this.readerFileTypes =
-        new TypeDescription[this.readerSchema.getMaximumId() + 1];
-      if (readerIncluded != null &&
-          readerIncluded.length + readerColumnOffset !=
-            this.readerSchema.getMaximumId() + 1) {
-        throw new IllegalArgumentException("Include vector the wrong length: "
-            + this.readerSchema.toJson() + " with include length "
-            + readerIncluded.length);
-      }
-      buildIdentityConversion(this.readerSchema);
     }
+    buildConversion(fileSchema, this.readerSchema, positionalLevels);
     this.positionalColumns = options.getForcePositionalEvolution();
     this.ppdSafeConversion = populatePpdSafeConversion();
   }
@@ -572,24 +561,6 @@ public class SchemaEvolution {
                         " type %s (%d) to reader type %s (%d)",
                         fileType.toString(), fileType.getId(),
                         readerType.toString(), readerType.getId()));
-    }
-  }
-
-  void buildIdentityConversion(TypeDescription readerType) {
-    int id = readerType.getId();
-    if (!includeReaderColumn(id)) {
-      return;
-    }
-    if (readerFileTypes[id] != null) {
-      throw new RuntimeException("reader to file type entry already assigned");
-    }
-    readerFileTypes[id] = readerType;
-    fileIncluded[id] = true;
-    List<TypeDescription> children = readerType.getChildren();
-    if (children != null) {
-      for (TypeDescription child : children) {
-        buildIdentityConversion(child);
-      }
     }
   }
 
