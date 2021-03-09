@@ -549,12 +549,6 @@ namespace orc {
      */
     virtual void seekToRow(uint64_t rowNumber) = 0;
 
-    /**
-     * If PPD is enabled, returns true and store number of selected RGs and
-     * number of evaluated RGs into the stats pair; otherwise returns false.
-     */
-    virtual bool getPPDStats(std::pair<uint64_t, uint64_t>& stats) const = 0;
-
   };
 }
 

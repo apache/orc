@@ -418,14 +418,6 @@ namespace orc {
     return forcedScaleOnHive11Decimal;
   }
 
-  bool RowReaderImpl::getPPDStats(std::pair<uint64_t, uint64_t>& stats) const {
-    if (sargsApplier) {
-      stats = sargsApplier->getStats();
-      return true;
-    }
-    return false;
-  }
-
   proto::StripeFooter getStripeFooter(const proto::StripeInformation& info,
                                       const FileContents& contents) {
     uint64_t stripeFooterStart = info.offset() + info.indexlength() +
