@@ -17,6 +17,7 @@
  */
 
 #include "SargsApplier.hh"
+#include <numeric>
 
 namespace orc {
 
@@ -43,7 +44,8 @@ namespace orc {
                              : mType(type)
                              , mSearchArgument(searchArgument)
                              , mRowIndexStride(rowIndexStride)
-                             , mWriterVersion(writerVersion) {
+                             , mWriterVersion(writerVersion)
+                             , mStats(0, 0) {
     const SearchArgumentImpl * sargs =
       dynamic_cast<const SearchArgumentImpl *>(mSearchArgument);
 
@@ -105,6 +107,12 @@ namespace orc {
       mHasSelected = mHasSelected || mRowGroups[rowGroup];
       mHasSkipped = mHasSkipped || (!mRowGroups[rowGroup]);
     }
+
+    // update stats
+    mStats.first = std::accumulate(
+      mRowGroups.cbegin(), mRowGroups.cend(), mStats.first,
+      [](bool rg, uint64_t s) { return rg ? 1 : 0 + s; });
+    mStats.second += groupsInStripe;
 
     return mHasSelected;
   }

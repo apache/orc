@@ -76,6 +76,10 @@ namespace orc {
       return false;
     }
 
+    std::pair<uint64_t, uint64_t> getStats() const {
+      return mStats;
+    }
+
   private:
     friend class TestSargsApplier_findColumnTest_Test;
     static uint64_t findColumn(const Type& type, const std::string& colName);
@@ -93,6 +97,8 @@ namespace orc {
     uint64_t mTotalRowsInStripe;
     bool mHasSelected;
     bool mHasSkipped;
+    // keep stats of selected RGs and evaluated RGs
+    std::pair<uint64_t, uint64_t> mStats;
   };
 
 }

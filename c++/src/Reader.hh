@@ -19,13 +19,14 @@
 #ifndef ORC_READER_IMPL_HH
 #define ORC_READER_IMPL_HH
 
+#include "orc/Exceptions.hh"
 #include "orc/Int128.hh"
 #include "orc/OrcFile.hh"
 #include "orc/Reader.hh"
 
 #include "ColumnReader.hh"
-#include "orc/Exceptions.hh"
 #include "RLE.hh"
+#include "sargs/SargsApplier.hh"
 #include "TypeImpl.hh"
 
 namespace orc {
@@ -142,6 +143,30 @@ namespace orc {
 
     // row index of current stripe with column id as the key
     std::unordered_map<uint64_t, proto::RowIndex> rowIndexes;
+    std::map<uint32_t, BloomFilterIndex> bloomFilterIndex;
+    std::shared_ptr<SearchArgument> sargs;
+    std::unique_ptr<SargsApplier> sargsApplier;
+
+    // load stripe index if not done so
+    void loadStripeIndex();
+
+    // In case of PPD, batch size should be aware of row group boundaries.
+    // If only a subset of row groups are selected then the next read should
+    // stop at the end of selected range.
+    static uint64_t computeBatchSize(uint64_t requestedSize,
+                                     uint64_t currentRowInStripe,
+                                     uint64_t rowsInCurrentStripe,
+                                     uint64_t rowIndexStride,
+                                     const std::vector<bool>& includedRowGroups);
+
+    // Skip non-selected rows
+    static uint64_t advanceToNextRowGroup(uint64_t currentRowInStripe,
+                                          uint64_t rowsInCurrentStripe,
+                                          uint64_t rowIndexStride,
+                                          const std::vector<bool>& includedRowGroups);
+
+    friend class TestRowReader_advanceToNextRowGroup_Test;
+    friend class TestRowReader_computeBatchSize_Test;
 
     /**
      * Seek to the start of a row group in the current stripe
@@ -159,7 +184,6 @@ namespace orc {
                   const RowReaderOptions& options);
 
     // Select the columns from the options object
-    void updateSelected();
     const std::vector<bool> getSelectedColumns() const override;
 
     const Type& getSelectedType() const override;
