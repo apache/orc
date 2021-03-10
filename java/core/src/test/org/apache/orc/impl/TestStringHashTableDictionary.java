@@ -29,7 +29,7 @@ public class TestStringHashTableDictionary {
    * A extension for {@link StringHashTableDictionary} for testing purpose by overwriting the hash function.
    *
    */
-  private class SimpleHashDictionary extends StringHashTableDictionary {
+  private static class SimpleHashDictionary extends StringHashTableDictionary {
     public SimpleHashDictionary(int initialCapacity) {
       super(initialCapacity);
     }
