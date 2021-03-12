@@ -17,8 +17,11 @@
  */
 package org.apache.orc.impl.reader.tree;
 
-import java.io.IOException;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.orc.impl.PositionProvider;
+import org.apache.orc.impl.reader.StripePlanner;
+
+import java.io.IOException;
 
 public class PrimitiveBatchReader extends BatchReader {
 
@@ -29,9 +32,21 @@ public class PrimitiveBatchReader extends BatchReader {
   @Override
   public void nextBatch(VectorizedRowBatch batch,
                         int batchSize) throws IOException {
-  batch.cols[0].reset();
-  batch.cols[0].ensureSize(batchSize, false);
-  rootType.nextVector(batch.cols[0], null, batchSize, batch);
-  resetBatch(batch, batchSize);
+    batch.cols[0].reset();
+    batch.cols[0].ensureSize(batchSize, false);
+    rootType.nextVector(batch.cols[0], null, batchSize, batch);
+    resetBatch(batch, batchSize);
+  }
+
+  public void startStripe(StripePlanner planner) throws IOException {
+    rootType.startStripe(planner);
+  }
+
+  public void skipRows(long rows) throws IOException {
+    rootType.skipRows(rows);
+  }
+
+  public void seek(PositionProvider[] index) throws IOException {
+    rootType.seek(index);
   }
 }
