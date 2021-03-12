@@ -397,13 +397,14 @@ public abstract class InStream extends InputStream {
     }
   }
 
-  private static class CompressedStream extends InStream {
+  static class CompressedStream extends InStream {
     private final int bufferSize;
     private ByteBuffer uncompressed;
     private final CompressionCodec codec;
     protected ByteBuffer compressed;
     protected DiskRangeList currentRange;
     private boolean isUncompressedOriginal;
+    protected long currentCompressedStart;
 
     /**
      * Create the stream without resetting the input stream.
@@ -471,6 +472,7 @@ public abstract class InStream extends InputStream {
     }
 
     private void readHeader() throws IOException {
+      currentCompressedStart = compressed.position();
       int b0 = readHeaderByte();
       int b1 = readHeaderByte();
       int b2 = readHeaderByte();
@@ -488,11 +490,14 @@ public abstract class InStream extends InputStream {
         isUncompressedOriginal = true;
       } else {
         if (isUncompressedOriginal) {
+          // Since the previous chunk was uncompressed, allocate the buffer and set original false
           allocateForUncompressed(bufferSize, slice.isDirect());
           isUncompressedOriginal = false;
         } else if (uncompressed == null) {
+          // If the buffer was not allocated then allocate the same
           allocateForUncompressed(bufferSize, slice.isDirect());
         } else {
+          // Since the buffer is already allocated just clear the same
           uncompressed.clear();
         }
         codec.decompress(slice, uncompressed);
@@ -551,15 +556,20 @@ public abstract class InStream extends InputStream {
 
     @Override
     public void seek(PositionProvider index) throws IOException {
-      seek(index.getNext());
+      boolean seeked = seek(index.getNext());
       long uncompressedBytes = index.getNext();
-      if (uncompressedBytes != 0) {
-        readHeader();
-        uncompressed.position(uncompressed.position() +
-                              (int) uncompressedBytes);
-      } else if (uncompressed != null) {
-        // mark the uncompressed buffer as done
-        uncompressed.position(uncompressed.limit());
+      if (!seeked && uncompressed != null) {
+        // Only reposition uncompressed
+        uncompressed.position((int) uncompressedBytes);
+      } else {
+        if (uncompressedBytes != 0) {
+          readHeader();
+          uncompressed.position(uncompressed.position() +
+                                (int) uncompressedBytes);
+        } else if (uncompressed != null) {
+          // mark the uncompressed buffer as done
+          uncompressed.position(uncompressed.limit());
+        }
       }
     }
 
@@ -621,9 +631,20 @@ public abstract class InStream extends InputStream {
           chunkLength + " bytes");
     }
 
-    void seek(long desired) throws IOException {
+    /**
+     * Seek to the desired chunk based on the input position.
+     *
+     * @param desired position in the compressed stream
+     * @return Indicates whether a seek was performed or not
+     * @throws IOException when seeking outside the stream bounds
+     */
+    boolean seek(long desired) throws IOException {
       if (desired == 0 && bytes == null) {
-        return;
+        return false;
+      }
+      if (desired == currentCompressedStart) {
+        // Header already at the required position
+        return false;
       }
       long posn = desired + offset;
       for (DiskRangeList range = bytes; range != null; range = range.next) {
@@ -632,7 +653,7 @@ public abstract class InStream extends InputStream {
               posn < range.getEnd())) {
           position = desired;
           setCurrent(range, true);
-          return;
+          return true;
         }
       }
       throw new IOException("Seek outside of data in " + this + " to " + desired);

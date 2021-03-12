@@ -19,6 +19,9 @@
 package org.apache.orc.impl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.DataInputStream;
@@ -434,8 +437,30 @@ public class TestInStream {
       int x = in.read();
       assertEquals(i & 0xff, x);
     }
+
+    // Forward seek test
+    int seeksPerformed = 0;
+    for(int i=0; i < 1024; ++i) {
+      long pos = positions[i].getNext();
+      positions[i].reset();
+      ByteBuffer c = ((InStream.CompressedStream) in).compressed;
+      if (pos == ((InStream.CompressedStream) in).currentCompressedStart) {
+        // Should have the same ByteBuffer if no seek has taken place
+        in.seek(positions[i]);
+        assertEquals(c, ((InStream.CompressedStream) in).compressed);
+      } else {
+        seeksPerformed += 1;
+        in.seek(positions[i]);
+        assertNotEquals(c, ((InStream.CompressedStream) in).compressed);
+      }
+      positions[i].reset();
+      assertEquals(i & 0xff, in.read());
+    }
+    assertEquals(1, seeksPerformed);
+
     assertEquals(0, in.available());
     for(int i=1023; i >= 0; --i) {
+      positions[i].reset();
       in.seek(positions[i]);
       assertEquals(i & 0xff, in.read());
     }
