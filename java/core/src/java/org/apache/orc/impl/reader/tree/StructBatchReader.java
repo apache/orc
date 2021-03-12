@@ -20,11 +20,18 @@ package org.apache.orc.impl.reader.tree;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.impl.OrcFilterContextImpl;
+import org.apache.orc.impl.PositionProvider;
 import org.apache.orc.impl.TreeReaderFactory;
+import org.apache.orc.impl.reader.StripePlanner;
 
 import java.io.IOException;
 import java.util.Set;
 
+/**
+ * Handles the Struct rootType for batch handling. The handling assumes that the root
+ * {@link org.apache.orc.impl.TreeReaderFactory.StructTreeReader} has no nulls, this is required as
+ * the {@link VectorizedRowBatch} does not represent the root Struct as a vector.
+ */
 public class StructBatchReader extends BatchReader {
   // The reader context including row-filtering details
   private final TreeReaderFactory.Context context;
@@ -74,6 +81,33 @@ public class StructBatchReader extends BatchReader {
       if (!earlyExpandCols.contains(children[i].getColumnId())) {
         readBatchColumn(batch, children, batchSize, i);
       }
+    }
+  }
+
+  @Override
+  public void startStripe(StripePlanner planner) throws IOException {
+    TypeReader[] children = ((TreeReaderFactory.StructTreeReader) rootType).fields;
+    for (int i = 0; i < children.length &&
+                    (vectorColumnCount == -1 || i < vectorColumnCount); ++i) {
+      children[i].startStripe(planner);
+    }
+  }
+
+  @Override
+  public void skipRows(long rows) throws IOException {
+    TypeReader[] children = ((TreeReaderFactory.StructTreeReader) rootType).fields;
+    for (int i = 0; i < children.length &&
+                    (vectorColumnCount == -1 || i < vectorColumnCount); ++i) {
+      children[i].skipRows(rows);
+    }
+  }
+
+  @Override
+  public void seek(PositionProvider[] index) throws IOException {
+    TypeReader[] children = ((TreeReaderFactory.StructTreeReader) rootType).fields;
+    for (int i = 0; i < children.length &&
+                    (vectorColumnCount == -1 || i < vectorColumnCount); ++i) {
+      children[i].seek(index);
     }
   }
 }
