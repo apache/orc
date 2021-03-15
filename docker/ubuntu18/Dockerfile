@@ -19,6 +19,7 @@
 
 FROM ubuntu:18.04
 LABEL maintainer="Apache ORC project <dev@orc.apache.org>"
+ARG jdk=8
 
 RUN ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
 RUN apt-get update
@@ -32,9 +33,9 @@ RUN apt-get install -y \
   make \
   curl \
   maven \
-  openjdk-8-jdk \
+  openjdk-${jdk}-jdk \
   tzdata
-RUN update-java-alternatives --set java-1.8.0-openjdk-amd64
+RUN update-java-alternatives --set java-1.${jdk}.0-openjdk-amd64
 
 WORKDIR /root
 VOLUME /root/.m2/repository

@@ -19,9 +19,23 @@
 
 FROM debian:9
 LABEL maintainer="Apache ORC project <dev@orc.apache.org>"
+ARG jdk=8
 
 RUN apt-get update
-RUN apt-get install -y \
+RUN if [ "${jdk}" = 11 ] ; then \
+  apt-get install -y \
+  cmake \
+  gcc \
+  g++ \
+  git \
+  libsasl2-dev \
+  libssl-dev \
+  openjdk-11-jdk \
+  make \
+  curl \
+  maven \
+  ; else \
+  apt-get install -y \
   cmake \
   gcc \
   g++ \
@@ -31,7 +45,8 @@ RUN apt-get install -y \
   openjdk-8-jdk \
   make \
   curl \
-  maven
+  maven \
+  ; fi
 
 WORKDIR /root
 

@@ -19,9 +19,31 @@
 
 FROM centos:8
 LABEL maintainer="Apache ORC project <dev@orc.apache.org>"
+ARG jdk=8
 
 RUN yum check-update || true
-RUN yum install -y \
+RUN if [ "${jdk}" = 11 ] ; then \
+  yum install -y \
+  cmake \
+  curl-devel \
+  cyrus-sasl-devel \
+  expat-devel \
+  gcc \
+  gcc-c++ \
+  gettext-devel \
+  git \
+  java-11-openjdk \
+  java-11-openjdk-devel \
+  libtool \
+  make \
+  maven \
+  openssl-devel \
+  tar \
+  wget \
+  which \
+  zlib-devel \
+  ; else \
+  yum install -y \
   cmake \
   curl-devel \
   cyrus-sasl-devel \
@@ -39,7 +61,8 @@ RUN yum install -y \
   tar \
   wget \
   which \
-  zlib-devel
+  zlib-devel \
+  ; fi
 
 ENV TZ=America/Los_Angeles
 WORKDIR /root

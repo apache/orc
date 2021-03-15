@@ -19,10 +19,32 @@
 
 FROM centos:7
 LABEL maintainer="Apache ORC project <dev@orc.apache.org>"
+ARG jdk=8
 
 RUN yum check-update || true
 RUN yum -y install epel-release
-RUN yum install -y \
+RUN if [ "${jdk}" = 11 ] ; then \
+  yum install -y \
+  cmake3 \
+  curl-devel \
+  cyrus-sasl-devel \
+  expat-devel \
+  gcc \
+  gcc-c++ \
+  gettext-devel \
+  git \
+  java-11-openjdk \
+  java-11-openjdk-devel \
+  libtool \
+  make \
+  maven \
+  openssl-devel \
+  tar \
+  wget \
+  which \
+  zlib-devel \
+  ; else \
+  yum install -y \
   cmake3 \
   curl-devel \
   cyrus-sasl-devel \
@@ -40,7 +62,9 @@ RUN yum install -y \
   tar \
   wget \
   which \
-  zlib-devel
+  zlib-devel \
+  ; fi
+
 # Our scripts assume that cmake is called 'cmake'
 RUN ln -s /usr/bin/cmake3 /usr/bin/cmake
 
