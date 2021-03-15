@@ -21,7 +21,7 @@ The scripts are:
 A base image for each OS is built using:
 
     cd docker/$os
-    docker build -t orc-$os .
+    docker build -t "orc-$os-jdk8" --build-arg jdk=8 . OR docker build -t "orc-$os-jdk11" --build-arg jdk=11 .
 
 ## Clean up
 
