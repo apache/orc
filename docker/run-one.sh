@@ -44,8 +44,14 @@ else
      OPTS=""
      ;;
   esac
-  docker run $VOLUME "orc-$OS" /bin/bash -c \
-	 "$CLONE && $MAKEDIR && cmake $OPTS .. && make package test-out" \
-      || failure
+
+  for jdk in 8 11; do
+   if [[ "$OS" = "debian10" && "$jdk" = "8" ]] || [[ "$OS" = "debian9" && "$jdk" = "11" ]] || [[ "$OS" = "ubuntu16" && "$jdk" = "11" ]]; then
+      continue
+    fi
+   docker run $VOLUME "orc-$OS-jdk${jdk}" /bin/bash -c \
+      "$CLONE && $MAKEDIR && cmake $OPTS .. && make package test-out" \
+         || failure
+   done
 fi
 echo "Finished $OS at $(date)"

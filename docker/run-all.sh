@@ -32,9 +32,15 @@ function failure {
 rm -f logs/pids.txt logs/*.log
 
 start=`date`
-for os in `cat os-list.txt`; do
-  echo "Building $os"
-  ( cd $os && docker build -t "orc-$os" . ) > logs/$os-build.log 2>&1 || exit 1
+for jdk in 8 11; do
+    for os in `cat os-list.txt`; do
+        if [[ "$os" = "debian10" && "$jdk" = "8" ]] || [[ "$os" = "debian9" && "$jdk" = "11" ]] || [[ "$os" = "ubuntu16" && "$jdk" = "11" ]]; then
+            echo "Skip building $os with $jdk"
+            continue
+        fi
+        echo "Building $os for $jdk"
+        ( cd $os && docker build -t "orc-$os-jdk${jdk}" --build-arg jdk=$jdk . ) > logs/${os}-jdk${jdk}-build.log 2>&1 || exit 1
+    done
 done
 testStart=`date`
 
