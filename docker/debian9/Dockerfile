@@ -18,7 +18,7 @@
 #
 
 FROM debian:9
-MAINTAINER Apache ORC project <dev@orc.apache.org>
+LABEL maintainer="Apache ORC project <dev@orc.apache.org>"
 
 RUN apt-get update
 RUN apt-get install -y \
