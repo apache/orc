@@ -18,7 +18,7 @@
 #
 
 FROM centos:7
-MAINTAINER Apache ORC project <dev@orc.apache.org>
+LABEL maintainer="Apache ORC project <dev@orc.apache.org>"
 
 RUN yum check-update || true
 RUN yum -y install epel-release
