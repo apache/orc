@@ -18,7 +18,7 @@
 #
 
 FROM debian:8
-MAINTAINER Apache ORC project <dev@orc.apache.org>
+LABEL maintainer="Apache ORC project <dev@orc.apache.org>"
 
 ADD sources.list apt.conf /etc/apt/
 
