@@ -34,7 +34,7 @@ rm -f logs/pids.txt logs/*.log
 start=`date`
 for jdk in 8 11; do
     for os in `cat os-list.txt`; do
-        echo "Building $os"
+        echo "Building $os for $jdk"
         ( cd $os && docker build -t "orc-$os-jdk${jdk}" --build-arg jdk=$jdk . ) > logs/${os}-jdk${jdk}-build.log 2>&1 || exit 1
     done
 done
