@@ -76,6 +76,10 @@ else ()
   set(SNAPPY_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${SNAPPY_HOME}
                         -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_LIBDIR=lib)
 
+  if (BUILD_POSITION_INDEPENDENT_LIB)
+    set(SNAPPY_CMAKE_ARGS ${SNAPPY_CMAKE_ARGS} -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
+  endif ()
+
   ExternalProject_Add (snappy_ep
     URL "https://github.com/google/snappy/archive/${SNAPPY_VERSION}.tar.gz"
     CMAKE_ARGS ${SNAPPY_CMAKE_ARGS}
@@ -123,6 +127,10 @@ else ()
   set(ZLIB_STATIC_LIB "${ZLIB_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${ZLIB_STATIC_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}")
   set(ZLIB_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${ZLIB_PREFIX}
                       -DBUILD_SHARED_LIBS=OFF)
+
+  if (BUILD_POSITION_INDEPENDENT_LIB)
+    set(ZLIB_CMAKE_ARGS ${ZLIB_CMAKE_ARGS} -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
+  endif ()
 
   ExternalProject_Add (zlib_ep
     URL "http://zlib.net/fossils/zlib-${ZLIB_VERSION}.tar.gz"
@@ -172,6 +180,10 @@ else ()
   set(ZSTD_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${ZSTD_HOME}
           -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_LIBDIR=lib)
 
+  if (BUILD_POSITION_INDEPENDENT_LIB)
+    set(ZSTD_CMAKE_ARGS ${ZSTD_CMAKE_ARGS} -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
+  endif ()
+
   if (CMAKE_VERSION VERSION_GREATER "3.7")
     set(ZSTD_CONFIGURE SOURCE_SUBDIR "build/cmake" CMAKE_ARGS ${ZSTD_CMAKE_ARGS})
   else()
@@ -219,6 +231,10 @@ else ()
   set(LZ4_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${LZ4_PREFIX}
                      -DCMAKE_INSTALL_LIBDIR=lib
                      -DBUILD_SHARED_LIBS=OFF)
+
+  if (BUILD_POSITION_INDEPENDENT_LIB)
+    set(LZ4_CMAKE_ARGS ${LZ4_CMAKE_ARGS} -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
+  endif ()
 
   if (CMAKE_VERSION VERSION_GREATER "3.7")
     set(LZ4_CONFIGURE SOURCE_SUBDIR "contrib/cmake_unofficial" CMAKE_ARGS ${LZ4_CMAKE_ARGS})
@@ -291,6 +307,10 @@ if (BUILD_CPP_TESTS)
                          -Dgtest_force_shared_crt=ON
                          -DCMAKE_CXX_FLAGS=${GTEST_CMAKE_CXX_FLAGS})
 
+  if (BUILD_POSITION_INDEPENDENT_LIB)
+    set(GTEST_CMAKE_ARGS ${GTEST_CMAKE_ARGS} -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
+  endif ()
+
     ExternalProject_Add(googletest_ep
       BUILD_IN_SOURCE 1
       URL ${GTEST_SRC_URL}
@@ -341,6 +361,11 @@ else ()
                           -DCMAKE_INSTALL_LIBDIR=lib
                           -DBUILD_SHARED_LIBS=OFF
                           -Dprotobuf_BUILD_TESTS=OFF)
+
+  if (BUILD_POSITION_INDEPENDENT_LIB)
+    set(PROTOBUF_CMAKE_ARGS ${PROTOBUF_CMAKE_ARGS} -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
+  endif ()
+
   if (MSVC)
     set(PROTOBUF_STATIC_LIB_PREFIX lib)
     list(APPEND PROTOBUF_CMAKE_ARGS -Dprotobuf_MSVC_STATIC_RUNTIME=OFF
@@ -425,6 +450,10 @@ if(BUILD_LIBHDFSPP)
                                 -DBUILD_SHARED_LIBS=OFF
                                 -DHDFSPP_LIBRARY_ONLY=TRUE
                                 -DBUILD_SHARED_HDFSPP=FALSE)
+
+      if (BUILD_POSITION_INDEPENDENT_LIB)
+        set(LIBHDFSPP_CMAKE_ARGS ${LIBHDFSPP_CMAKE_ARGS} -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
+      endif ()
 
       ExternalProject_Add (libhdfspp_ep
         DEPENDS orc::protobuf
