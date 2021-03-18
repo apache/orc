@@ -52,6 +52,10 @@ option(INSTALL_VENDORED_LIBS
 option(STOP_BUILD_ON_WARNING
     "Fail the build on C++ warnings"
     ON)
+  
+option(BUILD_POSITION_INDEPENDENT_LIB
+    "Compile static libraries with position independent code"
+    OFF)
 
 # Make sure that a build type is selected
 if (NOT CMAKE_BUILD_TYPE)
@@ -68,6 +72,10 @@ SET(CPACK_PACKAGE_CONTACT "Apache ORC <dev@orc.apache.org>")
 
 INCLUDE(CPack)
 INCLUDE(ExternalProject)
+
+if (BUILD_POSITION_INDEPENDENT_LIB)
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif ()
 
 #
 # Compiler specific flags
