@@ -16,15 +16,17 @@
 # limitations under the License.
 
 start=`date`
-for jdk in 8 11; do
-  for os in `cat os-list.txt`; do
-    if [[ "$os" = "debian10" && "$jdk" = "8" ]] || [[ "$os" = "debian9" && "$jdk" = "11" ]] || [[ "$os" = "ubuntu16" && "$jdk" = "11" ]]; then
-      echo "Skip an initialize $os with $jdk"
-      continue
-    fi
-    echo "Re-initialize $os with $jdk"
-    ( cd $os && docker build --no-cache -t "orc-${os}-jdk${jdk}" --build-arg jdk=${jdk} . )
-  done
+for build in `cat os-list.txt`; do
+  echo "Re-initialize $build"
+  OS=$(echo "$build" | cut -d '_' -f1)
+  REST=$(echo "$build" | cut -d '_' -f2- -s)
+  if [ -z "$REST" ]; then
+    ARGS=""
+  else
+    ARGS=$(echo "$REST" | sed -e 's/^/--build-arg /' -e 's/_/ --build-arg /g')
+  fi
+  TAG=$(echo "orc-$build" | sed -e 's/=/-/g')
+  ( cd $OS && docker build --no-cache -t "$TAG" $ARGS . )
 done
 echo "Start: $start"
 echo "End:" `date`

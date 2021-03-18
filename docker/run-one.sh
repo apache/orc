@@ -18,26 +18,27 @@
 GITHUB_USER=$1
 URL=https://github.com/$GITHUB_USER/orc.git
 BRANCH=$2
-OS=$3
+BUILD=$3
 
 function failure {
-    echo "FAILED $OS"
+    echo "FAILED $BUILD"
     exit 1
 }
 
 VOLUME="--volume m2cache:/root/.m2/repository"
+TAG=$(echo "orc-$BUILD" | sed -e 's/=/-/g')
 if [ $GITHUB_USER == "local" ]; then
   BRANCH=`git status| head -1 | sed -e 's/On branch //'`
-  echo "Started local run for $BRANCH on $OS at $(date)"
-  docker run $VOLUME -v`pwd`/..:/root/orc "orc-$OS" || failure
+  echo "Started local run for $BRANCH on $BUILD at $(date)"
+  docker run $VOLUME -v`pwd`/..:/root/orc "$TAG" || failure
 else
   CLONE="git clone $URL -b $BRANCH"
   MAKEDIR="mkdir orc/build && cd orc/build"
 
-  echo "Started $GITHUB_USER/$BRANCH on $OS at $(date)"
+  echo "Started $GITHUB_USER/$BRANCH on $BUILD at $(date)"
 
-  case $OS in
-  debian8)
+  case $BUILD in
+  debian8*)
      OPTS="-DSNAPPY_HOME=/usr/local"
      ;;
   *)
@@ -45,13 +46,8 @@ else
      ;;
   esac
 
-  for jdk in 8 11; do
-   if [[ "$OS" = "debian10" && "$jdk" = "8" ]] || [[ "$OS" = "debian9" && "$jdk" = "11" ]] || [[ "$OS" = "ubuntu16" && "$jdk" = "11" ]]; then
-      continue
-    fi
-   docker run $VOLUME "orc-$OS-jdk${jdk}" /bin/bash -c \
-      "$CLONE && $MAKEDIR && cmake $OPTS .. && make package test-out" \
-         || failure
-   done
+  docker run $VOLUME "$TAG" /bin/bash -c \
+     "$CLONE && $MAKEDIR && cmake $OPTS .. && make package test-out" \
+       || failure
 fi
-echo "Finished $OS at $(date)"
+echo "Finished $BUILD at $(date)"

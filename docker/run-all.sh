@@ -32,22 +32,24 @@ function failure {
 rm -f logs/pids.txt logs/*.log
 
 start=`date`
-for jdk in 8 11; do
-    for os in `cat os-list.txt`; do
-        if [[ "$os" = "debian10" && "$jdk" = "8" ]] || [[ "$os" = "debian9" && "$jdk" = "11" ]] || [[ "$os" = "ubuntu16" && "$jdk" = "11" ]]; then
-            echo "Skip building $os with $jdk"
-            continue
-        fi
-        echo "Building $os for $jdk"
-        ( cd $os && docker build -t "orc-$os-jdk${jdk}" --build-arg jdk=$jdk . ) > logs/${os}-jdk${jdk}-build.log 2>&1 || exit 1
-    done
+for build in `cat os-list.txt`; do
+  echo "Building $build"
+  OS=$(echo "$build" | cut -d '_' -f1)
+  REST=$(echo "$build" | cut -d '_' -f2- -s)
+  if [ -z "$REST" ]; then
+    ARGS=""
+  else
+    ARGS=$(echo "$REST" | sed -e 's/^/--build-arg /' -e 's/_/ --build-arg /g')
+  fi
+  TAG=$(echo "orc-$build" | sed -e 's/=/-/g')
+  ( cd $OS && docker build -t "$TAG" $ARGS . ) > logs/$os-build.log 2>&1 || exit 1
 done
 testStart=`date`
 
-for os in `cat os-list.txt`; do
-    ./run-one.sh $1 $2 $os > logs/$os-test.log 2>&1 &
+for build in `cat os-list.txt`; do
+    ./run-one.sh $1 $2 $build > logs/$build-test.log 2>&1 &
     echo "$!" >> logs/pids.txt
-    echo "Launching $os as $!"
+    echo "Launching $build as $!"
 done
 
 for job in `cat logs/pids.txt`; do
