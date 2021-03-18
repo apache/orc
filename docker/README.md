@@ -18,6 +18,8 @@ The scripts are:
 * `run-one.sh` *owner* *branch* *os* - test the owner's branch on one OS
 * `reinit.sh` - rebuild all of the base images without the image cache
 
+`run-all.sh`, `run-one.sh` and `reinit.sh` tests both on jdk8 and 11 across OSes
+
 A base image for each OS is built using:
 
     cd docker/$os
