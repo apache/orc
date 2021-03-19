@@ -21,6 +21,10 @@ execute_process(COMMAND ./mvnw versions:set -DnewVersion=${ORC_VERSION}
                                          ${NO_DOWNLOAD_MSG}
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
+# show maven & java version
+execute_process(COMMAND ./mvnw --version
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
 set(ORC_JARS
   ${CMAKE_CURRENT_BINARY_DIR}/shims/orc-shims-${ORC_VERSION}.jar
   ${CMAKE_CURRENT_BINARY_DIR}/core/orc-core-${ORC_VERSION}.jar
