@@ -19,6 +19,7 @@
 
 FROM debian:buster
 LABEL maintainer="Apache ORC project <dev@orc.apache.org>"
+ARG jdk=8
 
 RUN apt-get update
 RUN apt-get install -y \
@@ -28,10 +29,23 @@ RUN apt-get install -y \
   git \
   libsasl2-dev \
   libssl-dev \
-  openjdk-11-jdk \
   make \
   curl \
-  maven
+  maven; \
+  if [ "${jdk}" = "8" ] ; then \
+    apt-get install -y \
+      gnupg2 \
+      software-properties-common \
+      wget; \
+    wget -qO - https://adoptopenjdk.jfrog.io/adoptopenjdk/api/gpg/key/public | apt-key add -; \
+    add-apt-repository --yes https://adoptopenjdk.jfrog.io/adoptopenjdk/deb/ && \
+    apt-get update && \
+    apt-get install -y adoptopenjdk-8-hotspot && \
+    update-alternatives --set java /usr/lib/jvm/adoptopenjdk-8-hotspot-amd64/bin/java && \
+    update-alternatives --set javac /usr/lib/jvm/adoptopenjdk-8-hotspot-amd64/bin/javac; \
+  else \
+    apt-get install -y openjdk-11-jdk; \
+  fi
 
 WORKDIR /root
 
