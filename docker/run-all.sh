@@ -42,7 +42,7 @@ for build in `cat os-list.txt`; do
     ARGS=$(echo "$REST" | sed -e 's/^/--build-arg /' -e 's/_/ --build-arg /g')
   fi
   TAG=$(echo "orc-$build" | sed -e 's/=/-/g')
-  ( cd $OS && docker build -t "$TAG" $ARGS . ) > logs/$os-build.log 2>&1 || exit 1
+  ( cd $OS && docker build -t "$TAG" $ARGS . ) > logs/$build-build.log 2>&1 || exit 1
 done
 testStart=`date`
 
