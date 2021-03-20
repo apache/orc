@@ -397,7 +397,7 @@ public abstract class InStream extends InputStream {
     }
   }
 
-  static class CompressedStream extends InStream {
+  public static class CompressedStream extends InStream {
     private final int bufferSize;
     private ByteBuffer uncompressed;
     private final CompressionCodec codec;
@@ -472,7 +472,7 @@ public abstract class InStream extends InputStream {
     }
 
     private void readHeader() throws IOException {
-      currentCompressedStart = compressed.position();
+      currentCompressedStart = this.position;
       int b0 = readHeaderByte();
       int b1 = readHeaderByte();
       int b2 = readHeaderByte();
@@ -563,6 +563,7 @@ public abstract class InStream extends InputStream {
         uncompressed.position((int) uncompressedBytes);
       } else {
         if (uncompressedBytes != 0) {
+          // Decompress compressed as a seek has taken place and position uncompressed
           readHeader();
           uncompressed.position(uncompressed.position() +
                                 (int) uncompressedBytes);

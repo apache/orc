@@ -21,6 +21,8 @@ package org.apache.orc.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -437,32 +439,96 @@ public class TestInStream {
       int x = in.read();
       assertEquals(i & 0xff, x);
     }
-
-    // Forward seek test
-    int seeksPerformed = 0;
-    for(int i=0; i < 1024; ++i) {
-      long pos = positions[i].getNext();
-      positions[i].reset();
-      ByteBuffer c = ((InStream.CompressedStream) in).compressed;
-      if (pos == ((InStream.CompressedStream) in).currentCompressedStart) {
-        // Should have the same ByteBuffer if no seek has taken place
-        in.seek(positions[i]);
-        assertEquals(c, ((InStream.CompressedStream) in).compressed);
-      } else {
-        seeksPerformed += 1;
-        in.seek(positions[i]);
-        assertNotEquals(c, ((InStream.CompressedStream) in).compressed);
-      }
-      positions[i].reset();
-      assertEquals(i & 0xff, in.read());
-    }
-    assertEquals(1, seeksPerformed);
-
     assertEquals(0, in.available());
     for(int i=1023; i >= 0; --i) {
-      positions[i].reset();
       in.seek(positions[i]);
       assertEquals(i & 0xff, in.read());
+    }
+  }
+
+  private long seekPosition(long prevPos,
+                            PositionCollector[] positions,
+                            int posIdx,
+                            InStream in,
+                            boolean needsSeek)
+    throws IOException {
+    if (needsSeek) {
+      assertNotEquals(prevPos, positions[posIdx].getNext());
+    } else {
+      assertEquals(prevPos, positions[posIdx].getNext());
+    }
+    positions[posIdx].reset();
+    ByteBuffer c = ((InStream.CompressedStream) in).compressed;
+    in.seek(positions[posIdx]);
+    assertEquals(posIdx & 0xff, in.read());
+    if (needsSeek) {
+      assertNotSame(c, ((InStream.CompressedStream) in).compressed);
+    } else {
+      assertSame(c, ((InStream.CompressedStream) in).compressed);
+    }
+    positions[posIdx].reset();
+    return positions[posIdx].getNext();
+  }
+
+  @Test
+  public void testCompressedSeeks() throws Exception {
+    for (int offset : new int[]{0, 10}) {
+      int compValues = 1024;
+      int origValues = 100;
+      PositionCollector[] positions = new PositionCollector[compValues + origValues];
+      byte[] compBytes = getCompressed(positions);
+      assertEquals(961, compBytes.length);
+      // Add an original chunk at the end
+      byte[] bytes = new byte[compBytes.length + 3 + origValues + offset];
+      System.arraycopy(compBytes, 0, bytes, offset, compBytes.length);
+      int startPos = offset + compBytes.length;
+      // Write original header
+      bytes[startPos] = (byte) ((origValues << 1) + 1);
+      bytes[startPos + 1] = (byte) (origValues >> 7);
+      bytes[startPos + 2] = (byte) (origValues >> 15);
+      for (int i = 0; i < 100; i++) {
+        positions[compValues + i] = new PositionCollector();
+        positions[compValues + i].addPosition(compBytes.length);
+        positions[compValues + i].addPosition(i);
+        bytes[startPos + 3 + i] = (byte) (compValues + i);
+      }
+      InStream in = InStream.create("test", new BufferChunk(ByteBuffer.wrap(bytes), 0), offset,
+                                    compBytes.length + 3 + origValues,
+                                    InStream.options()
+                                      .withCodec(new ZlibCodec())
+                                      .withBufferSize(300));
+      assertEquals("compressed stream test position: 0 length: 1064 range: 0" +
+                   String.format(" offset: %d limit: %d range 0 = 0 to %d",
+                                 offset,
+                                 bytes.length,
+                                 bytes.length),
+                   in.toString());
+
+      // Position to the last
+      long currPos = positions[positions.length - 1].getNext();
+      positions[positions.length - 1].reset();
+      in.seek(positions[positions.length - 1]);
+
+      // Seek to the first should reposition compressed
+      currPos = seekPosition(currPos, positions, 0, in, true);
+      // Seek to next position should not require a seek
+      currPos = seekPosition(currPos, positions, 1, in, false);
+
+      // Seek to 301 which should require a seek
+      currPos = seekPosition(currPos, positions, 301, in, true);
+      // Seek to next position should not require a seek
+      seekPosition(currPos, positions, 302, in, false);
+
+      // Seek to 601 which should require a seek
+      currPos = seekPosition(currPos, positions, 601, in, true);
+      // Seek to next position should not require a seek
+      seekPosition(currPos, positions, 602, in, false);
+
+      // Seek to 1024 which should seek to original
+      currPos = seekPosition(currPos, positions, 1024, in, true);
+      // Seek to next position should not require a seek
+      seekPosition(currPos, positions, 1025, in, false);
+      seekPosition(currPos, positions, 1026, in, false);
     }
   }
 
