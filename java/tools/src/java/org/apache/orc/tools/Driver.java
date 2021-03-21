@@ -88,6 +88,7 @@ public class Driver {
       System.err.println("Commands:");
       System.err.println("   convert - convert CSV and JSON files to ORC");
       System.err.println("   count - recursively find *.orc and print the number of rows");
+      System.err.println("   head - print the first part of the data from the ORC file");
       System.err.println("   data - print the data from the ORC file");
       System.err.println("   json-schema - scan JSON files to determine their schema");
       System.err.println("   key - print information about the keys");
@@ -109,6 +110,9 @@ public class Driver {
         break;
       case "count":
         RowCount.main(conf, options.commandArgs);
+        break;
+      case "head":
+        PrintHeadData.main(conf, options.commandArgs);
         break;
       case "data":
         PrintData.main(conf, options.commandArgs);
