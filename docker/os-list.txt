@@ -5,4 +5,6 @@ debian10
 ubuntu16
 ubuntu18
 ubuntu20
-ubuntu20-clang
+centos8_jdk=11
+ubuntu20_jdk=11
+ubuntu20_jdk=11_cc=clang
