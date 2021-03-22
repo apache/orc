@@ -472,6 +472,8 @@ public class TestInStream {
 
   @Test
   public void testCompressedSeeks() throws Exception {
+    // We test two scenarios one where the stream is perfectly aligned with the DiskRange and the
+    // other where it requires an offset
     for (int offset : new int[]{0, 10}) {
       int compValues = 1024;
       int origValues = 100;
@@ -530,6 +532,26 @@ public class TestInStream {
       seekPosition(currPos, positions, 1025, in, false);
       seekPosition(currPos, positions, 1026, in, false);
     }
+  }
+
+  @Test
+  public void testInvalidSeek() throws Exception {
+    PositionCollector[] positions = new PositionCollector[1024];
+    byte[] bytes = getCompressed(positions);
+
+    assertEquals(961, bytes.length);
+    InStream in = InStream.create("test", new BufferChunk(ByteBuffer.wrap(bytes), 0), 0,
+                                  bytes.length, InStream.options().withCodec(new ZlibCodec()).withBufferSize(300));
+    assertEquals("compressed stream test position: 0 length: 961 range: 0" +
+                 " offset: 0 limit: 961 range 0 = 0 to 961",
+                 in.toString());
+
+    PositionCollector invalidPosition = new PositionCollector();
+    invalidPosition.addPosition(-1);
+    invalidPosition.addPosition(0);
+    in.seek(invalidPosition);
+    assertEquals(0, in.read());
+    assertEquals(1, in.read());
   }
 
   @Test

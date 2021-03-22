@@ -404,7 +404,7 @@ public abstract class InStream extends InputStream {
     protected ByteBuffer compressed;
     protected DiskRangeList currentRange;
     private boolean isUncompressedOriginal;
-    protected long currentCompressedStart;
+    protected long currentCompressedStart = -1;
 
     /**
      * Create the stream without resetting the input stream.
@@ -558,9 +558,14 @@ public abstract class InStream extends InputStream {
     public void seek(PositionProvider index) throws IOException {
       boolean seeked = seek(index.getNext());
       long uncompressedBytes = index.getNext();
-      if (!seeked && uncompressed != null) {
-        // Only reposition uncompressed
-        uncompressed.position((int) uncompressedBytes);
+      if (!seeked) {
+        if (uncompressed != null) {
+          // Only reposition uncompressed
+          uncompressed.position((int) uncompressedBytes);
+        } else {
+          // Should not happen as !seeked would mean that a previous readHeader has taken place
+        }
+
       } else {
         if (uncompressedBytes != 0) {
           // Decompress compressed as a seek has taken place and position uncompressed
