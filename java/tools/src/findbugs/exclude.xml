@@ -38,6 +38,6 @@
   </Match>
   <Match>
     <Bug pattern="DM_DEFAULT_ENCODING" />
-    <Class name="org.apache.orc.tools.PrintHeadData" />
+    <Class name="org.apache.orc.tools.PrintData" />
   </Match>
 </FindBugsFilter>
