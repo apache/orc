@@ -18,7 +18,9 @@
 package org.apache.orc.tools;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.hadoop.conf.Configuration;
@@ -44,8 +46,11 @@ import org.codehaus.jettison.json.JSONWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Print the contents of an ORC file as JSON.
@@ -195,20 +200,28 @@ public class PrintData {
   }
 
   static void printJsonData(PrintStream printStream,
-                            Reader reader) throws IOException, JSONException {
-    OutputStreamWriter out = new OutputStreamWriter(printStream, "UTF-8");
+          Reader reader, Optional<Integer> numberOfRows) throws IOException, JSONException {
+    OutputStreamWriter out = new OutputStreamWriter(printStream, StandardCharsets.UTF_8);
     RecordReader rows = reader.rows();
     try {
       TypeDescription schema = reader.getSchema();
       VectorizedRowBatch batch = schema.createRowBatch();
+      Integer counter = 0;
       while (rows.nextBatch(batch)) {
-        for(int r=0; r < batch.size; ++r) {
+        for (int r=0; r < batch.size; ++r) {
           JSONWriter writer = new JSONWriter(out);
           printRow(writer, batch, schema, r);
           out.write("\n");
           out.flush();
           if (printStream.checkError()) {
             throw new IOException("Error encountered when writing to stdout.");
+          }
+          if (numberOfRows.isPresent()) {
+            counter++;
+            if (counter >= numberOfRows.get()){
+              break;
+            }
+
           }
         }
       }
@@ -217,20 +230,52 @@ public class PrintData {
     }
   }
 
-  static CommandLine parseCommandLine(String[] args) throws ParseException {
+  private static Options getOptions() {
+    Option help = Option.builder("h").longOpt("help")
+            .hasArg(false)
+            .desc("Provide help")
+            .build();
+    Option linesOpt = Option.builder("n").longOpt("lines")
+            .argName("LINES")
+            .hasArg()
+            .build();
+
     Options options = new Options()
-        .addOption("help", "h", false, "Provide help");
-    return new GnuParser().parse(options, args);
+            .addOption(help)
+            .addOption(linesOpt);
+    return options;
   }
 
+  private static void printHelp(){
+    Options opts = getOptions();
+
+    PrintWriter pw = new PrintWriter(System.err);
+    new HelpFormatter().printHelp(pw, HelpFormatter.DEFAULT_WIDTH,
+            "java -jar orc-tools-*.jar data <orc file>*",
+            null,
+            opts,
+            HelpFormatter.DEFAULT_LEFT_PAD,
+            HelpFormatter.DEFAULT_DESC_PAD, null);
+    pw.flush();
+  }
+
+  static CommandLine parseCommandLine(String[] args) throws ParseException {
+    Options options = getOptions();
+    return new DefaultParser().parse(options, args);
+  }
 
   static void main(Configuration conf, String[] args
                    ) throws IOException, JSONException, ParseException {
     CommandLine cli = parseCommandLine(args);
     if (cli.hasOption('h') || cli.getArgs().length == 0) {
-      System.err.println("usage: java -jar orc-tools-*.jar data [--help] <orc file>*");
+      printHelp();
       System.exit(1);
     } else {
+      Optional<Integer> lines = Optional.empty();
+      if(cli.hasOption("n")){
+        lines = Optional.of( Integer.parseInt(cli.getOptionValue("n")));
+      }
+
       List<String> badFiles = new ArrayList<>();
       for (String file : cli.getArgs()) {
         try {
@@ -239,7 +284,7 @@ public class PrintData {
           if (reader == null) {
             continue;
           }
-          printJsonData(System.out, reader);
+          printJsonData(System.out, reader, lines);
           System.out.println(FileDump.SEPARATOR);
         } catch (Exception e) {
           System.err.println("Unable to dump data for file: " + file);

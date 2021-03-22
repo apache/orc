@@ -36,4 +36,8 @@
     <Class name="org.apache.orc.tools.ScanData"/>
     <Method name="main"/>
   </Match>
+  <Match>
+    <Bug pattern="DM_DEFAULT_ENCODING" />
+    <Class name="org.apache.orc.tools.PrintData" />
+  </Match>
 </FindBugsFilter>
