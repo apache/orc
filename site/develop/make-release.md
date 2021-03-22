@@ -125,7 +125,7 @@ edit CMakeLists.txt to change version to X.Y.(Z+1)-SNAPSHOT
 
 Update the site with the new release.
 
-* Check out the master branch (git co apache/master)
+* Check out the master branch (git checkout apache/master)
 
 ~~~
 Change directory in to site.
