@@ -1804,7 +1804,7 @@ namespace orc {
         }
         tsStats->update(millsUTC, static_cast<int32_t>(nanos[i] % 1000000));
 
-        if (secs[i] < 0 && nanos[i] != 0) {
+        if (secs[i] < 0 && nanos[i] > 999999) {
           secs[i] += 1;
         }
 
