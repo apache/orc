@@ -562,10 +562,9 @@ public abstract class InStream extends InputStream {
         if (uncompressed != null) {
           // Only reposition uncompressed
           uncompressed.position((int) uncompressedBytes);
-        } else {
-          // Should not happen as !seeked would mean that a previous readHeader has taken place
         }
-
+        // uncompressed == null should not happen as !seeked would mean that a previous
+        // readHeader has taken place
       } else {
         if (uncompressedBytes != 0) {
           // Decompress compressed as a seek has taken place and position uncompressed
