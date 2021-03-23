@@ -333,6 +333,9 @@ public class AvroWriter implements BatchWriter {
       case SNAPPY:
         writer.setCodec(CodecFactory.snappyCodec());
         break;
+      case ZSTD:
+        writer.setCodec(CodecFactory.zstandardCodec(CodecFactory.DEFAULT_ZSTANDARD_LEVEL));
+        break;
       default:
         throw new IllegalArgumentException("Compression unsupported " + compression);
     }
