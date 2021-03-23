@@ -33,7 +33,8 @@ import java.util.zip.GZIPOutputStream;
 public enum CompressionKind {
   NONE("none"),
   ZLIB("gz"),
-  SNAPPY("snappy");
+  SNAPPY("snappy"),
+  ZSTD("zstd");
 
   CompressionKind(String extendsion) {
     this.extension = extendsion;
