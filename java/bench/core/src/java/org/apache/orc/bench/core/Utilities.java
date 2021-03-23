@@ -58,6 +58,8 @@ public class Utilities {
         return org.apache.orc.CompressionKind.ZLIB;
       case SNAPPY:
         return org.apache.orc.CompressionKind.SNAPPY;
+      case ZSTD:
+        return org.apache.orc.CompressionKind.ZSTD;
       default:
         throw new IllegalArgumentException("Unknown compression " + compression);
     }
