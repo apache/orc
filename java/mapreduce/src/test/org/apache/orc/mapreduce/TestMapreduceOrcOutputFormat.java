@@ -48,6 +48,7 @@ import java.io.File;
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class TestMapreduceOrcOutputFormat {
 
@@ -151,6 +152,34 @@ public class TestMapreduceOrcOutputFormat {
       assertEquals(r * 3, ((IntWritable) row.getFieldValue(2)).get());
     }
     assertEquals(false, reader.nextKeyValue());
+  }
+
+  @Test
+  public void testAcidSelectionNoSchema() throws IOException, InterruptedException {
+    TaskAttemptID id = new TaskAttemptID("jt", 0, TaskType.MAP, 0, 1);
+    TaskAttemptContext attemptContext = new TaskAttemptContextImpl(conf, id);
+    // struct<operation:int,originalTransaction:bigint,bucket:int,rowId:bigint,currentTransaction:bigint,
+    // row:struct<i:int,j:int,k:int>>
+    conf.set(OrcConf.INCLUDE_COLUMNS.getAttribute(), "5");
+    // Do not set OrcConf.MAPRED_INPUT_SCHEMA (reader should use file schema instead)
+    FileSplit split = new FileSplit(new Path(getClass().getClassLoader().
+        getSystemResource("acid5k.orc").getPath()),
+        0, 1000000, new String[0]);
+    RecordReader<NullWritable, OrcStruct> reader =
+        new OrcInputFormat<OrcStruct>().createRecordReader(split,
+            attemptContext);
+    // Make sure we can read all rows
+    OrcStruct row;
+    for (int r=0; r < 5000; ++r) {
+      assertEquals(true, reader.nextKeyValue());
+      row = reader.getCurrentValue();
+      assertEquals(6, row.getNumFields());
+      OrcStruct innerRow = (OrcStruct) row.getFieldValue(5);
+      assertEquals(3,innerRow.getNumFields());
+      assertTrue(((IntWritable)innerRow.getFieldValue(0)).get() >= 0);
+      assertTrue(((IntWritable)innerRow.getFieldValue(1)).get() >= 0);
+      assertTrue(((IntWritable)innerRow.getFieldValue(2)).get() >= 0);
+    }
   }
 
   @Test
