@@ -641,6 +641,64 @@ namespace orc {
     }
   }
 
+  TEST_P(WriterTest, writeNegativeTimestamp) {
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    MemoryPool* pool = getDefaultPool();
+    std::unique_ptr<Type> type(Type::buildTypeFromString("struct<a:timestamp>"));
+    auto writer = createWriter(16 * 1024 * 1024, 64 * 1024,
+      CompressionKind_ZLIB, *type, pool, &memStream, fileVersion);
+    uint64_t batchCount = 5;
+    auto batch = writer->createRowBatch(batchCount * 2);
+    auto structBatch = dynamic_cast<StructVectorBatch *>(batch.get());
+    auto tsBatch = dynamic_cast<TimestampVectorBatch *>(structBatch->fields[0]);
+    structBatch->numElements = batchCount;
+    tsBatch->numElements = batchCount;
+    const int64_t seconds[] = { -2, -1, 0, 1, 2 };
+
+    // write 1st batch with nanosecond <= 999999
+    for (uint64_t i = 0; i < batchCount; ++i) {
+      tsBatch->data[i] = seconds[i];
+      tsBatch->nanoseconds[i] = 999999;
+    }
+    writer->add(*batch);
+
+    // write 2nd batch with nanosecond > 999999
+    for (uint64_t i = 0; i < batchCount; ++i) {
+      tsBatch->data[i] = seconds[i];
+      tsBatch->nanoseconds[i] = 1000000;
+    }
+    writer->add(*batch);
+    writer->close();
+
+    std::unique_ptr<InputStream> inStream(
+      new MemoryInputStream (memStream.getData(), memStream.getLength()));
+    auto reader = createReader(pool, std::move(inStream));
+    auto rowReader = createRowReader(reader.get());
+    batch = rowReader->createRowBatch(batchCount);
+    structBatch = dynamic_cast<StructVectorBatch *>(batch.get());
+    tsBatch = dynamic_cast<TimestampVectorBatch *>(structBatch->fields[0]);
+
+    // read 1st batch with nanosecond <= 999999
+    EXPECT_EQ(true, rowReader->next(*batch));
+    for (uint64_t i = 0; i < batchCount; ++i) {
+      EXPECT_EQ(seconds[i], tsBatch->data[i]);
+      EXPECT_EQ(999999, tsBatch->nanoseconds[i]);
+    }
+
+    // read 2nd batch with nanosecond > 999999
+    EXPECT_EQ(true, rowReader->next(*batch));
+    for (uint64_t i = 0; i < batchCount; ++i) {
+      if (seconds[i] == -1) {
+        // reproduce the JDK bug of java.sql.Timestamp.
+        // make sure the C++ ORC writer has consistent effect.
+        EXPECT_EQ(0, tsBatch->data[i]);
+      } else {
+        EXPECT_EQ(seconds[i], tsBatch->data[i]);
+      }
+      EXPECT_EQ(1000000, tsBatch->nanoseconds[i]);
+    }
+  }
+
   TEST_P(WriterTest, writeCharAndVarcharColumn) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool * pool = getDefaultPool();
