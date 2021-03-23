@@ -38,9 +38,7 @@ public abstract class BatchReader {
     this.rootType = rootType;
   }
 
-  public void startStripe(StripePlanner planner) throws IOException {
-    rootType.startStripe(planner);
-  }
+  public abstract void startStripe(StripePlanner planner) throws IOException;
 
   public void setVectorColumnCount(int vectorColumnCount) {
     this.vectorColumnCount = vectorColumnCount;
@@ -60,11 +58,7 @@ public abstract class BatchReader {
     batch.size = batchSize;
   }
 
-  public void skipRows(long rows) throws IOException {
-    rootType.skipRows(rows);
-  }
+  public abstract void skipRows(long rows) throws IOException;
 
-  public void seek(PositionProvider[] index) throws IOException {
-    rootType.seek(index);
-  }
+  public abstract void seek(PositionProvider[] index) throws IOException;
 }
