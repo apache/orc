@@ -79,6 +79,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -378,6 +379,62 @@ public class TestVectorOrcFile {
     // handle the close up
     Assert.assertEquals(false, rows.nextBatch(batch));
     rows.close();
+  }
+
+  @Test
+  public void testTimestampBug() throws IOException {
+    TypeDescription schema = TypeDescription.createTimestamp();
+    Writer writer = OrcFile.createWriter(testFilePath,
+        OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
+            .bufferSize(10000).version(fileFormat));
+    int batchCount = 5;
+    VectorizedRowBatch batch = schema.createRowBatch(batchCount * 2);;
+    TimestampColumnVector vec = (TimestampColumnVector) batch.cols[0];
+    int[] seconds = new int[]{ -2, -1, 0, 1, 2 };
+    // write 1st batch with nanosecond <= 999999
+    int nanos = 999_999;
+    for (int i = 0; i < batchCount; i++) {
+      Timestamp curr = Timestamp.from(Instant.ofEpochSecond(seconds[i]));
+      curr.setNanos(nanos);
+      vec.set(i, curr);
+    }
+
+    batch.size = batchCount;
+    writer.addRowBatch(batch);
+
+    nanos = 1_000_000;
+    // write 2nd batch with nanosecond > 999999
+    for (int i = 0; i < batchCount; i++) {
+      Timestamp curr = Timestamp.from(Instant.ofEpochSecond(seconds[i]));
+      curr.setNanos(nanos);
+      vec.set(i, curr);
+    }
+    writer.addRowBatch(batch);
+    writer.close();
+
+    Reader reader = OrcFile.createReader(testFilePath,
+        OrcFile.readerOptions(conf).filesystem(fs));
+    RecordReader rows = reader.rows();
+    batch = reader.getSchema().createRowBatch(batchCount);
+    TimestampColumnVector timestamps = (TimestampColumnVector) batch.cols[0];
+    rows.nextBatch(batch);
+    // read 1st batch with nanosecond <= 999999
+    for (int r=0; r < batchCount; ++r) {
+      assertEquals(seconds[r], timestamps.getTimestampAsLong(r));
+      assertEquals(999_999, timestamps.nanos[r]);
+    }
+    rows.nextBatch(batch);
+    // read 2nd batch with nanosecond > 999999
+    for (int r=0; r < batchCount; ++r) {
+      if (seconds[r] == -1) {
+        // reproduce the JDK bug of java.sql.Timestamp see ORC-763
+        // Wrong extra second: 1969-12-31 23.59.59.001 -> 1970-01-01 00.00.00.001
+        assertEquals(0, timestamps.getTimestampAsLong(r));
+      } else {
+        assertEquals(seconds[r], timestamps.getTimestampAsLong(r));
+      }
+      assertEquals(1_000_000, timestamps.nanos[r]);
+    }
   }
 
   @Test
