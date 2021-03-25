@@ -41,7 +41,7 @@
     <hive.version>3.1.2</hive.version>
     <jmh.version>1.20</jmh.version>
     <orc.version>${project.version}</orc.version>
-    <parquet.version>1.8.3</parquet.version>
+    <parquet.version>1.12.0</parquet.version>
     <slf4j.version>1.7.25</slf4j.version>
     <spark.version>3.1.1</spark.version>
     <storage-api.version>2.7.2</storage-api.version>
