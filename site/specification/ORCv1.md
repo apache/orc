@@ -1297,7 +1297,7 @@ in a bloom filter is as follows:
   * position = combinedHash % m
 6. Set the position in bit set. The LSB 6 bits identifies the long index
    within bitset and bit position within the long uses little endian order.
-  * bitset[position >> 6] \|= (1L << (position & 0x3f));
+  * bitset[position >> 6] \|= (1L << (position % 64));
 
 Bloom filter streams are interlaced with row group indexes. This placement
 makes it convenient to read the bloom filter stream and row index stream
