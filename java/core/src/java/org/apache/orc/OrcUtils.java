@@ -345,7 +345,9 @@ public class OrcUtils {
       case STRUCT: {
           result = TypeDescription.createStruct();
           for(int f=0; f < type.getSubtypesCount(); ++f) {
-            String fieldName = ParserUtils.parseName(new ParserUtils.StringPosition(type.getFieldNames(f)));
+            String name = type.getFieldNames(f);
+            name = name.startsWith("`") ? name : "`" + name + "`";
+            String fieldName = ParserUtils.parseName(new ParserUtils.StringPosition(name));
             result.addField(fieldName, convertTypeFromProtobuf(types, type.getSubtypes(f)));
           }
         }
