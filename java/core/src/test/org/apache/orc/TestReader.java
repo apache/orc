@@ -78,4 +78,11 @@ public class TestReader {
     OrcFile.createReader(testFilePath,
       OrcFile.readerOptions(conf).filesystem(fs));
   }
+
+  @Test
+  public void testReadDocColumn() throws Exception {
+    Path path = new Path(getClass().getClassLoader().getSystemResource("col.dot.orc").getPath());
+    Reader reader = OrcFile.createReader(path, OrcFile.readerOptions(conf).filesystem(fs));
+    assertEquals("col.dot", reader.getSchema().getFieldNames().get(0));
+  }
 }
