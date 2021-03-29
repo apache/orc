@@ -41,9 +41,13 @@ public class OrcMapreduceRecordWriter<V extends Writable>
   private final boolean isTopStruct;
 
   public OrcMapreduceRecordWriter(Writer writer) {
+    this(writer, VectorizedRowBatch.DEFAULT_SIZE);
+  }
+
+  public OrcMapreduceRecordWriter(Writer writer, int rowBatchSize) {
     this.writer = writer;
     schema = writer.getSchema();
-    this.batch = schema.createRowBatch();
+    this.batch = schema.createRowBatch(rowBatchSize);
     isTopStruct = schema.getCategory() == TypeDescription.Category.STRUCT;
   }
 

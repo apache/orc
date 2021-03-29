@@ -70,7 +70,7 @@ public class OrcInputFormat<V extends WritableComparable>
             .maxLength(OrcConf.MAX_FILE_LENGTH.getLong(conf)));
     return new OrcMapreduceRecordReader<>(file,
         org.apache.orc.mapred.OrcInputFormat.buildOptions(conf,
-            file, split.getStart(), split.getLength()));
+            file, split.getStart(), split.getLength()), OrcConf.ROW_BATCH_SIZE.getInt(conf));
   }
 
   @Override

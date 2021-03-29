@@ -45,6 +45,7 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparable;
+import org.apache.orc.OrcConf;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
 import org.apache.orc.TypeDescription;
@@ -69,14 +70,19 @@ public class OrcMapredRecordReader<V extends WritableComparable>
   }
 
   protected OrcMapredRecordReader(Reader fileReader,
-                                  Reader.Options options) throws IOException {
+      Reader.Options options) throws IOException {
+    this(fileReader, options, (int) OrcConf.ROW_BATCH_SIZE.getDefaultValue());
+  }
+
+  protected OrcMapredRecordReader(Reader fileReader,
+                                  Reader.Options options, int rowBatchSize) throws IOException {
     this.batchReader = fileReader.rows(options);
     if (options.getSchema() == null) {
       schema = fileReader.getSchema();
     } else {
       schema = options.getSchema();
     }
-    this.batch = schema.createRowBatch();
+    this.batch = schema.createRowBatch(rowBatchSize);
     rowInBatch = 0;
   }
 

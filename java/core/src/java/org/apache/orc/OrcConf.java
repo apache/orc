@@ -184,7 +184,9 @@ public enum OrcConf {
       "orc.proleptic.gregorian.default", false,
       "This value controls whether pre-ORC 27 files are using the hybrid or proleptic\n" +
       "calendar. Only Hive 3.1 and the C++ library wrote using the proleptic, so hybrid\n" +
-      "is the default.")
+      "is the default."),
+  ROW_BATCH_SIZE("orc.row.batch.size", "orc.row.batch.size", 1024, "This value controls the "
+      + "number of rows in a VectorizedRowBatch.")
   ;
 
   private final String attribute;

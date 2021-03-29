@@ -45,6 +45,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.RecordWriter;
 import org.apache.hadoop.mapred.Reporter;
+import org.apache.orc.OrcConf;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
 
@@ -63,9 +64,13 @@ public class OrcMapredRecordWriter<V extends Writable>
   private final boolean isTopStruct;
 
   public OrcMapredRecordWriter(Writer writer) {
+    this(writer, (int) OrcConf.ROW_BATCH_SIZE.getDefaultValue());
+  }
+
+  public OrcMapredRecordWriter(Writer writer, int rowBatchSize) {
     this.writer = writer;
     schema = writer.getSchema();
-    this.batch = schema.createRowBatch();
+    this.batch = schema.createRowBatch(rowBatchSize);
     isTopStruct = schema.getCategory() == TypeDescription.Category.STRUCT;
   }
 
