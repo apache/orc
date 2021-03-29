@@ -1683,6 +1683,9 @@ namespace orc {
       if (!notNull || notNull[i]) {
         directDataStream->write(data[i], unsignedLength);
 
+        if (enableBloomFilter) {
+          bloomFilter->addBytes(data[i], length[i]);
+        }
         binStats->update(unsignedLength);
         ++count;
       }

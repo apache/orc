@@ -1666,13 +1666,13 @@ namespace orc {
       .setMemoryPool(getDefaultPool())
       .setRowIndexStride(10000)
       .setFileVersion(fileVersion)
-      .setColumnsUseBloomFilter({1, 2});
+      .setColumnsUseBloomFilter({1, 2, 3});
 
     // write 65535 rows of data
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool * pool = getDefaultPool();
     std::unique_ptr<Type> type(Type::buildTypeFromString(
-      "struct<c1:bigint,c2:string>"));
+      "struct<c1:bigint,c2:string,c3:binary>"));
 
     char dataBuffer[327675]; // 300k
     uint64_t offset = 0;
@@ -1683,6 +1683,7 @@ namespace orc {
     StructVectorBatch& structBatch = dynamic_cast<StructVectorBatch&>(*batch);
     LongVectorBatch& longBatch = dynamic_cast<LongVectorBatch&>(*structBatch.fields[0]);
     StringVectorBatch& strBatch = dynamic_cast<StringVectorBatch&>(*structBatch.fields[1]);
+    StringVectorBatch& binBatch = dynamic_cast<StringVectorBatch&>(*structBatch.fields[2]);
 
     for (uint64_t i = 0; i < rowCount; ++i) {
       // each row group has a unique value
@@ -1697,12 +1698,18 @@ namespace orc {
       strBatch.data[i] = dataBuffer + offset;
       strBatch.length[i] = static_cast<int64_t>(os.str().size());
       memcpy(dataBuffer + offset, os.str().c_str(), os.str().size());
+
+      // c3
+      binBatch.data[i] = dataBuffer + offset;
+      binBatch.length[i] = static_cast<int64_t>(os.str().size());
+      memcpy(dataBuffer + offset, os.str().c_str(), os.str().size());
       offset += os.str().size();
     }
 
     structBatch.numElements = rowCount;
     longBatch.numElements = rowCount;
     strBatch.numElements = rowCount;
+    binBatch.numElements = rowCount;
     writer->add(*batch);
     writer->close();
 
@@ -1712,14 +1719,16 @@ namespace orc {
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     EXPECT_EQ(rowCount, reader->getNumberOfRows());
 
-    EXPECT_EQ(2, reader->getBloomFilters(0, {}).size());
+    EXPECT_EQ(3, reader->getBloomFilters(0, {}).size());
     EXPECT_EQ(1, reader->getBloomFilters(0, {1}).size());
     EXPECT_EQ(1, reader->getBloomFilters(0, {2}).size());
+    EXPECT_EQ(1, reader->getBloomFilters(0, {3}).size());
 
-    std::map<uint32_t, BloomFilterIndex> bfs = reader->getBloomFilters(0, {1, 2});
-    EXPECT_EQ(2, bfs.size());
+    std::map<uint32_t, BloomFilterIndex> bfs = reader->getBloomFilters(0, {1, 2, 3});
+    EXPECT_EQ(3, bfs.size());
     EXPECT_EQ(7, bfs[1].entries.size());
     EXPECT_EQ(7, bfs[2].entries.size());
+    EXPECT_EQ(7, bfs[3].entries.size());
 
     // test bloomfilters
     for (uint64_t rg = 0; rg <= rowCount / options.getRowIndexStride(); ++rg) {
@@ -1728,9 +1737,11 @@ namespace orc {
         if (value == rg) {
           EXPECT_TRUE(bfs[1].entries[rg]->testLong(static_cast<int64_t>(value)));
           EXPECT_TRUE(bfs[2].entries[rg]->testBytes(str.c_str(), static_cast<int64_t>(str.size())));
+          EXPECT_TRUE(bfs[3].entries[rg]->testBytes(str.c_str(), static_cast<int64_t>(str.size())));
         } else {
           EXPECT_FALSE(bfs[1].entries[rg]->testLong(static_cast<int64_t>(value)));
           EXPECT_FALSE(bfs[2].entries[rg]->testBytes(str.c_str(), static_cast<int64_t>(str.size())));
+          EXPECT_FALSE(bfs[3].entries[rg]->testBytes(str.c_str(), static_cast<int64_t>(str.size())));
         }
       }
     }
