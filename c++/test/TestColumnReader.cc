@@ -73,6 +73,10 @@ namespace orc {
     const Timezone &getWriterTimezone() const override {
       return getTimezoneByName("America/Los_Angeles");
     }
+
+    const Timezone& getReaderTimezone() const override {
+      return getTimezoneByName("GMT");
+    }
   };
 
   MockStripeStreams::~MockStripeStreams() {

@@ -41,6 +41,7 @@ namespace orc {
     std::set<uint64_t> columnsUseBloomFilter;
     double bloomFilterFalsePositiveProb;
     BloomFilterVersion bloomFilterVersion;
+    std::string timezone;
 
     WriterOptionsPrivate() :
                             fileVersion(FileVersion::v_0_12()) { // default to Hive_0_12
@@ -56,6 +57,7 @@ namespace orc {
       enableIndex = true;
       bloomFilterFalsePositiveProb = 0.05;
       bloomFilterVersion = UTF8;
+      timezone = "GMT";
     }
   };
 
@@ -227,6 +229,19 @@ namespace orc {
   // we only support UTF8 for now.
   BloomFilterVersion WriterOptions::getBloomFilterVersion() const {
     return privateBits->bloomFilterVersion;
+  }
+
+  const Timezone* WriterOptions::getTimezone() const {
+    return &getTimezoneByName(privateBits->timezone);
+  }
+
+  const std::string& WriterOptions::getTimezoneName() const {
+    return privateBits->timezone;
+  }
+
+  WriterOptions& WriterOptions::setTimezoneName(const std::string& zone) {
+    privateBits->timezone = zone;
+    return *this;
   }
 
   Writer::~Writer() {
@@ -441,7 +456,7 @@ namespace orc {
 
     // use GMT to guarantee TimestampVectorBatch from reader can write
     // same wall clock time
-    stripeFooter.set_writertimezone("GMT");
+    stripeFooter.set_writertimezone(options.getTimezoneName());
 
     // add stripe statistics to metadata
     proto::StripeStatistics* stripeStats = metadata.add_stripestats();
@@ -567,6 +582,10 @@ namespace orc {
     }
     case TIMESTAMP: {
       protoType.set_kind(proto::Type_Kind_TIMESTAMP);
+      break;
+    }
+    case TIMESTAMP_INSTANT: {
+      protoType.set_kind(proto::Type_Kind_TIMESTAMP_INSTANT);
       break;
     }
     case LIST: {

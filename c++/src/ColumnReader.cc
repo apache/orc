@@ -305,10 +305,14 @@ namespace orc {
     std::unique_ptr<orc::RleDecoder> secondsRle;
     std::unique_ptr<orc::RleDecoder> nanoRle;
     const Timezone& writerTimezone;
+    const Timezone& readerTimezone;
     const int64_t epochOffset;
+    const bool sameTimezone;
 
   public:
-    TimestampColumnReader(const Type& type, StripeStreams& stripe);
+    TimestampColumnReader(const Type& type,
+                          StripeStreams& stripe,
+                          bool isInstantType);
     ~TimestampColumnReader() override;
 
     uint64_t skip(uint64_t numValues) override;
@@ -323,10 +327,17 @@ namespace orc {
 
 
   TimestampColumnReader::TimestampColumnReader(const Type& type,
-                                               StripeStreams& stripe
+                                               StripeStreams& stripe,
+                                               bool isInstantType
                                ): ColumnReader(type, stripe),
-                                  writerTimezone(stripe.getWriterTimezone()),
-                                  epochOffset(writerTimezone.getEpoch()) {
+                                  writerTimezone(isInstantType ?
+                                                 getTimezoneByName("GMT") :
+                                                 stripe.getWriterTimezone()),
+                                  readerTimezone(isInstantType ?
+                                                 getTimezoneByName("GMT") :
+                                                 stripe.getReaderTimezone()),
+                                  epochOffset(writerTimezone.getEpoch()),
+                                  sameTimezone(&writerTimezone == &readerTimezone) {
     RleVersion vers = convertRleVersion(stripe.getEncoding(columnId).kind());
     std::unique_ptr<SeekableInputStream> stream =
         stripe.getStream(columnId, proto::Stream_Kind_DATA, true);
@@ -373,7 +384,20 @@ namespace orc {
           }
         }
         int64_t writerTime = secsBuffer[i] + epochOffset;
-        secsBuffer[i] = writerTimezone.convertToUTC(writerTime);
+        if (!sameTimezone) {
+          // adjust timestamp value to same wall clock time if writer and reader
+          // time zones have different rules, which is required for Apache Orc.
+          const auto& wv = writerTimezone.getVariant(writerTime);
+          const auto& rv = readerTimezone.getVariant(writerTime);
+          if (!wv.hasSameTzRule(rv)) {
+            // If the timezone adjustment moves the millis across a DST boundary,
+            // we need to reevaluate the offsets.
+            int64_t adjustedTime = writerTime + wv.gmtOffset - rv.gmtOffset;
+            const auto& adjustedReader = readerTimezone.getVariant(adjustedTime);
+            writerTime = writerTime + wv.gmtOffset - adjustedReader.gmtOffset;
+          }
+        }
+        secsBuffer[i] = writerTime;
         if (secsBuffer[i] < 0 && nanoBuffer[i] > 999999) {
           secsBuffer[i] -= 1;
         }
@@ -1806,7 +1830,11 @@ namespace orc {
 
     case TIMESTAMP:
       return std::unique_ptr<ColumnReader>
-        (new TimestampColumnReader(type, stripe));
+        (new TimestampColumnReader(type, stripe, false));
+
+    case TIMESTAMP_INSTANT:
+      return std::unique_ptr<ColumnReader>
+        (new TimestampColumnReader(type, stripe, true));
 
     case DECIMAL:
       // is this a Hive 0.11 or 0.12 file?

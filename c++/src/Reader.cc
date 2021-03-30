@@ -195,7 +195,8 @@ namespace orc {
                             forcedScaleOnHive11Decimal(opts.getForcedScaleOnHive11Decimal()),
                             footer(contents->footer.get()),
                             firstRowOfStripe(*contents->pool, 0),
-                            enableEncodedBlock(opts.getEnableLazyDecoding()) {
+                            enableEncodedBlock(opts.getEnableLazyDecoding()),
+                            readerTimezone(getTimezoneByName(opts.getReaderTimezone())) {
     uint64_t numberOfStripes;
     numberOfStripes = static_cast<uint64_t>(footer->stripes_size());
     currentStripe = numberOfStripes;
@@ -783,6 +784,7 @@ namespace orc {
       case proto::Type_Kind_BINARY:
       case proto::Type_Kind_DECIMAL:
       case proto::Type_Kind_TIMESTAMP:
+      case proto::Type_Kind_TIMESTAMP_INSTANT:
         return 3;
       case proto::Type_Kind_CHAR:
       case proto::Type_Kind_STRING:
@@ -978,7 +980,8 @@ namespace orc {
                                       currentStripeFooter,
                                       currentStripeInfo.offset(),
                                       *contents->stream,
-                                      writerTimezone);
+                                      writerTimezone,
+                                      readerTimezone);
       reader = buildReader(*contents->schema, stripeStreams);
 
       if (sargsApplier) {
