@@ -48,7 +48,8 @@ namespace orc {
                                       MemoryPool* memoryPool,
                                       OutputStream* stream,
                                       FileVersion version,
-                                      uint64_t stride = 0){
+                                      uint64_t stride = 0,
+                                      const std::string& timezone = "GMT") {
     WriterOptions options;
     options.setStripeSize(stripeSize);
     options.setCompressionBlockSize(compresionblockSize);
@@ -56,6 +57,7 @@ namespace orc {
     options.setMemoryPool(memoryPool);
     options.setRowIndexStride(stride);
     options.setFileVersion(version);
+    options.setTimezoneName(timezone);
     return createWriter(type, stream, options);
   }
 
@@ -67,8 +69,11 @@ namespace orc {
     return createReader(std::move(stream), options);
   }
 
-  std::unique_ptr<RowReader> createRowReader(Reader* reader) {
+  std::unique_ptr<RowReader> createRowReader(
+                                            Reader* reader,
+                                            const char* timezone = "GMT") {
     RowReaderOptions rowReaderOpts;
+    rowReaderOpts.setReaderTimezone(timezone);
     return reader->createRowReader(rowReaderOpts);
   }
 
@@ -696,6 +701,149 @@ namespace orc {
         EXPECT_EQ(seconds[i], tsBatch->data[i]);
       }
       EXPECT_EQ(1000000, tsBatch->nanoseconds[i]);
+    }
+  }
+
+  void testWriteTimestampWithTimezone(FileVersion fileVersion,
+                                      const char* writerTimezone,
+                                      const char* readerTimezone,
+                                      const std::string& tsStr,
+                                      int isDst = 0) {
+    char* tzBk = getenv("TZ");  // backup TZ env
+
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    MemoryPool* pool = getDefaultPool();
+    std::unique_ptr<Type> type(Type::buildTypeFromString("struct<col1:timestamp>"));
+
+    uint64_t stripeSize = 16 * 1024;
+    uint64_t compressionBlockSize = 1024;
+    uint64_t rowCount = 1;
+
+    std::unique_ptr<Writer> writer = createWriter(stripeSize,
+                                                  compressionBlockSize,
+                                                  CompressionKind_ZLIB,
+                                                  *type,
+                                                  pool,
+                                                  &memStream,
+                                                  fileVersion,
+                                                  0,
+                                                  writerTimezone);
+    auto batch = writer->createRowBatch(rowCount);
+    auto& structBatch = dynamic_cast<StructVectorBatch&>(*batch);
+    auto& tsBatch = dynamic_cast<TimestampVectorBatch&>(*structBatch.fields[0]);
+
+    // write timestamp in the writer timezone
+    setenv("TZ", writerTimezone, 1); tzset();
+    struct tm tm;
+    memset(&tm, 0, sizeof(struct tm));
+    strptime(tsStr.c_str(), "%Y-%m-%d %H:%M:%S", &tm);
+    // mktime() does depend on external hint for daylight saving time
+    tm.tm_isdst = isDst;
+    tsBatch.data[0] = mktime(&tm);
+    tsBatch.nanoseconds[0] = 0;
+    structBatch.numElements = rowCount;
+    tsBatch.numElements = rowCount;
+    writer->add(*batch);
+    writer->close();
+
+    // read timestamp from the reader timezone
+    std::unique_ptr<InputStream> inStream(
+      new MemoryInputStream (memStream.getData(), memStream.getLength()));
+    std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
+    std::unique_ptr<RowReader> rowReader = createRowReader(reader.get(), readerTimezone);
+    EXPECT_EQ(true, rowReader->next(*batch));
+
+    // verify we get same wall clock in reader timezone
+    setenv("TZ", readerTimezone, 1); tzset();
+    memset(&tm, 0, sizeof(struct tm));
+    time_t ttime = tsBatch.data[0];
+    localtime_r(&ttime, &tm);
+    char buf[20];
+    strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &tm);
+    EXPECT_TRUE(strncmp(buf, tsStr.c_str(), tsStr.size()) == 0);
+
+    // restore TZ env
+    if (tzBk) {
+      setenv("TZ", tzBk, 1); tzset();
+    } else {
+      unsetenv("TZ"); tzset();
+    }
+  }
+
+  TEST_P(WriterTest, writeTimestampWithTimezone) {
+    const int IS_DST = 1, NOT_DST = 0;
+    testWriteTimestampWithTimezone(fileVersion, "GMT", "GMT", "2001-11-12 18:31:01");
+    // behavior for Apache Orc (writer & reader timezone can change)
+    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", "America/Los_Angeles", "2001-11-12 18:31:01");
+    testWriteTimestampWithTimezone(fileVersion, "Asia/Shanghai", "Asia/Shanghai", "2001-11-12 18:31:01");
+    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", "Asia/Shanghai", "2001-11-12 18:31:01");
+    testWriteTimestampWithTimezone(fileVersion, "Asia/Shanghai", "America/Los_Angeles", "2001-11-12 18:31:01");
+    testWriteTimestampWithTimezone(fileVersion, "GMT", "Asia/Shanghai", "2001-11-12 18:31:01");
+    testWriteTimestampWithTimezone(fileVersion, "Asia/Shanghai", "GMT", "2001-11-12 18:31:01");
+    testWriteTimestampWithTimezone(fileVersion, "Asia/Shanghai", "America/Los_Angeles", "2018-01-01 23:59:59");
+    // daylight saving started at 2012-03-11 02:00:00 in Los Angeles
+    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", "Asia/Shanghai", "2012-03-11 01:59:59", NOT_DST);
+    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", "Asia/Shanghai", "2012-03-11 03:00:00", IS_DST);
+    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", "Asia/Shanghai", "2012-03-11 03:00:01", IS_DST);
+    // daylight saving ended at 2012-11-04 02:00:00 in Los Angeles
+    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", "Asia/Shanghai", "2012-11-04 01:59:59", IS_DST);
+    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", "Asia/Shanghai", "2012-11-04 02:00:00", NOT_DST);
+    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", "Asia/Shanghai", "2012-11-04 02:00:01", NOT_DST);
+    // other daylight saving time
+    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", "Asia/Shanghai", "2014-06-06 12:34:56", IS_DST);
+    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", "America/Los_Angeles", "2014-06-06 12:34:56", IS_DST);
+  }
+
+  TEST_P(WriterTest, writeTimestampInstant) {
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    MemoryPool* pool = getDefaultPool();
+    std::unique_ptr<Type> type(Type::buildTypeFromString(
+      "struct<col1:timestamp_with_local_time_zone>"));
+
+    uint64_t stripeSize = 16 * 1024;
+    uint64_t compressionBlockSize = 1024;
+    uint64_t rowCount = 102400;
+
+    std::unique_ptr<Writer> writer = createWriter(stripeSize,
+                                                  compressionBlockSize,
+                                                  CompressionKind_ZLIB,
+                                                  *type,
+                                                  pool,
+                                                  &memStream,
+                                                  fileVersion);
+    std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
+    StructVectorBatch * structBatch =
+      dynamic_cast<StructVectorBatch *>(batch.get());
+    TimestampVectorBatch * tsBatch =
+      dynamic_cast<TimestampVectorBatch *>(structBatch->fields[0]);
+
+    std::vector<std::time_t> times(rowCount);
+    for (uint64_t i = 0; i < rowCount; ++i) {
+      time_t currTime = -14210715; // 1969-07-20 12:34:45
+      times[i] = static_cast<int64_t>(currTime) + static_cast<int64_t >(i * 3660);
+      tsBatch->data[i] = times[i];
+      tsBatch->nanoseconds[i] = static_cast<int64_t>(i * 1000);
+    }
+    structBatch->numElements = rowCount;
+    tsBatch->numElements = rowCount;
+
+    writer->add(*batch);
+    writer->close();
+
+    std::unique_ptr<InputStream> inStream(
+      new MemoryInputStream (memStream.getData(), memStream.getLength()));
+    std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
+    std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
+    EXPECT_EQ(rowCount, reader->getNumberOfRows());
+
+    batch = rowReader->createRowBatch(rowCount);
+    EXPECT_EQ(true, rowReader->next(*batch));
+
+    structBatch = dynamic_cast<StructVectorBatch *>(batch.get());
+    tsBatch = dynamic_cast<TimestampVectorBatch *>(structBatch->fields[0]);
+    for (uint64_t i = 0; i < rowCount; ++i) {
+      EXPECT_EQ(times[i], tsBatch->data[i]);
+      EXPECT_EQ(i * 1000, tsBatch->nanoseconds[i]);
     }
   }
 

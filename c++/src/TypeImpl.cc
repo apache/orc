@@ -658,7 +658,7 @@ namespace orc {
       if (input[endPos] == ':') {
         fieldName = input.substr(pos, endPos - pos);
         pos = ++endPos;
-        while (endPos < end && isalpha(input[endPos])) {
+        while (endPos < end && (isalpha(input[endPos]) || input[endPos] == '_')) {
           ++endPos;
         }
       }
