@@ -716,8 +716,8 @@ Literals start with an initial byte of 0x80 to 0xff, which corresponds
 to the negative of number of literals in the sequence. Following the
 header byte, the list of N varints is encoded. Thus, if there are
 no runs, the overhead is 1 byte for each 128 integers. The first 5
-prime numbers [2, 3, 4, 7, 11] would encoded as [0xfb, 0x02, 0x03,
-0x04, 0x07, 0xb].
+prime numbers [2, 3, 5, 7, 11] would encoded as [0xff, 0x02, 0x00,
+0x02, 0x03, 0xff, 0xb].
 
 ## Integer Run Length Encoding, version 2
 
