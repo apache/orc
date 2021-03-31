@@ -706,11 +706,10 @@ namespace orc {
 
   void testWriteTimestampWithTimezone(FileVersion fileVersion,
                                       const char* writerTimezone,
+                                      int64_t writerTime,
                                       const char* readerTimezone,
-                                      const std::string& tsStr,
-                                      int isDst = 0) {
-    char* tzBk = getenv("TZ");  // backup TZ env
-
+                                      int64_t readerTime,
+                                      const std::string& tsStr) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
     std::unique_ptr<Type> type(Type::buildTypeFromString("struct<col1:timestamp>"));
@@ -733,13 +732,7 @@ namespace orc {
     auto& tsBatch = dynamic_cast<TimestampVectorBatch&>(*structBatch.fields[0]);
 
     // write timestamp in the writer timezone
-    setenv("TZ", writerTimezone, 1); tzset();
-    struct tm tm;
-    memset(&tm, 0, sizeof(struct tm));
-    strptime(tsStr.c_str(), "%Y-%m-%d %H:%M:%S", &tm);
-    // mktime() does depend on external hint for daylight saving time
-    tm.tm_isdst = isDst;
-    tsBatch.data[0] = mktime(&tm);
+    tsBatch.data[0] = writerTime;
     tsBatch.nanoseconds[0] = 0;
     structBatch.numElements = rowCount;
     tsBatch.numElements = rowCount;
@@ -754,44 +747,26 @@ namespace orc {
     EXPECT_EQ(true, rowReader->next(*batch));
 
     // verify we get same wall clock in reader timezone
-    setenv("TZ", readerTimezone, 1); tzset();
-    memset(&tm, 0, sizeof(struct tm));
-    time_t ttime = tsBatch.data[0];
-    localtime_r(&ttime, &tm);
-    char buf[20];
-    strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &tm);
-    EXPECT_TRUE(strncmp(buf, tsStr.c_str(), tsStr.size()) == 0);
-
-    // restore TZ env
-    if (tzBk) {
-      setenv("TZ", tzBk, 1); tzset();
-    } else {
-      unsetenv("TZ"); tzset();
-    }
+    EXPECT_EQ(tsBatch.data[0], readerTime);
   }
 
   TEST_P(WriterTest, writeTimestampWithTimezone) {
-    const int IS_DST = 1, NOT_DST = 0;
-    testWriteTimestampWithTimezone(fileVersion, "GMT", "GMT", "2001-11-12 18:31:01");
+    testWriteTimestampWithTimezone(fileVersion, "GMT", 1005589861, "GMT", 1005589861, "2001-11-12 18:31:01");
     // behavior for Apache Orc (writer & reader timezone can change)
-    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", "America/Los_Angeles", "2001-11-12 18:31:01");
-    testWriteTimestampWithTimezone(fileVersion, "Asia/Shanghai", "Asia/Shanghai", "2001-11-12 18:31:01");
-    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", "Asia/Shanghai", "2001-11-12 18:31:01");
-    testWriteTimestampWithTimezone(fileVersion, "Asia/Shanghai", "America/Los_Angeles", "2001-11-12 18:31:01");
-    testWriteTimestampWithTimezone(fileVersion, "GMT", "Asia/Shanghai", "2001-11-12 18:31:01");
-    testWriteTimestampWithTimezone(fileVersion, "Asia/Shanghai", "GMT", "2001-11-12 18:31:01");
-    testWriteTimestampWithTimezone(fileVersion, "Asia/Shanghai", "America/Los_Angeles", "2018-01-01 23:59:59");
+    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", 1005618661, "America/Los_Angeles", 1005618661, "2001-11-12 18:31:01");
+    testWriteTimestampWithTimezone(fileVersion, "Asia/Shanghai", 1005561061, "Asia/Shanghai", 1005561061, "2001-11-12 18:31:01");
+    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", 1005618661, "Asia/Shanghai", 1005561061, "2001-11-12 18:31:01");
+    testWriteTimestampWithTimezone(fileVersion, "Asia/Shanghai", 1005561061, "America/Los_Angeles", 1005618661, "2001-11-12 18:31:01");
     // daylight saving started at 2012-03-11 02:00:00 in Los Angeles
-    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", "Asia/Shanghai", "2012-03-11 01:59:59", NOT_DST);
-    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", "Asia/Shanghai", "2012-03-11 03:00:00", IS_DST);
-    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", "Asia/Shanghai", "2012-03-11 03:00:01", IS_DST);
+    //set the dst of write time is 0
+    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", 1331459999, "Asia/Shanghai", 1331402399, "2012-03-11 01:59:59");
+    //set the dst of write time is 1
+    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", 1331460000, "Asia/Shanghai", 1331406000, "2012-03-11 03:00:00");
     // daylight saving ended at 2012-11-04 02:00:00 in Los Angeles
-    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", "Asia/Shanghai", "2012-11-04 01:59:59", IS_DST);
-    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", "Asia/Shanghai", "2012-11-04 02:00:00", NOT_DST);
-    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", "Asia/Shanghai", "2012-11-04 02:00:01", NOT_DST);
-    // other daylight saving time
-    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", "Asia/Shanghai", "2014-06-06 12:34:56", IS_DST);
-    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", "America/Los_Angeles", "2014-06-06 12:34:56", IS_DST);
+    //set the dst of write time is 1
+    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", 1352019599, "Asia/Shanghai", 1351965599, "2012-11-04 01:59:59");
+    //set the dst of write time is 0
+    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", 1352023200, "Asia/Shanghai", 1351965600, "2012-11-04 02:00:00");
   }
 
   TEST_P(WriterTest, writeTimestampInstant) {
