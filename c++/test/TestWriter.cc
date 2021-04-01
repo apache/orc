@@ -708,8 +708,7 @@ namespace orc {
                                       const char* writerTimezone,
                                       int64_t writerTime,
                                       const char* readerTimezone,
-                                      int64_t readerTime,
-                                      const std::string& tsStr) {
+                                      int64_t readerTime) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
     std::unique_ptr<Type> type(Type::buildTypeFromString("struct<col1:timestamp>"));
@@ -751,22 +750,24 @@ namespace orc {
   }
 
   TEST_P(WriterTest, writeTimestampWithTimezone) {
-    testWriteTimestampWithTimezone(fileVersion, "GMT", 1005589861, "GMT", 1005589861, "2001-11-12 18:31:01");
+    //use the time "2001-11-12 18:31:01" to generate readerTime and writerTime.
+    testWriteTimestampWithTimezone(fileVersion, "GMT", 1005589861, "GMT", 1005589861);
     // behavior for Apache Orc (writer & reader timezone can change)
-    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", 1005618661, "America/Los_Angeles", 1005618661, "2001-11-12 18:31:01");
-    testWriteTimestampWithTimezone(fileVersion, "Asia/Shanghai", 1005561061, "Asia/Shanghai", 1005561061, "2001-11-12 18:31:01");
-    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", 1005618661, "Asia/Shanghai", 1005561061, "2001-11-12 18:31:01");
-    testWriteTimestampWithTimezone(fileVersion, "Asia/Shanghai", 1005561061, "America/Los_Angeles", 1005618661, "2001-11-12 18:31:01");
+    //use the time "2001-11-12 18:31:01" to generate readerTime and writerTime.
+    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", 1005618661, "America/Los_Angeles", 1005618661);
+    testWriteTimestampWithTimezone(fileVersion, "Asia/Shanghai", 1005561061, "Asia/Shanghai", 1005561061);
+    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", 1005618661, "Asia/Shanghai", 1005561061);
+    testWriteTimestampWithTimezone(fileVersion, "Asia/Shanghai", 1005561061, "America/Los_Angeles", 1005618661);
     // daylight saving started at 2012-03-11 02:00:00 in Los Angeles
-    //set the dst of write time is 0
-    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", 1331459999, "Asia/Shanghai", 1331402399, "2012-03-11 01:59:59");
-    //set the dst of write time is 1
-    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", 1331460000, "Asia/Shanghai", 1331406000, "2012-03-11 03:00:00");
+    //use the time "2012-03-11 01:59:59" to generate readerTime and writerTime. And set the dst of write time is 0
+    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", 1331459999, "Asia/Shanghai", 1331402399);
+    //use the time "2012-03-11 03:00:00" to generate readerTime and writerTime. And set the dst of write time is 1
+    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", 1331460000, "Asia/Shanghai", 1331406000);
     // daylight saving ended at 2012-11-04 02:00:00 in Los Angeles
-    //set the dst of write time is 1
-    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", 1352019599, "Asia/Shanghai", 1351965599, "2012-11-04 01:59:59");
-    //set the dst of write time is 0
-    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", 1352023200, "Asia/Shanghai", 1351965600, "2012-11-04 02:00:00");
+    //use the time "2012-11-04 01:59:59" to generate readerTime and writerTime. And set the dst of write time is 1
+    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", 1352019599, "Asia/Shanghai", 1351965599);
+    //use the time "2012-11-04 02:00:00" to generate readerTime and writerTime. And set the dst of write time is 0
+    testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", 1352023200, "Asia/Shanghai", 1351965600);
   }
 
   TEST_P(WriterTest, writeTimestampInstant) {

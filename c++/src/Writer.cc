@@ -454,8 +454,7 @@ namespace orc {
       *stripeFooter.add_columns() = encodings[i];
     }
 
-    // use GMT to guarantee TimestampVectorBatch from reader can write
-    // same wall clock time
+    // use specified timezone to write wall clock time.
     stripeFooter.set_writertimezone(options.getTimezoneName());
 
     // add stripe statistics to metadata
