@@ -769,7 +769,7 @@ namespace orc {
     memset(&tm, 0, sizeof(struct tm));
     time_t ttime = tsBatch.data[0];
 #ifdef _WIN32
-    localtime_s(&ttime, &tm);
+    localtime_s(&tm, &ttime);
 #else
     localtime_r(&ttime, &tm);
 #endif
@@ -778,16 +778,20 @@ namespace orc {
     EXPECT_TRUE(strncmp(buf, tsStr.c_str(), tsStr.size()) == 0);
 
     // restore TZ env
-    if (tzBk) {
 #ifdef _WIN32
-      _putenv_s("TZ", tzBk, 1);
-#else
-      setenv("TZ", tzBk, 1);
-#endif
-      tzset();
+    if (tzBk) {
+      _putenv_s("TZ", tzBk);
     } else {
-      unsetenv("TZ");tzset();
+      _putenv("TZ=");
     }
+#else
+    if (tzBk) {
+      setenv("TZ", tzBk, 1);
+    } else {
+      unsetenv("TZ");
+    }
+#endif
+    tzset();
   }
 
   TEST_P(WriterTest, writeTimestampWithTimezone) {
