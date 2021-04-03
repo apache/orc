@@ -194,6 +194,8 @@
               <module name="FileTabCharacter">
                 <property name="eachLine" value="true"></property>
               </module>
+              <module name="NewlineAtEndOfFile">
+              </module>
               <module name="TreeWalker">
                 <module name="UnusedImports"/>
               </module>
