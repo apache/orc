@@ -460,9 +460,9 @@ and the varint is 100 for an encoding of [0x61, 0xff, 0x64].
 Literals start with an initial byte of 0x80 to 0xff, which corresponds
 to the negative of number of literals in the sequence. Following the
 header byte, the list of N varints is encoded. Thus, if there are
-no runs, the overhead is 1 byte for each 128 integers. The first 5
-prime numbers [2, 3, 4, 7, 11] would encoded as [0xfb, 0x02, 0x03,
-0x04, 0x07, 0xb].
+no runs, the overhead is 1 byte for each 128 integers. Numbers
+[2, 3, 6, 7, 11] would be encoded as [0xfb, 0x02, 0x03, 0x06, 0x07, 0xb].
+
 
 # Stripes
 
@@ -766,4 +766,3 @@ indexes error-prone.
 Because dictionaries are accessed randomly, there is not a position to
 record for the dictionary and the entire dictionary must be read even
 if only part of a stripe is being read.
-
