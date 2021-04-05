@@ -71,7 +71,7 @@ public class OrcMapredRecordReader<V extends WritableComparable>
 
   protected OrcMapredRecordReader(Reader fileReader,
       Reader.Options options) throws IOException {
-    this(fileReader, options, (int) OrcConf.ROW_BATCH_SIZE.getDefaultValue());
+    this(fileReader, options, VectorizedRowBatch.DEFAULT_SIZE);
   }
 
   protected OrcMapredRecordReader(Reader fileReader,

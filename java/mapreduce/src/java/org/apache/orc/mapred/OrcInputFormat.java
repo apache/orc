@@ -154,7 +154,7 @@ public class OrcInputFormat<V extends WritableComparable>
         OrcFile.readerOptions(conf)
             .maxLength(OrcConf.MAX_FILE_LENGTH.getLong(conf)));
     return new OrcMapredRecordReader<>(file, buildOptions(conf,
-        file, split.getStart(), split.getLength()), OrcConf.ROW_BATCH_SIZE.getInt(conf));
+        file, split.getStart(), split.getLength()));
   }
 
   /**
