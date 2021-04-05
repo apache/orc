@@ -45,7 +45,6 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.RecordWriter;
 import org.apache.hadoop.mapred.Reporter;
-import org.apache.orc.OrcConf;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
 
