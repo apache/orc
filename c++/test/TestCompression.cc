@@ -338,6 +338,30 @@ namespace orc {
     protobuff_compression(CompressionKind_ZSTD, proto::ZSTD);
   }
 
+  TEST(Compression, lz4_compress_original_string) {
+    compress_original_string(CompressionKind_LZ4);
+  }
+
+  TEST(Compression, lz4_compress_simple_repeated_string) {
+    compress_simple_repeated_string(CompressionKind_LZ4);
+  }
+
+  TEST(Compression, lz4_compress_two_blocks) {
+    compress_two_blocks(CompressionKind_LZ4);
+  }
+
+  TEST(Compression, lz4_compress_random_letters) {
+    compress_random_letters(CompressionKind_LZ4);
+  }
+
+  TEST(Compression, lz4_compress_random_bytes) {
+    compress_random_bytes(CompressionKind_LZ4);
+  }
+
+  TEST(Compression, lz4_protobuff_compression) {
+    protobuff_compression(CompressionKind_LZ4, proto::LZ4);
+  }
+
   void testSeekDecompressionStream(CompressionKind kind) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool * pool = getDefaultPool();
@@ -402,5 +426,6 @@ namespace orc {
   TEST(Compression, seekDecompressionStream) {
     testSeekDecompressionStream(CompressionKind_ZSTD);
     testSeekDecompressionStream(CompressionKind_ZLIB);
+    testSeekDecompressionStream(CompressionKind_LZ4);
   }
 }
