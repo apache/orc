@@ -66,7 +66,8 @@ public class OrcMapredRecordWriter<V extends Writable>
     this(writer, VectorizedRowBatch.DEFAULT_SIZE);
   }
 
-  public OrcMapredRecordWriter(Writer writer, int rowBatchSize) {
+  public OrcMapredRecordWriter(Writer writer,
+                               int rowBatchSize) {
     this.writer = writer;
     schema = writer.getSchema();
     this.batch = schema.createRowBatch(rowBatchSize);
