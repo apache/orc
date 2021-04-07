@@ -931,7 +931,7 @@ DIAGNOSTIC_POP
     virtual uint64_t doBlockCompression() override;
 
     virtual uint64_t estimateMaxCompressionSize() override {
-      return LZ4_compressBound(bufferSize);
+      return static_cast<uint64_t>(LZ4_compressBound(bufferSize));
     }
 
   private:
@@ -954,7 +954,7 @@ DIAGNOSTIC_POP
   }
 
   void Lz4CompressionSteam::init() {
-    state = static_cast<LZ4_stream_t*>(malloc(LZ4_sizeofState()));
+    state = static_cast<LZ4_stream_t*>(malloc(static_cast<size_t>(LZ4_sizeofState())));
     if (!state) {
       throw std::runtime_error("Error while allocating state for lz4.");
     }
