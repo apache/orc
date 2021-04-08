@@ -36,6 +36,11 @@
 #define ZSTD_CLEVEL_DEFAULT 3
 #endif
 
+/* These macros are defined in lz4.c */
+#ifndef LZ4_ACCELERATION_DEFAULT
+#define LZ4_ACCELERATION_DEFAULT 1
+#endif
+
 #ifndef LZ4_ACCELERATION_MAX
 #define LZ4_ACCELERATION_MAX 65537
 #endif
@@ -1134,7 +1139,7 @@ DIAGNOSTIC_PUSH
     }
     case CompressionKind_LZ4: {
       int level = (strategy == CompressionStrategy_SPEED) ?
-              LZ4_ACCELERATION_MAX : 1;
+              LZ4_ACCELERATION_MAX : LZ4_ACCELERATION_DEFAULT;
       return std::unique_ptr<BufferedOutputStream>
         (new Lz4CompressionSteam(
           outStream, level, bufferCapacity, compressionBlockSize, pool));
