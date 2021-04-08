@@ -70,13 +70,19 @@ public class OrcMapredRecordReader<V extends WritableComparable>
 
   protected OrcMapredRecordReader(Reader fileReader,
                                   Reader.Options options) throws IOException {
+    this(fileReader, options, VectorizedRowBatch.DEFAULT_SIZE);
+  }
+
+  protected OrcMapredRecordReader(Reader fileReader,
+                                  Reader.Options options,
+                                  int rowBatchSize) throws IOException {
     this.batchReader = fileReader.rows(options);
     if (options.getSchema() == null) {
       schema = fileReader.getSchema();
     } else {
       schema = options.getSchema();
     }
-    this.batch = schema.createRowBatch();
+    this.batch = schema.createRowBatch(rowBatchSize);
     rowInBatch = 0;
   }
 

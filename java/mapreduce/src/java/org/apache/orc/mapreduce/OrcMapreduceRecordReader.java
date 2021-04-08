@@ -56,13 +56,19 @@ public class OrcMapreduceRecordReader<V extends WritableComparable>
 
   public OrcMapreduceRecordReader(Reader fileReader,
                                   Reader.Options options) throws IOException {
+    this(fileReader, options, VectorizedRowBatch.DEFAULT_SIZE);
+  }
+
+  public OrcMapreduceRecordReader(Reader fileReader,
+                                  Reader.Options options,
+                                  int rowBatchSize) throws IOException {
     this.batchReader = fileReader.rows(options);
     if (options.getSchema() == null) {
       schema = fileReader.getSchema();
     } else {
       schema = options.getSchema();
     }
-    this.batch = schema.createRowBatch();
+    this.batch = schema.createRowBatch(rowBatchSize);
     rowInBatch = 0;
     this.row = (V) OrcStruct.createValue(schema);
   }
