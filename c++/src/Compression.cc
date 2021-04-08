@@ -954,14 +954,14 @@ DIAGNOSTIC_POP
   }
 
   void Lz4CompressionSteam::init() {
-    state = static_cast<LZ4_stream_t*>(malloc(static_cast<size_t>(LZ4_sizeofState())));
+    state = LZ4_createStream();
     if (!state) {
       throw std::runtime_error("Error while allocating state for lz4.");
     }
   }
 
   void Lz4CompressionSteam::end() {
-    free(state);
+    (void)LZ4_freeStream(state);
     state = nullptr;
   }
 
