@@ -42,11 +42,13 @@ import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.RecordWriter;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.TaskAttemptContext;
+import org.apache.hadoop.util.Progressable;
 import org.apache.orc.CompressionKind;
 import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.TypeDescription;
+import org.apache.orc.Writer;
 import org.junit.Test;
 
 import java.io.File;
@@ -294,5 +296,53 @@ public class TestOrcOutputFormat {
     Reader file = OrcFile.createReader(path, OrcFile.readerOptions(conf));
     assertEquals(3000, file.getNumberOfRows());
     assertEquals(TYPE_STRING, file.getSchema().toString());
+  }
+
+  /**
+   * Make sure that the ORC writer is initialized with a configured row batch size
+   * @throws Exception
+   */
+  @Test
+  public void testOrcOutputFormatWithRowBatchSize() throws Exception {
+    conf.set("mapreduce.output.fileoutputformat.outputdir", workDir.toString());
+    conf.set("mapreduce.task.attempt.id", "attempt_jt0_0_m_0_0");
+    conf.setInt(OrcOutputFormatWithRowBatchSize.ROW_BATCH_SIZE, 128);
+    String TYPE_STRING = "struct<i:int,s:string>";
+    OrcConf.MAPRED_OUTPUT_SCHEMA.setString(conf, TYPE_STRING);
+    conf.setOutputCommitter(NullOutputCommitter.class);
+    TypeDescription schema = TypeDescription.fromString(TYPE_STRING);
+    OrcKey key = new OrcKey(new OrcStruct(schema));
+    RecordWriter<NullWritable, Writable> writer =
+        new OrcOutputFormatWithRowBatchSize<>().getRecordWriter(fs, conf, "key.orc",
+            Reporter.NULL);
+    NullWritable nada = NullWritable.get();
+    for(int r=0; r < 2000; ++r) {
+      ((OrcStruct) key.key).setAllFields(new IntWritable(r),
+          new Text(Integer.toString(r)));
+      writer.write(nada, key);
+    }
+    writer.close(Reporter.NULL);
+    Path path = new Path(workDir, "key.orc");
+    Reader file = OrcFile.createReader(path, OrcFile.readerOptions(conf));
+    assertEquals(2000, file.getNumberOfRows());
+    assertEquals(TYPE_STRING, file.getSchema().toString());
+  }
+
+  private static class OrcOutputFormatWithRowBatchSize<V extends Writable> extends OrcOutputFormat {
+    public static final String ROW_BATCH_SIZE = "orc.row.batch.size";
+
+    @Override
+    public RecordWriter<NullWritable, V> getRecordWriter(FileSystem fileSystem,
+        JobConf conf,
+        String name,
+        Progressable progressable
+    ) throws IOException {
+      Path path = getTaskOutputPath(conf, name);
+      Writer writer = OrcFile.createWriter(path,
+          buildOptions(conf).fileSystem(fileSystem));
+      //Ensure that orc.row.batch.size confing is set in the JobConf
+      int rowBatchSize = Integer.parseInt(conf.get(ROW_BATCH_SIZE));
+      return new OrcMapredRecordWriter<>(writer, rowBatchSize);
+    }
   }
 }
