@@ -44,7 +44,6 @@ public class OrcMapreduceRecordReader<V extends WritableComparable>
   private final VectorizedRowBatch batch;
   private int rowInBatch;
   private final V row;
-  private final boolean[] include;
 
   public OrcMapreduceRecordReader(RecordReader reader,
                                   TypeDescription schema) throws IOException {
@@ -53,7 +52,6 @@ public class OrcMapreduceRecordReader<V extends WritableComparable>
     this.schema = schema;
     rowInBatch = 0;
     this.row = (V) OrcStruct.createValue(schema);
-    this.include = null;
   }
 
   public OrcMapreduceRecordReader(Reader fileReader,
@@ -73,7 +71,6 @@ public class OrcMapreduceRecordReader<V extends WritableComparable>
     this.batch = schema.createRowBatch(rowBatchSize);
     rowInBatch = 0;
     this.row = (V) OrcStruct.createValue(schema);
-    this.include = options.getInclude();
   }
 
   /**
@@ -105,22 +102,16 @@ public class OrcMapreduceRecordReader<V extends WritableComparable>
     if (!ensureBatch()) {
       return false;
     }
-    int rowIdx = batch.selectedInUse ? batch.selected[rowInBatch] : rowInBatch;
     if (schema.getCategory() == TypeDescription.Category.STRUCT) {
       OrcStruct result = (OrcStruct) row;
       List<TypeDescription> children = schema.getChildren();
       int numberOfChildren = children.size();
       for(int i=0; i < numberOfChildren; ++i) {
-        TypeDescription child = children.get(i);
-        if (include == null || include[child.getId()]) {
-          result.setFieldValue(i, OrcMapredRecordReader.nextValue(batch.cols[i], rowIdx,
-                                                                  child, result.getFieldValue(i)));
-        } else {
-          result.setFieldValue(i, null);
-        }
+        result.setFieldValue(i, OrcMapredRecordReader.nextValue(batch.cols[i], rowInBatch,
+            children.get(i), result.getFieldValue(i)));
       }
     } else {
-      OrcMapredRecordReader.nextValue(batch.cols[0], rowIdx, schema, row);
+      OrcMapredRecordReader.nextValue(batch.cols[0], rowInBatch, schema, row);
     }
     rowInBatch += 1;
     return true;
