@@ -164,6 +164,7 @@ TEST (TestFileMetadata, testJson) {
   const std::string expected =
     "{ \"name\": \"" + file + "\",\n"
     "  \"type\": \"struct<userid:bigint,string1:string,subtype:double,decimal1:decimal(0,0),ts:timestamp>\",\n"
+    "  \"attributes\": {},\n"
     "  \"rows\": 25000,\n"
     "  \"stripe count\": 5,\n"
     "  \"format\": \"0.12\", \"writer version\": \"original\",\n"
@@ -205,14 +206,13 @@ TEST (TestFileMetadata, testJson) {
   EXPECT_EQ("", error);
 }
 
-
-
 TEST (TestFileMetadata, testNoFormat) {
   const std::string pgm = findProgram("tools/src/orc-metadata");
   const std::string file = findExample("orc_no_format.orc");
   const std::string expected =
     "{ \"name\": \"" + file + "\",\n"
     "  \"type\": \"struct<_col0:array<string>,_col1:map<int,string>,_col2:struct<name:string,score:int>>\",\n"
+    "  \"attributes\": {},\n"
     "  \"rows\": 5,\n"
     "  \"stripe count\": 1,\n"
     "  \"format\": \"0.11\", \"writer version\": \"original\",\n"
@@ -226,6 +226,67 @@ TEST (TestFileMetadata, testNoFormat) {
     "    { \"stripe\": 0, \"rows\": 5,\n"
     "      \"offset\": 3, \"length\": 522,\n"
     "      \"index\": 224, \"data\": 187, \"footer\": 111\n"
+    "    }\n"
+    "  ]\n"
+    "}\n";
+
+  std::string output;
+  std::string error;
+  std::cout << expected;
+  EXPECT_EQ(0, runProgram({pgm, file}, output, error));
+  EXPECT_EQ(expected, output);
+  EXPECT_EQ("", error);
+}
+
+TEST (TestFileMetadata, testAttributes) {
+  const std::string pgm = findProgram("tools/src/orc-metadata");
+  const std::string file = findExample("complextypes_iceberg.orc");
+  const std::string expected =
+    "{ \"name\": \"" + file +  "\",\n"
+    "  \"type\": \"struct<id:bigint,int_array:array<int>,int_array_array:array<array<int>>,int_map:map<string,int>,int_map_array:array<map<string,int>>,nested_struct:struct<a:int,b:array<int>,c:struct<d:array<array<struct<e:int,f:string>>>>,g:map<string,struct<h:struct<i:array<double>>>>>>\",\n"
+    "  \"attributes\": {\n"
+    "    \"id\": {\"iceberg.id\": \"1\", \"iceberg.long-type\": \"LONG\", \"iceberg.required\": \"false\"},\n"
+    "    \"int_array\": {\"iceberg.id\": \"2\", \"iceberg.required\": \"false\"},\n"
+    "    \"int_array._elem\": {\"iceberg.id\": \"7\", \"iceberg.required\": \"false\"},\n"
+    "    \"int_array_array\": {\"iceberg.id\": \"3\", \"iceberg.required\": \"false\"},\n"
+    "    \"int_array_array._elem\": {\"iceberg.id\": \"8\", \"iceberg.required\": \"false\"},\n"
+    "    \"int_array_array._elem._elem\": {\"iceberg.id\": \"9\", \"iceberg.required\": \"false\"},\n"
+    "    \"int_map\": {\"iceberg.id\": \"4\", \"iceberg.required\": \"false\"},\n"
+    "    \"int_map._key\": {\"iceberg.id\": \"10\", \"iceberg.required\": \"true\"},\n"
+    "    \"int_map._value\": {\"iceberg.id\": \"11\", \"iceberg.required\": \"false\"},\n"
+    "    \"int_map_array\": {\"iceberg.id\": \"5\", \"iceberg.required\": \"false\"},\n"
+    "    \"int_map_array._elem\": {\"iceberg.id\": \"12\", \"iceberg.required\": \"false\"},\n"
+    "    \"int_map_array._elem._key\": {\"iceberg.id\": \"13\", \"iceberg.required\": \"true\"},\n"
+    "    \"int_map_array._elem._value\": {\"iceberg.id\": \"14\", \"iceberg.required\": \"false\"},\n"
+    "    \"nested_struct\": {\"iceberg.id\": \"6\", \"iceberg.required\": \"false\"},\n"
+    "    \"nested_struct.a\": {\"iceberg.id\": \"15\", \"iceberg.required\": \"false\"},\n"
+    "    \"nested_struct.b\": {\"iceberg.id\": \"16\", \"iceberg.required\": \"false\"},\n"
+    "    \"nested_struct.b._elem\": {\"iceberg.id\": \"19\", \"iceberg.required\": \"false\"},\n"
+    "    \"nested_struct.c\": {\"iceberg.id\": \"17\", \"iceberg.required\": \"false\"},\n"
+    "    \"nested_struct.c.d\": {\"iceberg.id\": \"20\", \"iceberg.required\": \"false\"},\n"
+    "    \"nested_struct.c.d._elem\": {\"iceberg.id\": \"21\", \"iceberg.required\": \"false\"},\n"
+    "    \"nested_struct.c.d._elem._elem\": {\"iceberg.id\": \"22\", \"iceberg.required\": \"false\"},\n"
+    "    \"nested_struct.c.d._elem._elem.e\": {\"iceberg.id\": \"23\", \"iceberg.required\": \"false\"},\n"
+    "    \"nested_struct.c.d._elem._elem.f\": {\"iceberg.id\": \"24\", \"iceberg.required\": \"false\"},\n"
+    "    \"nested_struct.g\": {\"iceberg.id\": \"18\", \"iceberg.required\": \"false\"},\n"
+    "    \"nested_struct.g._key\": {\"iceberg.id\": \"25\", \"iceberg.required\": \"true\"},\n"
+    "    \"nested_struct.g._value\": {\"iceberg.id\": \"26\", \"iceberg.required\": \"false\"},\n"
+    "    \"nested_struct.g._value.h\": {\"iceberg.id\": \"27\", \"iceberg.required\": \"false\"},\n"
+    "    \"nested_struct.g._value.h.i\": {\"iceberg.id\": \"28\", \"iceberg.required\": \"false\"},\n"
+    "    \"nested_struct.g._value.h.i._elem\": {\"iceberg.id\": \"29\", \"iceberg.required\": \"false\"}},\n"
+    "  \"rows\": 1,\n"
+    "  \"stripe count\": 1,\n"
+    "  \"format\": \"0.12\", \"writer version\": \"future - 9\",\n"
+    "  \"compression\": \"zlib\", \"compression block\": 131072,\n"
+    "  \"file length\": 1734,\n"
+    "  \"content\": 1006, \"stripe stats\": 167, \"footer\": 535, \"postscript\": 25,\n"
+    "  \"row index stride\": 10000,\n"
+    "  \"user metadata\": {\n"
+    "  },\n"
+    "  \"stripes\": [\n"
+    "    { \"stripe\": 0, \"rows\": 1,\n"
+    "      \"offset\": 3, \"length\": 1003,\n"
+    "      \"index\": 679, \"data\": 150, \"footer\": 174\n"
     "    }\n"
     "  ]\n"
     "}\n";

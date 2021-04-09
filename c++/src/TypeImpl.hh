@@ -40,6 +40,7 @@ namespace orc {
     uint64_t maxLength;
     uint64_t precision;
     uint64_t scale;
+    std::map<std::string, std::string> attributes;
 
   public:
     /**
@@ -75,6 +76,15 @@ namespace orc {
     uint64_t getPrecision() const override;
 
     uint64_t getScale() const override;
+
+    Type& setAttribute(const std::string& key,
+                       const std::string& value) override;
+
+    Type& removeAttribute(const std::string& key) override;
+
+    std::vector<std::string> getAttributeKeys() const override;
+
+    std::string getAttributeValue(const std::string& key) const override;
 
     std::string toString() const override;
 

@@ -605,6 +605,13 @@ namespace orc {
       throw std::logic_error("Unknown type.");
     }
 
+    for (auto& key : t.getAttributeKeys()) {
+      const auto& value = t.getAttributeValue(key);
+      auto protoAttr = protoType.add_attributes();
+      protoAttr->set_key(key);
+      protoAttr->set_value(value);
+    }
+
     int pos = static_cast<int>(index);
     *footer.add_types() = protoType;
 
