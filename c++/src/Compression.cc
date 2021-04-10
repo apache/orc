@@ -36,6 +36,15 @@
 #define ZSTD_CLEVEL_DEFAULT 3
 #endif
 
+/* These macros are defined in lz4.c */
+#ifndef LZ4_ACCELERATION_DEFAULT
+#define LZ4_ACCELERATION_DEFAULT 1
+#endif
+
+#ifndef LZ4_ACCELERATION_MAX
+#define LZ4_ACCELERATION_MAX 65537
+#endif
+
 namespace orc {
 
   class CompressionStreamBase: public BufferedOutputStream {
@@ -898,6 +907,70 @@ DIAGNOSTIC_POP
   }
 
   /**
+   * LZ4 block compression
+   */
+  class Lz4CompressionSteam: public BlockCompressionStream {
+  public:
+    Lz4CompressionSteam(OutputStream * outStream,
+                        int compressionLevel,
+                        uint64_t capacity,
+                        uint64_t blockSize,
+                        MemoryPool& pool)
+                        : BlockCompressionStream(outStream,
+                                                 compressionLevel,
+                                                 capacity,
+                                                 blockSize,
+                                                 pool) {
+      this->init();
+    }
+
+    virtual std::string getName() const override {
+      return "Lz4CompressionStream";
+    }
+    
+    virtual ~Lz4CompressionSteam() override {
+      this->end();
+    }
+
+  protected:
+    virtual uint64_t doBlockCompression() override;
+
+    virtual uint64_t estimateMaxCompressionSize() override {
+      return static_cast<uint64_t>(LZ4_compressBound(bufferSize));
+    }
+
+  private:
+    void init();
+    void end();
+    LZ4_stream_t *state;
+  };
+
+  uint64_t Lz4CompressionSteam::doBlockCompression() {
+    int result = LZ4_compress_fast_extState(static_cast<void*>(state),
+                                            reinterpret_cast<const char*>(rawInputBuffer.data()),
+                                            reinterpret_cast<char*>(compressorBuffer.data()),
+                                            bufferSize,
+                                            static_cast<int>(compressorBuffer.size()),
+                                            level);
+    if (result == 0) {
+      throw std::runtime_error("Error during block compression using lz4.");
+    }
+    return static_cast<uint64_t>(result);
+  }
+
+  void Lz4CompressionSteam::init() {
+    state = LZ4_createStream();
+    if (!state) {
+      throw std::runtime_error("Error while allocating state for lz4.");
+    }
+  }
+
+  void Lz4CompressionSteam::end() {
+    (void)LZ4_freeStream(state);
+    state = nullptr;
+  }
+
+  /**
    * ZSTD block compression
    */
   class ZSTDCompressionStream: public BlockCompressionStream {
@@ -1064,9 +1137,15 @@ DIAGNOSTIC_PUSH
         (new ZSTDCompressionStream(
           outStream, level, bufferCapacity, compressionBlockSize, pool));
     }
+    case CompressionKind_LZ4: {
+      int level = (strategy == CompressionStrategy_SPEED) ?
+              LZ4_ACCELERATION_MAX : LZ4_ACCELERATION_DEFAULT;
+      return std::unique_ptr<BufferedOutputStream>
+        (new Lz4CompressionSteam(
+          outStream, level, bufferCapacity, compressionBlockSize, pool));
+    }
     case CompressionKind_SNAPPY:
     case CompressionKind_LZO:
-    case CompressionKind_LZ4:
     default:
       throw NotImplementedYet("compression codec");
     }
