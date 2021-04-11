@@ -275,6 +275,10 @@
                 </module>
                 <module name="NewlineAtEndOfFile">
                 </module>
+                <module name="RegexpSingleline">
+                  <property name="format" value="\s+$"/>
+                  <property name="message" value="No trailing white space allowed."/>
+                </module>
                 <module name="TreeWalker">
                   <module name="UnusedImports"/>
                 </module>
