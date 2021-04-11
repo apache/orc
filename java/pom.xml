@@ -74,6 +74,7 @@
     <storage-api.version>2.7.2</storage-api.version>
     <zookeeper.version>3.6.2</zookeeper.version>
     <maven.version>3.6.3</maven.version>
+    <slf4j.version>1.7.30</slf4j.version>
   </properties>
 
   <build>
@@ -718,12 +719,12 @@
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
-        <version>1.7.5</version>
+        <version>${slf4j.version}</version>
       </dependency>
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-simple</artifactId>
-        <version>1.7.5</version>
+        <version>${slf4j.version}</version>
       </dependency>
       <dependency>
         <groupId>org.threeten</groupId>
