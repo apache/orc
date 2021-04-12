@@ -269,12 +269,19 @@
             </execution>
           </executions>
           <configuration>
+            <sourceDirectories>
+              <directory>${basedir}/src/java</directory>
+            </sourceDirectories>
             <checkstyleRules>
               <module name="Checker">
                 <module name="FileTabCharacter">
                   <property name="eachLine" value="true"></property>
                 </module>
                 <module name="NewlineAtEndOfFile">
+                </module>
+                <module name="RegexpSingleline">
+                  <property name="format" value="\s+$"/>
+                  <property name="message" value="No trailing white space allowed."/>
                 </module>
                 <module name="TreeWalker">
                   <module name="UnusedImports"/>
