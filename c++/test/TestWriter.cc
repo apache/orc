@@ -704,6 +704,7 @@ namespace orc {
     }
   }
 
+#ifndef _MSC_VER
   void testWriteTimestampWithTimezone(FileVersion fileVersion,
                                       const char* writerTimezone,
                                       const char* readerTimezone,
@@ -771,7 +772,6 @@ namespace orc {
   }
 
   TEST_P(WriterTest, writeTimestampWithTimezone) {
-#ifndef _MSC_VER
     const int IS_DST = 1, NOT_DST = 0;
     testWriteTimestampWithTimezone(fileVersion, "GMT", "GMT", "2001-11-12 18:31:01");
     // behavior for Apache Orc (writer & reader timezone can change)
@@ -793,8 +793,8 @@ namespace orc {
     // other daylight saving time
     testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", "Asia/Shanghai", "2014-06-06 12:34:56", IS_DST);
     testWriteTimestampWithTimezone(fileVersion, "America/Los_Angeles", "America/Los_Angeles", "2014-06-06 12:34:56", IS_DST);
-#endif
   }
+#endif
 
   TEST_P(WriterTest, writeCharAndVarcharColumn) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
