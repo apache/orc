@@ -43,6 +43,7 @@ namespace orc {
     const uint64_t stripeStart;
     InputStream& input;
     const Timezone& writerTimezone;
+    const Timezone& readerTimezone;
 
   public:
     StripeStreamsImpl(const RowReaderImpl& reader, uint64_t index,
@@ -50,7 +51,8 @@ namespace orc {
                       const proto::StripeFooter& footer,
                       uint64_t stripeStart,
                       InputStream& input,
-                      const Timezone& writerTimezone);
+                      const Timezone& writerTimezone,
+                      const Timezone& readerTimezone);
 
     virtual ~StripeStreamsImpl() override;
 
@@ -67,6 +69,8 @@ namespace orc {
     MemoryPool& getMemoryPool() const override;
 
     const Timezone& getWriterTimezone() const override;
+
+    const Timezone& getReaderTimezone() const override;
 
     std::ostream* getErrorStream() const override;
 

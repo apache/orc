@@ -129,6 +129,7 @@ namespace orc {
     int32_t forcedScaleOnHive11Decimal;
     bool enableLazyDecoding;
     std::shared_ptr<SearchArgument> sargs;
+    std::string readerTimezone;
 
     RowReaderOptionsPrivate() {
       selection = ColumnSelection_NONE;
@@ -137,6 +138,7 @@ namespace orc {
       throwOnHive11DecimalOverflow = true;
       forcedScaleOnHive11Decimal = 6;
       enableLazyDecoding = false;
+      readerTimezone = "GMT";
     }
   };
 
@@ -258,6 +260,15 @@ namespace orc {
 
   std::shared_ptr<SearchArgument> RowReaderOptions::getSearchArgument() const {
     return privateBits->sargs;
+  }
+
+  RowReaderOptions& RowReaderOptions::setTimezoneName(const std::string& zoneName) {
+    privateBits->readerTimezone = zoneName;
+    return *this;
+  }
+
+  const std::string& RowReaderOptions::getTimezoneName() const {
+    return privateBits->readerTimezone;
   }
 }
 

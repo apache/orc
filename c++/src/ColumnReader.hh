@@ -69,6 +69,11 @@ namespace orc {
     virtual const Timezone& getWriterTimezone() const = 0;
 
     /**
+     * Get the reader's timezone, so that we can convert their dates correctly.
+     */
+    virtual const Timezone& getReaderTimezone() const = 0;
+
+    /**
      * Get the error stream.
      * @return a pointer to the stream that should get error messages
      */
