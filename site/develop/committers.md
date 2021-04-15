@@ -47,6 +47,7 @@ Siddharth Seth          | sseth        | Committer
 Stephen Walkauskas      | swalkaus     | Committer
 Vaibhav Gumashta        | vgumashta    | Committer
 Wei Zheng               | weiz         | Committer
+William Hyun            | william      | Committer
 Xiening Dai             | xndai        | Committer
 Xuefu Zhang             | xuefu        | Committer
 Ferdinand Xu            | xuf          | Committer
