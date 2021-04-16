@@ -76,7 +76,7 @@ public class StringRedBlackTree extends RedBlackTree implements Dictionary {
 
 
   private void recurse(int node, Dictionary.Visitor visitor,
-      DictionaryUtils.VisitorContextImpl context) throws IOException {
+      VisitorContextImpl context) throws IOException {
     if (node != NULL) {
       recurse(getLeft(node), visitor, context);
       context.setPosition(node);
@@ -93,7 +93,7 @@ public class StringRedBlackTree extends RedBlackTree implements Dictionary {
   @Override
   public void visit(Dictionary.Visitor visitor) throws IOException {
     recurse(root, visitor,
-        new DictionaryUtils.VisitorContextImpl(this.byteArray, this.keyOffsets));
+        new VisitorContextImpl(this.byteArray, this.keyOffsets));
   }
 
   /**

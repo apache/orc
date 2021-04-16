@@ -34,8 +34,7 @@ import org.apache.hadoop.io.Text;
 public class StringHashTableDictionary implements Dictionary {
 
   private final DynamicByteArray byteArray = new DynamicByteArray();
-  // starting offset of key-in-byte in the byte array for the i-th key.
-  // Two things combined stores the key array.
+  // starting offset of the key (in byte) in the byte array.
   private final DynamicIntArray keyOffsets;
 
   private final Text newKey = new Text();
@@ -49,6 +48,8 @@ public class StringHashTableDictionary implements Dictionary {
   private float loadFactor;
 
   private static float DEFAULT_LOAD_FACTOR = 0.75f;
+
+  private static final int BUCKET_SIZE = 20;
 
   private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
 
@@ -67,18 +68,24 @@ public class StringHashTableDictionary implements Dictionary {
   private DynamicIntArray[] initHashArray(int capacity) {
     DynamicIntArray[] bucket = new DynamicIntArray[capacity];
     for (int i = 0; i < capacity; i++) {
-      bucket[i] = new DynamicIntArray();
+      // We don't need large bucket: If we have more than a handful of collisions,
+      // then the table is too small or the function isn't good.
+      bucket[i] = createBucket();
     }
     return bucket;
+  }
+
+  private DynamicIntArray createBucket() {
+    return new DynamicIntArray(BUCKET_SIZE);
   }
 
   @Override
   public void visit(Visitor visitor)
       throws IOException {
-    traverse(visitor, new DictionaryUtils.VisitorContextImpl(this.byteArray, this.keyOffsets));
+    traverse(visitor, new VisitorContextImpl(this.byteArray, this.keyOffsets));
   }
 
-  private void traverse(Visitor visitor, DictionaryUtils.VisitorContextImpl context) throws IOException {
+  private void traverse(Visitor visitor, VisitorContextImpl context) throws IOException {
     for (DynamicIntArray intArray : hashArray) {
       for (int i = 0; i < intArray.size() ; i ++) {
         context.setPosition(intArray.get(i));
@@ -101,18 +108,16 @@ public class StringHashTableDictionary implements Dictionary {
 
   @Override
   public int add(byte[] bytes, int offset, int length) {
-    resizeIfNeeded();
     newKey.set(bytes, offset, length);
     return add(newKey);
   }
 
   public int add(Text text) {
     resizeIfNeeded();
+    newKey.set(text);
 
     int index = getIndex(text);
     DynamicIntArray candidateArray = hashArray[index];
-
-    newKey.set(text);
 
     Text tmpText = new Text();
     for (int i = 0; i < candidateArray.size(); i++) {
@@ -149,7 +154,7 @@ public class StringHashTableDictionary implements Dictionary {
    *
    */
   int getIndex(Text text) {
-    return (text.hashCode() & 0x7FFFFFFF) % capacity;
+    return Math.floorMod(text.hashCode(), capacity);
   }
 
   // Resize the hash table, re-hash all the existing keys.
@@ -157,19 +162,17 @@ public class StringHashTableDictionary implements Dictionary {
   private void doResize(int newSize) {
     DynamicIntArray[] resizedHashArray = new DynamicIntArray[newSize];
     for (int i = 0; i < newSize; i++) {
-      resizedHashArray[i] = new DynamicIntArray();
+      resizedHashArray[i] = createBucket();
     }
 
     Text tmpText = new Text();
     for (int i = 0; i < capacity; i++) {
       DynamicIntArray intArray = hashArray[i];
       int bucketSize = intArray.size();
-      if (bucketSize > 0) {
-        for (int j = 0; j < bucketSize; j++) {
-          getText(tmpText, intArray.get(j));
-          int newIndex = getIndex(tmpText);
-          resizedHashArray[newIndex].add(intArray.get(j));
-        }
+      for (int j = 0; j < bucketSize; j++) {
+        getText(tmpText, intArray.get(j));
+        int newIndex = getIndex(tmpText);
+        resizedHashArray[newIndex].add(intArray.get(j));
       }
     }
 

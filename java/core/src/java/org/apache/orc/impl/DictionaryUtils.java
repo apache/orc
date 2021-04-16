@@ -17,9 +17,6 @@
  */
 package org.apache.orc.impl;
 
-import java.io.IOException;
-import java.io.OutputStream;
-
 import org.apache.hadoop.io.Text;
 
 
@@ -28,6 +25,13 @@ public class DictionaryUtils {
     // Utility class does nothing in constructor
   }
 
+  /**
+   * Obtain the UTF8 string from the byteArray using the offset in index-array.
+   * @param result Container for the UTF8 String.
+   * @param position position in the keyOffsets
+   * @param keyOffsets starting offset of the key (in byte) in the byte array.
+   * @param byteArray storing raw bytes of all key seen in dictionary
+   */
   public static void getTextInternal(Text result, int position, DynamicIntArray keyOffsets, DynamicByteArray byteArray) {
     int offset = keyOffsets.get(position);
     int length;
@@ -37,50 +41,5 @@ public class DictionaryUtils {
       length = keyOffsets.get(position + 1) - offset;
     }
     byteArray.setText(result, offset, length);
-  }
-
-  static class VisitorContextImpl implements Dictionary.VisitorContext {
-    private int originalPosition;
-    private int start;
-    private int end;
-    private final DynamicIntArray keyOffsets;
-    private final DynamicByteArray byteArray;
-    private final Text text = new Text();
-
-    public VisitorContextImpl(DynamicByteArray byteArray, DynamicIntArray keyOffsets) {
-      this.byteArray = byteArray;
-      this.keyOffsets = keyOffsets;
-    }
-
-    @Override
-    public int getOriginalPosition() {
-      return originalPosition;
-    }
-
-    @Override
-    public Text getText() {
-      byteArray.setText(text, start, end - start);
-      return text;
-    }
-
-    @Override
-    public void writeBytes(OutputStream out) throws IOException {
-      byteArray.write(out, start, end - start);
-    }
-
-    @Override
-    public int getLength() {
-      return end - start;
-    }
-
-    public void setPosition(int position) {
-      originalPosition = position;
-      start = keyOffsets.get(originalPosition);
-      if (position + 1 == keyOffsets.size()) {
-        end = byteArray.size();
-      } else {
-        end = keyOffsets.get(originalPosition + 1);
-      }
-    }
   }
 }

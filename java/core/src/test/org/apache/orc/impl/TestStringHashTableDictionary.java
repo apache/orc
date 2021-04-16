@@ -18,7 +18,12 @@
 
 package org.apache.orc.impl;
 
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import org.apache.hadoop.io.Text;
+import org.apache.orc.StringDictTestingUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -26,8 +31,58 @@ import org.junit.Test;
 public class TestStringHashTableDictionary {
 
   /**
-   * A extension for {@link StringHashTableDictionary} for testing purpose by overwriting the hash function.
-   *
+   * Basic test cases by adding bytes directly and uses real hash function.
+   */
+  @Test
+  public void test0()
+      throws Exception {
+    StringHashTableDictionary htDict = new StringHashTableDictionary(5);
+
+    List<Text> testTexts =
+        Stream.of(new String[]{"Alice", "Bob", "Cindy", "David", "Eason"}).map(Text::new).collect(Collectors.toList());
+    List<byte[]> testBytes = testTexts.stream().map(Text::getBytes).collect(Collectors.toList());
+
+    Assert.assertEquals(0, htDict.getSizeInBytes());
+    Assert.assertEquals(0, htDict.add(testBytes.get(0), 0, testBytes.get(0).length));
+    Assert.assertEquals(1, htDict.add(testBytes.get(1), 0, testBytes.get(1).length));
+    Assert.assertEquals(0, htDict.add(testBytes.get(0), 0, testBytes.get(0).length));
+    Assert.assertEquals(1, htDict.add(testBytes.get(1), 0, testBytes.get(1).length));
+    Assert.assertEquals(2, htDict.add(testBytes.get(2), 0, testBytes.get(2).length));
+
+    Text text = new Text();
+    htDict.getText(text, 0);
+    Assert.assertEquals("Alice", text.toString());
+    htDict.getText(text, 1);
+    Assert.assertEquals("Bob", text.toString());
+    htDict.getText(text, 2);
+    Assert.assertEquals("Cindy", text.toString());
+
+    // entering the fourth and fifth element which triggers rehash
+    Assert.assertEquals(3, htDict.add(testBytes.get(3), 0, testBytes.get(3).length));
+    htDict.getText(text, 3);
+    Assert.assertEquals("David", text.toString());
+    Assert.assertEquals(4, htDict.add(testBytes.get(4), 0, testBytes.get(4).length));
+    htDict.getText(text, 4);
+    Assert.assertEquals("Eason", text.toString());
+
+    // Re-ensure no all previously existed string still have correct encoded value
+    htDict.getText(text, 0);
+    Assert.assertEquals("Alice", text.toString());
+    htDict.getText(text, 1);
+    Assert.assertEquals("Bob", text.toString());
+    htDict.getText(text, 2);
+    Assert.assertEquals("Cindy", text.toString());
+
+    // Peaking the hashtable and obtain the order sequence since the hashArray object needs to be private.
+    StringDictTestingUtils.checkContents(htDict, new int[]{1, 4, 0, 2, 3}, "Bob", "Eason", "Alice", "Cindy", "David");
+
+    htDict.clear();
+    Assert.assertEquals(0, htDict.size());
+  }
+
+  /**
+   * A extension for {@link StringHashTableDictionary} for testing purpose by overwriting the hash function,
+   * just to save the effort of obtaining order sequence manually.
    */
   private static class SimpleHashDictionary extends StringHashTableDictionary {
     public SimpleHashDictionary(int initialCapacity) {
@@ -83,9 +138,8 @@ public class TestStringHashTableDictionary {
     hashTableDictionary.getText(text, 2);
     Assert.assertEquals("1_Cindy", text.toString());
 
-
     // The order of words are based on each string's prefix given their index in the hashArray will be based on that.
-    TestStringRedBlackTree
+    StringDictTestingUtils
         .checkContents(hashTableDictionary, new int[]{3, 2, 0, 1, 4}, "0_David", "1_Cindy", "2_Alice", "3_Bob",
             "4_Eason");
 

@@ -23,6 +23,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -50,7 +52,11 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+
+@RunWith(Parameterized.class)
 public class TestStringDictionary {
 
   private Path workDir = new Path(System.getProperty("test.tmp.dir", "target" + File.separator + "test"
@@ -59,8 +65,7 @@ public class TestStringDictionary {
   private Configuration conf;
   private FileSystem fs;
   private Path testFilePath;
-
-  private static final String[] DICT_IMPLS = new String[]{"RBTREE", "HASH"};
+  private String dictImplString;
 
   @Rule
   public TestName testCaseName = new TestName();
@@ -71,6 +76,19 @@ public class TestStringDictionary {
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestStringDictionary." + testCaseName.getMethodName() + ".orc");
     fs.delete(testFilePath, false);
+    conf.set(DICTIONARY_IMPL.getAttribute(), dictImplString);
+  }
+
+  @Parameterized.Parameters
+  public static Collection params() {
+    return Arrays.asList(new Object[][] {
+        { "RBTREE" },
+        { "HASH" }
+    });
+  }
+
+  public TestStringDictionary(String dictImpl) {
+    this.dictImplString = dictImpl;
   }
 
   @Test
@@ -117,7 +135,8 @@ public class TestStringDictionary {
     }
   }
 
-  public void testHalfDistinctHelper(Configuration conf) throws Exception {
+  @Test
+  public void testHalfDistinct() throws Exception {
     TypeDescription schema = TypeDescription.createString();
     Writer writer = OrcFile.createWriter(
         testFilePath,
@@ -162,17 +181,6 @@ public class TestStringDictionary {
         OrcProto.ColumnEncoding encoding = footer.getColumns(i);
         assertEquals(OrcProto.ColumnEncoding.Kind.DICTIONARY_V2, encoding.getKind());
       }
-    }
-  }
-
-  @Test
-  public void testHalfDistinct() throws Exception {
-    // For test cases that enables dictionary-encoding, we would like to have all implementation of dictionary being tested.
-    for (String impl: DICT_IMPLS){
-      conf.set(DICTIONARY_IMPL.getAttribute(), impl);
-      testHalfDistinctHelper(conf);
-      // Clean up manually as method annotated by @Before isn't kicked for each iteration here.
-      openFileSystem();
     }
   }
 
