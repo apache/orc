@@ -704,6 +704,8 @@ namespace orc {
     }
   }
 
+//The UT is not supported under windows, because the timezone related
+//functions and names are not compatible under linux and windows.
 #ifndef _MSC_VER
   void testWriteTimestampWithTimezone(FileVersion fileVersion,
                                       const char* writerTimezone,

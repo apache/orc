@@ -57,6 +57,8 @@ namespace orc {
       enableIndex = true;
       bloomFilterFalsePositiveProb = 0.05;
       bloomFilterVersion = UTF8;
+      //Earlier, to work around insufficient support of timezone conversion
+      //the timezone was set to GMT by default
       timezone = "GMT";
     }
   };
