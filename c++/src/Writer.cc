@@ -41,6 +41,7 @@ namespace orc {
     std::set<uint64_t> columnsUseBloomFilter;
     double bloomFilterFalsePositiveProb;
     BloomFilterVersion bloomFilterVersion;
+    std::string timezone;
 
     WriterOptionsPrivate() :
                             fileVersion(FileVersion::v_0_12()) { // default to Hive_0_12
@@ -56,6 +57,10 @@ namespace orc {
       enableIndex = true;
       bloomFilterFalsePositiveProb = 0.05;
       bloomFilterVersion = UTF8;
+      //Writer timezone uses "GMT" by default to get rid of potential issues
+      //introduced by moving timestamps between different timezones.
+      //Explictly set the writer timezone if the use case depends on it.
+      timezone = "GMT";
     }
   };
 
@@ -227,6 +232,19 @@ namespace orc {
   // we only support UTF8 for now.
   BloomFilterVersion WriterOptions::getBloomFilterVersion() const {
     return privateBits->bloomFilterVersion;
+  }
+
+  const Timezone& WriterOptions::getTimezone() const {
+    return getTimezoneByName(privateBits->timezone);
+  }
+
+  const std::string& WriterOptions::getTimezoneName() const {
+    return privateBits->timezone;
+  }
+
+  WriterOptions& WriterOptions::setTimezoneName(const std::string& zone) {
+    privateBits->timezone = zone;
+    return *this;
   }
 
   Writer::~Writer() {
@@ -439,9 +457,7 @@ namespace orc {
       *stripeFooter.add_columns() = encodings[i];
     }
 
-    // use GMT to guarantee TimestampVectorBatch from reader can write
-    // same wall clock time
-    stripeFooter.set_writertimezone("GMT");
+    stripeFooter.set_writertimezone(options.getTimezoneName());
 
     // add stripe statistics to metadata
     proto::StripeStatistics* stripeStats = metadata.add_stripestats();

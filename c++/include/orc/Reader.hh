@@ -256,6 +256,16 @@ namespace orc {
      * Get search argument for predicate push down
      */
     std::shared_ptr<SearchArgument> getSearchArgument() const;
+
+    /**
+     * Set desired timezone to return data of timestamp type
+     */
+    RowReaderOptions& setTimezoneName(const std::string& zoneName);
+
+    /**
+     * Get desired timezone to return data of timestamp type
+     */
+    const std::string& getTimezoneName() const;
   };
 
 

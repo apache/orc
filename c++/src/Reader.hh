@@ -69,6 +69,7 @@ namespace orc {
                                       const FileContents& contents);
 
   class ReaderImpl;
+  class Timezone;
 
   class ColumnSelector {
    private:
@@ -146,6 +147,9 @@ namespace orc {
     std::map<uint32_t, BloomFilterIndex> bloomFilterIndex;
     std::shared_ptr<SearchArgument> sargs;
     std::unique_ptr<SargsApplier> sargsApplier;
+
+    // desired timezone to return data of timestamp types.
+    const Timezone& readerTimezone;
 
     // load stripe index if not done so
     void loadStripeIndex();

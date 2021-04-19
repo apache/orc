@@ -1731,7 +1731,7 @@ namespace orc {
                              const WriterOptions& options) :
                                  ColumnWriter(type, factory, options),
                                  rleVersion(options.getRleVersion()),
-                                 timezone(getTimezoneByName("GMT")){
+                                 timezone(options.getTimezone()){
     std::unique_ptr<BufferedOutputStream> dataStream =
         factory.createStream(proto::Stream_Kind_DATA);
     std::unique_ptr<BufferedOutputStream> secondaryStream =
