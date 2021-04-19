@@ -6,10 +6,10 @@
 
 ## Test
 
-To test against all of the Linux OSes against Apache's master branch:
+To test against all of the Linux OSes against Apache's main branch:
 
     cd docker
-    ./run-all.sh apache master
+    ./run-all.sh apache main
 
 Using `local` as the owner will cause the scripts to use the local repository.
 
