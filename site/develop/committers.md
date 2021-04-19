@@ -36,7 +36,7 @@ Matthew McCline         | mmccline     | Committer
 Sandeep More            | moresandeep  | Committer
 Naveen Gangam           | ngangam      | Committer
 Owen O'Malley           | omalley      | PMC
-Panagiotis Garefalakis  | pgaref       | Committer
+Panagiotis Garefalakis  | pgaref       | PMC
 Prasanth Jayachandran   | prasanthj    | PMC
 Pengcheng Xiong         | pxiong       | Committer
 Rajesh Balamohan        | rbalamohan   | Committer
