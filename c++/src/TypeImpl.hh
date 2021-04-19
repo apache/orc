@@ -80,6 +80,8 @@ namespace orc {
     Type& setAttribute(const std::string& key,
                        const std::string& value) override;
 
+    bool hasAttributeKey(const std::string& key) const override;
+
     Type& removeAttribute(const std::string& key) override;
 
     std::vector<std::string> getAttributeKeys() const override;

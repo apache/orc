@@ -127,8 +127,16 @@ namespace orc {
     return *this;
   }
 
+  bool TypeImpl::hasAttributeKey(const std::string& key) const {
+    return attributes.find(key) != attributes.end();
+  }
+
   Type& TypeImpl::removeAttribute(const std::string& key) {
-    attributes.erase(key);
+    auto it = attributes.find(key);
+    if (it == attributes.end()) {
+      throw std::range_error("Key not found: " + key);
+    }
+    attributes.erase(it);
     return *this;
   }
 
@@ -143,7 +151,9 @@ namespace orc {
 
   std::string TypeImpl::getAttributeValue(const std::string& key) const {
     auto it = attributes.find(key);
-    if (it == attributes.end()) return "";
+    if (it == attributes.end()) {
+      throw std::range_error("Key not found: " + key);
+    }
     return it->second;
   }
 

@@ -119,7 +119,9 @@ namespace orc {
     auto attributeKeys = col->getAttributeKeys();
 
     EXPECT_EQ(2, attributeKeys.size());
-    EXPECT_EQ("", col->getAttributeValue("bar"));
+    EXPECT_FALSE(col->hasAttributeKey("bar"));
+    EXPECT_TRUE(col->hasAttributeKey("foo"));
+    EXPECT_TRUE(col->hasAttributeKey("baz"));
     EXPECT_EQ("xfoo", col->getAttributeValue("foo"));
     EXPECT_EQ("xbaz", col->getAttributeValue("baz"));
   }
@@ -178,8 +180,9 @@ namespace orc {
   }
 
   void collectFieldIds(const Type* t, std::vector<uint64_t>* fieldIds) {
-    std::string id = t->getAttributeValue("iceberg.id");
-    if (!id.empty()) {
+    const std::string ICEBERG_ID = "iceberg.id";
+    if (t->hasAttributeKey(ICEBERG_ID)) {
+      std::string id = t->getAttributeValue(ICEBERG_ID);
       fieldIds->push_back(static_cast<uint64_t>(stoi(id)));
     } else {
       EXPECT_EQ(0, t->getColumnId());
