@@ -295,6 +295,11 @@ namespace orc {
     EXPECT_EQ(typeStr, type->toString());
 
     typeStr =
+      "struct<a:bigint,b:struct<a:binary,b:timestamp_with_local_time_zone>>";
+    type = Type::buildTypeFromString(typeStr);
+    EXPECT_EQ(typeStr, type->toString());
+
+    typeStr =
       "struct<a:bigint,b:struct<a:binary,b:timestamp>,c:map<double,tinyint>>";
     type = Type::buildTypeFromString(typeStr);
     EXPECT_EQ(typeStr, type->toString());

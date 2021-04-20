@@ -310,7 +310,9 @@ namespace orc {
     const bool sameTimezone;
 
   public:
-    TimestampColumnReader(const Type& type, StripeStreams& stripe);
+    TimestampColumnReader(const Type& type,
+                          StripeStreams& stripe,
+                          bool isInstantType);
     ~TimestampColumnReader() override;
 
     uint64_t skip(uint64_t numValues) override;
@@ -325,10 +327,15 @@ namespace orc {
 
 
   TimestampColumnReader::TimestampColumnReader(const Type& type,
-                                               StripeStreams& stripe
+                                               StripeStreams& stripe,
+                                               bool isInstantType
                                ): ColumnReader(type, stripe),
-                                  writerTimezone(stripe.getWriterTimezone()),
-                                  readerTimezone(stripe.getReaderTimezone()),
+                                  writerTimezone(isInstantType ?
+                                                 getTimezoneByName("GMT") :
+                                                 stripe.getWriterTimezone()),
+                                  readerTimezone(isInstantType ?
+                                                 getTimezoneByName("GMT") :
+                                                 stripe.getReaderTimezone()),
                                   epochOffset(writerTimezone.getEpoch()),
                                   sameTimezone(&writerTimezone == &readerTimezone){
     RleVersion vers = convertRleVersion(stripe.getEncoding(columnId).kind());
@@ -1823,7 +1830,11 @@ namespace orc {
 
     case TIMESTAMP:
       return std::unique_ptr<ColumnReader>
-        (new TimestampColumnReader(type, stripe));
+        (new TimestampColumnReader(type, stripe, false));
+
+    case TIMESTAMP_INSTANT:
+      return std::unique_ptr<ColumnReader>
+        (new TimestampColumnReader(type, stripe, true));
 
     case DECIMAL:
       // is this a Hive 0.11 or 0.12 file?

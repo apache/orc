@@ -784,6 +784,7 @@ namespace orc {
       case proto::Type_Kind_BINARY:
       case proto::Type_Kind_DECIMAL:
       case proto::Type_Kind_TIMESTAMP:
+      case proto::Type_Kind_TIMESTAMP_INSTANT:
         return 3;
       case proto::Type_Kind_CHAR:
       case proto::Type_Kind_STRING:
