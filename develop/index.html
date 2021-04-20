@@ -147,8 +147,8 @@ so you’ll be able to close PRs, etc.</p>
 <p>The important branches are:</p>
 
 <ul>
-  <li><a href="https://github.com/apache/orc/tree/master">master</a> -
-The master branch for all development</li>
+  <li><a href="https://github.com/apache/orc/tree/main">main</a> -
+The main branch for all development</li>
   <li>branch-X.Y - The release branches</li>
   <li><a href="https://github.com/apache/orc/tree/asf-site">asf-site</a> -
 The generated html pages that are deployed as https://orc.apache.org/</li>
@@ -194,7 +194,7 @@ committer’s review. However, most changes should be reviewed first.</p>
 <p>You’ll want to rebase it and make it a single commit by squashing
 the commits into a single commit.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git rebase -i apache/master
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git rebase -i apache/main
 </code></pre></div></div>
 
 <p>Update the commit message to sign it using your GPG key and close the
@@ -211,7 +211,7 @@ claiming to have fixed the problem, the form “Closes #999” also works.</p>
 
 <p>Finally, push the result to Apache:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git push apache HEAD:master
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git push apache HEAD:main
 </code></pre></div></div>
 
 <h2 id="creating-a-gpg-key">Creating a GPG key</h2>

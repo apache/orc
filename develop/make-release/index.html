@@ -200,12 +200,12 @@ extra releases (say I.J.K) from the Apache dist area.
 <p>Update the site with the new release.</p>
 
 <ul>
-  <li>Check out the master branch (git checkout apache/master)</li>
+  <li>Check out the main branch (git checkout apache/main)</li>
 </ul>
 
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Change directory in to site.
 % pwd
-&lt;path-to-master-src&gt;
+&lt;path-to-main-src&gt;
 % cd site
 % mkdir target
 % cd target
@@ -241,7 +241,7 @@ Set up site/target to be a separate git workspace that tracks the asf-site branc
 </ul>
 
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% git commit -am "Update site for X.Y.Z"
-% git push origin master
+% git push origin main
 </code></pre></div></div>
 
 <ul>
