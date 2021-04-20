@@ -58,6 +58,12 @@ namespace orc {
     virtual uint64_t getMaximumLength() const = 0;
     virtual uint64_t getPrecision() const = 0;
     virtual uint64_t getScale() const = 0;
+    virtual Type& setAttribute(const std::string& key,
+                               const std::string& value) = 0;
+    virtual bool hasAttributeKey(const std::string& key) const = 0;
+    virtual Type& removeAttribute(const std::string& key) = 0;
+    virtual std::vector<std::string> getAttributeKeys() const = 0;
+    virtual std::string getAttributeValue(const std::string& key) const = 0;
     virtual std::string toString() const = 0;
 
     /**

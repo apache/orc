@@ -93,6 +93,47 @@ void printRawTail(std::ostream& out,
   out << tail.DebugString();
 }
 
+void printAttributes(std::ostream& out, const orc::Type& type,
+    const std::string name, bool* hasAnyAttributes) {
+  const auto& attributeKeys = type.getAttributeKeys();
+  bool typeHasAttrs = !attributeKeys.empty();
+  if (typeHasAttrs) {
+    // 'hasAnyAttributes' is only needed to deal with commas properly.
+    if (*hasAnyAttributes) {
+      out << ',';
+    } else {
+      *hasAnyAttributes = true;
+    }
+    out << "\n    \"" << name << "\": {";
+  }
+  for (uint64_t i = 0; i < attributeKeys.size(); ++i) {
+    const auto& key = attributeKeys[i];
+    const auto& value = type.getAttributeValue(key);
+    out << "\"" << key << "\": \"" << value << "\"";
+    if (i < attributeKeys.size() - 1) {
+      out << ", ";
+    }
+  }
+  if (typeHasAttrs) {
+    out << '}';
+  }
+  for (uint64_t i = 0; i < type.getSubtypeCount(); ++i) {
+    const auto& child = *type.getSubtype(i);
+    std::string fieldName;
+    if (type.getKind() == orc::STRUCT) {
+      fieldName = type.getFieldName(i);
+    } else if (type.getKind() == orc::LIST) {
+      fieldName = "_elem";
+    } else if (type.getKind() == orc::MAP) {
+      fieldName = i == 0 ? "_key" : "_value";
+    } else {
+      fieldName = "_field_" + std::to_string(i);
+    }
+    std::string childName = (name.empty() ? "" : name + '.') + fieldName;
+    printAttributes(out, child, childName, hasAnyAttributes);
+  }
+}
+
 void printMetadata(std::ostream & out, const char*filename, bool verbose) {
   std::unique_ptr<orc::Reader> reader =
     orc::createReader(orc::readFile(filename), orc::ReaderOptions());
@@ -100,6 +141,10 @@ void printMetadata(std::ostream & out, const char*filename, bool verbose) {
   uint64_t numberColumns = reader->getType().getMaximumColumnId() + 1;
   out << "  \"type\": \""
             << reader->getType().toString() << "\",\n";
+  out << "  \"attributes\": {";
+  bool hasAnyAttributes = false;
+  printAttributes(out, reader->getType(), /*name=*/"", &hasAnyAttributes);
+  out << "},\n";
   out << "  \"rows\": " << reader->getNumberOfRows() << ",\n";
   uint64_t stripeCount = reader->getNumberOfStripes();
   out << "  \"stripe count\": " << stripeCount << ",\n";

@@ -121,6 +121,42 @@ namespace orc {
     return scale;
   }
 
+  Type& TypeImpl::setAttribute(const std::string& key,
+                     const std::string& value) {
+    attributes[key] = value;
+    return *this;
+  }
+
+  bool TypeImpl::hasAttributeKey(const std::string& key) const {
+    return attributes.find(key) != attributes.end();
+  }
+
+  Type& TypeImpl::removeAttribute(const std::string& key) {
+    auto it = attributes.find(key);
+    if (it == attributes.end()) {
+      throw std::range_error("Key not found: " + key);
+    }
+    attributes.erase(it);
+    return *this;
+  }
+
+  std::vector<std::string> TypeImpl::getAttributeKeys() const {
+    std::vector<std::string> ret;
+    ret.reserve(attributes.size());
+    for (auto& attribute : attributes) {
+      ret.push_back(attribute.first);
+    }
+    return ret;
+  }
+
+  std::string TypeImpl::getAttributeValue(const std::string& key) const {
+    auto it = attributes.find(key);
+    if (it == attributes.end()) {
+      throw std::range_error("Key not found: " + key);
+    }
+    return it->second;
+  }
+
   void TypeImpl::setIds(uint64_t _columnId, uint64_t _maxColumnId) {
     columnId = static_cast<int64_t>(_columnId);
     maximumColumnId = static_cast<int64_t>(_maxColumnId);
@@ -352,6 +388,7 @@ namespace orc {
   std::string printProtobufMessage(const google::protobuf::Message& message);
   std::unique_ptr<Type> convertType(const proto::Type& type,
                                     const proto::Footer& footer) {
+    std::unique_ptr<Type> ret;
     switch (static_cast<int64_t>(type.kind())) {
 
     case proto::Type_Kind_BOOLEAN:
@@ -365,24 +402,27 @@ namespace orc {
     case proto::Type_Kind_BINARY:
     case proto::Type_Kind_TIMESTAMP:
     case proto::Type_Kind_DATE:
-      return std::unique_ptr<Type>
+      ret = std::unique_ptr<Type>
         (new TypeImpl(static_cast<TypeKind>(type.kind())));
+      break;
 
     case proto::Type_Kind_CHAR:
     case proto::Type_Kind_VARCHAR:
-      return std::unique_ptr<Type>
+      ret = std::unique_ptr<Type>
         (new TypeImpl(static_cast<TypeKind>(type.kind()),
                       type.maximumlength()));
+      break;
 
     case proto::Type_Kind_DECIMAL:
-      return std::unique_ptr<Type>
+      ret = std::unique_ptr<Type>
         (new TypeImpl(DECIMAL, type.precision(), type.scale()));
+      break;
 
     case proto::Type_Kind_LIST:
     case proto::Type_Kind_MAP:
     case proto::Type_Kind_UNION: {
       TypeImpl* result = new TypeImpl(static_cast<TypeKind>(type.kind()));
-      std::unique_ptr<Type> return_value = std::unique_ptr<Type>(result);
+      ret = std::unique_ptr<Type>(result);
       if (type.kind() == proto::Type_Kind_LIST && type.subtypes_size() != 1)
         throw ParseError("Illegal LIST type that doesn't contain one subtype");
       if (type.kind() == proto::Type_Kind_MAP && type.subtypes_size() != 2)
@@ -394,23 +434,28 @@ namespace orc {
                                                        (type.subtypes(i))),
                                           footer));
       }
-      return return_value;
+      break;
     }
 
     case proto::Type_Kind_STRUCT: {
       TypeImpl* result = new TypeImpl(STRUCT);
-      std::unique_ptr<Type> return_value = std::unique_ptr<Type>(result);
+      ret = std::unique_ptr<Type>(result);
       for(int i=0; i < type.subtypes_size(); ++i) {
         result->addStructField(type.fieldnames(i),
                                convertType(footer.types(static_cast<int>
                                                         (type.subtypes(i))),
                                            footer));
       }
-      return return_value;
+      break;
     }
     default:
       throw NotImplementedYet("Unknown type kind");
     }
+    for (int i = 0; i < type.attributes_size(); ++i) {
+      const auto& attribute = type.attributes(i);
+      ret->setAttribute(attribute.key(), attribute.value());
+    }
+    return ret;
   }
 
   /**
@@ -496,6 +541,10 @@ namespace orc {
       throw NotImplementedYet("Unknown type kind");
     }
     result->setIds(fileType->getColumnId(), fileType->getMaximumColumnId());
+    for (auto& key : fileType->getAttributeKeys()) {
+      const auto& value = fileType->getAttributeValue(key);
+      result->setAttribute(key, value);
+    }
     return std::unique_ptr<Type>(result);
   }
 
