@@ -29,4 +29,4 @@ your question.
 ## Browse the code
 
 One of the advantages of open source software is that you can browse the code.
-The code is available on [github](https://github.com/apache/orc/tree/master).
+The code is available on [github](https://github.com/apache/orc/tree/main).

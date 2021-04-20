@@ -2,7 +2,7 @@
 layout: docs
 title: Building ORC
 permalink: /docs/building.html
-dockerUrl: https://github.com/apache/orc/blob/master/docker
+dockerUrl: https://github.com/apache/orc/blob/main/docker
 ---
 
 ## Building both C++ and Java
