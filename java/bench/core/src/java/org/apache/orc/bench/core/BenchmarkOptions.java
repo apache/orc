@@ -34,6 +34,7 @@ public class BenchmarkOptions {
   public static final String MIN_MEMORY = "min-memory";
   public static final String MAX_MEMORY = "max-memory";
   public static final String GC = "gc";
+  public static final String STACK_PROFILE = "stack";
 
   public static CommandLine parseCommandLine(String[] args) {
     Options options = new Options()
@@ -44,6 +45,7 @@ public class BenchmarkOptions {
         .addOption("t", TIME, true, "How long each iteration is in seconds")
         .addOption("m", MIN_MEMORY, true, "The minimum size of each JVM")
         .addOption("M", MAX_MEMORY, true, "The maximum size of each JVM")
+        .addOption("p", STACK_PROFILE, false, "Should enable stack profiler in JMH")
         .addOption("g", GC, false, "Should GC be profiled");
     CommandLine result;
     try {
