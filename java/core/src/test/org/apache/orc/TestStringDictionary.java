@@ -76,7 +76,7 @@ public class TestStringDictionary {
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestStringDictionary." + testCaseName.getMethodName() + ".orc");
     fs.delete(testFilePath, false);
-    conf.set(DICTIONARY_IMPL.getAttribute(), dictImplString);
+    OrcConf.DICTIONARY_IMPL.setString(conf, dictImplString);
   }
 
   @Parameterized.Parameters

@@ -43,7 +43,7 @@ import org.apache.orc.RecordReader;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.bench.core.CompressionKind;
 import org.apache.orc.bench.core.OrcBenchmark;
-import org.apache.orc.bench.core.ReadCounters;
+import org.apache.orc.bench.core.IOCounters;
 import org.apache.orc.bench.core.Utilities;
 import org.apache.parquet.hadoop.ParquetInputFormat;
 import org.openjdk.jmh.annotations.Benchmark;
@@ -91,7 +91,7 @@ public class FullReadBenchmark implements OrcBenchmark {
   }
 
   @Benchmark
-  public void orc(ReadCounters counters) throws Exception{
+  public void orc(IOCounters counters) throws Exception{
     Configuration conf = new Configuration();
     TrackingLocalFileSystem fs = new TrackingLocalFileSystem();
     fs.initialize(new URI("file:///"), conf);
@@ -112,7 +112,7 @@ public class FullReadBenchmark implements OrcBenchmark {
   }
 
   @Benchmark
-  public void avro(ReadCounters counters) throws Exception {
+  public void avro(IOCounters counters) throws Exception {
     Configuration conf = new Configuration();
     conf.set("fs.track.impl", TrackingLocalFileSystem.class.getName());
     conf.set("fs.defaultFS", "track:///");
@@ -134,7 +134,7 @@ public class FullReadBenchmark implements OrcBenchmark {
   }
 
   @Benchmark
-  public void parquet(ReadCounters counters) throws Exception {
+  public void parquet(IOCounters counters) throws Exception {
     JobConf conf = new JobConf();
     conf.set("fs.track.impl", TrackingLocalFileSystem.class.getName());
     conf.set("fs.defaultFS", "track:///");
@@ -159,7 +159,7 @@ public class FullReadBenchmark implements OrcBenchmark {
   }
 
   @Benchmark
-  public void json(ReadCounters counters) throws Exception {
+  public void json(IOCounters counters) throws Exception {
     Configuration conf = new Configuration();
     TrackingLocalFileSystem fs = new TrackingLocalFileSystem();
     fs.initialize(new URI("file:///"), conf);
