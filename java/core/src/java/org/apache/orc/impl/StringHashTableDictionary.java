@@ -139,7 +139,10 @@ public class StringHashTableDictionary implements Dictionary {
     if (keyOffsets.size() >= threshold) {
       int oldCapacity = keyOffsets.size();
       int newCapacity = (oldCapacity << 1) + 1;
+
       doResize(newCapacity);
+
+      this.capacity = newCapacity;
       this.threshold = (int)Math.min(newCapacity * loadFactor, MAX_ARRAY_SIZE + 1);
     }
   }

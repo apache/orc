@@ -95,7 +95,7 @@ public class ORCWriterBenchMark implements OrcBenchmark {
     batches.add(batch);
   }
 
-  @Param({"HASH"})
+  @Param({"RBTREE", "HASH", "NONE"})
   public String dictImpl;
 
   @TearDown(Level.Invocation)
