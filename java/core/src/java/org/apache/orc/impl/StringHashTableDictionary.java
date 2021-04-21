@@ -66,13 +66,13 @@ public class StringHashTableDictionary implements Dictionary {
   }
 
   private DynamicIntArray[] initHashArray(int capacity) {
-    DynamicIntArray[] bucket = new DynamicIntArray[capacity];
+    DynamicIntArray[] buckets = new DynamicIntArray[capacity];
     for (int i = 0; i < capacity; i++) {
       // We don't need large bucket: If we have more than a handful of collisions,
       // then the table is too small or the function isn't good.
-      bucket[i] = createBucket();
+      buckets[i] = createBucket();
     }
-    return bucket;
+    return buckets;
   }
 
   private DynamicIntArray createBucket() {
