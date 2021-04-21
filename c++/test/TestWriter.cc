@@ -804,7 +804,7 @@ namespace orc {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
     std::unique_ptr<Type> type(Type::buildTypeFromString(
-      "struct<col1:timestamp_with_local_time_zone>"));
+      "struct<col1:timestamp with local time zone>"));
 
     uint64_t stripeSize = 16 * 1024;
     uint64_t compressionBlockSize = 1024;

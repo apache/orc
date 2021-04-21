@@ -170,7 +170,7 @@ namespace orc {
     case TIMESTAMP:
       return "timestamp";
     case TIMESTAMP_INSTANT:
-      return "timestamp_with_local_time_zone";
+      return "timestamp with local time zone";
     case LIST:
       return "array<" + (subTypes[0] ? subTypes[0]->toString() : "void") + ">";
     case MAP:
@@ -614,7 +614,7 @@ namespace orc {
       return std::unique_ptr<Type>(new TypeImpl(BINARY));
     } else if (category == "timestamp") {
       return std::unique_ptr<Type>(new TypeImpl(TIMESTAMP));
-    } else if (category == "timestamp_with_local_time_zone") {
+    } else if (category == "timestamp with local time zone") {
       return std::unique_ptr<Type>(new TypeImpl(TIMESTAMP_INSTANT));
     } else if (category == "array") {
       return parseArrayType(input, start, end);
@@ -658,7 +658,7 @@ namespace orc {
       if (input[endPos] == ':') {
         fieldName = input.substr(pos, endPos - pos);
         pos = ++endPos;
-        while (endPos < end && (isalpha(input[endPos]) || input[endPos] == '_')) {
+        while (endPos < end && (isalpha(input[endPos]) || input[endPos] == ' ')) {
           ++endPos;
         }
       }
