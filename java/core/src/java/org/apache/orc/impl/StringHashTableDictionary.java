@@ -33,13 +33,14 @@ import org.apache.hadoop.io.Text;
  */
 public class StringHashTableDictionary implements Dictionary {
 
+  // containing all keys every seen in bytes.
   private final DynamicByteArray byteArray = new DynamicByteArray();
-  // starting offset of the key (in byte) in the byte array.
+  // containing starting offset of the key (in byte) in the byte array.
   private final DynamicIntArray keyOffsets;
 
   private final Text newKey = new Text();
 
-  private DynamicIntArray[] hashArray;
+  private DynamicIntArray[] hashBuckets;
 
   private int capacity;
 
@@ -61,7 +62,7 @@ public class StringHashTableDictionary implements Dictionary {
     this.capacity = initialCapacity;
     this.loadFactor = loadFactor;
     this.keyOffsets = new DynamicIntArray(initialCapacity);
-    this.hashArray = initHashArray(initialCapacity);
+    this.hashBuckets = initHashArray(initialCapacity);
     this.threshold = (int)Math.min(initialCapacity * loadFactor, MAX_ARRAY_SIZE + 1);
   }
 
@@ -86,7 +87,7 @@ public class StringHashTableDictionary implements Dictionary {
   }
 
   private void traverse(Visitor visitor, VisitorContextImpl context) throws IOException {
-    for (DynamicIntArray intArray : hashArray) {
+    for (DynamicIntArray intArray : hashBuckets) {
       for (int i = 0; i < intArray.size() ; i ++) {
         context.setPosition(intArray.get(i));
         visitor.visit(context);
@@ -98,12 +99,12 @@ public class StringHashTableDictionary implements Dictionary {
   public void clear() {
     byteArray.clear();
     keyOffsets.clear();
-    Arrays.fill(hashArray, null);
+    Arrays.fill(hashBuckets, null);
   }
 
   @Override
-  public void getText(Text result, int position) {
-    DictionaryUtils.getTextInternal(result, position, this.keyOffsets, this.byteArray);
+  public void getText(Text result, int positionInKeyOffset) {
+    DictionaryUtils.getTextInternal(result, positionInKeyOffset, this.keyOffsets, this.byteArray);
   }
 
   @Override
@@ -117,7 +118,7 @@ public class StringHashTableDictionary implements Dictionary {
     newKey.set(text);
 
     int index = getIndex(text);
-    DynamicIntArray candidateArray = hashArray[index];
+    DynamicIntArray candidateArray = hashBuckets[index];
 
     Text tmpText = new Text();
     for (int i = 0; i < candidateArray.size(); i++) {
@@ -137,12 +138,12 @@ public class StringHashTableDictionary implements Dictionary {
 
   private void resizeIfNeeded() {
     if (keyOffsets.size() >= threshold) {
-      int oldCapacity = keyOffsets.size();
+      int oldCapacity = this.capacity;
       int newCapacity = (oldCapacity << 1) + 1;
-
-      doResize(newCapacity);
-
       this.capacity = newCapacity;
+
+      doResize(newCapacity, oldCapacity);
+
       this.threshold = (int)Math.min(newCapacity * loadFactor, MAX_ARRAY_SIZE + 1);
     }
   }
@@ -162,31 +163,29 @@ public class StringHashTableDictionary implements Dictionary {
 
   // Resize the hash table, re-hash all the existing keys.
   // byteArray and keyOffsetsArray don't have to be re-filled.
-  private void doResize(int newSize) {
-    DynamicIntArray[] resizedHashArray = new DynamicIntArray[newSize];
-    for (int i = 0; i < newSize; i++) {
-      resizedHashArray[i] = createBucket();
+  private void doResize(int newCapacity, int oldCapacity) {
+    DynamicIntArray[] resizedHashBuckets = new DynamicIntArray[newCapacity];
+    for (int i = 0; i < newCapacity; i++) {
+      resizedHashBuckets[i] = createBucket();
     }
 
     Text tmpText = new Text();
-    for (int i = 0; i < capacity; i++) {
-      DynamicIntArray intArray = hashArray[i];
-      int bucketSize = intArray.size();
-      for (int j = 0; j < bucketSize; j++) {
-        getText(tmpText, intArray.get(j));
-        int newIndex = getIndex(tmpText);
-        resizedHashArray[newIndex].add(intArray.get(j));
+    for (int i = 0; i < oldCapacity; i++) {
+      DynamicIntArray oldBucket = hashBuckets[i];
+      for (int j = 0; j < oldBucket.size(); j++) {
+        getText(tmpText, oldBucket.get(j));
+        resizedHashBuckets[getIndex(tmpText)].add(oldBucket.get(j));
       }
     }
 
-    Arrays.fill(hashArray, null);
-    hashArray = resizedHashArray;
+    Arrays.fill(hashBuckets, null);
+    hashBuckets = resizedHashBuckets;
   }
 
   @Override
   public long getSizeInBytes() {
     long bucketTotalSize = 0L;
-    for (DynamicIntArray dynamicIntArray : hashArray) {
+    for (DynamicIntArray dynamicIntArray : hashBuckets) {
       bucketTotalSize += dynamicIntArray.size();
     }
 

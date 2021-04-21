@@ -17,7 +17,6 @@
  */
 package org.apache.orc;
 
-import static org.apache.orc.OrcConf.DICTIONARY_IMPL;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -137,20 +136,23 @@ public class TestStringDictionary {
 
   @Test
   public void testHalfDistinct() throws Exception {
+    final int totalSize = 20000;
+    final int bound = 10000;
+
     TypeDescription schema = TypeDescription.createString();
     Writer writer = OrcFile.createWriter(
         testFilePath,
         OrcFile.writerOptions(conf).setSchema(schema).compress(CompressionKind.NONE)
-            .bufferSize(10000));
+            .bufferSize(bound));
     Random rand = new Random(123);
-    int[] input = new int[20000];
-    for (int i = 0; i < 20000; i++) {
-      input[i] = rand.nextInt(10000);
+    int[] input = new int[totalSize];
+    for (int i = 0; i < totalSize; i++) {
+      input[i] = rand.nextInt(bound);
     }
 
     VectorizedRowBatch batch = schema.createRowBatch();
     BytesColumnVector col = (BytesColumnVector) batch.cols[0];
-    for (int i = 0; i < 20000; i++) {
+    for (int i = 0; i < totalSize; i++) {
       if (batch.size == batch.getMaxSize()) {
         writer.addRowBatch(batch);
         batch.reset();

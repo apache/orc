@@ -57,6 +57,8 @@ public class TestStringHashTableDictionary {
     htDict.getText(text, 2);
     Assert.assertEquals("Cindy", text.toString());
 
+    Assert.assertEquals(htDict.size(), 3);
+
     // entering the fourth and fifth element which triggers rehash
     Assert.assertEquals(3, htDict.add(testBytes.get(3), 0, testBytes.get(3).length));
     htDict.getText(text, 3);
@@ -64,6 +66,8 @@ public class TestStringHashTableDictionary {
     Assert.assertEquals(4, htDict.add(testBytes.get(4), 0, testBytes.get(4).length));
     htDict.getText(text, 4);
     Assert.assertEquals("Eason", text.toString());
+
+    Assert.assertEquals(htDict.size(), 5);
 
     // Re-ensure no all previously existed string still have correct encoded value
     htDict.getText(text, 0);
@@ -74,7 +78,7 @@ public class TestStringHashTableDictionary {
     Assert.assertEquals("Cindy", text.toString());
 
     // Peaking the hashtable and obtain the order sequence since the hashArray object needs to be private.
-    StringDictTestingUtils.checkContents(htDict, new int[]{1, 4, 0, 2, 3}, "Bob", "Eason", "Alice", "Cindy", "David");
+    StringDictTestingUtils.checkContents(htDict, new int[]{1, 2, 3, 0 ,4}, "Bob", "Cindy", "David", "Alice", "Eason");
 
     htDict.clear();
     Assert.assertEquals(0, htDict.size());
