@@ -62,8 +62,8 @@ so you'll be able to close PRs, etc.
 
 The important branches are:
 
-* [master](https://github.com/apache/orc/tree/master) -
-  The master branch for all development
+* [main](https://github.com/apache/orc/tree/main) -
+  The main branch for all development
 * branch-X.Y - The release branches
 * [asf-site](https://github.com/apache/orc/tree/asf-site) -
   The generated html pages that are deployed as https://orc.apache.org/
@@ -109,7 +109,7 @@ You'll want to rebase it and make it a single commit by squashing
 the commits into a single commit.
 
 ~~~~
-% git rebase -i apache/master
+% git rebase -i apache/main
 ~~~~
 
 Update the commit message to sign it using your GPG key and close the
@@ -128,7 +128,7 @@ claiming to have fixed the problem, the form "Closes #999" also works.
 Finally, push the result to Apache:
 
 ~~~~
-% git push apache HEAD:master
+% git push apache HEAD:main
 ~~~~
 
 ## Creating a GPG key

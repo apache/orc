@@ -125,12 +125,12 @@ edit CMakeLists.txt to change version to X.Y.(Z+1)-SNAPSHOT
 
 Update the site with the new release.
 
-* Check out the master branch (git checkout apache/master)
+* Check out the main branch (git checkout apache/main)
 
 ~~~
 Change directory in to site.
 % pwd
-<path-to-master-src>
+<path-to-main-src>
 % cd site
 % mkdir target
 % cd target
@@ -156,7 +156,7 @@ Set up site/target to be a separate git workspace that tracks the asf-site branc
 
 ~~~
 % git commit -am "Update site for X.Y.Z"
-% git push origin master
+% git push origin main
 ~~~
 
 * Change directory into site/target for publishing the site.
