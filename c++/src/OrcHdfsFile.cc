@@ -142,18 +142,20 @@ namespace orc {
         throw ParseError("Buffer is null");
       }
 
+      char* buf_ptr = reinterpret_cast<char*>(buf);
       hdfs::Status status;
       size_t total_bytes_read = 0;
       size_t last_bytes_read = 0;
 
       do {
-        status = file->PositionRead(buf,
+        status = file->PositionRead(buf_ptr,
             static_cast<size_t>(length) - total_bytes_read,
             static_cast<off_t>(offset + total_bytes_read), &last_bytes_read);
         if(!status.ok()) {
           throw ParseError("Error reading the file: " + status.ToString());
         }
         total_bytes_read += last_bytes_read;
+        buf_ptr += last_bytes_read;
       } while (total_bytes_read < length);
     }
 
