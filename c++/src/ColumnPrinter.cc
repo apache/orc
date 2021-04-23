@@ -249,6 +249,7 @@ namespace orc {
         break;
 
       case TIMESTAMP:
+      case TIMESTAMP_INSTANT:
         result = new TimestampColumnPrinter(buffer);
         break;
 

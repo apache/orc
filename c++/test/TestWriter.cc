@@ -800,6 +800,59 @@ namespace orc {
   }
 #endif
 
+  TEST_P(WriterTest, writeTimestampInstant) {
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    MemoryPool* pool = getDefaultPool();
+    std::unique_ptr<Type> type(Type::buildTypeFromString(
+      "struct<col1:timestamp with local time zone>"));
+
+    uint64_t stripeSize = 16 * 1024;
+    uint64_t compressionBlockSize = 1024;
+    uint64_t rowCount = 102400;
+
+    std::unique_ptr<Writer> writer = createWriter(stripeSize,
+                                                  compressionBlockSize,
+                                                  CompressionKind_ZLIB,
+                                                  *type,
+                                                  pool,
+                                                  &memStream,
+                                                  fileVersion);
+    std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
+    StructVectorBatch * structBatch =
+      dynamic_cast<StructVectorBatch *>(batch.get());
+    TimestampVectorBatch * tsBatch =
+      dynamic_cast<TimestampVectorBatch *>(structBatch->fields[0]);
+
+    std::vector<std::time_t> times(rowCount);
+    for (uint64_t i = 0; i < rowCount; ++i) {
+      time_t currTime = -14210715; // 1969-07-20 12:34:45
+      times[i] = static_cast<int64_t>(currTime) + static_cast<int64_t >(i * 3660);
+      tsBatch->data[i] = times[i];
+      tsBatch->nanoseconds[i] = static_cast<int64_t>(i * 1000);
+    }
+    structBatch->numElements = rowCount;
+    tsBatch->numElements = rowCount;
+
+    writer->add(*batch);
+    writer->close();
+
+    std::unique_ptr<InputStream> inStream(
+      new MemoryInputStream (memStream.getData(), memStream.getLength()));
+    std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
+    std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
+    EXPECT_EQ(rowCount, reader->getNumberOfRows());
+
+    batch = rowReader->createRowBatch(rowCount);
+    EXPECT_EQ(true, rowReader->next(*batch));
+
+    structBatch = dynamic_cast<StructVectorBatch *>(batch.get());
+    tsBatch = dynamic_cast<TimestampVectorBatch *>(structBatch->fields[0]);
+    for (uint64_t i = 0; i < rowCount; ++i) {
+      EXPECT_EQ(times[i], tsBatch->data[i]);
+      EXPECT_EQ(i * 1000, tsBatch->nanoseconds[i]);
+    }
+  }
+
   TEST_P(WriterTest, writeCharAndVarcharColumn) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool * pool = getDefaultPool();

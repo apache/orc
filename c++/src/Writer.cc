@@ -585,6 +585,10 @@ namespace orc {
       protoType.set_kind(proto::Type_Kind_TIMESTAMP);
       break;
     }
+    case TIMESTAMP_INSTANT: {
+      protoType.set_kind(proto::Type_Kind_TIMESTAMP_INSTANT);
+      break;
+    }
     case LIST: {
       protoType.set_kind(proto::Type_Kind_LIST);
       break;

@@ -448,6 +448,7 @@ int main(int argc, char* argv[]) {
                            i);
             break;
           case orc::TIMESTAMP:
+          case orc::TIMESTAMP_INSTANT:
             fillTimestampValues(data,
                                 structBatch->fields[i],
                                 numValues,

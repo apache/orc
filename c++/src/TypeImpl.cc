@@ -205,6 +205,8 @@ namespace orc {
       return "binary";
     case TIMESTAMP:
       return "timestamp";
+    case TIMESTAMP_INSTANT:
+      return "timestamp with local time zone";
     case LIST:
       return "array<" + (subTypes[0] ? subTypes[0]->toString() : "void") + ">";
     case MAP:
@@ -286,6 +288,7 @@ namespace orc {
         (new StringVectorBatch(capacity, memoryPool));
 
     case TIMESTAMP:
+    case TIMESTAMP_INSTANT:
       return std::unique_ptr<ColumnVectorBatch>
         (new TimestampVectorBatch(capacity, memoryPool));
 
@@ -401,6 +404,7 @@ namespace orc {
     case proto::Type_Kind_STRING:
     case proto::Type_Kind_BINARY:
     case proto::Type_Kind_TIMESTAMP:
+    case proto::Type_Kind_TIMESTAMP_INSTANT:
     case proto::Type_Kind_DATE:
       ret = std::unique_ptr<Type>
         (new TypeImpl(static_cast<TypeKind>(type.kind())));
@@ -484,6 +488,7 @@ namespace orc {
     case STRING:
     case BINARY:
     case TIMESTAMP:
+    case TIMESTAMP_INSTANT:
     case DATE:
       result = new TypeImpl(fileType->getKind());
       break;
@@ -658,6 +663,8 @@ namespace orc {
       return std::unique_ptr<Type>(new TypeImpl(BINARY));
     } else if (category == "timestamp") {
       return std::unique_ptr<Type>(new TypeImpl(TIMESTAMP));
+    } else if (category == "timestamp with local time zone") {
+      return std::unique_ptr<Type>(new TypeImpl(TIMESTAMP_INSTANT));
     } else if (category == "array") {
       return parseArrayType(input, start, end);
     } else if (category == "map") {
@@ -700,7 +707,7 @@ namespace orc {
       if (input[endPos] == ':') {
         fieldName = input.substr(pos, endPos - pos);
         pos = ++endPos;
-        while (endPos < end && isalpha(input[endPos])) {
+        while (endPos < end && (isalpha(input[endPos]) || input[endPos] == ' ')) {
           ++endPos;
         }
       }

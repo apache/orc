@@ -415,6 +415,7 @@ namespace orc {
         return std::unique_ptr<MutableColumnStatistics>(
           new DateColumnStatisticsImpl());
       case TIMESTAMP:
+      case TIMESTAMP_INSTANT:
         return std::unique_ptr<MutableColumnStatistics>(
           new TimestampColumnStatisticsImpl());
       case DECIMAL:

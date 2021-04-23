@@ -1701,7 +1701,8 @@ namespace orc {
   public:
     TimestampColumnWriter(const Type& type,
                           const StreamsFactory& factory,
-                          const WriterOptions& options);
+                          const WriterOptions& options,
+                          bool isInstantType);
 
     virtual void add(ColumnVectorBatch& rowBatch,
                      uint64_t offset,
@@ -1723,15 +1724,21 @@ namespace orc {
   private:
     RleVersion rleVersion;
     const Timezone& timezone;
+    const bool isUTC;
   };
 
   TimestampColumnWriter::TimestampColumnWriter(
                              const Type& type,
                              const StreamsFactory& factory,
-                             const WriterOptions& options) :
+                             const WriterOptions& options,
+                             bool isInstantType) :
                                  ColumnWriter(type, factory, options),
                                  rleVersion(options.getRleVersion()),
-                                 timezone(options.getTimezone()){
+                                 timezone(isInstantType ?
+                                          getTimezoneByName("GMT") :
+                                          options.getTimezone()),
+                                 isUTC(isInstantType ||
+                                       options.getTimezoneName() == "GMT") {
     std::unique_ptr<BufferedOutputStream> dataStream =
         factory.createStream(proto::Stream_Kind_DATA);
     std::unique_ptr<BufferedOutputStream> secondaryStream =
@@ -1801,6 +1808,9 @@ namespace orc {
       if (notNull == nullptr || notNull[i]) {
         // TimestampVectorBatch already stores data in UTC
         int64_t millsUTC = secs[i] * 1000 + nanos[i] / 1000000;
+        if (!isUTC) {
+          millsUTC = timezone.convertToUTC(millsUTC);
+        }
         ++count;
         if (enableBloomFilter) {
           bloomFilter->addLong(millsUTC);
@@ -2958,7 +2968,15 @@ namespace orc {
           new TimestampColumnWriter(
                                     type,
                                     factory,
-                                    options));
+                                    options,
+                                    false));
+      case TIMESTAMP_INSTANT:
+        return std::unique_ptr<ColumnWriter>(
+          new TimestampColumnWriter(
+                                    type,
+                                    factory,
+                                    options,
+                                    true));
       case DECIMAL:
         if (type.getPrecision() <= Decimal64ColumnWriter::MAX_PRECISION_64) {
           return std::unique_ptr<ColumnWriter>(
