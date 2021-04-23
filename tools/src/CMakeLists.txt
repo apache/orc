@@ -94,4 +94,8 @@ install(TARGETS
    orc-contents
    orc-metadata
    orc-statistics
+   orc-scan
+   orc-memory
+   timezone-dump
+   csv-import
    DESTINATION bin)
