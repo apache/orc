@@ -26,7 +26,6 @@ import org.apache.orc.impl.TreeReaderFactory;
 import org.apache.orc.impl.reader.StripePlanner;
 
 import java.io.IOException;
-import java.util.EnumSet;
 
 /**
  * Handles the Struct rootType for batch handling. The handling assumes that the root
@@ -50,38 +49,38 @@ public class StructBatchReader extends BatchReader {
                                TypeReader child,
                                int batchSize,
                                int index,
-                               EnumSet<TypeReader.ReadLevel> readLevel)
+                               TypeReader.ReadPhase readPhase)
     throws IOException {
     ColumnVector colVector = batch.cols[index];
     if (colVector != null) {
-      if (readLevel.contains(child.getReadLevel())) {
+      if (readPhase.contains(child.getReaderCategory())) {
         // Reset the column vector only if the current column is being processed, otherwise don't
         // reset as only its children are being processed
         colVector.reset();
         colVector.ensureSize(batchSize, false);
       }
-      child.nextVector(colVector, null, batchSize, batch, readLevel);
+      child.nextVector(colVector, null, batchSize, batch, readPhase);
     }
   }
 
   @Override
-  public void nextBatch(VectorizedRowBatch batch, int batchSize, EnumSet<TypeReader.ReadLevel> readLevel)
+  public void nextBatch(VectorizedRowBatch batch, int batchSize, TypeReader.ReadPhase readPhase)
     throws IOException {
-    if (readLevel.contains(TypeReader.ReadLevel.LEAD_CHILD)) {
+    if (readPhase == TypeReader.ReadPhase.ALL || readPhase == TypeReader.ReadPhase.LEADERS) {
       // selectedInUse = true indicates that the selected vector should be used to determine
       // valid rows in the batch
       batch.selectedInUse = false;
     }
-    nextBatchForLevel(batch, batchSize, readLevel);
+    nextBatchForLevel(batch, batchSize, readPhase);
 
     // Except when read level only includes FOLLOW, we can set the batch attributes of
     // selectedInUse and size.
-    if (readLevel.contains(TypeReader.ReadLevel.LEAD_CHILD)) {
+    if (readPhase == TypeReader.ReadPhase.ALL || readPhase == TypeReader.ReadPhase.LEADERS) {
       // these attributes can change as part of the filter application on the batch
       batch.size = batchSize;
     }
 
-    if (!readLevel.contains(TypeReader.ReadLevel.FOLLOW)) {
+    if (readPhase == TypeReader.ReadPhase.LEADERS) {
       // Apply filter callback to reduce number of # rows selected for decoding in the next
       // TreeReaders
       if (this.context.getColumnFilterCallback() != null) {
@@ -90,46 +89,46 @@ public class StructBatchReader extends BatchReader {
     }
   }
 
-  private void nextBatchForLevel(VectorizedRowBatch batch, int batchSize, EnumSet<TypeReader.ReadLevel> readLevel)
+  private void nextBatchForLevel(VectorizedRowBatch batch, int batchSize, TypeReader.ReadPhase readPhase)
     throws IOException {
     TypeReader[] children = structReader.fields;
     for (int i = 0; i < children.length
                     && (vectorColumnCount == -1 || i < vectorColumnCount); ++i) {
-      if (TypeReader.allowChild(children[i], readLevel)) {
-        readBatchColumn(batch, children[i], batchSize, i, readLevel);
+      if (TypeReader.shouldProcessChild(children[i], readPhase)) {
+        readBatchColumn(batch, children[i], batchSize, i, readPhase);
       }
     }
   }
 
   @Override
-  public void startStripe(StripePlanner planner,  EnumSet<TypeReader.ReadLevel> readLevel) throws IOException {
+  public void startStripe(StripePlanner planner,  TypeReader.ReadPhase readPhase) throws IOException {
     TypeReader[] children = ((TreeReaderFactory.StructTreeReader) rootType).fields;
     for (int i = 0; i < children.length &&
                     (vectorColumnCount == -1 || i < vectorColumnCount); ++i) {
-      if (TypeReader.allowChild(children[i], readLevel)) {
-        children[i].startStripe(planner, readLevel);
+      if (TypeReader.shouldProcessChild(children[i], readPhase)) {
+        children[i].startStripe(planner, readPhase);
       }
     }
   }
 
   @Override
-  public void skipRows(long rows,  EnumSet<TypeReader.ReadLevel> readLevel) throws IOException {
+  public void skipRows(long rows,  TypeReader.ReadPhase readerCategory) throws IOException {
     TypeReader[] children = ((TreeReaderFactory.StructTreeReader) rootType).fields;
     for (int i = 0; i < children.length &&
                     (vectorColumnCount == -1 || i < vectorColumnCount); ++i) {
-      if (TypeReader.allowChild(children[i], readLevel)) {
-        children[i].skipRows(rows, readLevel);
+      if (TypeReader.shouldProcessChild(children[i], readerCategory)) {
+        children[i].skipRows(rows, readerCategory);
       }
     }
   }
 
   @Override
-  public void seek(PositionProvider[] index, EnumSet<TypeReader.ReadLevel> readLevel) throws IOException {
+  public void seek(PositionProvider[] index, TypeReader.ReadPhase readPhase) throws IOException {
     TypeReader[] children = ((TreeReaderFactory.StructTreeReader) rootType).fields;
     for (int i = 0; i < children.length &&
                     (vectorColumnCount == -1 || i < vectorColumnCount); ++i) {
-      if (TypeReader.allowChild(children[i], readLevel)) {
-        children[i].seek(index, readLevel);
+      if (TypeReader.shouldProcessChild(children[i], readPhase)) {
+        children[i].seek(index, readPhase);
       }
     }
   }

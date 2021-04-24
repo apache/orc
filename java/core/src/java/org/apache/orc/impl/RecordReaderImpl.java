@@ -67,7 +67,6 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TimeZone;
@@ -102,7 +101,7 @@ public class RecordReaderImpl implements RecordReader {
   private final int maxDiskRangeChunkLimit;
   private final StripePlanner planner;
   // identifies the type of read, ALL(read everything), LEADS(read only the filter columns)
-  private final EnumSet<TypeReader.ReadLevel> readLevel;
+  private final TypeReader.ReadPhase startReadPhase;
   // identifies that follow columns bytes must be read
   private boolean needsFollowColumnsRead;
 
@@ -257,9 +256,9 @@ public class RecordReaderImpl implements RecordReader {
         }
       }
       LOG.info("Filter Columns: " + filterColIds);
-      this.readLevel = TypeReader.ReadLevel.LEADERS;
+      this.startReadPhase = TypeReader.ReadPhase.LEADERS;
     } else {
-      this.readLevel = TypeReader.ReadLevel.ALL;
+      this.startReadPhase = TypeReader.ReadPhase.ALL;
     }
 
     this.rowIndexColsToRead = ArrayUtils.contains(rowIndexCols, true) ? rowIndexCols : null;
@@ -1150,12 +1149,12 @@ public class RecordReaderImpl implements RecordReader {
 
     // if we haven't skipped the whole stripe, read the data
     if (rowInStripe < rowCountInStripe) {
-      planner.readData(indexes, includedRowGroups, false, readLevel);
-      reader.startStripe(planner, readLevel);
+      planner.readData(indexes, includedRowGroups, false, startReadPhase);
+      reader.startStripe(planner, startReadPhase);
       needsFollowColumnsRead = true;
       // if we skipped the first row group, move the pointers forward
       if (rowInStripe != 0) {
-        seekToRowEntry(reader, (int) (rowInStripe / rowIndexStride), readLevel);
+        seekToRowEntry(reader, (int) (rowInStripe / rowIndexStride), startReadPhase);
       }
     }
   }
@@ -1210,8 +1209,7 @@ public class RecordReaderImpl implements RecordReader {
    * @param nextRow the row we want to go to
    * @throws IOException
    */
-  private boolean advanceToNextRow(
-    BatchReader reader, long nextRow, boolean canAdvanceStripe)
+  private boolean advanceToNextRow(BatchReader reader, long nextRow, boolean canAdvanceStripe)
       throws IOException {
     long nextRowInStripe = nextRow - rowBaseInStripe;
     // check for row skipping
@@ -1241,10 +1239,10 @@ public class RecordReaderImpl implements RecordReader {
     if (nextRowInStripe != rowInStripe) {
       if (rowIndexStride != 0) {
         int rowGroup = (int) (nextRowInStripe / rowIndexStride);
-        seekToRowEntry(reader, rowGroup, readLevel);
-        reader.skipRows(nextRowInStripe - rowGroup * rowIndexStride, readLevel);
+        seekToRowEntry(reader, rowGroup, startReadPhase);
+        reader.skipRows(nextRowInStripe - rowGroup * rowIndexStride, startReadPhase);
       } else {
-        reader.skipRows(nextRowInStripe - rowInStripe, readLevel);
+        reader.skipRows(nextRowInStripe - rowInStripe, startReadPhase);
       }
       rowInStripe = nextRowInStripe;
     }
@@ -1271,8 +1269,8 @@ public class RecordReaderImpl implements RecordReader {
 
         batchSize = computeBatchSize(batch.getMaxSize());
         reader.setVectorColumnCount(batch.getDataColumnCount());
-        reader.nextBatch(batch, batchSize, readLevel);
-        if (!readLevel.contains(TypeReader.ReadLevel.FOLLOW) && batch.size > 0) {
+        reader.nextBatch(batch, batchSize, startReadPhase);
+        if (startReadPhase == TypeReader.ReadPhase.LEADERS && batch.size > 0) {
           // At least 1 row has been selected and as a result we read the follow columns into the
           // row batch
           reader.nextBatch(batch,
@@ -1301,8 +1299,11 @@ public class RecordReaderImpl implements RecordReader {
    * @param toFollowRow The rowIdx identifies the required row position within the stripe for
    *                    follow read
    * @param fromFollowRow Indicates the current position of the follow read, exclusive
+   * @return the read level for reading followers, this will be FOLLOWERS_AND_PARENTS in case of a
+   * seek otherwise will be FOLLOWERS
    */
-  private EnumSet<TypeReader.ReadLevel> prepareFollowReaders(long toFollowRow, long fromFollowRow) throws IOException {
+  private TypeReader.ReadPhase prepareFollowReaders(long toFollowRow, long fromFollowRow)
+    throws IOException {
     // 1. Determine the row group that this matches in the stripe
     int needRG = computeRGIdx(toFollowRow);
     // The current row is not yet read so we -1 to compute the previously read row group
@@ -1323,26 +1324,26 @@ public class RecordReaderImpl implements RecordReader {
     if (needsFollowColumnsRead) {
       needsFollowColumnsRead = false;
       planner.readFollowData(indexes, includedRowGroups, needRG, false);
-      reader.startStripe(planner, TypeReader.ReadLevel.FOLLOWERS);
+      reader.startStripe(planner, TypeReader.ReadPhase.FOLLOWERS);
     }
 
     // 3. Seek to the required row group and skip the rows as needed
-    EnumSet<TypeReader.ReadLevel> result = TypeReader.ReadLevel.FOLLOWERS;
+    TypeReader.ReadPhase result = TypeReader.ReadPhase.FOLLOWERS;
     if (needRG != readRG || toFollowRow < fromFollowRow) {
       // seek both the lead parents and follow. This will position the parents present vector to
       // facilitate the subsequent skip on the leader readers which will determine the number of
       // non null values to skip
-      seekToRowEntry(reader, needRG, TypeReader.ReadLevel.FOLLOWERS_WITH_PARENTS);
-      reader.skipRows(skipRows, TypeReader.ReadLevel.FOLLOWERS_WITH_PARENTS);
-      result = TypeReader.ReadLevel.FOLLOWERS_WITH_PARENTS;
+      seekToRowEntry(reader, needRG, TypeReader.ReadPhase.FOLLOWERS_AND_PARENTS);
+      reader.skipRows(skipRows, TypeReader.ReadPhase.FOLLOWERS_AND_PARENTS);
+      result = TypeReader.ReadPhase.FOLLOWERS_AND_PARENTS;
     } else if (skipRows > 0) {
       // in case we are only skipping within the row group, reposition the lead parents back to the
       // position of the follow and move both the lead parents and follow forward, this will compute
       // the correct non null skips on follow children
-      seekToRowEntry(reader, readRG, TypeReader.ReadLevel.LEADER_PARENTS);
-      reader.skipRows(fromFollowRow - (readRG * rowIndexStride), TypeReader.ReadLevel.LEADER_PARENTS);
-      reader.skipRows(skipRows, TypeReader.ReadLevel.FOLLOWERS_WITH_PARENTS);
-      result = TypeReader.ReadLevel.FOLLOWERS_WITH_PARENTS;
+      seekToRowEntry(reader, readRG, TypeReader.ReadPhase.LEADER_PARENTS);
+      reader.skipRows(fromFollowRow - (readRG * rowIndexStride), TypeReader.ReadPhase.LEADER_PARENTS);
+      reader.skipRows(skipRows, TypeReader.ReadPhase.FOLLOWERS_AND_PARENTS);
+      result = TypeReader.ReadPhase.FOLLOWERS_AND_PARENTS;
     }
     // Identifies the read level that should be performed for the read
     // FOLLOWERS_WITH_PARENTS indicates repositioning identifying both FOLLOW children and parents
@@ -1361,7 +1362,7 @@ public class RecordReaderImpl implements RecordReader {
     // aware of row group boundary and will not cause overflow when reading rows
     // illustration of this case is here https://issues.apache.org/jira/browse/HIVE-6287
     if (rowIndexStride != 0
-        && (includedRowGroups != null || !readLevel.contains(TypeReader.ReadLevel.FOLLOW))
+        && (includedRowGroups != null || startReadPhase != TypeReader.ReadPhase.ALL)
         && rowInStripe < rowCountInStripe) {
       int startRowGroup = (int) (rowInStripe / rowIndexStride);
       if (includedRowGroups != null && !includedRowGroups[startRowGroup]) {
@@ -1373,7 +1374,7 @@ public class RecordReaderImpl implements RecordReader {
       int endRowGroup = startRowGroup;
       // We force row group boundaries when dealing with filters. We adjust the end row group to
       // be the next row group even if more than one are possible selections.
-      if (includedRowGroups != null && readLevel.contains(TypeReader.ReadLevel.FOLLOW)) {
+      if (includedRowGroups != null && startReadPhase == TypeReader.ReadPhase.ALL) {
         while (endRowGroup < includedRowGroups.length
                && includedRowGroups[endRowGroup]) {
           endRowGroup += 1;
@@ -1453,7 +1454,7 @@ public class RecordReaderImpl implements RecordReader {
     }
   }
 
-  private void seekToRowEntry(BatchReader reader, int rowEntry, EnumSet<TypeReader.ReadLevel> readLevel)
+  private void seekToRowEntry(BatchReader reader, int rowEntry, TypeReader.ReadPhase readPhase)
       throws IOException {
     OrcProto.RowIndex[] rowIndices = indexes.getRowGroupIndex();
     PositionProvider[] index = new PositionProvider[rowIndices.length];
@@ -1468,7 +1469,7 @@ public class RecordReaderImpl implements RecordReader {
         }
       }
     }
-    reader.seek(index, readLevel);
+    reader.seek(index, readPhase);
   }
 
   @Override

@@ -23,8 +23,6 @@ import org.apache.orc.impl.reader.StripePlanner;
 
 import java.io.IOException;
 
-import java.util.EnumSet;
-
 public class PrimitiveBatchReader extends BatchReader {
 
   public PrimitiveBatchReader(TypeReader rowReader) {
@@ -34,22 +32,22 @@ public class PrimitiveBatchReader extends BatchReader {
   @Override
   public void nextBatch(VectorizedRowBatch batch,
                         int batchSize,
-                        EnumSet<TypeReader.ReadLevel> readLevel) throws IOException {
+                        TypeReader.ReadPhase readPhase) throws IOException {
     batch.cols[0].reset();
     batch.cols[0].ensureSize(batchSize, false);
-    rootType.nextVector(batch.cols[0], null, batchSize, batch, readLevel);
+    rootType.nextVector(batch.cols[0], null, batchSize, batch, readPhase);
     resetBatch(batch, batchSize);
   }
 
-  public void startStripe(StripePlanner planner, EnumSet<TypeReader.ReadLevel> readLevel) throws IOException {
-    rootType.startStripe(planner, readLevel);
+  public void startStripe(StripePlanner planner, TypeReader.ReadPhase readPhase) throws IOException {
+    rootType.startStripe(planner, readPhase);
   }
 
-  public void skipRows(long rows, EnumSet<TypeReader.ReadLevel> readLevel) throws IOException {
-    rootType.skipRows(rows, readLevel);
+  public void skipRows(long rows, TypeReader.ReadPhase readPhase) throws IOException {
+    rootType.skipRows(rows, readPhase);
   }
 
-  public void seek(PositionProvider[] index, EnumSet<TypeReader.ReadLevel> readLevel) throws IOException {
-    rootType.seek(index, readLevel);
+  public void seek(PositionProvider[] index, TypeReader.ReadPhase readPhase) throws IOException {
+    rootType.seek(index, readPhase);
   }
 }

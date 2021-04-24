@@ -1288,13 +1288,7 @@ public class TestRowFilteringSkip {
         .setRowFilter(new String[]{"missing"}, TestRowFilteringSkip::notNullFilterMissing))) {
       VectorizedRowBatch batch = readSchema.createRowBatchV2();
 
-      long rowCount = 0;
-      while (rows.nextBatch(batch)) {
-        // All rows are selected as NullTreeReader does not support filters
-        Assert.assertTrue(batch.selectedInUse);
-        rowCount += batch.size;
-      }
-      Assert.assertEquals(0, rowCount);
+      Assert.assertFalse(rows.nextBatch(batch));
     }
   }
 

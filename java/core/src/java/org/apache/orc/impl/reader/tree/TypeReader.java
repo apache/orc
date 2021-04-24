@@ -30,46 +30,65 @@ import java.util.EnumSet;
 public interface TypeReader {
   void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException;
 
-  void startStripe(StripePlanner planner, EnumSet<ReadLevel> readLevel) throws IOException;
+  void startStripe(StripePlanner planner, ReadPhase readPhase) throws IOException;
 
-  void seek(PositionProvider[] index, EnumSet<ReadLevel> readLevel) throws IOException;
+  void seek(PositionProvider[] index, ReadPhase readPhase) throws IOException;
 
-  void seek(PositionProvider index, EnumSet<ReadLevel> readLevel) throws IOException;
+  void seek(PositionProvider index, ReadPhase readPhase) throws IOException;
 
-  void skipRows(long rows, EnumSet<ReadLevel> readLevel) throws IOException;
+  void skipRows(long rows, ReadPhase readPhase) throws IOException;
 
   void nextVector(ColumnVector previous,
                   boolean[] isNull,
                   int batchSize,
                   FilterContext filterContext,
-                  EnumSet<ReadLevel> readLevel) throws IOException;
+                  ReadPhase readPhase) throws IOException;
 
   int getColumnId();
 
-  ReadLevel getReadLevel();
+  ReaderCategory getReaderCategory();
 
   /**
    * Determines if the child of the parent should be allowed based on the read level. The child
    * is allowed based on the read level or if the child is a LEAD_PARENT, this allows the handling
    * of FOLLOW children on the LEAD_PARENT
-   * @param reader the child reader that is being evaluated
-   * @param readLevel the requested read level
+   * @param child the child reader that is being evaluated
+   * @param readPhase the requested read level
    * @return true if allowed by read level or if it is a LEAD_PARENT otherwise false
    */
-  static boolean allowChild(TypeReader reader, EnumSet<ReadLevel> readLevel) {
-    return readLevel.contains(reader.getReadLevel())
-           || reader.getReadLevel() == ReadLevel.LEAD_PARENT;
+  static boolean shouldProcessChild(TypeReader child, ReadPhase readPhase) {
+    return readPhase.contains(child.getReaderCategory())
+           || child.getReaderCategory() == ReaderCategory.FILTER_PARENT;
   }
 
-  enum ReadLevel {
-    LEAD_CHILD,    // Read only the elementary filter columns
-    LEAD_PARENT,   // Read only the parent filter columns e.g. Struct and Union
-    FOLLOW;        // Read the non-filter columns
+  enum ReaderCategory {
+    FILTER_CHILD,    // Primitive type that is a filter column
+    FILTER_PARENT,   // Compound type with filter children
+    NON_FILTER       // Non-filter column
+  }
 
-    public static final EnumSet<ReadLevel> ALL = EnumSet.allOf(ReadLevel.class);
-    public static final EnumSet<ReadLevel> LEADERS = EnumSet.of(LEAD_PARENT, LEAD_CHILD);
-    public static final EnumSet<ReadLevel> FOLLOWERS = EnumSet.of(FOLLOW);
-    public static final EnumSet<ReadLevel> LEADER_PARENTS = EnumSet.of(LEAD_PARENT);
-    public static final EnumSet<ReadLevel> FOLLOWERS_WITH_PARENTS = EnumSet.of(LEAD_PARENT, FOLLOW);
+  enum ReadPhase {
+    // Used to read all columns in the absence of filters
+    ALL(EnumSet.allOf(ReaderCategory.class)),
+    // Used to perform read of the filter columns in the presence of filters
+    LEADERS(EnumSet.of(ReaderCategory.FILTER_PARENT, ReaderCategory.FILTER_CHILD)),
+    // Used to perform the read of non-filter columns after a match on the filter columns when a
+    // skip is not needed on the non-filter columns
+    FOLLOWERS(EnumSet.of(ReaderCategory.NON_FILTER)),
+    // Used to reposition the FILTER_PARENTs when a forward seek is required within the same row
+    // group
+    LEADER_PARENTS(EnumSet.of(ReaderCategory.FILTER_PARENT)),
+    // Used to reposition the FILTER_PARENTs and NON_FILTERs, this is required to accurately
+    // determine the the non-null rows to skip.
+    FOLLOWERS_AND_PARENTS(EnumSet.of(ReaderCategory.FILTER_PARENT, ReaderCategory.NON_FILTER));
+
+    EnumSet<ReaderCategory> categories;
+    ReadPhase(EnumSet<ReaderCategory> categories) {
+      this.categories = categories;
+    }
+
+    public boolean contains(ReaderCategory readerCategory) {
+      return categories.contains(readerCategory);
+    }
   }
 }
