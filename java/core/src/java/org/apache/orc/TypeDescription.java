@@ -116,7 +116,7 @@ public class TypeDescription
     MAP("map", false),
     STRUCT("struct", false),
     UNION("uniontype", false),
-    TIMESTAMP_INSTANT("timestamp with local time zone", false);
+    TIMESTAMP_INSTANT("timestamp with local time zone", true);
 
     Category(String name, boolean isPrimitive) {
       this.name = name;
