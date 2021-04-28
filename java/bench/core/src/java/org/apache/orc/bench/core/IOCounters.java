@@ -67,7 +67,7 @@ public class IOCounters {
   /**
    * Capture the number of I/O on average in each invocation.
    */
-  public long iOs() {
+  public long ops() {
     return recordCounters == null || recordCounters.invocations == 0 ?
         0 : io / recordCounters.invocations;
   }

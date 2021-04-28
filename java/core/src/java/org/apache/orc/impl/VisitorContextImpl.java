@@ -25,7 +25,8 @@ import org.apache.hadoop.io.Text;
 
 
 /**
- *
+ * Base implementation for {@link org.apache.orc.impl.Dictionary.VisitorContext} used to traversing
+ * all nodes in a dictionary.
  */
 public class VisitorContextImpl implements Dictionary.VisitorContext {
   private int originalPosition;

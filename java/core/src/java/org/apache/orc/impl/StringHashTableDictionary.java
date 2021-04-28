@@ -28,8 +28,7 @@ import org.apache.hadoop.io.Text;
  * Using HashTable to represent a dictionary. The strings are stored as UTF-8 bytes
  * and an offset for each entry. It is using chaining for collision resolution.
  *
- * This implementation is not thread-safe. It also assumes there's no reduction in the size of hash-table
- * as it shouldn't happen in the use cases for this class.
+ * This implementation is not thread-safe.
  */
 public class StringHashTableDictionary implements Dictionary {
 
@@ -62,18 +61,18 @@ public class StringHashTableDictionary implements Dictionary {
     this.capacity = initialCapacity;
     this.loadFactor = loadFactor;
     this.keyOffsets = new DynamicIntArray(initialCapacity);
-    this.hashBuckets = initHashArray(initialCapacity);
+    initHashBuckets(initialCapacity);
     this.threshold = (int)Math.min(initialCapacity * loadFactor, MAX_ARRAY_SIZE + 1);
   }
 
-  private DynamicIntArray[] initHashArray(int capacity) {
+  private void initHashBuckets(int capacity) {
     DynamicIntArray[] buckets = new DynamicIntArray[capacity];
     for (int i = 0; i < capacity; i++) {
       // We don't need large bucket: If we have more than a handful of collisions,
       // then the table is too small or the function isn't good.
       buckets[i] = createBucket();
     }
-    return buckets;
+    hashBuckets = buckets;
   }
 
   private DynamicIntArray createBucket() {
@@ -99,7 +98,7 @@ public class StringHashTableDictionary implements Dictionary {
   public void clear() {
     byteArray.clear();
     keyOffsets.clear();
-    Arrays.fill(hashBuckets, null);
+    initHashBuckets(this.capacity);
   }
 
   @Override

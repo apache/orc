@@ -70,7 +70,7 @@ public class ORCWriterBenchMark implements OrcBenchmark {
 
   @Override
   public String getDescription() {
-    return "Benchmark ORC Writer with different options";
+    return "Benchmark ORC Writer with different DICT options";
   }
 
   @Setup(Level.Trial)
@@ -86,7 +86,7 @@ public class ORCWriterBenchMark implements OrcBenchmark {
         batch = schema.createRowBatch();
         strVector = (BytesColumnVector) batch.cols[0];
       }
-      int randomNum = rand.nextInt(10000 - 10 + 1) + 10;
+      int randomNum = rand.nextInt(upperBound - 10 + 1) + 10;
       byte[] value = String.format("row %06d", randomNum).getBytes(StandardCharsets.UTF_8);
       strVector.setRef(batch.size, value, 0, value.length);
       ++batch.size;
@@ -97,6 +97,13 @@ public class ORCWriterBenchMark implements OrcBenchmark {
 
   @Param({"RBTREE", "HASH", "NONE"})
   public String dictImpl;
+
+  /**
+   * Controlling the bound of randomly generated data which is used to control the number of distinct keys
+   * appeared in the dictionary.
+   */
+  @Param({"10000", "2500", "500"})
+  public int upperBound;
 
   @TearDown(Level.Invocation)
   public void tearDownBenchmark()
