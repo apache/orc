@@ -393,8 +393,8 @@ public class TreeReaderFactory {
 
   public static class NullTreeReader extends TreeReader {
 
-    public NullTreeReader(int columnId) throws IOException {
-      super(columnId, null);
+    public NullTreeReader(int columnId, Context context) throws IOException {
+      super(columnId, context);
     }
 
     @Override
@@ -2895,7 +2895,7 @@ public class TreeReaderFactory {
     final SchemaEvolution evolution = context.getSchemaEvolution();
     TypeDescription fileType = evolution.getFileType(readerType);
     if (fileType == null || !evolution.includeReaderColumn(readerType.getId())){
-      return new NullTreeReader(0);
+      return new NullTreeReader(-1, context);
     }
     TypeDescription.Category readerTypeCategory = readerType.getCategory();
     // We skip attribute checks when comparing types since they are not used to

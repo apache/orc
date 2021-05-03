@@ -26,6 +26,7 @@ import org.apache.hadoop.hive.ql.exec.vector.Decimal64ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.StructColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
@@ -45,6 +46,8 @@ import java.text.Format;
 import java.text.SimpleDateFormat;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -1270,8 +1273,7 @@ public class TestRowFilteringSkip {
             col2.set(row, null);
           }
         }
-        col1.isRepeating = true;
-        col1.noNulls = false;
+        col1.noNulls = true;
         col2.noNulls = false;
         writer.addRowBatch(batch);
       }
@@ -1282,13 +1284,127 @@ public class TestRowFilteringSkip {
       .addField("missing", TypeDescription.createInt());
     Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf));
 
+    // Read nothing with NOT NULL filter on missing
     try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
       reader.options()
         .schema(readSchema)
         .setRowFilter(new String[]{"missing"}, TestRowFilteringSkip::notNullFilterMissing))) {
       VectorizedRowBatch batch = readSchema.createRowBatchV2();
 
-      Assert.assertFalse(rows.nextBatch(batch));
+      assertFalse(rows.nextBatch(batch));
+    }
+
+    // Read everything with select all filter on missing
+    try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
+      reader.options()
+        .schema(readSchema)
+        .setRowFilter(new String[]{"missing"}, TestRowFilteringSkip::allowAll))) {
+      VectorizedRowBatch batch = readSchema
+        .createRowBatch(TypeDescription.RowBatchVersion.USE_DECIMAL64, ColumnBatchRows);
+      long rowCount = 0;
+      LongColumnVector col1 = (LongColumnVector) batch.cols[0];
+      TimestampColumnVector col2 = (TimestampColumnVector) batch.cols[1];
+      while (rows.nextBatch(batch)) {
+        rowCount += batch.size;
+        assertFalse(batch.cols[2].noNulls);
+        assertTrue(batch.cols[2].isRepeating);
+        assertTrue(batch.cols[2].isNull[0]);
+        for (int i = 0; i < batch.size; i++) {
+          assertEquals(i, col1.vector[i]);
+          if (i % 2 == 0) {
+            assertEquals(Timestamp.valueOf((1900+i)+"-04-01 12:34:56.9"),
+                         col2.asScratchTimestamp(i));
+          } else {
+            assertTrue(col2.isNull[i]);
+          }
+        }
+      }
+      assertEquals(ColumnBatchRows * NUM_BATCHES, rowCount);
+    }
+  }
+
+  @Test
+  public void testSchemaEvolutionMissingNestedColumn() throws Exception {
+    // Set the row stride to a multiple of the batch size
+    final int INDEX_STRIDE = 16 * ColumnBatchRows;
+    final int NUM_BATCHES = 10;
+
+    TypeDescription fileSchema = TypeDescription.createStruct()
+      .addField("int1", TypeDescription.createInt())
+      .addField("s2", TypeDescription.createStruct()
+        .addField("ts2", TypeDescription.createTimestamp()));
+
+    try (Writer writer = OrcFile.createWriter(testFilePath,
+                                              OrcFile.writerOptions(conf)
+                                                .setSchema(fileSchema)
+                                                .rowIndexStride(INDEX_STRIDE))) {
+      VectorizedRowBatch batch = fileSchema.createRowBatchV2();
+      LongColumnVector int1 = (LongColumnVector) batch.cols[0];
+      StructColumnVector s2 = (StructColumnVector) batch.cols[1];
+      TimestampColumnVector ts2 = (TimestampColumnVector) s2.fields[0];
+      for (int b=0; b < NUM_BATCHES; ++b) {
+        batch.reset();
+        batch.size = ColumnBatchRows;
+        for (int row = 0; row < batch.size; row++) {
+          int1.vector[row] = row;
+          if ((row % 2) == 0)
+            ts2.set(row, Timestamp.valueOf((1900+row)+"-04-01 12:34:56.9"));
+          else {
+            s2.isNull[row] = true;
+          }
+        }
+        int1.noNulls = true;
+        ts2.noNulls = false;
+        s2.noNulls = false;
+        writer.addRowBatch(batch);
+      }
+    }
+
+    TypeDescription readSchema = fileSchema.clone();
+    readSchema
+      .findSubtype("s2")
+      .addField("missing", TypeDescription.createInt());
+    Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf));
+
+    // Read nothing with NOT NULL filter on missing
+    try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
+      reader.options()
+        .schema(readSchema)
+        .setRowFilter(new String[]{"s2.missing"},
+                      TestRowFilteringSkip::notNullFilterNestedMissing))) {
+      VectorizedRowBatch batch = readSchema.createRowBatchV2();
+      assertFalse(rows.nextBatch(batch));
+    }
+
+    // Read everything with select all filter on missing
+    try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
+      reader.options()
+        .schema(readSchema)
+        .setRowFilter(new String[]{"s2.missing"}, TestRowFilteringSkip::allowAll))) {
+      VectorizedRowBatch batch = readSchema
+        .createRowBatch(TypeDescription.RowBatchVersion.USE_DECIMAL64, ColumnBatchRows);
+      long rowCount = 0;
+      LongColumnVector int1 = (LongColumnVector) batch.cols[0];
+      StructColumnVector s2 = (StructColumnVector) batch.cols[1];
+      TimestampColumnVector ts2 = (TimestampColumnVector) s2.fields[0];
+      while (rows.nextBatch(batch)) {
+        rowCount += batch.size;
+        // Validate that the missing column is null
+        assertFalse(s2.fields[1].noNulls);
+        assertTrue(s2.fields[1].isRepeating);
+        assertTrue(s2.fields[1].isNull[0]);
+        for (int i = 0; i < batch.size; i++) {
+          assertEquals(i, int1.vector[i]);
+          if (i % 2 == 0) {
+            assertEquals(Timestamp.valueOf((1900+i)+"-04-01 12:34:56.9"),
+                         ts2.asScratchTimestamp(i));
+          } else {
+            assertTrue(s2.isNull[i]);
+            assertTrue(ts2.isNull[i]);
+          }
+        }
+      }
+      assertEquals(ColumnBatchRows * NUM_BATCHES, rowCount);
     }
   }
 
@@ -1310,6 +1426,31 @@ public class TestRowFilteringSkip {
     }
     batch.setSelectedInUse(true);
     batch.setSelectedSize(selIdx);
+  }
+
+  private static void notNullFilterNestedMissing(OrcFilterContext batch) {
+    int selIdx = 0;
+    StructColumnVector scv = (StructColumnVector) ((OrcFilterContextImpl) batch).getCols()[1];
+    ColumnVector cv = scv.fields[1];
+    if (cv.isRepeating) {
+      if (!cv.isNull[0]) {
+        for (int i = 0; i < batch.getSelectedSize(); i++) {
+          batch.getSelected()[selIdx++] = i;
+        }
+      }
+    } else {
+      for (int i = 0; i < batch.getSelectedSize(); i++) {
+        if (!cv.isNull[i]) {
+          batch.getSelected()[selIdx++] = i;
+        }
+      }
+    }
+    batch.setSelectedInUse(true);
+    batch.setSelectedSize(selIdx);
+  }
+
+  private static void allowAll(OrcFilterContext batch) {
+    // Do nothing everything is allowed by default
   }
 
   @Test

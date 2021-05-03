@@ -131,6 +131,27 @@ public class RecordReaderImpl implements RecordReader {
     }
   }
 
+  static TypeDescription findCommonColumnType(SchemaEvolution evolution, String columnName) {
+    try {
+      TypeDescription readerColumn = evolution.getReaderBaseSchema().findSubtype(
+        columnName, evolution.isSchemaEvolutionCaseAware);
+      TypeDescription fileColumn;
+      do {
+        fileColumn = evolution.getFileType(readerColumn);
+        if (fileColumn == null) {
+          readerColumn = readerColumn.getParent();
+        } else {
+          return fileColumn;
+        }
+      } while(readerColumn != null);
+      return null;
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException("Filter could not find column with name: " +
+                                         columnName + " on " + evolution.getReaderBaseSchema(),
+                                         e);
+    }
+  }
+
   /**
    * Find the mapping from predicate leaves to columns.
    * @param sargLeaves the search argument that we need to map
@@ -248,6 +269,12 @@ public class RecordReaderImpl implements RecordReader {
       for (String colName : options.getPreFilterColumnNames()) {
         TypeDescription expandCol = findColumnType(evolution, colName);
         // If the column is not present in the file then this can be ignored from read.
+        if (expandCol == null || expandCol.getId() == -1) {
+          // Add -1 to filter columns so that the NullTreeReader is invoked during the LEADERS phase
+          filterColIds.add(-1);
+          // Determine the common parent and include these
+          expandCol = findCommonColumnType(evolution, colName);
+        }
         while(expandCol != null && expandCol.getId() != -1) {
           // classify the column and the parent branch as LEAD
           filterColIds.add(expandCol.getId());
