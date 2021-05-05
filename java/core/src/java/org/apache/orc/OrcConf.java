@@ -244,6 +244,15 @@ public enum OrcConf {
     return getInt(null, conf);
   }
 
+  /**
+   * @deprecated Use {@link #getInt(Configuration)} instead. This method was
+   * incorrectly added and shouldn't be used anymore.
+   */
+  @Deprecated
+  public void getInt(Configuration conf, int value) {
+    // noop
+  }
+
   public void setInt(Configuration conf, int value) {
     conf.setInt(attribute, value);
   }
