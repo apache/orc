@@ -33,8 +33,6 @@ public interface Dictionary {
     HASH
   }
 
-  int INITIAL_DICTIONARY_SIZE = 4096;
-
   /**
    * Traverse the whole dictionary and apply the action.
    */

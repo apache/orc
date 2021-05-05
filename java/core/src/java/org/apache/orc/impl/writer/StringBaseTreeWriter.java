@@ -42,8 +42,6 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import static org.apache.orc.OrcConf.DICTIONARY_IMPL;
-import static org.apache.orc.OrcConf.DICTIONARY_INIT_SIZE;
-import static org.apache.orc.impl.Dictionary.INITIAL_DICTIONARY_SIZE;
 
 
 public abstract class StringBaseTreeWriter extends TreeWriterBase {
