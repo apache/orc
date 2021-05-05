@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import static org.apache.orc.OrcConf.DICTIONARY_IMPL;
+import static org.apache.orc.OrcConf.DICTIONARY_INIT_SIZE;
 import static org.apache.orc.impl.Dictionary.INITIAL_DICTIONARY_SIZE;
 
 
@@ -69,11 +70,12 @@ public abstract class StringBaseTreeWriter extends TreeWriterBase {
   private static Dictionary createDict(Configuration conf) {
     String dictImpl = conf.get(DICTIONARY_IMPL.getAttribute(),
         DICTIONARY_IMPL.getDefaultValue().toString()).toUpperCase();
+    int initSize = OrcConf.DICTIONARY_INIT_SIZE.getInt(conf);
     switch (Dictionary.IMPL.valueOf(dictImpl)) {
       case RBTREE:
-        return new StringRedBlackTree(INITIAL_DICTIONARY_SIZE);
+        return new StringRedBlackTree(initSize);
       case HASH:
-        return new StringHashTableDictionary(INITIAL_DICTIONARY_SIZE);
+        return new StringHashTableDictionary(initSize);
       default:
         throw new UnsupportedOperationException("Unknown implementation:" + dictImpl);
     }

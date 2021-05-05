@@ -49,8 +49,21 @@ public class StringHashTableDictionary implements Dictionary {
 
   private static float DEFAULT_LOAD_FACTOR = 0.75f;
 
-  private static final int BUCKET_SIZE = 20;
+  /**
+   * Picked based on :
+   * 1. default strip size (64MB),
+   * 2. an assumption that record size is around 500B,
+   * 3. and an assumption that there are 20% distinct keys among all keys seen within a stripe.
+   * We then have the following equation:
+   * 4096 * 0.75 (capacity without resize) * avgBucketSize * 5 (20% distinct) = 64 * 1024 * 1024 / 500
+   * from which we deduce avgBucketSize ~8
+   */
+  private static final int BUCKET_SIZE = 8;
 
+  /**
+   * The maximum size of array to allocate, value being the same as {@link java.util.Hashtable},
+   * given the fact that the stripe size could be increased to larger value by configuring "orc.stripe.size".
+   */
   private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
 
   public StringHashTableDictionary(int initialCapacity) {

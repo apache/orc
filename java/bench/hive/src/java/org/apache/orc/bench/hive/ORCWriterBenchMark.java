@@ -105,6 +105,10 @@ public class ORCWriterBenchMark implements OrcBenchmark {
   @Param({"10000", "2500", "500"})
   public int upperBound;
 
+  @Param({"4096", "8192", "10240"})
+  public int initSize;
+
+
   @TearDown(Level.Invocation)
   public void tearDownBenchmark()
       throws Exception {
@@ -131,6 +135,7 @@ public class ORCWriterBenchMark implements OrcBenchmark {
     } else {
       OrcConf.DICTIONARY_IMPL.setString(conf, dictImpl);
     }
+    OrcConf.DICTIONARY_INIT_SIZE.setInt(conf, initSize);
 
     TrackingLocalFileSystem fs = new TrackingLocalFileSystem();
     fs.initialize(new URI("file:///"), conf);
