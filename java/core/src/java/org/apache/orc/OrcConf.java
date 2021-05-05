@@ -244,7 +244,7 @@ public enum OrcConf {
     return getInt(null, conf);
   }
 
-  public void getInt(Configuration conf, int value) {
+  public void setInt(Configuration conf, int value) {
     conf.setInt(attribute, value);
   }
 
