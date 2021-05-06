@@ -176,12 +176,12 @@ public class ReaderEncryptionVariant implements EncryptionVariant {
 
   @Override
   public Key getFileFooterKey() throws IOException {
-    return key == null ? null : getDecryptedKey(footerKey);
+    return (key == null || provider == null) ? null : getDecryptedKey(footerKey);
   }
 
   @Override
   public Key getStripeKey(long stripe) throws IOException {
-    return key == null ? null : getDecryptedKey(localKeys[(int) stripe]);
+    return (key == null || provider == null) ? null : getDecryptedKey(localKeys[(int) stripe]);
   }
 
   @Override
