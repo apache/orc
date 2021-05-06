@@ -24,6 +24,7 @@ import org.apache.orc.EncryptionAlgorithm;
 import org.apache.orc.InMemoryKeystore;
 import org.apache.orc.OrcConf;
 import org.apache.orc.OrcProto;
+import org.apache.orc.impl.reader.ReaderEncryptionVariant;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -32,6 +33,7 @@ import java.util.List;
 import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class TestCryptoUtils {
 
@@ -85,5 +87,12 @@ public class TestCryptoUtils {
     Key key = provider.decryptLocalKey(meta, encrypted);
     assertEquals(new BytesWritable(localKey.getDecryptedKey().getEncoded()).toString(),
         new BytesWritable(key.getEncoded()).toString());
+  }
+
+  @Test
+  public void testInvalidKeyProvider() throws IOException {
+    Configuration conf = new Configuration();
+    OrcConf.KEY_PROVIDER.setString(conf, "");
+    assertNull(CryptoUtils.getKeyProvider(conf, new Random()));
   }
 }
