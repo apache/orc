@@ -353,18 +353,28 @@ DIAGNOSTIC_PUSH
     // the current state
     DecompressState state;
 
-    // the start of the current buffer
-    // This pointer is not owned by us. It is either owned by zstream or
-    // the underlying stream.
-    const char* outputBuffer;
-    // the size of the current buffer
+    // The starting and current position of the buffer for the uncompressed
+    // data. It either points to the data buffer or the underlying input stream.
+    const char *outputBufferStart;
+    const char *outputBuffer;
+    // The original (ie. the overall) and the actual length of the uncompressed
+    // data.
+    size_t uncompressedBufferLength;
     size_t outputBufferLength;
-    // the size of the current chunk
+
+    // The remaining size of the current chunk that is not yet consumed
+    // ie. decompressed or returned in output if state==DECOMPRESS_ORIGINAL
     size_t remainingLength;
 
     // the last buffer returned from the input
+    const char *inputBufferStart;
     const char *inputBuffer;
     const char *inputBufferEnd;
+
+    // Variables for saving the position of the header and the start of the
+    // buffer. Used when we have to seek a position.
+    size_t headerPosition;
+    size_t inputBufferStartPosition;
 
     // roughly the number of bytes returned
     off_t bytesReturned;
@@ -378,11 +388,16 @@ DIAGNOSTIC_PUSH
           input(std::move(inStream)),
           outputDataBuffer(pool, bufferSize),
           state(DECOMPRESS_HEADER),
+          outputBufferStart(nullptr),
           outputBuffer(nullptr),
+          uncompressedBufferLength(0),
           outputBufferLength(0),
           remainingLength(0),
+          inputBufferStart(nullptr),
           inputBuffer(nullptr),
           inputBufferEnd(nullptr),
+          headerPosition(0),
+          inputBufferStartPosition(0),
           bytesReturned(0)  {
   }
 
@@ -402,6 +417,9 @@ DIAGNOSTIC_PUSH
       inputBufferEnd = nullptr;
     } else {
       inputBufferEnd = inputBuffer + length;
+      inputBufferStartPosition
+        = static_cast<size_t>(input->ByteCount() - length);
+      inputBufferStart = inputBuffer;
     }
   }
 
@@ -432,7 +450,10 @@ DIAGNOSTIC_PUSH
   }
 
   bool DecompressionStream::Next(const void** data, int*size) {
-    // if the user pushed back, return them the partial buffer
+    // If we are starting a new header, we will have to store its positions
+    // after decompressing.
+    bool saveBufferPositions = false;
+    // If the user pushed back or seeked within the same chunk.
     if (outputBufferLength) {
       *data = outputBuffer;
       *size = static_cast<int>(outputBufferLength);
@@ -443,6 +464,10 @@ DIAGNOSTIC_PUSH
     }
     if (state == DECOMPRESS_HEADER || remainingLength == 0) {
       readHeader();
+      // Here we already read the three bytes of the header.
+      headerPosition = inputBufferStartPosition
+        + static_cast<size_t>(inputBuffer - inputBufferStart) - 3;
+      saveBufferPositions = true;
     }
     if (state == DECOMPRESS_EOF) {
       return false;
@@ -466,7 +491,11 @@ DIAGNOSTIC_PUSH
       throw std::logic_error("Unknown compression state in "
                              "DecompressionStream::Next");
     }
-    bytesReturned += *size;
+    bytesReturned += static_cast<off_t>(*size);
+    if (saveBufferPositions) {
+      uncompressedBufferLength = static_cast<size_t>(*size);
+      outputBufferStart = reinterpret_cast<const char*>(*data);
+    }
     return true;
   }
 
@@ -503,16 +532,47 @@ DIAGNOSTIC_PUSH
     return true;
   }
 
+  /** There are three possible scenarios when seeking a position:
+   * 1. The seeked position is already read and decompressed into
+   *    the output stream.
+   * 2. It is already read from the input stream, but has not been
+   *    decompressed yet, ie. it's not in the output stream.
+   * 3. It is not read yet from the inputstream.
+   */
   void DecompressionStream::seek(PositionProvider& position) {
-    // clear state to force seek to read from the right position
+    size_t seekedPosition = position.current();
+    // Case 1: the seeked position is the one that is currently buffered and
+    // decompressed. Here we only need to set the output buffer's pointer to the
+    // seeked position. Note that after the headerPosition comes the 3 bytes of
+    // the header.
+    if (headerPosition == seekedPosition
+        && inputBufferStartPosition <= headerPosition + 3 && inputBufferStart) {
+      position.next(); // Skip the input level position.
+      size_t posInChunk = position.next(); // Chunk level position.
+      outputBufferLength = uncompressedBufferLength - posInChunk;
+      outputBuffer = outputBufferStart + posInChunk;
+      return;
+    }
+    // Clear state to prepare reading from a new chunk header.
     state = DECOMPRESS_HEADER;
     outputBuffer = nullptr;
     outputBufferLength = 0;
     remainingLength = 0;
-    inputBuffer = nullptr;
-    inputBufferEnd = nullptr;
-
-    input->seek(position);
+    if (seekedPosition < static_cast<uint64_t>(input->ByteCount()) &&
+        seekedPosition >= inputBufferStartPosition) {
+      // Case 2: The input is buffered, but not yet decompressed. No need to
+      // force re-reading the inputBuffer, we just have to move it to the
+      // seeked position.
+      position.next(); // Skip the input level position.
+      inputBuffer
+        = inputBufferStart + (seekedPosition - inputBufferStartPosition);
+    } else {
+      // Case 3: The seeked position is not in the input buffer, here we are
+      // forcing to read it.
+      inputBuffer = nullptr;
+      inputBufferEnd = nullptr;
+      input->seek(position); // Actually use the input level position.
+    }
     bytesReturned = static_cast<off_t>(input->ByteCount());
     if (!Skip(static_cast<int>(position.next()))) {
       throw ParseError("Bad skip in " + getName());
