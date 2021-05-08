@@ -2200,7 +2200,9 @@ public class TreeReaderFactory {
       readDictionaryByteArray(result, filterContext, batchSize);
     }
 
-    private void readDictionaryByteArray(BytesColumnVector result, FilterContext filterContext, int batchSize) throws IOException {
+    private void readDictionaryByteArray(BytesColumnVector result,
+                                         FilterContext filterContext,
+                                         int batchSize) throws IOException {
       int offset;
       int length;
 
