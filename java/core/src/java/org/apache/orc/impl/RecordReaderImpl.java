@@ -100,7 +100,7 @@ public class RecordReaderImpl implements RecordReader {
   private final DataReader dataReader;
   private final int maxDiskRangeChunkLimit;
   private final StripePlanner planner;
-  // identifies the type of read, ALL(read everything), LEADS(read only the filter columns)
+  // identifies the type of read, ALL(read everything), LEADERS(read only the filter columns)
   private final TypeReader.ReadPhase startReadPhase;
   // identifies that follow columns bytes must be read
   private boolean needsFollowColumnsRead;
@@ -131,7 +131,17 @@ public class RecordReaderImpl implements RecordReader {
     }
   }
 
-  static TypeDescription findCommonColumnType(SchemaEvolution evolution, String columnName) {
+  /**
+   * Given a column name such as 'a.b.c', this method returns the column 'a.b.c' if present in the
+   * file. In case 'a.b.c' is not found in file then it tries to look for 'a.b', then 'a'. If none
+   * are present then it shall return null.
+   *
+   * @param evolution the mapping from reader to file schema
+   * @param columnName the fully qualified column name to look for
+   * @return the file column type or null in case none of the branch columns are present in the file
+   * @throws IllegalArgumentException if the column was not found in the reader schema
+   */
+  static TypeDescription findMostCommonColumn(SchemaEvolution evolution, String columnName) {
     try {
       TypeDescription readerColumn = evolution.getReaderBaseSchema().findSubtype(
         columnName, evolution.isSchemaEvolutionCaseAware);
@@ -273,7 +283,7 @@ public class RecordReaderImpl implements RecordReader {
           // Add -1 to filter columns so that the NullTreeReader is invoked during the LEADERS phase
           filterColIds.add(-1);
           // Determine the common parent and include these
-          expandCol = findCommonColumnType(evolution, colName);
+          expandCol = findMostCommonColumn(evolution, colName);
         }
         while(expandCol != null && expandCol.getId() != -1) {
           // classify the column and the parent branch as LEAD
@@ -1317,21 +1327,23 @@ public class RecordReaderImpl implements RecordReader {
   }
 
   /**
-   * This method plans the follow columns to position them based on the row idx determined by
-   * filtering the lead columns
+   * This method prepares the non-filter column readers for next batch. This involves the following
+   * 1. Determine position
+   * 2. Perform IO if required
+   * 3. Position the non-filter readers
    *
-   * Given that this is just repositioning of the follow columns, this method shall never have to
+   * This method is repositioning the non-filter columns and as such this method shall never have to
    * deal with navigating the stripe forward or skipping row groups, all of this should have already
-   * taken place based on the leading columns.
+   * taken place based on the filter columns.
    * @param toFollowRow The rowIdx identifies the required row position within the stripe for
    *                    follow read
    * @param fromFollowRow Indicates the current position of the follow read, exclusive
-   * @return the read level for reading followers, this will be FOLLOWERS_AND_PARENTS in case of a
-   * seek otherwise will be FOLLOWERS
+   * @return the read phase for reading non-filter columns, this shall be FOLLOWERS_AND_PARENTS in
+   * case of a seek otherwise will be FOLLOWERS
    */
   private TypeReader.ReadPhase prepareFollowReaders(long toFollowRow, long fromFollowRow)
     throws IOException {
-    // 1. Determine the row group that this matches in the stripe
+    // 1. Determine the required row group and skip rows needed from the RG start
     int needRG = computeRGIdx(toFollowRow);
     // The current row is not yet read so we -1 to compute the previously read row group
     int readRG = computeRGIdx(fromFollowRow - 1);
@@ -1346,38 +1358,40 @@ public class RecordReaderImpl implements RecordReader {
       skipRows = toFollowRow - (needRG * rowIndexStride);
     }
 
-    // 2. Plan the row group idx for the following columns, only if the rowgroup has changed,
-    // otherwise we have already read the required bytes
+    // 2. Plan the row group idx for the non-filter columns if this has not already taken place
     if (needsFollowColumnsRead) {
       needsFollowColumnsRead = false;
       planner.readFollowData(indexes, includedRowGroups, needRG, false);
       reader.startStripe(planner, TypeReader.ReadPhase.FOLLOWERS);
     }
 
-    // 3. Seek to the required row group and skip the rows as needed
+    // 3. Position the non-filter readers to the required RG and skipRows
     TypeReader.ReadPhase result = TypeReader.ReadPhase.FOLLOWERS;
     if (needRG != readRG || toFollowRow < fromFollowRow) {
-      // seek both the lead parents and follow. This will position the parents present vector to
-      // facilitate the subsequent skip on the leader readers which will determine the number of
-      // non null values to skip
+      // When having to change a row group or in case of back navigation, seek both the filter
+      // parents and non-filter. This will re-position the parents present vector. This is needed
+      // to determine the number of non-null values to skip on the non-filter columns.
       seekToRowEntry(reader, needRG, TypeReader.ReadPhase.FOLLOWERS_AND_PARENTS);
+      // skip rows on both the filter parents and non-filter as both have been positioned in the
+      // previous step
       reader.skipRows(skipRows, TypeReader.ReadPhase.FOLLOWERS_AND_PARENTS);
       result = TypeReader.ReadPhase.FOLLOWERS_AND_PARENTS;
     } else if (skipRows > 0) {
-      // in case we are only skipping within the row group, reposition the lead parents back to the
-      // position of the follow and move both the lead parents and follow forward, this will compute
-      // the correct non null skips on follow children
+      // in case we are only skipping within the row group, position the filter parents back to the
+      // position of the follow. This is required to determine the non-null values to skip on the
+      // non-filter columns.
       seekToRowEntry(reader, readRG, TypeReader.ReadPhase.LEADER_PARENTS);
       reader.skipRows(fromFollowRow - (readRG * rowIndexStride), TypeReader.ReadPhase.LEADER_PARENTS);
+      // Move both the filter parents and non-filter forward, this will compute the correct
+      // non-null skips on follow children
       reader.skipRows(skipRows, TypeReader.ReadPhase.FOLLOWERS_AND_PARENTS);
       result = TypeReader.ReadPhase.FOLLOWERS_AND_PARENTS;
     }
     // Identifies the read level that should be performed for the read
-    // FOLLOWERS_WITH_PARENTS indicates repositioning identifying both FOLLOW children and parents
-    // in scope
-    // FOLLOWERS indicates read only of the FOLLOW level without the parents, which is used during
-    // contiguous read as the parent information is captured into the RowBatch that is used as part
-    // of TreeReader.nextVector
+    // FOLLOWERS_WITH_PARENTS indicates repositioning identifying both non-filter and filter parents
+    // FOLLOWERS indicates read only of the non-filter level without the parents, which is used during
+    // contiguous read. During a contiguous read no skips are needed and the non-null information of
+    // the parent is available in the column vector for use during non-filter read
     return result;
   }
 
@@ -1518,6 +1532,7 @@ public class RecordReaderImpl implements RecordReader {
       readStripe();
     }
     if (rowIndexColsToRead == null) {
+      // Read the row indexes only if they were not already read as part of readStripe()
       readCurrentStripeRowIndex();
     }
 

@@ -48,7 +48,7 @@ public abstract class BatchReader {
    * Read the next batch of data from the file.
    * @param batch        the batch to read into
    * @param batchSize    the number of rows to read
-   * @param readPhase    defines the read level i.e. ALL, LEAD or FOLLOW
+   * @param readPhase    defines the read phase
    * @throws IOException errors reading the file
    */
   public abstract void nextBatch(VectorizedRowBatch batch,

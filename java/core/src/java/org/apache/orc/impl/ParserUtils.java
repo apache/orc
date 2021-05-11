@@ -404,7 +404,7 @@ public class ParserUtils {
   }
 
   static class ColumnFinder implements TypeVisitor {
-    // top and current are interpreted as a union, only of them them is expected to be set at any
+    // top and current are interpreted as a union, only one of them is expected to be set at any
     // given time.
     private ColumnVector[] top;
     private ColumnVector current = null;

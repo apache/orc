@@ -58,6 +58,7 @@ import org.apache.orc.impl.reader.tree.PrimitiveBatchReader;
 import org.apache.orc.impl.reader.tree.StructBatchReader;
 import org.apache.orc.impl.reader.tree.TypeReader;
 import org.apache.orc.impl.writer.TimestampTreeWriter;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Factory for creating ORC tree readers.
@@ -83,6 +84,8 @@ public class TreeReaderFactory {
     boolean useProlepticGregorian();
 
     boolean fileUsedProlepticGregorian();
+
+    TypeReader.ReaderCategory getReaderCategory(int columnId);
   }
 
   public static class ReaderContext implements Context {
@@ -189,6 +192,28 @@ public class TreeReaderFactory {
     public boolean fileUsedProlepticGregorian() {
       return fileUsedProlepticGregorian;
     }
+
+    @Override
+    public TypeReader.ReaderCategory getReaderCategory(int columnId) {
+      TypeReader.ReaderCategory result;
+      if (getColumnFilterCallback() == null || getColumnFilterIds().contains(columnId)) {
+        // parent filter columns that might include non-filter children. These are classified as
+        // FILTER_PARENT. This is used during the reposition for non-filter read. Only Struct and
+        // Union Readers are supported currently
+        TypeDescription.Category colCat = columnId == -1 ? null : getSchemaEvolution()
+          .getFileSchema()
+          .findSubtype(columnId)
+          .getCategory();
+        if (colCat == TypeDescription.Category.STRUCT || colCat == TypeDescription.Category.UNION) {
+          result = TypeReader.ReaderCategory.FILTER_PARENT;
+        } else {
+          result = TypeReader.ReaderCategory.FILTER_CHILD;
+        }
+      } else {
+        result = TypeReader.ReaderCategory.NON_FILTER;
+      }
+      return result;
+    }
   }
 
   public abstract static class TreeReader implements TypeReader {
@@ -223,11 +248,7 @@ public class TreeReaderFactory {
       this(columnId, null, context);
     }
 
-    protected TreeReader(int columnId, InStream in, Context context) throws IOException {
-      this(columnId, in, context, false);
-    }
-
-    protected TreeReader(int columnId, InStream in, Context context, boolean isParent) throws IOException {
+    protected TreeReader(int columnId, InStream in, @NotNull Context context) throws IOException {
       this.columnId = columnId;
       this.context = context;
       if (in == null) {
@@ -235,20 +256,7 @@ public class TreeReaderFactory {
       } else {
         present = new BitFieldReader(in);
       }
-      if (context == null
-          || context.getColumnFilterCallback() == null
-          || context.getColumnFilterIds().contains(columnId)) {
-        // Parent leads that might include follow children are classified as LEAD_PARENT to allow
-        // for repositioning of follow children. Only Struct and Union Readers are supported
-        // currently
-        if (isParent) {
-          this.readerCategory = ReaderCategory.FILTER_PARENT;
-        } else {
-          this.readerCategory = ReaderCategory.FILTER_CHILD;
-        }
-      } else {
-        this.readerCategory = ReaderCategory.NON_FILTER;
-      }
+      this.readerCategory = context.getReaderCategory(columnId);
     }
 
     @Override
@@ -2473,7 +2481,7 @@ public class TreeReaderFactory {
     protected StructTreeReader(int columnId,
                                TypeDescription readerSchema,
                                Context context) throws IOException {
-      super(columnId, null, context, true);
+      super(columnId, null, context);
 
       List<TypeDescription> childrenTypes = readerSchema.getChildren();
       this.fields = new TypeReader[childrenTypes.size()];
@@ -2491,7 +2499,7 @@ public class TreeReaderFactory {
                                Context context,
                                OrcProto.ColumnEncoding encoding,
                                TypeReader[] childReaders) throws IOException {
-      super(columnId, present, context, true);
+      super(columnId, present, context);
       if (encoding != null) {
         checkEncoding(encoding);
       }
@@ -2559,10 +2567,7 @@ public class TreeReaderFactory {
       if (!readPhase.contains(this.readerCategory)) {
         return;
       }
-      // Compute and capture the number of nonNulls, this will be used in a separate follow call
-      // if this is LEAD and the one of the child is follow
       items = countNonNulls(items);
-
       for (TypeReader field : fields) {
         if (field != null && TypeReader.shouldProcessChild(field, readPhase)) {
           field.skipRows(items, readPhase);
@@ -2578,7 +2583,7 @@ public class TreeReaderFactory {
     protected UnionTreeReader(int fileColumn,
                               TypeDescription readerSchema,
                               Context context) throws IOException {
-      super(fileColumn, null, context, true);
+      super(fileColumn, null, context);
       List<TypeDescription> childrenTypes = readerSchema.getChildren();
       int fieldCount = childrenTypes.size();
       this.fields = new TypeReader[fieldCount];
@@ -2592,7 +2597,7 @@ public class TreeReaderFactory {
                               Context context,
                               OrcProto.ColumnEncoding encoding,
                               TypeReader[] childReaders) throws IOException {
-      super(columnId, present, context, true);
+      super(columnId, present, context);
       if (encoding != null) {
         checkEncoding(encoding);
       }

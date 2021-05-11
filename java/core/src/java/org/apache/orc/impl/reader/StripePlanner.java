@@ -82,6 +82,7 @@ public class StripePlanner {
   private final OrcProto.Stream.Kind[] bloomFilterKinds;
   // does each column have a null stream?
   private final boolean[] hasNull;
+  // identifies the filter column ids whose streams should always be read
   private final Set<Integer> filterColIds;
 
   /**
@@ -491,9 +492,7 @@ public class StripePlanner {
    *
    * @param index              the index to use for offsets
    * @param includedRowGroups  which row groups are needed
-   * @param readPhase          Determines the columns that will be planned. If the read level
-   *                           requires LEAD then the filter columns are read, else if the read
-   *                           level requires FOLLOW then the non filter columns are read.
+   * @param readPhase          Determines the columns that will be planned.
    * @return the list of disk  ranges that will be loaded
    */
   private BufferChunkList planPartialDataReading(OrcIndex index,

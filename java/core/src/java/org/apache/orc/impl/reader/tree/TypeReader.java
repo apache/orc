@@ -50,11 +50,11 @@ public interface TypeReader {
 
   /**
    * Determines if the child of the parent should be allowed based on the read level. The child
-   * is allowed based on the read level or if the child is a LEAD_PARENT, this allows the handling
-   * of FOLLOW children on the LEAD_PARENT
+   * is allowed based on the read level or if the child is a FILTER_PARENT, this allows the handling
+   * of NON_FILTER children on the FILTER_PARENT child
    * @param child the child reader that is being evaluated
    * @param readPhase the requested read level
-   * @return true if allowed by read level or if it is a LEAD_PARENT otherwise false
+   * @return true if allowed by read level or if it is a FILTER_PARENT otherwise false
    */
   static boolean shouldProcessChild(TypeReader child, ReadPhase readPhase) {
     return readPhase.contains(child.getReaderCategory())

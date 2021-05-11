@@ -54,8 +54,9 @@ public class StructBatchReader extends BatchReader {
     ColumnVector colVector = batch.cols[index];
     if (colVector != null) {
       if (readPhase.contains(child.getReaderCategory())) {
-        // Reset the column vector only if the current column is being processed, otherwise don't
-        // reset as only its children are being processed
+        // Reset the column vector only if the current column is being processed. If the children
+        // are being processed then we should reset the parent e.g. PARENT_FILTER during FOLLOWERS
+        // read phase.
         colVector.reset();
         colVector.ensureSize(batchSize, false);
       }
@@ -73,10 +74,8 @@ public class StructBatchReader extends BatchReader {
     }
     nextBatchForLevel(batch, batchSize, readPhase);
 
-    // Except when read level only includes FOLLOW, we can set the batch attributes of
-    // selectedInUse and size.
     if (readPhase == TypeReader.ReadPhase.ALL || readPhase == TypeReader.ReadPhase.LEADERS) {
-      // these attributes can change as part of the filter application on the batch
+      // Set the batch size when reading everything or when reading FILTER columns
       batch.size = batchSize;
     }
 
