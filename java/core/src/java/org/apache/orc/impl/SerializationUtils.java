@@ -655,7 +655,8 @@ public final class SerializationUtils {
     unrolledBitPackBytes(input, offset, len, output, 8);
   }
 
-  private void unrolledBitPackBytes(long[] input, int offset, int len, OutputStream output, int numBytes) throws IOException {
+  private void unrolledBitPackBytes(long[] input, int offset, int len,
+      OutputStream output, int numBytes) throws IOException {
     final int numHops = 8;
     final int remainder = len % numHops;
     final int endOffset = offset + len;
