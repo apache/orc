@@ -279,6 +279,9 @@
                 </module>
                 <module name="NewlineAtEndOfFile">
                 </module>
+                <module name="LineLength">
+                  <property name="max" value="125"/>
+                </module>
                 <module name="RegexpSingleline">
                   <property name="format" value="\s+$"/>
                   <property name="message" value="No trailing white space allowed."/>
