@@ -200,14 +200,13 @@ public class TreeReaderFactory {
         // parent filter columns that might include non-filter children. These are classified as
         // FILTER_PARENT. This is used during the reposition for non-filter read. Only Struct and
         // Union Readers are supported currently
-        TypeDescription.Category colCat = columnId == -1 ? null : getSchemaEvolution()
+        TypeDescription col = columnId == -1 ? null : getSchemaEvolution()
           .getFileSchema()
-          .findSubtype(columnId)
-          .getCategory();
-        if (colCat == TypeDescription.Category.STRUCT || colCat == TypeDescription.Category.UNION) {
-          result = TypeReader.ReaderCategory.FILTER_PARENT;
-        } else {
+          .findSubtype(columnId);
+        if (col == null || col.getChildren() == null || col.getChildren().isEmpty()) {
           result = TypeReader.ReaderCategory.FILTER_CHILD;
+        } else {
+          result = TypeReader.ReaderCategory.FILTER_PARENT;
         }
       } else {
         result = TypeReader.ReaderCategory.NON_FILTER;
