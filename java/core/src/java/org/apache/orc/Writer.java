@@ -140,4 +140,15 @@ public interface Writer extends Closeable {
    * @return the information about the column
    */
   ColumnStatistics[] getStatistics() throws IOException;
+
+  /**
+   * Get the stripe information about the file. The output of this is based on the time at which it
+   * is called. It shall return stripes that have been completed.
+   *
+   * After the writer is closed this shall give the complete stripe information.
+   *
+   * @return stripe information
+   * @throws IOException
+   */
+  List<StripeInformation> getStripes() throws IOException;
 }

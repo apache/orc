@@ -22,7 +22,9 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.security.Key;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 import org.apache.orc.EncryptionAlgorithm;
@@ -116,6 +118,28 @@ public class ReaderImpl implements Reader {
       } else {
         encryptedKeys = previousKeys;
       }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      StripeInformationImpl that = (StripeInformationImpl) o;
+      return stripeId == that.stripeId
+             && originalStripeId == that.originalStripeId
+             && Arrays.deepEquals(encryptedKeys, that.encryptedKeys)
+             && stripe.equals(that.stripe);
+    }
+
+    @Override
+    public int hashCode() {
+      int result = Objects.hash(stripeId, originalStripeId, stripe);
+      result = 31 * result + Arrays.hashCode(encryptedKeys);
+      return result;
     }
 
     @Override

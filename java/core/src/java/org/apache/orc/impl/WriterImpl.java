@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
@@ -843,6 +844,11 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     // Get the file statistics, preferring the encrypted one.
     treeWriter.getCurrentStatistics(result);
     return result;
+  }
+
+  @Override
+  public List<StripeInformation> getStripes() throws IOException {
+    return Collections.unmodifiableList(OrcUtils.convertProtoStripesToStripes(stripes));
   }
 
   public CompressionCodec getCompressionCodec() {
