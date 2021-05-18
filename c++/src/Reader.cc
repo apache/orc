@@ -100,6 +100,20 @@ namespace orc {
   }
 
   /**
+   * Recurses over a type tree and selects the map.key and map.value of every selected map type.
+   */
+  void ColumnSelector::selectMaps(std::vector<bool>& selectedColumns, const Type& type) {
+    size_t id = static_cast<size_t>(type.getColumnId());
+    for(uint64_t c=0; c < type.getSubtypeCount(); ++c) {
+      if (type.getKind() == MAP && selectedColumns[id]) {
+        selectChildren(selectedColumns, *type.getSubtype(c));
+      } else {
+        selectMaps(selectedColumns, *type.getSubtype(c));
+      }
+    }
+  }
+
+  /**
    * Recurses over a type tree and build two maps
    * map<TypeName, TypeId>, map<TypeId, Type>
    */
