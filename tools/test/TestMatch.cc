@@ -1085,6 +1085,26 @@ TEST(TestMatch, selectColumns) {
         << "\"887336a7\"}}]}";
     EXPECT_EQ(expectedMapWithColumnId.str(), line);
 
+    // Map column #12 again, to test map key is automatically included
+    // two subtypes with column id:
+    // map<string(20),struct(21)<int1(22):int,string1(23):string>
+    cols.push_back(22);
+    cols.push_back(23);
+    rowReaderOpts.includeTypes(cols);
+    rowReader = reader->createRowReader(rowReaderOpts);
+    c = rowReader->getSelectedColumns();
+    for (unsigned int i=1; i < c.size(); i++) {
+      if (i>=19 && i<=23)
+        EXPECT_TRUE(c[i]);
+      else
+        EXPECT_TRUE(!c[i]);
+    }
+    batch = rowReader->createRowBatch(1);
+    std::ostringstream expectedMapSchema;
+    expectedMapSchema << "Struct vector <0 of 1; Map vector <Byte vector <0 of 1>, "
+        << "Struct vector <0 of 1; Long vector <0 of 1>; Byte vector <0 of 1>; > with 0 of 1>; >";
+    EXPECT_EQ(expectedMapSchema.str(), batch->toString());
+
     // Struct column #10, with field name: middle
     std::list<std::string> colNames;
     colNames.push_back("middle.list.int1");
