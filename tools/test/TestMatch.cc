@@ -1088,6 +1088,7 @@ TEST(TestMatch, selectColumns) {
     // Map column #12 again, to test map key is automatically included
     // two subtypes with column id:
     // map<string(20),struct(21)<int1(22):int,string1(23):string>
+    cols.clear();
     cols.push_back(22);
     cols.push_back(23);
     rowReaderOpts.includeTypes(cols);

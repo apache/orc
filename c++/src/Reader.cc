@@ -160,6 +160,7 @@ namespace orc {
       std::fill(selectedColumns.begin(), selectedColumns.end(), true);
     }
     selectParents(selectedColumns, *contents->schema.get());
+    selectMaps(selectedColumns, *contents->schema.get());
     selectedColumns[0] = true; // column 0 is selected by default
   }
 
