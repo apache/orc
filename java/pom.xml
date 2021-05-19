@@ -92,7 +92,7 @@
             <configuration>
               <rules>
                 <requireMavenVersion>
-                  <version>2.2.1</version>
+                  <version>${maven.version}</version>
                 </requireMavenVersion>
               </rules>
             </configuration>
@@ -102,7 +102,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.2.0</version>
         <configuration>
           <links>
             <link>http://hadoop.apache.org/docs/r${hadoop.version}/api</link>
@@ -151,7 +150,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
-        <version>3.2.1</version>
         <configuration>
           <attach>true</attach>
         </configuration>
@@ -230,7 +228,6 @@
         <plugin>
           <groupId>org.apache.rat</groupId>
           <artifactId>apache-rat-plugin</artifactId>
-          <version>0.13</version>
           <executions>
             <execution>
               <phase>package</phase>
@@ -340,7 +337,6 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.8.1</version>
           <configuration>
             <source>1.8</source>
             <target>1.8</target>
@@ -349,7 +345,6 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-shade-plugin</artifactId>
-          <version>3.2.4</version>
           <executions>
             <execution>
               <phase>package</phase>
