@@ -97,8 +97,6 @@ namespace orc {
     // is selected.
     bool selectParents(std::vector<bool>& selectedColumns, const Type& type);
 
-    // For selected map type, select its children, key and value
-    void selectMaps(std::vector<bool>& selectedColumns, const Type& type);
    /**
     * Constructor that selects columns.
     * @param contents of the file

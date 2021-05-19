@@ -294,8 +294,8 @@ namespace orc {
 
   std::string MapVectorBatch::toString() const {
     std::ostringstream buffer;
-    buffer << "Map vector <" << keys->toString() << ", "
-           << elements->toString() << " with "
+    buffer << "Map vector <" << (keys ? keys->toString(): "key not selected") << ", "
+           << (elements ? elements->toString(): "value not selected")  << " with "
            << numElements << " of " << capacity << ">";
     return buffer.str();
   }
@@ -316,8 +316,8 @@ namespace orc {
   uint64_t MapVectorBatch::getMemoryUsage() {
     return ColumnVectorBatch::getMemoryUsage()
            + static_cast<uint64_t>(offsets.capacity() * sizeof(int64_t))
-           + keys->getMemoryUsage()
-           + elements->getMemoryUsage();
+           + (keys ? keys->getMemoryUsage() : 0)
+           + (elements ? elements->getMemoryUsage() : 0);
   }
 
   bool MapVectorBatch::hasVariableLength() {

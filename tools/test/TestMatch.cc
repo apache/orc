@@ -1095,16 +1095,17 @@ TEST(TestMatch, selectColumns) {
     rowReader = reader->createRowReader(rowReaderOpts);
     c = rowReader->getSelectedColumns();
     for (unsigned int i=1; i < c.size(); i++) {
-      if (i>=19 && i<=23)
+      if (i==19 || (i>=21 && i<=23))
         EXPECT_TRUE(c[i]);
       else
         EXPECT_TRUE(!c[i]);
     }
     batch = rowReader->createRowBatch(1);
     std::ostringstream expectedMapSchema;
-    expectedMapSchema << "Struct vector <0 of 1; Map vector <Byte vector <0 of 1>, "
+    expectedMapSchema << "Struct vector <0 of 1; Map vector <key not selected, "
         << "Struct vector <0 of 1; Long vector <0 of 1>; Byte vector <0 of 1>; > with 0 of 1>; >";
     EXPECT_EQ(expectedMapSchema.str(), batch->toString());
+    EXPECT_EQ(45, batch->getMemoryUsage());
 
     // Struct column #10, with field name: middle
     std::list<std::string> colNames;
