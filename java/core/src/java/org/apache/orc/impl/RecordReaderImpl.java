@@ -153,7 +153,7 @@ public class RecordReaderImpl implements RecordReader {
         } else {
           return fileColumn;
         }
-      } while(readerColumn != null);
+      } while (readerColumn != null);
       return null;
     } catch (IllegalArgumentException e) {
       throw new IllegalArgumentException("Filter could not find column with name: " +
@@ -285,7 +285,7 @@ public class RecordReaderImpl implements RecordReader {
           // Determine the common parent and include these
           expandCol = findMostCommonColumn(evolution, colName);
         }
-        while(expandCol != null && expandCol.getId() != -1) {
+        while (expandCol != null && expandCol.getId() != -1) {
           // classify the column and the parent branch as LEAD
           filterColIds.add(expandCol.getId());
           rowIndexCols[expandCol.getId()] = true;

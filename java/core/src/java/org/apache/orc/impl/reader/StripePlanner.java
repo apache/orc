@@ -162,9 +162,8 @@ public class StripePlanner {
    * @param rowGroupInclude null for all of the rows or an array with boolean
    *                       for each row group in the current stripe.
    * @param forceDirect should direct buffers be created?
-   * @param readPhase influences the columns that are read e.g. if readLevel = ReadLevel.LEADERS
-   *                  which is used to identify filter columns, then only the data required for the
-   *                  filter columns is read.
+   * @param readPhase influences the columns that are read e.g. if readPhase = LEADERS then only
+   *                  the data required for FILTER columns is read
    * @return the buffers that were read
    */
   public BufferChunkList readData(OrcIndex index,
