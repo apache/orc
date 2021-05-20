@@ -96,6 +96,7 @@ namespace orc {
     // For each child of type, select it if one of its children
     // is selected.
     bool selectParents(std::vector<bool>& selectedColumns, const Type& type);
+
    /**
     * Constructor that selects columns.
     * @param contents of the file
