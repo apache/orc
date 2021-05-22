@@ -132,14 +132,8 @@ Change directory in to site.
 % pwd
 <path-to-main-src>
 % cd site
-% mkdir target
-% cd target
 Set up site/target to be a separate git workspace that tracks the asf-site branch.
-% git init
-% git remote add origin git@github.com:apache/orc.git -t asf-site
-% git fetch origin
-% git checkout asf-site
-% cd ..
+% git clone git@github.com:apache/orc.git -b asf-site target
 ~~~
 * edit site/_data/releases.yml to add new release
    * update the state for the releases to match the changes in the Apache dist
