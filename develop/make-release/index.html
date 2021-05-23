@@ -207,14 +207,8 @@ extra releases (say I.J.K) from the Apache dist area.
 % pwd
 &lt;path-to-main-src&gt;
 % cd site
-% mkdir target
-% cd target
 Set up site/target to be a separate git workspace that tracks the asf-site branch.
-% git init
-% git remote add origin git@github.com:apache/orc.git -t asf-site
-% git fetch origin
-% git checkout asf-site
-% cd ..
+% git clone git@github.com:apache/orc.git -b asf-site target
 </code></pre></div></div>
 <ul>
   <li>edit site/_data/releases.yml to add new release
