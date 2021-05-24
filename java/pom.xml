@@ -73,7 +73,7 @@
     <tools.hadoop.version>2.10.1</tools.hadoop.version>
     <storage-api.version>2.7.2</storage-api.version>
     <zookeeper.version>3.6.2</zookeeper.version>
-    <maven.version>3.6.3</maven.version>
+    <maven.version>3.6.0</maven.version>
     <slf4j.version>1.7.30</slf4j.version>
   </properties>
 
