@@ -100,9 +100,8 @@ public class MemoryManagerImpl implements MemoryManager {
    */
   @Override
   public synchronized void removeWriter(Path path) throws IOException {
-    WriterInfo val = writerList.get(path);
+    WriterInfo val = writerList.remove(path);
     if (val != null) {
-      writerList.remove(path);
       totalAllocation.addAndGet(-val.allocation);
     }
   }
