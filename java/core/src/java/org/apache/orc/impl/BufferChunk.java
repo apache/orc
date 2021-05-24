@@ -20,8 +20,6 @@ package org.apache.orc.impl;
 
 import org.apache.hadoop.hive.common.io.DiskRange;
 import org.apache.hadoop.hive.common.io.DiskRangeList;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 
@@ -32,8 +30,6 @@ import java.nio.ByteBuffer;
  */
 public class BufferChunk extends DiskRangeList {
 
-  private static final Logger LOG =
-      LoggerFactory.getLogger(BufferChunk.class);
   private ByteBuffer chunk;
 
   public BufferChunk(long offset, int length) {
@@ -78,11 +74,10 @@ public class BufferChunk extends DiskRangeList {
       sliceBuf.position(newPos);
       sliceBuf.limit(newLimit);
     } catch (Throwable t) {
-      LOG.error("Failed to slice buffer chunk with range" + " [" + this.offset + ", " + this.end
-          + "), position: " + chunk.position() + " limit: " + chunk.limit() + ", "
-          + (chunk.isDirect() ? "direct" : "array") + "; to [" + offset + ", " + end + ") "
-          + t.getClass());
-      throw new RuntimeException(t);
+      throw new RuntimeException("Failed to slice buffer chunk with range" + " [" + this.offset + ", " + this.end
+              + "), position: " + chunk.position() + " limit: " + chunk.limit() + ", "
+              + (chunk.isDirect() ? "direct" : "array") + "; to [" + offset + ", " + end + ") "
+              + t.getClass(), t);
     }
     return new BufferChunk(sliceBuf, offset + shiftBy);
   }

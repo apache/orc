@@ -53,7 +53,7 @@ public final class OrcCodecPool {
     }
     if (codec == null) {
       codec = WriterImpl.createCodec(kind);
-      LOG.debug("Got brand-new codec " + kind);
+      LOG.debug("Got brand-new codec {}", kind);
     } else {
       LOG.debug("Got recycled codec");
     }

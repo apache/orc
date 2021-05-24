@@ -612,9 +612,7 @@ public abstract class InStream extends InputStream {
 
       while (currentRange.next != null) {
         setCurrent(currentRange.next, false);
-        if (LOG.isDebugEnabled()) {
-          LOG.debug(String.format("Read slow-path, >1 cross block reads with %s", this.toString()));
-        }
+        LOG.debug("Read slow-path, >1 cross block reads with {}", this);
         if (compressed.remaining() >= len) {
           slice = compressed.slice();
           slice.limit(len);

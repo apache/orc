@@ -141,10 +141,8 @@ public class RecordReaderImpl implements RecordReader {
     OrcFile.WriterVersion writerVersion = fileReader.getWriterVersion();
     SchemaEvolution evolution;
     if (options.getSchema() == null) {
-      if (LOG.isInfoEnabled()) {
-        LOG.info("Reader schema not provided -- using file schema " +
-            fileReader.getSchema());
-      }
+      LOG.info("Reader schema not provided -- using file schema " +
+          fileReader.getSchema());
       evolution = new SchemaEvolution(fileReader.getSchema(), null, options);
     } else {
 
@@ -785,9 +783,7 @@ public class RecordReaderImpl implements RecordReader {
       result = TruthValue.YES_NO;
     }
 
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("Bloom filter evaluation: " + result.toString());
-    }
+    LOG.debug("Bloom filter evaluation: {}", result);
 
     return result;
   }
@@ -1030,13 +1026,11 @@ public class RecordReaderImpl implements RecordReader {
                   LOG.info("Skipping ORC PPD - " + e.getMessage() + " on "
                       + predicate);
                 } else {
-                  if (LOG.isWarnEnabled()) {
-                    final String reason = e.getClass().getSimpleName() + " when evaluating predicate." +
-                        " Skipping ORC PPD." +
-                        " Stats: " + stats +
-                        " Predicate: " + predicate;
-                    LOG.warn(reason, e);
-                  }
+                  final String reason = e.getClass().getSimpleName() + " when evaluating predicate." +
+                      " Skipping ORC PPD." +
+                      " Stats: " + stats +
+                      " Predicate: " + predicate;
+                  LOG.warn(reason, e);
                 }
                 boolean hasNoNull = stats.hasHasNull() && !stats.getHasNull();
                 if (predicate.getOperator().equals(PredicateLeaf.Operator.NULL_SAFE_EQUALS)

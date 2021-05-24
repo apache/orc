@@ -503,8 +503,7 @@ public class PhysicalFsWriter implements PhysicalWriter {
     if (length < blockSize && length > availBlockSpace &&
         addBlockPadding) {
       byte[] pad = new byte[(int) Math.min(HDFS_BUFFER_SIZE, availBlockSpace)];
-      LOG.info(String.format("Padding ORC by %d bytes while merging..",
-          availBlockSpace));
+      LOG.info("Padding ORC by {} bytes while merging", availBlockSpace);
       start += availBlockSpace;
       while (availBlockSpace > 0) {
         int writeLen = (int) Math.min(availBlockSpace, pad.length);
