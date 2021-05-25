@@ -86,7 +86,7 @@ public class ORCWriterBenchMark implements OrcBenchmark {
         batch = schema.createRowBatch();
         strVector = (BytesColumnVector) batch.cols[0];
       }
-      int randomNum = rand.nextInt(upperBound - 10 + 1) + 10;
+      int randomNum = rand.nextInt(distinctCount - 10 + 1) + 10;
       byte[] value = String.format("row %06d", randomNum).getBytes(StandardCharsets.UTF_8);
       strVector.setRef(batch.size, value, 0, value.length);
       ++batch.size;
@@ -103,10 +103,7 @@ public class ORCWriterBenchMark implements OrcBenchmark {
    * appeared in the dictionary.
    */
   @Param({"10000", "2500", "500"})
-  public int upperBound;
-
-  @Param({"4096", "8192", "10240"})
-  public int initSize;
+  public int distinctCount;
 
 
   @TearDown(Level.Invocation)
@@ -135,7 +132,6 @@ public class ORCWriterBenchMark implements OrcBenchmark {
     } else {
       OrcConf.DICTIONARY_IMPL.setString(conf, dictImpl);
     }
-    OrcConf.DICTIONARY_INIT_SIZE.setInt(conf, initSize);
 
     TrackingLocalFileSystem fs = new TrackingLocalFileSystem();
     fs.initialize(new URI("file:///"), conf);

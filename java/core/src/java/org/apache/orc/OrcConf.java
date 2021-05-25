@@ -111,8 +111,6 @@ public enum OrcConf {
           "The choices are:\n"
           + " rbtree - use red-black tree as the implementation for the dictionary.\n"
           + " hash - use hash table as the implementation for the dictionary."),
-  DICTIONARY_INIT_SIZE("orc.dictionary.initSize", "orc.dictionary.initSize",
-      4096, "the default initial size allocated for dictionary"),
   BLOOM_FILTER_COLUMNS("orc.bloom.filter.columns", "orc.bloom.filter.columns",
       "", "List of columns to create bloom filters for when writing."),
   BLOOM_FILTER_WRITE_VERSION("orc.bloom.filter.write.version",
