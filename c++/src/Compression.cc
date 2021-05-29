@@ -1031,6 +1031,47 @@ DIAGNOSTIC_POP
   }
 
   /**
+   * Snappy block compression
+   */
+  class SnappyCompressionStream: public BlockCompressionStream {
+  public:
+    SnappyCompressionStream(OutputStream * outStream,
+                        int compressionLevel,
+                        uint64_t capacity,
+                        uint64_t blockSize,
+                        MemoryPool& pool)
+                        : BlockCompressionStream(outStream,
+                                                 compressionLevel,
+                                                 capacity,
+                                                 blockSize,
+                                                 pool) {
+    }
+
+    virtual std::string getName() const override {
+      return "SnappyCompressionStream";
+    }
+    
+    virtual ~SnappyCompressionStream() override {
+    }
+
+  protected:
+    virtual uint64_t doBlockCompression() override;
+
+    virtual uint64_t estimateMaxCompressionSize() override {
+      return static_cast<uint64_t>(snappy::MaxCompressedLength(static_cast<size_t>(bufferSize)));
+    }
+  };
+
+  uint64_t SnappyCompressionStream::doBlockCompression() {
+    size_t compressedLength;
+    snappy::RawCompress(reinterpret_cast<const char*>(rawInputBuffer.data()),
+                        static_cast<size_t>(bufferSize),
+                        reinterpret_cast<char*>(compressorBuffer.data()),
+                        &compressedLength);
+    return static_cast<uint64_t>(compressedLength);
+  }
+
+  /**
    * ZSTD block compression
    */
   class ZSTDCompressionStream: public BlockCompressionStream {
@@ -1204,7 +1245,12 @@ DIAGNOSTIC_PUSH
         (new Lz4CompressionSteam(
           outStream, level, bufferCapacity, compressionBlockSize, pool));
     }
-    case CompressionKind_SNAPPY:
+    case CompressionKind_SNAPPY: {
+      int level = 0;
+      return std::unique_ptr<BufferedOutputStream>
+        (new SnappyCompressionStream(
+          outStream, level, bufferCapacity, compressionBlockSize, pool));
+    }
     case CompressionKind_LZO:
     default:
       throw NotImplementedYet("compression codec");
