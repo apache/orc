@@ -962,7 +962,7 @@ public class ReaderImpl implements Reader {
     case LIST:
       return numVals * JavaDataModel.get().primitive1();
     default:
-      LOG.debug("Unknown primitive category: " + column.getCategory());
+      LOG.debug("Unknown primitive category: {}", column.getCategory());
       break;
     }
 
