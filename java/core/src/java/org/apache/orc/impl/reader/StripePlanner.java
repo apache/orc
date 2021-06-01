@@ -520,17 +520,10 @@ public class StripePlanner {
       OrcProto.RowIndex[] rowIndex = index.getRowGroupIndex();
       for (StreamInformation stream : dataStreams) {
         if (readPhase == TypeReader.ReadPhase.ALL
-            ||(readPhase == TypeReader.ReadPhase.LEADERS
-               && filterColIds.contains(stream.column))
-            || (readPhase == TypeReader.ReadPhase.FOLLOWERS
-                && !filterColIds.contains(stream.column))) {
-          processStream(stream,
-                        result,
-                        rowIndex,
-                        startGroup,
-                        includedRowGroups,
-                        isCompressed,
-                        bufferSize);
+            || (readPhase == TypeReader.ReadPhase.LEADERS && filterColIds.contains(stream.column))
+            || (readPhase == TypeReader.ReadPhase.FOLLOWERS && !filterColIds.contains(stream.column))) {
+          processStream(stream, result, rowIndex, startGroup,
+                        includedRowGroups, isCompressed, bufferSize);
         } else {
           // In case a filter is present, then don't plan the lazy columns, they will be planned only
           // as needed.

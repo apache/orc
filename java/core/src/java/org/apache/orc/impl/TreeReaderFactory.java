@@ -196,7 +196,7 @@ public class TreeReaderFactory {
     @Override
     public TypeReader.ReaderCategory getReaderCategory(int columnId) {
       TypeReader.ReaderCategory result;
-      if (getColumnFilterCallback() == null || getColumnFilterIds().contains(columnId)) {
+      if (getColumnFilterIds().contains(columnId)) {
         // parent filter columns that might include non-filter children. These are classified as
         // FILTER_PARENT. This is used during the reposition for non-filter read. Only Struct and
         // Union Readers are supported currently
@@ -2054,11 +2054,8 @@ public class TreeReaderFactory {
       this(columnId, null, null, null, null, context);
     }
 
-    protected StringDirectTreeReader(int columnId,
-                                     InStream present,
-                                     InStream data,
-                                     InStream length,
-                                     OrcProto.ColumnEncoding.Kind encoding,
+    protected StringDirectTreeReader(int columnId, InStream present, InStream data,
+                                     InStream length, OrcProto.ColumnEncoding.Kind encoding,
                                      Context context) throws IOException {
       super(columnId, present, context);
       this.scratchlcv = new LongColumnVector();
@@ -2942,7 +2939,8 @@ public class TreeReaderFactory {
       case DATE:
         return new DateTreeReader(fileType.getId(), context);
       case DECIMAL:
-        if (isDecimalAsLong(version, fileType.getPrecision())){
+        if (version == OrcFile.Version.UNSTABLE_PRE_2_0 &&
+            fileType.getPrecision() <= TypeDescription.MAX_DECIMAL64_PRECISION){
           return new Decimal64TreeReader(fileType.getId(), fileType.getPrecision(),
               fileType.getScale(), context);
         }
@@ -2960,11 +2958,6 @@ public class TreeReaderFactory {
         throw new IllegalArgumentException("Unsupported type " +
             readerTypeCategory);
     }
-  }
-
-  public static boolean isDecimalAsLong(OrcFile.Version version, int precision) {
-    return version == OrcFile.Version.UNSTABLE_PRE_2_0 &&
-    precision <= TypeDescription.MAX_DECIMAL64_PRECISION;
   }
 
   public static BatchReader createRootReader(TypeDescription readerType, Context context)

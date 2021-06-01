@@ -431,10 +431,8 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     private DoubleColumnVector doubleColVector;
     private LongColumnVector longColVector;
 
-    AnyIntegerFromDoubleTreeReader(int columnId,
-                                   TypeDescription fileType,
-                                   TypeDescription readerType,
-                                   Context context)
+    AnyIntegerFromDoubleTreeReader(int columnId, TypeDescription fileType,
+                                   TypeDescription readerType, Context context)
         throws IOException {
       super(columnId, fileType.getCategory() == Category.DOUBLE ?
                           new DoubleTreeReader(columnId, context) :
