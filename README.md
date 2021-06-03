@@ -45,7 +45,7 @@ The subdirectories are:
 ### Building
 
 * Install java 1.8 or higher
-* Install maven 3 or higher
+* Install maven 3.6.3 or higher
 * Install cmake
 
 To build a release version with debug information:
@@ -83,6 +83,8 @@ To build only the Java library:
 % cd java
 % mvn package
 
+# If you do not have a supported version of Maven installed locally
+% mvnw package
 ```
 
 To build only the C++ library:
