@@ -36,7 +36,6 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.useIncrementalCompilation>false</maven.compiler.useIncrementalCompilation>
-    <jackson.version>2.10.0</jackson.version>
   </properties>
 
   <dependencies>
