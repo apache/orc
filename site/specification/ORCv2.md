@@ -260,6 +260,7 @@ message Type {
  DATE = 15;
  VARCHAR = 16;
  CHAR = 17;
+ TIMESTAMP_INSTANT = 18;
  }
  // the kind of this type
  required Kind kind = 1;
