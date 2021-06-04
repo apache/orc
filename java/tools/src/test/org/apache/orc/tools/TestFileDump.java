@@ -208,6 +208,7 @@ public class TestFileDump {
   public void testDump() throws Exception {
     TypeDescription schema = getMyRecordType();
     conf.set(OrcConf.ENCODING_STRATEGY.getAttribute(), "COMPRESSION");
+    conf.set(OrcConf.DICTIONARY_IMPL.getAttribute(), "rbtree");
     Writer writer = OrcFile.createWriter(testFilePath,
         OrcFile.writerOptions(conf)
             .fileSystem(fs)
@@ -404,6 +405,7 @@ public class TestFileDump {
         .setAttribute("test2", "value2")
         .setAttribute("test3", "value3");
     conf.set(OrcConf.ENCODING_STRATEGY.getAttribute(), "COMPRESSION");
+    conf.set(OrcConf.DICTIONARY_IMPL.getAttribute(), "rbtree");
     OrcFile.WriterOptions options = OrcFile.writerOptions(conf)
         .fileSystem(fs)
         .setSchema(schema)
@@ -456,6 +458,7 @@ public class TestFileDump {
   public void testBloomFilter2() throws Exception {
     TypeDescription schema = getMyRecordType();
     conf.set(OrcConf.ENCODING_STRATEGY.getAttribute(), "COMPRESSION");
+    conf.set(OrcConf.DICTIONARY_IMPL.getAttribute(), "rbtree");
     OrcFile.WriterOptions options = OrcFile.writerOptions(conf)
         .fileSystem(fs)
         .setSchema(schema)

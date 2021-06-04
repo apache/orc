@@ -96,6 +96,7 @@ public class TestJsonFileDump {
         .setAttribute("test1", "value1")
         .setAttribute("test2","value2");
     conf.set(OrcConf.ENCODING_STRATEGY.getAttribute(), "COMPRESSION");
+    conf.set(OrcConf.DICTIONARY_IMPL.getAttribute(), "rbtree");
     OrcFile.WriterOptions options = OrcFile.writerOptions(conf)
         .fileSystem(fs)
         .setSchema(schema)

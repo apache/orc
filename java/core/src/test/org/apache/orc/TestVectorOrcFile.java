@@ -622,6 +622,7 @@ public class TestVectorOrcFile {
             .setSchema(schema)
             .stripeSize(100000)
             .bufferSize(10000)
+            .enforceBufferSize()
             .version(fileFormat));
     VectorizedRowBatch batch = schema.createRowBatch();
     batch.size = 1000;
@@ -708,6 +709,92 @@ public class TestVectorOrcFile {
     items = index[1].getEntryList();
     assertEquals(2,
         items.get(0).getStatistics().getIntStatistics().getMaximum());
+  }
+
+  @Test
+  public void testStripeLevelStatsNoForce() throws Exception {
+    TypeDescription schema =
+        TypeDescription.fromString("struct<int1:int,string1:string>");
+    Writer writer = OrcFile.createWriter(testFilePath,
+        OrcFile.writerOptions(conf)
+            .setSchema(schema)
+            .stripeSize(100000)
+            .bufferSize(10000)
+            .version(fileFormat));
+    VectorizedRowBatch batch = schema.createRowBatch();
+    batch.size = 1000;
+    LongColumnVector field1 = (LongColumnVector) batch.cols[0];
+    BytesColumnVector field2 = (BytesColumnVector) batch.cols[1];
+    field1.isRepeating = true;
+    field2.isRepeating = true;
+    for (int b = 0; b < 11; b++) {
+      if (b >= 5) {
+        if (b >= 10) {
+          field1.vector[0] = 3;
+          field2.setVal(0, "three".getBytes(StandardCharsets.UTF_8));
+        } else {
+          field1.vector[0] = 2;
+          field2.setVal(0, "two".getBytes(StandardCharsets.UTF_8));
+        }
+      } else {
+        field1.vector[0] = 1;
+        field2.setVal(0, "one".getBytes(StandardCharsets.UTF_8));
+      }
+      writer.addRowBatch(batch);
+    }
+
+    writer.close();
+    Reader reader = OrcFile.createReader(testFilePath,
+        OrcFile.readerOptions(conf).filesystem(fs));
+
+    schema = writer.getSchema();
+    assertEquals(2, schema.getMaximumId());
+    boolean[] expected = new boolean[] {false, true, false};
+    boolean[] included = OrcUtils.includeColumns("int1", schema);
+    assertEquals(true, Arrays.equals(expected, included));
+
+    List<StripeStatistics> stats = reader.getStripeStatistics();
+    int numStripes = stats.size();
+    assertEquals(2, numStripes);
+    StripeStatistics ss1 = stats.get(0);
+    StripeStatistics ss2 = stats.get(1);
+
+    assertEquals(10000, ss1.getColumnStatistics()[0].getNumberOfValues());
+    assertEquals(1000, ss2.getColumnStatistics()[0].getNumberOfValues());
+
+    assertEquals(10000, (ss1.getColumnStatistics()[1]).getNumberOfValues());
+    assertEquals(1000, (ss2.getColumnStatistics()[1]).getNumberOfValues());
+    assertEquals(1, ((IntegerColumnStatistics)ss1.getColumnStatistics()[1]).getMinimum());
+    assertEquals(3, ((IntegerColumnStatistics)ss2.getColumnStatistics()[1]).getMinimum());
+    assertEquals(2, ((IntegerColumnStatistics)ss1.getColumnStatistics()[1]).getMaximum());
+    assertEquals(3, ((IntegerColumnStatistics)ss2.getColumnStatistics()[1]).getMaximum());
+    assertEquals(15000, ((IntegerColumnStatistics)ss1.getColumnStatistics()[1]).getSum());
+    assertEquals(3000, ((IntegerColumnStatistics)ss2.getColumnStatistics()[1]).getSum());
+
+    assertEquals(10000, (ss1.getColumnStatistics()[2]).getNumberOfValues());
+    assertEquals(1000, (ss2.getColumnStatistics()[2]).getNumberOfValues());
+    assertEquals("one", ((StringColumnStatistics)ss1.getColumnStatistics()[2]).getMinimum());
+    assertEquals("three", ((StringColumnStatistics)ss2.getColumnStatistics()[2]).getMinimum());
+    assertEquals("two", ((StringColumnStatistics)ss1.getColumnStatistics()[2]).getMaximum());
+    assertEquals("three", ((StringColumnStatistics) ss2.getColumnStatistics()[2]).getMaximum());
+    assertEquals(30000, ((StringColumnStatistics)ss1.getColumnStatistics()[2]).getSum());
+    assertEquals(5000, ((StringColumnStatistics)ss2.getColumnStatistics()[2]).getSum());
+
+    RecordReaderImpl recordReader = (RecordReaderImpl) reader.rows();
+    OrcProto.RowIndex[] index = recordReader.readRowIndex(0, null, null).getRowGroupIndex();
+    assertEquals(3, index.length);
+    List<OrcProto.RowIndexEntry> items = index[1].getEntryList();
+    assertEquals(1, items.size());
+    assertEquals(3, items.get(0).getPositionsCount());
+    assertEquals(0, items.get(0).getPositions(0));
+    assertEquals(0, items.get(0).getPositions(1));
+    assertEquals(0, items.get(0).getPositions(2));
+    assertEquals(1,
+        items.get(0).getStatistics().getIntStatistics().getMinimum());
+    index = recordReader.readRowIndex(1, null, null).getRowGroupIndex();
+    assertEquals(3, index.length);
+    items = index[1].getEntryList();
+    assertEquals(3, items.get(0).getStatistics().getIntStatistics().getMaximum());
   }
 
   private static void setInner(StructColumnVector inner, int rowId,
