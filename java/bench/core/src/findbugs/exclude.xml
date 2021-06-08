@@ -20,6 +20,6 @@
     <Class name="~org\.openjdk\.jmh\.infra\.generated.*"/>
   </Match>
   <Match>
-    <Class name="~org\.apache\.orc\.bench\.generated.*"/>
+    <Class name="~org\.apache\.orc\.bench\..*\.generated.*"/>
   </Match>
 </FindBugsFilter>
