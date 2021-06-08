@@ -29,5 +29,12 @@
     <containerDescriptorHandler>
       <handlerName>metaInf-services</handlerName>
     </containerDescriptorHandler>
+    <containerDescriptorHandler>
+      <handlerName>file-aggregator</handlerName>
+      <configuration>
+        <filePattern>META-INF/BenchmarkList</filePattern>
+        <outputPath>META-INF/BenchmarkList</outputPath>
+      </configuration>
+    </containerDescriptorHandler>
   </containerDescriptorHandlers>
 </assembly>
