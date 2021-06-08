@@ -30,6 +30,7 @@ import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.orc.impl.OrcFilterContextImpl;
+import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -146,6 +147,79 @@ public class TestRowFilteringIOSkip {
   }
 
   @Test
+  public void readSingleRowWithFilter() throws IOException {
+    int cnt = 100;
+    Random r = new Random(cnt);
+    long ridx;
+
+    while (cnt > 0) {
+      ridx = r.nextInt((int) RowCount);
+      readSingleRowWithFilter(ridx);
+      cnt--;
+    }
+  }
+
+  private void readSingleRowWithFilter(long idx) throws IOException {
+    Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(conf).filesystem(fs));
+    SearchArgument sarg = SearchArgumentFactory.newBuilder()
+      .in("ridx", PredicateLeaf.Type.LONG, idx)
+      .build();
+    Reader.Options options = r.options()
+      .searchArgument(sarg, new String[] {"ridx"})
+      .allowSelected(true)
+      .allowSARGToFilter(true);
+    VectorizedRowBatch b = schema.createRowBatch();
+    long rowCount = 0;
+    try (RecordReader rr = r.rows(options)) {
+      assertTrue(rr.nextBatch(b));
+      validateBatch(b, idx);
+      rowCount += b.size;
+      assertFalse(rr.nextBatch(b));
+    }
+    assertEquals(1, rowCount);
+  }
+
+  @Test
+  public void readWithoutSelectedSupport() throws IOException {
+    // When selected vector is not supported we will read more rows than just the filtered rows.
+    Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(conf).filesystem(fs));
+    long rowIdx = 12345;
+    SearchArgument sarg = SearchArgumentFactory.newBuilder()
+      .in("ridx", PredicateLeaf.Type.LONG, rowIdx)
+      .build();
+    Reader.Options options = r.options()
+      .searchArgument(sarg, new String[] {"ridx"})
+      .allowSelected(false)
+      .allowSARGToFilter(true);
+    VectorizedRowBatch b = schema.createRowBatch();
+    long rowCount = 0;
+    HiveDecimalWritable d = new HiveDecimalWritable();
+    readStart();
+    try (RecordReader rr = r.rows(options)) {
+      while (rr.nextBatch(b)) {
+        rowCount += b.size;
+        for (int i = 0; i < b.size; i++) {
+          if (i == b.selected[0]) {
+            // All the values are expected to match only for the selected row
+            long expValue = ((LongColumnVector) b.cols[0]).vector[i];
+            d.setFromLongAndScale(expValue, scale);
+            assertEquals(d, ((DecimalColumnVector) b.cols[1]).vector[i]);
+            assertEquals(expValue, ((LongColumnVector) b.cols[2]).vector[i]);
+            BytesColumnVector sv = (BytesColumnVector) b.cols[3];
+            assertEquals(String.valueOf(expValue),
+                                sv.toString(i));
+            assertEquals(rowIdx, ((LongColumnVector) b.cols[4]).vector[i]);
+          }
+        }
+      }
+    }
+    double p = readPercentage(readEnd(), fs.getFileStatus(filePath).getLen());
+    Assert.assertTrue(String.format("RowCount: %s should be between 1 and 1024", rowCount),
+                      rowCount > 0 && rowCount <= b.getMaxSize());
+    Assert.assertTrue(String.format("Read p: %s should be less than 3", p), p <= 3);
+  }
+
+  @Test
   public void readWithSArg() throws IOException {
     readStart();
     Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(conf).filesystem(fs));
@@ -153,6 +227,7 @@ public class TestRowFilteringIOSkip {
       .in("f1", PredicateLeaf.Type.LONG, 0L)
       .build();
     Reader.Options options = r.options()
+      .allowSelected(true)
       .searchArgument(sarg, new String[] {"f1"});
     VectorizedRowBatch b = schema.createRowBatch();
     long rowCount;
@@ -162,6 +237,50 @@ public class TestRowFilteringIOSkip {
     double p = readPercentage(readEnd(), fs.getFileStatus(filePath).getLen());
     assertEquals(RowCount, rowCount);
     assertTrue(p >= 100);
+  }
+
+  @Test
+  public void readWithSArgAsFilter() throws IOException {
+    readStart();
+    Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(conf).filesystem(fs));
+    SearchArgument sarg = SearchArgumentFactory.newBuilder()
+      .in("f1", PredicateLeaf.Type.LONG, 0L)
+      .build();
+    Reader.Options options = r.options()
+      .searchArgument(sarg, new String[] {"f1"})
+      .allowSelected(true)
+      .allowSARGToFilter(true);
+    VectorizedRowBatch b = schema.createRowBatch();
+    long rowCount;
+    try (RecordReader rr = r.rows(options)) {
+      rowCount = validateFilteredRecordReader(rr, b);
+    }
+    double p = readPercentage(readEnd(), fs.getFileStatus(filePath).getLen());
+    Assert.assertEquals(0, rowCount);
+    Assert.assertTrue(p < 30);
+  }
+
+  @Test
+  public void readWithInvalidSArgAs() throws IOException {
+    readStart();
+    Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(conf).filesystem(fs));
+    SearchArgument sarg = SearchArgumentFactory.newBuilder()
+      .startNot()
+      .isNull("f1", PredicateLeaf.Type.LONG)
+      .end()
+      .build();
+    Reader.Options options = r.options()
+      .searchArgument(sarg, new String[] {"f1"})
+      .allowSelected(true)
+      .allowSARGToFilter(true);
+    VectorizedRowBatch b = schema.createRowBatch();
+    long rowCount;
+    try (RecordReader rr = r.rows(options)) {
+      rowCount = validateFilteredRecordReader(rr, b);
+    }
+    double p = readPercentage(readEnd(), fs.getFileStatus(filePath).getLen());
+    Assert.assertEquals(RowCount, rowCount);
+    Assert.assertTrue(p > 100);
   }
 
   private long validateFilteredRecordReader(RecordReader rr, VectorizedRowBatch b)
@@ -198,12 +317,19 @@ public class TestRowFilteringIOSkip {
   }
 
   @Test
-  public void filterAllRows() throws IOException {
+  public void filterAllRowsWithFilter() throws IOException {
     readStart();
     Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(conf).filesystem(fs));
+    r.options();
+    filterAllRows(r,
+                  r.options()
+                    .allowSelected(true)
+                    .setRowFilter(FilterColumns,
+                                  new InFilter(new HashSet<>(0), 0)));
+  }
+
+  private void filterAllRows(Reader r, Reader.Options options) throws IOException {
     VectorizedRowBatch b = schema.createRowBatch();
-    Reader.Options options = r.options()
-      .setRowFilter(FilterColumns, new InFilter(new HashSet<>(0), 0));
     long rowCount = 0;
     try (RecordReader rr = r.rows(options)) {
       while (rr.nextBatch(b)) {
@@ -226,7 +352,7 @@ public class TestRowFilteringIOSkip {
     Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(conf).filesystem(fs));
     VectorizedRowBatch b = schema.createRowBatch();
     long rowCount;
-    try (RecordReader rr = r.rows()) {
+    try (RecordReader rr = r.rows(r.options().allowSelected(true))) {
       rowCount = validateFilteredRecordReader(rr, b);
     }
     double p = readPercentage(readEnd(), fs.getFileStatus(filePath).getLen());
@@ -250,6 +376,7 @@ public class TestRowFilteringIOSkip {
     VectorizedRowBatch b = schema.createRowBatch();
     long rowCount;
     try (RecordReader rr = r.rows(r.options()
+                                    .allowSelected(true)
                                     .setRowFilter(FilterColumns, new AllowAllFilter()))) {
       rowCount = validateFilteredRecordReader(rr, b);
     }
@@ -264,12 +391,15 @@ public class TestRowFilteringIOSkip {
     Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(conf).filesystem(fs));
     VectorizedRowBatch b = schema.createRowBatch();
     Reader.Options options = r.options()
+      .allowSelected(true)
       .setRowFilter(FilterColumns, new AlternateFilter());
     long rowCount;
     try (RecordReader rr = r.rows(options)) {
       rowCount = validateFilteredRecordReader(rr, b);
     }
-    readEnd();
+    FileSystem.Statistics stats = readEnd();
+    double readPercentage = readPercentage(stats, fs.getFileStatus(filePath).getLen());
+    assertTrue(readPercentage > 100);
     assertTrue(RowCount > rowCount);
   }
 
@@ -279,6 +409,7 @@ public class TestRowFilteringIOSkip {
     Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(conf).filesystem(fs));
     VectorizedRowBatch b = schema.createRowBatch();
     Reader.Options options = r.options()
+      .allowSelected(true)
       .setRowFilter(FilterColumns, new AlternateFilter());
     long seekRow;
     try (RecordReader rr = r.rows(options)) {
@@ -321,6 +452,120 @@ public class TestRowFilteringIOSkip {
     FileSystem.Statistics stats = readEnd();
     double readPercentage = readPercentage(stats, fs.getFileStatus(filePath).getLen());
     assertTrue(readPercentage > 130);
+  }
+
+  @Test
+  public void readFewRGWithSArg() throws IOException {
+    readStart();
+    Reader r = OrcFile.createReader(filePath,
+                                    OrcFile.readerOptions(conf).filesystem(fs));
+    VectorizedRowBatch b = schema.createRowBatch();
+    SearchArgument sarg = SearchArgumentFactory.newBuilder()
+      .in("ridx", PredicateLeaf.Type.LONG, 0L, 1000000L, 2000000L, 3000000L)
+      .build();
+    Reader.Options options = r.options()
+      .allowSelected(true)
+      .searchArgument(sarg, new String[] {"ridx"});
+
+    long rowCount;
+    try (RecordReader rr = r.rows(options)) {
+      rowCount = validateFilteredRecordReader(rr, b);
+    }
+    assertEquals(8192 * 4, rowCount);
+    FileSystem.Statistics stats = readEnd();
+    double readPercentage = readPercentage(stats, fs.getFileStatus(filePath).getLen());
+    assertTrue(readPercentage < 10);
+  }
+
+  @Test
+  public void readFewRGWithSArgAndFilter() throws IOException {
+    readStart();
+    Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(conf).filesystem(fs));
+    VectorizedRowBatch b = schema.createRowBatch();
+    SearchArgument sarg = SearchArgumentFactory.newBuilder()
+      .in("ridx", PredicateLeaf.Type.LONG, 0L, 1000000L, 2000000L, 3000000L)
+      .build();
+    Reader.Options options = r.options()
+      .searchArgument(sarg, new String[] {"ridx"})
+      .allowSelected(true)
+      .allowSARGToFilter(true);
+
+    long rowCount;
+    try (RecordReader rr = r.rows(options)) {
+      rowCount = validateFilteredRecordReader(rr, b);
+    }
+    assertEquals(4, rowCount);
+    FileSystem.Statistics stats = readEnd();
+    double readPercentage = readPercentage(stats, fs.getFileStatus(filePath).getLen());
+    assertTrue(readPercentage < 10);
+  }
+
+  @Test
+  public void schemaEvolutionMissingFilterColumn() throws IOException {
+    Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(conf).filesystem(fs));
+    TypeDescription readSchema = schema
+      .clone()
+      .addField("missing", TypeDescription.createLong());
+    SearchArgument sarg = SearchArgumentFactory.newBuilder()
+      .startNot()
+      .isNull("missing", PredicateLeaf.Type.LONG)
+      .end()
+      .build();
+    Reader.Options options = r.options()
+      .schema(readSchema)
+      .searchArgument(sarg, new String[] {"missing"})
+      .allowSelected(true)
+      .allowSARGToFilter(true);
+    VectorizedRowBatch b = readSchema.createRowBatch();
+    long rowCount = 0;
+    try (RecordReader rr = r.rows(options)) {
+      assertFalse(rr.nextBatch(b));
+    }
+    assertEquals(0, rowCount);
+  }
+
+  @Test
+  public void schemaEvolutionLong2StringColumn() throws IOException {
+    Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(conf).filesystem(fs));
+    // Change ridx column from long to string and swap the positions of ridx and f4 columns
+    TypeDescription readSchema = TypeDescription.createStruct()
+      .addField("f1", TypeDescription.createLong())
+      .addField("f2", TypeDescription.createDecimal().withPrecision(20).withScale(6))
+      .addField("f3", TypeDescription.createLong())
+      .addField("ridx", TypeDescription.createString())
+      .addField("f4", TypeDescription.createString());
+    SearchArgument sarg = SearchArgumentFactory.newBuilder()
+      .in("ridx", PredicateLeaf.Type.STRING, "1")
+      .build();
+    Reader.Options options = r.options()
+      .schema(readSchema)
+      .searchArgument(sarg, new String[] {"ridx"})
+      .allowSelected(true)
+      .allowSARGToFilter(true);
+    VectorizedRowBatch b = readSchema.createRowBatch();
+    long rowCount = 0;
+    try (RecordReader rr = r.rows(options)) {
+      assertTrue(rr.nextBatch(b));
+      assertEquals(1, b.size);
+      rowCount += b.size;
+      HiveDecimalWritable d = new HiveDecimalWritable();
+      int rowIdx = 1;
+      long expValue = ((LongColumnVector) b.cols[0]).vector[rowIdx];
+      d.setFromLongAndScale(expValue, scale);
+      assertEquals(d, ((DecimalColumnVector) b.cols[1]).vector[rowIdx]);
+      assertEquals(expValue, ((LongColumnVector) b.cols[2]).vector[rowIdx]);
+      // The columns ridx and f4 are swapped, which is reflected in the updated index value
+      BytesColumnVector sv = (BytesColumnVector) b.cols[4];
+      assertEquals(String.valueOf(expValue),
+                          sv.toString(rowIdx));
+      sv = (BytesColumnVector) b.cols[3];
+      assertEquals(String.valueOf(rowIdx),
+                          sv.toString(rowIdx));
+
+      assertFalse(rr.nextBatch(b));
+    }
+
+    assertEquals(1, rowCount);
   }
 
   private void seekToRow(RecordReader rr, VectorizedRowBatch b, long row) throws IOException {

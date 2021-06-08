@@ -752,9 +752,7 @@ public class TestSchemaEvolution {
   }
 
   @Test
-  public void testTimestampToStringEvolution(TestInfo testInfo) throws Exception {
-    testFilePath = new Path(workDir, "TestSchemaEvolution." +
-        testInfo.getTestMethod().get().getName() + ".orc");
+  public void testTimestampToStringEvolution() throws Exception {
     TypeDescription schema = TypeDescription.fromString("timestamp");
     Writer writer = OrcFile.createWriter(testFilePath,
         OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)

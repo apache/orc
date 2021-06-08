@@ -153,8 +153,10 @@ public class OrcInputFormat<V extends WritableComparable>
     Reader file = OrcFile.createReader(split.getPath(),
         OrcFile.readerOptions(conf)
             .maxLength(OrcConf.MAX_FILE_LENGTH.getLong(conf)));
-    return new OrcMapredRecordReader<>(file, buildOptions(conf,
-        file, split.getStart(), split.getLength()));
+    //Mapreduce supports selected vector
+    Reader.Options options =  buildOptions(conf, file, split.getStart(), split.getLength())
+      .allowSelected(true);
+    return new OrcMapredRecordReader<>(file, options);
   }
 
   /**
