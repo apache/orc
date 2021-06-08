@@ -49,6 +49,7 @@ public class TestRowFilteringComplexTypes {
     @BeforeEach
     public void openFileSystem(TestInfo testInfo) throws Exception {
         conf = new Configuration();
+        OrcConf.READER_USE_SELECTED.setBoolean(conf, true);
         fs = FileSystem.getLocal(conf);
         testFilePath = new Path(workDir,
             "TestRowFilteringComplexTypes." + testInfo.getTestMethod().get().getName() + ".orc");

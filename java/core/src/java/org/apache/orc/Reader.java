@@ -197,6 +197,8 @@ public interface Reader extends Closeable {
     private boolean isSchemaEvolutionCaseAware =
         (boolean) OrcConf.IS_SCHEMA_EVOLUTION_CASE_SENSITIVE.getDefaultValue();
     private boolean includeAcidColumns = true;
+    private boolean allowSARGToFilter = false;
+    private boolean useSelected = false;
 
     public Options() {
       // PASS
@@ -210,6 +212,8 @@ public interface Reader extends Closeable {
       positionalEvolutionLevel = OrcConf.FORCE_POSITIONAL_EVOLUTION_LEVEL.getInt(conf);
       isSchemaEvolutionCaseAware =
           OrcConf.IS_SCHEMA_EVOLUTION_CASE_SENSITIVE.getBoolean(conf);
+      allowSARGToFilter = OrcConf.ALLOW_SARG_TO_FILTER.getBoolean(conf);
+      useSelected = OrcConf.READER_USE_SELECTED.getBoolean(conf);
     }
 
     /**
@@ -280,6 +284,15 @@ public interface Reader extends Closeable {
       this.sarg = sarg;
       this.columnNames = columnNames;
       return this;
+    }
+
+    public Options allowSARGToFilter(boolean allowSARGToFilter) {
+      this.allowSARGToFilter = allowSARGToFilter;
+      return this;
+    }
+
+    public boolean isAllowSARGToFilter() {
+      return allowSARGToFilter;
     }
 
     /**
@@ -471,6 +484,8 @@ public interface Reader extends Closeable {
         schema.printToBuffer(buffer);
       }
       buffer.append(", includeAcidColumns: ").append(includeAcidColumns);
+      buffer.append(", allowSARGToFilter: ").append(allowSARGToFilter);
+      buffer.append(", useSelected: ").append(useSelected);
       buffer.append("}");
       return buffer.toString();
     }
@@ -478,6 +493,15 @@ public interface Reader extends Closeable {
     public boolean getTolerateMissingSchema() {
       return tolerateMissingSchema != null ? tolerateMissingSchema :
           (Boolean) OrcConf.TOLERATE_MISSING_SCHEMA.getDefaultValue();
+    }
+
+    public boolean useSelected() {
+      return useSelected;
+    }
+
+    public Options useSelected(boolean newValue) {
+      this.useSelected = newValue;
+      return this;
     }
   }
 

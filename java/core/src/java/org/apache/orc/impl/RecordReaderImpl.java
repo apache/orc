@@ -45,6 +45,7 @@ import org.apache.orc.DoubleColumnStatistics;
 import org.apache.orc.IntegerColumnStatistics;
 import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
+import org.apache.orc.OrcFilterContext;
 import org.apache.orc.OrcProto;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
@@ -52,6 +53,8 @@ import org.apache.orc.StringColumnStatistics;
 import org.apache.orc.StripeInformation;
 import org.apache.orc.TimestampColumnStatistics;
 import org.apache.orc.TypeDescription;
+import org.apache.orc.filter.BatchFilter;
+import org.apache.orc.impl.filter.FilterFactory;
 import org.apache.orc.impl.reader.ReaderEncryption;
 import org.apache.orc.impl.reader.StripePlanner;
 import org.apache.orc.impl.reader.tree.BatchReader;
@@ -71,6 +74,7 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.TimeZone;
 import java.util.TreeSet;
+import java.util.function.Consumer;
 
 public class RecordReaderImpl implements RecordReader {
   static final Logger LOG = LoggerFactory.getLogger(RecordReaderImpl.class);
@@ -104,6 +108,7 @@ public class RecordReaderImpl implements RecordReader {
   private final TypeReader.ReadPhase startReadPhase;
   // identifies that follow columns bytes must be read
   private boolean needsFollowColumnsRead;
+  private final boolean noSelectedVector;
 
   /**
    * Given a list of column names, find the given column and return the index.
@@ -204,6 +209,9 @@ public class RecordReaderImpl implements RecordReader {
             "file schema:   " + fileReader.getSchema());
       }
     }
+
+    this.noSelectedVector = !options.useSelected();
+    LOG.info("noSelectedVector={}", this.noSelectedVector);
     this.schema = evolution.getReaderSchema();
     this.path = fileReader.path;
     this.rowIndexStride = fileReader.rowIndexStride;
@@ -271,10 +279,22 @@ public class RecordReaderImpl implements RecordReader {
       skipCorrupt = OrcConf.SKIP_CORRUPT_DATA.getBoolean(fileReader.conf);
     }
 
+    String[] filterCols = null;
+    Consumer<OrcFilterContext> filterCallBack = null;
+    BatchFilter filter = FilterFactory.createBatchFilter(options,
+                                                         evolution.getReaderBaseSchema(),
+                                                         fileReader.getFileVersion(),
+                                                         false);
+    if (filter != null) {
+      // If a filter is determined then use this
+      filterCallBack = filter;
+      filterCols = filter.getColumnNames();
+    }
+
     // Map columnNames to ColumnIds
     SortedSet<Integer> filterColIds = new TreeSet<>();
-    if (options.getPreFilterColumnNames() != null) {
-      for (String colName : options.getPreFilterColumnNames()) {
+    if (filterCols != null) {
+      for (String colName : filterCols) {
         TypeDescription expandCol = findColumnType(evolution, colName);
         // If the column is not present in the file then this can be ignored from read.
         if (expandCol == null || expandCol.getId() == -1) {
@@ -300,7 +320,7 @@ public class RecordReaderImpl implements RecordReader {
     TreeReaderFactory.ReaderContext readerContext =
         new TreeReaderFactory.ReaderContext()
           .setSchemaEvolution(evolution)
-          .setFilterCallback(filterColIds, options.getFilterCallback())
+          .setFilterCallback(filterColIds, filterCallBack)
           .skipCorrupt(skipCorrupt)
           .fileFormat(fileReader.getFileVersion())
           .useUTCTimestamp(fileReader.useUTCTimestamp)
@@ -1313,6 +1333,15 @@ public class RecordReaderImpl implements RecordReader {
         advanceToNextRow(reader, rowInStripe + rowBaseInStripe, true);
         // batch.size can be modified by filter so only batchSize can tell if we actually read rows
       } while (batchSize != 0 && batch.size == 0);
+
+      if (noSelectedVector) {
+        // In case selected vector is not supported we leave the size to be read size. In this case
+        // the non filter columns might be read selectively, however the filter after the reader
+        // should eliminate rows that don't match predicate conditions
+        batch.size = batchSize;
+        batch.selectedInUse = false;
+      }
+
       return batchSize != 0;
     } catch (IOException e) {
       // Rethrow exception with file name in log message
