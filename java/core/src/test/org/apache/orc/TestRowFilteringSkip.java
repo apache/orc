@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.orc;
 
 import org.apache.hadoop.conf.Configuration;
@@ -47,17 +48,18 @@ import java.text.SimpleDateFormat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Types that are skipped at row-level include: Decimal, Decimal64, Double, Float, Char, VarChar, String, Boolean, Timestamp
+ * Types that are skipped at row-level include: Decimal, Decimal64, Double, Float, Char, VarChar,
+ * String, Boolean, Timestamp
  * For the remaining types that are not row-skipped see {@link TestRowFilteringNoSkip}
  */
 public class TestRowFilteringSkip {
 
-  private Path workDir = new Path(System.getProperty("test.tmp.dir", "target" + File.separator + "test"
-      + File.separator + "tmp"));
+  private Path workDir = new Path(System.getProperty("test.tmp.dir",
+                                                     "target" + File.separator + "test"
+                                                     + File.separator + "tmp"));
 
   private Configuration conf;
   private FileSystem fs;
@@ -71,12 +73,14 @@ public class TestRowFilteringSkip {
   @Before
   public void openFileSystem() throws Exception {
     conf = new Configuration();
+    OrcConf.ALLOW_SELECTED_VECTOR.setBoolean(conf, true);
     fs = FileSystem.getLocal(conf);
-    testFilePath = new Path(workDir, "TestRowFilteringSkip." + testCaseName.getMethodName() + ".orc");
+    testFilePath = new Path(workDir,
+                            "TestRowFilteringSkip." + testCaseName.getMethodName() + ".orc");
     fs.delete(testFilePath, false);
   }
 
-  public static String convertTime(long time){
+  public static String convertTime(long time) {
     Date date = new Date(time);
     Format format = new SimpleDateFormat("yyyy-MM-d HH:mm:ss.SSS");
     return format.format(date);
@@ -86,7 +90,7 @@ public class TestRowFilteringSkip {
   public static void intAnyRowFilter(OrcFilterContext batch) {
     // Dummy Filter implementation passing just one Batch row
     int newSize = 2;
-    batch.getSelected()[0] = batch.getSelectedSize()-100;
+    batch.getSelected()[0] = batch.getSelectedSize() - 100;
     batch.getSelected()[1] = 940;
     batch.setSelectedInUse(true);
     batch.setSelectedSize(newSize);
@@ -95,7 +99,7 @@ public class TestRowFilteringSkip {
   // Filter all rows except the first one
   public static void intFirstRowFilter(OrcFilterContext batch) {
     int newSize = 0;
-    for (int row = 0; row <batch.getSelectedSize(); ++row) {
+    for (int row = 0; row < batch.getSelectedSize(); ++row) {
       if (row == 0) {
         batch.getSelected()[newSize++] = row;
       }
@@ -119,10 +123,11 @@ public class TestRowFilteringSkip {
   }
 
   static int rowCount = 0;
+
   public static void intCustomValueFilter(OrcFilterContext batch) {
     LongColumnVector col1 = (LongColumnVector) ((OrcFilterContextImpl) batch).getCols()[0];
     int newSize = 0;
-    for (int row = 0; row <batch.getSelectedSize(); ++row) {
+    for (int row = 0; row < batch.getSelectedSize(); ++row) {
       long val = col1.vector[row];
       if ((val == 2) || (val == 5) || (val == 13) || (val == 29) || (val == 70)) {
         batch.getSelected()[newSize++] = row;
@@ -141,20 +146,20 @@ public class TestRowFilteringSkip {
 
     // ORC write some data (one PASSing row per batch)
     TypeDescription schema = TypeDescription.createStruct()
-        .addField("int1", TypeDescription.createInt())
-        .addField("decimal1", TypeDescription.createDecimal());
+      .addField("int1", TypeDescription.createInt())
+      .addField("decimal1", TypeDescription.createDecimal());
 
     HiveDecimalWritable passDataVal = new HiveDecimalWritable("100");
     HiveDecimalWritable nullDataVal = new HiveDecimalWritable("0");
 
     try (Writer writer = OrcFile.createWriter(testFilePath,
-        OrcFile.writerOptions(conf)
-            .setSchema(schema)
-            .rowIndexStride(INDEX_STRIDE))) {
+                                              OrcFile.writerOptions(conf)
+                                                .setSchema(schema)
+                                                .rowIndexStride(INDEX_STRIDE))) {
       VectorizedRowBatch batch = schema.createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       DecimalColumnVector col2 = (DecimalColumnVector) batch.cols[1];
-      for (int b=0; b < NUM_BATCHES; ++b) {
+      for (int b = 0; b < NUM_BATCHES; ++b) {
         batch.reset();
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
@@ -169,8 +174,8 @@ public class TestRowFilteringSkip {
     Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf));
 
     try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
-        reader.options()
-            .setRowFilter(new String[]{"int1"}, TestRowFilteringSkip::intRoundRobbinRowFilter))) {
+      reader.options()
+        .setRowFilter(new String[] {"int1"}, TestRowFilteringSkip::intRoundRobbinRowFilter))) {
       VectorizedRowBatch batch = reader.getSchema().createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       DecimalColumnVector col2 = (DecimalColumnVector) batch.cols[1];
@@ -184,10 +189,11 @@ public class TestRowFilteringSkip {
         Assert.assertTrue(batch.selected != null);
         // Rows are filtered so it should never be 1024
         Assert.assertTrue(batch.size != ColumnBatchRows);
-        assertEquals( true, col1.noNulls);
+        assertEquals(true, col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (col2.vector[r].compareTo(passDataVal) == 0)
-            noNullCnt ++;
+          if (col2.vector[r].compareTo(passDataVal) == 0) {
+            noNullCnt++;
+          }
         }
       }
       // Make sure that our filter worked
@@ -196,7 +202,7 @@ public class TestRowFilteringSkip {
       Assert.assertEquals(2, batch.selected[1]);
       Assert.assertEquals(col2.vector[0], passDataVal);
       Assert.assertEquals(col2.vector[511], nullDataVal);
-      Assert.assertEquals(col2.vector[1020],  passDataVal);
+      Assert.assertEquals(col2.vector[1020], passDataVal);
       Assert.assertEquals(col2.vector[1021], nullDataVal);
     }
   }
@@ -209,28 +215,29 @@ public class TestRowFilteringSkip {
 
     // ORC write some data (one PASSing row per batch)
     TypeDescription schema = TypeDescription.createStruct()
-        .addField("int1", TypeDescription.createInt())
-        .addField("decimal1", TypeDescription.createDecimal());
+      .addField("int1", TypeDescription.createInt())
+      .addField("decimal1", TypeDescription.createDecimal());
 
     HiveDecimalWritable failDataVal = new HiveDecimalWritable("-100");
     HiveDecimalWritable nullDataVal = new HiveDecimalWritable("0");
 
     try (Writer writer = OrcFile.createWriter(testFilePath,
-        OrcFile.writerOptions(conf)
-            .setSchema(schema)
-            .rowIndexStride(INDEX_STRIDE))) {
+                                              OrcFile.writerOptions(conf)
+                                                .setSchema(schema)
+                                                .rowIndexStride(INDEX_STRIDE))) {
       VectorizedRowBatch batch = schema.createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       DecimalColumnVector col2 = (DecimalColumnVector) batch.cols[1];
-      for (int b=0; b < NUM_BATCHES; ++b) {
+      for (int b = 0; b < NUM_BATCHES; ++b) {
         batch.reset();
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           col1.vector[row] = row;
-          if ((row % 2) == 0)
-            col2.vector[row] = new HiveDecimalWritable(row+1);
-          else
+          if ((row % 2) == 0) {
+            col2.vector[row] = new HiveDecimalWritable(row + 1);
+          } else {
             col2.vector[row] = failDataVal;
+          }
         }
         col1.isRepeating = false;
         writer.addRowBatch(batch);
@@ -240,8 +247,8 @@ public class TestRowFilteringSkip {
     Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf));
 
     try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
-        reader.options()
-            .setRowFilter(new String[]{"int1"}, TestRowFilteringSkip::intRoundRobbinRowFilter))) {
+      reader.options()
+        .setRowFilter(new String[] {"int1"}, TestRowFilteringSkip::intRoundRobbinRowFilter))) {
       VectorizedRowBatch batch = reader.getSchema().createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       DecimalColumnVector col2 = (DecimalColumnVector) batch.cols[1];
@@ -255,10 +262,11 @@ public class TestRowFilteringSkip {
         Assert.assertTrue(batch.selected != null);
         // Rows are filtered so it should never be 1024
         Assert.assertTrue(batch.size != ColumnBatchRows);
-        assertEquals( true, col1.noNulls);
+        assertEquals(true, col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (col2.vector[r].getHiveDecimal().longValue() > 0)
-            noNullCnt ++;
+          if (col2.vector[r].getHiveDecimal().longValue() > 0) {
+            noNullCnt++;
+          }
         }
       }
       // Make sure that our filter worked
@@ -267,7 +275,7 @@ public class TestRowFilteringSkip {
       Assert.assertEquals(2, batch.selected[1]);
       Assert.assertEquals(col2.vector[0].getHiveDecimal().longValue(), 1);
       Assert.assertEquals(col2.vector[511], nullDataVal);
-      Assert.assertEquals(col2.vector[1020].getHiveDecimal().longValue(),  1021);
+      Assert.assertEquals(col2.vector[1020].getHiveDecimal().longValue(), 1021);
       Assert.assertEquals(col2.vector[1021], nullDataVal);
     }
   }
@@ -280,25 +288,26 @@ public class TestRowFilteringSkip {
 
     // ORC write some data (one PASSing row per batch)
     TypeDescription schema = TypeDescription.createStruct()
-        .addField("int1", TypeDescription.createInt())
-        .addField("decimal1", TypeDescription.createDecimal());
+      .addField("int1", TypeDescription.createInt())
+      .addField("decimal1", TypeDescription.createDecimal());
 
     HiveDecimalWritable nullDataVal = new HiveDecimalWritable("0");
 
     try (Writer writer = OrcFile.createWriter(testFilePath,
-        OrcFile.writerOptions(conf)
-            .setSchema(schema)
-            .rowIndexStride(INDEX_STRIDE))) {
+                                              OrcFile.writerOptions(conf)
+                                                .setSchema(schema)
+                                                .rowIndexStride(INDEX_STRIDE))) {
       VectorizedRowBatch batch = schema.createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       DecimalColumnVector col2 = (DecimalColumnVector) batch.cols[1];
-      for (int b=0; b < NUM_BATCHES; ++b) {
+      for (int b = 0; b < NUM_BATCHES; ++b) {
         batch.reset();
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           col1.vector[row] = row;
-          if ((row % 2) == 0)
-            col2.vector[row] = new HiveDecimalWritable(row+1);
+          if ((row % 2) == 0) {
+            col2.vector[row] = new HiveDecimalWritable(row + 1);
+          }
         }
         // Make sure we trigger the nullCount path of DecimalTreeReader
         col2.noNulls = false;
@@ -309,8 +318,8 @@ public class TestRowFilteringSkip {
     Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf));
 
     try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
-        reader.options()
-            .setRowFilter(new String[]{"int1"}, TestRowFilteringSkip::intRoundRobbinRowFilter))) {
+      reader.options()
+        .setRowFilter(new String[] {"int1"}, TestRowFilteringSkip::intRoundRobbinRowFilter))) {
       VectorizedRowBatch batch = reader.getSchema().createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       DecimalColumnVector col2 = (DecimalColumnVector) batch.cols[1];
@@ -324,10 +333,11 @@ public class TestRowFilteringSkip {
         Assert.assertTrue(batch.selected != null);
         // Rows are filtered so it should never be 1024
         Assert.assertTrue(batch.size != ColumnBatchRows);
-        assertEquals( true, col1.noNulls);
+        assertEquals(true, col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (col2.vector[r].getHiveDecimal().longValue() > 0)
-            noNullCnt ++;
+          if (col2.vector[r].getHiveDecimal().longValue() > 0) {
+            noNullCnt++;
+          }
         }
       }
       // Make sure that our filter worked
@@ -336,7 +346,7 @@ public class TestRowFilteringSkip {
       Assert.assertEquals(2, batch.selected[1]);
       Assert.assertEquals(col2.vector[0].getHiveDecimal().longValue(), 1);
       Assert.assertEquals(col2.vector[511], nullDataVal);
-      Assert.assertEquals(col2.vector[1020].getHiveDecimal().longValue(),  1021);
+      Assert.assertEquals(col2.vector[1020].getHiveDecimal().longValue(), 1021);
       Assert.assertEquals(col2.vector[1021], nullDataVal);
     }
   }
@@ -350,24 +360,24 @@ public class TestRowFilteringSkip {
 
     // ORC write some data (one PASSing row per batch)
     TypeDescription schema = TypeDescription.createStruct()
-        .addField("int1", TypeDescription.createInt())
-        .addField("decimal1", TypeDescription.createDecimal())
-        .addField("decimal2", TypeDescription.createDecimal());
+      .addField("int1", TypeDescription.createInt())
+      .addField("decimal1", TypeDescription.createDecimal())
+      .addField("decimal2", TypeDescription.createDecimal());
 
     HiveDecimalWritable passDataVal = new HiveDecimalWritable("12");
     HiveDecimalWritable failDataVal = new HiveDecimalWritable("100");
     HiveDecimalWritable nullDataVal = new HiveDecimalWritable("0");
 
     try (Writer writer = OrcFile.createWriter(testFilePath,
-        OrcFile.writerOptions(conf)
-            .setSchema(schema)
-            .rowIndexStride(INDEX_STRIDE))) {
+                                              OrcFile.writerOptions(conf)
+                                                .setSchema(schema)
+                                                .rowIndexStride(INDEX_STRIDE))) {
       // Write 50 batches where each batch has a single value for str.
       VectorizedRowBatch batch = schema.createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       DecimalColumnVector col2 = (DecimalColumnVector) batch.cols[1];
       DecimalColumnVector col3 = (DecimalColumnVector) batch.cols[2];
-      for (int b=0; b < NUM_BATCHES; ++b) {
+      for (int b = 0; b < NUM_BATCHES; ++b) {
         batch.reset();
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
@@ -388,8 +398,8 @@ public class TestRowFilteringSkip {
     Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf));
 
     try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
-        reader.options()
-            .setRowFilter(new String[]{"int1"}, TestRowFilteringSkip::intAnyRowFilter))) {
+      reader.options()
+        .setRowFilter(new String[] {"int1"}, TestRowFilteringSkip::intAnyRowFilter))) {
       VectorizedRowBatch batch = reader.getSchema().createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       DecimalColumnVector col2 = (DecimalColumnVector) batch.cols[1];
@@ -404,10 +414,12 @@ public class TestRowFilteringSkip {
         Assert.assertTrue(batch.selected != null);
         // Rows are filtered so it should never be 1024
         Assert.assertTrue(batch.size != ColumnBatchRows);
-        assertEquals( true, col1.noNulls);
+        assertEquals(true, col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (col2.vector[r].compareTo(passDataVal) == 0 && col3.vector[r].compareTo(passDataVal) == 0)
-            noNullCnt ++;
+          if (col2.vector[r].compareTo(passDataVal) == 0
+              && col3.vector[r].compareTo(passDataVal) == 0) {
+            noNullCnt++;
+          }
         }
       }
       // Make sure that our filter worked
@@ -415,8 +427,8 @@ public class TestRowFilteringSkip {
       Assert.assertEquals(924, batch.selected[0]);
       Assert.assertEquals(940, batch.selected[1]);
       Assert.assertEquals(0, batch.selected[2]);
-      Assert.assertEquals(col2.vector[0],  nullDataVal);
-      Assert.assertEquals(col3.vector[0],  nullDataVal);
+      Assert.assertEquals(col2.vector[0], nullDataVal);
+      Assert.assertEquals(col3.vector[0], nullDataVal);
       Assert.assertEquals(col2.vector[511], nullDataVal);
       Assert.assertEquals(col3.vector[511], nullDataVal);
       Assert.assertEquals(col2.vector[924], passDataVal);
@@ -436,25 +448,26 @@ public class TestRowFilteringSkip {
 
     // ORC write some data (one PASSing row per batch)
     TypeDescription schema = TypeDescription.createStruct()
-        .addField("int1", TypeDescription.createInt())
-        .addField("decimal1", TypeDescription.createDecimal().withPrecision(10).withScale(2));
+      .addField("int1", TypeDescription.createInt())
+      .addField("decimal1", TypeDescription.createDecimal().withPrecision(10).withScale(2));
 
     try (Writer writer = OrcFile.createWriter(testFilePath,
-        OrcFile.writerOptions(conf)
-            .setSchema(schema)
-            .rowIndexStride(INDEX_STRIDE))) {
+                                              OrcFile.writerOptions(conf)
+                                                .setSchema(schema)
+                                                .rowIndexStride(INDEX_STRIDE))) {
       VectorizedRowBatch batch = schema.createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       Decimal64ColumnVector col2 = (Decimal64ColumnVector) batch.cols[1];
-      for (int b=0; b < NUM_BATCHES; ++b) {
+      for (int b = 0; b < NUM_BATCHES; ++b) {
         batch.reset();
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           col1.vector[row] = row;
-          if ((row % 2) == 0)
+          if ((row % 2) == 0) {
             col2.vector[row] = row + 1;
-          else
+          } else {
             col2.vector[row] = -1 * row;
+          }
         }
         col1.isRepeating = false;
         writer.addRowBatch(batch);
@@ -464,8 +477,8 @@ public class TestRowFilteringSkip {
     Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf));
 
     try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
-        reader.options()
-            .setRowFilter(new String[]{"int1"}, TestRowFilteringSkip::intRoundRobbinRowFilter))) {
+      reader.options()
+        .setRowFilter(new String[] {"int1"}, TestRowFilteringSkip::intRoundRobbinRowFilter))) {
       VectorizedRowBatch batch = reader.getSchema().createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       Decimal64ColumnVector col2 = (Decimal64ColumnVector) batch.cols[1];
@@ -479,10 +492,11 @@ public class TestRowFilteringSkip {
         Assert.assertTrue(batch.selected != null);
         // Rows are filtered so it should never be 1024
         Assert.assertTrue(batch.size != ColumnBatchRows);
-        assertEquals( true, col1.noNulls);
+        assertEquals(true, col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (col2.vector[r] != 0)
-            noNullCnt ++;
+          if (col2.vector[r] != 0) {
+            noNullCnt++;
+          }
         }
       }
       // Make sure that our filter worked
@@ -491,7 +505,7 @@ public class TestRowFilteringSkip {
       Assert.assertEquals(2, batch.selected[1]);
       Assert.assertEquals(col2.vector[0], 1);
       Assert.assertEquals(col2.vector[511], 0);
-      Assert.assertEquals(col2.vector[1020],  1021);
+      Assert.assertEquals(col2.vector[1020], 1021);
       Assert.assertEquals(col2.vector[1021], 0);
     }
   }
@@ -504,23 +518,24 @@ public class TestRowFilteringSkip {
 
     // ORC write some data (one PASSing row per batch)
     TypeDescription schema = TypeDescription.createStruct()
-        .addField("int1", TypeDescription.createInt())
-        .addField("decimal1", TypeDescription.createDecimal().withPrecision(10).withScale(2));
+      .addField("int1", TypeDescription.createInt())
+      .addField("decimal1", TypeDescription.createDecimal().withPrecision(10).withScale(2));
 
     try (Writer writer = OrcFile.createWriter(testFilePath,
-        OrcFile.writerOptions(conf)
-            .setSchema(schema)
-            .rowIndexStride(INDEX_STRIDE))) {
+                                              OrcFile.writerOptions(conf)
+                                                .setSchema(schema)
+                                                .rowIndexStride(INDEX_STRIDE))) {
       VectorizedRowBatch batch = schema.createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       Decimal64ColumnVector col2 = (Decimal64ColumnVector) batch.cols[1];
-      for (int b=0; b < NUM_BATCHES; ++b) {
+      for (int b = 0; b < NUM_BATCHES; ++b) {
         batch.reset();
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           col1.vector[row] = row;
-          if ((row % 2) == 0)
+          if ((row % 2) == 0) {
             col2.vector[row] = row + 1;
+          }
         }
         col2.noNulls = false;
         writer.addRowBatch(batch);
@@ -530,8 +545,8 @@ public class TestRowFilteringSkip {
     Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf));
 
     try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
-        reader.options()
-            .setRowFilter(new String[]{"int1"}, TestRowFilteringSkip::intRoundRobbinRowFilter))) {
+      reader.options()
+        .setRowFilter(new String[] {"int1"}, TestRowFilteringSkip::intRoundRobbinRowFilter))) {
       VectorizedRowBatch batch = reader.getSchema().createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       Decimal64ColumnVector col2 = (Decimal64ColumnVector) batch.cols[1];
@@ -545,10 +560,11 @@ public class TestRowFilteringSkip {
         Assert.assertTrue(batch.selected != null);
         // Rows are filtered so it should never be 1024
         Assert.assertTrue(batch.size != ColumnBatchRows);
-        assertEquals( true, col1.noNulls);
+        assertEquals(true, col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (col2.vector[r] == 0)
-            noNullCnt ++;
+          if (col2.vector[r] == 0) {
+            noNullCnt++;
+          }
         }
       }
       // Make sure that our filter worked
@@ -557,7 +573,7 @@ public class TestRowFilteringSkip {
       Assert.assertEquals(2, batch.selected[1]);
       Assert.assertEquals(col2.vector[0], 1);
       Assert.assertEquals(col2.vector[511], 0);
-      Assert.assertEquals(col2.vector[1020],  1021);
+      Assert.assertEquals(col2.vector[1020], 1021);
       Assert.assertEquals(col2.vector[1021], 0);
     }
   }
@@ -570,25 +586,26 @@ public class TestRowFilteringSkip {
 
     // ORC write some data (one PASSing row per batch)
     TypeDescription schema = TypeDescription.createStruct()
-        .addField("int1", TypeDescription.createInt())
-        .addField("double2", TypeDescription.createDouble());
+      .addField("int1", TypeDescription.createInt())
+      .addField("double2", TypeDescription.createDouble());
 
     try (Writer writer = OrcFile.createWriter(testFilePath,
-        OrcFile.writerOptions(conf)
-            .setSchema(schema)
-            .rowIndexStride(INDEX_STRIDE))) {
+                                              OrcFile.writerOptions(conf)
+                                                .setSchema(schema)
+                                                .rowIndexStride(INDEX_STRIDE))) {
       VectorizedRowBatch batch = schema.createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       DoubleColumnVector col2 = (DoubleColumnVector) batch.cols[1];
-      for (int b=0; b < NUM_BATCHES; ++b) {
+      for (int b = 0; b < NUM_BATCHES; ++b) {
         batch.reset();
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           col1.vector[row] = row;
-          if ((row % 2) ==0 )
+          if ((row % 2) == 0) {
             col2.vector[row] = 100;
-          else
+          } else {
             col2.vector[row] = 999;
+          }
         }
         col1.isRepeating = false;
         writer.addRowBatch(batch);
@@ -598,8 +615,8 @@ public class TestRowFilteringSkip {
     Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf));
 
     try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
-        reader.options()
-            .setRowFilter(new String[]{"int1"}, TestRowFilteringSkip::intRoundRobbinRowFilter))) {
+      reader.options()
+        .setRowFilter(new String[] {"int1"}, TestRowFilteringSkip::intRoundRobbinRowFilter))) {
       VectorizedRowBatch batch = reader.getSchema().createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       DoubleColumnVector col2 = (DoubleColumnVector) batch.cols[1];
@@ -613,10 +630,11 @@ public class TestRowFilteringSkip {
         Assert.assertTrue(batch.selected != null);
         // Rows are filtered so it should never be 1024
         Assert.assertTrue(batch.size != ColumnBatchRows);
-        assertEquals( true, col1.noNulls);
+        assertEquals(true, col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (col2.vector[r] == 100)
-            noNullCnt ++;
+          if (col2.vector[r] == 100) {
+            noNullCnt++;
+          }
         }
       }
       // Make sure that our filter worked
@@ -638,25 +656,26 @@ public class TestRowFilteringSkip {
 
     // ORC write some data (one PASSing row per batch)
     TypeDescription schema = TypeDescription.createStruct()
-        .addField("int1", TypeDescription.createInt())
-        .addField("float2", TypeDescription.createFloat());
+      .addField("int1", TypeDescription.createInt())
+      .addField("float2", TypeDescription.createFloat());
 
     try (Writer writer = OrcFile.createWriter(testFilePath,
-        OrcFile.writerOptions(conf)
-            .setSchema(schema)
-            .rowIndexStride(INDEX_STRIDE))) {
+                                              OrcFile.writerOptions(conf)
+                                                .setSchema(schema)
+                                                .rowIndexStride(INDEX_STRIDE))) {
       VectorizedRowBatch batch = schema.createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       DoubleColumnVector col2 = (DoubleColumnVector) batch.cols[1];
-      for (int b=0; b < NUM_BATCHES; ++b) {
+      for (int b = 0; b < NUM_BATCHES; ++b) {
         batch.reset();
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           col1.vector[row] = row;
-          if ((row % 2) ==0 )
-            col2.vector[row] = 100+row;
-          else
+          if ((row % 2) == 0) {
+            col2.vector[row] = 100 + row;
+          } else {
             col2.vector[row] = 999;
+          }
         }
         col1.isRepeating = false;
         writer.addRowBatch(batch);
@@ -666,8 +685,8 @@ public class TestRowFilteringSkip {
     Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf));
 
     try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
-        reader.options()
-            .setRowFilter(new String[]{"int1"}, TestRowFilteringSkip::intRoundRobbinRowFilter))) {
+      reader.options()
+        .setRowFilter(new String[] {"int1"}, TestRowFilteringSkip::intRoundRobbinRowFilter))) {
       VectorizedRowBatch batch = reader.getSchema().createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       DoubleColumnVector col2 = (DoubleColumnVector) batch.cols[1];
@@ -681,10 +700,11 @@ public class TestRowFilteringSkip {
         Assert.assertTrue(batch.selected != null);
         // Rows are filtered so it should never be 1024
         Assert.assertTrue(batch.size != ColumnBatchRows);
-        assertEquals( true, col1.noNulls);
+        assertEquals(true, col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (col2.vector[r] != 0)
-            noNullCnt ++;
+          if (col2.vector[r] != 0) {
+            noNullCnt++;
+          }
         }
       }
       // Make sure that our filter worked
@@ -706,28 +726,29 @@ public class TestRowFilteringSkip {
 
     // ORC write some data (one PASSing row per batch)
     TypeDescription schema = TypeDescription.createStruct()
-        .addField("int1", TypeDescription.createInt())
-        .addField("char2", TypeDescription.createChar());
+      .addField("int1", TypeDescription.createInt())
+      .addField("char2", TypeDescription.createChar());
 
     byte[] passData = ("p").getBytes(StandardCharsets.UTF_8);
     byte[] failData = ("f").getBytes(StandardCharsets.UTF_8);
 
     try (Writer writer = OrcFile.createWriter(testFilePath,
-        OrcFile.writerOptions(conf)
-            .setSchema(schema)
-            .rowIndexStride(INDEX_STRIDE))) {
+                                              OrcFile.writerOptions(conf)
+                                                .setSchema(schema)
+                                                .rowIndexStride(INDEX_STRIDE))) {
       VectorizedRowBatch batch = schema.createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       BytesColumnVector col2 = (BytesColumnVector) batch.cols[1];
-      for (int b=0; b < NUM_BATCHES; ++b) {
+      for (int b = 0; b < NUM_BATCHES; ++b) {
         batch.reset();
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           col1.vector[row] = row;
-          if ((row % 2) == 0)
+          if ((row % 2) == 0) {
             col2.setVal(row, passData);
-          else
+          } else {
             col2.setVal(row, failData);
+          }
         }
         col1.isRepeating = false;
         writer.addRowBatch(batch);
@@ -737,8 +758,8 @@ public class TestRowFilteringSkip {
     Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf));
 
     try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
-        reader.options()
-            .setRowFilter(new String[]{"int1"}, TestRowFilteringSkip::intRoundRobbinRowFilter))) {
+      reader.options()
+        .setRowFilter(new String[] {"int1"}, TestRowFilteringSkip::intRoundRobbinRowFilter))) {
       VectorizedRowBatch batch = reader.getSchema().createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       BytesColumnVector col2 = (BytesColumnVector) batch.cols[1];
@@ -752,10 +773,11 @@ public class TestRowFilteringSkip {
         Assert.assertTrue(batch.selected != null);
         // Rows are filtered so it should never be 1024
         Assert.assertTrue(batch.size != ColumnBatchRows);
-        assertEquals( true, col1.noNulls);
+        assertEquals(true, col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (!col2.toString(r).isEmpty())
-            noNullCnt ++;
+          if (!col2.toString(r).isEmpty()) {
+            noNullCnt++;
+          }
         }
       }
       // Make sure that our filter worked
@@ -777,28 +799,29 @@ public class TestRowFilteringSkip {
 
     // ORC write some data (one PASSing row per batch)
     TypeDescription schema = TypeDescription.createStruct()
-        .addField("int1", TypeDescription.createInt())
-        .addField("varchar2", TypeDescription.createVarchar());
+      .addField("int1", TypeDescription.createInt())
+      .addField("varchar2", TypeDescription.createVarchar());
 
     byte[] passData = ("p").getBytes(StandardCharsets.UTF_8);
     byte[] failData = ("f").getBytes(StandardCharsets.UTF_8);
 
     try (Writer writer = OrcFile.createWriter(testFilePath,
-        OrcFile.writerOptions(conf)
-            .setSchema(schema)
-            .rowIndexStride(INDEX_STRIDE))) {
+                                              OrcFile.writerOptions(conf)
+                                                .setSchema(schema)
+                                                .rowIndexStride(INDEX_STRIDE))) {
       VectorizedRowBatch batch = schema.createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       BytesColumnVector col2 = (BytesColumnVector) batch.cols[1];
-      for (int b=0; b < NUM_BATCHES; ++b) {
+      for (int b = 0; b < NUM_BATCHES; ++b) {
         batch.reset();
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           col1.vector[row] = row;
-          if ((row % 2) == 0)
+          if ((row % 2) == 0) {
             col2.setVal(row, passData);
-          else
+          } else {
             col2.setVal(row, failData);
+          }
         }
         col1.isRepeating = false;
         writer.addRowBatch(batch);
@@ -808,8 +831,8 @@ public class TestRowFilteringSkip {
     Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf));
 
     try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
-        reader.options()
-            .setRowFilter(new String[]{"int1"}, TestRowFilteringSkip::intRoundRobbinRowFilter))) {
+      reader.options()
+        .setRowFilter(new String[] {"int1"}, TestRowFilteringSkip::intRoundRobbinRowFilter))) {
       VectorizedRowBatch batch = reader.getSchema().createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       BytesColumnVector col2 = (BytesColumnVector) batch.cols[1];
@@ -823,10 +846,11 @@ public class TestRowFilteringSkip {
         Assert.assertTrue(batch.selected != null);
         // Rows are filtered so it should never be 1024
         Assert.assertTrue(batch.size != ColumnBatchRows);
-        assertEquals( true, col1.noNulls);
+        assertEquals(true, col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (!col2.toString(r).isEmpty())
-            noNullCnt ++;
+          if (!col2.toString(r).isEmpty()) {
+            noNullCnt++;
+          }
         }
       }
       // Make sure that our filter worked
@@ -848,26 +872,27 @@ public class TestRowFilteringSkip {
 
     // ORC write some data (one PASSing row per batch)
     TypeDescription schema = TypeDescription.createStruct()
-        .addField("int1", TypeDescription.createInt())
-        .addField("string1", TypeDescription.createString());
+      .addField("int1", TypeDescription.createInt())
+      .addField("string1", TypeDescription.createString());
 
     try (Writer writer = OrcFile.createWriter(testFilePath,
-        OrcFile.writerOptions(conf)
-            .setSchema(schema)
-            .rowIndexStride(INDEX_STRIDE))) {
+                                              OrcFile.writerOptions(conf)
+                                                .setSchema(schema)
+                                                .rowIndexStride(INDEX_STRIDE))) {
       // Write 50 batches where each batch has a single value for str.
       VectorizedRowBatch batch = schema.createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       BytesColumnVector col2 = (BytesColumnVector) batch.cols[1];
-      for (int b=0; b < NUM_BATCHES; ++b) {
+      for (int b = 0; b < NUM_BATCHES; ++b) {
         batch.reset();
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           col1.vector[row] = row;
-          if ((row % 2) ==0 )
+          if ((row % 2) == 0) {
             col2.setVal(row, ("passData-" + row).getBytes(StandardCharsets.UTF_8));
-          else
+          } else {
             col2.setVal(row, ("failData-" + row).getBytes(StandardCharsets.UTF_8));
+          }
         }
         col1.isRepeating = false;
         writer.addRowBatch(batch);
@@ -877,8 +902,8 @@ public class TestRowFilteringSkip {
     Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf));
 
     try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
-        reader.options()
-            .setRowFilter(new String[]{"int1"}, TestRowFilteringSkip::intRoundRobbinRowFilter))) {
+      reader.options()
+        .setRowFilter(new String[] {"int1"}, TestRowFilteringSkip::intRoundRobbinRowFilter))) {
       VectorizedRowBatch batch = reader.getSchema().createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       BytesColumnVector col2 = (BytesColumnVector) batch.cols[1];
@@ -892,10 +917,11 @@ public class TestRowFilteringSkip {
         Assert.assertTrue(batch.selected != null);
         // Rows are filtered so it should never be 1024
         Assert.assertTrue(batch.size != ColumnBatchRows);
-        assertEquals( true, col1.noNulls);
+        assertEquals(true, col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (!col2.toString(r).isEmpty())
-            noNullCnt ++;
+          if (!col2.toString(r).isEmpty()) {
+            noNullCnt++;
+          }
         }
       }
       // Make sure that our filter worked
@@ -916,25 +942,26 @@ public class TestRowFilteringSkip {
 
     // ORC write some data (one PASSing row per batch)
     TypeDescription schema = TypeDescription.createStruct()
-        .addField("int1", TypeDescription.createInt())
-        .addField("string1", TypeDescription.createString());
+      .addField("int1", TypeDescription.createInt())
+      .addField("string1", TypeDescription.createString());
 
     try (Writer writer = OrcFile.createWriter(testFilePath,
-        OrcFile.writerOptions(conf)
-            .setSchema(schema)
-            .rowIndexStride(INDEX_STRIDE))) {
+                                              OrcFile.writerOptions(conf)
+                                                .setSchema(schema)
+                                                .rowIndexStride(INDEX_STRIDE))) {
       VectorizedRowBatch batch = schema.createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       BytesColumnVector col2 = (BytesColumnVector) batch.cols[1];
-      for (int b=0; b < NUM_BATCHES; ++b) {
+      for (int b = 0; b < NUM_BATCHES; ++b) {
         batch.reset();
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           col1.vector[row] = row;
-          if (row % 2 ==0)
+          if (row % 2 == 0) {
             col2.setVal(row, ("passData").getBytes(StandardCharsets.UTF_8));
-          else
+          } else {
             col2.setVal(row, ("failData").getBytes(StandardCharsets.UTF_8));
+          }
         }
         col1.isRepeating = false;
         writer.addRowBatch(batch);
@@ -944,8 +971,8 @@ public class TestRowFilteringSkip {
     Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf));
 
     try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
-        reader.options()
-            .setRowFilter(new String[]{"int1"}, TestRowFilteringSkip::intRoundRobbinRowFilter))) {
+      reader.options()
+        .setRowFilter(new String[] {"int1"}, TestRowFilteringSkip::intRoundRobbinRowFilter))) {
       VectorizedRowBatch batch = reader.getSchema().createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       BytesColumnVector col2 = (BytesColumnVector) batch.cols[1];
@@ -959,10 +986,11 @@ public class TestRowFilteringSkip {
         Assert.assertTrue(batch.selected != null);
         // Rows are filtered so it should never be 1024
         Assert.assertTrue(batch.size != ColumnBatchRows);
-        assertEquals( true, col1.noNulls);
+        assertEquals(true, col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (!col2.toString(r).isEmpty())
-            noNullCnt ++;
+          if (!col2.toString(r).isEmpty()) {
+            noNullCnt++;
+          }
         }
       }
       // Make sure that our filter worked
@@ -983,17 +1011,17 @@ public class TestRowFilteringSkip {
 
     // ORC write some data (one PASSing row per batch)
     TypeDescription schema = TypeDescription.createStruct()
-        .addField("int1", TypeDescription.createInt())
-        .addField("bool2", TypeDescription.createBoolean());
+      .addField("int1", TypeDescription.createInt())
+      .addField("bool2", TypeDescription.createBoolean());
 
     try (Writer writer = OrcFile.createWriter(testFilePath,
-        OrcFile.writerOptions(conf)
-            .setSchema(schema)
-            .rowIndexStride(INDEX_STRIDE))) {
+                                              OrcFile.writerOptions(conf)
+                                                .setSchema(schema)
+                                                .rowIndexStride(INDEX_STRIDE))) {
       VectorizedRowBatch batch = schema.createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       LongColumnVector col2 = (LongColumnVector) batch.cols[1];
-      for (int b=0; b < NUM_BATCHES; ++b) {
+      for (int b = 0; b < NUM_BATCHES; ++b) {
         batch.reset();
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
@@ -1008,8 +1036,8 @@ public class TestRowFilteringSkip {
     Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf));
 
     try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
-        reader.options()
-            .setRowFilter(new String[]{"int1"}, TestRowFilteringSkip::intRoundRobbinRowFilter))) {
+      reader.options()
+        .setRowFilter(new String[] {"int1"}, TestRowFilteringSkip::intRoundRobbinRowFilter))) {
       VectorizedRowBatch batch = reader.getSchema().createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       LongColumnVector col2 = (LongColumnVector) batch.cols[1];
@@ -1023,10 +1051,11 @@ public class TestRowFilteringSkip {
         Assert.assertTrue(batch.selected != null);
         // Rows are filtered so it should never be 1024
         Assert.assertTrue(batch.size != ColumnBatchRows);
-        assertEquals( true, col1.noNulls);
+        assertEquals(true, col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (col2.vector[r] == 0)
-            noNullCnt ++;
+          if (col2.vector[r] == 0) {
+            noNullCnt++;
+          }
         }
       }
       // Make sure that our filter worked
@@ -1048,23 +1077,24 @@ public class TestRowFilteringSkip {
 
     // ORC write some data (one PASSing row per batch)
     TypeDescription schema = TypeDescription.createStruct()
-        .addField("int1", TypeDescription.createInt())
-        .addField("bool2", TypeDescription.createBoolean());
+      .addField("int1", TypeDescription.createInt())
+      .addField("bool2", TypeDescription.createBoolean());
 
     try (Writer writer = OrcFile.createWriter(testFilePath,
-        OrcFile.writerOptions(conf)
-            .setSchema(schema)
-            .rowIndexStride(INDEX_STRIDE))) {
+                                              OrcFile.writerOptions(conf)
+                                                .setSchema(schema)
+                                                .rowIndexStride(INDEX_STRIDE))) {
       VectorizedRowBatch batch = schema.createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       LongColumnVector col2 = (LongColumnVector) batch.cols[1];
-      for (int b=0; b < NUM_BATCHES; ++b) {
+      for (int b = 0; b < NUM_BATCHES; ++b) {
         batch.reset();
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           col1.vector[row] = row;
-          if ((row % 2) == 0)
+          if ((row % 2) == 0) {
             col2.vector[row] = 1;
+          }
         }
         col1.isRepeating = false;
         writer.addRowBatch(batch);
@@ -1074,8 +1104,8 @@ public class TestRowFilteringSkip {
     Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf));
 
     try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
-        reader.options()
-            .setRowFilter(new String[]{"int1"}, TestRowFilteringSkip::intRoundRobbinRowFilter))) {
+      reader.options()
+        .setRowFilter(new String[] {"int1"}, TestRowFilteringSkip::intRoundRobbinRowFilter))) {
       VectorizedRowBatch batch = reader.getSchema().createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       LongColumnVector col2 = (LongColumnVector) batch.cols[1];
@@ -1089,10 +1119,11 @@ public class TestRowFilteringSkip {
         Assert.assertTrue(batch.selected != null);
         // Rows are filtered so it should never be 1024
         Assert.assertTrue(batch.size != ColumnBatchRows);
-        assertEquals( true, col1.noNulls);
+        assertEquals(true, col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (col2.vector[r] == 0)
-            noNullCnt ++;
+          if (col2.vector[r] == 0) {
+            noNullCnt++;
+          }
         }
       }
       // Make sure that our filter worked
@@ -1113,23 +1144,24 @@ public class TestRowFilteringSkip {
 
     // ORC write some data (one PASSing row per batch)
     TypeDescription schema = TypeDescription.createStruct()
-        .addField("int1", TypeDescription.createInt())
-        .addField("bool2", TypeDescription.createBoolean());
+      .addField("int1", TypeDescription.createInt())
+      .addField("bool2", TypeDescription.createBoolean());
 
     try (Writer writer = OrcFile.createWriter(testFilePath,
-        OrcFile.writerOptions(conf)
-            .setSchema(schema)
-            .rowIndexStride(INDEX_STRIDE))) {
+                                              OrcFile.writerOptions(conf)
+                                                .setSchema(schema)
+                                                .rowIndexStride(INDEX_STRIDE))) {
       VectorizedRowBatch batch = schema.createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       LongColumnVector col2 = (LongColumnVector) batch.cols[1];
-      for (int b=0; b < NUM_BATCHES; ++b) {
+      for (int b = 0; b < NUM_BATCHES; ++b) {
         batch.reset();
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           col1.vector[row] = row;
-          if (row == 924 || row == 940)
+          if (row == 924 || row == 940) {
             col2.vector[row] = 1;
+          }
         }
         col1.isRepeating = false;
         writer.addRowBatch(batch);
@@ -1139,8 +1171,8 @@ public class TestRowFilteringSkip {
     Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf));
 
     try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
-        reader.options()
-            .setRowFilter(new String[]{"int1"}, TestRowFilteringSkip::intAnyRowFilter))) {
+      reader.options()
+        .setRowFilter(new String[] {"int1"}, TestRowFilteringSkip::intAnyRowFilter))) {
       VectorizedRowBatch batch = reader.getSchema().createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       LongColumnVector col2 = (LongColumnVector) batch.cols[1];
@@ -1154,10 +1186,11 @@ public class TestRowFilteringSkip {
         Assert.assertTrue(batch.selected != null);
         // Rows are filtered so it should never be 1024
         Assert.assertTrue(batch.size != ColumnBatchRows);
-        assertEquals( true, col1.noNulls);
+        assertEquals(true, col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (col2.vector[r] == 1)
-            noNullCnt ++;
+          if (col2.vector[r] == 1) {
+            noNullCnt++;
+          }
         }
       }
       // Make sure that our filter worked
@@ -1179,24 +1212,24 @@ public class TestRowFilteringSkip {
     final int NUM_BATCHES = 10;
 
     TypeDescription schema = TypeDescription.createStruct()
-        .addField("int1", TypeDescription.createInt())
-        .addField("ts2", TypeDescription.createTimestamp());
+      .addField("int1", TypeDescription.createInt())
+      .addField("ts2", TypeDescription.createTimestamp());
 
     try (Writer writer = OrcFile.createWriter(testFilePath,
-        OrcFile.writerOptions(conf)
-            .setSchema(schema)
-            .rowIndexStride(INDEX_STRIDE))) {
+                                              OrcFile.writerOptions(conf)
+                                                .setSchema(schema)
+                                                .rowIndexStride(INDEX_STRIDE))) {
       VectorizedRowBatch batch = schema.createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       TimestampColumnVector col2 = (TimestampColumnVector) batch.cols[1];
-      for (int b=0; b < NUM_BATCHES; ++b) {
+      for (int b = 0; b < NUM_BATCHES; ++b) {
         batch.reset();
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           col1.vector[row] = row;
-          if ((row % 2) == 0)
-            col2.set(row, Timestamp.valueOf((1900+row)+"-04-01 12:34:56.9"));
-          else {
+          if ((row % 2) == 0) {
+            col2.set(row, Timestamp.valueOf((1900 + row) + "-04-01 12:34:56.9"));
+          } else {
             col2.isNull[row] = true;
             col2.set(row, null);
           }
@@ -1211,8 +1244,8 @@ public class TestRowFilteringSkip {
     Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf));
 
     try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
-        reader.options()
-            .setRowFilter(new String[]{"int1"}, TestRowFilteringSkip::intRoundRobbinRowFilter))) {
+      reader.options()
+        .setRowFilter(new String[] {"int1"}, TestRowFilteringSkip::intRoundRobbinRowFilter))) {
       VectorizedRowBatch batch = reader.getSchema().createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       TimestampColumnVector col2 = (TimestampColumnVector) batch.cols[1];
@@ -1226,10 +1259,11 @@ public class TestRowFilteringSkip {
         Assert.assertTrue(batch.selected != null);
         // Rows are filtered so it should never be 1024
         Assert.assertTrue(batch.size != ColumnBatchRows);
-        assertEquals( true, col1.noNulls);
+        assertEquals(true, col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (col2.getTime(r) == 0)
-            noNullCnt ++;
+          if (col2.getTime(r) == 0) {
+            noNullCnt++;
+          }
         }
       }
       // Make sure that our filter worked
@@ -1261,14 +1295,14 @@ public class TestRowFilteringSkip {
       VectorizedRowBatch batch = fileSchema.createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
       TimestampColumnVector col2 = (TimestampColumnVector) batch.cols[1];
-      for (int b=0; b < NUM_BATCHES; ++b) {
+      for (int b = 0; b < NUM_BATCHES; ++b) {
         batch.reset();
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           col1.vector[row] = row;
-          if ((row % 2) == 0)
-            col2.set(row, Timestamp.valueOf((1900+row)+"-04-01 12:34:56.9"));
-          else {
+          if ((row % 2) == 0) {
+            col2.set(row, Timestamp.valueOf((1900 + row) + "-04-01 12:34:56.9"));
+          } else {
             col2.isNull[row] = true;
             col2.set(row, null);
           }
@@ -1288,7 +1322,8 @@ public class TestRowFilteringSkip {
     try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
       reader.options()
         .schema(readSchema)
-        .setRowFilter(new String[]{"missing"}, TestRowFilteringSkip::notNullFilterMissing))) {
+        .allowSelected(true)
+        .setRowFilter(new String[] {"missing"}, TestRowFilteringSkip::notNullFilterMissing))) {
       VectorizedRowBatch batch = readSchema.createRowBatchV2();
 
       assertFalse(rows.nextBatch(batch));
@@ -1298,7 +1333,7 @@ public class TestRowFilteringSkip {
     try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
       reader.options()
         .schema(readSchema)
-        .setRowFilter(new String[]{"missing"}, TestRowFilteringSkip::allowAll))) {
+        .setRowFilter(new String[] {"missing"}, TestRowFilteringSkip::allowAll))) {
       VectorizedRowBatch batch = readSchema
         .createRowBatch(TypeDescription.RowBatchVersion.USE_DECIMAL64, ColumnBatchRows);
       long rowCount = 0;
@@ -1312,7 +1347,7 @@ public class TestRowFilteringSkip {
         for (int i = 0; i < batch.size; i++) {
           assertEquals(i, col1.vector[i]);
           if (i % 2 == 0) {
-            assertEquals(Timestamp.valueOf((1900+i)+"-04-01 12:34:56.9"),
+            assertEquals(Timestamp.valueOf((1900 + i) + "-04-01 12:34:56.9"),
                          col2.asScratchTimestamp(i));
           } else {
             assertTrue(col2.isNull[i]);
@@ -1342,14 +1377,14 @@ public class TestRowFilteringSkip {
       LongColumnVector int1 = (LongColumnVector) batch.cols[0];
       StructColumnVector s2 = (StructColumnVector) batch.cols[1];
       TimestampColumnVector ts2 = (TimestampColumnVector) s2.fields[0];
-      for (int b=0; b < NUM_BATCHES; ++b) {
+      for (int b = 0; b < NUM_BATCHES; ++b) {
         batch.reset();
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           int1.vector[row] = row;
-          if ((row % 2) == 0)
-            ts2.set(row, Timestamp.valueOf((1900+row)+"-04-01 12:34:56.9"));
-          else {
+          if ((row % 2) == 0) {
+            ts2.set(row, Timestamp.valueOf((1900 + row) + "-04-01 12:34:56.9"));
+          } else {
             s2.isNull[row] = true;
           }
         }
@@ -1370,7 +1405,7 @@ public class TestRowFilteringSkip {
     try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
       reader.options()
         .schema(readSchema)
-        .setRowFilter(new String[]{"s2.missing"},
+        .setRowFilter(new String[] {"s2.missing"},
                       TestRowFilteringSkip::notNullFilterNestedMissing))) {
       VectorizedRowBatch batch = readSchema.createRowBatchV2();
       assertFalse(rows.nextBatch(batch));
@@ -1380,7 +1415,7 @@ public class TestRowFilteringSkip {
     try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
       reader.options()
         .schema(readSchema)
-        .setRowFilter(new String[]{"s2.missing"}, TestRowFilteringSkip::allowAll))) {
+        .setRowFilter(new String[] {"s2.missing"}, TestRowFilteringSkip::allowAll))) {
       VectorizedRowBatch batch = readSchema
         .createRowBatch(TypeDescription.RowBatchVersion.USE_DECIMAL64, ColumnBatchRows);
       long rowCount = 0;
@@ -1396,7 +1431,7 @@ public class TestRowFilteringSkip {
         for (int i = 0; i < batch.size; i++) {
           assertEquals(i, int1.vector[i]);
           if (i % 2 == 0) {
-            assertEquals(Timestamp.valueOf((1900+i)+"-04-01 12:34:56.9"),
+            assertEquals(Timestamp.valueOf((1900 + i) + "-04-01 12:34:56.9"),
                          ts2.asScratchTimestamp(i));
           } else {
             assertTrue(s2.isNull[i]);
@@ -1427,14 +1462,14 @@ public class TestRowFilteringSkip {
       LongColumnVector int1 = (LongColumnVector) batch.cols[0];
       StructColumnVector s2 = (StructColumnVector) batch.cols[1];
       TimestampColumnVector ts2 = (TimestampColumnVector) s2.fields[0];
-      for (int b=0; b < NUM_BATCHES; ++b) {
+      for (int b = 0; b < NUM_BATCHES; ++b) {
         batch.reset();
         batch.size = ColumnBatchRows;
         for (int row = 0; row < batch.size; row++) {
           int1.vector[row] = row;
-          if ((row % 2) == 0)
-            ts2.set(row, Timestamp.valueOf((1900+row)+"-04-01 12:34:56.9"));
-          else {
+          if ((row % 2) == 0) {
+            ts2.set(row, Timestamp.valueOf((1900 + row) + "-04-01 12:34:56.9"));
+          } else {
             s2.isNull[row] = true;
           }
         }
@@ -1456,7 +1491,7 @@ public class TestRowFilteringSkip {
     try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
       reader.options()
         .schema(readSchema)
-        .setRowFilter(new String[]{"s2.missing"},
+        .setRowFilter(new String[] {"s2.missing"},
                       TestRowFilteringSkip::notNullFilterNestedMissing))) {
       VectorizedRowBatch batch = readSchema.createRowBatchV2();
       assertFalse(rows.nextBatch(batch));
@@ -1466,7 +1501,7 @@ public class TestRowFilteringSkip {
     try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
       reader.options()
         .schema(readSchema)
-        .setRowFilter(new String[]{"s2.missing"}, TestRowFilteringSkip::allowAll))) {
+        .setRowFilter(new String[] {"s2.missing"}, TestRowFilteringSkip::allowAll))) {
       VectorizedRowBatch batch = readSchema
         .createRowBatch(TypeDescription.RowBatchVersion.USE_DECIMAL64, ColumnBatchRows);
       long rowCount = 0;
@@ -1543,13 +1578,13 @@ public class TestRowFilteringSkip {
   @Test
   public void testcustomFileTimestampRoundRobbinRowFilterCallback() throws Exception {
     testFilePath = new Path(getClass().getClassLoader().
-        getSystemResource("orc_split_elim.orc").getPath());
+      getSystemResource("orc_split_elim.orc").getPath());
 
     Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf));
 
     try (RecordReaderImpl rows = (RecordReaderImpl) reader.rows(
-        reader.options()
-            .setRowFilter(new String[]{"userid"}, TestRowFilteringSkip::intCustomValueFilter))) {
+      reader.options()
+        .setRowFilter(new String[] {"userid"}, TestRowFilteringSkip::intCustomValueFilter))) {
 
       VectorizedRowBatch batch = reader.getSchema().createRowBatchV2();
       LongColumnVector col1 = (LongColumnVector) batch.cols[0];
@@ -1566,7 +1601,9 @@ public class TestRowFilteringSkip {
         Assert.assertTrue(batch.size != ColumnBatchRows);
         assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
-          if (col1.vector[r] != 100) noNullCnt ++;
+          if (col1.vector[r] != 100) {
+            noNullCnt++;
+          }
         }
         // We should always select 1 row as the file is spaced as such. We could get 0 in case all
         // the rows are filtered out.
@@ -1574,7 +1611,7 @@ public class TestRowFilteringSkip {
           continue;
         }
         Assert.assertEquals(1, batch.size);
-        long val = col1.vector[batch.selected[0]] ;
+        long val = col1.vector[batch.selected[0]];
         // Check that we have read the valid value
         Assert.assertTrue((val == 2) || (val == 5) || (val == 13) || (val == 29) || (val == 70));
         if (val == 2) {

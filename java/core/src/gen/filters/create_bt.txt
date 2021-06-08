@@ -1,0 +1,51 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+  // This is generated from create_bt.txt
+  public static LeafFilter create<Not>BetweenFilter(String colName,
+                                              PredicateLeaf.Type type,
+                                              Object low,
+                                              Object high,
+                                              TypeDescription colType,
+                                              OrcFile.Version version) {
+    switch (type) {
+      case BOOLEAN:
+        return new Long<Not>Between(colName, (boolean) low ? 1L : 0L, (boolean) high ? 1L : 0L);
+      case DATE:
+        return new Long<Not>Between(colName, ((Date) low).toLocalDate().toEpochDay(), ((Date) high).toLocalDate().toEpochDay());
+      case DECIMAL:
+        HiveDecimalWritable dLow = (HiveDecimalWritable) low;
+        HiveDecimalWritable dHigh = (HiveDecimalWritable) high;
+        assert dLow.scale() <= colType.getScale() && dLow.scale() <= colType.getScale();
+        if (isDecimalAsLong(version, colType.getPrecision())) {
+          return new Long<Not>Between(colName, dLow.serialize64(colType.getScale()), dHigh.serialize64(colType.getScale()));
+        } else {
+          return new Decimal<Not>Between(colName, dLow, dHigh);
+        }
+      case FLOAT:
+        return new Float<Not>Between(colName, low, high);
+      case LONG:
+        return new Long<Not>Between(colName, low, high);
+      case STRING:
+        return new String<Not>Between(colName, low, high);
+      case TIMESTAMP:
+        return new Timestamp<Not>Between(colName, low, high);
+      default:
+        throw new IllegalArgumentException(String.format("<Not>Between does not support type: %s", type));
+    }
+  }
