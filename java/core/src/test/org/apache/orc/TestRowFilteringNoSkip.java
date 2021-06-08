@@ -50,6 +50,7 @@ public class TestRowFilteringNoSkip {
   @BeforeEach
   public void openFileSystem(TestInfo testInfo) throws Exception {
     conf = new Configuration();
+    OrcConf.READER_USE_SELECTED.setBoolean(conf, true);
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestRowFilteringNoSkip." +
         testInfo.getTestMethod().get().getName() + ".orc");
