@@ -1052,13 +1052,15 @@ DIAGNOSTIC_POP
     }
     
     virtual ~SnappyCompressionStream() override {
+      // PASS
     }
 
   protected:
     virtual uint64_t doBlockCompression() override;
 
     virtual uint64_t estimateMaxCompressionSize() override {
-      return static_cast<uint64_t>(snappy::MaxCompressedLength(static_cast<size_t>(bufferSize)));
+      return static_cast<uint64_t>
+        (snappy::MaxCompressedLength(static_cast<size_t>(bufferSize)));
     }
   };
 
