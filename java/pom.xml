@@ -75,6 +75,7 @@
     <zookeeper.version>3.6.2</zookeeper.version>
     <maven.version>3.6.3</maven.version>
     <slf4j.version>1.7.30</slf4j.version>
+    <protoc.artifact>com.google.protobuf:protoc:2.5.0</protoc.artifact>
   </properties>
 
   <build>
@@ -321,7 +322,7 @@
                 <goal>run</goal>
               </goals>
               <configuration>
-                 <protocArtifact>com.google.protobuf:protoc:2.5.0</protocArtifact>
+                 <protocArtifact>${protoc.artifact}</protocArtifact>
                  <protocVersion>2.5.0</protocVersion>
                 <addSources>none</addSources>
                 <includeDirectories>
@@ -420,6 +421,12 @@
       <modules>
         <module>bench</module>
       </modules>
+    </profile>
+    <profile>
+      <id>applesilicon</id>
+      <properties>
+        <protoc.artifact>com.google.protobuf:protoc:2.5.0:exe:osx-x86_64</protoc.artifact>
+      </properties>
     </profile>
   </profiles>
 
