@@ -36,7 +36,9 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.useIncrementalCompilation>false</maven.compiler.useIncrementalCompilation>
-    <jackson.version>2.10.0</jackson.version>
+
+    <!-- Spark Jackson version may not be same as ORC -->
+    <spark.jackson.version>2.10.0</spark.jackson.version>
   </properties>
 
   <dependencies>
@@ -138,17 +140,17 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-core</artifactId>
-      <version>${jackson.version}</version>
+      <version>${spark.jackson.version}</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>${jackson.version}</version>
+      <version>${spark.jackson.version}</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
-      <version>${jackson.version}</version>
+      <version>${spark.jackson.version}</version>
     </dependency>
   </dependencies>
 
