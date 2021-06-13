@@ -277,6 +277,15 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     return Math.min(kb256, Math.max(kb4, pow2));
   }
 
+  static {
+    try {
+      com.github.luben.zstd.util.Native.load();
+    } catch (UnsatisfiedLinkError | ExceptionInInitializerError e) {
+      LOG.warn("Unable to load zstd-jni library for your platform... " +
+            "using builtin-java classes where applicable");
+    }
+  }
+
   public static CompressionCodec createCodec(CompressionKind kind) {
     switch (kind) {
       case NONE:
@@ -292,7 +301,12 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
         return new AircompressorCodec(kind, new Lz4Compressor(),
             new Lz4Decompressor());
       case ZSTD:
-        return new ZstdCodec();
+        if (com.github.luben.zstd.util.Native.isLoaded()) {
+          return new ZstdCodec();
+        } else {
+          return new AircompressorCodec(kind, new ZstdCompressor(),
+            new ZstdDecompressor());
+        }
       case BROTLI:
         return new BrotliCodec();
       default:
