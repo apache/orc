@@ -332,7 +332,11 @@ public class TestRowFilteringComplexTypesNulls {
     }
     FileSystem.Statistics stats = readEnd();
     double readPercentage = readPercentage(stats, fs.getFileStatus(filePath).getLen());
+<<<<<<< HEAD
     assertTrue(readPercentage > 0.07);
+=======
+    assertTrue(readPercentage > 120);
+>>>>>>> b73cc5e9c (ORC-817: Replace aircompressor ZStandard compression with zstd-jni)
   }
 
   private void seekToRow(RecordReader rr, VectorizedRowBatch b, long row) throws IOException {

@@ -23,8 +23,6 @@ import io.airlift.compress.lz4.Lz4Compressor;
 import io.airlift.compress.lz4.Lz4Decompressor;
 import io.airlift.compress.lzo.LzoCompressor;
 import io.airlift.compress.lzo.LzoDecompressor;
-import io.airlift.compress.zstd.ZstdCompressor;
-import io.airlift.compress.zstd.ZstdDecompressor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -127,6 +125,8 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
   private final boolean[] directEncodingColumns;
   private final List<OrcProto.ColumnEncoding> unencryptedEncodings =
       new ArrayList<>();
+  private final int compressionZstdLevel;
+  private final int compressionZstdWindowLog;
 
   // the list of maskDescriptions, keys, and variants
   private SortedMap<String, MaskDescriptionImpl> maskDescriptions = new TreeMap<>();
@@ -182,6 +182,8 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
 
     this.encodingStrategy = opts.getEncodingStrategy();
     this.compressionStrategy = opts.getCompressionStrategy();
+    this.compressionZstdLevel = opts.getCompressionZstdLevel();
+    this.compressionZstdWindowLog = opts.getCompressionZstdWindowLog();
 
     // ORC-1362: if isBuildIndex=false, then rowIndexStride will be set to 0.
     if (opts.getRowIndexStride() >= 0 && opts.isBuildIndex()) {
@@ -288,10 +290,14 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
         return new AircompressorCodec(kind, new Lz4Compressor(),
             new Lz4Decompressor());
       case ZSTD:
+<<<<<<< HEAD
         return new AircompressorCodec(kind, new ZstdCompressor(),
             new ZstdDecompressor());
       case BROTLI:
         return new BrotliCodec();
+=======
+        return new ZstdCodec();
+>>>>>>> b73cc5e9c (ORC-817: Replace aircompressor ZStandard compression with zstd-jni)
       default:
         throw new IllegalArgumentException("Unknown compression codec: " +
             kind);
