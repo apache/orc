@@ -441,6 +441,9 @@ public class OrcFile {
     private WriterCallback callback;
     private EncodingStrategy encodingStrategy;
     private CompressionStrategy compressionStrategy;
+    private int compressionZstdLevel;
+    private int compressionZstdWindowLog;
+    private boolean compressionZstdLongMode;
     private double paddingTolerance;
     private String bloomFilterColumns;
     private double bloomFilterFpp;
@@ -484,6 +487,15 @@ public class OrcFile {
       String compString =
           OrcConf.COMPRESSION_STRATEGY.getString(tableProperties, conf);
       compressionStrategy = CompressionStrategy.valueOf(compString);
+
+      compressionZstdLevel =
+              OrcConf.COMPRESSION_ZSTD_LEVEL.getInt(tableProperties, conf);
+
+      compressionZstdWindowLog =
+              OrcConf.COMPRESSION_ZSTD_WINDOWLOG.getInt(tableProperties, conf);
+
+      compressionZstdLongMode =
+          OrcConf.COMPRESSION_ZSTD_LONGMODE.getBoolean(tableProperties, conf);
 
       paddingTolerance =
           OrcConf.BLOCK_PADDING_TOLERANCE.getDouble(tableProperties, conf);
@@ -901,6 +913,18 @@ public class OrcFile {
 
     public CompressionStrategy getCompressionStrategy() {
       return compressionStrategy;
+    }
+
+    public int getCompressionZstdLevel() {
+      return compressionZstdLevel;
+    }
+
+    public int getCompressionZstdWindowLog() {
+      return compressionZstdWindowLog;
+    }
+
+    public boolean getCompressionZstdLongMode() {
+      return compressionZstdLongMode;
     }
 
     public EncodingStrategy getEncodingStrategy() {

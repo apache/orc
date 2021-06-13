@@ -280,9 +280,11 @@ public class OutStream extends PositionedOutputStream {
       outputBuffer(current);
       getNewInputBuffer();
     } else {
+      // Make sure both compressed and overflow are not null before passing to compress
       if (compressed == null) {
         compressed = getNewOutputBuffer();
-      } else if (overflow == null) {
+      }
+      if (overflow == null) {
         overflow = getNewOutputBuffer();
       }
       int sizePosn = compressed.position();

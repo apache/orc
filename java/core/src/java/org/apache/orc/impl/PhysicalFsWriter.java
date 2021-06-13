@@ -104,8 +104,17 @@ public class PhysicalFsWriter implements PhysicalWriter {
     }
     CompressionCodec codec = OrcCodecPool.getCodec(opts.getCompress());
     if (codec != null){
-      compress.withCodec(codec, codec.getDefaultOptions());
+      // HACK: Fetch Zstd-specific options and set them here -- need to find a
+      // better way before merging.
+      CompressionCodec.Options tempOptions = codec.getDefaultOptions();
+      if (codec instanceof ZstdCodec) {
+        ((ZstdCodec.ZstdOptions) tempOptions).setLevel(opts.getCompressionZstdLevel());
+        ((ZstdCodec.ZstdOptions) tempOptions).setWindowLog(opts.getCompressionZstdWindowLog());
+        ((ZstdCodec.ZstdOptions) tempOptions).setLongMode(opts.getCompressionZstdLongMode());
+      }
+      compress.withCodec(codec, tempOptions);
     }
+
     this.compressionStrategy = opts.getCompressionStrategy();
     this.maxPadding = (int) (opts.getPaddingTolerance() * defaultStripeSize);
     this.blockSize = opts.getBlockSize();

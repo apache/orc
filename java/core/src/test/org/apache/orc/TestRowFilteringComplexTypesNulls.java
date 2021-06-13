@@ -332,7 +332,7 @@ public class TestRowFilteringComplexTypesNulls {
     }
     FileSystem.Statistics stats = readEnd();
     double readPercentage = readPercentage(stats, fs.getFileStatus(filePath).getLen());
-    assertTrue(readPercentage > 130);
+    assertTrue(readPercentage > 120);
   }
 
   private void seekToRow(RecordReader rr, VectorizedRowBatch b, long row) throws IOException {

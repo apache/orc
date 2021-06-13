@@ -2271,51 +2271,71 @@ public class TestVectorOrcFile {
   }
 
   /**
-   * Read and write a randomly generated zstd file.
+   * Write a randomly generated zstd-compressed file, read it back, and check
+   * that the output matches the input.
+   *
+   * Checks correctness across a variety of valid settings:
+   *
+   *  * Negative, low, moderate, and high compression levels
+   *  * Valid window sizes in [10-31], and default value of 0.
+   *  * Long mode explicitly enabled and disabled.
+   *
+   * @throws Exception
    */
   @ParameterizedTest
   @MethodSource("data")
   public void testZstd(Version fileFormat) throws Exception {
     TypeDescription schema =
         TypeDescription.fromString("struct<x:bigint,y:int,z:bigint>");
-    try (Writer writer = OrcFile.createWriter(testFilePath,
-        OrcFile.writerOptions(conf)
-            .setSchema(schema)
-            .compress(CompressionKind.ZSTD)
-            .bufferSize(1000)
-            .version(fileFormat))) {
-      VectorizedRowBatch batch = schema.createRowBatch();
-      Random rand = new Random(3);
-      batch.size = 1000;
-      for (int b = 0; b < 10; ++b) {
-        for (int r = 0; r < 1000; ++r) {
-          ((LongColumnVector) batch.cols[0]).vector[r] = rand.nextInt();
-          ((LongColumnVector) batch.cols[1]).vector[r] = b * 1000 + r;
-          ((LongColumnVector) batch.cols[2]).vector[r] = rand.nextLong();
+
+    for (Integer level : new ArrayList<>(Arrays.asList(-4, -1, 0, 1, 3, 8, 12, 17, 22))) {
+      for (Integer windowLog : new ArrayList<>(Arrays.asList(0, 10, 20, 31))) {
+        for (Boolean longMode : new ArrayList<>(Arrays.asList(false, true))) {
+          OrcConf.COMPRESSION_ZSTD_LEVEL.setInt(conf, level);
+          OrcConf.COMPRESSION_ZSTD_WINDOWLOG.setInt(conf, windowLog);
+          OrcConf.COMPRESSION_ZSTD_LONGMODE.setBoolean(conf, longMode);
+          try (Writer writer = OrcFile.createWriter(testFilePath,
+              OrcFile.writerOptions(conf)
+                  .setSchema(schema)
+                  .compress(CompressionKind.ZSTD)
+                  .bufferSize(1000)
+                  .version(fileFormat))) {
+            VectorizedRowBatch batch = schema.createRowBatch();
+            Random rand = new Random(27182);
+            batch.size = 1000;
+            for (int b = 0; b < 10; ++b) {
+              for (int r = 0; r < 1000; ++r) {
+                ((LongColumnVector) batch.cols[0]).vector[r] = rand.nextInt();
+                ((LongColumnVector) batch.cols[1]).vector[r] = b * 1000 + r;
+                ((LongColumnVector) batch.cols[2]).vector[r] = rand.nextLong();
+              }
+              writer.addRowBatch(batch);
+            }
+          }
+          try (Reader reader = OrcFile.createReader(testFilePath,
+              OrcFile.readerOptions(conf).filesystem(fs));
+               RecordReader rows = reader.rows()) {
+            assertEquals(CompressionKind.ZSTD, reader.getCompressionKind());
+            VectorizedRowBatch batch = reader.getSchema().createRowBatch(1000);
+            Random rand = new Random(27182);
+            for (int b = 0; b < 10; ++b) {
+              rows.nextBatch(batch);
+              assertEquals(1000, batch.size);
+              for (int r = 0; r < batch.size; ++r) {
+                assertEquals(rand.nextInt(),
+                    ((LongColumnVector) batch.cols[0]).vector[r]);
+                assertEquals(b * 1000 + r,
+                    ((LongColumnVector) batch.cols[1]).vector[r]);
+                assertEquals(rand.nextLong(),
+                    ((LongColumnVector) batch.cols[2]).vector[r]);
+              }
+            }
+            rows.nextBatch(batch);
+            assertEquals(0, batch.size);
+          }
+          fs.delete(testFilePath, false);
         }
-        writer.addRowBatch(batch);
       }
-    }
-    try (Reader reader = OrcFile.createReader(testFilePath,
-           OrcFile.readerOptions(conf).filesystem(fs));
-         RecordReader rows = reader.rows()) {
-      assertEquals(CompressionKind.ZSTD, reader.getCompressionKind());
-      VectorizedRowBatch batch = reader.getSchema().createRowBatch(1000);
-      Random rand = new Random(3);
-      for (int b = 0; b < 10; ++b) {
-        rows.nextBatch(batch);
-        assertEquals(1000, batch.size);
-        for (int r = 0; r < batch.size; ++r) {
-          assertEquals(rand.nextInt(),
-              ((LongColumnVector) batch.cols[0]).vector[r]);
-          assertEquals(b * 1000 + r,
-              ((LongColumnVector) batch.cols[1]).vector[r]);
-          assertEquals(rand.nextLong(),
-              ((LongColumnVector) batch.cols[2]).vector[r]);
-        }
-      }
-      rows.nextBatch(batch);
-      assertEquals(0, batch.size);
     }
   }
 
@@ -2332,7 +2352,7 @@ public class TestVectorOrcFile {
     WriterOptions opts = OrcFile.writerOptions(conf)
         .setSchema(schema).stripeSize(1000).bufferSize(100).version(fileFormat);
 
-    CompressionCodec snappyCodec, zlibCodec;
+    CompressionCodec snappyCodec, zlibCodec, zstdCodec;
     snappyCodec = writeBatchesAndGetCodec(10, 1000, opts.compress(CompressionKind.SNAPPY), batch);
     assertEquals(1, OrcCodecPool.getPoolSize(CompressionKind.SNAPPY));
     Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf).filesystem(fs));
@@ -2353,6 +2373,13 @@ public class TestVectorOrcFile {
     codec = writeBatchesAndGetCodec(10, 1000, opts.compress(CompressionKind.ZLIB), batch);
     assertEquals(1, OrcCodecPool.getPoolSize(CompressionKind.ZLIB));
     assertSame(zlibCodec, codec);
+
+    zstdCodec = writeBatchesAndGetCodec(10, 1000, opts.compress(CompressionKind.ZSTD), batch);
+    assertNotSame(zlibCodec, zstdCodec);
+    assertEquals(1, OrcCodecPool.getPoolSize(CompressionKind.ZSTD));
+    codec = writeBatchesAndGetCodec(10, 1000, opts.compress(CompressionKind.ZSTD), batch);
+    assertEquals(1, OrcCodecPool.getPoolSize(CompressionKind.ZSTD));
+    assertSame(zstdCodec, codec);
 
     assertSame(snappyCodec, OrcCodecPool.getCodec(CompressionKind.SNAPPY));
     CompressionCodec snappyCodec2 = writeBatchesAndGetCodec(
