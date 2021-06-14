@@ -245,29 +245,18 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     }
   }
 
-  private static int getClosestBufferSize(int estBufferSize) {
+  /**
+   * Given a buffer size, return the nearest superior power of 2. Min value is
+   * 4Kib, Max value is 256Kib.
+   *
+   * @param size Proposed buffer size
+   * @return the suggested buffer size
+   */
+  private static int getClosestBufferSize(int size) {
     final int kb4 = 4 * 1024;
-    final int kb8 = 8 * 1024;
-    final int kb16 = 16 * 1024;
-    final int kb32 = 32 * 1024;
-    final int kb64 = 64 * 1024;
-    final int kb128 = 128 * 1024;
     final int kb256 = 256 * 1024;
-    if (estBufferSize <= kb4) {
-      return kb4;
-    } else if (estBufferSize <= kb8) {
-      return kb8;
-    } else if (estBufferSize <= kb16) {
-      return kb16;
-    } else if (estBufferSize <= kb32) {
-      return kb32;
-    } else if (estBufferSize <= kb64) {
-      return kb64;
-    } else if (estBufferSize <= kb128) {
-      return kb128;
-    } else {
-      return kb256;
-    }
+    final int pow2 = size == 1 ? 1 : Integer.highestOneBit(size - 1) * 2;
+    return Math.min(kb256, Math.max(kb4, pow2));
   }
 
   public static CompressionCodec createCodec(CompressionKind kind) {
