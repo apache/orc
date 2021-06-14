@@ -423,10 +423,15 @@
       </modules>
     </profile>
     <profile>
-      <id>applesilicon</id>
+      <id>aarch64</id>
       <properties>
         <protoc.artifact>com.google.protobuf:protoc:2.5.0:exe:osx-x86_64</protoc.artifact>
       </properties>
+      <activation>
+        <os>
+          <arch>aarch64</arch>
+        </os>
+      </activation>
     </profile>
   </profiles>
 
