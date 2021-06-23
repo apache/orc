@@ -156,7 +156,7 @@ public class OrcInputFormat<V extends WritableComparable>
     //Mapreduce supports selected vector
     Reader.Options options =  buildOptions(conf, file, split.getStart(), split.getLength())
       .allowSelected(true);
-    return new OrcMapredRecordReader<>(file,options);
+    return new OrcMapredRecordReader<>(file, options);
   }
 
   /**
