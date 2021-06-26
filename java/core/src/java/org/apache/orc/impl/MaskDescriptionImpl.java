@@ -24,17 +24,17 @@ import org.apache.orc.TypeDescription;
 import org.apache.orc.DataMask;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 public class MaskDescriptionImpl implements DataMaskDescription,
                                             Comparable<MaskDescriptionImpl> {
   private int id;
   private final String name;
   private final String[] parameters;
-  private final Set<TypeDescription> columns = new HashSet<>();
+  private final List<TypeDescription> columns = new ArrayList<>();
 
   public MaskDescriptionImpl(String name,
                              String... parameters) {

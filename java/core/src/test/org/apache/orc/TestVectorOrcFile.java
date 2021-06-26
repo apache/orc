@@ -4453,7 +4453,7 @@ public class TestVectorOrcFile {
     final Random random = new Random(SEED);
 
     TypeDescription schema =
-        TypeDescription.fromString("struct<i:int,norm:int,x:array<string>>");
+        TypeDescription.fromString("struct<i:int,norm:int,x:array<string>,j:int>");
 
     byte[] piiKey = new byte[16];
     random.nextBytes(piiKey);
@@ -4467,7 +4467,8 @@ public class TestVectorOrcFile {
             .setSchema(schema)
             .version(fileFormat)
             .setKeyProvider(keys)
-            .encrypt("pii:i;credit:x"));
+            .encrypt("pii:i,j;credit:x")
+            .masks((String)OrcConf.DATA_MASK.getDefaultValue()));
     VectorizedRowBatch batch = schema.createRowBatch();
     batch.size = ROWS;
     LongColumnVector i = (LongColumnVector) batch.cols[0];
@@ -4475,8 +4476,10 @@ public class TestVectorOrcFile {
     ListColumnVector x = (ListColumnVector) batch.cols[2];
     BytesColumnVector xElem = (BytesColumnVector) x.child;
     xElem.ensureSize(3 * ROWS, false);
+    LongColumnVector j = (LongColumnVector) batch.cols[3];
     for(int r=0; r < ROWS; ++r) {
       i.vector[r] = r * 3;
+      j.vector[r] = r * 7;
       norm.vector[r] = r * 5;
       int start = x.childCount;
       x.offsets[r] = start;
@@ -4510,6 +4513,7 @@ public class TestVectorOrcFile {
     i = (LongColumnVector) batch.cols[0];
     norm = (LongColumnVector) batch.cols[1];
     x = (ListColumnVector) batch.cols[2];
+    j = (LongColumnVector) batch.cols[3];
 
     // ensure that we get the right number of rows with all nulls
     assertTrue(rows.nextBatch(batch));
@@ -4517,6 +4521,9 @@ public class TestVectorOrcFile {
     assertEquals(true, i.isRepeating);
     assertEquals(false, i.noNulls);
     assertEquals(true, i.isNull[0]);
+    assertEquals(true, j.isRepeating);
+    assertEquals(false, j.noNulls);
+    assertEquals(true, j.isNull[0]);
     assertEquals(true, x.isRepeating);
     assertEquals(false, x.noNulls);
     assertEquals(true, x.isNull[0]);
@@ -4545,21 +4552,27 @@ public class TestVectorOrcFile {
     assertEquals(3 * ROWS, stats[4].getNumberOfValues());
     assertEquals("0.0", ((StringColumnStatistics)stats[4]).getMinimum());
     assertEquals("999.2", ((StringColumnStatistics)stats[4]).getMaximum());
+    assertEquals(ROWS, stats[5].getNumberOfValues());
+    assertEquals(0, ((IntegerColumnStatistics) stats[5]).getMinimum());
+    assertEquals(7 * (ROWS - 1), ((IntegerColumnStatistics) stats[5]).getMaximum());
 
     rows = reader.rows();
     batch = reader.getSchema().createRowBatch();
     i = (LongColumnVector) batch.cols[0];
     norm = (LongColumnVector) batch.cols[1];
     x = (ListColumnVector) batch.cols[2];
+    j = (LongColumnVector) batch.cols[3];
     xElem = (BytesColumnVector) x.child;
     assertTrue(rows.nextBatch(batch));
     assertEquals(ROWS, batch.size);
     assertEquals(false, i.isRepeating);
     assertEquals(false, x.isRepeating);
     assertEquals(false, xElem.isRepeating);
+    assertEquals(false, j.isRepeating);
     assertEquals(true, i.noNulls);
     assertEquals(true, x.noNulls);
     assertEquals(true, xElem.noNulls);
+    assertEquals(true, j.noNulls);
     for(int r=0; r < ROWS; ++r) {
       assertEquals("row " + r, r * 3, i.vector[r]);
       assertEquals("row " + r, r * 5, norm.vector[r]);
@@ -4569,6 +4582,7 @@ public class TestVectorOrcFile {
         assertEquals("row " + r + "." + child, String.format("%d.%d", r, child),
             xElem.toString((int) x.offsets[r] + child));
       }
+      assertEquals("row " + r, r * 7, j.vector[r]);
     }
     assertFalse(rows.nextBatch(batch));
     rows.close();
