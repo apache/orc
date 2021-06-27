@@ -40,7 +40,6 @@ The subdirectories are:
 * java - the java reader and writer
 * proto - the protocol buffer definition for the ORC metadata
 * site - the website and documentation
-* snap - the script to build [snaps](https://snapcraft.io/) of the ORC tools
 * tools - the c++ tools for reading and inspecting ORC files
 
 ### Building
