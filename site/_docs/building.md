@@ -59,14 +59,14 @@ is invoking:
 
 You'll need to install:
 
-* java (>= 1.7)
-* maven (>= 3)
+* java (>= 1.8)
+* maven (>= 3.8.1)
 
 To build:
 
 ~~~ shell
 % cd java
-% mvn package
+% ./mvnw package
 ~~~
 
 ## Building just C++

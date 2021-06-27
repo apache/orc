@@ -82,10 +82,8 @@ To build a release version without debug information:
 To build only the Java library:
 ```shell
 % cd java
-% mvn package
+% ./mvnw package
 
-# If you do not have a supported version of Maven installed locally
-% mvnw package
 ```
 
 To build only the C++ library:
