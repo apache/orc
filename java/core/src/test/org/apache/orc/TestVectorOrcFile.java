@@ -2167,7 +2167,7 @@ public class TestVectorOrcFile {
         OrcFile.writerOptions(conf)
             .setSchema(schema)
             .compress(CompressionKind.ZSTD)
-            .bufferSize(1000)
+            .bufferSize(2000)
             .version(fileFormat))) {
       VectorizedRowBatch batch = schema.createRowBatch();
       Random rand = new Random(3);
