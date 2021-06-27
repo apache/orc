@@ -60,7 +60,7 @@ is invoking:
 You'll need to install:
 
 * java (>= 1.8)
-* maven (>= 3.8.1)
+* maven (>= 3)
 
 To build:
 
