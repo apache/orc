@@ -81,7 +81,7 @@ To build a release version without debug information:
 To build only the Java library:
 ```shell
 % cd java
-% mvn package
+% ./mvnw package
 
 ```
 

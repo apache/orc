@@ -85,7 +85,7 @@ Publish the artifacts to Maven central staging. Make sure to have this [setup](h
 
 ~~~
 % cd java
-% mvn -Papache-release clean deploy
+% ./mvnw -Papache-release clean deploy
 ~~~
 
 Publish from the staging area:

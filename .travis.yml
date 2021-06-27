@@ -14,8 +14,8 @@ matrix:
     - MAVEN_OPTS=-Xmx2g MAVEN_SKIP_RC=true
     script:
     - cd java
-    - mvn -Panalyze clean package
-    - mvn apache-rat:check
+    - ./mvnw -Panalyze clean package
+    - ./mvnw apache-rat:check
 
   - language: cpp
     compiler: gcc

@@ -15,7 +15,7 @@ There are three sub-modules to try to mitigate dependency hell:
 
 To build this library:
 
-```% mvn clean package```
+```% ./mvnw clean package```
 
 To fetch the source data:
 
