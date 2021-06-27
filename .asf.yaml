@@ -22,3 +22,9 @@ github:
     merge: false
     squash: true
     rebase: true
+  labels:
+    - apache
+    - orc
+    - java
+    - cpp
+    - big-data
