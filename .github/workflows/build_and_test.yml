@@ -19,6 +19,7 @@ jobs:
           - 1.8
           - 11
           - 16
+          - 17-ea
     env:
       MAVEN_OPTS: -Xmx2g
       MAVEN_SKIP_RC: true
