@@ -467,6 +467,7 @@
       <plugins>
         <plugin>
           <artifactId>maven-assembly-plugin</artifactId>
+          <version>${maven-assembly-plugin.version}</version>
           <configuration>
             <descriptors>
               <descriptor>src/assembly/uber.xml</descriptor>
