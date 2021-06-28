@@ -24,7 +24,6 @@ INFRA:
   - ".asf.yaml"
   - ".gitignore"
   - "docker/**/*"
-  - "snap/**/*"
 BUILD:
   - "CMakeLists.txt"
   - "cmake_modules/**/*"
