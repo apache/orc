@@ -2296,7 +2296,7 @@ namespace orc {
         for (uint64_t i = 0; i < numValues; ++i) {
           if (notNull[i]) {
             ++count;
-            collectionStats->update(offsets[i]);
+            collectionStats->update(static_cast<uint64_t>(offsets[i]));
             if (enableBloomFilter) {
               bloomFilter->addLong(offsets[i]);
             }
@@ -2532,7 +2532,7 @@ namespace orc {
         for (uint64_t i = 0; i < numValues; ++i) {
           if (notNull[i]) {
             ++count;
-            collectionStats->update(offsets[i]);
+            collectionStats->update(static_cast<uint64_t>(offsets[i]));
             if (enableBloomFilter) {
               bloomFilter->addLong(offsets[i]);
             }
