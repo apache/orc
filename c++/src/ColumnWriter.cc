@@ -2262,6 +2262,11 @@ namespace orc {
     if (listBatch == nullptr) {
       throw InvalidArgument("Failed to cast to ListVectorBatch");
     }
+    CollectionColumnStatisticsImpl* collectionStats =
+        dynamic_cast<CollectionColumnStatisticsImpl*>(colIndexStatistics.get());
+    if (collectionStats == nullptr) {
+      throw InvalidArgument("Failed to cast to CollectionColumnStatisticsImpl");
+    }
 
     ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
@@ -2285,20 +2290,21 @@ namespace orc {
 
     if (enableIndex) {
       if (!notNull) {
-        colIndexStatistics->increase(numValues);
+        collectionStats->increase(numValues);
       } else {
         uint64_t count = 0;
         for (uint64_t i = 0; i < numValues; ++i) {
           if (notNull[i]) {
             ++count;
+            collectionStats->update(offsets[i]);
             if (enableBloomFilter) {
               bloomFilter->addLong(offsets[i]);
             }
           }
         }
-        colIndexStatistics->increase(count);
+        collectionStats->increase(count);
         if (count < numValues) {
-          colIndexStatistics->setHasNull(true);
+          collectionStats->setHasNull(true);
         }
       }
     }
@@ -2488,6 +2494,11 @@ namespace orc {
     if (mapBatch == nullptr) {
       throw InvalidArgument("Failed to cast to MapVectorBatch");
     }
+    CollectionColumnStatisticsImpl* collectionStats =
+        dynamic_cast<CollectionColumnStatisticsImpl*>(colIndexStatistics.get());
+    if (collectionStats == nullptr) {
+      throw InvalidArgument("Failed to cast to CollectionColumnStatisticsImpl");
+    }
 
     ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
@@ -2515,20 +2526,21 @@ namespace orc {
 
     if (enableIndex) {
       if (!notNull) {
-        colIndexStatistics->increase(numValues);
+        collectionStats->increase(numValues);
       } else {
         uint64_t count = 0;
         for (uint64_t i = 0; i < numValues; ++i) {
           if (notNull[i]) {
             ++count;
+            collectionStats->update(offsets[i]);
             if (enableBloomFilter) {
               bloomFilter->addLong(offsets[i]);
             }
           }
         }
-        colIndexStatistics->increase(count);
+        collectionStats->increase(count);
         if (count < numValues) {
-          colIndexStatistics->setHasNull(true);
+          collectionStats->setHasNull(true);
         }
       }
     }

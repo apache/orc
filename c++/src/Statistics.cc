@@ -30,6 +30,8 @@ namespace orc {
       return new IntegerColumnStatisticsImpl(s);
     } else if (s.has_doublestatistics()) {
       return new DoubleColumnStatisticsImpl(s);
+    } else if (s.has_collectionstatistics()) {
+      return new CollectionColumnStatisticsImpl(s);
     } else if (s.has_stringstatistics()) {
       return new StringColumnStatisticsImpl(s, statContext);
     } else if (s.has_bucketstatistics()) {
@@ -135,6 +137,10 @@ namespace orc {
     // PASS
   }
 
+  CollectionColumnStatistics::~CollectionColumnStatistics() {
+    // PASS
+  }
+
   MutableColumnStatistics::~MutableColumnStatistics() {
     // PASS
   }
@@ -164,6 +170,10 @@ namespace orc {
   }
 
   IntegerColumnStatisticsImpl::~IntegerColumnStatisticsImpl() {
+    // PASS
+  }
+
+  CollectionColumnStatisticsImpl::~CollectionColumnStatisticsImpl() {
     // PASS
   }
 
@@ -381,6 +391,26 @@ namespace orc {
     }
   }
 
+  CollectionColumnStatisticsImpl::CollectionColumnStatisticsImpl
+  (const proto::ColumnStatistics& pb) {
+    _stats.setNumberOfValues(pb.numberofvalues());
+    _stats.setHasNull(pb.hasnull());
+    if (!pb.has_collectionstatistics()) {
+      _stats.setMinimum(0);
+      _stats.setMaximum(0);
+      _stats.setSum(0);
+    } else {
+      const proto::CollectionStatistics& stats = pb.collectionstatistics();
+      _stats.setHasMinimum(stats.has_minchildren());
+      _stats.setHasMaximum(stats.has_maxchildren());
+      _stats.setHasSum(stats.has_totalchildren());
+
+      _stats.setMinimum(stats.minchildren());
+      _stats.setMaximum(stats.maxchildren());
+      _stats.setSum(stats.totalchildren());
+    }
+  }
+
   std::unique_ptr<MutableColumnStatistics> createColumnStatistics(
     const Type& type) {
     switch (static_cast<int64_t>(type.getKind())) {
@@ -393,9 +423,11 @@ namespace orc {
       case SHORT:
         return std::unique_ptr<MutableColumnStatistics>(
           new IntegerColumnStatisticsImpl());
-      case STRUCT:
       case MAP:
       case LIST:
+        return std::unique_ptr<MutableColumnStatistics>(
+          new CollectionColumnStatisticsImpl());
+      case STRUCT:
       case UNION:
         return std::unique_ptr<MutableColumnStatistics>(
           new ColumnStatisticsImpl());
