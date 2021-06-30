@@ -75,7 +75,7 @@ public class ReaderEncryptionKey implements EncryptionKey {
 
   @Override
   public ReaderEncryptionVariant[] getEncryptionRoots() {
-    return roots.toArray(new ReaderEncryptionVariant[roots.size()]);
+    return roots.toArray(new ReaderEncryptionVariant[0]);
   }
 
   public HadoopShims.KeyMetadata getMetadata() {

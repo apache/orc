@@ -176,7 +176,7 @@ public class OrcInputFormat<V extends WritableComparable>
     if (ok.size() == result.length) {
       return result;
     } else {
-      return ok.toArray(new FileStatus[ok.size()]);
+      return ok.toArray(new FileStatus[0]);
     }
   }
 }

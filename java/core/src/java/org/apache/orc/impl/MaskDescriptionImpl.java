@@ -82,7 +82,7 @@ public class MaskDescriptionImpl implements DataMaskDescription,
 
   @Override
   public TypeDescription[] getColumns() {
-    TypeDescription[] result = columns.toArray(new TypeDescription[columns.size()]);
+    TypeDescription[] result = columns.toArray(new TypeDescription[0]);
     // sort the columns by their ids
     Arrays.sort(result, Comparator.comparingInt(TypeDescription::getId));
     return result;

@@ -65,7 +65,7 @@ public class WriterEncryptionKey implements EncryptionKey {
 
   @Override
   public WriterEncryptionVariant[] getEncryptionRoots() {
-    return roots.toArray(new WriterEncryptionVariant[roots.size()]);
+    return roots.toArray(new WriterEncryptionVariant[0]);
   }
 
   @Override
