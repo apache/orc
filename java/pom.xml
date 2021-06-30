@@ -17,7 +17,7 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>18</version>
+    <version>23</version>
   </parent>
   <groupId>org.apache.orc</groupId>
   <artifactId>orc</artifactId>
@@ -63,7 +63,8 @@
 
   <properties>
     <!-- Build Properties -->
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
     <maven.compiler.useIncrementalCompilation>false</maven.compiler.useIncrementalCompilation>
     <test.tmp.dir>${project.build.directory}/testing-tmp</test.tmp.dir>
     <example.dir>${project.basedir}/../../examples</example.dir>
@@ -75,8 +76,10 @@
     <zookeeper.version>3.6.2</zookeeper.version>
     <maven.version>3.6.3</maven.version>
     <maven-assembly-plugin.version>3.3.0</maven-assembly-plugin.version>
+    <maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
     <slf4j.version>1.7.30</slf4j.version>
     <protoc.artifact>com.google.protobuf:protoc:2.5.0</protoc.artifact>
+    <surefire.version>3.0.0-M5</surefire.version>
   </properties>
 
   <build>
@@ -84,7 +87,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
-        <version>3.0.0-M3</version>
         <executions>
           <execution>
             <id>enforce-maven</id>
@@ -132,7 +134,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-antrun-plugin</artifactId>
-        <version>3.0.0</version>
         <executions>
           <execution>
             <id>setup-test-dirs</id>
@@ -168,7 +169,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.0.0-M5</version>
         <configuration>
           <trimStackTrace>false</trimStackTrace>
           <reuseForks>false</reuseForks>
@@ -188,12 +188,10 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-project-info-reports-plugin</artifactId>
-        <version>3.1.1</version>
       </plugin>
       <plugin>
         <groupId>io.github.zlika</groupId>
         <artifactId>reproducible-build-maven-plugin</artifactId>
-        <version>0.13</version>
         <executions>
           <execution>
             <phase>package</phase>
@@ -338,15 +336,8 @@
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <configuration>
-            <source>1.8</source>
-            <target>1.8</target>
-          </configuration>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-shade-plugin</artifactId>
+          <version>${maven-shade-plugin.version}</version>
           <executions>
             <execution>
               <phase>package</phase>
