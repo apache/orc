@@ -580,7 +580,6 @@ public class ParserUtils {
     while (consumeChar(source, ',')) {
       params.add(parseName(source));
     }
-    return new MaskDescriptionImpl(maskName,
-        params.toArray(new String[params.size()]));
+    return new MaskDescriptionImpl(maskName, params.toArray(new String[0]));
   }
 }
