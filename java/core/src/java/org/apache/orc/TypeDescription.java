@@ -564,8 +564,7 @@ public class TypeDescription
    * @return a list of sorted attribute names
    */
   public List<String> getAttributeNames() {
-    List<String> result = new ArrayList<>(attributes.size());
-    result.addAll(attributes.keySet());
+    List<String> result = new ArrayList<>(attributes.keySet());
     Collections.sort(result);
     return result;
   }

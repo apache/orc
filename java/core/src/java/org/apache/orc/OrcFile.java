@@ -1144,8 +1144,8 @@ public class OrcFile {
       return false;
     }
     for(String key: reader.getMetadataKeys()) {
-      if (userMetadata.containsKey(key)) {
-        ByteBuffer currentValue = userMetadata.get(key);
+      ByteBuffer currentValue = userMetadata.get(key);
+      if (currentValue != null) {
         ByteBuffer newValue = reader.getMetadataValue(key);
         if (!newValue.equals(currentValue)) {
           LOG.info("Can't merge {} because of different user metadata {}", path,

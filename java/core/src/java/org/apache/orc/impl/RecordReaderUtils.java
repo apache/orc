@@ -571,8 +571,7 @@ public class RecordReaderUtils {
       TreeMap<Key, ByteBuffer> tree = getBufferTree(buffer.isDirect());
       while (true) {
         Key key = new Key(buffer.capacity(), currentGeneration++);
-        if (!tree.containsKey(key)) {
-          tree.put(key, buffer);
+        if (tree.putIfAbsent(key, buffer) == null) {
           return;
         }
         // Buffers are indexed by (capacity, generation).
