@@ -128,11 +128,11 @@ public class InMemoryKeystore implements KeyProvider {
   @Override
   public HadoopShims.KeyMetadata getCurrentKeyVersion(final String keyName) {
     String versionName = buildVersionName(keyName, currentVersion.get(keyName));
-    if (keys.containsKey(versionName)) {
-      return keys.get(versionName);
-    } else {
+    KeyVersion keyVersion = keys.get(versionName);
+    if (keyVersion == null) {
       throw new IllegalArgumentException("Unknown key " + keyName);
     }
+    return keys.get(versionName);
   }
 
   /**
@@ -144,10 +144,10 @@ public class InMemoryKeystore implements KeyProvider {
   @Override
   public LocalKey createLocalKey(final HadoopShims.KeyMetadata key) {
     final String keyVersion = buildVersionName(key.getKeyName(), key.getVersion());
-    if (!keys.containsKey(keyVersion)) {
+    final KeyVersion secret = keys.get(keyVersion);
+    if (secret == null) {
       throw new IllegalArgumentException("Unknown key " + key);
     }
-    final KeyVersion secret = keys.get(keyVersion);
     final EncryptionAlgorithm algorithm = secret.getAlgorithm();
     byte[] encryptedKey = new byte[algorithm.keyLength()];
     random.nextBytes(encryptedKey);
@@ -197,10 +197,12 @@ public class InMemoryKeystore implements KeyProvider {
   public Key decryptLocalKey(HadoopShims.KeyMetadata key,
                              byte[] encryptedKey) {
     final String keyVersion = buildVersionName(key.getKeyName(), key.getVersion());
-    if (!keys.containsKey(keyVersion)) {
+    final KeyVersion secret = keys.get(keyVersion);
+
+    if (secret == null) {
       return null;
     }
-    final KeyVersion secret = keys.get(keyVersion);
+
     final EncryptionAlgorithm algorithm = secret.getAlgorithm();
     byte[] iv = new byte[algorithm.getIvLength()];
     System.arraycopy(encryptedKey, 0, iv, 0, iv.length);
@@ -293,8 +295,8 @@ public class InMemoryKeystore implements KeyProvider {
         buffer);
 
     /* Check whether the key is already present and has a smaller version */
-    if (currentVersion.get(keyName) != null &&
-        currentVersion.get(keyName) >= version) {
+    Integer currentKeyVersion = currentVersion.get(keyName);
+    if (currentKeyVersion != null && currentKeyVersion >= version) {
       throw new IOException(String
           .format("Key %s with equal or higher version %d already exists",
               keyName, version));

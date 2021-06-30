@@ -118,13 +118,8 @@ public class OrcFilterContextImpl implements OrcFilterContext {
 
   @Override
   public ColumnVector[] findColumnVector(String name) {
-    if (!vectors.containsKey(name)) {
-      vectors.put(name,
-                  ParserUtils.findColumnVectors(readSchema,
-                                                new ParserUtils.StringPosition(name),
-                                                true,
-                                                batch));
-    }
-    return vectors.get(name);
+    return vectors.computeIfAbsent(name,
+        key -> ParserUtils.findColumnVectors(readSchema,
+            new ParserUtils.StringPosition(key), true, batch));
   }
 }
