@@ -76,6 +76,7 @@
     <zookeeper.version>3.6.2</zookeeper.version>
     <maven.version>3.6.3</maven.version>
     <maven-assembly-plugin.version>3.3.0</maven-assembly-plugin.version>
+    <maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
     <slf4j.version>1.7.30</slf4j.version>
     <protoc.artifact>com.google.protobuf:protoc:2.5.0</protoc.artifact>
     <surefire.version>3.0.0-M5</surefire.version>
@@ -336,6 +337,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-shade-plugin</artifactId>
+          <version>${maven-shade-plugin.version}</version>
           <executions>
             <execution>
               <phase>package</phase>
