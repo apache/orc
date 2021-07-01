@@ -21,6 +21,8 @@ To fetch the source data:
 
 ```% ./fetch-data.sh```
 
+> :warning: Script will fetch 7GB of data
+
 To generate the derived data:
 
 ```% java -jar core/target/orc-benchmarks-core-*-uber.jar generate data```
