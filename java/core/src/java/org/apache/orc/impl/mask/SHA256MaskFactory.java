@@ -108,8 +108,7 @@ public class SHA256MaskFactory extends MaskFactory {
         targetLength = schema.getMaxLength();
         /* pad the hash with blank char if targetlength is greater than hash */
         if (targetLength > hash.length) {
-          byte[] tmp = new byte[targetLength];
-          System.arraycopy(hash, 0, tmp, 0, hash.length);
+          byte[] tmp = Arrays.copyOf(hash, targetLength);
           Arrays.fill(tmp, hash.length, tmp.length - 1, (byte) ' ');
           hash = tmp;
         }

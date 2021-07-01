@@ -151,8 +151,7 @@ public class InMemoryKeystore implements KeyProvider {
     final EncryptionAlgorithm algorithm = secret.getAlgorithm();
     byte[] encryptedKey = new byte[algorithm.keyLength()];
     random.nextBytes(encryptedKey);
-    byte[] iv = new byte[algorithm.getIvLength()];
-    System.arraycopy(encryptedKey, 0, iv, 0, iv.length);
+    byte[] iv = Arrays.copyOf(encryptedKey, algorithm.getIvLength());
     Cipher localCipher = algorithm.createCipher();
 
     try {
@@ -202,8 +201,7 @@ public class InMemoryKeystore implements KeyProvider {
     }
     final KeyVersion secret = keys.get(keyVersion);
     final EncryptionAlgorithm algorithm = secret.getAlgorithm();
-    byte[] iv = new byte[algorithm.getIvLength()];
-    System.arraycopy(encryptedKey, 0, iv, 0, iv.length);
+    byte[] iv = Arrays.copyOf(encryptedKey, algorithm.getIvLength());
     Cipher localCipher = algorithm.createCipher();
 
     try {
@@ -278,16 +276,7 @@ public class InMemoryKeystore implements KeyProvider {
       algorithm = EncryptionAlgorithm.AES_CTR_128;
     }
 
-    final byte[] buffer = new byte[algorithm.keyLength()];
-    if (algorithm.keyLength() > masterKey.length) {
-
-      System.arraycopy(masterKey, 0, buffer, 0, masterKey.length);
-      /* fill with zeros */
-      Arrays.fill(buffer, masterKey.length, buffer.length - 1, (byte) 0);
-
-    } else {
-      System.arraycopy(masterKey, 0, buffer, 0, algorithm.keyLength());
-    }
+    final byte[] buffer = Arrays.copyOf(masterKey, algorithm.keyLength());
 
     final KeyVersion key = new KeyVersion(keyName, version, algorithm,
         buffer);
