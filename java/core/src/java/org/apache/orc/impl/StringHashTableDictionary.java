@@ -209,5 +209,4 @@ public class StringHashTableDictionary implements Dictionary {
 
     return byteArray.getSizeInBytes() + keyOffsets.getSizeInBytes() + bucketTotalSize ;
   }
-
 }
