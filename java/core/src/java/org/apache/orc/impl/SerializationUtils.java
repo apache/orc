@@ -34,6 +34,7 @@ import java.io.OutputStream;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.sql.Date;
+import java.util.Arrays;
 import java.util.TimeZone;
 
 public final class SerializationUtils {
@@ -42,6 +43,15 @@ public final class SerializationUtils {
   private final static int BUFFER_SIZE = 64;
   private final byte[] readBuffer;
   private final byte[] writeBuffer;
+
+  /**
+   * Buffer for histogram that store the encoded bit requirement for each bit
+   * size. Maximum number of discrete bits that can encoded is ordinal of
+   * FixedBitSizes.
+   *
+   * @see FixedBitSizes
+   */
+  private final int[] histBuffer = new int[32];
 
   public SerializationUtils() {
     this.readBuffer = new byte[BUFFER_SIZE];
@@ -255,12 +265,8 @@ public final class SerializationUtils {
    * @return bits required to store value
    */
   public int findClosestNumBits(long value) {
-    int count = 0;
-    while (value != 0) {
-      count++;
-      value = value >>> 1;
-    }
-    return getClosestFixedBits(count);
+    final int numBits = 64 - Long.numberOfLeadingZeros(value);
+    return getClosestFixedBits(numBits);
   }
 
   /**
@@ -287,27 +293,24 @@ public final class SerializationUtils {
    * @param p - percentile value (&gt;=0.0 to &lt;=1.0)
    * @return pth percentile bits
    */
-  public int percentileBits(long[] data, int offset, int length,
-                            double p) {
+  public int percentileBits(long[] data, int offset, int length, double p) {
     if ((p > 1.0) || (p <= 0.0)) {
       return -1;
     }
 
-    // histogram that store the encoded bit requirement for each values.
-    // maximum number of bits that can encoded is 32 (refer FixedBitSizes)
-    int[] hist = new int[32];
+    Arrays.fill(this.histBuffer, 0);
 
     // compute the histogram
     for(int i = offset; i < (offset + length); i++) {
       int idx = encodeBitWidth(findClosestNumBits(data[i]));
-      hist[idx] += 1;
+      this.histBuffer[idx] += 1;
     }
 
     int perLen = (int) (length * (1.0 - p));
 
     // return the bits required by pth percentile length
-    for(int i = hist.length - 1; i >= 0; i--) {
-      perLen -= hist[i];
+    for(int i = this.histBuffer.length - 1; i >= 0; i--) {
+      perLen -= this.histBuffer[i];
       if (perLen < 0) {
         return decodeBitWidth(i);
       }
@@ -352,26 +355,31 @@ public final class SerializationUtils {
     if (n == 0) {
       return 1;
     }
-
-    if (n >= 1 && n <= 24) {
+    if (n <= 24) {
       return n;
-    } else if (n > 24 && n <= 26) {
-      return 26;
-    } else if (n > 26 && n <= 28) {
-      return 28;
-    } else if (n > 28 && n <= 30) {
-      return 30;
-    } else if (n > 30 && n <= 32) {
-      return 32;
-    } else if (n > 32 && n <= 40) {
-      return 40;
-    } else if (n > 40 && n <= 48) {
-      return 48;
-    } else if (n > 48 && n <= 56) {
-      return 56;
-    } else {
-      return 64;
     }
+    if (n <= 26) {
+      return 26;
+    }
+    if (n <= 28) {
+      return 28;
+    }
+    if (n <= 30) {
+      return 30;
+    }
+    if (n <= 32) {
+      return 32;
+    }
+    if (n <= 40) {
+      return 40;
+    }
+    if (n <= 48) {
+      return 48;
+    }
+    if (n <= 56) {
+      return 56;
+    }
+    return 64;
   }
 
   public int getClosestAlignedFixedBits(int n) {
@@ -402,8 +410,9 @@ public final class SerializationUtils {
 
   /**
    * Finds the closest available fixed bit width match and returns its encoded
-   * value (ordinal)
-   * @param n - fixed bit width to encode
+   * value (ordinal).
+   *
+   * @param n fixed bit width to encode
    * @return encoded fixed bit width
    */
   public int encodeBitWidth(int n) {
@@ -411,23 +420,29 @@ public final class SerializationUtils {
 
     if (n >= 1 && n <= 24) {
       return n - 1;
-    } else if (n > 24 && n <= 26) {
-      return FixedBitSizes.TWENTYSIX.ordinal();
-    } else if (n > 26 && n <= 28) {
-      return FixedBitSizes.TWENTYEIGHT.ordinal();
-    } else if (n > 28 && n <= 30) {
-      return FixedBitSizes.THIRTY.ordinal();
-    } else if (n > 30 && n <= 32) {
-      return FixedBitSizes.THIRTYTWO.ordinal();
-    } else if (n > 32 && n <= 40) {
-      return FixedBitSizes.FORTY.ordinal();
-    } else if (n > 40 && n <= 48) {
-      return FixedBitSizes.FORTYEIGHT.ordinal();
-    } else if (n > 48 && n <= 56) {
-      return FixedBitSizes.FIFTYSIX.ordinal();
-    } else {
-      return FixedBitSizes.SIXTYFOUR.ordinal();
     }
+    if (n <= 26) {
+      return FixedBitSizes.TWENTYSIX.ordinal();
+    }
+    if (n <= 28) {
+      return FixedBitSizes.TWENTYEIGHT.ordinal();
+    }
+    if (n <= 30) {
+      return FixedBitSizes.THIRTY.ordinal();
+    }
+    if (n <= 32) {
+      return FixedBitSizes.THIRTYTWO.ordinal();
+    }
+    if (n <= 40) {
+      return FixedBitSizes.FORTY.ordinal();
+    }
+    if (n <= 48) {
+      return FixedBitSizes.FORTYEIGHT.ordinal();
+    }
+    if (n <= 56) {
+      return FixedBitSizes.FIFTYSIX.ordinal();
+    }
+    return FixedBitSizes.SIXTYFOUR.ordinal();
   }
 
   /**
