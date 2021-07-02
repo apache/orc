@@ -135,5 +135,4 @@ public class StringRedBlackTree extends RedBlackTree implements Dictionary {
     return byteArray.getSizeInBytes() + keyOffsets.getSizeInBytes() +
       super.getSizeInBytes();
   }
-
 }
