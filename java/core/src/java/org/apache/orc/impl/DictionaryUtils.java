@@ -70,4 +70,27 @@ public class DictionaryUtils {
     byteArray.write(out, offset, length);
     return length;
   }
+  
+  /**
+   * Compare a UTF8 string from the byteArray using the offset in index-array.
+   *
+   * @param text Container for the UTF8 String
+   * @param position position in the keyOffsets
+   * @param keyOffsets starting offset of the key (in byte) in the byte array
+   * @param byteArray storing raw bytes of all key seen in dictionary
+   * @return true if the text is equal to the value within the byteArray; false
+   *         otherwise
+   */
+  public static boolean equalsTextInternal(Text text, int position,
+      DynamicIntArray keyOffsets, DynamicByteArray byteArray) {
+    final int offset = keyOffsets.get(position);
+    final int length;
+    if (position + 1 == keyOffsets.size()) {
+      length = byteArray.size() - offset;
+    } else {
+      length = keyOffsets.get(position + 1) - offset;
+    }
+    return 0 == byteArray.compare(text.getBytes(), 0, text.getLength(), offset,
+        length);
+  }
 }
