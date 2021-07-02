@@ -47,6 +47,15 @@ public interface Dictionary {
    */
   void getText(Text result, int position);
 
+  /**
+   * Given the position index, write the original string, before being encoded,
+   * to the OutputStream.
+   *
+   * @return the number of byte written to the stream
+   * @throws IOException if an I/O error occurs
+   */
+  int writeTo(OutputStream out, int position) throws IOException;
+
   int add(byte[] bytes, int offset, int length);
 
   int size();

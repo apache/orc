@@ -20,7 +20,6 @@ package org.apache.orc.impl.writer;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.util.JavaDataModel;
-import org.apache.hadoop.io.Text;
 import org.apache.orc.OrcConf;
 import org.apache.orc.OrcProto;
 import org.apache.orc.StringColumnStatistics;
@@ -178,7 +177,6 @@ public abstract class StringBaseTreeWriter extends TreeWriterBase {
     int length = rows.size();
     int rowIndexEntry = 0;
     OrcProto.RowIndex.Builder rowIndex = getRowIndex();
-    Text text = new Text();
     // write the values translated into the dump order.
     for (int i = 0; i <= length; ++i) {
       // now that we are writing out the row values, we can finalize the
@@ -202,9 +200,8 @@ public abstract class StringBaseTreeWriter extends TreeWriterBase {
         if (useDictionaryEncoding) {
           rowOutput.write(dumpOrder[rows.get(i)]);
         } else {
-          dictionary.getText(text, rows.get(i));
-          directStreamOutput.write(text.getBytes(), 0, text.getLength());
-          lengthOutput.write(text.getLength());
+          final int writeLen = dictionary.writeTo(directStreamOutput, rows.get(i));
+          lengthOutput.write(writeLen);
         }
       }
     }

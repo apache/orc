@@ -222,10 +222,10 @@ public final class DynamicByteArray {
    * @param out the stream to write to
    * @param offset the first offset to write
    * @param length the number of bytes to write
-   * @throws IOException
+   * @throws IOException if an I/O error occurs
    */
-  public void write(OutputStream out, int offset,
-                    int length) throws IOException {
+  public void write(OutputStream out, int offset, int length)
+      throws IOException {
     int currentChunk = offset / chunkSize;
     int currentOffset = offset % chunkSize;
     while (length > 0) {

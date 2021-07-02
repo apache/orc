@@ -18,6 +18,7 @@
 package org.apache.orc.impl;
 
 import java.io.IOException;
+import java.io.OutputStream;
 
 import org.apache.hadoop.io.Text;
 
@@ -111,6 +112,12 @@ public class StringRedBlackTree extends RedBlackTree implements Dictionary {
     DictionaryUtils.getTextInternal(result, originalPosition, this.keyOffsets, this.byteArray);
   }
 
+  @Override
+  public int writeTo(OutputStream out, int position) throws IOException {
+    return DictionaryUtils.writeToTextInternal(out, position, this.keyOffsets,
+        this.byteArray);
+  }
+
   /**
    * Get the size of the character data in the table.
    * @return the bytes used by the table
@@ -128,4 +135,5 @@ public class StringRedBlackTree extends RedBlackTree implements Dictionary {
     return byteArray.getSizeInBytes() + keyOffsets.getSizeInBytes() +
       super.getSizeInBytes();
   }
+
 }

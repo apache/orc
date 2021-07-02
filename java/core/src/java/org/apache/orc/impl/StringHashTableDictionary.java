@@ -19,6 +19,7 @@
 package org.apache.orc.impl;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Arrays;
 
 import org.apache.hadoop.io.Text;
@@ -120,6 +121,11 @@ public class StringHashTableDictionary implements Dictionary {
   }
 
   @Override
+  public int writeTo(OutputStream out, int position) throws IOException {
+    return DictionaryUtils.writeToTextInternal(out, position, this.keyOffsets, this.byteArray);
+  }
+
+  @Override
   public int add(byte[] bytes, int offset, int length) {
     newKey.set(bytes, offset, length);
     return add(newKey);
@@ -203,4 +209,5 @@ public class StringHashTableDictionary implements Dictionary {
 
     return byteArray.getSizeInBytes() + keyOffsets.getSizeInBytes() + bucketTotalSize ;
   }
+
 }
