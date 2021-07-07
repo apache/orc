@@ -397,7 +397,7 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
         data[r] = (int) next();
       }
     } else if (!(vector.isRepeating && vector.isNull[0])) {
-      for (int r = 0; r < batchSize ++r) {
+      for (int r = 0; r < batchSize; ++r) {
           data[r] = (vector.isNull[r]) ? 1 : (int) next();
       }
     }
