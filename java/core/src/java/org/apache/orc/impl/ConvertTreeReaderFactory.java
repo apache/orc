@@ -1101,8 +1101,8 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void setConvertVectorElement(int elementNum) {
       double doubleValue = doubleColVector.vector[elementNum];
       if (!Double.isNaN(doubleValue)) {
-        String string = String.valueOf(doubleValue);
-        byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
+        String string = Double.toString(doubleValue);
+        byte[] bytes = string.getBytes(StandardCharsets.US_ASCII);
         assignStringGroupVectorEntry(bytesColVector, elementNum, readerType, bytes);
       } else {
         bytesColVector.noNulls = false;
