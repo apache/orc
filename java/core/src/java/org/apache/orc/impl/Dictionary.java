@@ -44,6 +44,10 @@ public interface Dictionary {
 
   /**
    * Given the position index, return the original string before being encoded.
+   * The value of the Text in the Dictionary is copied into {@code result}.
+   *
+   * @param result the holder to copy the dictionary text into
+   * @param position the position where the key was added
    */
   void getText(Text result, int position);
 
