@@ -390,20 +390,15 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
   }
 
   @Override
-  public void nextVector(ColumnVector vector,
-                         int[] data,
-                         int size) throws IOException {
+  public void nextVector(ColumnVector vector, int[] data, int size) throws IOException {
+    final int batchSize = Math.min(data.length, size);
     if (vector.noNulls) {
-      for(int r=0; r < data.length && r < size; ++r) {
+      for (int r = 0; r < batchSize; ++r) {
         data[r] = (int) next();
       }
     } else if (!(vector.isRepeating && vector.isNull[0])) {
-      for(int r=0; r < data.length && r < size; ++r) {
-        if (!vector.isNull[r]) {
-          data[r] = (int) next();
-        } else {
-          data[r] = 1;
-        }
+      for (int r = 0; r < batchSize; ++r) {
+        data[r] = (vector.isNull[r]) ? 1 : (int) next();
       }
     }
   }
