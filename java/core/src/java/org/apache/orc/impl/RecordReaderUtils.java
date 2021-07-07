@@ -570,7 +570,7 @@ public class RecordReaderUtils {
       // If our key is not unique on the first try, try again
       do {
         key = new Key(buffer.capacity(), currentGeneration++);
-      while (tree.putIfAbsent(key, buffer) != null);
+      } while (tree.putIfAbsent(key, buffer) != null);
     }
   }
 }
