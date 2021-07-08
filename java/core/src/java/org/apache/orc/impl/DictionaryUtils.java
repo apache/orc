@@ -52,7 +52,7 @@ public class DictionaryUtils {
    * @param out the output stream
    * @param position position in the keyOffsets
    * @param keyOffsets starting offset of the key (in byte) in the byte array
-   * @param byteArray storing raw bytes of all key seen in dictionary
+   * @param byteArray storing raw bytes of all keys seen in dictionary
    * @return the number of bytes written to the output stream
    * @throw IOException if an I/O error occurs
    */
