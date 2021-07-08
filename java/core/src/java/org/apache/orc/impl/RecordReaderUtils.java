@@ -506,7 +506,7 @@ public class RecordReaderUtils {
       private final long insertionGeneration;
       private final int hash;
 
-      Key (int capacity, long insertionGeneration) {
+      Key(int capacity, long insertionGeneration) {
         this.capacity = capacity;
         this.insertionGeneration = insertionGeneration;
         this.hash = new HashCodeBuilder().append(capacity).append(insertionGeneration)
