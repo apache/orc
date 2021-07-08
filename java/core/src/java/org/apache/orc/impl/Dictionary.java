@@ -55,6 +55,8 @@ public interface Dictionary {
    * Given the position index, write the original string, before being encoded,
    * to the OutputStream.
    *
+   * @param out the output stream to which to write the data
+   * @param position the position where the key was originally added
    * @return the number of byte written to the stream
    * @throws IOException if an I/O error occurs
    */
