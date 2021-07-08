@@ -1068,8 +1068,8 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
   }
 
   public static class StringGroupFromBooleanTreeReader extends StringGroupFromAnyIntegerTreeReader {
-    private static final TRUE_BYTES = "TRUE".getBytes(StandardCharsets.US_ASCII);
-    private static final FALSE_BYTES = "FALSE".getBytes(StandardCharsets.US_ASCII);
+    private static final byte[] TRUE_BYTES = "TRUE".getBytes(StandardCharsets.US_ASCII);
+    private static final byte[] FALSE_BYTES = "FALSE".getBytes(StandardCharsets.US_ASCII);
 
     StringGroupFromBooleanTreeReader(int columnId, TypeDescription fileType,
                                      TypeDescription readerType,
