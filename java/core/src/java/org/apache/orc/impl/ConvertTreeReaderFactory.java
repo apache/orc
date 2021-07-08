@@ -962,7 +962,9 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
         seconds += 1;
         nanos = 1_000_000_000 - nanos;
       }
-      HiveDecimal value = HiveDecimal.create(String.format("%d.%09d", seconds, nanos));
+      BigDecimal secondsBd = new BigDecimal(seconds);
+	    BigDecimal nanosBd = new BigDecimal(nanos).movePointLeft(9));
+      HiveDecimal value = HiveDecimal.create(secondsBd.add(nanosBd));
       if (value != null) {
         // The DecimalColumnVector will enforce precision and scale and set the entry to null when out of bounds.
         if (decimalColVector instanceof Decimal64ColumnVector) {
