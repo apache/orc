@@ -1068,6 +1068,8 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
   }
 
   public static class StringGroupFromBooleanTreeReader extends StringGroupFromAnyIntegerTreeReader {
+    private static final TRUE_BYTES = "TRUE".getBytes(StandardCharsets.US_ASCII);
+    private static final FALSE_BYTES = "FALSE".getBytes(StandardCharsets.US_ASCII);
 
     StringGroupFromBooleanTreeReader(int columnId, TypeDescription fileType,
                                      TypeDescription readerType,
@@ -1077,8 +1079,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
 
     @Override
     public void setConvertVectorElement(int elementNum) {
-      byte[] bytes = (longColVector.vector[elementNum] != 0 ? "TRUE" : "FALSE")
-         .getBytes(StandardCharsets.UTF_8);
+      byte[] bytes = (longColVector.vector[elementNum] != 0 ? TRUE_BYTES : FALSE_BYTES);
       assignStringGroupVectorEntry(bytesColVector, elementNum, readerType, bytes);
     }
   }
