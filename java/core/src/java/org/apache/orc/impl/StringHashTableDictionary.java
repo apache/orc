@@ -19,7 +19,6 @@
 package org.apache.orc.impl;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 import org.apache.hadoop.io.Text;
 
@@ -190,7 +189,6 @@ public class StringHashTableDictionary implements Dictionary {
       }
     }
 
-    Arrays.fill(hashBuckets, null);
     hashBuckets = resizedHashBuckets;
   }
 
