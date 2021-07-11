@@ -17,8 +17,10 @@
  */
 package org.apache.orc.impl;
 
-import org.apache.hadoop.io.Text;
+import java.io.IOException;
+import java.io.OutputStream;
 
+import org.apache.hadoop.io.Text;
 
 public class DictionaryUtils {
   private DictionaryUtils() {
@@ -30,7 +32,7 @@ public class DictionaryUtils {
    * @param result Container for the UTF8 String.
    * @param position position in the keyOffsets
    * @param keyOffsets starting offset of the key (in byte) in the byte array.
-   * @param byteArray storing raw bytes of all key seen in dictionary
+   * @param byteArray storing raw bytes of all keys seen in dictionary
    */
   public static void getTextInternal(Text result, int position, DynamicIntArray keyOffsets, DynamicByteArray byteArray) {
     int offset = keyOffsets.get(position);
@@ -41,5 +43,30 @@ public class DictionaryUtils {
       length = keyOffsets.get(position + 1) - offset;
     }
     byteArray.setText(result, offset, length);
+  }
+
+  /**
+   * Write a UTF8 string from the byteArray, using the offset in index-array,
+   * into an OutputStream
+   *
+   * @param out the output stream
+   * @param position position in the keyOffsets
+   * @param keyOffsets starting offset of the key (in byte) in the byte array
+   * @param byteArray storing raw bytes of all keys seen in dictionary
+   * @return the number of bytes written to the output stream
+   * @throw IOException if an I/O error occurs
+   */
+  public static int writeToTextInternal(OutputStream out, int position,
+      DynamicIntArray keyOffsets, DynamicByteArray byteArray)
+      throws IOException {
+    int offset = keyOffsets.get(position);
+    int length;
+    if (position + 1 == keyOffsets.size()) {
+      length = byteArray.size() - offset;
+    } else {
+      length = keyOffsets.get(position + 1) - offset;
+    }
+    byteArray.write(out, offset, length);
+    return length;
   }
 }

@@ -18,6 +18,7 @@
 package org.apache.orc.impl;
 
 import java.io.IOException;
+import java.io.OutputStream;
 
 import org.apache.hadoop.io.Text;
 
@@ -109,6 +110,12 @@ public class StringRedBlackTree extends RedBlackTree implements Dictionary {
   @Override
   public void getText(Text result, int originalPosition) {
     DictionaryUtils.getTextInternal(result, originalPosition, this.keyOffsets, this.byteArray);
+  }
+
+  @Override
+  public int writeTo(OutputStream out, int position) throws IOException {
+    return DictionaryUtils.writeToTextInternal(out, position, this.keyOffsets,
+        this.byteArray);
   }
 
   /**
