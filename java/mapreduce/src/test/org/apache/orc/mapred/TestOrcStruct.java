@@ -63,7 +63,7 @@ public class TestOrcStruct {
     expected.setFieldValue(0, new IntWritable(1));
     expected.setFieldValue(1, new LongWritable(2));
     expected.setFieldValue(2, new Text("wow"));
-    assertEquals(147710, expected.hashCode());
+    assertEquals(178524, expected.hashCode());
     assertNotEquals(expected, actual);
     TestOrcList.cloneWritable(expected, actual);
     assertEquals(expected, actual);
@@ -72,7 +72,7 @@ public class TestOrcStruct {
     expected.setFieldValue(2, null);
     TestOrcList.cloneWritable(expected, actual);
     assertEquals(expected, actual);
-    assertEquals(3, expected.hashCode());
+    assertEquals(29791, expected.hashCode());
     expected.setFieldValue(1, new LongWritable(111));
     assertEquals(111, ((LongWritable) expected.getFieldValue(1)).get());
     TestOrcList.cloneWritable(expected, actual);
