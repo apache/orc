@@ -37,8 +37,6 @@ public class StringHashTableDictionary implements Dictionary {
   // containing starting offset of the key (in byte) in the byte array.
   private final DynamicIntArray keyOffsets;
 
-  private final Text newKey = new Text();
-
   private DynamicIntArray[] hashBuckets;
 
   private int capacity;
@@ -124,31 +122,29 @@ public class StringHashTableDictionary implements Dictionary {
     return DictionaryUtils.writeToTextInternal(out, position, this.keyOffsets, this.byteArray);
   }
 
-  @Override
-  public int add(byte[] bytes, int offset, int length) {
-    newKey.set(bytes, offset, length);
-    return add(newKey);
+  public int add(Text text) {
+    return add(text.getBytes(), 0, text.getLength());
   }
 
-  public int add(Text text) {
+  @Override
+  public int add(final byte[] bytes, final int offset, final int length) {
     resizeIfNeeded();
-    newKey.set(text);
 
-    int index = getIndex(text);
+    int index = getIndex(bytes, offset, length);
     DynamicIntArray candidateArray = hashBuckets[index];
 
     Text tmpText = new Text();
     for (int i = 0; i < candidateArray.size(); i++) {
-      getText(tmpText, candidateArray.get(i));
-      if (tmpText.equals(newKey)) {
-        return candidateArray.get(i);
+      final int candidateIndex = candidateArray.get(i);
+      getText(tmpText, candidateIndex);
+      if (tmpText.compareTo(bytes, offset, length) == 0) {
+        return candidateIndex;
       }
     }
 
     // if making it here, it means no match.
-    int len = newKey.getLength();
     int currIdx = keyOffsets.size();
-    keyOffsets.add(byteArray.add(newKey.getBytes(), 0, len));
+    keyOffsets.add(byteArray.add(bytes, offset, length));
     candidateArray.add(currIdx);
     return currIdx;
   }
@@ -172,10 +168,20 @@ public class StringHashTableDictionary implements Dictionary {
 
   /**
    * Compute the hash value and find the corresponding index.
-   *
    */
   int getIndex(Text text) {
-    return Math.floorMod(text.hashCode(), capacity);
+    return getIndex(text.getBytes(), 0, text.getLength());
+  }
+
+  /**
+   * Compute the hash value and find the corresponding index.
+   */
+  int getIndex(final byte[] bytes, final int offset, final int length) {
+    int hash = 1;
+    for (int i = offset; i < offset + length; i++) {
+      hash = (31 * hash) + bytes[i];
+    }
+    return Math.floorMod(hash, capacity);
   }
 
   // Resize the hash table, re-hash all the existing keys.
