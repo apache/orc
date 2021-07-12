@@ -271,7 +271,7 @@ public class JsonFileDump {
         break;
     }
     List<TypeDescription> children = type.getChildren();
-    if (children != null) {
+    if (!children.isEmpty()) {
       writer.key("children");
       switch (type.getCategory()) {
         case STRUCT:

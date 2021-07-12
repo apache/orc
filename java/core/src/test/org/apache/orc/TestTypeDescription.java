@@ -411,10 +411,8 @@ public class TestTypeDescription {
       result += 1;
     }
     List<TypeDescription> children = schema.getChildren();
-    if (children != null) {
-      for (TypeDescription child : children) {
-        result += clearAttributes(child);
-      }
+    for (TypeDescription child : children) {
+      result += clearAttributes(child);
     }
     return result;
   }

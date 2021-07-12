@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
@@ -49,6 +50,25 @@ public class TypeDescription
   // type attributes
   public static final String ENCRYPT_ATTRIBUTE = "encrypt";
   public static final String MASK_ATTRIBUTE = "mask";
+
+  private int id = -1;
+  private int maxId = -1;
+  private TypeDescription parent;
+  private final Category category;
+  private final List<TypeDescription> children;
+  private final List<String> fieldNames;
+  private final Map<String,String> attributes = new HashMap<>();
+  private int maxLength = DEFAULT_LENGTH;
+  private int precision = DEFAULT_PRECISION;
+  private int scale = DEFAULT_SCALE;
+
+  public TypeDescription(final Category category) {
+    this.category = Objects.requireNonNull(category);
+    this.children =
+        (category.isPrimitive) ? Collections.emptyList() : new ArrayList<>();
+    this.fieldNames = (category != Category.STRUCT) ? Collections.emptyList()
+        : new ArrayList<>();
+  }
 
   @Override
   public int compareTo(TypeDescription other) {
@@ -362,15 +382,11 @@ public class TypeDescription
     result.maxLength = maxLength;
     result.precision = precision;
     result.scale = scale;
-    if (fieldNames != null) {
-      result.fieldNames.addAll(fieldNames);
-    }
-    if (children != null) {
-      for(TypeDescription child: children) {
-        TypeDescription clone = child.clone();
-        clone.parent = result;
-        result.children.add(clone);
-      }
+    result.fieldNames.addAll(fieldNames);
+    for (TypeDescription child : children) {
+      TypeDescription clone = child.clone();
+      clone.parent = result;
+      result.children.add(clone);
     }
     for (Map.Entry<String,String> pair: attributes.entrySet()) {
       result.attributes.put(pair.getKey(), pair.getValue());
@@ -381,10 +397,8 @@ public class TypeDescription
   @Override
   public int hashCode() {
     long result = category.ordinal() * 4241 + maxLength + precision * 13 + scale;
-    if (children != null) {
-      for(TypeDescription child: children) {
-        result = result * 6959 + child.hashCode();
-      }
+    for (TypeDescription child : children) {
+      result = result * 6959 + child.hashCode();
     }
     return (int) result;
   }
@@ -430,21 +444,17 @@ public class TypeDescription
       }
     }
     // check the children
-    if (children != null) {
-      if (children.size() != castOther.children.size()) {
+    if (children.size() != castOther.children.size()) {
+      return false;
+    }
+    for (int i = 0; i < children.size(); ++i) {
+      if (!children.get(i).equals(castOther.children.get(i), checkAttributes)) {
         return false;
       }
-      for (int i = 0; i < children.size(); ++i) {
-        if (!children.get(i).equals(castOther.children.get(i), checkAttributes)) {
-          return false;
-        }
-      }
     }
-    if (category == Category.STRUCT) {
-      for(int i=0; i < fieldNames.size(); ++i) {
-        if (!fieldNames.get(i).equals(castOther.fieldNames.get(i))) {
-          return false;
-        }
+    for (int i = 0; i < fieldNames.size(); ++i) {
+      if (!fieldNames.get(i).equals(castOther.fieldNames.get(i))) {
+        return false;
       }
     }
     return true;
@@ -564,8 +574,13 @@ public class TypeDescription
    * @return a list of sorted attribute names
    */
   public List<String> getAttributeNames() {
-    List<String> result = new ArrayList<>(attributes.keySet());
-    Collections.sort(result);
+    final List<String> result;
+    if (attributes.isEmpty()) {
+      result = Collections.emptyList();
+    } else {
+      result = new ArrayList<>(attributes.keySet());
+      Collections.sort(result);
+    }
     return result;
   }
 
@@ -591,7 +606,8 @@ public class TypeDescription
    * @return the list of children types
    */
   public List<TypeDescription> getChildren() {
-    return children == null ? null : Collections.unmodifiableList(children);
+    return children.isEmpty() ? Collections.emptyList()
+        : Collections.unmodifiableList(children);
   }
 
   /**
@@ -601,10 +617,8 @@ public class TypeDescription
    */
   private int assignIds(int startId) {
     id = startId++;
-    if (children != null) {
-      for (TypeDescription child : children) {
-        startId = child.assignIds(startId);
-      }
+    for (TypeDescription child : children) {
+      startId = child.assignIds(startId);
     }
     maxId = startId - 1;
     return startId;
@@ -633,31 +647,6 @@ public class TypeDescription
         throw new IllegalArgumentException("Can't add children to " + category);
     }
   }
-
-  public TypeDescription(Category category) {
-    this.category = category;
-    if (category.isPrimitive) {
-      children = null;
-    } else {
-      children = new ArrayList<>();
-    }
-    if (category == Category.STRUCT) {
-      fieldNames = new ArrayList<>();
-    } else {
-      fieldNames = null;
-    }
-  }
-
-  private int id = -1;
-  private int maxId = -1;
-  private TypeDescription parent;
-  private final Category category;
-  private final List<TypeDescription> children;
-  private final List<String> fieldNames;
-  private final Map<String,String> attributes = new HashMap<>();
-  private int maxLength = DEFAULT_LENGTH;
-  private int precision = DEFAULT_PRECISION;
-  private int scale = DEFAULT_SCALE;
 
   static void printFieldName(StringBuilder buffer, String name) {
     if (UNQUOTED_NAMES.matcher(name).matches()) {

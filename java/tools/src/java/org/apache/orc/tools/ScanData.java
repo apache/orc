@@ -126,7 +126,7 @@ public class ScanData {
     include[column.getId()] = true;
     TypeDescription schema = reader.getSchema();
     boolean result = false;
-    if (column.getChildren() == null) {
+    if (column.getChildren().isEmpty()) {
       int row = 0;
       try (RecordReader rows = reader.rows(reader.options().include(include))) {
         rows.seekToRow(current.row);

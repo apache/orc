@@ -303,7 +303,7 @@ public final class FileDump {
       }
     }
     List<TypeDescription> children = type.getChildren();
-    if (children != null) {
+    if (!children.isEmpty()) {
       switch (type.getCategory()) {
         case STRUCT:
           List<String> fields = type.getFieldNames();

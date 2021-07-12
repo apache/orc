@@ -329,14 +329,12 @@ public class SchemaEvolution {
                         boolean[] ppdSafeConversion,
                         List<TypeDescription> children) {
     boolean safePpd;
-    if (children != null) {
-      for (TypeDescription child : children) {
-        TypeDescription fileType = getFileType(child.getId());
-        safePpd = validatePPDConversion(fileType, child);
-        ppdSafeConversion[child.getId()] = safePpd;
-        populatePpdSafeConversionForChildern(ppdSafeConversion,
-            child.getChildren());
-      }
+    for (TypeDescription child : children) {
+      TypeDescription fileType = getFileType(child.getId());
+      safePpd = validatePPDConversion(fileType, child);
+      ppdSafeConversion[child.getId()] = safePpd;
+      populatePpdSafeConversionForChildern(ppdSafeConversion,
+          child.getChildren());
     }
     return  ppdSafeConversion;
   }
