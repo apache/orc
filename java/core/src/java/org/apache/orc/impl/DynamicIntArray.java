@@ -121,19 +121,20 @@ public final class DynamicIntArray {
 
   @Override
   public String toString() {
-    int i;
-    StringBuilder sb = new StringBuilder(length * 4);
-
-    sb.append('{');
     int l = length - 1;
-    for (i=0; i<l; i++) {
-      sb.append(get(i));
-      sb.append(',');
+    if (l == -1) {
+      return "{}";
     }
-    sb.append(get(i));
-    sb.append('}');
 
-    return sb.toString();
+    StringBuilder sb = new StringBuilder(length * 4);
+    sb.append('{');
+    for (int i = 0; i <= l; i++) {
+      sb.append(get(i));
+      if (i != l) {
+        sb.append(", ");
+      }
+    }
+    return sb.append('}').toString();
   }
 
   public int getSizeInBytes() {
