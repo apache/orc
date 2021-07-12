@@ -99,10 +99,8 @@ public class TestStringHashTableDictionary {
      * this way we know the order of the traverse() method.
      */
     @Override
-    int getIndex(Text text) {
-      String s = text.toString();
-      int underscore = s.indexOf("_");
-      return Integer.parseInt(text.toString().substring(0, underscore));
+    int getIndex(byte[] bytes, int offset, int length) {
+      return (char) bytes[0] - '0';
     }
   }
 
