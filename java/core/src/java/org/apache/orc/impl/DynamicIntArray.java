@@ -131,7 +131,7 @@ public final class DynamicIntArray {
     for (int i = 0; i <= l; i++) {
       sb.append(get(i));
       if (i != l) {
-        sb.append(", ");
+        sb.append(",");
       }
     }
     return sb.append('}').toString();
