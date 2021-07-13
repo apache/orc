@@ -87,4 +87,10 @@ public class TestDynamicArray {
     }
     assertEquals("{6,15,68,3,3}", dia.toString());
   }
+
+  @Test
+  public void testEmptyIntArrayToString() {
+    DynamicIntArray dia = new DynamicIntArray();
+    assertEquals("{}", dia.toString());
+  }
 }
