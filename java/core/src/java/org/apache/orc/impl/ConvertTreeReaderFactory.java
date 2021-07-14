@@ -33,6 +33,7 @@ import java.time.temporal.ChronoField;
 import java.util.EnumMap;
 import java.util.TimeZone;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
@@ -1397,7 +1398,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       byte[] bytes = inBytesColVector.vector[elementNum];
       int start = inBytesColVector.start[elementNum];
       int length = inBytesColVector.length[elementNum];
-      byte[] string = new byte[length == 0 ? 0 : 3 * length - 1];
+      final byte[] string = (length == 0) ? ArrayUtils.EMPTY_BYTE_ARRAY : new byte[3 * length - 1];
       for(int p = 0; p < string.length; p += 2) {
         if (p != 0) {
           string[p++] = ' ';
