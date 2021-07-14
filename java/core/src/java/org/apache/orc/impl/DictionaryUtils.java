@@ -70,7 +70,7 @@ public class DictionaryUtils {
     byteArray.write(out, offset, length);
     return length;
   }
-  
+
   /**
    * Compare a UTF8 string from the byteArray using the offset in index-array.
    *
