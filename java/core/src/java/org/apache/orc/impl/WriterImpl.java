@@ -863,11 +863,9 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
       return true;
     }
     List<TypeDescription> children = schema.getChildren();
-    if (children != null) {
-      for (TypeDescription child : children) {
-        if (hasTimestamp(child)) {
-          return true;
-        }
+    for (TypeDescription child : children) {
+      if (hasTimestamp(child)) {
+        return true;
       }
     }
     return false;
@@ -919,10 +917,8 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
       mask.addColumn(schema);
     }
     List<TypeDescription> children = schema.getChildren();
-    if (children != null) {
-      for(TypeDescription child: children) {
-        result += visitTypeTree(child, encrypted, provider);
-      }
+    for (TypeDescription child : children) {
+      result += visitTypeTree(child, encrypted, provider);
     }
     return result;
   }

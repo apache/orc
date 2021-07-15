@@ -203,7 +203,7 @@ public class TreeReaderFactory {
         TypeDescription col = columnId == -1 ? null : getSchemaEvolution()
           .getFileSchema()
           .findSubtype(columnId);
-        if (col == null || col.getChildren() == null || col.getChildren().isEmpty()) {
+        if (col == null || col.getChildren().isEmpty()) {
           result = TypeReader.ReaderCategory.FILTER_CHILD;
         } else {
           result = TypeReader.ReaderCategory.FILTER_PARENT;

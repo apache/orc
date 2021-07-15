@@ -199,10 +199,8 @@ public class OrcUtils {
           typeDescr.getCategory());
     }
     result.add(type.build());
-    if (children != null) {
-      for(TypeDescription child: children) {
-        appendOrcTypes(result, child);
-      }
+    for (TypeDescription child : children) {
+      appendOrcTypes(result, child);
     }
   }
 
