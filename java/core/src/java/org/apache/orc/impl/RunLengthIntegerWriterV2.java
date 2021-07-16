@@ -286,7 +286,10 @@ public class RunLengthIntegerWriterV2 implements IntegerWriter {
     // find the number of bytes required for base and shift it by 5 bits
     // to accommodate patch width. The additional bit is used to store the sign
     // of the base value.
-    final int baseWidth = utils.findClosestNumBits(min) + 1;
+    int baseBitsNum = utils.findClosestNumBits(min);
+    // if Negative, sign bit is already accounted for
+    final int baseWidth = isNegative ? baseBitsNum : baseBitsNum + 1;
+
     final int baseBytes = baseWidth % 8 == 0 ? baseWidth / 8 : (baseWidth / 8) + 1;
     final int bb = (baseBytes - 1) << 5;
 
@@ -530,7 +533,7 @@ public class RunLengthIntegerWriterV2 implements IntegerWriter {
       // fallback to DIRECT encoding.
       // The decision to use patched base was based on zigzag values, but the
       // actual patching is done on base reduced literals.
-      if ((brBits100p - brBits95p) != 0 && Math.abs(min) < BASE_VALUE_LIMIT) {
+      if ((brBits100p - brBits95p) != 0) {
         encoding = EncodingType.PATCHED_BASE;
         preparePatchedBlob();
         return;

@@ -1219,6 +1219,74 @@ public class TestNewIntegerEncoding {
     }
   }
 
+  // This case is used to testing encoding large negative integer.
+  // The minimum is -84742859065569280, it's a 57 bit width integer
+  // and 8 bytes is used to encoding it.
+  @Test
+  public void testPatchedBaseLargeNegativeInteger() throws Exception {
+    TypeDescription schema = TypeDescription.createStruct()
+        .addField("int", TypeDescription.createLong());
+
+    Writer writer = OrcFile.createWriter(testFilePath,
+        OrcFile.writerOptions(conf)
+            .setSchema(schema)
+            .stripeSize(100000)
+            .bufferSize(10000)
+            .encodingStrategy(encodingStrategy));
+    VectorizedRowBatch batch = schema.createRowBatch();
+
+    List<Long> longList = Lists.newArrayList();
+    for (int i = 0; i < 25; ++i) {
+      longList.add(-17887939293638656L);
+      longList.add(-15605417571528704L);
+      longList.add(-15605417571528704L);
+      longList.add(-13322895849418752L);
+      longList.add(-13322895849418752L);
+      longList.add(-84742859065569280L);
+      longList.add(-15605417571528704L);
+      longList.add(-13322895849418752L);
+      longList.add(-13322895849418752L);
+      longList.add(-15605417571528704L);
+      longList.add(-13322895849418752L);
+      longList.add(-13322895849418752L);
+      longList.add(-15605417571528704L);
+      longList.add(-15605417571528704L);
+      longList.add(-13322895849418752L);
+      longList.add(-13322895849418752L);
+      longList.add(-15605417571528704L);
+      longList.add(-15605417571528704L);
+      longList.add(-13322895849418752L);
+      longList.add(-13322895849418752L);
+      longList.add(-11040374127308800L);
+      longList.add(-15605417571528704L);
+      longList.add(-13322895849418752L);
+      longList.add(-13322895849418752L);
+      longList.add(-15605417571528704L);
+      longList.add(-15605417571528704L);
+      longList.add(-13322895849418752L);
+      longList.add(-13322895849418752L);
+      longList.add(-15605417571528704L);
+      longList.add(-13322895849418752L);
+    }
+    for (Long currLong : longList) {
+      appendLong(batch, currLong);
+    }
+    writer.addRowBatch(batch);
+    writer.close();
+
+    Reader reader = OrcFile.createReader(testFilePath,
+        OrcFile.readerOptions(conf).filesystem(fs));
+    RecordReader rows = reader.rows();
+    batch = reader.getSchema().createRowBatch();
+    int idx = 0;
+    assertEquals(rows.nextBatch(batch), true);
+    assertEquals(batch.size, longList.size());
+    for (int r = 0; r < batch.size; ++r) {
+      assertEquals(longList.get(idx++).longValue(),
+          ((LongColumnVector) batch.cols[0]).vector[r]);
+    }
+  }
+
   @Test
   public void testPatchedBaseTimestamp() throws Exception {
     TypeDescription schema = TypeDescription.createStruct()
