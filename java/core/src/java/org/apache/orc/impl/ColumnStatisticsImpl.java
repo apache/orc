@@ -1864,9 +1864,10 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
     @Override
     public int hashCode() {
+      final int prime = 31;
       int result = super.hashCode();
-      result = 31 * result + (int) minimum;
-      result = 31 * result + (int) maximum;
+      result = prime * result + (int) (maximum ^ (maximum >>> 32));
+      result = prime * result + (int) (minimum ^ (minimum >>> 32));
       return result;
     }
   }
