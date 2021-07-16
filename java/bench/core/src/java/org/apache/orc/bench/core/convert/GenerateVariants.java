@@ -46,6 +46,7 @@ import org.apache.orc.bench.core.convert.parquet.ParquetReader;
 import org.apache.orc.bench.core.convert.parquet.ParquetWriter;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * A tool to create the different variants that we need to benchmark against.
@@ -120,10 +121,12 @@ public class GenerateVariants implements OrcBenchmark {
     long records = Long.parseLong(cli.getOptionValue("sales", "25000000"));
     Configuration conf = new Configuration();
     Path root = new Path(cli.getArgs()[0]);
-    for(String data: dataList) {
+
+    for (final String data: dataList) {
+      System.out.println("Processing " + data + " " + Arrays.toString(formatList));
+
       // Set up the reader
       TypeDescription schema = Utilities.loadSchema(data + ".schema");
-      BatchReader reader = createReader(root, data, schema, conf, records);
 
       // Set up the writers for each combination
       BatchWriter[] writers = new BatchWriter[compressList.length * formatList.length];
@@ -139,15 +142,18 @@ public class GenerateVariants implements OrcBenchmark {
         }
       }
 
-      // Copy the rows
-      VectorizedRowBatch batch = schema.createRowBatch();
-      while (reader.nextBatch(batch)) {
-        for(BatchWriter writer: writers) {
-          writer.writeBatch(batch);
+      // Copy the rows from Reader
+      try (BatchReader reader = createReader(root, data, schema, conf, records)) {
+        VectorizedRowBatch batch = schema.createRowBatch();
+        while (reader.nextBatch(batch)) {
+          for (BatchWriter writer : writers) {
+            writer.writeBatch(batch);
+          }
         }
       }
-      reader.close();
-      for(BatchWriter writer: writers) {
+
+      // Close all the writers
+      for (BatchWriter writer : writers) {
         writer.close();
       }
     }
