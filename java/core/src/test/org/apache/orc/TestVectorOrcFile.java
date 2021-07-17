@@ -2685,7 +2685,7 @@ public class TestVectorOrcFile {
     RecordReader rows = reader.rows(reader.options()
         .range(0L, Long.MAX_VALUE)
         .include(new boolean[]{true, true, true})
-        .searchArgument(sarg, new String[]{null, "int1", "string1"}));
+        .searchArgument(sarg));
     batch = reader.getSchema().createRowBatch(2000);
     LongColumnVector ints = (LongColumnVector) batch.cols[0];
     BytesColumnVector strs = (BytesColumnVector) batch.cols[1];
@@ -2710,7 +2710,7 @@ public class TestVectorOrcFile {
     rows = reader.rows(reader.options()
         .range(0L, Long.MAX_VALUE)
         .include(new boolean[]{true, true, true})
-        .searchArgument(sarg, new String[]{null, "int1", "string1"}));
+        .searchArgument(sarg));
     Assert.assertEquals(3500L, rows.getRowNumber());
     assertTrue(!rows.nextBatch(batch));
 
@@ -2726,7 +2726,7 @@ public class TestVectorOrcFile {
     rows = reader.rows(reader.options()
         .range(0L, Long.MAX_VALUE)
         .include(new boolean[]{true, true, true})
-        .searchArgument(sarg, new String[]{null, "int1", "string1"}));
+        .searchArgument(sarg));
     Assert.assertEquals(0, rows.getRowNumber());
     Assert.assertEquals(true, rows.nextBatch(batch));
     assertEquals(1000, batch.size);
@@ -2771,6 +2771,7 @@ public class TestVectorOrcFile {
     Reader reader = OrcFile.createReader(testFilePath,
         OrcFile.readerOptions(conf).filesystem(fs));
     assertEquals(3500, reader.getNumberOfRows());
+    assertNull(reader.options().getColumnNames());
 
     SearchArgument sarg = SearchArgumentFactory.newBuilder()
         .startAnd()
@@ -2780,15 +2781,17 @@ public class TestVectorOrcFile {
         .lessThan("`int1`", PredicateLeaf.Type.LONG, 600000L)
         .end()
         .build();
-    RecordReader rows = reader.rows(reader.options()
+    Reader.Options opts = reader.options()
         .range(0L, Long.MAX_VALUE)
         .include(new boolean[]{true, true, true})
-        .searchArgument(sarg, new String[]{null, "`int1`", "string1"}));
+        .searchArgument(sarg, new String[]{null, "`int1`", "string1"});
+    RecordReader rows = reader.rows(opts);
     batch = reader.getSchema().createRowBatch(2000);
 
     Assert.assertEquals(1000L, rows.getRowNumber());
     Assert.assertEquals(true, rows.nextBatch(batch));
     assertEquals(1000, batch.size);
+    assertArrayEquals(new String[]{"`int1`", "`int1`"}, opts.getColumnNames());
 
     // Validate the same behaviour with schemaFromString
     fs.delete(testFilePath, false);
@@ -4186,11 +4189,11 @@ public class TestVectorOrcFile {
             .lessThan("complex.int2", PredicateLeaf.Type.LONG, 600000L)
             .end()
             .build();
-
-    RecordReader rows = reader.rows(reader.options()
-            .range(0L, Long.MAX_VALUE)
-            .include(new boolean[]{true, true, true, true, true})
-            .searchArgument(sarg, new String[]{null, "int1", "complex","int2","string1"}));
+    Reader.Options opts = reader.options()
+        .range(0L, Long.MAX_VALUE)
+        .include(new boolean[]{true, true, true, true, true})
+        .searchArgument(sarg);
+    RecordReader rows = reader.rows(opts);
     batch = reader.getSchema().createRowBatch(2000);
     LongColumnVector ints1 = (LongColumnVector) batch.cols[0];
     StructColumnVector struct1 = (StructColumnVector) batch.cols[1];
@@ -4200,6 +4203,7 @@ public class TestVectorOrcFile {
     Assert.assertEquals(1000L, rows.getRowNumber());
     Assert.assertEquals(true, rows.nextBatch(batch));
     assertEquals(1000, batch.size);
+    assertArrayEquals(new String[]{"complex.int2", "complex.int2"}, opts.getColumnNames());;
 
     for(int i=1000; i < 2000; ++i) {
       assertEquals(i,ints1.vector[i-1000]);
@@ -4219,7 +4223,7 @@ public class TestVectorOrcFile {
     rows = reader.rows(reader.options()
             .range(0L, Long.MAX_VALUE)
             .include(new boolean[]{true, true, true, true, true})
-            .searchArgument(sarg, new String[]{null, "int1",null,"int2","string1"}));
+            .searchArgument(sarg));
     Assert.assertEquals(3500L, rows.getRowNumber());
     assertTrue(!rows.nextBatch(batch));
 
@@ -4235,7 +4239,7 @@ public class TestVectorOrcFile {
     rows = reader.rows(reader.options()
             .range(0L, Long.MAX_VALUE)
             .include(new boolean[]{true, true,true,true, true})
-            .searchArgument(sarg, new String[]{null, "int1",null, "int2","string1"}));
+            .searchArgument(sarg));
     Assert.assertEquals(0, rows.getRowNumber());
     Assert.assertEquals(true, rows.nextBatch(batch));
     assertEquals(1000, batch.size);
@@ -4299,7 +4303,7 @@ public class TestVectorOrcFile {
 
     RecordReader rows = reader.rows(reader.options()
             .range(0L, Long.MAX_VALUE)
-            .searchArgument(sarg, new String[]{"double1"}));
+            .searchArgument(sarg));
     batch = reader.getSchema().createRowBatch(3500);
 
     rows.nextBatch(batch);
@@ -4359,7 +4363,7 @@ public class TestVectorOrcFile {
               .end()
               .build();
       // should find one row group
-      try (RecordReader rows = reader.rows(reader.options().searchArgument(sarg, new String[]{}))) {
+      try (RecordReader rows = reader.rows(reader.options().searchArgument(sarg))) {
         rows.nextBatch(batch);
         assertEquals(1024, batch.size);
         assertEquals(true, batch.cols[0].isRepeating);
@@ -4374,7 +4378,7 @@ public class TestVectorOrcFile {
           .end()
           .build();
       // should find one row group
-      try (RecordReader rows = reader.rows(reader.options().searchArgument(sarg, new String[]{}))) {
+      try (RecordReader rows = reader.rows(reader.options().searchArgument(sarg))) {
         rows.nextBatch(batch);
         assertEquals(1024, batch.size);
         assertEquals(true, batch.cols[1].isRepeating);
@@ -4428,7 +4432,7 @@ public class TestVectorOrcFile {
               .in("int1", PredicateLeaf.Type.LONG, 1L)
               .end().build();
 
-      try (RecordReader rows = reader.rows(reader.options().searchArgument(sarg, new String[]{}))) {
+      try (RecordReader rows = reader.rows(reader.options().searchArgument(sarg))) {
         assertEquals(false, rows.nextBatch(batch));
       }
 
@@ -4439,7 +4443,7 @@ public class TestVectorOrcFile {
           .in("string1", PredicateLeaf.Type.STRING, "val")
           .end().build();
 
-      try (RecordReader rows = reader.rows(reader.options().searchArgument(sarg, new String[]{}))) {
+      try (RecordReader rows = reader.rows(reader.options().searchArgument(sarg))) {
         assertEquals(false, rows.nextBatch(batch));
       }
     }

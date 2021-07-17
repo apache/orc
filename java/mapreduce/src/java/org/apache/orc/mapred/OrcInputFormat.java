@@ -139,7 +139,7 @@ public class OrcInputFormat<V extends WritableComparable>
       byte[] sargBytes = Base64.decodeBase64(kryoSarg);
       SearchArgument sarg =
           new Kryo().readObject(new Input(sargBytes), SearchArgumentImpl.class);
-      options.searchArgument(sarg, sargColumns.split(","));
+      options.searchArgument(sarg);
     }
     return options;
   }
