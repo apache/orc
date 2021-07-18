@@ -173,8 +173,7 @@ public class RecordReaderImpl implements RecordReader {
                             List<PredicateLeaf> sargLeaves,
                             SchemaEvolution evolution) {
     int[] result = new int[sargLeaves.size()];
-    Arrays.fill(result, -1);
-    for(int i=0; i < result.length; ++i) {
+    for (int i = 0; i < sargLeaves.size(); ++i) {
       String colName = sargLeaves.get(i).getColumnName();
       result[i] = findColumns(evolution, colName);
     }
