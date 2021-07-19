@@ -20,6 +20,7 @@ package org.apache.orc.impl;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 
 import org.apache.hadoop.io.Text;
 
@@ -50,6 +51,8 @@ public interface Dictionary {
    * @param position the position where the key was added
    */
   void getText(Text result, int position);
+
+  ByteBuffer getText(int position);
 
   /**
    * Given the position index, write the original string, before being encoded,

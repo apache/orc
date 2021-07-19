@@ -18,6 +18,7 @@
 
 package org.apache.orc.impl;
 
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -103,6 +104,11 @@ public class TestStringHashTableDictionary {
       String s = text.toString();
       int underscore = s.indexOf("_");
       return Integer.parseInt(text.toString().substring(0, underscore));
+    }
+
+    @Override
+    int getIndex(ByteBuffer text) {
+      return (char)text.array()[text.position()] - '0';
     }
   }
 
