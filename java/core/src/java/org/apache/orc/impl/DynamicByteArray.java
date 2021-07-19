@@ -254,7 +254,7 @@ public final class DynamicByteArray {
     return sb.toString();
   }
 
-  public void setByteBuffer(ByteBuffer result, int offset, int length) {
+  public ByteBuffer setByteBuffer(ByteBuffer result, int offset, int length) {
     result.clear();
     int currentChunk = offset / chunkSize;
     int currentOffset = offset % chunkSize;
@@ -266,6 +266,7 @@ public final class DynamicByteArray {
       currentOffset = 0;
       currentLength = Math.min(length, chunkSize - currentOffset);
     }
+    return result;
   }
 
   /**
@@ -292,6 +293,16 @@ public final class DynamicByteArray {
       }
     }
     return result;
+  }
+
+  public ByteBuffer get(int offset, int length) {
+    final int currentChunk = offset / chunkSize;
+    final int currentOffset = offset % chunkSize;
+    final int currentLength = Math.min(length, chunkSize - currentOffset);
+    if (currentLength == length) {
+      return ByteBuffer.wrap(data[currentChunk], currentOffset, length);
+    }
+    return (ByteBuffer) this.setByteBuffer(ByteBuffer.allocate(length), offset, length).flip();
   }
 
   /**

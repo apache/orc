@@ -22,6 +22,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.orc.StringDictTestingUtils;
 import org.junit.jupiter.api.Test;
 
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -101,6 +102,11 @@ public class TestStringHashTableDictionary {
     @Override
     int getIndex(byte[] bytes, int offset, int length) {
       return (char) bytes[0] - '0';
+    }
+
+    @Override
+    int getIndex(ByteBuffer text) {
+      return (char)text.array()[text.position()] - '0';
     }
   }
 
