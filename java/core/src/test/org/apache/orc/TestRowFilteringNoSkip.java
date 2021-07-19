@@ -58,6 +58,7 @@ public class TestRowFilteringNoSkip {
   @Before
   public void openFileSystem() throws Exception {
     conf = new Configuration();
+    OrcConf.ALLOW_SELECTED_VECTOR.setBoolean(conf, true);
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestRowFilteringNoSkip." + testCaseName.getMethodName() + ".orc");
     fs.delete(testFilePath, false);

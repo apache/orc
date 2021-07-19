@@ -302,7 +302,7 @@ public class TreeReaderFactory {
      * Seek to the given position.
      *
      * @param index the indexes loaded from the file
-     * @param readPhase
+     * @param readPhase the current readPhase
      * @throws IOException
      */
     public void seek(PositionProvider[] index, ReadPhase readPhase) throws IOException {
@@ -2941,8 +2941,7 @@ public class TreeReaderFactory {
       case DATE:
         return new DateTreeReader(fileType.getId(), context);
       case DECIMAL:
-        if (version == OrcFile.Version.UNSTABLE_PRE_2_0 &&
-            fileType.getPrecision() <= TypeDescription.MAX_DECIMAL64_PRECISION){
+        if (isDecimalAsLong(version, fileType.getPrecision())){
           return new Decimal64TreeReader(fileType.getId(), fileType.getPrecision(),
               fileType.getScale(), context);
         }
@@ -2960,6 +2959,11 @@ public class TreeReaderFactory {
         throw new IllegalArgumentException("Unsupported type " +
             readerTypeCategory);
     }
+  }
+
+  public static boolean isDecimalAsLong(OrcFile.Version version, int precision) {
+    return version == OrcFile.Version.UNSTABLE_PRE_2_0 &&
+    precision <= TypeDescription.MAX_DECIMAL64_PRECISION;
   }
 
   public static BatchReader createRootReader(TypeDescription readerType, Context context)
