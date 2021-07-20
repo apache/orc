@@ -100,7 +100,7 @@ public final class SerializationUtils {
   }
 
   public float readFloat(InputStream in) throws IOException {
-    readFully(in, readBuffer, 0, 4);
+    readFully(in, readBuffer, 4);
     int val = (((readBuffer[0] & 0xff) << 0)
         + ((readBuffer[1] & 0xff) << 8)
         + ((readBuffer[2] & 0xff) << 16)
@@ -127,7 +127,7 @@ public final class SerializationUtils {
   }
 
   public long readLongLE(InputStream in) throws IOException {
-    readFully(in, readBuffer, 0, 8);
+    readFully(in, readBuffer, 8);
     return (((readBuffer[0] & 0xff) << 0)
         + ((readBuffer[1] & 0xff) << 8)
         + ((readBuffer[2] & 0xff) << 16)
@@ -138,15 +138,22 @@ public final class SerializationUtils {
         + ((long) (readBuffer[7] & 0xff) << 56));
   }
 
-  private void readFully(final InputStream in, final byte[] buffer, final int off, final int len)
+  private void readFully(final InputStream in, final byte[] buffer, final int len)
       throws IOException {
-    int n = 0;
-    while (n < len) {
-      int count = in.read(buffer, off + n, len - n);
-      if (count < 0) {
+    final int firstRead = in.read(buffer, 0, len);
+    if (firstRead != len) {
+      if (firstRead < 0) {
         throw new EOFException("Read past EOF for " + in);
       }
-      n += count;
+      int remaining = len - firstRead;
+      while (remaining > 0) {
+        final int location = len - remaining;
+        final int count = in.read(buffer, location, remaining);
+        if (count < 0) {
+          throw new EOFException("Read past EOF for " + in);
+        }
+        remaining -= count;
+      }
     }
   }
 
