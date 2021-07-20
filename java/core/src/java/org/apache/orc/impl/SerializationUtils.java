@@ -154,20 +154,22 @@ public final class SerializationUtils {
     IOUtils.skipFully(in, numOfDoubles * 8L);
   }
 
-  public void writeDouble(OutputStream output,
-                          double value) throws IOException {
-    writeLongLE(output, Double.doubleToLongBits(value));
-  }
-
-  private void writeLongLE(OutputStream output, long value) throws IOException {
-    writeBuffer[0] = (byte) ((value >> 0)  & 0xff);
-    writeBuffer[1] = (byte) ((value >> 8)  & 0xff);
-    writeBuffer[2] = (byte) ((value >> 16) & 0xff);
-    writeBuffer[3] = (byte) ((value >> 24) & 0xff);
-    writeBuffer[4] = (byte) ((value >> 32) & 0xff);
-    writeBuffer[5] = (byte) ((value >> 40) & 0xff);
-    writeBuffer[6] = (byte) ((value >> 48) & 0xff);
-    writeBuffer[7] = (byte) ((value >> 56) & 0xff);
+  public void writeDouble(OutputStream output, double value)
+      throws IOException {
+    final long bits = Double.doubleToLongBits(value);
+    final int first = (int) (bits & 0xFFFFFFFF);
+    final int second = (int) ((bits >>> 32) & 0xFFFFFFFF);
+    // Implementation taken from Apache Avro (org.apache.avro.io.BinaryData)
+    // the compiler seems to execute this order the best, likely due to
+    // register allocation -- the lifetime of constants is minimized.
+    writeBuffer[0] = (byte) (first);
+    writeBuffer[4] = (byte) (second);
+    writeBuffer[5] = (byte) (second >>> 8);
+    writeBuffer[1] = (byte) (first >>> 8);
+    writeBuffer[2] = (byte) (first >>> 16);
+    writeBuffer[6] = (byte) (second >>> 16);
+    writeBuffer[7] = (byte) (second >>> 24);
+    writeBuffer[3] = (byte) (first >>> 24);
     output.write(writeBuffer, 0, 8);
   }
 
