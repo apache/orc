@@ -173,7 +173,6 @@ public final class SerializationUtils {
     output.write(writeBuffer, 0, 8);
   }
 
-
   /**
    * Write the arbitrarily sized signed BigInteger in vint format.
    *
