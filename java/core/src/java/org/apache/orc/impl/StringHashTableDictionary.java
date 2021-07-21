@@ -20,9 +20,11 @@ package org.apache.orc.impl;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.WritableComparator;
 
 
 /**
@@ -121,6 +123,11 @@ public class StringHashTableDictionary implements Dictionary {
   }
 
   @Override
+  public ByteBuffer getText(int positionInKeyOffset) {
+    return DictionaryUtils.getTextInternal(positionInKeyOffset, this.keyOffsets, this.byteArray);
+  }
+
+  @Override
   public int writeTo(OutputStream out, int position) throws IOException {
     return DictionaryUtils.writeToTextInternal(out, position, this.keyOffsets, this.byteArray);
   }
@@ -179,6 +186,11 @@ public class StringHashTableDictionary implements Dictionary {
     return Math.floorMod(text.hashCode(), capacity);
   }
 
+  int getIndex(ByteBuffer text) {
+    return Math.floorMod(WritableComparator.hashBytes(text.array(),
+        text.position(), text.remaining()), capacity);
+  }
+
   // Resize the hash table, re-hash all the existing keys.
   // byteArray and keyOffsetsArray don't have to be re-filled.
   private void doResize(int newCapacity, int oldCapacity) {
@@ -187,12 +199,12 @@ public class StringHashTableDictionary implements Dictionary {
       resizedHashBuckets[i] = createBucket();
     }
 
-    Text tmpText = new Text();
     for (int i = 0; i < oldCapacity; i++) {
       DynamicIntArray oldBucket = hashBuckets[i];
       for (int j = 0; j < oldBucket.size(); j++) {
-        getText(tmpText, oldBucket.get(j));
-        resizedHashBuckets[getIndex(tmpText)].add(oldBucket.get(j));
+        final int offset = oldBucket.get(j);
+        ByteBuffer text = getText(offset);
+        resizedHashBuckets[getIndex(text)].add(oldBucket.get(j));
       }
     }
 
@@ -209,4 +221,5 @@ public class StringHashTableDictionary implements Dictionary {
 
     return byteArray.getSizeInBytes() + keyOffsets.getSizeInBytes() + bucketTotalSize ;
   }
+
 }

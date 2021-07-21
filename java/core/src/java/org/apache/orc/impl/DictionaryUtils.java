@@ -19,6 +19,7 @@ package org.apache.orc.impl;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 
 import org.apache.hadoop.io.Text;
 
@@ -43,6 +44,17 @@ public class DictionaryUtils {
       length = keyOffsets.get(position + 1) - offset;
     }
     byteArray.setText(result, offset, length);
+  }
+
+  public static ByteBuffer getTextInternal(int position, DynamicIntArray keyOffsets, DynamicByteArray byteArray) {
+    final int offset = keyOffsets.get(position);
+    final int length;
+    if (position + 1 == keyOffsets.size()) {
+      length = byteArray.size() - offset;
+    } else {
+      length = keyOffsets.get(position + 1) - offset;
+    }
+    return byteArray.get(offset, length);
   }
 
   /**

@@ -19,6 +19,7 @@ package org.apache.orc.impl;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 
 import org.apache.hadoop.io.Text;
 
@@ -110,6 +111,11 @@ public class StringRedBlackTree extends RedBlackTree implements Dictionary {
   @Override
   public void getText(Text result, int originalPosition) {
     DictionaryUtils.getTextInternal(result, originalPosition, this.keyOffsets, this.byteArray);
+  }
+
+  @Override
+  public ByteBuffer getText(int positionInKeyOffset) {
+    return DictionaryUtils.getTextInternal(positionInKeyOffset, this.keyOffsets, this.byteArray);
   }
 
   @Override
