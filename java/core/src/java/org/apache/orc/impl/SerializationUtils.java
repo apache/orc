@@ -138,22 +138,19 @@ public final class SerializationUtils {
         + ((long) (readBuffer[7] & 0xff) << 56));
   }
 
-  private void readFully(final InputStream in, final byte[] buffer, final int len)
+  private void readFully(final InputStream in, final byte[] buffer, int len)
       throws IOException {
-    final int firstRead = in.read(buffer, 0, len);
-    if (firstRead != len) {
-      if (firstRead < 0) {
+    int offset = 0;
+    for (;;) {
+      final int n = in.read(buffer, offset, len);
+      if (n == len) {
+        return;
+      }
+      if (n < 0) {
         throw new EOFException("Read past EOF for " + in);
       }
-      int remaining = len - firstRead;
-      while (remaining > 0) {
-        final int location = len - remaining;
-        final int count = in.read(buffer, location, remaining);
-        if (count < 0) {
-          throw new EOFException("Read past EOF for " + in);
-        }
-        remaining -= count;
-      }
+      offset += n;
+      len -= n;
     }
   }
 
