@@ -18,6 +18,7 @@
 package org.apache.orc.impl;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -960,7 +961,10 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
         seconds += 1;
         nanos = 1_000_000_000 - nanos;
       }
-      HiveDecimal value = HiveDecimal.create(String.format("%d.%09d", seconds, nanos));
+      BigDecimal secondsBd = new BigDecimal(seconds);
+      BigDecimal nanosBd = new BigDecimal(nanos).movePointLeft(9);
+      BigDecimal resultBd = (seconds >= 0L) ? secondsBd.add(nanosBd) : secondsBd.subtract(nanosBd);
+      HiveDecimal value = HiveDecimal.create(resultBd);
       if (value != null) {
         // The DecimalColumnVector will enforce precision and scale and set the entry to null when out of bounds.
         if (decimalColVector instanceof Decimal64ColumnVector) {
