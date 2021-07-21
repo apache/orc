@@ -19,6 +19,7 @@
 package org.apache.orc.impl;
 
 import java.io.IOException;
+import java.io.OutputStream;
 
 import org.apache.hadoop.io.Text;
 
@@ -116,6 +117,11 @@ public class StringHashTableDictionary implements Dictionary {
   @Override
   public void getText(Text result, int positionInKeyOffset) {
     DictionaryUtils.getTextInternal(result, positionInKeyOffset, this.keyOffsets, this.byteArray);
+  }
+
+  @Override
+  public int writeTo(OutputStream out, int position) throws IOException {
+    return DictionaryUtils.writeToTextInternal(out, position, this.keyOffsets, this.byteArray);
   }
 
   @Override

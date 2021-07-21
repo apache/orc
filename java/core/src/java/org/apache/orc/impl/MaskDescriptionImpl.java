@@ -118,10 +118,10 @@ public class MaskDescriptionImpl implements DataMaskDescription,
 
   @Override
   public int hashCode() {
-    int result = name.hashCode();
-    for (String p: parameters) {
-      result = result * 101 + p.hashCode();
-    }
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ((name == null) ? 0 : name.hashCode());
+    result = prime * result + Arrays.hashCode(parameters);
     return result;
   }
 

@@ -208,6 +208,9 @@ public class PrintData {
       VectorizedRowBatch batch = schema.createRowBatch();
       Integer counter = 0;
       while (rows.nextBatch(batch)) {
+        if (numberOfRows.isPresent() && counter >= numberOfRows.get()){
+            break;
+        }
         for (int r=0; r < batch.size; ++r) {
           JSONWriter writer = new JSONWriter(out);
           printRow(writer, batch, schema, r);
@@ -221,7 +224,6 @@ public class PrintData {
             if (counter >= numberOfRows.get()){
               break;
             }
-
           }
         }
       }

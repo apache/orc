@@ -324,11 +324,7 @@ public class BloomFilter {
 
     @Override
     public int hashCode() {
-      int result = 0;
-      for(long l: data) {
-        result = (int) (result * 13 + l);
-      }
-      return result;
+      return Arrays.hashCode(data);
     }
   }
 }

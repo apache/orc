@@ -380,13 +380,14 @@ public class TypeDescription
 
   @Override
   public int hashCode() {
-    long result = category.ordinal() * 4241 + maxLength + precision * 13 + scale;
-    if (children != null) {
-      for(TypeDescription child: children) {
-        result = result * 6959 + child.hashCode();
-      }
-    }
-    return (int) result;
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + category.hashCode();
+    result = prime * result + children.hashCode();
+    result = prime * result + maxLength;
+    result = prime * result + precision;
+    result = prime * result + scale;
+    return result;
   }
 
   @Override
