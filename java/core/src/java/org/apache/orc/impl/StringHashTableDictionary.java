@@ -75,18 +75,19 @@ public class StringHashTableDictionary implements Dictionary {
     this.capacity = initialCapacity;
     this.loadFactor = loadFactor;
     this.keyOffsets = new DynamicIntArray(initialCapacity);
-    initHashBuckets(initialCapacity);
+    initHashBuckets(false);
     this.threshold = (int)Math.min(initialCapacity * loadFactor, MAX_ARRAY_SIZE + 1);
   }
 
-  private void initHashBuckets(int capacity) {
-    DynamicIntArray[] buckets = new DynamicIntArray[capacity];
-    for (int i = 0; i < capacity; i++) {
+  private void initHashBuckets(final boolean reinit) {
+    final DynamicIntArray[] newBuckets =
+        (reinit) ? this.hashBuckets : new DynamicIntArray[this.capacity];
+    for (int i = 0; i < this.capacity; i++) {
       // We don't need large bucket: If we have more than a handful of collisions,
       // then the table is too small or the function isn't good.
-      buckets[i] = createBucket();
+      newBuckets[i] = createBucket();
     }
-    hashBuckets = buckets;
+    hashBuckets = newBuckets;
   }
 
   private DynamicIntArray createBucket() {
@@ -112,7 +113,7 @@ public class StringHashTableDictionary implements Dictionary {
   public void clear() {
     byteArray.clear();
     keyOffsets.clear();
-    initHashBuckets(this.capacity);
+    initHashBuckets(true);
   }
 
   @Override
