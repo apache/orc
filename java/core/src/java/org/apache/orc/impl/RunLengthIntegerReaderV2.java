@@ -36,7 +36,6 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
   private InStream input;
   private final boolean signed;
   private final long[] literals = new long[RunLengthIntegerWriterV2.MAX_SCOPE];
-  private boolean isRepeating = false;
   private int numLiterals = 0;
   private int used = 0;
   private final boolean skipCorrupt;
@@ -54,7 +53,6 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
   private final static RunLengthIntegerWriterV2.EncodingType[] encodings = RunLengthIntegerWriterV2.EncodingType.values();
   private void readValues(boolean ignoreEof) throws IOException {
     // read the first 2 bits and determine the encoding type
-    isRepeating = false;
     int firstByte = input.read();
     if (firstByte < 0) {
       if (!ignoreEof) {
@@ -103,7 +101,6 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
       // if all number are positive)
       long fd = SerializationUtils.readVslong(input);
       if (fd == 0) {
-        isRepeating = true;
         assert numLiterals == 1;
         Arrays.fill(literals, numLiterals, numLiterals + len, literals[0]);
         numLiterals += len;
@@ -301,7 +298,6 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
       throw new AssertionError("readValues called with existing values present");
     }
     // repeat the value for length times
-    isRepeating = true;
     // TODO: this is not so useful and V1 reader doesn't do that. Fix? Same if delta == 0
     for(int i = 0; i < len; i++) {
       literals[i] = val;
