@@ -196,11 +196,12 @@ namespace orc {
     Int128& operator<<=(uint32_t bits) {
       if (bits != 0) {
         if (bits < 64) {
-          highbits <<= bits;
+          // use unsigned type to avoid left-shift into the sign bit
+          highbits = static_cast<int64_t>(static_cast<uint64_t>(highbits) << bits);
           highbits |= (lowbits >> (64 - bits));
           lowbits <<= bits;
         } else if (bits < 128) {
-          highbits = static_cast<int64_t>(lowbits) << (bits - 64);
+          highbits = static_cast<int64_t>(lowbits << (bits - 64));
           lowbits = 0;
         } else {
           highbits = 0;
@@ -218,7 +219,8 @@ namespace orc {
       if (bits != 0) {
         if (bits < 64) {
           lowbits >>= bits;
-          lowbits |= static_cast<uint64_t>(highbits << (64 - bits));
+          // use unsigned type to avoid left-shift into the sign bit
+          lowbits |= static_cast<uint64_t>(highbits) << (64 - bits);
           highbits = static_cast<int64_t>
             (static_cast<uint64_t>(highbits) >> bits);
         } else if (bits < 128) {
