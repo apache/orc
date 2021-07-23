@@ -124,7 +124,7 @@ public class RunLengthIntegerWriterV2 implements IntegerWriter {
 
   static final int MAX_SCOPE = 512;
   static final int MIN_REPEAT = 3;
-  static final long BASE_VALUE_LIMIT = 1l << 56;
+  static final long BASE_VALUE_LIMIT = 1L << 56;
   private static final int MAX_SHORT_REPEAT_LENGTH = 10;
   private long prevDelta = 0;
   private int fixedRunLength = 0;
