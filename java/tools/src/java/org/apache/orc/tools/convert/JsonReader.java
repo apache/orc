@@ -263,8 +263,9 @@ public class JsonReader implements RecordReader {
 
     public MapColumnConverter(TypeDescription schema) {
       TypeDescription keyType = schema.getChildren().get(0);
-      if (keyType.getCategory() != TypeDescription.Category.STRING)
+      if (keyType.getCategory() != TypeDescription.Category.STRING) {
         throw new IllegalArgumentException("JSON can only support MAP key in STRING type: " + schema);
+      }
       keyConverter = createConverter(keyType);
       valueConverter = createConverter(schema.getChildren().get(1));
     }

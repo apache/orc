@@ -1831,8 +1831,9 @@ public class TreeReaderFactory {
             if (idx - previousIdx > 0) {
               valueReader.skip(countNonNullRowsInRange(result.isNull, previousIdx, idx));
             }
-            if (!result.isNull[r])
+            if (!result.isNull[r]) {
               result.vector[idx].setFromLongAndScale(valueReader.next(), scale);
+            }
             previousIdx = idx + 1;
           }
           valueReader.skip(countNonNullRowsInRange(result.isNull, previousIdx, batchSize));
@@ -2284,8 +2285,9 @@ public class TreeReaderFactory {
           // and set strings one by one
           if (filterContext.isSelectedInUse()) {
             // Set all string values to null - offset and length is zero
-            for (int i = 0; i < batchSize; i++)
+            for (int i = 0; i < batchSize; i++) {
               result.setRef(i, dictionaryBufferInBytesCache, 0, 0);
+            }
             // Read selected rows from stream
             for (int i = 0; i != filterContext.getSelectedSize(); i++) {
               int idx = filterContext.getSelected()[i];
