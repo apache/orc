@@ -159,7 +159,7 @@ public final class SerializationUtils {
     final long bits = Double.doubleToLongBits(value);
     final int first = (int) (bits & 0xFFFFFFFF);
     final int second = (int) ((bits >>> 32) & 0xFFFFFFFF);
-    // Implementation taken from Apache Avro
+    // Implementation taken from Apache Avro (org.apache.avro.io.BinaryData)
     // the compiler seems to execute this order the best, likely due to
     // register allocation -- the lifetime of constants is minimized.
     writeBuffer[0] = (byte) (first);
