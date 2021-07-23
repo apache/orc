@@ -66,11 +66,20 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
     }
     currentEncoding = encodings[(firstByte >>> 6) & 0x03];
     switch (currentEncoding) {
-    case SHORT_REPEAT: readShortRepeatValues(firstByte); break;
-    case DIRECT: readDirectValues(firstByte); break;
-    case PATCHED_BASE: readPatchedBaseValues(firstByte); break;
-    case DELTA: readDeltaValues(firstByte); break;
-    default: throw new IOException("Unknown encoding " + currentEncoding);
+    case SHORT_REPEAT:
+      readShortRepeatValues(firstByte);
+      break;
+    case DIRECT:
+      readDirectValues(firstByte);
+      break;
+    case PATCHED_BASE:
+      readPatchedBaseValues(firstByte);
+      break;
+    case DELTA:
+      readDeltaValues(firstByte);
+      break;
+    default:
+      throw new IOException("Unknown encoding " + currentEncoding);
     }
   }
 
