@@ -286,7 +286,10 @@
                   <property name="message" value="No trailing white space allowed."/>
                 </module>
                 <module name="TreeWalker">
+                  <module name="OuterTypeFilename"/>
                   <module name="UnusedImports"/>
+                  <module name="UpperEll"/>
+                  <module name="ArrayTypeStyle"/>
                 </module>
               </module>
             </checkstyleRules>
