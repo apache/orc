@@ -78,7 +78,7 @@ public class BloomFilterIO  {
     int numFuncs = bloomFilter.getNumHashFunctions();
     switch (kind) {
       case BLOOM_FILTER: {
-        long values[] = new long[bloomFilter.getBitsetCount()];
+        long[] values = new long[bloomFilter.getBitsetCount()];
         for (int i = 0; i < values.length; ++i) {
           values[i] = bloomFilter.getBitset(i);
         }
