@@ -306,7 +306,7 @@ public class ParserUtils {
     TypeDescription current = schema;
     int id = schema.getId();
     if (goal < id || goal > schema.getMaximumId()) {
-      throw new IllegalArgumentException("Unknown type id " + id + " in " +
+      throw new IllegalArgumentException("Unknown type id " + goal + " in " +
           current.toJson());
     }
     while (id != goal) {
