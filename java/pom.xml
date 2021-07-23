@@ -286,6 +286,11 @@
                 <module name="TreeWalker">
                   <module name="OuterTypeFilename"/>
                   <module name="UnusedImports"/>
+                  <module name="NoLineWrap"/>
+                  <module name="OneStatementPerLine"/>
+                  <module name="NeedBraces">
+                    <property name="allowSingleLineStatement" value="true"/>
+                  </module>
                   <module name="UpperEll"/>
                   <module name="ArrayTypeStyle"/>
                 </module>
