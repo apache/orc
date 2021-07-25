@@ -34,7 +34,8 @@ public class DictionaryUtils {
    * @param keyOffsets starting offset of the key (in byte) in the byte array.
    * @param byteArray storing raw bytes of all keys seen in dictionary
    */
-  public static void getTextInternal(Text result, int position, DynamicIntArray keyOffsets, DynamicByteArray byteArray) {
+  public static void getTextInternal(Text result, int position,
+      DynamicIntArray keyOffsets, DynamicByteArray byteArray) {
     int offset = keyOffsets.get(position);
     int length;
     if (position + 1 == keyOffsets.size()) {

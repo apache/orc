@@ -83,8 +83,8 @@ class ZeroCopyShims {
     }
   }
 
-  public static HadoopShims.ZeroCopyReaderShim getZeroCopyReader(FSDataInputStream in,
-                                                                 HadoopShims.ByteBufferPoolShim pool) throws IOException {
+  public static HadoopShims.ZeroCopyReaderShim getZeroCopyReader(
+      FSDataInputStream in, HadoopShims.ByteBufferPoolShim pool) throws IOException {
     return new ZeroCopyAdapter(in, pool);
   }
 

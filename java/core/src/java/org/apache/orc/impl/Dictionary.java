@@ -25,7 +25,8 @@ import org.apache.hadoop.io.Text;
 
 
 /**
- * Interface to define the dictionary used for encoding value in columns of specific types like string, char, varchar, etc.
+ * Interface to define the dictionary used for encoding value in columns
+ * of specific types like string, char, varchar, etc.
  */
 public interface Dictionary {
   enum IMPL {
