@@ -9,7 +9,6 @@ matrix:
   fast_finish: true
   include:
   - language: java
-    jdk: openjdk8
     env:
     - MAVEN_OPTS=-Xmx2g MAVEN_SKIP_RC=true
     script:
