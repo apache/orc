@@ -162,7 +162,8 @@ public class TimestampRowFilterBenchmark extends org.openjdk.jmh.Main {
 
   /*
    * Run this test:
-   *  java -cp hive/target/orc-benchmarks-hive-*-uber.jar org.apache.orc.bench.hive.rowfilter.TimestampRowFilterBenchmark
+   *  java -cp hive/target/orc-benchmarks-hive-*-uber.jar \
+   *    org.apache.orc.bench.hive.rowfilter.TimestampRowFilterBenchmark
    */
   public static void main(String[] args) throws RunnerException {
     new Runner(new OptionsBuilder()

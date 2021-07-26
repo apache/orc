@@ -735,7 +735,8 @@ public class ReaderImpl implements Reader {
       OrcProto.Footer footer =
           OrcProto.Footer.parseFrom(
               InStream.createCodedInputStream(
-                  InStream.create("footer", new BufferChunk(buffer, 0), psOffset - footerSize, footerSize, compression)));
+                  InStream.create("footer", new BufferChunk(buffer, 0),
+                                  psOffset - footerSize, footerSize, compression)));
       fileTailBuilder.setPostscriptLength(psLen).setFooter(footer);
     }
     // clear does not clear the contents but sets position to 0 and limit = capacity
