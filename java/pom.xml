@@ -279,7 +279,7 @@
                 <module name="NewlineAtEndOfFile">
                 </module>
                 <module name="LineLength">
-                  <property name="max" value="125"/>
+                  <property name="max" value="120"/>
                 </module>
                 <module name="RegexpSingleline">
                   <property name="format" value="\s+$"/>

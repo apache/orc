@@ -750,7 +750,8 @@ public final class SerializationUtils {
     output.write(writeBuffer, 0, toWrite);
   }
 
-  private void writeLongBE(OutputStream output, long[] input, int offset, int numHops, int numBytes) throws IOException {
+  private void writeLongBE(OutputStream output, long[] input, int offset,
+                           int numHops, int numBytes) throws IOException {
 
     switch (numBytes) {
     case 1:

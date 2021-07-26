@@ -264,7 +264,8 @@ public final class HybridDate
     }
 
     private boolean isCutoverMonth() {
-        return isoDate.getYear() == CUTOVER_YEAR && isoDate.getMonthValue() == 9 && isoDate.getDayOfMonth() > CUTOVER_DAYS;
+        return isoDate.getYear() == CUTOVER_YEAR &&
+            isoDate.getMonthValue() == 9 && isoDate.getDayOfMonth() > CUTOVER_DAYS;
     }
 
     //-------------------------------------------------------------------------
