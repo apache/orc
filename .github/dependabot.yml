@@ -23,3 +23,6 @@ updates:
       # Pin gson to 2.2.4 because of Hive
       - dependency-name: "com.google.code.gson:gson"
         versions: "[2.3,)"
+      # Pin jmh to 1.20
+      - dependency-name: "org.openjdk.jmh:jmh-core"
+        versions: "[1.21,)"
