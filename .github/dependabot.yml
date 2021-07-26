@@ -19,3 +19,7 @@ updates:
     directory: "/java"
     schedule:
       interval: "weekly"
+    ignore:
+      # Pin gson to 2.2.4 because of Hive
+      - dependency-name: "com.google.code.gson:gson"
+        versions: "[2.3,)"
