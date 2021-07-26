@@ -311,6 +311,9 @@ public class TestRecordReaderImpl {
     }
 
     @Override
+    public int getId() { return -1; }
+
+    @Override
     public List<Object> getLiteralList() {
       return null;
     }
