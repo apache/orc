@@ -23,7 +23,6 @@ import java.io.OutputStream;
 import java.util.Arrays;
 
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.WritableComparator;
 
 
 /**
@@ -176,12 +175,14 @@ public class StringHashTableDictionary implements Dictionary {
   }
 
   /**
-   * Compute the hash value and find the corresponding index. Uses same
-   * implementation as {@code Text#hashCode()}.
+   * Compute the hash value and find the corresponding index.
    */
   int getIndex(final byte[] bytes, final int offset, final int length) {
-    return Math.floorMod(WritableComparator.hashBytes(bytes, offset, length),
-        capacity);
+    int hash = 1;
+    for (int i = offset; i < offset + length; i++) {
+      hash = (31 * hash) + bytes[i];
+    }
+    return Math.floorMod(hash, capacity);
   }
 
   // Resize the hash table, re-hash all the existing keys.
