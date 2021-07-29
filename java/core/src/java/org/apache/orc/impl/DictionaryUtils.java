@@ -22,7 +22,8 @@ import java.io.OutputStream;
 
 import org.apache.hadoop.io.Text;
 
-public class DictionaryUtils {
+class DictionaryUtils {
+
   private DictionaryUtils() {
     // Utility class does nothing in constructor
   }
