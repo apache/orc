@@ -13,9 +13,12 @@ There are three sub-modules to try to mitigate dependency hell:
 * hive - the Hive benchmarks
 * spark - the Spark benchmarks
 
-To build this library:
+To build this library, run the following in the parent directory:
 
-```% ./mvnw clean package```
+```
+% ./mvnw clean package -Pbenchmark
+% cd bench
+```
 
 To fetch the source data:
 
