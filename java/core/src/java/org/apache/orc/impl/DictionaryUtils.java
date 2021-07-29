@@ -93,6 +93,6 @@ public class DictionaryUtils {
       keyLength = keyOffsets.get(position + 1) - byteArrayOffset;
     }
     return 0 == byteArray.compare(bytes, offset, length, byteArrayOffset,
-    	keyLength);
+      keyLength);
   }
 }
