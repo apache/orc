@@ -135,7 +135,7 @@ public class StringHashTableDictionary implements Dictionary {
 
     for (int i = 0; i < candidateArray.size(); i++) {
       final int candidateIndex = candidateArray.get(i);
-      if (DictionaryUtils.equalsTextInternal(newKey, candidateIndex,
+      if (DictionaryUtils.equalsInternal(bytes, offset, length, candidateIndex,
           this.keyOffsets, this.byteArray)) {
         return candidateIndex;
       }
