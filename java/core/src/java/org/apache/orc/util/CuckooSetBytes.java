@@ -350,12 +350,24 @@ public class CuckooSetBytes {
        *
        * mix(a,b,c);
        */
-      a = (a - c) & INT_MASK;  a ^= rot(c, 4);  c = (c + b) & INT_MASK;
-      b = (b - a) & INT_MASK;  b ^= rot(a, 6);  a = (a + c) & INT_MASK;
-      c = (c - b) & INT_MASK;  c ^= rot(b, 8);  b = (b + a) & INT_MASK;
-      a = (a - c) & INT_MASK;  a ^= rot(c,16);  c = (c + b) & INT_MASK;
-      b = (b - a) & INT_MASK;  b ^= rot(a,19);  a = (a + c) & INT_MASK;
-      c = (c - b) & INT_MASK;  c ^= rot(b, 4);  b = (b + a) & INT_MASK;
+      a = (a - c) & INT_MASK;
+      a ^= rot(c, 4);
+      c = (c + b) & INT_MASK;
+      b = (b - a) & INT_MASK;
+      b ^= rot(a, 6);
+      a = (a + c) & INT_MASK;
+      c = (c - b) & INT_MASK;
+      c ^= rot(b, 8);
+      b = (b + a) & INT_MASK;
+      a = (a - c) & INT_MASK;
+      a ^= rot(c,16);
+      c = (c + b) & INT_MASK;
+      b = (b - a) & INT_MASK;
+      b ^= rot(a,19);
+      a = (a + c) & INT_MASK;
+      c = (c - b) & INT_MASK;
+      c ^= rot(b, 4);
+      b = (b + a) & INT_MASK;
     }
 
     //-------------------------------- last block: affect all 32 bits of (c)
@@ -425,13 +437,20 @@ public class CuckooSetBytes {
      * }
      *
      */
-    c ^= b; c = (c - rot(b,14)) & INT_MASK;
-    a ^= c; a = (a - rot(c,11)) & INT_MASK;
-    b ^= a; b = (b - rot(a,25)) & INT_MASK;
-    c ^= b; c = (c - rot(b,16)) & INT_MASK;
-    a ^= c; a = (a - rot(c,4))  & INT_MASK;
-    b ^= a; b = (b - rot(a,14)) & INT_MASK;
-    c ^= b; c = (c - rot(b,24)) & INT_MASK;
+    c ^= b;
+    c = (c - rot(b,14)) & INT_MASK;
+    a ^= c;
+    a = (a - rot(c,11)) & INT_MASK;
+    b ^= a;
+    b = (b - rot(a,25)) & INT_MASK;
+    c ^= b;
+    c = (c - rot(b,16)) & INT_MASK;
+    a ^= c;
+    a = (a - rot(c,4))  & INT_MASK;
+    b ^= a;
+    b = (b - rot(a,14)) & INT_MASK;
+    c ^= b;
+    c = (c - rot(b,24)) & INT_MASK;
 
     return (int)(c & INT_MASK);
   }

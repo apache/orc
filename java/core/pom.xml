@@ -37,11 +37,6 @@
       <groupId>org.apache.orc</groupId>
       <artifactId>orc-shims</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.apache.orc</groupId>
-      <artifactId>orc-gen</artifactId>
-      <version>${project.version}</version>
-    </dependency>
 
     <!-- inter-project -->
     <dependency>
@@ -164,33 +159,6 @@
             <ignoredDependency>org.apache.hive:hive-storage-api</ignoredDependency>
           </ignoredDependencies>
         </configuration>
-      </plugin>
-      <plugin>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>generate-sources</id>
-            <phase>generate-sources</phase>
-            <configuration>
-              <target>
-                <property name="compile.classpath"
-                          refid="maven.compile.classpath"/>
-                <taskdef name="filtergen"
-                         classname="org.apache.orc.gen.FilterGenerator"
-                         classpath="${compile.classpath}"/>
-                <mkdir dir="${project.build.directory}/generated-sources/java/org/apache/orc/filter/impl"/>
-                <mkdir dir="${project.build.directory}/generated-test-sources/java/org/apache/orc/filter/impl"/>
-                <filtergen templateDir="${basedir}/src/gen/filters"
-                           srcPkgDir="${project.build.directory}/generated-sources/java/org/apache/orc/filter/impl"
-                           testPkgDir="${project.build.directory}/generated-test-sources/java/org/apache/orc/filter/impl"
-                />
-              </target>
-            </configuration>
-            <goals>
-              <goal>run</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
     </plugins>
   </build>

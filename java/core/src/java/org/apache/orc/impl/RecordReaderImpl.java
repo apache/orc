@@ -54,7 +54,7 @@ import org.apache.orc.StripeInformation;
 import org.apache.orc.TimestampColumnStatistics;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.filter.BatchFilter;
-import org.apache.orc.filter.FilterFactory;
+import org.apache.orc.impl.filter.FilterFactory;
 import org.apache.orc.impl.reader.ReaderEncryption;
 import org.apache.orc.impl.reader.StripePlanner;
 import org.apache.orc.impl.reader.tree.BatchReader;
