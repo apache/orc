@@ -28,7 +28,6 @@ import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentImpl;
 import org.apache.orc.impl.RecordReaderImpl;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -110,8 +109,8 @@ public class TestOrcTimestampPPD {
     times = (TimestampColumnVector) batch.cols[0];
     while (rows.nextBatch(batch)) {
       for (int r = 0; r < batch.size; ++r) {
-        Assert.assertEquals(tslist.get(0), times.asScratchTimestamp(r));
-        Assert.assertEquals(tslist.get(0).getNanos(), times.asScratchTimestamp(r).getNanos());
+        assertEquals(tslist.get(0), times.asScratchTimestamp(r));
+        assertEquals(tslist.get(0).getNanos(), times.asScratchTimestamp(r).getNanos());
       }
     }
     rows.close();
@@ -125,15 +124,15 @@ public class TestOrcTimestampPPD {
     PredicateLeaf pred = createPredicateLeaf(PredicateLeaf.Operator.EQUALS, PredicateLeaf.Type.TIMESTAMP, "c",
         Timestamp.valueOf("1970-01-01 00:00:00.0005"), null);
     // Make sure PPD is now passing
-    Assert.assertEquals(SearchArgument.TruthValue.YES, RecordReaderImpl.evaluatePredicate(colStats[0], pred, null));
+    assertEquals(SearchArgument.TruthValue.YES, RecordReaderImpl.evaluatePredicate(colStats[0], pred, null));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.LESS_THAN_EQUALS, PredicateLeaf.Type.TIMESTAMP, "c",
         Timestamp.valueOf("1970-01-01 00:00:00.0005"), null);
-    Assert.assertEquals(SearchArgument.TruthValue.YES, RecordReaderImpl.evaluatePredicate(colStats[0], pred, null));
+    assertEquals(SearchArgument.TruthValue.YES, RecordReaderImpl.evaluatePredicate(colStats[0], pred, null));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.LESS_THAN, PredicateLeaf.Type.TIMESTAMP, "c",
         Timestamp.valueOf("1970-01-01 00:00:00.0005"), null);
-    Assert.assertEquals(SearchArgument.TruthValue.NO, RecordReaderImpl.evaluatePredicate(colStats[0], pred, null));
+    assertEquals(SearchArgument.TruthValue.NO, RecordReaderImpl.evaluatePredicate(colStats[0], pred, null));
   }
 
   @Test
@@ -172,8 +171,8 @@ public class TestOrcTimestampPPD {
     times = (TimestampColumnVector) batch.cols[0];
     while (rows.nextBatch(batch)) {
       for (int r = 0; r < batch.size; ++r) {
-        Assert.assertEquals(tslist.get(r), times.asScratchTimestamp(r));
-        Assert.assertEquals(tslist.get(r).getNanos(), times.asScratchTimestamp(r).getNanos());
+        assertEquals(tslist.get(r), times.asScratchTimestamp(r));
+        assertEquals(tslist.get(r).getNanos(), times.asScratchTimestamp(r).getNanos());
       }
     }
     rows.close();
@@ -187,22 +186,22 @@ public class TestOrcTimestampPPD {
     // PPD EQUALS with nano precision passing
     PredicateLeaf pred = createPredicateLeaf(PredicateLeaf.Operator.EQUALS, PredicateLeaf.Type.TIMESTAMP, "c",
         Timestamp.valueOf("2037-01-01 00:00:00.001109"), null);
-    Assert.assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[0], pred, null));
+    assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[0], pred, null));
 
     // PPD EQUALS with ms precision NOT passing
     pred = createPredicateLeaf(PredicateLeaf.Operator.EQUALS, PredicateLeaf.Type.TIMESTAMP, "c",
         Timestamp.valueOf("2037-01-01 00:00:001"), null);
-    Assert.assertEquals(SearchArgument.TruthValue.NO, RecordReaderImpl.evaluatePredicate(colStats[0], pred, null));
+    assertEquals(SearchArgument.TruthValue.NO, RecordReaderImpl.evaluatePredicate(colStats[0], pred, null));
 
     // PPD LESS_THAN with ns precision passing
     pred = createPredicateLeaf(PredicateLeaf.Operator.LESS_THAN, PredicateLeaf.Type.TIMESTAMP, "c",
         Timestamp.valueOf("2037-01-01 00:00:00.006789"), null);
-    Assert.assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[0], pred, null));
+    assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[0], pred, null));
 
     // PPD LESS_THAN with ms precision passing
     pred = createPredicateLeaf(PredicateLeaf.Operator.LESS_THAN, PredicateLeaf.Type.TIMESTAMP, "c",
         Timestamp.valueOf("2037-01-01 00:00:00.002"), null);
-    Assert.assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[0], pred, null));
+    assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[0], pred, null));
   }
 }
 

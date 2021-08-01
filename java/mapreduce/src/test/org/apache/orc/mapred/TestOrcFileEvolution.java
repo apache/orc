@@ -30,7 +30,6 @@ import org.apache.hadoop.mapred.Reporter;
 import org.apache.orc.*;
 import org.apache.orc.TypeDescription.Category;
 import org.apache.orc.impl.SchemaEvolution;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -43,7 +42,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 
 /**
@@ -237,7 +236,7 @@ public class TestOrcFileEvolution {
   public void testMissingColumnFromReaderSchema() {
     // Expect failure if the column is missing from the reader schema, as column a that is added
     // by the SArg is missing from the reader schema
-    Assert.assertThrows("Field a not found in", IllegalArgumentException.class,
+    assertThrows("Field a not found in", IllegalArgumentException.class,
                         () -> checkEvolution("struct<b:int,c:string>",
                                        "struct<b:int,c:string>",
                                        struct(1, "foo"),

@@ -26,7 +26,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.TimeZone;
 
-import org.junit.Assert;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -182,7 +181,7 @@ public class TestOrcTimezone1 {
         ts.asScratchTimestamp(0));
 
     // handle the close up
-    Assert.assertEquals(false, rows.nextBatch(batch));
+    assertEquals(false, rows.nextBatch(batch));
     rows.close();
   }
 }
