@@ -33,3 +33,6 @@ updates:
         versions: "[2.2.1,)"
       - dependency-name: "org.apache.hadoop:hadoop-mapreduce-client-core"
         versions: "[2.2.1,)"
+      # Pin scala-library to 2.12.10
+      - dependency-name: "org.scala-lang:scala-library"
+        versions: "[2.12.11,)"
