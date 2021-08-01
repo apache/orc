@@ -517,18 +517,18 @@ public class TestStringDictionary {
       // within the same package as ORC reader
       OrcProto.StripeFooter footer = ((RecordReaderImpl) recordReader).readStripeFooter(stripe);
       for (int i = 0; i < footer.getColumnsCount(); ++i) {
-        Assert.assertEquals(
+        assertEquals(
             "Expected 3 columns in the footer: One for the Orc Struct, and two for its members.",
             3, footer.getColumnsCount());
-        Assert.assertEquals(
+        assertEquals(
             "The ORC schema struct should be DIRECT encoded.",
             OrcProto.ColumnEncoding.Kind.DIRECT, footer.getColumns(0).getKind()
         );
-        Assert.assertEquals(
+        assertEquals(
             "The shortString column must be DICTIONARY_V2 encoded",
             OrcProto.ColumnEncoding.Kind.DICTIONARY_V2, footer.getColumns(1).getKind()
         );
-        Assert.assertEquals(
+        assertEquals(
             "The longString column must be DIRECT_V2 encoded",
             OrcProto.ColumnEncoding.Kind.DIRECT_V2, footer.getColumns(2).getKind()
         );

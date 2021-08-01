@@ -30,7 +30,7 @@ import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.orc.impl.OrcFilterContextImpl;
-import org.junit.Assert;
+import static org.junit.Assert.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -120,8 +120,8 @@ public class TestRowFilteringIOSkip {
   @Test
   public void writeIsSuccessful() throws IOException {
     Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(conf).filesystem(fs));
-    Assert.assertEquals(RowCount, r.getNumberOfRows());
-    Assert.assertTrue(r.getStripes().size() > 1);
+    assertEquals(RowCount, r.getNumberOfRows());
+    assertTrue(r.getStripes().size() > 1);
   }
 
   @Test
@@ -132,14 +132,14 @@ public class TestRowFilteringIOSkip {
     long rowCount = 0;
     try (RecordReader rr = r.rows(r.options().include(FirstColumnOnly))) {
       while (rr.nextBatch(b)) {
-        Assert.assertTrue(((LongColumnVector) b.cols[0]).vector[0] != 0);
+        assertTrue(((LongColumnVector) b.cols[0]).vector[0] != 0);
         rowCount += b.size;
       }
     }
     FileSystem.Statistics stats = readEnd();
-    Assert.assertEquals(RowCount, rowCount);
+    assertEquals(RowCount, rowCount);
     // We should read less than half the length of the file
-    Assert.assertTrue(String.format("Bytes read %d is not half of file size %d",
+    assertTrue(String.format("Bytes read %d is not half of file size %d",
                                     stats.getBytesRead(),
                                     r.getContentLength()),
                       stats.getBytesRead() < r.getContentLength() / 2);
@@ -160,8 +160,8 @@ public class TestRowFilteringIOSkip {
       rowCount = validateFilteredRecordReader(rr, b);
     }
     double p = readPercentage(readEnd(), fs.getFileStatus(filePath).getLen());
-    Assert.assertEquals(RowCount, rowCount);
-    Assert.assertTrue(p >= 100);
+    assertEquals(RowCount, rowCount);
+    assertTrue(p >= 100);
   }
 
   private long validateFilteredRecordReader(RecordReader rr, VectorizedRowBatch b)
@@ -186,13 +186,13 @@ public class TestRowFilteringIOSkip {
       }
       long expValue = ((LongColumnVector) b.cols[0]).vector[rowIdx];
       d.setFromLongAndScale(expValue, scale);
-      Assert.assertEquals(d, ((DecimalColumnVector) b.cols[1]).vector[rowIdx]);
-      Assert.assertEquals(expValue, ((LongColumnVector) b.cols[2]).vector[rowIdx]);
+      assertEquals(d, ((DecimalColumnVector) b.cols[1]).vector[rowIdx]);
+      assertEquals(expValue, ((LongColumnVector) b.cols[2]).vector[rowIdx]);
       BytesColumnVector sv = (BytesColumnVector) b.cols[3];
-      Assert.assertEquals(String.valueOf(expValue),
+      assertEquals(String.valueOf(expValue),
                           sv.toString(rowIdx));
       if (expRowNum != -1) {
-        Assert.assertEquals(expRowNum + i, ((LongColumnVector) b.cols[4]).vector[rowIdx]);
+        assertEquals(expRowNum + i, ((LongColumnVector) b.cols[4]).vector[rowIdx]);
       }
     }
   }
@@ -207,16 +207,16 @@ public class TestRowFilteringIOSkip {
     long rowCount = 0;
     try (RecordReader rr = r.rows(options)) {
       while (rr.nextBatch(b)) {
-        Assert.assertTrue(((LongColumnVector) b.cols[0]).vector[0] != 0);
-        Assert.assertTrue(((LongColumnVector) b.cols[0]).vector[0] != 0);
+        assertTrue(((LongColumnVector) b.cols[0]).vector[0] != 0);
+        assertTrue(((LongColumnVector) b.cols[0]).vector[0] != 0);
         rowCount += b.size;
       }
     }
     FileSystem.Statistics stats = readEnd();
-    Assert.assertEquals(0, rowCount);
+    assertEquals(0, rowCount);
     // We should read less than half the length of the file
     double readPercentage = readPercentage(stats, fs.getFileStatus(filePath).getLen());
-    Assert.assertTrue(String.format("Bytes read %.2f%% should be less than 50%%",
+    assertTrue(String.format("Bytes read %.2f%% should be less than 50%%",
                                     readPercentage),
                       readPercentage < 50);
   }
@@ -231,8 +231,8 @@ public class TestRowFilteringIOSkip {
       rowCount = validateFilteredRecordReader(rr, b);
     }
     double p = readPercentage(readEnd(), fs.getFileStatus(filePath).getLen());
-    Assert.assertEquals(RowCount, rowCount);
-    Assert.assertTrue(p >= 100);
+    assertEquals(RowCount, rowCount);
+    assertTrue(p >= 100);
   }
 
   private double readPercentage(FileSystem.Statistics stats, long fileSize) {
@@ -255,8 +255,8 @@ public class TestRowFilteringIOSkip {
       rowCount = validateFilteredRecordReader(rr, b);
     }
     double p = readPercentage(readEnd(), fs.getFileStatus(filePath).getLen());
-    Assert.assertEquals(RowCount, rowCount);
-    Assert.assertTrue(p >= 100);
+    assertEquals(RowCount, rowCount);
+    assertTrue(p >= 100);
   }
 
   @Test
@@ -271,7 +271,7 @@ public class TestRowFilteringIOSkip {
       rowCount = validateFilteredRecordReader(rr, b);
     }
     readEnd();
-    Assert.assertTrue(RowCount > rowCount);
+    assertTrue(RowCount > rowCount);
   }
 
   @Test
@@ -284,14 +284,14 @@ public class TestRowFilteringIOSkip {
     long seekRow;
     try (RecordReader rr = r.rows(options)) {
       // Validate the first batch
-      Assert.assertTrue(rr.nextBatch(b));
+      assertTrue(rr.nextBatch(b));
       validateBatch(b, 0);
-      Assert.assertEquals(b.size, rr.getRowNumber());
+      assertEquals(b.size, rr.getRowNumber());
 
       // Read the next batch, will skip a batch that is filtered
-      Assert.assertTrue(rr.nextBatch(b));
+      assertTrue(rr.nextBatch(b));
       validateBatch(b, 2048);
-      Assert.assertEquals(2048 + 1024, rr.getRowNumber());
+      assertEquals(2048 + 1024, rr.getRowNumber());
 
       // Seek forward
       seekToRow(rr, b, 4096);
@@ -300,7 +300,7 @@ public class TestRowFilteringIOSkip {
       long bytesRead = readEnd().getBytesRead();
       seekToRow(rr, b, 1024);
       // No IO should have taken place
-      Assert.assertEquals(bytesRead, readEnd().getBytesRead());
+      assertEquals(bytesRead, readEnd().getBytesRead());
 
       // Seek forward to next row group, where the first batch is not filtered
       seekToRow(rr, b, 8192);
@@ -316,17 +316,17 @@ public class TestRowFilteringIOSkip {
       // stripe change
       bytesRead = readEnd().getBytesRead();
       seekToRow(rr, b, 1024);
-      Assert.assertTrue("Change of stripe should require more IO",
+      assertTrue("Change of stripe should require more IO",
                         readEnd().getBytesRead() > bytesRead);
     }
     FileSystem.Statistics stats = readEnd();
     double readPercentage = readPercentage(stats, fs.getFileStatus(filePath).getLen());
-    Assert.assertTrue(readPercentage > 130);
+    assertTrue(readPercentage > 130);
   }
 
   private void seekToRow(RecordReader rr, VectorizedRowBatch b, long row) throws IOException {
     rr.seekToRow(row);
-    Assert.assertTrue(rr.nextBatch(b));
+    assertTrue(rr.nextBatch(b));
     long expRowNum;
     if ((row / b.getMaxSize()) % 2 == 0) {
       expRowNum = row;
@@ -335,7 +335,7 @@ public class TestRowFilteringIOSkip {
       expRowNum = row + b.getMaxSize();
     }
     validateBatch(b, expRowNum);
-    Assert.assertEquals(expRowNum + b.getMaxSize(), rr.getRowNumber());
+    assertEquals(expRowNum + b.getMaxSize(), rr.getRowNumber());
   }
 
   private static class InFilter implements Consumer<OrcFilterContext> {

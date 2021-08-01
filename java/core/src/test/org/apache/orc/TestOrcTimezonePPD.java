@@ -40,8 +40,8 @@ import org.apache.orc.impl.RecordReaderImpl;
 import org.apache.orc.impl.SerializationUtils;
 import org.apache.orc.util.BloomFilter;
 import org.apache.orc.util.BloomFilterIO;
+import static org.junit.Assert.assertNull;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -168,35 +168,35 @@ public class TestOrcTimezonePPD {
     Timestamp gotMax = ((TimestampColumnStatistics) colStats[0]).getMaximum();
     assertEquals("2007-08-01 04:00:00.0", gotMax.toString());
 
-    Assert.assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[0],
+    assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[0],
       SearchArgumentFactory.newBuilder().equals
         ("c", PredicateLeaf.Type.TIMESTAMP, Timestamp.valueOf("2007-08-01 00:00:00.0")).build().getLeaves().get(0),
       null));
 
-    Assert.assertEquals(SearchArgument.TruthValue.NO, RecordReaderImpl.evaluatePredicate(colStats[0],
+    assertEquals(SearchArgument.TruthValue.NO, RecordReaderImpl.evaluatePredicate(colStats[0],
       SearchArgumentFactory.newBuilder().equals
         ("c", PredicateLeaf.Type.TIMESTAMP, Timestamp.valueOf("2007-08-02 00:00:00.0")).build().getLeaves().get(0),
       null));
 
-    Assert.assertEquals(SearchArgument.TruthValue.NO, RecordReaderImpl.evaluatePredicate(colStats[0],
+    assertEquals(SearchArgument.TruthValue.NO, RecordReaderImpl.evaluatePredicate(colStats[0],
       SearchArgumentFactory.newBuilder().between
         ("c", PredicateLeaf.Type.TIMESTAMP, Timestamp.valueOf("2007-08-01 05:00:00.0"),
           Timestamp.valueOf("2007-08-01 06:00:00.0")).build().getLeaves().get(0),
       null));
 
-    Assert.assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[0],
+    assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[0],
       SearchArgumentFactory.newBuilder().between
         ("c", PredicateLeaf.Type.TIMESTAMP, Timestamp.valueOf("2007-08-01 00:00:00.0"),
           Timestamp.valueOf("2007-08-01 03:00:00.0")).build().getLeaves().get(0),
       null));
 
-    Assert.assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[0],
+    assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[0],
       SearchArgumentFactory.newBuilder().in
         ("c", PredicateLeaf.Type.TIMESTAMP, Timestamp.valueOf("2007-08-01 00:00:00.0"),
           Timestamp.valueOf("2007-08-01 03:00:00.0")).build().getLeaves().get(0),
       null));
 
-    Assert.assertEquals(SearchArgument.TruthValue.NO, RecordReaderImpl.evaluatePredicate(colStats[0],
+    assertEquals(SearchArgument.TruthValue.NO, RecordReaderImpl.evaluatePredicate(colStats[0],
       SearchArgumentFactory.newBuilder().in
         ("c", PredicateLeaf.Type.TIMESTAMP, Timestamp.valueOf("2007-08-02 00:00:00.0"),
           Timestamp.valueOf("2007-08-02 03:00:00.0")).build().getLeaves().get(0),
@@ -261,23 +261,23 @@ public class TestOrcTimezonePPD {
     BloomFilter bf = BloomFilterIO.deserialize(OrcProto.Stream.Kind.BLOOM_FILTER_UTF8,
         buildEncoding(), reader.getWriterVersion(),
       TypeDescription.Category.TIMESTAMP, bloomFilter);
-    Assert.assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[1],
+    assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[1],
       SearchArgumentFactory.newBuilder().equals
         ("c", PredicateLeaf.Type.TIMESTAMP, Timestamp.valueOf("2007-08-01 00:00:00.0")).build().getLeaves().get(0),
       bf));
 
-    Assert.assertEquals(SearchArgument.TruthValue.NO, RecordReaderImpl.evaluatePredicate(colStats[1],
+    assertEquals(SearchArgument.TruthValue.NO, RecordReaderImpl.evaluatePredicate(colStats[1],
       SearchArgumentFactory.newBuilder().equals
         ("c", PredicateLeaf.Type.TIMESTAMP, Timestamp.valueOf("2007-08-02 00:00:00.0")).build().getLeaves().get(0),
       bf));
 
-    Assert.assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[1],
+    assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[1],
       SearchArgumentFactory.newBuilder().in
         ("c", PredicateLeaf.Type.TIMESTAMP, Timestamp.valueOf("2007-08-01 00:00:00.0"),
           Timestamp.valueOf("2007-08-01 03:00:00.0")).build().getLeaves().get(0),
       bf));
 
-    Assert.assertEquals(SearchArgument.TruthValue.NO, RecordReaderImpl.evaluatePredicate(colStats[1],
+    assertEquals(SearchArgument.TruthValue.NO, RecordReaderImpl.evaluatePredicate(colStats[1],
       SearchArgumentFactory.newBuilder().in
         ("c", PredicateLeaf.Type.TIMESTAMP, Timestamp.valueOf("2007-08-02 00:00:00.0"),
           Timestamp.valueOf("2007-08-02 03:00:00.0")).build().getLeaves().get(0),
@@ -336,26 +336,26 @@ public class TestOrcTimezonePPD {
     PredicateLeaf pred = createPredicateLeaf(
       PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.TIMESTAMP, "x",
       Timestamp.valueOf("2007-08-01 00:00:00.0"), null);
-    Assert.assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
+    assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.TIMESTAMP, "x",
       Timestamp.valueOf("2007-08-01 02:00:00.0"), null);
-    Assert.assertEquals(SearchArgument.TruthValue.NO, RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
+    assertEquals(SearchArgument.TruthValue.NO, RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
 
     bf.addLong(SerializationUtils.convertToUtc(TimeZone.getDefault(),
         Timestamp.valueOf("2007-08-01 02:00:00.0").getTime()));
-    Assert.assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
+    assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.LESS_THAN, PredicateLeaf.Type.TIMESTAMP, "x",
       Timestamp.valueOf("2007-08-01 00:00:00.0"), null);
-    Assert.assertEquals(SearchArgument.TruthValue.NO, RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
+    assertEquals(SearchArgument.TruthValue.NO, RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.LESS_THAN_EQUALS, PredicateLeaf.Type.TIMESTAMP, "x",
       Timestamp.valueOf("2007-08-01 00:00:00.0"), null);
-    Assert.assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
+    assertEquals(SearchArgument.TruthValue.YES_NO, RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.IS_NULL, PredicateLeaf.Type.TIMESTAMP, "x", null, null);
-    Assert.assertEquals(SearchArgument.TruthValue.NO, RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
+    assertEquals(SearchArgument.TruthValue.NO, RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
   }
 
   @Test
@@ -386,10 +386,10 @@ public class TestOrcTimezonePPD {
     rows.close();
     ColumnStatistics[] colStats = reader.getStatistics();
     Timestamp gotMin = ((TimestampColumnStatistics) colStats[1]).getMinimum();
-    Assert.assertNull(gotMin);
+    assertNull(gotMin);
 
     Timestamp gotMax = ((TimestampColumnStatistics) colStats[1]).getMaximum();
-    Assert.assertNull(gotMax);
+    assertNull(gotMax);
 
     OrcProto.BloomFilterIndex[] bloomFilterIndices = indices.getBloomFilterIndex();
     OrcProto.BloomFilter bloomFilter = bloomFilterIndices[1].getBloomFilter(0);
@@ -399,9 +399,9 @@ public class TestOrcTimezonePPD {
     PredicateLeaf pred = createPredicateLeaf(
       PredicateLeaf.Operator.NULL_SAFE_EQUALS, PredicateLeaf.Type.TIMESTAMP, "x",
       Timestamp.valueOf("2007-08-01 00:00:00.0"), null);
-    Assert.assertEquals(SearchArgument.TruthValue.NULL, RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
+    assertEquals(SearchArgument.TruthValue.NULL, RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
 
     pred = createPredicateLeaf(PredicateLeaf.Operator.IS_NULL, PredicateLeaf.Type.TIMESTAMP, "x", null, null);
-    Assert.assertEquals(SearchArgument.TruthValue.YES, RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
+    assertEquals(SearchArgument.TruthValue.YES, RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
   }
 }
