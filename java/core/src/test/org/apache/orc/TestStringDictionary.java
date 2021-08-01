@@ -46,7 +46,6 @@ import org.apache.orc.impl.writer.StringTreeWriter;
 import org.apache.orc.impl.writer.TreeWriter;
 import org.apache.orc.impl.writer.WriterContext;
 import org.apache.orc.impl.writer.WriterEncryptionVariant;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

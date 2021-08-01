@@ -15,7 +15,7 @@
  */
 package org.apache.orc;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.sql.Timestamp;
@@ -40,7 +40,6 @@ import org.apache.orc.impl.RecordReaderImpl;
 import org.apache.orc.impl.SerializationUtils;
 import org.apache.orc.util.BloomFilter;
 import org.apache.orc.util.BloomFilterIO;
-import static org.junit.Assert.assertNull;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
