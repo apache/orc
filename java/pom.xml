@@ -370,6 +370,17 @@
                     <shadedPattern>org.apache.orc.storage</shadedPattern>
                   </relocation>
                 </relocations>
+                <filters>
+                  <filter>
+                    <artifact>*:*</artifact>
+                    <excludes>
+                      <exclude>META-INF/MANIFEST.MF</exclude>
+                      <exclude>META-INF/DEPENDENCIES</exclude>
+                      <exclude>META-INF/LICENSE</exclude>
+                      <exclude>META-INF/NOTICE</exclude>
+                    </excludes>
+                  </filter>
+                </filters>
               </configuration>
             </execution>
           </executions>
