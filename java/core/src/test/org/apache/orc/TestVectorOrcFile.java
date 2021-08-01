@@ -33,6 +33,7 @@ import com.google.common.collect.Lists;
 import org.apache.orc.impl.ReaderImpl;
 import org.apache.orc.impl.reader.ReaderEncryption;
 import org.apache.orc.impl.reader.StripePlanner;
+import org.apache.orc.OrcFile.Version;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -62,10 +63,8 @@ import org.apache.orc.impl.RecordReaderUtils;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.*;
-
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.*;
 import org.mockito.Mockito;
 
 import javax.xml.bind.DatatypeConverter;

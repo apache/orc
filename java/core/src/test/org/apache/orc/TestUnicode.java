@@ -17,12 +17,15 @@
  */
 package org.apache.orc;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.*;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -30,15 +33,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
 
-@RunWith(Parameterized.class)
 public class TestUnicode {
   Path workDir = new Path(System.getProperty("test.tmp.dir", "target" + File.separator + "test"
       + File.separator + "tmp"));
@@ -47,26 +42,14 @@ public class TestUnicode {
   FileSystem fs;
   Path testFilePath;
 
-  private final String type;
-  private final int maxLength;
-  private final boolean hasRTrim;
-
-  @Parameters
-  public static Collection<Object[]> data() {
-    ArrayList<Object[]> data = new ArrayList<>();
+  private static Stream<Arguments> data() {
+    ArrayList<Arguments> data = new ArrayList<>();
     for (int j = 0; j < 2; j++) {
       for (int i = 1; i <= 5; i++) {
-        data.add(new Object[] { j == 0 ? "char" : "varchar", i, true });
+        data.add(Arguments.of(j == 0 ? "char" : "varchar", i, true));
       }
     }
-    //data.add(new Object[] {"char", 3});
-    return data;
-  }
-
-  public TestUnicode(String type, int maxLength, boolean hasRTrim) {
-    this.type = type;
-    this.maxLength = maxLength;
-    this.hasRTrim = hasRTrim;
+    return data.stream();
   }
 
   static final String[] utf8strs = new String[] {
@@ -79,23 +62,22 @@ public class TestUnicode {
       "\u270f\ufe0f\ud83d\udcdd\u270f\ufe0f", "\ud83c\udf3b\ud83d\udc1d\ud83c\udf6f",
       "\ud83c\udf7a\ud83e\udd43\ud83c\udf77" };
 
-  @Rule
-  public TestName testCaseName = new TestName();
-
-  @Before
-  public void openFileSystem() throws Exception {
+  @BeforeEach
+  public void openFileSystem(TestInfo testInfo) throws Exception {
     conf = new Configuration();
     fs = FileSystem.getLocal(conf);
-    testFilePath = new Path(workDir, "TestOrcFile." + testCaseName.getMethodName() + ".orc");
+    testFilePath = new Path(workDir, "TestOrcFile." +
+        testInfo.getTestMethod().get().getName() + ".orc");
     fs.delete(testFilePath, false);
   }
 
-  @Test
-  public void testUtf8() throws Exception {
+  @ParameterizedTest
+  @MethodSource("data")
+  public void testUtf8(String type, int maxLength, boolean hasRTrim) throws Exception {
     if (type == "varchar") {
       testVarChar(maxLength);
     } else {
-      testChar(maxLength);
+      testChar(maxLength, hasRTrim);
     }
   }
 
@@ -140,14 +122,14 @@ public class TestUnicode {
     return val;
   }
 
-  public void testChar(int maxLength) throws Exception {
+  public void testChar(int maxLength, boolean hasRTrim) throws Exception {
     // char(n)
     TypeDescription schema = TypeDescription.createChar().withMaxLength(maxLength);
     String[] expected = new String[utf8strs.length];
     for (int i = 0; i < utf8strs.length; i++) {
       expected[i] = getPaddedValue(utf8strs[i], maxLength, hasRTrim);
     }
-    verifyWrittenStrings(schema, utf8strs, expected);
+    verifyWrittenStrings(schema, utf8strs, expected, maxLength);
   }
 
   public void testVarChar(int maxLength) throws Exception {
@@ -157,10 +139,10 @@ public class TestUnicode {
     for (int i = 0; i < utf8strs.length; i++) {
       expected[i] = enforceMaxLength(utf8strs[i], maxLength);
     }
-    verifyWrittenStrings(schema, utf8strs, expected);
+    verifyWrittenStrings(schema, utf8strs, expected, maxLength);
   }
 
-  public void verifyWrittenStrings(TypeDescription schema, String[] inputs, String[] expected)
+  public void verifyWrittenStrings(TypeDescription schema, String[] inputs, String[] expected, int maxLength)
       throws Exception {
     Writer writer =
         OrcFile.createWriter(testFilePath, OrcFile.writerOptions(conf).setSchema(schema)
@@ -185,8 +167,8 @@ public class TestUnicode {
     int idx = 0;
     while (rows.nextBatch(batch)) {
       for (int r = 0; r < batch.size; ++r) {
-        assertEquals(String.format("test for %s:%d", schema, maxLength), expected[idx],
-            toString(col, r));
+        assertEquals(expected[idx], toString(col, r),
+            String.format("test for %s:%d", schema, maxLength));
         idx++;
       }
     }

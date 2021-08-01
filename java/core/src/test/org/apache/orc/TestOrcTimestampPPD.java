@@ -27,11 +27,6 @@ import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentImpl;
 import org.apache.orc.impl.RecordReaderImpl;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,7 +34,8 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.TimeZone;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestOrcTimestampPPD {
   Path workDir =
@@ -52,18 +48,16 @@ public class TestOrcTimestampPPD {
   public TestOrcTimestampPPD() {
   }
 
-  @Rule
-  public TestName testCaseName = new TestName();
-
-  @Before
-  public void openFileSystem() throws Exception {
+  @BeforeEach
+  public void openFileSystem(TestInfo testInfo) throws Exception {
     conf = new Configuration();
     fs = FileSystem.getLocal(conf);
-    testFilePath = new Path(workDir, "TestOrcTimestampPPD." + testCaseName.getMethodName() + ".orc");
+    testFilePath = new Path(workDir,
+        "TestOrcTimestampPPD." + testInfo.getTestMethod().get().getName() + ".orc");
     fs.delete(testFilePath, false);
   }
 
-  @After
+  @AfterEach
   public void restoreTimeZone() {
     TimeZone.setDefault(defaultTimeZone);
   }

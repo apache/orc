@@ -20,16 +20,13 @@ package org.apache.orc.impl;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.orc.MemoryManager;
-import org.hamcrest.BaseMatcher;
-import org.hamcrest.Description;
-import org.junit.Test;
 import static org.mockito.ArgumentMatchers.eq;
 import org.mockito.Mockito;
 
 import java.lang.management.ManagementFactory;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test the ORC memory manager.
@@ -80,33 +77,8 @@ public class TestMemoryManager {
         ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getMax();
     System.err.print("Memory = " + mem);
     long pool = mgr.getTotalMemoryPool();
-    assertTrue("Pool too small: " + pool, mem * 0.899 < pool);
-    assertTrue("Pool too big: " + pool, pool < mem * 0.901);
-  }
-
-  private static class DoubleMatcher extends BaseMatcher<Double> {
-    final double expected;
-    final double error;
-    DoubleMatcher(double expected, double error) {
-      this.expected = expected;
-      this.error = error;
-    }
-
-    @Override
-    public boolean matches(Object val) {
-      double dbl = (Double) val;
-      return Math.abs(dbl - expected) <= error;
-    }
-
-    @Override
-    public void describeTo(Description description) {
-      description.appendText("not sufficiently close to ");
-      description.appendText(Double.toString(expected));
-    }
-  }
-
-  private static DoubleMatcher closeTo(double value, double error) {
-    return new DoubleMatcher(value, error);
+    assertTrue(mem * 0.899 < pool, "Pool too small: " + pool);
+    assertTrue(pool < mem * 0.901, "Pool too big: " + pool);
   }
 
   @Test

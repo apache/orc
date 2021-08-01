@@ -15,8 +15,8 @@
  */
 package org.apache.orc.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.EOFException;
@@ -49,24 +49,17 @@ import org.apache.orc.RecordReader;
 import org.apache.orc.StripeStatistics;
 import org.apache.orc.TestVectorOrcFile;
 import org.apache.orc.TypeDescription;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class TestReaderImpl {
   private Path workDir = new Path(System.getProperty("example.dir",
       "../../examples/"));
-
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
 
   private final Path path = new Path("test-file.orc");
   private FSDataInputStream in;
   private int psLen;
   private ByteBuffer buffer;
 
-  @Before
+  @BeforeEach
   public void setup() {
     in = null;
   }
@@ -74,15 +67,17 @@ public class TestReaderImpl {
   @Test
   public void testEnsureOrcFooterSmallTextFile() throws IOException {
     prepareTestCase("1".getBytes(StandardCharsets.UTF_8));
-    thrown.expect(FileFormatException.class);
-    ReaderImpl.ensureOrcFooter(in, path, psLen, buffer);
+    assertThrows(FileFormatException.class, () -> {
+      ReaderImpl.ensureOrcFooter(in, path, psLen, buffer);
+    });
   }
 
   @Test
   public void testEnsureOrcFooterLargeTextFile() throws IOException {
     prepareTestCase("This is Some Text File".getBytes(StandardCharsets.UTF_8));
-    thrown.expect(FileFormatException.class);
-    ReaderImpl.ensureOrcFooter(in, path, psLen, buffer);
+    assertThrows(FileFormatException.class, () -> {
+      ReaderImpl.ensureOrcFooter(in, path, psLen, buffer);
+    });
   }
 
   @Test

@@ -24,15 +24,12 @@ import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.impl.RecordReaderImpl;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
 
 import java.io.File;
 import java.sql.Timestamp;
 
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Types that are not skipped at row-level include: Long, Short, Int, Date, Binary
@@ -50,14 +47,12 @@ public class TestRowFilteringNoSkip {
 
   private static final int ColumnBatchRows = 1024;
 
-  @Rule
-  public TestName testCaseName = new TestName();
-
-  @Before
-  public void openFileSystem() throws Exception {
+  @BeforeEach
+  public void openFileSystem(TestInfo testInfo) throws Exception {
     conf = new Configuration();
     fs = FileSystem.getLocal(conf);
-    testFilePath = new Path(workDir, "TestRowFilteringNoSkip." + testCaseName.getMethodName() + ".orc");
+    testFilePath = new Path(workDir, "TestRowFilteringNoSkip." +
+        testInfo.getTestMethod().get().getName() + ".orc");
     fs.delete(testFilePath, false);
   }
 

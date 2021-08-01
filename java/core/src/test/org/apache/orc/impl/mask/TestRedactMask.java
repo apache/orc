@@ -20,13 +20,13 @@ package org.apache.orc.impl.mask;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.serde2.io.DateWritable;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
-import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.Timestamp;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestRedactMask {
 
@@ -59,12 +59,12 @@ public class TestRedactMask {
         if (i == 18 && digit == 9) {
           expected = 999_999_999_999_999_999L;
         }
-        assertEquals("digit " + digit + " value " + input, expected,
-            mask.maskLong(input));
-        assertEquals("digit " + digit + " value " + (5 * input), expected,
-            mask.maskLong(5 * input));
-        assertEquals("digit " + digit + " value " + (9 * input), expected,
-            mask.maskLong(9 * input));
+        assertEquals(expected, mask.maskLong(input),
+            "digit " + digit + " value " + input);
+        assertEquals(expected, mask.maskLong(5 * input),
+            "digit " + digit + " value " + (5 * input));
+        assertEquals(expected, mask.maskLong(9 * input),
+            "digit " + digit + " value " + (9 * input));
         expected = expected * 10 + digit;
         input *= 10;
       }
@@ -235,9 +235,9 @@ public class TestRedactMask {
         " \uD863\uDCCA\uD863\uDCCA\uD863\uDCCA\uD863\uDCCA" +
         "\uD863\uDCCA\uD863\uDCCA\uD863\uDCCA\uD863\uDCCA.";
     for(int r=0; r < 1024; ++r) {
-      assertEquals("r = " + r, expected,
+      assertEquals(expected,
           new String(target.vector[r], target.start[r], target.length[r],
-              StandardCharsets.UTF_8));
+              StandardCharsets.UTF_8), "r = " + r);
     }
 
     // Make sure that the target keeps the larger output buffer.

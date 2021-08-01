@@ -18,44 +18,39 @@
 
 package org.apache.orc;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.*;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
 
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Longs;
 
-@RunWith(value = Parameterized.class)
 public class TestUnrolledBitPack {
 
-  private long val;
-
-  public TestUnrolledBitPack(long val) {
-    this.val = val;
-  }
-
-  @Parameters
-  public static Collection<Object[]> data() {
-    Object[][] data = new Object[][] { { -1 }, { 1 }, { 7 }, { -128 }, { 32000 }, { 8300000 },
-        { Integer.MAX_VALUE }, { 540000000000L }, { 140000000000000L }, { 36000000000000000L },
-        { Long.MAX_VALUE } };
-    return Arrays.asList(data);
+  private static Stream<Arguments> data() {
+    return Stream.of(
+        Arguments.of(-1),
+        Arguments.of(1),
+        Arguments.of(7),
+        Arguments.of(-128),
+        Arguments.of(32000),
+        Arguments.of(8300000),
+        Arguments.of(Integer.MAX_VALUE),
+        Arguments.of(540000000000L),
+        Arguments.of(140000000000000L),
+        Arguments.of(36000000000000000L),
+        Arguments.of(Long.MAX_VALUE));
   }
 
   Path workDir = new Path(System.getProperty("test.tmp.dir", "target" + File.separator + "test"
@@ -65,19 +60,18 @@ public class TestUnrolledBitPack {
   FileSystem fs;
   Path testFilePath;
 
-  @Rule
-  public TestName testCaseName = new TestName();
-
-  @Before
-  public void openFileSystem() throws Exception {
+  @BeforeEach
+  public void openFileSystem(TestInfo testInfo) throws Exception {
     conf = new Configuration();
     fs = FileSystem.getLocal(conf);
-    testFilePath = new Path(workDir, "TestOrcFile." + testCaseName.getMethodName() + ".orc");
+    testFilePath = new Path(workDir, "TestOrcFile." +
+        testInfo.getTestMethod().get().getName() + ".orc");
     fs.delete(testFilePath, false);
   }
 
-  @Test
-  public void testBitPacking() throws Exception {
+  @ParameterizedTest
+  @MethodSource("data")
+  public void testBitPacking(long val) throws Exception {
     TypeDescription schema = TypeDescription.createLong();
 
     long[] inp = new long[] { val, 0, val, val, 0, val, 0, val, val, 0, val, 0, val, val, 0, 0,

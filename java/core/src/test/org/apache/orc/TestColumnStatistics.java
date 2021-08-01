@@ -29,10 +29,6 @@ import org.apache.hadoop.hive.serde2.io.DateWritable;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.orc.impl.ColumnStatisticsImpl;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
 
 import java.io.File;
 import java.math.BigDecimal;
@@ -42,8 +38,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test ColumnStatisticsImpl for ORC.
@@ -143,9 +139,10 @@ public class TestColumnStatistics {
     final StringColumnStatistics typed = (StringColumnStatistics) stats1;
     final StringColumnStatistics typed2 = (StringColumnStatistics) stats2;
 
-    assertTrue("Upperbound cannot be more than 1024 bytes",
-        1024 >= typed.getUpperBound().getBytes(StandardCharsets.UTF_8).length);
-    assertTrue("Lowerbound cannot be more than 1024 bytes",1024 >= typed.getLowerBound().getBytes(StandardCharsets.UTF_8).length);
+    assertTrue(1024 >= typed.getUpperBound().getBytes(StandardCharsets.UTF_8).length,
+        "Upperbound cannot be more than 1024 bytes");
+    assertTrue(1024 >= typed.getLowerBound().getBytes(StandardCharsets.UTF_8).length,
+        "Lowerbound cannot be more than 1024 bytes");
 
     assertEquals(null, typed.getMinimum());
     assertEquals(null, typed.getMaximum());
@@ -157,8 +154,10 @@ public class TestColumnStatistics {
     stats1.updateString(test.getBytes(StandardCharsets.UTF_8), 0,
         test.getBytes(StandardCharsets.UTF_8).length, 0);
 
-    assertTrue("Lowerbound cannot be more than 1024 bytes", 1024 >= typed.getLowerBound().getBytes(StandardCharsets.UTF_8).length);
-    assertTrue("Upperbound cannot be more than 1024 bytes", 1024 >= typed.getUpperBound().getBytes(StandardCharsets.UTF_8).length);
+    assertTrue(1024 >= typed.getLowerBound().getBytes(StandardCharsets.UTF_8).length,
+        "Lowerbound cannot be more than 1024 bytes");
+    assertTrue(1024 >= typed.getUpperBound().getBytes(StandardCharsets.UTF_8).length,
+            "Upperbound cannot be more than 1024 bytes");
 
     assertEquals(null, typed.getMinimum());
     assertEquals(null, typed.getMaximum());
@@ -679,8 +678,10 @@ public class TestColumnStatistics {
     Reader reader = OrcFile.createReader(testFilePath,
         OrcFile.readerOptions(conf).filesystem(fs));
     DecimalColumnStatistics statistics = (DecimalColumnStatistics) reader.getStatistics()[0];
-    assertEquals("Incorrect maximum value", new BigDecimal("-99999.99"), statistics.getMinimum().bigDecimalValue());
-    assertEquals("Incorrect minimum value", new BigDecimal("-88888.88"), statistics.getMaximum().bigDecimalValue());
+    assertEquals(new BigDecimal("-99999.99"), statistics.getMinimum().bigDecimalValue(),
+        "Incorrect maximum value");
+    assertEquals(new BigDecimal("-88888.88"), statistics.getMaximum().bigDecimalValue(),
+        "Incorrect minimum value");
   }
 
 
@@ -691,15 +692,13 @@ public class TestColumnStatistics {
   FileSystem fs;
   Path testFilePath;
 
-  @Rule
-  public TestName testCaseName = new TestName();
-
-  @Before
-  public void openFileSystem() throws Exception {
+  @BeforeEach
+  public void openFileSystem(TestInfo testInfo) throws Exception {
     conf = new Configuration();
     fs = FileSystem.getLocal(conf);
     fs.setWorkingDirectory(workDir);
-    testFilePath = new Path("TestOrcFile." + testCaseName.getMethodName() + ".orc");
+    testFilePath = new Path(
+        "TestOrcFile." + testInfo.getTestMethod().get().getName() + ".orc");
     fs.delete(testFilePath, false);
   }
 }

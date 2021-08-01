@@ -17,9 +17,12 @@
  */
 package org.apache.orc;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
+
 import static org.apache.orc.TestVectorOrcFile.assertEmptyStats;
-import static org.junit.Assert.assertArrayEquals;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,10 +40,6 @@ import org.apache.hadoop.hive.ql.exec.vector.StructColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 
 import org.apache.orc.impl.RecordReaderImpl;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
 
 import com.google.common.collect.Lists;
 
@@ -108,15 +107,12 @@ public class TestOrcNullOptimization {
   FileSystem fs;
   Path testFilePath;
 
-  @Rule
-  public TestName testCaseName = new TestName();
-
-  @Before
-  public void openFileSystem() throws Exception {
+  @BeforeEach
+  public void openFileSystem(TestInfo testInfo) throws Exception {
     conf = new Configuration();
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestOrcNullOptimization." +
-        testCaseName.getMethodName() + ".orc");
+        testInfo.getTestMethod().get().getName() + ".orc");
     fs.delete(testFilePath, false);
   }
 

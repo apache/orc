@@ -19,13 +19,13 @@
 package org.apache.orc.impl;
 
 import org.apache.orc.CompressionCodec;
-import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class TestZlib {
 

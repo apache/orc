@@ -19,64 +19,42 @@ package org.apache.orc;
 
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
 import java.util.TimeZone;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  * Test over an orc file that does not store time zone information in the footer
  * and it was written from a time zone that does not observe DST.
  */
-@RunWith(Parameterized.class)
 public class TestOrcNoTimezone {
   Configuration conf;
   FileSystem fs;
-  String readerTimeZone;
   SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
   static TimeZone defaultTimeZone = TimeZone.getDefault();
 
-  public TestOrcNoTimezone(String readerTZ) {
-    this.readerTimeZone = readerTZ;
-  }
-
-  @Parameterized.Parameters
-  public static Collection<Object[]> data() {
-    List<Object[]> result = Arrays.asList(new Object[][]{
-        {"GMT-12:00"},
-        {"UTC"},
-        {"GMT+8:00"},
-    });
-    return result;
-  }
-
-  @Before
+  @BeforeEach
   public void openFileSystem() throws Exception {
     conf = new Configuration();
     fs = FileSystem.getLocal(conf);
   }
 
-  @After
+  @AfterEach
   public void restoreTimeZone() {
     TimeZone.setDefault(defaultTimeZone);
   }
 
-  @Test
-  public void testReadOldTimestampFormat() throws Exception {
+  @ParameterizedTest
+  @ValueSource(strings = {"GMT-12:00", "UTC", "GMT+8:00"})
+  public void testReadOldTimestampFormat(String readerTimeZone) throws Exception {
     TimeZone.setDefault(TimeZone.getTimeZone(readerTimeZone));
     Path oldFilePath = new Path(getClass().getClassLoader().
         getSystemResource("orc-file-no-timezone.orc").getPath());
@@ -93,18 +71,20 @@ public class TestOrcNoTimezone {
         (reader.options().include(include));
     assertTrue(rows.nextBatch(batch));
     Timestamp timestamp = ts.asScratchTimestamp(0);
-    assertEquals("For timezone : " + TimeZone.getTimeZone(readerTimeZone),
+    assertEquals(
         Timestamp.valueOf("2014-01-01 12:34:56.0").toString(),
-        formatter.format(timestamp));
+        formatter.format(timestamp),
+        "For timezone : " + TimeZone.getTimeZone(readerTimeZone));
 
     // check the contents of second row
     rows.seekToRow(1);
     assertTrue(rows.nextBatch(batch));
     assertEquals(1, batch.size);
     timestamp = ts.asScratchTimestamp(0);
-    assertEquals("For timezone : " + TimeZone.getTimeZone(readerTimeZone),
+    assertEquals(
         Timestamp.valueOf("2014-06-06 12:34:56.0").toString(),
-        formatter.format(timestamp));
+        formatter.format(timestamp),
+        "For timezone : " + TimeZone.getTimeZone(readerTimeZone));
 
     // handle the close up
     assertFalse(rows.nextBatch(batch));

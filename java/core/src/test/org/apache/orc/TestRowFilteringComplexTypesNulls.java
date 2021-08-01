@@ -31,8 +31,6 @@ import org.apache.hadoop.hive.ql.exec.vector.UnionColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.orc.impl.OrcFilterContextImpl;
-import org.junit.BeforeClass;
-import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,8 +42,8 @@ import java.util.Random;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestRowFilteringComplexTypesNulls {
   private static final Logger LOG =
@@ -73,7 +71,7 @@ public class TestRowFilteringComplexTypesNulls {
   private static final String[] FilterColumns = new String[] {"ridx", "s2.f2", "u3.0"};
   private static final int scale = 3;
 
-  @BeforeClass
+  @BeforeAll
   public static void setup() throws IOException {
     conf = new Configuration();
     fs = FileSystem.get(conf);
@@ -193,9 +191,8 @@ public class TestRowFilteringComplexTypesNulls {
     assertEquals(0, rowCount);
     // We should read less than half the length of the file
     double readPercentage = readPercentage(stats, fs.getFileStatus(filePath).getLen());
-    assertTrue(String.format("Bytes read %.2f%% should be less than 50%%",
-                             readPercentage),
-               readPercentage < 50);
+    assertTrue(readPercentage < 50,
+        String.format("Bytes read %.2f%% should be less than 50%%", readPercentage));
   }
 
   private long validateFilteredRecordReader(RecordReader rr, VectorizedRowBatch b)
@@ -328,8 +325,8 @@ public class TestRowFilteringComplexTypesNulls {
       // stripe change
       bytesRead = readEnd().getBytesRead();
       seekToRow(rr, b, 1024);
-      assertTrue("Change of stripe should require more IO",
-                 readEnd().getBytesRead() > bytesRead);
+      assertTrue(readEnd().getBytesRead() > bytesRead,
+          "Change of stripe should require more IO");
     }
     FileSystem.Statistics stats = readEnd();
     double readPercentage = readPercentage(stats, fs.getFileStatus(filePath).getLen());

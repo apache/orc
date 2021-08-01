@@ -30,9 +30,6 @@ import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.orc.impl.OrcFilterContextImpl;
-import static org.junit.Assert.*;
-import org.junit.BeforeClass;
-import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +40,9 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 import java.util.function.Consumer;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestRowFilteringIOSkip {
   private static final Logger LOG = LoggerFactory.getLogger(TestRowFilteringIOSkip.class);
@@ -65,7 +65,7 @@ public class TestRowFilteringIOSkip {
   private static final String[] FilterColumns = new String[] {"f1", "ridx"};
   private static final int scale = 3;
 
-  @BeforeClass
+  @BeforeAll
   public static void setup() throws IOException {
     conf = new Configuration();
     fs = FileSystem.get(conf);
@@ -139,10 +139,10 @@ public class TestRowFilteringIOSkip {
     FileSystem.Statistics stats = readEnd();
     assertEquals(RowCount, rowCount);
     // We should read less than half the length of the file
-    assertTrue(String.format("Bytes read %d is not half of file size %d",
-                                    stats.getBytesRead(),
-                                    r.getContentLength()),
-                      stats.getBytesRead() < r.getContentLength() / 2);
+    assertTrue(stats.getBytesRead() < r.getContentLength() / 2,
+        String.format("Bytes read %d is not half of file size %d",
+            stats.getBytesRead(),
+            r.getContentLength()));
   }
 
   @Test
@@ -216,9 +216,8 @@ public class TestRowFilteringIOSkip {
     assertEquals(0, rowCount);
     // We should read less than half the length of the file
     double readPercentage = readPercentage(stats, fs.getFileStatus(filePath).getLen());
-    assertTrue(String.format("Bytes read %.2f%% should be less than 50%%",
-                                    readPercentage),
-                      readPercentage < 50);
+    assertTrue(readPercentage < 50,
+        String.format("Bytes read %.2f%% should be less than 50%%", readPercentage));
   }
 
   @Test
@@ -316,8 +315,8 @@ public class TestRowFilteringIOSkip {
       // stripe change
       bytesRead = readEnd().getBytesRead();
       seekToRow(rr, b, 1024);
-      assertTrue("Change of stripe should require more IO",
-                        readEnd().getBytesRead() > bytesRead);
+      assertTrue(readEnd().getBytesRead() > bytesRead,
+          "Change of stripe should require more IO");
     }
     FileSystem.Statistics stats = readEnd();
     double readPercentage = readPercentage(stats, fs.getFileStatus(filePath).getLen());

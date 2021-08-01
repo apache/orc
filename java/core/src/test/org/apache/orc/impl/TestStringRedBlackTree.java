@@ -18,13 +18,13 @@
 
 package org.apache.orc.impl;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
 
 import org.apache.hadoop.io.IntWritable;
 import org.apache.orc.StringDictTestingUtils;
-import org.junit.Test;
 
 /**
  * Test the red-black tree with string keys.
