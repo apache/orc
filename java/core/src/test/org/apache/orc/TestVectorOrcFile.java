@@ -32,7 +32,6 @@ import com.google.common.collect.Lists;
 import org.apache.orc.impl.ReaderImpl;
 import org.apache.orc.impl.reader.ReaderEncryption;
 import org.apache.orc.impl.reader.StripePlanner;
-import org.junit.Assert;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -238,7 +237,7 @@ public class TestVectorOrcFile {
             + stripe.getFooterLength();
       }
     }
-    Assert.assertEquals(reader.getNumberOfRows(), rowCount);
+    assertEquals(reader.getNumberOfRows(), rowCount);
     assertEquals(2, stripeCount);
 
     // check the stats
@@ -285,7 +284,7 @@ public class TestVectorOrcFile {
     VectorizedRowBatch batch = schema.createRowBatch();
 
     RecordReader rows = reader.rows();
-    Assert.assertEquals(true, rows.nextBatch(batch));
+    assertEquals(true, rows.nextBatch(batch));
     assertEquals(1024, batch.size);
 
     // check the contents of the first row
@@ -338,7 +337,7 @@ public class TestVectorOrcFile {
 
     // check the contents of row 7499
     rows.seekToRow(7499);
-    Assert.assertEquals(true, rows.nextBatch(batch));
+    assertEquals(true, rows.nextBatch(batch));
     assertEquals(true, getBoolean(batch, 0));
     assertEquals(100, getByte(batch, 0));
     assertEquals(2048, getShort(batch, 0));
@@ -377,7 +376,7 @@ public class TestVectorOrcFile {
         decs.vector[0]);
 
     // handle the close up
-    Assert.assertEquals(false, rows.nextBatch(batch));
+    assertEquals(false, rows.nextBatch(batch));
     rows.close();
   }
 
@@ -481,7 +480,7 @@ public class TestVectorOrcFile {
             timestamps.asScratchTimestamp(r).getNanos());
       }
     }
-    Assert.assertEquals(tslist.size(), rows.getRowNumber());
+    assertEquals(tslist.size(), rows.getRowNumber());
     assertEquals(0, writer.getSchema().getMaximumId());
     boolean[] expected = new boolean[] {false};
     boolean[] included = OrcUtils.includeColumns("", writer.getSchema());
@@ -558,7 +557,7 @@ public class TestVectorOrcFile {
     BytesColumnVector bytes = (BytesColumnVector) batch.cols[0];
     BytesColumnVector strs = (BytesColumnVector) batch.cols[1];
     RecordReader rows = reader.rows();
-    Assert.assertEquals(true, rows.nextBatch(batch));
+    assertEquals(true, rows.nextBatch(batch));
     assertEquals(4, batch.size);
 
     // check the contents of the first row
@@ -578,7 +577,7 @@ public class TestVectorOrcFile {
     assertEquals("hi", strs.toString(3));
 
     // handle the close up
-    Assert.assertEquals(false, rows.nextBatch(batch));
+    assertEquals(false, rows.nextBatch(batch));
     rows.close();
   }
 
@@ -605,12 +604,12 @@ public class TestVectorOrcFile {
       OrcFile.readerOptions(conf).filesystem(fs));
     // check the stats
     ColumnStatistics[] stats = reader.getStatistics();
-    Assert.assertEquals(4, stats[0].getNumberOfValues());
-    Assert.assertEquals(0, stats[1].getNumberOfValues());
-    Assert.assertEquals(true, stats[1].hasNull());
-    Assert.assertNull(((DecimalColumnStatistics)stats[1]).getMinimum());
-    Assert.assertNull(((DecimalColumnStatistics)stats[1]).getMaximum());
-    Assert.assertEquals(new HiveDecimalWritable(0).getHiveDecimal(), ((DecimalColumnStatistics)stats[1]).getSum());
+    assertEquals(4, stats[0].getNumberOfValues());
+    assertEquals(0, stats[1].getNumberOfValues());
+    assertEquals(true, stats[1].hasNull());
+    assertNull(((DecimalColumnStatistics)stats[1]).getMinimum());
+    assertNull(((DecimalColumnStatistics)stats[1]).getMaximum());
+    assertEquals(new HiveDecimalWritable(0).getHiveDecimal(), ((DecimalColumnStatistics)stats[1]).getSum());
   }
 
   @Test
@@ -1299,9 +1298,9 @@ public class TestVectorOrcFile {
     RecordReader rows = reader.rows();
     // create a new batch
     batch = readerSchema.createRowBatch();
-    Assert.assertEquals(true, rows.nextBatch(batch));
+    assertEquals(true, rows.nextBatch(batch));
     assertEquals(2, batch.size);
-    Assert.assertEquals(false, rows.nextBatch(batch));
+    assertEquals(false, rows.nextBatch(batch));
 
     // check the contents of the first row
     assertEquals(false, getBoolean(batch, 0));
@@ -1364,7 +1363,7 @@ public class TestVectorOrcFile {
     assertEquals("mauddib", value.string1.toString());
 
     // handle the close up
-    Assert.assertEquals(false, rows.nextBatch(batch));
+    assertEquals(false, rows.nextBatch(batch));
     rows.close();
   }
 
@@ -1455,8 +1454,8 @@ public class TestVectorOrcFile {
     VectorizedRowBatch batch1 = reader.getSchema().createRowBatch(1000);
     VectorizedRowBatch batch2 = reader.getSchema().createRowBatch(1000);
     for(int i = 0; i < 21000; i += 1000) {
-      Assert.assertEquals(true, rows1.nextBatch(batch1));
-      Assert.assertEquals(true, rows2.nextBatch(batch2));
+      assertEquals(true, rows1.nextBatch(batch1));
+      assertEquals(true, rows2.nextBatch(batch2));
       assertEquals(1000, batch1.size);
       assertEquals(1000, batch2.size);
       for(int j=0; j < 1000; ++j) {
@@ -1466,8 +1465,8 @@ public class TestVectorOrcFile {
             ((BytesColumnVector) batch2.cols[1]).toString(j));
       }
     }
-    Assert.assertEquals(false, rows1.nextBatch(batch1));
-    Assert.assertEquals(false, rows2.nextBatch(batch2));
+    assertEquals(false, rows1.nextBatch(batch1));
+    assertEquals(false, rows2.nextBatch(batch2));
     rows1.close();
     rows2.close();
   }
@@ -1486,13 +1485,13 @@ public class TestVectorOrcFile {
     Reader reader = OrcFile.createReader(testFilePath,
         OrcFile.readerOptions(conf).filesystem(fs));
     VectorizedRowBatch batch = reader.getSchema().createRowBatch();
-    Assert.assertEquals(false, reader.rows().nextBatch(batch));
-    Assert.assertEquals(CompressionKind.NONE, reader.getCompressionKind());
-    Assert.assertEquals(0, reader.getNumberOfRows());
-    Assert.assertEquals(0, reader.getCompressionSize());
-    Assert.assertEquals(false, reader.getMetadataKeys().iterator().hasNext());
-    Assert.assertEquals(3, reader.getContentLength());
-    Assert.assertEquals(false, reader.getStripes().iterator().hasNext());
+    assertEquals(false, reader.rows().nextBatch(batch));
+    assertEquals(CompressionKind.NONE, reader.getCompressionKind());
+    assertEquals(0, reader.getNumberOfRows());
+    assertEquals(0, reader.getCompressionSize());
+    assertEquals(false, reader.getMetadataKeys().iterator().hasNext());
+    assertEquals(3, reader.getContentLength());
+    assertEquals(false, reader.getStripes().iterator().hasNext());
   }
 
   @Test
@@ -1525,10 +1524,10 @@ public class TestVectorOrcFile {
 
     Reader reader = OrcFile.createReader(testFilePath,
         OrcFile.readerOptions(conf).filesystem(fs));
-    Assert.assertEquals(byteBuf(5, 7, 11, 13, 17, 19), reader.getMetadataValue("clobber"));
-    Assert.assertEquals(byteBuf(1, 2, 3, 4, 5, 6, 7, -1, -2, 127, -128),
+    assertEquals(byteBuf(5, 7, 11, 13, 17, 19), reader.getMetadataValue("clobber"));
+    assertEquals(byteBuf(1, 2, 3, 4, 5, 6, 7, -1, -2, 127, -128),
         reader.getMetadataValue("my.meta"));
-    Assert.assertEquals(bigBuf, reader.getMetadataValue("big"));
+    assertEquals(bigBuf, reader.getMetadataValue("big"));
     try {
       reader.getMetadataValue("unknown");
       assertTrue(false);
@@ -1968,8 +1967,8 @@ public class TestVectorOrcFile {
     included = OrcUtils.includeColumns("union", schema);
     assertEquals(true, Arrays.equals(expected, included));
 
-    Assert.assertEquals(false, reader.getMetadataKeys().iterator().hasNext());
-    Assert.assertEquals(5077, reader.getNumberOfRows());
+    assertEquals(false, reader.getMetadataKeys().iterator().hasNext());
+    assertEquals(5077, reader.getNumberOfRows());
     DecimalColumnStatistics decStats =
         (DecimalColumnStatistics) reader.getStatistics()[5];
     assertEquals(71, decStats.getNumberOfValues());
@@ -1990,19 +1989,19 @@ public class TestVectorOrcFile {
         currentOffset += stripe.getLength();
       }
     }
-    Assert.assertEquals(reader.getNumberOfRows(), rowCount);
+    assertEquals(reader.getNumberOfRows(), rowCount);
     assertEquals(2, stripeCount);
-    Assert.assertEquals(reader.getContentLength(), currentOffset);
+    assertEquals(reader.getContentLength(), currentOffset);
     RecordReader rows = reader.rows();
-    Assert.assertEquals(0, rows.getRowNumber());
-    Assert.assertEquals(0.0, rows.getProgress(), 0.000001);
+    assertEquals(0, rows.getRowNumber());
+    assertEquals(0.0, rows.getProgress(), 0.000001);
 
     schema = reader.getSchema();
     batch = schema.createRowBatch(74);
-    Assert.assertEquals(0, rows.getRowNumber());
+    assertEquals(0, rows.getRowNumber());
     rows.nextBatch(batch);
     assertEquals(74, batch.size);
-    Assert.assertEquals(74, rows.getRowNumber());
+    assertEquals(74, rows.getRowNumber());
     TimestampColumnVector ts = (TimestampColumnVector) batch.cols[0];
     UnionColumnVector union = (UnionColumnVector) batch.cols[1];
     LongColumnVector longs = (LongColumnVector) union.fields[0];
@@ -2101,8 +2100,8 @@ public class TestVectorOrcFile {
 
     rows.nextBatch(batch);
     assertEquals(0, batch.size);
-    Assert.assertEquals(1.0, rows.getProgress(), 0.00001);
-    Assert.assertEquals(reader.getNumberOfRows(), rows.getRowNumber());
+    assertEquals(1.0, rows.getProgress(), 0.00001);
+    assertEquals(reader.getNumberOfRows(), rows.getRowNumber());
     rows.seekToRow(1);
     rows.nextBatch(batch);
     assertEquals(1000, batch.size);
@@ -2134,7 +2133,7 @@ public class TestVectorOrcFile {
     writer.close();
     Reader reader = OrcFile.createReader(testFilePath,
         OrcFile.readerOptions(conf).filesystem(fs));
-    Assert.assertEquals(CompressionKind.SNAPPY, reader.getCompressionKind());
+    assertEquals(CompressionKind.SNAPPY, reader.getCompressionKind());
     RecordReader rows = reader.rows();
     batch = reader.getSchema().createRowBatch(1000);
     rand = new Random(12);
@@ -2317,13 +2316,13 @@ public class TestVectorOrcFile {
     snappyCodec = writeBatchesAndGetCodec(10, 1000, opts.compress(CompressionKind.SNAPPY), batch);
     assertEquals(1, OrcCodecPool.getPoolSize(CompressionKind.SNAPPY));
     Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf).filesystem(fs));
-    Assert.assertEquals(CompressionKind.SNAPPY, reader.getCompressionKind());
+    assertEquals(CompressionKind.SNAPPY, reader.getCompressionKind());
     CompressionCodec codec = readBatchesAndGetCodec(reader, 10, 1000);
     assertEquals(1, OrcCodecPool.getPoolSize(CompressionKind.SNAPPY));
     assertSame(snappyCodec, codec);
 
     reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf).filesystem(fs));
-    Assert.assertEquals(CompressionKind.SNAPPY, reader.getCompressionKind());
+    assertEquals(CompressionKind.SNAPPY, reader.getCompressionKind());
     codec = readBatchesAndGetCodec(reader, 10, 1000);
     assertSame(snappyCodec, codec);
     assertEquals(1, OrcCodecPool.getPoolSize(CompressionKind.SNAPPY));
@@ -2341,7 +2340,7 @@ public class TestVectorOrcFile {
     assertNotSame(snappyCodec, snappyCodec2);
     OrcCodecPool.returnCodec(CompressionKind.SNAPPY, snappyCodec);
     reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf).filesystem(fs));
-    Assert.assertEquals(CompressionKind.SNAPPY, reader.getCompressionKind());
+    assertEquals(CompressionKind.SNAPPY, reader.getCompressionKind());
     codec = readBatchesAndGetCodec(reader, 10, 1000);
     assertEquals(2, OrcCodecPool.getPoolSize(CompressionKind.SNAPPY));
     assertTrue(snappyCodec == codec || snappyCodec2 == codec);
@@ -2421,8 +2420,8 @@ public class TestVectorOrcFile {
     writer.close();
     Reader reader = OrcFile.createReader(testFilePath,
         OrcFile.readerOptions(conf).filesystem(fs));
-    Assert.assertEquals(50000, reader.getNumberOfRows());
-    Assert.assertEquals(0, reader.getRowIndexStride());
+    assertEquals(50000, reader.getNumberOfRows());
+    assertEquals(0, reader.getRowIndexStride());
     StripeInformation stripe = reader.getStripes().iterator().next();
     assertEquals(true, stripe.getDataLength() != 0);
     assertEquals(0, stripe.getIndexLength());
@@ -2495,7 +2494,7 @@ public class TestVectorOrcFile {
     writer.close();
     Reader reader = OrcFile.createReader(testFilePath,
         OrcFile.readerOptions(conf).filesystem(fs));
-    Assert.assertEquals(COUNT, reader.getNumberOfRows());
+    assertEquals(COUNT, reader.getNumberOfRows());
     RecordReader rows = reader.rows();
     // get the row index
     InStream.StreamOptions options = InStream.options();
@@ -2530,7 +2529,7 @@ public class TestVectorOrcFile {
       if (nextRowInBatch < 0) {
         long base = Math.max(i - 1023, 0);
         rows.seekToRow(base);
-        Assert.assertEquals("row " + i, true, rows.nextBatch(batch));
+        assertEquals("row " + i, true, rows.nextBatch(batch));
         nextRowInBatch = batch.size - 1;
       }
       checkRandomRow(batch, intValues, doubleValues,
@@ -2562,12 +2561,12 @@ public class TestVectorOrcFile {
     rows.seekToRow(lastRowOfStripe2);
     // we only want two rows
     batch = reader.getSchema().createRowBatch(2);
-    Assert.assertEquals(true, rows.nextBatch(batch));
+    assertEquals(true, rows.nextBatch(batch));
     assertEquals(1, batch.size);
     assertEquals(intValues[(int) lastRowOfStripe2], getLong(batch, 0));
     assertEquals(stringValues[(int) lastRowOfStripe2],
         getText(batch, 0).toString());
-    Assert.assertEquals(true, rows.nextBatch(batch));
+    assertEquals(true, rows.nextBatch(batch));
     assertEquals(intValues[(int) lastRowOfStripe2 + 1], getLong(batch, 0));
     assertEquals(stringValues[(int) lastRowOfStripe2 + 1],
         getText(batch, 0).toString());
@@ -2690,16 +2689,16 @@ public class TestVectorOrcFile {
     LongColumnVector ints = (LongColumnVector) batch.cols[0];
     BytesColumnVector strs = (BytesColumnVector) batch.cols[1];
 
-    Assert.assertEquals(1000L, rows.getRowNumber());
-    Assert.assertEquals(true, rows.nextBatch(batch));
+    assertEquals(1000L, rows.getRowNumber());
+    assertEquals(true, rows.nextBatch(batch));
     assertEquals(1000, batch.size);
 
     for(int i=1000; i < 2000; ++i) {
       assertEquals(300 * i, ints.vector[i - 1000]);
       assertEquals(Integer.toHexString(10*i), strs.toString(i - 1000));
     }
-    Assert.assertEquals(false, rows.nextBatch(batch));
-    Assert.assertEquals(3500, rows.getRowNumber());
+    assertEquals(false, rows.nextBatch(batch));
+    assertEquals(3500, rows.getRowNumber());
 
     // look through the file with no rows selected
     sarg = SearchArgumentFactory.newBuilder()
@@ -2711,7 +2710,7 @@ public class TestVectorOrcFile {
         .range(0L, Long.MAX_VALUE)
         .include(new boolean[]{true, true, true})
         .searchArgument(sarg, new String[]{null, "int1", "string1"}));
-    Assert.assertEquals(3500L, rows.getRowNumber());
+    assertEquals(3500L, rows.getRowNumber());
     assertTrue(!rows.nextBatch(batch));
 
     // select first 100 and last 100 rows
@@ -2727,24 +2726,24 @@ public class TestVectorOrcFile {
         .range(0L, Long.MAX_VALUE)
         .include(new boolean[]{true, true, true})
         .searchArgument(sarg, new String[]{null, "int1", "string1"}));
-    Assert.assertEquals(0, rows.getRowNumber());
-    Assert.assertEquals(true, rows.nextBatch(batch));
+    assertEquals(0, rows.getRowNumber());
+    assertEquals(true, rows.nextBatch(batch));
     assertEquals(1000, batch.size);
-    Assert.assertEquals(3000, rows.getRowNumber());
+    assertEquals(3000, rows.getRowNumber());
     for(int i=0; i < 1000; ++i) {
       assertEquals(300 * i, ints.vector[i]);
       assertEquals(Integer.toHexString(10*i), strs.toString(i));
     }
 
-    Assert.assertEquals(true, rows.nextBatch(batch));
+    assertEquals(true, rows.nextBatch(batch));
     assertEquals(500, batch.size);
-    Assert.assertEquals(3500, rows.getRowNumber());
+    assertEquals(3500, rows.getRowNumber());
     for(int i=3000; i < 3500; ++i) {
       assertEquals(300 * i, ints.vector[i - 3000]);
       assertEquals(Integer.toHexString(10*i), strs.toString(i - 3000));
     }
-    Assert.assertEquals(false, rows.nextBatch(batch));
-    Assert.assertEquals(3500, rows.getRowNumber());
+    assertEquals(false, rows.nextBatch(batch));
+    assertEquals(3500, rows.getRowNumber());
   }
 
   @Test
@@ -2786,8 +2785,8 @@ public class TestVectorOrcFile {
         .searchArgument(sarg, new String[]{null, "`int1`", "string1"}));
     batch = reader.getSchema().createRowBatch(2000);
 
-    Assert.assertEquals(1000L, rows.getRowNumber());
-    Assert.assertEquals(true, rows.nextBatch(batch));
+    assertEquals(1000L, rows.getRowNumber());
+    assertEquals(true, rows.nextBatch(batch));
     assertEquals(1000, batch.size);
 
     // Validate the same behaviour with schemaFromString
@@ -2832,8 +2831,8 @@ public class TestVectorOrcFile {
         .searchArgument(sarg, new String[]{null, "`int1`", "string1"}));
     batch = readerSchemaFromStr.getSchema().createRowBatch(2000);
 
-    Assert.assertEquals(1000L, rows.getRowNumber());
-    Assert.assertEquals(true, rows.nextBatch(batch));
+    assertEquals(1000L, rows.getRowNumber());
+    assertEquals(true, rows.nextBatch(batch));
     assertEquals(1000, batch.size);
 
     assertEquals(reader.getSchema(), readerSchemaFromStr.getSchema());
@@ -3050,7 +3049,7 @@ public class TestVectorOrcFile {
     BytesColumnVector mapKeys = (BytesColumnVector) maps.keys;
     BytesColumnVector mapValues = (BytesColumnVector) maps.values;
 
-    Assert.assertEquals(true, rows.nextBatch(batch));
+    assertEquals(true, rows.nextBatch(batch));
     assertEquals(1024, batch.size);
 
     // read the 1024 nulls
@@ -3064,7 +3063,7 @@ public class TestVectorOrcFile {
     }
 
     // read the 1024 repeat values
-    Assert.assertEquals(true, rows.nextBatch(batch));
+    assertEquals(true, rows.nextBatch(batch));
     assertEquals(1024, batch.size);
     for(int r=0; r < 1024; ++r) {
       assertEquals("row " + r, "Horton", bins.toString(r));
@@ -3097,7 +3096,7 @@ public class TestVectorOrcFile {
     }
 
     // read the second set of 1024 nulls
-    Assert.assertEquals(true, rows.nextBatch(batch));
+    assertEquals(true, rows.nextBatch(batch));
     assertEquals(1024, batch.size);
     for(int f=0; f < batch.cols.length; ++f) {
       assertEquals("field " + f,
@@ -3108,7 +3107,7 @@ public class TestVectorOrcFile {
           true, batch.cols[f].isNull[0]);
     }
 
-    Assert.assertEquals(true, rows.nextBatch(batch));
+    assertEquals(true, rows.nextBatch(batch));
     assertEquals(1024, batch.size);
     for(int r=0; r < 1024; ++r) {
       String hex = Integer.toHexString(r);
@@ -3145,7 +3144,7 @@ public class TestVectorOrcFile {
     }
 
     // should have no more rows
-    Assert.assertEquals(false, rows.nextBatch(batch));
+    assertEquals(false, rows.nextBatch(batch));
   }
 
   private static String makeString(BytesColumnVector vector, int row) {
@@ -3187,7 +3186,7 @@ public class TestVectorOrcFile {
         OrcFile.readerOptions(conf));
     RecordReader rows = reader.rows();
     batch = reader.getSchema().createRowBatch();
-    Assert.assertEquals(true, rows.nextBatch(batch));
+    assertEquals(true, rows.nextBatch(batch));
     assertEquals(4, batch.size);
     // ORC currently trims the output strings. See HIVE-12286
     assertEquals("",
@@ -3239,19 +3238,19 @@ public class TestVectorOrcFile {
         OrcFile.readerOptions(conf));
     RecordReader rows = reader.rows();
     batch = reader.getSchema().createRowBatch();
-    Assert.assertEquals(true, rows.nextBatch(batch));
+    assertEquals(true, rows.nextBatch(batch));
     assertEquals(1024, batch.size);
     for(int r=0; r < 1024; ++r) {
       assertEquals(Integer.toString(r * 10001),
           makeString((BytesColumnVector) batch.cols[0], r));
     }
-    Assert.assertEquals(true, rows.nextBatch(batch));
+    assertEquals(true, rows.nextBatch(batch));
     assertEquals(1024, batch.size);
     for(int r=0; r < 1024; ++r) {
       assertEquals("Halloween",
           makeString((BytesColumnVector) batch.cols[0], r));
     }
-    Assert.assertEquals(false, rows.nextBatch(batch));
+    assertEquals(false, rows.nextBatch(batch));
   }
 
   @Test
@@ -3337,7 +3336,7 @@ public class TestVectorOrcFile {
     UnionColumnVector union = (UnionColumnVector) batch.cols[0];
     LongColumnVector ints = (LongColumnVector) union.fields[0];
     LongColumnVector longs = (LongColumnVector) union.fields[1];
-    Assert.assertEquals(true, rows.nextBatch(batch));
+    assertEquals(true, rows.nextBatch(batch));
     assertEquals(1024, batch.size);
     for(int r=0; r < 1024; ++r) {
       if (r < 200) {
@@ -3364,7 +3363,7 @@ public class TestVectorOrcFile {
         assertEquals("row " + r, -r, longs.vector[r]);
       }
     }
-    Assert.assertEquals(false, rows.nextBatch(batch));
+    assertEquals(false, rows.nextBatch(batch));
   }
 
   /**
@@ -3437,7 +3436,7 @@ public class TestVectorOrcFile {
         assertEquals("row " + r, "null", actual.toString());
       }
     }
-    Assert.assertEquals(false, rows.nextBatch(batch));
+    assertEquals(false, rows.nextBatch(batch));
   }
 
   /**
@@ -4197,8 +4196,8 @@ public class TestVectorOrcFile {
     LongColumnVector ints2 = (LongColumnVector) struct1.fields[0];
     BytesColumnVector strs = (BytesColumnVector) struct1.fields[1];
 
-    Assert.assertEquals(1000L, rows.getRowNumber());
-    Assert.assertEquals(true, rows.nextBatch(batch));
+    assertEquals(1000L, rows.getRowNumber());
+    assertEquals(true, rows.nextBatch(batch));
     assertEquals(1000, batch.size);
 
     for(int i=1000; i < 2000; ++i) {
@@ -4206,8 +4205,8 @@ public class TestVectorOrcFile {
       assertEquals(300 * i, ints2.vector[i - 1000]);
       assertEquals(Integer.toHexString(10*i), strs.toString(i - 1000));
     }
-    Assert.assertEquals(false, rows.nextBatch(batch));
-    Assert.assertEquals(3500, rows.getRowNumber());
+    assertEquals(false, rows.nextBatch(batch));
+    assertEquals(3500, rows.getRowNumber());
 
 
     // look through the file with no rows selected
@@ -4220,7 +4219,7 @@ public class TestVectorOrcFile {
             .range(0L, Long.MAX_VALUE)
             .include(new boolean[]{true, true, true, true, true})
             .searchArgument(sarg, new String[]{null, "int1",null,"int2","string1"}));
-    Assert.assertEquals(3500L, rows.getRowNumber());
+    assertEquals(3500L, rows.getRowNumber());
     assertTrue(!rows.nextBatch(batch));
 
     // select first 100 and last 100 rows
@@ -4236,25 +4235,25 @@ public class TestVectorOrcFile {
             .range(0L, Long.MAX_VALUE)
             .include(new boolean[]{true, true,true,true, true})
             .searchArgument(sarg, new String[]{null, "int1",null, "int2","string1"}));
-    Assert.assertEquals(0, rows.getRowNumber());
-    Assert.assertEquals(true, rows.nextBatch(batch));
+    assertEquals(0, rows.getRowNumber());
+    assertEquals(true, rows.nextBatch(batch));
     assertEquals(1000, batch.size);
-    Assert.assertEquals(3000, rows.getRowNumber());
+    assertEquals(3000, rows.getRowNumber());
 
     for(int i=0; i < 1000; ++i) {
       assertEquals(300 * i, ints2.vector[i]);
       assertEquals(Integer.toHexString(10*i), strs.toString(i));
     }
 
-    Assert.assertEquals(true, rows.nextBatch(batch));
+    assertEquals(true, rows.nextBatch(batch));
     assertEquals(500, batch.size);
-    Assert.assertEquals(3500, rows.getRowNumber());
+    assertEquals(3500, rows.getRowNumber());
     for(int i=3000; i < 3500; ++i) {
       assertEquals(300 * i, ints2.vector[i - 3000]);
       assertEquals(Integer.toHexString(10*i), strs.toString(i - 3000));
     }
-    Assert.assertEquals(false, rows.nextBatch(batch));
-    Assert.assertEquals(3500, rows.getRowNumber());
+    assertEquals(false, rows.nextBatch(batch));
+    assertEquals(3500, rows.getRowNumber());
   }
 
   @Test

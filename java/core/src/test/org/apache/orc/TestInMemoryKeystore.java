@@ -21,7 +21,7 @@ import java.nio.charset.StandardCharsets;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.orc.impl.HadoopShims;
 import org.apache.orc.impl.LocalKey;
-import org.junit.Assert;
+import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -60,9 +60,9 @@ public class TestInMemoryKeystore {
   @Test
   public void testGetKeyNames() {
 
-    Assert.assertTrue(memoryKeystore.getKeyNames().contains("key128"));
-    Assert.assertTrue(memoryKeystore.getKeyNames().contains("key256"));
-    Assert.assertTrue(memoryKeystore.getKeyNames().contains("key256short"));
+    assertTrue(memoryKeystore.getKeyNames().contains("key128"));
+    assertTrue(memoryKeystore.getKeyNames().contains("key256"));
+    assertTrue(memoryKeystore.getKeyNames().contains("key256short"));
 
   }
 
@@ -72,14 +72,14 @@ public class TestInMemoryKeystore {
     final HadoopShims.KeyMetadata metadata = memoryKeystore
         .getCurrentKeyVersion("key256");
 
-    Assert.assertEquals("key256", metadata.getKeyName());
+    assertEquals("key256", metadata.getKeyName());
     if (InMemoryKeystore.SUPPORTS_AES_256) {
-      Assert.assertEquals(EncryptionAlgorithm.AES_CTR_256, metadata.getAlgorithm());
+      assertEquals(EncryptionAlgorithm.AES_CTR_256, metadata.getAlgorithm());
     } else {
-      Assert.assertEquals(EncryptionAlgorithm.AES_CTR_128, metadata.getAlgorithm());
+      assertEquals(EncryptionAlgorithm.AES_CTR_128, metadata.getAlgorithm());
     }
 
-    Assert.assertEquals(0, metadata.getVersion());
+    assertEquals(0, metadata.getVersion());
 
   }
 
@@ -91,17 +91,17 @@ public class TestInMemoryKeystore {
 
     LocalKey key128 = memoryKeystore.createLocalKey(metadata128);
     // we are sure the key is the same because of the random generator.
-    Assert.assertEquals("39 72 2c bb f8 b9 1a 4b 90 45 c5 e6 17 5f 10 01",
+    assertEquals("39 72 2c bb f8 b9 1a 4b 90 45 c5 e6 17 5f 10 01",
         stringify(key128.getEncryptedKey()));
-    Assert.assertEquals("46 33 66 fd 79 57 66 9a ba 4a 28 df bf 16 f2 88",
+    assertEquals("46 33 66 fd 79 57 66 9a ba 4a 28 df bf 16 f2 88",
         stringify(key128.getDecryptedKey().getEncoded()));
     // used online aes/cbc calculator to encrypt key
-    Assert.assertEquals("AES", key128.getDecryptedKey().getAlgorithm());
+    assertEquals("AES", key128.getDecryptedKey().getAlgorithm());
 
     // now decrypt the key again
     Key decryptKey = memoryKeystore.decryptLocalKey(metadata128,
         key128.getEncryptedKey());
-    Assert.assertEquals(stringify(key128.getDecryptedKey().getEncoded()),
+    assertEquals(stringify(key128.getDecryptedKey().getEncoded()),
         stringify(decryptKey.getEncoded()));
 
     HadoopShims.KeyMetadata metadata256 = memoryKeystore
@@ -109,34 +109,34 @@ public class TestInMemoryKeystore {
     LocalKey key256 = memoryKeystore.createLocalKey(metadata256);
     // this is forced by the fixed Random in the keystore for this test
     if (InMemoryKeystore.SUPPORTS_AES_256) {
-      Assert.assertEquals("ea c3 2f 7f cd 5e cc da 5c 6e 62 fc 4e 63 85 08 0f " +
+      assertEquals("ea c3 2f 7f cd 5e cc da 5c 6e 62 fc 4e 63 85 08 0f " +
                               "7b 6c db 79 e5 51 ec 9c 9c c7 fc bd 60 ee 73",
           stringify(key256.getEncryptedKey()));
        // used online aes/cbc calculator to encrypt key
-      Assert.assertEquals("00 b0 1c 24 d9 03 bc 02 63 87 b3 f9 65 4e e7 a8 b8" +
+      assertEquals("00 b0 1c 24 d9 03 bc 02 63 87 b3 f9 65 4e e7 a8 b8" +
                               " 58 eb a0 81 06 b3 61 cf f8 06 ba 30 d4 c5 36",
           stringify(key256.getDecryptedKey().getEncoded()));
     } else {
-      Assert.assertEquals("ea c3 2f 7f cd 5e cc da 5c 6e 62 fc 4e 63 85 08",
+      assertEquals("ea c3 2f 7f cd 5e cc da 5c 6e 62 fc 4e 63 85 08",
           stringify(key256.getEncryptedKey()));
-      Assert.assertEquals("6d 1c ff 55 a5 44 75 11 fb e6 8e 08 cd 2a 10 e8",
+      assertEquals("6d 1c ff 55 a5 44 75 11 fb e6 8e 08 cd 2a 10 e8",
           stringify(key256.getDecryptedKey().getEncoded()));
     }
-    Assert.assertEquals("AES", key256.getDecryptedKey().getAlgorithm());
+    assertEquals("AES", key256.getDecryptedKey().getAlgorithm());
 
     // now decrypt the key again
     decryptKey = memoryKeystore.decryptLocalKey(metadata256, key256.getEncryptedKey());
-    Assert.assertEquals(stringify(key256.getDecryptedKey().getEncoded()),
+    assertEquals(stringify(key256.getDecryptedKey().getEncoded()),
         stringify(decryptKey.getEncoded()));
   }
 
   @Test
   public void testRollNewVersion() throws IOException {
 
-    Assert.assertEquals(0,
+    assertEquals(0,
         memoryKeystore.getCurrentKeyVersion("key128").getVersion());
     memoryKeystore.addKey("key128", 1, EncryptionAlgorithm.AES_CTR_128, "NewSecret".getBytes(StandardCharsets.UTF_8));
-    Assert.assertEquals(1,
+    assertEquals(1,
         memoryKeystore.getCurrentKeyVersion("key128").getVersion());
   }
 
@@ -145,9 +145,9 @@ public class TestInMemoryKeystore {
     try {
       memoryKeystore.addKey("key128", 0, EncryptionAlgorithm.AES_CTR_128,
           "exception".getBytes(StandardCharsets.UTF_8));
-      Assert.fail("Keys with same name cannot be added.");
+      fail("Keys with same name cannot be added.");
     } catch (IOException e) {
-      Assert.assertTrue(e.toString().contains("equal or higher version"));
+      assertTrue(e.toString().contains("equal or higher version"));
     }
 
   }
@@ -161,24 +161,24 @@ public class TestInMemoryKeystore {
    */
   @Test
   public void testMultipleVersion() throws IOException {
-    Assert.assertEquals(0,
+    assertEquals(0,
         memoryKeystore.getCurrentKeyVersion("key256").getVersion());
     memoryKeystore.addKey("key256", 1, EncryptionAlgorithm.AES_CTR_256,
         "NewSecret".getBytes(StandardCharsets.UTF_8));
-    Assert.assertEquals(1,
+    assertEquals(1,
         memoryKeystore.getCurrentKeyVersion("key256").getVersion());
 
     try {
       memoryKeystore.addKey("key256", 1, EncryptionAlgorithm.AES_CTR_256,
           "BadSecret".getBytes(StandardCharsets.UTF_8));
-      Assert.fail("Keys with smaller version should not be added.");
+      fail("Keys with smaller version should not be added.");
     } catch (final IOException e) {
-      Assert.assertTrue(e.toString().contains("equal or higher version"));
+      assertTrue(e.toString().contains("equal or higher version"));
     }
 
     memoryKeystore.addKey("key256", 2, EncryptionAlgorithm.AES_CTR_256,
         "NewerSecret".getBytes(StandardCharsets.UTF_8));
-    Assert.assertEquals(2,
+    assertEquals(2,
         memoryKeystore.getCurrentKeyVersion("key256").getVersion());
 
     // make sure that all 3 versions of key256 exist and have different secrets
@@ -191,9 +191,9 @@ public class TestInMemoryKeystore {
     Key key2 = memoryKeystore.decryptLocalKey(
         new HadoopShims.KeyMetadata("key256", 2, EncryptionAlgorithm.AES_CTR_256),
         new byte[16]);
-    Assert.assertNotEquals(new BytesWritable(key0.getEncoded()).toString(),
+    assertNotEquals(new BytesWritable(key0.getEncoded()).toString(),
         new BytesWritable(key1.getEncoded()).toString());
-    Assert.assertNotEquals(new BytesWritable(key1.getEncoded()).toString(),
+    assertNotEquals(new BytesWritable(key1.getEncoded()).toString(),
         new BytesWritable(key2.getEncoded()).toString());
   }
 

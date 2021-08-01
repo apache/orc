@@ -18,7 +18,7 @@
 
 package org.apache.orc.tools;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.BufferedReader;
@@ -59,7 +59,6 @@ import org.apache.orc.Reader;
 import org.apache.orc.StripeStatistics;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -194,12 +193,12 @@ public class TestFileDump {
       if (actualLine != null) {
         actualLine = actualLine.trim();
       }
-      Assert.assertEquals(expectedLine, actualLine);
+      assertEquals(expectedLine, actualLine);
       expectedLine = eStream.readLine();
       expectedLine = expectedLine == null ? null : expectedLine.trim();
     }
-    Assert.assertNull(eStream.readLine());
-    Assert.assertNull(aStream.readLine());
+    assertNull(eStream.readLine());
+    assertNull(aStream.readLine());
     eStream.close();
     aStream.close();
   }
@@ -330,8 +329,8 @@ public class TestFileDump {
     System.out.flush();
     System.setOut(origOut);
     String[] lines = myOut.toString(StandardCharsets.UTF_8.toString()).split("\n");
-    Assert.assertEquals("{\"b\":true,\"bt\":10,\"s\":100,\"i\":1000,\"l\":10000,\"f\":4,\"d\":20,\"de\":\"4.2222\",\"t\":\"2014-11-25 18:09:24.0\",\"dt\":\"2014-11-25\",\"str\":\"string\",\"c\":\"hello\",\"vc\":\"hello\",\"m\":[{\"_key\":\"k1\",\"_value\":\"v1\"}],\"a\":[100,200],\"st\":{\"i\":10,\"s\":\"foo\"}}", lines[0]);
-    Assert.assertEquals("{\"b\":false,\"bt\":20,\"s\":200,\"i\":2000,\"l\":20000,\"f\":8,\"d\":40,\"de\":\"2.2222\",\"t\":\"2014-11-25 18:02:44.0\",\"dt\":\"2014-09-28\",\"str\":\"abcd\",\"c\":\"world\",\"vc\":\"world\",\"m\":[{\"_key\":\"k3\",\"_value\":\"v3\"}],\"a\":[200,300],\"st\":{\"i\":20,\"s\":\"bar\"}}", lines[1]);
+    assertEquals("{\"b\":true,\"bt\":10,\"s\":100,\"i\":1000,\"l\":10000,\"f\":4,\"d\":20,\"de\":\"4.2222\",\"t\":\"2014-11-25 18:09:24.0\",\"dt\":\"2014-11-25\",\"str\":\"string\",\"c\":\"hello\",\"vc\":\"hello\",\"m\":[{\"_key\":\"k1\",\"_value\":\"v1\"}],\"a\":[100,200],\"st\":{\"i\":10,\"s\":\"foo\"}}", lines[0]);
+    assertEquals("{\"b\":false,\"bt\":20,\"s\":200,\"i\":2000,\"l\":20000,\"f\":8,\"d\":40,\"de\":\"2.2222\",\"t\":\"2014-11-25 18:02:44.0\",\"dt\":\"2014-09-28\",\"str\":\"abcd\",\"c\":\"world\",\"vc\":\"world\",\"m\":[{\"_key\":\"k3\",\"_value\":\"v3\"}],\"a\":[200,300],\"st\":{\"i\":20,\"s\":\"bar\"}}", lines[1]);
   }
 
   // Test that if the fraction of rows that have distinct strings is greater than the configured

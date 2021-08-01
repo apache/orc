@@ -27,7 +27,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Random;
 
-import org.junit.Assert;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -276,7 +275,7 @@ public class TestOrcNullOptimization {
         stats[2].toString());
 
     // check the inspectors
-    Assert.assertEquals("struct<a:int,b:string,c:boolean,d:array<struct<z:int>>>",
+    assertEquals("struct<a:int,b:string,c:boolean,d:array<struct<z:int>>>",
         reader.getSchema().toString());
 
     RecordReader rows = reader.rows();
@@ -377,7 +376,7 @@ public class TestOrcNullOptimization {
     ListColumnVector dColumn = (ListColumnVector) batch.cols[3];
     LongColumnVector dElements =
         (LongColumnVector)(((StructColumnVector) dColumn.child).fields[0]);
-    Assert.assertEquals("struct<a:int,b:string,c:boolean,d:array<struct<z:int>>>",
+    assertEquals("struct<a:int,b:string,c:boolean,d:array<struct<z:int>>>",
         reader.getSchema().toString());
 
     RecordReader rows = reader.rows();

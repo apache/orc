@@ -34,7 +34,6 @@ import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
-import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -138,13 +137,13 @@ public class TestOrcStruct {
     OrcMapredRecordReader<OrcUnion> recordReader = new OrcMapredRecordReader<>(reader,options);
     OrcUnion result = recordReader.createValue();
     recordReader.next(recordReader.createKey(), result);
-    Assert.assertEquals(result, u1);
+    assertEquals(result, u1);
     recordReader.next(recordReader.createKey(), result);
-    Assert.assertEquals(result, u2);
+    assertEquals(result, u2);
     recordReader.next(recordReader.createKey(), result);
-    Assert.assertEquals(result, u3);
+    assertEquals(result, u3);
     recordReader.next(recordReader.createKey(), result);
-    Assert.assertEquals(result, u4);
+    assertEquals(result, u4);
   }
 
   @Test
