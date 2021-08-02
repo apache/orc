@@ -21,21 +21,24 @@ package org.apache.orc.impl;
 import org.apache.hadoop.crypto.key.KeyProvider;
 import org.apache.hadoop.crypto.key.kms.KMSClientProvider;
 import org.apache.orc.EncryptionAlgorithm;
-import org.junit.Test;
 
 import java.sql.Date;
 import java.util.HashMap;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.Test;
 
 public class TestHadoopShimsPre2_7 {
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void testFindingUnknownEncryption() {
-    KeyProvider.Metadata meta = new KMSClientProvider.KMSMetadata(
-        "XXX/CTR/NoPadding", 128, "", new HashMap<String, String>(),
-        new Date(0), 1);
-    HadoopShimsPre2_7.findAlgorithm(meta);
+    assertThrows(IllegalArgumentException.class, () -> {
+      KeyProvider.Metadata meta = new KMSClientProvider.KMSMetadata(
+          "XXX/CTR/NoPadding", 128, "", new HashMap<String, String>(),
+          new Date(0), 1);
+      HadoopShimsPre2_7.findAlgorithm(meta);
+    });
   }
 
   @Test
