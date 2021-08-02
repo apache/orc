@@ -1039,7 +1039,7 @@ public class OrcFile {
     if (first.length != next.length) {
       return false;
     }
-    for(int k = 0; k < first.length && k < next.length; ++k) {
+    for(int k = 0; k < first.length; ++k) {
       if (!first[k].getKeyName().equals(next[k].getKeyName()) ||
           first[k].getKeyVersion() != next[k].getKeyVersion() ||
           first[k].getAlgorithm() != next[k].getAlgorithm()) {
@@ -1054,7 +1054,7 @@ public class OrcFile {
     if (first.length != next.length) {
       return false;
     }
-    for(int k = 0; k < first.length && k < next.length; ++k) {
+    for(int k = 0; k < first.length; ++k) {
       if (!first[k].getName().equals(next[k].getName())) {
         return false;
       }
@@ -1063,7 +1063,7 @@ public class OrcFile {
       if (firstParam.length != nextParam.length) {
         return false;
       }
-      for(int p=0; p < firstParam.length && p < nextParam.length; ++p) {
+      for(int p=0; p < firstParam.length; ++p) {
         if (!firstParam[p].equals(nextParam[p])) {
           return false;
         }
@@ -1073,7 +1073,7 @@ public class OrcFile {
       if (firstRoots.length != nextRoots.length) {
         return false;
       }
-      for(int r=0; r < firstRoots.length && r < nextRoots.length; ++r) {
+      for(int r=0; r < firstRoots.length; ++r) {
         if (firstRoots[r].getId() != nextRoots[r].getId()) {
           return false;
         }
@@ -1087,7 +1087,7 @@ public class OrcFile {
     if (first.length != next.length) {
       return false;
     }
-    for(int k = 0; k < first.length && k < next.length; ++k) {
+    for(int k = 0; k < first.length; ++k) {
       if ((first[k].getKeyDescription() == null) !=
               (next[k].getKeyDescription() == null) ||
           !first[k].getKeyDescription().getKeyName().equals(
