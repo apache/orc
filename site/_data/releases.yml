@@ -221,7 +221,7 @@
 
 1.4.5:
   date: 2019-12-09
-  state: stable
+  state: archived
   tar: orc-1.4.5.tar.gz
   signed-by: Owen O’Malley (3D0C92B9)
   sha256: 6b30272d4c4cbccc4f019590aa0b770214ff154c8204018a640a61ae0b29e9cb
