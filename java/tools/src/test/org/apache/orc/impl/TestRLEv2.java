@@ -17,8 +17,8 @@
  */
 package org.apache.orc.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -43,10 +43,6 @@ import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
 import org.apache.orc.impl.writer.StreamOptions;
 import org.apache.orc.tools.FileDump;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
 
 public class TestRLEv2 {
   Path workDir = new Path(System.getProperty("test.tmp.dir",
@@ -55,15 +51,12 @@ public class TestRLEv2 {
   Configuration conf;
   FileSystem fs;
 
-  @Rule
-  public TestName testCaseName = new TestName();
-
-  @Before
-  public void openFileSystem () throws Exception {
+  @BeforeEach
+  public void openFileSystem (TestInfo testInfo) throws Exception {
     conf = new Configuration();
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestRLEv2." +
-        testCaseName.getMethodName() + ".orc");
+        testInfo.getTestMethod().get().getName() + ".orc");
     fs.delete(testFilePath, false);
   }
 
@@ -375,7 +368,7 @@ public class TestRLEv2 {
     public void compareBytes(int... expected) {
       for(int i=0; i < expected.length; ++i) {
         ByteBuffer current = getCurrentBuffer();
-        assertEquals("position " + i, (byte) expected[i], current.get());
+        assertEquals((byte) expected[i], current.get(), "position " + i);
       }
       assertEquals(null, getCurrentBuffer());
     }

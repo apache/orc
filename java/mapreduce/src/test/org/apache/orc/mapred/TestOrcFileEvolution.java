@@ -30,25 +30,20 @@ import org.apache.hadoop.mapred.Reporter;
 import org.apache.orc.*;
 import org.apache.orc.TypeDescription.Category;
 import org.apache.orc.impl.SchemaEvolution;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.rules.TestName;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
 /**
  * Test the behavior of ORC's schema evolution
  */
-@RunWith(Parameterized.class)
 public class TestOrcFileEvolution {
 
   // These utility methods are just to make writing tests easier. The values
@@ -82,37 +77,18 @@ public class TestOrcFileEvolution {
   FileSystem fs;
   Path testFilePath;
 
-  private boolean addSarg;
-
-  public TestOrcFileEvolution(boolean addSarg) {
-    this.addSarg = addSarg;
-  }
-
-  @Parameterized.Parameters
-  public static Collection params() {
-    return Arrays.asList(new Object[][] {
-      { true },
-      { false }
-    });
-  }
-
-  @Rule
-  public TestName testCaseName = new TestName();
-
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
-
-  @Before
-  public void openFileSystem() throws Exception {
+  @BeforeEach
+  public void openFileSystem(TestInfo testInfo) throws Exception {
     conf = new Configuration();
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestOrcFile." +
-        testCaseName.getMethodName() + ".orc");
+        testInfo.getTestMethod().get().getName() + ".orc");
     fs.delete(testFilePath, false);
   }
 
-  @Test
-  public void testAddFieldToEnd() {
+  @ParameterizedTest
+  @ValueSource(booleans =  {true, false})
+  public void testAddFieldToEnd(boolean addSarg) {
     checkEvolution("struct<a:int,b:string>", "struct<a:int,b:string,c:double>",
         struct(11, "foo"),
         addSarg ? struct(0, "", 0.0) : struct(11, "foo", null),
@@ -134,70 +110,79 @@ public class TestOrcFileEvolution {
                    sArg, sCols, false);
   }
 
-  @Test
-  public void testAddFieldBeforeEnd() {
+  @ParameterizedTest
+  @ValueSource(booleans =  {true, false})
+  public void testAddFieldBeforeEnd(boolean addSarg) {
     checkEvolution("struct<a:int,b:string>", "struct<a:int,c:double,b:string>",
         struct(1, "foo"),
         struct(1, null, "foo"),
                    addSarg);
   }
 
-  @Test
-  public void testRemoveLastField() {
+  @ParameterizedTest
+  @ValueSource(booleans =  {true, false})
+  public void testRemoveLastField(boolean addSarg) {
     checkEvolution("struct<a:int,b:string,c:double>", "struct<a:int,b:string>",
         struct(1, "foo", 3.14),
         struct(1, "foo"),
                    addSarg);
   }
 
-  @Test
-  public void testRemoveFieldBeforeEnd() {
+  @ParameterizedTest
+  @ValueSource(booleans =  {true, false})
+  public void testRemoveFieldBeforeEnd(boolean addSarg) {
     checkEvolution("struct<a:int,b:string,c:double>", "struct<a:int,c:double>",
         struct(1, "foo", 3.14),
         struct(1, 3.14),
                    addSarg);
   }
 
-  @Test
-  public void testRemoveAndAddField() {
+  @ParameterizedTest
+  @ValueSource(booleans =  {true, false})
+  public void testRemoveAndAddField(boolean addSarg) {
     checkEvolution("struct<a:int,b:string>", "struct<a:int,c:double>",
         struct(1, "foo"), struct(1, null),
                    addSarg);
   }
 
-  @Test
-  public void testReorderFields() {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  public void testReorderFields(boolean addSarg) {
     checkEvolution("struct<a:int,b:string>", "struct<b:string,a:int>",
         struct(1, "foo"), struct("foo", 1),
                    addSarg);
   }
 
-  @Test
-  public void testAddFieldEndOfStruct() {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  public void testAddFieldEndOfStruct(boolean addSarg) {
     checkEvolution("struct<a:struct<b:int>,c:string>",
         "struct<a:struct<b:int,d:double>,c:string>",
         struct(struct(2), "foo"), struct(struct(2, null), "foo"),
                    addSarg);
   }
 
-  @Test
-  public void testAddFieldBeforeEndOfStruct() {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  public void testAddFieldBeforeEndOfStruct(boolean addSarg) {
     checkEvolution("struct<a:struct<b:int>,c:string>",
         "struct<a:struct<d:double,b:int>,c:string>",
         struct(struct(2), "foo"), struct(struct(null, 2), "foo"),
                    addSarg);
   }
 
-  @Test
-  public void testAddSimilarField() {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  public void testAddSimilarField(boolean addSarg) {
     checkEvolution("struct<a:struct<b:int>>",
         "struct<a:struct<b:int>,c:struct<b:int>>", struct(struct(2)),
         struct(struct(2), null),
                    addSarg);
   }
 
-  @Test
-  public void testConvergentEvolution() {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  public void testConvergentEvolution(boolean addSarg) {
     checkEvolution("struct<a:struct<a:int,b:string>,c:struct<a:int>>",
         "struct<a:struct<a:int,b:string>,c:struct<a:int,b:string>>",
         struct(struct(2, "foo"), struct(3)),
@@ -205,8 +190,9 @@ public class TestOrcFileEvolution {
                    addSarg);
   }
 
-  @Test
-  public void testMapKeyEvolution() {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  public void testMapKeyEvolution(boolean addSarg) {
     checkEvolution("struct<a:map<struct<a:int>,int>>",
         "struct<a:map<struct<a:int,b:string>,int>>",
         struct(map(struct(1), 2)),
@@ -214,8 +200,9 @@ public class TestOrcFileEvolution {
                    addSarg);
   }
 
-  @Test
-  public void testMapValueEvolution() {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  public void testMapValueEvolution(boolean addSarg) {
     checkEvolution("struct<a:map<int,struct<a:int>>>",
         "struct<a:map<int,struct<a:int,b:string>>>",
         struct(map(2, struct(1))),
@@ -223,8 +210,9 @@ public class TestOrcFileEvolution {
                    addSarg);
   }
 
-  @Test
-  public void testListEvolution() {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  public void testListEvolution(boolean addSarg) {
     checkEvolution("struct<a:array<struct<b:int>>>",
         "struct<a:array<struct<b:int,c:string>>>",
         struct(list(struct(1), struct(2))),
@@ -236,17 +224,18 @@ public class TestOrcFileEvolution {
   public void testMissingColumnFromReaderSchema() {
     // Expect failure if the column is missing from the reader schema, as column a that is added
     // by the SArg is missing from the reader schema
-    assertThrows("Field a not found in", IllegalArgumentException.class,
-                        () -> checkEvolution("struct<b:int,c:string>",
-                                       "struct<b:int,c:string>",
-                                       struct(1, "foo"),
-                                       struct(1, "foo", null),
-                                       true, true, false));
-
+    assertThrows(IllegalArgumentException.class, () -> {
+      checkEvolution("struct<b:int,c:string>",
+                      "struct<b:int,c:string>",
+                      struct(1, "foo"),
+                      struct(1, "foo", null),
+                      true, true, false);
+    }, "Field a not found in");
   }
 
-  @Test
-  public void testPreHive4243CheckEqual() {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  public void testPreHive4243CheckEqual(boolean addSarg) {
     // Expect success on equal schemas
     checkEvolutionPosn("struct<_col0:int,_col1:string>",
                    "struct<_col0:int,_col1:string>",
@@ -254,36 +243,43 @@ public class TestOrcFileEvolution {
                    struct(1, "foo", null), false, addSarg, false);
   }
 
-  @Test
-  public void testPreHive4243Check() {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  public void testPreHive4243Check(boolean addSarg) {
     // Expect exception on strict compatibility check
-    thrown.expectMessage("HIVE-4243");
-    checkEvolutionPosn("struct<_col0:int,_col1:string>",
-                   "struct<_col0:int,_col1:string,_col2:double>",
-                   struct(1, "foo"),
-                   struct(1, "foo", null), false, addSarg, false);
+    Exception e = assertThrows(RuntimeException.class, () -> {
+      checkEvolutionPosn("struct<_col0:int,_col1:string>",
+        "struct<_col0:int,_col1:string,_col2:double>",
+        struct(1, "foo"),
+        struct(1, "foo", null), false, addSarg, false);
+    });
+    assertTrue(e.getMessage().contains("HIVE-4243"));
   }
 
-  @Test
-  public void testPreHive4243AddColumn() {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  public void testPreHive4243AddColumn(boolean addSarg) {
     checkEvolutionPosn("struct<_col0:int,_col1:string>",
                    "struct<_col0:int,_col1:string,_col2:double>",
                    struct(1, "foo"),
                    struct(1, "foo", null), true, addSarg, false);
   }
 
-  @Test
-  public void testPreHive4243AddColumnMiddle() {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  public void testPreHive4243AddColumnMiddle(boolean addSarg) {
     // Expect exception on type mismatch
-    thrown.expect(SchemaEvolution.IllegalEvolutionException.class);
-    checkEvolutionPosn("struct<_col0:int,_col1:double>",
-                   "struct<_col0:int,_col1:date,_col2:double>",
-                   struct(1, 1.0),
-                   null, true, addSarg, false);
+    assertThrows(SchemaEvolution.IllegalEvolutionException.class, () -> {
+      checkEvolutionPosn("struct<_col0:int,_col1:double>",
+        "struct<_col0:int,_col1:date,_col2:double>",
+        struct(1, 1.0),
+        null, true, addSarg, false);
+    });
   }
 
-  @Test
-  public void testPreHive4243AddColumnWithFix() {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  public void testPreHive4243AddColumnWithFix(boolean addSarg) {
     checkEvolution("struct<_col0:int,_col1:string>",
                    "struct<a:int,b:string,c:double>",
                    struct(1, "foo"),
@@ -293,19 +289,21 @@ public class TestOrcFileEvolution {
   @Test
   public void testPreHive4243AddColumnMiddleWithFix() {
     // Expect exception on type mismatch
-    thrown.expect(SchemaEvolution.IllegalEvolutionException.class);
-    checkEvolution("struct<_col0:int,_col1:double>",
-        "struct<a:int,b:date,c:double>",
-        struct(1, 1.0),
-        null, true);
+    assertThrows(SchemaEvolution.IllegalEvolutionException.class, () -> {
+      checkEvolution("struct<_col0:int,_col1:double>",
+              "struct<a:int,b:date,c:double>",
+              struct(1, 1.0),
+              null, true);
+    });
   }
 
   /**
    * Test positional schema evolution.
    * With the sarg, it eliminates the row and we don't get the row.
    */
-  @Test
-  public void testPositional() {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  public void testPositional(boolean addSarg) {
     checkEvolution("struct<x:int,y:int,z:int>", "struct<a:int,b:int,c:int,d:int>",
         struct(11, 2, 3),
         // if the sarg works, we get the default value
@@ -317,8 +315,9 @@ public class TestOrcFileEvolution {
    * Make the sarg try to use a column past the end of the file schema, since
    * it will get null, the predicate doesn't hit.
    */
-  @Test
-  public void testPositional2() {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  public void testPositional2(boolean addSarg) {
     checkEvolution("struct<x:int,y:int,z:int>", "struct<b:int,c:int,d:int,a:int>",
         struct(11, 2, 3),
         struct(11, 2, 3, null),
