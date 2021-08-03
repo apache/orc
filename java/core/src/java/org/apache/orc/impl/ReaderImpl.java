@@ -564,7 +564,7 @@ public class ReaderImpl implements Reader {
       this.userMetadata = tail.getFooter().getMetadataList()
               .stream().collect(Collectors.toMap(
                       OrcProto.UserMetadataItem::getName,
-                      OrcProto.UserMetadataItem::getNameBytes,
+                      OrcProto.UserMetadataItem::getValue,
                       (bytes, bytes2) -> bytes2,
                       TreeMap::new)
               );
