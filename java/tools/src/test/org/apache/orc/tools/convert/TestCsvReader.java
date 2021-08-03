@@ -27,27 +27,26 @@ import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.RecordReader;
 import org.apache.orc.TypeDescription;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
 import java.io.StringReader;
 import java.util.Locale;
 
 import static org.apache.orc.tools.convert.ConvertTool.DEFAULT_TIMESTAMP_FORMAT;
-import static org.junit.Assert.assertEquals;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.*;
 
 public class TestCsvReader {
 
   Locale defaultLocale;
 
-  @Before
+  @BeforeEach
   public void storeDefaultLocale() {
     defaultLocale = Locale.getDefault();
     Locale.setDefault(Locale.US);
   }
 
-  @After
+  @AfterEach
   public void restoreDefaultLocale() {
     Locale.setDefault(defaultLocale);
   }
@@ -111,7 +110,7 @@ public class TestCsvReader {
     assertEquals(true, reader.nextBatch(batch));
     assertEquals(3, batch.size);
     for(int c=0; c < 4; ++c) {
-      assertEquals("column " + c, false, batch.cols[c].noNulls);
+      assertEquals(false, batch.cols[c].noNulls, "column " + c);
     }
 
     // check row 0
@@ -120,12 +119,12 @@ public class TestCsvReader {
     assertEquals("1", ((DecimalColumnVector) batch.cols[2]).vector[0].toString());
     assertEquals("a", ((BytesColumnVector) batch.cols[3]).toString(0));
     for(int c=0; c < 4; ++c) {
-      assertEquals("column " + c, false, batch.cols[c].isNull[0]);
+      assertEquals(false, batch.cols[c].isNull[0], "column " + c);
     }
 
     // row 1
     for(int c=0; c < 4; ++c) {
-      assertEquals("column " + c, true, batch.cols[c].isNull[1]);
+      assertEquals(true, batch.cols[c].isNull[1], "column " + c);
     }
 
     // check row 2
@@ -134,7 +133,7 @@ public class TestCsvReader {
     assertEquals("3", ((DecimalColumnVector) batch.cols[2]).vector[2].toString());
     assertEquals("row 3", ((BytesColumnVector) batch.cols[3]).toString(2));
     for(int c=0; c < 4; ++c) {
-      assertEquals("column " + c, false, batch.cols[c].isNull[2]);
+      assertEquals(false, batch.cols[c].isNull[2], "column " + c);
     }
   }
 
@@ -153,11 +152,11 @@ public class TestCsvReader {
     assertEquals(2, batch.size);
     int nextVal = 1;
     for(int r=0; r < 2; ++r) {
-      assertEquals("row " + r, nextVal++, ((LongColumnVector) batch.cols[0]).vector[r]);
+      assertEquals(nextVal++, ((LongColumnVector) batch.cols[0]).vector[r], "row " + r);
       StructColumnVector b = (StructColumnVector) batch.cols[1];
-      assertEquals("row " + r, nextVal++, ((LongColumnVector) b.fields[0]).vector[r]);
-      assertEquals("row " + r, nextVal++, ((LongColumnVector) b.fields[1]).vector[r]);
-      assertEquals("row " + r, nextVal++, ((LongColumnVector) batch.cols[2]).vector[r]);
+      assertEquals(nextVal++, ((LongColumnVector) b.fields[0]).vector[r], "row " + r);
+      assertEquals(nextVal++, ((LongColumnVector) b.fields[1]).vector[r], "row " + r);
+      assertEquals(nextVal++, ((LongColumnVector) batch.cols[2]).vector[r], "row " + r);
     }
     assertEquals(false, reader.nextBatch(batch));
   }

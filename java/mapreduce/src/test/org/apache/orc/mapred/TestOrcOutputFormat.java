@@ -49,13 +49,13 @@ import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
-import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
 
 public class TestOrcOutputFormat {
 
@@ -187,9 +187,9 @@ public class TestOrcOutputFormat {
         } else {
           union.set((byte) 0, new OrcTimestamp("2011-12-25 12:34:56"));
         }
-        assertEquals("row " + r, struct, row.getFieldValue(11));
-        assertEquals("row " + r, new OrcTimestamp("1996-12-11 15:00:00"),
-            row.getFieldValue(12));
+        assertEquals(struct, row.getFieldValue(11), "row " + r);
+        assertEquals(new OrcTimestamp("1996-12-11 15:00:00"),
+            row.getFieldValue(12), "row " + r);
       }
     }
     assertEquals(false, reader.next(nada, row));
