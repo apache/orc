@@ -34,20 +34,14 @@ import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import com.google.common.io.Files;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 public class TestOrcStruct {
-
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void testRead() throws IOException {
@@ -167,16 +161,18 @@ public class TestOrcStruct {
   public void testBadFieldRead() {
     OrcStruct struct = new OrcStruct(TypeDescription.fromString
         ("struct<i:int,j:double,k:string>"));
-    thrown.expect(IllegalArgumentException.class);
-    struct.getFieldValue("bad");
+    assertThrows(IllegalArgumentException.class, () -> {
+      struct.getFieldValue("bad");
+    });
   }
 
   @Test
   public void testBadFieldWrite() {
     OrcStruct struct = new OrcStruct(TypeDescription.fromString
         ("struct<i:int,j:double,k:string>"));
-    thrown.expect(IllegalArgumentException.class);
-    struct.setFieldValue("bad", new Text("foobar"));
+    assertThrows(IllegalArgumentException.class, () -> {
+      struct.setFieldValue("bad", new Text("foobar"));
+    });
   }
 
   @Test

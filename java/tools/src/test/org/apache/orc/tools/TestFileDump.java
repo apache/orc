@@ -18,8 +18,9 @@
 
 package org.apache.orc.tools;
 
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.*;
+import org.junit.jupiter.api.*;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -59,8 +60,6 @@ import org.apache.orc.Reader;
 import org.apache.orc.StripeStatistics;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
-import org.junit.Before;
-import org.junit.Test;
 
 public class TestFileDump {
 
@@ -69,7 +68,7 @@ public class TestFileDump {
   FileSystem fs;
   Path testFilePath;
 
-  @Before
+  @BeforeEach
   public void openFileSystem () throws Exception {
     conf = new Configuration();
     fs = FileSystem.getLocal(conf);
