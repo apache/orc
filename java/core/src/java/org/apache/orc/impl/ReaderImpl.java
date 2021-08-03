@@ -24,8 +24,11 @@ import java.security.Key;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.TreeMap;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.apache.orc.EncryptionAlgorithm;
 import org.apache.orc.EncryptionKey;
@@ -55,6 +58,7 @@ import org.apache.hadoop.hive.ql.util.JavaDataModel;
 import org.apache.hadoop.io.Text;
 import org.apache.orc.OrcProto;
 
+import com.google.protobuf.ByteString;
 import com.google.protobuf.CodedInputStream;
 import org.apache.orc.impl.reader.ReaderEncryptionVariant;
 import org.slf4j.Logger;
@@ -77,7 +81,7 @@ public class ReaderImpl implements Reader {
   private final int metadataSize;
   protected final List<OrcProto.Type> types;
   private final TypeDescription schema;
-  private final List<OrcProto.UserMetadataItem> userMetadata;
+  private final Map<String, ByteString> userMetadata;
   private final List<OrcProto.ColumnStatistics> fileStats;
   private final List<StripeInformation> stripes;
   protected final int rowIndexStride;
@@ -209,31 +213,19 @@ public class ReaderImpl implements Reader {
 
   @Override
   public List<String> getMetadataKeys() {
-    List<String> result = new ArrayList<>();
-    for(OrcProto.UserMetadataItem item: userMetadata) {
-      result.add(item.getName());
-    }
-    return result;
+    return new ArrayList<>(userMetadata.keySet());
   }
 
   @Override
   public ByteBuffer getMetadataValue(String key) {
-    for(OrcProto.UserMetadataItem item: userMetadata) {
-      if (item.hasName() && item.getName().equals(key)) {
-        return item.getValue().asReadOnlyByteBuffer();
-      }
-    }
-    throw new IllegalArgumentException("Can't find user metadata " + key);
+    return userMetadata.computeIfAbsent(key, s -> {
+      throw new IllegalArgumentException("Can't find user metadata " + key);
+    }).asReadOnlyByteBuffer();
   }
 
   @Override
   public boolean hasMetadataValue(String key) {
-    for(OrcProto.UserMetadataItem item: userMetadata) {
-      if (item.hasName() && item.getName().equals(key)) {
-        return true;
-      }
-    }
-    return false;
+    return userMetadata.containsKey(key);
   }
 
   @Override
@@ -569,7 +561,13 @@ public class ReaderImpl implements Reader {
       this.rowIndexStride = tail.getFooter().getRowIndexStride();
       this.contentLength = tail.getFooter().getContentLength();
       this.numberOfRows = tail.getFooter().getNumberOfRows();
-      this.userMetadata = tail.getFooter().getMetadataList();
+      this.userMetadata = tail.getFooter().getMetadataList()
+              .stream().collect(Collectors.toMap(
+                      OrcProto.UserMetadataItem::getName,
+                      OrcProto.UserMetadataItem::getNameBytes,
+                      (bytes, bytes2) -> bytes2,
+                      TreeMap::new)
+              );
       this.fileStats = tail.getFooter().getStatisticsList();
       this.writerVersion = tail.getWriterVersion();
       this.stripes = tail.getStripes();
