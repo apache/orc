@@ -17,11 +17,8 @@
  */
 package org.apache.orc;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,14 +26,8 @@ import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class TestTypeDescription {
-  @Rule
-  public ExpectedException thrown= ExpectedException.none();
-
   @Test
   public void testJson() {
     TypeDescription bin = TypeDescription.createBinary();
@@ -163,58 +154,66 @@ public class TestTypeDescription {
 
   @Test
   public void testMissingField() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("Missing name at 'struct<^'");
-    TypeDescription.fromString("struct<");
+    IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
+      TypeDescription.fromString("struct<");
+    });
+    assertTrue(e.getMessage().contains("Missing name at 'struct<^'"));
   }
 
   @Test
   public void testQuotedField1() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("Unmatched quote at 'struct<^`abc'");
-    TypeDescription.fromString("struct<`abc");
+    IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
+      TypeDescription.fromString("struct<`abc");
+    });
+    assertTrue(e.getMessage().contains("Unmatched quote at 'struct<^`abc'"));
   }
 
   @Test
   public void testQuotedField2() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("Empty quoted field name at 'struct<``^:int>'");
-    TypeDescription.fromString("struct<``:int>");
+    IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
+      TypeDescription.fromString("struct<``:int>");
+    });
+    assertTrue(e.getMessage().contains("Empty quoted field name at 'struct<``^:int>'"));
   }
 
   @Test
   public void testParserUnknownCategory() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("Can't parse category at 'FOOBAR^'");
-    TypeDescription.fromString("FOOBAR");
+    IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
+      TypeDescription.fromString("FOOBAR");
+    });
+    assertTrue(e.getMessage().contains("Can't parse category at 'FOOBAR^'"));
   }
 
   @Test
   public void testParserEmptyCategory() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("Can't parse category at '^<int>'");
-    TypeDescription.fromString("<int>");
+    IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
+      TypeDescription.fromString("<int>");
+    });
+    assertTrue(e.getMessage().contains("Can't parse category at '^<int>'"));
   }
 
   @Test
   public void testParserMissingInt() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("Missing integer at 'char(^)'");
-    TypeDescription.fromString("char()");
+    IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
+      TypeDescription.fromString("char()");
+    });
+    assertTrue(e.getMessage().contains("Missing integer at 'char(^)'"));
   }
 
   @Test
   public void testParserMissingSize() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("Missing required char '(' at 'struct<c:char^>'");
-    TypeDescription.fromString("struct<c:char>");
+    IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
+      TypeDescription.fromString("struct<c:char>");
+    });
+    assertTrue(e.getMessage().contains("Missing required char '(' at 'struct<c:char^>'"));
   }
 
   @Test
   public void testParserExtraStuff() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("Extra characters at 'struct<i:int>^,'");
-    TypeDescription.fromString("struct<i:int>,");
+    IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
+      TypeDescription.fromString("struct<i:int>,");
+    });
+    assertTrue(e.getMessage().contains("Extra characters at 'struct<i:int>^,'"));
   }
 
   @Test
@@ -462,7 +461,7 @@ public class TestTypeDescription {
     assertEquals(3, clearAttributes(schema));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void testEncryptionConflict() {
     TypeDescription schema = TypeDescription.fromString(
         "struct<" +
@@ -470,10 +469,11 @@ public class TestTypeDescription {
             "address:struct<street:string,city:string,country:string,post_code:string>," +
             "credit_cards:array<struct<card_number:string,expire:date,ccv:string>>>");
     // set some encryption
-    schema.annotateEncryption("pii:address,personal:address",null);
+    assertThrows(IllegalArgumentException.class, () ->
+        schema.annotateEncryption("pii:address,personal:address",null));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void testMaskConflict() {
     TypeDescription schema = TypeDescription.fromString(
         "struct<" +
@@ -481,6 +481,7 @@ public class TestTypeDescription {
             "address:struct<street:string,city:string,country:string,post_code:string>," +
             "credit_cards:array<struct<card_number:string,expire:date,ccv:string>>>");
     // set some encryption
-    schema.annotateEncryption(null,"nullify:name;sha256:name");
+    assertThrows(IllegalArgumentException.class, () ->
+        schema.annotateEncryption(null,"nullify:name;sha256:name"));
   }
 }

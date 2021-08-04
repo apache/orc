@@ -21,9 +21,8 @@ import java.nio.charset.StandardCharsets;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.orc.impl.HadoopShims;
 import org.apache.orc.impl.LocalKey;
-import static org.junit.Assert.*;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
 import java.security.Key;
@@ -40,7 +39,7 @@ public class TestInMemoryKeystore {
     super();
   }
 
-  @Before
+  @BeforeEach
   public void init() throws IOException {
     // For testing, use a fixed random number generator so that everything
     // is repeatable.

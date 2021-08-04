@@ -17,16 +17,17 @@
  */
 package org.apache.orc;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.*;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.stream.Stream;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -46,15 +47,8 @@ import org.apache.orc.impl.writer.StringTreeWriter;
 import org.apache.orc.impl.writer.TreeWriter;
 import org.apache.orc.impl.writer.WriterContext;
 import org.apache.orc.impl.writer.WriterEncryptionVariant;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 
-@RunWith(Parameterized.class)
 public class TestStringDictionary {
 
   private Path workDir = new Path(System.getProperty("test.tmp.dir", "target" + File.separator + "test"
@@ -63,34 +57,24 @@ public class TestStringDictionary {
   private Configuration conf;
   private FileSystem fs;
   private Path testFilePath;
-  private String dictImplString;
 
-  @Rule
-  public TestName testCaseName = new TestName();
-
-  @Before
-  public void openFileSystem() throws Exception {
+  @BeforeEach
+  public void openFileSystem(TestInfo testInfo) throws Exception {
     conf = new Configuration();
     fs = FileSystem.getLocal(conf);
-    testFilePath = new Path(workDir, "TestStringDictionary." + testCaseName.getMethodName() + ".orc");
+    testFilePath = new Path(workDir, "TestStringDictionary." +
+        testInfo.getTestMethod().get().getName() + ".orc");
     fs.delete(testFilePath, false);
-    OrcConf.DICTIONARY_IMPL.setString(conf, dictImplString);
   }
 
-  @Parameterized.Parameters
-  public static Collection params() {
-    return Arrays.asList(new Object[][] {
-        { "RBTREE" },
-        { "HASH" }
-    });
+  private static Stream<Arguments> data() {
+    return Stream.of(Arguments.of("RBTREE"), Arguments.of("HASH"));
   }
 
-  public TestStringDictionary(String dictImpl) {
-    this.dictImplString = dictImpl;
-  }
-
-  @Test
-  public void testTooManyDistinct() throws Exception {
+  @ParameterizedTest
+  @MethodSource("data")
+  public void testTooManyDistinct(String dictImpl) throws Exception {
+    OrcConf.DICTIONARY_IMPL.setString(conf, dictImpl);
     TypeDescription schema = TypeDescription.createString();
 
     Writer writer = OrcFile.createWriter(
@@ -133,8 +117,10 @@ public class TestStringDictionary {
     }
   }
 
-  @Test
-  public void testHalfDistinct() throws Exception {
+  @ParameterizedTest
+  @MethodSource("data")
+  public void testHalfDistinct(String dictImpl) throws Exception {
+    OrcConf.DICTIONARY_IMPL.setString(conf, dictImpl);
     final int totalSize = 20000;
     final int bound = 10000;
 
@@ -300,8 +286,10 @@ public class TestStringDictionary {
     }
   }
 
-  @Test
-  public void testNonDistinctDisabled() throws Exception {
+  @ParameterizedTest
+  @MethodSource("data")
+  public void testNonDistinctDisabled(String dictImpl) throws Exception {
+    OrcConf.DICTIONARY_IMPL.setString(conf, dictImpl);
     TypeDescription schema = TypeDescription.createString();
 
     conf.set(OrcConf.DICTIONARY_KEY_SIZE_THRESHOLD.getAttribute(), "0.0");
@@ -322,8 +310,10 @@ public class TestStringDictionary {
     assertEquals(6000, output.buffer.size());
   }
 
-  @Test
-  public void testTooManyDistinctCheckDisabled() throws Exception {
+  @ParameterizedTest
+  @MethodSource("data")
+  public void testTooManyDistinctCheckDisabled(String dictImpl) throws Exception {
+    OrcConf.DICTIONARY_IMPL.setString(conf, dictImpl);
     TypeDescription schema = TypeDescription.createString();
 
     conf.setBoolean(OrcConf.ROW_INDEX_STRIDE_DICTIONARY_CHECK.getAttribute(), false);
@@ -366,8 +356,10 @@ public class TestStringDictionary {
     }
   }
 
-  @Test
-  public void testHalfDistinctCheckDisabled() throws Exception {
+  @ParameterizedTest
+  @MethodSource("data")
+  public void testHalfDistinctCheckDisabled(String dictImpl) throws Exception {
+    OrcConf.DICTIONARY_IMPL.setString(conf, dictImpl);
     TypeDescription schema = TypeDescription.createString();
 
     conf.setBoolean(OrcConf.ROW_INDEX_STRIDE_DICTIONARY_CHECK.getAttribute(),
@@ -417,8 +409,10 @@ public class TestStringDictionary {
     }
   }
 
-  @Test
-  public void testTooManyDistinctV11AlwaysDictionary() throws Exception {
+  @ParameterizedTest
+  @MethodSource("data")
+  public void testTooManyDistinctV11AlwaysDictionary(String dictImpl) throws Exception {
+    OrcConf.DICTIONARY_IMPL.setString(conf, dictImpl);
     TypeDescription schema = TypeDescription.createString();
 
     Writer writer = OrcFile.createWriter(
@@ -467,8 +461,10 @@ public class TestStringDictionary {
    * `longString` column (presumably for a low hit-ratio), while preserving DICTIONARY_V2 for `shortString`.
    * @throws Exception on unexpected failure
    */
-  @Test
-  public void testDisableDictionaryForSpecificColumn() throws Exception {
+  @ParameterizedTest
+  @MethodSource("data")
+  public void testDisableDictionaryForSpecificColumn(String dictImpl) throws Exception {
+    OrcConf.DICTIONARY_IMPL.setString(conf, dictImpl);
     final String SHORT_STRING_VALUE = "foo";
     final String  LONG_STRING_VALUE = "BAAAAAAAAR!!";
 
@@ -516,27 +512,28 @@ public class TestStringDictionary {
       // within the same package as ORC reader
       OrcProto.StripeFooter footer = ((RecordReaderImpl) recordReader).readStripeFooter(stripe);
       for (int i = 0; i < footer.getColumnsCount(); ++i) {
+        assertEquals(3, footer.getColumnsCount(),
+            "Expected 3 columns in the footer: One for the Orc Struct, and two for its members.");
         assertEquals(
-            "Expected 3 columns in the footer: One for the Orc Struct, and two for its members.",
-            3, footer.getColumnsCount());
-        assertEquals(
-            "The ORC schema struct should be DIRECT encoded.",
-            OrcProto.ColumnEncoding.Kind.DIRECT, footer.getColumns(0).getKind()
+            OrcProto.ColumnEncoding.Kind.DIRECT, footer.getColumns(0).getKind(),
+            "The ORC schema struct should be DIRECT encoded."
         );
         assertEquals(
-            "The shortString column must be DICTIONARY_V2 encoded",
-            OrcProto.ColumnEncoding.Kind.DICTIONARY_V2, footer.getColumns(1).getKind()
+            OrcProto.ColumnEncoding.Kind.DICTIONARY_V2, footer.getColumns(1).getKind(),
+            "The shortString column must be DICTIONARY_V2 encoded"
         );
         assertEquals(
-            "The longString column must be DIRECT_V2 encoded",
-            OrcProto.ColumnEncoding.Kind.DIRECT_V2, footer.getColumns(2).getKind()
+            OrcProto.ColumnEncoding.Kind.DIRECT_V2, footer.getColumns(2).getKind(),
+            "The longString column must be DIRECT_V2 encoded"
         );
       }
     }
   }
 
-  @Test
-  public void testForcedNonDictionary() throws Exception {
+  @ParameterizedTest
+  @MethodSource("data")
+  public void testForcedNonDictionary(String dictImpl) throws Exception {
+    OrcConf.DICTIONARY_IMPL.setString(conf, dictImpl);
     // Set the row stride to 16k so that it is a multiple of the batch size
     final int INDEX_STRIDE = 16 * 1024;
     final int NUM_BATCHES = 50;
@@ -576,14 +573,14 @@ public class TestStringDictionary {
         OrcProto.RowIndexEntry entry = index.getEntry(e);
         // For a string column with direct encoding, compression & no nulls, we
         // should have 5 positions in each entry.
-        assertEquals("position count entry " + e, 5, entry.getPositionsCount());
+        assertEquals(5, entry.getPositionsCount(), "position count entry " + e);
         // make sure we can seek and get the right data
         int row = e * INDEX_STRIDE;
         rows.seekToRow(row);
-        assertTrue("entry " + e, rows.nextBatch(batch));
-        assertEquals("entry " + e, 1024, batch.size);
-        assertEquals("entry " + e, true, col.noNulls);
-        assertEquals("entry " + e, "Value for " + (row / 1024), col.toString(0));
+        assertTrue(rows.nextBatch(batch), "entry " + e);
+        assertEquals(1024, batch.size, "entry " + e);
+        assertEquals(true, col.noNulls, "entry " + e);
+        assertEquals("Value for " + (row / 1024), col.toString(0), "entry " + e);
       }
     }
   }
@@ -591,8 +588,10 @@ public class TestStringDictionary {
   /**
    * That when we disable dictionaries, we don't get broken row indexes.
    */
-  @Test
-  public void testRowIndex() throws Exception {
+  @ParameterizedTest
+  @MethodSource("data")
+  public void testRowIndex(String dictImpl) throws Exception {
+    OrcConf.DICTIONARY_IMPL.setString(conf, dictImpl);
     TypeDescription schema =
         TypeDescription.fromString("struct<str:string>");
     // turn off the dictionaries
@@ -627,7 +626,7 @@ public class TestStringDictionary {
     while (recordReader.nextBatch(batch)) {
       for(int r=0; r < batch.size; ++r) {
         String value = String.format("row %06d", r + base);
-        assertEquals("row " + (r + base), value, strVector.toString(r));
+        assertEquals(value, strVector.toString(r), "row " + (r + base));
       }
       base += batch.size;
     }
@@ -638,8 +637,10 @@ public class TestStringDictionary {
   /**
    * Test that files written before ORC-569 are read correctly.
    */
-  @Test
-  public void testRowIndexPreORC569() throws Exception {
+  @ParameterizedTest
+  @MethodSource("data")
+  public void testRowIndexPreORC569(String dictImpl) throws Exception {
+    OrcConf.DICTIONARY_IMPL.setString(conf, dictImpl);
     testFilePath = new Path(System.getProperty("example.dir"), "TestStringDictionary.testRowIndex.orc");
     SearchArgument sarg = SearchArgumentFactory.newBuilder(conf)
         .lessThan("str", PredicateLeaf.Type.STRING, "row 001000")
@@ -652,7 +653,7 @@ public class TestStringDictionary {
         while (recordReader.nextBatch(batch)) {
           for (int r = 0; r < batch.size; ++r) {
             String value = String.format("row %06d", r + base);
-            assertEquals("row " + (r + base), value, strVector.toString(r));
+            assertEquals(value, strVector.toString(r), "row " + (r + base));
           }
           base += batch.size;
         }

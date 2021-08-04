@@ -15,16 +15,19 @@
  */
 package org.apache.orc;
 
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.*;
 
 import java.io.File;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.stream.Stream;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -40,13 +43,6 @@ import org.apache.orc.impl.RecordReaderImpl;
 import org.apache.orc.impl.SerializationUtils;
 import org.apache.orc.util.BloomFilter;
 import org.apache.orc.util.BloomFilterIO;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 import com.google.common.collect.Lists;
 import org.slf4j.Logger;
@@ -55,7 +51,6 @@ import org.slf4j.LoggerFactory;
 /**
  *
  */
-@RunWith(Parameterized.class)
 public class TestOrcTimezonePPD {
   private static final Logger LOG = LoggerFactory.getLogger(TestOrcTimezonePPD.class);
 
@@ -64,55 +59,42 @@ public class TestOrcTimezonePPD {
   Configuration conf;
   FileSystem fs;
   Path testFilePath;
-  String writerTimeZone;
-  String readerTimeZone;
   static TimeZone defaultTimeZone = TimeZone.getDefault();
   TimeZone utcTz = TimeZone.getTimeZone("UTC");
   DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-  public TestOrcTimezonePPD(String writerTZ, String readerTZ) {
-    this.writerTimeZone = writerTZ;
-    this.readerTimeZone = readerTZ;
-  }
-
-  @Parameterized.Parameters
-  public static Collection<Object[]> data() {
-    List<Object[]> result = Arrays.asList(new Object[][]{
-      {"US/Eastern", "America/Los_Angeles"},
-      {"US/Eastern", "UTC"},
+  private static Stream<Arguments> data() {
+    return Stream.of(
+        Arguments.of("US/Eastern", "America/Los_Angeles"),
+        Arguments.of("US/Eastern", "UTC"),
         /* Extreme timezones */
-      {"GMT-12:00", "GMT+14:00"},
+        Arguments.of("GMT-12:00", "GMT+14:00"),
         /* No difference in DST */
-      {"America/Los_Angeles", "America/Los_Angeles"}, /* same timezone both with DST */
-      {"Europe/Berlin", "Europe/Berlin"}, /* same as above but europe */
-      {"America/Phoenix", "Asia/Kolkata"} /* Writer no DST, Reader no DST */,
-      {"Europe/Berlin", "America/Los_Angeles"} /* Writer DST, Reader DST */,
-      {"Europe/Berlin", "America/Chicago"} /* Writer DST, Reader DST */,
+        Arguments.of("America/Los_Angeles", "America/Los_Angeles"), /* same timezone both with DST */
+        Arguments.of("Europe/Berlin", "Europe/Berlin"), /* same as above but europe */
+        Arguments.of("America/Phoenix", "Asia/Kolkata") /* Writer no DST, Reader no DST */,
+        Arguments.of("Europe/Berlin", "America/Los_Angeles") /* Writer DST, Reader DST */,
+        Arguments.of("Europe/Berlin", "America/Chicago") /* Writer DST, Reader DST */,
         /* With DST difference */
-      {"Europe/Berlin", "UTC"},
-      {"UTC", "Europe/Berlin"} /* Writer no DST, Reader DST */,
-      {"America/Los_Angeles", "Asia/Kolkata"} /* Writer DST, Reader no DST */,
-      {"Europe/Berlin", "Asia/Kolkata"} /* Writer DST, Reader no DST */,
+        Arguments.of("Europe/Berlin", "UTC"),
+        Arguments.of("UTC", "Europe/Berlin") /* Writer no DST, Reader DST */,
+        Arguments.of("America/Los_Angeles", "Asia/Kolkata") /* Writer DST, Reader no DST */,
+        Arguments.of("Europe/Berlin", "Asia/Kolkata") /* Writer DST, Reader no DST */,
         /* Timezone offsets for the reader has changed historically */
-      {"Asia/Saigon", "Pacific/Enderbury"},
-      {"UTC", "Asia/Jerusalem"},
-    });
-    return result;
+        Arguments.of("Asia/Saigon", "Pacific/Enderbury"),
+        Arguments.of("UTC", "Asia/Jerusalem"));
   }
 
-  @Rule
-  public TestName testCaseName = new TestName();
-
-  @Before
-  public void openFileSystem() throws Exception {
+  @BeforeEach
+  public void openFileSystem(TestInfo testInfo) throws Exception {
     conf = new Configuration();
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestOrcFile." +
-      testCaseName.getMethodName() + ".orc");
+      testInfo.getTestMethod().get().getName() + ".orc");
     fs.delete(testFilePath, false);
   }
 
-  @After
+  @AfterEach
   public void restoreTimeZone() {
     TimeZone.setDefault(defaultTimeZone);
   }
@@ -126,8 +108,9 @@ public class TestOrcTimezonePPD {
       literal, literalList);
   }
 
-  @Test
-  public void testTimestampPPDMinMax() throws Exception {
+  @ParameterizedTest
+  @MethodSource("data")
+  public void testTimestampPPDMinMax(String writerTimeZone, String readerTimeZone) throws Exception {
     TypeDescription schema = TypeDescription.createTimestamp();
 
     TimeZone.setDefault(TimeZone.getTimeZone(writerTimeZone));
@@ -210,8 +193,9 @@ public class TestOrcTimezonePPD {
     return result.build();
   }
 
-  @Test
-  public void testTimestampPPDBloomFilter() throws Exception {
+  @ParameterizedTest
+  @MethodSource("data")
+  public void testTimestampPPDBloomFilter(String writerTimeZone, String readerTimeZone) throws Exception {
     LOG.info("Writer = " + writerTimeZone + " reader = " + readerTimeZone);
     TypeDescription schema = TypeDescription.createStruct().addField("ts", TypeDescription.createTimestamp());
 
@@ -283,8 +267,9 @@ public class TestOrcTimezonePPD {
       bf));
   }
 
-  @Test
-  public void testTimestampMinMaxAndBloomFilter() throws Exception {
+  @ParameterizedTest
+  @MethodSource("data")
+  public void testTimestampMinMaxAndBloomFilter(String writerTimeZone, String readerTimeZone) throws Exception {
     TypeDescription schema = TypeDescription.createStruct().addField("ts", TypeDescription.createTimestamp());
 
     TimeZone.setDefault(TimeZone.getTimeZone(writerTimeZone));
@@ -357,8 +342,9 @@ public class TestOrcTimezonePPD {
     assertEquals(SearchArgument.TruthValue.NO, RecordReaderImpl.evaluatePredicate(colStats[1], pred, bf));
   }
 
-  @Test
-  public void testTimestampAllNulls() throws Exception {
+  @ParameterizedTest
+  @MethodSource("data")
+  public void testTimestampAllNulls(String writerTimeZone, String readerTimeZone) throws Exception {
     TypeDescription schema = TypeDescription.createStruct().addField("ts", TypeDescription.createTimestamp());
 
     TimeZone.setDefault(TimeZone.getTimeZone(writerTimeZone));

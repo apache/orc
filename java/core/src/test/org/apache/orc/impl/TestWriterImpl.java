@@ -29,14 +29,12 @@ import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
 import java.io.IOException;
 import java.util.Collections;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestWriterImpl {
 
@@ -46,7 +44,7 @@ public class TestWriterImpl {
   Path testFilePath;
   TypeDescription schema;
 
-  @Before
+  @BeforeEach
   public void openFileSystem() throws Exception {
     conf = new Configuration();
     fs = FileSystem.getLocal(conf);
@@ -56,16 +54,18 @@ public class TestWriterImpl {
     schema = TypeDescription.fromString("struct<x:int,y:int>");
   }
 
-  @After
+  @AfterEach
   public void deleteTestFile() throws Exception {
     fs.delete(testFilePath, false);
   }
 
-  @Test(expected = IOException.class)
+  @Test
   public void testDefaultOverwriteFlagForWriter() throws Exception {
-    // default value of the overwrite flag is false, so this should fail
-    Writer w = OrcFile.createWriter(testFilePath, OrcFile.writerOptions(conf).setSchema(schema));
-    w.close();
+    assertThrows(IOException.class, () -> {
+      // default value of the overwrite flag is false, so this should fail
+      Writer w = OrcFile.createWriter(testFilePath, OrcFile.writerOptions(conf).setSchema(schema));
+      w.close();
+    });
   }
 
   @Test

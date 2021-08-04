@@ -24,9 +24,8 @@ import java.util.stream.Stream;
 
 import org.apache.hadoop.io.Text;
 import org.apache.orc.StringDictTestingUtils;
-import static org.junit.Assert.assertEquals;
-import org.junit.Test;
-
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestStringHashTableDictionary {
 

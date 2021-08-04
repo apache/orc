@@ -30,11 +30,9 @@ import org.apache.hadoop.hive.ql.exec.vector.UnionColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.orc.impl.RecordReaderImpl;
-import static org.junit.Assert.*;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.File;
 
@@ -48,14 +46,12 @@ public class TestRowFilteringComplexTypes {
 
     private static final int ColumnBatchRows = 1024;
 
-    @Rule
-    public TestName testCaseName = new TestName();
-
-    @Before
-    public void openFileSystem() throws Exception {
+    @BeforeEach
+    public void openFileSystem(TestInfo testInfo) throws Exception {
         conf = new Configuration();
         fs = FileSystem.getLocal(conf);
-        testFilePath = new Path(workDir, "TestRowFilteringComplexTypes." + testCaseName.getMethodName() + ".orc");
+        testFilePath = new Path(workDir,
+            "TestRowFilteringComplexTypes." + testInfo.getTestMethod().get().getName() + ".orc");
         fs.delete(testFilePath, false);
     }
 
@@ -177,14 +173,14 @@ public class TestRowFilteringComplexTypes {
                 for (int r = 0; r < batch.size; ++r) {
                     int row = batch.selected[r];
                     int originalRow = (r + previousBatchRows) * 2;
-                    assertEquals("row " + originalRow, originalRow, col1.vector[row]);
-                    assertEquals("row " + originalRow, 0, col2.tags[row]);
-                    assertEquals("row " + originalRow,
-                        originalRow * 1000, innerCol1.vector[row]);
+                    String msg = "row " + originalRow;
+                    assertEquals(originalRow, col1.vector[row], msg);
+                    assertEquals(0, col2.tags[row], msg);
+                    assertEquals(originalRow * 1000, innerCol1.vector[row], msg);
                 }
                 // check to make sure that we didn't read innerCol2
                 for(int r = 1; r < ColumnBatchRows; r += 2) {
-                    assertEquals("row " + r, 0, innerCol2.vector[r]);
+                    assertEquals(0, innerCol2.vector[r], "row " + r);
                 }
                 previousBatchRows += batch.size;
             }

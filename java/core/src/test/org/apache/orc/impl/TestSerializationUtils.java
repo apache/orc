@@ -17,17 +17,16 @@
  */
 package org.apache.orc.impl;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.util.Random;
-
-import org.junit.Test;
 
 import com.google.common.math.LongMath;
 
@@ -80,10 +79,10 @@ public class TestSerializationUtils {
     for(int i=-8192; i < 8192; ++i) {
       buffer.reset();
         SerializationUtils.writeBigInteger(buffer, BigInteger.valueOf(i));
-      assertEquals("compare length for " + i,
-            i >= -64 && i < 64 ? 1 : 2, buffer.size());
-      assertEquals("compare result for " + i,
-          i, SerializationUtils.readBigInteger(fromBuffer(buffer)).intValue());
+      assertEquals(i >= -64 && i < 64 ? 1 : 2, buffer.size(),
+          "compare length for " + i);
+      assertEquals(i, SerializationUtils.readBigInteger(fromBuffer(buffer)).intValue(),
+          "compare result for " + i);
     }
     buffer.reset();
     SerializationUtils.writeBigInteger(buffer,

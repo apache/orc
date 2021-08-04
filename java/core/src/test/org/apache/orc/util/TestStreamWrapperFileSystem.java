@@ -29,13 +29,13 @@ import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
 import org.apache.orc.TestVectorOrcFile;
 import org.apache.orc.TypeDescription;
-import org.junit.Test;
 
 import java.io.IOException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for StreamWrapperFileSystem.
@@ -75,10 +75,10 @@ public class TestStreamWrapperFileSystem {
       int current = 0;
       for(int r=0; r < 7500; ++r) {
         if (current >= batch.size) {
-          assertTrue("row " + r, rows.nextBatch(batch));
+          assertTrue(rows.nextBatch(batch), "row " + r);
           current = 0;
         }
-        assertEquals("row " + r, r % 2, boolean1.vector[current++]);
+        assertEquals(r % 2, boolean1.vector[current++], "row " + r);
       }
     }
   }
