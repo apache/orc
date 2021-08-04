@@ -30,7 +30,7 @@ public interface RecordReader extends Closeable {
   /**
    * Read the next row batch. The size of the batch to read cannot be
    * controlled by the callers. Caller need to look at
-   * VectorizedRowBatch.size of the retunred object to know the batch
+   * VectorizedRowBatch.size of the returned object to know the batch
    * size read.
    * @param batch a row batch object to read into
    * @return were more rows available to read?
