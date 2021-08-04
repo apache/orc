@@ -37,7 +37,6 @@ import java.util.Set;
 import static org.apache.orc.impl.TreeReaderFactory.isDecimalAsLong;
 
 public class LeafFilterFactory {
-
   private LeafFilterFactory() {}
 
   private static LeafFilter createEqualsFilter(String colName,
@@ -48,26 +47,26 @@ public class LeafFilterFactory {
                                                boolean negated) {
     switch (type) {
       case BOOLEAN:
-        return new LongEquals(colName, (boolean) literal ? 1L : 0L, negated);
+        return new LongFilters.LongEquals(colName, (boolean) literal ? 1L : 0L, negated);
       case DATE:
-        return new LongEquals(colName,
-            ((Date) literal).toLocalDate().toEpochDay(), negated);
+        return new LongFilters.LongEquals(colName,
+                                          ((Date) literal).toLocalDate().toEpochDay(), negated);
       case DECIMAL:
         HiveDecimalWritable d = (HiveDecimalWritable) literal;
         assert d.scale() <= colType.getScale();
         if (isDecimalAsLong(version, colType.getPrecision())) {
-          return new LongEquals(colName, d.serialize64(colType.getScale()), negated);
+          return new LongFilters.LongEquals(colName, d.serialize64(colType.getScale()), negated);
         } else {
-          return new DecimalEquals(colName, d, negated);
+          return new DecimalFilters.DecimalEquals(colName, d, negated);
         }
       case FLOAT:
-        return new FloatEquals(colName, literal, negated);
+        return new FloatFilters.FloatEquals(colName, literal, negated);
       case LONG:
-        return new LongEquals(colName, literal, negated);
+        return new LongFilters.LongEquals(colName, literal, negated);
       case STRING:
-        return new StringEquals(colName, literal, negated);
+        return new StringFilters.StringEquals(colName, literal, negated);
       case TIMESTAMP:
-        return new TimestampEquals(colName, literal, negated);
+        return new TimestampFilters.TimestampEquals(colName, literal, negated);
       default:
         throw new IllegalArgumentException(String.format("Equals does not support type: %s", type));
     }
@@ -81,27 +80,27 @@ public class LeafFilterFactory {
                                                  boolean negated) {
     switch (type) {
       case BOOLEAN:
-        return new LongLessThan(colName, (boolean) literal ? 1L : 0L, negated);
+        return new LongFilters.LongLessThan(colName, (boolean) literal ? 1L : 0L, negated);
       case DATE:
-        return new LongLessThan(colName,
-            ((Date) literal).toLocalDate().toEpochDay(), negated);
+        return new LongFilters.LongLessThan(colName,
+                                            ((Date) literal).toLocalDate().toEpochDay(), negated);
       case DECIMAL:
         HiveDecimalWritable d = (HiveDecimalWritable) literal;
         assert d.scale() <= colType.getScale();
         if (isDecimalAsLong(version, colType.getPrecision())) {
-          return new LongLessThan(colName, d.serialize64(colType.getScale()),
-              negated);
+          return new LongFilters.LongLessThan(colName, d.serialize64(colType.getScale()),
+                                              negated);
         } else {
-          return new DecimalLessThan(colName, d, negated);
+          return new DecimalFilters.DecimalLessThan(colName, d, negated);
         }
       case FLOAT:
-        return new FloatLessThan(colName, literal, negated);
+        return new FloatFilters.FloatLessThan(colName, literal, negated);
       case LONG:
-        return new LongLessThan(colName, literal, negated);
+        return new LongFilters.LongLessThan(colName, literal, negated);
       case STRING:
-        return new StringLessThan(colName, literal, negated);
+        return new StringFilters.StringLessThan(colName, literal, negated);
       case TIMESTAMP:
-        return new TimestampLessThan(colName, literal, negated);
+        return new TimestampFilters.TimestampLessThan(colName, literal, negated);
       default:
         throw new IllegalArgumentException(String.format("LessThan does not support type: %s", type));
     }
@@ -115,28 +114,28 @@ public class LeafFilterFactory {
                                                        boolean negated) {
     switch (type) {
       case BOOLEAN:
-        return new LongLessThanEquals(colName, (boolean) literal ? 1L : 0L,
-            negated);
+        return new LongFilters.LongLessThanEquals(colName, (boolean) literal ? 1L : 0L,
+                                                  negated);
       case DATE:
-        return new LongLessThanEquals(colName,
-            ((Date) literal).toLocalDate().toEpochDay(), negated);
+        return new LongFilters.LongLessThanEquals(colName,
+                                                  ((Date) literal).toLocalDate().toEpochDay(), negated);
       case DECIMAL:
         HiveDecimalWritable d = (HiveDecimalWritable) literal;
         assert d.scale() <= colType.getScale();
         if (isDecimalAsLong(version, colType.getPrecision())) {
-          return new LongLessThanEquals(colName,
-              d.serialize64(colType.getScale()), negated);
+          return new LongFilters.LongLessThanEquals(colName,
+                                                    d.serialize64(colType.getScale()), negated);
         } else {
-          return new DecimalLessThanEquals(colName, d, negated);
+          return new DecimalFilters.DecimalLessThanEquals(colName, d, negated);
         }
       case FLOAT:
-        return new FloatLessThanEquals(colName, literal, negated);
+        return new FloatFilters.FloatLessThanEquals(colName, literal, negated);
       case LONG:
-        return new LongLessThanEquals(colName, literal, negated);
+        return new LongFilters.LongLessThanEquals(colName, literal, negated);
       case STRING:
-        return new StringLessThanEquals(colName, literal, negated);
+        return new StringFilters.StringLessThanEquals(colName, literal, negated);
       case TIMESTAMP:
-        return new TimestampLessThanEquals(colName, literal, negated);
+        return new TimestampFilters.TimestampLessThanEquals(colName, literal, negated);
       default:
         throw new IllegalArgumentException(String.format("LessThanEquals does not support type: %s", type));
     }
@@ -151,29 +150,29 @@ public class LeafFilterFactory {
                                                 boolean negated) {
     switch (type) {
       case BOOLEAN:
-        return new LongBetween(colName, (boolean) low ? 1L : 0L,
-            (boolean) high ? 1L : 0L, negated);
+        return new LongFilters.LongBetween(colName, (boolean) low ? 1L : 0L,
+                                           (boolean) high ? 1L : 0L, negated);
       case DATE:
-        return new LongBetween(colName, ((Date) low).toLocalDate().toEpochDay(),
-            ((Date) high).toLocalDate().toEpochDay(), negated);
+        return new LongFilters.LongBetween(colName, ((Date) low).toLocalDate().toEpochDay(),
+                                           ((Date) high).toLocalDate().toEpochDay(), negated);
       case DECIMAL:
         HiveDecimalWritable dLow = (HiveDecimalWritable) low;
         HiveDecimalWritable dHigh = (HiveDecimalWritable) high;
         assert dLow.scale() <= colType.getScale() && dLow.scale() <= colType.getScale();
         if (isDecimalAsLong(version, colType.getPrecision())) {
-          return new LongBetween(colName, dLow.serialize64(colType.getScale()),
-              dHigh.serialize64(colType.getScale()), negated);
+          return new LongFilters.LongBetween(colName, dLow.serialize64(colType.getScale()),
+                                             dHigh.serialize64(colType.getScale()), negated);
         } else {
-          return new DecimalBetween(colName, dLow, dHigh, negated);
+          return new DecimalFilters.DecimalBetween(colName, dLow, dHigh, negated);
         }
       case FLOAT:
-        return new FloatBetween(colName, low, high, negated);
+        return new FloatFilters.FloatBetween(colName, low, high, negated);
       case LONG:
-        return new LongBetween(colName, low, high, negated);
+        return new LongFilters.LongBetween(colName, low, high, negated);
       case STRING:
-        return new StringBetween(colName, low, high, negated);
+        return new StringFilters.StringBetween(colName, low, high, negated);
       case TIMESTAMP:
-        return new TimestampBetween(colName, low, high, negated);
+        return new TimestampFilters.TimestampBetween(colName, low, high, negated);
       default:
         throw new IllegalArgumentException(String.format("Between does not support type: %s", type));
     }
@@ -187,12 +186,12 @@ public class LeafFilterFactory {
                                            boolean negated) {
     switch (type) {
       case BOOLEAN:
-        return new LongIn(colName,
-            inList.stream().map((Object v) -> (boolean) v ? 1L : 0L)
+        return new LongFilters.LongIn(colName,
+                                      inList.stream().map((Object v) -> (boolean) v ? 1L : 0L)
                 .collect(Collectors.toList()), negated);
       case DATE:
-        return new LongIn(colName,
-            inList.stream()
+        return new LongFilters.LongIn(colName,
+                                      inList.stream()
                 .map((Object v) -> ((Date) v).toLocalDate().toEpochDay())
                 .collect(Collectors.toList()), negated);
       case DECIMAL:
@@ -203,18 +202,18 @@ public class LeafFilterFactory {
             assert v.scale() <= colType.getScale();
             values.add(v.serialize64(colType.getScale()));
           }
-          return new LongIn(colName, values, negated);
+          return new LongFilters.LongIn(colName, values, negated);
         } else {
-          return new DecimalIn(colName, inList, negated);
+          return new DecimalFilters.DecimalIn(colName, inList, negated);
         }
       case FLOAT:
-        return new FloatIn(colName, inList, negated);
+        return new FloatFilters.FloatIn(colName, inList, negated);
       case LONG:
-        return new LongIn(colName, inList, negated);
+        return new LongFilters.LongIn(colName, inList, negated);
       case STRING:
-        return new StringIn(colName, inList, negated);
+        return new StringFilters.StringIn(colName, inList, negated);
       case TIMESTAMP:
-        return new TimestampIn(colName, inList, negated);
+        return new TimestampFilters.TimestampIn(colName, inList, negated);
       default:
         throw new IllegalArgumentException(String.format("In does not support type: %s", type));
     }

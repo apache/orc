@@ -19,7 +19,6 @@
 package org.apache.orc.impl.filter;
 
 import org.apache.orc.OrcFilterContext;
-import org.apache.orc.impl.filter.Selected;
 
 /**
  * A filter that operates on the supplied
@@ -32,10 +31,12 @@ public interface VectorFilter {
 
   /**
    * Filter the vectorized row batch that is wrapped into the FilterContext.
-   * @param fc     The filter context that contains the VectorizedRowBatch
-   * @param bound  The bound of the scan
-   * @param selIn  The current selection
-   * @param selOut The result selection
+   * @param fc     The filter context that wraps the VectorizedRowBatch
+   * @param bound  The bound of the scan, it is expected that the filter only operates on the bound
+   *               and change the selection status of the rows scoped by the bound. The filter is
+   *               expected to leave the bound unchanged.
+   * @param selOut The filter should update the selOut for the elements scoped by bound. The selOut
+   *               should be sorted in ascending order
    */
-  void filter(OrcFilterContext fc, Selected bound, Selected selIn, Selected selOut);
+  void filter(OrcFilterContext fc, Selected bound, Selected selOut);
 }

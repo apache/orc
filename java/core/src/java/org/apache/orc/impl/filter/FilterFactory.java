@@ -58,9 +58,9 @@ public class FilterFactory {
       SearchArgument sArg = opts.getSearchArgument();
       Set<String> colNames = new HashSet<>();
       try {
-        //TODO Once HIVE-24458 is merged, should use the getUnexpandedExpression for performance
-        // reasons
-        filters.add(BatchFilterFactory.create(createSArgFilter(sArg.getExpression(),
+        ExpressionTree exprTree = normalize ? sArg.getExpression() : sArg.getCompactExpression();
+        LOG.debug("normalize={}, using expressionTree={}", normalize, exprTree);
+        filters.add(BatchFilterFactory.create(createSArgFilter(exprTree,
                                                                colNames,
                                                                sArg.getLeaves(),
                                                                readSchema,

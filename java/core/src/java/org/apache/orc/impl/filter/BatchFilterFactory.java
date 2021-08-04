@@ -53,7 +53,6 @@ public class BatchFilterFactory {
     final VectorFilter filter;
     private final String[] colNames;
     private final Selected bound = new Selected();
-    private final Selected selIn = new Selected();
     private final Selected selOut = new Selected();
 
     private BatchFilterImpl(VectorFilter filter, String[] colNames) {
@@ -65,12 +64,10 @@ public class BatchFilterFactory {
     public void accept(OrcFilterContext fc) {
       // Define the bound to be the batch size
       bound.initialize(fc);
-      // None of the selected values are protected
-      selIn.selSize = 0;
       // selOut is set to the selectedVector
       selOut.sel = fc.getSelected();
       selOut.selSize = 0;
-      filter.filter(fc, bound, selIn, selOut);
+      filter.filter(fc, bound, selOut);
 
       if (selOut.selSize < fc.getSelectedSize()) {
         fc.setSelectedSize(selOut.selSize);

@@ -18,12 +18,15 @@
 
 package org.apache.orc.util;
 
-import org.junit.Test;
+
+import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 public class CuckooSetBytesTest {
 

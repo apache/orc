@@ -32,50 +32,29 @@ public class IsNotNullFilter implements VectorFilter {
   @Override
   public void filter(OrcFilterContext fc,
                      Selected bound,
-                     Selected selIn,
                      Selected selOut) {
     ColumnVector[] branch = fc.findColumnVector(colName);
     ColumnVector v = branch[branch.length - 1];
     boolean noNulls = OrcFilterContext.noNulls(branch);
-    int inIdx = 0;
-    int currSize = 0;
-    int rowIdx;
 
-    if (noNulls) {
+    if (noNulls || (v.isRepeating && !OrcFilterContext.isNull(branch, 0))) {
       // In case we don't have any nulls, then irrespective of the repeating status, select all the
       // values
-      for (int i = 0; i < bound.selSize; i++) {
-        rowIdx = bound.sel[i];
-
-        if (inIdx < selIn.selSize && rowIdx == selIn.sel[inIdx]) {
-          // Row already protected, no need to evaluate
-          inIdx++;
-          continue;
-        }
-
-        // Select the row
-        selOut.sel[currSize++] = rowIdx;
-      }
+      selOut.selectAll(bound);
     } else if (!v.isRepeating) {
+      int currSize = 0;
+      int rowIdx;
       // As we have at least one null in this branch, we only need to check if it is repeating
       // otherwise the repeating value will be null.
       for (int i = 0; i < bound.selSize; i++) {
         rowIdx = bound.sel[i];
-
-        if (inIdx < selIn.selSize && rowIdx == selIn.sel[inIdx]) {
-          // Row already protected, no need to evaluate
-          inIdx++;
-          continue;
-        }
 
         // Select if the value is not null
         if (!OrcFilterContext.isNull(branch, rowIdx)) {
           selOut.sel[currSize++] = rowIdx;
         }
       }
+      selOut.selSize = currSize;
     }
-
-    selOut.selSize = currSize;
   }
-
 }

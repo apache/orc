@@ -20,8 +20,9 @@ package org.apache.orc.impl.filter.leaf;
 
 import org.apache.orc.impl.filter.VectorFilter;
 import org.apache.orc.impl.filter.ATestFilter;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class TestEquals extends ATestFilter {
 
@@ -29,8 +30,8 @@ public class TestEquals extends ATestFilter {
   public void testFoundMatching() {
     setBatch(new Long[] {1L, 2L, 3L, 4L, 5L, 6L},
              new String[] {"a", "b", "c", "d", "e", "f"});
-    VectorFilter f = new LongEquals("f1", 3L, false);
-    Assert.assertFalse(fc.isSelectedInUse());
+    VectorFilter f = new LongFilters.LongEquals("f1", 3L, false);
+    assertFalse(fc.isSelectedInUse());
     filter(f);
 
     validateSelected(2);
@@ -40,8 +41,8 @@ public class TestEquals extends ATestFilter {
   public void testNothingFound() {
     setBatch(new Long[] {1L, 2L, 3L, 4L, 5L, null},
              new String[] {"a", "b", "c", "d", "e", "f"});
-    VectorFilter f = new LongEquals("f1", 8L, false);
-    Assert.assertFalse(fc.isSelectedInUse());
+    VectorFilter f = new LongFilters.LongEquals("f1", 8L, false);
+    assertFalse(fc.isSelectedInUse());
     filter(f);
 
     validateNoneSelected();
@@ -52,7 +53,7 @@ public class TestEquals extends ATestFilter {
     setBatch(new Long[] {1L, null, null, null, null, null},
              new String[] {"a", "b", "c", "d", "e", "f"});
     fc.getCols()[0].isRepeating = true;
-    VectorFilter f = new LongEquals("f1", 1L, false);
+    VectorFilter f = new LongFilters.LongEquals("f1", 1L, false);
     filter(f);
     validateAllSelected(6);
   }
@@ -62,7 +63,7 @@ public class TestEquals extends ATestFilter {
     setBatch(new Long[] {null, null, null, null, null, null},
              new String[] {"a", "b", "c", "d", "e", "f"});
     fc.getCols()[0].isRepeating = true;
-    VectorFilter f = new LongEquals("f1", 1L, false);
+    VectorFilter f = new LongFilters.LongEquals("f1", 1L, false);
     filter(f);
     validateNoneSelected();
   }

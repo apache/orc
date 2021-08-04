@@ -27,8 +27,8 @@ import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.OrcFilterContextImpl;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.sql.Date;
 import java.text.ParseException;
@@ -44,7 +44,7 @@ public class TestConvFilter {
   private final OrcFilterContextImpl fc = new OrcFilterContextImpl(schema);
   private final VectorizedRowBatch batch = schema.createRowBatchV2();
 
-  @Before
+  @BeforeEach
   public void setup() throws ParseException {
     setBatch();
   }

@@ -31,9 +31,8 @@ import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.task.TaskAttemptContextImpl;
 import org.apache.orc.OrcConf;
 import org.apache.orc.mapred.OrcStruct;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,6 +41,8 @@ import java.util.Random;
 import static org.apache.orc.mapreduce.FilterTestUtil.RowCount;
 import static org.apache.orc.mapreduce.FilterTestUtil.validateLimitedRow;
 import static org.apache.orc.mapreduce.FilterTestUtil.validateRow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 public class TestMapReduceFiltering {
@@ -53,7 +54,7 @@ public class TestMapReduceFiltering {
   private static FileSystem fs;
   private static final Path filePath = new Path(workDir, "mapreduce_skip_file.orc");
 
-  @BeforeClass
+  @BeforeAll
   public static void setup() throws IOException {
     conf = new Configuration();
     fs = FileSystem.get(conf);
@@ -81,8 +82,8 @@ public class TestMapReduceFiltering {
     long rowCount = validateFilteredRecordReader(r);
     double p = FilterTestUtil.readPercentage(FilterTestUtil.readEnd(),
                                              fs.getFileStatus(filePath).getLen());
-    Assert.assertEquals(FilterTestUtil.RowCount, rowCount);
-    Assert.assertTrue(p >= 100);
+    assertEquals(FilterTestUtil.RowCount, rowCount);
+    assertTrue(p >= 100);
   }
 
   @Test
@@ -106,8 +107,8 @@ public class TestMapReduceFiltering {
     long rowCount = validateFilteredRecordReader(r);
     double p = FilterTestUtil.readPercentage(FilterTestUtil.readEnd(),
                                              fs.getFileStatus(filePath).getLen());
-    Assert.assertEquals(0, rowCount);
-    Assert.assertTrue(p < 30);
+    assertEquals(0, rowCount);
+    assertTrue(p < 30);
   }
 
   @Test
@@ -147,7 +148,7 @@ public class TestMapReduceFiltering {
       rowCount += 1;
     }
     r.close();
-    Assert.assertEquals(1, rowCount);
+    assertEquals(1, rowCount);
   }
 
   private static long validateFilteredRecordReader(org.apache.hadoop.mapreduce.RecordReader<NullWritable

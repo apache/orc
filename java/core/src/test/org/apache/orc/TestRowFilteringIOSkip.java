@@ -30,7 +30,6 @@ import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.orc.impl.OrcFilterContextImpl;
-import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -214,9 +213,9 @@ public class TestRowFilteringIOSkip {
       }
     }
     double p = readPercentage(readEnd(), fs.getFileStatus(filePath).getLen());
-    Assert.assertTrue(String.format("RowCount: %s should be between 1 and 1024", rowCount),
-                      rowCount > 0 && rowCount <= b.getMaxSize());
-    Assert.assertTrue(String.format("Read p: %s should be less than 3", p), p <= 3);
+    assertTrue(rowCount > 0 && rowCount <= b.getMaxSize(),
+               String.format("RowCount: %s should be between 1 and 1024", rowCount));
+    assertTrue(p <= 3, String.format("Read p: %s should be less than 3", p));
   }
 
   @Test
@@ -256,8 +255,8 @@ public class TestRowFilteringIOSkip {
       rowCount = validateFilteredRecordReader(rr, b);
     }
     double p = readPercentage(readEnd(), fs.getFileStatus(filePath).getLen());
-    Assert.assertEquals(0, rowCount);
-    Assert.assertTrue(p < 30);
+    assertEquals(0, rowCount);
+    assertTrue(p < 30);
   }
 
   @Test
@@ -279,8 +278,8 @@ public class TestRowFilteringIOSkip {
       rowCount = validateFilteredRecordReader(rr, b);
     }
     double p = readPercentage(readEnd(), fs.getFileStatus(filePath).getLen());
-    Assert.assertEquals(RowCount, rowCount);
-    Assert.assertTrue(p > 100);
+    assertEquals(RowCount, rowCount);
+    assertTrue(p > 100);
   }
 
   private long validateFilteredRecordReader(RecordReader rr, VectorizedRowBatch b)

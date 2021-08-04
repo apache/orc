@@ -29,15 +29,16 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.orc.OrcConf;
 import org.apache.orc.mapreduce.FilterTestUtil;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Random;
 
 import static org.apache.orc.mapreduce.FilterTestUtil.RowCount;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 public class TestMapRedFiltering {
@@ -49,7 +50,7 @@ public class TestMapRedFiltering {
   private static FileSystem fs;
   private static final Path filePath = new Path(workDir, "mapred_skip_file.orc");
 
-  @BeforeClass
+  @BeforeAll
   public static void setup() throws IOException {
     conf = new Configuration();
     fs = FileSystem.get(conf);
@@ -74,8 +75,8 @@ public class TestMapRedFiltering {
     long rowCount = validateFilteredRecordReader(r);
     double p = FilterTestUtil.readPercentage(FilterTestUtil.readEnd(),
                                              fs.getFileStatus(filePath).getLen());
-    Assert.assertEquals(FilterTestUtil.RowCount, rowCount);
-    Assert.assertTrue(p >= 100);
+    assertEquals(FilterTestUtil.RowCount, rowCount);
+    assertTrue(p >= 100);
   }
 
   @Test
@@ -96,8 +97,8 @@ public class TestMapRedFiltering {
     long rowCount = validateFilteredRecordReader(r);
     double p = FilterTestUtil.readPercentage(FilterTestUtil.readEnd(),
                                              fs.getFileStatus(filePath).getLen());
-    Assert.assertEquals(0, rowCount);
-    Assert.assertTrue(p < 30);
+    assertEquals(0, rowCount);
+    assertTrue(p < 30);
   }
 
   @Test
@@ -145,7 +146,7 @@ public class TestMapRedFiltering {
       FilterTestUtil.validateLimitedRow(row, idx);
       rowCount += 1;
     }
-    Assert.assertEquals(1, rowCount);
+    assertEquals(1, rowCount);
     r.close();
   }
 }

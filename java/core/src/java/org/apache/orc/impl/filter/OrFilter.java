@@ -24,41 +24,26 @@ public class OrFilter implements VectorFilter {
 
   public final VectorFilter[] filters;
   private final Selected orOut = new Selected();
+  private final Selected orBound = new Selected();
 
   public OrFilter(VectorFilter[] filters) {
     this.filters = filters;
   }
 
-  public static void merge(Selected src, Selected tgt) {
-    int writeIdx = src.selSize + tgt.selSize - 1;
-    int srcIdx = src.selSize - 1;
-    int tgtIdx = tgt.selSize - 1;
-
-    while (tgtIdx >= 0 || srcIdx >= 0) {
-      if (srcIdx < 0 || (tgtIdx >= 0 && src.sel[srcIdx] < tgt.sel[tgtIdx])) {
-        // src is exhausted or tgt is larger
-        tgt.sel[writeIdx--] = tgt.sel[tgtIdx--];
-      } else {
-        tgt.sel[writeIdx--] = src.sel[srcIdx--];
-      }
-    }
-    tgt.selSize += src.selSize;
-  }
-
   @Override
   public void filter(OrcFilterContext fc,
                      Selected bound,
-                     Selected selIn,
                      Selected selOut) {
     orOut.ensureSize(bound.selSize);
-    // In case of an OR filter, the current selections are always protected and not evaluated again.
-    selOut.set(selIn);
+    orBound.set(bound);
     for (VectorFilter f : filters) {
-      // In case of OR since we have to append to existing output, pass the out as empty
-      orOut.selSize = 0;
-      f.filter(fc, bound, selOut, orOut);
+      // In case of OR since we have to add to existing output, pass the out as empty
+      orOut.clear();
+      f.filter(fc, orBound, orOut);
       // During an OR operation the size cannot decrease, merge the current selections into selOut
-      merge(orOut, selOut);
+      selOut.unionDisjoint(orOut);
+      // Remove these from the bound as they don't need any further evaluation
+      orBound.minus(orOut);
     }
   }
 }

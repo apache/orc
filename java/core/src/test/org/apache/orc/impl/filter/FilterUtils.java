@@ -22,15 +22,15 @@ import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.orc.OrcFile;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.filter.BatchFilter;
-import org.apache.orc.impl.filter.leaf.TestFilter;
+import org.apache.orc.impl.filter.leaf.TestFilters;
 
 public class FilterUtils {
 
   public static BatchFilter createVectorFilter(SearchArgument sArg,
                                                TypeDescription readSchema) {
-    return TestFilter.createBatchFilter(sArg,
-                                        readSchema,
-                                        OrcFile.Version.UNSTABLE_PRE_2_0,
-                                        false);
+    return TestFilters.createBatchFilter(sArg,
+                                         readSchema,
+                                         OrcFile.Version.UNSTABLE_PRE_2_0,
+                                         false);
   }
 }

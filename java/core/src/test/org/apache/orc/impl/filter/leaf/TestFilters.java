@@ -32,18 +32,15 @@ import org.apache.orc.impl.filter.ATestFilter;
 import org.apache.orc.impl.filter.AndFilter;
 import org.apache.orc.impl.filter.FilterUtils;
 import org.apache.orc.impl.filter.OrFilter;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.function.Consumer;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class TestFilter extends ATestFilter {
+public class TestFilters extends ATestFilter {
 
-  // For Testing only
   public static BatchFilter createBatchFilter(SearchArgument sArg,
                                               TypeDescription readSchema) {
     return createBatchFilter(sArg, readSchema, OrcFile.Version.UNSTABLE_PRE_2_0);
@@ -115,16 +112,16 @@ public class TestFilter extends ATestFilter {
     VectorFilter f = new OrFilter(
       new VectorFilter[] {
         new AndFilter(new VectorFilter[] {
-          new LongIn("f1",
-                     Arrays.asList(1L, 6L), false),
-          new StringIn("f2",
-                       Arrays.asList("a", "c"), false)
+          new LongFilters.LongIn("f1",
+                                 Arrays.asList(1L, 6L), false),
+          new StringFilters.StringIn("f2",
+                                     Arrays.asList("a", "c"), false)
         }),
         new AndFilter(new VectorFilter[] {
-          new LongIn("f1",
-                     Arrays.asList(3L, 4L), false),
-          new StringIn("f2",
-                       Arrays.asList("c", "e"), false)
+          new LongFilters.LongIn("f1",
+                                 Arrays.asList(3L, 4L), false),
+          new StringFilters.StringIn("f2",
+                                     Arrays.asList("c", "e"), false)
         })
       }
     );
@@ -133,7 +130,7 @@ public class TestFilter extends ATestFilter {
              new String[] {"a", "b", "c", "d", "e", "f"});
 
     filter(f);
-    Assert.assertEquals(2, fc.getSelectedSize());
+    assertEquals(2, fc.getSelectedSize());
     assertArrayEquals(new int[] {0, 2},
                       Arrays.copyOf(fc.getSelected(), fc.getSelectedSize()));
   }
@@ -156,7 +153,7 @@ public class TestFilter extends ATestFilter {
 
     Consumer<OrcFilterContext> filter = createBatchFilter(sArg, schema);
     filter.accept(fc.setBatch(batch));
-    Assert.assertEquals(6, fc.getSelectedSize());
+    assertEquals(6, fc.getSelectedSize());
     assertArrayEquals(new int[] {0, 1, 2, 3, 4, 5},
                       Arrays.copyOf(fc.getSelected(), fc.getSelectedSize()));
   }
@@ -167,7 +164,7 @@ public class TestFilter extends ATestFilter {
       .nullSafeEquals("f1", PredicateLeaf.Type.LONG, 0L)
       .build();
 
-    Assert.assertNull(FilterUtils.createVectorFilter(sarg, schema));
+    assertNull(FilterUtils.createVectorFilter(sarg, schema));
   }
 
   @Test

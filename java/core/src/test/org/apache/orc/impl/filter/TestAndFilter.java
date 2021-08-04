@@ -23,13 +23,14 @@ import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcFilterContext;
-import org.apache.orc.impl.filter.leaf.TestFilter;
-import org.junit.Assert;
-import org.junit.Test;
+import org.apache.orc.impl.filter.leaf.TestFilters;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestAndFilter extends ATestFilter {
 
@@ -43,10 +44,10 @@ public class TestAndFilter extends ATestFilter {
       .equals("f1", PredicateLeaf.Type.LONG, 4L)
       .end()
       .build();
-    Consumer<OrcFilterContext> f = TestFilter.createBatchFilter(s,
-                                                                schema,
-                                                                OrcFile.Version.CURRENT);
-    Assert.assertFalse(fc.isSelectedInUse());
+    Consumer<OrcFilterContext> f = TestFilters.createBatchFilter(s,
+                                                                 schema,
+                                                                 OrcFile.Version.CURRENT);
+    assertFalse(fc.isSelectedInUse());
     f.accept(fc);
 
     validateNoneSelected();
@@ -62,17 +63,17 @@ public class TestAndFilter extends ATestFilter {
       .build();
 
     Set<String> colIds = new HashSet<>();
-    VectorFilter f = FilterFactory.createSArgFilter(sarg.getExpression(),
+    VectorFilter f = FilterFactory.createSArgFilter(sarg.getCompactExpression(),
                                                     colIds,
                                                     sarg.getLeaves(),
                                                     schema,
                                                     OrcFile.Version.CURRENT);
-    Assert.assertNotNull(f);
-    Assert.assertTrue(f instanceof AndFilter);
-    Assert.assertEquals(2, ((AndFilter) f).filters.length);
-    Assert.assertEquals(2, colIds.size());
-    Assert.assertTrue(colIds.contains("f1"));
-    Assert.assertTrue(colIds.contains("f2"));
+    assertNotNull(f);
+    assertTrue(f instanceof AndFilter);
+    assertEquals(2, ((AndFilter) f).filters.length);
+    assertEquals(2, colIds.size());
+    assertTrue(colIds.contains("f1"));
+    assertTrue(colIds.contains("f2"));
 
     // Setup the data such that the AND condition should not select any row
     setBatch(
@@ -81,8 +82,8 @@ public class TestAndFilter extends ATestFilter {
     fc.setBatch(batch);
 
     filter(f);
-    Assert.assertTrue(fc.isSelectedInUse());
-    Assert.assertEquals(0, fc.getSelectedSize());
+    assertTrue(fc.isSelectedInUse());
+    assertEquals(0, fc.getSelectedSize());
   }
 
 }

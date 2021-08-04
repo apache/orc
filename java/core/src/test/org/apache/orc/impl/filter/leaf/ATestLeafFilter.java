@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.orc.impl.filter;
+package org.apache.orc.impl.filter.leaf;
 
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
@@ -25,19 +25,20 @@ import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
-import org.junit.Before;
+import org.apache.orc.impl.filter.ATestFilter;
+import org.junit.jupiter.api.BeforeEach;
 
 import java.sql.Timestamp;
 import java.util.stream.IntStream;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public class ATestGenFilter extends ATestFilter {
+public class ATestLeafFilter extends ATestFilter {
   static final int lowIdx = 2;
   static final int highIdx = 4;
   static final int size = 6;
 
-  @Before
+  @BeforeEach
   public void setup() {
     HiveDecimalWritable[] decValues = new HiveDecimalWritable[] {
       new HiveDecimalWritable(Long.MIN_VALUE + "100.01"),

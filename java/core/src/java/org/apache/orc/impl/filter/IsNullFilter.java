@@ -32,46 +32,29 @@ public class IsNullFilter implements VectorFilter {
   @Override
   public void filter(OrcFilterContext fc,
                      Selected bound,
-                     Selected selIn,
                      Selected selOut) {
     ColumnVector[] branch = fc.findColumnVector(colName);
     ColumnVector v = branch[branch.length - 1];
     boolean noNulls = OrcFilterContext.noNulls(branch);
-    int inIdx = 0;
-    int currSize = 0;
-    int rowIdx;
 
     // If the vector does not have nulls then none of them are selected and nothing to do
     if (!noNulls) {
-      if (v.isRepeating) {
+      if (v.isRepeating && OrcFilterContext.isNull(branch, 0)) {
         // If the repeating vector is null then set all as selected.
-        for (int i = 0; i < bound.selSize; i++) {
-          // Identify the rowIdx from the selected vector
-          rowIdx = bound.sel[i];
-          if (inIdx < selIn.selSize && rowIdx == selIn.sel[inIdx]) {
-            // Row already selected, no need to evaluate
-            inIdx++;
-            continue;
-          }
-          selOut.sel[currSize++] = rowIdx;
-        }
+        selOut.selectAll(bound);
       } else {
+        int currSize = 0;
+        int rowIdx;
         for (int i = 0; i < bound.selSize; i++) {
           // Identify the rowIdx from the selected vector
           rowIdx = bound.sel[i];
-          if (inIdx < selIn.selSize && rowIdx == selIn.sel[inIdx]) {
-            // Row already selected, no need to evaluate
-            inIdx++;
-            continue;
-          }
 
           if (OrcFilterContext.isNull(branch, rowIdx)) {
             selOut.sel[currSize++] = rowIdx;
           }
         }
+        selOut.selSize = currSize;
       }
     }
-    selOut.selSize = currSize;
   }
-
 }

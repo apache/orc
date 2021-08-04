@@ -22,11 +22,12 @@ import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
 import org.apache.orc.OrcFile;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
 import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestOrFilter extends ATestFilter {
   @Test
@@ -39,17 +40,17 @@ public class TestOrFilter extends ATestFilter {
       .build();
 
     Set<String> colIds = new HashSet<>();
-    VectorFilter f = FilterFactory.createSArgFilter(sarg.getExpression(),
+    VectorFilter f = FilterFactory.createSArgFilter(sarg.getCompactExpression(),
                                                     colIds,
                                                     sarg.getLeaves(),
                                                     schema,
                                                     OrcFile.Version.CURRENT);
-    Assert.assertNotNull(f);
-    Assert.assertTrue(f instanceof OrFilter);
-    Assert.assertEquals(2, ((OrFilter) f).filters.length);
-    Assert.assertEquals(2, colIds.size());
-    Assert.assertTrue(colIds.contains("f1"));
-    Assert.assertTrue(colIds.contains("f2"));
+    assertNotNull(f);
+    assertTrue(f instanceof OrFilter);
+    assertEquals(2, ((OrFilter) f).filters.length);
+    assertEquals(2, colIds.size());
+    assertTrue(colIds.contains("f1"));
+    assertTrue(colIds.contains("f2"));
 
     // Setup the data such that the OR condition should select every row
     setBatch(

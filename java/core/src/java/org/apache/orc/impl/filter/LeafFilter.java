@@ -37,26 +37,18 @@ public abstract class LeafFilter implements VectorFilter {
   @Override
   public void filter(OrcFilterContext fc,
                      Selected bound,
-                     Selected selIn,
                      Selected selOut) {
     ColumnVector[] branch = fc.findColumnVector(colName);
     ColumnVector v = branch[branch.length - 1];
     boolean noNulls = OrcFilterContext.noNulls(branch);
-    int inIdx = 0;
     int currSize = 0;
     int rowIdx;
 
     if (v.isRepeating) {
-      if (!OrcFilterContext.isNull(branch, 0) &&
-          allow(v, 0) != negated) {
+      if (!OrcFilterContext.isNull(branch, 0) && allowWNegation(v, 0)) {
         // If the repeating value is allowed then allow the current selSize
         for (int i = 0; i < bound.selSize; i++) {
           rowIdx = bound.sel[i];
-          if (inIdx < selIn.selSize && rowIdx == selIn.sel[inIdx]) {
-            // Row already protected, no need to evaluate
-            inIdx++;
-            continue;
-          }
           selOut.sel[currSize++] = rowIdx;
         }
       }
@@ -64,14 +56,8 @@ public abstract class LeafFilter implements VectorFilter {
       for (int i = 0; i < bound.selSize; i++) {
         rowIdx = bound.sel[i];
 
-        if (inIdx < selIn.selSize && rowIdx == selIn.sel[inIdx]) {
-          // Row already protected, no need to evaluate
-          inIdx++;
-          continue;
-        }
-
         // Check the value
-        if (allow(v, rowIdx) != negated) {
+        if (allowWNegation(v, rowIdx)) {
           selOut.sel[currSize++] = rowIdx;
         }
       }
@@ -79,21 +65,19 @@ public abstract class LeafFilter implements VectorFilter {
       for (int i = 0; i < bound.selSize; i++) {
         rowIdx = bound.sel[i];
 
-        if (inIdx < selIn.selSize && rowIdx == selIn.sel[inIdx]) {
-          // Row already protected, no need to evaluate
-          inIdx++;
-          continue;
-        }
-
         // Check the value only if not null
         if (!OrcFilterContext.isNull(branch, rowIdx) &&
-            allow(v, rowIdx) != negated) {
+            allowWNegation(v, rowIdx)) {
           selOut.sel[currSize++] = rowIdx;
         }
       }
     }
 
     selOut.selSize = currSize;
+  }
+
+  private boolean allowWNegation(ColumnVector v, int rowIdx) {
+    return allow(v, rowIdx) != negated;
   }
 
   abstract protected boolean allow(ColumnVector v, int rowIdx);

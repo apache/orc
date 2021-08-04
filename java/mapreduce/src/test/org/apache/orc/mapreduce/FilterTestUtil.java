@@ -31,13 +31,14 @@ import org.apache.orc.OrcFile;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
 import org.apache.orc.mapred.OrcStruct;
-import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class FilterTestUtil {
   private final static Logger LOG = LoggerFactory.getLogger(FilterTestUtil.class);
@@ -107,14 +108,14 @@ public class FilterTestUtil {
     HiveDecimalWritable d = new HiveDecimalWritable();
 
     if (expId > 0) {
-      Assert.assertEquals(expId, ((LongWritable) row.getFieldValue(4)).get());
+      assertEquals(expId, ((LongWritable) row.getFieldValue(4)).get());
     }
     for (int i = 0; i < row.getNumFields(); i++) {
       long expValue = ((LongWritable) row.getFieldValue(0)).get();
       d.setFromLongAndScale(expValue, scale);
-      Assert.assertEquals(d, row.getFieldValue(1));
-      Assert.assertEquals(expValue, ((LongWritable) row.getFieldValue(2)).get());
-      Assert.assertEquals(String.valueOf(expValue),
+      assertEquals(d, row.getFieldValue(1));
+      assertEquals(expValue, ((LongWritable) row.getFieldValue(2)).get());
+      assertEquals(String.valueOf(expValue),
                           row.getFieldValue(3).toString());
     }
   }
@@ -123,13 +124,13 @@ public class FilterTestUtil {
     HiveDecimalWritable d = new HiveDecimalWritable();
 
     if (expId > 0) {
-      Assert.assertEquals(expId, ((LongWritable) row.getFieldValue(4)).get());
+      assertEquals(expId, ((LongWritable) row.getFieldValue(4)).get());
     }
     for (int i = 0; i < row.getNumFields(); i++) {
       long expValue = ((LongWritable) row.getFieldValue(0)).get();
       d.setFromLongAndScale(expValue, scale);
-      Assert.assertEquals(d, row.getFieldValue(1));
-      Assert.assertEquals(expValue, ((LongWritable) row.getFieldValue(2)).get());
+      assertEquals(d, row.getFieldValue(1));
+      assertEquals(expValue, ((LongWritable) row.getFieldValue(2)).get());
     }
   }
 

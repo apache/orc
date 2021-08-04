@@ -22,12 +22,14 @@ import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
 import org.apache.orc.OrcFilterContext;
-import org.apache.orc.impl.filter.leaf.TestFilter;
-import org.junit.Assert;
-import org.junit.Test;
+import org.apache.orc.impl.filter.leaf.TestFilters;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.function.Consumer;
+
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestNotFilter extends ATestFilter {
 
@@ -40,7 +42,7 @@ public class TestNotFilter extends ATestFilter {
       .in("f1", PredicateLeaf.Type.LONG, 3L, 5L)
       .end()
       .build();
-    Consumer<OrcFilterContext> f = TestFilter.createBatchFilter(sArg, schema);
+    Consumer<OrcFilterContext> f = TestFilters.createBatchFilter(sArg, schema);
     f.accept(fc.setBatch(batch));
 
     validateSelected(0, 1, 3, 5);
@@ -55,11 +57,11 @@ public class TestNotFilter extends ATestFilter {
       .in("f1", PredicateLeaf.Type.LONG, 7L, 8L)
       .end()
       .build();
-    Consumer<OrcFilterContext> f = TestFilter.createBatchFilter(sArg, schema);
+    Consumer<OrcFilterContext> f = TestFilters.createBatchFilter(sArg, schema);
     f.accept(fc.setBatch(batch));
 
-    Assert.assertEquals(6, fc.getSelectedSize());
-    Assert.assertArrayEquals(new int[] {0, 1, 2, 3, 4, 5},
+    assertEquals(6, fc.getSelectedSize());
+    assertArrayEquals(new int[] {0, 1, 2, 3, 4, 5},
                              Arrays.copyOf(fc.getSelected(), fc.getSelectedSize()));
   }
 
@@ -75,7 +77,7 @@ public class TestNotFilter extends ATestFilter {
       .end()
       .end()
       .build();
-    Consumer<OrcFilterContext> f = TestFilter.createBatchFilter(sArg, schema);
+    Consumer<OrcFilterContext> f = TestFilters.createBatchFilter(sArg, schema);
     f.accept(fc.setBatch(batch));
 
     validateSelected(2);
@@ -93,7 +95,7 @@ public class TestNotFilter extends ATestFilter {
       .end()
       .end()
       .build();
-    Consumer<OrcFilterContext> f = TestFilter.createBatchFilter(sArg, schema);
+    Consumer<OrcFilterContext> f = TestFilters.createBatchFilter(sArg, schema);
     f.accept(fc.setBatch(batch));
 
     validateSelected(1, 2);
@@ -112,7 +114,7 @@ public class TestNotFilter extends ATestFilter {
       .end()
       .build();
 
-    Consumer<OrcFilterContext> f = TestFilter.createBatchFilter(sArg, schema);
+    Consumer<OrcFilterContext> f = TestFilters.createBatchFilter(sArg, schema);
     f.accept(fc.setBatch(batch));
 
     validateSelected(0, 1, 3, 4, 5);
@@ -131,7 +133,7 @@ public class TestNotFilter extends ATestFilter {
       .end()
       .build();
 
-    Consumer<OrcFilterContext> f = TestFilter.createBatchFilter(sArg, schema);
+    Consumer<OrcFilterContext> f = TestFilters.createBatchFilter(sArg, schema);
     f.accept(fc.setBatch(batch));
 
     validateSelected(0, 1, 4, 5);

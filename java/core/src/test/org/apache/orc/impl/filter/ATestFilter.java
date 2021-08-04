@@ -28,11 +28,15 @@ import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.orc.OrcFilterContext;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.OrcFilterContextImpl;
-import org.junit.Assert;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.util.Arrays;
+
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ATestFilter {
   protected final TypeDescription schema = TypeDescription.createStruct()
@@ -134,9 +138,9 @@ public class ATestFilter {
   }
 
   static void validateSelected(OrcFilterContext fc, int... v) {
-    Assert.assertTrue(fc.isSelectedInUse());
-    Assert.assertEquals(v.length, fc.getSelectedSize());
-    Assert.assertArrayEquals(v, Arrays.copyOf(fc.getSelected(), v.length));
+    assertTrue(fc.isSelectedInUse());
+    assertEquals(v.length, fc.getSelectedSize());
+    assertArrayEquals(v, Arrays.copyOf(fc.getSelected(), v.length));
   }
 
   protected void validateAllSelected(int size) {
@@ -144,8 +148,8 @@ public class ATestFilter {
   }
 
   static void validateAllSelected(OrcFilterContext fc, int size) {
-    Assert.assertFalse(fc.isSelectedInUse());
-    Assert.assertEquals(size, fc.getSelectedSize());
+    assertFalse(fc.isSelectedInUse());
+    assertEquals(size, fc.getSelectedSize());
   }
 
   protected void validateNoneSelected() {
@@ -153,8 +157,8 @@ public class ATestFilter {
   }
 
   static void validateNoneSelected(OrcFilterContext fc) {
-    Assert.assertTrue(fc.isSelectedInUse());
-    Assert.assertEquals(0, fc.getSelectedSize());
+    assertTrue(fc.isSelectedInUse());
+    assertEquals(0, fc.getSelectedSize());
   }
 
   protected void filter(VectorFilter filter) {

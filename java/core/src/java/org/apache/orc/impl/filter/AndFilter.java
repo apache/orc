@@ -23,6 +23,7 @@ import org.apache.orc.OrcFilterContext;
 public class AndFilter implements VectorFilter {
   public final VectorFilter[] filters;
   private final Selected andBound = new Selected();
+  private final Selected andOut = new Selected();
 
   public AndFilter(VectorFilter[] filters) {
     this.filters = filters;
@@ -31,15 +32,17 @@ public class AndFilter implements VectorFilter {
   @Override
   public void filter(OrcFilterContext fc,
                      Selected bound,
-                     Selected selIn,
                      Selected selOut) {
     // Each filter restricts the current selection. Make a copy of the current selection that will
     // be used for the next filter and finally output to selOut
     andBound.set(bound);
+    andOut.ensureSize(bound.selSize);
     for (VectorFilter f : filters) {
-      f.filter(fc, andBound, selIn, selOut);
+      andOut.clear();
+      f.filter(fc, andBound, andOut);
       // Make the current selection the bound for the next filter in AND
-      andBound.set(selOut);
+      andBound.set(andOut);
     }
+    selOut.unionDisjoint(andOut);
   }
 }
