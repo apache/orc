@@ -20,7 +20,6 @@ package org.apache.orc.impl;
 import java.io.EOFException;
 import java.io.IOException;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 
 /**
