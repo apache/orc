@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import org.apache.orc.EncryptionAlgorithm;
 import org.apache.orc.EncryptionKey;
