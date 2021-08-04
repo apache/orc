@@ -24,22 +24,12 @@ import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.StructColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.TypeDescription;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestOrcFilterContextImpl {
 
@@ -49,9 +39,6 @@ public class TestOrcFilterContextImpl {
       .addField("f2a", TypeDescription.createLong())
       .addField("f2b", TypeDescription.createString()))
     .addField("f3", TypeDescription.createString());
-
-  @Rule
-  public final ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void testSuccessfulRetrieval() {
@@ -86,9 +73,9 @@ public class TestOrcFilterContextImpl {
     fc.setBatch(b);
 
     // Missing field at top level
-    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                                                      () -> fc.findColumnVector("f4"));
-    assertThat(exception.getMessage(), containsString("Field f4 not found in"));
+    IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
+                                              () -> fc.findColumnVector("f4"));
+    assertTrue(e.getMessage().contains("Field f4 not found in"));
   }
 
   @Test
@@ -98,10 +85,10 @@ public class TestOrcFilterContextImpl {
     fc.setBatch(b);
 
     // Missing field at top level
-    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                                                      () -> fc.findColumnVector("f2.c"));
-    assertThat(exception.getMessage(),
-               containsString("Field c not found in struct<f2a:bigint,f2b:string>"));
+    IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
+                                              () -> fc.findColumnVector("f2.c"));
+    assertTrue(e.getMessage().contains(
+        "Field c not found in struct<f2a:bigint,f2b:string>"));
   }
 
   @Test

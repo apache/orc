@@ -29,11 +29,11 @@ import org.apache.hadoop.hive.ql.exec.vector.UnionColumnVector;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.orc.DataMask;
 import org.apache.orc.TypeDescription;
-import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestDataMask {
 
@@ -155,20 +155,22 @@ public class TestDataMask {
 
     // check the outputs
     for(int i=0; i < 3; ++i) {
-      assertEquals("iter " + i, (i + 1) + "." + (i + 1), a.vector[i].toString());
-      assertEquals("iter " + i, 1.25 * (i + 1), b.vector[i], 0.0001);
-      assertEquals("iter " + i, i == 0 ? 0 : c.offsets[i-1] + c.lengths[i-1], c.offsets[i]);
-      assertEquals("iter " + i, 2 * i, c.lengths[i]);
-      assertEquals("iter " + i, i == 0 ? 4 : d.offsets[i-1] - d.lengths[i], d.offsets[i]);
-      assertEquals("iter " + i, 2, d.lengths[i]);
-      assertEquals("iter " + i, i % 2, e.tags[i]);
-      assertEquals("iter " + i, Integer.toHexString(0x123 * i), f.toString(i));
+      String msg = "iter " + i;
+      assertEquals((i + 1) + "." + (i + 1), a.vector[i].toString(), msg);
+      assertEquals(1.25 * (i + 1), b.vector[i], 0.0001, msg);
+      assertEquals(i == 0 ? 0 : c.offsets[i-1] + c.lengths[i-1], c.offsets[i], msg);
+      assertEquals(2 * i, c.lengths[i], msg);
+      assertEquals(i == 0 ? 4 : d.offsets[i-1] - d.lengths[i], d.offsets[i], msg);
+      assertEquals(2, d.lengths[i], msg);
+      assertEquals(i % 2, e.tags[i], msg);
+      assertEquals(Integer.toHexString(0x123 * i), f.toString(i), msg);
     }
     // check the subvalues for the list and map
     for(int i=0; i < 6; ++i) {
-      assertEquals("iter " + i, i, ce.vector[i]);
-      assertEquals("iter " + i, i * 1111, dk.time[i]);
-      assertEquals("iter " + i, i * 11, dv.vector[i]);
+      String msg = "iter " + i;
+      assertEquals(i, ce.vector[i], msg);
+      assertEquals(i * 1111, dk.time[i], msg);
+      assertEquals(i * 11, dv.vector[i], msg);
     }
     assertEquals(0, e1.vector[0]);
     assertEquals(20, e1.vector[2]);

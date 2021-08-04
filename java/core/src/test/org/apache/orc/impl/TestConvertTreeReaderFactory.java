@@ -46,13 +46,9 @@ import org.apache.orc.RecordReader;
 import org.apache.orc.TestProlepticConversions;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestConvertTreeReaderFactory {
 
@@ -64,17 +60,15 @@ public class TestConvertTreeReaderFactory {
   private Path testFilePath;
   private int LARGE_BATCH_SIZE;
 
-  @Rule
-  public TestName testCaseName = new TestName();
-
-  @Before
-  public void setupPath() throws Exception {
+  @BeforeEach
+  public void setupPath(TestInfo testInfo) throws Exception {
     // Default CV length is 1024
     this.LARGE_BATCH_SIZE = 1030;
     this.conf = new Configuration();
     this.fs = FileSystem.getLocal(conf);
-    this.testFilePath = new Path(workDir, TestWriterImpl.class.getSimpleName() + testCaseName.getMethodName().
-        replaceFirst("\\[[0-9]+]", "") + ".orc");
+    this.testFilePath = new Path(workDir, TestWriterImpl.class.getSimpleName() +
+        testInfo.getTestMethod().get().getName().replaceFirst("\\[[0-9]+]", "") +
+        ".orc");
     fs.delete(testFilePath, false);
   }
 

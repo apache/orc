@@ -17,97 +17,79 @@
  */
 package org.apache.orc;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.*;
 
 import java.io.File;
 import java.sql.Timestamp;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.stream.Stream;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 import com.google.common.collect.Lists;
 
 /**
  *
  */
-@RunWith(Parameterized.class)
 public class TestOrcTimezone1 {
   Path workDir = new Path(System.getProperty("test.tmp.dir",
       "target" + File.separator + "test" + File.separator + "tmp"));
   Configuration conf;
   FileSystem fs;
   Path testFilePath;
-  String writerTimeZone;
-  String readerTimeZone;
   static TimeZone defaultTimeZone = TimeZone.getDefault();
 
-  public TestOrcTimezone1(String writerTZ, String readerTZ) {
-    this.writerTimeZone = writerTZ;
-    this.readerTimeZone = readerTZ;
-  }
-
-  @Parameterized.Parameters
-  public static Collection<Object[]> data() {
-    List<Object[]> result = Arrays.asList(new Object[][]{
-        /* Extreme timezones */
-        {"GMT-12:00", "GMT+14:00"},
+  private static Stream<Arguments> data() {
+    return Stream.of(/* Extreme timezones */
+        Arguments.of("GMT-12:00", "GMT+14:00"),
         /* No difference in DST */
-        {"America/Los_Angeles", "America/Los_Angeles"}, /* same timezone both with DST */
-        {"Europe/Berlin", "Europe/Berlin"}, /* same as above but europe */
-        {"America/Phoenix", "Asia/Kolkata"} /* Writer no DST, Reader no DST */,
-        {"Europe/Berlin", "America/Los_Angeles"} /* Writer DST, Reader DST */,
-        {"Europe/Berlin", "America/Chicago"} /* Writer DST, Reader DST */,
+        Arguments.of("America/Los_Angeles", "America/Los_Angeles"), /* same timezone both with DST */
+        Arguments.of("Europe/Berlin", "Europe/Berlin"), /* same as above but europe */
+        Arguments.of("America/Phoenix", "Asia/Kolkata") /* Writer no DST, Reader no DST */,
+        Arguments.of("Europe/Berlin", "America/Los_Angeles") /* Writer DST, Reader DST */,
+        Arguments.of("Europe/Berlin", "America/Chicago") /* Writer DST, Reader DST */,
         /* With DST difference */
-        {"Europe/Berlin", "UTC"},
-        {"UTC", "Europe/Berlin"} /* Writer no DST, Reader DST */,
-        {"America/Los_Angeles", "Asia/Kolkata"} /* Writer DST, Reader no DST */,
-        {"Europe/Berlin", "Asia/Kolkata"} /* Writer DST, Reader no DST */,
+        Arguments.of("Europe/Berlin", "UTC"),
+        Arguments.of("UTC", "Europe/Berlin") /* Writer no DST, Reader DST */,
+        Arguments.of("America/Los_Angeles", "Asia/Kolkata") /* Writer DST, Reader no DST */,
+        Arguments.of("Europe/Berlin", "Asia/Kolkata") /* Writer DST, Reader no DST */,
         /* Timezone offsets for the reader has changed historically */
-        {"Asia/Saigon", "Pacific/Enderbury"},
-        {"UTC", "Asia/Jerusalem"},
+        Arguments.of("Asia/Saigon", "Pacific/Enderbury"),
+        Arguments.of("UTC", "Asia/Jerusalem")
 
         // NOTE:
         // "1995-01-01 03:00:00.688888888" this is not a valid time in Pacific/Enderbury timezone.
         // On 1995-01-01 00:00:00 GMT offset moved from -11:00 hr to +13:00 which makes all values
         // on 1995-01-01 invalid. Try this with joda time
         // new MutableDateTime("1995-01-01", DateTimeZone.forTimeZone(readerTimeZone));
-    });
-    return result;
+    );
   }
 
-  @Rule
-  public TestName testCaseName = new TestName();
-
-  @Before
-  public void openFileSystem() throws Exception {
+  @BeforeEach
+  public void openFileSystem(TestInfo testInfo) throws Exception {
     conf = new Configuration();
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestOrcFile." +
-        testCaseName.getMethodName() + ".orc");
+        testInfo.getTestMethod().get().getName() + ".orc");
     fs.delete(testFilePath, false);
   }
 
-  @After
+  @AfterEach
   public void restoreTimeZone() {
     TimeZone.setDefault(defaultTimeZone);
   }
 
-  @Test
-  public void testTimestampWriter() throws Exception {
+  @ParameterizedTest
+  @MethodSource("data")
+  public void testTimestampWriter(String writerTimeZone, String readerTimeZone) throws Exception {
     TypeDescription schema = TypeDescription.createTimestamp();
 
     TimeZone.setDefault(TimeZone.getTimeZone(writerTimeZone));
@@ -153,8 +135,9 @@ public class TestOrcTimezone1 {
     rows.close();
   }
 
-  @Test
-  public void testReadTimestampFormat_0_11() throws Exception {
+  @ParameterizedTest
+  @MethodSource("data")
+  public void testReadTimestampFormat_0_11(String writerTimeZone, String readerTimeZone) throws Exception {
     TimeZone.setDefault(TimeZone.getTimeZone(readerTimeZone));
     Path oldFilePath = new Path(getClass().getClassLoader().
         getSystemResource("orc-file-11-format.orc").getPath());

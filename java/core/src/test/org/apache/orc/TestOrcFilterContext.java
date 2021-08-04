@@ -26,16 +26,9 @@ import org.apache.hadoop.hive.ql.exec.vector.MapColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.StructColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.UnionColumnVector;
 import org.apache.orc.impl.OrcFilterContextImpl;
-import org.junit.Before;
-import org.junit.Test;
 
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestOrcFilterContext {
   private final TypeDescription schema = TypeDescription.createStruct()
@@ -67,7 +60,7 @@ public class TestOrcFilterContext {
   private final OrcFilterContext filterContext = new OrcFilterContextImpl(schema)
     .setBatch(schema.createRowBatch());
 
-  @Before
+  @BeforeEach
   public void setup() {
     filterContext.reset();
   }
@@ -76,45 +69,45 @@ public class TestOrcFilterContext {
   public void testTopLevelElementaryType() {
     ColumnVector[] vectorBranch = filterContext.findColumnVector("f1");
     assertEquals(1, vectorBranch.length);
-    assertThat(vectorBranch[0], instanceOf(LongColumnVector.class));
+    assertTrue(vectorBranch[0] instanceof LongColumnVector);
   }
 
   @Test
   public void testTopLevelCompositeType() {
     ColumnVector[] vectorBranch = filterContext.findColumnVector("f3");
     assertEquals(1, vectorBranch.length);
-    assertThat(vectorBranch[0], instanceOf(StructColumnVector.class));
+    assertTrue(vectorBranch[0] instanceof StructColumnVector);
 
     vectorBranch = filterContext.findColumnVector("f4");
     assertEquals(1, vectorBranch.length);
-    assertThat(vectorBranch[0], instanceOf(ListColumnVector.class));
+    assertTrue(vectorBranch[0] instanceof ListColumnVector);
 
     vectorBranch = filterContext.findColumnVector("f5");
     assertEquals(1, vectorBranch.length);
-    assertThat(vectorBranch[0], instanceOf(MapColumnVector.class));
+    assertTrue(vectorBranch[0] instanceof MapColumnVector);
 
     vectorBranch = filterContext.findColumnVector("f6");
     assertEquals(1, vectorBranch.length);
-    assertThat(vectorBranch[0], instanceOf(UnionColumnVector.class));
+    assertTrue(vectorBranch[0] instanceof UnionColumnVector);
   }
 
   @Test
   public void testNestedType() {
     ColumnVector[] vectorBranch = filterContext.findColumnVector("f3.a");
     assertEquals(2, vectorBranch.length);
-    assertThat(vectorBranch[0], instanceOf(StructColumnVector.class));
-    assertThat(vectorBranch[1], instanceOf(LongColumnVector.class));
+    assertTrue(vectorBranch[0] instanceof StructColumnVector);
+    assertTrue(vectorBranch[1] instanceof LongColumnVector);
 
     vectorBranch = filterContext.findColumnVector("f3.c");
     assertEquals(2, vectorBranch.length);
-    assertThat(vectorBranch[0], instanceOf(StructColumnVector.class));
-    assertThat(vectorBranch[1], instanceOf(MapColumnVector.class));
+    assertTrue(vectorBranch[0] instanceof StructColumnVector);
+    assertTrue(vectorBranch[1] instanceof MapColumnVector);
 
     vectorBranch = filterContext.findColumnVector("f6.1.b");
     assertEquals(3, vectorBranch.length);
-    assertThat(vectorBranch[0], instanceOf(UnionColumnVector.class));
-    assertThat(vectorBranch[1], instanceOf(StructColumnVector.class));
-    assertThat(vectorBranch[2], instanceOf(ListColumnVector.class));
+    assertTrue(vectorBranch[0] instanceof UnionColumnVector);
+    assertTrue(vectorBranch[1] instanceof StructColumnVector);
+    assertTrue(vectorBranch[2] instanceof ListColumnVector);
   }
 
   @Test
@@ -181,24 +174,24 @@ public class TestOrcFilterContext {
       .setBatch(topListSchema.createRowBatch());
     ColumnVector[] vectorBranch = fc.findColumnVector("_elem");
     assertEquals(2, vectorBranch.length);
-    assertThat(vectorBranch[0], instanceOf(ListColumnVector.class));
-    assertThat(vectorBranch[1], instanceOf(StructColumnVector.class));
+    assertTrue(vectorBranch[0] instanceof ListColumnVector);
+    assertTrue(vectorBranch[1] instanceof StructColumnVector);
   }
 
   @Test
   public void testUnsupportedIsNullUse() {
     ColumnVector[] vectorBranch = filterContext.findColumnVector("f4._elem.a");
     assertEquals(3, vectorBranch.length);
-    assertThat(vectorBranch[0], instanceOf(ListColumnVector.class));
-    assertThat(vectorBranch[1], instanceOf(StructColumnVector.class));
-    assertThat(vectorBranch[2], instanceOf(BytesColumnVector.class));
+    assertTrue(vectorBranch[0] instanceof ListColumnVector);
+    assertTrue(vectorBranch[1] instanceof StructColumnVector);
+    assertTrue(vectorBranch[2] instanceof BytesColumnVector);
 
     assertTrue(OrcFilterContext.noNulls(vectorBranch));
     IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                                                       () -> OrcFilterContext.isNull(vectorBranch,
                                                                                     0));
-    assertThat(exception.getMessage(), containsString("ListColumnVector"));
-    assertThat(exception.getMessage(), containsString("List and Map vectors are not supported"));
+    assertTrue(exception.getMessage().contains("ListColumnVector"));
+    assertTrue(exception.getMessage().contains("List and Map vectors are not supported"));
   }
 
   @Test

@@ -17,13 +17,13 @@
  */
 package org.apache.orc.impl;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.nio.ByteBuffer;
 
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.impl.writer.StreamOptions;
-import org.junit.Test;
 
 public class TestBitFieldReader {
 

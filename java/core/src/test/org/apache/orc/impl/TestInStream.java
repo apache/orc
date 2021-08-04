@@ -18,13 +18,8 @@
 
 package org.apache.orc.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -41,7 +36,6 @@ import org.apache.orc.EncryptionAlgorithm;
 import org.apache.orc.OrcProto;
 import org.apache.orc.PhysicalWriter;
 import org.apache.orc.impl.writer.StreamOptions;
-import org.junit.Test;
 
 public class TestInStream {
 
@@ -147,11 +141,11 @@ public class TestInStream {
         in.toString());
     for(int i=0; i < 1024; ++i) {
       int x = in.read();
-      assertEquals("value " + i, i & 0xff, x);
+      assertEquals(i & 0xff, x, "value " + i);
     }
     for(int i=1023; i >= 0; --i) {
       in.seek(positions[i]);
-      assertEquals("value " + i, i & 0xff, in.read());
+      assertEquals(i & 0xff, in.read(), "value " + i);
     }
   }
 
@@ -217,11 +211,11 @@ public class TestInStream {
                        " range: 0 offset: 0 position: 0 limit: 1965",
           in.toString());
       for (int i = 0; i < ROW_COUNT; ++i) {
-        assertEquals("row " + i, i * DATA_CONST, inputStream.readLong());
+        assertEquals(i * DATA_CONST, inputStream.readLong(), "row " + i);
       }
       for (int i = ROW_COUNT - 1; i >= 0; --i) {
         in.seek(positions[i]);
-        assertEquals("row " + i, i * DATA_CONST, inputStream.readLong());
+        assertEquals(i * DATA_CONST, inputStream.readLong(), "row " + i);
       }
     }
   }
@@ -265,11 +259,11 @@ public class TestInStream {
                        " range: 0 offset: 0 position: 0 limit: 1965",
           in.toString());
       for (int i = 0; i < ROW_COUNT; ++i) {
-        assertEquals("row " + i, i * DATA_CONST, inputStream.readLong());
+        assertEquals(i * DATA_CONST, inputStream.readLong(), "row " + i);
       }
       for (int i = ROW_COUNT - 1; i >= 0; --i) {
         in.seek(positions[i]);
-        assertEquals("row " + i, i * DATA_CONST, inputStream.readLong());
+        assertEquals(i * DATA_CONST, inputStream.readLong(), "row " + i);
       }
     }
   }
@@ -344,11 +338,11 @@ public class TestInStream {
                        (bytes.length - 15) + " to " + bytes.length,
           in.toString());
       for (int i = 0; i < ROW_COUNT; ++i) {
-        assertEquals("row " + i, i * DATA_CONST, inputStream.readLong());
+        assertEquals(i * DATA_CONST, inputStream.readLong(), "row " + i);
       }
       for (int i = ROW_COUNT - 1; i >= 0; --i) {
         in.seek(positions[i]);
-        assertEquals("row " + i, i * DATA_CONST, inputStream.readLong());
+        assertEquals(i * DATA_CONST, inputStream.readLong(), "row " + i);
       }
     }
   }
@@ -398,11 +392,11 @@ public class TestInStream {
                        "  range 1 = 2100 to 4044;  range 2 = 4044 to 5044",
           in.toString());
       for (int i = 0; i < ROW_COUNT; ++i) {
-        assertEquals("row " + i, i * DATA_CONST, inputStream.readLong());
+        assertEquals(i * DATA_CONST, inputStream.readLong(), "row " + i);
       }
       for (int i = ROW_COUNT - 1; i >= 0; --i) {
         in.seek(positions[i]);
-        assertEquals("row " + i, i * DATA_CONST, inputStream.readLong());
+        assertEquals(i * DATA_CONST, inputStream.readLong(), "row " + i);
       }
     }
   }
@@ -845,7 +839,7 @@ public class TestInStream {
     byte[] inBuffer = new byte[4096];
     assertEquals(4096, inStream.read(inBuffer));
     for(int i=0; i < inBuffer.length; ++i) {
-      assertEquals("position " + i, (byte)i, inBuffer[i]);
+      assertEquals((byte)i, inBuffer[i], "position " + i);
     }
   }
 
@@ -891,10 +885,9 @@ public class TestInStream {
     posn = 0;
     int read = inStream.read(inBuffer);
     while (read != -1) {
-      assertEquals("Read length at " + posn,
-          Math.min(STREAM_LENGTH - posn, CHUNK_LENGTH), read);
+      assertEquals(Math.min(STREAM_LENGTH - posn, CHUNK_LENGTH), read, "Read length at " + posn);
       for(int i=0; i < read; ++i) {
-        assertEquals("posn " + posn + " + " + i, (byte)(posn + i), inBuffer[i]);
+        assertEquals((byte)(posn + i), inBuffer[i], "posn " + posn + " + " + i);
       }
       posn += read;
       read = inStream.read(inBuffer);
@@ -935,7 +928,7 @@ public class TestInStream {
     byte[] inBuffer = new byte[4096];
     assertEquals(4096, inStream.read(inBuffer));
     for(int i=0; i < inBuffer.length; ++i) {
-      assertEquals("position " + i, (byte)i, inBuffer[i]);
+      assertEquals((byte)i, inBuffer[i], "position " + i);
     }
   }
 
@@ -956,7 +949,7 @@ public class TestInStream {
     byte[] inBuffer = new byte[4096];
     assertEquals(4096, inStream.read(inBuffer));
     for(int i=0; i < inBuffer.length; ++i) {
-      assertEquals("position " + i, (byte)i, inBuffer[i]);
+      assertEquals((byte)i, inBuffer[i], "position " + i);
     }
   }
 }
