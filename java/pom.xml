@@ -25,7 +25,7 @@
   <packaging>pom</packaging>
 
   <name>Apache ORC</name>
-  <url>http://orc.apache.org</url>
+  <url>https://orc.apache.org</url>
   <description>
      ORC is a self-describing type-aware columnar file format designed
      for Hadoop workloads. It is optimized for large streaming reads,
@@ -42,14 +42,14 @@
       <subscribe>user-subscribe@orc.apache.org</subscribe>
       <unsubscribe>user-unsubscribe@orc.apache.org</unsubscribe>
       <post>user@orc.apache.org</post>
-      <archive>http://mail-archives.apache.org/mod_mbox/orc-user/</archive>
+      <archive>https://mail-archives.apache.org/mod_mbox/orc-user/</archive>
     </mailingList>
     <mailingList>
       <name>ORC Developer List</name>
       <subscribe>dev-subscribe@orc.apache.org</subscribe>
       <unsubscribe>dev-unsubscribe@orc.apache.org</unsubscribe>
       <post>dev@orc.apache.org</post>
-      <archive>http://mail-archives.apache.org/mod_mbox/orc-dev/</archive>
+      <archive>https://mail-archives.apache.org/mod_mbox/orc-dev/</archive>
     </mailingList>
   </mailingLists>
 
@@ -108,23 +108,23 @@
         <artifactId>maven-javadoc-plugin</artifactId>
         <configuration>
           <links>
-            <link>http://hadoop.apache.org/docs/r${hadoop.version}/api</link>
-            <link>http://orc.apache.org/api/hive-storage-api</link>
-            <link>http://orc.apache.org/api/orc-core</link>
-            <link>http://orc.apache.org/api/orc-mapreduce</link>
-            <link>http://orc.apache.org/api/orc-tools</link>
+            <link>https://hadoop.apache.org/docs/r${hadoop.version}/api</link>
+            <link>https://orc.apache.org/api/hive-storage-api</link>
+            <link>https://orc.apache.org/api/orc-core</link>
+            <link>https://orc.apache.org/api/orc-mapreduce</link>
+            <link>https://orc.apache.org/api/orc-tools</link>
           </links>
           <offlineLinks>
             <offlineLink>
-              <url>http://orc.apache.org/api/hive-storage-api</url>
+              <url>https://orc.apache.org/api/hive-storage-api</url>
               <location>${project.basedir}/../../site/api/hive-storage-api</location>
             </offlineLink>
             <offlineLink>
-              <url>http://orc.apache.org/api/orc-core</url>
+              <url>https://orc.apache.org/api/orc-core</url>
               <location>${project.basedir}/../../site/api/orc-core</location>
             </offlineLink>
             <offlineLink>
-              <url>http://orc.apache.org/api/orc-mapreduce</url>
+              <url>https://orc.apache.org/api/orc-mapreduce</url>
               <location>${project.basedir}/../../site/api/orc-mapreduce</location>
             </offlineLink>
           </offlineLinks>
