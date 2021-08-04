@@ -81,7 +81,7 @@ public class ReaderImpl implements Reader {
   private final int metadataSize;
   protected final List<OrcProto.Type> types;
   private final TypeDescription schema;
-  private final Map<String, ByteString> userMetadata;
+  private final UserMetadata userMetadata;
   private final List<OrcProto.ColumnStatistics> fileStats;
   private final List<StripeInformation> stripes;
   protected final int rowIndexStride;
@@ -206,6 +206,45 @@ public class ReaderImpl implements Reader {
     }
   }
 
+  public static class UserMetadata {
+    private final List<OrcProto.UserMetadataItem> innerUserMetadata;
+
+    private Map<String, ByteString> metadataCache;
+
+    public UserMetadata(List<OrcProto.UserMetadataItem> userMetadata) {
+      this.innerUserMetadata = userMetadata;
+    }
+
+    public List<String> getMetadataKeys() {
+      List<String> result = new ArrayList<>();
+      for(OrcProto.UserMetadataItem item: innerUserMetadata) {
+        result.add(item.getName());
+      }
+      return result;
+    }
+
+    private void lazyInitCache() {
+      if (metadataCache == null) {
+        metadataCache = new TreeMap<>();
+        for(OrcProto.UserMetadataItem item: innerUserMetadata) {
+          metadataCache.putIfAbsent(item.getName(), item.getValue());
+        }
+      }
+    }
+
+    public ByteBuffer getMetadataValue(String key) {
+      lazyInitCache();
+      return metadataCache.computeIfAbsent(key, s -> {
+        throw new IllegalArgumentException("Can't find user metadata " + key);
+      }).asReadOnlyByteBuffer();
+    }
+
+    public boolean hasMetadataValue(String key) {
+      lazyInitCache();
+      return metadataCache.containsKey(key);
+    }
+  }
+
   @Override
   public long getNumberOfRows() {
     return numberOfRows;
@@ -213,19 +252,17 @@ public class ReaderImpl implements Reader {
 
   @Override
   public List<String> getMetadataKeys() {
-    return new ArrayList<>(userMetadata.keySet());
+    return userMetadata.getMetadataKeys();
   }
 
   @Override
   public ByteBuffer getMetadataValue(String key) {
-    return userMetadata.computeIfAbsent(key, s -> {
-      throw new IllegalArgumentException("Can't find user metadata " + key);
-    }).asReadOnlyByteBuffer();
+    return userMetadata.getMetadataValue(key);
   }
 
   @Override
   public boolean hasMetadataValue(String key) {
-    return userMetadata.containsKey(key);
+    return userMetadata.hasMetadataValue(key);
   }
 
   @Override
@@ -561,13 +598,7 @@ public class ReaderImpl implements Reader {
       this.rowIndexStride = tail.getFooter().getRowIndexStride();
       this.contentLength = tail.getFooter().getContentLength();
       this.numberOfRows = tail.getFooter().getNumberOfRows();
-      this.userMetadata = tail.getFooter().getMetadataList()
-              .stream().collect(Collectors.toMap(
-                      OrcProto.UserMetadataItem::getName,
-                      OrcProto.UserMetadataItem::getValue,
-                      (bytes, bytes2) -> bytes2,
-                      TreeMap::new)
-              );
+      this.userMetadata = new UserMetadata(tail.getFooter().getMetadataList());
       this.fileStats = tail.getFooter().getStatisticsList();
       this.writerVersion = tail.getWriterVersion();
       this.stripes = tail.getStripes();
