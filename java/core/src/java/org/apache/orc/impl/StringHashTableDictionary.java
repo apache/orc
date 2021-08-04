@@ -133,11 +133,10 @@ public class StringHashTableDictionary implements Dictionary {
     int index = getIndex(bytes, offset, length);
     DynamicIntArray candidateArray = hashBuckets[index];
 
-    Text tmpText = new Text();
     for (int i = 0; i < candidateArray.size(); i++) {
       final int candidateIndex = candidateArray.get(i);
-      getText(tmpText, candidateIndex);
-      if (tmpText.compareTo(bytes, offset, length) == 0) {
+      if (DictionaryUtils.equalsInternal(bytes, offset, length, candidateIndex,
+          this.keyOffsets, this.byteArray)) {
         return candidateIndex;
       }
     }
