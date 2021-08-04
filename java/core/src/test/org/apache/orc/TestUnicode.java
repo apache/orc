@@ -74,7 +74,7 @@ public class TestUnicode {
   @ParameterizedTest
   @MethodSource("data")
   public void testUtf8(String type, int maxLength, boolean hasRTrim) throws Exception {
-    if (type == "varchar") {
+    if (type.equals("varchar")) {
       testVarChar(maxLength);
     } else {
       testChar(maxLength, hasRTrim);

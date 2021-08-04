@@ -21,7 +21,7 @@ package org.apache.orc.impl;
 import org.apache.orc.OrcProto;
 
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestStreamName {
 
@@ -38,7 +38,7 @@ public class TestStreamName {
     assertEquals(false, s1.equals(s2));
     assertEquals(false, s1.equals(s3));
     assertEquals(true, s1.equals(s1p));
-    assertEquals(false, s1.equals(null));
+    assertFalse(s1.equals(null));
     assertEquals(true, s1.compareTo(s2) < 0);
     assertEquals(true, s2.compareTo(s3) < 0);
     assertEquals(true, s3.compareTo(s4) < 0);
