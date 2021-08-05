@@ -34,6 +34,10 @@
     <!-- intra-project -->
     <dependency>
       <groupId>org.apache.orc</groupId>
+      <artifactId>orc-shims</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.orc</groupId>
       <artifactId>orc-core</artifactId>
     </dependency>
 
@@ -62,7 +66,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-hdfs</artifactId>
+      <artifactId>hadoop-hdfs-client</artifactId>
       <version>${tools.hadoop.version}</version>
       <scope>compile</scope>
     </dependency>
@@ -138,6 +142,15 @@
         <artifactId>maven-javadoc-plugin</artifactId>
         <configuration>
           <destDir>${project.artifactId}</destDir>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <configuration>
+          <ignoredUnusedDeclaredDependencies>
+            <ignoredUnusedDeclaredDependency>com.google.guava:guava</ignoredUnusedDeclaredDependency>
+          </ignoredUnusedDeclaredDependencies>
         </configuration>
       </plugin>
     </plugins>
