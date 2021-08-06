@@ -171,6 +171,22 @@
               </artifactSet>
               <shadedArtifactAttached>false</shadedArtifactAttached>
               <shadedClassifierName>shaded</shadedClassifierName>
+              <filters>
+                <filter>
+                  <artifact>org.codehaus.janino:janino</artifact>
+                  <excludes>
+                    <exclude>META-INF/DUMMY.SF</exclude>
+                    <exclude>META-INF/DUMMY.DSA</exclude>
+                  </excludes>
+                </filter>
+                <filter>
+                  <artifact>org.codehaus.janino:commons-compiler</artifact>
+                  <excludes>
+                    <exclude>META-INF/DUMMY.SF</exclude>
+                    <exclude>META-INF/DUMMY.DSA</exclude>
+                  </excludes>
+                </filter>
+              </filters>
               <relocations>
                 <relocation>
                   <pattern>org.apache.orc.storage</pattern>
