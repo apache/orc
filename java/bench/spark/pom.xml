@@ -173,15 +173,12 @@
               <shadedClassifierName>shaded</shadedClassifierName>
               <filters>
                 <filter>
-                  <artifact>org.codehaus.janino:janino</artifact>
+                  <artifact>*:*</artifact>
                   <excludes>
-                    <exclude>META-INF/DUMMY.SF</exclude>
-                    <exclude>META-INF/DUMMY.DSA</exclude>
-                  </excludes>
-                </filter>
-                <filter>
-                  <artifact>org.codehaus.janino:commons-compiler</artifact>
-                  <excludes>
+                    <exclude>META-INF/MANIFEST.MF</exclude>
+                    <exclude>META-INF/DEPENDENCIES</exclude>
+                    <exclude>META-INF/LICENSE</exclude>
+                    <exclude>META-INF/NOTICE</exclude>
                     <exclude>META-INF/DUMMY.SF</exclude>
                     <exclude>META-INF/DUMMY.DSA</exclude>
                   </excludes>
