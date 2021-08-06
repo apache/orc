@@ -371,6 +371,10 @@
         <version>${spark.version}</version>
 	<exclusions>
 	  <exclusion>
+	    <groupId>org.apache.avro</groupId>
+	    <artifactId>avro-mapred</artifactId>
+	  </exclusion>
+	  <exclusion>
 	    <groupId>org.glassfish.hk2.external</groupId>
 	    <artifactId>aopalliance-repackaged</artifactId>
 	  </exclusion>
@@ -400,6 +404,10 @@
           <exclusion>
             <groupId>org.apache.orc</groupId>
             <artifactId>orc-mapreduce</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.parquet</groupId>
+            <artifactId>parquet-column</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
