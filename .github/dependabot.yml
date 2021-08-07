@@ -36,3 +36,6 @@ updates:
       # Pin scala-library to 2.12.10
       - dependency-name: "org.scala-lang:scala-library"
         versions: "[2.12.11,)"
+      # Pin maven-dependency-plugin to 3.1.2 due to MDEP-753, MDEP-757, MDEP-759
+      - dependency-name: "org.apache.maven.plugins:maven-dependency-plugin"
+        versions: "[3.2.0,)"
