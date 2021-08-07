@@ -223,7 +223,7 @@ public class GenerateVariants implements OrcBenchmark {
     }
   }
 
-  static CommandLine parseCommandLine(String[] args) throws ParseException {
+  public static CommandLine parseCommandLine(String[] args) throws ParseException {
     Options options = new Options()
         .addOption("h", "help", false, "Provide help")
         .addOption("c", "compress", true, "List of compression")
