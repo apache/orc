@@ -763,7 +763,7 @@
       <dependency>
         <groupId>org.jetbrains</groupId>
         <artifactId>annotations</artifactId>
-        <version>17.0.0</version>
+        <version>21.0.1</version>
       </dependency>
       <dependency>
         <groupId>org.slf4j</groupId>
