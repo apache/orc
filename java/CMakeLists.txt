@@ -53,6 +53,16 @@ add_test(
            -Dbuild.dir=${CMAKE_CURRENT_BINARY_DIR} test
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
+add_test(
+  NAME java-examples-test
+  COMMAND java -jar examples/orc-examples-${ORC_VERSION}-uber.jar write
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+add_test(
+  NAME java-tools-test
+  COMMAND java -jar tools/orc-tools-${ORC_VERSION}-uber.jar version
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
 install(
   FILES ${ORC_JARS}
   DESTINATION share)
