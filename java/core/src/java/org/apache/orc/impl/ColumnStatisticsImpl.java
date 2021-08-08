@@ -64,10 +64,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     if (hasNull != that.hasNull) {
       return false;
     }
-    if (bytesOnDisk != that.bytesOnDisk) {
-      return false;
-    }
-    return true;
+    return bytesOnDisk == that.bytesOnDisk;
   }
 
   @Override
@@ -155,11 +152,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
       BooleanStatisticsImpl that = (BooleanStatisticsImpl) o;
 
-      if (trueCount != that.trueCount) {
-        return false;
-      }
-
-      return true;
+      return trueCount == that.trueCount;
     }
 
     @Override
@@ -294,11 +287,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       if (maximum != that.maximum) {
         return false;
       }
-      if (sum != that.sum) {
-        return false;
-      }
-
-      return true;
+      return sum == that.sum;
     }
 
     @Override
@@ -500,11 +489,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       if (hasMinimum != that.hasMinimum) {
         return false;
       }
-      if (overflow != that.overflow) {
-        return false;
-      }
-
-      return true;
+      return overflow == that.overflow;
     }
 
     @Override
@@ -658,11 +643,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       if (Double.compare(that.maximum, maximum) != 0) {
         return false;
       }
-      if (Double.compare(that.sum, sum) != 0) {
-        return false;
-      }
-
-      return true;
+      return Double.compare(that.sum, sum) == 0;
     }
 
     @Override
@@ -915,11 +896,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       if (minimum != null ? !minimum.equals(that.minimum) : that.minimum != null) {
         return false;
       }
-      if (maximum != null ? !maximum.equals(that.maximum) : that.maximum != null) {
-        return false;
-      }
-
-      return true;
+      return maximum != null ? maximum.equals(that.maximum) : that.maximum == null;
     }
 
     @Override
@@ -1079,11 +1056,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
       BinaryStatisticsImpl that = (BinaryStatisticsImpl) o;
 
-      if (sum != that.sum) {
-        return false;
-      }
-
-      return true;
+      return sum == that.sum;
     }
 
     @Override
@@ -1248,11 +1221,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       if (maximum != null ? !maximum.equals(that.maximum) : that.maximum != null) {
         return false;
       }
-      if (sum != null ? !sum.equals(that.sum) : that.sum != null) {
-        return false;
-      }
-
-      return true;
+      return sum != null ? sum.equals(that.sum) : that.sum == null;
     }
 
     @Override
@@ -1628,11 +1597,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       if (minimum != that.minimum) {
         return false;
       }
-      if (maximum != that.maximum) {
-        return false;
-      }
-
-      return true;
+      return maximum == that.maximum;
     }
 
     @Override
