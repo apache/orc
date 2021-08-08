@@ -278,7 +278,7 @@ public class RunLengthIntegerWriterV2 implements IntegerWriter {
     final int headerSecondByte = variableRunLength & 0xff;
 
     // if the min value is negative toggle the sign
-    final boolean isNegative = min < 0 ? true : false;
+    final boolean isNegative = min < 0;
     if (isNegative) {
       min = -min;
     }
