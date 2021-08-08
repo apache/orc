@@ -140,10 +140,7 @@ public abstract class TreeWriterBase implements TreeWriter {
                                     boolean signed, boolean isDirectV2,
                                     WriterContext writer) {
     if (isDirectV2) {
-      boolean alignedBitpacking = false;
-      if (writer.getEncodingStrategy().equals(OrcFile.EncodingStrategy.SPEED)) {
-        alignedBitpacking = true;
-      }
+      boolean alignedBitpacking = writer.getEncodingStrategy().equals(OrcFile.EncodingStrategy.SPEED);
       return new RunLengthIntegerWriterV2(output, signed, alignedBitpacking);
     } else {
       return new RunLengthIntegerWriter(output, signed);
