@@ -152,19 +152,19 @@ public class TestOrcTimezone1 {
     include[schema.getChildren().get(col).getId()] = true;
     RecordReader rows = reader.rows
         (reader.options().include(include));
-    assertEquals(true, rows.nextBatch(batch));
+    assertTrue(rows.nextBatch(batch));
     assertEquals(Timestamp.valueOf("2000-03-12 15:00:00"),
         ts.asScratchTimestamp(0));
 
     // check the contents of second row
     rows.seekToRow(7499);
-    assertEquals(true, rows.nextBatch(batch));
+    assertTrue(rows.nextBatch(batch));
     assertEquals(1, batch.size);
     assertEquals(Timestamp.valueOf("2000-03-12 15:00:01"),
         ts.asScratchTimestamp(0));
 
     // handle the close up
-    assertEquals(false, rows.nextBatch(batch));
+    assertFalse(rows.nextBatch(batch));
     rows.close();
   }
 }

@@ -27,6 +27,7 @@ import java.nio.ByteBuffer;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class TestZstd {
 
@@ -38,7 +39,7 @@ public class TestZstd {
     in.flip();
     CompressionCodec codec = new AircompressorCodec(
         CompressionKind.ZSTD, new ZstdCompressor(), new ZstdDecompressor());
-    assertEquals(false, codec.compress(in, out, null,
+    assertFalse(codec.compress(in, out, null,
         codec.getDefaultOptions()));
   }
 

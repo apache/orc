@@ -715,7 +715,7 @@ public class TestSchemaEvolution {
     TypeDescription schemaOnRead = TypeDescription.createDecimal().withPrecision(38).withScale(9);
     RecordReader rows = reader.rows(reader.options().schema(schemaOnRead));
     batch = schemaOnRead.createRowBatch();
-    assertEquals(true, rows.nextBatch(batch));
+    assertTrue(rows.nextBatch(batch));
     assertEquals(3, batch.size);
     DecimalColumnVector dcv = (DecimalColumnVector) batch.cols[0];
     assertEquals("74.123456789", dcv.vector[0].toString());
@@ -777,7 +777,7 @@ public class TestSchemaEvolution {
     RecordReader rows = reader.rows(reader.options().schema(schema));
     batch = schema.createRowBatchV2();
     BytesColumnVector bcv = (BytesColumnVector) batch.cols[0];
-    assertEquals(true, rows.nextBatch(batch));
+    assertTrue(rows.nextBatch(batch));
     assertEquals(3, batch.size);
     assertEquals("1970-01-01 00:01:14.123456789", bcv.toString(0));
     assertEquals("1970-01-01 00:02:03.456", bcv.toString(1));
@@ -1548,7 +1548,7 @@ public class TestSchemaEvolution {
       assertEquals(c, evo.getFileType(c).getId(), "column " + c);
     }
     // the file doesn't have z
-    assertEquals(null, evo.getFileType(9));
+    assertNull(evo.getFileType(9));
   }
 
   @Test
@@ -1652,7 +1652,7 @@ public class TestSchemaEvolution {
     assertEquals(1, evo.getFileType(1).getId());
     assertEquals(2, evo.getFileType(2).getId());
     assertEquals(3, evo.getFileType(3).getId());
-    assertEquals(null, evo.getFileType(4));
+    assertNull(evo.getFileType(4));
     assertEquals(4, evo.getFileType(5).getId());
     assertEquals(5, evo.getFileType(6).getId());
     assertEquals(6, fileInclude.length);
@@ -1693,7 +1693,7 @@ public class TestSchemaEvolution {
     SchemaEvolution evo = new SchemaEvolution(fileType, readType, options);
 
     // check to make sure the fields are mapped correctly
-    assertEquals(null, evo.getFileType(1));
+    assertNull(evo.getFileType(1));
     assertEquals(2, evo.getFileType(2).getId());
     assertEquals(1, evo.getFileType(3).getId());
 
@@ -1729,8 +1729,8 @@ public class TestSchemaEvolution {
     VectorizedRowBatch batch = readType.createRowBatch();
     reader.nextBatch(batch, 10, TypeReader.ReadPhase.ALL);
     final String EXPECTED = "ABCDEFGHIJ";
-    assertEquals(true, batch.cols[0].isRepeating);
-    assertEquals(true, batch.cols[0].isNull[0]);
+    assertTrue(batch.cols[0].isRepeating);
+    assertTrue(batch.cols[0].isNull[0]);
     for(int r=0; r < 10; ++r) {
       assertEquals(EXPECTED.substring(r, r+1),
         ((BytesColumnVector) batch.cols[1]).toString(r), "col1." + r);
@@ -1774,7 +1774,7 @@ public class TestSchemaEvolution {
     assertEquals(1, evo.getFileType(1).getId());
     assertEquals(2, evo.getFileType(2).getId());
     assertEquals(3, evo.getFileType(3).getId());
-    assertEquals(null, evo.getFileType(4));
+    assertNull(evo.getFileType(4));
   }
 
   @Test
@@ -1815,7 +1815,7 @@ public class TestSchemaEvolution {
     assertEquals(2, evo.getFileType(2).getId());
     assertEquals(3, evo.getFileType(3).getId());
     assertEquals(4, evo.getFileType(4).getId());
-    assertEquals(null, evo.getFileType(5));
+    assertNull(evo.getFileType(5));
   }
 
   @Test
@@ -1966,7 +1966,7 @@ public class TestSchemaEvolution {
           int current = 0;
           for (int r = 0; r < VALUES; ++r) {
             if (current == batch.size) {
-              assertEquals(true, rows.nextBatch(batch), "row " + r);
+              assertTrue(rows.nextBatch(batch), "row " + r);
               current = 0;
             }
             assertEquals(
@@ -1979,7 +1979,7 @@ public class TestSchemaEvolution {
                 "row " + r);
             current += 1;
           }
-          assertEquals(false, rows.nextBatch(batch));
+          assertFalse(rows.nextBatch(batch));
         }
 
         // test conversion to decimal
@@ -1991,7 +1991,7 @@ public class TestSchemaEvolution {
           int current = 0;
           for (int r = 0; r < VALUES; ++r) {
             if (current == batch.size) {
-              assertEquals(true, rows.nextBatch(batch), "row " + r);
+              assertTrue(rows.nextBatch(batch), "row " + r);
               current = 0;
             }
             assertEquals( timeStrings[r] + " " + READER_ZONE.getId(),
@@ -2000,7 +2000,7 @@ public class TestSchemaEvolution {
                 decimalTimestampToString(t2.vector[current], WRITER_ZONE), "row " + r);
             current += 1;
           }
-          assertEquals(false, rows.nextBatch(batch));
+          assertFalse(rows.nextBatch(batch));
         }
 
         // test conversion to double
@@ -2012,7 +2012,7 @@ public class TestSchemaEvolution {
           int current = 0;
           for (int r = 0; r < VALUES; ++r) {
             if (current == batch.size) {
-              assertEquals(true, rows.nextBatch(batch), "row " + r);
+              assertTrue(rows.nextBatch(batch), "row " + r);
               current = 0;
             }
             assertEquals( timeStrings[r] + " " + READER_ZONE.getId(),
@@ -2021,7 +2021,7 @@ public class TestSchemaEvolution {
                 doubleTimestampToString(t2.vector[current], WRITER_ZONE), "row " + r);
             current += 1;
           }
-          assertEquals(false, rows.nextBatch(batch));
+          assertFalse(rows.nextBatch(batch));
         }
 
         // test conversion to date
@@ -2033,7 +2033,7 @@ public class TestSchemaEvolution {
           int current = 0;
           for (int r = 0; r < VALUES; ++r) {
             if (current == batch.size) {
-              assertEquals(true, rows.nextBatch(batch), "row " + r);
+              assertTrue(rows.nextBatch(batch), "row " + r);
               current = 0;
             }
             String date = timeStrings[r].substring(0, 10);
@@ -2046,7 +2046,7 @@ public class TestSchemaEvolution {
                     LocalDate.ofEpochDay(t2.vector[current])), "row " + r);
             current += 1;
           }
-          assertEquals(false, rows.nextBatch(batch));
+          assertFalse(rows.nextBatch(batch));
         }
 
         // test conversion to string
@@ -2058,7 +2058,7 @@ public class TestSchemaEvolution {
           int current = 0;
           for (int r = 0; r < VALUES; ++r) {
             if (current == batch.size) {
-              assertEquals(true, rows.nextBatch(batch), "row " + r);
+              assertTrue(rows.nextBatch(batch), "row " + r);
               current = 0;
             }
             assertEquals(timeStrings[r], bytesT1.toString(current), "row " + r);
@@ -2069,7 +2069,7 @@ public class TestSchemaEvolution {
                 bytesT2.toString(current), "row " + r);
             current += 1;
           }
-          assertEquals(false, rows.nextBatch(batch));
+          assertFalse(rows.nextBatch(batch));
         }
 
         // test conversion between timestamps
@@ -2081,7 +2081,7 @@ public class TestSchemaEvolution {
           int current = 0;
           for (int r = 0; r < VALUES; ++r) {
             if (current == batch.size) {
-              assertEquals(true, rows.nextBatch(batch), "row " + r);
+              assertTrue(rows.nextBatch(batch), "row " + r);
               current = 0;
             }
             assertEquals(timeStrings[r] + " " + READER_ZONE.getId(),
@@ -2093,7 +2093,7 @@ public class TestSchemaEvolution {
                 "row " + r);
             current += 1;
           }
-          assertEquals(false, rows.nextBatch(batch));
+          assertFalse(rows.nextBatch(batch));
         }
       }
 
@@ -2113,7 +2113,7 @@ public class TestSchemaEvolution {
           int current = 0;
           for (int r = 0; r < VALUES; ++r) {
             if (current == batch.size) {
-              assertEquals(true, rows.nextBatch(batch), "row " + r);
+              assertTrue(rows.nextBatch(batch), "row " + r);
               current = 0;
             }
             assertEquals(
@@ -2124,7 +2124,7 @@ public class TestSchemaEvolution {
                 longTimestampToString(t2.vector[current], WRITER_ZONE), "row " + r);
             current += 1;
           }
-          assertEquals(false, rows.nextBatch(batch));
+          assertFalse(rows.nextBatch(batch));
         }
 
         // test conversion to decimal
@@ -2136,7 +2136,7 @@ public class TestSchemaEvolution {
           int current = 0;
           for (int r = 0; r < VALUES; ++r) {
             if (current == batch.size) {
-              assertEquals(true, rows.nextBatch(batch), "row " + r);
+              assertTrue(rows.nextBatch(batch), "row " + r);
               current = 0;
             }
             assertEquals(timeStrings[r] + " " + UTC.getId(),
@@ -2145,7 +2145,7 @@ public class TestSchemaEvolution {
                 decimalTimestampToString(t2.vector[current], WRITER_ZONE), "row " + r);
             current += 1;
           }
-          assertEquals(false, rows.nextBatch(batch));
+          assertFalse(rows.nextBatch(batch));
         }
 
         // test conversion to double
@@ -2157,7 +2157,7 @@ public class TestSchemaEvolution {
           int current = 0;
           for (int r = 0; r < VALUES; ++r) {
             if (current == batch.size) {
-              assertEquals(true, rows.nextBatch(batch), "row " + r);
+              assertTrue(rows.nextBatch(batch), "row " + r);
               current = 0;
             }
             assertEquals(timeStrings[r] + " " + UTC.getId(),
@@ -2168,7 +2168,7 @@ public class TestSchemaEvolution {
                 "row " + r);
             current += 1;
           }
-          assertEquals(false, rows.nextBatch(batch));
+          assertFalse(rows.nextBatch(batch));
         }
 
         // test conversion to date
@@ -2180,7 +2180,7 @@ public class TestSchemaEvolution {
           int current = 0;
           for (int r = 0; r < VALUES; ++r) {
             if (current == batch.size) {
-              assertEquals(true, rows.nextBatch(batch), "row " + r);
+              assertTrue(rows.nextBatch(batch), "row " + r);
               current = 0;
             }
             String date = timeStrings[r].substring(0, 10);
@@ -2195,7 +2195,7 @@ public class TestSchemaEvolution {
                 "row " + r);
             current += 1;
           }
-          assertEquals(false, rows.nextBatch(batch));
+          assertFalse(rows.nextBatch(batch));
         }
 
         // test conversion to string in UTC
@@ -2207,7 +2207,7 @@ public class TestSchemaEvolution {
           int current = 0;
           for (int r = 0; r < VALUES; ++r) {
             if (current == batch.size) {
-              assertEquals(true, rows.nextBatch(batch), "row " + r);
+              assertTrue(rows.nextBatch(batch), "row " + r);
               current = 0;
             }
             assertEquals(timeStrings[r], bytesT1.toString(current), "row " + r);
@@ -2218,7 +2218,7 @@ public class TestSchemaEvolution {
                 "row " + r);
             current += 1;
           }
-          assertEquals(false, rows.nextBatch(batch));
+          assertFalse(rows.nextBatch(batch));
         }
 
         // test conversion between timestamps in UTC
@@ -2230,7 +2230,7 @@ public class TestSchemaEvolution {
           int current = 0;
           for (int r = 0; r < VALUES; ++r) {
             if (current == batch.size) {
-              assertEquals(true, rows.nextBatch(batch), "row " + r);
+              assertTrue(rows.nextBatch(batch), "row " + r);
               current = 0;
             }
             assertEquals(timeStrings[r] + " UTC",
@@ -2242,7 +2242,7 @@ public class TestSchemaEvolution {
                 "row " + r);
             current += 1;
           }
-          assertEquals(false, rows.nextBatch(batch));
+          assertFalse(rows.nextBatch(batch));
         }
       }
     } finally {
@@ -2389,7 +2389,7 @@ public class TestSchemaEvolution {
         int current = 0;
         for (int r = 0; r < VALUES; ++r) {
           if (current == batch.size) {
-            assertEquals(true, rows.nextBatch(batch), "row " + r);
+            assertTrue(rows.nextBatch(batch), "row " + r);
             current = 0;
           }
 
@@ -2449,7 +2449,7 @@ public class TestSchemaEvolution {
               msg);
           current += 1;
         }
-        assertEquals(false, rows.nextBatch(batch));
+        assertFalse(rows.nextBatch(batch));
       }
 
       // try the tests with useUtc set on
@@ -2459,7 +2459,7 @@ public class TestSchemaEvolution {
         int current = 0;
         for (int r = 0; r < VALUES; ++r) {
           if (current == batch.size) {
-            assertEquals(true, rows.nextBatch(batch), "row " + r);
+            assertTrue(rows.nextBatch(batch), "row " + r);
             current = 0;
           }
 
@@ -2509,7 +2509,7 @@ public class TestSchemaEvolution {
               msg);
           current += 1;
         }
-        assertEquals(false, rows.nextBatch(batch));
+        assertFalse(rows.nextBatch(batch));
       }
     } finally {
       TimeZone.setDefault(oldDefault);

@@ -579,7 +579,7 @@ public class TestStringDictionary {
         rows.seekToRow(row);
         assertTrue(rows.nextBatch(batch), "entry " + e);
         assertEquals(1024, batch.size, "entry " + e);
-        assertEquals(true, col.noNulls, "entry " + e);
+        assertTrue(col.noNulls, "entry " + e);
         assertEquals("Value for " + (row / 1024), col.toString(0), "entry " + e);
       }
     }

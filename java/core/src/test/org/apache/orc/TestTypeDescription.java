@@ -269,31 +269,31 @@ public class TestTypeDescription {
             "g:uniontype<string,int>>");
     try {
       type.findSubtype("13");
-      assertTrue(false);
+      fail();
     } catch (IllegalArgumentException e) {
       // PASS
     }
     try {
       type.findSubtype("aa");
-      assertTrue(false);
+      fail();
     } catch (IllegalArgumentException e) {
       // PASS
     }
     try {
       type.findSubtype("b.a");
-      assertTrue(false);
+      fail();
     } catch (IllegalArgumentException e) {
       // PASS
     }
     try {
       type.findSubtype("g.2");
-      assertTrue(false);
+      fail();
     } catch (IllegalArgumentException e) {
       // PASS
     }
     try {
       type.findSubtype("b.c.d");
-      assertTrue(false);
+      fail();
     } catch (IllegalArgumentException e) {
       // PASS
     }
@@ -382,7 +382,7 @@ public class TestTypeDescription {
         street.getAttributeNames().toArray());
     assertEquals("pii", street.getAttributeValue("context"));
     assertEquals("nullify", street.getAttributeValue("mask"));
-    assertEquals(null, street.getAttributeValue("foobar"));
+    assertNull(street.getAttributeValue("foobar"));
   }
 
   @Test
@@ -399,7 +399,7 @@ public class TestTypeDescription {
 
     TypeDescription clone = schema.clone();
     assertEquals(3, clearAttributes(clone));
-    assertFalse(clone.equals(schema));
+    assertNotEquals(clone, schema);
     assertTrue(clone.equals(schema, false));
   }
 

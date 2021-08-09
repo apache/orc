@@ -47,7 +47,7 @@ public class TestJsonReader {
                 "struct<a:timestamp>");
         JsonReader reader = new JsonReader(input, null, 1, schema, tsFormat);
         VectorizedRowBatch batch = schema.createRowBatch(2);
-        assertEquals(true, reader.nextBatch(batch));
+        assertTrue(reader.nextBatch(batch));
         assertEquals(2, batch.size);
         TimestampColumnVector cv = (TimestampColumnVector) batch.cols[0];
         assertEquals("2018-03-21 12:23:34.123456", cv.asScratchTimestamp(0).toString());
@@ -69,7 +69,7 @@ public class TestJsonReader {
                 "struct<a:timestamp>");
         JsonReader reader = new JsonReader(input, null, 1, schema, tsFormat);
         VectorizedRowBatch batch = schema.createRowBatch(6);
-        assertEquals(true, reader.nextBatch(batch));
+        assertTrue(reader.nextBatch(batch));
         assertEquals(6, batch.size);
         TimestampColumnVector cv = (TimestampColumnVector) batch.cols[0];
         assertEquals("1970-01-01 00:00:00.0001", cv.asScratchTimestamp(0).toString());
