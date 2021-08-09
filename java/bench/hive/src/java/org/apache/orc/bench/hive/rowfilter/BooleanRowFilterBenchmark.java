@@ -84,7 +84,8 @@ public class BooleanRowFilterBenchmark extends org.openjdk.jmh.Main {
     while (rows.nextBatch(state.batch)) {
       blackhole.consume(state.batch);
     }
-    rows.close();  }
+    rows.close();
+  }
 
   /*
    * Run this test:
