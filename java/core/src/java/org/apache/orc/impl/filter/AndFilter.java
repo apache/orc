@@ -43,6 +43,6 @@ public class AndFilter implements VectorFilter {
       // Make the current selection the bound for the next filter in AND
       andBound.set(andOut);
     }
-    selOut.unionDisjoint(andOut);
+    selOut.set(andOut);
   }
 }
