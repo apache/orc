@@ -34,6 +34,8 @@ import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestDataMask {
 
@@ -49,9 +51,9 @@ public class TestDataMask {
     cv.vector[0] = 10;
     cv.vector[1] = 20;
     mask.maskData(cv, masked, 0, 2);
-    assertEquals(true, masked.isRepeating);
-    assertEquals(false, masked.noNulls);
-    assertEquals(true, masked.isNull[0]);
+    assertTrue(masked.isRepeating);
+    assertFalse(masked.noNulls);
+    assertTrue(masked.isNull[0]);
   }
 
   @Test
@@ -131,14 +133,14 @@ public class TestDataMask {
 
     // send it through the nullify mask
     nullify.maskData(cv, masked, 0, 3);
-    assertEquals(false, masked.noNulls);
-    assertEquals(true, masked.isRepeating);
-    assertEquals(true, masked.isNull[0]);
+    assertFalse(masked.noNulls);
+    assertTrue(masked.isRepeating);
+    assertTrue(masked.isNull[0]);
 
     // send it through our identity mask
     identity.maskData(cv, masked, 0 , 3);
-    assertEquals(true, masked.noNulls);
-    assertEquals(false, masked.isRepeating);
+    assertTrue(masked.noNulls);
+    assertFalse(masked.isRepeating);
 
     // point accessors to masked values
     a = (DecimalColumnVector) masked.fields[0];
@@ -175,9 +177,9 @@ public class TestDataMask {
     assertEquals(0, e1.vector[0]);
     assertEquals(20, e1.vector[2]);
     // the redact mask always replaces binary with null
-    assertEquals(false, e2.noNulls);
-    assertEquals(true, e2.isRepeating);
-    assertEquals(true, e2.isNull[0]);
+    assertFalse(e2.noNulls);
+    assertTrue(e2.isRepeating);
+    assertTrue(e2.isNull[0]);
   }
 
 }

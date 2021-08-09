@@ -24,6 +24,8 @@ import org.apache.orc.OrcUtils;
 import org.apache.orc.TypeDescription;
 
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -42,8 +44,7 @@ public class TestOrcUtils {
     includeColumns[1] = true;
     includeColumns[3] = true;
 
-    assertTrue(Arrays.equals(includeColumns,
-        OrcUtils.includeColumns("msisdn, imei", schema)));
+    assertArrayEquals(includeColumns, OrcUtils.includeColumns("msisdn, imei", schema));
   }
 
   @Test
@@ -63,8 +64,7 @@ public class TestOrcUtils {
     boolean[] includeColumns = new boolean[8+1];
     includeColumns[7] = true;
 
-    assertTrue(Arrays.equals(includeColumns,
-        OrcUtils.includeColumns("msisdn", schema)));
+    assertArrayEquals(includeColumns, OrcUtils.includeColumns("msisdn", schema));
   }
 
   @Test
@@ -79,8 +79,7 @@ public class TestOrcUtils {
     boolean[] includeColumns = new boolean[3+1];
     includeColumns[2] = true;
 
-    assertTrue(Arrays.equals(includeColumns,
-        OrcUtils.includeColumns("row.msisdn", schema)));
+    assertArrayEquals(includeColumns, OrcUtils.includeColumns("row.msisdn", schema));
   }
 
   @Test
@@ -94,7 +93,6 @@ public class TestOrcUtils {
 
     boolean[] includeColumns = new boolean[3+1];
 
-    assertTrue(Arrays.equals(includeColumns,
-        OrcUtils.includeColumns("msisdn, row.msisdn2", schema)));
+    assertArrayEquals(includeColumns, OrcUtils.includeColumns("msisdn, row.msisdn2", schema));
   }
 }

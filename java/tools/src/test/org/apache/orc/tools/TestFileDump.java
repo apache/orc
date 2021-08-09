@@ -604,9 +604,9 @@ public class TestFileDump {
     assertEquals(20000, stats[0].getNumberOfValues());
     assertEquals(20000, stats[1].getNumberOfValues());
     assertEquals(7000, stats[2].getNumberOfValues());
-    assertEquals(false, stats[0].hasNull());
-    assertEquals(false, stats[1].hasNull());
-    assertEquals(true, stats[2].hasNull());
+    assertFalse(stats[0].hasNull());
+    assertFalse(stats[1].hasNull());
+    assertTrue(stats[2].hasNull());
 
     // check the stripe level stats
     List<StripeStatistics> stripeStats = reader.getStripeStatistics();
@@ -615,36 +615,36 @@ public class TestFileDump {
     ColumnStatistics ss1_cs1 = ss1.getColumnStatistics()[0];
     ColumnStatistics ss1_cs2 = ss1.getColumnStatistics()[1];
     ColumnStatistics ss1_cs3 = ss1.getColumnStatistics()[2];
-    assertEquals(false, ss1_cs1.hasNull());
-    assertEquals(false, ss1_cs2.hasNull());
-    assertEquals(true, ss1_cs3.hasNull());
+    assertFalse(ss1_cs1.hasNull());
+    assertFalse(ss1_cs2.hasNull());
+    assertTrue(ss1_cs3.hasNull());
 
     // stripe 2 stats
     StripeStatistics ss2 = stripeStats.get(1);
     ColumnStatistics ss2_cs1 = ss2.getColumnStatistics()[0];
     ColumnStatistics ss2_cs2 = ss2.getColumnStatistics()[1];
     ColumnStatistics ss2_cs3 = ss2.getColumnStatistics()[2];
-    assertEquals(false, ss2_cs1.hasNull());
-    assertEquals(false, ss2_cs2.hasNull());
-    assertEquals(true, ss2_cs3.hasNull());
+    assertFalse(ss2_cs1.hasNull());
+    assertFalse(ss2_cs2.hasNull());
+    assertTrue(ss2_cs3.hasNull());
 
     // stripe 3 stats
     StripeStatistics ss3 = stripeStats.get(2);
     ColumnStatistics ss3_cs1 = ss3.getColumnStatistics()[0];
     ColumnStatistics ss3_cs2 = ss3.getColumnStatistics()[1];
     ColumnStatistics ss3_cs3 = ss3.getColumnStatistics()[2];
-    assertEquals(false, ss3_cs1.hasNull());
-    assertEquals(false, ss3_cs2.hasNull());
-    assertEquals(false, ss3_cs3.hasNull());
+    assertFalse(ss3_cs1.hasNull());
+    assertFalse(ss3_cs2.hasNull());
+    assertFalse(ss3_cs3.hasNull());
 
     // stripe 4 stats
     StripeStatistics ss4 = stripeStats.get(3);
     ColumnStatistics ss4_cs1 = ss4.getColumnStatistics()[0];
     ColumnStatistics ss4_cs2 = ss4.getColumnStatistics()[1];
     ColumnStatistics ss4_cs3 = ss4.getColumnStatistics()[2];
-    assertEquals(false, ss4_cs1.hasNull());
-    assertEquals(false, ss4_cs2.hasNull());
-    assertEquals(true, ss4_cs3.hasNull());
+    assertFalse(ss4_cs1.hasNull());
+    assertFalse(ss4_cs2.hasNull());
+    assertTrue(ss4_cs3.hasNull());
 
     // Test file dump
     PrintStream origOut = System.out;

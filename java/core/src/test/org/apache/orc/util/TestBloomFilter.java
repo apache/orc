@@ -25,6 +25,8 @@ import org.apache.orc.TypeDescription;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+
 import org.junit.jupiter.api.Test;
 
 /**
@@ -92,6 +94,6 @@ public class TestBloomFilter {
     long[] bits = new long[]{0x8040201008040201L, ~0x8040201008040201L};
     BloomFilter bloom = new BloomFilterUtf8(bits, 1);
     BloomFilter other = new BloomFilterUtf8(new long[]{0,0}, 1);
-    assertEquals(false, bloom.equals(other));
+    assertFalse(bloom.equals(other));
   }
 }

@@ -92,8 +92,8 @@ public class TestColumnStatisticsImpl {
     TypeDescription instant = TypeDescription.createTimestampInstant();
     ColumnStatisticsImpl stats = ColumnStatisticsImpl.create(instant);
     TimestampColumnStatistics dstats = (TimestampColumnStatistics) stats;
-    assertEquals(null, dstats.getMinimumUTC());
-    assertEquals(null, dstats.getMaximumUTC());
+    assertNull(dstats.getMinimumUTC());
+    assertNull(dstats.getMaximumUTC());
     stats.updateTimestamp(123, 456789);
     stats.updateTimestamp(1234, 567890);
     stats.increment(2);
@@ -156,11 +156,11 @@ public class TestColumnStatisticsImpl {
     pb.setDecimalStatistics(decimalBuilder);
     DecimalColumnStatistics stats2 = (DecimalColumnStatistics)
         ColumnStatisticsImpl.deserialize(schema, pb.build());
-    assertEquals(null, stats2.getSum());
+    assertNull(stats2.getSum());
 
     // merge them together
     updateStats1.merge((ColumnStatisticsImpl) stats2);
-    assertEquals(null, stats1.getSum());
+    assertNull(stats1.getSum());
 
     updateStats1.reset();
     assertEquals("0", stats1.getSum().toString());
@@ -170,12 +170,12 @@ public class TestColumnStatisticsImpl {
     updateStats1.updateDecimal64(1, 4);
     assertEquals("0.0101", stats1.getSum().toString());
     updateStats1.updateDecimal64(TypeDescription.MAX_DECIMAL64, 6);
-    assertEquals(null, stats1.getSum());
+    assertNull(stats1.getSum());
     updateStats1.reset();
     updateStats1.updateDecimal64(TypeDescription.MAX_DECIMAL64, 6);
     assertEquals("999999999999.999999", stats1.getSum().toString());
     updateStats1.updateDecimal64(1, 6);
-    assertEquals(null, stats1.getSum());
+    assertNull(stats1.getSum());
 
     updateStats1.reset();
     ColumnStatisticsImpl updateStats2 = (ColumnStatisticsImpl) stats2;
@@ -187,7 +187,7 @@ public class TestColumnStatisticsImpl {
     assertEquals("999999999999.999999", stats1.getSum().toString());
     assertEquals("999999999999.999999", stats2.getSum().toString());
     updateStats1.merge(updateStats2);
-    assertEquals(null, stats1.getSum());
+    assertNull(stats1.getSum());
   }
 
   @Test

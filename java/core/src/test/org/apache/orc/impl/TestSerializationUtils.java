@@ -20,6 +20,8 @@ package org.apache.orc.impl;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.ByteArrayInputStream;
@@ -119,12 +121,12 @@ public class TestSerializationUtils {
   public void testSubtractionOverflow() {
     // cross check results with Guava results below
     SerializationUtils utils = new SerializationUtils();
-    assertEquals(false, utils.isSafeSubtract(22222222222L, Long.MIN_VALUE));
-    assertEquals(false, utils.isSafeSubtract(-22222222222L, Long.MAX_VALUE));
-    assertEquals(false, utils.isSafeSubtract(Long.MIN_VALUE, Long.MAX_VALUE));
-    assertEquals(true, utils.isSafeSubtract(-1553103058346370095L, 6553103058346370095L));
-    assertEquals(true, utils.isSafeSubtract(0, Long.MAX_VALUE));
-    assertEquals(true, utils.isSafeSubtract(Long.MIN_VALUE, 0));
+    assertFalse(utils.isSafeSubtract(22222222222L, Long.MIN_VALUE));
+    assertFalse(utils.isSafeSubtract(-22222222222L, Long.MAX_VALUE));
+    assertFalse(utils.isSafeSubtract(Long.MIN_VALUE, Long.MAX_VALUE));
+    assertTrue(utils.isSafeSubtract(-1553103058346370095L, 6553103058346370095L));
+    assertTrue(utils.isSafeSubtract(0, Long.MAX_VALUE));
+    assertTrue(utils.isSafeSubtract(Long.MIN_VALUE, 0));
   }
 
   @Test
