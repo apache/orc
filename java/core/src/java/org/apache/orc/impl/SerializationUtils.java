@@ -39,7 +39,7 @@ import java.util.TimeZone;
 public final class SerializationUtils {
   private static final Logger LOG = LoggerFactory.getLogger(SerializationUtils.class);
 
-  private final static int BUFFER_SIZE = 64;
+  private static final int BUFFER_SIZE = 64;
   private final byte[] readBuffer;
   private final byte[] writeBuffer;
 

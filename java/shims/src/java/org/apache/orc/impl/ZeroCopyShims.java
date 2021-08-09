@@ -29,17 +29,17 @@ class ZeroCopyShims {
   private static final class ByteBufferPoolAdapter implements ByteBufferPool {
     private HadoopShims.ByteBufferPoolShim pool;
 
-    public ByteBufferPoolAdapter(HadoopShims.ByteBufferPoolShim pool) {
+    ByteBufferPoolAdapter(HadoopShims.ByteBufferPoolShim pool) {
       this.pool = pool;
     }
 
     @Override
-    public final ByteBuffer getBuffer(boolean direct, int length) {
+    public ByteBuffer getBuffer(boolean direct, int length) {
       return this.pool.getBuffer(direct, length);
     }
 
     @Override
-    public final void putBuffer(ByteBuffer buffer) {
+    public void putBuffer(ByteBuffer buffer) {
       this.pool.putBuffer(buffer);
     }
   }
@@ -47,12 +47,12 @@ class ZeroCopyShims {
   private static final class ZeroCopyAdapter implements HadoopShims.ZeroCopyReaderShim {
     private final FSDataInputStream in;
     private final ByteBufferPoolAdapter pool;
-    private final static EnumSet<ReadOption> CHECK_SUM = EnumSet
+    private static final EnumSet<ReadOption> CHECK_SUM = EnumSet
         .noneOf(ReadOption.class);
-    private final static EnumSet<ReadOption> NO_CHECK_SUM = EnumSet
+    private static final EnumSet<ReadOption> NO_CHECK_SUM = EnumSet
         .of(ReadOption.SKIP_CHECKSUMS);
 
-    public ZeroCopyAdapter(FSDataInputStream in,
+    ZeroCopyAdapter(FSDataInputStream in,
                            HadoopShims.ByteBufferPoolShim poolshim) {
       this.in = in;
       if (poolshim != null) {
@@ -63,7 +63,7 @@ class ZeroCopyShims {
     }
 
     @Override
-    public final ByteBuffer readBuffer(int maxLength, boolean verifyChecksums)
+    public ByteBuffer readBuffer(int maxLength, boolean verifyChecksums)
         throws IOException {
       EnumSet<ReadOption> options = NO_CHECK_SUM;
       if (verifyChecksums) {
@@ -73,12 +73,12 @@ class ZeroCopyShims {
     }
 
     @Override
-    public final void releaseBuffer(ByteBuffer buffer) {
+    public void releaseBuffer(ByteBuffer buffer) {
       this.in.releaseBuffer(buffer);
     }
 
     @Override
-    public final void close() throws IOException {
+    public void close() throws IOException {
       this.in.close();
     }
   }

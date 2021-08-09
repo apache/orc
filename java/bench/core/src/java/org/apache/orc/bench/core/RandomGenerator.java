@@ -66,7 +66,7 @@ public class RandomGenerator {
     private final int sizeRange;
     private final Field child;
 
-    public RandomList(int minSize, int maxSize, Field child) {
+    RandomList(int minSize, int maxSize, Field child) {
       this.minSize = minSize;
       this.sizeRange = maxSize - minSize + 1;
       this.child = child;
@@ -92,7 +92,7 @@ public class RandomGenerator {
   private class RandomStruct extends ValueGenerator {
     private final Field[] children;
 
-    public RandomStruct(Field[] children) {
+    RandomStruct(Field[] children) {
       this.children = children;
     }
 
