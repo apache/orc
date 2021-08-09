@@ -873,7 +873,7 @@ public class RecordReaderImpl implements RecordReader {
    */
   static class SargCastException extends IllegalArgumentException {
 
-    public SargCastException(String string) {
+    SargCastException(String string) {
       super(string);
     }
   }
@@ -992,8 +992,8 @@ public class RecordReaderImpl implements RecordReader {
   }
 
   public static class SargApplier {
-    public final static boolean[] READ_ALL_RGS = null;
-    public final static boolean[] READ_NO_RGS = new boolean[0];
+    public static final boolean[] READ_ALL_RGS = null;
+    public static final boolean[] READ_NO_RGS = new boolean[0];
 
     private final OrcFile.WriterVersion writerVersion;
     private final SearchArgument sarg;

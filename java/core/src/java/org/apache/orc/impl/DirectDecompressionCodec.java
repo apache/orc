@@ -23,6 +23,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 public interface DirectDecompressionCodec extends CompressionCodec {
-  public boolean isAvailable();
-  public void directDecompress(ByteBuffer in, ByteBuffer out) throws IOException;
+  boolean isAvailable();
+  void directDecompress(ByteBuffer in, ByteBuffer out) throws IOException;
 }

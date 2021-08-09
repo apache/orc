@@ -28,11 +28,11 @@ import java.io.PrintStream;
 class ListType extends HiveType {
   HiveType elementType;
 
-  public ListType() {
+  ListType() {
     super(Kind.LIST);
   }
 
-  public ListType(HiveType child) {
+  ListType(HiveType child) {
     super(Kind.LIST);
     this.elementType = child;
   }

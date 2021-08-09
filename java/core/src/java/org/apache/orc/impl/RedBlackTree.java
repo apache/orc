@@ -40,7 +40,7 @@ abstract class RedBlackTree {
   /**
    * Create a set with the given initial capacity.
    */
-  public RedBlackTree(int initialCapacity) {
+  RedBlackTree(int initialCapacity) {
     data = new DynamicIntArray(initialCapacity * ELEMENT_SIZE);
   }
 

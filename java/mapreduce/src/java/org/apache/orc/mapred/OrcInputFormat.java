@@ -51,7 +51,7 @@ import org.apache.orc.TypeDescription;
 public class OrcInputFormat<V extends WritableComparable>
     extends FileInputFormat<NullWritable, V> {
 
-  private final static int KRYO_SARG_MAX_BUFFER = 16777216;
+  private static final int KRYO_SARG_MAX_BUFFER = 16777216;
 
   /**
    * Convert a string with a comma separated list of column ids into the

@@ -295,6 +295,8 @@
                 <module name="TreeWalker">
                   <module name="OuterTypeFilename"/>
                   <module name="UnusedImports"/>
+                  <module name="ModifierOrder"/>
+                  <module name="RedundantModifier"/>
                   <module name="NoLineWrap"/>
                   <module name="OneStatementPerLine"/>
                   <module name="NeedBraces">

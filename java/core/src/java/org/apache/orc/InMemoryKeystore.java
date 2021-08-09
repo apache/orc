@@ -312,7 +312,7 @@ public class InMemoryKeystore implements KeyProvider {
 
     private final byte[] material;
 
-    public KeyVersion(final String keyName, final int version,
+    KeyVersion(final String keyName, final int version,
         final EncryptionAlgorithm algorithm, final byte[] material) {
       super(keyName, version, algorithm);
       this.material = material;
