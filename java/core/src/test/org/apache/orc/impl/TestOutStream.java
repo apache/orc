@@ -213,7 +213,7 @@ public class TestOutStream {
       for (int i = 0; i < 10000; ++i) {
         assertEquals("The Cheesy Poofs " + i, reader.readLine(), "i = " + i);
       }
-      assertEquals(null, reader.readLine());
+      assertNull(reader.readLine());
     }
   }
 }

@@ -269,7 +269,7 @@ public class TestProlepticConversions {
         assertEquals(expectedT, dateFormat.format(
             new Date(TimeUnit.DAYS.toMillis(t2d.vector[r]))), "row " + r);
       }
-      assertEquals(false, rows.nextBatch(batch));
+      assertFalse(rows.nextBatch(batch));
     }
   }
 
@@ -375,7 +375,7 @@ public class TestProlepticConversions {
         assertEquals(millis/1000.0, t2D.vector[r], 0.1, "row " + r);
         assertEquals(time, t2s.toString(r), "row " + r);
       }
-      assertEquals(false, rows.nextBatch(batch));
+      assertFalse(rows.nextBatch(batch));
     }
   }
 }

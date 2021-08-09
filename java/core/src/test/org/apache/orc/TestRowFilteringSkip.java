@@ -172,10 +172,10 @@ public class TestRowFilteringSkip {
       int noNullCnt = 0;
       while (rows.nextBatch(batch)) {
         assertTrue(batch.selectedInUse);
-        assertTrue(batch.selected != null);
+        assertNotNull(batch.selected);
         // Rows are filtered so it should never be 1024
         assertTrue(batch.size != ColumnBatchRows);
-        assertEquals( true, col1.noNulls);
+        assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
           if (col2.vector[r].compareTo(passDataVal) == 0)
             noNullCnt ++;
@@ -243,10 +243,10 @@ public class TestRowFilteringSkip {
       int noNullCnt = 0;
       while (rows.nextBatch(batch)) {
         assertTrue(batch.selectedInUse);
-        assertTrue(batch.selected != null);
+        assertNotNull(batch.selected);
         // Rows are filtered so it should never be 1024
         assertTrue(batch.size != ColumnBatchRows);
-        assertEquals( true, col1.noNulls);
+        assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
           if (col2.vector[r].getHiveDecimal().longValue() > 0)
             noNullCnt ++;
@@ -312,10 +312,10 @@ public class TestRowFilteringSkip {
       int noNullCnt = 0;
       while (rows.nextBatch(batch)) {
         assertTrue(batch.selectedInUse);
-        assertTrue(batch.selected != null);
+        assertNotNull(batch.selected);
         // Rows are filtered so it should never be 1024
         assertTrue(batch.size != ColumnBatchRows);
-        assertEquals( true, col1.noNulls);
+        assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
           if (col2.vector[r].getHiveDecimal().longValue() > 0)
             noNullCnt ++;
@@ -392,10 +392,10 @@ public class TestRowFilteringSkip {
       int noNullCnt = 0;
       while (rows.nextBatch(batch)) {
         assertTrue(batch.selectedInUse);
-        assertTrue(batch.selected != null);
+        assertNotNull(batch.selected);
         // Rows are filtered so it should never be 1024
         assertTrue(batch.size != ColumnBatchRows);
-        assertEquals( true, col1.noNulls);
+        assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
           if (col2.vector[r].compareTo(passDataVal) == 0 && col3.vector[r].compareTo(passDataVal) == 0)
             noNullCnt ++;
@@ -467,10 +467,10 @@ public class TestRowFilteringSkip {
       int noNullCnt = 0;
       while (rows.nextBatch(batch)) {
         assertTrue(batch.selectedInUse);
-        assertTrue(batch.selected != null);
+        assertNotNull(batch.selected);
         // Rows are filtered so it should never be 1024
         assertTrue(batch.size != ColumnBatchRows);
-        assertEquals( true, col1.noNulls);
+        assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
           if (col2.vector[r] != 0)
             noNullCnt ++;
@@ -533,10 +533,10 @@ public class TestRowFilteringSkip {
       int noNullCnt = 0;
       while (rows.nextBatch(batch)) {
         assertTrue(batch.selectedInUse);
-        assertTrue(batch.selected != null);
+        assertNotNull(batch.selected);
         // Rows are filtered so it should never be 1024
         assertTrue(batch.size != ColumnBatchRows);
-        assertEquals( true, col1.noNulls);
+        assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
           if (col2.vector[r] == 0)
             noNullCnt ++;
@@ -601,10 +601,10 @@ public class TestRowFilteringSkip {
       int noNullCnt = 0;
       while (rows.nextBatch(batch)) {
         assertTrue(batch.selectedInUse);
-        assertTrue(batch.selected != null);
+        assertNotNull(batch.selected);
         // Rows are filtered so it should never be 1024
         assertTrue(batch.size != ColumnBatchRows);
-        assertEquals( true, col1.noNulls);
+        assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
           if (col2.vector[r] == 100)
             noNullCnt ++;
@@ -614,10 +614,10 @@ public class TestRowFilteringSkip {
       assertEquals(NUM_BATCHES * 512, noNullCnt);
       assertEquals(0, batch.selected[0]);
       assertEquals(2, batch.selected[1]);
-      assertTrue(col2.vector[0] == 100.0);
-      assertTrue(col2.vector[511] == 0.0);
-      assertTrue(col2.vector[1020] == 100);
-      assertTrue(col2.vector[1021] == 0);
+      assertEquals(100.0, col2.vector[0]);
+      assertEquals(0.0, col2.vector[511]);
+      assertEquals(100, col2.vector[1020]);
+      assertEquals(0, col2.vector[1021]);
     }
   }
 
@@ -669,10 +669,10 @@ public class TestRowFilteringSkip {
       int noNullCnt = 0;
       while (rows.nextBatch(batch)) {
         assertTrue(batch.selectedInUse);
-        assertTrue(batch.selected != null);
+        assertNotNull(batch.selected);
         // Rows are filtered so it should never be 1024
         assertTrue(batch.size != ColumnBatchRows);
-        assertEquals( true, col1.noNulls);
+        assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
           if (col2.vector[r] != 0)
             noNullCnt ++;
@@ -683,9 +683,9 @@ public class TestRowFilteringSkip {
       assertEquals(0, batch.selected[0]);
       assertEquals(2, batch.selected[1]);
       assertTrue(col2.vector[0] != 999.0);
-      assertTrue(col2.vector[511] == 0.0);
-      assertTrue(col2.vector[1020] == 1120.0);
-      assertTrue(col2.vector[1021] == 0);
+      assertEquals(0.0, col2.vector[511]);
+      assertEquals(1120.0, col2.vector[1020]);
+      assertEquals(0, col2.vector[1021]);
     }
   }
 
@@ -740,10 +740,10 @@ public class TestRowFilteringSkip {
       int noNullCnt = 0;
       while (rows.nextBatch(batch)) {
         assertTrue(batch.selectedInUse);
-        assertTrue(batch.selected != null);
+        assertNotNull(batch.selected);
         // Rows are filtered so it should never be 1024
         assertTrue(batch.size != ColumnBatchRows);
-        assertEquals( true, col1.noNulls);
+        assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
           if (!col2.toString(r).isEmpty())
             noNullCnt ++;
@@ -753,9 +753,9 @@ public class TestRowFilteringSkip {
       assertEquals(NUM_BATCHES * 512, noNullCnt);
       assertEquals(0, batch.selected[0]);
       assertEquals(2, batch.selected[1]);
-      assertTrue(col2.toString(0).equals("p"));
+      assertEquals("p", col2.toString(0));
       assertTrue(col2.toString(511).isEmpty());
-      assertTrue(col2.toString(1020).equals("p"));
+      assertEquals("p", col2.toString(1020));
       assertTrue(col2.toString(1021).isEmpty());
     }
   }
@@ -811,10 +811,10 @@ public class TestRowFilteringSkip {
       int noNullCnt = 0;
       while (rows.nextBatch(batch)) {
         assertTrue(batch.selectedInUse);
-        assertTrue(batch.selected != null);
+        assertNotNull(batch.selected);
         // Rows are filtered so it should never be 1024
         assertTrue(batch.size != ColumnBatchRows);
-        assertEquals( true, col1.noNulls);
+        assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
           if (!col2.toString(r).isEmpty())
             noNullCnt ++;
@@ -824,9 +824,9 @@ public class TestRowFilteringSkip {
       assertEquals(NUM_BATCHES * 512, noNullCnt);
       assertEquals(0, batch.selected[0]);
       assertEquals(2, batch.selected[1]);
-      assertTrue(col2.toString(0).equals("p"));
+      assertEquals("p", col2.toString(0));
       assertTrue(col2.toString(511).isEmpty());
-      assertTrue(col2.toString(1020).equals("p"));
+      assertEquals("p", col2.toString(1020));
       assertTrue(col2.toString(1021).isEmpty());
     }
   }
@@ -880,10 +880,10 @@ public class TestRowFilteringSkip {
       int noNullCnt = 0;
       while (rows.nextBatch(batch)) {
         assertTrue(batch.selectedInUse);
-        assertTrue(batch.selected != null);
+        assertNotNull(batch.selected);
         // Rows are filtered so it should never be 1024
         assertTrue(batch.size != ColumnBatchRows);
-        assertEquals( true, col1.noNulls);
+        assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
           if (!col2.toString(r).isEmpty())
             noNullCnt ++;
@@ -947,10 +947,10 @@ public class TestRowFilteringSkip {
       int noNullCnt = 0;
       while (rows.nextBatch(batch)) {
         assertTrue(batch.selectedInUse);
-        assertTrue(batch.selected != null);
+        assertNotNull(batch.selected);
         // Rows are filtered so it should never be 1024
         assertTrue(batch.size != ColumnBatchRows);
-        assertEquals( true, col1.noNulls);
+        assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
           if (!col2.toString(r).isEmpty())
             noNullCnt ++;
@@ -1011,10 +1011,10 @@ public class TestRowFilteringSkip {
       int noNullCnt = 0;
       while (rows.nextBatch(batch)) {
         assertTrue(batch.selectedInUse);
-        assertTrue(batch.selected != null);
+        assertNotNull(batch.selected);
         // Rows are filtered so it should never be 1024
         assertTrue(batch.size != ColumnBatchRows);
-        assertEquals( true, col1.noNulls);
+        assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
           if (col2.vector[r] == 0)
             noNullCnt ++;
@@ -1022,13 +1022,13 @@ public class TestRowFilteringSkip {
       }
       // Make sure that our filter worked
       assertEquals(NUM_BATCHES * ColumnBatchRows, noNullCnt);
-      assertEquals(false, col2.isRepeating);
+      assertFalse(col2.isRepeating);
       assertEquals(0, batch.selected[0]);
       assertEquals(2, batch.selected[1]);
-      assertTrue(col2.vector[0] == 0);
-      assertTrue(col2.vector[511] == 0);
-      assertTrue(col2.vector[1020] == 0);
-      assertTrue(col2.vector[1021] == 0);
+      assertEquals(0, col2.vector[0]);
+      assertEquals(0, col2.vector[511]);
+      assertEquals(0, col2.vector[1020]);
+      assertEquals(0, col2.vector[1021]);
     }
   }
 
@@ -1077,10 +1077,10 @@ public class TestRowFilteringSkip {
       int noNullCnt = 0;
       while (rows.nextBatch(batch)) {
         assertTrue(batch.selectedInUse);
-        assertTrue(batch.selected != null);
+        assertNotNull(batch.selected);
         // Rows are filtered so it should never be 1024
         assertTrue(batch.size != ColumnBatchRows);
-        assertEquals( true, col1.noNulls);
+        assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
           if (col2.vector[r] == 0)
             noNullCnt ++;
@@ -1090,10 +1090,10 @@ public class TestRowFilteringSkip {
       assertEquals(NUM_BATCHES * 512, noNullCnt);
       assertEquals(0, batch.selected[0]);
       assertEquals(2, batch.selected[1]);
-      assertTrue(col2.vector[0] == 1);
-      assertTrue(col2.vector[511] == 0);
-      assertTrue(col2.vector[1020] == 1);
-      assertTrue(col2.vector[1021] == 0);
+      assertEquals(1, col2.vector[0]);
+      assertEquals(0, col2.vector[511]);
+      assertEquals(1, col2.vector[1020]);
+      assertEquals(0, col2.vector[1021]);
     }
   }
 
@@ -1142,10 +1142,10 @@ public class TestRowFilteringSkip {
       int noNullCnt = 0;
       while (rows.nextBatch(batch)) {
         assertTrue(batch.selectedInUse);
-        assertTrue(batch.selected != null);
+        assertNotNull(batch.selected);
         // Rows are filtered so it should never be 1024
         assertTrue(batch.size != ColumnBatchRows);
-        assertEquals( true, col1.noNulls);
+        assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
           if (col2.vector[r] == 1)
             noNullCnt ++;
@@ -1155,11 +1155,11 @@ public class TestRowFilteringSkip {
       assertEquals(NUM_BATCHES * 2, noNullCnt);
       assertEquals(924, batch.selected[0]);
       assertEquals(940, batch.selected[1]);
-      assertTrue(col2.vector[0] == 0);
-      assertTrue(col2.vector[511] == 0);
-      assertTrue(col2.vector[1020] == 0);
-      assertTrue(col2.vector[924] == 1);
-      assertTrue(col2.vector[940] == 1);
+      assertEquals(0, col2.vector[0]);
+      assertEquals(0, col2.vector[511]);
+      assertEquals(0, col2.vector[1020]);
+      assertEquals(1, col2.vector[924]);
+      assertEquals(1, col2.vector[940]);
     }
   }
 
@@ -1214,10 +1214,10 @@ public class TestRowFilteringSkip {
       int noNullCnt = 0;
       while (rows.nextBatch(batch)) {
         assertTrue(batch.selectedInUse);
-        assertTrue(batch.selected != null);
+        assertNotNull(batch.selected);
         // Rows are filtered so it should never be 1024
         assertTrue(batch.size != ColumnBatchRows);
-        assertEquals( true, col1.noNulls);
+        assertTrue(col1.noNulls);
         for (int r = 0; r < ColumnBatchRows; ++r) {
           if (col2.getTime(r) == 0)
             noNullCnt ++;
@@ -1225,13 +1225,13 @@ public class TestRowFilteringSkip {
       }
       // Make sure that our filter worked
       assertEquals(NUM_BATCHES * 512, noNullCnt);
-      assertEquals(false, col2.isRepeating);
+      assertFalse(col2.isRepeating);
       assertEquals(0, batch.selected[0]);
       assertEquals(2, batch.selected[1]);
-      assertTrue(convertTime(col2.getTime(0)).compareTo("1900-04-1 12:34:56.900") == 0);
-      assertTrue(col2.getTime(511) == 0);
-      assertTrue(convertTime(col2.getTime(1020)).compareTo("2920-04-1 12:34:56.900") == 0);
-      assertTrue(col2.getTime(1021) == 0);
+      assertEquals(0, convertTime(col2.getTime(0)).compareTo("1900-04-1 12:34:56.900"));
+      assertEquals(0, col2.getTime(511));
+      assertEquals(0, convertTime(col2.getTime(1020)).compareTo("2920-04-1 12:34:56.900"));
+      assertEquals(0, col2.getTime(1021));
     }
   }
 

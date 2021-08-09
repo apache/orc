@@ -144,8 +144,8 @@ public class TestColumnStatistics {
     assertTrue(1024 >= typed.getLowerBound().getBytes(StandardCharsets.UTF_8).length,
         "Lowerbound cannot be more than 1024 bytes");
 
-    assertEquals(null, typed.getMinimum());
-    assertEquals(null, typed.getMaximum());
+    assertNull(typed.getMinimum());
+    assertNull(typed.getMaximum());
 
     stats1.reset();
 
@@ -159,8 +159,8 @@ public class TestColumnStatistics {
     assertTrue(1024 >= typed.getUpperBound().getBytes(StandardCharsets.UTF_8).length,
             "Upperbound cannot be more than 1024 bytes");
 
-    assertEquals(null, typed.getMinimum());
-    assertEquals(null, typed.getMaximum());
+    assertNull(typed.getMinimum());
+    assertNull(typed.getMaximum());
 
     stats1.reset();
     /* test upper bound - merging  */
@@ -174,12 +174,12 @@ public class TestColumnStatistics {
     stats2.updateString(new Text(fragment));
 
     assertEquals("anne", typed2.getMinimum());
-    assertEquals(null, typed2.getMaximum());
+    assertNull(typed2.getMaximum());
 
     stats1.merge(stats2);
 
     assertEquals("anne", typed.getMinimum());
-    assertEquals(null, typed.getMaximum());
+    assertNull(typed.getMaximum());
 
 
     /* test lower bound - merging  */
@@ -195,7 +195,7 @@ public class TestColumnStatistics {
 
     stats1.merge(stats2);
 
-    assertEquals(null, typed.getMinimum());
+    assertNull(typed.getMinimum());
     assertEquals("jane", typed.getMaximum());
   }
 
@@ -217,8 +217,8 @@ public class TestColumnStatistics {
     StringColumnStatistics stringStats = (StringColumnStatistics) stats;
 
     // make sure that the min/max are null
-    assertEquals(null, stringStats.getMinimum());
-    assertEquals(null, stringStats.getMaximum());
+    assertNull(stringStats.getMinimum());
+    assertNull(stringStats.getMaximum());
     assertEquals(5 * 256, stringStats.getSum());
 
     // and that the lower and upper bound are correct
@@ -258,8 +258,8 @@ public class TestColumnStatistics {
     StringColumnStatistics stringStats = (StringColumnStatistics) stats;
 
     // make sure that the min/max are null
-    assertEquals(null, stringStats.getMinimum());
-    assertEquals(null, stringStats.getMaximum());
+    assertNull(stringStats.getMinimum());
+    assertNull(stringStats.getMaximum());
     assertEquals(2 * 5 * 256, stringStats.getSum());
 
     // and that the lower and upper bound are correct
@@ -287,8 +287,8 @@ public class TestColumnStatistics {
     StringColumnStatistics stringStats = (StringColumnStatistics) stats;
 
     // make sure that the min/max are null
-    assertEquals(null, stringStats.getMinimum());
-    assertEquals(null, stringStats.getMaximum());
+    assertNull(stringStats.getMinimum());
+    assertNull(stringStats.getMaximum());
     assertEquals(3 * 5 * 256, stringStats.getSum());
 
     // and that the lower and upper bound are correct
@@ -316,8 +316,8 @@ public class TestColumnStatistics {
     StringColumnStatistics stringStats = (StringColumnStatistics) stats;
 
     // make sure that the min/max are null
-    assertEquals(null, stringStats.getMinimum());
-    assertEquals(null, stringStats.getMaximum());
+    assertNull(stringStats.getMinimum());
+    assertNull(stringStats.getMaximum());
     assertEquals(4 * 5 * 256, stringStats.getSum());
 
     // and that the lower and upper bound are correct
@@ -371,8 +371,8 @@ public class TestColumnStatistics {
     ColumnStatisticsImpl stats2 =
         ColumnStatisticsImpl.deserialize(schema, serial);
     StringColumnStatistics typed2 = (StringColumnStatistics) stats2;
-    assertEquals(null, typed2.getMinimum());
-    assertEquals(null, typed2.getMaximum());
+    assertNull(typed2.getMinimum());
+    assertNull(typed2.getMaximum());
     assertEquals(lowerBound, typed2.getLowerBound());
     assertEquals(upperbound, typed2.getUpperBound());
     assertEquals(1764L, typed2.getSum());
@@ -583,8 +583,8 @@ public class TestColumnStatistics {
     assertEquals("2000-04-02 03:30:00.0001", typed.getMaximum().toString());
 
     stats1.reset();
-    assertEquals(null, typed.getMinimum());
-    assertEquals(null, typed.getMaximum());
+    assertNull(typed.getMinimum());
+    assertNull(typed.getMaximum());
 
     stats1.updateTimestamp(Timestamp.valueOf( "1999-04-04 00:00:00.000231"));
     stats1.updateTimestamp(Timestamp.valueOf( "2009-03-08 12:00:00.000654"));
@@ -620,8 +620,8 @@ public class TestColumnStatistics {
     assertEquals("1969-12-31 16:00:00.0009", typed.getMaximum().toString());
 
     stats1.reset();
-    assertEquals(null, typed.getMinimum());
-    assertEquals(null, typed.getMaximum());
+    assertNull(typed.getMinimum());
+    assertNull(typed.getMaximum());
 
     stats1.updateTimestamp(Timestamp.valueOf("1969-12-31 15:00:00.0005"));
     stats1.increment(1);

@@ -1325,7 +1325,7 @@ public class TestNewIntegerEncoding {
         OrcFile.readerOptions(conf).filesystem(fs));
     RecordReader rows = reader.rows();
     batch = reader.getSchema().createRowBatch();
-    assertEquals(true, rows.nextBatch(batch));
+    assertTrue(rows.nextBatch(batch));
     assertEquals(5, batch.size);
     assertEquals(-7486502418706614742L,
         ((LongColumnVector) batch.cols[0]).vector[0]);
@@ -1337,7 +1337,7 @@ public class TestNewIntegerEncoding {
         ((LongColumnVector) batch.cols[0]).vector[3]);
     assertEquals(-5535739865598783616L,
         ((LongColumnVector) batch.cols[0]).vector[4]);
-    assertEquals(false, rows.nextBatch(batch));
+    assertFalse(rows.nextBatch(batch));
   }
 
   @ParameterizedTest

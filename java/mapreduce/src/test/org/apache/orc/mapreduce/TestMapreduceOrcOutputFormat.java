@@ -49,6 +49,8 @@ import java.io.File;
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
@@ -105,12 +107,12 @@ public class TestMapreduceOrcOutputFormat {
             attemptContext);
     // the sarg should cause it to skip over the rows except 1000 to 2000
     for(int r=1000; r < 2000; ++r) {
-      assertEquals(true, reader.nextKeyValue());
+      assertTrue(reader.nextKeyValue());
       row = reader.getCurrentValue();
       assertEquals(r, ((IntWritable) row.getFieldValue(0)).get());
       assertEquals(Integer.toBinaryString(r), row.getFieldValue(1).toString());
     }
-    assertEquals(false, reader.nextKeyValue());
+    assertFalse(reader.nextKeyValue());
   }
 
   @Test
@@ -147,13 +149,13 @@ public class TestMapreduceOrcOutputFormat {
             attemptContext);
     // the sarg should cause it to skip over the rows except 1000 to 2000
     for(int r=0; r < 3000; ++r) {
-      assertEquals(true, reader.nextKeyValue());
+      assertTrue(reader.nextKeyValue());
       row = reader.getCurrentValue();
       assertEquals(r, ((IntWritable) row.getFieldValue(0)).get());
-      assertEquals(null, row.getFieldValue(1));
+      assertNull(row.getFieldValue(1));
       assertEquals(r * 3, ((IntWritable) row.getFieldValue(2)).get());
     }
-    assertEquals(false, reader.nextKeyValue());
+    assertFalse(reader.nextKeyValue());
   }
 
   @Test
@@ -173,7 +175,7 @@ public class TestMapreduceOrcOutputFormat {
     // Make sure we can read all rows
     OrcStruct row;
     for (int r=0; r < 5000; ++r) {
-      assertEquals(true, reader.nextKeyValue());
+      assertTrue(reader.nextKeyValue());
       row = reader.getCurrentValue();
       assertEquals(6, row.getNumFields());
       OrcStruct innerRow = (OrcStruct) row.getFieldValue(5);
@@ -218,13 +220,13 @@ public class TestMapreduceOrcOutputFormat {
             attemptContext);
     // the sarg should cause it to skip over the rows except 1000 to 2000
     for (int r = 0; r < 3000; ++r) {
-      assertEquals(true, reader.nextKeyValue());
+      assertTrue(reader.nextKeyValue());
       row = reader.getCurrentValue();
-      assertEquals(null, row.getFieldValue(0));
-      assertEquals(null, row.getFieldValue(1));
-      assertEquals(null, row.getFieldValue(2));
+      assertNull(row.getFieldValue(0));
+      assertNull(row.getFieldValue(1));
+      assertNull(row.getFieldValue(2));
     }
-    assertEquals(false, reader.nextKeyValue());
+    assertFalse(reader.nextKeyValue());
   }
 
   /**

@@ -55,6 +55,10 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.junit.jupiter.api.Test;
 
 public class TestOrcOutputFormat {
@@ -164,10 +168,10 @@ public class TestOrcOutputFormat {
     nada = reader.createKey();
     row = reader.createValue();
     for(int r=0; r < 22; ++r) {
-      assertEquals(true, reader.next(nada, row));
+      assertTrue(reader.next(nada, row));
       if (r == 20) {
         for(int c=0; c < 12; ++c) {
-          assertEquals(null, row.getFieldValue(c));
+          assertNull(row.getFieldValue(c));
         }
       } else {
         assertEquals(new BytesWritable(new byte[]{1, 2, 3, 4}), row.getFieldValue(0));
@@ -192,7 +196,7 @@ public class TestOrcOutputFormat {
             row.getFieldValue(12), "row " + r);
       }
     }
-    assertEquals(false, reader.next(nada, row));
+    assertFalse(reader.next(nada, row));
   }
 
   /**
@@ -235,10 +239,10 @@ public class TestOrcOutputFormat {
     nada = reader.createKey();
     value = reader.createValue();
     for(long lo=0; lo < 2000; ++lo) {
-      assertEquals(true, reader.next(nada, value));
+      assertTrue(reader.next(nada, value));
       assertEquals(lo, value.get());
     }
-    assertEquals(false, reader.next(nada, value));
+    assertFalse(reader.next(nada, value));
   }
 
   /**

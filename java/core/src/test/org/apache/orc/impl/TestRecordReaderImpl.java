@@ -395,12 +395,12 @@ public class TestRecordReaderImpl {
                .setDoubleStatistics(OrcProto.DoubleStatistics.newBuilder()
                  .setMinimum(10.0d).setMaximum(100.0d).build()).build()),
         new StubPredicate(PredicateLeaf.Type.FLOAT), true).lower);
-    assertEquals(null, RecordReaderImpl.getValueRange(
+    assertNull(RecordReaderImpl.getValueRange(
         ColumnStatisticsImpl.deserialize(null,
-          OrcProto.ColumnStatistics.newBuilder()
-              .setNumberOfValues(1)
-              .setStringStatistics(OrcProto.StringStatistics.newBuilder().build())
-              .build()), new StubPredicate(PredicateLeaf.Type.STRING),true).lower);
+            OrcProto.ColumnStatistics.newBuilder()
+                .setNumberOfValues(1)
+                .setStringStatistics(OrcProto.StringStatistics.newBuilder().build())
+                .build()), new StubPredicate(PredicateLeaf.Type.STRING), true).lower);
     assertEquals("a", RecordReaderImpl.getValueRange(
         ColumnStatisticsImpl.deserialize(null,
           OrcProto.ColumnStatistics.newBuilder()
@@ -527,12 +527,12 @@ public class TestRecordReaderImpl {
               .setDoubleStatistics(OrcProto.DoubleStatistics.newBuilder()
                 .setMinimum(10.0d).setMaximum(100.0d).build()).build()),
         new StubPredicate(PredicateLeaf.Type.FLOAT), true).upper);
-    assertEquals(null, RecordReaderImpl.getValueRange(
+    assertNull(RecordReaderImpl.getValueRange(
         ColumnStatisticsImpl.deserialize(null,
-          OrcProto.ColumnStatistics.newBuilder()
-              .setNumberOfValues(1)
-              .setStringStatistics(OrcProto.StringStatistics.newBuilder().build())
-              .build()), new StubPredicate(PredicateLeaf.Type.STRING), true).upper);
+            OrcProto.ColumnStatistics.newBuilder()
+                .setNumberOfValues(1)
+                .setStringStatistics(OrcProto.StringStatistics.newBuilder().build())
+                .build()), new StubPredicate(PredicateLeaf.Type.STRING), true).upper);
     assertEquals("b", RecordReaderImpl.getValueRange(
         ColumnStatisticsImpl.deserialize(null,
           OrcProto.ColumnStatistics.newBuilder()
@@ -1358,7 +1358,7 @@ public class TestRecordReaderImpl {
 
   @Test
   public void testOverlap() throws Exception {
-    assertTrue(!RecordReaderUtils.overlap(0, 10, -10, -1));
+    assertFalse(RecordReaderUtils.overlap(0, 10, -10, -1));
     assertTrue(RecordReaderUtils.overlap(0, 10, -1, 0));
     assertTrue(RecordReaderUtils.overlap(0, 10, -1, 1));
     assertTrue(RecordReaderUtils.overlap(0, 10, 2, 8));
@@ -1366,7 +1366,7 @@ public class TestRecordReaderImpl {
     assertTrue(RecordReaderUtils.overlap(0, 10, 10, 11));
     assertTrue(RecordReaderUtils.overlap(0, 10, 0, 10));
     assertTrue(RecordReaderUtils.overlap(0, 10, -1, 11));
-    assertTrue(!RecordReaderUtils.overlap(0, 10, 11, 12));
+    assertFalse(RecordReaderUtils.overlap(0, 10, 11, 12));
   }
 
   private static DiskRangeList diskRanges(Integer... points) {
@@ -1485,12 +1485,12 @@ public class TestRecordReaderImpl {
     assertEquals(20000 + RecordReaderUtils.WORST_UNCOMPRESSED_SLOP, result.get(1).getLength());
     assertEquals(START + 41000, result.get(2).getOffset());
     assertEquals(10000 + RecordReaderUtils.WORST_UNCOMPRESSED_SLOP, result.get(2).getLength());
-    assertEquals(null, result.get(3));
+    assertNull(result.get(3));
 
     // if we read no rows, don't read any bytes
     rowGroups = new boolean[]{false, false, false, false, false, false};
     result = planner.readData(index, rowGroups, false, TypeReader.ReadPhase.ALL);
-    assertEquals(null, result.get(0));
+    assertNull(result.get(0));
 
     // all rows, but only columns 0 and 2.
     rowGroups = null;
@@ -1501,7 +1501,7 @@ public class TestRecordReaderImpl {
     assertEquals(2000, result.get(0).getLength());
     assertEquals(START + 102000, result.get(1).getOffset());
     assertEquals(198000, result.get(1).getLength());
-    assertEquals(null, result.get(2));
+    assertNull(result.get(2));
 
     rowGroups = new boolean[]{false, true, false, false, false, false};
     result = planner.readData(index, rowGroups, false, TypeReader.ReadPhase.ALL);
@@ -1510,7 +1510,7 @@ public class TestRecordReaderImpl {
     assertEquals(START + 122000, result.get(1).getOffset());
     assertEquals(20000 + RecordReaderUtils.WORST_UNCOMPRESSED_SLOP,
         result.get(1).getLength());
-    assertEquals(null, result.get(2));
+    assertNull(result.get(2));
 
     rowGroups = new boolean[]{false, false, false, false, false, true};
     columns = new boolean[]{true, true, true};
@@ -1524,7 +1524,7 @@ public class TestRecordReaderImpl {
     assertEquals(1000, result.get(2).getLength());
     assertEquals(START + 202000, result.get(3).getOffset());
     assertEquals(98000, result.get(3).getLength());
-    assertEquals(null, result.get(4));
+    assertNull(result.get(4));
   }
 
 
@@ -1580,7 +1580,7 @@ public class TestRecordReaderImpl {
     assertEquals(20000 + SLOP, result.get(1).getLength());
     assertEquals(START + 41000, result.get(2).getOffset());
     assertEquals(10000 + SLOP, result.get(2).getLength());
-    assertEquals(null, result.get(3));
+    assertNull(result.get(3));
 
     rowGroups = new boolean[]{false, false, false, false, false, true};
     result = planner.readData(index, rowGroups, false, TypeReader.ReadPhase.ALL);
@@ -1588,7 +1588,7 @@ public class TestRecordReaderImpl {
     assertEquals(500, result.get(0).getLength());
     assertEquals(START + 51000, result.get(1).getOffset());
     assertEquals(49000, result.get(1).getLength());
-    assertEquals(null, result.get(2));
+    assertNull(result.get(2));
   }
 
   @Test
@@ -1646,12 +1646,12 @@ public class TestRecordReaderImpl {
     assertEquals(2000, result.get(3).getLength());
     assertEquals(START + 97000, result.get(4).getOffset());
     assertEquals(3000, result.get(4).getLength());
-    assertEquals(null, result.get(5));
+    assertNull(result.get(5));
 
     // Don't read anything if no groups are selected
     rowGroups = new boolean[6];
     result = planner.readData(index, rowGroups, false, TypeReader.ReadPhase.ALL);
-    assertEquals(null, result.get(0));
+    assertNull(result.get(0));
   }
 
   @Test
@@ -2104,7 +2104,7 @@ public class TestRecordReaderImpl {
     planner.parseStripe(stripe, new boolean[]{true, true, true, false});
     planner.readRowIndex(new boolean[]{false, true, true, false}, index);
     assertEquals(OrcProto.Stream.Kind.BLOOM_FILTER, bloomFilterKinds[1]);
-    assertEquals(null, bloomFilterKinds[2]);
+    assertNull(bloomFilterKinds[2]);
     assertEquals(1, stripe.getStream(1, OrcProto.Stream.Kind.ROW_INDEX).readCount);
     assertEquals(1, stripe.getStream(1, OrcProto.Stream.Kind.BLOOM_FILTER).readCount);
     assertEquals(1, stripe.getStream(2, OrcProto.Stream.Kind.ROW_INDEX).readCount);
@@ -2120,7 +2120,7 @@ public class TestRecordReaderImpl {
     planner.parseStripe(stripe, new boolean[]{true, true, true, true});
     planner.readRowIndex(new boolean[]{false, true, true, true}, index);
     assertEquals(OrcProto.Stream.Kind.BLOOM_FILTER, bloomFilterKinds[1]);
-    assertEquals(null, bloomFilterKinds[2]);
+    assertNull(bloomFilterKinds[2]);
     assertEquals(OrcProto.Stream.Kind.BLOOM_FILTER, bloomFilterKinds[3]);
     assertEquals(1, stripe.getStream(1, OrcProto.Stream.Kind.ROW_INDEX).readCount);
     assertEquals(1, stripe.getStream(1, OrcProto.Stream.Kind.BLOOM_FILTER).readCount);
@@ -2136,8 +2136,8 @@ public class TestRecordReaderImpl {
         OrcFile.WriterVersion.HIVE_4243, true, Integer.MAX_VALUE);
     planner.parseStripe(stripe, new boolean[]{true, false, true, false});
     planner.readRowIndex(new boolean[]{false, false, true, false}, index);
-    assertEquals(null, bloomFilterKinds[1]);
-    assertEquals(null, bloomFilterKinds[2]);
+    assertNull(bloomFilterKinds[1]);
+    assertNull(bloomFilterKinds[2]);
     assertEquals(0, stripe.getStream(1, OrcProto.Stream.Kind.ROW_INDEX).readCount);
     assertEquals(0, stripe.getStream(1, OrcProto.Stream.Kind.BLOOM_FILTER).readCount);
     assertEquals(1, stripe.getStream(2, OrcProto.Stream.Kind.ROW_INDEX).readCount);
@@ -2278,10 +2278,10 @@ public class TestRecordReaderImpl {
         new ReaderImpl.StripeInformationImpl(stripe, 1, -1, null),
         indexes, null, encodings, null, false);
     assertEquals(4, rows.length);
-    assertEquals(false, rows[0]);
-    assertEquals(false, rows[1]);
-    assertEquals(false, rows[2]);
-    assertEquals(true, rows[3]);
+    assertFalse(rows[0]);
+    assertFalse(rows[1]);
+    assertFalse(rows[2]);
+    assertTrue(rows[3]);
     assertEquals(0, applier.getExceptionCount()[0]);
     assertEquals(0, applier.getExceptionCount()[1]);
   }
@@ -2325,9 +2325,9 @@ public class TestRecordReaderImpl {
         new ReaderImpl.StripeInformationImpl(stripe, 1, -1, null),
         indexes, null, encodings, null, false);
     assertEquals(3, rows.length);
-    assertEquals(false, rows[0]);
-    assertEquals(true, rows[1]);
-    assertEquals(true, rows[2]);
+    assertFalse(rows[0]);
+    assertTrue(rows[1]);
+    assertTrue(rows[2]);
     assertEquals(1, applier.getExceptionCount()[0]);
     assertEquals(0, applier.getExceptionCount()[1]);
   }
@@ -2366,7 +2366,7 @@ public class TestRecordReaderImpl {
 
     boolean[] rows = applier.pickRowGroups(new ReaderImpl.StripeInformationImpl(stripe,  1, -1, null),
         indexes, null, encodings, null, false);
-    assertEquals(true, Arrays.equals(SargApplier.READ_ALL_RGS, rows)); //cannot filter for new column, return all rows
+    assertTrue(Arrays.equals(SargApplier.READ_ALL_RGS, rows)); //cannot filter for new column, return all rows
   }
 
   private boolean[] includeAll(TypeDescription readerType) {

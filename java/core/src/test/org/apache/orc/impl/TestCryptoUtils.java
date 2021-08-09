@@ -71,8 +71,8 @@ public class TestCryptoUtils {
 
     List<String> keyNames = provider.getKeyNames();
     assertEquals(2, keyNames.size());
-    assertEquals(true, keyNames.contains("pii"));
-    assertEquals(true, keyNames.contains("secret"));
+    assertTrue(keyNames.contains("pii"));
+    assertTrue(keyNames.contains("secret"));
     HadoopShims.KeyMetadata meta = provider.getCurrentKeyVersion("pii");
     assertEquals(1, meta.getVersion());
     LocalKey localKey = provider.createLocalKey(meta);
