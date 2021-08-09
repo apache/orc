@@ -68,7 +68,7 @@ public abstract class InStream extends InputStream {
    * @param newRange the block that is current
    * @param isJump if this was a seek instead of a natural read
    */
-  abstract protected void setCurrent(DiskRangeList newRange,
+  protected abstract void setCurrent(DiskRangeList newRange,
                                      boolean isJump);
     /**
      * Reset the input to a new set of data.
@@ -696,7 +696,7 @@ public abstract class InStream extends InputStream {
   private static class EncryptedCompressedStream extends CompressedStream {
     private final EncryptionState encrypt;
 
-    public EncryptedCompressedStream(Object name,
+    EncryptedCompressedStream(Object name,
                                      DiskRangeList input,
                                      long offset,
                                      long length,
