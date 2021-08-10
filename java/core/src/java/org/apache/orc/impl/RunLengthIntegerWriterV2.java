@@ -533,16 +533,13 @@ public class RunLengthIntegerWriterV2 implements IntegerWriter {
       if ((brBits100p - brBits95p) != 0 && Math.abs(min) < BASE_VALUE_LIMIT) {
         encoding = EncodingType.PATCHED_BASE;
         preparePatchedBlob();
-        return;
       } else {
         encoding = EncodingType.DIRECT;
-        return;
       }
     } else {
       // if difference in bits between 95th percentile and 100th percentile is
       // 0, then patch length will become 0. Hence we will fallback to direct
       encoding = EncodingType.DIRECT;
-      return;
     }
   }
 
@@ -692,16 +689,13 @@ public class RunLengthIntegerWriterV2 implements IntegerWriter {
           variableRunLength = fixedRunLength;
           fixedRunLength = 0;
           determineEncoding();
-          writeValues();
-        } else if (fixedRunLength >= MIN_REPEAT
-            && fixedRunLength <= MAX_SHORT_REPEAT_LENGTH) {
+        } else if (fixedRunLength <= MAX_SHORT_REPEAT_LENGTH) {
           encoding = EncodingType.SHORT_REPEAT;
-          writeValues();
         } else {
           encoding = EncodingType.DELTA;
           isFixedDelta = true;
-          writeValues();
         }
+        writeValues();
       }
     }
     output.flush();
@@ -772,12 +766,11 @@ public class RunLengthIntegerWriterV2 implements IntegerWriter {
           if (fixedRunLength >= MIN_REPEAT) {
             if (fixedRunLength <= MAX_SHORT_REPEAT_LENGTH) {
               encoding = EncodingType.SHORT_REPEAT;
-              writeValues();
             } else {
               encoding = EncodingType.DELTA;
               isFixedDelta = true;
-              writeValues();
             }
+            writeValues();
           }
 
           // if fixed run length is <MIN_REPEAT and current value is
