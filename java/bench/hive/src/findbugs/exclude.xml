@@ -14,7 +14,7 @@
 -->
 <FindBugsFilter>
   <Match>
-    <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2,MS_EXPOSE_REP"/>
+    <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2,MS_EXPOSE_REP,DM_EXIT"/>
   </Match>
   <Match>
     <Class name="~org\.openjdk\.jmh\.infra\.generated.*"/>

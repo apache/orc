@@ -17,16 +17,8 @@
  */
 package org.apache.orc.bench.hive.rowfilter;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
-import org.apache.orc.OrcFile;
-import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
 import org.apache.orc.TypeDescription;
-import org.apache.orc.bench.core.Utilities;
-import org.apache.orc.OrcFilterContext;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -35,7 +27,6 @@ import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
 import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
-import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.infra.Blackhole;
@@ -43,8 +34,6 @@ import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
-import java.io.IOException;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 @State(Scope.Benchmark)
@@ -55,10 +44,8 @@ import java.util.concurrent.TimeUnit;
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 public class BooleanRowFilterBenchmark extends org.openjdk.jmh.Main {
 
-  private static final Path root = new Path(System.getProperty("user.dir"));
-
   @State(Scope.Thread)
-  public static class InputState {
+  public static class InputState extends RowFilterInputState {
 
     @Param({"ORIGINAL"})
     public TypeDescription.RowBatchVersion version;
@@ -72,79 +59,19 @@ public class BooleanRowFilterBenchmark extends org.openjdk.jmh.Main {
     @Param({"2"})
     public int filterColsNum;
 
-    Configuration conf = new Configuration();
-    FileSystem fs;
-    TypeDescription schema;
-    VectorizedRowBatch batch;
-    Path path;
-    boolean[] include;
-    Reader reader;
-    Reader.Options readerOptions;
-    String filter_column = "sales_id";
+    String dataRelativePath = "data/generated/sales/orc.none";
 
-    @Setup
-    public void setup() throws IOException {
-      fs = FileSystem.getLocal(conf).getRaw();
-      path = new Path(root, "data/generated/sales/orc.none");
-      schema = Utilities.loadSchema("sales.schema");
-      batch = schema.createRowBatch(version, 1024);
-      include = new boolean[schema.getMaximumId() + 1];
-      for(TypeDescription child: schema.getChildren()) {
-        if (schema.getFieldNames().get(child.getId()-1).compareTo(filter_column) == 0) {
-          System.out.println("Apply Filter on column: " + schema.getFieldNames().get(child.getId()-1));
-          include[child.getId()] = true;
-        } else if (child.getCategory() == benchType) {
-          System.out.println("Skip column(s): " + schema.getFieldNames().get(child.getId()-1));
-          include[child.getId()] = true;
-          if (--filterColsNum == 0) break;
-        }
-      }
-      if (filterColsNum != 0) {
-        System.err.println("Dataset does not contain type: "+ benchType);
-        System.exit(-1);
-      }
-      generateRandomSet(Double.parseDouble(filterPerc));
-      reader = OrcFile.createReader(path,
-          OrcFile.readerOptions(conf).filesystem(fs));
-      // just read the Boolean columns
-      readerOptions = reader.options().include(include);
-    }
+    String schemaName = "sales.schema";
 
-    static boolean[] filterValues = null;
-    public static boolean[] generateRandomSet(double percentage) throws IllegalArgumentException {
-      if (percentage > 1.0) {
-        throw new IllegalArgumentException("Filter percentage must be < 1.0 but was "+ percentage);
-      }
-      filterValues = new boolean[1024];
-      int count = 0;
-      while (count < (1024 * percentage)) {
-        Random randomGenerator = new Random();
-        int randVal = randomGenerator.nextInt(1024);
-        if (filterValues[randVal] == false) {
-          filterValues[randVal] = true;
-          count++;
-        }
-      }
-      return filterValues;
-    }
+    String filterColumn = "sales_id";
 
-    public static void customIntRowFilter(OrcFilterContext batch) {
-      int newSize = 0;
-      for (int row = 0; row < batch.getSelectedSize(); ++row) {
-        if (filterValues[row]) {
-          batch.getSelected()[newSize++] = row;
-        }
-      }
-      batch.setSelectedInUse(true);
-      batch.setSelectedSize(newSize);
-    }
   }
 
   @Benchmark
   public void readOrcRowFilter(Blackhole blackhole, InputState state) throws Exception {
     RecordReader rows =
         state.reader.rows(state.readerOptions
-            .setRowFilter(new String[]{state.filter_column}, InputState::customIntRowFilter));
+            .setRowFilter(new String[]{state.filterColumn}, state::customIntRowFilter));
     while (rows.nextBatch(state.batch)) {
       blackhole.consume(state.batch);
     }
