@@ -25,7 +25,7 @@
 
   <groupId>org.apache.orc</groupId>
   <artifactId>orc-benchmarks</artifactId>
-  <version>1.6.10</version>
+  <version>1.6.11-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>ORC Benchmarks</name>
   <description>
