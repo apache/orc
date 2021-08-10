@@ -80,6 +80,9 @@ public class ScanVariants implements OrcBenchmark {
       for (String compress : compressList) {
         CompressionKind compressKind = CompressionKind.fromExtension(compress);
         for (String format : formatList) {
+          if (compressKind == CompressionKind.ZSTD && format.equals("json")) {
+            continue; // JSON doesn't support ZSTD
+          }
           Path filename = Utilities.getVariant(root, data, format,
               compress);
           BatchReader reader = GenerateVariants.createFileReader(filename,
