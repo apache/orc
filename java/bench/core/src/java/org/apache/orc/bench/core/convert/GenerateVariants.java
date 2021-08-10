@@ -135,6 +135,7 @@ public class GenerateVariants implements OrcBenchmark {
             CompressionKind.valueOf(compressList[compress].toUpperCase());
         for(int format=0; format < formatList.length; ++format) {
           if (compressionKind == CompressionKind.ZSTD && formatList[format].equals("json")) {
+            System.out.println("Ignore JSON format with ZSTD compression case");
             continue; // JSON doesn't support ZSTD
           }
           Path outPath = Utilities.getVariant(root, data, formatList[format],
