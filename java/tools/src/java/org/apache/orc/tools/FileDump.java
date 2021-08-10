@@ -437,8 +437,7 @@ public final class FileDump {
     FileSystem fs = file.getFileSystem(conf);
     long fileLen = fs.getFileStatus(file).getLen();
     long paddedBytes = getTotalPaddingSize(reader);
-    // empty ORC file is ~45 bytes. Assumption here is file length always >0
-    double percentPadding = ((double) paddedBytes / (double) fileLen) * 100;
+    double percentPadding = (fileLen == 0) ? 0.0d : 100.0d * paddedBytes / fileLen;
     DecimalFormat format = new DecimalFormat("##.##");
     System.out.println("\nFile length: " + fileLen + " bytes");
     System.out.println("Padding length: " + paddedBytes + " bytes");
