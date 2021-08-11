@@ -26,6 +26,7 @@ import org.apache.orc.TypeDescription;
 import org.apache.orc.bench.core.convert.BatchReader;
 import org.apache.orc.bench.core.convert.avro.AvroReader;
 import org.apache.parquet.avro.AvroParquetReader;
+import org.apache.parquet.hadoop.util.HadoopInputFile;
 
 import java.io.IOException;
 
@@ -37,7 +38,8 @@ public class ParquetReader implements BatchReader {
   public ParquetReader(Path path,
                        TypeDescription schema,
                        Configuration conf) throws IOException {
-    reader = AvroParquetReader.<GenericData.Record>builder(path)
+    HadoopInputFile inputFile = HadoopInputFile.fromPath(path, conf);
+    reader = AvroParquetReader.<GenericData.Record>builder(inputFile)
         .withCompatibility(true).build();
     converters = AvroReader.buildConverters(schema);
   }

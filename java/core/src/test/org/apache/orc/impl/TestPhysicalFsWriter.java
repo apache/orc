@@ -92,7 +92,7 @@ public class TestPhysicalFsWriter {
                                      Progressable progress) throws IOException {
       List<byte[]> contents = new ArrayList<>();
       fileContents.put(f, contents);
-      return new FSDataOutputStream(new MemoryOutputStream(contents));
+      return new FSDataOutputStream(new MemoryOutputStream(contents), null);
     }
 
     @Override

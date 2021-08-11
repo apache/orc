@@ -30,6 +30,7 @@ import org.apache.orc.bench.core.convert.avro.AvroSchemaUtils;
 import org.apache.orc.bench.core.convert.avro.AvroWriter;
 import org.apache.parquet.avro.AvroParquetWriter;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
+import org.apache.parquet.hadoop.util.HadoopOutputFile;
 
 import java.io.IOException;
 
@@ -60,8 +61,9 @@ public class ParquetWriter implements BatchWriter {
                        CompressionKind compression
                        ) throws IOException {
     Schema avroSchema = AvroSchemaUtils.createAvroSchema(schema);
+    HadoopOutputFile outputFile = HadoopOutputFile.fromPath(path, conf);
     writer = AvroParquetWriter
-        .<GenericData.Record>builder(path)
+        .<GenericData.Record>builder(outputFile)
         .withSchema(avroSchema)
         .withConf(conf)
         .withCompressionCodec(getParquetCompression(compression))

@@ -19,8 +19,8 @@
 package org.apache.orc.tools;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.hadoop.conf.Configuration;
@@ -39,17 +39,17 @@ public class Driver {
   static Options createOptions() {
     Options result = new Options();
 
-    result.addOption(OptionBuilder
-         .withLongOpt("help")
-         .withDescription("Print help message")
-         .create('h'));
+    result.addOption(Option.builder("h")
+        .longOpt("help")
+        .desc("Print help message")
+        .build());
 
-    result.addOption(OptionBuilder
-        .withLongOpt("define")
-        .withDescription("Set a configuration property")
-        .hasArgs(2)
-        .withValueSeparator()
-        .create('D'));
+    result.addOption(Option.builder("D")
+        .longOpt("define")
+        .desc("Set a configuration property")
+        .numberOfArgs(2)
+        .valueSeparator()
+        .build());
     return result;
   }
 
@@ -59,7 +59,7 @@ public class Driver {
     final String[] commandArgs;
 
     DriverOptions(String[] args) throws ParseException {
-      genericOptions = new GnuParser().parse(createOptions(), args, true);
+      genericOptions = new DefaultParser().parse(createOptions(), args, true);
       String[] unprocessed = genericOptions.getArgs();
       if (unprocessed.length == 0) {
         command = null;
