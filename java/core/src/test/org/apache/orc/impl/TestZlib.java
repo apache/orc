@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,13 +19,14 @@
 package org.apache.orc.impl;
 
 import org.apache.orc.CompressionCodec;
-import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class TestZlib {
 
@@ -36,7 +37,7 @@ public class TestZlib {
     in.put(new byte[]{1,2,3,4,5,6,7,10});
     in.flip();
     CompressionCodec codec = new ZlibCodec();
-    assertEquals(false, codec.compress(in, out, null,
+    assertFalse(codec.compress(in, out, null,
         codec.getDefaultOptions()));
   }
 

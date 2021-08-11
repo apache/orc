@@ -31,12 +31,6 @@ import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.impl.DateUtils;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -48,34 +42,27 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
+
 import org.threeten.extra.chrono.HybridChronology;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.*;
 
 /**
  * This class tests all of the combinations of reading and writing the hybrid
  * and proleptic calendars.
  */
-@RunWith(Parameterized.class)
 public class TestProlepticConversions {
 
-  @Parameterized.Parameter
-  public boolean writerProlepticGregorian;
-
-  @Parameterized.Parameter(1)
-  public boolean readerProlepticGregorian;
-
-  @Parameterized.Parameters
-  public static Collection<Object[]> getParameters() {
-    List<Object[]> result = new ArrayList<>();
-    final boolean[] BOOLEANS = new boolean[]{false, true};
-    for(Boolean writer: BOOLEANS) {
-      for (Boolean reader: BOOLEANS) {
-        result.add(new Object[]{writer, reader});
-      }
-    }
-    return result;
+  private static Stream<Arguments> data() {
+    return Stream.of(
+        Arguments.of(false, false),
+        Arguments.of(false, true),
+        Arguments.of(true, false),
+        Arguments.of(true, true));
   }
 
   private Path workDir = new Path(System.getProperty("test.tmp.dir",
@@ -95,14 +82,11 @@ public class TestProlepticConversions {
   private FileSystem fs;
   private Path testFilePath;
 
-  @Rule
-  public TestName testCaseName = new TestName();
-
-  @Before
-  public void setupPath() throws Exception {
+  @BeforeEach
+  public void setupPath(TestInfo testInfo) throws Exception {
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestProlepticConversion." +
-       testCaseName.getMethodName().replaceFirst("\\[[0-9]+]", "") + ".orc");
+       testInfo.getTestMethod().get().getName().replaceFirst("\\[[0-9]+]", "") + ".orc");
     fs.delete(testFilePath, false);
   }
 
@@ -112,8 +96,10 @@ public class TestProlepticConversions {
     return result;
   }
 
-  @Test
-  public void testReadWrite() throws Exception {
+  @ParameterizedTest
+  @MethodSource("data")
+  public void testReadWrite(
+      boolean writerProlepticGregorian, boolean readerProlepticGregorian) throws Exception {
     TypeDescription schema = TypeDescription.fromString(
         "struct<d:date,t:timestamp,i:timestamp with local time zone>");
     try (Writer writer = OrcFile.createWriter(testFilePath,
@@ -197,10 +183,13 @@ public class TestProlepticConversions {
       for(int r=0; r < batch.size; ++r) {
         String expectedD = String.format("%04d-01-23", r * 2 + 1);
         String expectedT = String.format("%04d-03-21 %02d:12:34", 2 * r + 1, r % 24);
-        assertEquals("row " + r, expectedD, readerChronology.dateEpochDay(d.vector[r])
-            .format(dateFormat));
-        assertEquals("row " + r, expectedT, timeFormat.format(t.asScratchTimestamp(r)));
-        assertEquals("row " + r, expectedT, timeFormat.format(i.asScratchTimestamp(r)));
+        assertEquals(expectedD,
+            readerChronology.dateEpochDay(d.vector[r]).format(dateFormat),
+            "row " + r);
+        assertEquals(expectedT, timeFormat.format(t.asScratchTimestamp(r)),
+            "row " + r);
+        assertEquals(expectedT, timeFormat.format(i.asScratchTimestamp(r)),
+            "row " + r);
       }
     }
   }
@@ -208,8 +197,10 @@ public class TestProlepticConversions {
   /**
    * Test all of the type conversions from/to date.
    */
-  @Test
-  public void testSchemaEvolutionDate() throws Exception {
+  @ParameterizedTest
+  @MethodSource("data")
+  public void testSchemaEvolutionDate(
+      boolean writerProlepticGregorian, boolean readerProlepticGregorian) throws Exception {
     TypeDescription schema = TypeDescription.fromString(
         "struct<d2s:date,d2t:date,s2d:string,t2d:timestamp>");
     try (Writer writer = OrcFile.createWriter(testFilePath,
@@ -271,14 +262,14 @@ public class TestProlepticConversions {
         String expectedD1 = String.format("%04d-01-23", 2 * r + 1);
         String expectedD2 = expectedD1 + " 00:00:00";
         String expectedT = String.format("%04d-03-21", 2 * r + 1);
-        assertEquals("row " + r, expectedD1, d2s.toString(r));
-        assertEquals("row " + r, expectedD2, timeFormat.format(d2t.asScratchTimestamp(r)));
-        assertEquals("row " + r, expectedD1, DateUtils.printDate((int) s2d.vector[r],
-            readerProlepticGregorian));
-        assertEquals("row " + r, expectedT, dateFormat.format(
-            new Date(TimeUnit.DAYS.toMillis(t2d.vector[r]))));
+        assertEquals(expectedD1, d2s.toString(r), "row " + r);
+        assertEquals(expectedD2, timeFormat.format(d2t.asScratchTimestamp(r)), "row " + r);
+        assertEquals(expectedD1, DateUtils.printDate((int) s2d.vector[r],
+            readerProlepticGregorian), "row " + r);
+        assertEquals(expectedT, dateFormat.format(
+            new Date(TimeUnit.DAYS.toMillis(t2d.vector[r]))), "row " + r);
       }
-      assertEquals(false, rows.nextBatch(batch));
+      assertFalse(rows.nextBatch(batch));
     }
   }
 
@@ -286,8 +277,10 @@ public class TestProlepticConversions {
    * Test all of the type conversions from/to timestamp, except for date,
    * which was handled above.
    */
-  @Test
-  public void testSchemaEvolutionTimestamp() throws Exception {
+  @ParameterizedTest
+  @MethodSource("data")
+  public void testSchemaEvolutionTimestamp(
+      boolean writerProlepticGregorian, boolean readerProlepticGregorian) throws Exception {
     TypeDescription schema = TypeDescription.fromString(
         "struct<t2i:timestamp,t2d:timestamp,t2D:timestamp,t2s:timestamp,"
         + "i2t:bigint,d2t:decimal(18,2),D2t:double,s2t:string>");
@@ -365,20 +358,24 @@ public class TestProlepticConversions {
       for(int r=0; r < batch.size; ++r) {
         String time = String.format("%04d-03-21 %02d:12:34.12", 2 * r + 1, r % 24);
         long millis = DateUtils.parseTime(time, readerProlepticGregorian, true);
-        assertEquals("row " + r, time.substring(0, time.length() - 3),
-            DateUtils.printTime(i2t.time[r], readerProlepticGregorian, true));
-        assertEquals("row " + r, time,
-            DateUtils.printTime(d2t.time[r], readerProlepticGregorian, true));
-        assertEquals("row " + r, time,
-            DateUtils.printTime(D2t.time[r], readerProlepticGregorian, true));
-        assertEquals("row " + r, time,
-            DateUtils.printTime(s2t.time[r], readerProlepticGregorian, true));
-        assertEquals("row " + r, Math.floorDiv(millis, 1000), t2i.vector[r]);
-        assertEquals("row " + r, Math.floorDiv(millis, 10), t2d.vector[r]);
-        assertEquals("row " + r, millis/1000.0, t2D.vector[r], 0.1);
-        assertEquals("row " + r, time, t2s.toString(r));
+        assertEquals(time.substring(0, time.length() - 3),
+            DateUtils.printTime(i2t.time[r], readerProlepticGregorian, true),
+            "row " + r);
+        assertEquals(time,
+            DateUtils.printTime(d2t.time[r], readerProlepticGregorian, true),
+            "row " + r);
+        assertEquals(time,
+            DateUtils.printTime(D2t.time[r], readerProlepticGregorian, true),
+            "row " + r);
+        assertEquals(time,
+            DateUtils.printTime(s2t.time[r], readerProlepticGregorian, true),
+            "row " + r);
+        assertEquals(Math.floorDiv(millis, 1000), t2i.vector[r], "row " + r);
+        assertEquals(Math.floorDiv(millis, 10), t2d.vector[r], "row " + r);
+        assertEquals(millis/1000.0, t2D.vector[r], 0.1, "row " + r);
+        assertEquals(time, t2s.toString(r), "row " + r);
       }
-      assertEquals(false, rows.nextBatch(batch));
+      assertFalse(rows.nextBatch(batch));
     }
   }
 }

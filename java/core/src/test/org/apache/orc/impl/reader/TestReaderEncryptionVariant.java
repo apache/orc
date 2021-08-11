@@ -21,13 +21,13 @@ package org.apache.orc.impl.reader;
 import org.apache.orc.EncryptionAlgorithm;
 import org.apache.orc.OrcProto;
 import org.apache.orc.StripeInformation;
-import org.junit.Test;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 
-import static org.junit.Assert.assertNull;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class TestReaderEncryptionVariant {
 

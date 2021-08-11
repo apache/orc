@@ -24,14 +24,13 @@ import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
 import org.apache.orc.IntegerColumnStatistics;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.util.BloomFilter;
-import org.junit.Assert;
-import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.apache.orc.impl.TestRecordReaderImpl.createPredicateLeaf;
 
 public class TestPredicatePushDownBounds {
@@ -340,8 +339,8 @@ public class TestPredicatePushDownBounds {
     stat.updateInteger(3, 100);
 
     IntegerColumnStatistics typed = (IntegerColumnStatistics) stat;
-    Assert.assertEquals(1, typed.getMinimum());
-    Assert.assertEquals(3, typed.getMaximum());
+    assertEquals(1, typed.getMinimum());
+    assertEquals(3, typed.getMaximum());
 
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
         .startAnd()
@@ -359,8 +358,8 @@ public class TestPredicatePushDownBounds {
     newStat.updateInteger(3, 100);
 
     typed = (IntegerColumnStatistics) newStat;
-    Assert.assertEquals(3, typed.getMinimum());
-    Assert.assertEquals(3, typed.getMaximum());
+    assertEquals(3, typed.getMinimum());
+    assertEquals(3, typed.getMaximum());
 
     sArg = SearchArgumentFactory.newBuilder()
         .startAnd()

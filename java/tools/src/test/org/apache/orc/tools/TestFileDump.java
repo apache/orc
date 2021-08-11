@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,8 +18,9 @@
 
 package org.apache.orc.tools;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.*;
+import org.junit.jupiter.api.*;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -59,9 +60,6 @@ import org.apache.orc.Reader;
 import org.apache.orc.StripeStatistics;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
 
 public class TestFileDump {
 
@@ -70,7 +68,7 @@ public class TestFileDump {
   FileSystem fs;
   Path testFilePath;
 
-  @Before
+  @BeforeEach
   public void openFileSystem () throws Exception {
     conf = new Configuration();
     fs = FileSystem.getLocal(conf);
@@ -194,12 +192,12 @@ public class TestFileDump {
       if (actualLine != null) {
         actualLine = actualLine.trim();
       }
-      Assert.assertEquals(expectedLine, actualLine);
+      assertEquals(expectedLine, actualLine);
       expectedLine = eStream.readLine();
       expectedLine = expectedLine == null ? null : expectedLine.trim();
     }
-    Assert.assertNull(eStream.readLine());
-    Assert.assertNull(aStream.readLine());
+    assertNull(eStream.readLine());
+    assertNull(aStream.readLine());
     eStream.close();
     aStream.close();
   }
@@ -330,8 +328,8 @@ public class TestFileDump {
     System.out.flush();
     System.setOut(origOut);
     String[] lines = myOut.toString(StandardCharsets.UTF_8.toString()).split("\n");
-    Assert.assertEquals("{\"b\":true,\"bt\":10,\"s\":100,\"i\":1000,\"l\":10000,\"f\":4,\"d\":20,\"de\":\"4.2222\",\"t\":\"2014-11-25 18:09:24.0\",\"dt\":\"2014-11-25\",\"str\":\"string\",\"c\":\"hello\",\"vc\":\"hello\",\"m\":[{\"_key\":\"k1\",\"_value\":\"v1\"}],\"a\":[100,200],\"st\":{\"i\":10,\"s\":\"foo\"}}", lines[0]);
-    Assert.assertEquals("{\"b\":false,\"bt\":20,\"s\":200,\"i\":2000,\"l\":20000,\"f\":8,\"d\":40,\"de\":\"2.2222\",\"t\":\"2014-11-25 18:02:44.0\",\"dt\":\"2014-09-28\",\"str\":\"abcd\",\"c\":\"world\",\"vc\":\"world\",\"m\":[{\"_key\":\"k3\",\"_value\":\"v3\"}],\"a\":[200,300],\"st\":{\"i\":20,\"s\":\"bar\"}}", lines[1]);
+    assertEquals("{\"b\":true,\"bt\":10,\"s\":100,\"i\":1000,\"l\":10000,\"f\":4,\"d\":20,\"de\":\"4.2222\",\"t\":\"2014-11-25 18:09:24.0\",\"dt\":\"2014-11-25\",\"str\":\"string\",\"c\":\"hello\",\"vc\":\"hello\",\"m\":[{\"_key\":\"k1\",\"_value\":\"v1\"}],\"a\":[100,200],\"st\":{\"i\":10,\"s\":\"foo\"}}", lines[0]);
+    assertEquals("{\"b\":false,\"bt\":20,\"s\":200,\"i\":2000,\"l\":20000,\"f\":8,\"d\":40,\"de\":\"2.2222\",\"t\":\"2014-11-25 18:02:44.0\",\"dt\":\"2014-09-28\",\"str\":\"abcd\",\"c\":\"world\",\"vc\":\"world\",\"m\":[{\"_key\":\"k3\",\"_value\":\"v3\"}],\"a\":[200,300],\"st\":{\"i\":20,\"s\":\"bar\"}}", lines[1]);
   }
 
   // Test that if the fraction of rows that have distinct strings is greater than the configured
@@ -606,9 +604,9 @@ public class TestFileDump {
     assertEquals(20000, stats[0].getNumberOfValues());
     assertEquals(20000, stats[1].getNumberOfValues());
     assertEquals(7000, stats[2].getNumberOfValues());
-    assertEquals(false, stats[0].hasNull());
-    assertEquals(false, stats[1].hasNull());
-    assertEquals(true, stats[2].hasNull());
+    assertFalse(stats[0].hasNull());
+    assertFalse(stats[1].hasNull());
+    assertTrue(stats[2].hasNull());
 
     // check the stripe level stats
     List<StripeStatistics> stripeStats = reader.getStripeStatistics();
@@ -617,36 +615,36 @@ public class TestFileDump {
     ColumnStatistics ss1_cs1 = ss1.getColumnStatistics()[0];
     ColumnStatistics ss1_cs2 = ss1.getColumnStatistics()[1];
     ColumnStatistics ss1_cs3 = ss1.getColumnStatistics()[2];
-    assertEquals(false, ss1_cs1.hasNull());
-    assertEquals(false, ss1_cs2.hasNull());
-    assertEquals(true, ss1_cs3.hasNull());
+    assertFalse(ss1_cs1.hasNull());
+    assertFalse(ss1_cs2.hasNull());
+    assertTrue(ss1_cs3.hasNull());
 
     // stripe 2 stats
     StripeStatistics ss2 = stripeStats.get(1);
     ColumnStatistics ss2_cs1 = ss2.getColumnStatistics()[0];
     ColumnStatistics ss2_cs2 = ss2.getColumnStatistics()[1];
     ColumnStatistics ss2_cs3 = ss2.getColumnStatistics()[2];
-    assertEquals(false, ss2_cs1.hasNull());
-    assertEquals(false, ss2_cs2.hasNull());
-    assertEquals(true, ss2_cs3.hasNull());
+    assertFalse(ss2_cs1.hasNull());
+    assertFalse(ss2_cs2.hasNull());
+    assertTrue(ss2_cs3.hasNull());
 
     // stripe 3 stats
     StripeStatistics ss3 = stripeStats.get(2);
     ColumnStatistics ss3_cs1 = ss3.getColumnStatistics()[0];
     ColumnStatistics ss3_cs2 = ss3.getColumnStatistics()[1];
     ColumnStatistics ss3_cs3 = ss3.getColumnStatistics()[2];
-    assertEquals(false, ss3_cs1.hasNull());
-    assertEquals(false, ss3_cs2.hasNull());
-    assertEquals(false, ss3_cs3.hasNull());
+    assertFalse(ss3_cs1.hasNull());
+    assertFalse(ss3_cs2.hasNull());
+    assertFalse(ss3_cs3.hasNull());
 
     // stripe 4 stats
     StripeStatistics ss4 = stripeStats.get(3);
     ColumnStatistics ss4_cs1 = ss4.getColumnStatistics()[0];
     ColumnStatistics ss4_cs2 = ss4.getColumnStatistics()[1];
     ColumnStatistics ss4_cs3 = ss4.getColumnStatistics()[2];
-    assertEquals(false, ss4_cs1.hasNull());
-    assertEquals(false, ss4_cs2.hasNull());
-    assertEquals(true, ss4_cs3.hasNull());
+    assertFalse(ss4_cs1.hasNull());
+    assertFalse(ss4_cs2.hasNull());
+    assertTrue(ss4_cs3.hasNull());
 
     // Test file dump
     PrintStream origOut = System.out;

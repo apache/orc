@@ -25,15 +25,14 @@ import org.apache.orc.InMemoryKeystore;
 import org.apache.orc.OrcConf;
 import org.apache.orc.OrcProto;
 import org.apache.orc.impl.reader.ReaderEncryptionVariant;
-import org.junit.Test;
 
 import java.io.IOException;
 import java.security.Key;
 import java.util.List;
 import java.util.Random;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestCryptoUtils {
 
@@ -72,8 +71,8 @@ public class TestCryptoUtils {
 
     List<String> keyNames = provider.getKeyNames();
     assertEquals(2, keyNames.size());
-    assertEquals(true, keyNames.contains("pii"));
-    assertEquals(true, keyNames.contains("secret"));
+    assertTrue(keyNames.contains("pii"));
+    assertTrue(keyNames.contains("secret"));
     HadoopShims.KeyMetadata meta = provider.getCurrentKeyVersion("pii");
     assertEquals(1, meta.getVersion());
     LocalKey localKey = provider.createLocalKey(meta);

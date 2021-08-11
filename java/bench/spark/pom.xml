@@ -53,10 +53,6 @@
       <artifactId>netty-all</artifactId>
     </dependency>
     <dependency>
-      <groupId>io.netty</groupId>
-      <artifactId>netty</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
     </dependency>
@@ -111,14 +107,6 @@
       <artifactId>spark-avro_2.12</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.codehaus.janino</groupId>
-      <artifactId>janino</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.codehaus.janino</groupId>
-      <artifactId>commons-compiler</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.jodd</groupId>
       <artifactId>jodd-core</artifactId>
     </dependency>
@@ -148,6 +136,13 @@
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
       <version>${spark.jackson.version}</version>
+    </dependency>
+    <!-- This should be the same with Spark's dependency. -->
+    <dependency>
+      <groupId>org.objenesis</groupId>
+      <artifactId>objenesis</artifactId>
+      <version>2.6</version>
+      <scope>compile</scope>
     </dependency>
   </dependencies>
 
@@ -181,15 +176,12 @@
               <shadedClassifierName>shaded</shadedClassifierName>
               <filters>
                 <filter>
-                  <artifact>org.codehaus.janino:janino</artifact>
+                  <artifact>*:*</artifact>
                   <excludes>
-                    <exclude>META-INF/DUMMY.SF</exclude>
-                    <exclude>META-INF/DUMMY.DSA</exclude>
-                  </excludes>
-                </filter>
-                <filter>
-                  <artifact>org.codehaus.janino:commons-compiler</artifact>
-                  <excludes>
+                    <exclude>META-INF/MANIFEST.MF</exclude>
+                    <exclude>META-INF/DEPENDENCIES</exclude>
+                    <exclude>META-INF/LICENSE</exclude>
+                    <exclude>META-INF/NOTICE</exclude>
                     <exclude>META-INF/DUMMY.SF</exclude>
                     <exclude>META-INF/DUMMY.DSA</exclude>
                   </excludes>

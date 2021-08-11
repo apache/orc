@@ -17,8 +17,8 @@
  */
 package org.apache.orc.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -43,10 +43,6 @@ import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
 import org.apache.orc.impl.writer.StreamOptions;
 import org.apache.orc.tools.FileDump;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
 
 public class TestRLEv2 {
   Path workDir = new Path(System.getProperty("test.tmp.dir",
@@ -55,15 +51,12 @@ public class TestRLEv2 {
   Configuration conf;
   FileSystem fs;
 
-  @Rule
-  public TestName testCaseName = new TestName();
-
-  @Before
-  public void openFileSystem () throws Exception {
+  @BeforeEach
+  public void openFileSystem (TestInfo testInfo) throws Exception {
     conf = new Configuration();
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestRLEv2." +
-        testCaseName.getMethodName() + ".orc");
+        testInfo.getTestMethod().get().getName() + ".orc");
     fs.delete(testFilePath, false);
   }
 
@@ -97,7 +90,7 @@ public class TestRLEv2 {
     String outDump = new String(myOut.toByteArray(), StandardCharsets.UTF_8);
     // 10 runs of 512 elements. Each run has 2 bytes header, 2 bytes base (base = 123,
     // zigzag encoded varint) and 1 byte delta (delta = 0). In total, 5 bytes per run.
-    assertEquals(true, outDump.contains("Stream: column 0 section DATA start: 3 length 50"));
+    assertTrue(outDump.contains("Stream: column 0 section DATA start: 3 length 50"));
     System.setOut(origOut);
   }
 
@@ -127,7 +120,7 @@ public class TestRLEv2 {
     String outDump = new String(myOut.toByteArray(), StandardCharsets.UTF_8);
     // 10 runs of 512 elements. Each run has 2 bytes header, 1 byte base (base = 0)
     // and 1 byte delta (delta = 1). In total, 4 bytes per run.
-    assertEquals(true, outDump.contains("Stream: column 0 section DATA start: 3 length 40"));
+    assertTrue(outDump.contains("Stream: column 0 section DATA start: 3 length 40"));
     System.setOut(origOut);
   }
 
@@ -157,7 +150,7 @@ public class TestRLEv2 {
     String outDump = new String(myOut.toByteArray(), StandardCharsets.UTF_8);
     // 10 runs of 512 elements. Each run has 2 bytes header, 2 byte base (base = 512, zigzag + varint)
     // and 1 byte delta (delta = 1). In total, 5 bytes per run.
-    assertEquals(true, outDump.contains("Stream: column 0 section DATA start: 3 length 50"));
+    assertTrue(outDump.contains("Stream: column 0 section DATA start: 3 length 50"));
     System.setOut(origOut);
   }
 
@@ -187,7 +180,7 @@ public class TestRLEv2 {
     String outDump = new String(myOut.toByteArray(), StandardCharsets.UTF_8);
     // 10 runs of 512 elements. Each run has 2 bytes header, 1 byte base (base = 0)
     // and 2 bytes delta (delta = 100, zigzag encoded varint). In total, 5 bytes per run.
-    assertEquals(true, outDump.contains("Stream: column 0 section DATA start: 3 length 50"));
+    assertTrue(outDump.contains("Stream: column 0 section DATA start: 3 length 50"));
     System.setOut(origOut);
   }
 
@@ -217,7 +210,7 @@ public class TestRLEv2 {
     String outDump = new String(myOut.toByteArray(), StandardCharsets.UTF_8);
     // 10 runs of 512 elements. Each run has 2 bytes header, 2 byte base (base = 512, zigzag + varint)
     // and 2 bytes delta (delta = 100, zigzag encoded varint). In total, 6 bytes per run.
-    assertEquals(true, outDump.contains("Stream: column 0 section DATA start: 3 length 60"));
+    assertTrue(outDump.contains("Stream: column 0 section DATA start: 3 length 60"));
     System.setOut(origOut);
   }
 
@@ -246,7 +239,7 @@ public class TestRLEv2 {
     System.out.flush();
     String outDump = new String(myOut.toByteArray(), StandardCharsets.UTF_8);
     // 1 byte header + 1 byte value
-    assertEquals(true, outDump.contains("Stream: column 0 section DATA start: 3 length 2"));
+    assertTrue(outDump.contains("Stream: column 0 section DATA start: 3 length 2"));
     System.setOut(origOut);
   }
 
@@ -278,7 +271,7 @@ public class TestRLEv2 {
     // monotonicity will be undetermined for this sequence 0,0,1,2,3,...510. Hence DIRECT encoding
     // will be used. 2 bytes for header and 640 bytes for data (512 values with fixed bit of 10 bits
     // each, 5120/8 = 640). Total bytes 642
-    assertEquals(true, outDump.contains("Stream: column 0 section DATA start: 3 length 642"));
+    assertTrue(outDump.contains("Stream: column 0 section DATA start: 3 length 642"));
     System.setOut(origOut);
   }
 
@@ -310,7 +303,7 @@ public class TestRLEv2 {
     System.out.flush();
     String outDump = new String(myOut.toByteArray(), StandardCharsets.UTF_8);
     // use PATCHED_BASE encoding
-    assertEquals(true, outDump.contains("Stream: column 0 section DATA start: 3 length 583"));
+    assertTrue(outDump.contains("Stream: column 0 section DATA start: 3 length 583"));
     System.setOut(origOut);
   }
 
@@ -375,9 +368,9 @@ public class TestRLEv2 {
     public void compareBytes(int... expected) {
       for(int i=0; i < expected.length; ++i) {
         ByteBuffer current = getCurrentBuffer();
-        assertEquals("position " + i, (byte) expected[i], current.get());
+        assertEquals((byte) expected[i], current.get(), "position " + i);
       }
-      assertEquals(null, getCurrentBuffer());
+      assertNull(getCurrentBuffer());
     }
   }
 

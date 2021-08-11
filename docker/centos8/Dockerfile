@@ -31,6 +31,7 @@ RUN yum install -y \
   gcc-c++ \
   gettext-devel \
   git \
+  libarchive \
   libtool \
   make \
   maven \

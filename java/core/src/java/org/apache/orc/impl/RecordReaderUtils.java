@@ -500,7 +500,7 @@ public class RecordReaderUtils {
 
   // this is an implementation copied from ElasticByteBufferPool in hadoop-2,
   // which lacks a clear()/clean() operation
-  public final static class ByteBufferAllocatorPool implements HadoopShims.ByteBufferPoolShim {
+  public static final class ByteBufferAllocatorPool implements HadoopShims.ByteBufferPoolShim {
     private static final class Key implements Comparable<Key> {
       private final int capacity;
       private final long insertionGeneration;

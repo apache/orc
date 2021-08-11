@@ -134,6 +134,10 @@ public class GenerateVariants implements OrcBenchmark {
         CompressionKind compressionKind =
             CompressionKind.valueOf(compressList[compress].toUpperCase());
         for(int format=0; format < formatList.length; ++format) {
+          if (compressionKind == CompressionKind.ZSTD && formatList[format].equals("json")) {
+            System.out.println("Ignore JSON format with ZSTD compression case");
+            continue; // JSON doesn't support ZSTD
+          }
           Path outPath = Utilities.getVariant(root, data, formatList[format],
               compressionKind.getExtension());
           writers[compress * formatList.length + format] =
@@ -147,14 +151,18 @@ public class GenerateVariants implements OrcBenchmark {
         VectorizedRowBatch batch = schema.createRowBatch();
         while (reader.nextBatch(batch)) {
           for (BatchWriter writer : writers) {
-            writer.writeBatch(batch);
+            if (writer != null) {
+              writer.writeBatch(batch);
+            }
           }
         }
       }
 
       // Close all the writers
       for (BatchWriter writer : writers) {
-        writer.close();
+        if (writer != null) {
+          writer.close();
+        }
       }
     }
   }
@@ -223,7 +231,7 @@ public class GenerateVariants implements OrcBenchmark {
     }
   }
 
-  static CommandLine parseCommandLine(String[] args) throws ParseException {
+  public static CommandLine parseCommandLine(String[] args) throws ParseException {
     Options options = new Options()
         .addOption("h", "help", false, "Provide help")
         .addOption("c", "compress", true, "List of compression")

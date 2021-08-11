@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,17 +17,18 @@
  */
 package org.apache.orc.impl;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.util.Random;
-
-import org.junit.Test;
 
 import com.google.common.math.LongMath;
 
@@ -80,10 +81,10 @@ public class TestSerializationUtils {
     for(int i=-8192; i < 8192; ++i) {
       buffer.reset();
         SerializationUtils.writeBigInteger(buffer, BigInteger.valueOf(i));
-      assertEquals("compare length for " + i,
-            i >= -64 && i < 64 ? 1 : 2, buffer.size());
-      assertEquals("compare result for " + i,
-          i, SerializationUtils.readBigInteger(fromBuffer(buffer)).intValue());
+      assertEquals(i >= -64 && i < 64 ? 1 : 2, buffer.size(),
+          "compare length for " + i);
+      assertEquals(i, SerializationUtils.readBigInteger(fromBuffer(buffer)).intValue(),
+          "compare result for " + i);
     }
     buffer.reset();
     SerializationUtils.writeBigInteger(buffer,
@@ -120,12 +121,12 @@ public class TestSerializationUtils {
   public void testSubtractionOverflow() {
     // cross check results with Guava results below
     SerializationUtils utils = new SerializationUtils();
-    assertEquals(false, utils.isSafeSubtract(22222222222L, Long.MIN_VALUE));
-    assertEquals(false, utils.isSafeSubtract(-22222222222L, Long.MAX_VALUE));
-    assertEquals(false, utils.isSafeSubtract(Long.MIN_VALUE, Long.MAX_VALUE));
-    assertEquals(true, utils.isSafeSubtract(-1553103058346370095L, 6553103058346370095L));
-    assertEquals(true, utils.isSafeSubtract(0, Long.MAX_VALUE));
-    assertEquals(true, utils.isSafeSubtract(Long.MIN_VALUE, 0));
+    assertFalse(utils.isSafeSubtract(22222222222L, Long.MIN_VALUE));
+    assertFalse(utils.isSafeSubtract(-22222222222L, Long.MAX_VALUE));
+    assertFalse(utils.isSafeSubtract(Long.MIN_VALUE, Long.MAX_VALUE));
+    assertTrue(utils.isSafeSubtract(-1553103058346370095L, 6553103058346370095L));
+    assertTrue(utils.isSafeSubtract(0, Long.MAX_VALUE));
+    assertTrue(utils.isSafeSubtract(Long.MIN_VALUE, 0));
   }
 
   @Test

@@ -18,7 +18,6 @@
 
 package org.apache.orc.impl;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.OrcFile;
@@ -40,7 +39,7 @@ import java.util.TimeZone;
 public final class SerializationUtils {
   private static final Logger LOG = LoggerFactory.getLogger(SerializationUtils.class);
 
-  private final static int BUFFER_SIZE = 64;
+  private static final int BUFFER_SIZE = 64;
   private final byte[] readBuffer;
   private final byte[] writeBuffer;
 
@@ -100,7 +99,7 @@ public final class SerializationUtils {
   }
 
   public float readFloat(InputStream in) throws IOException {
-    readFully(in, readBuffer, 0, 4);
+    readFully(in, readBuffer, 4);
     int val = (((readBuffer[0] & 0xff) << 0)
         + ((readBuffer[1] & 0xff) << 8)
         + ((readBuffer[2] & 0xff) << 16)
@@ -127,7 +126,7 @@ public final class SerializationUtils {
   }
 
   public long readLongLE(InputStream in) throws IOException {
-    readFully(in, readBuffer, 0, 8);
+    readFully(in, readBuffer, 8);
     return (((readBuffer[0] & 0xff) << 0)
         + ((readBuffer[1] & 0xff) << 8)
         + ((readBuffer[2] & 0xff) << 16)
@@ -138,15 +137,19 @@ public final class SerializationUtils {
         + ((long) (readBuffer[7] & 0xff) << 56));
   }
 
-  private void readFully(final InputStream in, final byte[] buffer, final int off, final int len)
+  private void readFully(final InputStream in, final byte[] buffer, int len)
       throws IOException {
-    int n = 0;
-    while (n < len) {
-      int count = in.read(buffer, off + n, len - n);
-      if (count < 0) {
+    int offset = 0;
+    for (;;) {
+      final int n = in.read(buffer, offset, len);
+      if (n == len) {
+        return;
+      }
+      if (n < 0) {
         throw new EOFException("Read past EOF for " + in);
       }
-      n += count;
+      offset += n;
+      len -= n;
     }
   }
 
@@ -154,20 +157,22 @@ public final class SerializationUtils {
     IOUtils.skipFully(in, numOfDoubles * 8L);
   }
 
-  public void writeDouble(OutputStream output,
-                          double value) throws IOException {
-    writeLongLE(output, Double.doubleToLongBits(value));
-  }
-
-  private void writeLongLE(OutputStream output, long value) throws IOException {
-    writeBuffer[0] = (byte) ((value >> 0)  & 0xff);
-    writeBuffer[1] = (byte) ((value >> 8)  & 0xff);
-    writeBuffer[2] = (byte) ((value >> 16) & 0xff);
-    writeBuffer[3] = (byte) ((value >> 24) & 0xff);
-    writeBuffer[4] = (byte) ((value >> 32) & 0xff);
-    writeBuffer[5] = (byte) ((value >> 40) & 0xff);
-    writeBuffer[6] = (byte) ((value >> 48) & 0xff);
-    writeBuffer[7] = (byte) ((value >> 56) & 0xff);
+  public void writeDouble(OutputStream output, double value)
+      throws IOException {
+    final long bits = Double.doubleToLongBits(value);
+    final int first = (int) (bits & 0xFFFFFFFF);
+    final int second = (int) ((bits >>> 32) & 0xFFFFFFFF);
+    // Implementation taken from Apache Avro (org.apache.avro.io.BinaryData)
+    // the compiler seems to execute this order the best, likely due to
+    // register allocation -- the lifetime of constants is minimized.
+    writeBuffer[0] = (byte) (first);
+    writeBuffer[4] = (byte) (second);
+    writeBuffer[5] = (byte) (second >>> 8);
+    writeBuffer[1] = (byte) (first >>> 8);
+    writeBuffer[2] = (byte) (first >>> 16);
+    writeBuffer[6] = (byte) (second >>> 16);
+    writeBuffer[7] = (byte) (second >>> 24);
+    writeBuffer[3] = (byte) (first >>> 24);
     output.write(writeBuffer, 0, 8);
   }
 
@@ -765,7 +770,8 @@ public final class SerializationUtils {
     output.write(writeBuffer, 0, toWrite);
   }
 
-  private void writeLongBE(OutputStream output, long[] input, int offset, int numHops, int numBytes) throws IOException {
+  private void writeLongBE(OutputStream output, long[] input, int offset,
+                           int numHops, int numBytes) throws IOException {
 
     switch (numBytes) {
     case 1:

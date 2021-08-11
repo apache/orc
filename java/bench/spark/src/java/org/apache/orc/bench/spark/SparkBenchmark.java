@@ -19,6 +19,7 @@
 package org.apache.orc.bench.spark;
 
 import com.google.auto.service.AutoService;
+import org.apache.commons.cli.CommandLine;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -27,6 +28,7 @@ import org.apache.orc.TypeDescription;
 import org.apache.orc.bench.core.OrcBenchmark;
 import org.apache.orc.bench.core.IOCounters;
 import org.apache.orc.bench.core.Utilities;
+import org.apache.orc.bench.core.convert.GenerateVariants;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.avro.AvroFileFormat;
 import org.apache.spark.sql.catalyst.InternalRow;
@@ -52,6 +54,7 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.infra.Blackhole;
 import org.openjdk.jmh.runner.Runner;
+import org.openjdk.jmh.runner.options.OptionsBuilder;
 import scala.Function1;
 
 import java.io.IOException;
@@ -87,7 +90,14 @@ public class SparkBenchmark implements OrcBenchmark {
 
   @Override
   public void run(String[] args) throws Exception {
-    new Runner(Utilities.parseOptions(args, this.getClass())).run();
+    CommandLine cmds = GenerateVariants.parseCommandLine(args);
+    new Runner(new OptionsBuilder()
+        .parent(Utilities.parseOptions(args, this.getClass()))
+        .param("compression", cmds.getOptionValue("compress", "none,gz,snappy").split(","))
+        .param("dataset", cmds.getOptionValue("data", "taxi,sales,github").split(","))
+        .param("format", cmds.getOptionValue("format", "orc,parquet,json").split(","))
+        .build()
+    ).run();
   }
 
   @State(Scope.Thread)

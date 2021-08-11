@@ -23,7 +23,7 @@ import java.nio.charset.StandardCharsets;
 import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.orc.impl.Dictionary;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 /**
@@ -54,8 +54,8 @@ public class StringDictTestingUtils {
     public void visit(Dictionary.VisitorContext context)
         throws IOException {
       String word = context.getText().toString();
-      assertEquals("in word " + current, words[current], word);
-      assertEquals("in word " + current, order[current], context.getOriginalPosition());
+      assertEquals(words[current], word, "in word " + current);
+      assertEquals(order[current], context.getOriginalPosition(), "in word " + current);
       buffer.reset();
       context.writeBytes(buffer);
       assertEquals(word, new String(buffer.getData(), 0, buffer.getLength(), StandardCharsets.UTF_8));

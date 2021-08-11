@@ -56,4 +56,44 @@
     <Class name="org.apache.orc.TypeDescription"/>
     <Method name="equals" />
   </Match>
+  <Match>
+    <Bug pattern="NP_NULL_ON_SOME_PATH"/>
+    <Class name="org.apache.orc.impl.StreamName"/>
+    <Method name="compareTo" />
+  </Match>
+  <Match>
+    <Bug pattern="NP_NULL_ON_SOME_PATH"/>
+    <Class name="org.apache.orc.impl.reader.ReaderEncryptionKey"/>
+    <Method name="compareTo" />
+  </Match>
+  <Match>
+    <Bug pattern="NP_NULL_ON_SOME_PATH"/>
+    <Class name="org.apache.orc.impl.reader.ReaderEncryptionVariant"/>
+    <Method name="compareTo" />
+  </Match>
+  <Match>
+    <Bug pattern="NP_NULL_ON_SOME_PATH"/>
+    <Class name="org.apache.orc.impl.MaskDescriptionImpl"/>
+    <Method name="compareTo" />
+  </Match>
+  <Match>
+    <Bug pattern="NP_NULL_ON_SOME_PATH"/>
+    <Class name="org.apache.orc.impl.TreeReaderFactory$TreeReader"/>
+    <Method name="&lt;init&gt;" />
+  </Match>
+  <Match>
+    <Bug pattern="NP_NULL_ON_SOME_PATH"/>
+    <Class name="org.apache.orc.impl.writer.WriterEncryptionKey"/>
+    <Method name="compareTo" />
+  </Match>
+  <Match>
+    <Bug pattern="NP_NULL_ON_SOME_PATH"/>
+    <Class name="org.apache.orc.impl.writer.WriterEncryptionVariant"/>
+    <Method name="compareTo" />
+  </Match>
+  <Match>
+    <Bug pattern="NP_NULL_PARAM_DEREF"/>
+    <Class name="org.apache.orc.impl.reader.StripePlanner"/>
+    <Method name="planPartialDataReading" />
+  </Match>
 </FindBugsFilter>

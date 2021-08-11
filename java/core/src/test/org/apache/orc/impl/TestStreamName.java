@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,9 +19,9 @@
 package org.apache.orc.impl;
 
 import org.apache.orc.OrcProto;
-import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestStreamName {
 
@@ -34,15 +34,15 @@ public class TestStreamName {
     StreamName s4 = new StreamName(5,
         OrcProto.Stream.Kind.DICTIONARY_DATA);
     StreamName s1p = new StreamName(3, OrcProto.Stream.Kind.DATA);
-    assertEquals(true, s1.equals(s1));
-    assertEquals(false, s1.equals(s2));
-    assertEquals(false, s1.equals(s3));
-    assertEquals(true, s1.equals(s1p));
-    assertEquals(false, s1.equals(null));
-    assertEquals(true, s1.compareTo(s2) < 0);
-    assertEquals(true, s2.compareTo(s3) < 0);
-    assertEquals(true, s3.compareTo(s4) < 0);
-    assertEquals(true, s4.compareTo(s1p) > 0);
+    assertTrue(s1.equals(s1));
+    assertFalse(s1.equals(s2));
+    assertFalse(s1.equals(s3));
+    assertTrue(s1.equals(s1p));
+    assertNotEquals(null, s1);
+    assertTrue(s1.compareTo(s2) < 0);
+    assertTrue(s2.compareTo(s3) < 0);
+    assertTrue(s3.compareTo(s4) < 0);
+    assertTrue(s4.compareTo(s1p) > 0);
     assertEquals(0, s1p.compareTo(s1));
   }
 }

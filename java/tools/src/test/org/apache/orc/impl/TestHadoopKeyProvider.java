@@ -19,14 +19,16 @@ package org.apache.orc.impl;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.BytesWritable;
-import org.junit.Test;
 
 import java.io.IOException;
 import java.security.Key;
 import java.util.List;
 import java.util.Random;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.Test;
 
 public class TestHadoopKeyProvider {
 
@@ -43,8 +45,8 @@ public class TestHadoopKeyProvider {
     KeyProvider provider = CryptoUtils.getKeyProvider(conf, new Random(24));
     List<String> keyNames = provider.getKeyNames();
     assertEquals(2, keyNames.size());
-    assertEquals(true, keyNames.contains("pii"));
-    assertEquals(true, keyNames.contains("secret"));
+    assertTrue(keyNames.contains("pii"));
+    assertTrue(keyNames.contains("secret"));
     HadoopShims.KeyMetadata piiKey = provider.getCurrentKeyVersion("pii");
     assertEquals(1, piiKey.getVersion());
     LocalKey localKey = provider.createLocalKey(piiKey);

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,7 +17,11 @@
  */
 package org.apache.orc.tools.convert;
 
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+import com.opencsv.exceptions.CsvValidationException;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
@@ -80,8 +84,15 @@ public class CsvReader implements RecordReader {
                    String nullString,
                    String timestampFormat) {
     this.underlying = input;
-    this.reader = new CSVReader(reader, separatorChar, quoteChar, escapeChar,
-        headerLines);
+    CSVParser parser = new CSVParserBuilder()
+        .withSeparator(separatorChar)
+        .withQuoteChar(quoteChar)
+        .withEscapeChar(escapeChar)
+        .build();
+    this.reader = new CSVReaderBuilder(reader)
+        .withSkipLines(headerLines)
+        .withCSVParser(parser)
+        .build();
     this.nullString = nullString;
     this.totalSize = size;
     IntWritable nextColumn = new IntWritable(0);
@@ -101,18 +112,22 @@ public class CsvReader implements RecordReader {
     final int BATCH_SIZE = batch.getMaxSize();
     String[] nextLine;
     // Read the CSV rows and place them into the column vectors.
-    while ((nextLine = reader.readNext()) != null) {
-      rowNumber++;
-      if (nextLine.length != columns &&
-          !(nextLine.length == columns + 1 && "".equals(nextLine[columns]))) {
-        throw new IllegalArgumentException("Too many columns on line " +
-            rowNumber + ". Expected " + columns + ", but got " +
-            nextLine.length + ".");
+    try {
+      while ((nextLine = reader.readNext()) != null) {
+        rowNumber++;
+        if (nextLine.length != columns &&
+            !(nextLine.length == columns + 1 && "".equals(nextLine[columns]))) {
+          throw new IllegalArgumentException("Too many columns on line " +
+              rowNumber + ". Expected " + columns + ", but got " +
+              nextLine.length + ".");
+        }
+        converter.convert(nextLine, batch, batch.size++);
+        if (batch.size == BATCH_SIZE) {
+          break;
+        }
       }
-      converter.convert(nextLine, batch, batch.size++);
-      if (batch.size == BATCH_SIZE) {
-        break;
-      }
+    } catch (CsvValidationException e) {
+      throw new IOException(e);
     }
     return batch.size != 0;
   }

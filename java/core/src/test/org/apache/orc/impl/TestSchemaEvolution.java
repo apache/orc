@@ -17,11 +17,8 @@
  */
 package org.apache.orc.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,15 +53,8 @@ import org.apache.orc.impl.reader.StripePlanner;
 import org.apache.orc.impl.reader.tree.BatchReader;
 import org.apache.orc.impl.reader.tree.StructBatchReader;
 import org.apache.orc.impl.reader.tree.TypeReader;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
 
 public class TestSchemaEvolution {
-
-  @Rule
-  public TestName testCaseName = new TestName();
 
   Configuration conf;
   Reader.Options options;
@@ -73,13 +63,13 @@ public class TestSchemaEvolution {
   Path workDir = new Path(System.getProperty("test.tmp.dir",
       "target" + File.separator + "test" + File.separator + "tmp"));
 
-  @Before
-  public void setup() throws Exception {
+  @BeforeEach
+  public void setup(TestInfo testInfo) throws Exception {
     conf = new Configuration();
     options = new Reader.Options(conf);
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, "TestSchemaEvolution." +
-        testCaseName.getMethodName() + ".orc");
+        testInfo.getTestMethod().get().getName() + ".orc");
     fs.delete(testFilePath, false);
   }
 
@@ -337,9 +327,9 @@ public class TestSchemaEvolution {
   }
 
   @Test
-  public void testFloatToDoubleEvolution() throws Exception {
+  public void testFloatToDoubleEvolution(TestInfo testInfo) throws Exception {
     testFilePath = new Path(workDir, "TestSchemaEvolution." +
-        testCaseName.getMethodName() + ".orc");
+        testInfo.getTestMethod().get().getName() + ".orc");
     TypeDescription schema = TypeDescription.createFloat();
     Writer writer = OrcFile.createWriter(testFilePath,
         OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
@@ -364,9 +354,9 @@ public class TestSchemaEvolution {
   }
 
   @Test
-  public void testFloatToDecimalEvolution() throws Exception {
+  public void testFloatToDecimalEvolution(TestInfo testInfo) throws Exception {
     testFilePath = new Path(workDir, "TestSchemaEvolution." +
-      testCaseName.getMethodName() + ".orc");
+      testInfo.getTestMethod().get().getName() + ".orc");
     TypeDescription schema = TypeDescription.createFloat();
     Writer writer = OrcFile.createWriter(testFilePath,
       OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
@@ -391,9 +381,9 @@ public class TestSchemaEvolution {
   }
 
   @Test
-  public void testFloatToDecimal64Evolution() throws Exception {
+  public void testFloatToDecimal64Evolution(TestInfo testInfo) throws Exception {
     testFilePath = new Path(workDir, "TestSchemaEvolution." +
-      testCaseName.getMethodName() + ".orc");
+        testInfo.getTestMethod().get().getName() + ".orc");
     TypeDescription schema = TypeDescription.createFloat();
     Writer writer = OrcFile.createWriter(testFilePath,
       OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
@@ -418,9 +408,9 @@ public class TestSchemaEvolution {
   }
 
   @Test
-  public void testDoubleToDecimalEvolution() throws Exception {
+  public void testDoubleToDecimalEvolution(TestInfo testInfo) throws Exception {
     testFilePath = new Path(workDir, "TestSchemaEvolution." +
-      testCaseName.getMethodName() + ".orc");
+        testInfo.getTestMethod().get().getName() + ".orc");
     TypeDescription schema = TypeDescription.createDouble();
     Writer writer = OrcFile.createWriter(testFilePath,
       OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
@@ -445,9 +435,9 @@ public class TestSchemaEvolution {
   }
 
   @Test
-  public void testDoubleToDecimal64Evolution() throws Exception {
+  public void testDoubleToDecimal64Evolution(TestInfo testInfo) throws Exception {
     testFilePath = new Path(workDir, "TestSchemaEvolution." +
-      testCaseName.getMethodName() + ".orc");
+        testInfo.getTestMethod().get().getName() + ".orc");
     TypeDescription schema = TypeDescription.createDouble();
     Writer writer = OrcFile.createWriter(testFilePath,
       OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
@@ -472,9 +462,9 @@ public class TestSchemaEvolution {
   }
 
   @Test
-  public void testLongToDecimalEvolution() throws Exception {
+  public void testLongToDecimalEvolution(TestInfo testInfo) throws Exception {
     testFilePath = new Path(workDir, "TestSchemaEvolution." +
-      testCaseName.getMethodName() + ".orc");
+        testInfo.getTestMethod().get().getName() + ".orc");
     TypeDescription schema = TypeDescription.createLong();
     Writer writer = OrcFile.createWriter(testFilePath,
       OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
@@ -499,9 +489,9 @@ public class TestSchemaEvolution {
   }
 
   @Test
-  public void testLongToDecimal64Evolution() throws Exception {
+  public void testLongToDecimal64Evolution(TestInfo testInfo) throws Exception {
     testFilePath = new Path(workDir, "TestSchemaEvolution." +
-      testCaseName.getMethodName() + ".orc");
+        testInfo.getTestMethod().get().getName() + ".orc");
     TypeDescription schema = TypeDescription.createLong();
     Writer writer = OrcFile.createWriter(testFilePath,
       OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
@@ -526,9 +516,9 @@ public class TestSchemaEvolution {
   }
 
   @Test
-  public void testDecimalToDecimalEvolution() throws Exception {
+  public void testDecimalToDecimalEvolution(TestInfo testInfo) throws Exception {
     testFilePath = new Path(workDir, "TestSchemaEvolution." +
-      testCaseName.getMethodName() + ".orc");
+        testInfo.getTestMethod().get().getName() + ".orc");
     TypeDescription schema = TypeDescription.createDecimal().withPrecision(38).withScale(0);
     Writer writer = OrcFile.createWriter(testFilePath,
       OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
@@ -553,9 +543,9 @@ public class TestSchemaEvolution {
   }
 
   @Test
-  public void testDecimalToDecimal64Evolution() throws Exception {
+  public void testDecimalToDecimal64Evolution(TestInfo testInfo) throws Exception {
     testFilePath = new Path(workDir, "TestSchemaEvolution." +
-      testCaseName.getMethodName() + ".orc");
+        testInfo.getTestMethod().get().getName() + ".orc");
     TypeDescription schema = TypeDescription.createDecimal().withPrecision(38).withScale(2);
     Writer writer = OrcFile.createWriter(testFilePath,
       OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
@@ -580,9 +570,9 @@ public class TestSchemaEvolution {
   }
 
   @Test
-  public void testBooleanToStringEvolution() throws Exception {
+  public void testBooleanToStringEvolution(TestInfo testInfo) throws Exception {
     testFilePath = new Path(workDir, "TestSchemaEvolution." +
-      testCaseName.getMethodName() + ".orc");
+        testInfo.getTestMethod().get().getName() + ".orc");
     TypeDescription schema = TypeDescription.createBoolean();
     Writer writer = OrcFile.createWriter(testFilePath,
       OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
@@ -643,9 +633,9 @@ public class TestSchemaEvolution {
   }
 
   @Test
-  public void testStringToDecimalEvolution() throws Exception {
+  public void testStringToDecimalEvolution(TestInfo testInfo) throws Exception {
     testFilePath = new Path(workDir, "TestSchemaEvolution." +
-      testCaseName.getMethodName() + ".orc");
+        testInfo.getTestMethod().get().getName() + ".orc");
     TypeDescription schema = TypeDescription.createString();
     Writer writer = OrcFile.createWriter(testFilePath,
       OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
@@ -671,9 +661,9 @@ public class TestSchemaEvolution {
   }
 
   @Test
-  public void testStringToDecimal64Evolution() throws Exception {
+  public void testStringToDecimal64Evolution(TestInfo testInfo) throws Exception {
     testFilePath = new Path(workDir, "TestSchemaEvolution." +
-      testCaseName.getMethodName() + ".orc");
+        testInfo.getTestMethod().get().getName() + ".orc");
     TypeDescription schema = TypeDescription.createString();
     Writer writer = OrcFile.createWriter(testFilePath,
       OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
@@ -699,9 +689,9 @@ public class TestSchemaEvolution {
   }
 
   @Test
-  public void testTimestampToDecimalEvolution() throws Exception {
+  public void testTimestampToDecimalEvolution(TestInfo testInfo) throws Exception {
     testFilePath = new Path(workDir, "TestSchemaEvolution." +
-      testCaseName.getMethodName() + ".orc");
+        testInfo.getTestMethod().get().getName() + ".orc");
     TypeDescription schema = TypeDescription.createTimestamp();
     Writer writer = OrcFile.createWriter(testFilePath,
       OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
@@ -725,7 +715,7 @@ public class TestSchemaEvolution {
     TypeDescription schemaOnRead = TypeDescription.createDecimal().withPrecision(38).withScale(9);
     RecordReader rows = reader.rows(reader.options().schema(schemaOnRead));
     batch = schemaOnRead.createRowBatch();
-    assertEquals(true, rows.nextBatch(batch));
+    assertTrue(rows.nextBatch(batch));
     assertEquals(3, batch.size);
     DecimalColumnVector dcv = (DecimalColumnVector) batch.cols[0];
     assertEquals("74.123456789", dcv.vector[0].toString());
@@ -735,9 +725,9 @@ public class TestSchemaEvolution {
   }
 
   @Test
-  public void testTimestampToDecimal64Evolution() throws Exception {
+  public void testTimestampToDecimal64Evolution(TestInfo testInfo) throws Exception {
     testFilePath = new Path(workDir, "TestSchemaEvolution." +
-      testCaseName.getMethodName() + ".orc");
+        testInfo.getTestMethod().get().getName() + ".orc");
     TypeDescription schema = TypeDescription.createTimestamp();
     Writer writer = OrcFile.createWriter(testFilePath,
       OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
@@ -762,9 +752,9 @@ public class TestSchemaEvolution {
   }
 
   @Test
-  public void testTimestampToStringEvolution() throws Exception {
+  public void testTimestampToStringEvolution(TestInfo testInfo) throws Exception {
     testFilePath = new Path(workDir, "TestSchemaEvolution." +
-                                         testCaseName.getMethodName() + ".orc");
+        testInfo.getTestMethod().get().getName() + ".orc");
     TypeDescription schema = TypeDescription.fromString("timestamp");
     Writer writer = OrcFile.createWriter(testFilePath,
         OrcFile.writerOptions(conf).setSchema(schema).stripeSize(100000)
@@ -787,7 +777,7 @@ public class TestSchemaEvolution {
     RecordReader rows = reader.rows(reader.options().schema(schema));
     batch = schema.createRowBatchV2();
     BytesColumnVector bcv = (BytesColumnVector) batch.cols[0];
-    assertEquals(true, rows.nextBatch(batch));
+    assertTrue(rows.nextBatch(batch));
     assertEquals(3, batch.size);
     assertEquals("1970-01-01 00:01:14.123456789", bcv.toString(0));
     assertEquals("1970-01-01 00:02:03.456", bcv.toString(1));
@@ -1503,13 +1493,15 @@ public class TestSchemaEvolution {
     assertSame(original, mapped);
   }
 
-  @Test(expected = SchemaEvolution.IllegalEvolutionException.class)
+  @Test
   public void testIncompatibleTypes() {
-    TypeDescription fileType = TypeDescription.fromString("struct<a:int>");
-    TypeDescription readerType = TypeDescription.fromString("struct<a:date>");
-    boolean[] included = includeAll(readerType);
-    options.tolerateMissingSchema(false);
-    new SchemaEvolution(fileType, readerType, options.include(included));
+    assertThrows(SchemaEvolution.IllegalEvolutionException.class, () -> {
+      TypeDescription fileType = TypeDescription.fromString("struct<a:int>");
+      TypeDescription readerType = TypeDescription.fromString("struct<a:date>");
+      boolean[] included = includeAll(readerType);
+      options.tolerateMissingSchema(false);
+      new SchemaEvolution(fileType, readerType, options.include(included));
+    });
   }
 
   @Test
@@ -1529,7 +1521,7 @@ public class TestSchemaEvolution {
         evo.getReaderBaseSchema().toString());
     // the first stuff should be an identity
     for(int c=0; c < 8; ++c) {
-      assertEquals("column " + c, c, evo.getFileType(c).getId());
+      assertEquals(c, evo.getFileType(c).getId(), "column " + c);
     }
     // y and z should swap places
     assertEquals(9, evo.getFileType(8).getId());
@@ -1553,10 +1545,10 @@ public class TestSchemaEvolution {
         evo.getReaderBaseSchema().toString());
     // the first stuff should be an identity
     for(int c=0; c < 9; ++c) {
-      assertEquals("column " + c, c, evo.getFileType(c).getId());
+      assertEquals(c, evo.getFileType(c).getId(), "column " + c);
     }
     // the file doesn't have z
-    assertEquals(null, evo.getFileType(9));
+    assertNull(evo.getFileType(9));
   }
 
   @Test
@@ -1579,16 +1571,16 @@ public class TestSchemaEvolution {
     boolean[] fileInclude = evo.getFileIncluded();
 
     //get top level struct col
-    assertEquals("column " + 0, 0, evo.getFileType(0).getId());
-    assertTrue("column " + 0, fileInclude[0]);
+    assertEquals(0, evo.getFileType(0).getId(), "column " + 0);
+    assertTrue(fileInclude[0], "column " + 0);
     for(int c=1; c < 6; ++c) {
-      assertNull("column " + c, evo.getFileType(c));
+      assertNull(evo.getFileType(c), "column " + c);
       //skip all acid metadata columns
-      assertFalse("column " + c, fileInclude[c]);
+      assertFalse(fileInclude[c], "column " + c);
     }
     for(int c=6; c < 9; ++c) {
-      assertEquals("column " + c, c, evo.getFileType(c).getId());
-      assertTrue("column " + c, fileInclude[c]);
+      assertEquals(c, evo.getFileType(c).getId(), "column " + c);
+      assertTrue(fileInclude[c], "column " + c);
     }
     // don't read the last column
     assertFalse(fileInclude[9]);
@@ -1612,8 +1604,8 @@ public class TestSchemaEvolution {
     // the first stuff should be an identity
     boolean[] fileInclude = evo.getFileIncluded();
     for(int c=0; c < 9; ++c) {
-      assertEquals("column " + c, c, evo.getFileType(c).getId());
-      assertTrue("column " + c, fileInclude[c]);
+      assertEquals(c, evo.getFileType(c).getId(), "column " + c);
+      assertTrue(fileInclude[c], "column " + c);
     }
     // don't read the last column
     assertFalse(fileInclude[9]);
@@ -1633,7 +1625,7 @@ public class TestSchemaEvolution {
     // the first stuff should be an identity
     boolean[] fileInclude = evo.getFileIncluded();
     for(int c=0; c < 9; ++c) {
-      assertEquals("column " + c, c, evo.getFileType(c).getId());
+      assertEquals(c, evo.getFileType(c).getId(), "column " + c);
     }
     assertEquals(10, evo.getFileType(9).getId());
     assertEquals(11, evo.getFileType(10).getId());
@@ -1641,7 +1633,7 @@ public class TestSchemaEvolution {
     assertEquals(12, evo.getFileType(12).getId());
     assertEquals(13, fileInclude.length);
     for(int c=0; c < fileInclude.length; ++c) {
-      assertTrue("column " + c, fileInclude[c]);
+      assertTrue(fileInclude[c], "column " + c);
     }
   }
 
@@ -1660,12 +1652,12 @@ public class TestSchemaEvolution {
     assertEquals(1, evo.getFileType(1).getId());
     assertEquals(2, evo.getFileType(2).getId());
     assertEquals(3, evo.getFileType(3).getId());
-    assertEquals(null, evo.getFileType(4));
+    assertNull(evo.getFileType(4));
     assertEquals(4, evo.getFileType(5).getId());
     assertEquals(5, evo.getFileType(6).getId());
     assertEquals(6, fileInclude.length);
     for(int c=0; c < fileInclude.length; ++c) {
-      assertTrue("column " + c, fileInclude[c]);
+      assertTrue(fileInclude[c], "column " + c);
     }
   }
 
@@ -1701,7 +1693,7 @@ public class TestSchemaEvolution {
     SchemaEvolution evo = new SchemaEvolution(fileType, readType, options);
 
     // check to make sure the fields are mapped correctly
-    assertEquals(null, evo.getFileType(1));
+    assertNull(evo.getFileType(1));
     assertEquals(2, evo.getFileType(2).getId());
     assertEquals(1, evo.getFileType(3).getId());
 
@@ -1737,13 +1729,12 @@ public class TestSchemaEvolution {
     VectorizedRowBatch batch = readType.createRowBatch();
     reader.nextBatch(batch, 10, TypeReader.ReadPhase.ALL);
     final String EXPECTED = "ABCDEFGHIJ";
-    assertEquals(true, batch.cols[0].isRepeating);
-    assertEquals(true, batch.cols[0].isNull[0]);
+    assertTrue(batch.cols[0].isRepeating);
+    assertTrue(batch.cols[0].isNull[0]);
     for(int r=0; r < 10; ++r) {
-      assertEquals("col1." + r, EXPECTED.substring(r, r+1),
-          ((BytesColumnVector) batch.cols[1]).toString(r));
-      assertEquals("col2." + r, r,
-          ((LongColumnVector) batch.cols[2]).vector[r]);
+      assertEquals(EXPECTED.substring(r, r+1),
+        ((BytesColumnVector) batch.cols[1]).toString(r), "col1." + r);
+      assertEquals(r, ((LongColumnVector) batch.cols[2]).vector[r], "col2." + r);
     }
   }
 
@@ -1783,7 +1774,7 @@ public class TestSchemaEvolution {
     assertEquals(1, evo.getFileType(1).getId());
     assertEquals(2, evo.getFileType(2).getId());
     assertEquals(3, evo.getFileType(3).getId());
-    assertEquals(null, evo.getFileType(4));
+    assertNull(evo.getFileType(4));
   }
 
   @Test
@@ -1824,7 +1815,7 @@ public class TestSchemaEvolution {
     assertEquals(2, evo.getFileType(2).getId());
     assertEquals(3, evo.getFileType(3).getId());
     assertEquals(4, evo.getFileType(4).getId());
-    assertEquals(null, evo.getFileType(5));
+    assertNull(evo.getFileType(5));
   }
 
   @Test
@@ -1975,18 +1966,20 @@ public class TestSchemaEvolution {
           int current = 0;
           for (int r = 0; r < VALUES; ++r) {
             if (current == batch.size) {
-              assertEquals("row " + r, true, rows.nextBatch(batch));
+              assertTrue(rows.nextBatch(batch), "row " + r);
               current = 0;
             }
-            assertEquals("row " + r, (timeStrings[r] + " " +
-                                          READER_ZONE.getId()).replace(".7 ", " "),
-                longTimestampToString(t1.vector[current], READER_ZONE));
-            assertEquals("row " + r, (timeStrings[r] + " " +
-                                          WRITER_ZONE.getId()).replace(".7 ", " "),
-                longTimestampToString(t2.vector[current], WRITER_ZONE));
+            assertEquals(
+                (timeStrings[r] + " " + READER_ZONE.getId()).replace(".7 ", " "),
+                longTimestampToString(t1.vector[current], READER_ZONE),
+                "row " + r);
+            assertEquals(
+                (timeStrings[r] + " " + WRITER_ZONE.getId()).replace(".7 ", " "),
+                longTimestampToString(t2.vector[current], WRITER_ZONE),
+                "row " + r);
             current += 1;
           }
-          assertEquals(false, rows.nextBatch(batch));
+          assertFalse(rows.nextBatch(batch));
         }
 
         // test conversion to decimal
@@ -1998,16 +1991,16 @@ public class TestSchemaEvolution {
           int current = 0;
           for (int r = 0; r < VALUES; ++r) {
             if (current == batch.size) {
-              assertEquals("row " + r, true, rows.nextBatch(batch));
+              assertTrue(rows.nextBatch(batch), "row " + r);
               current = 0;
             }
-            assertEquals("row " + r, timeStrings[r] + " " + READER_ZONE.getId(),
-                decimalTimestampToString(t1.vector[current], READER_ZONE));
-            assertEquals("row " + r, timeStrings[r] + " " + WRITER_ZONE.getId(),
-                decimalTimestampToString(t2.vector[current], WRITER_ZONE));
+            assertEquals( timeStrings[r] + " " + READER_ZONE.getId(),
+                decimalTimestampToString(t1.vector[current], READER_ZONE), "row " + r);
+            assertEquals(timeStrings[r] + " " + WRITER_ZONE.getId(),
+                decimalTimestampToString(t2.vector[current], WRITER_ZONE), "row " + r);
             current += 1;
           }
-          assertEquals(false, rows.nextBatch(batch));
+          assertFalse(rows.nextBatch(batch));
         }
 
         // test conversion to double
@@ -2019,16 +2012,16 @@ public class TestSchemaEvolution {
           int current = 0;
           for (int r = 0; r < VALUES; ++r) {
             if (current == batch.size) {
-              assertEquals("row " + r, true, rows.nextBatch(batch));
+              assertTrue(rows.nextBatch(batch), "row " + r);
               current = 0;
             }
-            assertEquals("row " + r, timeStrings[r] + " " + READER_ZONE.getId(),
-                doubleTimestampToString(t1.vector[current], READER_ZONE));
-            assertEquals("row " + r, timeStrings[r] + " " + WRITER_ZONE.getId(),
-                doubleTimestampToString(t2.vector[current], WRITER_ZONE));
+            assertEquals( timeStrings[r] + " " + READER_ZONE.getId(),
+                doubleTimestampToString(t1.vector[current], READER_ZONE), "row " + r);
+            assertEquals( timeStrings[r] + " " + WRITER_ZONE.getId(),
+                doubleTimestampToString(t2.vector[current], WRITER_ZONE), "row " + r);
             current += 1;
           }
-          assertEquals(false, rows.nextBatch(batch));
+          assertFalse(rows.nextBatch(batch));
         }
 
         // test conversion to date
@@ -2040,20 +2033,20 @@ public class TestSchemaEvolution {
           int current = 0;
           for (int r = 0; r < VALUES; ++r) {
             if (current == batch.size) {
-              assertEquals("row " + r, true, rows.nextBatch(batch));
+              assertTrue(rows.nextBatch(batch), "row " + r);
               current = 0;
             }
             String date = timeStrings[r].substring(0, 10);
-            assertEquals("row " + r, date,
+            assertEquals(date,
                 ConvertTreeReaderFactory.DATE_FORMAT.format(
-                    LocalDate.ofEpochDay(t1.vector[current])));
+                    LocalDate.ofEpochDay(t1.vector[current])), "row " + r);
             // NYC -> Sydney moves forward a day for instant
-            assertEquals("row " + r, date.replace("-27", "-28"),
+            assertEquals(date.replace("-27", "-28"),
                 ConvertTreeReaderFactory.DATE_FORMAT.format(
-                    LocalDate.ofEpochDay(t2.vector[current])));
+                    LocalDate.ofEpochDay(t2.vector[current])), "row " + r);
             current += 1;
           }
-          assertEquals(false, rows.nextBatch(batch));
+          assertFalse(rows.nextBatch(batch));
         }
 
         // test conversion to string
@@ -2065,18 +2058,18 @@ public class TestSchemaEvolution {
           int current = 0;
           for (int r = 0; r < VALUES; ++r) {
             if (current == batch.size) {
-              assertEquals("row " + r, true, rows.nextBatch(batch));
+              assertTrue(rows.nextBatch(batch), "row " + r);
               current = 0;
             }
-            assertEquals("row " + r, timeStrings[r], bytesT1.toString(current));
+            assertEquals(timeStrings[r], bytesT1.toString(current), "row " + r);
             Instant t = Instant.from(WRITER_FORMAT.parse(timeStrings[r]));
-            assertEquals("row " + r,
+            assertEquals(
                 timestampToString(Instant.from(WRITER_FORMAT.parse(timeStrings[r])),
                     READER_ZONE),
-                bytesT2.toString(current));
+                bytesT2.toString(current), "row " + r);
             current += 1;
           }
-          assertEquals(false, rows.nextBatch(batch));
+          assertFalse(rows.nextBatch(batch));
         }
 
         // test conversion between timestamps
@@ -2088,17 +2081,19 @@ public class TestSchemaEvolution {
           int current = 0;
           for (int r = 0; r < VALUES; ++r) {
             if (current == batch.size) {
-              assertEquals("row " + r, true, rows.nextBatch(batch));
+              assertTrue(rows.nextBatch(batch), "row " + r);
               current = 0;
             }
-            assertEquals("row " + r, timeStrings[r] + " " + READER_ZONE.getId(),
-                timestampToString(timeT1.time[current], timeT1.nanos[current], READER_ZONE));
-            assertEquals("row " + r,
+            assertEquals(timeStrings[r] + " " + READER_ZONE.getId(),
+                timestampToString(timeT1.time[current], timeT1.nanos[current], READER_ZONE),
+                "row " + r);
+            assertEquals(
                 timestampToString(Instant.from(WRITER_FORMAT.parse(timeStrings[r])), READER_ZONE),
-                timestampToString(timeT2.time[current], timeT2.nanos[current], READER_ZONE));
+                timestampToString(timeT2.time[current], timeT2.nanos[current], READER_ZONE),
+                "row " + r);
             current += 1;
           }
-          assertEquals(false, rows.nextBatch(batch));
+          assertFalse(rows.nextBatch(batch));
         }
       }
 
@@ -2118,18 +2113,18 @@ public class TestSchemaEvolution {
           int current = 0;
           for (int r = 0; r < VALUES; ++r) {
             if (current == batch.size) {
-              assertEquals("row " + r, true, rows.nextBatch(batch));
+              assertTrue(rows.nextBatch(batch), "row " + r);
               current = 0;
             }
-            assertEquals("row " + r, (timeStrings[r] + " " +
-                                          UTC.getId()).replace(".7 ", " "),
-                longTimestampToString(t1.vector[current], UTC));
-            assertEquals("row " + r, (timeStrings[r] + " " +
-                                          WRITER_ZONE.getId()).replace(".7 ", " "),
-                longTimestampToString(t2.vector[current], WRITER_ZONE));
+            assertEquals(
+                (timeStrings[r] + " " + UTC.getId()).replace(".7 ", " "),
+                longTimestampToString(t1.vector[current], UTC), "row " + r);
+            assertEquals(
+                (timeStrings[r] + " " + WRITER_ZONE.getId()).replace(".7 ", " "),
+                longTimestampToString(t2.vector[current], WRITER_ZONE), "row " + r);
             current += 1;
           }
-          assertEquals(false, rows.nextBatch(batch));
+          assertFalse(rows.nextBatch(batch));
         }
 
         // test conversion to decimal
@@ -2141,16 +2136,16 @@ public class TestSchemaEvolution {
           int current = 0;
           for (int r = 0; r < VALUES; ++r) {
             if (current == batch.size) {
-              assertEquals("row " + r, true, rows.nextBatch(batch));
+              assertTrue(rows.nextBatch(batch), "row " + r);
               current = 0;
             }
-            assertEquals("row " + r, timeStrings[r] + " " + UTC.getId(),
-                decimalTimestampToString(t1.vector[current], UTC));
-            assertEquals("row " + r, timeStrings[r] + " " + WRITER_ZONE.getId(),
-                decimalTimestampToString(t2.vector[current], WRITER_ZONE));
+            assertEquals(timeStrings[r] + " " + UTC.getId(),
+                decimalTimestampToString(t1.vector[current], UTC), "row " + r);
+            assertEquals(timeStrings[r] + " " + WRITER_ZONE.getId(),
+                decimalTimestampToString(t2.vector[current], WRITER_ZONE), "row " + r);
             current += 1;
           }
-          assertEquals(false, rows.nextBatch(batch));
+          assertFalse(rows.nextBatch(batch));
         }
 
         // test conversion to double
@@ -2162,16 +2157,18 @@ public class TestSchemaEvolution {
           int current = 0;
           for (int r = 0; r < VALUES; ++r) {
             if (current == batch.size) {
-              assertEquals("row " + r, true, rows.nextBatch(batch));
+              assertTrue(rows.nextBatch(batch), "row " + r);
               current = 0;
             }
-            assertEquals("row " + r, timeStrings[r] + " " + UTC.getId(),
-                doubleTimestampToString(t1.vector[current], UTC));
-            assertEquals("row " + r, timeStrings[r] + " " + WRITER_ZONE.getId(),
-                doubleTimestampToString(t2.vector[current], WRITER_ZONE));
+            assertEquals(timeStrings[r] + " " + UTC.getId(),
+                doubleTimestampToString(t1.vector[current], UTC),
+                "row " + r);
+            assertEquals(timeStrings[r] + " " + WRITER_ZONE.getId(),
+                doubleTimestampToString(t2.vector[current], WRITER_ZONE),
+                "row " + r);
             current += 1;
           }
-          assertEquals(false, rows.nextBatch(batch));
+          assertFalse(rows.nextBatch(batch));
         }
 
         // test conversion to date
@@ -2183,20 +2180,22 @@ public class TestSchemaEvolution {
           int current = 0;
           for (int r = 0; r < VALUES; ++r) {
             if (current == batch.size) {
-              assertEquals("row " + r, true, rows.nextBatch(batch));
+              assertTrue(rows.nextBatch(batch), "row " + r);
               current = 0;
             }
             String date = timeStrings[r].substring(0, 10);
-            assertEquals("row " + r, date,
+            assertEquals(date,
                 ConvertTreeReaderFactory.DATE_FORMAT.format(
-                    LocalDate.ofEpochDay(t1.vector[current])));
+                    LocalDate.ofEpochDay(t1.vector[current])),
+                "row " + r);
             // NYC -> UTC still moves forward a day
-            assertEquals("row " + r, date.replace("-27", "-28"),
+            assertEquals(date.replace("-27", "-28"),
                 ConvertTreeReaderFactory.DATE_FORMAT.format(
-                    LocalDate.ofEpochDay(t2.vector[current])));
+                    LocalDate.ofEpochDay(t2.vector[current])),
+                "row " + r);
             current += 1;
           }
-          assertEquals(false, rows.nextBatch(batch));
+          assertFalse(rows.nextBatch(batch));
         }
 
         // test conversion to string in UTC
@@ -2208,17 +2207,18 @@ public class TestSchemaEvolution {
           int current = 0;
           for (int r = 0; r < VALUES; ++r) {
             if (current == batch.size) {
-              assertEquals("row " + r, true, rows.nextBatch(batch));
+              assertTrue(rows.nextBatch(batch), "row " + r);
               current = 0;
             }
-            assertEquals("row " + r, timeStrings[r], bytesT1.toString(current));
-            assertEquals("row " + r,
+            assertEquals(timeStrings[r], bytesT1.toString(current), "row " + r);
+            assertEquals(
                 timestampToString(Instant.from(WRITER_FORMAT.parse(timeStrings[r])),
                     UTC),
-                bytesT2.toString(current));
+                bytesT2.toString(current),
+                "row " + r);
             current += 1;
           }
-          assertEquals(false, rows.nextBatch(batch));
+          assertFalse(rows.nextBatch(batch));
         }
 
         // test conversion between timestamps in UTC
@@ -2230,17 +2230,19 @@ public class TestSchemaEvolution {
           int current = 0;
           for (int r = 0; r < VALUES; ++r) {
             if (current == batch.size) {
-              assertEquals("row " + r, true, rows.nextBatch(batch));
+              assertTrue(rows.nextBatch(batch), "row " + r);
               current = 0;
             }
-            assertEquals("row " + r, timeStrings[r] + " UTC",
-                timestampToString(timeT1.time[current], timeT1.nanos[current], UTC));
-            assertEquals("row " + r,
+            assertEquals(timeStrings[r] + " UTC",
+                timestampToString(timeT1.time[current], timeT1.nanos[current], UTC),
+                "row " + r);
+            assertEquals(
                 timestampToString(Instant.from(WRITER_FORMAT.parse(timeStrings[r])), UTC),
-                timestampToString(timeT2.time[current], timeT2.nanos[current], UTC));
+                timestampToString(timeT2.time[current], timeT2.nanos[current], UTC),
+                "row " + r);
             current += 1;
           }
-          assertEquals(false, rows.nextBatch(batch));
+          assertFalse(rows.nextBatch(batch));
         }
       }
     } finally {
@@ -2387,7 +2389,7 @@ public class TestSchemaEvolution {
         int current = 0;
         for (int r = 0; r < VALUES; ++r) {
           if (current == batch.size) {
-            assertEquals("row " + r, true, rows.nextBatch(batch));
+            assertTrue(rows.nextBatch(batch), "row " + r);
             current = 0;
           }
 
@@ -2397,44 +2399,57 @@ public class TestSchemaEvolution {
           String expectedDate1 = midnight + " " + READER_ZONE.getId();
           String expectedDate2 = midnight + " " + UTC.getId();
 
-          assertEquals("row " + r, expected1.replace(".1 ", " "),
-              timestampToString(l1.time[current], l1.nanos[current], READER_ZONE));
+          String msg = "row " + r;
+          assertEquals(expected1.replace(".1 ", " "),
+              timestampToString(l1.time[current], l1.nanos[current], READER_ZONE),
+              msg);
 
-          assertEquals("row " + r, expected2.replace(".1 ", " "),
-              timestampToString(l2.time[current], l2.nanos[current], WRITER_ZONE));
+          assertEquals(expected2.replace(".1 ", " "),
+              timestampToString(l2.time[current], l2.nanos[current], WRITER_ZONE),
+              msg);
 
-          assertEquals("row " + r, longTimestampToString(((r % 128) - offset), READER_ZONE),
-              timestampToString(t1.time[current], t1.nanos[current], READER_ZONE));
+          assertEquals(longTimestampToString(((r % 128) - offset), READER_ZONE),
+              timestampToString(t1.time[current], t1.nanos[current], READER_ZONE),
+              msg);
 
-          assertEquals("row " + r, longTimestampToString((r % 128), WRITER_ZONE),
-              timestampToString(t2.time[current], t2.nanos[current], WRITER_ZONE));
+          assertEquals(longTimestampToString((r % 128), WRITER_ZONE),
+              timestampToString(t2.time[current], t2.nanos[current], WRITER_ZONE),
+              msg);
 
-          assertEquals("row " + r, expected1,
-              timestampToString(d1.time[current], d1.nanos[current], READER_ZONE));
+          assertEquals(expected1,
+              timestampToString(d1.time[current], d1.nanos[current], READER_ZONE),
+              msg);
 
-          assertEquals("row " + r, expected2,
-              timestampToString(d2.time[current], d2.nanos[current], WRITER_ZONE));
+          assertEquals(expected2,
+              timestampToString(d2.time[current], d2.nanos[current], WRITER_ZONE),
+              msg);
 
-          assertEquals("row " + r, expected1,
-              timestampToString(dbl1.time[current], dbl1.nanos[current], READER_ZONE));
+          assertEquals(expected1,
+              timestampToString(dbl1.time[current], dbl1.nanos[current], READER_ZONE),
+              msg);
 
-          assertEquals("row " + r, expected2,
-              timestampToString(dbl2.time[current], dbl2.nanos[current], WRITER_ZONE));
+          assertEquals(expected2,
+              timestampToString(dbl2.time[current], dbl2.nanos[current], WRITER_ZONE),
+              msg);
 
-          assertEquals("row " + r, expectedDate1,
-              timestampToString(dt1.time[current], dt1.nanos[current], READER_ZONE));
+          assertEquals(expectedDate1,
+              timestampToString(dt1.time[current], dt1.nanos[current], READER_ZONE),
+              msg);
 
-          assertEquals("row " + r, expectedDate2,
-              timestampToString(dt2.time[current], dt2.nanos[current], UTC));
+          assertEquals(expectedDate2,
+              timestampToString(dt2.time[current], dt2.nanos[current], UTC),
+              msg);
 
-          assertEquals("row " + r, expected1,
-              timestampToString(s1.time[current], s1.nanos[current], READER_ZONE));
+          assertEquals(expected1,
+              timestampToString(s1.time[current], s1.nanos[current], READER_ZONE),
+              msg);
 
-          assertEquals("row " + r, expected2,
-              timestampToString(s2.time[current], s2.nanos[current], WRITER_ZONE));
+          assertEquals(expected2,
+              timestampToString(s2.time[current], s2.nanos[current], WRITER_ZONE),
+              msg);
           current += 1;
         }
-        assertEquals(false, rows.nextBatch(batch));
+        assertFalse(rows.nextBatch(batch));
       }
 
       // try the tests with useUtc set on
@@ -2444,7 +2459,7 @@ public class TestSchemaEvolution {
         int current = 0;
         for (int r = 0; r < VALUES; ++r) {
           if (current == batch.size) {
-            assertEquals("row " + r, true, rows.nextBatch(batch));
+            assertTrue(rows.nextBatch(batch), "row " + r);
             current = 0;
           }
 
@@ -2452,39 +2467,49 @@ public class TestSchemaEvolution {
           String expected2 = timeStrings[r] + " " + WRITER_ZONE.getId();
           String midnight = timeStrings[r].substring(0, 10) + " 00:00:00";
           String expectedDate = midnight + " " + UTC.getId();
+          String msg = "row " + r;
+          assertEquals(expected1.replace(".1 ", " "),
+              timestampToString(l1.time[current], l1.nanos[current], UTC),
+              msg);
 
-          assertEquals("row " + r, expected1.replace(".1 ", " "),
-              timestampToString(l1.time[current], l1.nanos[current], UTC));
+          assertEquals(expected2.replace(".1 ", " "),
+              timestampToString(l2.time[current], l2.nanos[current], WRITER_ZONE),
+              msg);
 
-          assertEquals("row " + r, expected2.replace(".1 ", " "),
-              timestampToString(l2.time[current], l2.nanos[current], WRITER_ZONE));
+          assertEquals(expected1,
+              timestampToString(d1.time[current], d1.nanos[current], UTC),
+              msg);
 
-          assertEquals("row " + r, expected1,
-              timestampToString(d1.time[current], d1.nanos[current], UTC));
+          assertEquals(expected2,
+              timestampToString(d2.time[current], d2.nanos[current], WRITER_ZONE),
+              msg);
 
-          assertEquals("row " + r, expected2,
-              timestampToString(d2.time[current], d2.nanos[current], WRITER_ZONE));
+          assertEquals(expected1,
+              timestampToString(dbl1.time[current], dbl1.nanos[current], UTC),
+              msg);
 
-          assertEquals("row " + r, expected1,
-              timestampToString(dbl1.time[current], dbl1.nanos[current], UTC));
+          assertEquals(expected2,
+              timestampToString(dbl2.time[current], dbl2.nanos[current], WRITER_ZONE),
+              msg);
 
-          assertEquals("row " + r, expected2,
-              timestampToString(dbl2.time[current], dbl2.nanos[current], WRITER_ZONE));
+          assertEquals(expectedDate,
+              timestampToString(dt1.time[current], dt1.nanos[current], UTC),
+              msg);
 
-          assertEquals("row " + r, expectedDate,
-              timestampToString(dt1.time[current], dt1.nanos[current], UTC));
+          assertEquals(expectedDate,
+              timestampToString(dt2.time[current], dt2.nanos[current], UTC),
+              msg);
 
-          assertEquals("row " + r, expectedDate,
-              timestampToString(dt2.time[current], dt2.nanos[current], UTC));
+          assertEquals(expected1,
+              timestampToString(s1.time[current], s1.nanos[current], UTC),
+              msg);
 
-          assertEquals("row " + r, expected1,
-              timestampToString(s1.time[current], s1.nanos[current], UTC));
-
-          assertEquals("row " + r, expected2,
-              timestampToString(s2.time[current], s2.nanos[current], WRITER_ZONE));
+          assertEquals(expected2,
+              timestampToString(s2.time[current], s2.nanos[current], WRITER_ZONE),
+              msg);
           current += 1;
         }
-        assertEquals(false, rows.nextBatch(batch));
+        assertFalse(rows.nextBatch(batch));
       }
     } finally {
       TimeZone.setDefault(oldDefault);
@@ -2565,7 +2590,7 @@ public class TestSchemaEvolution {
          RecordReader rows = reader.rows(reader.options().schema(readerSchema))) {
       int value = 0;
       while (value < values.length) {
-        assertTrue("value " + value, rows.nextBatch(batchTimeStamp));
+        assertTrue(rows.nextBatch(batchTimeStamp), "value " + value);
         for(int row=0; row < batchTimeStamp.size; ++row) {
           double expected = values[value + row];
           String rowName = String.format("value %d", value + row);
@@ -2573,18 +2598,18 @@ public class TestSchemaEvolution {
           if (expected * 1000 < Long.MIN_VALUE ||
                   expected * 1000 > Long.MAX_VALUE ||
                   ((expected >= 0) != isPositive)) {
-            assertFalse(rowName, t1.noNulls);
-            assertTrue(rowName, t1.isNull[row]);
+            assertFalse(t1.noNulls, rowName);
+            assertTrue(t1.isNull[row], rowName);
           } else {
             double actual = Math.floorDiv(t1.time[row], 1000) +
                                 t1.nanos[row] / 1_000_000_000.0;
-            assertEquals(rowName, expected, actual,
-                Math.abs(expected * (isFloat ? 0.000001 : 0.0000000000000001)));
-            assertFalse(rowName, t1.isNull[row]);
-            assertTrue(String.format(
-                "%s nanos should be 0 to 1,000,000,000 instead it's: %d",
-                rowName, t1.nanos[row]),
-                t1.nanos[row] >= 0 && t1.nanos[row] < 1_000_000_000);
+            assertEquals(expected, actual,
+                Math.abs(expected * (isFloat ? 0.000001 : 0.0000000000000001)), rowName);
+            assertFalse(t1.isNull[row], rowName);
+            assertTrue(t1.nanos[row] >= 0 && t1.nanos[row] < 1_000_000_000,
+                String.format(
+                    "%s nanos should be 0 to 1,000,000,000 instead it's: %d",
+                    rowName, t1.nanos[row]));
           }
         }
         value += batchTimeStamp.size;
@@ -2607,8 +2632,8 @@ public class TestSchemaEvolution {
     SchemaEvolution evoCc = new SchemaEvolution(typeCamelCaseColumns, null, options);
     SchemaEvolution evoLc = new SchemaEvolution(typeLowerCaseColumns, null, options);
 
-    assertTrue("Schema (" + ccSchema +") was found to be non-acid ", evoCc.isAcid());
-    assertTrue("Schema (" + lcSchema +") was found to be non-acid ", evoLc.isAcid());
+    assertTrue(evoCc.isAcid(), "Schema (" + ccSchema +") was found to be non-acid ");
+    assertTrue(evoLc.isAcid(), "Schema (" + lcSchema +") was found to be non-acid ");
   }
 
   @Test
@@ -2621,13 +2646,13 @@ public class TestSchemaEvolution {
     TypeDescription readerSchema = TypeDescription.fromString(acidSchema);
     SchemaEvolution schemaEvolution = new SchemaEvolution(fileSchema, readerSchema, options);
 
-    assertEquals(String.format("Reader schema %s is not acid", schemaEvolution.getReaderSchema().toString()),
-        acidSchema, schemaEvolution.getReaderSchema().toString());
+    assertEquals(acidSchema, schemaEvolution.getReaderSchema().toString(),
+        String.format("Reader schema %s is not acid", schemaEvolution.getReaderSchema().toString()));
 
     String notAcidSchema ="struct<a:int,b:int>";
     readerSchema = TypeDescription.fromString(notAcidSchema);
     schemaEvolution = new SchemaEvolution(fileSchema, readerSchema, options);
-    assertEquals(String.format("Reader schema %s is not acid", schemaEvolution.getReaderSchema().toString()),
-        acidSchema, schemaEvolution.getReaderSchema().toString());
+    assertEquals(acidSchema, schemaEvolution.getReaderSchema().toString(),
+        String.format("Reader schema %s is not acid", schemaEvolution.getReaderSchema().toString()));
   }
 }

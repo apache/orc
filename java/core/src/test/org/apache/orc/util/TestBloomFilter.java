@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,10 +22,12 @@ import com.google.protobuf.ByteString;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
 import org.apache.orc.TypeDescription;
-import org.junit.Test;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for BloomFilter
@@ -92,6 +94,6 @@ public class TestBloomFilter {
     long[] bits = new long[]{0x8040201008040201L, ~0x8040201008040201L};
     BloomFilter bloom = new BloomFilterUtf8(bits, 1);
     BloomFilter other = new BloomFilterUtf8(new long[]{0,0}, 1);
-    assertEquals(false, bloom.equals(other));
+    assertFalse(bloom.equals(other));
   }
 }

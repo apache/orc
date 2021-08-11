@@ -194,7 +194,7 @@ public class JsonReader implements BatchReader {
     private JsonConverter[] childrenConverters;
     private List<String> fieldNames;
 
-    public StructColumnConverter(TypeDescription schema) {
+    StructColumnConverter(TypeDescription schema) {
       List<TypeDescription> kids = schema.getChildren();
       childrenConverters = new JsonConverter[kids.size()];
       for(int c=0; c < childrenConverters.length; ++c) {
@@ -221,7 +221,7 @@ public class JsonReader implements BatchReader {
   static class ListColumnConverter implements JsonConverter {
     private JsonConverter childrenConverter;
 
-    public ListColumnConverter(TypeDescription schema) {
+    ListColumnConverter(TypeDescription schema) {
       childrenConverter = createConverter(schema.getChildren().get(0));
     }
 

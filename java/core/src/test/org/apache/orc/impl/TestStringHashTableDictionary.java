@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,9 +24,8 @@ import java.util.stream.Stream;
 
 import org.apache.hadoop.io.Text;
 import org.apache.orc.StringDictTestingUtils;
-import org.junit.Assert;
-import org.junit.Test;
-
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestStringHashTableDictionary {
 
@@ -42,46 +41,46 @@ public class TestStringHashTableDictionary {
         Stream.of(new String[]{"Alice", "Bob", "Cindy", "David", "Eason"}).map(Text::new).collect(Collectors.toList());
     List<byte[]> testBytes = testTexts.stream().map(Text::getBytes).collect(Collectors.toList());
 
-    Assert.assertEquals(0, htDict.getSizeInBytes());
-    Assert.assertEquals(0, htDict.add(testBytes.get(0), 0, testBytes.get(0).length));
-    Assert.assertEquals(1, htDict.add(testBytes.get(1), 0, testBytes.get(1).length));
-    Assert.assertEquals(0, htDict.add(testBytes.get(0), 0, testBytes.get(0).length));
-    Assert.assertEquals(1, htDict.add(testBytes.get(1), 0, testBytes.get(1).length));
-    Assert.assertEquals(2, htDict.add(testBytes.get(2), 0, testBytes.get(2).length));
+    assertEquals(0, htDict.getSizeInBytes());
+    assertEquals(0, htDict.add(testBytes.get(0), 0, testBytes.get(0).length));
+    assertEquals(1, htDict.add(testBytes.get(1), 0, testBytes.get(1).length));
+    assertEquals(0, htDict.add(testBytes.get(0), 0, testBytes.get(0).length));
+    assertEquals(1, htDict.add(testBytes.get(1), 0, testBytes.get(1).length));
+    assertEquals(2, htDict.add(testBytes.get(2), 0, testBytes.get(2).length));
 
     Text text = new Text();
     htDict.getText(text, 0);
-    Assert.assertEquals("Alice", text.toString());
+    assertEquals("Alice", text.toString());
     htDict.getText(text, 1);
-    Assert.assertEquals("Bob", text.toString());
+    assertEquals("Bob", text.toString());
     htDict.getText(text, 2);
-    Assert.assertEquals("Cindy", text.toString());
+    assertEquals("Cindy", text.toString());
 
-    Assert.assertEquals(htDict.size(), 3);
+    assertEquals(htDict.size(), 3);
 
     // entering the fourth and fifth element which triggers rehash
-    Assert.assertEquals(3, htDict.add(testBytes.get(3), 0, testBytes.get(3).length));
+    assertEquals(3, htDict.add(testBytes.get(3), 0, testBytes.get(3).length));
     htDict.getText(text, 3);
-    Assert.assertEquals("David", text.toString());
-    Assert.assertEquals(4, htDict.add(testBytes.get(4), 0, testBytes.get(4).length));
+    assertEquals("David", text.toString());
+    assertEquals(4, htDict.add(testBytes.get(4), 0, testBytes.get(4).length));
     htDict.getText(text, 4);
-    Assert.assertEquals("Eason", text.toString());
+    assertEquals("Eason", text.toString());
 
-    Assert.assertEquals(htDict.size(), 5);
+    assertEquals(htDict.size(), 5);
 
     // Re-ensure no all previously existed string still have correct encoded value
     htDict.getText(text, 0);
-    Assert.assertEquals("Alice", text.toString());
+    assertEquals("Alice", text.toString());
     htDict.getText(text, 1);
-    Assert.assertEquals("Bob", text.toString());
+    assertEquals("Bob", text.toString());
     htDict.getText(text, 2);
-    Assert.assertEquals("Cindy", text.toString());
+    assertEquals("Cindy", text.toString());
 
     // Peaking the hashtable and obtain the order sequence since the hashArray object needs to be private.
     StringDictTestingUtils.checkContents(htDict, new int[]{1, 2, 3, 0 ,4}, "Bob", "Cindy", "David", "Alice", "Eason");
 
     htDict.clear();
-    Assert.assertEquals(0, htDict.size());
+    assertEquals(0, htDict.size());
   }
 
   /**
@@ -99,10 +98,8 @@ public class TestStringHashTableDictionary {
      * this way we know the order of the traverse() method.
      */
     @Override
-    int getIndex(Text text) {
-      String s = text.toString();
-      int underscore = s.indexOf("_");
-      return Integer.parseInt(text.toString().substring(0, underscore));
+    int getIndex(byte[] bytes, int offset, int length) {
+      return (char) bytes[0] - '0';
     }
   }
 
@@ -111,36 +108,36 @@ public class TestStringHashTableDictionary {
       throws Exception {
     SimpleHashDictionary hashTableDictionary = new SimpleHashDictionary(5);
     // Non-resize trivial cases
-    Assert.assertEquals(0, hashTableDictionary.getSizeInBytes());
-    Assert.assertEquals(0, hashTableDictionary.add(new Text("2_Alice")));
-    Assert.assertEquals(1, hashTableDictionary.add(new Text("3_Bob")));
-    Assert.assertEquals(0, hashTableDictionary.add(new Text("2_Alice")));
-    Assert.assertEquals(1, hashTableDictionary.add(new Text("3_Bob")));
-    Assert.assertEquals(2, hashTableDictionary.add(new Text("1_Cindy")));
+    assertEquals(0, hashTableDictionary.getSizeInBytes());
+    assertEquals(0, hashTableDictionary.add(new Text("2_Alice")));
+    assertEquals(1, hashTableDictionary.add(new Text("3_Bob")));
+    assertEquals(0, hashTableDictionary.add(new Text("2_Alice")));
+    assertEquals(1, hashTableDictionary.add(new Text("3_Bob")));
+    assertEquals(2, hashTableDictionary.add(new Text("1_Cindy")));
 
     Text text = new Text();
     hashTableDictionary.getText(text, 0);
-    Assert.assertEquals("2_Alice", text.toString());
+    assertEquals("2_Alice", text.toString());
     hashTableDictionary.getText(text, 1);
-    Assert.assertEquals("3_Bob", text.toString());
+    assertEquals("3_Bob", text.toString());
     hashTableDictionary.getText(text, 2);
-    Assert.assertEquals("1_Cindy", text.toString());
+    assertEquals("1_Cindy", text.toString());
 
     // entering the fourth and fifth element which triggers rehash
-    Assert.assertEquals(3, hashTableDictionary.add(new Text("0_David")));
+    assertEquals(3, hashTableDictionary.add(new Text("0_David")));
     hashTableDictionary.getText(text, 3);
-    Assert.assertEquals("0_David", text.toString());
-    Assert.assertEquals(4, hashTableDictionary.add(new Text("4_Eason")));
+    assertEquals("0_David", text.toString());
+    assertEquals(4, hashTableDictionary.add(new Text("4_Eason")));
     hashTableDictionary.getText(text, 4);
-    Assert.assertEquals("4_Eason", text.toString());
+    assertEquals("4_Eason", text.toString());
 
     // Re-ensure no all previously existed string still have correct encoded value
     hashTableDictionary.getText(text, 0);
-    Assert.assertEquals("2_Alice", text.toString());
+    assertEquals("2_Alice", text.toString());
     hashTableDictionary.getText(text, 1);
-    Assert.assertEquals("3_Bob", text.toString());
+    assertEquals("3_Bob", text.toString());
     hashTableDictionary.getText(text, 2);
-    Assert.assertEquals("1_Cindy", text.toString());
+    assertEquals("1_Cindy", text.toString());
 
     // The order of words are based on each string's prefix given their index in the hashArray will be based on that.
     StringDictTestingUtils
@@ -148,6 +145,6 @@ public class TestStringHashTableDictionary {
             "4_Eason");
 
     hashTableDictionary.clear();
-    Assert.assertEquals(0, hashTableDictionary.size());
+    assertEquals(0, hashTableDictionary.size());
   }
 }

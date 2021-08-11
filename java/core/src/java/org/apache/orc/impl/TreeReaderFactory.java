@@ -302,7 +302,7 @@ public class TreeReaderFactory {
      * Seek to the given position.
      *
      * @param index the indexes loaded from the file
-     * @param readPhase
+     * @param readPhase the current readPhase
      * @throws IOException
      */
     public void seek(PositionProvider[] index, ReadPhase readPhase) throws IOException {
@@ -1831,8 +1831,9 @@ public class TreeReaderFactory {
             if (idx - previousIdx > 0) {
               valueReader.skip(countNonNullRowsInRange(result.isNull, previousIdx, idx));
             }
-            if (!result.isNull[r])
+            if (!result.isNull[r]) {
               result.vector[idx].setFromLongAndScale(valueReader.next(), scale);
+            }
             previousIdx = idx + 1;
           }
           valueReader.skip(countNonNullRowsInRange(result.isNull, previousIdx, batchSize));
@@ -2284,8 +2285,9 @@ public class TreeReaderFactory {
           // and set strings one by one
           if (filterContext.isSelectedInUse()) {
             // Set all string values to null - offset and length is zero
-            for (int i = 0; i < batchSize; i++)
+            for (int i = 0; i < batchSize; i++) {
               result.setRef(i, dictionaryBufferInBytesCache, 0, 0);
+            }
             // Read selected rows from stream
             for (int i = 0; i != filterContext.getSelectedSize(); i++) {
               int idx = filterContext.getSelected()[i];
@@ -2941,8 +2943,7 @@ public class TreeReaderFactory {
       case DATE:
         return new DateTreeReader(fileType.getId(), context);
       case DECIMAL:
-        if (version == OrcFile.Version.UNSTABLE_PRE_2_0 &&
-            fileType.getPrecision() <= TypeDescription.MAX_DECIMAL64_PRECISION){
+        if (isDecimalAsLong(version, fileType.getPrecision())){
           return new Decimal64TreeReader(fileType.getId(), fileType.getPrecision(),
               fileType.getScale(), context);
         }
@@ -2960,6 +2961,11 @@ public class TreeReaderFactory {
         throw new IllegalArgumentException("Unsupported type " +
             readerTypeCategory);
     }
+  }
+
+  public static boolean isDecimalAsLong(OrcFile.Version version, int precision) {
+    return version == OrcFile.Version.UNSTABLE_PRE_2_0 &&
+    precision <= TypeDescription.MAX_DECIMAL64_PRECISION;
   }
 
   public static BatchReader createRootReader(TypeDescription readerType, Context context)

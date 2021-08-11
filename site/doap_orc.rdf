@@ -44,9 +44,9 @@ the values that are required for the current query.</description>
     <category rdf:resource="http://projects.apache.org/category/library" />
     <release>
       <Version>
-        <name>Apache ORC 1.4.3</name>
-        <created>2018-02-09</created>
-        <revision>1.4.3</revision>
+        <name>Apache ORC 1.6.9</name>
+        <created>2021-07-02</created>
+        <revision>1.6.9</revision>
       </Version>
     </release>
     <repository>
@@ -57,8 +57,8 @@ the values that are required for the current query.</description>
     </repository>
     <maintainer>
       <foaf:Person>
-        <foaf:name>Owen O'Malley</foaf:name>
-          <foaf:mbox rdf:resource="mailto:omalley@apache.org"/>
+        <foaf:name>Dongjoon Hyun</foaf:name>
+          <foaf:mbox rdf:resource="mailto:dongjoon@apache.org"/>
       </foaf:Person>
     </maintainer>
   </Project>

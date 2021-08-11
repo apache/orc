@@ -37,7 +37,7 @@
     <orc.version>${project.version}</orc.version>
     <parquet.version>1.12.0</parquet.version>
     <spark.version>3.1.2</spark.version>
-    <jackson.version>2.12.2</jackson.version>
+    <jackson.version>2.12.4</jackson.version>
   </properties>
 
   <modules>
@@ -66,7 +66,7 @@
       <dependency>
         <groupId>com.google.auto.service</groupId>
         <artifactId>auto-service</artifactId>
-        <version>1.0-rc7</version>
+        <version>1.0</version>
         <optional>true</optional>
       </dependency>
       <dependency>
@@ -92,12 +92,6 @@
         <groupId>io.netty</groupId>
         <artifactId>netty-all</artifactId>
         <version>4.1.42.Final</version>
-        <scope>runtime</scope>
-      </dependency>
-      <dependency>
-        <groupId>io.netty</groupId>
-        <artifactId>netty</artifactId>
-        <version>3.9.9.Final</version>
         <scope>runtime</scope>
       </dependency>
       <dependency>
@@ -343,6 +337,17 @@
         <groupId>org.apache.parquet</groupId>
         <artifactId>parquet-hadoop</artifactId>
         <version>${parquet.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.xerial.snappy</groupId>
+            <artifactId>snappy-java</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.xerial.snappy</groupId>
+        <artifactId>snappy-java</artifactId>
+        <version>1.1.8.4</version>
       </dependency>
       <dependency>
         <groupId>org.apache.parquet</groupId>
@@ -359,6 +364,10 @@
         <artifactId>spark-core_2.12</artifactId>
         <version>${spark.version}</version>
 	<exclusions>
+	  <exclusion>
+	    <groupId>org.apache.avro</groupId>
+	    <artifactId>avro-mapred</artifactId>
+	  </exclusion>
 	  <exclusion>
 	    <groupId>org.glassfish.hk2.external</groupId>
 	    <artifactId>aopalliance-repackaged</artifactId>
@@ -390,24 +399,16 @@
             <groupId>org.apache.orc</groupId>
             <artifactId>orc-mapreduce</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>org.apache.parquet</groupId>
+            <artifactId>parquet-column</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.spark</groupId>
         <artifactId>spark-avro_2.12</artifactId>
         <version>${spark.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.codehaus.janino</groupId>
-        <artifactId>janino</artifactId>
-        <version>3.0.8</version>
-        <scope>runtime</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.codehaus.janino</groupId>
-        <artifactId>commons-compiler</artifactId>
-        <version>3.0.8</version>
-        <scope>runtime</scope>
       </dependency>
       <dependency>
         <groupId>org.jodd</groupId>
@@ -456,6 +457,15 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <configuration>
+          <ignoredDependencies>
+            <ignoredDependency>*:*</ignoredDependency>
+          </ignoredDependencies>
+        </configuration>
       </plugin>
     </plugins>
     <pluginManagement>

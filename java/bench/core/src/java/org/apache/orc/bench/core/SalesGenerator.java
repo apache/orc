@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -25,7 +25,7 @@ import org.apache.orc.bench.core.convert.BatchReader;
 public class SalesGenerator implements BatchReader {
   private final RandomGenerator generator;
   private long rowsRemaining;
-  private final static double MOSTLY = 0.99999;
+  private static final double MOSTLY = 0.99999;
 
   public SalesGenerator(long rows) {
     this(rows, 42);

@@ -33,7 +33,7 @@ import java.time.temporal.ChronoField;
 import java.util.EnumMap;
 import java.util.TimeZone;
 
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
@@ -1069,6 +1069,8 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
   }
 
   public static class StringGroupFromBooleanTreeReader extends StringGroupFromAnyIntegerTreeReader {
+    private static final byte[] TRUE_BYTES = "TRUE".getBytes(StandardCharsets.US_ASCII);
+    private static final byte[] FALSE_BYTES = "FALSE".getBytes(StandardCharsets.US_ASCII);
 
     StringGroupFromBooleanTreeReader(int columnId, TypeDescription fileType,
                                      TypeDescription readerType,
@@ -1078,8 +1080,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
 
     @Override
     public void setConvertVectorElement(int elementNum) {
-      byte[] bytes = (longColVector.vector[elementNum] != 0 ? "TRUE" : "FALSE")
-         .getBytes(StandardCharsets.UTF_8);
+      byte[] bytes = (longColVector.vector[elementNum] != 0 ? TRUE_BYTES : FALSE_BYTES);
       assignStringGroupVectorEntry(bytesColVector, elementNum, readerType, bytes);
     }
   }

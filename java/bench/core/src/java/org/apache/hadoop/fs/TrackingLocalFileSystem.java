@@ -26,7 +26,7 @@ public class TrackingLocalFileSystem extends RawLocalFileSystem {
 
   class TrackingFileInputStream extends RawLocalFileSystem.LocalFSFileInputStream {
 
-    public TrackingFileInputStream(Path f) throws IOException {
+    TrackingFileInputStream(Path f) throws IOException {
       super(f);
     }
 

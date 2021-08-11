@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -34,21 +34,14 @@ import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import com.google.common.io.Files;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 public class TestOrcStruct {
-
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void testRead() throws IOException {
@@ -138,13 +131,13 @@ public class TestOrcStruct {
     OrcMapredRecordReader<OrcUnion> recordReader = new OrcMapredRecordReader<>(reader,options);
     OrcUnion result = recordReader.createValue();
     recordReader.next(recordReader.createKey(), result);
-    Assert.assertEquals(result, u1);
+    assertEquals(result, u1);
     recordReader.next(recordReader.createKey(), result);
-    Assert.assertEquals(result, u2);
+    assertEquals(result, u2);
     recordReader.next(recordReader.createKey(), result);
-    Assert.assertEquals(result, u3);
+    assertEquals(result, u3);
     recordReader.next(recordReader.createKey(), result);
-    Assert.assertEquals(result, u4);
+    assertEquals(result, u4);
   }
 
   @Test
@@ -168,16 +161,18 @@ public class TestOrcStruct {
   public void testBadFieldRead() {
     OrcStruct struct = new OrcStruct(TypeDescription.fromString
         ("struct<i:int,j:double,k:string>"));
-    thrown.expect(IllegalArgumentException.class);
-    struct.getFieldValue("bad");
+    assertThrows(IllegalArgumentException.class, () -> {
+      struct.getFieldValue("bad");
+    });
   }
 
   @Test
   public void testBadFieldWrite() {
     OrcStruct struct = new OrcStruct(TypeDescription.fromString
         ("struct<i:int,j:double,k:string>"));
-    thrown.expect(IllegalArgumentException.class);
-    struct.setFieldValue("bad", new Text("foobar"));
+    assertThrows(IllegalArgumentException.class, () -> {
+      struct.setFieldValue("bad", new Text("foobar"));
+    });
   }
 
   @Test

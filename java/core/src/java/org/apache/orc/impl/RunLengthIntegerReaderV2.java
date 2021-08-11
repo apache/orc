@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -50,7 +50,8 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
     this.utils = new SerializationUtils();
   }
 
-  private final static RunLengthIntegerWriterV2.EncodingType[] encodings = RunLengthIntegerWriterV2.EncodingType.values();
+  private static final RunLengthIntegerWriterV2.EncodingType[] encodings =
+    RunLengthIntegerWriterV2.EncodingType.values();
   private void readValues(boolean ignoreEof) throws IOException {
     // read the first 2 bits and determine the encoding type
     int firstByte = input.read();
@@ -63,11 +64,20 @@ public class RunLengthIntegerReaderV2 implements IntegerReader {
     }
     currentEncoding = encodings[(firstByte >>> 6) & 0x03];
     switch (currentEncoding) {
-    case SHORT_REPEAT: readShortRepeatValues(firstByte); break;
-    case DIRECT: readDirectValues(firstByte); break;
-    case PATCHED_BASE: readPatchedBaseValues(firstByte); break;
-    case DELTA: readDeltaValues(firstByte); break;
-    default: throw new IOException("Unknown encoding " + currentEncoding);
+    case SHORT_REPEAT:
+      readShortRepeatValues(firstByte);
+      break;
+    case DIRECT:
+      readDirectValues(firstByte);
+      break;
+    case PATCHED_BASE:
+      readPatchedBaseValues(firstByte);
+      break;
+    case DELTA:
+      readDeltaValues(firstByte);
+      break;
+    default:
+      throw new IOException("Unknown encoding " + currentEncoding);
     }
   }
 

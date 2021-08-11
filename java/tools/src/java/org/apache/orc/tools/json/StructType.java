@@ -30,7 +30,7 @@ import java.util.TreeMap;
  */
 class StructType extends HiveType {
   private static final String COL_PREFIX = "_col";
-  private final static Comparator<String> FIELD_COMPARATOR = (left, right) -> {
+  private static final Comparator<String> FIELD_COMPARATOR = (left, right) -> {
     if (left == null) {
       return right == null ? 0 : -1;
     } else if (right == null) {

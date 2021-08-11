@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,11 +22,12 @@ import io.airlift.compress.zstd.ZstdCompressor;
 import io.airlift.compress.zstd.ZstdDecompressor;
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.CompressionKind;
-import org.junit.Test;
 
 import java.nio.ByteBuffer;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class TestZstd {
 
@@ -38,7 +39,7 @@ public class TestZstd {
     in.flip();
     CompressionCodec codec = new AircompressorCodec(
         CompressionKind.ZSTD, new ZstdCompressor(), new ZstdDecompressor());
-    assertEquals(false, codec.compress(in, out, null,
+    assertFalse(codec.compress(in, out, null,
         codec.getDefaultOptions()));
   }
 

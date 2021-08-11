@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,7 +17,8 @@
  */
 package org.apache.orc;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.File;
 
@@ -25,10 +26,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
 
 public class TestReader {
   Path workDir = new Path(System.getProperty("test.tmp.dir",
@@ -37,15 +34,12 @@ public class TestReader {
   FileSystem fs;
   Path testFilePath;
 
-  @Rule
-  public TestName testCaseName = new TestName();
-
-  @Before
-  public void openFileSystem() throws Exception {
+  @BeforeEach
+  public void openFileSystem(TestInfo testInfo) throws Exception {
     conf = new Configuration();
     fs = FileSystem.getLocal(conf);
     testFilePath = new Path(workDir, TestReader.class.getSimpleName() + "." +
-        testCaseName.getMethodName() + ".orc");
+        testInfo.getTestMethod().get().getName() + ".orc");
     fs.delete(testFilePath, false);
   }
 
@@ -59,24 +53,28 @@ public class TestReader {
     assertEquals(0, reader.getNumberOfRows());
   }
 
-  @Test(expected=FileFormatException.class)
+  @Test
   public void testReadFileLengthLessThanMagic() throws Exception {
-    FSDataOutputStream fout = fs.create(testFilePath);
-    fout.writeBoolean(true);
-    fout.close();
-    assertEquals(1, fs.getFileStatus(testFilePath).getLen());
-    OrcFile.createReader(testFilePath,
-      OrcFile.readerOptions(conf).filesystem(fs));
+    assertThrows(FileFormatException.class, () -> {
+      FSDataOutputStream fout = fs.create(testFilePath);
+      fout.writeBoolean(true);
+      fout.close();
+      assertEquals(1, fs.getFileStatus(testFilePath).getLen());
+      OrcFile.createReader(testFilePath,
+          OrcFile.readerOptions(conf).filesystem(fs));
+    });
   }
 
-  @Test(expected=FileFormatException.class)
+  @Test
   public void testReadFileInvalidHeader() throws Exception {
-    FSDataOutputStream fout = fs.create(testFilePath);
-    fout.writeLong(1);
-    fout.close();
-    assertEquals(8, fs.getFileStatus(testFilePath).getLen());
-    OrcFile.createReader(testFilePath,
-      OrcFile.readerOptions(conf).filesystem(fs));
+    assertThrows(FileFormatException.class, () -> {
+      FSDataOutputStream fout = fs.create(testFilePath);
+      fout.writeLong(1);
+      fout.close();
+      assertEquals(8, fs.getFileStatus(testFilePath).getLen());
+      OrcFile.createReader(testFilePath,
+          OrcFile.readerOptions(conf).filesystem(fs));
+    });
   }
 
   @Test

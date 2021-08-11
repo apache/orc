@@ -22,7 +22,6 @@ import org.apache.hadoop.hive.ql.exec.vector.DateColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.TypeDescription;
-import org.junit.Test;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -33,9 +32,8 @@ import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 public class TestJsonReader {
     @Test
@@ -49,7 +47,7 @@ public class TestJsonReader {
                 "struct<a:timestamp>");
         JsonReader reader = new JsonReader(input, null, 1, schema, tsFormat);
         VectorizedRowBatch batch = schema.createRowBatch(2);
-        assertEquals(true, reader.nextBatch(batch));
+        assertTrue(reader.nextBatch(batch));
         assertEquals(2, batch.size);
         TimestampColumnVector cv = (TimestampColumnVector) batch.cols[0];
         assertEquals("2018-03-21 12:23:34.123456", cv.asScratchTimestamp(0).toString());
@@ -71,7 +69,7 @@ public class TestJsonReader {
                 "struct<a:timestamp>");
         JsonReader reader = new JsonReader(input, null, 1, schema, tsFormat);
         VectorizedRowBatch batch = schema.createRowBatch(6);
-        assertEquals(true, reader.nextBatch(batch));
+        assertTrue(reader.nextBatch(batch));
         assertEquals(6, batch.size);
         TimestampColumnVector cv = (TimestampColumnVector) batch.cols[0];
         assertEquals("1970-01-01 00:00:00.0001", cv.asScratchTimestamp(0).toString());

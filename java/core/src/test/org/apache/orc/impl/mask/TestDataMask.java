@@ -29,11 +29,13 @@ import org.apache.hadoop.hive.ql.exec.vector.UnionColumnVector;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.orc.DataMask;
 import org.apache.orc.TypeDescription;
-import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestDataMask {
 
@@ -49,9 +51,9 @@ public class TestDataMask {
     cv.vector[0] = 10;
     cv.vector[1] = 20;
     mask.maskData(cv, masked, 0, 2);
-    assertEquals(true, masked.isRepeating);
-    assertEquals(false, masked.noNulls);
-    assertEquals(true, masked.isNull[0]);
+    assertTrue(masked.isRepeating);
+    assertFalse(masked.noNulls);
+    assertTrue(masked.isNull[0]);
   }
 
   @Test
@@ -131,14 +133,14 @@ public class TestDataMask {
 
     // send it through the nullify mask
     nullify.maskData(cv, masked, 0, 3);
-    assertEquals(false, masked.noNulls);
-    assertEquals(true, masked.isRepeating);
-    assertEquals(true, masked.isNull[0]);
+    assertFalse(masked.noNulls);
+    assertTrue(masked.isRepeating);
+    assertTrue(masked.isNull[0]);
 
     // send it through our identity mask
     identity.maskData(cv, masked, 0 , 3);
-    assertEquals(true, masked.noNulls);
-    assertEquals(false, masked.isRepeating);
+    assertTrue(masked.noNulls);
+    assertFalse(masked.isRepeating);
 
     // point accessors to masked values
     a = (DecimalColumnVector) masked.fields[0];
@@ -155,27 +157,29 @@ public class TestDataMask {
 
     // check the outputs
     for(int i=0; i < 3; ++i) {
-      assertEquals("iter " + i, (i + 1) + "." + (i + 1), a.vector[i].toString());
-      assertEquals("iter " + i, 1.25 * (i + 1), b.vector[i], 0.0001);
-      assertEquals("iter " + i, i == 0 ? 0 : c.offsets[i-1] + c.lengths[i-1], c.offsets[i]);
-      assertEquals("iter " + i, 2 * i, c.lengths[i]);
-      assertEquals("iter " + i, i == 0 ? 4 : d.offsets[i-1] - d.lengths[i], d.offsets[i]);
-      assertEquals("iter " + i, 2, d.lengths[i]);
-      assertEquals("iter " + i, i % 2, e.tags[i]);
-      assertEquals("iter " + i, Integer.toHexString(0x123 * i), f.toString(i));
+      String msg = "iter " + i;
+      assertEquals((i + 1) + "." + (i + 1), a.vector[i].toString(), msg);
+      assertEquals(1.25 * (i + 1), b.vector[i], 0.0001, msg);
+      assertEquals(i == 0 ? 0 : c.offsets[i-1] + c.lengths[i-1], c.offsets[i], msg);
+      assertEquals(2 * i, c.lengths[i], msg);
+      assertEquals(i == 0 ? 4 : d.offsets[i-1] - d.lengths[i], d.offsets[i], msg);
+      assertEquals(2, d.lengths[i], msg);
+      assertEquals(i % 2, e.tags[i], msg);
+      assertEquals(Integer.toHexString(0x123 * i), f.toString(i), msg);
     }
     // check the subvalues for the list and map
     for(int i=0; i < 6; ++i) {
-      assertEquals("iter " + i, i, ce.vector[i]);
-      assertEquals("iter " + i, i * 1111, dk.time[i]);
-      assertEquals("iter " + i, i * 11, dv.vector[i]);
+      String msg = "iter " + i;
+      assertEquals(i, ce.vector[i], msg);
+      assertEquals(i * 1111, dk.time[i], msg);
+      assertEquals(i * 11, dv.vector[i], msg);
     }
     assertEquals(0, e1.vector[0]);
     assertEquals(20, e1.vector[2]);
     // the redact mask always replaces binary with null
-    assertEquals(false, e2.noNulls);
-    assertEquals(true, e2.isRepeating);
-    assertEquals(true, e2.isNull[0]);
+    assertFalse(e2.noNulls);
+    assertTrue(e2.isRepeating);
+    assertTrue(e2.isNull[0]);
   }
 
 }

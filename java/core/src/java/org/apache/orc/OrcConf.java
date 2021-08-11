@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -160,11 +160,18 @@ public enum OrcConf {
   ROWS_BETWEEN_CHECKS("orc.rows.between.memory.checks", "orc.rows.between.memory.checks", 5000,
     "How often should MemoryManager check the memory sizes? Measured in rows\n" +
       "added to all of the writers.  Valid range is [1,10000] and is primarily meant for" +
-      "n\testing.  Setting this too low may negatively affect performance."),
+      "testing.  Setting this too low may negatively affect performance."),
   OVERWRITE_OUTPUT_FILE("orc.overwrite.output.file", "orc.overwrite.output.file", false,
     "A boolean flag to enable overwriting of the output file if it already exists.\n"),
   IS_SCHEMA_EVOLUTION_CASE_SENSITIVE("orc.schema.evolution.case.sensitive", "orc.schema.evolution.case.sensitive", true,
           "A boolean flag to determine if the comparision of field names in schema evolution is case sensitive .\n"),
+  ALLOW_SARG_TO_FILTER("orc.sarg.to.filter", "org.sarg.to.filter", false,
+                       "A boolean flag to determine if a SArg is allowed to become a filter"),
+  READER_USE_SELECTED("orc.filter.use.selected", "orc.filter.use.selected", false,
+                        "A boolean flag to determine if the selected vector is supported by\n"
+                        + "the reading application. If false, the output of the ORC reader must have the filter\n"
+                        + "reapplied to avoid using unset values in the unselected rows.\n"
+                        + "If unsure please leave this as false."),
   WRITE_VARIABLE_LENGTH_BLOCKS("orc.write.variable.length.blocks", null, false,
       "A boolean flag as to whether the ORC writer should write variable length\n"
       + "HDFS blocks."),

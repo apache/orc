@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -104,16 +104,17 @@ public class OrcMapredRecordReader<V extends WritableComparable>
     if (!ensureBatch()) {
       return false;
     }
+    int rowIdx = batch.selectedInUse ? batch.selected[rowInBatch] : rowInBatch;
     if (schema.getCategory() == TypeDescription.Category.STRUCT) {
       OrcStruct result = (OrcStruct) value;
       List<TypeDescription> children = schema.getChildren();
       int numberOfChildren = children.size();
       for(int i=0; i < numberOfChildren; ++i) {
-        result.setFieldValue(i, nextValue(batch.cols[i], rowInBatch,
+        result.setFieldValue(i, nextValue(batch.cols[i], rowIdx,
             children.get(i), result.getFieldValue(i)));
       }
     } else {
-      nextValue(batch.cols[0], rowInBatch, schema, value);
+      nextValue(batch.cols[0], rowIdx, schema, value);
     }
     rowInBatch += 1;
     return true;

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -205,7 +205,7 @@ public class JsonReader implements RecordReader {
     private JsonConverter[] childrenConverters;
     private List<String> fieldNames;
 
-    public StructColumnConverter(TypeDescription schema) {
+    StructColumnConverter(TypeDescription schema) {
       List<TypeDescription> kids = schema.getChildren();
       childrenConverters = new JsonConverter[kids.size()];
       for(int c=0; c < childrenConverters.length; ++c) {
@@ -233,7 +233,7 @@ public class JsonReader implements RecordReader {
   class ListColumnConverter implements JsonConverter {
     private JsonConverter childrenConverter;
 
-    public ListColumnConverter(TypeDescription schema) {
+    ListColumnConverter(TypeDescription schema) {
       childrenConverter = createConverter(schema.getChildren().get(0));
     }
 
@@ -261,10 +261,11 @@ public class JsonReader implements RecordReader {
     private JsonConverter keyConverter;
     private JsonConverter valueConverter;
 
-    public MapColumnConverter(TypeDescription schema) {
+    MapColumnConverter(TypeDescription schema) {
       TypeDescription keyType = schema.getChildren().get(0);
-      if (keyType.getCategory() != TypeDescription.Category.STRING)
+      if (keyType.getCategory() != TypeDescription.Category.STRING) {
         throw new IllegalArgumentException("JSON can only support MAP key in STRING type: " + schema);
+      }
       keyConverter = createConverter(keyType);
       valueConverter = createConverter(schema.getChildren().get(1));
     }

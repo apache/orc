@@ -18,8 +18,9 @@
 
 package org.apache.orc.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.*;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -35,8 +36,6 @@ import org.apache.orc.InMemoryKeystore;
 import org.apache.orc.OrcProto;
 import org.apache.orc.PhysicalWriter;
 import org.apache.orc.impl.writer.StreamOptions;
-import org.junit.Assume;
-import org.junit.Test;
 import org.mockito.Mockito;
 
 public class TestOutStream {
@@ -151,7 +150,7 @@ public class TestOutStream {
       };
       assertEquals(generated.length, output.length);
       for (int i = 0; i < generated.length; ++i) {
-        assertEquals("i = " + i, (byte) (generated[i] ^ data[i]), output[i]);
+        assertEquals((byte) (generated[i] ^ data[i]), output[i], "i = " + i);
       }
 
       receiver.buffer.clear();
@@ -164,7 +163,7 @@ public class TestOutStream {
       generated = new int[]{0x16, 0x03, 0xE6, 0xC3};
       assertEquals(generated.length, output.length);
       for (int i = 0; i < generated.length; ++i) {
-        assertEquals("i = " + i, (byte) (generated[i] ^ data[i]), output[i]);
+        assertEquals((byte) (generated[i] ^ data[i]), output[i], "i = " + i);
       }
     }
   }
@@ -172,7 +171,7 @@ public class TestOutStream {
   @Test
   public void testCompression256Encryption() throws Exception {
     // disable test if AES_256 is not available
-    Assume.assumeTrue(InMemoryKeystore.SUPPORTS_AES_256);
+    assumeTrue(InMemoryKeystore.SUPPORTS_AES_256);
     TestInStream.OutputCollector receiver = new TestInStream.OutputCollector();
     EncryptionAlgorithm aes256 = EncryptionAlgorithm.AES_CTR_256;
     byte[] keyBytes = new byte[aes256.keyLength()];
@@ -212,9 +211,9 @@ public class TestOutStream {
              StandardCharsets.UTF_8))) {
       // check the contents of the decompressed stream
       for (int i = 0; i < 10000; ++i) {
-        assertEquals("i = " + i, "The Cheesy Poofs " + i, reader.readLine());
+        assertEquals("The Cheesy Poofs " + i, reader.readLine(), "i = " + i);
       }
-      assertEquals(null, reader.readLine());
+      assertNull(reader.readLine());
     }
   }
 }
