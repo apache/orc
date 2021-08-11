@@ -31,11 +31,10 @@ import org.apache.orc.TypeDescription;
 
 /**
  * This example shows how to read compound data types in ORC.
- *
  */
 public class AdvancedReader {
 
-  public static void main(Configuration conf,String[] args) throws IOException {
+  public static void main(Configuration conf, String[] args) throws IOException {
     // Get the information from the file footer
     Reader reader = OrcFile.createReader(new Path("advanced-example.orc"),
         OrcFile.readerOptions(conf));
@@ -86,6 +85,6 @@ public class AdvancedReader {
   }
 
   public static void main(String[] args) throws IOException {
-    main(new Configuration(),args);
+    main(new Configuration(), args);
   }
 }
