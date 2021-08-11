@@ -64,6 +64,16 @@ add_test(
   COMMAND java -jar tools/orc-tools-${ORC_VERSION}-uber.jar version
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+add_test(
+  NAME java-bench-gen-test
+  COMMAND java -jar bench/core/orc-benchmarks-core-${ORC_VERSION}-uber.jar generate data -d sales -s 1
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+add_test(
+  NAME java-bench-scan-test
+  COMMAND java -jar bench/core/orc-benchmarks-core-${ORC_VERSION}-uber.jar scan data -d sales
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
 install(
   FILES ${ORC_JARS}
   DESTINATION share)
