@@ -74,6 +74,7 @@ public class Driver {
       System.err.println("   write - write a sample ORC file");
       System.err.println("   read - read a sample ORC file");
       System.err.println("   write2 - write a sample ORC file with a map");
+      System.err.println("   read2 - read a sample ORC file with a map");
       System.err.println();
       System.err.println("To get more help, provide -h to the command");
       System.exit(1);
@@ -92,6 +93,8 @@ public class Driver {
       CoreWriter.main(conf, options.commandArgs);
     } else if ("write2".equals(options.command)) {
       AdvancedWriter.main(conf, options.commandArgs);
+    } else if ("read2".equals(options.command)) {
+      AdvancedReader.main(conf, options.commandArgs);
     } else {
       System.err.println("Unknown subcommand: " + options.command);
       System.exit(1);
