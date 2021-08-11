@@ -75,5 +75,5 @@ jobs:
         mkdir -p ~/.m2
         mkdir build
         cd build
-        cmake -DANALYZE_JAVA=ON ..
+        cmake -DANALYZE_JAVA=ON -DOPENSSL_ROOT_DIR=`brew --prefix openssl` ..
         make package test-out
