@@ -35,9 +35,8 @@ import org.apache.orc.TypeDescription;
  */
 public class AdvancedReader {
 
-  public static void main(String[] args) throws IOException {
+  public static void main(Configuration conf,String[] args) throws IOException {
     // Get the information from the file footer
-    Configuration conf = new Configuration();
     Reader reader = OrcFile.createReader(new Path("advanced-example.orc"),
         OrcFile.readerOptions(conf));
     System.out.println("File schema: " + reader.getSchema());
@@ -84,5 +83,9 @@ public class AdvancedReader {
       }
     }
     rowIterator.close();
+  }
+
+  public static void main(String[] args) throws IOException {
+    main(new Configuration(),args);
   }
 }
