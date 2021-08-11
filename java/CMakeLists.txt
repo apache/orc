@@ -64,6 +64,25 @@ add_test(
   COMMAND java -jar tools/orc-tools-${ORC_VERSION}-uber.jar version
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+execute_process(
+  COMMAND java --add-opens java.base/java.nio=ALL-UNNAMED -version
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+  RESULT_VARIABLE RET)
+if(RET EQUAL 0)
+  set(ADD_OPENS --add-opens)
+  set(JAVA_NIO java.base/java.nio=ALL-UNNAMED)
+endif()
+
+add_test(
+  NAME java-bench-gen-test
+  COMMAND java ${ADD_OPENS} ${JAVA_NIO} -jar bench/core/orc-benchmarks-core-${ORC_VERSION}-uber.jar generate data -d sales -s 1
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+add_test(
+  NAME java-bench-scan-test
+  COMMAND java ${ADD_OPENS} ${JAVA_NIO} -jar bench/core/orc-benchmarks-core-${ORC_VERSION}-uber.jar scan data -d sales
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
 install(
   FILES ${ORC_JARS}
   DESTINATION share)
