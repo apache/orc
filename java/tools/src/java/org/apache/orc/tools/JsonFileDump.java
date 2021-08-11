@@ -362,9 +362,9 @@ public class JsonFileDump {
         writer.key("totalLength").value(((StringColumnStatistics) cs).getSum());
         writer.key("type").value(OrcProto.Type.Kind.STRING);
       } else if (cs instanceof DateColumnStatistics) {
-        if (((DateColumnStatistics) cs).getMaximum() != null) {
-          writer.key("min").value(((DateColumnStatistics) cs).getMinimum());
-          writer.key("max").value(((DateColumnStatistics) cs).getMaximum());
+        if (((DateColumnStatistics) cs).getMaximumLocalDate() != null) {
+          writer.key("min").value(((DateColumnStatistics) cs).getMinimumLocalDate());
+          writer.key("max").value(((DateColumnStatistics) cs).getMaximumLocalDate());
         }
         writer.key("type").value(OrcProto.Type.Kind.DATE);
       } else if (cs instanceof TimestampColumnStatistics) {

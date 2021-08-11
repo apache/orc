@@ -23,7 +23,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonStreamParser;
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -355,7 +355,7 @@ public class JsonSchemaFinder {
         .desc("Print types as Hive table declaration").build());
     options.addOption(Option.builder("p").longOpt("pretty")
         .desc("Pretty print the schema").build());
-    CommandLine cli = new GnuParser().parse(options, args);
+    CommandLine cli = new DefaultParser().parse(options, args);
     if (cli.hasOption('h') || cli.getArgs().length == 0) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp("json-schema", options);
