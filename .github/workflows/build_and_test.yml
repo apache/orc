@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    name: "Build with Java ${{ matrix.java }}"
+    name: "Build with Java ${{ matrix.java }} on ${{ matrix.os }}"
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
