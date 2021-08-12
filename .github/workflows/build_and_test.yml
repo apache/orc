@@ -46,11 +46,14 @@ jobs:
         make package test-out
 
   build-mac:
-    name: "Build with Java ${{ matrix.java }}"
-    runs-on: macos-11
+    name: "Build with Java ${{ matrix.java }} on ${{ matrix.os }}"
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os:
+          - macos-10.15
+          - macos-11
         java:
           - 11
     env:
