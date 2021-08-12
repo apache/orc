@@ -782,11 +782,6 @@
       </dependency>
       <dependency>
         <groupId>org.threeten</groupId>
-        <artifactId>threetenbp</artifactId>
-        <version>1.3.5</version>
-      </dependency>
-      <dependency>
-        <groupId>org.threeten</groupId>
         <artifactId>threeten-extra</artifactId>
         <version>1.7.0</version>
       </dependency>
