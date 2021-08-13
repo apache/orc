@@ -31,6 +31,7 @@ import org.apache.orc.OrcFile.WriterOptions;
 import com.google.common.collect.Lists;
 
 import org.apache.orc.impl.ReaderImpl;
+import static org.apache.orc.impl.mask.SHA256MaskFactory.printHexBinary;
 import org.apache.orc.impl.reader.ReaderEncryption;
 import org.apache.orc.impl.reader.StripePlanner;
 import org.apache.orc.OrcFile.Version;
@@ -67,7 +68,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
 import org.mockito.Mockito;
 
-import javax.xml.bind.DatatypeConverter;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -3877,7 +3877,7 @@ public class TestVectorOrcFile {
     try {
       MessageDigest md = MessageDigest.getInstance("SHA-256");
       byte[] digest = md.digest(value.getBytes(StandardCharsets.UTF_8));
-      return DatatypeConverter.printHexBinary(digest);
+      return printHexBinary(digest);
     } catch (NoSuchAlgorithmException e) {
       throw new RuntimeException(e);
     }

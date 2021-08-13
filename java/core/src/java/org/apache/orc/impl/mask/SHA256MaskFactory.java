@@ -22,7 +22,6 @@ import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.orc.DataMask;
 import org.apache.orc.TypeDescription;
 
-import javax.xml.bind.DatatypeConverter;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -73,6 +72,20 @@ public class SHA256MaskFactory extends MaskFactory {
     }
   }
 
+  private static final char[] DIGITS = {
+      '0', '1', '2', '3', '4', '5', '6', '7',
+      '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
+  };
+
+  public static String printHexBinary(byte[] data) {
+    final char[] out = new char[data.length << 1];
+    for (int i = 0, j = 0; i < data.length; i++) {
+      out[j++] = DIGITS[(0xF0 & data[i]) >>> 4];
+      out[j++] = DIGITS[0x0F & data[i]];
+    }
+    return new String(out);
+  }
+
   /**
    * Mask a string by finding the character category of each character
    * and replacing it with the matching literal.
@@ -87,8 +100,7 @@ public class SHA256MaskFactory extends MaskFactory {
 
     // take SHA-256 Hash and convert to HEX
     md.update(source.vector[row], source.start[row], source.length[row]);
-    byte[] hash = DatatypeConverter.printHexBinary(md.digest())
-                      .getBytes(StandardCharsets.UTF_8);
+    byte[] hash = printHexBinary(md.digest()).getBytes(StandardCharsets.UTF_8);
     int targetLength = hash.length;
 
     switch (schema.getCategory()) {
