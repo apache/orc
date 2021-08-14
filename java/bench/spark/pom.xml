@@ -181,9 +181,17 @@
                     <exclude>META-INF/MANIFEST.MF</exclude>
                     <exclude>META-INF/DEPENDENCIES</exclude>
                     <exclude>META-INF/LICENSE</exclude>
+                    <exclude>META-INF/LICENSE.md</exclude>
                     <exclude>META-INF/NOTICE</exclude>
+                    <exclude>META-INF/NOTICE-binary</exclude>
+                    <exclude>META-INF/NOTICE.md</exclude>
+                    <exclude>META-INF/NOTICE.txt</exclude>
                     <exclude>META-INF/DUMMY.SF</exclude>
                     <exclude>META-INF/DUMMY.DSA</exclude>
+                    <exclude>LICENSE</exclude>
+                    <exclude>NOTICE</exclude>
+                    <exclude>THIRD-PARTY</exclude>
+                    <exclude>about.html</exclude>
                   </excludes>
                 </filter>
               </filters>
