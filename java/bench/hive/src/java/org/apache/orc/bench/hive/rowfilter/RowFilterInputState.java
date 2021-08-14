@@ -53,7 +53,8 @@ public abstract class RowFilterInputState {
   public void setup() throws IOException, IllegalAccessException {
     TypeDescription.RowBatchVersion version =
         (TypeDescription.RowBatchVersion) FieldUtils.readField(this, "version", true);
-    TypeDescription.Category benchType = (TypeDescription.Category) FieldUtils.readField(this, "benchType", true);
+    TypeDescription.Category benchType =
+        (TypeDescription.Category) FieldUtils.readField(this, "benchType", true);
     String filterPerc = (String) FieldUtils.readField(this, "filterPerc", true);
     int filterColsNum = (int) FieldUtils.readField(this, "filterColsNum", true);
     String dataRelativePath = (String) FieldUtils.readField(this, "dataRelativePath", true);
@@ -67,7 +68,8 @@ public abstract class RowFilterInputState {
     include = new boolean[schema.getMaximumId() + 1];
     for (TypeDescription child : schema.getChildren()) {
       if (schema.getFieldNames().get(child.getId() - 1).compareTo(filterColumn) == 0) {
-        System.out.println("Apply Filter on column: " + schema.getFieldNames().get(child.getId() - 1));
+        System.out.println(
+            "Apply Filter on column: " + schema.getFieldNames().get(child.getId() - 1));
         include[child.getId()] = true;
       } else if (child.getCategory() == benchType) {
         System.out.println("Skip column(s): " + schema.getFieldNames().get(child.getId() - 1));

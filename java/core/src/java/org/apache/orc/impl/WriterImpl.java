@@ -802,12 +802,12 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     }
     rowsInStripe = stripeInfo.getNumberOfRows();
     // update stripe information
-    OrcProto.StripeInformation.Builder dirEntry = OrcProto.StripeInformation
-                                                      .newBuilder()
-                                                      .setNumberOfRows(rowsInStripe)
-                                                      .setIndexLength(stripeInfo.getIndexLength())
-                                                      .setDataLength(stripeInfo.getDataLength())
-                                                      .setFooterLength(stripeInfo.getFooterLength());
+    OrcProto.StripeInformation.Builder dirEntry =
+        OrcProto.StripeInformation.newBuilder()
+                                  .setNumberOfRows(rowsInStripe)
+                                  .setIndexLength(stripeInfo.getIndexLength())
+                                  .setDataLength(stripeInfo.getDataLength())
+                                  .setFooterLength(stripeInfo.getFooterLength());
     // If this is the first stripe of the original file, we need to copy the
     // encryption information.
     if (stripeInfo.hasEncryptionStripeId()) {
@@ -934,10 +934,10 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
    * @param schema the type tree that we search for annotations
    * @param keyOverrides user specified key overrides
    */
-  private WriterEncryptionVariant[] setupEncryption(KeyProvider provider,
-                                                    TypeDescription schema,
-                                                    Map<String, HadoopShims.KeyMetadata> keyOverrides
-                                                    ) throws IOException {
+  private WriterEncryptionVariant[] setupEncryption(
+      KeyProvider provider,
+      TypeDescription schema,
+      Map<String, HadoopShims.KeyMetadata> keyOverrides) throws IOException {
     keyProvider = provider != null ? provider :
                       CryptoUtils.getKeyProvider(conf, new SecureRandom());
     // Load the overrides into the cache so that we use the required key versions.

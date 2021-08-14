@@ -88,8 +88,9 @@ public class StructBatchReader extends BatchReader {
     }
   }
 
-  private void nextBatchForLevel(VectorizedRowBatch batch, int batchSize, TypeReader.ReadPhase readPhase)
-    throws IOException {
+  private void nextBatchForLevel(
+      VectorizedRowBatch batch, int batchSize, TypeReader.ReadPhase readPhase)
+      throws IOException {
     TypeReader[] children = structReader.fields;
     for (int i = 0; i < children.length
                     && (vectorColumnCount == -1 || i < vectorColumnCount); ++i) {
@@ -100,7 +101,8 @@ public class StructBatchReader extends BatchReader {
   }
 
   @Override
-  public void startStripe(StripePlanner planner,  TypeReader.ReadPhase readPhase) throws IOException {
+  public void startStripe(StripePlanner planner,  TypeReader.ReadPhase readPhase)
+      throws IOException {
     TypeReader[] children = ((TreeReaderFactory.StructTreeReader) rootType).fields;
     for (int i = 0; i < children.length &&
                     (vectorColumnCount == -1 || i < vectorColumnCount); ++i) {

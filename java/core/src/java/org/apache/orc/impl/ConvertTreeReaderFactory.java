@@ -391,7 +391,8 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     private final TypeDescription readerType;
     private final boolean downCastNeeded;
 
-    AnyIntegerFromAnyIntegerTreeReader(int columnId, TypeDescription fileType, TypeDescription readerType,
+    AnyIntegerFromAnyIntegerTreeReader(
+        int columnId, TypeDescription fileType, TypeDescription readerType,
       Context context) throws IOException {
       super(columnId, createFromInteger(columnId, fileType, context), context);
       this.readerType = readerType;
@@ -679,7 +680,8 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     private DecimalColumnVector decimalColVector;
     private DoubleColumnVector doubleColVector;
 
-    DoubleFromDecimalTreeReader(int columnId, TypeDescription fileType, Context context) throws IOException {
+    DoubleFromDecimalTreeReader(
+        int columnId, TypeDescription fileType, Context context) throws IOException {
       super(columnId, new DecimalTreeReader(columnId, fileType.getPrecision(),
           fileType.getScale(), context), context);
       this.precision = fileType.getPrecision();
@@ -994,7 +996,8 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     private int fileScale;
     private ColumnVector decimalColVector;
 
-    DecimalFromDecimalTreeReader(int columnId, TypeDescription fileType, TypeDescription readerType, Context context)
+    DecimalFromDecimalTreeReader(
+        int columnId, TypeDescription fileType, TypeDescription readerType, Context context)
         throws IOException {
       super(columnId, new DecimalTreeReader(columnId, fileType.getPrecision(),
           fileType.getScale(), context), context);
@@ -1006,9 +1009,11 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     public void setConvertVectorElement(int elementNum) throws IOException {
 
       if (decimalColVector instanceof Decimal64ColumnVector) {
-        ((Decimal64ColumnVector) decimalColVector).set(elementNum, fileDecimalColVector.vector[elementNum]);
+        ((Decimal64ColumnVector) decimalColVector).set(
+            elementNum, fileDecimalColVector.vector[elementNum]);
       } else {
-        ((DecimalColumnVector) decimalColVector).set(elementNum, fileDecimalColVector.vector[elementNum]);
+        ((DecimalColumnVector) decimalColVector).set(
+            elementNum, fileDecimalColVector.vector[elementNum]);
       }
 
     }

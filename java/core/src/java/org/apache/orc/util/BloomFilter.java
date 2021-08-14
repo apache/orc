@@ -234,7 +234,7 @@ public class BloomFilter {
    * @param that - bloom filter to merge
    */
   public void merge(BloomFilter that) {
-    if (this != that && this.numBits == that.numBits && this.numHashFunctions == that.numHashFunctions) {
+    if (this != that && numBits == that.numBits && numHashFunctions == that.numHashFunctions) {
       this.bitSet.putAll(that.bitSet);
     } else {
       throw new IllegalArgumentException("BloomFilters are not compatible for merging." +

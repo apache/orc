@@ -137,7 +137,8 @@ public class RowFilterProjectionBenchmark implements OrcBenchmark {
     List<TypeDescription> children = schema.getChildren();
     boolean foundFilterCol = false;
     for (int c = children.get(0).getId(); c < schema.getMaximumId() + 1; ++c) {
-      if (c < schema.getFieldNames().size() && schema.getFieldNames().get(c-1).compareTo(filter_column) == 0) {
+      if (c < schema.getFieldNames().size() &&
+          schema.getFieldNames().get(c-1).compareTo(filter_column) == 0) {
         foundFilterCol = true;
         include[c] = true;
       }
@@ -153,7 +154,8 @@ public class RowFilterProjectionBenchmark implements OrcBenchmark {
     RecordReader rows =
         reader.rows(reader.options()
           .include(include)
-          .setRowFilter(new String[]{filter_column}, RowFilterProjectionBenchmark::customIntRowFilter));
+          .setRowFilter(new String[]{filter_column},
+              RowFilterProjectionBenchmark::customIntRowFilter));
 
     VectorizedRowBatch batch = schema.createRowBatch();
     while (rows.nextBatch(batch)) {
@@ -195,7 +197,8 @@ public class RowFilterProjectionBenchmark implements OrcBenchmark {
     List<TypeDescription> children = schema.getChildren();
     boolean foundFilterCol = false;
     for (int c = children.get(0).getId(); c < schema.getMaximumId() + 1; ++c) {
-      if (c < schema.getFieldNames().size() && schema.getFieldNames().get(c-1).compareTo(filter_column) == 0) {
+      if (c < schema.getFieldNames().size() &&
+          schema.getFieldNames().get(c-1).compareTo(filter_column) == 0) {
         foundFilterCol = true;
         include[c] = true;
       }
