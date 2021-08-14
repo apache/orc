@@ -110,7 +110,8 @@ public class TreeReaderFactory {
       return this;
     }
 
-    public ReaderContext setFilterCallback(Set<Integer> filterColumnsList, Consumer<OrcFilterContext> filterCallback) {
+    public ReaderContext setFilterCallback(
+        Set<Integer> filterColumnsList, Consumer<OrcFilterContext> filterCallback) {
       this.filterColumnIds = filterColumnsList;
       this.filterCallback = filterCallback;
       return this;
@@ -501,7 +502,8 @@ public class TreeReaderFactory {
       this(columnId, null, null, context);
     }
 
-    protected ByteTreeReader(int columnId, InStream present, InStream data, Context context) throws IOException {
+    protected ByteTreeReader(
+        int columnId, InStream present, InStream data, Context context) throws IOException {
       super(columnId, present, context);
       this.reader = new RunLengthByteReader(data);
     }
@@ -965,7 +967,8 @@ public class TreeReaderFactory {
             // some nulls
             int previousIdx = 0;
             // conditions to ensure bounds checks skips
-            for (int i = 0; batchSize <= result.isNull.length && i != filterContext.getSelectedSize(); i++) {
+            for (int i = 0; batchSize <= result.isNull.length &&
+                i != filterContext.getSelectedSize(); i++) {
               int idx = filterContext.getSelected()[i];
               if (idx - previousIdx > 0) {
                 utils.skipDouble(stream, countNonNullRowsInRange(result.isNull, previousIdx, idx));
@@ -978,7 +981,8 @@ public class TreeReaderFactory {
               }
               previousIdx = idx + 1;
             }
-            utils.skipDouble(stream, countNonNullRowsInRange(result.isNull, previousIdx, batchSize));
+            utils.skipDouble(stream,
+                countNonNullRowsInRange(result.isNull, previousIdx, batchSize));
           }
         } else {
           // no nulls
@@ -1516,7 +1520,8 @@ public class TreeReaderFactory {
       valueStream = planner.getStream(new StreamName(columnId,
           OrcProto.Stream.Kind.DATA));
       scaleReader = createIntegerReader(planner.getEncoding(columnId).getKind(),
-          planner.getStream(new StreamName(columnId, OrcProto.Stream.Kind.SECONDARY)), true, context);
+          planner.getStream(new StreamName(columnId, OrcProto.Stream.Kind.SECONDARY)),
+          true, context);
     }
 
     @Override
@@ -2425,7 +2430,8 @@ public class TreeReaderFactory {
     }
 
     protected VarcharTreeReader(int columnId, int maxLength, InStream present, InStream data,
-                                InStream length, InStream dictionary, OrcProto.ColumnEncoding encoding,
+                                InStream length, InStream dictionary,
+                                OrcProto.ColumnEncoding encoding,
                                 Context context) throws IOException {
       super(columnId, present, data, length, dictionary, encoding, context);
       this.maxLength = maxLength;
@@ -2652,8 +2658,8 @@ public class TreeReaderFactory {
     public void startStripe(StripePlanner planner, ReadPhase readPhase) throws IOException {
       if (readPhase.contains(this.readerCategory)) {
         super.startStripe(planner, readPhase);
-        tags = new RunLengthByteReader(planner.getStream(new StreamName(columnId,
-                                                                        OrcProto.Stream.Kind.DATA)));
+        tags = new RunLengthByteReader(planner.getStream(
+            new StreamName(columnId, OrcProto.Stream.Kind.DATA)));
       }
       for (TypeReader field : fields) {
         if (field != null && TypeReader.shouldProcessChild(field, readPhase)) {

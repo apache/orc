@@ -268,7 +268,8 @@ public interface Reader extends Closeable {
      *
      * @return this
      */
-    public Options setRowFilter(String[] filterColumnNames, Consumer<OrcFilterContext> filterCallback) {
+    public Options setRowFilter(
+        String[] filterColumnNames, Consumer<OrcFilterContext> filterCallback) {
       this.preFilterColumns = filterColumnNames;
       this.skipRowCallback =  filterCallback;
       return this;

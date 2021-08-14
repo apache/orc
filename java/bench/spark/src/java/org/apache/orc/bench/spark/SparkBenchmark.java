@@ -240,7 +240,8 @@ public class SparkBenchmark implements OrcBenchmark {
       default:
         throw new IllegalArgumentException("Unknown data set " + source.dataset);
     }
-    Seq<Tuple2<String,String>> optionsScala = JavaConverters.asScalaBufferConverter(options).asScala().toSeq();
+    Seq<Tuple2<String,String>> optionsScala =
+        JavaConverters.asScalaBufferConverter(options).asScala().toSeq();
     @SuppressWarnings("unchecked")
     Map<String,String> scalaMap = (Map<String, String>)Map$.MODULE$.apply(optionsScala);
     Function1<PartitionedFile,Iterator<InternalRow>> factory =
@@ -292,7 +293,8 @@ public class SparkBenchmark implements OrcBenchmark {
       default:
         break;
     }
-    Seq<Tuple2<String,String>> optionsScala = JavaConverters.asScalaBufferConverter(options).asScala().toSeq();
+    Seq<Tuple2<String,String>> optionsScala =
+        JavaConverters.asScalaBufferConverter(options).asScala().toSeq();
     @SuppressWarnings("unchecked")
     Map<String,String> scalaMap = (Map<String, String>)Map$.MODULE$.apply(optionsScala);
     Function1<PartitionedFile,Iterator<InternalRow>> factory =

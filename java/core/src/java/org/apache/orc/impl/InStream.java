@@ -481,7 +481,7 @@ public abstract class InStream extends InputStream {
 
       if (chunkLength > bufferSize) {
         throw new IllegalArgumentException("Buffer size too small. size = " +
-                                               bufferSize + " needed = " + chunkLength + " in " + name);
+            bufferSize + " needed = " + chunkLength + " in " + name);
       }
       ByteBuffer slice = this.slice(chunkLength);
 

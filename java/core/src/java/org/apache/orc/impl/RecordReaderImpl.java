@@ -214,7 +214,8 @@ public class RecordReaderImpl implements RecordReader {
     this.schema = evolution.getReaderSchema();
     this.path = fileReader.path;
     this.rowIndexStride = fileReader.rowIndexStride;
-    boolean ignoreNonUtf8BloomFilter = OrcConf.IGNORE_NON_UTF8_BLOOM_FILTERS.getBoolean(fileReader.conf);
+    boolean ignoreNonUtf8BloomFilter =
+        OrcConf.IGNORE_NON_UTF8_BLOOM_FILTERS.getBoolean(fileReader.conf);
     ReaderEncryption encryption = fileReader.getEncryption();
     this.fileIncluded = evolution.getFileIncluded();
     SearchArgument sarg = options.getSearchArgument();
@@ -581,7 +582,8 @@ public class RecordReaderImpl implements RecordReader {
                                            TypeDescription type,
                                            boolean writerUsedProlepticGregorian,
                                            boolean useUTCTimestamp) {
-    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(null, statsProto, writerUsedProlepticGregorian, true);
+    ColumnStatistics cs = ColumnStatisticsImpl.deserialize(
+        null, statsProto, writerUsedProlepticGregorian, true);
     ValueRange range = getValueRange(cs, predicate, useUTCTimestamp);
 
     // files written before ORC-135 stores timestamp wrt to local timezone causing issues with PPD.
@@ -676,7 +678,8 @@ public class RecordReaderImpl implements RecordReader {
 
     result = evaluatePredicateMinMax(predicate, predObj, range);
     if (shouldEvaluateBloomFilter(predicate, result, bloomFilter)) {
-      return evaluatePredicateBloomFilter(predicate, predObj, bloomFilter, range.hasNulls, useUTCTimestamp);
+      return evaluatePredicateBloomFilter(
+          predicate, predObj, bloomFilter, range.hasNulls, useUTCTimestamp);
     } else {
       return result;
     }
@@ -804,7 +807,8 @@ public class RecordReaderImpl implements RecordReader {
         for (Object arg : predicate.getLiteralList()) {
           // if atleast one value in IN list exist in bloom filter, qualify the row group/stripe
           Object predObjItem = getBaseObjectForComparison(predicate.getType(), (Comparable) arg);
-          TruthValue result = checkInBloomFilter(bloomFilter, predObjItem, hasNull, useUTCTimestamp);
+          TruthValue result =
+              checkInBloomFilter(bloomFilter, predObjItem, hasNull, useUTCTimestamp);
           if (result == TruthValue.YES_NO_NULL || result == TruthValue.YES_NO) {
             return result;
           }
@@ -841,7 +845,8 @@ public class RecordReaderImpl implements RecordReader {
           result = TruthValue.YES_NO_NULL;
         }
       } else {
-        if (bf.testLong(SerializationUtils.convertToUtc(TimeZone.getDefault(), ((Timestamp) predObj).getTime()))) {
+        if (bf.testLong(SerializationUtils.convertToUtc(
+            TimeZone.getDefault(), ((Timestamp) predObj).getTime()))) {
           result = TruthValue.YES_NO_NULL;
         }
       }
@@ -1106,7 +1111,8 @@ public class RecordReaderImpl implements RecordReader {
                   LOG.info("Skipping ORC PPD - " + e.getMessage() + " on "
                       + predicate);
                 } else {
-                  final String reason = e.getClass().getSimpleName() + " when evaluating predicate." +
+                  final String reason = e.getClass().getSimpleName() +
+                      " when evaluating predicate." +
                       " Skipping ORC PPD." +
                       " Stats: " + stats +
                       " Predicate: " + predicate;
@@ -1403,7 +1409,8 @@ public class RecordReaderImpl implements RecordReader {
       // position of the follow. This is required to determine the non-null values to skip on the
       // non-filter columns.
       seekToRowEntry(reader, readRG, TypeReader.ReadPhase.LEADER_PARENTS);
-      reader.skipRows(fromFollowRow - (readRG * rowIndexStride), TypeReader.ReadPhase.LEADER_PARENTS);
+      reader.skipRows(fromFollowRow - (readRG * rowIndexStride),
+          TypeReader.ReadPhase.LEADER_PARENTS);
       // Move both the filter parents and non-filter forward, this will compute the correct
       // non-null skips on follow children
       reader.skipRows(skipRows, TypeReader.ReadPhase.FOLLOWERS_AND_PARENTS);

@@ -41,7 +41,8 @@ public class RowCount {
         if (status.isFile() && status.getPath().getName().endsWith(".orc")) {
           Path filename = status.getPath();
           try (Reader reader = OrcFile.createReader(filename, OrcFile.readerOptions(conf))) {
-            System.out.println(String.format("%s %d", filename.toString(), reader.getNumberOfRows()));
+            System.out.println(String.format("%s %d",
+                filename.toString(), reader.getNumberOfRows()));
           } catch (IOException ioe) {
             bad += 1;
             System.err.println("Failed to read " + filename);

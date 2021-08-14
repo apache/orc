@@ -175,7 +175,8 @@ public class DateUtils {
 
   public static Integer parseDate(String date, boolean fromProleptic) {
     try {
-      TemporalAccessor time = (fromProleptic ? PROLEPTIC_DATE_FORMAT : HYBRID_DATE_FORMAT).parse(date);
+      TemporalAccessor time =
+          (fromProleptic ? PROLEPTIC_DATE_FORMAT : HYBRID_DATE_FORMAT).parse(date);
       return (int) LocalDate.from(time).toEpochDay();
     } catch (DateTimeParseException e) {
       return null;
