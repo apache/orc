@@ -66,7 +66,9 @@ add_test(
 execute_process(
   COMMAND java --add-opens java.base/java.nio=ALL-UNNAMED -version
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-  RESULT_VARIABLE RET)
+  RESULT_VARIABLE RET
+  OUTPUT_QUIET
+  ERROR_QUIET)
 if(RET EQUAL 0)
   set(ADD_OPENS --add-opens)
   set(JAVA_NIO java.base/java.nio=ALL-UNNAMED)
