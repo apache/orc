@@ -521,7 +521,8 @@ public class StripePlanner {
       for (StreamInformation stream : dataStreams) {
         if (readPhase == TypeReader.ReadPhase.ALL
             || (readPhase == TypeReader.ReadPhase.LEADERS && filterColIds.contains(stream.column))
-            || (readPhase == TypeReader.ReadPhase.FOLLOWERS && !filterColIds.contains(stream.column))) {
+            || (readPhase == TypeReader.ReadPhase.FOLLOWERS &&
+                !filterColIds.contains(stream.column))) {
           processStream(stream, result, rowIndex, startGroup,
                         includedRowGroups, isCompressed, bufferSize);
         } else {
@@ -560,14 +561,15 @@ public class StripePlanner {
             encodings[stream.column].getKind(), kind, stream.kind,
             isCompressed, hasNull[column]);
           long start = Math.max(alreadyRead,
-                                stream.offset + (group == 0 ? 0 : ri.getEntry(group).getPositions(posn)));
+              stream.offset + (group == 0 ? 0 : ri.getEntry(group).getPositions(posn)));
           long end = stream.offset;
           if (endGroup == includedRowGroups.length - 1) {
             end += stream.length;
           } else {
             long nextGroupOffset = ri.getEntry(endGroup + 1).getPositions(posn);
             end += RecordReaderUtils.estimateRgEndOffset(isCompressed,
-                                                         bufferSize, false, nextGroupOffset, stream.length);
+                                                         bufferSize, false, nextGroupOffset,
+                                                         stream.length);
           }
           if (alreadyRead < end) {
             addChunk(result, stream, start, end - start);

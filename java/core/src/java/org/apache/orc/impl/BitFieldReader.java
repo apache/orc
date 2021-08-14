@@ -70,7 +70,8 @@ public final class BitFieldReader {
       for (int i = 0; i != filterContext.getSelectedSize(); i++) {
         int idx = filterContext.getSelected()[i];
         if (idx - previousIdx > 0) {
-          skip(TreeReaderFactory.TreeReader.countNonNullRowsInRange(previous.isNull, previousIdx, idx));
+          skip(TreeReaderFactory.TreeReader.countNonNullRowsInRange(
+              previous.isNull, previousIdx, idx));
         }
         if (!previous.isNull[idx]) {
           previous.vector[idx] = next();
@@ -79,7 +80,8 @@ public final class BitFieldReader {
         }
         previousIdx = idx + 1;
       }
-      skip(TreeReaderFactory.TreeReader.countNonNullRowsInRange(previous.isNull, previousIdx, (int)previousLen));
+      skip(TreeReaderFactory.TreeReader.countNonNullRowsInRange(
+          previous.isNull, previousIdx, (int)previousLen));
     }
   }
 

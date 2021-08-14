@@ -39,7 +39,8 @@ public class PrimitiveBatchReader extends BatchReader {
     resetBatch(batch, batchSize);
   }
 
-  public void startStripe(StripePlanner planner, TypeReader.ReadPhase readPhase) throws IOException {
+  public void startStripe(StripePlanner planner, TypeReader.ReadPhase readPhase)
+      throws IOException {
     rootType.startStripe(planner, readPhase);
   }
 

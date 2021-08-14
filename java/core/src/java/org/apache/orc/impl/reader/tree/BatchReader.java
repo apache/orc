@@ -62,5 +62,6 @@ public abstract class BatchReader {
 
   public abstract void skipRows(long rows, TypeReader.ReadPhase readPhase) throws IOException;
 
-  public abstract void seek(PositionProvider[] index, TypeReader.ReadPhase readPhase) throws IOException;
+  public abstract void seek(PositionProvider[] index, TypeReader.ReadPhase readPhase)
+      throws IOException;
 }

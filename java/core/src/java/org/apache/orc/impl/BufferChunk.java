@@ -74,7 +74,8 @@ public class BufferChunk extends DiskRangeList {
       sliceBuf.position(newPos);
       sliceBuf.limit(newLimit);
     } catch (Throwable t) {
-      throw new RuntimeException("Failed to slice buffer chunk with range" + " [" + this.offset + ", " + this.end
+      throw new RuntimeException(
+              "Failed to slice buffer chunk with range" + " [" + this.offset + ", " + this.end
               + "), position: " + chunk.position() + " limit: " + chunk.limit() + ", "
               + (chunk.isDirect() ? "direct" : "array") + "; to [" + offset + ", " + end + ") "
               + t.getClass(), t);

@@ -305,7 +305,8 @@ public class ReaderImpl implements Reader {
   }
 
   @Override
-  public List<StripeStatistics> getVariantStripeStatistics(EncryptionVariant variant) throws IOException {
+  public List<StripeStatistics> getVariantStripeStatistics(EncryptionVariant variant)
+      throws IOException {
     if (variant == null) {
       if (stripeStatistics == null) {
         try (CompressionCodec codec = OrcCodecPool.getCodec(compressionKind)) {
@@ -575,7 +576,8 @@ public class ReaderImpl implements Reader {
       this.stripes = tail.getStripes();
       this.stripeStatistics = null;
       this.encryption = new ReaderEncryption(tail.getFooter(), schema,
-          tail.getStripeStatisticsOffset(), tail.getTailBuffer(), stripes, options.getKeyProvider(), conf);
+          tail.getStripeStatisticsOffset(), tail.getTailBuffer(), stripes,
+          options.getKeyProvider(), conf);
     }
     this.types = OrcUtils.getOrcTypes(schema);
   }
@@ -741,7 +743,8 @@ public class ReaderImpl implements Reader {
     }
     // clear does not clear the contents but sets position to 0 and limit = capacity
     buffer.clear();
-    return new OrcTail(fileTailBuilder.build(), new BufferChunk(buffer.slice(), 0), modificationTime);
+    return new OrcTail(fileTailBuilder.build(),
+        new BufferChunk(buffer.slice(), 0), modificationTime);
   }
 
   protected OrcTail extractFileTail(FileSystem fs, Path path,
@@ -1062,7 +1065,8 @@ public class ReaderImpl implements Reader {
                   if (included == null || included[sub]) {
                     for(int s = 0; s < colStats.size(); ++s) {
                       StripeStatisticsImpl resultElem = (StripeStatisticsImpl) result.get(s);
-                      resultElem.updateColumn(sub, colStats.get(s).getColumn(sub - variantType.getId()));
+                      resultElem.updateColumn(sub,
+                          colStats.get(s).getColumn(sub - variantType.getId()));
                     }
                   }
                 }

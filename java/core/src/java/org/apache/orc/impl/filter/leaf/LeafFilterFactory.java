@@ -118,7 +118,8 @@ public class LeafFilterFactory {
                                                   negated);
       case DATE:
         return new LongFilters.LongLessThanEquals(colName,
-                                                  ((Date) literal).toLocalDate().toEpochDay(), negated);
+                                                  ((Date) literal).toLocalDate().toEpochDay(),
+                                                  negated);
       case DECIMAL:
         HiveDecimalWritable d = (HiveDecimalWritable) literal;
         assert d.scale() <= colType.getScale();
@@ -269,7 +270,8 @@ public class LeafFilterFactory {
         return negated ? new IsNotNullFilter(leaf.getColumnName()) :
             new IsNullFilter(leaf.getColumnName());
       default:
-        throw new FilterFactory.UnSupportedSArgException(String.format("Predicate: %s is not supported", leaf));
+        throw new FilterFactory.UnSupportedSArgException(
+            String.format("Predicate: %s is not supported", leaf));
     }
   }
 }

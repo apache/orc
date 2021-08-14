@@ -51,7 +51,8 @@ public enum OrcConf {
       "Define the version of the file to write. Possible values are 0.11 and\n"+
           " 0.12. If this parameter is not defined, ORC will use the run\n" +
           " length encoding (RLE) introduced in Hive 0.12."),
-  ENFORCE_COMPRESSION_BUFFER_SIZE("orc.buffer.size.enforce", "hive.exec.orc.buffer.size.enforce", false,
+  ENFORCE_COMPRESSION_BUFFER_SIZE("orc.buffer.size.enforce",
+      "hive.exec.orc.buffer.size.enforce", false,
       "Defines whether to enforce ORC compression buffer size."),
   ENCODING_STRATEGY("orc.encoding.strategy", "hive.exec.orc.encoding.strategy",
       "SPEED",
@@ -163,13 +164,16 @@ public enum OrcConf {
       "testing.  Setting this too low may negatively affect performance."),
   OVERWRITE_OUTPUT_FILE("orc.overwrite.output.file", "orc.overwrite.output.file", false,
     "A boolean flag to enable overwriting of the output file if it already exists.\n"),
-  IS_SCHEMA_EVOLUTION_CASE_SENSITIVE("orc.schema.evolution.case.sensitive", "orc.schema.evolution.case.sensitive", true,
-          "A boolean flag to determine if the comparision of field names in schema evolution is case sensitive .\n"),
+  IS_SCHEMA_EVOLUTION_CASE_SENSITIVE("orc.schema.evolution.case.sensitive",
+      "orc.schema.evolution.case.sensitive", true,
+      "A boolean flag to determine if the comparision of field names " +
+      "in schema evolution is case sensitive .\n"),
   ALLOW_SARG_TO_FILTER("orc.sarg.to.filter", "org.sarg.to.filter", false,
                        "A boolean flag to determine if a SArg is allowed to become a filter"),
   READER_USE_SELECTED("orc.filter.use.selected", "orc.filter.use.selected", false,
                         "A boolean flag to determine if the selected vector is supported by\n"
-                        + "the reading application. If false, the output of the ORC reader must have the filter\n"
+                        + "the reading application. If false, the output of the ORC reader "
+                        + "must have the filter\n"
                         + "reapplied to avoid using unset values in the unselected rows.\n"
                         + "If unsure please leave this as false."),
   WRITE_VARIABLE_LENGTH_BLOCKS("orc.write.variable.length.blocks", null, false,
@@ -178,11 +182,13 @@ public enum OrcConf {
   DIRECT_ENCODING_COLUMNS("orc.column.encoding.direct", "orc.column.encoding.direct", "",
       "Comma-separated list of columns for which dictionary encoding is to be skipped."),
   // some JVM doesn't allow array creation of size Integer.MAX_VALUE, so chunk size is slightly less than max int
-  ORC_MAX_DISK_RANGE_CHUNK_LIMIT("orc.max.disk.range.chunk.limit", "hive.exec.orc.max.disk.range.chunk.limit",
+  ORC_MAX_DISK_RANGE_CHUNK_LIMIT("orc.max.disk.range.chunk.limit",
+      "hive.exec.orc.max.disk.range.chunk.limit",
     Integer.MAX_VALUE - 1024, "When reading stripes >2GB, specify max limit for the chunk size."),
   ENCRYPTION("orc.encrypt", "orc.encrypt", null, "The list of keys and columns to encrypt with"),
   DATA_MASK("orc.mask", "orc.mask", null, "The masks to apply to the encrypted columns"),
-  KEY_PROVIDER("orc.key.provider", "orc.key.provider", "hadoop", "The kind of KeyProvider to use for encryption."),
+  KEY_PROVIDER("orc.key.provider", "orc.key.provider", "hadoop",
+      "The kind of KeyProvider to use for encryption."),
   PROLEPTIC_GREGORIAN("orc.proleptic.gregorian", "orc.proleptic.gregorian", false,
       "Should we read and write dates & times using the proleptic Gregorian calendar\n" +
           "instead of the hybrid Julian Gregorian? Hive before 3.1 and Spark before 3.0\n" +

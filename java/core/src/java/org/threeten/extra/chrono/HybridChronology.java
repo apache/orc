@@ -133,7 +133,8 @@ public final class HybridChronology
     /**
      * Range of proleptic month.
      */
-    static final ValueRange PROLEPTIC_MONTH_RANGE = ValueRange.of(-999_998 * 12L, 999_999 * 12L + 11);
+    static final ValueRange PROLEPTIC_MONTH_RANGE =
+        ValueRange.of(-999_998 * 12L, 999_999 * 12L + 11);
 
     /**
      * Private constructor, that is public to satisfy the {@code ServiceLoader}.
@@ -448,7 +449,8 @@ public final class HybridChronology
 
     //-----------------------------------------------------------------------
     @Override  // override for return type
-    public HybridDate resolveDate(Map<TemporalField, Long> fieldValues, ResolverStyle resolverStyle) {
+    public HybridDate resolveDate(
+            Map<TemporalField, Long> fieldValues, ResolverStyle resolverStyle) {
         return (HybridDate) super.resolveDate(fieldValues, resolverStyle);
     }
 

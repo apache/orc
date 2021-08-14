@@ -13,7 +13,7 @@ title: Coding Guidelines
 
 ## Formatting
 
-* All files must have an 80 character maximum line length.
+* All files must have an 100 character maximum line length.
 * Indentation should be 2 spaces.
 * Files should use spaces instead of tabs.
 * Wrapping lines
