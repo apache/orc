@@ -296,6 +296,7 @@
                 <module name="TreeWalker">
                   <module name="OuterTypeFilename"/>
                   <module name="UnusedImports"/>
+                  <module name="RedundantImport"/>
                   <module name="ModifierOrder"/>
                   <module name="RedundantModifier"/>
                   <module name="NoLineWrap"/>
