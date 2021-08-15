@@ -31,6 +31,7 @@ import java.util.function.Consumer;
  * The interface for reading ORC files.
  *
  * One Reader can support multiple concurrent RecordReader.
+ * @since 1.1.0
  */
 public interface Reader extends Closeable {
 
