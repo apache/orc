@@ -33,6 +33,7 @@ public interface Writer extends Closeable {
   /**
    * Get the schema for this writer
    * @return the file schema
+   * @since 1.1.0
    */
   TypeDescription getSchema();
 
@@ -42,12 +43,14 @@ public interface Writer extends Closeable {
    * second value will replace the first.
    * @param key a key to label the data with.
    * @param value the contents of the metadata.
+   * @since 1.1.0
    */
   void addUserMetadata(String key, ByteBuffer value);
 
   /**
    * Add a row batch to the ORC file.
    * @param batch the rows to add
+   * @since 1.1.0
    */
   void addRowBatch(VectorizedRowBatch batch) throws IOException;
 
@@ -55,6 +58,7 @@ public interface Writer extends Closeable {
    * Flush all of the buffers and close the file. No methods on this writer
    * should be called afterwards.
    * @throws IOException
+   * @since 1.1.0
    */
   @Override
   void close() throws IOException;
@@ -65,6 +69,7 @@ public interface Writer extends Closeable {
    * after closing the writer.
    *
    * @return raw data size
+   * @since 1.1.0
    */
   long getRawDataSize();
 
@@ -74,6 +79,7 @@ public interface Writer extends Closeable {
    * closing the writer.
    *
    * @return row count
+   * @since 1.1.0
    */
   long getNumberOfRows();
 
@@ -81,6 +87,7 @@ public interface Writer extends Closeable {
    * Write an intermediate footer on the file such that if the file is
    * truncated to the returned offset, it would be a valid ORC file.
    * @return the offset that would be a valid end location for an ORC file
+   * @since 1.1.0
    */
   long writeIntermediateFooter() throws IOException;
 
@@ -100,6 +107,7 @@ public interface Writer extends Closeable {
    * @param length - length of stripe within byte array
    * @param stripeInfo - stripe information
    * @param stripeStatistics - unencrypted stripe statistics
+   * @since 1.1.0
    */
   void appendStripe(byte[] stripe, int offset, int length,
       StripeInformation stripeInfo,
@@ -118,6 +126,7 @@ public interface Writer extends Closeable {
    * @param stripeStatistics - stripe statistics with the last one being
    *                         for the unencrypted data and the others being for
    *                         each encryption variant.
+   * @since 1.6.0
    */
   void appendStripe(byte[] stripe, int offset, int length,
                     StripeInformation stripeInfo,
@@ -127,6 +136,7 @@ public interface Writer extends Closeable {
    * Update the current user metadata with a list of new values.
    * @param userMetadata - user metadata
    * @deprecated use {@link #addUserMetadata(String, ByteBuffer)} instead
+   * @since 1.1.0
    */
   void appendUserMetadata(List<OrcProto.UserMetadataItem> userMetadata);
 
@@ -139,6 +149,7 @@ public interface Writer extends Closeable {
    * be used judiciously.
    *
    * @return the information about the column
+   * @since 1.1.0
    */
   ColumnStatistics[] getStatistics() throws IOException;
 
@@ -150,6 +161,7 @@ public interface Writer extends Closeable {
    *
    * @return stripe information
    * @throws IOException
+   * @since 1.6.0
    */
   List<StripeInformation> getStripes() throws IOException;
 }
