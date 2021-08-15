@@ -24,6 +24,7 @@ import java.io.IOException;
 
 /**
  * A row-by-row iterator for ORC files.
+ * @since 1.1.0
  */
 public interface RecordReader extends Closeable {
   /**
