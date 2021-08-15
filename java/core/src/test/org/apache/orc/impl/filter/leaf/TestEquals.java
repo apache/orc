@@ -18,8 +18,8 @@
 
 package org.apache.orc.impl.filter.leaf;
 
-import org.apache.orc.impl.filter.VectorFilter;
 import org.apache.orc.impl.filter.ATestFilter;
+import org.apache.orc.impl.filter.VectorFilter;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;

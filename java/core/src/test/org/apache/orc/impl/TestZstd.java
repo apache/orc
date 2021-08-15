@@ -22,11 +22,10 @@ import io.airlift.compress.zstd.ZstdCompressor;
 import io.airlift.compress.zstd.ZstdDecompressor;
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.CompressionKind;
+import org.junit.jupiter.api.Test;
 
 import java.nio.ByteBuffer;
 
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class TestZstd {

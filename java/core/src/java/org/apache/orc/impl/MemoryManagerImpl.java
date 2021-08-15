@@ -18,10 +18,10 @@
 
 package org.apache.orc.impl;
 
-import org.apache.orc.MemoryManager;
-import org.apache.orc.OrcConf;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.orc.MemoryManager;
+import org.apache.orc.OrcConf;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;

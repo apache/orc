@@ -17,11 +17,11 @@
  */
 package org.apache.orc.impl;
 
-import java.io.EOFException;
-import java.io.IOException;
-
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.io.filter.FilterContext;
+
+import java.io.EOFException;
+import java.io.IOException;
 
 public final class BitFieldReader {
   private final RunLengthByteReader input;

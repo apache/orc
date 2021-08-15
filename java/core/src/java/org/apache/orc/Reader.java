@@ -18,14 +18,14 @@
 
 package org.apache.orc;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.function.Consumer;
-
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 
 /**
  * The interface for reading ORC files.

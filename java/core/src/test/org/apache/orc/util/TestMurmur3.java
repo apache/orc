@@ -18,16 +18,17 @@
 
 package org.apache.orc.util;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import org.junit.jupiter.api.Test;
-
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
+import org.junit.jupiter.api.Test;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Random;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests for Murmur3 variants.

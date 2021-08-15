@@ -36,8 +36,8 @@ import org.apache.hadoop.hive.ql.exec.vector.StructColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.TypeDescription;
-import org.apache.orc.bench.core.convert.BatchWriter;
 import org.apache.orc.bench.core.CompressionKind;
+import org.apache.orc.bench.core.convert.BatchWriter;
 
 import java.io.IOException;
 import java.nio.Buffer;

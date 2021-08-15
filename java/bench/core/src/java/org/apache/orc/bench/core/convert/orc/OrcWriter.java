@@ -24,9 +24,9 @@ import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.OrcFile;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
-import org.apache.orc.bench.core.convert.BatchWriter;
 import org.apache.orc.bench.core.CompressionKind;
 import org.apache.orc.bench.core.Utilities;
+import org.apache.orc.bench.core.convert.BatchWriter;
 
 import java.io.IOException;
 

@@ -17,11 +17,11 @@
  */
 package org.apache.orc;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-
 import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.orc.impl.Dictionary;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

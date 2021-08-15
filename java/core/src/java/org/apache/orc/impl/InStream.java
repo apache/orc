@@ -17,6 +17,16 @@
  */
 package org.apache.orc.impl;
 
+import com.google.protobuf.CodedInputStream;
+import org.apache.hadoop.hive.common.io.DiskRangeList;
+import org.apache.orc.CompressionCodec;
+import org.apache.orc.EncryptionAlgorithm;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.crypto.Cipher;
+import javax.crypto.ShortBufferException;
+import javax.crypto.spec.IvParameterSpec;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -24,18 +34,6 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.util.function.Consumer;
-
-import org.apache.hadoop.hive.common.io.DiskRangeList;
-import org.apache.orc.CompressionCodec;
-import org.apache.orc.EncryptionAlgorithm;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.protobuf.CodedInputStream;
-
-import javax.crypto.Cipher;
-import javax.crypto.ShortBufferException;
-import javax.crypto.spec.IvParameterSpec;
 
 public abstract class InStream extends InputStream {
 

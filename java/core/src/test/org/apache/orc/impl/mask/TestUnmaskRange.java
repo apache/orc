@@ -19,10 +19,10 @@ package org.apache.orc.impl.mask;
 
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
+import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 
-import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**

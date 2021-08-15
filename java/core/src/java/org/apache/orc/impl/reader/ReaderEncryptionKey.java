@@ -18,8 +18,8 @@
 
 package org.apache.orc.impl.reader;
 
-import org.apache.orc.EncryptionKey;
 import org.apache.orc.EncryptionAlgorithm;
+import org.apache.orc.EncryptionKey;
 import org.apache.orc.OrcProto;
 import org.apache.orc.impl.HadoopShims;
 import org.jetbrains.annotations.NotNull;
