@@ -17,13 +17,14 @@
  */
 package org.apache.orc.impl;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.ArrayList;
-import java.util.List;
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.CompressionKind;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A clone of Hadoop codec pool for ORC; cause it has its own codecs...

@@ -18,7 +18,6 @@
 
 package org.apache.orc.tools;
 
-import java.io.IOException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
@@ -26,6 +25,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
+
+import java.io.IOException;
 
 /**
  * Given a set of paths, finds all of the "*.orc" files under them and prints the number of rows in each file.

@@ -18,12 +18,12 @@
 
 package org.apache.orc;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-
 import org.apache.orc.impl.StreamName;
 import org.apache.orc.impl.writer.StreamOptions;
 import org.apache.orc.impl.writer.WriterEncryptionVariant;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
 /**
  * This interface separates the physical layout of ORC files from the higher

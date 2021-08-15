@@ -31,6 +31,8 @@ import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
 import org.apache.orc.PhysicalWriter;
 import org.apache.orc.TypeDescription;
+import org.junit.jupiter.api.Test;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
@@ -42,8 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import org.junit.jupiter.api.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestPhysicalFsWriter {
 

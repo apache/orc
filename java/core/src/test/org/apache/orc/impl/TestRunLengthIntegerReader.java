@@ -17,13 +17,13 @@
  */
 package org.apache.orc.impl;
 
+import org.apache.orc.CompressionCodec;
+import org.apache.orc.impl.writer.StreamOptions;
+import org.junit.jupiter.api.Test;
+
 import java.nio.ByteBuffer;
 import java.util.Random;
 
-import org.apache.orc.CompressionCodec;
-import org.apache.orc.impl.writer.StreamOptions;
-
-import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestRunLengthIntegerReader {

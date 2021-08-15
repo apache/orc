@@ -17,19 +17,6 @@
  */
 package org.apache.orc.impl;
 
-import java.io.EOFException;
-import java.io.IOException;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TimeZone;
-import java.util.function.Consumer;
-
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
@@ -48,9 +35,9 @@ import org.apache.hadoop.hive.ql.exec.vector.expressions.StringExpr;
 import org.apache.hadoop.hive.ql.io.filter.FilterContext;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.orc.OrcFile;
-import org.apache.orc.TypeDescription;
-import org.apache.orc.OrcProto;
 import org.apache.orc.OrcFilterContext;
+import org.apache.orc.OrcProto;
+import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.reader.ReaderEncryption;
 import org.apache.orc.impl.reader.StripePlanner;
 import org.apache.orc.impl.reader.tree.BatchReader;
@@ -59,6 +46,19 @@ import org.apache.orc.impl.reader.tree.StructBatchReader;
 import org.apache.orc.impl.reader.tree.TypeReader;
 import org.apache.orc.impl.writer.TimestampTreeWriter;
 import org.jetbrains.annotations.NotNull;
+
+import java.io.EOFException;
+import java.io.IOException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
+import java.util.function.Consumer;
 
 /**
  * Factory for creating ORC tree readers.

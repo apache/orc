@@ -18,10 +18,10 @@
 
 package org.apache.orc.impl;
 
+import org.apache.hadoop.io.Text;
+
 import java.io.IOException;
 import java.util.Arrays;
-
-import org.apache.hadoop.io.Text;
 
 
 /**

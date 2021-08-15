@@ -18,6 +18,11 @@
 
 package org.apache.orc;
 
+import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.orc.impl.ParserUtils;
+import org.apache.orc.impl.TypeUtils;
+import org.jetbrains.annotations.NotNull;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,11 +30,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
-
-import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
-import org.apache.orc.impl.ParserUtils;
-import org.apache.orc.impl.TypeUtils;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * This is the description of the types in an ORC file.

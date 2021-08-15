@@ -18,9 +18,15 @@
 
 package org.apache.orc.impl;
 
+import org.apache.hadoop.hive.common.io.DiskRangeList;
+import org.apache.orc.CompressionCodec;
+import org.apache.orc.EncryptionAlgorithm;
+import org.apache.orc.OrcProto;
+import org.apache.orc.PhysicalWriter;
+import org.apache.orc.impl.writer.StreamOptions;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
 
+import javax.crypto.spec.SecretKeySpec;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -29,13 +35,12 @@ import java.security.Key;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import javax.crypto.spec.SecretKeySpec;
-import org.apache.hadoop.hive.common.io.DiskRangeList;
-import org.apache.orc.CompressionCodec;
-import org.apache.orc.EncryptionAlgorithm;
-import org.apache.orc.OrcProto;
-import org.apache.orc.PhysicalWriter;
-import org.apache.orc.impl.writer.StreamOptions;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class TestInStream {
 

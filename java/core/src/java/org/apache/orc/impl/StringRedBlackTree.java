@@ -17,9 +17,9 @@
  */
 package org.apache.orc.impl;
 
-import java.io.IOException;
-
 import org.apache.hadoop.io.Text;
+
+import java.io.IOException;
 
 /**
  * A red-black tree that stores strings. The strings are stored as UTF-8 bytes

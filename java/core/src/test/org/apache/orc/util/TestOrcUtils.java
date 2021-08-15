@@ -18,15 +18,11 @@
 
 package org.apache.orc.util;
 
-import java.util.Arrays;
-
 import org.apache.orc.OrcUtils;
 import org.apache.orc.TypeDescription;
-
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests for OrcUtils.

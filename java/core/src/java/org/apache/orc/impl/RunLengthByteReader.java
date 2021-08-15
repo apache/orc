@@ -17,10 +17,10 @@
  */
 package org.apache.orc.impl;
 
+import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
+
 import java.io.EOFException;
 import java.io.IOException;
-
-import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 
 /**
  * A reader that reads a sequence of bytes. A control byte is read before

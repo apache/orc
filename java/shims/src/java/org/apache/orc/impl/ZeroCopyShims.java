@@ -17,13 +17,13 @@
  */
 package org.apache.orc.impl;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.EnumSet;
-
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.ReadOption;
 import org.apache.hadoop.io.ByteBufferPool;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.EnumSet;
 
 class ZeroCopyShims {
   private static final class ByteBufferPoolAdapter implements ByteBufferPool {
