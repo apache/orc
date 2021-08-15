@@ -27,6 +27,7 @@ import java.util.List;
 
 /**
  * The interface for writing ORC files.
+ * @since 1.1.0
  */
 public interface Writer extends Closeable {
 
