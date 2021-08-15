@@ -37,12 +37,14 @@ public interface Reader extends Closeable {
   /**
    * Get the number of rows in the file.
    * @return the number of rows
+   * @since 1.1.0
    */
   long getNumberOfRows();
 
   /**
    * Get the deserialized data size of the file
    * @return raw data size
+   * @since 1.1.0
    */
   long getRawDataSize();
 
@@ -50,6 +52,7 @@ public interface Reader extends Closeable {
    * Get the deserialized data size of the specified columns
    * @param colNames the list of column names
    * @return raw data size of columns
+   * @since 1.1.0
    */
   long getRawDataSizeOfColumns(List<String> colNames);
 
@@ -57,12 +60,14 @@ public interface Reader extends Closeable {
    * Get the deserialized data size of the specified columns ids
    * @param colIds - internal column id (check orcfiledump for column ids)
    * @return raw data size of columns
+   * @since 1.1.0
    */
   long getRawDataSizeFromColIndices(List<Integer> colIds);
 
   /**
    * Get the user metadata keys.
    * @return the set of metadata keys
+   * @since 1.1.0
    */
   List<String> getMetadataKeys();
 
@@ -70,6 +75,7 @@ public interface Reader extends Closeable {
    * Get a user metadata value.
    * @param key a key given by the user
    * @return the bytes associated with the given key
+   * @since 1.1.0
    */
   ByteBuffer getMetadataValue(String key);
 
@@ -77,18 +83,21 @@ public interface Reader extends Closeable {
    * Did the user set the given metadata value.
    * @param key the key to check
    * @return true if the metadata value was set
+   * @since 1.1.0
    */
   boolean hasMetadataValue(String key);
 
   /**
    * Get the compression kind.
    * @return the kind of compression in the file
+   * @since 1.1.0
    */
   CompressionKind getCompressionKind();
 
   /**
    * Get the buffer size for the compression.
    * @return number of bytes to buffer for the compression codec.
+   * @since 1.1.0
    */
   int getCompressionSize();
 
@@ -96,29 +105,34 @@ public interface Reader extends Closeable {
    * Get the number of rows per a entry in the row index.
    * @return the number of rows per an entry in the row index or 0 if there
    * is no row index.
+   * @since 1.1.0
    */
   int getRowIndexStride();
 
   /**
    * Get the list of stripes.
    * @return the information about the stripes in order
+   * @since 1.1.0
    */
   List<StripeInformation> getStripes();
 
   /**
    * Get the length of the file.
    * @return the number of bytes in the file
+   * @since 1.1.0
    */
   long getContentLength();
 
   /**
    * Get the statistics about the columns in the file.
    * @return the information about the column
+   * @since 1.1.0
    */
   ColumnStatistics[] getStatistics();
 
   /**
    * Get the type of rows in this ORC file.
+   * @since 1.1.0
    */
   TypeDescription getSchema();
 
@@ -132,6 +146,7 @@ public interface Reader extends Closeable {
 
   /**
    * Get the file format version.
+   * @since 1.1.0
    */
   OrcFile.Version getFileVersion();
 
@@ -144,23 +159,27 @@ public interface Reader extends Closeable {
    * Get the file tail (footer + postscript)
    *
    * @return - file tail
+   * @since 1.1.0
    */
   OrcProto.FileTail getFileTail();
 
   /**
    * Get the list of encryption keys for column encryption.
    * @return the set of encryption keys
+   * @since 1.6.0
    */
   EncryptionKey[] getColumnEncryptionKeys();
 
   /**
    * Get the data masks for the unencrypted variant of the data.
    * @return the lists of data masks
+   * @since 1.6.0
    */
   DataMaskDescription[] getDataMasks();
 
   /**
    * Get the list of encryption variants for the data.
+   * @since 1.6.0
    */
   EncryptionVariant[] getEncryptionVariants();
 
@@ -172,6 +191,7 @@ public interface Reader extends Closeable {
    * @param variant the encryption variant or null for unencrypted
    * @return a list of stripe statistics (one per a stripe)
    * @throws IOException if the required key is not available
+   * @since 1.6.0
    */
   List<StripeStatistics> getVariantStripeStatistics(EncryptionVariant variant
                                                     ) throws IOException;
@@ -220,6 +240,7 @@ public interface Reader extends Closeable {
      * Set the list of columns to read.
      * @param include a list of columns to read
      * @return this
+     * @since 1.1.0
      */
     public Options include(boolean[] include) {
       this.include = include;
@@ -231,6 +252,7 @@ public interface Reader extends Closeable {
      * @param offset the starting byte offset
      * @param length the number of bytes to read
      * @return this
+     * @since 1.1.0
      */
     public Options range(long offset, long length) {
       this.offset = offset;
@@ -240,6 +262,7 @@ public interface Reader extends Closeable {
 
     /**
      * Set the schema on read type description.
+     * @since 1.1.0
      */
     public Options schema(TypeDescription schema) {
       this.schema = schema;
@@ -267,6 +290,7 @@ public interface Reader extends Closeable {
      *               should set the filter output using the selected array.
      *
      * @return this
+     * @since 1.7.0
      */
     public Options setRowFilter(
         String[] filterColumnNames, Consumer<OrcFilterContext> filterCallback) {
@@ -280,6 +304,7 @@ public interface Reader extends Closeable {
      * @param sarg the search argument
      * @param columnNames the column names for
      * @return this
+     * @since 1.1.0
      */
     public Options searchArgument(SearchArgument sarg, String[] columnNames) {
       this.sarg = sarg;
@@ -287,11 +312,22 @@ public interface Reader extends Closeable {
       return this;
     }
 
+    /**
+     * Set allowSARGToFilter.
+     * @param allowSARGToFilter
+     * @return this
+     * @since 1.7.0
+     */
     public Options allowSARGToFilter(boolean allowSARGToFilter) {
       this.allowSARGToFilter = allowSARGToFilter;
       return this;
     }
 
+    /**
+     * Get allowSARGToFilter value.
+     * @return allowSARGToFilter
+     * @since 1.7.0
+     */
     public boolean isAllowSARGToFilter() {
       return allowSARGToFilter;
     }
@@ -300,12 +336,19 @@ public interface Reader extends Closeable {
      * Set whether to use zero copy from HDFS.
      * @param value the new zero copy flag
      * @return this
+     * @since 1.1.0
      */
     public Options useZeroCopy(boolean value) {
       this.useZeroCopy = value;
       return this;
     }
 
+    /**
+     * Set dataReader.
+     * @param value the new dataReader.
+     * @return this
+     * @since 1.1.0
+     */
     public Options dataReader(DataReader value) {
       this.dataReader = value;
       return this;
@@ -315,6 +358,7 @@ public interface Reader extends Closeable {
      * Set whether to skip corrupt records.
      * @param value the new skip corrupt records flag
      * @return this
+     * @since 1.1.0
      */
     public Options skipCorruptRecords(boolean value) {
       this.skipCorruptRecords = value;
@@ -327,6 +371,7 @@ public interface Reader extends Closeable {
      * pre-HIVE-4243 writer.
      * @param value the new tolerance flag
      * @return this
+     * @since 1.2.0
      */
     public Options tolerateMissingSchema(boolean value) {
       this.tolerateMissingSchema = value;
@@ -338,6 +383,7 @@ public interface Reader extends Closeable {
      * based on the column names.
      * @param value force positional evolution
      * @return this
+     * @since 1.3.0
      */
     public Options forcePositionalEvolution(boolean value) {
       this.forcePositionalEvolution = value;
@@ -349,6 +395,7 @@ public interface Reader extends Closeable {
      * based on the column names.
      * @param value number of levels of positional schema evolution
      * @return this
+     * @since 1.5.11
      */
     public Options positionalEvolutionLevel(int value) {
       this.positionalEvolutionLevel = value;
@@ -361,52 +408,82 @@ public interface Reader extends Closeable {
      * evolution is case sensitive
      * @param value the flag for schema evolution is case sensitive or not.
      * @return this
+     * @since 1.5.0
      */
     public Options isSchemaEvolutionCaseAware(boolean value) {
       this.isSchemaEvolutionCaseAware = value;
       return this;
     }
+
     /**
      * {@code true} if acid metadata columns should be decoded otherwise they will
      * be set to {@code null}.
+     * @since 1.5.3
      */
     public Options includeAcidColumns(boolean includeAcidColumns) {
       this.includeAcidColumns = includeAcidColumns;
       return this;
     }
 
+    /**
+     * @since 1.1.0
+     */
     public boolean[] getInclude() {
       return include;
     }
 
+    /**
+     * @since 1.1.0
+     */
     public long getOffset() {
       return offset;
     }
 
+    /**
+     * @since 1.1.0
+     */
     public long getLength() {
       return length;
     }
 
+    /**
+     * @since 1.1.0
+     */
     public TypeDescription getSchema() {
       return schema;
     }
 
+    /**
+     * @since 1.1.0
+     */
     public SearchArgument getSearchArgument() {
       return sarg;
     }
 
+    /**
+     * @since 1.7.0
+     */
     public Consumer<OrcFilterContext> getFilterCallback() {
       return skipRowCallback;
     }
 
+    /**
+     * @since 1.7.0
+     */
     public String[] getPreFilterColumnNames(){
       return preFilterColumns;
     }
 
+    /**
+     * @since 1.1.0
+     */
     public String[] getColumnNames() {
       return columnNames;
     }
 
+    /**
+     * @since 1.1.0
+     */
     public long getMaxOffset() {
       long result = offset + length;
       if (result < 0) {
@@ -415,34 +492,58 @@ public interface Reader extends Closeable {
       return result;
     }
 
+    /**
+     * @since 1.1.0
+     */
     public Boolean getUseZeroCopy() {
       return useZeroCopy;
     }
 
+    /**
+     * @since 1.1.0
+     */
     public Boolean getSkipCorruptRecords() {
       return skipCorruptRecords;
     }
 
+    /**
+     * @since 1.1.0
+     */
     public DataReader getDataReader() {
       return dataReader;
     }
 
+    /**
+     * @since 1.3.0
+     */
     public boolean getForcePositionalEvolution() {
       return forcePositionalEvolution;
     }
 
+    /**
+     * @since 1.5.11
+     */
     public int getPositionalEvolutionLevel() {
       return positionalEvolutionLevel;
     }
 
+    /**
+     * @since 1.5.0
+     */
     public boolean getIsSchemaEvolutionCaseAware() {
       return isSchemaEvolutionCaseAware;
     }
 
+    /**
+     * @since 1.5.3
+     */
     public boolean getIncludeAcidColumns() {
       return includeAcidColumns;
     }
 
+    /**
+     * @since 1.1.0
+     */
     @Override
     public Options clone() {
       try {
@@ -456,6 +557,9 @@ public interface Reader extends Closeable {
       }
     }
 
+    /**
+     * @since 1.1.0
+     */
     @Override
     public String toString() {
       StringBuilder buffer = new StringBuilder();
@@ -491,15 +595,24 @@ public interface Reader extends Closeable {
       return buffer.toString();
     }
 
+    /**
+     * @since 1.2.0
+     */
     public boolean getTolerateMissingSchema() {
       return tolerateMissingSchema != null ? tolerateMissingSchema :
           (Boolean) OrcConf.TOLERATE_MISSING_SCHEMA.getDefaultValue();
     }
 
+    /**
+     * @since 1.7.0
+     */
     public boolean useSelected() {
       return useSelected;
     }
 
+    /**
+     * @since 1.7.0
+     */
     public Options useSelected(boolean newValue) {
       this.useSelected = newValue;
       return this;
@@ -510,12 +623,14 @@ public interface Reader extends Closeable {
    * Create a default options object that can be customized for creating
    * a RecordReader.
    * @return a new default Options object
+   * @since 1.2.0
    */
   Options options();
 
   /**
    * Create a RecordReader that reads everything with the default options.
    * @return a new RecordReader
+   * @since 1.1.0
    */
   RecordReader rows() throws IOException;
 
@@ -525,28 +640,33 @@ public interface Reader extends Closeable {
    * before the rows() method was introduced.
    * @param options the options to read with
    * @return a new RecordReader
+   * @since 1.1.0
    */
   RecordReader rows(Options options) throws IOException;
 
   /**
    * @return List of integers representing version of the file, in order from major to minor.
+   * @since 1.1.0
    */
   List<Integer> getVersionList();
 
   /**
    * @return Gets the size of metadata, in bytes.
+   * @since 1.1.0
    */
   int getMetadataSize();
 
   /**
    * @return Stripe statistics, in original protobuf form.
    * @deprecated Use {@link #getStripeStatistics()} instead.
+   * @since 1.1.0
    */
   List<OrcProto.StripeStatistics> getOrcProtoStripeStatistics();
 
   /**
    * Get the stripe statistics for all of the columns.
    * @return a list of the statistics for each stripe in the file
+   * @since 1.2.0
    */
   List<StripeStatistics> getStripeStatistics() throws IOException;
 
@@ -555,27 +675,32 @@ public interface Reader extends Closeable {
    * @param include null for all columns or an array where the required columns
    *                are selected
    * @return a list of the statistics for each stripe in the file
+   * @since 1.6.0
    */
   List<StripeStatistics> getStripeStatistics(boolean[] include) throws IOException;
 
   /**
    * @return File statistics, in original protobuf form.
    * @deprecated Use {@link #getStatistics()} instead.
+   * @since 1.1.0
    */
   List<OrcProto.ColumnStatistics> getOrcProtoFileStatistics();
 
   /**
    * @return Serialized file metadata read from disk for the purposes of caching, etc.
+   * @since 1.1.0
    */
   ByteBuffer getSerializedFileFooter();
 
   /**
    * Was the file written using the proleptic Gregorian calendar.
+   * @since 1.5.9
    */
   boolean writerUsedProlepticGregorian();
 
   /**
    * Should the returned values use the proleptic Gregorian calendar?
+   * @since 1.5.9
    */
   boolean getConvertToProlepticGregorian();
 }
