@@ -18,9 +18,9 @@
 
 package org.apache.orc.impl;
 
-import java.io.IOException;
-
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
+
+import java.io.IOException;
 
 /**
  * Interface for reading integers.

@@ -17,14 +17,6 @@
  */
 package org.apache.orc.tools;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -39,22 +31,30 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
-import org.apache.orc.impl.ReaderImpl;
-import org.apache.orc.util.BloomFilter;
-import org.apache.orc.util.BloomFilterIO;
 import org.apache.orc.ColumnStatistics;
 import org.apache.orc.CompressionKind;
 import org.apache.orc.OrcFile;
+import org.apache.orc.OrcProto;
 import org.apache.orc.Reader;
+import org.apache.orc.StripeInformation;
+import org.apache.orc.StripeStatistics;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
 import org.apache.orc.impl.ColumnStatisticsImpl;
 import org.apache.orc.impl.OrcAcidUtils;
 import org.apache.orc.impl.OrcIndex;
-import org.apache.orc.OrcProto;
-import org.apache.orc.StripeInformation;
-import org.apache.orc.StripeStatistics;
+import org.apache.orc.impl.ReaderImpl;
 import org.apache.orc.impl.RecordReaderImpl;
+import org.apache.orc.util.BloomFilter;
+import org.apache.orc.util.BloomFilterIO;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * A tool for printing out the file structure of ORC files.

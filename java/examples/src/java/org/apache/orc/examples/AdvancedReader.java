@@ -17,7 +17,6 @@
  */
 package org.apache.orc.examples;
 
-import java.io.IOException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
@@ -28,6 +27,8 @@ import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
 import org.apache.orc.TypeDescription;
+
+import java.io.IOException;
 
 /**
  * This example shows how to read compound data types in ORC.

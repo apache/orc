@@ -17,10 +17,10 @@
  */
 package org.apache.orc.impl;
 
+import org.apache.hadoop.io.Text;
+
 import java.io.IOException;
 import java.io.OutputStream;
-
-import org.apache.hadoop.io.Text;
 
 public class DictionaryUtils {
   private DictionaryUtils() {

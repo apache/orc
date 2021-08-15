@@ -17,12 +17,12 @@
  */
 package org.apache.orc.impl;
 
+import org.apache.hadoop.io.Text;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-
-import org.apache.hadoop.io.Text;
 
 /**
  * A class that is a growable array of bytes. Growth is managed in terms of

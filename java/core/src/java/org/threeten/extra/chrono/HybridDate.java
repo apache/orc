@@ -17,10 +17,6 @@
  */
 package org.threeten.extra.chrono;
 
-import static org.threeten.extra.chrono.HybridChronology.CUTOVER;
-import static org.threeten.extra.chrono.HybridChronology.CUTOVER_DAYS;
-import static org.threeten.extra.chrono.HybridChronology.CUTOVER_YEAR;
-
 import java.io.Serializable;
 import java.time.Clock;
 import java.time.DateTimeException;
@@ -41,6 +37,10 @@ import java.time.temporal.TemporalQuery;
 import java.time.temporal.TemporalUnit;
 import java.time.temporal.ValueRange;
 import java.util.Objects;
+
+import static org.threeten.extra.chrono.HybridChronology.CUTOVER;
+import static org.threeten.extra.chrono.HybridChronology.CUTOVER_DAYS;
+import static org.threeten.extra.chrono.HybridChronology.CUTOVER_YEAR;
 
 /**
  * A date in the British Cutover calendar system.

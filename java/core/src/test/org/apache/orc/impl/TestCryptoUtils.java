@@ -24,15 +24,16 @@ import org.apache.orc.EncryptionAlgorithm;
 import org.apache.orc.InMemoryKeystore;
 import org.apache.orc.OrcConf;
 import org.apache.orc.OrcProto;
-import org.apache.orc.impl.reader.ReaderEncryptionVariant;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.security.Key;
 import java.util.List;
 import java.util.Random;
 
-import org.junit.jupiter.api.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestCryptoUtils {
 

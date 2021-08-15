@@ -17,16 +17,21 @@
  */
 package org.apache.orc;
 
-import java.nio.charset.StandardCharsets;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.orc.impl.HadoopShims;
 import org.apache.orc.impl.LocalKey;
-import org.junit.jupiter.api.*;
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Random;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Test {@link InMemoryKeystore} class

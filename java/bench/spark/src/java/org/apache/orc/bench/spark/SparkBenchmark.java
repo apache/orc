@@ -25,8 +25,8 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.TrackingLocalFileSystem;
 import org.apache.orc.TypeDescription;
-import org.apache.orc.bench.core.OrcBenchmark;
 import org.apache.orc.bench.core.IOCounters;
+import org.apache.orc.bench.core.OrcBenchmark;
 import org.apache.orc.bench.core.Utilities;
 import org.apache.orc.bench.core.convert.GenerateVariants;
 import org.apache.spark.sql.SparkSession;
@@ -56,16 +56,14 @@ import org.openjdk.jmh.infra.Blackhole;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import scala.Function1;
-
-import java.io.IOException;
-
 import scala.Tuple2;
 import scala.collection.Iterator;
 import scala.collection.JavaConverters;
+import scala.collection.Seq;
 import scala.collection.immutable.Map;
 import scala.collection.immutable.Map$;
-import scala.collection.Seq;
 
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;

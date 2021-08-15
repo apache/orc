@@ -18,11 +18,11 @@
 
 package org.apache.orc;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-
 import org.apache.orc.impl.BufferChunkList;
 import org.apache.orc.impl.InStream;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
 /** An abstract data reader that IO formats can use to read bytes from underlying storage. */
 public interface DataReader extends AutoCloseable, Cloneable {

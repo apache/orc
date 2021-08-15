@@ -17,10 +17,10 @@
  */
 package org.apache.orc;
 
+import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+
 import java.io.Closeable;
 import java.io.IOException;
-
-import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 
 /**
  * A row-by-row iterator for ORC files.

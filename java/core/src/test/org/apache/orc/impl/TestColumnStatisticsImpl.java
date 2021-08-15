@@ -27,12 +27,15 @@ import org.apache.orc.OrcProto;
 import org.apache.orc.Reader;
 import org.apache.orc.TimestampColumnStatistics;
 import org.apache.orc.TypeDescription;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.TimeZone;
 
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestColumnStatisticsImpl {
 

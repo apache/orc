@@ -17,14 +17,14 @@
  */
 package org.apache.orc.impl;
 
+import org.apache.orc.CompressionCodec;
+import org.apache.orc.CompressionKind;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
-
-import org.apache.orc.CompressionCodec;
-import org.apache.orc.CompressionKind;
 
 public class ZlibCodec implements CompressionCodec, DirectDecompressionCodec {
   private static final HadoopShims SHIMS = HadoopShimsFactory.get();

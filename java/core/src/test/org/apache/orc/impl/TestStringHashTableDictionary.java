@@ -18,14 +18,15 @@
 
 package org.apache.orc.impl;
 
+import org.apache.hadoop.io.Text;
+import org.apache.orc.StringDictTestingUtils;
+import org.junit.jupiter.api.Test;
+
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.hadoop.io.Text;
-import org.apache.orc.StringDictTestingUtils;
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestStringHashTableDictionary {
 

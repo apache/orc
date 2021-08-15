@@ -20,13 +20,14 @@ package org.apache.orc.impl;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.orc.MemoryManager;
-import static org.mockito.ArgumentMatchers.eq;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.lang.management.ManagementFactory;
 
-import org.junit.jupiter.api.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.eq;
 
 /**
  * Test the ORC memory manager.

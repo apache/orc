@@ -19,6 +19,7 @@ package org.apache.orc.impl;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.BytesWritable;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.security.Key;
@@ -27,8 +28,6 @@ import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import org.junit.jupiter.api.Test;
 
 public class TestHadoopKeyProvider {
 

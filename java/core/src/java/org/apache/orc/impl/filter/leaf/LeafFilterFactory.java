@@ -22,17 +22,17 @@ import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.orc.OrcFile;
 import org.apache.orc.TypeDescription;
-import org.apache.orc.impl.filter.VectorFilter;
 import org.apache.orc.impl.filter.FilterFactory;
 import org.apache.orc.impl.filter.IsNotNullFilter;
 import org.apache.orc.impl.filter.IsNullFilter;
 import org.apache.orc.impl.filter.LeafFilter;
+import org.apache.orc.impl.filter.VectorFilter;
 
 import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.apache.orc.impl.TreeReaderFactory.isDecimalAsLong;
 

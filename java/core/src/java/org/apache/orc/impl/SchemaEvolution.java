@@ -18,18 +18,18 @@
 
 package org.apache.orc.impl;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.orc.Reader;
+import org.apache.orc.TypeDescription;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
-
-import org.apache.hadoop.conf.Configuration;
-import org.apache.orc.Reader;
-import org.apache.orc.TypeDescription;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Infer and track the evolution between the schema as stored in the file and

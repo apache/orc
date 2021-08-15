@@ -35,8 +35,8 @@ import org.apache.hadoop.hive.ql.exec.vector.UnionColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.serde2.io.DateWritable;
 import org.apache.orc.TypeDescription;
-import org.apache.orc.bench.core.convert.BatchWriter;
 import org.apache.orc.bench.core.CompressionKind;
+import org.apache.orc.bench.core.convert.BatchWriter;
 
 import java.io.IOException;
 import java.io.OutputStream;

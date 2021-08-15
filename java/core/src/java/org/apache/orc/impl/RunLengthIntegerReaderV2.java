@@ -17,13 +17,13 @@
  */
 package org.apache.orc.impl;
 
-import java.io.EOFException;
-import java.io.IOException;
-import java.util.Arrays;
-
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.EOFException;
+import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * A reader that reads a sequence of light weight compressed integers. Refer
