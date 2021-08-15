@@ -18,8 +18,6 @@
 
 package org.apache.orc.bench.core.convert.json;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
@@ -47,7 +45,7 @@ import java.util.List;
 
 public class JsonWriter implements BatchWriter {
   private final Writer outStream;
-  private final JsonGenerator writer;
+  private final com.google.gson.stream.JsonWriter writer;
   private final TypeDescription schema;
 
   public JsonWriter(Path path, TypeDescription schema,
@@ -56,45 +54,44 @@ public class JsonWriter implements BatchWriter {
     OutputStream file = path.getFileSystem(conf).create(path, true);
     outStream = new OutputStreamWriter(compression.create(file),
         StandardCharsets.UTF_8);
-    JsonFactory factory = new JsonFactory();
-    factory.setRootValueSeparator("\n");
-    writer = factory.createGenerator(outStream);
+    writer = new com.google.gson.stream.JsonWriter(outStream);
+    writer.setLenient(true);
     this.schema = schema;
   }
 
-  private static void printMap(JsonGenerator writer,
+  private static void printMap(com.google.gson.stream.JsonWriter writer,
                                MapColumnVector vector,
                                TypeDescription schema,
                                int row) throws IOException {
-    writer.writeStartArray();
+    writer.beginArray();
     TypeDescription keyType = schema.getChildren().get(0);
     TypeDescription valueType = schema.getChildren().get(1);
     int offset = (int) vector.offsets[row];
     for (int i = 0; i < vector.lengths[row]; ++i) {
-      writer.writeStartObject();
-      writer.writeFieldName("_key");
+      writer.beginObject();
+      writer.name("_key");
       printValue(writer, vector.keys, keyType, offset + i);
-      writer.writeFieldName("_value");
+      writer.name("_value");
       printValue(writer, vector.values, valueType, offset + i);
-      writer.writeEndObject();
+      writer.endObject();
     }
-    writer.writeEndArray();
+    writer.endArray();
   }
 
-  private static void printList(JsonGenerator writer,
+  private static void printList(com.google.gson.stream.JsonWriter writer,
                                 ListColumnVector vector,
                                 TypeDescription schema,
                                 int row) throws IOException {
-    writer.writeStartArray();
+    writer.beginArray();
     int offset = (int) vector.offsets[row];
     TypeDescription childType = schema.getChildren().get(0);
     for (int i = 0; i < vector.lengths[row]; ++i) {
       printValue(writer, vector.child, childType, offset + i);
     }
-    writer.writeEndArray();
+    writer.endArray();
   }
 
-  private static void printUnion(JsonGenerator writer,
+  private static void printUnion(com.google.gson.stream.JsonWriter writer,
                                  UnionColumnVector vector,
                                  TypeDescription schema,
                                  int row) throws IOException {
@@ -102,21 +99,21 @@ public class JsonWriter implements BatchWriter {
     printValue(writer, vector.fields[tag], schema.getChildren().get(tag), row);
   }
 
-  static void printStruct(JsonGenerator writer,
+  static void printStruct(com.google.gson.stream.JsonWriter writer,
                           StructColumnVector batch,
                           TypeDescription schema,
                           int row) throws IOException {
-    writer.writeStartObject();
+    writer.beginObject();
     List<String> fieldNames = schema.getFieldNames();
     List<TypeDescription> fieldTypes = schema.getChildren();
     for (int i = 0; i < fieldTypes.size(); ++i) {
-      writer.writeFieldName(fieldNames.get(i));
+      writer.name(fieldNames.get(i));
       printValue(writer, batch.fields[i], fieldTypes.get(i), row);
     }
-    writer.writeEndObject();
+    writer.endObject();
   }
 
-  static void printBinary(JsonGenerator writer, BytesColumnVector vector,
+  static void printBinary(com.google.gson.stream.JsonWriter writer, BytesColumnVector vector,
                           int row) throws IOException {
     StringBuilder buffer = new StringBuilder();
     int offset = vector.start[row];
@@ -124,10 +121,10 @@ public class JsonWriter implements BatchWriter {
       int value = 0xff & (int) vector.vector[row][offset + i];
       buffer.append(String.format("%02x", value));
     }
-    writer.writeString(buffer.toString());
+    writer.value(buffer.toString());
   }
 
-  static void printValue(JsonGenerator writer, ColumnVector vector,
+  static void printValue(com.google.gson.stream.JsonWriter writer, ColumnVector vector,
                          TypeDescription schema, int row) throws IOException {
     if (vector.isRepeating) {
       row = 0;
@@ -135,35 +132,35 @@ public class JsonWriter implements BatchWriter {
     if (vector.noNulls || !vector.isNull[row]) {
       switch (schema.getCategory()) {
         case BOOLEAN:
-          writer.writeBoolean(((LongColumnVector) vector).vector[row] != 0);
+          writer.value(((LongColumnVector) vector).vector[row] != 0);
           break;
         case BYTE:
         case SHORT:
         case INT:
         case LONG:
-          writer.writeNumber(((LongColumnVector) vector).vector[row]);
+          writer.value(((LongColumnVector) vector).vector[row]);
           break;
         case FLOAT:
         case DOUBLE:
-          writer.writeNumber(((DoubleColumnVector) vector).vector[row]);
+          writer.value(((DoubleColumnVector) vector).vector[row]);
           break;
         case STRING:
         case CHAR:
         case VARCHAR:
-          writer.writeString(((BytesColumnVector) vector).toString(row));
+          writer.value(((BytesColumnVector) vector).toString(row));
           break;
         case BINARY:
           printBinary(writer, (BytesColumnVector) vector, row);
           break;
         case DECIMAL:
-          writer.writeString(((DecimalColumnVector) vector).vector[row].toString());
+          writer.value(((DecimalColumnVector) vector).vector[row].toString());
           break;
         case DATE:
-          writer.writeString(new DateWritable(
+          writer.value(new DateWritable(
               (int) ((LongColumnVector) vector).vector[row]).toString());
           break;
         case TIMESTAMP:
-          writer.writeString(((TimestampColumnVector) vector)
+          writer.value(((TimestampColumnVector) vector)
               .asScratchTimestamp(row).toString());
           break;
         case LIST:
@@ -179,27 +176,26 @@ public class JsonWriter implements BatchWriter {
           printUnion(writer, (UnionColumnVector) vector, schema, row);
           break;
         default:
-          throw new IllegalArgumentException("Unknown type " +
-              schema.toString());
+          throw new IllegalArgumentException("Unknown type " + schema);
       }
     } else {
-      writer.writeNull();
+      writer.nullValue();
     }
   }
 
-  static void printRow(JsonGenerator writer,
-                              VectorizedRowBatch batch,
-                              TypeDescription schema,
-                              int row) throws IOException {
+  static void printRow(com.google.gson.stream.JsonWriter writer,
+                       VectorizedRowBatch batch,
+                       TypeDescription schema,
+                       int row) throws IOException {
     if (schema.getCategory() == TypeDescription.Category.STRUCT) {
       List<TypeDescription> fieldTypes = schema.getChildren();
       List<String> fieldNames = schema.getFieldNames();
-      writer.writeStartObject();
+      writer.beginObject();
       for (int c = 0; c < batch.cols.length; ++c) {
-        writer.writeFieldName(fieldNames.get(c));
+        writer.name(fieldNames.get(c));
         printValue(writer, batch.cols[c], fieldTypes.get(c), row);
       }
-      writer.writeEndObject();
+      writer.endObject();
     } else {
       printValue(writer, batch.cols[0], schema, row);
     }
@@ -208,6 +204,7 @@ public class JsonWriter implements BatchWriter {
   public void writeBatch(VectorizedRowBatch batch) throws IOException {
     for (int r = 0; r < batch.size; ++r) {
       printRow(writer, batch, schema, r);
+      outStream.write("\n");
     }
   }
 

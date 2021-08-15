@@ -17,6 +17,7 @@
  */
 package org.apache.orc.tools;
 
+import com.google.gson.stream.JsonWriter;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -40,8 +41,6 @@ import org.apache.hadoop.hive.serde2.io.DateWritable;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
 import org.apache.orc.TypeDescription;
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONWriter;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -57,30 +56,30 @@ import java.util.Optional;
  */
 public class PrintData {
 
-  private static void printMap(JSONWriter writer,
+  private static void printMap(JsonWriter writer,
                                MapColumnVector vector,
                                TypeDescription schema,
-                               int row) throws JSONException {
-    writer.array();
+                               int row) throws IOException {
+    writer.beginArray();
     TypeDescription keyType = schema.getChildren().get(0);
     TypeDescription valueType = schema.getChildren().get(1);
     int offset = (int) vector.offsets[row];
     for (int i = 0; i < vector.lengths[row]; ++i) {
-      writer.object();
-      writer.key("_key");
+      writer.beginObject();
+      writer.name("_key");
       printValue(writer, vector.keys, keyType, offset + i);
-      writer.key("_value");
+      writer.name("_value");
       printValue(writer, vector.values, valueType, offset + i);
       writer.endObject();
     }
     writer.endArray();
   }
 
-  private static void printList(JSONWriter writer,
+  private static void printList(JsonWriter writer,
                                 ListColumnVector vector,
                                 TypeDescription schema,
-                                int row) throws JSONException {
-    writer.array();
+                                int row) throws IOException {
+    writer.beginArray();
     int offset = (int) vector.offsets[row];
     TypeDescription childType = schema.getChildren().get(0);
     for (int i = 0; i < vector.lengths[row]; ++i) {
@@ -89,39 +88,39 @@ public class PrintData {
     writer.endArray();
   }
 
-  private static void printUnion(JSONWriter writer,
+  private static void printUnion(JsonWriter writer,
                                  UnionColumnVector vector,
                                  TypeDescription schema,
-                                 int row) throws JSONException {
+                                 int row) throws IOException {
     int tag = vector.tags[row];
     printValue(writer, vector.fields[tag], schema.getChildren().get(tag), row);
   }
 
-  static void printStruct(JSONWriter writer,
+  static void printStruct(JsonWriter writer,
                           StructColumnVector batch,
                           TypeDescription schema,
-                          int row) throws JSONException {
-    writer.object();
+                          int row) throws IOException {
+    writer.beginObject();
     List<String> fieldNames = schema.getFieldNames();
     List<TypeDescription> fieldTypes = schema.getChildren();
     for (int i = 0; i < fieldTypes.size(); ++i) {
-      writer.key(fieldNames.get(i));
+      writer.name(fieldNames.get(i));
       printValue(writer, batch.fields[i], fieldTypes.get(i), row);
     }
     writer.endObject();
   }
 
-  static void printBinary(JSONWriter writer, BytesColumnVector vector,
-                          int row) throws JSONException {
-    writer.array();
+  static void printBinary(JsonWriter writer, BytesColumnVector vector,
+                          int row) throws IOException {
+    writer.beginArray();
     int offset = vector.start[row];
     for(int i=0; i < vector.length[row]; ++i) {
       writer.value(0xff & (int) vector.vector[row][offset + i]);
     }
     writer.endArray();
   }
-  static void printValue(JSONWriter writer, ColumnVector vector,
-                         TypeDescription schema, int row) throws JSONException {
+  static void printValue(JsonWriter writer, ColumnVector vector,
+                         TypeDescription schema, int row) throws IOException {
     if (vector.isRepeating) {
       row = 0;
     }
@@ -177,20 +176,20 @@ public class PrintData {
               schema.toString());
       }
     } else {
-      writer.value(null);
+      writer.nullValue();
     }
   }
 
-  static void printRow(JSONWriter writer,
+  static void printRow(JsonWriter writer,
                        VectorizedRowBatch batch,
                        TypeDescription schema,
-                       int row) throws JSONException {
+                       int row) throws IOException {
     if (schema.getCategory() == TypeDescription.Category.STRUCT) {
       List<TypeDescription> fieldTypes = schema.getChildren();
       List<String> fieldNames = schema.getFieldNames();
-      writer.object();
+      writer.beginObject();
       for (int c = 0; c < batch.cols.length; ++c) {
-        writer.key(fieldNames.get(c));
+        writer.name(fieldNames.get(c));
         printValue(writer, batch.cols[c], fieldTypes.get(c), row);
       }
       writer.endObject();
@@ -200,7 +199,7 @@ public class PrintData {
   }
 
   static void printJsonData(PrintStream printStream,
-          Reader reader, Optional<Integer> numberOfRows) throws IOException, JSONException {
+          Reader reader, Optional<Integer> numberOfRows) throws IOException {
     OutputStreamWriter out = new OutputStreamWriter(printStream, StandardCharsets.UTF_8);
     RecordReader rows = reader.rows();
     try {
@@ -212,7 +211,7 @@ public class PrintData {
             break;
         }
         for (int r=0; r < batch.size; ++r) {
-          JSONWriter writer = new JSONWriter(out);
+          JsonWriter writer = new JsonWriter(out);
           printRow(writer, batch, schema, r);
           out.write("\n");
           out.flush();
@@ -267,7 +266,7 @@ public class PrintData {
   }
 
   static void main(Configuration conf, String[] args
-                   ) throws IOException, JSONException, ParseException {
+                   ) throws ParseException {
     CommandLine cli = parseCommandLine(args);
     if (cli.hasOption('h') || cli.getArgs().length == 0) {
       printHelp();
@@ -291,7 +290,6 @@ public class PrintData {
         } catch (Exception e) {
           System.err.println("Unable to dump data for file: " + file);
           e.printStackTrace();
-          continue;
         }
       }
     }

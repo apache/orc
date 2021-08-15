@@ -28,7 +28,7 @@
       }
     }
   },
-  "calendar": "Julian\/Gregorian",
+  "calendar": "Julian/Gregorian",
   "stripeStatistics": [
     {
       "stripeNumber": 1,
@@ -359,150 +359,152 @@
           "dictionarySize": 35
         }
       ],
-      "indexes": [{
-        "columnId": 3,
-        "rowGroupIndexes": [
-          {
-            "entryId": 0,
-            "count": 990,
-            "hasNull": true,
-            "min": "Darkness,",
-            "max": "worst",
-            "totalLength": 3873,
-            "type": "STRING",
-            "positions": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "entryId": 1,
-            "count": 990,
-            "hasNull": true,
-            "min": "Darkness,",
-            "max": "worst",
-            "totalLength": 3861,
-            "type": "STRING",
-            "positions": [
-              0,
-              38,
-              12,
-              0,
-              0,
-              736,
-              23
-            ]
-          },
-          {
-            "entryId": 2,
-            "count": 990,
-            "hasNull": true,
-            "min": "Darkness,",
-            "max": "worst",
-            "totalLength": 3946,
-            "type": "STRING",
-            "positions": [
-              0,
-              78,
-              12,
-              0,
-              0,
-              1473,
-              43
-            ]
-          },
-          {
-            "entryId": 3,
-            "count": 990,
-            "hasNull": true,
-            "min": "Darkness,",
-            "max": "worst",
-            "totalLength": 3774,
-            "type": "STRING",
-            "positions": [
-              0,
-              118,
-              12,
-              0,
-              0,
-              2067,
-              261
-            ]
-          },
-          {
-            "entryId": 4,
-            "count": 990,
-            "hasNull": true,
-            "min": "Darkness,",
-            "max": "worst",
-            "totalLength": 3829,
-            "type": "STRING",
-            "positions": [
-              0,
-              158,
-              12,
-              0,
-              0,
-              2992,
-              35
-            ]
+      "indexes": [
+        {
+          "columnId": 3,
+          "rowGroupIndexes": [
+            {
+              "entryId": 0,
+              "count": 990,
+              "hasNull": true,
+              "min": "Darkness,",
+              "max": "worst",
+              "totalLength": 3873,
+              "type": "STRING",
+              "positions": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "entryId": 1,
+              "count": 990,
+              "hasNull": true,
+              "min": "Darkness,",
+              "max": "worst",
+              "totalLength": 3861,
+              "type": "STRING",
+              "positions": [
+                0,
+                38,
+                12,
+                0,
+                0,
+                736,
+                23
+              ]
+            },
+            {
+              "entryId": 2,
+              "count": 990,
+              "hasNull": true,
+              "min": "Darkness,",
+              "max": "worst",
+              "totalLength": 3946,
+              "type": "STRING",
+              "positions": [
+                0,
+                78,
+                12,
+                0,
+                0,
+                1473,
+                43
+              ]
+            },
+            {
+              "entryId": 3,
+              "count": 990,
+              "hasNull": true,
+              "min": "Darkness,",
+              "max": "worst",
+              "totalLength": 3774,
+              "type": "STRING",
+              "positions": [
+                0,
+                118,
+                12,
+                0,
+                0,
+                2067,
+                261
+              ]
+            },
+            {
+              "entryId": 4,
+              "count": 990,
+              "hasNull": true,
+              "min": "Darkness,",
+              "max": "worst",
+              "totalLength": 3829,
+              "type": "STRING",
+              "positions": [
+                0,
+                158,
+                12,
+                0,
+                0,
+                2992,
+                35
+              ]
+            }
+          ],
+          "bloomFilterIndexes": [
+            {
+              "entryId": 0,
+              "numHashFunctions": 4,
+              "bitCount": 6272,
+              "popCount": 138,
+              "loadFactor": 0.022002551704645157,
+              "expectedFpp": 2.3436470542037569E-7
+            },
+            {
+              "entryId": 1,
+              "numHashFunctions": 4,
+              "bitCount": 6272,
+              "popCount": 138,
+              "loadFactor": 0.022002551704645157,
+              "expectedFpp": 2.3436470542037569E-7
+            },
+            {
+              "entryId": 2,
+              "numHashFunctions": 4,
+              "bitCount": 6272,
+              "popCount": 138,
+              "loadFactor": 0.022002551704645157,
+              "expectedFpp": 2.3436470542037569E-7
+            },
+            {
+              "entryId": 3,
+              "numHashFunctions": 4,
+              "bitCount": 6272,
+              "popCount": 138,
+              "loadFactor": 0.022002551704645157,
+              "expectedFpp": 2.3436470542037569E-7
+            },
+            {
+              "entryId": 4,
+              "numHashFunctions": 4,
+              "bitCount": 6272,
+              "popCount": 138,
+              "loadFactor": 0.022002551704645157,
+              "expectedFpp": 2.3436470542037569E-7
+            }
+          ],
+          "stripeLevelBloomFilter": {
+            "numHashFunctions": 4,
+            "bitCount": 6272,
+            "popCount": 138,
+            "loadFactor": 0.022002551704645157,
+            "expectedFpp": 2.3436470542037569E-7
           }
-        ],
-        "bloomFilterIndexes": [
-          {
-            "entryId": 0,
-            "numHashFunctions": 4,
-            "bitCount": 6272,
-            "popCount": 138,
-            "loadFactor": 0.022002551704645157,
-            "expectedFpp": 2.3436470542037569E-7
-          },
-          {
-            "entryId": 1,
-            "numHashFunctions": 4,
-            "bitCount": 6272,
-            "popCount": 138,
-            "loadFactor": 0.022002551704645157,
-            "expectedFpp": 2.3436470542037569E-7
-          },
-          {
-            "entryId": 2,
-            "numHashFunctions": 4,
-            "bitCount": 6272,
-            "popCount": 138,
-            "loadFactor": 0.022002551704645157,
-            "expectedFpp": 2.3436470542037569E-7
-          },
-          {
-            "entryId": 3,
-            "numHashFunctions": 4,
-            "bitCount": 6272,
-            "popCount": 138,
-            "loadFactor": 0.022002551704645157,
-            "expectedFpp": 2.3436470542037569E-7
-          },
-          {
-            "entryId": 4,
-            "numHashFunctions": 4,
-            "bitCount": 6272,
-            "popCount": 138,
-            "loadFactor": 0.022002551704645157,
-            "expectedFpp": 2.3436470542037569E-7
-          }
-        ],
-        "stripeLevelBloomFilter": {
-          "numHashFunctions": 4,
-          "bitCount": 6272,
-          "popCount": 138,
-          "loadFactor": 0.022002551704645157,
-          "expectedFpp": 2.3436470542037569E-7
         }
-      }]
+      ]
     },
     {
       "stripeNumber": 2,
@@ -600,150 +602,152 @@
           "dictionarySize": 35
         }
       ],
-      "indexes": [{
-        "columnId": 3,
-        "rowGroupIndexes": [
-          {
-            "entryId": 0,
-            "count": 990,
-            "hasNull": true,
-            "min": "Darkness,",
-            "max": "worst",
-            "totalLength": 3946,
-            "type": "STRING",
-            "positions": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "entryId": 1,
-            "count": 990,
-            "hasNull": true,
-            "min": "Darkness,",
-            "max": "worst",
-            "totalLength": 3836,
-            "type": "STRING",
-            "positions": [
-              0,
-              38,
-              12,
-              0,
-              0,
-              746,
-              11
-            ]
-          },
-          {
-            "entryId": 2,
-            "count": 990,
-            "hasNull": true,
-            "min": "Darkness,",
-            "max": "worst",
-            "totalLength": 3791,
-            "type": "STRING",
-            "positions": [
-              0,
-              78,
-              12,
-              0,
-              0,
-              1430,
-              95
-            ]
-          },
-          {
-            "entryId": 3,
-            "count": 990,
-            "hasNull": true,
-            "min": "Darkness,",
-            "max": "worst",
-            "totalLength": 3904,
-            "type": "STRING",
-            "positions": [
-              0,
-              118,
-              12,
-              0,
-              0,
-              2239,
-              23
-            ]
-          },
-          {
-            "entryId": 4,
-            "count": 990,
-            "hasNull": true,
-            "min": "Darkness,",
-            "max": "worst",
-            "totalLength": 3920,
-            "type": "STRING",
-            "positions": [
-              0,
-              158,
-              12,
-              0,
-              0,
-              2994,
-              17
-            ]
+      "indexes": [
+        {
+          "columnId": 3,
+          "rowGroupIndexes": [
+            {
+              "entryId": 0,
+              "count": 990,
+              "hasNull": true,
+              "min": "Darkness,",
+              "max": "worst",
+              "totalLength": 3946,
+              "type": "STRING",
+              "positions": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "entryId": 1,
+              "count": 990,
+              "hasNull": true,
+              "min": "Darkness,",
+              "max": "worst",
+              "totalLength": 3836,
+              "type": "STRING",
+              "positions": [
+                0,
+                38,
+                12,
+                0,
+                0,
+                746,
+                11
+              ]
+            },
+            {
+              "entryId": 2,
+              "count": 990,
+              "hasNull": true,
+              "min": "Darkness,",
+              "max": "worst",
+              "totalLength": 3791,
+              "type": "STRING",
+              "positions": [
+                0,
+                78,
+                12,
+                0,
+                0,
+                1430,
+                95
+              ]
+            },
+            {
+              "entryId": 3,
+              "count": 990,
+              "hasNull": true,
+              "min": "Darkness,",
+              "max": "worst",
+              "totalLength": 3904,
+              "type": "STRING",
+              "positions": [
+                0,
+                118,
+                12,
+                0,
+                0,
+                2239,
+                23
+              ]
+            },
+            {
+              "entryId": 4,
+              "count": 990,
+              "hasNull": true,
+              "min": "Darkness,",
+              "max": "worst",
+              "totalLength": 3920,
+              "type": "STRING",
+              "positions": [
+                0,
+                158,
+                12,
+                0,
+                0,
+                2994,
+                17
+              ]
+            }
+          ],
+          "bloomFilterIndexes": [
+            {
+              "entryId": 0,
+              "numHashFunctions": 4,
+              "bitCount": 6272,
+              "popCount": 138,
+              "loadFactor": 0.022002551704645157,
+              "expectedFpp": 2.3436470542037569E-7
+            },
+            {
+              "entryId": 1,
+              "numHashFunctions": 4,
+              "bitCount": 6272,
+              "popCount": 138,
+              "loadFactor": 0.022002551704645157,
+              "expectedFpp": 2.3436470542037569E-7
+            },
+            {
+              "entryId": 2,
+              "numHashFunctions": 4,
+              "bitCount": 6272,
+              "popCount": 138,
+              "loadFactor": 0.022002551704645157,
+              "expectedFpp": 2.3436470542037569E-7
+            },
+            {
+              "entryId": 3,
+              "numHashFunctions": 4,
+              "bitCount": 6272,
+              "popCount": 138,
+              "loadFactor": 0.022002551704645157,
+              "expectedFpp": 2.3436470542037569E-7
+            },
+            {
+              "entryId": 4,
+              "numHashFunctions": 4,
+              "bitCount": 6272,
+              "popCount": 138,
+              "loadFactor": 0.022002551704645157,
+              "expectedFpp": 2.3436470542037569E-7
+            }
+          ],
+          "stripeLevelBloomFilter": {
+            "numHashFunctions": 4,
+            "bitCount": 6272,
+            "popCount": 138,
+            "loadFactor": 0.022002551704645157,
+            "expectedFpp": 2.3436470542037569E-7
           }
-        ],
-        "bloomFilterIndexes": [
-          {
-            "entryId": 0,
-            "numHashFunctions": 4,
-            "bitCount": 6272,
-            "popCount": 138,
-            "loadFactor": 0.022002551704645157,
-            "expectedFpp": 2.3436470542037569E-7
-          },
-          {
-            "entryId": 1,
-            "numHashFunctions": 4,
-            "bitCount": 6272,
-            "popCount": 138,
-            "loadFactor": 0.022002551704645157,
-            "expectedFpp": 2.3436470542037569E-7
-          },
-          {
-            "entryId": 2,
-            "numHashFunctions": 4,
-            "bitCount": 6272,
-            "popCount": 138,
-            "loadFactor": 0.022002551704645157,
-            "expectedFpp": 2.3436470542037569E-7
-          },
-          {
-            "entryId": 3,
-            "numHashFunctions": 4,
-            "bitCount": 6272,
-            "popCount": 138,
-            "loadFactor": 0.022002551704645157,
-            "expectedFpp": 2.3436470542037569E-7
-          },
-          {
-            "entryId": 4,
-            "numHashFunctions": 4,
-            "bitCount": 6272,
-            "popCount": 138,
-            "loadFactor": 0.022002551704645157,
-            "expectedFpp": 2.3436470542037569E-7
-          }
-        ],
-        "stripeLevelBloomFilter": {
-          "numHashFunctions": 4,
-          "bitCount": 6272,
-          "popCount": 138,
-          "loadFactor": 0.022002551704645157,
-          "expectedFpp": 2.3436470542037569E-7
         }
-      }]
+      ]
     },
     {
       "stripeNumber": 3,
@@ -841,150 +845,152 @@
           "dictionarySize": 35
         }
       ],
-      "indexes": [{
-        "columnId": 3,
-        "rowGroupIndexes": [
-          {
-            "entryId": 0,
-            "count": 990,
-            "hasNull": true,
-            "min": "Darkness,",
-            "max": "worst",
-            "totalLength": 3829,
-            "type": "STRING",
-            "positions": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "entryId": 1,
-            "count": 990,
-            "hasNull": true,
-            "min": "Darkness,",
-            "max": "worst",
-            "totalLength": 3853,
-            "type": "STRING",
-            "positions": [
-              0,
-              38,
-              12,
-              0,
-              0,
-              698,
-              74
-            ]
-          },
-          {
-            "entryId": 2,
-            "count": 990,
-            "hasNull": true,
-            "min": "Darkness,",
-            "max": "worst",
-            "totalLength": 3796,
-            "type": "STRING",
-            "positions": [
-              0,
-              78,
-              12,
-              0,
-              0,
-              1483,
-              39
-            ]
-          },
-          {
-            "entryId": 3,
-            "count": 990,
-            "hasNull": true,
-            "min": "Darkness,",
-            "max": "worst",
-            "totalLength": 3736,
-            "type": "STRING",
-            "positions": [
-              0,
-              118,
-              12,
-              0,
-              0,
-              2148,
-              155
-            ]
-          },
-          {
-            "entryId": 4,
-            "count": 990,
-            "hasNull": true,
-            "min": "Darkness,",
-            "max": "worst",
-            "totalLength": 3817,
-            "type": "STRING",
-            "positions": [
-              0,
-              158,
-              12,
-              0,
-              0,
-              3018,
-              8
-            ]
+      "indexes": [
+        {
+          "columnId": 3,
+          "rowGroupIndexes": [
+            {
+              "entryId": 0,
+              "count": 990,
+              "hasNull": true,
+              "min": "Darkness,",
+              "max": "worst",
+              "totalLength": 3829,
+              "type": "STRING",
+              "positions": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "entryId": 1,
+              "count": 990,
+              "hasNull": true,
+              "min": "Darkness,",
+              "max": "worst",
+              "totalLength": 3853,
+              "type": "STRING",
+              "positions": [
+                0,
+                38,
+                12,
+                0,
+                0,
+                698,
+                74
+              ]
+            },
+            {
+              "entryId": 2,
+              "count": 990,
+              "hasNull": true,
+              "min": "Darkness,",
+              "max": "worst",
+              "totalLength": 3796,
+              "type": "STRING",
+              "positions": [
+                0,
+                78,
+                12,
+                0,
+                0,
+                1483,
+                39
+              ]
+            },
+            {
+              "entryId": 3,
+              "count": 990,
+              "hasNull": true,
+              "min": "Darkness,",
+              "max": "worst",
+              "totalLength": 3736,
+              "type": "STRING",
+              "positions": [
+                0,
+                118,
+                12,
+                0,
+                0,
+                2148,
+                155
+              ]
+            },
+            {
+              "entryId": 4,
+              "count": 990,
+              "hasNull": true,
+              "min": "Darkness,",
+              "max": "worst",
+              "totalLength": 3817,
+              "type": "STRING",
+              "positions": [
+                0,
+                158,
+                12,
+                0,
+                0,
+                3018,
+                8
+              ]
+            }
+          ],
+          "bloomFilterIndexes": [
+            {
+              "entryId": 0,
+              "numHashFunctions": 4,
+              "bitCount": 6272,
+              "popCount": 138,
+              "loadFactor": 0.022002551704645157,
+              "expectedFpp": 2.3436470542037569E-7
+            },
+            {
+              "entryId": 1,
+              "numHashFunctions": 4,
+              "bitCount": 6272,
+              "popCount": 138,
+              "loadFactor": 0.022002551704645157,
+              "expectedFpp": 2.3436470542037569E-7
+            },
+            {
+              "entryId": 2,
+              "numHashFunctions": 4,
+              "bitCount": 6272,
+              "popCount": 138,
+              "loadFactor": 0.022002551704645157,
+              "expectedFpp": 2.3436470542037569E-7
+            },
+            {
+              "entryId": 3,
+              "numHashFunctions": 4,
+              "bitCount": 6272,
+              "popCount": 138,
+              "loadFactor": 0.022002551704645157,
+              "expectedFpp": 2.3436470542037569E-7
+            },
+            {
+              "entryId": 4,
+              "numHashFunctions": 4,
+              "bitCount": 6272,
+              "popCount": 138,
+              "loadFactor": 0.022002551704645157,
+              "expectedFpp": 2.3436470542037569E-7
+            }
+          ],
+          "stripeLevelBloomFilter": {
+            "numHashFunctions": 4,
+            "bitCount": 6272,
+            "popCount": 138,
+            "loadFactor": 0.022002551704645157,
+            "expectedFpp": 2.3436470542037569E-7
           }
-        ],
-        "bloomFilterIndexes": [
-          {
-            "entryId": 0,
-            "numHashFunctions": 4,
-            "bitCount": 6272,
-            "popCount": 138,
-            "loadFactor": 0.022002551704645157,
-            "expectedFpp": 2.3436470542037569E-7
-          },
-          {
-            "entryId": 1,
-            "numHashFunctions": 4,
-            "bitCount": 6272,
-            "popCount": 138,
-            "loadFactor": 0.022002551704645157,
-            "expectedFpp": 2.3436470542037569E-7
-          },
-          {
-            "entryId": 2,
-            "numHashFunctions": 4,
-            "bitCount": 6272,
-            "popCount": 138,
-            "loadFactor": 0.022002551704645157,
-            "expectedFpp": 2.3436470542037569E-7
-          },
-          {
-            "entryId": 3,
-            "numHashFunctions": 4,
-            "bitCount": 6272,
-            "popCount": 138,
-            "loadFactor": 0.022002551704645157,
-            "expectedFpp": 2.3436470542037569E-7
-          },
-          {
-            "entryId": 4,
-            "numHashFunctions": 4,
-            "bitCount": 6272,
-            "popCount": 138,
-            "loadFactor": 0.022002551704645157,
-            "expectedFpp": 2.3436470542037569E-7
-          }
-        ],
-        "stripeLevelBloomFilter": {
-          "numHashFunctions": 4,
-          "bitCount": 6272,
-          "popCount": 138,
-          "loadFactor": 0.022002551704645157,
-          "expectedFpp": 2.3436470542037569E-7
         }
-      }]
+      ]
     },
     {
       "stripeNumber": 4,
@@ -1082,150 +1088,152 @@
           "dictionarySize": 35
         }
       ],
-      "indexes": [{
-        "columnId": 3,
-        "rowGroupIndexes": [
-          {
-            "entryId": 0,
-            "count": 990,
-            "hasNull": true,
-            "min": "Darkness,",
-            "max": "worst",
-            "totalLength": 3959,
-            "type": "STRING",
-            "positions": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
-          },
-          {
-            "entryId": 1,
-            "count": 990,
-            "hasNull": true,
-            "min": "Darkness,",
-            "max": "worst",
-            "totalLength": 3816,
-            "type": "STRING",
-            "positions": [
-              0,
-              38,
-              12,
-              0,
-              0,
-              495,
-              338
-            ]
-          },
-          {
-            "entryId": 2,
-            "count": 990,
-            "hasNull": true,
-            "min": "Darkness,",
-            "max": "worst",
-            "totalLength": 3883,
-            "type": "STRING",
-            "positions": [
-              0,
-              78,
-              12,
-              0,
-              0,
-              1449,
-              71
-            ]
-          },
-          {
-            "entryId": 3,
-            "count": 990,
-            "hasNull": true,
-            "min": "Darkness,",
-            "max": "worst",
-            "totalLength": 3938,
-            "type": "STRING",
-            "positions": [
-              0,
-              118,
-              12,
-              0,
-              0,
-              2207,
-              59
-            ]
-          },
-          {
-            "entryId": 4,
-            "count": 990,
-            "hasNull": true,
-            "min": "Darkness,",
-            "max": "worst",
-            "totalLength": 3863,
-            "type": "STRING",
-            "positions": [
-              0,
-              158,
-              12,
-              0,
-              0,
-              2838,
-              223
-            ]
+      "indexes": [
+        {
+          "columnId": 3,
+          "rowGroupIndexes": [
+            {
+              "entryId": 0,
+              "count": 990,
+              "hasNull": true,
+              "min": "Darkness,",
+              "max": "worst",
+              "totalLength": 3959,
+              "type": "STRING",
+              "positions": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "entryId": 1,
+              "count": 990,
+              "hasNull": true,
+              "min": "Darkness,",
+              "max": "worst",
+              "totalLength": 3816,
+              "type": "STRING",
+              "positions": [
+                0,
+                38,
+                12,
+                0,
+                0,
+                495,
+                338
+              ]
+            },
+            {
+              "entryId": 2,
+              "count": 990,
+              "hasNull": true,
+              "min": "Darkness,",
+              "max": "worst",
+              "totalLength": 3883,
+              "type": "STRING",
+              "positions": [
+                0,
+                78,
+                12,
+                0,
+                0,
+                1449,
+                71
+              ]
+            },
+            {
+              "entryId": 3,
+              "count": 990,
+              "hasNull": true,
+              "min": "Darkness,",
+              "max": "worst",
+              "totalLength": 3938,
+              "type": "STRING",
+              "positions": [
+                0,
+                118,
+                12,
+                0,
+                0,
+                2207,
+                59
+              ]
+            },
+            {
+              "entryId": 4,
+              "count": 990,
+              "hasNull": true,
+              "min": "Darkness,",
+              "max": "worst",
+              "totalLength": 3863,
+              "type": "STRING",
+              "positions": [
+                0,
+                158,
+                12,
+                0,
+                0,
+                2838,
+                223
+              ]
+            }
+          ],
+          "bloomFilterIndexes": [
+            {
+              "entryId": 0,
+              "numHashFunctions": 4,
+              "bitCount": 6272,
+              "popCount": 138,
+              "loadFactor": 0.022002551704645157,
+              "expectedFpp": 2.3436470542037569E-7
+            },
+            {
+              "entryId": 1,
+              "numHashFunctions": 4,
+              "bitCount": 6272,
+              "popCount": 138,
+              "loadFactor": 0.022002551704645157,
+              "expectedFpp": 2.3436470542037569E-7
+            },
+            {
+              "entryId": 2,
+              "numHashFunctions": 4,
+              "bitCount": 6272,
+              "popCount": 138,
+              "loadFactor": 0.022002551704645157,
+              "expectedFpp": 2.3436470542037569E-7
+            },
+            {
+              "entryId": 3,
+              "numHashFunctions": 4,
+              "bitCount": 6272,
+              "popCount": 138,
+              "loadFactor": 0.022002551704645157,
+              "expectedFpp": 2.3436470542037569E-7
+            },
+            {
+              "entryId": 4,
+              "numHashFunctions": 4,
+              "bitCount": 6272,
+              "popCount": 138,
+              "loadFactor": 0.022002551704645157,
+              "expectedFpp": 2.3436470542037569E-7
+            }
+          ],
+          "stripeLevelBloomFilter": {
+            "numHashFunctions": 4,
+            "bitCount": 6272,
+            "popCount": 138,
+            "loadFactor": 0.022002551704645157,
+            "expectedFpp": 2.3436470542037569E-7
           }
-        ],
-        "bloomFilterIndexes": [
-          {
-            "entryId": 0,
-            "numHashFunctions": 4,
-            "bitCount": 6272,
-            "popCount": 138,
-            "loadFactor": 0.022002551704645157,
-            "expectedFpp": 2.3436470542037569E-7
-          },
-          {
-            "entryId": 1,
-            "numHashFunctions": 4,
-            "bitCount": 6272,
-            "popCount": 138,
-            "loadFactor": 0.022002551704645157,
-            "expectedFpp": 2.3436470542037569E-7
-          },
-          {
-            "entryId": 2,
-            "numHashFunctions": 4,
-            "bitCount": 6272,
-            "popCount": 138,
-            "loadFactor": 0.022002551704645157,
-            "expectedFpp": 2.3436470542037569E-7
-          },
-          {
-            "entryId": 3,
-            "numHashFunctions": 4,
-            "bitCount": 6272,
-            "popCount": 138,
-            "loadFactor": 0.022002551704645157,
-            "expectedFpp": 2.3436470542037569E-7
-          },
-          {
-            "entryId": 4,
-            "numHashFunctions": 4,
-            "bitCount": 6272,
-            "popCount": 138,
-            "loadFactor": 0.022002551704645157,
-            "expectedFpp": 2.3436470542037569E-7
-          }
-        ],
-        "stripeLevelBloomFilter": {
-          "numHashFunctions": 4,
-          "bitCount": 6272,
-          "popCount": 138,
-          "loadFactor": 0.022002551704645157,
-          "expectedFpp": 2.3436470542037569E-7
         }
-      }]
+      ]
     },
     {
       "stripeNumber": 5,
@@ -1323,46 +1331,52 @@
           "dictionarySize": 35
         }
       ],
-      "indexes": [{
-        "columnId": 3,
-        "rowGroupIndexes": [{
-          "entryId": 0,
-          "count": 990,
-          "hasNull": true,
-          "min": "Darkness,",
-          "max": "worst",
-          "totalLength": 3963,
-          "type": "STRING",
-          "positions": [
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0
-          ]
-        }],
-        "bloomFilterIndexes": [{
-          "entryId": 0,
-          "numHashFunctions": 4,
-          "bitCount": 6272,
-          "popCount": 138,
-          "loadFactor": 0.022002551704645157,
-          "expectedFpp": 2.3436470542037569E-7
-        }],
-        "stripeLevelBloomFilter": {
-          "numHashFunctions": 4,
-          "bitCount": 6272,
-          "popCount": 138,
-          "loadFactor": 0.022002551704645157,
-          "expectedFpp": 2.3436470542037569E-7
+      "indexes": [
+        {
+          "columnId": 3,
+          "rowGroupIndexes": [
+            {
+              "entryId": 0,
+              "count": 990,
+              "hasNull": true,
+              "min": "Darkness,",
+              "max": "worst",
+              "totalLength": 3963,
+              "type": "STRING",
+              "positions": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "bloomFilterIndexes": [
+            {
+              "entryId": 0,
+              "numHashFunctions": 4,
+              "bitCount": 6272,
+              "popCount": 138,
+              "loadFactor": 0.022002551704645157,
+              "expectedFpp": 2.3436470542037569E-7
+            }
+          ],
+          "stripeLevelBloomFilter": {
+            "numHashFunctions": 4,
+            "bitCount": 6272,
+            "popCount": 138,
+            "loadFactor": 0.022002551704645157,
+            "expectedFpp": 2.3436470542037569E-7
+          }
         }
-      }]
+      ]
     }
   ],
   "fileLength": 272513,
   "paddingLength": 0,
-  "paddingRatio": 0,
+  "paddingRatio": 0.0,
   "status": "OK"
 }
