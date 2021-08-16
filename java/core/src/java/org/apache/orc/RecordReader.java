@@ -24,6 +24,7 @@ import java.io.IOException;
 
 /**
  * A row-by-row iterator for ORC files.
+ * @since 1.1.0
  */
 public interface RecordReader extends Closeable {
   /**
@@ -34,6 +35,7 @@ public interface RecordReader extends Closeable {
    * @param batch a row batch object to read into
    * @return were more rows available to read?
    * @throws java.io.IOException
+   * @since 1.1.0
    */
   boolean nextBatch(VectorizedRowBatch batch) throws IOException;
 
@@ -42,6 +44,7 @@ public interface RecordReader extends Closeable {
    * call to next().
    * @return the row number from 0 to the number of rows in the file
    * @throws java.io.IOException
+   * @since 1.1.0
    */
   long getRowNumber() throws IOException;
 
@@ -49,18 +52,21 @@ public interface RecordReader extends Closeable {
    * Get the progress of the reader through the rows.
    * @return a fraction between 0.0 and 1.0 of rows read
    * @throws java.io.IOException
+   * @since 1.1.0
    */
   float getProgress() throws IOException;
 
   /**
    * Release the resources associated with the given reader.
    * @throws java.io.IOException
+   * @since 1.1.0
    */
   @Override
   void close() throws IOException;
 
   /**
    * Seek to a particular row number.
+   * @since 1.1.0
    */
   void seekToRow(long rowCount) throws IOException;
 }
