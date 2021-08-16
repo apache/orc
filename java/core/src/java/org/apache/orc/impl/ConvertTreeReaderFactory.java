@@ -1251,7 +1251,8 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
    * @param value the writable container to reuse
    * @return the timestamp instant
    */
-  static Instant decimalToInstant(DecimalColumnVector vector, int element, HiveDecimalWritable value) {
+  static Instant decimalToInstant(DecimalColumnVector vector, int element,
+      HiveDecimalWritable value) {
     final HiveDecimalWritable writable = vector.vector[element];
     final long seconds = writable.longValue();
 
