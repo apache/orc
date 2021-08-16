@@ -831,9 +831,9 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       this.value.setFromLong(longValue);
       // The DecimalColumnVector will enforce precision and scale and set the entry to null when out of bounds.
       if (decimalColVector instanceof Decimal64ColumnVector) {
-        ((Decimal64ColumnVector) decimalColVector).set(elementNum, this.value);
+        ((Decimal64ColumnVector) decimalColVector).set(elementNum, value);
       } else {
-        ((DecimalColumnVector) decimalColVector).set(elementNum, this.value);
+        ((DecimalColumnVector) decimalColVector).set(elementNum, value);
       }
     }
 
