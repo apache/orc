@@ -162,7 +162,7 @@ public interface Writer extends Closeable {
    *
    * @return stripe information
    * @throws IOException
-   * @since 1.6.0
+   * @since 1.6.8
    */
   List<StripeInformation> getStripes() throws IOException;
 }
