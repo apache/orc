@@ -58,8 +58,8 @@ import java.util.List;
 public class JsonFileDump {
 
   public static void printJsonMetaData(List<String> files,
-                                       Configuration conf,
-                                       List<Integer> rowIndexCols, boolean prettyPrint, boolean printTimeZone)
+      Configuration conf,
+      List<Integer> rowIndexCols, boolean prettyPrint, boolean printTimeZone)
       throws IOException {
     if (files.isEmpty()) {
       return;
