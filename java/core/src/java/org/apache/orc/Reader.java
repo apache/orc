@@ -201,6 +201,7 @@ public interface Reader extends Closeable {
 
   /**
    * Options for creating a RecordReader.
+   * @since 1.1.0
    */
   class Options implements Cloneable {
     private boolean[] include;
@@ -223,10 +224,16 @@ public interface Reader extends Closeable {
     private boolean allowSARGToFilter = false;
     private boolean useSelected = false;
 
+    /**
+     * @since 1.1.0
+     */
     public Options() {
       // PASS
     }
 
+    /**
+     * @since 1.1.0
+     */
     public Options(Configuration conf) {
       useZeroCopy = OrcConf.USE_ZEROCOPY.getBoolean(conf);
       skipCorruptRecords = OrcConf.SKIP_CORRUPT_DATA.getBoolean(conf);
