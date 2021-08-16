@@ -767,11 +767,6 @@
         </exclusions>
       </dependency>
       <dependency>
-        <groupId>org.codehaus.jettison</groupId>
-        <artifactId>jettison</artifactId>
-        <version>1.4.1</version>
-      </dependency>
-      <dependency>
         <groupId>org.jetbrains</groupId>
         <artifactId>annotations</artifactId>
         <version>21.0.1</version>

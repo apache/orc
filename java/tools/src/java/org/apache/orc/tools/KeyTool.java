@@ -17,6 +17,7 @@
  */
 package org.apache.orc.tools;
 
+import com.google.gson.stream.JsonWriter;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -29,8 +30,6 @@ import org.apache.orc.EncryptionAlgorithm;
 import org.apache.orc.impl.CryptoUtils;
 import org.apache.orc.impl.HadoopShims;
 import org.apache.orc.impl.KeyProvider;
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONWriter;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -42,23 +41,23 @@ import java.security.SecureRandom;
  */
 public class KeyTool {
 
-  static void printKey(JSONWriter writer,
+  static void printKey(JsonWriter writer,
                        KeyProvider provider,
-                       String keyName) throws JSONException, IOException {
+                       String keyName) throws IOException {
     HadoopShims.KeyMetadata meta = provider.getCurrentKeyVersion(keyName);
-    writer.object();
-    writer.key("name");
+    writer.beginObject();
+    writer.name("name");
     writer.value(keyName);
     EncryptionAlgorithm algorithm = meta.getAlgorithm();
-    writer.key("algorithm");
+    writer.name("algorithm");
     writer.value(algorithm.getAlgorithm());
-    writer.key("keyLength");
+    writer.name("keyLength");
     writer.value(algorithm.keyLength());
-    writer.key("version");
+    writer.name("version");
     writer.value(meta.getVersion());
     byte[] iv = new byte[algorithm.getIvLength()];
     byte[] key = provider.decryptLocalKey(meta, iv).getEncoded();
-    writer.key("key 0");
+    writer.name("key 0");
     writer.value(new BytesWritable(key).toString());
     writer.endObject();
   }
@@ -79,7 +78,7 @@ public class KeyTool {
     this.conf = conf;
   }
 
-  void run() throws IOException, JSONException {
+  void run() throws IOException {
     KeyProvider provider =
         CryptoUtils.getKeyProvider(conf, new SecureRandom());
     if (provider == null) {
@@ -87,7 +86,7 @@ public class KeyTool {
       System.exit(1);
     }
     for(String keyName: provider.getKeyNames()) {
-      JSONWriter writer = new JSONWriter(this.writer);
+      JsonWriter writer = new JsonWriter(this.writer);
       printKey(writer, provider, keyName);
       this.writer.write('\n');
     }
@@ -113,7 +112,7 @@ public class KeyTool {
 
   public static void main(Configuration conf,
                           String[] args
-                          ) throws IOException, ParseException, JSONException {
+                          ) throws IOException, ParseException {
     KeyTool tool = new KeyTool(conf, args);
     tool.run();
   }

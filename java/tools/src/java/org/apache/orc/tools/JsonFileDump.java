@@ -17,6 +17,7 @@
  */
 package org.apache.orc.tools;
 
+import com.google.gson.stream.JsonWriter;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -45,13 +46,9 @@ import org.apache.orc.impl.ReaderImpl;
 import org.apache.orc.impl.RecordReaderImpl;
 import org.apache.orc.util.BloomFilter;
 import org.apache.orc.util.BloomFilterIO;
-import org.codehaus.jettison.json.JSONArray;
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONObject;
-import org.codehaus.jettison.json.JSONStringer;
-import org.codehaus.jettison.json.JSONWriter;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,53 +60,57 @@ public class JsonFileDump {
   public static void printJsonMetaData(List<String> files,
       Configuration conf,
       List<Integer> rowIndexCols, boolean prettyPrint, boolean printTimeZone)
-      throws JSONException, IOException {
+      throws IOException {
     if (files.isEmpty()) {
       return;
     }
-    JSONStringer writer = new JSONStringer();
+    StringWriter stringWriter = new StringWriter();
+    JsonWriter writer = new JsonWriter(stringWriter);
+    if (prettyPrint) {
+      writer.setIndent("  ");
+    }
     boolean multiFile = files.size() > 1;
     if (multiFile) {
-      writer.array();
+      writer.beginArray();
     } else {
-      writer.object();
+      writer.beginObject();
     }
     for (String filename : files) {
       try {
         if (multiFile) {
-          writer.object();
+          writer.beginObject();
         }
-        writer.key("fileName").value(filename);
+        writer.name("fileName").value(filename);
         Path path = new Path(filename);
         Reader reader = FileDump.getReader(path, conf, null);
         if (reader == null) {
-          writer.key("status").value("FAILED");
+          writer.name("status").value("FAILED");
           continue;
         }
-        writer.key("fileVersion").value(reader.getFileVersion().getName());
-        writer.key("writerVersion").value(reader.getWriterVersion());
+        writer.name("fileVersion").value(reader.getFileVersion().getName());
+        writer.name("writerVersion").value(reader.getWriterVersion().toString());
         RecordReaderImpl rows = (RecordReaderImpl) reader.rows();
-        writer.key("numberOfRows").value(reader.getNumberOfRows());
-        writer.key("compression").value(reader.getCompressionKind());
+        writer.name("numberOfRows").value(reader.getNumberOfRows());
+        writer.name("compression").value(reader.getCompressionKind().toString());
         if (reader.getCompressionKind() != CompressionKind.NONE) {
-          writer.key("compressionBufferSize").value(reader.getCompressionSize());
+          writer.name("compressionBufferSize").value(reader.getCompressionSize());
         }
-        writer.key("schemaString").value(reader.getSchema().toString());
-        writer.key("schema");
+        writer.name("schemaString").value(reader.getSchema().toString());
+        writer.name("schema");
         writeSchema(writer, reader.getSchema());
-        writer.key("calendar").value(reader.writerUsedProlepticGregorian()
-                                         ? "proleptic Gregorian"
-                                         : "Julian/Gregorian");
-        writer.key("stripeStatistics").array();
+        writer.name("calendar").value(reader.writerUsedProlepticGregorian()
+            ? "proleptic Gregorian"
+            : "Julian/Gregorian");
+        writer.name("stripeStatistics").beginArray();
         List<StripeStatistics> stripeStatistics = reader.getStripeStatistics();
         for (int n = 0; n < stripeStatistics.size(); n++) {
-          writer.object();
-          writer.key("stripeNumber").value(n + 1);
+          writer.beginObject();
+          writer.name("stripeNumber").value(n + 1);
           StripeStatistics ss = stripeStatistics.get(n);
-          writer.key("columnStatistics").array();
+          writer.name("columnStatistics").beginArray();
           for (int i = 0; i < ss.getColumnStatistics().length; i++) {
-            writer.object();
-            writer.key("columnId").value(i);
+            writer.beginObject();
+            writer.name("columnId").value(i);
             writeColumnStatistics(writer, ss.getColumnStatistics()[i]);
             writer.endObject();
           }
@@ -126,53 +127,53 @@ public class JsonFileDump {
             rowIndexCols.add(i);
           }
         }
-        writer.key("fileStatistics").array();
+        writer.name("fileStatistics").beginArray();
         for (int i = 0; i < stats.length; ++i) {
-          writer.object();
-          writer.key("columnId").value(i);
+          writer.beginObject();
+          writer.name("columnId").value(i);
           writeColumnStatistics(writer, stats[i]);
           writer.endObject();
         }
         writer.endArray();
 
-        writer.key("stripes").array();
+        writer.name("stripes").beginArray();
         int stripeIx = -1;
         for (StripeInformation stripe : reader.getStripes()) {
           ++stripeIx;
           long stripeStart = stripe.getOffset();
           OrcProto.StripeFooter footer = rows.readStripeFooter(stripe);
-          writer.object(); // start of stripe information
-          writer.key("stripeNumber").value(stripeIx + 1);
-          writer.key("stripeInformation");
+          writer.beginObject(); // start of stripe information
+          writer.name("stripeNumber").value(stripeIx + 1);
+          writer.name("stripeInformation");
           writeStripeInformation(writer, stripe);
           if (printTimeZone) {
-            writer.key("writerTimezone").value(
+            writer.name("writerTimezone").value(
                 footer.hasWriterTimezone() ? footer.getWriterTimezone() : FileDump.UNKNOWN);
           }
           long sectionStart = stripeStart;
 
-          writer.key("streams").array();
+          writer.name("streams").beginArray();
           for (OrcProto.Stream section : footer.getStreamsList()) {
-            writer.object();
+            writer.beginObject();
             String kind = section.hasKind() ? section.getKind().name() : FileDump.UNKNOWN;
-            writer.key("columnId").value(section.getColumn());
-            writer.key("section").value(kind);
-            writer.key("startOffset").value(sectionStart);
-            writer.key("length").value(section.getLength());
+            writer.name("columnId").value(section.getColumn());
+            writer.name("section").value(kind);
+            writer.name("startOffset").value(sectionStart);
+            writer.name("length").value(section.getLength());
             sectionStart += section.getLength();
             writer.endObject();
           }
           writer.endArray();
 
-          writer.key("encodings").array();
+          writer.name("encodings").beginArray();
           for (int i = 0; i < footer.getColumnsCount(); ++i) {
-            writer.object();
+            writer.beginObject();
             OrcProto.ColumnEncoding encoding = footer.getColumns(i);
-            writer.key("columnId").value(i);
-            writer.key("kind").value(encoding.getKind());
+            writer.name("columnId").value(i);
+            writer.name("kind").value(encoding.getKind().toString());
             if (encoding.getKind() == OrcProto.ColumnEncoding.Kind.DICTIONARY ||
                 encoding.getKind() == OrcProto.ColumnEncoding.Kind.DICTIONARY_V2) {
-              writer.key("dictionarySize").value(encoding.getDictionarySize());
+              writer.name("dictionarySize").value(encoding.getDictionarySize());
             }
             writer.endObject();
           }
@@ -185,10 +186,10 @@ public class JsonFileDump {
               sargColumns[colIdx] = true;
             }
             OrcIndex indices = rows.readRowIndex(stripeIx, null, sargColumns);
-            writer.key("indexes").array();
+            writer.name("indexes").beginArray();
             for (int col : rowIndexCols) {
-              writer.object();
-              writer.key("columnId").value(col);
+              writer.beginObject();
+              writer.name("columnId").value(col);
               writeRowGroupIndexes(writer, col, indices.getRowGroupIndex(),
                   reader.getSchema(), (ReaderImpl) reader);
               writeBloomFilterIndexes(writer, col, indices,
@@ -208,94 +209,81 @@ public class JsonFileDump {
         long paddedBytes = FileDump.getTotalPaddingSize(reader);
         // empty ORC file is ~45 bytes. Assumption here is file length always >0
         double percentPadding = ((double) paddedBytes / (double) fileLen) * 100;
-        writer.key("fileLength").value(fileLen);
-        writer.key("paddingLength").value(paddedBytes);
-        writer.key("paddingRatio").value(percentPadding);
+        writer.name("fileLength").value(fileLen);
+        writer.name("paddingLength").value(paddedBytes);
+        writer.name("paddingRatio").value(percentPadding);
         AcidStats acidStats = OrcAcidUtils.parseAcidStats(reader);
         if (acidStats != null) {
-          writer.key("numInserts").value(acidStats.inserts);
-          writer.key("numDeletes").value(acidStats.deletes);
-          writer.key("numUpdates").value(acidStats.updates);
+          writer.name("numInserts").value(acidStats.inserts);
+          writer.name("numDeletes").value(acidStats.deletes);
+          writer.name("numUpdates").value(acidStats.updates);
         }
-        writer.key("status").value("OK");
+        writer.name("status").value("OK");
         rows.close();
 
         writer.endObject();
       } catch (Throwable e) {
-        writer.key("status").value("FAILED");
+        writer.name("status").value("FAILED");
         throw e;
       }
     }
     if (multiFile) {
       writer.endArray();
     }
-
-    if (prettyPrint) {
-      final String prettyJson;
-      if (multiFile) {
-        JSONArray jsonArray = new JSONArray(writer.toString());
-        prettyJson = jsonArray.toString(2);
-      } else {
-        JSONObject jsonObject = new JSONObject(writer.toString());
-        prettyJson = jsonObject.toString(2);
-      }
-      System.out.println(prettyJson);
-    } else {
-      System.out.println(writer.toString());
-    }
+    System.out.println(stringWriter);
   }
 
-  private static void writeSchema(JSONStringer writer, TypeDescription type)
-      throws JSONException {
-    writer.object();
-    writer.key("columnId").value(type.getId());
-    writer.key("columnType").value(type.getCategory());
+  private static void writeSchema(JsonWriter writer, TypeDescription type)
+      throws IOException {
+    writer.beginObject();
+    writer.name("columnId").value(type.getId());
+    writer.name("columnType").value(type.getCategory().toString());
     List<String> attributes = type.getAttributeNames();
     if (attributes.size() > 0) {
-      writer.key("attributes").object();
+      writer.name("attributes").beginObject();
       for (String name : attributes) {
-        writer.key(name).value(type.getAttributeValue(name));
+        writer.name(name).value(type.getAttributeValue(name));
       }
       writer.endObject();
     }
     switch (type.getCategory()) {
       case DECIMAL:
-        writer.key("precision").value(type.getPrecision());
-        writer.key("scale").value(type.getScale());
+        writer.name("precision").value(type.getPrecision());
+        writer.name("scale").value(type.getScale());
         break;
       case VARCHAR:
       case CHAR:
-        writer.key("maxLength").value(type.getMaxLength());
+        writer.name("maxLength").value(type.getMaxLength());
         break;
       default:
         break;
     }
     List<TypeDescription> children = type.getChildren();
     if (children != null) {
-      writer.key("children");
+      writer.name("children");
       switch (type.getCategory()) {
         case STRUCT:
-          writer.object();
+          writer.beginObject();
           List<String> fields = type.getFieldNames();
           for (int c = 0; c < fields.size(); ++c) {
-            writer.key(fields.get(c));
+            writer.name(fields.get(c));
             writeSchema(writer, children.get(c));
           }
           writer.endObject();
           break;
         case LIST:
-          writer.array();
+          writer.beginArray();
           writeSchema(writer, children.get(0));
           writer.endArray();
           break;
         case MAP:
-          writer.array();
+          writer.beginArray();
           writeSchema(writer, children.get(0));
           writeSchema(writer, children.get(1));
           writer.endArray();
           break;
         case UNION:
-          writer.array();
+          writer.beginArray();
           for (TypeDescription child : children) {
             writeSchema(writer, child);
           }
@@ -308,101 +296,101 @@ public class JsonFileDump {
     writer.endObject();
   }
 
-  private static void writeStripeInformation(JSONWriter writer, StripeInformation stripe)
-      throws JSONException {
-    writer.object();
-    writer.key("offset").value(stripe.getOffset());
-    writer.key("indexLength").value(stripe.getIndexLength());
-    writer.key("dataLength").value(stripe.getDataLength());
-    writer.key("footerLength").value(stripe.getFooterLength());
-    writer.key("rowCount").value(stripe.getNumberOfRows());
+  private static void writeStripeInformation(JsonWriter writer, StripeInformation stripe)
+      throws IOException {
+    writer.beginObject();
+    writer.name("offset").value(stripe.getOffset());
+    writer.name("indexLength").value(stripe.getIndexLength());
+    writer.name("dataLength").value(stripe.getDataLength());
+    writer.name("footerLength").value(stripe.getFooterLength());
+    writer.name("rowCount").value(stripe.getNumberOfRows());
     writer.endObject();
   }
 
-  private static void writeColumnStatistics(JSONWriter writer, ColumnStatistics cs)
-      throws JSONException {
+  private static void writeColumnStatistics(JsonWriter writer, ColumnStatistics cs)
+      throws IOException {
     if (cs != null) {
-      writer.key("count").value(cs.getNumberOfValues());
-      writer.key("hasNull").value(cs.hasNull());
+      writer.name("count").value(cs.getNumberOfValues());
+      writer.name("hasNull").value(cs.hasNull());
       if (cs.getBytesOnDisk() != 0) {
-        writer.key("bytesOnDisk").value(cs.getBytesOnDisk());
+        writer.name("bytesOnDisk").value(cs.getBytesOnDisk());
       }
       if (cs instanceof BinaryColumnStatistics) {
-        writer.key("totalLength").value(((BinaryColumnStatistics) cs).getSum());
-        writer.key("type").value(OrcProto.Type.Kind.BINARY);
+        writer.name("totalLength").value(((BinaryColumnStatistics) cs).getSum());
+        writer.name("type").value(OrcProto.Type.Kind.BINARY.toString());
       } else if (cs instanceof BooleanColumnStatistics) {
-        writer.key("trueCount").value(((BooleanColumnStatistics) cs).getTrueCount());
-        writer.key("falseCount").value(((BooleanColumnStatistics) cs).getFalseCount());
-        writer.key("type").value(OrcProto.Type.Kind.BOOLEAN);
+        writer.name("trueCount").value(((BooleanColumnStatistics) cs).getTrueCount());
+        writer.name("falseCount").value(((BooleanColumnStatistics) cs).getFalseCount());
+        writer.name("type").value(OrcProto.Type.Kind.BOOLEAN.toString());
       } else if (cs instanceof IntegerColumnStatistics) {
-        writer.key("min").value(((IntegerColumnStatistics) cs).getMinimum());
-        writer.key("max").value(((IntegerColumnStatistics) cs).getMaximum());
+        writer.name("min").value(((IntegerColumnStatistics) cs).getMinimum());
+        writer.name("max").value(((IntegerColumnStatistics) cs).getMaximum());
         if (((IntegerColumnStatistics) cs).isSumDefined()) {
-          writer.key("sum").value(((IntegerColumnStatistics) cs).getSum());
+          writer.name("sum").value(((IntegerColumnStatistics) cs).getSum());
         }
-        writer.key("type").value(OrcProto.Type.Kind.LONG);
+        writer.name("type").value(OrcProto.Type.Kind.LONG.toString());
       } else if (cs instanceof DoubleColumnStatistics) {
-        writer.key("min").value(((DoubleColumnStatistics) cs).getMinimum());
-        writer.key("max").value(((DoubleColumnStatistics) cs).getMaximum());
-        writer.key("sum").value(((DoubleColumnStatistics) cs).getSum());
-        writer.key("type").value(OrcProto.Type.Kind.DOUBLE);
+        writer.name("min").value(((DoubleColumnStatistics) cs).getMinimum());
+        writer.name("max").value(((DoubleColumnStatistics) cs).getMaximum());
+        writer.name("sum").value(((DoubleColumnStatistics) cs).getSum());
+        writer.name("type").value(OrcProto.Type.Kind.DOUBLE.toString());
       } else if (cs instanceof StringColumnStatistics) {
         String lower = ((StringColumnStatistics) cs).getLowerBound();
         if (((StringColumnStatistics) cs).getMinimum() != null) {
-          writer.key("min").value(lower);
+          writer.name("min").value(lower);
         } else if (lower != null) {
-          writer.key("lowerBound").value(lower);
+          writer.name("lowerBound").value(lower);
         }
         String upper = ((StringColumnStatistics) cs).getUpperBound();
         if (((StringColumnStatistics) cs).getMaximum() != null) {
-          writer.key("max").value(upper);
+          writer.name("max").value(upper);
         } else if (upper != null) {
-          writer.key("upperBound").value(upper);
+          writer.name("upperBound").value(upper);
         }
-        writer.key("totalLength").value(((StringColumnStatistics) cs).getSum());
-        writer.key("type").value(OrcProto.Type.Kind.STRING);
+        writer.name("totalLength").value(((StringColumnStatistics) cs).getSum());
+        writer.name("type").value(OrcProto.Type.Kind.STRING.toString());
       } else if (cs instanceof DateColumnStatistics) {
         if (((DateColumnStatistics) cs).getMaximumLocalDate() != null) {
-          writer.key("min").value(((DateColumnStatistics) cs).getMinimumLocalDate());
-          writer.key("max").value(((DateColumnStatistics) cs).getMaximumLocalDate());
+          writer.name("min").value(((DateColumnStatistics) cs).getMinimumLocalDate().toString());
+          writer.name("max").value(((DateColumnStatistics) cs).getMaximumLocalDate().toString());
         }
-        writer.key("type").value(OrcProto.Type.Kind.DATE);
+        writer.name("type").value(OrcProto.Type.Kind.DATE.toString());
       } else if (cs instanceof TimestampColumnStatistics) {
         if (((TimestampColumnStatistics) cs).getMaximum() != null) {
-          writer.key("min").value(((TimestampColumnStatistics) cs).getMinimum());
-          writer.key("max").value(((TimestampColumnStatistics) cs).getMaximum());
+          writer.name("min").value(((TimestampColumnStatistics) cs).getMinimum().toString());
+          writer.name("max").value(((TimestampColumnStatistics) cs).getMaximum().toString());
         }
-        writer.key("type").value(OrcProto.Type.Kind.TIMESTAMP);
+        writer.name("type").value(OrcProto.Type.Kind.TIMESTAMP.toString());
       } else if (cs instanceof DecimalColumnStatistics) {
         if (((DecimalColumnStatistics) cs).getMaximum() != null) {
-          writer.key("min").value(((DecimalColumnStatistics) cs).getMinimum());
-          writer.key("max").value(((DecimalColumnStatistics) cs).getMaximum());
-          writer.key("sum").value(((DecimalColumnStatistics) cs).getSum());
+          writer.name("min").value(((DecimalColumnStatistics) cs).getMinimum().toString());
+          writer.name("max").value(((DecimalColumnStatistics) cs).getMaximum().toString());
+          writer.name("sum").value(((DecimalColumnStatistics) cs).getSum().toString());
         }
-        writer.key("type").value(OrcProto.Type.Kind.DECIMAL);
+        writer.name("type").value(OrcProto.Type.Kind.DECIMAL.toString());
       } else if (cs instanceof CollectionColumnStatistics) {
-        writer.key("minChildren").value(((CollectionColumnStatistics) cs).getMinimumChildren());
-        writer.key("maxChildren").value(((CollectionColumnStatistics) cs).getMaximumChildren());
-        writer.key("totalChildren").value(((CollectionColumnStatistics) cs).getTotalChildren());
+        writer.name("minChildren").value(((CollectionColumnStatistics) cs).getMinimumChildren());
+        writer.name("maxChildren").value(((CollectionColumnStatistics) cs).getMaximumChildren());
+        writer.name("totalChildren").value(((CollectionColumnStatistics) cs).getTotalChildren());
       }
     }
   }
 
-  private static void writeBloomFilterIndexes(JSONWriter writer, int col,
+  private static void writeBloomFilterIndexes(JsonWriter writer, int col,
                                               OrcIndex index,
                                               OrcFile.WriterVersion version,
                                               TypeDescription.Category type,
                                               OrcProto.ColumnEncoding encoding
-                                              ) throws JSONException {
+  ) throws IOException {
 
     BloomFilter stripeLevelBF = null;
     OrcProto.BloomFilterIndex[] bloomFilterIndex = index.getBloomFilterIndex();
     if (bloomFilterIndex != null && bloomFilterIndex[col] != null) {
       int entryIx = 0;
-      writer.key("bloomFilterIndexes").array();
+      writer.name("bloomFilterIndexes").beginArray();
       for (OrcProto.BloomFilter bf : bloomFilterIndex[col].getBloomFilterList()) {
-        writer.object();
-        writer.key("entryId").value(entryIx++);
+        writer.beginObject();
+        writer.name("entryId").value(entryIx++);
         BloomFilter toMerge = BloomFilterIO.deserialize(
             index.getBloomFilterKinds()[col], encoding, version, type, bf);
         writeBloomFilterStats(writer, toMerge);
@@ -416,15 +404,15 @@ public class JsonFileDump {
       writer.endArray();
     }
     if (stripeLevelBF != null) {
-      writer.key("stripeLevelBloomFilter");
-      writer.object();
+      writer.name("stripeLevelBloomFilter");
+      writer.beginObject();
       writeBloomFilterStats(writer, stripeLevelBF);
       writer.endObject();
     }
   }
 
-  private static void writeBloomFilterStats(JSONWriter writer, BloomFilter bf)
-      throws JSONException {
+  private static void writeBloomFilterStats(JsonWriter writer, BloomFilter bf)
+      throws IOException {
     int bitCount = bf.getBitSize();
     int popCount = 0;
     for (long l : bf.getBitSet()) {
@@ -433,27 +421,27 @@ public class JsonFileDump {
     int k = bf.getNumHashFunctions();
     float loadFactor = (float) popCount / (float) bitCount;
     float expectedFpp = (float) Math.pow(loadFactor, k);
-    writer.key("numHashFunctions").value(k);
-    writer.key("bitCount").value(bitCount);
-    writer.key("popCount").value(popCount);
-    writer.key("loadFactor").value(loadFactor);
-    writer.key("expectedFpp").value(expectedFpp);
+    writer.name("numHashFunctions").value(k);
+    writer.name("bitCount").value(bitCount);
+    writer.name("popCount").value(popCount);
+    writer.name("loadFactor").value(loadFactor);
+    writer.name("expectedFpp").value(expectedFpp);
   }
 
-  private static void writeRowGroupIndexes(JSONWriter writer, int col,
+  private static void writeRowGroupIndexes(JsonWriter writer, int col,
                                            OrcProto.RowIndex[] rowGroupIndex,
                                            TypeDescription schema,
-                                           ReaderImpl reader) throws JSONException {
+                                           ReaderImpl reader) throws IOException {
     OrcProto.RowIndex index;
     if (rowGroupIndex == null || (col >= rowGroupIndex.length) ||
         ((index = rowGroupIndex[col]) == null)) {
       return;
     }
 
-    writer.key("rowGroupIndexes").array();
+    writer.name("rowGroupIndexes").beginArray();
     for (int entryIx = 0; entryIx < index.getEntryCount(); ++entryIx) {
-      writer.object();
-      writer.key("entryId").value(entryIx);
+      writer.beginObject();
+      writer.name("entryId").value(entryIx);
       OrcProto.RowIndexEntry entry = index.getEntry(entryIx);
       if (entry == null) {
         continue;
@@ -462,7 +450,7 @@ public class JsonFileDump {
       writeColumnStatistics(writer, ColumnStatisticsImpl.deserialize(
           schema.findSubtype(col), colStats, reader.writerUsedProlepticGregorian(),
           reader.getConvertToProlepticGregorian()));
-      writer.key("positions").array();
+      writer.name("positions").beginArray();
       for (int posIx = 0; posIx < entry.getPositionsCount(); ++posIx) {
         writer.value(entry.getPositions(posIx));
       }
