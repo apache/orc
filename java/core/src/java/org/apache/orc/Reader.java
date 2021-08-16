@@ -142,6 +142,7 @@ public interface Reader extends Closeable {
    * type in the list.
    * @return the list of flattened types
    * @deprecated use getSchema instead
+   * @since 1.1.0
    */
   List<OrcProto.Type> getTypes();
 
@@ -153,6 +154,7 @@ public interface Reader extends Closeable {
 
   /**
    * Get the version of the writer of this file.
+   * @since 1.1.0
    */
   OrcFile.WriterVersion getWriterVersion();
 
