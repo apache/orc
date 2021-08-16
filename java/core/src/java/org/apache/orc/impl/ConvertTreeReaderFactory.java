@@ -817,23 +817,23 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
   public static class DecimalFromAnyIntegerTreeReader extends ConvertTreeReader {
     private LongColumnVector longColVector;
     private ColumnVector decimalColVector;
-    private final HiveDecimalWritable reuse;
+    private final HiveDecimalWritable value;
 
     DecimalFromAnyIntegerTreeReader(int columnId, TypeDescription fileType, Context context)
         throws IOException {
       super(columnId, createFromInteger(columnId, fileType, context), context);
-      this.reuse = new HiveDecimalWritable();
+      value = new HiveDecimalWritable();
     }
 
     @Override
     public void setConvertVectorElement(int elementNum) {
       long longValue = longColVector.vector[elementNum];
-      this.reuse.setFromLong(longValue);
+      this.value.setFromLong(longValue);
       // The DecimalColumnVector will enforce precision and scale and set the entry to null when out of bounds.
       if (decimalColVector instanceof Decimal64ColumnVector) {
-        ((Decimal64ColumnVector) decimalColVector).set(elementNum, this.reuse);
+        ((Decimal64ColumnVector) decimalColVector).set(elementNum, this.value);
       } else {
-        ((DecimalColumnVector) decimalColVector).set(elementNum, this.reuse);
+        ((DecimalColumnVector) decimalColVector).set(elementNum, this.value);
       }
     }
 
@@ -1248,10 +1248,10 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
    * Convert a decimal to an Instant using seconds & nanos.
    * @param vector the decimal64 column vector
    * @param element the element number to use
-   * @param reuse the writable container to reuse
+   * @param value the writable container to reuse
    * @return the timestamp instant
    */
-  static Instant decimalToInstant(DecimalColumnVector vector, int element, HiveDecimalWritable reuse) {
+  static Instant decimalToInstant(DecimalColumnVector vector, int element, HiveDecimalWritable value) {
     final HiveDecimalWritable writable = vector.vector[element];
     final long seconds = writable.longValue();
 
@@ -1259,10 +1259,10 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       return null;
     } else {
       // copy the value so that we can mutate it
-      reuse.set(writable);
-      reuse.mutateFractionPortion();
-      reuse.mutateScaleByPowerOfTen(9);
-      int nanos = (int) reuse.longValue();
+      value.set(writable);
+      value.mutateFractionPortion();
+      value.mutateScaleByPowerOfTen(9);
+      int nanos = (int) value.longValue();
       return Instant.ofEpochSecond(seconds, nanos);
     }
   }
@@ -1560,7 +1560,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     private final TimeZone local;
     private final boolean useProlepticGregorian;
     private final boolean fileUsedProlepticGregorian;
-    private final HiveDecimalWritable reuse;
+    private final HiveDecimalWritable value;
 
     TimestampFromDecimalTreeReader(int columnId, TypeDescription fileType,
                                    Context context,
@@ -1573,12 +1573,12 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
       local = TimeZone.getDefault();
       useProlepticGregorian = context.useProlepticGregorian();
       fileUsedProlepticGregorian = context.fileUsedProlepticGregorian();
-      this.reuse = new HiveDecimalWritable();
+      value = new HiveDecimalWritable();
     }
 
     @Override
     public void setConvertVectorElement(int elementNum) {
-      Instant t = decimalToInstant(decimalColVector, elementNum, this.reuse);
+      Instant t = decimalToInstant(decimalColVector, elementNum, value);
       if (t == null) {
         timestampColVector.noNulls = false;
         timestampColVector.isNull[elementNum] = true;
