@@ -38,6 +38,7 @@ import org.apache.orc.impl.reader.tree.TypeReader;
 import org.threeten.extra.chrono.HybridChronology;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.time.Instant;
