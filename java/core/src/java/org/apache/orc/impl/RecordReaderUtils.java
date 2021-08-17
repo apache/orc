@@ -511,24 +511,17 @@ public class RecordReaderUtils {
 
       @Override
       public int compareTo(Key other) {
-        if (capacity != other.capacity) {
-          return capacity - other.capacity;
-        } else {
-          return Long.compare(insertionGeneration, other.insertionGeneration);
-        }
+        final int c = Integer.compare(capacity, other.capacity);
+        return (c != 0) ? c : Long.compare(insertionGeneration, other.insertionGeneration);
       }
 
       @Override
       public boolean equals(Object rhs) {
-        if (rhs == null) {
-          return false;
-        }
-        try {
+        if (rhs instanceof Key) {
           Key o = (Key) rhs;
-          return (compareTo(o) == 0);
-        } catch (ClassCastException e) {
-          return false;
+          return 0 == compareTo(o);
         }
+        return false;
       }
 
       @Override
@@ -568,14 +561,13 @@ public class RecordReaderUtils {
     @Override
     public void putBuffer(ByteBuffer buffer) {
       TreeMap<Key, ByteBuffer> tree = getBufferTree(buffer.isDirect());
-      while (true) {
-        Key key = new Key(buffer.capacity(), currentGeneration++);
-        if (tree.putIfAbsent(key, buffer) == null) {
-          return;
-        }
-        // Buffers are indexed by (capacity, generation).
-        // If our key is not unique on the first try, we try again
-      }
+      Key key;
+
+      // Buffers are indexed by (capacity, generation).
+      // If our key is not unique on the first try, try again
+      do {
+        key = new Key(buffer.capacity(), currentGeneration++);
+      } while (tree.putIfAbsent(key, buffer) != null);
     }
   }
 }
