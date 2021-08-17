@@ -47,7 +47,8 @@ public class DictionaryUtils {
     byteArray.setText(result, offset, length);
   }
 
-  public static ByteBuffer getTextInternal(int position, DynamicIntArray keyOffsets, DynamicByteArray byteArray) {
+  public static ByteBuffer getTextInternal(int position, DynamicIntArray keyOffsets,
+      DynamicByteArray byteArray) {
     final int offset = keyOffsets.get(position);
     final int length;
     if (position + 1 == keyOffsets.size()) {

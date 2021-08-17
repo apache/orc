@@ -19,12 +19,11 @@
 package org.apache.orc.impl;
 
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.WritableComparator;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-
-import org.apache.hadoop.io.WritableComparator;
 
 /**
  * Using HashTable to represent a dictionary. The strings are stored as UTF-8 bytes
