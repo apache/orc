@@ -504,13 +504,10 @@ public class RecordReaderUtils {
     private static final class Key implements Comparable<Key> {
       private final int capacity;
       private final long insertionGeneration;
-      private final int hash;
 
       Key(int capacity, long insertionGeneration) {
         this.capacity = capacity;
         this.insertionGeneration = insertionGeneration;
-        this.hash = new HashCodeBuilder().append(capacity).append(insertionGeneration)
-            .toHashCode();
       }
 
       @Override
@@ -530,7 +527,8 @@ public class RecordReaderUtils {
 
       @Override
       public int hashCode() {
-        return hash;
+        return new HashCodeBuilder().append(capacity).append(insertionGeneration)
+            .toHashCode();
       }
     }
 
