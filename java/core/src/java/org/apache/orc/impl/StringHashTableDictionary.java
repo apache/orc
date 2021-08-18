@@ -19,7 +19,6 @@
 package org.apache.orc.impl;
 
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.WritableComparator;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -189,11 +188,6 @@ public class StringHashTableDictionary implements Dictionary {
     return Math.floorMod(hash, capacity);
   }
 
-  int getIndex(ByteBuffer text) {
-    return Math.floorMod(WritableComparator.hashBytes(text.array(),
-        text.position(), text.remaining()), capacity);
-  }
-
   // Resize the hash table, re-hash all the existing keys.
   // byteArray and keyOffsetsArray don't have to be re-filled.
   private void doResize(int newCapacity, int oldCapacity) {
@@ -207,7 +201,8 @@ public class StringHashTableDictionary implements Dictionary {
       for (int j = 0; j < oldBucket.size(); j++) {
         final int offset = oldBucket.get(j);
         ByteBuffer text = getText(offset);
-        resizedHashBuckets[getIndex(text)].add(oldBucket.get(j));
+        resizedHashBuckets[getIndex(text.array(),
+                text.position(), text.remaining())].add(oldBucket.get(j));
       }
     }
 
