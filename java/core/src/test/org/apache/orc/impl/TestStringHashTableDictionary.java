@@ -102,7 +102,6 @@ public class TestStringHashTableDictionary {
     int getIndex(byte[] bytes, int offset, int length) {
       return (char) bytes[0] - '0';
     }
-
   }
 
   @Test
