@@ -69,7 +69,7 @@ public class ConvertTool {
       if (file.format == Format.JSON) {
         System.err.println("Scanning " + file.path + " for schema");
         filesScanned += 1;
-        schemaFinder.addFile(file.getReader(file.filesystem.open(file.path)));
+        schemaFinder.addFile(file.getReader(file.filesystem.open(file.path)), file.path.getName());
       } else if (file.format == Format.ORC) {
         System.err.println("Merging schema from " + file.path);
         filesScanned += 1;
