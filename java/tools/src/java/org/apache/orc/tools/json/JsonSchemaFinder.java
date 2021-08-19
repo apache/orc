@@ -310,6 +310,9 @@ public class JsonSchemaFinder {
         return result;
       }
       case MAP:
+        return new MapType(
+            makeHiveType(schema.getChildren().get(0)),
+            makeHiveType(schema.getChildren().get(1)));
       default:
         throw new IllegalArgumentException("Unhandled type " + schema);
     }

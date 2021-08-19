@@ -34,7 +34,8 @@ abstract class HiveType {
     BINARY(1), DATE(1), TIMESTAMP(1), TIMESTAMP_INSTANT(1), STRING(2),
     STRUCT(1, false),
     LIST(1, false),
-    UNION(8, false);
+    UNION(8, false),
+    MAP(9, false);
 
     // for types that subsume each other, establish a ranking.
     final int rank;

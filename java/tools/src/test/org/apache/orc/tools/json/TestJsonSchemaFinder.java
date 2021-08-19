@@ -353,4 +353,42 @@ public class TestJsonSchemaFinder {
         new StringType(HiveType.Kind.TIMESTAMP)
         ).toString());
   }
+
+  @Test
+  public void testMapMerges() throws Exception {
+    assertEquals("map<decimal(15,10),string>", JsonSchemaFinder.mergeType(
+        new MapType(new NumericType(HiveType.Kind.DECIMAL, 2, 10),
+            new StringType(HiveType.Kind.TIMESTAMP)),
+        new MapType(new NumericType(HiveType.Kind.INT, 5, 0),
+            new StringType(HiveType.Kind.BINARY))
+    ).toString());
+    assertEquals("map<binary,timestamp>", JsonSchemaFinder.mergeType(
+        new MapType(new StringType(HiveType.Kind.BINARY), new StringType(HiveType.Kind.TIMESTAMP)),
+        new MapType(new StringType(HiveType.Kind.BINARY), new StringType(HiveType.Kind.TIMESTAMP))
+    ).toString());
+    assertEquals("map<string,string>", JsonSchemaFinder.mergeType(
+        new MapType(new StringType(HiveType.Kind.BINARY), new StringType(HiveType.Kind.TIMESTAMP)),
+        new MapType(new StringType(HiveType.Kind.TIMESTAMP), new StringType(HiveType.Kind.BINARY))
+    ).toString());
+    assertEquals("struct<bar:map<struct<i:decimal(15,10),j:string>,struct<k:boolean>>,foo:int>",
+        JsonSchemaFinder.mergeType(
+            new StructType()
+                .addField("bar", new MapType(
+                    new StructType()
+                        .addField("i", new NumericType(HiveType.Kind.INT, 5, 0))
+                        .addField("j", new StringType(HiveType.Kind.BINARY)),
+                    new StructType()
+                        .addField("k", new BooleanType())))
+                .addField("foo", new NumericType(HiveType.Kind.INT, 5, 0)),
+            new StructType()
+                .addField("bar", new MapType(
+                    new StructType()
+                        .addField("i", new NumericType(HiveType.Kind.DECIMAL, 2, 10))
+                        .addField("j", new StringType(HiveType.Kind.TIMESTAMP)),
+                    new StructType()
+                        .addField("k", new BooleanType())))
+                .addField("foo", new NumericType(HiveType.Kind.INT, 5, 0))
+    ).toString());
+  }
+
 }
