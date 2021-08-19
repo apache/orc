@@ -278,11 +278,11 @@ public class JsonSchemaFinder {
       line = Integer.parseInt(m.group(1));
       column = Integer.parseInt(m.group(2));
       if (line == 1 && column == 1) {
-        System.err.printf("File %s is empty.", filename);
+        System.err.printf("File %s is empty.%n", filename);
         System.exit(1);
       }
     }
-    System.err.printf("Please check the file. %n%n%s", ExceptionUtils.getStackTrace(e));
+    System.err.printf("Please check the file.%n%n%s%n", ExceptionUtils.getStackTrace(e));
     System.exit(1);
   }
 
