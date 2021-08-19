@@ -20,6 +20,7 @@ package org.apache.orc.tools.json;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonStreamParser;
 import org.apache.commons.cli.CommandLine;
@@ -28,6 +29,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.TypeDescriptionPrettyPrint;
@@ -247,15 +249,41 @@ public class JsonSchemaFinder {
     } else {
       reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
     }
-    addFile(reader);
+    addFile(reader, filename);
   }
 
-  public void addFile(java.io.Reader reader) throws IOException {
+  public void addFile(java.io.Reader reader, String filename) {
     JsonStreamParser parser = new JsonStreamParser(reader);
-    while (parser.hasNext()) {
-      records += 1;
-      mergedType = mergeType(mergedType, pickType(parser.next()));
+    try {
+      while (parser.hasNext()) {
+        mergedType = mergeType(mergedType, pickType(parser.next()));
+        records += 1;
+      }
+    } catch (JsonParseException e) {
+      printParseExceptionMsg(e, filename);
     }
+  }
+
+  private void printParseExceptionMsg(JsonParseException e, String filename) {
+    System.err.printf(
+        "A JsonParseException was thrown while processing the %dth record of file %s.%n",
+        records + 1, filename);
+
+    String pattern = "at line (\\d+) column (\\d+)";
+    Pattern r = Pattern.compile(pattern);
+    Matcher m = r.matcher(e.getMessage());
+    int line;
+    int column;
+    if (m.find( )) {
+      line = Integer.parseInt(m.group(1));
+      column = Integer.parseInt(m.group(2));
+      if (line == 1 && column == 1) {
+        System.err.printf("File %s is empty.", filename);
+        System.exit(1);
+      }
+    }
+    System.err.printf("Please check the file. %n%n%s", ExceptionUtils.getStackTrace(e));
+    System.exit(1);
   }
 
   HiveType makeHiveType(TypeDescription schema) {
