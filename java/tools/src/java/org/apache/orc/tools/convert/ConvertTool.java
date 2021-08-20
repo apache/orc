@@ -196,8 +196,9 @@ public class ConvertTool {
     this.timestampFormat = opts.getOptionValue("t", DEFAULT_TIMESTAMP_FORMAT);
     String outFilename = opts.hasOption('o')
         ? opts.getOptionValue('o') : "output.orc";
+    boolean overwrite = opts.hasOption('O');
     writer = OrcFile.createWriter(new Path(outFilename),
-        OrcFile.writerOptions(conf).setSchema(schema));
+        OrcFile.writerOptions(conf).setSchema(schema).overwrite(overwrite));
     batch = schema.createRowBatch();
   }
 
@@ -256,8 +257,12 @@ public class ConvertTool {
         Option.builder("H").longOpt("header").desc("CSV header lines")
             .hasArg().build());
     options.addOption(
-            Option.builder("t").longOpt("timestampformat").desc("Timestamp Format")
+        Option.builder("t").longOpt("timestampformat").desc("Timestamp Format")
             .hasArg().build());
+    options.addOption(
+        Option.builder("O").longOpt("overwrite").desc("Overwrite an existing file")
+            .build()
+    );
     CommandLine cli = new DefaultParser().parse(options, args);
     if (cli.hasOption('h') || cli.getArgs().length == 0) {
       HelpFormatter formatter = new HelpFormatter();
