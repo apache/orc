@@ -82,7 +82,7 @@
     <protoc.artifact>com.google.protobuf:protoc:2.5.0</protoc.artifact>
     <surefire.version>3.0.0-M5</surefire.version>
     <junit.version>5.7.2</junit.version>
-    <mockito.version>3.11.2</mockito.version>
+    <mockito.version>3.12.1</mockito.version>
   </properties>
 
   <build>
