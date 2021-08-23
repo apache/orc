@@ -70,9 +70,9 @@ namespace orc {
   void TestRangePredicates(Reader* reader) {
     // Build search argument (x >= 300000 AND x < 600000) for column 'int1'.
     // Test twice for using column name and column id respectively.
-    for (int i = 0; i < 2; ++i) {
+    for (int k = 0; k < 2; ++k) {
       std::unique_ptr<SearchArgument> sarg;
-      if (i == 0) {
+      if (k == 0) {
         sarg = SearchArgumentFactory::newBuilder()
           ->startAnd()
           .startNot()
