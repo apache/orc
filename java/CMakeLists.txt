@@ -35,7 +35,7 @@ set(ORC_JARS
 if (ANALYZE_JAVA)
   set(JAVA_PROFILE "-Pcmake,analyze,benchmark")
 else()
-  set(JAVA_PROFILE "-Pcmake")
+  set(JAVA_PROFILE "-Pcmake,benchmark")
 endif()
 
 add_custom_command(
