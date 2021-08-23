@@ -152,9 +152,9 @@ namespace orc {
   void TestOrPredicates(Reader* reader) {
     // Select first 1000 and last 500 rows: x < 30000 OR x >= 1020000
     // Test twice for using column name and column id respectively.
-    for (int i = 0; i < 2; ++i) {
+    for (int k = 0; k < 2; ++k) {
       std::unique_ptr<SearchArgument> sarg;
-      if (i == 0) {
+      if (k == 0) {
         sarg = SearchArgumentFactory::newBuilder()
           ->startOr()
           .lessThan("int1", PredicateDataType::LONG,
