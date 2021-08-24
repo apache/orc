@@ -54,7 +54,11 @@ namespace orc {
     const std::vector<PredicateLeaf>& leaves = sargs->getLeaves();
     mFilterColumns.resize(leaves.size(), INVALID_COLUMN_ID);
     for (size_t i = 0; i != mFilterColumns.size(); ++i) {
-      mFilterColumns[i] = findColumn(type, leaves[i].getColumnName());
+      if (leaves[i].hasColumnName()) {
+        mFilterColumns[i] = findColumn(type, leaves[i].getColumnName());
+      } else {
+        mFilterColumns[i] = leaves[i].getColumnId();
+      }
     }
   }
 
