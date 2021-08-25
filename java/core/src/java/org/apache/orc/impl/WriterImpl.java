@@ -148,7 +148,6 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     this.conf = opts.getConfiguration();
     // clone it so that we can annotate it with encryption
     this.schema = opts.getSchema().clone();
-    useProlepticGregorian = opts.getProlepticGregorian();
     int numColumns = schema.getMaximumId() + 1;
     if (!opts.isEnforceBufferSize()) {
       opts.bufferSize(getEstimatedBufferSize(opts.getStripeSize(), numColumns,
@@ -163,34 +162,34 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
         opts.getKeyOverrides());
     needKeyFlush = encryption.length > 0;
 
-    // Set up the physical writer
-    this.physicalWriter = opts.getPhysicalWriter() == null ?
-                              new PhysicalFsWriter(fs, path, opts, encryption) :
-                              opts.getPhysicalWriter();
-    unencryptedOptions = physicalWriter.getStreamOptions();
-    OutStream.assertBufferSizeValid(unencryptedOptions.getBufferSize());
-
-    this.callback = opts.getCallback();
-    this.writerVersion = opts.getWriterVersion();
-    bloomFilterVersion = opts.getBloomFilterVersion();
     this.directEncodingColumns = OrcUtils.includeColumns(
         opts.getDirectEncodingColumns(), opts.getSchema());
     dictionaryKeySizeThreshold =
         OrcConf.DICTIONARY_KEY_SIZE_THRESHOLD.getDouble(conf);
+
+    this.callback = opts.getCallback();
     if (callback != null) {
       callbackContext = () -> WriterImpl.this;
     } else {
       callbackContext = null;
     }
+
+    this.useProlepticGregorian = opts.getProlepticGregorian();
     this.writeTimeZone = hasTimestamp(schema);
     this.useUTCTimeZone = opts.getUseUTCTimestamp();
-    this.stripeSize = opts.getStripeSize();
-    this.version = opts.getVersion();
+
     this.encodingStrategy = opts.getEncodingStrategy();
     this.compressionStrategy = opts.getCompressionStrategy();
+
     this.rowIndexStride = opts.getRowIndexStride();
-    this.memoryManager = opts.getMemoryManager();
     buildIndex = rowIndexStride > 0;
+    if (buildIndex && rowIndexStride < MIN_ROW_INDEX_STRIDE) {
+      throw new IllegalArgumentException("Row stride must be at least " +
+          MIN_ROW_INDEX_STRIDE);
+    }
+
+    this.writerVersion = opts.getWriterVersion();
+    this.version = opts.getVersion();
     if (version == OrcFile.Version.FUTURE) {
       throw new IllegalArgumentException("Can not write in a unknown version.");
     } else if (version == OrcFile.Version.UNSTABLE_PRE_2_0) {
@@ -198,29 +197,34 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
           " readable by other versions of the software. It is only for" +
           " developer testing.");
     }
-    boolean buildBloomFilter = buildIndex;
-    if (version == OrcFile.Version.V_0_11) {
-      /* do not write bloom filters for ORC v11 */
-      buildBloomFilter = false;
-    }
-    if (!buildBloomFilter) {
+
+    this.bloomFilterVersion = opts.getBloomFilterVersion();
+    this.bloomFilterFpp = opts.getBloomFilterFpp();
+    /* do not write bloom filters for ORC v11 */
+    if (!buildIndex || version == OrcFile.Version.V_0_11) {
       this.bloomFilterColumns = new boolean[schema.getMaximumId() + 1];
     } else {
       this.bloomFilterColumns =
           OrcUtils.includeColumns(opts.getBloomFilterColumns(), schema);
     }
-    this.bloomFilterFpp = opts.getBloomFilterFpp();
-    physicalWriter.writeHeader();
 
-    treeWriter = TreeWriter.Factory.create(schema, null, new StreamFactory());
-    if (buildIndex && rowIndexStride < MIN_ROW_INDEX_STRIDE) {
-      throw new IllegalArgumentException("Row stride must be at least " +
-          MIN_ROW_INDEX_STRIDE);
-    }
     // ensure that we are able to handle callbacks before we register ourselves
     ROWS_PER_CHECK = OrcConf.ROWS_BETWEEN_CHECKS.getLong(conf);
+    this.stripeSize = opts.getStripeSize();
     memoryLimit = stripeSize;
+    memoryManager = opts.getMemoryManager();
     memoryManager.addWriter(path, stripeSize, this);
+
+    // Set up the physical writer
+    this.physicalWriter = opts.getPhysicalWriter() == null ?
+        new PhysicalFsWriter(fs, path, opts, encryption) :
+        opts.getPhysicalWriter();
+    physicalWriter.writeHeader();
+    unencryptedOptions = physicalWriter.getStreamOptions();
+    OutStream.assertBufferSizeValid(unencryptedOptions.getBufferSize());
+
+    treeWriter = TreeWriter.Factory.create(schema, null, new StreamFactory());
+
     LOG.info("ORC writer created for path: {} with stripeSize: {} options: {}",
         path, stripeSize, unencryptedOptions);
   }
