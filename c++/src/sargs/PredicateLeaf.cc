@@ -293,7 +293,8 @@ namespace orc {
         }
       case PredicateLeaf::Operator::LESS_THAN_EQUALS:
         loc = compareToRange(values.at(0), minValue, maxValue);
-        if (loc == Location::AFTER || loc == Location::MAX) {
+        if (loc == Location::AFTER || loc == Location::MAX ||
+            (loc == Location::MIN && minValue == maxValue)) {
           return hasNull ? TruthValue::YES_NULL : TruthValue::YES;
         } else if (loc == Location::BEFORE) {
           return hasNull ? TruthValue::NO_NULL : TruthValue::NO;
