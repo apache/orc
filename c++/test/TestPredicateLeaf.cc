@@ -366,6 +366,13 @@ namespace orc {
               evaluate(pred, createIntStats(10L, 15L, true)));
     EXPECT_EQ(TruthValue::YES_NULL,
               evaluate(pred, createIntStats(0L, 10L, true)));
+    // Edge cases where minValue == maxValue
+    EXPECT_EQ(TruthValue::YES_NULL,
+              evaluate(pred, createIntStats(10L, 10L, true)));
+    EXPECT_EQ(TruthValue::YES_NULL,
+              evaluate(pred, createIntStats(15L, 15L, true)));
+    EXPECT_EQ(TruthValue::NO_NULL,
+              evaluate(pred, createIntStats(20L, 20L, true)));
     // Edge case where stats contain NaN or Inf numbers
     PredicateLeaf pred4(
             PredicateLeaf::Operator::LESS_THAN,
@@ -518,8 +525,13 @@ namespace orc {
               evaluate(pred, createStringStats("c", "d", true)));
     EXPECT_EQ(TruthValue::YES_NO_NULL,
               evaluate(pred, createStringStats("b", "d", true)));
-    EXPECT_EQ(TruthValue::YES_NO_NULL,
+    // Edge cases where minValue == maxValue
+    EXPECT_EQ(TruthValue::YES_NULL,
+              evaluate(pred, createStringStats("a", "a", true)));
+    EXPECT_EQ(TruthValue::YES_NULL,
               evaluate(pred, createStringStats("c", "c", true)));
+    EXPECT_EQ(TruthValue::NO_NULL,
+              evaluate(pred, createStringStats("d", "d", true)));
   }
 
   TEST(TestPredicateLeaf, testInWithNullInStats) {
@@ -874,8 +886,12 @@ namespace orc {
                         PredicateDataType::TIMESTAMP,
                         "x",
                         Literal(static_cast<int64_t>(0), 500000));
-    EXPECT_EQ(TruthValue::YES_NO, evaluate(
+    EXPECT_EQ(TruthValue::YES, evaluate(
+      pred2, createTimestampStats(0, 499999, 0, 499999)));
+    EXPECT_EQ(TruthValue::YES, evaluate(
       pred2, createTimestampStats(0, 500000, 0, 500000)));
+    EXPECT_EQ(TruthValue::NO, evaluate(
+      pred2, createTimestampStats(0, 500001, 0, 500001)));
 
     PredicateLeaf pred3(PredicateLeaf::Operator::LESS_THAN,
                         PredicateDataType::TIMESTAMP,
