@@ -147,8 +147,8 @@ abstract class RedBlackTree {
    * @param greatGrandparent Grandparent's parent
    * @return Does parent also need to be checked and/or fixed?
    */
-    private boolean add(int node, boolean fromLeft, int parent, int grandparent, int greatGrandparent,
-            byte[] bytes, int offset, int length) {
+    private boolean add(int node, boolean fromLeft, int parent, int grandparent,
+            int greatGrandparent, byte[] bytes, int offset, int length) {
     if (node == NULL) {
       if (root == NULL) {
         lastAdd = insert(NULL, NULL, false);
@@ -271,9 +271,10 @@ abstract class RedBlackTree {
 
   /**
    * Add the new key to the tree.
- * @param length 
- * @param offset 
- * @param bytes 
+   *
+   * @param bytes
+   * @param offset
+   * @param length
    * @return true if the element is a new one.
    */
   protected boolean doAdd(byte[] bytes, int offset, int length) {
