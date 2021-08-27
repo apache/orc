@@ -22,6 +22,7 @@ import org.apache.hadoop.io.Text;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 /**
  * A red-black tree that stores strings. The strings are stored as UTF-8 bytes
@@ -30,7 +31,6 @@ import java.nio.ByteBuffer;
 public class StringRedBlackTree extends RedBlackTree implements Dictionary {
   private final DynamicByteArray byteArray = new DynamicByteArray();
   private final DynamicIntArray keyOffsets;
-  private final Text newKey = new Text();
 
   public StringRedBlackTree(int initialCapacity) {
     super(initialCapacity);
@@ -38,32 +38,26 @@ public class StringRedBlackTree extends RedBlackTree implements Dictionary {
   }
 
   public int add(String value) {
-    newKey.set(value);
-    return addNewKey();
+    byte[] b = value.getBytes(StandardCharsets.UTF_8);
+    return add(b, 0, b.length);
   }
 
-  private int addNewKey() {
-    // if the newKey is actually new, add it to our byteArray and store the offset & length
-    if (add()) {
-      int len = newKey.getLength();
-      keyOffsets.add(byteArray.add(newKey.getBytes(), 0, len));
-    }
-    return lastAdd;
-  }
-
+  @Deprecated
   public int add(Text value) {
-    newKey.set(value);
-    return addNewKey();
+    return add(value.getBytes(), 0, value.getLength());
   }
 
   @Override
   public int add(byte[] bytes, int offset, int length) {
-    newKey.set(bytes, offset, length);
-    return addNewKey();
+    // if the newKey is actually new, add it to our byteArray and store the offset & length
+    if (doAdd(bytes, offset, length)) {
+      keyOffsets.add(byteArray.add(bytes, offset, length));
+    }
+    return lastAdd;
   }
 
   @Override
-  protected int compareValue(int position) {
+  protected int compareValue(int position, byte[] bytes, int offset, int length) {
     int start = keyOffsets.get(position);
     int end;
     if (position + 1 == keyOffsets.size()) {
@@ -71,8 +65,7 @@ public class StringRedBlackTree extends RedBlackTree implements Dictionary {
     } else {
       end = keyOffsets.get(position+1);
     }
-    return byteArray.compare(newKey.getBytes(), 0, newKey.getLength(),
-                             start, end - start);
+    return byteArray.compare(bytes, offset, length, start, end - start);
   }
 
 

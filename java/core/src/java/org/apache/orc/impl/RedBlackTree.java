@@ -62,7 +62,7 @@ abstract class RedBlackTree {
    * @return 0 if the values are the same, -1 if the new value is smaller and
    *         1 if the new value is larger.
    */
-  protected abstract int compareValue(int position);
+  protected abstract int compareValue(int position, byte[] bytes, int offset, int length);
 
   /**
    * Is the given node red as opposed to black? To prevent having an extra word
@@ -147,8 +147,8 @@ abstract class RedBlackTree {
    * @param greatGrandparent Grandparent's parent
    * @return Does parent also need to be checked and/or fixed?
    */
-  private boolean add(int node, boolean fromLeft, int parent,
-                      int grandparent, int greatGrandparent) {
+    private boolean add(int node, boolean fromLeft, int parent, int grandparent, int greatGrandparent,
+            byte[] bytes, int offset, int length) {
     if (node == NULL) {
       if (root == NULL) {
         lastAdd = insert(NULL, NULL, false);
@@ -167,14 +167,14 @@ abstract class RedBlackTree {
         }
       }
     } else {
-      int compare = compareValue(node);
+      int compare = compareValue(node, bytes, offset, length);
       boolean keepGoing;
 
       // Recurse down to find where the node needs to be added
       if (compare < 0) {
-        keepGoing = add(getLeft(node), true, node, parent, grandparent);
+        keepGoing = add(getLeft(node), true, node, parent, grandparent, bytes, offset, length);
       } else if (compare > 0) {
-        keepGoing = add(getRight(node), false, node, parent, grandparent);
+        keepGoing = add(getRight(node), false, node, parent, grandparent, bytes, offset, length);
       } else {
         lastAdd = node;
         wasAdd = false;
@@ -271,10 +271,13 @@ abstract class RedBlackTree {
 
   /**
    * Add the new key to the tree.
+ * @param length 
+ * @param offset 
+ * @param bytes 
    * @return true if the element is a new one.
    */
-  protected boolean add() {
-    add(root, false, NULL, NULL, NULL);
+  protected boolean doAdd(byte[] bytes, int offset, int length) {
+    add(root, false, NULL, NULL, NULL, bytes, offset, length);
     if (wasAdd) {
       setRed(root, false);
       return true;
