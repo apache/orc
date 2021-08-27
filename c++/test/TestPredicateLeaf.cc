@@ -401,7 +401,11 @@ namespace orc {
     EXPECT_EQ(TruthValue::NO_NULL,
               evaluate(pred, createIntStats(12L, 18L, true)));
 
-    std::vector<Literal> inList = {10L, 15L, 20L};
+    std::vector<Literal> inList{
+        static_cast<int64_t>(10),
+        static_cast<int64_t>(15),
+        static_cast<int64_t>(20)
+    };
     PredicateLeaf pred2(
             PredicateLeaf::Operator::IN,
             PredicateDataType::LONG,
