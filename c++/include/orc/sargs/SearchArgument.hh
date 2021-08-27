@@ -203,7 +203,7 @@ namespace orc {
 
     /**
      * Add an in leaf to the current item on the stack.
-     * @param column the field name of the column
+     * @param columnId the column id of the column
      * @param type the type of the expression
      * @param literals the literals
      * @return this
