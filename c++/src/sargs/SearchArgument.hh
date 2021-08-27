@@ -214,6 +214,28 @@ namespace orc {
                               const std::initializer_list<Literal>& literals) override;
 
     /**
+     * Add an in leaf to the current item on the stack.
+     * @param column the field name of the column
+     * @param type the type of the expression
+     * @param literals the literals
+     * @return this
+     */
+    SearchArgumentBuilder& in(const std::string& column,
+                              PredicateDataType type,
+                              const std::vector<Literal>& literals) override;
+
+    /**
+     * Add an in leaf to the current item on the stack.
+     * @param columnId the column id of the column
+     * @param type the type of the expression
+     * @param literals the literals
+     * @return this
+     */
+    SearchArgumentBuilder& in(uint64_t columnId,
+                              PredicateDataType type,
+                              const std::vector<Literal>& literals) override;
+
+    /**
      * Add an is null leaf to the current item on the stack.
      * @param column the field name of the column
      * @param type the type of the expression
@@ -284,10 +306,10 @@ namespace orc {
                                            PredicateDataType type,
                                            Literal literal);
 
-    template<typename T>
+    template<typename T, typename CONTAINER>
     SearchArgumentBuilder& addChildForIn(T column,
                                          PredicateDataType type,
-                                         const std::initializer_list<Literal>& literals);
+                                         const CONTAINER& literals);
 
     template<typename T>
     SearchArgumentBuilder& addChildForIsNull(T column,
