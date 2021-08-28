@@ -545,14 +545,13 @@ public class RunLengthIntegerWriterV2 implements IntegerWriter {
 
   private void computeZigZagLiterals() {
     // populate zigzag encoded literals
-    long zzEncVal = 0;
-    for (int i = 0; i < numLiterals; i++) {
-      if (signed) {
-        zzEncVal = utils.zigzagEncode(literals[i]);
-      } else {
-        zzEncVal = literals[i];
+    if (signed) {
+      for (int i = 0; i < numLiterals; i++) {
+        zigzagLiterals[i] = utils.zigzagEncode(literals[i]);
       }
-      zigzagLiterals[i] = zzEncVal;
+    }
+    else {
+      System.arraycopy(literals, 0, zigzagLiterals, 0, numLiterals);
     }
   }
 
