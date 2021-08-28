@@ -367,7 +367,8 @@ public class RunLengthIntegerWriterV2 implements IntegerWriter {
     output.write(headerSecondByte);
 
     // bit packing the zigzag encoded literals
-    utils.writeInts(zigzagLiterals, 0, numLiterals, fb, output);
+    long[] currentZigzagLiterals = signed ? zigzagLiterals : literals;
+    utils.writeInts(currentZigzagLiterals, 0, numLiterals, fb, output);
 
     // reset run length
     variableRunLength = 0;
@@ -414,7 +415,8 @@ public class RunLengthIntegerWriterV2 implements IntegerWriter {
     // break early for delta overflows or for shorter runs
     computeZigZagLiterals();
 
-    zzBits100p = utils.percentileBits(zigzagLiterals, 0, numLiterals, 1.0);
+    long[] currentZigzagLiterals = signed ? zigzagLiterals : literals;
+    zzBits100p = utils.percentileBits(currentZigzagLiterals, 0, numLiterals, 1.0);
 
     // not a big win for shorter runs to determine encoding
     if (numLiterals <= MIN_REPEAT) {
@@ -504,7 +506,7 @@ public class RunLengthIntegerWriterV2 implements IntegerWriter {
     // beyond a threshold then we need to patch the values. if the variation
     // is not significant then we can use direct encoding
 
-    zzBits90p = utils.percentileBits(zigzagLiterals, 0, numLiterals, 0.9);
+    zzBits90p = utils.percentileBits(currentZigzagLiterals, 0, numLiterals, 0.9);
     int diffBitsLH = zzBits100p - zzBits90p;
 
     // if the difference between 90th percentile and 100th percentile fixed
@@ -549,9 +551,6 @@ public class RunLengthIntegerWriterV2 implements IntegerWriter {
       for (int i = 0; i < numLiterals; i++) {
         zigzagLiterals[i] = utils.zigzagEncode(literals[i]);
       }
-    }
-    else {
-      System.arraycopy(literals, 0, zigzagLiterals, 0, numLiterals);
     }
   }
 
