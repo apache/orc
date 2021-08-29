@@ -134,7 +134,7 @@ public class RunLengthIntegerWriterV2 implements IntegerWriter {
   private final boolean signed;
   private EncodingType encoding;
   private int numLiterals;
-  private final long[] zigzagLiterals = new long[MAX_SCOPE];
+  private final long[] zigzagLiterals;
   private final long[] baseRedLiterals = new long[MAX_SCOPE];
   private final long[] adjDeltas = new long[MAX_SCOPE];
   private long fixedDelta;
@@ -160,6 +160,7 @@ public class RunLengthIntegerWriterV2 implements IntegerWriter {
       boolean alignedBitpacking) {
     this.output = output;
     this.signed = signed;
+    this.zigzagLiterals = signed ? new long[MAX_SCOPE] : null;
     this.alignedBitpacking = alignedBitpacking;
     this.utils = new SerializationUtils();
     clear();
