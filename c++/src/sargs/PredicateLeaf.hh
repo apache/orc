@@ -86,6 +86,16 @@ namespace orc {
                   uint64_t columnId,
                   const std::initializer_list<Literal>& literalList);
 
+    PredicateLeaf(Operator op,
+                  PredicateDataType type,
+                  const std::string& colName,
+                  const std::vector<Literal>& literalList);
+
+    PredicateLeaf(Operator op,
+                  PredicateDataType type,
+                  uint64_t columnId,
+                  const std::vector<Literal>& literalList);
+
     /**
      * Get the operator for the leaf.
      */

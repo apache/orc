@@ -400,6 +400,25 @@ namespace orc {
               evaluate(pred, createIntStats(10L, 30L, true)));
     EXPECT_EQ(TruthValue::NO_NULL,
               evaluate(pred, createIntStats(12L, 18L, true)));
+
+    std::vector<Literal> inList{
+        static_cast<int64_t>(10),
+        static_cast<int64_t>(15),
+        static_cast<int64_t>(20)
+    };
+    PredicateLeaf pred2(
+            PredicateLeaf::Operator::IN,
+            PredicateDataType::LONG,
+            "y",
+            inList);
+    EXPECT_EQ(TruthValue::YES_NULL,
+              evaluate(pred2, createIntStats(20L, 20L, true)));
+    EXPECT_EQ(TruthValue::NO_NULL,
+              evaluate(pred2, createIntStats(12L, 14L, true)));
+    EXPECT_EQ(TruthValue::NO_NULL,
+              evaluate(pred2, createIntStats(16L, 19L, true)));
+    EXPECT_EQ(TruthValue::YES_NO_NULL,
+              evaluate(pred2, createIntStats(12L, 18L, true)));
   }
 
   TEST(TestPredicateLeaf, testBetween) {
