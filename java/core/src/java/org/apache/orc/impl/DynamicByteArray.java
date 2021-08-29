@@ -294,6 +294,18 @@ public final class DynamicByteArray {
     return result;
   }
 
+  public ByteBuffer get(int offset, int length) {
+    final int currentChunk = offset / chunkSize;
+    final int currentOffset = offset % chunkSize;
+    final int currentLength = Math.min(length, chunkSize - currentOffset);
+    if (currentLength == length) {
+      return ByteBuffer.wrap(data[currentChunk], currentOffset, length);
+    }
+    ByteBuffer bb = ByteBuffer.allocate(length);
+    setByteBuffer(bb, offset, length);
+    return (ByteBuffer) bb.flip();
+  }
+
   /**
    * Get the size of the buffers.
    */

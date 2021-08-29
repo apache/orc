@@ -22,7 +22,7 @@ import org.apache.hadoop.io.Text;
 
 import java.io.IOException;
 import java.io.OutputStream;
-
+import java.nio.ByteBuffer;
 
 /**
  * Using HashTable to represent a dictionary. The strings are stored as UTF-8 bytes
@@ -124,6 +124,11 @@ public class StringHashTableDictionary implements Dictionary {
   }
 
   @Override
+  public ByteBuffer getText(int positionInKeyOffset) {
+    return DictionaryUtils.getTextInternal(positionInKeyOffset, this.keyOffsets, this.byteArray);
+  }
+
+  @Override
   public int writeTo(OutputStream out, int position) throws IOException {
     return DictionaryUtils.writeToTextInternal(out, position, this.keyOffsets, this.byteArray);
   }
@@ -197,12 +202,13 @@ public class StringHashTableDictionary implements Dictionary {
       resizedHashBuckets[i] = createBucket();
     }
 
-    Text tmpText = new Text();
     for (int i = 0; i < oldCapacity; i++) {
       DynamicIntArray oldBucket = hashBuckets[i];
       for (int j = 0; j < oldBucket.size(); j++) {
-        getText(tmpText, oldBucket.get(j));
-        resizedHashBuckets[getIndex(tmpText)].add(oldBucket.get(j));
+        final int offset = oldBucket.get(j);
+        ByteBuffer text = getText(offset);
+        resizedHashBuckets[getIndex(text.array(),
+                text.position(), text.remaining())].add(oldBucket.get(j));
       }
     }
 
@@ -218,4 +224,5 @@ public class StringHashTableDictionary implements Dictionary {
 
     return byteArray.getSizeInBytes() + keyOffsets.getSizeInBytes() + bucketTotalSize ;
   }
+
 }

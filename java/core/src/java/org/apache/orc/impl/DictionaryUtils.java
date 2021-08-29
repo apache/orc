@@ -21,6 +21,7 @@ import org.apache.hadoop.io.Text;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 
 public class DictionaryUtils {
   private DictionaryUtils() {
@@ -44,6 +45,27 @@ public class DictionaryUtils {
       length = keyOffsets.get(position + 1) - offset;
     }
     byteArray.setText(result, offset, length);
+  }
+
+  /**
+   * Return a {@code ByteBuffer} containing the data at a certain offset within a
+   * {@code DynamicByteArray}.
+   *
+   * @param position position in the keyOffsets
+   * @param keyOffsets starting offset of the key (in byte) in the byte array
+   * @param byteArray storing raw bytes of all keys seen in dictionary
+   * @return the number of bytes written to the output stream
+   */
+  public static ByteBuffer getTextInternal(int position, DynamicIntArray keyOffsets,
+      DynamicByteArray byteArray) {
+    final int offset = keyOffsets.get(position);
+    final int length;
+    if (position + 1 == keyOffsets.size()) {
+      length = byteArray.size() - offset;
+    } else {
+      length = keyOffsets.get(position + 1) - offset;
+    }
+    return byteArray.get(offset, length);
   }
 
   /**
