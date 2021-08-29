@@ -191,10 +191,10 @@ namespace orc {
       PredicateLeaf::Operator::NULL_SAFE_EQUALS, columnId, type, literal);
   }
 
-  template<typename T>
+  template<typename T, typename CONTAINER>
   SearchArgumentBuilder& SearchArgumentBuilderImpl::addChildForIn(T column,
                                                 PredicateDataType type,
-                                                const std::initializer_list<Literal>& literals) {
+                                                const CONTAINER& literals) {
     TreeNode &parent = mCurrTree.front();
     if (isInvalidColumn(column)) {
       parent->addChild(
@@ -220,6 +220,18 @@ namespace orc {
   SearchArgumentBuilder& SearchArgumentBuilderImpl::in(uint64_t columnId,
                                                        PredicateDataType type,
                                                        const std::initializer_list<Literal>& literals) {
+    return addChildForIn(columnId, type, literals);
+  }
+
+  SearchArgumentBuilder& SearchArgumentBuilderImpl::in(const std::string& column,
+                                                       PredicateDataType type,
+                                                       const std::vector<Literal>& literals) {
+    return addChildForIn(column, type, literals);
+  }
+
+  SearchArgumentBuilder& SearchArgumentBuilderImpl::in(uint64_t columnId,
+                                                       PredicateDataType type,
+                                                       const std::vector<Literal>& literals) {
     return addChildForIn(columnId, type, literals);
   }
 
