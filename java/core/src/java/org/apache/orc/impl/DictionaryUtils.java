@@ -47,6 +47,15 @@ public class DictionaryUtils {
     byteArray.setText(result, offset, length);
   }
 
+  /**
+   * Return a {@code ByteBuffer} containing the data at a certain offset within a
+   * {@code DynamicByteArray}.
+   *
+   * @param position position in the keyOffsets
+   * @param keyOffsets starting offset of the key (in byte) in the byte array
+   * @param byteArray storing raw bytes of all keys seen in dictionary
+   * @return the number of bytes written to the output stream
+   */
   public static ByteBuffer getTextInternal(int position, DynamicIntArray keyOffsets,
       DynamicByteArray byteArray) {
     final int offset = keyOffsets.get(position);
