@@ -414,7 +414,10 @@ public class RunLengthIntegerWriterV2 implements IntegerWriter {
 
     // we need to compute zigzag values for DIRECT encoding if we decide to
     // break early for delta overflows or for shorter runs
-    computeZigZagLiterals();
+    // only signed numbers need to compute zigzag values
+    if (signed) {
+      computeZigZagLiterals();
+    }
 
     long[] currentZigzagLiterals = signed ? zigzagLiterals : literals;
     zzBits100p = utils.percentileBits(currentZigzagLiterals, 0, numLiterals, 1.0);
@@ -548,10 +551,9 @@ public class RunLengthIntegerWriterV2 implements IntegerWriter {
 
   private void computeZigZagLiterals() {
     // populate zigzag encoded literals
-    if (signed) {
-      for (int i = 0; i < numLiterals; i++) {
-        zigzagLiterals[i] = utils.zigzagEncode(literals[i]);
-      }
+    assert signed : "only signed numbers need to compute zigzag values";
+    for (int i = 0; i < numLiterals; i++) {
+      zigzagLiterals[i] = utils.zigzagEncode(literals[i]);
     }
   }
 
