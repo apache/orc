@@ -6,7 +6,7 @@ author: omalley
 categories: [team]
 ---
 
-The ORC PMC is happy to add Dongjoon Hyun as an ORC committer for his
+The ORC PMC is happy to add Dongjoon Hyun as an ORC committer for the
 work on improving ORC's integration to Spark.
 
 Thank you for your work on ORC, Dongjoon!

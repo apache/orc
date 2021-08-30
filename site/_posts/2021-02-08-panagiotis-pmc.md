@@ -10,5 +10,5 @@ On behalf of the Apache ORC Project Management Committee (PMC), it gives
 me great pleasure to announce that Panagiotis Garefalakis has joined the PMC. Panagiotis
 has radically improved the integration between Hive and ORC.
 
-Please join me in welcoming Dongjoon to the ORC PMC!
+Please join me in welcoming Panagiotis to the ORC PMC!
 

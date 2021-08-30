@@ -4649,11 +4649,11 @@ public class TestVectorOrcFile {
             "bin:binary>");
 
     InMemoryKeystore allKeys = new InMemoryKeystore();
-    byte[][] masterKeys = new byte[6][];
-    for(int k=0; k < masterKeys.length; ++k) {
-      masterKeys[k] = new byte[algorithm.keyLength()];
-      random.nextBytes(masterKeys[k]);
-      allKeys.addKey("key_" + k, algorithm, masterKeys[k]);
+    byte[][] keys = new byte[6][];
+    for(int k=0; k < keys.length; ++k) {
+      keys[k] = new byte[algorithm.keyLength()];
+      random.nextBytes(keys[k]);
+      allKeys.addKey("key_" + k, algorithm, keys[k]);
     }
 
     Writer writer = OrcFile.createWriter(testFilePath,
@@ -4707,7 +4707,7 @@ public class TestVectorOrcFile {
     // try enabling each key by itself
     for(int c=0; c < 6; ++c) {
       InMemoryKeystore single = new InMemoryKeystore();
-      single.addKey("key_" + c, algorithm, masterKeys[c]);
+      single.addKey("key_" + c, algorithm, keys[c]);
       reader = OrcFile.createReader(testFilePath,
           OrcFile.readerOptions(conf).setKeyProvider(single));
       boolean[] hasData = new boolean[6];

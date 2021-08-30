@@ -6,7 +6,7 @@ author: dongjoon
 categories: [team]
 ---
 
-The ORC PMC is happy to add Panagiotis Garefalakis as an ORC committer for his
+The ORC PMC is happy to add Panagiotis Garefalakis as an ORC committer for the
 work on improving ORC's integration to Apache Hive.
 
 Thank you for your work on ORC, Panagiotis!
