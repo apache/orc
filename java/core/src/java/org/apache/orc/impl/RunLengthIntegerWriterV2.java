@@ -134,7 +134,7 @@ public class RunLengthIntegerWriterV2 implements IntegerWriter {
   private final boolean signed;
   private EncodingType encoding;
   private int numLiterals;
-  private final long[] zigzagLiterals = new long[MAX_SCOPE];
+  private final long[] zigzagLiterals;
   private final long[] baseRedLiterals = new long[MAX_SCOPE];
   private final long[] adjDeltas = new long[MAX_SCOPE];
   private long fixedDelta;
@@ -160,6 +160,7 @@ public class RunLengthIntegerWriterV2 implements IntegerWriter {
       boolean alignedBitpacking) {
     this.output = output;
     this.signed = signed;
+    this.zigzagLiterals = signed ? new long[MAX_SCOPE] : null;
     this.alignedBitpacking = alignedBitpacking;
     this.utils = new SerializationUtils();
     clear();
@@ -367,7 +368,8 @@ public class RunLengthIntegerWriterV2 implements IntegerWriter {
     output.write(headerSecondByte);
 
     // bit packing the zigzag encoded literals
-    utils.writeInts(zigzagLiterals, 0, numLiterals, fb, output);
+    long[] currentZigzagLiterals = signed ? zigzagLiterals : literals;
+    utils.writeInts(currentZigzagLiterals, 0, numLiterals, fb, output);
 
     // reset run length
     variableRunLength = 0;
@@ -412,9 +414,13 @@ public class RunLengthIntegerWriterV2 implements IntegerWriter {
 
     // we need to compute zigzag values for DIRECT encoding if we decide to
     // break early for delta overflows or for shorter runs
-    computeZigZagLiterals();
+    // only signed numbers need to compute zigzag values
+    if (signed) {
+      computeZigZagLiterals();
+    }
 
-    zzBits100p = utils.percentileBits(zigzagLiterals, 0, numLiterals, 1.0);
+    long[] currentZigzagLiterals = signed ? zigzagLiterals : literals;
+    zzBits100p = utils.percentileBits(currentZigzagLiterals, 0, numLiterals, 1.0);
 
     // not a big win for shorter runs to determine encoding
     if (numLiterals <= MIN_REPEAT) {
@@ -504,7 +510,7 @@ public class RunLengthIntegerWriterV2 implements IntegerWriter {
     // beyond a threshold then we need to patch the values. if the variation
     // is not significant then we can use direct encoding
 
-    zzBits90p = utils.percentileBits(zigzagLiterals, 0, numLiterals, 0.9);
+    zzBits90p = utils.percentileBits(currentZigzagLiterals, 0, numLiterals, 0.9);
     int diffBitsLH = zzBits100p - zzBits90p;
 
     // if the difference between 90th percentile and 100th percentile fixed
@@ -545,14 +551,9 @@ public class RunLengthIntegerWriterV2 implements IntegerWriter {
 
   private void computeZigZagLiterals() {
     // populate zigzag encoded literals
-    long zzEncVal = 0;
+    assert signed : "only signed numbers need to compute zigzag values";
     for (int i = 0; i < numLiterals; i++) {
-      if (signed) {
-        zzEncVal = utils.zigzagEncode(literals[i]);
-      } else {
-        zzEncVal = literals[i];
-      }
-      zigzagLiterals[i] = zzEncVal;
+      zigzagLiterals[i] = utils.zigzagEncode(literals[i]);
     }
   }
 
