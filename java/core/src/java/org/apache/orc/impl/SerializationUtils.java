@@ -270,8 +270,11 @@ public final class SerializationUtils {
    * @return bits required to store value
    */
   public int findClosestNumBits(long value) {
-    final int numBits = 64 - Long.numberOfLeadingZeros(value);
-    return getClosestFixedBits(numBits);
+    return getClosestFixedBits(findNumBits(value));
+  }
+
+  private int findNumBits(long value) {
+    return 64 - Long.numberOfLeadingZeros(value);
   }
 
   /**
@@ -307,7 +310,7 @@ public final class SerializationUtils {
 
     // compute the histogram
     for(int i = offset; i < (offset + length); i++) {
-      int idx = encodeBitWidth(findClosestNumBits(data[i]));
+      int idx = encodeBitWidth(findNumBits(data[i]));
       this.histBuffer[idx] += 1;
     }
 
