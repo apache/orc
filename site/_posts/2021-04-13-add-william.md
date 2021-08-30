@@ -6,7 +6,7 @@ author: dongjoon
 categories: [team]
 ---
 
-The ORC PMC is happy to add William Hyun as an ORC committer for his
+The ORC PMC is happy to add William Hyun as an ORC committer for the
 work on improving ORC's code quality and integration to Apache Spark and Apache Iceberg.
 
 Thank you for your work on ORC, William!
