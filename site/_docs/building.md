@@ -9,7 +9,7 @@ dockerUrl: https://github.com/apache/orc/blob/main/docker
 
 The C++ library is supported on the following operating systems:
 
-* CentOS 6 or 7
+* CentOS 7 or 8
 * Debian 8 or 9
 * MacOS 10.10 to 10.13
 * Ubuntu 18.04 or 20.04
