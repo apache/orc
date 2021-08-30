@@ -273,12 +273,7 @@ public final class SerializationUtils {
     return getClosestFixedBits(findNumBits(value));
   }
 
-  /**
-   * Count the number of bits left after subtracting leading zeros
-   * @param value
-   * @return bits left after subtracting leading zeros
-   */
-  public int findNumBits(long value) {
+  private int findNumBits(long value) {
     return 64 - Long.numberOfLeadingZeros(value);
   }
 
