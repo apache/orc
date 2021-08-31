@@ -31,34 +31,34 @@ The command line looks like:
 The convert command reads several JSON files and converts them into a
 single ORC file.
 
--e,--escape `<escape>`
+`-e,--escape <escape>`
   : Sets CSV escape character
 
--h,--help
+`-h,--help`
   : Print help
 
--H,--header `<header>`
+`-H,--header <header>`
   : Sets CSV header lines
 
--n,--null `<null>`
+`-n,--null <null>`
   : Sets CSV null string
 
--o,--output `<filename>`
+`-o,--output <filename>`
   : Sets the output ORC filename, which defaults to output.orc
 
--O,--overwrite
+`-O,--overwrite`
   : If the file already exists, it will be overwritten
 
--q,--quote `<quote>`
+`-q,--quote <quote>`
   : Sets CSV quote character
 
--s,--schema `<schema>`
+`-s,--schema <schema>`
   : Sets the schema for the ORC file. By default, the schema is automatically discovered.
 
--S,--separator `<separator>`
+`-S,--separator <separator>`
   : Sets CSV separator character
 
--t,--timestampformat `<timestampformat>`
+`-t,--timestampformat <timestampformat>`
   : Sets timestamp Format
   
 The automatic JSON schema discovery is equivalent to the json-schema tool
@@ -66,7 +66,7 @@ below.
 
 ## Java Count
 
-The count command recursively find *.orc and print the number of rows. The parameter value can be a space separated file paths string.
+The count command recursively find *.orc and print the number of rows. 
 
 ## Java Data
 
@@ -74,10 +74,10 @@ The data command prints the data in an ORC file as a JSON document. Each
 record is printed as a JSON object on a line. Each record is annotated with
 the fieldnames and a JSON representation that depends on the field's type.
 
--h,--help
+`-h,--help`
    : Print help
 
--n,--lines `<LINES>`
+`-n,--lines <LINES>`
    : Sets lines of data to be printed 
 
 ## Java JSON Schema
@@ -87,26 +87,26 @@ produces a schema that encompasses all of the records in all of the
 documents. It works by computing the enclosing type and promoting it
 to include all of the observed values.
 
--f,--flat
+`-f,--flat`
   : Print the schema as a list of flat types for each subfield
 
--h,--help
+`-h,--help`
   : Print help
 
--p,--pretty
+`-p,--pretty`
   : Pretty print the schema
 
--t,--table
+`-t,--table`
   : Print the schema as a Hive table declaration  
 
 ## Java Key
 
 The key command prints the information about the encryption keys.
 
--h,--help
+`-h,--help`
   : Print help
 
--o,--output `<output>`
+`-o,--output <output>`
   : Output filename
 
 ## Java Meta
@@ -114,31 +114,31 @@ The key command prints the information about the encryption keys.
 The meta command prints the metadata about the given ORC file and is
 equivalent to the Hive ORC File Dump command.
 
---backup-path `<path>`
+`--backup-path <path>`
   : when used with --recover specifies the path where the recovered file is written (default: /tmp)
 
--d,--data
+`-d,--data`
   : Should the data be printed
 
--h,--help
+`-h,--help`
   : Print help
 
--j,--json
+`-j,--json`
   : Format the output in JSON
 
--p,--pretty
+`-p,--pretty`
   : Pretty print the output
 
--r,--rowindex `<ids>`
+`-r,--rowindex <ids>`
   : Print the row indexes for the comma separated list of column ids
 
---recover
+`--recover`
   : Skip over corrupted values in the ORC file
 
---skip-dump
+`--skip-dump`
   : Skip dumping the metadata
 
--t,--timezone
+`-t,--timezone`
   : Print the timezone of the writer
 
 
@@ -300,15 +300,15 @@ The scan command reads the contents of the file without printing anything. It
 is primarily intendend for benchmarking the Java reader without including the
 cost of printing the data out.
 
--h,--help
+`-h,--help`
   : Print help
 
--s,--schema
+`-s,--schema`
   : Print schema
 
--v,--verbose
+`-v,--verbose`
   : Print exceptions
 
 ## Java Version
 
-The version command print the version of this ORC tool.
+The version command prints the version of this ORC tool.
