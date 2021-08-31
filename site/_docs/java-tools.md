@@ -138,7 +138,7 @@ equivalent to the Hive ORC File Dump command.
 --skip-dump
   : Skip dumping the metadata
 
--t
+-t,--timezone
   : Print the timezone of the writer
 
 
