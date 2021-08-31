@@ -829,11 +829,14 @@ supports both the local file system and HDFS.</p>
 <p>The subcommands for the tools are:</p>
 
 <ul>
-  <li>meta - print the metadata of an ORC file</li>
-  <li>data - print the data of an ORC file</li>
-  <li>scan (since ORC 1.3) - scan the data for benchmarking</li>
   <li>convert (since ORC 1.4) - convert JSON files to ORC</li>
+  <li>count (since ORC 1.6) - recursively find *.orc and print the number of rows</li>
+  <li>data - print the data of an ORC file</li>
   <li>json-schema (since ORC 1.4) - determine the schema of JSON documents</li>
+  <li>key (since ORC 1.5) - print information about the encryption keys</li>
+  <li>meta - print the metadata of an ORC file</li>
+  <li>scan (since ORC 1.3) - scan the data for benchmarking</li>
+  <li>version (since ORC 1.6) - print the version of this ORC tool</li>
 </ul>
 
 <p>The command line looks like:</p>
@@ -841,26 +844,107 @@ supports both the local file system and HDFS.</p>
 <div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% java <span class="nt">-jar</span> orc-tools-X.Y.Z-uber.jar &lt;sub-command&gt; &lt;args&gt;
 </code></pre></div></div>
 
+<h2 id="java-convert">Java Convert</h2>
+
+<p>The convert command reads several JSON files and converts them into a
+single ORC file.</p>
+
+<dl>
+  <dt><code class="highlighter-rouge">-e,--escape &lt;escape&gt;</code></dt>
+  <dd>Sets CSV escape character</dd>
+  <dt><code class="highlighter-rouge">-h,--help</code></dt>
+  <dd>Print help</dd>
+  <dt><code class="highlighter-rouge">-H,--header &lt;header&gt;</code></dt>
+  <dd>Sets CSV header lines</dd>
+  <dt><code class="highlighter-rouge">-n,--null &lt;null&gt;</code></dt>
+  <dd>Sets CSV null string</dd>
+  <dt><code class="highlighter-rouge">-o,--output &lt;filename&gt;</code></dt>
+  <dd>Sets the output ORC filename, which defaults to output.orc</dd>
+  <dt><code class="highlighter-rouge">-O,--overwrite</code></dt>
+  <dd>If the file already exists, it will be overwritten</dd>
+  <dt><code class="highlighter-rouge">-q,--quote &lt;quote&gt;</code></dt>
+  <dd>Sets CSV quote character</dd>
+  <dt><code class="highlighter-rouge">-s,--schema &lt;schema&gt;</code></dt>
+  <dd>Sets the schema for the ORC file. By default, the schema is automatically discovered.</dd>
+  <dt><code class="highlighter-rouge">-S,--separator &lt;separator&gt;</code></dt>
+  <dd>Sets CSV separator character</dd>
+  <dt><code class="highlighter-rouge">-t,--timestampformat &lt;timestampformat&gt;</code></dt>
+  <dd>Sets timestamp Format</dd>
+</dl>
+
+<p>The automatic JSON schema discovery is equivalent to the json-schema tool
+below.</p>
+
+<h2 id="java-count">Java Count</h2>
+
+<p>The count command recursively find *.orc and print the number of rows.</p>
+
+<h2 id="java-data">Java Data</h2>
+
+<p>The data command prints the data in an ORC file as a JSON document. Each
+record is printed as a JSON object on a line. Each record is annotated with
+the fieldnames and a JSON representation that depends on the field’s type.</p>
+
+<dl>
+  <dt><code class="highlighter-rouge">-h,--help</code></dt>
+  <dd>Print help</dd>
+  <dt><code class="highlighter-rouge">-n,--lines &lt;LINES&gt;</code></dt>
+  <dd>Sets lines of data to be printed</dd>
+</dl>
+
+<h2 id="java-json-schema">Java JSON Schema</h2>
+
+<p>The JSON Schema discovery tool processes a set of JSON documents and
+produces a schema that encompasses all of the records in all of the
+documents. It works by computing the enclosing type and promoting it
+to include all of the observed values.</p>
+
+<dl>
+  <dt><code class="highlighter-rouge">-f,--flat</code></dt>
+  <dd>Print the schema as a list of flat types for each subfield</dd>
+  <dt><code class="highlighter-rouge">-h,--help</code></dt>
+  <dd>Print help</dd>
+  <dt><code class="highlighter-rouge">-p,--pretty</code></dt>
+  <dd>Pretty print the schema</dd>
+  <dt><code class="highlighter-rouge">-t,--table</code></dt>
+  <dd>Print the schema as a Hive table declaration</dd>
+</dl>
+
+<h2 id="java-key">Java Key</h2>
+
+<p>The key command prints the information about the encryption keys.</p>
+
+<dl>
+  <dt><code class="highlighter-rouge">-h,--help</code></dt>
+  <dd>Print help</dd>
+  <dt><code class="highlighter-rouge">-o,--output &lt;output&gt;</code></dt>
+  <dd>Output filename</dd>
+</dl>
+
 <h2 id="java-meta">Java Meta</h2>
 
 <p>The meta command prints the metadata about the given ORC file and is
 equivalent to the Hive ORC File Dump command.</p>
 
 <dl>
-  <dt>-j</dt>
-  <dd>format the output in JSON</dd>
-  <dt>-p</dt>
-  <dd>pretty print the output</dd>
-  <dt>-t</dt>
-  <dd>print the timezone of the writer</dd>
-  <dt>–rowindex</dt>
-  <dd>print the row indexes for the comma separated list of column ids</dd>
-  <dt>–recover</dt>
-  <dd>skip over corrupted values in the ORC file</dd>
-  <dt>–skip-dump</dt>
-  <dd>skip dumping the metadata</dd>
-  <dt>–backup-path</dt>
-  <dd>when used with –recover specifies the path where the recovered file is written</dd>
+  <dt><code class="highlighter-rouge">--backup-path &lt;path&gt;</code></dt>
+  <dd>when used with –recover specifies the path where the recovered file is written (default: /tmp)</dd>
+  <dt><code class="highlighter-rouge">-d,--data</code></dt>
+  <dd>Should the data be printed</dd>
+  <dt><code class="highlighter-rouge">-h,--help</code></dt>
+  <dd>Print help</dd>
+  <dt><code class="highlighter-rouge">-j,--json</code></dt>
+  <dd>Format the output in JSON</dd>
+  <dt><code class="highlighter-rouge">-p,--pretty</code></dt>
+  <dd>Pretty print the output</dd>
+  <dt><code class="highlighter-rouge">-r,--rowindex &lt;ids&gt;</code></dt>
+  <dd>Print the row indexes for the comma separated list of column ids</dd>
+  <dt><code class="highlighter-rouge">--recover</code></dt>
+  <dd>Skip over corrupted values in the ORC file</dd>
+  <dt><code class="highlighter-rouge">--skip-dump</code></dt>
+  <dd>Skip dumping the metadata</dd>
+  <dt><code class="highlighter-rouge">-t,--timezone</code></dt>
+  <dd>Print the timezone of the writer</dd>
 </dl>
 
 <p>An example of the output is given below:</p>
@@ -1014,50 +1098,24 @@ Padding ratio: 0%
 ______________________________________________________________________
 </code></pre></div></div>
 
-<h2 id="java-data">Java Data</h2>
-
-<p>The data command prints the data in an ORC file as a JSON document. Each
-record is printed as a JSON object on a line. Each record is annotated with
-the fieldnames and a JSON representation that depends on the field’s type.</p>
-
 <h2 id="java-scan">Java Scan</h2>
 
 <p>The scan command reads the contents of the file without printing anything. It
 is primarily intendend for benchmarking the Java reader without including the
 cost of printing the data out.</p>
 
-<h2 id="java-convert">Java Convert</h2>
-
-<p>The convert command reads several JSON files and converts them into a
-single ORC file.</p>
-
 <dl>
-  <dt>-o <filename></filename></dt>
-  <dd>Sets the output ORC filename, which defaults to output.orc</dd>
-  <dt>-s <schema></schema></dt>
-  <dd>Sets the schema for the ORC file. By default, the schema is automatically discovered.</dd>
-  <dt>-h</dt>
+  <dt><code class="highlighter-rouge">-h,--help</code></dt>
   <dd>Print help</dd>
+  <dt><code class="highlighter-rouge">-s,--schema</code></dt>
+  <dd>Print schema</dd>
+  <dt><code class="highlighter-rouge">-v,--verbose</code></dt>
+  <dd>Print exceptions</dd>
 </dl>
 
-<p>The automatic JSON schema discovery is equivalent to the json-schema tool
-below.</p>
+<h2 id="java-version">Java Version</h2>
 
-<h2 id="java-json-schema">Java JSON Schema</h2>
-
-<p>The JSON Schema discovery tool processes a set of JSON documents and
-produces a schema that encompasses all of the records in all of the
-documents. It works by computing the enclosing type and promoting it
-to include all of the observed values.</p>
-
-<dl>
-  <dt>-f</dt>
-  <dd>Print the schema as a list of flat types for each subfield</dd>
-  <dt>-t</dt>
-  <dd>Print the schema as a Hive table declaration</dd>
-  <dt>-h</dt>
-  <dd>Print help</dd>
-</dl>
+<p>The version command prints the version of this ORC tool.</p>
 
           
 
