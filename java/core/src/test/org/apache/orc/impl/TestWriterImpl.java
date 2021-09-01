@@ -118,4 +118,12 @@ public class TestWriterImpl {
     Reader r = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf));
     assertEquals(r.getStripes(), w.getStripes());
   }
+
+  @Test
+  public void testCloseIsIdempotent() throws IOException {
+    conf.set(OrcConf.OVERWRITE_OUTPUT_FILE.getAttribute(), "true");
+    Writer w = OrcFile.createWriter(testFilePath, OrcFile.writerOptions(conf).setSchema(schema));
+    w.close();
+    w.close();
+  }
 }
