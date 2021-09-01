@@ -570,6 +570,29 @@ public class TestRowFilteringIOSkip {
     assertEquals(1, rowCount);
   }
 
+  @Test
+  public void readCaseInsensitive() throws IOException {
+    // Use the ridx column input in UpperCase and flag case-sensitivity off
+    Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(conf).filesystem(fs));
+    SearchArgument sarg = SearchArgumentFactory.newBuilder()
+      .in("RIDX", PredicateLeaf.Type.LONG, 1L)
+      .build();
+    Reader.Options options = r.options()
+      .searchArgument(sarg, new String[] {"RIDX"})
+      .useSelected(true)
+      .allowSARGToFilter(true)
+      .isSchemaEvolutionCaseAware(false);
+    VectorizedRowBatch b = schema.createRowBatch();
+    long rowCount = 0;
+    try (RecordReader rr = r.rows(options)) {
+      assertTrue(rr.nextBatch(b));
+      validateBatch(b, 1L);
+      rowCount += b.size;
+      assertFalse(rr.nextBatch(b));
+    }
+    assertEquals(1, rowCount);
+  }
+
   private void seekToRow(RecordReader rr, VectorizedRowBatch b, long row) throws IOException {
     rr.seekToRow(row);
     assertTrue(rr.nextBatch(b));
