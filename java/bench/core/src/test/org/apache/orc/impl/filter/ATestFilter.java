@@ -39,7 +39,7 @@ public class ATestFilter {
     .addField("f2", TypeDescription.createString())
     .addField("f3p", TypeDescription.createDate())
     .addField("f3h", TypeDescription.createDate());
-  protected final OrcFilterContextImpl fc = new OrcFilterContextImpl(schema);
+  protected final OrcFilterContextImpl fc = new OrcFilterContextImpl(schema, false);
 
   protected final VectorizedRowBatch batch = schema.createRowBatch();
 

@@ -49,7 +49,7 @@ public class TestOrcFilterContextImpl {
   @Test
   public void testSuccessfulRetrieval() {
     VectorizedRowBatch b = createBatch();
-    OrcFilterContextImpl fc = new OrcFilterContextImpl(schema);
+    OrcFilterContextImpl fc = new OrcFilterContextImpl(schema, false);
     fc.setBatch(b);
 
     validateF1Vector(fc.findColumnVector("f1"), 1);
@@ -64,7 +64,7 @@ public class TestOrcFilterContextImpl {
     VectorizedRowBatch b1 = createBatch();
     VectorizedRowBatch b2 = createBatch();
     ((LongColumnVector) b2.cols[0]).vector[0] = 100;
-    OrcFilterContextImpl fc = new OrcFilterContextImpl(schema);
+    OrcFilterContextImpl fc = new OrcFilterContextImpl(schema, false);
     fc.setBatch(b1);
     validateF1Vector(fc.findColumnVector("f1"), 1);
     // Change the batch
@@ -75,7 +75,7 @@ public class TestOrcFilterContextImpl {
   @Test
   public void testMissingFieldTopLevel() {
     VectorizedRowBatch b = createBatch();
-    OrcFilterContextImpl fc = new OrcFilterContextImpl(schema);
+    OrcFilterContextImpl fc = new OrcFilterContextImpl(schema, false);
     fc.setBatch(b);
 
     // Missing field at top level
@@ -87,7 +87,7 @@ public class TestOrcFilterContextImpl {
   @Test
   public void testMissingFieldNestedLevel() {
     VectorizedRowBatch b = createBatch();
-    OrcFilterContextImpl fc = new OrcFilterContextImpl(schema);
+    OrcFilterContextImpl fc = new OrcFilterContextImpl(schema, false);
     fc.setBatch(b);
 
     // Missing field at top level
@@ -99,7 +99,7 @@ public class TestOrcFilterContextImpl {
 
   @Test
   public void testPropagations() {
-    OrcFilterContextImpl fc = new OrcFilterContextImpl(schema);
+    OrcFilterContextImpl fc = new OrcFilterContextImpl(schema, false);
     assertNull(fc.getBatch());
     fc.setBatch(schema.createRowBatch());
     assertNotNull(fc.getBatch());

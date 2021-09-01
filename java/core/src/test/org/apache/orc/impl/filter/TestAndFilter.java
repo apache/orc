@@ -70,6 +70,7 @@ public class TestAndFilter extends ATestFilter {
                                                     colIds,
                                                     sarg.getLeaves(),
                                                     schema,
+                                                    false,
                                                     OrcFile.Version.CURRENT);
     assertNotNull(f);
     assertTrue(f instanceof AndFilter);

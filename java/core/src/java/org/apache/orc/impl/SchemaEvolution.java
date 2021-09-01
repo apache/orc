@@ -157,6 +157,10 @@ public class SchemaEvolution {
     return false;
   }
 
+  public boolean isSchemaEvolutionCaseAware() {
+    return isSchemaEvolutionCaseAware;
+  }
+
   public TypeDescription getReaderSchema() {
     return readerSchema;
   }

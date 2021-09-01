@@ -46,6 +46,7 @@ public class TestOrFilter extends ATestFilter {
                                                     colIds,
                                                     sarg.getLeaves(),
                                                     schema,
+                                                    false,
                                                     OrcFile.Version.CURRENT);
     assertNotNull(f);
     assertTrue(f instanceof OrFilter);

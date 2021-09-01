@@ -48,7 +48,7 @@ public class TestFilter {
   protected final Random rnd = new Random(seed);
   protected final VectorizedRowBatch b = FilterBenchUtil.createBatch(rnd);
   protected final OrcFilterContextImpl fc = (OrcFilterContextImpl)
-    new OrcFilterContextImpl(FilterBenchUtil.schema).setBatch(b);
+    new OrcFilterContextImpl(FilterBenchUtil.schema, false).setBatch(b);
 
   public static Stream<Arguments> filters() {
     return Stream.of(
@@ -108,6 +108,7 @@ public class TestFilter {
             .allowSARGToFilter(true);
           filter = FilterFactory.createBatchFilter(options,
                                                    FilterBenchUtil.schema,
+                                                   false,
                                                    OrcFile.Version.CURRENT,
                                                    normalize);
           break;
