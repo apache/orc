@@ -39,7 +39,7 @@ import java.util.Map;
  */
 public class FakeKeyProvider extends KeyProvider {
   // map from key name to metadata
-  private final Map<String, TestMetadata> keyMetdata = new HashMap<>();
+  private final Map<String, TestMetadata> keyMetadata = new HashMap<>();
   // map from key version name to material
   private final Map<String, KeyVersion> keyVersions = new HashMap<>();
 
@@ -54,7 +54,7 @@ public class FakeKeyProvider extends KeyProvider {
 
   @Override
   public List<String> getKeys() {
-    return new ArrayList<>(keyMetdata.keySet());
+    return new ArrayList<>(keyMetadata.keySet());
   }
 
   @Override
@@ -73,13 +73,13 @@ public class FakeKeyProvider extends KeyProvider {
 
   @Override
   public Metadata getMetadata(String name)  {
-    return keyMetdata.get(name);
+    return keyMetadata.get(name);
   }
 
   @Override
   public KeyVersion createKey(String name, byte[] bytes, Options options) {
     String versionName = buildVersionName(name, 0);
-    keyMetdata.put(name, new TestMetadata(options.getCipher(),
+    keyMetadata.put(name, new TestMetadata(options.getCipher(),
         options.getBitLength(), 1));
     KeyVersion result = new KMSClientProvider.KMSKeyVersion(name, versionName, bytes);
     keyVersions.put(versionName, result);
@@ -93,7 +93,7 @@ public class FakeKeyProvider extends KeyProvider {
 
   @Override
   public KeyVersion rollNewVersion(String name, byte[] bytes) {
-    TestMetadata key = keyMetdata.get(name);
+    TestMetadata key = keyMetadata.get(name);
     String versionName = buildVersionName(name, key.addVersion());
     KeyVersion result = new KMSClientProvider.KMSKeyVersion(name, versionName,
         bytes);

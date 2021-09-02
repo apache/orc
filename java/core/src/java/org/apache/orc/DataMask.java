@@ -58,7 +58,7 @@ public interface DataMask {
 
     /**
      * Build a DataMaskDescription given the name and a set of parameters.
-     * @param params the paramters
+     * @param params the parameters
      * @return a MaskDescription with the given parameters
      */
     public DataMaskDescription getDescription(String... params) {

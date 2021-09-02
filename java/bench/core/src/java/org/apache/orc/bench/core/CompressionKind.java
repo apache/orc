@@ -36,8 +36,8 @@ public enum CompressionKind {
   SNAPPY("snappy"),
   ZSTD("zstd");
 
-  CompressionKind(String extendsion) {
-    this.extension = extendsion;
+  CompressionKind(String extension) {
+    this.extension = extension;
   }
 
   private final String extension;

@@ -340,7 +340,7 @@ public class TestOrcOutputFormat {
       Path path = getTaskOutputPath(conf, name);
       Writer writer = OrcFile.createWriter(path,
           buildOptions(conf).fileSystem(fileSystem));
-      //Ensure that orc.row.batch.size confing is set in the JobConf
+      //Ensure that orc.row.batch.size config is set in the JobConf
       int rowBatchSize = Integer.parseInt(conf.get(ROW_BATCH_SIZE));
       return new OrcMapredRecordWriter<>(writer, rowBatchSize);
     }
