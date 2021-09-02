@@ -93,7 +93,7 @@ public class RedactMaskFactory extends MaskFactory {
   // The replacement codepoint for each character category. We use codepoints
   // here so that we don't have to worry about handling long UTF characters
   // as special cases.
-  private final int UPPPER_REPLACEMENT;
+  private final int UPPER_REPLACEMENT;
   private final int LOWER_REPLACEMENT;
   private final int OTHER_LETTER_REPLACEMENT;
   private final int MARK_REPLACEMENT;
@@ -123,7 +123,7 @@ public class RedactMaskFactory extends MaskFactory {
   public RedactMaskFactory(String... params) {
     ByteBuffer param = params.length < 1 ? ByteBuffer.allocate(0) :
         ByteBuffer.wrap(params[0].getBytes(StandardCharsets.UTF_8));
-    UPPPER_REPLACEMENT = getNextCodepoint(param, DEFAULT_LETTER_UPPER);
+    UPPER_REPLACEMENT = getNextCodepoint(param, DEFAULT_LETTER_UPPER);
     LOWER_REPLACEMENT = getNextCodepoint(param, DEFAULT_LETTER_LOWER);
     DIGIT_CP_REPLACEMENT = getNextCodepoint(param, DEFAULT_NUMBER_DIGIT_CP);
     DIGIT_REPLACEMENT = getReplacementDigit(DIGIT_CP_REPLACEMENT);
@@ -733,7 +733,7 @@ public class RedactMaskFactory extends MaskFactory {
   int getReplacement(int codepoint) {
     switch (Character.getType(codepoint)) {
       case Character.UPPERCASE_LETTER:
-        return UPPPER_REPLACEMENT;
+        return UPPER_REPLACEMENT;
       case Character.LOWERCASE_LETTER:
         return LOWER_REPLACEMENT;
       case Character.TITLECASE_LETTER:

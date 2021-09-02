@@ -235,7 +235,7 @@ public class OrcFile {
         return FUTURE;
       }
       if (writer != WriterImplementation.ORC_JAVA && val < 6) {
-        throw new IllegalArgumentException("ORC File with illegval version " +
+        throw new IllegalArgumentException("ORC File with illegal version " +
             val + " for writer " + writer);
       }
       WriterVersion[] versions = values[writer.id];
@@ -277,7 +277,7 @@ public class OrcFile {
     private FileSystem filesystem;
     private long maxLength = Long.MAX_VALUE;
     private OrcTail orcTail;
-    // TODO: We can generalize FileMetada interface. Make OrcTail implement FileMetadata interface
+    // TODO: We can generalize FileMetadata interface. Make OrcTail implement FileMetadata interface
     // and remove this class altogether. Both footer caching and llap caching just needs OrcTail.
     // For now keeping this around to avoid complex surgery
     private FileMetadata fileMetadata;

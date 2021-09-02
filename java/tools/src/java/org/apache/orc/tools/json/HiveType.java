@@ -75,7 +75,7 @@ abstract class HiveType {
   public abstract boolean subsumes(HiveType other);
 
   /**
-   * Merge the other type into this one. It assumes that subsubes(other) is
+   * Merge the other type into this one. It assumes that subsumes(other) is
    * true.
    * @param other
    */

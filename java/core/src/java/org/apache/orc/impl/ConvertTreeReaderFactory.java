@@ -292,7 +292,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
      */
     // Override this to use convertVector.
     public void setConvertVectorElement(int elementNum) throws IOException {
-      throw new RuntimeException("Expected this method to be overriden");
+      throw new RuntimeException("Expected this method to be overridden");
     }
 
     // Common code used by the conversion.
@@ -2385,7 +2385,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
    *   TimestampFromAnyIntegerTreeReader (written)
    *   TimestampFromFloatTreeReader (written)
    *   TimestampFromDoubleTreeReader (written)
-   *   TimestampFromDecimalTreeeReader (written)
+   *   TimestampFromDecimalTreeReader (written)
    *   TimestampFromStringGroupTreeReader (written)
    *   TimestampFromDateTreeReader
    *
