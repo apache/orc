@@ -140,6 +140,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
   // information
   private boolean needKeyFlush;
   private final boolean useProlepticGregorian;
+  private boolean isClose = false;
 
   public WriterImpl(FileSystem fs,
                     Path path,
@@ -725,15 +726,21 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
 
   @Override
   public void close() throws IOException {
-    if (callback != null) {
-      callback.preFooterWrite(callbackContext);
+    if (!isClose) {
+      try {
+        if (callback != null) {
+          callback.preFooterWrite(callbackContext);
+        }
+        // remove us from the memory manager so that we don't get any callbacks
+        memoryManager.removeWriter(path);
+        // actually close the file
+        flushStripe();
+        lastFlushOffset = writeFooter();
+        physicalWriter.close();
+      } finally {
+        isClose = true;
+      }
     }
-    // remove us from the memory manager so that we don't get any callbacks
-    memoryManager.removeWriter(path);
-    // actually close the file
-    flushStripe();
-    lastFlushOffset = writeFooter();
-    physicalWriter.close();
   }
 
   /**
