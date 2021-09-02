@@ -53,7 +53,7 @@ public interface TreeWriter {
   void prepareStripe(int stripeId);
 
   /**
-   * Write a VectorizedRowBath to the file. This is called by the WriterImplV2
+   * Write a VectorizedRowBatch to the file. This is called by the WriterImplV2
    * at the top level.
    * @param batch the list of all of the columns
    * @param offset the first row from the batch to write

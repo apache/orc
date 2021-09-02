@@ -414,7 +414,7 @@ public interface Reader extends Closeable {
 
 
     /**
-     * Set boolean flag to determine if the comparision of field names in schema
+     * Set boolean flag to determine if the comparison of field names in schema
      * evolution is case sensitive
      * @param value the flag for schema evolution is case sensitive or not.
      * @return this
