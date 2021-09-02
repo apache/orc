@@ -310,7 +310,7 @@ public class RecordReaderUtils {
   }
 
   /**
-   * Zero-copy tead the data from the file based on a list of ranges in a
+   * Zero-copy read the data from the file based on a list of ranges in a
    * single read.
    *
    * As a side note, the HDFS zero copy API really sucks from a user's point of

@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Types that are not skipped at row-level include: Long, Short, Int, Date, Binary
  * As it turns out it is more expensive to skip non-selected rows rather that just decode all and propagate the
- * selected array. Skipping for these type breaks instruction pipelining and introduces more branch misspredictions.
+ * selected array. Skipping for these type breaks instruction pipelining and introduces more branch mispredictions.
  */
 public class TestRowFilteringNoSkip {
 

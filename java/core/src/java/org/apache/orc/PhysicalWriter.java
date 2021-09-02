@@ -120,7 +120,7 @@ public interface PhysicalWriter {
   void close() throws IOException;
 
   /**
-   * Flushes the writer so that readers can see the preceeding postscripts.
+   * Flushes the writer so that readers can see the preceding postscripts.
    */
   void flush() throws IOException;
 
@@ -135,7 +135,7 @@ public interface PhysicalWriter {
                        ) throws IOException;
 
   /**
-   * Get the number of bytes for a file in a givem column.
+   * Get the number of bytes for a file in a given column.
    * @param column column from which to get file size
    * @param variant the encryption variant to check
    * @return number of bytes for the given column

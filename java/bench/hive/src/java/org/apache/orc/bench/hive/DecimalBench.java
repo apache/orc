@@ -80,7 +80,7 @@ public class DecimalBench implements OrcBenchmark {
     /**
      * Load the data from the values array into the ColumnVector.
      * @param vector the output
-     * @param values the intput
+     * @param values the input
      * @param offset the first input value
      * @param length the number of values to copy
      */

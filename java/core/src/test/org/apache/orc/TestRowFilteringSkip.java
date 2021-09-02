@@ -1539,7 +1539,7 @@ public class TestRowFilteringSkip {
   }
 
   @Test
-  public void testcustomFileTimestampRoundRobbinRowFilterCallback() throws Exception {
+  public void testCustomFileTimestampRoundRobbinRowFilterCallback() throws Exception {
     testFilePath = new Path(getClass().getClassLoader().
         getSystemResource("orc_split_elim.orc").getPath());
 
