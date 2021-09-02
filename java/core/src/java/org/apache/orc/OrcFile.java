@@ -164,11 +164,11 @@ public class OrcFile {
   public enum WriterVersion {
     // Java ORC Writer
     ORIGINAL(WriterImplementation.ORC_JAVA, 0),
-    HIVE_8732(WriterImplementation.ORC_JAVA, 1), // fixed stripe/file maximum
-                                                 // statistics & string statistics
-                                                 // use utf8 for min/max
-    HIVE_4243(WriterImplementation.ORC_JAVA, 2), // use real column names from
-                                                 // Hive tables
+    HIVE_8732(WriterImplementation.ORC_JAVA, 1), /**
+                                                  * fixed stripe/file maximum statistics &
+                                                  * string statistics to use utf8 for min/max
+                                                  */
+    HIVE_4243(WriterImplementation.ORC_JAVA, 2), // use real column names from Hive tables
     HIVE_12055(WriterImplementation.ORC_JAVA, 3), // vectorized writer
     HIVE_13083(WriterImplementation.ORC_JAVA, 4), // decimals write present stream correctly
     ORC_101(WriterImplementation.ORC_JAVA, 5),   // bloom filters use utf8
