@@ -61,7 +61,7 @@ public class TestOrcFilterContext {
                                            TypeDescription.createList(TypeDescription.createChar()))
                 )
     );
-  private final OrcFilterContext filterContext = new OrcFilterContextImpl(schema)
+  private final OrcFilterContext filterContext = new OrcFilterContextImpl(schema, false)
     .setBatch(schema.createRowBatch());
 
   @BeforeEach
@@ -72,6 +72,13 @@ public class TestOrcFilterContext {
   @Test
   public void testTopLevelElementaryType() {
     ColumnVector[] vectorBranch = filterContext.findColumnVector("f1");
+    assertEquals(1, vectorBranch.length);
+    assertTrue(vectorBranch[0] instanceof LongColumnVector);
+  }
+
+  @Test
+  public void testTopLevelElementaryTypeCaseInsensitive() {
+    ColumnVector[] vectorBranch = filterContext.findColumnVector("F1");
     assertEquals(1, vectorBranch.length);
     assertTrue(vectorBranch[0] instanceof LongColumnVector);
   }
@@ -174,7 +181,7 @@ public class TestOrcFilterContext {
         .addField("a", TypeDescription.createChar())
         .addField("b", TypeDescription
           .createBoolean()));
-    OrcFilterContext fc = new OrcFilterContextImpl(topListSchema)
+    OrcFilterContext fc = new OrcFilterContextImpl(topListSchema, false)
       .setBatch(topListSchema.createRowBatch());
     ColumnVector[] vectorBranch = fc.findColumnVector("_elem");
     assertEquals(2, vectorBranch.length);

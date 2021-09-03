@@ -41,7 +41,9 @@ public class StructBatchReader extends BatchReader {
   public StructBatchReader(TypeReader rowReader, TreeReaderFactory.Context context) {
     super(rowReader);
     this.context = context;
-    this.filterContext = new OrcFilterContextImpl(context.getSchemaEvolution().getReaderSchema());
+    this.filterContext = new OrcFilterContextImpl(context.getSchemaEvolution().getReaderSchema(),
+                                                  context.getSchemaEvolution()
+                                                    .isSchemaEvolutionCaseAware());
     structReader = (TreeReaderFactory.StructTreeReader) rowReader;
   }
 

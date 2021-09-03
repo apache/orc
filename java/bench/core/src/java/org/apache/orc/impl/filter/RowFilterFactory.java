@@ -90,6 +90,7 @@ public class RowFilterFactory {
     LeafFilter f = (LeafFilter) LeafFilterFactory.createLeafVectorFilter(leaf,
                                                                          colIds,
                                                                          readSchema,
+                                                                         false,
                                                                          version,
                                                                          negated);
     return new RowFilter.LeafFilter(f);

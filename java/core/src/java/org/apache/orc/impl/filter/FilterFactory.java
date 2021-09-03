@@ -41,14 +41,16 @@ public class FilterFactory {
    * Create a BatchFilter. This considers both the input filter and the SearchArgument filter. If
    * both are available then they are compounded by AND.
    *
-   * @param opts       for reading the file
-   * @param readSchema that should be used
-   * @param version    provides the ORC file version
-   * @param normalize  identifies if the SArg should be normalized or not
+   * @param opts              for reading the file
+   * @param readSchema        that should be used
+   * @param isSchemaCaseAware identifies if the schema is case-sensitive
+   * @param version           provides the ORC file version
+   * @param normalize         identifies if the SArg should be normalized or not
    * @return BatchFilter that represents the SearchArgument or null
    */
   public static BatchFilter createBatchFilter(Reader.Options opts,
                                               TypeDescription readSchema,
+                                              boolean isSchemaCaseAware,
                                               OrcFile.Version version,
                                               boolean normalize) {
     List<BatchFilter> filters = new ArrayList<>(2);
@@ -64,6 +66,7 @@ public class FilterFactory {
                                                                colNames,
                                                                sArg.getLeaves(),
                                                                readSchema,
+                                                               isSchemaCaseAware,
                                                                version),
                                               colNames.toArray(new String[0])));
       } catch (UnSupportedSArgException e) {
@@ -83,6 +86,7 @@ public class FilterFactory {
                                               Set<String> colIds,
                                               List<PredicateLeaf> leaves,
                                               TypeDescription readSchema,
+                                              boolean isSchemaCaseAware,
                                               OrcFile.Version version)
     throws UnSupportedSArgException {
     VectorFilter result;
@@ -94,6 +98,7 @@ public class FilterFactory {
                                           colIds,
                                           leaves,
                                           readSchema,
+                                          isSchemaCaseAware,
                                           version);
         }
         result = new OrFilter(orFilters);
@@ -105,6 +110,7 @@ public class FilterFactory {
                                            colIds,
                                            leaves,
                                            readSchema,
+                                           isSchemaCaseAware,
                                            version);
         }
         result = new AndFilter(andFilters);
@@ -114,17 +120,19 @@ public class FilterFactory {
         ExpressionTree leaf = expr.getChildren().get(0);
         assert leaf.getOperator() == ExpressionTree.Operator.LEAF;
         result = LeafFilterFactory.createLeafVectorFilter(leaves.get(leaf.getLeaf()),
-                                                             colIds,
-                                                             readSchema,
-                                                             version,
-            true);
+                                                          colIds,
+                                                          readSchema,
+                                                          isSchemaCaseAware,
+                                                          version,
+                                                          true);
         break;
       case LEAF:
         result = LeafFilterFactory.createLeafVectorFilter(leaves.get(expr.getLeaf()),
                                                           colIds,
                                                           readSchema,
+                                                          isSchemaCaseAware,
                                                           version,
-            false);
+                                                          false);
         break;
       default:
         throw new UnSupportedSArgException(String.format("SArg expression: %s is not supported",

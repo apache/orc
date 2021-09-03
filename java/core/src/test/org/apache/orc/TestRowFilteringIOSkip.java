@@ -45,6 +45,7 @@ import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestRowFilteringIOSkip {
@@ -568,6 +569,48 @@ public class TestRowFilteringIOSkip {
     }
 
     assertEquals(1, rowCount);
+  }
+
+  @Test
+  public void readWithCaseSensitivityOff() throws IOException {
+    // Use the ridx column input in UpperCase and flag case-sensitivity off
+    Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(conf).filesystem(fs));
+    SearchArgument sarg = SearchArgumentFactory.newBuilder()
+      .in("RIDX", PredicateLeaf.Type.LONG, 1L)
+      .build();
+    Reader.Options options = r.options()
+      .searchArgument(sarg, new String[] {"RIDX"})
+      .useSelected(true)
+      .allowSARGToFilter(true)
+      .isSchemaEvolutionCaseAware(false);
+    VectorizedRowBatch b = schema.createRowBatch();
+    long rowCount = 0;
+    try (RecordReader rr = r.rows(options)) {
+      assertTrue(rr.nextBatch(b));
+      validateBatch(b, 1L);
+      rowCount += b.size;
+      assertFalse(rr.nextBatch(b));
+    }
+    assertEquals(1, rowCount);
+  }
+
+  @Test
+  public void readFailureWithCaseSensitivityOn() throws IOException {
+    // Use the ridx column input in UpperCase and flag case-sensitivity off
+    Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(conf).filesystem(fs));
+    SearchArgument sarg = SearchArgumentFactory.newBuilder()
+      .in("RIDX", PredicateLeaf.Type.LONG, 1L)
+      .build();
+    Reader.Options options = r.options()
+      .searchArgument(sarg, new String[] {"RIDX"})
+      .useSelected(true)
+      .allowSARGToFilter(true)
+      .isSchemaEvolutionCaseAware(true);
+    assertThrows(IllegalArgumentException.class,
+                 () -> r.rows(options),
+                 "Field RIDX not found in struct<f1:bigint,f2:decimal(20,6),f3:bigint,"
+                 + "f4:string,ridx:bigint>");
+
   }
 
   private void seekToRow(RecordReader rr, VectorizedRowBatch b, long row) throws IOException {

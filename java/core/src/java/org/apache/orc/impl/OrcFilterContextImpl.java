@@ -39,9 +39,11 @@ public class OrcFilterContextImpl implements OrcFilterContext {
   // Cache of field to ColumnVector, this is reset everytime the batch reference changes
   private final Map<String, ColumnVector[]> vectors;
   private final TypeDescription readSchema;
+  private final boolean isSchemaCaseAware;
 
-  public OrcFilterContextImpl(TypeDescription readSchema) {
+  public OrcFilterContextImpl(TypeDescription readSchema, boolean isSchemaCaseAware) {
     this.readSchema = readSchema;
+    this.isSchemaCaseAware = isSchemaCaseAware;
     this.vectors = new HashMap<>();
   }
 
@@ -122,7 +124,7 @@ public class OrcFilterContextImpl implements OrcFilterContext {
       vectors.put(name,
                   ParserUtils.findColumnVectors(readSchema,
                                                 new ParserUtils.StringPosition(name),
-                                                true,
+                                                isSchemaCaseAware,
                                                 batch));
     }
     return vectors.get(name);
