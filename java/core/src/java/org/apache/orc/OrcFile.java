@@ -165,7 +165,7 @@ public class OrcFile {
     // Java ORC Writer
     ORIGINAL(WriterImplementation.ORC_JAVA, 0),
     HIVE_8732(WriterImplementation.ORC_JAVA, 1), /**
-                                                  * fixed stripe/file maximum statistics &
+                                                  * fixed stripe/file maximum statistics and
                                                   * string statistics to use utf8 for min/max
                                                   */
     HIVE_4243(WriterImplementation.ORC_JAVA, 2), // use real column names from Hive tables
