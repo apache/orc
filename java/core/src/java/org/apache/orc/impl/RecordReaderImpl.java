@@ -283,7 +283,7 @@ public class RecordReaderImpl implements RecordReader {
     Consumer<OrcFilterContext> filterCallBack = null;
     BatchFilter filter = FilterFactory.createBatchFilter(options,
                                                          evolution.getReaderBaseSchema(),
-                                                         evolution.isSchemaEvolutionCaseAware,
+                                                         evolution.isSchemaEvolutionCaseAware(),
                                                          fileReader.getFileVersion(),
                                                          false);
     if (filter != null) {
