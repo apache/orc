@@ -45,7 +45,7 @@ public class ATestFilter {
     .addField("f3", TypeDescription.createDecimal().withPrecision(38).withScale(2))
     .addField("f4", TypeDescription.createDouble())
     .addField("f5", TypeDescription.createTimestamp());
-  protected final OrcFilterContextImpl fc = new OrcFilterContextImpl(schema);
+  protected final OrcFilterContextImpl fc = new OrcFilterContextImpl(schema, false);
 
   protected final VectorizedRowBatch batch = schema.createRowBatch();
 

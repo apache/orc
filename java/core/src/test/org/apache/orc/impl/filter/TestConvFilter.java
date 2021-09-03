@@ -41,7 +41,7 @@ public class TestConvFilter {
     .addField("f2", TypeDescription.createDate())
     .addField("f3", TypeDescription.createDecimal().withPrecision(18).withScale(scale));
 
-  private final OrcFilterContextImpl fc = new OrcFilterContextImpl(schema);
+  private final OrcFilterContextImpl fc = new OrcFilterContextImpl(schema, false);
   private final VectorizedRowBatch batch = schema.createRowBatchV2();
 
   @BeforeEach

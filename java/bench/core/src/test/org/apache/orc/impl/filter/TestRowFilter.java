@@ -40,7 +40,7 @@ public class TestRowFilter extends ATestFilter {
   private final TypeDescription schema = TypeDescription.createStruct()
     .addField("f1", TypeDescription.createLong())
     .addField("f2", TypeDescription.createString());
-  final OrcFilterContextImpl fc = new OrcFilterContextImpl(schema);
+  final OrcFilterContextImpl fc = new OrcFilterContextImpl(schema, false);
 
   private final VectorizedRowBatch batch = schema.createRowBatch();
 

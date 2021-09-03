@@ -60,7 +60,7 @@ public class TestFilters extends ATestFilter {
                                               boolean normalize) {
     Reader.Options options = new Reader.Options().allowSARGToFilter(true);
     options.searchArgument(sArg, new String[0]);
-    return FilterFactory.createBatchFilter(options, readSchema, version, normalize);
+    return FilterFactory.createBatchFilter(options, readSchema, false, version, normalize);
   }
 
   @Test

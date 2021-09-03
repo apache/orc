@@ -168,6 +168,7 @@ public class FilterBench implements OrcBenchmark {
           .useSelected(true);
         return FilterFactory.createBatchFilter(options,
                                                FilterBenchUtil.schema,
+                                               false,
                                                OrcFile.Version.CURRENT,
                                                normalize);
       default:
@@ -198,7 +199,7 @@ public class FilterBench implements OrcBenchmark {
       Random rnd = new Random(1024);
       VectorizedRowBatch b = FilterBenchUtil.createBatch(rnd);
       Configuration conf = new Configuration();
-      fc = new OrcFilterContextImpl(FilterBenchUtil.schema).setBatch(b);
+      fc = new OrcFilterContextImpl(FilterBenchUtil.schema, false).setBatch(b);
       Map.Entry<SearchArgument, int[]> r = FilterBenchUtil.createSArg(rnd, b, fInSize);
       SearchArgument sArg = r.getKey();
       expSel = r.getValue();
@@ -247,7 +248,7 @@ public class FilterBench implements OrcBenchmark {
     public void setup() throws FilterFactory.UnSupportedSArgException {
       VectorizedRowBatch b = FilterBenchUtil.createBatch(new Random(1024));
 
-      fc = new OrcFilterContextImpl(FilterBenchUtil.schema).setBatch(b);
+      fc = new OrcFilterContextImpl(FilterBenchUtil.schema, false).setBatch(b);
       Map.Entry<SearchArgument, int[]> r = FilterBenchUtil.createComplexSArg(new Random(1024),
                                                                              b,
                                                                              inSize,

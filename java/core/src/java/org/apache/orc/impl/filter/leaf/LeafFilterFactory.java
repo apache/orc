@@ -223,11 +223,12 @@ public class LeafFilterFactory {
   public static VectorFilter createLeafVectorFilter(PredicateLeaf leaf,
                                                     Set<String> colIds,
                                                     TypeDescription readSchema,
+                                                    boolean isSchemaCaseAware,
                                                     OrcFile.Version version,
                                                     boolean negated)
       throws FilterFactory.UnSupportedSArgException {
     colIds.add(leaf.getColumnName());
-    TypeDescription colType = readSchema.findSubtype(leaf.getColumnName());
+    TypeDescription colType = readSchema.findSubtype(leaf.getColumnName(), isSchemaCaseAware);
 
     switch (leaf.getOperator()) {
       case IN:
