@@ -28,8 +28,8 @@ import java.nio.charset.StandardCharsets;
 public class StringTreeWriter extends StringBaseTreeWriter {
   StringTreeWriter(TypeDescription schema,
                    WriterEncryptionVariant encryption,
-                   WriterContext writer) throws IOException {
-    super(schema, encryption, writer);
+                   WriterContext writerContext) throws IOException {
+    super(schema, encryption, writerContext);
   }
 
   @Override

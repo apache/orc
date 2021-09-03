@@ -49,16 +49,16 @@ public class DecimalTreeWriter extends TreeWriterBase {
 
   public DecimalTreeWriter(TypeDescription schema,
                            WriterEncryptionVariant encryption,
-                           WriterContext writer) throws IOException {
-    super(schema, encryption, writer);
-    this.isDirectV2 = isNewWriteFormat(writer);
-    valueStream = writer.createStream(
+                           WriterContext writerContext) throws IOException {
+    super(schema, encryption, writerContext);
+    this.isDirectV2 = isNewWriteFormat(writerContext);
+    valueStream = writerContext.createStream(
         new StreamName(id, OrcProto.Stream.Kind.DATA, encryption));
     scratchLongs = new long[HiveDecimal.SCRATCH_LONGS_LEN];
     scratchBuffer = new byte[HiveDecimal.SCRATCH_BUFFER_LEN_TO_BYTES];
-    this.scaleStream = createIntegerWriter(writer.createStream(
+    this.scaleStream = createIntegerWriter(writerContext.createStream(
         new StreamName(id, OrcProto.Stream.Kind.SECONDARY, encryption)),
-        true, isDirectV2, writer);
+        true, isDirectV2, writerContext);
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
     }

@@ -399,4 +399,3 @@ public class OutStream extends PositionedOutputStream {
     receiver.suppress();
   }
 }
-

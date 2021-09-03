@@ -38,15 +38,15 @@ public class UnionTreeWriter extends TreeWriterBase {
 
   UnionTreeWriter(TypeDescription schema,
                   WriterEncryptionVariant encryption,
-                  WriterContext writer) throws IOException {
-    super(schema, encryption, writer);
+                  WriterContext writerContext) throws IOException {
+    super(schema, encryption, writerContext);
     List<TypeDescription> children = schema.getChildren();
     childrenWriters = new TreeWriterBase[children.size()];
     for (int i = 0; i < childrenWriters.length; ++i) {
-      childrenWriters[i] = Factory.create(children.get(i), encryption, writer);
+      childrenWriters[i] = Factory.create(children.get(i), encryption, writerContext);
     }
     tags =
-        new RunLengthByteWriter(writer.createStream(
+        new RunLengthByteWriter(writerContext.createStream(
             new StreamName(id, OrcProto.Stream.Kind.DATA, encryption)));
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);

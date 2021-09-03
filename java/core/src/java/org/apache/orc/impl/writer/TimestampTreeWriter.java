@@ -51,20 +51,20 @@ public class TimestampTreeWriter extends TreeWriterBase {
 
   public TimestampTreeWriter(TypeDescription schema,
                              WriterEncryptionVariant encryption,
-                             WriterContext writer,
+                             WriterContext writerContext,
                              boolean instantType) throws IOException {
-    super(schema, encryption, writer);
-    this.isDirectV2 = isNewWriteFormat(writer);
-    this.seconds = createIntegerWriter(writer.createStream(
+    super(schema, encryption, writerContext);
+    this.isDirectV2 = isNewWriteFormat(writerContext);
+    this.seconds = createIntegerWriter(writerContext.createStream(
         new StreamName(id, OrcProto.Stream.Kind.DATA, encryption)),
-        true, isDirectV2, writer);
-    this.nanos = createIntegerWriter(writer.createStream(
+        true, isDirectV2, writerContext);
+    this.nanos = createIntegerWriter(writerContext.createStream(
         new StreamName(id, OrcProto.Stream.Kind.SECONDARY, encryption)),
-        false, isDirectV2, writer);
+        false, isDirectV2, writerContext);
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
     }
-    this.alwaysUTC = instantType || writer.getUseUTCTimestamp();
+    this.alwaysUTC = instantType || writerContext.getUseUTCTimestamp();
     DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     try {
       if (this.alwaysUTC) {
@@ -82,7 +82,7 @@ public class TimestampTreeWriter extends TreeWriterBase {
     } catch (ParseException e) {
       throw new IOException("Unable to create base timestamp tree writer", e);
     }
-    useProleptic = writer.getProlepticGregorian();
+    useProleptic = writerContext.getProlepticGregorian();
   }
 
   @Override

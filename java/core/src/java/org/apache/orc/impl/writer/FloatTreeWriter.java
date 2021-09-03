@@ -37,9 +37,9 @@ public class FloatTreeWriter extends TreeWriterBase {
 
   public FloatTreeWriter(TypeDescription schema,
                          WriterEncryptionVariant encryption,
-                         WriterContext writer) throws IOException {
-    super(schema, encryption, writer);
-    this.stream = writer.createStream(
+                         WriterContext writerContext) throws IOException {
+    super(schema, encryption, writerContext);
+    this.stream = writerContext.createStream(
         new StreamName(id, OrcProto.Stream.Kind.DATA, encryption));
     this.utils = new SerializationUtils();
     if (rowIndexPosition != null) {
