@@ -12,9 +12,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<!DOCTYPE module PUBLIC
-        "-//Checkstyle//DTD Checkstyle Configuration 1.2//EN"
-        "https://checkstyle.org/dtds/configuration_1_2.dtd">
+<!DOCTYPE module PUBLIC "-//Checkstyle//DTD Checkstyle Configuration 1.2//EN" "https://checkstyle.org/dtds/configuration_1_2.dtd">
 
 <module name="Checker">
   <module name="FileTabCharacter">
@@ -37,8 +35,7 @@
     <module name="RedundantImport"/>
     <!-- https://checkstyle.sourceforge.io/config_imports.html#ImportOrder IntelliJ default example -->
     <module name="CustomImportOrder">
-      <property name="customImportOrderRules"
-                value="THIRD_PARTY_PACKAGE###SPECIAL_IMPORTS###STANDARD_JAVA_PACKAGE###STATIC"/>
+      <property name="customImportOrderRules" value="THIRD_PARTY_PACKAGE###SPECIAL_IMPORTS###STANDARD_JAVA_PACKAGE###STATIC"/>
       <property name="specialImportsRegExp" value="^javax\."/>
       <property name="standardPackageRegExp" value="^java\."/>
       <property name="sortImportsInGroupAlphabetically" value="true"/>
