@@ -265,7 +265,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
 
     @Override
     public void seek(PositionProvider[] index, ReadPhase readPhase) throws IOException {
-     // Pass-thru.
+      // Pass-thru.
       fromReader.seek(index, readPhase);
     }
 
@@ -2421,7 +2421,7 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
     case VARCHAR:
       switch (readerType.getCategory()) {
       // Not currently supported conversion(s):
-        // (None)
+      // (None)
       default:
         return true;
       }

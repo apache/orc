@@ -68,10 +68,10 @@ public abstract class InStream extends InputStream {
    */
   protected abstract void setCurrent(DiskRangeList newRange,
                                      boolean isJump);
-    /**
-     * Reset the input to a new set of data.
-     * @param input the input data
-     */
+  /**
+   * Reset the input to a new set of data.
+   * @param input the input data
+   */
   protected void reset(DiskRangeList input) {
     bytes = input;
     while (input != null &&
