@@ -62,10 +62,10 @@ public interface IntegerReader {
    * @param length the number of numbers to read
    * @throws IOException
    */
-   void nextVector(ColumnVector column,
-                   long[] data,
-                   int length
-                   ) throws IOException;
+  void nextVector(ColumnVector column,
+                  long[] data,
+                  int length
+                  ) throws IOException;
 
   /**
    * Return the next available vector for values. Does not change the

@@ -254,21 +254,21 @@ public class InMemoryKeystore implements KeyProvider {
     return addKey(keyName, 0, algorithm, masterKey);
   }
 
-    /**
-     * Function that takes care of adding a new key.<br>
-     * A new key can be added only if:
-     * <ul>
-     * <li>This is a new key and no prior key version exist.</li>
-     * <li>If the key exists (has versions), then the new version to be added should be greater than
-     * the version that already exists.</li>
-     * </ul>
-     *
-     * @param keyName   Name of the key to be added
-     * @param version   Key Version
-     * @param algorithm Algorithm used
-     * @param masterKey Master key
-     * @return this
-     */
+  /**
+   * Function that takes care of adding a new key.<br>
+   * A new key can be added only if:
+   * <ul>
+   * <li>This is a new key and no prior key version exist.</li>
+   * <li>If the key exists (has versions), then the new version to be added should be greater than
+   * the version that already exists.</li>
+   * </ul>
+   *
+   * @param keyName   Name of the key to be added
+   * @param version   Key Version
+   * @param algorithm Algorithm used
+   * @param masterKey Master key
+   * @return this
+   */
   public InMemoryKeystore addKey(String keyName, int version,
                                  EncryptionAlgorithm algorithm,
                                  byte[] masterKey) throws IOException {

@@ -57,7 +57,7 @@ public class CharTreeWriter extends StringBaseTreeWriter {
       for(int i=0; i < length; ++i) {
         if (vec.noNulls || !vec.isNull[i + offset]) {
           // offset + i, once per loop
-         writePadded(vec, i + offset, 1);
+          writePadded(vec, i + offset, 1);
         }
       }
     }
