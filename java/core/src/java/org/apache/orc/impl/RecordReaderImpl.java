@@ -211,7 +211,7 @@ public class RecordReaderImpl implements RecordReader {
     }
 
     this.noSelectedVector = !options.useSelected();
-    LOG.info("noSelectedVector={}", this.noSelectedVector);
+    LOG.debug("noSelectedVector={}", this.noSelectedVector);
     this.schema = evolution.getReaderSchema();
     this.path = fileReader.path;
     this.rowIndexStride = fileReader.rowIndexStride;
@@ -312,8 +312,8 @@ public class RecordReaderImpl implements RecordReader {
           expandCol = expandCol.getParent();
         }
       }
-      LOG.info("Filter Columns: " + filterColIds);
       this.startReadPhase = TypeReader.ReadPhase.LEADERS;
+      LOG.debug("Using startReadPhase: {} with filter columns: {}", startReadPhase, filterColIds);
     } else {
       this.startReadPhase = TypeReader.ReadPhase.ALL;
     }
