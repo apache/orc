@@ -44,12 +44,13 @@ import org.apache.orc.Writer;
 import org.apache.orc.mapred.OrcKey;
 import org.apache.orc.mapred.OrcStruct;
 import org.apache.orc.mapred.OrcValue;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestMrUnit {
 
@@ -208,9 +209,9 @@ public class TestMrUnit {
 
     while (rowIterator.nextBatch(batch)) {
       for(int row=0; row < batch.size; ++row) {
-        Assert.assertEquals(expectedX[row], x.vector[row]);
-        Assert.assertEquals(expectedY[row], y.vector[row]);
-        Assert.assertEquals(expectedZ[row], z.toString(row));
+        assertEquals(expectedX[row], x.vector[row]);
+        assertEquals(expectedY[row], y.vector[row]);
+        assertEquals(expectedZ[row], z.toString(row));
       }
     }
     rowIterator.close();
@@ -243,7 +244,7 @@ public class TestMrUnit {
     FileStatus[] fileStatuses = output.getFileSystem(CONF)
         .listStatus(output, path -> path.getName().endsWith(".orc"));
 
-    Assert.assertEquals(fileStatuses.length, 1);
+    assertEquals(fileStatuses.length, 1);
 
     Path path = fileStatuses[0].getPath();
     readOutputFile(path);
