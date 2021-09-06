@@ -37,7 +37,7 @@
     <orc.version>${project.version}</orc.version>
     <parquet.version>1.12.0</parquet.version>
     <spark.version>3.1.2</spark.version>
-    <jackson.version>2.12.4</jackson.version>
+    <jackson.version>2.12.5</jackson.version>
     <hadoop.version>3.3.1</hadoop.version>
     <junit.version>5.7.2</junit.version>
   </properties>
