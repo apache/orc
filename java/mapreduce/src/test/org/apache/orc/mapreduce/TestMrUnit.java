@@ -176,7 +176,6 @@ public class TestMrUnit {
 
   private void readOutputFile(Path output) throws IOException, InterruptedException {
     Reader reader = OrcFile.createReader(output, OrcFile.readerOptions(CONF));
-    VectorizedRowBatch batch = OUT_SCHEMA.createRowBatch();
     OrcMapreduceRecordReader<OrcStruct> recordReader = new OrcMapreduceRecordReader<>(reader,
             org.apache.orc.mapred.OrcInputFormat.buildOptions(CONF, reader, 0, 20));
 
