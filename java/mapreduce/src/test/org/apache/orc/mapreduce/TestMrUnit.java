@@ -21,13 +21,12 @@ package org.apache.orc.mapreduce;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.StructColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.io.DataInputBuffer;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.RawComparator;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.JobConfigurable;
 import org.apache.hadoop.mapreduce.Job;
@@ -38,7 +37,6 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
-import org.apache.orc.RecordReader;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
 import org.apache.orc.mapred.OrcKey;
@@ -48,7 +46,6 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -155,44 +152,33 @@ public class TestMrUnit {
     }
   }
 
-  public void writeInputFile(Path input) throws IOException {
-    Writer writer = OrcFile.createWriter(input,
+  public void writeInputFile(Path inputPath) throws IOException {
+    Writer writer = OrcFile.createWriter(inputPath,
         OrcFile.writerOptions(CONF).setSchema(INPUT_SCHEMA).overwrite(true));
-    VectorizedRowBatch batch = INPUT_SCHEMA.createRowBatch();
-    StructColumnVector one = (StructColumnVector) batch.cols[0];
-    LongColumnVector x = (LongColumnVector)one.fields[0];
-    LongColumnVector y = (LongColumnVector)one.fields[1];
-    StructColumnVector two = (StructColumnVector) batch.cols[1];
-    BytesColumnVector z = (BytesColumnVector)two.fields[0];
+    OrcMapreduceRecordWriter<OrcStruct> recordWriter = new OrcMapreduceRecordWriter<>(writer);
+    NullWritable nada = NullWritable.get();
 
-    for(int r = 0; r < 20; ++r) {
-      int row = batch.size++;
-      x.vector[row] = 100 -  (r / 4);
-      y.vector[row] = r * 2;
-      byte[] bytes = Integer.toHexString(r).getBytes(StandardCharsets.UTF_8);
-      z.vector[row] = bytes;
-      z.setRef(row, bytes, 0, bytes.length);
-      if (batch.size == batch.getMaxSize()) {
-        writer.addRowBatch(batch);
-        batch.reset();
-      }
+    OrcStruct input = (OrcStruct) OrcStruct.createValue(INPUT_SCHEMA);
+    IntWritable x =
+        (IntWritable) ((OrcStruct) input.getFieldValue(0)).getFieldValue(0);
+    IntWritable y =
+        (IntWritable) ((OrcStruct) input.getFieldValue(0)).getFieldValue(1);
+    Text z = (Text) ((OrcStruct) input.getFieldValue(1)).getFieldValue(0);
+
+    for(int r=0; r < 20; ++r) {
+      x.set(100 -  (r / 4));
+      y.set(r*2);
+      z.set(Integer.toHexString(r));
+      recordWriter.write(nada, input);
     }
-    if (batch.size != 0) {
-      writer.addRowBatch(batch);
-    }
-    writer.close();
+    recordWriter.close(null);
   }
 
-  private void readOutputFile(Path output) throws IOException {
+  private void readOutputFile(Path output) throws IOException, InterruptedException {
     Reader reader = OrcFile.createReader(output, OrcFile.readerOptions(CONF));
     VectorizedRowBatch batch = OUT_SCHEMA.createRowBatch();
-    RecordReader rowIterator = reader.rows(reader.options()
-        .schema(OUT_SCHEMA));
-    StructColumnVector one = (StructColumnVector) batch.cols[0];
-    LongColumnVector x = (LongColumnVector)one.fields[0];
-    LongColumnVector y = (LongColumnVector)one.fields[1];
-    StructColumnVector two = (StructColumnVector) batch.cols[1];
-    BytesColumnVector z = (BytesColumnVector)two.fields[0];
+    OrcMapreduceRecordReader<OrcStruct> recordReader = new OrcMapreduceRecordReader<>(reader,
+            org.apache.orc.mapred.OrcInputFormat.buildOptions(CONF, reader, 0, 20));
 
     int[] expectedX = new int[20];
     int[] expectedY = new int[20];
@@ -207,14 +193,20 @@ public class TestMrUnit {
       }
     }
 
-    while (rowIterator.nextBatch(batch)) {
-      for(int row=0; row < batch.size; ++row) {
-        assertEquals(expectedX[row], x.vector[row]);
-        assertEquals(expectedY[row], y.vector[row]);
-        assertEquals(expectedZ[row], z.toString(row));
-      }
+    int row = 0;
+    while (recordReader.nextKeyValue()) {
+      OrcStruct value = recordReader.getCurrentValue();
+      IntWritable x =
+          (IntWritable) ((OrcStruct) value.getFieldValue(0)).getFieldValue(0);
+      IntWritable y =
+          (IntWritable) ((OrcStruct) value.getFieldValue(0)).getFieldValue(1);
+      Text z = (Text) ((OrcStruct) value.getFieldValue(1)).getFieldValue(0);
+      assertEquals(expectedX[row], x.get());
+      assertEquals(expectedY[row], y.get());
+      assertEquals(expectedZ[row], z.toString());
+      row ++;
     }
-    rowIterator.close();
+    recordReader.close();
   }
 
   @Test
