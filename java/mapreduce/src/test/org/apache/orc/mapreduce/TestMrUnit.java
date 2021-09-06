@@ -68,6 +68,7 @@ public class TestMrUnit {
     OrcConf.MAPRED_SHUFFLE_KEY_SCHEMA.setString(CONF, "struct<x:int,y:int>");
     OrcConf.MAPRED_SHUFFLE_VALUE_SCHEMA.setString(CONF, "struct<z:string>");
     OrcConf.MAPRED_OUTPUT_SCHEMA.setString(CONF, OUT_SCHEMA.toString());
+    // This is required due to ORC-964
     CONF.set("mapreduce.job.output.key.comparator.class", OrcKeyComparator.class.getName());
     try {
       FS = FileSystem.getLocal(CONF);
@@ -165,9 +166,9 @@ public class TestMrUnit {
         (IntWritable) ((OrcStruct) input.getFieldValue(0)).getFieldValue(1);
     Text z = (Text) ((OrcStruct) input.getFieldValue(1)).getFieldValue(0);
 
-    for(int r=0; r < 20; ++r) {
+    for(int r = 0; r < 20; ++r) {
       x.set(100 -  (r / 4));
-      y.set(r*2);
+      y.set(r * 2);
       z.set(Integer.toHexString(r));
       recordWriter.write(nada, input);
     }
@@ -183,8 +184,8 @@ public class TestMrUnit {
     int[] expectedY = new int[20];
     String[] expectedZ = new String[20];
     int count = 0;
-    for(int g=4; g >= 0; --g) {
-      for(int i=0; i < 4; ++i) {
+    for(int g = 4; g >= 0; --g) {
+      for(int i = 0; i < 4; ++i) {
         expectedX[count] = 100 - g;
         int r = g * 4 + i;
         expectedY[count] = r * 2;
