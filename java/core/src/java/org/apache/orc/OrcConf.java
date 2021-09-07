@@ -107,7 +107,7 @@ public enum OrcConf {
           "writing first stripe. In both cases, the decision to use\n" +
           "dictionary or not will be retained thereafter."),
   DICTIONARY_IMPL("orc.dictionary.implementation", "orc.dictionary.implementation",
-      "hash",
+      "rbtree",
       "the implementation for the dictionary used for string-type column encoding.\n" +
           "The choices are:\n"
           + " rbtree - use red-black tree as the implementation for the dictionary.\n"
