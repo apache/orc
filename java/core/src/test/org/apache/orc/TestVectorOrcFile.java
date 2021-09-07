@@ -713,6 +713,7 @@ public class TestVectorOrcFile {
   public void testStripeLevelStatsNoForce(Version fileFormat) throws Exception {
     TypeDescription schema =
         TypeDescription.fromString("struct<int1:int,string1:string>");
+    OrcConf.DICTIONARY_IMPL.setString(conf, "hash");
     Writer writer = OrcFile.createWriter(testFilePath,
         OrcFile.writerOptions(conf)
             .setSchema(schema)
