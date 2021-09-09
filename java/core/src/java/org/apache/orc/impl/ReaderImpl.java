@@ -88,6 +88,7 @@ public class ReaderImpl implements Reader {
   protected final boolean useUTCTimestamp;
   private final List<Integer> versionList;
   private final OrcFile.WriterVersion writerVersion;
+  private final String softwareVersion;
 
   protected final OrcTail tail;
 
@@ -281,6 +282,11 @@ public class ReaderImpl implements Reader {
   @Override
   public OrcFile.WriterVersion getWriterVersion() {
     return writerVersion;
+  }
+
+  @Override
+  public String getSoftwareVersion() {
+    return softwareVersion;
   }
 
   @Override
@@ -552,6 +558,7 @@ public class ReaderImpl implements Reader {
       this.userMetadata = null; // not cached and not needed here
       // FileMetadata is obsolete and doesn't support encryption
       this.encryption = new ReaderEncryption();
+      this.softwareVersion = null;
     } else {
       OrcTail orcTail = options.getOrcTail();
       if (orcTail == null) {
@@ -574,9 +581,12 @@ public class ReaderImpl implements Reader {
       this.writerVersion = tail.getWriterVersion();
       this.stripes = tail.getStripes();
       this.stripeStatistics = null;
-      this.encryption = new ReaderEncryption(tail.getFooter(), schema,
+      OrcProto.Footer footer = tail.getFooter();
+      this.encryption = new ReaderEncryption(footer, schema,
           tail.getStripeStatisticsOffset(), tail.getTailBuffer(), stripes,
           options.getKeyProvider(), conf);
+      this.softwareVersion = OrcUtils.getSoftwareVersion(footer.getWriter(),
+          footer.getSoftwareVersion());
     }
     this.types = OrcUtils.getOrcTypes(schema);
   }
