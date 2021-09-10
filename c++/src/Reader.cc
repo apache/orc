@@ -385,7 +385,7 @@ namespace orc {
 
   void RowReaderImpl::seekToRowGroup(uint32_t rowGroupEntryId) {
     // store positions for selected columns
-    std::vector<std::list<uint64_t>> positions;
+    std::list<std::list<uint64_t>> positions;
     // store position providers for selected colimns
     std::unordered_map<uint64_t, PositionProvider> positionProviders;
 
