@@ -279,7 +279,7 @@ public abstract class TreeWriterBase implements TreeWriter {
             "index entries found: " + rowIndex.getEntryCount() + " expected: " +
             requiredIndexEntries);
       }
-      context.writeIndex(new StreamName(id, OrcProto.Stream.Kind.ROW_INDEX), rowIndex);
+      context.writeIndex(new StreamName(id, OrcProto.Stream.Kind.ROW_INDEX, encryption), rowIndex);
       rowIndex.clear();
       rowIndexEntry.clear();
     }

@@ -30,6 +30,7 @@ import org.apache.orc.impl.BufferChunkList;
 import org.apache.orc.impl.CryptoUtils;
 import org.apache.orc.impl.InStream;
 import org.apache.orc.impl.OrcIndex;
+import org.apache.orc.impl.PhysicalFsWriter;
 import org.apache.orc.impl.RecordReaderUtils;
 import org.apache.orc.impl.StreamName;
 import org.apache.orc.impl.reader.tree.TypeReader;
@@ -279,12 +280,13 @@ public class StripePlanner {
   private long handleStream(long offset,
                             boolean[] columnInclude,
                             OrcProto.Stream stream,
+                            StreamName.Area area,
                             ReaderEncryptionVariant variant) {
     int column = stream.getColumn();
     if (stream.hasKind()) {
       OrcProto.Stream.Kind kind = stream.getKind();
 
-      if (kind == OrcProto.Stream.Kind.ENCRYPTED_INDEX ||
+      if (StreamName.getArea(kind) != area || kind == OrcProto.Stream.Kind.ENCRYPTED_INDEX ||
               kind == OrcProto.Stream.Kind.ENCRYPTED_DATA) {
         // Ignore the placeholders that shouldn't count toward moving the
         // offsets.
@@ -323,6 +325,8 @@ public class StripePlanner {
 
   /**
    * Find the complete list of streams.
+   * CurrentOffset total order must be consistent with write
+   * {@link PhysicalFsWriter#finalizeStripe}
    * @param streamStart the starting offset of streams in the file
    * @param footer the footer for the stripe
    * @param columnInclude which columns are being read
@@ -332,17 +336,38 @@ public class StripePlanner {
                            boolean[] columnInclude) throws IOException {
     long currentOffset = streamStart;
     Arrays.fill(bloomFilterKinds, null);
+
+    // count the unencrypted index streams offset
     for(OrcProto.Stream stream: footer.getStreamsList()) {
-      currentOffset += handleStream(currentOffset, columnInclude, stream, null);
+      currentOffset += handleStream(currentOffset, columnInclude, stream,
+          StreamName.Area.INDEX, null);
     }
 
-    // Add the encrypted streams that we are using
+    // count the encrypted index streams offset
     for(ReaderEncryptionVariant variant: encryption.getVariants()) {
       int variantId = variant.getVariantId();
       OrcProto.StripeEncryptionVariant stripeVariant =
           footer.getEncryption(variantId);
       for(OrcProto.Stream stream: stripeVariant.getStreamsList()) {
-        currentOffset += handleStream(currentOffset, columnInclude, stream, variant);
+        currentOffset += handleStream(currentOffset, columnInclude, stream,
+            StreamName.Area.INDEX, variant);
+      }
+    }
+
+    // count the unencrypted data streams offset
+    for(OrcProto.Stream stream: footer.getStreamsList()) {
+      currentOffset += handleStream(currentOffset, columnInclude, stream,
+          StreamName.Area.DATA, null);
+    }
+
+    // count the encrypted data streams offset
+    for(ReaderEncryptionVariant variant: encryption.getVariants()) {
+      int variantId = variant.getVariantId();
+      OrcProto.StripeEncryptionVariant stripeVariant =
+          footer.getEncryption(variantId);
+      for(OrcProto.Stream stream: stripeVariant.getStreamsList()) {
+        currentOffset += handleStream(currentOffset, columnInclude, stream,
+            StreamName.Area.DATA, variant);
       }
     }
   }
