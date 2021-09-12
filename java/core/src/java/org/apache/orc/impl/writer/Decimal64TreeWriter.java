@@ -45,7 +45,7 @@ public class Decimal64TreeWriter extends TreeWriterBase {
                              WriterContext writer) throws IOException {
     super(schema, encryption, writer);
     OutStream stream = writer.createStream(
-        new StreamName(id, OrcProto.Stream.Kind.DATA));
+        new StreamName(id, OrcProto.Stream.Kind.DATA, encryption));
     // Use RLEv2 until we have the new RLEv3.
     valueWriter = new RunLengthIntegerWriterV2(stream, true, true);
     scale = schema.getScale();
