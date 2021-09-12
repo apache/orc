@@ -274,6 +274,7 @@ public class StripePlanner {
    * @param offset the position in the file for this stream
    * @param columnInclude which columns are being read
    * @param stream the stream to consider
+   * @param area only the area will be included
    * @param variant the variant being read
    * @return the offset for the next stream
    */
