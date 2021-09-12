@@ -2,6 +2,7 @@
   "fileName": "TestFileDump.testDump.orc",
   "fileVersion": "0.12",
   "writerVersion": "ORC_14",
+  "softwareVersion": "ORC Java 1.8.0-SNAPSHOT",
   "numberOfRows": 21000,
   "compression": "ZLIB",
   "compressionBufferSize": 4096,
@@ -1361,7 +1362,7 @@
       }]
     }
   ],
-  "fileLength": 272513,
+  "fileLength": 272529,
   "paddingLength": 0,
   "paddingRatio": 0,
   "status": "OK"

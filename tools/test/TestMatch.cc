@@ -38,6 +38,7 @@ namespace orc {
     std::string json;
     std::string typeString;
     std::string formatVersion;
+    std::string softwareVersion;
     uint64_t rowCount;
     uint64_t contentLength;
     uint64_t stripeCount;
@@ -50,6 +51,7 @@ namespace orc {
                        const std::string& _json,
                        const std::string& _typeString,
                        const std::string& _version,
+                       const std::string& _softwareVersion,
                        uint64_t _rowCount,
                        uint64_t _contentLength,
                        uint64_t _stripeCount,
@@ -61,6 +63,7 @@ namespace orc {
                           json(_json),
                           typeString(_typeString),
                           formatVersion(_version),
+                          softwareVersion(_softwareVersion),
                           rowCount(_rowCount),
                           contentLength(_contentLength),
                           stripeCount(_stripeCount),
@@ -111,6 +114,7 @@ namespace orc {
     EXPECT_EQ(GetParam().rowIndexStride, reader->getRowIndexStride());
     EXPECT_EQ(GetParam().contentLength, reader->getContentLength());
     EXPECT_EQ(GetParam().formatVersion, reader->getFormatVersion().toString());
+    EXPECT_EQ(GetParam().softwareVersion, reader->getSoftwareVersion());
     EXPECT_EQ(getFilename(), reader->getStreamName());
     EXPECT_EQ(GetParam().userMeta.size(), reader->getMetadataKeys().size());
     for(std::map<std::string, std::string>::const_iterator itr =
@@ -163,6 +167,7 @@ namespace orc {
                                        "TestOrcFile.columnProjection.jsn.gz",
                                        "struct<int1:int,string1:string>",
                                        "0.12",
+                                       "ORC Java",
                                        21000,
                                        428406,
                                        5,
@@ -182,6 +187,7 @@ namespace orc {
                                        "string>>,map:map<string,struct<int1:"
                                        "int,string1:string>>>",
                                        "0.12",
+                                       "ORC Java",
                                        0,
                                        3,
                                        0,
@@ -201,6 +207,7 @@ namespace orc {
                                        "string>>,map:map<string,struct<int1:"
                                        "int,string1:string>>>",
                                        "0.12",
+                                       "ORC Java",
                                        1,
                                        980,
                                        1,
@@ -220,6 +227,7 @@ namespace orc {
                                        "string>>,map:map<string,struct<int1:"
                                        "int,string1:string>>>",
                                        "0.12",
+                                       "ORC Java",
                                        2,
                                        1015,
                                        1,
@@ -233,6 +241,7 @@ namespace orc {
                                        ".jsn.gz",
                                        "struct<int1:int,string1:string>",
                                        "0.11",
+                                       "ORC Java",
                                        2500,
                                        18779,
                                        25,
@@ -246,6 +255,7 @@ namespace orc {
                                        ".jsn.gz",
                                        "struct<int1:int,string1:string>",
                                        "0.12",
+                                       "ORC Java",
                                        2500,
                                        10618,
                                        4,
@@ -258,6 +268,7 @@ namespace orc {
                                        ".jsn.gz",
                                        "struct<int1:int,string1:string>",
                                        "0.12",
+                                       "ORC Java",
                                        3500,
                                        15529,
                                        1,
@@ -276,6 +287,7 @@ namespace orc {
                                        "string1:string>>,map:map<string,"
                                        "struct<int1:int,string1:string>>>",
                                        "0.12",
+                                       "ORC Java",
                                        32768,
                                        1896379,
                                        7,
@@ -287,6 +299,7 @@ namespace orc {
                                        "TestOrcFile.testSnappy.jsn.gz",
                                        "struct<int1:int,string1:string>",
                                        "0.12",
+                                       "ORC Java",
                                        10000,
                                        126061,
                                        2,
@@ -300,6 +313,7 @@ namespace orc {
                                        "istics.jsn.gz",
                                        "struct<bytes1:binary,string1:string>",
                                        "0.12",
+                                       "ORC Java",
                                        4,
                                        185,
                                        1,
@@ -312,6 +326,7 @@ namespace orc {
                                        ".jsn.gz",
                                        "struct<int1:int,string1:string>",
                                        "0.12",
+                                       "ORC Java",
                                        11000,
                                        597,
                                        3,
@@ -323,6 +338,7 @@ namespace orc {
                                        "TestOrcFile.testTimestamp.jsn.gz",
                                        "timestamp",
                                        "0.11",
+                                       "ORC Java",
                                        12,
                                        188,
                                        1,
@@ -336,6 +352,7 @@ namespace orc {
                                        "struct<time:timestamp,union:uniontype"
                                        "<int,string>,decimal:decimal(38,18)>",
                                        "0.12",
+                                       "ORC Java",
                                        5077,
                                        20906,
                                        2,
@@ -347,6 +364,7 @@ namespace orc {
                                        "TestOrcFile.testWithoutIndex.jsn.gz",
                                        "struct<int1:int,string1:string>",
                                        "0.12",
+                                       "ORC Java",
                                        50000,
                                        214643,
                                        10,
@@ -358,6 +376,7 @@ namespace orc {
                                        "decimal.jsn.gz",
                                        "struct<_col0:decimal(10,5)>",
                                        "0.12",
+                                       "ORC Java",
                                        6000,
                                        16186,
                                        1,
@@ -372,6 +391,7 @@ namespace orc {
                                         "_col5:string,_col6:int,_col7:int,"
                                         "_col8:int>"),
                                        "0.11",
+                                       "ORC Java",
                                        1920800,
                                        5069718,
                                        385,
@@ -386,6 +406,7 @@ namespace orc {
                                         "_col5:string,_col6:int,_col7:int,"
                                         "_col8:int>"),
                                        "0.11",
+                                       "ORC Java",
                                        1920800,
                                        396823,
                                        385,
@@ -400,6 +421,7 @@ namespace orc {
                                         "_col5:string,_col6:int,_col7:int,"
                                         "_col8:int>"),
                                        "0.12",
+                                       "ORC Java",
                                        1920800,
                                        45592,
                                        1,
@@ -413,6 +435,7 @@ namespace orc {
                                         "_col2:int,_col3:bigint,_col4:float,"
                                         "_col5:double,_col6:boolean>"),
                                        "0.12",
+                                       "ORC Java",
                                        70000,
                                        366347,
                                        1,
@@ -434,6 +457,7 @@ namespace orc {
                                         "string>>,ts:timestamp,"
                                         "decimal1:decimal(0,0)>"),
                                        "0.11",
+                                       "ORC Java",
                                        7500,
                                        372542,
                                        2,
@@ -448,17 +472,34 @@ namespace orc {
 					"decimal1:decimal(16,6),"
                                         "ts:timestamp>"),
                                        "0.12",
+                                       "ORC Java 1.8.0-SNAPSHOT",
                                        25000,
-                                       1981,
+                                       1980,
                                        1,
                                        CompressionKind_ZLIB,
                                        262144,
+                                       10000,
+                                       std::map<std::string, std::string>()),
+                    OrcFileDescription("orc_split_elim_cpp.orc",
+                                       "orc_split_elim_cpp.jsn.gz",
+                                       ("struct<userid:bigint,string1:string,"
+                                        "subtype:double,"
+                                        "decimal1:decimal(16,6),"
+                                        "ts:timestamp>"),
+                                       "0.12",
+                                       "ORC C++ 1.8.0-SNAPSHOT",
+                                       25000,
+                                       2942,
+                                       1,
+                                       CompressionKind_ZLIB,
+                                       65536,
                                        10000,
                                        std::map<std::string, std::string>()),
                     OrcFileDescription("orc_index_int_string.orc",
                                        "orc_index_int_string.jsn.gz",
                                        ("struct<_col0:int,_col1:varchar(4)>"),
                                        "0.12",
+                                       "ORC Java",
                                        6000,
                                        11280,
                                        1,
@@ -474,6 +515,7 @@ namespace orc {
                                        "_col7:string,_col8:timestamp,"
                                        "_col9:decimal(4,2),_col10:binary>",
                                        "0.12",
+                                       "ORC Java",
                                        2098,
                                        41780,
                                        2,
@@ -485,6 +527,7 @@ namespace orc {
                                        "TestVectorOrcFile.testLz4.jsn.gz",
                                        "struct<x:bigint,y:int,z:bigint>",
                                        "0.12",
+                                       "ORC Java",
                                        10000,
                                        120952,
                                        2,
@@ -496,6 +539,7 @@ namespace orc {
                                        "TestVectorOrcFile.testLzo.jsn.gz",
                                        "struct<x:bigint,y:int,z:bigint>",
                                        "0.12",
+                                       "ORC Java",
                                        10000,
                                        120955,
                                        2,
@@ -512,6 +556,7 @@ INSTANTIATE_TEST_CASE_P(TestMatch1900, FileParam,
                                        "TestOrcFile.testDate1900.jsn.gz",
                                        "struct<time:timestamp,date:date>",
                                        "0.12",
+                                       "ORC Java",
                                        70000,
                                        30478,
                                        8,
@@ -529,6 +574,7 @@ INSTANTIATE_TEST_CASE_P(TestMatch1900, FileParam,
                                        "TestOrcFile.testDate2038.jsn.gz",
                                        "struct<time:timestamp,date:date>",
                                        "0.12",
+                                       "ORC Java",
                                        212000,
                                        94762,
                                        28,

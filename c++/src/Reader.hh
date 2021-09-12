@@ -259,6 +259,8 @@ namespace orc {
 
     uint32_t getWriterIdValue() const override;
 
+    std::string getSoftwareVersion() const override;
+
     WriterVersion getWriterVersion() const override;
 
     uint64_t getNumberOfRows() const override;

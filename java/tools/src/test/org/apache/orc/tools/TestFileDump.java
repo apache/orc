@@ -57,8 +57,11 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -184,22 +187,56 @@ public class TestFileDump {
     ((BytesColumnVector) struct.fields[1]).setVal(row, sts.getBytes(StandardCharsets.UTF_8));
   }
 
+  private static final Pattern ignoreTailPattern =
+      Pattern.compile("^(?<head>File Version|\"softwareVersion\"): .*");
+  private static final Pattern fileSizePattern =
+      Pattern.compile("^(\"fileLength\"|File length): (?<size>[0-9]+).*");
+  // Allow file size to be up to 100 bytes larger.
+  private static final int SIZE_SLOP = 100;
+
+  /**
+   * Preprocess the string for matching.
+   * If it matches the fileSizePattern, we return the file size as a Long.
+   * @param line the input line
+   * @return the processed line or a Long with the file size
+   */
+  private static Object preprocessLine(String line) {
+    if (line == null) {
+      return line;
+    }
+    line = line.trim();
+    Matcher match = fileSizePattern.matcher(line);
+    if (match.matches()) {
+      return Long.parseLong(match.group("size"));
+    }
+    match = ignoreTailPattern.matcher(line);
+    if (match.matches()) {
+      return match.group("head");
+    }
+    return line;
+  }
+
+  /**
+   * Compare two files for equivalence.
+   * @param expected Loaded from the class path
+   * @param actual Loaded from the file system
+   */
   public static void checkOutput(String expected,
                                  String actual) throws Exception {
-    BufferedReader eStream = Files.newBufferedReader(Paths.get(TestJsonFileDump.getFileFromClasspath(expected)), StandardCharsets.UTF_8);
+    BufferedReader eStream = Files.newBufferedReader(Paths.get(
+        TestJsonFileDump.getFileFromClasspath(expected)), StandardCharsets.UTF_8);
     BufferedReader aStream = Files.newBufferedReader(Paths.get(actual), StandardCharsets.UTF_8);
-    String expectedLine = eStream.readLine();
-    if (expectedLine != null) {
-      expectedLine = expectedLine.trim();
-    }
+    Object expectedLine = preprocessLine(eStream.readLine());
     while (expectedLine != null) {
-      String actualLine = aStream.readLine();
-      if (actualLine != null) {
-        actualLine = actualLine.trim();
+      Object actualLine = preprocessLine(aStream.readLine());
+      if (expectedLine instanceof Long && actualLine instanceof Long) {
+        long diff = (Long) actualLine - (Long) expectedLine;
+        assertTrue(diff < SIZE_SLOP,
+            "expected: " + expectedLine + ", actual: " + actualLine);
+      } else {
+        assertEquals(expectedLine, actualLine);
       }
-      assertEquals(expectedLine, actualLine);
-      expectedLine = eStream.readLine();
-      expectedLine = expectedLine == null ? null : expectedLine.trim();
+      expectedLine = preprocessLine(eStream.readLine());
     }
     assertNull(eStream.readLine());
     assertNull(aStream.readLine());
