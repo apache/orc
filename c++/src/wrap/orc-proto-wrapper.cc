@@ -15,6 +15,7 @@
 #include "Adaptor.hh"
 
 #if defined(__GNUC__) || defined(__clang__)
+  DIAGNOSTIC_IGNORE("-Warray-bounds")
   DIAGNOSTIC_IGNORE("-Wconversion")
   DIAGNOSTIC_IGNORE("-Wdeprecated")
   DIAGNOSTIC_IGNORE("-Wignored-qualifiers")
