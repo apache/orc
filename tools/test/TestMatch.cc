@@ -484,7 +484,7 @@ namespace orc {
                                        "orc_split_elim_cpp.jsn.gz",
                                        ("struct<userid:bigint,string1:string,"
                                         "subtype:double,"
-					"decimal1:decimal(16,6),"
+                                        "decimal1:decimal(16,6),"
                                         "ts:timestamp>"),
                                        "0.12",
                                        "ORC C++ 1.8.0-SNAPSHOT",
