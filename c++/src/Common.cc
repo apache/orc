@@ -72,21 +72,21 @@ namespace orc {
 
   std::string writerIdToString(uint32_t id) {
     switch (id) {
-    case ORC_JAVA_WRITER:
-      return "ORC Java";
-    case ORC_CPP_WRITER:
-      return "ORC C++";
-    case PRESTO_WRITER:
-      return "Presto";
-    case SCRITCHLEY_GO:
-      return "Scritchley Go";
-    case TRINO_WRITER:
-      return "Trino";
-    default: {
-      std::ostringstream buffer;
-      buffer << "Unknown(" << id << ")";
-      return buffer.str();
-    }
+      case ORC_JAVA_WRITER:
+        return "ORC Java";
+      case ORC_CPP_WRITER:
+        return "ORC C++";
+      case PRESTO_WRITER:
+        return "Presto";
+      case SCRITCHLEY_GO:
+        return "Scritchley Go";
+      case TRINO_WRITER:
+        return "Trino";
+      default: {
+        std::ostringstream buffer;
+        buffer << "Unknown(" << id << ")";
+        return buffer.str();
+      }
     }
   }
 
