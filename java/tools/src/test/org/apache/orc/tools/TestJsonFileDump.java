@@ -68,26 +68,6 @@ public class TestJsonFileDump {
     fs.delete(testFilePath, false);
   }
 
-  static void checkOutput(String expected,
-                                  String actual) throws Exception {
-//    BufferedReader eStream =
-//        new BufferedReader(new FileReader(getFileFromClasspath(expected)));
-//    new BufferedReader(new FileReader(getFileFromClasspath(expected)));
-    BufferedReader eStream  = Files
-        .newBufferedReader(Paths.get(getFileFromClasspath(expected)), StandardCharsets.UTF_8);
-//    BufferedReader aStream =
-//        new BufferedReader(new FileReader(actual));
-    BufferedReader aStream = Files.newBufferedReader(Paths.get(actual), StandardCharsets.UTF_8);
-    String expectedLine = eStream.readLine();
-    while (expectedLine != null) {
-      String actualLine = aStream.readLine();
-      assertEquals(expectedLine, actualLine);
-      expectedLine = eStream.readLine();
-    }
-    assertNull(eStream.readLine());
-    assertNull(aStream.readLine());
-  }
-
   @Test
   public void testJsonDump() throws Exception {
     TypeDescription schema =
@@ -150,6 +130,6 @@ public class TestJsonFileDump {
     System.setOut(origOut);
 
 
-    checkOutput(outputFilename, workDir + File.separator + outputFilename);
+    TestFileDump.checkOutput(outputFilename, workDir + File.separator + outputFilename);
   }
 }

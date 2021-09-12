@@ -166,7 +166,7 @@ TEST (TestFileMetadata, testJson) {
     "  \"type\": \"struct<userid:bigint,string1:string,subtype:double,decimal1:decimal(0,0),ts:timestamp>\",\n"
     "  \"rows\": 25000,\n"
     "  \"stripe count\": 5,\n"
-    "  \"format\": \"0.12\", \"writer version\": \"original\",\n"
+    "  \"format\": \"0.12\", \"writer version\": \"original\", \"software version\": \"ORC Java\",\n"
     "  \"compression\": \"none\",\n"
     "  \"file length\": 246402,\n"
     "  \"content\": 245568, \"stripe stats\": 526, \"footer\": 288, \"postscript\": 19,\n"
@@ -215,7 +215,7 @@ TEST (TestFileMetadata, testNoFormat) {
     "  \"type\": \"struct<_col0:array<string>,_col1:map<int,string>,_col2:struct<name:string,score:int>>\",\n"
     "  \"rows\": 5,\n"
     "  \"stripe count\": 1,\n"
-    "  \"format\": \"0.11\", \"writer version\": \"original\",\n"
+    "  \"format\": \"0.11\", \"writer version\": \"original\", \"software version\": \"ORC Java\",\n"
     "  \"compression\": \"zlib\", \"compression block\": 262144,\n"
     "  \"file length\": 745,\n"
     "  \"content\": 525, \"stripe stats\": 0, \"footer\": 210, \"postscript\": 9,\n"
@@ -237,3 +237,4 @@ TEST (TestFileMetadata, testNoFormat) {
   EXPECT_EQ(expected, output);
   EXPECT_EQ("", error);
 }
+

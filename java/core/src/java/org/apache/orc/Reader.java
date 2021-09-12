@@ -140,6 +140,16 @@ public interface Reader extends Closeable {
   OrcFile.WriterVersion getWriterVersion();
 
   /**
+   * Get the implementation and version of the software that wrote the file.
+   * It defaults to "ORC Java" for old files. For current files, we include the
+   * version also.
+   * @since 1.5.13
+   * @return returns the writer implementation and hopefully the version of the
+   *   software
+   */
+  String getSoftwareVersion();
+
+  /**
    * Get the file tail (footer + postscript)
    *
    * @return - file tail

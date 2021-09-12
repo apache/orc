@@ -21,9 +21,11 @@ import org.apache.orc.impl.ReaderImpl;
 import org.apache.orc.impl.SchemaEvolution;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 
 import static org.apache.hadoop.util.StringUtils.COMMA_STR;
 
@@ -386,5 +388,73 @@ public class OrcUtils {
       previousKeys = stripe.getEncryptedLocalKeys();
     }
     return result;
+  }
+
+  /**
+   * Get the user-facing version string for the software that wrote the file.
+   * @param writer the code for the writer from OrcProto.Footer
+   * @param version the orcVersion from OrcProto.Footer
+   * @return the version string
+   */
+  public static String getSoftwareVersion(int writer,
+                                          String version) {
+    String base;
+    switch (writer) {
+      case 0:
+        base = "ORC Java";
+        break;
+      case 1:
+        base = "ORC C++";
+        break;
+      case 2:
+        base = "Presto";
+        break;
+      case 3:
+        base = "Scritchley Go";
+        break;
+      case 4:
+        base = "Trino";
+        break;
+      default:
+        base = String.format("Unknown(%d)", writer);
+        break;
+    }
+    if (version == null) {
+      return base;
+    } else {
+      return base + " " + version;
+    }
+  }
+
+  /**
+   * Get the software version from Maven.
+   * @return The version of the software.
+   */
+  public static String getOrcVersion() {
+    Class<OrcFile> cls = OrcFile.class;
+    // try to load from maven properties first
+    try (InputStream is = cls.getResourceAsStream(
+        "/META-INF/maven/org.apache.orc/orc-core/pom.properties")) {
+      if (is != null) {
+        Properties p = new Properties();
+        p.load(is);
+        String version = p.getProperty("version", null);
+        if (version != null) {
+          return version;
+        }
+      }
+    } catch (IOException e) {
+      // ignore
+    }
+
+    // fallback to using Java API
+    Package aPackage = cls.getPackage();
+    if (aPackage != null) {
+      String version = aPackage.getImplementationVersion();
+      if (version != null) {
+        return version;
+      }
+    }
+    return "unknown";
   }
 }
