@@ -89,6 +89,7 @@ public class JsonFileDump {
         }
         writer.name("fileVersion").value(reader.getFileVersion().getName());
         writer.name("writerVersion").value(reader.getWriterVersion().toString());
+        writer.name("softwareVersion").value(reader.getSoftwareVersion());
         RecordReaderImpl rows = (RecordReaderImpl) reader.rows();
         writer.name("numberOfRows").value(reader.getNumberOfRows());
         writer.name("compression").value(reader.getCompressionKind().toString());

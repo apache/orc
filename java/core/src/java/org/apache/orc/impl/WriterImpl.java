@@ -666,6 +666,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
       builder.setEncryption(writeEncryptionFooter());
     }
     builder.setWriter(OrcFile.WriterImplementation.ORC_JAVA.getId());
+    builder.setSoftwareVersion(OrcUtils.getOrcVersion());
     physicalWriter.writeFileFooter(builder);
     return writePostScript();
   }
