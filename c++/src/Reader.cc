@@ -437,6 +437,15 @@ namespace orc {
     }
   }
 
+  std::string ReaderImpl::getSoftwareVersion() const {
+    std::ostringstream buffer;
+    buffer << writerIdToString(getWriterIdValue());
+    if (footer->has_softwareversion()) {
+      buffer << " " << footer->softwareversion();
+    }
+    return buffer.str();
+  }
+
   WriterVersion ReaderImpl::getWriterVersion() const {
     if (!contents->postscript->has_writerversion()) {
       return WriterVersion_ORIGINAL;

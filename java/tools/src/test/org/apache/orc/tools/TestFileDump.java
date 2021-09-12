@@ -19,6 +19,7 @@
 package org.apache.orc.tools;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.BufferedReader;
@@ -28,13 +29,18 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -62,6 +68,7 @@ import org.apache.orc.Writer;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
 
 public class TestFileDump {
 
@@ -181,19 +188,55 @@ public class TestFileDump {
     ((BytesColumnVector) struct.fields[1]).setVal(row, sts.getBytes());
   }
 
+  private static final Pattern ignoreTailPattern =
+      Pattern.compile("^(?<head>File Version|\"softwareVersion\"): .*");
+  private static final Pattern fileSizePattern =
+      Pattern.compile("^(\"fileLength\"|File length): (?<size>[0-9]+).*");
+  // Allow file size to be up to 100 bytes larger.
+  private static final int SIZE_SLOP = 100;
+
+  /**
+   * Preprocess the string for matching.
+   * If it matches the fileSizePattern, we return the file size as a Long.
+   * @param line the input line
+   * @return the processed line or a Long with the file size
+   */
+  private static Object preprocessLine(String line) {
+    if (line == null) {
+      return line;
+    }
+    line = line.trim();
+    Matcher match = fileSizePattern.matcher(line);
+    if (match.matches()) {
+      return Long.parseLong(match.group("size"));
+    }
+    match = ignoreTailPattern.matcher(line);
+    if (match.matches()) {
+      return match.group("head");
+    }
+    return line;
+  }
+
+  /**
+   * Compare two files for equivalence.
+   * @param expected Loaded from the class path
+   * @param actual Loaded from the file system
+   */
   public static void checkOutput(String expected,
                                  String actual) throws Exception {
-    BufferedReader eStream =
-        new BufferedReader(new FileReader
-            (TestJsonFileDump.getFileFromClasspath(expected)));
-    BufferedReader aStream =
-        new BufferedReader(new FileReader(actual));
-    String expectedLine = eStream.readLine().trim();
+    BufferedReader eStream = Files.newBufferedReader(Paths.get(
+        TestJsonFileDump.getFileFromClasspath(expected)), StandardCharsets.UTF_8);
+    BufferedReader aStream = Files.newBufferedReader(Paths.get(actual), StandardCharsets.UTF_8);
+    Object expectedLine = preprocessLine(eStream.readLine());
     while (expectedLine != null) {
-      String actualLine = aStream.readLine().trim();
-      Assert.assertEquals(expectedLine, actualLine);
-      expectedLine = eStream.readLine();
-      expectedLine = expectedLine == null ? null : expectedLine.trim();
+      Object actualLine = preprocessLine(aStream.readLine());
+      if (expectedLine instanceof Long && actualLine instanceof Long) {
+        long diff = (Long) actualLine - (Long) expectedLine;
+        assertTrue("expected: " + expectedLine + ", actual: " + actualLine, diff < SIZE_SLOP);
+      } else {
+        assertEquals(expectedLine, actualLine);
+      }
+      expectedLine = preprocessLine(eStream.readLine());
     }
     Assert.assertNull(eStream.readLine());
     Assert.assertNull(aStream.readLine());

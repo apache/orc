@@ -166,7 +166,7 @@ TEST (TestFileMetadata, testJson) {
     "  \"type\": \"struct<userid:bigint,string1:string,subtype:double,decimal1:decimal(0,0),ts:timestamp>\",\n"
     "  \"rows\": 25000,\n"
     "  \"stripe count\": 5,\n"
-    "  \"format\": \"0.12\", \"writer version\": \"original\",\n"
+    "  \"format\": \"0.12\", \"writer version\": \"original\", \"software version\": \"ORC Java\",\n"
     "  \"compression\": \"none\",\n"
     "  \"file length\": 246402,\n"
     "  \"content\": 245568, \"stripe stats\": 526, \"footer\": 288, \"postscript\": 19,\n"

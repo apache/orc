@@ -106,6 +106,7 @@ void printMetadata(std::ostream & out, const char*filename, bool verbose) {
   out << "  \"format\": \"" << reader->getFormatVersion().toString()
       << "\", \"writer version\": \""
             << orc::writerVersionToString(reader->getWriterVersion())
+            << "\", \"software version\": \"" << reader->getSoftwareVersion()
             << "\",\n";
   out << "  \"compression\": \""
             << orc::compressionKindToString(reader->getCompression())

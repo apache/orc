@@ -84,6 +84,7 @@ public class ReaderImpl implements Reader {
   protected final boolean useUTCTimestamp;
   private final List<Integer> versionList;
   private final OrcFile.WriterVersion writerVersion;
+  private final String softwareVersion;
 
   protected OrcTail tail;
 
@@ -212,6 +213,11 @@ public class ReaderImpl implements Reader {
   @Override
   public OrcFile.WriterVersion getWriterVersion() {
     return writerVersion;
+  }
+
+  @Override
+  public String getSoftwareVersion() {
+    return softwareVersion;
   }
 
   @Override
@@ -364,6 +370,7 @@ public class ReaderImpl implements Reader {
       this.fileStats = fileMetadata.getFileStats();
       this.stripes = fileMetadata.getStripes();
       this.userMetadata = null; // not cached and not needed here
+      this.softwareVersion = null;
     } else {
       OrcTail orcTail = options.getOrcTail();
       if (orcTail == null) {
@@ -386,6 +393,9 @@ public class ReaderImpl implements Reader {
       this.writerVersion = tail.getWriterVersion();
       this.stripes = tail.getStripes();
       this.stripeStats = tail.getStripeStatisticsProto();
+      OrcProto.Footer footer = tail.getFooter();
+      this.softwareVersion = OrcUtils.getSoftwareVersion(footer.getWriter(),
+          footer.getSoftwareVersion());
     }
     OrcUtils.isValidTypeTree(this.types, 0);
     this.schema = OrcUtils.convertTypeFromProtobuf(this.types, 0);

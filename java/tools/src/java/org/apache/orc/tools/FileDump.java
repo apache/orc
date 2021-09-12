@@ -305,7 +305,8 @@ public final class FileDump {
     TypeDescription schema = reader.getSchema();
     System.out.println("Structure for " + filename);
     System.out.println("File Version: " + reader.getFileVersion().getName() +
-        " with " + reader.getWriterVersion());
+        " with " + reader.getWriterVersion() + " by " +
+        reader.getSoftwareVersion());
     RecordReaderImpl rows = (RecordReaderImpl) reader.rows();
     System.out.println("Rows: " + reader.getNumberOfRows());
     System.out.println("Compression: " + reader.getCompressionKind());
