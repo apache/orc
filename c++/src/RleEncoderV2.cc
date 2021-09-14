@@ -124,7 +124,8 @@ void RleEncoderV2::write(int64_t val) {
         }
 
         if (fixedRunLength == MAX_LITERAL_SIZE) {
-            determineEncoding(option);
+            option.encoding = DELTA;
+            option.isFixedDelta = true;
             writeValues(option);
         }
         return;

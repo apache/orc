@@ -755,7 +755,8 @@ public class RunLengthIntegerWriterV2 implements IntegerWriter {
 
           // if fixed runs reached max repeat length then write values
           if (fixedRunLength == MAX_SCOPE) {
-            determineEncoding();
+            encoding = EncodingType.DELTA;
+            isFixedDelta = true;
             writeValues();
           }
         } else {
