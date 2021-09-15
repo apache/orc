@@ -317,13 +317,13 @@ public class OutStream extends PositionedOutputStream {
      *
      * @return the length of total compressed bytes.
      */
-    public long commitCompress(int currentPosn) throws IOException {
+    public long commitCompress(int startPosn) throws IOException {
       // find the total bytes in the chunk
-      int totalBytes = compressed.position() - currentPosn - HEADER_SIZE;
+      int totalBytes = compressed.position() - startPosn - HEADER_SIZE;
       if (overflow != null) {
         totalBytes += overflow.position();
       }
-      writeHeader(compressed, currentPosn, totalBytes, false);
+      writeHeader(compressed, startPosn, totalBytes, false);
       // if we have less than the next header left, spill it.
       if (compressed.remaining() < HEADER_SIZE) {
         compressed.flip();
@@ -334,6 +334,7 @@ public class OutStream extends PositionedOutputStream {
       return totalBytes + HEADER_SIZE;
     }
 
+    // TODO: This should be test covered as well.
     public void abortCompress(int currentPosn) throws IOException {
       // we are using the original, but need to spill the current
       // compressed buffer first for ordering. So back up to where we started,
@@ -394,10 +395,11 @@ public class OutStream extends PositionedOutputStream {
       // Worth compression
       if (codec.compress(current, compressedBuffer.compressed, compressedBuffer.overflow, options)) {
         // move position back to after the header
+        uncompressedBytes = 0;
+
         current.position(HEADER_SIZE);
         current.limit(current.capacity());
 
-        uncompressedBytes = 0;
         compressedBytes += compressedBuffer.commitCompress(currentPosn);
       } else {
         compressedBytes += uncompressedBytes + HEADER_SIZE;
@@ -428,10 +430,10 @@ public class OutStream extends PositionedOutputStream {
   @Override
   public void flush() throws IOException {
     spill();
+    compressedBuffer.reset();
     if (cipher != null) {
       finishEncryption();
     }
-    compressedBuffer.reset();
     uncompressedBytes = 0;
     compressedBytes = 0;
     current = null;
