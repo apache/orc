@@ -87,6 +87,8 @@
     <option value="/news/">Home</option>
     <optgroup label="v1.x">
       
+      <option value="/news/2021/09/15/ORC-1.6.11/">ORC 1.6.11 Released</option>
+      
       <option value="/news/2021/08/10/ORC-1.6.10/">ORC 1.6.10 Released</option>
       
       <option value="/news/2021/07/02/ORC-1.6.9/">ORC 1.6.9 Released</option>
@@ -216,6 +218,60 @@
         
   <article>
   <h2>
+    <a href="/news/2021/09/15/ORC-1.6.11/">
+      ORC 1.6.11 Released
+    </a>
+  </h2>
+  <span class="post-category">
+    <span class="label">
+      release
+    </span>
+  </span>
+  <div class="post-meta">
+    <span class="post-date">
+      15 Sep 2021
+    </span>
+    <a href="https://people.apache.org/~dongjoon" class="post-author">
+      <img src="https://people.apache.org/~dongjoon//dongjoon.png"
+           class="avatar" alt="dongjoon avatar"
+           width="24" height="24">
+      dongjoon
+    </a>
+  </div>
+  <div class="post-content">
+    <p>The ORC team is excited to announce the release of ORC v1.6.11.</p>
+
+<ul>
+  <li>Released: 15 September 2021</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.6.11/orc-1.6.11.tar.gz">orc-1.6.11.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-1.6.11/orc-1.6.11.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.6.11">rel/release-1.6.11</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.6.11%22">ORC 1.6.11</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.6.11/orc-1.6.11.tar.gz.sha256">67c17c012bd588fc…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.6.11%22&amp;tempMax=500">ORC-1.6.11</a></li>
+</ul>
+
+<p>The new features of ORC 1.6:</p>
+
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-14">ORC-14</a> Add column encryption.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-189">ORC-189</a> Add timestamp with local timezone</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-203">ORC-203</a> Trim minimum and maximum string values</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-363">ORC-363</a> Add zstd support in Java</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-397">ORC-397</a> Support selectively disabling dictionaries</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-522">ORC-522</a> Add type annotations</li>
+</ul>
+
+<p>Known issues:</p>
+
+
+  </div>
+</article>
+
+
+  <article>
+  <h2>
     <a href="/news/2021/08/10/ORC-1.6.10/">
       ORC 1.6.10 Released
     </a>
@@ -241,12 +297,12 @@
 
 <ul>
   <li>Released: 10 August 2021</li>
-  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.6.10/orc-1.6.10.tar.gz">orc-1.6.10.tar.gz</a></li>
-  <li><a href="https://downloads.apache.org/orc/orc-1.6.10/orc-1.6.10.tar.gz.asc">GPG Signature</a>
+  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-1.6.10/orc-1.6.10.tar.gz">orc-1.6.10.tar.gz</a></li>
+  <li><a href="https://archive.apache.org/dist/orc/orc-1.6.10/orc-1.6.10.tar.gz.asc">GPG Signature</a>
 signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (AD1C5877)</a></li>
   <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.6.10">rel/release-1.6.10</a></li>
   <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.6.10%22">ORC 1.6.10</a></li>
-  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.6.10/orc-1.6.10.tar.gz.sha256">3a7347c85d18e44d…</a></li>
+  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-1.6.10/orc-1.6.10.tar.gz.sha256">3a7347c85d18e44d…</a></li>
   <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.6.10%22&amp;tempMax=500">ORC-1.6.10</a></li>
 </ul>
 
@@ -3571,6 +3627,10 @@ together with the Java implementation.</p>
     <ul>
       
       <li class="">
+        <a href="/news/2021/09/15/ORC-1.6.11/">Version 1.6.11</a>
+      </li>
+      
+      <li class="">
         <a href="/news/2021/08/10/ORC-1.6.10/">Version 1.6.10</a>
       </li>
       
@@ -3586,13 +3646,11 @@ together with the Java implementation.</p>
         <a href="/news/2021/01/22/ORC-1.6.7/">Version 1.6.7</a>
       </li>
       
-      <li class="">
-        <a href="/news/2020/12/10/ORC-1.6.6/">Version 1.6.6</a>
-      </li>
-      
     </ul>
     <h4>Other News</h4>
     <ul>
+        
+        
         
         
         
