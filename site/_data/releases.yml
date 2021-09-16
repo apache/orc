@@ -105,9 +105,17 @@
     ORC-569: The first index entry may have empty positions
     ORC-571: ArrayIndexOutOfBoundsException in StripePlanner.readRowIndex
 
+1.5.13:
+  date: 2021-09-15
+  state: archived
+  tar: orc-1.5.13.tar.gz
+  signed-by: Dongjoon Hyun (34F0FC5C)
+  sha256: 45274afce558b93f001b729bd3d68bc5462fdc17b726e4dcd41339cd2e1eb645
+  known-issues:
+
 1.5.12:
   date: 2020-09-30
-  state: stable
+  state: archived
   tar: orc-1.5.12.tar.gz
   signed-by: Owen O’Malley (AD1C5877)
   sha256: 938e48eca6c83fcd807b08054fb4a8e34e9ebfc58aa19bfd52ac246da5639bce
