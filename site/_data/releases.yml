@@ -1,8 +1,16 @@
 # List the releases in reverse logical order
 # Only one release should be tagged latest
+1.6.11:
+  date: 2021-09-15
+  state: latest
+  tar: orc-1.6.11.tar.gz
+  signed-by: Dongjoon Hyun (34F0FC5C)
+  sha256: 67c17c012bd588fc5e8195b23fe92c2cb59aa6e20d57ed3dceb3a5f0b0b4c459
+  known-issues:
+
 1.6.10:
   date: 2021-08-10
-  state: latest
+  state: archived
   tar: orc-1.6.10.tar.gz
   signed-by: Owen O’Malley (AD1C5877)
   sha256: 3a7347c85d18e44dece97d98320313848ec1d60aa635136a5187eafec7632ad2
