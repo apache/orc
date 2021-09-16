@@ -275,7 +275,6 @@ public class OutStream extends PositionedOutputStream {
      */
     ByteBuffer overflow = null;
 
-    // TODO: Not sure if this logical cascading is correct or not. Also, maybe not needed if this is shared.
     public void init() {
       if (compressed == null) {
         compressed = getNewOutputBuffer();
