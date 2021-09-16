@@ -390,7 +390,8 @@ public class OutStream extends PositionedOutputStream {
       compressedBuffer.advanceTo(currentPosn + HEADER_SIZE);
 
       // Worth compression
-      if (codec.compress(current, compressedBuffer.compressed, compressedBuffer.overflow, options)) {
+      if (codec.compress(current, compressedBuffer.compressed,
+          compressedBuffer.overflow, options)) {
         // move position back to after the header
         uncompressedBytes = 0;
 
