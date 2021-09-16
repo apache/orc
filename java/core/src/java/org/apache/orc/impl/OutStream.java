@@ -59,7 +59,6 @@ public class OutStream extends PositionedOutputStream {
 
   /**
    * Lazily initialized: Won't allocate byte buffer until invocation of init()
-   * TODO: May need to change this setting.
    */
   public OutputCompressedBuffer compressedBuffer = new OutputCompressedBuffer();
 
