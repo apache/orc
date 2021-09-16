@@ -110,7 +110,11 @@
           <ignoredUnusedDeclaredDependencies>
             <ignoredUnusedDeclaredDependency>com.google.guava:guava</ignoredUnusedDeclaredDependency>
             <ignoredUnusedDeclaredDependency>org.apache.hadoop:hadoop-hdfs</ignoredUnusedDeclaredDependency>
+            <ignoredUnusedDeclaredDependency>org.apache.hadoop:hadoop-common</ignoredUnusedDeclaredDependency>
           </ignoredUnusedDeclaredDependencies>
+          <ignoredDependencies>
+            <ignoredDependency>org.apache.hadoop:hadoop-client-api</ignoredDependency>
+          </ignoredDependencies>
         </configuration>
       </plugin>
     </plugins>
