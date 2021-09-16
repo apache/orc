@@ -95,5 +95,15 @@
         <directory>${build.dir}/shims</directory>
       </build>
     </profile>
+    <profile>
+      <id>java17</id>
+      <dependencies>
+        <dependency>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-client-api</artifactId>
+          <version>${hadoop.version}</version>
+        </dependency>
+      </dependencies>
+    </profile>
   </profiles>
 </project>

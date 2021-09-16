@@ -153,6 +153,8 @@
           </ignoredUnusedDeclaredDependencies>
           <ignoredDependencies>
             <ignoredDependency>org.apache.hive:hive-storage-api</ignoredDependency>
+            <ignoredDependency>org.apache.hadoop:hadoop-client-api</ignoredDependency>
+            <ignoredDependency>org.apache.hadoop:hadoop-client-runtime</ignoredDependency>
           </ignoredDependencies>
         </configuration>
       </plugin>
@@ -165,6 +167,23 @@
       <build>
         <directory>${build.dir}/core</directory>
       </build>
+    </profile>
+    <profile>
+      <id>java17</id>
+      <dependencies>
+        <dependency>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-client-api</artifactId>
+          <version>${hadoop.version}</version>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-client-runtime</artifactId>
+          <version>${hadoop.version}</version>
+          <scope>test</scope>
+        </dependency>
+      </dependencies>
     </profile>
   </profiles>
 </project>

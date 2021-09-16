@@ -500,6 +500,14 @@
         </os>
       </activation>
     </profile>
+    <profile>
+      <id>java17</id>
+      <properties>
+        <min.hadoop.version>3.3.1</min.hadoop.version>
+        <hadoop.version>3.3.1</hadoop.version>
+        <tools.hadoop.version>3.3.1</tools.hadoop.version>
+      </properties>
+    </profile>
   </profiles>
 
   <dependencyManagement>

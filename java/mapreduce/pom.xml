@@ -129,6 +129,10 @@
               org.apache.hadoop:hadoop-mapreduce-client-jobclient
             </ignoredUnusedDeclaredDependency>
           </ignoredUnusedDeclaredDependencies>
+          <ignoredDependencies>
+            <ignoredDependency>org.apache.hadoop:hadoop-client-api</ignoredDependency>
+            <ignoredDependency>org.apache.hadoop:hadoop-client-runtime</ignoredDependency>
+          </ignoredDependencies>
         </configuration>
       </plugin>
     </plugins>
@@ -140,6 +144,23 @@
       <build>
         <directory>${build.dir}/mapreduce</directory>
       </build>
+    </profile>
+    <profile>
+      <id>java17</id>
+      <dependencies>
+        <dependency>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-client-api</artifactId>
+          <version>${hadoop.version}</version>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-client-runtime</artifactId>
+          <version>${hadoop.version}</version>
+          <scope>test</scope>
+        </dependency>
+      </dependencies>
     </profile>
   </profiles>
 </project>
