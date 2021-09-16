@@ -110,7 +110,9 @@ public class TestFilter {
                                                    FilterBenchUtil.schema,
                                                    false,
                                                    OrcFile.Version.CURRENT,
-                                                   normalize);
+                                                   normalize,
+                                                   null,
+                                                   null);
           break;
         default:
           throw new IllegalArgumentException();

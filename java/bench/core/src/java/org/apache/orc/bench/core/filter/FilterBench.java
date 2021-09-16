@@ -170,7 +170,9 @@ public class FilterBench implements OrcBenchmark {
                                                FilterBenchUtil.schema,
                                                false,
                                                OrcFile.Version.CURRENT,
-                                               normalize);
+                                               normalize,
+                                               null,
+                                               null);
       default:
         throw new IllegalArgumentException();
     }

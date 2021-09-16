@@ -18,6 +18,7 @@
 
 package org.apache.orc.impl.filter;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.io.sarg.ExpressionTree;
 import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
@@ -25,6 +26,7 @@ import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.filter.BatchFilter;
+import org.apache.orc.filter.PluginFilterService;
 import org.apache.orc.impl.filter.leaf.LeafFilterFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.ServiceLoader;
 import java.util.Set;
 
 public class FilterFactory {
@@ -46,16 +49,35 @@ public class FilterFactory {
    * @param isSchemaCaseAware identifies if the schema is case-sensitive
    * @param version           provides the ORC file version
    * @param normalize         identifies if the SArg should be normalized or not
+   * @param filePath   that is fully qualified to determine plugin filter(s)
+   * @param conf       configuration shared when determining Plugin filter(s)
    * @return BatchFilter that represents the SearchArgument or null
    */
   public static BatchFilter createBatchFilter(Reader.Options opts,
                                               TypeDescription readSchema,
                                               boolean isSchemaCaseAware,
                                               OrcFile.Version version,
-                                              boolean normalize) {
+                                              boolean normalize,
+                                              String filePath,
+                                              Configuration conf) {
     List<BatchFilter> filters = new ArrayList<>(2);
 
-    // 1. Process SArgFilter
+    // 1. Process input filter
+    if (opts.getFilterCallback() != null) {
+      filters.add(BatchFilterFactory.create(opts.getFilterCallback(),
+                                            opts.getPreFilterColumnNames()));
+    }
+
+    // 2. Process PluginFilter
+    if (opts.isAllowPluginFilters()) {
+      List<BatchFilter> pluginFilters = findPluginFilters(filePath, conf);
+      if (!pluginFilters.isEmpty()) {
+        LOG.debug("Added plugin filters {} to the read", pluginFilters);
+        filters.addAll(pluginFilters);
+      }
+    }
+
+    // 3. Process SArgFilter
     if (opts.isAllowSARGToFilter() && opts.getSearchArgument() != null) {
       SearchArgument sArg = opts.getSearchArgument();
       Set<String> colNames = new HashSet<>();
@@ -74,11 +96,6 @@ public class FilterFactory {
       }
     }
 
-    // 2. Process input filter
-    if (opts.getFilterCallback() != null) {
-      filters.add(BatchFilterFactory.create(opts.getFilterCallback(),
-                                            opts.getPreFilterColumnNames()));
-    }
     return BatchFilterFactory.create(filters);
   }
 
@@ -146,5 +163,25 @@ public class FilterFactory {
     public UnSupportedSArgException(String message) {
       super(message);
     }
+  }
+
+  /**
+   * Find filter(s) for a given file path. The order in which the filter services are invoked is
+   * unpredictable.
+   *
+   * @param filePath fully qualified path of the file being evaluated
+   * @param conf     reader configuration of ORC, can be used to configure the filter services
+   * @return The plugin filter(s) matching the given file, can be empty if none are found
+   */
+  static List<BatchFilter> findPluginFilters(String filePath, Configuration conf) {
+    List<BatchFilter> filters = new ArrayList<>();
+    for (PluginFilterService s : ServiceLoader.load(PluginFilterService.class)) {
+      LOG.debug("Processing filter service {}", s);
+      BatchFilter filter = s.getFilter(filePath, conf);
+      if (filter != null) {
+        filters.add(filter);
+      }
+    }
+    return filters;
   }
 }

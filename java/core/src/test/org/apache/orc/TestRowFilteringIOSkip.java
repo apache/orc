@@ -158,6 +158,7 @@ public class TestRowFilteringIOSkip {
     while (cnt > 0) {
       ridx = r.nextInt((int) RowCount);
       readSingleRowWithFilter(ridx);
+      readSingleRowWithPluginFilter(ridx);
       cnt--;
     }
   }
@@ -169,6 +170,29 @@ public class TestRowFilteringIOSkip {
       .build();
     Reader.Options options = r.options()
       .searchArgument(sarg, new String[] {"ridx"})
+      .useSelected(true)
+      .allowSARGToFilter(true);
+    VectorizedRowBatch b = schema.createRowBatch();
+    long rowCount = 0;
+    try (RecordReader rr = r.rows(options)) {
+      assertTrue(rr.nextBatch(b));
+      validateBatch(b, idx);
+      rowCount += b.size;
+      assertFalse(rr.nextBatch(b));
+    }
+    assertEquals(1, rowCount);
+  }
+
+  private void readSingleRowWithPluginFilter(long idx) throws IOException {
+    Configuration localConf = new Configuration(conf);
+    OrcConf.ALLOW_PLUGIN_FILTER.setBoolean(localConf, true);
+    localConf.set("my.filter.name", "my_long_abs_eq");
+    localConf.set("my.filter.col.name", "ridx");
+    localConf.set("my.filter.col.value", String.valueOf(-idx));
+    localConf.set("my.filter.scope", fs.makeQualified(filePath.getParent()) + "/.*");
+
+    Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(localConf).filesystem(fs));
+    Reader.Options options = r.options()
       .useSelected(true)
       .allowSARGToFilter(true);
     VectorizedRowBatch b = schema.createRowBatch();
@@ -329,6 +353,19 @@ public class TestRowFilteringIOSkip {
                     .useSelected(true)
                     .setRowFilter(FilterColumns,
                                   new InFilter(new HashSet<>(0), 0)));
+  }
+
+  @Test
+  public void filterAllRowsWPluginFilter() throws IOException {
+    readStart();
+    Configuration localConf = new Configuration(conf);
+    OrcConf.ALLOW_PLUGIN_FILTER.setBoolean(localConf, true);
+    localConf.set("my.filter.name", "my_long_abs_eq");
+    localConf.set("my.filter.col.name", "f1");
+    localConf.set("my.filter.col.value", String.valueOf(Long.MIN_VALUE));
+    localConf.set("my.filter.scope", fs.makeQualified(filePath.getParent()) + "/.*");
+    Reader r = OrcFile.createReader(filePath, OrcFile.readerOptions(localConf).filesystem(fs));
+    filterAllRows(r, r.options());
   }
 
   private void filterAllRows(Reader r, Reader.Options options) throws IOException {

@@ -91,7 +91,7 @@ class BatchFilterFactory {
     }
   }
 
-  private static class AndBatchFilterImpl implements BatchFilter {
+  static class AndBatchFilterImpl implements BatchFilter {
     private final BatchFilter[] filters;
     private final String[] colNames;
 

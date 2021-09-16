@@ -817,6 +817,12 @@
         <version>1.11.19</version>
         <scope>test</scope>
       </dependency>
+      <dependency>
+        <groupId>com.google.auto.service</groupId>
+        <artifactId>auto-service</artifactId>
+        <version>1.0</version>
+        <optional>true</optional>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 </project>

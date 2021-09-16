@@ -281,11 +281,15 @@ public class RecordReaderImpl implements RecordReader {
 
     String[] filterCols = null;
     Consumer<OrcFilterContext> filterCallBack = null;
+    String filePath = options.isAllowPluginFilters() ?
+      fileReader.getFileSystem().makeQualified(fileReader.path).toString() : null;
     BatchFilter filter = FilterFactory.createBatchFilter(options,
                                                          evolution.getReaderBaseSchema(),
                                                          evolution.isSchemaEvolutionCaseAware(),
                                                          fileReader.getFileVersion(),
-                                                         false);
+                                                         false,
+                                                         filePath,
+                                                         fileReader.conf);
     if (filter != null) {
       // If a filter is determined then use this
       filterCallBack = filter;
