@@ -333,7 +333,6 @@ public class OutStream extends PositionedOutputStream {
       return totalBytes + HEADER_SIZE;
     }
 
-    // TODO: This should be test covered as well.
     public void abortCompress(int currentPosn) throws IOException {
       // we are using the original, but need to spill the current
       // compressed buffer first for ordering. So back up to where we started,
