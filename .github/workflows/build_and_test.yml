@@ -22,8 +22,7 @@ jobs:
         java:
           - 1.8
           - 11
-          - 16
-          - 17-ea
+          - 17
     env:
       MAVEN_OPTS: -Xmx2g
       MAVEN_SKIP_RC: true

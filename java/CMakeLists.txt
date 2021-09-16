@@ -38,6 +38,19 @@ else()
   set(JAVA_PROFILE "-Pcmake,benchmark")
 endif()
 
+execute_process(
+  COMMAND java --add-opens java.base/java.nio=ALL-UNNAMED -version
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+  RESULT_VARIABLE RET
+  OUTPUT_QUIET
+  ERROR_QUIET)
+if(RET EQUAL 0)
+  set(JAVA_PROFILE ${JAVA_PROFILE},java17)
+  set(JAVA_TEST_PROFILE -Pcmake,java17)
+  set(ADD_OPENS --add-opens)
+  set(JAVA_NIO java.base/java.nio=ALL-UNNAMED)
+endif()
+
 add_custom_command(
    OUTPUT ${ORC_JARS}
    COMMAND ./mvnw ${NO_DOWNLOAD_MSG} ${JAVA_PROFILE}
@@ -50,30 +63,20 @@ add_custom_target(java_build ALL DEPENDS ${ORC_JARS})
 
 add_test(
   NAME java-test
-  COMMAND ./mvnw ${NO_DOWNLOAD_MSG} -Pcmake
+  COMMAND ./mvnw ${NO_DOWNLOAD_MSG} ${JAVA_TEST_PROFILE}
            -Dbuild.dir=${CMAKE_CURRENT_BINARY_DIR} test
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_test(
-  NAME java-examples-test
-  COMMAND java -jar examples/orc-examples-${ORC_VERSION}-uber.jar write
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+# TOOD(ORC-1003)
+# add_test(
+#   NAME java-examples-test
+#   COMMAND java -jar examples/orc-examples-${ORC_VERSION}-uber.jar write
+#   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 add_test(
   NAME java-tools-test
   COMMAND java -jar tools/orc-tools-${ORC_VERSION}-uber.jar version
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-
-execute_process(
-  COMMAND java --add-opens java.base/java.nio=ALL-UNNAMED -version
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-  RESULT_VARIABLE RET
-  OUTPUT_QUIET
-  ERROR_QUIET)
-if(RET EQUAL 0)
-  set(ADD_OPENS --add-opens)
-  set(JAVA_NIO java.base/java.nio=ALL-UNNAMED)
-endif()
 
 add_test(
   NAME java-bench-gen-test
