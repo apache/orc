@@ -822,35 +822,47 @@
         <article>
           <h1>Releases</h1>
           
-<h2 id="current-release---1611">Current Release - 1.6.11:</h2>
+<h2 id="current-release---170">Current Release - 1.7.0:</h2>
 
-<p>ORC 1.6.11 contains both the Java and C++ reader and writer
+<p>ORC 1.7.0 contains both the Java and C++ reader and writer
 for ORC files. It also contains tools for working with ORC
 files and looking at their contents and metadata.</p>
 
 <ul>
   <li>Released: 15 September 2021</li>
-  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.6.11/orc-1.6.11.tar.gz">orc-1.6.11.tar.gz</a></li>
-  <li><a href="https://downloads.apache.org/orc/orc-1.6.11/orc-1.6.11.tar.gz.asc">GPG Signature</a>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.7.0/orc-1.7.0.tar.gz">orc-1.7.0.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-1.7.0/orc-1.7.0.tar.gz.asc">GPG Signature</a>
 signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
-  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.6.11">rel/release-1.6.11</a></li>
-  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.6.11%22">ORC 1.6.11</a></li>
-  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.6.11/orc-1.6.11.tar.gz.sha256">67c17c012bd588fc…</a></li>
-  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.6.11%22&amp;tempMax=500">ORC-1.6.11</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.7.0">rel/release-1.7.0</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.7.0%22">ORC 1.7.0</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.7.0/orc-1.7.0.tar.gz.sha256">cab8cea768b391b1…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.7.0%22&amp;tempMax=500">ORC-1.7.0</a></li>
 </ul>
 
-<p>The new features of ORC 1.6:</p>
+<p>The new features of ORC 1.7:</p>
 
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-14">ORC-14</a> Add column encryption.</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-189">ORC-189</a> Add timestamp with local timezone</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-203">ORC-203</a> Trim minimum and maximum string values</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-363">ORC-363</a> Add zstd support in Java</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-397">ORC-397</a> Support selectively disabling dictionaries</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-522">ORC-522</a> Add type annotations</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-377">ORC-377</a> Support Snappy compression in C++ Writer</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-577">ORC-577</a> Support row-level filtering</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-716">ORC-716</a> Build and test on Java 17-EA</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-731">ORC-731</a> Improve <code class="highlighter-rouge">Java Tools</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-742">ORC-742</a> LazyIO of non-filter columns</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-751">ORC-751</a> Implement Predicate Pushdown in C++ Reader</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-755">ORC-755</a> Introduce OrcFilterContext</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-757">ORC-757</a> Add Hashtable implementation for dictionary</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-780">ORC-780</a> Support LZ4 Compression in C++ Writer</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-797">ORC-797</a> Allow writers to get the stripe information</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-818">ORC-818</a> Build and test in Apple Silicon</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-861">ORC-861</a> Bump CMake minimum requirement to 2.8.12</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-867">ORC-867</a> Upgrade hive-storage-api to 2.8.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-984">ORC-984</a> Save the software version that wrote each ORC file</li>
 </ul>
 
 <p>Known issues:</p>
+
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1002">ORC-1002</a> Add java17 profile</li>
+</ul>
 
 <h2 id="checking-signatures">Checking signatures</h2>
 
@@ -877,9 +889,19 @@ committers’ <a href="https://downloads.apache.org/orc/KEYS">key list</a>.</p>
     
       
       <tr>
-        <td style="text-align: center">1.6.11</td>
+        <td style="text-align: center">1.7.0</td>
         <td style="text-align: center">2021-09-15</td>
         <td style="text-align: center">latest</td>
+        <td style="text-align: center">
+          <a href="/news/2021/09/15/ORC-1.7.0/">
+          ORC-1.7.0</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.6.11</td>
+        <td style="text-align: center">2021-09-15</td>
+        <td style="text-align: center">stable</td>
         <td style="text-align: center">
           <a href="/news/2021/09/15/ORC-1.6.11/">
           ORC-1.6.11</a></td>

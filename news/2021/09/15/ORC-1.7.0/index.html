@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>ORC 1.6.10 Released</title>
+  <title>ORC 1.7.0 Released</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="generator" content="Jekyll v3.8.6">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
@@ -221,8 +221,8 @@
       <div class="unit four-fifths">
         <article>
   <h2>
-    ORC 1.6.10 Released
-    <a href="/news/2021/08/10/ORC-1.6.10/" class="permalink" title="Permalink">∞</a>
+    ORC 1.7.0 Released
+    <a href="/news/2021/09/15/ORC-1.7.0/" class="permalink" title="Permalink">∞</a>
   </h2>
   <span class="post-category">
     <span class="label">
@@ -231,41 +231,53 @@
   </span>
   <div class="post-meta">
     <span class="post-date">
-      10 Aug 2021
+      15 Sep 2021
     </span>
-    <a href="https://people.apache.org/~omalley" class="post-author">
-      <img src="https://people.apache.org/~omalley/omalley.png"
-           class="avatar" alt="omalley avatar"
+    <a href="https://people.apache.org/~dongjoon" class="post-author">
+      <img src="https://people.apache.org/~dongjoon/dongjoon.png"
+           class="avatar" alt="dongjoon avatar"
            width="24" height="24">
-      omalley
+      dongjoon
     </a>
   </div>
   <div class="post-content">
-    <p>The ORC team is excited to announce the release of ORC v1.6.10..</p>
+    <p>The ORC team is excited to announce the release of ORC v1.7.0.</p>
 
 <ul>
-  <li>Released: 10 August 2021</li>
-  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-1.6.10/orc-1.6.10.tar.gz">orc-1.6.10.tar.gz</a></li>
-  <li><a href="https://archive.apache.org/dist/orc/orc-1.6.10/orc-1.6.10.tar.gz.asc">GPG Signature</a>
-signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (AD1C5877)</a></li>
-  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.6.10">rel/release-1.6.10</a></li>
-  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.6.10%22">ORC 1.6.10</a></li>
-  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-1.6.10/orc-1.6.10.tar.gz.sha256">3a7347c85d18e44d…</a></li>
-  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.6.10%22&amp;tempMax=500">ORC-1.6.10</a></li>
+  <li>Released: 15 September 2021</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.7.0/orc-1.7.0.tar.gz">orc-1.7.0.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-1.7.0/orc-1.7.0.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.7.0">rel/release-1.7.0</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.7.0%22">ORC 1.7.0</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.7.0/orc-1.7.0.tar.gz.sha256">cab8cea768b391b1…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.7.0%22&amp;tempMax=500">ORC-1.7.0</a></li>
 </ul>
 
-<p>The new features of ORC 1.6:</p>
+<p>The new features of ORC 1.7:</p>
 
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-14">ORC-14</a> Add column encryption.</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-189">ORC-189</a> Add timestamp with local timezone</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-203">ORC-203</a> Trim minimum and maximum string values</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-363">ORC-363</a> Add zstd support in Java</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-397">ORC-397</a> Support selectively disabling dictionaries</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-522">ORC-522</a> Add type annotations</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-377">ORC-377</a> Support Snappy compression in C++ Writer</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-577">ORC-577</a> Support row-level filtering</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-716">ORC-716</a> Build and test on Java 17-EA</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-731">ORC-731</a> Improve <code class="highlighter-rouge">Java Tools</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-742">ORC-742</a> LazyIO of non-filter columns</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-751">ORC-751</a> Implement Predicate Pushdown in C++ Reader</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-755">ORC-755</a> Introduce OrcFilterContext</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-757">ORC-757</a> Add Hashtable implementation for dictionary</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-780">ORC-780</a> Support LZ4 Compression in C++ Writer</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-797">ORC-797</a> Allow writers to get the stripe information</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-818">ORC-818</a> Build and test in Apple Silicon</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-861">ORC-861</a> Bump CMake minimum requirement to 2.8.12</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-867">ORC-867</a> Upgrade hive-storage-api to 2.8.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-984">ORC-984</a> Save the software version that wrote each ORC file</li>
 </ul>
 
 <p>Known issues:</p>
+
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1002">ORC-1002</a> Add java17 profile</li>
+</ul>
 
 
   </div>
@@ -286,7 +298,7 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (AD1C5
     <h4>Recent Releases</h4>
     <ul>
       
-      <li class="">
+      <li class="current">
         <a href="/news/2021/09/15/ORC-1.7.0/">Version 1.7.0</a>
       </li>
       
@@ -298,7 +310,7 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (AD1C5
         <a href="/news/2021/09/15/ORC-1.5.13/">Version 1.5.13</a>
       </li>
       
-      <li class="current">
+      <li class="">
         <a href="/news/2021/08/10/ORC-1.6.10/">Version 1.6.10</a>
       </li>
       
