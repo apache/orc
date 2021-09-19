@@ -276,6 +276,20 @@ void RleEncoderV2::preparePatchedBlob(EncodingOption& option) {
     }
 }
 
+/**
+ * Prepare for Direct or PatchedBase encoding
+ * compute zigZagLiterals and zzBits100p (Max number of encoding bits required)
+ * @return zigzagLiterals
+ */
+int64_t* RleEncoderV2::prepareForDirectOrPatchedBase(EncodingOption& option) {
+    if (isSigned) {
+        computeZigZagLiterals(option);
+    }
+    int64_t* currentZigzagLiterals = isSigned ? zigzagLiterals : literals;
+    option.zzBits100p = percentileBits(currentZigzagLiterals, 0, numLiterals, 1.0);
+    return currentZigzagLiterals;
+}
+
 void RleEncoderV2::determineEncoding(EncodingOption& option) {
     // We need to compute zigzag values for DIRECT and PATCHED_BASE encodings,
     // but not for SHORT_REPEAT or DELTA. So we only perform the zigzag
@@ -285,11 +299,7 @@ void RleEncoderV2::determineEncoding(EncodingOption& option) {
     if (numLiterals <= MIN_REPEAT) {
         // we need to compute zigzag values for DIRECT encoding if we decide to
         // break early for delta overflows or for shorter runs
-        if (isSigned) {
-            computeZigZagLiterals(option);
-        }
-        int64_t* currentZigzagLiterals = isSigned ? zigzagLiterals : literals;
-        option.zzBits100p = percentileBits(currentZigzagLiterals, 0, numLiterals, 1.0);
+        prepareForDirectOrPatchedBase(option);
         option.encoding = DIRECT;
         return;
     }
@@ -329,11 +339,7 @@ void RleEncoderV2::determineEncoding(EncodingOption& option) {
     // PATCHED_BASE condition as encoding using DIRECT is faster and has less
     // overhead than PATCHED_BASE
     if (!isSafeSubtract(max, option.min)) {
-        if (isSigned) {
-            computeZigZagLiterals(option);
-        }
-        int64_t* currentZigzagLiterals = isSigned ? zigzagLiterals : literals;
-        option.zzBits100p = percentileBits(currentZigzagLiterals, 0, numLiterals, 1.0);
+        prepareForDirectOrPatchedBase(option);
         option.encoding = DIRECT;
         return;
     }
@@ -389,11 +395,7 @@ void RleEncoderV2::determineEncoding(EncodingOption& option) {
     // beyond a threshold then we need to patch the values. if the variation
     // is not significant then we can use direct encoding
 
-    if (isSigned) {
-        computeZigZagLiterals(option);
-    }
-    int64_t* currentZigzagLiterals = isSigned ? zigzagLiterals : literals;
-    option.zzBits100p = percentileBits(currentZigzagLiterals, 0, numLiterals, 1.0);
+    int64_t* currentZigzagLiterals = prepareForDirectOrPatchedBase(option);
     option.zzBits90p = percentileBits(currentZigzagLiterals, 0, numLiterals, 0.9, true);
     uint32_t diffBitsLH = option.zzBits100p - option.zzBits90p;
 

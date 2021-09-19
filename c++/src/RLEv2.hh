@@ -93,6 +93,7 @@ private:
     int64_t*  adjDeltas;
 
     uint32_t getOpCode(EncodingType encoding);
+    int64_t* prepareForDirectOrPatchedBase(EncodingOption& option);
     void determineEncoding(EncodingOption& option);
     void computeZigZagLiterals(EncodingOption& option);
     void preparePatchedBlob(EncodingOption& option);

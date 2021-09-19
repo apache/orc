@@ -410,20 +410,28 @@ public class RunLengthIntegerWriterV2 implements IntegerWriter {
     fixedRunLength = 0;
   }
 
-  private void determineEncoding() {
-
-    // we need to compute zigzag values for DIRECT encoding if we decide to
-    // break early for delta overflows or for shorter runs
+  /**
+   * Prepare for Direct or PatchedBase encoding
+   * compute zigZagLiterals and zzBits100p (Max number of encoding bits required)
+   * @return zigzagLiterals
+   */
+  private long[] prepareForDirectOrPatchedBase() {
     // only signed numbers need to compute zigzag values
     if (signed) {
       computeZigZagLiterals();
     }
-
     long[] currentZigzagLiterals = signed ? zigzagLiterals : literals;
     zzBits100p = utils.percentileBits(currentZigzagLiterals, 0, numLiterals, 1.0);
+    return currentZigzagLiterals;
+  }
+
+  private void determineEncoding() {
+    // we need to compute zigzag values for DIRECT encoding if we decide to
+    // break early for delta overflows or for shorter runs
 
     // not a big win for shorter runs to determine encoding
     if (numLiterals <= MIN_REPEAT) {
+      prepareForDirectOrPatchedBase();
       encoding = EncodingType.DIRECT;
       return;
     }
@@ -463,6 +471,7 @@ public class RunLengthIntegerWriterV2 implements IntegerWriter {
     // PATCHED_BASE condition as encoding using DIRECT is faster and has less
     // overhead than PATCHED_BASE
     if (!utils.isSafeSubtract(max, min)) {
+      prepareForDirectOrPatchedBase();
       encoding = EncodingType.DIRECT;
       return;
     }
@@ -509,7 +518,7 @@ public class RunLengthIntegerWriterV2 implements IntegerWriter {
     // number of bit requirement between 90th and 100th percentile varies
     // beyond a threshold then we need to patch the values. if the variation
     // is not significant then we can use direct encoding
-
+    long[] currentZigzagLiterals = prepareForDirectOrPatchedBase();
     zzBits90p = utils.percentileBits(currentZigzagLiterals, 0, numLiterals, 0.9);
     int diffBitsLH = zzBits100p - zzBits90p;
 
