@@ -1,8 +1,17 @@
 # List the releases in reverse logical order
 # Only one release should be tagged latest
-1.6.11:
+1.7.0:
   date: 2021-09-15
   state: latest
+  tar: orc-1.7.0.tar.gz
+  signed-by: Dongjoon Hyun (34F0FC5C)
+  sha256: cab8cea768b391b173ad5ba839baf20ba9abc42570e3d661783c9c52e0430ab3
+  known-issues:
+    ORC-1002: Add java17 profile
+
+1.6.11:
+  date: 2021-09-15
+  state: stable
   tar: orc-1.6.11.tar.gz
   signed-by: Dongjoon Hyun (34F0FC5C)
   sha256: 67c17c012bd588fc5e8195b23fe92c2cb59aa6e20d57ed3dceb3a5f0b0b4c459
