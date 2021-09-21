@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
 
 import static org.apache.hadoop.util.StringUtils.COMMA_STR;
@@ -74,6 +75,49 @@ public class OrcUtils {
       }
     }
     return results;
+  }
+
+  public static DigestConf[] includeDigestConfColumnsColumns(String selectedColumns,
+                                                             TypeDescription schema) {
+    int numFlattenedCols = schema.getMaximumId();
+    DigestConf[] results = new DigestConf[numFlattenedCols + 1];
+    Arrays.fill(results, DigestConf.NO_CREATE_DIGEST);
+    if (selectedColumns != null && selectedColumns.startsWith("*")) {
+      fillDigestConf(selectedColumns, null, results);
+      return results;
+    }
+    TypeDescription baseSchema = SchemaEvolution.checkAcidSchema(schema) ?
+        SchemaEvolution.getBaseRow(schema) : schema;
+
+    if (selectedColumns != null &&
+        baseSchema.getCategory() == TypeDescription.Category.STRUCT) {
+
+      for (String selectedColumn : selectedColumns.split(COMMA_STR)) {
+        fillDigestConf(selectedColumn, baseSchema, results);
+      }
+    }
+    return results;
+  }
+
+  private static void fillDigestConf(String selectedColumn,
+                                     TypeDescription baseSchema,
+                                     DigestConf[] results) {
+    try {
+      String[] split = selectedColumn.split(":", -1);
+      DigestConf digestConf = split.length == 1
+          ? DigestConf.DEFAULT_DIGEST
+          : new DigestConf(true, Double.parseDouble(split[1]));
+      String columnName = split[0].trim();
+      if (baseSchema == null && Objects.equals("*", columnName)) {
+        Arrays.fill(results, digestConf);
+      }
+      else if (baseSchema != null) {
+        TypeDescription column = findColumn(baseSchema, columnName);
+        if (column != null) {
+          results[column.getId()] = digestConf;
+        }
+      }
+    } catch (Exception ignore) {}
   }
 
   private static TypeDescription findColumn(TypeDescription schema, String column) {

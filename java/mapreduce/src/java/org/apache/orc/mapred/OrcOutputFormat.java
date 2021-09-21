@@ -56,6 +56,7 @@ public class OrcOutputFormat<V extends Writable>
             (OrcConf.ENCODING_STRATEGY.getString(conf)))
         .bloomFilterColumns(OrcConf.BLOOM_FILTER_COLUMNS.getString(conf))
         .bloomFilterFpp(OrcConf.BLOOM_FILTER_FPP.getDouble(conf))
+        .digestColumns(OrcConf.DIGEST_COLUMNS.getString(conf))
         .blockSize(OrcConf.BLOCK_SIZE.getLong(conf))
         .blockPadding(OrcConf.BLOCK_PADDING.getBoolean(conf))
         .stripeSize(OrcConf.STRIPE_SIZE.getLong(conf))

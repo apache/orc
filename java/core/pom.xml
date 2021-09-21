@@ -75,6 +75,10 @@
       <groupId>org.threeten</groupId>
       <artifactId>threeten-extra</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.tdunning</groupId>
+      <artifactId>t-digest</artifactId>
+    </dependency>
 
     <!-- test inter-project -->
     <dependency>

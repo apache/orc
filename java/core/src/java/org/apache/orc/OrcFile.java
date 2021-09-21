@@ -445,6 +445,7 @@ public class OrcFile {
     private String bloomFilterColumns;
     private double bloomFilterFpp;
     private BloomFilterVersion bloomFilterVersion;
+    private String digestColumns;
     private PhysicalWriter physicalWriter;
     private WriterVersion writerVersion = CURRENT_WRITER;
     private boolean useUTCTimestamp;
@@ -496,6 +497,7 @@ public class OrcFile {
           BloomFilterVersion.fromString(
               OrcConf.BLOOM_FILTER_WRITE_VERSION.getString(tableProperties,
                   conf));
+      digestColumns = OrcConf.DIGEST_COLUMNS.getString(tableProperties, conf);
       shims = HadoopShimsFactory.get();
       writeVariableLengthBlocks =
           OrcConf.WRITE_VARIABLE_LENGTH_BLOCKS.getBoolean(tableProperties,conf);
@@ -628,6 +630,14 @@ public class OrcFile {
      */
     public WriterOptions bloomFilterFpp(double fpp) {
       bloomFilterFpp = fpp;
+      return this;
+    }
+
+    /**
+     * Comma separated values of column names for which bloom filter is to be created.
+     */
+    public WriterOptions digestColumns(String columns) {
+      digestColumns = columns;
       return this;
     }
 
@@ -849,6 +859,10 @@ public class OrcFile {
 
     public String getBloomFilterColumns() {
       return bloomFilterColumns;
+    }
+
+    public String getDigestColumns() {
+      return digestColumns;
     }
 
     public boolean getOverwrite() {

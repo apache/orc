@@ -42,6 +42,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -219,6 +220,13 @@ public class TestStringDictionary {
     @Override
     public double getBloomFilterFPP() {
       return 0;
+    }
+
+    @Override
+    public DigestConf[] getDigestConf() {
+      DigestConf[] digestConfArray = new DigestConf[schema.getMaximumId() + 1];
+      Arrays.fill(digestConfArray, DigestConf.NO_CREATE_DIGEST);
+      return digestConfArray;
     }
 
     @Override

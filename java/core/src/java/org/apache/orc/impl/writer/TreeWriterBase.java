@@ -21,6 +21,7 @@ package org.apache.orc.impl.writer;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.ColumnStatistics;
+import org.apache.orc.DigestConf;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
 import org.apache.orc.StripeStatistics;
@@ -63,6 +64,7 @@ public abstract class TreeWriterBase implements TreeWriter {
   protected final BloomFilter bloomFilter;
   protected final BloomFilterUtf8 bloomFilterUtf8;
   protected final boolean createBloomFilter;
+  protected final DigestConf digestConf;
   private final OrcProto.BloomFilterIndex.Builder bloomFilterIndex;
   private final OrcProto.BloomFilterIndex.Builder bloomFilterIndexUtf8;
   protected final OrcProto.BloomFilter.Builder bloomFilterEntry;
@@ -89,10 +91,11 @@ public abstract class TreeWriterBase implements TreeWriter {
     isPresent = new BitFieldWriter(isPresentOutStream, 1);
     this.foundNulls = false;
     createBloomFilter = context.getBloomFilterColumns()[id];
+    digestConf = context.getDigestConf()[id];
     boolean proleptic = context.getProlepticGregorian();
-    indexStatistics = ColumnStatisticsImpl.create(schema, proleptic);
-    stripeColStatistics = ColumnStatisticsImpl.create(schema, proleptic);
-    fileStatistics = ColumnStatisticsImpl.create(schema, proleptic);
+    indexStatistics = ColumnStatisticsImpl.create(schema, proleptic, digestConf);
+    stripeColStatistics = ColumnStatisticsImpl.create(schema, proleptic, digestConf);
+    fileStatistics = ColumnStatisticsImpl.create(schema, proleptic, digestConf.copy(true));
     if (context.buildIndex()) {
       rowIndex = OrcProto.RowIndex.newBuilder();
       rowIndexEntry = OrcProto.RowIndexEntry.newBuilder();

@@ -39,4 +39,25 @@ public interface ColumnStatistics {
    * @return the number of bytes
    */
   long getBytesOnDisk();
+
+  /**
+   * Returns true if the digest is saved
+   * @return true if the digest is saved else false
+   */
+  default boolean hasDigest() {
+    return false;
+  }
+
+  /**
+   * Returns an estimate of a cutoff
+   * @param q The desired fraction
+   * @return quantile
+   */
+  default double quantile(double q) {
+    throw new UnsupportedOperationException("not support get quantile");
+  }
+
+  default double cdf(double q) {
+    throw new UnsupportedOperationException("not support get cdf");
+  }
 }

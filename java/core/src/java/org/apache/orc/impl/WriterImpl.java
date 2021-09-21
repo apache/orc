@@ -33,6 +33,7 @@ import org.apache.orc.ColumnStatistics;
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.CompressionKind;
 import org.apache.orc.DataMask;
+import org.apache.orc.DigestConf;
 import org.apache.orc.MemoryManager;
 import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
@@ -120,6 +121,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
   private final boolean[] bloomFilterColumns;
   private final double bloomFilterFpp;
   private final OrcFile.BloomFilterVersion bloomFilterVersion;
+  private final DigestConf[] digestConfColumns;
   private final boolean writeTimeZone;
   private final boolean useUTCTimeZone;
   private final double dictionaryKeySizeThreshold;
@@ -208,6 +210,9 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
       this.bloomFilterColumns =
           OrcUtils.includeColumns(opts.getBloomFilterColumns(), schema);
     }
+
+    this.digestConfColumns = OrcUtils.includeDigestConfColumnsColumns(
+        opts.getDigestColumns(), schema);
 
     // ensure that we are able to handle callbacks before we register ourselves
     ROWS_PER_CHECK = OrcConf.ROWS_BETWEEN_CHECKS.getLong(conf);
@@ -387,6 +392,15 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     @Override
     public double getBloomFilterFPP() {
       return bloomFilterFpp;
+    }
+
+    /**
+     * Get the digest conf of each column
+     * @return digest conf of each column
+     */
+    @Override
+    public DigestConf[] getDigestConf() {
+      return digestConfColumns;
     }
 
     /**

@@ -20,6 +20,7 @@ package org.apache.orc.impl.writer;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.orc.DataMask;
+import org.apache.orc.DigestConf;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
 import org.apache.orc.PhysicalWriter;
@@ -71,6 +72,12 @@ public interface WriterContext {
    * @return fpp
    */
   double getBloomFilterFPP();
+
+  /**
+   * Get the digest conf of each column
+   * @return digest conf of each column
+   */
+  DigestConf[] getDigestConf();
 
   /**
    * Get the writer's configuration.
