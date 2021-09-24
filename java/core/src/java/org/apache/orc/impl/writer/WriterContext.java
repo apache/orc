@@ -29,8 +29,6 @@ import org.apache.orc.impl.StreamName;
 
 import java.io.IOException;
 
-import static org.apache.orc.CustomStatisticsRegister.EMPTY_IMPL_BUILDER;
-
 public interface WriterContext {
 
   /**
