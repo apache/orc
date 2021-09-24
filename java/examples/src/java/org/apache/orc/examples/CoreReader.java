@@ -34,7 +34,7 @@ public class CoreReader {
   public static void main(Configuration conf, String[] args) throws IOException {
     // Get the information from the file footer
     Reader reader = OrcFile.createReader(new Path("my-file.orc"),
-        OrcFile.readerOptions(conf));
+                                         OrcFile.readerOptions(conf));
     System.out.println("File schema: " + reader.getSchema());
     System.out.println("Row count: " + reader.getNumberOfRows());
 
@@ -44,7 +44,7 @@ public class CoreReader {
     // Read the row data
     VectorizedRowBatch batch = readSchema.createRowBatch();
     RecordReader rowIterator = reader.rows(reader.options()
-        .schema(readSchema));
+                                             .schema(readSchema));
     LongColumnVector z = (LongColumnVector) batch.cols[0];
     BytesColumnVector y = (BytesColumnVector) batch.cols[1];
     LongColumnVector x = (LongColumnVector) batch.cols[2];
