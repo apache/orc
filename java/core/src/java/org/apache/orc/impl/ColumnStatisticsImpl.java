@@ -18,8 +18,6 @@
 package org.apache.orc.impl;
 
 import com.google.protobuf.ByteString;
-import com.tdunning.math.stats.AVLTreeDigest;
-import com.tdunning.math.stats.TDigest;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.serde2.io.DateWritable;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
@@ -30,18 +28,19 @@ import org.apache.orc.BinaryColumnStatistics;
 import org.apache.orc.BooleanColumnStatistics;
 import org.apache.orc.CollectionColumnStatistics;
 import org.apache.orc.ColumnStatistics;
+import org.apache.orc.CustomStatistics;
+import org.apache.orc.CustomStatisticsRegister;
 import org.apache.orc.DateColumnStatistics;
 import org.apache.orc.DecimalColumnStatistics;
-import org.apache.orc.DigestConf;
 import org.apache.orc.DoubleColumnStatistics;
 import org.apache.orc.IntegerColumnStatistics;
 import org.apache.orc.OrcProto;
 import org.apache.orc.StringColumnStatistics;
 import org.apache.orc.TimestampColumnStatistics;
 import org.apache.orc.TypeDescription;
+import org.apache.orc.UpdateStatistics;
 import org.threeten.extra.chrono.HybridChronology;
 
-import java.nio.ByteBuffer;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.chrono.ChronoLocalDate;
@@ -50,10 +49,10 @@ import java.time.chrono.IsoChronology;
 import java.util.Objects;
 import java.util.TimeZone;
 
-import static org.apache.orc.DigestConf.NO_CREATE_DIGEST;
+import static org.apache.orc.CustomStatistics.EMPTY_IMPL;
 
 
-public class ColumnStatisticsImpl implements ColumnStatistics {
+public class ColumnStatisticsImpl implements ColumnStatistics, UpdateStatistics {
 
   @Override
   public boolean equals(Object o) {
@@ -72,14 +71,15 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     if (hasNull != that.hasNull) {
       return false;
     }
-    return bytesOnDisk == that.bytesOnDisk;
+    if (bytesOnDisk != that.bytesOnDisk) {
+      return false;
+    }
+    return Objects.equals(customStatistics, that.customStatistics);
   }
 
   @Override
   public int hashCode() {
-    int result = (int) (count ^ (count >>> 32));
-    result = 31 * result + (hasNull ? 1 : 0);
-    return result;
+    return Objects.hash(count, hasNull, bytesOnDisk, customStatistics);
   }
 
   private static final class BooleanStatisticsImpl extends ColumnStatisticsImpl
@@ -92,7 +92,8 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       trueCount = bkt.getCount(0);
     }
 
-    BooleanStatisticsImpl() {
+    BooleanStatisticsImpl(CustomStatistics customStatistics) {
+      super(customStatistics);
     }
 
     @Override
@@ -106,6 +107,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       if (value) {
         trueCount += repetitions;
       }
+      customStatistics.updateBoolean(value, repetitions);
     }
 
     @Override
@@ -177,16 +179,12 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
   private static final class CollectionColumnStatisticsImpl extends ColumnStatisticsImpl
       implements CollectionColumnStatistics {
 
-    private DigestConf digestConf;
-    private TDigest tDigest = null;
     protected long minimum = Long.MAX_VALUE;
     protected long maximum = 0;
     protected long sum = 0;
 
-    CollectionColumnStatisticsImpl(DigestConf digestConf) {
-      super();
-      this.digestConf = digestConf;
-      this.tDigest = digestConf.createDigest();
+    CollectionColumnStatisticsImpl(CustomStatistics customStatistics) {
+      super(customStatistics);
     }
 
     CollectionColumnStatisticsImpl(OrcProto.ColumnStatistics stats) {
@@ -196,13 +194,6 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       minimum = collStat.hasMinChildren() ? collStat.getMinChildren() : Long.MAX_VALUE;
       maximum = collStat.hasMaxChildren() ? collStat.getMaxChildren() : 0;
       sum = collStat.hasTotalChildren() ? collStat.getTotalChildren() : 0;
-      if (collStat.hasDigest()) {
-        tDigest = AVLTreeDigest.fromBytes(collStat.getDigest().asReadOnlyByteBuffer());
-        this.digestConf = new DigestConf(true, tDigest.compression());
-      }
-      else {
-        this.digestConf = NO_CREATE_DIGEST;
-      }
     }
 
     @Override
@@ -218,10 +209,8 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       if (length > maximum) {
         maximum = length;
       }
-      if (tDigest != null) {
-        tDigest.add(length);
-      }
       this.sum += length;
+      this.customStatistics.updateCollectionLength(length);
     }
 
     @Override
@@ -230,7 +219,6 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       minimum = Long.MAX_VALUE;
       maximum = 0;
       sum = 0;
-      tDigest = digestConf.createDigest();
     }
 
     @Override
@@ -248,14 +236,6 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
           if (otherColl.maximum > maximum) {
             maximum = otherColl.maximum;
           }
-        }
-        TDigest otherTDigest = ((CollectionColumnStatisticsImpl) other).tDigest;
-        if (tDigest != null && otherTDigest != null) {
-          tDigest.add(otherTDigest);
-        }
-        else {
-          this.digestConf = NO_CREATE_DIGEST;
-          tDigest = null;
         }
         sum += otherColl.sum;
       } else {
@@ -317,10 +297,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       if (maximum != that.maximum) {
         return false;
       }
-      if (sum != that.sum) {
-        return false;
-      }
-      return Objects.equals(tDigest, that.tDigest);
+      return sum == that.sum;
     }
 
     @Override
@@ -329,7 +306,6 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       result = 31 * result + (count != 0 ? (int) (minimum ^ (minimum >>> 32)): 0) ;
       result = 31 * result + (count != 0 ? (int) (maximum ^ (maximum >>> 32)): 0);
       result = 31 * result + (sum != 0 ? (int) (sum ^ (sum >>> 32)): 0);
-      result = 31 * result + (tDigest != null ? tDigest.hashCode() : 0);
       return result;
     }
 
@@ -345,28 +321,8 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       if (sum != 0) {
         collectionStats.setTotalChildren(sum);
       }
-      if (tDigest != null && digestConf.getPersistence()) {
-        ByteBuffer byteBuffer = ByteBuffer.allocate(tDigest.byteSize());
-        tDigest.asBytes(byteBuffer);
-        collectionStats.setDigest(ByteString.copyFrom(byteBuffer));
-      }
       builder.setCollectionStatistics(collectionStats);
       return builder;
-    }
-
-    @Override
-    public boolean hasDigest() {
-      return this.tDigest != null;
-    }
-
-    @Override
-    public double quantile(double q) {
-      return this.tDigest.quantile(q);
-    }
-
-    @Override
-    public double cdf(double value) {
-      return this.tDigest.cdf(value);
     }
   }
 
@@ -376,17 +332,14 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
   private static final class IntegerStatisticsImpl extends ColumnStatisticsImpl
       implements IntegerColumnStatistics {
 
-    private DigestConf digestConf;
-    private TDigest tDigest = null;
     private long minimum = Long.MAX_VALUE;
     private long maximum = Long.MIN_VALUE;
     private long sum = 0;
     private boolean hasMinimum = false;
     private boolean overflow = false;
 
-    IntegerStatisticsImpl(DigestConf digestConf) {
-      this.digestConf = digestConf;
-      this.tDigest = digestConf.createDigest();
+    IntegerStatisticsImpl(CustomStatistics customStatistics) {
+      super(customStatistics);
     }
 
     IntegerStatisticsImpl(OrcProto.ColumnStatistics stats) {
@@ -404,14 +357,6 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       } else {
         overflow = true;
       }
-      if (intStat.hasDigest()) {
-        ByteBuffer byteBuffer = intStat.getDigest().asReadOnlyByteBuffer();
-        tDigest = AVLTreeDigest.fromBytes(byteBuffer);
-        this.digestConf = new DigestConf(true, tDigest.compression());
-      }
-      else {
-        this.digestConf = NO_CREATE_DIGEST;
-      }
     }
 
     @Override
@@ -422,7 +367,6 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       maximum = Long.MIN_VALUE;
       sum = 0;
       overflow = false;
-      tDigest = digestConf.createDigest();
     }
 
     @Override
@@ -443,9 +387,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
           overflow = (sum >= 0) != wasPositive;
         }
       }
-      if (tDigest != null) {
-        tDigest.add(value, repetitions);
-      }
+      this.customStatistics.updateInteger(value, repetitions);
     }
 
     @Override
@@ -473,15 +415,6 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
             overflow = (sum >= 0) != wasPositive;
           }
         }
-
-        TDigest otherTDigest = ((IntegerStatisticsImpl) other).tDigest;
-        if (tDigest != null && otherTDigest != null) {
-          tDigest.add(otherTDigest);
-        }
-        else {
-          this.digestConf = NO_CREATE_DIGEST;
-          tDigest = null;
-        }
       } else {
         if (isStatsExists() && hasMinimum) {
           throw new IllegalArgumentException("Incompatible merging of integer column statistics");
@@ -501,12 +434,6 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       }
       if (!overflow) {
         intb.setSum(sum);
-      }
-      if (tDigest != null && digestConf.getPersistence()) {
-        ByteBuffer byteBuffer = ByteBuffer.allocate(tDigest.byteSize());
-        tDigest.asBytes(byteBuffer);
-        byteBuffer.flip();
-        intb.setDigest(ByteString.copyFrom(byteBuffer));
       }
       builder.setIntStatistics(intb);
       return builder;
@@ -545,7 +472,6 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
         buf.append(" sum: ");
         buf.append(sum);
       }
-      // TODO: 2021/9/21 tDigest toString
       return buf.toString();
     }
 
@@ -575,10 +501,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       if (hasMinimum != that.hasMinimum) {
         return false;
       }
-      if (overflow != that.overflow) {
-        return false;
-      }
-      return Objects.equals(tDigest, that.tDigest);
+      return overflow == that.overflow;
     }
 
     @Override
@@ -589,38 +512,19 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       result = 31 * result + (int) (sum ^ (sum >>> 32));
       result = 31 * result + (hasMinimum ? 1 : 0);
       result = 31 * result + (overflow ? 1 : 0);
-      result = 31 * result + (tDigest != null ? tDigest.hashCode() : 0);
       return result;
-    }
-
-    @Override
-    public boolean hasDigest() {
-      return this.tDigest != null;
-    }
-
-    @Override
-    public double quantile(double q) {
-      return this.tDigest.quantile(q);
-    }
-
-    @Override
-    public double cdf(double value) {
-      return this.tDigest.cdf(value);
     }
   }
 
   private static final class DoubleStatisticsImpl extends ColumnStatisticsImpl
        implements DoubleColumnStatistics {
-    private DigestConf digestConf;
-    private TDigest tDigest = null;
     private boolean hasMinimum = false;
     private double minimum = Double.MAX_VALUE;
     private double maximum = Double.MIN_VALUE;
     private double sum = 0;
 
-    DoubleStatisticsImpl(DigestConf digestConf) {
-      this.digestConf = digestConf;
-      this.tDigest = digestConf.createDigest();
+    DoubleStatisticsImpl(CustomStatistics customStatistics) {
+      super(customStatistics);
     }
 
     DoubleStatisticsImpl(OrcProto.ColumnStatistics stats) {
@@ -636,13 +540,6 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       if (dbl.hasSum()) {
         sum = dbl.getSum();
       }
-      if (dbl.hasDigest()) {
-        tDigest = AVLTreeDigest.fromBytes(dbl.getDigest().asReadOnlyByteBuffer());
-        this.digestConf = new DigestConf(true, tDigest.compression());
-      }
-      else {
-        this.digestConf = NO_CREATE_DIGEST;
-      }
     }
 
     @Override
@@ -652,7 +549,6 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       minimum = Double.MAX_VALUE;
       maximum = Double.MIN_VALUE;
       sum = 0;
-      tDigest = digestConf.createDigest();
     }
 
     @Override
@@ -666,10 +562,8 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       } else if (value > maximum) {
         maximum = value;
       }
-      if (tDigest != null) {
-        tDigest.add(value);
-      }
       sum += value;
+      customStatistics.updateDouble(value);
     }
 
     @Override
@@ -688,14 +582,6 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
             maximum = dbl.maximum;
           }
         }
-        TDigest otherTDigest = ((DoubleStatisticsImpl) other).tDigest;
-        if (this.tDigest != null && otherTDigest != null) {
-          this.tDigest.add(otherTDigest);
-        }
-        else {
-          this.digestConf = NO_CREATE_DIGEST;
-          tDigest = null;
-        }
         sum += dbl.sum;
       } else {
         if (isStatsExists() && hasMinimum) {
@@ -713,11 +599,6 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       if (hasMinimum) {
         dbl.setMinimum(minimum);
         dbl.setMaximum(maximum);
-      }
-      if (tDigest != null && digestConf.getPersistence()) {
-        ByteBuffer byteBuffer = ByteBuffer.allocate(tDigest.byteSize());
-        tDigest.asBytes(byteBuffer);
-        dbl.setDigest(ByteString.copyFrom(byteBuffer));
       }
       dbl.setSum(sum);
       builder.setDoubleStatistics(dbl);
@@ -776,10 +657,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       if (Double.compare(that.maximum, maximum) != 0) {
         return false;
       }
-      if (Double.compare(that.sum, sum) != 0) {
-        return false;
-      }
-      return Objects.equals(tDigest, that.tDigest);
+      return Double.compare(that.sum, sum) == 0;
     }
 
     @Override
@@ -793,23 +671,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       result = 31 * result + (int) (temp ^ (temp >>> 32));
       temp = Double.doubleToLongBits(sum);
       result = 31 * result + (int) (temp ^ (temp >>> 32));
-      result = 31 * result + (tDigest != null ? tDigest.hashCode() : 0);
       return result;
-    }
-
-    @Override
-    public boolean hasDigest() {
-      return this.tDigest != null;
-    }
-
-    @Override
-    public double quantile(double q) {
-      return this.tDigest.quantile(q);
-    }
-
-    @Override
-    public double cdf(double value) {
-      return this.tDigest.cdf(value);
     }
   }
 
@@ -823,7 +685,8 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     private boolean isLowerBoundSet = false;
     private boolean isUpperBoundSet = false;
 
-    StringStatisticsImpl() {
+    StringStatisticsImpl(CustomStatistics customStatistics) {
+      super(customStatistics);
     }
 
     StringStatisticsImpl(OrcProto.ColumnStatistics stats) {
@@ -858,12 +721,19 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
     @Override
     public void updateString(Text value) {
-      updateString(value.getBytes(), 0, value.getLength(), 1);
+      internalUpdateString(value.getBytes(), 0, value.getLength(), 1);
+      customStatistics.updateString(value);
     }
 
     @Override
     public void updateString(byte[] bytes, int offset, int length,
                              int repetitions) {
+      internalUpdateString(bytes, offset, length, repetitions);
+      customStatistics.updateString(bytes, offset, length, repetitions);
+    }
+
+    private void internalUpdateString(byte[] bytes, int offset, int length,
+                                      int repetitions) {
       if (minimum == null) {
         if(length > MAX_BYTES_RECORDED) {
           minimum = truncateLowerBound(bytes, offset);
@@ -1129,7 +999,8 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
     private long sum = 0;
 
-    BinaryStatisticsImpl() {
+    BinaryStatisticsImpl(CustomStatistics customStatistics) {
+      super(customStatistics);
     }
 
     BinaryStatisticsImpl(OrcProto.ColumnStatistics stats) {
@@ -1149,12 +1020,14 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     @Override
     public void updateBinary(BytesWritable value) {
       sum += value.getLength();
+      customStatistics.updateBinary(value);
     }
 
     @Override
     public void updateBinary(byte[] bytes, int offset, int length,
                              int repetitions) {
       sum += (long)length * repetitions;
+      customStatistics.updateBinary(bytes, offset, length, repetitions);
     }
 
     @Override
@@ -1227,7 +1100,8 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     private HiveDecimalWritable maximum = null;
     private HiveDecimalWritable sum = new HiveDecimalWritable(0);
 
-    DecimalStatisticsImpl() {
+    DecimalStatisticsImpl(CustomStatistics customStatistics) {
+      super(customStatistics);
     }
 
     DecimalStatisticsImpl(OrcProto.ColumnStatistics stats) {
@@ -1256,6 +1130,19 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
     @Override
     public void updateDecimal(HiveDecimalWritable value) {
+      internalUpdateDecimal(value);
+      customStatistics.updateDecimal(value);
+    }
+
+    @Override
+    public void updateDecimal64(long value, int scale) {
+      HiveDecimalWritable dValue = new HiveDecimalWritable();
+      dValue.setFromLongAndScale(value, scale);
+      internalUpdateDecimal(dValue);
+      customStatistics.updateDecimal64(value, scale);
+    }
+
+    private void internalUpdateDecimal(HiveDecimalWritable value) {
       if (minimum == null) {
         minimum = new HiveDecimalWritable(value);
         maximum = new HiveDecimalWritable(value);
@@ -1267,13 +1154,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       if (sum != null) {
         sum.mutateAdd(value);
       }
-    }
-
-    @Override
-    public void updateDecimal64(long value, int scale) {
-      HiveDecimalWritable dValue = new HiveDecimalWritable();
-      dValue.setFromLongAndScale(value, scale);
-      updateDecimal(dValue);
+      customStatistics.updateDecimal(value);
     }
 
     @Override
@@ -1396,7 +1277,8 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     private long sum = 0;
     private final HiveDecimalWritable scratch = new HiveDecimalWritable();
 
-    Decimal64StatisticsImpl(int scale) {
+    Decimal64StatisticsImpl(int scale, CustomStatistics customStatistics) {
+      super(customStatistics);
       this.scale = scale;
     }
 
@@ -1438,11 +1320,17 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
     @Override
     public void updateDecimal(HiveDecimalWritable value) {
-      updateDecimal64(value.serialize64(scale), scale);
+      internalUpdateDecimal64(value.serialize64(scale), scale);
+      customStatistics.updateDecimal(value);
     }
 
     @Override
     public void updateDecimal64(long value, int valueScale) {
+      internalUpdateDecimal64(value, valueScale);
+      customStatistics.updateDecimal64(value, valueScale);
+    }
+
+    private void internalUpdateDecimal64(long value, int valueScale) {
       // normalize the scale to our desired level
       while (valueScale != scale) {
         if (valueScale > scale) {
@@ -1466,7 +1354,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       if (hasSum) {
         sum += value;
         hasSum = sum <= TypeDescription.MAX_DECIMAL64 &&
-              sum >= TypeDescription.MIN_DECIMAL64;
+            sum >= TypeDescription.MIN_DECIMAL64;
       }
     }
 
@@ -1600,8 +1488,6 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
   private static final class DateStatisticsImpl extends ColumnStatisticsImpl
       implements DateColumnStatistics {
 
-    private DigestConf digestConf;
-    private TDigest tDigest = null;
     private int minimum = Integer.MAX_VALUE;
     private int maximum = Integer.MIN_VALUE;
     private final Chronology chronology;
@@ -1610,10 +1496,9 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       return proleptic ? IsoChronology.INSTANCE : HybridChronology.INSTANCE;
     }
 
-    DateStatisticsImpl(boolean convertToProleptic, DigestConf digestConf) {
+    DateStatisticsImpl(boolean convertToProleptic, CustomStatistics customStatistics) {
+      super(customStatistics);
       this.chronology = getInstance(convertToProleptic);
-      this.digestConf = digestConf;
-      this.tDigest = digestConf.createDigest();
     }
 
     DateStatisticsImpl(OrcProto.ColumnStatistics stats,
@@ -1631,13 +1516,6 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
         minimum = DateUtils.convertDate(dateStats.getMinimum(),
             writerUsedProlepticGregorian, convertToProlepticGregorian);
       }
-      if (dateStats.hasDigest()) {
-        tDigest = AVLTreeDigest.fromBytes(dateStats.getDigest().asReadOnlyByteBuffer());
-        this.digestConf = new DigestConf(true, tDigest.compression());
-      }
-      else {
-        this.digestConf = NO_CREATE_DIGEST;
-      }
     }
 
     @Override
@@ -1645,7 +1523,6 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       super.reset();
       minimum = Integer.MAX_VALUE;
       maximum = Integer.MIN_VALUE;
-      tDigest = digestConf.createDigest();
     }
 
     @Override
@@ -1655,9 +1532,6 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       }
       if (maximum < value.getDays()) {
         maximum = value.getDays();
-      }
-      if (tDigest != null) {
-        tDigest.add(value.getDays());
       }
     }
 
@@ -1669,9 +1543,6 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       if (maximum < value) {
         maximum = value;
       }
-      if (tDigest != null) {
-        tDigest.add(value);
-      }
     }
 
     @Override
@@ -1680,14 +1551,6 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
         DateStatisticsImpl dateStats = (DateStatisticsImpl) other;
         minimum = Math.min(minimum, dateStats.minimum);
         maximum = Math.max(maximum, dateStats.maximum);
-        TDigest otherTDigest = ((DateStatisticsImpl) other).tDigest;
-        if (tDigest != null && otherTDigest != null) {
-          tDigest.add(otherTDigest);
-        }
-        else {
-          this.digestConf = NO_CREATE_DIGEST;
-          tDigest = null;
-        }
       } else {
         if (isStatsExists() && count != 0) {
           throw new IllegalArgumentException("Incompatible merging of date column statistics");
@@ -1704,11 +1567,6 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       if (count != 0) {
         dateStats.setMinimum(minimum);
         dateStats.setMaximum(maximum);
-      }
-      if (tDigest != null && digestConf.getPersistence()) {
-        ByteBuffer byteBuffer = ByteBuffer.allocate(tDigest.byteSize());
-        tDigest.asBytes(byteBuffer);
-        dateStats.setDigest(ByteString.copyFrom(byteBuffer));
       }
       result.setDateStatistics(dateStats);
       return result;
@@ -1781,10 +1639,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       if (minimum != that.minimum) {
         return false;
       }
-      if (maximum != that.maximum) {
-        return false;
-      }
-      return Objects.equals(tDigest, that.tDigest);
+      return maximum == that.maximum;
     }
 
     @Override
@@ -1792,23 +1647,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       int result = super.hashCode();
       result = 31 * result + minimum;
       result = 31 * result + maximum;
-      result = 31 * result + (tDigest != null ? tDigest.hashCode() : 0);
       return result;
-    }
-
-    @Override
-    public boolean hasDigest() {
-      return this.tDigest != null;
-    }
-
-    @Override
-    public double quantile(double q) {
-      return this.tDigest.quantile(q);
-    }
-
-    @Override
-    public double cdf(double value) {
-      return this.tDigest.cdf(value);
     }
   }
 
@@ -1823,7 +1662,8 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     private int minNanos = DEFAULT_MIN_NANOS;
     private int maxNanos = DEFAULT_MAX_NANOS;
 
-    TimestampStatisticsImpl() {
+    TimestampStatisticsImpl(CustomStatistics customStatistics) {
+      super(customStatistics);
     }
 
     TimestampStatisticsImpl(OrcProto.ColumnStatistics stats,
@@ -1874,11 +1714,17 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
       long millis = SerializationUtils.convertToUtc(TimeZone.getDefault(),
           value.getTime());
       // prune the last 6 digits for ns precision
-      updateTimestamp(millis, value.getNanos() % 1_000_000);
+      internalUpdateTimestamp(millis, value.getNanos() % 1_000_000);
+      customStatistics.updateTimestamp(value);
     }
 
     @Override
     public void updateTimestamp(long value, int nanos) {
+      internalUpdateTimestamp(value, nanos);
+      customStatistics.updateTimestamp(value, nanos);
+    }
+
+    protected void internalUpdateTimestamp(long value, int nanos) {
       if (minimum > maximum) {
         minimum = value;
         maximum = value;
@@ -2041,7 +1887,8 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
   }
 
   private static final class TimestampInstantStatisticsImpl extends TimestampStatisticsImpl {
-    TimestampInstantStatisticsImpl() {
+    TimestampInstantStatisticsImpl(CustomStatistics customStatistics) {
+      super(customStatistics);
     }
 
     TimestampInstantStatisticsImpl(OrcProto.ColumnStatistics stats,
@@ -2052,7 +1899,8 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
     @Override
     public void updateTimestamp(Timestamp value) {
-      updateTimestamp(value.getTime(), value.getNanos() % 1_000_000);
+      internalUpdateTimestamp(value.getTime(), value.getNanos() % 1_000_000);
+      customStatistics.updateTimestamp(value);
     }
 
     @Override
@@ -2069,6 +1917,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
   protected long count = 0;
   private boolean hasNull = false;
   private long bytesOnDisk = 0;
+  protected CustomStatistics customStatistics;
 
   ColumnStatisticsImpl(OrcProto.ColumnStatistics stats) {
     if (stats.hasNumberOfValues()) {
@@ -2082,9 +1931,25 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     } else {
       hasNull = true;
     }
+
+    if (stats.hasCustomStatistics()) {
+      OrcProto.CustomStatistics customStatistics = stats.getCustomStatistics();
+      ByteString statisticsContent = customStatistics.getStatisticsContent();
+      String customStatisticsName = customStatistics.getCustomStatisticsName();
+      try {
+        this.customStatistics = CustomStatisticsRegister.getInstance()
+            .getCustomStatisticsBuilder(customStatisticsName).build(statisticsContent);
+      } catch (Exception e) {
+        this.customStatistics = EMPTY_IMPL;
+      }
+    }
+    else {
+      customStatistics = EMPTY_IMPL;
+    }
   }
 
-  ColumnStatisticsImpl() {
+  ColumnStatisticsImpl(CustomStatistics customStatistics) {
+    this.customStatistics = customStatistics;
   }
 
   public void increment() {
@@ -2103,84 +1968,23 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     hasNull = true;
   }
 
-  /**
-   * Update the collection length for Map and List type.
-   * @param value length of collection
-   */
-  public void updateCollectionLength(final long value) {
-    throw new UnsupportedOperationException(
-        "Can't update collection count");
-  }
-
-  public void updateBoolean(boolean value, int repetitions) {
-    throw new UnsupportedOperationException("Can't update boolean");
-  }
-
-  public void updateInteger(long value, int repetitions) {
-    throw new UnsupportedOperationException("Can't update integer");
-  }
-
-  public void updateDouble(double value) {
-    throw new UnsupportedOperationException("Can't update double");
-  }
-
-  public void updateString(Text value) {
-    throw new UnsupportedOperationException("Can't update string");
-  }
-
-  public void updateString(byte[] bytes, int offset, int length,
-                           int repetitions) {
-    throw new UnsupportedOperationException("Can't update string");
-  }
-
-  public void updateBinary(BytesWritable value) {
-    throw new UnsupportedOperationException("Can't update binary");
-  }
-
-  public void updateBinary(byte[] bytes, int offset, int length,
-                           int repetitions) {
-    throw new UnsupportedOperationException("Can't update string");
-  }
-
-  public void updateDecimal(HiveDecimalWritable value) {
-    throw new UnsupportedOperationException("Can't update decimal");
-  }
-
-  public void updateDecimal64(long value, int scale) {
-    throw new UnsupportedOperationException("Can't update decimal");
-  }
-
-  public void updateDate(DateWritable value) {
-    throw new UnsupportedOperationException("Can't update date");
-  }
-
-  public void updateDate(int value) {
-    throw new UnsupportedOperationException("Can't update date");
-  }
-
-  public void updateTimestamp(Timestamp value) {
-    throw new UnsupportedOperationException("Can't update timestamp");
-  }
-
-  // has to be extended
-  public void updateTimestamp(long value, int nanos) {
-    throw new UnsupportedOperationException("Can't update timestamp");
-  }
-
   public boolean isStatsExists() {
-    return (count > 0 || hasNull == true);
+    return (count > 0 || hasNull);
   }
 
   public void merge(ColumnStatisticsImpl stats) {
     count += stats.count;
     hasNull |= stats.hasNull;
     bytesOnDisk += stats.bytesOnDisk;
+    customStatistics.merge(stats.customStatistics);
   }
 
+  @Override
   public void reset() {
     count = 0;
     bytesOnDisk = 0;
     hasNull = false;
+    customStatistics.reset();
   }
 
   @Override
@@ -2203,8 +2007,18 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     return bytesOnDisk;
   }
 
+  /**
+   * Get custom statistics info.
+   * @return custom statistics info
+   */
+  @Override
+  public CustomStatistics getCustomStatistics() {
+    return customStatistics;
+  }
+
   @Override
   public String toString() {
+    // TODO: 2021/9/24 add customStatistics
     return "count: " + count + " hasNull: " + hasNull +
         (bytesOnDisk != 0 ? " bytesOnDisk: " + bytesOnDisk : "");
   }
@@ -2217,6 +2031,13 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     if (bytesOnDisk != 0) {
       builder.setBytesOnDisk(bytesOnDisk);
     }
+    if (isCustomStatsExists() && customStatistics.needPersistence()) {
+      OrcProto.CustomStatistics.Builder customStatBuilder =
+          OrcProto.CustomStatistics.newBuilder();
+      customStatBuilder.setCustomStatisticsName(customStatistics.name())
+          .setStatisticsContent(customStatistics.content());
+      builder.setCustomStatistics(customStatBuilder);
+    }
     return builder;
   }
 
@@ -2226,46 +2047,46 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
   public static ColumnStatisticsImpl create(TypeDescription schema,
                                             boolean convertToProleptic) {
-    return create(schema, convertToProleptic, NO_CREATE_DIGEST);
+    return create(schema, convertToProleptic, EMPTY_IMPL);
   }
 
   public static ColumnStatisticsImpl create(TypeDescription schema,
                                             boolean convertToProleptic,
-                                            DigestConf digestConf) {
+                                            CustomStatistics customStatistics) {
     switch (schema.getCategory()) {
       case BOOLEAN:
-        return new BooleanStatisticsImpl();
+        return new BooleanStatisticsImpl(customStatistics);
       case BYTE:
       case SHORT:
       case INT:
       case LONG:
-        return new IntegerStatisticsImpl(digestConf);
+        return new IntegerStatisticsImpl(customStatistics);
       case LIST:
       case MAP:
-        return new CollectionColumnStatisticsImpl(digestConf);
+        return new CollectionColumnStatisticsImpl(customStatistics);
       case FLOAT:
       case DOUBLE:
-        return new DoubleStatisticsImpl(digestConf);
+        return new DoubleStatisticsImpl(customStatistics);
       case STRING:
       case CHAR:
       case VARCHAR:
-        return new StringStatisticsImpl();
+        return new StringStatisticsImpl(customStatistics);
       case DECIMAL:
         if (schema.getPrecision() <= TypeDescription.MAX_DECIMAL64_PRECISION) {
-          return new Decimal64StatisticsImpl(schema.getScale());
+          return new Decimal64StatisticsImpl(schema.getScale(), customStatistics);
         } else {
-          return new DecimalStatisticsImpl();
+          return new DecimalStatisticsImpl(customStatistics);
         }
       case DATE:
-        return new DateStatisticsImpl(convertToProleptic, digestConf);
+        return new DateStatisticsImpl(convertToProleptic, customStatistics);
       case TIMESTAMP:
-        return new TimestampStatisticsImpl();
+        return new TimestampStatisticsImpl(customStatistics);
       case TIMESTAMP_INSTANT:
-        return new TimestampInstantStatisticsImpl();
+        return new TimestampInstantStatisticsImpl(customStatistics);
       case BINARY:
-        return new BinaryStatisticsImpl();
+        return new BinaryStatisticsImpl(customStatistics);
       default:
-        return new ColumnStatisticsImpl();
+        return new ColumnStatisticsImpl(customStatistics);
     }
   }
 

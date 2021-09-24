@@ -21,7 +21,8 @@ package org.apache.orc.impl.writer;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.ColumnStatistics;
-import org.apache.orc.DigestConf;
+import org.apache.orc.CustomStatistics;
+import org.apache.orc.CustomStatisticsBuilder;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
 import org.apache.orc.StripeStatistics;
@@ -64,7 +65,7 @@ public abstract class TreeWriterBase implements TreeWriter {
   protected final BloomFilter bloomFilter;
   protected final BloomFilterUtf8 bloomFilterUtf8;
   protected final boolean createBloomFilter;
-  protected final DigestConf digestConf;
+  protected final CustomStatisticsBuilder customStatisticsBuilder;
   private final OrcProto.BloomFilterIndex.Builder bloomFilterIndex;
   private final OrcProto.BloomFilterIndex.Builder bloomFilterIndexUtf8;
   protected final OrcProto.BloomFilter.Builder bloomFilterEntry;
@@ -91,11 +92,13 @@ public abstract class TreeWriterBase implements TreeWriter {
     isPresent = new BitFieldWriter(isPresentOutStream, 1);
     this.foundNulls = false;
     createBloomFilter = context.getBloomFilterColumns()[id];
-    digestConf = context.getDigestConf()[id];
+    customStatisticsBuilder = context.getCustomStatisticsBuilder()[id];
+    CustomStatistics[] customStatisticsArray = customStatisticsBuilder.build();
+    assert customStatisticsArray.length == 3;
     boolean proleptic = context.getProlepticGregorian();
-    indexStatistics = ColumnStatisticsImpl.create(schema, proleptic, digestConf);
-    stripeColStatistics = ColumnStatisticsImpl.create(schema, proleptic, digestConf);
-    fileStatistics = ColumnStatisticsImpl.create(schema, proleptic, digestConf.copy(true));
+    indexStatistics = ColumnStatisticsImpl.create(schema, proleptic, customStatisticsArray[0]);
+    stripeColStatistics = ColumnStatisticsImpl.create(schema, proleptic, customStatisticsArray[1]);
+    fileStatistics = ColumnStatisticsImpl.create(schema, proleptic, customStatisticsArray[2]);
     if (context.buildIndex()) {
       rowIndex = OrcProto.RowIndex.newBuilder();
       rowIndexEntry = OrcProto.RowIndexEntry.newBuilder();

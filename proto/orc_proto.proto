@@ -26,14 +26,12 @@ message IntegerStatistics  {
   optional sint64 minimum = 1;
   optional sint64 maximum = 2;
   optional sint64 sum = 3;
-  optional bytes digest = 4;
 }
 
 message DoubleStatistics {
   optional double minimum = 1;
   optional double maximum = 2;
   optional double sum = 3;
-  optional bytes digest = 4;
 }
 
 message StringStatistics {
@@ -61,7 +59,6 @@ message DateStatistics {
   // min,max values saved as days since epoch
   optional sint32 minimum = 1;
   optional sint32 maximum = 2;
-  optional bytes digest = 3;
 }
 
 message TimestampStatistics {
@@ -85,7 +82,11 @@ message CollectionStatistics {
   optional uint64 minChildren = 1;
   optional uint64 maxChildren = 2;
   optional uint64 totalChildren = 3;
-  optional bytes digest = 4;
+}
+
+message CustomStatistics {
+  optional string customStatisticsName = 1;
+  optional bytes statisticsContent = 2;
 }
 
 message ColumnStatistics {
@@ -101,6 +102,7 @@ message ColumnStatistics {
   optional bool hasNull = 10;
   optional uint64 bytesOnDisk = 11;
   optional CollectionStatistics collectionStatistics = 12;
+  optional CustomStatistics customStatistics = 13;
 }
 
 message RowIndexEntry {

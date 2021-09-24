@@ -48,6 +48,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.stream.Stream;
 
+import static org.apache.orc.CustomStatisticsRegister.EMPTY_IMPL_BUILDER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -223,10 +224,11 @@ public class TestStringDictionary {
     }
 
     @Override
-    public DigestConf[] getDigestConf() {
-      DigestConf[] digestConfArray = new DigestConf[schema.getMaximumId() + 1];
-      Arrays.fill(digestConfArray, DigestConf.NO_CREATE_DIGEST);
-      return digestConfArray;
+    public CustomStatisticsBuilder[] getCustomStatisticsBuilder() {
+      CustomStatisticsBuilder[] customStatisticsBuilders =
+          new CustomStatisticsBuilder[schema.getMaximumId() + 1];
+      Arrays.fill(customStatisticsBuilders, EMPTY_IMPL_BUILDER);
+      return customStatisticsBuilders;
     }
 
     @Override

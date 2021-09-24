@@ -19,8 +19,8 @@
 package org.apache.orc.impl.writer;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.orc.CustomStatisticsBuilder;
 import org.apache.orc.DataMask;
-import org.apache.orc.DigestConf;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
 import org.apache.orc.PhysicalWriter;
@@ -28,6 +28,8 @@ import org.apache.orc.impl.OutStream;
 import org.apache.orc.impl.StreamName;
 
 import java.io.IOException;
+
+import static org.apache.orc.CustomStatisticsRegister.EMPTY_IMPL_BUILDER;
 
 public interface WriterContext {
 
@@ -74,10 +76,10 @@ public interface WriterContext {
   double getBloomFilterFPP();
 
   /**
-   * Get the digest conf of each column
-   * @return digest conf of each column
+   * Get the custom statistics builder
+   * @return custom statistics builder
    */
-  DigestConf[] getDigestConf();
+  CustomStatisticsBuilder[] getCustomStatisticsBuilder();
 
   /**
    * Get the writer's configuration.

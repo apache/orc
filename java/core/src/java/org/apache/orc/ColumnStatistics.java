@@ -17,6 +17,8 @@
  */
 package org.apache.orc;
 
+import static org.apache.orc.CustomStatistics.EMPTY_IMPL;
+
 /**
  * Statistics that are available for all types of columns.
  */
@@ -41,23 +43,13 @@ public interface ColumnStatistics {
   long getBytesOnDisk();
 
   /**
-   * Returns true if the digest is saved
-   * @return true if the digest is saved else false
+   * Get custom statistics info.
+   * @return custom statistics info
    */
-  default boolean hasDigest() {
-    return false;
+  CustomStatistics getCustomStatistics();
+
+  default boolean isCustomStatsExists() {
+    return getCustomStatistics() != EMPTY_IMPL;
   }
 
-  /**
-   * Returns an estimate of a cutoff
-   * @param q The desired fraction
-   * @return quantile
-   */
-  default double quantile(double q) {
-    throw new UnsupportedOperationException("not support get quantile");
-  }
-
-  default double cdf(double q) {
-    throw new UnsupportedOperationException("not support get cdf");
-  }
 }

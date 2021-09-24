@@ -30,6 +30,7 @@ import java.util.Objects;
 import java.util.Properties;
 
 import static org.apache.hadoop.util.StringUtils.COMMA_STR;
+import static org.apache.orc.CustomStatisticsRegister.EMPTY_IMPL_BUILDER;
 
 public class OrcUtils {
 
@@ -77,44 +78,44 @@ public class OrcUtils {
     return results;
   }
 
-  public static DigestConf[] includeDigestConfColumnsColumns(String selectedColumns,
-                                                             TypeDescription schema) {
+  public static CustomStatisticsBuilder[] includeCustomStatisticsColumns(
+      String customStatisticsColumns, TypeDescription schema) {
     int numFlattenedCols = schema.getMaximumId();
-    DigestConf[] results = new DigestConf[numFlattenedCols + 1];
-    Arrays.fill(results, DigestConf.NO_CREATE_DIGEST);
-    if (selectedColumns != null && selectedColumns.startsWith("*")) {
-      fillDigestConf(selectedColumns, null, results);
+    CustomStatisticsBuilder[] results = new CustomStatisticsBuilder[numFlattenedCols + 1];
+    Arrays.fill(results, EMPTY_IMPL_BUILDER);
+    if (customStatisticsColumns != null && customStatisticsColumns.startsWith("*")) {
+      fillCustomStatisticsBuilder(customStatisticsColumns, null, results);
       return results;
     }
     TypeDescription baseSchema = SchemaEvolution.checkAcidSchema(schema) ?
         SchemaEvolution.getBaseRow(schema) : schema;
 
-    if (selectedColumns != null &&
+    if (customStatisticsColumns != null &&
         baseSchema.getCategory() == TypeDescription.Category.STRUCT) {
 
-      for (String selectedColumn : selectedColumns.split(COMMA_STR)) {
-        fillDigestConf(selectedColumn, baseSchema, results);
+      for (String selectedColumn : customStatisticsColumns.split(COMMA_STR)) {
+        fillCustomStatisticsBuilder(selectedColumn, baseSchema, results);
       }
     }
     return results;
   }
 
-  private static void fillDigestConf(String selectedColumn,
-                                     TypeDescription baseSchema,
-                                     DigestConf[] results) {
+  private static void fillCustomStatisticsBuilder(String customStatisticsColumns,
+                                                  TypeDescription baseSchema,
+                                                  CustomStatisticsBuilder[] builders) {
     try {
-      String[] split = selectedColumn.split(":", -1);
-      DigestConf digestConf = split.length == 1
-          ? DigestConf.DEFAULT_DIGEST
-          : new DigestConf(true, Double.parseDouble(split[1]));
+      String[] split = customStatisticsColumns.split(":", -1);
+      CustomStatisticsBuilder builder = split.length == 1
+          ? EMPTY_IMPL_BUILDER
+          : CustomStatisticsRegister.getInstance().getCustomStatisticsBuilder(split[1]);
       String columnName = split[0].trim();
       if (baseSchema == null && Objects.equals("*", columnName)) {
-        Arrays.fill(results, digestConf);
+        Arrays.fill(builders, builder);
       }
       else if (baseSchema != null) {
         TypeDescription column = findColumn(baseSchema, columnName);
         if (column != null) {
-          results[column.getId()] = digestConf;
+          builders[column.getId()] = builder;
         }
       }
     } catch (Exception ignore) {}
