@@ -23,6 +23,7 @@
 #include "orc/orc-config.hh"
 #include "orc/Type.hh"
 #include "orc/Vector.hh"
+#include "orc/CustomStatistics.hh"
 
 #include <memory>
 #include <set>
@@ -202,6 +203,16 @@ namespace orc {
      * Get whether this column uses BloomFilter
      */
     bool isColumnUseBloomFilter(uint64_t column) const;
+
+    /**
+     * Set custom Statistics builder
+     */
+    WriterOptions& setCustomStatisticsBuilder(uint16_t columns, CustomStatisticsBuilder* builder);
+
+    /**
+     * Get custom Statistics builder
+     */
+    CustomStatisticsBuilder* getCustomStatisticsBuilder(uint64_t column) const;
 
     /**
      * Set false positive probability of BloomFilter

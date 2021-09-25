@@ -58,6 +58,7 @@ namespace orc {
     T _minimum;
     T _maximum;
     T _sum;
+    CustomStatistics* _customStatistics;
   public:
     InternalStatisticsImpl() {
       _hasNull = false;
@@ -67,9 +68,47 @@ namespace orc {
       _hasTotalLength = false;
       _totalLength = 0;
       _valueCount = 0;
+      _customStatistics = &CustomStatistics::emptyCustomStatistics();
+    }
+    InternalStatisticsImpl(CustomStatistics& customStatistics) {
+      _hasNull = false;
+      _hasMinimum = false;
+      _hasMaximum = false;
+      _hasSum = false;
+      _hasTotalLength = false;
+      _totalLength = 0;
+      _valueCount = 0;
+      _customStatistics = &customStatistics;
+    }
+    InternalStatisticsImpl(const proto::ColumnStatistics& stats) {
+      _hasNull = false;
+      _hasMinimum = false;
+      _hasMaximum = false;
+      _hasSum = false;
+      _hasTotalLength = false;
+      _totalLength = 0;
+      _valueCount = 0;
+      if (stats.has_customstatistics()) {
+        std::string name = stats.customstatistics().customstatisticsname();
+        try {
+          const CustomStatisticsBuilder* builder =
+            CustomStatisticsRegister::instance().getCustomStatisticsBuilder(name);
+
+          _customStatistics = &builder->build(stats.customstatistics().statisticscontent());
+        } catch (...) {
+          _customStatistics = getCustomStatistics();
+        }
+      }
+      else {
+        _customStatistics = getCustomStatistics();
+      }
     }
 
-    ~InternalStatisticsImpl() {}
+    ~InternalStatisticsImpl() {
+      if (_customStatistics != getCustomStatistics()) {
+        delete _customStatistics;
+      }
+    }
 
     // GET / SET _totalLength
     bool hasTotalLength() const { return _hasTotalLength; }
@@ -119,6 +158,21 @@ namespace orc {
 
     void setHasNull(bool hasNull) { _hasNull = hasNull; }
 
+    CustomStatistics* getCustomStatistics() const { return _customStatistics;}
+
+    bool isCustomStatsExists() const {
+      return getCustomStatistics() != &CustomStatistics::emptyCustomStatistics();
+    }
+
+    void customStatisticsToProtoBuf(proto::ColumnStatistics &pbStats) const {
+      CustomStatistics* customStatistics = getCustomStatistics();
+      if (isCustomStatsExists() && customStatistics->needPersistence()) {
+        proto::CustomStatistics *customStats = pbStats.mutable_customstatistics();
+        customStats->set_customstatisticsname(customStatistics->name());
+        customStats->set_statisticscontent(customStatistics->content());
+      }
+    }
+
     void reset() {
       _hasNull = false;
       _hasMinimum = false;
@@ -127,6 +181,7 @@ namespace orc {
       _hasTotalLength = false;
       _totalLength = 0;
       _valueCount = 0;
+      _customStatistics->reset();
     }
 
     void updateMinMax(T value) {
@@ -163,6 +218,7 @@ namespace orc {
 
       _hasTotalLength = _hasTotalLength && other._hasTotalLength;
       _totalLength += other._totalLength;
+      _customStatistics->merge(*other.getCustomStatistics());
     }
    };
 
@@ -205,6 +261,7 @@ namespace orc {
     InternalCharStatistics _stats;
   public:
     ColumnStatisticsImpl() { reset(); }
+    ColumnStatisticsImpl(CustomStatistics& customStatistics): _stats(customStatistics) { reset(); }
     ColumnStatisticsImpl(const proto::ColumnStatistics& stats);
     virtual ~ColumnStatisticsImpl() override;
 
@@ -239,6 +296,8 @@ namespace orc {
     void toProtoBuf(proto::ColumnStatistics& pbStats) const override {
       pbStats.set_hasnull(_stats.hasNull());
       pbStats.set_numberofvalues(_stats.getNumberOfValues());
+
+      _stats.customStatisticsToProtoBuf(pbStats);
     }
 
     std::string toString() const override {
@@ -256,6 +315,7 @@ namespace orc {
     InternalCharStatistics _stats;
   public:
     BinaryColumnStatisticsImpl() { reset(); }
+    BinaryColumnStatisticsImpl(CustomStatistics& customStatistics) : _stats(customStatistics) { reset(); }
     BinaryColumnStatisticsImpl(const proto::ColumnStatistics& stats,
                                const StatContext& statContext);
     virtual ~BinaryColumnStatisticsImpl() override;
@@ -299,6 +359,7 @@ namespace orc {
 
     void update(size_t length) {
       _stats.setTotalLength(_stats.getTotalLength() + length);
+      _stats.getCustomStatistics()->updateBinary(length);
     }
 
     void merge(const MutableColumnStatistics& other) override {
@@ -318,6 +379,8 @@ namespace orc {
 
       proto::BinaryStatistics* binStats = pbStats.mutable_binarystatistics();
       binStats->set_sum(static_cast<int64_t>(_stats.getTotalLength()));
+
+      _stats.customStatisticsToProtoBuf(pbStats);
     }
 
     std::string toString() const override {
@@ -343,6 +406,7 @@ namespace orc {
 
   public:
     BooleanColumnStatisticsImpl() { reset(); }
+    BooleanColumnStatisticsImpl(CustomStatistics& customStatistics) : _stats(customStatistics) { reset(); }
     BooleanColumnStatisticsImpl(const proto::ColumnStatistics& stats,
                                 const StatContext& statContext);
     virtual ~BooleanColumnStatisticsImpl() override;
@@ -397,6 +461,7 @@ namespace orc {
       if (value) {
         _trueCount += repetitions;
       }
+      _stats.getCustomStatistics()->updateBoolean(value, repetitions);
     }
 
     void merge(const MutableColumnStatistics& other) override {
@@ -422,6 +487,8 @@ namespace orc {
       } else {
         bucketStats->clear_count();
       }
+
+      _stats.customStatisticsToProtoBuf(pbStats);
     }
 
     std::string toString() const override {
@@ -446,6 +513,7 @@ namespace orc {
     InternalDateStatistics _stats;
   public:
     DateColumnStatisticsImpl() { reset(); }
+    DateColumnStatisticsImpl(CustomStatistics& customStatistics) : _stats(customStatistics) { reset(); }
     DateColumnStatisticsImpl(const proto::ColumnStatistics& stats,
                              const StatContext& statContext);
     virtual ~DateColumnStatisticsImpl() override;
@@ -506,6 +574,7 @@ namespace orc {
 
     void update(int32_t value) {
       _stats.updateMinMax(value);
+      _stats.getCustomStatistics()->updateDate(value);
     }
 
     void merge(const MutableColumnStatistics& other) override {
@@ -531,6 +600,8 @@ namespace orc {
         dateStatistics->clear_minimum();
         dateStatistics->clear_maximum();
       }
+
+      _stats.customStatisticsToProtoBuf(pbStats);
     }
 
     std::string toString() const override {
@@ -560,6 +631,7 @@ namespace orc {
 
   public:
     DecimalColumnStatisticsImpl() { reset(); }
+    DecimalColumnStatisticsImpl(CustomStatistics& customStatistics) : _stats(customStatistics) { reset(); }
     DecimalColumnStatisticsImpl(const proto::ColumnStatistics& stats,
                                 const StatContext& statContext);
     virtual ~DecimalColumnStatisticsImpl() override;
@@ -641,6 +713,7 @@ namespace orc {
       if (_stats.hasSum()) {
         updateSum(value);
       }
+      _stats.getCustomStatistics()->updateDecimal(value);
     }
 
     void merge(const MutableColumnStatistics& other) override {
@@ -677,6 +750,8 @@ namespace orc {
       } else {
         decStats->clear_sum();
       }
+
+      _stats.customStatisticsToProtoBuf(pbStats);
     }
 
     std::string toString() const override {
@@ -744,6 +819,7 @@ namespace orc {
     InternalDoubleStatistics _stats;
   public:
     DoubleColumnStatisticsImpl() { reset(); }
+    DoubleColumnStatisticsImpl(CustomStatistics& customStatistics) : _stats(customStatistics) { reset(); }
     DoubleColumnStatisticsImpl(const proto::ColumnStatistics& stats);
     virtual ~DoubleColumnStatisticsImpl() override;
 
@@ -821,6 +897,7 @@ namespace orc {
     void update(double value) {
       _stats.updateMinMax(value);
       _stats.setSum(_stats.getSum() + value);
+      _stats.getCustomStatistics()->updateDouble(value);
     }
 
     void merge(const MutableColumnStatistics& other) override {
@@ -856,6 +933,7 @@ namespace orc {
       } else {
         doubleStats->clear_sum();
       }
+      _stats.customStatisticsToProtoBuf(pbStats);
     }
 
     std::string toString() const override {
@@ -890,6 +968,7 @@ namespace orc {
     InternalIntegerStatistics _stats;
   public:
     IntegerColumnStatisticsImpl() { reset(); }
+    IntegerColumnStatisticsImpl(CustomStatistics& customStatistics) : _stats(customStatistics) { reset(); }
     IntegerColumnStatisticsImpl(const proto::ColumnStatistics& stats);
     virtual ~IntegerColumnStatisticsImpl() override;
 
@@ -964,7 +1043,18 @@ namespace orc {
       _stats.setSum(sum);
     }
 
-    void update(int64_t value, int repetitions);
+    void update(int64_t value, int repetitions) {
+      _stats.updateMinMax(value);
+
+      if (_stats.hasSum()) {
+        bool wasPositive = _stats.getSum() >= 0;
+        _stats.setSum(value * repetitions + _stats.getSum());
+        if ((value >= 0) == wasPositive) {
+          _stats.setHasSum((_stats.getSum() >= 0) == wasPositive);
+        }
+      }
+      _stats.getCustomStatistics()->updateInteger(value, repetitions);
+    }
 
     void merge(const MutableColumnStatistics& other) override {
       const IntegerColumnStatisticsImpl& intStats =
@@ -1005,6 +1095,8 @@ namespace orc {
       } else {
         intStats->clear_sum();
       }
+
+      _stats.customStatisticsToProtoBuf(pbStats);
     }
 
     std::string toString() const override {
@@ -1039,7 +1131,8 @@ namespace orc {
     InternalStringStatistics _stats;
 
   public:
-    StringColumnStatisticsImpl() {
+    StringColumnStatisticsImpl() { reset(); }
+    StringColumnStatisticsImpl(CustomStatistics& customStatistics) : _stats(customStatistics) {
       reset();
     }
     StringColumnStatisticsImpl(const proto::ColumnStatistics& stats,
@@ -1117,7 +1210,8 @@ namespace orc {
       _stats.setTotalLength(length);
     }
 
-    void update(const char* value, size_t length) {
+  private:
+    void internalUpdate(const char* value, size_t length) {
       if (value != nullptr) {
         if (!_stats.hasMinimum()) {
           std::string tempStr(value, value + length);
@@ -1129,7 +1223,7 @@ namespace orc {
                                value,
                                std::min(_stats.getMinimum().length(), length));
           if (minCmp > 0 ||
-                (minCmp == 0 && length < _stats.getMinimum().length())) {
+              (minCmp == 0 && length < _stats.getMinimum().length())) {
             setMinimum(std::string(value, value + length));
           }
 
@@ -1138,7 +1232,7 @@ namespace orc {
                                value,
                                std::min(_stats.getMaximum().length(), length));
           if (maxCmp < 0 ||
-                (maxCmp == 0 && length > _stats.getMaximum().length())) {
+              (maxCmp == 0 && length > _stats.getMaximum().length())) {
             setMaximum(std::string(value, value + length));
           }
         }
@@ -1147,8 +1241,15 @@ namespace orc {
       _stats.setTotalLength(_stats.getTotalLength() + length);
     }
 
+  public:
+    void update(const char* value, size_t length) {
+      internalUpdate(value, length);
+      _stats.getCustomStatistics()->updateString(value, length);
+    }
+
     void update(std::string value) {
-      update(value.c_str(), value.length());
+      internalUpdate(value.c_str(), value.length());
+      _stats.getCustomStatistics()->updateString(value);
     }
 
     void merge(const MutableColumnStatistics& other) override {
@@ -1179,6 +1280,8 @@ namespace orc {
       } else {
         strStats->clear_sum();
       }
+
+      _stats.customStatisticsToProtoBuf(pbStats);
     }
 
     std::string toString() const override {
@@ -1222,6 +1325,7 @@ namespace orc {
 
   public:
     TimestampColumnStatisticsImpl() { reset(); }
+    TimestampColumnStatisticsImpl(CustomStatistics& customStatistics) : _stats(customStatistics) { reset(); }
     TimestampColumnStatisticsImpl(const proto::ColumnStatistics& stats,
                                   const StatContext& statContext);
     virtual ~TimestampColumnStatisticsImpl() override;
@@ -1282,6 +1386,7 @@ namespace orc {
 
     void update(int64_t value) {
       _stats.updateMinMax(value);
+      _stats.getCustomStatistics()->updateTimestamp(value);
     }
 
     void update(int64_t milli, int32_t nano) {
@@ -1306,6 +1411,7 @@ namespace orc {
           _stats.setMaximum(milli);
         }
       }
+      _stats.getCustomStatistics()->updateTimestamp(milli, nano);
     }
 
     void merge(const MutableColumnStatistics& other) override {
@@ -1369,6 +1475,8 @@ namespace orc {
         tsStats->clear_minimumnanos();
         tsStats->clear_maximumnanos();
       }
+
+      _stats.customStatisticsToProtoBuf(pbStats);
     }
 
     std::string toString() const override {
@@ -1471,6 +1579,7 @@ namespace orc {
 
   public:
     CollectionColumnStatisticsImpl() { reset(); }
+    CollectionColumnStatisticsImpl(CustomStatistics& customStatistics) : _stats(customStatistics) { reset(); }
     CollectionColumnStatisticsImpl(const proto::ColumnStatistics &stats);
     virtual ~CollectionColumnStatisticsImpl() override;
 
@@ -1580,6 +1689,7 @@ namespace orc {
           _stats.setHasSum(false);
         }
       }
+      _stats.getCustomStatistics()->updateCollection(value);
     }
 
     void toProtoBuf(proto::ColumnStatistics &pbStats) const override {
@@ -1600,6 +1710,8 @@ namespace orc {
       } else {
         collectionStats->clear_totalchildren();
       }
+
+      _stats.customStatisticsToProtoBuf(pbStats);
     }
 
     std::string toString() const override {
@@ -1702,7 +1814,8 @@ namespace orc {
    * @return MutableColumnStatistics instances
    */
   std::unique_ptr<MutableColumnStatistics> createColumnStatistics(
-                                                            const Type& type);
+                                                            const Type& type,
+                                                            CustomStatistics& customStatistics);
 
 }// namespace
 

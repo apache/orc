@@ -177,18 +177,6 @@ namespace orc {
     // PASS
   }
 
-  void IntegerColumnStatisticsImpl::update(int64_t value, int repetitions) {
-    _stats.updateMinMax(value);
-
-    if (_stats.hasSum()) {
-      bool wasPositive = _stats.getSum() >= 0;
-      _stats.setSum(value * repetitions + _stats.getSum());
-      if ((value >= 0) == wasPositive) {
-        _stats.setHasSum((_stats.getSum() >= 0) == wasPositive);
-      }
-    }
-  }
-
   StringColumnStatisticsImpl::~StringColumnStatisticsImpl() {
     // PASS
   }
@@ -198,13 +186,13 @@ namespace orc {
   }
 
   ColumnStatisticsImpl::ColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb) {
+  (const proto::ColumnStatistics& pb): _stats(pb) {
     _stats.setNumberOfValues(pb.numberofvalues());
     _stats.setHasNull(pb.hasnull());
   }
 
   BinaryColumnStatisticsImpl::BinaryColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb, const StatContext& statContext){
+  (const proto::ColumnStatistics& pb, const StatContext& statContext) : _stats(pb) {
     _stats.setNumberOfValues(pb.numberofvalues());
     _stats.setHasNull(pb.hasnull());
     if (pb.has_binarystatistics() && statContext.correctStats) {
@@ -215,7 +203,7 @@ namespace orc {
   }
 
   BooleanColumnStatisticsImpl::BooleanColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb, const StatContext& statContext){
+  (const proto::ColumnStatistics& pb, const StatContext& statContext) : _stats(pb) {
     _stats.setNumberOfValues(pb.numberofvalues());
     _stats.setHasNull(pb.hasnull());
     if (pb.has_bucketstatistics() && statContext.correctStats) {
@@ -228,7 +216,7 @@ namespace orc {
   }
 
   DateColumnStatisticsImpl::DateColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb, const StatContext& statContext){
+  (const proto::ColumnStatistics& pb, const StatContext& statContext) : _stats(pb) {
     _stats.setNumberOfValues(pb.numberofvalues());
     _stats.setHasNull(pb.hasnull());
     if (!pb.has_datestatistics() || !statContext.correctStats) {
@@ -245,7 +233,7 @@ namespace orc {
   }
 
   DecimalColumnStatisticsImpl::DecimalColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb, const StatContext& statContext){
+  (const proto::ColumnStatistics& pb, const StatContext& statContext) : _stats(pb) {
     _stats.setNumberOfValues(pb.numberofvalues());
     _stats.setHasNull(pb.hasnull());
     if (pb.has_decimalstatistics() && statContext.correctStats) {
@@ -261,7 +249,7 @@ namespace orc {
   }
 
   DoubleColumnStatisticsImpl::DoubleColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb){
+  (const proto::ColumnStatistics& pb) : _stats(pb) {
     _stats.setNumberOfValues(pb.numberofvalues());
     _stats.setHasNull(pb.hasnull());
     if (!pb.has_doublestatistics()) {
@@ -281,7 +269,7 @@ namespace orc {
   }
 
   IntegerColumnStatisticsImpl::IntegerColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb){
+  (const proto::ColumnStatistics& pb) : _stats(pb) {
     _stats.setNumberOfValues(pb.numberofvalues());
     _stats.setHasNull(pb.hasnull());
     if (!pb.has_intstatistics()) {
@@ -301,7 +289,7 @@ namespace orc {
   }
 
   StringColumnStatisticsImpl::StringColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb, const StatContext& statContext){
+  (const proto::ColumnStatistics& pb, const StatContext& statContext) : _stats(pb) {
     _stats.setNumberOfValues(pb.numberofvalues());
     _stats.setHasNull(pb.hasnull());
     if (!pb.has_stringstatistics() || !statContext.correctStats) {
@@ -319,7 +307,7 @@ namespace orc {
   }
 
   TimestampColumnStatisticsImpl::TimestampColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb, const StatContext& statContext) {
+  (const proto::ColumnStatistics& pb, const StatContext& statContext) : _stats(pb) {
     _stats.setNumberOfValues(pb.numberofvalues());
     _stats.setHasNull(pb.hasnull());
     if (!pb.has_timestampstatistics() || !statContext.correctStats) {
@@ -392,7 +380,7 @@ namespace orc {
   }
 
   CollectionColumnStatisticsImpl::CollectionColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb) {
+  (const proto::ColumnStatistics& pb) : _stats(pb) {
     _stats.setNumberOfValues(pb.numberofvalues());
     _stats.setHasNull(pb.hasnull());
     if (!pb.has_collectionstatistics()) {
@@ -412,47 +400,47 @@ namespace orc {
   }
 
   std::unique_ptr<MutableColumnStatistics> createColumnStatistics(
-    const Type& type) {
+    const Type& type, CustomStatistics& customStatistics) {
     switch (static_cast<int64_t>(type.getKind())) {
       case BOOLEAN:
         return std::unique_ptr<MutableColumnStatistics>(
-          new BooleanColumnStatisticsImpl());
+          new BooleanColumnStatisticsImpl(customStatistics));
       case BYTE:
       case INT:
       case LONG:
       case SHORT:
         return std::unique_ptr<MutableColumnStatistics>(
-          new IntegerColumnStatisticsImpl());
+          new IntegerColumnStatisticsImpl(customStatistics));
       case MAP:
       case LIST:
         return std::unique_ptr<MutableColumnStatistics>(
-          new CollectionColumnStatisticsImpl());
+          new CollectionColumnStatisticsImpl(customStatistics));
       case STRUCT:
       case UNION:
         return std::unique_ptr<MutableColumnStatistics>(
-          new ColumnStatisticsImpl());
+          new ColumnStatisticsImpl(customStatistics));
       case FLOAT:
       case DOUBLE:
         return std::unique_ptr<MutableColumnStatistics>(
-          new DoubleColumnStatisticsImpl());
+          new DoubleColumnStatisticsImpl(customStatistics));
       case BINARY:
         return std::unique_ptr<MutableColumnStatistics>(
-          new BinaryColumnStatisticsImpl());
+          new BinaryColumnStatisticsImpl(customStatistics));
       case STRING:
       case CHAR:
       case VARCHAR:
         return std::unique_ptr<MutableColumnStatistics>(
-          new StringColumnStatisticsImpl());
+          new StringColumnStatisticsImpl(customStatistics));
       case DATE:
         return std::unique_ptr<MutableColumnStatistics>(
-          new DateColumnStatisticsImpl());
+          new DateColumnStatisticsImpl(customStatistics));
       case TIMESTAMP:
       case TIMESTAMP_INSTANT:
         return std::unique_ptr<MutableColumnStatistics>(
-          new TimestampColumnStatisticsImpl());
+          new TimestampColumnStatisticsImpl(customStatistics));
       case DECIMAL:
         return std::unique_ptr<MutableColumnStatistics>(
-          new DecimalColumnStatisticsImpl());
+          new DecimalColumnStatisticsImpl(customStatistics));
       default:
         throw NotImplementedYet("Not supported type: " + type.toString());
     }

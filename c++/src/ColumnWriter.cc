@@ -98,6 +98,7 @@ namespace orc {
                                 rowIndexEntry(),
                                 rowIndexPosition(),
                                 enableBloomFilter(false),
+                                customStatisticsBuilder(),
                                 memPool(*options.getMemoryPool()),
                                 indexStream(),
                                 bloomFilterStream() {
@@ -106,9 +107,13 @@ namespace orc {
         factory.createStream(proto::Stream_Kind_PRESENT);
     notNullEncoder = createBooleanRleEncoder(std::move(presentStream));
 
-    colIndexStatistics = createColumnStatistics(type);
-    colStripeStatistics = createColumnStatistics(type);
-    colFileStatistics = createColumnStatistics(type);
+    customStatisticsBuilder = options.getCustomStatisticsBuilder(columnId);
+
+    std::vector<CustomStatistics*> buildVector = customStatisticsBuilder->build();
+
+    colIndexStatistics = createColumnStatistics(type, *buildVector[0]);
+    colStripeStatistics = createColumnStatistics(type, *buildVector[1]);
+    colFileStatistics = createColumnStatistics(type, *buildVector[2]);
 
     if (enableIndex) {
       rowIndex = std::unique_ptr<proto::RowIndex>(new proto::RowIndex());

@@ -23,6 +23,8 @@
 #include "Timezone.hh"
 
 #include <memory>
+#include <orc/Writer.hh>
+
 
 namespace orc {
 
@@ -39,6 +41,7 @@ namespace orc {
     double dictionaryKeySizeThreshold;
     bool enableIndex;
     std::set<uint64_t> columnsUseBloomFilter;
+    std::map<uint64_t, CustomStatisticsBuilder*> columnsUseCustomStatistics;
     double bloomFilterFalsePositiveProb;
     BloomFilterVersion bloomFilterVersion;
     std::string timezone;
@@ -232,6 +235,22 @@ namespace orc {
   // we only support UTF8 for now.
   BloomFilterVersion WriterOptions::getBloomFilterVersion() const {
     return privateBits->bloomFilterVersion;
+  }
+
+  WriterOptions& WriterOptions::setCustomStatisticsBuilder(const uint16_t columns,
+                                                           CustomStatisticsBuilder* builder) {
+    privateBits->columnsUseCustomStatistics.insert(std::make_pair(columns, builder));
+    return *this;
+  }
+
+  CustomStatisticsBuilder* WriterOptions::getCustomStatisticsBuilder(uint64_t column) const {
+    auto iterator = privateBits->columnsUseCustomStatistics.find(column);
+    if (iterator != privateBits->columnsUseCustomStatistics.end()) {
+      return iterator->second;
+    }
+    else {
+      return &CustomStatisticsBuilder::emptyCustomStatisticsBuilder();
+    }
   }
 
   const Timezone& WriterOptions::getTimezone() const {

@@ -88,6 +88,8 @@ namespace orc {
     std::unique_ptr<BloomFilterImpl> bloomFilter;
     std::unique_ptr<proto::BloomFilterIndex> bloomFilterIndex;
 
+    CustomStatisticsBuilder* customStatisticsBuilder;
+
   public:
     ColumnWriter(const Type& type, const StreamsFactory& factory,
                  const WriterOptions& options);

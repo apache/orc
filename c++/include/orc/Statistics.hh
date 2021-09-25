@@ -22,6 +22,7 @@
 #include "orc/orc-config.hh"
 #include "orc/Type.hh"
 #include "orc/Vector.hh"
+#include "CustomStatistics.hh"
 
 namespace orc {
 
@@ -49,6 +50,7 @@ namespace orc {
      * Print out statistics of column if any.
      */
     virtual std::string toString() const = 0;
+
   };
 
   /**

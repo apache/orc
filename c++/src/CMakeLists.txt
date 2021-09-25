@@ -204,6 +204,7 @@ set(SOURCE_FILES
   ColumnWriter.cc
   Common.cc
   Compression.cc
+  CustomStatistics.cc
   Exceptions.cc
   Int128.cc
   LzoDecompressor.cc
