@@ -275,8 +275,8 @@ endif ()
 
 if (WIN32)
   ExternalProject_Add(tzdata_ep
-    URL "ftp://cygwin.osuosl.org/pub/cygwin/noarch/release/tzdata/tzdata-2020e-1.tar.xz"
-    URL_HASH MD5=f387bd21bd54a68ef73a0b9fa20a9ff5
+    URL "ftp://cygwin.osuosl.org/pub/cygwin/noarch/release/tzdata/tzdata-2021b-1.tar.xz"
+    URL_HASH MD5=d0de6f00f5a37ee211cfabeae9eb0937
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND "")
