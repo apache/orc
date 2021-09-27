@@ -964,7 +964,23 @@ namespace orc {
       _stats.setSum(sum);
     }
 
-    void update(int64_t value, int repetitions);
+    void update(int64_t value, int repetitions) {
+      _stats.updateMinMax(value);
+
+      if (_stats.hasSum()) {
+        if (repetitions > 1) {
+          _stats.setHasSum(__builtin_mul_overflow(value, repetitions, &value) == 0);
+        }
+
+        if (_stats.hasSum()) {
+          _stats.setHasSum(__builtin_add_overflow(_stats.getSum(), value, &value) == 0);
+
+          if (_stats.hasSum()) {
+            _stats.setSum(value);
+          }
+        }
+      }
+    }
 
     void merge(const MutableColumnStatistics& other) override {
       const IntegerColumnStatisticsImpl& intStats =
