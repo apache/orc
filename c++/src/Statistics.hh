@@ -991,10 +991,10 @@ namespace orc {
       // update sum and check overflow
       _stats.setHasSum(_stats.hasSum() && intStats.hasSum());
       if (_stats.hasSum()) {
-        bool wasPositive = _stats.getSum() >= 0;
-        _stats.setSum(_stats.getSum() + intStats.getSum());
-        if ((intStats.getSum() >= 0) == wasPositive) {
-          _stats.setHasSum((_stats.getSum() >= 0) == wasPositive);
+        int64_t value;
+        _stats.setHasSum(__builtin_add_overflow(_stats.getSum(), intStats.getSum(), &value) == 0);
+        if (_stats.hasSum()) {
+          _stats.setSum(value);
         }
       }
     }
