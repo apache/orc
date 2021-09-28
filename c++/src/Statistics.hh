@@ -969,11 +969,11 @@ namespace orc {
 
       if (_stats.hasSum()) {
         if (repetitions > 1) {
-          _stats.setHasSum(__builtin_mul_overflow(value, repetitions, &value) == 0);
+          _stats.setHasSum(multiplyExact(value, repetitions, &value));
         }
 
         if (_stats.hasSum()) {
-          _stats.setHasSum(__builtin_add_overflow(_stats.getSum(), value, &value) == 0);
+          _stats.setHasSum(addExact(_stats.getSum(), value, &value));
 
           if (_stats.hasSum()) {
             _stats.setSum(value);
@@ -992,7 +992,7 @@ namespace orc {
       _stats.setHasSum(_stats.hasSum() && intStats.hasSum());
       if (_stats.hasSum()) {
         int64_t value;
-        _stats.setHasSum(__builtin_add_overflow(_stats.getSum(), intStats.getSum(), &value) == 0);
+        _stats.setHasSum(addExact(_stats.getSum(), intStats.getSum(), &value));
         if (_stats.hasSum()) {
           _stats.setSum(value);
         }
