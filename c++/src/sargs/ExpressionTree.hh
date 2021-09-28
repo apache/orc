@@ -23,6 +23,7 @@
 
 #include <limits>
 #include <memory>
+#include <string>
 #include <vector>
 
 static const size_t UNUSED_LEAF = std::numeric_limits<size_t>::max();
