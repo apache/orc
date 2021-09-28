@@ -176,7 +176,7 @@
         <configuration>
           <trimStackTrace>false</trimStackTrace>
           <reuseForks>false</reuseForks>
-          <argLine>-Xmx2048m</argLine>
+          <argLine>-Xmx2048m -XX:+IgnoreUnrecognizedVMOptions --add-opens=java.base/java.nio=ALL-UNNAMED</argLine>
           <environmentVariables>
             <TZ>US/Pacific</TZ>
             <LANG>en_US.UTF-8</LANG>
@@ -465,6 +465,9 @@
     </profile>
     <profile>
       <id>java17</id>
+      <activation>
+        <jdk>[17,)</jdk>
+      </activation>
       <properties>
         <min.hadoop.version>3.3.1</min.hadoop.version>
         <hadoop.version>3.3.1</hadoop.version>
