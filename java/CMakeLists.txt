@@ -45,8 +45,6 @@ execute_process(
   OUTPUT_QUIET
   ERROR_QUIET)
 if(RET EQUAL 0)
-  set(JAVA_PROFILE ${JAVA_PROFILE},java17)
-  set(JAVA_TEST_PROFILE -Pcmake,java17)
   set(ADD_OPENS --add-opens)
   set(JAVA_NIO java.base/java.nio=ALL-UNNAMED)
 endif()
@@ -63,7 +61,7 @@ add_custom_target(java_build ALL DEPENDS ${ORC_JARS})
 
 add_test(
   NAME java-test
-  COMMAND ./mvnw ${NO_DOWNLOAD_MSG} ${JAVA_TEST_PROFILE}
+  COMMAND ./mvnw ${NO_DOWNLOAD_MSG} -Pcmake
            -Dbuild.dir=${CMAKE_CURRENT_BINARY_DIR} test
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
