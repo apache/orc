@@ -34,7 +34,18 @@ TEST (TestFileScan, testNominal) {
   EXPECT_EQ("Rows: 32768\nBatches: 33\n", output);
   EXPECT_EQ("", error);
 
+  EXPECT_EQ(0, runProgram({pgm, std::string("-c"), std::string("1,2,3"), file},
+                          output, error));
+  EXPECT_EQ("Rows: 32768\nBatches: 33\n", output);
+  EXPECT_EQ("", error);
+
   EXPECT_EQ(0, runProgram({pgm, std::string("-b"), std::string("256"), file},
+                          output, error));
+  EXPECT_EQ("Rows: 32768\nBatches: 131\n", output);
+  EXPECT_EQ("", error);
+
+  EXPECT_EQ(0, runProgram({pgm, std::string("-b"), std::string("256"),
+                           std::string("-c"), std::string("1,2,3"), file},
                           output, error));
   EXPECT_EQ("Rows: 32768\nBatches: 131\n", output);
   EXPECT_EQ("", error);
@@ -50,6 +61,11 @@ TEST (TestFileScan, testNominal) {
 
   EXPECT_EQ(0, runProgram({pgm, std::string("--batch=256"), file},
                           output, error));
+  EXPECT_EQ("Rows: 32768\nBatches: 131\n", output);
+  EXPECT_EQ("", error);
+
+  EXPECT_EQ(0, runProgram({pgm, std::string("--batch=256"),
+                           std::string("--columns=1,2,3"), file},output, error));
   EXPECT_EQ("Rows: 32768\nBatches: 131\n", output);
   EXPECT_EQ("", error);
 }
@@ -104,6 +120,7 @@ TEST (TestFileScan, testBadCommand) {
   EXPECT_EQ("", output);
   EXPECT_EQ("orc-scan: option requires an argument -- b\n"
             "Usage: orc-scan [-h] [--help]\n"
+            "                [-c 1,2,...] [--columns=1,2,...]\n"
             "                [-b<size>] [--batch=<size>] <filename>\n",
             removeChars(stripPrefix(error, "orc-scan: "),"'`"));
 
@@ -122,6 +139,7 @@ TEST (TestFileScan, testBadCommand) {
   EXPECT_EQ("", output);
   EXPECT_EQ("orc-scan: option --batch requires an argument\n"
             "Usage: orc-scan [-h] [--help]\n"
+            "                [-c 1,2,...] [--columns=1,2,...]\n"
             "                [-b<size>] [--batch=<size>] <filename>\n",
             removeChars(stripPrefix(error, "orc-scan: "), "'`"));
 
