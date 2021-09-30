@@ -43,6 +43,14 @@ CHECK_CXX_SOURCE_COMPILES("
 )
 
 CHECK_CXX_SOURCE_COMPILES("
+    int main(){
+      int a;
+      return __builtin_add_overflow(1, 2, &a);
+    }"
+  HAS_BUILTIN_OVERFLOW_CHECK
+)
+
+CHECK_CXX_SOURCE_COMPILES("
     #include<stdint.h>
     #include<stdio.h>
     int main(int,char*[]){
