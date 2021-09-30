@@ -80,27 +80,27 @@ public abstract class StringBaseTreeWriter extends TreeWriterBase {
 
   StringBaseTreeWriter(TypeDescription schema,
                        WriterEncryptionVariant encryption,
-                       WriterContext writerContext) throws IOException {
-    super(schema, encryption, writerContext);
-    Configuration conf = writerContext.getConfiguration();
+                       WriterContext context) throws IOException {
+    super(schema, encryption, context);
+    Configuration conf = context.getConfiguration();
 
     this.dictionary = createDict(conf);
-    this.isDirectV2 = isNewWriteFormat(writerContext);
-    directStreamOutput = writerContext.createStream(
+    this.isDirectV2 = isNewWriteFormat(context);
+    directStreamOutput = context.createStream(
         new StreamName(id, OrcProto.Stream.Kind.DATA, encryption));
-    stringOutput = writerContext.createStream(
+    stringOutput = context.createStream(
         new StreamName(id, OrcProto.Stream.Kind.DICTIONARY_DATA, encryption));
-    lengthOutput = createIntegerWriter(writerContext.createStream(
+    lengthOutput = createIntegerWriter(context.createStream(
         new StreamName(id, OrcProto.Stream.Kind.LENGTH, encryption)),
-        false, isDirectV2, writerContext);
+        false, isDirectV2, context);
     rowOutput = createIntegerWriter(directStreamOutput, false, isDirectV2,
-        writerContext);
+        context);
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
     }
     rowIndexValueCount.add(0L);
-    buildIndex = writerContext.buildIndex();
-    dictionaryKeySizeThreshold = writerContext.getDictionaryKeySizeThreshold(id);
+    buildIndex = context.buildIndex();
+    dictionaryKeySizeThreshold = context.getDictionaryKeySizeThreshold(id);
     strideDictionaryCheck =
         OrcConf.ROW_INDEX_STRIDE_DICTIONARY_CHECK.getBoolean(conf);
     if (dictionaryKeySizeThreshold <= 0.0) {

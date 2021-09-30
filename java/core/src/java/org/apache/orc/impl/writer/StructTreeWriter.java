@@ -33,12 +33,12 @@ public class StructTreeWriter extends TreeWriterBase {
 
   public StructTreeWriter(TypeDescription schema,
                           WriterEncryptionVariant encryption,
-                          WriterContext writerContext) throws IOException {
-    super(schema, encryption, writerContext);
+                          WriterContext context) throws IOException {
+    super(schema, encryption, context);
     List<TypeDescription> children = schema.getChildren();
     childrenWriters = new TreeWriter[children.size()];
     for (int i = 0; i < childrenWriters.length; ++i) {
-      childrenWriters[i] = Factory.create(children.get(i), encryption, writerContext);
+      childrenWriters[i] = Factory.create(children.get(i), encryption, context);
     }
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);

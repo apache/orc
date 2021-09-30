@@ -36,9 +36,9 @@ public class BooleanTreeWriter extends TreeWriterBase {
 
   public BooleanTreeWriter(TypeDescription schema,
                            WriterEncryptionVariant encryption,
-                           WriterContext writerContext) throws IOException {
-    super(schema, encryption, writerContext);
-    PositionedOutputStream out = writerContext.createStream(
+                           WriterContext context) throws IOException {
+    super(schema, encryption, context);
+    PositionedOutputStream out = context.createStream(
         new StreamName(id, OrcProto.Stream.Kind.DATA, encryption));
     this.writer = new BitFieldWriter(out, 1);
     if (rowIndexPosition != null) {

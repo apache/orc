@@ -39,15 +39,15 @@ public class MapTreeWriter extends TreeWriterBase {
 
   MapTreeWriter(TypeDescription schema,
                 WriterEncryptionVariant encryption,
-                WriterContext writerContext) throws IOException {
-    super(schema, encryption, writerContext);
-    this.isDirectV2 = isNewWriteFormat(writerContext);
+                WriterContext context) throws IOException {
+    super(schema, encryption, context);
+    this.isDirectV2 = isNewWriteFormat(context);
     List<TypeDescription> children = schema.getChildren();
-    keyWriter = Factory.create(children.get(0), encryption, writerContext);
-    valueWriter = Factory.create(children.get(1), encryption, writerContext);
-    lengths = createIntegerWriter(writerContext.createStream(
+    keyWriter = Factory.create(children.get(0), encryption, context);
+    valueWriter = Factory.create(children.get(1), encryption, context);
+    lengths = createIntegerWriter(context.createStream(
         new StreamName(id, OrcProto.Stream.Kind.LENGTH, encryption)),
-        false, isDirectV2, writerContext);
+        false, isDirectV2, context);
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
     }

@@ -39,14 +39,14 @@ public class BinaryTreeWriter extends TreeWriterBase {
 
   public BinaryTreeWriter(TypeDescription schema,
                           WriterEncryptionVariant encryption,
-                          WriterContext writerContext) throws IOException {
-    super(schema, encryption, writerContext);
-    this.stream = writerContext.createStream(
+                          WriterContext context) throws IOException {
+    super(schema, encryption, context);
+    this.stream = context.createStream(
         new StreamName(id, OrcProto.Stream.Kind.DATA, encryption));
-    this.isDirectV2 = isNewWriteFormat(writerContext);
-    this.length = createIntegerWriter(writerContext.createStream(
+    this.isDirectV2 = isNewWriteFormat(context);
+    this.length = createIntegerWriter(context.createStream(
         new StreamName(id, OrcProto.Stream.Kind.LENGTH, encryption)),
-        false, isDirectV2, writerContext);
+        false, isDirectV2, context);
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
     }
