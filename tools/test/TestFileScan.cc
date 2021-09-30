@@ -34,7 +34,7 @@ TEST (TestFileScan, testNominal) {
   EXPECT_EQ("Rows: 32768\nBatches: 33\n", output);
   EXPECT_EQ("", error);
 
-  EXPECT_EQ(0, runProgram({pgm, std::string("-c"), std::string("1,2,3"), file},
+  EXPECT_EQ(0, runProgram({pgm, std::string("-c"), std::string("1,2,3,9"), file},
                           output, error));
   EXPECT_EQ("Rows: 32768\nBatches: 33\n", output);
   EXPECT_EQ("", error);
