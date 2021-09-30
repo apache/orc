@@ -414,7 +414,15 @@ public class RecordReaderUtils {
     long offset = first.getOffset();
     int readSize = (int) (computeEnd(first, last) - offset);
     byte[] buffer = new byte[readSize];
-    file.readFully(offset, buffer, 0, buffer.length);
+    try {
+      file.readFully(offset, buffer, 0, buffer.length);
+    } catch(IOException e) {
+      throw new IOException(String.format("Failed while reading %s %d:%d",
+                                          file,
+                                          offset,
+                                          buffer.length),
+                            e);
+    }
 
     // get the data into a ByteBuffer
     ByteBuffer bytes;
