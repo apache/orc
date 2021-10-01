@@ -93,6 +93,7 @@ public class Driver {
       System.err.println("   key - print information about the keys");
       System.err.println("   meta - print the metadata about the ORC file");
       System.err.println("   scan - scan the ORC file");
+      System.err.println("   sizes - list size on disk of each column");
       System.err.println("   version - print the version of this ORC tool");
       System.err.println();
       System.err.println("To get more help, provide -h to the command");
@@ -124,6 +125,9 @@ public class Driver {
         break;
       case "scan":
         ScanData.main(conf, options.commandArgs);
+        break;
+      case "sizes":
+        ColumnSizes.main(conf, options.commandArgs);
         break;
       case "version":
         PrintVersion.main(conf, options.commandArgs);

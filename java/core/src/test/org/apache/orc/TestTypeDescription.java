@@ -490,4 +490,23 @@ public class TestTypeDescription {
     assertThrows(IllegalArgumentException.class, () ->
         schema.annotateEncryption(null,"nullify:name;sha256:name"));
   }
+
+  @Test
+  public void testGetFullFieldName() {
+    TypeDescription schema = TypeDescription.fromString(
+        "struct<" +
+            "name:struct<first:string,last:string>," +
+            "address:struct<street:string,city:string,country:string,post_code:string>," +
+            "credit_cards:array<struct<card_number:string,expire:date,ccv:string>>," +
+            "properties:map<string,uniontype<int,string>>>");
+    for (String column: new String[]{"0", "name", "name.first", "name.last",
+                                     "address.street", "address.city",
+                                     "credit_cards", "credit_cards._elem",
+                                     "credit_cards._elem.card_number",
+                                     "properties", "properties._key", "properties._value",
+                                     "properties._value.0", "properties._value.1"}) {
+      assertEquals(column,
+          schema.findSubtype(column, true).getFullFieldName());
+    }
+  }
 }
