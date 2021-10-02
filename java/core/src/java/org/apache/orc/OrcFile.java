@@ -691,7 +691,7 @@ public class OrcFile {
     }
 
     /**
-     * A package local option to set the memory manager.
+     * A public option to set the memory manager.
      */
     public WriterOptions memory(MemoryManager value) {
       memoryManagerValue = value;
