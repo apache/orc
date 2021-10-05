@@ -862,4 +862,71 @@ public class TypeDescription
           + source);
     }
   }
+
+  /**
+   * Find the index of a given child object using == comparison.
+   * @param child The child type
+   * @return the index 0 to N-1 of the children.
+   */
+  private int getChildIndex(TypeDescription child) {
+    for(int i=children.size() - 1; i >= 0; --i) {
+      if (children.get(i) == child) {
+        return i;
+      }
+    }
+    throw new IllegalArgumentException("Child not found");
+  }
+
+  /**
+   * For a complex type, get the partial name for this child. For structures,
+   * it returns the corresponding field name. For lists and maps, it uses the
+   * special names "_elem", "_key", and "_value". Unions use the integer index.
+   * @param child The desired child, which must be the same object (==)
+   * @return The name of the field for the given child.
+   */
+  private String getPartialName(TypeDescription child) {
+    switch (category) {
+      case LIST:
+        return "_elem";
+      case MAP:
+        return getChildIndex(child) == 0 ? "_key" : "_value";
+      case STRUCT:
+        return fieldNames.get(getChildIndex(child));
+      case UNION:
+        return Integer.toString(getChildIndex(child));
+      default:
+        throw new IllegalArgumentException(
+            "Can't get the field name of a primitive type");
+    }
+  }
+
+  /**
+   * Get the full field name for the given type. For
+   * "struct&lt;a:struct&lt;list&lt;struct&lt;b:int,c:int&gt;&gt;&gt;&gt;" when
+   * called on c, would return "a._elem.c".
+   * @return A string that is the inverse of findSubtype
+   */
+  public String getFullFieldName() {
+    List<String> parts = new ArrayList<>(getId());
+    TypeDescription current = this;
+    TypeDescription parent = current.getParent();
+    // Handle the root as a special case so that it isn't an empty string.
+    if (parent == null) {
+      return Integer.toString(current.getId());
+    }
+    while (parent != null) {
+      parts.add(parent.getPartialName(current));
+      current = parent;
+      parent = current.getParent();
+    }
+    // Put the string together backwards
+    StringBuilder buffer = new StringBuilder();
+    for (int part=parts.size() - 1; part >= 0; --part) {
+      buffer.append(parts.get(part));
+      if (part != 0) {
+        buffer.append('.');
+      }
+    }
+    return buffer.toString();
+  }
 }
