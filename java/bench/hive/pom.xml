@@ -96,6 +96,11 @@
       <groupId>org.openjdk.jmh</groupId>
       <artifactId>jmh-generator-annprocess</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.tdunning</groupId>
+      <artifactId>t-digest</artifactId>
+      <version>3.3</version>
+    </dependency>
   </dependencies>
   
   <build>
