@@ -35,9 +35,9 @@ public class ByteTreeWriter extends TreeWriterBase {
 
   public ByteTreeWriter(TypeDescription schema,
                         WriterEncryptionVariant encryption,
-                        WriterContext writer) throws IOException {
-    super(schema, encryption, writer);
-    this.writer = new RunLengthByteWriter(writer.createStream(
+                        WriterContext context) throws IOException {
+    super(schema, encryption, context);
+    this.writer = new RunLengthByteWriter(context.createStream(
         new StreamName(id, OrcProto.Stream.Kind.DATA, encryption)));
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);

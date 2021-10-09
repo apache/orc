@@ -39,16 +39,16 @@ public class DateTreeWriter extends TreeWriterBase {
 
   public DateTreeWriter(TypeDescription schema,
                         WriterEncryptionVariant encryption,
-                        WriterContext writer) throws IOException {
-    super(schema, encryption, writer);
-    OutStream out = writer.createStream(
+                        WriterContext context) throws IOException {
+    super(schema, encryption, context);
+    OutStream out = context.createStream(
         new StreamName(id, OrcProto.Stream.Kind.DATA, encryption));
-    this.isDirectV2 = isNewWriteFormat(writer);
-    this.writer = createIntegerWriter(out, true, isDirectV2, writer);
+    this.isDirectV2 = isNewWriteFormat(context);
+    this.writer = createIntegerWriter(out, true, isDirectV2, context);
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
     }
-    useProleptic = writer.getProlepticGregorian();
+    useProleptic = context.getProlepticGregorian();
   }
 
   @Override

@@ -38,13 +38,13 @@ public class ListTreeWriter extends TreeWriterBase {
 
   ListTreeWriter(TypeDescription schema,
                  WriterEncryptionVariant encryption,
-                 WriterContext writer) throws IOException {
-    super(schema, encryption, writer);
-    this.isDirectV2 = isNewWriteFormat(writer);
-    childWriter = Factory.create(schema.getChildren().get(0), encryption, writer);
-    lengths = createIntegerWriter(writer.createStream(
+                 WriterContext context) throws IOException {
+    super(schema, encryption, context);
+    this.isDirectV2 = isNewWriteFormat(context);
+    childWriter = Factory.create(schema.getChildren().get(0), encryption, context);
+    lengths = createIntegerWriter(context.createStream(
         new StreamName(id, OrcProto.Stream.Kind.LENGTH, encryption)),
-        false, isDirectV2, writer);
+        false, isDirectV2, context);
     if (rowIndexPosition != null) {
       recordPosition(rowIndexPosition);
     }

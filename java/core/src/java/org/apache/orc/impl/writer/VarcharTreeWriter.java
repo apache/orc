@@ -34,8 +34,8 @@ public class VarcharTreeWriter extends StringBaseTreeWriter {
 
   VarcharTreeWriter(TypeDescription schema,
                     WriterEncryptionVariant encryption,
-                    WriterContext writer) throws IOException {
-    super(schema, encryption, writer);
+                    WriterContext context) throws IOException {
+    super(schema, encryption, context);
     maxLength = schema.getMaxLength();
   }
 

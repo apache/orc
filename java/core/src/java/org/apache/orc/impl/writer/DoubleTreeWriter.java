@@ -37,9 +37,9 @@ public class DoubleTreeWriter extends TreeWriterBase {
 
   public DoubleTreeWriter(TypeDescription schema,
                           WriterEncryptionVariant encryption,
-                          WriterContext writer) throws IOException {
-    super(schema, encryption, writer);
-    this.stream = writer.createStream(
+                          WriterContext context) throws IOException {
+    super(schema, encryption, context);
+    this.stream = context.createStream(
         new StreamName(id, OrcProto.Stream.Kind.DATA, encryption));
     this.utils = new SerializationUtils();
     if (rowIndexPosition != null) {
