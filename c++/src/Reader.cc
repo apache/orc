@@ -35,6 +35,12 @@
 #include <set>
 
 namespace orc {
+  // ORC files writen by these versions of cpp writers have inconsistent bloom filter
+  // hashing with the Java codes (ORC-1024). Bloom filters of them should not be used
+  // after we fix ORC-1024.
+  static const char* BAD_CPP_BLOOM_FILTER_VERSIONS[] = {
+    "1.6.0", "1.6.1", "1.6.2", "1.6.3", "1.6.4", "1.6.5", "1.6.6", "1.6.7", "1.6.8",
+    "1.6.9", "1.6.10", "1.6.11", "1.7.0"};
 
   const WriterVersionImpl &WriterVersionImpl::VERSION_HIVE_8732() {
     static const WriterVersionImpl version(WriterVersion_HIVE_8732);
@@ -243,6 +249,18 @@ namespace orc {
                                           footer->rowindexstride(),
                                           getWriterVersionImpl(_contents.get())));
     }
+
+    // Check if the file has inconsistent bloom filters.
+    hasBadBloomFilters = false;
+    if (footer->writer() == ORC_CPP_WRITER) {
+      const std::string &fullVersion = footer->softwareversion();
+      for (const char* v : BAD_CPP_BLOOM_FILTER_VERSIONS) {
+        if (fullVersion.find(v) != std::string::npos) {
+          hasBadBloomFilters = true;
+          break;
+        }
+      }
+    }
   }
 
   CompressionKind RowReaderImpl::getCompression() const {
@@ -363,7 +381,7 @@ namespace orc {
             throw ParseError("Failed to parse the row index");
           }
           rowIndexes[colId] = rowIndex;
-        } else { // Stream_Kind_BLOOM_FILTER_UTF8
+        } else if (!hasBadBloomFilters) { // Stream_Kind_BLOOM_FILTER_UTF8
           proto::BloomFilterIndex pbBFIndex;
           if (!pbBFIndex.ParseFromZeroCopyStream(inStream.get())) {
             throw ParseError("Failed to parse bloom filter index");

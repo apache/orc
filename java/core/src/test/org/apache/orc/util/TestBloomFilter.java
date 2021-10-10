@@ -61,6 +61,32 @@ public class TestBloomFilter {
     assertEquals(~0x8040201008040201L, longs[1]);
   }
 
+  /**
+   * Same test as TestBloomFilter_testLongHash() in C++ codes. Make sure the hash values
+   * are consistent between the Java client and C++ client.
+   * TODO(ORC-1025): Add exhaustive test on all numbers.
+   */
+  @Test
+  public void testLongHash() {
+    assertEquals(0, BloomFilter.getLongHash(0));
+    assertEquals(6614246905173314819L, BloomFilter.getLongHash(-1));
+    assertEquals(-5218250166726157773L, BloomFilter.getLongHash(-2));
+    assertEquals(1396019780946710816L, BloomFilter.getLongHash(-3));
+
+    assertEquals(3691278333958578070L, BloomFilter.getLongHash(-9223372036854775805L));
+    assertEquals(-1192099642781211952L, BloomFilter.getLongHash(-9223372036854775806L));
+    assertEquals(-9102499068535824902L, BloomFilter.getLongHash(-9223372036854775807L));
+
+    assertEquals(1499534499340523007L, BloomFilter.getLongHash(790302201));
+    assertEquals(-5108695154500810163L, BloomFilter.getLongHash(790302202));
+    assertEquals(-2450623810987162260L, BloomFilter.getLongHash(790302203));
+    assertEquals(-1097054448615658549L, BloomFilter.getLongHash(18000000000L));
+
+    assertEquals(-4986173376161118712L, BloomFilter.getLongHash(9223372036064673413L));
+    assertEquals(3785699328822078862L, BloomFilter.getLongHash(9223372036064673414L));
+    assertEquals(294188322706112357L, BloomFilter.getLongHash(9223372036064673415L));
+  }
+
   @Test
   public void testBloomFilterSerialize() {
     long[] bits = new long[]{0x8040201008040201L, ~0x8040201008040201L};

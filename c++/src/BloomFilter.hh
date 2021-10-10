@@ -164,10 +164,10 @@ namespace orc {
     friend struct BloomFilterUTF8Utils;
 
     // compute k hash values from hash64 and set bits
-    void addHash(uint64_t hash64);
+    void addHash(int64_t hash64);
 
     // compute k hash values from hash64 and check bits
-    bool testHash(uint64_t hash64) const;
+    bool testHash(int64_t hash64) const;
 
     void serialize(proto::BloomFilter& bloomFilter) const;
 

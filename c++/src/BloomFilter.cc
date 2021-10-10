@@ -103,7 +103,7 @@ namespace orc {
 
   // Thomas Wang's integer hash function
   // http://web.archive.org/web/20071223173210/http://www.concentric.net/~Ttwang/tech/inthash.htm
-  inline uint64_t getLongHash(uint64_t key) {
+  inline int64_t getLongHash(int64_t key) {
     key = (~key) + (key << 21); // key = (key << 21) - key - 1;
     key = key ^ (key >> 24);
     key = (key + (key << 3)) + (key << 8); // key * 265
@@ -148,20 +148,20 @@ namespace orc {
 
   void BloomFilterImpl::addBytes(const char * data, int64_t length) {
     uint64_t hash64 = getBytesHash(data, length);
-    addHash(hash64);
+    addHash(static_cast<int64_t>(hash64));
   }
 
   void BloomFilterImpl::addLong(int64_t data) {
-    addHash(getLongHash(static_cast<uint64_t>(data)));
+    addHash(getLongHash(data));
   }
 
   bool BloomFilterImpl::testBytes(const char * data, int64_t length) const {
     uint64_t hash64 = getBytesHash(data, length);
-    return testHash(hash64);
+    return testHash(static_cast<int64_t>(hash64));
   }
 
   bool BloomFilterImpl::testLong(int64_t data) const {
-    return testHash(getLongHash(static_cast<uint64_t>(data)));
+    return testHash(getLongHash(data));
   }
 
   uint64_t BloomFilterImpl::sizeInBytes() const {
@@ -223,7 +223,7 @@ namespace orc {
 
   DIAGNOSTIC_POP
 
-  void BloomFilterImpl::addHash(uint64_t hash64) {
+  void BloomFilterImpl::addHash(int64_t hash64) {
     int32_t hash1 = static_cast<int32_t>(hash64 & 0xffffffff);
     int32_t hash2 = static_cast<int32_t>(hash64 >> 32);
 
@@ -238,7 +238,7 @@ namespace orc {
     }
   }
 
-  bool BloomFilterImpl::testHash(uint64_t hash64) const{
+  bool BloomFilterImpl::testHash(int64_t hash64) const{
     int32_t hash1 = static_cast<int32_t>(hash64 & 0xffffffff);
     int32_t hash2 = static_cast<int32_t>(hash64 >> 32);
 

@@ -127,6 +127,7 @@ namespace orc {
     proto::Footer* footer;
     DataBuffer<uint64_t> firstRowOfStripe;
     mutable std::unique_ptr<Type> selectedSchema;
+    bool hasBadBloomFilters;
 
     // reading state
     uint64_t previousRow;

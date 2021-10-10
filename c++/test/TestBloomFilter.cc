@@ -17,8 +17,8 @@
  */
 
 #include "BloomFilter.hh"
+#include "BloomFilter.cc"
 #include "orc/OrcFile.hh"
-#include "wrap/gmock.h"
 #include "wrap/gtest-wrapper.h"
 
 namespace orc {
@@ -81,6 +81,29 @@ namespace orc {
     EXPECT_EQ(128, bitset.bitSize());
     EXPECT_EQ(0x8040201008040201L, longs[0]);
     EXPECT_EQ(~0x8040201008040201L, longs[1]);
+  }
+
+  // Same test as TestBloomFilter#testLongHash() in Java codes. Make sure the hash values
+  // are consistent between the Java client and C++ client.
+  // TODO(ORC-1025): Add exhaustive test on all numbers.
+  TEST(TestBloomFilter, testLongHash) {
+    EXPECT_EQ(0, orc::getLongHash(0));
+    EXPECT_EQ(6614246905173314819, orc::getLongHash(-1));
+    EXPECT_EQ(-5218250166726157773, orc::getLongHash(-2));
+    EXPECT_EQ(1396019780946710816, orc::getLongHash(-3));
+
+    EXPECT_EQ(3691278333958578070, orc::getLongHash(-9223372036854775805));
+    EXPECT_EQ(-1192099642781211952, orc::getLongHash(-9223372036854775806));
+    EXPECT_EQ(-9102499068535824902, orc::getLongHash(-9223372036854775807));
+
+    EXPECT_EQ(1499534499340523007, orc::getLongHash(790302201));
+    EXPECT_EQ(-5108695154500810163, orc::getLongHash(790302202));
+    EXPECT_EQ(-2450623810987162260, orc::getLongHash(790302203));
+    EXPECT_EQ(-1097054448615658549, orc::getLongHash(18000000000));
+
+    EXPECT_EQ(-4986173376161118712, orc::getLongHash(9223372036064673413));
+    EXPECT_EQ(3785699328822078862, orc::getLongHash(9223372036064673414));
+    EXPECT_EQ(294188322706112357, orc::getLongHash(9223372036064673415));
   }
 
   TEST(TestBloomFilter, testBloomFilterBasicOperations) {
