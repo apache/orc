@@ -58,6 +58,7 @@ public class ConvertTool {
   private final int csvHeaderLines;
   private final String csvNullString;
   private final String timestampFormat;
+  private final String bloomFilterColumns;
   private final Writer writer;
   private final VectorizedRowBatch batch;
 
@@ -194,11 +195,17 @@ public class ConvertTool {
     this.csvHeaderLines = getIntOption(opts, 'H', 0);
     this.csvNullString = opts.getOptionValue('n', "");
     this.timestampFormat = opts.getOptionValue("t", DEFAULT_TIMESTAMP_FORMAT);
+    this.bloomFilterColumns = opts.getOptionValue('b', null);
     String outFilename = opts.hasOption('o')
         ? opts.getOptionValue('o') : "output.orc";
     boolean overwrite = opts.hasOption('O');
-    writer = OrcFile.createWriter(new Path(outFilename),
-        OrcFile.writerOptions(conf).setSchema(schema).overwrite(overwrite));
+    OrcFile.WriterOptions writerOpts = OrcFile.writerOptions(conf)
+        .setSchema(schema)
+        .overwrite(overwrite);
+    if (this.bloomFilterColumns != null) {
+      writerOpts.bloomFilterColumns(this.bloomFilterColumns);
+    }
+    writer = OrcFile.createWriter(new Path(outFilename), writerOpts);
     batch = schema.createRowBatch();
   }
 
@@ -238,6 +245,10 @@ public class ConvertTool {
     options.addOption(
         Option.builder("s").longOpt("schema").hasArg()
             .desc("The schema to write in to the file").build());
+    options.addOption(
+        Option.builder("b").longOpt("bloomFilterColumns").hasArg()
+            .desc("Comma separated values of column names for which bloom filter is " +
+                "to be created").build());
     options.addOption(
         Option.builder("o").longOpt("output").desc("Output filename")
             .hasArg().build());
