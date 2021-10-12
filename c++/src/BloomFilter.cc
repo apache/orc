@@ -212,7 +212,9 @@ namespace orc {
 
   void BloomFilterImpl::addHash(int64_t hash64) {
     int32_t hash1 = static_cast<int32_t>(hash64 & 0xffffffff);
-    int32_t hash2 = static_cast<int32_t>(hash64 >> 32);
+    // In Java codes, we use "hash64 >>> 32" which is an unsigned shift op.
+    // So we cast hash64 to uint64_t here for an unsigned right shift.
+    int32_t hash2 = static_cast<int32_t>(static_cast<uint64_t>(hash64) >> 32);
 
     for (int32_t i = 1; i <= mNumHashFunctions; ++i) {
       int32_t combinedHash = hash1 + i * hash2;
@@ -227,7 +229,9 @@ namespace orc {
 
   bool BloomFilterImpl::testHash(int64_t hash64) const{
     int32_t hash1 = static_cast<int32_t>(hash64 & 0xffffffff);
-    int32_t hash2 = static_cast<int32_t>(hash64 >> 32);
+    // In Java codes, we use "hash64 >>> 32" which is an unsigned shift op.
+    // So we cast hash64 to uint64_t here for an unsigned right shift.
+    int32_t hash2 = static_cast<int32_t>(static_cast<uint64_t>(hash64) >> 32);
 
     for (int32_t i = 1; i <= mNumHashFunctions; ++i) {
       int32_t combinedHash = hash1 + i * hash2;

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "Murmur3.cc"
+#include "Murmur3.hh"
 #include "wrap/gtest-wrapper.h"
 
 namespace orc {
@@ -33,8 +33,8 @@ namespace orc {
                        " we had everything before us, we had nothing before us,"
                        " we were all going direct to Heaven,"
                        " we were all going direct the other way.";
-    uint32_t originLen = sizeof(origin) / sizeof(uint8_t) - 1;
-    uint64_t hash = Murmur3::hash64(origin, originLen);
+    uint32_t len = sizeof(origin) / sizeof(uint8_t) - 1;
+    uint64_t hash = Murmur3::hash64(origin, len);
     EXPECT_EQ(305830725663368540L, hash);
   }
 

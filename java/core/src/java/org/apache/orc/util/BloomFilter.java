@@ -247,6 +247,13 @@ public class BloomFilter {
   }
 
   /**
+   * Helper method that only used for tests. Use default visibility.
+   */
+  boolean testBitSetPos(int pos) {
+    return this.bitSet.get(pos);
+  }
+
+  /**
    * Bare metal bit set implementation. For performance reasons, this implementation does not check
    * for index bounds nor expand the bit set size if the specified index is greater than the size.
    */

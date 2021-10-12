@@ -105,6 +105,16 @@ namespace orc {
     EXPECT_EQ(294188322706112357, orc::getLongHash(9223372036064673415));
   }
 
+#define CheckBitSet(bf, p1, p2, p3, p4, p5) \
+  EXPECT_TRUE(bf.mBitSet->get(p1));         \
+  EXPECT_TRUE(bf.mBitSet->get(p2));         \
+  EXPECT_TRUE(bf.mBitSet->get(p3));         \
+  EXPECT_TRUE(bf.mBitSet->get(p4));         \
+  EXPECT_TRUE(bf.mBitSet->get(p5))
+
+  // Same test as TestBloomFilter#testBasicOperations() in Java codes. We also
+  // verifies the bitSet positions that are set, to make sure both the Java and C++ codes
+  // hash the same value into the same position.
   TEST(TestBloomFilter, testBloomFilterBasicOperations) {
     BloomFilterImpl bloomFilter(128);
 
@@ -121,14 +131,23 @@ namespace orc {
     EXPECT_FALSE(bloomFilter.testLong(-1111));
 
     bloomFilter.addLong(1);
+    CheckBitSet(bloomFilter, 567, 288, 246, 306, 228);
     bloomFilter.addLong(11);
+    CheckBitSet(bloomFilter, 228, 285, 342, 399, 456);
     bloomFilter.addLong(111);
+    CheckBitSet(bloomFilter, 802, 630, 458, 545, 717);
     bloomFilter.addLong(1111);
+    CheckBitSet(bloomFilter, 826, 526, 40, 480, 86);
     bloomFilter.addLong(0);
+    CheckBitSet(bloomFilter, 0, 0, 0, 0, 0);
     bloomFilter.addLong(-1);
+    CheckBitSet(bloomFilter, 120, 308, 335, 108, 535);
     bloomFilter.addLong(-11);
+    CheckBitSet(bloomFilter, 323, 685, 215, 577, 107);
     bloomFilter.addLong(-111);
+    CheckBitSet(bloomFilter, 357, 318, 279, 15, 54);
     bloomFilter.addLong(-1111);
+    CheckBitSet(bloomFilter, 572, 680, 818, 434, 232);
 
     EXPECT_TRUE(bloomFilter.testLong(1));
     EXPECT_TRUE(bloomFilter.testLong(11));
@@ -153,14 +172,23 @@ namespace orc {
     EXPECT_FALSE(bloomFilter.testDouble(-1111.1111));
 
     bloomFilter.addDouble(1.1);
+    CheckBitSet(bloomFilter, 522, 692, 12, 370, 753);
     bloomFilter.addDouble(11.11);
+    CheckBitSet(bloomFilter,  210, 188, 89, 720, 389);
     bloomFilter.addDouble(111.111);
+    CheckBitSet(bloomFilter, 831, 252, 583, 500, 335);
     bloomFilter.addDouble(1111.1111);
+    CheckBitSet(bloomFilter, 725, 175, 374, 92, 642);
     bloomFilter.addDouble(0.0);
+    CheckBitSet(bloomFilter, 0, 0, 0, 0, 0);
     bloomFilter.addDouble(-1.1);
+    CheckBitSet(bloomFilter, 636, 163, 565, 206, 679);
     bloomFilter.addDouble(-11.11);
+    CheckBitSet(bloomFilter, 473, 192, 743, 462, 181);
     bloomFilter.addDouble(-111.111);
+    CheckBitSet(bloomFilter, 167, 152, 472, 295, 24);
     bloomFilter.addDouble(-1111.1111);
+    CheckBitSet(bloomFilter, 308, 346, 384, 422, 371);
 
     EXPECT_TRUE(bloomFilter.testDouble(1.1));
     EXPECT_TRUE(bloomFilter.testDouble(11.11));
@@ -186,8 +214,11 @@ namespace orc {
                                        static_cast<int64_t>(strlen(cnStr))));
 
     bloomFilter.addBytes(emptyStr, static_cast<int64_t>(strlen(emptyStr)));
+    CheckBitSet(bloomFilter, 656, 807, 480, 151, 304);
     bloomFilter.addBytes(enStr, static_cast<int64_t>(strlen(enStr)));
+    CheckBitSet(bloomFilter, 576, 221, 68, 729, 392);
     bloomFilter.addBytes(cnStr, static_cast<int64_t>(strlen(cnStr)));
+    CheckBitSet(bloomFilter, 602, 636, 44, 362, 318);
 
     EXPECT_TRUE(bloomFilter.testBytes(emptyStr,
                                       static_cast<int64_t>(strlen(emptyStr))));
