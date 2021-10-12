@@ -17,7 +17,6 @@
  */
 
 #include "BloomFilter.hh"
-#include "BloomFilter.cc"
 #include "orc/OrcFile.hh"
 #include "wrap/gtest-wrapper.h"
 
