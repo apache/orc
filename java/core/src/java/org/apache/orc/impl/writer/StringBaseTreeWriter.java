@@ -155,22 +155,7 @@ public abstract class StringBaseTreeWriter extends TreeWriterBase {
   private void flushDictionary() throws IOException {
     final int[] dumpOrder = new int[dictionary.size()];
 
-    if (useDictionaryEncoding) {
-      // Write the dictionary by traversing the dictionary writing out
-      // the bytes and lengths; and creating the map from the original order
-      // to the final sorted order.
-      dictionary.visit(new Dictionary.Visitor() {
-        private int currentId = 0;
-
-        @Override
-        public void visit(Dictionary.VisitorContext context
-        ) throws IOException {
-          context.writeBytes(stringOutput);
-          lengthOutput.write(context.getLength());
-          dumpOrder[context.getOriginalPosition()] = currentId++;
-        }
-      });
-    } else {
+    if (!useDictionaryEncoding) {
       // for direct encoding, we don't want the dictionary data stream
       stringOutput.suppress();
     }
@@ -198,7 +183,7 @@ public abstract class StringBaseTreeWriter extends TreeWriterBase {
       }
       if (i != length) {
         if (useDictionaryEncoding) {
-          rowOutput.write(dumpOrder[rows.get(i)]);
+          rowOutput.write(rows.get(i));
         } else {
           final int writeLen = dictionary.writeTo(directStreamOutput, rows.get(i));
           lengthOutput.write(writeLen);
