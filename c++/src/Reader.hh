@@ -180,6 +180,13 @@ namespace orc {
      */
     void seekToRowGroup(uint32_t rowGroupEntryId);
 
+    /**
+     * Check if the file has bad bloom filters (ORC-1024). We will skip using them in the
+     * following reads.
+     * @return true if it has.
+     */
+    bool checkBadBloomFilters();
+
   public:
    /**
     * Constructor that lets the user specify additional options.

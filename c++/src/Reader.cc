@@ -250,17 +250,33 @@ namespace orc {
                                           getWriterVersionImpl(_contents.get())));
     }
 
-    // Check if the file has inconsistent bloom filters.
-    hasBadBloomFilters = false;
-    if (footer->writer() == ORC_CPP_WRITER) {
-      const std::string &fullVersion = footer->softwareversion();
-      for (const char* v : BAD_CPP_BLOOM_FILTER_VERSIONS) {
-        if (fullVersion.find(v) != std::string::npos) {
-          hasBadBloomFilters = true;
-          break;
-        }
+    hasBadBloomFilters = checkBadBloomFilters();
+  }
+
+  // Check if the file has inconsistent bloom filters (ORC-1024).
+  bool RowReaderImpl::checkBadBloomFilters() {
+    // Only C++ writer in old releases could have bad bloom filters.
+    if (footer->writer() != ORC_CPP_WRITER) return false;
+    // 'softwareVersion' is added in ORC-984 which is resolved in 1.5.13, 1.6.11, and 1.7.0.
+    // 1.6.x releases before 1.6.11 won't have it. On the other side, the C++ writer
+    // supports writing bloom filters since 1.6.0. So files written by the C++ writer
+    // and with 'softwareVersion' unset would have bad bloom filters.
+    if (!footer->has_softwareversion()) return true;
+
+    const std::string &fullVersion = footer->softwareversion();
+    std::string version;
+    // Deal with snapshot versions, e.g. 1.6.12-SNAPSHOT.
+    if (fullVersion.find('-') != std::string::npos) {
+      version = fullVersion.substr(0, fullVersion.find('-'));
+    } else {
+      version = fullVersion;
+    }
+    for (const char *v : BAD_CPP_BLOOM_FILTER_VERSIONS) {
+      if (version == v) {
+        return true;
       }
     }
+    return false;
   }
 
   CompressionKind RowReaderImpl::getCompression() const {
