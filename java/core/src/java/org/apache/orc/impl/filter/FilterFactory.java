@@ -49,8 +49,8 @@ public class FilterFactory {
    * @param isSchemaCaseAware identifies if the schema is case-sensitive
    * @param version           provides the ORC file version
    * @param normalize         identifies if the SArg should be normalized or not
-   * @param filePath   that is fully qualified to determine plugin filter(s)
-   * @param conf       configuration shared when determining Plugin filter(s)
+   * @param filePath          that is fully qualified to determine plugin filter(s)
+   * @param conf              configuration shared when determining Plugin filter(s)
    * @return BatchFilter that represents the SearchArgument or null
    */
   public static BatchFilter createBatchFilter(Reader.Options opts,
@@ -69,7 +69,7 @@ public class FilterFactory {
     }
 
     // 2. Process PluginFilter
-    if (opts.isAllowPluginFilters()) {
+    if (opts.allowPluginFilters()) {
       List<BatchFilter> pluginFilters = findPluginFilters(filePath, conf);
       if (!pluginFilters.isEmpty()) {
         LOG.debug("Added plugin filters {} to the read", pluginFilters);

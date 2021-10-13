@@ -640,7 +640,7 @@ public interface Reader extends Closeable {
       return this;
     }
 
-    public boolean isAllowPluginFilters() {
+    public boolean allowPluginFilters() {
       return allowPluginFilters;
     }
 

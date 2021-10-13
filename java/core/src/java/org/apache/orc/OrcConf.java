@@ -176,13 +176,13 @@ public enum OrcConf {
                         + "must have the filter\n"
                         + "reapplied to avoid using unset values in the unselected rows.\n"
                         + "If unsure please leave this as false."),
-  ALLOW_PLUGIN_FILTER("orc.filter.plugin.enable",
-                      "orc.filter.plugin.enable",
+  ALLOW_PLUGIN_FILTER("orc.filter.plugin",
+                      "orc.filter.plugin",
                       false,
                       "Enables the use of plugin filters during read. The plugin filters "
                       + "are discovered against the service "
                       + "org.apache.orc.filter.PluginFilterService, if multiple filters are "
-                      + "determined they are combined using AND. The order of application is "
+                      + "determined, they are combined using AND. The order of application is "
                       + "non-deterministic and the filter functionality should not depend on the "
                       + "order of application."),
   WRITE_VARIABLE_LENGTH_BLOCKS("orc.write.variable.length.blocks", null, false,
