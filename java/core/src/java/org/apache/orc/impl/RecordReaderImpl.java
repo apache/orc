@@ -110,7 +110,7 @@ public class RecordReaderImpl implements RecordReader {
   private boolean needsFollowColumnsRead;
   private final boolean noSelectedVector;
   // identifies whether the file has bad bloom filters that we should not use.
-  private final boolean hasBadBloomFilters;
+  private final boolean skipBloomFilters;
   static final String[] BAD_CPP_BLOOM_FILTER_VERSIONS = {
       "1.6.0", "1.6.1", "1.6.2", "1.6.3", "1.6.4", "1.6.5", "1.6.6", "1.6.7", "1.6.8",
       "1.6.9", "1.6.10", "1.6.11", "1.7.0"};
@@ -334,7 +334,7 @@ public class RecordReaderImpl implements RecordReader {
               fileReader.options.getConvertToProlepticGregorian())
           .setEncryption(encryption);
     reader = TreeReaderFactory.createRootReader(evolution.getReaderSchema(), readerContext);
-    hasBadBloomFilters = checkBadBloomFilters(fileReader.getFileTail().getFooter());
+    skipBloomFilters = hasBadBloomFilters(fileReader.getFileTail().getFooter());
 
     int columns = evolution.getFileSchema().getMaximumId() + 1;
     indexes = new OrcIndex(new OrcProto.RowIndex[columns],
@@ -357,14 +357,14 @@ public class RecordReaderImpl implements RecordReader {
   }
 
   /**
-   * Check if the file has inconsistent bloom filters (ORC-1024). We will skip using them
+   * Check if the file has inconsistent bloom filters. We will skip using them
    * in the following reads.
    * @return true if it has.
    */
-  private boolean checkBadBloomFilters(OrcProto.Footer footer) {
+  private boolean hasBadBloomFilters(OrcProto.Footer footer) {
     // Only C++ writer in old releases could have bad bloom filters.
     if (footer.getWriter() != 1) return false;
-    // 'softwareVersion' is added in ORC-984 which is resolved in 1.5.13, 1.6.11, and 1.7.0.
+    // 'softwareVersion' is added in 1.5.13, 1.6.11, and 1.7.0.
     // 1.6.x releases before 1.6.11 won't have it. On the other side, the C++ writer
     // supports writing bloom filters since 1.6.0. So files written by the C++ writer
     // and with 'softwareVersion' unset would have bad bloom filters.
@@ -1211,9 +1211,9 @@ public class RecordReaderImpl implements RecordReader {
     }
     return sargApp.pickRowGroups(stripes.get(currentStripe),
         indexes.getRowGroupIndex(),
-        hasBadBloomFilters ? null : indexes.getBloomFilterKinds(),
+        skipBloomFilters ? null : indexes.getBloomFilterKinds(),
         stripeFooter.getColumnsList(),
-        hasBadBloomFilters ? null : indexes.getBloomFilterIndex(),
+        skipBloomFilters ? null : indexes.getBloomFilterIndex(),
         false);
   }
 

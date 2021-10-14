@@ -136,6 +136,5 @@ namespace orc {
   TEST(TestRowReader, testSkipBadBloomFilters) {
     CheckFileWithSargs("bad_bloom_filter_1.6.11.orc", "ORC C++ 1.6.11");
     CheckFileWithSargs("bad_bloom_filter_1.6.0.orc", "ORC C++");
-    CheckFileWithSargs("bad_bloom_filter_1.6.11-SNAPSHOT.orc", "ORC C++ 1.6.11-SNAPSHOT");
   }
 }  // namespace

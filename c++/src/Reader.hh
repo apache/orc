@@ -127,7 +127,7 @@ namespace orc {
     proto::Footer* footer;
     DataBuffer<uint64_t> firstRowOfStripe;
     mutable std::unique_ptr<Type> selectedSchema;
-    bool hasBadBloomFilters;
+    bool skipBloomFilters;
 
     // reading state
     uint64_t previousRow;
@@ -185,7 +185,7 @@ namespace orc {
      * following reads.
      * @return true if it has.
      */
-    bool checkBadBloomFilters();
+    bool hasBadBloomFilters();
 
   public:
    /**

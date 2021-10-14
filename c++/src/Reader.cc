@@ -36,8 +36,7 @@
 
 namespace orc {
   // ORC files writen by these versions of cpp writers have inconsistent bloom filter
-  // hashing with the Java codes (ORC-1024). Bloom filters of them should not be used
-  // after we fix ORC-1024.
+  // hashing. Bloom filters of them should not be used.
   static const char* BAD_CPP_BLOOM_FILTER_VERSIONS[] = {
     "1.6.0", "1.6.1", "1.6.2", "1.6.3", "1.6.4", "1.6.5", "1.6.6", "1.6.7", "1.6.8",
     "1.6.9", "1.6.10", "1.6.11", "1.7.0"};
@@ -250,14 +249,14 @@ namespace orc {
                                           getWriterVersionImpl(_contents.get())));
     }
 
-    hasBadBloomFilters = checkBadBloomFilters();
+    skipBloomFilters = hasBadBloomFilters();
   }
 
   // Check if the file has inconsistent bloom filters.
-  bool RowReaderImpl::checkBadBloomFilters() {
+  bool RowReaderImpl::hasBadBloomFilters() {
     // Only C++ writer in old releases could have bad bloom filters.
     if (footer->writer() != ORC_CPP_WRITER) return false;
-    // 'softwareVersion' is added in ORC-984 which is resolved in 1.5.13, 1.6.11, and 1.7.0.
+    // 'softwareVersion' is added in 1.5.13, 1.6.11, and 1.7.0.
     // 1.6.x releases before 1.6.11 won't have it. On the other side, the C++ writer
     // supports writing bloom filters since 1.6.0. So files written by the C++ writer
     // and with 'softwareVersion' unset would have bad bloom filters.
@@ -397,7 +396,7 @@ namespace orc {
             throw ParseError("Failed to parse the row index");
           }
           rowIndexes[colId] = rowIndex;
-        } else if (!hasBadBloomFilters) { // Stream_Kind_BLOOM_FILTER_UTF8
+        } else if (!skipBloomFilters) { // Stream_Kind_BLOOM_FILTER_UTF8
           proto::BloomFilterIndex pbBFIndex;
           if (!pbBFIndex.ParseFromZeroCopyStream(inStream.get())) {
             throw ParseError("Failed to parse bloom filter index");
