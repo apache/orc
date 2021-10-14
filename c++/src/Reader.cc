@@ -253,7 +253,7 @@ namespace orc {
     hasBadBloomFilters = checkBadBloomFilters();
   }
 
-  // Check if the file has inconsistent bloom filters (ORC-1024).
+  // Check if the file has inconsistent bloom filters.
   bool RowReaderImpl::checkBadBloomFilters() {
     // Only C++ writer in old releases could have bad bloom filters.
     if (footer->writer() != ORC_CPP_WRITER) return false;

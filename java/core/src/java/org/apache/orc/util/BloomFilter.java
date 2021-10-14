@@ -247,7 +247,8 @@ public class BloomFilter {
   }
 
   /**
-   * Helper method that only used for tests. Use default visibility.
+   * Helper method that only used for tests. Check if the given position in the bitSet is
+   * true. Use default visibility.
    */
   boolean testBitSetPos(int pos) {
     return this.bitSet.get(pos);

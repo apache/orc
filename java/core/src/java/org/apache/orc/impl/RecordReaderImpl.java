@@ -109,7 +109,7 @@ public class RecordReaderImpl implements RecordReader {
   // identifies that follow columns bytes must be read
   private boolean needsFollowColumnsRead;
   private final boolean noSelectedVector;
-  // identifies whether the file has bad bloom filters that we should not use (ORC-1024).
+  // identifies whether the file has bad bloom filters that we should not use.
   private final boolean hasBadBloomFilters;
   static final String[] BAD_CPP_BLOOM_FILTER_VERSIONS = {
       "1.6.0", "1.6.1", "1.6.2", "1.6.3", "1.6.4", "1.6.5", "1.6.6", "1.6.7", "1.6.8",
