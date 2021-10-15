@@ -109,6 +109,11 @@ public class RecordReaderImpl implements RecordReader {
   // identifies that follow columns bytes must be read
   private boolean needsFollowColumnsRead;
   private final boolean noSelectedVector;
+  // identifies whether the file has bad bloom filters that we should not use.
+  private final boolean skipBloomFilters;
+  static final String[] BAD_CPP_BLOOM_FILTER_VERSIONS = {
+      "1.6.0", "1.6.1", "1.6.2", "1.6.3", "1.6.4", "1.6.5", "1.6.6", "1.6.7", "1.6.8",
+      "1.6.9", "1.6.10", "1.6.11", "1.7.0"};
 
   /**
    * Given a list of column names, find the given column and return the index.
@@ -329,6 +334,7 @@ public class RecordReaderImpl implements RecordReader {
               fileReader.options.getConvertToProlepticGregorian())
           .setEncryption(encryption);
     reader = TreeReaderFactory.createRootReader(evolution.getReaderSchema(), readerContext);
+    skipBloomFilters = hasBadBloomFilters(fileReader.getFileTail().getFooter());
 
     int columns = evolution.getFileSchema().getMaximumId() + 1;
     indexes = new OrcIndex(new OrcProto.RowIndex[columns],
@@ -348,6 +354,33 @@ public class RecordReaderImpl implements RecordReader {
       throw new IOException(String.format("Problem opening stripe %d footer in %s.",
           stripeId, path), e);
     }
+  }
+
+  /**
+   * Check if the file has inconsistent bloom filters. We will skip using them
+   * in the following reads.
+   * @return true if it has.
+   */
+  private boolean hasBadBloomFilters(OrcProto.Footer footer) {
+    // Only C++ writer in old releases could have bad bloom filters.
+    if (footer.getWriter() != 1) return false;
+    // 'softwareVersion' is added in 1.5.13, 1.6.11, and 1.7.0.
+    // 1.6.x releases before 1.6.11 won't have it. On the other side, the C++ writer
+    // supports writing bloom filters since 1.6.0. So files written by the C++ writer
+    // and with 'softwareVersion' unset would have bad bloom filters.
+    if (!footer.hasSoftwareVersion()) return true;
+    String fullVersion = footer.getSoftwareVersion();
+    String version = fullVersion;
+    // Deal with snapshot versions, e.g. 1.6.12-SNAPSHOT.
+    if (fullVersion.contains("-")) {
+      version = fullVersion.substring(0, fullVersion.indexOf('-'));
+    }
+    for (String v : BAD_CPP_BLOOM_FILTER_VERSIONS) {
+      if (v.equals(version)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public static final class PositionProviderImpl implements PositionProvider {
@@ -1178,8 +1211,10 @@ public class RecordReaderImpl implements RecordReader {
     }
     return sargApp.pickRowGroups(stripes.get(currentStripe),
         indexes.getRowGroupIndex(),
-        indexes.getBloomFilterKinds(), stripeFooter.getColumnsList(),
-        indexes.getBloomFilterIndex(), false);
+        skipBloomFilters ? null : indexes.getBloomFilterKinds(),
+        stripeFooter.getColumnsList(),
+        skipBloomFilters ? null : indexes.getBloomFilterIndex(),
+        false);
   }
 
   private void clearStreams() {
