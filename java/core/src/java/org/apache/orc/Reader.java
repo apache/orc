@@ -233,6 +233,7 @@ public interface Reader extends Closeable {
     private boolean includeAcidColumns = true;
     private boolean allowSARGToFilter = false;
     private boolean useSelected = false;
+    private boolean allowPluginFilters = false;
 
     /**
      * @since 1.1.0
@@ -254,6 +255,7 @@ public interface Reader extends Closeable {
           OrcConf.IS_SCHEMA_EVOLUTION_CASE_SENSITIVE.getBoolean(conf);
       allowSARGToFilter = OrcConf.ALLOW_SARG_TO_FILTER.getBoolean(conf);
       useSelected = OrcConf.READER_USE_SELECTED.getBoolean(conf);
+      allowPluginFilters = OrcConf.ALLOW_PLUGIN_FILTER.getBoolean(conf);
     }
 
     /**
@@ -635,6 +637,15 @@ public interface Reader extends Closeable {
      */
     public Options useSelected(boolean newValue) {
       this.useSelected = newValue;
+      return this;
+    }
+
+    public boolean allowPluginFilters() {
+      return allowPluginFilters;
+    }
+
+    public Options allowPluginFilters(boolean allowPluginFilters) {
+      this.allowPluginFilters = allowPluginFilters;
       return this;
     }
   }

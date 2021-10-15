@@ -102,6 +102,11 @@
       <artifactId>mockito-junit-jupiter</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>com.google.auto.service</groupId>
+      <artifactId>auto-service</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -151,10 +156,14 @@
           <ignoredUnusedDeclaredDependencies>
             <ignoredUnusedDeclaredDependency>org.apache.hadoop:hadoop-hdfs</ignoredUnusedDeclaredDependency>
           </ignoredUnusedDeclaredDependencies>
+          <ignoredUsedUndeclaredDependencies>
+            <ignoredUsedUndeclaredDependency>com.google.auto.service:auto-service-annotations</ignoredUsedUndeclaredDependency>
+          </ignoredUsedUndeclaredDependencies>
           <ignoredDependencies>
             <ignoredDependency>org.apache.hive:hive-storage-api</ignoredDependency>
             <ignoredDependency>org.apache.hadoop:hadoop-client-api</ignoredDependency>
             <ignoredDependency>org.apache.hadoop:hadoop-client-runtime</ignoredDependency>
+            <ignoredDependency>com.google.auto.service:auto-service</ignoredDependency>
           </ignoredDependencies>
         </configuration>
       </plugin>
