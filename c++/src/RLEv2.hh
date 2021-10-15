@@ -161,56 +161,25 @@ private:
     bitSize = 0;
   }
 
-  unsigned char readByte() {
-  if (bufferStart == bufferEnd) {
-    int bufferLength;
-    const void* bufferPointer;
-    if (!inputStream->Next(&bufferPointer, &bufferLength)) {
-      throw ParseError("bad read in RleDecoderV2::readByte");
-    }
-    bufferStart = static_cast<const char*>(bufferPointer);
-    bufferEnd = bufferStart + bufferLength;
-  }
-
-  unsigned char result = static_cast<unsigned char>(*bufferStart++);
-  return result;
-}
+  unsigned char readByte();
 
   int64_t readLongBE(uint64_t bsz);
   int64_t readVslong();
   uint64_t readVulong();
   uint64_t readLongs(int64_t *data, uint64_t offset, uint64_t len,
-                     uint64_t fb, const char* notNull = nullptr) {
-  uint64_t ret = 0;
+                     uint64_t fbs, const char* notNull = nullptr);
 
-  // TODO: unroll to improve performance
-  for(uint64_t i = offset; i < (offset + len); i++) {
-    // skip null positions
-    if (notNull && !notNull[i]) {
-      continue;
-    }
-    uint64_t result = 0;
-    uint64_t bitsLeftToRead = fb;
-    while (bitsLeftToRead > bitsLeft) {
-      result <<= bitsLeft;
-      result |= curByte & ((1 << bitsLeft) - 1);
-      bitsLeftToRead -= bitsLeft;
-      curByte = readByte();
-      bitsLeft = 8;
-    }
-
-    // handle the left over bits
-    if (bitsLeftToRead > 0) {
-      result <<= bitsLeftToRead;
-      bitsLeft -= static_cast<uint32_t>(bitsLeftToRead);
-      result |= (curByte >> bitsLeft) & ((1 << bitsLeftToRead) - 1);
-    }
-    data[i] = static_cast<int64_t>(result);
-    ++ret;
-  }
-
-  return ret;
-}
+  void readLongsWithoutNulls(int64_t *data, uint64_t offset, uint64_t len,
+                             uint64_t fbs);
+  void unrolledUnpack4(int64_t *data, uint64_t offset, uint64_t len);
+  void unrolledUnpack8(int64_t *data, uint64_t offset, uint64_t len);
+  void unrolledUnpack16(int64_t *data, uint64_t offset, uint64_t len);
+  void unrolledUnpack24(int64_t *data, uint64_t offset, uint64_t len);
+  void unrolledUnpack32(int64_t *data, uint64_t offset, uint64_t len);
+  void unrolledUnpack40(int64_t *data, uint64_t offset, uint64_t len);
+  void unrolledUnpack48(int64_t *data, uint64_t offset, uint64_t len);
+  void unrolledUnpack56(int64_t *data, uint64_t offset, uint64_t len);
+  void unrolledUnpack64(int64_t *data, uint64_t offset, uint64_t len);
 
   uint64_t nextShortRepeats(int64_t* data, uint64_t offset, uint64_t numValues,
                             const char* notNull);
@@ -234,7 +203,7 @@ private:
   int64_t firstValue; // Used by SHORT_REPEAT and DELTA
   int64_t prevValue; // Used by DELTA
   uint32_t bitSize; // Used by DIRECT, PATCHED_BASE and DELTA
-  uint32_t bitsLeft; // Used by anything that uses readLongs
+  uint32_t bitsLeft; // Used by readLongs when bitSize < 8
   uint32_t curByte; // Used by anything that uses readLongs
   uint32_t patchBitSize; // Used by PATCHED_BASE
   uint64_t unpackedIdx; // Used by PATCHED_BASE
