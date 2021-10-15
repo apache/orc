@@ -192,7 +192,7 @@ public class BloomFilter {
 
   // Thomas Wang's integer hash function
   // http://web.archive.org/web/20071223173210/http://www.concentric.net/~Ttwang/tech/inthash.htm
-  private long getLongHash(long key) {
+  static long getLongHash(long key) {
     key = (~key) + (key << 21); // key = (key << 21) - key - 1;
     key = key ^ (key >> 24);
     key = (key + (key << 3)) + (key << 8); // key * 265
@@ -244,6 +244,14 @@ public class BloomFilter {
 
   public void reset() {
     this.bitSet.clear();
+  }
+
+  /**
+   * Helper method that only used for tests. Check if the given position in the bitSet is
+   * true. Use default visibility.
+   */
+  boolean testBitSetPos(int pos) {
+    return this.bitSet.get(pos);
   }
 
   /**
