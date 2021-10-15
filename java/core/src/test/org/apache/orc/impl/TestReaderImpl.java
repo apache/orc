@@ -25,6 +25,9 @@ import org.apache.hadoop.fs.PositionedReadable;
 import org.apache.hadoop.fs.Seekable;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
+import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
+import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.util.Progressable;
 import org.apache.orc.FileFormatException;
@@ -51,6 +54,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -410,5 +414,35 @@ public class TestReaderImpl {
         ReaderImpl.getRawDataSizeFromColIndices(include, schema, stats),
         ReaderImpl.getRawDataSizeFromColIndices(list, types, stats));
     }
+  }
+
+  private void CheckFileWithSargs(String fileName, String softwareVersion)
+      throws IOException {
+    Configuration conf = new Configuration();
+    Path path = new Path(workDir, fileName);
+    FileSystem fs = path.getFileSystem(conf);
+    try (ReaderImpl reader = (ReaderImpl) OrcFile.createReader(path,
+        OrcFile.readerOptions(conf).filesystem(fs))) {
+      assertEquals(softwareVersion, reader.getSoftwareVersion());
+
+      Reader.Options opt = new Reader.Options();
+      SearchArgument.Builder builder = SearchArgumentFactory.newBuilder(conf);
+      builder.equals("id", PredicateLeaf.Type.LONG, 18000000000L);
+      opt.searchArgument(builder.build(), new String[]{"id"});
+
+      TypeDescription schema = reader.getSchema();
+      VectorizedRowBatch batch = schema.createRowBatch();
+      try (RecordReader rows = reader.rows(opt)) {
+        assertTrue(rows.nextBatch(batch), "No rows read out!");
+        assertEquals(5, batch.size);
+        assertFalse(rows.nextBatch(batch));
+      }
+    }
+  }
+
+  @Test
+  public void testSkipBadBloomFilters() throws IOException {
+    CheckFileWithSargs("bad_bloom_filter_1.6.11.orc", "ORC C++ 1.6.11");
+    CheckFileWithSargs("bad_bloom_filter_1.6.0.orc", "ORC C++ ");
   }
 }

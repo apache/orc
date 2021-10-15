@@ -101,4 +101,40 @@ namespace orc {
       900, rowsInCurrentStripe, rowIndexStride, includedRowGroups));
   }
 
+  void CheckFileWithSargs(const char* fileName, const char* softwareVersion) {
+    std::stringstream ss;
+    if(const char* example_dir = std::getenv("ORC_EXAMPLE_DIR")) {
+      ss << example_dir;
+    } else {
+      ss << "../../../examples";
+    }
+    // Read a file with bloom filters written by CPP writer in version 1.6.11.
+    ss << "/" << fileName;
+    ReaderOptions readerOpts;
+    std::unique_ptr<Reader> reader =
+      createReader(readLocalFile(ss.str().c_str()), readerOpts);
+    EXPECT_EQ(WriterId::ORC_CPP_WRITER, reader->getWriterId());
+    EXPECT_EQ(softwareVersion, reader->getSoftwareVersion());
+
+    // Create SearchArgument with a EQUALS predicate which can leverage the bloom filters.
+    RowReaderOptions rowReaderOpts;
+    std::unique_ptr<SearchArgumentBuilder> sarg = SearchArgumentFactory::newBuilder();
+    // Integer value 18000000000 has an inconsistent hash before the fix of ORC-1024.
+    sarg->equals(1, PredicateDataType::LONG,Literal(static_cast<int64_t>(18000000000L)));
+    std::unique_ptr<SearchArgument> final_sarg = sarg->build();
+    rowReaderOpts.searchArgument(std::move(final_sarg));
+    std::unique_ptr<RowReader> rowReader = reader->createRowReader(rowReaderOpts);
+
+    // Make sure bad bloom filters won't affect the results.
+    std::unique_ptr<ColumnVectorBatch> batch =
+      rowReader->createRowBatch(1024);
+    EXPECT_TRUE(rowReader->next(*batch));
+    EXPECT_EQ(5, batch->numElements);
+    EXPECT_FALSE(rowReader->next(*batch));
+  }
+
+  TEST(TestRowReader, testSkipBadBloomFilters) {
+    CheckFileWithSargs("bad_bloom_filter_1.6.11.orc", "ORC C++ 1.6.11");
+    CheckFileWithSargs("bad_bloom_filter_1.6.0.orc", "ORC C++");
+  }
 }  // namespace
