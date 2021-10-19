@@ -40,8 +40,13 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestEncryption {
 
@@ -138,6 +143,39 @@ public class TestEncryption {
   public void testPushDownReadEncryption() throws IOException {
     write();
     read(true);
+  }
+
+  @Test
+  public void testConcurrentCreation() throws InterruptedException {
+    ExecutorService executorService = Executors.newFixedThreadPool(10);
+    CountDownLatch countDownLatch = new CountDownLatch(10);
+    for (int i = 0; i < 10; i++) {
+      Path path = new Path("testWriterImpl" + i + ".orc");
+      Thread thread = new Thread(() -> {
+        try {
+          OrcFile.createWriter(new Path("testWriterImpl" + path + ".orc"),
+              OrcFile.writerOptions(conf)
+                  .setSchema(schema)
+                  .overwrite(true)
+                  .setKeyProvider(keyProvider)
+                  .encrypt(encryption)
+                  .masks(mask));
+          countDownLatch.countDown();
+        } catch (Exception e) {
+          throw new RuntimeException("create writer fail", e);
+        } finally {
+          try {
+            if (fs.exists(path)) {
+              fs.delete(path, false);
+            }
+          } catch (IOException e) {
+            e.printStackTrace();
+          }
+        }
+      });
+      executorService.submit(thread);
+    }
+    assertTrue(countDownLatch.await(10, TimeUnit.SECONDS));
   }
 
 }
