@@ -19,6 +19,9 @@
 package org.apache.orc.tools;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
@@ -63,9 +66,12 @@ import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.apache.orc.tools.FileDump.DEFAULT_BLOCK_SIZE;
+import static org.apache.orc.tools.FileDump.RECOVER_READ_SIZE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -702,5 +708,87 @@ public class TestFileDump {
     // and be ignored.
     assumeTrue(!System.getProperty("os.name").startsWith("Windows"));
     TestFileDump.checkOutput(outputFilename, workDir + File.separator + outputFilename);
+  }
+
+  @Test
+  public void testRecover() throws Exception {
+    TypeDescription schema = getMyRecordType();
+    conf.set(OrcConf.ENCODING_STRATEGY.getAttribute(), "COMPRESSION");
+    conf.set(OrcConf.DICTIONARY_IMPL.getAttribute(), "rbtree");
+    Writer writer = OrcFile.createWriter(testFilePath,
+        OrcFile.writerOptions(conf)
+            .fileSystem(fs)
+            .setSchema(schema)
+            .compress(CompressionKind.ZLIB)
+            .stripeSize(100000)
+            .rowIndexStride(1000));
+    Random r1 = new Random(1);
+    String[] words = new String[]{"It", "was", "the", "best", "of", "times,",
+        "it", "was", "the", "worst", "of", "times,", "it", "was", "the", "age",
+        "of", "wisdom,", "it", "was", "the", "age", "of", "foolishness,", "it",
+        "was", "the", "epoch", "of", "belief,", "it", "was", "the", "epoch",
+        "of", "incredulity,", "it", "was", "the", "season", "of", "Light,",
+        "it", "was", "the", "season", "of", "Darkness,", "it", "was", "the",
+        "spring", "of", "hope,", "it", "was", "the", "winter", "of", "despair,",
+        "we", "had", "everything", "before", "us,", "we", "had", "nothing",
+        "before", "us,", "we", "were", "all", "going", "direct", "to",
+        "Heaven,", "we", "were", "all", "going", "direct", "the", "other",
+        "way"};
+    VectorizedRowBatch batch = schema.createRowBatch(1000);
+    for(int i=0; i < 21000; ++i) {
+      appendMyRecord(batch, r1.nextInt(), r1.nextLong(),
+          words[r1.nextInt(words.length)]);
+      if (batch.size == batch.getMaxSize()) {
+        writer.addRowBatch(batch);
+        batch.reset();
+      }
+    }
+    if (batch.size > 0) {
+      writer.addRowBatch(batch);
+    }
+    writer.addUserMetadata("hive.acid.key.index",
+        StandardCharsets.UTF_8.encode("1,1,1;2,3,5;"));
+    writer.addUserMetadata("some.user.property",
+        StandardCharsets.UTF_8.encode("foo#bar$baz&"));
+    writer.close();
+
+    long fileSize = fs.getFileStatus(testFilePath).getLen();
+    byte[] bytes = new byte[1024];
+    Path corruptedFilePath = new Path("corruptedFile.orc");
+
+    try {
+      FSDataInputStream fdis = fs.open(testFilePath);
+      FileStatus fileStatus = fs.getFileStatus(testFilePath);
+      FSDataOutputStream fdos = fs.create(corruptedFilePath, true,
+          conf.getInt("io.file.buffer.size", 4096),
+          fileStatus.getReplication(),
+          fileStatus.getBlockSize());
+      long remaining = fileSize;
+
+      while (remaining > 0) {
+        int toRead = (int) Math.min(DEFAULT_BLOCK_SIZE, remaining);
+        byte[] data = new byte[toRead];
+        long startPos = fileSize - remaining;
+        fdis.readFully(startPos, data, 0, toRead);
+        fdos.write(data);
+        remaining = remaining - toRead;
+      }
+      fdos.write(bytes);
+      fdos.write(OrcFile.MAGIC.getBytes(StandardCharsets.UTF_8));
+      fdos.write(bytes);
+      fdis.close();
+      fdos.close();
+
+      conf.setInt(RECOVER_READ_SIZE, (int) (fileSize - 2));
+
+      FileDump.main(conf, new String[]{"--recover", "--skip-dump",
+          corruptedFilePath.toUri().getRawPath()});
+
+      assertSame(fs.getFileChecksum(testFilePath), fs.getFileChecksum(corruptedFilePath));
+    } finally {
+      if (fs.exists(corruptedFilePath)) {
+        fs.delete(corruptedFilePath, false);
+      }
+    }
   }
 }

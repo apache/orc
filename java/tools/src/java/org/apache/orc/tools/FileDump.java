@@ -62,6 +62,7 @@ import java.util.List;
 public final class FileDump {
   public static final String UNKNOWN = "UNKNOWN";
   public static final String SEPARATOR = StringUtils.repeat("_", 120) + "\n";
+  public static final String RECOVER_READ_SIZE = "orc.recover.read.size"; // only for testing
   public static final int DEFAULT_BLOCK_SIZE = 256 * 1024 * 1024;
   public static final String DEFAULT_BACKUP_PATH = System.getProperty("java.io.tmpdir");
   public static final PathFilter HIDDEN_AND_SIDE_FILE_FILTER = new PathFilter() {
@@ -459,6 +460,11 @@ public final class FileDump {
   private static void recoverFiles(final List<String> corruptFiles, final Configuration conf,
       final String backup)
       throws IOException {
+
+    byte[] magicBytes = OrcFile.MAGIC.getBytes(StandardCharsets.UTF_8);
+    int magicLength = magicBytes.length;
+    int readSize = conf.getInt(RECOVER_READ_SIZE, DEFAULT_BLOCK_SIZE);
+
     for (String corruptFile : corruptFiles) {
       System.err.println("Recovering file " + corruptFile);
       Path corruptPath = new Path(corruptFile);
@@ -470,17 +476,30 @@ public final class FileDump {
         List<Long> footerOffsets = new ArrayList<>();
 
         // start reading the data file form top to bottom and record the valid footers
-        while (remaining > 0) {
-          int toRead = (int) Math.min(DEFAULT_BLOCK_SIZE, remaining);
-          byte[] data = new byte[toRead];
+        while (remaining > 0 && corruptFileLen > (2L * magicLength)) {
+          int toRead = (int) Math.min(readSize, remaining);
           long startPos = corruptFileLen - remaining;
-          fdis.readFully(startPos, data, 0, toRead);
+          byte[] data;
+          if (startPos == 0) {
+            data = new byte[toRead];
+            fdis.readFully(startPos, data, 0, toRead);
+          }
+          else {
+            // For non-first reads, we let startPos move back magicLength bytes
+            // which prevents two adjacent reads from separating OrcFile.MAGIC
+            startPos = startPos - magicLength;
+            data = new byte[toRead + magicLength];
+            fdis.readFully(startPos, data, 0, toRead + magicLength);
+          }
 
           // find all MAGIC string and see if the file is readable from there
           int index = 0;
           long nextFooterOffset;
-          byte[] magicBytes = OrcFile.MAGIC.getBytes(StandardCharsets.UTF_8);
           while (index != -1) {
+            // There are two reasons for searching from index + 1
+            // 1. to skip the OrcFile.MAGIC in the file header when the first match is made
+            // 2. When the match is successful, the index is moved backwards to search for
+            // the subsequent OrcFile.MAGIC
             index = indexOf(data, magicBytes, index + 1);
             if (index != -1) {
               nextFooterOffset = startPos + index + magicBytes.length + 1;
@@ -583,8 +602,10 @@ public final class FileDump {
 
       // Move side file to backup path
       Path sideFilePath = OrcAcidUtils.getSideFile(corruptPath);
-      Path backupSideFilePath = new Path(backupDataPath.getParent(), sideFilePath.getName());
-      moveFiles(fs, sideFilePath, backupSideFilePath);
+      if (fs.exists(sideFilePath)) {
+        Path backupSideFilePath = new Path(backupDataPath.getParent(), sideFilePath.getName());
+        moveFiles(fs, sideFilePath, backupSideFilePath);
+      }
 
       // finally move recovered file to actual file
       moveFiles(fs, recoveredPath, corruptPath);
@@ -638,19 +659,16 @@ public final class FileDump {
       return -1;
     }
 
-    int j = 0;
-    for (int i = index; i < data.length; i++) {
-      if (pattern[j] == data[i]) {
-        j++;
-      } else {
-        j = 0;
+    for (int i = index; i < data.length - pattern.length + 1; i++) {
+      boolean found = true;
+      for (int j = 0; j < pattern.length; j++) {
+        if (data[i + j] != pattern[j]) {
+          found = false;
+          break;
+        }
       }
-
-      if (j == pattern.length) {
-        return i - pattern.length + 1;
-      }
+      if (found) return i;
     }
-
     return -1;
   }
 
