@@ -40,13 +40,8 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
 
 public class TestEncryption {
 
@@ -143,45 +138,6 @@ public class TestEncryption {
   public void testPushDownReadEncryption() throws IOException {
     write();
     read(true);
-  }
-
-  @Test
-  @SuppressWarnings("unchecked")
-  public void testConcurrentCreation() throws InterruptedException {
-    ExecutorService executorService = Executors.newFixedThreadPool(10);
-    Future<Writer>[] futures = new Future[10];
-    for (int i = 0; i < 10; i++) {
-      Path path = new Path("testWriterImpl" + i + ".orc");
-      futures[i] = executorService.submit(() -> {
-        try {
-          return OrcFile.createWriter(new Path("testWriterImpl" + path + ".orc"),
-              OrcFile.writerOptions(conf)
-                  .setSchema(schema)
-                  .overwrite(true)
-                  .setKeyProvider(keyProvider)
-                  .encrypt(encryption)
-                  .masks(mask));
-        } catch (Exception e) {
-          throw new RuntimeException("create writer fail", e);
-        } finally {
-          try {
-            if (fs.exists(path)) {
-              fs.delete(path, false);
-            }
-          } catch (IOException e) {
-            e.printStackTrace();
-          }
-        }
-      });
-    }
-    for (Future<Writer> future : futures) {
-      try {
-        future.get();
-      } catch (ExecutionException e) {
-        e.printStackTrace();
-        fail();
-      }
-    }
   }
 
 }
