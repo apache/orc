@@ -713,8 +713,6 @@ public class TestFileDump {
   @Test
   public void testRecover() throws Exception {
     TypeDescription schema = getMyRecordType();
-    conf.set(OrcConf.ENCODING_STRATEGY.getAttribute(), "COMPRESSION");
-    conf.set(OrcConf.DICTIONARY_IMPL.getAttribute(), "rbtree");
     Writer writer = OrcFile.createWriter(testFilePath,
         OrcFile.writerOptions(conf)
             .fileSystem(fs)
@@ -746,10 +744,6 @@ public class TestFileDump {
     if (batch.size > 0) {
       writer.addRowBatch(batch);
     }
-    writer.addUserMetadata("hive.acid.key.index",
-        StandardCharsets.UTF_8.encode("1,1,1;2,3,5;"));
-    writer.addUserMetadata("some.user.property",
-        StandardCharsets.UTF_8.encode("foo#bar$baz&"));
     writer.close();
 
     long fileSize = fs.getFileStatus(testFilePath).getLen();
@@ -782,7 +776,7 @@ public class TestFileDump {
       conf.setInt(RECOVER_READ_SIZE, (int) (fileSize - 2));
 
       FileDump.main(conf, new String[]{"--recover", "--skip-dump",
-          corruptedFilePath.toUri().getRawPath()});
+          corruptedFilePath.toUri().getPath()});
 
       assertSame(fs.getFileChecksum(testFilePath), fs.getFileChecksum(corruptedFilePath));
     } finally {
