@@ -659,16 +659,19 @@ public final class FileDump {
       return -1;
     }
 
-    for (int i = index; i < data.length - pattern.length + 1; i++) {
-      boolean found = true;
-      for (int j = 0; j < pattern.length; j++) {
-        if (data[i + j] != pattern[j]) {
-          found = false;
-          break;
-        }
+    int j = 0;
+    for (int i = index; i < data.length; i++) {
+      if (pattern[j] == data[i]) {
+        j++;
+      } else {
+        j = 0;
       }
-      if (found) return i;
+
+      if (j == pattern.length) {
+        return i - pattern.length + 1;
+      }
     }
+
     return -1;
   }
 
