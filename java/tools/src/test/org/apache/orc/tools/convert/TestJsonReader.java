@@ -117,10 +117,13 @@ public class TestJsonReader {
         ZonedDateTime datetime5 = ZonedDateTime.of(datetime1, ZoneId.of("UTC"));
         ZonedDateTime datetime6 = ZonedDateTime.of(datetime2, ZoneId.of("America/New_York"));
 
+        String datetime4Str = datetime4.toString();
+        datetime4Str = datetime4Str.substring(0, datetime4Str.length() - 5) + "0700";
+
         String inputString = "{\"dt\": \"" + datetime1.toString() + "\"}\n" +
                              "{\"dt\": \"" + datetime2.toString() + "\"}\n" +
                              "{\"dt\": \"" + datetime3.toString() + "\"}\n" +
-                             "{\"dt\": \"" + datetime4.toString().replace("07:00", "0700") + "\"}\n" +
+                             "{\"dt\": \"" + datetime4Str + "\"}\n" +
                              "{\"dt\": \"" + datetime5.toLocalDateTime().toString() + "[" + datetime5.getZone() + "]\"}\n" +
                              "{\"dt\": \"" + datetime6.toLocalDateTime().toString() + "[" + datetime6.getZone() + "]\"}\n";
 
