@@ -653,25 +653,22 @@ public final class FileDump {
   }
 
   // search for byte pattern in another byte array
-  private static int indexOf(final byte[] data, final byte[] pattern, final int index) {
+  public static int indexOf(final byte[] data, final byte[] pattern, final int index) {
     if (data == null || data.length == 0 || pattern == null || pattern.length == 0 ||
         index > data.length || index < 0) {
       return -1;
     }
 
-    int j = 0;
-    for (int i = index; i < data.length; i++) {
-      if (pattern[j] == data[i]) {
-        j++;
-      } else {
-        j = 0;
+    for (int i = index; i < data.length - pattern.length + 1; i++) {
+      boolean found = true;
+      for (int j = 0; j < pattern.length; j++) {
+        if (data[i + j] != pattern[j]) {
+          found = false;
+          break;
+        }
       }
-
-      if (j == pattern.length) {
-        return i - pattern.length + 1;
-      }
+      if (found) return i;
     }
-
     return -1;
   }
 

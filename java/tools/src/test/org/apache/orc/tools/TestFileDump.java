@@ -60,7 +60,6 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.regex.Matcher;
@@ -708,6 +707,14 @@ public class TestFileDump {
     // and be ignored.
     assumeTrue(!System.getProperty("os.name").startsWith("Windows"));
     TestFileDump.checkOutput(outputFilename, workDir + File.separator + outputFilename);
+  }
+
+  @Test
+  public void testIndexOf() {
+    byte[] bytes = ("OO" + OrcFile.MAGIC).getBytes(StandardCharsets.UTF_8);
+    byte[] pattern = OrcFile.MAGIC.getBytes(StandardCharsets.UTF_8);
+
+    assertEquals(2, FileDump.indexOf(bytes, pattern, 1));
   }
 
   @Test
