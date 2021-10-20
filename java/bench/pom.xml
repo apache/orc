@@ -38,7 +38,7 @@
     <parquet.version>1.12.2</parquet.version>
     <spark.version>3.1.2</spark.version>
     <hadoop.version>3.3.1</hadoop.version>
-    <junit.version>5.8.0</junit.version>
+    <junit.version>5.8.1</junit.version>
   </properties>
 
   <modules>
