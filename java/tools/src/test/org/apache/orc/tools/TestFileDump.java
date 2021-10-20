@@ -716,10 +716,7 @@ public class TestFileDump {
     Writer writer = OrcFile.createWriter(testFilePath,
         OrcFile.writerOptions(conf)
             .fileSystem(fs)
-            .setSchema(schema)
-            .compress(CompressionKind.ZLIB)
-            .stripeSize(100000)
-            .rowIndexStride(1000));
+            .setSchema(schema));
     Random r1 = new Random(1);
     String[] words = new String[]{"It", "was", "the", "best", "of", "times,",
         "it", "was", "the", "worst", "of", "times,", "it", "was", "the", "age",
