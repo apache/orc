@@ -114,8 +114,6 @@ public interface DataMask {
    * that are accessed through Java's ServiceLoader API.
    */
   class Factory {
-    private static final ServiceLoader<Provider> LOADER =
-        ServiceLoader.load(Provider.class);
 
     /**
      * Build a new DataMask instance.
@@ -130,7 +128,7 @@ public interface DataMask {
     public static DataMask build(DataMaskDescription mask,
                                  TypeDescription schema,
                                  MaskOverrides overrides) {
-      for(Provider provider: LOADER) {
+      for(Provider provider: ServiceLoader.load(Provider.class)) {
         DataMask result = provider.build(mask, schema, overrides);
         if (result != null) {
           return result;
