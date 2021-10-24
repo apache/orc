@@ -567,16 +567,25 @@ public final class FileDump {
     // validate the recovered file once again and start moving corrupt files to backup folder
     if (isReadable(recoveredPath, conf, Long.MAX_VALUE)) {
       Path backupDataPath;
+      Path backupDirPath;
+      Path relativeCorruptPath;
       String scheme = corruptPath.toUri().getScheme();
       String authority = corruptPath.toUri().getAuthority();
-      String filePath = corruptPath.toUri().getPath();
 
       // use the same filesystem as corrupt file if backup-path is not explicitly specified
       if (backup.equals(DEFAULT_BACKUP_PATH)) {
-        backupDataPath = new Path(scheme, authority, DEFAULT_BACKUP_PATH + filePath);
+        backupDirPath = new Path(scheme, authority, DEFAULT_BACKUP_PATH);
       } else {
-        backupDataPath = Path.mergePaths(new Path(backup), corruptPath);
+        backupDirPath = new Path(backup);
       }
+
+      if (corruptPath.isUriPathAbsolute()) {
+        relativeCorruptPath = corruptPath;
+      } else {
+        relativeCorruptPath = Path.mergePaths(new Path(Path.SEPARATOR), corruptPath);
+      }
+
+      backupDataPath = Path.mergePaths(backupDirPath, relativeCorruptPath);
 
       // Move data file to backup path
       moveFiles(fs, corruptPath, backupDataPath);
