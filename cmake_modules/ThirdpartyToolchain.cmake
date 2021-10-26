@@ -274,14 +274,35 @@ endif ()
 # IANA - Time Zone Database
 
 if (WIN32)
-  ExternalProject_Add(tzdata_ep
-    URL "ftp://cygwin.osuosl.org/pub/cygwin/noarch/release/tzdata/tzdata-2021b-1.tar.xz"
-    URL_HASH MD5=d0de6f00f5a37ee211cfabeae9eb0937
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND "")
-  ExternalProject_Get_Property(tzdata_ep SOURCE_DIR)
-  set(TZDATA_DIR ${SOURCE_DIR}/share/zoneinfo)
+  SET(CURRENT_TZDATA_FILE "")
+  SET(CURRENT_TZDATA_SHA512 "")
+  File(DOWNLOAD "http://ftp.osuosl.org/pub/cygwin/noarch/release/tzdata/sha512.sum" ${CMAKE_CURRENT_BINARY_DIR}/sha512.sum)
+  File(READ ${CMAKE_CURRENT_BINARY_DIR}/sha512.sum TZDATA_SHA512_CONTENT)
+  string(REPLACE "\n" ";" TZDATA_SHA512_LINE ${TZDATA_SHA512_CONTENT})
+  foreach (LINE IN LISTS TZDATA_SHA512_LINE)
+      if (LINE MATCHES ".tar.xz$" AND (NOT LINE MATCHES "src.tar.xz$"))
+          string(REPLACE " " ";" FILE_ARGS ${LINE})
+          list (GET FILE_ARGS 0 FILE_SHA512)
+          list (GET FILE_ARGS 2 FILE_NAME)
+          if (FILE_NAME STRGREATER CURRENT_TZDATA_FILE)
+              SET(CURRENT_TZDATA_FILE ${FILE_NAME})
+              SET(CURRENT_TZDATA_SHA512 ${FILE_SHA512})
+          endif()
+      endif()
+  endforeach()
+
+  if (NOT "${CURRENT_TZDATA_FILE}" STREQUAL "")
+    ExternalProject_Add(tzdata_ep
+      URL "ftp://cygwin.osuosl.org/pub/cygwin/noarch/release/tzdata/${CURRENT_TZDATA_FILE}"
+      URL_HASH SHA512=${CURRENT_TZDATA_SHA512}
+      CONFIGURE_COMMAND ""
+      BUILD_COMMAND ""
+      INSTALL_COMMAND "")
+    ExternalProject_Get_Property(tzdata_ep SOURCE_DIR)
+    set(TZDATA_DIR ${SOURCE_DIR}/share/zoneinfo)
+  else()
+    message(STATUS "WARNING: tzdata were not found")
+  endif()
 endif ()
 
 # ----------------------------------------------------------------------
