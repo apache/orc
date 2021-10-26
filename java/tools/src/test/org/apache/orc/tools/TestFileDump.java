@@ -753,12 +753,12 @@ public class TestFileDump {
         .toUri().getPath();
 
     String copyTestFilePathStr = Path.mergePaths(
-            workDir, Path.mergePaths(new Path(Path.SEPARATOR),
+        workDir, Path.mergePaths(new Path(Path.SEPARATOR),
                 new Path("CopyTestFileDump.testDump.orc")))
         .toUri().getPath();
 
-    String testCrcFilePathStr = Path.mergePaths(workDir,
-            Path.mergePaths(new Path(Path.SEPARATOR),
+    String testCrcFilePathStr = Path.mergePaths(
+        workDir, Path.mergePaths(new Path(Path.SEPARATOR),
                 new Path(".TestFileDump.testDump.orc.crc")))
         .toUri().getPath();
 
