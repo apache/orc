@@ -18,7 +18,6 @@
 
 package org.apache.orc.tools;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -45,10 +44,14 @@ import org.apache.orc.Writer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -774,16 +777,33 @@ public class TestFileDump {
       }
 
       // Clean up the crc file and append data to avoid checksum read exceptions
-      FileUtils.deleteQuietly(new File(testCrcFilePathStr));
+      Files.delete(Paths.get(testCrcFilePathStr));
 
       conf.setInt(RECOVER_READ_SIZE, (int) (fileSize - 2));
 
       FileDump.main(conf, new String[]{"--recover", "--skip-dump",
           testFilePath.toUri().getPath()});
 
-      assertTrue(FileUtils.contentEquals(new File(testFilePathStr), new File(copyTestFilePathStr)));
+      assertTrue(contentEquals(testFilePathStr, copyTestFilePathStr));
     } finally {
-      FileUtils.deleteQuietly(new File(copyTestFilePathStr));
+      Files.delete(Paths.get(copyTestFilePathStr));
+    }
+  }
+
+  private static boolean contentEquals(String filePath, String otherFilePath) throws IOException {
+    try (InputStream is = new BufferedInputStream(new FileInputStream(filePath));
+         InputStream otherIs = new BufferedInputStream(new FileInputStream(otherFilePath))) {
+      int ch = is.read();
+      while (-1 != ch) {
+        int ch2 = otherIs.read();
+        if (ch != ch2) {
+          return false;
+        }
+        ch = is.read();
+      }
+
+      int ch2 = otherIs.read();
+      return ch2 == -1;
     }
   }
 }
