@@ -18,10 +18,8 @@
 
 package org.apache.orc.tools;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
@@ -65,12 +63,10 @@ import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.apache.orc.tools.FileDump.DEFAULT_BLOCK_SIZE;
 import static org.apache.orc.tools.FileDump.RECOVER_READ_SIZE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -751,42 +747,43 @@ public class TestFileDump {
     writer.close();
 
     long fileSize = fs.getFileStatus(testFilePath).getLen();
-    byte[] bytes = new byte[1024];
-    Path corruptedFilePath = new Path("corruptedFile.orc");
+
+    String testFilePathStr = Path.mergePaths(
+        workDir, Path.mergePaths(new Path(Path.SEPARATOR), testFilePath))
+        .toUri().getPath();
+
+    String copyTestFilePathStr = Path.mergePaths(
+            workDir, Path.mergePaths(new Path(Path.SEPARATOR),
+                new Path("CopyTestFileDump.testDump.orc")))
+        .toUri().getPath();
+
+    String testCrcFilePathStr = Path.mergePaths(workDir,
+            Path.mergePaths(new Path(Path.SEPARATOR),
+                new Path(".TestFileDump.testDump.orc.crc")))
+        .toUri().getPath();
 
     try {
-      FSDataInputStream fdis = fs.open(testFilePath);
-      FileStatus fileStatus = fs.getFileStatus(testFilePath);
-      FSDataOutputStream fdos = fs.create(corruptedFilePath, true,
-          conf.getInt("io.file.buffer.size", 4096),
-          fileStatus.getReplication(),
-          fileStatus.getBlockSize());
-      long remaining = fileSize;
+      Files.copy(Paths.get(testFilePathStr), Paths.get(copyTestFilePathStr));
 
-      while (remaining > 0) {
-        int toRead = (int) Math.min(DEFAULT_BLOCK_SIZE, remaining);
-        byte[] data = new byte[toRead];
-        long startPos = fileSize - remaining;
-        fdis.readFully(startPos, data, 0, toRead);
-        fdos.write(data);
-        remaining = remaining - toRead;
+      // Append write data to make it a corrupt file
+      try (FileOutputStream output = new FileOutputStream(testFilePathStr, true)) {
+        output.write(new byte[1024]);
+        output.write(OrcFile.MAGIC.getBytes(StandardCharsets.UTF_8));
+        output.write(new byte[1024]);
+        output.flush();
       }
-      fdos.write(bytes);
-      fdos.write(OrcFile.MAGIC.getBytes(StandardCharsets.UTF_8));
-      fdos.write(bytes);
-      fdis.close();
-      fdos.close();
+
+      // Clean up the crc file and append data to avoid checksum read exceptions
+      FileUtils.deleteQuietly(new File(testCrcFilePathStr));
 
       conf.setInt(RECOVER_READ_SIZE, (int) (fileSize - 2));
 
       FileDump.main(conf, new String[]{"--recover", "--skip-dump",
-          corruptedFilePath.toUri().getPath()});
+          testFilePath.toUri().getPath()});
 
-      assertSame(fs.getFileChecksum(testFilePath), fs.getFileChecksum(corruptedFilePath));
+      assertTrue(FileUtils.contentEquals(new File(testFilePathStr), new File(copyTestFilePathStr)));
     } finally {
-      if (fs.exists(corruptedFilePath)) {
-        fs.delete(corruptedFilePath, false);
-      }
+      FileUtils.deleteQuietly(new File(copyTestFilePathStr));
     }
   }
 }
