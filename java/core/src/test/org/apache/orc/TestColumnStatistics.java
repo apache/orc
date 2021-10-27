@@ -43,12 +43,23 @@ import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
  * Test ColumnStatisticsImpl for ORC.
  */
 public class TestColumnStatistics {
+
+  @Test
+  public void testLongSumOverflow() {
+    TypeDescription schema = TypeDescription.createInt();
+    ColumnStatisticsImpl stats = ColumnStatisticsImpl.create(schema);
+    stats.updateInteger(1, 1);
+    assertTrue(((IntegerColumnStatistics) stats).isSumDefined());
+    stats.updateInteger(Long.MAX_VALUE, 3);
+    assertFalse(((IntegerColumnStatistics) stats).isSumDefined());
+  }
 
   @Test
   public void testLongMerge() throws Exception {
