@@ -592,8 +592,10 @@ public final class FileDump {
 
       // Move side file to backup path
       Path sideFilePath = OrcAcidUtils.getSideFile(corruptPath);
-      Path backupSideFilePath = new Path(backupDataPath.getParent(), sideFilePath.getName());
-      moveFiles(fs, sideFilePath, backupSideFilePath);
+      if (fs.exists(sideFilePath)) {
+        Path backupSideFilePath = new Path(backupDataPath.getParent(), sideFilePath.getName());
+        moveFiles(fs, sideFilePath, backupSideFilePath);
+      }
 
       // finally move recovered file to actual file
       moveFiles(fs, recoveredPath, corruptPath);
