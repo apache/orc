@@ -370,10 +370,13 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
         maximum = value;
       }
       if (!overflow) {
-        boolean wasPositive = sum >= 0;
-        sum += value * repetitions;
-        if ((value >= 0) == wasPositive) {
-          overflow = (sum >= 0) != wasPositive;
+        try {
+          long increment = repetitions > 1
+              ? Math.multiplyExact(value, repetitions)
+              : value;
+          sum = Math.addExact(sum, increment);
+        } catch (ArithmeticException e) {
+          overflow = true;
         }
       }
     }
@@ -397,10 +400,10 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
         overflow |= otherInt.overflow;
         if (!overflow) {
-          boolean wasPositive = sum >= 0;
-          sum += otherInt.sum;
-          if ((otherInt.sum >= 0) == wasPositive) {
-            overflow = (sum >= 0) != wasPositive;
+          try {
+            sum = Math.addExact(sum, otherInt.sum);
+          } catch (ArithmeticException e) {
+            overflow = true;
           }
         }
       } else {
