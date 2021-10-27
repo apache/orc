@@ -44,10 +44,14 @@ import org.apache.orc.Writer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -57,12 +61,12 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.apache.orc.tools.FileDump.RECOVER_READ_SIZE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -710,5 +714,96 @@ public class TestFileDump {
     byte[] pattern = OrcFile.MAGIC.getBytes(StandardCharsets.UTF_8);
 
     assertEquals(2, FileDump.indexOf(bytes, pattern, 1));
+  }
+
+  @Test
+  public void testRecover() throws Exception {
+    TypeDescription schema = getMyRecordType();
+    Writer writer = OrcFile.createWriter(testFilePath,
+        OrcFile.writerOptions(conf)
+            .fileSystem(fs)
+            .setSchema(schema));
+    Random r1 = new Random(1);
+    String[] words = new String[]{"It", "was", "the", "best", "of", "times,",
+        "it", "was", "the", "worst", "of", "times,", "it", "was", "the", "age",
+        "of", "wisdom,", "it", "was", "the", "age", "of", "foolishness,", "it",
+        "was", "the", "epoch", "of", "belief,", "it", "was", "the", "epoch",
+        "of", "incredulity,", "it", "was", "the", "season", "of", "Light,",
+        "it", "was", "the", "season", "of", "Darkness,", "it", "was", "the",
+        "spring", "of", "hope,", "it", "was", "the", "winter", "of", "despair,",
+        "we", "had", "everything", "before", "us,", "we", "had", "nothing",
+        "before", "us,", "we", "were", "all", "going", "direct", "to",
+        "Heaven,", "we", "were", "all", "going", "direct", "the", "other",
+        "way"};
+    VectorizedRowBatch batch = schema.createRowBatch(1000);
+    for(int i=0; i < 21000; ++i) {
+      appendMyRecord(batch, r1.nextInt(), r1.nextLong(),
+          words[r1.nextInt(words.length)]);
+      if (batch.size == batch.getMaxSize()) {
+        writer.addRowBatch(batch);
+        batch.reset();
+      }
+    }
+    if (batch.size > 0) {
+      writer.addRowBatch(batch);
+    }
+    writer.close();
+
+    long fileSize = fs.getFileStatus(testFilePath).getLen();
+
+    String testFilePathStr = Path.mergePaths(
+        workDir, Path.mergePaths(new Path(Path.SEPARATOR), testFilePath))
+        .toUri().getPath();
+
+    String copyTestFilePathStr = Path.mergePaths(
+        workDir, Path.mergePaths(new Path(Path.SEPARATOR),
+                new Path("CopyTestFileDump.testDump.orc")))
+        .toUri().getPath();
+
+    String testCrcFilePathStr = Path.mergePaths(
+        workDir, Path.mergePaths(new Path(Path.SEPARATOR),
+                new Path(".TestFileDump.testDump.orc.crc")))
+        .toUri().getPath();
+
+    try {
+      Files.copy(Paths.get(testFilePathStr), Paths.get(copyTestFilePathStr));
+
+      // Append write data to make it a corrupt file
+      try (FileOutputStream output = new FileOutputStream(testFilePathStr, true)) {
+        output.write(new byte[1024]);
+        output.write(OrcFile.MAGIC.getBytes(StandardCharsets.UTF_8));
+        output.write(new byte[1024]);
+        output.flush();
+      }
+
+      // Clean up the crc file and append data to avoid checksum read exceptions
+      Files.delete(Paths.get(testCrcFilePathStr));
+
+      conf.setInt(RECOVER_READ_SIZE, (int) (fileSize - 2));
+
+      FileDump.main(conf, new String[]{"--recover", "--skip-dump",
+          testFilePath.toUri().getPath()});
+
+      assertTrue(contentEquals(testFilePathStr, copyTestFilePathStr));
+    } finally {
+      Files.delete(Paths.get(copyTestFilePathStr));
+    }
+  }
+
+  private static boolean contentEquals(String filePath, String otherFilePath) throws IOException {
+    try (InputStream is = new BufferedInputStream(new FileInputStream(filePath));
+         InputStream otherIs = new BufferedInputStream(new FileInputStream(otherFilePath))) {
+      int ch = is.read();
+      while (-1 != ch) {
+        int ch2 = otherIs.read();
+        if (ch != ch2) {
+          return false;
+        }
+        ch = is.read();
+      }
+
+      int ch2 = otherIs.read();
+      return ch2 == -1;
+    }
   }
 }
