@@ -18,7 +18,6 @@
 
 package org.apache.orc.impl.writer;
 
-import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ListColumnVector;
 import org.apache.orc.ColumnStatistics;
 import org.apache.orc.OrcProto;
@@ -26,8 +25,10 @@ import org.apache.orc.StripeStatistics;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.CryptoUtils;
 import org.apache.orc.impl.IntegerWriter;
+import org.apache.orc.impl.InternalColumnVector;
 import org.apache.orc.impl.PositionRecorder;
 import org.apache.orc.impl.StreamName;
+import org.apache.orc.impl.WholeColumnVector;
 
 import java.io.IOException;
 
@@ -68,20 +69,22 @@ public class ListTreeWriter extends TreeWriterBase {
   }
 
   @Override
-  public void writeBatch(ColumnVector vector, int offset,
+  public void writeBatch(InternalColumnVector vector, int offset,
                          int length) throws IOException {
     super.writeBatch(vector, offset, length);
-    ListColumnVector vec = (ListColumnVector) vector;
+    ListColumnVector vec = (ListColumnVector) vector.getColumnVector();
+    InternalColumnVector internalChild = new WholeColumnVector(vec.child);
+
     /* update aggregate statistics */
     indexStatistics.updateCollectionLength(vec.lengths.length);
 
-    if (vector.isRepeating) {
-      if (vector.noNulls || !vector.isNull[0]) {
+    if (vector.isRepeating()) {
+      if (vector.notRepeatNull()) {
         int childOffset = (int) vec.offsets[0];
         int childLength = (int) vec.lengths[0];
         for (int i = 0; i < length; ++i) {
           lengths.write(childLength);
-          childWriter.writeBatch(vec.child, childOffset, childLength);
+          childWriter.writeBatch(internalChild, childOffset, childLength);
         }
         if (createBloomFilter) {
           if (bloomFilter != null) {
@@ -95,15 +98,16 @@ public class ListTreeWriter extends TreeWriterBase {
       int currentOffset = 0;
       int currentLength = 0;
       for (int i = 0; i < length; ++i) {
-        if (!vec.isNull[i + offset]) {
-          int nextLength = (int) vec.lengths[offset + i];
-          int nextOffset = (int) vec.offsets[offset + i];
+        if (!vector.isNull(i + offset)) {
+          int valueOffset = vector.getValueOffset(i + offset);
+          int nextLength = (int) vec.lengths[valueOffset];
+          int nextOffset = (int) vec.offsets[valueOffset];
           lengths.write(nextLength);
           if (currentLength == 0) {
             currentOffset = nextOffset;
             currentLength = nextLength;
           } else if (currentOffset + currentLength != nextOffset) {
-            childWriter.writeBatch(vec.child, currentOffset,
+            childWriter.writeBatch(internalChild, currentOffset,
                 currentLength);
             currentOffset = nextOffset;
             currentLength = nextLength;
@@ -119,7 +123,7 @@ public class ListTreeWriter extends TreeWriterBase {
         }
       }
       if (currentLength != 0) {
-        childWriter.writeBatch(vec.child, currentOffset,
+        childWriter.writeBatch(internalChild, currentOffset,
             currentLength);
       }
     }

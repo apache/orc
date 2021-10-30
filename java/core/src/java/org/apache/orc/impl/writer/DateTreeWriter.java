@@ -18,7 +18,6 @@
 
 package org.apache.orc.impl.writer;
 
-import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DateColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.util.JavaDataModel;
@@ -26,6 +25,7 @@ import org.apache.orc.OrcProto;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.CryptoUtils;
 import org.apache.orc.impl.IntegerWriter;
+import org.apache.orc.impl.InternalColumnVector;
 import org.apache.orc.impl.OutStream;
 import org.apache.orc.impl.PositionRecorder;
 import org.apache.orc.impl.StreamName;
@@ -52,18 +52,18 @@ public class DateTreeWriter extends TreeWriterBase {
   }
 
   @Override
-  public void writeBatch(ColumnVector vector, int offset,
+  public void writeBatch(InternalColumnVector vector, int offset,
                          int length) throws IOException {
     super.writeBatch(vector, offset, length);
-    LongColumnVector vec = (LongColumnVector) vector;
-    if (vector instanceof  DateColumnVector) {
+    LongColumnVector vec = (LongColumnVector) vector.getColumnVector();
+    if (vec instanceof  DateColumnVector) {
       ((DateColumnVector) vec).changeCalendar(useProleptic, true);
     } else if (useProleptic) {
       throw new IllegalArgumentException("Can't use LongColumnVector to write" +
                                              " proleptic dates");
     }
-    if (vector.isRepeating) {
-      if (vector.noNulls || !vector.isNull[0]) {
+    if (vector.isRepeating()) {
+      if (vector.notRepeatNull()) {
         int value = (int) vec.vector[0];
         indexStatistics.updateDate(value);
         if (createBloomFilter) {
@@ -78,8 +78,8 @@ public class DateTreeWriter extends TreeWriterBase {
       }
     } else {
       for (int i = 0; i < length; ++i) {
-        if (vec.noNulls || !vec.isNull[i + offset]) {
-          int value = (int) vec.vector[i + offset];
+        if (vector.noNulls() || !vector.isNull(i + offset)) {
+          int value = (int) vec.vector[vector.getValueOffset(i + offset)];
           writer.write(value);
           indexStatistics.updateDate(value);
           if (createBloomFilter) {

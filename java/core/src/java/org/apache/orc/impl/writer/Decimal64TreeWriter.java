@@ -26,6 +26,7 @@ import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.orc.OrcProto;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.CryptoUtils;
+import org.apache.orc.impl.InternalColumnVector;
 import org.apache.orc.impl.OutStream;
 import org.apache.orc.impl.PositionRecorder;
 import org.apache.orc.impl.RunLengthIntegerWriterV2;
@@ -54,11 +55,12 @@ public class Decimal64TreeWriter extends TreeWriterBase {
     }
   }
 
-  private void writeBatch(DecimalColumnVector vector, int offset,
+  private void writeBatchForDecimal(InternalColumnVector vector, int offset,
                          int length) throws IOException {
-    if (vector.isRepeating) {
-      if (vector.noNulls || !vector.isNull[0]) {
-        HiveDecimalWritable value = vector.vector[0];
+    DecimalColumnVector vec = (DecimalColumnVector) vector.getColumnVector();
+    if (vector.isRepeating()) {
+      if (vector.notRepeatNull()) {
+        HiveDecimalWritable value = vec.vector[0];
         long lg = value.serialize64(scale);
         indexStatistics.updateDecimal64(lg, scale);
         if (createBloomFilter) {
@@ -70,8 +72,8 @@ public class Decimal64TreeWriter extends TreeWriterBase {
       }
     } else {
       for (int i = 0; i < length; ++i) {
-        if (vector.noNulls || !vector.isNull[i + offset]) {
-          HiveDecimalWritable value = vector.vector[i + offset];
+        if (vector.noNulls() || !vector.isNull(i + offset)) {
+          HiveDecimalWritable value = vec.vector[vector.getValueOffset(i + offset)];
           long lg = value.serialize64(scale);
           valueWriter.write(lg);
           indexStatistics.updateDecimal64(lg, scale);
@@ -83,12 +85,13 @@ public class Decimal64TreeWriter extends TreeWriterBase {
     }
   }
 
-  private void writeBatch(Decimal64ColumnVector vector, int offset,
+  private void writeBatchForDecimal64(InternalColumnVector vector, int offset,
                           int length) throws IOException {
-    assert(scale == vector.scale);
-    if (vector.isRepeating) {
-      if (vector.noNulls || !vector.isNull[0]) {
-        long lg = vector.vector[0];
+    Decimal64ColumnVector vec = (Decimal64ColumnVector) vector.getColumnVector();
+    assert(scale == vec.scale);
+    if (vector.isRepeating()) {
+      if (vector.notRepeatNull()) {
+        long lg = vec.vector[0];
         indexStatistics.updateDecimal64(lg, scale);
         if (createBloomFilter) {
           bloomFilterUtf8.addLong(lg);
@@ -99,8 +102,8 @@ public class Decimal64TreeWriter extends TreeWriterBase {
       }
     } else {
       for (int i = 0; i < length; ++i) {
-        if (vector.noNulls || !vector.isNull[i + offset]) {
-          long lg = vector.vector[i + offset];
+        if (vector.noNulls() || !vector.isNull(i + offset)) {
+          long lg = vec.vector[vector.getValueOffset(i + offset)];
           valueWriter.write(lg);
           indexStatistics.updateDecimal64(lg, scale);
           if (createBloomFilter) {
@@ -112,13 +115,14 @@ public class Decimal64TreeWriter extends TreeWriterBase {
   }
 
   @Override
-  public void writeBatch(ColumnVector vector, int offset,
+  public void writeBatch(InternalColumnVector vector, int offset,
                          int length) throws IOException {
     super.writeBatch(vector, offset, length);
-    if (vector instanceof Decimal64ColumnVector) {
-      writeBatch((Decimal64ColumnVector) vector, offset, length);
+    ColumnVector columnVector = vector.getColumnVector();
+    if (columnVector instanceof Decimal64ColumnVector) {
+      writeBatchForDecimal64(vector, offset, length);
     } else {
-      writeBatch((DecimalColumnVector) vector, offset, length);
+      writeBatchForDecimal(vector, offset, length);
     }
   }
 

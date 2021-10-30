@@ -19,8 +19,8 @@
 package org.apache.orc.impl.writer;
 
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.orc.TypeDescription;
+import org.apache.orc.impl.InternalColumnVector;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -33,12 +33,12 @@ public class StringTreeWriter extends StringBaseTreeWriter {
   }
 
   @Override
-  public void writeBatch(ColumnVector vector, int offset,
+  public void writeBatch(InternalColumnVector vector, int offset,
                          int length) throws IOException {
     super.writeBatch(vector, offset, length);
-    BytesColumnVector vec = (BytesColumnVector) vector;
-    if (vector.isRepeating) {
-      if (vector.noNulls || !vector.isNull[0]) {
+    BytesColumnVector vec = (BytesColumnVector) vector.getColumnVector();
+    if (vector.isRepeating()) {
+      if (vector.notRepeatNull()) {
         if (useDictionaryEncoding) {
           int id = dictionary.add(vec.vector[0], vec.start[0], vec.length[0]);
           for (int i = 0; i < length; ++i) {
@@ -64,26 +64,27 @@ public class StringTreeWriter extends StringBaseTreeWriter {
       }
     } else {
       for (int i = 0; i < length; ++i) {
-        if (vec.noNulls || !vec.isNull[i + offset]) {
+        if (vector.noNulls() || !vector.isNull(i + offset)) {
+          int valueOffset = vector.getValueOffset(i + offset);
           if (useDictionaryEncoding) {
-            rows.add(dictionary.add(vec.vector[offset + i],
-                vec.start[offset + i], vec.length[offset + i]));
+            rows.add(dictionary.add(vec.vector[valueOffset],
+                vec.start[valueOffset], vec.length[valueOffset]));
           } else {
-            directStreamOutput.write(vec.vector[offset + i],
-                vec.start[offset + i], vec.length[offset + i]);
-            lengthOutput.write(vec.length[offset + i]);
+            directStreamOutput.write(vec.vector[valueOffset],
+                vec.start[valueOffset], vec.length[valueOffset]);
+            lengthOutput.write(vec.length[valueOffset]);
           }
-          indexStatistics.updateString(vec.vector[offset + i],
-              vec.start[offset + i], vec.length[offset + i], 1);
+          indexStatistics.updateString(vec.vector[valueOffset],
+              vec.start[valueOffset], vec.length[valueOffset], 1);
           if (createBloomFilter) {
             if (bloomFilter != null) {
               // translate from UTF-8 to the default charset
-              bloomFilter.addString(new String(vec.vector[offset + i],
-                  vec.start[offset + i], vec.length[offset + i],
+              bloomFilter.addString(new String(vec.vector[valueOffset],
+                  vec.start[valueOffset], vec.length[valueOffset],
                   StandardCharsets.UTF_8));
             }
-            bloomFilterUtf8.addBytes(vec.vector[offset + i],
-                vec.start[offset + i], vec.length[offset + i]);
+            bloomFilterUtf8.addBytes(vec.vector[valueOffset],
+                vec.start[valueOffset], vec.length[valueOffset]);
           }
         }
       }

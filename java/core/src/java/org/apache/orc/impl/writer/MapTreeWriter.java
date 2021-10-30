@@ -25,11 +25,14 @@ import org.apache.orc.StripeStatistics;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.CryptoUtils;
 import org.apache.orc.impl.IntegerWriter;
+import org.apache.orc.impl.InternalColumnVector;
 import org.apache.orc.impl.PositionRecorder;
 import org.apache.orc.impl.StreamName;
+import org.apache.orc.impl.WholeColumnVector;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.function.Function;
 
 public class MapTreeWriter extends TreeWriterBase {
   private final IntegerWriter lengths;
@@ -72,22 +75,24 @@ public class MapTreeWriter extends TreeWriterBase {
   }
 
   @Override
-  public void writeBatch(ColumnVector vector, int offset,
+  public void writeBatch(InternalColumnVector vector, int offset,
                          int length) throws IOException {
     super.writeBatch(vector, offset, length);
-    MapColumnVector vec = (MapColumnVector) vector;
+    MapColumnVector vec = (MapColumnVector) vector.getColumnVector();
+    InternalColumnVector internalKeys = new WholeColumnVector(vec.keys);
+    InternalColumnVector internalValues = new WholeColumnVector(vec.values);
 
     /* update aggregate statistics */
     indexStatistics.updateCollectionLength(vec.lengths.length);
 
-    if (vector.isRepeating) {
-      if (vector.noNulls || !vector.isNull[0]) {
+    if (vector.isRepeating()) {
+      if (vector.notRepeatNull()) {
         int childOffset = (int) vec.offsets[0];
         int childLength = (int) vec.lengths[0];
         for (int i = 0; i < length; ++i) {
           lengths.write(childLength);
-          keyWriter.writeBatch(vec.keys, childOffset, childLength);
-          valueWriter.writeBatch(vec.values, childOffset, childLength);
+          keyWriter.writeBatch(internalKeys, childOffset, childLength);
+          valueWriter.writeBatch(internalValues, childOffset, childLength);
         }
         if (createBloomFilter) {
           if (bloomFilter != null) {
@@ -101,17 +106,18 @@ public class MapTreeWriter extends TreeWriterBase {
       int currentOffset = 0;
       int currentLength = 0;
       for (int i = 0; i < length; ++i) {
-        if (!vec.isNull[i + offset]) {
-          int nextLength = (int) vec.lengths[offset + i];
-          int nextOffset = (int) vec.offsets[offset + i];
+        if (!vector.isNull(i + offset)) {
+          int valueOffset = vector.getValueOffset(i + offset);
+          int nextLength = (int) vec.lengths[valueOffset];
+          int nextOffset = (int) vec.offsets[valueOffset];
           lengths.write(nextLength);
           if (currentLength == 0) {
             currentOffset = nextOffset;
             currentLength = nextLength;
           } else if (currentOffset + currentLength != nextOffset) {
-            keyWriter.writeBatch(vec.keys, currentOffset,
+            keyWriter.writeBatch(internalKeys, currentOffset,
                 currentLength);
-            valueWriter.writeBatch(vec.values, currentOffset,
+            valueWriter.writeBatch(internalValues, currentOffset,
                 currentLength);
             currentOffset = nextOffset;
             currentLength = nextLength;
@@ -127,9 +133,9 @@ public class MapTreeWriter extends TreeWriterBase {
         }
       }
       if (currentLength != 0) {
-        keyWriter.writeBatch(vec.keys, currentOffset,
+        keyWriter.writeBatch(internalKeys, currentOffset,
             currentLength);
-        valueWriter.writeBatch(vec.values, currentOffset,
+        valueWriter.writeBatch(internalValues, currentOffset,
             currentLength);
       }
     }

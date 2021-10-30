@@ -20,13 +20,15 @@ package org.apache.orc.impl.writer;
 
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.StructColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.ColumnStatistics;
 import org.apache.orc.StripeStatistics;
 import org.apache.orc.TypeDescription;
+import org.apache.orc.impl.InternalColumnVector;
+import org.apache.orc.impl.InternalVectorizedRowBatch;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.function.Function;
 
 public class StructTreeWriter extends TreeWriterBase {
   final TreeWriter[] childrenWriters;
@@ -46,42 +48,46 @@ public class StructTreeWriter extends TreeWriterBase {
   }
 
   @Override
-  public void writeRootBatch(VectorizedRowBatch batch, int offset,
+  public void writeRootBatch(InternalVectorizedRowBatch batch, int offset,
                              int length) throws IOException {
     // update the statistics for the root column
     indexStatistics.increment(length);
     // I'm assuming that the root column isn't nullable so that I don't need
     // to update isPresent.
     for (int i = 0; i < childrenWriters.length; ++i) {
-      childrenWriters[i].writeBatch(batch.cols[i], offset, length);
+      childrenWriters[i].writeBatch(batch.cols(i), offset, length);
     }
   }
 
   private static void writeFields(StructColumnVector vector,
                                   TreeWriter[] childrenWriters,
-                                  int offset, int length) throws IOException {
+                                  int offset, int length,
+                                  Function<ColumnVector, InternalColumnVector> encapsulationFun)
+      throws IOException {
     for (int field = 0; field < childrenWriters.length; ++field) {
-      childrenWriters[field].writeBatch(vector.fields[field], offset, length);
+      childrenWriters[field].writeBatch(
+          encapsulationFun.apply(vector.fields[field]), offset, length);
     }
   }
 
   @Override
-  public void writeBatch(ColumnVector vector, int offset,
+  public void writeBatch(InternalColumnVector vector, int offset,
                          int length) throws IOException {
     super.writeBatch(vector, offset, length);
-    StructColumnVector vec = (StructColumnVector) vector;
-    if (vector.isRepeating) {
-      if (vector.noNulls || !vector.isNull[0]) {
-        writeFields(vec, childrenWriters, offset, length);
+    Function<ColumnVector, InternalColumnVector> encapsulationFun = vector.encapsulationFunction();
+    StructColumnVector vec = (StructColumnVector) vector.getColumnVector();
+    if (vector.isRepeating()) {
+      if (vector.notRepeatNull()) {
+        writeFields(vec, childrenWriters, offset, length, encapsulationFun);
       }
-    } else if (vector.noNulls) {
-      writeFields(vec, childrenWriters, offset, length);
+    } else if (vector.noNulls()) {
+      writeFields(vec, childrenWriters, offset, length, encapsulationFun);
     } else {
       // write the records in runs
       int currentRun = 0;
       boolean started = false;
       for (int i = 0; i < length; ++i) {
-        if (!vec.isNull[i + offset]) {
+        if (!vector.isNull(i + offset)) {
           if (!started) {
             started = true;
             currentRun = i;
@@ -89,12 +95,12 @@ public class StructTreeWriter extends TreeWriterBase {
         } else if (started) {
           started = false;
           writeFields(vec, childrenWriters, offset + currentRun,
-              i - currentRun);
+              i - currentRun, encapsulationFun);
         }
       }
       if (started) {
         writeFields(vec, childrenWriters, offset + currentRun,
-            length - currentRun);
+            length - currentRun, encapsulationFun);
       }
     }
   }

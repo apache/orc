@@ -18,12 +18,12 @@
 
 package org.apache.orc.impl.writer;
 
-import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.ColumnStatistics;
 import org.apache.orc.OrcFile;
 import org.apache.orc.StripeStatistics;
 import org.apache.orc.TypeDescription;
+import org.apache.orc.impl.InternalColumnVector;
+import org.apache.orc.impl.InternalVectorizedRowBatch;
 
 import java.io.IOException;
 
@@ -59,7 +59,7 @@ public interface TreeWriter {
    * @param offset the first row from the batch to write
    * @param length the number of rows to write
    */
-  void writeRootBatch(VectorizedRowBatch batch, int offset,
+  void writeRootBatch(InternalVectorizedRowBatch batch, int offset,
                       int length) throws IOException;
 
   /**
@@ -69,7 +69,7 @@ public interface TreeWriter {
    * @param offset the first value offset to write.
    * @param length the number of values to write
    */
-  void writeBatch(ColumnVector vector, int offset,
+  void writeBatch(InternalColumnVector vector, int offset,
                   int length) throws IOException;
 
   /**

@@ -28,6 +28,7 @@ import org.apache.orc.OrcProto;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.CryptoUtils;
 import org.apache.orc.impl.IntegerWriter;
+import org.apache.orc.impl.InternalColumnVector;
 import org.apache.orc.impl.PositionRecorder;
 import org.apache.orc.impl.PositionedOutputStream;
 import org.apache.orc.impl.SerializationUtils;
@@ -75,11 +76,12 @@ public class DecimalTreeWriter extends TreeWriterBase {
     return result;
   }
 
-  private void writeBatch(DecimalColumnVector vector, int offset,
+  private void writeBatchForDecimal(InternalColumnVector vector, int offset,
                          int length) throws IOException {
-    if (vector.isRepeating) {
-      if (vector.noNulls || !vector.isNull[0]) {
-        HiveDecimalWritable value = vector.vector[0];
+    DecimalColumnVector vec = (DecimalColumnVector) vector.getColumnVector();
+    if (vector.isRepeating()) {
+      if (vector.notRepeatNull()) {
+        HiveDecimalWritable value = vec.vector[0];
         indexStatistics.updateDecimal(value);
         if (createBloomFilter) {
           String str = value.toString(scratchBuffer);
@@ -96,8 +98,8 @@ public class DecimalTreeWriter extends TreeWriterBase {
       }
     } else {
       for (int i = 0; i < length; ++i) {
-        if (vector.noNulls || !vector.isNull[i + offset]) {
-          HiveDecimalWritable value = vector.vector[i + offset];
+        if (vector.noNulls() || !vector.isNull(i + offset)) {
+          HiveDecimalWritable value = vec.vector[vector.getValueOffset(i + offset)];
           value.serializationUtilsWrite(valueStream, scratchLongs);
           scaleStream.write(value.scale());
           indexStatistics.updateDecimal(value);
@@ -113,14 +115,15 @@ public class DecimalTreeWriter extends TreeWriterBase {
     }
   }
 
-  private void writeBatch(Decimal64ColumnVector vector, int offset,
+  private void writeBatchForDecimal64(InternalColumnVector vector, int offset,
                           int length) throws IOException {
-    if (vector.isRepeating) {
-      if (vector.noNulls || !vector.isNull[0]) {
-        indexStatistics.updateDecimal64(vector.vector[0], vector.scale);
+    Decimal64ColumnVector vec = (Decimal64ColumnVector) vector.getColumnVector();
+    if (vector.isRepeating()) {
+      if (vector.notRepeatNull()) {
+        indexStatistics.updateDecimal64(vec.vector[0], vec.scale);
         if (createBloomFilter) {
-          HiveDecimalWritable value = vector.getScratchWritable();
-          value.setFromLongAndScale(vector.vector[0], vector.scale);
+          HiveDecimalWritable value = vec.getScratchWritable();
+          value.setFromLongAndScale(vec.vector[0], vec.scale);
           String str = value.toString(scratchBuffer);
           if (bloomFilter != null) {
             bloomFilter.addString(str);
@@ -128,20 +131,20 @@ public class DecimalTreeWriter extends TreeWriterBase {
           bloomFilterUtf8.addString(str);
         }
         for (int i = 0; i < length; ++i) {
-          utils.writeVslong(valueStream, vector.vector[0]);
-          scaleStream.write(vector.scale);
+          utils.writeVslong(valueStream, vec.vector[0]);
+          scaleStream.write(vec.scale);
         }
       }
     } else {
-      HiveDecimalWritable value = vector.getScratchWritable();
+      HiveDecimalWritable value = vec.getScratchWritable();
       for (int i = 0; i < length; ++i) {
-        if (vector.noNulls || !vector.isNull[i + offset]) {
-          long num = vector.vector[i + offset];
+        if (vector.noNulls() || !vector.isNull(i + offset)) {
+          long num = vec.vector[vector.getValueOffset(i + offset)];
           utils.writeVslong(valueStream, num);
-          scaleStream.write(vector.scale);
-          indexStatistics.updateDecimal64(num, vector.scale);
+          scaleStream.write(vec.scale);
+          indexStatistics.updateDecimal64(num, vec.scale);
           if (createBloomFilter) {
-            value.setFromLongAndScale(num, vector.scale);
+            value.setFromLongAndScale(num, vec.scale);
             String str = value.toString(scratchBuffer);
             if (bloomFilter != null) {
               bloomFilter.addString(str);
@@ -154,13 +157,14 @@ public class DecimalTreeWriter extends TreeWriterBase {
   }
 
   @Override
-  public void writeBatch(ColumnVector vector, int offset,
+  public void writeBatch(InternalColumnVector vector, int offset,
                          int length) throws IOException {
     super.writeBatch(vector, offset, length);
-    if (vector instanceof Decimal64ColumnVector) {
-      writeBatch((Decimal64ColumnVector) vector, offset, length);
+    ColumnVector columnVector = vector.getColumnVector();
+    if (columnVector instanceof Decimal64ColumnVector) {
+      writeBatchForDecimal64(vector, offset, length);
     } else {
-      writeBatch((DecimalColumnVector) vector, offset, length);
+      writeBatchForDecimal(vector, offset, length);
     }
   }
 

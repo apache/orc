@@ -18,13 +18,13 @@
 
 package org.apache.orc.impl.writer;
 
-import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.util.JavaDataModel;
 import org.apache.orc.OrcProto;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.BitFieldWriter;
 import org.apache.orc.impl.CryptoUtils;
+import org.apache.orc.impl.InternalColumnVector;
 import org.apache.orc.impl.PositionRecorder;
 import org.apache.orc.impl.PositionedOutputStream;
 import org.apache.orc.impl.StreamName;
@@ -47,12 +47,12 @@ public class BooleanTreeWriter extends TreeWriterBase {
   }
 
   @Override
-  public void writeBatch(ColumnVector vector, int offset,
+  public void writeBatch(InternalColumnVector vector, int offset,
                          int length) throws IOException {
     super.writeBatch(vector, offset, length);
-    LongColumnVector vec = (LongColumnVector) vector;
-    if (vector.isRepeating) {
-      if (vector.noNulls || !vector.isNull[0]) {
+    LongColumnVector vec = (LongColumnVector) vector.getColumnVector();
+    if (vector.isRepeating()) {
+      if (vector.notRepeatNull()) {
         int value = vec.vector[0] == 0 ? 0 : 1;
         indexStatistics.updateBoolean(value != 0, length);
         for (int i = 0; i < length; ++i) {
@@ -61,8 +61,8 @@ public class BooleanTreeWriter extends TreeWriterBase {
       }
     } else {
       for (int i = 0; i < length; ++i) {
-        if (vec.noNulls || !vec.isNull[i + offset]) {
-          int value = vec.vector[i + offset] == 0 ? 0 : 1;
+        if (vector.noNulls() || !vector.isNull(i + offset)) {
+          int value = vec.vector[vector.getValueOffset(i + offset)] == 0 ? 0 : 1;
           writer.write(value);
           indexStatistics.updateBoolean(value != 0, 1);
         }

@@ -19,8 +19,8 @@
 package org.apache.orc.impl.writer;
 
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.orc.TypeDescription;
+import org.apache.orc.impl.InternalColumnVector;
 import org.apache.orc.impl.Utf8Utils;
 
 import java.io.IOException;
@@ -44,20 +44,20 @@ public class CharTreeWriter extends StringBaseTreeWriter {
   }
 
   @Override
-  public void writeBatch(ColumnVector vector, int offset,
+  public void writeBatch(InternalColumnVector vector, int offset,
                          int length) throws IOException {
     super.writeBatch(vector, offset, length);
-    BytesColumnVector vec = (BytesColumnVector) vector;
-    if (vector.isRepeating) {
-      if (vector.noNulls || !vector.isNull[0]) {
+    BytesColumnVector vec = (BytesColumnVector) vector.getColumnVector();
+    if (vector.isRepeating()) {
+      if (vector.notRepeatNull()) {
         // 0, length times
         writePadded(vec, 0, length);
       }
     } else {
       for(int i=0; i < length; ++i) {
-        if (vec.noNulls || !vec.isNull[i + offset]) {
+        if (vector.noNulls() || !vector.isNull(i + offset)) {
           // offset + i, once per loop
-          writePadded(vec, i + offset, 1);
+          writePadded(vec, vector.getValueOffset(i + offset), 1);
         }
       }
     }

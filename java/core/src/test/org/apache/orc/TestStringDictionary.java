@@ -29,6 +29,7 @@ import org.apache.orc.impl.OutStream;
 import org.apache.orc.impl.RecordReaderImpl;
 import org.apache.orc.impl.StreamName;
 import org.apache.orc.impl.TestInStream;
+import org.apache.orc.impl.WholeColumnVector;
 import org.apache.orc.impl.writer.StreamOptions;
 import org.apache.orc.impl.writer.StringTreeWriter;
 import org.apache.orc.impl.writer.TreeWriter;
@@ -304,7 +305,7 @@ public class TestStringDictionary {
     batch.size = 1024;
     col.isRepeating = true;
     col.setVal(0, "foobar".getBytes(StandardCharsets.UTF_8));
-    writer.writeBatch(col, 0, batch.size);
+    writer.writeBatch(new WholeColumnVector(col), 0, batch.size);
     TestInStream.OutputCollector output = writerContext.streams.get(
         new StreamName(0, OrcProto.Stream.Kind.DATA));
     // Check to make sure that the strings are being written to the stream,

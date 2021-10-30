@@ -18,12 +18,12 @@
 
 package org.apache.orc.impl.writer;
 
-import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
 import org.apache.hadoop.hive.ql.util.JavaDataModel;
 import org.apache.orc.OrcProto;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.CryptoUtils;
+import org.apache.orc.impl.InternalColumnVector;
 import org.apache.orc.impl.PositionRecorder;
 import org.apache.orc.impl.PositionedOutputStream;
 import org.apache.orc.impl.SerializationUtils;
@@ -48,12 +48,12 @@ public class FloatTreeWriter extends TreeWriterBase {
   }
 
   @Override
-  public void writeBatch(ColumnVector vector, int offset,
+  public void writeBatch(InternalColumnVector vector, int offset,
                          int length) throws IOException {
     super.writeBatch(vector, offset, length);
-    DoubleColumnVector vec = (DoubleColumnVector) vector;
-    if (vector.isRepeating) {
-      if (vector.noNulls || !vector.isNull[0]) {
+    DoubleColumnVector vec = (DoubleColumnVector) vector.getColumnVector();
+    if (vector.isRepeating()) {
+      if (vector.notRepeatNull()) {
         float value = (float) vec.vector[0];
         indexStatistics.updateDouble(value);
         if (createBloomFilter) {
@@ -68,8 +68,8 @@ public class FloatTreeWriter extends TreeWriterBase {
       }
     } else {
       for (int i = 0; i < length; ++i) {
-        if (vec.noNulls || !vec.isNull[i + offset]) {
-          float value = (float) vec.vector[i + offset];
+        if (vector.noNulls() || !vector.isNull(i + offset)) {
+          float value = (float) vec.vector[vector.getValueOffset(i + offset)];
           utils.writeFloat(stream, value);
           indexStatistics.updateDouble(value);
           if (createBloomFilter) {
@@ -82,7 +82,6 @@ public class FloatTreeWriter extends TreeWriterBase {
       }
     }
   }
-
 
   @Override
   public void writeStripe(int requiredIndexEntries) throws IOException {

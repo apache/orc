@@ -683,20 +683,22 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
 
   @Override
   public void addRowBatch(VectorizedRowBatch batch) throws IOException {
+    InternalVectorizedRowBatch internalBatch = InternalVectorizedRowBatch.encapsulation(batch);
+    int batchSize = internalBatch.size();
     try {
       // If this is the first set of rows in this stripe, tell the tree writers
       // to prepare the stripe.
-      if (batch.size != 0 && rowsInStripe == 0) {
+      if (batchSize != 0 && rowsInStripe == 0) {
         treeWriter.prepareStripe(stripes.size() + 1);
       }
       if (buildIndex) {
         // Batch the writes up to the rowIndexStride so that we can get the
         // right size indexes.
         int posn = 0;
-        while (posn < batch.size) {
-          int chunkSize = Math.min(batch.size - posn,
+        while (posn < batchSize) {
+          int chunkSize = Math.min(batchSize - posn,
               rowIndexStride - rowsInIndex);
-          treeWriter.writeRootBatch(batch, posn, chunkSize);
+          treeWriter.writeRootBatch(internalBatch, posn, chunkSize);
           posn += chunkSize;
           rowsInIndex += chunkSize;
           rowsInStripe += chunkSize;
@@ -705,10 +707,10 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
           }
         }
       } else {
-        rowsInStripe += batch.size;
-        treeWriter.writeRootBatch(batch, 0, batch.size);
+        rowsInStripe += batchSize;
+        treeWriter.writeRootBatch(internalBatch, 0, batchSize);
       }
-      rowsSinceCheck += batch.size;
+      rowsSinceCheck += batchSize;
       previousAllocation = memoryManager.checkMemory(previousAllocation, this);
       checkMemory();
     } catch (Throwable t) {

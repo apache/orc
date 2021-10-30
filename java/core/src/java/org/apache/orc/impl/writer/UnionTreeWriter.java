@@ -25,12 +25,14 @@ import org.apache.orc.OrcProto;
 import org.apache.orc.StripeStatistics;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.CryptoUtils;
+import org.apache.orc.impl.InternalColumnVector;
 import org.apache.orc.impl.PositionRecorder;
 import org.apache.orc.impl.RunLengthByteWriter;
 import org.apache.orc.impl.StreamName;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.function.Function;
 
 public class UnionTreeWriter extends TreeWriterBase {
   private final RunLengthByteWriter tags;
@@ -54,12 +56,14 @@ public class UnionTreeWriter extends TreeWriterBase {
   }
 
   @Override
-  public void writeBatch(ColumnVector vector, int offset,
+  public void writeBatch(InternalColumnVector vector, int offset,
                          int length) throws IOException {
     super.writeBatch(vector, offset, length);
-    UnionColumnVector vec = (UnionColumnVector) vector;
-    if (vector.isRepeating) {
-      if (vector.noNulls || !vector.isNull[0]) {
+    UnionColumnVector vec = (UnionColumnVector) vector.getColumnVector();
+    Function<ColumnVector, InternalColumnVector> encapsulationFun = vector.encapsulationFunction();
+
+    if (vector.isRepeating()) {
+      if (vector.notRepeatNull()) {
         byte tag = (byte) vec.tags[0];
         for (int i = 0; i < length; ++i) {
           tags.write(tag);
@@ -70,7 +74,7 @@ public class UnionTreeWriter extends TreeWriterBase {
           }
           bloomFilterUtf8.addLong(tag);
         }
-        childrenWriters[tag].writeBatch(vec.fields[tag], offset, length);
+        childrenWriters[tag].writeBatch(encapsulationFun.apply(vec.fields[tag]), offset, length);
       }
     } else {
       // write the records in runs of the same tag
@@ -79,21 +83,22 @@ public class UnionTreeWriter extends TreeWriterBase {
       for (int i = 0; i < length; ++i) {
         // only need to deal with the non-nulls, since the nulls were dealt
         // with in the super method.
-        if (vec.noNulls || !vec.isNull[i + offset]) {
-          byte tag = (byte) vec.tags[offset + i];
+        if (vector.noNulls() || !vector.isNull(i + offset)) {
+          int valueOffset = vector.getValueOffset(i + offset);
+          byte tag = (byte) vec.tags[valueOffset];
           tags.write(tag);
           if (currentLength[tag] == 0) {
             // start a new sequence
-            currentStart[tag] = i + offset;
+            currentStart[tag] = valueOffset;
             currentLength[tag] = 1;
-          } else if (currentStart[tag] + currentLength[tag] == i + offset) {
+          } else if (currentStart[tag] + currentLength[tag] == valueOffset) {
             // ok, we are extending the current run for that tag.
             currentLength[tag] += 1;
           } else {
             // otherwise, we need to close off the old run and start a new one
-            childrenWriters[tag].writeBatch(vec.fields[tag],
+            childrenWriters[tag].writeBatch(encapsulationFun.apply(vec.fields[tag]),
                 currentStart[tag], currentLength[tag]);
-            currentStart[tag] = i + offset;
+            currentStart[tag] = valueOffset;
             currentLength[tag] = 1;
           }
           if (createBloomFilter) {
@@ -107,8 +112,8 @@ public class UnionTreeWriter extends TreeWriterBase {
       // write out any left over sequences
       for (int tag = 0; tag < currentStart.length; ++tag) {
         if (currentLength[tag] != 0) {
-          childrenWriters[tag].writeBatch(vec.fields[tag], currentStart[tag],
-              currentLength[tag]);
+          childrenWriters[tag].writeBatch(encapsulationFun.apply(vec.fields[tag]),
+              currentStart[tag], currentLength[tag]);
         }
       }
     }

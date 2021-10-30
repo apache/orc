@@ -19,12 +19,12 @@
 package org.apache.orc.impl.writer;
 
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.orc.BinaryColumnStatistics;
 import org.apache.orc.OrcProto;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.CryptoUtils;
 import org.apache.orc.impl.IntegerWriter;
+import org.apache.orc.impl.InternalColumnVector;
 import org.apache.orc.impl.PositionRecorder;
 import org.apache.orc.impl.PositionedOutputStream;
 import org.apache.orc.impl.StreamName;
@@ -64,12 +64,12 @@ public class BinaryTreeWriter extends TreeWriterBase {
   }
 
   @Override
-  public void writeBatch(ColumnVector vector, int offset,
+  public void writeBatch(InternalColumnVector vector, int offset,
                          int length) throws IOException {
     super.writeBatch(vector, offset, length);
-    BytesColumnVector vec = (BytesColumnVector) vector;
-    if (vector.isRepeating) {
-      if (vector.noNulls || !vector.isNull[0]) {
+    BytesColumnVector vec = (BytesColumnVector) vector.getColumnVector();
+    if (vector.isRepeating()) {
+      if (vector.notRepeatNull()) {
         for (int i = 0; i < length; ++i) {
           stream.write(vec.vector[0], vec.start[0],
               vec.length[0]);
@@ -86,25 +86,25 @@ public class BinaryTreeWriter extends TreeWriterBase {
       }
     } else {
       for (int i = 0; i < length; ++i) {
-        if (vec.noNulls || !vec.isNull[i + offset]) {
-          stream.write(vec.vector[offset + i],
-              vec.start[offset + i], vec.length[offset + i]);
-          this.length.write(vec.length[offset + i]);
-          indexStatistics.updateBinary(vec.vector[offset + i],
-              vec.start[offset + i], vec.length[offset + i], 1);
+        int valueOffset = vector.getValueOffset(i + offset);
+        if (vector.noNulls() || !vector.isNull(i + offset)) {
+          stream.write(vec.vector[valueOffset],
+              vec.start[valueOffset], vec.length[valueOffset]);
+          this.length.write(vec.length[valueOffset]);
+          indexStatistics.updateBinary(vec.vector[valueOffset],
+              vec.start[valueOffset], vec.length[valueOffset], 1);
           if (createBloomFilter) {
             if (bloomFilter != null) {
-              bloomFilter.addBytes(vec.vector[offset + i],
-                  vec.start[offset + i], vec.length[offset + i]);
+              bloomFilter.addBytes(vec.vector[valueOffset],
+                  vec.start[valueOffset], vec.length[valueOffset]);
             }
-            bloomFilterUtf8.addBytes(vec.vector[offset + i],
-                vec.start[offset + i], vec.length[offset + i]);
+            bloomFilterUtf8.addBytes(vec.vector[valueOffset],
+                vec.start[valueOffset], vec.length[valueOffset]);
           }
         }
       }
     }
   }
-
 
   @Override
   public void writeStripe(int requiredIndexEntries) throws IOException {

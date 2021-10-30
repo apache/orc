@@ -18,13 +18,16 @@
 
 package org.apache.orc.impl.writer;
 
-import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.ColumnStatistics;
 import org.apache.orc.DataMask;
 import org.apache.orc.StripeStatistics;
 import org.apache.orc.TypeDescription;
+import org.apache.orc.impl.InternalColumnVector;
+import org.apache.orc.impl.InternalVectorizedRowBatch;
 import org.apache.orc.impl.TypeUtils;
+import org.apache.orc.impl.WholeColumnVector;
+import org.apache.orc.impl.WholeVectorizedRowBatch;
 
 import java.io.IOException;
 
@@ -38,19 +41,25 @@ public class EncryptionTreeWriter implements TreeWriter {
   private final TreeWriter[] childrenWriters;
   private final DataMask[] masks;
   // a column vector that we use to apply the masks
-  private final ColumnVector scratch;
-  private final VectorizedRowBatch scratchBatch;
+  private final WholeColumnVector scratch;
+  private final WholeVectorizedRowBatch scratchBatch;
+  private final VectorizedRowBatch transferBatch;
 
   EncryptionTreeWriter(TypeDescription schema,
                        WriterEncryptionVariant encryption,
                        WriterContext context) throws IOException {
-    scratch = TypeUtils.createColumn(schema, TypeDescription.RowBatchVersion.USE_DECIMAL64, 1024);
+    scratch = new WholeColumnVector(TypeUtils.createColumn(
+        schema, TypeDescription.RowBatchVersion.USE_DECIMAL64, 1024), false);
     childrenWriters = new TreeWriterBase[2];
     masks = new DataMask[childrenWriters.length];
     if (schema.getCategory() == TypeDescription.Category.STRUCT) {
-      scratchBatch = new VectorizedRowBatch(schema.getChildren().size(), 1024);
+      scratchBatch = new WholeVectorizedRowBatch(
+          new VectorizedRowBatch(schema.getChildren().size(), 1024));
+      transferBatch = new VectorizedRowBatch(schema.getChildren().size(), 1024);
     } else {
-      scratchBatch = new VectorizedRowBatch(1, 1024);
+      scratchBatch = new WholeVectorizedRowBatch(
+          new VectorizedRowBatch(1, 1024));
+      transferBatch = new VectorizedRowBatch(1, 1024);
     }
 
     // no mask, encrypted data
@@ -63,15 +72,27 @@ public class EncryptionTreeWriter implements TreeWriter {
   }
 
   @Override
-  public void writeRootBatch(VectorizedRowBatch batch, int offset,
+  public void writeRootBatch(InternalVectorizedRowBatch batch, int offset,
                              int length) throws IOException {
     scratchBatch.ensureSize(offset + length);
     for(int alt=0; alt < childrenWriters.length; ++alt) {
       // if there is a mask, apply it to each column
       if (masks[alt] != null) {
-        for(int col=0; col < scratchBatch.cols.length; ++col) {
-          masks[alt].maskData(batch.cols[col], scratchBatch.cols[col], offset,
-              length);
+        if (batch.getVectorizedRowBatch().isSelectedInUse()) {
+          int[] selected = batch.getVectorizedRowBatch().getSelected();
+          int selectedSize = batch.getVectorizedRowBatch().getSelectedSize();
+          for(int col=0; col < scratchBatch.colsSize(); ++col) {
+            batch.cols(col).getColumnVector()
+                .copySelected(true, selected, selectedSize, transferBatch.cols[col]);
+            masks[alt].maskData(transferBatch.cols[col],
+                scratchBatch.cols(col).getColumnVector(), offset, length);
+          }
+        }
+        else {
+          for(int col=0; col < scratchBatch.colsSize(); ++col) {
+            masks[alt].maskData(batch.cols(col).getColumnVector(),
+                scratchBatch.cols(col).getColumnVector(), offset, length);
+          }
         }
         childrenWriters[alt].writeRootBatch(scratchBatch, offset, length);
       } else {
@@ -81,13 +102,13 @@ public class EncryptionTreeWriter implements TreeWriter {
   }
 
   @Override
-  public void writeBatch(ColumnVector vector, int offset,
+  public void writeBatch(InternalColumnVector vector, int offset,
                          int length) throws IOException {
     scratch.ensureSize(length, false);
     for(int alt=0; alt < childrenWriters.length; ++alt) {
       // if there is a mask, apply it to each column
       if (masks[alt] != null) {
-        masks[alt].maskData(vector, scratch, offset, length);
+        masks[alt].maskData(vector.getColumnVector(), scratch.getColumnVector(), offset, length);
         childrenWriters[alt].writeBatch(scratch, offset, length);
       } else {
         childrenWriters[alt].writeBatch(vector, offset, length);

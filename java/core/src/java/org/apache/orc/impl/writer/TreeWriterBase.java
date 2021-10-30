@@ -18,8 +18,6 @@
 
 package org.apache.orc.impl.writer;
 
-import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
-import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.ColumnStatistics;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
@@ -29,6 +27,8 @@ import org.apache.orc.impl.BitFieldWriter;
 import org.apache.orc.impl.ColumnStatisticsImpl;
 import org.apache.orc.impl.CryptoUtils;
 import org.apache.orc.impl.IntegerWriter;
+import org.apache.orc.impl.InternalColumnVector;
+import org.apache.orc.impl.InternalVectorizedRowBatch;
 import org.apache.orc.impl.OutStream;
 import org.apache.orc.impl.PositionRecorder;
 import org.apache.orc.impl.PositionedOutputStream;
@@ -163,9 +163,9 @@ public abstract class TreeWriterBase implements TreeWriter {
    * @param length the number of rows to write
    */
   @Override
-  public void writeRootBatch(VectorizedRowBatch batch, int offset,
+  public void writeRootBatch(InternalVectorizedRowBatch batch, int offset,
                              int length) throws IOException {
-    writeBatch(batch.cols[0], offset, length);
+    writeBatch(batch.cols(0), offset, length);
   }
 
   /**
@@ -175,9 +175,9 @@ public abstract class TreeWriterBase implements TreeWriter {
    * @param length the number of values from the vector to write
    */
   @Override
-  public void writeBatch(ColumnVector vector, int offset,
+  public void writeBatch(InternalColumnVector vector, int offset,
                          int length) throws IOException {
-    if (vector.noNulls) {
+    if (vector.noNulls()) {
       indexStatistics.increment(length);
       if (isPresent != null) {
         for (int i = 0; i < length; ++i) {
@@ -185,8 +185,8 @@ public abstract class TreeWriterBase implements TreeWriter {
         }
       }
     } else {
-      if (vector.isRepeating) {
-        boolean isNull = vector.isNull[0];
+      if (vector.isRepeating()) {
+        boolean isNull = !vector.notRepeatNull();
         if (isPresent != null) {
           for (int i = 0; i < length; ++i) {
             isPresent.write(isNull ? 0 : 1);
@@ -202,7 +202,7 @@ public abstract class TreeWriterBase implements TreeWriter {
         // count the number of non-null values
         int nonNullCount = 0;
         for(int i = 0; i < length; ++i) {
-          boolean isNull = vector.isNull[i + offset];
+          boolean isNull = vector.isNull(i + offset);
           if (!isNull) {
             nonNullCount += 1;
           }

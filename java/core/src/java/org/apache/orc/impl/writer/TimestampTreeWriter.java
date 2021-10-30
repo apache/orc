@@ -18,13 +18,13 @@
 
 package org.apache.orc.impl.writer;
 
-import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.ql.util.JavaDataModel;
 import org.apache.orc.OrcProto;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.impl.CryptoUtils;
 import org.apache.orc.impl.IntegerWriter;
+import org.apache.orc.impl.InternalColumnVector;
 import org.apache.orc.impl.PositionRecorder;
 import org.apache.orc.impl.SerializationUtils;
 import org.apache.orc.impl.StreamName;
@@ -94,13 +94,13 @@ public class TimestampTreeWriter extends TreeWriterBase {
   }
 
   @Override
-  public void writeBatch(ColumnVector vector, int offset,
+  public void writeBatch(InternalColumnVector vector, int offset,
                          int length) throws IOException {
     super.writeBatch(vector, offset, length);
-    TimestampColumnVector vec = (TimestampColumnVector) vector;
+    TimestampColumnVector vec = (TimestampColumnVector) vector.getColumnVector();
     vec.changeCalendar(useProleptic, true);
-    if (vector.isRepeating) {
-      if (vector.noNulls || !vector.isNull[0]) {
+    if (vector.isRepeating()) {
+      if (vector.notRepeatNull()) {
         // ignore the bottom three digits from the vec.time field
         final long secs = vec.time[0] / MILLIS_PER_SECOND;
         final int newNanos = vec.nanos[0];
@@ -126,10 +126,11 @@ public class TimestampTreeWriter extends TreeWriterBase {
       }
     } else {
       for (int i = 0; i < length; ++i) {
-        if (vec.noNulls || !vec.isNull[i + offset]) {
+        if (vector.noNulls() || !vector.isNull(i + offset)) {
+          int valueOffset = vector.getValueOffset(i + offset);
           // ignore the bottom three digits from the vec.time field
-          final long secs = vec.time[i + offset] / MILLIS_PER_SECOND;
-          final int newNanos = vec.nanos[i + offset];
+          final long secs = vec.time[valueOffset] / MILLIS_PER_SECOND;
+          final int newNanos = vec.nanos[valueOffset];
           // set the millis based on the top three digits of the nanos
           long millis = secs * MILLIS_PER_SECOND + newNanos / 1_000_000;
           if (millis < 0 && newNanos > 999_999) {
