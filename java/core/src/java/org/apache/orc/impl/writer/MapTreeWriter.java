@@ -17,7 +17,6 @@
  */
 package org.apache.orc.impl.writer;
 
-import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.MapColumnVector;
 import org.apache.orc.ColumnStatistics;
 import org.apache.orc.OrcProto;
@@ -32,7 +31,6 @@ import org.apache.orc.impl.WholeColumnVector;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.function.Function;
 
 public class MapTreeWriter extends TreeWriterBase {
   private final IntegerWriter lengths;
