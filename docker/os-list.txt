@@ -2,6 +2,7 @@ centos7
 centos8
 debian9
 debian10
+debian11
 ubuntu18
 ubuntu20
 centos8_jdk=11
