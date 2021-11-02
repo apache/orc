@@ -33,7 +33,7 @@ namespace orc {
                        " we had everything before us, we had nothing before us,"
                        " we were all going direct to Heaven,"
                        " we were all going direct the other way.";
-    uint32_t len = sizeof(origin) / sizeof(uint8_t) - 1;
+    uint32_t len = static_cast<uint32_t>(sizeof(origin) / sizeof(uint8_t) - 1);
     uint64_t hash = Murmur3::hash64(origin, len);
     EXPECT_EQ(305830725663368540L, hash);
   }
