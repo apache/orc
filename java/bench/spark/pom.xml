@@ -19,13 +19,13 @@
   <parent>
     <groupId>org.apache.orc</groupId>
     <artifactId>orc-benchmarks</artifactId>
-    <version>1.6.12-SNAPSHOT</version>
+    <version>1.6.12</version>
     <relativePath>..</relativePath>
   </parent>
 
   <groupId>org.apache.orc</groupId>
   <artifactId>orc-benchmarks-spark</artifactId>
-  <version>1.6.12-SNAPSHOT</version>
+  <version>1.6.12</version>
   <packaging>jar</packaging>
   <name>ORC Benchmarks Spark</name>
   <description>
