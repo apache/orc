@@ -362,8 +362,7 @@ namespace orc {
           // fast copy. We may over-copy but there's enough room in input
           // and output to not overrun them
           do {
-            *reinterpret_cast<int64_t*>(output) =
-              *reinterpret_cast<const int64_t*>(input);
+            memcpy(output, input, SIZE_OF_LONG);
             input += SIZE_OF_LONG;
             output += SIZE_OF_LONG;
           } while (output < literalOutputLimit);
