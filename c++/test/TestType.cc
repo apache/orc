@@ -338,6 +338,34 @@ namespace orc {
         "Missing comma after field.");
   }
 
+  TEST(TestType, quotedFieldNames) {
+    ORC_UNIQUE_PTR<Type> type = createStructType();
+    type->addStructField("foo bar", createPrimitiveType(INT));
+    type->addStructField("`some`thing`", createPrimitiveType(INT));
+    type->addStructField("èœ", createPrimitiveType(INT));
+    type->addStructField("1234567890_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        createPrimitiveType(INT));
+    type->addStructField("'!@#$%^&*()-=_+", createPrimitiveType(INT));
+    EXPECT_EQ("struct<`foo bar`"
+        ":int,```some``thing```:int,`èœ`:int,"
+        "1234567890_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:int,"
+        "`'!@#$%^&*()-=_+`:int>", type->toString());
+
+    std::string typeStr =
+      "struct<`foo bar`:int,```quotes```:double,`abc``def````ghi`:float>";
+    type = Type::buildTypeFromString(typeStr);
+    EXPECT_EQ(3, type->getSubtypeCount());
+    EXPECT_EQ("foo bar", type->getFieldName(0));
+    EXPECT_EQ("`quotes`", type->getFieldName(1));
+    EXPECT_EQ("abc`def``ghi", type->getFieldName(2));
+    EXPECT_EQ(typeStr, type->toString());
+
+    expectLogicErrorDuringParse("struct<``:int>",
+        "Empty quoted field name.");
+    expectLogicErrorDuringParse("struct<`col0:int>",
+        "Invalid field name. Unmatched quote");
+  }
+
   void testCorruptHelper(const proto::Type& type,
                          const proto::Footer& footer,
                          const char* errMsg) {
