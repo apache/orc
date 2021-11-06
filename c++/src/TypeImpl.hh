@@ -148,6 +148,16 @@ namespace orc {
                                               size_t end);
 
     /**
+     * Parse field name from string
+     * @param input the input string of a field name
+     * @param start start position of the input string
+     * @param end end position of the input string
+     */
+    static std::pair<std::string, size_t> parseName(const std::string &input,
+                                                    const size_t start,
+                                                    const size_t end);
+
+    /**
      * Parse struct type from string
      * @param input the input string of a struct type
      * @param start start position of the input string

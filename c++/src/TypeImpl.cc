@@ -592,6 +592,45 @@ namespace orc {
     return return_value;
   }
 
+  std::pair<std::string, size_t> TypeImpl::parseName(const std::string &input,
+                                                     const size_t start,
+                                                     const size_t end) {
+    size_t pos = start;
+    if (input[pos] == '`') {
+      bool closed = false;
+      std::ostringstream oss;
+      while (pos < end) {
+        char ch = input[++pos];
+        if (ch == '`') {
+          if (pos < end && input[pos+1] == '`') {
+            ++pos;
+            oss.put('`');
+          } else {
+            closed = true;
+            break;
+          }
+        } else {
+          oss.put(ch);
+        }
+      }
+      if (!closed) {
+        throw std::logic_error("Invalid field name. Unmatched quote");
+      }
+      if (oss.tellp() == 0) {
+        throw std::logic_error("Empty quoted field name.");
+      }
+      return std::make_pair(oss.str(), pos + 1);
+    } else {
+      while (pos < end && (isalnum(input[pos]) || input[pos] == '_')) {
+        ++pos;
+      }
+      if (pos == start) {
+        throw std::logic_error("Missing field name.");
+      }
+      return std::make_pair(input.substr(start, pos - start), pos);
+    }
+  }
+
   std::unique_ptr<Type> TypeImpl::parseStructType(const std::string &input,
                                                   size_t start,
                                                   size_t end) {
