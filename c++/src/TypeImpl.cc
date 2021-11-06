@@ -650,7 +650,7 @@ namespace orc {
       if (!closed) {
         throw std::logic_error("Invalid field name. Unmatched quote");
       }
-      if (oss.tellp() == 0) {
+      if (oss.tellp() == std::streamoff(0)) {
         throw std::logic_error("Empty quoted field name.");
       }
       return std::make_pair(oss.str(), pos + 1);
