@@ -1572,7 +1572,7 @@ namespace orc {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool * pool = getDefaultPool();
     std::unique_ptr<Type> type(Type::buildTypeFromString(
-      "struct<struct<bigint>>"));
+      "struct<col0:struct<col1:bigint>>"));
 
     uint64_t stripeSize = 1024;
     uint64_t compressionBlockSize = 1024;
@@ -1662,7 +1662,7 @@ namespace orc {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool * pool = getDefaultPool();
     std::unique_ptr<Type> type(Type::buildTypeFromString(
-      "struct<struct<bigint>>"));
+      "struct<col0:struct<col1:bigint>>"));
 
     uint64_t stripeSize = 1024;
     uint64_t compressionBlockSize = 1024;
