@@ -183,6 +183,15 @@ namespace orc {
     return this;
   }
 
+  bool isUnquotedFieldName(std::string fieldName) {
+    for (auto &ch : fieldName) {
+        if (!isalnum(ch) && ch != '_') {
+          return false;
+        }
+    }
+    return true;
+  }
+
   std::string TypeImpl::toString() const {
     switch (static_cast<int64_t>(kind)) {
     case BOOLEAN:
@@ -218,7 +227,19 @@ namespace orc {
         if (i != 0) {
           result += ",";
         }
-        result += fieldNames[i];
+        if (isUnquotedFieldName(fieldNames[i])) {
+          result += fieldNames[i];
+        } else {
+          std::string name(fieldNames[i]);
+          size_t pos = 0;
+          while ((pos = name.find("`", pos)) != std::string::npos) {
+            name.replace(pos, 1, "``");
+            pos += 2;
+          }
+          result += "`";
+          result += name;
+          result += "`";
+        }
         result += ":";
         result += subTypes[i]->toString();
       }
