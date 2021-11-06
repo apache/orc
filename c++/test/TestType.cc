@@ -277,6 +277,18 @@ namespace orc {
     EXPECT_EQ(13, cutType->getSubtype(1)->getMaximumColumnId());
   }
 
+  void expectLogicErrorDuringParse(std::string typeStr, const char* errMsg) {
+    try {
+      ORC_UNIQUE_PTR<Type> type = Type::buildTypeFromString(typeStr);
+      FAIL() << "'" << typeStr << "'"
+          << " should throw std::logic_error for invalid schema";
+    } catch (std::logic_error& e) {
+      EXPECT_EQ(e.what(), std::string(errMsg));
+    } catch (...) {
+      FAIL() << "Should only throw std::logic_error for invalid schema";
+    }
+  }
+
   TEST(TestType, buildTypeFromString) {
     std::string typeStr = "struct<a:int,b:string,c:decimal(10,2),d:varchar(5)>";
     ORC_UNIQUE_PTR<Type> type = Type::buildTypeFromString(typeStr);
@@ -303,6 +315,27 @@ namespace orc {
       "struct<a:bigint,b:struct<a:binary,b:timestamp>,c:map<double,tinyint>>";
     type = Type::buildTypeFromString(typeStr);
     EXPECT_EQ(typeStr, type->toString());
+
+    typeStr = "timestamp with local time zone";
+    type = Type::buildTypeFromString(typeStr);
+    EXPECT_EQ(typeStr, type->toString());
+
+    expectLogicErrorDuringParse("foobar",
+        "Unknown type foobar");
+    expectLogicErrorDuringParse("struct<col0:int>other",
+        "Invalid type string.");
+    expectLogicErrorDuringParse("array<>",
+        "Unknown type ");
+    expectLogicErrorDuringParse("array<int,string>",
+        "Array type must contain exactly one sub type.");
+    expectLogicErrorDuringParse("map<int,string,double>",
+        "Map type must contain exactly two sub types.");
+    expectLogicErrorDuringParse("int<>","Invalid < after int type.");
+    expectLogicErrorDuringParse("array(int)", "Missing < after array.");
+    expectLogicErrorDuringParse("struct<struct<bigint>>",
+        "Invalid struct type. No field name set.");
+    expectLogicErrorDuringParse("struct<a:bigint;b:string>",
+        "Missing comma after field.");
   }
 
   void testCorruptHelper(const proto::Type& type,
