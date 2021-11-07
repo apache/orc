@@ -1,8 +1,17 @@
 # List the releases in reverse logical order
 # Only one release should be tagged latest
+1.7.1:
+  date: 2021-11-07
+  state: latest
+  tar: orc-1.7.1.tar.gz
+  signed-by: Dongjoon Hyun (34F0FC5C)
+  sha256: 65d71e571238cbcb7c3cbb9a10f7ad988f452d17c58479154be3b9d6ec27d005
+  known-issues:
+    ORC-1041: Use memcpy during LZO decompression
+
 1.7.0:
   date: 2021-09-15
-  state: latest
+  state: archived
   tar: orc-1.7.0.tar.gz
   signed-by: Dongjoon Hyun (34F0FC5C)
   sha256: cab8cea768b391b173ad5ba839baf20ba9abc42570e3d661783c9c52e0430ab3
