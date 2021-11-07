@@ -342,12 +342,11 @@ namespace orc {
     ORC_UNIQUE_PTR<Type> type = createStructType();
     type->addStructField("foo bar", createPrimitiveType(INT));
     type->addStructField("`some`thing`", createPrimitiveType(INT));
-    type->addStructField("èœ", createPrimitiveType(INT));
     type->addStructField("1234567890_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
         createPrimitiveType(INT));
     type->addStructField("'!@#$%^&*()-=_+", createPrimitiveType(INT));
     EXPECT_EQ("struct<`foo bar`"
-        ":int,```some``thing```:int,`èœ`:int,"
+        ":int,```some``thing```:int,"
         "1234567890_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:int,"
         "`'!@#$%^&*()-=_+`:int>", type->toString());
 
