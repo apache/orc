@@ -87,6 +87,8 @@
     <option value="/news/">Home</option>
     <optgroup label="v1.x">
       
+      <option value="/news/2021/11/07/ORC-1.7.1/">ORC 1.7.1 Released</option>
+      
       <option value="/news/2021/10/02/william-pmc/">ORC adds William Hyun to PMC</option>
       
       <option value="/news/2021/09/15/ORC-1.7.0/">ORC 1.7.0 Released</option>
@@ -224,6 +226,73 @@
         
   <article>
   <h2>
+    <a href="/news/2021/11/07/ORC-1.7.1/">
+      ORC 1.7.1 Released
+    </a>
+  </h2>
+  <span class="post-category">
+    <span class="label">
+      release
+    </span>
+  </span>
+  <div class="post-meta">
+    <span class="post-date">
+      07 Nov 2021
+    </span>
+    <a href="https://people.apache.org/~dongjoon" class="post-author">
+      <img src="https://people.apache.org/~dongjoon//dongjoon.png"
+           class="avatar" alt="dongjoon avatar"
+           width="24" height="24">
+      dongjoon
+    </a>
+  </div>
+  <div class="post-content">
+    <p>The ORC team is excited to announce the release of ORC v1.7.1.</p>
+
+<ul>
+  <li>Released: 7 November 2021</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.7.1/orc-1.7.1.tar.gz">orc-1.7.1.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-1.7.1/orc-1.7.1.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.7.1">rel/release-1.7.1</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.7.1%22">ORC 1.7.1</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.7.1/orc-1.7.1.tar.gz.sha256">65d71e571238cbcb…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.7.1%22&amp;tempMax=500">ORC-1.7.1</a></li>
+</ul>
+
+<p>The bug fixes of ORC 1.7:</p>
+
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-879">ORC-879</a> Flaky Test for TestJsonReader</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1000">ORC-1000</a> Use Java 17 in GitHub Action</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1002">ORC-1002</a> Add java17 profile for Java17 unit testing</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1008">ORC-1008</a> Overflow detection code is incorrect in IntegerColumnStatisticsImpl</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1009">ORC-1009</a> [C++] Missing string include causes build failure with MSVC++</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1010">ORC-1010</a> Bump tzdata from tzdata-2020e-1.tar.xz to tzdata-2021b-1.tar.xz</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1011">ORC-1011</a> Activate <code class="highlighter-rouge">java17</code> profile automatically</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1015">ORC-1015</a> Update OrcFile.WriterOptions::memory javadoc</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1016">ORC-1016</a> Use <code class="highlighter-rouge">openssl@1.1</code> in GitHub Action MacOS CIs</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1024">ORC-1024</a> BloomFilter hash computation is inconsistent between Java and C++ clients</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1029">ORC-1029</a> Could not load ‘org.apache.orc.DataMask.Provider’ when using orc encryption and spark executor with multi cores!</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1030">ORC-1030</a> Java Tools Recover File command does not accurately find OrcFile.MAGIC</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1034">ORC-1034</a> The search byte array algorithm is incorrectly implemented in FileDump.java</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1035">ORC-1035</a> <code class="highlighter-rouge">backupDataPath</code> may be incorrect in recoverFile</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1039">ORC-1039</a> Make FileDump.recoverFile handle side files only if they exist</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1032">ORC-1032</a> Bump parquet.version from 1.12.0 to 1.12.2</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1036">ORC-1036</a> Due to tzdata upgrade, the fixed download links in CI are often not working</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1037">ORC-1037</a> Bump spark.version from 3.1.2 to 3.2.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1040">ORC-1040</a> Add Debian 11 docker test</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1042">ORC-1042</a> Ignore unused-function C++ compile warning on CentOS 7</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1043">ORC-1043</a> Fix C++ conversion compilation error in CentOS 7</li>
+</ul>
+
+
+  </div>
+</article>
+
+
+  <article>
+  <h2>
     <a href="/news/2021/09/15/ORC-1.7.0/">
       ORC 1.7.0 Released
     </a>
@@ -249,12 +318,12 @@
 
 <ul>
   <li>Released: 15 September 2021</li>
-  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.7.0/orc-1.7.0.tar.gz">orc-1.7.0.tar.gz</a></li>
-  <li><a href="https://downloads.apache.org/orc/orc-1.7.0/orc-1.7.0.tar.gz.asc">GPG Signature</a>
+  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-1.7.0/orc-1.7.0.tar.gz">orc-1.7.0.tar.gz</a></li>
+  <li><a href="https://archive.apache.org/dist/orc/orc-1.7.0/orc-1.7.0.tar.gz.asc">GPG Signature</a>
 signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
   <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.7.0">rel/release-1.7.0</a></li>
   <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.7.0%22">ORC 1.7.0</a></li>
-  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.7.0/orc-1.7.0.tar.gz.sha256">cab8cea768b391b1…</a></li>
+  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-1.7.0/orc-1.7.0.tar.gz.sha256">cab8cea768b391b1…</a></li>
   <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.7.0%22&amp;tempMax=500">ORC-1.7.0</a></li>
 </ul>
 
@@ -3108,6 +3177,10 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (3D0C9
     <ul>
       
       <li class="">
+        <a href="/news/2021/11/07/ORC-1.7.1/">Version 1.7.1</a>
+      </li>
+      
+      <li class="">
         <a href="/news/2021/09/15/ORC-1.7.0/">Version 1.7.0</a>
       </li>
       
@@ -3123,13 +3196,11 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (3D0C9
         <a href="/news/2021/08/10/ORC-1.6.10/">Version 1.6.10</a>
       </li>
       
-      <li class="">
-        <a href="/news/2021/07/02/ORC-1.6.9/">Version 1.6.9</a>
-      </li>
-      
     </ul>
     <h4>Other News</h4>
     <ul>
+        
+        
         
         
         <li class="">
