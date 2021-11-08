@@ -793,6 +793,7 @@ namespace orc {
     } else if (category == "decimal") {
       return parseDecimalType(input, start, end);
     } else if (category == "date") {
+      validatePrimitiveType(category, input, start);
       return std::unique_ptr<Type>(new TypeImpl(DATE));
     } else if (category == "varchar") {
       if (input[start] != '(') {
