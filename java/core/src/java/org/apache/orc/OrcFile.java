@@ -242,7 +242,7 @@ public class OrcFile {
             val + " for writer " + writer);
       }
       WriterVersion[] versions = values[writer.id];
-      if (val < 0 || versions.length < val) {
+      if (val < 0 || versions.length <= val) {
         return FUTURE;
       }
       WriterVersion result = versions[val];
