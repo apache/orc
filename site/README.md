@@ -12,7 +12,7 @@ the site is to use docker to use a standard environment.
 ## Run the docker container with the preview of the site.
 
 1. `docker build -t orc-site .`
-2. `docker run -d -p 4000:4000 orc-site`
+2. `docker run -d --name orc-container -p 4000:4000 orc-site`
 
 ## Browsing
 
@@ -24,11 +24,10 @@ Look at the site by navigating to
 You'll copy the files from the container to the site/target directory and
 commit those to the asf-site branch.
 
-1. Find the name of the container using `docker ps`.
-2. `docker cp $CONTAINER:/home/orc/site/target .`
-3. `cd target`
-4. Commit the files and push to Apache.
+1. `docker cp orc-container:/home/orc/site/target .`
+2. `cd target`
+3. Commit the files and push to Apache.
 
 ## Shutting down the docker container
 
-1. `docker stop $CONTAINER`
+1. `docker rm -f orc-container`
