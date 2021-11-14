@@ -29,20 +29,30 @@ Generate the source tarball and checksums for the release.
 % wget https://github.com/apache/orc/archive/release-X.Y.Zrc0.tar.gz
 % tar xzf release-X.Y.Zrc0.tar.gz
 % mv orc-release-X.Y.Zrc0 orc-X.Y.Z
-% tar czf orc-X.Y.Zrc0.tar.gz orc-X.Y.Z
-% shasum -a 256 orc-X.Y.Zrc0.tar.gz > orc-X.Y.Zrc0.tar.gz.sha256
-% gpg --detach-sig --armor orc-X.Y.Zrc0.tar.gz
+% tar czf orc-X.Y.Z.tar.gz orc-X.Y.Z
+% mkdir orc-X.Y.Z-rc0
+% mv orc-X.Y.Z.tar.gz orc-X.Y.Z-rc0
+% cd orc-X.Y.Z-rc0
+% shasum -a 256 orc-X.Y.Z.tar.gz > orc-X.Y.Z.tar.gz.sha256
+% gpg --detach-sig --armor orc-X.Y.Z.tar.gz
 ~~~
 
-Copy the artifacts into your personal Apache website.
+Verify the artifacts
 
 ~~~
-% sftp <apacheid>@home.apache.org
-sftp> cd public_html
-sftp> mkdir orc-X.Y.Zrc0
-sftp> cd orc-X.Y.Zrc0
-sftp> put orc-X.Y.Zrc0*
-sftp> quit
+% shasum -a256 orc-X.Y.Z.tar.gz | diff - orc-X.Y.Z.tar.gz.sha256
+% gpg --verify orc-X.Y.Z.tar.gz.asc
+% cd ..
+~~~
+
+Upload the artifacts into Apache dev distribution website.
+
+~~~
+% svn co --depth=files "https://dist.apache.org/repos/dist/dev/orc" svn-orc
+% mv orc-X.Y.Z-rc0 svn-orc
+% cd svn-orc
+% svn add orc-X.Y.Z-rc0
+% svn commit -m "Upload Apache ORC X.Y.Z RC0"
 ~~~
 
 Make sure your GPG key is present in [Apache
@@ -58,15 +68,23 @@ Send email with the vote:
 
 ~~~
 To: dev@orc.apache.org
-Subject: [VOTE] Should we release ORC X.Y.Zrc0?
+Subject: [VOTE] Release Apache ORC X.Y.Z (RC0)
 
-All,
+Please vote on releasing the following candidate as Apache ORC version X.Y.Z.
 
-Should we release the following artifacts as ORC X.Y.Z?
+[ ] +1 Release this package as Apache ORC X.Y.Z
+[ ] -1 Do not release this package because ...
 
-tar: http://home.apache.org/~omalley/orc-X.Y.Zrc0/
-tag: https://github.com/apache/orc/releases/tag/release-X.Y.Zrc0
-jiras: https://issues.apache.org/jira/browse/ORC/fixforversion/<fixid>
+TAG:
+https://github.com/apache/orc/releases/tag/release-X.Y.Zrc0
+
+RELEASE FILES:
+https://dist.apache.org/repos/dist/dev/orc/orc-X.Y.Z-rc0
+
+LIST OF ISSUES:
+https://issues.apache.org/jira/projects/ORC/versions/<fixid>
+
+This vote will be open for 72 hours.
 
 Thanks!
 ~~~
