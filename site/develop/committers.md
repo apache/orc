@@ -52,6 +52,7 @@ Xiening Dai             | xndai        | Committer
 Xuefu Zhang             | xuefu        | Committer
 Ferdinand Xu            | xuf          | Committer
 Yongzhi Chen            | ychena       | Committer
+Yiqun Zhang             | yqzhang      | Committer
 Aihua Xu                | zihuaxu      | Committer
 
 Companies with employees that are committers:
@@ -63,6 +64,7 @@ Companies with employees that are committers:
 * Confluent
 * Facebook
 * Hortonworks
+* Huya
 * Intel
 * LinkedIn
 * Microsoft
