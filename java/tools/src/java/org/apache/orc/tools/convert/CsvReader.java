@@ -303,8 +303,7 @@ public class CsvReader implements RecordReader {
           Timestamp timestamp = Timestamp.from(offsetDateTime.toInstant());
           vector.set(row, timestamp);
         } else if (temporalAccessor instanceof LocalDateTime) {
-          ZonedDateTime tz = ((LocalDateTime) temporalAccessor).atZone(ZoneId.systemDefault());
-          Timestamp timestamp = Timestamp.from(tz.toInstant());
+          Timestamp timestamp = Timestamp.valueOf((LocalDateTime) temporalAccessor);
           vector.set(row, timestamp);
         } else {
           column.noNulls = false;
@@ -371,5 +370,16 @@ public class CsvReader implements RecordReader {
       default:
         throw new IllegalArgumentException("Unhandled type " + schema);
     }
+  }
+
+  public static void main(String[] args) {
+    DateTimeFormatter timestampFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS zZ");
+    TemporalAccessor temporalAccessor =
+        timestampFormat.parseBest("0001-01-01 00:00:00.000 GMT+0000",
+            ZonedDateTime::from, OffsetDateTime::from, LocalDateTime::from);
+    System.out.println(temporalAccessor.getClass().getSimpleName());
+    ZonedDateTime zonedDateTime = (ZonedDateTime) temporalAccessor;
+    Timestamp timestamp = Timestamp.from(zonedDateTime.toInstant());
+    System.out.println(timestamp);
   }
 }
