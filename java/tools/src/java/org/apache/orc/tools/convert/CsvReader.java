@@ -370,15 +370,4 @@ public class CsvReader implements RecordReader {
         throw new IllegalArgumentException("Unhandled type " + schema);
     }
   }
-
-  public static void main(String[] args) {
-    DateTimeFormatter timestampFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS zZ");
-    TemporalAccessor temporalAccessor =
-        timestampFormat.parseBest("0001-01-01 00:00:00.000 GMT+0000",
-            ZonedDateTime::from, OffsetDateTime::from, LocalDateTime::from);
-    System.out.println(temporalAccessor.getClass().getSimpleName());
-    ZonedDateTime zonedDateTime = (ZonedDateTime) temporalAccessor;
-    Timestamp timestamp = Timestamp.from(zonedDateTime.toInstant());
-    System.out.println(timestamp);
-  }
 }
