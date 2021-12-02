@@ -89,7 +89,6 @@ public class TestConvert {
     VectorizedRowBatch batch = readSchema.createRowBatch();
     RecordReader rowIterator = reader.rows(reader.options().schema(readSchema));
     TimestampColumnVector tcv = (TimestampColumnVector) batch.cols[0];
-    rowIterator.nextBatch(batch);
 
     while (rowIterator.nextBatch(batch)) {
       for (int row = 0; row < batch.size; ++row) {
