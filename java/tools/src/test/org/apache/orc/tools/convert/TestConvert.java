@@ -29,16 +29,21 @@ import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
 import org.apache.orc.TypeDescription;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.TimeZone;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestConvert {
+
+  public static final TimeZone DEFAULT_TIME_ZONE = TimeZone.getDefault();
 
   Path workDir = new Path(System.getProperty("test.tmp.dir"));
   Configuration conf;
@@ -52,6 +57,16 @@ public class TestConvert {
     fs.setWorkingDirectory(workDir);
     testFilePath = new Path("TestConvert.testConvert.orc");
     fs.delete(testFilePath, false);
+  }
+
+  @BeforeAll
+  public static void changeDefaultTimeZone() {
+    TimeZone.setDefault(TimeZone.getTimeZone("America/New_York"));
+  }
+
+  @AfterAll
+  public static void resetDefaultTimeZone() {
+    TimeZone.setDefault(DEFAULT_TIME_ZONE);
   }
 
   @Test
