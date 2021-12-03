@@ -39,7 +39,6 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
@@ -288,8 +287,7 @@ public class CsvReader implements RecordReader {
           Timestamp timestamp = Timestamp.from(offsetDateTime.toInstant());
           vector.set(row, timestamp);
         } else if (temporalAccessor instanceof LocalDateTime) {
-          ZonedDateTime tz = ((LocalDateTime) temporalAccessor).atZone(ZoneId.systemDefault());
-          Timestamp timestamp = Timestamp.from(tz.toInstant());
+          Timestamp timestamp = Timestamp.valueOf((LocalDateTime) temporalAccessor);
           vector.set(row, timestamp);
         } else {
           column.noNulls = false;
