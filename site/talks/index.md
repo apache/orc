@@ -9,6 +9,15 @@ Watch some presentations and read through some slide decks about ORC.
 
 ## Videos
 
+* The Rise of ZStandard: Apache Spark/Parquet/ORC/Avro
+  [slides](https://www.slideshare.net/databricks/the-rise-of-zstandard-apache-sparkparquetorcavro)
+
+    Dongjoon Hyun and Pang Wu at DATA+AI Summit 2021
+
+    <iframe width="420" height="315"
+            src="https://www.youtube.com/embed/dTGxhHwjONY" frameborder="0"
+            allowfullscreen></iframe>
+
 * ORC File & Vectorization - Improving Hive Data Storage and Query Performance
   [slides](https://www.slideshare.net/oom65/orc-andvectorizationhadoopsummit)
  
