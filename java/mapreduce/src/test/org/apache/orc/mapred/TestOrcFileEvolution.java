@@ -237,15 +237,13 @@ public class TestOrcFileEvolution {
 
   @Test
   public void testMissingColumnFromReaderSchema() {
-    // Expect failure if the column is missing from the reader schema, as column a that is added
-    // by the SArg is missing from the reader schema
-    assertThrows(IllegalArgumentException.class, () -> {
-      checkEvolution("struct<b:int,c:string>",
-                      "struct<b:int,c:string>",
-                      struct(1, "foo"),
-                      struct(1, "foo", null),
-                      true, true, false);
-    }, "Field a not found in");
+    // If column is part of the SArg but is missing from the reader schema
+    // will be ignored (consistent with 1.6 release behaviour)
+    checkEvolution("struct<b:int,c:string>",
+       "struct<b:int,c:string>",
+        struct(1, "foo"),
+        struct(1, "foo", null),
+        true, true, false);
   }
 
   @ParameterizedTest

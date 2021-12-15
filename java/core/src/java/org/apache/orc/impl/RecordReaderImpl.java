@@ -183,10 +183,15 @@ public class RecordReaderImpl implements RecordReader {
                             List<PredicateLeaf> sargLeaves,
                             SchemaEvolution evolution) {
     int[] result = new int[sargLeaves.size()];
-    Arrays.fill(result, -1);
-    for(int i=0; i < result.length; ++i) {
-      String colName = sargLeaves.get(i).getColumnName();
-      result[i] = findColumns(evolution, colName);
+    for (int i = 0; i < sargLeaves.size(); ++i) {
+      int colNum = -1;
+      try {
+        String colName = sargLeaves.get(i).getColumnName();
+        colNum = findColumns(evolution, colName);
+      } catch (IllegalArgumentException e) {
+        LOG.debug("{}", e.getMessage());
+      }
+      result[i] = colNum;
     }
     return result;
   }
