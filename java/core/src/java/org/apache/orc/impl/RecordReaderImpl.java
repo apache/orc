@@ -184,8 +184,14 @@ public class RecordReaderImpl implements RecordReader {
                             SchemaEvolution evolution) {
     int[] result = new int[sargLeaves.size()];
     for (int i = 0; i < sargLeaves.size(); ++i) {
-      String colName = sargLeaves.get(i).getColumnName();
-      result[i] = findColumns(evolution, colName);
+      int colNum = -1;
+      try {
+        String colName = sargLeaves.get(i).getColumnName();
+        colNum = findColumns(evolution, colName);
+      } catch (IllegalArgumentException e) {
+        LOG.debug("{}", e.getMessage());
+      }
+      result[i] = colNum;
     }
     return result;
   }
