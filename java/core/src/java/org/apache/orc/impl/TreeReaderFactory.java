@@ -2190,7 +2190,7 @@ public class TreeReaderFactory {
       super.startStripe(planner, readPhase);
 
       StreamName name = new StreamName(columnId,
-              OrcProto.Stream.Kind.DICTIONARY_DATA);
+          OrcProto.Stream.Kind.DICTIONARY_DATA);
       dictionaryStream = planner.getStream(name);
       initDictionary = false;
 
@@ -2203,7 +2203,7 @@ public class TreeReaderFactory {
       // set up the row reader
       name = new StreamName(columnId, OrcProto.Stream.Kind.DATA);
       reader = createIntegerReader(encoding.getKind(),
-              planner.getStream(name), false, context);
+          planner.getStream(name), false, context);
     }
 
     private void readDictionaryLengthStream(InStream in, OrcProto.ColumnEncoding encoding)
