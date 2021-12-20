@@ -64,6 +64,11 @@ namespace orc {
     return reader.getSelectedColumns();
   }
 
+  const std::set<ReadIntent>
+  StripeStreamsImpl::getReadIntents(uint64_t typeId) const {
+    return reader.getReadIntents(typeId);
+  }
+
   proto::ColumnEncoding StripeStreamsImpl::getEncoding(uint64_t columnId
                                                        ) const {
     return footer.columns(static_cast<int>(columnId));

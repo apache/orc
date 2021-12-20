@@ -182,11 +182,19 @@ namespace orc {
     uint64_t getMemoryUsage();
     bool hasVariableLength();
 
+    bool hasElements = false;
+    bool hasPositions = false;
+
     /**
      * The offset of the first element of each list.
      * The length of list i is offsets[i+1] - offsets[i].
      */
     DataBuffer<int64_t> offsets;
+
+    /**
+     * Position of each element in their respective array.
+     */
+    DataBuffer<int64_t> pos;
 
     // the concatenated elements
     ORC_UNIQUE_PTR<ColumnVectorBatch> elements;

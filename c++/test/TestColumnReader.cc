@@ -65,6 +65,7 @@ namespace orc {
     bool());
     MOCK_CONST_METHOD0(getForcedScaleOnHive11Decimal, int32_t()
     );
+    MOCK_CONST_METHOD1(getReadIntents, const std::set<ReadIntent>(uint64_t));
 
     MemoryPool &getMemoryPool() const {
       return *getDefaultPool();
@@ -1406,6 +1407,10 @@ TEST_P(TestColumnReaderEncoded, testList) {
   EXPECT_CALL(streams, getEncoding(testing::_))
       .WillRepeatedly(testing::Return(directEncoding));
 
+  // set getReadIntents
+  EXPECT_CALL(streams, getReadIntents(testing::_))
+      .WillRepeatedly(testing::Return(std::set<ReadIntent>({ReadIntent_DATA, ReadIntent_POS})));
+
   // set getStream
   EXPECT_CALL(streams, getStreamProxy(testing::_,
           proto::Stream_Kind_PRESENT, true))
@@ -1456,10 +1461,13 @@ TEST_P(TestColumnReaderEncoded, testList) {
   ASSERT_EQ(true, !batch.hasNulls);
   ASSERT_EQ(512, lists->numElements);
   ASSERT_EQ(true, !lists->hasNulls);
+  ASSERT_EQ(true, lists->hasElements);
+  ASSERT_EQ(true, lists->hasPositions);
   ASSERT_EQ(1024, longs->numElements);
   ASSERT_EQ(true, !longs->hasNulls);
   for (size_t i = 0; i <= batch.numElements; ++i) {
     EXPECT_EQ(2 * i, lists->offsets[i]);
+    EXPECT_EQ(i % 2, lists->pos[i]);
   }
   for (size_t i = 0; i < longs->numElements; ++i) {
     EXPECT_EQ(i, longs->data[i]);
@@ -1486,6 +1494,9 @@ TEST(TestColumnReader, testListPropagateNulls) {
   EXPECT_CALL(streams, getEncoding(testing::_))
       .WillRepeatedly(testing::Return(directEncoding));
 
+  // set getReadIntents
+  EXPECT_CALL(streams, getReadIntents(testing::_))
+      .WillRepeatedly(testing::Return(std::set<ReadIntent>({ReadIntent_DATA})));
 
   // set getStream
   EXPECT_CALL(streams, getStreamProxy(testing::_,
@@ -1544,6 +1555,10 @@ TEST(TestColumnReader, testListWithNulls) {
   directEncoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
   EXPECT_CALL(streams, getEncoding(testing::_))
       .WillRepeatedly(testing::Return(directEncoding));
+
+  // set getReadIntents
+  EXPECT_CALL(streams, getReadIntents(testing::_))
+      .WillRepeatedly(testing::Return(std::set<ReadIntent>({ReadIntent_DATA})));
 
   // set getStream
   EXPECT_CALL(streams, getStreamProxy(0, proto::Stream_Kind_PRESENT, true))
@@ -1707,6 +1722,10 @@ TEST(TestColumnReader, testListSkipWithNulls) {
   EXPECT_CALL(streams, getEncoding(testing::_))
       .WillRepeatedly(testing::Return(directEncoding));
 
+  // set getReadIntents
+  EXPECT_CALL(streams, getReadIntents(testing::_))
+      .WillRepeatedly(testing::Return(std::set<ReadIntent>({ReadIntent_DATA})));
+
   // set getStream
   EXPECT_CALL(streams, getStreamProxy(0, proto::Stream_Kind_PRESENT, true))
       .WillRepeatedly(testing::Return(nullptr));
@@ -1824,6 +1843,10 @@ TEST(TestColumnReader, testListSkipWithNullsNoData) {
   directEncoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
   EXPECT_CALL(streams, getEncoding(testing::_))
       .WillRepeatedly(testing::Return(directEncoding));
+
+  // set getReadIntents
+  EXPECT_CALL(streams, getReadIntents(testing::_))
+      .WillRepeatedly(testing::Return(std::set<ReadIntent>({ReadIntent_DATA})));
 
   // set getStream
   EXPECT_CALL(streams, getStreamProxy(0, proto::Stream_Kind_PRESENT, true))

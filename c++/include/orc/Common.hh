@@ -122,6 +122,11 @@ namespace orc {
     StreamKind_BLOOM_FILTER_UTF8 = 8
   };
 
+  enum ReadIntent {
+    ReadIntent_DATA = 0,
+    ReadIntent_POS = 1
+  };
+
   /**
    * Get the string representation of the StreamKind.
    */

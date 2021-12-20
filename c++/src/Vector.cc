@@ -243,9 +243,9 @@ namespace orc {
     return false;
   }
 
-  ListVectorBatch::ListVectorBatch(uint64_t cap, MemoryPool& pool
-                   ): ColumnVectorBatch(cap, pool),
-                      offsets(pool, cap+1) {
+  ListVectorBatch::ListVectorBatch(uint64_t cap, MemoryPool &pool)
+      : ColumnVectorBatch(cap, pool), offsets(pool, cap + 1),
+        pos(pool, cap + 1) {
     // PASS
   }
 

@@ -122,6 +122,7 @@ namespace orc {
 
     // inputs
     std::vector<bool> selectedColumns;
+    RowReaderOptions::TypeReadIntents readIntents;
 
     // footer
     proto::Footer* footer;
@@ -217,6 +218,8 @@ namespace orc {
     const FileContents& getFileContents() const;
     bool getThrowOnHive11DecimalOverflow() const;
     int32_t getForcedScaleOnHive11Decimal() const;
+
+    const std::set<ReadIntent> getReadIntents(uint64_t typeId) const override;
   };
 
   class ReaderImpl : public Reader {

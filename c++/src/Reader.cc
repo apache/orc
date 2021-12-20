@@ -239,6 +239,7 @@ namespace orc {
 
     ColumnSelector column_selector(contents.get());
     column_selector.updateSelected(selectedColumns, opts);
+    readIntents = opts.getReadIntents();
 
     // prepare SargsApplier if SearchArgument is available
     if (opts.getSearchArgument() && footer->rowindexstride() > 0) {
@@ -288,6 +289,16 @@ namespace orc {
 
   const std::vector<bool> RowReaderImpl::getSelectedColumns() const {
     return selectedColumns;
+  }
+
+  const std::set<ReadIntent>
+  RowReaderImpl::getReadIntents(uint64_t typeId) const {
+    auto elem = readIntents.find(typeId);
+    if (elem == readIntents.end()) {
+      return std::set<ReadIntent>({ReadIntent_DATA});
+    } else {
+      return elem->second;
+    }
   }
 
   const Type& RowReaderImpl::getSelectedType() const {

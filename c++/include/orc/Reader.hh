@@ -150,6 +150,28 @@ namespace orc {
     RowReaderOptions& includeTypes(const std::list<uint64_t>& types);
 
     /**
+     * A map of <typeId, set<ReadIntent>> used as a parameter in
+     * RowReaderOptions::includeTypesAndIntents.
+     */
+    typedef std::map<uint64_t, std::set<ReadIntent>> TypeReadIntents;
+
+    /**
+     * Selects which type ids to read and specific ReadIntents for each
+     * type id. The root type is always 0 and the rest of the types are
+     * labeled in a preorder traversal of the tree. The parent types are
+     * automatically selected, but the children are not. If a type id is
+     * selected with an empty ReadIntent set, the empty set will be replaced
+     * by {ReadIntent_DATA}.
+     *
+     * This option clears any previous setting of the selected columns or
+     * types.
+     * @param typesAndIntents a map of <typeId, set<ReadIntent>>.
+     * @return this
+     */
+    RowReaderOptions&
+    includeTypesAndIntents(const TypeReadIntents& typesAndIntents);
+
+    /**
      * Set the section of the file to process.
      * @param offset the starting byte offset
      * @param length the number of bytes to read
@@ -266,6 +288,8 @@ namespace orc {
      * Get desired timezone to return data of timestamp type
      */
     const std::string& getTimezoneName() const;
+
+    const TypeReadIntents getReadIntents() const;
   };
 
 
@@ -564,6 +588,8 @@ namespace orc {
      * @param rowNumber the next row the reader should return
      */
     virtual void seekToRow(uint64_t rowNumber) = 0;
+
+    virtual const std::set<ReadIntent> getReadIntents(uint64_t typeId) const = 0;
 
   };
 }
