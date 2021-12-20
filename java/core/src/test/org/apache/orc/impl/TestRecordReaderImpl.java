@@ -120,7 +120,7 @@ public class TestRecordReaderImpl {
     Configuration conf = new Configuration();
     TypeDescription file = TypeDescription.fromString("struct<A:int>");
     TypeDescription reader = TypeDescription.fromString("struct<a:int>");
-    conf.setBoolean("orc.schema.evolution.case.sensitive", false);
+    conf.setBoolean("orc.schema.evolution.case.aware", false);
     SchemaEvolution evo = new SchemaEvolution(file, reader, new Reader.Options(conf));
     assertEquals(1, RecordReaderImpl.findColumns(evo, "A"));
   }
