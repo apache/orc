@@ -229,7 +229,7 @@ public interface Reader extends Closeable {
     private Boolean tolerateMissingSchema = null;
     private boolean forcePositionalEvolution;
     private boolean isSchemaEvolutionCaseAware =
-        (boolean) OrcConf.IS_SCHEMA_EVOLUTION_CASE_SENSITIVE.getDefaultValue();
+        (boolean) OrcConf.IS_SCHEMA_EVOLUTION_CASE_AWARE.getDefaultValue();
     private boolean includeAcidColumns = true;
     private boolean allowSARGToFilter = false;
     private boolean useSelected = false;
@@ -252,7 +252,7 @@ public interface Reader extends Closeable {
       forcePositionalEvolution = OrcConf.FORCE_POSITIONAL_EVOLUTION.getBoolean(conf);
       positionalEvolutionLevel = OrcConf.FORCE_POSITIONAL_EVOLUTION_LEVEL.getInt(conf);
       isSchemaEvolutionCaseAware =
-          OrcConf.IS_SCHEMA_EVOLUTION_CASE_SENSITIVE.getBoolean(conf);
+          OrcConf.IS_SCHEMA_EVOLUTION_CASE_AWARE.getBoolean(conf);
       allowSARGToFilter = OrcConf.ALLOW_SARG_TO_FILTER.getBoolean(conf);
       useSelected = OrcConf.READER_USE_SELECTED.getBoolean(conf);
       allowPluginFilters = OrcConf.ALLOW_PLUGIN_FILTER.getBoolean(conf);

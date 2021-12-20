@@ -164,8 +164,8 @@ public enum OrcConf {
       "testing.  Setting this too low may negatively affect performance."),
   OVERWRITE_OUTPUT_FILE("orc.overwrite.output.file", "orc.overwrite.output.file", false,
     "A boolean flag to enable overwriting of the output file if it already exists.\n"),
-  IS_SCHEMA_EVOLUTION_CASE_SENSITIVE("orc.schema.evolution.case.sensitive",
-      "orc.schema.evolution.case.sensitive", true,
+  IS_SCHEMA_EVOLUTION_CASE_AWARE("orc.schema.evolution.case.aware",
+      "orc.schema.evolution.case.aware", true,
       "A boolean flag to determine if the comparision of field names " +
       "in schema evolution is case sensitive .\n"),
   ALLOW_SARG_TO_FILTER("orc.sarg.to.filter", "org.sarg.to.filter", false,
