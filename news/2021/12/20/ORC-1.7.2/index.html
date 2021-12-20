@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>ORC 1.5.9 Released</title>
+  <title>ORC 1.7.2 Released</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="generator" content="Jekyll v3.8.6">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
@@ -231,8 +231,8 @@
       <div class="unit four-fifths">
         <article>
   <h2>
-    ORC 1.5.9 Released
-    <a href="/news/2020/01/30/ORC-1.5.9/" class="permalink" title="Permalink">∞</a>
+    ORC 1.7.2 Released
+    <a href="/news/2021/12/20/ORC-1.7.2/" class="permalink" title="Permalink">∞</a>
   </h2>
   <span class="post-category">
     <span class="label">
@@ -241,43 +241,54 @@
   </span>
   <div class="post-meta">
     <span class="post-date">
-      30 Jan 2020
+      20 Dec 2021
     </span>
-    <a href="https://people.apache.org/~omalley" class="post-author">
-      <img src="https://people.apache.org/~omalley/omalley.png"
-           class="avatar" alt="omalley avatar"
+    <a href="https://people.apache.org/~dongjoon" class="post-author">
+      <img src="https://people.apache.org/~dongjoon/dongjoon.png"
+           class="avatar" alt="dongjoon avatar"
            width="24" height="24">
-      omalley
+      dongjoon
     </a>
   </div>
   <div class="post-content">
-    <p>The ORC team is excited to announce the release of ORC v1.5.9.</p>
+    <p>The ORC team is excited to announce the release of ORC v1.7.2.</p>
 
 <ul>
-  <li>Released: 30 January 2020</li>
-  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-1.5.9/orc-1.5.9.tar.gz">orc-1.5.9.tar.gz</a></li>
-  <li><a href="https://archive.apache.org/dist/orc/orc-1.5.9/orc-1.5.9.tar.gz.asc">GPG Signature</a>
-signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (3D0C92B9)</a></li>
-  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.5.9">rel/release-1.5.9</a></li>
-  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.5.9%22">ORC 1.5.9</a></li>
-  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-1.5.9/orc-1.5.9.tar.gz.sha256">75c534555df8a932…</a></li>
-  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.5.9%22&amp;tempMax=500">ORC-1.5.9</a></li>
+  <li>Released: 20 December 2021</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.7.2/orc-1.7.2.tar.gz">orc-1.7.2.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-1.7.2/orc-1.7.2.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.7.2">rel/release-1.7.2</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.7.2%22">ORC 1.7.2</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.7.2/orc-1.7.2.tar.gz.sha256">65d71e571238cbcb…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.7.2%22&amp;tempMax=500">ORC-1.7.2</a></li>
 </ul>
 
-<p>The new features of ORC 1.5:</p>
+<p>The bug fixes:</p>
 
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-179">ORC-179</a> Add ORC C++ Writer</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-91">ORC-91</a> Support for variable length blocks in HDFS.</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-199">ORC-199</a> Implement a CSV to ORC converter</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-344">ORC-344</a> Support for using Decimal64ColumnVector</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-345">ORC-345</a> Adding Decimal64StatisticsImpl</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-331">ORC-331</a> Support for building C++ under MSVC.</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-234">ORC-234</a> Support for older versions of Hadoop (&gt;= 2.2.x)</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-305">ORC-305</a> Added statistics for size on disk</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-492">ORC-492</a> Avoid potential ArrayIndexOutOfBoundsException when getting WriterVersionn</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1002">ORC-1053</a> Fix time zone offset precision when convert tool converts LocalDateTime to Timestamp is not consistent with the internal default precision of ORC</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1041">ORC-1041</a> Use memcpy during LZO decompression</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1059">ORC-1059</a> Align findColumns behaviour between 1.6 and 1.7 release</li>
 </ul>
 
-<p>Known issues:</p>
+<p>The ‘tools’ improvements:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1012">ORC-1012</a> Support specifying columns in orc-scan</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1017">ORC-1017</a> Add sizes tool to determine and display the sizes of each column in a set of files</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1023">ORC-1023</a> Support writing bloom filters in ConvertTool</li>
+</ul>
+
+<p>The ‘tests’ fixes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-915">ORC-915</a> Remove io.netty.netty from Spark benchmark</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-938">ORC-938</a> Bump netty-all from 4.1.42.Final to 4.1.66.Final</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-948">ORC-948</a> Add hive benchmark integration tests</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-957">ORC-957</a> Bump netty-all from 4.1.66.Final to 4.1.67.Final</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1021">ORC-1021</a> Add -fno-omit-frame-pointer in DEBUG and RELWITHDEBINFO builds</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1051">ORC-1051</a> Update benchmark dependencies</li>
+</ul>
 
 
   </div>
@@ -298,7 +309,7 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (3D0C9
     <h4>Recent Releases</h4>
     <ul>
       
-      <li class="">
+      <li class="current">
         <a href="/news/2021/12/20/ORC-1.7.2/">Version 1.7.2</a>
       </li>
       

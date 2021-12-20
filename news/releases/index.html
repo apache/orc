@@ -87,6 +87,8 @@
     <option value="/news/">Home</option>
     <optgroup label="v1.x">
       
+      <option value="/news/2021/12/20/ORC-1.7.2/">ORC 1.7.2 Released</option>
+      
       <option value="/news/2021/11/23/add-yiqun/">Yiqun Zhang added as committer</option>
       
       <option value="/news/2021/11/07/ORC-1.7.1/">ORC 1.7.1 Released</option>
@@ -230,6 +232,73 @@
         
   <article>
   <h2>
+    <a href="/news/2021/12/20/ORC-1.7.2/">
+      ORC 1.7.2 Released
+    </a>
+  </h2>
+  <span class="post-category">
+    <span class="label">
+      release
+    </span>
+  </span>
+  <div class="post-meta">
+    <span class="post-date">
+      20 Dec 2021
+    </span>
+    <a href="https://people.apache.org/~dongjoon" class="post-author">
+      <img src="https://people.apache.org/~dongjoon//dongjoon.png"
+           class="avatar" alt="dongjoon avatar"
+           width="24" height="24">
+      dongjoon
+    </a>
+  </div>
+  <div class="post-content">
+    <p>The ORC team is excited to announce the release of ORC v1.7.2.</p>
+
+<ul>
+  <li>Released: 20 December 2021</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.7.2/orc-1.7.2.tar.gz">orc-1.7.2.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-1.7.2/orc-1.7.2.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.7.2">rel/release-1.7.2</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.7.2%22">ORC 1.7.2</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.7.2/orc-1.7.2.tar.gz.sha256">65d71e571238cbcb…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.7.2%22&amp;tempMax=500">ORC-1.7.2</a></li>
+</ul>
+
+<p>The bug fixes:</p>
+
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-492">ORC-492</a> Avoid potential ArrayIndexOutOfBoundsException when getting WriterVersionn</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1002">ORC-1053</a> Fix time zone offset precision when convert tool converts LocalDateTime to Timestamp is not consistent with the internal default precision of ORC</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1041">ORC-1041</a> Use memcpy during LZO decompression</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1059">ORC-1059</a> Align findColumns behaviour between 1.6 and 1.7 release</li>
+</ul>
+
+<p>The ‘tools’ improvements:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1012">ORC-1012</a> Support specifying columns in orc-scan</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1017">ORC-1017</a> Add sizes tool to determine and display the sizes of each column in a set of files</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1023">ORC-1023</a> Support writing bloom filters in ConvertTool</li>
+</ul>
+
+<p>The ‘tests’ fixes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-915">ORC-915</a> Remove io.netty.netty from Spark benchmark</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-938">ORC-938</a> Bump netty-all from 4.1.42.Final to 4.1.66.Final</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-948">ORC-948</a> Add hive benchmark integration tests</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-957">ORC-957</a> Bump netty-all from 4.1.66.Final to 4.1.67.Final</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1021">ORC-1021</a> Add -fno-omit-frame-pointer in DEBUG and RELWITHDEBINFO builds</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1051">ORC-1051</a> Update benchmark dependencies</li>
+</ul>
+
+
+  </div>
+</article>
+
+
+  <article>
+  <h2>
     <a href="/news/2021/11/07/ORC-1.7.1/">
       ORC 1.7.1 Released
     </a>
@@ -255,12 +324,12 @@
 
 <ul>
   <li>Released: 7 November 2021</li>
-  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.7.1/orc-1.7.1.tar.gz">orc-1.7.1.tar.gz</a></li>
-  <li><a href="https://downloads.apache.org/orc/orc-1.7.1/orc-1.7.1.tar.gz.asc">GPG Signature</a>
+  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-1.7.1/orc-1.7.1.tar.gz">orc-1.7.1.tar.gz</a></li>
+  <li><a href="https://archive.apache.org/dist/orc/orc-1.7.1/orc-1.7.1.tar.gz.asc">GPG Signature</a>
 signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
   <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.7.1">rel/release-1.7.1</a></li>
   <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.7.1%22">ORC 1.7.1</a></li>
-  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.7.1/orc-1.7.1.tar.gz.sha256">65d71e571238cbcb…</a></li>
+  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-1.7.1/orc-1.7.1.tar.gz.sha256">65d71e571238cbcb…</a></li>
   <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.7.1%22&amp;tempMax=500">ORC-1.7.1</a></li>
 </ul>
 
@@ -3236,6 +3305,10 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (3D0C9
     <ul>
       
       <li class="">
+        <a href="/news/2021/12/20/ORC-1.7.2/">Version 1.7.2</a>
+      </li>
+      
+      <li class="">
         <a href="/news/2021/11/07/ORC-1.7.1/">Version 1.7.1</a>
       </li>
       
@@ -3251,13 +3324,11 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (3D0C9
         <a href="/news/2021/09/15/ORC-1.6.11/">Version 1.6.11</a>
       </li>
       
-      <li class="">
-        <a href="/news/2021/09/15/ORC-1.5.13/">Version 1.5.13</a>
-      </li>
-      
     </ul>
     <h4>Other News</h4>
     <ul>
+        
+        
         
         
         <li class="">
