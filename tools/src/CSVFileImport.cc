@@ -352,6 +352,15 @@ int main(int argc, char* argv[]) {
   input = argv[1];
   output = argv[2];
 
+  std::string timezoneName = "GMT";
+  {
+    // get local time zone
+    time_t t = time(ORC_NULLPTR);
+    struct tm* p = localtime(&t);
+    if (p->tm_zone != ORC_NULLPTR) {
+      timezoneName = std::string(p->tm_zone);
+    }
+  }
   std::cout << GetDate() << " Start importing Orc file..." << std::endl;
   ORC_UNIQUE_PTR<orc::Type> fileType = orc::Type::buildTypeFromString(schema);
 
@@ -364,6 +373,7 @@ int main(int argc, char* argv[]) {
   options.setStripeSize(stripeSize);
   options.setCompressionBlockSize(blockSize);
   options.setCompression(compression);
+  options.setTimezoneName(timezoneName);
 
   ORC_UNIQUE_PTR<orc::OutputStream> outStream = orc::writeLocalFile(output);
   ORC_UNIQUE_PTR<orc::Writer> writer =
