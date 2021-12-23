@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 
 /**
@@ -278,7 +279,7 @@ public class OrcFile {
   public static class ReaderOptions {
     private final Configuration conf;
     private FileSystem filesystem;
-    private long maxLength = Long.MAX_VALUE;
+    private Optional<Long> maxLength = Optional.empty();
     private OrcTail orcTail;
     private KeyProvider keyProvider;
     // TODO: We can generalize FileMetada interface. Make OrcTail implement FileMetadata interface
@@ -298,8 +299,22 @@ public class OrcFile {
       return this;
     }
 
+    /**
+     * The maximum size of the file to read for finding the file tail.
+     * A value less than zero or a value equal to Long.MAX_VALUE denotes
+     * that there should be no maximum length applied.
+     *
+     * @param val the maximum length to search
+     * @return {@code this} ReaderOptions
+     */
     public ReaderOptions maxLength(long val) {
-      maxLength = val;
+      if (val < 0L) {
+        this.maxLength = Optional.empty();
+      } else if (val == Long.MAX_VALUE) {
+        this.maxLength = Optional.empty();
+      } else {
+        this.maxLength = Optional.of(val);
+      }
       return this;
     }
 
@@ -338,8 +353,16 @@ public class OrcFile {
       return filesystem;
     }
 
+    /**
+     * @deprecated Use {@link #getMaxReadLength()}
+     */
+    @Deprecated
     public long getMaxLength() {
-      return maxLength;
+      return maxLength.orElse(Long.MAX_VALUE);
+    }
+
+    public Optional<Long> getMaxReadLength() {
+        return maxLength;
     }
 
     public OrcTail getOrcTail() {

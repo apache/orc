@@ -49,6 +49,7 @@ import java.nio.charset.CharacterCodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -358,7 +359,7 @@ public class TestReaderImpl {
     FileSystem fs = path.getFileSystem(conf);
     try (ReaderImpl reader = (ReaderImpl) OrcFile.createReader(path,
         OrcFile.readerOptions(conf).filesystem(fs))) {
-      OrcTail tail = reader.extractFileTail(fs, path, Long.MAX_VALUE);
+      OrcTail tail = reader.extractFileTail(fs, path, Optional.empty());
       List<StripeStatistics> stats = tail.getStripeStatistics();
       assertEquals(1, stats.size());
       OrcProto.TimestampStatistics tsStats =

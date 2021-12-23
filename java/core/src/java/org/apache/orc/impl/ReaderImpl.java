@@ -57,6 +57,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 public class ReaderImpl implements Reader {
@@ -65,7 +66,7 @@ public class ReaderImpl implements Reader {
 
   private static final int DIRECTORY_SIZE_GUESS = 16 * 1024;
 
-  private final long maxLength;
+  private final Optional<Long> maxLength;
   protected final Path path;
   protected final OrcFile.ReaderOptions options;
   protected final org.apache.orc.CompressionKind compressionKind;
@@ -527,7 +528,7 @@ public class ReaderImpl implements Reader {
     this.path = path;
     this.options = options;
     this.conf = options.getConfiguration();
-    this.maxLength = options.getMaxLength();
+    this.maxLength = options.getMaxReadLength();
     this.useUTCTimestamp = options.getUseUTCTimestamp();
     FileMetadata fileMetadata = options.getFileMetadata();
     if (fileMetadata != null) {
@@ -555,7 +556,7 @@ public class ReaderImpl implements Reader {
     } else {
       OrcTail orcTail = options.getOrcTail();
       if (orcTail == null) {
-        tail = extractFileTail(getFileSystem(), path, options.getMaxLength());
+        tail = extractFileTail(getFileSystem(), path, this.maxLength);
         options.orcTail(tail);
       } else {
         checkOrcVersion(path, orcTail.getPostScript());
@@ -746,8 +747,14 @@ public class ReaderImpl implements Reader {
         new BufferChunk(buffer.slice(), 0), modificationTime);
   }
 
+  @Deprecated
   protected OrcTail extractFileTail(FileSystem fs, Path path,
       long maxFileLength) throws IOException {
+    return extractFileTail(fs, path, Optional.of(maxFileLength));
+  }
+
+  protected OrcTail extractFileTail(FileSystem fs, Path path,
+      Optional<Long> maxFileLength) throws IOException {
     BufferChunk buffer;
     OrcProto.PostScript ps;
     OrcProto.FileTail.Builder fileTailBuilder = OrcProto.FileTail.newBuilder();
@@ -756,12 +763,12 @@ public class ReaderImpl implements Reader {
     try {
       // figure out the size of the file using the option or filesystem
       long size;
-      if (maxFileLength == Long.MAX_VALUE) {
+      if (!maxFileLength.isPresent()) {
         FileStatus fileStatus = fs.getFileStatus(path);
         size = fileStatus.getLen();
         modificationTime = fileStatus.getModificationTime();
       } else {
-        size = maxFileLength;
+        size = maxFileLength.get();
         modificationTime = -1;
       }
       if (size == 0) {
@@ -1094,9 +1101,9 @@ public class ReaderImpl implements Reader {
     StringBuilder buffer = new StringBuilder();
     buffer.append("ORC Reader(");
     buffer.append(path);
-    if (maxLength != -1) {
+    if (maxLength.isPresent()) {
       buffer.append(", ");
-      buffer.append(maxLength);
+      buffer.append(maxLength.get());
     }
     buffer.append(")");
     return buffer.toString();
