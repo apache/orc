@@ -280,8 +280,11 @@ void usage() {
             << "                  [-s <size>] [--stripe=<size>]\n"
             << "                  [-c <size>] [--block=<size>]\n"
             << "                  [-b <size>] [--batch=<size>]\n"
+            << "                  [-t <string>] [--timezone=<string>]\n"
             << "                  <schema> <input> <output>\n"
             << "Import CSV file into an Orc file using the specified schema.\n"
+            << "The timezone can be viewed in the directory /usr/share/zoneinfo\n"
+            << "If not specified, default timezone is GMT.\n"
             << "Compound types are not yet supported.\n";
 }
 
@@ -289,6 +292,7 @@ int main(int argc, char* argv[]) {
   std::string input;
   std::string output;
   std::string schema;
+  std::string timezone="GMT";
   uint64_t stripeSize = (128 << 20); // 128M
   uint64_t blockSize = 64 << 10;     // 64K
   uint64_t batchSize = 1024;
@@ -300,13 +304,14 @@ int main(int argc, char* argv[]) {
     {"stripe", required_argument, ORC_NULLPTR, 'p'},
     {"block", required_argument, ORC_NULLPTR, 'c'},
     {"batch", required_argument, ORC_NULLPTR, 'b'},
+    {"timezone", required_argument, ORC_NULLPTR, 't'},
     {ORC_NULLPTR, 0, ORC_NULLPTR, 0}
   };
   bool helpFlag = false;
   int opt;
   char *tail;
   do {
-    opt = getopt_long(argc, argv, "i:o:s:b:c:p:h", longOptions, ORC_NULLPTR);
+    opt = getopt_long(argc, argv, "i:o:s:b:c:p:t:h", longOptions, ORC_NULLPTR);
     switch (opt) {
       case '?':
       case 'h':
@@ -337,6 +342,9 @@ int main(int argc, char* argv[]) {
           return 1;
         }
         break;
+      case 't':
+        timezone = std::string(optarg);
+        break;
     }
   } while (opt != -1);
 
@@ -364,6 +372,7 @@ int main(int argc, char* argv[]) {
   options.setStripeSize(stripeSize);
   options.setCompressionBlockSize(blockSize);
   options.setCompression(compression);
+  options.setTimezoneName(timezone);
 
   ORC_UNIQUE_PTR<orc::OutputStream> outStream = orc::writeLocalFile(output);
   ORC_UNIQUE_PTR<orc::Writer> writer =
