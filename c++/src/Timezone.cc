@@ -724,6 +724,10 @@ namespace orc {
    * mapping is copied from JDK sun.util.calendar.ZoneInfoFile.java file.
    */
   static std::string convertTimezoneAlias(const std::string& zone) {
+    DIAGNOSTIC_PUSH
+      #ifdef __clang__
+        DIAGNOSTIC_IGNORE("-Wexit-time-destructors")
+      #endif
     static std::unordered_map<std::string, std::string> alias = {
       { "ACT", "Australia/Darwin" },
       { "AET", "Australia/Sydney" },
@@ -751,6 +755,7 @@ namespace orc {
       { "SST", "Pacific/Guadalcanal" },
       { "VST", "Asia/Ho_Chi_Minh" }
     };
+    DIAGNOSTIC_POP
 
     auto ret = alias.find(zone);
     return ret != alias.cend() ? ret->second : zone;
