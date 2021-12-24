@@ -26,9 +26,9 @@ import org.jetbrains.annotations.NotNull;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.regex.Pattern;
 
 /**
@@ -372,9 +372,7 @@ public class TypeDescription
         result.children.add(clone);
       }
     }
-    for (Map.Entry<String,String> pair: attributes.entrySet()) {
-      result.attributes.put(pair.getKey(), pair.getValue());
-    }
+    result.attributes.putAll(attributes);
     return result;
   }
 
@@ -420,14 +418,8 @@ public class TypeDescription
     }
     if (checkAttributes) {
       // make sure the attributes are the same
-      List<String> attributeNames = getAttributeNames();
-      if (castOther.getAttributeNames().size() != attributeNames.size()) {
+      if (!this.attributes.equals(castOther.attributes)) {
         return false;
-      }
-      for (String attribute : attributeNames) {
-        if (!getAttributeValue(attribute).equals(castOther.getAttributeValue(attribute))) {
-          return false;
-        }
       }
     }
     // check the children
@@ -565,9 +557,7 @@ public class TypeDescription
    * @return a list of sorted attribute names
    */
   public List<String> getAttributeNames() {
-    List<String> result = new ArrayList<>(attributes.keySet());
-    Collections.sort(result);
-    return result;
+    return new ArrayList<>(attributes.keySet());
   }
 
   /**
@@ -655,7 +645,9 @@ public class TypeDescription
   private final Category category;
   private final List<TypeDescription> children;
   private final List<String> fieldNames;
-  private final Map<String,String> attributes = new HashMap<>();
+
+  /** Sorted by attribute name */
+  private final SortedMap<String,String> attributes = new TreeMap<>();
   private int maxLength = DEFAULT_LENGTH;
   private int precision = DEFAULT_PRECISION;
   private int scale = DEFAULT_SCALE;
