@@ -26,7 +26,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <unordered_map>
 
 namespace orc {
 
@@ -719,56 +718,13 @@ namespace orc {
   }
 
   /**
-   * Translate timezone abbreviation to zone file name for TZDB. This is a
-   * workaround to read timezone name written by Java ORC library. The alias
-   * mapping is copied from JDK sun.util.calendar.ZoneInfoFile.java file.
-   */
-  static std::string convertTimezoneAlias(const std::string& zone) {
-    DIAGNOSTIC_PUSH
-      #ifdef __clang__
-        DIAGNOSTIC_IGNORE("-Wexit-time-destructors")
-      #endif
-    static std::unordered_map<std::string, std::string> alias = {
-      { "ACT", "Australia/Darwin" },
-      { "AET", "Australia/Sydney" },
-      { "AGT", "America/Argentina/Buenos_Aires" },
-      { "ART", "Africa/Cairo" },
-      { "AST", "America/Anchorage" },
-      { "BET", "America/Sao_Paulo" },
-      { "BST", "Asia/Dhaka" },
-      { "CAT", "Africa/Harare" },
-      { "CNT", "America/St_Johns" },
-      { "CST", "America/Chicago" },
-      { "CTT", "Asia/Shanghai" },
-      { "EAT", "Africa/Addis_Ababa" },
-      { "ECT", "Europe/Paris" },
-      { "IET", "America/Indiana/Indianapolis" },
-      { "IST", "Asia/Kolkata" },
-      { "JST", "Asia/Tokyo" },
-      { "MIT", "Pacific/Apia" },
-      { "NET", "Asia/Yerevan" },
-      { "NST", "Pacific/Auckland" },
-      { "PLT", "Asia/Karachi" },
-      { "PNT", "America/Phoenix" },
-      { "PRT", "America/Puerto_Rico" },
-      { "PST", "America/Los_Angeles" },
-      { "SST", "Pacific/Guadalcanal" },
-      { "VST", "Asia/Ho_Chi_Minh" }
-    };
-    DIAGNOSTIC_POP
-
-    auto ret = alias.find(zone);
-    return ret != alias.cend() ? ret->second : zone;
-  }
-
-  /**
    * Get a timezone by name (eg. America/Los_Angeles).
    * Results are cached.
    */
   const Timezone& getTimezoneByName(const std::string& zone) {
     std::string filename(getTimezoneDirectory());
     filename += "/";
-    filename += convertTimezoneAlias(zone);
+    filename += zone;
     return getTimezoneByFilename(filename);
   }
 
