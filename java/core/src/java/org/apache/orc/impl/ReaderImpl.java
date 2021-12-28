@@ -720,9 +720,9 @@ public class ReaderImpl implements Reader {
   public static OrcTail extractFileTail(ByteBuffer buffer, long fileLen, long modificationTime)
       throws IOException {
     OrcProto.PostScript ps;
-    long readSize = fileLen != -1 ? fileLen : buffer.limit();
+    long readSize = buffer.limit();
     OrcProto.FileTail.Builder fileTailBuilder = OrcProto.FileTail.newBuilder();
-    fileTailBuilder.setFileLength(readSize);
+    fileTailBuilder.setFileLength(fileLen != -1 ? fileLen : readSize);
 
     int psLen = buffer.get((int) (readSize - 1)) & 0xff;
     int psOffset = (int) (readSize - 1 - psLen);
