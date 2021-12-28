@@ -446,4 +446,23 @@ public class TestReaderImpl {
     CheckFileWithSargs("bad_bloom_filter_1.6.11.orc", "ORC C++ 1.6.11");
     CheckFileWithSargs("bad_bloom_filter_1.6.0.orc", "ORC C++ ");
   }
+
+  @Test
+  public void testExtractFileTailIndexOutOfBoundsException() throws Exception {
+    Configuration conf = new Configuration();
+    Path path = new Path(workDir, "demo-11-none.orc");
+    FileSystem fs = path.getFileSystem(conf);
+    FileStatus fileStatus = fs.getFileStatus(path);
+    try (ReaderImpl reader = (ReaderImpl) OrcFile.createReader(path,
+            OrcFile.readerOptions(conf).filesystem(fs))) {
+      OrcTail tail = reader.extractFileTail(fs, path, Long.MAX_VALUE);
+      ByteBuffer tailBuffer = tail.getSerializedTail();
+
+      OrcTail extractedTail = ReaderImpl.extractFileTail(tailBuffer, fileStatus.getLen(), fileStatus.getModificationTime());
+
+      assertEquals(tail.getFileLength(), extractedTail.getFileLength());
+      assertEquals(tail.getFooter().getMetadataList(), extractedTail.getFooter().getMetadataList());
+      assertEquals(tail.getFooter().getStripesList(), extractedTail.getFooter().getStripesList());
+    }
+  }
 }
