@@ -283,8 +283,7 @@ void usage() {
             << "                  [-t <string>] [--timezone=<string>]\n"
             << "                  <schema> <input> <output>\n"
             << "Import CSV file into an Orc file using the specified schema.\n"
-            << "The timezone can be viewed in the directory /usr/share/zoneinfo\n"
-            << "If not specified, default timezone is GMT.\n"
+            << "The timezone is writer timezone of timestamp types.\n"
             << "Compound types are not yet supported.\n";
 }
 
