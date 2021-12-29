@@ -17,7 +17,7 @@
 # ORC site builder
 #
 
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 LABEL maintainer="Apache ORC project <dev@orc.apache.org>"
 
 RUN ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
