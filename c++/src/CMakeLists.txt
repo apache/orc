@@ -157,7 +157,7 @@ CHECK_CXX_SOURCE_RUNS("
       struct tm time2038;
       strptime(\"2037-05-05 12:34:56\", \"%Y-%m-%d %H:%M:%S\", &time2037);
       strptime(\"2038-05-05 12:34:56\", \"%Y-%m-%d %H:%M:%S\", &time2038);
-      return mktime(&time2038) - mktime(&time2037) != 31536000;
+      return (mktime(&time2038) - mktime(&time2037)) <= 31500000;
     }"
   HAS_POST_2038
 )
