@@ -21,6 +21,10 @@ support](https://databricks.com/blog/2015/07/16/joint-blog-post-bringing-orc-sup
 for reading and writing ORC files with support for column project and
 predicate push down.
 
+### [Apache Arrow](https://arrow.apache.org/)
+
+Apache Arrow supports reading and writing [ORC file format](https://arrow.apache.org/docs/index.html?highlight=orc#apache-arrow).
+
 ### [Apache Flink](https://flink.apache.org/)
 
 Apache Flink supports
