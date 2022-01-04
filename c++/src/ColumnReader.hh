@@ -94,7 +94,7 @@ namespace orc {
 
     /**
      * Get a set of ReadIntent for a given typeId.
-     * @param typeId
+     * @param typeId the type id to look up.
      * @return set of ReadIntent that was specified for given typeId through
      *    RowReaderOptions::includeTypesAndIntents. If no ReadIntent was
      *    specified for typeId, return {ReadIntent_DATA}.
