@@ -57,23 +57,36 @@ TEST (TestCSVFileImport, test10rows) {
 TEST (TestCSVFileImport, testTimezoneOption) {
   // create an ORC file from importing the CSV file
   const std::string pgm1 = findProgram("tools/src/csv-import");
+  const std::string pgm2 = findProgram("tools/src/orc-contents");
   const std::string csvFile =
     findExample("TestCSVFileImport.testTimezoneOption.csv");
-  const std::string orcFile = "/tmp/test_csv_import_test_timezone_option.orc";
   const std::string schema = "'struct<_a:timestamp>'";
   std::string output;
   std::string error;
-
-  std::string option = "--timezone=America/Los_Angeles";
-  EXPECT_EQ(0, runProgram({pgm1, option, schema, csvFile, orcFile},
-                          output, error));
-  EXPECT_EQ("", error);
-
-  // verify the ORC file content
-  const std::string pgm2 = findProgram("tools/src/orc-contents");
-  const std::string expected =
-    "{\"_a\": \"2021-12-26 16:00:00.0\"}\n";
-  EXPECT_EQ(0, runProgram({pgm2, orcFile}, output, error));
-  EXPECT_EQ(expected, output);
-  EXPECT_EQ("", error);
+  {
+    std::string orcFile = "/tmp/test_csv_import_test_timezone_option1.orc";
+    std::string option = "--timezone=America/Los_Angeles";
+    EXPECT_EQ(0, runProgram({pgm1, option, schema, csvFile, orcFile},
+                            output, error));
+    EXPECT_EQ("", error);
+    // verify the ORC file content
+    const std::string expected =
+      "{\"_a\": \"2021-12-26 16:00:00.0\"}\n";
+    EXPECT_EQ(0, runProgram({pgm2, orcFile}, output, error));
+    EXPECT_EQ(expected, output);
+    EXPECT_EQ("", error);
+  }
+  {
+    std::string orcFile = "/tmp/test_csv_import_test_timezone_option2.orc";
+    std::string option = "--timezone=Europe/Paris";
+    EXPECT_EQ(0, runProgram({pgm1, option, schema, csvFile, orcFile},
+                            output, error));
+    EXPECT_EQ("", error);
+    // verify the ORC file content
+    const std::string expected =
+      "{\"_a\": \"2021-12-27 01:00:00.0\"}\n";
+    EXPECT_EQ(0, runProgram({pgm2, orcFile}, output, error));
+    EXPECT_EQ(expected, output);
+    EXPECT_EQ("", error);
+  }
 }
