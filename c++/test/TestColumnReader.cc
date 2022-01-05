@@ -65,7 +65,7 @@ namespace orc {
     bool());
     MOCK_CONST_METHOD0(getForcedScaleOnHive11Decimal, int32_t()
     );
-    MOCK_CONST_METHOD1(getReadIntent, const ArrayReadIntent(uint64_t));
+    MOCK_CONST_METHOD1(getReadIntent, ArrayReadIntent(uint64_t));
 
     MemoryPool &getMemoryPool() const {
       return *getDefaultPool();

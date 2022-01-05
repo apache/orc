@@ -291,7 +291,7 @@ namespace orc {
     return selectedColumns;
   }
 
-  const ArrayReadIntent RowReaderImpl::getReadIntent(uint64_t typeId) const {
+  ArrayReadIntent RowReaderImpl::getReadIntent(uint64_t typeId) const {
     auto elem = readIntents.find(typeId);
     if (elem == readIntents.end()) {
       return ArrayReadIntent_ALL;

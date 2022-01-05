@@ -99,7 +99,7 @@ namespace orc {
      *    RowReaderOptions::includeTypesWithIntents. If no ArrayReadIntent was
      *    specified for typeId, return ArrayReadIntent_ALL.
      */
-    virtual const ArrayReadIntent getReadIntent(uint64_t typeId) const = 0;
+    virtual ArrayReadIntent getReadIntent(uint64_t typeId) const = 0;
   };
 
   /**

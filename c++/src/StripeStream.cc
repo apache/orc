@@ -64,7 +64,7 @@ namespace orc {
     return reader.getSelectedColumns();
   }
 
-  const ArrayReadIntent StripeStreamsImpl::getReadIntent(uint64_t typeId) const {
+  ArrayReadIntent StripeStreamsImpl::getReadIntent(uint64_t typeId) const {
     return reader.getReadIntent(typeId);
   }
 
