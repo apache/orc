@@ -190,22 +190,18 @@ namespace orc {
   RowReaderOptions& RowReaderOptions::includeTypes(const std::list<uint64_t>& types) {
     privateBits->selection = ColumnSelection_TYPE_IDS;
     privateBits->includedColumnIndexes.assign(types.begin(), types.end());
-    privateBits->readIntents.clear();
     privateBits->includedColumnNames.clear();
     privateBits->readIntents.clear();
     return *this;
   }
 
-  RowReaderOptions& RowReaderOptions::includeTypesAndIntents(const TypeReadIntents& typesAndIntents) {
+  RowReaderOptions&
+  RowReaderOptions::includeTypesWithIntents(const TypeReadIntents& typesAndIntents) {
     privateBits->selection = ColumnSelection_TYPE_IDS;
     privateBits->includedColumnIndexes.clear();
     privateBits->readIntents.clear();
     for (const auto& typeIntentPair : typesAndIntents ) {
-      if (typeIntentPair.second.empty()) {
-        privateBits->readIntents[typeIntentPair.first] = {ReadIntent_DATA};
-      } else {
-        privateBits->readIntents[typeIntentPair.first] = typeIntentPair.second;
-      }
+      privateBits->readIntents[typeIntentPair.first] = typeIntentPair.second;
       privateBits->includedColumnIndexes.push_back(typeIntentPair.first);
     }
     privateBits->includedColumnNames.clear();

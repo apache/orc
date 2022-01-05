@@ -219,7 +219,7 @@ namespace orc {
     bool getThrowOnHive11DecimalOverflow() const;
     int32_t getForcedScaleOnHive11Decimal() const;
 
-    const std::set<ReadIntent> getReadIntents(uint64_t typeId) const override;
+    const ArrayReadIntent getReadIntent(uint64_t typeId) const override;
   };
 
   class ReaderImpl : public Reader {

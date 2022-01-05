@@ -122,9 +122,9 @@ namespace orc {
     StreamKind_BLOOM_FILTER_UTF8 = 8
   };
 
-  enum ReadIntent {
-    ReadIntent_DATA = 0,
-    ReadIntent_POS = 1
+  enum ArrayReadIntent {
+    ArrayReadIntent_ALL = 0,
+    ArrayReadIntent_OFFSETS = 1
   };
 
   /**

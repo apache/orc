@@ -970,7 +970,6 @@ namespace orc {
   private:
     std::unique_ptr<ColumnReader> child;
     std::unique_ptr<RleDecoder> rle;
-    bool readPos = false;
 
   public:
     ListColumnReader(const Type& type, StripeStreams& stipe);
@@ -1010,14 +1009,11 @@ namespace orc {
     if (stream == nullptr)
       throw ParseError("LENGTH stream not found in List column");
     rle = createRleDecoder(std::move(stream), false, vers, memoryPool);
-    for (auto intent : stripe.getReadIntents(columnId)) {
-      if (intent == ReadIntent_DATA) {
-        const Type &childType = *type.getSubtype(0);
-        if (selectedColumns[static_cast<uint64_t>(childType.getColumnId())]) {
-          child = buildReader(childType, stripe);
-        }
-      } else if (intent == ReadIntent_POS) {
-        readPos = true;
+    ArrayReadIntent intent = stripe.getReadIntent(columnId);
+    if (intent == ArrayReadIntent_ALL) {
+      const Type &childType = *type.getSubtype(0);
+      if (selectedColumns[static_cast<uint64_t>(childType.getColumnId())]) {
+        child = buildReader(childType, stripe);
       }
     }
   }
@@ -1091,39 +1087,11 @@ namespace orc {
     offsets[numValues] = static_cast<int64_t>(totalChildren);
     ColumnReader *childReader = child.get();
     if (childReader) {
-      listBatch.hasElements = true;
       if (encoded) {
         childReader->nextEncoded(*(listBatch.elements.get()), totalChildren, nullptr);
       } else {
         childReader->next(*(listBatch.elements.get()), totalChildren, nullptr);
       }
-    }
-
-    if (readPos) {
-      listBatch.hasPositions = true;
-      if (listBatch.pos.capacity() < totalChildren) {
-        listBatch.pos.resize(totalChildren);
-      }
-      readArrayIndices(offsets, totalChildren, listBatch.pos.data());
-    }
-  }
-
-  void ListColumnReader::readArrayIndices(const int64_t *arrayOffsets,
-                                          uint64_t totalChildren,
-                                          int64_t *data) {
-    uint64_t childIdx = 0;
-    uint64_t offsetIndex = 0;
-    uint64_t curr_offset = static_cast<uint64_t>(arrayOffsets[offsetIndex]);
-    int64_t position = 0;
-    while (childIdx < totalChildren) {
-      if (curr_offset <= childIdx) {
-        offsetIndex++;
-        curr_offset = static_cast<uint64_t>(arrayOffsets[offsetIndex]);
-        position = 0;
-      }
-      data[childIdx] = position;
-      childIdx++;
-      position++;
     }
   }
 

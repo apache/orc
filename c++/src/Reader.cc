@@ -291,11 +291,10 @@ namespace orc {
     return selectedColumns;
   }
 
-  const std::set<ReadIntent>
-  RowReaderImpl::getReadIntents(uint64_t typeId) const {
+  const ArrayReadIntent RowReaderImpl::getReadIntent(uint64_t typeId) const {
     auto elem = readIntents.find(typeId);
     if (elem == readIntents.end()) {
-      return std::set<ReadIntent>({ReadIntent_DATA});
+      return ArrayReadIntent_ALL;
     } else {
       return elem->second;
     }

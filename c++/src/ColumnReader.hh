@@ -93,13 +93,13 @@ namespace orc {
     virtual int32_t getForcedScaleOnHive11Decimal() const = 0;
 
     /**
-     * Get a set of ReadIntent for a given typeId.
+     * Get an ArrayReadIntent for a given typeId.
      * @param typeId the type id to look up.
-     * @return set of ReadIntent that was specified for given typeId through
-     *    RowReaderOptions::includeTypesAndIntents. If no ReadIntent was
-     *    specified for typeId, return {ReadIntent_DATA}.
+     * @return an ArrayReadIntent that was specified for given typeId through
+     *    RowReaderOptions::includeTypesWithIntents. If no ArrayReadIntent was
+     *    specified for typeId, return ArrayReadIntent_ALL.
      */
-    virtual const std::set<ReadIntent> getReadIntents(uint64_t typeId) const = 0;
+    virtual const ArrayReadIntent getReadIntent(uint64_t typeId) const = 0;
   };
 
   /**

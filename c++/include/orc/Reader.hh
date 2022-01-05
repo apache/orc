@@ -150,26 +150,24 @@ namespace orc {
     RowReaderOptions& includeTypes(const std::list<uint64_t>& types);
 
     /**
-     * A map of <typeId, set<ReadIntent>> used as a parameter in
-     * RowReaderOptions::includeTypesAndIntents.
+     * A map of <typeId, ArrayReadIntent> used as a parameter in
+     * RowReaderOptions::includeTypesWithIntents.
      */
-    typedef std::map<uint64_t, std::set<ReadIntent>> TypeReadIntents;
+    typedef std::map<uint64_t, ArrayReadIntent> TypeReadIntents;
 
     /**
-     * Selects which type ids to read and specific ReadIntents for each
+     * Selects which type ids to read and specific ArrayReadIntents for each
      * type id. The root type is always 0 and the rest of the types are
      * labeled in a preorder traversal of the tree. The parent types are
-     * automatically selected, but the children are not. If a type id is
-     * selected with an empty ReadIntent set, the empty set will be replaced
-     * by {ReadIntent_DATA}.
+     * automatically selected, but the children are not.
      *
      * This option clears any previous setting of the selected columns or
      * types.
-     * @param typesAndIntents a map of <typeId, set<ReadIntent>>.
+     * @param typesWithIntents a map of <typeId, ArrayReadIntent>.
      * @return this
      */
     RowReaderOptions&
-    includeTypesAndIntents(const TypeReadIntents& typesAndIntents);
+    includeTypesWithIntents(const TypeReadIntents& typesWithIntents);
 
     /**
      * Set the section of the file to process.
@@ -289,6 +287,10 @@ namespace orc {
      */
     const std::string& getTimezoneName() const;
 
+    /**
+     * Get the <typeId, ArrayReadIntent> map that was supplied through
+     * includeTypesWithIntents.
+     */
     const TypeReadIntents getReadIntents() const;
   };
 
@@ -589,7 +591,14 @@ namespace orc {
      */
     virtual void seekToRow(uint64_t rowNumber) = 0;
 
-    virtual const std::set<ReadIntent> getReadIntents(uint64_t typeId) const = 0;
+    /**
+     * Get an ArrayReadIntent for a given typeId.
+     * @param typeId the type id to look up.
+     * @return an ArrayReadIntent that was specified for given typeId through
+     *    RowReaderOptions::includeTypesWithIntents. If no ArrayReadIntent was
+     *    specified for typeId, return ArrayReadIntent_ALL.
+     */
+    virtual const ArrayReadIntent getReadIntent(uint64_t typeId) const = 0;
 
   };
 }
