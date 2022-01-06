@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    name: "Build with Java ${{ matrix.java }} on ${{ matrix.os }}"
+    name: "Java ${{ matrix.java }} and ${{ matrix.cxx }} on ${{ matrix.os }}"
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -23,6 +23,15 @@ jobs:
           - 1.8
           - 11
           - 17
+        cc:
+          - clang
+        cxx:
+          - clang++
+        include:
+          - os: ubuntu-20.04
+            java: 1.8
+            cc: gcc
+            cxx: g++
     env:
       MAVEN_OPTS: -Xmx2g
       MAVEN_SKIP_RC: true
@@ -46,7 +55,7 @@ jobs:
         mkdir build
         cd build
         if [ "${{ matrix.os }}" = "ubuntu-20.04" ]; then
-          cmake -DANALYZE_JAVA=ON ..
+          cmake -DANALYZE_JAVA=ON -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} -DCMAKE_C_COMPILER=${{ matrix.cc }} -DSTOP_BUILD_ON_WARNING=OFF ..
         else
           cmake -DANALYZE_JAVA=ON -DOPENSSL_ROOT_DIR=`brew --prefix openssl@1.1` ..
         fi
