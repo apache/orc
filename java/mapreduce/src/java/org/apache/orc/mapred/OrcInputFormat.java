@@ -21,7 +21,6 @@ package org.apache.orc.mapred;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -42,6 +41,7 @@ import org.apache.orc.TypeDescription;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 /**
@@ -94,7 +94,7 @@ public class OrcInputFormat<V extends WritableComparable>
     int bufferSize = (int)OrcConf.KRYO_SARG_BUFFER.getLong(conf);
     Output out = new Output(bufferSize, KRYO_SARG_MAX_BUFFER);
     new Kryo().writeObject(out, sarg);
-    OrcConf.KRYO_SARG.setString(conf, Base64.encodeBase64String(out.toBytes()));
+    OrcConf.KRYO_SARG.setString(conf, Base64.getMimeEncoder().encodeToString(out.toBytes()));
     StringBuilder buffer = new StringBuilder();
     for (int i = 0; i < columnNames.length; ++i) {
       if (i != 0) {
@@ -135,7 +135,7 @@ public class OrcInputFormat<V extends WritableComparable>
     String kryoSarg = OrcConf.KRYO_SARG.getString(conf);
     String sargColumns = OrcConf.SARG_COLUMNS.getString(conf);
     if (kryoSarg != null && sargColumns != null) {
-      byte[] sargBytes = Base64.decodeBase64(kryoSarg);
+      byte[] sargBytes = Base64.getMimeDecoder().decode(kryoSarg);
       SearchArgument sarg =
           new Kryo().readObject(new Input(sargBytes), SearchArgumentImpl.class);
       options.searchArgument(sarg, sargColumns.split(","));
