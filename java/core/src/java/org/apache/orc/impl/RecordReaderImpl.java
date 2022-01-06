@@ -79,6 +79,11 @@ import java.util.function.Consumer;
 public class RecordReaderImpl implements RecordReader {
   static final Logger LOG = LoggerFactory.getLogger(RecordReaderImpl.class);
   private static final boolean isLogDebugEnabled = LOG.isDebugEnabled();
+  private static final OrcProto.ColumnStatistics EMPTY_COLUMN_STATISTICS =
+      OrcProto.ColumnStatistics.newBuilder().setNumberOfValues(0)
+          .setHasNull(false)
+          .setBytesOnDisk(0)
+          .build();
   protected final Path path;
   private final long firstRow;
   private final List<StripeInformation> stripes = new ArrayList<>();
@@ -434,18 +439,33 @@ public class RecordReaderImpl implements RecordReader {
     final boolean onlyLowerBound;
     final boolean onlyUpperBound;
     final boolean hasNulls;
+    final boolean hasValue;
+    final boolean comparable;
 
     ValueRange(PredicateLeaf predicate,
                T lower, T upper,
                boolean hasNulls,
                boolean onlyLowerBound,
-               boolean onlyUpperBound) {
+               boolean onlyUpperBound,
+               boolean hasValue,
+               boolean comparable) {
       PredicateLeaf.Type type = predicate.getType();
       this.lower = getBaseObjectForComparison(type, lower);
       this.upper = getBaseObjectForComparison(type, upper);
       this.hasNulls = hasNulls;
       this.onlyLowerBound = onlyLowerBound;
       this.onlyUpperBound = onlyUpperBound;
+      this.hasValue = hasValue;
+      this.comparable = comparable;
+    }
+
+    ValueRange(PredicateLeaf predicate,
+               T lower, T upper,
+               boolean hasNulls,
+               boolean onlyLowerBound,
+               boolean onlyUpperBound) {
+      this(predicate, lower, upper, hasNulls, onlyLowerBound, onlyUpperBound,
+          lower != null, lower != null);
     }
 
     ValueRange(PredicateLeaf predicate, T lower, T upper,
@@ -462,8 +482,31 @@ public class RecordReaderImpl implements RecordReader {
       this(predicate, null, null, hasNulls, false, false);
     }
 
+    ValueRange(PredicateLeaf predicate, boolean hasNulls, boolean hasValue, boolean comparable) {
+      this(predicate, null, null, hasNulls, false, false, hasValue, comparable);
+    }
+
     boolean hasValues() {
-      return lower != null;
+      return hasValue;
+    }
+
+    /**
+     * This method is used separately when the hasValue is true
+     * Whether min or max is provided for comparison
+     * @return is it comparable
+     */
+    boolean comparable() {
+      return comparable;
+    }
+
+    /**
+     * value range is invalid if the column statistics are non-existent
+     * @see ColumnStatisticsImpl#isStatsExists()
+     * this method is similar to isStatsExists
+     * @return value range is valid or not
+     */
+    boolean valid() {
+      return hasValue || hasNulls;
     }
 
     /**
@@ -575,7 +618,7 @@ public class RecordReaderImpl implements RecordReader {
       Boolean max = stats.getTrueCount() != 0;
       return new ValueRange<>(predicate, min, max, stats.hasNull());
     } else {
-      return new ValueRange(predicate, null, null, true);
+      return new ValueRange(predicate, index.hasNull(), true, false);
     }
   }
 
@@ -706,6 +749,10 @@ public class RecordReaderImpl implements RecordReader {
                                            ValueRange range,
                                            BloomFilter bloomFilter,
                                            boolean useUTCTimestamp) {
+    if (!range.valid()) {
+      return TruthValue.YES_NO_NULL;
+    }
+
     // if we didn't have any values, everything must have been null
     if (!range.hasValues()) {
       if (predicate.getOperator() == PredicateLeaf.Operator.IS_NULL) {
@@ -713,6 +760,8 @@ public class RecordReaderImpl implements RecordReader {
       } else {
         return TruthValue.NULL;
       }
+    } else if (!range.comparable()) {
+      return range.hasNulls ? TruthValue.YES_NO_NULL : TruthValue.YES_NO;
     }
 
     TruthValue result;
@@ -1134,7 +1183,10 @@ public class RecordReaderImpl implements RecordReader {
             if (entry == null) {
               throw new AssertionError("RG is not populated for " + columnIx + " rg " + rowGroup);
             }
-            OrcProto.ColumnStatistics stats = entry.getStatistics();
+            OrcProto.ColumnStatistics stats = EMPTY_COLUMN_STATISTICS;
+            if (entry.hasStatistics()) {
+              stats = entry.getStatistics();
+            }
             OrcProto.BloomFilter bf = null;
             OrcProto.Stream.Kind bfk = null;
             if (bloomFilterIndices != null && bloomFilterIndices[columnIx] != null) {

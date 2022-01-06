@@ -2449,4 +2449,70 @@ public class TestRecordReaderImpl {
     f2.setAccessible(true);
     assertFalse((boolean)f2.get(applier1));
   }
+
+  @Test
+  public void testCompatibleSpecificationUnofficialFile() throws IOException {
+    // unofficial.orc is a file compatible with the ORC specification,
+    // but its column statistics only implements the ColumnStatistics interface
+    // without providing other information such as min and max
+    Path path = new Path(ClassLoader.getSystemResource("unofficial.orc").getPath());
+    Configuration conf = new Configuration();
+    FileSystem fs = FileSystem.getLocal(conf);
+    TypeDescription readSchema =
+        TypeDescription.fromString("struct<INT:int>");
+    Reader reader = OrcFile.createReader(path, OrcFile.readerOptions(conf).filesystem(fs));
+    RecordReader rowIterator = reader.rows(
+        reader.options()
+            .schema(readSchema)
+            .searchArgument(SearchArgumentFactory.newBuilder()
+                .equals("INT", PredicateLeaf.Type.LONG, 2L)
+                .build(), new String[]{"INT"}) //predict push down
+    );
+
+    VectorizedRowBatch batch = readSchema.createRowBatch();
+    LongColumnVector x = (LongColumnVector) batch.cols[0];
+
+    assertTrue(rowIterator.nextBatch(batch));
+    assertEquals(10, batch.size);
+    assertFalse(x.noNulls);
+    for (int row = 0; row < batch.size; ++row) {
+      int xRow = x.isRepeating ? 0 : row;
+      if (xRow % 2 == 0) {
+        assertFalse(x.isNull[xRow]);
+        assertEquals(xRow, x.vector[xRow]);
+      } else {
+        assertTrue(x.isNull[xRow]);
+      }
+    }
+    rowIterator.close();
+  }
+
+  @Test
+  public void testCDUFUnofficialFile() throws IOException {
+    getClass().getClassLoader();
+    Path path = new Path(ClassLoader.getSystemResource("cudf-unofficial.orc").getPath());
+    Configuration conf = new Configuration();
+    FileSystem fs = FileSystem.getLocal(conf);
+    TypeDescription readSchema =
+        TypeDescription.fromString("struct<INT:int>");
+    Reader reader = OrcFile.createReader(path, OrcFile.readerOptions(conf).filesystem(fs));
+    RecordReader rowIterator = reader.rows(
+        reader.options()
+            .schema(readSchema)
+            .searchArgument(SearchArgumentFactory.newBuilder()
+                .equals("INT", PredicateLeaf.Type.LONG, 2L)
+                .build(), new String[]{"INT"}) //predict push down
+    );
+
+    VectorizedRowBatch batch = readSchema.createRowBatch();
+    LongColumnVector x = (LongColumnVector) batch.cols[0];
+
+    assertTrue(rowIterator.nextBatch(batch));
+    assertEquals(3, batch.size);
+    for (int row = 0; row < batch.size; ++row) {
+      assertFalse(x.isNull[row]);
+      assertEquals(row + 1, x.vector[row]);
+    }
+    rowIterator.close();
+  }
 }
