@@ -2516,4 +2516,23 @@ public class TestRecordReaderImpl {
 
     assertEquals(TruthValue.NULL, whenNoHasValuesAndHasNullStatistics);
   }
+
+  @Test
+  public void testRgEndOffset() throws IOException {
+    Configuration conf = new Configuration();
+    Path filePath = new Path(getClass().getClassLoader().
+        getSystemResource("orc-small-compression-size.orc").getPath());
+    Reader reader = OrcFile.createReader(filePath, OrcFile.readerOptions(conf));
+
+    SearchArgument sarg = SearchArgumentFactory.newBuilder()
+        .startNot()
+        .lessThan("x", PredicateLeaf.Type.LONG, 120000L)
+        .end().build();
+    VectorizedRowBatch batch = reader.getSchema().createRowBatch();
+    try (RecordReader rows = reader.rows(reader.options().searchArgument(sarg, null))) {
+      while (rows.nextBatch(batch)) {
+        // do nothing but check all the data can be read
+      }
+    }
+  }
 }

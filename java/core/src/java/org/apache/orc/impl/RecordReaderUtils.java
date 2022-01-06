@@ -182,10 +182,13 @@ public class RecordReaderUtils {
                                          long streamLength) {
     // figure out the worst case last location
     // if adjacent groups have the same compressed block offset then stretch the slop
-    // by factor of 2 to safely accommodate the next compression block.
-    // One for the current compression block and another for the next compression block.
+    // by a factor to safely accommodate the next compression block.
+    // 512 is the MAX_SCOPE defined in RunLengthIntegerWriterV2.
+    // 4 is the maximum size of bytes for each value (see RunLengthIntegerWriterV2.zzBits100p).
+    // We need to calculate the maximum number of blocks by bufferSize accordingly.
+    int stretchFactor = 2 + (512 * 4 - 1) / bufferSize;
     long slop = isCompressed
-                    ? 2 * (OutStream.HEADER_SIZE + bufferSize)
+                    ? stretchFactor * (OutStream.HEADER_SIZE + bufferSize)
                     : WORST_UNCOMPRESSED_SLOP;
     return isLast ? streamLength : Math.min(streamLength, nextGroupOffset + slop);
   }
