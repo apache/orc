@@ -186,7 +186,7 @@ public class RecordReaderUtils {
     // 512 is the MAX_SCOPE defined in RunLengthIntegerWriterV2.
     // 4 is the maximum size of bytes for each value (see RunLengthIntegerWriterV2.zzBits100p).
     // We need to calculate the maximum number of blocks by bufferSize accordingly.
-    int stretchFactor = 2 + (512 * 4 - 1) / bufferSize;
+    int stretchFactor = bufferSize > 0 ? 2 + (512 * 4 - 1) / bufferSize : 2;
     long slop = isCompressed
                     ? stretchFactor * (OutStream.HEADER_SIZE + bufferSize)
                     : WORST_UNCOMPRESSED_SLOP;
