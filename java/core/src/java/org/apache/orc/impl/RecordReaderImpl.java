@@ -79,7 +79,8 @@ import java.util.function.Consumer;
 public class RecordReaderImpl implements RecordReader {
   static final Logger LOG = LoggerFactory.getLogger(RecordReaderImpl.class);
   private static final boolean isLogDebugEnabled = LOG.isDebugEnabled();
-  private static final OrcProto.ColumnStatistics EMPTY_COLUMN_STATISTICS =
+  // as public for use with test cases
+  public static final OrcProto.ColumnStatistics EMPTY_COLUMN_STATISTICS =
       OrcProto.ColumnStatistics.newBuilder().setNumberOfValues(0)
           .setHasNull(false)
           .setBytesOnDisk(0)
@@ -491,12 +492,11 @@ public class RecordReaderImpl implements RecordReader {
     }
 
     /**
-     * This method is used separately when the hasValue is true
      * Whether min or max is provided for comparison
      * @return is it comparable
      */
     boolean comparable() {
-      return comparable;
+      return hasValue && comparable;
     }
 
     /**

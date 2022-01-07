@@ -78,6 +78,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.TimeZone;
 
+import static org.apache.orc.OrcFile.CURRENT_WRITER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -2451,68 +2452,68 @@ public class TestRecordReaderImpl {
   }
 
   @Test
-  public void testCompatibleSpecificationUnofficialFile() throws IOException {
-    // unofficial.orc is a file compatible with the ORC specification,
-    // but its column statistics only implements the ColumnStatistics interface
-    // without providing other information such as min and max
-    Path path = new Path(ClassLoader.getSystemResource("unofficial.orc").getPath());
-    Configuration conf = new Configuration();
-    FileSystem fs = FileSystem.getLocal(conf);
-    TypeDescription readSchema =
-        TypeDescription.fromString("struct<INT:int>");
-    Reader reader = OrcFile.createReader(path, OrcFile.readerOptions(conf).filesystem(fs));
-    RecordReader rowIterator = reader.rows(
-        reader.options()
-            .schema(readSchema)
-            .searchArgument(SearchArgumentFactory.newBuilder()
-                .equals("INT", PredicateLeaf.Type.LONG, 2L)
-                .build(), new String[]{"INT"}) //predict push down
-    );
+  public void testWithoutStatistics() {
+    OrcProto.ColumnEncoding encoding = OrcProto.ColumnEncoding.newBuilder()
+        .setKind(OrcProto.ColumnEncoding.Kind.DIRECT_V2)
+        .build();
 
-    VectorizedRowBatch batch = readSchema.createRowBatch();
-    LongColumnVector x = (LongColumnVector) batch.cols[0];
+    PredicateLeaf pred = createPredicateLeaf(
+        PredicateLeaf.Operator.EQUALS, PredicateLeaf.Type.LONG, "x", 2L, null);
 
-    assertTrue(rowIterator.nextBatch(batch));
-    assertEquals(10, batch.size);
-    assertFalse(x.noNulls);
-    for (int row = 0; row < batch.size; ++row) {
-      int xRow = x.isRepeating ? 0 : row;
-      if (xRow % 2 == 0) {
-        assertFalse(x.isNull[xRow]);
-        assertEquals(xRow, x.vector[xRow]);
-      } else {
-        assertTrue(x.isNull[xRow]);
-      }
-    }
-    rowIterator.close();
+    TruthValue truthValue = RecordReaderImpl.evaluatePredicateProto(
+        RecordReaderImpl.EMPTY_COLUMN_STATISTICS,
+        pred, null, encoding, null,
+        CURRENT_WRITER, TypeDescription.createInt());
+
+    assertEquals(TruthValue.YES_NO_NULL, truthValue);
   }
 
   @Test
-  public void testCDUFUnofficialFile() throws IOException {
-    getClass().getClassLoader();
-    Path path = new Path(ClassLoader.getSystemResource("cudf-unofficial.orc").getPath());
-    Configuration conf = new Configuration();
-    FileSystem fs = FileSystem.getLocal(conf);
-    TypeDescription readSchema =
-        TypeDescription.fromString("struct<INT:int>");
-    Reader reader = OrcFile.createReader(path, OrcFile.readerOptions(conf).filesystem(fs));
-    RecordReader rowIterator = reader.rows(
-        reader.options()
-            .schema(readSchema)
-            .searchArgument(SearchArgumentFactory.newBuilder()
-                .equals("INT", PredicateLeaf.Type.LONG, 2L)
-                .build(), new String[]{"INT"}) //predict push down
-    );
+  public void testMissMinOrMaxInStatistics() {
+    OrcProto.ColumnEncoding encoding = OrcProto.ColumnEncoding.newBuilder()
+        .setKind(OrcProto.ColumnEncoding.Kind.DIRECT_V2)
+        .build();
 
-    VectorizedRowBatch batch = readSchema.createRowBatch();
-    LongColumnVector x = (LongColumnVector) batch.cols[0];
+    PredicateLeaf pred = createPredicateLeaf(
+        PredicateLeaf.Operator.EQUALS, PredicateLeaf.Type.LONG, "x", 2L, null);
 
-    assertTrue(rowIterator.nextBatch(batch));
-    assertEquals(3, batch.size);
-    for (int row = 0; row < batch.size; ++row) {
-      assertFalse(x.isNull[row]);
-      assertEquals(row + 1, x.vector[row]);
-    }
-    rowIterator.close();
+    OrcProto.ColumnStatistics hasValuesAndHasNullStatistics =
+        OrcProto.ColumnStatistics.newBuilder().setNumberOfValues(10)
+            .setHasNull(true)
+            .setBytesOnDisk(40)
+            .build();
+
+    OrcProto.ColumnStatistics hasValuesAndNoHasNullStatistics =
+        OrcProto.ColumnStatistics.newBuilder().setNumberOfValues(5)
+            .setHasNull(false)
+            .setBytesOnDisk(20)
+            .build();
+
+    OrcProto.ColumnStatistics noHasValuesAndHasNullStatistics =
+        OrcProto.ColumnStatistics.newBuilder().setNumberOfValues(0)
+            .setHasNull(true)
+            .setBytesOnDisk(0)
+            .build();
+
+    TruthValue whenHasValuesAndHasNullTruthValue = RecordReaderImpl.evaluatePredicateProto(
+        hasValuesAndHasNullStatistics,
+        pred, null, encoding, null,
+        CURRENT_WRITER, TypeDescription.createInt());
+
+    assertEquals(TruthValue.YES_NO_NULL, whenHasValuesAndHasNullTruthValue);
+
+    TruthValue whenHasValuesAndNoHasNullTruthValue = RecordReaderImpl.evaluatePredicateProto(
+        hasValuesAndNoHasNullStatistics,
+        pred, null, encoding, null,
+        CURRENT_WRITER, TypeDescription.createInt());
+
+    assertEquals(TruthValue.YES_NO, whenHasValuesAndNoHasNullTruthValue);
+
+    TruthValue whenNoHasValuesAndHasNullStatistics = RecordReaderImpl.evaluatePredicateProto(
+        noHasValuesAndHasNullStatistics,
+        pred, null, encoding, null,
+        CURRENT_WRITER, TypeDescription.createInt());
+
+    assertEquals(TruthValue.NULL, whenNoHasValuesAndHasNullStatistics);
   }
 }
