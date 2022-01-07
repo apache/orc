@@ -1539,7 +1539,7 @@ public class TestRecordReaderImpl {
         new InStream.StreamOptions()
             .withCodec(OrcCodecPool.getCodec(CompressionKind.ZLIB))
             .withBufferSize(1024);
-    final int SLOP = 3 * (OutStream.HEADER_SIZE + options.getBufferSize());
+    final int SLOP = 5 * (OutStream.HEADER_SIZE + options.getBufferSize());
     MockDataReader dataReader = new MockDataReader(schema, options)
       .addStream(1, OrcProto.Stream.Kind.ROW_INDEX,
           createRowIndex(options,

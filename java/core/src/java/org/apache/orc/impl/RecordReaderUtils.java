@@ -184,9 +184,9 @@ public class RecordReaderUtils {
     // if adjacent groups have the same compressed block offset then stretch the slop
     // by a factor to safely accommodate the next compression block.
     // 512 is the MAX_SCOPE defined in RunLengthIntegerWriterV2.
-    // 4 is the maximum size of bytes for each value (see RunLengthIntegerWriterV2.zzBits100p).
+    // 8 is the maximum size of bytes for each value (see RunLengthIntegerWriterV2.zzBits100p).
     // We need to calculate the maximum number of blocks by bufferSize accordingly.
-    int stretchFactor = bufferSize > 0 ? 2 + (512 * 4 - 1) / bufferSize : 2;
+    int stretchFactor = bufferSize > 0 ? 2 + (512 * 8 - 1) / bufferSize : 2;
     long slop = isCompressed
                     ? stretchFactor * (OutStream.HEADER_SIZE + bufferSize)
                     : WORST_UNCOMPRESSED_SLOP;
