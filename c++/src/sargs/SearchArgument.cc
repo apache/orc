@@ -83,7 +83,6 @@ namespace orc {
 
   SearchArgumentBuilder& SearchArgumentBuilderImpl::end() {
     TreeNode& current = mCurrTree.front();
-    mCurrTree.pop_front();
     if (current->getChildren().empty()) {
       throw std::invalid_argument("Cannot create expression " +
         mRoot->toString() + " with no children.");
@@ -93,6 +92,7 @@ namespace orc {
       throw std::invalid_argument("Can't create NOT expression " +
         current->toString() + " with more than 1 child.");
     }
+    mCurrTree.pop_front();
     return *this;
   }
 
