@@ -88,10 +88,12 @@ namespace orc {
     // Select a field by id
     void updateSelectedByFieldId(std::vector<bool>& selectedColumns, uint64_t fieldId);
     // Select a type by id
-    void updateSelectedByTypeId(std::vector<bool>& selectedColumns, uint64_t typeId);
+    void updateSelectedByTypeId(std::vector<bool>& selectedColumns, uint64_t typeId,
+                                const RowReaderOptions::TypeReadIntents* readIntents = nullptr);
 
     // Select all of the recursive children of the given type.
-    void selectChildren(std::vector<bool>& selectedColumns, const Type& type);
+    void selectChildren(std::vector<bool>& selectedColumns, const Type& type,
+                        const RowReaderOptions::TypeReadIntents* readIntents = nullptr);
 
     // For each child of type, select it if one of its children
     // is selected.
@@ -122,7 +124,6 @@ namespace orc {
 
     // inputs
     std::vector<bool> selectedColumns;
-    RowReaderOptions::TypeReadIntents readIntents;
 
     // footer
     proto::Footer* footer;
@@ -218,8 +219,6 @@ namespace orc {
     const FileContents& getFileContents() const;
     bool getThrowOnHive11DecimalOverflow() const;
     int32_t getForcedScaleOnHive11Decimal() const;
-
-    ArrayReadIntent getReadIntent(uint64_t typeId) const override;
   };
 
   class ReaderImpl : public Reader {

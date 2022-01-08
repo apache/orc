@@ -993,9 +993,6 @@ namespace orc {
     void nextInternal(ColumnVectorBatch& rowBatch,
                       uint64_t numValues,
                       char *notNull);
-
-    void readArrayIndices(const int64_t *arrayOffsets, uint64_t arrayCount,
-                          int64_t *data);
   };
 
   ListColumnReader::ListColumnReader(const Type& type,
@@ -1009,12 +1006,9 @@ namespace orc {
     if (stream == nullptr)
       throw ParseError("LENGTH stream not found in List column");
     rle = createRleDecoder(std::move(stream), false, vers, memoryPool);
-    ArrayReadIntent intent = stripe.getReadIntent(columnId);
-    if (intent == ArrayReadIntent_ALL) {
-      const Type &childType = *type.getSubtype(0);
-      if (selectedColumns[static_cast<uint64_t>(childType.getColumnId())]) {
-        child = buildReader(childType, stripe);
-      }
+    const Type& childType = *type.getSubtype(0);
+    if (selectedColumns[static_cast<uint64_t>(childType.getColumnId())]) {
+      child = buildReader(childType, stripe);
     }
   }
 

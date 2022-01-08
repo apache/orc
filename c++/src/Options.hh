@@ -288,7 +288,7 @@ namespace orc {
     return privateBits->readerTimezone;
   }
 
-  const RowReaderOptions::TypeReadIntents RowReaderOptions::getReadIntents() const {
+  const RowReaderOptions::TypeReadIntents RowReaderOptions::getTypeReadIntents() const {
     return privateBits->readIntents;
   }
 }

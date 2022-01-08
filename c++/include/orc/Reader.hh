@@ -150,20 +150,19 @@ namespace orc {
     RowReaderOptions& includeTypes(const std::list<uint64_t>& types);
 
     /**
-     * A map of <typeId, ArrayReadIntent> used as a parameter in
-     * RowReaderOptions::includeTypesWithIntents.
+     * A map type of <typeId, ReadIntent>.
      */
-    typedef std::map<uint64_t, ArrayReadIntent> TypeReadIntents;
+    typedef std::map<uint64_t, ReadIntent> TypeReadIntents;
 
     /**
-     * Selects which type ids to read and specific ArrayReadIntents for each
+     * Selects which type ids to read and specific ReadIntents for each
      * type id. The root type is always 0 and the rest of the types are
      * labeled in a preorder traversal of the tree. The parent types are
      * automatically selected, but the children are not.
      *
      * This option clears any previous setting of the selected columns or
      * types.
-     * @param typesWithIntents a map of <typeId, ArrayReadIntent>.
+     * @param typesWithIntents a map of TypeReadIntents.
      * @return this
      */
     RowReaderOptions&
@@ -288,10 +287,10 @@ namespace orc {
     const std::string& getTimezoneName() const;
 
     /**
-     * Get the <typeId, ArrayReadIntent> map that was supplied through
+     * Get the TypeReadIntents map that was supplied by client through
      * includeTypesWithIntents.
      */
-    const TypeReadIntents getReadIntents() const;
+    const TypeReadIntents getTypeReadIntents() const;
   };
 
 
@@ -590,15 +589,6 @@ namespace orc {
      * @param rowNumber the next row the reader should return
      */
     virtual void seekToRow(uint64_t rowNumber) = 0;
-
-    /**
-     * Get an ArrayReadIntent for a given typeId.
-     * @param typeId the type id to look up.
-     * @return an ArrayReadIntent that was specified for given typeId through
-     *    RowReaderOptions::includeTypesWithIntents. If no ArrayReadIntent was
-     *    specified for typeId, return ArrayReadIntent_ALL.
-     */
-    virtual ArrayReadIntent getReadIntent(uint64_t typeId) const = 0;
 
   };
 }

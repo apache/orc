@@ -57,7 +57,6 @@ namespace orc {
     virtual ~StripeStreamsImpl() override;
 
     virtual const std::vector<bool> getSelectedColumns() const override;
-    virtual ArrayReadIntent getReadIntent(uint64_t typeId) const override;
 
     virtual proto::ColumnEncoding getEncoding(uint64_t columnId
                                               ) const override;

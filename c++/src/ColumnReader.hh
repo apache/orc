@@ -91,15 +91,6 @@ namespace orc {
      * @return the number of scale digits
      */
     virtual int32_t getForcedScaleOnHive11Decimal() const = 0;
-
-    /**
-     * Get an ArrayReadIntent for a given typeId.
-     * @param typeId the type id to look up.
-     * @return an ArrayReadIntent that was specified for given typeId through
-     *    RowReaderOptions::includeTypesWithIntents. If no ArrayReadIntent was
-     *    specified for typeId, return ArrayReadIntent_ALL.
-     */
-    virtual ArrayReadIntent getReadIntent(uint64_t typeId) const = 0;
   };
 
   /**

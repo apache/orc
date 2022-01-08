@@ -80,12 +80,23 @@ namespace orc {
     return static_cast<WriterVersion>(contents->postscript->writerversion());
   }
 
-  void ColumnSelector::selectChildren(std::vector<bool>& selectedColumns, const Type& type) {
+  void ColumnSelector::selectChildren(
+      std::vector<bool> &selectedColumns, const Type &type,
+      const RowReaderOptions::TypeReadIntents *readIntents) {
     size_t id = static_cast<size_t>(type.getColumnId());
+    TypeKind kind = type.getKind();
     if (!selectedColumns[id]) {
       selectedColumns[id] = true;
-      for(size_t c = id; c <= type.getMaximumColumnId(); ++c){
-        selectedColumns[c] = true;
+      bool selectChild = true;
+      if (readIntents != nullptr && kind == TypeKind::LIST) {
+        auto elem = readIntents->find(id);
+        selectChild =
+            (elem != readIntents->end()) && (elem->second == ReadIntent_ALL);
+      }
+      if (selectChild) {
+        for (size_t c = id; c <= type.getMaximumColumnId(); ++c) {
+          selectedColumns[c] = true;
+        }
       }
     }
   }
@@ -142,9 +153,11 @@ namespace orc {
         updateSelectedByName(selectedColumns, *field);
       }
     } else if (options.getTypeIdsSet()) {
+      const RowReaderOptions::TypeReadIntents readIntents =
+          options.getTypeReadIntents();
       for(std::list<uint64_t>::const_iterator typeId = options.getInclude().begin();
           typeId != options.getInclude().end(); ++typeId) {
-        updateSelectedByTypeId(selectedColumns, *typeId);
+        updateSelectedByTypeId(selectedColumns, *typeId, &readIntents);
       }
     } else {
       // default is to select all columns
@@ -166,10 +179,12 @@ namespace orc {
     }
   }
 
-  void ColumnSelector::updateSelectedByTypeId(std::vector<bool>& selectedColumns, uint64_t typeId) {
+  void ColumnSelector::updateSelectedByTypeId(
+      std::vector<bool> &selectedColumns, uint64_t typeId,
+      const RowReaderOptions::TypeReadIntents *readIntents) {
     if (typeId < selectedColumns.size()) {
       const Type& type = *idTypeMap[typeId];
-      selectChildren(selectedColumns, type);
+      selectChildren(selectedColumns, type, readIntents);
     } else {
       std::stringstream buffer;
       buffer << "Invalid type id selected " << typeId << " out of "
@@ -239,7 +254,6 @@ namespace orc {
 
     ColumnSelector column_selector(contents.get());
     column_selector.updateSelected(selectedColumns, opts);
-    readIntents = opts.getReadIntents();
 
     // prepare SargsApplier if SearchArgument is available
     if (opts.getSearchArgument() && footer->rowindexstride() > 0) {
@@ -289,15 +303,6 @@ namespace orc {
 
   const std::vector<bool> RowReaderImpl::getSelectedColumns() const {
     return selectedColumns;
-  }
-
-  ArrayReadIntent RowReaderImpl::getReadIntent(uint64_t typeId) const {
-    auto elem = readIntents.find(typeId);
-    if (elem == readIntents.end()) {
-      return ArrayReadIntent_ALL;
-    } else {
-      return elem->second;
-    }
   }
 
   const Type& RowReaderImpl::getSelectedType() const {

@@ -122,9 +122,17 @@ namespace orc {
     StreamKind_BLOOM_FILTER_UTF8 = 8
   };
 
-  enum ArrayReadIntent {
-    ArrayReadIntent_ALL = 0,
-    ArrayReadIntent_OFFSETS = 1
+  /**
+   * Specific read intention when selecting a certain TypeId.
+   * This enum currently only being utilized by LIST type selection.
+   *
+   * TODO: extend this to support MAP and UNION type.
+   */
+  enum ReadIntent {
+    ReadIntent_ALL = 0,
+
+    // Only read offsets of a LIST type. Do not read the children types.
+    ReadIntent_OFFSETS = 1
   };
 
   /**

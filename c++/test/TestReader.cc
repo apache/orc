@@ -26,6 +26,8 @@
 
 namespace orc {
 
+using ::testing::ElementsAreArray;
+
   TEST(TestReader, testWriterVersions) {
     EXPECT_EQ("original", writerVersionToString(WriterVersion_ORIGINAL));
     EXPECT_EQ("HIVE-8732", writerVersionToString(WriterVersion_HIVE_8732));
@@ -136,5 +138,90 @@ namespace orc {
   TEST(TestRowReader, testSkipBadBloomFilters) {
     CheckFileWithSargs("bad_bloom_filter_1.6.11.orc", "ORC C++ 1.6.11");
     CheckFileWithSargs("bad_bloom_filter_1.6.0.orc", "ORC C++");
+  }
+
+  /**
+   * Read complextypes_iceberg.orc and verify the resolved selections.
+   *
+   * The ORC file has the following schema:
+   *   struct<
+   *     id:bigint,
+   *     int_array:array<int>,
+   *     int_array_array:array<array<int>>,
+   *     int_map:map<string,int>,
+   *     int_map_array:array<map<string,int>>,
+   *     nested_struct:struct<
+   *       a:int,
+   *       b:array<int>,
+   *       c:struct<
+   *         d:array<array<struct<
+   *           e:int,
+   *           f:string
+   *         >>>
+   *       >,
+   *       g:map<string,struct<
+   *         h:struct<
+   *           i:array<double>
+   *         >
+   *       >>
+   *     >
+   *   >
+   *
+   * @param readIntents TypeReadIntents describing the section.
+   * @param expectedSelection expected TypeIds that will be selected from given
+   * readIntents.
+   */
+  void verifySelection(const RowReaderOptions::TypeReadIntents &readIntents,
+                       const std::vector<uint32_t> &expectedSelection) {
+    std::string fileName = "complextypes_iceberg.orc";
+    std::stringstream ss;
+    if (const char* example_dir = std::getenv("ORC_EXAMPLE_DIR")) {
+      ss << example_dir;
+    } else {
+      ss << "../../../examples";
+    }
+    ss << "/" << fileName;
+    ReaderOptions readerOpts;
+    std::unique_ptr<Reader> reader =
+        createReader(readLocalFile(ss.str().c_str()), readerOpts);
+
+    RowReaderOptions rowReaderOpts;
+    rowReaderOpts.includeTypesWithIntents(readIntents);
+    std::unique_ptr<RowReader> rowReader =
+        reader->createRowReader(rowReaderOpts);
+    std::vector<bool> expected(reader->getType().getMaximumColumnId() + 1,
+                               false);
+    for (auto id : expectedSelection) {
+      expected[id] = true;
+    }
+    ASSERT_THAT(rowReader->getSelectedColumns(), ElementsAreArray(expected));
+  }
+
+  TEST(TestReadIntent, testListAll) {
+    // select all of int_array_array.
+    verifySelection({{4, ReadIntent_ALL}}, {0, 4, 5, 6});
+  }
+
+  TEST(TestReadIntent, testListOffsets) {
+    // select only the offsets of int_array_array.
+    verifySelection({{4, ReadIntent_OFFSETS}}, {0, 4});
+
+    // select only the offsets of int_array_array.item.
+    verifySelection({{4, ReadIntent_OFFSETS}, {5, ReadIntent_OFFSETS}},
+                    {0, 4, 5});
+  }
+
+  TEST(TestReadIntent, testListAllAndOffsets) {
+    // select all of int_array and only the offsets of int_array_array.
+    verifySelection({{2, ReadIntent_ALL}, {4, ReadIntent_OFFSETS}},
+                    {0, 2, 3, 4});
+  }
+
+  TEST(TestReadIntent, testListConflictingIntent) {
+    // test conflicting ReadIntent on nested list.
+    verifySelection({{4, ReadIntent_OFFSETS}, {5, ReadIntent_ALL}},
+                    {0, 4, 5, 6});
+    verifySelection({{4, ReadIntent_ALL}, {5, ReadIntent_OFFSETS}},
+                    {0, 4, 5, 6});
   }
 }  // namespace
