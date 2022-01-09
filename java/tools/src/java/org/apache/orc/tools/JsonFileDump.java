@@ -444,7 +444,7 @@ public class JsonFileDump {
       writer.beginObject();
       writer.name("entryId").value(entryIx);
       OrcProto.RowIndexEntry entry = index.getEntry(entryIx);
-      if (entry == null) {
+      if (entry == null || !entry.hasStatistics()) {
         continue;
       }
       OrcProto.ColumnStatistics colStats = entry.getStatistics();
