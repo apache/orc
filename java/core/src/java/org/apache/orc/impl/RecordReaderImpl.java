@@ -483,10 +483,6 @@ public class RecordReaderImpl implements RecordReader {
       this(predicate, null, null, hasNulls, false, false);
     }
 
-    ValueRange(PredicateLeaf predicate, boolean hasNulls, boolean hasValue, boolean comparable) {
-      this(predicate, null, null, hasNulls, false, false, hasValue, comparable);
-    }
-
     boolean hasValues() {
       return hasValue;
     }
@@ -618,7 +614,7 @@ public class RecordReaderImpl implements RecordReader {
       Boolean max = stats.getTrueCount() != 0;
       return new ValueRange<>(predicate, min, max, stats.hasNull());
     } else {
-      return new ValueRange(predicate, index.hasNull(), true, false);
+      return new ValueRange(predicate, null, null, index.hasNull(), false, false, true, false);
     }
   }
 
