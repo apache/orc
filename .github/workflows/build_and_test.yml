@@ -10,11 +10,15 @@ on:
 
 jobs:
   build:
-    name: "Build with Java ${{ matrix.java }}"
-    runs-on: ubuntu-20.04
+    name: "Build with Java ${{ matrix.java }} on ${{ matrix.os }}"
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os:
+          - ubuntu-20.04
+          - macos-10.15
+          - macos-11
         java:
           - 1.8
           - 11
@@ -41,7 +45,11 @@ jobs:
         mkdir -p ~/.m2
         mkdir build
         cd build
-        cmake -DANALYZE_JAVA=ON ..
+        if [ "${{ matrix.os }}" = "ubuntu-20.04" ]; then
+          cmake -DANALYZE_JAVA=ON ..
+        else
+          cmake -DANALYZE_JAVA=ON -DOPENSSL_ROOT_DIR=`brew --prefix openssl` ..
+        fi
         make package test-out
         cd ../java
         mvn apache-rat:check
