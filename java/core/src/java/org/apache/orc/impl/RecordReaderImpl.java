@@ -495,7 +495,7 @@ public class RecordReaderImpl implements RecordReader {
      * Whether min or max is provided for comparison
      * @return is it comparable
      */
-    boolean comparable() {
+    boolean isComparable() {
       return hasValue && comparable;
     }
 
@@ -505,7 +505,7 @@ public class RecordReaderImpl implements RecordReader {
      * this method is similar to isStatsExists
      * @return value range is valid or not
      */
-    boolean valid() {
+    boolean isValid() {
       return hasValue || hasNulls;
     }
 
@@ -749,7 +749,7 @@ public class RecordReaderImpl implements RecordReader {
                                            ValueRange range,
                                            BloomFilter bloomFilter,
                                            boolean useUTCTimestamp) {
-    if (!range.valid()) {
+    if (!range.isValid()) {
       return TruthValue.YES_NO_NULL;
     }
 
@@ -760,7 +760,7 @@ public class RecordReaderImpl implements RecordReader {
       } else {
         return TruthValue.NULL;
       }
-    } else if (!range.comparable()) {
+    } else if (!range.isComparable()) {
       return range.hasNulls ? TruthValue.YES_NO_NULL : TruthValue.YES_NO;
     }
 
