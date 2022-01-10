@@ -747,10 +747,10 @@ public final class FileDump {
         buf.append("unknown\n");
         continue;
       }
-      OrcProto.ColumnStatistics colStats = entry.getStatistics();
-      if (colStats == null) {
+      if (!entry.hasStatistics()) {
         buf.append("no stats at ");
       } else {
+        OrcProto.ColumnStatistics colStats = entry.getStatistics();
         ColumnStatistics cs =
             ColumnStatisticsImpl.deserialize(colSchema, colStats,
                 reader.writerUsedProlepticGregorian(),
