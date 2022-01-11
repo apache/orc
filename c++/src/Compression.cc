@@ -320,6 +320,16 @@ DIAGNOSTIC_PUSH
                          DECOMPRESS_CONTINUE,
                          DECOMPRESS_ORIGINAL,
                          DECOMPRESS_EOF};
+  std::string decompressStateToString(DecompressState state) {
+    switch (state) {
+      case DECOMPRESS_HEADER: return "DECOMPRESS_HEADER";
+      case DECOMPRESS_START: return "DECOMPRESS_START";
+      case DECOMPRESS_CONTINUE: return "DECOMPRESS_CONTINUE";
+      case DECOMPRESS_ORIGINAL: return "DECOMPRESS_ORIGINAL";
+      case DECOMPRESS_EOF: return "DECOMPRESS_EOF";
+    }
+    return "unknown";
+  }
 
   class DecompressionStream : public SeekableInputStream {
   public:
@@ -415,6 +425,7 @@ DIAGNOSTIC_PUSH
       state = DECOMPRESS_EOF;
       inputBuffer = nullptr;
       inputBufferEnd = nullptr;
+      inputBufferStart = nullptr;
     } else {
       inputBufferEnd = inputBuffer + length;
       inputBufferStartPosition
@@ -533,24 +544,37 @@ DIAGNOSTIC_PUSH
   }
 
   /** There are three possible scenarios when seeking a position:
-   * 1. The seeked position is already read and decompressed into
-   *    the output stream.
-   * 2. It is already read from the input stream, but has not been
-   *    decompressed yet, ie. it's not in the output stream.
-   * 3. It is not read yet from the inputstream.
+   * 1. The chunk of the seeked position is already read and decompressed into the output
+   *    stream, ie. chunk header is read and chunk contents are in the output stream.
+   * 2. The chunk of the seeked position is partially read. This only happens for
+   *    uncompressed chunks. The chunk header is read but the seeked position hasn't been
+   *    read yet.
+   * 3. It is already read from the input stream, but has not been decompressed yet, ie.
+   *    it's not in the output stream.
+   * 4. It is not read yet from the input stream.
    */
   void DecompressionStream::seek(PositionProvider& position) {
     size_t seekedPosition = position.current();
-    // Case 1: the seeked position is the one that is currently buffered and
-    // decompressed. Here we only need to set the output buffer's pointer to the
-    // seeked position. Note that after the headerPosition comes the 3 bytes of
-    // the header.
+    // Case 1&2: the seeked position is in the current chunk and it's buffered and
+    // decompressed. Note that after the headerPosition comes the 3 bytes of the header.
     if (headerPosition == seekedPosition
         && inputBufferStartPosition <= headerPosition + 3 && inputBufferStart) {
       position.next(); // Skip the input level position.
       size_t posInChunk = position.next(); // Chunk level position.
-      outputBufferLength = uncompressedBufferLength - posInChunk;
-      outputBuffer = outputBufferStart + posInChunk;
+      // Case 1: The position is in the decompressed buffer. Here we only need to
+      // set the output buffer's pointer to the seeked position.
+      if (uncompressedBufferLength >= posInChunk) {
+        outputBufferLength = uncompressedBufferLength - posInChunk;
+        outputBuffer = outputBufferStart + posInChunk;
+        return;
+      }
+      // Case 2: The position is outside the decompressed buffer. Skip bytes to seek.
+      if (!Skip(static_cast<int>(posInChunk - uncompressedBufferLength))) {
+        std::ostringstream ss;
+        ss << "Bad seek to (chunkHeader=" << seekedPosition << ", posInChunk=" << posInChunk
+           << ") in " << getName();
+        throw ParseError(ss.str());
+      }
       return;
     }
     // Clear state to prepare reading from a new chunk header.
@@ -560,14 +584,14 @@ DIAGNOSTIC_PUSH
     remainingLength = 0;
     if (seekedPosition < static_cast<uint64_t>(input->ByteCount()) &&
         seekedPosition >= inputBufferStartPosition) {
-      // Case 2: The input is buffered, but not yet decompressed. No need to
+      // Case 3: The input is buffered, but not yet decompressed. No need to
       // force re-reading the inputBuffer, we just have to move it to the
       // seeked position.
       position.next(); // Skip the input level position.
       inputBuffer
         = inputBufferStart + (seekedPosition - inputBufferStartPosition);
     } else {
-      // Case 3: The seeked position is not in the input buffer, here we are
+      // Case 4: The seeked position is not in the input buffer, here we are
       // forcing to read it.
       inputBuffer = nullptr;
       inputBufferEnd = nullptr;
