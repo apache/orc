@@ -89,13 +89,15 @@ namespace orc {
     void updateSelectedByFieldId(std::vector<bool>& selectedColumns, uint64_t fieldId);
     // Select a type by id
     void updateSelectedByTypeId(std::vector<bool>& selectedColumns, uint64_t typeId);
-    // Select a type by id and read intent.
+    // Select a type by id and read intent map.
     void updateSelectedByTypeId(std::vector<bool>& selectedColumns, uint64_t typeId,
                                 const RowReaderOptions::IdReadIntentMap& idReadIntentMap);
 
     // Select all of the recursive children of the given type.
     void selectChildren(std::vector<bool>& selectedColumns, const Type& type);
-    // Select all of the recursive children of the given type and read intent.
+    // Select a type id of the given type.
+    // This function may also select all of the recursive children of the given type
+    // depending on the read intent of that type in idReadIntentMap.
     void selectChildren(std::vector<bool>& selectedColumns, const Type& type,
                         const RowReaderOptions::IdReadIntentMap& idReadIntentMap);
 
