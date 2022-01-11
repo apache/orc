@@ -40,6 +40,7 @@ import org.apache.orc.ColumnStatistics;
 import org.apache.orc.CompressionCodec;
 import org.apache.orc.CompressionKind;
 import org.apache.orc.DataReader;
+import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcProto;
 import org.apache.orc.Reader;
@@ -1539,7 +1540,9 @@ public class TestRecordReaderImpl {
         new InStream.StreamOptions()
             .withCodec(OrcCodecPool.getCodec(CompressionKind.ZLIB))
             .withBufferSize(1024);
-    final int SLOP = 5 * (OutStream.HEADER_SIZE + options.getBufferSize());
+    final int stretchFactor = 2 +
+        (RecordReaderUtils.MAX_VALUES_LENGTH * RecordReaderUtils.MAX_BIT_WIDTH / 8 - 1) / options.getBufferSize();
+    final int SLOP = stretchFactor * (OutStream.HEADER_SIZE + options.getBufferSize());
     MockDataReader dataReader = new MockDataReader(schema, options)
       .addStream(1, OrcProto.Stream.Kind.ROW_INDEX,
           createRowIndex(options,
@@ -2519,19 +2522,51 @@ public class TestRecordReaderImpl {
 
   @Test
   public void testRgEndOffset() throws IOException {
-    Configuration conf = new Configuration();
-    Path filePath = new Path(getClass().getClassLoader().
-        getSystemResource("orc-small-compression-size.orc").getPath());
-    Reader reader = OrcFile.createReader(filePath, OrcFile.readerOptions(conf));
+    for (int compressionSize = 64; compressionSize < 4096; compressionSize *= 2) {
+      testSmallCompressionSizeOrc(compressionSize);
+    }
+  }
 
+  private void testSmallCompressionSizeOrc(int compressionSize) throws IOException {
+    Configuration conf = new Configuration();
+    Path path = new Path(workDir, "smallCompressionSize.orc");
+    FileSystem.get(conf).delete(path, true);
+
+    TypeDescription schema = TypeDescription.fromString("struct<x:int>");
+    conf.setLong(OrcConf.BUFFER_SIZE.getAttribute(), compressionSize);
+    OrcFile.WriterOptions options = OrcFile.writerOptions(conf).setSchema(schema);
+    Writer writer = OrcFile.createWriter(path, options);
+    VectorizedRowBatch writeBatch = schema.createRowBatch();
+    LongColumnVector writeX = (LongColumnVector) writeBatch.cols[0];
+    for (int row = 0; row < 30_000; ++row) {
+      int idx = writeBatch.size++;
+      writeX.vector[idx] = row >= 10_000 && row < 20_000 ? row + 100_000 : row;
+      if (writeBatch.size == writeBatch.getMaxSize()) {
+        writer.addRowBatch(writeBatch);
+        writeBatch.reset();
+      }
+    }
+    if (writeBatch.size != 0) {
+      writer.addRowBatch(writeBatch);
+    }
+    writer.close();
+
+    Reader reader = OrcFile.createReader(path, OrcFile.readerOptions(conf));
+    // only the second row group will be selected
     SearchArgument sarg = SearchArgumentFactory.newBuilder()
         .startNot()
-        .lessThan("x", PredicateLeaf.Type.LONG, 120000L)
+        .lessThan("x", PredicateLeaf.Type.LONG, 100000L)
         .end().build();
     VectorizedRowBatch batch = reader.getSchema().createRowBatch();
+    LongColumnVector readX = (LongColumnVector) batch.cols[0];
     try (RecordReader rows = reader.rows(reader.options().searchArgument(sarg, null))) {
+      int row = 10_000;
       while (rows.nextBatch(batch)) {
-        // do nothing but check all the data can be read
+        for (int i = 0; i < batch.size; i++) {
+          final int current_row = row++;
+          final int expectedVal = current_row >= 10_000 && current_row < 20_000 ? current_row + 100_000 : current_row;
+          assertEquals(expectedVal, readX.vector[i]);
+        }
       }
     }
   }

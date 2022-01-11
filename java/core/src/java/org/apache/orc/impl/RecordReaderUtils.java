@@ -180,13 +180,14 @@ public class RecordReaderUtils {
                                          boolean isLast,
                                          long nextGroupOffset,
                                          long streamLength) {
+    if (isCompressed && bufferSize <= 0) {
+      throw new IllegalArgumentException("BufferSize must be > 0 but was " + bufferSize);
+    }
     // figure out the worst case last location
     // if adjacent groups have the same compressed block offset then stretch the slop
     // by a factor to safely accommodate the next compression block.
-    // 512 is the MAX_SCOPE defined in RunLengthIntegerWriterV2.
-    // 8 is the maximum size of bytes for each value (see RunLengthIntegerWriterV2.zzBits100p).
     // We need to calculate the maximum number of blocks by bufferSize accordingly.
-    int stretchFactor = bufferSize > 0 ? 2 + (512 * 8 - 1) / bufferSize : 2;
+    final int stretchFactor = isCompressed ? 2 + (MAX_VALUES_LENGTH * MAX_BIT_WIDTH / 8 - 1) / bufferSize : -1;
     long slop = isCompressed
                     ? stretchFactor * (OutStream.HEADER_SIZE + bufferSize)
                     : WORST_UNCOMPRESSED_SLOP;
@@ -265,6 +266,11 @@ public class RecordReaderUtils {
   // for uncompressed streams, what is the most overlap with the following set
   // of rows (long vint literal group).
   static final int WORST_UNCOMPRESSED_SLOP = 2 + 8 * 512;
+  // the maximum number of values that need to be consumed from the run
+  static final int MAX_VALUES_LENGTH = RunLengthIntegerWriterV2.MAX_SCOPE;
+  // the maximum bit width for each value
+  static final int MAX_BIT_WIDTH =
+      SerializationUtils.decodeBitWidth(SerializationUtils.FixedBitSizes.SIXTYFOUR.ordinal());
 
   /**
    * Is this stream part of a dictionary?
