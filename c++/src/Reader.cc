@@ -41,7 +41,9 @@ namespace orc {
     "1.6.0", "1.6.1", "1.6.2", "1.6.3", "1.6.4", "1.6.5", "1.6.6", "1.6.7", "1.6.8",
     "1.6.9", "1.6.10", "1.6.11", "1.7.0"};
 
-  static const RowReaderOptions::IdReadIntentMap EMPTY_ID_READ_INTENT_MAP;
+  const RowReaderOptions::IdReadIntentMap emptyIdReadIntentMap() {
+    return {};
+  }
 
   const WriterVersionImpl &WriterVersionImpl::VERSION_HIVE_8732() {
     static const WriterVersionImpl version(WriterVersion_HIVE_8732);
@@ -82,8 +84,13 @@ namespace orc {
     return static_cast<WriterVersion>(contents->postscript->writerversion());
   }
 
+  void ColumnSelector::selectChildren(std::vector<bool>& selectedColumns, const Type& type) {
+    return selectChildren(selectedColumns, type, emptyIdReadIntentMap());
+  }
+
   void ColumnSelector::selectChildren(
-      std::vector<bool> &selectedColumns, const Type &type,
+      std::vector<bool> &selectedColumns,
+      const Type &type,
       const RowReaderOptions::IdReadIntentMap& idReadIntentMap) {
     size_t id = static_cast<size_t>(type.getColumnId());
     TypeKind kind = type.getKind();
@@ -175,8 +182,7 @@ namespace orc {
   void ColumnSelector::updateSelectedByFieldId(std::vector<bool>& selectedColumns,
                                                uint64_t fieldId) {
     if (fieldId < contents->schema->getSubtypeCount()) {
-      selectChildren(selectedColumns, *contents->schema->getSubtype(fieldId),
-                     EMPTY_ID_READ_INTENT_MAP);
+      selectChildren(selectedColumns, *contents->schema->getSubtype(fieldId));
     } else {
       std::stringstream buffer;
       buffer << "Invalid column selected " << fieldId << " out of "
@@ -185,8 +191,13 @@ namespace orc {
     }
   }
 
+  void ColumnSelector::updateSelectedByTypeId(std::vector<bool>& selectedColumns, uint64_t typeId) {
+    updateSelectedByTypeId(selectedColumns, typeId, emptyIdReadIntentMap());
+  }
+
   void ColumnSelector::updateSelectedByTypeId(
-      std::vector<bool> &selectedColumns, uint64_t typeId,
+      std::vector<bool> &selectedColumns,
+      uint64_t typeId,
       const RowReaderOptions::IdReadIntentMap& idReadIntentMap) {
     if (typeId < selectedColumns.size()) {
       const Type& type = *idTypeMap[typeId];
@@ -203,8 +214,7 @@ namespace orc {
                                             const std::string& fieldName) {
     std::map<std::string, uint64_t>::const_iterator ite = nameIdMap.find(fieldName);
     if (ite != nameIdMap.end()) {
-      updateSelectedByTypeId(selectedColumns, ite->second,
-                             EMPTY_ID_READ_INTENT_MAP);
+      updateSelectedByTypeId(selectedColumns, ite->second);
     } else {
       throw ParseError("Invalid column selected " + fieldName);
     }
@@ -908,8 +918,7 @@ namespace orc {
     if (include.begin() != include.end()) {
       for(std::list<uint64_t>::const_iterator field = include.begin();
           field != include.end(); ++field) {
-        column_selector.updateSelectedByTypeId(selectedColumns, *field,
-                                               EMPTY_ID_READ_INTENT_MAP);
+        column_selector.updateSelectedByTypeId(selectedColumns, *field);
       }
     } else {
       // default is to select all columns
