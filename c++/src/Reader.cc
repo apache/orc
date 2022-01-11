@@ -41,6 +41,8 @@ namespace orc {
     "1.6.0", "1.6.1", "1.6.2", "1.6.3", "1.6.4", "1.6.5", "1.6.6", "1.6.7", "1.6.8",
     "1.6.9", "1.6.10", "1.6.11", "1.7.0"};
 
+  static const RowReaderOptions::IdReadIntentMap EMPTY_ID_READ_INTENT_MAP;
+
   const WriterVersionImpl &WriterVersionImpl::VERSION_HIVE_8732() {
     static const WriterVersionImpl version(WriterVersion_HIVE_8732);
     return version;
@@ -82,17 +84,20 @@ namespace orc {
 
   void ColumnSelector::selectChildren(
       std::vector<bool> &selectedColumns, const Type &type,
-      const RowReaderOptions::TypeReadIntents *readIntents) {
+      const RowReaderOptions::IdReadIntentMap& idReadIntentMap) {
     size_t id = static_cast<size_t>(type.getColumnId());
     TypeKind kind = type.getKind();
     if (!selectedColumns[id]) {
       selectedColumns[id] = true;
       bool selectChild = true;
-      if (readIntents != nullptr && kind == TypeKind::LIST) {
-        auto elem = readIntents->find(id);
-        selectChild =
-            (elem != readIntents->end()) && (elem->second == ReadIntent_ALL);
+      if (kind == TypeKind::LIST) {
+        auto elem = idReadIntentMap.find(id);
+        if (elem != idReadIntentMap.end() &&
+            elem->second == ReadIntent_OFFSETS) {
+          selectChild = false;
+        }
       }
+
       if (selectChild) {
         for (size_t c = id; c <= type.getMaximumColumnId(); ++c) {
           selectedColumns[c] = true;
@@ -153,11 +158,11 @@ namespace orc {
         updateSelectedByName(selectedColumns, *field);
       }
     } else if (options.getTypeIdsSet()) {
-      const RowReaderOptions::TypeReadIntents readIntents =
-          options.getTypeReadIntents();
+      const RowReaderOptions::IdReadIntentMap idReadIntentMap =
+          options.getIdReadIntentMap();
       for(std::list<uint64_t>::const_iterator typeId = options.getInclude().begin();
           typeId != options.getInclude().end(); ++typeId) {
-        updateSelectedByTypeId(selectedColumns, *typeId, &readIntents);
+        updateSelectedByTypeId(selectedColumns, *typeId, idReadIntentMap);
       }
     } else {
       // default is to select all columns
@@ -170,7 +175,8 @@ namespace orc {
   void ColumnSelector::updateSelectedByFieldId(std::vector<bool>& selectedColumns,
                                                uint64_t fieldId) {
     if (fieldId < contents->schema->getSubtypeCount()) {
-      selectChildren(selectedColumns, *contents->schema->getSubtype(fieldId));
+      selectChildren(selectedColumns, *contents->schema->getSubtype(fieldId),
+                     EMPTY_ID_READ_INTENT_MAP);
     } else {
       std::stringstream buffer;
       buffer << "Invalid column selected " << fieldId << " out of "
@@ -181,10 +187,10 @@ namespace orc {
 
   void ColumnSelector::updateSelectedByTypeId(
       std::vector<bool> &selectedColumns, uint64_t typeId,
-      const RowReaderOptions::TypeReadIntents *readIntents) {
+      const RowReaderOptions::IdReadIntentMap& idReadIntentMap) {
     if (typeId < selectedColumns.size()) {
       const Type& type = *idTypeMap[typeId];
-      selectChildren(selectedColumns, type, readIntents);
+      selectChildren(selectedColumns, type, idReadIntentMap);
     } else {
       std::stringstream buffer;
       buffer << "Invalid type id selected " << typeId << " out of "
@@ -197,7 +203,8 @@ namespace orc {
                                             const std::string& fieldName) {
     std::map<std::string, uint64_t>::const_iterator ite = nameIdMap.find(fieldName);
     if (ite != nameIdMap.end()) {
-      updateSelectedByTypeId(selectedColumns, ite->second);
+      updateSelectedByTypeId(selectedColumns, ite->second,
+                             EMPTY_ID_READ_INTENT_MAP);
     } else {
       throw ParseError("Invalid column selected " + fieldName);
     }
@@ -901,7 +908,8 @@ namespace orc {
     if (include.begin() != include.end()) {
       for(std::list<uint64_t>::const_iterator field = include.begin();
           field != include.end(); ++field) {
-        column_selector.updateSelectedByTypeId(selectedColumns, *field);
+        column_selector.updateSelectedByTypeId(selectedColumns, *field,
+                                               EMPTY_ID_READ_INTENT_MAP);
       }
     } else {
       // default is to select all columns

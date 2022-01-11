@@ -167,11 +167,11 @@ using ::testing::ElementsAreArray;
    *     >
    *   >
    *
-   * @param readIntents TypeReadIntents describing the section.
+   * @param idReadIntentMap IdReadIntentMap describing the selections.
    * @param expectedSelection expected TypeIds that will be selected from given
-   * readIntents.
+   * idReadIntentMap.
    */
-  void verifySelection(const RowReaderOptions::TypeReadIntents &readIntents,
+  void verifySelection(const RowReaderOptions::IdReadIntentMap &idReadIntentMap,
                        const std::vector<uint32_t> &expectedSelection) {
     std::string fileName = "complextypes_iceberg.orc";
     std::stringstream ss;
@@ -186,7 +186,7 @@ using ::testing::ElementsAreArray;
         createReader(readLocalFile(ss.str().c_str()), readerOpts);
 
     RowReaderOptions rowReaderOpts;
-    rowReaderOpts.includeTypesWithIntents(readIntents);
+    rowReaderOpts.includeTypesWithIntents(idReadIntentMap);
     std::unique_ptr<RowReader> rowReader =
         reader->createRowReader(rowReaderOpts);
     std::vector<bool> expected(reader->getType().getMaximumColumnId() + 1,

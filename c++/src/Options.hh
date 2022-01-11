@@ -130,7 +130,7 @@ namespace orc {
     bool enableLazyDecoding;
     std::shared_ptr<SearchArgument> sargs;
     std::string readerTimezone;
-    RowReaderOptions::TypeReadIntents readIntents;
+    RowReaderOptions::IdReadIntentMap idReadIntentMap;
 
     RowReaderOptionsPrivate() {
       selection = ColumnSelection_NONE;
@@ -175,7 +175,7 @@ namespace orc {
     privateBits->selection = ColumnSelection_FIELD_IDS;
     privateBits->includedColumnIndexes.assign(include.begin(), include.end());
     privateBits->includedColumnNames.clear();
-    privateBits->readIntents.clear();
+    privateBits->idReadIntentMap.clear();
     return *this;
   }
 
@@ -183,7 +183,7 @@ namespace orc {
     privateBits->selection = ColumnSelection_NAMES;
     privateBits->includedColumnNames.assign(include.begin(), include.end());
     privateBits->includedColumnIndexes.clear();
-    privateBits->readIntents.clear();
+    privateBits->idReadIntentMap.clear();
     return *this;
   }
 
@@ -191,17 +191,17 @@ namespace orc {
     privateBits->selection = ColumnSelection_TYPE_IDS;
     privateBits->includedColumnIndexes.assign(types.begin(), types.end());
     privateBits->includedColumnNames.clear();
-    privateBits->readIntents.clear();
+    privateBits->idReadIntentMap.clear();
     return *this;
   }
 
   RowReaderOptions&
-  RowReaderOptions::includeTypesWithIntents(const TypeReadIntents& typesAndIntents) {
+  RowReaderOptions::includeTypesWithIntents(const IdReadIntentMap& idReadIntentMap) {
     privateBits->selection = ColumnSelection_TYPE_IDS;
     privateBits->includedColumnIndexes.clear();
-    privateBits->readIntents.clear();
-    for (const auto& typeIntentPair : typesAndIntents ) {
-      privateBits->readIntents[typeIntentPair.first] = typeIntentPair.second;
+    privateBits->idReadIntentMap.clear();
+    for (const auto& typeIntentPair : idReadIntentMap) {
+      privateBits->idReadIntentMap[typeIntentPair.first] = typeIntentPair.second;
       privateBits->includedColumnIndexes.push_back(typeIntentPair.first);
     }
     privateBits->includedColumnNames.clear();
@@ -288,8 +288,9 @@ namespace orc {
     return privateBits->readerTimezone;
   }
 
-  const RowReaderOptions::TypeReadIntents RowReaderOptions::getTypeReadIntents() const {
-    return privateBits->readIntents;
+  const RowReaderOptions::IdReadIntentMap
+  RowReaderOptions::getIdReadIntentMap() const {
+    return privateBits->idReadIntentMap;
   }
 }
 

@@ -125,8 +125,6 @@ namespace orc {
   /**
    * Specific read intention when selecting a certain TypeId.
    * This enum currently only being utilized by LIST type selection.
-   *
-   * TODO: extend this to support MAP and UNION type.
    */
   enum ReadIntent {
     ReadIntent_ALL = 0,

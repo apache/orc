@@ -152,21 +152,20 @@ namespace orc {
     /**
      * A map type of <typeId, ReadIntent>.
      */
-    typedef std::map<uint64_t, ReadIntent> TypeReadIntents;
+    typedef std::map<uint64_t, ReadIntent> IdReadIntentMap;
 
     /**
      * Selects which type ids to read and specific ReadIntents for each
-     * type id. The root type is always 0 and the rest of the types are
-     * labeled in a preorder traversal of the tree. The parent types are
-     * automatically selected, but the children are not.
+     * type id. The ancestor types are automatically selected, but the children
+     * are not.
      *
      * This option clears any previous setting of the selected columns or
      * types.
-     * @param typesWithIntents a map of TypeReadIntents.
+     * @param idReadIntentMap a map of IdReadIntentMap.
      * @return this
      */
     RowReaderOptions&
-    includeTypesWithIntents(const TypeReadIntents& typesWithIntents);
+    includeTypesWithIntents(const IdReadIntentMap& idReadIntentMap);
 
     /**
      * Set the section of the file to process.
@@ -287,10 +286,9 @@ namespace orc {
     const std::string& getTimezoneName() const;
 
     /**
-     * Get the TypeReadIntents map that was supplied by client through
-     * includeTypesWithIntents.
+     * Get the IdReadIntentMap map that was supplied by client.
      */
-    const TypeReadIntents getTypeReadIntents() const;
+    const IdReadIntentMap getIdReadIntentMap() const;
   };
 
 
