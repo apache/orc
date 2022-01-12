@@ -669,7 +669,7 @@ namespace orc {
       buf[2] = static_cast<char>(compressedSize >> 15);
     }
 
-    void writeUnCompressedHeader(size_t compressedSize) {
+    void writeUncompressedHeader(size_t compressedSize) {
       writeHeader(compressedSize);
       buf[0] |= 1;
     }
@@ -801,7 +801,7 @@ namespace orc {
     SCOPED_TRACE("testUncompressedSeek");
     const int N = 197;
     CompressBuffer compressBuffer(N);
-    compressBuffer.writeUnCompressedHeader(N);
+    compressBuffer.writeUncompressedHeader(N);
     for (int i = 0; i < N; ++i) {
       compressBuffer.getCompressed()[i] = static_cast<char>(i);
     }

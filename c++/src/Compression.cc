@@ -320,6 +320,7 @@ DIAGNOSTIC_PUSH
                          DECOMPRESS_CONTINUE,
                          DECOMPRESS_ORIGINAL,
                          DECOMPRESS_EOF};
+
   std::string decompressStateToString(DecompressState state) {
     switch (state) {
       case DECOMPRESS_HEADER: return "DECOMPRESS_HEADER";
