@@ -187,7 +187,9 @@ public class RecordReaderUtils {
     // if adjacent groups have the same compressed block offset then stretch the slop
     // by a factor to safely accommodate the next compression block.
     // We need to calculate the maximum number of blocks by bufferSize accordingly.
-    final int stretchFactor = isCompressed ? 2 + (MAX_VALUES_LENGTH * MAX_BIT_WIDTH / 8 - 1) / bufferSize : -1;
+    final int stretchFactor = isCompressed
+        ? 2 + (MAX_VALUES_LENGTH * MAX_BIT_WIDTH / 8 - 1) / bufferSize
+        : -1;
     long slop = isCompressed
                     ? stretchFactor * (OutStream.HEADER_SIZE + bufferSize)
                     : WORST_UNCOMPRESSED_SLOP;
