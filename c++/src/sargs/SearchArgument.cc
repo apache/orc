@@ -16,6 +16,10 @@
  * limitations under the License.
  */
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreserved-identifier"
+#pragma clang diagnostic ignored "-Wsuggest-destructor-override"
+
 #include "sargs/SearchArgument.hh"
 
 #include <algorithm>
@@ -627,3 +631,5 @@ namespace orc {
   }
 
 } // namespace orc
+
+#pragma clang diagnostic pop

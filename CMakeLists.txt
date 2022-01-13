@@ -55,7 +55,7 @@ option(INSTALL_VENDORED_LIBS
 option(STOP_BUILD_ON_WARNING
     "Fail the build on C++ warnings"
     ON)
-  
+
 option(BUILD_POSITION_INDEPENDENT_LIB
     "Compile static libraries with position independent code"
     OFF)
@@ -96,6 +96,8 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set (WARN_FLAGS "${WARN_FLAGS} -Wno-covered-switch-default")
   set (WARN_FLAGS "${WARN_FLAGS} -Wno-missing-noreturn -Wno-unknown-pragmas")
   set (WARN_FLAGS "${WARN_FLAGS} -Wno-gnu-zero-variadic-macro-arguments")
+  set (WARN_FLAGS "${WARN_FLAGS} -Wno-reserved-identifier")
+  set (WARN_FLAGS "${WARN_FLAGS} -Wno-suggest-destructor-override")
   set (WARN_FLAGS "${WARN_FLAGS} -Wconversion")
   if (CMAKE_HOST_APPLE AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "12.0")
     set (WARN_FLAGS "${WARN_FLAGS} -Wno-c++2a-compat -Wno-unknown-warning-option -Wno-suggest-override -Wno-suggest-destructor-override")

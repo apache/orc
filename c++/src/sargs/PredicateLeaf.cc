@@ -15,6 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreserved-identifier"
+#pragma clang diagnostic ignored "-Wsuggest-destructor-override"
 
 #include "orc/BloomFilter.hh"
 #include "orc/Common.hh"
@@ -802,3 +805,4 @@ namespace orc {
   }
 
 } // namespace orc
+#pragma clang diagnostic pop

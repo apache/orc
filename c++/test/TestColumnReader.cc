@@ -32,6 +32,7 @@
 #ifdef __clang__
   DIAGNOSTIC_IGNORE("-Winconsistent-missing-override")
   DIAGNOSTIC_IGNORE("-Wmissing-variable-declarations")
+  DIAGNOSTIC_IGNORE("-Wsuggest-override")
 #endif
 #ifdef __GNUC__
   DIAGNOSTIC_IGNORE("-Wparentheses")
