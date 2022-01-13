@@ -16,9 +16,11 @@
  * limitations under the License.
  */
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wreserved-identifier"
-#pragma clang diagnostic ignored "-Wsuggest-destructor-override"
+#ifdef __clang__
+  #pragma clang diagnostic push
+  #pragma clang diagnostic ignored "-Wreserved-identifier"
+  #pragma clang diagnostic ignored "-Wsuggest-destructor-override"
+#endif
 
 #include "SargsApplier.hh"
 #include <numeric>
@@ -128,4 +130,6 @@ namespace orc {
 
 }
 
-#pragma clang diagnostic pop
+#ifdef __clang__
+  #pragma clang diagnostic pop
+#endif
