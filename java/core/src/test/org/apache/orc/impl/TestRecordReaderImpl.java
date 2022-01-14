@@ -78,6 +78,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.TimeZone;
 
+import static org.apache.orc.OrcFile.CURRENT_WRITER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -2448,5 +2449,71 @@ public class TestRecordReaderImpl {
     Field f2 = RecordReaderImpl.SargApplier.class.getDeclaredField("convertToProlepticGregorian");
     f2.setAccessible(true);
     assertFalse((boolean)f2.get(applier1));
+  }
+
+  @Test
+  public void testWithoutStatistics() {
+    OrcProto.ColumnEncoding encoding = OrcProto.ColumnEncoding.newBuilder()
+        .setKind(OrcProto.ColumnEncoding.Kind.DIRECT_V2)
+        .build();
+
+    PredicateLeaf pred = createPredicateLeaf(
+        PredicateLeaf.Operator.EQUALS, PredicateLeaf.Type.LONG, "x", 2L, null);
+
+    TruthValue truthValue = RecordReaderImpl.evaluatePredicateProto(
+        RecordReaderImpl.EMPTY_COLUMN_STATISTICS,
+        pred, null, encoding, null,
+        CURRENT_WRITER, TypeDescription.createInt());
+
+    assertEquals(TruthValue.YES_NO_NULL, truthValue);
+  }
+
+  @Test
+  public void testMissMinOrMaxInStatistics() {
+    OrcProto.ColumnEncoding encoding = OrcProto.ColumnEncoding.newBuilder()
+        .setKind(OrcProto.ColumnEncoding.Kind.DIRECT_V2)
+        .build();
+
+    PredicateLeaf pred = createPredicateLeaf(
+        PredicateLeaf.Operator.EQUALS, PredicateLeaf.Type.LONG, "x", 2L, null);
+
+    OrcProto.ColumnStatistics hasValuesAndHasNullStatistics =
+        OrcProto.ColumnStatistics.newBuilder().setNumberOfValues(10)
+            .setHasNull(true)
+            .setBytesOnDisk(40)
+            .build();
+
+    OrcProto.ColumnStatistics hasValuesAndNoHasNullStatistics =
+        OrcProto.ColumnStatistics.newBuilder().setNumberOfValues(5)
+            .setHasNull(false)
+            .setBytesOnDisk(20)
+            .build();
+
+    OrcProto.ColumnStatistics noHasValuesAndHasNullStatistics =
+        OrcProto.ColumnStatistics.newBuilder().setNumberOfValues(0)
+            .setHasNull(true)
+            .setBytesOnDisk(0)
+            .build();
+
+    TruthValue whenHasValuesAndHasNullTruthValue = RecordReaderImpl.evaluatePredicateProto(
+        hasValuesAndHasNullStatistics,
+        pred, null, encoding, null,
+        CURRENT_WRITER, TypeDescription.createInt());
+
+    assertEquals(TruthValue.YES_NO_NULL, whenHasValuesAndHasNullTruthValue);
+
+    TruthValue whenHasValuesAndNoHasNullTruthValue = RecordReaderImpl.evaluatePredicateProto(
+        hasValuesAndNoHasNullStatistics,
+        pred, null, encoding, null,
+        CURRENT_WRITER, TypeDescription.createInt());
+
+    assertEquals(TruthValue.YES_NO, whenHasValuesAndNoHasNullTruthValue);
+
+    TruthValue whenNoHasValuesAndHasNullStatistics = RecordReaderImpl.evaluatePredicateProto(
+        noHasValuesAndHasNullStatistics,
+        pred, null, encoding, null,
+        CURRENT_WRITER, TypeDescription.createInt());
+
+    assertEquals(TruthValue.NULL, whenNoHasValuesAndHasNullStatistics);
   }
 }
