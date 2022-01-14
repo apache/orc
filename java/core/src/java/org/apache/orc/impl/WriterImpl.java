@@ -696,7 +696,18 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
         while (posn < batch.size) {
           int chunkSize = Math.min(batch.size - posn,
               rowIndexStride - rowsInIndex);
-          treeWriter.writeRootBatch(batch, posn, chunkSize);
+          if (batch.isSelectedInUse()) {
+            // find the longest chunk that is continuously selected from posn
+            for (int len = 1; len < chunkSize; ++len) {
+              if (batch.selected[posn + len] - batch.selected[posn] != len) {
+                chunkSize = len;
+                break;
+              }
+            }
+            treeWriter.writeRootBatch(batch, batch.selected[posn], chunkSize);
+          } else {
+            treeWriter.writeRootBatch(batch, posn, chunkSize);
+          }
           posn += chunkSize;
           rowsInIndex += chunkSize;
           rowsInStripe += chunkSize;
@@ -705,8 +716,24 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
           }
         }
       } else {
+        if (batch.isSelectedInUse()) {
+          int posn = 0;
+          while (posn < batch.size) {
+            int chunkSize = 1;
+            while (posn + chunkSize < batch.size) {
+              // find the longest chunk that is continuously selected from posn
+              if (batch.selected[posn + chunkSize] - batch.selected[posn] != chunkSize) {
+                break;
+              }
+              ++chunkSize;
+            }
+            treeWriter.writeRootBatch(batch, batch.selected[posn], chunkSize);
+            posn += chunkSize;
+          }
+        } else {
+          treeWriter.writeRootBatch(batch, 0, batch.size);
+        }
         rowsInStripe += batch.size;
-        treeWriter.writeRootBatch(batch, 0, batch.size);
       }
       rowsSinceCheck += batch.size;
       previousAllocation = memoryManager.checkMemory(previousAllocation, this);
