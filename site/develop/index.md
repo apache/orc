@@ -91,6 +91,39 @@ From our website, you can use:
 ORC uses Commit-Then-Review, so patches can be committed without a
 committer's review. However, most changes should be reviewed first.
 
+## Tests
+
+In principle, new pull requests had better provide test coverage for newly proposed code path.
+In addition, newly added test cases are supposed to fail without the proposed main code.
+In other words, reviewers need to check these two things during the review manually.
+The following is useful during Java code review and tests.
+
+### Running Individual Java Test File
+
+~~~~
+% cd java
+% ./mvnw test -pl core -Dtest=TestRecordReaderImpl
+~~~~
+
+### Running Multiple Java Test Files
+
+~~~~
+% cd java
+% ./mvnw test -pl core -Dtest='Test*Reader*'
+~~~~
+
+### Running Individual Java Test Case
+~~~~
+% cd java
+$ ./mvnw test -pl core -Dtest=TestRecordReaderImpl#testFindColumn
+~~~~
+
+### Running Multiple Java Test Cases
+~~~~
+% cd java
+% ./mvnw test -pl core -Dtest='TestRecordReaderImpl#testFind*'
+~~~~
+
 ## Approving a pull request
 
 Fetch the current state of the project:
