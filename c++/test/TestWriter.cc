@@ -31,7 +31,6 @@
 
 #ifdef __clang__
   DIAGNOSTIC_IGNORE("-Wmissing-variable-declarations")
-  DIAGNOSTIC_IGNORE("-Wsuggest-override")
 #endif
 
 namespace orc {
