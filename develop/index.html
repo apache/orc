@@ -179,6 +179,35 @@ changed.</p>
 <p>ORC uses Commit-Then-Review, so patches can be committed without a
 committer’s review. However, most changes should be reviewed first.</p>
 
+<h2 id="tests">Tests</h2>
+
+<p>In principle, new pull requests had better provide test coverage for newly proposed code path.
+In addition, newly added test cases are supposed to fail without the proposed main code.
+In other words, reviewers need to check these two things during the review manually.
+The following is useful during Java code review and tests.</p>
+
+<h3 id="running-individual-java-test-file">Running Individual Java Test File</h3>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% cd java
+% ./mvnw test -pl core -Dtest=TestRecordReaderImpl
+</code></pre></div></div>
+
+<h3 id="running-multiple-java-test-files">Running Multiple Java Test Files</h3>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% cd java
+% ./mvnw test -pl core -Dtest='Test*Reader*'
+</code></pre></div></div>
+
+<h3 id="running-individual-java-test-case">Running Individual Java Test Case</h3>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% cd java
+$ ./mvnw test -pl core -Dtest=TestRecordReaderImpl#testFindColumn
+</code></pre></div></div>
+
+<h3 id="running-multiple-java-test-cases">Running Multiple Java Test Cases</h3>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% cd java
+% ./mvnw test -pl core -Dtest='TestRecordReaderImpl#testFind*'
+</code></pre></div></div>
+
 <h2 id="approving-a-pull-request">Approving a pull request</h2>
 
 <p>Fetch the current state of the project:</p>
@@ -288,7 +317,7 @@ votes within our project.</p>
 
 
   <footer role="contentinfo">
-  <p>The contents of this website are &copy;&nbsp;2021
+  <p>The contents of this website are &copy;&nbsp;2022
      <a href="https://www.apache.org/">Apache Software Foundation</a>
      under the terms of the <a
       href="https://www.apache.org/licenses/LICENSE-2.0.html">
