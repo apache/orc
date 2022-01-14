@@ -16,12 +16,6 @@
  * limitations under the License.
  */
 
-#ifdef __clang__
-  #pragma clang diagnostic push
-  #pragma clang diagnostic ignored "-Wreserved-identifier"
-  #pragma clang diagnostic ignored "-Wsuggest-destructor-override"
-#endif
-
 #include "orc/BloomFilter.hh"
 #include "orc/Common.hh"
 #include "orc/Type.hh"
@@ -808,6 +802,3 @@ namespace orc {
   }
 
 } // namespace orc
-#ifdef __clang__
-  #pragma clang diagnostic pop
-#endif

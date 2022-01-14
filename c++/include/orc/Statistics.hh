@@ -56,7 +56,7 @@ namespace orc {
    */
   class BinaryColumnStatistics: public ColumnStatistics {
   public:
-    virtual ~BinaryColumnStatistics() override;
+    virtual ~BinaryColumnStatistics();
 
     /**
      * Check whether column has total length.
@@ -72,7 +72,7 @@ namespace orc {
    */
   class BooleanColumnStatistics: public ColumnStatistics {
   public:
-    virtual ~BooleanColumnStatistics() override;
+    virtual ~BooleanColumnStatistics();
 
     /**
      * Check whether column has true/false count.
@@ -89,7 +89,7 @@ namespace orc {
    */
   class DateColumnStatistics: public ColumnStatistics {
   public:
-    virtual ~DateColumnStatistics() override;
+    virtual ~DateColumnStatistics();
 
     /**
      * Check whether column has minimum.
@@ -121,7 +121,7 @@ namespace orc {
    */
   class DecimalColumnStatistics: public ColumnStatistics {
   public:
-    virtual ~DecimalColumnStatistics() override;
+    virtual ~DecimalColumnStatistics();
 
     /**
      * Check whether column has minimum.
@@ -165,7 +165,7 @@ namespace orc {
    */
   class DoubleColumnStatistics: public ColumnStatistics {
   public:
-    virtual ~DoubleColumnStatistics() override;
+    virtual ~DoubleColumnStatistics();
 
     /**
      * Check whether column has minimum.
@@ -212,7 +212,7 @@ namespace orc {
    */
   class IntegerColumnStatistics: public ColumnStatistics {
   public:
-    virtual ~IntegerColumnStatistics() override;
+    virtual ~IntegerColumnStatistics();
 
     /**
      * Check whether column has minimum.
@@ -258,7 +258,7 @@ namespace orc {
    */
   class StringColumnStatistics: public ColumnStatistics {
   public:
-    virtual ~StringColumnStatistics() override;
+    virtual ~StringColumnStatistics();
 
     /**
      * Check whether column has minimum.
@@ -302,7 +302,7 @@ namespace orc {
    */
   class TimestampColumnStatistics: public ColumnStatistics {
   public:
-    virtual ~TimestampColumnStatistics() override;
+    virtual ~TimestampColumnStatistics();
 
     /**
      * Check whether minimum timestamp exists.
@@ -389,7 +389,7 @@ namespace orc {
    */
   class CollectionColumnStatistics : public ColumnStatistics {
   public:
-    virtual ~CollectionColumnStatistics() override;
+    virtual ~CollectionColumnStatistics();
 
     /**
      * check whether column has minimum number of children
@@ -454,7 +454,7 @@ namespace orc {
 
   class StripeStatistics : public Statistics {
   public:
-    virtual ~StripeStatistics() override;
+    virtual ~StripeStatistics();
 
     /**
      * Get the statistics of a given RowIndex entry in a given column.

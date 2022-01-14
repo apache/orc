@@ -51,7 +51,7 @@ namespace orc {
    */
   class SeekableInputStream: public google::protobuf::io::ZeroCopyInputStream {
   public:
-    virtual ~SeekableInputStream() override;
+    virtual ~SeekableInputStream();
     virtual void seek(PositionProvider& position) = 0;
     virtual std::string getName() const = 0;
   };

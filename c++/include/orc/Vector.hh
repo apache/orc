@@ -90,33 +90,33 @@ namespace orc {
 
   struct LongVectorBatch: public ColumnVectorBatch {
     LongVectorBatch(uint64_t capacity, MemoryPool& pool);
-    virtual ~LongVectorBatch() override;
+    virtual ~LongVectorBatch();
 
     DataBuffer<int64_t> data;
-    std::string toString() const override;
-    void resize(uint64_t capacity) override;
-    void clear() override;
-    uint64_t getMemoryUsage() override;
+    std::string toString() const;
+    void resize(uint64_t capacity);
+    void clear();
+    uint64_t getMemoryUsage();
   };
 
   struct DoubleVectorBatch: public ColumnVectorBatch {
     DoubleVectorBatch(uint64_t capacity, MemoryPool& pool);
-    virtual ~DoubleVectorBatch() override;
-    std::string toString() const override;
-    void resize(uint64_t capacity) override;
-    void clear() override;
-    uint64_t getMemoryUsage() override;
+    virtual ~DoubleVectorBatch();
+    std::string toString() const;
+    void resize(uint64_t capacity);
+    void clear();
+    uint64_t getMemoryUsage();
 
     DataBuffer<double> data;
   };
 
   struct StringVectorBatch: public ColumnVectorBatch {
     StringVectorBatch(uint64_t capacity, MemoryPool& pool);
-    virtual ~StringVectorBatch() override;
-    std::string toString() const override;
-    void resize(uint64_t capacity) override;
-    void clear() override;
-    uint64_t getMemoryUsage() override;
+    virtual ~StringVectorBatch();
+    std::string toString() const;
+    void resize(uint64_t capacity);
+    void clear();
+    uint64_t getMemoryUsage();
 
     // pointers to the start of each string
     DataBuffer<char*> data;
@@ -152,9 +152,9 @@ namespace orc {
    */
   struct EncodedStringVectorBatch : public StringVectorBatch {
     EncodedStringVectorBatch(uint64_t capacity, MemoryPool& pool);
-    virtual ~EncodedStringVectorBatch() override;
-    std::string toString() const override;
-    void resize(uint64_t capacity) override;
+    virtual ~EncodedStringVectorBatch();
+    std::string toString() const;
+    void resize(uint64_t capacity);
     std::shared_ptr<StringDictionary> dictionary;
 
     // index for dictionary entry
@@ -163,24 +163,24 @@ namespace orc {
 
   struct StructVectorBatch: public ColumnVectorBatch {
     StructVectorBatch(uint64_t capacity, MemoryPool& pool);
-    virtual ~StructVectorBatch() override;
-    std::string toString() const override;
-    void resize(uint64_t capacity) override;
-    void clear() override;
-    uint64_t getMemoryUsage() override;
-    bool hasVariableLength() override;
+    virtual ~StructVectorBatch();
+    std::string toString() const;
+    void resize(uint64_t capacity);
+    void clear();
+    uint64_t getMemoryUsage();
+    bool hasVariableLength();
 
     std::vector<ColumnVectorBatch*> fields;
   };
 
   struct ListVectorBatch: public ColumnVectorBatch {
     ListVectorBatch(uint64_t capacity, MemoryPool& pool);
-    virtual ~ListVectorBatch() override;
-    std::string toString() const override;
-    void resize(uint64_t capacity) override;
-    void clear() override;
-    uint64_t getMemoryUsage() override;
-    bool hasVariableLength() override;
+    virtual ~ListVectorBatch();
+    std::string toString() const;
+    void resize(uint64_t capacity);
+    void clear();
+    uint64_t getMemoryUsage();
+    bool hasVariableLength();
 
     /**
      * The offset of the first element of each list.
@@ -194,12 +194,12 @@ namespace orc {
 
   struct MapVectorBatch: public ColumnVectorBatch {
     MapVectorBatch(uint64_t capacity, MemoryPool& pool);
-    virtual ~MapVectorBatch() override;
-    std::string toString() const override;
-    void resize(uint64_t capacity) override;
-    void clear() override;
-    uint64_t getMemoryUsage() override;
-    bool hasVariableLength() override;
+    virtual ~MapVectorBatch();
+    std::string toString() const;
+    void resize(uint64_t capacity);
+    void clear();
+    uint64_t getMemoryUsage();
+    bool hasVariableLength();
 
     /**
      * The offset of the first element of each map.
@@ -215,12 +215,12 @@ namespace orc {
 
   struct UnionVectorBatch: public ColumnVectorBatch {
     UnionVectorBatch(uint64_t capacity, MemoryPool& pool);
-    virtual ~UnionVectorBatch() override;
-    std::string toString() const override;
-    void resize(uint64_t capacity) override;
-    void clear() override;
-    uint64_t getMemoryUsage() override;
-    bool hasVariableLength() override;
+    virtual ~UnionVectorBatch();
+    std::string toString() const;
+    void resize(uint64_t capacity);
+    void clear();
+    uint64_t getMemoryUsage();
+    bool hasVariableLength();
 
     /**
      * For each value, which element of children has the value.
@@ -248,11 +248,11 @@ namespace orc {
 
   struct Decimal64VectorBatch: public ColumnVectorBatch {
     Decimal64VectorBatch(uint64_t capacity, MemoryPool& pool);
-    virtual ~Decimal64VectorBatch() override;
-    std::string toString() const override;
-    void resize(uint64_t capacity) override;
-    void clear() override;
-    uint64_t getMemoryUsage() override;
+    virtual ~Decimal64VectorBatch();
+    std::string toString() const;
+    void resize(uint64_t capacity);
+    void clear();
+    uint64_t getMemoryUsage();
 
     // total number of digits
     int32_t precision;
@@ -274,11 +274,11 @@ namespace orc {
 
   struct Decimal128VectorBatch: public ColumnVectorBatch {
     Decimal128VectorBatch(uint64_t capacity, MemoryPool& pool);
-    virtual ~Decimal128VectorBatch() override;
-    std::string toString() const override;
-    void resize(uint64_t capacity) override;
-    void clear() override;
-    uint64_t getMemoryUsage() override;
+    virtual ~Decimal128VectorBatch();
+    std::string toString() const;
+    void resize(uint64_t capacity);
+    void clear();
+    uint64_t getMemoryUsage();
 
     // total number of digits
     int32_t precision;
@@ -306,11 +306,11 @@ namespace orc {
    */
   struct TimestampVectorBatch: public ColumnVectorBatch {
     TimestampVectorBatch(uint64_t capacity, MemoryPool& pool);
-    virtual ~TimestampVectorBatch() override;
-    std::string toString() const override;
-    void resize(uint64_t capacity) override;
-    void clear() override;
-    uint64_t getMemoryUsage() override;
+    virtual ~TimestampVectorBatch();
+    std::string toString() const;
+    void resize(uint64_t capacity);
+    void clear();
+    uint64_t getMemoryUsage();
 
     // the number of seconds past 1 Jan 1970 00:00 UTC (aka time_t)
     // Note that we always assume data is in GMT timezone; therefore it is

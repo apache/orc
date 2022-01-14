@@ -303,22 +303,22 @@ namespace orc {
   public:
     ByteRleDecoderImpl(std::unique_ptr<SeekableInputStream> input);
 
-    virtual ~ByteRleDecoderImpl() override;
+    virtual ~ByteRleDecoderImpl();
 
     /**
      * Seek to a particular spot.
      */
-    virtual void seek(PositionProvider&) override;
+    virtual void seek(PositionProvider&);
 
     /**
      * Seek over a given number of values.
      */
-    virtual void skip(uint64_t numValues) override;
+    virtual void skip(uint64_t numValues);
 
     /**
      * Read a number of values into the batch.
      */
-    virtual void next(char* data, uint64_t numValues, char* notNull) override;
+    virtual void next(char* data, uint64_t numValues, char* notNull);
 
   protected:
     inline void nextBuffer();
@@ -485,22 +485,22 @@ namespace orc {
   public:
     BooleanRleDecoderImpl(std::unique_ptr<SeekableInputStream> input);
 
-    virtual ~BooleanRleDecoderImpl() override;
+    virtual ~BooleanRleDecoderImpl();
 
     /**
      * Seek to a particular spot.
      */
-    virtual void seek(PositionProvider&) override;
+    virtual void seek(PositionProvider&);
 
     /**
      * Seek over a given number of values.
      */
-    virtual void skip(uint64_t numValues) override;
+    virtual void skip(uint64_t numValues);
 
     /**
      * Read a number of values into the batch.
      */
-    virtual void next(char* data, uint64_t numValues, char* notNull) override;
+    virtual void next(char* data, uint64_t numValues, char* notNull);
 
   protected:
     size_t remainingBits;
