@@ -140,40 +140,7 @@ using ::testing::ElementsAreArray;
     CheckFileWithSargs("bad_bloom_filter_1.6.0.orc", "ORC C++");
   }
 
-  /**
-   * Read complextypes_iceberg.orc and verify the resolved selections.
-   *
-   * The ORC file has the following schema:
-   *   struct<
-   *     id:bigint,
-   *     int_array:array<int>,
-   *     int_array_array:array<array<int>>,
-   *     int_map:map<string,int>,
-   *     int_map_array:array<map<string,int>>,
-   *     nested_struct:struct<
-   *       a:int,
-   *       b:array<int>,
-   *       c:struct<
-   *         d:array<array<struct<
-   *           e:int,
-   *           f:string
-   *         >>>
-   *       >,
-   *       g:map<string,struct<
-   *         h:struct<
-   *           i:array<double>
-   *         >
-   *       >>
-   *     >
-   *   >
-   *
-   * @param idReadIntentMap IdReadIntentMap describing the selections.
-   * @param expectedSelection expected TypeIds that will be selected from given
-   * idReadIntentMap.
-   */
-  void verifySelection(const RowReaderOptions::IdReadIntentMap &idReadIntentMap,
-                       const std::vector<uint32_t> &expectedSelection) {
-    std::string fileName = "complextypes_iceberg.orc";
+  std::unique_ptr<Reader> createExampleReader(std::string fileName) {
     std::stringstream ss;
     if (const char* example_dir = std::getenv("ORC_EXAMPLE_DIR")) {
       ss << example_dir;
@@ -182,8 +149,26 @@ using ::testing::ElementsAreArray;
     }
     ss << "/" << fileName;
     ReaderOptions readerOpts;
-    std::unique_ptr<Reader> reader =
-        createReader(readLocalFile(ss.str().c_str()), readerOpts);
+    return createReader(readLocalFile(ss.str().c_str()), readerOpts);
+  }
+
+  /**
+   * Read TestOrcFile.nestedList.orc and verify the resolved selections.
+   *
+   * The ORC file has the following content:
+   * {
+   *   "int_array": [-1, -2],
+   *   "int_array_array_array": [[[1], [2], [3]], [[4, 5], [6]], [[7, 8, 9]]]
+   * }
+   *
+   * @param idReadIntentMap IdReadIntentMap describing the selections.
+   * @param expectedSelection expected TypeIds that will be selected from given
+   * idReadIntentMap.
+   */
+  void verifySelection(const RowReaderOptions::IdReadIntentMap &idReadIntentMap,
+                       const std::vector<uint32_t> &expectedSelection) {
+    std::string fileName = "TestOrcFile.nestedList.orc";
+    std::unique_ptr<Reader> reader = createExampleReader(fileName);
 
     RowReaderOptions rowReaderOpts;
     rowReaderOpts.includeTypesWithIntents(idReadIntentMap);
@@ -198,30 +183,71 @@ using ::testing::ElementsAreArray;
   }
 
   TEST(TestReadIntent, testListAll) {
-    // select all of int_array_array.
-    verifySelection({{4, ReadIntent_ALL}}, {0, 4, 5, 6});
+    // select all of int_array.
+    verifySelection({{1, ReadIntent_ALL}}, {0, 1, 2});
   }
 
   TEST(TestReadIntent, testListOffsets) {
-    // select only the offsets of int_array_array.
-    verifySelection({{4, ReadIntent_OFFSETS}}, {0, 4});
+    // select only the offsets of int_array.
+    verifySelection({{1, ReadIntent_OFFSETS}}, {0, 1});
 
-    // select only the offsets of int_array_array.item.
-    verifySelection({{4, ReadIntent_OFFSETS}, {5, ReadIntent_OFFSETS}},
-                    {0, 4, 5});
+    // select only the offsets of int_array and the outermost offsets of
+    // int_array_array_array.
+    verifySelection({{1, ReadIntent_OFFSETS}, {3, ReadIntent_OFFSETS}},
+                    {0, 1, 3});
+
+    // select the entire offsets of int_array_array_array without the elements.
+    verifySelection({{3, ReadIntent_OFFSETS}, {5, ReadIntent_OFFSETS}},
+                    {0, 3, 4, 5});
   }
 
   TEST(TestReadIntent, testListAllAndOffsets) {
-    // select all of int_array and only the offsets of int_array_array.
-    verifySelection({{2, ReadIntent_ALL}, {4, ReadIntent_OFFSETS}},
-                    {0, 2, 3, 4});
+    // select all of int_array and only the outermost offsets of int_array_array_array.
+    verifySelection({{1, ReadIntent_ALL}, {3, ReadIntent_OFFSETS}},
+                    {0, 1, 2, 3});
   }
 
   TEST(TestReadIntent, testListConflictingIntent) {
     // test conflicting ReadIntent on nested list.
-    verifySelection({{4, ReadIntent_OFFSETS}, {5, ReadIntent_ALL}},
-                    {0, 4, 5, 6});
-    verifySelection({{4, ReadIntent_ALL}, {5, ReadIntent_OFFSETS}},
-                    {0, 4, 5, 6});
+    verifySelection({{3, ReadIntent_OFFSETS}, {5, ReadIntent_ALL}},
+                    {0, 3, 4, 5, 6});
+    verifySelection({{3, ReadIntent_ALL}, {5, ReadIntent_OFFSETS}},
+                    {0, 3, 4, 5, 6});
+  }
+
+  TEST(TestReadIntent, testRowBatchContent) {
+    std::unique_ptr<Reader> reader = createExampleReader("TestOrcFile.nestedList.orc");
+
+    // select all of int_array and only the offsets of int_array_array.
+    RowReaderOptions::IdReadIntentMap idReadIntentMap =
+        {{1, ReadIntent_ALL}, {3, ReadIntent_OFFSETS}};
+    RowReaderOptions rowReaderOpts;
+    rowReaderOpts.includeTypesWithIntents(idReadIntentMap);
+    std::unique_ptr<RowReader> rowReader =
+        reader->createRowReader(rowReaderOpts);
+
+    // Read a row batch.
+    std::unique_ptr<ColumnVectorBatch> batch =
+        rowReader->createRowBatch(1024);
+    EXPECT_TRUE(rowReader->next(*batch));
+    EXPECT_EQ(1, batch->numElements);
+    auto& structBatch = dynamic_cast<StructVectorBatch&>(*batch);
+
+    // verify content of int_array selection.
+    auto& intArrayBatch = dynamic_cast<ListVectorBatch&>(*structBatch.fields[0]);
+    auto& innerLongBatch = dynamic_cast<LongVectorBatch&>(*intArrayBatch.elements);
+    EXPECT_EQ(1, intArrayBatch.numElements);
+    EXPECT_EQ(0, intArrayBatch.offsets.data()[0]);
+    EXPECT_EQ(2, intArrayBatch.offsets.data()[1]);
+    EXPECT_EQ(2, innerLongBatch.numElements);
+    EXPECT_EQ(-1, innerLongBatch.data.data()[0]);
+    EXPECT_EQ(-2, innerLongBatch.data.data()[1]);
+
+    // verify content of int_array_array_array selection.
+    auto& intArrayArrayArrayBatch = dynamic_cast<ListVectorBatch&>(*structBatch.fields[1]);
+    EXPECT_EQ(1, intArrayArrayArrayBatch.numElements);
+    EXPECT_EQ(0, intArrayArrayArrayBatch.offsets.data()[0]);
+    EXPECT_EQ(3, intArrayArrayArrayBatch.offsets.data()[1]);
+    EXPECT_EQ(nullptr, intArrayArrayArrayBatch.elements.get());
   }
 }  // namespace
