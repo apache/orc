@@ -180,19 +180,14 @@ public class RecordReaderUtils {
                                          boolean isLast,
                                          long nextGroupOffset,
                                          long streamLength) {
-    if (isCompressed && bufferSize <= 0) {
-      throw new IllegalArgumentException("BufferSize must be > 0 but was " + bufferSize);
+    // Figure out the worst case last location
+    long slop = WORST_UNCOMPRESSED_SLOP;
+    // Stretch the slop by a factor to safely accommodate following compression blocks.
+    // We need to calculate the maximum number of blocks(stretchFactor) by bufferSize accordingly.
+    if (isCompressed) {
+      int stretchFactor = 2 + (MAX_VALUES_LENGTH * MAX_BYTE_WIDTH - 1) / bufferSize;
+      slop = stretchFactor * (OutStream.HEADER_SIZE + bufferSize);
     }
-    // figure out the worst case last location
-    // if adjacent groups have the same compressed block offset then stretch the slop
-    // by a factor to safely accommodate the next compression block.
-    // We need to calculate the maximum number of blocks by bufferSize accordingly.
-    final int stretchFactor = isCompressed
-        ? 2 + (MAX_VALUES_LENGTH * MAX_BIT_WIDTH / 8 - 1) / bufferSize
-        : -1;
-    long slop = isCompressed
-                    ? stretchFactor * (OutStream.HEADER_SIZE + bufferSize)
-                    : WORST_UNCOMPRESSED_SLOP;
     return isLast ? streamLength : Math.min(streamLength, nextGroupOffset + slop);
   }
 
@@ -270,9 +265,9 @@ public class RecordReaderUtils {
   static final int WORST_UNCOMPRESSED_SLOP = 2 + 8 * 512;
   // the maximum number of values that need to be consumed from the run
   static final int MAX_VALUES_LENGTH = RunLengthIntegerWriterV2.MAX_SCOPE;
-  // the maximum bit width for each value
-  static final int MAX_BIT_WIDTH =
-      SerializationUtils.decodeBitWidth(SerializationUtils.FixedBitSizes.SIXTYFOUR.ordinal());
+  // the maximum byte width for each value
+  static final int MAX_BYTE_WIDTH =
+      SerializationUtils.decodeBitWidth(SerializationUtils.FixedBitSizes.SIXTYFOUR.ordinal()) / 8;
 
   /**
    * Is this stream part of a dictionary?
