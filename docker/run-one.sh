@@ -37,15 +37,6 @@ else
 
   echo "Started $GITHUB_USER/$BRANCH on $BUILD at $(date)"
 
-  case $BUILD in
-  debian8*)
-     OPTS="-DSNAPPY_HOME=/usr/local"
-     ;;
-  *)
-     OPTS=""
-     ;;
-  esac
-
   docker run $VOLUME "$TAG" /bin/bash -c \
      "$CLONE && $MAKEDIR && cmake $OPTS .. && make package test-out" \
        || failure
