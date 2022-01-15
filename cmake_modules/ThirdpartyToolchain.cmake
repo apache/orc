@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set(LZ4_VERSION "1.7.5")
+set(LZ4_VERSION "1.9.3")
 set(SNAPPY_VERSION "1.1.7")
 set(ZLIB_VERSION "1.2.11")
 set(GTEST_VERSION "1.8.0")
@@ -237,10 +237,10 @@ else ()
   endif ()
 
   if (CMAKE_VERSION VERSION_GREATER "3.7")
-    set(LZ4_CONFIGURE SOURCE_SUBDIR "contrib/cmake_unofficial" CMAKE_ARGS ${LZ4_CMAKE_ARGS})
+    set(LZ4_CONFIGURE SOURCE_SUBDIR "build/cmake" CMAKE_ARGS ${LZ4_CMAKE_ARGS})
   else()
     set(LZ4_CONFIGURE CONFIGURE_COMMAND "${THIRDPARTY_CONFIGURE_COMMAND}" ${LZ4_CMAKE_ARGS}
-                                        "${CMAKE_CURRENT_BINARY_DIR}/lz4_ep-prefix/src/lz4_ep/contrib/cmake_unofficial")
+                                        "${CMAKE_CURRENT_BINARY_DIR}/lz4_ep-prefix/src/lz4_ep/build/cmake")
   endif()
 
   ExternalProject_Add(lz4_ep
