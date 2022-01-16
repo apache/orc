@@ -26,7 +26,7 @@
 
 namespace orc {
 
-using ::testing::ElementsAreArray;
+  using ::testing::ElementsAreArray;
 
   TEST(TestReader, testWriterVersions) {
     EXPECT_EQ("original", writerVersionToString(WriterVersion_ORIGINAL));
