@@ -38,11 +38,7 @@ public class HadoopShimsFactory {
       Class<? extends HadoopShims> cls =
           (Class<? extends HadoopShims>) Class.forName(name);
       return cls.newInstance();
-    } catch (InstantiationException e) {
-      throw new IllegalStateException("Can't create shims for " + name, e);
-    } catch (IllegalAccessException e) {
-      throw new IllegalStateException("Can't create shims for " + name, e);
-    } catch (ClassNotFoundException e) {
+    } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
       throw new IllegalStateException("Can't create shims for " + name, e);
     }
   }
