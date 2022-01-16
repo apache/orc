@@ -4145,8 +4145,8 @@ public class TestVectorOrcFile {
     try {
       OrcFile.createReader(zeroFile, OrcFile.readerOptions(conf));
       fail("no exception for bad version");
-    } catch (IOException io) {
-      String m = io.getMessage();
+    } catch (IOException e) {
+      String m = e.getMessage();
       assertTrue(m.contains("version1999.orc was written by a future ORC version 19.99."));
       assertTrue(m.contains("This file is not readable by this version of ORC."));
       assertTrue(m.contains("Postscript: footerLength: 19 compression: NONE " +
