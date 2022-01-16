@@ -19,6 +19,7 @@
 package org.apache.orc.impl;
 
 import com.google.protobuf.CodedInputStream;
+import com.google.protobuf.TextFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -44,7 +45,6 @@ import org.apache.orc.RecordReader;
 import org.apache.orc.StripeInformation;
 import org.apache.orc.StripeStatistics;
 import org.apache.orc.TypeDescription;
-import org.apache.orc.UnknownFormatException;
 import org.apache.orc.impl.reader.ReaderEncryption;
 import org.apache.orc.impl.reader.ReaderEncryptionVariant;
 import org.slf4j.Logger;
@@ -519,8 +519,9 @@ public class ReaderImpl implements Reader {
                                         ) throws IOException {
     List<Integer> version = postscript.getVersionList();
     if (getFileVersion(version) == OrcFile.Version.FUTURE) {
-      throw new UnknownFormatException(path, versionString(version),
-          postscript);
+      throw new IOException(path + " was written by a future ORC version " +
+          versionString(version) + ". This file is not readable by this version of ORC.\n"+
+          "Postscript: " + TextFormat.shortDebugString(postscript));
     }
   }
 
