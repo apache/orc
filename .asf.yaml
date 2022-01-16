@@ -18,6 +18,8 @@
 github:
   description: "Apache ORC - the smallest, fastest columnar storage for Hadoop workloads"
   homepage: https://orc.apache.org/
+  features:
+    issues: true
   enabled_merge_buttons:
     merge: false
     squash: true
