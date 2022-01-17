@@ -36,7 +36,6 @@ import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.orc.impl.KeyProvider;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 
@@ -74,7 +73,6 @@ public class TestSelectedVector {
   }
 
   @Test
-  @Disabled("Disable until the impl of ORC-1004 is merged")
   public void testWriteBaseTypeUseSelectedVector() throws IOException {
     TypeDescription schema =
         TypeDescription.fromString("struct<a:boolean,b:tinyint,c:smallint,d:int,e:bigint," +
@@ -234,7 +232,6 @@ public class TestSelectedVector {
   }
 
   @Test
-  @Disabled("Disable until the impl of ORC-1004 is merged")
   public void testWriteComplexTypeUseSelectedVector() throws IOException {
     TypeDescription schema =
         TypeDescription.fromString("struct<a:map<int,uniontype<int,string>>," +
@@ -381,7 +378,6 @@ public class TestSelectedVector {
   }
 
   @Test
-  @Disabled("Disable until the impl of ORC-1004 is merged")
   public void testWriteRepeatedUseSelectedVector() throws IOException {
     TypeDescription schema =
         TypeDescription.fromString("struct<a:int,b:string,c:decimal(20,5)>");
@@ -465,7 +461,6 @@ public class TestSelectedVector {
   }
 
   @Test
-  @Disabled("Disable until the impl of ORC-1004 is merged")
   public void testWriteEncryptionUseSelectedVector() throws IOException {
     TypeDescription schema =
         TypeDescription.fromString("struct<id:int,name:string>");

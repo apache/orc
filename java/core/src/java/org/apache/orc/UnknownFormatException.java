@@ -23,6 +23,10 @@ import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
 
+/**
+ * @deprecated This will be removed in the future releases.
+ */
+@Deprecated
 public class UnknownFormatException extends IOException {
   private final Path path;
   private final String versionString;

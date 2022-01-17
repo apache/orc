@@ -4145,12 +4145,13 @@ public class TestVectorOrcFile {
     try {
       OrcFile.createReader(zeroFile, OrcFile.readerOptions(conf));
       fail("no exception for bad version");
-    } catch (UnknownFormatException uf) {
-      assertEquals("version1999.orc", uf.getPath().getName(), "path is correct");
-      assertEquals("19.99", uf.getVersionString());
-      OrcProto.PostScript ps = uf.getPostscript();
-      assertEquals("ORC", ps.getMagic());
-      assertEquals(OrcProto.CompressionKind.NONE, ps.getCompression());
+    } catch (IOException e) {
+      String m = e.getMessage();
+      assertTrue(m.contains("version1999.orc was written by a future ORC version 19.99."));
+      assertTrue(m.contains("This file is not readable by this version of ORC."));
+      assertTrue(m.contains("Postscript: footerLength: 19 compression: NONE " +
+          "compressionBlockSize: 65536 version: 19 version: 99 metadataLength: 0 " +
+          "writerVersion: 1"));
     }
   }
 
