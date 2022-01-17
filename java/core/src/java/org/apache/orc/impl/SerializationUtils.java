@@ -434,7 +434,7 @@ public final class SerializationUtils {
    * @param n - encoded fixed bit width
    * @return decoded fixed bit width
    */
-  public int decodeBitWidth(int n) {
+  public static int decodeBitWidth(int n) {
     if (n >= FixedBitSizes.ONE.ordinal()
         && n <= FixedBitSizes.TWENTYFOUR.ordinal()) {
       return n + 1;
