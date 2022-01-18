@@ -55,7 +55,9 @@ TEST (TestFileContents, testRaw) {
 TEST (TestFileContents, testSelectedColumns) {
   const std::string pgm = findProgram("tools/src/orc-contents");
   const std::string file = findExample("TestOrcFile.test1.orc");
-  const std::string options = "--columns=1,3,5,7";
+  const std::string columnFields = "1,3,5,7";
+  const std::string columnTypeIds = "2,4,6,8";
+  const std::string columnNames = "byte1,int1,float1,bytes1";
   const std::string expected =
     "{\"byte1\": 1, \"int1\": 65536, \"float1\": 1, \"bytes1\": [0, 1, 2, 3, 4]}\n"
       "{\"byte1\": 100, \"int1\": 65536, \"float1\": 2, \"bytes1\": []}\n";
@@ -63,7 +65,65 @@ TEST (TestFileContents, testSelectedColumns) {
   std::string output;
   std::string error;
 
-  EXPECT_EQ(0, runProgram({pgm, options, file}, output, error));
+  EXPECT_EQ(0, runProgram({pgm, "--columns=" + columnFields, file}, output, error));
+  EXPECT_EQ(expected, output);
+  EXPECT_EQ("", error);
+  EXPECT_EQ(0, runProgram({pgm, "--columns", columnFields, file}, output, error));
+  EXPECT_EQ(expected, output);
+  EXPECT_EQ("", error);
+  EXPECT_EQ(0, runProgram({pgm, "-c", columnFields, file}, output, error));
+  EXPECT_EQ(expected, output);
+  EXPECT_EQ("", error);
+
+  EXPECT_EQ(0, runProgram({pgm, "--columnTypeIds=" + columnTypeIds, file}, output, error));
+  EXPECT_EQ(expected, output);
+  EXPECT_EQ("", error);
+  EXPECT_EQ(0, runProgram({pgm, "--columnTypeIds", columnTypeIds, file}, output, error));
+  EXPECT_EQ(expected, output);
+  EXPECT_EQ("", error);
+  EXPECT_EQ(0, runProgram({pgm, "-t", columnTypeIds, file}, output, error));
+  EXPECT_EQ(expected, output);
+  EXPECT_EQ("", error);
+
+  EXPECT_EQ(0, runProgram({pgm, "--columnNames=" + columnNames, file}, output, error));
+  EXPECT_EQ(expected, output);
+  EXPECT_EQ("", error);
+  EXPECT_EQ(0, runProgram({pgm, "--columnNames", columnNames, file}, output, error));
+  EXPECT_EQ(expected, output);
+  EXPECT_EQ("", error);
+  EXPECT_EQ(0, runProgram({pgm, "-n", columnNames, file}, output, error));
+  EXPECT_EQ(expected, output);
+  EXPECT_EQ("", error);
+}
+
+TEST (TestFileContents, testNestedColumns) {
+  const std::string pgm = findProgram("tools/src/orc-contents");
+  const std::string file = findExample("complextypes_iceberg.orc");
+  const std::string columnTypeIds = "1,15,16";
+  const std::string columnNames = "id,nested_struct.a,nested_struct.b";
+  const std::string expected =
+    "{\"id\": 8, \"nested_struct\": {\"a\": -1, \"b\": [-1]}}\n";
+
+  std::string output;
+  std::string error;
+
+  EXPECT_EQ(0, runProgram({pgm, "--columnTypeIds=" + columnTypeIds, file}, output, error));
+  EXPECT_EQ(expected, output);
+  EXPECT_EQ("", error);
+  EXPECT_EQ(0, runProgram({pgm, "--columnTypeIds", columnTypeIds, file}, output, error));
+  EXPECT_EQ(expected, output);
+  EXPECT_EQ("", error);
+  EXPECT_EQ(0, runProgram({pgm, "-t", columnTypeIds, file}, output, error));
+  EXPECT_EQ(expected, output);
+  EXPECT_EQ("", error);
+
+  EXPECT_EQ(0, runProgram({pgm, "--columnNames=" + columnNames, file}, output, error));
+  EXPECT_EQ(expected, output);
+  EXPECT_EQ("", error);
+  EXPECT_EQ(0, runProgram({pgm, "--columnNames", columnNames, file}, output, error));
+  EXPECT_EQ(expected, output);
+  EXPECT_EQ("", error);
+  EXPECT_EQ(0, runProgram({pgm, "-n", columnNames, file}, output, error));
   EXPECT_EQ(expected, output);
   EXPECT_EQ("", error);
 }

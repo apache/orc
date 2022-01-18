@@ -10,7 +10,13 @@ Displays the contents of the ORC file as a JSON document. With the
 `columns` argument only the selected columns are printed.
 
 ~~~ shell
-% orc-contents  [--columns=1,2,...] <filename>
+% orc-contents [options] <filename>
+Options:
+	-h --help
+	-c --columns		Comma separated list of top-level column fields
+	-t --columnTypeIds	Comma separated list of column type ids
+	-n --columnNames	Comma separated list of column names
+	-b --batch		Batch size for reading
 ~~~
 
 If you run it on the example file TestOrcFile.test1.orc, you'll see (without
@@ -115,7 +121,13 @@ to set the batch size which is 1024 rows by default. It is useful to check
 if the ORC file is damaged.
 
 ~~~ shell
-% orc-scan [--batch=<size>] <filename>
+% orc-scan [options] <filename>...
+Options:
+	-h --help
+	-c --columns		Comma separated list of top-level column fields
+	-t --columnTypeIds	Comma separated list of column type ids
+	-n --columnNames	Comma separated list of column names
+	-b --batch		Batch size for reading
 ~~~
 
 If you run it on the example file TestOrcFile.test1.orc, you'll see:
@@ -135,7 +147,7 @@ With the `withIndex` option to include column statistics in each row group.
 % orc-statistics [--withIndex] <filename>
 ~~~
 
-If you run it on the example file TestOrcFile.TestOrcFile.columnProjection.orc
+If you run it on the example file TestOrcFile.columnProjection.orc
 you'll see:
 
 ~~~ shell
@@ -265,4 +277,29 @@ Has null: no
 Minimum: 1059d81c9025a217
 Maximum: ffc17f0e35e1a6c0
 Total length: 15941
+~~~
+
+## orc-memory
+
+Estimate the memory footprint for reading the ORC file.
+
+~~~ shell
+% orc-memory [options] <filename>
+Options:
+	-h --help
+	-c --columns		Comma separated list of top-level column fields
+	-t --columnTypeIds	Comma separated list of column type ids
+	-n --columnNames	Comma separated list of column names
+	-b --batch		Batch size for reading
+~~~
+
+If you run it on the example file TestOrcFile.columnProjection.orc
+you'll see:
+
+~~~ shell
+% orc-memory examples/TestOrcFile.columnProjection.orc,
+Reader memory estimate: 202972
+Batch memory estimate:  27000
+Total memory estimate:  229972
+Actual max memory used: 160381
 ~~~

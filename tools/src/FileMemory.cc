@@ -16,15 +16,12 @@
  * limitations under the License.
  */
 
-#include "orc/orc-config.hh"
-#include "orc/ColumnPrinter.hh"
-#include "orc/Exceptions.hh"
+#include "ToolsHelper.hh"
 
 #include <string>
 #include <memory>
 #include <iostream>
 #include <map>
-#include <exception>
 
 class TestMemoryPool: public orc::MemoryPool {
 private:
@@ -60,13 +57,9 @@ public:
 TestMemoryPool::~TestMemoryPool() {}
 
 void processFile(const char* filename,
-                 const std::list<uint64_t>& cols,
-                 uint32_t batchSize) {
+                 const orc::RowReaderOptions& rowReaderOpts,
+                 uint64_t batchSize) {
   orc::ReaderOptions readerOpts;
-  orc::RowReaderOptions rowReaderOpts;
-  if (cols.size() > 0) {
-    rowReaderOpts.include(cols);
-  }
   std::unique_ptr<orc::MemoryPool> pool(new TestMemoryPool());
   readerOpts.setMemoryPool(*(pool.get()));
 
@@ -76,7 +69,18 @@ void processFile(const char* filename,
 
   std::unique_ptr<orc::ColumnVectorBatch> batch =
       rowReader->createRowBatch(batchSize);
-  uint64_t readerMemory = reader->getMemoryUseByFieldId(cols);
+  uint64_t readerMemory;
+  if (rowReaderOpts.getIndexesSet()) {
+    readerMemory = reader->getMemoryUseByFieldId(rowReaderOpts.getInclude());
+  } else if (rowReaderOpts.getNamesSet()) {
+    readerMemory = reader->getMemoryUseByName(rowReaderOpts.getIncludeNames());
+  } else if (rowReaderOpts.getTypeIdsSet()) {
+    readerMemory = reader->getMemoryUseByTypeId(rowReaderOpts.getInclude());
+  } else {
+    // default is to select all columns
+    readerMemory = reader->getMemoryUseByName({});
+  }
+
   uint64_t batchMemory = batch->getMemoryUsage();
   while (rowReader->next(*batch)) {}
   uint64_t actualMemory =
@@ -93,47 +97,22 @@ void processFile(const char* filename,
 }
 
 int main(int argc, char* argv[]) {
-  if (argc < 2) {
-    std::cout << "Usage: orc-memory [--columns=column1,column2,...] "
-        << "[--batch=rows_in_batch] <filename> \n";
+  uint64_t batchSize = 1000;
+  orc::RowReaderOptions rowReaderOptions;
+  bool success = parseOptions(&argc, &argv, &batchSize, &rowReaderOptions);
+  if (argc < 1 || !success) {
+    std::cerr << "Usage: orc-memory [options] <filename>...\n";
+    printOptions(std::cerr);
+    std::cerr << "Estimate the memory footprint for reading ORC files\n";
     return 1;
   }
-
-  const std::string COLUMNS_PREFIX = "--columns=";
-  const std::string BATCH_PREFIX = "--batch=";
-  char* filename = ORC_NULLPTR;
-
-  // Default parameters
-  std::list<uint64_t> cols;
-  uint32_t batchSize = 1000;
-
-  // Read command-line options
-  char *param, *value;
-  for (int i = 1; i < argc; i++) {
-    if ( (param = std::strstr(argv[i], COLUMNS_PREFIX.c_str())) ) {
-      value = std::strtok(param+COLUMNS_PREFIX.length(), "," );
-      while (value) {
-        cols.push_back(static_cast<uint64_t>(std::atoi(value)));
-        value = std::strtok(ORC_NULLPTR, "," );
-      }
-    } else if ( (param=strstr(argv[i], BATCH_PREFIX.c_str())) ) {
-      batchSize =
-        static_cast<uint32_t>(std::atoi(param+BATCH_PREFIX.length()));
-    } else {
-      filename = argv[i];
+  for (int i = 0; i < argc; ++i) {
+    try {
+      processFile(argv[i], rowReaderOptions, batchSize);
+    } catch (std::exception& ex) {
+      std::cerr << "Caught exception: " << ex.what() << "\n";
+      return 1;
     }
   }
-
-  if (filename == ORC_NULLPTR) {
-    std::cout << "Error: Filename not provided.\n";
-    return 1;
-  }
-
-  try {
-    processFile(filename, cols, batchSize);
-    return 0;
-  } catch (std::exception& ex) {
-    std::cerr << "Caught exception: " << ex.what() << "\n";
-    return 1;
-  }
+  return 0;
 }
