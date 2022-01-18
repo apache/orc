@@ -130,6 +130,7 @@ namespace orc {
     bool enableLazyDecoding;
     std::shared_ptr<SearchArgument> sargs;
     std::string readerTimezone;
+    RowReaderOptions::IdReadIntentMap idReadIntentMap;
 
     RowReaderOptionsPrivate() {
       selection = ColumnSelection_NONE;
@@ -174,6 +175,7 @@ namespace orc {
     privateBits->selection = ColumnSelection_FIELD_IDS;
     privateBits->includedColumnIndexes.assign(include.begin(), include.end());
     privateBits->includedColumnNames.clear();
+    privateBits->idReadIntentMap.clear();
     return *this;
   }
 
@@ -181,12 +183,27 @@ namespace orc {
     privateBits->selection = ColumnSelection_NAMES;
     privateBits->includedColumnNames.assign(include.begin(), include.end());
     privateBits->includedColumnIndexes.clear();
+    privateBits->idReadIntentMap.clear();
     return *this;
   }
 
   RowReaderOptions& RowReaderOptions::includeTypes(const std::list<uint64_t>& types) {
     privateBits->selection = ColumnSelection_TYPE_IDS;
     privateBits->includedColumnIndexes.assign(types.begin(), types.end());
+    privateBits->includedColumnNames.clear();
+    privateBits->idReadIntentMap.clear();
+    return *this;
+  }
+
+  RowReaderOptions&
+  RowReaderOptions::includeTypesWithIntents(const IdReadIntentMap& idReadIntentMap) {
+    privateBits->selection = ColumnSelection_TYPE_IDS;
+    privateBits->includedColumnIndexes.clear();
+    privateBits->idReadIntentMap.clear();
+    for (const auto& typeIntentPair : idReadIntentMap) {
+      privateBits->idReadIntentMap[typeIntentPair.first] = typeIntentPair.second;
+      privateBits->includedColumnIndexes.push_back(typeIntentPair.first);
+    }
     privateBits->includedColumnNames.clear();
     return *this;
   }
@@ -269,6 +286,11 @@ namespace orc {
 
   const std::string& RowReaderOptions::getTimezoneName() const {
     return privateBits->readerTimezone;
+  }
+
+  const RowReaderOptions::IdReadIntentMap
+  RowReaderOptions::getIdReadIntentMap() const {
+    return privateBits->idReadIntentMap;
   }
 }
 

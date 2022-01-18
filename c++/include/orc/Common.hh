@@ -123,6 +123,17 @@ namespace orc {
   };
 
   /**
+   * Specific read intention when selecting a certain TypeId.
+   * This enum currently only being utilized by LIST type selection.
+   */
+  enum ReadIntent {
+    ReadIntent_ALL = 0,
+
+    // Only read offsets of a LIST type. Do not read the children types.
+    ReadIntent_OFFSETS = 1
+  };
+
+  /**
    * Get the string representation of the StreamKind.
    */
   std::string streamKindToString(StreamKind kind);
