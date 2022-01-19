@@ -127,3 +127,18 @@ TEST (TestFileContents, testNestedColumns) {
   EXPECT_EQ(expected, output);
   EXPECT_EQ("", error);
 }
+
+TEST (TestFileContents, testInvalidName) {
+  const std::string pgm = findProgram("tools/src/orc-contents");
+  const std::string file = findExample("TestOrcFile.test1.orc");
+  const std::string error_msg =
+    "Invalid column selected abc. Valid names are boolean1, byte1, bytes1, double1, "
+    "float1, int1, list, list.int1, list.string1, long1, map, map.int1, map.string1, "
+    "middle, middle.list, middle.list.int1, middle.list.string1, short1, string1";
+
+  std::string output;
+  std::string error;
+  EXPECT_EQ(1, runProgram({pgm, "-n", "byte1,abc", file}, output, error));
+  EXPECT_EQ("", output);
+  EXPECT_NE(std::string::npos, error.find(error_msg));
+}
