@@ -97,7 +97,7 @@ namespace orc {
     if (!selectedColumns[id]) {
       selectedColumns[id] = true;
       bool selectChild = true;
-      if (kind == TypeKind::LIST) {
+      if (kind == TypeKind::LIST || kind == TypeKind::MAP || kind == TypeKind::UNION) {
         auto elem = idReadIntentMap.find(id);
         if (elem != idReadIntentMap.end() &&
             elem->second == ReadIntent_OFFSETS) {
@@ -120,10 +120,24 @@ namespace orc {
   bool ColumnSelector::selectParents(std::vector<bool>& selectedColumns, const Type& type) {
     size_t id = static_cast<size_t>(type.getColumnId());
     bool result = selectedColumns[id];
+    uint64_t numSubtypeSelected = 0;
     for(uint64_t c=0; c < type.getSubtypeCount(); ++c) {
-      result |= selectParents(selectedColumns, *type.getSubtype(c));
+      if (selectParents(selectedColumns, *type.getSubtype(c))) {
+        result = true;
+        numSubtypeSelected++;
+      }
     }
     selectedColumns[id] = result;
+
+    if (type.getKind() == TypeKind::UNION && selectedColumns[id]) {
+      if (0 < numSubtypeSelected && numSubtypeSelected < type.getSubtypeCount()) {
+        // Subtypes of UNION should be fully selected or not selected at all.
+        // Override partial subtype selections with full selections.
+        for (uint64_t c = 0; c < type.getSubtypeCount(); ++c) {
+          selectChildren(selectedColumns, *type.getSubtype(c));
+        }
+      }
+    }
     return result;
   }
 

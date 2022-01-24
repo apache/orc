@@ -124,12 +124,12 @@ namespace orc {
 
   /**
    * Specific read intention when selecting a certain TypeId.
-   * This enum currently only being utilized by LIST type selection.
+   * This enum currently only being utilized by LIST, MAP, and UNION type selection.
    */
   enum ReadIntent {
     ReadIntent_ALL = 0,
 
-    // Only read offsets of a LIST type. Do not read the children types.
+    // Only read the offsets of selected type. Do not read the children types.
     ReadIntent_OFFSETS = 1
   };
 
