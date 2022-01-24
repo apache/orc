@@ -24,7 +24,7 @@
 #include <sstream>
 
 namespace orc {
-
+  void checkProtoTypes(const proto::Footer &footer);
   Type::~Type() {
     // PASS
   }
@@ -413,6 +413,8 @@ namespace orc {
   std::unique_ptr<Type> convertType(const proto::Type& type,
                                     const proto::Footer& footer) {
     std::unique_ptr<Type> ret;
+    //check for corrupt footers before conversion
+    checkProtoTypes(footer);
     switch (static_cast<int64_t>(type.kind())) {
 
     case proto::Type_Kind_BOOLEAN:
