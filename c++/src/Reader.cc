@@ -184,7 +184,15 @@ namespace orc {
     if (ite != nameIdMap.end()) {
       updateSelectedByTypeId(selectedColumns, ite->second);
     } else {
-      throw ParseError("Invalid column selected " + fieldName);
+      bool first = true;
+      std::ostringstream ss;
+      ss << "Invalid column selected " << fieldName << ". Valid names are ";
+      for (auto it = nameIdMap.begin(); it != nameIdMap.end(); ++it) {
+        if (!first) ss << ", ";
+        ss << it->first;
+        first = false;
+      }
+      throw ParseError(ss.str());
     }
   }
 
