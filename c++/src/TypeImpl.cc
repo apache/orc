@@ -24,9 +24,9 @@
 #include <sstream>
 
 namespace orc {
-  void checkProtoTypes(const proto::Footer &footer);
-  Type::~Type() {
-    // PASS
+  
+   Type::~Type() {
+   // PASS
   }
 
   TypeImpl::TypeImpl(TypeKind _kind) {
@@ -413,8 +413,6 @@ namespace orc {
   std::unique_ptr<Type> convertType(const proto::Type& type,
                                     const proto::Footer& footer) {
     std::unique_ptr<Type> ret;
-    //check for corrupt footers before conversion
-    checkProtoTypes(footer);
     switch (static_cast<int64_t>(type.kind())) {
 
     case proto::Type_Kind_BOOLEAN:
@@ -456,6 +454,7 @@ namespace orc {
         throw ParseError("Illegal MAP type that doesn't contain two subtypes");
       if (type.kind() == proto::Type_Kind_UNION && type.subtypes_size() == 0)
         throw ParseError("Illegal UNION type that doesn't contain any subtypes");
+      
       for(int i=0; i < type.subtypes_size(); ++i) {
         result->addUnionChild(convertType(footer.types(static_cast<int>
                                                        (type.subtypes(i))),
@@ -467,6 +466,8 @@ namespace orc {
     case proto::Type_Kind_STRUCT: {
       TypeImpl* result = new TypeImpl(STRUCT);
       ret = std::unique_ptr<Type>(result);
+     if (type.subtypes_size() > type.fieldnames_size())
+        throw ParseError("Illegal STRUCT type that contains less fieldnames than subtypes");
       for(int i=0; i < type.subtypes_size(); ++i) {
         result->addStructField(type.fieldnames(i),
                                convertType(footer.types(static_cast<int>

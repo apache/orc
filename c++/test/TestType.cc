@@ -404,6 +404,21 @@ namespace orc {
     illUnionType.set_kind(proto::Type_Kind_UNION);
     testCorruptHelper(illUnionType, footer,
         "Illegal UNION type that doesn't contain any subtypes");
+
+    proto::Type illStructType;
+    proto::Type structType;
+    illStructType.set_kind(proto::Type_Kind_STRUCT);
+    structType.set_kind(proto::Type_Kind_STRUCT);
+    structType.add_subtypes(0);  // construct a loop back to root
+    structType.add_fieldnames("root");
+    illStructType.add_subtypes(1);
+    illStructType.add_fieldnames("f1");
+    illStructType.add_subtypes(2);
+    *(footer.add_types()) = illStructType;
+    *(footer.add_types()) = structType;
+    testCorruptHelper(illStructType, footer,
+        "Illegal STRUCT type that contains less fieldnames than subtypes");
+  
   }
 
   void expectParseError(const proto::Footer &footer, const char* errMsg) {
