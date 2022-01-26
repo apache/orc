@@ -418,7 +418,6 @@ namespace orc {
     *(footer.add_types()) = structType;
     testCorruptHelper(illStructType, footer,
         "Illegal STRUCT type that contains less fieldnames than subtypes");
-  
   }
 
   void expectParseError(const proto::Footer &footer, const char* errMsg) {

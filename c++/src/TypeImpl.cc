@@ -24,9 +24,9 @@
 #include <sstream>
 
 namespace orc {
-  
-   Type::~Type() {
-   // PASS
+
+  Type::~Type() {
+    // PASS
   }
 
   TypeImpl::TypeImpl(TypeKind _kind) {
@@ -454,7 +454,6 @@ namespace orc {
         throw ParseError("Illegal MAP type that doesn't contain two subtypes");
       if (type.kind() == proto::Type_Kind_UNION && type.subtypes_size() == 0)
         throw ParseError("Illegal UNION type that doesn't contain any subtypes");
-      
       for(int i=0; i < type.subtypes_size(); ++i) {
         result->addUnionChild(convertType(footer.types(static_cast<int>
                                                        (type.subtypes(i))),
@@ -466,7 +465,7 @@ namespace orc {
     case proto::Type_Kind_STRUCT: {
       TypeImpl* result = new TypeImpl(STRUCT);
       ret = std::unique_ptr<Type>(result);
-     if (type.subtypes_size() > type.fieldnames_size())
+      if (type.subtypes_size() > type.fieldnames_size())
         throw ParseError("Illegal STRUCT type that contains less fieldnames than subtypes");
       for(int i=0; i < type.subtypes_size(); ++i) {
         result->addStructField(type.fieldnames(i),
