@@ -465,6 +465,8 @@ namespace orc {
     case proto::Type_Kind_STRUCT: {
       TypeImpl* result = new TypeImpl(STRUCT);
       ret = std::unique_ptr<Type>(result);
+      if (type.subtypes_size() > type.fieldnames_size())
+        throw ParseError("Illegal STRUCT type that contains less fieldnames than subtypes");
       for(int i=0; i < type.subtypes_size(); ++i) {
         result->addStructField(type.fieldnames(i),
                                convertType(footer.types(static_cast<int>
