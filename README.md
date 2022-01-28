@@ -26,8 +26,7 @@ Releases:
 
 The current build status:
 * Main branch <a href="https://github.com/apache/orc/actions/workflows/build_and_test.yml?query=branch%3Amain">
-![main build status](https://github.com/apache/orc/actions/workflows/build_and_test.yml/badge.svg?branch=main)</a> <a href="https://travis-ci.com/apache/orc/branches">
-![main build status](https://travis-ci.com/apache/orc.svg?branch=main)</a>
+![main build status](https://github.com/apache/orc/actions/workflows/build_and_test.yml/badge.svg?branch=main)</a>
 
 Bug tracking: <a href="http://orc.apache.org/bugs">Apache Jira</a>
 
