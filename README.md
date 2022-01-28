@@ -21,6 +21,8 @@ Releases:
 * Latest: <a href="http://orc.apache.org/releases">Apache ORC releases</a>
 * Maven Central: <a href="http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22">![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.apache.orc/orc/badge.svg)</a>
 * Downloads: <a href="http://orc.apache.org/downloads">Apache ORC downloads</a>
+* Release tags: <a href="https://github.com/apache/orc/releases">Apache ORC release tags</a>
+* Plan: <a href="https://github.com/apache/orc/milestones">Apache ORC future release plan</a>
 
 The current build status:
 * Main branch <a href="https://github.com/apache/orc/actions/workflows/build_and_test.yml?query=branch%3Amain">
