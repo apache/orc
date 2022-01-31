@@ -67,7 +67,7 @@ public class ScanVariants implements OrcBenchmark {
   public void run(String[] args) throws Exception {
     CommandLine cli = parseCommandLine(args);
     String[] compressList =
-        cli.getOptionValue("compress", "none,snappy,gz").split(",");
+        cli.getOptionValue("compress", "snappy,gz,zstd").split(",");
     String[] dataList =
         cli.getOptionValue("data", "taxi,sales,github").split(",");
     String[] formatList =

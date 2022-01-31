@@ -113,7 +113,7 @@ public class GenerateVariants implements OrcBenchmark {
   public void run(String[] args) throws Exception {
     CommandLine cli = parseCommandLine(args);
     String[] compressList =
-        cli.getOptionValue("compress", "none,snappy,zlib").split(",");
+        cli.getOptionValue("compress", "snappy,zlib,zstd").split(",");
     String[] dataList =
         cli.getOptionValue("data", "taxi,sales,github").split(",");
     String[] formatList =
