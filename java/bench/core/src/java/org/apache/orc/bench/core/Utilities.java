@@ -18,6 +18,7 @@
 
 package org.apache.orc.bench.core;
 
+import com.google.common.base.Preconditions;
 import org.apache.commons.cli.CommandLine;
 import org.apache.hadoop.fs.Path;
 import org.apache.orc.TypeDescription;
@@ -33,6 +34,7 @@ public class Utilities {
 
   public static TypeDescription loadSchema(String name) throws IOException {
     InputStream in = Utilities.class.getClassLoader().getResourceAsStream(name);
+    Preconditions.checkArgument(in != null, "Schema not found: " + name);
     byte[] buffer= new byte[1 * 1024];
     int len = in.read(buffer);
     StringBuilder string = new StringBuilder();
