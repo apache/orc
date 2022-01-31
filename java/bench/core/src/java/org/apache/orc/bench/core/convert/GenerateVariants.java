@@ -120,6 +120,8 @@ public class GenerateVariants implements OrcBenchmark {
         cli.getOptionValue("format", "avro,json,orc,parquet").split(",");
     long records = Long.parseLong(cli.getOptionValue("sales", "25000000"));
     Configuration conf = new Configuration();
+    // Disable Hadoop checksums
+    conf.set("fs.file.impl", "org.apache.hadoop.fs.RawLocalFileSystem");
     Path root = new Path(cli.getArgs()[0]);
 
     for (final String data: dataList) {
