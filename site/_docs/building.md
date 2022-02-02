@@ -9,7 +9,7 @@ dockerUrl: https://github.com/apache/orc/blob/main/docker
 
 The C++ library is supported on the following operating systems:
 
-* CentOS 7 or 8
+* CentOS 7
 * Debian 9 to 11
 * MacOS 11 to 12.1
 * Ubuntu 18.04 or 20.04
@@ -26,7 +26,6 @@ For each version of Linux, please check the corresponding Dockerfile, which
 is in the docker subdirectory, for the list of packages required to build ORC:
 
 * [CentOS 7]({{ page.dockerUrl }}/centos7/Dockerfile)
-* [CentOS 8]({{ page.dockerUrl }}/centos8/Dockerfile)
 * [Debian 9]({{ page.dockerUrl }}/debian9/Dockerfile)
 * [Debian 10]({{ page.dockerUrl }}/debian10/Dockerfile)
 * [Debian 11]({{ page.dockerUrl }}/debian11/Dockerfile)
