@@ -11,6 +11,10 @@
   - building
   - releases
 
+- title: Using in Python
+  docs:
+  - pyarrow
+
 - title: Using in Spark
   docs:
   - spark-ddl
