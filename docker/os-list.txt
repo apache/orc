@@ -1,5 +1,4 @@
 centos7
-centos8
 debian9
 debian10
 debian11
