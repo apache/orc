@@ -128,6 +128,8 @@
   
     
   
+    
+  
 
   
 
@@ -168,9 +170,13 @@
   
     
   
+    
+  
 
   
 
+  
+    
   
     
   
@@ -248,12 +254,16 @@
   
     
   
+    
+  
 
   
 
   
     
       <option value="/docs/acid.html">ACID support</option>
+    
+  
     
   
     
@@ -335,9 +345,13 @@
   
     
   
+    
+  
 
   
 
+  
+    
   
     
   
@@ -367,6 +381,55 @@
   
     
       <option value="/docs/releases.html">Releases</option>
+    
+  
+    
+  
+    
+  
+    
+  
+
+
+    </optgroup>
+    
+    <optgroup label="Using in Python">
+      
+
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <option value="/docs/pyarrow.html">PyArrow</option>
+    
+  
     
   
     
@@ -417,6 +480,8 @@
     
   
     
+  
+    
       <option value="/docs/spark-ddl.html">Spark DDL</option>
     
   
@@ -425,6 +490,8 @@
 
   
 
+  
+    
   
     
   
@@ -509,6 +576,8 @@
   
     
   
+    
+  
 
   
 
@@ -527,6 +596,8 @@
   
     
       <option value="/docs/hive-config.html">Hive Configuration</option>
+    
+  
     
   
     
@@ -596,6 +667,8 @@
   
     
   
+    
+  
 
   
 
@@ -626,6 +699,8 @@
   
     
       <option value="/docs/mapreduce.html">Using in MapReduce</option>
+    
+  
     
   
     
@@ -683,6 +758,8 @@
   
     
   
+    
+  
 
   
 
@@ -695,6 +772,8 @@
   
     
       <option value="/docs/core-cpp.html">Using Core C++</option>
+    
+  
     
   
     
@@ -770,6 +849,8 @@
   
     
   
+    
+  
 
   
 
@@ -810,6 +891,8 @@
   
     
   
+    
+  
 
 
     </optgroup>
@@ -826,7 +909,13 @@
 <p>Displays the contents of the ORC file as a JSON document. With the
 <code class="highlighter-rouge">columns</code> argument only the selected columns are printed.</p>
 
-<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% orc-contents  <span class="o">[</span><span class="nt">--columns</span><span class="o">=</span>1,2,...] &lt;filename&gt;
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% orc-contents <span class="o">[</span>options] &lt;filename&gt;
+Options:
+	<span class="nt">-h</span> <span class="nt">--help</span>
+	<span class="nt">-c</span> <span class="nt">--columns</span>		Comma separated list of top-level column fields
+	<span class="nt">-t</span> <span class="nt">--columnTypeIds</span>	Comma separated list of column <span class="nb">type </span>ids
+	<span class="nt">-n</span> <span class="nt">--columnNames</span>	Comma separated list of column names
+	<span class="nt">-b</span> <span class="nt">--batch</span>		Batch size <span class="k">for </span>reading
 </code></pre></div></div>
 
 <p>If you run it on the example file TestOrcFile.test1.orc, you’ll see (without
@@ -925,7 +1014,13 @@ you’ll see:</p>
 to set the batch size which is 1024 rows by default. It is useful to check
 if the ORC file is damaged.</p>
 
-<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% orc-scan <span class="o">[</span><span class="nt">--batch</span><span class="o">=</span>&lt;size&gt;] &lt;filename&gt;
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% orc-scan <span class="o">[</span>options] &lt;filename&gt;...
+Options:
+	<span class="nt">-h</span> <span class="nt">--help</span>
+	<span class="nt">-c</span> <span class="nt">--columns</span>		Comma separated list of top-level column fields
+	<span class="nt">-t</span> <span class="nt">--columnTypeIds</span>	Comma separated list of column <span class="nb">type </span>ids
+	<span class="nt">-n</span> <span class="nt">--columnNames</span>	Comma separated list of column names
+	<span class="nt">-b</span> <span class="nt">--batch</span>		Batch size <span class="k">for </span>reading
 </code></pre></div></div>
 
 <p>If you run it on the example file TestOrcFile.test1.orc, you’ll see:</p>
@@ -943,7 +1038,7 @@ With the <code class="highlighter-rouge">withIndex</code> option to include colu
 <div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% orc-statistics <span class="o">[</span><span class="nt">--withIndex</span><span class="o">]</span> &lt;filename&gt;
 </code></pre></div></div>
 
-<p>If you run it on the example file TestOrcFile.TestOrcFile.columnProjection.orc
+<p>If you run it on the example file TestOrcFile.columnProjection.orc
 you’ll see:</p>
 
 <div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% orc-statistics examples/TestOrcFile.columnProjection.orc
@@ -1074,11 +1169,37 @@ Maximum: ffc17f0e35e1a6c0
 Total length: 15941
 </code></pre></div></div>
 
+<h2 id="orc-memory">orc-memory</h2>
+
+<p>Estimate the memory footprint for reading the ORC file.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% orc-memory <span class="o">[</span>options] &lt;filename&gt;
+Options:
+	<span class="nt">-h</span> <span class="nt">--help</span>
+	<span class="nt">-c</span> <span class="nt">--columns</span>		Comma separated list of top-level column fields
+	<span class="nt">-t</span> <span class="nt">--columnTypeIds</span>	Comma separated list of column <span class="nb">type </span>ids
+	<span class="nt">-n</span> <span class="nt">--columnNames</span>	Comma separated list of column names
+	<span class="nt">-b</span> <span class="nt">--batch</span>		Batch size <span class="k">for </span>reading
+</code></pre></div></div>
+
+<p>If you run it on the example file TestOrcFile.columnProjection.orc
+you’ll see:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% orc-memory examples/TestOrcFile.columnProjection.orc,
+Reader memory estimate: 202972
+Batch memory estimate:  27000
+Total memory estimate:  229972
+Actual max memory used: 160381
+</code></pre></div></div>
+
           
 
 
 
 
+
+  
+  
 
   
   
@@ -1233,6 +1354,8 @@ Total length: 15941
     
   
     
+  
+    
       <li class=""><a href="/docs/types.html">Types</a></li>
       
 
@@ -1329,7 +1452,53 @@ Total length: 15941
     
   
     
+  
+    
       <li class=""><a href="/docs/releases.html">Releases</a></li>
+      
+
+
+</ul>
+
+    
+    <h4>Using in Python</h4>
+    
+
+<ul>
+
+  
+
+  
+
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <li class=""><a href="/docs/pyarrow.html">PyArrow</a></li>
       
 
 
@@ -1377,6 +1546,8 @@ Total length: 15941
     
   
     
+  
+    
       <li class=""><a href="/docs/spark-ddl.html">Spark DDL</a></li>
       
 
@@ -1385,6 +1556,8 @@ Total length: 15941
 
   
 
+  
+    
   
     
   

@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>ORC Adopters</title>
+  <title>PyArrow</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="generator" content="Jekyll v3.8.6">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
@@ -903,118 +903,60 @@
 
       <div class="unit four-fifths">
         <article>
-          <h1>ORC Adopters</h1>
-          <p>If your company or tool uses ORC, please let us know so that we can update
-this page.</p>
+          <h1>PyArrow</h1>
+          <h2 id="how-to-install">How to install</h2>
 
-<h3 id="apache-hadoop"><a href="https://hadoop.apache.org/">Apache Hadoop</a></h3>
+<p>Apache Arrow project’s PyArrow is the recommended package.</p>
 
-<p>ORC files have always supporting reading and writing from Hadoop’s MapReduce,
-but with the ORC 1.1.0 release it is now easier than ever without pulling in
-Hive’s exec jar and all of its dependencies. OrcStruct now also implements
-WritableComparable and can be serialized through the MapReduce shuffle.</p>
+<p>https://pypi.org/project/pyarrow/</p>
 
-<h3 id="apache-spark"><a href="https://spark.apache.org/">Apache Spark</a></h3>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pip3 install pyarrow
+pip3 install pandas
+</code></pre></div></div>
 
-<p>Apache Spark has <a href="https://databricks.com/blog/2015/07/16/joint-blog-post-bringing-orc-support-into-apache-spark.html">added
-support</a>
-for reading and writing ORC files with support for column project and
-predicate push down.</p>
+<h2 id="how-to-write-and-read-an-orc-file">How to write and read an ORC file</h2>
 
-<h3 id="apache-arrow"><a href="https://arrow.apache.org/">Apache Arrow</a></h3>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [1]: import pandas as pd
 
-<p>Apache Arrow supports reading and writing <a href="https://arrow.apache.org/docs/index.html?highlight=orc#apache-arrow">ORC file format</a>.</p>
+In [2]: import pyarrow as pa
 
-<h3 id="apache-flink"><a href="https://flink.apache.org/">Apache Flink</a></h3>
+In [3]: import pyarrow.orc as orc
 
-<p>Apache Flink supports
-<a href="https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/connectors/table/formats/orc/">ORC format in Table API</a>
-for reading and writing ORC files.</p>
+In [4]: orc.write_table(pa.table({"col1": [1, 2, 3]}), "test.orc")
 
-<h3 id="apache-iceberg"><a href="https://iceberg.apache.org/">Apache Iceberg</a></h3>
+In [5]: t = orc.ORCFile("test.orc").read()
 
-<p>Apache Iceberg supports <a href="https://iceberg.apache.org/#spec/#orc">ORC spec</a> to use ORC tables.</p>
-
-<h3 id="apache-druid"><a href="https://druid.apache.org/">Apache Druid</a></h3>
-
-<p>Apache Druid supports
-<a href="https://druid.apache.org/docs/0.22.1/development/extensions-core/orc.html#orc-extension">ORC extension</a>
-to ingest and understand the Apache ORC data format.</p>
-
-<h3 id="apache-hive"><a href="https://hive.apache.org/">Apache Hive</a></h3>
-
-<p>Apache Hive was the original use case and home for ORC.  ORC’s strong
-type system, advanced compression, column projection, predicate push
-down, and vectorization support make Hive <a href="https://hortonworks.com/blog/orcfile-in-hdp-2-better-compression-better-performance/">perform
-better</a>
-than any other format for your data.</p>
-
-<h3 id="apache-gobblin"><a href="https://gobblin.apache.org/">Apache Gobblin</a></h3>
-
-<p>Apache Gobblin supports
-<a href="https://gobblin.apache.org/docs/case-studies/Writing-ORC-Data/">writing data to ORC files</a>
-by leveraging Apache Hive’s SerDe library.</p>
-
-<h3 id="apache-nifi"><a href="https://nifi.apache.org/">Apache Nifi</a></h3>
-
-<p>Apache Nifi is <a href="https://issues.apache.org/jira/browse/NIFI-1663">adding
-support</a> for writing
-ORC files.</p>
-
-<h3 id="apache-pig"><a href="https://pig.apache.org/">Apache Pig</a></h3>
-
-<p>Apache Pig added support for reading and writing ORC files in <a href="https://hortonworks.com/blog/announcing-apache-pig-0-14-0/">Pig
-14.0</a>.</p>
-
-<h3 id="eel"><a href="https://github.com/51zero/eel-sdk">EEL</a></h3>
-
-<p>EEL is a Scala BigData API that supports reading and writing data for
-various file formats and storage systems including to and from ORC. It
-is designed as a in-process low level API for manipulating data. Data
-is lazily streamed from source to sink and using standard Scala
-operations such as map, flatMap and filter, it is especially suited
-for ETL style applications. EEL supports ORC predicate and projection
-pushdowns and correct handles conversions from other formats including
-complex types such as maps, lists or nested structs. A typical use
-case would be to extract data from JDBC to ORC files housed in HDFS,
-or directly into Hive tables backed by an ORC file format.</p>
-
-<h3 id="facebook"><a href="https://facebook.com">Facebook</a></h3>
-
-<p>With more than 300 PB of data, Facebook was an <a href="https://code.facebook.com/posts/229861827208629/scaling-the-facebook-data-warehouse-to-300-pb/">early adopter of
-ORC</a> and quickly put it into production.</p>
-
-<h3 id="linkedin"><a href="https://linkedin.com">LinkedIn</a></h3>
-
-<p>LinkedIn uses
-<a href="https://engineering.linkedin.com/blog/2021/fastingest-low-latency-gobblin">the ORC file format</a>
-with Apache Iceberg metadata catalog and Apache Gobblin to provide our data customers with high-query performance.</p>
-
-<p>https://engineering.linkedin.com/blog/2021/fastingest-low-latency-gobblin</p>
-
-<h3 id="trino-formerly-presto-sql"><a href="https://trino.io/">Trino (formerly Presto SQL)</a></h3>
-
-<p>The Trino team has done a lot of work <a href="https://code.facebook.com/posts/370832626374903/even-faster-data-at-the-speed-of-presto-orc/">integrating
-ORC</a> into their SQL engine.</p>
-
-<h3 id="timber"><a href="https://timber.io/">Timber</a></h3>
-
-<p>Timber adopted ORC for it’s S3 based logging platform that stores
-petabytes of log data. ORC has been key in ensuring a fast,
-cost-effective strategy for persisting and querying that data.</p>
-
-<h3 id="vertica"><a href="http://www8.hp.com/us/en/software-solutions/advanced-sql-big-data-analytics/">Vertica</a></h3>
-
-<p>HPE Vertica has contributed significantly to the ORC C++ library. ORC
-is a significant part of Vertica SQL-on-Hadoop (VSQLoH) which brings
-the performance, reliability and standards compliance of the Vertica
-Analytic Database to the Hadoop ecosystem.</p>
+In [6]: t.to_pandas()
+Out[6]:
+   col1
+0     1
+1     2
+2     3
+</code></pre></div></div>
 
           
 
 
 
 
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
 
   
   
@@ -1026,14 +968,14 @@ Analytic Database to the Hadoop ecosystem.</p>
           
             
             
-            <a href="/docs/index.html" class="prev">Back</a>
+            <a href="/docs/releases.html" class="prev">Back</a>
           
       </div>
       <div class="right align-left">
           
             
             
-            <a href="/docs/types.html" class="next">Next</a>
+            <a href="/docs/spark-ddl.html" class="next">Next</a>
           
       </div>
     </div>
@@ -1085,7 +1027,7 @@ Analytic Database to the Hadoop ecosystem.</p>
     
   
     
-      <li class="current"><a href="/docs/adopters.html">ORC Adopters</a></li>
+      <li class=""><a href="/docs/adopters.html">ORC Adopters</a></li>
       
 
 
@@ -1271,7 +1213,7 @@ Analytic Database to the Hadoop ecosystem.</p>
     
   
     
-      <li class=""><a href="/docs/pyarrow.html">PyArrow</a></li>
+      <li class="current"><a href="/docs/pyarrow.html">PyArrow</a></li>
       
 
 
