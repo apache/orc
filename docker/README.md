@@ -1,6 +1,6 @@
 ## Supported OSes
 
-* CentOS 7 and 8
+* CentOS 7
 * Debian 9 and 10
 * Ubuntu 18 and 20
 
