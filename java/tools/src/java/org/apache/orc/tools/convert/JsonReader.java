@@ -63,6 +63,8 @@ public class JsonReader implements RecordReader {
   private final FSDataInputStream input;
   private long rowNumber = 0;
   private final DateTimeFormatter dateTimeFormatter;
+  private final String unionTag;
+  private final String unionValue;
 
   interface JsonConverter {
     void convert(JsonElement value, ColumnVector vect, int row);
@@ -313,9 +315,9 @@ public class JsonReader implements RecordReader {
       } else {
         UnionColumnVector vector = (UnionColumnVector) vect;
         JsonObject obj = value.getAsJsonObject();
-        int tag = obj.get("tag").getAsInt();
+        int tag = obj.get(unionTag).getAsInt();
         vector.tags[row] = tag;
-        childConverter[tag].convert(obj.get("value"), vector.fields[tag], row);
+        childConverter[tag].convert(obj.get(unionValue), vector.fields[tag], row);
       }
     }
   }
@@ -362,15 +364,19 @@ public class JsonReader implements RecordReader {
                     FSDataInputStream underlying,
                     long size,
                     TypeDescription schema,
-                    String timestampFormat) throws IOException {
-    this(new JsonStreamParser(reader), underlying, size, schema, timestampFormat);
+                    String timestampFormat,
+                    String unionTag,
+                    String unionValue) throws IOException {
+    this(new JsonStreamParser(reader), underlying, size, schema, timestampFormat, unionTag, unionValue);
   }
 
   public JsonReader(Iterator<JsonElement> parser,
                     FSDataInputStream underlying,
                     long size,
                     TypeDescription schema,
-                    String timestampFormat) throws IOException {
+                    String timestampFormat,
+                    String unionTag,
+                    String unionValue) throws IOException {
     this.schema = schema;
     if (schema.getCategory() != TypeDescription.Category.STRUCT) {
       throw new IllegalArgumentException("Root must be struct - " + schema);
@@ -384,6 +390,8 @@ public class JsonReader implements RecordReader {
     for(int c = 0; c < converters.length; ++c) {
       converters[c] = createConverter(fieldTypes.get(c));
     }
+    this.unionTag = unionTag;
+    this.unionValue = unionValue;
   }
 
   @Override
