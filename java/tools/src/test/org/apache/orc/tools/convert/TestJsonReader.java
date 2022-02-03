@@ -174,5 +174,4 @@ public class TestJsonReader {
         assertEquals(0, union.tags[2]);
         assertEquals(3, longs.vector[2]);
     }
-
 }

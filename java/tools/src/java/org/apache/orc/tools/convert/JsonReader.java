@@ -367,7 +367,8 @@ public class JsonReader implements RecordReader {
                     String timestampFormat,
                     String unionTag,
                     String unionValue) throws IOException {
-    this(new JsonStreamParser(reader), underlying, size, schema, timestampFormat, unionTag, unionValue);
+    this(new JsonStreamParser(reader), underlying, size, schema, timestampFormat, unionTag,
+         unionValue);
   }
 
   public JsonReader(Iterator<JsonElement> parser,

@@ -153,7 +153,8 @@ public class ConvertTool {
         }
         case JSON: {
           FSDataInputStream underlying = filesystem.open(path);
-          return new JsonReader(getReader(underlying), underlying, size, schema, timestampFormat, unionTag, unionValue);
+          return new JsonReader(getReader(underlying), underlying, size, schema, timestampFormat,
+              unionTag, unionValue);
         }
         case CSV: {
           FSDataInputStream underlying = filesystem.open(path);
@@ -279,10 +280,12 @@ public class ConvertTool {
             .build()
     );
     options.addOption(
-        Option.builder().longOpt("union-tag").desc("JSON key name representing UNION tag. Default to \"tag\".")
+        Option.builder().longOpt("union-tag")
+            .desc("JSON key name representing UNION tag. Default to \"tag\".")
             .hasArg().build());
     options.addOption(
-        Option.builder().longOpt("union-value").desc("JSON key name representing UNION value. Default to \"value\".")
+        Option.builder().longOpt("union-value")
+            .desc("JSON key name representing UNION value. Default to \"value\".")
             .hasArg().build());
     CommandLine cli = new DefaultParser().parse(options, args);
     if (cli.hasOption('h') || cli.getArgs().length == 0) {
