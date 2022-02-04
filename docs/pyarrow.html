@@ -906,11 +906,9 @@
           <h1>PyArrow</h1>
           <h2 id="how-to-install">How to install</h2>
 
-<p>Apache Arrow project’s PyArrow is the recommended package.</p>
+<p><a href="https://arrow.apache.org">Apache Arrow</a> project’s <a href="https://pypi.org/project/pyarrow/">PyArrow</a> is the recommended package.</p>
 
-<p>https://pypi.org/project/pyarrow/</p>
-
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pip3 install pyarrow
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pip3 install pyarrow==7.0.0
 pip3 install pandas
 </code></pre></div></div>
 
@@ -920,14 +918,12 @@ pip3 install pandas
 
 In [2]: import pyarrow as pa
 
-In [3]: import pyarrow.orc as orc
+In [3]: from pyarrow import orc
 
 In [4]: orc.write_table(pa.table({"col1": [1, 2, 3]}), "test.orc")
 
-In [5]: t = orc.ORCFile("test.orc").read()
-
-In [6]: t.to_pandas()
-Out[6]:
+In [5]: orc.read_table("test.orc").to_pandas()
+Out[5]:
    col1
 0     1
 1     2
