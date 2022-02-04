@@ -6,12 +6,10 @@ permalink: /docs/pyarrow.html
 
 ## How to install
 
-Apache Arrow project's PyArrow is the recommended package.
-
-https://pypi.org/project/pyarrow/
+[Apache Arrow](https://arrow.apache.org) project's [PyArrow](https://pypi.org/project/pyarrow/) is the recommended package.
 
 ```
-pip3 install pyarrow
+pip3 install pyarrow==7.0.0
 pip3 install pandas
 ```
 
@@ -22,14 +20,12 @@ In [1]: import pandas as pd
 
 In [2]: import pyarrow as pa
 
-In [3]: import pyarrow.orc as orc
+In [3]: from pyarrow import orc
 
 In [4]: orc.write_table(pa.table({"col1": [1, 2, 3]}), "test.orc")
 
-In [5]: t = orc.ORCFile("test.orc").read()
-
-In [6]: t.to_pandas()
-Out[6]:
+In [5]: orc.read_table("test.orc").to_pandas()
+Out[5]:
    col1
 0     1
 1     2
