@@ -176,7 +176,7 @@
         <configuration>
           <trimStackTrace>false</trimStackTrace>
           <reuseForks>false</reuseForks>
-          <argLine>-Xmx2048m -XX:+IgnoreUnrecognizedVMOptions --add-opens=java.base/java.nio=ALL-UNNAMED</argLine>
+          <argLine>-Xmx2048m -XX:+IgnoreUnrecognizedVMOptions --add-opens=java.base/java.nio=ALL-UNNAMED --add-opens=java.security.jgss/sun.security.krb5=ALL-UNNAMED</argLine>
           <environmentVariables>
             <TZ>US/Pacific</TZ>
             <LANG>en_US.UTF-8</LANG>
