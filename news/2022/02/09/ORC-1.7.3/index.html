@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>Gang Wu and Xiening Dai added as committer</title>
+  <title>ORC 1.7.3 Released</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="generator" content="Jekyll v3.8.6">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
@@ -235,30 +235,113 @@
       <div class="unit four-fifths">
         <article>
   <h2>
-    Gang Wu and Xiening Dai added as committer
-    <a href="/news/2018/03/27/add-xiening-and-gang/" class="permalink" title="Permalink">∞</a>
+    ORC 1.7.3 Released
+    <a href="/news/2022/02/09/ORC-1.7.3/" class="permalink" title="Permalink">∞</a>
   </h2>
   <span class="post-category">
     <span class="label">
-      team
+      release
     </span>
   </span>
   <div class="post-meta">
     <span class="post-date">
-      27 Mar 2018
+      09 Feb 2022
     </span>
-    <a href="https://people.apache.org/~omalley" class="post-author">
-      <img src="https://people.apache.org/~omalley/omalley.png"
-           class="avatar" alt="omalley avatar"
+    <a href="https://people.apache.org/~dongjoon" class="post-author">
+      <img src="https://people.apache.org/~dongjoon/dongjoon.png"
+           class="avatar" alt="dongjoon avatar"
            width="24" height="24">
-      omalley
+      dongjoon
     </a>
   </div>
   <div class="post-content">
-    <p>The ORC PMC is happy to add Gang Wu and Xiening Dai as ORC committers for their
-work on the C++ ORC writer.</p>
+    <p>The ORC team is excited to announce the release of ORC v1.7.3.</p>
 
-<p>Thank you for your work on ORC, Gang and Xiening!</p>
+<ul>
+  <li>Released: 9 February 2022</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.7.3/orc-1.7.3.tar.gz">orc-1.7.3.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-1.7.3/orc-1.7.3.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.7.3">rel/release-1.7.3</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.7.3%22">ORC 1.7.3</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.7.3/orc-1.7.3.tar.gz.sha256">535c4d7588172e85…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.7.3%22&amp;tempMax=500">ORC-1.7.3</a></li>
+</ul>
+
+<p>The ‘bug’ fixes:</p>
+
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1060">ORC-1060</a> Reduce memory usage when vectorized reading dictionary string encoding columns</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1065">ORC-1065</a> Fix IndexOutOfBoundsException in ReaderImpl.extractFileTail</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1067">ORC-1067</a> [C++] Upgrade ZSTD to 1.5.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1078">ORC-1078</a> Row group end offset doesn’t accommodate all the blocks</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1081">ORC-1081</a> Fix heap-use-after-free in SearchArgumentBuilderImpl::end()</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1087">ORC-1087</a> [C++] Handle unloaded seek positions when seeking in an uncompressed chunk</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1092">ORC-1092</a> [C++] Upgrade LZ4 to version 1.9.3</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1102">ORC-1102</a> [C++] Upgrade ZSTD to 1.5.2</li>
+</ul>
+
+<p>The ‘tools’ improvements:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1055">ORC-1055</a> [C++] Add the timezone option for the csv-import tool</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1082">ORC-1082</a> Improve FileDump and JsonFileDump to be robust on missing column statistics</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1092">ORC-1092</a> [C++] Support specifying type ids or column names in cpp tools</li>
+</ul>
+
+<p>The ‘documentation’ patches:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1050">ORC-1050</a> Update ORC site README.md and release process page</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1069">ORC-1069</a> Update building.md</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1071">ORC-1071</a> Update ‘adopters’ page</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1091">ORC-1091</a> Add ‘Tests’ section at ORC ‘develop’ page</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1112">ORC-1112</a> Add ‘Using with Python’ web page</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1114">ORC-1114</a> Update ‘Using with Python’ page with ‘PyArrow’ 7.0.0</li>
+</ul>
+
+<p>The ‘task’ patches:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1070">ORC-1070</a> Upgrade site docker image to use Ubuntu 20.04</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1072">ORC-1072</a> Add ‘Stale’ GitHub Action job</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1094">ORC-1094</a> Enable GitHub issues tab</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1095">ORC-1095</a> Deprecate ‘UnknownFormatException’</li>
+</ul>
+
+<p>The ‘tests’ fixes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-875">ORC-875</a> Add GitHub Action job for Windows Server 2019</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-878">ORC-878</a> Bump auto-service from 1.0-rc7 to 1.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-881">ORC-881</a> Bump slf4j.version from 1.7.30 to 1.7.32</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-989">ORC-989</a> Bump checkstyle from 8.45.1 to 9.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-993">ORC-993</a> Bump junit.version from 5.7.2 to 5.8.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1018">ORC-1018</a> Bump checkstyle from 9.0 to 9.0.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1033">ORC-1033</a> Bump junit.version from 5.8.0 to 5.8.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1044">ORC-1044</a> Bump reproducible-build-maven-plugin to 0.14</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1048">ORC-1048</a> Bump checkstyle from 9.0.1 to 9.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1052">ORC-1052</a> Bump avro.version from 1.10.2 to 1.11.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1057">ORC-1057</a> Bump junit.version from 5.8.1 to 5.8.2</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1061">ORC-1061</a> Bump checkstyle from 9.1 to 9.2</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1066">ORC-1066</a> Bump guava from 30.1.1-jre to 31.0.1-jre</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1068">ORC-1068</a> [C++] Stabilize HAS_POST_2038 test</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1073">ORC-1073</a> Remove appveyor.yml</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1076">ORC-1076</a> Remove Travis PR Builder Link from README.md</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1079">ORC-1079</a> Add Linux Clang 11 GitHub Action test coverage</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1080">ORC-1080</a> Remove .travis.yml</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1084">ORC-1084</a> Bump checkstyle from 9.2 to 9.2.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1086">ORC-1086</a> Bump reproducible-build-maven-plugin from 0.14 to 0.15</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1090">ORC-1090</a> Disable Clang 13.0-specific compilation warnings</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1093">ORC-1093</a> Remove debian8 specific code in run-one.sh</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1096">ORC-1096</a> Bump slf4j.version to 1.7.33</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1103">ORC-1103</a> Use Maven 3.8.4</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1104">ORC-1104</a> Use Spark 3.2.1 in benchmark</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1105">ORC-1105</a> fetch-data.sh should use zsh instead of bash</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1106">ORC-1106</a> Use transitive commons-lang3 dependency in bench module</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1107">ORC-1107</a> Fix NPE at benchmark data schema loading</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1108">ORC-1108</a> Use RawLocalFileSystem to skip checksum files during benchmark data generation</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1109">ORC-1109</a> Use zstd instead of none in the default compress option</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1111">ORC-1111</a> Bump build-helper-maven-plugin from 3.2.0 to 3.3.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1113">ORC-1113</a> Remove CentOS 8 from docker-based tests</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1115">ORC-1115</a> Suppress Illegal reflective access warnings on Java9+ Tests</li>
+</ul>
 
   </div>
 </article>
@@ -278,7 +361,7 @@ work on the C++ ORC writer.</p>
     <h4>Recent Releases</h4>
     <ul>
       
-      <li class="">
+      <li class="current">
         <a href="/news/2022/02/09/ORC-1.7.3/">Version 1.7.3</a>
       </li>
       
@@ -425,7 +508,7 @@ work on the C++ ORC writer.</p>
         
         
         
-        <li class="current">
+        <li class="">
           <a href="/news/2018/03/27/add-xiening-and-gang/">Gang Wu and Xiening Dai added as committer</a>
         </li>
         
