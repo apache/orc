@@ -1,8 +1,16 @@
 # List the releases in reverse logical order
 # Only one release should be tagged latest
+1.7.3:
+  date: 2022-02-09
+  state: latest
+  tar: orc-1.7.3.tar.gz
+  signed-by: Dongjoon Hyun (34F0FC5C)
+  sha256: 535c4d7588172e85b8fc941cd0575d67f2155a55e4cd65d87d5b194b0bb28a31
+  known-issues:
+
 1.7.2:
   date: 2021-12-20
-  state: latest
+  state: archived
   tar: orc-1.7.2.tar.gz
   signed-by: Dongjoon Hyun (34F0FC5C)
   sha256: ef39bae755116fecb07fb4334656f984ba8ce7cdb1c64de078d3ed186b286007
