@@ -50,7 +50,7 @@ public class TestJsonReader {
         StringReader input = new StringReader(s);
         TypeDescription schema = TypeDescription.fromString(
                 "struct<a:timestamp>");
-        JsonReader reader = new JsonReader(input, null, 1, schema, tsFormat, "tag", "value");
+        JsonReader reader = new JsonReader(input, null, 1, schema, tsFormat);
         VectorizedRowBatch batch = schema.createRowBatch(2);
         assertTrue(reader.nextBatch(batch));
         assertEquals(2, batch.size);
@@ -72,7 +72,7 @@ public class TestJsonReader {
         StringReader input = new StringReader(s);
         TypeDescription schema = TypeDescription.fromString(
                 "struct<a:timestamp>");
-        JsonReader reader = new JsonReader(input, null, 1, schema, tsFormat, "tag", "value");
+        JsonReader reader = new JsonReader(input, null, 1, schema, tsFormat);
         VectorizedRowBatch batch = schema.createRowBatch(6);
         assertTrue(reader.nextBatch(batch));
         assertEquals(6, batch.size);
@@ -98,7 +98,7 @@ public class TestJsonReader {
         StringReader input = new StringReader(inputString);
 
         TypeDescription schema = TypeDescription.fromString("struct<dt:date>");
-        JsonReader reader = new JsonReader(input, null, 1, schema, "", "tag", "value");
+        JsonReader reader = new JsonReader(input, null, 1, schema, "");
         VectorizedRowBatch batch = schema.createRowBatch(4);
         assertTrue(reader.nextBatch(batch));
         assertEquals(4, batch.size);
@@ -133,7 +133,7 @@ public class TestJsonReader {
         StringReader input = new StringReader(inputString);
 
         TypeDescription schema = TypeDescription.fromString("struct<dt:timestamp>");
-        JsonReader reader = new JsonReader(input, null, 1, schema, timestampFormat, "tag", "value");
+        JsonReader reader = new JsonReader(input, null, 1, schema, timestampFormat);
         VectorizedRowBatch batch = schema.createRowBatch(6);
         assertTrue(reader.nextBatch(batch));
         assertEquals(6, batch.size);

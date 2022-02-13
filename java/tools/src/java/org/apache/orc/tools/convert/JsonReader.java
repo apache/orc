@@ -63,8 +63,8 @@ public class JsonReader implements RecordReader {
   private final FSDataInputStream input;
   private long rowNumber = 0;
   private final DateTimeFormatter dateTimeFormatter;
-  private final String unionTag;
-  private final String unionValue;
+  private String unionTag = "tag";
+  private String unionValue = "value";
 
   interface JsonConverter {
     void convert(JsonElement value, ColumnVector vect, int row);
@@ -367,17 +367,24 @@ public class JsonReader implements RecordReader {
                     String timestampFormat,
                     String unionTag,
                     String unionValue) throws IOException {
-    this(new JsonStreamParser(reader), underlying, size, schema, timestampFormat, unionTag,
-         unionValue);
+    this(new JsonStreamParser(reader), underlying, size, schema, timestampFormat);
+    this.unionTag = unionTag;
+    this.unionValue = unionValue;
+  }
+
+  public JsonReader(Reader reader,
+                    FSDataInputStream underlying,
+                    long size,
+                    TypeDescription schema,
+                    String timestampFormat) throws IOException {
+    this(new JsonStreamParser(reader), underlying, size, schema, timestampFormat);
   }
 
   public JsonReader(Iterator<JsonElement> parser,
                     FSDataInputStream underlying,
                     long size,
                     TypeDescription schema,
-                    String timestampFormat,
-                    String unionTag,
-                    String unionValue) throws IOException {
+                    String timestampFormat) throws IOException {
     this.schema = schema;
     if (schema.getCategory() != TypeDescription.Category.STRUCT) {
       throw new IllegalArgumentException("Root must be struct - " + schema);
@@ -391,8 +398,6 @@ public class JsonReader implements RecordReader {
     for(int c = 0; c < converters.length; ++c) {
       converters[c] = createConverter(fieldTypes.get(c));
     }
-    this.unionTag = unionTag;
-    this.unionValue = unionValue;
   }
 
   @Override
