@@ -59,6 +59,8 @@ public class ConvertTool {
   private final String csvNullString;
   private final String timestampFormat;
   private final String bloomFilterColumns;
+  private final String unionTag;
+  private final String unionValue;
   private final Writer writer;
   private final VectorizedRowBatch batch;
 
@@ -151,7 +153,8 @@ public class ConvertTool {
         }
         case JSON: {
           FSDataInputStream underlying = filesystem.open(path);
-          return new JsonReader(getReader(underlying), underlying, size, schema, timestampFormat);
+          return new JsonReader(getReader(underlying), underlying, size, schema, timestampFormat,
+              unionTag, unionValue);
         }
         case CSV: {
           FSDataInputStream underlying = filesystem.open(path);
@@ -196,6 +199,8 @@ public class ConvertTool {
     this.csvNullString = opts.getOptionValue('n', "");
     this.timestampFormat = opts.getOptionValue("t", DEFAULT_TIMESTAMP_FORMAT);
     this.bloomFilterColumns = opts.getOptionValue('b', null);
+    this.unionTag = opts.getOptionValue("union-tag", "tag");
+    this.unionValue = opts.getOptionValue("union-value", "value");
     String outFilename = opts.hasOption('o')
         ? opts.getOptionValue('o') : "output.orc";
     boolean overwrite = opts.hasOption('O');
@@ -274,6 +279,14 @@ public class ConvertTool {
         Option.builder("O").longOpt("overwrite").desc("Overwrite an existing file")
             .build()
     );
+    options.addOption(
+        Option.builder().longOpt("union-tag")
+            .desc("JSON key name representing UNION tag. Default to \"tag\".")
+            .hasArg().build());
+    options.addOption(
+        Option.builder().longOpt("union-value")
+            .desc("JSON key name representing UNION value. Default to \"value\".")
+            .hasArg().build());
     CommandLine cli = new DefaultParser().parse(options, args);
     if (cli.hasOption('h') || cli.getArgs().length == 0) {
       HelpFormatter formatter = new HelpFormatter();

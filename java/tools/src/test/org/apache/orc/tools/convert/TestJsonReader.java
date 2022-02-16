@@ -18,8 +18,11 @@
 
 package org.apache.orc.tools.convert;
 
+import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DateColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.UnionColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.TypeDescription;
 import org.junit.jupiter.api.Test;
@@ -143,4 +146,32 @@ public class TestJsonReader {
         assertEquals(datetime6.toInstant(), cv.asScratchTimestamp(5).toInstant());
     }
 
+    @Test
+    public void testUnionTypeSupport() throws IOException {
+        String inputString = "{\"foo\": {\"tag\": 0, \"value\": 1}}\n" +
+                "{\"foo\": {\"tag\": 1, \"value\": \"testing\"}}\n" +
+                "{\"foo\": {\"tag\": 0, \"value\": 3}}";
+
+
+        StringReader input = new StringReader(inputString);
+
+        TypeDescription schema = TypeDescription.fromString("struct<foo:uniontype<int,string>>");
+        JsonReader reader = new JsonReader(input, null, 1, schema, "", "tag", "value");
+        VectorizedRowBatch batch = schema.createRowBatch(3);
+        assertTrue(reader.nextBatch(batch));
+        assertEquals(3, batch.size);
+        UnionColumnVector union = (UnionColumnVector) batch.cols[0];
+        LongColumnVector longs = (LongColumnVector) union.fields[0];
+        BytesColumnVector strs = (BytesColumnVector) union.fields[1];
+        assertTrue(union.noNulls);
+        assertFalse(union.isNull[0]);
+        assertEquals(0, union.tags[0]);
+        assertEquals(1, longs.vector[0]);
+        assertFalse(union.isNull[1]);
+        assertEquals(1, union.tags[1]);
+        assertEquals("testing", strs.toString(1));
+        assertFalse(union.isNull[2]);
+        assertEquals(0, union.tags[2]);
+        assertEquals(3, longs.vector[2]);
+    }
 }

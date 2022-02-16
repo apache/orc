@@ -34,6 +34,7 @@ import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.MapColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.StructColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.UnionColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.RecordReader;
 import org.apache.orc.TypeDescription;
@@ -62,6 +63,8 @@ public class JsonReader implements RecordReader {
   private final FSDataInputStream input;
   private long rowNumber = 0;
   private final DateTimeFormatter dateTimeFormatter;
+  private String unionTag = "tag";
+  private String unionValue = "value";
 
   interface JsonConverter {
     void convert(JsonElement value, ColumnVector vect, int row);
@@ -293,6 +296,32 @@ public class JsonReader implements RecordReader {
     }
   }
 
+  class UnionColumnConverter implements JsonConverter {
+    private JsonConverter[] childConverter;
+
+    UnionColumnConverter(TypeDescription schema) {
+      int size = schema.getChildren().size();
+      childConverter = new JsonConverter[size];
+      for (int i = 0; i < size; i++) {
+        childConverter[i] = createConverter(schema.getChildren().get(i));
+      }
+    }
+
+    @Override
+    public void convert(JsonElement value, ColumnVector vect, int row) {
+      if (value == null || value.isJsonNull()) {
+        vect.noNulls = false;
+        vect.isNull[row] = true;
+      } else {
+        UnionColumnVector vector = (UnionColumnVector) vect;
+        JsonObject obj = value.getAsJsonObject();
+        int tag = obj.get(unionTag).getAsInt();
+        vector.tags[row] = tag;
+        childConverter[tag].convert(obj.get(unionValue), vector.fields[tag], row);
+      }
+    }
+  }
+
   JsonConverter createConverter(TypeDescription schema) {
     switch (schema.getCategory()) {
       case BYTE:
@@ -324,9 +353,23 @@ public class JsonReader implements RecordReader {
         return new ListColumnConverter(schema);
       case MAP:
         return new MapColumnConverter(schema);
+      case UNION:
+        return new UnionColumnConverter(schema);
       default:
         throw new IllegalArgumentException("Unhandled type " + schema);
     }
+  }
+
+  public JsonReader(Reader reader,
+                    FSDataInputStream underlying,
+                    long size,
+                    TypeDescription schema,
+                    String timestampFormat,
+                    String unionTag,
+                    String unionValue) throws IOException {
+    this(new JsonStreamParser(reader), underlying, size, schema, timestampFormat);
+    this.unionTag = unionTag;
+    this.unionValue = unionValue;
   }
 
   public JsonReader(Reader reader,
