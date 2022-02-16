@@ -11,14 +11,15 @@
   - building
   - releases
 
-- title: Using in Python
-  docs:
-  - pyarrow
-
 - title: Using in Spark
   docs:
   - spark-ddl
   - spark-config
+
+- title: Using in Python
+  docs:
+  - pyarrow
+  - dask
 
 - title: Using in Hive
   docs:
