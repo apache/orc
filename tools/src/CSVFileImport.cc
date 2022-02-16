@@ -422,7 +422,7 @@ int main(int argc, char* argv[]) {
           case orc::CHAR:
           case orc::VARCHAR:
           case orc::BINARY: 
-            bufferList.emplace_back(*orc::getDefaultPool(), 4 * 1024 * 1024);
+            bufferList.emplace_back(*orc::getDefaultPool(), 1 * 1024 * 1024);
             fillStringValues(data,
                              structBatch->fields[i],
                              numValues,
