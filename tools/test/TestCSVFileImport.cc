@@ -24,6 +24,8 @@
 #include "wrap/gmock.h"
 #include "wrap/gtest-wrapper.h"
 
+#include <fstream>
+
 TEST (TestCSVFileImport, test10rows) {
   // create an ORC file from importing the CSV file
   const std::string pgm1 = findProgram("tools/src/csv-import");
@@ -89,4 +91,37 @@ TEST (TestCSVFileImport, testTimezoneOption) {
     EXPECT_EQ(expected, output);
     EXPECT_EQ("", error);
   }
+}
+
+TEST (TestCSVFileImport, testLongString) {
+  // create an ORC file from importing the CSV file
+  const std::string pgm1 = findProgram("tools/src/csv-import");
+  const std::string csvFile = "/tmp/test_csv_import_test_long_string.csv";
+  const std::string orcFile = "/tmp/test_csv_import_test_long_string.orc";
+  const std::string schema = "'struct<_a:string,b_:binary,_c:varchar(10)>'";
+  std::string output;
+  std::string error;
+
+  std::ofstream csvFileStream(csvFile, std::ios::binary | std::ios::out | std::ios::trunc);
+  if(csvFileStream.is_open())
+  {
+    std::string longStr;
+    longStr.resize(4 * 1024 * 1024 + 1, 'x');
+    csvFileStream << "str1," << longStr << ",var1\n";
+    csvFileStream << "str2," << longStr << ",var2\n";
+    csvFileStream.close();
+  }
+
+  EXPECT_EQ(0, runProgram({pgm1, schema, csvFile, orcFile}, output, error));
+  EXPECT_EQ("", error);
+
+  // verify the ORC file content
+  const std::string pgm2 = findProgram("tools/src/orc-contents");
+  std::string option = "--columns=0,2";
+  const std::string expected =
+    "{\"_a\": \"str1\", \"_c\": \"var1\"}\n"
+    "{\"_a\": \"str2\", \"_c\": \"var2\"}\n";
+  EXPECT_EQ(0, runProgram({pgm2, option, orcFile}, output, error));
+  EXPECT_EQ(expected, output);
+  EXPECT_EQ("", error);
 }
