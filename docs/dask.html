@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>Indexes</title>
+  <title>Dask</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="generator" content="Jekyll v3.8.6">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
@@ -983,41 +983,60 @@
 
       <div class="unit four-fifths">
         <article>
-          <h1>Indexes</h1>
-          <p>ORC provides three level of indexes within each file:</p>
+          <h1>Dask</h1>
+          <h2 id="how-to-install">How to install</h2>
 
-<ul>
-  <li>file level - statistics about the values in each column across the entire 
-file</li>
-  <li>stripe level - statistics about the values in each column for each stripe</li>
-  <li>row level - statistics about the values in each column for each set of
-10,000 rows within a stripe</li>
-</ul>
+<p><a href="https://dask.org">Dask</a> also supports Apache ORC.</p>
 
-<p>The file and stripe level column statistics are in the file footer so
-that they are easy to access to determine if the rest of the file
-needs to be read at all. Row level indexes include both the column
-statistics for each row group and the position for seeking to the
-start of the row group.</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pip3 install "dask[dataframe]==2022.2.0"
+pip3 install pandas
+</code></pre></div></div>
 
-<p>Column statistics always contain the count of values and whether there
-are null values present. Most other primitive types include the
-minimum and maximum values and for numeric types the sum. As of Hive
-1.2, the indexes can include bloom filters, which provide a much more
-selective filter.</p>
+<h2 id="how-to-write-and-read-an-orc-file">How to write and read an ORC file</h2>
 
-<p>The indexes at all levels are used by the reader using Search
-ARGuments or SARGs, which are simplified expressions that restrict the
-rows that are of interest. For example, if a query was looking for
-people older than 100 years old, the SARG would be “age &gt; 100” and
-only files, stripes, or row groups that had people over 100 years old
-would be read.</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [1]: import pandas as pd
+
+In [2]: import dask.dataframe as dd
+
+In [3]: pf = pd.DataFrame(data={"col1": [1, 2, 3]})
+
+In [4]: dd.to_orc(dd.from_pandas(pf, npartitions=2), path="/tmp/orc")
+Out[4]: (None,)
+
+In [5]: dd.read_orc(path="/tmp/orc").compute()
+Out[5]:
+   col1
+0     1
+1     2
+2     3
+</code></pre></div></div>
 
           
 
 
 
 
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+  
 
   
   
@@ -1035,14 +1054,14 @@ would be read.</p>
           
             
             
-            <a href="/docs/types.html" class="prev">Back</a>
+            <a href="/docs/pyarrow.html" class="prev">Back</a>
           
       </div>
       <div class="right align-left">
           
             
             
-            <a href="/docs/acid.html" class="next">Next</a>
+            <a href="/docs/hive-ddl.html" class="next">Next</a>
           
       </div>
     </div>
@@ -1172,7 +1191,7 @@ would be read.</p>
     
   
     
-      <li class="current"><a href="/docs/indexes.html">Indexes</a></li>
+      <li class=""><a href="/docs/indexes.html">Indexes</a></li>
       
 
 
@@ -1406,7 +1425,7 @@ would be read.</p>
     
   
     
-      <li class=""><a href="/docs/dask.html">Dask</a></li>
+      <li class="current"><a href="/docs/dask.html">Dask</a></li>
       
 
 
