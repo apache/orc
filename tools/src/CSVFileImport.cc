@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <list>
 #include <memory>
 #include <getopt.h>
 #include <string>
@@ -77,8 +78,8 @@ void fillStringValues(const std::vector<std::string>& data,
                       orc::ColumnVectorBatch* batch,
                       uint64_t numValues,
                       uint64_t colIndex,
-                      orc::DataBuffer<char>& buffer,
-                      uint64_t& offset) {
+                      orc::DataBuffer<char>& buffer) {
+  uint64_t offset = 0;
   orc::StringVectorBatch* stringBatch =
     dynamic_cast<orc::StringVectorBatch*>(batch);
   bool hasNull = false;
@@ -365,7 +366,8 @@ int main(int argc, char* argv[]) {
   double totalElapsedTime = 0.0;
   clock_t totalCPUTime = 0;
 
-  orc::DataBuffer<char> buffer(*orc::getDefaultPool(), 4 * 1024 * 1024);
+  typedef std::list<orc::DataBuffer<char>> DataBufferList;
+  DataBufferList bufferList;
 
   orc::WriterOptions options;
   options.setStripeSize(stripeSize);
@@ -385,7 +387,6 @@ int main(int argc, char* argv[]) {
   std::ifstream finput(input.c_str());
   while (!eof) {
     uint64_t numValues = 0;      // num of lines read in a batch
-    uint64_t bufferOffset = 0;   // current offset in the string buffer
 
     data.clear();
     memset(rowBatch->notNull.data(), 1, batchSize);
@@ -420,13 +421,13 @@ int main(int argc, char* argv[]) {
           case orc::STRING:
           case orc::CHAR:
           case orc::VARCHAR:
-          case orc::BINARY:
+          case orc::BINARY: 
+            bufferList.emplace_back(*orc::getDefaultPool(), 1 * 1024 * 1024);
             fillStringValues(data,
                              structBatch->fields[i],
                              numValues,
                              i,
-                             buffer,
-                             bufferOffset);
+                             bufferList.back());
             break;
           case orc::FLOAT:
           case orc::DOUBLE:
