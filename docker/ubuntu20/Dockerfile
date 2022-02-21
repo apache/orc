@@ -45,7 +45,8 @@ RUN apt-get install -y \
     update-alternatives --set cc  /usr/bin/clang && \
     update-alternatives --set c++ /usr/bin/clang++ \
   ; fi
-RUN update-java-alternatives --set java-1.${jdk}.0-openjdk-amd64
+RUN update-alternatives --set java $(update-alternatives --list java | grep ${jdk}) && \
+    update-alternatives --set javac $(update-alternatives --list javac | grep ${jdk})
 
 ENV CC=cc
 ENV CXX=c++
