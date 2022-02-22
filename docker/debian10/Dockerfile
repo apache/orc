@@ -41,10 +41,10 @@ RUN apt-get install -y \
     add-apt-repository --yes https://adoptopenjdk.jfrog.io/adoptopenjdk/deb/ && \
     apt-get update && \
     apt-get install -y adoptopenjdk-8-hotspot && \
-    update-alternatives --set java /usr/lib/jvm/adoptopenjdk-8-hotspot-amd64/bin/java && \
-    update-alternatives --set javac /usr/lib/jvm/adoptopenjdk-8-hotspot-amd64/bin/javac; \
+    update-alternatives --set java $(update-alternatives --list java | grep ${jdk}) && \
+    update-alternatives --set javac $(update-alternatives --list javac | grep ${jdk}); \
   else \
-    apt-get install -y openjdk-11-jdk; \
+    apt-get install -y openjdk-${jdk}-jdk; \
   fi
 
 WORKDIR /root
