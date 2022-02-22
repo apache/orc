@@ -35,7 +35,8 @@ RUN apt-get install -y \
   maven \
   openjdk-${jdk}-jdk \
   tzdata
-RUN update-java-alternatives --set java-1.${jdk}.0-openjdk-amd64
+RUN update-alternatives --set java $(update-alternatives --list java | grep ${jdk}) && \
+    update-alternatives --set javac $(update-alternatives --list javac | grep ${jdk})
 
 WORKDIR /root
 VOLUME /root/.m2/repository
