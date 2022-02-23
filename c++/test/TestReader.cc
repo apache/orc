@@ -286,18 +286,21 @@ namespace orc {
     auto& intArrayBatch = dynamic_cast<ListVectorBatch&>(*structBatch.fields[0]);
     auto& innerLongBatch = dynamic_cast<LongVectorBatch&>(*intArrayBatch.elements);
     EXPECT_EQ(1, intArrayBatch.numElements);
+    EXPECT_TRUE(intArrayBatch.offsets.data() != nullptr);
     EXPECT_EQ(0, intArrayBatch.offsets.data()[0]);
     EXPECT_EQ(2, intArrayBatch.offsets.data()[1]);
     EXPECT_EQ(2, innerLongBatch.numElements);
+    EXPECT_TRUE(innerLongBatch.data.data() != nullptr);
     EXPECT_EQ(-1, innerLongBatch.data.data()[0]);
     EXPECT_EQ(-2, innerLongBatch.data.data()[1]);
 
     // verify content of int_array_array_array selection.
     auto& intArrayArrayArrayBatch = dynamic_cast<ListVectorBatch&>(*structBatch.fields[1]);
     EXPECT_EQ(1, intArrayArrayArrayBatch.numElements);
+    EXPECT_TRUE(intArrayArrayArrayBatch.offsets.data() != nullptr);
     EXPECT_EQ(0, intArrayArrayArrayBatch.offsets.data()[0]);
     EXPECT_EQ(3, intArrayArrayArrayBatch.offsets.data()[1]);
-    EXPECT_EQ(nullptr, intArrayArrayArrayBatch.elements.get());
+    EXPECT_TRUE(intArrayArrayArrayBatch.elements == nullptr);
   }
 
   std::unique_ptr<Reader> createNestedMapMemReader() {
@@ -332,48 +335,48 @@ namespace orc {
     auto& type10StringBatch = dynamic_cast<StringVectorBatch&>(*type9MapBatch.keys);
     auto& type11StringBatch = dynamic_cast<StringVectorBatch&>(*type9MapBatch.elements);
 
-    char map2Key[] = "k0";
-    char map2Element[] = "v0";
-    char map5Key[] = "k1";
-    char map7Key[] = "k2";
-    char map9Key[] = "k3";
-    char map9Element[] = "v3";
+    std::string map2Key = "k0";
+    std::string map2Element = "v0";
+    std::string map5Key = "k1";
+    std::string map7Key = "k2";
+    std::string map9Key = "k3";
+    std::string map9Element = "v3";
 
     type11StringBatch.numElements = 1;
-    type11StringBatch.data[0] = &map9Element[0];
-    type11StringBatch.length[0] = 2;
+    type11StringBatch.data[0] = const_cast<char*>(map9Element.c_str());
+    type11StringBatch.length[0] = static_cast<int64_t>(map9Element.length());
 
     type10StringBatch.numElements = 1;
-    type10StringBatch.data[0] = &map9Key[0];
-    type10StringBatch.length[0] = 2;
+    type10StringBatch.data[0] = const_cast<char*>(map9Key.c_str());
+    type10StringBatch.length[0] = static_cast<int64_t>(map9Key.length());
 
     type9MapBatch.numElements = 1;
     type9MapBatch.offsets[0] = 0;
     type9MapBatch.offsets[1] = 1;
 
     type8StringBatch.numElements = 1;
-    type8StringBatch.data[0] = &map7Key[0];
-    type8StringBatch.length[0] = 2;
+    type8StringBatch.data[0] = const_cast<char*>(map7Key.c_str());
+    type8StringBatch.length[0] = static_cast<int64_t>(map7Key.length());
 
     type7MapBatch.numElements = 1;
     type7MapBatch.offsets[0] = 0;
     type7MapBatch.offsets[1] = 1;
 
     type6StringBatch.numElements = 1;
-    type6StringBatch.data[0] = &map5Key[0];
-    type6StringBatch.length[0] = 2;
+    type6StringBatch.data[0] = const_cast<char*>(map5Key.c_str());
+    type6StringBatch.length[0] = static_cast<int64_t>(map5Key.length());
 
     type5MapBatch.numElements = 1;
     type5MapBatch.offsets[0] = 0;
     type5MapBatch.offsets[1] = 1;
 
     type4StringBatch.numElements = 1;
-    type4StringBatch.data[0] = &map2Element[0];
-    type4StringBatch.length[0] = 2;
+    type4StringBatch.data[0] = const_cast<char*>(map2Element.c_str());
+    type4StringBatch.length[0] = static_cast<int64_t>(map2Element.length());
 
     type3StringBatch.numElements = 1;
-    type3StringBatch.data[0] = &map2Key[0];
-    type3StringBatch.length[0] = 2;
+    type3StringBatch.data[0] = const_cast<char*>(map2Key.c_str());
+    type3StringBatch.length[0] = static_cast<int64_t>(map2Key.length());
 
     type2MapBatch.numElements = 1;
     type2MapBatch.offsets[0] = 0;
@@ -453,24 +456,28 @@ namespace orc {
     auto& keyBatch = dynamic_cast<StringVectorBatch&>(*mapBatch.keys);
     auto& valueBatch = dynamic_cast<StringVectorBatch&>(*mapBatch.elements);
     EXPECT_EQ(1, mapBatch.numElements);
+    EXPECT_TRUE(mapBatch.offsets.data() != nullptr);
     EXPECT_EQ(0, mapBatch.offsets.data()[0]);
     EXPECT_EQ(1, mapBatch.offsets.data()[1]);
     // verify key content.
     EXPECT_EQ(1, keyBatch.numElements);
+    EXPECT_TRUE(keyBatch.length.data() != nullptr);
     EXPECT_EQ(2, keyBatch.length.data()[0]);
     EXPECT_EQ(0, strncmp("k0", keyBatch.data.data()[0], 2));
     // verify value content.
     EXPECT_EQ(1, valueBatch.numElements);
+    EXPECT_TRUE(valueBatch.length.data() != nullptr);
     EXPECT_EQ(2, valueBatch.length.data()[0]);
     EXPECT_EQ(0, strncmp("v0", valueBatch.data.data()[0], 2));
 
     // verify content of nested_map selection.
     auto& nestedMapBatch = dynamic_cast<MapVectorBatch&>(*structBatch.fields[1]);
     EXPECT_EQ(1, nestedMapBatch.numElements);
+    EXPECT_TRUE(nestedMapBatch.offsets.data() != nullptr);
     EXPECT_EQ(0, nestedMapBatch.offsets.data()[0]);
     EXPECT_EQ(1, nestedMapBatch.offsets.data()[1]);
-    EXPECT_EQ(nullptr, nestedMapBatch.keys.get());
-    EXPECT_EQ(nullptr, nestedMapBatch.elements.get());
+    EXPECT_TRUE(nestedMapBatch.keys == nullptr);
+    EXPECT_TRUE(nestedMapBatch.elements == nullptr);
   }
 
   std::unique_ptr<Reader> createNestedUnionMemReader() {
@@ -505,8 +512,8 @@ namespace orc {
     auto& type10StringBatch = dynamic_cast<StringVectorBatch&>(*type8UnionBatch.children[1]);
     auto& type11LongBatch = dynamic_cast<LongVectorBatch&>(*type5UnionBatch.children[1]);
 
-    char string4Element[] = "s1";
-    char string10Element[] = "n1";
+    std::string string4Element = "s1";
+    std::string string10Element = "n1";
 
     // first row
     type1LongBatch.data[0] = 0;
@@ -525,16 +532,16 @@ namespace orc {
     type1LongBatch.data[1] = 1;
     type2UnionBatch.tags[1] = 1;
     type2UnionBatch.offsets[1] = 0;
-    type4StringBatch.data[0] = &string4Element[0];
-    type4StringBatch.length[0] = 2;
+    type4StringBatch.data[0] = const_cast<char*>(string4Element.c_str());
+    type4StringBatch.length[0] = static_cast<int64_t>(string4Element.length());
     type5UnionBatch.tags[1] = 0;
     type5UnionBatch.offsets[1] = 1;
     type6UnionBatch.tags[1] = 1;
     type6UnionBatch.offsets[1] = 1;
     type8UnionBatch.tags[1] = 1;
     type8UnionBatch.offsets[1] = 0;
-    type10StringBatch.data[0] = &string10Element[0];
-    type10StringBatch.length[0] = 2;
+    type10StringBatch.data[0] = const_cast<char*>(string10Element.c_str());
+    type10StringBatch.length[0] = static_cast<int64_t>(string10Element.length());
 
     // update numElements
     type11LongBatch.numElements = 0;
@@ -624,6 +631,10 @@ namespace orc {
     auto& stringBatch = dynamic_cast<StringVectorBatch&>(*unionBatch.children[1]);
     EXPECT_EQ(1, longBatch.numElements);
     EXPECT_EQ(1, stringBatch.numElements);
+    EXPECT_TRUE(unionBatch.tags.data() != nullptr);
+    EXPECT_TRUE(unionBatch.offsets.data() != nullptr);
+    EXPECT_TRUE(longBatch.data.data() != nullptr);
+    EXPECT_TRUE(stringBatch.length.data() != nullptr);
     // verify content of the first row.
     EXPECT_EQ(0, unionBatch.tags.data()[0]);
     EXPECT_EQ(0, unionBatch.offsets.data()[0]);
@@ -638,6 +649,8 @@ namespace orc {
     auto& nestedUnionBatch = dynamic_cast<UnionVectorBatch&>(*structBatch.fields[1]);
     EXPECT_EQ(2, nestedUnionBatch.numElements);
     EXPECT_EQ(0, nestedUnionBatch.children.size());
+    EXPECT_TRUE(nestedUnionBatch.tags.data() != nullptr);
+    EXPECT_TRUE(nestedUnionBatch.offsets.data() != nullptr);
     // verify that tags and offsets are still read.
     EXPECT_EQ(0, nestedUnionBatch.tags.data()[0]);
     EXPECT_EQ(0, nestedUnionBatch.tags.data()[1]);
