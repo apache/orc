@@ -290,21 +290,21 @@ namespace orc {
     auto& intArrayBatch = dynamic_cast<ListVectorBatch&>(*structBatch.fields[0]);
     auto& innerLongBatch = dynamic_cast<LongVectorBatch&>(*intArrayBatch.elements);
     EXPECT_EQ(1, intArrayBatch.numElements);
-    EXPECT_TRUE(intArrayBatch.offsets.data() != nullptr);
+    EXPECT_NE(nullptr, intArrayBatch.offsets.data());
     EXPECT_EQ(0, intArrayBatch.offsets.data()[0]);
     EXPECT_EQ(2, intArrayBatch.offsets.data()[1]);
     EXPECT_EQ(2, innerLongBatch.numElements);
-    EXPECT_TRUE(innerLongBatch.data.data() != nullptr);
+    EXPECT_NE(nullptr, innerLongBatch.data.data());
     EXPECT_EQ(-1, innerLongBatch.data.data()[0]);
     EXPECT_EQ(-2, innerLongBatch.data.data()[1]);
 
     // verify content of int_array_array_array selection.
     auto& intArrayArrayArrayBatch = dynamic_cast<ListVectorBatch&>(*structBatch.fields[1]);
     EXPECT_EQ(1, intArrayArrayArrayBatch.numElements);
-    EXPECT_TRUE(intArrayArrayArrayBatch.offsets.data() != nullptr);
+    EXPECT_NE(nullptr, intArrayArrayArrayBatch.offsets.data());
     EXPECT_EQ(0, intArrayArrayArrayBatch.offsets.data()[0]);
     EXPECT_EQ(3, intArrayArrayArrayBatch.offsets.data()[1]);
-    EXPECT_TRUE(intArrayArrayArrayBatch.elements == nullptr);
+    EXPECT_EQ(nullptr, intArrayArrayArrayBatch.elements);
   }
 
   std::unique_ptr<Reader> createNestedMapMemReader(MemoryOutputStream& memStream) {
@@ -464,28 +464,30 @@ namespace orc {
     auto& keyBatch = dynamic_cast<StringVectorBatch&>(*mapBatch.keys);
     auto& valueBatch = dynamic_cast<StringVectorBatch&>(*mapBatch.elements);
     EXPECT_EQ(1, mapBatch.numElements);
-    EXPECT_TRUE(mapBatch.offsets.data() != nullptr);
+    EXPECT_NE(nullptr, mapBatch.offsets.data());
     EXPECT_EQ(0, mapBatch.offsets.data()[0]);
     EXPECT_EQ(1, mapBatch.offsets.data()[1]);
     // verify key content.
     EXPECT_EQ(1, keyBatch.numElements);
-    EXPECT_TRUE(keyBatch.length.data() != nullptr);
+    EXPECT_NE(nullptr, keyBatch.length.data());
+    EXPECT_NE(nullptr, keyBatch.data.data());
     EXPECT_EQ(2, keyBatch.length.data()[0]);
     EXPECT_EQ(0, strncmp("k0", keyBatch.data.data()[0], 2));
     // verify value content.
     EXPECT_EQ(1, valueBatch.numElements);
-    EXPECT_TRUE(valueBatch.length.data() != nullptr);
+    EXPECT_NE(nullptr, valueBatch.length.data());
+    EXPECT_NE(nullptr, valueBatch.data.data());
     EXPECT_EQ(2, valueBatch.length.data()[0]);
     EXPECT_EQ(0, strncmp("v0", valueBatch.data.data()[0], 2));
 
     // verify content of nested_map selection.
     auto& nestedMapBatch = dynamic_cast<MapVectorBatch&>(*structBatch.fields[1]);
     EXPECT_EQ(1, nestedMapBatch.numElements);
-    EXPECT_TRUE(nestedMapBatch.offsets.data() != nullptr);
+    EXPECT_NE(nullptr, nestedMapBatch.offsets.data());
     EXPECT_EQ(0, nestedMapBatch.offsets.data()[0]);
     EXPECT_EQ(1, nestedMapBatch.offsets.data()[1]);
-    EXPECT_TRUE(nestedMapBatch.keys == nullptr);
-    EXPECT_TRUE(nestedMapBatch.elements == nullptr);
+    EXPECT_EQ(nullptr, nestedMapBatch.keys);
+    EXPECT_EQ(nullptr, nestedMapBatch.elements);
   }
 
   std::unique_ptr<Reader> createNestedUnionMemReader(MemoryOutputStream& memStream) {
@@ -643,10 +645,10 @@ namespace orc {
     auto& stringBatch = dynamic_cast<StringVectorBatch&>(*unionBatch.children[1]);
     EXPECT_EQ(1, longBatch.numElements);
     EXPECT_EQ(1, stringBatch.numElements);
-    EXPECT_TRUE(unionBatch.tags.data() != nullptr);
-    EXPECT_TRUE(unionBatch.offsets.data() != nullptr);
-    EXPECT_TRUE(longBatch.data.data() != nullptr);
-    EXPECT_TRUE(stringBatch.length.data() != nullptr);
+    EXPECT_NE(nullptr, unionBatch.tags.data());
+    EXPECT_NE(nullptr, unionBatch.offsets.data());
+    EXPECT_NE(nullptr, longBatch.data.data());
+    EXPECT_NE(nullptr, stringBatch.length.data());
     // verify content of the first row.
     EXPECT_EQ(0, unionBatch.tags.data()[0]);
     EXPECT_EQ(0, unionBatch.offsets.data()[0]);
@@ -661,8 +663,8 @@ namespace orc {
     auto& nestedUnionBatch = dynamic_cast<UnionVectorBatch&>(*structBatch.fields[1]);
     EXPECT_EQ(2, nestedUnionBatch.numElements);
     EXPECT_EQ(0, nestedUnionBatch.children.size());
-    EXPECT_TRUE(nestedUnionBatch.tags.data() != nullptr);
-    EXPECT_TRUE(nestedUnionBatch.offsets.data() != nullptr);
+    EXPECT_NE(nullptr, nestedUnionBatch.tags.data());
+    EXPECT_NE(nullptr, nestedUnionBatch.offsets.data());
     // verify that tags and offsets are still read.
     EXPECT_EQ(0, nestedUnionBatch.tags.data()[0]);
     EXPECT_EQ(0, nestedUnionBatch.tags.data()[1]);
