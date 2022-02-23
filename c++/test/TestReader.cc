@@ -161,8 +161,7 @@ namespace orc {
     ASSERT_THAT(rowReader->getSelectedColumns(), ElementsAreArray(expected));
   }
 
-  std::unique_ptr<Reader> createNestedListMemReader() {
-    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+  std::unique_ptr<Reader> createNestedListMemReader(MemoryOutputStream& memStream) {
     MemoryPool* pool = getDefaultPool();
 
     auto type = std::unique_ptr<Type>(
@@ -229,14 +228,16 @@ namespace orc {
   }
 
   TEST(TestReadIntent, testListAll) {
-    std::unique_ptr<Reader> reader = createNestedListMemReader();
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    std::unique_ptr<Reader> reader = createNestedListMemReader(memStream);
 
     // select all of int_array.
     verifySelection(reader, {{1, ReadIntent_ALL}}, {0, 1, 2});
   }
 
   TEST(TestReadIntent, testListOffsets) {
-    std::unique_ptr<Reader> reader = createNestedListMemReader();
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    std::unique_ptr<Reader> reader = createNestedListMemReader(memStream);
 
     // select only the offsets of int_array.
     verifySelection(reader, {{1, ReadIntent_OFFSETS}}, {0, 1});
@@ -250,14 +251,16 @@ namespace orc {
   }
 
   TEST(TestReadIntent, testListAllAndOffsets) {
-    std::unique_ptr<Reader> reader = createNestedListMemReader();
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    std::unique_ptr<Reader> reader = createNestedListMemReader(memStream);
 
     // select all of int_array and only the outermost offsets of int_array_array_array.
     verifySelection(reader, {{1, ReadIntent_ALL}, {3, ReadIntent_OFFSETS}}, {0, 1, 2, 3});
   }
 
   TEST(TestReadIntent, testListConflictingIntent) {
-    std::unique_ptr<Reader> reader = createNestedListMemReader();
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    std::unique_ptr<Reader> reader = createNestedListMemReader(memStream);
 
     // test conflicting ReadIntent on nested list.
     verifySelection(reader, {{3, ReadIntent_OFFSETS}, {5, ReadIntent_ALL}}, {0, 3, 4, 5, 6});
@@ -265,7 +268,8 @@ namespace orc {
   }
 
   TEST(TestReadIntent, testRowBatchContent) {
-    std::unique_ptr<Reader> reader = createNestedListMemReader();
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    std::unique_ptr<Reader> reader = createNestedListMemReader(memStream);
 
     // select all of int_array and only the offsets of int_array_array.
     RowReaderOptions::IdReadIntentMap idReadIntentMap =
@@ -303,8 +307,7 @@ namespace orc {
     EXPECT_TRUE(intArrayArrayArrayBatch.elements == nullptr);
   }
 
-  std::unique_ptr<Reader> createNestedMapMemReader() {
-    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+  std::unique_ptr<Reader> createNestedMapMemReader(MemoryOutputStream& memStream) {
     MemoryPool* pool = getDefaultPool();
 
     auto type = std::unique_ptr<Type>(
@@ -398,14 +401,16 @@ namespace orc {
   }
 
   TEST(TestReadIntent, testMapAll) {
-    std::unique_ptr<Reader> reader = createNestedMapMemReader();
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    std::unique_ptr<Reader> reader = createNestedMapMemReader(memStream);
 
     // select all of single_map.
     verifySelection(reader, {{2, ReadIntent_ALL}}, {0, 2, 3, 4});
   }
 
   TEST(TestReadIntent, testMapOffsets) {
-    std::unique_ptr<Reader> reader = createNestedMapMemReader();
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    std::unique_ptr<Reader> reader = createNestedMapMemReader(memStream);
 
     // select only the offsets of single_map.
     verifySelection(reader, {{2, ReadIntent_OFFSETS}}, {0, 2});
@@ -418,14 +423,16 @@ namespace orc {
   }
 
   TEST(TestReadIntent, testMapAllAndOffsets) {
-    std::unique_ptr<Reader> reader = createNestedMapMemReader();
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    std::unique_ptr<Reader> reader = createNestedMapMemReader(memStream);
 
     // select all of single_map and only the outermost offsets of nested_map.
     verifySelection(reader, {{2, ReadIntent_ALL}, {5, ReadIntent_OFFSETS}}, {0, 2, 3, 4, 5});
   }
 
   TEST(TestReadIntent, testMapConflictingIntent) {
-    std::unique_ptr<Reader> reader = createNestedMapMemReader();
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    std::unique_ptr<Reader> reader = createNestedMapMemReader(memStream);
 
     // test conflicting ReadIntent on nested_map.
     verifySelection(reader, {{5, ReadIntent_OFFSETS}, {9, ReadIntent_ALL}}, {0, 5, 7, 9, 10, 11});
@@ -436,7 +443,8 @@ namespace orc {
   }
 
   TEST(TestReadIntent, testMapRowBatchContent) {
-    std::unique_ptr<Reader> reader = createNestedMapMemReader();
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    std::unique_ptr<Reader> reader = createNestedMapMemReader(memStream);
 
     // select all of single_map and only the offsets of nested_map.
     RowReaderOptions::IdReadIntentMap idReadIntentMap = {{2, ReadIntent_ALL},
@@ -480,8 +488,7 @@ namespace orc {
     EXPECT_TRUE(nestedMapBatch.elements == nullptr);
   }
 
-  std::unique_ptr<Reader> createNestedUnionMemReader() {
-    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+  std::unique_ptr<Reader> createNestedUnionMemReader(MemoryOutputStream& memStream) {
     MemoryPool* pool = getDefaultPool();
 
     auto type = std::unique_ptr<Type>(
@@ -568,14 +575,16 @@ namespace orc {
   }
 
   TEST(TestReadIntent, testUnionAll) {
-    std::unique_ptr<Reader> reader = createNestedUnionMemReader();
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    std::unique_ptr<Reader> reader = createNestedUnionMemReader(memStream);
 
     // select all of single_union.
     verifySelection(reader, {{2, ReadIntent_ALL}}, {0, 2, 3, 4});
   }
 
   TEST(TestReadIntent, testUnionOffsets) {
-    std::unique_ptr<Reader> reader = createNestedUnionMemReader();
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    std::unique_ptr<Reader> reader = createNestedUnionMemReader(memStream);
 
     // select only the offsets of single_union.
     verifySelection(reader, {{2, ReadIntent_OFFSETS}}, {0, 2});
@@ -589,14 +598,16 @@ namespace orc {
   }
 
   TEST(TestReadIntent, testUnionAllAndOffsets) {
-    std::unique_ptr<Reader> reader = createNestedUnionMemReader();
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    std::unique_ptr<Reader> reader = createNestedUnionMemReader(memStream);
 
     // select all of single_union and only the outermost offsets of nested_union.
     verifySelection(reader, {{2, ReadIntent_ALL}, {5, ReadIntent_OFFSETS}}, {0, 2, 3, 4, 5});
   }
 
   TEST(TestReadIntent, testUnionConflictingIntent) {
-    std::unique_ptr<Reader> reader = createNestedUnionMemReader();
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    std::unique_ptr<Reader> reader = createNestedUnionMemReader(memStream);
 
     // test conflicting ReadIntent on nested_union.
     verifySelection(reader, {{5, ReadIntent_OFFSETS}, {8, ReadIntent_ALL}},
@@ -608,7 +619,8 @@ namespace orc {
   }
 
   TEST(TestReadIntent, testUnionRowBatchContent) {
-    std::unique_ptr<Reader> reader = createNestedUnionMemReader();
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    std::unique_ptr<Reader> reader = createNestedUnionMemReader(memStream);
 
     // select all of single_union and only the offsets of nested_union.
     RowReaderOptions::IdReadIntentMap idReadIntentMap = {{2, ReadIntent_ALL},
