@@ -131,6 +131,7 @@
             </offlineLink>
           </offlineLinks>
           <reportOutputDirectory>${project.basedir}/../../site/api</reportOutputDirectory>
+          <notimestamp>true</notimestamp>
         </configuration>
       </plugin>
       <plugin>
