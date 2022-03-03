@@ -25,6 +25,7 @@
 
 #include <vector>
 
+#define MAX_LITERAL_SIZE 512
 #define MIN_REPEAT 3
 #define HIST_LEN 32
 namespace orc {
@@ -131,25 +132,18 @@ public:
 
 private:
 
-  // Used by PATCHED_BASE
-  void adjustGapAndPatch() {
-    curGap = static_cast<uint64_t>(unpackedPatch[patchIdx]) >>
-      patchBitSize;
-    curPatch = unpackedPatch[patchIdx] & patchMask;
-    actualGap = 0;
-
-    // special case: gap is >255 then patch value will be 0.
-    // if gap is <=255 then patch value cannot be 0
-    while (curGap == 255 && curPatch == 0) {
-      actualGap += 255;
-      ++patchIdx;
-      curGap = static_cast<uint64_t>(unpackedPatch[patchIdx]) >>
-        patchBitSize;
-      curPatch = unpackedPatch[patchIdx] & patchMask;
-    }
-    // add the left over gap
-    actualGap += curGap;
-  }
+  /**
+   * Decode the next gap and patch from 'unpackedPatch' and update the index on it.
+   * Used by PATCHED_BASE.
+   *
+   * @param patchBitSize  bit size of the patch value
+   * @param patchMask     mask for the patch value
+   * @param resGap        result of gap
+   * @param resPatch      result of patch
+   * @param patchIdx      current index in the 'unpackedPatch' buffer
+   */
+  void adjustGapAndPatch(uint32_t patchBitSize, int64_t patchMask,
+                         int64_t* resGap, int64_t* resPatch, uint64_t* patchIdx);
 
   void resetReadLongs() {
     bitsLeft = 0;
@@ -158,7 +152,6 @@ private:
 
   void resetRun() {
     resetReadLongs();
-    bitSize = 0;
   }
 
   unsigned char readByte();
@@ -166,11 +159,9 @@ private:
   int64_t readLongBE(uint64_t bsz);
   int64_t readVslong();
   uint64_t readVulong();
-  uint64_t readLongs(int64_t *data, uint64_t offset, uint64_t len,
-                     uint64_t fbs, const char* notNull = nullptr);
+  void readLongs(int64_t *data, uint64_t offset, uint64_t len, uint64_t fbs);
+  void readLongsSlow(int64_t *data, uint64_t offset, uint64_t len, uint64_t fbs);
 
-  void readLongsWithoutNulls(int64_t *data, uint64_t offset, uint64_t len,
-                             uint64_t fbs);
   void unrolledUnpack4(int64_t *data, uint64_t offset, uint64_t len);
   void unrolledUnpack8(int64_t *data, uint64_t offset, uint64_t len);
   void unrolledUnpack16(int64_t *data, uint64_t offset, uint64_t len);
@@ -190,31 +181,22 @@ private:
   uint64_t nextDelta(int64_t* data, uint64_t offset, uint64_t numValues,
                      const char* notNull);
 
+  uint64_t copyDataFromBuffer(int64_t* data, uint64_t offset, uint64_t numValues,
+                              const char* notNull);
+
   const std::unique_ptr<SeekableInputStream> inputStream;
   const bool isSigned;
 
   unsigned char firstByte;
-  uint64_t runLength;
-  uint64_t runRead;
+  uint64_t runLength; // Length of the current run
+  uint64_t runRead; // Number of returned values of the current run
   const char *bufferStart;
   const char *bufferEnd;
-  int64_t deltaBase; // Used by DELTA
-  uint64_t byteSize; // Used by SHORT_REPEAT and PATCHED_BASE
-  int64_t firstValue; // Used by SHORT_REPEAT and DELTA
-  int64_t prevValue; // Used by DELTA
-  uint32_t bitSize; // Used by DIRECT, PATCHED_BASE and DELTA
   uint32_t bitsLeft; // Used by readLongs when bitSize < 8
   uint32_t curByte; // Used by anything that uses readLongs
-  uint32_t patchBitSize; // Used by PATCHED_BASE
-  uint64_t unpackedIdx; // Used by PATCHED_BASE
-  uint64_t patchIdx; // Used by PATCHED_BASE
-  int64_t base; // Used by PATCHED_BASE
-  uint64_t curGap; // Used by PATCHED_BASE
-  int64_t curPatch; // Used by PATCHED_BASE
-  int64_t patchMask; // Used by PATCHED_BASE
-  int64_t actualGap; // Used by PATCHED_BASE
   DataBuffer<int64_t> unpacked; // Used by PATCHED_BASE
   DataBuffer<int64_t> unpackedPatch; // Used by PATCHED_BASE
+  DataBuffer<int64_t> literals; // Values of the current run
 };
 }  // namespace orc
 

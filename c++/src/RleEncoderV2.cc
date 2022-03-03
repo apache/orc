@@ -21,7 +21,6 @@
 #include "RLEv2.hh"
 #include "RLEV2Util.hh"
 
-#define MAX_LITERAL_SIZE 512
 #define MAX_SHORT_REPEAT_LENGTH 10
 
 namespace orc {
