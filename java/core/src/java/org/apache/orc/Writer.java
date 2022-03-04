@@ -165,4 +165,11 @@ public interface Writer extends Closeable {
    * @since 1.6.8
    */
   List<StripeInformation> getStripes() throws IOException;
+
+  /**
+   * Estimate the memory currently used by the writer to buffer the stripe.
+   * `This method help write engine to control the refresh policy of the ORC.`
+   * @return the number of bytes
+   */
+  long estimateMemory();
 }
