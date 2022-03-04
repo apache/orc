@@ -853,6 +853,16 @@ public class TestSchemaEvolution {
     assertTrue(both1.isPPDSafeConversion(2));
     assertTrue(both1.isPPDSafeConversion(3));
     assertFalse(both1.isPPDSafeConversion(4));
+
+    // column pruning
+    readerStruct1 = TypeDescription.createStruct()
+        .addField("f2", TypeDescription.createString());
+    both1 = new SchemaEvolution(fileStruct1, readerStruct1, options);
+    assertTrue(both1.hasConversion());
+    assertFalse(both1.isPPDSafeConversion(0));
+    assertFalse(both1.isPPDSafeConversion(1));
+    assertTrue(both1.isPPDSafeConversion(2));
+    assertFalse(both1.isPPDSafeConversion(3));
   }
 
   @Test

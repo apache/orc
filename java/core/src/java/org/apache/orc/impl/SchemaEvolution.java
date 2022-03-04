@@ -38,6 +38,8 @@ import java.util.regex.Pattern;
 public class SchemaEvolution {
   // indexed by reader column id
   private final TypeDescription[] readerFileTypes;
+  // key: file column id, value: reader column id
+  private final Map<Integer, Integer> typeIdsMap = new HashMap<>();
   // indexed by reader column id
   private final boolean[] readerIncluded;
   // the offset to the first column id ignoring any ACID columns
@@ -126,6 +128,11 @@ public class SchemaEvolution {
       }
     }
     buildConversion(fileSchema, this.readerSchema, positionalLevels);
+    for (int i = 0; i < readerFileTypes.length; i++) {
+      if (readerFileTypes[i] != null) {
+        this.typeIdsMap.put(readerFileTypes[i].getId(), i);
+      }
+    }
     this.positionalColumns = options.getForcePositionalEvolution();
     this.ppdSafeConversion = populatePpdSafeConversion();
   }
@@ -296,13 +303,13 @@ public class SchemaEvolution {
 
   /**
    * Check if column is safe for ppd evaluation
-   * @param colId reader column id
+   * @param colId file column id
    * @return true if the specified column is safe for ppd evaluation else false
    */
   public boolean isPPDSafeConversion(final int colId) {
     if (hasConversion()) {
-      return !(colId < 0 || colId >= ppdSafeConversion.length) &&
-          ppdSafeConversion[colId];
+      Integer readerTypeId = typeIdsMap.get(colId);
+      return readerTypeId != null && ppdSafeConversion[readerTypeId];
     }
 
     // when there is no schema evolution PPD is safe
