@@ -1008,4 +1008,9 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     }
     return result;
   }
+
+  @Override
+  public long estimateMemory() {
+    return this.treeWriter.estimateMemory();
+  }
 }
