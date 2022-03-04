@@ -401,7 +401,6 @@ RleDecoderV2::RleDecoderV2(std::unique_ptr<SeekableInputStream> input,
                               bufferEnd(bufferStart),
                               bitsLeft(0),
                               curByte(0),
-                              unpacked(pool, 0),
                               unpackedPatch(pool, 0),
                               literals(pool, MAX_LITERAL_SIZE) {
   // PASS
@@ -610,10 +609,7 @@ uint64_t RleDecoderV2::nextPatched(int64_t* const data,
       base = -base;
     }
 
-    // TODO: something more efficient than resize
-    unpacked.resize(runLength);
-    uint64_t unpackedIdx = 0;
-    readLongs(unpacked.data(), 0, runLength, bitSize);
+    readLongs(literals.data(), 0, runLength, bitSize);
     // any remaining bits are thrown out
     resetReadLongs();
 
@@ -639,12 +635,12 @@ uint64_t RleDecoderV2::nextPatched(int64_t* const data,
     adjustGapAndPatch(patchBitSize, patchMask, &gap, &patch, &patchIdx);
 
     for (uint64_t i = 0; i < runLength; ++i) {
-      if (static_cast<int64_t>(unpackedIdx) != gap) {
+      if (static_cast<int64_t>(i) != gap) {
         // no patching required. add base to unpacked value to get final value
-        literals[i] = base + unpacked[unpackedIdx];
+        literals[i] += base;
       } else {
         // extract the patch value
-        int64_t patchedVal = unpacked[unpackedIdx] | (patch << bitSize);
+        int64_t patchedVal = literals[i] | (patch << bitSize);
 
         // add base to patched value
         literals[i] = base + patchedVal;
@@ -657,10 +653,9 @@ uint64_t RleDecoderV2::nextPatched(int64_t* const data,
                             &patchIdx);
 
           // next gap is relative to the current gap
-          gap += unpackedIdx;
+          gap += i;
         }
       }
-      ++unpackedIdx;
     }
   }
 

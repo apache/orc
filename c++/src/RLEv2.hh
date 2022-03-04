@@ -194,7 +194,6 @@ private:
   const char *bufferEnd;
   uint32_t bitsLeft; // Used by readLongs when bitSize < 8
   uint32_t curByte; // Used by anything that uses readLongs
-  DataBuffer<int64_t> unpacked; // Used by PATCHED_BASE
   DataBuffer<int64_t> unpackedPatch; // Used by PATCHED_BASE
   DataBuffer<int64_t> literals; // Values of the current run
 };
