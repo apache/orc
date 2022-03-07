@@ -44,6 +44,7 @@ Renat Valiullin         | reval        | Committer
 Sergey Shelukhin        | sershe       | Committer
 Sergio Pena             | spena        | Committer
 Siddharth Seth          | sseth        | Committer
+Quanlong Huang          | stigahuang   | Committer
 Stephen Walkauskas      | swalkaus     | Committer
 Vaibhav Gumashta        | vgumashta    | Committer
 Wei Zheng               | weiz         | Committer
