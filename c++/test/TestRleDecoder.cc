@@ -151,6 +151,28 @@ TEST(RLEv2, basicDelta4) {
                values.size());
 };
 
+TEST(RLEv2, basicDelta5) {
+  std::vector<int64_t> values(65);
+  for (size_t i = 0; i < 65; ++i) {
+    values[i] = static_cast<int64_t>(i - 32);
+  }
+
+  // Original values: [-32, -31, -30, ..., -1, 0, 1, 2, ..., 32]
+  // 2 bytes header: 0xc0, 0x40
+  //    2 bits for encoding type(3). 5 bits for bitSize which is 0 for fixed delta.
+  //    9 bits for length of 65(64).
+  // Base value: -32 which is 65(0x3f) after zigzag
+  // Delta base: 1 which is 2(0x02) after zigzag
+  const unsigned char bytes[] = {0xc0, 0x40, 0x3f, 0x02};
+  unsigned long l = sizeof(bytes) / sizeof(char);
+  // Read 1 at a time, then 3 at a time, etc.
+  checkResults(values, decodeRLEv2(bytes, l, 1, values.size()), 1);
+  checkResults(values, decodeRLEv2(bytes, l, 3, values.size()), 3);
+  checkResults(values, decodeRLEv2(bytes, l, 7, values.size()), 7);
+  checkResults(values, decodeRLEv2(bytes, l, values.size(), values.size()),
+               values.size());
+}
+
 TEST(RLEv2, delta0Width) {
   const unsigned char buffer[] = {0x4e, 0x2, 0x0, 0x1, 0x2, 0xc0, 0x2, 0x42,
 				  0x0};

@@ -63,6 +63,9 @@ namespace orc {
     CompressionKind compression;
     MemoryPool *pool;
     std::ostream *errorStream;
+    /// Decimal64 in ORCv2 uses RLE to store values. This flag indicates whether
+    /// this new encoding is used.
+    bool isDecimalAsLong;
   };
 
   proto::StripeFooter getStripeFooter(const proto::StripeInformation& info,
@@ -224,6 +227,7 @@ namespace orc {
 
     const FileContents& getFileContents() const;
     bool getThrowOnHive11DecimalOverflow() const;
+    bool getIsDecimalAsLong() const;
     int32_t getForcedScaleOnHive11Decimal() const;
   };
 

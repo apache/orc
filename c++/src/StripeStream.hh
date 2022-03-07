@@ -76,6 +76,8 @@ namespace orc {
 
     bool getThrowOnHive11DecimalOverflow() const override;
 
+    bool isDecimalAsLong() const override;
+
     int32_t getForcedScaleOnHive11Decimal() const override;
   };
 
