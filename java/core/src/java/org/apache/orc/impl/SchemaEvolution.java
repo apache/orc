@@ -38,8 +38,6 @@ import java.util.regex.Pattern;
 public class SchemaEvolution {
   // indexed by reader column id
   private final TypeDescription[] readerFileTypes;
-  // key: file column id, value: reader column id
-  private final Map<Integer, Integer> typeIdsMap = new HashMap<>();
   // indexed by reader column id
   private final boolean[] readerIncluded;
   // the offset to the first column id ignoring any ACID columns
@@ -58,7 +56,7 @@ public class SchemaEvolution {
    */
   private final boolean includeAcidColumns;
 
-  // indexed by reader column id
+  // indexed by file column id
   private final boolean[] ppdSafeConversion;
 
   // columns are indexed, not named between Reader & File schema
@@ -128,11 +126,6 @@ public class SchemaEvolution {
       }
     }
     buildConversion(fileSchema, this.readerSchema, positionalLevels);
-    for (int i = 0; i < readerFileTypes.length; i++) {
-      if (readerFileTypes[i] != null) {
-        this.typeIdsMap.put(readerFileTypes[i].getId(), i);
-      }
-    }
     this.positionalColumns = options.getForcePositionalEvolution();
     this.ppdSafeConversion = populatePpdSafeConversion();
   }
@@ -303,13 +296,13 @@ public class SchemaEvolution {
 
   /**
    * Check if column is safe for ppd evaluation
-   * @param colId file column id
+   * @param fileColId file column id
    * @return true if the specified column is safe for ppd evaluation else false
    */
-  public boolean isPPDSafeConversion(final int colId) {
+  public boolean isPPDSafeConversion(final int fileColId) {
     if (hasConversion()) {
-      Integer readerTypeId = typeIdsMap.get(colId);
-      return readerTypeId != null && ppdSafeConversion[readerTypeId];
+      return !(fileColId < 0 || fileColId >= ppdSafeConversion.length) &&
+          ppdSafeConversion[fileColId];
     }
 
     // when there is no schema evolution PPD is safe
@@ -321,9 +314,9 @@ public class SchemaEvolution {
       return null;
     }
 
-    boolean[] result = new boolean[readerSchema.getMaximumId() + 1];
+    boolean[] result = new boolean[fileSchema.getMaximumId() + 1];
     boolean safePpd = validatePPDConversion(fileSchema, readerSchema);
-    result[readerSchema.getId()] = safePpd;
+    result[fileSchema.getId()] = safePpd;
     return populatePpdSafeConversionForChildren(result,
         readerSchema.getChildren());
   }
@@ -344,12 +337,14 @@ public class SchemaEvolution {
       for (TypeDescription child : children) {
         TypeDescription fileType = getFileType(child.getId());
         safePpd = validatePPDConversion(fileType, child);
-        ppdSafeConversion[child.getId()] = safePpd;
+        if (fileType != null) {
+          ppdSafeConversion[fileType.getId()] = safePpd;
+        }
         populatePpdSafeConversionForChildren(ppdSafeConversion,
             child.getChildren());
       }
     }
-    return  ppdSafeConversion;
+    return ppdSafeConversion;
   }
 
   private boolean validatePPDConversion(final TypeDescription fileType,
