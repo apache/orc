@@ -56,7 +56,7 @@ public class SchemaEvolution {
    */
   private final boolean includeAcidColumns;
 
-  // indexed by reader column id
+  // indexed by file column id
   private final boolean[] ppdSafeConversion;
 
   // columns are indexed, not named between Reader & File schema
@@ -303,13 +303,13 @@ public class SchemaEvolution {
 
   /**
    * Check if column is safe for ppd evaluation
-   * @param colId reader column id
+   * @param fileColId file column id
    * @return true if the specified column is safe for ppd evaluation else false
    */
-  public boolean isPPDSafeConversion(final int colId) {
+  public boolean isPPDSafeConversion(final int fileColId) {
     if (hasConversion()) {
-      return !(colId < 0 || colId >= ppdSafeConversion.length) &&
-          ppdSafeConversion[colId];
+      return !(fileColId < 0 || fileColId >= ppdSafeConversion.length) &&
+          ppdSafeConversion[fileColId];
     }
 
     // when there is no schema evolution PPD is safe
@@ -321,9 +321,9 @@ public class SchemaEvolution {
       return null;
     }
 
-    boolean[] result = new boolean[readerSchema.getMaximumId() + 1];
+    boolean[] result = new boolean[fileSchema.getMaximumId() + 1];
     boolean safePpd = validatePPDConversion(fileSchema, readerSchema);
-    result[readerSchema.getId()] = safePpd;
+    result[fileSchema.getId()] = safePpd;
     return populatePpdSafeConversionForChildren(result,
         readerSchema.getChildren());
   }
@@ -344,12 +344,14 @@ public class SchemaEvolution {
       for (TypeDescription child : children) {
         TypeDescription fileType = getFileType(child.getId());
         safePpd = validatePPDConversion(fileType, child);
-        ppdSafeConversion[child.getId()] = safePpd;
+        if (fileType != null) {
+          ppdSafeConversion[fileType.getId()] = safePpd;
+        }
         populatePpdSafeConversionForChildren(ppdSafeConversion,
             child.getChildren());
       }
     }
-    return  ppdSafeConversion;
+    return ppdSafeConversion;
   }
 
   private boolean validatePPDConversion(final TypeDescription fileType,
