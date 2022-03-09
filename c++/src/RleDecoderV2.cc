@@ -681,11 +681,6 @@ uint64_t RleDecoderV2::nextDelta(int64_t* const data,
     runLength |= readByte();
     ++runLength; // account for first value
     runRead = 0;
-    if (runLength < 2) {
-      std::stringstream ss;
-      ss << "Illegal run length for delta encoding: " << runLength;
-      throw ParseError(ss.str());
-    }
 
     int64_t prevValue;
     // read the first value stored as vint
@@ -708,6 +703,11 @@ uint64_t RleDecoderV2::nextDelta(int64_t* const data,
       }
     } else {
       prevValue = literals[1] = prevValue + deltaBase;
+      if (runLength < 2) {
+        std::stringstream ss;
+        ss << "Illegal run length for delta encoding: " << runLength;
+        throw ParseError(ss.str());
+      }
       // write the unpacked values, add it to previous value and store final
       // value to result buffer. if the delta base value is negative then it
       // is a decreasing sequence else an increasing sequence
