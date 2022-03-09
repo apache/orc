@@ -160,7 +160,7 @@ private:
   int64_t readVslong();
   uint64_t readVulong();
   void readLongs(int64_t *data, uint64_t offset, uint64_t len, uint64_t fbs);
-  void readLongsSlow(int64_t *data, uint64_t offset, uint64_t len, uint64_t fbs);
+  void plainUnpackLongs(int64_t *data, uint64_t offset, uint64_t len, uint64_t fbs);
 
   void unrolledUnpack4(int64_t *data, uint64_t offset, uint64_t len);
   void unrolledUnpack8(int64_t *data, uint64_t offset, uint64_t len);

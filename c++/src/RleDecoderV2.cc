@@ -95,7 +95,7 @@ void RleDecoderV2::readLongs(int64_t *data, uint64_t offset, uint64_t len, uint6
       return;
     default:
       // Fallback to the default implementation for deprecated bit size.
-      readLongsSlow(data, offset, len, fbs);
+      plainUnpackLongs(data, offset, len, fbs);
       return;
   }
 }
@@ -367,8 +367,8 @@ void RleDecoderV2::unrolledUnpack64(int64_t *data, uint64_t offset, uint64_t len
   }
 }
 
-void RleDecoderV2::readLongsSlow(int64_t *data, uint64_t offset, uint64_t len,
-                                 uint64_t fbs) {
+void RleDecoderV2::plainUnpackLongs(int64_t *data, uint64_t offset, uint64_t len,
+                                    uint64_t fbs) {
   for (uint64_t i = offset; i < (offset + len); i++) {
     uint64_t result = 0;
     uint64_t bitsLeftToRead = fbs;
@@ -681,6 +681,11 @@ uint64_t RleDecoderV2::nextDelta(int64_t* const data,
     runLength |= readByte();
     ++runLength; // account for first value
     runRead = 0;
+    if (runLength < 2) {
+      std::stringstream ss;
+      ss << "Illegal run length for delta encoding: " << runLength;
+      throw ParseError(ss.str());
+    }
 
     int64_t prevValue;
     // read the first value stored as vint
@@ -737,4 +742,5 @@ uint64_t RleDecoderV2::copyDataFromBuffer(int64_t* data, uint64_t offset,
   }
   return nRead;
 }
+
 }  // namespace orc
