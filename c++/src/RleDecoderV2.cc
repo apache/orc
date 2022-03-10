@@ -699,7 +699,7 @@ uint64_t RleDecoderV2::nextDelta(int64_t* const data,
     if (bitSize == 0) {
       // add fixed deltas to adjacent values
       for (uint64_t i = 1; i < runLength; ++i) {
-        prevValue = literals[i] = prevValue + deltaBase;
+        literals[i] = literals[i - 1] + deltaBase;
       }
     } else {
       prevValue = literals[1] = prevValue + deltaBase;
@@ -710,7 +710,8 @@ uint64_t RleDecoderV2::nextDelta(int64_t* const data,
       }
       // write the unpacked values, add it to previous value and store final
       // value to result buffer. if the delta base value is negative then it
-      // is a decreasing sequence else an increasing sequence
+      // is a decreasing sequence else an increasing sequence.
+      // read deltas using the literals buffer.
       readLongs(literals.data(), 2, runLength - 2, bitSize);
       if (deltaBase < 0) {
         for (uint64_t i = 2; i < runLength; ++i) {
