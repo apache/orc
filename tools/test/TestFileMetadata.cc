@@ -238,6 +238,39 @@ TEST (TestFileMetadata, testNoFormat) {
   EXPECT_EQ("", error);
 }
 
+TEST (TestFileMetadata, testV2Format) {
+  const std::string pgm = findProgram("tools/src/orc-metadata");
+  const std::string file = findExample("decimal64_v2.orc");
+  const std::string expected_out =
+    "{ \"name\": \"" + file + "\",\n"
+    "  \"type\": \"struct<a:bigint,b:decimal(12,0),c:decimal(20,2),d:decimal(12,2),e:decimal(2,2)>\",\n"
+    "  \"attributes\": {},\n"
+    "  \"rows\": 10,\n"
+    "  \"stripe count\": 1,\n"
+    "  \"format\": \"UNSTABLE-PRE-2.0\", \"writer version\": \"ORC-135\", \"software version\": \"ORC Java\",\n"
+    "  \"compression\": \"zlib\", \"compression block\": 262144,\n"
+    "  \"file length\": 738,\n"
+    "  \"content\": 377, \"stripe stats\": 130, \"footer\": 204, \"postscript\": 26,\n"
+    "  \"row index stride\": 10000,\n"
+    "  \"user metadata\": {\n"
+    "  },\n"
+    "  \"stripes\": [\n"
+    "    { \"stripe\": 0, \"rows\": 10,\n"
+    "      \"offset\": 3, \"length\": 374,\n"
+    "      \"index\": 192, \"data\": 112, \"footer\": 70\n"
+    "    }\n"
+    "  ]\n"
+    "}\n";
+  const std::string expected_err = "Warning: ORC file " + file +
+    " was written in an unknown format version UNSTABLE-PRE-2.0\n";
+
+  std::string output;
+  std::string error;
+  EXPECT_EQ(0, runProgram({pgm, file}, output, error)) << error;
+  EXPECT_EQ(expected_out, output);
+  EXPECT_EQ(expected_err, error);
+}
+
 TEST (TestFileMetadata, testAttributes) {
   const std::string pgm = findProgram("tools/src/orc-metadata");
   const std::string file = findExample("complextypes_iceberg.orc");
