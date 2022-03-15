@@ -266,9 +266,9 @@ TEST (TestFileMetadata, testV2Format) {
 
   std::string output;
   std::string error;
-  EXPECT_EQ(0, runProgram({pgm, file}, output, error));
-  EXPECT_EQ(expected_out, output) << output;
-  EXPECT_EQ(expected_err, error) << error;
+  EXPECT_EQ(0, runProgram({pgm, file}, output, error)) << error;
+  EXPECT_EQ(expected_out, output);
+  EXPECT_EQ(expected_err, error);
 }
 
 TEST (TestFileMetadata, testAttributes) {
