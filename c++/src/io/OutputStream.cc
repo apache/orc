@@ -96,6 +96,9 @@ namespace orc {
     dataBuffer->resize(0);
     return dataSize;
   }
+  void BufferedOutputStream::suppress() {
+    dataBuffer->resize(0);
+  }
 
   void AppendOnlyBufferedStream::write(const char * data, size_t size) {
     size_t dataOffset = 0;

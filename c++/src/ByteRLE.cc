@@ -61,6 +61,8 @@ namespace orc {
 
     virtual void recordPosition(PositionRecorder* recorder) const override;
 
+    virtual void suppress() override;
+
   protected:
     std::unique_ptr<BufferedOutputStream> outputStream;
     char* literals;
@@ -201,6 +203,17 @@ namespace orc {
       recorder->add(flushedSize + unflushedSize);
     }
     recorder->add(static_cast<uint64_t>(numLiterals));
+  }
+
+  void ByteRleEncoderImpl::suppress() {
+    // written data can be just ignored because they are only flushed in memory
+    outputStream->suppress();
+
+    numLiterals = 0;
+    tailRunLength = 0;
+    repeat = false;
+    bufferPosition = 0;
+    bufferLength = 0;
   }
 
   std::unique_ptr<ByteRleEncoder> createByteRleEncoder
