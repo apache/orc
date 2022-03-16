@@ -157,13 +157,13 @@ TEST (TestFileContents, testDecimal64V2) {
       "{\"a\": 17292380422, \"b\": 12, \"c\": 14836.80, \"d\": 0.09, \"e\": 0.06}\n"
       "{\"a\": 17292380422, \"b\": 41, \"c\": 82152.52, \"d\": 0.07, \"e\": 0.02}\n"
       "{\"a\": 17292380422, \"b\": 38, \"c\": 47240.84, \"d\": 0.10, \"e\": 0.00}\n";
-  const std::string error_msg =
-      "decimal64_v2.orc was written in an unknown format version UNSTABLE-PRE-2.0";
+  const std::string error_msg = "Warning: ORC file " + file +
+      " was written in an unknown format version UNSTABLE-PRE-2.0\n";
 
   std::string output;
   std::string error;
 
-  EXPECT_EQ(0, runProgram({pgm, file}, output, error));
+  EXPECT_EQ(0, runProgram({pgm, file}, output, error)) << error;
   EXPECT_EQ(expected, output);
-  EXPECT_NE(std::string::npos, error.find(error_msg)) << error;
+  EXPECT_EQ(error_msg, error);
 }
