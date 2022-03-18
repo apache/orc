@@ -21,6 +21,7 @@
 
 #include "MemoryInputStream.hh"
 #include "MemoryOutputStream.hh"
+#include "Reader.hh"
 
 #include "wrap/gmock.h"
 #include "wrap/gtest-wrapper.h"
@@ -1896,6 +1897,100 @@ namespace orc {
           EXPECT_FALSE(bfs[1].entries[rg]->testLong(static_cast<int64_t>(value)));
           EXPECT_FALSE(bfs[2].entries[rg]->testBytes(str.c_str(), static_cast<int64_t>(str.size())));
           EXPECT_FALSE(bfs[3].entries[rg]->testBytes(str.c_str(), static_cast<int64_t>(str.size())));
+        }
+      }
+    }
+  }
+
+  TEST(WriterTest, testSuppressPresentStream) {
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    MemoryPool* pool = getDefaultPool();
+    size_t rowCount = 2000;
+    {
+      auto type = std::unique_ptr<Type>(
+        Type::buildTypeFromString("struct<col1:int,col2:int>"));
+      WriterOptions options;
+      options.setStripeSize(1024 * 1024)
+          .setCompressionBlockSize(1024)
+          .setCompression(CompressionKind_NONE)
+          .setMemoryPool(pool)
+          .setRowIndexStride(1000);
+
+      auto writer = createWriter(*type, &memStream, options);
+      auto batch = writer->createRowBatch(rowCount);
+      auto& structBatch = dynamic_cast<StructVectorBatch&>(*batch);
+      auto& longBatch1 = dynamic_cast<LongVectorBatch&>(*structBatch.fields[0]);
+      auto& longBatch2 = dynamic_cast<LongVectorBatch&>(*structBatch.fields[1]);
+      structBatch.numElements = rowCount;
+      longBatch1.numElements = rowCount;
+      longBatch2.numElements = rowCount;
+      longBatch1.hasNulls = true;
+      for (size_t i = 0; i < rowCount; ++i) {
+        if (i % 2 == 0) {
+          longBatch1.notNull[i] = 0;
+        } else {
+          longBatch1.notNull[i] = 1;
+          longBatch1.data[i] = static_cast<int64_t>(i*100);
+        }
+        longBatch2.data[i] = static_cast<int64_t>(i*300);
+      }
+      writer->add(*batch);
+      writer->close();
+    }
+    // read file & check the present stream
+    {
+      std::unique_ptr<InputStream> inStream(
+        new MemoryInputStream(memStream.getData(), memStream.getLength()));
+      ReaderOptions readerOptions;
+      readerOptions.setMemoryPool(*pool);
+      std::unique_ptr<Reader> reader =
+        createReader(std::move(inStream), readerOptions);
+      EXPECT_EQ(rowCount, reader->getNumberOfRows());
+      std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
+      auto batch = rowReader->createRowBatch(1000);
+      EXPECT_TRUE(rowReader->next(*batch));
+      EXPECT_EQ(1000, batch->numElements);
+      auto& structBatch = dynamic_cast<StructVectorBatch&>(*batch);
+      auto& longBatch1 = dynamic_cast<LongVectorBatch&>(*structBatch.fields[0]);
+      auto& longBatch2 = dynamic_cast<LongVectorBatch&>(*structBatch.fields[1]);
+      for (size_t i = 0; i < 1000; ++i) {
+        if (i % 2 == 0) {
+          EXPECT_FALSE(longBatch1.notNull[i]);
+         } else {
+          EXPECT_TRUE(longBatch1.notNull[i]);
+          EXPECT_EQ(longBatch1.data[i], static_cast<int64_t>(i*100));
+        }
+        EXPECT_EQ(longBatch2.data[i], static_cast<int64_t>(i*300));
+      }
+      // Read rows 1500 - 2000
+      rowReader->seekToRow(1500);
+      EXPECT_TRUE(rowReader->next(*batch));
+      EXPECT_EQ(500, batch->numElements);
+      for (size_t i = 0; i < 500; ++i) {
+        if (i % 2 == 0) {
+          EXPECT_FALSE(longBatch1.notNull[i]);
+         } else {
+          EXPECT_TRUE(longBatch1.notNull[i]);
+          EXPECT_EQ(longBatch1.data[i], static_cast<int64_t>((i + 1500)*100));
+        }
+        EXPECT_EQ(longBatch2.data[i], static_cast<int64_t>((i + 1500)*300));
+      }
+      // fetch StripeFooter from pb stream
+      std::unique_ptr<StripeInformation> stripeInfo = reader->getStripe(0);
+      ReaderImpl* readerImpl = dynamic_cast<ReaderImpl*>(reader.get());
+      std::unique_ptr<SeekableInputStream> pbStream(
+        new SeekableFileInputStream(readerImpl->getStream(),
+        stripeInfo->getOffset() + stripeInfo->getIndexLength() + stripeInfo->getDataLength(),
+        stripeInfo->getFooterLength(),
+        *pool));
+      proto::StripeFooter stripeFooter;
+      if (!stripeFooter.ParseFromZeroCopyStream(pbStream.get())) {
+        throw ParseError("Parse stripe footer from pb stream failed");
+      }
+      for (int i = 0; i < stripeFooter.streams_size(); ++i) {
+        const proto::Stream& stream = stripeFooter.streams(i);
+        if (stream.has_kind() && stream.kind() == proto::Stream_Kind_PRESENT) {
+          EXPECT_EQ(stream.column(), 1UL);
         }
       }
     }

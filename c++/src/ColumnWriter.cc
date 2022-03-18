@@ -142,10 +142,10 @@ namespace orc {
                          const char* incomingMask) {
     const char* notNull = batch.notNull.data() + offset;
     notNullEncoder->add(notNull, numValues, incomingMask);
-    for (uint64_t i = 0; i < numValues; ++i) {
+    hasNullValue |= batch.hasNulls;
+    for (uint64_t i = 0; !hasNullValue && i < numValues; ++i) {
       if (!notNull[i]) {
         hasNullValue = true;
-        break;
       }
     }
   }
