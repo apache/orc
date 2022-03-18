@@ -39,6 +39,8 @@ target_link_libraries (tool-test
   orc::gmock
 )
 
+add_dependencies(tool-test tool-set)
+
 if (TEST_VALGRIND_MEMCHECK)
   add_test (tool-test valgrind --tool=memcheck --leak-check=full --error-exitcode=1 ./tool-test ${EXAMPLE_DIRECTORY} ${PROJECT_BINARY_DIR})
 else ()

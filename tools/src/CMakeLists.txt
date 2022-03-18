@@ -94,12 +94,18 @@ target_link_libraries (csv-import
   ${CMAKE_THREAD_LIBS_INIT}
   )
 
+set(CPP_TOOL_NAMES
+  orc-contents
+  orc-metadata
+  orc-statistics
+  orc-scan
+  orc-memory
+  timezone-dump
+  csv-import
+  )
+
+add_custom_target(tool-set ALL DEPENDS ${CPP_TOOL_NAMES})
+
 install(TARGETS
-   orc-contents
-   orc-metadata
-   orc-statistics
-   orc-scan
-   orc-memory
-   timezone-dump
-   csv-import
+   ${CPP_TOOL_NAMES}
    DESTINATION bin)
