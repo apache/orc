@@ -96,6 +96,7 @@ namespace orc {
     dataBuffer->resize(0);
     return dataSize;
   }
+
   void BufferedOutputStream::suppress() {
     dataBuffer->resize(0);
   }
