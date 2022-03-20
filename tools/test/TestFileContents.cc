@@ -142,3 +142,28 @@ TEST (TestFileContents, testInvalidName) {
   EXPECT_EQ("", output);
   EXPECT_NE(std::string::npos, error.find(error_msg));
 }
+
+TEST (TestFileContents, testDecimal64V2) {
+  const std::string pgm = findProgram("tools/src/orc-contents");
+  const std::string file = findExample("decimal64_v2.orc");
+  const std::string expected =
+      "{\"a\": 17292380420, \"b\": 24, \"c\": 36164.16, \"d\": 0.03, \"e\": 0.01}\n"
+      "{\"a\": 17292380421, \"b\": 38, \"c\": 63351.70, \"d\": 0.08, \"e\": 0.01}\n"
+      "{\"a\": 17292380421, \"b\": 28, \"c\": 42673.96, \"d\": 0.09, \"e\": 0.06}\n"
+      "{\"a\": 17292380421, \"b\": 40, \"c\": 76677.60, \"d\": 0.05, \"e\": 0.04}\n"
+      "{\"a\": 17292380421, \"b\": 2, \"c\": 2096.48, \"d\": 0.07, \"e\": 0.07}\n"
+      "{\"a\": 17292380421, \"b\": 42, \"c\": 45284.82, \"d\": 0.07, \"e\": 0.05}\n"
+      "{\"a\": 17292380421, \"b\": 10, \"c\": 18572.90, \"d\": 0.01, \"e\": 0.08}\n"
+      "{\"a\": 17292380422, \"b\": 12, \"c\": 14836.80, \"d\": 0.09, \"e\": 0.06}\n"
+      "{\"a\": 17292380422, \"b\": 41, \"c\": 82152.52, \"d\": 0.07, \"e\": 0.02}\n"
+      "{\"a\": 17292380422, \"b\": 38, \"c\": 47240.84, \"d\": 0.10, \"e\": 0.00}\n";
+  const std::string error_msg = "Warning: ORC file " + file +
+      " was written in an unknown format version UNSTABLE-PRE-2.0\n";
+
+  std::string output;
+  std::string error;
+
+  EXPECT_EQ(0, runProgram({pgm, file}, output, error)) << error;
+  EXPECT_EQ(expected, output);
+  EXPECT_EQ(error_msg, error);
+}

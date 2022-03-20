@@ -127,6 +127,10 @@ namespace orc {
     return reader.getThrowOnHive11DecimalOverflow();
   }
 
+  bool StripeStreamsImpl::isDecimalAsLong() const {
+    return reader.getIsDecimalAsLong();
+  }
+
   int32_t StripeStreamsImpl::getForcedScaleOnHive11Decimal() const {
     return reader.getForcedScaleOnHive11Decimal();
   }

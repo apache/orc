@@ -1656,6 +1656,60 @@ namespace orc {
     }
   }
 
+  class Decimal64ColumnReaderV2: public ColumnReader {
+  protected:
+    std::unique_ptr<RleDecoder> valueDecoder;
+    int32_t precision;
+    int32_t scale;
+
+  public:
+    Decimal64ColumnReaderV2(const Type& type, StripeStreams& stripe);
+    ~Decimal64ColumnReaderV2() override;
+
+    uint64_t skip(uint64_t numValues) override;
+
+    void next(ColumnVectorBatch& rowBatch,
+              uint64_t numValues,
+              char *notNull) override;
+  };
+
+  Decimal64ColumnReaderV2::Decimal64ColumnReaderV2(const Type& type,
+                                                   StripeStreams& stripe
+                                                   ): ColumnReader(type, stripe) {
+    scale = static_cast<int32_t>(type.getScale());
+    precision = static_cast<int32_t>(type.getPrecision());
+    std::unique_ptr<SeekableInputStream> stream =
+        stripe.getStream(columnId, proto::Stream_Kind_DATA, true);
+    if (stream == nullptr) {
+      std::stringstream ss;
+      ss << "DATA stream not found in Decimal64V2 column. ColumnId=" << columnId;
+      throw ParseError(ss.str());
+    }
+    valueDecoder = createRleDecoder(std::move(stream), true, RleVersion_2, memoryPool);
+  }
+
+  Decimal64ColumnReaderV2::~Decimal64ColumnReaderV2() {
+    // PASS
+  }
+
+  uint64_t Decimal64ColumnReaderV2::skip(uint64_t numValues) {
+    numValues = ColumnReader::skip(numValues);
+    valueDecoder->skip(numValues);
+    return numValues;
+  }
+
+  void Decimal64ColumnReaderV2::next(ColumnVectorBatch& rowBatch,
+                                     uint64_t numValues,
+                                     char *notNull) {
+    ColumnReader::next(rowBatch, numValues, notNull);
+    notNull = rowBatch.hasNulls ? rowBatch.notNull.data() : nullptr;
+    Decimal64VectorBatch &batch =
+      dynamic_cast<Decimal64VectorBatch&>(rowBatch);
+    valueDecoder->next(batch.values.data(), numValues, notNull);
+    batch.precision = precision;
+    batch.scale = scale;
+  }
+
   class DecimalHive11ColumnReader: public Decimal64ColumnReader {
   private:
     bool throwOnOverflow;
@@ -1841,18 +1895,19 @@ namespace orc {
       if (type.getPrecision() == 0) {
         return std::unique_ptr<ColumnReader>
           (new DecimalHive11ColumnReader(type, stripe));
-
+      }
       // can we represent the values using int64_t?
-      } else if (type.getPrecision() <=
-                 Decimal64ColumnReader::MAX_PRECISION_64) {
+      if (type.getPrecision() <= Decimal64ColumnReader::MAX_PRECISION_64) {
+        if (stripe.isDecimalAsLong()) {
+          return std::unique_ptr<ColumnReader>
+            (new Decimal64ColumnReaderV2(type, stripe));
+        }
         return std::unique_ptr<ColumnReader>
           (new Decimal64ColumnReader(type, stripe));
-
-      // otherwise we use the Int128 implementation
-      } else {
-        return std::unique_ptr<ColumnReader>
-          (new Decimal128ColumnReader(type, stripe));
       }
+      // otherwise we use the Int128 implementation
+      return std::unique_ptr<ColumnReader>
+        (new Decimal128ColumnReader(type, stripe));
 
     default:
       throw NotImplementedYet("buildReader unhandled type");

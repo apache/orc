@@ -502,6 +502,10 @@ namespace orc {
     return throwOnHive11DecimalOverflow;
   }
 
+  bool RowReaderImpl::getIsDecimalAsLong() const {
+    return contents->isDecimalAsLong;
+  }
+
   int32_t RowReaderImpl::getForcedScaleOnHive11Decimal() const {
     return forcedScaleOnHive11Decimal;
   }
@@ -616,9 +620,7 @@ namespace orc {
     if (contents->postscript->version_size() != 2) {
       return FileVersion::v_0_11();
     }
-    return FileVersion(
-                contents->postscript->version(0),
-                contents->postscript->version(1));
+    return {contents->postscript->version(0), contents->postscript->version(1)};
   }
 
   uint64_t ReaderImpl::getNumberOfRows() const {
@@ -1388,6 +1390,13 @@ namespace orc {
 
       contents->footer = REDUNDANT_MOVE(readFooter(stream.get(), buffer.get(),
         footerOffset, *contents->postscript,  *contents->pool));
+    }
+    contents->isDecimalAsLong = false;
+    if (contents->postscript->version_size() == 2) {
+      FileVersion v(contents->postscript->version(0), contents->postscript->version(1));
+      if (v == FileVersion::UNSTABLE_PRE_2_0()) {
+        contents->isDecimalAsLong = true;
+      }
     }
     contents->stream = std::move(stream);
     return std::unique_ptr<Reader>(new ReaderImpl(std::move(contents),

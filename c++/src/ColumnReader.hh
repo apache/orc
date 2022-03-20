@@ -91,6 +91,12 @@ namespace orc {
      * @return the number of scale digits
      */
     virtual int32_t getForcedScaleOnHive11Decimal() const = 0;
+
+    /**
+     * Whether decimals that have precision <=18 are encoded as fixed scale and values
+     * encoded in RLE.
+     */
+    virtual bool isDecimalAsLong() const = 0;
   };
 
   /**
