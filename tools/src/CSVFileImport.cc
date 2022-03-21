@@ -301,7 +301,7 @@ int main(int argc, char* argv[]) {
   static struct option longOptions[] = {
     {"help", no_argument, ORC_NULLPTR, 'h'},
     {"delimiter", required_argument, ORC_NULLPTR, 'd'},
-    {"stripe", required_argument, ORC_NULLPTR, 'p'},
+    {"stripe", required_argument, ORC_NULLPTR, 's'},
     {"block", required_argument, ORC_NULLPTR, 'c'},
     {"batch", required_argument, ORC_NULLPTR, 'b'},
     {"timezone", required_argument, ORC_NULLPTR, 't'},
@@ -311,7 +311,7 @@ int main(int argc, char* argv[]) {
   int opt;
   char *tail;
   do {
-    opt = getopt_long(argc, argv, "i:o:s:b:c:p:t:h", longOptions, ORC_NULLPTR);
+    opt = getopt_long(argc, argv, "i:o:d:s:c:b:t:h", longOptions, ORC_NULLPTR);
     switch (opt) {
       case '?':
       case 'h':
@@ -321,7 +321,7 @@ int main(int argc, char* argv[]) {
       case 'd':
         gDelimiter = optarg[0];
         break;
-      case 'p':
+      case 's':
         stripeSize = strtoul(optarg, &tail, 10);
         if (*tail != '\0') {
           fprintf(stderr, "The --stripe parameter requires an integer option.\n");
