@@ -311,9 +311,8 @@ int main(int argc, char* argv[]) {
   int opt;
   char *tail;
   do {
-    opt = getopt_long(argc, argv, "i:o:d:s:c:b:t:h", longOptions, ORC_NULLPTR);
+    opt = getopt_long(argc, argv, "d:s:c:b:t:h", longOptions, ORC_NULLPTR);
     switch (opt) {
-      case '?':
       case 'h':
         helpFlag = true;
         opt = -1;
