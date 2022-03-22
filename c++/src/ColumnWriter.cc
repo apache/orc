@@ -100,7 +100,8 @@ namespace orc {
                                 enableBloomFilter(false),
                                 memPool(*options.getMemoryPool()),
                                 indexStream(),
-                                bloomFilterStream() {
+                                bloomFilterStream(),
+                                hasNullValue(false) {
 
     std::unique_ptr<BufferedOutputStream> presentStream =
         factory.createStream(proto::Stream_Kind_PRESENT);
@@ -139,10 +140,22 @@ namespace orc {
                          uint64_t offset,
                          uint64_t numValues,
                          const char* incomingMask) {
-    notNullEncoder->add(batch.notNull.data() + offset, numValues, incomingMask);
+    const char* notNull = batch.notNull.data() + offset;
+    notNullEncoder->add(notNull, numValues, incomingMask);
+    hasNullValue |= batch.hasNulls;
+    for (uint64_t i = 0; !hasNullValue && i < numValues; ++i) {
+      if (!notNull[i]) {
+        hasNullValue = true;
+      }
+    }
   }
 
   void ColumnWriter::flush(std::vector<proto::Stream>& streams) {
+    if (!hasNullValue) {
+      // supress the present stream
+      notNullEncoder->suppress();
+      return;
+    }
     proto::Stream stream;
     stream.set_kind(proto::Stream_Kind_PRESENT);
     stream.set_column(static_cast<uint32_t>(columnId));
@@ -199,6 +212,21 @@ namespace orc {
   }
 
   void ColumnWriter::writeIndex(std::vector<proto::Stream> &streams) const {
+    if (!hasNullValue) {
+      // remove positions of present stream
+      int presentCount = indexStream->isCompressed() ? 4 : 3;
+      for (int i = 0; i != rowIndex->entry_size(); ++i) {
+        proto::RowIndexEntry* entry = rowIndex->mutable_entry(i);
+        std::vector<uint64_t> positions;
+        for (int j = presentCount; j < entry->positions_size(); ++j) {
+          positions.push_back(entry->positions(j));
+        }
+        entry->clear_positions();
+        for (size_t j = 0; j != positions.size(); ++j) {
+          entry->add_positions(positions[j]);
+        }
+      }
+    }
     // write row index to output stream
     rowIndex->SerializeToZeroCopyStream(indexStream.get());
 
