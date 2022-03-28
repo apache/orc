@@ -416,7 +416,7 @@ namespace orc {
   class DoubleColumnReader: public ColumnReader {
   public:
     DoubleColumnReader(const Type& type, StripeStreams& stripe);
-    ~DoubleColumnReader() override {};
+    ~DoubleColumnReader() override {}
 
     uint64_t skip(uint64_t numValues) override;
 
