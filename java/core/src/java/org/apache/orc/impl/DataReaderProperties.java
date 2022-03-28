@@ -32,6 +32,8 @@ public final class DataReaderProperties {
   private final InStream.StreamOptions compression;
   private final boolean zeroCopy;
   private final int maxDiskRangeChunkLimit;
+  private final int minSeekSize;
+  private final double minSeekSizeTolerance;
 
   private DataReaderProperties(Builder builder) {
     this.fileSystemSupplier = builder.fileSystemSupplier;
@@ -40,6 +42,8 @@ public final class DataReaderProperties {
     this.compression = builder.compression;
     this.zeroCopy = builder.zeroCopy;
     this.maxDiskRangeChunkLimit = builder.maxDiskRangeChunkLimit;
+    this.minSeekSize = builder.minSeekSize;
+    this.minSeekSizeTolerance = builder.minSeekSizeTolerance;
   }
 
   public Supplier<FileSystem> getFileSystemSupplier() {
@@ -70,6 +74,14 @@ public final class DataReaderProperties {
     return new Builder();
   }
 
+  public int getMinSeekSize() {
+    return minSeekSize;
+  }
+
+  public double getMinSeekSizeTolerance() {
+    return minSeekSizeTolerance;
+  }
+
   public static class Builder {
 
     private Supplier<FileSystem> fileSystemSupplier;
@@ -79,6 +91,9 @@ public final class DataReaderProperties {
     private boolean zeroCopy;
     private int maxDiskRangeChunkLimit =
         (int) OrcConf.ORC_MAX_DISK_RANGE_CHUNK_LIMIT.getDefaultValue();
+    private int minSeekSize = (int) OrcConf.ORC_MIN_DISK_SEEK_SIZE.getDefaultValue();
+    private double minSeekSizeTolerance = (double) OrcConf.ORC_MIN_DISK_SEEK_SIZE_TOLERANCE
+      .getDefaultValue();
 
     private Builder() {
 
@@ -116,6 +131,16 @@ public final class DataReaderProperties {
 
     public Builder withMaxDiskRangeChunkLimit(int value) {
       maxDiskRangeChunkLimit = value;
+      return this;
+    }
+
+    public Builder withMinSeekSize(int value) {
+      minSeekSize = value;
+      return this;
+    }
+
+    public Builder withMinSeekSizeTolerance(double value) {
+      minSeekSizeTolerance = value;
       return this;
     }
 

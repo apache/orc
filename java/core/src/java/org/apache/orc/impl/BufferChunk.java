@@ -89,7 +89,10 @@ public class BufferChunk extends DiskRangeList {
       return false;
     }
     BufferChunk ob = (BufferChunk) other;
-    return chunk.equals(ob.chunk);
+    return (chunk != null && ob.chunk != null && chunk.equals(ob.chunk))
+           || (chunk == null && ob.chunk == null
+               && offset == ob.offset
+               && getLength() == ob.getLength());
   }
 
   @Override
