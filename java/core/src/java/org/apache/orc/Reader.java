@@ -234,6 +234,9 @@ public interface Reader extends Closeable {
     private boolean allowSARGToFilter = false;
     private boolean useSelected = false;
     private boolean allowPluginFilters = false;
+    private int minSeekSize = (int) OrcConf.ORC_MIN_DISK_SEEK_SIZE.getDefaultValue();
+    private double minSeekSizeTolerance = (double) OrcConf.ORC_MIN_DISK_SEEK_SIZE_TOLERANCE
+      .getDefaultValue();
 
     /**
      * @since 1.1.0
@@ -256,6 +259,8 @@ public interface Reader extends Closeable {
       allowSARGToFilter = OrcConf.ALLOW_SARG_TO_FILTER.getBoolean(conf);
       useSelected = OrcConf.READER_USE_SELECTED.getBoolean(conf);
       allowPluginFilters = OrcConf.ALLOW_PLUGIN_FILTER.getBoolean(conf);
+      minSeekSize = OrcConf.ORC_MIN_DISK_SEEK_SIZE.getInt(conf);
+      minSeekSizeTolerance = OrcConf.ORC_MIN_DISK_SEEK_SIZE_TOLERANCE.getDouble(conf);
     }
 
     /**
@@ -646,6 +651,36 @@ public interface Reader extends Closeable {
 
     public Options allowPluginFilters(boolean allowPluginFilters) {
       this.allowPluginFilters = allowPluginFilters;
+      return this;
+    }
+
+    /**
+     * @since 1.8.0
+     */
+    public int minSeekSize() {
+      return minSeekSize;
+    }
+
+    /**
+     * @since 1.8.0
+     */
+    public Options minSeekSize(int minSeekSize) {
+      this.minSeekSize = minSeekSize;
+      return this;
+    }
+
+    /**
+     * @since 1.8.0
+     */
+    public double minSeekSizeTolerance() {
+      return minSeekSizeTolerance;
+    }
+
+    /**
+     * @since 1.8.0
+     */
+    public Options minSeekSizeTolerance(double value) {
+      this.minSeekSizeTolerance = value;
       return this;
     }
   }

@@ -194,6 +194,19 @@ public enum OrcConf {
   ORC_MAX_DISK_RANGE_CHUNK_LIMIT("orc.max.disk.range.chunk.limit",
       "hive.exec.orc.max.disk.range.chunk.limit",
     Integer.MAX_VALUE - 1024, "When reading stripes >2GB, specify max limit for the chunk size."),
+  ORC_MIN_DISK_SEEK_SIZE("orc.min.disk.seek.size",
+                         "orc.min.disk.seek.size",
+                         0,
+                         "When determining contiguous reads, gaps within this size are "
+                         + "read contiguously and not seeked. Default value of zero disables this "
+                         + "optimization"),
+  ORC_MIN_DISK_SEEK_SIZE_TOLERANCE("orc.min.disk.seek.size.tolerance",
+                          "orc.min.disk.seek.size.tolerance", 0.00,
+                          "Define the tolerance for for extra bytes read as a result of "
+                          + "orc.min.disk.seek.size. If the "
+                          + "(bytesRead - bytesNeeded) / bytesNeeded is greater than this "
+                          + "threshold then extra work is performed to drop the extra bytes from "
+                          + "memory after the read."),
   ENCRYPTION("orc.encrypt", "orc.encrypt", null, "The list of keys and columns to encrypt with"),
   DATA_MASK("orc.mask", "orc.mask", null, "The masks to apply to the encrypted columns"),
   KEY_PROVIDER("orc.key.provider", "orc.key.provider", "hadoop",

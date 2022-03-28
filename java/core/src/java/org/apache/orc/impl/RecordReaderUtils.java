@@ -53,6 +53,8 @@ public class RecordReaderUtils {
     private final Supplier<FileSystem> fileSystemSupplier;
     private final Path path;
     private final boolean useZeroCopy;
+    private final int minSeekSize;
+    private final double minSeekSizeTolerance;
     private InStream.StreamOptions options;
     private boolean isOpen = false;
 
@@ -62,6 +64,8 @@ public class RecordReaderUtils {
       this.file = properties.getFile();
       this.useZeroCopy = properties.getZeroCopy();
       this.options = properties.getCompression();
+      this.minSeekSize = properties.getMinSeekSize();
+      this.minSeekSizeTolerance = properties.getMinSeekSizeTolerance();
     }
 
     @Override
@@ -99,7 +103,8 @@ public class RecordReaderUtils {
     public BufferChunkList readFileData(BufferChunkList range,
                                         boolean doForceDirect
                                         ) throws IOException {
-      RecordReaderUtils.readDiskRanges(file, zcr, range, doForceDirect);
+      RecordReaderUtils.readDiskRanges(file, zcr, range, doForceDirect, minSeekSize,
+                                       minSeekSizeTolerance);
       return range;
     }
 
@@ -459,11 +464,23 @@ public class RecordReaderUtils {
    * @return the last range to read
    */
   static BufferChunk findSingleRead(BufferChunk first) {
+    return findSingleRead(first, 0);
+  }
+
+  /**
+   * Find the list of ranges that should be read in a single read.
+   * The read will stop when there is a gap, one of the ranges already has data,
+   * or we have reached the maximum read size of 2^31.
+   * @param first the first range to read
+   * @param minSeekSize minimum size for seek instead of read
+   * @return the last range to read
+   */
+  private static BufferChunk findSingleRead(BufferChunk first, long minSeekSize) {
     BufferChunk last = first;
     long currentEnd = first.getEnd();
     while (last.next != null &&
                !last.next.hasData() &&
-               last.next.getOffset() <= currentEnd &&
+               last.next.getOffset() <= (currentEnd + minSeekSize) &&
                last.next.getEnd() - first.getOffset() < Integer.MAX_VALUE) {
       last = (BufferChunk) last.next;
       currentEnd = Math.max(currentEnd, last.getEnd());
@@ -486,18 +503,43 @@ public class RecordReaderUtils {
                              HadoopShims.ZeroCopyReaderShim zcr,
                              BufferChunkList list,
                              boolean doForceDirect) throws IOException {
+    readDiskRanges(file, zcr, list, doForceDirect, 0, 0);
+  }
+
+  /**
+   * Read the list of ranges from the file by updating each range in the list
+   * with a buffer that has the bytes from the file.
+   *
+   * The ranges must be sorted, but may overlap or include holes.
+   *
+   * @param file the file to read
+   * @param zcr the zero copy shim
+   * @param list the disk ranges within the file to read
+   * @param doForceDirect allocate direct buffers
+   * @param minSeekSize the minimum gap to prefer seek vs read
+   * @param minSeekSizeTolerance allowed tolerance for extra bytes in memory as a result of
+   *                             minSeekSize
+   */
+  private static void readDiskRanges(FSDataInputStream file,
+                             HadoopShims.ZeroCopyReaderShim zcr,
+                             BufferChunkList list,
+                             boolean doForceDirect,
+                             int minSeekSize,
+                             double minSeekSizeTolerance) throws IOException {
     BufferChunk current = list == null ? null : list.get();
     while (current != null) {
       while (current.hasData()) {
         current = (BufferChunk) current.next;
       }
-      BufferChunk last = findSingleRead(current);
       if (zcr != null) {
+        BufferChunk last = findSingleRead(current);
         zeroCopyReadRanges(file, zcr, current, last, doForceDirect);
+        current = (BufferChunk) last.next;
       } else {
-        readRanges(file, current, last, doForceDirect);
+        ChunkReader chunkReader = ChunkReader.create(current, minSeekSize);
+        chunkReader.readRanges(file, doForceDirect, minSeekSizeTolerance);
+        current = (BufferChunk) chunkReader.to.next;
       }
-      current = (BufferChunk) last.next;
     }
   }
 
@@ -582,6 +624,170 @@ public class RecordReaderUtils {
       do {
         key = new Key(buffer.capacity(), currentGeneration++);
       } while (tree.putIfAbsent(key, buffer) != null);
+    }
+  }
+
+  static class ChunkReader {
+    private final BufferChunk from;
+    private final BufferChunk to;
+    private final int readBytes;
+    private final int reqBytes;
+
+    private ChunkReader(BufferChunk from, BufferChunk to, int readSize, int reqBytes) {
+      this.from = from;
+      this.to = to;
+      this.readBytes = readSize;
+      this.reqBytes = reqBytes;
+    }
+
+    double getExtraBytesFraction() {
+      return (readBytes - reqBytes) / ((double) reqBytes);
+    }
+
+    public int getReadBytes() {
+      return readBytes;
+    }
+
+    public int getReqBytes() {
+      return reqBytes;
+    }
+
+    public BufferChunk getFrom() {
+      return from;
+    }
+
+    public BufferChunk getTo() {
+      return to;
+    }
+
+    void populateChunks(ByteBuffer bytes, boolean allocateDirect, double extraByteTolerance) {
+      if (getExtraBytesFraction() > extraByteTolerance) {
+        LOG.debug("ExtraBytesFraction = {}, ExtraByteTolerance = {}, reducing memory size",
+                  getExtraBytesFraction(),
+                  extraByteTolerance);
+        populateChunksReduceSize(bytes, allocateDirect);
+      } else {
+        LOG.debug("ExtraBytesFraction = {}, ExtraByteTolerance = {}, populating as is",
+                  getExtraBytesFraction(),
+                  extraByteTolerance);
+        populateChunksAsIs(bytes);
+      }
+    }
+
+    void populateChunksAsIs(ByteBuffer bytes) {
+      // populate each BufferChunks with the data
+      BufferChunk current = from;
+      long offset = from.getOffset();
+      while (current != to.next) {
+        ByteBuffer currentBytes = current == to ? bytes : bytes.duplicate();
+        currentBytes.position((int) (current.getOffset() - offset));
+        currentBytes.limit((int) (current.getEnd() - offset));
+        current.setChunk(currentBytes);
+        current = (BufferChunk) current.next;
+      }
+    }
+
+    void populateChunksReduceSize(ByteBuffer bytes, boolean allocateDirect) {
+      ByteBuffer newBuffer;
+      if (allocateDirect) {
+        newBuffer = ByteBuffer.allocateDirect(reqBytes);
+        newBuffer.position(reqBytes);
+        newBuffer.flip();
+      } else {
+        byte[] newBytes = new byte[reqBytes];
+        newBuffer = ByteBuffer.wrap(newBytes);
+      }
+
+      final long offset = from.getOffset();
+      int copyStart = 0;
+      int copyEnd;
+      int copyLength;
+      int skippedBytes = 0;
+      int srcPosition;
+      BufferChunk current = from;
+      while (current != to.next) {
+        // We can skip bytes as required, but no need to copy bytes that are already copied
+        srcPosition = (int) (current.getOffset() - offset);
+        skippedBytes += Math.max(0, srcPosition - copyStart);
+        copyStart = Math.max(copyStart, srcPosition);
+        copyEnd = (int) (current.getEnd() - offset);
+        copyLength = copyStart < copyEnd ? copyEnd - copyStart : 0;
+        newBuffer.put(bytes.array(), copyStart, copyLength);
+        copyStart += copyLength;
+        // Set up new ByteBuffer that wraps on the same backing array
+        ByteBuffer currentBytes = current == to ? newBuffer : newBuffer.duplicate();
+        currentBytes.position(srcPosition - skippedBytes);
+        currentBytes.limit(currentBytes.position() + current.getLength());
+        current.setChunk(currentBytes);
+        current = (BufferChunk) current.next;
+      }
+    }
+
+    /**
+     * Read the data from the file based on a list of ranges in a single read.
+     *
+     * @param file           the file to read from
+     * @param allocateDirect should we use direct buffers
+     */
+    void readRanges(FSDataInputStream file, boolean allocateDirect, double extraByteTolerance)
+      throws IOException {
+      // assume that the chunks are sorted by offset
+      long offset = from.getOffset();
+      int readSize = (int) (computeEnd(from, to) - offset);
+      byte[] buffer = new byte[readSize];
+      try {
+        file.readFully(offset, buffer, 0, buffer.length);
+      } catch (IOException e) {
+        throw new IOException(String.format("Failed while reading %s %d:%d",
+                                            file,
+                                            offset,
+                                            buffer.length),
+                              e);
+      }
+
+      // get the data into a ByteBuffer
+      ByteBuffer bytes;
+      if (allocateDirect) {
+        bytes = ByteBuffer.allocateDirect(readSize);
+        bytes.put(buffer);
+        bytes.flip();
+      } else {
+        bytes = ByteBuffer.wrap(buffer);
+      }
+
+      // populate each BufferChunks with the data
+      populateChunks(bytes, allocateDirect, extraByteTolerance);
+    }
+
+    static ChunkReader create(BufferChunk from, BufferChunk to) {
+      long f = Integer.MAX_VALUE;
+      long e = Integer.MIN_VALUE;
+
+      long cf = Integer.MAX_VALUE;
+      long ef = Integer.MIN_VALUE;
+      int reqBytes = 0;
+
+      BufferChunk current = from;
+      while (current != to.next) {
+        f = Math.min(f, current.getOffset());
+        e = Math.max(e, current.getEnd());
+        if (ef == Integer.MIN_VALUE || current.getOffset() <= ef) {
+          cf = Math.min(cf, current.getOffset());
+          ef = Math.max(ef, current.getEnd());
+        } else {
+          reqBytes += ef - cf;
+          cf = current.getOffset();
+          ef = current.getEnd();
+        }
+        current = (BufferChunk) current.next;
+      }
+      reqBytes += ef - cf;
+      return new ChunkReader(from, to, (int) (e - f), reqBytes);
+    }
+
+    static ChunkReader create(BufferChunk from, int minSeekSize) {
+      BufferChunk to = findSingleRead(from, minSeekSize);
+      return create(from, to);
     }
   }
 }
