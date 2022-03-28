@@ -412,10 +412,11 @@ namespace orc {
     nanoRle->seek(positions.at(columnId));
   }
 
+  template<TypeKind COLUMN_KIND, bool IS_LITTLE_ENDIAN>
   class DoubleColumnReader: public ColumnReader {
   public:
     DoubleColumnReader(const Type& type, StripeStreams& stripe);
-    ~DoubleColumnReader() override;
+    ~DoubleColumnReader() override {};
 
     uint64_t skip(uint64_t numValues) override;
 
@@ -428,8 +429,7 @@ namespace orc {
 
   private:
     std::unique_ptr<SeekableInputStream> inputStream;
-    TypeKind columnKind;
-    const uint64_t bytesPerValue ;
+    const uint64_t bytesPerValue = (COLUMN_KIND == FLOAT) ? 4 : 8;
     const char *bufferPointer;
     const char *bufferEnd;
 
@@ -447,8 +447,24 @@ namespace orc {
 
     double readDouble() {
       int64_t bits = 0;
-      for (uint64_t i=0; i < 8; i++) {
-        bits |= static_cast<int64_t>(readByte()) << (i*8);
+      if (bufferEnd - bufferPointer >= 8) {
+        if (IS_LITTLE_ENDIAN) {
+          bits = *(reinterpret_cast<const int64_t*>(bufferPointer));
+        } else {
+          bits = static_cast<int64_t>(static_cast<unsigned char>(bufferPointer[0]));
+          bits |= static_cast<int64_t>(static_cast<unsigned char>(bufferPointer[1])) << 8;
+          bits |= static_cast<int64_t>(static_cast<unsigned char>(bufferPointer[2])) << 16;
+          bits |= static_cast<int64_t>(static_cast<unsigned char>(bufferPointer[3])) << 24;
+          bits |= static_cast<int64_t>(static_cast<unsigned char>(bufferPointer[4])) << 32;
+          bits |= static_cast<int64_t>(static_cast<unsigned char>(bufferPointer[5])) << 40;
+          bits |= static_cast<int64_t>(static_cast<unsigned char>(bufferPointer[6])) << 48;
+          bits |= static_cast<int64_t>(static_cast<unsigned char>(bufferPointer[7])) << 56;
+        }
+        bufferPointer += 8;
+      } else {
+        for (uint64_t i = 0; i < 8; i++) {
+          bits |= static_cast<int64_t>(readByte()) << (i * 8);
+        }
       }
       double *result = reinterpret_cast<double*>(&bits);
       return *result;
@@ -456,32 +472,36 @@ namespace orc {
 
     double readFloat() {
       int32_t bits = 0;
-      for (uint64_t i=0; i < 4; i++) {
-        bits |= readByte() << (i*8);
+      if (bufferEnd - bufferPointer >= 4) {
+        bits = static_cast<unsigned char>(bufferPointer[0]);
+        bits |= static_cast<unsigned char>(bufferPointer[1]) << 8;
+        bits |= static_cast<unsigned char>(bufferPointer[2]) << 16;
+        bits |= static_cast<unsigned char>(bufferPointer[3]) << 24;
+        bufferPointer += 4;
+      } else {
+        for (uint64_t i = 0; i < 4; i++) {
+          bits |= readByte() << (i * 8);
+        }
       }
       float *result = reinterpret_cast<float*>(&bits);
       return static_cast<double>(*result);
     }
   };
 
-  DoubleColumnReader::DoubleColumnReader(const Type& type,
-                                         StripeStreams& stripe
-                                         ): ColumnReader(type, stripe),
-                                            columnKind(type.getKind()),
-                                            bytesPerValue((type.getKind() ==
-                                                           FLOAT) ? 4 : 8),
-                                            bufferPointer(nullptr),
-                                            bufferEnd(nullptr) {
+  template<TypeKind COLUMN_KIND, bool IS_LITTLE_ENDIAN>
+  DoubleColumnReader<COLUMN_KIND, IS_LITTLE_ENDIAN>::DoubleColumnReader(
+      const Type& type,
+      StripeStreams& stripe
+      ): ColumnReader(type, stripe),
+         bufferPointer(nullptr),
+         bufferEnd(nullptr) {
     inputStream = stripe.getStream(columnId, proto::Stream_Kind_DATA, true);
     if (inputStream == nullptr)
       throw ParseError("DATA stream not found in Double column");
   }
 
-  DoubleColumnReader::~DoubleColumnReader() {
-    // PASS
-  }
-
-  uint64_t DoubleColumnReader::skip(uint64_t numValues) {
+  template<TypeKind COLUMN_KIND, bool IS_LITTLE_ENDIAN>
+  uint64_t DoubleColumnReader<COLUMN_KIND, IS_LITTLE_ENDIAN>::skip(uint64_t numValues) {
     numValues = ColumnReader::skip(numValues);
 
     if (static_cast<size_t>(bufferEnd - bufferPointer) >=
@@ -503,15 +523,17 @@ namespace orc {
     return numValues;
   }
 
-  void DoubleColumnReader::next(ColumnVectorBatch& rowBatch,
-                                uint64_t numValues,
-                                char *notNull) {
+  template<TypeKind COLUMN_KIND, bool IS_LITTLE_ENDIAN>
+  void DoubleColumnReader<COLUMN_KIND, IS_LITTLE_ENDIAN>::next(
+      ColumnVectorBatch& rowBatch,
+      uint64_t numValues,
+      char *notNull) {
     ColumnReader::next(rowBatch, numValues, notNull);
     // update the notNull from the parent class
     notNull = rowBatch.hasNulls ? rowBatch.notNull.data() : nullptr;
     double* outArray = dynamic_cast<DoubleVectorBatch&>(rowBatch).data.data();
 
-    if (columnKind == FLOAT) {
+    if (COLUMN_KIND == FLOAT) {
       if (notNull) {
         for(size_t i=0; i < numValues; ++i) {
           if (notNull[i]) {
@@ -531,11 +553,31 @@ namespace orc {
           }
         }
       } else {
-        for(size_t i=0; i < numValues; ++i) {
+        // Number of values in the buffer that we can copy directly.
+        // Only viable when the machine is little-endian.
+        uint64_t bufferNum = 0;
+        if (IS_LITTLE_ENDIAN) {
+          bufferNum = std::min(numValues,
+              static_cast<size_t>(bufferEnd - bufferPointer) / bytesPerValue);
+          uint64_t bufferBytes = bufferNum * bytesPerValue;
+          memcpy(outArray, bufferPointer, bufferBytes);
+          bufferPointer += bufferBytes;
+        }
+        for (size_t i = bufferNum; i < numValues; ++i) {
           outArray[i] = readDouble();
         }
       }
     }
+  }
+
+  template<TypeKind COLUMN_KIND, bool IS_LITTLE_ENDIAN>
+  void DoubleColumnReader<COLUMN_KIND, IS_LITTLE_ENDIAN>::seekToRowGroup(
+      std::unordered_map<uint64_t, PositionProvider>& positions) {
+    ColumnReader::seekToRowGroup(positions);
+    inputStream->seek(positions.at(columnId));
+    // clear buffer state after seek
+    bufferEnd = nullptr;
+    bufferPointer = nullptr;
   }
 
   void readFully(char* buffer, int64_t bufferSize, SeekableInputStream* stream) {
@@ -552,15 +594,6 @@ namespace orc {
       memcpy(buffer + posn, chunk, static_cast<size_t>(length));
       posn += length;
     }
-  }
-
-  void DoubleColumnReader::seekToRowGroup(
-    std::unordered_map<uint64_t, PositionProvider>& positions) {
-    ColumnReader::seekToRowGroup(positions);
-    inputStream->seek(positions.at(columnId));
-    // clear buffer state after seek
-    bufferEnd = nullptr;
-    bufferPointer = nullptr;
   }
 
   class StringDictionaryColumnReader: public ColumnReader {
@@ -1824,6 +1857,11 @@ namespace orc {
     }
   }
 
+  static bool isLittleEndian() {
+    static union { uint32_t i; char c[4]; } num = { 0x01020304 };
+    return num.c[0] == 4;
+  }
+
   /**
    * Create a reader for the given stripe.
    */
@@ -1878,9 +1916,20 @@ namespace orc {
           new StructColumnReader(type, stripe));
 
     case FLOAT:
-    case DOUBLE:
+      if (isLittleEndian()) {
+        return std::unique_ptr<ColumnReader>(
+            new DoubleColumnReader<FLOAT, true>(type, stripe));
+      }
       return std::unique_ptr<ColumnReader>(
-          new DoubleColumnReader(type, stripe));
+          new DoubleColumnReader<FLOAT, false>(type, stripe));
+
+    case DOUBLE:
+      if (isLittleEndian()) {
+        return std::unique_ptr<ColumnReader>(
+            new DoubleColumnReader<DOUBLE, true>(type, stripe));
+      }
+      return std::unique_ptr<ColumnReader>(
+          new DoubleColumnReader<DOUBLE, false>(type, stripe));
 
     case TIMESTAMP:
       return std::unique_ptr<ColumnReader>
