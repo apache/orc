@@ -591,8 +591,8 @@ namespace orc {
     if (!isMetadataLoaded) {
       readMetadata();
     }
-    return metadata.get() == nullptr ? 0 :
-      static_cast<uint64_t>(metadata->stripestats_size());
+    return contents->metadata == nullptr ? 0 :
+      static_cast<uint64_t>(contents->metadata->stripestats_size());
   }
 
   std::unique_ptr<StripeInformation>
@@ -767,11 +767,11 @@ namespace orc {
     if (!isMetadataLoaded) {
       readMetadata();
     }
-    if (metadata.get() == nullptr) {
+    if (contents->metadata == nullptr) {
       throw std::logic_error("No stripe statistics in file");
     }
     size_t num_cols = static_cast<size_t>(
-                          metadata->stripestats(
+                          contents->metadata->stripestats(
                               static_cast<int>(stripeIndex)).colstats_size());
     std::vector<std::vector<proto::ColumnStatistics> > indexStats(num_cols);
 
@@ -788,7 +788,7 @@ namespace orc {
         getLocalTimezone();
     StatContext statContext(hasCorrectStatistics(), &writerTZ);
     return std::unique_ptr<StripeStatistics>
-           (new StripeStatisticsImpl(metadata->stripestats(static_cast<int>(stripeIndex)),
+           (new StripeStatisticsImpl(contents->metadata->stripestats(static_cast<int>(stripeIndex)),
                                                    indexStats, statContext));
   }
 
@@ -831,8 +831,8 @@ namespace orc {
                                                           *contents->pool)),
                            contents->blockSize,
                            *contents->pool);
-      metadata.reset(new proto::Metadata());
-      if (!metadata->ParseFromZeroCopyStream(pbStream.get())) {
+      contents->metadata.reset(new proto::Metadata());
+      if (!contents->metadata->ParseFromZeroCopyStream(pbStream.get())) {
         throw ParseError("Failed to parse the metadata");
       }
     }
@@ -860,6 +860,10 @@ namespace orc {
 
   std::unique_ptr<RowReader> ReaderImpl::createRowReader(
            const RowReaderOptions& opts) const {
+    if (opts.getSearchArgument() && !isMetadataLoaded) {
+      // load stripe statistics for PPD
+      readMetadata();
+    }
     return std::unique_ptr<RowReader>(new RowReaderImpl(contents, opts));
   }
 
@@ -1034,6 +1038,15 @@ namespace orc {
     rowIndexes.clear();
     bloomFilterIndex.clear();
 
+    // evaluate file statistics if it exists
+    if (sargsApplier && !sargsApplier->evaluateFileStatistics(*footer)) {
+      // skip the entire file
+      currentStripe = lastStripe;
+      currentRowInStripe = 0;
+      rowsInCurrentStripe = 0;
+      return;
+    }
+
     do {
       currentStripeInfo = footer->stripes(static_cast<int>(currentStripe));
       uint64_t fileLength = contents->stream->getLength();
@@ -1050,16 +1063,26 @@ namespace orc {
       rowsInCurrentStripe = currentStripeInfo.numberofrows();
 
       if (sargsApplier) {
-        // read row group statistics and bloom filters of current stripe
-        loadStripeIndex();
+        bool isStripeNeeded = true;
+        if (contents->metadata) {
+          const auto& currentStripeStats =
+            contents->metadata->stripestats(static_cast<int>(currentStripe));
+          // skip this stripe after stats fail to satisfy sargs
+          isStripeNeeded = sargsApplier->evaluateStripeStatistics(currentStripeStats);
+        }
 
-        // select row groups to read in the current stripe
-        sargsApplier->pickRowGroups(rowsInCurrentStripe,
-                                    rowIndexes,
-                                    bloomFilterIndex);
-        if (sargsApplier->hasSelectedFrom(currentRowInStripe)) {
-          // current stripe has at least one row group matching the predicate
-          break;
+        if (isStripeNeeded) {
+          // read row group statistics and bloom filters of current stripe
+          loadStripeIndex();
+
+          // select row groups to read in the current stripe
+          sargsApplier->pickRowGroups(rowsInCurrentStripe,
+                                      rowIndexes,
+                                      bloomFilterIndex);
+          if (sargsApplier->hasSelectedFrom(currentRowInStripe)) {
+            // current stripe has at least one row group matching the predicate
+            break;
+          }
         } else {
           // advance to next stripe when current stripe has no matching rows
           currentStripe += 1;
@@ -1113,7 +1136,7 @@ namespace orc {
     uint64_t rowsToRead =
       std::min(static_cast<uint64_t>(data.capacity),
                rowsInCurrentStripe - currentRowInStripe);
-    if (sargsApplier) {
+    if (sargsApplier && rowsToRead > 0) {
       rowsToRead = computeBatchSize(rowsToRead,
                                     currentRowInStripe,
                                     rowsInCurrentStripe,

@@ -46,7 +46,9 @@ namespace orc {
                              , mSearchArgument(searchArgument)
                              , mRowIndexStride(rowIndexStride)
                              , mWriterVersion(writerVersion)
-                             , mStats(0, 0) {
+                             , mStats(0, 0)
+                             , mHasEvaluatedFileStats(false)
+                             , mFileStatsEvalResult(true) {
     const SearchArgumentImpl * sargs =
       dynamic_cast<const SearchArgumentImpl *>(mSearchArgument);
 
@@ -122,4 +124,53 @@ namespace orc {
     return mHasSelected;
   }
 
+  bool SargsApplier::evaluateColumnStatistics(
+                                    const PbColumnStatistics& colStats) const {
+    const SearchArgumentImpl * sargs =
+      dynamic_cast<const SearchArgumentImpl *>(mSearchArgument);
+    if (sargs == nullptr) {
+      throw InvalidArgument("Failed to cast to SearchArgumentImpl");
+    }
+
+    const std::vector<PredicateLeaf>& leaves = sargs->getLeaves();
+    std::vector<TruthValue> leafValues(
+      leaves.size(), TruthValue::YES_NO_NULL);
+
+    for (size_t pred = 0; pred != leaves.size(); ++pred) {
+      uint64_t columnId = mFilterColumns[pred];
+      if (columnId != INVALID_COLUMN_ID &&
+          colStats.size() > static_cast<int>(columnId)) {
+        leafValues[pred] = leaves[pred].evaluate(
+          mWriterVersion, colStats.Get(static_cast<int>(columnId)), nullptr);
+      }
+    }
+
+    return isNeeded(mSearchArgument->evaluate(leafValues));
+  }
+
+  bool SargsApplier::evaluateStripeStatistics(
+                            const proto::StripeStatistics& stripeStats) {
+    if (stripeStats.colstats_size() == 0) {
+      return true;
+    }
+
+    bool ret = evaluateColumnStatistics(stripeStats.colstats());
+    if (!ret) {
+      // reset mRowGroups when the current stripe does not satisfy the PPD
+      mRowGroups.clear();
+    }
+    return ret;
+  }
+
+  bool SargsApplier::evaluateFileStatistics(const proto::Footer& footer) {
+    if (!mHasEvaluatedFileStats) {
+      if (footer.statistics_size() == 0) {
+        mFileStatsEvalResult = true;
+      } else {
+        mFileStatsEvalResult = evaluateColumnStatistics(footer.statistics());
+      }
+      mHasEvaluatedFileStats = true;
+    }
+    return mFileStatsEvalResult;
+  }
 }

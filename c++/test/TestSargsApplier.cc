@@ -120,4 +120,75 @@ namespace orc {
     EXPECT_EQ(true, rowgroups[3]);
   }
 
+  TEST(TestSargsApplier, testStripeAndFileStats) {
+    auto type = std::unique_ptr<Type>(
+      Type::buildTypeFromString("struct<x:int,y:int>"));
+    auto sarg = SearchArgumentFactory::newBuilder()
+      ->startAnd()
+      .equals(
+              "x",
+              PredicateDataType::LONG,
+              Literal(static_cast<int64_t>(20)))
+      .equals(
+              "y",
+              PredicateDataType::LONG,
+              Literal(static_cast<int64_t>(40)))
+      .end()
+      .build();
+    // Test stripe stats 0 <= x <= 10 and 0 <= y <= 50
+    {
+      orc::proto::StripeStatistics stripeStats;
+      proto::ColumnStatistics structStatistics;
+      structStatistics.set_hasnull(false);
+      *stripeStats.add_colstats() = structStatistics;
+      *stripeStats.add_colstats() = createIntStats(0L, 10L);
+      *stripeStats.add_colstats() = createIntStats(0L, 50L);
+      SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135);
+      EXPECT_FALSE(applier.evaluateStripeStatistics(stripeStats));
+    }
+    // Test stripe stats 0 <= x <= 50 and 0 <= y <= 50
+    {
+      orc::proto::StripeStatistics stripeStats;
+      proto::ColumnStatistics structStatistics;
+      structStatistics.set_hasnull(false);
+      *stripeStats.add_colstats() = structStatistics;
+      *stripeStats.add_colstats() = createIntStats(0L, 50L);
+      *stripeStats.add_colstats() = createIntStats(0L, 50L);
+      SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135);
+      EXPECT_TRUE(applier.evaluateStripeStatistics(stripeStats));
+    }
+    // Test file stats 0 <= x <= 10 and 0 <= y <= 50
+    {
+      orc::proto::Footer footer;
+      proto::ColumnStatistics structStatistics;
+      structStatistics.set_hasnull(false);
+      *footer.add_statistics() = structStatistics;
+      *footer.add_statistics() = createIntStats(0L, 10L);
+      *footer.add_statistics() = createIntStats(0L, 50L);
+      SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135);
+      EXPECT_FALSE(applier.evaluateFileStatistics(footer));
+    }
+    // Test file stats 0 <= x <= 50 and 0 <= y <= 30
+    {
+      orc::proto::Footer footer;
+      proto::ColumnStatistics structStatistics;
+      structStatistics.set_hasnull(false);
+      *footer.add_statistics() = structStatistics;
+      *footer.add_statistics() = createIntStats(0L, 50L);
+      *footer.add_statistics() = createIntStats(0L, 30L);
+      SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135);
+      EXPECT_FALSE(applier.evaluateFileStatistics(footer));
+    }
+    // Test file stats 0 <= x <= 50 and 0 <= y <= 50
+    {
+      orc::proto::Footer footer;
+      proto::ColumnStatistics structStatistics;
+      structStatistics.set_hasnull(false);
+      *footer.add_statistics() = structStatistics;
+      *footer.add_statistics() = createIntStats(0L, 50L);
+      *footer.add_statistics() = createIntStats(0L, 50L);
+      SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135);
+      EXPECT_TRUE(applier.evaluateFileStatistics(footer));
+    }
+  }
 }  // namespace orc
