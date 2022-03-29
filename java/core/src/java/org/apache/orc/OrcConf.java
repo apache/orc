@@ -195,8 +195,8 @@ public enum OrcConf {
       "hive.exec.orc.max.disk.range.chunk.limit",
     Integer.MAX_VALUE - 1024, "When reading stripes >2GB, specify max limit for the chunk size."),
   ORC_MIN_DISK_SEEK_SIZE("orc.min.disk.seek.size",
-                                 "hive.exec.orc.min.disk.seek.size",
-                                 0,
+                         "hive.exec.orc.min.disk.seek.size",
+                         0,
                          "When determining contiguous reads, gaps within this size are "
                          + "read contiguously and not seeked. Default value of zero disables this "
                          + "optimization"),

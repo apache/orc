@@ -22,6 +22,7 @@ import org.apache.hadoop.hive.common.io.DiskRange;
 import org.apache.hadoop.hive.common.io.DiskRangeList;
 
 import java.nio.ByteBuffer;
+import java.util.Objects;
 
 /**
  * The sections of stripe that we have read.
@@ -89,10 +90,7 @@ public class BufferChunk extends DiskRangeList {
       return false;
     }
     BufferChunk ob = (BufferChunk) other;
-    return (chunk != null && ob.chunk != null && chunk.equals(ob.chunk))
-           || (chunk == null && ob.chunk == null
-               && offset == ob.offset
-               && getLength() == ob.getLength());
+    return Objects.equals(chunk, ob.chunk) && offset == ob.offset && getLength() == ob.getLength();
   }
 
   @Override
