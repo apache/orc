@@ -38,6 +38,19 @@ namespace orc {
                  WriterVersion writerVersion);
 
     /**
+     * Evaluate search argument on file statistics
+     * @return true if file statistics satisfy the sargs
+     */
+    bool evaluateFileStatistics(const proto::Footer& footer);
+
+    /**
+     * Evaluate search argument on stripe statistics
+     * @return true if stripe statistics satisfy the sargs
+     */
+    bool evaluateStripeStatistics(uint64_t rowsInStripe,
+                                  const proto::StripeStatistics& stripeStats);
+
+    /**
      * TODO: use proto::RowIndex and proto::BloomFilter to do the evaluation
      * Pick the row groups that we need to load from the current stripe.
      * @return true if any row group is selected
@@ -81,6 +94,11 @@ namespace orc {
     }
 
   private:
+    // evaluate column statistics in the form of protobuf::RepeatedPtrField
+    typedef ::google::protobuf::RepeatedPtrField<proto::ColumnStatistics>
+      PbColumnStatistics;
+    bool evaluateColumnStatistics(const PbColumnStatistics& colStats) const;
+
     friend class TestSargsApplier_findColumnTest_Test;
     friend class TestSargsApplier_findArrayColumnTest_Test;
     friend class TestSargsApplier_findMapColumnTest_Test;
@@ -101,6 +119,9 @@ namespace orc {
     bool mHasSkipped;
     // keep stats of selected RGs and evaluated RGs
     std::pair<uint64_t, uint64_t> mStats;
+    // store result of file stats evaluation
+    bool mHasEvaluatedFileStats;
+    bool mFileStatsEvalResult;
   };
 
 }
