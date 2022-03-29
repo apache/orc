@@ -66,6 +66,7 @@ namespace orc {
     /// Decimal64 in ORCv2 uses RLE to store values. This flag indicates whether
     /// this new encoding is used.
     bool isDecimalAsLong;
+    std::unique_ptr<proto::Metadata> metadata;
   };
 
   proto::StripeFooter getStripeFooter(const proto::StripeInformation& info,
@@ -253,9 +254,6 @@ namespace orc {
                                const proto::StripeFooter& currentStripeFooter,
                                std::vector<std::vector<proto::ColumnStatistics> >* indexStats) const;
 
-    // metadata
-    mutable std::unique_ptr<proto::Metadata> metadata;
-    mutable bool isMetadataLoaded;
    public:
     /**
      * Constructor that lets the user specify additional options.
