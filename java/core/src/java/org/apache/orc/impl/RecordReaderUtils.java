@@ -624,13 +624,13 @@ public class RecordReaderUtils {
     }
 
     void populateChunksReduceSize(ByteBuffer bytes, boolean allocateDirect) {
-      byte[] newBytes = new byte[reqBytes];
       ByteBuffer newBuffer;
       if (allocateDirect) {
         newBuffer = ByteBuffer.allocateDirect(reqBytes);
         newBuffer.position(reqBytes);
         newBuffer.flip();
       } else {
+        byte[] newBytes = new byte[reqBytes];
         newBuffer = ByteBuffer.wrap(newBytes);
       }
 

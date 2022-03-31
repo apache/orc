@@ -21,6 +21,7 @@ package org.apache.orc.impl;
 import org.junit.jupiter.api.Test;
 
 import java.nio.ByteBuffer;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -35,28 +36,37 @@ class TestRecordReaderUtils {
     .range(4100, 100)
     .range(8000, 1000).build();
 
+  private static void assertChunkEquals(BufferChunk expected, BufferChunk actual) {
+    assertTrue(Objects.equals(expected, actual)
+               && expected.getOffset() == actual.getOffset()
+               && expected.getLength() == actual.getLength());
+  }
+
   @Test
   public void testDeterminationOfSingleRead() {
     BufferChunk toChunk = RecordReaderUtils.ChunkReader.create(rangeList.get(), 0).getTo();
-    assertEquals(rangeList.get(1), toChunk);
-    assertTrue(RecordReaderUtils.ChunkReader.create(rangeList.get(), toChunk).getExtraBytesFraction()
+    assertChunkEquals(rangeList.get(1), toChunk);
+    assertTrue(RecordReaderUtils.ChunkReader.create(rangeList.get(), toChunk)
+                 .getExtraBytesFraction()
                < 0.001);
 
     toChunk = RecordReaderUtils.ChunkReader.create(rangeList.get(), 1000).getTo();
-    assertEquals(rangeList.get(3), toChunk);
-    assertTrue(RecordReaderUtils.ChunkReader.create(rangeList.get(), toChunk).getExtraBytesFraction()
+    assertChunkEquals(rangeList.get(3), toChunk);
+    assertTrue(RecordReaderUtils.ChunkReader.create(rangeList.get(), toChunk)
+                 .getExtraBytesFraction()
                >= .2);
 
     toChunk = RecordReaderUtils.ChunkReader.create(rangeList.get(), 999).getTo();
-    assertEquals(rangeList.get(1), toChunk);
-    assertTrue(RecordReaderUtils.ChunkReader.create(rangeList.get(), toChunk).getExtraBytesFraction()
+    assertChunkEquals(rangeList.get(1), toChunk);
+    assertTrue(RecordReaderUtils.ChunkReader.create(rangeList.get(), toChunk)
+                 .getExtraBytesFraction()
                < 0.001);
   }
 
   @Test
   public void testNoGapCombine() {
     BufferChunk toChunk = RecordReaderUtils.findSingleRead(rangeList.get());
-    assertEquals(rangeList.get(1), toChunk);
+    assertChunkEquals(rangeList.get(1), toChunk);
   }
 
   @Test
@@ -64,7 +74,7 @@ class TestRecordReaderUtils {
     RecordReaderUtils.ChunkReader chunkReader =
       RecordReaderUtils.ChunkReader.create(rangeList.get(),
                                            1000);
-    assertEquals(rangeList.get(3), chunkReader.getTo());
+    assertChunkEquals(rangeList.get(3), chunkReader.getTo());
     populateAndValidateChunks(chunkReader, false);
   }
 
@@ -73,7 +83,7 @@ class TestRecordReaderUtils {
     RecordReaderUtils.ChunkReader chunkReader =
       RecordReaderUtils.ChunkReader.create(rangeList.get(),
                                            1000);
-    assertEquals(rangeList.get(3), chunkReader.getTo());
+    assertChunkEquals(rangeList.get(3), chunkReader.getTo());
     populateAndValidateChunks(chunkReader, true);
   }
 
@@ -88,7 +98,7 @@ class TestRecordReaderUtils {
     RecordReaderUtils.ChunkReader chunkReader =
       RecordReaderUtils.ChunkReader.create(rangeList.get(),
                                            1000);
-    assertEquals(rangeList.get(3), chunkReader.getTo());
+    assertChunkEquals(rangeList.get(3), chunkReader.getTo());
     populateAndValidateChunks(chunkReader, true);
   }
 
@@ -104,7 +114,7 @@ class TestRecordReaderUtils {
     RecordReaderUtils.ChunkReader chunkReader =
       RecordReaderUtils.ChunkReader.create(rangeList.get(),
                                            1000);
-    assertEquals(rangeList.get(4), chunkReader.getTo());
+    assertChunkEquals(rangeList.get(4), chunkReader.getTo());
     populateAndValidateChunks(chunkReader, true);
   }
 
@@ -120,7 +130,7 @@ class TestRecordReaderUtils {
     RecordReaderUtils.ChunkReader chunkReader =
       RecordReaderUtils.ChunkReader.create(rangeList.get(),
                                            1000);
-    assertEquals(rangeList.get(4), chunkReader.getTo());
+    assertChunkEquals(rangeList.get(4), chunkReader.getTo());
     chunkReader.populateChunks(makeByteBuffer(chunkReader.getReadBytes(),
                                               chunkReader.getFrom().getOffset()),
                                false,
