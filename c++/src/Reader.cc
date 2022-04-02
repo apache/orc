@@ -548,6 +548,7 @@ namespace orc {
                             fileLength(_fileLength),
                             postscriptLength(_postscriptLength),
                             footer(contents->footer.get()) {
+    isMetadataLoaded = false;
     checkOrcVersion();
     numberOfStripes = static_cast<uint64_t>(footer->stripes_size());
     contents->schema = REDUNDANT_MOVE(convertType(footer->types(0), *footer));
@@ -587,7 +588,7 @@ namespace orc {
   }
 
   uint64_t ReaderImpl::getNumberOfStripeStatistics() const {
-    if (!contents->metadata) {
+    if (!isMetadataLoaded) {
       readMetadata();
     }
     return contents->metadata == nullptr ? 0 :
@@ -763,7 +764,7 @@ namespace orc {
 
   std::unique_ptr<StripeStatistics>
   ReaderImpl::getStripeStatistics(uint64_t stripeIndex) const {
-    if (!contents->metadata) {
+    if (!isMetadataLoaded) {
       readMetadata();
     }
     if (contents->metadata == nullptr) {
@@ -835,6 +836,7 @@ namespace orc {
         throw ParseError("Failed to parse the metadata");
       }
     }
+    isMetadataLoaded = true;
   }
 
   bool ReaderImpl::hasCorrectStatistics() const {
@@ -858,7 +860,7 @@ namespace orc {
 
   std::unique_ptr<RowReader> ReaderImpl::createRowReader(
            const RowReaderOptions& opts) const {
-    if (opts.getSearchArgument() && !contents->metadata) {
+    if (opts.getSearchArgument() && !isMetadataLoaded) {
       // load stripe statistics for PPD
       readMetadata();
     }
@@ -1061,11 +1063,12 @@ namespace orc {
 
       if (sargsApplier) {
         bool isStripeNeeded = true;
-        if (contents->metadata && !sargsApplier->evaluateStripeStatistics(
-          rowsInCurrentStripe,
-          contents->metadata->stripestats(static_cast<int>(currentStripe)))) {
+        if (contents->metadata) {
+          const auto& currentStripeStats =
+            contents->metadata->stripestats(static_cast<int>(currentStripe));
           // skip this stripe after stats fail to satisfy sargs
-          isStripeNeeded = false;
+          isStripeNeeded = sargsApplier->evaluateStripeStatistics(rowsInCurrentStripe,
+                                                                  currentStripeStats);
         }
 
         if (isStripeNeeded) {

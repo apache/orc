@@ -254,6 +254,8 @@ namespace orc {
                                const proto::StripeFooter& currentStripeFooter,
                                std::vector<std::vector<proto::ColumnStatistics> >* indexStats) const;
 
+    // metadata
+    mutable bool isMetadataLoaded;
    public:
     /**
      * Constructor that lets the user specify additional options.

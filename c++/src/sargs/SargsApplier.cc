@@ -126,20 +126,20 @@ namespace orc {
 
   bool SargsApplier::evaluateColumnStatistics(
                                     const PbColumnStatistics& colStats) const {
-    const auto& leaves =
-      dynamic_cast<const SearchArgumentImpl *>(mSearchArgument)->getLeaves();
+    const SearchArgumentImpl * sargs =
+      dynamic_cast<const SearchArgumentImpl *>(mSearchArgument);
+    if (sargs == nullptr) {
+      throw InvalidArgument("Failed to cast to SearchArgumentImpl");
+    }
+
+    const std::vector<PredicateLeaf>& leaves = sargs->getLeaves();
     std::vector<TruthValue> leafValues(
       leaves.size(), TruthValue::YES_NO_NULL);
 
     for (size_t pred = 0; pred != leaves.size(); ++pred) {
       uint64_t columnId = mFilterColumns[pred];
-      if (columnId == INVALID_COLUMN_ID) {
-        // this column does not exist in current file
-        leafValues[pred] = TruthValue::YES_NO_NULL;
-      } else if (colStats.size() <= static_cast<int>(columnId)) {
-        // column stats does not exist
-        leafValues[pred] = TruthValue::YES_NO_NULL;
-      } else {
+      if (columnId != INVALID_COLUMN_ID &&
+          colStats.size() > static_cast<int>(columnId)) {
         leafValues[pred] = leaves[pred].evaluate(
           mWriterVersion, colStats.Get(static_cast<int>(columnId)), nullptr);
       }
@@ -156,7 +156,7 @@ namespace orc {
     }
 
     bool ret = evaluateColumnStatistics(stripeStats.colstats());
-    if (!ret) {
+    if (!ret && mRowIndexStride > 0) {
       // allocate evaluation result for row groups
       uint64_t groupsInStripe =
         (rowsInStripe + mRowIndexStride - 1) / mRowIndexStride;
