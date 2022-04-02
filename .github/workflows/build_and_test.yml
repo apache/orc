@@ -29,6 +29,9 @@ jobs:
           - os: ubuntu-20.04
             java: 1.8
             cxx: g++
+          - os: ubuntu-20.04
+            java: 18
+            cxx: g++
     env:
       MAVEN_OPTS: -Xmx2g
       MAVEN_SKIP_RC: true
