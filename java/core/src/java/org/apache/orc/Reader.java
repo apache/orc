@@ -654,19 +654,31 @@ public interface Reader extends Closeable {
       return this;
     }
 
+    /**
+     * @since 1.8.0
+     */
     public int minSeekSize() {
       return minSeekSize;
     }
 
+    /**
+     * @since 1.8.0
+     */
     public Options minSeekSize(int minSeekSize) {
       this.minSeekSize = minSeekSize;
       return this;
     }
 
+    /**
+     * @since 1.8.0
+     */
     public double minSeekSizeTolerance() {
       return minSeekSizeTolerance;
     }
 
+    /**
+     * @since 1.8.0
+     */
     public Options minSeekSizeTolerance(double value) {
       this.minSeekSizeTolerance = value;
       return this;
