@@ -650,7 +650,8 @@ public class RecordReaderImpl implements RecordReader {
                    " include ORC-517. Writer version: {}",
           predicate.getColumnName(), writerVersion);
       return TruthValue.YES_NO_NULL;
-    } else if (category == TypeDescription.Category.DOUBLE) {
+    } else if (category == TypeDescription.Category.DOUBLE
+        || category == TypeDescription.Category.FLOAT) {
       DoubleColumnStatistics dstas = (DoubleColumnStatistics) cs;
       if (!Double.isFinite(dstas.getSum())) {
         LOG.debug("Not using predication pushdown on {} because stats contain NaN values",
