@@ -4070,7 +4070,8 @@ public class TestVectorOrcFile {
   @Test
   public void testPredicatePushdownWithNan() throws Exception {
     TypeDescription schema = TypeDescription.createStruct()
-            .addField("double1", TypeDescription.createDouble());
+        .addField("double1", TypeDescription.createDouble())
+        .addField("float1", TypeDescription.createFloat());
 
     Writer writer = OrcFile.createWriter(testFilePath,
             OrcFile.writerOptions(conf)
@@ -4084,14 +4085,18 @@ public class TestVectorOrcFile {
     batch.ensureSize(3500);
     batch.size = 3500;
     batch.cols[0].noNulls = true;
+    batch.cols[1].noNulls = true;
 
     DoubleColumnVector dbcol = ((DoubleColumnVector) batch.cols[0]);
+    DoubleColumnVector fcol = ((DoubleColumnVector) batch.cols[1]);
 
     // first row NaN (resulting to min/max and sum columnStats of stride to be NaN)
     // NaN in the middle of a stride causes Sum of last stride to be NaN
     dbcol.vector[0] = Double.NaN;
+    fcol.vector[0] = Double.NaN;
     for (int i=1; i < 3500; ++i) {
       dbcol.vector[i] = i == 3200 ? Double.NaN : i;
+      fcol.vector[i] = i == 3200 ? Double.NaN : i;
     }
     writer.addRowBatch(batch);
     writer.close();
@@ -4101,6 +4106,7 @@ public class TestVectorOrcFile {
     assertEquals(3500, reader.getNumberOfRows());
 
     // Only the first stride matches the predicate, just need to make sure NaN stats are ignored
+    // Test double category push down
     SearchArgument sarg = SearchArgumentFactory.newBuilder()
             .startAnd()
             .lessThan("double1", PredicateLeaf.Type.FLOAT, 100d)
@@ -4110,6 +4116,29 @@ public class TestVectorOrcFile {
     RecordReader rows = reader.rows(reader.options()
             .range(0L, Long.MAX_VALUE)
             .searchArgument(sarg, new String[]{"double1"}));
+    batch = reader.getSchema().createRowBatch(3500);
+
+    rows.nextBatch(batch);
+    // First stride should be read as NaN sum is ignored
+    assertEquals(1000, batch.size);
+
+    rows.nextBatch(batch);
+    // Last stride should be read as NaN sum is ignored
+    assertEquals(500, batch.size);
+
+    rows.nextBatch(batch);
+    assertEquals(0, batch.size);
+
+    // Test float category push down
+    sarg = SearchArgumentFactory.newBuilder()
+        .startAnd()
+        .lessThan("float1", PredicateLeaf.Type.FLOAT, 100d)
+        .end()
+        .build();
+
+    rows = reader.rows(reader.options()
+        .range(0L, Long.MAX_VALUE)
+        .searchArgument(sarg, new String[]{"float1"}));
     batch = reader.getSchema().createRowBatch(3500);
 
     rows.nextBatch(batch);
