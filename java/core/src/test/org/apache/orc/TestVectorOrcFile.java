@@ -4384,6 +4384,91 @@ public class TestVectorOrcFile {
     assertEquals(0, batch.size);
   }
 
+  @ParameterizedTest
+  @MethodSource("data")
+  public void testPredicatePushdownWithSumOverflow(Version fileFormat) throws Exception {
+    TypeDescription schema = TypeDescription.createStruct()
+        .addField("double1", TypeDescription.createDouble())
+        .addField("float1", TypeDescription.createFloat());
+
+    Writer writer = OrcFile.createWriter(testFilePath,
+        OrcFile.writerOptions(conf)
+            .setSchema(schema)
+            .stripeSize(400000L)
+            .compress(CompressionKind.NONE)
+            .bufferSize(500)
+            .rowIndexStride(1000)
+            .version(fileFormat));
+    VectorizedRowBatch batch = schema.createRowBatch();
+    batch.ensureSize(3500);
+    batch.size = 3500;
+    batch.cols[0].noNulls = true;
+    batch.cols[1].noNulls = true;
+
+    DoubleColumnVector dbcol = ((DoubleColumnVector) batch.cols[0]);
+    DoubleColumnVector fcol = ((DoubleColumnVector) batch.cols[1]);
+
+    // First two rows of data cause sum overflow, sum is not a finite value,
+    // but this does not prevent pushing down (range comparisons work fine)
+    // The same applies to the middle stripe
+    fcol.vector[0] = dbcol.vector[0] = Double.MAX_VALUE / 2 + Double.MAX_VALUE / 4;
+    fcol.vector[1] = dbcol.vector[1] = Double.MAX_VALUE / 2 + Double.MAX_VALUE / 4;
+    for (int i=2; i < 3500; ++i) {
+      if (i >= 3200 && i<= 3201) {
+        fcol.vector[i] = dbcol.vector[i] = Double.MAX_VALUE / 2 + Double.MAX_VALUE / 4;
+      } else {
+        dbcol.vector[i] = i;
+        fcol.vector[i] = i;
+      }
+    }
+    writer.addRowBatch(batch);
+    writer.close();
+
+    Reader reader = OrcFile.createReader(testFilePath,
+        OrcFile.readerOptions(conf).filesystem(fs));
+    assertEquals(3500, reader.getNumberOfRows());
+
+    // Test double category push down
+    SearchArgument sarg = SearchArgumentFactory.newBuilder()
+        .startAnd()
+        .lessThan("double1", PredicateLeaf.Type.FLOAT, 100d)
+        .end()
+        .build();
+
+    RecordReader rows = reader.rows(reader.options()
+        .range(0L, Long.MAX_VALUE)
+        .searchArgument(sarg, new String[]{"double1"}));
+    batch = reader.getSchema().createRowBatch(3500);
+
+    rows.nextBatch(batch);
+    // First stride should be read
+    assertEquals(1000, batch.size);
+
+    rows.nextBatch(batch);
+    // Last strip should not be read, even if sum is not finite
+    assertEquals(0, batch.size);
+
+    // Test float category push down
+    sarg = SearchArgumentFactory.newBuilder()
+        .startAnd()
+        .lessThan("float1", PredicateLeaf.Type.FLOAT, 100d)
+        .end()
+        .build();
+
+    rows = reader.rows(reader.options()
+        .range(0L, Long.MAX_VALUE)
+        .searchArgument(sarg, new String[]{"float1"}));
+    batch = reader.getSchema().createRowBatch(3500);
+
+    rows.nextBatch(batch);
+    // First stride should be read
+    assertEquals(1000, batch.size);
+
+    rows.nextBatch(batch);
+    // Last strip should not be read, even if sum is not finite
+    assertEquals(0, batch.size);
+  }
+
   /**
    * Test predicate pushdown on nulls, with different combinations of
    * values and nulls.
