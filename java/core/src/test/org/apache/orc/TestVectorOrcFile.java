@@ -4153,9 +4153,7 @@ public class TestVectorOrcFile {
     assertEquals(0, batch.size);
   }
 
-  @ParameterizedTest
-  @MethodSource("data")
-  public void testPredicatePushdownWithSumOverflow(Version fileFormat) throws Exception {
+  public void testPredicatePushdownWithSumOverflow() throws Exception {
     TypeDescription schema = TypeDescription.createStruct()
         .addField("double1", TypeDescription.createDouble())
         .addField("float1", TypeDescription.createFloat());
