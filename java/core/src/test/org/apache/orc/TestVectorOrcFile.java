@@ -4408,14 +4408,19 @@ public class TestVectorOrcFile {
     DoubleColumnVector dbcol = ((DoubleColumnVector) batch.cols[0]);
     DoubleColumnVector fcol = ((DoubleColumnVector) batch.cols[1]);
 
-    // First two rows of data cause sum overflow, sum is not a finite value,
+    double largeNumber = Double.MAX_VALUE / 2 + Double.MAX_VALUE / 4;
+
+    // Here we are writing 3500 rows of data, with stripeSize set to 400000
+    // and rowIndexStride set to 1000, so 1 stripe will be written,
+    // indexed in 4 strides.
+    // Two large values are written in the first and fourth strides,
+    // causing the statistical sum to overflow, sum is not a finite value,
     // but this does not prevent pushing down (range comparisons work fine)
-    // The same applies to the middle stripe
-    fcol.vector[0] = dbcol.vector[0] = Double.MAX_VALUE / 2 + Double.MAX_VALUE / 4;
-    fcol.vector[1] = dbcol.vector[1] = Double.MAX_VALUE / 2 + Double.MAX_VALUE / 4;
+    fcol.vector[0] = dbcol.vector[0] = largeNumber;
+    fcol.vector[1] = dbcol.vector[1] = largeNumber;
     for (int i=2; i < 3500; ++i) {
       if (i >= 3200 && i<= 3201) {
-        fcol.vector[i] = dbcol.vector[i] = Double.MAX_VALUE / 2 + Double.MAX_VALUE / 4;
+        fcol.vector[i] = dbcol.vector[i] = largeNumber;
       } else {
         dbcol.vector[i] = i;
         fcol.vector[i] = i;
@@ -4445,7 +4450,7 @@ public class TestVectorOrcFile {
     assertEquals(1000, batch.size);
 
     rows.nextBatch(batch);
-    // Last strip should not be read, even if sum is not finite
+    // Last stride should not be read, even if sum is not finite
     assertEquals(0, batch.size);
 
     // Test float category push down
@@ -4465,7 +4470,7 @@ public class TestVectorOrcFile {
     assertEquals(1000, batch.size);
 
     rows.nextBatch(batch);
-    // Last strip should not be read, even if sum is not finite
+    // Last stride should not be read, even if sum is not finite
     assertEquals(0, batch.size);
   }
 
