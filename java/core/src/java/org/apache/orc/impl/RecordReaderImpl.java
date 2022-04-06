@@ -653,7 +653,7 @@ public class RecordReaderImpl implements RecordReader {
     } else if (category == TypeDescription.Category.DOUBLE
         || category == TypeDescription.Category.FLOAT) {
       DoubleColumnStatistics dstas = (DoubleColumnStatistics) cs;
-      if (!Double.isFinite(dstas.getSum())) {
+      if (Double.isNaN(dstas.getSum())) {
         LOG.debug("Not using predication pushdown on {} because stats contain NaN values",
                 predicate.getColumnName());
         return dstas.hasNull() ? TruthValue.YES_NO_NULL : TruthValue.YES_NO;
