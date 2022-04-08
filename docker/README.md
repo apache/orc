@@ -1,14 +1,8 @@
 ## Supported OSes
 
-<<<<<<< HEAD
-* CentOS 7, and 8
-* Debian 9, and 10
-* Ubuntu 16, 18, and 20
-=======
 * CentOS 7
 * Debian 9 and 10
-* Ubuntu 18 and 20
->>>>>>> 3c77a880 (ORC-1113: Remove CentOS 8 from docker-based tests (#1040))
+* Ubuntu 16, 18, and 20
 
 ## Test
 
