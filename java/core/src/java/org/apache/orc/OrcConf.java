@@ -195,13 +195,13 @@ public enum OrcConf {
       "hive.exec.orc.max.disk.range.chunk.limit",
     Integer.MAX_VALUE - 1024, "When reading stripes >2GB, specify max limit for the chunk size."),
   ORC_MIN_DISK_SEEK_SIZE("orc.min.disk.seek.size",
-                         "hive.exec.orc.min.disk.seek.size",
+                         "orc.min.disk.seek.size",
                          0,
                          "When determining contiguous reads, gaps within this size are "
                          + "read contiguously and not seeked. Default value of zero disables this "
                          + "optimization"),
   ORC_MIN_DISK_SEEK_SIZE_TOLERANCE("orc.min.disk.seek.size.tolerance",
-                          "hive.exec.orc.min.disk.seek.size.tolerance", 0.00,
+                          "orc.min.disk.seek.size.tolerance", 0.00,
                           "Define the tolerance for for extra bytes read as a result of "
                           + "orc.min.disk.seek.size. If the (bytesRead - bytesNeeded) / bytesNeeded"
                           + "is greater than this threshold then extra work is performed to drop "
