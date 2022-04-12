@@ -153,11 +153,8 @@ namespace orc {
     std::unique_ptr<ColumnReader> reader;
 
     bool enableEncodedBlock;
-    /**
-     * seek to the next stripe to read
-     * @return true if the next valid stripe exists
-     */
-    bool startNextStripe();
+    // internal methods
+    void startNextStripe();
 
     // row index of current stripe with column id as the key
     std::unordered_map<uint64_t, proto::RowIndex> rowIndexes;

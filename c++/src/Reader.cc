@@ -1033,7 +1033,7 @@ namespace orc {
     return memory + decompressorMemory ;
   }
 
-  bool RowReaderImpl::startNextStripe() {
+  void RowReaderImpl::startNextStripe() {
     reader.reset(); // ColumnReaders use lots of memory; free old memory first
     rowIndexes.clear();
     bloomFilterIndex.clear();
@@ -1043,7 +1043,7 @@ namespace orc {
       // skip the entire file
       currentStripe = lastStripe;
       currentRowInStripe = 0;
-      return false;
+      return;
     }
 
     do {
@@ -1116,7 +1116,6 @@ namespace orc {
         }
       }
     }
-    return currentStripe < lastStripe;
   }
 
   bool RowReaderImpl::next(ColumnVectorBatch& data) {
@@ -1131,12 +1130,7 @@ namespace orc {
       return false;
     }
     if (currentRowInStripe == 0) {
-      if (!startNextStripe()) {
-        previousRow = lastStripe <= 0 ? footer->numberofrows() :
-                      firstRowOfStripe[lastStripe - 1] +
-                      footer->stripes(static_cast<int>(lastStripe - 1)).numberofrows();
-        return false;
-      }
+      startNextStripe();
     }
     uint64_t rowsToRead =
       std::min(static_cast<uint64_t>(data.capacity),
