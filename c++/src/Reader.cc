@@ -1043,6 +1043,7 @@ namespace orc {
       // skip the entire file
       currentStripe = lastStripe;
       currentRowInStripe = 0;
+      rowsInCurrentStripe = 0;
       return;
     }
 
@@ -1135,7 +1136,7 @@ namespace orc {
     uint64_t rowsToRead =
       std::min(static_cast<uint64_t>(data.capacity),
                rowsInCurrentStripe - currentRowInStripe);
-    if (sargsApplier) {
+    if (sargsApplier && rowsToRead > 0) {
       rowsToRead = computeBatchSize(rowsToRead,
                                     currentRowInStripe,
                                     rowsInCurrentStripe,
