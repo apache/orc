@@ -238,4 +238,89 @@ namespace orc {
     TestNoRowsSelected(reader.get());
     TestOrPredicates(reader.get());
   }
+
+  void TestNoRowsSelectedWithFileStats(Reader* reader) {
+    std::unique_ptr<SearchArgument> sarg =
+      SearchArgumentFactory::newBuilder()
+        ->startAnd()
+        .lessThan("col1", PredicateDataType::LONG,
+                  Literal(static_cast<int64_t>(0)))
+        .end()
+        .build();
+
+    RowReaderOptions rowReaderOpts;
+    rowReaderOpts.searchArgument(std::move(sarg));
+    auto rowReader = reader->createRowReader(rowReaderOpts);
+
+    auto readBatch = rowReader->createRowBatch(2000);
+    EXPECT_EQ(false, rowReader->next(*readBatch));
+  }
+
+  void TestSelectedWithStripeStats(Reader* reader) {
+    std::unique_ptr<SearchArgument> sarg =
+      SearchArgumentFactory::newBuilder()
+          ->startAnd()
+          .between("col1",
+                   PredicateDataType::LONG,
+                   Literal(static_cast<int64_t>(3500)),
+                   Literal(static_cast<int64_t>(7000)))
+          .end()
+          .build();
+
+    RowReaderOptions rowReaderOpts;
+    rowReaderOpts.searchArgument(std::move(sarg));
+    auto rowReader = reader->createRowReader(rowReaderOpts);
+
+    auto readBatch = rowReader->createRowBatch(2000);
+    EXPECT_EQ(true, rowReader->next(*readBatch));
+    // test previous row number
+    EXPECT_EQ(3500, rowReader->getRowNumber());
+    EXPECT_EQ(2000, readBatch->numElements);
+    auto& batch0 = dynamic_cast<StructVectorBatch&>(*readBatch);
+    auto& batch1 = dynamic_cast<LongVectorBatch&>(*batch0.fields[0]);
+    for (uint64_t i = 0; i < 2000; ++i) {
+      EXPECT_EQ(i + 3500 , batch1.data[i]);
+    }
+  }
+
+  TEST(TestPredicatePushdown, testStripeAndFileStats) {
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    MemoryPool * pool = getDefaultPool();
+    auto type = std::unique_ptr<Type>(Type::buildTypeFromString(
+      "struct<col1:bigint>"));
+    WriterOptions options;
+    options.setStripeSize(1)
+      .setCompressionBlockSize(1024)
+      .setCompression(CompressionKind_NONE)
+      .setMemoryPool(pool)
+      .setRowIndexStride(1000);
+
+    auto writer = createWriter(*type, &memStream, options);
+    auto batch = writer->createRowBatch(3500);
+    auto& structBatch = dynamic_cast<StructVectorBatch&>(*batch);
+    auto& longBatch = dynamic_cast<LongVectorBatch&>(*structBatch.fields[0]);
+
+    // stripe 1 : 0 <= col1 < 3500
+    // stripe 2 : 3500<= col1 < 7000
+    uint64_t stripeCount = 2;
+    for (uint64_t currentStripe = 0; currentStripe < stripeCount; ++currentStripe) {
+      for (uint64_t i = 0; i < 3500; ++i) {
+        longBatch.data[i] = static_cast<int64_t>(i + currentStripe * 3500);
+      }
+      structBatch.numElements = 3500;
+      longBatch.numElements = 3500;
+      writer->add(*batch);
+    }
+    writer->close();
+    std::unique_ptr<InputStream> inStream(new MemoryInputStream (
+      memStream.getData(), memStream.getLength()));
+    ReaderOptions readerOptions;
+    readerOptions.setMemoryPool(*pool);
+    std::unique_ptr<Reader> reader = createReader(std::move(inStream), readerOptions);
+    EXPECT_EQ(7000, reader->getNumberOfRows());
+    EXPECT_EQ(stripeCount, reader->getNumberOfStripes());
+
+    TestNoRowsSelectedWithFileStats(reader.get());
+    TestSelectedWithStripeStats(reader.get());
+  }
 }  // namespace orc

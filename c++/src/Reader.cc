@@ -1033,7 +1033,7 @@ namespace orc {
     return memory + decompressorMemory ;
   }
 
-  void RowReaderImpl::startNextStripe() {
+  bool RowReaderImpl::startNextStripe() {
     reader.reset(); // ColumnReaders use lots of memory; free old memory first
     rowIndexes.clear();
     bloomFilterIndex.clear();
@@ -1043,7 +1043,7 @@ namespace orc {
       // skip the entire file
       currentStripe = lastStripe;
       currentRowInStripe = 0;
-      return;
+      return false;
     }
 
     do {
@@ -1067,8 +1067,7 @@ namespace orc {
           const auto& currentStripeStats =
             contents->metadata->stripestats(static_cast<int>(currentStripe));
           // skip this stripe after stats fail to satisfy sargs
-          isStripeNeeded = sargsApplier->evaluateStripeStatistics(rowsInCurrentStripe,
-                                                                  currentStripeStats);
+          isStripeNeeded = sargsApplier->evaluateStripeStatistics(currentStripeStats);
         }
 
         if (isStripeNeeded) {
@@ -1117,6 +1116,7 @@ namespace orc {
         }
       }
     }
+    return currentStripe < lastStripe;
   }
 
   bool RowReaderImpl::next(ColumnVectorBatch& data) {
@@ -1131,7 +1131,12 @@ namespace orc {
       return false;
     }
     if (currentRowInStripe == 0) {
-      startNextStripe();
+      if (!startNextStripe()) {
+        previousRow = lastStripe <= 0 ? footer->numberofrows() :
+                      firstRowOfStripe[lastStripe - 1] +
+                      footer->stripes(static_cast<int>(lastStripe - 1)).numberofrows();
+        return false;
+      }
     }
     uint64_t rowsToRead =
       std::min(static_cast<uint64_t>(data.capacity),

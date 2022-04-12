@@ -149,20 +149,15 @@ namespace orc {
   }
 
   bool SargsApplier::evaluateStripeStatistics(
-                            uint64_t rowsInStripe,
                             const proto::StripeStatistics& stripeStats) {
     if (stripeStats.colstats_size() == 0) {
       return true;
     }
 
     bool ret = evaluateColumnStatistics(stripeStats.colstats());
-    if (!ret && mRowIndexStride > 0) {
-      // allocate evaluation result for row groups
-      uint64_t groupsInStripe =
-        (rowsInStripe + mRowIndexStride - 1) / mRowIndexStride;
-      mRowGroups.resize(groupsInStripe);
-      mTotalRowsInStripe = rowsInStripe;
-      std::fill(mRowGroups.begin(), mRowGroups.end(), false);
+    if (!ret) {
+      // reset mRowGroups when the current stripe does not satisfy the PPD
+      mRowGroups.clear();
     }
     return ret;
   }

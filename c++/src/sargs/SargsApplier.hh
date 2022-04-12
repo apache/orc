@@ -47,8 +47,7 @@ namespace orc {
      * Evaluate search argument on stripe statistics
      * @return true if stripe statistics satisfy the sargs
      */
-    bool evaluateStripeStatistics(uint64_t rowsInStripe,
-                                  const proto::StripeStatistics& stripeStats);
+    bool evaluateStripeStatistics(const proto::StripeStatistics& stripeStats);
 
     /**
      * TODO: use proto::RowIndex and proto::BloomFilter to do the evaluation

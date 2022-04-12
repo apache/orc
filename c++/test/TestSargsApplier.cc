@@ -144,7 +144,7 @@ namespace orc {
       *stripeStats.add_colstats() = createIntStats(0L, 10L);
       *stripeStats.add_colstats() = createIntStats(0L, 50L);
       SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135);
-      EXPECT_FALSE(applier.evaluateStripeStatistics(3000, stripeStats));
+      EXPECT_FALSE(applier.evaluateStripeStatistics(stripeStats));
     }
     // Test stripe stats 0 <= x <= 50 and 0 <= y <= 50
     {
@@ -155,7 +155,7 @@ namespace orc {
       *stripeStats.add_colstats() = createIntStats(0L, 50L);
       *stripeStats.add_colstats() = createIntStats(0L, 50L);
       SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135);
-      EXPECT_TRUE(applier.evaluateStripeStatistics(3000, stripeStats));
+      EXPECT_TRUE(applier.evaluateStripeStatistics(stripeStats));
     }
     // Test file stats 0 <= x <= 10 and 0 <= y <= 50
     {
