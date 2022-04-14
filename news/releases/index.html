@@ -87,6 +87,8 @@
     <option value="/news/">Home</option>
     <optgroup label="v1.x">
       
+      <option value="/news/2022/04/14/ORC-1.6.14/">ORC 1.6.14 Released</option>
+      
       <option value="/news/2022/03/05/add-quanlong/">Quanlong Huang added as committer</option>
       
       <option value="/news/2022/02/09/ORC-1.7.3/">ORC 1.7.3 Released</option>
@@ -238,6 +240,60 @@
         
   <article>
   <h2>
+    <a href="/news/2022/04/14/ORC-1.6.14/">
+      ORC 1.6.14 Released
+    </a>
+  </h2>
+  <span class="post-category">
+    <span class="label">
+      release
+    </span>
+  </span>
+  <div class="post-meta">
+    <span class="post-date">
+      14 Apr 2022
+    </span>
+    <a href="https://people.apache.org/~dongjoon" class="post-author">
+      <img src="https://people.apache.org/~dongjoon//dongjoon.png"
+           class="avatar" alt="dongjoon avatar"
+           width="24" height="24">
+      dongjoon
+    </a>
+  </div>
+  <div class="post-content">
+    <p>The ORC team is excited to announce the release of ORC v1.6.14.</p>
+
+<ul>
+  <li>Released: 14 April 2022</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.6.14/orc-1.6.14.tar.gz">orc-1.6.14.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-1.6.14/orc-1.6.14.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.6.14">rel/release-1.6.14</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.6.14%22">ORC 1.6.14</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.6.14/orc-1.6.14.tar.gz.sha256">f2701d27d197a0b4…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.6.14%22&amp;tempMax=500">ORC-1.6.14</a></li>
+</ul>
+
+<p>The bug fixes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1121">ORC-1121</a> Fix column coversion check bug which causes column filters don’t work</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1146">ORC-1146</a> Float category missing check if the statistic sum is a finite value</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1147">ORC-1147</a> Use isNaN instead of isFinite to determine the contain NaN values</li>
+</ul>
+
+<p>The ‘tests’ fixes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1016">ORC-1016</a> Use <code class="highlighter-rouge">openssl@1.1</code> in GitHub Action MacOS CIs</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1113">ORC-1113</a> Remove CentOS 8 from docker-based tests</li>
+</ul>
+
+
+  </div>
+</article>
+
+
+  <article>
+  <h2>
     <a href="/news/2022/02/09/ORC-1.7.3/">
       ORC 1.7.3 Released
     </a>
@@ -378,12 +434,12 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5
 
 <ul>
   <li>Released: 20 January 2022</li>
-  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.6.13/orc-1.6.13.tar.gz">orc-1.6.13.tar.gz</a></li>
-  <li><a href="https://downloads.apache.org/orc/orc-1.6.13/orc-1.6.13.tar.gz.asc">GPG Signature</a>
+  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-1.6.13/orc-1.6.13.tar.gz">orc-1.6.13.tar.gz</a></li>
+  <li><a href="https://archive.apache.org/dist/orc/orc-1.6.13/orc-1.6.13.tar.gz.asc">GPG Signature</a>
 signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
   <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.6.13">rel/release-1.6.13</a></li>
   <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.6.13%22">ORC 1.6.13</a></li>
-  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.6.13/orc-1.6.13.tar.gz.sha256">ff69f9e0b5b01dfc…</a></li>
+  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-1.6.13/orc-1.6.13.tar.gz.sha256">ff69f9e0b5b01dfc…</a></li>
   <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.6.13%22&amp;tempMax=500">ORC-1.6.13</a></li>
 </ul>
 
@@ -3481,6 +3537,10 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (3D0C9
     <ul>
       
       <li class="">
+        <a href="/news/2022/04/14/ORC-1.6.14/">Version 1.6.14</a>
+      </li>
+      
+      <li class="">
         <a href="/news/2022/02/09/ORC-1.7.3/">Version 1.7.3</a>
       </li>
       
@@ -3496,13 +3556,11 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (3D0C9
         <a href="/news/2021/11/07/ORC-1.7.1/">Version 1.7.1</a>
       </li>
       
-      <li class="">
-        <a href="/news/2021/11/07/ORC-1.6.12/">Version 1.6.12</a>
-      </li>
-      
     </ul>
     <h4>Other News</h4>
     <ul>
+        
+        
         
         
         <li class="">
