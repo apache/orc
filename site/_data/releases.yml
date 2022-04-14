@@ -34,9 +34,18 @@
   known-issues:
     ORC-1002: Add java17 profile
 
+1.6.14:
+  date: 2022-04-14
+  state: stable
+  tar: orc-1.6.14.tar.gz
+  signed-by: Dongjoon Hyun (34F0FC5C)
+  sha256: f2701d27d197a0b483727790414c1c3b50cbe4506dae947d3e6dc3d951f1ee09
+  known-issues:
+    ORC-1041: Use memcpy during LZO decompression
+
 1.6.13:
   date: 2022-01-20
-  state: stable
+  state: archived
   tar: orc-1.6.13.tar.gz
   signed-by: Dongjoon Hyun (34F0FC5C)
   sha256: ff69f9e0b5b01dfc6ef596e83bc12913875ad977af415d7592f9df5b405b8148
