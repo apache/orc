@@ -415,6 +415,17 @@ public class RecordReaderUtils {
    * The read will stop when there is a gap, one of the ranges already has data,
    * or we have reached the maximum read size of 2^31.
    * @param first the first range to read
+   * @return the last range to read
+   */
+  static BufferChunk findSingleRead(BufferChunk first) {
+    return findSingleRead(first, 0);
+  }
+
+  /**
+   * Find the list of ranges that should be read in a single read.
+   * The read will stop when there is a gap, one of the ranges already has data,
+   * or we have reached the maximum read size of 2^31.
+   * @param first the first range to read
    * @param minSeekSize minimum size for seek instead of read
    * @return the last range to read
    */
@@ -431,8 +442,22 @@ public class RecordReaderUtils {
     return last;
   }
 
-  static BufferChunk findSingleRead(BufferChunk first) {
-    return findSingleRead(first, 0);
+  /**
+   * Read the list of ranges from the file by updating each range in the list
+   * with a buffer that has the bytes from the file.
+   *
+   * The ranges must be sorted, but may overlap or include holes.
+   *
+   * @param file the file to read
+   * @param zcr the zero copy shim
+   * @param list the disk ranges within the file to read
+   * @param doForceDirect allocate direct buffers
+   */
+  static void readDiskRanges(FSDataInputStream file,
+                             HadoopShims.ZeroCopyReaderShim zcr,
+                             BufferChunkList list,
+                             boolean doForceDirect) throws IOException {
+    readDiskRanges(file, zcr, list, doForceDirect, 0, 0);
   }
 
   /**
@@ -449,7 +474,7 @@ public class RecordReaderUtils {
    * @param minSeekSizeTolerance allowed tolerance for extra bytes in memory as a result of
    *                             minSeekSize
    */
-  static void readDiskRanges(FSDataInputStream file,
+  private static void readDiskRanges(FSDataInputStream file,
                              HadoopShims.ZeroCopyReaderShim zcr,
                              BufferChunkList list,
                              boolean doForceDirect,
@@ -470,13 +495,6 @@ public class RecordReaderUtils {
         current = (BufferChunk) chunkReader.to.next;
       }
     }
-  }
-
-  static void readDiskRanges(FSDataInputStream file,
-                             HadoopShims.ZeroCopyReaderShim zcr,
-                             BufferChunkList list,
-                             boolean doForceDirect) throws IOException {
-    readDiskRanges(file, zcr, list, doForceDirect, 0, 0);
   }
 
   static HadoopShims.ZeroCopyReaderShim createZeroCopyShim(FSDataInputStream file,
