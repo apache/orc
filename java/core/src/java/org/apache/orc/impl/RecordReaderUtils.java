@@ -411,6 +411,52 @@ public class RecordReaderUtils {
   }
 
   /**
+   * Read the data from the file based on a list of ranges in a single read.
+   * @param file the file to read from
+   * @param first the first range to read
+   * @param last the last range to read
+   * @param allocateDirect should we use direct buffers
+   */
+  static void readRanges(FSDataInputStream file,
+                         BufferChunk first,
+                         BufferChunk last,
+                         boolean allocateDirect) throws IOException {
+    // assume that the chunks are sorted by offset
+    long offset = first.getOffset();
+    int readSize = (int) (computeEnd(first, last) - offset);
+    byte[] buffer = new byte[readSize];
+    try {
+      file.readFully(offset, buffer, 0, buffer.length);
+    } catch(IOException e) {
+      throw new IOException(String.format("Failed while reading %s %d:%d",
+                                          file,
+                                          offset,
+                                          buffer.length),
+                            e);
+    }
+
+    // get the data into a ByteBuffer
+    ByteBuffer bytes;
+    if (allocateDirect) {
+      bytes = ByteBuffer.allocateDirect(readSize);
+      bytes.put(buffer);
+      bytes.flip();
+    } else {
+      bytes = ByteBuffer.wrap(buffer);
+    }
+
+    // populate each BufferChunks with the data
+    BufferChunk current = first;
+    while (current != last.next) {
+      ByteBuffer currentBytes = current == last ? bytes : bytes.duplicate();
+      currentBytes.position((int) (current.getOffset() - offset));
+      currentBytes.limit((int) (current.getEnd() - offset));
+      current.setChunk(currentBytes);
+      current = (BufferChunk) current.next;
+    }
+  }
+
+  /**
    * Find the list of ranges that should be read in a single read.
    * The read will stop when there is a gap, one of the ranges already has data,
    * or we have reached the maximum read size of 2^31.
@@ -676,7 +722,6 @@ public class RecordReaderUtils {
         current = (BufferChunk) current.next;
       }
     }
-
 
     /**
      * Read the data from the file based on a list of ranges in a single read.

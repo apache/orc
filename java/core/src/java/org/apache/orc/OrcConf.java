@@ -203,9 +203,10 @@ public enum OrcConf {
   ORC_MIN_DISK_SEEK_SIZE_TOLERANCE("orc.min.disk.seek.size.tolerance",
                           "orc.min.disk.seek.size.tolerance", 0.00,
                           "Define the tolerance for for extra bytes read as a result of "
-                          + "orc.min.disk.seek.size. If the (bytesRead - bytesNeeded) / bytesNeeded "
-                          + "is greater than this threshold then extra work is performed to drop "
-                          + "the extra bytes from memory after the read."),
+                          + "orc.min.disk.seek.size. If the "
+                          + "(bytesRead - bytesNeeded) / bytesNeeded is greater than this "
+                          + "threshold then extra work is performed to drop the extra bytes from "
+                          + "memory after the read."),
   ENCRYPTION("orc.encrypt", "orc.encrypt", null, "The list of keys and columns to encrypt with"),
   DATA_MASK("orc.mask", "orc.mask", null, "The masks to apply to the encrypted columns"),
   KEY_PROVIDER("orc.key.provider", "orc.key.provider", "hadoop",
