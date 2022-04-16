@@ -58,8 +58,6 @@ namespace orc {
   TEST(TestRowReader, computeBatchSize) {
     uint64_t rowIndexStride = 100;
     uint64_t rowsInCurrentStripe = 100 * 8 + 50;
-    std::vector<bool> includedRowGroups =
-      { false, false, true, true, false, false, true, true, false };
     std::vector<uint64_t> nextSkippedRows =
       { 0, 0, 400, 400, 0, 0, 800, 800, 0 };
 

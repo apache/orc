@@ -166,7 +166,7 @@ namespace orc {
 
     bool ret = evaluateColumnStatistics(stripeStats.colstats());
     if (!ret) {
-      // reset mRowGroups when the current stripe does not satisfy the PPD
+      // reset mNextSkippedRows when the current stripe does not satisfy the PPD
       mNextSkippedRows.clear();
     }
     return ret;

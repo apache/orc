@@ -114,7 +114,7 @@ namespace orc {
 
     // Map from RowGroup index to the next skipped row of the selected range it
     // locates. If the RowGroup is not selected, set the value to 0.
-    // Calculated in pickRowGroups.
+    // Calculated in pickRowGroups().
     std::vector<uint64_t> mNextSkippedRows;
     uint64_t mTotalRowsInStripe;
     bool mHasSelected;
