@@ -86,7 +86,9 @@ namespace orc {
     mHasSelected = false;
     mHasSkipped = false;
     uint64_t nextSkippedRowGroup = groupsInStripe;
-    for (int rowGroup = static_cast<int>(groupsInStripe - 1); rowGroup >= 0; --rowGroup) {
+    size_t rowGroup = groupsInStripe;
+    do {
+      --rowGroup;
       for (size_t pred = 0; pred != leaves.size(); ++pred) {
         uint64_t columnIdx = mFilterColumns[pred];
         auto rowIndexIter = rowIndexes.find(columnIdx);
@@ -121,7 +123,7 @@ namespace orc {
       }
       mHasSelected |= needed;
       mHasSkipped |= !needed;
-    }
+    } while (rowGroup != 0);
 
     // update stats
     mStats.first = std::accumulate(
