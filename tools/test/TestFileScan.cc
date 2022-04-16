@@ -206,7 +206,7 @@ void checkForError(const std::string& filename, const std::string& error_msg) {
   std::string error;
   EXPECT_EQ(1, runProgram({pgm, filename}, output, error));
   EXPECT_EQ("", output);
-  EXPECT_NE(std::string::npos, error.find(error_msg));
+  EXPECT_NE(std::string::npos, error.find(error_msg)) << error;
 }
 
 TEST (TestFileScan, testErrorHandling) {

@@ -112,12 +112,12 @@ namespace orc {
     // evaluate row group index
     SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135);
     EXPECT_TRUE(applier.pickRowGroups(4000, rowIndexes, {}));
-    std::vector<bool> rowgroups = applier.getRowGroups();
-    EXPECT_EQ(4, rowgroups.size());
-    EXPECT_EQ(false, rowgroups[0]);
-    EXPECT_EQ(false, rowgroups[1]);
-    EXPECT_EQ(false, rowgroups[2]);
-    EXPECT_EQ(true, rowgroups[3]);
+    const auto& nextSkippedRows = applier.getNextSkippedRows();
+    EXPECT_EQ(4, nextSkippedRows.size());
+    EXPECT_EQ(0, nextSkippedRows[0]);
+    EXPECT_EQ(0, nextSkippedRows[1]);
+    EXPECT_EQ(0, nextSkippedRows[2]);
+    EXPECT_EQ(4000, nextSkippedRows[3]);
   }
 
   TEST(TestSargsApplier, testStripeAndFileStats) {

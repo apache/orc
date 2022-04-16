@@ -71,7 +71,7 @@ namespace orc {
     // init state of each row group
     uint64_t groupsInStripe =
       (rowsInStripe + mRowIndexStride - 1) / mRowIndexStride;
-    mRowGroups.resize(groupsInStripe, true);
+    mNextSkippedRows.resize(groupsInStripe);
     mTotalRowsInStripe = rowsInStripe;
 
     // row indexes do not exist, simply read all rows
@@ -85,7 +85,8 @@ namespace orc {
       leaves.size(), TruthValue::YES_NO_NULL);
     mHasSelected = false;
     mHasSkipped = false;
-    for (size_t rowGroup = 0; rowGroup != groupsInStripe; ++rowGroup) {
+    uint64_t nextSkippedRowGroup = groupsInStripe;
+    for (int rowGroup = static_cast<int>(groupsInStripe - 1); rowGroup >= 0; --rowGroup) {
       for (size_t pred = 0; pred != leaves.size(); ++pred) {
         uint64_t columnIdx = mFilterColumns[pred];
         auto rowIndexIter = rowIndexes.find(columnIdx);
@@ -110,14 +111,21 @@ namespace orc {
         }
       }
 
-      mRowGroups[rowGroup] = isNeeded(mSearchArgument->evaluate(leafValues));
-      mHasSelected = mHasSelected || mRowGroups[rowGroup];
-      mHasSkipped = mHasSkipped || (!mRowGroups[rowGroup]);
+      bool needed = isNeeded(mSearchArgument->evaluate(leafValues));
+      if (!needed) {
+        mNextSkippedRows[rowGroup] = 0;
+        nextSkippedRowGroup = rowGroup;
+      } else {
+        mNextSkippedRows[rowGroup] = (nextSkippedRowGroup == groupsInStripe) ?
+                                     rowsInStripe : (nextSkippedRowGroup * mRowIndexStride);
+      }
+      mHasSelected |= needed;
+      mHasSkipped |= !needed;
     }
 
     // update stats
     mStats.first = std::accumulate(
-      mRowGroups.cbegin(), mRowGroups.cend(), mStats.first,
+      mNextSkippedRows.cbegin(), mNextSkippedRows.cend(), mStats.first,
       [](bool rg, uint64_t s) { return rg ? 1 : 0 + s; });
     mStats.second += groupsInStripe;
 
@@ -157,7 +165,7 @@ namespace orc {
     bool ret = evaluateColumnStatistics(stripeStats.colstats());
     if (!ret) {
       // reset mRowGroups when the current stripe does not satisfy the PPD
-      mRowGroups.clear();
+      mNextSkippedRows.clear();
     }
     return ret;
   }
