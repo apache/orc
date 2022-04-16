@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>Panagiotis Garefalakis added as committer</title>
+  <title>ORC 1.7.4 Released</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="generator" content="Jekyll v3.8.6">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
@@ -241,30 +241,66 @@
       <div class="unit four-fifths">
         <article>
   <h2>
-    Panagiotis Garefalakis added as committer
-    <a href="/news/2020/11/16/add-panagiotis/" class="permalink" title="Permalink">∞</a>
+    ORC 1.7.4 Released
+    <a href="/news/2022/04/15/ORC-1.7.4/" class="permalink" title="Permalink">∞</a>
   </h2>
   <span class="post-category">
     <span class="label">
-      team
+      release
     </span>
   </span>
   <div class="post-meta">
     <span class="post-date">
-      16 Nov 2020
+      15 Apr 2022
     </span>
-    <a href="https://people.apache.org/~dongjoon" class="post-author">
-      <img src="https://people.apache.org/~dongjoon/dongjoon.png"
-           class="avatar" alt="dongjoon avatar"
+    <a href="https://people.apache.org/~william" class="post-author">
+      <img src="https://people.apache.org/~william/william.png"
+           class="avatar" alt="william avatar"
            width="24" height="24">
-      dongjoon
+      william
     </a>
   </div>
   <div class="post-content">
-    <p>The ORC PMC is happy to add Panagiotis Garefalakis as an ORC committer for the
-work on improving ORC’s integration to Apache Hive.</p>
+    <p>The ORC team is excited to announce the release of ORC v1.7.4.</p>
 
-<p>Thank you for your work on ORC, Panagiotis!</p>
+<ul>
+  <li>Released: 15 April 2022</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.7.4/orc-1.7.4.tar.gz">orc-1.7.4.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-1.7.4/orc-1.7.4.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">William Hyun (DECDFA29)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.7.4">rel/release-1.7.4</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.7.4%22">ORC 1.7.4</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.7.4/orc-1.7.4.tar.gz.sha256">0a70c5e877b1ff26…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.7.4%22&amp;tempMax=500">ORC-1.7.4</a></li>
+</ul>
+
+<p>The bug fixes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1120">ORC-1120</a> Remove C++ library limitation about write version</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1121">ORC-1121</a> Fix column conversion check bug which causes column filters don’t work</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1127">ORC-1127</a> Add missing version of UNSTABLE-PRE-2.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1146">ORC-1146</a> Float category missing check if the statistic sum is a finite value</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1147">ORC-1147</a> Use isNaN instead of isFinite to determine the contain NaN values</li>
+</ul>
+
+<p>The improvements:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-236">ORC-236</a> Support <code class="highlighter-rouge">UNION</code> type in Java Convert tool</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1116">ORC-1116</a> Fix csv-import tool when exporting long bytes</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1123">ORC-1123</a> Add estimationMemory method for writer</li>
+</ul>
+
+<p>The test changes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1145">ORC-1145</a> Add Java 18 to GitHub Action CI</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1118">ORC-1118</a> Support Java 17 and ARM64 docker tests</li>
+</ul>
+
+<p>The documentation changes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1117">ORC-1117</a> Add <code class="highlighter-rouge">Dask</code> page at <code class="highlighter-rouge">Using in Python</code> section</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1119">ORC-1119</a> Remove timestamp from ORC API docs</li>
+</ul>
 
   </div>
 </article>
@@ -284,7 +320,7 @@ work on improving ORC’s integration to Apache Hive.</p>
     <h4>Recent Releases</h4>
     <ul>
       
-      <li class="">
+      <li class="current">
         <a href="/news/2022/04/15/ORC-1.7.4/">Version 1.7.4</a>
       </li>
       
@@ -369,7 +405,7 @@ work on improving ORC’s integration to Apache Hive.</p>
         
         
         
-        <li class="current">
+        <li class="">
           <a href="/news/2020/11/16/add-panagiotis/">Panagiotis Garefalakis added as committer</a>
         </li>
         
