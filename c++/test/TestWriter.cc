@@ -1996,5 +1996,5 @@ namespace orc {
     }
   }
 
-  INSTANTIATE_TEST_CASE_P(OrcTest, WriterTest, Values(FileVersion::v_0_11(), FileVersion::v_0_12()));
+  INSTANTIATE_TEST_CASE_P(OrcTest, WriterTest, Values(FileVersion::v_0_11(), FileVersion::v_0_12(), FileVersion::UNSTABLE_PRE_2_0()));
 }
