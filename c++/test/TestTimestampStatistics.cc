@@ -96,7 +96,6 @@ namespace orc {
     const TimestampColumnStatistics* stripeColStats =
       reinterpret_cast<const TimestampColumnStatistics*>(stripeStats->getColumnStatistics(1));
 
-
     EXPECT_TRUE(stripeColStats->hasLowerBound());
     EXPECT_TRUE(stripeColStats->hasUpperBound());
     EXPECT_TRUE(stripeColStats->hasMinimum());
