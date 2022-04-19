@@ -1837,7 +1837,7 @@ namespace orc {
         // TimestampVectorBatch already stores data in UTC
         int64_t millsUTC = secs[i] * 1000 + nanos[i] / 1000000;
         if (!isUTC) {
-          millsUTC = timezone.convertToUTC(millsUTC);
+          millsUTC = timezone.convertToUTC(secs[i]) * 1000 + nanos[i] / 1000000;
         }
         ++count;
         if (enableBloomFilter) {
