@@ -460,11 +460,11 @@ public class TestReaderImpl {
       List<StripeStatistics> stats = tail.getStripeStatistics();
       assertEquals(1, stats.size());
 
-      TypeDescription schema = reader.getSchema();
-      assertEquals("struct<a:bigint,b:decimal(10,2),c:decimal(2,2),d:decimal(2,2),e:decimal(2,2)>",
-          schema.toString());
-      VectorizedRowBatch batch = schema.createRowBatchV2();
       try (RecordReader rows = reader.rows()) {
+        TypeDescription schema = reader.getSchema();
+        assertEquals("struct<a:bigint,b:decimal(10,2),c:decimal(2,2),d:decimal(2,2),e:decimal(2,2)>",
+            schema.toString());
+        VectorizedRowBatch batch = schema.createRowBatchV2();
         assertTrue(rows.nextBatch(batch), "No rows read out!");
         assertEquals(10, batch.size);
         LongColumnVector col1 = (LongColumnVector) batch.cols[0];
