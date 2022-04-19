@@ -1785,7 +1785,7 @@ public class TreeReaderFactory {
     public void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
       if (encoding.getKind() != OrcProto.ColumnEncoding.Kind.DIRECT &&
           encoding.getKind() != OrcProto.ColumnEncoding.Kind.DIRECT_V2) {
-        throw new IOException("rexUnknown encoding " + encoding + " in column " +
+        throw new IOException("Unknown encoding " + encoding + " in column " +
             columnId);
       }
     }
