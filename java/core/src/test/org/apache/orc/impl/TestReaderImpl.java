@@ -462,7 +462,6 @@ public class TestReaderImpl {
 
       TypeDescription schema = reader.getSchema();
       VectorizedRowBatch batch = schema.createRowBatchV2();
-      //assertEquals("Rex", batch.cols[1].getClass().toString());
       try (RecordReader rows = reader.rows()) {
         assertTrue(rows.nextBatch(batch), "No rows read out!");
         assertEquals(10, batch.size);
