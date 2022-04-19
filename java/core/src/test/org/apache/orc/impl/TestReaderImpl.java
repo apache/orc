@@ -461,25 +461,28 @@ public class TestReaderImpl {
       assertEquals(1, stats.size());
 
       TypeDescription schema = reader.getSchema();
+      assertEquals("struct<a:bigint,b:decimal(10,2),c:decimal(2,2),d:decimal(2,2),e:decimal(2,2)>",
+          schema.toString());
       VectorizedRowBatch batch = schema.createRowBatchV2();
       try (RecordReader rows = reader.rows()) {
         assertTrue(rows.nextBatch(batch), "No rows read out!");
         assertEquals(10, batch.size);
-        assertFalse(rows.nextBatch(batch));
         LongColumnVector col1 = (LongColumnVector) batch.cols[0];
-        Decimal64ColumnVector col2 = (Decimal64ColumnVector) batch.cols[2];
+        Decimal64ColumnVector col2 = (Decimal64ColumnVector) batch.cols[1];
         Decimal64ColumnVector col3 = (Decimal64ColumnVector) batch.cols[2];
         Decimal64ColumnVector col4 = (Decimal64ColumnVector) batch.cols[3];
         Decimal64ColumnVector col5 = (Decimal64ColumnVector) batch.cols[4];
         for (int i = 0; i < batch.size; ++i) {
           assertEquals(17292380420L + i, col1.vector[i]);
           if (i == 0) {
-            assertEquals(164.16, col2.vector[i]);
+            long scaleNum = (long) Math.pow(10, col2.scale);
+            assertEquals(164.16 * scaleNum, col2.vector[i]);
           } else {
             assertEquals(col2.vector[i - 1] * 2, col2.vector[i]);
           }
           assertEquals(col3.vector[i] + col4.vector[i], col5.vector[i]);
         }
+        assertFalse(rows.nextBatch(batch));
       }
     }
   }
