@@ -175,13 +175,13 @@ namespace orc {
                                      uint64_t currentRowInStripe,
                                      uint64_t rowsInCurrentStripe,
                                      uint64_t rowIndexStride,
-                                     const std::vector<bool>& includedRowGroups);
+                                     const std::vector<uint64_t>& nextSkippedRows);
 
     // Skip non-selected rows
     static uint64_t advanceToNextRowGroup(uint64_t currentRowInStripe,
                                           uint64_t rowsInCurrentStripe,
                                           uint64_t rowIndexStride,
-                                          const std::vector<bool>& includedRowGroups);
+                                          const std::vector<uint64_t>& nextSkippedRows);
 
     friend class TestRowReader_advanceToNextRowGroup_Test;
     friend class TestRowReader_computeBatchSize_Test;

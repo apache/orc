@@ -60,10 +60,11 @@ namespace orc {
                       const std::map<uint32_t, BloomFilterIndex>& bloomFilters);
 
     /**
-     * Return a vector of bool for each row group for their selection
-     * in the last evaluation
+     * Return a vector of the next skipped row for each RowGroup. Each value is the row id
+     * in stripe. 0 means the current RowGroup is entirely skipped.
+     * Only valid after invoking pickRowGroups().
      */
-    const std::vector<bool>& getRowGroups() const { return mRowGroups; }
+    const std::vector<uint64_t>& getNextSkippedRows() const { return mNextSkippedRows; }
 
     /**
      * Indicate whether any row group is selected in the last evaluation
@@ -80,8 +81,8 @@ namespace orc {
      */
     bool hasSelectedFrom(uint64_t currentRowInStripe) const {
       uint64_t rg = currentRowInStripe / mRowIndexStride;
-      for (; rg < mRowGroups.size(); ++rg) {
-        if (mRowGroups[rg]) {
+      for (; rg < mNextSkippedRows.size(); ++rg) {
+        if (mNextSkippedRows[rg]) {
           return true;
         }
       }
@@ -111,8 +112,10 @@ namespace orc {
     // column ids for each predicate leaf in the search argument
     std::vector<uint64_t> mFilterColumns;
 
-    // store results of last call of pickRowGroups
-    std::vector<bool> mRowGroups;
+    // Map from RowGroup index to the next skipped row of the selected range it
+    // locates. If the RowGroup is not selected, set the value to 0.
+    // Calculated in pickRowGroups().
+    std::vector<uint64_t> mNextSkippedRows;
     uint64_t mTotalRowsInStripe;
     bool mHasSelected;
     bool mHasSkipped;

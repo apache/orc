@@ -1110,7 +1110,7 @@ namespace orc {
         currentRowInStripe = advanceToNextRowGroup(currentRowInStripe,
                                                    rowsInCurrentStripe,
                                                    footer->rowindexstride(),
-                                                   sargsApplier->getRowGroups());
+                                                   sargsApplier->getNextSkippedRows());
         previousRow = firstRowOfStripe[currentStripe] + currentRowInStripe - 1;
         if (currentRowInStripe > 0) {
           seekToRowGroup(static_cast<uint32_t>(currentRowInStripe / footer->rowindexstride()));
@@ -1141,7 +1141,7 @@ namespace orc {
                                     currentRowInStripe,
                                     rowsInCurrentStripe,
                                     footer->rowindexstride(),
-                                    sargsApplier->getRowGroups());
+                                    sargsApplier->getNextSkippedRows());
     }
     data.numElements = rowsToRead;
     if (rowsToRead == 0) {
@@ -1165,7 +1165,7 @@ namespace orc {
       uint64_t nextRowToRead = advanceToNextRowGroup(currentRowInStripe,
                                                      rowsInCurrentStripe,
                                                      footer->rowindexstride(),
-                                                     sargsApplier->getRowGroups());
+                                                     sargsApplier->getNextSkippedRows());
       if (currentRowInStripe != nextRowToRead) {
         // it is guaranteed to be at start of a row group
         currentRowInStripe = nextRowToRead;
@@ -1186,21 +1186,18 @@ namespace orc {
                                            uint64_t currentRowInStripe,
                                            uint64_t rowsInCurrentStripe,
                                            uint64_t rowIndexStride,
-                                           const std::vector<bool>& includedRowGroups) {
+                                           const std::vector<uint64_t>& nextSkippedRows) {
     // In case of PPD, batch size should be aware of row group boundaries. If only a subset of row
     // groups are selected then marker position is set to the end of range (subset of row groups
     // within stripe).
     uint64_t endRowInStripe = rowsInCurrentStripe;
-    if (!includedRowGroups.empty()) {
-      endRowInStripe = currentRowInStripe;
-      uint32_t rg = static_cast<uint32_t>(currentRowInStripe / rowIndexStride);
-      for (; rg < includedRowGroups.size(); ++rg) {
-        if (!includedRowGroups[rg]) {
-          break;
-        } else {
-          endRowInStripe = std::min(rowsInCurrentStripe, (rg + 1) * rowIndexStride);
-        }
-      }
+    uint64_t groupsInStripe = nextSkippedRows.size();
+    if (groupsInStripe > 0) {
+      auto rg = static_cast<uint32_t>(currentRowInStripe / rowIndexStride);
+      if (rg >= groupsInStripe) return 0;
+      uint64_t nextSkippedRow = nextSkippedRows[rg];
+      if (nextSkippedRow == 0) return 0;
+      endRowInStripe = nextSkippedRow;
     }
     return std::min(requestedSize, endRowInStripe - currentRowInStripe);
   }
@@ -1208,19 +1205,27 @@ namespace orc {
   uint64_t RowReaderImpl::advanceToNextRowGroup(uint64_t currentRowInStripe,
                                                 uint64_t rowsInCurrentStripe,
                                                 uint64_t rowIndexStride,
-                                                const std::vector<bool>& includedRowGroups) {
-    if (!includedRowGroups.empty()) {
-      uint32_t rg = static_cast<uint32_t>(currentRowInStripe / rowIndexStride);
-      for (; rg < includedRowGroups.size(); ++rg) {
-        if (includedRowGroups[rg]) {
-          return currentRowInStripe;
-        } else {
-          // advance to start of next row group
-          currentRowInStripe = (rg + 1) * rowIndexStride;
-        }
-      }
+                                                const std::vector<uint64_t>& nextSkippedRows) {
+    auto groupsInStripe = nextSkippedRows.size();
+    if (groupsInStripe == 0) {
+      // No PPD, keeps using the current row in stripe
+      return std::min(currentRowInStripe, rowsInCurrentStripe);
     }
-    return std::min(currentRowInStripe, rowsInCurrentStripe);
+    auto rg = static_cast<uint32_t>(currentRowInStripe / rowIndexStride);
+    if (rg >= groupsInStripe) {
+      // Points to the end of the stripe
+      return rowsInCurrentStripe;
+    }
+    if (nextSkippedRows[rg] != 0) {
+      // Current row group is selected
+      return currentRowInStripe;
+    }
+    // Advance to the next selected row group
+    while (rg < groupsInStripe && nextSkippedRows[rg] == 0) ++rg;
+    if (rg < groupsInStripe) {
+      return rg * rowIndexStride;
+    }
+    return rowsInCurrentStripe;
   }
 
   std::unique_ptr<ColumnVectorBatch> RowReaderImpl::createRowBatch
