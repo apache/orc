@@ -2,7 +2,7 @@
 
 * CentOS 7
 * Debian 9 and 10
-* Ubuntu 18 and 20
+* Ubuntu 18, 20 and 22
 
 ## Test
 
