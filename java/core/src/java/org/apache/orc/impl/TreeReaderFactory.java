@@ -1783,7 +1783,8 @@ public class TreeReaderFactory {
 
     @Override
     public void checkEncoding(OrcProto.ColumnEncoding encoding) throws IOException {
-      if ((encoding.getKind() != OrcProto.ColumnEncoding.Kind.DIRECT)) {
+      if (encoding.getKind() != OrcProto.ColumnEncoding.Kind.DIRECT &&
+          encoding.getKind() != OrcProto.ColumnEncoding.Kind.DIRECT_V2) {
         throw new IOException("Unknown encoding " + encoding + " in column " +
             columnId);
       }
