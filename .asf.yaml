@@ -30,3 +30,7 @@ github:
     - java
     - cpp
     - big-data
+notifications:
+  pullrequests: issues@orc.apache.org
+  issues: issues@orc.apache.org
+  commits: commits@orc.apache.org
