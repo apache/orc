@@ -223,6 +223,38 @@ namespace orc {
     }
   }
 
+  void TestSeekWithPredicates(Reader* reader, uint64_t seekRowNumber) {
+    // Build search argument (x < 300000) for column 'int1'. Only the first row group
+    // will be selected. It has 1000 rows: (0, "0"), (300, "10"), (600, "20"), ...,
+    // (299700, "9990").
+    std::unique_ptr<SearchArgument> sarg = SearchArgumentFactory::newBuilder()
+        ->lessThan("int1", PredicateDataType::LONG,
+                   Literal(static_cast<int64_t>(300000)))
+        .build();
+    RowReaderOptions rowReaderOpts;
+    rowReaderOpts.searchArgument(std::move(sarg));
+    auto rowReader = reader->createRowReader(rowReaderOpts);
+    auto readBatch = rowReader->createRowBatch(2000);
+    auto& batch0 = dynamic_cast<StructVectorBatch&>(*readBatch);
+    auto& batch1 = dynamic_cast<LongVectorBatch&>(*batch0.fields[0]);
+
+    rowReader->seekToRow(seekRowNumber);
+    if (seekRowNumber >= 1000) {
+      // Seek advance the first row group will go to the end of file
+      EXPECT_FALSE(rowReader->next(*readBatch));
+      EXPECT_EQ(0, readBatch->numElements);
+      EXPECT_EQ(3500, rowReader->getRowNumber());
+      return;
+    }
+    EXPECT_TRUE(rowReader->next(*readBatch));
+    EXPECT_EQ(1000 - seekRowNumber, readBatch->numElements);
+    EXPECT_EQ(seekRowNumber, rowReader->getRowNumber());
+    for (uint64_t i = 0; i < readBatch->numElements; ++i) {
+      EXPECT_EQ((i + seekRowNumber) * 300, batch1.data[i]);
+    }
+    EXPECT_FALSE(rowReader->next(*readBatch));
+  }
+
   TEST(TestPredicatePushdown, testPredicatePushdown) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool * pool = getDefaultPool();
@@ -237,6 +269,15 @@ namespace orc {
     TestRangePredicates(reader.get());
     TestNoRowsSelected(reader.get());
     TestOrPredicates(reader.get());
+
+    TestSeekWithPredicates(reader.get(), 0);
+    TestSeekWithPredicates(reader.get(), 10);
+    TestSeekWithPredicates(reader.get(), 100);
+    TestSeekWithPredicates(reader.get(), 500);
+    TestSeekWithPredicates(reader.get(), 999);
+    TestSeekWithPredicates(reader.get(), 1000);
+    TestSeekWithPredicates(reader.get(), 1001);
+    TestSeekWithPredicates(reader.get(), 4000);
   }
 
   void TestNoRowsSelectedWithFileStats(Reader* reader) {

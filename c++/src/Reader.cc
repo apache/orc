@@ -1083,7 +1083,9 @@ namespace orc {
             // current stripe has at least one row group matching the predicate
             break;
           }
-        } else {
+          isStripeNeeded = false;
+        }
+        if (!isStripeNeeded) {
           // advance to next stripe when current stripe has no matching rows
           currentStripe += 1;
           currentRowInStripe = 0;
@@ -1113,7 +1115,11 @@ namespace orc {
                                                    sargsApplier->getNextSkippedRows());
         previousRow = firstRowOfStripe[currentStripe] + currentRowInStripe - 1;
         if (currentRowInStripe > 0) {
-          seekToRowGroup(static_cast<uint32_t>(currentRowInStripe / footer->rowindexstride()));
+          auto rowIndexStride = footer->rowindexstride();
+          auto rowGroupId = static_cast<uint32_t>(currentRowInStripe / rowIndexStride);
+          uint64_t rowsToSkip = currentRowInStripe % rowIndexStride;
+          seekToRowGroup(rowGroupId);
+          reader->skip(rowsToSkip);
         }
       }
     }
