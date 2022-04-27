@@ -386,7 +386,9 @@ namespace orc {
     TestMultipleSeeksWithoutRowIndexes(reader.get(), false);
   }
 
-  void TestNoRowsSelectedWithFileStats(Reader* reader) {
+  // Test Sarg skips the whole file based on file stats.
+  // Seeking to 'seekRowNumber' (if it's non-negative) before reads.
+  void TestNoRowsSelectedWithFileStats(Reader* reader, int seekRowNumber) {
     std::unique_ptr<SearchArgument> sarg =
       SearchArgumentFactory::newBuilder()
         ->startAnd()
@@ -400,49 +402,85 @@ namespace orc {
     auto rowReader = reader->createRowReader(rowReaderOpts);
 
     auto readBatch = rowReader->createRowBatch(2000);
+    if (seekRowNumber >= 0) {
+      rowReader->seekToRow(static_cast<uint64_t>(seekRowNumber));
+    }
     EXPECT_EQ(false, rowReader->next(*readBatch));
+    EXPECT_EQ(7000, rowReader->getRowNumber());
   }
 
-  void TestSelectedWithStripeStats(Reader* reader) {
+  void TestLastStripeSelectedWithStripeStats(Reader* reader, int seekRowNumber) {
+    // Sargs: col1 between 3500 and 7000. First stripe (3500 rows) will be skipped.
     std::unique_ptr<SearchArgument> sarg =
       SearchArgumentFactory::newBuilder()
-          ->startAnd()
-          .between("col1",
-                   PredicateDataType::LONG,
-                   Literal(static_cast<int64_t>(3500)),
-                   Literal(static_cast<int64_t>(7000)))
-          .end()
+          ->between("col1",
+                    PredicateDataType::LONG,
+                    Literal(static_cast<int64_t>(3500)),
+                    Literal(static_cast<int64_t>(7000)))
           .build();
 
     RowReaderOptions rowReaderOpts;
     rowReaderOpts.searchArgument(std::move(sarg));
     auto rowReader = reader->createRowReader(rowReaderOpts);
 
-    auto readBatch = rowReader->createRowBatch(2000);
-    // 1st batch of 2000 rows
-    EXPECT_EQ(true, rowReader->next(*readBatch));
-    // test previous row number
-    EXPECT_EQ(3500, rowReader->getRowNumber());
-    EXPECT_EQ(2000, readBatch->numElements);
-    auto& batch0 = dynamic_cast<StructVectorBatch&>(*readBatch);
-    auto& batch1 = dynamic_cast<LongVectorBatch&>(*batch0.fields[0]);
-    for (uint64_t i = 0; i < 2000; ++i) {
-      EXPECT_EQ(i + 3500 , batch1.data[i]);
+    if (seekRowNumber >= 0) {
+      rowReader->seekToRow(static_cast<uint64_t>(seekRowNumber));
     }
-    // 2nd batch of 1500 rows
-    EXPECT_EQ(true, rowReader->next(*readBatch));
-    // test previous row number
-    EXPECT_EQ(5500, rowReader->getRowNumber());
-    EXPECT_EQ(1500, readBatch->numElements);
-    for (uint64_t i = 0; i < 1500; ++i) {
-      EXPECT_EQ(i + 5500 , batch1.data[i]) << i;
+    // Seek within the first stripe which is skipped due to PPD. Any seeks within it
+    // will go to the end of the first stripe.
+    if (seekRowNumber < 3500) {
+      auto readBatch = rowReader->createRowBatch(2000);
+      // 1st batch of 2000 rows
+      EXPECT_EQ(true, rowReader->next(*readBatch));
+      // test previous row number
+      EXPECT_EQ(3500, rowReader->getRowNumber());
+      EXPECT_EQ(2000, readBatch->numElements);
+      auto& batch0 = dynamic_cast<StructVectorBatch&>(*readBatch);
+      auto& batch1 = dynamic_cast<LongVectorBatch&>(*batch0.fields[0]);
+      for (uint64_t i = 0; i < 2000; ++i) {
+        EXPECT_EQ(i + 3500 , batch1.data[i]);
+      }
+
+      // 2nd batch of the remaining 1500 rows
+      EXPECT_EQ(true, rowReader->next(*readBatch));
+      // test previous row number
+      EXPECT_EQ(5500, rowReader->getRowNumber());
+      EXPECT_EQ(1500, readBatch->numElements);
+      for (uint64_t i = 0; i < 1500; ++i) {
+        EXPECT_EQ(i + 5500 , batch1.data[i]);
+      }
+      // no more batches
+      EXPECT_EQ(false, rowReader->next(*readBatch));
+      return;
     }
-    // no more batches
-    EXPECT_EQ(false, rowReader->next(*readBatch));
+
+    // Seek to the end of file
+    if (seekRowNumber >= 7000) {
+      auto readBatch = rowReader->createRowBatch(2000);
+      EXPECT_EQ(false, rowReader->next(*readBatch));
+      EXPECT_EQ(7000, rowReader->getRowNumber());
+      return;
+    }
+
+    {
+      // Seek within the second stripe. Use 3500 as the batch size so we can read all rows
+      // at once.
+      auto readBatch = rowReader->createRowBatch(3500);
+      EXPECT_EQ(true, rowReader->next(*readBatch));
+      EXPECT_EQ(seekRowNumber, rowReader->getRowNumber());
+      EXPECT_EQ(7000 - seekRowNumber, readBatch->numElements);
+      auto& batch0 = dynamic_cast<StructVectorBatch&>(*readBatch);
+      auto& batch1 = dynamic_cast<LongVectorBatch&>(*batch0.fields[0]);
+      for (uint64_t i = 0; i < readBatch->numElements; ++i) {
+        EXPECT_EQ(i + static_cast<unsigned long>(seekRowNumber), batch1.data[i]);
+      }
+      // no more batches
+      EXPECT_EQ(false, rowReader->next(*readBatch));
+    }
   }
 
-  void TestSelectedWithStripeStats2(Reader* reader) {
-    // Sargs: col1 < 3500
+  void TestFirstStripeSelectedWithStripeStats(Reader* reader, int seekRowNumber) {
+    // Sargs: col1 < 3500. Last stripe (3500 rows) will be skipped.
     std::unique_ptr<SearchArgument> sarg = SearchArgumentFactory::newBuilder()
         ->lessThan("col1",
                    PredicateDataType::LONG,
@@ -452,27 +490,26 @@ namespace orc {
     rowReaderOpts.searchArgument(std::move(sarg));
     auto rowReader = reader->createRowReader(rowReaderOpts);
 
-    auto readBatch = rowReader->createRowBatch(2000);
-    // 1st batch of 2000 rows
-    EXPECT_EQ(true, rowReader->next(*readBatch));
-    // test previous row number
-    EXPECT_EQ(0, rowReader->getRowNumber());
-    EXPECT_EQ(2000, readBatch->numElements);
+    auto readBatch = rowReader->createRowBatch(3500);
     auto& batch0 = dynamic_cast<StructVectorBatch&>(*readBatch);
     auto& batch1 = dynamic_cast<LongVectorBatch&>(*batch0.fields[0]);
-    for (uint64_t i = 0; i < 2000; ++i) {
-      EXPECT_EQ(i, batch1.data[i]);
+
+    uint64_t firstRowNumber = 0;
+    if (seekRowNumber >= 0) {
+      rowReader->seekToRow(static_cast<uint64_t>(seekRowNumber));
+      firstRowNumber = static_cast<uint64_t>(seekRowNumber);
     }
-    // 2nd batch of the remaining 1500 rows
-    EXPECT_EQ(true, rowReader->next(*readBatch));
-    // test previous row number
-    EXPECT_EQ(2000, rowReader->getRowNumber());
-    EXPECT_EQ(1500, readBatch->numElements);
-    for (uint64_t i = 0; i < 1500; ++i) {
-      EXPECT_EQ(i + 2000, batch1.data[i]);
+    if (seekRowNumber < 3500) {
+      EXPECT_EQ(true, rowReader->next(*readBatch));
+      EXPECT_EQ(firstRowNumber, rowReader->getRowNumber());
+      EXPECT_EQ(3500 - firstRowNumber, readBatch->numElements);
+      for (uint64_t i = 0; i < readBatch->numElements; ++i) {
+        EXPECT_EQ(i + firstRowNumber, batch1.data[i]);
+      }
     }
     // no more batches
     EXPECT_EQ(false, rowReader->next(*readBatch));
+    EXPECT_EQ(7000, rowReader->getRowNumber());
   }
 
   TEST(TestPredicatePushdown, testStripeAndFileStats) {
@@ -512,8 +549,12 @@ namespace orc {
     EXPECT_EQ(7000, reader->getNumberOfRows());
     EXPECT_EQ(stripeCount, reader->getNumberOfStripes());
 
-    TestNoRowsSelectedWithFileStats(reader.get());
-    TestSelectedWithStripeStats(reader.get());
-    TestSelectedWithStripeStats2(reader.get());
+    // Seek to different positions before each test. -1 means no seek.
+    int seekRowNumber[] = {-1, 0, 1000, 4000, 8000};
+    for (int pos : seekRowNumber) {
+      TestNoRowsSelectedWithFileStats(reader.get(), pos);
+      TestLastStripeSelectedWithStripeStats(reader.get(), pos);
+      TestFirstStripeSelectedWithStripeStats(reader.get(), pos);
+    }
   }
 }  // namespace orc
