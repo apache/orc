@@ -419,6 +419,7 @@ namespace orc {
     auto rowReader = reader->createRowReader(rowReaderOpts);
 
     auto readBatch = rowReader->createRowBatch(2000);
+    // 1st batch of 2000 rows
     EXPECT_EQ(true, rowReader->next(*readBatch));
     // test previous row number
     EXPECT_EQ(3500, rowReader->getRowNumber());
@@ -428,6 +429,45 @@ namespace orc {
     for (uint64_t i = 0; i < 2000; ++i) {
       EXPECT_EQ(i + 3500 , batch1.data[i]);
     }
+    // 2nd batch of 1500 rows
+    EXPECT_EQ(true, rowReader->next(*readBatch));
+    // test previous row number
+    EXPECT_EQ(5500, rowReader->getRowNumber());
+    EXPECT_EQ(1500, readBatch->numElements);
+    for (uint64_t i = 0; i < 1500; ++i) {
+      EXPECT_EQ(i + 5500 , batch1.data[i]) << i;
+    }
+    // no more batches
+    EXPECT_EQ(false, rowReader->next(*readBatch));
+
+    // Sargs: col1 < 3500
+    sarg = SearchArgumentFactory::newBuilder()
+        ->lessThan("col1",
+                   PredicateDataType::LONG,
+                   Literal(static_cast<int64_t>(3500)))
+        .build();
+    rowReaderOpts.searchArgument(std::move(sarg));
+    rowReader = reader->createRowReader(rowReaderOpts);
+    // 1st batch of 2000 rows
+    EXPECT_EQ(true, rowReader->next(*readBatch));
+    // test previous row number
+    EXPECT_EQ(0, rowReader->getRowNumber());
+    EXPECT_EQ(2000, readBatch->numElements);
+    auto& batch2 = dynamic_cast<StructVectorBatch&>(*readBatch);
+    auto& batch3 = dynamic_cast<LongVectorBatch&>(*batch2.fields[0]);
+    for (uint64_t i = 0; i < 2000; ++i) {
+      EXPECT_EQ(i, batch3.data[i]);
+    }
+    // 2nd batch of the remaining 1500 rows
+    EXPECT_EQ(true, rowReader->next(*readBatch));
+    // test previous row number
+    EXPECT_EQ(2000, rowReader->getRowNumber());
+    EXPECT_EQ(1500, readBatch->numElements);
+    for (uint64_t i = 0; i < 1500; ++i) {
+      EXPECT_EQ(i + 2000, batch3.data[i]);
+    }
+    // no more batches
+    EXPECT_EQ(false, rowReader->next(*readBatch));
   }
 
   TEST(TestPredicatePushdown, testStripeAndFileStats) {

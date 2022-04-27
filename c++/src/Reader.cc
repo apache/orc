@@ -1137,7 +1137,7 @@ namespace orc {
     if (currentRowInStripe == 0) {
       startNextStripe();
     }
-    uint64_t rowsToRead =
+    uint64_t rowsToRead = currentStripe >= lastStripe ? 0 :
       std::min(static_cast<uint64_t>(data.capacity),
                rowsInCurrentStripe - currentRowInStripe);
     if (sargsApplier && rowsToRead > 0) {
