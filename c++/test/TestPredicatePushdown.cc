@@ -324,14 +324,10 @@ namespace orc {
     TestNoRowsSelected(reader.get());
     TestOrPredicates(reader.get());
 
-    TestSeekWithPredicates(reader.get(), 0);
-    TestSeekWithPredicates(reader.get(), 10);
-    TestSeekWithPredicates(reader.get(), 100);
-    TestSeekWithPredicates(reader.get(), 500);
-    TestSeekWithPredicates(reader.get(), 999);
-    TestSeekWithPredicates(reader.get(), 1000);
-    TestSeekWithPredicates(reader.get(), 1001);
-    TestSeekWithPredicates(reader.get(), 4000);
+    uint64_t seekRowNumbers[] = {0, 10, 100, 500, 999, 1000, 1001, 4000};
+    for (uint64_t i = 0; i < 8; ++i) {
+      TestSeekWithPredicates(reader.get(), seekRowNumbers[i]);
+    }
 
     TestMultipleSeeksWithPredicates(reader.get());
   }
