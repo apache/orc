@@ -396,26 +396,28 @@ namespace orc {
     previousRow = rowNumber;
     startNextStripe();
 
-    // when predicate push down is enabled, above call to startNextStripe()
-    // will move current row to 1st matching row group; here we only need
-    // to deal with the case when PPD is not enabled.
-    if (!sargsApplier) {
-      uint64_t rowsToSkip = currentRowInStripe;
-
-      if (footer->rowindexstride() > 0 &&
-          currentStripeInfo.indexlength() > 0) {
+    uint64_t rowsToSkip = currentRowInStripe;
+    auto rowIndexStride = footer->rowindexstride();
+    // seek to the target row group if row indexes exists
+    if (rowIndexStride > 0 && currentStripeInfo.indexlength() > 0) {
+      // when predicate push down is enabled, above call to startNextStripe()
+      // will move current row to 1st matching row group; here we only need
+      // to deal with the case when PPD is not enabled.
+      if (!sargsApplier) {
         if (rowIndexes.empty()) {
           loadStripeIndex();
         }
-        uint32_t rowGroupId =
-          static_cast<uint32_t>(currentRowInStripe / footer->rowindexstride());
-        rowsToSkip -= static_cast<uint64_t>(rowGroupId) * footer->rowindexstride();
-
+        auto rowGroupId = static_cast<uint32_t>(rowsToSkip / rowIndexStride);
         if (rowGroupId != 0) {
           seekToRowGroup(rowGroupId);
         }
       }
-
+      // skip leading rows in the target row group
+      rowsToSkip %= rowIndexStride;
+    }
+    // 'reader' is reset in startNextStripe(). It could be nullptr if 'rowsToSkip' is 0,
+    // e.g. when startNextStripe() skips all remaining rows of the file.
+    if (rowsToSkip > 0) {
       reader->skip(rowsToSkip);
     }
   }
@@ -1083,7 +1085,9 @@ namespace orc {
             // current stripe has at least one row group matching the predicate
             break;
           }
-        } else {
+          isStripeNeeded = false;
+        }
+        if (!isStripeNeeded) {
           // advance to next stripe when current stripe has no matching rows
           currentStripe += 1;
           currentRowInStripe = 0;
