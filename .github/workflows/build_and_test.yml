@@ -17,8 +17,8 @@ jobs:
       matrix:
         os:
           - ubuntu-20.04
-          - macos-10.15
           - macos-11
+          - macos-12
         java:
           - 1.8
           - 11
