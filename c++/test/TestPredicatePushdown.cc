@@ -237,6 +237,7 @@ namespace orc {
     auto readBatch = rowReader->createRowBatch(2000);
     auto& batch0 = dynamic_cast<StructVectorBatch&>(*readBatch);
     auto& batch1 = dynamic_cast<LongVectorBatch&>(*batch0.fields[0]);
+    auto& batch2 = dynamic_cast<StringVectorBatch&>(*batch0.fields[1]);
 
     rowReader->seekToRow(seekRowNumber);
     if (seekRowNumber >= 1000) {
@@ -250,9 +251,62 @@ namespace orc {
     EXPECT_EQ(1000 - seekRowNumber, readBatch->numElements);
     EXPECT_EQ(seekRowNumber, rowReader->getRowNumber());
     for (uint64_t i = 0; i < readBatch->numElements; ++i) {
-      EXPECT_EQ((i + seekRowNumber) * 300, batch1.data[i]);
+      EXPECT_EQ(300 * (i + seekRowNumber), batch1.data[i]);
+      EXPECT_EQ(std::to_string(10 * (i + seekRowNumber)),
+                std::string(batch2.data[i], static_cast<size_t>(batch2.length[i])));
     }
     EXPECT_FALSE(rowReader->next(*readBatch));
+    EXPECT_EQ(3500, rowReader->getRowNumber());
+  }
+
+  void TestMultipleSeeksWithPredicates(Reader* reader) {
+    // Build search argument (x >= 300000 AND x < 600000) for column 'int1'. Only the 2nd
+    // row group will be selected.
+    std::unique_ptr<SearchArgument> sarg = SearchArgumentFactory::newBuilder()
+        ->startAnd()
+        .startNot()
+        .lessThan("int1", PredicateDataType::LONG,
+                  Literal(static_cast<int64_t>(300000L)))
+        .end()
+        .lessThan("int1", PredicateDataType::LONG,
+                  Literal(static_cast<int64_t>(600000L)))
+        .end()
+        .build();
+    RowReaderOptions rowReaderOpts;
+    rowReaderOpts.searchArgument(std::move(sarg));
+    auto rowReader = reader->createRowReader(rowReaderOpts);
+
+    // Read only one row after each seek
+    auto readBatch = rowReader->createRowBatch(1);
+    auto& batch0 = dynamic_cast<StructVectorBatch&>(*readBatch);
+    auto& batch1 = dynamic_cast<LongVectorBatch&>(*batch0.fields[0]);
+    auto& batch2 = dynamic_cast<StringVectorBatch&>(*batch0.fields[1]);
+
+    // Seek within the 1st row group will go to the start of the 2nd row group
+    rowReader->seekToRow(10);
+    EXPECT_TRUE(rowReader->next(*readBatch));
+    EXPECT_EQ(1000, rowReader->getRowNumber()) << "Should start at the 2nd row group";
+    EXPECT_EQ(1, readBatch->numElements);
+    EXPECT_EQ(300000, batch1.data[0]);
+    EXPECT_EQ("10000", std::string(batch2.data[0], static_cast<size_t>(batch2.length[0])));
+
+    // Seek within the 2nd row group (1000 rows) which is selected by the search argument
+    uint64_t seekRowNum[] = {1001, 1010, 1100, 1500, 1999};
+    for (uint64_t pos : seekRowNum) {
+      rowReader->seekToRow(pos);
+      EXPECT_TRUE(rowReader->next(*readBatch));
+      EXPECT_EQ(pos, rowReader->getRowNumber());
+      EXPECT_EQ(1, readBatch->numElements);
+      EXPECT_EQ(300 * pos, batch1.data[0]);
+      EXPECT_EQ(std::to_string(10 * pos),
+                std::string(batch2.data[0], static_cast<size_t>(batch2.length[0])));
+    }
+
+    // Seek advance the 2nd row group will go to the end of file
+    rowReader->seekToRow(2000);
+    EXPECT_FALSE(rowReader->next(*readBatch));
+    EXPECT_EQ(3500, rowReader->getRowNumber());
+    EXPECT_EQ(0, readBatch->numElements);
   }
 
   TEST(TestPredicatePushdown, testPredicatePushdown) {
@@ -278,6 +332,8 @@ namespace orc {
     TestSeekWithPredicates(reader.get(), 1000);
     TestSeekWithPredicates(reader.get(), 1001);
     TestSeekWithPredicates(reader.get(), 4000);
+
+    TestMultipleSeeksWithPredicates(reader.get());
   }
 
   void TestNoRowsSelectedWithFileStats(Reader* reader) {
