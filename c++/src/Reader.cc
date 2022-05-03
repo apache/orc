@@ -1035,6 +1035,20 @@ namespace orc {
     return memory + decompressorMemory ;
   }
 
+  // Update fields to indicate we've reached the end of file
+  void RowReaderImpl::markEndOfFile() {
+    currentStripe = lastStripe;
+    currentRowInStripe = 0;
+    rowsInCurrentStripe = 0;
+    if (lastStripe == 0) {
+      // Empty file
+      previousRow = 0;
+    } else {
+      previousRow = firstRowOfStripe[lastStripe - 1] +
+          footer->stripes(static_cast<int>(lastStripe - 1)).numberofrows();
+    }
+  }
+
   void RowReaderImpl::startNextStripe() {
     reader.reset(); // ColumnReaders use lots of memory; free old memory first
     rowIndexes.clear();
@@ -1043,9 +1057,7 @@ namespace orc {
     // evaluate file statistics if it exists
     if (sargsApplier && !sargsApplier->evaluateFileStatistics(*footer)) {
       // skip the entire file
-      currentStripe = lastStripe;
-      currentRowInStripe = 0;
-      rowsInCurrentStripe = 0;
+      markEndOfFile();
       return;
     }
 
@@ -1120,18 +1132,16 @@ namespace orc {
           seekToRowGroup(static_cast<uint32_t>(currentRowInStripe / footer->rowindexstride()));
         }
       }
+    } else {
+      // All remaining stripes are skipped.
+      markEndOfFile();
     }
   }
 
   bool RowReaderImpl::next(ColumnVectorBatch& data) {
     if (currentStripe >= lastStripe) {
       data.numElements = 0;
-      if (lastStripe > 0) {
-        previousRow = firstRowOfStripe[lastStripe - 1] +
-          footer->stripes(static_cast<int>(lastStripe - 1)).numberofrows();
-      } else {
-        previousRow = 0;
-      }
+      markEndOfFile();
       return false;
     }
     if (currentRowInStripe == 0) {
@@ -1149,9 +1159,7 @@ namespace orc {
     }
     data.numElements = rowsToRead;
     if (rowsToRead == 0) {
-      previousRow = lastStripe <= 0 ? footer->numberofrows() :
-                    firstRowOfStripe[lastStripe - 1] +
-                    footer->stripes(static_cast<int>(lastStripe - 1)).numberofrows();
+      markEndOfFile();
       return false;
     }
     if (enableEncodedBlock) {
