@@ -49,6 +49,11 @@ down, and vectorization support make Hive [perform
 better](https://hortonworks.com/blog/orcfile-in-hdp-2-better-compression-better-performance/)
 than any other format for your data.
 
+### [Apache Impala](https://impala.apache.org/)
+
+Apache Impala supports [reading from ORC format Hive tables](https://impala.apache.org/docs/build/html/topics/impala_orc.html)
+by leveraging the ORC C++ library.
+
 ### [Apache Gobblin](https://gobblin.apache.org/)
 
 Apache Gobblin supports
