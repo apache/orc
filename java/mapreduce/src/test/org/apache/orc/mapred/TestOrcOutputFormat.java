@@ -297,6 +297,7 @@ public class TestOrcOutputFormat {
     writer.close(Reporter.NULL);
     Path path = new Path(workDir, "value.orc");
     Reader file = OrcFile.createReader(path, OrcFile.readerOptions(conf));
+    assertEquals(OrcConf.ROW_BATCH_SIZE.getDefaultValue(), file.options().getRowBatchSize());
     assertEquals(3000, file.getNumberOfRows());
     assertEquals(TYPE_STRING, file.getSchema().toString());
   }
@@ -327,12 +328,13 @@ public class TestOrcOutputFormat {
     writer.close(Reporter.NULL);
     Path path = new Path(workDir, "key.orc");
     Reader file = OrcFile.createReader(path, OrcFile.readerOptions(conf));
+    assertEquals(128, file.options().getRowBatchSize());
     assertEquals(2000, file.getNumberOfRows());
     assertEquals(TYPE_STRING, file.getSchema().toString());
   }
 
   private static class OrcOutputFormatWithRowBatchSize<V extends Writable> extends OrcOutputFormat {
-    public static final String ROW_BATCH_SIZE = "orc.row.batch.size";
+    public static final String ROW_BATCH_SIZE = OrcConf.ROW_BATCH_SIZE.getAttribute();
 
     @Override
     public RecordWriter<NullWritable, V> getRecordWriter(FileSystem fileSystem,

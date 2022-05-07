@@ -42,6 +42,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -205,6 +206,79 @@ public class TestOrcLargeStripe {
         OrcFile.readerOptions(conf).filesystem(fs));
       RecordReader rows = reader.rows();
       batch = reader.getSchema().createRowBatch();
+      int rowsRead = 0;
+      while (rows.nextBatch(batch)) {
+        rowsRead += batch.size;
+      }
+      assertEquals(size, rowsRead);
+    } finally {
+      fs.delete(testFilePath, false);
+    }
+  }
+
+  @Test
+  public void testAdjustRowBatchSizeWhenReadLargeString() throws IOException {
+    final Runtime rt = Runtime.getRuntime();
+    assumeTrue(rt.maxMemory() > 4_000_000_000L);
+    TypeDescription schema = TypeDescription.createString();
+
+    conf.setDouble("hive.exec.orc.dictionary.key.size.threshold", 0.0);
+    Writer writer = OrcFile.createWriter(
+            testFilePath,
+            OrcFile.writerOptions(conf).setSchema(schema)
+                    .compress(CompressionKind.NONE));
+    // default batch size
+    int size = 1024;
+    int width = Integer.MAX_VALUE / 1000;
+
+    // generate a random string that is width characters long
+    Random random = new Random(123);
+    char[] randomChars= new char[width];
+    int posn = 0;
+    for(int length = 0; length < width && posn < randomChars.length; ++posn) {
+      char cp = (char) random.nextInt(Character.MIN_SUPPLEMENTARY_CODE_POINT);
+      // make sure we get a valid, non-surrogate
+      while (Character.isSurrogate(cp)) {
+        cp = (char) random.nextInt(Character.MIN_SUPPLEMENTARY_CODE_POINT);
+      }
+      // compute the length of the utf8
+      length += cp < 0x80 ? 1 : (cp < 0x800 ? 2 : 3);
+      randomChars[posn] = cp;
+    }
+
+    // put the random characters in as a repeating value.
+    VectorizedRowBatch batch = schema.createRowBatch();
+    BytesColumnVector string = (BytesColumnVector) batch.cols[0];
+    string.setVal(0, new String(randomChars, 0, posn).getBytes(StandardCharsets.UTF_8));
+    string.isRepeating = true;
+    for(int rows=size; rows > 0; rows -= batch.size) {
+      batch.size = Math.min(rows, batch.getMaxSize());
+      writer.addRowBatch(batch);
+    }
+    writer.close();
+
+    // default batch size
+    IOException exception = assertThrows(
+            IOException.class,
+            () -> {
+              try (Reader reader = OrcFile.createReader(testFilePath,
+                      OrcFile.readerOptions(conf).filesystem(fs))) {
+                RecordReader rows = reader.rows();
+                rows.nextBatch(reader.getSchema().createRowBatch());
+              }
+            }
+    );
+    assertEquals("totalLength:-2095944704 is a negative number. " +
+                    "The current batch size is 1024, " +
+                    "you can reduce the value by 'orc.row.batch.size'.",
+            exception.getCause().getMessage());
+
+    try {
+      Reader reader = OrcFile.createReader(testFilePath,
+              OrcFile.readerOptions(conf).filesystem(fs));
+      RecordReader rows = reader.rows();
+      // Modify RowBatchMaxSize to reduce from 1024 to 2
+      batch = reader.getSchema().createRowBatch(2);
       int rowsRead = 0;
       while (rows.nextBatch(batch)) {
         rowsRead += batch.size;

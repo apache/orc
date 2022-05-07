@@ -51,7 +51,9 @@ import java.util.GregorianCalendar;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 
 public class TestConvertTreeReaderFactory {
 
@@ -348,5 +350,41 @@ public class TestConvertTreeReaderFactory {
       // Make sure we delete file across tests
       fs.delete(testFilePath, false);
     }
+  }
+
+  @Test
+  public void testReadOrcByteArraysException() {
+    InStream stream = mock(InStream.class);
+    RunLengthIntegerReaderV2 lengths = mock(RunLengthIntegerReaderV2.class);
+    int batchSize = 1024;
+    LongColumnVector defaultBatchSizeScratchlcv = new LongColumnVector(batchSize);
+    for (int i = 0; i < batchSize; i++) {
+      defaultBatchSizeScratchlcv.vector[i] = Integer.MAX_VALUE - 8;
+    }
+
+    BytesColumnVector defaultBatchSizeResult = new BytesColumnVector(batchSize);
+    IOException defaultBatchSizeException = assertThrows(
+            IOException.class,
+            () -> TreeReaderFactory.BytesColumnVectorUtil.readOrcByteArrays(stream, lengths,
+                    defaultBatchSizeScratchlcv, defaultBatchSizeResult, batchSize));
+
+    assertEquals("totalLength:-9216 is a negative number. " +
+                    "The current batch size is 1024, " +
+                    "you can reduce the value by 'orc.row.batch.size'.",
+            defaultBatchSizeException.getMessage());
+
+    int batchSizeOne = 1;
+    LongColumnVector batchSizeOneScratchlcv = new LongColumnVector(batchSizeOne);
+    for (int i = 0; i < batchSizeOne; i++) {
+      batchSizeOneScratchlcv.vector[i] = Long.MAX_VALUE;
+    }
+    BytesColumnVector batchSizeOneResult = new BytesColumnVector(batchSizeOne);
+    IOException batchSizeOneException = assertThrows(
+            IOException.class,
+            () -> TreeReaderFactory.BytesColumnVectorUtil.readOrcByteArrays(stream, lengths,
+                    batchSizeOneScratchlcv, batchSizeOneResult, batchSizeOne));
+
+    assertEquals("totalLength:-1 is a negative number.",
+            batchSizeOneException.getMessage());
   }
 }

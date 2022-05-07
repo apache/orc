@@ -237,6 +237,7 @@ public interface Reader extends Closeable {
     private int minSeekSize = (int) OrcConf.ORC_MIN_DISK_SEEK_SIZE.getDefaultValue();
     private double minSeekSizeTolerance = (double) OrcConf.ORC_MIN_DISK_SEEK_SIZE_TOLERANCE
       .getDefaultValue();
+    private int rowBatchSize = (int) OrcConf.ROW_BATCH_SIZE.getDefaultValue();
 
     /**
      * @since 1.1.0
@@ -261,6 +262,7 @@ public interface Reader extends Closeable {
       allowPluginFilters = OrcConf.ALLOW_PLUGIN_FILTER.getBoolean(conf);
       minSeekSize = OrcConf.ORC_MIN_DISK_SEEK_SIZE.getInt(conf);
       minSeekSizeTolerance = OrcConf.ORC_MIN_DISK_SEEK_SIZE_TOLERANCE.getDouble(conf);
+      rowBatchSize = OrcConf.ROW_BATCH_SIZE.getInt(conf);
     }
 
     /**
@@ -681,6 +683,21 @@ public interface Reader extends Closeable {
      */
     public Options minSeekSizeTolerance(double value) {
       this.minSeekSizeTolerance = value;
+      return this;
+    }
+
+    /**
+     * @since 1.9.0
+     */
+    public int getRowBatchSize() {
+      return rowBatchSize;
+    }
+
+    /**
+     * @since 1.9.0
+     */
+    public Options rowBatchSize(int value) {
+      this.rowBatchSize = value;
       return this;
     }
   }
