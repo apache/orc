@@ -222,7 +222,7 @@ public enum OrcConf {
       "is the default."),
   ROW_BATCH_SIZE("orc.row.batch.size", "orc.row.batch.size", 1024,
           "The number of rows to include in a orc vectorized reader batch. " +
-                  "The number should be carefully chosen to minimize overhead " +
+                  "The value should be carefully chosen to minimize overhead " +
                   "and avoid OOMs in reading data.")
   ;
 

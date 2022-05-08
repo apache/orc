@@ -34,6 +34,7 @@ import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.ql.exec.vector.expressions.StringExpr;
 import org.apache.hadoop.hive.ql.io.filter.FilterContext;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
+import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcFilterContext;
 import org.apache.orc.OrcProto;
@@ -2000,7 +2001,9 @@ public class TreeReaderFactory {
         if (batchSize > 1) {
           sb.append(" The current batch size is ")
                   .append(batchSize)
-                  .append(", you can reduce the value by 'orc.row.batch.size'.");
+                  .append(", you can reduce the value by '")
+                  .append(OrcConf.ROW_BATCH_SIZE.getAttribute())
+                  .append("'.");
         }
         throw new IOException(sb.toString());
       }
