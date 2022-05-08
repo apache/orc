@@ -53,7 +53,7 @@ Xiening Dai             | xndai        | Committer
 Xuefu Zhang             | xuefu        | Committer
 Ferdinand Xu            | xuf          | Committer
 Yongzhi Chen            | ychena       | Committer
-Yiqun Zhang             | yqzhang      | Committer
+Yiqun Zhang             | yqzhang      | PMC
 Aihua Xu                | zihuaxu      | Committer
 
 Companies with employees that are committers:
