@@ -81,7 +81,7 @@ public class FilterBench implements OrcBenchmark {
     new Runner(parseOptions(args)).run();
   }
 
-  private static CommandLine parseCommandLine(String[] args) {
+  public static CommandLine parseCommandLine(String[] args, boolean needsArgs) {
     org.apache.commons.cli.Options options = new org.apache.commons.cli.Options()
       .addOption("h", HELP, false, "Provide help")
       .addOption("i", ITERATIONS, true, "Number of iterations")
@@ -98,7 +98,7 @@ public class FilterBench implements OrcBenchmark {
       System.err.println("Argument exception - " + pe.getMessage());
       result = null;
     }
-    if (result == null || result.hasOption(HELP) || result.getArgs().length == 0) {
+    if (result == null || result.hasOption(HELP) || (needsArgs && result.getArgs().length == 0)) {
       new HelpFormatter().printHelp("java -jar <jar> <command> <options> <sub_cmd>\n"
                                     + "sub_cmd:\nsimple\ncomplex\n",
                                     options);
@@ -108,20 +108,8 @@ public class FilterBench implements OrcBenchmark {
     return result;
   }
 
-  public static Options parseOptions(String[] args) {
-    CommandLine options = parseCommandLine(args);
-    String cmd = options.getArgs()[0];
+  public static OptionsBuilder optionsBuilder(CommandLine options) {
     OptionsBuilder builder = new OptionsBuilder();
-    switch (cmd) {
-      case "simple":
-        builder.include(SimpleFilter.class.getSimpleName());
-        break;
-      case "complex":
-        builder.include(ComplexFilter.class.getSimpleName());
-        break;
-      default:
-        throw new UnsupportedOperationException(String.format("Command %s is not supported", cmd));
-    }
     if (options.hasOption(GC)) {
       builder.addProfiler("hs_gc");
     }
@@ -147,6 +135,23 @@ public class FilterBench implements OrcBenchmark {
     String maxMemory = options.getOptionValue(MAX_MEMORY, "2g");
     builder.jvmArgs("-server",
                     "-Xms" + minMemory, "-Xmx" + maxMemory);
+    return builder;
+  }
+
+  public static Options parseOptions(String[] args) {
+    CommandLine options = parseCommandLine(args, true);
+    OptionsBuilder builder = optionsBuilder(options);
+    String cmd = options.getArgs()[0];
+    switch (cmd) {
+      case "simple":
+        builder.include(SimpleFilter.class.getSimpleName());
+        break;
+      case "complex":
+        builder.include(ComplexFilter.class.getSimpleName());
+        break;
+      default:
+        throw new UnsupportedOperationException(String.format("Command %s is not supported", cmd));
+    }
     return builder.build();
   }
 
