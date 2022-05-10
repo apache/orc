@@ -1999,11 +1999,11 @@ public class TreeReaderFactory {
         StringBuilder sb = new StringBuilder("totalLength:" + totalLength
                 + " is a negative number.");
         if (batchSize > 1) {
-          sb.append(" The current batch size is ")
-                  .append(batchSize)
-                  .append(", you can reduce the value by '")
-                  .append(OrcConf.ROW_BATCH_SIZE.getAttribute())
-                  .append("'.");
+          sb.append(" The current batch size is ");
+          sb.append(batchSize);
+          sb.append(", you can reduce the value by '");
+          sb.append(OrcConf.ROW_BATCH_SIZE.getAttribute());
+          sb.append("'.");
         }
         throw new IOException(sb.toString());
       }

@@ -217,7 +217,7 @@ public class TestOrcLargeStripe {
   }
 
   @Test
-  public void testRowBatchSizeWhenStringDirectGreaterThan2GB() throws IOException {
+  public void testAdjustRowBatchSizeWhenReadLargeString() throws IOException {
     final Runtime rt = Runtime.getRuntime();
     assumeTrue(rt.maxMemory() > 4_000_000_000L);
     TypeDescription schema = TypeDescription.createString();
