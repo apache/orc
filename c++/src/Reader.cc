@@ -282,6 +282,7 @@ namespace orc {
       }
     }
     firstStripe = currentStripe;
+    currentInitedStripe = lastStripe;
 
     if (currentStripe == 0) {
       previousRow = (std::numeric_limits<uint64_t>::max)();
@@ -391,27 +392,40 @@ namespace orc {
       return;
     }
 
-    currentStripe = seekToStripe;
-    currentRowInStripe = rowNumber - firstRowOfStripe[currentStripe];
     previousRow = rowNumber;
-    startNextStripe();
+    auto rowIndexStride = footer->rowindexstride();
+    if (!isCurrentStripeInited()
+        || currentStripe != seekToStripe
+        || rowIndexStride == 0
+        || currentStripeInfo.indexlength() == 0) {
+      // current stripe is not initialized or
+      // target stripe is not current stripe or
+      // current stripe doesn't have row indexes
+      currentStripe = seekToStripe;
+      currentRowInStripe = rowNumber - firstRowOfStripe[currentStripe];
+      startNextStripe();
+      if (currentStripe >= lastStripe) {
+        return;
+      }
+    } else {
+      currentRowInStripe = rowNumber - firstRowOfStripe[currentStripe];
+      if (sargsApplier) {
+        // advance to selected row group if predicate pushdown is enabled
+        currentRowInStripe = advanceToNextRowGroup(currentRowInStripe,
+                                                   rowsInCurrentStripe,
+                                                   footer->rowindexstride(),
+                                                   sargsApplier->getNextSkippedRows());
+      }
+    }
 
     uint64_t rowsToSkip = currentRowInStripe;
-    auto rowIndexStride = footer->rowindexstride();
     // seek to the target row group if row indexes exists
     if (rowIndexStride > 0 && currentStripeInfo.indexlength() > 0) {
-      // when predicate push down is enabled, above call to startNextStripe()
-      // will move current row to 1st matching row group; here we only need
-      // to deal with the case when PPD is not enabled.
-      if (!sargsApplier) {
-        if (rowIndexes.empty()) {
-          loadStripeIndex();
-        }
-        auto rowGroupId = static_cast<uint32_t>(rowsToSkip / rowIndexStride);
-        if (rowGroupId != 0) {
-          seekToRowGroup(rowGroupId);
-        }
+      if (rowIndexes.empty()) {
+        loadStripeIndex();
       }
+      auto rowGroupId = static_cast<uint32_t>(rowsToSkip / rowIndexStride);
+      seekToRowGroup(rowGroupId);
       // skip leading rows in the target row group
       rowsToSkip %= rowIndexStride;
     }
@@ -1075,6 +1089,7 @@ namespace orc {
       }
       currentStripeFooter = getStripeFooter(currentStripeInfo, *contents.get());
       rowsInCurrentStripe = currentStripeInfo.numberofrows();
+      currentInitedStripe = currentStripe;
 
       if (sargsApplier) {
         bool isStripeNeeded = true;
