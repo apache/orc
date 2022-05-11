@@ -146,6 +146,7 @@ namespace orc {
     uint64_t firstStripe;
     uint64_t currentStripe;
     uint64_t lastStripe; // the stripe AFTER the last one
+    uint64_t processingStripe;
     uint64_t currentRowInStripe;
     uint64_t rowsInCurrentStripe;
     proto::StripeInformation currentStripeInfo;
@@ -186,6 +187,11 @@ namespace orc {
 
     friend class TestRowReader_advanceToNextRowGroup_Test;
     friend class TestRowReader_computeBatchSize_Test;
+
+    // whether the current stripe is initialized
+    inline bool isCurrentStripeInited() const {
+      return currentStripe == processingStripe;
+    }
 
     /**
      * Seek to the start of a row group in the current stripe

@@ -72,6 +72,10 @@ namespace orc {
       return currentCapacity;
     }
 
+    const T& operator[](uint64_t i) const {
+      return buf[i];
+    }
+
     T& operator[](uint64_t i) {
       return buf[i];
     }
