@@ -424,8 +424,7 @@ namespace orc {
       if (rowIndexes.empty()) {
         loadStripeIndex();
       }
-      auto rowGroupId = static_cast<uint32_t>(rowsToSkip / rowIndexStride);
-      seekToRowGroup(rowGroupId);
+      seekToRowGroup(static_cast<uint32_t>(rowsToSkip / rowIndexStride));
       // skip leading rows in the target row group
       rowsToSkip %= rowIndexStride;
     }
