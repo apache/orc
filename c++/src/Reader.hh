@@ -188,13 +188,6 @@ namespace orc {
     friend class TestRowReader_advanceToNextRowGroup_Test;
     friend class TestRowReader_computeBatchSize_Test;
 
-    // last row number of the current stripe
-    inline uint64_t lastRowOfCurrentStripe() const {
-      return currentStripe < lastStripe ?
-        firstRowOfStripe[currentStripe] + rowsInCurrentStripe :
-        footer->numberofrows();
-    }
-
     // whether the current stripe is initialized
     inline bool isCurrentStripeInited() const {
       return currentStripe == currentInitedStripe;
