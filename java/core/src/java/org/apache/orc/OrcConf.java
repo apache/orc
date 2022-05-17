@@ -29,6 +29,10 @@ public enum OrcConf {
   STRIPE_SIZE("orc.stripe.size", "hive.exec.orc.default.stripe.size",
       64L * 1024 * 1024,
       "Define the default ORC stripe size, in bytes."),
+  STRIPE_ROW_COUNT("orc.stripe.row.count","orc.stripe.row.count",
+      Integer.MAX_VALUE, "This value limit the row count in one stripe. "
+      + "The number of stripe rows can be controlled at"
+      + " (0, \"orc.stripe.row.count\" + max(batchSize, \"orc.rows.between.memory.checks\"))"),
   BLOCK_SIZE("orc.block.size", "hive.exec.orc.default.block.size",
       256L * 1024 * 1024,
       "Define the default file system block size for ORC files."),
@@ -161,7 +165,8 @@ public enum OrcConf {
   ROWS_BETWEEN_CHECKS("orc.rows.between.memory.checks", "orc.rows.between.memory.checks", 5000,
     "How often should MemoryManager check the memory sizes? Measured in rows\n" +
       "added to all of the writers.  Valid range is [1,10000] and is primarily meant for" +
-      "testing.  Setting this too low may negatively affect performance."),
+      "testing.  Setting this too low may negatively affect performance."
+        + " Use orc.stripe.row.count instead if the value larger than orc.stripe.row.count."),
   OVERWRITE_OUTPUT_FILE("orc.overwrite.output.file", "orc.overwrite.output.file", false,
     "A boolean flag to enable overwriting of the output file if it already exists.\n"),
   IS_SCHEMA_EVOLUTION_CASE_SENSITIVE("orc.schema.evolution.case.sensitive",
