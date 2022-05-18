@@ -42,3 +42,6 @@ updates:
       # Pin protobuf-java to 2.5.0
       - dependency-name: "com.google.protobuf:protobuf-java"
         versions: "[2.5.1,)"
+      # Pin jodd-core to 3.5.2
+      - dependency-name: "org.jodd:jodd-core"
+        versions: "[3.5.3,)"
