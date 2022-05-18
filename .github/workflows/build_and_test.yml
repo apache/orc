@@ -67,6 +67,24 @@ jobs:
         fi
         make package test-out
 
+  ubuntu22:
+    name: "Build on Ubuntu 22.04"
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:22.04
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: "Test"
+      run: |
+        apt update
+        apt-get install --no-install-recommends -y git cmake libsasl2-dev libssl-dev make gcc g++ curl openjdk-17-jdk tzdata
+        mkdir -p ~/.m2
+        mkdir build
+        cd build
+        cmake -DANALYZE_JAVA=ON ..
+        make package test-out
+
   windows:
     name: "Build on Windows"
     runs-on: windows-2019
