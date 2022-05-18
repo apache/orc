@@ -282,7 +282,7 @@ namespace orc {
       }
     }
     firstStripe = currentStripe;
-    currentInitedStripe = lastStripe;
+    processingStripe = lastStripe;
 
     if (currentStripe == 0) {
       previousRow = (std::numeric_limits<uint64_t>::max)();
@@ -424,6 +424,7 @@ namespace orc {
       if (rowIndexes.empty()) {
         loadStripeIndex();
       }
+      // TODO: process the call of loadStripeIndex() failures
       seekToRowGroup(static_cast<uint32_t>(rowsToSkip / rowIndexStride));
       // skip leading rows in the target row group
       rowsToSkip %= rowIndexStride;
@@ -1088,7 +1089,7 @@ namespace orc {
       }
       currentStripeFooter = getStripeFooter(currentStripeInfo, *contents.get());
       rowsInCurrentStripe = currentStripeInfo.numberofrows();
-      currentInitedStripe = currentStripe;
+      processingStripe = currentStripe;
 
       if (sargsApplier) {
         bool isStripeNeeded = true;

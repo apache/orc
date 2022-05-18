@@ -146,7 +146,7 @@ namespace orc {
     uint64_t firstStripe;
     uint64_t currentStripe;
     uint64_t lastStripe; // the stripe AFTER the last one
-    uint64_t currentInitedStripe;
+    uint64_t processingStripe;
     uint64_t currentRowInStripe;
     uint64_t rowsInCurrentStripe;
     proto::StripeInformation currentStripeInfo;
@@ -190,7 +190,7 @@ namespace orc {
 
     // whether the current stripe is initialized
     inline bool isCurrentStripeInited() const {
-      return currentStripe == currentInitedStripe;
+      return currentStripe == processingStripe;
     }
 
     /**
