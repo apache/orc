@@ -424,7 +424,7 @@ namespace orc {
       if (rowIndexes.empty()) {
         loadStripeIndex();
       }
-      // TODO: process the call of loadStripeIndex() failures
+      // TODO(ORC-1175): process the failures of loadStripeIndex() call
       seekToRowGroup(static_cast<uint32_t>(rowsToSkip / rowIndexStride));
       // skip leading rows in the target row group
       rowsToSkip %= rowIndexStride;
