@@ -17,6 +17,7 @@ jobs:
       matrix:
         os:
           - ubuntu-20.04
+          - ubuntu-22.04
           - macos-11
           - macos-12
         java:
@@ -60,6 +61,10 @@ jobs:
           cmake -DANALYZE_JAVA=ON -DOPENSSL_ROOT_DIR=`brew --prefix openssl@1.1` ..
         fi
         make package test-out
+    - name: Step on failure
+      if: ${{ failure() }}
+      run: |
+        cat /home/runner/work/orc/orc/build/java/rat.txt
 
   windows:
     name: "Build on Windows"
