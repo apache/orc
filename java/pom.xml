@@ -265,6 +265,7 @@
               <exclude>**/*.out</exclude>
               <exclude>**/*.schema</exclude>
               <exclude>**/*.md</exclude>
+              <exclude>**/m2.conf</exclude>
               <exclude>**/target/**</exclude>
               <exclude>.idea/**</exclude>
               <exclude>**/*.iml</exclude>
