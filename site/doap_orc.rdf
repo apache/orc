@@ -44,9 +44,14 @@ the values that are required for the current query.</description>
     <category rdf:resource="http://projects.apache.org/category/library" />
     <release>
       <Version>
-        <name>Apache ORC 1.6.9</name>
-        <created>2021-07-02</created>
-        <revision>1.6.9</revision>
+        <name>Latest release</name>
+        <created>2022-04-15</created>
+        <revision>1.7.4</revision>
+      </Version>
+      <Version>
+        <name>Stable release</name>
+        <created>2022-04-14</created>
+        <revision>1.6.14</revision>
       </Version>
     </release>
     <repository>
