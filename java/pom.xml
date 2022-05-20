@@ -83,6 +83,7 @@
     <surefire.version>3.0.0-M5</surefire.version>
     <junit.version>5.8.2</junit.version>
     <mockito.version>4.5.1</mockito.version>
+    <checkstyle.version>10.2</checkstyle.version>
   </properties>
 
   <build>
@@ -280,7 +281,7 @@
             <dependency>
               <groupId>com.puppycrawl.tools</groupId>
               <artifactId>checkstyle</artifactId>
-              <version>9.2.1</version>
+              <version>${checkstyle.version}</version>
             </dependency>
           </dependencies>
           <executions>
@@ -474,6 +475,15 @@
         <min.hadoop.version>3.3.2</min.hadoop.version>
         <hadoop.version>3.3.2</hadoop.version>
         <tools.hadoop.version>3.3.2</tools.hadoop.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>java8</id>
+      <activation>
+        <jdk>1.8</jdk>
+      </activation>
+      <properties>
+        <checkstyle.version>9.3</checkstyle.version>
       </properties>
     </profile>
   </profiles>
