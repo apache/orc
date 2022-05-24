@@ -1025,7 +1025,8 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">William Hyun (DECDFA29
 
 <h2 id="checking-signatures">Checking signatures</h2>
 
-<p>All GPG signatures should be verified as matching one of the keys in ORC’s
+<p>Verify the releases by following <a href="https://www.apache.org/info/verification.html">ASF procedures</a>.
+All GPG signatures should be verified as matching one of the keys in ORC’s
 committers’ <a href="https://downloads.apache.org/orc/KEYS">key list</a>.</p>
 
 <div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% shasum <span class="nt">-a</span> 256 orc-X.Y.Z.tgz | diff - orc-X.Y.Z.tgz.sha256
