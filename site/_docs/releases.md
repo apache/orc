@@ -22,6 +22,7 @@ files and looking at their contents and metadata.
 
 ## Checking signatures
 
+Verify the releases by following [ASF procedures](https://www.apache.org/info/verification.html).
 All GPG signatures should be verified as matching one of the keys in ORC's
 committers' [key list]({{ site.dist }}/KEYS).
 
