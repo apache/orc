@@ -237,7 +237,7 @@ def cherry_pick(pr_num, merge_hash, default_branch):
 
 def fix_version_from_branch(branch, versions):
     # Note: Assumes this is a sorted (newest->oldest) list of un-released versions
-    if branch == "master":
+    if branch == "main":
         return versions[0]
     else:
         branch_ver = branch.replace("branch-", "")
@@ -288,7 +288,7 @@ def resolve_jira_issue(merge_branches, comment, default_jira_id=""):
     )
     for v in default_fix_versions:
         # Handles the case where we have forked a release branch but not yet made the release.
-        # In this case, if the PR is committed to the master branch and the release branch, we
+        # In this case, if the PR is committed to the main branch and the release branch, we
         # only consider the release branch to be the fix version. E.g. it is not valid to have
         # both 1.1.0 and 1.0.0 as fix versions.
         (major, minor, patch) = v.split(".")
