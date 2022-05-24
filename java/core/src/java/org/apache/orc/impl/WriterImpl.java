@@ -88,6 +88,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
 
   private final Path path;
   private final long stripeSize;
+  private final long stripeRowCount;
   private final int rowIndexStride;
   private final TypeDescription schema;
   private final PhysicalWriter physicalWriter;
@@ -210,7 +211,9 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     }
 
     // ensure that we are able to handle callbacks before we register ourselves
-    ROWS_PER_CHECK = OrcConf.ROWS_BETWEEN_CHECKS.getLong(conf);
+    ROWS_PER_CHECK = Math.min(opts.getStripeRowCountValue(),
+        OrcConf.ROWS_BETWEEN_CHECKS.getLong(conf));
+    this.stripeRowCount= opts.getStripeRowCountValue();
     this.stripeSize = opts.getStripeSize();
     memoryLimit = stripeSize;
     memoryManager = opts.getMemoryManager();
@@ -298,9 +301,10 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
       long size = treeWriter.estimateMemory();
       if (LOG.isDebugEnabled()) {
         LOG.debug("ORC writer " + physicalWriter + " size = " + size +
-                      " limit = " + memoryLimit);
+            " memoryLimit = " + memoryLimit + " rowsInStripe = " + rowsInStripe +
+            " stripeRowCountLimit = " + stripeRowCount);
       }
-      if (size > memoryLimit) {
+      if (size > memoryLimit || rowsInStripe >= stripeRowCount) {
         flushStripe();
         return true;
       }
