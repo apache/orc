@@ -29,10 +29,10 @@ public enum OrcConf {
   STRIPE_SIZE("orc.stripe.size", "hive.exec.orc.default.stripe.size",
       64L * 1024 * 1024,
       "Define the default ORC stripe size, in bytes."),
-  STRIPE_ROW_COUNT("orc.stripe.row.count","orc.stripe.row.count",
-      Integer.MAX_VALUE, "This value limit the row count in one stripe. "
-      + "The number of stripe rows can be controlled at"
-      + " (0, \"orc.stripe.row.count\" + max(batchSize, \"orc.rows.between.memory.checks\"))"),
+  STRIPE_ROW_COUNT("orc.stripe.row.count", "orc.stripe.row.count",
+      Integer.MAX_VALUE, "This value limit the row count in one stripe. \n" +
+      "The number of stripe rows can be controlled at \n" +
+      "(0, \"orc.stripe.row.count\" + max(batchSize, \"orc.rows.between.memory.checks\"))"),
   BLOCK_SIZE("orc.block.size", "hive.exec.orc.default.block.size",
       256L * 1024 * 1024,
       "Define the default file system block size for ORC files."),
