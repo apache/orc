@@ -430,6 +430,7 @@ public class OrcFile {
     private FileSystem fileSystemValue = null;
     private TypeDescription schema = null;
     private long stripeSizeValue;
+    private long stripeRowCountValue;
     private long blockSizeValue;
     private int rowIndexStrideValue;
     private int bufferSizeValue;
@@ -463,6 +464,7 @@ public class OrcFile {
       memoryManagerValue = getStaticMemoryManager(conf);
       overwrite = OrcConf.OVERWRITE_OUTPUT_FILE.getBoolean(tableProperties, conf);
       stripeSizeValue = OrcConf.STRIPE_SIZE.getLong(tableProperties, conf);
+      stripeRowCountValue = OrcConf.STRIPE_ROW_COUNT.getLong(tableProperties, conf);
       blockSizeValue = OrcConf.BLOCK_SIZE.getLong(tableProperties, conf);
       rowIndexStrideValue =
           (int) OrcConf.ROW_INDEX_STRIDE.getLong(tableProperties, conf);
@@ -869,6 +871,10 @@ public class OrcFile {
 
     public long getStripeSize() {
       return stripeSizeValue;
+    }
+
+    public long getStripeRowCountValue() {
+      return stripeRowCountValue;
     }
 
     public CompressionKind getCompress() {

@@ -120,6 +120,28 @@ public class TestWriterImpl {
   }
 
   @Test
+  public void testStripeRowCountLimit() throws Exception {
+    conf.set(OrcConf.OVERWRITE_OUTPUT_FILE.getAttribute(), "true");
+    conf.set(OrcConf.STRIPE_ROW_COUNT.getAttribute(),"100");
+    VectorizedRowBatch b = schema.createRowBatch();
+    LongColumnVector f1 = (LongColumnVector) b.cols[0];
+    LongColumnVector f2 = (LongColumnVector) b.cols[1];
+    Writer w = OrcFile.createWriter(testFilePath, OrcFile.writerOptions(conf).setSchema(schema));
+    long rowCount = 1000;
+    for (int i = 0; i < rowCount; i++) {
+      f1.vector[b.size] = Long.MIN_VALUE ;
+      f2.vector[b.size] = Long.MAX_VALUE ;
+      b.size += 1;
+      if (b.size == 10) {
+        w.addRowBatch(b);
+        b.reset();
+      }
+    }
+    w.close();
+    assertEquals(10, w.getStripes().size());
+  }
+
+  @Test
   public void testCloseIsIdempotent() throws IOException {
     conf.set(OrcConf.OVERWRITE_OUTPUT_FILE.getAttribute(), "true");
     Writer w = OrcFile.createWriter(testFilePath, OrcFile.writerOptions(conf).setSchema(schema));
