@@ -498,6 +498,7 @@
       </properties>
       <activation>
         <os>
+          <family>mac</family>
           <arch>aarch64</arch>
         </os>
       </activation>
