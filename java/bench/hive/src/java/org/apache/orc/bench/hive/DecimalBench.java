@@ -188,8 +188,8 @@ public class DecimalBench implements OrcBenchmark {
     int row = 0;
     int batchPosn = 0;
     BatchReader reader =
-        new GenerateVariants.RecursiveReader(new Path(root, "sources/taxi"), "csv",
-        schema, conf, org.apache.orc.bench.core.CompressionKind.ZLIB);
+        new GenerateVariants.RecursiveReader(new Path(root, "sources/taxi"), "parquet",
+        schema, conf, org.apache.orc.bench.core.CompressionKind.NONE);
     VectorizedRowBatch batch = schema.createRowBatch();
     batch.size = 0;
     TypeDescription columnSchema = schema.findSubtype(column);
