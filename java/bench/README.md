@@ -16,7 +16,7 @@ There are three sub-modules to try to mitigate dependency hell:
 To build this library, run the following in the parent directory:
 
 ```
-% ./mvnw clean package -Pbenchmark
+% ./mvnw clean package -Pbenchmark -Dmaven.test.skip
 % cd bench
 ```
 
