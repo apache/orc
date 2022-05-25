@@ -18,7 +18,12 @@
 
 package org.apache.orc.bench.core;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.ServiceConfigurationError;
+import java.util.ServiceLoader;
+import java.util.TreeMap;
 
 /**
  * A driver tool to call the various benchmark classes.
