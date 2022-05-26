@@ -10,3 +10,4 @@ target
 .idea
 .DS_Store
 .java-version
+java/bench/data
