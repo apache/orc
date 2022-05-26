@@ -40,7 +40,7 @@ public class Driver {
         OrcBenchmark bench = iterator.next();
         result.put(bench.getName(), bench);
       } catch (ServiceConfigurationError e) {
-        System.out.println("WARN (Driver): misconfigured benchmark exists:" + e);
+        System.err.println("Misconfigured benchmark exists:" + e);
       }
     }
     return result;
