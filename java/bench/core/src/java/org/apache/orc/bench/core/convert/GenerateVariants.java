@@ -242,7 +242,7 @@ public class GenerateVariants implements OrcBenchmark {
         .addOption("s", "sales", true, "Number of records for sales");
     CommandLine result = new DefaultParser().parse(options, args);
     if (result.hasOption("help") || result.getArgs().length == 0) {
-      new HelpFormatter().printHelp("convert <root>", options);
+      new HelpFormatter().printHelp("generate <root>", options);
       System.exit(1);
     }
     return result;
