@@ -88,7 +88,7 @@ add_test(
 
 add_test(
   NAME java-bench-hive-test
-  COMMAND java -Dbench.root.dir=. ${ADD_OPENS} ${JAVA_NIO} -jar bench/hive/orc-benchmarks-hive-${ORC_VERSION}-uber.jar write -i 1 -I 0 -t 1 data
+  COMMAND java ${ADD_OPENS} ${JAVA_NIO} -jar bench/hive/orc-benchmarks-hive-${ORC_VERSION}-uber.jar write -i 1 -I 0 -t 1 data
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 install(
