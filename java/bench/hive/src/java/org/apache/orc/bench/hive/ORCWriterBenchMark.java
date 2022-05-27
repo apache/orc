@@ -59,8 +59,11 @@ import java.util.concurrent.TimeUnit;
 @AutoService(OrcBenchmark.class)
 public class ORCWriterBenchMark implements OrcBenchmark {
   private static final Path root = Utilities.getBenchmarkRoot();
-  private Path dumpDir = new Path(root, "dumpDir");
   private List<VectorizedRowBatch> batches = new ArrayList<>();
+
+  private Path dumpDir() {
+    return new Path(root, "dumpDir");
+  }
 
   @Override
   public String getName() {
@@ -112,7 +115,7 @@ public class ORCWriterBenchMark implements OrcBenchmark {
     Configuration conf = new Configuration();
     TrackingLocalFileSystem fs = new TrackingLocalFileSystem();
     fs.initialize(new URI("file:///"), conf);
-    fs.delete(dumpDir, true);
+    fs.delete(dumpDir(), true);
   }
 
   @Override
@@ -136,7 +139,7 @@ public class ORCWriterBenchMark implements OrcBenchmark {
     fs.initialize(new URI("file:///"), conf);
     FileSystem.Statistics statistics = fs.getLocalStatistics();
     statistics.reset();
-    Path testFilePath = new Path(dumpDir, "dictBench");
+    Path testFilePath = new Path(dumpDir(), "dictBench");
 
     TypeDescription schema = TypeDescription.fromString("struct<str:string>");
     // Note that the total data volume will be around 100 * 1024 * 1024
