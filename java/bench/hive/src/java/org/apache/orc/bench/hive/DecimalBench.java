@@ -157,7 +157,7 @@ public class DecimalBench implements OrcBenchmark {
       schema = TypeDescription.createDecimal()
           .withScale(2)
           .withPrecision(precision);
-      readCsvData(total_amount, root, "total_amount", conf);
+      readRawData(total_amount, root, "total_amount", conf);
       batch = schema.createRowBatchV2();
     }
   }
@@ -180,7 +180,7 @@ public class DecimalBench implements OrcBenchmark {
     writer.close();
   }
 
-  static void readCsvData(long[] data,
+  static void readRawData(long[] data,
                           Path root,
                           String column,
                           Configuration conf) throws IOException {
