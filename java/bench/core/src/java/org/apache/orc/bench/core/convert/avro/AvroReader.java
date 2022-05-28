@@ -41,7 +41,6 @@ import org.apache.orc.TypeDescription;
 import org.apache.orc.bench.core.convert.BatchReader;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.List;
 
