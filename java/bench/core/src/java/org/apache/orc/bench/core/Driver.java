@@ -19,9 +19,7 @@
 package org.apache.orc.bench.core;
 
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 import java.util.TreeMap;
 
@@ -34,14 +32,8 @@ public class Driver {
 
   private static Map<String, OrcBenchmark> getBenchmarks() {
     Map<String, OrcBenchmark> result = new TreeMap<>();
-    Iterator<OrcBenchmark> iterator = loader.iterator();
-    while (iterator.hasNext()) {
-      try {
-        OrcBenchmark bench = iterator.next();
-        result.put(bench.getName(), bench);
-      } catch (ServiceConfigurationError e) {
-        System.err.println("Misconfigured benchmark exists:" + e);
-      }
+    for(OrcBenchmark bench: loader) {
+      result.put(bench.getName(), bench);
     }
     return result;
   }
