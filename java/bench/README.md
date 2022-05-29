@@ -24,7 +24,7 @@ To fetch the source data:
 
 ```% ./fetch-data.sh```
 
-> :warning: Script will fetch 500MB of data
+> :warning: Script will fetch 4GB of data
 
 To generate the derived data:
 
