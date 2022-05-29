@@ -15,8 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 mkdir -p data/sources/taxi
-(cd data/sources/taxi; wget -O - https://s3.amazonaws.com/nyc-tlc/trip+data/yellow_tripdata_2015-11.csv | gzip > yellow_tripdata_2015-11.csv.gz )
-(cd data/sources/taxi; wget -O - https://s3.amazonaws.com/nyc-tlc/trip+data/yellow_tripdata_2015-12.csv | gzip > yellow_tripdata_2015-12.csv.gz )
+(cd data/sources/taxi; wget https://s3.amazonaws.com/nyc-tlc/trip+data/yellow_tripdata_2015-11.parquet )
+(cd data/sources/taxi; wget https://s3.amazonaws.com/nyc-tlc/trip+data/yellow_tripdata_2015-12.parquet )
 
 mkdir -p data/sources/github
 (cd data/sources/github; wget http://data.gharchive.org/2015-11-{01..15}-{0..23}.json.gz)

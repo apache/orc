@@ -221,8 +221,8 @@ public class GenerateVariants implements OrcBenchmark {
                                          long salesRecords) throws IOException {
     switch (dataName) {
       case "taxi":
-        return new RecursiveReader(new Path(root, "sources/" + dataName), "csv",
-            schema, conf, CompressionKind.ZLIB);
+        return new RecursiveReader(new Path(root, "sources/" + dataName), "parquet",
+            schema, conf, CompressionKind.NONE);
       case "sales":
         return new SalesGenerator(salesRecords);
       case "github":
