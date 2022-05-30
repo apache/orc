@@ -59,7 +59,7 @@ public class StringRowFilterBenchmark extends org.openjdk.jmh.Main {
     @Param({"2"})
     public int filterColsNum;
 
-    String dataRelativePath = "data/generated/sales/orc.none";
+    String dataRelativePath = "data/generated/sales/orc.zstd";
 
     String schemaName = "sales.schema";
 
