@@ -60,7 +60,7 @@ public class DecimalRowFilterBenchmark extends org.openjdk.jmh.Main {
     @Param({"2"})
     public int filterColsNum;
 
-    String dataRelativePath = "data/generated/taxi/orc.none";
+    String dataRelativePath = "data/generated/taxi/orc.zstd";
 
     String schemaName = "taxi.schema";
 

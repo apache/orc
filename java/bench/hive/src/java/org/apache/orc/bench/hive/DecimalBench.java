@@ -225,7 +225,7 @@ public class DecimalBench implements OrcBenchmark {
     @Setup
     public void setup() throws IOException {
       fs = FileSystem.getLocal(conf).getRaw();
-      path = new Path(root, "generated/taxi/orc.none");
+      path = new Path(root, "generated/taxi/orc.zstd");
       schema = Utilities.loadSchema("taxi.schema");
       batch = schema.createRowBatch(version, 1024);
       // only include the columns with decimal values

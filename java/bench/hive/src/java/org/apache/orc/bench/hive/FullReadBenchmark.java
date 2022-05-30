@@ -72,7 +72,7 @@ public class FullReadBenchmark implements OrcBenchmark {
   @Param({"taxi", "sales", "github"})
   public String dataset;
 
-  @Param({"none", "gz", "snappy"})
+  @Param({"gz", "snappy", "zstd"})
   public String compression;
 
   @Override

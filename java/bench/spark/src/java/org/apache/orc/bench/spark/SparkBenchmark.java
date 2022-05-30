@@ -91,7 +91,7 @@ public class SparkBenchmark implements OrcBenchmark {
     CommandLine cmds = GenerateVariants.parseCommandLine(args);
     new Runner(new OptionsBuilder()
         .parent(Utilities.parseOptions(args, this.getClass()))
-        .param("compression", cmds.getOptionValue("compress", "none,gz,snappy").split(","))
+        .param("compression", cmds.getOptionValue("compress", "gz,snappy,zstd").split(","))
         .param("dataset", cmds.getOptionValue("data", "taxi,sales,github").split(","))
         .param("format", cmds.getOptionValue("format", "orc,parquet,json").split(","))
         .build()
@@ -111,7 +111,7 @@ public class SparkBenchmark implements OrcBenchmark {
     @Param({"taxi", "sales", "github"})
     String dataset;
 
-    @Param({"none", "gz", "snappy"})
+    @Param({"gz", "snappy", "zstd"})
     String compression;
 
     @Param({"orc", "parquet", "json"})
