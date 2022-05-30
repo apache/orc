@@ -83,7 +83,7 @@
     <surefire.version>3.0.0-M5</surefire.version>
     <junit.version>5.8.2</junit.version>
     <mockito.version>4.6.0</mockito.version>
-    <checkstyle.version>10.2</checkstyle.version>
+    <checkstyle.version>10.3</checkstyle.version>
   </properties>
 
   <repositories>
