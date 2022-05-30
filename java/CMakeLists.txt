@@ -91,6 +91,11 @@ add_test(
   COMMAND java ${ADD_OPENS} ${JAVA_NIO} -jar bench/hive/orc-benchmarks-hive-${ORC_VERSION}-uber.jar write -i 1 -I 0 -t 1 data
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+add_test(
+  NAME java-bench-spark-test
+  COMMAND java ${ADD_OPENS} ${JAVA_NIO} -jar bench/spark/orc-benchmarks-spark-${ORC_VERSION}.jar spark data -d sales -c zstd -f orc
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
 install(
   FILES ${ORC_JARS}
   DESTINATION share)
