@@ -63,7 +63,7 @@ public class ColumnProjectionBenchmark implements OrcBenchmark {
   @Param({ "github", "sales", "taxi"})
   public String dataset;
 
-  @Param({"none", "snappy", "gz"})
+  @Param({"snappy", "gz", "zstd"})
   public String compression;
 
   @Override
