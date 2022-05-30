@@ -111,7 +111,7 @@ public class SparkBenchmark implements OrcBenchmark {
     @Param({"taxi", "sales", "github"})
     String dataset;
 
-    @Param({"none", "gz", "snappy"})
+    @Param({"gz", "snappy", "zstd"})
     String compression;
 
     @Param({"orc", "parquet", "json"})
