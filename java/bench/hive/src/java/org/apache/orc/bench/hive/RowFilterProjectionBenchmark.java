@@ -58,7 +58,7 @@ public class RowFilterProjectionBenchmark implements OrcBenchmark {
   @Param({"taxi"})
   public String dataset;
 
-  @Param({"none"})
+  @Param({"zstd"})
   public String compression;
 
   @Param({"0.01", "0.1", "0.2", "0.4", "0.6", "0.8", "1."})
