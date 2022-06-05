@@ -37,6 +37,7 @@ Sandeep More            | moresandeep  | Committer
 Naveen Gangam           | ngangam      | Committer
 Owen O'Malley           | omalley      | PMC
 Panagiotis Garefalakis  | pgaref       | PMC
+Pavan Lanka             | planka       | Committer
 Prasanth Jayachandran   | prasanthj    | PMC
 Pengcheng Xiong         | pxiong       | Committer
 Rajesh Balamohan        | rbalamohan   | Committer
