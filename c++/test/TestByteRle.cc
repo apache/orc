@@ -1450,7 +1450,8 @@ TEST(BooleanRle, seekBoolAndByteRLE) {
                            new SeekableArrayInputStream(memStream.getData(),
                                                         memStream.getLength())),
                          blockSize,
-                         *getDefaultPool()));
+                         *getDefaultPool(),
+                         *getDefaultReaderMetrics()));
 
     // before fix of ORC-470, skip all remaining boolean values will get an
     // exception since BooleanRLEDecoder still tries to read one last byte from

@@ -103,7 +103,8 @@ namespace orc {
             std::unique_ptr<SeekableArrayInputStream>(new SeekableArrayInputStream(
                     memStream.getData(),
                     memStream.getLength())),
-            isSinged, version, *getDefaultPool());
+            isSinged, version, *getDefaultPool(),
+            *getDefaultReaderMetrics());
 
     int64_t* decodedData = new int64_t[numValues];
     decoder->next(decodedData, numValues, notNull);

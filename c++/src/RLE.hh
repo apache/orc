@@ -102,6 +102,10 @@ namespace orc {
     // must be non-inline!
     virtual ~RleDecoder();
 
+    RleDecoder(ReaderMetrics& _metrics) : metrics(_metrics) {
+      // pass
+    }
+
     /**
      * Seek to a particular spot.
      */
@@ -121,6 +125,9 @@ namespace orc {
      */
     virtual void next(int64_t* data, uint64_t numValues,
                       const char* notNull) = 0;
+
+  protected:
+    ReaderMetrics& metrics;
   };
 
   /**
@@ -148,7 +155,8 @@ namespace orc {
                       (std::unique_ptr<SeekableInputStream> input,
                        bool isSigned,
                        RleVersion version,
-                       MemoryPool& pool);
+                       MemoryPool& pool,
+                       ReaderMetrics& metrics);
 
 }  // namespace orc
 

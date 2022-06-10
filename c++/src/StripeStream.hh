@@ -68,6 +68,8 @@ namespace orc {
 
     MemoryPool& getMemoryPool() const override;
 
+    ReaderMetrics& getReaderMetrics() const override;
+
     const Timezone& getWriterTimezone() const override;
 
     const Timezone& getReaderTimezone() const override;
@@ -135,6 +137,7 @@ namespace orc {
     CompressionKind compression;
     uint64_t blockSize;
     mutable std::unique_ptr<proto::StripeFooter> stripeFooter;
+    ReaderMetrics& metrics;
     void ensureStripeFooterLoaded() const;
   public:
 
@@ -146,7 +149,8 @@ namespace orc {
                           InputStream* _stream,
                           MemoryPool& _memory,
                           CompressionKind _compression,
-                          uint64_t _blockSize
+                          uint64_t _blockSize,
+                          ReaderMetrics& _metrics
                           ) : offset(_offset),
                               indexLength(_indexLength),
                               dataLength(_dataLength),
@@ -155,7 +159,8 @@ namespace orc {
                               stream(_stream),
                               memory(_memory),
                               compression(_compression),
-                              blockSize(_blockSize) {
+                              blockSize(_blockSize),
+                              metrics(_metrics) {
       // PASS
     }
 

@@ -112,7 +112,8 @@ private:
 class RleDecoderV2 : public RleDecoder {
 public:
   RleDecoderV2(std::unique_ptr<SeekableInputStream> input,
-               bool isSigned, MemoryPool& pool);
+               bool isSigned, MemoryPool& pool,
+               ReaderMetrics& metrics);
 
   /**
   * Seek to a particular spot.

@@ -112,7 +112,8 @@ namespace orc {
                                     *pool,
                                     myBlock)),
                                   reader.getCompressionSize(),
-                                  *pool);
+                                  *pool,
+                                  *reader.getFileContents().readerMetrics);
       }
       offset += stream.length();
     }
@@ -121,6 +122,10 @@ namespace orc {
 
   MemoryPool& StripeStreamsImpl::getMemoryPool() const {
     return *reader.getFileContents().pool;
+  }
+
+  ReaderMetrics& StripeStreamsImpl::getReaderMetrics() const {
+    return *reader.getFileContents().readerMetrics;
   }
 
   bool StripeStreamsImpl::getThrowOnHive11DecimalOverflow() const {
@@ -147,7 +152,8 @@ namespace orc {
                                                           footerLength,
                                                           memory)),
                            blockSize,
-                           memory);
+                           memory,
+                           metrics);
       stripeFooter.reset(new proto::StripeFooter());
       if (!stripeFooter->ParseFromZeroCopyStream(pbStream.get())) {
         throw ParseError("Failed to parse the stripe footer");

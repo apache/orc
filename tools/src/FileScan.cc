@@ -37,6 +37,9 @@ void scanFile(std::ostream & out, const char* filename, uint64_t batchSize,
   }
   out << "Rows: " << rows << std::endl;
   out << "Batches: " << batches << std::endl;
+  out << "ReaderCount: " << reader->getReaderMetrics().ReaderCount << std::endl;
+  out << "ElapsedTime(us): "
+      << reader->getReaderMetrics().ReaderInclusiveLatencyUs << std::endl;
 }
 
 int main(int argc, char* argv[]) {

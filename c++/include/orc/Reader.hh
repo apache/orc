@@ -39,6 +39,25 @@ namespace orc {
   struct ReaderOptionsPrivate;
   struct RowReaderOptionsPrivate;
 
+  struct ReaderMetrics {
+    volatile uint64_t DecompCount;
+    volatile uint64_t DecompLatencyUs;
+    volatile uint64_t DecodingCount;
+    volatile uint64_t DecodingLatencyUs;
+    volatile uint64_t ReaderCount;
+    volatile uint64_t ReaderInclusiveLatencyUs;
+
+    ReaderMetrics() {
+      DecompCount = 0;
+      DecompLatencyUs = 0;
+      DecodingCount = 0;
+      DecodingLatencyUs = 0;
+      ReaderCount = 0;
+      ReaderInclusiveLatencyUs = 0;
+    }
+  };
+  ReaderMetrics* getDefaultReaderMetrics();
+
   /**
    * Options for creating a Reader.
    */
@@ -454,6 +473,12 @@ namespace orc {
      * Check if the file has correct column statistics.
      */
     virtual bool hasCorrectStatistics() const = 0;
+
+    /**
+     * Get metrics of the reader
+     * @return the accumulated reader metrics to current state.
+     */
+    virtual ReaderMetrics getReaderMetrics() const = 0;
 
     /**
      * Get the serialized file tail.

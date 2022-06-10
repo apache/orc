@@ -64,6 +64,11 @@ namespace orc {
     virtual MemoryPool& getMemoryPool() const = 0;
 
     /**
+     * Get the reader metrics for this reader.
+     */
+    virtual ReaderMetrics& getReaderMetrics() const = 0;
+
+    /**
      * Get the writer's timezone, so that we can convert their dates correctly.
      */
     virtual const Timezone& getWriterTimezone() const = 0;
@@ -107,6 +112,7 @@ namespace orc {
     std::unique_ptr<ByteRleDecoder> notNullDecoder;
     uint64_t columnId;
     MemoryPool& memoryPool;
+    ReaderMetrics& metrics;
 
   public:
     ColumnReader(const Type& type, StripeStreams& stipe);
