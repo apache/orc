@@ -86,6 +86,18 @@ public class PhysicalFsWriter implements PhysicalWriter {
     this(fs, path, opts, new WriterEncryptionVariant[0]);
   }
 
+  public PhysicalFsWriter(FileSystem fs,
+                          Path path,
+                          OrcFile.WriterOptions opts,
+                          WriterEncryptionVariant[] encryption
+                          ) throws IOException {
+    this(fs.create(path, opts.getOverwrite(), HDFS_BUFFER_SIZE,
+            fs.getDefaultReplication(path), opts.getBlockSize()), opts, encryption);
+    this.path = path;
+    LOG.info("ORC writer created for path: {} with stripeSize: {} blockSize: {}" +
+            " compression: {}", path, opts.getStripeSize(), blockSize, compress);
+  }
+
   public PhysicalFsWriter(FSDataOutputStream outputStream,
                           OrcFile.WriterOptions opts,
                           WriterEncryptionVariant[] encryption
@@ -122,18 +134,6 @@ public class PhysicalFsWriter implements PhysicalWriter {
               .withEncryption(key.getAlgorithm(), variant.getFileFooterKey());
       variants.put(variant, new VariantTracker(variant.getRoot(), encryptOptions));
     }
-  }
-
-  public PhysicalFsWriter(FileSystem fs,
-                          Path path,
-                          OrcFile.WriterOptions opts,
-                          WriterEncryptionVariant[] encryption
-  ) throws IOException {
-    this(fs.create(path, opts.getOverwrite(), HDFS_BUFFER_SIZE,
-            fs.getDefaultReplication(path), opts.getBlockSize()), opts, encryption);
-    this.path = path;
-    LOG.info("ORC writer created for path: {} with stripeSize: {} blockSize: {}" +
-            " compression: {}", path, opts.getStripeSize(), blockSize, compress);
   }
 
   /**
