@@ -1,7 +1,7 @@
 ## Supported OSes
 
 * CentOS 7
-* Debian 9 and 10
+* Debian 10 and 11
 * Ubuntu 18, 20 and 22
 
 ## Test
@@ -25,10 +25,6 @@ A base image for each OS is built using:
     cd docker/$os
     FOR jdk8:  docker build -t "orc-$os-jdk8" --build-arg jdk=8 .
     FOR jdk11: docker build -t "orc-$os-jdk11" --build-arg jdk=11 .
-
-## JDK 11 support
-
-For debian9 & ubuntu16: JDK 11 support isn't provided.
 
 ## Clean up
 
