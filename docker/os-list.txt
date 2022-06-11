@@ -1,5 +1,4 @@
 centos7
-debian9
 debian10
 debian11
 ubuntu18
