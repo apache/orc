@@ -99,7 +99,8 @@ void processFile(const char* filename,
 int main(int argc, char* argv[]) {
   uint64_t batchSize = 1000;
   orc::RowReaderOptions rowReaderOptions;
-  bool success = parseOptions(&argc, &argv, &batchSize, &rowReaderOptions);
+  bool showMetrics = false;
+  bool success = parseOptions(&argc, &argv, &batchSize, &rowReaderOptions, &showMetrics);
   if (argc < 1 || !success) {
     std::cerr << "Usage: orc-memory [options] <filename>...\n";
     printOptions(std::cerr);

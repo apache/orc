@@ -21,7 +21,8 @@
 #include <iostream>
 
 void scanFile(std::ostream & out, const char* filename, uint64_t batchSize,
-              const orc::RowReaderOptions& rowReaderOpts) {
+              const orc::RowReaderOptions& rowReaderOpts,
+              bool showMetrics) {
   orc::ReaderOptions readerOpts;
   std::unique_ptr<orc::Reader> reader =
     orc::createReader(orc::readFile(filename), readerOpts);
@@ -37,15 +38,16 @@ void scanFile(std::ostream & out, const char* filename, uint64_t batchSize,
   }
   out << "Rows: " << rows << std::endl;
   out << "Batches: " << batches << std::endl;
-  out << "ReaderCount: " << reader->getReaderMetrics().ReaderCount << std::endl;
-  out << "ElapsedTime(us): "
-      << reader->getReaderMetrics().ReaderInclusiveLatencyUs << std::endl;
+  if (showMetrics) {
+    printReaderMetrics(out, reader->getReaderMetrics());
+  }
 }
 
 int main(int argc, char* argv[]) {
   uint64_t batchSize = 1024;
+  bool showMetrics = false;
   orc::RowReaderOptions rowReaderOptions;
-  bool success = parseOptions(&argc, &argv, &batchSize, &rowReaderOptions);
+  bool success = parseOptions(&argc, &argv, &batchSize, &rowReaderOptions, &showMetrics);
   if (argc < 1 || !success) {
     std::cerr << "Usage: orc-scan [options] <filename>...\n";
     printOptions(std::cerr);
@@ -54,7 +56,7 @@ int main(int argc, char* argv[]) {
   }
   for (int i = 0; i < argc; ++i) {
     try {
-      scanFile(std::cout, argv[i], batchSize, rowReaderOptions);
+      scanFile(std::cout, argv[i], batchSize, rowReaderOptions, showMetrics);
     } catch (std::exception& ex) {
       std::cerr << "Caught exception in " << argv[i] << ": " << ex.what() << "\n";
       return 1;

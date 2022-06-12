@@ -1165,7 +1165,7 @@ namespace orc {
   }
 
   bool RowReaderImpl::next(ColumnVectorBatch& data) {
-    AutoStopwatch(&contents->readerMetrics->ReaderInclusiveLatencyUs,
+    AutoStopwatch measure(&contents->readerMetrics->ReaderInclusiveLatencyUs,
                   &contents->readerMetrics->ReaderCount);
     if (currentStripe >= lastStripe) {
       data.numElements = 0;

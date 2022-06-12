@@ -54,7 +54,7 @@ namespace orc {
     std::unique_ptr<SeekableInputStream> stream =
       stripe.getStream(columnId, proto::Stream_Kind_PRESENT, true);
     if (stream.get()) {
-      notNullDecoder = createBooleanRleDecoder(std::move(stream));
+      notNullDecoder = createBooleanRleDecoder(std::move(stream), metrics);
     }
   }
 
@@ -161,7 +161,7 @@ namespace orc {
         stripe.getStream(columnId, proto::Stream_Kind_DATA, true);
     if (stream == nullptr)
       throw ParseError("DATA stream not found in Boolean column");
-    rle = createBooleanRleDecoder(std::move(stream));
+    rle = createBooleanRleDecoder(std::move(stream), metrics);
   }
 
   BooleanColumnReader::~BooleanColumnReader() {
@@ -217,7 +217,7 @@ namespace orc {
         stripe.getStream(columnId, proto::Stream_Kind_DATA, true);
     if (stream == nullptr)
       throw ParseError("DATA stream not found in Byte column");
-    rle = createByteRleDecoder(std::move(stream));
+    rle = createByteRleDecoder(std::move(stream), metrics);
   }
 
   ByteColumnReader::~ByteColumnReader() {
@@ -1339,7 +1339,7 @@ namespace orc {
         stripe.getStream(columnId, proto::Stream_Kind_DATA, true);
     if (stream == nullptr)
       throw ParseError("LENGTH stream not found in Union column");
-    rle = createByteRleDecoder(std::move(stream));
+    rle = createByteRleDecoder(std::move(stream), metrics);
     // figure out which types are selected
     const std::vector<bool> selectedColumns = stripe.getSelectedColumns();
     for(unsigned int i=0; i < numChildren; ++i) {

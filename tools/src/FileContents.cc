@@ -49,7 +49,8 @@ void printContents(const char* filename, const orc::RowReaderOptions& rowReaderO
 int main(int argc, char* argv[]) {
   uint64_t batchSize; // not used
   orc::RowReaderOptions rowReaderOptions;
-  bool success = parseOptions(&argc, &argv, &batchSize, &rowReaderOptions);
+  bool showMetrics = false;
+  bool success = parseOptions(&argc, &argv, &batchSize, &rowReaderOptions, &showMetrics);
 
   if (argc < 1 || !success) {
     std::cerr << "Usage: orc-contents [options] <filename>...\n";

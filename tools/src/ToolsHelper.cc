@@ -26,16 +26,19 @@ void printOptions(std::ostream& out) {
       << "\t-c --columns\t\tComma separated list of top-level column fields\n"
       << "\t-t --columnTypeIds\tComma separated list of column type ids\n"
       << "\t-n --columnNames\tComma separated list of column names\n"
-      << "\t-b --batch\t\tBatch size for reading\n";
+      << "\t-b --batch\t\tBatch size for reading\n"
+      << "\t-m --metrics\t\tShow metrics for reading\n";
 }
 
-bool parseOptions(int* argc, char** argv[], uint64_t* batchSize, orc::RowReaderOptions* rowReaderOpts) {
+bool parseOptions(int* argc, char** argv[], uint64_t* batchSize,
+                  orc::RowReaderOptions* rowReaderOpts, bool* showMetrics) {
   static struct option longOptions[] = {
     {"help", no_argument, ORC_NULLPTR, 'h'},
     {"batch", required_argument, ORC_NULLPTR, 'b'},
     {"columns", required_argument, ORC_NULLPTR, 'c'},
     {"columnTypeIds", required_argument, ORC_NULLPTR, 't'},
     {"columnNames", required_argument, ORC_NULLPTR, 'n'},
+    {"metrics", no_argument, ORC_NULLPTR, 'm'},
     {ORC_NULLPTR, 0, ORC_NULLPTR, 0}
   };
   std::list<uint64_t> cols;
@@ -43,7 +46,7 @@ bool parseOptions(int* argc, char** argv[], uint64_t* batchSize, orc::RowReaderO
   int opt;
   char *tail;
   do {
-    opt = getopt_long(*argc, *argv, "hb:c:t:n:", longOptions, ORC_NULLPTR);
+    opt = getopt_long(*argc, *argv, "hb:c:t:n:m", longOptions, ORC_NULLPTR);
     switch (opt) {
       case '?':
       case 'h':
@@ -80,10 +83,25 @@ bool parseOptions(int* argc, char** argv[], uint64_t* batchSize, orc::RowReaderO
         }
         break;
       }
+      case 'm' : {
+        *showMetrics = true;
+        break;
+      }
       default: break;
     }
   } while (opt != -1);
   *argc -= optind;
   *argv += optind;
   return true;
+}
+
+void printReaderMetrics(std::ostream& out, const orc::ReaderMetrics& metrics) {
+  out << "ReaderCount: " << metrics.ReaderCount << std::endl;
+  out << "ElapsedTimeUs: " << metrics.ReaderInclusiveLatencyUs << std::endl;
+  out << "DecompCount: " << metrics.DecompCount << std::endl;
+  out << "DecompLatencyUs: " << metrics.DecompLatencyUs << std::endl;
+  out << "DecodingCount: " << metrics.DecodingCount << std::endl;
+  out << "DecodingLatencyUs: " << metrics.DecodingLatencyUs << std::endl;
+  out << "ByteDecodingCount: " << metrics.ByteDecodingCount << std::endl;
+  out << "ByteDecodingLatencyUs: " << metrics.ByteDecodingLatencyUs << std::endl;
 }

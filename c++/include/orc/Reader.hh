@@ -40,20 +40,24 @@ namespace orc {
   struct RowReaderOptionsPrivate;
 
   struct ReaderMetrics {
+    volatile uint64_t ReaderCount;
+    volatile uint64_t ReaderInclusiveLatencyUs;
     volatile uint64_t DecompCount;
     volatile uint64_t DecompLatencyUs;
     volatile uint64_t DecodingCount;
     volatile uint64_t DecodingLatencyUs;
-    volatile uint64_t ReaderCount;
-    volatile uint64_t ReaderInclusiveLatencyUs;
+    volatile uint64_t ByteDecodingCount;
+    volatile uint64_t ByteDecodingLatencyUs;
 
     ReaderMetrics() {
+      ReaderCount = 0;
+      ReaderInclusiveLatencyUs = 0;
       DecompCount = 0;
       DecompLatencyUs = 0;
       DecodingCount = 0;
       DecodingLatencyUs = 0;
-      ReaderCount = 0;
-      ReaderInclusiveLatencyUs = 0;
+      ByteDecodingCount = 0;
+      ByteDecodingLatencyUs = 0;
     }
   };
   ReaderMetrics* getDefaultReaderMetrics();
