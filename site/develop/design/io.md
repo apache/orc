@@ -1,16 +1,18 @@
-* [IO](#IO)
-  * [Background](#Background)
-    * [Seek vs Read](#SeekvsRead)
-    * [ORC Read](#ORCRead)
-  * [Read Optimization](#ReadOptimization)
-    * [Approach](#Approach)
-    * [Scope](#Scope)
-    * [Benchmarks](#Benchmarks)
-      * [Local FS](#LocalFS)
-      * [AWS S3](#AWSS3)
-    * [Summary](#Summary)
+---
+layout: page 
+title: IO
+---
 
-# IO <a id="IO"></a>
+* [Background](#Background)
+  * [Seek vs Read](#SeekvsRead)
+  * [ORC Read](#ORCRead)
+* [Read Optimization](#ReadOptimization)
+  * [Approach](#Approach)
+  * [Scope](#Scope)
+  * [Benchmarks](#Benchmarks)
+    * [Local FS](#LocalFS)
+    * [AWS S3](#AWSS3)
+  * [Summary](#Summary)
 
 ## Background <a id="Background"></a>
 
@@ -29,7 +31,7 @@ In this test we are trying to read through a file
   * We will leave Y variable to determine when this is best
 * Read X bytes
 
-![Seek vs Read](seekvsread.png)
+![Seek vs Read](/img/seekvsread.png)
 
 Observations:
 
@@ -107,14 +109,14 @@ The purpose of this benchmark is to ascertain if we have added any significant p
 java -jar java/bench/core/target/orc-benchmarks-core-*-uber.jar chunk_read
 ```
 
-|Benchmark          |(alternate)|(colCount)|(extraByteTolerance)|(minSeekSize)|(rowCount)|Mode| Cnt|Score|Sign|Error|Units|
-|:---               |:---       |      ---:|                ---:|         ---:|      ---:|:---|---:| ---:|:---| ---:|:--- |
-|ChunkReadBench.read|true       |       128|                 0.0|            0|     65536|avgt|  20|0.352|±   |0.006|s/op |
-|ChunkReadBench.read|true       |       128|                 0.0|      4194304|     65536|avgt|  20|0.357|±   |0.002|s/op |
-|ChunkReadBench.read|true       |       128|                10.0|      4194304|     65536|avgt|  20|0.349|±   |0.002|s/op |
-|ChunkReadBench.read|false      |       128|                 0.0|            0|     65536|avgt|  20|0.667|±   |0.007|s/op |
-|ChunkReadBench.read|false      |       128|                 0.0|      4194304|     65536|avgt|  20|0.673|±   |0.004|s/op |
-|ChunkReadBench.read|false      |       128|                10.0|      4194304|     65536|avgt|  20|0.671|±   |0.005|s/op |
+|(alt)|(cols)| (byteTol) |(minSeek)|Mode| Cnt|Score|Sign|Error|Units|
+|:--- |  ---:|----------:|     ---:|:---|---:| ---:|:---| ---:|:--- |
+|true |   128|       0.0 |        0|avgt|  20|0.352|±   |0.006|s/op |
+|true |   128|       0.0 |  4194304|avgt|  20|0.357|±   |0.002|s/op |
+|true |   128|      10.0 |  4194304|avgt|  20|0.349|±   |0.002|s/op |
+|false|   128|       0.0 |        0|avgt|  20|0.667|±   |0.007|s/op |
+|false|   128|       0.0 |  4194304|avgt|  20|0.673|±   |0.004|s/op |
+|false|   128|      10.0 |  4194304|avgt|  20|0.671|±   |0.005|s/op |
 
 Observations/Details:
 
@@ -133,14 +135,14 @@ Observations/Details:
 In this benchmark we brought up an EKS Container in the same region as the AWS S3 bucket to test the performance of the
 patch.
 
-|(alternate)|(extraByteTolerance)|(minSeekSize)|Mode| Cnt|Score|Sign|Error|Units|
-|:---       |                ---:|         ---:|:---|---:| ---:|:---| ---:|:--- |
-|FALSE      |                 0.0|            0|avgt|   5|1.837|±   |0.089|s/op |
-|FALSE      |                 0.0|      4194304|avgt|   5|1.919|±   | 0.11|s/op |
-|FALSE      |                10.0|      4194304|avgt|   5|1.895|±   |0.191|s/op |
-|TRUE       |                 0.0|            0|avgt|   5|  5.8|±   |1.132|s/op |
-|TRUE       |                 0.0|      4194304|avgt|   5|1.479|±   |0.197|s/op |
-|TRUE       |                10.0|      4194304|avgt|   5|1.435|±   |0.176|s/op |
+|(alternate)| (byteTol) |(minSeekSize)|Mode| Cnt|Score|Sign|Error|Units|
+|:---       |----------:|         ---:|:---|---:| ---:|:---| ---:|:--- |
+|FALSE      |       0.0 |            0|avgt|   5|1.837|±   |0.089|s/op |
+|FALSE      |       0.0 |      4194304|avgt|   5|1.919|±   | 0.11|s/op |
+|FALSE      |      10.0 |      4194304|avgt|   5|1.895|±   |0.191|s/op |
+|TRUE       |       0.0 |            0|avgt|   5|  5.8|±   |1.132|s/op |
+|TRUE       |       0.0 |      4194304|avgt|   5|1.479|±   |0.197|s/op |
+|TRUE       |      10.0 |      4194304|avgt|   5|1.435|±   |0.176|s/op |
 
 Observations/Details:
 
@@ -167,4 +169,4 @@ Based on the benchmarks the following is recommended for ORC in AWS S3:
 
 [s3_pricing]: https://aws.amazon.com/s3/pricing/
 
-[dr]: ../../../java/core/src/java/org/apache/orc/DataReader.java
+[dr]: {{ site.repository }}/tree/main/java/core/src/java/org/apache/orc/DataReader.java
