@@ -39,6 +39,9 @@ You can subscribe to the lists by sending email to
 Each code change requires a [jira]({{ site.jira }}/ORC) to track the
 discussion of the change.
 
+## Design
+Some code changes provide [design/additional documentation](design).
+
 ## Source code
 
 ORC uses git for version control. Get the source code and configure it

@@ -1,17 +1,19 @@
-* [Lazy Filter](#LazyFilter)
-  * [Background](#Background)
-  * [Design](#Design)
-    * [SArg to Filter](#SArgtoFilter)
-    * [Read](#Read)
-  * [Configuration](#Configuration)
-  * [Tests](#Tests)
-  * [Appendix](#Appendix)
-    * [Benchmarks](#Benchmarks)
-      * [Row vs Vector](#RowvsVector)
-      * [Normalization vs Compact](#NormalizationvsCompact)
-      * [Summary](#Summary)
+---
+layout: page
+title: Lazy Filter
+---
 
-# Lazy Filter <a id="LazyFilter"></a>
+* [Background](#Background)
+* [Design](#Design)
+  * [SArg to Filter](#SArgtoFilter)
+  * [Read](#Read)
+* [Configuration](#Configuration)
+* [Tests](#Tests)
+* [Appendix](#Appendix)
+  * [Benchmarks](#Benchmarks)
+    * [Row vs Vector](#RowvsVector)
+    * [Normalization vs Compact](#NormalizationvsCompact)
+    * [Summary](#Summary)
 
 ## Background <a id="Background"></a>
 
@@ -252,18 +254,18 @@ compared with the Vector filter.
 java -jar java/bench/core/target/orc-benchmarks-core-*-uber.jar filter simple
 ```
 
-|Benchmark                      |(fInSize)|(fType)|Mode| Cnt| Score|Error  |Units|
-|:---                           |     ---:|:---   |:---|---:|  ---:|:---   |:--- |
-|FilterBench.SimpleFilter.filter|        4|row    |avgt|  20|38.207|± 0.178|us/op|
-|FilterBench.SimpleFilter.filter|        4|vector |avgt|  20|18.663|± 0.117|us/op|
-|FilterBench.SimpleFilter.filter|        8|row    |avgt|  20|50.694|± 0.313|us/op|
-|FilterBench.SimpleFilter.filter|        8|vector |avgt|  20|35.532|± 0.190|us/op|
-|FilterBench.SimpleFilter.filter|       16|row    |avgt|  20|52.443|± 0.268|us/op|
-|FilterBench.SimpleFilter.filter|       16|vector |avgt|  20|33.966|± 0.204|us/op|
-|FilterBench.SimpleFilter.filter|       32|row    |avgt|  20|68.504|± 0.318|us/op|
-|FilterBench.SimpleFilter.filter|       32|vector |avgt|  20|51.707|± 0.302|us/op|
-|FilterBench.SimpleFilter.filter|      256|row    |avgt|  20|88.348|± 0.793|us/op|
-|FilterBench.SimpleFilter.filter|      256|vector |avgt|  20|72.602|± 0.282|us/op|
+|Benchmark   |(fInSize)|(fType)|Mode| Cnt| Score|Error  |Units|
+|:---        |     ---:|:---   |:---|---:|  ---:|:---   |:--- |
+|SimpleFilter|        4|row    |avgt|  20|38.207|± 0.178|us/op|
+|SimpleFilter|        4|vector |avgt|  20|18.663|± 0.117|us/op|
+|SimpleFilter|        8|row    |avgt|  20|50.694|± 0.313|us/op|
+|SimpleFilter|        8|vector |avgt|  20|35.532|± 0.190|us/op|
+|SimpleFilter|       16|row    |avgt|  20|52.443|± 0.268|us/op|
+|SimpleFilter|       16|vector |avgt|  20|33.966|± 0.204|us/op|
+|SimpleFilter|       32|row    |avgt|  20|68.504|± 0.318|us/op|
+|SimpleFilter|       32|vector |avgt|  20|51.707|± 0.302|us/op|
+|SimpleFilter|      256|row    |avgt|  20|88.348|± 0.793|us/op|
+|SimpleFilter|      256|vector |avgt|  20|72.602|± 0.282|us/op|
 
 Explanation:
 
@@ -289,20 +291,20 @@ simpler code base.
 java -jar java/bench/core/target/orc-benchmarks-core-*-uber.jar filter complex
 ```
 
-|Benchmark                       |(fSize)|(fType)|(normalize)|Mode| Cnt|   Score|Error   |Units|
-|:---                            |   ---:|:---   |:---       |:---|---:|    ---:|:---    |:--- |
-|FilterBench.ComplexFilter.filter|      2|row    |true       |avgt|  20|  91.922|± 0.301 |us/op|
-|FilterBench.ComplexFilter.filter|      2|row    |false      |avgt|  20|  90.741|± 0.556 |us/op|
-|FilterBench.ComplexFilter.filter|      2|vector |true       |avgt|  20|  61.137|± 0.398 |us/op|
-|FilterBench.ComplexFilter.filter|      2|vector |false      |avgt|  20|  54.829|± 0.431 |us/op|
-|FilterBench.ComplexFilter.filter|      4|row    |true       |avgt|  20| 284.956|± 1.237 |us/op|
-|FilterBench.ComplexFilter.filter|      4|row    |false      |avgt|  20| 130.526|± 0.767 |us/op|
-|FilterBench.ComplexFilter.filter|      4|vector |true       |avgt|  20| 242.387|± 1.053 |us/op|
-|FilterBench.ComplexFilter.filter|      4|vector |false      |avgt|  20|  98.530|± 0.423 |us/op|
-|FilterBench.ComplexFilter.filter|      8|row    |true       |avgt|  20|8007.101|± 54.912|us/op|
-|FilterBench.ComplexFilter.filter|      8|row    |false      |avgt|  20| 234.943|± 4.713 |us/op|
-|FilterBench.ComplexFilter.filter|      8|vector |true       |avgt|  20|7013.758|± 33.701|us/op|
-|FilterBench.ComplexFilter.filter|      8|vector |false      |avgt|  20| 190.442|± 0.881 |us/op|
+|Benchmark    |(fSize)|(fType)|(normalize)|Mode| Cnt|   Score|Error   |Units|
+|:---         |   ---:|:---   |:---       |:---|---:|    ---:|:---    |:--- |
+|ComplexFilter|      2|row    |true       |avgt|  20|  91.922|± 0.301 |us/op|
+|ComplexFilter|      2|row    |false      |avgt|  20|  90.741|± 0.556 |us/op|
+|ComplexFilter|      2|vector |true       |avgt|  20|  61.137|± 0.398 |us/op|
+|ComplexFilter|      2|vector |false      |avgt|  20|  54.829|± 0.431 |us/op|
+|ComplexFilter|      4|row    |true       |avgt|  20| 284.956|± 1.237 |us/op|
+|ComplexFilter|      4|row    |false      |avgt|  20| 130.526|± 0.767 |us/op|
+|ComplexFilter|      4|vector |true       |avgt|  20| 242.387|± 1.053 |us/op|
+|ComplexFilter|      4|vector |false      |avgt|  20|  98.530|± 0.423 |us/op|
+|ComplexFilter|      8|row    |true       |avgt|  20|8007.101|± 54.912|us/op|
+|ComplexFilter|      8|row    |false      |avgt|  20| 234.943|± 4.713 |us/op|
+|ComplexFilter|      8|vector |true       |avgt|  20|7013.758|± 33.701|us/op|
+|ComplexFilter|      8|vector |false      |avgt|  20| 190.442|± 0.881 |us/op|
 
 Explanation:
 
@@ -322,11 +324,13 @@ Based on the benchmarks we have the following conclusions:
 * Vector based filter is significantly better than a row based filter and justifies the more complex code.
 * Compact filter is significantly faster than a normalized filter.
 
-[ORC-577]: https://issues.apache.org/jira/browse/ORC-577
+[ORC-577]: {{ site.jira }}/ORC-577
 
-[HIVE-24458]: https://issues.apache.org/jira/browse/HIVE-24458
+[HIVE-24458]: {{ site.jira }}/HIVE-24458
 
-[vfilter]: ../../../java/core/src/java/org/apache/orc/impl/filter/VectorFilter.java
+[rfilter]: {{ site.repository }}/tree/main/java/bench/core/src/java/org/apache/orc/impl/filter/RowFilter.java
+
+[vfilter]: {{ site.repository }}/tree/main/java/core/src/java/org/apache/orc/impl/filter/VectorFilter.java
 
 [rowvvector]: #RowvsVector
 
