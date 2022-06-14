@@ -1,0 +1,800 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <title>Lazy Filter</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="generator" content="Jekyll v3.8.6">
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
+  <link rel="stylesheet" href="/css/screen.css">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <!--[if lt IE 9]>
+  <script src="/js/html5shiv.min.js"></script>
+  <script src="/js/respond.min.js"></script>
+  <![endif]-->
+</head>
+
+
+<body class="wrap">
+  <header role="banner">
+  <nav class="mobile-nav show-on-mobiles">
+    <ul>
+  <li class="">
+    <a href="/">Home</a>
+  </li>
+  <li class="">
+    <a href="/docs/"><span class="show-on-mobiles">Docs</span>
+                     <span class="hide-on-mobiles">Documentation</span></a>
+  </li>
+  <li class="">
+    <a href="/talks/">Talks</a>
+  </li>
+  <li class="">
+    <a href="/news/">News</a>
+  </li>
+  <li class="">
+    <a href="/help/">Help</a>
+  </li>
+  <li class="current">
+    <a href="/develop/">Develop</a>
+  </li>
+</ul>
+
+  </nav>
+  <div class="grid">
+    <div class="unit one-third center-on-mobiles">
+      <h1>
+        <a href="/">
+          <span class="sr-only">Apache ORC</span>
+          <img src="/img/logo.png" width="249" height="101" alt="ORC Logo">
+        </a>
+      </h1>
+    </div>
+    <nav class="main-nav unit two-thirds hide-on-mobiles">
+      <ul>
+  <li class="">
+    <a href="/">Home</a>
+  </li>
+  <li class="">
+    <a href="/docs/"><span class="show-on-mobiles">Docs</span>
+                     <span class="hide-on-mobiles">Documentation</span></a>
+  </li>
+  <li class="">
+    <a href="/talks/">Talks</a>
+  </li>
+  <li class="">
+    <a href="/news/">News</a>
+  </li>
+  <li class="">
+    <a href="/help/">Help</a>
+  </li>
+  <li class="current">
+    <a href="/develop/">Develop</a>
+  </li>
+</ul>
+
+    </nav>
+  </div>
+</header>
+
+
+  <section class="standalone">
+  <div class="grid">
+
+    <div class="unit whole">
+      <article>
+        <h1>Lazy Filter</h1>
+        <ul>
+  <li><a href="#Background">Background</a></li>
+  <li><a href="#Design">Design</a>
+    <ul>
+      <li><a href="#SArgtoFilter">SArg to Filter</a></li>
+      <li><a href="#Read">Read</a></li>
+    </ul>
+  </li>
+  <li><a href="#Configuration">Configuration</a></li>
+  <li><a href="#Tests">Tests</a></li>
+  <li><a href="#Appendix">Appendix</a>
+    <ul>
+      <li><a href="#Benchmarks">Benchmarks</a>
+        <ul>
+          <li><a href="#RowvsVector">Row vs Vector</a></li>
+          <li><a href="#NormalizationvsCompact">Normalization vs Compact</a></li>
+          <li><a href="#Summary">Summary</a></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="background-">Background <a id="Background"></a></h2>
+
+<p>This feature request started as a result of a needle in the haystack search that is performed with the following
+characteristics:</p>
+
+<ul>
+  <li>The search fields are not part of partition, bucket or sort specification.</li>
+  <li>The table is a very large table.</li>
+  <li>The result is very few rows compared to the scan size.</li>
+  <li>The search columns are a significant subset of selection columns in the query.</li>
+</ul>
+
+<p>Initial analysis showed that we could have a significant benefit by lazily reading the non-search columns only when we
+have a match. We explore the design and some benchmarks in subsequent sections.</p>
+
+<h2 id="design-">Design <a id="Design"></a></h2>
+
+<p>This builds further on <a href="https://issues.apache.org/jira/browse/ORC-577">ORC-577</a> which currently only restricts deserialization for some selected data types
+but does not improve on IO.</p>
+
+<p>On a high level the design includes the following components:</p>
+
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>┌──────────────┐          ┌────────────────────────┐
+│              │          │          Read          │
+│              │          │                        │
+│              │          │     ┌────────────┐     │
+│SArg to Filter│─────────▶│     │Read Filter │     │
+│              │          │     │  Columns   │     │
+│              │          │     └────────────┘     │
+│              │          │            │           │
+└──────────────┘          │            ▼           │
+                          │     ┌────────────┐     │
+                          │     │Apply Filter│     │
+                          │     └────────────┘     │
+                          │            │           │
+                          │            ▼           │
+                          │     ┌────────────┐     │
+                          │     │Read Select │     │
+                          │     │  Columns   │     │
+                          │     └────────────┘     │
+                          │                        │
+                          │                        │
+                          └────────────────────────┘
+</code></pre></div></div>
+
+<ul>
+  <li><strong>SArg to Filter</strong>: Converts Search Arguments passed down into filters for efficient application during scans.</li>
+  <li><strong>Read</strong>: Performs the lazy read using the filters.
+    <ul>
+      <li><strong>Read Filter Columns</strong>: Read the filter columns from the file.</li>
+      <li><strong>Apply Filter</strong>: Apply the filter on the read filter columns.</li>
+      <li><strong>Read Select Columns</strong>: If filter selects at least a row then read the remaining columns.</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="sarg-to-filter-">SArg to Filter <a id="SArgtoFilter"></a></h3>
+
+<p>SArg to Filter converts the passed SArg into a filter. This enables automatic compatibility with both Spark and Hive as
+they already push down Search Arguments down to ORC.</p>
+
+<p>The SArg is automatically converted into a <a href="https://github.com/apache/orc/tree/main/java/core/src/java/org/apache/orc/impl/filter/VectorFilter.java">Vector Filter</a>. Which is applied during the read process. Two
+filter types were evaluated:</p>
+
+<ul>
+  <li><a href="https://github.com/apache/orc/tree/main/java/bench/core/src/java/org/apache/orc/impl/filter/RowFilter.java">Row Filter</a> that evaluates each row across all the predicates once.</li>
+  <li><a href="https://github.com/apache/orc/tree/main/java/core/src/java/org/apache/orc/impl/filter/VectorFilter.java">Vector Filter</a> that evaluates each filter across the entire vector and adjusts the subsequent evaluation.</li>
+</ul>
+
+<p>While a row based filter is easier to code, it is much <a href="#RowvsVector">slower</a> to process. We also see a significant
+<a href="#RowvsVector">performance gain</a> in the absence of normalization.</p>
+
+<p>The builder for search argument should allow skipping normalization during the <a href="https://github.com/apache/hive/blob/storage-branch-2.7/storage-api/src/java/org/apache/hadoop/hive/ql/io/sarg/SearchArgumentImpl.java#L491">build</a>. This has been added with
+<a href="https://issues.apache.org/jira/browse/HIVE-24458">HIVE-24458</a>.</p>
+
+<h3 id="read-">Read <a id="Read"></a></h3>
+
+<p>The read process has the following changes:</p>
+
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>                         │
+                         │
+                         │
+┌────────────────────────▼────────────────────────┐
+│               ┏━━━━━━━━━━━━━━━━┓                │
+│               ┃Plan ++Search++ ┃                │
+│               ┃    Columns     ┃                │
+│               ┗━━━━━━━━━━━━━━━━┛                │
+│                 Read   │Stripe                  │
+└────────────────────────┼────────────────────────┘
+                         │
+                         ▼
+
+
+                         │
+                         │
+┌────────────────────────▼────────────────────────┐
+│               ┏━━━━━━━━━━━━━━━━┓                │
+│               ┃Read ++Search++ ┃                │
+│               ┃    Columns     ┃◀─────────┐     │
+│               ┗━━━━━━━━━━━━━━━━┛          │     │
+│                        │              Size = 0  │
+│                        ▼                  │     │
+│               ┏━━━━━━━━━━━━━━━━┓          │     │
+│               ┃  Apply Filter  ┃──────────┘     │
+│               ┗━━━━━━━━━━━━━━━━┛                │
+│                    Size &gt; 0                     │
+│                        │                        │
+│                        ▼                        │
+│               ┏━━━━━━━━━━━━━━━━┓                │
+│               ┃  Plan Select   ┃                │
+│               ┃    Columns     ┃                │
+│               ┗━━━━━━━━━━━━━━━━┛                │
+│                        │                        │
+│                        ▼                        │
+│               ┏━━━━━━━━━━━━━━━━┓                │
+│               ┃  Read Select   ┃                │
+│               ┃    Columns     ┃                │
+│               ┗━━━━━━━━━━━━━━━━┛                │
+│                   Next │Batch                   │
+└────────────────────────┼────────────────────────┘
+                         │
+                         ▼
+</code></pre></div></div>
+
+<p>The read process changes:</p>
+
+<ul>
+  <li><strong>Read Stripe</strong> used to plan the read of all (search + select) columns. This is enhanced to plan and fetch only the
+search columns. The rest of the stripe planning process optimizations remain unchanged e.g. partial read planning of
+the stripe based on RowGroup statistics.</li>
+  <li><strong>Next Batch</strong> identifies the processing that takes place when <code class="highlighter-rouge">RecordReader.nextBatch</code> is invoked.
+    <ul>
+      <li><strong>Read Search Columns</strong> takes place instead of reading all the selected columns. This is in sync with the planning
+that has taken place during <strong>Read Stripe</strong> where only the search columns have been planned.</li>
+      <li><strong>Apply Filter</strong> on the batch that at this point only includes search columns. Evaluate the result of the filter:
+        <ul>
+          <li><strong>Size = 0</strong> indicates all records have been filtered out. Given this we proceed to the next batch of search
+columns.</li>
+          <li><strong>Size &gt; 0</strong> indicates that at least one record accepted by the filter. This record needs to be substantiated with
+other columns.</li>
+        </ul>
+      </li>
+      <li><strong>Plan Select Columns</strong> is invoked to perform read of the select columns. The planning happens as follows:
+        <ul>
+          <li>Determine the current position of the read within the stripe and plan the read for the select columns from this
+point forward to the end of the stripe.</li>
+          <li>The Read planning of select columns respects the row groups filtered out as a result of the stripe planning.</li>
+          <li>Fetch the select columns using the above plan.</li>
+        </ul>
+      </li>
+      <li><strong>Read Select Columns</strong> into the vectorized row batch</li>
+      <li>Return this batch.</li>
+    </ul>
+  </li>
+</ul>
+
+<p>The current implementation performs a single read for the select columns in a stripe.</p>
+
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>┌──────────────────────────────────────────────────┐
+│ ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐ │
+│ │RG0 │ │RG1 │ │RG2■│ │RG3 │ │RG4 │ │RG5■│ │RG6 │ │
+│ └────┘ └────┘ └────┘ └────┘ └────┘ └────┘ └────┘ │
+│                      Stripe                      │
+└──────────────────────────────────────────────────┘
+</code></pre></div></div>
+
+<p>The above diagram depicts a stripe with 7 Row Groups out of which <strong>RG2</strong> and <strong>RG5</strong> are selected by the filter. The
+current implementation does the following:</p>
+
+<ul>
+  <li>Start the read planning process from the first match RG2</li>
+  <li>Read to the end of the stripe that includes RG6</li>
+  <li>Based on the above fetch skips RG0 and RG1 subject to compression block boundaries</li>
+</ul>
+
+<p>The above logic could be enhanced to perform say <strong>2 or n</strong> reads before reading to the end of stripe. The current
+implementation allows 0 reads before reading to the end of the stripe. The value of <strong>n</strong> could be configurable but
+should avoid too many short reads.</p>
+
+<p>The read behavior changes as follows with multiple reads being allowed within a stripe for select columns:</p>
+
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>┌──────────────────────────────────────────────────┐
+│ ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐ │
+│ │    │ │    │ │■■■■│ │■■■■│ │■■■■│ │■■■■│ │■■■■│ │
+│ └────┘ └────┘ └────┘ └────┘ └────┘ └────┘ └────┘ │
+│              Current implementation              │
+└──────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────┐
+│ ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐ │
+│ │    │ │    │ │■■■■│ │    │ │    │ │■■■■│ │■■■■│ │
+│ └────┘ └────┘ └────┘ └────┘ └────┘ └────┘ └────┘ │
+│               Allow 1 partial read               │
+└──────────────────────────────────────────────────┘
+</code></pre></div></div>
+
+<p>The figure shows that we could read significantly fewer bytes by performing an additional read before reading to the end
+of stripe. This shall be included as a subsequent enhancement to this patch.</p>
+
+<h2 id="configuration-">Configuration <a id="Configuration"></a></h2>
+
+<p>The following configuration options are exposed that control the filter behavior:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Property</th>
+      <th style="text-align: left">Type</th>
+      <th style="text-align: left">Default</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">orc.sarg.to.filter</td>
+      <td style="text-align: left">boolean</td>
+      <td style="text-align: left">false</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">orc.filter.use.selected</td>
+      <td style="text-align: left">boolean</td>
+      <td style="text-align: left">false</td>
+    </tr>
+  </tbody>
+</table>
+
+<ul>
+  <li><code class="highlighter-rouge">orc.sarg.to.filter</code> can be used to turn off the SArg to filter conversion. This might be particularly relevant in
+cases where the filter is expensive and does not eliminate a lot of records. This will not be relevant once we have
+the option to turn off the filters on the caller as they have been completely implemented by the ORC layer.</li>
+  <li><code class="highlighter-rouge">orc.filter.use.selected</code> is an important setting that if incorrectly enabled results in wrong output. A boolean flag
+to determine if the selected vector is supported by the reading application. If false, the output of the ORC reader
+must have the filter reapplied to avoid using unset values in the unselected rows. If unsure please leave this as
+false.</li>
+</ul>
+
+<h2 id="tests-">Tests <a id="Tests"></a></h2>
+
+<p>We evaluated this patch against a search job with the following stats:</p>
+
+<ul>
+  <li>Table
+    <ul>
+      <li>Size: ~<strong>420 TB</strong></li>
+      <li>Data fields: ~<strong>120</strong></li>
+      <li>Partition fields: <strong>3</strong></li>
+    </ul>
+  </li>
+  <li>Scan
+    <ul>
+      <li>Search fields: 3 data fields with large (~ 1000 value) IN clauses compounded by <strong>OR</strong>.</li>
+      <li>Select fields: 16 data fields (includes the 3 search fields), 1 partition field</li>
+      <li>Search:
+        <ul>
+          <li>Size: ~<strong>180 TB</strong></li>
+          <li>Records: <strong>3.99 T</strong></li>
+        </ul>
+      </li>
+      <li>Selected:
+        <ul>
+          <li>Size: ~<strong>100 MB</strong></li>
+          <li>Records: <strong>1 M</strong></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<p>We have observed the following reductions:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Test</th>
+      <th style="text-align: right">IO Reduction %</th>
+      <th style="text-align: right">CPU Reduction %</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">SELECT 16 cols</td>
+      <td style="text-align: right">45</td>
+      <td style="text-align: right">47</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">SELECT *</td>
+      <td style="text-align: right">70</td>
+      <td style="text-align: right">87</td>
+    </tr>
+  </tbody>
+</table>
+
+<ul>
+  <li>The savings are more significant as you increase the number of select columns with respect to the search columns</li>
+  <li>When the filter selects most data, no significant penalty observed as a result of 2 IO compared with a single IO
+    <ul>
+      <li>We do have a penalty as a result of the double filter application both in ORC and in the calling engine.</li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="appendix-">Appendix <a id="Appendix"></a></h2>
+
+<h3 id="benchmarks-">Benchmarks <a id="Benchmarks"></a></h3>
+
+<h4 id="row-vs-vector-">Row vs Vector <a id="RowvsVector"></a></h4>
+
+<p>We start with a decision of using a Row filter vs a Vector filter. The Row filter has the advantage of simpler code when
+compared with the Vector filter.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>java <span class="nt">-jar</span> java/bench/core/target/orc-benchmarks-core-<span class="k">*</span><span class="nt">-uber</span>.jar filter simple
+</code></pre></div></div>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Benchmark</th>
+      <th style="text-align: right">(fInSize)</th>
+      <th style="text-align: left">(fType)</th>
+      <th style="text-align: left">Mode</th>
+      <th style="text-align: right">Cnt</th>
+      <th style="text-align: right">Score</th>
+      <th style="text-align: left">Error</th>
+      <th style="text-align: left">Units</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">SimpleFilter</td>
+      <td style="text-align: right">4</td>
+      <td style="text-align: left">row</td>
+      <td style="text-align: left">avgt</td>
+      <td style="text-align: right">20</td>
+      <td style="text-align: right">38.207</td>
+      <td style="text-align: left">± 0.178</td>
+      <td style="text-align: left">us/op</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">SimpleFilter</td>
+      <td style="text-align: right">4</td>
+      <td style="text-align: left">vector</td>
+      <td style="text-align: left">avgt</td>
+      <td style="text-align: right">20</td>
+      <td style="text-align: right">18.663</td>
+      <td style="text-align: left">± 0.117</td>
+      <td style="text-align: left">us/op</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">SimpleFilter</td>
+      <td style="text-align: right">8</td>
+      <td style="text-align: left">row</td>
+      <td style="text-align: left">avgt</td>
+      <td style="text-align: right">20</td>
+      <td style="text-align: right">50.694</td>
+      <td style="text-align: left">± 0.313</td>
+      <td style="text-align: left">us/op</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">SimpleFilter</td>
+      <td style="text-align: right">8</td>
+      <td style="text-align: left">vector</td>
+      <td style="text-align: left">avgt</td>
+      <td style="text-align: right">20</td>
+      <td style="text-align: right">35.532</td>
+      <td style="text-align: left">± 0.190</td>
+      <td style="text-align: left">us/op</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">SimpleFilter</td>
+      <td style="text-align: right">16</td>
+      <td style="text-align: left">row</td>
+      <td style="text-align: left">avgt</td>
+      <td style="text-align: right">20</td>
+      <td style="text-align: right">52.443</td>
+      <td style="text-align: left">± 0.268</td>
+      <td style="text-align: left">us/op</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">SimpleFilter</td>
+      <td style="text-align: right">16</td>
+      <td style="text-align: left">vector</td>
+      <td style="text-align: left">avgt</td>
+      <td style="text-align: right">20</td>
+      <td style="text-align: right">33.966</td>
+      <td style="text-align: left">± 0.204</td>
+      <td style="text-align: left">us/op</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">SimpleFilter</td>
+      <td style="text-align: right">32</td>
+      <td style="text-align: left">row</td>
+      <td style="text-align: left">avgt</td>
+      <td style="text-align: right">20</td>
+      <td style="text-align: right">68.504</td>
+      <td style="text-align: left">± 0.318</td>
+      <td style="text-align: left">us/op</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">SimpleFilter</td>
+      <td style="text-align: right">32</td>
+      <td style="text-align: left">vector</td>
+      <td style="text-align: left">avgt</td>
+      <td style="text-align: right">20</td>
+      <td style="text-align: right">51.707</td>
+      <td style="text-align: left">± 0.302</td>
+      <td style="text-align: left">us/op</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">SimpleFilter</td>
+      <td style="text-align: right">256</td>
+      <td style="text-align: left">row</td>
+      <td style="text-align: left">avgt</td>
+      <td style="text-align: right">20</td>
+      <td style="text-align: right">88.348</td>
+      <td style="text-align: left">± 0.793</td>
+      <td style="text-align: left">us/op</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">SimpleFilter</td>
+      <td style="text-align: right">256</td>
+      <td style="text-align: left">vector</td>
+      <td style="text-align: left">avgt</td>
+      <td style="text-align: right">20</td>
+      <td style="text-align: right">72.602</td>
+      <td style="text-align: left">± 0.282</td>
+      <td style="text-align: left">us/op</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Explanation:</p>
+
+<ul>
+  <li><strong>fInSize</strong> calls out the number of values in the IN clause.</li>
+  <li><strong>fType</strong> calls out the whether the filter is a row based filter, or a vector based filter.</li>
+</ul>
+
+<p>Observations:</p>
+
+<ul>
+  <li>The vector based filter is significantly faster than the row based filter.
+    <ul>
+      <li>At best, vector was faster by <strong>51.15%</strong></li>
+      <li>At worst, vector was faster by <strong>17.82%</strong></li>
+    </ul>
+  </li>
+  <li>The performance of the filters is deteriorates with the increase of the IN values, however even in this case the
+vector filter is much better than the row filter. The current <code class="highlighter-rouge">IN</code> filter employs a binary search on an array instead
+of a hash lookup.</li>
+</ul>
+
+<h4 id="normalization-vs-compact-">Normalization vs Compact <a id="NormalizationvsCompact"></a></h4>
+
+<p>In this test we use a complex filter with both AND, and OR to understand the impact of Conjunctive Normal Form on the
+filter performance. The Search Argument builder by default performs a CNF. The advantage of the CNF would again be a
+simpler code base.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>java <span class="nt">-jar</span> java/bench/core/target/orc-benchmarks-core-<span class="k">*</span><span class="nt">-uber</span>.jar filter complex
+</code></pre></div></div>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Benchmark</th>
+      <th style="text-align: right">(fSize)</th>
+      <th style="text-align: left">(fType)</th>
+      <th style="text-align: left">(normalize)</th>
+      <th style="text-align: left">Mode</th>
+      <th style="text-align: right">Cnt</th>
+      <th style="text-align: right">Score</th>
+      <th style="text-align: left">Error</th>
+      <th style="text-align: left">Units</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">ComplexFilter</td>
+      <td style="text-align: right">2</td>
+      <td style="text-align: left">row</td>
+      <td style="text-align: left">true</td>
+      <td style="text-align: left">avgt</td>
+      <td style="text-align: right">20</td>
+      <td style="text-align: right">91.922</td>
+      <td style="text-align: left">± 0.301</td>
+      <td style="text-align: left">us/op</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">ComplexFilter</td>
+      <td style="text-align: right">2</td>
+      <td style="text-align: left">row</td>
+      <td style="text-align: left">false</td>
+      <td style="text-align: left">avgt</td>
+      <td style="text-align: right">20</td>
+      <td style="text-align: right">90.741</td>
+      <td style="text-align: left">± 0.556</td>
+      <td style="text-align: left">us/op</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">ComplexFilter</td>
+      <td style="text-align: right">2</td>
+      <td style="text-align: left">vector</td>
+      <td style="text-align: left">true</td>
+      <td style="text-align: left">avgt</td>
+      <td style="text-align: right">20</td>
+      <td style="text-align: right">61.137</td>
+      <td style="text-align: left">± 0.398</td>
+      <td style="text-align: left">us/op</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">ComplexFilter</td>
+      <td style="text-align: right">2</td>
+      <td style="text-align: left">vector</td>
+      <td style="text-align: left">false</td>
+      <td style="text-align: left">avgt</td>
+      <td style="text-align: right">20</td>
+      <td style="text-align: right">54.829</td>
+      <td style="text-align: left">± 0.431</td>
+      <td style="text-align: left">us/op</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">ComplexFilter</td>
+      <td style="text-align: right">4</td>
+      <td style="text-align: left">row</td>
+      <td style="text-align: left">true</td>
+      <td style="text-align: left">avgt</td>
+      <td style="text-align: right">20</td>
+      <td style="text-align: right">284.956</td>
+      <td style="text-align: left">± 1.237</td>
+      <td style="text-align: left">us/op</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">ComplexFilter</td>
+      <td style="text-align: right">4</td>
+      <td style="text-align: left">row</td>
+      <td style="text-align: left">false</td>
+      <td style="text-align: left">avgt</td>
+      <td style="text-align: right">20</td>
+      <td style="text-align: right">130.526</td>
+      <td style="text-align: left">± 0.767</td>
+      <td style="text-align: left">us/op</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">ComplexFilter</td>
+      <td style="text-align: right">4</td>
+      <td style="text-align: left">vector</td>
+      <td style="text-align: left">true</td>
+      <td style="text-align: left">avgt</td>
+      <td style="text-align: right">20</td>
+      <td style="text-align: right">242.387</td>
+      <td style="text-align: left">± 1.053</td>
+      <td style="text-align: left">us/op</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">ComplexFilter</td>
+      <td style="text-align: right">4</td>
+      <td style="text-align: left">vector</td>
+      <td style="text-align: left">false</td>
+      <td style="text-align: left">avgt</td>
+      <td style="text-align: right">20</td>
+      <td style="text-align: right">98.530</td>
+      <td style="text-align: left">± 0.423</td>
+      <td style="text-align: left">us/op</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">ComplexFilter</td>
+      <td style="text-align: right">8</td>
+      <td style="text-align: left">row</td>
+      <td style="text-align: left">true</td>
+      <td style="text-align: left">avgt</td>
+      <td style="text-align: right">20</td>
+      <td style="text-align: right">8007.101</td>
+      <td style="text-align: left">± 54.912</td>
+      <td style="text-align: left">us/op</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">ComplexFilter</td>
+      <td style="text-align: right">8</td>
+      <td style="text-align: left">row</td>
+      <td style="text-align: left">false</td>
+      <td style="text-align: left">avgt</td>
+      <td style="text-align: right">20</td>
+      <td style="text-align: right">234.943</td>
+      <td style="text-align: left">± 4.713</td>
+      <td style="text-align: left">us/op</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">ComplexFilter</td>
+      <td style="text-align: right">8</td>
+      <td style="text-align: left">vector</td>
+      <td style="text-align: left">true</td>
+      <td style="text-align: left">avgt</td>
+      <td style="text-align: right">20</td>
+      <td style="text-align: right">7013.758</td>
+      <td style="text-align: left">± 33.701</td>
+      <td style="text-align: left">us/op</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">ComplexFilter</td>
+      <td style="text-align: right">8</td>
+      <td style="text-align: left">vector</td>
+      <td style="text-align: left">false</td>
+      <td style="text-align: left">avgt</td>
+      <td style="text-align: right">20</td>
+      <td style="text-align: right">190.442</td>
+      <td style="text-align: left">± 0.881</td>
+      <td style="text-align: left">us/op</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Explanation:</p>
+
+<ul>
+  <li><strong>fSize</strong> identifies the size of the children in the OR clause that will be normalized.</li>
+  <li><strong>normalize</strong> identifies whether normalize was carried out on the Search Argument.</li>
+</ul>
+
+<p>Observations:</p>
+
+<ul>
+  <li>Vector filter is better than the row filter as demonstrated by the <a href="#RowvsVector">Row vs Vector Test</a>.</li>
+  <li>Normalizing the search argument results in a significant performance penalty given the explosion of the operator tree
+    <ul>
+      <li>In case where an AND includes 8 ORs, the compact version is faster by <strong>97.29%</strong></li>
+    </ul>
+  </li>
+</ul>
+
+<h4 id="summary-">Summary <a id="Summary"></a></h4>
+
+<p>Based on the benchmarks we have the following conclusions:</p>
+
+<ul>
+  <li>Vector based filter is significantly better than a row based filter and justifies the more complex code.</li>
+  <li>Compact filter is significantly faster than a normalized filter.</li>
+</ul>
+
+
+      </article>
+    </div>
+
+    <div class="clear"></div>
+
+  </div>
+</section>
+
+
+  <footer role="contentinfo">
+  <p>The contents of this website are &copy;&nbsp;2022
+     <a href="https://www.apache.org/">Apache Software Foundation</a>
+     under the terms of the <a
+      href="https://www.apache.org/licenses/LICENSE-2.0.html">
+      Apache&nbsp;License&nbsp;v2</a>. Apache ORC and its logo are trademarks
+      of the Apache Software Foundation.</p>
+</footer>
+
+  <script>
+  var anchorForId = function (id) {
+    var anchor = document.createElement("a");
+    anchor.className = "header-link";
+    anchor.href      = "#" + id;
+    anchor.innerHTML = "<span class=\"sr-only\">Permalink</span><i class=\"fa fa-link\"></i>";
+    anchor.title = "Permalink";
+    return anchor;
+  };
+
+  var linkifyAnchors = function (level, containingElement) {
+    var headers = containingElement.getElementsByTagName("h" + level);
+    for (var h = 0; h < headers.length; h++) {
+      var header = headers[h];
+
+      if (typeof header.id !== "undefined" && header.id !== "") {
+        header.appendChild(anchorForId(header.id));
+      }
+    }
+  };
+
+  document.onreadystatechange = function () {
+    if (this.readyState === "complete") {
+      var contentBlock = document.getElementsByClassName("docs")[0] || document.getElementsByClassName("news")[0];
+      if (!contentBlock) {
+        return;
+      }
+      for (var level = 1; level <= 6; level++) {
+        linkifyAnchors(level, contentBlock);
+      }
+    }
+  };
+</script>
+
+
+</body>
+</html>
