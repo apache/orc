@@ -543,8 +543,8 @@ namespace orc {
 
   BooleanRleDecoderImpl::BooleanRleDecoderImpl
                                 (std::unique_ptr<SeekableInputStream> input,
-                                 ReaderMetrics& metrics
-                                 ): ByteRleDecoderImpl(std::move(input), metrics) {
+                                 ReaderMetrics& _metrics
+                                 ): ByteRleDecoderImpl(std::move(input), _metrics) {
     remainingBits = 0;
     lastByte = 0;
   }

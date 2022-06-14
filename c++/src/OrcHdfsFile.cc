@@ -41,9 +41,12 @@ namespace orc {
     std::unique_ptr<hdfs::FileSystem> file_system;
     uint64_t totalLength;
     const uint64_t READ_SIZE = 1024 * 1024; //1 MB
+    ReaderMetrics& metrics;
 
   public:
-    HdfsFileInputStream(std::string _filename) {
+    HdfsFileInputStream(std::string _filename,
+                        ReaderMetrics& _metrics)
+                        : metrics(_metrics) {
       filename = _filename ;
 
       //Building a URI object from the given uri_path

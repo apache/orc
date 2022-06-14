@@ -44,7 +44,7 @@ public:
             std::chrono::microseconds elapsedTime =
                 std::chrono::duration_cast<std::chrono::microseconds>(
                     std::chrono::high_resolution_clock::now() - start);
-            latencyUs->fetch_add(elapsedTime.count());
+            latencyUs->fetch_add(static_cast<uint64_t>(elapsedTime.count()));
         }
 
         if (count) {
