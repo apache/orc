@@ -200,8 +200,11 @@ namespace orc {
       ss << "../../../examples";
     }
     ss << "/complextypes_iceberg.orc";
+    ReaderOptions readerOpts;
     std::unique_ptr<orc::Reader> reader =
-      orc::createReader(readLocalFile(ss.str().c_str()), ReaderOptions());
+      orc::createReader(readLocalFile(ss.str().c_str(),
+                                      *readerOpts.getReaderMetrics()),
+                        readerOpts);
     auto rowReader = createRowReader(reader);
     auto& root = rowReader->getSelectedType();
     std::vector<uint64_t> fieldIds;

@@ -96,12 +96,20 @@ bool parseOptions(int* argc, char** argv[], uint64_t* batchSize,
 }
 
 void printReaderMetrics(std::ostream& out, const orc::ReaderMetrics& metrics) {
+  static const uint64_t US_PER_SECOND = 1000000;
+  out << "ElapsedTimeSeconds: "
+      << metrics.ReaderInclusiveLatencyUs / US_PER_SECOND << std::endl;
+  out << "DecompLatencySeconds: "
+      << metrics.DecompLatencyUs / US_PER_SECOND << std::endl;
+  out << "DecodingLatencySeconds: "
+      << metrics.DecodingLatencyUs / US_PER_SECOND << std::endl;
+  out << "ByteDecodingLatencySeconds: "
+      << metrics.ByteDecodingLatencyUs / US_PER_SECOND << std::endl;
+  out << "IOBlockingLatencySeconds: "
+      << metrics.IOBlockingLatencyUs / US_PER_SECOND << std::endl;
   out << "ReaderCount: " << metrics.ReaderCount << std::endl;
-  out << "ElapsedTimeUs: " << metrics.ReaderInclusiveLatencyUs << std::endl;
   out << "DecompCount: " << metrics.DecompCount << std::endl;
-  out << "DecompLatencyUs: " << metrics.DecompLatencyUs << std::endl;
   out << "DecodingCount: " << metrics.DecodingCount << std::endl;
-  out << "DecodingLatencyUs: " << metrics.DecodingLatencyUs << std::endl;
   out << "ByteDecodingCount: " << metrics.ByteDecodingCount << std::endl;
-  out << "ByteDecodingLatencyUs: " << metrics.ByteDecodingLatencyUs << std::endl;
+  out << "IOCount: " << metrics.IOCount << std::endl;
 }

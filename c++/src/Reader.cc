@@ -1166,7 +1166,7 @@ namespace orc {
 
   bool RowReaderImpl::next(ColumnVectorBatch& data) {
     AutoStopwatch measure(&contents->readerMetrics->ReaderInclusiveLatencyUs,
-                  &contents->readerMetrics->ReaderCount);
+                          &contents->readerMetrics->ReaderCount);
     if (currentStripe >= lastStripe) {
       data.numElements = 0;
       markEndOfFile();
@@ -1412,7 +1412,7 @@ namespace orc {
     std::shared_ptr<FileContents> contents = std::shared_ptr<FileContents>(new FileContents());
     contents->pool = options.getMemoryPool();
     contents->errorStream = options.getErrorStream();
-    contents->readerMetrics.reset(new ReaderMetrics());
+    contents->readerMetrics = options.getReaderMetrics();
     std::string serializedFooter = options.getSerializedFileTail();
     uint64_t fileLength;
     uint64_t postscriptLength;

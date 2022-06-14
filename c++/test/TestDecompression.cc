@@ -210,7 +210,8 @@ namespace orc {
 
   TEST_F(TestDecompression, testFileBackup) {
     SCOPED_TRACE("testFileBackup");
-    std::unique_ptr<InputStream> file = readLocalFile(simpleFile);
+    std::unique_ptr<InputStream> file =
+      readLocalFile(simpleFile, *getDefaultReaderMetrics());
     SeekableFileInputStream stream(file.get(), 0, 200, *getDefaultPool(), 20);
     const void *ptr;
     int len;
@@ -241,7 +242,8 @@ namespace orc {
 
   TEST_F(TestDecompression, testFileSkip) {
     SCOPED_TRACE("testFileSkip");
-    std::unique_ptr<InputStream> file = readLocalFile(simpleFile);
+    std::unique_ptr<InputStream> file =
+      readLocalFile(simpleFile, *getDefaultReaderMetrics());
     SeekableFileInputStream stream(file.get(), 0, 200, *getDefaultPool(), 20);
     const void *ptr;
     int len;
@@ -261,7 +263,8 @@ namespace orc {
 
   TEST_F(TestDecompression, testFileCombo) {
     SCOPED_TRACE("testFileCombo");
-    std::unique_ptr<InputStream> file = readLocalFile(simpleFile);
+    std::unique_ptr<InputStream> file =
+      readLocalFile(simpleFile, *getDefaultReaderMetrics());
     SeekableFileInputStream stream(file.get(), 0, 200, *getDefaultPool(), 20);
     const void *ptr;
     int len;
@@ -281,7 +284,8 @@ namespace orc {
 
   TEST_F(TestDecompression, testFileSeek) {
     SCOPED_TRACE("testFileSeek");
-    std::unique_ptr<InputStream> file = readLocalFile(simpleFile);
+    std::unique_ptr<InputStream> file =
+      readLocalFile(simpleFile, *getDefaultReaderMetrics());
     SeekableFileInputStream stream(file.get(), 0, 200, *getDefaultPool(), 20);
     const void *ptr;
     int len;

@@ -67,7 +67,7 @@ namespace orc {
     /// this new encoding is used.
     bool isDecimalAsLong;
     std::unique_ptr<proto::Metadata> metadata;
-    std::unique_ptr<ReaderMetrics> readerMetrics;
+    ReaderMetrics* readerMetrics;
   };
 
   proto::StripeFooter getStripeFooter(const proto::StripeInformation& info,
@@ -337,7 +337,7 @@ namespace orc {
 
     bool hasCorrectStatistics() const override;
 
-    ReaderMetrics getReaderMetrics() const override {
+    const ReaderMetrics& getReaderMetrics() const override {
       return *contents->readerMetrics;
     }
 

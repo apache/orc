@@ -19,39 +19,36 @@
 #ifndef ORC_UTILS_HH
 #define ORC_UTILS_HH
 
-#include <stdint.h>
-#include <time.h>
-#include <sys/time.h>
+#include <atomic>
+#include <chrono>
 
 namespace orc {
 
-static inline uint64_t getCurrentTimeUs() {
-  timespec ts;
-  clock_gettime(CLOCK_MONOTONIC, &ts);
-  return static_cast<uint64_t>(ts.tv_sec) * 1000000ULL +
-         static_cast<uint64_t>(ts.tv_nsec) / 1000;
-}
-
 class AutoStopwatch {
-    uint64_t start;
-    volatile uint64_t* latencyUs;
-    volatile uint64_t* count;
+    std::chrono::high_resolution_clock::time_point start;
+    std::atomic<uint64_t>* latencyUs;
+    std::atomic<uint64_t>* count;
 
 public:
-    AutoStopwatch(volatile uint64_t* latency,
-                  volatile uint64_t* cnt) {
-        start = getCurrentTimeUs();
-        latencyUs = latency;
-        count = cnt;
+    AutoStopwatch(std::atomic<uint64_t>* _latencyUs,
+                  std::atomic<uint64_t>* _count)
+                  : latencyUs(_latencyUs),
+                    count(_count) {
+        if (latencyUs) {
+            start = std::chrono::high_resolution_clock::now();
+        }
     }
 
     ~AutoStopwatch() {
         if (latencyUs) {
-            uint64_t elapsedTime = getCurrentTimeUs() - start;
-             __sync_fetch_and_add(latencyUs, elapsedTime);
+            std::chrono::microseconds elapsedTime =
+                std::chrono::duration_cast<std::chrono::microseconds>(
+                    std::chrono::high_resolution_clock::now() - start);
+            latencyUs->fetch_add(elapsedTime.count());
         }
+
         if (count) {
-            __sync_fetch_and_add(count, 1);
+            count->fetch_add(1);
         }
     }
 };

@@ -32,6 +32,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <atomic>
 
 namespace orc {
 
@@ -39,26 +40,21 @@ namespace orc {
   struct ReaderOptionsPrivate;
   struct RowReaderOptionsPrivate;
 
+  /**
+   * Expose the reader metrics including the latency and
+   * number of calls of the decompression/decoding/IO modules.
+   */
   struct ReaderMetrics {
-    volatile uint64_t ReaderCount;
-    volatile uint64_t ReaderInclusiveLatencyUs;
-    volatile uint64_t DecompCount;
-    volatile uint64_t DecompLatencyUs;
-    volatile uint64_t DecodingCount;
-    volatile uint64_t DecodingLatencyUs;
-    volatile uint64_t ByteDecodingCount;
-    volatile uint64_t ByteDecodingLatencyUs;
-
-    ReaderMetrics() {
-      ReaderCount = 0;
-      ReaderInclusiveLatencyUs = 0;
-      DecompCount = 0;
-      DecompLatencyUs = 0;
-      DecodingCount = 0;
-      DecodingLatencyUs = 0;
-      ByteDecodingCount = 0;
-      ByteDecodingLatencyUs = 0;
-    }
+    std::atomic<uint64_t> ReaderCount{0};
+    std::atomic<uint64_t> ReaderInclusiveLatencyUs{0};
+    std::atomic<uint64_t> DecompCount{0};
+    std::atomic<uint64_t> DecompLatencyUs{0};
+    std::atomic<uint64_t> DecodingCount{0};
+    std::atomic<uint64_t> DecodingLatencyUs{0};
+    std::atomic<uint64_t> ByteDecodingCount{0};
+    std::atomic<uint64_t> ByteDecodingLatencyUs{0};
+    std::atomic<uint64_t> IOCount{0};
+    std::atomic<uint64_t> IOBlockingLatencyUs{0};
   };
   ReaderMetrics* getDefaultReaderMetrics();
 
@@ -100,6 +96,11 @@ namespace orc {
     ReaderOptions& setMemoryPool(MemoryPool& pool);
 
     /**
+     * Set the reader metrics.
+     */
+    ReaderOptions& setReaderMetrics(ReaderMetrics& metrics);
+
+    /**
      * Set the location of the tail as defined by the logical length of the
      * file.
      */
@@ -125,6 +126,11 @@ namespace orc {
      * Get the memory allocator.
      */
     MemoryPool* getMemoryPool() const;
+
+    /**
+     * Get the reader metrics.
+     */
+    ReaderMetrics* getReaderMetrics() const;
   };
 
   /**
@@ -482,7 +488,7 @@ namespace orc {
      * Get metrics of the reader
      * @return the accumulated reader metrics to current state.
      */
-    virtual ReaderMetrics getReaderMetrics() const = 0;
+    virtual const ReaderMetrics& getReaderMetrics() const = 0;
 
     /**
      * Get the serialized file tail.
