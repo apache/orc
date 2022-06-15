@@ -112,4 +112,8 @@ void printReaderMetrics(std::ostream& out, const orc::ReaderMetrics& metrics) {
   out << "DecodingCount: " << metrics.DecodingCount << std::endl;
   out << "ByteDecodingCount: " << metrics.ByteDecodingCount << std::endl;
   out << "IOCount: " << metrics.IOCount << std::endl;
+  out << "SelectedRowGroupCount: "
+      << metrics.SelectedRowGroupCount << std::endl;
+  out << "EvaluatedRowGroupCount: "
+      << metrics.EvaluatedRowGroupCount << std::endl;
 }

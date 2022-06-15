@@ -41,14 +41,15 @@ namespace orc {
   SargsApplier::SargsApplier(const Type& type,
                              const SearchArgument * searchArgument,
                              uint64_t rowIndexStride,
-                             WriterVersion writerVersion)
+                             WriterVersion writerVersion,
+                             ReaderMetrics& metrics)
                              : mType(type)
                              , mSearchArgument(searchArgument)
                              , mRowIndexStride(rowIndexStride)
                              , mWriterVersion(writerVersion)
-                             , mStats(0, 0)
                              , mHasEvaluatedFileStats(false)
-                             , mFileStatsEvalResult(true) {
+                             , mFileStatsEvalResult(true)
+                             , mMetrics(metrics) {
     const SearchArgumentImpl * sargs =
       dynamic_cast<const SearchArgumentImpl *>(mSearchArgument);
 
@@ -126,10 +127,12 @@ namespace orc {
     } while (rowGroup != 0);
 
     // update stats
-    mStats.first = std::accumulate(
-      mNextSkippedRows.cbegin(), mNextSkippedRows.cend(), mStats.first,
-      [](bool rg, uint64_t s) { return rg ? 1 : 0 + s; });
-    mStats.second += groupsInStripe;
+    uint64_t selectedRGs = std::accumulate(
+      mNextSkippedRows.cbegin(), mNextSkippedRows.cend(), 0UL,
+      [](uint64_t initVal, uint64_t rg) {
+        return rg > 0 ? initVal + 1 : initVal; });
+    mMetrics.SelectedRowGroupCount.fetch_add(selectedRGs);
+    mMetrics.EvaluatedRowGroupCount.fetch_add(groupsInStripe);
 
     return mHasSelected;
   }

@@ -23,6 +23,7 @@
 #include <orc/Common.hh>
 #include "orc/BloomFilter.hh"
 #include "orc/Type.hh"
+#include "orc/Reader.hh"
 
 #include "sargs/SearchArgument.hh"
 
@@ -35,7 +36,8 @@ namespace orc {
     SargsApplier(const Type& type,
                  const SearchArgument * searchArgument,
                  uint64_t rowIndexStride,
-                 WriterVersion writerVersion);
+                 WriterVersion writerVersion,
+                 ReaderMetrics& metrics);
 
     /**
      * Evaluate search argument on file statistics
@@ -90,7 +92,8 @@ namespace orc {
     }
 
     std::pair<uint64_t, uint64_t> getStats() const {
-      return mStats;
+      return std::make_pair(mMetrics.SelectedRowGroupCount.load(),
+                            mMetrics.EvaluatedRowGroupCount.load());
     }
 
   private:
@@ -119,11 +122,12 @@ namespace orc {
     uint64_t mTotalRowsInStripe;
     bool mHasSelected;
     bool mHasSkipped;
-    // keep stats of selected RGs and evaluated RGs
-    std::pair<uint64_t, uint64_t> mStats;
     // store result of file stats evaluation
     bool mHasEvaluatedFileStats;
     bool mFileStatsEvalResult;
+    // use the SelectedRowGroupCount and EvaluatedRowGroupCount to
+    // keep stats of selected RGs and evaluated RGs
+    ReaderMetrics& mMetrics;
   };
 
 }

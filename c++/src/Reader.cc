@@ -307,7 +307,8 @@ namespace orc {
       sargsApplier.reset(new SargsApplier(*contents->schema,
                                           sargs.get(),
                                           footer->rowindexstride(),
-                                          getWriterVersionImpl(_contents.get())));
+                                          getWriterVersionImpl(_contents.get()),
+                                          *contents->readerMetrics));
     }
 
     skipBloomFilters = hasBadBloomFilters();
