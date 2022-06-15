@@ -643,9 +643,9 @@ DIAGNOSTIC_PUSH
                    (std::unique_ptr<SeekableInputStream> inStream,
                     size_t bufferSize,
                     MemoryPool& _pool,
-                    ReaderMetrics& metrics
+                    ReaderMetrics& _metrics
                     ): DecompressionStream
-                          (std::move(inStream), bufferSize, _pool, metrics) {
+                          (std::move(inStream), bufferSize, _pool, _metrics) {
     zstream.next_in = nullptr;
     zstream.avail_in = 0;
     zstream.zalloc = nullptr;
@@ -764,9 +764,9 @@ DIAGNOSTIC_POP
                    (std::unique_ptr<SeekableInputStream> inStream,
                     size_t blockSize,
                     MemoryPool& _pool,
-                    ReaderMetrics& metrics
+                    ReaderMetrics& _metrics
                     ) : DecompressionStream
-                            (std::move(inStream), blockSize, _pool, metrics),
+                            (std::move(inStream), blockSize, _pool, _metrics),
                         inputDataBuffer(pool, blockSize) {
   }
 
@@ -813,12 +813,12 @@ DIAGNOSTIC_POP
     SnappyDecompressionStream(std::unique_ptr<SeekableInputStream> inStream,
                               size_t blockSize,
                               MemoryPool& _pool,
-                              ReaderMetrics& metrics
+                              ReaderMetrics& _metrics
                               ): BlockDecompressionStream
                                  (std::move(inStream),
                                   blockSize,
                                   _pool,
-                                  metrics) {
+                                  _metrics) {
       // PASS
     }
 
@@ -858,12 +858,12 @@ DIAGNOSTIC_POP
     LzoDecompressionStream(std::unique_ptr<SeekableInputStream> inStream,
                            size_t blockSize,
                            MemoryPool& _pool,
-                           ReaderMetrics& metrics
+                           ReaderMetrics& _metrics
                            ): BlockDecompressionStream
                                   (std::move(inStream),
                                    blockSize,
                                    _pool,
-                                   metrics) {
+                                   _metrics) {
       // PASS
     }
 
@@ -892,12 +892,12 @@ DIAGNOSTIC_POP
     Lz4DecompressionStream(std::unique_ptr<SeekableInputStream> inStream,
                            size_t blockSize,
                            MemoryPool& _pool,
-                           ReaderMetrics& metrics
+                           ReaderMetrics& _metrics
                            ): BlockDecompressionStream
                               (std::move(inStream),
                                blockSize,
                                _pool,
-                               metrics) {
+                               _metrics) {
       // PASS
     }
 
@@ -1198,11 +1198,11 @@ DIAGNOSTIC_PUSH
     ZSTDDecompressionStream(std::unique_ptr<SeekableInputStream> inStream,
                             size_t blockSize,
                             MemoryPool& _pool,
-                            ReaderMetrics& metrics)
+                            ReaderMetrics& _metrics)
                             : BlockDecompressionStream(std::move(inStream),
                                                        blockSize,
                                                        _pool,
-                                                       metrics) {
+                                                       _metrics) {
       this->init();
     }
 

@@ -393,8 +393,8 @@ void RleDecoderV2::plainUnpackLongs(int64_t *data, uint64_t offset, uint64_t len
 
 RleDecoderV2::RleDecoderV2(std::unique_ptr<SeekableInputStream> input,
                            bool _isSigned, MemoryPool& pool,
-                           ReaderMetrics& metrics
-                           ): RleDecoder(metrics),
+                           ReaderMetrics& _metrics
+                           ): RleDecoder(_metrics),
                               inputStream(std::move(input)),
                               isSigned(_isSigned),
                               firstByte(0),
