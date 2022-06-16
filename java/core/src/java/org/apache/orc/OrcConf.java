@@ -197,7 +197,14 @@ public enum OrcConf {
       "orc.proleptic.gregorian.default", false,
       "This value controls whether pre-ORC 27 files are using the hybrid or proleptic\n" +
       "calendar. Only Hive 3.1 and the C++ library wrote using the proleptic, so hybrid\n" +
-      "is the default.")
+      "is the default."),
+  ROW_BATCH_SIZE("orc.row.batch.size", "orc.row.batch.size", 1024,
+      "The number of rows to include in a orc vectorized reader batch. " +
+      "The value should be carefully chosen to minimize overhead and avoid OOMs in reading data."),
+  ROW_BATCH_CHILD_LIMIT("orc.row.child.limit", "orc.row.child.limit",
+      1024 * 32, "The maximum number of child elements to buffer before "+
+      "the ORC row writer writes the batch to the file."
+      )
   ;
 
   private final String attribute;
