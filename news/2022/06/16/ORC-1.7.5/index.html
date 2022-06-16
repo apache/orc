@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>ORC adds Aliaksei Sandryhaila to PMC</title>
+  <title>ORC 1.7.5 Released</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="generator" content="Jekyll v3.8.6">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
@@ -247,34 +247,75 @@
       <div class="unit four-fifths">
         <article>
   <h2>
-    ORC adds Aliaksei Sandryhaila to PMC
-    <a href="/news/2015/11/19/aliaksei-on-pmc/" class="permalink" title="Permalink">∞</a>
+    ORC 1.7.5 Released
+    <a href="/news/2022/06/16/ORC-1.7.5/" class="permalink" title="Permalink">∞</a>
   </h2>
   <span class="post-category">
     <span class="label">
-      team
+      release
     </span>
   </span>
   <div class="post-meta">
     <span class="post-date">
-      19 Nov 2015
+      16 Jun 2022
     </span>
-    <a href="https://people.apache.org/~omalley" class="post-author">
-      <img src="https://people.apache.org/~omalley/omalley.png"
-           class="avatar" alt="omalley avatar"
+    <a href="https://people.apache.org/~william" class="post-author">
+      <img src="https://people.apache.org/~william/william.png"
+           class="avatar" alt="william avatar"
            width="24" height="24">
-      omalley
+      william
     </a>
   </div>
   <div class="post-content">
-    <p>On behalf of the Apache ORC Project Management Committee (PMC), it gives
-me great pleasure to announce that Aliaksei Sandryhaila has joined the Apache
-ORC PMC. He has done lot of good work on ORC and I’m looking forward to
-more.</p>
+    <p>The ORC team is excited to announce the release of ORC v1.7.5.</p>
 
-<p>Please join me in welcoming Aliaksei to ORC PMC!</p>
+<ul>
+  <li>Released: 16 June 2022</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.7.5/orc-1.7.5.tar.gz">orc-1.7.5.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-1.7.5/orc-1.7.5.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">William Hyun (DECDFA29)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.7.5">rel/release-1.7.5</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.7.5%22">ORC 1.7.5</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.7.5/orc-1.7.5.tar.gz.sha256">b90cae5853e3ea0e…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.7.5%22&amp;tempMax=500">ORC-1.7.5</a></li>
+</ul>
 
-<p>Congratulations Aliaksei!</p>
+<p>The bug fixes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1151">ORC-1151</a> Fix ColumnWriter for non-UTC Timestamp columns</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1160">ORC-1160</a> Fix seekToRow can’t seek within selected row group</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1133">ORC-1133</a> Fix csv-import tool options</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1183">ORC-1183</a> Upgrade gson to 2.9.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1186">ORC-1186</a> Limit <code class="highlighter-rouge">family</code> in <code class="highlighter-rouge">aarch64</code> profile</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1188">ORC-1188</a> Fix <code class="highlighter-rouge">ORC_PREFER_STATIC_ZLIB</code></li>
+</ul>
+
+<p>The improvements:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1198">ORC-1198</a> Add a new <code class="highlighter-rouge">PhysicalFsWriter</code> constructor with <code class="highlighter-rouge">FSDataOutputStream</code> parameter</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1199">ORC-1199</a> Use Google mirror of Maven Central as the primary</li>
+</ul>
+
+<p>The test changes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1155">ORC-1155</a> Add Ubuntu 22.04 to docker tests</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1154">ORC-1154</a> Bump hive.version from 3.1.2 to 3.1.3</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1161">ORC-1161</a> Add MacOS 12 and remove MacOS 10</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1174">ORC-1174</a> Add <code class="highlighter-rouge">Ubuntu 22.04</code> to GitHub Action</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1182">ORC-1182</a> Use <code class="highlighter-rouge">slf4j-simple</code> instead of deprecated <code class="highlighter-rouge">slf4j-log4j12</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1184">ORC-1184</a> Use Hadoop 3.3.3 in benchmark module</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1189">ORC-1189</a> Update <code class="highlighter-rouge">README.md</code> and <code class="highlighter-rouge">help</code> command message in <code class="highlighter-rouge">benchmark</code> module and <code class="highlighter-rouge">.gitignore</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1190">ORC-1190</a> Fix <code class="highlighter-rouge">ORCWriterBenchMark</code> <code class="highlighter-rouge">dumpDir</code> initialization</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1191">ORC-1191</a> Updated TLC Taxi Benchmark Dataset</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1192">ORC-1192</a> Use <code class="highlighter-rouge">orc.zstd</code> instead of <code class="highlighter-rouge">orc.none</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1196">ORC-1196</a> Add Spark benchmark integration tests to GHA</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1201">ORC-1201</a> Remove <code class="highlighter-rouge">Debian 9</code> from Docker Tests</li>
+</ul>
+
+<p>The documentation changes:</p>
+<ul>
+  <li>Add ASF verification instruction link</li>
+</ul>
 
   </div>
 </article>
@@ -294,7 +335,7 @@ more.</p>
     <h4>Recent Releases</h4>
     <ul>
       
-      <li class="">
+      <li class="current">
         <a href="/news/2022/06/16/ORC-1.7.5/">Version 1.7.5</a>
       </li>
       
@@ -535,7 +576,7 @@ more.</p>
         
         
         
-        <li class="current">
+        <li class="">
           <a href="/news/2015/11/19/aliaksei-on-pmc/">ORC adds Aliaksei Sandryhaila to PMC</a>
         </li>
         
