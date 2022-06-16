@@ -25,6 +25,7 @@ import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ListColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.MapColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.MultiValuedColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.StructColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.UnionColumnVector;
@@ -45,10 +46,12 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.RecordWriter;
 import org.apache.hadoop.mapred.Reporter;
+import org.apache.orc.OrcConf;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +64,9 @@ public class OrcMapredRecordWriter<V extends Writable>
   private final VectorizedRowBatch batch;
   private final TypeDescription schema;
   private final boolean isTopStruct;
+  private final List<MultiValuedColumnVector> variableLengthColumns =
+      new ArrayList<>();
+  private final int maxChildLength;
 
   public OrcMapredRecordWriter(Writer writer) {
     this(writer, VectorizedRowBatch.DEFAULT_SIZE);
@@ -68,10 +74,71 @@ public class OrcMapredRecordWriter<V extends Writable>
 
   public OrcMapredRecordWriter(Writer writer,
                                int rowBatchSize) {
+    this(writer, rowBatchSize,
+        (Integer) OrcConf.ROW_BATCH_CHILD_LIMIT.getDefaultValue());
+  }
+
+  public OrcMapredRecordWriter(Writer writer,
+                               int rowBatchSize,
+                               int maxChildLength) {
     this.writer = writer;
     schema = writer.getSchema();
     this.batch = schema.createRowBatch(rowBatchSize);
+    addVariableLengthColumns(variableLengthColumns, batch);
     isTopStruct = schema.getCategory() == TypeDescription.Category.STRUCT;
+    this.maxChildLength = maxChildLength;
+  }
+
+  /**
+   * Find variable length columns and add them to the list.
+   * @param result the list to be appended to
+   * @param vector the column vector to scan
+   */
+  private static
+  void addVariableLengthColumns(List<MultiValuedColumnVector> result,
+                                        ColumnVector vector) {
+    switch (vector.type) {
+      case LIST: {
+        ListColumnVector cv = (ListColumnVector) vector;
+        result.add(cv);
+        addVariableLengthColumns(result, cv.child);
+        break;
+      }
+      case MAP: {
+        MapColumnVector cv = (MapColumnVector) vector;
+        result.add(cv);
+        addVariableLengthColumns(result, cv.keys);
+        addVariableLengthColumns(result, cv.values);
+        break;
+      }
+      case STRUCT: {
+        for(ColumnVector child: ((StructColumnVector) vector).fields) {
+          addVariableLengthColumns(result, child);
+        }
+        break;
+      }
+      case UNION: {
+        for(ColumnVector child: ((UnionColumnVector) vector).fields) {
+          addVariableLengthColumns(result, child);
+        }
+        break;
+      }
+      default:
+        break;
+    }
+  }
+
+  /**
+   * Find variable length columns and add them to the list.
+   * @param result the list to be appended to
+   * @param batch the batch to scan
+   */
+  public static
+  void addVariableLengthColumns(List<MultiValuedColumnVector> result,
+                                        VectorizedRowBatch batch) {
+    for(ColumnVector cv: batch.cols) {
+      addVariableLengthColumns(result, cv);
+    }
   }
 
   static void setLongValue(ColumnVector vector, int row, long value) {
@@ -264,10 +331,23 @@ public class OrcMapredRecordWriter<V extends Writable>
     }
   }
 
+  /**
+   * Get the longest variable length vector in a column vector
+   * @return the length of the longest sub-column
+   */
+  public static int getMaxChildLength(List<MultiValuedColumnVector> columns) {
+    int result = 0;
+    for(MultiValuedColumnVector cv: columns) {
+      result = Math.max(result, cv.childCount);
+    }
+    return result;
+  }
+
   @Override
   public void write(NullWritable nullWritable, V v) throws IOException {
     // if the batch is full, write it out.
-    if (batch.size == batch.getMaxSize()) {
+    if (batch.size == batch.getMaxSize() ||
+        getMaxChildLength(variableLengthColumns) >= maxChildLength) {
       writer.addRowBatch(batch);
       batch.reset();
     }

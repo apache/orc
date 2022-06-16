@@ -294,7 +294,7 @@ public class TestMapreduceOrcOutputFormat {
   @Test
   public void testOrcOutputFormatWithRowBatchSize() throws Exception {
     conf.set("mapreduce.output.fileoutputformat.outputdir", workDir.toString());
-    conf.setInt(OrcOutputFormatWithRowBatchSize.ROW_BATCH_SIZE, 128);
+    OrcConf.ROW_BATCH_SIZE.setInt(conf, 128);
     String TYPE_STRING = "struct<i:int,s:string>";
     OrcConf.MAPRED_OUTPUT_SCHEMA.setString(conf, TYPE_STRING);
     conf.setBoolean(OrcOutputFormat.SKIP_TEMP_DIRECTORY, true);
@@ -303,7 +303,7 @@ public class TestMapreduceOrcOutputFormat {
     TypeDescription schema = TypeDescription.fromString(TYPE_STRING);
     OrcKey key = new OrcKey(new OrcStruct(schema));
     RecordWriter<NullWritable, Writable> writer =
-        new OrcOutputFormatWithRowBatchSize<>().getRecordWriter(attemptContext);
+        new OrcOutputFormat<>().getRecordWriter(attemptContext);
     NullWritable nada = NullWritable.get();
     for(int r=0; r < 2000; ++r) {
       ((OrcStruct) key.key).setAllFields(new IntWritable(r),
@@ -315,23 +315,5 @@ public class TestMapreduceOrcOutputFormat {
     Reader file = OrcFile.createReader(path, OrcFile.readerOptions(conf));
     assertEquals(2000, file.getNumberOfRows());
     assertEquals(TYPE_STRING, file.getSchema().toString());
-  }
-
-  private static class OrcOutputFormatWithRowBatchSize<V extends Writable> extends OrcOutputFormat {
-    private static final String EXTENSION = ".orc";
-    public static final String ROW_BATCH_SIZE = "orc.row.batch.size";
-
-    @Override
-    public RecordWriter<NullWritable, V>
-         getRecordWriter(TaskAttemptContext taskAttemptContext
-                        ) throws IOException {
-      Configuration conf = taskAttemptContext.getConfiguration();
-      Path filename = getDefaultWorkFile(taskAttemptContext, EXTENSION);
-      Writer writer = OrcFile.createWriter(filename,
-          org.apache.orc.mapred.OrcOutputFormat.buildOptions(conf));
-      //Ensure that orc.row.batch.size confing is set in the JobConf
-      int rowBatchSize = Integer.parseInt(conf.get(ROW_BATCH_SIZE));
-      return new OrcMapreduceRecordWriter<>(writer, rowBatchSize);
-    }
   }
 }

@@ -18,11 +18,13 @@
 
 package org.apache.orc.mapreduce;
 
+import org.apache.hadoop.hive.ql.exec.vector.MultiValuedColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.orc.OrcConf;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
 import org.apache.orc.mapred.OrcKey;
@@ -31,6 +33,8 @@ import org.apache.orc.mapred.OrcStruct;
 import org.apache.orc.mapred.OrcValue;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class OrcMapreduceRecordWriter<V extends Writable>
     extends RecordWriter<NullWritable, V> {
@@ -39,6 +43,9 @@ public class OrcMapreduceRecordWriter<V extends Writable>
   private final VectorizedRowBatch batch;
   private final TypeDescription schema;
   private final boolean isTopStruct;
+  private final List<MultiValuedColumnVector> variableLengthColumns =
+      new ArrayList<>();
+  private final int maxChildLength;
 
   public OrcMapreduceRecordWriter(Writer writer) {
     this(writer, VectorizedRowBatch.DEFAULT_SIZE);
@@ -46,16 +53,26 @@ public class OrcMapreduceRecordWriter<V extends Writable>
 
   public OrcMapreduceRecordWriter(Writer writer,
                                   int rowBatchSize) {
+    this(writer, rowBatchSize,
+        (Integer) OrcConf.ROW_BATCH_CHILD_LIMIT.getDefaultValue());
+  }
+
+  public OrcMapreduceRecordWriter(Writer writer,
+                                  int rowBatchSize,
+                                  int maxChildLength) {
     this.writer = writer;
     schema = writer.getSchema();
     this.batch = schema.createRowBatch(rowBatchSize);
     isTopStruct = schema.getCategory() == TypeDescription.Category.STRUCT;
+    OrcMapredRecordWriter.addVariableLengthColumns(variableLengthColumns, batch);
+    this.maxChildLength = maxChildLength;
   }
 
   @Override
   public void write(NullWritable nullWritable, V v) throws IOException {
     // if the batch is full, write it out.
-    if (batch.size == batch.getMaxSize()) {
+    if (batch.size == batch.getMaxSize() ||
+        OrcMapredRecordWriter.getMaxChildLength(variableLengthColumns) >= maxChildLength) {
       writer.addRowBatch(batch);
       batch.reset();
     }
