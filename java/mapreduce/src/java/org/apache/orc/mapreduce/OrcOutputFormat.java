@@ -25,6 +25,7 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
 import org.apache.orc.Writer;
 
@@ -49,7 +50,9 @@ public class OrcOutputFormat<V extends Writable>
     Path filename = getDefaultWorkFile(taskAttemptContext, EXTENSION);
     Writer writer = OrcFile.createWriter(filename,
         org.apache.orc.mapred.OrcOutputFormat.buildOptions(conf));
-     return new OrcMapreduceRecordWriter<V>(writer);
+     return new OrcMapreduceRecordWriter<V>(writer,
+         OrcConf.ROW_BATCH_SIZE.getInt(conf),
+         OrcConf.ROW_BATCH_CHILD_LIMIT.getInt(conf));
   }
 
   @Override

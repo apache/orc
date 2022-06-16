@@ -227,7 +227,11 @@ public enum OrcConf {
       "is the default."),
   ROW_BATCH_SIZE("orc.row.batch.size", "orc.row.batch.size", 1024,
       "The number of rows to include in a orc vectorized reader batch. " +
-      "The value should be carefully chosen to minimize overhead and avoid OOMs in reading data.")
+      "The value should be carefully chosen to minimize overhead and avoid OOMs in reading data."),
+  ROW_BATCH_CHILD_LIMIT("orc.row.child.limit", "orc.row.child.limit",
+      1024 * 32, "The maximum number of child elements to buffer before "+
+      "the ORC row writer writes the batch to the file."
+      )
   ;
 
   private final String attribute;
