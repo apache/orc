@@ -1,8 +1,16 @@
 # List the releases in reverse logical order
 # Only one release should be tagged latest
+1.7.5:
+  date: 2022-06-16
+  state: latest
+  tar: orc-1.7.5.tar.gz
+  signed-by: William Hyun (DECDFA29)
+  sha256: b90cae5853e3ea0e5bf64e3883d09d871ec280536e0bb2cc52d08f79f0be0010
+  known-issues:
+
 1.7.4:
   date: 2022-04-15
-  state: latest
+  state: archived
   tar: orc-1.7.4.tar.gz
   signed-by: William Hyun (DECDFA29)
   sha256: 0a70c5e877b1ff268e768c94392574a084092f8aa7f97796c13de276103d8272
