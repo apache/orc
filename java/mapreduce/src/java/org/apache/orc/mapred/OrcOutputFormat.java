@@ -75,6 +75,8 @@ public class OrcOutputFormat<V extends Writable>
     Path path = getTaskOutputPath(conf, name);
     Writer writer = OrcFile.createWriter(path,
         buildOptions(conf).fileSystem(fileSystem));
-    return new OrcMapredRecordWriter<>(writer);
+    return new OrcMapredRecordWriter<>(writer,
+        OrcConf.ROW_BATCH_SIZE.getInt(conf),
+        OrcConf.ROW_BATCH_CHILD_LIMIT.getInt(conf));
   }
 }
