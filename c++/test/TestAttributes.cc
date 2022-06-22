@@ -203,7 +203,7 @@ namespace orc {
     ReaderOptions readerOpts;
     std::unique_ptr<orc::Reader> reader =
       orc::createReader(readLocalFile(ss.str().c_str(),
-                                      *readerOpts.getReaderMetrics()),
+                                      readerOpts.getReaderMetrics()),
                         readerOpts);
     auto rowReader = createRowReader(reader);
     auto& root = rowReader->getSelectedType();

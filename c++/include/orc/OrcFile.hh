@@ -108,7 +108,7 @@ namespace orc {
    * @param metrics the metrics of the reader
    */
   ORC_UNIQUE_PTR<InputStream> readFile(const std::string& path,
-                                       ReaderMetrics& metrics);
+                                       ReaderMetrics* metrics = nullptr);
 
   /**
    * Create a stream to a local file.
@@ -116,7 +116,7 @@ namespace orc {
    * @param metrics the metrics of the reader
    */
   ORC_UNIQUE_PTR<InputStream> readLocalFile(const std::string& path,
-                                            ReaderMetrics& metrics);
+                                            ReaderMetrics* metrics = nullptr);
 
   /**
    * Create a stream to an HDFS file.
@@ -124,7 +124,7 @@ namespace orc {
    * @param metrics the metrics of the reader
    */
   ORC_UNIQUE_PTR<InputStream> readHdfsFile(const std::string& path,
-                                           ReaderMetrics& metrics);
+                                           ReaderMetrics* metrics = nullptr);
 
   /**
    * Create a reader to read the ORC file.

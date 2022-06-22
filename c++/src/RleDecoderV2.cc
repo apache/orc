@@ -393,7 +393,7 @@ void RleDecoderV2::plainUnpackLongs(int64_t *data, uint64_t offset, uint64_t len
 
 RleDecoderV2::RleDecoderV2(std::unique_ptr<SeekableInputStream> input,
                            bool _isSigned, MemoryPool& pool,
-                           ReaderMetrics& _metrics
+                           ReaderMetrics* _metrics
                            ): RleDecoder(_metrics),
                               inputStream(std::move(input)),
                               isSigned(_isSigned),
@@ -435,8 +435,7 @@ void RleDecoderV2::skip(uint64_t numValues) {
 void RleDecoderV2::next(int64_t* const data,
                         const uint64_t numValues,
                         const char* const notNull) {
-  AutoStopwatch measure(&metrics.DecodingLatencyUs,
-                        &metrics.DecodingCount);
+  DEFINE_AUTO_STOPWATCH(metrics, DecodingLatencyUs, DecodingCount);
   uint64_t nRead = 0;
 
   while (nRead < numValues) {

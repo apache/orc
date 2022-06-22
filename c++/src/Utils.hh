@@ -53,6 +53,11 @@ public:
   }
 };
 
+#define DEFINE_AUTO_STOPWATCH(METRICS_PTR, LATENCY_VAR, COUNT_VAR)    \
+  AutoStopwatch measure(                                              \
+    (METRICS_PTR == nullptr ? nullptr : &METRICS_PTR->LATENCY_VAR),   \
+    (METRICS_PTR == nullptr ? nullptr : &METRICS_PTR->COUNT_VAR))
+
 }
 
 #endif

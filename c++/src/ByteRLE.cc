@@ -320,7 +320,7 @@ namespace orc {
   class ByteRleDecoderImpl: public ByteRleDecoder {
   public:
     ByteRleDecoderImpl(std::unique_ptr<SeekableInputStream> input,
-                       ReaderMetrics& metrics);
+                       ReaderMetrics* metrics);
 
     virtual ~ByteRleDecoderImpl();
 
@@ -351,7 +351,7 @@ namespace orc {
     const char* bufferStart;
     const char* bufferEnd;
     bool repeating;
-    ReaderMetrics& metrics;
+    ReaderMetrics* metrics;
   };
 
   void ByteRleDecoderImpl::nextBuffer() {
@@ -386,7 +386,7 @@ namespace orc {
 
   ByteRleDecoderImpl::ByteRleDecoderImpl(
                         std::unique_ptr<SeekableInputStream> input,
-                        ReaderMetrics& _metrics)
+                        ReaderMetrics* _metrics)
                         : metrics(_metrics) {
     inputStream = std::move(input);
     repeating = false;
@@ -412,8 +412,7 @@ namespace orc {
   }
 
   void ByteRleDecoderImpl::skip(uint64_t numValues) {
-    AutoStopwatch meassure(&metrics.ByteDecodingLatencyUs,
-                           &metrics.ByteDecodingCount);
+    DEFINE_AUTO_STOPWATCH(metrics, ByteDecodingLatencyUs, ByteDecodingCount);
     while (numValues > 0) {
       if (remainingValues == 0) {
         readHeader();
@@ -441,8 +440,7 @@ namespace orc {
 
   void ByteRleDecoderImpl::next(char* data, uint64_t numValues,
                                 char* notNull) {
-    AutoStopwatch meassure(&metrics.ByteDecodingLatencyUs,
-                           &metrics.ByteDecodingCount);
+    DEFINE_AUTO_STOPWATCH(metrics, ByteDecodingLatencyUs, ByteDecodingCount);
     nextInternal(data, numValues, notNull);
   }
 
@@ -509,7 +507,7 @@ namespace orc {
 
   std::unique_ptr<ByteRleDecoder> createByteRleDecoder
                                  (std::unique_ptr<SeekableInputStream> input,
-                                  ReaderMetrics& metrics) {
+                                  ReaderMetrics* metrics) {
     return std::unique_ptr<ByteRleDecoder>(new ByteRleDecoderImpl
                                            (std::move(input), metrics));
   }
@@ -517,7 +515,7 @@ namespace orc {
   class BooleanRleDecoderImpl: public ByteRleDecoderImpl {
   public:
     BooleanRleDecoderImpl(std::unique_ptr<SeekableInputStream> input,
-                          ReaderMetrics& metrics);
+                          ReaderMetrics* metrics);
 
     virtual ~BooleanRleDecoderImpl();
 
@@ -543,7 +541,7 @@ namespace orc {
 
   BooleanRleDecoderImpl::BooleanRleDecoderImpl
                                 (std::unique_ptr<SeekableInputStream> input,
-                                 ReaderMetrics& _metrics
+                                 ReaderMetrics* _metrics
                                  ): ByteRleDecoderImpl(std::move(input), _metrics) {
     remainingBits = 0;
     lastByte = 0;
@@ -584,8 +582,7 @@ namespace orc {
 
   void BooleanRleDecoderImpl::next(char* data, uint64_t numValues,
                                    char* notNull) {
-    AutoStopwatch meassure(&metrics.ByteDecodingLatencyUs,
-                           &metrics.ByteDecodingCount);
+    DEFINE_AUTO_STOPWATCH(metrics, ByteDecodingLatencyUs, ByteDecodingCount);
     // next spot to fill in
     uint64_t position = 0;
 
@@ -655,7 +652,7 @@ namespace orc {
 
   std::unique_ptr<ByteRleDecoder> createBooleanRleDecoder
                                  (std::unique_ptr<SeekableInputStream> input,
-                                  ReaderMetrics& metrics) {
+                                  ReaderMetrics* metrics) {
     BooleanRleDecoderImpl* decoder =
       new BooleanRleDecoderImpl(std::move(input), metrics);
     return std::unique_ptr<ByteRleDecoder>(

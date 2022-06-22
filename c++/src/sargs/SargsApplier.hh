@@ -37,7 +37,7 @@ namespace orc {
                  const SearchArgument * searchArgument,
                  uint64_t rowIndexStride,
                  WriterVersion writerVersion,
-                 ReaderMetrics& metrics);
+                 ReaderMetrics* metrics);
 
     /**
      * Evaluate search argument on file statistics
@@ -92,8 +92,12 @@ namespace orc {
     }
 
     std::pair<uint64_t, uint64_t> getStats() const {
-      return std::make_pair(mMetrics.SelectedRowGroupCount.load(),
-                            mMetrics.EvaluatedRowGroupCount.load());
+      if (mMetrics != nullptr) {
+        return std::make_pair(mMetrics->SelectedRowGroupCount.load(),
+                              mMetrics->EvaluatedRowGroupCount.load());
+      } else {
+        return {0, 0};
+      }
     }
 
   private:
@@ -127,7 +131,7 @@ namespace orc {
     bool mFileStatsEvalResult;
     // use the SelectedRowGroupCount and EvaluatedRowGroupCount to
     // keep stats of selected RGs and evaluated RGs
-    ReaderMetrics& mMetrics;
+    ReaderMetrics* mMetrics;
   };
 
 }

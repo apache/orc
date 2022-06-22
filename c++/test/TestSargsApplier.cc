@@ -112,7 +112,7 @@ namespace orc {
     // evaluate row group index
     ReaderMetrics metrics;
     SargsApplier applier(
-      *type, sarg.get(), 1000, WriterVersion_ORC_135, metrics);
+      *type, sarg.get(), 1000, WriterVersion_ORC_135, &metrics);
     EXPECT_TRUE(applier.pickRowGroups(4000, rowIndexes, {}));
     const auto& nextSkippedRows = applier.getNextSkippedRows();
     EXPECT_EQ(4, nextSkippedRows.size());
@@ -148,7 +148,7 @@ namespace orc {
       *stripeStats.add_colstats() = createIntStats(0L, 10L);
       *stripeStats.add_colstats() = createIntStats(0L, 50L);
       SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135,
-                           *getDefaultReaderMetrics());
+                           getDefaultReaderMetrics());
       EXPECT_FALSE(applier.evaluateStripeStatistics(stripeStats));
     }
     // Test stripe stats 0 <= x <= 50 and 0 <= y <= 50
@@ -160,7 +160,7 @@ namespace orc {
       *stripeStats.add_colstats() = createIntStats(0L, 50L);
       *stripeStats.add_colstats() = createIntStats(0L, 50L);
       SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135,
-                           *getDefaultReaderMetrics());
+                           getDefaultReaderMetrics());
       EXPECT_TRUE(applier.evaluateStripeStatistics(stripeStats));
     }
     // Test file stats 0 <= x <= 10 and 0 <= y <= 50
@@ -172,7 +172,7 @@ namespace orc {
       *footer.add_statistics() = createIntStats(0L, 10L);
       *footer.add_statistics() = createIntStats(0L, 50L);
       SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135,
-                           *getDefaultReaderMetrics());
+                           getDefaultReaderMetrics());
       EXPECT_FALSE(applier.evaluateFileStatistics(footer));
     }
     // Test file stats 0 <= x <= 50 and 0 <= y <= 30
@@ -184,7 +184,7 @@ namespace orc {
       *footer.add_statistics() = createIntStats(0L, 50L);
       *footer.add_statistics() = createIntStats(0L, 30L);
       SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135,
-                           *getDefaultReaderMetrics());
+                           getDefaultReaderMetrics());
       EXPECT_FALSE(applier.evaluateFileStatistics(footer));
     }
     // Test file stats 0 <= x <= 50 and 0 <= y <= 50
@@ -196,7 +196,7 @@ namespace orc {
       *footer.add_statistics() = createIntStats(0L, 50L);
       *footer.add_statistics() = createIntStats(0L, 50L);
       SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135,
-                           *getDefaultReaderMetrics());
+                           getDefaultReaderMetrics());
       EXPECT_TRUE(applier.evaluateFileStatistics(footer));
     }
   }

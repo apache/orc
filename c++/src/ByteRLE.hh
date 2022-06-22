@@ -107,7 +107,7 @@ namespace orc {
    */
   std::unique_ptr<ByteRleDecoder> createByteRleDecoder
                                  (std::unique_ptr<SeekableInputStream> input,
-                                  ReaderMetrics& metrics);
+                                  ReaderMetrics* metrics);
 
   /**
    * Create a boolean RLE decoder.
@@ -120,7 +120,7 @@ namespace orc {
    */
   std::unique_ptr<ByteRleDecoder> createBooleanRleDecoder
                                  (std::unique_ptr<SeekableInputStream> input,
-                                  ReaderMetrics& metrics);
+                                  ReaderMetrics* metrics);
 }
 
 #endif

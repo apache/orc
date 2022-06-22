@@ -121,7 +121,7 @@ namespace orc {
     ReaderOptions readerOpts;
     std::unique_ptr<Reader> reader =
       createReader(readLocalFile(ss.str().c_str(),
-                                 *readerOpts.getReaderMetrics()),
+                                 readerOpts.getReaderMetrics()),
                    readerOpts);
     EXPECT_EQ(WriterId::ORC_CPP_WRITER, reader->getWriterId());
     EXPECT_EQ(softwareVersion, reader->getSoftwareVersion());

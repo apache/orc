@@ -104,7 +104,7 @@ namespace orc {
                     memStream.getData(),
                     memStream.getLength())),
             isSinged, version, *getDefaultPool(),
-            *getDefaultReaderMetrics());
+            getDefaultReaderMetrics());
 
     int64_t* decodedData = new int64_t[numValues];
     decoder->next(decodedData, numValues, notNull);

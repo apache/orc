@@ -113,7 +113,7 @@ namespace orc {
                                     myBlock)),
                                   reader.getCompressionSize(),
                                   *pool,
-                                  *reader.getFileContents().readerMetrics);
+                                  reader.getFileContents().readerMetrics);
       }
       offset += stream.length();
     }
@@ -124,8 +124,8 @@ namespace orc {
     return *reader.getFileContents().pool;
   }
 
-  ReaderMetrics& StripeStreamsImpl::getReaderMetrics() const {
-    return *reader.getFileContents().readerMetrics;
+  ReaderMetrics* StripeStreamsImpl::getReaderMetrics() const {
+    return reader.getFileContents().readerMetrics;
   }
 
   bool StripeStreamsImpl::getThrowOnHive11DecimalOverflow() const {

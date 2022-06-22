@@ -55,7 +55,7 @@ namespace orc {
 
     std::unique_ptr<SeekableInputStream> decompressStream =
       createDecompressor(kind, std::move(inputStream), 1024, pool,
-                         *getDefaultReaderMetrics());
+                         getDefaultReaderMetrics());
 
     const char * decompressedBuffer;
     int decompressedSize;
@@ -297,7 +297,7 @@ namespace orc {
                          std::move(inputStream),
                          1024,
                          *pool,
-                         *getDefaultReaderMetrics());
+                         getDefaultReaderMetrics());
 
     proto::PostScript ps2;
     ps2.ParseFromZeroCopyStream(decompressStream.get());
@@ -422,7 +422,7 @@ namespace orc {
                          std::move(inputStream),
                          blockSize,
                          *pool,
-                         *getDefaultReaderMetrics());
+                         getDefaultReaderMetrics());
 
     // prepare positions to seek to
     EXPECT_EQ(rowIndexEntry1.positions_size(), rowIndexEntry2.positions_size());

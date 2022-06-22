@@ -54,7 +54,7 @@ namespace orc {
                           bool isSigned,
                           RleVersion version,
                           MemoryPool& pool,
-                          ReaderMetrics& metrics) {
+                          ReaderMetrics* metrics) {
     switch (static_cast<int64_t>(version)) {
     case RleVersion_1:
       // We don't have std::make_unique() yet.

@@ -65,7 +65,7 @@ void processFile(const char* filename,
 
   std::unique_ptr<orc::Reader> reader =
                   orc::createReader(orc::readFile(std::string(filename),
-                                                  *readerOpts.getReaderMetrics()),
+                                                  readerOpts.getReaderMetrics()),
                                     readerOpts);
   std::unique_ptr<orc::RowReader> rowReader = reader->createRowReader(rowReaderOpts);
 

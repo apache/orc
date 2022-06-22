@@ -192,7 +192,7 @@ void RleDecoderV1::readHeader() {
 
 RleDecoderV1::RleDecoderV1(std::unique_ptr<SeekableInputStream> input,
                            bool hasSigned,
-                           ReaderMetrics& _metrics)
+                           ReaderMetrics* _metrics)
     : RleDecoder(_metrics),
       inputStream(std::move(input)),
       isSigned(hasSigned),

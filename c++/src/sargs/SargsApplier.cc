@@ -42,7 +42,7 @@ namespace orc {
                              const SearchArgument * searchArgument,
                              uint64_t rowIndexStride,
                              WriterVersion writerVersion,
-                             ReaderMetrics& metrics)
+                             ReaderMetrics* metrics)
                              : mType(type)
                              , mSearchArgument(searchArgument)
                              , mRowIndexStride(rowIndexStride)
@@ -131,8 +131,10 @@ namespace orc {
       mNextSkippedRows.cbegin(), mNextSkippedRows.cend(), 0UL,
       [](uint64_t initVal, uint64_t rg) {
         return rg > 0 ? initVal + 1 : initVal; });
-    mMetrics.SelectedRowGroupCount.fetch_add(selectedRGs);
-    mMetrics.EvaluatedRowGroupCount.fetch_add(groupsInStripe);
+    if (mMetrics != nullptr) {
+      mMetrics->SelectedRowGroupCount.fetch_add(selectedRGs);
+      mMetrics->EvaluatedRowGroupCount.fetch_add(groupsInStripe);
+    }
 
     return mHasSelected;
   }

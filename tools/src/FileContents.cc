@@ -27,7 +27,7 @@ void printContents(const char* filename, const orc::RowReaderOptions& rowReaderO
   std::unique_ptr<orc::Reader> reader;
   std::unique_ptr<orc::RowReader> rowReader;
   reader = orc::createReader(orc::readFile(std::string(filename),
-                                           *readerOpts.getReaderMetrics()),
+                                           readerOpts.getReaderMetrics()),
                              readerOpts);
   rowReader = reader->createRowReader(rowReaderOpts);
 

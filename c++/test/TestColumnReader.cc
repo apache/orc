@@ -71,8 +71,8 @@ namespace orc {
       return *getDefaultPool();
     }
 
-    ReaderMetrics& getReaderMetrics() const {
-      return *getDefaultReaderMetrics();
+    ReaderMetrics* getReaderMetrics() const {
+      return getDefaultReaderMetrics();
     }
 
     const Timezone &getWriterTimezone() const override {

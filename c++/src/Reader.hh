@@ -337,8 +337,8 @@ namespace orc {
 
     bool hasCorrectStatistics() const override;
 
-    const ReaderMetrics& getReaderMetrics() const override {
-      return *contents->readerMetrics;
+    const ReaderMetrics* getReaderMetrics() const override {
+      return contents->readerMetrics;
     }
 
     const proto::PostScript* getPostscript() const {return contents->postscript.get();}

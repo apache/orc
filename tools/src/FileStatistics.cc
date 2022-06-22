@@ -30,7 +30,7 @@ void printStatistics(const char *filename, bool withIndex) {
   orc::ReaderOptions opts;
   std::unique_ptr<orc::Reader> reader;
   reader = orc::createReader(orc::readFile(std::string(filename),
-                                           *opts.getReaderMetrics()),
+                                           opts.getReaderMetrics()),
                              opts);
   // print out all selected columns statistics.
   std::unique_ptr<orc::Statistics> colStats = reader->getStatistics();

@@ -100,7 +100,7 @@ namespace orc {
     /**
      * Set the reader metrics.
      */
-    ReaderOptions& setReaderMetrics(ReaderMetrics& metrics);
+    ReaderOptions& setReaderMetrics(ReaderMetrics* metrics);
 
     /**
      * Set the location of the tail as defined by the logical length of the
@@ -490,7 +490,7 @@ namespace orc {
      * Get metrics of the reader
      * @return the accumulated reader metrics to current state.
      */
-    virtual const ReaderMetrics& getReaderMetrics() const = 0;
+    virtual const ReaderMetrics* getReaderMetrics() const = 0;
 
     /**
      * Get the serialized file tail.

@@ -102,7 +102,7 @@ namespace orc {
     // must be non-inline!
     virtual ~RleDecoder();
 
-    RleDecoder(ReaderMetrics& _metrics) : metrics(_metrics) {
+    RleDecoder(ReaderMetrics* _metrics) : metrics(_metrics) {
       // pass
     }
 
@@ -127,7 +127,7 @@ namespace orc {
                       const char* notNull) = 0;
 
   protected:
-    ReaderMetrics& metrics;
+    ReaderMetrics* metrics;
   };
 
   /**
@@ -156,7 +156,7 @@ namespace orc {
                        bool isSigned,
                        RleVersion version,
                        MemoryPool& pool,
-                       ReaderMetrics& metrics);
+                       ReaderMetrics* metrics);
 
 }  // namespace orc
 

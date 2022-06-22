@@ -45,11 +45,11 @@ namespace orc {
     std::string filename;
     int file;
     uint64_t totalLength;
-    ReaderMetrics& metrics;
+    ReaderMetrics* metrics;
 
   public:
     FileInputStream(std::string _filename,
-                    ReaderMetrics& _metrics)
+                    ReaderMetrics* _metrics)
                     : filename(_filename),
                       metrics(_metrics) {
       file = open(filename.c_str(), O_BINARY | O_RDONLY);
@@ -76,8 +76,7 @@ namespace orc {
     void read(void* buf,
               uint64_t length,
               uint64_t offset) override {
-      AutoStopwatch measure(&metrics.IOBlockingLatencyUs,
-                            &metrics.IOCount);
+      DEFINE_AUTO_STOPWATCH(metrics, IOBlockingLatencyUs, IOCount);
       if (!buf) {
         throw ParseError("Buffer is null");
       }
@@ -101,7 +100,7 @@ namespace orc {
   }
 
   std::unique_ptr<InputStream> readFile(const std::string& path,
-                                        ReaderMetrics& metrics) {
+                                        ReaderMetrics* metrics) {
 #ifdef BUILD_LIBHDFSPP
     if(strncmp (path.c_str(), "hdfs://", 7) == 0){
       return orc::readHdfsFile(std::string(path), metrics);
@@ -114,7 +113,7 @@ namespace orc {
   }
 
   std::unique_ptr<InputStream> readLocalFile(const std::string& path,
-                                             ReaderMetrics& metrics) {
+                                             ReaderMetrics* metrics) {
       return std::unique_ptr<InputStream>(new FileInputStream(path, metrics));
   }
 

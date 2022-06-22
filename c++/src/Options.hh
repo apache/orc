@@ -89,8 +89,8 @@ namespace orc {
     return privateBits->memoryPool;
   }
 
-  ReaderOptions& ReaderOptions::setReaderMetrics(ReaderMetrics& metrics) {
-    privateBits->metrics = &metrics;
+  ReaderOptions& ReaderOptions::setReaderMetrics(ReaderMetrics* metrics) {
+    privateBits->metrics = metrics;
     return *this;
   }
 

@@ -73,7 +73,7 @@ namespace orc {
       new SeekableArrayInputStream(memStream.getData(), memStream.getLength()));
 
     std::unique_ptr<ByteRleDecoder> decoder =
-      createByteRleDecoder(std::move(inStream), *getDefaultReaderMetrics());
+      createByteRleDecoder(std::move(inStream), getDefaultReaderMetrics());
 
     char* decodedData = new char[numValues];
     decoder->next(decodedData, numValues, notNull);
@@ -97,7 +97,7 @@ namespace orc {
       new SeekableArrayInputStream(memStream.getData(), memStream.getLength()));
 
     std::unique_ptr<ByteRleDecoder> decoder =
-      createBooleanRleDecoder(std::move(inStream), *getDefaultReaderMetrics());
+      createBooleanRleDecoder(std::move(inStream), getDefaultReaderMetrics());
 
     char* decodedData = new char[numValues];
     decoder->next(decodedData, numValues, notNull);

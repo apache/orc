@@ -41,11 +41,11 @@ namespace orc {
     std::unique_ptr<hdfs::FileSystem> file_system;
     uint64_t totalLength;
     const uint64_t READ_SIZE = 1024 * 1024; //1 MB
-    ReaderMetrics& metrics;
+    ReaderMetrics* metrics;
 
   public:
     HdfsFileInputStream(std::string _filename,
-                        ReaderMetrics& _metrics)
+                        ReaderMetrics* _metrics)
                         : metrics(_metrics) {
       filename = _filename ;
 
@@ -141,8 +141,7 @@ namespace orc {
     void read(void* buf,
               uint64_t length,
               uint64_t offset) override {
-      AutoStopwatch measure(&metrics.IOBlockingLatencyUs,
-                            &metrics.IOCount);
+      DEFINE_AUTO_STOPWATCH(metrics, IOBlockingLatencyUs, IOCount);
       if (!buf) {
         throw ParseError("Buffer is null");
       }
@@ -175,7 +174,7 @@ namespace orc {
   }
 
   std::unique_ptr<InputStream> readHdfsFile(const std::string& path,
-                                            ReaderMetrics& metrics) {
+                                            ReaderMetrics* metrics) {
     return std::unique_ptr<InputStream>(new HdfsFileInputStream(path, metrics));
   }
 }

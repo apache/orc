@@ -308,7 +308,7 @@ namespace orc {
                                           sargs.get(),
                                           footer->rowindexstride(),
                                           getWriterVersionImpl(_contents.get()),
-                                          *contents->readerMetrics));
+                                          contents->readerMetrics));
     }
 
     skipBloomFilters = hasBadBloomFilters();
@@ -466,7 +466,7 @@ namespace orc {
                                    *contents->pool)),
                              getCompressionSize(),
                              *contents->pool,
-                             *contents->readerMetrics);
+                             contents->readerMetrics);
 
         if (pbStream.kind() == proto::Stream_Kind_ROW_INDEX) {
           proto::RowIndex rowIndex;
@@ -548,7 +548,7 @@ namespace orc {
                                                       *contents.pool)),
                          contents.blockSize,
                          *contents.pool,
-                         *contents.readerMetrics);
+                         contents.readerMetrics);
     proto::StripeFooter result;
     if (!result.ParseFromZeroCopyStream(pbStream.get())) {
       throw ParseError(std::string("bad StripeFooter from ") +
@@ -639,7 +639,7 @@ namespace orc {
         *contents->pool,
         contents->compression,
         contents->blockSize,
-        *contents->readerMetrics));
+        contents->readerMetrics));
   }
 
   FileVersion ReaderImpl::getFormatVersion() const {
@@ -759,7 +759,7 @@ namespace orc {
                                                 *contents->pool)),
                   contents->blockSize,
                   *(contents->pool),
-                  *contents->readerMetrics);
+                  contents->readerMetrics);
 
         proto::RowIndex rowIndex;
         if (!rowIndex.ParseFromZeroCopyStream(pbStream.get())) {
@@ -858,7 +858,7 @@ namespace orc {
                                                           *contents->pool)),
                            contents->blockSize,
                            *contents->pool,
-                           *contents->readerMetrics);
+                           contents->readerMetrics);
       contents->metadata.reset(new proto::Metadata());
       if (!contents->metadata->ParseFromZeroCopyStream(pbStream.get())) {
         throw ParseError("Failed to parse the metadata");
@@ -1166,8 +1166,8 @@ namespace orc {
   }
 
   bool RowReaderImpl::next(ColumnVectorBatch& data) {
-    AutoStopwatch measure(&contents->readerMetrics->ReaderInclusiveLatencyUs,
-                          &contents->readerMetrics->ReaderCount);
+    DEFINE_AUTO_STOPWATCH(
+      contents->readerMetrics, ReaderInclusiveLatencyUs, ReaderCount);
     if (currentStripe >= lastStripe) {
       data.numElements = 0;
       markEndOfFile();
@@ -1385,7 +1385,7 @@ namespace orc {
                                             uint64_t footerOffset,
                                             const proto::PostScript& ps,
                                             MemoryPool& memoryPool,
-                                            ReaderMetrics& readerMetrics) {
+                                            ReaderMetrics* readerMetrics) {
     const char *footerPtr = buffer->data() + footerOffset;
 
     std::unique_ptr<SeekableInputStream> pbStream =
@@ -1461,7 +1461,7 @@ namespace orc {
       }
 
       contents->footer = REDUNDANT_MOVE(readFooter(stream.get(), buffer.get(),
-        footerOffset, *contents->postscript,  *contents->pool, *contents->readerMetrics));
+        footerOffset, *contents->postscript,  *contents->pool, contents->readerMetrics));
     }
     contents->isDecimalAsLong = false;
     if (contents->postscript->version_size() == 2) {
@@ -1511,7 +1511,7 @@ namespace orc {
                                                             *contents->pool)),
                              contents->blockSize,
                              *(contents->pool),
-                             *contents->readerMetrics);
+                             contents->readerMetrics);
 
         proto::BloomFilterIndex pbBFIndex;
         if (!pbBFIndex.ParseFromZeroCopyStream(pbStream.get())) {

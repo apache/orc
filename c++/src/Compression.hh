@@ -37,7 +37,7 @@ namespace orc {
                         std::unique_ptr<SeekableInputStream> input,
                         uint64_t bufferSize,
                         MemoryPool& pool,
-                        ReaderMetrics& metrics);
+                        ReaderMetrics* metrics);
 
   /**
    * Create a compressor for the given compression kind.

@@ -695,8 +695,7 @@ namespace orc {
       return *(itr->second).get();
     }
     try {
-      ORC_UNIQUE_PTR<InputStream> file =
-        readFile(filename, *getDefaultReaderMetrics());
+      ORC_UNIQUE_PTR<InputStream> file = readFile(filename);
       size_t size = static_cast<size_t>(file->getLength());
       std::vector<unsigned char> buffer(size);
       file->read(&buffer[0], size, 0);

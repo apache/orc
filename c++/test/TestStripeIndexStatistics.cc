@@ -38,7 +38,7 @@ namespace orc {
     orc::ReaderOptions readerOpts;
     std::unique_ptr<orc::Reader> reader =
       createReader(readLocalFile(ss.str().c_str(),
-                                 *readerOpts.getReaderMetrics()),
+                                 readerOpts.getReaderMetrics()),
                    readerOpts);
     std::unique_ptr<orc::StripeStatistics> stripeStats = reader->getStripeStatistics(0);
     EXPECT_EQ(3, stripeStats->getNumberOfRowIndexStats(0));
