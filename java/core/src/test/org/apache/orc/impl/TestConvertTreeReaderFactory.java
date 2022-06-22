@@ -32,6 +32,7 @@ import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.OrcFile;
+import org.apache.orc.OrcFile.WriterOptions;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
 import org.apache.orc.TestProlepticConversions;
@@ -64,6 +65,8 @@ public class TestConvertTreeReaderFactory {
   private FileSystem fs;
   private Path testFilePath;
   private int LARGE_BATCH_SIZE;
+  private static final int INCREASING_BATCH_SIZE_FIRST = 30;
+  private static final int INCREASING_BATCH_SIZE_SECOND = 50;
 
   @BeforeEach
   public void setupPath(TestInfo testInfo) throws Exception {
@@ -94,22 +97,7 @@ public class TestConvertTreeReaderFactory {
     TExpectedColumnVector dcv = (TExpectedColumnVector) (listCol).child;
     batch.size = 1;
     for (int row = 0; row < LARGE_BATCH_SIZE; ++row) {
-      if (dcv instanceof DecimalColumnVector) {
-        ((DecimalColumnVector) dcv).set(row, HiveDecimal.create(row * 2 + 1));
-      } else if (dcv instanceof DoubleColumnVector) {
-        ((DoubleColumnVector) dcv).vector[row] = row * 2 + 1;
-      } else if (dcv instanceof BytesColumnVector) {
-        ((BytesColumnVector) dcv).setVal(row, ((row * 2 + 1) + "").getBytes(StandardCharsets.UTF_8));
-      } else if (dcv instanceof LongColumnVector) {
-        ((LongColumnVector) dcv).vector[row] = row * 2 + 1;
-      } else if (dcv instanceof TimestampColumnVector) {
-        ((TimestampColumnVector) dcv).set(row, Timestamp.valueOf((1900 + row) + "-04-01 12:34:56.9"));
-      } else if (dcv instanceof DateColumnVector) {
-        String date = String.format("%04d-01-23", row * 2 + 1);
-        ((DateColumnVector) dcv).vector[row] = TimeUnit.MILLISECONDS.toDays(dateFormat.parse(date).getTime());
-      } else {
-        throw new IllegalStateException("Writing File with a large array of "+ expectedColumnType + " is not supported!");
-      }
+      setElementInVector(expectedColumnType, dateFormat, dcv, row);
     }
 
     listCol.childCount = 1;
@@ -120,6 +108,65 @@ public class TestConvertTreeReaderFactory {
     w.close();
     assertEquals(((ListColumnVector) batch.cols[0]).child.getClass(), expectedColumnType);
     return (TExpectedColumnVector) ((ListColumnVector) batch.cols[0]).child;
+  }
+
+  public <TExpectedColumnVector extends ColumnVector> TExpectedColumnVector createORCFileWithBatchesOfIncreasingSizeInDifferentStripes(
+      TypeDescription schema, Class<TExpectedColumnVector> typeClass, boolean useDecimal64)
+      throws IOException, ParseException {
+    conf = new Configuration();
+    fs = FileSystem.getLocal(conf);
+    fs.setWorkingDirectory(workDir);
+    WriterOptions options = OrcFile.writerOptions(conf);
+    Writer w = OrcFile.createWriter(testFilePath, options.setSchema(schema));
+
+    SimpleDateFormat dateFormat = TestProlepticConversions.createParser("yyyy-MM-dd", new GregorianCalendar());
+    VectorizedRowBatch batch = schema.createRowBatch(
+        useDecimal64 ? TypeDescription.RowBatchVersion.USE_DECIMAL64 : TypeDescription.RowBatchVersion.ORIGINAL,
+        INCREASING_BATCH_SIZE_FIRST);
+
+    TExpectedColumnVector columnVector = (TExpectedColumnVector) batch.cols[0];
+    batch.size = INCREASING_BATCH_SIZE_FIRST;
+    for (int row = 0; row < INCREASING_BATCH_SIZE_FIRST; ++row) {
+      setElementInVector(typeClass, dateFormat, columnVector, row);
+    }
+
+    w.addRowBatch(batch);
+    w.writeIntermediateFooter(); //forcing a new stripe
+
+    batch = schema.createRowBatch(
+        useDecimal64 ? TypeDescription.RowBatchVersion.USE_DECIMAL64 : TypeDescription.RowBatchVersion.ORIGINAL,
+        INCREASING_BATCH_SIZE_SECOND);
+
+    columnVector = (TExpectedColumnVector) batch.cols[0];
+    batch.size = INCREASING_BATCH_SIZE_SECOND;
+    for (int row = 0; row < INCREASING_BATCH_SIZE_SECOND; ++row) {
+      setElementInVector(typeClass, dateFormat, columnVector, row);
+    }
+
+    w.addRowBatch(batch);
+    w.close();
+    return (TExpectedColumnVector) batch.cols[0];
+  }
+
+  private void setElementInVector(
+      Class<?> expectedColumnType, SimpleDateFormat dateFormat, ColumnVector dcv, int row)
+      throws ParseException {
+    if (dcv instanceof DecimalColumnVector) {
+      ((DecimalColumnVector) dcv).set(row, HiveDecimal.create(row * 2 + 1));
+    } else if (dcv instanceof DoubleColumnVector) {
+      ((DoubleColumnVector) dcv).vector[row] = row * 2 + 1;
+    } else if (dcv instanceof BytesColumnVector) {
+      ((BytesColumnVector) dcv).setVal(row, ((row * 2 + 1) + "").getBytes(StandardCharsets.UTF_8));
+    } else if (dcv instanceof LongColumnVector) {
+      ((LongColumnVector) dcv).vector[row] = row * 2 + 1;
+    } else if (dcv instanceof TimestampColumnVector) {
+      ((TimestampColumnVector) dcv).set(row, Timestamp.valueOf((1900 + row) + "-04-01 12:34:56.9"));
+    } else if (dcv instanceof DateColumnVector) {
+      String date = String.format("%04d-01-23", row * 2 + 1);
+      ((DateColumnVector) dcv).vector[row] = TimeUnit.MILLISECONDS.toDays(dateFormat.parse(date).getTime());
+    } else {
+      throw new IllegalStateException("Writing File with a large array of "+ expectedColumnType + " is not supported!");
+    }
   }
 
   public <TExpectedColumnVector extends ColumnVector> TExpectedColumnVector readORCFileWithLargeArray(
@@ -143,6 +190,31 @@ public class TestConvertTreeReaderFactory {
     assertTrue(batch.cols[0] instanceof ListColumnVector);
     assertEquals(((ListColumnVector) batch.cols[0]).child.getClass(), expectedColumnType);
     return (TExpectedColumnVector) ((ListColumnVector) batch.cols[0]).child;
+  }
+
+  public void readORCFileIncreasingBatchSize(String typeString, Class<?> expectedColumnType) throws Exception {
+    Reader.Options options = new Reader.Options();
+    TypeDescription schema = TypeDescription.fromString("struct<col1:" + typeString + ">");
+    options.schema(schema);
+    String expected = options.toString();
+
+    Configuration conf = new Configuration();
+
+    Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf));
+    RecordReader rows = reader.rows(options);
+    VectorizedRowBatch batch = schema.createRowBatchV2();
+
+    rows.nextBatch(batch);
+    assertEquals(INCREASING_BATCH_SIZE_FIRST , batch.size);
+    assertEquals(expected, options.toString());
+    assertEquals(batch.cols.length, 1);
+    assertEquals(batch.cols[0].getClass(), expectedColumnType);
+
+    rows.nextBatch(batch);
+    assertEquals(INCREASING_BATCH_SIZE_SECOND , batch.size);
+    assertEquals(expected, options.toString());
+    assertEquals(batch.cols.length, 1);
+    assertEquals(batch.cols[0].getClass(), expectedColumnType);
   }
 
   public void testConvertToDecimal() throws Exception {
@@ -347,6 +419,65 @@ public class TestConvertTreeReaderFactory {
       testConvertToVarchar();
       testConvertToTimestamp();
     } finally {
+      fs.delete(testFilePath, false);
+    }
+  }
+
+  @Test
+  public void testDecimalVectorIncreasingSizeInDifferentStripes() throws Exception {
+    String typeStr = "decimal(6,1)";
+    Class typeClass = DecimalColumnVector.class;
+
+    TypeDescription schema = TypeDescription.fromString("struct<col1:" + typeStr + ">");
+    createORCFileWithBatchesOfIncreasingSizeInDifferentStripes(schema, typeClass, typeClass.equals(Decimal64ColumnVector.class));
+    try {
+      testConvertToIntegerIncreasingSize();
+      testConvertToDoubleIncreasingSize();
+      testConvertToVarcharIncreasingSize();
+      testConvertToTimestampIncreasingSize();
+      testConvertToDecimalIncreasingSize();
+    } finally {
+      fs.delete(testFilePath, false);
+    }
+  }
+
+  @Test
+  public void testDecimal64VectorIncreasingSizeInDifferentStripes() throws Exception {
+    String typeStr = "decimal(6,1)";
+    Class typeClass = Decimal64ColumnVector.class;
+
+    TypeDescription schema = TypeDescription.fromString("struct<col1:" + typeStr + ">");
+    createORCFileWithBatchesOfIncreasingSizeInDifferentStripes(schema, typeClass,
+        typeClass.equals(Decimal64ColumnVector.class));
+    try {
+      testConvertToIntegerIncreasingSize();
+      testConvertToDoubleIncreasingSize();
+      testConvertToVarcharIncreasingSize();
+      testConvertToTimestampIncreasingSize();
+      testConvertToDecimalIncreasingSize();
+    } finally {
+      // Make sure we delete file across tests
+      fs.delete(testFilePath, false);
+    }
+  }
+
+  @Test
+  public void testStringVectorIncreasingSizeInDifferentStripes() throws Exception {
+    String typeStr = "varchar(10)";
+    Class typeClass = BytesColumnVector.class;
+
+    TypeDescription schema = TypeDescription.fromString("struct<col1:" + typeStr + ">");
+    createORCFileWithBatchesOfIncreasingSizeInDifferentStripes(schema, typeClass,
+        typeClass.equals(Decimal64ColumnVector.class));
+    try {
+      testConvertToIntegerIncreasingSize();
+      testConvertToDoubleIncreasingSize();
+      testConvertToDecimalIncreasingSize();
+      testConvertToVarcharIncreasingSize();
+      testConvertToBinaryIncreasingSize();
+      testConvertToTimestampIncreasingSize();
+      testConvertToDateIncreasingSize();
+    } finally {
       // Make sure we delete file across tests
       fs.delete(testFilePath, false);
     }
@@ -386,5 +517,126 @@ public class TestConvertTreeReaderFactory {
 
     assertEquals("totalLength:-1 is a negative number.",
             batchSizeOneException.getMessage());
+  }
+
+  public void testBinaryVectorIncreasingSizeInDifferentStripes() throws Exception {
+    String typeStr = "binary";
+    Class typeClass = BytesColumnVector.class;
+
+    TypeDescription schema = TypeDescription.fromString("struct<col1:" + typeStr + ">");
+    createORCFileWithBatchesOfIncreasingSizeInDifferentStripes(schema, typeClass,
+        typeClass.equals(Decimal64ColumnVector.class));
+    try {
+      testConvertToVarcharIncreasingSize();
+    } finally {
+      fs.delete(testFilePath, false);
+    }
+  }
+
+  @Test
+  public void testDoubleVectorIncreasingSizeInDifferentStripes() throws Exception {
+    String typeStr = "double";
+    Class typeClass = DoubleColumnVector.class;
+
+    TypeDescription schema = TypeDescription.fromString("struct<col1:" + typeStr + ">");
+    createORCFileWithBatchesOfIncreasingSizeInDifferentStripes(schema, typeClass,
+        typeClass.equals(Decimal64ColumnVector.class));
+    try {
+      testConvertToDoubleIncreasingSize();
+      testConvertToIntegerIncreasingSize();
+      testConvertToFloatIncreasingSize();
+      testConvertToDecimalIncreasingSize();
+      testConvertToVarcharIncreasingSize();
+      testConvertToTimestampIncreasingSize();
+    } finally {
+      fs.delete(testFilePath, false);
+    }
+  }
+
+  @Test
+  public void testIntVectorIncreasingSizeInDifferentStripes() throws Exception {
+    String typeStr = "int";
+    Class typeClass = LongColumnVector.class;
+
+    TypeDescription schema = TypeDescription.fromString("struct<col1:" + typeStr + ">");
+    createORCFileWithBatchesOfIncreasingSizeInDifferentStripes(schema, typeClass,
+        typeClass.equals(Decimal64ColumnVector.class));
+    try {
+      testConvertToIntegerIncreasingSize();
+      testConvertToDoubleIncreasingSize();
+      testConvertToDecimalIncreasingSize();
+      testConvertToVarcharIncreasingSize();
+      testConvertToTimestampIncreasingSize();
+    } finally {
+      fs.delete(testFilePath, false);
+    }
+  }
+
+  @Test
+  public void testTimestampVectorIncreasingSizeInDifferentStripes() throws Exception {
+    String typeStr = "timestamp";
+    Class typeClass = TimestampColumnVector.class;
+
+    TypeDescription schema = TypeDescription.fromString("struct<col1:" + typeStr + ">");
+    createORCFileWithBatchesOfIncreasingSizeInDifferentStripes(schema, typeClass,
+        typeClass.equals(Decimal64ColumnVector.class));
+    try {
+      testConvertToIntegerIncreasingSize();
+      testConvertToDoubleIncreasingSize();
+      testConvertToDecimalIncreasingSize();
+      testConvertToVarcharIncreasingSize();
+      testConvertToTimestampIncreasingSize();
+      testConvertToDateIncreasingSize();
+    } finally {
+      fs.delete(testFilePath, false);
+    }
+  }
+
+  @Test
+  public void testDateVectorIncreasingSizeInDifferentStripes() throws Exception {
+    String typeStr = "date";
+    Class typeClass = DateColumnVector.class;
+
+    TypeDescription schema = TypeDescription.fromString("struct<col1:" + typeStr + ">");
+    createORCFileWithBatchesOfIncreasingSizeInDifferentStripes(schema, typeClass,
+        typeClass.equals(Decimal64ColumnVector.class));
+    try {
+      testConvertToVarcharIncreasingSize();
+      testConvertToTimestampIncreasingSize();
+    } finally {
+      fs.delete(testFilePath, false);
+    }
+  }
+
+  private void testConvertToDoubleIncreasingSize() throws Exception {
+    readORCFileIncreasingBatchSize("double", DoubleColumnVector.class);
+  }
+
+  private void testConvertToIntegerIncreasingSize() throws Exception {
+    readORCFileIncreasingBatchSize("int", LongColumnVector.class);
+  }
+
+  private void testConvertToFloatIncreasingSize() throws Exception {
+    readORCFileIncreasingBatchSize("float", DoubleColumnVector.class);
+  }
+
+  public void testConvertToDecimalIncreasingSize() throws Exception {
+    readORCFileIncreasingBatchSize("decimal(6,1)", Decimal64ColumnVector.class);
+  }
+
+  private void testConvertToVarcharIncreasingSize() throws Exception {
+    readORCFileIncreasingBatchSize("varchar(10)", BytesColumnVector.class);
+  }
+
+  private void testConvertToTimestampIncreasingSize() throws Exception {
+    readORCFileIncreasingBatchSize("timestamp", TimestampColumnVector.class);
+  }
+
+  private void testConvertToDateIncreasingSize() throws Exception {
+    readORCFileIncreasingBatchSize("date", DateColumnVector.class);
+  }
+
+  private void testConvertToBinaryIncreasingSize() throws Exception {
+    readORCFileIncreasingBatchSize("binary", BytesColumnVector.class);
   }
 }
