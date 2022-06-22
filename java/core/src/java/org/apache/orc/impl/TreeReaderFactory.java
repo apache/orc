@@ -308,6 +308,19 @@ public class TreeReaderFactory {
       }
     }
 
+    /**
+     * Ensures the size of a vector, and gives the power to TreeReader subclasses to
+     * ensure the size of any other inner/intermediate vectors which are in use (e.g. in ConvertTreeReaders).
+     *
+     * @param vector The ColumnVector object
+     * @param batchSize Size of the column vector
+     */
+    protected void ensureSize(ColumnVector vector, int batchSize) {
+      if (vector != null) {
+        vector.ensureSize(batchSize, false);
+      }
+    }
+
     public BitFieldReader getPresent() {
       return present;
     }
@@ -2043,7 +2056,7 @@ public class TreeReaderFactory {
         ColumnVector colVector = batch.cols[i];
         if (colVector != null) {
           colVector.reset();
-          colVector.ensureSize((int) batchSize, false);
+          fields[i].ensureSize(colVector, (int) batchSize);
           fields[i].nextVector(colVector, null, batchSize);
         }
       }
