@@ -201,7 +201,7 @@ public class SparkBenchmark implements OrcBenchmark {
             JavaConverters.collectionAsScalaIterableConverter(filters).asScala().toSeq(),
             scalaMap, source.conf);
     PartitionedFile file = new PartitionedFile(InternalRow.empty(),
-        source.path.toString(), 0, Long.MAX_VALUE, new String[0]);
+        source.path.toString(), 0, Long.MAX_VALUE, new String[0], 0L, 0L);
     processReader(factory.apply(file), statistics, counters, blackhole);
   }
 
@@ -249,7 +249,7 @@ public class SparkBenchmark implements OrcBenchmark {
             JavaConverters.collectionAsScalaIterableConverter(filters).asScala().toSeq(),
             scalaMap, source.conf);
     PartitionedFile file = new PartitionedFile(InternalRow.empty(),
-        source.path.toString(), 0, Long.MAX_VALUE, new String[0]);
+        source.path.toString(), 0, Long.MAX_VALUE, new String[0], 0L, 0L);
     processReader(factory.apply(file), statistics, counters, blackhole);
   }
 
@@ -301,7 +301,7 @@ public class SparkBenchmark implements OrcBenchmark {
             JavaConverters.collectionAsScalaIterableConverter(filters).asScala().toSeq(),
             scalaMap, source.conf);
     PartitionedFile file = new PartitionedFile(InternalRow.empty(),
-        source.path.toString(), 0, Long.MAX_VALUE, new String[0]);
+        source.path.toString(), 0, Long.MAX_VALUE, new String[0], 0L, 0L);
     processReader(factory.apply(file), statistics, counters, blackhole);
   }
 }
