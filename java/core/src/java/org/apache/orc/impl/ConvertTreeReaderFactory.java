@@ -1814,9 +1814,6 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
         }
       } else {
         bytesColVector.ensureSize(batchSize, false);
-        if (dateColumnVector != null) {
-          dateColumnVector.ensureSize(batchSize, false);
-        }
       }
       // Read present/isNull stream
       fromReader.nextVector(bytesColVector, isNull, batchSize, filterContext, readPhase);
