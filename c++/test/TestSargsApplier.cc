@@ -147,9 +147,12 @@ namespace orc {
       *stripeStats.add_colstats() = structStatistics;
       *stripeStats.add_colstats() = createIntStats(0L, 10L);
       *stripeStats.add_colstats() = createIntStats(0L, 50L);
+      ReaderMetrics metrics;
       SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135,
-                           getDefaultReaderMetrics());
-      EXPECT_FALSE(applier.evaluateStripeStatistics(stripeStats));
+                           &metrics);
+      EXPECT_FALSE(applier.evaluateStripeStatistics(stripeStats, 1));
+      EXPECT_EQ(metrics.SelectedRowGroupCount.load(), 0);
+      EXPECT_EQ(metrics.EvaluatedRowGroupCount.load(), 1);
     }
     // Test stripe stats 0 <= x <= 50 and 0 <= y <= 50
     {
@@ -159,9 +162,12 @@ namespace orc {
       *stripeStats.add_colstats() = structStatistics;
       *stripeStats.add_colstats() = createIntStats(0L, 50L);
       *stripeStats.add_colstats() = createIntStats(0L, 50L);
+      ReaderMetrics metrics;
       SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135,
-                           getDefaultReaderMetrics());
-      EXPECT_TRUE(applier.evaluateStripeStatistics(stripeStats));
+                           &metrics);
+      EXPECT_TRUE(applier.evaluateStripeStatistics(stripeStats, 1));
+      EXPECT_EQ(metrics.SelectedRowGroupCount.load(), 0);
+      EXPECT_EQ(metrics.EvaluatedRowGroupCount.load(), 0);
     }
     // Test file stats 0 <= x <= 10 and 0 <= y <= 50
     {
@@ -171,9 +177,12 @@ namespace orc {
       *footer.add_statistics() = structStatistics;
       *footer.add_statistics() = createIntStats(0L, 10L);
       *footer.add_statistics() = createIntStats(0L, 50L);
+      ReaderMetrics metrics;
       SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135,
-                           getDefaultReaderMetrics());
-      EXPECT_FALSE(applier.evaluateFileStatistics(footer));
+                           &metrics);
+      EXPECT_FALSE(applier.evaluateFileStatistics(footer, 1));
+      EXPECT_EQ(metrics.SelectedRowGroupCount.load(), 0);
+      EXPECT_EQ(metrics.EvaluatedRowGroupCount.load(), 1);
     }
     // Test file stats 0 <= x <= 50 and 0 <= y <= 30
     {
@@ -183,9 +192,12 @@ namespace orc {
       *footer.add_statistics() = structStatistics;
       *footer.add_statistics() = createIntStats(0L, 50L);
       *footer.add_statistics() = createIntStats(0L, 30L);
+      ReaderMetrics metrics;
       SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135,
-                           getDefaultReaderMetrics());
-      EXPECT_FALSE(applier.evaluateFileStatistics(footer));
+                           &metrics);
+      EXPECT_FALSE(applier.evaluateFileStatistics(footer, 1));
+      EXPECT_EQ(metrics.SelectedRowGroupCount.load(), 0);
+      EXPECT_EQ(metrics.EvaluatedRowGroupCount.load(), 1);
     }
     // Test file stats 0 <= x <= 50 and 0 <= y <= 50
     {
@@ -195,9 +207,12 @@ namespace orc {
       *footer.add_statistics() = structStatistics;
       *footer.add_statistics() = createIntStats(0L, 50L);
       *footer.add_statistics() = createIntStats(0L, 50L);
+      ReaderMetrics metrics;
       SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135,
-                           getDefaultReaderMetrics());
-      EXPECT_TRUE(applier.evaluateFileStatistics(footer));
+                           &metrics);
+      EXPECT_TRUE(applier.evaluateFileStatistics(footer, 1));
+      EXPECT_EQ(metrics.SelectedRowGroupCount.load(), 0);
+      EXPECT_EQ(metrics.EvaluatedRowGroupCount.load(), 0);
     }
   }
 }  // namespace orc

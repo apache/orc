@@ -45,19 +45,15 @@ namespace orc {
    * number of calls of the decompression/decoding/IO modules.
    */
   struct ReaderMetrics {
-    std::atomic<uint64_t> ReaderCount{0};
+    std::atomic<uint64_t> ReaderCall{0};
     // ReaderInclusiveLatencyUs contains the latency of
     // the decompression/decoding/IO modules.
     std::atomic<uint64_t> ReaderInclusiveLatencyUs{0};
-    std::atomic<uint64_t> DecompCount{0};
-    // DecompLatencyUs contains the IO blocking latency.
-    std::atomic<uint64_t> DecompLatencyUs{0};
-    std::atomic<uint64_t> DecodingCount{0};
-    // DecodingLatencyUs contains the latency of the decompression/IO modules.
+    std::atomic<uint64_t> DecompressionCall{0};
+    std::atomic<uint64_t> DecompressionLatencyUs{0};
+    std::atomic<uint64_t> DecodingCall{0};
     std::atomic<uint64_t> DecodingLatencyUs{0};
-    std::atomic<uint64_t> ByteDecodingCount{0};
-    // ByteDecodingLatencyUs contains the latency of
-    // the decompression/IO modules.
+    std::atomic<uint64_t> ByteDecodingCall{0};
     std::atomic<uint64_t> ByteDecodingLatencyUs{0};
     std::atomic<uint64_t> IOCount{0};
     std::atomic<uint64_t> IOBlockingLatencyUs{0};

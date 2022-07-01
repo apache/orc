@@ -424,6 +424,7 @@ DIAGNOSTIC_PUSH
   }
 
   void DecompressionStream::readBuffer(bool failOnEof) {
+    SCOPED_MINUS_STOPWATCH(metrics, DecompressionLatencyUs);
     int length;
     if (!input->Next(reinterpret_cast<const void**>(&inputBuffer),
                       &length)) {
@@ -469,7 +470,7 @@ DIAGNOSTIC_PUSH
   }
 
   bool DecompressionStream::Next(const void** data, int*size) {
-    DEFINE_AUTO_STOPWATCH(metrics, DecompLatencyUs, DecompCount);
+    SCOPED_STOPWATCH(metrics, DecompressionLatencyUs, DecompressionCall);
     // If we are starting a new header, we will have to store its positions
     // after decompressing.
     bool saveBufferPositions = false;

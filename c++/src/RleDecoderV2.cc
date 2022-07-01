@@ -25,6 +25,7 @@
 namespace orc {
 
 unsigned char RleDecoderV2::readByte() {
+  SCOPED_MINUS_STOPWATCH(metrics, DecodingLatencyUs);
   if (bufferStart == bufferEnd) {
     int bufferLength;
     const void* bufferPointer;
@@ -435,7 +436,7 @@ void RleDecoderV2::skip(uint64_t numValues) {
 void RleDecoderV2::next(int64_t* const data,
                         const uint64_t numValues,
                         const char* const notNull) {
-  DEFINE_AUTO_STOPWATCH(metrics, DecodingLatencyUs, DecodingCount);
+  SCOPED_STOPWATCH(metrics, DecodingLatencyUs, DecodingCall);
   uint64_t nRead = 0;
 
   while (nRead < numValues) {

@@ -20,6 +20,7 @@
 #include "Compression.hh"
 #include "orc/Exceptions.hh"
 #include "RLEv1.hh"
+#include "Utils.hh"
 
 #include <algorithm>
 
@@ -138,6 +139,7 @@ void RleEncoderV1::write(int64_t value) {
 }
 
 signed char RleDecoderV1::readByte() {
+  SCOPED_MINUS_STOPWATCH(metrics, DecodingLatencyUs);
   if (bufferStart == bufferEnd) {
     int bufferLength;
     const void* bufferPointer;
@@ -234,6 +236,7 @@ void RleDecoderV1::skip(uint64_t numValues) {
 void RleDecoderV1::next(int64_t* const data,
                         const uint64_t numValues,
                         const char* const notNull) {
+  SCOPED_STOPWATCH(metrics, DecodingLatencyUs, DecodingCall);
   uint64_t position = 0;
   // skipNulls()
   if (notNull) {

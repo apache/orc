@@ -268,6 +268,7 @@ namespace orc {
     lastStripe = 0;
     currentRowInStripe = 0;
     rowsInCurrentStripe = 0;
+    fileRowGroupCount = 0;
     uint64_t rowTotal = 0;
 
     firstRowOfStripe.resize(numberOfStripes);
@@ -285,6 +286,10 @@ namespace orc {
         if (i >= lastStripe) {
           lastStripe = i + 1;
         }
+      }
+      if (footer->rowindexstride() > 0) {
+        fileRowGroupCount +=
+          (stripeInfo.numberofrows() + footer->rowindexstride() - 1) / footer->rowindexstride();
       }
     }
     firstStripe = currentStripe;
@@ -1081,7 +1086,7 @@ namespace orc {
     bloomFilterIndex.clear();
 
     // evaluate file statistics if it exists
-    if (sargsApplier && !sargsApplier->evaluateFileStatistics(*footer)) {
+    if (sargsApplier && !sargsApplier->evaluateFileStatistics(*footer, fileRowGroupCount)) {
       // skip the entire file
       markEndOfFile();
       return;
@@ -1109,7 +1114,9 @@ namespace orc {
           const auto& currentStripeStats =
             contents->metadata->stripestats(static_cast<int>(currentStripe));
           // skip this stripe after stats fail to satisfy sargs
-          isStripeNeeded = sargsApplier->evaluateStripeStatistics(currentStripeStats);
+          uint64_t stripeRowGroupCount =
+            (rowsInCurrentStripe + footer->rowindexstride() - 1) / footer->rowindexstride();
+          isStripeNeeded = sargsApplier->evaluateStripeStatistics(currentStripeStats, stripeRowGroupCount);
         }
 
         if (isStripeNeeded) {
@@ -1166,8 +1173,8 @@ namespace orc {
   }
 
   bool RowReaderImpl::next(ColumnVectorBatch& data) {
-    DEFINE_AUTO_STOPWATCH(
-      contents->readerMetrics, ReaderInclusiveLatencyUs, ReaderCount);
+    SCOPED_STOPWATCH(
+      contents->readerMetrics, ReaderInclusiveLatencyUs, ReaderCall);
     if (currentStripe >= lastStripe) {
       data.numElements = 0;
       markEndOfFile();

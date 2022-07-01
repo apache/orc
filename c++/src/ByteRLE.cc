@@ -355,6 +355,7 @@ namespace orc {
   };
 
   void ByteRleDecoderImpl::nextBuffer() {
+    SCOPED_MINUS_STOPWATCH(metrics, ByteDecodingLatencyUs);
     int bufferLength;
     const void* bufferPointer;
     bool result = inputStream->Next(&bufferPointer, &bufferLength);
@@ -412,7 +413,7 @@ namespace orc {
   }
 
   void ByteRleDecoderImpl::skip(uint64_t numValues) {
-    DEFINE_AUTO_STOPWATCH(metrics, ByteDecodingLatencyUs, ByteDecodingCount);
+    SCOPED_STOPWATCH(metrics, ByteDecodingLatencyUs, ByteDecodingCall);
     while (numValues > 0) {
       if (remainingValues == 0) {
         readHeader();
@@ -440,7 +441,7 @@ namespace orc {
 
   void ByteRleDecoderImpl::next(char* data, uint64_t numValues,
                                 char* notNull) {
-    DEFINE_AUTO_STOPWATCH(metrics, ByteDecodingLatencyUs, ByteDecodingCount);
+    SCOPED_STOPWATCH(metrics, ByteDecodingLatencyUs, ByteDecodingCall);
     nextInternal(data, numValues, notNull);
   }
 
@@ -582,7 +583,7 @@ namespace orc {
 
   void BooleanRleDecoderImpl::next(char* data, uint64_t numValues,
                                    char* notNull) {
-    DEFINE_AUTO_STOPWATCH(metrics, ByteDecodingLatencyUs, ByteDecodingCount);
+    SCOPED_STOPWATCH(metrics, ByteDecodingLatencyUs, ByteDecodingCall);
     // next spot to fill in
     uint64_t position = 0;
 

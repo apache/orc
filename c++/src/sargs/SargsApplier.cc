@@ -164,7 +164,8 @@ namespace orc {
   }
 
   bool SargsApplier::evaluateStripeStatistics(
-                            const proto::StripeStatistics& stripeStats) {
+                            const proto::StripeStatistics& stripeStats,
+                            uint64_t stripeRowGroupCount) {
     if (stripeStats.colstats_size() == 0) {
       return true;
     }
@@ -173,16 +174,23 @@ namespace orc {
     if (!ret) {
       // reset mNextSkippedRows when the current stripe does not satisfy the PPD
       mNextSkippedRows.clear();
+      if (mMetrics != nullptr) {
+        mMetrics->EvaluatedRowGroupCount.fetch_add(stripeRowGroupCount);
+      }
     }
     return ret;
   }
 
-  bool SargsApplier::evaluateFileStatistics(const proto::Footer& footer) {
+  bool SargsApplier::evaluateFileStatistics(const proto::Footer& footer,
+                                            uint64_t fileRowGroupCount) {
     if (!mHasEvaluatedFileStats) {
       if (footer.statistics_size() == 0) {
         mFileStatsEvalResult = true;
       } else {
         mFileStatsEvalResult = evaluateColumnStatistics(footer.statistics());
+        if (!mFileStatsEvalResult && mMetrics != nullptr) {
+          mMetrics->EvaluatedRowGroupCount.fetch_add(fileRowGroupCount);
+        }
       }
       mHasEvaluatedFileStats = true;
     }

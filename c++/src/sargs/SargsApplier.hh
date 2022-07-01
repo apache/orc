@@ -41,15 +41,25 @@ namespace orc {
 
     /**
      * Evaluate search argument on file statistics
+     * If file statistics don't satisfy the sargs,
+     * the EvaluatedRowGroupCount of Reader Metrics will be updated.
+     * Otherwise, Reader Metrics will not be updated and
+     * will require further evaluation.
      * @return true if file statistics satisfy the sargs
      */
-    bool evaluateFileStatistics(const proto::Footer& footer);
+    bool evaluateFileStatistics(const proto::Footer& footer,
+                                uint64_t fileRowGroupCount);
 
     /**
      * Evaluate search argument on stripe statistics
+     * If stripe statistics don't satisfy the sargs,
+     * the EvaluatedRowGroupCount of Reader Metrics will be updated.
+     * Otherwise, Reader Metrics will not be updated and
+     * will require further evaluation.
      * @return true if stripe statistics satisfy the sargs
      */
-    bool evaluateStripeStatistics(const proto::StripeStatistics& stripeStats);
+    bool evaluateStripeStatistics(const proto::StripeStatistics& stripeStats,
+                                  uint64_t stripeRowGroupCount);
 
     /**
      * TODO: use proto::RowIndex and proto::BloomFilter to do the evaluation
