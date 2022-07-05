@@ -74,7 +74,7 @@
     <tools.hadoop.version>2.10.2</tools.hadoop.version>
     <storage-api.version>2.8.1</storage-api.version>
     <zookeeper.version>3.6.2</zookeeper.version>
-    <maven.version>3.8.4</maven.version>
+    <maven.version>3.8.6</maven.version>
     <maven-assembly-plugin.version>3.3.0</maven-assembly-plugin.version>
     <maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
     <slf4j.version>1.7.33</slf4j.version>
