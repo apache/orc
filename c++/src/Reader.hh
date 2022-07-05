@@ -150,7 +150,8 @@ namespace orc {
     uint64_t processingStripe;
     uint64_t currentRowInStripe;
     uint64_t rowsInCurrentStripe;
-    uint64_t fileRowGroupCount;
+    // number of row groups between first stripe and last stripe
+    uint64_t numRowGroupsInStripeRange;
     proto::StripeInformation currentStripeInfo;
     proto::StripeFooter currentStripeFooter;
     std::unique_ptr<ColumnReader> reader;

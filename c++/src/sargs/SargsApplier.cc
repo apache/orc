@@ -182,14 +182,14 @@ namespace orc {
   }
 
   bool SargsApplier::evaluateFileStatistics(const proto::Footer& footer,
-                                            uint64_t fileRowGroupCount) {
+                                            uint64_t numRowGroupsInStripeRange) {
     if (!mHasEvaluatedFileStats) {
       if (footer.statistics_size() == 0) {
         mFileStatsEvalResult = true;
       } else {
         mFileStatsEvalResult = evaluateColumnStatistics(footer.statistics());
         if (!mFileStatsEvalResult && mMetrics != nullptr) {
-          mMetrics->EvaluatedRowGroupCount.fetch_add(fileRowGroupCount);
+          mMetrics->EvaluatedRowGroupCount.fetch_add(numRowGroupsInStripeRange);
         }
       }
       mHasEvaluatedFileStats = true;

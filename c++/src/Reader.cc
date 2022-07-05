@@ -268,7 +268,7 @@ namespace orc {
     lastStripe = 0;
     currentRowInStripe = 0;
     rowsInCurrentStripe = 0;
-    fileRowGroupCount = 0;
+    numRowGroupsInStripeRange = 0;
     uint64_t rowTotal = 0;
 
     firstRowOfStripe.resize(numberOfStripes);
@@ -286,10 +286,10 @@ namespace orc {
         if (i >= lastStripe) {
           lastStripe = i + 1;
         }
-      }
-      if (footer->rowindexstride() > 0) {
-        fileRowGroupCount +=
-          (stripeInfo.numberofrows() + footer->rowindexstride() - 1) / footer->rowindexstride();
+        if (footer->rowindexstride() > 0) {
+          numRowGroupsInStripeRange +=
+            (stripeInfo.numberofrows() + footer->rowindexstride() - 1) / footer->rowindexstride();
+        }
       }
     }
     firstStripe = currentStripe;
@@ -1086,7 +1086,7 @@ namespace orc {
     bloomFilterIndex.clear();
 
     // evaluate file statistics if it exists
-    if (sargsApplier && !sargsApplier->evaluateFileStatistics(*footer, fileRowGroupCount)) {
+    if (sargsApplier && !sargsApplier->evaluateFileStatistics(*footer, numRowGroupsInStripeRange)) {
       // skip the entire file
       markEndOfFile();
       return;

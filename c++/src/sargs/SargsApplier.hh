@@ -48,7 +48,7 @@ namespace orc {
      * @return true if file statistics satisfy the sargs
      */
     bool evaluateFileStatistics(const proto::Footer& footer,
-                                uint64_t fileRowGroupCount);
+                                uint64_t numRowGroupsInStripeRange);
 
     /**
      * Evaluate search argument on stripe statistics
