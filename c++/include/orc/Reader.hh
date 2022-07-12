@@ -101,6 +101,8 @@ namespace orc {
 
     /**
      * Set the reader metrics.
+     *
+     * When set to nullptr, the reader metrics will be disabled.
      */
     ReaderOptions& setReaderMetrics(ReaderMetrics* metrics);
 
