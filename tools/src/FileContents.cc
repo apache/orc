@@ -26,7 +26,9 @@ void printContents(const char* filename, const orc::RowReaderOptions& rowReaderO
   orc::ReaderOptions readerOpts;
   std::unique_ptr<orc::Reader> reader;
   std::unique_ptr<orc::RowReader> rowReader;
-  reader = orc::createReader(orc::readFile(std::string(filename)), readerOpts);
+  reader = orc::createReader(orc::readFile(std::string(filename),
+                                           readerOpts.getReaderMetrics()),
+                             readerOpts);
   rowReader = reader->createRowReader(rowReaderOpts);
 
   std::unique_ptr<orc::ColumnVectorBatch> batch = rowReader->createRowBatch(1000);
@@ -49,7 +51,8 @@ void printContents(const char* filename, const orc::RowReaderOptions& rowReaderO
 int main(int argc, char* argv[]) {
   uint64_t batchSize; // not used
   orc::RowReaderOptions rowReaderOptions;
-  bool success = parseOptions(&argc, &argv, &batchSize, &rowReaderOptions);
+  bool showMetrics = false;
+  bool success = parseOptions(&argc, &argv, &batchSize, &rowReaderOptions, &showMetrics);
 
   if (argc < 1 || !success) {
     std::cerr << "Usage: orc-contents [options] <filename>...\n";

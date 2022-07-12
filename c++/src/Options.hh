@@ -42,11 +42,13 @@ namespace orc {
     std::ostream* errorStream;
     MemoryPool* memoryPool;
     std::string serializedTail;
+    ReaderMetrics* metrics;
 
     ReaderOptionsPrivate() {
       tailLocation = std::numeric_limits<uint64_t>::max();
       errorStream = &std::cerr;
       memoryPool = getDefaultPool();
+      metrics = getDefaultReaderMetrics();
     }
   };
 
@@ -85,6 +87,15 @@ namespace orc {
 
   MemoryPool* ReaderOptions::getMemoryPool() const{
     return privateBits->memoryPool;
+  }
+
+  ReaderOptions& ReaderOptions::setReaderMetrics(ReaderMetrics* metrics) {
+    privateBits->metrics = metrics;
+    return *this;
+  }
+
+  ReaderMetrics* ReaderOptions::getReaderMetrics() const {
+    return privateBits->metrics;
   }
 
   ReaderOptions& ReaderOptions::setTailLocation(uint64_t offset) {

@@ -23,6 +23,7 @@
 #include <orc/Common.hh>
 #include "orc/BloomFilter.hh"
 #include "orc/Type.hh"
+#include "orc/Reader.hh"
 
 #include "sargs/SearchArgument.hh"
 
@@ -35,19 +36,30 @@ namespace orc {
     SargsApplier(const Type& type,
                  const SearchArgument * searchArgument,
                  uint64_t rowIndexStride,
-                 WriterVersion writerVersion);
+                 WriterVersion writerVersion,
+                 ReaderMetrics* metrics);
 
     /**
      * Evaluate search argument on file statistics
+     * If file statistics don't satisfy the sargs,
+     * the EvaluatedRowGroupCount of Reader Metrics will be updated.
+     * Otherwise, Reader Metrics will not be updated and
+     * will require further evaluation.
      * @return true if file statistics satisfy the sargs
      */
-    bool evaluateFileStatistics(const proto::Footer& footer);
+    bool evaluateFileStatistics(const proto::Footer& footer,
+                                uint64_t numRowGroupsInStripeRange);
 
     /**
      * Evaluate search argument on stripe statistics
+     * If stripe statistics don't satisfy the sargs,
+     * the EvaluatedRowGroupCount of Reader Metrics will be updated.
+     * Otherwise, Reader Metrics will not be updated and
+     * will require further evaluation.
      * @return true if stripe statistics satisfy the sargs
      */
-    bool evaluateStripeStatistics(const proto::StripeStatistics& stripeStats);
+    bool evaluateStripeStatistics(const proto::StripeStatistics& stripeStats,
+                                  uint64_t stripeRowGroupCount);
 
     /**
      * TODO: use proto::RowIndex and proto::BloomFilter to do the evaluation
@@ -90,7 +102,12 @@ namespace orc {
     }
 
     std::pair<uint64_t, uint64_t> getStats() const {
-      return mStats;
+      if (mMetrics != nullptr) {
+        return std::make_pair(mMetrics->SelectedRowGroupCount.load(),
+                              mMetrics->EvaluatedRowGroupCount.load());
+      } else {
+        return {0, 0};
+      }
     }
 
   private:
@@ -119,11 +136,12 @@ namespace orc {
     uint64_t mTotalRowsInStripe;
     bool mHasSelected;
     bool mHasSkipped;
-    // keep stats of selected RGs and evaluated RGs
-    std::pair<uint64_t, uint64_t> mStats;
     // store result of file stats evaluation
     bool mHasEvaluatedFileStats;
     bool mFileStatsEvalResult;
+    // use the SelectedRowGroupCount and EvaluatedRowGroupCount to
+    // keep stats of selected RGs and evaluated RGs
+    ReaderMetrics* mMetrics;
   };
 
 }

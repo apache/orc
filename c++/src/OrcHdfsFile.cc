@@ -19,6 +19,7 @@
 #include "orc/OrcFile.hh"
 
 #include "Adaptor.hh"
+#include "Utils.hh"
 #include "orc/Exceptions.hh"
 
 #include <errno.h>
@@ -40,9 +41,12 @@ namespace orc {
     std::unique_ptr<hdfs::FileSystem> file_system;
     uint64_t totalLength;
     const uint64_t READ_SIZE = 1024 * 1024; //1 MB
+    ReaderMetrics* metrics;
 
   public:
-    HdfsFileInputStream(std::string _filename) {
+    HdfsFileInputStream(std::string _filename,
+                        ReaderMetrics* _metrics)
+                        : metrics(_metrics) {
       filename = _filename ;
 
       //Building a URI object from the given uri_path
@@ -137,7 +141,7 @@ namespace orc {
     void read(void* buf,
               uint64_t length,
               uint64_t offset) override {
-
+      SCOPED_STOPWATCH(metrics, IOBlockingLatencyUs, IOCount);
       if (!buf) {
         throw ParseError("Buffer is null");
       }
@@ -169,7 +173,8 @@ namespace orc {
   HdfsFileInputStream::~HdfsFileInputStream() {
   }
 
-  std::unique_ptr<InputStream> readHdfsFile(const std::string& path) {
-    return std::unique_ptr<InputStream>(new HdfsFileInputStream(path));
+  std::unique_ptr<InputStream> readHdfsFile(const std::string& path,
+                                            ReaderMetrics* metrics) {
+    return std::unique_ptr<InputStream>(new HdfsFileInputStream(path, metrics));
   }
 }

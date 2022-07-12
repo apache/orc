@@ -103,9 +103,11 @@ namespace orc {
   /**
    * Create a byte RLE decoder.
    * @param input the input stream to read from
+   * @param metrics the metrics of the decoder
    */
   std::unique_ptr<ByteRleDecoder> createByteRleDecoder
-                                 (std::unique_ptr<SeekableInputStream> input);
+                                 (std::unique_ptr<SeekableInputStream> input,
+                                  ReaderMetrics* metrics);
 
   /**
    * Create a boolean RLE decoder.
@@ -114,9 +116,11 @@ namespace orc {
    * if the value is masked by notNull. This is required for the notNull stream
    * processing to properly apply multiple masks from nested types.
    * @param input the input stream to read from
+   * @param metrics the metrics of the decoder
    */
   std::unique_ptr<ByteRleDecoder> createBooleanRleDecoder
-                                 (std::unique_ptr<SeekableInputStream> input);
+                                 (std::unique_ptr<SeekableInputStream> input,
+                                  ReaderMetrics* metrics);
 }
 
 #endif

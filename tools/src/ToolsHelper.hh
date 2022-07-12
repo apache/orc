@@ -17,9 +17,13 @@
  */
 
 #include "orc/ColumnPrinter.hh"
+#include "orc/Reader.hh"
 #include <iostream>
 
 void printOptions(std::ostream& out);
 
 bool parseOptions(int* argc, char** argv[], uint64_t* batchSize,
-                  orc::RowReaderOptions* rowReaderOpts);
+                  orc::RowReaderOptions* rowReaderOpts, bool* showMetrics);
+
+void printReaderMetrics(std::ostream& out, const orc::ReaderMetrics* metrics);
+

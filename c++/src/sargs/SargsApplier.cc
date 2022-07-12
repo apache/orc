@@ -41,14 +41,15 @@ namespace orc {
   SargsApplier::SargsApplier(const Type& type,
                              const SearchArgument * searchArgument,
                              uint64_t rowIndexStride,
-                             WriterVersion writerVersion)
+                             WriterVersion writerVersion,
+                             ReaderMetrics* metrics)
                              : mType(type)
                              , mSearchArgument(searchArgument)
                              , mRowIndexStride(rowIndexStride)
                              , mWriterVersion(writerVersion)
-                             , mStats(0, 0)
                              , mHasEvaluatedFileStats(false)
-                             , mFileStatsEvalResult(true) {
+                             , mFileStatsEvalResult(true)
+                             , mMetrics(metrics) {
     const SearchArgumentImpl * sargs =
       dynamic_cast<const SearchArgumentImpl *>(mSearchArgument);
 
@@ -126,10 +127,14 @@ namespace orc {
     } while (rowGroup != 0);
 
     // update stats
-    mStats.first = std::accumulate(
-      mNextSkippedRows.cbegin(), mNextSkippedRows.cend(), mStats.first,
-      [](bool rg, uint64_t s) { return rg ? 1 : 0 + s; });
-    mStats.second += groupsInStripe;
+    uint64_t selectedRGs = std::accumulate(
+      mNextSkippedRows.cbegin(), mNextSkippedRows.cend(), 0UL,
+      [](uint64_t initVal, uint64_t rg) {
+        return rg > 0 ? initVal + 1 : initVal; });
+    if (mMetrics != nullptr) {
+      mMetrics->SelectedRowGroupCount.fetch_add(selectedRGs);
+      mMetrics->EvaluatedRowGroupCount.fetch_add(groupsInStripe);
+    }
 
     return mHasSelected;
   }
@@ -159,7 +164,8 @@ namespace orc {
   }
 
   bool SargsApplier::evaluateStripeStatistics(
-                            const proto::StripeStatistics& stripeStats) {
+                            const proto::StripeStatistics& stripeStats,
+                            uint64_t stripeRowGroupCount) {
     if (stripeStats.colstats_size() == 0) {
       return true;
     }
@@ -168,16 +174,23 @@ namespace orc {
     if (!ret) {
       // reset mNextSkippedRows when the current stripe does not satisfy the PPD
       mNextSkippedRows.clear();
+      if (mMetrics != nullptr) {
+        mMetrics->EvaluatedRowGroupCount.fetch_add(stripeRowGroupCount);
+      }
     }
     return ret;
   }
 
-  bool SargsApplier::evaluateFileStatistics(const proto::Footer& footer) {
+  bool SargsApplier::evaluateFileStatistics(const proto::Footer& footer,
+                                            uint64_t numRowGroupsInStripeRange) {
     if (!mHasEvaluatedFileStats) {
       if (footer.statistics_size() == 0) {
         mFileStatsEvalResult = true;
       } else {
         mFileStatsEvalResult = evaluateColumnStatistics(footer.statistics());
+        if (!mFileStatsEvalResult && mMetrics != nullptr) {
+          mMetrics->EvaluatedRowGroupCount.fetch_add(numRowGroupsInStripeRange);
+        }
       }
       mHasEvaluatedFileStats = true;
     }

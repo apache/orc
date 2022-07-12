@@ -71,6 +71,10 @@ namespace orc {
       return *getDefaultPool();
     }
 
+    ReaderMetrics* getReaderMetrics() const {
+      return getDefaultReaderMetrics();
+    }
+
     const Timezone &getWriterTimezone() const override {
       return getTimezoneByName("America/Los_Angeles");
     }

@@ -17,6 +17,7 @@
  */
 
 #include "Adaptor.hh"
+#include "Utils.hh"
 #include "orc/OrcFile.hh"
 #include "orc/Exceptions.hh"
 
@@ -44,10 +45,13 @@ namespace orc {
     std::string filename;
     int file;
     uint64_t totalLength;
+    ReaderMetrics* metrics;
 
   public:
-    FileInputStream(std::string _filename) {
-      filename = _filename;
+    FileInputStream(std::string _filename,
+                    ReaderMetrics* _metrics)
+                    : filename(_filename),
+                      metrics(_metrics) {
       file = open(filename.c_str(), O_BINARY | O_RDONLY);
       if (file == -1) {
         throw ParseError("Can't open " + filename);
@@ -72,6 +76,7 @@ namespace orc {
     void read(void* buf,
               uint64_t length,
               uint64_t offset) override {
+      SCOPED_STOPWATCH(metrics, IOBlockingLatencyUs, IOCount);
       if (!buf) {
         throw ParseError("Buffer is null");
       }
@@ -94,20 +99,22 @@ namespace orc {
     close(file);
   }
 
-  std::unique_ptr<InputStream> readFile(const std::string& path) {
+  std::unique_ptr<InputStream> readFile(const std::string& path,
+                                        ReaderMetrics* metrics) {
 #ifdef BUILD_LIBHDFSPP
     if(strncmp (path.c_str(), "hdfs://", 7) == 0){
-      return orc::readHdfsFile(std::string(path));
+      return orc::readHdfsFile(std::string(path), metrics);
     } else {
 #endif
-      return orc::readLocalFile(std::string(path));
+      return orc::readLocalFile(std::string(path), metrics);
 #ifdef BUILD_LIBHDFSPP
       }
 #endif
   }
 
-  std::unique_ptr<InputStream> readLocalFile(const std::string& path) {
-      return std::unique_ptr<InputStream>(new FileInputStream(path));
+  std::unique_ptr<InputStream> readLocalFile(const std::string& path,
+                                             ReaderMetrics* metrics) {
+      return std::unique_ptr<InputStream>(new FileInputStream(path, metrics));
   }
 
   OutputStream::~OutputStream() {

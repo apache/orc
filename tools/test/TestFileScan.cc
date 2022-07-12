@@ -126,6 +126,7 @@ TEST (TestFileScan, testBadCommand) {
             "\t-t --columnTypeIds\tComma separated list of column type ids\n"
             "\t-n --columnNames\tComma separated list of column names\n"
             "\t-b --batch\t\tBatch size for reading\n"
+            "\t-m --metrics\t\tShow metrics for reading\n"
             "Scans and displays the row count of the ORC files.\n",
             removeChars(stripPrefix(error, "orc-scan: "),"'`"));
 
@@ -140,6 +141,7 @@ TEST (TestFileScan, testBadCommand) {
             "\t-t --columnTypeIds\tComma separated list of column type ids\n"
             "\t-n --columnNames\tComma separated list of column names\n"
             "\t-b --batch\t\tBatch size for reading\n"
+            "\t-m --metrics\t\tShow metrics for reading\n"
             "Scans and displays the row count of the ORC files.\n",
             error);
 
@@ -154,6 +156,7 @@ TEST (TestFileScan, testBadCommand) {
             "\t-t --columnTypeIds\tComma separated list of column type ids\n"
             "\t-n --columnNames\tComma separated list of column names\n"
             "\t-b --batch\t\tBatch size for reading\n"
+            "\t-m --metrics\t\tShow metrics for reading\n"
             "Scans and displays the row count of the ORC files.\n",
             error);
 
@@ -168,6 +171,7 @@ TEST (TestFileScan, testBadCommand) {
             "\t-t --columnTypeIds\tComma separated list of column type ids\n"
             "\t-n --columnNames\tComma separated list of column names\n"
             "\t-b --batch\t\tBatch size for reading\n"
+            "\t-m --metrics\t\tShow metrics for reading\n"
             "Scans and displays the row count of the ORC files.\n",
             removeChars(stripPrefix(error, "orc-scan: "), "'`"));
 
@@ -182,6 +186,7 @@ TEST (TestFileScan, testBadCommand) {
             "\t-t --columnTypeIds\tComma separated list of column type ids\n"
             "\t-n --columnNames\tComma separated list of column names\n"
             "\t-b --batch\t\tBatch size for reading\n"
+            "\t-m --metrics\t\tShow metrics for reading\n"
             "Scans and displays the row count of the ORC files.\n",
             error);
 
@@ -196,6 +201,7 @@ TEST (TestFileScan, testBadCommand) {
             "\t-t --columnTypeIds\tComma separated list of column type ids\n"
             "\t-n --columnNames\tComma separated list of column names\n"
             "\t-b --batch\t\tBatch size for reading\n"
+            "\t-m --metrics\t\tShow metrics for reading\n"
             "Scans and displays the row count of the ORC files.\n",
             error);
 }

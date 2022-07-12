@@ -67,6 +67,7 @@ namespace orc {
     /// this new encoding is used.
     bool isDecimalAsLong;
     std::unique_ptr<proto::Metadata> metadata;
+    ReaderMetrics* readerMetrics;
   };
 
   proto::StripeFooter getStripeFooter(const proto::StripeInformation& info,
@@ -149,6 +150,8 @@ namespace orc {
     uint64_t processingStripe;
     uint64_t currentRowInStripe;
     uint64_t rowsInCurrentStripe;
+    // number of row groups between first stripe and last stripe
+    uint64_t numRowGroupsInStripeRange;
     proto::StripeInformation currentStripeInfo;
     proto::StripeFooter currentStripeFooter;
     std::unique_ptr<ColumnReader> reader;
@@ -336,6 +339,10 @@ namespace orc {
 
     bool hasCorrectStatistics() const override;
 
+    const ReaderMetrics* getReaderMetrics() const override {
+      return contents->readerMetrics;
+    }
+
     const proto::PostScript* getPostscript() const {return contents->postscript.get();}
 
     uint64_t getBlockSize() const {return contents->blockSize;}
@@ -357,7 +364,6 @@ namespace orc {
     std::map<uint32_t, BloomFilterIndex>
     getBloomFilters(uint32_t stripeIndex, const std::set<uint32_t>& included) const override;
   };
-
 }// namespace
 
 #endif

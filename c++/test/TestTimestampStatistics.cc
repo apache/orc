@@ -40,8 +40,11 @@ namespace orc {
       ss << "../../../examples";
     }
     ss << "/TestOrcFile.testTimestamp.orc";
+    orc::ReaderOptions readerOpts;
     std::unique_ptr<orc::Reader> reader =
-      createReader(readLocalFile(ss.str().c_str()), ReaderOptions());
+      createReader(readLocalFile(ss.str().c_str(),
+                                 readerOpts.getReaderMetrics()),
+                   readerOpts);
 
     std::unique_ptr<orc::ColumnStatistics> footerStats = reader->getColumnStatistics(0);
     const orc::TimestampColumnStatistics* footerColStats =

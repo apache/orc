@@ -53,15 +53,18 @@ namespace orc {
                          (std::unique_ptr<SeekableInputStream> input,
                           bool isSigned,
                           RleVersion version,
-                          MemoryPool& pool) {
+                          MemoryPool& pool,
+                          ReaderMetrics* metrics) {
     switch (static_cast<int64_t>(version)) {
     case RleVersion_1:
       // We don't have std::make_unique() yet.
       return std::unique_ptr<RleDecoder>(new RleDecoderV1(std::move(input),
-                                                          isSigned));
+                                                          isSigned,
+                                                          metrics));
     case RleVersion_2:
       return std::unique_ptr<RleDecoder>(new RleDecoderV2(std::move(input),
-                                                          isSigned, pool));
+                                                          isSigned, pool,
+                                                          metrics));
     default:
       throw NotImplementedYet("Not implemented yet");
     }

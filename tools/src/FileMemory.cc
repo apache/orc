@@ -64,7 +64,9 @@ void processFile(const char* filename,
   readerOpts.setMemoryPool(*(pool.get()));
 
   std::unique_ptr<orc::Reader> reader =
-                  orc::createReader(orc::readFile(std::string(filename)), readerOpts);
+                  orc::createReader(orc::readFile(std::string(filename),
+                                                  readerOpts.getReaderMetrics()),
+                                    readerOpts);
   std::unique_ptr<orc::RowReader> rowReader = reader->createRowReader(rowReaderOpts);
 
   std::unique_ptr<orc::ColumnVectorBatch> batch =
@@ -99,7 +101,8 @@ void processFile(const char* filename,
 int main(int argc, char* argv[]) {
   uint64_t batchSize = 1000;
   orc::RowReaderOptions rowReaderOptions;
-  bool success = parseOptions(&argc, &argv, &batchSize, &rowReaderOptions);
+  bool showMetrics = false;
+  bool success = parseOptions(&argc, &argv, &batchSize, &rowReaderOptions, &showMetrics);
   if (argc < 1 || !success) {
     std::cerr << "Usage: orc-memory [options] <filename>...\n";
     printOptions(std::cerr);

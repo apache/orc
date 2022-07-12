@@ -20,10 +20,12 @@
 #include "Compression.hh"
 #include "RLEv2.hh"
 #include "RLEV2Util.hh"
+#include "Utils.hh"
 
 namespace orc {
 
 unsigned char RleDecoderV2::readByte() {
+  SCOPED_MINUS_STOPWATCH(metrics, DecodingLatencyUs);
   if (bufferStart == bufferEnd) {
     int bufferLength;
     const void* bufferPointer;
@@ -391,8 +393,10 @@ void RleDecoderV2::plainUnpackLongs(int64_t *data, uint64_t offset, uint64_t len
 }
 
 RleDecoderV2::RleDecoderV2(std::unique_ptr<SeekableInputStream> input,
-                           bool _isSigned, MemoryPool& pool
-                           ): inputStream(std::move(input)),
+                           bool _isSigned, MemoryPool& pool,
+                           ReaderMetrics* _metrics
+                           ): RleDecoder(_metrics),
+                              inputStream(std::move(input)),
                               isSigned(_isSigned),
                               firstByte(0),
                               runLength(0),
@@ -432,6 +436,7 @@ void RleDecoderV2::skip(uint64_t numValues) {
 void RleDecoderV2::next(int64_t* const data,
                         const uint64_t numValues,
                         const char* const notNull) {
+  SCOPED_STOPWATCH(metrics, DecodingLatencyUs, DecodingCall);
   uint64_t nRead = 0;
 
   while (nRead < numValues) {

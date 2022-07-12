@@ -119,8 +119,11 @@ namespace orc {
     // Read a file with bloom filters written by CPP writer in version 1.6.11.
     ss << "/" << fileName;
     ReaderOptions readerOpts;
+    readerOpts.setReaderMetrics(nullptr);
     std::unique_ptr<Reader> reader =
-      createReader(readLocalFile(ss.str().c_str()), readerOpts);
+      createReader(readLocalFile(ss.str().c_str(),
+                                 readerOpts.getReaderMetrics()),
+                   readerOpts);
     EXPECT_EQ(WriterId::ORC_CPP_WRITER, reader->getWriterId());
     EXPECT_EQ(softwareVersion, reader->getSoftwareVersion());
 
@@ -573,6 +576,7 @@ namespace orc {
         new MemoryInputStream(memStream.getData(), memStream.getLength()));
     ReaderOptions readerOptions;
     readerOptions.setMemoryPool(*pool);
+    readerOptions.setReaderMetrics(nullptr);
     return createReader(std::move(inStream), readerOptions);
   }
 
