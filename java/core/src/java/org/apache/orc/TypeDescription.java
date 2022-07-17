@@ -246,7 +246,7 @@ public class TypeDescription
    * @return this for method chaining
    */
   public TypeDescription setAttribute(@NotNull String key,
-                                      @NotNull String value) {
+                                      String value) {
     attributes.put(key, value);
     return this;
   }
