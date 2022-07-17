@@ -45,3 +45,6 @@ updates:
       # Pin jodd-core to 3.5.2
       - dependency-name: "org.jodd:jodd-core"
         versions: "[3.5.3,)"
+      # Pin annotations to 17.0.0
+      - dependency-name: "org.jetbrains.annotations"
+        versions: "[17.0.1,)"
