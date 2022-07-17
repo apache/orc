@@ -509,4 +509,10 @@ public class TestTypeDescription {
           schema.findSubtype(column, true).getFullFieldName());
     }
   }
+
+  @Test
+  public void testSetAttribute() {
+    TypeDescription type = TypeDescription.fromString("int");
+    type.setAttribute("key1", null);
+  }
 }
