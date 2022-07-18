@@ -103,7 +103,7 @@ public final class FileDump {
         rowIndexCols = null; // All the columns
       } else {
         String[] colStrs = cli.getOptionValue("r").split(",");
-        rowIndexCols = new ArrayList<Integer>(colStrs.length);
+        rowIndexCols = new ArrayList<>(colStrs.length);
         for (String colStr : colStrs) {
           rowIndexCols.add(Integer.parseInt(colStr));
         }
@@ -119,7 +119,7 @@ public final class FileDump {
     }
 
     // if the specified path is directory, iterate through all files and print the file dump
-    List<String> filesInPath = new ArrayList<>();
+    List<String> filesInPath = new ArrayList<Integer>();
     for (String filename : files) {
       Path path = new Path(filename);
       filesInPath.addAll(getAllFilesInPath(path, conf));
@@ -755,7 +755,7 @@ public final class FileDump {
             ColumnStatisticsImpl.deserialize(colSchema, colStats,
                 reader.writerUsedProlepticGregorian(),
                 reader.getConvertToProlepticGregorian());
-        buf.append(cs.toString());
+        buf.append(cs);
       }
       buf.append(" positions: ");
       for (int posIx = 0; posIx < entry.getPositionsCount(); ++posIx) {
