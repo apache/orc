@@ -131,11 +131,9 @@ public class OutStream extends PositionedOutputStream {
     try {
       cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(iv));
     } catch (InvalidKeyException e) {
-      throw new IllegalStateException("ORC bad encryption key for " +
-                                          toString(), e);
+      throw new IllegalStateException("ORC bad encryption key for " + this, e);
     } catch (InvalidAlgorithmParameterException e) {
-      throw new IllegalStateException("ORC bad encryption parameter for " +
-                                          toString(), e);
+      throw new IllegalStateException("ORC bad encryption parameter for " + this, e);
     }
   }
 
@@ -154,10 +152,10 @@ public class OutStream extends PositionedOutputStream {
         receiver.output(output);
         if (encrypted != len) {
           throw new IllegalArgumentException("Encryption of incomplete buffer "
-              + len + " -> " + encrypted + " in " + toString());
+              + len + " -> " + encrypted + " in " + this);
         }
       } catch (ShortBufferException e) {
-        throw new IOException("Short buffer in encryption in " + toString(), e);
+        throw new IOException("Short buffer in encryption in " + this, e);
       }
     } else {
       receiver.output(buffer);
@@ -172,8 +170,7 @@ public class OutStream extends PositionedOutputStream {
     try {
       byte[] finalBytes = cipher.doFinal();
       if (finalBytes != null && finalBytes.length != 0) {
-        throw new IllegalStateException("We shouldn't have remaining bytes " +
-            toString());
+        throw new IllegalStateException("We shouldn't have remaining bytes " + this);
       }
     } catch (IllegalBlockSizeException e) {
       throw new IllegalArgumentException("Bad block size", e);

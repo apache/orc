@@ -611,7 +611,7 @@ public interface Reader extends Closeable {
       buffer.append(length);
       if (sarg != null) {
         buffer.append(", sarg: ");
-        buffer.append(sarg.toString());
+        buffer.append(sarg);
       }
       if (schema != null) {
         buffer.append(", schema: ");

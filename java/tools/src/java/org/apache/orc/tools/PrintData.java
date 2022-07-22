@@ -172,8 +172,7 @@ public class PrintData {
           printUnion(writer, (UnionColumnVector) vector, schema, row);
           break;
         default:
-          throw new IllegalArgumentException("Unknown type " +
-              schema.toString());
+          throw new IllegalArgumentException("Unknown type " + schema);
       }
     } else {
       writer.nullValue();

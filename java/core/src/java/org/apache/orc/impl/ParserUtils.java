@@ -387,7 +387,7 @@ public class ParserUtils {
             }
           } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Field " + first +
-                "not found in " + current.toString(), e);
+                "not found in " + current, e);
           }
           break;
         }
@@ -396,7 +396,7 @@ public class ParserUtils {
       }
       if (posn < 0) {
         throw new IllegalArgumentException("Field " + first +
-                                           " not found in " + current.toString());
+                                           " not found in " + current);
       }
       current = current.getChildren().get(posn);
       visitor.visit(current, posn);
