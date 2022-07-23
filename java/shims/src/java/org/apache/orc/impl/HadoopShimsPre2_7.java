@@ -222,7 +222,7 @@ public class HadoopShimsPre2_7 implements HadoopShims {
     if (result.size() == 0) {
       LOG.info("Can't get KeyProvider for ORC encryption from" +
           " hadoop.security.key.provider.path.");
-      return new HadoopShimsPre2_3.NullKeyProvider();
+      return new NullKeyProvider();
     } else {
       return new KeyProviderImpl(result.get(0), random);
     }
