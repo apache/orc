@@ -565,8 +565,8 @@ public class SchemaEvolution {
       throw new IllegalEvolutionException(
           String.format("ORC does not support type conversion from file" +
                         " type %s (%d) to reader type %s (%d)",
-                        fileType.toString(), fileType.getId(),
-                        readerType.toString(), readerType.getId()));
+                        fileType, fileType.getId(),
+                        readerType, readerType.getId()));
     }
   }
 

@@ -89,7 +89,7 @@ abstract class HiveType {
    * @param prefix the prefix to add to each field name
    */
   public void printFlat(PrintStream out, String prefix) {
-    out.println(prefix + ": " + toString());
+    out.println(prefix + ": " + this);
   }
 
   public abstract TypeDescription getSchema();

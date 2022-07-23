@@ -89,9 +89,9 @@ public class TestJsonReader {
     public void testDateTypeSupport() throws IOException {
         LocalDate date1 = LocalDate.of(2021, 1, 18);
         LocalDate date2 = LocalDate.now();
-        String inputString = "{\"dt\": \"" + date1.toString() + "\"}\n" +
-                             "{\"dt\": \"" + date2.toString() + "\"}\n" +
-                             "{\"dt\": \"" + date2.toString() + "\"}\n" +
+        String inputString = "{\"dt\": \"" + date1 + "\"}\n" +
+                             "{\"dt\": \"" + date2 + "\"}\n" +
+                             "{\"dt\": \"" + date2 + "\"}\n" +
                              "{\"dt\": null}";
 
 
@@ -123,9 +123,9 @@ public class TestJsonReader {
         String datetime4Str = datetime4.toString();
         datetime4Str = datetime4Str.substring(0, datetime4Str.length() - 5) + "0700";
 
-        String inputString = "{\"dt\": \"" + datetime1.toString() + "\"}\n" +
-                             "{\"dt\": \"" + datetime2.toString() + "\"}\n" +
-                             "{\"dt\": \"" + datetime3.toString() + "\"}\n" +
+        String inputString = "{\"dt\": \"" + datetime1 + "\"}\n" +
+                             "{\"dt\": \"" + datetime2 + "\"}\n" +
+                             "{\"dt\": \"" + datetime3 + "\"}\n" +
                              "{\"dt\": \"" + datetime4Str + "\"}\n" +
                              "{\"dt\": \"" + datetime5.toLocalDateTime().toString() + "[" + datetime5.getZone() + "]\"}\n" +
                              "{\"dt\": \"" + datetime6.toLocalDateTime().toString() + "[" + datetime6.getZone() + "]\"}\n";

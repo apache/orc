@@ -289,7 +289,7 @@ public final class FileDump {
           buffer.append(' ');
           buffer.append(file);
         }
-        System.err.println(buffer.toString());
+        System.err.println(buffer);
         System.out.println(SEPARATOR);
       }
     }
@@ -386,9 +386,9 @@ public final class FileDump {
         if (tz == null || tz.isEmpty()) {
           tz = UNKNOWN;
         }
-        System.out.println("  Stripe: " + stripe.toString() + " timezone: " + tz);
+        System.out.println("  Stripe: " + stripe + " timezone: " + tz);
       } else {
-        System.out.println("  Stripe: " + stripe.toString());
+        System.out.println("  Stripe: " + stripe);
       }
       long sectionStart = stripeStart;
       for (OrcProto.Stream section : footer.getStreamsList()) {
@@ -755,7 +755,7 @@ public final class FileDump {
             ColumnStatisticsImpl.deserialize(colSchema, colStats,
                 reader.writerUsedProlepticGregorian(),
                 reader.getConvertToProlepticGregorian());
-        buf.append(cs.toString());
+        buf.append(cs);
       }
       buf.append(" positions: ");
       for (int posIx = 0; posIx < entry.getPositionsCount(); ++posIx) {

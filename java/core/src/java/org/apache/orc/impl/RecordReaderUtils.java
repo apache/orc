@@ -304,7 +304,7 @@ public class RecordReaderUtils {
         buffer.append("{");
       }
       isFirst = false;
-      buffer.append(range.toString());
+      buffer.append(range);
       buffer.append("}");
       range = range.next;
     }

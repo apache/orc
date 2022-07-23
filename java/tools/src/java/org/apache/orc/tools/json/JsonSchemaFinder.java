@@ -174,7 +174,7 @@ public class JsonSchemaFinder {
     if (type == null) {
       out.print("void");
     } else if (type.kind.isPrimitive) {
-      out.print(type.toString());
+      out.print(type);
     } else {
       switch (type.kind) {
         case STRUCT:

@@ -238,7 +238,7 @@ public class BloomFilter {
       this.bitSet.putAll(that.bitSet);
     } else {
       throw new IllegalArgumentException("BloomFilters are not compatible for merging." +
-          " this - " + this.toString() + " that - " + that.toString());
+          " this - " + this + " that - " + that);
     }
   }
 
