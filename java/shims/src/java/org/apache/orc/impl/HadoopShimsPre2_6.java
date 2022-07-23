@@ -133,6 +133,6 @@ public class HadoopShimsPre2_6 implements HadoopShims {
 
   @Override
   public KeyProvider getHadoopKeyProvider(Configuration conf, Random random) {
-    return new HadoopShimsPre2_3.NullKeyProvider();
+    return new NullKeyProvider();
   }
 }
