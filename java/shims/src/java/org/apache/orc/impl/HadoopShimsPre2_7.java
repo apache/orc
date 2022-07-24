@@ -51,7 +51,7 @@ public class HadoopShimsPre2_7 implements HadoopShims {
 
   @Override
   public DirectDecompressor getDirectDecompressor(DirectCompressionType codec) {
-    return HadoopShimsPre2_6.getDecompressor(codec);
+    return HadoopShimsCurrent.getDecompressor(codec);
  }
 
   @Override
