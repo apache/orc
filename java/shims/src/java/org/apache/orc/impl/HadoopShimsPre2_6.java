@@ -25,7 +25,6 @@ import org.apache.hadoop.io.compress.zlib.ZlibDecompressor;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
 import java.util.Random;
 
 /**
@@ -38,64 +37,6 @@ import java.util.Random;
  * </ul>
  */
 public class HadoopShimsPre2_6 implements HadoopShims {
-
-  static class SnappyDirectDecompressWrapper implements DirectDecompressor {
-    private final SnappyDirectDecompressor root;
-    private boolean isFirstCall = true;
-
-    SnappyDirectDecompressWrapper(SnappyDirectDecompressor root) {
-      this.root = root;
-    }
-
-    @Override
-    public void decompress(ByteBuffer input, ByteBuffer output) throws IOException {
-      if (!isFirstCall) {
-        root.reset();
-      } else {
-        isFirstCall = false;
-      }
-      root.decompress(input, output);
-    }
-
-    @Override
-    public void reset() {
-      root.reset();
-    }
-
-    @Override
-    public void end() {
-      root.end();
-    }
-  }
-
-  static class ZlibDirectDecompressWrapper implements DirectDecompressor {
-    private final ZlibDecompressor.ZlibDirectDecompressor root;
-    private boolean isFirstCall = true;
-
-    ZlibDirectDecompressWrapper(ZlibDecompressor.ZlibDirectDecompressor root) {
-      this.root = root;
-    }
-
-    @Override
-    public void decompress(ByteBuffer input, ByteBuffer output) throws IOException {
-      if (!isFirstCall) {
-        root.reset();
-      } else {
-        isFirstCall = false;
-      }
-      root.decompress(input, output);
-    }
-
-    @Override
-    public void reset() {
-      root.reset();
-    }
-
-    @Override
-    public void end() {
-      root.end();
-    }
-  }
 
   static DirectDecompressor getDecompressor( DirectCompressionType codec) {
     switch (codec) {
