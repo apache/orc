@@ -70,7 +70,7 @@
     <test.tmp.dir>${project.build.directory}/testing-tmp</test.tmp.dir>
     <example.dir>${project.basedir}/../../examples</example.dir>
 
-    <min.hadoop.version>2.2.0</min.hadoop.version>
+    <min.hadoop.version>2.7.3</min.hadoop.version>
     <hadoop.version>2.7.3</hadoop.version>
     <tools.hadoop.version>2.10.1</tools.hadoop.version>
     <storage-api.version>2.8.1</storage-api.version>
