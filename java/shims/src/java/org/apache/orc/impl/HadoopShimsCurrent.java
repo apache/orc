@@ -21,6 +21,8 @@ package org.apache.orc.impl;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
+import org.apache.hadoop.io.compress.snappy.SnappyDecompressor;
+import org.apache.hadoop.io.compress.zlib.ZlibDecompressor;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -37,9 +39,26 @@ import java.util.Random;
  */
 public class HadoopShimsCurrent implements HadoopShims {
 
+  static DirectDecompressor getDecompressor( DirectCompressionType codec) {
+    switch (codec) {
+      case ZLIB:
+        return new ZlibDirectDecompressWrapper
+            (new ZlibDecompressor.ZlibDirectDecompressor());
+      case ZLIB_NOHEADER:
+        return new ZlibDirectDecompressWrapper
+            (new ZlibDecompressor.ZlibDirectDecompressor
+                (ZlibDecompressor.CompressionHeader.NO_HEADER, 0));
+      case SNAPPY:
+        return new SnappyDirectDecompressWrapper
+            (new SnappyDecompressor.SnappyDirectDecompressor());
+      default:
+        return null;
+    }
+  }
+
   @Override
   public DirectDecompressor getDirectDecompressor(DirectCompressionType codec) {
-    return HadoopShimsPre2_6.getDecompressor(codec);
+    return getDecompressor(codec);
   }
 
   @Override
