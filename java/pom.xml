@@ -76,7 +76,7 @@
     <storage-api.version>2.8.1</storage-api.version>
     <zookeeper.version>3.8.0</zookeeper.version>
     <maven.version>3.8.6</maven.version>
-    <maven-assembly-plugin.version>3.4.1</maven-assembly-plugin.version>
+    <maven-assembly-plugin.version>3.4.2</maven-assembly-plugin.version>
     <maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
     <slf4j.version>1.7.36</slf4j.version>
     <protoc.artifact>com.google.protobuf:protoc:2.5.0</protoc.artifact>
