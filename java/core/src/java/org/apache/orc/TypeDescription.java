@@ -247,7 +247,11 @@ public class TypeDescription
    */
   public TypeDescription setAttribute(@NotNull String key,
                                       String value) {
-    attributes.put(key, value);
+    if (value == null) {
+      attributes.remove(key);
+    } else {
+      attributes.put(key, value);
+    }
     return this;
   }
 
