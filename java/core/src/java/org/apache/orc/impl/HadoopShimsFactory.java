@@ -20,6 +20,8 @@ package org.apache.orc.impl;
 
 import org.apache.hadoop.util.VersionInfo;
 
+import java.lang.reflect.InvocationTargetException;
+
 /**
  * The factory for getting the proper version of the Hadoop shims.
  */
@@ -37,8 +39,10 @@ public class HadoopShimsFactory {
     try {
       Class<? extends HadoopShims> cls =
           (Class<? extends HadoopShims>) Class.forName(name);
-      return cls.newInstance();
-    } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+      return cls.getDeclaredConstructor().newInstance();
+    } catch (ClassNotFoundException | NoSuchMethodException | SecurityException |
+             InstantiationException | IllegalAccessException | IllegalArgumentException |
+             InvocationTargetException e) {
       throw new IllegalStateException("Can't create shims for " + name, e);
     }
   }
