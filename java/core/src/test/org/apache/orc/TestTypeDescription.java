@@ -514,5 +514,7 @@ public class TestTypeDescription {
   public void testSetAttribute() {
     TypeDescription type = TypeDescription.fromString("int");
     type.setAttribute("key1", null);
+
+    assertEquals(0, type.getAttributeNames().size());
   }
 }
