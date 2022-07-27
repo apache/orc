@@ -100,7 +100,7 @@ class KeyProviderImpl implements KeyProvider {
     org.apache.hadoop.crypto.key.KeyProvider.Metadata meta =
         provider.getMetadata(keyName);
     return new HadoopShims.KeyMetadata(keyName, meta.getVersions() - 1,
-        HadoopShimsPre2_7.findAlgorithm(meta));
+        HadoopShimsCurrent.findAlgorithm(meta));
   }
 
   /**
@@ -125,7 +125,7 @@ class KeyProviderImpl implements KeyProvider {
     byte[] iv = new byte[algorithm.getIvLength()];
     unmangleIv(encryptedKey, iv);
     EncryptedKeyVersion param = EncryptedKeyVersion.createForDecryption(
-        key.getKeyName(), HadoopShimsPre2_7.buildKeyVersionName(key), iv, encryptedKey);
+        key.getKeyName(), HadoopShimsCurrent.buildKeyVersionName(key), iv, encryptedKey);
     try {
       KeyProviderCryptoExtension.KeyVersion decryptedKey;
       if (provider instanceof KeyProviderCryptoExtension) {
@@ -150,7 +150,7 @@ class KeyProviderImpl implements KeyProvider {
     byte[] iv = new byte[algorithm.getIvLength()];
     unmangleIv(encryptedKey, iv);
     EncryptedKeyVersion param = EncryptedKeyVersion.createForDecryption(
-        key.getKeyName(), HadoopShimsPre2_7.buildKeyVersionName(key), iv, encryptedKey);
+        key.getKeyName(), HadoopShimsCurrent.buildKeyVersionName(key), iv, encryptedKey);
     try {
       KeyProviderCryptoExtension.KeyVersion decryptedKey;
       if (provider instanceof KeyProviderCryptoExtension) {
