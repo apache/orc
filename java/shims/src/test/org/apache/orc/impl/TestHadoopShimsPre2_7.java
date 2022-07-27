@@ -37,7 +37,7 @@ public class TestHadoopShimsPre2_7 {
       KeyProvider.Metadata meta = new KMSClientProvider.KMSMetadata(
           "XXX/CTR/NoPadding", 128, "", new HashMap<String, String>(),
           new Date(0), 1);
-      HadoopShimsPre2_7.findAlgorithm(meta);
+      HadoopShimsCurrent.findAlgorithm(meta);
     });
   }
 
@@ -47,16 +47,16 @@ public class TestHadoopShimsPre2_7 {
         "AES/CTR/NoPadding", 128, "", new HashMap<String, String>(),
         new Date(0), 1);
     assertEquals(EncryptionAlgorithm.AES_CTR_128,
-        HadoopShimsPre2_7.findAlgorithm(meta));
+        HadoopShimsCurrent.findAlgorithm(meta));
     meta = new KMSClientProvider.KMSMetadata(
         "AES/CTR/NoPadding", 256, "", new HashMap<String, String>(),
         new Date(0), 1);
     assertEquals(EncryptionAlgorithm.AES_CTR_256,
-        HadoopShimsPre2_7.findAlgorithm(meta));
+        HadoopShimsCurrent.findAlgorithm(meta));
     meta = new KMSClientProvider.KMSMetadata(
         "AES/CTR/NoPadding", 512, "", new HashMap<String, String>(),
         new Date(0), 1);
     assertEquals(EncryptionAlgorithm.AES_CTR_256,
-        HadoopShimsPre2_7.findAlgorithm(meta));
+        HadoopShimsCurrent.findAlgorithm(meta));
   }
 }
