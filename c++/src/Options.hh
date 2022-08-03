@@ -48,7 +48,7 @@ namespace orc {
       tailLocation = std::numeric_limits<uint64_t>::max();
       errorStream = &std::cerr;
       memoryPool = getDefaultPool();
-      metrics = getDefaultReaderMetrics();
+      metrics = nullptr;
     }
   };
 

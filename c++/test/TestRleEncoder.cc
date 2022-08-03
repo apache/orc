@@ -20,6 +20,7 @@
 
 #include "MemoryOutputStream.hh"
 #include "RLEv1.hh"
+#include "OrcTest.hh"
 
 #include "wrap/orc-proto-wrapper.hh"
 #include "wrap/gtest-wrapper.h"
@@ -104,7 +105,7 @@ namespace orc {
                     memStream.getData(),
                     memStream.getLength())),
             isSinged, version, *getDefaultPool(),
-            getDefaultReaderMetrics());
+            getTestReaderMetrics());
 
     int64_t* decodedData = new int64_t[numValues];
     decoder->next(decodedData, numValues, notNull);

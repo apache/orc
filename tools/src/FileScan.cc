@@ -24,6 +24,9 @@ void scanFile(std::ostream & out, const char* filename, uint64_t batchSize,
               const orc::RowReaderOptions& rowReaderOpts,
               bool showMetrics) {
   orc::ReaderOptions readerOpts;
+  if (showMetrics) {
+    readerOpts.setReaderMetrics(orc::getDefaultReaderMetrics());
+  }
   std::unique_ptr<orc::Reader> reader =
     orc::createReader(orc::readFile(filename,
                                     readerOpts.getReaderMetrics()),

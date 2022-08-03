@@ -60,16 +60,27 @@ public:
   }
 };
 
-#define SCOPED_STOPWATCH(METRICS_PTR, LATENCY_VAR, COUNT_VAR)         \
-  AutoStopwatch measure(                                              \
-    (METRICS_PTR == nullptr ? nullptr : &METRICS_PTR->LATENCY_VAR),   \
+#if ENABLE_METRICS
+#define SCOPED_STOPWATCH(METRICS_PTR, LATENCY_VAR, COUNT_VAR)               \
+  AutoStopwatch measure(                                                    \
+    (METRICS_PTR == nullptr ? nullptr : &METRICS_PTR->LATENCY_VAR),         \
     (METRICS_PTR == nullptr ? nullptr : &METRICS_PTR->COUNT_VAR))
 
-#define SCOPED_MINUS_STOPWATCH(METRICS_PTR, LATENCY_VAR)              \
-  AutoStopwatch measure(                                              \
-    (METRICS_PTR == nullptr ? nullptr : &METRICS_PTR->LATENCY_VAR),   \
+#define SCOPED_MINUS_STOPWATCH(METRICS_PTR, LATENCY_VAR)                    \
+  AutoStopwatch measure(                                                    \
+    (METRICS_PTR == nullptr ? nullptr : &METRICS_PTR->LATENCY_VAR),         \
     nullptr, true)
+#else
+#define SCOPED_STOPWATCH(METRICS_PTR, LATENCY_VAR, COUNT_VAR)               \
+  if (METRICS_PTR != nullptr) {                                             \
+    throw std::logic_error("The build option to support metrics is OFF.");  \
+  }
+
+#define SCOPED_MINUS_STOPWATCH(METRICS_PTR, LATENCY_VAR)                    \
+  if (METRICS_PTR != nullptr) {                                             \
+    throw std::logic_error("The build option to support metrics is OFF.");  \
+  }
+#endif
 
 }
-
 #endif

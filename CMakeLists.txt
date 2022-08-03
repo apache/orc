@@ -60,6 +60,10 @@ option(BUILD_POSITION_INDEPENDENT_LIB
     "Compile static libraries with position independent code"
     OFF)
 
+option(BUILD_CPP_ENABLE_METRICS
+    "Enable the metrics collection at compile phase"
+    OFF)
+
 # Make sure that a build type is selected
 if (NOT CMAKE_BUILD_TYPE)
   message(STATUS "No build type selected, default to ReleaseWithDebugInfo")
@@ -128,6 +132,11 @@ elseif (MSVC)
   add_definitions (-D_CRT_NONSTDC_NO_DEPRECATE) # The POSIX name for this item is deprecated
   set (WARN_FLAGS "${WARN_FLAGS} -wd4521") # multiple copy constructors specified
   set (WARN_FLAGS "${WARN_FLAGS} -wd4146") # unary minus operator applied to unsigned type, result still unsigned
+endif ()
+
+if (BUILD_CPP_ENABLE_METRICS)
+    message(STATUS "Enable the metrics collection")
+    add_definitions(-DENABLE_METRICS)
 endif ()
 
 enable_testing()

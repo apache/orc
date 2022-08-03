@@ -16,18 +16,16 @@
  * limitations under the License.
  */
 
-#ifndef ORC_TEST_HH
-#define ORC_TEST_HH
-
-#include "orc/Reader.hh"
-
-// determine the size of an array
-#define ARRAY_SIZE(array) (sizeof(array)/sizeof(*array))
+#include "OrcTest.hh"
 
 namespace orc {
 
-  ReaderMetrics* getTestReaderMetrics();
-
+ReaderMetrics* getTestReaderMetrics() {
+#if ENABLE_METRICS
+  return getDefaultReaderMetrics();
+#else
+  return nullptr;
+#endif
 }
 
-#endif
+}
