@@ -72,7 +72,7 @@ namespace orc {
     }
 
     ReaderMetrics* getReaderMetrics() const {
-      return getTestReaderMetrics();
+      return getDefaultReaderMetrics();
     }
 
     const Timezone &getWriterTimezone() const override {

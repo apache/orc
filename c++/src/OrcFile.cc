@@ -40,6 +40,12 @@
 
 namespace orc {
 
+DIAGNOSTIC_PUSH
+
+#ifdef __clang__
+  DIAGNOSTIC_IGNORE("-Wunused-private-field")
+#endif
+
   class FileInputStream : public InputStream {
   private:
     std::string filename;
@@ -111,6 +117,8 @@ namespace orc {
       }
 #endif
   }
+
+DIAGNOSTIC_POP
 
   std::unique_ptr<InputStream> readLocalFile(const std::string& path,
                                              ReaderMetrics* metrics) {

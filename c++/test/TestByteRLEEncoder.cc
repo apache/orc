@@ -18,7 +18,6 @@
 
 #include "ByteRLE.hh"
 #include "MemoryOutputStream.hh"
-#include "OrcTest.hh"
 
 #include "wrap/gtest-wrapper.h"
 #include "wrap/orc-proto-wrapper.hh"
@@ -74,7 +73,7 @@ namespace orc {
       new SeekableArrayInputStream(memStream.getData(), memStream.getLength()));
 
     std::unique_ptr<ByteRleDecoder> decoder =
-      createByteRleDecoder(std::move(inStream), getTestReaderMetrics());
+      createByteRleDecoder(std::move(inStream), getDefaultReaderMetrics());
 
     char* decodedData = new char[numValues];
     decoder->next(decodedData, numValues, notNull);
@@ -98,7 +97,7 @@ namespace orc {
       new SeekableArrayInputStream(memStream.getData(), memStream.getLength()));
 
     std::unique_ptr<ByteRleDecoder> decoder =
-      createBooleanRleDecoder(std::move(inStream), getTestReaderMetrics());
+      createBooleanRleDecoder(std::move(inStream), getDefaultReaderMetrics());
 
     char* decodedData = new char[numValues];
     decoder->next(decodedData, numValues, notNull);

@@ -34,6 +34,12 @@
 
 namespace orc {
 
+DIAGNOSTIC_PUSH
+
+#ifdef __clang__
+  DIAGNOSTIC_IGNORE("-Wunused-private-field")
+#endif
+
   class HdfsFileInputStream : public InputStream {
   private:
     std::string filename;
@@ -169,6 +175,8 @@ namespace orc {
 
     ~HdfsFileInputStream() override;
   };
+
+DIAGNOSTIC_POP
 
   HdfsFileInputStream::~HdfsFileInputStream() {
   }

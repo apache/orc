@@ -19,15 +19,7 @@
 #ifndef ORC_TEST_HH
 #define ORC_TEST_HH
 
-#include "orc/Reader.hh"
-
 // determine the size of an array
 #define ARRAY_SIZE(array) (sizeof(array)/sizeof(*array))
-
-namespace orc {
-
-  ReaderMetrics* getTestReaderMetrics();
-
-}
 
 #endif
