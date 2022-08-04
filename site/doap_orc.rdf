@@ -45,8 +45,8 @@ the values that are required for the current query.</description>
     <release>
       <Version>
         <name>Latest release</name>
-        <created>2022-04-15</created>
-        <revision>1.7.4</revision>
+        <created>2022-06-16</created>
+        <revision>1.7.5</revision>
       </Version>
       <Version>
         <name>Stable release</name>
