@@ -17,6 +17,8 @@
  */
 package org.apache.orc.impl;
 
+import java.util.Arrays;
+
 /**
  * Dynamic int array that uses primitive types and chunks to avoid copying
  * large number of integers when it resizes.
@@ -57,9 +59,7 @@ public final class DynamicIntArray {
     if (chunkIndex >= initializedChunks) {
       if (chunkIndex >= data.length) {
         int newSize = Math.max(chunkIndex + 1, 2 * data.length);
-        int[][] newChunk = new int[newSize][];
-        System.arraycopy(data, 0, newChunk, 0, data.length);
-        data = newChunk;
+        data = Arrays.copyOf(data, newSize);
       }
       for (int i=initializedChunks; i <= chunkIndex; ++i) {
         data[i] = new int[chunkSize];

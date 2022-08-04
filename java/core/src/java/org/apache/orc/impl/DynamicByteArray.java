@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 /**
  * A class that is a growable array of bytes. Growth is managed in terms of
@@ -56,9 +57,7 @@ public final class DynamicByteArray {
     if (chunkIndex >= initializedChunks) {
       if (chunkIndex >= data.length) {
         int newSize = Math.max(chunkIndex + 1, 2 * data.length);
-        byte[][] newChunk = new byte[newSize][];
-        System.arraycopy(data, 0, newChunk, 0, data.length);
-        data = newChunk;
+        data = Arrays.copyOf(data, newSize);
       }
       for(int i=initializedChunks; i <= chunkIndex; ++i) {
         data[i] = new byte[chunkSize];

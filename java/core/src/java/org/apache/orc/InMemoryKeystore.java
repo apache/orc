@@ -151,8 +151,7 @@ public class InMemoryKeystore implements KeyProvider {
     final EncryptionAlgorithm algorithm = secret.getAlgorithm();
     byte[] encryptedKey = new byte[algorithm.keyLength()];
     random.nextBytes(encryptedKey);
-    byte[] iv = new byte[algorithm.getIvLength()];
-    System.arraycopy(encryptedKey, 0, iv, 0, iv.length);
+    byte[] iv = Arrays.copyOf(encryptedKey, algorithm.getIvLength());
     Cipher localCipher = algorithm.createCipher();
 
     try {
@@ -204,8 +203,7 @@ public class InMemoryKeystore implements KeyProvider {
     }
 
     final EncryptionAlgorithm algorithm = secret.getAlgorithm();
-    byte[] iv = new byte[algorithm.getIvLength()];
-    System.arraycopy(encryptedKey, 0, iv, 0, iv.length);
+    byte[] iv = Arrays.copyOf(encryptedKey, algorithm.getIvLength());
     Cipher localCipher = algorithm.createCipher();
 
     try {
