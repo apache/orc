@@ -276,7 +276,16 @@ public class InMemoryKeystore implements KeyProvider {
       algorithm = EncryptionAlgorithm.AES_CTR_128;
     }
 
-    final byte[] buffer = Arrays.copyOf(masterKey, algorithm.keyLength());
+    final byte[] buffer = new byte[algorithm.keyLength()];
+    if (algorithm.keyLength() > masterKey.length) {
+
+      System.arraycopy(masterKey, 0, buffer, 0, masterKey.length);
+      /* fill with zeros */
+      Arrays.fill(buffer, masterKey.length, buffer.length - 1, (byte) 0);
+
+    } else {
+      System.arraycopy(masterKey, 0, buffer, 0, algorithm.keyLength());
+    }
 
     final KeyVersion key = new KeyVersion(keyName, version, algorithm,
         buffer);
