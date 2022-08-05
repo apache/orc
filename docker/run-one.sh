@@ -26,7 +26,7 @@ function failure {
 }
 
 VOLUME="--volume m2cache:/root/.m2/repository"
-TAG=$(echo "orc-$BUILD" | sed -e 's/=/-/g')
+TAG=$(echo "apache/orc-dev:$BUILD" | sed -e 's/=/-/g')
 if [ $GITHUB_USER == "local" ]; then
   BRANCH=`git status| head -1 | sed -e 's/On branch //'`
   echo "Started local run for $BRANCH on $BUILD at $(date)"
