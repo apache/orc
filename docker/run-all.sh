@@ -32,19 +32,6 @@ function failure {
 rm -f logs/pids.txt logs/*.log
 
 start=`date`
-for build in `cat os-list.txt`; do
-  echo "Building $build"
-  OS=$(echo "$build" | cut -d '_' -f1)
-  REST=$(echo "$build" | cut -d '_' -f2- -s)
-  if [ -z "$REST" ]; then
-    ARGS=""
-  else
-    ARGS=$(echo "$REST" | sed -e 's/^/--build-arg /' -e 's/_/ --build-arg /g')
-  fi
-  TAG=$(echo "orc-$build" | sed -e 's/=/-/g')
-  ( cd $OS && docker build -t "$TAG" $ARGS . ) > logs/$build-build.log 2>&1 || exit 1
-done
-testStart=`date`
 
 for build in `cat os-list.txt`; do
     ./run-one.sh $1 $2 $build > logs/$build-test.log 2>&1 &
@@ -58,6 +45,5 @@ for job in `cat logs/pids.txt`; do
 done
 
 echo ""
-echo "Build start: $start"
-echo "Test start: $testStart"
+echo "Test start: $start"
 echo "End:" `date`

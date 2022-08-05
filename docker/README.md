@@ -4,6 +4,16 @@
 * Debian 10 and 11
 * Ubuntu 18, 20 and 22
 
+## Pre-built Images
+
+Apache ORC community provides a set of pre-built docker images and uses it during testing.
+
+    docker pull apache/orc-dev:ubuntu22
+
+You can find all tags here.
+
+    https://hub.docker.com/r/apache/orc-dev/tags
+
 ## Test
 
 To test against all of the Linux OSes against Apache's main branch:
