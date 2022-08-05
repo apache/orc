@@ -60,6 +60,7 @@ public:
   }
 };
 
+#if ENABLE_METRICS
 #define SCOPED_STOPWATCH(METRICS_PTR, LATENCY_VAR, COUNT_VAR)         \
   AutoStopwatch measure(                                              \
     (METRICS_PTR == nullptr ? nullptr : &METRICS_PTR->LATENCY_VAR),   \
@@ -69,6 +70,10 @@ public:
   AutoStopwatch measure(                                              \
     (METRICS_PTR == nullptr ? nullptr : &METRICS_PTR->LATENCY_VAR),   \
     nullptr, true)
+#else
+#define SCOPED_STOPWATCH(METRICS_PTR, LATENCY_VAR, COUNT_VAR)
+#define SCOPED_MINUS_STOPWATCH(METRICS_PTR, LATENCY_VAR)
+#endif
 
 }
 
