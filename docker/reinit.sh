@@ -17,7 +17,6 @@
 
 start=`date`
 for build in `cat os-list.txt`; do
-  echo "Re-initialize $build"
   OS=$(echo "$build" | cut -d '_' -f1)
   REST=$(echo "$build" | cut -d '_' -f2- -s)
   if [ -z "$REST" ]; then
@@ -25,7 +24,8 @@ for build in `cat os-list.txt`; do
   else
     ARGS=$(echo "$REST" | sed -e 's/^/--build-arg /' -e 's/_/ --build-arg /g')
   fi
-  TAG=$(echo "orc-$build" | sed -e 's/=/-/g')
+  TAG=$(echo "apache/orc-dev:$build" | sed -e 's/=/-/g')
+  echo "Re-initialize $TAG"
   ( cd $OS && docker build --no-cache -t "$TAG" $ARGS . )
 done
 echo "Start: $start"
