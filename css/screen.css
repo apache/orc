@@ -922,7 +922,7 @@ aside {
   text-align: center;
   padding-top: 40px;
   position: relative;
-  background: url(../img/article-footer.png) top center no-repeat;
+  background: top center no-repeat;
   margin: 40px -20px 10px; }
   .section-nav > div {
     width: 49.5%; }
