@@ -1,7 +1,7 @@
 ---
 layout: docs
 title: Releases
-permalink: /docs/releases.html
+permalink: /releases.html
 ---
 {% for relItr in site.data.releases %}
   {% if relItr[1]["state"] == "latest" %}
