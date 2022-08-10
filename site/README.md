@@ -11,12 +11,12 @@ the site is to use docker to use a standard environment.
 
 ## Run the docker container with the preview of the site.
 
-1. `docker run -d --name orc-container -p 4000:4000 apache/orc-dev:site`
+1. `docker run -d --name orc-container -p 4000:4000 -v $PWD:/home/orc/site apache/orc-dev:site`
 
 ## Browsing
 
 Look at the site by navigating to
-[http://0.0.0.0:4000/](http://0.0.0.0:4000/) .
+[http://localhost:4000/](http://localhost:4000/) .
 
 ## Pushing to site
 
