@@ -9,7 +9,6 @@
 - title: Installing
   docs:
   - building
-  - releases
 
 - title: Using in Spark
   docs:

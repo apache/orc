@@ -11,7 +11,7 @@ the site is to use docker to use a standard environment.
 
 ## Run the docker container with the preview of the site.
 
-1. `docker run -d --name orc-container -p 4000:4000 apache/orc-dev:site`
+1. `docker run -d --name orc-container -p 4000:4000 -v $PWD:/home/orc/site apache/orc-dev:site`
 
 ## Browsing
 
