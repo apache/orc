@@ -16,7 +16,7 @@ the site is to use docker to use a standard environment.
 ## Browsing
 
 Look at the site by navigating to
-[http://localhost:4000/](http://localhost:4000/) .
+[http://0.0.0.0:4000/](http://0.0.0.0:4000/) .
 
 ## Pushing to site
 
