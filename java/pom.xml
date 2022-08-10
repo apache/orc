@@ -568,9 +568,9 @@
         <jdk>[17,)</jdk>
       </activation>
       <properties>
-        <min.hadoop.version>3.3.3</min.hadoop.version>
-        <hadoop.version>3.3.3</hadoop.version>
-        <tools.hadoop.version>3.3.3</tools.hadoop.version>
+        <min.hadoop.version>3.3.4</min.hadoop.version>
+        <hadoop.version>3.3.4</hadoop.version>
+        <tools.hadoop.version>3.3.4</tools.hadoop.version>
       </properties>
     </profile>
   </profiles>
