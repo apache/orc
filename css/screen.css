@@ -193,7 +193,7 @@ td, th {
 /* Wrapping at a maximum width is optional */
 .wrap .grid,
 .grid.wrap {
-  max-width: 978px;
+  max-width: 1302px;
   margin: 0 auto; }
 
 /* Width classes also have shorthand versions numbered as fractions
