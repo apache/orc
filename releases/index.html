@@ -1,0 +1,760 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <title>Releases</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="generator" content="Jekyll v3.8.6">
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
+  <link rel="stylesheet" href="/css/screen.css">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <!--[if lt IE 9]>
+  <script src="/js/html5shiv.min.js"></script>
+  <script src="/js/respond.min.js"></script>
+  <![endif]-->
+</head>
+
+
+<body class="wrap">
+  <header role="banner">
+  <nav class="mobile-nav show-on-mobiles">
+    <ul>
+  <li class="">
+    <a href="/">Home</a>
+  </li>
+  <li class="current">
+    <a href="/releases/"><span class="show-on-mobiles">Rel</span>
+                         <span class="hide-on-mobiles">Releases</span></a>
+  </li>
+  <li class="">
+    <a href="/docs/"><span class="show-on-mobiles">Doc</span>
+                     <span class="hide-on-mobiles">Documentation</span></a>
+  </li>
+  <li class="">
+    <a href="/talks/"><span class="show-on-mobiles">Talk</span>
+                      <span class="hide-on-mobiles">Talks</span></a>
+  </li>
+  <li class="">
+    <a href="/news/">News</a>
+  </li>
+  <li class="">
+    <a href="/develop/"><span class="show-on-mobiles">Dev</span>
+                        <span class="hide-on-mobiles">Develop</span></a>
+  </li>
+  <li class="">
+    <a href="/help/">Help</a>
+  </li>
+</ul>
+
+  </nav>
+  <div class="grid">
+    <div class="unit one-quarter center-on-mobiles">
+      <h1>
+        <a href="/">
+          <span class="sr-only">Apache ORC</span>
+          <img src="/img/logo.png" width="249" height="101" alt="ORC Logo">
+        </a>
+      </h1>
+    </div>
+    <nav class="main-nav unit three-quarters hide-on-mobiles">
+      <ul>
+  <li class="">
+    <a href="/">Home</a>
+  </li>
+  <li class="current">
+    <a href="/releases/"><span class="show-on-mobiles">Rel</span>
+                         <span class="hide-on-mobiles">Releases</span></a>
+  </li>
+  <li class="">
+    <a href="/docs/"><span class="show-on-mobiles">Doc</span>
+                     <span class="hide-on-mobiles">Documentation</span></a>
+  </li>
+  <li class="">
+    <a href="/talks/"><span class="show-on-mobiles">Talk</span>
+                      <span class="hide-on-mobiles">Talks</span></a>
+  </li>
+  <li class="">
+    <a href="/news/">News</a>
+  </li>
+  <li class="">
+    <a href="/develop/"><span class="show-on-mobiles">Dev</span>
+                        <span class="hide-on-mobiles">Develop</span></a>
+  </li>
+  <li class="">
+    <a href="/help/">Help</a>
+  </li>
+</ul>
+
+    </nav>
+  </div>
+</header>
+
+
+  <section class="standalone">
+  <div class="grid">
+
+    <div class="unit whole">
+      <article>
+        <h1>Releases</h1>
+        
+<h2 id="current-release---175">Current Release - 1.7.5:</h2>
+
+<p>ORC 1.7.5 contains both the Java and C++ reader and writer
+for ORC files. It also contains tools for working with ORC
+files and looking at their contents and metadata.</p>
+
+<ul>
+  <li>Released: 16 June 2022</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.7.5/orc-1.7.5.tar.gz">orc-1.7.5.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-1.7.5/orc-1.7.5.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">William Hyun (DECDFA29)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.7.5">rel/release-1.7.5</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.7.5%22">ORC 1.7.5</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.7.5/orc-1.7.5.tar.gz.sha256">b90cae5853e3ea0e…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.7.5%22&amp;tempMax=500">ORC-1.7.5</a></li>
+</ul>
+
+<p>The new features of ORC 1.7:</p>
+
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-377">ORC-377</a> Support Snappy compression in C++ Writer</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-577">ORC-577</a> Support row-level filtering</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-716">ORC-716</a> Build and test on Java 17-EA</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-731">ORC-731</a> Improve <code class="highlighter-rouge">Java Tools</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-742">ORC-742</a> LazyIO of non-filter columns</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-751">ORC-751</a> Implement Predicate Pushdown in C++ Reader</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-755">ORC-755</a> Introduce OrcFilterContext</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-757">ORC-757</a> Add Hashtable implementation for dictionary</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-780">ORC-780</a> Support LZ4 Compression in C++ Writer</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-797">ORC-797</a> Allow writers to get the stripe information</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-818">ORC-818</a> Build and test in Apple Silicon</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-861">ORC-861</a> Bump CMake minimum requirement to 2.8.12</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-867">ORC-867</a> Upgrade hive-storage-api to 2.8.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-984">ORC-984</a> Save the software version that wrote each ORC file</li>
+</ul>
+
+<p>Known issues:</p>
+
+<h2 id="checking-signatures">Checking signatures</h2>
+
+<p>Verify the releases by following <a href="https://www.apache.org/info/verification.html">ASF procedures</a>.
+All GPG signatures should be verified as matching one of the keys in ORC’s
+committers’ <a href="https://downloads.apache.org/orc/KEYS">key list</a>.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% shasum <span class="nt">-a</span> 256 orc-X.Y.Z.tgz | diff - orc-X.Y.Z.tgz.sha256
+% gpg <span class="nt">--import</span> KEYS
+% gpg <span class="nt">--verify</span> orc-X.Y.Z.tgz.asc
+</code></pre></div></div>
+
+<h2 id="all-releases">All releases:</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center">Version</th>
+      <th style="text-align: center">Date</th>
+      <th style="text-align: center">State</th>
+      <th style="text-align: center">Release</th>
+    </tr>
+  </thead>
+  <tbody>
+    
+      
+      <tr>
+        <td style="text-align: center">1.7.5</td>
+        <td style="text-align: center">2022-06-16</td>
+        <td style="text-align: center">latest</td>
+        <td style="text-align: center">
+          <a href="/news/2022/06/16/ORC-1.7.5/">
+          ORC-1.7.5</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.7.4</td>
+        <td style="text-align: center">2022-04-15</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2022/04/15/ORC-1.7.4/">
+          ORC-1.7.4</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.7.3</td>
+        <td style="text-align: center">2022-02-09</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2022/02/09/ORC-1.7.3/">
+          ORC-1.7.3</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.7.2</td>
+        <td style="text-align: center">2021-12-20</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2021/12/20/ORC-1.7.2/">
+          ORC-1.7.2</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.7.1</td>
+        <td style="text-align: center">2021-11-07</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2021/11/07/ORC-1.7.1/">
+          ORC-1.7.1</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.7.0</td>
+        <td style="text-align: center">2021-09-15</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2021/09/15/ORC-1.7.0/">
+          ORC-1.7.0</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.6.14</td>
+        <td style="text-align: center">2022-04-14</td>
+        <td style="text-align: center">stable</td>
+        <td style="text-align: center">
+          <a href="/news/2022/04/14/ORC-1.6.14/">
+          ORC-1.6.14</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.6.13</td>
+        <td style="text-align: center">2022-01-20</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2022/01/20/ORC-1.6.13/">
+          ORC-1.6.13</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.6.12</td>
+        <td style="text-align: center">2021-11-07</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2021/11/07/ORC-1.6.12/">
+          ORC-1.6.12</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.6.11</td>
+        <td style="text-align: center">2021-09-15</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2021/09/15/ORC-1.6.11/">
+          ORC-1.6.11</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.6.10</td>
+        <td style="text-align: center">2021-08-10</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2021/08/10/ORC-1.6.10/">
+          ORC-1.6.10</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.6.9</td>
+        <td style="text-align: center">2021-07-02</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2021/07/02/ORC-1.6.9/">
+          ORC-1.6.9</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.6.8</td>
+        <td style="text-align: center">2021-05-21</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2021/05/21/ORC-1.6.8/">
+          ORC-1.6.8</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.6.7</td>
+        <td style="text-align: center">2021-01-22</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2021/01/22/ORC-1.6.7/">
+          ORC-1.6.7</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.6.6</td>
+        <td style="text-align: center">2020-12-10</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2020/12/10/ORC-1.6.6/">
+          ORC-1.6.6</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.6.5</td>
+        <td style="text-align: center">2020-10-01</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2020/10/01/ORC-1.6.5/">
+          ORC-1.6.5</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.6.4</td>
+        <td style="text-align: center">2020-09-14</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2020/09/14/ORC-1.6.4/">
+          ORC-1.6.4</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.6.3</td>
+        <td style="text-align: center">2020-04-26</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2020/04/26/ORC-1.6.3/">
+          ORC-1.6.3</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.6.2</td>
+        <td style="text-align: center">2019-11-24</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2019/11/24/ORC-1.6.2/">
+          ORC-1.6.2</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.6.1</td>
+        <td style="text-align: center">2019-10-26</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2019/10/26/ORC-1.6.1/">
+          ORC-1.6.1</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.6.0</td>
+        <td style="text-align: center">2019-09-03</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2019/09/03/ORC-1.6.0/">
+          ORC-1.6.0</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.5.13</td>
+        <td style="text-align: center">2021-09-15</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2021/09/15/ORC-1.5.13/">
+          ORC-1.5.13</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.5.12</td>
+        <td style="text-align: center">2020-09-30</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2020/09/30/ORC-1.5.12/">
+          ORC-1.5.12</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.5.11</td>
+        <td style="text-align: center">2020-09-14</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2020/09/14/ORC-1.5.11/">
+          ORC-1.5.11</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.5.10</td>
+        <td style="text-align: center">2020-04-26</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2020/04/26/ORC-1.5.10/">
+          ORC-1.5.10</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.5.9</td>
+        <td style="text-align: center">2020-01-30</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2020/01/30/ORC-1.5.9/">
+          ORC-1.5.9</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.5.8</td>
+        <td style="text-align: center">2019-11-24</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2019/11/24/ORC-1.5.8/">
+          ORC-1.5.8</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.5.7</td>
+        <td style="text-align: center">2019-10-26</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2019/10/26/ORC-1.5.7/">
+          ORC-1.5.7</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.5.6</td>
+        <td style="text-align: center">2019-06-27</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2019/06/27/ORC-1.5.6/">
+          ORC-1.5.6</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.5.5</td>
+        <td style="text-align: center">2019-03-14</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2019/03/14/ORC-1.5.5/">
+          ORC-1.5.5</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.5.4</td>
+        <td style="text-align: center">2018-12-21</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2018/12/21/ORC-1.5.4/">
+          ORC-1.5.4</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.5.3</td>
+        <td style="text-align: center">2018-09-25</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2018/09/25/ORC-1.5.3/">
+          ORC-1.5.3</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.5.2</td>
+        <td style="text-align: center">2018-06-29</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2018/06/29/ORC-1.5.2/">
+          ORC-1.5.2</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.5.1</td>
+        <td style="text-align: center">2018-05-25</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2018/05/25/ORC-1.5.1/">
+          ORC-1.5.1</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.5.0</td>
+        <td style="text-align: center">2018-05-14</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2018/05/14/ORC-1.5.0/">
+          ORC-1.5.0</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.4.5</td>
+        <td style="text-align: center">2019-12-09</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2019/12/09/ORC-1.4.5/">
+          ORC-1.4.5</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.4.4</td>
+        <td style="text-align: center">2018-05-14</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2018/05/14/ORC-1.4.4/">
+          ORC-1.4.4</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.4.3</td>
+        <td style="text-align: center">2018-02-09</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2018/02/09/ORC-1.4.3/">
+          ORC-1.4.3</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.4.2</td>
+        <td style="text-align: center">2018-01-23</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2018/01/23/ORC-1.4.2/">
+          ORC-1.4.2</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.4.1</td>
+        <td style="text-align: center">2017-10-16</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2017/10/16/ORC-1.4.1/">
+          ORC-1.4.1</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.4.0</td>
+        <td style="text-align: center">2017-05-08</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2017/05/08/ORC-1.4.0/">
+          ORC-1.4.0</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.3.4</td>
+        <td style="text-align: center">2017-10-16</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2017/10/16/ORC-1.3.4/">
+          ORC-1.3.4</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.3.3</td>
+        <td style="text-align: center">2017-02-21</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2017/02/21/ORC-1.3.3/">
+          ORC-1.3.3</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.3.2</td>
+        <td style="text-align: center">2017-02-13</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2017/02/13/ORC-1.3.2/">
+          ORC-1.3.2</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.3.1</td>
+        <td style="text-align: center">2017-02-03</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2017/02/03/ORC-1.3.1/">
+          ORC-1.3.1</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.3.0</td>
+        <td style="text-align: center">2017-01-23</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2017/01/23/ORC-1.3.0/">
+          ORC-1.3.0</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.2.3</td>
+        <td style="text-align: center">2016-12-12</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2016/12/12/ORC-1.2.3/">
+          ORC-1.2.3</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.2.2</td>
+        <td style="text-align: center">2016-12-01</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2016/12/01/ORC-1.2.2/">
+          ORC-1.2.2</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.2.1</td>
+        <td style="text-align: center">2016-10-05</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2016/10/05/ORC-1.2.1/">
+          ORC-1.2.1</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.2.0</td>
+        <td style="text-align: center">2016-08-25</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2016/08/25/ORC-1.2.0/">
+          ORC-1.2.0</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.1.2</td>
+        <td style="text-align: center">2016-07-08</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2016/07/08/ORC-1.1.2/">
+          ORC-1.1.2</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.1.1</td>
+        <td style="text-align: center">2016-06-13</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2016/06/13/ORC-1.1.1/">
+          ORC-1.1.1</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.1.0</td>
+        <td style="text-align: center">2016-06-10</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2016/06/10/ORC-1.1.0/">
+          ORC-1.1.0</a></td>
+      </tr>
+    
+      
+      <tr>
+        <td style="text-align: center">1.0.0</td>
+        <td style="text-align: center">2016-01-25</td>
+        <td style="text-align: center">archived</td>
+        <td style="text-align: center">
+          <a href="/news/2016/01/25/ORC-1.0.0/">
+          ORC-1.0.0</a></td>
+      </tr>
+    
+  </tbody>
+</table>
+
+
+      </article>
+    </div>
+
+    <div class="clear"></div>
+
+  </div>
+</section>
+
+
+  <footer role="contentinfo">
+  <p style="margin-left: 20px; margin-right; 20px; text-align: center">The contents of this website are &copy;&nbsp;2022
+     <a href="https://www.apache.org/">Apache Software Foundation</a>
+     under the terms of the <a
+      href="https://www.apache.org/licenses/LICENSE-2.0.html">
+      Apache&nbsp;License&nbsp;v2</a>. Apache ORC and its logo are trademarks
+      of the Apache Software Foundation.</p>
+</footer>
+
+  <script>
+  var anchorForId = function (id) {
+    var anchor = document.createElement("a");
+    anchor.className = "header-link";
+    anchor.href      = "#" + id;
+    anchor.innerHTML = "<span class=\"sr-only\">Permalink</span><i class=\"fa fa-link\"></i>";
+    anchor.title = "Permalink";
+    return anchor;
+  };
+
+  var linkifyAnchors = function (level, containingElement) {
+    var headers = containingElement.getElementsByTagName("h" + level);
+    for (var h = 0; h < headers.length; h++) {
+      var header = headers[h];
+
+      if (typeof header.id !== "undefined" && header.id !== "") {
+        header.appendChild(anchorForId(header.id));
+      }
+    }
+  };
+
+  document.onreadystatechange = function () {
+    if (this.readyState === "complete") {
+      var contentBlock = document.getElementsByClassName("docs")[0] || document.getElementsByClassName("news")[0];
+      if (!contentBlock) {
+        return;
+      }
+      for (var level = 1; level <= 6; level++) {
+        linkifyAnchors(level, contentBlock);
+      }
+    }
+  };
+</script>
+
+
+</body>
+</html>
