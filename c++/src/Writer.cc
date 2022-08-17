@@ -42,6 +42,7 @@ namespace orc {
     double bloomFilterFalsePositiveProb;
     BloomFilterVersion bloomFilterVersion;
     std::string timezone;
+    WriterMetrics* metrics;
 
     WriterOptionsPrivate() :
                             fileVersion(FileVersion::v_0_12()) { // default to Hive_0_12
@@ -61,6 +62,7 @@ namespace orc {
       //introduced by moving timestamps between different timezones.
       //Explictly set the writer timezone if the use case depends on it.
       timezone = "GMT";
+      metrics = nullptr;
     }
   };
 
@@ -252,6 +254,15 @@ namespace orc {
 
   WriterOptions& WriterOptions::setTimezoneName(const std::string& zone) {
     privateBits->timezone = zone;
+    return *this;
+  }
+
+  WriterMetrics* WriterOptions::getWriterMetrics() const {
+    return privateBits->metrics;
+  }
+
+  WriterOptions& WriterOptions::setWriterMetrics(WriterMetrics* metrics) {
+    privateBits->metrics = metrics;
     return *this;
   }
 

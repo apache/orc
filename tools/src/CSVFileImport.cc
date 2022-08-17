@@ -277,6 +277,7 @@ void fillTimestampValues(const std::vector<std::string>& data,
 
 void usage() {
   std::cout << "Usage: csv-import [-h] [--help]\n"
+            << "                  [-m] [--metrics]\n"
             << "                  [-d <character>] [--delimiter=<character>]\n"
             << "                  [-s <size>] [--stripe=<size>]\n"
             << "                  [-c <size>] [--block=<size>]\n"
@@ -300,6 +301,7 @@ int main(int argc, char* argv[]) {
 
   static struct option longOptions[] = {
     {"help", no_argument, ORC_NULLPTR, 'h'},
+    {"metrics", no_argument, ORC_NULLPTR, 'm'},
     {"delimiter", required_argument, ORC_NULLPTR, 'd'},
     {"stripe", required_argument, ORC_NULLPTR, 's'},
     {"block", required_argument, ORC_NULLPTR, 'c'},
@@ -308,14 +310,18 @@ int main(int argc, char* argv[]) {
     {ORC_NULLPTR, 0, ORC_NULLPTR, 0}
   };
   bool helpFlag = false;
+  bool showMetrics = false;
   int opt;
   char *tail;
   do {
-    opt = getopt_long(argc, argv, "d:s:c:b:t:h", longOptions, ORC_NULLPTR);
+    opt = getopt_long(argc, argv, "d:s:c:b:t:mh", longOptions, ORC_NULLPTR);
     switch (opt) {
       case 'h':
         helpFlag = true;
         opt = -1;
+        break;
+      case 'm':
+        showMetrics = true;
         break;
       case 'd':
         gDelimiter = optarg[0];
@@ -374,7 +380,9 @@ int main(int argc, char* argv[]) {
   options.setCompression(compression);
   options.setTimezoneName(timezoneName);
 
-  ORC_UNIQUE_PTR<orc::OutputStream> outStream = orc::writeLocalFile(output);
+  orc::WriterMetrics metrics;
+  ORC_UNIQUE_PTR<orc::OutputStream> outStream =
+    orc::writeLocalFile(output, showMetrics ? &metrics : nullptr);
   ORC_UNIQUE_PTR<orc::Writer> writer =
     orc::createWriter(*fileType, outStream.get(), options);
   ORC_UNIQUE_PTR<orc::ColumnVectorBatch> rowBatch =
@@ -502,5 +510,12 @@ int main(int argc, char* argv[]) {
   std::cout << GetDate() << " Total writer CPU time: "
             << static_cast<double>(totalCPUTime) / CLOCKS_PER_SEC
             << "s." << std::endl;
+  if (showMetrics) {
+    std::cout << GetDate() << " IO block lantency: "
+              << static_cast<double>(metrics.IOBlockingLatencyUs) / 1000000.0
+              << "s." << std::endl;
+    std::cout << GetDate() << " IO count: "
+              << metrics.IOCount << std::endl;
+  }
   return 0;
 }

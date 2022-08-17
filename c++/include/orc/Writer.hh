@@ -47,6 +47,13 @@ namespace orc {
   class Timezone;
 
   /**
+   * Expose the IO metrics for write operation.
+   */
+  struct WriterMetrics {
+    std::atomic<uint64_t> IOCount{0};
+    std::atomic<uint64_t> IOBlockingLatencyUs{0};
+  };
+  /**
    * Options for creating a Writer.
    */
   class WriterOptions {
@@ -235,6 +242,17 @@ namespace orc {
      * @param zone writer timezone name
      */
     WriterOptions& setTimezoneName(const std::string& zone);
+
+    /**
+     * Set the writer metrics.
+     */
+    WriterOptions& setWriterMetrics(WriterMetrics * metrics);
+
+    /**
+     * Get the writer metrics.
+     * @return if not set, return nullptr.
+     */
+    WriterMetrics * getWriterMetrics() const;
   };
 
   class Writer {
