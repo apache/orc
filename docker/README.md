@@ -2,6 +2,7 @@
 
 * CentOS 7
 * Debian 10 and 11
+* Fedora 37
 * Ubuntu 18, 20 and 22
 
 ## Pre-built Images
