@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>ORC 1.4.3 Released</title>
+  <title>ORC 1.7.6 Released</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="generator" content="Jekyll v3.8.6">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
@@ -261,8 +261,8 @@
       <div class="unit four-fifths">
         <article>
   <h2>
-    ORC 1.4.3 Released
-    <a href="/news/2018/02/09/ORC-1.4.3/" class="permalink" title="Permalink">∞</a>
+    ORC 1.7.6 Released
+    <a href="/news/2022/08/17/ORC-1.7.6/" class="permalink" title="Permalink">∞</a>
   </h2>
   <span class="post-category">
     <span class="label">
@@ -271,45 +271,71 @@
   </span>
   <div class="post-meta">
     <span class="post-date">
-      09 Feb 2018
+      17 Aug 2022
     </span>
-    <a href="https://people.apache.org/~omalley" class="post-author">
-      <img src="https://people.apache.org/~omalley/omalley.png"
-           class="avatar" alt="omalley avatar"
+    <a href="https://people.apache.org/~william" class="post-author">
+      <img src="https://people.apache.org/~william/william.png"
+           class="avatar" alt="william avatar"
            width="24" height="24">
-      omalley
+      william
     </a>
   </div>
   <div class="post-content">
-    <p>The ORC team is excited to announce the release of ORC v1.4.3.</p>
+    <p>The ORC team is excited to announce the release of ORC v1.7.6.</p>
 
 <ul>
-  <li>Released: 9 February 2018</li>
-  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-1.4.3/orc-1.4.3.tar.gz">orc-1.4.3.tar.gz</a></li>
-  <li><a href="https://archive.apache.org/dist/orc/orc-1.4.3/orc-1.4.3.tar.gz.asc">GPG Signature</a>
-signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (3D0C92B9)</a></li>
-  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.4.3">rel/release-1.4.3</a></li>
-  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.4.3%22">ORC 1.4.3</a></li>
-  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-1.4.3/orc-1.4.3.tar.gz.sha256">0310d6ed20d95b7c…</a></li>
-  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.4.3%22&amp;tempMax=500">ORC-1.4.3</a></li>
+  <li>Released: 17 August 2022</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.7.6/orc-1.7.6.tar.gz">orc-1.7.6.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-1.7.6/orc-1.7.6.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">William Hyun (DECDFA29)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.7.6">rel/release-1.7.6</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.7.6%22">ORC 1.7.6</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.7.6/orc-1.7.6.tar.gz.sha256">a75e0cccaaf5e03f…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.7.6%22&amp;tempMax=500">ORC-1.7.6</a></li>
 </ul>
 
-<p>The new features of ORC 1.4:</p>
-
+<p>The bug fixes:</p>
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-72">ORC-72</a> Add benchmark code for file formats.</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-87">ORC-87</a> Fix timestamp statistics in C++.</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-150">ORC-150</a> Add tool to convert from JSON.</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-151">ORC-151</a> Reduce the size of tools.jar.</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-174">ORC-174</a> Create a nohive variant of the jars.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1204">ORC-1204</a> ORC MapReduce writer to flush when long arrays</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1205">ORC-1205</a> <code class="highlighter-rouge">nextVector</code> should invoke <code class="highlighter-rouge">ensureSize</code> when reusing vectors</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1215">ORC-1215</a> Remove a wrong <code class="highlighter-rouge">NotNull</code> annotation on <code class="highlighter-rouge">value</code> of <code class="highlighter-rouge">setAttribute</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1222">ORC-1222</a> Upgrade <code class="highlighter-rouge">tools.hadoop.version</code> to 2.10.2</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1227">ORC-1227</a> Use <code class="highlighter-rouge">Constructor.newInstance</code> instead of <code class="highlighter-rouge">Class.newInstance</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1228">ORC-1228</a> Fix <code class="highlighter-rouge">setAttribute</code> to handle null value</li>
 </ul>
 
-<p>Known issues:</p>
-
+<p>The test changes:</p>
 <ul>
-  <li><a href="/security/CVE-2018-8015">CVE-2018-8015</a> ORC files with malformed types cause stack overflow.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-932">ORC-932</a> Bump byte-buddy from 1.10.19 to 1.11.12 (#842)</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1169">ORC-1169</a> Use Hadoop to 3.3.2 on Java 17+ (#1113)</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1178">ORC-1178</a> Use Hadoop 3.3.3 on Java 17+ (#1129)</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1193">ORC-1193</a> Bump parquet.version to 1.12.3</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1207">ORC-1207</a> Upgrade Spark to 3.3.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1210">ORC-1210</a> Upgrade maven to 3.8.6</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1234">ORC-1234</a> Upgrade <code class="highlighter-rouge">objenesis</code> to 3.2 in Spark benchmark</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1235">ORC-1235</a> Bump avro.version to 1.11.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1240">ORC-1240</a> Update site README to use <code class="highlighter-rouge">apache/orc-dev</code> DockerHub image</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1241">ORC-1241</a> Use <code class="highlighter-rouge">apache/orc-dev</code> DockerHub repository in Docker tests</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1244">ORC-1244</a> Upgrade <code class="highlighter-rouge">byte-buddy</code> to 1.12.13 in branch-1.7</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1245">ORC-1245</a> Use Hadoop 3.3.4 on Java 17+ and benchmark</li>
 </ul>
 
+<p>The documentation changes:</p>
+<ul>
+  <li>MINOR: Update DOAP with new releases (#1127)</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-900">ORC-900</a> Update <code class="highlighter-rouge">doap_orc.rdf</code> for Apache Projects page (#806)</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1231">ORC-1231</a> Update supported OS list in <code class="highlighter-rouge">building.md</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1237">ORC-1237</a> Remove a wrong image link to <code class="highlighter-rouge">article-footer.png</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1238">ORC-1238</a> Update DOAP with 1.7.5</li>
+</ul>
+
+<p>The tasks:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1185">ORC-1185</a> Add <code class="highlighter-rouge">merge_orc_pr.py</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1187">ORC-1187</a> Use <code class="highlighter-rouge">main</code> instead of <code class="highlighter-rouge">master</code> in <code class="highlighter-rouge">merge_orc_pr.py</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1213">ORC-1213</a> Use <code class="highlighter-rouge">https</code> in <code class="highlighter-rouge">ThirdpartyToolchain.cmake</code></li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1226">ORC-1226</a> Add a deprecation warning for Hadoop 2.7.2 and below</li>
+</ul>
 
   </div>
 </article>
@@ -329,7 +355,7 @@ signed by <a href="https://downloads.apache.org/orc/KEYS">Owen O’Malley (3D0C9
     <h4>Recent Releases</h4>
     <ul>
       
-      <li class="">
+      <li class="current">
         <a href="/news/2022/08/17/ORC-1.7.6/">Version 1.7.6</a>
       </li>
       
