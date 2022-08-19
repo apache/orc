@@ -34,6 +34,12 @@ namespace orc {
     virtual void add(uint64_t pos) = 0;
   };
 
+DIAGNOSTIC_PUSH
+
+#ifdef __clang__
+  DIAGNOSTIC_IGNORE("-Wunused-private-field")
+#endif
+  struct WriterMetrics;
   /**
    * A subclass of Google's ZeroCopyOutputStream that supports output to memory
    * buffer, and flushing to OutputStream.
@@ -45,12 +51,14 @@ namespace orc {
     OutputStream * outputStream;
     std::unique_ptr<DataBuffer<char> > dataBuffer;
     uint64_t blockSize;
+    WriterMetrics* metrics;
 
   public:
     BufferedOutputStream(MemoryPool& pool,
                       OutputStream * outStream,
                       uint64_t capacity,
-                      uint64_t block_size);
+                      uint64_t block_size,
+                      WriterMetrics* metrics);
     virtual ~BufferedOutputStream() override;
 
     virtual bool Next(void** data, int*size) override;
@@ -66,6 +74,7 @@ namespace orc {
 
     virtual bool isCompressed() const { return false; }
   };
+DIAGNOSTIC_POP
 
   /**
    * An append only buffered stream that allows

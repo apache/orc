@@ -24,11 +24,11 @@
 #include "orc/Type.hh"
 #include "orc/Vector.hh"
 
+#include <atomic>
 #include <memory>
 #include <set>
 #include <string>
 #include <vector>
-#include <atomic>
 
 namespace orc {
 
@@ -51,7 +51,9 @@ namespace orc {
    * Expose the IO metrics for write operation.
    */
   struct WriterMetrics {
+    // Record the number of IO requests written to the output file
     std::atomic<uint64_t> IOCount{0};
+    // Record the lantency of IO blocking
     std::atomic<uint64_t> IOBlockingLatencyUs{0};
   };
   /**

@@ -58,7 +58,8 @@ namespace orc {
                             // BufferedOutputStream initial capacity
                             1 * 1024 * 1024,
                             options.getCompressionBlockSize(),
-                            *options.getMemoryPool());
+                            *options.getMemoryPool(),
+                            options.getWriterMetrics());
   }
 
   std::unique_ptr<StreamsFactory> createStreamsFactory(

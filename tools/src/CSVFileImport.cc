@@ -375,14 +375,14 @@ int main(int argc, char* argv[]) {
   DataBufferList bufferList;
 
   orc::WriterOptions options;
+  orc::WriterMetrics metrics;
   options.setStripeSize(stripeSize);
   options.setCompressionBlockSize(blockSize);
   options.setCompression(compression);
   options.setTimezoneName(timezoneName);
+  options.setWriterMetrics(showMetrics ? &metrics : nullptr);
 
-  orc::WriterMetrics metrics;
-  ORC_UNIQUE_PTR<orc::OutputStream> outStream =
-    orc::writeLocalFile(output, showMetrics ? &metrics : nullptr);
+  ORC_UNIQUE_PTR<orc::OutputStream> outStream = orc::writeLocalFile(output);
   ORC_UNIQUE_PTR<orc::Writer> writer =
     orc::createWriter(*fileType, outStream.get(), options);
   ORC_UNIQUE_PTR<orc::ColumnVectorBatch> rowBatch =

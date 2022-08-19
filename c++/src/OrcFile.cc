@@ -135,14 +135,12 @@ DIAGNOSTIC_POP
     int file;
     uint64_t bytesWritten;
     bool closed;
-    WriterMetrics* metrics;
 
   public:
-    FileOutputStream(std::string _filename, WriterMetrics* _metrics) {
+    FileOutputStream(std::string _filename) {
       bytesWritten = 0;
       filename = _filename;
       closed = false;
-      metrics = _metrics;
       file = open(
                   filename.c_str(),
                   O_BINARY | O_CREAT | O_WRONLY | O_TRUNC,
@@ -163,7 +161,6 @@ DIAGNOSTIC_POP
     }
 
     void write(const void* buf, size_t length) override {
-      SCOPED_STOPWATCH(metrics, IOBlockingLatencyUs, IOCount);
       if (closed) {
         throw std::logic_error("Cannot write to closed stream.");
       }
@@ -196,8 +193,7 @@ DIAGNOSTIC_POP
     }
   }
 
-  std::unique_ptr<OutputStream> writeLocalFile(const std::string& path,
-                                               WriterMetrics* metrics) {
-    return std::unique_ptr<OutputStream>(new FileOutputStream(path, metrics));
+  std::unique_ptr<OutputStream> writeLocalFile(const std::string& path) {
+    return std::unique_ptr<OutputStream>(new FileOutputStream(path));
   }
 }

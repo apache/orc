@@ -1449,7 +1449,8 @@ TEST(BooleanRle, seekBoolAndByteRLE) {
                         CompressionStrategy_COMPRESSION,
                         capacity,
                         blockSize,
-                        *getDefaultPool()));
+                        *getDefaultPool(),
+                        nullptr));
     encoder->add(data, numValues, nullptr);
     encoder->flush();
 
@@ -1482,7 +1483,8 @@ TEST(BooleanRle, seekBoolAndByteRLE) {
     uint64_t capacity = 500 * 1024;
     uint64_t block = 1024;
     std::unique_ptr<BufferedOutputStream> outStream(
-            new BufferedOutputStream(*getDefaultPool(), &memStream, capacity, block));
+            new BufferedOutputStream(
+                    *getDefaultPool(), &memStream, capacity, block, nullptr));
 
     std::unique_ptr<ByteRleEncoder> encoder =
             createBooleanRleEncoder(std::move(outStream));

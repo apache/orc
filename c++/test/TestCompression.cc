@@ -85,7 +85,8 @@ namespace orc {
                        strategy,
                        capacity,
                        block,
-                       pool);
+                       pool,
+                       nullptr);
 
     size_t pos = 0;
     char * compressBuffer;
@@ -284,7 +285,8 @@ namespace orc {
                        CompressionStrategy_SPEED,
                        capacity,
                        block,
-                       *pool);
+                       *pool,
+                       nullptr);
 
     EXPECT_TRUE(ps.SerializeToZeroCopyStream(compressStream.get()));
     compressStream->flush();
@@ -394,8 +396,14 @@ namespace orc {
     CompressionStrategy strategy = CompressionStrategy_COMPRESSION;
     uint64_t batchSize = 1024, blockSize = 256;
 
-    AppendOnlyBufferedStream outStream(createCompressor(
-      kind, &memStream, strategy, DEFAULT_MEM_STREAM_SIZE, blockSize, *pool));
+    AppendOnlyBufferedStream outStream(
+      createCompressor(kind,
+                       &memStream,
+                       strategy,
+                       DEFAULT_MEM_STREAM_SIZE,
+                       blockSize,
+                       *pool,
+                       nullptr));
 
     // write 3 batches of data and record positions between every batch
     size_t row = 0;

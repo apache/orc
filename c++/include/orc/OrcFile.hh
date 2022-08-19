@@ -136,10 +136,8 @@ namespace orc {
   /**
    * Create a stream to write to a local file.
    * @param path the name of the file in the local file system
-   * @param metrics the metrics of the writer
    */
-  ORC_UNIQUE_PTR<OutputStream> writeLocalFile(const std::string& path,
-                                              WriterMetrics* metrics = nullptr);
+  ORC_UNIQUE_PTR<OutputStream> writeLocalFile(const std::string& path);
 
   /**
    * Create a writer to write the ORC file.
