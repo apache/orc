@@ -28,7 +28,9 @@ namespace orc {
 
     uint64_t capacity = 1000;
     uint64_t block = 10;
-    BufferedOutputStream bufStream(*pool, &memStream, capacity, block);
+    WriterMetrics metrics;
+    BufferedOutputStream bufStream(
+            *pool, &memStream, capacity, block, &metrics);
     for (int i = 0; i < 100; ++i) {
       char * buf;
       int len;
@@ -44,6 +46,9 @@ namespace orc {
     for (int i = 0; i < 1000; ++i) {
       EXPECT_EQ(memStream.getData()[i], 'a' + i % 10);
     }
+#if ENABLE_METRICS
+    EXPECT_EQ(metrics.IOCount.load(), 1);
+#endif
   }
 
   TEST(BufferedOutputStream, block_not_aligned) {
@@ -52,7 +57,9 @@ namespace orc {
 
     uint64_t capacity = 20;
     uint64_t block = 10;
-    BufferedOutputStream bufStream(*pool, &memStream, capacity, block);
+    WriterMetrics metrics;
+    BufferedOutputStream bufStream(
+            *pool, &memStream, capacity, block, &metrics);
 
     char * buf;
     int len;
@@ -89,6 +96,9 @@ namespace orc {
     for (int i = 0; i < 5; ++i) {
      EXPECT_EQ(memStream.getData()[i + 7], 'a' + i);
     }
+#if ENABLE_METRICS
+    EXPECT_EQ(metrics.IOCount.load(), 2);
+#endif
   }
 
   TEST(BufferedOutputStream, protobuff_serialization) {
@@ -97,7 +107,9 @@ namespace orc {
 
     uint64_t capacity = 20;
     uint64_t block = 10;
-    BufferedOutputStream bufStream(*pool, &memStream, capacity, block);
+    WriterMetrics metrics;
+    BufferedOutputStream bufStream(
+            *pool, &memStream, capacity, block, &metrics);
 
     proto::PostScript ps;
     ps.set_footerlength(197934);

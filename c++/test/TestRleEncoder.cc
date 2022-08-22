@@ -126,7 +126,8 @@ namespace orc {
 
     return createRleEncoder(
             std::unique_ptr<BufferedOutputStream>(
-                    new BufferedOutputStream(*pool, &memStream, 500 * 1024, 1024)),
+                    new BufferedOutputStream(
+                            *pool, &memStream, 500 * 1024, 1024, nullptr)),
             isSigned, version, *pool, alignBitpacking);
   }
 

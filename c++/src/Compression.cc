@@ -54,7 +54,8 @@ namespace orc {
                           int compressionLevel,
                           uint64_t capacity,
                           uint64_t blockSize,
-                          MemoryPool& pool);
+                          MemoryPool& pool,
+                          WriterMetrics* metrics);
 
     virtual bool Next(void** data, int*size) override = 0;
     virtual void BackUp(int count) override;
@@ -98,11 +99,13 @@ namespace orc {
                                                int compressionLevel,
                                                uint64_t capacity,
                                                uint64_t blockSize,
-                                               MemoryPool& pool) :
+                                               MemoryPool& pool,
+                                               WriterMetrics* metrics) :
                                                 BufferedOutputStream(pool,
                                                                      outStream,
                                                                      capacity,
-                                                                     blockSize),
+                                                                     blockSize,
+                                                                     metrics),
                                                 rawInputBuffer(pool, blockSize),
                                                 level(compressionLevel),
                                                 outputBuffer(nullptr),
@@ -160,7 +163,8 @@ namespace orc {
                           int compressionLevel,
                           uint64_t capacity,
                           uint64_t blockSize,
-                          MemoryPool& pool);
+                          MemoryPool& pool,
+                          WriterMetrics* metrics);
 
     virtual bool Next(void** data, int*size) override;
     virtual std::string getName() const override = 0;
@@ -174,12 +178,14 @@ namespace orc {
                                        int compressionLevel,
                                        uint64_t capacity,
                                        uint64_t blockSize,
-                                       MemoryPool& pool) :
+                                       MemoryPool& pool,
+                                       WriterMetrics* metrics) :
                                          CompressionStreamBase(outStream,
                                                                compressionLevel,
                                                                capacity,
                                                                blockSize,
-                                                               pool) {
+                                                               pool,
+                                                               metrics) {
     // PASS
   }
 
@@ -219,7 +225,8 @@ namespace orc {
                           int compressionLevel,
                           uint64_t capacity,
                           uint64_t blockSize,
-                          MemoryPool& pool);
+                          MemoryPool& pool,
+                          WriterMetrics* metrics);
 
     virtual ~ZlibCompressionStream() override {
       end();
@@ -241,12 +248,14 @@ namespace orc {
                         int compressionLevel,
                         uint64_t capacity,
                         uint64_t blockSize,
-                        MemoryPool& pool)
+                        MemoryPool& pool,
+                        WriterMetrics* metrics)
                         : CompressionStream(outStream,
                                             compressionLevel,
                                             capacity,
                                             blockSize,
-                                            pool) {
+                                            pool,
+                                            metrics) {
     init();
   }
 
@@ -934,12 +943,14 @@ DIAGNOSTIC_POP
                            int compressionLevel,
                            uint64_t capacity,
                            uint64_t blockSize,
-                           MemoryPool& pool)
+                           MemoryPool& pool,
+                           WriterMetrics* metrics)
                            : CompressionStreamBase(outStream,
                                                    compressionLevel,
                                                    capacity,
                                                    blockSize,
-                                                   pool)
+                                                   pool,
+                                                   metrics)
                            , compressorBuffer(pool) {
       // PASS
     }
@@ -1022,12 +1033,14 @@ DIAGNOSTIC_POP
                         int compressionLevel,
                         uint64_t capacity,
                         uint64_t blockSize,
-                        MemoryPool& pool)
+                        MemoryPool& pool,
+                        WriterMetrics* metrics)
                         : BlockCompressionStream(outStream,
                                                  compressionLevel,
                                                  capacity,
                                                  blockSize,
-                                                 pool) {
+                                                 pool,
+                                                 metrics) {
       this->init();
     }
 
@@ -1086,12 +1099,14 @@ DIAGNOSTIC_POP
                         int compressionLevel,
                         uint64_t capacity,
                         uint64_t blockSize,
-                        MemoryPool& pool)
+                        MemoryPool& pool,
+                        WriterMetrics* metrics)
                         : BlockCompressionStream(outStream,
                                                  compressionLevel,
                                                  capacity,
                                                  blockSize,
-                                                 pool) {
+                                                 pool,
+                                                 metrics) {
     }
 
     virtual std::string getName() const override {
@@ -1129,12 +1144,14 @@ DIAGNOSTIC_POP
                           int compressionLevel,
                           uint64_t capacity,
                           uint64_t blockSize,
-                          MemoryPool& pool)
+                          MemoryPool& pool,
+                          WriterMetrics* metrics)
                           : BlockCompressionStream(outStream,
                                                    compressionLevel,
                                                    capacity,
                                                    blockSize,
-                                                   pool) {
+                                                   pool,
+                                                   metrics) {
       this->init();
     }
 
@@ -1268,39 +1285,44 @@ DIAGNOSTIC_PUSH
                       CompressionStrategy strategy,
                       uint64_t bufferCapacity,
                       uint64_t compressionBlockSize,
-                      MemoryPool& pool) {
+                      MemoryPool& pool,
+                      WriterMetrics* metrics) {
     switch (static_cast<int64_t>(kind)) {
     case CompressionKind_NONE: {
       return std::unique_ptr<BufferedOutputStream>
         (new BufferedOutputStream(
-                pool, outStream, bufferCapacity, compressionBlockSize));
+          pool, outStream, bufferCapacity, compressionBlockSize, metrics));
     }
     case CompressionKind_ZLIB: {
       int level = (strategy == CompressionStrategy_SPEED) ?
               Z_BEST_SPEED + 1 : Z_DEFAULT_COMPRESSION;
       return std::unique_ptr<BufferedOutputStream>
         (new ZlibCompressionStream(
-                outStream, level, bufferCapacity, compressionBlockSize, pool));
+          outStream, level, bufferCapacity,
+          compressionBlockSize, pool, metrics));
     }
     case CompressionKind_ZSTD: {
       int level = (strategy == CompressionStrategy_SPEED) ?
               1 : ZSTD_CLEVEL_DEFAULT;
       return std::unique_ptr<BufferedOutputStream>
         (new ZSTDCompressionStream(
-          outStream, level, bufferCapacity, compressionBlockSize, pool));
+          outStream, level, bufferCapacity,
+          compressionBlockSize, pool, metrics));
     }
     case CompressionKind_LZ4: {
       int level = (strategy == CompressionStrategy_SPEED) ?
               LZ4_ACCELERATION_MAX : LZ4_ACCELERATION_DEFAULT;
       return std::unique_ptr<BufferedOutputStream>
         (new Lz4CompressionSteam(
-          outStream, level, bufferCapacity, compressionBlockSize, pool));
+          outStream, level, bufferCapacity,
+          compressionBlockSize, pool, metrics));
     }
     case CompressionKind_SNAPPY: {
       int level = 0;
       return std::unique_ptr<BufferedOutputStream>
         (new SnappyCompressionStream(
-          outStream, level, bufferCapacity, compressionBlockSize, pool));
+          outStream, level, bufferCapacity,
+          compressionBlockSize, pool, metrics));
     }
     case CompressionKind_LZO:
     default:

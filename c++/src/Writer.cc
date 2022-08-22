@@ -21,6 +21,7 @@
 
 #include "ColumnWriter.hh"
 #include "Timezone.hh"
+#include "Utils.hh"
 
 #include <memory>
 
@@ -42,6 +43,7 @@ namespace orc {
     double bloomFilterFalsePositiveProb;
     BloomFilterVersion bloomFilterVersion;
     std::string timezone;
+    WriterMetrics* metrics;
 
     WriterOptionsPrivate() :
                             fileVersion(FileVersion::v_0_12()) { // default to Hive_0_12
@@ -61,6 +63,7 @@ namespace orc {
       //introduced by moving timestamps between different timezones.
       //Explictly set the writer timezone if the use case depends on it.
       timezone = "GMT";
+      metrics = nullptr;
     }
   };
 
@@ -255,6 +258,15 @@ namespace orc {
     return *this;
   }
 
+  WriterMetrics* WriterOptions::getWriterMetrics() const {
+    return privateBits->metrics;
+  }
+
+  WriterOptions& WriterOptions::setWriterMetrics(WriterMetrics* metrics) {
+    privateBits->metrics = metrics;
+    return *this;
+  }
+
   Writer::~Writer() {
     // PASS
   }
@@ -328,14 +340,16 @@ namespace orc {
                                   options.getCompressionStrategy(),
                                   1 * 1024 * 1024, // buffer capacity: 1M
                                   options.getCompressionBlockSize(),
-                                  *options.getMemoryPool());
+                                  *options.getMemoryPool(),
+                                  options.getWriterMetrics());
 
     // uncompressed stream for post script
     bufferedStream.reset(new BufferedOutputStream(
                                             *options.getMemoryPool(),
                                             outStream,
                                             1024, // buffer capacity: 1024 bytes
-                                            options.getCompressionBlockSize()));
+                                            options.getCompressionBlockSize(),
+                                            options.getWriterMetrics()));
 
     init();
   }
@@ -393,7 +407,11 @@ namespace orc {
   void WriterImpl::init() {
     // Write file header
     const static size_t magicIdLength = strlen(WriterImpl::magicId);
-    outStream->write(WriterImpl::magicId, magicIdLength);
+    {
+      SCOPED_STOPWATCH(
+        options.getWriterMetrics(), IOBlockingLatencyUs, IOCount);
+      outStream->write(WriterImpl::magicId, magicIdLength);
+    }
     currentOffset += magicIdLength;
 
     // Initialize file footer
@@ -541,6 +559,7 @@ namespace orc {
     }
     unsigned char psLength =
                       static_cast<unsigned char>(bufferedStream->flush());
+    SCOPED_STOPWATCH(options.getWriterMetrics(), IOBlockingLatencyUs, IOCount);
     outStream->write(&psLength, sizeof(unsigned char));
   }
 

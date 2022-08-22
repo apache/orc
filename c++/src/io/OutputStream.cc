@@ -18,6 +18,7 @@
 
 #include "orc/Exceptions.hh"
 #include "OutputStream.hh"
+#include "Utils.hh"
 
 #include <sstream>
 
@@ -31,9 +32,11 @@ namespace orc {
                                     MemoryPool& pool,
                                     OutputStream * outStream,
                                     uint64_t capacity_,
-                                    uint64_t blockSize_)
+                                    uint64_t blockSize_,
+                                    WriterMetrics* metrics_)
                                     : outputStream(outStream),
-                                      blockSize(blockSize_) {
+                                      blockSize(blockSize_),
+                                      metrics(metrics_) {
     dataBuffer.reset(new DataBuffer<char>(pool));
     dataBuffer->reserve(capacity_);
   }
@@ -92,7 +95,10 @@ namespace orc {
 
   uint64_t BufferedOutputStream::flush() {
     uint64_t dataSize = dataBuffer->size();
-    outputStream->write(dataBuffer->data(), dataSize);
+    {
+      SCOPED_STOPWATCH(metrics, IOBlockingLatencyUs, IOCount);
+      outputStream->write(dataBuffer->data(), dataSize);
+    }
     dataBuffer->resize(0);
     return dataSize;
   }

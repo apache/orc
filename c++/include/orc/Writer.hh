@@ -24,6 +24,7 @@
 #include "orc/Type.hh"
 #include "orc/Vector.hh"
 
+#include <atomic>
 #include <memory>
 #include <set>
 #include <string>
@@ -46,6 +47,15 @@ namespace orc {
 
   class Timezone;
 
+  /**
+   * Expose the IO metrics for write operation.
+   */
+  struct WriterMetrics {
+    // Record the number of IO requests written to the output file
+    std::atomic<uint64_t> IOCount{0};
+    // Record the lantency of IO blocking
+    std::atomic<uint64_t> IOBlockingLatencyUs{0};
+  };
   /**
    * Options for creating a Writer.
    */
@@ -235,6 +245,17 @@ namespace orc {
      * @param zone writer timezone name
      */
     WriterOptions& setTimezoneName(const std::string& zone);
+
+    /**
+     * Set the writer metrics.
+     */
+    WriterOptions& setWriterMetrics(WriterMetrics * metrics);
+
+    /**
+     * Get the writer metrics.
+     * @return if not set, return nullptr.
+     */
+    WriterMetrics * getWriterMetrics() const;
   };
 
   class Writer {
