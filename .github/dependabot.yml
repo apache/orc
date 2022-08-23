@@ -39,9 +39,9 @@ updates:
       # Pin maven-dependency-plugin to 3.1.2 due to MDEP-753, MDEP-757, MDEP-759
       - dependency-name: "org.apache.maven.plugins:maven-dependency-plugin"
         versions: "[3.2.0,)"
-      # Pin protobuf-java to 2.5.0
+      # Pin protobuf-java to 3.17.3
       - dependency-name: "com.google.protobuf:protobuf-java"
-        versions: "[2.5.1,)"
+        versions: "[3.17.4,)"
       # Pin jodd-core to 3.5.2
       - dependency-name: "org.jodd:jodd-core"
         versions: "[3.5.3,)"
