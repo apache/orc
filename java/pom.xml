@@ -471,7 +471,7 @@
                 <relocations>
                   <relocation>
                     <pattern>com.google.protobuf</pattern>
-                    <shadedPattern>com.google.protobuf25</shadedPattern>
+                    <shadedPattern>org.apache.orc.protobuf</shadedPattern>
                   </relocation>
                 </relocations>
                 <filters>
@@ -506,7 +506,7 @@
                 <relocations>
                   <relocation>
                     <pattern>com.google.protobuf</pattern>
-                    <shadedPattern>com.google.protobuf25</shadedPattern>
+                    <shadedPattern>org.apache.orc.protobuf</shadedPattern>
                   </relocation>
                   <relocation>
                     <pattern>org.apache.hadoop.hive</pattern>
