@@ -79,7 +79,6 @@
     <maven-assembly-plugin.version>3.4.1</maven-assembly-plugin.version>
     <maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
     <slf4j.version>1.7.36</slf4j.version>
-    <protoc.artifact>com.google.protobuf:protoc:2.5.0</protoc.artifact>
     <surefire.version>3.0.0-M5</surefire.version>
     <junit.version>5.8.2</junit.version>
     <mockito.version>4.6.1</mockito.version>
@@ -437,8 +436,7 @@
                 <goal>run</goal>
               </goals>
               <configuration>
-                 <protocArtifact>${protoc.artifact}</protocArtifact>
-                 <protocVersion>2.5.0</protocVersion>
+                <protocVersion>3.17.3</protocVersion>
                 <addSources>none</addSources>
                 <includeDirectories>
                   <include>../../proto</include>
@@ -551,18 +549,6 @@
       </modules>
     </profile>
     <profile>
-      <id>aarch64</id>
-      <properties>
-        <protoc.artifact>com.google.protobuf:protoc:2.5.0:exe:osx-x86_64</protoc.artifact>
-      </properties>
-      <activation>
-        <os>
-          <family>mac</family>
-          <arch>aarch64</arch>
-        </os>
-      </activation>
-    </profile>
-    <profile>
       <id>java17</id>
       <activation>
         <jdk>[17,)</jdk>
@@ -632,7 +618,7 @@
       <dependency>
         <groupId>com.google.protobuf</groupId>
         <artifactId>protobuf-java</artifactId>
-        <version>2.5.0</version>
+        <version>3.17.3</version>
       </dependency>
       <dependency>
         <groupId>com.opencsv</groupId>
