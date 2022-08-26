@@ -27,6 +27,8 @@ ORC provides a rich set of scalar and compound types:
   * varchar
 * Binary blobs
   * binary
+* Decimal type
+  * decimal
 * Date/time
   * timestamp
   * timestamp with local time zone
