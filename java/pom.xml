@@ -21,7 +21,7 @@
   </parent>
   <groupId>org.apache.orc</groupId>
   <artifactId>orc</artifactId>
-  <version>1.8.0</version>
+  <version>1.8.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Apache ORC</name>
@@ -63,7 +63,7 @@
 
   <properties>
     <!-- Build Properties -->
-    <project.build.outputTimestamp>2022-08-27T03:02:31Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2022-08-27T03:07:00Z</project.build.outputTimestamp>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
     <maven.compiler.useIncrementalCompilation>false</maven.compiler.useIncrementalCompilation>
@@ -611,7 +611,7 @@
       <dependency>
         <groupId>org.apache.orc</groupId>
         <artifactId>orc-shims</artifactId>
-        <version>1.8.0</version>
+        <version>1.8.1-SNAPSHOT</version>
         <exclusions>
           <exclusion>
             <groupId>org.apache.hadoop</groupId>
@@ -626,17 +626,17 @@
       <dependency>
         <groupId>org.apache.orc</groupId>
         <artifactId>orc-core</artifactId>
-        <version>1.8.0</version>
+        <version>1.8.1-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.apache.orc</groupId>
         <artifactId>orc-mapreduce</artifactId>
-        <version>1.8.0</version>
+        <version>1.8.1-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.apache.orc</groupId>
         <artifactId>orc-tools</artifactId>
-        <version>1.8.0</version>
+        <version>1.8.1-SNAPSHOT</version>
       </dependency>
 
       <!-- inter-project depedencies -->
