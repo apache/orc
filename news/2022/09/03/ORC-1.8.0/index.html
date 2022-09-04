@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>ORC adopts new logo</title>
+  <title>ORC 1.8.0 Released</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="generator" content="Jekyll v3.8.6">
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic,900">
@@ -263,31 +263,108 @@
       <div class="unit four-fifths">
         <article>
   <h2>
-    ORC adopts new logo
-    <a href="/news/2015/06/26/new-logo/" class="permalink" title="Permalink">∞</a>
+    ORC 1.8.0 Released
+    <a href="/news/2022/09/03/ORC-1.8.0/" class="permalink" title="Permalink">∞</a>
   </h2>
   <span class="post-category">
     <span class="label">
-      project
+      release
     </span>
   </span>
   <div class="post-meta">
     <span class="post-date">
-      26 Jun 2015
+      03 Sep 2022
     </span>
-    <a href="https://people.apache.org/~omalley" class="post-author">
-      <img src="https://people.apache.org/~omalley/omalley.png"
-           class="avatar" alt="omalley avatar"
+    <a href="https://people.apache.org/~william" class="post-author">
+      <img src="https://people.apache.org/~william/william.png"
+           class="avatar" alt="william avatar"
            width="24" height="24">
-      omalley
+      william
     </a>
   </div>
   <div class="post-content">
-    <p>The ORC project has adopted a new logo. We hope you like it.</p>
+    <p>The ORC team is excited to announce the release of ORC v1.8.0.</p>
 
-<p><img src="/img/logo.png" alt="orc logo" title="orc logo" /></p>
+<ul>
+  <li>Released: 3 September 2022</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.8.0/orc-1.8.0.tar.gz">orc-1.8.0.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-1.8.0/orc-1.8.0.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">William Hyun (DECDFA29)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.8.0">rel/release-1.8.0</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.8.0%22">ORC 1.8.0</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.8.0/orc-1.8.0.tar.gz.sha256">859d78bfded98405…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.8.0%22&amp;tempMax=500">ORC-1.8.0</a></li>
+</ul>
 
-<p>Other great options included a big white hand on a black shield. <em>smile</em></p>
+<p>New Feature and Notable Changes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-450">ORC-450</a> Support selecting list indices without materializing list items</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-824">ORC-824</a> Add column statistics for List and Map</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1004">ORC-1004</a> Java ORC writer supports the selection vector</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1075">ORC-1075</a> Support reading ORC files with no column statistics</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1125">ORC-1125</a> Support decoding decimals in RLE</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1136">ORC-1136</a> Optimize reads by combining multiple reads without significant separation into a single read</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1138">ORC-1138</a> Seek vs Read Optimization</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1172">ORC-1172</a> Add row count limit config for one stripe</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1212">ORC-1212</a> Upgrade protobuf-java to 3.17.3</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1220">ORC-1220</a> Set min.hadoop.version to 2.7.3</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1248">ORC-1248</a> Redefine Hadoop dependency for Apache ORC 1.8.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1256">ORC-1256</a> Publish test-jar to maven central</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1260">ORC-1260</a> Publish shaded-protobuf classifier artifacts</li>
+</ul>
+
+<p>Improvements:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-825">ORC-825</a> Use Empty Array For Collections toArray</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-826">ORC-826</a> Do Not Use Collection Contains/Get</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-828">ORC-828</a> Improve Fetch Data Set Process</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-829">ORC-829</a> Optimize Serialization percentileBits</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-831">ORC-831</a> Do Not Copy String When Flushing Dictionary</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-833">ORC-833</a> RunLengthIntegerReaderV2 Calculate Batch Size Once</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-834">ORC-834</a> Do Not Convert to String in DecimalFromTimestampTreeReader</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-835">ORC-835</a> Cache TRUE/FALSE Bytes in StringGroupFromBooleanTreeReader</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-836">ORC-836</a> StringGroupFromDoubleTreeReader Use Double toString</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-837">ORC-837</a> Reuse HiveDecimalWritable in ConvertTreeReaderFactory</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-838">ORC-838</a> Simplify compareTo/equals/putBuffer of ByteBufferAllocatorPool</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-840">ORC-840</a> Remove Superfluous Array Fill in RecordReaderImpl</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-841">ORC-841</a> Remove Superfluous Array Fill in StringHashTableDictionary</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-842">ORC-842</a> Remove newKey from StringHashTableDictionary</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-844">ORC-844</a> Improve hashCode Methods</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-847">ORC-847</a> Do Not Create Empty Array in StringGroupFromBinaryTreeReader</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-852">ORC-852</a> Allow DynamicByteArray to Return a ByteBuffer</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-853">ORC-853</a> Optimize writeDouble Implementation</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-855">ORC-855</a> Remove Unused isRepeating from RunLengthIntegerReaderV2</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-865">ORC-865</a> Bump opencsv from 3.9 to 5.5.1</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-883">ORC-883</a> Dependency Audit and QA</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-897">ORC-897</a> optimization loop termination condition in readerIsCompatible method</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-935">ORC-935</a> Bump commons-csv from 1.8 to 1.9.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-937">ORC-937</a> Replace deprecated method</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-958">ORC-958</a> Convert command support overwrite option</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-969">ORC-969</a> Evaluate SearchArguments using file and stripe level stats</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-975">ORC-975</a> Avoid double counting closestFixedBits in percentileBits method</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-982">ORC-982</a> Extract checkstyle to a single file, help newcomers check code style</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-988">ORC-988</a> Bump opencsv from 5.5.1 to 5.5.2</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-992">ORC-992</a> Reached max repeat length, we can directly decide to use DELTA encoding</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1005">ORC-1005</a> Make that the java and C++ implementations of determineEncoding in RunLengthIntegerWriterV2 are consistent.</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1007">ORC-1007</a> Fix a warning from the shade plugin</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1013">ORC-1013</a> Renaming a parameter in constructors of TreeWriter’s derived classes</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1014">ORC-1014</a> Add details when we get IOExceptions from file system</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1020">ORC-1020</a> Improve orc::RleDecoderV2::nextDirect</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1027">ORC-1027</a> Filter processing to allow filter injections that cannot be represented via SArgs</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1047">ORC-1047</a> Handle quoted field names during string schema parsing</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1077">ORC-1077</a> Remove commons-codec dependency and use java.util.Base64</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1099">ORC-1099</a> Extend ReadIntent to support MAP and UNION type</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1101">ORC-1101</a> Improve malformed STRUCT handling</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1122">ORC-1122</a> Add buffer to decode the whole run in RleDecoderV2</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1137">ORC-1137</a> Improve float/double conversion in DoubleColumnReader::next()</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1149">ORC-1149</a> Bump slf4j.version to 1.7.36</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1150">ORC-1150</a> Improve RowReaderImpl::computeBatchSize()</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1152">ORC-1152</a> Support encoding short decimals in RLEv2</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1156">ORC-1156</a> Update opencsv to 5.6</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1163">ORC-1163</a> Bump zookeeper from 3.7.0 to 3.8.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1169">ORC-1169</a> Use Hadoop 3.3.2 on Java 17+</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1178">ORC-1178</a> Use hadoop 3.3.3 on Java 17+</li>
+</ul>
 
   </div>
 </article>
@@ -307,7 +384,7 @@
     <h4>Recent Releases</h4>
     <ul>
       
-      <li class="">
+      <li class="current">
         <a href="/news/2022/09/03/ORC-1.8.0/">Version 1.8.0</a>
       </li>
       
@@ -558,7 +635,7 @@
         
         
         
-        <li class="current">
+        <li class="">
           <a href="/news/2015/06/26/new-logo/">ORC adopts new logo</a>
         </li>
         

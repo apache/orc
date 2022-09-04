@@ -97,40 +97,39 @@
       <article>
         <h1>Releases</h1>
         
-<h2 id="current-release---176">Current Release - 1.7.6:</h2>
+<h2 id="current-release---180">Current Release - 1.8.0:</h2>
 
-<p>ORC 1.7.6 contains both the Java and C++ reader and writer
+<p>ORC 1.8.0 contains both the Java and C++ reader and writer
 for ORC files. It also contains tools for working with ORC
 files and looking at their contents and metadata.</p>
 
 <ul>
-  <li>Released: 17 August 2022</li>
-  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.7.6/orc-1.7.6.tar.gz">orc-1.7.6.tar.gz</a></li>
-  <li><a href="https://downloads.apache.org/orc/orc-1.7.6/orc-1.7.6.tar.gz.asc">GPG Signature</a>
+  <li>Released: 3 September 2022</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.8.0/orc-1.8.0.tar.gz">orc-1.8.0.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-1.8.0/orc-1.8.0.tar.gz.asc">GPG Signature</a>
 signed by <a href="https://downloads.apache.org/orc/KEYS">William Hyun (DECDFA29)</a></li>
-  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.7.6">rel/release-1.7.6</a></li>
-  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.7.6%22">ORC 1.7.6</a></li>
-  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.7.6/orc-1.7.6.tar.gz.sha256">a75e0cccaaf5e03f…</a></li>
-  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.7.6%22&amp;tempMax=500">ORC-1.7.6</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.8.0">rel/release-1.8.0</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.8.0%22">ORC 1.8.0</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.8.0/orc-1.8.0.tar.gz.sha256">859d78bfded98405…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.8.0%22&amp;tempMax=500">ORC-1.8.0</a></li>
 </ul>
 
-<p>The new features of ORC 1.7:</p>
+<p>The New Features and Notable Changes of ORC 1.8:</p>
 
 <ul>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-377">ORC-377</a> Support Snappy compression in C++ Writer</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-577">ORC-577</a> Support row-level filtering</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-716">ORC-716</a> Build and test on Java 17-EA</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-731">ORC-731</a> Improve <code class="highlighter-rouge">Java Tools</code></li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-742">ORC-742</a> LazyIO of non-filter columns</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-751">ORC-751</a> Implement Predicate Pushdown in C++ Reader</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-755">ORC-755</a> Introduce OrcFilterContext</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-757">ORC-757</a> Add Hashtable implementation for dictionary</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-780">ORC-780</a> Support LZ4 Compression in C++ Writer</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-797">ORC-797</a> Allow writers to get the stripe information</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-818">ORC-818</a> Build and test in Apple Silicon</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-861">ORC-861</a> Bump CMake minimum requirement to 2.8.12</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-867">ORC-867</a> Upgrade hive-storage-api to 2.8.1</li>
-  <li><a href="https://issues.apache.org/jira/browse/ORC-984">ORC-984</a> Save the software version that wrote each ORC file</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-450">ORC-450</a> Support selecting list indices without materializing list items</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-824">ORC-824</a> Add column statistics for List and Map</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1004">ORC-1004</a> Java ORC writer supports the selection vector</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1075">ORC-1075</a> Support reading ORC files with no column statistics</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1125">ORC-1125</a> Support decoding decimals in RLE</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1136">ORC-1136</a> Optimize reads by combining multiple reads without significant separation into a single read</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1138">ORC-1138</a> Seek vs Read Optimization</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1172">ORC-1172</a> Add row count limit config for one stripe</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1212">ORC-1212</a> Upgrade protobuf-java to 3.17.3</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1220">ORC-1220</a> Set min.hadoop.version to 2.7.3</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1248">ORC-1248</a> Redefine Hadoop dependency for Apache ORC 1.8.0</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1256">ORC-1256</a> Publish test-jar to maven central</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1260">ORC-1260</a> Publish shaded-protobuf classifier artifacts</li>
 </ul>
 
 <p>Known issues:</p>
@@ -161,9 +160,19 @@ committers’ <a href="https://downloads.apache.org/orc/KEYS">key list</a>.</p>
     
       
       <tr>
+        <td style="text-align: center">1.8.0</td>
+        <td style="text-align: center">2022-09-03</td>
+        <td style="text-align: center">latest</td>
+        <td style="text-align: center">
+          <a href="/news/2022/09/03/ORC-1.8.0/">
+          ORC-1.8.0</a></td>
+      </tr>
+    
+      
+      <tr>
         <td style="text-align: center">1.7.6</td>
         <td style="text-align: center">2022-08-17</td>
-        <td style="text-align: center">latest</td>
+        <td style="text-align: center">stable</td>
         <td style="text-align: center">
           <a href="/news/2022/08/17/ORC-1.7.6/">
           ORC-1.7.6</a></td>
@@ -233,7 +242,7 @@ committers’ <a href="https://downloads.apache.org/orc/KEYS">key list</a>.</p>
       <tr>
         <td style="text-align: center">1.6.14</td>
         <td style="text-align: center">2022-04-14</td>
-        <td style="text-align: center">stable</td>
+        <td style="text-align: center">archived</td>
         <td style="text-align: center">
           <a href="/news/2022/04/14/ORC-1.6.14/">
           ORC-1.6.14</a></td>
