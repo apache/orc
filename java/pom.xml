@@ -289,27 +289,6 @@
           </configuration>
         </plugin>
         <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>findbugs-maven-plugin</artifactId>
-          <version>3.0.5</version>
-          <configuration>
-            <effort>Max</effort>
-            <excludeFilterFile>${basedir}/src/findbugs/exclude.xml</excludeFilterFile>
-            <xmlOutput>true</xmlOutput>
-            <findbugsXmlOutputDirectory>${project.build.directory}/findbugs</findbugsXmlOutputDirectory>
-            <includeTests>true</includeTests>
-          </configuration>
-          <executions>
-            <execution>
-              <id>analyze-compile</id>
-              <phase>test</phase>
-              <goals>
-                <goal>check</goal>
-              </goals>
-            </execution>
-          </executions>
-        </plugin>
-        <plugin>
           <groupId>com.github.spotbugs</groupId>
           <artifactId>spotbugs-maven-plugin</artifactId>
           <version>4.7.1.1</version>
@@ -553,10 +532,6 @@
       <id>analyze</id>
       <build>
         <plugins>
-          <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>findbugs-maven-plugin</artifactId>
-          </plugin>
           <plugin>
             <groupId>com.github.spotbugs</groupId>
             <artifactId>spotbugs-maven-plugin</artifactId>
