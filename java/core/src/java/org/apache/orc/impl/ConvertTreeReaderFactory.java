@@ -554,7 +554,6 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
         longColVector = (LongColumnVector) previousVector;
       } else {
         decimalColVector.ensureSize(batchSize, false);
-        decimalColVector.reset();
       }
       // Read present/isNull stream
       fromReader.nextVector(decimalColVector, isNull, batchSize, filterContext, readPhase);
@@ -719,7 +718,6 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
         doubleColVector = (DoubleColumnVector) previousVector;
       } else {
         decimalColVector.ensureSize(batchSize, false);
-        decimalColVector.reset();
       }
       // Read present/isNull stream
       fromReader.nextVector(decimalColVector, isNull, batchSize, filterContext, readPhase);
@@ -1063,7 +1061,6 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
         decimalColVector = previousVector;
       } else {
         fileDecimalColVector.ensureSize(batchSize, false);
-        fileDecimalColVector.reset();
       }
       // Read present/isNull stream
       fromReader.nextVector(fileDecimalColVector, isNull, batchSize, filterContext, readPhase);
@@ -1218,7 +1215,6 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
         bytesColVector = (BytesColumnVector) previousVector;
       } else {
         decimalColVector.ensureSize(batchSize, false);
-        decimalColVector.reset();
       }
       // Read present/isNull stream
       fromReader.nextVector(decimalColVector, isNull, batchSize, filterContext, readPhase);
@@ -1656,7 +1652,6 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
         timestampColVector = (TimestampColumnVector) previousVector;
       } else {
         decimalColVector.ensureSize(batchSize, false);
-        decimalColVector.reset();
       }
       timestampColVector.changeCalendar(fileUsedProlepticGregorian, false);
       // Read present/isNull stream
