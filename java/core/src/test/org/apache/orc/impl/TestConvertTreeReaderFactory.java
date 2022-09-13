@@ -659,12 +659,20 @@ public class TestConvertTreeReaderFactory {
       f1.set(0, (HiveDecimal) null);
       b.size = 1024;
       w.addRowBatch(b);
+
       b.reset();
       for (int i = 0; i < 1024; i++) {
         f1.set(i, HiveDecimal.create(i + 1));
       }
       b.size = 1024;
       w.addRowBatch(b);
+
+      b.reset();
+      f1.isRepeating = true;
+      f1.set(0, HiveDecimal.create(1));
+      b.size = 1024;
+      w.addRowBatch(b);
+
       b.reset();
       w.close();
 
@@ -679,7 +687,7 @@ public class TestConvertTreeReaderFactory {
   }
 
   private void readDecimalInNullStripe(String typeString, Class<?> expectedColumnType,
-      String expectedResult) throws Exception {
+      String[] expectedResult) throws Exception {
     Reader.Options options = new Reader.Options();
     TypeDescription schema = TypeDescription.fromString("struct<col1:" + typeString + ">");
     options.schema(schema);
@@ -699,7 +707,7 @@ public class TestConvertTreeReaderFactory {
     assertTrue(batch.cols[0].isRepeating);
     StringBuilder sb = new StringBuilder();
     batch.cols[0].stringifyValue(sb, 1023);
-    assertEquals(sb.toString(), "null");
+    assertEquals(sb.toString(), expectedResult[0]);
 
     rows.nextBatch(batch);
     assertEquals(1024, batch.size);
@@ -709,26 +717,41 @@ public class TestConvertTreeReaderFactory {
     assertFalse(batch.cols[0].isRepeating);
     StringBuilder sb2 = new StringBuilder();
     batch.cols[0].stringifyValue(sb2, 1023);
-    assertEquals(sb2.toString(), expectedResult);
+    assertEquals(sb2.toString(), expectedResult[1]);
+
+    rows.nextBatch(batch);
+    assertEquals(1024, batch.size);
+    assertEquals(expected, options.toString());
+    assertEquals(batch.cols.length, 1);
+    assertEquals(batch.cols[0].getClass(), expectedColumnType);
+    assertTrue(batch.cols[0].isRepeating);
+    StringBuilder sb3 = new StringBuilder();
+    batch.cols[0].stringifyValue(sb3, 1023);
+    assertEquals(sb3.toString(), expectedResult[2]);
   }
 
   private void testDecimalConvertToLongInNullStripe() throws Exception {
-    readDecimalInNullStripe("bigint", LongColumnVector.class, "1024");
+    readDecimalInNullStripe("bigint", LongColumnVector.class,
+            new String[]{"null", "1024", "1"});
   }
 
   private void testDecimalConvertToDoubleInNullStripe() throws Exception {
-    readDecimalInNullStripe("double", DoubleColumnVector.class, "1024.0");
+    readDecimalInNullStripe("double", DoubleColumnVector.class,
+            new String[]{"null", "1024.0", "1.0"});
   }
 
   private void testDecimalConvertToStringInNullStripe() throws Exception {
-    readDecimalInNullStripe("string", BytesColumnVector.class, "\"1024\"");
+    readDecimalInNullStripe("string", BytesColumnVector.class,
+            new String[]{"null", "\"1024\"", "\"1\""});
   }
 
   private void testDecimalConvertToTimestampInNullStripe() throws Exception {
-    readDecimalInNullStripe("timestamp", TimestampColumnVector.class, "1970-01-01 00:17:04.0");
+    readDecimalInNullStripe("timestamp", TimestampColumnVector.class,
+            new String[]{"null", "1970-01-01 00:17:04.0", "1970-01-01 00:00:01.0"});
   }
 
   private void testDecimalConvertToDecimalInNullStripe() throws Exception {
-    readDecimalInNullStripe("decimal(18,2)", DecimalColumnVector.class, "1024");
+    readDecimalInNullStripe("decimal(18,2)", DecimalColumnVector.class,
+            new String[]{"null", "1024", "1"});
   }
 }
