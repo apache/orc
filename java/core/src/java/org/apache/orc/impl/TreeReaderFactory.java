@@ -1560,12 +1560,7 @@ public class TreeReaderFactory {
             result.isNull[r] = true;
             result.noNulls = false;
           }
-          if (result.isRepeating
-              && r > 0
-              && (!eq(vector[0], vector[r]) ||
-              result.isNull[0] != result.isNull[r])) {
-            result.isRepeating = false;
-          }
+          setIsRepeatingIfNeeded(result, r);
         }
       } else if (!result.isRepeating || !result.isNull[0]) {
         result.isRepeating = true;
@@ -1579,12 +1574,7 @@ public class TreeReaderFactory {
               result.noNulls = false;
             }
           }
-          if (result.isRepeating
-              && r > 0
-              && (!eq(vector[0], vector[r]) ||
-              result.isNull[0] != result.isNull[r])) {
-            result.isRepeating = false;
-          }
+          setIsRepeatingIfNeeded(result, r);
         }
       }
     }
@@ -1619,12 +1609,7 @@ public class TreeReaderFactory {
             result.isNull[idx] = true;
             result.noNulls = false;
           }
-          if (result.isRepeating
-              && idx > 0
-              && (!eq(vector[0], vector[idx]) ||
-              result.isNull[0] != result.isNull[idx])) {
-            result.isRepeating = false;
-          }
+          setIsRepeatingIfNeeded(result, idx);
           previousIdx = idx + 1;
         }
         skipStreamRows(batchSize - previousIdx);
@@ -1645,12 +1630,7 @@ public class TreeReaderFactory {
               result.noNulls = false;
             }
           }
-          if (result.isRepeating
-              && idx > 0
-              && (!eq(vector[0], vector[idx]) ||
-              result.isNull[0] != result.isNull[idx])) {
-            result.isRepeating = false;
-          }
+          setIsRepeatingIfNeeded(result, idx);
           previousIdx = idx + 1;
         }
         skipStreamRows(countNonNullRowsInRange(result.isNull, previousIdx, batchSize));
@@ -1675,12 +1655,7 @@ public class TreeReaderFactory {
         for (int r = 0; r < batchSize; ++r) {
           final long scaleFactor = powerOfTenTable[scale - scratchScaleVector[r]];
           result.vector[r] = SerializationUtils.readVslong(valueStream) * scaleFactor;
-          if (result.isRepeating
-              && r > 0
-              && (result.vector[0] != result.vector[r] ||
-              result.isNull[0] != result.isNull[r])) {
-            result.isRepeating = false;
-          }
+          setIsRepeatingIfNeeded(result, r);
         }
       } else if (!result.isRepeating || !result.isNull[0]) {
         result.isRepeating = true;
@@ -1689,12 +1664,7 @@ public class TreeReaderFactory {
             final long scaleFactor = powerOfTenTable[scale - scratchScaleVector[r]];
             result.vector[r] = SerializationUtils.readVslong(valueStream) * scaleFactor;
           }
-          if (result.isRepeating
-             && r > 0
-             && (result.vector[0] != result.vector[r] ||
-             result.isNull[0] != result.isNull[r])) {
-            result.isRepeating = false;
-          }
+          setIsRepeatingIfNeeded(result, r);
         }
       }
       result.precision = (short) precision;
@@ -1727,12 +1697,7 @@ public class TreeReaderFactory {
           for (int s=scratchScaleVector[idx]; s < scale; ++s) {
             result.vector[idx] *= 10;
           }
-          if (result.isRepeating
-              && idx > 0
-              && (result.vector[0] != result.vector[idx] ||
-              result.isNull[0] != result.isNull[idx])) {
-            result.isRepeating = false;
-          }
+          setIsRepeatingIfNeeded(result, idx);
           previousIdx = idx + 1;
         }
         skipStreamRows(batchSize - previousIdx);
@@ -1750,18 +1715,31 @@ public class TreeReaderFactory {
               result.vector[idx] *= 10;
             }
           }
-          if (result.isRepeating
-              && idx > 0
-              && (result.vector[0] != result.vector[idx] ||
-              result.isNull[0] != result.isNull[idx])) {
-            result.isRepeating = false;
-          }
+          setIsRepeatingIfNeeded(result, idx);
           previousIdx = idx + 1;
         }
         skipStreamRows(countNonNullRowsInRange(result.isNull, previousIdx, batchSize));
       }
       result.precision = (short) precision;
       result.scale = (short) scale;
+    }
+
+    private void setIsRepeatingIfNeeded(Decimal64ColumnVector result, int index) {
+      if (result.isRepeating
+          && index > 0
+          && (result.vector[0] != result.vector[index] ||
+          result.isNull[0] != result.isNull[index])) {
+        result.isRepeating = false;
+      }
+    }
+
+    private void setIsRepeatingIfNeeded(DecimalColumnVector result, int index) {
+      if (result.isRepeating
+          && index > 0
+          && (!eq(result.vector[0], result.vector[index]) ||
+          result.isNull[0] != result.isNull[index])) {
+        result.isRepeating = false;
+      }
     }
 
     private boolean eq(HiveDecimalWritable first, HiveDecimalWritable other) {
@@ -1887,12 +1865,7 @@ public class TreeReaderFactory {
               valueReader.skip(idx - previousIdx);
             }
             result.vector[idx].setFromLongAndScale(valueReader.next(), scale);
-            if (result.isRepeating
-                && idx > 0
-                && (!eq(result.vector[0], result.vector[idx]) ||
-                result.isNull[0] != result.isNull[idx])) {
-              result.isRepeating = false;
-            }
+            setIsRepeatingIfNeeded(result, idx);
             previousIdx = idx + 1;
           }
           valueReader.skip(batchSize - previousIdx);
@@ -1900,12 +1873,7 @@ public class TreeReaderFactory {
           result.isRepeating = true;
           for (int r = 0; r < batchSize; ++r) {
             result.vector[r].setFromLongAndScale(valueReader.next(), scale);
-            if (result.isRepeating
-                && r > 0
-                && (!eq(result.vector[0], result.vector[r]) ||
-                result.isNull[0] != result.isNull[r])) {
-              result.isRepeating = false;
-            }
+            setIsRepeatingIfNeeded(result, r);
           }
         }
       } else if (!result.isRepeating || !result.isNull[0]) {
@@ -1920,12 +1888,7 @@ public class TreeReaderFactory {
             if (!result.isNull[r]) {
               result.vector[idx].setFromLongAndScale(valueReader.next(), scale);
             }
-            if (result.isRepeating
-                && idx > 0
-                && (!eq(result.vector[0], result.vector[idx]) ||
-                result.isNull[0] != result.isNull[idx])) {
-              result.isRepeating = false;
-            }
+            setIsRepeatingIfNeeded(result, idx);
             previousIdx = idx + 1;
           }
           valueReader.skip(countNonNullRowsInRange(result.isNull, previousIdx, batchSize));
@@ -1935,12 +1898,7 @@ public class TreeReaderFactory {
             if (!result.isNull[r]) {
               result.vector[r].setFromLongAndScale(valueReader.next(), scale);
             }
-            if (result.isRepeating
-                && r > 0
-                && (!eq(result.vector[0], result.vector[r]) ||
-                result.isNull[0] != result.isNull[r])) {
-              result.isRepeating = false;
-            }
+            setIsRepeatingIfNeeded(result, r);
           }
         }
       }
@@ -1954,6 +1912,15 @@ public class TreeReaderFactory {
       valueReader.nextVector(result, result.vector, batchSize);
       result.precision = (short) precision;
       result.scale = (short) scale;
+    }
+
+    private void setIsRepeatingIfNeeded(DecimalColumnVector result, int index) {
+      if (result.isRepeating
+          && index > 0
+          && (!eq(result.vector[0], result.vector[index]) ||
+          result.isNull[0] != result.isNull[index])) {
+        result.isRepeating = false;
+      }
     }
 
     private boolean eq(HiveDecimalWritable first, HiveDecimalWritable other) {
