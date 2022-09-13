@@ -1578,12 +1578,12 @@ public class TreeReaderFactory {
               result.isNull[r] = true;
               result.noNulls = false;
             }
-            if (result.isRepeating
-                && r > 0
-                && (!eq(vector[0], vector[r]) ||
-                result.isNull[0] != result.isNull[r])) {
-              result.isRepeating = false;
-            }
+          }
+          if (result.isRepeating
+              && r > 0
+              && (!eq(vector[0], vector[r]) ||
+              result.isNull[0] != result.isNull[r])) {
+            result.isRepeating = false;
           }
         }
       }
@@ -1688,12 +1688,12 @@ public class TreeReaderFactory {
           if (!result.isNull[r]) {
             final long scaleFactor = powerOfTenTable[scale - scratchScaleVector[r]];
             result.vector[r] = SerializationUtils.readVslong(valueStream) * scaleFactor;
-            if (result.isRepeating
-                && r > 0
-                && (result.vector[0] != result.vector[r] ||
-                result.isNull[0] != result.isNull[r])) {
-              result.isRepeating = false;
-            }
+          }
+          if (result.isRepeating
+             && r > 0
+             && (result.vector[0] != result.vector[r] ||
+             result.isNull[0] != result.isNull[r])) {
+            result.isRepeating = false;
           }
         }
       }
