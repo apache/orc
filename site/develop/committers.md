@@ -16,7 +16,7 @@ Chinna Rao Lalam        | chinnaraol   | Committer
 Chaoyu Tang             | ctang        | Committer
 Carl Steinbach          | cws          | Committer
 Daniel Dai              | daijy        | Committer
-Dongjoon Hyun           | dongjoon     | PMC Chair
+Dongjoon Hyun           | dongjoon     | PMC
 Deepak Majeti           | mdeepak      | PMC
 Eugene Koifman          | ekoifman     | PMC
 Gang Wu                 | gangwu       | PMC
@@ -49,7 +49,7 @@ Quanlong Huang          | stigahuang   | Committer
 Stephen Walkauskas      | swalkaus     | Committer
 Vaibhav Gumashta        | vgumashta    | Committer
 Wei Zheng               | weiz         | Committer
-William Hyun            | william      | PMC
+William Hyun            | william      | PMC Chair
 Xiening Dai             | xndai        | Committer
 Xuefu Zhang             | xuefu        | Committer
 Ferdinand Xu            | xuf          | Committer
