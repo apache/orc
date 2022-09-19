@@ -31,6 +31,7 @@ import org.apache.hadoop.hive.ql.exec.vector.ListColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcFile.WriterOptions;
 import org.apache.orc.Reader;
@@ -52,6 +53,7 @@ import java.util.GregorianCalendar;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -638,5 +640,118 @@ public class TestConvertTreeReaderFactory {
 
   private void testConvertToBinaryIncreasingSize() throws Exception {
     readORCFileIncreasingBatchSize("binary", BytesColumnVector.class);
+  }
+
+  @Test
+  public void testDecimalConvertInNullStripe() throws Exception {
+    try {
+      Configuration decimalConf = new Configuration(conf);
+      decimalConf.set(OrcConf.STRIPE_ROW_COUNT.getAttribute(), "1024");
+      decimalConf.set(OrcConf.ROWS_BETWEEN_CHECKS.getAttribute(), "1");
+
+      String typeStr = "decimal(5,1)";
+      TypeDescription schema = TypeDescription.fromString("struct<col1:" + typeStr + ">");
+      Writer w = OrcFile.createWriter(testFilePath, OrcFile.writerOptions(decimalConf).setSchema(schema));
+
+      VectorizedRowBatch b = schema.createRowBatch();
+      DecimalColumnVector f1 = (DecimalColumnVector) b.cols[0];
+      f1.isRepeating = true;
+      f1.set(0, (HiveDecimal) null);
+      b.size = 1024;
+      w.addRowBatch(b);
+
+      b.reset();
+      for (int i = 0; i < 1024; i++) {
+        f1.set(i, HiveDecimal.create(i + 1));
+      }
+      b.size = 1024;
+      w.addRowBatch(b);
+
+      b.reset();
+      f1.isRepeating = true;
+      f1.set(0, HiveDecimal.create(1));
+      b.size = 1024;
+      w.addRowBatch(b);
+
+      b.reset();
+      w.close();
+
+      testDecimalConvertToLongInNullStripe();
+      testDecimalConvertToDoubleInNullStripe();
+      testDecimalConvertToStringInNullStripe();
+      testDecimalConvertToTimestampInNullStripe();
+      testDecimalConvertToDecimalInNullStripe();
+    } finally {
+      fs.delete(testFilePath, false);
+    }
+  }
+
+  private void readDecimalInNullStripe(String typeString, Class<?> expectedColumnType,
+      String[] expectedResult) throws Exception {
+    Reader.Options options = new Reader.Options();
+    TypeDescription schema = TypeDescription.fromString("struct<col1:" + typeString + ">");
+    options.schema(schema);
+    String expected = options.toString();
+
+    Configuration conf = new Configuration();
+
+    Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf));
+    RecordReader rows = reader.rows(options);
+    VectorizedRowBatch batch = schema.createRowBatch();
+
+    rows.nextBatch(batch);
+    assertEquals(1024, batch.size);
+    assertEquals(expected, options.toString());
+    assertEquals(batch.cols.length, 1);
+    assertEquals(batch.cols[0].getClass(), expectedColumnType);
+    assertTrue(batch.cols[0].isRepeating);
+    StringBuilder sb = new StringBuilder();
+    batch.cols[0].stringifyValue(sb, 1023);
+    assertEquals(sb.toString(), expectedResult[0]);
+
+    rows.nextBatch(batch);
+    assertEquals(1024, batch.size);
+    assertEquals(expected, options.toString());
+    assertEquals(batch.cols.length, 1);
+    assertEquals(batch.cols[0].getClass(), expectedColumnType);
+    assertFalse(batch.cols[0].isRepeating);
+    StringBuilder sb2 = new StringBuilder();
+    batch.cols[0].stringifyValue(sb2, 1023);
+    assertEquals(sb2.toString(), expectedResult[1]);
+
+    rows.nextBatch(batch);
+    assertEquals(1024, batch.size);
+    assertEquals(expected, options.toString());
+    assertEquals(batch.cols.length, 1);
+    assertEquals(batch.cols[0].getClass(), expectedColumnType);
+    assertTrue(batch.cols[0].isRepeating);
+    StringBuilder sb3 = new StringBuilder();
+    batch.cols[0].stringifyValue(sb3, 1023);
+    assertEquals(sb3.toString(), expectedResult[2]);
+  }
+
+  private void testDecimalConvertToLongInNullStripe() throws Exception {
+    readDecimalInNullStripe("bigint", LongColumnVector.class,
+            new String[]{"null", "1024", "1"});
+  }
+
+  private void testDecimalConvertToDoubleInNullStripe() throws Exception {
+    readDecimalInNullStripe("double", DoubleColumnVector.class,
+            new String[]{"null", "1024.0", "1.0"});
+  }
+
+  private void testDecimalConvertToStringInNullStripe() throws Exception {
+    readDecimalInNullStripe("string", BytesColumnVector.class,
+            new String[]{"null", "\"1024\"", "\"1\""});
+  }
+
+  private void testDecimalConvertToTimestampInNullStripe() throws Exception {
+    readDecimalInNullStripe("timestamp", TimestampColumnVector.class,
+            new String[]{"null", "1970-01-01 00:17:04.0", "1970-01-01 00:00:01.0"});
+  }
+
+  private void testDecimalConvertToDecimalInNullStripe() throws Exception {
+    readDecimalInNullStripe("decimal(18,2)", DecimalColumnVector.class,
+            new String[]{"null", "1024", "1"});
   }
 }
