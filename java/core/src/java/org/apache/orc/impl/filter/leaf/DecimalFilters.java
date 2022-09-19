@@ -43,8 +43,8 @@ class DecimalFilters {
 
     @Override
     protected boolean allow(ColumnVector v, int rowIdx) {
-      return ((DecimalColumnVector) v).vector[rowIdx].compareTo(low) >= 0
-             && ((DecimalColumnVector) v).vector[rowIdx].compareTo(high) <= 0;
+      return ((DecimalColumnVector) v).vector[rowIdx].compareTo(low) >= 0 &&
+             ((DecimalColumnVector) v).vector[rowIdx].compareTo(high) <= 0;
     }
   }
 

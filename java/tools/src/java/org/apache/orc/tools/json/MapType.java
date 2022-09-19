@@ -42,8 +42,8 @@ public class MapType extends HiveType {
 
   @Override
   public boolean equals(Object o) {
-    return super.equals(o) && keyType.equals(((MapType)o).keyType)
-        && valueType.equals(((MapType)o).valueType);
+    return super.equals(o) && keyType.equals(((MapType)o).keyType) &&
+        valueType.equals(((MapType)o).valueType);
   }
 
   @Override
@@ -53,10 +53,10 @@ public class MapType extends HiveType {
 
   @Override
   public boolean subsumes(HiveType other) {
-    return (other.kind == Kind.MAP
-        && keyType.subsumes(((MapType)other).keyType)
-        && valueType.subsumes(((MapType)other).valueType))
-        || other.kind == Kind.NULL;
+    return (other.kind == Kind.MAP &&
+        keyType.subsumes(((MapType)other).keyType) &&
+        valueType.subsumes(((MapType)other).valueType)) ||
+        other.kind == Kind.NULL;
   }
 
   @Override

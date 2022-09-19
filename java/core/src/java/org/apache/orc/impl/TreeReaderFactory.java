@@ -805,8 +805,8 @@ public class TreeReaderFactory {
             // some nulls
             result.isRepeating = false;
             // conditions to ensure bounds checks skips
-            for (int i = 0; batchSize <= result.isNull.length
-                && batchSize <= result.vector.length && i < batchSize; i++) {
+            for (int i = 0; batchSize <= result.isNull.length &&
+                batchSize <= result.vector.length && i < batchSize; i++) {
               if (!result.isNull[i]) {
                 result.vector[i] = utils.readFloat(stream);
               } else {
@@ -1021,8 +1021,8 @@ public class TreeReaderFactory {
             // some nulls
             result.isRepeating = false;
             // conditions to ensure bounds checks skips
-            for (int i = 0; batchSize <= result.isNull.length
-                && batchSize <= result.vector.length && i < batchSize; i++) {
+            for (int i = 0; batchSize <= result.isNull.length &&
+                batchSize <= result.vector.length && i < batchSize; i++) {
               if (!result.isNull[i]) {
                 result.vector[i] = utils.readDouble(stream);
               } else {
@@ -1725,19 +1725,15 @@ public class TreeReaderFactory {
     }
 
     private void setIsRepeatingIfNeeded(Decimal64ColumnVector result, int index) {
-      if (result.isRepeating
-          && index > 0
-          && (result.vector[0] != result.vector[index]
-              || result.isNull[0] != result.isNull[index])) {
+      if (result.isRepeating && index > 0 && (result.vector[0] != result.vector[index] ||
+          result.isNull[0] != result.isNull[index])) {
         result.isRepeating = false;
       }
     }
 
     private void setIsRepeatingIfNeeded(DecimalColumnVector result, int index) {
-      if (result.isRepeating
-          && index > 0
-          && (!result.vector[0].equals(result.vector[index])
-              || result.isNull[0] != result.isNull[index])) {
+      if (result.isRepeating && index > 0 && (!result.vector[0].equals(result.vector[index]) ||
+          result.isNull[0] != result.isNull[index])) {
         result.isRepeating = false;
       }
     }
@@ -1907,10 +1903,8 @@ public class TreeReaderFactory {
     }
 
     private void setIsRepeatingIfNeeded(DecimalColumnVector result, int index) {
-      if (result.isRepeating
-          && index > 0
-          && (!result.vector[0].equals(result.vector[index])
-              || result.isNull[0] != result.isNull[index])) {
+      if (result.isRepeating && index > 0 && (!result.vector[0].equals(result.vector[index]) ||
+          result.isNull[0] != result.isNull[index])) {
         result.isRepeating = false;
       }
     }

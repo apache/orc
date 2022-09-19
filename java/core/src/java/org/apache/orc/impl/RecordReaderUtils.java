@@ -545,8 +545,8 @@ public class RecordReaderUtils {
 
   static HadoopShims.ZeroCopyReaderShim createZeroCopyShim(FSDataInputStream file,
       CompressionCodec codec, ByteBufferAllocatorPool pool) throws IOException {
-    if ((codec == null || ((codec instanceof DirectDecompressionCodec)
-            && ((DirectDecompressionCodec) codec).isAvailable()))) {
+    if ((codec == null || ((codec instanceof DirectDecompressionCodec) &&
+        ((DirectDecompressionCodec) codec).isAvailable()))) {
       /* codec is null or is available */
       return SHIMS.getZeroCopyReader(file, pool);
     }

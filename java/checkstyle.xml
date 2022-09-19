@@ -50,5 +50,10 @@
     </module>
     <module name="UpperEll"/>
     <module name="ArrayTypeStyle"/>
+    <module name="RegexpSinglelineJava">
+      <property name="format" value="^\s+(&amp;&amp;|[|][|])"/>
+      <property name="ignoreComments" value="true"/>
+      <property name="message" value="No starting LAND and LOR allowed."/>
+    </module>
   </module>
 </module>

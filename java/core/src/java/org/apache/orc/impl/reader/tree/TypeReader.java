@@ -57,8 +57,8 @@ public interface TypeReader {
    * @return true if allowed by read level or if it is a FILTER_PARENT otherwise false
    */
   static boolean shouldProcessChild(TypeReader child, ReadPhase readPhase) {
-    return readPhase.contains(child.getReaderCategory())
-           || child.getReaderCategory() == ReaderCategory.FILTER_PARENT;
+    return readPhase.contains(child.getReaderCategory()) ||
+           child.getReaderCategory() == ReaderCategory.FILTER_PARENT;
   }
 
   enum ReaderCategory {

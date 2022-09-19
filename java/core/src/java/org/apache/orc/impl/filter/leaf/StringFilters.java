@@ -45,9 +45,9 @@ class StringFilters {
     protected boolean allow(ColumnVector v, int rowIdx) {
       BytesColumnVector bv = (BytesColumnVector) v;
       return StringExpr.compare(bv.vector[rowIdx], bv.start[rowIdx], bv.length[rowIdx],
-                                low, 0, low.length) >= 0
-             && StringExpr.compare(bv.vector[rowIdx], bv.start[rowIdx], bv.length[rowIdx],
-                                   high, 0, high.length) <= 0;
+                                low, 0, low.length) >= 0 &&
+             StringExpr.compare(bv.vector[rowIdx], bv.start[rowIdx], bv.length[rowIdx],
+                                high, 0, high.length) <= 0;
     }
   }
 

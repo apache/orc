@@ -85,8 +85,8 @@ public class CuckooSetBytes {
    */
   public boolean lookup(byte[] b, int start, int len) {
 
-    return entryEqual(t1, h1(b, start, len), b, start, len)
-        || entryEqual(t2, h2(b, start, len), b, start, len);
+    return entryEqual(t1, h1(b, start, len), b, start, len) ||
+           entryEqual(t2, h2(b, start, len), b, start, len);
   }
 
   private static boolean entryEqual(byte[][] t, int hash, byte[] b, int start, int len) {
