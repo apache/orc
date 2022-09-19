@@ -129,10 +129,10 @@ public class ReaderImpl implements Reader {
         return false;
       }
       StripeInformationImpl that = (StripeInformationImpl) o;
-      return stripeId == that.stripeId
-             && originalStripeId == that.originalStripeId
-             && Arrays.deepEquals(encryptedKeys, that.encryptedKeys)
-             && stripe.equals(that.stripe);
+      return stripeId == that.stripeId &&
+             originalStripeId == that.originalStripeId &&
+             Arrays.deepEquals(encryptedKeys, that.encryptedKeys) &&
+             stripe.equals(that.stripe);
     }
 
     @Override

@@ -100,9 +100,7 @@ public final class BitFieldReader {
       // The default value for nulls in Vectorization for int types is 1
       // and given that non null value can also be 1, we need to check for isNull also
       // when determining the isRepeating flag.
-      if (previous.isRepeating
-          && i > 0
-          && ((previous.vector[0] != previous.vector[i]) ||
+      if (previous.isRepeating && i > 0 && ((previous.vector[0] != previous.vector[i]) ||
           (previous.isNull[0] != previous.isNull[i]))) {
         previous.isRepeating = false;
       }

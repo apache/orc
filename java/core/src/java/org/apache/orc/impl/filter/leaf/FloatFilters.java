@@ -41,8 +41,8 @@ class FloatFilters {
 
    @Override
    protected boolean allow(ColumnVector v, int rowIdx) {
-     return ((DoubleColumnVector) v).vector[rowIdx] >= low
-            && ((DoubleColumnVector) v).vector[rowIdx] <= high;
+     return ((DoubleColumnVector) v).vector[rowIdx] >= low &&
+            ((DoubleColumnVector) v).vector[rowIdx] <= high;
    }
  }
 

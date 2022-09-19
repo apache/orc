@@ -695,8 +695,8 @@ public class RecordReaderImpl implements RecordReader {
                    " include ORC-517. Writer version: {}",
           predicate.getColumnName(), writerVersion);
       return TruthValue.YES_NO_NULL;
-    } else if (category == TypeDescription.Category.DOUBLE
-        || category == TypeDescription.Category.FLOAT) {
+    } else if (category == TypeDescription.Category.DOUBLE ||
+        category == TypeDescription.Category.FLOAT) {
       DoubleColumnStatistics dstas = (DoubleColumnStatistics) cs;
       if (Double.isNaN(dstas.getSum())) {
         LOG.debug("Not using predication pushdown on {} because stats contain NaN values",
@@ -783,11 +783,11 @@ public class RecordReaderImpl implements RecordReader {
     // 1) Bloom filter is available
     // 2) Min/Max evaluation yield YES or MAYBE
     // 3) Predicate is EQUALS or IN list
-    return bloomFilter != null
-           && result != TruthValue.NO_NULL && result != TruthValue.NO
-           && (predicate.getOperator().equals(PredicateLeaf.Operator.EQUALS)
-               || predicate.getOperator().equals(PredicateLeaf.Operator.NULL_SAFE_EQUALS)
-               || predicate.getOperator().equals(PredicateLeaf.Operator.IN));
+    return bloomFilter != null &&
+           result != TruthValue.NO_NULL && result != TruthValue.NO &&
+           (predicate.getOperator().equals(PredicateLeaf.Operator.EQUALS) ||
+               predicate.getOperator().equals(PredicateLeaf.Operator.NULL_SAFE_EQUALS) ||
+               predicate.getOperator().equals(PredicateLeaf.Operator.IN));
   }
 
   private static TruthValue evaluatePredicateMinMax(PredicateLeaf predicate,
@@ -1214,8 +1214,8 @@ public class RecordReaderImpl implements RecordReader {
                   LOG.warn(reason, e);
                 }
                 boolean hasNoNull = stats.hasHasNull() && !stats.getHasNull();
-                if (predicate.getOperator().equals(PredicateLeaf.Operator.NULL_SAFE_EQUALS)
-                    || hasNoNull) {
+                if (predicate.getOperator().equals(PredicateLeaf.Operator.NULL_SAFE_EQUALS) ||
+                    hasNoNull) {
                   exceptionAnswer[pred] = TruthValue.YES_NO;
                 } else {
                   exceptionAnswer[pred] = TruthValue.YES_NO_NULL;
@@ -1528,9 +1528,9 @@ public class RecordReaderImpl implements RecordReader {
     // within strip). Batch size computed out of marker position makes sure that batch size is
     // aware of row group boundary and will not cause overflow when reading rows
     // illustration of this case is here https://issues.apache.org/jira/browse/HIVE-6287
-    if (rowIndexStride != 0
-        && (includedRowGroups != null || startReadPhase != TypeReader.ReadPhase.ALL)
-        && rowInStripe < rowCountInStripe) {
+    if (rowIndexStride != 0 &&
+        (includedRowGroups != null || startReadPhase != TypeReader.ReadPhase.ALL) &&
+        rowInStripe < rowCountInStripe) {
       int startRowGroup = (int) (rowInStripe / rowIndexStride);
       if (includedRowGroups != null && !includedRowGroups[startRowGroup]) {
         while (startRowGroup < includedRowGroups.length && !includedRowGroups[startRowGroup]) {
@@ -1542,8 +1542,7 @@ public class RecordReaderImpl implements RecordReader {
       // We force row group boundaries when dealing with filters. We adjust the end row group to
       // be the next row group even if more than one are possible selections.
       if (includedRowGroups != null && startReadPhase == TypeReader.ReadPhase.ALL) {
-        while (endRowGroup < includedRowGroups.length
-               && includedRowGroups[endRowGroup]) {
+        while (endRowGroup < includedRowGroups.length && includedRowGroups[endRowGroup]) {
           endRowGroup += 1;
         }
       } else {
@@ -1603,8 +1602,8 @@ public class RecordReaderImpl implements RecordReader {
                                boolean[] included,
                                boolean[] readCols) throws IOException {
     // Use the cached objects if the read request matches the cached request
-    if (stripeIndex == currentStripe
-            && (readCols == null || Arrays.equals(readCols, rowIndexColsToRead))) {
+    if (stripeIndex == currentStripe &&
+        (readCols == null || Arrays.equals(readCols, rowIndexColsToRead))) {
       if (rowIndexColsToRead != null) {
         return indexes;
       } else {

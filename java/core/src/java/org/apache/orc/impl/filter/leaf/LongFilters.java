@@ -41,8 +41,8 @@ class LongFilters {
 
     @Override
     protected boolean allow(ColumnVector v, int rowIdx) {
-      return ((LongColumnVector) v).vector[rowIdx] >= low
-             && ((LongColumnVector) v).vector[rowIdx] <= high;
+      return ((LongColumnVector) v).vector[rowIdx] >= low &&
+             ((LongColumnVector) v).vector[rowIdx] <= high;
     }
   }
 

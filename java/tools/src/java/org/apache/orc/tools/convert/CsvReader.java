@@ -176,9 +176,9 @@ public class CsvReader implements RecordReader {
         column.noNulls = false;
         column.isNull[row] = true;
       } else {
-        if (values[offset].equalsIgnoreCase("true")
-            || values[offset].equalsIgnoreCase("t")
-            || values[offset].equals("1")) {
+        if (values[offset].equalsIgnoreCase("true") ||
+            values[offset].equalsIgnoreCase("t") ||
+            values[offset].equals("1")) {
           ((LongColumnVector) column).vector[row] = 1;
         } else {
           ((LongColumnVector) column).vector[row] = 0;

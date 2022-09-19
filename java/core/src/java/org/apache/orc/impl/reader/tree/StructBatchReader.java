@@ -94,8 +94,8 @@ public class StructBatchReader extends BatchReader {
       VectorizedRowBatch batch, int batchSize, TypeReader.ReadPhase readPhase)
       throws IOException {
     TypeReader[] children = structReader.fields;
-    for (int i = 0; i < children.length
-                    && (vectorColumnCount == -1 || i < vectorColumnCount); ++i) {
+    for (int i = 0; i < children.length && (vectorColumnCount == -1 || i < vectorColumnCount);
+        ++i) {
       if (TypeReader.shouldProcessChild(children[i], readPhase)) {
         readBatchColumn(batch, children[i], batchSize, i, readPhase);
       }

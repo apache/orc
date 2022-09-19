@@ -470,11 +470,9 @@ public class StripePlanner {
   private BufferChunkList planDataReading(TypeReader.ReadPhase readPhase) {
     BufferChunkList result = new BufferChunkList();
     for(StreamInformation stream: dataStreams) {
-      if (readPhase == TypeReader.ReadPhase.ALL
-          ||(readPhase == TypeReader.ReadPhase.LEADERS
-             && filterColIds.contains(stream.column))
-          || (readPhase == TypeReader.ReadPhase.FOLLOWERS
-              && !filterColIds.contains(stream.column))) {
+      if (readPhase == TypeReader.ReadPhase.ALL ||
+          (readPhase == TypeReader.ReadPhase.LEADERS && filterColIds.contains(stream.column)) ||
+          (readPhase == TypeReader.ReadPhase.FOLLOWERS && !filterColIds.contains(stream.column))) {
         addChunk(result, stream, stream.offset, stream.length);
       } else {
         // In case a filter is present, then don't plan the lazy columns, they will be planned only
@@ -545,9 +543,9 @@ public class StripePlanner {
       int bufferSize = compression.getBufferSize();
       OrcProto.RowIndex[] rowIndex = index.getRowGroupIndex();
       for (StreamInformation stream : dataStreams) {
-        if (readPhase == TypeReader.ReadPhase.ALL
-            || (readPhase == TypeReader.ReadPhase.LEADERS && filterColIds.contains(stream.column))
-            || (readPhase == TypeReader.ReadPhase.FOLLOWERS &&
+        if (readPhase == TypeReader.ReadPhase.ALL ||
+            (readPhase == TypeReader.ReadPhase.LEADERS && filterColIds.contains(stream.column)) ||
+            (readPhase == TypeReader.ReadPhase.FOLLOWERS &&
                 !filterColIds.contains(stream.column))) {
           processStream(stream, result, rowIndex, startGroup,
                         includedRowGroups, isCompressed, bufferSize);

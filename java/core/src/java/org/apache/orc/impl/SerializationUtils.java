@@ -459,8 +459,8 @@ public final class SerializationUtils {
    * @return decoded fixed bit width
    */
   public static int decodeBitWidth(int n) {
-    if (n >= FixedBitSizes.ONE.ordinal()
-        && n <= FixedBitSizes.TWENTYFOUR.ordinal()) {
+    if (n >= FixedBitSizes.ONE.ordinal() &&
+        n <= FixedBitSizes.TWENTYFOUR.ordinal()) {
       return n + 1;
     } else if (n == FixedBitSizes.TWENTYSIX.ordinal()) {
       return 26;
@@ -492,8 +492,7 @@ public final class SerializationUtils {
    */
   public void writeInts(long[] input, int offset, int len, int bitSize,
                         OutputStream output) throws IOException {
-    if (input == null || input.length < 1 || offset < 0 || len < 1
-        || bitSize < 1) {
+    if (input == null || input.length < 1 || offset < 0 || len < 1 || bitSize < 1) {
       return;
     }
 

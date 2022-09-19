@@ -44,8 +44,8 @@ class TimestampFilters {
 
     @Override
     protected boolean allow(ColumnVector v, int rowIdx) {
-      return ((TimestampColumnVector) v).compareTo(rowIdx, low) >= 0
-             && ((TimestampColumnVector) v).compareTo(rowIdx, high) <= 0;
+      return ((TimestampColumnVector) v).compareTo(rowIdx, low) >= 0 &&
+             ((TimestampColumnVector) v).compareTo(rowIdx, high) <= 0;
     }
   }
 
