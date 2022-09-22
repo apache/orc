@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required (VERSION 2.8.12)
+cmake_minimum_required (VERSION 3.12.0)
 if (POLICY CMP0048)
     cmake_policy(SET CMP0048 NEW)
 endif ()
@@ -96,7 +96,7 @@ if (NOT MSVC)
   set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 endif ()
 message(STATUS "compiler ${CMAKE_CXX_COMPILER_ID} version ${CMAKE_CXX_COMPILER_VERSION}")
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set (CXX11_FLAGS "-std=c++11")
   set (WARN_FLAGS "-Weverything -Wno-c++98-compat -Wno-missing-prototypes")
   set (WARN_FLAGS "${WARN_FLAGS} -Wno-c++98-compat-pedantic -Wno-padded")
