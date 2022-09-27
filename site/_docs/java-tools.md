@@ -18,6 +18,7 @@ The subcommands for the tools are:
   * key (since ORC 1.5) - print information about the encryption keys
   * meta - print the metadata of an ORC file
   * scan (since ORC 1.3) - scan the data for benchmarking
+  * sizes (since ORC 1.7.2) - list size on disk of each column
   * version (since ORC 1.6) - print the version of this ORC tool
 
 The command line looks like:
@@ -312,6 +313,23 @@ cost of printing the data out.
 
 `-v,--verbose`
   : Print exceptions
+
+## Java Sizes
+
+The sizes command lists size on disk of each column. The output contains not
+only the raw data of the table, but also the size of metadata such as `padding`,
+`stripeFooter`, `fileFooter`, `stripeIndex` and `stripeData`.
+
+~~~ shell
+% java -jar orc-tools-X.Y.Z-uber.jar sizes examples/my-file.orc
+Percent  Bytes/Row  Name
+  98.45  2.62       y
+  0.81   0.02       _file_footer
+  0.30   0.01       _index
+  0.25   0.01       x
+  0.19   0.01       _stripe_footer
+______________________________________________________________________
+~~~
 
 ## Java Version
 
