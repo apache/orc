@@ -24,7 +24,6 @@ ARG jdk=8
 RUN ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
 RUN apt-get update
 RUN apt-get install -y \
-  cmake \
   gcc \
   g++ \
   git \
@@ -34,9 +33,18 @@ RUN apt-get install -y \
   curl \
   maven \
   openjdk-${jdk}-jdk \
-  tzdata
+  tzdata \
+  wget \
+  software-properties-common
+
 RUN update-alternatives --set java $(update-alternatives --list java | grep ${jdk}) && \
     update-alternatives --set javac $(update-alternatives --list javac | grep ${jdk})
+
+# Install latest cmake
+RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
+RUN apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main'
+RUN apt update
+RUN apt install -y cmake
 
 WORKDIR /root
 VOLUME /root/.m2/repository
