@@ -851,8 +851,6 @@ public class OrcFile {
       return blockSizeValue;
     }
 
-
-
     public String getBloomFilterColumns() {
       return bloomFilterColumns;
     }
