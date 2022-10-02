@@ -237,6 +237,67 @@ namespace orc {
     #pragma clang diagnostic ignored "-Wexit-time-destructors"
   #endif
 
+  BlockBuffer::BlockBuffer(MemoryPool& pool, uint64_t _blockSize)
+      : memoryPool(pool),
+        currentSize(0),
+        currentCapacity(0),
+        blockSize(_blockSize) {
+    if (blockSize == 0) {
+      throw std::logic_error("Block size cannot be zero");
+    }
+    reserve(blockSize);
+  }
+
+  BlockBuffer::~BlockBuffer() {
+    for (size_t i = 0; i < blocks.size(); ++i) {
+      memoryPool.free(blocks[i]);
+    }
+    blocks.clear();
+    currentSize = currentCapacity = 0;
+  }
+
+  uint64_t BlockBuffer::getBlockNumber() const {
+    return (currentSize + blockSize - 1) / blockSize;
+  }
+
+  Block BlockBuffer::getBlock(uint64_t blockIndex) {
+    if (blockIndex >= getBlockNumber()) {
+      throw std::out_of_range("block index out of range.");
+    }
+    return Block(blocks[blockIndex],
+                 std::min(currentSize - blockIndex * blockSize, blockSize));
+  }
+
+  void BlockBuffer::reserve(uint64_t capacity) {
+    while (currentCapacity < capacity) {
+      char* newBlockPtr = memoryPool.malloc(blockSize);
+      if (newBlockPtr != nullptr) {
+        blocks.emplace_back(newBlockPtr);
+        currentCapacity += blockSize;
+      } else {
+        break;
+      }
+    }
+  }
+
+  void BlockBuffer::resize(uint64_t size) {
+    reserve(size);
+    if (currentCapacity >= size) {
+      currentSize = size;
+    } else {
+      throw std::logic_error("Resize more memory error");
+    }
+  }
+
+  void BlockBuffer::shrink(uint64_t newCapacity) {
+    while (currentCapacity > newCapacity) {
+      memoryPool.free(blocks.back());
+      blocks.pop_back();
+      currentCapacity -= blockSize;
+    }
+    currentSize = std::min(currentSize, currentCapacity);
+  }
+
   MemoryPool* getDefaultPool() {
     static MemoryPoolImpl internal;
     return &internal;

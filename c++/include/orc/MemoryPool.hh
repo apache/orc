@@ -23,6 +23,7 @@
 #include "orc/Int128.hh"
 
 #include <memory>
+#include <vector>
 
 namespace orc {
 
@@ -148,6 +149,63 @@ namespace orc {
   #ifdef __clang__
     #pragma clang diagnostic pop
   #endif
+
+  struct Block {
+    char* data;
+    uint64_t size;
+
+    Block() : data(nullptr), size(0) {}
+    Block(char* _data, uint64_t _size) : data(_data), size(_size) {}
+  };
+
+  class BlockBuffer {
+  private:
+    MemoryPool& memoryPool;
+    // current buffer size
+    uint64_t currentSize;
+    // maximal capacity (actual allocated memory)
+    uint64_t currentCapacity;
+    // unit for buffer expansion or shrinkage
+    const uint64_t blockSize;
+    // pointers to the start of each block
+    std::vector<char*> blocks;
+
+    // non-copy-constructible
+    BlockBuffer(BlockBuffer& buffer) = delete;
+    BlockBuffer& operator=(BlockBuffer& buffer) = delete;
+    BlockBuffer(BlockBuffer&& buffer) = delete;
+    BlockBuffer& operator=(BlockBuffer&& buffer) = delete;
+
+  public:
+    BlockBuffer(MemoryPool& pool, uint64_t blockSize);
+    ~BlockBuffer();
+
+    /**
+     * Get the Block object
+     */
+    Block getBlock(uint64_t blockIndex);
+
+    /**
+     * Get the Block number
+     */
+    uint64_t getBlockNumber() const;
+
+    uint64_t size() const {
+      return currentSize;
+    }
+
+    uint64_t capacity() const {
+      return currentCapacity;
+    }
+
+    void resize(uint64_t size);
+    void reserve(uint64_t capacity);
+
+    /**
+     * Reclaim allocated memory
+     */
+    void shrink(uint64_t newCapacity);
+  };
 } // namespace orc
 
 
