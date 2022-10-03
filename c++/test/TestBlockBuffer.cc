@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+#include "MemoryPool.hh"
 #include "orc/OrcFile.hh"
 #include "wrap/gtest-wrapper.h"
 

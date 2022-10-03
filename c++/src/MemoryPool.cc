@@ -17,9 +17,9 @@
  */
 
 #include "orc/Int128.hh"
-#include "orc/MemoryPool.hh"
 
 #include "Adaptor.hh"
+#include "MemoryPool.hh"
 
 #include <cstdlib>
 #include <iostream>
