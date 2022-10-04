@@ -78,7 +78,7 @@
     <maven.version>3.8.6</maven.version>
     <maven-assembly-plugin.version>3.4.2</maven-assembly-plugin.version>
     <maven-shade-plugin.version>3.4.0</maven-shade-plugin.version>
-    <slf4j.version>2.0.1</slf4j.version>
+    <slf4j.version>2.0.3</slf4j.version>
     <surefire.version>3.0.0-M5</surefire.version>
     <junit.version>5.9.0</junit.version>
     <mockito.version>4.8.0</mockito.version>
