@@ -29,6 +29,7 @@ import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
+import org.apache.orc.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -90,6 +91,32 @@ public class TestWriterImpl {
     conf.set(OrcConf.BLOOM_FILTER_COLUMNS.getAttribute(), "*");
     Writer w = OrcFile.createWriter(testFilePath, OrcFile.writerOptions(conf).setSchema(schema));
     w.close();
+  }
+
+  @Test
+  public void testNoIndexIfEnableIndexIsFalse() throws Exception {
+    conf.set(OrcConf.OVERWRITE_OUTPUT_FILE.getAttribute(), "true");
+    conf.set(OrcConf.ROW_INDEX_STRIDE.getAttribute(), "1000");
+    conf.setBoolean(OrcConf.ENABLE_INDEXES.getAttribute(), false);
+    VectorizedRowBatch b = schema.createRowBatch();
+    LongColumnVector f1 = (LongColumnVector) b.cols[0];
+    LongColumnVector f2 = (LongColumnVector) b.cols[1];
+    Writer w = OrcFile.createWriter(testFilePath, OrcFile.writerOptions(conf).setSchema(schema));
+    long rowCount = 1000;
+    for (int i = 0; i < rowCount; i++) {
+      f1.vector[b.size] = 1 ;
+      f2.vector[b.size] = 2 ;
+      b.size += 1;
+      if (b.size == 10) {
+        w.addRowBatch(b);
+        b.reset();
+      }
+    }
+    w.close();
+
+    for (StripeInformation information: w.getStripes()) {
+      assertEquals(0, information.getIndexLength());
+    }
   }
 
   @Test

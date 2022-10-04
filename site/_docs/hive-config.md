@@ -16,7 +16,7 @@ orc.compress             | ZLIB        | high level compression = {NONE, ZLIB, S
 orc.compress.size        | 262,144     | compression chunk size
 orc.stripe.size          | 67,108,864  | memory buffer in bytes for writing
 orc.row.index.stride     | 10,000      | number of rows between index entries
-orc.create.index         | true        | create indexes?
+orc.create.index         | true        | whether the ORC writer create indexes as part of the file or not
 orc.bloom.filter.columns | ""          | comma separated list of column names
 orc.bloom.filter.fpp     | 0.05        | bloom filter false positive rate
 
