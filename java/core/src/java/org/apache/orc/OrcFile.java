@@ -431,6 +431,7 @@ public class OrcFile {
     private TypeDescription schema = null;
     private long stripeSizeValue;
     private long blockSizeValue;
+    private boolean buildIndex;
     private int rowIndexStrideValue;
     private int bufferSizeValue;
     private boolean enforceBufferSize = false;
@@ -464,6 +465,7 @@ public class OrcFile {
       overwrite = OrcConf.OVERWRITE_OUTPUT_FILE.getBoolean(tableProperties, conf);
       stripeSizeValue = OrcConf.STRIPE_SIZE.getLong(tableProperties, conf);
       blockSizeValue = OrcConf.BLOCK_SIZE.getLong(tableProperties, conf);
+      buildIndex = OrcConf.ENABLE_INDEXES.getBoolean(tableProperties, conf);
       rowIndexStrideValue =
           (int) OrcConf.ROW_INDEX_STRIDE.getLong(tableProperties, conf);
       bufferSizeValue = (int) OrcConf.BUFFER_SIZE.getLong(tableProperties,
@@ -897,6 +899,10 @@ public class OrcFile {
 
     public int getRowIndexStride() {
       return rowIndexStrideValue;
+    }
+
+    public boolean isBuildIndex() {
+      return buildIndex;
     }
 
     public CompressionStrategy getCompressionStrategy() {

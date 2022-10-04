@@ -183,7 +183,8 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     this.compressionStrategy = opts.getCompressionStrategy();
 
     this.rowIndexStride = opts.getRowIndexStride();
-    buildIndex = rowIndexStride > 0;
+
+    this.buildIndex = opts.isBuildIndex() && (rowIndexStride > 0);
     if (buildIndex && rowIndexStride < MIN_ROW_INDEX_STRIDE) {
       throw new IllegalArgumentException("Row stride must be at least " +
           MIN_ROW_INDEX_STRIDE);
