@@ -262,17 +262,29 @@ namespace orc {
 
   Block BlockBuffer::getBlock(uint64_t blockIndex) {
     if (blockIndex >= getBlockNumber()) {
-      throw std::out_of_range("block index out of range.");
+      throw std::out_of_range("Block index out of range");
     }
     return Block(blocks[blockIndex],
                  std::min(currentSize - blockIndex * blockSize, blockSize));
+  }
+
+  Block BlockBuffer::getEmptyBlock() {
+    if (currentSize < currentCapacity) {
+      Block emptyBlock(blocks[currentSize / blockSize] + currentSize % blockSize,
+          blockSize - currentSize % blockSize);
+      currentSize = (currentSize / blockSize + 1) * blockSize;
+      return emptyBlock;
+    } else {
+      resize(currentSize + blockSize);
+      return Block(blocks.back(), blockSize);
+    }
   }
 
   void BlockBuffer::reserve(uint64_t capacity) {
     while (currentCapacity < capacity) {
       char* newBlockPtr = memoryPool.malloc(blockSize);
       if (newBlockPtr != nullptr) {
-        blocks.emplace_back(newBlockPtr);
+        blocks.push_back(newBlockPtr);
         currentCapacity += blockSize;
       } else {
         break;
@@ -285,17 +297,8 @@ namespace orc {
     if (currentCapacity >= size) {
       currentSize = size;
     } else {
-      throw std::logic_error("Resize more memory error");
+      throw std::logic_error("Block buffer resize error");
     }
-  }
-
-  void BlockBuffer::shrink(uint64_t newCapacity) {
-    while (currentCapacity > newCapacity) {
-      memoryPool.free(blocks.back());
-      blocks.pop_back();
-      currentCapacity -= blockSize;
-    }
-    currentSize = std::min(currentSize, currentCapacity);
   }
 
   MemoryPool* getDefaultPool() {

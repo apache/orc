@@ -22,6 +22,9 @@
 
 #include "orc/MemoryPool.hh"
 
+#include <iostream>
+#include <vector>
+
 namespace orc {
 
   struct Block {
@@ -30,6 +33,7 @@ namespace orc {
 
     Block() : data(nullptr), size(0) {}
     Block(char* _data, uint64_t _size) : data(_data), size(_size) {}
+    ~Block() {}
   };
 
   class BlockBuffer {
@@ -39,7 +43,7 @@ namespace orc {
     uint64_t currentSize;
     // maximal capacity (actual allocated memory)
     uint64_t currentCapacity;
-    // unit for buffer expansion or shrinkage
+    // unit for buffer expansion
     const uint64_t blockSize;
     // pointers to the start of each block
     std::vector<char*> blocks;
@@ -52,12 +56,18 @@ namespace orc {
 
   public:
     BlockBuffer(MemoryPool& pool, uint64_t blockSize);
+
     ~BlockBuffer();
 
     /**
      * Get the Block object
      */
     Block getBlock(uint64_t blockIndex);
+
+    /**
+     * Get the empty block or allocate a new block if the buffer is exhausted
+     */
+    Block getEmptyBlock();
 
     /**
      * Get the Block number
@@ -74,11 +84,6 @@ namespace orc {
 
     void resize(uint64_t size);
     void reserve(uint64_t capacity);
-
-    /**
-     * Reclaim allocated memory
-     */
-    void shrink(uint64_t newCapacity);
   };
 } // namespace
 

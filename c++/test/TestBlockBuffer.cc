@@ -48,12 +48,6 @@ namespace orc {
     EXPECT_EQ(buffer.getBlockNumber(), 256);
     EXPECT_EQ(buffer.size(), 256 * 1024);
     EXPECT_EQ(buffer.capacity(), 256 * 1024);
-
-    // shrinkage of capacity
-    buffer.shrink(64 * 1024);
-    EXPECT_EQ(buffer.getBlockNumber(), 64);
-    EXPECT_EQ(buffer.size(), 64 * 1024);
-    EXPECT_EQ(buffer.capacity(), 64 * 1024);
   }
 
   TEST(TestBlockBuffer, get_block) {

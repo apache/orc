@@ -23,7 +23,6 @@
 #include "orc/Int128.hh"
 
 #include <memory>
-#include <vector>
 
 namespace orc {
 
