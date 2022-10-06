@@ -54,32 +54,27 @@ namespace orc {
     MemoryPool* pool = getDefaultPool();
     BlockBuffer buffer(*pool, 1024);
 
-    buffer.resize(5000);
-    EXPECT_EQ(buffer.getBlockNumber(), 5);
-    for (int blockIdx = 0; blockIdx < buffer.getBlockNumber(); ++blockIdx) {
-      Block block = buffer.getBlock(blockIdx);
-      for (int j = 0; j < block.size; ++j) {
-        block.data[j] = static_cast<char>('A' + (blockIdx + j) % 26);
-      }
-    }
-
-    buffer.resize(10000);
-    EXPECT_EQ(buffer.getBlockNumber(), 10);
-    for (int blockIdx = 4; blockIdx < buffer.getBlockNumber(); ++blockIdx) {
-      Block block = buffer.getBlock(blockIdx);
-      for (int j = 0; j < block.size; ++j) {
-        block.data[j] = static_cast<char>('a' + (blockIdx + j) % 26);
+    EXPECT_EQ(buffer.getBlockNumber(), 0);
+    for (uint64_t i = 0; i < 10; ++i) {
+      Block block = buffer.getEmptyBlock();
+      EXPECT_EQ(buffer.getBlockNumber(), i + 1);
+      for (uint64_t j = 0; j < block.size; ++j) {
+        if (i % 2 == 0) {
+          block.data[j] = static_cast<char>('A' + (i + j) % 26);
+        } else {
+          block.data[j] = static_cast<char>('a' + (i + j) % 26);
+        }
       }
     }
 
     // verify the block data
-    for (int blockIdx = 0; blockIdx < buffer.getBlockNumber(); ++blockIdx) {
-      Block block = buffer.getBlock(blockIdx);
-      for (int j = 0; j < block.size; ++j) {
-        if (blockIdx < 4) {
-          EXPECT_EQ(block.data[j], 'A' + (blockIdx + j) % 26);
+    for (uint64_t i = 0; i < buffer.getBlockNumber(); ++i) {
+      Block block = buffer.getBlock(i);
+      for (uint64_t j = 0; j < block.size; ++j) {
+        if (i % 2 == 0) {
+          EXPECT_EQ(block.data[j], 'A' + (i + j) % 26);
         } else {
-          EXPECT_EQ(block.data[j], 'a' + (blockIdx + j) % 26);
+          EXPECT_EQ(block.data[j], 'a' + (i + j) % 26);
         }
       }
     }
