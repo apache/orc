@@ -33,7 +33,9 @@ namespace orc {
     Block() : data(nullptr), size(0) {}
     Block(char* _data, uint64_t _size) : data(_data), size(_size) {}
     Block(const Block& block) = default;
-    ~Block() {}
+    ~Block() {
+      // PASS
+    }
   };
 
   class BlockBuffer {
