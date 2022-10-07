@@ -24,6 +24,9 @@ jobs:
   label:
     name: Label pull requests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
     - uses: actions/labeler@2.2.0
       with:
