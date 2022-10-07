@@ -33,9 +33,7 @@ namespace orc {
     Block() : data(nullptr), size(0) {}
     Block(char* _data, uint64_t _size) : data(_data), size(_size) {}
     Block(const Block& block) = default;
-    ~Block() {
-      // PASS
-    }
+    ~Block() {}
   };
 
   class BlockBuffer {
@@ -67,7 +65,7 @@ namespace orc {
     Block getBlock(uint64_t blockIndex);
 
     /**
-     * Get the empty block or allocate a new block if the buffer is exhausted
+     * Get a empty block or allocate a new block if the buffer is exhausted
      */
     Block getEmptyBlock();
 
