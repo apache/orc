@@ -1007,7 +1007,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
   }
 
   /**
-   * Get next chunk size when row selected enable.
+   * Get next chunk size if row selected enable.
    * We will find the longest size of chunk that will be less than maxSize.
    * @param posn the position where we are
    * @param maxSize the largest chunk size in this selection
