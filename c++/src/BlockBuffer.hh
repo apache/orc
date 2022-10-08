@@ -26,20 +26,6 @@
 namespace orc {
 
   /**
-   * Block points to a section of memory allocated by BlockBuffer,
-   * containing the corresponding physical memory address and size.
-   */
-  struct Block {
-    char* data;
-    uint64_t size;
-
-    Block() : data(nullptr), size(0) {}
-    Block(char* _data, uint64_t _size) : data(_data), size(_size) {}
-    Block(const Block& block) = default;
-    ~Block() = default;
-  };
-
-  /**
    * BlockBuffer implements a memory allocation policy based on
    * equal-length blocks. BlockBuffer will reserve multiple blocks
    * for allocation.
@@ -68,6 +54,22 @@ namespace orc {
     ~BlockBuffer();
 
     /**
+    * Block points to a section of memory allocated by BlockBuffer,
+    * containing the corresponding physical memory address and available size.
+    */
+    struct Block {
+      // the start of block
+      char* data;
+      // number of bytes available at data
+      uint64_t size;
+
+      Block() : data(nullptr), size(0) {}
+      Block(char* _data, uint64_t _size) : data(_data), size(_size) {}
+      Block(const Block& block) = default;
+      ~Block() = default;
+    };
+
+    /**
      * Get the allocated block object.
      * The last allocated block size may be less than blockSize,
      * and the rest of the blocks are all of size blockSize.
@@ -77,16 +79,17 @@ namespace orc {
     Block getBlock(uint64_t blockIndex) const;
 
     /**
-     * Get a empty block or a new block if the buffer is exhausted.
+     * Get a empty block or allocate a new block to write.
      * If the last allocated block size is less than blockSize,
-     * the empty block size is blockSize - lastBlockSize.
-     * Otherwise, the empty block size is blockSize.
+     * the size of empty block is equal to blockSize minus the size of
+     * the last allocated block size. Otherwise, the size of
+     * the empty block is equal to blockSize.
      * @return a empty block object
      */
-    Block getEmptyBlock();
+    Block getNextBlock();
 
     /**
-     * Get the number of allocated blocks
+     * Get the number of blocks that are fully or partially occupied
      */
     uint64_t getBlockNumber() const {
       return (currentSize + blockSize - 1) / blockSize;
@@ -101,6 +104,12 @@ namespace orc {
     }
 
     void resize(uint64_t size);
+    /**
+     * Reserve function requests the block buffer to contain
+     * at least capacity(input parameter) bytes. Reallocation happens
+     * if there is need of more space.
+     * @param capacity new capacity of block buffer
+     */
     void reserve(uint64_t capacity);
   };
 }  // namespace orc

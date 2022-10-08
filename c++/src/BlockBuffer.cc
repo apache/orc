@@ -41,7 +41,7 @@ namespace orc {
     currentSize = currentCapacity = 0;
   }
 
-  Block BlockBuffer::getBlock(uint64_t blockIndex) const {
+  BlockBuffer::Block BlockBuffer::getBlock(uint64_t blockIndex) const {
     if (blockIndex >= getBlockNumber()) {
       throw std::out_of_range("Block index out of range");
     }
@@ -49,7 +49,7 @@ namespace orc {
                  std::min(currentSize - blockIndex * blockSize, blockSize));
   }
 
-  Block BlockBuffer::getEmptyBlock() {
+  BlockBuffer::Block BlockBuffer::getNextBlock() {
     if (currentSize < currentCapacity) {
       Block emptyBlock(
           blocks[currentSize / blockSize] + currentSize % blockSize,

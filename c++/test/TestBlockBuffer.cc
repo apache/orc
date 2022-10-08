@@ -55,7 +55,7 @@ namespace orc {
 
     EXPECT_EQ(buffer.getBlockNumber(), 0);
     for (uint64_t i = 0; i < 10; ++i) {
-      Block block = buffer.getEmptyBlock();
+      BlockBuffer::Block block = buffer.getNextBlock();
       EXPECT_EQ(buffer.getBlockNumber(), i + 1);
       for (uint64_t j = 0; j < block.size; ++j) {
         if (i % 2 == 0) {
@@ -68,7 +68,7 @@ namespace orc {
 
     // verify the block data
     for (uint64_t i = 0; i < buffer.getBlockNumber(); ++i) {
-      Block block = buffer.getBlock(i);
+      BlockBuffer::Block block = buffer.getBlock(i);
       for (uint64_t j = 0; j < block.size; ++j) {
         if (i % 2 == 0) {
           EXPECT_EQ(block.data[j], 'A' + (i + j) % 26);
