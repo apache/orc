@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef ORC_MEMORYPOOL_IMPL_HH
-#define ORC_MEMORYPOOL_IMPL_HH
+#ifndef ORC_BLOCK_BUFFER_HH
+#define ORC_BLOCK_BUFFER_HH
 
 #include "orc/MemoryPool.hh"
 
