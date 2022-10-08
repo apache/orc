@@ -68,7 +68,7 @@ namespace orc {
     ~BlockBuffer();
 
     /**
-     * Get the allocated Block object.
+     * Get the allocated block object.
      * The last allocated block size may be less than blockSize,
      * and the rest of the blocks are all of size blockSize.
      * @param blockIndex the index of blocks
@@ -86,7 +86,7 @@ namespace orc {
     Block getEmptyBlock();
 
     /**
-     * Get the Block number
+     * Get the number of allocated blocks
      */
     uint64_t getBlockNumber() const {
       return (currentSize + blockSize - 1) / blockSize;
