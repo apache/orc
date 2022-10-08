@@ -25,6 +25,10 @@
 
 namespace orc {
 
+  /**
+   * Block points to a section of memory allocated by BlockBuffer,
+   * containing the corresponding physical memory address and size.
+   */
   struct Block {
     char* data;
     uint64_t size;
@@ -32,9 +36,14 @@ namespace orc {
     Block() : data(nullptr), size(0) {}
     Block(char* _data, uint64_t _size) : data(_data), size(_size) {}
     Block(const Block& block) = default;
-    ~Block() {}
+    ~Block() = default;
   };
 
+  /**
+   * BlockBuffer implements a memory allocation policy based on
+   * equal-length blocks. BlockBuffer will reserve multiple blocks
+   * for allocation.
+   */
   class BlockBuffer {
   private:
     MemoryPool& memoryPool;
@@ -59,19 +68,29 @@ namespace orc {
     ~BlockBuffer();
 
     /**
-     * Get the Block object
+     * Get the allocated Block object.
+     * The last allocated block size may be less than blockSize,
+     * and the rest of the blocks are all of size blockSize.
+     * @param blockIndex the index of blocks
+     * @return the allocated block object
      */
-    Block getBlock(uint64_t blockIndex);
+    Block getBlock(uint64_t blockIndex) const;
 
     /**
-     * Get a empty block or allocate a new block if the buffer is exhausted
+     * Get a empty block or a new block if the buffer is exhausted.
+     * If the last allocated block size is less than blockSize,
+     * the empty block size is blockSize - lastBlockSize.
+     * Otherwise, the empty block size is blockSize.
+     * @return a empty block object
      */
     Block getEmptyBlock();
 
     /**
      * Get the Block number
      */
-    uint64_t getBlockNumber() const;
+    uint64_t getBlockNumber() const {
+      return (currentSize + blockSize - 1) / blockSize;
+    }
 
     uint64_t size() const {
       return currentSize;
@@ -84,6 +103,6 @@ namespace orc {
     void resize(uint64_t size);
     void reserve(uint64_t capacity);
   };
-} // namespace
+}  // namespace orc
 
 #endif
