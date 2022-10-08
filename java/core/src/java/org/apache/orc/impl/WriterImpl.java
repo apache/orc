@@ -702,7 +702,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
           int chunkSize = Math.min(batch.size - posn,
               rowIndexStride - rowsInIndex);
           if (batch.isSelectedInUse()) {
-            chunkSize = selectedRowNextSize(posn, chunkSize, batch.selected);
+            chunkSize = nextSelectedRowSize(posn, chunkSize, batch.selected);
             treeWriter.writeRootBatch(batch, batch.selected[posn], chunkSize);
           } else {
             treeWriter.writeRootBatch(batch, posn, chunkSize);
@@ -718,7 +718,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
         if (batch.isSelectedInUse()) {
           int posn = 0;
           while (posn < batch.size) {
-            int chunkSize = selectedRowNextSize(posn, batch.size - posn, batch.selected);
+            int chunkSize = nextSelectedRowSize(posn, batch.size - posn, batch.selected);
             treeWriter.writeRootBatch(batch, batch.selected[posn], chunkSize);
             posn += chunkSize;
           }
@@ -1012,7 +1012,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
    * @param posn the position where we are
    * @param maxSize the largest chunk size in this selection
    */
-  private int selectedRowNextSize(int posn, int maxSize, int[] selected) {
+  private int nextSelectedRowSize(int posn, int maxSize, int[] selected) {
     // find the longest chunk that is continuously selected from posn
     for (int len = 1; len < maxSize; ++len) {
       if (selected[posn + len] - selected[posn] != len) {
