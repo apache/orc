@@ -1006,6 +1006,12 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     return this.treeWriter.estimateMemory();
   }
 
+  /**
+   * Get next chunk size when row selected enable.
+   * We will find the longest size of chunk that will be less than maxSize.
+   * @param posn the position where we are
+   * @param maxSize the largest chunk size in this selection
+   */
   private int selectedRowNextSize(int posn, int maxSize, int[] selected) {
     // find the longest chunk that is continuously selected from posn
     for (int len = 1; len < maxSize; ++len) {
