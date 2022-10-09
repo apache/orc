@@ -105,12 +105,11 @@ namespace orc {
 
     void resize(uint64_t size);
     /**
-     * Reserve function requests the block buffer to contain
-     * at least capacity(input parameter) bytes. Reallocation happens
-     * if there is need of more space.
-     * @param capacity new capacity of block buffer
+     * Requests the BlockBuffer to contain at least newCapacity bytes.
+     * Reallocation happens if there is need of more space.
+     * @param newCapacity new capacity of BlockBuffer
      */
-    void reserve(uint64_t capacity);
+    void reserve(uint64_t newCapacity);
   };
 }  // namespace orc
 

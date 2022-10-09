@@ -62,8 +62,17 @@ namespace orc {
     }
   }
 
-  void BlockBuffer::reserve(uint64_t capacity) {
-    while (currentCapacity < capacity) {
+  void BlockBuffer::resize(uint64_t size) {
+    reserve(size);
+    if (currentCapacity >= size) {
+      currentSize = size;
+    } else {
+      throw std::logic_error("Block buffer resize error");
+    }
+  }
+
+  void BlockBuffer::reserve(uint64_t newCapacity) {
+    while (currentCapacity < newCapacity) {
       char* newBlockPtr = memoryPool.malloc(blockSize);
       if (newBlockPtr != nullptr) {
         blocks.push_back(newBlockPtr);
@@ -71,15 +80,6 @@ namespace orc {
       } else {
         break;
       }
-    }
-  }
-
-  void BlockBuffer::resize(uint64_t size) {
-    reserve(size);
-    if (currentCapacity >= size) {
-      currentSize = size;
-    } else {
-      throw std::logic_error("Block buffer resize error");
     }
   }
 } // namespace orc
