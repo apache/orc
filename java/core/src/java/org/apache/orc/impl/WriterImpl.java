@@ -1013,6 +1013,10 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
    * @param maxSize the largest chunk size in this selection
    */
   private int nextSelectedRowSize(int posn, int maxSize, int[] selected) {
+    if (posn < 0 || maxSize < 0 || selected == null || (maxSize - 1 + posn >= selected.length)) {
+      throw new IllegalArgumentException("Error to fetch next selected " +
+              "rowSize posn=" + posn + " maxSize=" + maxSize);
+    }
     // find the longest chunk that is continuously selected from posn
     for (int len = 1; len < maxSize; ++len) {
       if (selected[posn + len] - selected[posn] != len) {
