@@ -20,6 +20,7 @@
 #define ORC_OUTPUTSTREAM_HH
 
 #include "Adaptor.hh"
+#include "BlockBuffer.hh"
 #include "orc/OrcFile.hh"
 #include "wrap/zero-copy-stream-wrapper.h"
 
@@ -49,7 +50,7 @@ DIAGNOSTIC_PUSH
   class BufferedOutputStream: public google::protobuf::io::ZeroCopyOutputStream {
   private:
     OutputStream * outputStream;
-    std::unique_ptr<DataBuffer<char> > dataBuffer;
+    std::unique_ptr<BlockBuffer> dataBuffer;
     uint64_t blockSize;
     WriterMetrics* metrics;
 

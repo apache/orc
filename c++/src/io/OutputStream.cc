@@ -37,7 +37,7 @@ namespace orc {
                                     : outputStream(outStream),
                                       blockSize(blockSize_),
                                       metrics(metrics_) {
-    dataBuffer.reset(new DataBuffer<char>(pool));
+    dataBuffer.reset(new BlockBuffer(pool, blockSize));
     dataBuffer->reserve(capacity_);
   }
 
@@ -46,16 +46,12 @@ namespace orc {
   }
 
   bool BufferedOutputStream::Next(void** buffer, int* size) {
-    *size = static_cast<int>(blockSize);
-    uint64_t oldSize = dataBuffer->size();
-    uint64_t newSize = oldSize + blockSize;
-    uint64_t newCapacity = dataBuffer->capacity();
-    while (newCapacity < newSize) {
-      newCapacity += dataBuffer->capacity();
+    auto block = dataBuffer->getNextBlock();
+    if (block.data == nullptr) {
+      throw std::logic_error("Failed to get next buffer from block buffer.");
     }
-    dataBuffer->reserve(newCapacity);
-    dataBuffer->resize(newSize);
-    *buffer = dataBuffer->data() + oldSize;
+    *buffer = block.data;
+    *size = static_cast<int>(block.size);
     return true;
   }
 
@@ -95,9 +91,11 @@ namespace orc {
 
   uint64_t BufferedOutputStream::flush() {
     uint64_t dataSize = dataBuffer->size();
+    for (uint64_t i = 0; i < dataBuffer->getBlockNumber(); ++i)
     {
       SCOPED_STOPWATCH(metrics, IOBlockingLatencyUs, IOCount);
-      outputStream->write(dataBuffer->data(), dataSize);
+      auto block = dataBuffer->getBlock(i);
+      outputStream->write(block.data, block.size);
     }
     dataBuffer->resize(0);
     return dataSize;
