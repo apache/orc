@@ -231,7 +231,11 @@ public enum OrcConf {
   ROW_BATCH_CHILD_LIMIT("orc.row.child.limit", "orc.row.child.limit",
       1024 * 32, "The maximum number of child elements to buffer before "+
       "the ORC row writer writes the batch to the file."
-      )
+      ),
+  ORC_VECTORED_READ("orc.vectored.read",
+      "hive.exec.orc.vectored.read",
+      false,
+      "Data will be read in asynch mode through vectored IO.")
   ;
 
   private final String attribute;

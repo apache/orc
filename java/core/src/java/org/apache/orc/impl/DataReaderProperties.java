@@ -34,6 +34,7 @@ public final class DataReaderProperties {
   private final int maxDiskRangeChunkLimit;
   private final int minSeekSize;
   private final double minSeekSizeTolerance;
+  private final boolean isVectoredRead;
 
   private DataReaderProperties(Builder builder) {
     this.fileSystemSupplier = builder.fileSystemSupplier;
@@ -44,6 +45,7 @@ public final class DataReaderProperties {
     this.maxDiskRangeChunkLimit = builder.maxDiskRangeChunkLimit;
     this.minSeekSize = builder.minSeekSize;
     this.minSeekSizeTolerance = builder.minSeekSizeTolerance;
+    this.isVectoredRead = builder.isVectoredRead;
   }
 
   public Supplier<FileSystem> getFileSystemSupplier() {
@@ -82,6 +84,8 @@ public final class DataReaderProperties {
     return minSeekSizeTolerance;
   }
 
+  public boolean getIsVectoredRead() { return isVectoredRead; }
+
   public static class Builder {
 
     private Supplier<FileSystem> fileSystemSupplier;
@@ -94,6 +98,7 @@ public final class DataReaderProperties {
     private int minSeekSize = (int) OrcConf.ORC_MIN_DISK_SEEK_SIZE.getDefaultValue();
     private double minSeekSizeTolerance = (double) OrcConf.ORC_MIN_DISK_SEEK_SIZE_TOLERANCE
       .getDefaultValue();
+    private boolean isVectoredRead;
 
     private Builder() {
 
@@ -141,6 +146,11 @@ public final class DataReaderProperties {
 
     public Builder withMinSeekSizeTolerance(double value) {
       minSeekSizeTolerance = value;
+      return this;
+    }
+
+    public Builder withVectoredRead(boolean isVectored){
+      this.isVectoredRead = isVectored;
       return this;
     }
 

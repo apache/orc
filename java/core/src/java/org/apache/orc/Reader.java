@@ -238,6 +238,7 @@ public interface Reader extends Closeable {
     private double minSeekSizeTolerance = (double) OrcConf.ORC_MIN_DISK_SEEK_SIZE_TOLERANCE
       .getDefaultValue();
     private int rowBatchSize = (int) OrcConf.ROW_BATCH_SIZE.getDefaultValue();
+    private boolean isVectoredRead = false;
 
     /**
      * @since 1.1.0
@@ -263,6 +264,7 @@ public interface Reader extends Closeable {
       minSeekSize = OrcConf.ORC_MIN_DISK_SEEK_SIZE.getInt(conf);
       minSeekSizeTolerance = OrcConf.ORC_MIN_DISK_SEEK_SIZE_TOLERANCE.getDouble(conf);
       rowBatchSize = OrcConf.ROW_BATCH_SIZE.getInt(conf);
+      isVectoredRead = OrcConf.ORC_VECTORED_READ.getBoolean(conf);
     }
 
     /**
@@ -569,6 +571,8 @@ public interface Reader extends Closeable {
     public boolean getIncludeAcidColumns() {
       return includeAcidColumns;
     }
+
+    public boolean getIsVectoredRead() { return isVectoredRead;}
 
     /**
      * @since 1.1.0

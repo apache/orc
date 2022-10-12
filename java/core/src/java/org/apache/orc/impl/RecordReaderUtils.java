@@ -19,6 +19,7 @@ package org.apache.orc.impl;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileRange;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.io.DiskRangeList;
@@ -27,6 +28,7 @@ import org.apache.orc.DataReader;
 import org.apache.orc.OrcProto;
 import org.apache.orc.StripeInformation;
 import org.apache.orc.TypeDescription;
+import org.apache.orc.impl.HadoopShims.ZeroCopyReaderShim;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +39,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.ExecutionException;
+import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
 /**
@@ -57,6 +61,7 @@ public class RecordReaderUtils {
     private final double minSeekSizeTolerance;
     private InStream.StreamOptions options;
     private boolean isOpen = false;
+    private boolean isVectoredRead;
 
     private DefaultDataReader(DataReaderProperties properties) {
       this.fileSystemSupplier = properties.getFileSystemSupplier();
@@ -66,6 +71,7 @@ public class RecordReaderUtils {
       this.options = properties.getCompression();
       this.minSeekSize = properties.getMinSeekSize();
       this.minSeekSizeTolerance = properties.getMinSeekSizeTolerance();
+      this.isVectoredRead = properties.getIsVectoredRead();
     }
 
     @Override
@@ -103,9 +109,19 @@ public class RecordReaderUtils {
     public BufferChunkList readFileData(BufferChunkList range,
                                         boolean doForceDirect
                                         ) throws IOException {
-      RecordReaderUtils.readDiskRanges(file, zcr, range, doForceDirect, minSeekSize,
+      readDiskRangesNormalorVectored(file, zcr, range, doForceDirect, minSeekSize,
                                        minSeekSizeTolerance);
       return range;
+    }
+
+    public void readDiskRangesNormalorVectored(FSDataInputStream file, ZeroCopyReaderShim zcr,
+        BufferChunkList range, boolean doForceDirect, int minSeekSize, double minSeekSizeTolerance
+         ) throws  IOException{
+      if(isVectoredRead) {
+        RecordReaderUtils.readDiskRangesVectored(file, range, doForceDirect);
+      }
+      RecordReaderUtils.readDiskRanges(file, zcr, range, doForceDirect, minSeekSize,
+          minSeekSizeTolerance);
     }
 
     @Override
@@ -486,6 +502,65 @@ public class RecordReaderUtils {
       currentEnd = Math.max(currentEnd, last.getEnd());
     }
     return last;
+  }
+
+  /**
+   * Convert from DiskRangeList to FileRange
+   * @param range
+   * @return list of fileRange
+   */
+  static List<FileRange> getFileRangeFrom(BufferChunkList range) {
+    List<FileRange> fRange = new ArrayList<>();
+    BufferChunk cr = range.get();
+    while (cr.next != null) {
+      long len = cr.getLength();
+      long off = cr.getOffset();
+      FileRange currentRange = FileRange.createFileRange(off, (int) len);
+      fRange.add(currentRange);
+      cr = (BufferChunk) cr.next;
+    }
+    return fRange;
+  }
+
+  /**
+   * Read the list of ranges from the file.
+   * @param range the disk ranges within the stripe to read
+   * @return the bytes read for each disk range, which is the same length as
+   *    ranges
+   * @throws IOException
+   */
+  static void readDiskRangesVectored(FSDataInputStream fileInputStream,
+      BufferChunkList range, boolean doForceDirect) throws IOException {
+    if (range == null)
+      return;
+    BufferChunkList rootRange = range;
+    //Convert DiskRange to FileRange here
+    List<FileRange> fRanges = getFileRangeFrom(range);
+
+    try {
+      IntFunction<ByteBuffer> allocate = doForceDirect ? ByteBuffer::allocateDirect : ByteBuffer::allocate;
+
+      fileInputStream.readVectored(fRanges, allocate);
+
+      int index = 0;
+      range = rootRange;
+      BufferChunk current = range.get();
+      while (current != null) {
+        if (current.hasData()) {
+          current = (BufferChunk) current.next;
+          index ++;
+        }
+        ByteBuffer data = fRanges.get(index).getData().get();
+        current.setChunk(data);
+        //replace the range data with the buffer chunk returned after reading
+        current = (BufferChunk) current.next;
+      }
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new IOException(e);
+    } catch (ExecutionException e) {
+      throw new IOException(e);
+    }
   }
 
   /**

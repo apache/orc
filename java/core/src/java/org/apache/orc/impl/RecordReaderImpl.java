@@ -283,7 +283,8 @@ public class RecordReaderImpl implements RecordReader {
               .withMaxDiskRangeChunkLimit(maxDiskRangeChunkLimit)
               .withZeroCopy(zeroCopy)
               .withMinSeekSize(options.minSeekSize())
-              .withMinSeekSizeTolerance(options.minSeekSizeTolerance());
+              .withMinSeekSizeTolerance(options.minSeekSizeTolerance())
+              .withVectoredRead(options.getIsVectoredRead());
       FSDataInputStream file = fileReader.takeFile();
       if (file != null) {
         builder.withFile(file);
