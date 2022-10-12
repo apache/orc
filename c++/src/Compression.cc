@@ -163,7 +163,9 @@ namespace orc {
         throw std::logic_error("Write to an out-of-bound place!");
       }
       int currentSize = std::min(outputSize - outputPosition, size - offset);
-      memcpy(outputBuffer + outputPosition, data + offset, currentSize);
+      memcpy(outputBuffer + outputPosition,
+             data + offset,
+             static_cast<size_t>(currentSize));
       offset += currentSize;
       outputPosition += currentSize;
     }
