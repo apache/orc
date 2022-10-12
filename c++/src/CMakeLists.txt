@@ -205,6 +205,7 @@ set(SOURCE_FILES
   sargs/TruthValue.cc
   wrap/orc-proto-wrapper.cc
   Adaptor.cc
+  BlockBuffer.cc
   BloomFilter.cc
   ByteRLE.cc
   ColumnPrinter.cc

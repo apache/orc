@@ -22,6 +22,7 @@ add_executable (orc-test
   MemoryInputStream.cc
   MemoryOutputStream.cc
   TestAttributes.cc
+  TestBlockBuffer.cc
   TestBufferedOutputStream.cc
   TestBloomFilter.cc
   TestByteRle.cc
