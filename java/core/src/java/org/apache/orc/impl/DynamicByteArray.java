@@ -20,7 +20,6 @@ package org.apache.orc.impl;
 import org.apache.hadoop.io.Text;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -123,29 +122,6 @@ public final class DynamicByteArray {
   }
 
   /**
-   * Read the entire stream into this array.
-   * @param in the stream to read from
-   * @throws IOException
-   */
-  public void readAll(InputStream in) throws IOException {
-    int currentChunk = length / chunkSize;
-    int currentOffset = length % chunkSize;
-    grow(currentChunk);
-    int currentLength = in.read(data[currentChunk], currentOffset,
-      chunkSize - currentOffset);
-    while (currentLength > 0) {
-      length += currentLength;
-      currentOffset = length % chunkSize;
-      if (currentOffset == 0) {
-        currentChunk = length / chunkSize;
-        grow(currentChunk);
-      }
-      currentLength = in.read(data[currentChunk], currentOffset,
-        chunkSize - currentOffset);
-    }
-  }
-
-  /**
    * Byte compare a set of bytes against the bytes in this dynamic array.
    * @param other source of the other bytes
    * @param otherOffset start offset in the other array
@@ -190,9 +166,7 @@ public final class DynamicByteArray {
    */
   public void clear() {
     length = 0;
-    for(int i=0; i < data.length; ++i) {
-      data[i] = null;
-    }
+    Arrays.fill(data, null);
     initializedChunks = 0;
   }
 
@@ -221,7 +195,7 @@ public final class DynamicByteArray {
    * @param out the stream to write to
    * @param offset the first offset to write
    * @param length the number of bytes to write
-   * @throws IOException
+   * @throws IOException if an I/O error occurs.
    */
   public void write(OutputStream out, int offset,
                     int length) throws IOException {
@@ -286,7 +260,6 @@ public final class DynamicByteArray {
         destOffset += currentLength;
         totalLength -= currentLength;
         currentChunk += 1;
-        currentOffset = 0;
         currentLength = Math.min(totalLength, chunkSize - currentOffset);
       }
     }
