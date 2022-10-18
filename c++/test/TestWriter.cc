@@ -2015,7 +2015,7 @@ namespace orc {
     uint64_t rows = 0;
     uint64_t batchSize = 10000;
     for (uint64_t i = 0; i < rowCount; ++i) {
-      longBatch.data[i] = i;
+      longBatch.data[i] = static_cast<int64_t>(i);
       ++rows;
       if (rows == batchSize) {
         structBatch.numElements = rows;
