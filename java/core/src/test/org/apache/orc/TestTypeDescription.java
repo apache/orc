@@ -517,4 +517,10 @@ public class TestTypeDescription {
 
     assertEquals(0, type.getAttributeNames().size());
   }
+
+  @Test
+  public void testHashCode() {
+    // Should not throw NPE
+    TypeDescription.fromString("int").hashCode();
+  }
 }
