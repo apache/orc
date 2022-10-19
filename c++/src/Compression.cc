@@ -62,6 +62,7 @@ namespace orc {
 
     virtual std::string getName() const override = 0;
     virtual uint64_t flush() override;
+    virtual void suppress() override;
 
     virtual bool isCompressed() const override { return true; }
     virtual uint64_t getSize() const override;
@@ -131,6 +132,12 @@ namespace orc {
     BufferedOutputStream::BackUp(outputSize - outputPosition);
     bufferSize = outputSize = outputPosition = 0;
     return BufferedOutputStream::flush();
+  }
+
+  void CompressionStreamBase::suppress() {
+    outputBuffer = nullptr;
+    bufferSize = outputPosition = outputSize = 0;
+    BufferedOutputStream::suppress();
   }
 
   uint64_t CompressionStreamBase::getSize() const {
@@ -956,6 +963,7 @@ DIAGNOSTIC_POP
     }
 
     virtual bool Next(void** data, int*size) override;
+    virtual void suppress() override;
     virtual std::string getName() const override = 0;
 
   protected:
@@ -1022,6 +1030,11 @@ DIAGNOSTIC_POP
     compressorBuffer.resize(estimateMaxCompressionSize());
 
     return true;
+  }
+
+  void BlockCompressionStream::suppress() {
+    compressorBuffer.resize(0);
+    CompressionStreamBase::suppress();
   }
 
   /**
