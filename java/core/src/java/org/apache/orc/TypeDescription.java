@@ -387,7 +387,9 @@ public class TypeDescription
     final int prime = 31;
     int result = 1;
     result = prime * result + category.hashCode();
-    result = prime * result + children.hashCode();
+    if (children != null) {
+      result = prime * result + children.hashCode();
+    }
     result = prime * result + maxLength;
     result = prime * result + precision;
     result = prime * result + scale;
