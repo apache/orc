@@ -1996,5 +1996,53 @@ namespace orc {
     }
   }
 
+  // Before the fix of ORC-1288, this case will trigger the bug about
+  // invalid memory freeing with zlib compression when writing a orc file
+  // that contains multiple stripes, and each stripe contains multiple columns
+  // with no null values.
+  void testSuppressPresentStream(orc::CompressionKind kind) {
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    MemoryPool* pool = getDefaultPool();
+    uint64_t rowCount = 5000000;
+    auto type = std::unique_ptr<Type>(
+      Type::buildTypeFromString("struct<c0:int>"));
+    WriterOptions options;
+    options.setStripeSize(1024)
+      .setCompressionBlockSize(1024)
+      .setCompression(kind)
+      .setMemoryPool(pool);
+
+    auto writer = createWriter(*type, &memStream, options);
+    auto batch = writer->createRowBatch(rowCount);
+    auto& structBatch = dynamic_cast<StructVectorBatch&>(*batch);
+    auto& longBatch = dynamic_cast<LongVectorBatch&>(*structBatch.fields[0]);
+    uint64_t rows = 0;
+    uint64_t batchSize = 10000;
+    for (uint64_t i = 0; i < rowCount; ++i) {
+      longBatch.data[i] = static_cast<int64_t>(i);
+      ++rows;
+      if (rows == batchSize) {
+        structBatch.numElements = rows;
+        longBatch.numElements = rows;
+        writer->add(*batch);
+        rows = 0;
+      }
+    }
+    if (rows != 0) {
+      structBatch.numElements = rows;
+      longBatch.numElements = rows;
+      writer->add(*batch);
+      rows = 0;
+    }
+    writer->close();
+  }
+
+  TEST(WriterTest, suppressPresentStreamWithCompressionKinds) {
+    testSuppressPresentStream(CompressionKind_ZLIB);
+    testSuppressPresentStream(CompressionKind_ZSTD);
+    testSuppressPresentStream(CompressionKind_LZ4);
+    testSuppressPresentStream(CompressionKind_SNAPPY);
+  }
+
   INSTANTIATE_TEST_CASE_P(OrcTest, WriterTest, Values(FileVersion::v_0_11(), FileVersion::v_0_12(), FileVersion::UNSTABLE_PRE_2_0()));
 }
