@@ -113,7 +113,9 @@ public final class DynamicIntArray {
 
   public void clear() {
     length = 0;
-    Arrays.fill(data, null);
+    for(int i=0; i < data.length; ++i) {
+      data[i] = null;
+    }
     initializedChunks = 0;
   }
 
