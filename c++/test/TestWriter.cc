@@ -1996,6 +1996,10 @@ namespace orc {
     }
   }
 
+  // Before the fix of ORC-1288, this case will trigger the bug about
+  // invalid memory freeing with zlib compression when writing a orc file
+  // that contains multiple stripes, and each stripe contains multiple columns
+  // with no null values.
   void testSuppressPresentStream(orc::CompressionKind kind) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
