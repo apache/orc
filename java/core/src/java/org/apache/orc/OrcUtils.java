@@ -44,7 +44,7 @@ public class OrcUtils {
    * Index 0 is the root element of the struct which is set to false by default, index 1,2
    * corresponds to columns a and b. Index 3,4 correspond to column c which is list&lt;string&gt; and
    * index 5 correspond to column d. After flattening list&lt;string&gt; gets 2 columns.
-   *
+   * <p>
    * Column names that aren't found are ignored.
    * @param selectedColumns - comma separated list of selected column names
    * @param schema       - object schema

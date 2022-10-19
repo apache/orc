@@ -52,7 +52,7 @@ import java.util.Set;
 /**
  * This class handles parsing the stripe information and handling the necessary
  * filtering and selection.
- *
+ * <p>
  * It supports:
  * <ul>
  *   <li>column projection</li>

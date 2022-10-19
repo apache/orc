@@ -29,7 +29,7 @@ import java.util.function.Consumer;
 
 /**
  * The interface for reading ORC files.
- *
+ * <p>
  * One Reader can support multiple concurrent RecordReader.
  * @since 1.1.0
  */

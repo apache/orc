@@ -42,7 +42,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Masking strategy that hides most string and numeric values based on unicode
  * character categories.
- *
+ * <p>
  * Masking Parameters:
  *   character replacements: string of 10 characters one per group below
  *     letter, upper case (default X)
@@ -55,7 +55,7 @@ import java.util.concurrent.TimeUnit;
  *     mark               (default ः)
  *     number, other      (default ²)
  *     other              (default ۝)
- *
+ * <p>
  *   time replacements: string of 6 numbers or _ one per field below
  *     year (0 to 4000, default no masking)
  *     month (1 to 12, default 1)
@@ -63,7 +63,7 @@ import java.util.concurrent.TimeUnit;
  *     hour (0 to 23, default 0)
  *     minute (0 to 59, default 0)
  *     second (0 to 59, default 0)
- *
+ * <p>
  * Parameters use "_" for preserve original.
  */
 public class RedactMaskFactory extends MaskFactory {

@@ -24,7 +24,7 @@ import java.util.ServiceLoader;
 
 /**
  * The API for masking data during column encryption for ORC.
- *
+ * <p>
  * They apply to an individual column (via ColumnVector) instead of a
  * VectorRowBatch.
  *

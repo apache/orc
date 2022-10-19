@@ -24,7 +24,7 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * The name of a stream within a stripe.
- *
+ * <p>
  * Sorted by area, encryption, column, and then kind.
  */
 public class StreamName implements Comparable<StreamName> {

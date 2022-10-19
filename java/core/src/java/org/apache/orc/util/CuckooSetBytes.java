@@ -25,12 +25,12 @@ import java.util.Random;
 /**
  * A high-performance set implementation used to support fast set membership testing,
  * using Cuckoo hashing. This is used to support fast tests of the form
- *
+ * <p>
  *       column IN ( list-of-values )
- *
+ * <p>
  * For details on the algorithm, see R. Pagh and F. F. Rodler, "Cuckoo Hashing,"
  * Elsevier Science preprint, Dec. 2003. http://www.itu.dk/people/pagh/papers/cuckoo-jour.pdf.
- *
+ * <p>
  * Copied from CuckooSetBytes@Apache Hive project for convenience
  */
 public class CuckooSetBytes {
