@@ -23,7 +23,7 @@ import java.security.Key;
 
 /**
  * Information about a column encryption variant.
- *
+ * <p>
  * Column encryption is done by encoding multiple variants of the same column.
  * Each encrypted column ends up in two variants:
  * <ul>

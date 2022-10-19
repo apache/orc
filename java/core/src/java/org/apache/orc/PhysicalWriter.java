@@ -28,7 +28,7 @@ import java.nio.ByteBuffer;
 /**
  * This interface separates the physical layout of ORC files from the higher
  * level details.
- *
+ * <p>
  * This API is limited to being used by LLAP.
  */
 public interface PhysicalWriter {

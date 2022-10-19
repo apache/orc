@@ -28,7 +28,7 @@ import java.io.IOException;
  * dynamic partitions, it is easy to end up with many writers in the same task.
  * By managing the size of each allocation, we try to cut down the size of each
  * allocation and keep the task from running out of memory.
- *
+ * <p>
  * This class is not thread safe, but is re-entrant - ensure creation and all
  * invocations are triggered from the same thread.
  */

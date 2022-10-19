@@ -31,7 +31,7 @@ import java.io.IOException;
 /**
  * This type provides a wrapper for OrcStruct so that it can be sent through
  * the MapReduce shuffle as a value.
- *
+ * <p>
  * The user should set the JobConf with orc.mapred.value.type with the type
  * string of the type.
  */

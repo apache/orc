@@ -27,7 +27,7 @@ import java.util.Random;
 
 /**
  * Shims for versions of Hadoop less than 2.6
- *
+ * <p>
  * Adds support for:
  * <ul>
  *   <li>Direct buffer decompression</li>

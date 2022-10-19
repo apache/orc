@@ -27,7 +27,7 @@ import java.nio.ByteBuffer;
 /**
  * Using HashTable to represent a dictionary. The strings are stored as UTF-8 bytes
  * and an offset for each entry. It is using chaining for collision resolution.
- *
+ * <p>
  * This implementation is not thread-safe.
  */
 public class StringHashTableDictionary implements Dictionary {
