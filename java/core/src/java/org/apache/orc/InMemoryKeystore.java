@@ -42,15 +42,15 @@ import java.util.TreeMap;
 
 /**
  * This is an in-memory implementation of {@link KeyProvider}.
- *
+ * <p>
  * The primary use of this class is for when the user doesn't have a
  * Hadoop KMS running and wishes to use encryption. It is also useful for
  * testing.
- *
+ * <p>
  * The local keys for this class are encrypted/decrypted using the cipher
  * in CBC/NoPadding mode and a constant IV. Since the key is random, the
  * constant IV is not a problem.
- *
+ * <p>
  * This class is not thread safe.
  */
 public class InMemoryKeystore implements KeyProvider {

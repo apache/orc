@@ -35,13 +35,13 @@ import java.io.IOException;
  * type of column. TreeWriters may have children TreeWriters that handle the
  * sub-types. Each of the TreeWriters writes the column's data as a set of
  * streams.
- *
+ * <p>
  * This class is unsynchronized like most Stream objects, so from the creation
  * of an OrcFile and all access to a single instance has to be from a single
  * thread.
- *
+ * <p>
  * There are no known cases where these happen between different threads today.
- *
+ * <p>
  * Caveat: the MemoryManager is created during WriterOptions create, that has
  * to be confined to a single thread as well.
  *

@@ -29,7 +29,7 @@ import java.util.Random;
 
 /**
  * Shims for versions of Hadoop less than 2.7.
- *
+ * <p>
  * Adds support for:
  * <ul>
  *   <li>Crypto</li>

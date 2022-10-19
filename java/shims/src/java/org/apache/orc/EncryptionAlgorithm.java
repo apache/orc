@@ -24,7 +24,7 @@ import java.security.NoSuchAlgorithmException;
 
 /**
  * The encryption algorithms supported by ORC.
- *
+ * <p>
  * This class can't reference any of the newer Hadoop classes.
  */
 public enum EncryptionAlgorithm {

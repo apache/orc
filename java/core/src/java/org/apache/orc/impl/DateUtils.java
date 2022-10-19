@@ -31,11 +31,11 @@ import java.util.concurrent.TimeUnit;
 /**
  * Conversion utilities from the hybrid Julian/Gregorian calendar to/from the
  * proleptic Gregorian.
- *
+ * <p>
  * The semantics here are to hold the string representation constant and change
  * the epoch offset rather than holding the instant in time constant and change
  * the string representation.
- *
+ * <p>
  * These utilities will be fast for the common case (&gt; 1582 AD), but slow
  * for old dates.
  */

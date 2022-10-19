@@ -23,7 +23,7 @@ import org.apache.orc.OrcFilterContext;
 /**
  * A filter that operates on the supplied
  * {@link org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch} and updates the selections.
- *
+ * <p>
  * This is the interface that is the basis of both the leaf filters such as Equals, In and logical
  * filters such as And, Or and Not
  */
