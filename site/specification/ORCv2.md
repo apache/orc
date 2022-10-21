@@ -812,8 +812,8 @@ serialized with direct encoding (1), a width of 16 bits (15), and
 length of 4 (3) as [0x5e, 0x03, 0x5c, 0xa1, 0xab, 0x1e, 0xde, 0xad,
 0xbe, 0xef].
 
-> Note: the run length(4) is one-off. We can get 4 by adding 1 to 3.\
-  See [Hive-4123](https://github.com/apache/hive/commit/69deabeaac020ba60b0f2156579f53e9fe46157a#diff-c00fea1863eaf0d6f047535e874274199020ffed3eb00deb897f513aa86f6b59R232-R236)
+> Note: the run length(4) is one-off. We can get 4 by adding 1 to 3
+(See [Hive-4123](https://github.com/apache/hive/commit/69deabeaac020ba60b0f2156579f53e9fe46157a#diff-c00fea1863eaf0d6f047535e874274199020ffed3eb00deb897f513aa86f6b59R232-R236))
 
 ![Direct](/img/Direct.png)
 
