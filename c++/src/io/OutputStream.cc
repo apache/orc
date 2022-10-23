@@ -92,14 +92,28 @@ namespace orc {
   uint64_t BufferedOutputStream::flush() {
     uint64_t dataSize = dataBuffer->size();
     // flush data buffer into outputStream
+    if (dataBuffer->getBlockNumber() > 0)
     {
+      uint64_t ioCount = 0;
       SCOPED_STOPWATCH(metrics, IOBlockingLatencyUs, nullptr);
-      for (uint64_t i = 0; i < dataBuffer->getBlockNumber(); ++i) {
-        auto block = dataBuffer->getBlock(i);
-        outputStream->write(block.data, block.size);
+      // try to merge adjacent IO requests
+      BlockBuffer::Block mergeBlock = dataBuffer->getBlock(0);
+      for (uint64_t i = 1; i < dataBuffer->getBlockNumber(); ++i) {
+        auto curBlock = dataBuffer->getBlock(i);
+        if (mergeBlock.data + mergeBlock.size == curBlock.data) {
+          mergeBlock.size += curBlock.size;
+        } else {
+          outputStream->write(mergeBlock.data, mergeBlock.size);
+          mergeBlock = curBlock;
+          ++ioCount;
+        }
       }
+      // flush the last merge block
+      outputStream->write(mergeBlock.data, mergeBlock.size);
+      ++ioCount;
+
       if (metrics != nullptr) {
-        metrics->IOCount.fetch_add(dataBuffer->getBlockNumber());
+        metrics->IOCount.fetch_add(ioCount);
       }
     }
     dataBuffer->resize(0);
