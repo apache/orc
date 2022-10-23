@@ -98,7 +98,7 @@ namespace orc {
     int outputSize;
 
     // Compression block header pointer array
-    static const int HEADER_SIZE = 3;
+    static const uint32_t HEADER_SIZE = 3;
     std::array<char*, HEADER_SIZE> header;
   };
 
@@ -174,7 +174,7 @@ namespace orc {
 
   void CompressionStreamBase::ensureHeader() {
     // adjust 3 bytes for the compression header
-    for (int i = 0; i < HEADER_SIZE; ++i) {
+    for (uint32_t i = 0; i < HEADER_SIZE; ++i) {
       if (outputPosition >= outputSize) {
         if (!BufferedOutputStream::Next(
           reinterpret_cast<void **>(&outputBuffer),
