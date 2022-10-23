@@ -24,6 +24,7 @@
 #include "lz4.h"
 
 #include <algorithm>
+#include <array>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -98,7 +99,7 @@ namespace orc {
 
     // Compression block header pointer array
     static const int HEADER_SIZE = 3;
-    char* header[HEADER_SIZE];
+    std::array<char*, HEADER_SIZE> header;
   };
 
   CompressionStreamBase::CompressionStreamBase(OutputStream * outStream,
@@ -119,9 +120,7 @@ namespace orc {
                                                 outputPosition(0),
                                                 outputSize(0) {
     // init header pointer array
-    for (int i = 0; i < HEADER_SIZE; ++i) {
-      header[i] = nullptr;
-    }
+    header.fill(nullptr);
   }
 
   void CompressionStreamBase::BackUp(int count) {
@@ -147,6 +146,7 @@ namespace orc {
            static_cast<uint64_t>(outputSize - outputPosition);
   }
 
+  // write the data content into outputBuffer
   void CompressionStreamBase::writeData(const unsigned char* data, int size) {
     int offset = 0;
     while (offset < size) {
@@ -159,8 +159,9 @@ namespace orc {
         }
         outputPosition = 0;
       } else  if (outputPosition > outputSize) {
-        // this will unlikely happen, but we have seen a few on zstd v1.1.0
-        throw std::logic_error("Write to an out-of-bound place!");
+        // for safety this will unlikely happen
+        throw std::logic_error(
+            "Write to an out-of-bound place during compression!");
       }
       int currentSize = std::min(outputSize - outputPosition, size - offset);
       memcpy(outputBuffer + outputPosition,

@@ -91,11 +91,16 @@ namespace orc {
 
   uint64_t BufferedOutputStream::flush() {
     uint64_t dataSize = dataBuffer->size();
-    for (uint64_t i = 0; i < dataBuffer->getBlockNumber(); ++i)
+    // flush data buffer into outputStream
     {
-      SCOPED_STOPWATCH(metrics, IOBlockingLatencyUs, IOCount);
-      auto block = dataBuffer->getBlock(i);
-      outputStream->write(block.data, block.size);
+      SCOPED_STOPWATCH(metrics, IOBlockingLatencyUs, nullptr);
+      for (uint64_t i = 0; i < dataBuffer->getBlockNumber(); ++i) {
+        auto block = dataBuffer->getBlock(i);
+        outputStream->write(block.data, block.size);
+      }
+      if (metrics != nullptr) {
+        metrics->IOCount.fetch_add(dataBuffer->getBlockNumber());
+      }
     }
     dataBuffer->resize(0);
     return dataSize;
