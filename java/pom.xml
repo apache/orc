@@ -383,6 +383,7 @@
           </executions>
           <configuration>
             <failOnWarning>true</failOnWarning>
+            <ignoreNonCompile>true</ignoreNonCompile>
           </configuration>
         </plugin>
         <plugin>
