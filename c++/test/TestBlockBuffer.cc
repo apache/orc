@@ -17,10 +17,12 @@
  */
 
 #include "BlockBuffer.hh"
+#include "MemoryOutputStream.hh"
 #include "orc/OrcFile.hh"
 #include "wrap/gtest-wrapper.h"
 
 namespace orc {
+  const int DEFAULT_MEM_STREAM_SIZE = 10 * 1024 * 1024; // 10M
 
   TEST(TestBlockBuffer, size_and_capacity) {
     MemoryPool* pool = getDefaultPool();
@@ -77,5 +79,43 @@ namespace orc {
         }
       }
     }
+  }
+
+  void writeToOutputStream(uint64_t blockSize) {
+    MemoryOutputStream outputStream(DEFAULT_MEM_STREAM_SIZE);
+    MemoryPool* pool = getDefaultPool();
+    BlockBuffer buffer(*pool, blockSize);
+    uint64_t totalBufferSize = 10240;
+    while (buffer.size() < totalBufferSize) {
+      BlockBuffer::Block block = buffer.getNextBlock();
+      uint64_t blockNumber = buffer.getBlockNumber();
+      for (uint64_t j = 0; j < block.size; ++j) {
+        if (blockNumber % 2 == 0) {
+          block.data[j] = static_cast<char>('A' + (blockNumber + j) % 26);
+        } else {
+          block.data[j] = static_cast<char>('a' + (blockNumber + j) % 26);
+        }
+      }
+    }
+    buffer.resize(totalBufferSize);
+    // flush data buffer into output stream
+    buffer.writeTo(&outputStream);
+    // verify data buffer
+    uint64_t dataIndex = 0;
+    for (uint64_t i = 0; i < buffer.getBlockNumber(); ++i) {
+      BlockBuffer::Block block = buffer.getBlock(i);
+      for (uint64_t j = 0; j < block.size; ++j) {
+        EXPECT_EQ(outputStream.getData()[dataIndex++], block.data[j]);
+      }
+    }
+  }
+
+  TEST(TestBlockBuffer, write_to) {
+    // test block size < natural write size
+    writeToOutputStream(1024);
+    // test block size = natural write size
+    writeToOutputStream(2048);
+    // test block size > natural write size
+    writeToOutputStream(4096);
   }
 }

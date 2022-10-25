@@ -25,6 +25,7 @@
 
 namespace orc {
 
+  class OutputStream;
   /**
    * BlockBuffer implements a memory allocation policy based on
    * equal-length blocks. BlockBuffer will reserve multiple blocks
@@ -108,6 +109,11 @@ namespace orc {
      * @param newCapacity new capacity of BlockBuffer
      */
     void reserve(uint64_t newCapacity);
+    /**
+     * Write the BlockBuffer content into OutputStream
+     * @param output the output stream to write to
+     */
+    uint64_t writeTo(OutputStream* output);
   };
 }  // namespace orc
 

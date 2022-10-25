@@ -17,6 +17,7 @@
  */
 
 #include "BlockBuffer.hh"
+#include "orc/OrcFile.hh"
 
 #include <algorithm>
 
@@ -81,5 +82,43 @@ namespace orc {
         break;
       }
     }
+  }
+
+  uint64_t BlockBuffer::writeTo(OutputStream* output) {
+    static uint64_t MAX_CHUNK_SIZE = 1024 * 1024 * 1024;
+    uint64_t chunkSize = std::min(output->getNaturalWriteSize(), MAX_CHUNK_SIZE);
+    if (chunkSize == 0) {
+      throw std::logic_error("Natural write size cannot be zero");
+    }
+    char* chunk = memoryPool.malloc(chunkSize);
+    uint64_t chunkOffset = 0;
+
+    uint64_t IOCount = 0;
+    uint64_t blockNumber = getBlockNumber();
+    for (uint64_t i = 0; i < blockNumber; ++i) {
+      Block block = getBlock(i);
+      uint64_t blockOffset = 0;
+      while (blockOffset < block.size) {
+        // copy current block into chunk
+        uint64_t copySize =
+          std::min(chunkSize - chunkOffset, block.size - blockOffset);
+        memcpy(chunk + chunkOffset, block.data + blockOffset, copySize);
+        chunkOffset += copySize;
+        blockOffset += copySize;
+
+        // chunk is full
+        if (chunkOffset >= chunkSize) {
+          output->write(chunk, chunkSize);
+          chunkOffset = 0;
+          ++IOCount;
+        }
+      }
+    }
+    if (chunkOffset != 0) {
+      output->write(chunk, chunkOffset);
+      ++IOCount;
+    }
+    memoryPool.free(chunk);
+    return IOCount;
   }
 } // namespace orc
