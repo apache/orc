@@ -112,6 +112,7 @@ namespace orc {
     /**
      * Write the BlockBuffer content into OutputStream
      * @param output the output stream to write to
+     * @return the number of IO requests written to the OutputStream
      */
     uint64_t writeTo(OutputStream* output);
   };
