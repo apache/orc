@@ -31,6 +31,7 @@ namespace orc {
     MemoryOutputStream(ssize_t capacity) : name("MemoryOutputStream") {
       data = new char[capacity];
       length = 0;
+      naturalWriteSize = 2048;
     }
 
     virtual ~MemoryOutputStream() override;

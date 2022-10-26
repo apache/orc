@@ -17,6 +17,8 @@
  */
 
 #include "BlockBuffer.hh"
+#include "orc/Writer.hh"
+#include "orc/OrcFile.hh"
 
 #include <algorithm>
 
@@ -80,6 +82,57 @@ namespace orc {
       } else {
         break;
       }
+    }
+  }
+
+  void BlockBuffer::writeTo(OutputStream* output,
+                            WriterMetrics* metrics) {
+    if (currentSize == 0) {
+      return;
+    }
+    static uint64_t MAX_CHUNK_SIZE = 1024 * 1024 * 1024;
+    uint64_t chunkSize = std::min(output->getNaturalWriteSize(), MAX_CHUNK_SIZE);
+    if (chunkSize == 0) {
+      throw std::logic_error("Natural write size cannot be zero");
+    }
+    uint64_t ioCount = 0;
+    uint64_t blockNumber = getBlockNumber();
+    // if only exists one block, currentSize is equal to first block size
+    if (blockNumber == 1 && currentSize <= chunkSize) {
+      Block block = getBlock(0);
+      output->write(block.data, block.size);
+      ++ioCount;
+    } else {
+      char* chunk = memoryPool.malloc(chunkSize);
+      uint64_t chunkOffset = 0;
+      for (uint64_t i = 0; i < blockNumber; ++i) {
+        Block block = getBlock(i);
+        uint64_t blockOffset = 0;
+        while (blockOffset < block.size) {
+          // copy current block into chunk
+          uint64_t copySize =
+            std::min(chunkSize - chunkOffset, block.size - blockOffset);
+          memcpy(chunk + chunkOffset, block.data + blockOffset, copySize);
+          chunkOffset += copySize;
+          blockOffset += copySize;
+
+          // chunk is full
+          if (chunkOffset >= chunkSize) {
+            output->write(chunk, chunkSize);
+            chunkOffset = 0;
+            ++ioCount;
+          }
+        }
+      }
+      if (chunkOffset != 0) {
+        output->write(chunk, chunkOffset);
+        ++ioCount;
+      }
+      memoryPool.free(chunk);
+    }
+
+    if (metrics != nullptr) {
+      metrics->IOCount.fetch_add(ioCount);
     }
   }
 } // namespace orc

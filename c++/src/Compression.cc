@@ -24,6 +24,7 @@
 #include "lz4.h"
 
 #include <algorithm>
+#include <array>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -68,10 +69,12 @@ namespace orc {
     virtual uint64_t getSize() const override;
 
   protected:
-    void writeHeader(char * buffer, size_t compressedSize, bool original) {
-      buffer[0] = static_cast<char>((compressedSize << 1) + (original ? 1 : 0));
-      buffer[1] = static_cast<char>(compressedSize >> 7);
-      buffer[2] = static_cast<char>(compressedSize >> 15);
+    void writeData(const unsigned char* data, int size);
+
+    void writeHeader(size_t compressedSize, bool original) {
+      *header[0] = static_cast<char>((compressedSize << 1) + (original ? 1 : 0));
+      *header[1] = static_cast<char>(compressedSize >> 7);
+      *header[2] = static_cast<char>(compressedSize >> 15);
     }
 
     // ensure enough room for compression block header
@@ -94,6 +97,10 @@ namespace orc {
 
     // Compress output buffer size
     int outputSize;
+
+    // Compression block header pointer array
+    static const uint32_t HEADER_SIZE = 3;
+    std::array<char*, HEADER_SIZE> header;
   };
 
   CompressionStreamBase::CompressionStreamBase(OutputStream * outStream,
@@ -113,7 +120,8 @@ namespace orc {
                                                 bufferSize(0),
                                                 outputPosition(0),
                                                 outputSize(0) {
-    // PASS
+    // init header pointer array
+    header.fill(nullptr);
   }
 
   void CompressionStreamBase::BackUp(int count) {
@@ -145,19 +153,46 @@ namespace orc {
            static_cast<uint64_t>(outputSize - outputPosition);
   }
 
+  // write the data content into outputBuffer
+  void CompressionStreamBase::writeData(const unsigned char* data, int size) {
+    int offset = 0;
+    while (offset < size) {
+      if (outputPosition == outputSize) {
+        if (!BufferedOutputStream::Next(
+          reinterpret_cast<void **>(&outputBuffer),
+          &outputSize)) {
+            throw std::runtime_error(
+                "Failed to get next output buffer from output stream.");
+        }
+        outputPosition = 0;
+      } else  if (outputPosition > outputSize) {
+        // for safety this will unlikely happen
+        throw std::logic_error(
+            "Write to an out-of-bound place during compression!");
+      }
+      int currentSize = std::min(outputSize - outputPosition, size - offset);
+      memcpy(outputBuffer + outputPosition,
+             data + offset,
+             static_cast<size_t>(currentSize));
+      offset += currentSize;
+      outputPosition += currentSize;
+    }
+  }
+
   void CompressionStreamBase::ensureHeader() {
     // adjust 3 bytes for the compression header
-    if (outputPosition + 3 >= outputSize) {
-      int newPosition = outputPosition + 3 - outputSize;
-      if (!BufferedOutputStream::Next(
-        reinterpret_cast<void **>(&outputBuffer),
-        &outputSize)) {
+    for (uint32_t i = 0; i < HEADER_SIZE; ++i) {
+      if (outputPosition >= outputSize) {
+        if (!BufferedOutputStream::Next(
+          reinterpret_cast<void **>(&outputBuffer),
+          &outputSize)) {
         throw std::runtime_error(
           "Failed to get next output buffer from output stream.");
+        }
+        outputPosition = 0;
       }
-      outputPosition = newPosition;
-    } else {
-      outputPosition += 3;
+      header[i] = outputBuffer + outputPosition;
+      ++outputPosition;
     }
   }
 
@@ -200,22 +235,20 @@ namespace orc {
     if (bufferSize != 0) {
       ensureHeader();
 
+      uint64_t preSize = getSize();
       uint64_t totalCompressedSize = doStreamingCompression();
-
-      char * header = outputBuffer + outputPosition - totalCompressedSize - 3;
       if (totalCompressedSize >= static_cast<unsigned long>(bufferSize)) {
-        writeHeader(header, static_cast<size_t>(bufferSize), true);
-        memcpy(
-          header + 3,
-          rawInputBuffer.data(),
-          static_cast<size_t>(bufferSize));
+        writeHeader(static_cast<size_t>(bufferSize), true);
+        // reset output buffer
+        outputBuffer = nullptr;
+        outputPosition = outputSize = 0;
+        uint64_t backup = getSize() - preSize;
+        BufferedOutputStream::BackUp(static_cast<int>(backup));
 
-        int backup = static_cast<int>(totalCompressedSize) - bufferSize;
-        BufferedOutputStream::BackUp(backup);
-        outputPosition -= backup;
-        outputSize -= backup;
+        // copy raw input buffer into block buffer
+        writeData(rawInputBuffer.data(), bufferSize);
       } else {
-        writeHeader(header, totalCompressedSize, false);
+        writeHeader(totalCompressedSize, false);
       }
     }
 
@@ -987,41 +1020,18 @@ DIAGNOSTIC_POP
 
       const unsigned char * dataToWrite = nullptr;
       int totalSizeToWrite = 0;
-      char * header = outputBuffer + outputPosition - 3;
 
       if (totalCompressedSize >= static_cast<size_t>(bufferSize)) {
-        writeHeader(header, static_cast<size_t>(bufferSize), true);
+        writeHeader(static_cast<size_t>(bufferSize), true);
         dataToWrite = rawInputBuffer.data();
         totalSizeToWrite = bufferSize;
       } else {
-        writeHeader(header, totalCompressedSize, false);
+        writeHeader(totalCompressedSize, false);
         dataToWrite = compressorBuffer.data();
         totalSizeToWrite = static_cast<int>(totalCompressedSize);
       }
 
-      char * dst = header + 3;
-      while (totalSizeToWrite > 0) {
-        if (outputPosition == outputSize) {
-          if (!BufferedOutputStream::Next(reinterpret_cast<void **>(&outputBuffer),
-                                          &outputSize)) {
-            throw std::logic_error(
-              "Failed to get next output buffer from output stream.");
-          }
-          outputPosition = 0;
-          dst = outputBuffer;
-        } else if (outputPosition > outputSize) {
-          // this will unlikely happen, but we have seen a few on zstd v1.1.0
-          throw std::logic_error("Write to an out-of-bound place!");
-        }
-
-        int sizeToWrite = std::min(totalSizeToWrite, outputSize - outputPosition);
-        std::memcpy(dst, dataToWrite, static_cast<size_t>(sizeToWrite));
-
-        outputPosition += sizeToWrite;
-        dataToWrite += sizeToWrite;
-        totalSizeToWrite -= sizeToWrite;
-        dst += sizeToWrite;
-      }
+      writeData(dataToWrite, totalSizeToWrite);
     }
 
     *data = rawInputBuffer.data();
