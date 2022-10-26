@@ -14,9 +14,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+set -e
 mkdir -p data/sources/taxi
-(cd data/sources/taxi; wget https://s3.amazonaws.com/nyc-tlc/trip+data/yellow_tripdata_2015-11.parquet )
-(cd data/sources/taxi; wget https://s3.amazonaws.com/nyc-tlc/trip+data/yellow_tripdata_2015-12.parquet )
+(cd data/sources/taxi; wget https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2015-11.parquet )
+(cd data/sources/taxi; wget https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2015-12.parquet )
 
 mkdir -p data/sources/github
 (cd data/sources/github; wget http://data.gharchive.org/2015-11-{01..15}-{0..23}.json.gz)
