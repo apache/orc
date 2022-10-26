@@ -99,7 +99,7 @@ namespace orc {
     }
     buffer.resize(totalBufferSize);
     // flush data buffer into output stream
-    buffer.writeTo(&outputStream);
+    buffer.writeTo(&outputStream, nullptr);
     // verify data buffer
     uint64_t dataIndex = 0;
     for (uint64_t i = 0; i < buffer.getBlockNumber(); ++i) {

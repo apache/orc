@@ -26,6 +26,7 @@
 namespace orc {
 
   class OutputStream;
+  struct WriterMetrics;
   /**
    * BlockBuffer implements a memory allocation policy based on
    * equal-length blocks. BlockBuffer will reserve multiple blocks
@@ -114,9 +115,10 @@ namespace orc {
     /**
      * Write the BlockBuffer content into OutputStream
      * @param output the output stream to write to
-     * @return the number of IO requests written to the OutputStream
+     * @param metrics the metrics of the writer
      */
-    uint64_t writeTo(OutputStream* output);
+    void writeTo(OutputStream* output,
+                 WriterMetrics* metrics);
   };
 }  // namespace orc
 

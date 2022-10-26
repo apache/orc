@@ -95,10 +95,7 @@ namespace orc {
     if (dataSize > 0)
     {
       SCOPED_STOPWATCH(metrics, IOBlockingLatencyUs, nullptr);
-      uint64_t IOCount = dataBuffer->writeTo(outputStream);
-      if (metrics != nullptr) {
-        metrics->IOCount.fetch_add(IOCount);
-      }
+      dataBuffer->writeTo(outputStream, metrics);
     }
     dataBuffer->resize(0);
     return dataSize;
