@@ -80,11 +80,13 @@ jobs:
       uses: actions/checkout@v2
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v1.1
+      with:
+        msbuild-architecture: x64
     - name: "Test"
       run: |
         mkdir build
         cd build
-        cmake .. -G "Visual Studio 16 2019" -A Win64 -DCMAKE_BUILD_TYPE=Debug -DBUILD_LIBHDFSPP=OFF -DBUILD_TOOLS=OFF -DBUILD_JAVA=OFF
+        cmake .. -G "Visual Studio 16 2019" -DCMAKE_BUILD_TYPE=Debug -DBUILD_LIBHDFSPP=OFF -DBUILD_TOOLS=OFF -DBUILD_JAVA=OFF
         cmake --build . --config Debug
         ctest -C Debug --output-on-failure
 
