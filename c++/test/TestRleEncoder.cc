@@ -308,5 +308,5 @@ namespace orc {
     runExampleTest(data, 9, expectedEncoded, 13);
   }
 
-  INSTANTIATE_TEST_CASE_P(OrcTest, RleTest, Values(true, false));
+  INSTANTIATE_TEST_SUITE_P(OrcTest, RleTest, Values(true, false));
 }

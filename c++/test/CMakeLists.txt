@@ -58,6 +58,7 @@ target_link_libraries (orc-test
   orc::protobuf
   orc::snappy
   orc::zlib
+  orc::gtest
   orc::gmock
 )
 
