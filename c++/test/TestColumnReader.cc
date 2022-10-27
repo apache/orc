@@ -4724,6 +4724,6 @@ TEST(TestColumnReader, testStringDictinoryIndexOverflow) {
   }
 }
 
-INSTANTIATE_TEST_CASE_P(OrcColumnReaderTest, TestColumnReaderEncoded, Values(true, false));
+INSTANTIATE_TEST_SUITE_P(OrcColumnReaderTest, TestColumnReaderEncoded, Values(true, false));
 
 }  // namespace orc

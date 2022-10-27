@@ -161,7 +161,7 @@ namespace orc {
 
   std::map<std::string, std::string> makeMetadata();
 
-  INSTANTIATE_TEST_CASE_P(TestMatchParam, FileParam,
+  INSTANTIATE_TEST_SUITE_P(TestMatchParam, FileParam,
     testing::Values(
                     OrcFileDescription("TestOrcFile.columnProjection.orc",
                                        "TestOrcFile.columnProjection.jsn.gz",
@@ -550,7 +550,7 @@ namespace orc {
                     ));
 
 #ifdef HAS_PRE_1970
-INSTANTIATE_TEST_CASE_P(TestMatch1900, FileParam,
+INSTANTIATE_TEST_SUITE_P(TestMatch1900, FileParam,
     testing::Values(
                     OrcFileDescription("TestOrcFile.testDate1900.orc",
                                        "TestOrcFile.testDate1900.jsn.gz",
@@ -568,7 +568,7 @@ INSTANTIATE_TEST_CASE_P(TestMatch1900, FileParam,
 #endif
 
 #ifdef HAS_POST_2038
-  INSTANTIATE_TEST_CASE_P(TestMatch2038, FileParam,
+  INSTANTIATE_TEST_SUITE_P(TestMatch2038, FileParam,
     testing::Values(
                     OrcFileDescription("TestOrcFile.testDate2038.orc",
                                        "TestOrcFile.testDate2038.jsn.gz",
