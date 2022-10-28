@@ -84,7 +84,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake .. -G "Visual Studio 16 2019 Win64" -DCMAKE_BUILD_TYPE=Debug -DBUILD_LIBHDFSPP=OFF -DBUILD_TOOLS=OFF -DBUILD_JAVA=OFF
+        cmake .. -G "Visual Studio 14 2015 Win64" -DCMAKE_BUILD_TYPE=Debug -DBUILD_LIBHDFSPP=OFF -DBUILD_TOOLS=OFF -DBUILD_JAVA=OFF
         cmake --build . --config Debug
         ctest -C Debug --output-on-failure
 
