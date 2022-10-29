@@ -28,7 +28,7 @@ namespace orc {
 
   class MemoryOutputStream : public OutputStream {
   public:
-    MemoryOutputStream(ssize_t capacity) : name("MemoryOutputStream") {
+    MemoryOutputStream(size_t capacity) : name("MemoryOutputStream") {
       data = new char[capacity];
       length = 0;
       naturalWriteSize = 2048;
