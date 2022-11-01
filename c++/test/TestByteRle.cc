@@ -823,7 +823,7 @@ TEST(ByteRle, testSeek) {
   } while (i != 0);
 }
 
-TEST(ByteRle, seekInEmptyPresentStream) {
+TEST(ByteRle, seekOverEmptyPresentStream) {
   const char* buffer = nullptr;
   std::unique_ptr<ByteRleDecoder> rle =
       createByteRleDecoder(

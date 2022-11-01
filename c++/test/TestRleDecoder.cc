@@ -3004,7 +3004,7 @@ TEST(RLEv1, testLeadingNulls) {
   }
 }
 
-TEST(RLEv1, seekInEmptyPresentStream) {
+TEST(RLEv1, seekOverEmptyPresentStream) {
   const char* buffer = nullptr;
   std::unique_ptr<RleDecoder> rle =
       createRleDecoder(std::unique_ptr<SeekableInputStream>
