@@ -18,7 +18,7 @@ include_directories(
   ${PROJECT_BINARY_DIR}/c++/src
 )
 
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX11_FLAGS} ${WARN_FLAGS}")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX17_FLAGS} ${WARN_FLAGS}")
 
 add_executable (tool-test
   gzip.cc
@@ -36,6 +36,7 @@ target_link_libraries (tool-test
   orc::protobuf
   orc::zlib
   orc::snappy
+  orc::gtest
   orc::gmock
 )
 
