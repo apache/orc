@@ -2651,6 +2651,17 @@ TEST(RLEv1, testLeadingNulls) {
   for (size_t i = 5; i < 10; ++i) {
     EXPECT_EQ(i - 4, data[i]) << "Output wrong at " << i;
   }
-};
+}
+
+TEST(RLEv1, seekOverEmptyPresentStream) {
+  const char* buffer = nullptr;
+  std::unique_ptr<RleDecoder> rle =
+      createRleDecoder(std::unique_ptr<SeekableInputStream>
+		       (new SeekableArrayInputStream(buffer, 0, 1)),
+		       false, RleVersion_1, *getDefaultPool());
+  std::list<uint64_t> position(2, 0);
+  PositionProvider location(position);
+  rle->seek(location);
+}
 
 }  // namespace orc
