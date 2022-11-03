@@ -83,14 +83,14 @@ public class FilterBench implements OrcBenchmark {
 
   public static CommandLine parseCommandLine(String[] args, boolean needsArgs) {
     org.apache.commons.cli.Options options = new org.apache.commons.cli.Options()
-      .addOption("h", HELP, false, "Provide help")
-      .addOption("i", ITERATIONS, true, "Number of iterations")
-      .addOption("I", WARMUP_ITERATIONS, true, "Number of warmup iterations")
-      .addOption("f", FORK, true, "How many forks to use")
-      .addOption("t", TIME, true, "How long each iteration is in seconds")
-      .addOption("m", MIN_MEMORY, true, "The minimum size of each JVM")
-      .addOption("M", MAX_MEMORY, true, "The maximum size of each JVM")
-      .addOption("g", GC, false, "Should GC be profiled");
+        .addOption("h", HELP, false, "Provide help")
+        .addOption("i", ITERATIONS, true, "Number of iterations")
+        .addOption("I", WARMUP_ITERATIONS, true, "Number of warmup iterations")
+        .addOption("f", FORK, true, "How many forks to use")
+        .addOption("t", TIME, true, "How long each iteration is in seconds")
+        .addOption("m", MIN_MEMORY, true, "The minimum size of each JVM")
+        .addOption("M", MAX_MEMORY, true, "The maximum size of each JVM")
+        .addOption("g", GC, false, "Should GC be profiled");
     CommandLine result;
     try {
       result = new DefaultParser().parse(options, args, true);
@@ -118,15 +118,15 @@ public class FilterBench implements OrcBenchmark {
     }
     if (options.hasOption(WARMUP_ITERATIONS)) {
       builder.warmupIterations(Integer.parseInt(options.getOptionValue(
-        WARMUP_ITERATIONS)));
+          WARMUP_ITERATIONS)));
     }
     if (options.hasOption(FORK)) {
       builder.forks(Integer.parseInt(options.getOptionValue(
-        FORK)));
+          FORK)));
     }
     if (options.hasOption(TIME)) {
       TimeValue iterationTime = TimeValue.seconds(Long.parseLong(
-        options.getOptionValue(TIME)));
+          options.getOptionValue(TIME)));
       builder.measurementTime(iterationTime);
       builder.warmupTime(iterationTime);
     }
@@ -168,9 +168,9 @@ public class FilterBench implements OrcBenchmark {
                                        normalize);
       case "vector":
         Reader.Options options = new Reader.Options(conf)
-          .searchArgument(sArg, new String[0])
-          .allowSARGToFilter(true)
-          .useSelected(true);
+            .searchArgument(sArg, new String[0])
+            .allowSARGToFilter(true)
+            .useSelected(true);
         return FilterFactory.createBatchFilter(options,
                                                FilterBenchUtil.schema,
                                                false,

@@ -118,8 +118,8 @@ public class ColumnProjectionBenchmark implements OrcBenchmark {
       conf.set("columns", "vendor_id,pickup_time");
       conf.set("columns.types", "int,timestamp");
     } else if ("sales".equals(dataset)) {
-        conf.set("columns", "sales_id,customer_id");
-        conf.set("columns.types", "bigint,bigint");
+      conf.set("columns", "sales_id,customer_id");
+      conf.set("columns.types", "bigint,bigint");
     } else if ("github".equals(dataset)) {
       conf.set("columns", "actor,created_at");
       conf.set("columns.types", "struct<avatar_url:string,gravatar_id:string," +

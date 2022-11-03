@@ -35,8 +35,8 @@ import java.util.Set;
 
 class FilterBenchUtil {
   static final TypeDescription schema = TypeDescription.createStruct()
-    .addField("f1", TypeDescription.createLong())
-    .addField("f2", TypeDescription.createLong());
+      .addField("f1", TypeDescription.createLong())
+      .addField("f2", TypeDescription.createLong());
 
   static VectorizedRowBatch createBatch(Random rnd) {
     VectorizedRowBatch b = schema.createRowBatch(1024);
@@ -71,11 +71,11 @@ class FilterBenchUtil {
     }
 
     SearchArgument sArg = SearchArgumentFactory.newBuilder()
-      .startOr()
-      .in("f1", PredicateLeaf.Type.LONG, f1Values)
-      .in("f2", PredicateLeaf.Type.LONG, f2Values)
-      .end()
-      .build();
+        .startOr()
+        .in("f1", PredicateLeaf.Type.LONG, f1Values)
+        .in("f2", PredicateLeaf.Type.LONG, f2Values)
+        .end()
+        .build();
     int[] s = sel.stream()
       .mapToInt(Integer::intValue)
       .toArray();
@@ -108,8 +108,8 @@ class FilterBenchUtil {
         sel.add(selIdx);
       }
       builder
-        .in("f1", PredicateLeaf.Type.LONG, f1Values)
-        .in("f2", PredicateLeaf.Type.LONG, f2Values);
+          .in("f1", PredicateLeaf.Type.LONG, f1Values)
+          .in("f2", PredicateLeaf.Type.LONG, f2Values);
       builder.end();
     }
     builder.end();
