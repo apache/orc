@@ -372,33 +372,33 @@ public class CuckooSetBytes {
 
     //-------------------------------- last block: affect all 32 bits of (c)
     switch (length) {                   // all the case statements fall through
-    case 12:
-      c = (c + (((key[offset + 11] & BYTE_MASK) << 24) & INT_MASK)) & INT_MASK;
-    case 11:
-      c = (c + (((key[offset + 10] & BYTE_MASK) << 16) & INT_MASK)) & INT_MASK;
-    case 10:
-      c = (c + (((key[offset + 9]  & BYTE_MASK) <<  8) & INT_MASK)) & INT_MASK;
-    case  9:
-      c = (c + (key[offset + 8]    & BYTE_MASK)) & INT_MASK;
-    case  8:
-      b = (b + (((key[offset + 7]  & BYTE_MASK) << 24) & INT_MASK)) & INT_MASK;
-    case  7:
-      b = (b + (((key[offset + 6]  & BYTE_MASK) << 16) & INT_MASK)) & INT_MASK;
-    case  6:
-      b = (b + (((key[offset + 5]  & BYTE_MASK) <<  8) & INT_MASK)) & INT_MASK;
-    case  5:
-      b = (b + (key[offset + 4]    & BYTE_MASK)) & INT_MASK;
-    case  4:
-      a = (a + (((key[offset + 3]  & BYTE_MASK) << 24) & INT_MASK)) & INT_MASK;
-    case  3:
-      a = (a + (((key[offset + 2]  & BYTE_MASK) << 16) & INT_MASK)) & INT_MASK;
-    case  2:
-      a = (a + (((key[offset + 1]  & BYTE_MASK) <<  8) & INT_MASK)) & INT_MASK;
-    case  1:
-      a = (a + (key[offset] & BYTE_MASK)) & INT_MASK;
-      break;
-    case  0:
-      return (int)(c & INT_MASK);
+      case 12:
+        c = (c + (((key[offset + 11] & BYTE_MASK) << 24) & INT_MASK)) & INT_MASK;
+      case 11:
+        c = (c + (((key[offset + 10] & BYTE_MASK) << 16) & INT_MASK)) & INT_MASK;
+      case 10:
+        c = (c + (((key[offset + 9]  & BYTE_MASK) <<  8) & INT_MASK)) & INT_MASK;
+      case  9:
+        c = (c + (key[offset + 8]    & BYTE_MASK)) & INT_MASK;
+      case  8:
+        b = (b + (((key[offset + 7]  & BYTE_MASK) << 24) & INT_MASK)) & INT_MASK;
+      case  7:
+        b = (b + (((key[offset + 6]  & BYTE_MASK) << 16) & INT_MASK)) & INT_MASK;
+      case  6:
+        b = (b + (((key[offset + 5]  & BYTE_MASK) <<  8) & INT_MASK)) & INT_MASK;
+      case  5:
+        b = (b + (key[offset + 4]    & BYTE_MASK)) & INT_MASK;
+      case  4:
+        a = (a + (((key[offset + 3]  & BYTE_MASK) << 24) & INT_MASK)) & INT_MASK;
+      case  3:
+        a = (a + (((key[offset + 2]  & BYTE_MASK) << 16) & INT_MASK)) & INT_MASK;
+      case  2:
+        a = (a + (((key[offset + 1]  & BYTE_MASK) <<  8) & INT_MASK)) & INT_MASK;
+      case  1:
+        a = (a + (key[offset] & BYTE_MASK)) & INT_MASK;
+        break;
+      case  0:
+        return (int)(c & INT_MASK);
     }
     /*
      * final -- final mixing of 3 32-bit values (a,b,c) into c

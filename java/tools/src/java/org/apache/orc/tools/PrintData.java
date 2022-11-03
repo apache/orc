@@ -207,7 +207,7 @@ public class PrintData {
       Integer counter = 0;
       while (rows.nextBatch(batch)) {
         if (numberOfRows.isPresent() && counter >= numberOfRows.get()){
-            break;
+          break;
         }
         for (int r=0; r < batch.size; ++r) {
           JsonWriter writer = new JsonWriter(out);

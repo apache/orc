@@ -29,7 +29,7 @@ public class RunLengthIntegerReader implements IntegerReader {
   private InStream input;
   private final boolean signed;
   private final long[] literals =
-    new long[RunLengthIntegerWriter.MAX_LITERAL_SIZE];
+      new long[RunLengthIntegerWriter.MAX_LITERAL_SIZE];
   private int numLiterals = 0;
   private int delta = 0;
   private int used = 0;

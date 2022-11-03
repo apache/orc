@@ -134,7 +134,7 @@ public final class IOUtils {
       final byte[] byteArray = getByteArray();
       final long n = input.read(byteArray, 0, (int) Math.min(remain, byteArray.length));
       if (n < 0) { // EOF
-          break;
+        break;
       }
       remain -= n;
     }

@@ -67,12 +67,9 @@ public class OrcInputFormat<V extends WritableComparable>
         OrcFile.readerOptions(conf)
             .maxLength(OrcConf.MAX_FILE_LENGTH.getLong(conf)));
     //Mapreduce supports selected vector
-    Reader.Options options =
-      org.apache.orc.mapred.OrcInputFormat.buildOptions(conf,
-                                                        file,
-                                                        split.getStart(),
-                                                        split.getLength())
-      .useSelected(true);
+    Reader.Options options = org.apache.orc.mapred.OrcInputFormat.buildOptions(
+        conf, file, split.getStart(), split.getLength())
+        .useSelected(true);
     return new OrcMapreduceRecordReader<>(file, options);
   }
 

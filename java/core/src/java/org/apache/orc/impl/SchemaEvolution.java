@@ -63,9 +63,9 @@ public class SchemaEvolution {
   private final boolean positionalColumns;
 
   private static final Logger LOG =
-    LoggerFactory.getLogger(SchemaEvolution.class);
+      LoggerFactory.getLogger(SchemaEvolution.class);
   private static final Pattern missingMetadataPattern =
-    Pattern.compile("_col\\d+");
+      Pattern.compile("_col\\d+");
 
 
   public static class IllegalEvolutionException extends RuntimeException {
@@ -105,7 +105,7 @@ public class SchemaEvolution {
           + readerIncluded.length);
     }
     this.readerFileTypes =
-      new TypeDescription[this.readerSchema.getMaximumId() + 1];
+        new TypeDescription[this.readerSchema.getMaximumId() + 1];
     int positionalLevels = 0;
     if (options.getForcePositionalEvolution()) {
       positionalLevels = isAcid ? 2 : options.getPositionalEvolutionLevel();
@@ -255,31 +255,31 @@ public class SchemaEvolution {
   private boolean typesAreImplicitConversion(final TypeDescription fileType,
       final TypeDescription readerType) {
     switch (fileType.getCategory()) {
-    case BYTE:
+      case BYTE:
         if (readerType.getCategory().equals(TypeDescription.Category.SHORT) ||
             readerType.getCategory().equals(TypeDescription.Category.INT) ||
             readerType.getCategory().equals(TypeDescription.Category.LONG)) {
           return true;
         }
         break;
-    case SHORT:
+      case SHORT:
         if (readerType.getCategory().equals(TypeDescription.Category.INT) ||
             readerType.getCategory().equals(TypeDescription.Category.LONG)) {
           return true;
         }
         break;
-    case INT:
+      case INT:
         if (readerType.getCategory().equals(TypeDescription.Category.LONG)) {
           return true;
         }
         break;
-    case FLOAT:
+      case FLOAT:
         if (readerType.getCategory().equals(TypeDescription.Category.DOUBLE)) {
           return true;
         }
         break;
-    case CHAR:
-    case VARCHAR:
+      case CHAR:
+      case VARCHAR:
         if (readerType.getCategory().equals(TypeDescription.Category.STRING)) {
           return true;
         }
@@ -288,7 +288,7 @@ public class SchemaEvolution {
           return (fileType.getMaxLength() <= readerType.getMaxLength());
         }
         break;
-    default:
+      default:
         break;
     }
     return false;
@@ -612,7 +612,7 @@ public class SchemaEvolution {
   }
 
   private static final List<String> acidEventFieldNames=
-    new ArrayList<String>();
+      new ArrayList<String>();
 
   static {
     acidEventFieldNames.add("operation");

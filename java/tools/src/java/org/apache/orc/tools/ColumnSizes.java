@@ -150,8 +150,8 @@ public class ColumnSizes {
         Long.compare(y.size, x.size) : x.name.compareTo(y.name));
     out.println("Percent  Bytes/Row  Name");
     for (StringLongPair item: sizes) {
-       out.println(String.format("  %-5.2f  %-9.2f  %s",
-           100.0 * item.size / totalSize, (double) item.size / rows, item.name));
+      out.println(String.format("  %-5.2f  %-9.2f  %s",
+          100.0 * item.size / totalSize, (double) item.size / rows, item.name));
     }
   }
 

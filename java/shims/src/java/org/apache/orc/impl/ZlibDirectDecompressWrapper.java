@@ -24,30 +24,30 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 class ZlibDirectDecompressWrapper implements HadoopShims.DirectDecompressor {
-    private final ZlibDecompressor.ZlibDirectDecompressor root;
-    private boolean isFirstCall = true;
+  private final ZlibDecompressor.ZlibDirectDecompressor root;
+  private boolean isFirstCall = true;
 
-    ZlibDirectDecompressWrapper(ZlibDecompressor.ZlibDirectDecompressor root) {
-        this.root = root;
-    }
+  ZlibDirectDecompressWrapper(ZlibDecompressor.ZlibDirectDecompressor root) {
+    this.root = root;
+  }
 
-    @Override
-    public void decompress(ByteBuffer input, ByteBuffer output) throws IOException {
-        if (!isFirstCall) {
-            root.reset();
-        } else {
-            isFirstCall = false;
-        }
-        root.decompress(input, output);
+  @Override
+  public void decompress(ByteBuffer input, ByteBuffer output) throws IOException {
+    if (!isFirstCall) {
+      root.reset();
+    } else {
+      isFirstCall = false;
     }
+    root.decompress(input, output);
+  }
 
-    @Override
-    public void reset() {
-        root.reset();
-    }
+  @Override
+  public void reset() {
+    root.reset();
+  }
 
-    @Override
-    public void end() {
-        root.end();
-    }
+  @Override
+  public void end() {
+    root.end();
+  }
 }
