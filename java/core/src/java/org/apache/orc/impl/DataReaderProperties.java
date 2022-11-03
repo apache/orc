@@ -93,7 +93,7 @@ public final class DataReaderProperties {
         (int) OrcConf.ORC_MAX_DISK_RANGE_CHUNK_LIMIT.getDefaultValue();
     private int minSeekSize = (int) OrcConf.ORC_MIN_DISK_SEEK_SIZE.getDefaultValue();
     private double minSeekSizeTolerance = (double) OrcConf.ORC_MIN_DISK_SEEK_SIZE_TOLERANCE
-      .getDefaultValue();
+        .getDefaultValue();
 
     private Builder() {
 

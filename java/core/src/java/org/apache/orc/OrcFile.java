@@ -995,8 +995,7 @@ public class OrcFile {
 
   private static MemoryManager memoryManager = null;
 
-  private static synchronized
-  MemoryManager getStaticMemoryManager(Configuration conf) {
+  private static synchronized MemoryManager getStaticMemoryManager(Configuration conf) {
     if (memoryManager == null) {
       memoryManager = new MemoryManagerImpl(conf);
     }

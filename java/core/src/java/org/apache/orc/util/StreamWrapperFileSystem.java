@@ -66,9 +66,9 @@ public class StreamWrapperFileSystem extends FileSystem {
                                  Path path,
                                  long fileSize,
                                  Configuration conf) {
-   this(stream,
-       new FileStatus(fileSize, false, 1, OrcConf.BLOCK_SIZE.getInt(conf), 0, path),
-       conf);
+    this(stream,
+        new FileStatus(fileSize, false, 1, OrcConf.BLOCK_SIZE.getInt(conf), 0, path),
+        conf);
   }
 
   @Override

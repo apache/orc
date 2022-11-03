@@ -30,7 +30,7 @@ import java.io.IOException;
 public class RunLengthByteReader {
   private InStream input;
   private final byte[] literals =
-    new byte[RunLengthByteWriter.MAX_LITERAL_SIZE];
+      new byte[RunLengthByteWriter.MAX_LITERAL_SIZE];
   private int numLiterals = 0;
   private int used = 0;
   private boolean repeat = false;

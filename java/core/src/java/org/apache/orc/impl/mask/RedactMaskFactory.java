@@ -945,24 +945,24 @@ public class RedactMaskFactory extends MaskFactory {
   private boolean isIndexInUnmaskRange(final int index, final int length) {
 
     for(final Map.Entry<Integer, Integer> pair : unmaskIndexRanges.entrySet()) {
-       int start;
-       int end;
+      int start;
+      int end;
 
-       if(pair.getKey() >= 0) {
-         // for positive indexes
-         start = pair.getKey();
-       } else {
-         // for negative indexes
-         start = length + pair.getKey();
-       }
+      if(pair.getKey() >= 0) {
+        // for positive indexes
+        start = pair.getKey();
+      } else {
+        // for negative indexes
+        start = length + pair.getKey();
+      }
 
-       if(pair.getValue() >= 0) {
-         // for positive indexes
-         end = pair.getValue();
-       } else {
-         // for negative indexes
-         end = length + pair.getValue();
-       }
+      if(pair.getValue() >= 0) {
+        // for positive indexes
+        end = pair.getValue();
+      } else {
+        // for negative indexes
+        end = length + pair.getValue();
+      }
 
       // if the given index is in range
       if(index >= start && index <= end ) {

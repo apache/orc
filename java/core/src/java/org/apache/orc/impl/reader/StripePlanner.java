@@ -184,8 +184,8 @@ public class StripePlanner {
                                         boolean forceDirect)
     throws IOException {
     BufferChunkList chunks = (index == null || rowGroupInclude == null)
-      ? planDataReading(TypeReader.ReadPhase.FOLLOWERS)
-      : planPartialDataReading(index, rowGroupInclude, rgIdx, TypeReader.ReadPhase.FOLLOWERS);
+        ? planDataReading(TypeReader.ReadPhase.FOLLOWERS)
+        : planPartialDataReading(index, rowGroupInclude, rgIdx, TypeReader.ReadPhase.FOLLOWERS);
     dataReader.readFileData(chunks, forceDirect);
     return chunks;
   }
@@ -309,13 +309,13 @@ public class StripePlanner {
           StreamInformation info =
               new StreamInformation(kind, column, offset, stream.getLength());
           switch (StreamName.getArea(kind)) {
-          case DATA:
-            dataStreams.add(info);
-            break;
-          case INDEX:
-            indexStreams.add(info);
-            break;
-          default:
+            case DATA:
+              dataStreams.add(info);
+              break;
+            case INDEX:
+              indexStreams.add(info);
+              break;
+            default:
           }
           streams.put(new StreamName(column, kind), info);
         }
@@ -400,17 +400,17 @@ public class StripePlanner {
             "index", stream.firstChunk, stream.offset,
             stream.length, getStreamOptions(column, stream.kind)));
         switch (stream.kind) {
-        case ROW_INDEX:
-          indexes[column] = OrcProto.RowIndex.parseFrom(data);
-          break;
-        case BLOOM_FILTER:
-        case BLOOM_FILTER_UTF8:
-          if (sargColumns != null && sargColumns[column]) {
-            blooms[column] = OrcProto.BloomFilterIndex.parseFrom(data);
-          }
-          break;
-        default:
-          break;
+          case ROW_INDEX:
+            indexes[column] = OrcProto.RowIndex.parseFrom(data);
+            break;
+          case BLOOM_FILTER:
+          case BLOOM_FILTER_UTF8:
+            if (sargColumns != null && sargColumns[column]) {
+              blooms[column] = OrcProto.BloomFilterIndex.parseFrom(data);
+            }
+            break;
+          default:
+            break;
         }
       }
     }
@@ -442,19 +442,19 @@ public class StripePlanner {
     BufferChunkList result = new BufferChunkList();
     for(StreamInformation stream: indexStreams) {
       switch (stream.kind) {
-      case ROW_INDEX:
-        addChunk(result, stream, stream.offset, stream.length);
-        break;
-      case BLOOM_FILTER:
-      case BLOOM_FILTER_UTF8:
-        if (bloomFilterColumns[stream.column] &&
-                bloomFilterKinds[stream.column] == stream.kind) {
+        case ROW_INDEX:
           addChunk(result, stream, stream.offset, stream.length);
-        }
-        break;
-      default:
-        // PASS
-        break;
+          break;
+        case BLOOM_FILTER:
+        case BLOOM_FILTER_UTF8:
+          if (bloomFilterColumns[stream.column] &&
+                  bloomFilterKinds[stream.column] == stream.kind) {
+            addChunk(result, stream, stream.offset, stream.length);
+          }
+          break;
+        default:
+          // PASS
+          break;
       }
     }
     return result;
@@ -486,17 +486,17 @@ public class StripePlanner {
   static boolean hadBadBloomFilters(TypeDescription.Category category,
                                     OrcFile.WriterVersion version) {
     switch(category) {
-    case STRING:
-    case CHAR:
-    case VARCHAR:
-      return !version.includes(OrcFile.WriterVersion.HIVE_12055);
-    case DECIMAL:
-      // fixed by ORC-101, but ORC-101 changed stream kind to BLOOM_FILTER_UTF8
-      return true;
-    case TIMESTAMP:
-      return !version.includes(OrcFile.WriterVersion.ORC_135);
-    default:
-      return false;
+      case STRING:
+      case CHAR:
+      case VARCHAR:
+        return !version.includes(OrcFile.WriterVersion.HIVE_12055);
+      case DECIMAL:
+        // fixed by ORC-101, but ORC-101 changed stream kind to BLOOM_FILTER_UTF8
+        return true;
+      case TIMESTAMP:
+        return !version.includes(OrcFile.WriterVersion.ORC_135);
+      default:
+        return false;
     }
   }
 
@@ -582,8 +582,8 @@ public class StripePlanner {
             endGroup += 1;
           }
           int posn = RecordReaderUtils.getIndexPosition(
-            encodings[stream.column].getKind(), kind, stream.kind,
-            isCompressed, hasNull[column]);
+              encodings[stream.column].getKind(), kind, stream.kind,
+              isCompressed, hasNull[column]);
           long start = Math.max(alreadyRead,
               stream.offset + (group == 0 ? 0 : ri.getEntry(group).getPositions(posn)));
           long end = stream.offset;

@@ -132,7 +132,7 @@ public final class DynamicByteArray {
     int currentOffset = length % chunkSize;
     grow(currentChunk);
     int currentLength = in.read(data[currentChunk], currentOffset,
-      chunkSize - currentOffset);
+        chunkSize - currentOffset);
     while (currentLength > 0) {
       length += currentLength;
       currentOffset = length % chunkSize;

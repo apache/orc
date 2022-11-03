@@ -145,48 +145,48 @@ public interface TreeWriter {
                                     WriterContext streamFactory) throws IOException {
       OrcFile.Version version = streamFactory.getVersion();
       switch (schema.getCategory()) {
-      case BOOLEAN:
-        return new BooleanTreeWriter(schema, encryption, streamFactory);
-      case BYTE:
-        return new ByteTreeWriter(schema, encryption, streamFactory);
-      case SHORT:
-      case INT:
-      case LONG:
-        return new IntegerTreeWriter(schema, encryption, streamFactory);
-      case FLOAT:
-        return new FloatTreeWriter(schema, encryption, streamFactory);
-      case DOUBLE:
-        return new DoubleTreeWriter(schema, encryption, streamFactory);
-      case STRING:
-        return new StringTreeWriter(schema, encryption, streamFactory);
-      case CHAR:
-        return new CharTreeWriter(schema, encryption, streamFactory);
-      case VARCHAR:
-        return new VarcharTreeWriter(schema, encryption, streamFactory);
-      case BINARY:
-        return new BinaryTreeWriter(schema, encryption, streamFactory);
-      case TIMESTAMP:
-        return new TimestampTreeWriter(schema, encryption, streamFactory, false);
-      case TIMESTAMP_INSTANT:
-        return new TimestampTreeWriter(schema, encryption, streamFactory, true);
-      case DATE:
-        return new DateTreeWriter(schema, encryption, streamFactory);
-      case DECIMAL:
-        if (version == OrcFile.Version.UNSTABLE_PRE_2_0 &&
-                schema.getPrecision() <= TypeDescription.MAX_DECIMAL64_PRECISION) {
-          return new Decimal64TreeWriter(schema, encryption, streamFactory);
-        }
-        return new DecimalTreeWriter(schema, encryption, streamFactory);
-      case STRUCT:
-        return new StructTreeWriter(schema, encryption, streamFactory);
-      case MAP:
-        return new MapTreeWriter(schema, encryption, streamFactory);
-      case LIST:
-        return new ListTreeWriter(schema, encryption, streamFactory);
-      case UNION:
-        return new UnionTreeWriter(schema, encryption, streamFactory);
-      default:
-        throw new IllegalArgumentException("Bad category: " +
+        case BOOLEAN:
+          return new BooleanTreeWriter(schema, encryption, streamFactory);
+        case BYTE:
+          return new ByteTreeWriter(schema, encryption, streamFactory);
+        case SHORT:
+        case INT:
+        case LONG:
+          return new IntegerTreeWriter(schema, encryption, streamFactory);
+        case FLOAT:
+          return new FloatTreeWriter(schema, encryption, streamFactory);
+        case DOUBLE:
+          return new DoubleTreeWriter(schema, encryption, streamFactory);
+        case STRING:
+          return new StringTreeWriter(schema, encryption, streamFactory);
+        case CHAR:
+          return new CharTreeWriter(schema, encryption, streamFactory);
+        case VARCHAR:
+          return new VarcharTreeWriter(schema, encryption, streamFactory);
+        case BINARY:
+          return new BinaryTreeWriter(schema, encryption, streamFactory);
+        case TIMESTAMP:
+          return new TimestampTreeWriter(schema, encryption, streamFactory, false);
+        case TIMESTAMP_INSTANT:
+          return new TimestampTreeWriter(schema, encryption, streamFactory, true);
+        case DATE:
+          return new DateTreeWriter(schema, encryption, streamFactory);
+        case DECIMAL:
+          if (version == OrcFile.Version.UNSTABLE_PRE_2_0 &&
+                  schema.getPrecision() <= TypeDescription.MAX_DECIMAL64_PRECISION) {
+            return new Decimal64TreeWriter(schema, encryption, streamFactory);
+          }
+          return new DecimalTreeWriter(schema, encryption, streamFactory);
+        case STRUCT:
+          return new StructTreeWriter(schema, encryption, streamFactory);
+        case MAP:
+          return new MapTreeWriter(schema, encryption, streamFactory);
+        case LIST:
+          return new ListTreeWriter(schema, encryption, streamFactory);
+        case UNION:
+          return new UnionTreeWriter(schema, encryption, streamFactory);
+        default:
+          throw new IllegalArgumentException("Bad category: " +
                                                schema.getCategory());
       }
     }

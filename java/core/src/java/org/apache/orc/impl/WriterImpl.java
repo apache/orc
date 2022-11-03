@@ -102,9 +102,9 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
   private long lastFlushOffset = 0;
   private int stripesAtLastFlush = -1;
   private final List<OrcProto.StripeInformation> stripes =
-    new ArrayList<>();
+      new ArrayList<>();
   private final Map<String, ByteString> userMetadata =
-    new TreeMap<>();
+      new TreeMap<>();
   private final TreeWriter treeWriter;
   private final boolean buildIndex;
   private final MemoryManager memoryManager;
@@ -665,7 +665,7 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     // add all of the user metadata
     for(Map.Entry<String, ByteString> entry: userMetadata.entrySet()) {
       builder.addMetadata(OrcProto.UserMetadataItem.newBuilder()
-        .setName(entry.getKey()).setValue(entry.getValue()));
+          .setName(entry.getKey()).setValue(entry.getValue()));
     }
     if (encryption.length > 0) {
       builder.setEncryption(writeEncryptionFooter());

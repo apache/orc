@@ -452,7 +452,7 @@ public final class FileDump {
       }
       ByteBuffer byteBuffer = reader.getMetadataValue(keys.get(i));
       System.out.println("  " + keys.get(i) + "="
-        + StandardCharsets.UTF_8.decode(byteBuffer));
+          + StandardCharsets.UTF_8.decode(byteBuffer));
     }
     rows.close();
   }

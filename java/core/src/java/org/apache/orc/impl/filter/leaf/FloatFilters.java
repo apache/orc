@@ -29,80 +29,80 @@ class FloatFilters {
   private FloatFilters() {
   }
 
- static class FloatBetween extends LeafFilter {
-   private final double low;
-   private final double high;
+  static class FloatBetween extends LeafFilter {
+    private final double low;
+    private final double high;
 
-   FloatBetween(String colName, Object low, Object high, boolean negated) {
-     super(colName, negated);
-     this.low = (double) low;
-     this.high = (double) high;
-   }
+    FloatBetween(String colName, Object low, Object high, boolean negated) {
+      super(colName, negated);
+      this.low = (double) low;
+      this.high = (double) high;
+    }
 
-   @Override
-   protected boolean allow(ColumnVector v, int rowIdx) {
-     return ((DoubleColumnVector) v).vector[rowIdx] >= low &&
-            ((DoubleColumnVector) v).vector[rowIdx] <= high;
-   }
- }
+    @Override
+    protected boolean allow(ColumnVector v, int rowIdx) {
+      return ((DoubleColumnVector) v).vector[rowIdx] >= low &&
+          ((DoubleColumnVector) v).vector[rowIdx] <= high;
+    }
+  }
 
- static class FloatEquals extends LeafFilter {
-   private final double aValue;
+  static class FloatEquals extends LeafFilter {
+    private final double aValue;
 
-   FloatEquals(String colName, Object aValue, boolean negated) {
-     super(colName, negated);
-     this.aValue = (double) aValue;
-   }
+    FloatEquals(String colName, Object aValue, boolean negated) {
+      super(colName, negated);
+      this.aValue = (double) aValue;
+    }
 
-   @Override
-   protected boolean allow(ColumnVector v, int rowIdx) {
-     return ((DoubleColumnVector) v).vector[rowIdx] == aValue;
-   }
- }
+    @Override
+    protected boolean allow(ColumnVector v, int rowIdx) {
+      return ((DoubleColumnVector) v).vector[rowIdx] == aValue;
+    }
+  }
 
- static class FloatIn extends LeafFilter {
-   private final double[] inValues;
+  static class FloatIn extends LeafFilter {
+    private final double[] inValues;
 
-   FloatIn(String colName, List<Object> values, boolean negated) {
-     super(colName, negated);
-     inValues = new double[values.size()];
-     for (int i = 0; i < values.size(); i++) {
-       inValues[i] = (double) values.get(i);
-     }
-     Arrays.sort(inValues);
-   }
+    FloatIn(String colName, List<Object> values, boolean negated) {
+      super(colName, negated);
+      inValues = new double[values.size()];
+      for (int i = 0; i < values.size(); i++) {
+        inValues[i] = (double) values.get(i);
+      }
+      Arrays.sort(inValues);
+    }
 
-   @Override
-   protected boolean allow(ColumnVector v, int rowIdx) {
-     return Arrays.binarySearch(inValues, ((DoubleColumnVector) v).vector[rowIdx]) >= 0;
-   }
- }
+    @Override
+    protected boolean allow(ColumnVector v, int rowIdx) {
+      return Arrays.binarySearch(inValues, ((DoubleColumnVector) v).vector[rowIdx]) >= 0;
+    }
+  }
 
- static class FloatLessThan extends LeafFilter {
-   private final double aValue;
+  static class FloatLessThan extends LeafFilter {
+    private final double aValue;
 
-   FloatLessThan(String colName, Object aValue, boolean negated) {
-     super(colName, negated);
-     this.aValue = (double) aValue;
-   }
+    FloatLessThan(String colName, Object aValue, boolean negated) {
+      super(colName, negated);
+      this.aValue = (double) aValue;
+    }
 
-   @Override
-   protected boolean allow(ColumnVector v, int rowIdx) {
-     return ((DoubleColumnVector) v).vector[rowIdx] < aValue;
-   }
- }
+    @Override
+    protected boolean allow(ColumnVector v, int rowIdx) {
+      return ((DoubleColumnVector) v).vector[rowIdx] < aValue;
+    }
+  }
 
- static class FloatLessThanEquals extends LeafFilter {
-   private final double aValue;
+  static class FloatLessThanEquals extends LeafFilter {
+    private final double aValue;
 
-   FloatLessThanEquals(String colName, Object aValue, boolean negated) {
-     super(colName, negated);
-     this.aValue = (double) aValue;
-   }
+    FloatLessThanEquals(String colName, Object aValue, boolean negated) {
+      super(colName, negated);
+      this.aValue = (double) aValue;
+    }
 
-   @Override
-   protected boolean allow(ColumnVector v, int rowIdx) {
-     return ((DoubleColumnVector) v).vector[rowIdx] <= aValue;
-   }
- }
+    @Override
+    protected boolean allow(ColumnVector v, int rowIdx) {
+      return ((DoubleColumnVector) v).vector[rowIdx] <= aValue;
+    }
+  }
 }

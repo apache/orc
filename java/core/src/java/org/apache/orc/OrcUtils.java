@@ -122,83 +122,83 @@ public class OrcUtils {
               .build());
     }
     switch (typeDescr.getCategory()) {
-    case BOOLEAN:
-      type.setKind(OrcProto.Type.Kind.BOOLEAN);
-      break;
-    case BYTE:
-      type.setKind(OrcProto.Type.Kind.BYTE);
-      break;
-    case SHORT:
-      type.setKind(OrcProto.Type.Kind.SHORT);
-      break;
-    case INT:
-      type.setKind(OrcProto.Type.Kind.INT);
-      break;
-    case LONG:
-      type.setKind(OrcProto.Type.Kind.LONG);
-      break;
-    case FLOAT:
-      type.setKind(OrcProto.Type.Kind.FLOAT);
-      break;
-    case DOUBLE:
-      type.setKind(OrcProto.Type.Kind.DOUBLE);
-      break;
-    case STRING:
-      type.setKind(OrcProto.Type.Kind.STRING);
-      break;
-    case CHAR:
-      type.setKind(OrcProto.Type.Kind.CHAR);
-      type.setMaximumLength(typeDescr.getMaxLength());
-      break;
-    case VARCHAR:
-      type.setKind(OrcProto.Type.Kind.VARCHAR);
-      type.setMaximumLength(typeDescr.getMaxLength());
-      break;
-    case BINARY:
-      type.setKind(OrcProto.Type.Kind.BINARY);
-      break;
-    case TIMESTAMP:
-      type.setKind(OrcProto.Type.Kind.TIMESTAMP);
-      break;
-    case TIMESTAMP_INSTANT:
+      case BOOLEAN:
+        type.setKind(OrcProto.Type.Kind.BOOLEAN);
+        break;
+      case BYTE:
+        type.setKind(OrcProto.Type.Kind.BYTE);
+        break;
+      case SHORT:
+        type.setKind(OrcProto.Type.Kind.SHORT);
+        break;
+      case INT:
+        type.setKind(OrcProto.Type.Kind.INT);
+        break;
+      case LONG:
+        type.setKind(OrcProto.Type.Kind.LONG);
+        break;
+      case FLOAT:
+        type.setKind(OrcProto.Type.Kind.FLOAT);
+        break;
+      case DOUBLE:
+        type.setKind(OrcProto.Type.Kind.DOUBLE);
+        break;
+      case STRING:
+        type.setKind(OrcProto.Type.Kind.STRING);
+        break;
+      case CHAR:
+        type.setKind(OrcProto.Type.Kind.CHAR);
+        type.setMaximumLength(typeDescr.getMaxLength());
+        break;
+      case VARCHAR:
+        type.setKind(OrcProto.Type.Kind.VARCHAR);
+        type.setMaximumLength(typeDescr.getMaxLength());
+        break;
+      case BINARY:
+        type.setKind(OrcProto.Type.Kind.BINARY);
+        break;
+      case TIMESTAMP:
+        type.setKind(OrcProto.Type.Kind.TIMESTAMP);
+        break;
+      case TIMESTAMP_INSTANT:
         type.setKind(OrcProto.Type.Kind.TIMESTAMP_INSTANT);
         break;
-    case DATE:
-      type.setKind(OrcProto.Type.Kind.DATE);
-      break;
-    case DECIMAL:
-      type.setKind(OrcProto.Type.Kind.DECIMAL);
-      type.setPrecision(typeDescr.getPrecision());
-      type.setScale(typeDescr.getScale());
-      break;
-    case LIST:
-      type.setKind(OrcProto.Type.Kind.LIST);
-      type.addSubtypes(children.get(0).getId());
-      break;
-    case MAP:
-      type.setKind(OrcProto.Type.Kind.MAP);
-      for(TypeDescription t: children) {
-        type.addSubtypes(t.getId());
-      }
-      break;
-    case STRUCT:
-      type.setKind(OrcProto.Type.Kind.STRUCT);
-      for(TypeDescription t: children) {
-        type.addSubtypes(t.getId());
-      }
-      for(String field: typeDescr.getFieldNames()) {
-        type.addFieldNames(field);
-      }
-      break;
-    case UNION:
-      type.setKind(OrcProto.Type.Kind.UNION);
-      for(TypeDescription t: children) {
-        type.addSubtypes(t.getId());
-      }
-      break;
-    default:
-      throw new IllegalArgumentException("Unknown category: " +
-          typeDescr.getCategory());
+      case DATE:
+        type.setKind(OrcProto.Type.Kind.DATE);
+        break;
+      case DECIMAL:
+        type.setKind(OrcProto.Type.Kind.DECIMAL);
+        type.setPrecision(typeDescr.getPrecision());
+        type.setScale(typeDescr.getScale());
+        break;
+      case LIST:
+        type.setKind(OrcProto.Type.Kind.LIST);
+        type.addSubtypes(children.get(0).getId());
+        break;
+      case MAP:
+        type.setKind(OrcProto.Type.Kind.MAP);
+        for(TypeDescription t: children) {
+          type.addSubtypes(t.getId());
+        }
+        break;
+      case STRUCT:
+        type.setKind(OrcProto.Type.Kind.STRUCT);
+        for(TypeDescription t: children) {
+          type.addSubtypes(t.getId());
+        }
+        for(String field: typeDescr.getFieldNames()) {
+          type.addFieldNames(field);
+        }
+        break;
+      case UNION:
+        type.setKind(OrcProto.Type.Kind.UNION);
+        for(TypeDescription t: children) {
+          type.addSubtypes(t.getId());
+        }
+        break;
+      default:
+        throw new IllegalArgumentException("Unknown category: " +
+            typeDescr.getCategory());
     }
     result.add(type.build());
     if (children != null) {
@@ -297,12 +297,11 @@ public class OrcUtils {
         result = TypeDescription.createString();
         break;
       case CHAR:
-      case VARCHAR: {
-          result = type.getKind() == OrcProto.Type.Kind.CHAR ?
-              TypeDescription.createChar() : TypeDescription.createVarchar();
-          if (type.hasMaximumLength()) {
-            result.withMaxLength(type.getMaximumLength());
-          }
+      case VARCHAR:
+        result = type.getKind() == OrcProto.Type.Kind.CHAR ?
+            TypeDescription.createChar() : TypeDescription.createVarchar();
+        if (type.hasMaximumLength()) {
+          result.withMaxLength(type.getMaximumLength());
         }
         break;
       case BINARY:
@@ -318,15 +317,15 @@ public class OrcUtils {
         result = TypeDescription.createDate();
         break;
       case DECIMAL: {
-          result = TypeDescription.createDecimal();
-          if (type.hasScale()) {
-            result.withScale(type.getScale());
-          }
-          if (type.hasPrecision()) {
-            result.withPrecision(type.getPrecision());
-          }
+        result = TypeDescription.createDecimal();
+        if (type.hasScale()) {
+          result.withScale(type.getScale());
         }
-        break;
+        if (type.hasPrecision()) {
+          result.withPrecision(type.getPrecision());
+        }
+      }
+      break;
       case LIST:
         if (type.getSubtypesCount() != 1) {
           throw new FileFormatException("LIST type should contain exactly " +
@@ -345,27 +344,27 @@ public class OrcUtils {
             convertTypeFromProtobuf(types, type.getSubtypes(1)));
         break;
       case STRUCT: {
-          result = TypeDescription.createStruct();
-          for(int f=0; f < type.getSubtypesCount(); ++f) {
-            String name = type.getFieldNames(f);
-            name = name.startsWith("`") ? name : "`" + name + "`";
-            String fieldName = ParserUtils.parseName(new ParserUtils.StringPosition(name));
-            result.addField(fieldName, convertTypeFromProtobuf(types, type.getSubtypes(f)));
-          }
+        result = TypeDescription.createStruct();
+        for(int f=0; f < type.getSubtypesCount(); ++f) {
+          String name = type.getFieldNames(f);
+          name = name.startsWith("`") ? name : "`" + name + "`";
+          String fieldName = ParserUtils.parseName(new ParserUtils.StringPosition(name));
+          result.addField(fieldName, convertTypeFromProtobuf(types, type.getSubtypes(f)));
         }
-        break;
+      }
+      break;
       case UNION: {
-          if (type.getSubtypesCount() == 0) {
-            throw new FileFormatException("UNION type should contain at least" +
-                  " one subtype but has none");
-          }
-          result = TypeDescription.createUnion();
-          for(int f=0; f < type.getSubtypesCount(); ++f) {
-            result.addUnionChild(
-                convertTypeFromProtobuf(types, type.getSubtypes(f)));
-          }
+        if (type.getSubtypesCount() == 0) {
+          throw new FileFormatException("UNION type should contain at least" +
+                " one subtype but has none");
         }
-        break;
+        result = TypeDescription.createUnion();
+        for(int f=0; f < type.getSubtypesCount(); ++f) {
+          result.addUnionChild(
+              convertTypeFromProtobuf(types, type.getSubtypes(f)));
+        }
+      }
+      break;
       default:
         throw new IllegalArgumentException("Unknown ORC type " + type.getKind());
     }

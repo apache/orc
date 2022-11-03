@@ -49,15 +49,15 @@ public class HadoopShimsCurrent implements HadoopShims {
   static DirectDecompressor getDecompressor(DirectCompressionType codec) {
     switch (codec) {
       case ZLIB:
-        return new ZlibDirectDecompressWrapper
-            (new ZlibDecompressor.ZlibDirectDecompressor());
+        return new ZlibDirectDecompressWrapper(
+            new ZlibDecompressor.ZlibDirectDecompressor());
       case ZLIB_NOHEADER:
-        return new ZlibDirectDecompressWrapper
-            (new ZlibDecompressor.ZlibDirectDecompressor
-                (ZlibDecompressor.CompressionHeader.NO_HEADER, 0));
+        return new ZlibDirectDecompressWrapper(
+            new ZlibDecompressor.ZlibDirectDecompressor(
+                ZlibDecompressor.CompressionHeader.NO_HEADER, 0));
       case SNAPPY:
-        return new SnappyDirectDecompressWrapper
-            (new SnappyDecompressor.SnappyDirectDecompressor());
+        return new SnappyDirectDecompressWrapper(
+            new SnappyDecompressor.SnappyDirectDecompressor());
       default:
         return null;
     }

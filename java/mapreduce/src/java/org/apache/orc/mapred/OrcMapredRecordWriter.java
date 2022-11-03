@@ -94,9 +94,8 @@ public class OrcMapredRecordWriter<V extends Writable>
    * @param result the list to be appended to
    * @param vector the column vector to scan
    */
-  private static
-  void addVariableLengthColumns(List<MultiValuedColumnVector> result,
-                                        ColumnVector vector) {
+  private static void addVariableLengthColumns(List<MultiValuedColumnVector> result,
+                                               ColumnVector vector) {
     switch (vector.type) {
       case LIST: {
         ListColumnVector cv = (ListColumnVector) vector;
@@ -133,9 +132,8 @@ public class OrcMapredRecordWriter<V extends Writable>
    * @param result the list to be appended to
    * @param batch the batch to scan
    */
-  public static
-  void addVariableLengthColumns(List<MultiValuedColumnVector> result,
-                                        VectorizedRowBatch batch) {
+  public static void addVariableLengthColumns(List<MultiValuedColumnVector> result,
+                                              VectorizedRowBatch batch) {
     for(ColumnVector cv: batch.cols) {
       addVariableLengthColumns(result, cv);
     }
