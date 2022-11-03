@@ -202,8 +202,8 @@ public class TreeReaderFactory {
         // FILTER_PARENT. This is used during the reposition for non-filter read. Only Struct and
         // Union Readers are supported currently
         TypeDescription col = columnId == -1 ? null : getSchemaEvolution()
-          .getFileSchema()
-          .findSubtype(columnId);
+            .getFileSchema()
+            .findSubtype(columnId);
         if (col == null || col.getChildren() == null || col.getChildren().isEmpty()) {
           result = TypeReader.ReaderCategory.FILTER_CHILD;
         } else {
@@ -1716,11 +1716,11 @@ public class TreeReaderFactory {
       // Read present/isNull stream
       super.nextVector(result, isNull, batchSize, filterContext, readPhase);
       if (result instanceof Decimal64ColumnVector) {
-         if (filterContext.isSelectedInUse()) {
-           nextVector((Decimal64ColumnVector) result, isNull, filterContext, batchSize);
-         } else {
-           nextVector((Decimal64ColumnVector) result, isNull, batchSize);
-         }
+        if (filterContext.isSelectedInUse()) {
+          nextVector((Decimal64ColumnVector) result, isNull, filterContext, batchSize);
+        } else {
+          nextVector((Decimal64ColumnVector) result, isNull, batchSize);
+        }
       } else {
         if (filterContext.isSelectedInUse()) {
           nextVector((DecimalColumnVector) result, isNull, filterContext, batchSize);
@@ -1844,12 +1844,12 @@ public class TreeReaderFactory {
           }
           valueReader.skip(countNonNullRowsInRange(result.isNull, previousIdx, batchSize));
         } else {
-            for (int r = 0; r < batchSize; ++r) {
-              if (!result.isNull[r]) {
-                result.vector[r].setFromLongAndScale(valueReader.next(), scale);
-              }
+          for (int r = 0; r < batchSize; ++r) {
+            if (!result.isNull[r]) {
+              result.vector[r].setFromLongAndScale(valueReader.next(), scale);
             }
           }
+        }
       }
       result.precision = (short) precision;
       result.scale = (short) scale;
@@ -2990,7 +2990,7 @@ public class TreeReaderFactory {
 
   public static boolean isDecimalAsLong(OrcFile.Version version, int precision) {
     return version == OrcFile.Version.UNSTABLE_PRE_2_0 &&
-    precision <= TypeDescription.MAX_DECIMAL64_PRECISION;
+        precision <= TypeDescription.MAX_DECIMAL64_PRECISION;
   }
 
   public static BatchReader createRootReader(TypeDescription readerType, Context context)

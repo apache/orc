@@ -145,30 +145,30 @@ public class ReaderEncryptionVariant implements EncryptionVariant {
     Key result = localKey.getDecryptedKey();
     if (result == null) {
       switch (this.key.getState()) {
-      case UNTRIED:
-        try {
+        case UNTRIED:
+          try {
+            result = provider.decryptLocalKey(key.getMetadata(),
+                localKey.getEncryptedKey());
+          } catch (IOException ioe) {
+            LOG.info("Can't decrypt using key {}", key);
+          }
+          if (result != null) {
+            localKey.setDecryptedKey(result);
+            key.setSuccess();
+          } else {
+            key.setFailure();
+          }
+          break;
+        case SUCCESS:
           result = provider.decryptLocalKey(key.getMetadata(),
               localKey.getEncryptedKey());
-        } catch (IOException ioe) {
-          LOG.info("Can't decrypt using key {}", key);
-        }
-        if (result != null) {
+          if (result == null) {
+            throw new IOException("Can't decrypt local key " + key);
+          }
           localKey.setDecryptedKey(result);
-          key.setSuccess();
-        } else {
-          key.setFailure();
-        }
-        break;
-      case SUCCESS:
-        result = provider.decryptLocalKey(key.getMetadata(),
-            localKey.getEncryptedKey());
-        if (result == null) {
-          throw new IOException("Can't decrypt local key " + key);
-        }
-        localKey.setDecryptedKey(result);
-        break;
-      case FAILURE:
-        return null;
+          break;
+        case FAILURE:
+          return null;
       }
     }
     return result;

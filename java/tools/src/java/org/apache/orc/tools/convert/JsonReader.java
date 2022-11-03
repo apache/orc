@@ -170,7 +170,7 @@ public class JsonReader implements RecordReader {
       } else {
         TimestampColumnVector vector = (TimestampColumnVector) vect;
         TemporalAccessor temporalAccessor = dateTimeFormatter.parseBest(value.getAsString(),
-          ZonedDateTime::from, OffsetDateTime::from, LocalDateTime::from);
+            ZonedDateTime::from, OffsetDateTime::from, LocalDateTime::from);
         if (temporalAccessor instanceof ZonedDateTime) {
           ZonedDateTime zonedDateTime = ((ZonedDateTime) temporalAccessor);
           Timestamp timestamp = Timestamp.from(zonedDateTime.toInstant());

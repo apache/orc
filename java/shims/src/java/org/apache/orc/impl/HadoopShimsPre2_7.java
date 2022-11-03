@@ -44,7 +44,7 @@ public class HadoopShimsPre2_7 implements HadoopShims {
   @Override
   public DirectDecompressor getDirectDecompressor(DirectCompressionType codec) {
     return HadoopShimsCurrent.getDecompressor(codec);
- }
+  }
 
   @Override
   public ZeroCopyReaderShim getZeroCopyReader(FSDataInputStream in,

@@ -144,17 +144,16 @@ public class OrcInputFormat<V extends WritableComparable>
   }
 
   @Override
-  public RecordReader<NullWritable, V>
-  getRecordReader(InputSplit inputSplit,
-                  JobConf conf,
-                  Reporter reporter) throws IOException {
+  public RecordReader<NullWritable, V> getRecordReader(InputSplit inputSplit,
+                                                       JobConf conf,
+                                                       Reporter reporter) throws IOException {
     FileSplit split = (FileSplit) inputSplit;
     Reader file = OrcFile.createReader(split.getPath(),
         OrcFile.readerOptions(conf)
             .maxLength(OrcConf.MAX_FILE_LENGTH.getLong(conf)));
     //Mapreduce supports selected vector
     Reader.Options options =  buildOptions(conf, file, split.getStart(), split.getLength())
-      .useSelected(true);
+        .useSelected(true);
     return new OrcMapredRecordReader<>(file, options);
   }
 
