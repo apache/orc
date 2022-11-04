@@ -108,6 +108,14 @@ namespace orc {
   template <>
   void DataBuffer<double>::resize(uint64_t newSize);
 
+  // Specializations for float
+
+  template <>
+  DataBuffer<float>::~DataBuffer();
+
+  template <>
+  void DataBuffer<float>::resize(uint64_t newSize);
+
   // Specializations for int64_t
 
   template <>
@@ -115,6 +123,30 @@ namespace orc {
 
   template <>
   void DataBuffer<int64_t>::resize(uint64_t newSize);
+
+  // Specializations for int32_t
+
+  template <>
+  DataBuffer<int32_t>::~DataBuffer();
+
+  template <>
+  void DataBuffer<int32_t>::resize(uint64_t newSize);
+
+  // Specializations for int16_t
+
+  template <>
+  DataBuffer<int16_t>::~DataBuffer();
+
+  template <>
+  void DataBuffer<int16_t>::resize(uint64_t newSize);
+
+  // Specializations for int8_t
+
+  template <>
+  DataBuffer<int8_t>::~DataBuffer();
+
+  template <>
+  void DataBuffer<int8_t>::resize(uint64_t newSize);
 
   // Specializations for uint64_t
 
@@ -140,8 +172,12 @@ namespace orc {
   extern template class DataBuffer<char>;
   extern template class DataBuffer<char*>;
   extern template class DataBuffer<double>;
+  extern template class DataBuffer<float>;
   extern template class DataBuffer<Int128>;
   extern template class DataBuffer<int64_t>;
+  extern template class DataBuffer<int32_t>;
+  extern template class DataBuffer<int16_t>;
+  extern template class DataBuffer<int8_t>;
   extern template class DataBuffer<uint64_t>;
   extern template class DataBuffer<unsigned char>;
 

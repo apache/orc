@@ -282,18 +282,38 @@ namespace orc {
   std::unique_ptr<ColumnVectorBatch>
   TypeImpl::createRowBatch(uint64_t capacity,
                            MemoryPool& memoryPool,
-                           bool encoded) const {
+                           bool encoded,
+                           bool enableFixedWidthNumericVectorBatch) const {
     switch (static_cast<int64_t>(kind)) {
     case BOOLEAN:
-    case BYTE:
-    case SHORT:
-    case INT:
+    case BYTE: {
+      if (enableFixedWidthNumericVectorBatch) {
+        return std::unique_ptr<ColumnVectorBatch>
+          (new ByteVectorBatch(capacity, memoryPool));
+      }
+    }
+    case SHORT: {
+      if (enableFixedWidthNumericVectorBatch) {
+        return std::unique_ptr<ColumnVectorBatch>
+          (new ShortVectorBatch(capacity, memoryPool));
+      }
+    }
+    case INT: {
+      if (enableFixedWidthNumericVectorBatch) {
+        return std::unique_ptr<ColumnVectorBatch>
+          (new IntVectorBatch(capacity, memoryPool));
+      }
+    }
     case LONG:
     case DATE:
       return std::unique_ptr<ColumnVectorBatch>
         (new LongVectorBatch(capacity, memoryPool));
 
     case FLOAT:
+      if (enableFixedWidthNumericVectorBatch) {
+        return std::unique_ptr<ColumnVectorBatch>
+          (new FloatVectorBatch(capacity, memoryPool));
+      }
     case DOUBLE:
       return std::unique_ptr<ColumnVectorBatch>
         (new DoubleVectorBatch(capacity, memoryPool));
@@ -319,7 +339,9 @@ namespace orc {
       for(uint64_t i=0; i < getSubtypeCount(); ++i) {
           result->fields.push_back(getSubtype(i)->
                                    createRowBatch(capacity,
-                                                  memoryPool, encoded).release());
+                                                  memoryPool,
+                                                  encoded,
+                                                  enableFixedWidthNumericVectorBatch).release());
       }
       return return_value;
     }
@@ -328,7 +350,10 @@ namespace orc {
       ListVectorBatch* result = new ListVectorBatch(capacity, memoryPool);
       std::unique_ptr<ColumnVectorBatch> return_value = std::unique_ptr<ColumnVectorBatch>(result);
       if (getSubtype(0) != nullptr) {
-        result->elements = getSubtype(0)->createRowBatch(capacity, memoryPool, encoded);
+        result->elements = getSubtype(0)->createRowBatch(capacity,
+                                                         memoryPool,
+                                                         encoded,
+                                                         enableFixedWidthNumericVectorBatch);
       }
       return return_value;
     }
@@ -337,10 +362,16 @@ namespace orc {
       MapVectorBatch* result = new MapVectorBatch(capacity, memoryPool);
       std::unique_ptr<ColumnVectorBatch> return_value = std::unique_ptr<ColumnVectorBatch>(result);
       if (getSubtype(0) != nullptr) {
-        result->keys = getSubtype(0)->createRowBatch(capacity, memoryPool, encoded);
+        result->keys = getSubtype(0)->createRowBatch(capacity,
+                                                     memoryPool,
+                                                     encoded,
+                                                     enableFixedWidthNumericVectorBatch);
       }
       if (getSubtype(1) != nullptr) {
-        result->elements = getSubtype(1)->createRowBatch(capacity, memoryPool, encoded);
+        result->elements = getSubtype(1)->createRowBatch(capacity,
+                                                         memoryPool,
+                                                         encoded,
+                                                         enableFixedWidthNumericVectorBatch);
       }
       return return_value;
     }
@@ -360,7 +391,9 @@ namespace orc {
       std::unique_ptr<ColumnVectorBatch> return_value = std::unique_ptr<ColumnVectorBatch>(result);
       for(uint64_t i=0; i < getSubtypeCount(); ++i) {
           result->children.push_back(getSubtype(i)->createRowBatch(capacity,
-                                                                   memoryPool, encoded)
+                                                                   memoryPool,
+                                                                   encoded,
+                                                                   enableFixedWidthNumericVectorBatch)
                                      .release());
       }
       return return_value;

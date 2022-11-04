@@ -325,6 +325,18 @@ namespace orc {
      * Get the IdReadIntentMap map that was supplied by client.
      */
     const IdReadIntentMap getIdReadIntentMap() const;
+
+    /**
+     * Set the enableFixedWidthNumericVectorBatch.
+     */
+    RowReaderOptions& setEnableFixedWidthNumericVectorBatch(
+      bool enableFixedWidthNumericVectorBatch);
+
+    /**
+     * Get whether or not to use FixedWidth Numeric columnVectorBatch.
+     * @return if not set, the default is false
+     */
+    bool getEnableFixedWidthNumericVectorBatch() const;
   };
 
 

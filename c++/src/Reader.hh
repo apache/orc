@@ -157,6 +157,7 @@ namespace orc {
     std::unique_ptr<ColumnReader> reader;
 
     bool enableEncodedBlock;
+    bool enableFixedWidthNumericVectorBatch;
     // internal methods
     void startNextStripe();
     inline void markEndOfFile();

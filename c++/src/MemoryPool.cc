@@ -167,6 +167,24 @@ namespace orc {
     currentSize = newSize;
   }
 
+  // Specializations for float
+
+  template <>
+  DataBuffer<float>::~DataBuffer() {
+    if (buf) {
+      memoryPool.free(reinterpret_cast<char*>(buf));
+    }
+  }
+
+  template <>
+  void DataBuffer<float>::resize(uint64_t newSize) {
+    reserve(newSize);
+    if (newSize > currentSize) {
+      memset(buf + currentSize, 0, (newSize - currentSize) * sizeof(float));
+    }
+    currentSize = newSize;
+  }
+
   // Specializations for int64_t
 
   template <>
@@ -181,6 +199,61 @@ namespace orc {
     reserve(newSize);
     if (newSize > currentSize) {
       memset(buf + currentSize, 0, (newSize - currentSize) * sizeof(int64_t));
+    }
+    currentSize = newSize;
+  }
+
+  // Specializations for int32_t
+
+  template <>
+  DataBuffer<int32_t>::~DataBuffer() {
+    if (buf) {
+      memoryPool.free(reinterpret_cast<char*>(buf));
+    }
+  }
+
+  template <>
+  void DataBuffer<int32_t>::resize(uint64_t newSize) {
+    reserve(newSize);
+    if (newSize > currentSize) {
+      memset(buf + currentSize, 0, (newSize - currentSize) * sizeof(int32_t));
+    }
+    currentSize = newSize;
+  }
+
+  // Specializations for int16_t
+
+  template <>
+  DataBuffer<int16_t>::~DataBuffer(){
+    if (buf) {
+      memoryPool.free(reinterpret_cast<char*>(buf));
+    }
+  }
+
+  template <>
+  void DataBuffer<int16_t>::resize(uint64_t newSize) {
+    reserve(newSize);
+    if (newSize > currentSize) {
+      memset(buf + currentSize, 0, (newSize - currentSize) * sizeof(int16_t));
+    }
+    currentSize = newSize;
+  }
+
+
+  // Specializations for int8_t
+
+  template <>
+  DataBuffer<int8_t>::~DataBuffer(){
+    if (buf) {
+      memoryPool.free(reinterpret_cast<char*>(buf));
+    }
+  }
+
+  template <>
+  void DataBuffer<int8_t>::resize(uint64_t newSize) {
+    reserve(newSize);
+    if (newSize > currentSize) {
+      memset(buf + currentSize, 0, (newSize - currentSize) * sizeof(int8_t));
     }
     currentSize = newSize;
   }
@@ -228,8 +301,12 @@ namespace orc {
   template class DataBuffer<char>;
   template class DataBuffer<char*>;
   template class DataBuffer<double>;
+  template class DataBuffer<float>;
   template class DataBuffer<Int128>;
   template class DataBuffer<int64_t>;
+  template class DataBuffer<int32_t>;
+  template class DataBuffer<int16_t>;
+  template class DataBuffer<int8_t>;
   template class DataBuffer<uint64_t>;
   template class DataBuffer<unsigned char>;
 

@@ -269,6 +269,7 @@ namespace orc {
     currentRowInStripe = 0;
     rowsInCurrentStripe = 0;
     numRowGroupsInStripeRange = 0;
+    enableFixedWidthNumericVectorBatch = opts.getEnableFixedWidthNumericVectorBatch();
     uint64_t rowTotal = 0;
 
     firstRowOfStripe.resize(numberOfStripes);
@@ -1153,7 +1154,7 @@ namespace orc {
                                       *contents->stream,
                                       writerTimezone,
                                       readerTimezone);
-      reader = buildReader(*contents->schema, stripeStreams);
+      reader = buildReader(*contents->schema, stripeStreams, enableFixedWidthNumericVectorBatch);
 
       if (sargsApplier) {
         // move to the 1st selected row group when PPD is enabled.
@@ -1278,7 +1279,10 @@ namespace orc {
 
   std::unique_ptr<ColumnVectorBatch> RowReaderImpl::createRowBatch
                                               (uint64_t capacity) const {
-    return getSelectedType().createRowBatch(capacity, *contents->pool, enableEncodedBlock);
+    return getSelectedType().createRowBatch(capacity,
+                                            *contents->pool,
+                                            enableEncodedBlock,
+                                            enableFixedWidthNumericVectorBatch);
   }
 
   void ensureOrcFooter(InputStream* stream,

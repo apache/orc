@@ -167,7 +167,8 @@ namespace orc {
    * Create a reader for the given stripe.
    */
   std::unique_ptr<ColumnReader> buildReader(const Type& type,
-                                            StripeStreams& stripe);
+                                            StripeStreams& stripe,
+                                            bool enableFixedWidthNumericVectorBatch = false);
 }
 
 #endif

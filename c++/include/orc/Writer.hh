@@ -256,6 +256,18 @@ namespace orc {
      * @return if not set, return nullptr.
      */
     WriterMetrics * getWriterMetrics() const;
+
+    /**
+     * Set the enableFixedWidthNumericVectorBatch.
+     */
+    WriterOptions& setEnableFixedWidthNumericVectorBatch(
+      bool enableFixedWidthNumericVectorBatch);
+
+    /**
+     * Get whether or not to use dedicated columnVectorBatch
+     * @return if not set, the default is false
+     */
+    bool getEnableFixedWidthNumericVectorBatch() const;
   };
 
   class Writer {

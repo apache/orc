@@ -235,7 +235,8 @@ void RleDecoderV1::skip(uint64_t numValues) {
   }
 }
 
-void RleDecoderV1::next(int64_t* const data,
+template <typename T>
+void RleDecoderV1::next(T* const data,
                         const uint64_t numValues,
                         const char* const notNull) {
   SCOPED_STOPWATCH(metrics, DecodingLatencyUs, DecodingCall);
@@ -259,13 +260,13 @@ void RleDecoderV1::next(int64_t* const data,
       if (notNull) {
         for (uint64_t i = 0; i < count; ++i) {
           if (notNull[position + i]) {
-            data[position + i] = value + static_cast<int64_t>(consumed) * delta;
+            data[position + i] = static_cast<T>(value + static_cast<int64_t>(consumed) * delta);
             consumed += 1;
           }
         }
       } else {
         for (uint64_t i = 0; i < count; ++i) {
-          data[position + i] = value + static_cast<int64_t>(i) * delta;
+          data[position + i] = static_cast<T>(value + static_cast<int64_t>(i) * delta);
         }
         consumed = count;
       }
@@ -275,19 +276,19 @@ void RleDecoderV1::next(int64_t* const data,
         for (uint64_t i = 0 ; i < count; ++i) {
           if (notNull[position + i]) {
             data[position + i] = isSigned
-                ? unZigZag(readLong())
-                : static_cast<int64_t>(readLong());
+                ? static_cast<T>(unZigZag(readLong()))
+                : static_cast<T>(readLong());
             ++consumed;
           }
         }
       } else {
         if (isSigned) {
           for (uint64_t i = 0; i < count; ++i) {
-            data[position + i] = unZigZag(readLong());
+            data[position + i] = static_cast<T>(unZigZag(readLong()));
           }
         } else {
           for (uint64_t i = 0; i < count; ++i) {
-            data[position + i] = static_cast<int64_t>(readLong());
+            data[position + i] = static_cast<T>(readLong());
           }
         }
         consumed = count;

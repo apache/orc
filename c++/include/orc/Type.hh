@@ -70,10 +70,11 @@ namespace orc {
     /**
      * Create a row batch for this type.
      */
-    virtual ORC_UNIQUE_PTR<ColumnVectorBatch> createRowBatch(uint64_t size,
-                                                             MemoryPool& pool,
-                                                             bool encoded = false
-                                                             ) const = 0;
+    virtual ORC_UNIQUE_PTR<ColumnVectorBatch> createRowBatch(
+      uint64_t size,
+      MemoryPool& pool,
+      bool encoded = false,
+      bool enableFixedWidthNumericVectorBatch = false) const = 0;
 
     /**
      * Add a new field to a struct type.

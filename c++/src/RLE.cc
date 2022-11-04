@@ -43,7 +43,7 @@ namespace orc {
                                                           isSigned));
     case RleVersion_2:
       return std::unique_ptr<RleEncoder>(new RleEncoderV2(std::move(output),
-                                                            isSigned, alignedBitpacking));
+                                                          isSigned, alignedBitpacking));
     default:
       throw NotImplementedYet("Not implemented yet");
     }
@@ -71,10 +71,37 @@ namespace orc {
   }
 
   void RleEncoder::add(const int64_t* data, uint64_t numValues,
-                         const char* notNull) {
+                       const char* notNull) {
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!notNull || notNull[i]) {
         write(data[i]);
+      }
+    }
+  }
+
+  void RleEncoder::add(const int32_t* data, uint64_t numValues,
+                       const char* notNull) {
+    for (uint64_t i = 0; i < numValues; ++i) {
+      if (!notNull || notNull[i]) {
+        write(static_cast<int64_t>(data[i]));
+      }
+    }
+  }
+
+  void RleEncoder::add(const int16_t* data, uint64_t numValues,
+                       const char* notNull) {
+    for (uint64_t i = 0; i < numValues; ++i) {
+      if (!notNull || notNull[i]) {
+        write(static_cast<int64_t>(data[i]));
+      }
+    }
+  }
+
+  void RleEncoder::add(const int8_t* data, uint64_t numValues,
+                       const char* notNull) {
+    for (uint64_t i = 0; i < numValues; ++i) {
+      if (!notNull || notNull[i]) {
+        write(static_cast<int64_t>(data[i]));
       }
     }
   }

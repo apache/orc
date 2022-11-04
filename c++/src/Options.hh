@@ -142,6 +142,7 @@ namespace orc {
     std::shared_ptr<SearchArgument> sargs;
     std::string readerTimezone;
     RowReaderOptions::IdReadIntentMap idReadIntentMap;
+    bool enableFixedWidthNumericVectorBatch;
 
     RowReaderOptionsPrivate() {
       selection = ColumnSelection_NONE;
@@ -151,6 +152,7 @@ namespace orc {
       forcedScaleOnHive11Decimal = 6;
       enableLazyDecoding = false;
       readerTimezone = "GMT";
+      enableFixedWidthNumericVectorBatch = false;
     }
   };
 
@@ -302,6 +304,16 @@ namespace orc {
   const RowReaderOptions::IdReadIntentMap
   RowReaderOptions::getIdReadIntentMap() const {
     return privateBits->idReadIntentMap;
+  }
+
+  RowReaderOptions& RowReaderOptions::setEnableFixedWidthNumericVectorBatch(
+    bool enableFixedWidthNumericVectorBatch) {
+    privateBits->enableFixedWidthNumericVectorBatch = enableFixedWidthNumericVectorBatch;
+    return *this;
+  }
+
+  bool RowReaderOptions::getEnableFixedWidthNumericVectorBatch() const {
+    return privateBits->enableFixedWidthNumericVectorBatch;
   }
 }
 

@@ -94,10 +94,12 @@ namespace orc {
                          std::unique_ptr<Type> fieldType) override;
     Type* addUnionChild(std::unique_ptr<Type> fieldType) override;
 
-    std::unique_ptr<ColumnVectorBatch> createRowBatch(uint64_t size,
-                                                      MemoryPool& memoryPool,
-                                                      bool encoded = false
-                                                      ) const override;
+    std::unique_ptr<ColumnVectorBatch> createRowBatch(
+        uint64_t size,
+        MemoryPool& memoryPool,
+        bool encoded = false,
+        bool enableFixedWidthNumericVectorBatch = false
+        ) const override;
 
     /**
      * Explicitly set the column ids. Only for internal usage.

@@ -65,8 +65,29 @@ public:
     /**
     * Read a number of values into the batch.
     */
+    template <typename T>
+    void next(T* data, uint64_t numValues,
+              const char* notNull);
+
     void next(int64_t* data, uint64_t numValues,
-              const char* notNull) override;
+              const char* notNull) override {
+      next<int64_t>(data, numValues, notNull);
+    }
+
+    void next(int32_t* data, uint64_t numValues,
+              const char* notNull) override {
+      next<int32_t>(data, numValues, notNull);
+    }
+
+    void next(int16_t* data, uint64_t numValues,
+              const char* notNull) override {
+      next<int16_t>(data, numValues, notNull);
+    }
+
+    void next(int8_t* data, uint64_t numValues,
+              const char* notNull) override {
+      next<int8_t>(data, numValues, notNull);
+    }
 
 private:
     inline signed char readByte();

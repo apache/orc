@@ -44,6 +44,7 @@ namespace orc {
     BloomFilterVersion bloomFilterVersion;
     std::string timezone;
     WriterMetrics* metrics;
+    bool enableFixedWidthNumericVectorBatch;
 
     WriterOptionsPrivate() :
                             fileVersion(FileVersion::v_0_12()) { // default to Hive_0_12
@@ -64,6 +65,7 @@ namespace orc {
       //Explictly set the writer timezone if the use case depends on it.
       timezone = "GMT";
       metrics = nullptr;
+      enableFixedWidthNumericVectorBatch = false;
     }
   };
 
@@ -267,6 +269,16 @@ namespace orc {
     return *this;
   }
 
+  WriterOptions& WriterOptions::setEnableFixedWidthNumericVectorBatch(
+      bool enableFixedWidthNumericVectorBatch) {
+    privateBits->enableFixedWidthNumericVectorBatch = enableFixedWidthNumericVectorBatch;
+    return *this;
+  }
+
+  bool WriterOptions::getEnableFixedWidthNumericVectorBatch() const {
+    return privateBits->enableFixedWidthNumericVectorBatch;
+  }
+
   Writer::~Writer() {
     // PASS
   }
@@ -289,6 +301,7 @@ namespace orc {
 
     static const char* magicId;
     static const WriterId writerId;
+    bool enableFixedWidthNumericVectorBatch;
 
   public:
     WriterImpl(
@@ -333,6 +346,8 @@ namespace orc {
     stripeRows = totalRows = indexRows = 0;
     currentOffset = 0;
 
+    enableFixedWidthNumericVectorBatch = opts.getEnableFixedWidthNumericVectorBatch();
+
     // compression stream for stripe footer, file footer and metadata
     compressionStream = createCompressor(
                                   options.getCompression(),
@@ -356,7 +371,7 @@ namespace orc {
 
   std::unique_ptr<ColumnVectorBatch> WriterImpl::createRowBatch(uint64_t size)
                                                                          const {
-    return type.createRowBatch(size, *options.getMemoryPool());
+    return type.createRowBatch(size, *options.getMemoryPool(), false, enableFixedWidthNumericVectorBatch);
   }
 
   void WriterImpl::add(ColumnVectorBatch& rowsToAdd) {

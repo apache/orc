@@ -433,7 +433,8 @@ void RleDecoderV2::skip(uint64_t numValues) {
   }
 }
 
-void RleDecoderV2::next(int64_t* const data,
+template <typename T>
+void RleDecoderV2::next(T* const data,
                         const uint64_t numValues,
                         const char* const notNull) {
   SCOPED_STOPWATCH(metrics, DecodingLatencyUs, DecodingCall);
@@ -475,7 +476,8 @@ void RleDecoderV2::next(int64_t* const data,
   }
 }
 
-uint64_t RleDecoderV2::nextShortRepeats(int64_t* const data,
+template <typename T>
+uint64_t RleDecoderV2::nextShortRepeats(T* const data,
                                         uint64_t offset,
                                         uint64_t numValues,
                                         const char* const notNull) {
@@ -502,13 +504,13 @@ uint64_t RleDecoderV2::nextShortRepeats(int64_t* const data,
   if (notNull) {
     for(uint64_t pos = offset; pos < offset + nRead; ++pos) {
       if (notNull[pos]) {
-        data[pos] = literals[0];
+        data[pos] = static_cast<T>(literals[0]);
         ++runRead;
       }
     }
   } else {
     for(uint64_t pos = offset; pos < offset + nRead; ++pos) {
-      data[pos] = literals[0];
+      data[pos] = static_cast<T>(literals[0]);
       ++runRead;
     }
   }
@@ -516,7 +518,8 @@ uint64_t RleDecoderV2::nextShortRepeats(int64_t* const data,
   return nRead;
 }
 
-uint64_t RleDecoderV2::nextDirect(int64_t* const data,
+template <typename T>
+uint64_t RleDecoderV2::nextDirect(T* const data,
                                   uint64_t offset,
                                   uint64_t numValues,
                                   const char* const notNull) {
@@ -567,7 +570,8 @@ void RleDecoderV2::adjustGapAndPatch(uint32_t patchBitSize, int64_t patchMask,
   *patchIdx = idx;
 }
 
-uint64_t RleDecoderV2::nextPatched(int64_t* const data,
+template <typename T>
+uint64_t RleDecoderV2::nextPatched(T* const data,
                                    uint64_t offset,
                                    uint64_t numValues,
                                    const char* const notNull) {
@@ -667,7 +671,8 @@ uint64_t RleDecoderV2::nextPatched(int64_t* const data,
   return copyDataFromBuffer(data, offset, numValues, notNull);
 }
 
-uint64_t RleDecoderV2::nextDelta(int64_t* const data,
+template <typename T>
+uint64_t RleDecoderV2::nextDelta(T* const data,
                                  uint64_t offset,
                                  uint64_t numValues,
                                  const char* const notNull) {
@@ -733,18 +738,20 @@ uint64_t RleDecoderV2::nextDelta(int64_t* const data,
   return copyDataFromBuffer(data, offset, numValues, notNull);
 }
 
-uint64_t RleDecoderV2::copyDataFromBuffer(int64_t* data, uint64_t offset,
+template <typename T>
+uint64_t RleDecoderV2::copyDataFromBuffer(T* data, uint64_t offset,
                                           uint64_t numValues, const char* notNull) {
   uint64_t nRead = std::min(runLength - runRead, numValues);
   if (notNull) {
     for (uint64_t i = offset; i < (offset + nRead); ++i) {
       if (notNull[i]) {
-        data[i] = literals[runRead++];
+        data[i] = static_cast<T>(literals[runRead++]);
       }
     }
   } else {
-    memcpy(data + offset, literals.data() + runRead, nRead * sizeof(int64_t));
-    runRead += nRead;
+    for (uint64_t i = offset; i < (offset + nRead); ++i) {
+      data[i] = static_cast<T>(literals[runRead++]);
+    }
   }
   return nRead;
 }

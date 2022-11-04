@@ -128,8 +128,29 @@ public:
   /**
   * Read a number of values into the batch.
   */
+  template <typename T>
+  void next(T* data, uint64_t numValues,
+            const char* notNull);
+
   void next(int64_t* data, uint64_t numValues,
-            const char* notNull) override;
+            const char* notNull) override {
+    next<int64_t>(data, numValues, notNull);
+  }
+
+  void next(int32_t* data, uint64_t numValues,
+                    const char* notNull) override {
+    next<int32_t>(data, numValues, notNull);
+  }
+
+  void next(int16_t* data, uint64_t numValues,
+                    const char* notNull) override {
+    next<int16_t>(data, numValues, notNull);
+  }
+
+  void next(int8_t* data, uint64_t numValues,
+                    const char* notNull) override {
+    next<int8_t>(data, numValues, notNull);
+  }
 
 private:
 
@@ -173,16 +194,20 @@ private:
   void unrolledUnpack56(int64_t *data, uint64_t offset, uint64_t len);
   void unrolledUnpack64(int64_t *data, uint64_t offset, uint64_t len);
 
-  uint64_t nextShortRepeats(int64_t* data, uint64_t offset, uint64_t numValues,
+  template <typename T>
+  uint64_t nextShortRepeats(T* data, uint64_t offset, uint64_t numValues,
                             const char* notNull);
-  uint64_t nextDirect(int64_t* data, uint64_t offset, uint64_t numValues,
+  template <typename T>
+  uint64_t nextDirect(T* data, uint64_t offset, uint64_t numValues,
                       const char* notNull);
-  uint64_t nextPatched(int64_t* data, uint64_t offset, uint64_t numValues,
+  template <typename T>
+  uint64_t nextPatched(T* data, uint64_t offset, uint64_t numValues,
                        const char* notNull);
-  uint64_t nextDelta(int64_t* data, uint64_t offset, uint64_t numValues,
+  template <typename T>
+  uint64_t nextDelta(T* data, uint64_t offset, uint64_t numValues,
                      const char* notNull);
-
-  uint64_t copyDataFromBuffer(int64_t* data, uint64_t offset, uint64_t numValues,
+  template <typename T>
+  uint64_t copyDataFromBuffer(T* data, uint64_t offset, uint64_t numValues,
                               const char* notNull);
 
   const std::unique_ptr<SeekableInputStream> inputStream;
