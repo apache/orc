@@ -106,14 +106,3 @@ jobs:
         cd java
         mvn install -DskipTests
         mvn javadoc:javadoc
-
-  formatting-check:
-    name: Format check
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Run clang-format style check for C++ code
-      uses: jidicula/clang-format-action@v4.2.0
-      with:
-        clang-format-version: '13'
-        check-path: 'c++'
