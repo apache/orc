@@ -134,14 +134,14 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
           int adjustedDownLen =
               StringExpr.rightTrimAndTruncate(bytes, start, length, readerType.getMaxLength());
           bytesColVector.setVal(elementNum, bytes, start, adjustedDownLen);
+          break;
         }
-        break;
         case VARCHAR: {
           int adjustedDownLen =
               StringExpr.truncate(bytes, start, length, readerType.getMaxLength());
           bytesColVector.setVal(elementNum, bytes, start, adjustedDownLen);
+          break;
         }
-        break;
         default:
           throw new RuntimeException("Unexpected type kind " + readerType.getCategory().name());
       }
@@ -162,8 +162,8 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
           if (adjustedDownLen < length) {
             bytesColVector.length[elementNum] = adjustedDownLen;
           }
+          break;
         }
-        break;
         case VARCHAR: {
           int length = bytesColVector.length[elementNum];
           int adjustedDownLen = StringExpr
@@ -173,8 +173,8 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
           if (adjustedDownLen < length) {
             bytesColVector.length[elementNum] = adjustedDownLen;
           }
+          break;
         }
-        break;
         default:
           throw new RuntimeException("Unexpected type kind " + readerType.getCategory().name());
       }
