@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#include "Adaptor.hh"
 #include "gzip.hh"
+#include "Adaptor.hh"
 
 #include <iostream>
 #include <stdexcept>
@@ -28,45 +28,43 @@
 
 namespace orc {
 
-  GzipTextReader::GzipTextReader(const std::string& _filename
-                                 ): filename(_filename) {
-    file = fopen(filename.c_str(), "rb");
-    if (file == nullptr) {
-      throw std::runtime_error("can't open " + filename);
-    }
-    stream.zalloc = nullptr;
-    stream.zfree = nullptr;
-    stream.opaque = nullptr;
-    stream.avail_in = 0;
-    stream.avail_out = 1;
-    stream.next_in = nullptr;
-    int ret = inflateInit2(&stream, 16+MAX_WBITS);
-    if (ret != Z_OK) {
-      throw std::runtime_error("zlib failed initialization for " + filename);
-    }
-    outPtr = nullptr;
-    outEnd = nullptr;
-    isDone = false;
+GzipTextReader::GzipTextReader(const std::string& _filename) : filename(_filename) {
+  file = fopen(filename.c_str(), "rb");
+  if (file == nullptr) {
+    throw std::runtime_error("can't open " + filename);
   }
+  stream.zalloc = nullptr;
+  stream.zfree = nullptr;
+  stream.opaque = nullptr;
+  stream.avail_in = 0;
+  stream.avail_out = 1;
+  stream.next_in = nullptr;
+  int ret = inflateInit2(&stream, 16 + MAX_WBITS);
+  if (ret != Z_OK) {
+    throw std::runtime_error("zlib failed initialization for " + filename);
+  }
+  outPtr = nullptr;
+  outEnd = nullptr;
+  isDone = false;
+}
 
-  bool GzipTextReader::nextBuffer() {
-    // if we are done, return
-    if (isDone) {
-      return false;
+bool GzipTextReader::nextBuffer() {
+  // if we are done, return
+  if (isDone) {
+    return false;
+  }
+  // if the last read is done, read more
+  if (stream.avail_in == 0 && stream.avail_out != 0) {
+    stream.next_in = input;
+    stream.avail_in = static_cast<unsigned>(fread(input, 1, sizeof(input), file));
+    if (ferror(file)) {
+      throw std::runtime_error("failure reading " + filename);
     }
-    // if the last read is done, read more
-    if (stream.avail_in == 0 && stream.avail_out != 0) {
-      stream.next_in = input;
-      stream.avail_in = static_cast<unsigned>(fread(input, 1, sizeof(input),
-                                                    file));
-      if (ferror(file)) {
-        throw std::runtime_error("failure reading " + filename);
-      }
-    }
-    stream.avail_out = sizeof(output);
-    stream.next_out = output;
-    int ret = inflate(&stream, Z_NO_FLUSH);
-    switch (ret) {
+  }
+  stream.avail_out = sizeof(output);
+  stream.next_out = output;
+  int ret = inflate(&stream, Z_NO_FLUSH);
+  switch (ret) {
     case Z_OK:
       break;
     case Z_STREAM_END:
@@ -83,33 +81,33 @@ namespace orc {
       throw std::runtime_error("zlib buffer problem");
     default:
       throw std::runtime_error("zlib unknown problem");
-    }
-    outPtr = output;
-    outEnd = output + (sizeof(output) - stream.avail_out);
-    return true;
   }
+  outPtr = output;
+  outEnd = output + (sizeof(output) - stream.avail_out);
+  return true;
+}
 
-  bool GzipTextReader::nextLine(std::string& line) {
-    bool result = false;
-    line.clear();
-    while (true) {
-      if (outPtr == outEnd) {
-        if (!nextBuffer()) {
-          return result;
-        }
+bool GzipTextReader::nextLine(std::string& line) {
+  bool result = false;
+  line.clear();
+  while (true) {
+    if (outPtr == outEnd) {
+      if (!nextBuffer()) {
+        return result;
       }
-      unsigned char ch = *(outPtr++);
-      if (ch == '\n') {
-        return true;
-      }
-      line += static_cast<char>(ch);
     }
-  }
-
-  GzipTextReader::~GzipTextReader() {
-    inflateEnd(&stream);
-    if (fclose(file) != 0) {
-      std::cerr << "can't close file " << filename;
+    unsigned char ch = *(outPtr++);
+    if (ch == '\n') {
+      return true;
     }
+    line += static_cast<char>(ch);
   }
 }
+
+GzipTextReader::~GzipTextReader() {
+  inflateEnd(&stream);
+  if (fclose(file) != 0) {
+    std::cerr << "can't close file " << filename;
+  }
+}
+}  // namespace orc

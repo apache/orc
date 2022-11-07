@@ -32,19 +32,17 @@ void printOptions(std::ostream& out) {
 
 bool parseOptions(int* argc, char** argv[], uint64_t* batchSize,
                   orc::RowReaderOptions* rowReaderOpts, bool* showMetrics) {
-  static struct option longOptions[] = {
-    {"help", no_argument, ORC_NULLPTR, 'h'},
-    {"batch", required_argument, ORC_NULLPTR, 'b'},
-    {"columns", required_argument, ORC_NULLPTR, 'c'},
-    {"columnTypeIds", required_argument, ORC_NULLPTR, 't'},
-    {"columnNames", required_argument, ORC_NULLPTR, 'n'},
-    {"metrics", no_argument, ORC_NULLPTR, 'm'},
-    {ORC_NULLPTR, 0, ORC_NULLPTR, 0}
-  };
+  static struct option longOptions[] = {{"help", no_argument, ORC_NULLPTR, 'h'},
+                                        {"batch", required_argument, ORC_NULLPTR, 'b'},
+                                        {"columns", required_argument, ORC_NULLPTR, 'c'},
+                                        {"columnTypeIds", required_argument, ORC_NULLPTR, 't'},
+                                        {"columnNames", required_argument, ORC_NULLPTR, 'n'},
+                                        {"metrics", no_argument, ORC_NULLPTR, 'm'},
+                                        {ORC_NULLPTR, 0, ORC_NULLPTR, 0}};
   std::list<uint64_t> cols;
   std::list<std::string> colNames;
   int opt;
-  char *tail;
+  char* tail;
   do {
     opt = getopt_long(*argc, *argv, "hb:c:t:n:m", longOptions, ORC_NULLPTR);
     switch (opt) {
@@ -62,7 +60,7 @@ bool parseOptions(int* argc, char** argv[], uint64_t* batchSize,
       case 'c':
       case 'n': {
         bool empty = true;
-        char *col = std::strtok(optarg, ",");
+        char* col = std::strtok(optarg, ",");
         while (col) {
           if (opt == 'n') {
             colNames.emplace_back(col);
@@ -83,11 +81,12 @@ bool parseOptions(int* argc, char** argv[], uint64_t* batchSize,
         }
         break;
       }
-      case 'm' : {
+      case 'm': {
         *showMetrics = true;
         break;
       }
-      default: break;
+      default:
+        break;
     }
   } while (opt != -1);
   *argc -= optind;
@@ -98,24 +97,20 @@ bool parseOptions(int* argc, char** argv[], uint64_t* batchSize,
 void printReaderMetrics(std::ostream& out, const orc::ReaderMetrics* metrics) {
   if (metrics != nullptr) {
     static const uint64_t US_PER_SECOND = 1000000;
-    out << "ElapsedTimeSeconds: "
-        << metrics->ReaderInclusiveLatencyUs / US_PER_SECOND << std::endl;
-    out << "DecompressionLatencySeconds: "
-        << metrics->DecompressionLatencyUs / US_PER_SECOND << std::endl;
-    out << "DecodingLatencySeconds: "
-        << metrics->DecodingLatencyUs / US_PER_SECOND << std::endl;
-    out << "ByteDecodingLatencySeconds: "
-        << metrics->ByteDecodingLatencyUs / US_PER_SECOND << std::endl;
-    out << "IOBlockingLatencySeconds: "
-        << metrics->IOBlockingLatencyUs / US_PER_SECOND << std::endl;
+    out << "ElapsedTimeSeconds: " << metrics->ReaderInclusiveLatencyUs / US_PER_SECOND << std::endl;
+    out << "DecompressionLatencySeconds: " << metrics->DecompressionLatencyUs / US_PER_SECOND
+        << std::endl;
+    out << "DecodingLatencySeconds: " << metrics->DecodingLatencyUs / US_PER_SECOND << std::endl;
+    out << "ByteDecodingLatencySeconds: " << metrics->ByteDecodingLatencyUs / US_PER_SECOND
+        << std::endl;
+    out << "IOBlockingLatencySeconds: " << metrics->IOBlockingLatencyUs / US_PER_SECOND
+        << std::endl;
     out << "ReaderCall: " << metrics->ReaderCall << std::endl;
     out << "DecompressionCall: " << metrics->DecompressionCall << std::endl;
     out << "DecodingCall: " << metrics->DecodingCall << std::endl;
     out << "ByteDecodingCall: " << metrics->ByteDecodingCall << std::endl;
     out << "IOCount: " << metrics->IOCount << std::endl;
-    out << "PPD SelectedRowGroupCount: "
-        << metrics->SelectedRowGroupCount << std::endl;
-    out << "PPD EvaluatedRowGroupCount: "
-        << metrics->EvaluatedRowGroupCount << std::endl;
+    out << "PPD SelectedRowGroupCount: " << metrics->SelectedRowGroupCount << std::endl;
+    out << "PPD EvaluatedRowGroupCount: " << metrics->EvaluatedRowGroupCount << std::endl;
   }
 }

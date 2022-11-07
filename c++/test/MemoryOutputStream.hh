@@ -19,53 +19,42 @@
 #ifndef ORC_MEMORYOUTPUTSTREAM_HH
 #define ORC_MEMORYOUTPUTSTREAM_HH
 
-#include "orc/OrcFile.hh"
 #include "io/OutputStream.hh"
+#include "orc/OrcFile.hh"
 
 #include <iostream>
 
 namespace orc {
 
-  class MemoryOutputStream : public OutputStream {
-  public:
-    MemoryOutputStream(size_t capacity) : name("MemoryOutputStream") {
-      data = new char[capacity];
-      length = 0;
-      naturalWriteSize = 2048;
-    }
+class MemoryOutputStream : public OutputStream {
+ public:
+  MemoryOutputStream(size_t capacity) : name("MemoryOutputStream") {
+    data = new char[capacity];
+    length = 0;
+    naturalWriteSize = 2048;
+  }
 
-    virtual ~MemoryOutputStream() override;
+  virtual ~MemoryOutputStream() override;
 
-    virtual uint64_t getLength() const override {
-      return length;
-    }
+  virtual uint64_t getLength() const override { return length; }
 
-    virtual uint64_t getNaturalWriteSize() const override {
-      return naturalWriteSize;
-    }
+  virtual uint64_t getNaturalWriteSize() const override { return naturalWriteSize; }
 
-    virtual void write(const void* buf, size_t size) override;
+  virtual void write(const void* buf, size_t size) override;
 
-    virtual const std::string& getName() const override {
-      return name;
-    }
+  virtual const std::string& getName() const override { return name; }
 
-    const char * getData() const {
-      return data;
-    }
+  const char* getData() const { return data; }
 
-    void close() override {
-    }
+  void close() override {}
 
-    void reset()  {
-      length = 0;
-    }
+  void reset() { length = 0; }
 
-  private:
-    char * data;
-    std::string name;
-    uint64_t length, naturalWriteSize;
-  };
-}
+ private:
+  char* data;
+  std::string name;
+  uint64_t length, naturalWriteSize;
+};
+}  // namespace orc
 
 #endif

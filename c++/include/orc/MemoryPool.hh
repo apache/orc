@@ -19,136 +19,123 @@
 #ifndef MEMORYPOOL_HH_
 #define MEMORYPOOL_HH_
 
-#include "orc/orc-config.hh"
 #include "orc/Int128.hh"
+#include "orc/orc-config.hh"
 
 #include <memory>
 
 namespace orc {
 
-  class MemoryPool {
-  public:
-    virtual ~MemoryPool();
+class MemoryPool {
+ public:
+  virtual ~MemoryPool();
 
-    virtual char* malloc(uint64_t size) = 0;
-    virtual void free(char* p) = 0;
-  };
-  MemoryPool* getDefaultPool();
+  virtual char* malloc(uint64_t size) = 0;
+  virtual void free(char* p) = 0;
+};
+MemoryPool* getDefaultPool();
 
-  template <class T>
-  class DataBuffer {
-  private:
-    MemoryPool& memoryPool;
-    T* buf;
-    // current size
-    uint64_t currentSize;
-    // maximal capacity (actual allocated memory)
-    uint64_t currentCapacity;
+template <class T>
+class DataBuffer {
+ private:
+  MemoryPool& memoryPool;
+  T* buf;
+  // current size
+  uint64_t currentSize;
+  // maximal capacity (actual allocated memory)
+  uint64_t currentCapacity;
 
-    // not implemented
-    DataBuffer(DataBuffer& buffer);
-    DataBuffer& operator=(DataBuffer& buffer);
+  // not implemented
+  DataBuffer(DataBuffer& buffer);
+  DataBuffer& operator=(DataBuffer& buffer);
 
-  public:
-    DataBuffer(MemoryPool& pool, uint64_t _size = 0);
+ public:
+  DataBuffer(MemoryPool& pool, uint64_t _size = 0);
 
-    DataBuffer(DataBuffer<T>&& buffer) ORC_NOEXCEPT;
+  DataBuffer(DataBuffer<T>&& buffer) ORC_NOEXCEPT;
 
-    virtual ~DataBuffer();
+  virtual ~DataBuffer();
 
-    T* data() {
-      return buf;
-    }
+  T* data() { return buf; }
 
-    const T* data() const {
-      return buf;
-    }
+  const T* data() const { return buf; }
 
-    uint64_t size() {
-      return currentSize;
-    }
+  uint64_t size() { return currentSize; }
 
-    uint64_t capacity() {
-      return currentCapacity;
-    }
+  uint64_t capacity() { return currentCapacity; }
 
-    const T& operator[](uint64_t i) const {
-      return buf[i];
-    }
+  const T& operator[](uint64_t i) const { return buf[i]; }
 
-    T& operator[](uint64_t i) {
-      return buf[i];
-    }
+  T& operator[](uint64_t i) { return buf[i]; }
 
-    void reserve(uint64_t _size);
-    void resize(uint64_t _size);
-  };
+  void reserve(uint64_t _size);
+  void resize(uint64_t _size);
+};
 
-  // Specializations for char
+// Specializations for char
 
-  template <>
-  DataBuffer<char>::~DataBuffer();
+template <>
+DataBuffer<char>::~DataBuffer();
 
-  template <>
-  void DataBuffer<char>::resize(uint64_t newSize);
+template <>
+void DataBuffer<char>::resize(uint64_t newSize);
 
-  // Specializations for char*
+// Specializations for char*
 
-  template <>
-  DataBuffer<char*>::~DataBuffer();
+template <>
+DataBuffer<char*>::~DataBuffer();
 
-  template <>
-  void DataBuffer<char*>::resize(uint64_t newSize);
+template <>
+void DataBuffer<char*>::resize(uint64_t newSize);
 
-  // Specializations for double
+// Specializations for double
 
-  template <>
-  DataBuffer<double>::~DataBuffer();
+template <>
+DataBuffer<double>::~DataBuffer();
 
-  template <>
-  void DataBuffer<double>::resize(uint64_t newSize);
+template <>
+void DataBuffer<double>::resize(uint64_t newSize);
 
-  // Specializations for int64_t
+// Specializations for int64_t
 
-  template <>
-  DataBuffer<int64_t>::~DataBuffer();
+template <>
+DataBuffer<int64_t>::~DataBuffer();
 
-  template <>
-  void DataBuffer<int64_t>::resize(uint64_t newSize);
+template <>
+void DataBuffer<int64_t>::resize(uint64_t newSize);
 
-  // Specializations for uint64_t
+// Specializations for uint64_t
 
-  template <>
-  DataBuffer<uint64_t>::~DataBuffer();
+template <>
+DataBuffer<uint64_t>::~DataBuffer();
 
-  template <>
-  void DataBuffer<uint64_t>::resize(uint64_t newSize);
+template <>
+void DataBuffer<uint64_t>::resize(uint64_t newSize);
 
-  // Specializations for unsigned char
+// Specializations for unsigned char
 
-  template <>
-  DataBuffer<unsigned char>::~DataBuffer();
+template <>
+DataBuffer<unsigned char>::~DataBuffer();
 
-  template <>
-  void DataBuffer<unsigned char>::resize(uint64_t newSize);
+template <>
+void DataBuffer<unsigned char>::resize(uint64_t newSize);
 
-  #ifdef __clang__
-    #pragma clang diagnostic push
-    #pragma clang diagnostic ignored "-Wweak-template-vtables"
-  #endif
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wweak-template-vtables"
+#endif
 
-  extern template class DataBuffer<char>;
-  extern template class DataBuffer<char*>;
-  extern template class DataBuffer<double>;
-  extern template class DataBuffer<Int128>;
-  extern template class DataBuffer<int64_t>;
-  extern template class DataBuffer<uint64_t>;
-  extern template class DataBuffer<unsigned char>;
+extern template class DataBuffer<char>;
+extern template class DataBuffer<char*>;
+extern template class DataBuffer<double>;
+extern template class DataBuffer<Int128>;
+extern template class DataBuffer<int64_t>;
+extern template class DataBuffer<uint64_t>;
+extern template class DataBuffer<unsigned char>;
 
-  #ifdef __clang__
-    #pragma clang diagnostic pop
-  #endif
-} // namespace orc
-
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
+}  // namespace orc
 
 #endif /* MEMORYPOOL_HH_ */

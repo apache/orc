@@ -20,48 +20,41 @@
 #include "orc/Exceptions.hh"
 
 #include <getopt.h>
-#include <string>
-#include <memory>
 #include <iostream>
+#include <memory>
 #include <string>
 
-void printStatistics(const char *filename, bool withIndex) {
-
+void printStatistics(const char* filename, bool withIndex) {
   orc::ReaderOptions opts;
   std::unique_ptr<orc::Reader> reader;
-  reader = orc::createReader(orc::readFile(std::string(filename),
-                                           opts.getReaderMetrics()),
-                             opts);
+  reader = orc::createReader(orc::readFile(std::string(filename), opts.getReaderMetrics()), opts);
   // print out all selected columns statistics.
   std::unique_ptr<orc::Statistics> colStats = reader->getStatistics();
-  std::cout << "File " << filename << " has "
-            << colStats->getNumberOfColumns() << " columns"  << std::endl;
-  for(uint32_t i=0; i < colStats->getNumberOfColumns(); ++i) {
+  std::cout << "File " << filename << " has " << colStats->getNumberOfColumns() << " columns"
+            << std::endl;
+  for (uint32_t i = 0; i < colStats->getNumberOfColumns(); ++i) {
     std::cout << "*** Column " << i << " ***" << std::endl;
     std::cout << colStats->getColumnStatistics(i)->toString() << std::endl;
   }
 
   // test stripe statistics
   std::unique_ptr<orc::StripeStatistics> stripeStats;
-  std::cout << "File " << filename << " has " << reader->getNumberOfStripes()
-            << " stripes"  << std::endl;
+  std::cout << "File " << filename << " has " << reader->getNumberOfStripes() << " stripes"
+            << std::endl;
   if (reader->getNumberOfStripeStatistics() == 0) {
-    std::cout << "File " << filename << " doesn't have stripe statistics"
-              << std::endl;
+    std::cout << "File " << filename << " doesn't have stripe statistics" << std::endl;
   } else {
     for (unsigned int j = 0; j < reader->getNumberOfStripeStatistics(); j++) {
       stripeStats = reader->getStripeStatistics(j);
       std::cout << "*** Stripe " << j << " ***" << std::endl << std::endl;
 
-      for(unsigned int k = 0; k < stripeStats->getNumberOfColumns(); ++k) {
+      for (unsigned int k = 0; k < stripeStats->getNumberOfColumns(); ++k) {
         std::cout << "--- Column " << k << " ---" << std::endl;
-        std::cout << stripeStats->getColumnStatistics(k)->toString()
-                  << std::endl;
+        std::cout << stripeStats->getColumnStatistics(k)->toString() << std::endl;
         if (withIndex) {
-          for(unsigned int r = 0; r < stripeStats->getNumberOfRowIndexStats(k); ++r) {
+          for (unsigned int r = 0; r < stripeStats->getNumberOfRowIndexStats(k); ++r) {
             std::cout << "--- RowIndex " << r << " ---" << std::endl;
-            std::cout << stripeStats->getRowIndexStatistics(k, r)->toString()
-                      << std::endl;
+            std::cout << stripeStats->getRowIndexStatistics(k, r)->toString() << std::endl;
           }
         }
       }
@@ -70,11 +63,9 @@ void printStatistics(const char *filename, bool withIndex) {
 }
 
 int main(int argc, char* argv[]) {
-  static struct option longOptions[] = {
-    {"help", no_argument, ORC_NULLPTR, 'h'},
-    {"withIndex", no_argument, ORC_NULLPTR, 'i'},
-    {ORC_NULLPTR, 0, ORC_NULLPTR, 0}
-  };
+  static struct option longOptions[] = {{"help", no_argument, ORC_NULLPTR, 'h'},
+                                        {"withIndex", no_argument, ORC_NULLPTR, 'i'},
+                                        {ORC_NULLPTR, 0, ORC_NULLPTR, 0}};
   const char* filename = ORC_NULLPTR;
   bool withIndex = false;
   bool helpFlag = false;
@@ -82,34 +73,33 @@ int main(int argc, char* argv[]) {
   do {
     opt = getopt_long(argc, argv, "hi", longOptions, ORC_NULLPTR);
     switch (opt) {
-    case '?':
-    case 'h':
-      helpFlag = true;
-      opt = -1;
-      break;
-    case 'i':
-      withIndex = true;
-      break;
+      case '?':
+      case 'h':
+        helpFlag = true;
+        opt = -1;
+        break;
+      case 'i':
+        withIndex = true;
+        break;
     }
   } while (opt != -1);
   argc -= optind;
   argv += optind;
 
   if (argc < 1 || helpFlag) {
-    std::cerr
-      << "Usage: orc-statistics [-h] [--help] [-i] [--withIndex]"
-      << " <filenames>\n";
+    std::cerr << "Usage: orc-statistics [-h] [--help] [-i] [--withIndex]"
+              << " <filenames>\n";
     exit(1);
   }
 
-  for(int i=0; i < argc; ++i) {
-      filename = argv[i];
-      try {
-          printStatistics(filename, withIndex);
-      } catch (std::exception& ex) {
-          std::cerr << "Caught exception: " << ex.what() << "\n";
-          return 1;
-      }
+  for (int i = 0; i < argc; ++i) {
+    filename = argv[i];
+    try {
+      printStatistics(filename, withIndex);
+    } catch (std::exception& ex) {
+      std::cerr << "Caught exception: " << ex.what() << "\n";
+      return 1;
+    }
   }
 
   return 0;

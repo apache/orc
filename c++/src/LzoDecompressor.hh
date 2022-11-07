@@ -25,18 +25,16 @@
 
 namespace orc {
 
-  /**
-   * Decompress the bytes in to the output buffer.
-   * @param inputAddress the start of the input
-   * @param inputLimit one past the last byte of the input
-   * @param outputAddress the start of the output buffer
-   * @param outputLimit one past the last byte of the output buffer
-   * @result the number of bytes decompressed
-   */
-  uint64_t lzoDecompress(const char *inputAddress,
-                         const char *inputLimit,
-                         char *outputAddress,
-                         char *outputLimit);
-}
+/**
+ * Decompress the bytes in to the output buffer.
+ * @param inputAddress the start of the input
+ * @param inputLimit one past the last byte of the input
+ * @param outputAddress the start of the output buffer
+ * @param outputLimit one past the last byte of the output buffer
+ * @result the number of bytes decompressed
+ */
+uint64_t lzoDecompress(const char* inputAddress, const char* inputLimit, char* outputAddress,
+                       char* outputLimit);
+}  // namespace orc
 
 #endif

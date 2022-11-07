@@ -18,21 +18,21 @@
 
 #include "ToolsHelper.hh"
 
-#include <string>
-#include <memory>
 #include <iostream>
 #include <map>
+#include <memory>
+#include <string>
 
-class TestMemoryPool: public orc::MemoryPool {
-private:
+class TestMemoryPool : public orc::MemoryPool {
+ private:
   std::map<char*, uint64_t> blocks;
   uint64_t totalMemory;
   uint64_t maxMemory;
 
-public:
+ public:
   char* malloc(uint64_t size) ORC_OVERRIDE {
     char* p = static_cast<char*>(std::malloc(size));
-    blocks[p] = size ;
+    blocks[p] = size;
     totalMemory += size;
     if (maxMemory < totalMemory) {
       maxMemory = totalMemory;
@@ -42,35 +42,29 @@ public:
 
   void free(char* p) ORC_OVERRIDE {
     std::free(p);
-    totalMemory -= blocks[p] ;
+    totalMemory -= blocks[p];
     blocks.erase(p);
   }
 
-  uint64_t getMaxMemory() {
-    return maxMemory ;
-  }
+  uint64_t getMaxMemory() { return maxMemory; }
 
-  TestMemoryPool(): totalMemory(0), maxMemory(0) {}
+  TestMemoryPool() : totalMemory(0), maxMemory(0) {}
   ~TestMemoryPool() ORC_OVERRIDE;
 };
 
 TestMemoryPool::~TestMemoryPool() {}
 
-void processFile(const char* filename,
-                 const orc::RowReaderOptions& rowReaderOpts,
+void processFile(const char* filename, const orc::RowReaderOptions& rowReaderOpts,
                  uint64_t batchSize) {
   orc::ReaderOptions readerOpts;
   std::unique_ptr<orc::MemoryPool> pool(new TestMemoryPool());
   readerOpts.setMemoryPool(*(pool.get()));
 
-  std::unique_ptr<orc::Reader> reader =
-                  orc::createReader(orc::readFile(std::string(filename),
-                                                  readerOpts.getReaderMetrics()),
-                                    readerOpts);
+  std::unique_ptr<orc::Reader> reader = orc::createReader(
+      orc::readFile(std::string(filename), readerOpts.getReaderMetrics()), readerOpts);
   std::unique_ptr<orc::RowReader> rowReader = reader->createRowReader(rowReaderOpts);
 
-  std::unique_ptr<orc::ColumnVectorBatch> batch =
-      rowReader->createRowBatch(batchSize);
+  std::unique_ptr<orc::ColumnVectorBatch> batch = rowReader->createRowBatch(batchSize);
   uint64_t readerMemory;
   if (rowReaderOpts.getIndexesSet()) {
     readerMemory = reader->getMemoryUseByFieldId(rowReaderOpts.getInclude());
@@ -84,16 +78,14 @@ void processFile(const char* filename,
   }
 
   uint64_t batchMemory = batch->getMemoryUsage();
-  while (rowReader->next(*batch)) {}
-  uint64_t actualMemory =
-      static_cast<TestMemoryPool*>(pool.get())->getMaxMemory();
-  std::cout << "Reader memory estimate: " << readerMemory
-            << "\nBatch memory estimate:  " ;
+  while (rowReader->next(*batch)) {
+  }
+  uint64_t actualMemory = static_cast<TestMemoryPool*>(pool.get())->getMaxMemory();
+  std::cout << "Reader memory estimate: " << readerMemory << "\nBatch memory estimate:  ";
   if (batch->hasVariableLength()) {
     std::cout << "Cannot estimate because reading ARRAY or MAP columns";
   } else {
-    std::cout << batchMemory
-              << "\nTotal memory estimate:  " << readerMemory + batchMemory;
+    std::cout << batchMemory << "\nTotal memory estimate:  " << readerMemory + batchMemory;
   }
   std::cout << "\nActual max memory used: " << actualMemory << "\n";
 }

@@ -24,18 +24,16 @@
  * the output on each of the streams. The return code of the program is
  * returned as the result.
  */
-int runProgram(const std::vector<std::string> &command,
-               std::string &out,
-               std::string &err);
+int runProgram(const std::vector<std::string>& command, std::string& out, std::string& err);
 
 /**
  * Get the name of the given example file.
  * @param name the simple name of the example file
  */
-std::string findExample(const std::string &name);
+std::string findExample(const std::string& name);
 
 /**
  * Get the name of the given executable.
  * @param name the simple name of the executable
  */
-std::string findProgram(const std::string &name);
+std::string findProgram(const std::string& name);

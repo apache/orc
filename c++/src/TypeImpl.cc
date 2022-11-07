@@ -16,184 +16,167 @@
  * limitations under the License.
  */
 
+#include "TypeImpl.hh"
 #include "Adaptor.hh"
 #include "orc/Exceptions.hh"
-#include "TypeImpl.hh"
 
 #include <iostream>
 #include <sstream>
 
 namespace orc {
 
-  Type::~Type() {
-    // PASS
-  }
+Type::~Type() {
+  // PASS
+}
 
-  TypeImpl::TypeImpl(TypeKind _kind) {
-    parent = nullptr;
-    columnId = -1;
-    maximumColumnId = -1;
-    kind = _kind;
-    maxLength = 0;
-    precision = 0;
-    scale = 0;
-    subtypeCount = 0;
-  }
+TypeImpl::TypeImpl(TypeKind _kind) {
+  parent = nullptr;
+  columnId = -1;
+  maximumColumnId = -1;
+  kind = _kind;
+  maxLength = 0;
+  precision = 0;
+  scale = 0;
+  subtypeCount = 0;
+}
 
-  TypeImpl::TypeImpl(TypeKind _kind, uint64_t _maxLength) {
-    parent = nullptr;
-    columnId = -1;
-    maximumColumnId = -1;
-    kind = _kind;
-    maxLength = _maxLength;
-    precision = 0;
-    scale = 0;
-    subtypeCount = 0;
-  }
+TypeImpl::TypeImpl(TypeKind _kind, uint64_t _maxLength) {
+  parent = nullptr;
+  columnId = -1;
+  maximumColumnId = -1;
+  kind = _kind;
+  maxLength = _maxLength;
+  precision = 0;
+  scale = 0;
+  subtypeCount = 0;
+}
 
-  TypeImpl::TypeImpl(TypeKind _kind, uint64_t _precision,
-                     uint64_t _scale) {
-    parent = nullptr;
-    columnId = -1;
-    maximumColumnId = -1;
-    kind = _kind;
-    maxLength = 0;
-    precision = _precision;
-    scale = _scale;
-    subtypeCount = 0;
-  }
+TypeImpl::TypeImpl(TypeKind _kind, uint64_t _precision, uint64_t _scale) {
+  parent = nullptr;
+  columnId = -1;
+  maximumColumnId = -1;
+  kind = _kind;
+  maxLength = 0;
+  precision = _precision;
+  scale = _scale;
+  subtypeCount = 0;
+}
 
-  uint64_t TypeImpl::assignIds(uint64_t root) const {
-    columnId = static_cast<int64_t>(root);
-    uint64_t current = root + 1;
-    for(uint64_t i=0; i < subtypeCount; ++i) {
-      current = dynamic_cast<TypeImpl*>(subTypes[i].get())->assignIds(current);
+uint64_t TypeImpl::assignIds(uint64_t root) const {
+  columnId = static_cast<int64_t>(root);
+  uint64_t current = root + 1;
+  for (uint64_t i = 0; i < subtypeCount; ++i) {
+    current = dynamic_cast<TypeImpl*>(subTypes[i].get())->assignIds(current);
+  }
+  maximumColumnId = static_cast<int64_t>(current) - 1;
+  return current;
+}
+
+void TypeImpl::ensureIdAssigned() const {
+  if (columnId == -1) {
+    const TypeImpl* root = this;
+    while (root->parent != nullptr) {
+      root = root->parent;
     }
-    maximumColumnId = static_cast<int64_t>(current) - 1;
-    return current;
+    root->assignIds(0);
   }
+}
 
-  void TypeImpl::ensureIdAssigned() const {
-    if (columnId == -1) {
-      const TypeImpl* root = this;
-      while (root->parent != nullptr) {
-        root = root->parent;
-      }
-      root->assignIds(0);
+uint64_t TypeImpl::getColumnId() const {
+  ensureIdAssigned();
+  return static_cast<uint64_t>(columnId);
+}
+
+uint64_t TypeImpl::getMaximumColumnId() const {
+  ensureIdAssigned();
+  return static_cast<uint64_t>(maximumColumnId);
+}
+
+TypeKind TypeImpl::getKind() const { return kind; }
+
+uint64_t TypeImpl::getSubtypeCount() const { return subtypeCount; }
+
+const Type* TypeImpl::getSubtype(uint64_t i) const { return subTypes[i].get(); }
+
+const std::string& TypeImpl::getFieldName(uint64_t i) const { return fieldNames[i]; }
+
+uint64_t TypeImpl::getMaximumLength() const { return maxLength; }
+
+uint64_t TypeImpl::getPrecision() const { return precision; }
+
+uint64_t TypeImpl::getScale() const { return scale; }
+
+Type& TypeImpl::setAttribute(const std::string& key, const std::string& value) {
+  attributes[key] = value;
+  return *this;
+}
+
+bool TypeImpl::hasAttributeKey(const std::string& key) const {
+  return attributes.find(key) != attributes.end();
+}
+
+Type& TypeImpl::removeAttribute(const std::string& key) {
+  auto it = attributes.find(key);
+  if (it == attributes.end()) {
+    throw std::range_error("Key not found: " + key);
+  }
+  attributes.erase(it);
+  return *this;
+}
+
+std::vector<std::string> TypeImpl::getAttributeKeys() const {
+  std::vector<std::string> ret;
+  ret.reserve(attributes.size());
+  for (auto& attribute : attributes) {
+    ret.push_back(attribute.first);
+  }
+  return ret;
+}
+
+std::string TypeImpl::getAttributeValue(const std::string& key) const {
+  auto it = attributes.find(key);
+  if (it == attributes.end()) {
+    throw std::range_error("Key not found: " + key);
+  }
+  return it->second;
+}
+
+void TypeImpl::setIds(uint64_t _columnId, uint64_t _maxColumnId) {
+  columnId = static_cast<int64_t>(_columnId);
+  maximumColumnId = static_cast<int64_t>(_maxColumnId);
+}
+
+void TypeImpl::addChildType(std::unique_ptr<Type> childType) {
+  TypeImpl* child = dynamic_cast<TypeImpl*>(childType.get());
+  subTypes.push_back(std::move(childType));
+  if (child != nullptr) {
+    child->parent = this;
+  }
+  subtypeCount += 1;
+}
+
+Type* TypeImpl::addStructField(const std::string& fieldName, std::unique_ptr<Type> fieldType) {
+  addChildType(std::move(fieldType));
+  fieldNames.push_back(fieldName);
+  return this;
+}
+
+Type* TypeImpl::addUnionChild(std::unique_ptr<Type> fieldType) {
+  addChildType(std::move(fieldType));
+  return this;
+}
+
+bool isUnquotedFieldName(std::string fieldName) {
+  for (auto& ch : fieldName) {
+    if (!isalnum(ch) && ch != '_') {
+      return false;
     }
   }
+  return true;
+}
 
-  uint64_t TypeImpl::getColumnId() const {
-    ensureIdAssigned();
-    return static_cast<uint64_t>(columnId);
-  }
-
-  uint64_t TypeImpl::getMaximumColumnId() const {
-    ensureIdAssigned();
-    return static_cast<uint64_t>(maximumColumnId);
-  }
-
-  TypeKind TypeImpl::getKind() const {
-    return kind;
-  }
-
-  uint64_t TypeImpl::getSubtypeCount() const {
-    return subtypeCount;
-  }
-
-  const Type* TypeImpl::getSubtype(uint64_t i) const {
-    return subTypes[i].get();
-  }
-
-  const std::string& TypeImpl::getFieldName(uint64_t i) const {
-    return fieldNames[i];
-  }
-
-  uint64_t TypeImpl::getMaximumLength() const {
-    return maxLength;
-  }
-
-  uint64_t TypeImpl::getPrecision() const {
-    return precision;
-  }
-
-  uint64_t TypeImpl::getScale() const {
-    return scale;
-  }
-
-  Type& TypeImpl::setAttribute(const std::string& key,
-                     const std::string& value) {
-    attributes[key] = value;
-    return *this;
-  }
-
-  bool TypeImpl::hasAttributeKey(const std::string& key) const {
-    return attributes.find(key) != attributes.end();
-  }
-
-  Type& TypeImpl::removeAttribute(const std::string& key) {
-    auto it = attributes.find(key);
-    if (it == attributes.end()) {
-      throw std::range_error("Key not found: " + key);
-    }
-    attributes.erase(it);
-    return *this;
-  }
-
-  std::vector<std::string> TypeImpl::getAttributeKeys() const {
-    std::vector<std::string> ret;
-    ret.reserve(attributes.size());
-    for (auto& attribute : attributes) {
-      ret.push_back(attribute.first);
-    }
-    return ret;
-  }
-
-  std::string TypeImpl::getAttributeValue(const std::string& key) const {
-    auto it = attributes.find(key);
-    if (it == attributes.end()) {
-      throw std::range_error("Key not found: " + key);
-    }
-    return it->second;
-  }
-
-  void TypeImpl::setIds(uint64_t _columnId, uint64_t _maxColumnId) {
-    columnId = static_cast<int64_t>(_columnId);
-    maximumColumnId = static_cast<int64_t>(_maxColumnId);
-  }
-
-  void TypeImpl::addChildType(std::unique_ptr<Type> childType) {
-    TypeImpl* child = dynamic_cast<TypeImpl*>(childType.get());
-    subTypes.push_back(std::move(childType));
-    if (child != nullptr) {
-      child->parent = this;
-    }
-    subtypeCount += 1;
-  }
-
-  Type* TypeImpl::addStructField(const std::string& fieldName,
-                                 std::unique_ptr<Type> fieldType) {
-    addChildType(std::move(fieldType));
-    fieldNames.push_back(fieldName);
-    return this;
-  }
-
-  Type* TypeImpl::addUnionChild(std::unique_ptr<Type> fieldType) {
-    addChildType(std::move(fieldType));
-    return this;
-  }
-
-  bool isUnquotedFieldName(std::string fieldName) {
-    for (auto &ch : fieldName) {
-        if (!isalnum(ch) && ch != '_') {
-          return false;
-        }
-    }
-    return true;
-  }
-
-  std::string TypeImpl::toString() const {
-    switch (static_cast<int64_t>(kind)) {
+std::string TypeImpl::toString() const {
+  switch (static_cast<int64_t>(kind)) {
     case BOOLEAN:
       return "boolean";
     case BYTE:
@@ -220,10 +203,10 @@ namespace orc {
       return "array<" + (subTypes[0] ? subTypes[0]->toString() : "void") + ">";
     case MAP:
       return "map<" + (subTypes[0] ? subTypes[0]->toString() : "void") + "," +
-        (subTypes[1] ? subTypes[1]->toString() : "void") +  ">";
+             (subTypes[1] ? subTypes[1]->toString() : "void") + ">";
     case STRUCT: {
       std::string result = "struct<";
-      for(size_t i=0; i < subTypes.size(); ++i) {
+      for (size_t i = 0; i < subTypes.size(); ++i) {
         if (i != 0) {
           result += ",";
         }
@@ -248,7 +231,7 @@ namespace orc {
     }
     case UNION: {
       std::string result = "uniontype<";
-      for(size_t i=0; i < subTypes.size(); ++i) {
+      for (size_t i = 0; i < subTypes.size(); ++i) {
         if (i != 0) {
           result += ",";
         }
@@ -276,50 +259,44 @@ namespace orc {
     }
     default:
       throw NotImplementedYet("Unknown type");
-    }
   }
+}
 
-  std::unique_ptr<ColumnVectorBatch>
-  TypeImpl::createRowBatch(uint64_t capacity,
-                           MemoryPool& memoryPool,
-                           bool encoded) const {
-    switch (static_cast<int64_t>(kind)) {
+std::unique_ptr<ColumnVectorBatch> TypeImpl::createRowBatch(uint64_t capacity,
+                                                            MemoryPool& memoryPool,
+                                                            bool encoded) const {
+  switch (static_cast<int64_t>(kind)) {
     case BOOLEAN:
     case BYTE:
     case SHORT:
     case INT:
     case LONG:
     case DATE:
-      return std::unique_ptr<ColumnVectorBatch>
-        (new LongVectorBatch(capacity, memoryPool));
+      return std::unique_ptr<ColumnVectorBatch>(new LongVectorBatch(capacity, memoryPool));
 
     case FLOAT:
     case DOUBLE:
-      return std::unique_ptr<ColumnVectorBatch>
-        (new DoubleVectorBatch(capacity, memoryPool));
+      return std::unique_ptr<ColumnVectorBatch>(new DoubleVectorBatch(capacity, memoryPool));
 
     case STRING:
     case BINARY:
     case CHAR:
     case VARCHAR:
-      return encoded ?
-      std::unique_ptr<ColumnVectorBatch>
-        (new EncodedStringVectorBatch(capacity, memoryPool))
-      : std::unique_ptr<ColumnVectorBatch>
-        (new StringVectorBatch(capacity, memoryPool));
+      return encoded
+                 ? std::unique_ptr<ColumnVectorBatch>(
+                       new EncodedStringVectorBatch(capacity, memoryPool))
+                 : std::unique_ptr<ColumnVectorBatch>(new StringVectorBatch(capacity, memoryPool));
 
     case TIMESTAMP:
     case TIMESTAMP_INSTANT:
-      return std::unique_ptr<ColumnVectorBatch>
-        (new TimestampVectorBatch(capacity, memoryPool));
+      return std::unique_ptr<ColumnVectorBatch>(new TimestampVectorBatch(capacity, memoryPool));
 
     case STRUCT: {
-      StructVectorBatch *result = new StructVectorBatch(capacity, memoryPool);
+      StructVectorBatch* result = new StructVectorBatch(capacity, memoryPool);
       std::unique_ptr<ColumnVectorBatch> return_value = std::unique_ptr<ColumnVectorBatch>(result);
-      for(uint64_t i=0; i < getSubtypeCount(); ++i) {
-          result->fields.push_back(getSubtype(i)->
-                                   createRowBatch(capacity,
-                                                  memoryPool, encoded).release());
+      for (uint64_t i = 0; i < getSubtypeCount(); ++i) {
+        result->fields.push_back(
+            getSubtype(i)->createRowBatch(capacity, memoryPool, encoded).release());
       }
       return return_value;
     }
@@ -347,74 +324,62 @@ namespace orc {
 
     case DECIMAL: {
       if (getPrecision() == 0 || getPrecision() > 18) {
-        return std::unique_ptr<ColumnVectorBatch>
-          (new Decimal128VectorBatch(capacity, memoryPool));
+        return std::unique_ptr<ColumnVectorBatch>(new Decimal128VectorBatch(capacity, memoryPool));
       } else {
-        return std::unique_ptr<ColumnVectorBatch>
-          (new Decimal64VectorBatch(capacity, memoryPool));
+        return std::unique_ptr<ColumnVectorBatch>(new Decimal64VectorBatch(capacity, memoryPool));
       }
     }
 
     case UNION: {
-      UnionVectorBatch *result = new UnionVectorBatch(capacity, memoryPool);
+      UnionVectorBatch* result = new UnionVectorBatch(capacity, memoryPool);
       std::unique_ptr<ColumnVectorBatch> return_value = std::unique_ptr<ColumnVectorBatch>(result);
-      for(uint64_t i=0; i < getSubtypeCount(); ++i) {
-          result->children.push_back(getSubtype(i)->createRowBatch(capacity,
-                                                                   memoryPool, encoded)
-                                     .release());
+      for (uint64_t i = 0; i < getSubtypeCount(); ++i) {
+        result->children.push_back(
+            getSubtype(i)->createRowBatch(capacity, memoryPool, encoded).release());
       }
       return return_value;
     }
 
     default:
       throw NotImplementedYet("not supported yet");
-    }
   }
+}
 
-  std::unique_ptr<Type> createPrimitiveType(TypeKind kind) {
-    return std::unique_ptr<Type>(new TypeImpl(kind));
-  }
+std::unique_ptr<Type> createPrimitiveType(TypeKind kind) {
+  return std::unique_ptr<Type>(new TypeImpl(kind));
+}
 
-  std::unique_ptr<Type> createCharType(TypeKind kind,
-                                       uint64_t maxLength) {
-    return std::unique_ptr<Type>(new TypeImpl(kind, maxLength));
-  }
+std::unique_ptr<Type> createCharType(TypeKind kind, uint64_t maxLength) {
+  return std::unique_ptr<Type>(new TypeImpl(kind, maxLength));
+}
 
-  std::unique_ptr<Type> createDecimalType(uint64_t precision,
-                                          uint64_t scale) {
-    return std::unique_ptr<Type>(new TypeImpl(DECIMAL, precision, scale));
-  }
+std::unique_ptr<Type> createDecimalType(uint64_t precision, uint64_t scale) {
+  return std::unique_ptr<Type>(new TypeImpl(DECIMAL, precision, scale));
+}
 
-  std::unique_ptr<Type> createStructType() {
-    return std::unique_ptr<Type>(new TypeImpl(STRUCT));
-  }
+std::unique_ptr<Type> createStructType() { return std::unique_ptr<Type>(new TypeImpl(STRUCT)); }
 
-  std::unique_ptr<Type> createListType(std::unique_ptr<Type> elements) {
-    TypeImpl* result = new TypeImpl(LIST);
-    std::unique_ptr<Type> return_value = std::unique_ptr<Type>(result);
-    result->addChildType(std::move(elements));
-    return return_value;
-  }
+std::unique_ptr<Type> createListType(std::unique_ptr<Type> elements) {
+  TypeImpl* result = new TypeImpl(LIST);
+  std::unique_ptr<Type> return_value = std::unique_ptr<Type>(result);
+  result->addChildType(std::move(elements));
+  return return_value;
+}
 
-  std::unique_ptr<Type> createMapType(std::unique_ptr<Type> key,
-                                      std::unique_ptr<Type> value) {
-    TypeImpl* result = new TypeImpl(MAP);
-    std::unique_ptr<Type> return_value = std::unique_ptr<Type>(result);
-    result->addChildType(std::move(key));
-    result->addChildType(std::move(value));
-    return return_value;
-  }
+std::unique_ptr<Type> createMapType(std::unique_ptr<Type> key, std::unique_ptr<Type> value) {
+  TypeImpl* result = new TypeImpl(MAP);
+  std::unique_ptr<Type> return_value = std::unique_ptr<Type>(result);
+  result->addChildType(std::move(key));
+  result->addChildType(std::move(value));
+  return return_value;
+}
 
-  std::unique_ptr<Type> createUnionType() {
-    return std::unique_ptr<Type>(new TypeImpl(UNION));
-  }
+std::unique_ptr<Type> createUnionType() { return std::unique_ptr<Type>(new TypeImpl(UNION)); }
 
-  std::string printProtobufMessage(const google::protobuf::Message& message);
-  std::unique_ptr<Type> convertType(const proto::Type& type,
-                                    const proto::Footer& footer) {
-    std::unique_ptr<Type> ret;
-    switch (static_cast<int64_t>(type.kind())) {
-
+std::string printProtobufMessage(const google::protobuf::Message& message);
+std::unique_ptr<Type> convertType(const proto::Type& type, const proto::Footer& footer) {
+  std::unique_ptr<Type> ret;
+  switch (static_cast<int64_t>(type.kind())) {
     case proto::Type_Kind_BOOLEAN:
     case proto::Type_Kind_BYTE:
     case proto::Type_Kind_SHORT:
@@ -427,20 +392,17 @@ namespace orc {
     case proto::Type_Kind_TIMESTAMP:
     case proto::Type_Kind_TIMESTAMP_INSTANT:
     case proto::Type_Kind_DATE:
-      ret = std::unique_ptr<Type>
-        (new TypeImpl(static_cast<TypeKind>(type.kind())));
+      ret = std::unique_ptr<Type>(new TypeImpl(static_cast<TypeKind>(type.kind())));
       break;
 
     case proto::Type_Kind_CHAR:
     case proto::Type_Kind_VARCHAR:
-      ret = std::unique_ptr<Type>
-        (new TypeImpl(static_cast<TypeKind>(type.kind()),
-                      type.maximumlength()));
+      ret = std::unique_ptr<Type>(
+          new TypeImpl(static_cast<TypeKind>(type.kind()), type.maximumlength()));
       break;
 
     case proto::Type_Kind_DECIMAL:
-      ret = std::unique_ptr<Type>
-        (new TypeImpl(DECIMAL, type.precision(), type.scale()));
+      ret = std::unique_ptr<Type>(new TypeImpl(DECIMAL, type.precision(), type.scale()));
       break;
 
     case proto::Type_Kind_LIST:
@@ -454,10 +416,9 @@ namespace orc {
         throw ParseError("Illegal MAP type that doesn't contain two subtypes");
       if (type.kind() == proto::Type_Kind_UNION && type.subtypes_size() == 0)
         throw ParseError("Illegal UNION type that doesn't contain any subtypes");
-      for(int i=0; i < type.subtypes_size(); ++i) {
-        result->addUnionChild(convertType(footer.types(static_cast<int>
-                                                       (type.subtypes(i))),
-                                          footer));
+      for (int i = 0; i < type.subtypes_size(); ++i) {
+        result->addUnionChild(
+            convertType(footer.types(static_cast<int>(type.subtypes(i))), footer));
       }
       break;
     }
@@ -467,40 +428,38 @@ namespace orc {
       ret = std::unique_ptr<Type>(result);
       if (type.subtypes_size() > type.fieldnames_size())
         throw ParseError("Illegal STRUCT type that contains less fieldnames than subtypes");
-      for(int i=0; i < type.subtypes_size(); ++i) {
-        result->addStructField(type.fieldnames(i),
-                               convertType(footer.types(static_cast<int>
-                                                        (type.subtypes(i))),
-                                           footer));
+      for (int i = 0; i < type.subtypes_size(); ++i) {
+        result->addStructField(
+            type.fieldnames(i),
+            convertType(footer.types(static_cast<int>(type.subtypes(i))), footer));
       }
       break;
     }
     default:
       throw NotImplementedYet("Unknown type kind");
-    }
-    for (int i = 0; i < type.attributes_size(); ++i) {
-      const auto& attribute = type.attributes(i);
-      ret->setAttribute(attribute.key(), attribute.value());
-    }
-    return ret;
+  }
+  for (int i = 0; i < type.attributes_size(); ++i) {
+    const auto& attribute = type.attributes(i);
+    ret->setAttribute(attribute.key(), attribute.value());
+  }
+  return ret;
+}
+
+/**
+ * Build a clone of the file type, projecting columns from the selected
+ * vector. This routine assumes that the parent of any selected column
+ * is also selected. The column ids are copied from the fileType.
+ * @param fileType the type in the file
+ * @param selected is each column by id selected
+ * @return a clone of the fileType filtered by the selection array
+ */
+std::unique_ptr<Type> buildSelectedType(const Type* fileType, const std::vector<bool>& selected) {
+  if (fileType == nullptr || !selected[fileType->getColumnId()]) {
+    return std::unique_ptr<Type>();
   }
 
-  /**
-   * Build a clone of the file type, projecting columns from the selected
-   * vector. This routine assumes that the parent of any selected column
-   * is also selected. The column ids are copied from the fileType.
-   * @param fileType the type in the file
-   * @param selected is each column by id selected
-   * @return a clone of the fileType filtered by the selection array
-   */
-  std::unique_ptr<Type> buildSelectedType(const Type *fileType,
-                                          const std::vector<bool>& selected) {
-    if (fileType == nullptr || !selected[fileType->getColumnId()]) {
-      return std::unique_ptr<Type>();
-    }
-
-    TypeImpl* result;
-    switch (static_cast<int>(fileType->getKind())) {
+  TypeImpl* result;
+  switch (static_cast<int>(fileType->getKind())) {
     case BOOLEAN:
     case BYTE:
     case SHORT:
@@ -517,8 +476,7 @@ namespace orc {
       break;
 
     case DECIMAL:
-      result= new TypeImpl(fileType->getKind(),
-                           fileType->getPrecision(), fileType->getScale());
+      result = new TypeImpl(fileType->getKind(), fileType->getPrecision(), fileType->getScale());
       break;
 
     case VARCHAR:
@@ -528,26 +486,21 @@ namespace orc {
 
     case LIST:
       result = new TypeImpl(fileType->getKind());
-      result->addChildType(buildSelectedType(fileType->getSubtype(0),
-                                             selected));
+      result->addChildType(buildSelectedType(fileType->getSubtype(0), selected));
       break;
 
     case MAP:
       result = new TypeImpl(fileType->getKind());
-      result->addChildType(buildSelectedType(fileType->getSubtype(0),
-                                             selected));
-      result->addChildType(buildSelectedType(fileType->getSubtype(1),
-                                             selected));
+      result->addChildType(buildSelectedType(fileType->getSubtype(0), selected));
+      result->addChildType(buildSelectedType(fileType->getSubtype(1), selected));
       break;
 
     case STRUCT: {
       result = new TypeImpl(fileType->getKind());
-      for(uint64_t child=0; child < fileType->getSubtypeCount(); ++child) {
-        std::unique_ptr<Type> childType =
-          buildSelectedType(fileType->getSubtype(child), selected);
+      for (uint64_t child = 0; child < fileType->getSubtypeCount(); ++child) {
+        std::unique_ptr<Type> childType = buildSelectedType(fileType->getSubtype(child), selected);
         if (childType.get() != nullptr) {
-          result->addStructField(fileType->getFieldName(child),
-                                 std::move(childType));
+          result->addStructField(fileType->getFieldName(child), std::move(childType));
         }
       }
       break;
@@ -555,9 +508,8 @@ namespace orc {
 
     case UNION: {
       result = new TypeImpl(fileType->getKind());
-      for(uint64_t child=0; child < fileType->getSubtypeCount(); ++child) {
-        std::unique_ptr<Type> childType =
-          buildSelectedType(fileType->getSubtype(child), selected);
+      for (uint64_t child = 0; child < fileType->getSubtypeCount(); ++child) {
+        std::unique_ptr<Type> childType = buildSelectedType(fileType->getSubtype(child), selected);
         if (childType.get() != nullptr) {
           result->addUnionChild(std::move(childType));
         }
@@ -567,291 +519,268 @@ namespace orc {
 
     default:
       throw NotImplementedYet("Unknown type kind");
-    }
-    result->setIds(fileType->getColumnId(), fileType->getMaximumColumnId());
-    for (auto& key : fileType->getAttributeKeys()) {
-      const auto& value = fileType->getAttributeValue(key);
-      result->setAttribute(key, value);
-    }
-    return std::unique_ptr<Type>(result);
   }
-
-  ORC_UNIQUE_PTR<Type> Type::buildTypeFromString(const std::string& input) {
-    size_t size = input.size();
-    std::pair<ORC_UNIQUE_PTR<Type>, size_t> res =
-      TypeImpl::parseType(input, 0, size);
-    if (res.second != size) {
-      throw std::logic_error("Invalid type string.");
-    }
-    return std::move(res.first);
+  result->setIds(fileType->getColumnId(), fileType->getMaximumColumnId());
+  for (auto& key : fileType->getAttributeKeys()) {
+    const auto& value = fileType->getAttributeValue(key);
+    result->setAttribute(key, value);
   }
+  return std::unique_ptr<Type>(result);
+}
 
-  std::unique_ptr<Type> TypeImpl::parseArrayType(const std::string &input,
-                                                 size_t start,
-                                                 size_t end) {
-    TypeImpl* arrayType = new TypeImpl(LIST);
-    std::unique_ptr<Type> return_value = std::unique_ptr<Type>(arrayType);
-    if (input[start] != '<') {
-      throw std::logic_error("Missing < after array.");
-    }
-    std::pair<ORC_UNIQUE_PTR<Type>, size_t> res =
-      TypeImpl::parseType(input, start + 1, end);
-    if (res.second != end) {
-      throw std::logic_error(
-        "Array type must contain exactly one sub type.");
-    }
-    arrayType->addChildType(std::move(res.first));
-    return return_value;
+ORC_UNIQUE_PTR<Type> Type::buildTypeFromString(const std::string& input) {
+  size_t size = input.size();
+  std::pair<ORC_UNIQUE_PTR<Type>, size_t> res = TypeImpl::parseType(input, 0, size);
+  if (res.second != size) {
+    throw std::logic_error("Invalid type string.");
   }
+  return std::move(res.first);
+}
 
-  std::unique_ptr<Type> TypeImpl::parseMapType(const std::string &input,
-                                               size_t start,
-                                               size_t end) {
-    TypeImpl* mapType = new TypeImpl(MAP);
-    std::unique_ptr<Type> return_value = std::unique_ptr<Type>(mapType);
-    if (input[start] != '<') {
-      throw std::logic_error("Missing < after map.");
-    }
-    std::pair<ORC_UNIQUE_PTR<Type>, size_t> key =
-      TypeImpl::parseType(input, start + 1, end);
-    if (input[key.second] != ',') {
-      throw std::logic_error("Missing comma after key.");
-    }
-    std::pair<ORC_UNIQUE_PTR<Type>, size_t> val =
-      TypeImpl::parseType(input, key.second + 1, end);
-    if (val.second != end) {
-      throw std::logic_error(
-        "Map type must contain exactly two sub types.");
-    }
-    mapType->addChildType(std::move(key.first));
-    mapType->addChildType(std::move(val.first));
-    return return_value;
+std::unique_ptr<Type> TypeImpl::parseArrayType(const std::string& input, size_t start, size_t end) {
+  TypeImpl* arrayType = new TypeImpl(LIST);
+  std::unique_ptr<Type> return_value = std::unique_ptr<Type>(arrayType);
+  if (input[start] != '<') {
+    throw std::logic_error("Missing < after array.");
   }
+  std::pair<ORC_UNIQUE_PTR<Type>, size_t> res = TypeImpl::parseType(input, start + 1, end);
+  if (res.second != end) {
+    throw std::logic_error("Array type must contain exactly one sub type.");
+  }
+  arrayType->addChildType(std::move(res.first));
+  return return_value;
+}
 
-  std::pair<std::string, size_t> TypeImpl::parseName(const std::string &input,
-                                                     const size_t start,
-                                                     const size_t end) {
-    size_t pos = start;
-    if (input[pos] == '`') {
-      bool closed = false;
-      std::ostringstream oss;
-      while (pos < end) {
-        char ch = input[++pos];
-        if (ch == '`') {
-          if (pos < end && input[pos+1] == '`') {
-            ++pos;
-            oss.put('`');
-          } else {
-            closed = true;
-            break;
-          }
+std::unique_ptr<Type> TypeImpl::parseMapType(const std::string& input, size_t start, size_t end) {
+  TypeImpl* mapType = new TypeImpl(MAP);
+  std::unique_ptr<Type> return_value = std::unique_ptr<Type>(mapType);
+  if (input[start] != '<') {
+    throw std::logic_error("Missing < after map.");
+  }
+  std::pair<ORC_UNIQUE_PTR<Type>, size_t> key = TypeImpl::parseType(input, start + 1, end);
+  if (input[key.second] != ',') {
+    throw std::logic_error("Missing comma after key.");
+  }
+  std::pair<ORC_UNIQUE_PTR<Type>, size_t> val = TypeImpl::parseType(input, key.second + 1, end);
+  if (val.second != end) {
+    throw std::logic_error("Map type must contain exactly two sub types.");
+  }
+  mapType->addChildType(std::move(key.first));
+  mapType->addChildType(std::move(val.first));
+  return return_value;
+}
+
+std::pair<std::string, size_t> TypeImpl::parseName(const std::string& input, const size_t start,
+                                                   const size_t end) {
+  size_t pos = start;
+  if (input[pos] == '`') {
+    bool closed = false;
+    std::ostringstream oss;
+    while (pos < end) {
+      char ch = input[++pos];
+      if (ch == '`') {
+        if (pos < end && input[pos + 1] == '`') {
+          ++pos;
+          oss.put('`');
         } else {
-          oss.put(ch);
-        }
-      }
-      if (!closed) {
-        throw std::logic_error("Invalid field name. Unmatched quote");
-      }
-      if (oss.tellp() == std::streamoff(0)) {
-        throw std::logic_error("Empty quoted field name.");
-      }
-      return std::make_pair(oss.str(), pos + 1);
-    } else {
-      while (pos < end && (isalnum(input[pos]) || input[pos] == '_')) {
-        ++pos;
-      }
-      if (pos == start) {
-        throw std::logic_error("Missing field name.");
-      }
-      return std::make_pair(input.substr(start, pos - start), pos);
-    }
-  }
-
-  std::unique_ptr<Type> TypeImpl::parseStructType(const std::string &input,
-                                                  size_t start,
-                                                  size_t end) {
-    TypeImpl* structType = new TypeImpl(STRUCT);
-    std::unique_ptr<Type> return_value = std::unique_ptr<Type>(structType);
-    size_t pos = start + 1;
-    if (input[start] != '<') {
-      throw std::logic_error("Missing < after struct.");
-    }
-    while (pos < end) {
-      std::pair<std::string, size_t> nameRes = parseName(input, pos, end);
-      pos = nameRes.second;
-      if (input[pos] != ':') {
-        throw std::logic_error("Invalid struct type. No field name set.");
-      }
-      std::pair<ORC_UNIQUE_PTR<Type>, size_t> typeRes =
-        TypeImpl::parseType(input, ++pos, end);
-      structType->addStructField(nameRes.first, std::move(typeRes.first));
-      pos = typeRes.second;
-      if (pos != end && input[pos] != ',') {
-        throw std::logic_error("Missing comma after field.");
-      }
-      ++pos;
-    }
-
-    return return_value;
-  }
-
-  std::unique_ptr<Type> TypeImpl::parseUnionType(const std::string &input,
-                                                 size_t start,
-                                                 size_t end) {
-    TypeImpl* unionType = new TypeImpl(UNION);
-    std::unique_ptr<Type> return_value = std::unique_ptr<Type>(unionType);
-    size_t pos = start + 1;
-    if (input[start] != '<') {
-      throw std::logic_error("Missing < after uniontype.");
-    }
-    while (pos < end) {
-      std::pair<ORC_UNIQUE_PTR<Type>, size_t> res =
-        TypeImpl::parseType(input, pos, end);
-      unionType->addChildType(std::move(res.first));
-      pos = res.second;
-      if (pos != end && input[pos] != ',') {
-        throw std::logic_error("Missing comma after union sub type.");
-      }
-      ++pos;
-    }
-
-    return return_value;
-  }
-
-  std::unique_ptr<Type> TypeImpl::parseDecimalType(const std::string &input,
-                                                   size_t start,
-                                                   size_t end) {
-    if (input[start] != '(') {
-      throw std::logic_error("Missing ( after decimal.");
-    }
-    size_t pos = start + 1;
-    size_t sep = input.find(',', pos);
-    if (sep + 1 >= end || sep == std::string::npos) {
-      throw std::logic_error("Decimal type must specify precision and scale.");
-    }
-    uint64_t precision =
-      static_cast<uint64_t>(atoi(input.substr(pos, sep - pos).c_str()));
-    uint64_t scale =
-      static_cast<uint64_t>(atoi(input.substr(sep + 1, end - sep - 1).c_str()));
-    return std::unique_ptr<Type>(new TypeImpl(DECIMAL, precision, scale));
-  }
-
-  void validatePrimitiveType(std::string category,
-                             const std::string &input,
-                             const size_t pos) {
-    if (input[pos] == '<' || input[pos] == '(') {
-      std::ostringstream oss;
-      oss << "Invalid " << input[pos] << " after "
-        << category << " type.";
-      throw std::logic_error(oss.str());
-    }
-  }
-
-  std::unique_ptr<Type> TypeImpl::parseCategory(std::string category,
-                                                const std::string &input,
-                                                size_t start,
-                                                size_t end) {
-    if (category == "boolean") {
-      validatePrimitiveType(category, input, start);
-      return std::unique_ptr<Type>(new TypeImpl(BOOLEAN));
-    } else if (category == "tinyint") {
-      validatePrimitiveType(category, input, start);
-      return std::unique_ptr<Type>(new TypeImpl(BYTE));
-    } else if (category == "smallint") {
-      validatePrimitiveType(category, input, start);
-      return std::unique_ptr<Type>(new TypeImpl(SHORT));
-    } else if (category == "int") {
-      validatePrimitiveType(category, input, start);
-      return std::unique_ptr<Type>(new TypeImpl(INT));
-    } else if (category == "bigint") {
-      validatePrimitiveType(category, input, start);
-      return std::unique_ptr<Type>(new TypeImpl(LONG));
-    } else if (category == "float") {
-      validatePrimitiveType(category, input, start);
-      return std::unique_ptr<Type>(new TypeImpl(FLOAT));
-    } else if (category == "double") {
-      validatePrimitiveType(category, input, start);
-      return std::unique_ptr<Type>(new TypeImpl(DOUBLE));
-    } else if (category == "string") {
-      validatePrimitiveType(category, input, start);
-      return std::unique_ptr<Type>(new TypeImpl(STRING));
-    } else if (category == "binary") {
-      validatePrimitiveType(category, input, start);
-      return std::unique_ptr<Type>(new TypeImpl(BINARY));
-    } else if (category == "timestamp") {
-      validatePrimitiveType(category, input, start);
-      return std::unique_ptr<Type>(new TypeImpl(TIMESTAMP));
-    } else if (category == "timestamp with local time zone") {
-      validatePrimitiveType(category, input, start);
-      return std::unique_ptr<Type>(new TypeImpl(TIMESTAMP_INSTANT));
-    } else if (category == "array") {
-      return parseArrayType(input, start, end);
-    } else if (category == "map") {
-      return parseMapType(input, start, end);
-    } else if (category == "struct") {
-      return parseStructType(input, start, end);
-    } else if (category == "uniontype") {
-      return parseUnionType(input, start, end);
-    } else if (category == "decimal") {
-      return parseDecimalType(input, start, end);
-    } else if (category == "date") {
-      validatePrimitiveType(category, input, start);
-      return std::unique_ptr<Type>(new TypeImpl(DATE));
-    } else if (category == "varchar") {
-      if (input[start] != '(') {
-        throw std::logic_error("Missing ( after varchar.");
-      }
-      uint64_t maxLength = static_cast<uint64_t>(
-        atoi(input.substr(start + 1, end - start + 1).c_str()));
-      return std::unique_ptr<Type>(new TypeImpl(VARCHAR, maxLength));
-    } else if (category == "char") {
-      if (input[start] != '(') {
-        throw std::logic_error("Missing ( after char.");
-      }
-      uint64_t maxLength = static_cast<uint64_t>(
-        atoi(input.substr(start + 1, end - start + 1).c_str()));
-      return std::unique_ptr<Type>(new TypeImpl(CHAR, maxLength));
-    } else {
-      throw std::logic_error("Unknown type " + category);
-    }
-  }
-
-  std::pair<ORC_UNIQUE_PTR<Type>, size_t> TypeImpl::parseType(const std::string &input, size_t start, size_t end) {
-    size_t pos = start;
-    while (pos < end && (isalpha(input[pos]) || input[pos] == ' ')) {
-      ++pos;
-    }
-    size_t endPos = pos;
-    size_t nextPos = pos + 1;
-    if (input[pos] == '<') {
-      int count = 1;
-      while (nextPos < end) {
-        if (input[nextPos] == '<') {
-          ++count;
-        } else if (input[nextPos] == '>') {
-          --count;
-        }
-        if (count == 0) {
+          closed = true;
           break;
         }
-        ++nextPos;
+      } else {
+        oss.put(ch);
       }
-      if (nextPos == end) {
-        throw std::logic_error("Invalid type string. Cannot find closing >");
-      }
-      endPos = nextPos + 1;
-    } else if (input[pos] == '(') {
-      while (nextPos < end && input[nextPos] != ')') {
-        ++nextPos;
-      }
-      if (nextPos == end) {
-        throw std::logic_error("Invalid type string. Cannot find closing )");
-      }
-      endPos = nextPos + 1;
     }
+    if (!closed) {
+      throw std::logic_error("Invalid field name. Unmatched quote");
+    }
+    if (oss.tellp() == std::streamoff(0)) {
+      throw std::logic_error("Empty quoted field name.");
+    }
+    return std::make_pair(oss.str(), pos + 1);
+  } else {
+    while (pos < end && (isalnum(input[pos]) || input[pos] == '_')) {
+      ++pos;
+    }
+    if (pos == start) {
+      throw std::logic_error("Missing field name.");
+    }
+    return std::make_pair(input.substr(start, pos - start), pos);
+  }
+}
 
-    std::string category = input.substr(start, pos - start);
-    return std::make_pair(parseCategory(category, input, pos, nextPos), endPos);
+std::unique_ptr<Type> TypeImpl::parseStructType(const std::string& input, size_t start,
+                                                size_t end) {
+  TypeImpl* structType = new TypeImpl(STRUCT);
+  std::unique_ptr<Type> return_value = std::unique_ptr<Type>(structType);
+  size_t pos = start + 1;
+  if (input[start] != '<') {
+    throw std::logic_error("Missing < after struct.");
+  }
+  while (pos < end) {
+    std::pair<std::string, size_t> nameRes = parseName(input, pos, end);
+    pos = nameRes.second;
+    if (input[pos] != ':') {
+      throw std::logic_error("Invalid struct type. No field name set.");
+    }
+    std::pair<ORC_UNIQUE_PTR<Type>, size_t> typeRes = TypeImpl::parseType(input, ++pos, end);
+    structType->addStructField(nameRes.first, std::move(typeRes.first));
+    pos = typeRes.second;
+    if (pos != end && input[pos] != ',') {
+      throw std::logic_error("Missing comma after field.");
+    }
+    ++pos;
   }
 
+  return return_value;
 }
+
+std::unique_ptr<Type> TypeImpl::parseUnionType(const std::string& input, size_t start, size_t end) {
+  TypeImpl* unionType = new TypeImpl(UNION);
+  std::unique_ptr<Type> return_value = std::unique_ptr<Type>(unionType);
+  size_t pos = start + 1;
+  if (input[start] != '<') {
+    throw std::logic_error("Missing < after uniontype.");
+  }
+  while (pos < end) {
+    std::pair<ORC_UNIQUE_PTR<Type>, size_t> res = TypeImpl::parseType(input, pos, end);
+    unionType->addChildType(std::move(res.first));
+    pos = res.second;
+    if (pos != end && input[pos] != ',') {
+      throw std::logic_error("Missing comma after union sub type.");
+    }
+    ++pos;
+  }
+
+  return return_value;
+}
+
+std::unique_ptr<Type> TypeImpl::parseDecimalType(const std::string& input, size_t start,
+                                                 size_t end) {
+  if (input[start] != '(') {
+    throw std::logic_error("Missing ( after decimal.");
+  }
+  size_t pos = start + 1;
+  size_t sep = input.find(',', pos);
+  if (sep + 1 >= end || sep == std::string::npos) {
+    throw std::logic_error("Decimal type must specify precision and scale.");
+  }
+  uint64_t precision = static_cast<uint64_t>(atoi(input.substr(pos, sep - pos).c_str()));
+  uint64_t scale = static_cast<uint64_t>(atoi(input.substr(sep + 1, end - sep - 1).c_str()));
+  return std::unique_ptr<Type>(new TypeImpl(DECIMAL, precision, scale));
+}
+
+void validatePrimitiveType(std::string category, const std::string& input, const size_t pos) {
+  if (input[pos] == '<' || input[pos] == '(') {
+    std::ostringstream oss;
+    oss << "Invalid " << input[pos] << " after " << category << " type.";
+    throw std::logic_error(oss.str());
+  }
+}
+
+std::unique_ptr<Type> TypeImpl::parseCategory(std::string category, const std::string& input,
+                                              size_t start, size_t end) {
+  if (category == "boolean") {
+    validatePrimitiveType(category, input, start);
+    return std::unique_ptr<Type>(new TypeImpl(BOOLEAN));
+  } else if (category == "tinyint") {
+    validatePrimitiveType(category, input, start);
+    return std::unique_ptr<Type>(new TypeImpl(BYTE));
+  } else if (category == "smallint") {
+    validatePrimitiveType(category, input, start);
+    return std::unique_ptr<Type>(new TypeImpl(SHORT));
+  } else if (category == "int") {
+    validatePrimitiveType(category, input, start);
+    return std::unique_ptr<Type>(new TypeImpl(INT));
+  } else if (category == "bigint") {
+    validatePrimitiveType(category, input, start);
+    return std::unique_ptr<Type>(new TypeImpl(LONG));
+  } else if (category == "float") {
+    validatePrimitiveType(category, input, start);
+    return std::unique_ptr<Type>(new TypeImpl(FLOAT));
+  } else if (category == "double") {
+    validatePrimitiveType(category, input, start);
+    return std::unique_ptr<Type>(new TypeImpl(DOUBLE));
+  } else if (category == "string") {
+    validatePrimitiveType(category, input, start);
+    return std::unique_ptr<Type>(new TypeImpl(STRING));
+  } else if (category == "binary") {
+    validatePrimitiveType(category, input, start);
+    return std::unique_ptr<Type>(new TypeImpl(BINARY));
+  } else if (category == "timestamp") {
+    validatePrimitiveType(category, input, start);
+    return std::unique_ptr<Type>(new TypeImpl(TIMESTAMP));
+  } else if (category == "timestamp with local time zone") {
+    validatePrimitiveType(category, input, start);
+    return std::unique_ptr<Type>(new TypeImpl(TIMESTAMP_INSTANT));
+  } else if (category == "array") {
+    return parseArrayType(input, start, end);
+  } else if (category == "map") {
+    return parseMapType(input, start, end);
+  } else if (category == "struct") {
+    return parseStructType(input, start, end);
+  } else if (category == "uniontype") {
+    return parseUnionType(input, start, end);
+  } else if (category == "decimal") {
+    return parseDecimalType(input, start, end);
+  } else if (category == "date") {
+    validatePrimitiveType(category, input, start);
+    return std::unique_ptr<Type>(new TypeImpl(DATE));
+  } else if (category == "varchar") {
+    if (input[start] != '(') {
+      throw std::logic_error("Missing ( after varchar.");
+    }
+    uint64_t maxLength =
+        static_cast<uint64_t>(atoi(input.substr(start + 1, end - start + 1).c_str()));
+    return std::unique_ptr<Type>(new TypeImpl(VARCHAR, maxLength));
+  } else if (category == "char") {
+    if (input[start] != '(') {
+      throw std::logic_error("Missing ( after char.");
+    }
+    uint64_t maxLength =
+        static_cast<uint64_t>(atoi(input.substr(start + 1, end - start + 1).c_str()));
+    return std::unique_ptr<Type>(new TypeImpl(CHAR, maxLength));
+  } else {
+    throw std::logic_error("Unknown type " + category);
+  }
+}
+
+std::pair<ORC_UNIQUE_PTR<Type>, size_t> TypeImpl::parseType(const std::string& input, size_t start,
+                                                            size_t end) {
+  size_t pos = start;
+  while (pos < end && (isalpha(input[pos]) || input[pos] == ' ')) {
+    ++pos;
+  }
+  size_t endPos = pos;
+  size_t nextPos = pos + 1;
+  if (input[pos] == '<') {
+    int count = 1;
+    while (nextPos < end) {
+      if (input[nextPos] == '<') {
+        ++count;
+      } else if (input[nextPos] == '>') {
+        --count;
+      }
+      if (count == 0) {
+        break;
+      }
+      ++nextPos;
+    }
+    if (nextPos == end) {
+      throw std::logic_error("Invalid type string. Cannot find closing >");
+    }
+    endPos = nextPos + 1;
+  } else if (input[pos] == '(') {
+    while (nextPos < end && input[nextPos] != ')') {
+      ++nextPos;
+    }
+    if (nextPos == end) {
+      throw std::logic_error("Invalid type string. Cannot find closing )");
+    }
+    endPos = nextPos + 1;
+  }
+
+  std::string category = input.substr(start, pos - start);
+  return std::make_pair(parseCategory(category, input, pos, nextPos), endPos);
+}
+
+}  // namespace orc

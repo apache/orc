@@ -20,12 +20,11 @@
 
 #include "Timezone.hh"
 
-#include <string>
-#include <memory>
 #include <iostream>
+#include <memory>
 #include <string>
 
-void printFile(const std::string &name) {
+void printFile(const std::string& name) {
   std::cout << "Timezone " << name << ":\n";
   const orc::Timezone& tz = orc::getTimezoneByName(name);
   tz.print(std::cout);
@@ -35,7 +34,7 @@ int main(int argc, char* argv[]) {
   if (argc < 2) {
     std::cout << "Usage: timezone-dump<filename>\n";
   }
-  for(int o=1; o < argc; ++o) {
+  for (int o = 1; o < argc; ++o) {
     printFile(argv[o]);
   }
   return 0;

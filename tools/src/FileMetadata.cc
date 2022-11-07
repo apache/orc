@@ -17,39 +17,33 @@
  */
 
 #include <getopt.h>
-#include <iostream>
 #include <fstream>
-#include <vector>
-#include <string>
+#include <iostream>
 #include <sstream>
+#include <string>
+#include <vector>
 
-#include "orc/OrcFile.hh"
 #include "orc/Exceptions.hh"
+#include "orc/OrcFile.hh"
 
 //#include "Adaptor.hh"
 #include "wrap/orc-proto-wrapper.hh"
 
-void printStripeInformation(std::ostream& out,
-                            uint64_t index,
-                            uint64_t columns,
-                            std::unique_ptr<orc::StripeInformation> stripe,
-                            bool verbose) {
-  out << "    { \"stripe\": " << index
-      << ", \"rows\": " << stripe->getNumberOfRows() << ",\n";
-  out << "      \"offset\": " << stripe->getOffset()
-      << ", \"length\": " << stripe->getLength() << ",\n";
+void printStripeInformation(std::ostream& out, uint64_t index, uint64_t columns,
+                            std::unique_ptr<orc::StripeInformation> stripe, bool verbose) {
+  out << "    { \"stripe\": " << index << ", \"rows\": " << stripe->getNumberOfRows() << ",\n";
+  out << "      \"offset\": " << stripe->getOffset() << ", \"length\": " << stripe->getLength()
+      << ",\n";
   out << "      \"index\": " << stripe->getIndexLength()
-      << ", \"data\": " << stripe->getDataLength()
-      << ", \"footer\": " << stripe->getFooterLength();
+      << ", \"data\": " << stripe->getDataLength() << ", \"footer\": " << stripe->getFooterLength();
   if (verbose) {
     out << ",\n      \"encodings\": [\n";
-    for(uint64_t col=0; col < columns; ++col) {
+    for (uint64_t col = 0; col < columns; ++col) {
       if (col != 0) {
         out << ",\n";
       }
       orc::ColumnEncodingKind encoding = stripe->getColumnEncoding(col);
-      out << "         { \"column\": " << col
-          << ", \"encoding\": \""
+      out << "         { \"column\": " << col << ", \"encoding\": \""
           << columnEncodingKindToString(encoding) << "\"";
       if (encoding == orc::ColumnEncodingKind_DICTIONARY ||
           encoding == orc::ColumnEncodingKind_DICTIONARY_V2) {
@@ -59,17 +53,15 @@ void printStripeInformation(std::ostream& out,
     }
     out << "\n      ],\n";
     out << "      \"streams\": [\n";
-    for(uint64_t str = 0; str < stripe->getNumberOfStreams(); ++str) {
+    for (uint64_t str = 0; str < stripe->getNumberOfStreams(); ++str) {
       if (str != 0) {
         out << ",\n";
       }
-      ORC_UNIQUE_PTR<orc::StreamInformation> stream =
-        stripe->getStreamInformation(str);
-      out << "        { \"id\": " << str
-          << ", \"column\": " << stream->getColumnId()
+      ORC_UNIQUE_PTR<orc::StreamInformation> stream = stripe->getStreamInformation(str);
+      out << "        { \"id\": " << str << ", \"column\": " << stream->getColumnId()
           << ", \"kind\": \"" << streamKindToString(stream->getKind())
-          << "\", \"offset\": " << stream->getOffset()
-          << ", \"length\": " << stream->getLength() << " }";
+          << "\", \"offset\": " << stream->getOffset() << ", \"length\": " << stream->getLength()
+          << " }";
     }
     out << "\n      ]";
     std::string tz = stripe->getWriterTimezone();
@@ -80,13 +72,11 @@ void printStripeInformation(std::ostream& out,
   out << "\n    }";
 }
 
-void printRawTail(std::ostream& out,
-                  const char*filename) {
+void printRawTail(std::ostream& out, const char* filename) {
   out << "Raw file tail: " << filename << "\n";
   orc::ReaderOptions readerOpts;
   std::unique_ptr<orc::Reader> reader =
-    orc::createReader(orc::readFile(filename, readerOpts.getReaderMetrics()),
-                      readerOpts);
+      orc::createReader(orc::readFile(filename, readerOpts.getReaderMetrics()), readerOpts);
   // Parse the file tail from the serialized one.
   orc::proto::FileTail tail;
   if (!tail.ParseFromString(reader->getSerializedFileTail())) {
@@ -95,8 +85,8 @@ void printRawTail(std::ostream& out,
   out << tail.DebugString();
 }
 
-void printAttributes(std::ostream& out, const orc::Type& type,
-    const std::string name, bool* hasAnyAttributes) {
+void printAttributes(std::ostream& out, const orc::Type& type, const std::string name,
+                     bool* hasAnyAttributes) {
   const auto& attributeKeys = type.getAttributeKeys();
   bool typeHasAttrs = !attributeKeys.empty();
   if (typeHasAttrs) {
@@ -136,15 +126,13 @@ void printAttributes(std::ostream& out, const orc::Type& type,
   }
 }
 
-void printMetadata(std::ostream & out, const char*filename, bool verbose) {
+void printMetadata(std::ostream& out, const char* filename, bool verbose) {
   orc::ReaderOptions readerOpts;
   std::unique_ptr<orc::Reader> reader =
-    orc::createReader(orc::readFile(filename, readerOpts.getReaderMetrics()),
-                      readerOpts);
+      orc::createReader(orc::readFile(filename, readerOpts.getReaderMetrics()), readerOpts);
   out << "{ \"name\": \"" << filename << "\",\n";
   uint64_t numberColumns = reader->getType().getMaximumColumnId() + 1;
-  out << "  \"type\": \""
-            << reader->getType().toString() << "\",\n";
+  out << "  \"type\": \"" << reader->getType().toString() << "\",\n";
   out << "  \"attributes\": {";
   bool hasAnyAttributes = false;
   printAttributes(out, reader->getType(), /*name=*/"", &hasAnyAttributes);
@@ -152,17 +140,12 @@ void printMetadata(std::ostream & out, const char*filename, bool verbose) {
   out << "  \"rows\": " << reader->getNumberOfRows() << ",\n";
   uint64_t stripeCount = reader->getNumberOfStripes();
   out << "  \"stripe count\": " << stripeCount << ",\n";
-  out << "  \"format\": \"" << reader->getFormatVersion().toString()
-      << "\", \"writer version\": \""
-            << orc::writerVersionToString(reader->getWriterVersion())
-            << "\", \"software version\": \"" << reader->getSoftwareVersion()
-            << "\",\n";
-  out << "  \"compression\": \""
-            << orc::compressionKindToString(reader->getCompression())
-            << "\",";
+  out << "  \"format\": \"" << reader->getFormatVersion().toString() << "\", \"writer version\": \""
+      << orc::writerVersionToString(reader->getWriterVersion()) << "\", \"software version\": \""
+      << reader->getSoftwareVersion() << "\",\n";
+  out << "  \"compression\": \"" << orc::compressionKindToString(reader->getCompression()) << "\",";
   if (reader->getCompression() != orc::CompressionKind_NONE) {
-    out << " \"compression block\": "
-              << reader->getCompressionSize() << ",";
+    out << " \"compression block\": " << reader->getCompressionSize() << ",";
   }
   out << "\n  \"file length\": " << reader->getFileLength() << ",\n";
   out << "  \"content\": " << reader->getContentLength()
@@ -170,25 +153,21 @@ void printMetadata(std::ostream & out, const char*filename, bool verbose) {
       << ", \"footer\": " << reader->getFileFooterLength()
       << ", \"postscript\": " << reader->getFilePostscriptLength() << ",\n";
   if (reader->getRowIndexStride()) {
-    out << "  \"row index stride\": "
-              << reader->getRowIndexStride() << ",\n";
+    out << "  \"row index stride\": " << reader->getRowIndexStride() << ",\n";
   }
   out << "  \"user metadata\": {";
   std::list<std::string> keys = reader->getMetadataKeys();
   uint64_t remaining = keys.size();
-  for(std::list<std::string>::const_iterator itr = keys.begin();
-      itr != keys.end(); ++itr) {
-    out << "\n    \"" << *itr << "\": \""
-              << reader->getMetadataValue(*itr) << "\"";
+  for (std::list<std::string>::const_iterator itr = keys.begin(); itr != keys.end(); ++itr) {
+    out << "\n    \"" << *itr << "\": \"" << reader->getMetadataValue(*itr) << "\"";
     if (--remaining != 0) {
       out << ",";
     }
   }
   out << "\n  },\n";
   out << "  \"stripes\": [\n";
-  for(uint64_t i=0; i < stripeCount; ++i) {
-    printStripeInformation(out, i, numberColumns, reader->getStripe(i),
-                           verbose);
+  for (uint64_t i = 0; i < stripeCount; ++i) {
+    printStripeInformation(out, i, numberColumns, reader->getStripe(i), verbose);
     if (i == stripeCount - 1) {
       out << "\n";
     } else {
@@ -200,12 +179,10 @@ void printMetadata(std::ostream & out, const char*filename, bool verbose) {
 }
 
 int main(int argc, char* argv[]) {
-  static struct option longOptions[] = {
-    {"help", no_argument, ORC_NULLPTR, 'h'},
-    {"raw", no_argument, ORC_NULLPTR, 'r'},
-    {"verbose", no_argument, ORC_NULLPTR, 'v'},
-    {ORC_NULLPTR, 0, ORC_NULLPTR, 0}
-  };
+  static struct option longOptions[] = {{"help", no_argument, ORC_NULLPTR, 'h'},
+                                        {"raw", no_argument, ORC_NULLPTR, 'r'},
+                                        {"verbose", no_argument, ORC_NULLPTR, 'v'},
+                                        {ORC_NULLPTR, 0, ORC_NULLPTR, 0}};
   bool helpFlag = false;
   bool verboseFlag = false;
   bool rawFlag = false;
@@ -213,29 +190,28 @@ int main(int argc, char* argv[]) {
   do {
     opt = getopt_long(argc, argv, "hrv", longOptions, ORC_NULLPTR);
     switch (opt) {
-    case '?':
-    case 'h':
-      helpFlag = true;
-      opt = -1;
-      break;
-    case 'v':
-      verboseFlag = true;
-      break;
-    case 'r':
-      rawFlag = true;
-      break;
+      case '?':
+      case 'h':
+        helpFlag = true;
+        opt = -1;
+        break;
+      case 'v':
+        verboseFlag = true;
+        break;
+      case 'r':
+        rawFlag = true;
+        break;
     }
   } while (opt != -1);
   argc -= optind;
   argv += optind;
 
   if (argc < 1 || helpFlag) {
-    std::cerr
-      << "Usage: orc-metadata [-h] [--help] [-r] [--raw] [-v] [--verbose]"
-      << " <filename>\n";
+    std::cerr << "Usage: orc-metadata [-h] [--help] [-r] [--raw] [-v] [--verbose]"
+              << " <filename>\n";
     exit(1);
   } else {
-    for(int i=0; i < argc; ++i) {
+    for (int i = 0; i < argc; ++i) {
       try {
         if (rawFlag) {
           printRawTail(std::cout, argv[i]);
@@ -243,8 +219,7 @@ int main(int argc, char* argv[]) {
           printMetadata(std::cout, argv[i], verboseFlag);
         }
       } catch (std::exception& ex) {
-        std::cerr << "Caught exception in " << argv[i]
-                  << ": " << ex.what() << "\n";
+        std::cerr << "Caught exception in " << argv[i] << ": " << ex.what() << "\n";
         return 1;
       }
     }

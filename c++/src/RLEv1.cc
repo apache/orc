@@ -16,11 +16,11 @@
  * limitations under the License.
  */
 
+#include "RLEv1.hh"
 #include "Adaptor.hh"
 #include "Compression.hh"
-#include "orc/Exceptions.hh"
-#include "RLEv1.hh"
 #include "Utils.hh"
+#include "orc/Exceptions.hh"
 
 #include <algorithm>
 
@@ -35,25 +35,20 @@ const int64_t MAX_DELTA = 127;
 const int64_t MIN_DELTA = -128;
 const uint64_t MAX_LITERAL_SIZE = 128;
 
-RleEncoderV1::RleEncoderV1(
-                          std::unique_ptr<BufferedOutputStream> outStream,
-                          bool hasSigned):
-                          RleEncoder(std::move(outStream), hasSigned) {
+RleEncoderV1::RleEncoderV1(std::unique_ptr<BufferedOutputStream> outStream, bool hasSigned)
+    : RleEncoder(std::move(outStream), hasSigned) {
   literals = new int64_t[MAX_LITERAL_SIZE];
   delta = 0;
   repeat = false;
   tailRunLength = 0;
 }
 
-RleEncoderV1::~RleEncoderV1() {
-  delete [] literals;
-}
+RleEncoderV1::~RleEncoderV1() { delete[] literals; }
 
 void RleEncoderV1::writeValues() {
   if (numLiterals != 0) {
     if (repeat) {
-      writeByte(static_cast<char>
-                (static_cast<uint64_t>(numLiterals) - MINIMUM_REPEAT));
+      writeByte(static_cast<char>(static_cast<uint64_t>(numLiterals) - MINIMUM_REPEAT));
       writeByte(static_cast<char>(delta));
       if (isSigned) {
         writeVslong(literals[0]);
@@ -62,7 +57,7 @@ void RleEncoderV1::writeValues() {
       }
     } else {
       writeByte(static_cast<char>(-numLiterals));
-      for(size_t i=0; i < numLiterals; ++i) {
+      for (size_t i = 0; i < numLiterals; ++i) {
         if (isSigned) {
           writeVslong(literals[i]);
         } else {
@@ -186,9 +181,7 @@ void RleDecoderV1::readHeader() {
     remainingValues = static_cast<uint64_t>(ch) + MINIMUM_REPEAT;
     repeating = true;
     delta = readByte();
-    value = isSigned
-        ? unZigZag(readLong())
-        : static_cast<int64_t>(readLong());
+    value = isSigned ? unZigZag(readLong()) : static_cast<int64_t>(readLong());
   }
 }
 
@@ -201,12 +194,9 @@ void RleDecoderV1::reset() {
   repeating = false;
 }
 
-RleDecoderV1::RleDecoderV1(std::unique_ptr<SeekableInputStream> input,
-                           bool hasSigned,
+RleDecoderV1::RleDecoderV1(std::unique_ptr<SeekableInputStream> input, bool hasSigned,
                            ReaderMetrics* _metrics)
-    : RleDecoder(_metrics),
-      inputStream(std::move(input)),
-      isSigned(hasSigned) {
+    : RleDecoder(_metrics), inputStream(std::move(input)), isSigned(hasSigned) {
   reset();
 }
 
@@ -235,9 +225,7 @@ void RleDecoderV1::skip(uint64_t numValues) {
   }
 }
 
-void RleDecoderV1::next(int64_t* const data,
-                        const uint64_t numValues,
-                        const char* const notNull) {
+void RleDecoderV1::next(int64_t* const data, const uint64_t numValues, const char* const notNull) {
   SCOPED_STOPWATCH(metrics, DecodingLatencyUs, DecodingCall);
   uint64_t position = 0;
   // skipNulls()
@@ -272,11 +260,9 @@ void RleDecoderV1::next(int64_t* const data,
       value += static_cast<int64_t>(consumed) * delta;
     } else {
       if (notNull) {
-        for (uint64_t i = 0 ; i < count; ++i) {
+        for (uint64_t i = 0; i < count; ++i) {
           if (notNull[position + i]) {
-            data[position + i] = isSigned
-                ? unZigZag(readLong())
-                : static_cast<int64_t>(readLong());
+            data[position + i] = isSigned ? unZigZag(readLong()) : static_cast<int64_t>(readLong());
             ++consumed;
           }
         }

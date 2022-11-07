@@ -18,27 +18,26 @@
 
 #include "ToolsHelper.hh"
 
+#include <iostream>
 #include <memory>
 #include <string>
-#include <iostream>
 
 void printContents(const char* filename, const orc::RowReaderOptions& rowReaderOpts) {
   orc::ReaderOptions readerOpts;
   std::unique_ptr<orc::Reader> reader;
   std::unique_ptr<orc::RowReader> rowReader;
-  reader = orc::createReader(orc::readFile(std::string(filename),
-                                           readerOpts.getReaderMetrics()),
+  reader = orc::createReader(orc::readFile(std::string(filename), readerOpts.getReaderMetrics()),
                              readerOpts);
   rowReader = reader->createRowReader(rowReaderOpts);
 
   std::unique_ptr<orc::ColumnVectorBatch> batch = rowReader->createRowBatch(1000);
   std::string line;
   std::unique_ptr<orc::ColumnPrinter> printer =
-    createColumnPrinter(line, &rowReader->getSelectedType());
+      createColumnPrinter(line, &rowReader->getSelectedType());
 
   while (rowReader->next(*batch)) {
     printer->reset(*batch);
-    for(unsigned long i=0; i < batch->numElements; ++i) {
+    for (unsigned long i = 0; i < batch->numElements; ++i) {
       line.clear();
       printer->printRow(i);
       line += "\n";
@@ -49,7 +48,7 @@ void printContents(const char* filename, const orc::RowReaderOptions& rowReaderO
 }
 
 int main(int argc, char* argv[]) {
-  uint64_t batchSize; // not used
+  uint64_t batchSize;  // not used
   orc::RowReaderOptions rowReaderOptions;
   bool showMetrics = false;
   bool success = parseOptions(&argc, &argv, &batchSize, &rowReaderOptions, &showMetrics);

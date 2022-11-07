@@ -30,56 +30,56 @@ static const size_t UNUSED_LEAF = std::numeric_limits<size_t>::max();
 
 namespace orc {
 
-  class ExpressionTree;
-  typedef std::shared_ptr<ExpressionTree> TreeNode;
-  typedef std::initializer_list<TreeNode> NodeList;
+class ExpressionTree;
+typedef std::shared_ptr<ExpressionTree> TreeNode;
+typedef std::initializer_list<TreeNode> NodeList;
 
-  /**
-   * The inner representation of the SearchArgument. Most users should not
-   * need this interface, it is only for file formats that need to translate
-   * the SearchArgument into an internal form.
-   */
-  class ExpressionTree {
-  public:
-    enum class Operator { OR, AND, NOT, LEAF, CONSTANT };
+/**
+ * The inner representation of the SearchArgument. Most users should not
+ * need this interface, it is only for file formats that need to translate
+ * the SearchArgument into an internal form.
+ */
+class ExpressionTree {
+ public:
+  enum class Operator { OR, AND, NOT, LEAF, CONSTANT };
 
-    ExpressionTree(Operator op);
-    ExpressionTree(Operator op, std::initializer_list<TreeNode> children);
-    ExpressionTree(size_t leaf);
-    ExpressionTree(TruthValue constant);
+  ExpressionTree(Operator op);
+  ExpressionTree(Operator op, std::initializer_list<TreeNode> children);
+  ExpressionTree(size_t leaf);
+  ExpressionTree(TruthValue constant);
 
-    ExpressionTree(const ExpressionTree& other);
-    ExpressionTree& operator=(const ExpressionTree&) = delete;
+  ExpressionTree(const ExpressionTree& other);
+  ExpressionTree& operator=(const ExpressionTree&) = delete;
 
-    Operator getOperator() const;
+  Operator getOperator() const;
 
-    const std::vector<TreeNode>& getChildren() const;
+  const std::vector<TreeNode>& getChildren() const;
 
-    std::vector<TreeNode>& getChildren();
+  std::vector<TreeNode>& getChildren();
 
-    const TreeNode getChild(size_t i) const;
+  const TreeNode getChild(size_t i) const;
 
-    TreeNode getChild(size_t i);
+  TreeNode getChild(size_t i);
 
-    TruthValue getConstant() const;
+  TruthValue getConstant() const;
 
-    size_t getLeaf() const;
+  size_t getLeaf() const;
 
-    void setLeaf(size_t leaf);
+  void setLeaf(size_t leaf);
 
-    void addChild(TreeNode child);
+  void addChild(TreeNode child);
 
-    std::string toString() const;
+  std::string toString() const;
 
-    TruthValue evaluate(const std::vector<TruthValue>& leaves) const;
+  TruthValue evaluate(const std::vector<TruthValue>& leaves) const;
 
-  private:
-    Operator mOperator;
-    std::vector<TreeNode> mChildren;
-    size_t mLeaf;
-    TruthValue mConstant;
-  };
+ private:
+  Operator mOperator;
+  std::vector<TreeNode> mChildren;
+  size_t mLeaf;
+  TruthValue mConstant;
+};
 
-} // namespace orc
+}  // namespace orc
 
-#endif //ORC_EXPRESSIONTREE_HH
+#endif  // ORC_EXPRESSIONTREE_HH

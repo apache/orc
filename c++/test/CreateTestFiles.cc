@@ -24,17 +24,14 @@
 #include <string>
 
 /**
- * Write an empty custom ORC file with a lot of control over format. 
+ * Write an empty custom ORC file with a lot of control over format.
  * We use this to create files to test the reader rather than anything
  * that users would want to do.
  */
-void writeCustomOrcFile(const std::string& filename,
-                        const orc::proto::Metadata& metadata,
-                        const orc::proto::Footer& footer,
-                        const std::vector<std::uint32_t>& version,
+void writeCustomOrcFile(const std::string& filename, const orc::proto::Metadata& metadata,
+                        const orc::proto::Footer& footer, const std::vector<std::uint32_t>& version,
                         std::uint32_t writerVersion) {
-  std::fstream output(filename.c_str(),
-                      std::ios::out | std::ios::trunc | std::ios::binary);
+  std::fstream output(filename.c_str(), std::ios::out | std::ios::trunc | std::ios::binary);
   output << "ORC";
   if (!metadata.SerializeToOstream(&output)) {
     std::cerr << "Failed to write metadata for " << filename << "\n";
@@ -47,8 +44,8 @@ void writeCustomOrcFile(const std::string& filename,
   orc::proto::PostScript ps;
   ps.set_footerlength(static_cast<uint64_t>(footer.ByteSizeLong()));
   ps.set_compression(orc::proto::NONE);
-  ps.set_compressionblocksize(64*1024);
-  for(size_t i=0; i < version.size(); ++i) {
+  ps.set_compressionblocksize(64 * 1024);
+  for (size_t i = 0; i < version.size(); ++i) {
     ps.add_version(version[i]);
   }
   ps.set_metadatalength(static_cast<uint64_t>(metadata.ByteSizeLong()));
@@ -82,7 +79,7 @@ void writeVersion1999() {
   writeCustomOrcFile("version1999.orc", meta, footer, version, 1);
 }
 
-int main(int, char *[]) {
+int main(int, char*[]) {
   writeVersion1999();
   google::protobuf::ShutdownProtobufLibrary();
   return 0;

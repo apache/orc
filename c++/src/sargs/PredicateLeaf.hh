@@ -19,167 +19,145 @@
 #ifndef ORC_PREDICATELEAF_HH
 #define ORC_PREDICATELEAF_HH
 
-#include "wrap/orc-proto-wrapper.hh"
 #include "orc/Common.hh"
 #include "orc/sargs/Literal.hh"
 #include "orc/sargs/TruthValue.hh"
+#include "wrap/orc-proto-wrapper.hh"
 
 #include <string>
 #include <vector>
 
 namespace orc {
 
-  static constexpr uint64_t INVALID_COLUMN_ID =
-    std::numeric_limits<uint64_t>::max();
+static constexpr uint64_t INVALID_COLUMN_ID = std::numeric_limits<uint64_t>::max();
 
-  class BloomFilter;
+class BloomFilter;
+
+/**
+ * The primitive predicates that form a SearchArgument.
+ */
+class PredicateLeaf {
+ public:
+  /**
+   * The possible operators for predicates. To get the opposites, construct
+   * an expression with a not operator.
+   */
+  enum class Operator {
+    EQUALS = 0,
+    NULL_SAFE_EQUALS,
+    LESS_THAN,
+    LESS_THAN_EQUALS,
+    IN,
+    BETWEEN,
+    IS_NULL
+  };
+
+  // The possible types for sargs.
+  enum class Type {
+    LONG = 0,  // all of the integer types
+    FLOAT,     // float and double
+    STRING,    // string, char, varchar
+    DATE,
+    DECIMAL,
+    TIMESTAMP,
+    BOOLEAN
+  };
+
+  PredicateLeaf() = default;
+
+  PredicateLeaf(Operator op, PredicateDataType type, const std::string& colName, Literal literal);
+
+  PredicateLeaf(Operator op, PredicateDataType type, uint64_t columnId, Literal literal);
+
+  PredicateLeaf(Operator op, PredicateDataType type, const std::string& colName,
+                const std::initializer_list<Literal>& literalList);
+
+  PredicateLeaf(Operator op, PredicateDataType type, uint64_t columnId,
+                const std::initializer_list<Literal>& literalList);
+
+  PredicateLeaf(Operator op, PredicateDataType type, const std::string& colName,
+                const std::vector<Literal>& literalList);
+
+  PredicateLeaf(Operator op, PredicateDataType type, uint64_t columnId,
+                const std::vector<Literal>& literalList);
 
   /**
-   * The primitive predicates that form a SearchArgument.
+   * Get the operator for the leaf.
    */
-  class PredicateLeaf {
-  public:
-    /**
-     * The possible operators for predicates. To get the opposites, construct
-     * an expression with a not operator.
-     */
-    enum class Operator {
-      EQUALS = 0,
-      NULL_SAFE_EQUALS,
-      LESS_THAN,
-      LESS_THAN_EQUALS,
-      IN,
-      BETWEEN,
-      IS_NULL
-    };
+  Operator getOperator() const;
 
-    // The possible types for sargs.
-    enum class Type {
-      LONG = 0,     // all of the integer types
-      FLOAT,        // float and double
-      STRING,       // string, char, varchar
-      DATE,
-      DECIMAL,
-      TIMESTAMP,
-      BOOLEAN
-    };
+  /**
+   * Get the type of the column and literal by the file format.
+   */
+  PredicateDataType getType() const;
 
-    PredicateLeaf() = default;
+  /**
+   * Get whether the predicate is created using column name.
+   */
+  bool hasColumnName() const;
 
-    PredicateLeaf(Operator op,
-                  PredicateDataType type,
-                  const std::string& colName,
-                  Literal literal);
+  /**
+   * Get the simple column name.
+   */
+  const std::string& getColumnName() const;
 
-    PredicateLeaf(Operator op,
-                  PredicateDataType type,
-                  uint64_t columnId,
-                  Literal literal);
+  /**
+   * Get the column id.
+   */
+  uint64_t getColumnId() const;
 
-    PredicateLeaf(Operator op,
-                  PredicateDataType type,
-                  const std::string& colName,
-                  const std::initializer_list<Literal>& literalList);
+  /**
+   * Get the literal half of the predicate leaf.
+   */
+  Literal getLiteral() const;
 
-    PredicateLeaf(Operator op,
-                  PredicateDataType type,
-                  uint64_t columnId,
-                  const std::initializer_list<Literal>& literalList);
+  /**
+   * For operators with multiple literals (IN and BETWEEN), get the literals.
+   */
+  const std::vector<Literal>& getLiteralList() const;
 
-    PredicateLeaf(Operator op,
-                  PredicateDataType type,
-                  const std::string& colName,
-                  const std::vector<Literal>& literalList);
+  /**
+   * Evaluate current PredicateLeaf based on ColumnStatistics and BloomFilter
+   */
+  TruthValue evaluate(const WriterVersion writerVersion, const proto::ColumnStatistics& colStats,
+                      const BloomFilter* bloomFilter) const;
 
-    PredicateLeaf(Operator op,
-                  PredicateDataType type,
-                  uint64_t columnId,
-                  const std::vector<Literal>& literalList);
+  std::string toString() const;
 
-    /**
-     * Get the operator for the leaf.
-     */
-    Operator getOperator() const;
+  bool operator==(const PredicateLeaf& r) const;
 
-    /**
-     * Get the type of the column and literal by the file format.
-     */
-    PredicateDataType getType() const;
+  size_t getHashCode() const { return mHashCode; }
 
-    /**
-     * Get whether the predicate is created using column name.
-     */
-    bool hasColumnName() const;
+ private:
+  size_t hashCode() const;
 
-    /**
-     * Get the simple column name.
-     */
-    const std::string& getColumnName() const;
+  void validate() const;
+  void validateColumn() const;
 
-    /**
-     * Get the column id.
-     */
-    uint64_t getColumnId() const;
+  std::string columnDebugString() const;
 
-    /**
-     * Get the literal half of the predicate leaf.
-     */
-    Literal getLiteral() const;
+  TruthValue evaluatePredicateMinMax(const proto::ColumnStatistics& colStats) const;
 
-    /**
-     * For operators with multiple literals (IN and BETWEEN), get the literals.
-     */
-    const std::vector<Literal>& getLiteralList() const;
+  TruthValue evaluatePredicateBloomFiter(const BloomFilter* bloomFilter, bool hasNull) const;
 
-    /**
-     * Evaluate current PredicateLeaf based on ColumnStatistics and BloomFilter
-     */
-    TruthValue evaluate(const WriterVersion writerVersion,
-                        const proto::ColumnStatistics& colStats,
-                        const BloomFilter * bloomFilter) const;
+ private:
+  Operator mOperator;
+  PredicateDataType mType;
+  std::string mColumnName;
+  bool mHasColumnName;
+  uint64_t mColumnId;
+  std::vector<Literal> mLiterals;
+  size_t mHashCode;
+};
 
-    std::string toString() const;
+struct PredicateLeafHash {
+  size_t operator()(const PredicateLeaf& leaf) const { return leaf.getHashCode(); }
+};
 
-    bool operator==(const PredicateLeaf& r) const;
+struct PredicateLeafComparator {
+  bool operator()(const PredicateLeaf& lhs, const PredicateLeaf& rhs) const { return lhs == rhs; }
+};
 
-    size_t getHashCode() const { return mHashCode; }
+}  // namespace orc
 
-  private:
-    size_t hashCode() const;
-
-    void validate() const;
-    void validateColumn() const;
-
-    std::string columnDebugString() const;
-
-    TruthValue evaluatePredicateMinMax(
-                                 const proto::ColumnStatistics& colStats) const;
-
-    TruthValue evaluatePredicateBloomFiter(const BloomFilter * bloomFilter,
-                                           bool hasNull) const;
-
-  private:
-    Operator mOperator;
-    PredicateDataType mType;
-    std::string mColumnName;
-    bool mHasColumnName;
-    uint64_t mColumnId;
-    std::vector<Literal> mLiterals;
-    size_t mHashCode;
-  };
-
-  struct PredicateLeafHash {
-    size_t operator()(const PredicateLeaf& leaf) const {
-      return leaf.getHashCode();
-    }
-  };
-
-  struct PredicateLeafComparator {
-    bool operator()(const PredicateLeaf& lhs, const PredicateLeaf& rhs) const {
-      return lhs == rhs;
-    }
-  };
-
-} // namespace orc
-
-#endif //ORC_PREDICATELEAF_HH
+#endif  // ORC_PREDICATELEAF_HH
