@@ -44,7 +44,7 @@ public class InMemoryEncryptionWriter {
     String encryption = "pii:x,y";
     WriterOptions writerOptions =
         OrcFile.writerOptions(conf).setSchema(schema).setKeyProvider(provider).encrypt(encryption);
-    Writer writer = OrcFile.createWriter(new Path("encrypted.orc"),writerOptions);
+    Writer writer = OrcFile.createWriter(new Path("encrypted.orc"), writerOptions);
 
     VectorizedRowBatch batch = schema.createRowBatch();
     LongColumnVector x = (LongColumnVector) batch.cols[0];

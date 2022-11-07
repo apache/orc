@@ -41,7 +41,7 @@ public class InMemoryEncryptionReader {
     // InMemoryKeystore is used to get key to read encryption data.
     InMemoryKeystore keyProvider = new InMemoryKeystore().addKey("pii", AES_CTR_128, kmsKey);
     ReaderOptions readerOptions = OrcFile.readerOptions(conf).setKeyProvider(keyProvider);
-    Reader reader = OrcFile.createReader(new Path("encrypted.orc"),readerOptions);
+    Reader reader = OrcFile.createReader(new Path("encrypted.orc"), readerOptions);
 
     System.out.println("File schema: " + reader.getSchema());
     System.out.println("Row count: " + reader.getNumberOfRows());
