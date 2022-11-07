@@ -130,18 +130,16 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
         case STRING:
           bytesColVector.setVal(elementNum, bytes, start, length);
           break;
-        case CHAR: {
-          int adjustedDownLen =
+        case CHAR:
+          int charAdjustedDownLen =
               StringExpr.rightTrimAndTruncate(bytes, start, length, readerType.getMaxLength());
-          bytesColVector.setVal(elementNum, bytes, start, adjustedDownLen);
+          bytesColVector.setVal(elementNum, bytes, start, charAdjustedDownLen);
           break;
-        }
-        case VARCHAR: {
-          int adjustedDownLen =
+        case VARCHAR:
+          int varcharAdjustedDownLen =
               StringExpr.truncate(bytes, start, length, readerType.getMaxLength());
-          bytesColVector.setVal(elementNum, bytes, start, adjustedDownLen);
+          bytesColVector.setVal(elementNum, bytes, start, varcharAdjustedDownLen);
           break;
-        }
         default:
           throw new RuntimeException("Unexpected type kind " + readerType.getCategory().name());
       }
@@ -153,28 +151,26 @@ public class ConvertTreeReaderFactory extends TreeReaderFactory {
         case STRING:
           // No conversion needed.
           break;
-        case CHAR: {
-          int length = bytesColVector.length[elementNum];
-          int adjustedDownLen = StringExpr
+        case CHAR:
+          int charLength = bytesColVector.length[elementNum];
+          int charAdjustedDownLen = StringExpr
               .rightTrimAndTruncate(bytesColVector.vector[elementNum],
-                  bytesColVector.start[elementNum], length,
+                  bytesColVector.start[elementNum], charLength,
                   readerType.getMaxLength());
-          if (adjustedDownLen < length) {
-            bytesColVector.length[elementNum] = adjustedDownLen;
+          if (charAdjustedDownLen < charLength) {
+            bytesColVector.length[elementNum] = charAdjustedDownLen;
           }
           break;
-        }
-        case VARCHAR: {
-          int length = bytesColVector.length[elementNum];
-          int adjustedDownLen = StringExpr
+        case VARCHAR:
+          int varcharLength = bytesColVector.length[elementNum];
+          int varcharAdjustedDownLen = StringExpr
               .truncate(bytesColVector.vector[elementNum],
-                  bytesColVector.start[elementNum], length,
+                  bytesColVector.start[elementNum], varcharLength,
                   readerType.getMaxLength());
-          if (adjustedDownLen < length) {
-            bytesColVector.length[elementNum] = adjustedDownLen;
+          if (varcharAdjustedDownLen < varcharLength) {
+            bytesColVector.length[elementNum] = varcharAdjustedDownLen;
           }
           break;
-        }
         default:
           throw new RuntimeException("Unexpected type kind " + readerType.getCategory().name());
       }
