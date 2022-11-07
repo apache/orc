@@ -23,6 +23,8 @@
 #include "orc/Vector.hh"
 #include "orc/orc-config.hh"
 
+#include <sstream>
+
 namespace orc {
 
 /**

@@ -23,6 +23,7 @@
 #include "orc/OrcFile.hh"
 #include "orc/Reader.hh"
 
+#include "ColumnReader.hh"
 #include "Timezone.hh"
 #include "TypeImpl.hh"
 
