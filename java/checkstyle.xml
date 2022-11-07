@@ -31,6 +31,10 @@
   <module name="TreeWalker">
     <module name="OuterTypeFilename"/>
     <module name="CommentsIndentation"/>
+    <module name="AvoidStarImport">
+      <property name="allowClassImports" value="false"/>
+      <property name="allowStaticMemberImports" value="false"/>
+    </module>
     <module name="UnusedImports"/>
     <module name="RedundantImport"/>
     <!-- https://checkstyle.sourceforge.io/config_imports.html#ImportOrder IntelliJ default example -->
