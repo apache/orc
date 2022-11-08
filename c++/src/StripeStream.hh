@@ -101,13 +101,21 @@ namespace orc {
 
     ~StreamInformationImpl() override;
 
-    StreamKind getKind() const override { return kind; }
+    StreamKind getKind() const override {
+      return kind;
+    }
 
-    uint64_t getColumnId() const override { return column; }
+    uint64_t getColumnId() const override {
+      return column;
+    }
 
-    uint64_t getOffset() const override { return offset; }
+    uint64_t getOffset() const override {
+      return offset;
+    }
 
-    uint64_t getLength() const override { return length; }
+    uint64_t getLength() const override {
+      return length;
+    }
   };
 
   /**
@@ -150,16 +158,28 @@ namespace orc {
       // PASS
     }
 
-    uint64_t getOffset() const override { return offset; }
+    uint64_t getOffset() const override {
+      return offset;
+    }
 
-    uint64_t getLength() const override { return indexLength + dataLength + footerLength; }
-    uint64_t getIndexLength() const override { return indexLength; }
+    uint64_t getLength() const override {
+      return indexLength + dataLength + footerLength;
+    }
+    uint64_t getIndexLength() const override {
+      return indexLength;
+    }
 
-    uint64_t getDataLength() const override { return dataLength; }
+    uint64_t getDataLength() const override {
+      return dataLength;
+    }
 
-    uint64_t getFooterLength() const override { return footerLength; }
+    uint64_t getFooterLength() const override {
+      return footerLength;
+    }
 
-    uint64_t getNumberOfRows() const override { return numRows; }
+    uint64_t getNumberOfRows() const override {
+      return numRows;
+    }
 
     uint64_t getNumberOfStreams() const override {
       ensureStripeFooterLoaded();

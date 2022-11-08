@@ -69,9 +69,13 @@ namespace orc {
 
     ~FileInputStream() override;
 
-    uint64_t getLength() const override { return totalLength; }
+    uint64_t getLength() const override {
+      return totalLength;
+    }
 
-    uint64_t getNaturalReadSize() const override { return 128 * 1024; }
+    uint64_t getNaturalReadSize() const override {
+      return 128 * 1024;
+    }
 
     void read(void* buf, uint64_t length, uint64_t offset) override {
       SCOPED_STOPWATCH(metrics, IOBlockingLatencyUs, IOCount);
@@ -88,7 +92,9 @@ namespace orc {
       }
     }
 
-    const std::string& getName() const override { return filename; }
+    const std::string& getName() const override {
+      return filename;
+    }
   };
 
   FileInputStream::~FileInputStream() {
@@ -137,9 +143,13 @@ namespace orc {
 
     ~FileOutputStream() override;
 
-    uint64_t getLength() const override { return bytesWritten; }
+    uint64_t getLength() const override {
+      return bytesWritten;
+    }
 
-    uint64_t getNaturalWriteSize() const override { return 128 * 1024; }
+    uint64_t getNaturalWriteSize() const override {
+      return 128 * 1024;
+    }
 
     void write(const void* buf, size_t length) override {
       if (closed) {
@@ -155,7 +165,9 @@ namespace orc {
       bytesWritten += static_cast<uint64_t>(bytesWrite);
     }
 
-    const std::string& getName() const override { return filename; }
+    const std::string& getName() const override {
+      return filename;
+    }
 
     void close() override {
       if (!closed) {

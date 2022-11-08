@@ -46,7 +46,9 @@ class TestMemoryPool : public orc::MemoryPool {
     blocks.erase(p);
   }
 
-  uint64_t getMaxMemory() { return maxMemory; }
+  uint64_t getMaxMemory() {
+    return maxMemory;
+  }
 
   TestMemoryPool() : totalMemory(0), maxMemory(0) {}
   ~TestMemoryPool() ORC_OVERRIDE;

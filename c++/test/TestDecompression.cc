@@ -56,7 +56,9 @@ namespace orc {
     }
 
     // Per-test-case tear-down.
-    static void TearDownTestCase() { simpleFile = 0; }
+    static void TearDownTestCase() {
+      simpleFile = 0;
+    }
 
     static const char* simpleFile;
   };
@@ -620,8 +622,12 @@ namespace orc {
    public:
     CompressBuffer(size_t capacity) : buf(capacity + HEADER_SIZE) {}
 
-    char* getCompressed() { return buf.data() + HEADER_SIZE; }
-    char* getBuffer() { return buf.data(); }
+    char* getCompressed() {
+      return buf.data() + HEADER_SIZE;
+    }
+    char* getBuffer() {
+      return buf.data();
+    }
 
     void writeHeader(size_t compressedSize) {
       buf[0] = static_cast<char>(compressedSize << 1);
@@ -641,7 +647,9 @@ namespace orc {
       return header >> 1;
     }
 
-    size_t getBufferSize() const { return getCompressedSize() + HEADER_SIZE; }
+    size_t getBufferSize() const {
+      return getCompressedSize() + HEADER_SIZE;
+    }
   };
 
   TEST(Snappy, testBasic) {

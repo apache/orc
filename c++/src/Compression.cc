@@ -61,7 +61,9 @@ namespace orc {
     virtual uint64_t flush() override;
     virtual void suppress() override;
 
-    virtual bool isCompressed() const override { return true; }
+    virtual bool isCompressed() const override {
+      return true;
+    }
     virtual uint64_t getSize() const override;
 
    protected:
@@ -231,7 +233,9 @@ namespace orc {
     ZlibCompressionStream(OutputStream* outStream, int compressionLevel, uint64_t capacity,
                           uint64_t blockSize, MemoryPool& pool, WriterMetrics* metrics);
 
-    virtual ~ZlibCompressionStream() override { end(); }
+    virtual ~ZlibCompressionStream() override {
+      end();
+    }
 
     virtual std::string getName() const override;
 
@@ -945,9 +949,13 @@ namespace orc {
       this->init();
     }
 
-    virtual std::string getName() const override { return "Lz4CompressionStream"; }
+    virtual std::string getName() const override {
+      return "Lz4CompressionStream";
+    }
 
-    virtual ~Lz4CompressionSteam() override { this->end(); }
+    virtual ~Lz4CompressionSteam() override {
+      this->end();
+    }
 
    protected:
     virtual uint64_t doBlockCompression() override;
@@ -994,7 +1002,9 @@ namespace orc {
                             uint64_t blockSize, MemoryPool& pool, WriterMetrics* metrics)
         : BlockCompressionStream(outStream, compressionLevel, capacity, blockSize, pool, metrics) {}
 
-    virtual std::string getName() const override { return "SnappyCompressionStream"; }
+    virtual std::string getName() const override {
+      return "SnappyCompressionStream";
+    }
 
     virtual ~SnappyCompressionStream() override {
       // PASS
@@ -1027,9 +1037,13 @@ namespace orc {
       this->init();
     }
 
-    virtual std::string getName() const override { return "ZstdCompressionStream"; }
+    virtual std::string getName() const override {
+      return "ZstdCompressionStream";
+    }
 
-    virtual ~ZSTDCompressionStream() override { this->end(); }
+    virtual ~ZSTDCompressionStream() override {
+      this->end();
+    }
 
    protected:
     virtual uint64_t doBlockCompression() override;
@@ -1080,7 +1094,9 @@ namespace orc {
       this->init();
     }
 
-    virtual ~ZSTDDecompressionStream() override { this->end(); }
+    virtual ~ZSTDDecompressionStream() override {
+      this->end();
+    }
 
     std::string getName() const override {
       std::ostringstream result;

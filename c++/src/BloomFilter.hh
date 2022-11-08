@@ -181,7 +181,9 @@ namespace orc {
 
   struct BloomFilterUTF8Utils {
     // serialize BloomFilter in protobuf
-    static void serialize(const BloomFilterImpl& in, proto::BloomFilter& out) { in.serialize(out); }
+    static void serialize(const BloomFilterImpl& in, proto::BloomFilter& out) {
+      in.serialize(out);
+    }
 
     // deserialize BloomFilter from protobuf
     static std::unique_ptr<BloomFilter> deserialize(const proto::Stream_Kind& streamKind,

@@ -502,12 +502,16 @@ namespace orc {
    public:
     virtual ~Version1Parser() override;
 
-    virtual uint64_t getVersion() const override { return 1; }
+    virtual uint64_t getVersion() const override {
+      return 1;
+    }
 
     /**
      * Get the number of bytes
      */
-    virtual uint64_t getTimeSize() const override { return 4; }
+    virtual uint64_t getTimeSize() const override {
+      return 4;
+    }
 
     /**
      * Parse the time at the given location.
@@ -530,12 +534,16 @@ namespace orc {
    public:
     virtual ~Version2Parser() override;
 
-    virtual uint64_t getVersion() const override { return 2; }
+    virtual uint64_t getVersion() const override {
+      return 2;
+    }
 
     /**
      * Get the number of bytes
      */
-    virtual uint64_t getTimeSize() const override { return 8; }
+    virtual uint64_t getTimeSize() const override {
+      return 8;
+    }
 
     /**
      * Parse the time at the given location.
@@ -566,11 +574,17 @@ namespace orc {
 
     void print(std::ostream&) const override;
 
-    uint64_t getVersion() const override { return version; }
+    uint64_t getVersion() const override {
+      return version;
+    }
 
-    int64_t getEpoch() const override { return epoch; }
+    int64_t getEpoch() const override {
+      return epoch;
+    }
 
-    int64_t convertToUTC(int64_t clk) const override { return clk + getVariant(clk).gmtOffset; }
+    int64_t convertToUTC(int64_t clk) const override {
+      return clk + getVariant(clk).gmtOffset;
+    }
 
    private:
     void parseTimeVariants(const unsigned char* ptr, uint64_t variantOffset, uint64_t variantCount,

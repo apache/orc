@@ -55,7 +55,9 @@ namespace orc {
 
     RowIndexPositionRecorder(proto::RowIndexEntry& entry) : rowIndexEntry(entry) {}
 
-    virtual void add(uint64_t pos) override { rowIndexEntry.add_positions(pos); }
+    virtual void add(uint64_t pos) override {
+      rowIndexEntry.add_positions(pos);
+    }
 
    private:
     proto::RowIndexEntry& rowIndexEntry;

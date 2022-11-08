@@ -325,12 +325,16 @@ namespace orc {
     /**
      * Get the high bits of the twos complement representation of the number.
      */
-    int64_t getHighBits() { return highbits; }
+    int64_t getHighBits() {
+      return highbits;
+    }
 
     /**
      * Get the low bits of the twos complement representation of the number.
      */
-    uint64_t getLowBits() { return lowbits; }
+    uint64_t getLowBits() {
+      return lowbits;
+    }
 
     /**
      * Represent the absolute number as a list of uint32.

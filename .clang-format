@@ -19,8 +19,8 @@ Language: Cpp
 BasedOnStyle: Google
 ColumnLimit: 100
 IndentWidth: 2
+NamespaceIndentation: All
 UseTab: Never
+AllowShortFunctionsOnASingleLine: Empty
 DerivePointerAlignment: false
 IncludeBlocks: Preserve
-NamespaceIndentation: All
-AllowShortFunctionsOnASingleLine: Inline

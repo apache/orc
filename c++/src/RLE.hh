@@ -61,7 +61,9 @@ namespace orc {
     /**
      * Get size of buffer used so far.
      */
-    uint64_t getBufferSize() const { return outputStream->getSize(); }
+    uint64_t getBufferSize() const {
+      return outputStream->getSize();
+    }
 
     /**
      * Flushing underlying BufferedOutputStream

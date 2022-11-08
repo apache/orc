@@ -42,18 +42,24 @@ namespace orc {
     /**
      * Get major version
      */
-    uint32_t getMajor() const { return this->majorVersion; }
+    uint32_t getMajor() const {
+      return this->majorVersion;
+    }
 
     /**
      * Get minor version
      */
-    uint32_t getMinor() const { return this->minorVersion; }
+    uint32_t getMinor() const {
+      return this->minorVersion;
+    }
 
     bool operator==(const FileVersion& right) const {
       return this->majorVersion == right.getMajor() && this->minorVersion == right.getMinor();
     }
 
-    bool operator!=(const FileVersion& right) const { return !(*this == right); }
+    bool operator!=(const FileVersion& right) const {
+      return !(*this == right);
+    }
 
     std::string toString() const;
   };

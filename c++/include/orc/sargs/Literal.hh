@@ -44,17 +44,27 @@ namespace orc {
       }
       Timestamp& operator=(const Timestamp&) = default;
       Timestamp& operator=(Timestamp&&) = default;
-      bool operator==(const Timestamp& r) const { return second == r.second && nanos == r.nanos; }
+      bool operator==(const Timestamp& r) const {
+        return second == r.second && nanos == r.nanos;
+      }
       bool operator<(const Timestamp& r) const {
         return second < r.second || (second == r.second && nanos < r.nanos);
       }
       bool operator<=(const Timestamp& r) const {
         return second < r.second || (second == r.second && nanos <= r.nanos);
       }
-      bool operator!=(const Timestamp& r) const { return !(*this == r); }
-      bool operator>(const Timestamp& r) const { return r < *this; }
-      bool operator>=(const Timestamp& r) const { return r <= *this; }
-      int64_t getMillis() const { return second * 1000 + nanos / 1000000; }
+      bool operator!=(const Timestamp& r) const {
+        return !(*this == r);
+      }
+      bool operator>(const Timestamp& r) const {
+        return r < *this;
+      }
+      bool operator>=(const Timestamp& r) const {
+        return r <= *this;
+      }
+      int64_t getMillis() const {
+        return second * 1000 + nanos / 1000000;
+      }
       int64_t second;
       int32_t nanos;
     };
@@ -119,11 +129,17 @@ namespace orc {
     /**
      * Check if a literal is null
      */
-    bool isNull() const { return mIsNull; }
+    bool isNull() const {
+      return mIsNull;
+    }
 
-    PredicateDataType getType() const { return mType; }
+    PredicateDataType getType() const {
+      return mType;
+    }
     std::string toString() const;
-    size_t getHashCode() const { return mHashCode; }
+    size_t getHashCode() const {
+      return mHashCode;
+    }
 
    private:
     size_t hashCode() const;

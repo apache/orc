@@ -56,17 +56,29 @@ namespace orc {
 
     virtual ~DataBuffer();
 
-    T* data() { return buf; }
+    T* data() {
+      return buf;
+    }
 
-    const T* data() const { return buf; }
+    const T* data() const {
+      return buf;
+    }
 
-    uint64_t size() { return currentSize; }
+    uint64_t size() {
+      return currentSize;
+    }
 
-    uint64_t capacity() { return currentCapacity; }
+    uint64_t capacity() {
+      return currentCapacity;
+    }
 
-    const T& operator[](uint64_t i) const { return buf[i]; }
+    const T& operator[](uint64_t i) const {
+      return buf[i];
+    }
 
-    T& operator[](uint64_t i) { return buf[i]; }
+    T& operator[](uint64_t i) {
+      return buf[i];
+    }
 
     void reserve(uint64_t _size);
     void resize(uint64_t _size);

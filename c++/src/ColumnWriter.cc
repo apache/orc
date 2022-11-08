@@ -1361,7 +1361,9 @@ namespace orc {
     /**
      * Checks if b is the first byte of a UTF-8 character.
      */
-    inline static bool isUtfStartByte(char b) { return (b & 0xC0) != 0x80; }
+    inline static bool isUtfStartByte(char b) {
+      return (b & 0xC0) != 0x80;
+    }
 
     /**
      * Find the start of the last character that ends in the current string.

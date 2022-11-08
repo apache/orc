@@ -47,7 +47,9 @@ namespace orc {
 
     WriterVersionImpl(WriterVersion ver) : version(ver) {}
 
-    bool compareGT(const WriterVersion other) const { return version > other; }
+    bool compareGT(const WriterVersion other) const {
+      return version > other;
+    }
   };
 
   /**
@@ -187,7 +189,9 @@ namespace orc {
     friend class TestRowReader_computeBatchSize_Test;
 
     // whether the current stripe is initialized
-    inline bool isCurrentStripeInited() const { return currentStripe == processingStripe; }
+    inline bool isCurrentStripeInited() const {
+      return currentStripe == processingStripe;
+    }
 
     /**
      * Seek to the start of a row group in the current stripe
@@ -326,17 +330,29 @@ namespace orc {
 
     bool hasCorrectStatistics() const override;
 
-    const ReaderMetrics* getReaderMetrics() const override { return contents->readerMetrics; }
+    const ReaderMetrics* getReaderMetrics() const override {
+      return contents->readerMetrics;
+    }
 
-    const proto::PostScript* getPostscript() const { return contents->postscript.get(); }
+    const proto::PostScript* getPostscript() const {
+      return contents->postscript.get();
+    }
 
-    uint64_t getBlockSize() const { return contents->blockSize; }
+    uint64_t getBlockSize() const {
+      return contents->blockSize;
+    }
 
-    const proto::Footer* getFooter() const { return contents->footer.get(); }
+    const proto::Footer* getFooter() const {
+      return contents->footer.get();
+    }
 
-    const Type* getSchema() const { return contents->schema.get(); }
+    const Type* getSchema() const {
+      return contents->schema.get();
+    }
 
-    InputStream* getStream() const { return contents->stream.get(); }
+    InputStream* getStream() const {
+      return contents->stream.get();
+    }
 
     uint64_t getMemoryUse(int stripeIx = -1) override;
 

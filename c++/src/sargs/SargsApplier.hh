@@ -71,17 +71,23 @@ namespace orc {
      * in stripe. 0 means the current RowGroup is entirely skipped.
      * Only valid after invoking pickRowGroups().
      */
-    const std::vector<uint64_t>& getNextSkippedRows() const { return mNextSkippedRows; }
+    const std::vector<uint64_t>& getNextSkippedRows() const {
+      return mNextSkippedRows;
+    }
 
     /**
      * Indicate whether any row group is selected in the last evaluation
      */
-    bool hasSelected() const { return mHasSelected; }
+    bool hasSelected() const {
+      return mHasSelected;
+    }
 
     /**
      * Indicate whether any row group is skipped in the last evaluation
      */
-    bool hasSkipped() const { return mHasSkipped; }
+    bool hasSkipped() const {
+      return mHasSkipped;
+    }
 
     /**
      * Whether any row group from current row in the stripe matches PPD.

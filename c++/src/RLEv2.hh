@@ -178,7 +178,9 @@ namespace orc {
       curByte = 0;
     }
 
-    void resetRun() { resetReadLongs(); }
+    void resetRun() {
+      resetReadLongs();
+    }
 
     unsigned char readByte();
 

@@ -60,15 +60,21 @@ namespace orc {
     MOCK_CONST_METHOD0(getForcedScaleOnHive11Decimal, int32_t());
     MOCK_CONST_METHOD0(isDecimalAsLong, bool());
 
-    MemoryPool& getMemoryPool() const { return *getDefaultPool(); }
+    MemoryPool& getMemoryPool() const {
+      return *getDefaultPool();
+    }
 
-    ReaderMetrics* getReaderMetrics() const { return getDefaultReaderMetrics(); }
+    ReaderMetrics* getReaderMetrics() const {
+      return getDefaultReaderMetrics();
+    }
 
     const Timezone& getWriterTimezone() const override {
       return getTimezoneByName("America/Los_Angeles");
     }
 
-    const Timezone& getReaderTimezone() const override { return getTimezoneByName("GMT"); }
+    const Timezone& getReaderTimezone() const override {
+      return getTimezoneByName("GMT");
+    }
   };
 
   MockStripeStreams::~MockStripeStreams() {

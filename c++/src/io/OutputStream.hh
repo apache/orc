@@ -70,7 +70,9 @@ namespace orc {
     virtual uint64_t flush();
     virtual void suppress();
 
-    virtual bool isCompressed() const { return false; }
+    virtual bool isCompressed() const {
+      return false;
+    }
   };
   DIAGNOSTIC_POP
 

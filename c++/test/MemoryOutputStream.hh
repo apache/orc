@@ -36,19 +36,29 @@ namespace orc {
 
     virtual ~MemoryOutputStream() override;
 
-    virtual uint64_t getLength() const override { return length; }
+    virtual uint64_t getLength() const override {
+      return length;
+    }
 
-    virtual uint64_t getNaturalWriteSize() const override { return naturalWriteSize; }
+    virtual uint64_t getNaturalWriteSize() const override {
+      return naturalWriteSize;
+    }
 
     virtual void write(const void* buf, size_t size) override;
 
-    virtual const std::string& getName() const override { return name; }
+    virtual const std::string& getName() const override {
+      return name;
+    }
 
-    const char* getData() const { return data; }
+    const char* getData() const {
+      return data;
+    }
 
     void close() override {}
 
-    void reset() { length = 0; }
+    void reset() {
+      length = 0;
+    }
 
    private:
     char* data;

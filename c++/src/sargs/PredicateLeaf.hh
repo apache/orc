@@ -126,7 +126,9 @@ namespace orc {
 
     bool operator==(const PredicateLeaf& r) const;
 
-    size_t getHashCode() const { return mHashCode; }
+    size_t getHashCode() const {
+      return mHashCode;
+    }
 
    private:
     size_t hashCode() const;
@@ -151,11 +153,15 @@ namespace orc {
   };
 
   struct PredicateLeafHash {
-    size_t operator()(const PredicateLeaf& leaf) const { return leaf.getHashCode(); }
+    size_t operator()(const PredicateLeaf& leaf) const {
+      return leaf.getHashCode();
+    }
   };
 
   struct PredicateLeafComparator {
-    bool operator()(const PredicateLeaf& lhs, const PredicateLeaf& rhs) const { return lhs == rhs; }
+    bool operator()(const PredicateLeaf& lhs, const PredicateLeaf& rhs) const {
+      return lhs == rhs;
+    }
   };
 
 }  // namespace orc

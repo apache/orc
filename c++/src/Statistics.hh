@@ -73,50 +73,90 @@ namespace orc {
     ~InternalStatisticsImpl() {}
 
     // GET / SET _totalLength
-    bool hasTotalLength() const { return _hasTotalLength; }
+    bool hasTotalLength() const {
+      return _hasTotalLength;
+    }
 
-    void setHasTotalLength(bool hasTotalLength) { _hasTotalLength = hasTotalLength; }
+    void setHasTotalLength(bool hasTotalLength) {
+      _hasTotalLength = hasTotalLength;
+    }
 
-    uint64_t getTotalLength() const { return _totalLength; }
+    uint64_t getTotalLength() const {
+      return _totalLength;
+    }
 
-    void setTotalLength(uint64_t totalLength) { _totalLength = totalLength; }
+    void setTotalLength(uint64_t totalLength) {
+      _totalLength = totalLength;
+    }
 
     // GET / SET _sum
-    bool hasSum() const { return _hasSum; }
+    bool hasSum() const {
+      return _hasSum;
+    }
 
-    void setHasSum(bool hasSum) { _hasSum = hasSum; }
+    void setHasSum(bool hasSum) {
+      _hasSum = hasSum;
+    }
 
-    T getSum() const { return _sum; }
+    T getSum() const {
+      return _sum;
+    }
 
-    void setSum(T sum) { _sum = sum; }
+    void setSum(T sum) {
+      _sum = sum;
+    }
 
     // GET / SET _maximum
-    bool hasMaximum() const { return _hasMaximum; }
+    bool hasMaximum() const {
+      return _hasMaximum;
+    }
 
-    const T& getMaximum() const { return _maximum; }
+    const T& getMaximum() const {
+      return _maximum;
+    }
 
-    void setHasMaximum(bool hasMax) { _hasMaximum = hasMax; }
+    void setHasMaximum(bool hasMax) {
+      _hasMaximum = hasMax;
+    }
 
-    void setMaximum(T max) { _maximum = max; }
+    void setMaximum(T max) {
+      _maximum = max;
+    }
 
     // GET / SET _minimum
-    bool hasMinimum() const { return _hasMinimum; }
+    bool hasMinimum() const {
+      return _hasMinimum;
+    }
 
-    void setHasMinimum(bool hasMin) { _hasMinimum = hasMin; }
+    void setHasMinimum(bool hasMin) {
+      _hasMinimum = hasMin;
+    }
 
-    const T& getMinimum() const { return _minimum; }
+    const T& getMinimum() const {
+      return _minimum;
+    }
 
-    void setMinimum(T min) { _minimum = min; }
+    void setMinimum(T min) {
+      _minimum = min;
+    }
 
     // GET / SET _valueCount
-    uint64_t getNumberOfValues() const { return _valueCount; }
+    uint64_t getNumberOfValues() const {
+      return _valueCount;
+    }
 
-    void setNumberOfValues(uint64_t numValues) { _valueCount = numValues; }
+    void setNumberOfValues(uint64_t numValues) {
+      _valueCount = numValues;
+    }
 
     // GET / SET _hasNullValue
-    bool hasNull() const { return _hasNull; }
+    bool hasNull() const {
+      return _hasNull;
+    }
 
-    void setHasNull(bool hasNull) { _hasNull = hasNull; }
+    void setHasNull(bool hasNull) {
+      _hasNull = hasNull;
+    }
 
     void reset() {
       _hasNull = false;
@@ -203,27 +243,39 @@ namespace orc {
     InternalCharStatistics _stats;
 
    public:
-    ColumnStatisticsImpl() { reset(); }
+    ColumnStatisticsImpl() {
+      reset();
+    }
     ColumnStatisticsImpl(const proto::ColumnStatistics& stats);
     virtual ~ColumnStatisticsImpl() override;
 
-    uint64_t getNumberOfValues() const override { return _stats.getNumberOfValues(); }
+    uint64_t getNumberOfValues() const override {
+      return _stats.getNumberOfValues();
+    }
 
-    void setNumberOfValues(uint64_t value) override { _stats.setNumberOfValues(value); }
+    void setNumberOfValues(uint64_t value) override {
+      _stats.setNumberOfValues(value);
+    }
 
     void increase(uint64_t count) override {
       _stats.setNumberOfValues(_stats.getNumberOfValues() + count);
     }
 
-    bool hasNull() const override { return _stats.hasNull(); }
+    bool hasNull() const override {
+      return _stats.hasNull();
+    }
 
-    void setHasNull(bool hasNull) override { _stats.setHasNull(hasNull); }
+    void setHasNull(bool hasNull) override {
+      _stats.setHasNull(hasNull);
+    }
 
     void merge(const MutableColumnStatistics& other) override {
       _stats.merge(dynamic_cast<const ColumnStatisticsImpl&>(other)._stats);
     }
 
-    void reset() override { _stats.reset(); }
+    void reset() override {
+      _stats.reset();
+    }
 
     void toProtoBuf(proto::ColumnStatistics& pbStats) const override {
       pbStats.set_hasnull(_stats.hasNull());
@@ -243,24 +295,36 @@ namespace orc {
     InternalCharStatistics _stats;
 
    public:
-    BinaryColumnStatisticsImpl() { reset(); }
+    BinaryColumnStatisticsImpl() {
+      reset();
+    }
     BinaryColumnStatisticsImpl(const proto::ColumnStatistics& stats,
                                const StatContext& statContext);
     virtual ~BinaryColumnStatisticsImpl() override;
 
-    uint64_t getNumberOfValues() const override { return _stats.getNumberOfValues(); }
+    uint64_t getNumberOfValues() const override {
+      return _stats.getNumberOfValues();
+    }
 
-    void setNumberOfValues(uint64_t value) override { _stats.setNumberOfValues(value); }
+    void setNumberOfValues(uint64_t value) override {
+      _stats.setNumberOfValues(value);
+    }
 
     void increase(uint64_t count) override {
       _stats.setNumberOfValues(_stats.getNumberOfValues() + count);
     }
 
-    bool hasNull() const override { return _stats.hasNull(); }
+    bool hasNull() const override {
+      return _stats.hasNull();
+    }
 
-    void setHasNull(bool hasNull) override { _stats.setHasNull(hasNull); }
+    void setHasNull(bool hasNull) override {
+      _stats.setHasNull(hasNull);
+    }
 
-    bool hasTotalLength() const override { return _stats.hasTotalLength(); }
+    bool hasTotalLength() const override {
+      return _stats.hasTotalLength();
+    }
 
     uint64_t getTotalLength() const override {
       if (hasTotalLength()) {
@@ -275,7 +339,9 @@ namespace orc {
       _stats.setTotalLength(length);
     }
 
-    void update(size_t length) { _stats.setTotalLength(_stats.getTotalLength() + length); }
+    void update(size_t length) {
+      _stats.setTotalLength(_stats.getTotalLength() + length);
+    }
 
     void merge(const MutableColumnStatistics& other) override {
       const BinaryColumnStatisticsImpl& binStats =
@@ -318,25 +384,37 @@ namespace orc {
     uint64_t _trueCount;
 
    public:
-    BooleanColumnStatisticsImpl() { reset(); }
+    BooleanColumnStatisticsImpl() {
+      reset();
+    }
     BooleanColumnStatisticsImpl(const proto::ColumnStatistics& stats,
                                 const StatContext& statContext);
     virtual ~BooleanColumnStatisticsImpl() override;
 
-    bool hasCount() const override { return _hasCount; }
+    bool hasCount() const override {
+      return _hasCount;
+    }
 
     void increase(uint64_t count) override {
       _stats.setNumberOfValues(_stats.getNumberOfValues() + count);
       _hasCount = true;
     }
 
-    uint64_t getNumberOfValues() const override { return _stats.getNumberOfValues(); }
+    uint64_t getNumberOfValues() const override {
+      return _stats.getNumberOfValues();
+    }
 
-    void setNumberOfValues(uint64_t value) override { _stats.setNumberOfValues(value); }
+    void setNumberOfValues(uint64_t value) override {
+      _stats.setNumberOfValues(value);
+    }
 
-    bool hasNull() const override { return _stats.hasNull(); }
+    bool hasNull() const override {
+      return _stats.hasNull();
+    }
 
-    void setHasNull(bool hasNull) override { _stats.setHasNull(hasNull); }
+    void setHasNull(bool hasNull) override {
+      _stats.setHasNull(hasNull);
+    }
 
     uint64_t getFalseCount() const override {
       if (hasCount()) {
@@ -410,25 +488,39 @@ namespace orc {
     InternalDateStatistics _stats;
 
    public:
-    DateColumnStatisticsImpl() { reset(); }
+    DateColumnStatisticsImpl() {
+      reset();
+    }
     DateColumnStatisticsImpl(const proto::ColumnStatistics& stats, const StatContext& statContext);
     virtual ~DateColumnStatisticsImpl() override;
 
-    bool hasMinimum() const override { return _stats.hasMinimum(); }
+    bool hasMinimum() const override {
+      return _stats.hasMinimum();
+    }
 
-    bool hasMaximum() const override { return _stats.hasMaximum(); }
+    bool hasMaximum() const override {
+      return _stats.hasMaximum();
+    }
 
     void increase(uint64_t count) override {
       _stats.setNumberOfValues(_stats.getNumberOfValues() + count);
     }
 
-    uint64_t getNumberOfValues() const override { return _stats.getNumberOfValues(); }
+    uint64_t getNumberOfValues() const override {
+      return _stats.getNumberOfValues();
+    }
 
-    void setNumberOfValues(uint64_t value) override { _stats.setNumberOfValues(value); }
+    void setNumberOfValues(uint64_t value) override {
+      _stats.setNumberOfValues(value);
+    }
 
-    bool hasNull() const override { return _stats.hasNull(); }
+    bool hasNull() const override {
+      return _stats.hasNull();
+    }
 
-    void setHasNull(bool hasNull) override { _stats.setHasNull(hasNull); }
+    void setHasNull(bool hasNull) override {
+      _stats.setHasNull(hasNull);
+    }
 
     int32_t getMinimum() const override {
       if (hasMinimum()) {
@@ -456,7 +548,9 @@ namespace orc {
       _stats.setMaximum(maximum);
     }
 
-    void update(int32_t value) { _stats.updateMinMax(value); }
+    void update(int32_t value) {
+      _stats.updateMinMax(value);
+    }
 
     void merge(const MutableColumnStatistics& other) override {
       const DateColumnStatisticsImpl& dateStats =
@@ -464,7 +558,9 @@ namespace orc {
       _stats.merge(dateStats._stats);
     }
 
-    void reset() override { _stats.reset(); }
+    void reset() override {
+      _stats.reset();
+    }
 
     void toProtoBuf(proto::ColumnStatistics& pbStats) const override {
       pbStats.set_hasnull(_stats.hasNull());
@@ -506,28 +602,44 @@ namespace orc {
     InternalDecimalStatistics _stats;
 
    public:
-    DecimalColumnStatisticsImpl() { reset(); }
+    DecimalColumnStatisticsImpl() {
+      reset();
+    }
     DecimalColumnStatisticsImpl(const proto::ColumnStatistics& stats,
                                 const StatContext& statContext);
     virtual ~DecimalColumnStatisticsImpl() override;
 
-    bool hasMinimum() const override { return _stats.hasMinimum(); }
+    bool hasMinimum() const override {
+      return _stats.hasMinimum();
+    }
 
-    bool hasMaximum() const override { return _stats.hasMaximum(); }
+    bool hasMaximum() const override {
+      return _stats.hasMaximum();
+    }
 
-    bool hasSum() const override { return _stats.hasSum(); }
+    bool hasSum() const override {
+      return _stats.hasSum();
+    }
 
     void increase(uint64_t count) override {
       _stats.setNumberOfValues(_stats.getNumberOfValues() + count);
     }
 
-    uint64_t getNumberOfValues() const override { return _stats.getNumberOfValues(); }
+    uint64_t getNumberOfValues() const override {
+      return _stats.getNumberOfValues();
+    }
 
-    void setNumberOfValues(uint64_t value) override { _stats.setNumberOfValues(value); }
+    void setNumberOfValues(uint64_t value) override {
+      _stats.setNumberOfValues(value);
+    }
 
-    bool hasNull() const override { return _stats.hasNull(); }
+    bool hasNull() const override {
+      return _stats.hasNull();
+    }
 
-    void setHasNull(bool hasNull) override { _stats.setHasNull(hasNull); }
+    void setHasNull(bool hasNull) override {
+      _stats.setHasNull(hasNull);
+    }
 
     Decimal getMinimum() const override {
       if (hasMinimum()) {
@@ -672,27 +784,43 @@ namespace orc {
     InternalDoubleStatistics _stats;
 
    public:
-    DoubleColumnStatisticsImpl() { reset(); }
+    DoubleColumnStatisticsImpl() {
+      reset();
+    }
     DoubleColumnStatisticsImpl(const proto::ColumnStatistics& stats);
     virtual ~DoubleColumnStatisticsImpl() override;
 
-    bool hasMinimum() const override { return _stats.hasMinimum(); }
+    bool hasMinimum() const override {
+      return _stats.hasMinimum();
+    }
 
-    bool hasMaximum() const override { return _stats.hasMaximum(); }
+    bool hasMaximum() const override {
+      return _stats.hasMaximum();
+    }
 
-    bool hasSum() const override { return _stats.hasSum(); }
+    bool hasSum() const override {
+      return _stats.hasSum();
+    }
 
     void increase(uint64_t count) override {
       _stats.setNumberOfValues(_stats.getNumberOfValues() + count);
     }
 
-    uint64_t getNumberOfValues() const override { return _stats.getNumberOfValues(); }
+    uint64_t getNumberOfValues() const override {
+      return _stats.getNumberOfValues();
+    }
 
-    void setNumberOfValues(uint64_t value) override { _stats.setNumberOfValues(value); }
+    void setNumberOfValues(uint64_t value) override {
+      _stats.setNumberOfValues(value);
+    }
 
-    bool hasNull() const override { return _stats.hasNull(); }
+    bool hasNull() const override {
+      return _stats.hasNull();
+    }
 
-    void setHasNull(bool hasNull) override { _stats.setHasNull(hasNull); }
+    void setHasNull(bool hasNull) override {
+      _stats.setHasNull(hasNull);
+    }
 
     double getMinimum() const override {
       if (hasMinimum()) {
@@ -805,27 +933,43 @@ namespace orc {
     InternalIntegerStatistics _stats;
 
    public:
-    IntegerColumnStatisticsImpl() { reset(); }
+    IntegerColumnStatisticsImpl() {
+      reset();
+    }
     IntegerColumnStatisticsImpl(const proto::ColumnStatistics& stats);
     virtual ~IntegerColumnStatisticsImpl() override;
 
-    bool hasMinimum() const override { return _stats.hasMinimum(); }
+    bool hasMinimum() const override {
+      return _stats.hasMinimum();
+    }
 
-    bool hasMaximum() const override { return _stats.hasMaximum(); }
+    bool hasMaximum() const override {
+      return _stats.hasMaximum();
+    }
 
-    bool hasSum() const override { return _stats.hasSum(); }
+    bool hasSum() const override {
+      return _stats.hasSum();
+    }
 
     void increase(uint64_t count) override {
       _stats.setNumberOfValues(_stats.getNumberOfValues() + count);
     }
 
-    uint64_t getNumberOfValues() const override { return _stats.getNumberOfValues(); }
+    uint64_t getNumberOfValues() const override {
+      return _stats.getNumberOfValues();
+    }
 
-    void setNumberOfValues(uint64_t value) override { _stats.setNumberOfValues(value); }
+    void setNumberOfValues(uint64_t value) override {
+      _stats.setNumberOfValues(value);
+    }
 
-    bool hasNull() const override { return _stats.hasNull(); }
+    bool hasNull() const override {
+      return _stats.hasNull();
+    }
 
-    void setHasNull(bool hasNull) override { _stats.setHasNull(hasNull); }
+    void setHasNull(bool hasNull) override {
+      _stats.setHasNull(hasNull);
+    }
 
     int64_t getMinimum() const override {
       if (hasMinimum()) {
@@ -956,28 +1100,44 @@ namespace orc {
     InternalStringStatistics _stats;
 
    public:
-    StringColumnStatisticsImpl() { reset(); }
+    StringColumnStatisticsImpl() {
+      reset();
+    }
     StringColumnStatisticsImpl(const proto::ColumnStatistics& stats,
                                const StatContext& statContext);
     virtual ~StringColumnStatisticsImpl() override;
 
-    bool hasMinimum() const override { return _stats.hasMinimum(); }
+    bool hasMinimum() const override {
+      return _stats.hasMinimum();
+    }
 
-    bool hasMaximum() const override { return _stats.hasMaximum(); }
+    bool hasMaximum() const override {
+      return _stats.hasMaximum();
+    }
 
-    bool hasTotalLength() const override { return _stats.hasTotalLength(); }
+    bool hasTotalLength() const override {
+      return _stats.hasTotalLength();
+    }
 
     void increase(uint64_t count) override {
       _stats.setNumberOfValues(_stats.getNumberOfValues() + count);
     }
 
-    uint64_t getNumberOfValues() const override { return _stats.getNumberOfValues(); }
+    uint64_t getNumberOfValues() const override {
+      return _stats.getNumberOfValues();
+    }
 
-    void setNumberOfValues(uint64_t value) override { _stats.setNumberOfValues(value); }
+    void setNumberOfValues(uint64_t value) override {
+      _stats.setNumberOfValues(value);
+    }
 
-    bool hasNull() const override { return _stats.hasNull(); }
+    bool hasNull() const override {
+      return _stats.hasNull();
+    }
 
-    void setHasNull(bool hasNull) override { _stats.setHasNull(hasNull); }
+    void setHasNull(bool hasNull) override {
+      _stats.setHasNull(hasNull);
+    }
 
     const std::string& getMinimum() const override {
       if (hasMinimum()) {
@@ -1044,7 +1204,9 @@ namespace orc {
       _stats.setTotalLength(_stats.getTotalLength() + length);
     }
 
-    void update(std::string value) { update(value.c_str(), value.length()); }
+    void update(std::string value) {
+      update(value.c_str(), value.length());
+    }
 
     void merge(const MutableColumnStatistics& other) override {
       const StringColumnStatisticsImpl& strStats =
@@ -1116,26 +1278,40 @@ namespace orc {
     static constexpr int32_t DEFAULT_MAX_NANOS = 999999;
 
    public:
-    TimestampColumnStatisticsImpl() { reset(); }
+    TimestampColumnStatisticsImpl() {
+      reset();
+    }
     TimestampColumnStatisticsImpl(const proto::ColumnStatistics& stats,
                                   const StatContext& statContext);
     virtual ~TimestampColumnStatisticsImpl() override;
 
-    bool hasMinimum() const override { return _stats.hasMinimum(); }
+    bool hasMinimum() const override {
+      return _stats.hasMinimum();
+    }
 
-    bool hasMaximum() const override { return _stats.hasMaximum(); }
+    bool hasMaximum() const override {
+      return _stats.hasMaximum();
+    }
 
-    uint64_t getNumberOfValues() const override { return _stats.getNumberOfValues(); }
+    uint64_t getNumberOfValues() const override {
+      return _stats.getNumberOfValues();
+    }
 
-    void setNumberOfValues(uint64_t value) override { _stats.setNumberOfValues(value); }
+    void setNumberOfValues(uint64_t value) override {
+      _stats.setNumberOfValues(value);
+    }
 
     void increase(uint64_t count) override {
       _stats.setNumberOfValues(_stats.getNumberOfValues() + count);
     }
 
-    bool hasNull() const override { return _stats.hasNull(); }
+    bool hasNull() const override {
+      return _stats.hasNull();
+    }
 
-    void setHasNull(bool hasNull) override { _stats.setHasNull(hasNull); }
+    void setHasNull(bool hasNull) override {
+      _stats.setHasNull(hasNull);
+    }
 
     int64_t getMinimum() const override {
       if (hasMinimum()) {
@@ -1163,7 +1339,9 @@ namespace orc {
       _stats.setMaximum(maximum);
     }
 
-    void update(int64_t value) { _stats.updateMinMax(value); }
+    void update(int64_t value) {
+      _stats.updateMinMax(value);
+    }
 
     void update(int64_t milli, int32_t nano) {
       if (!_stats.hasMinimum()) {
@@ -1299,9 +1477,13 @@ namespace orc {
       return buffer.str();
     }
 
-    bool hasLowerBound() const override { return _hasLowerBound; }
+    bool hasLowerBound() const override {
+      return _hasLowerBound;
+    }
 
-    bool hasUpperBound() const override { return _hasUpperBound; }
+    bool hasUpperBound() const override {
+      return _hasUpperBound;
+    }
 
     int64_t getLowerBound() const override {
       if (hasLowerBound()) {
@@ -1342,27 +1524,43 @@ namespace orc {
     InternalCollectionStatistics _stats;
 
    public:
-    CollectionColumnStatisticsImpl() { reset(); }
+    CollectionColumnStatisticsImpl() {
+      reset();
+    }
     CollectionColumnStatisticsImpl(const proto::ColumnStatistics& stats);
     virtual ~CollectionColumnStatisticsImpl() override;
 
-    bool hasMinimumChildren() const override { return _stats.hasMinimum(); }
+    bool hasMinimumChildren() const override {
+      return _stats.hasMinimum();
+    }
 
-    bool hasMaximumChildren() const override { return _stats.hasMaximum(); }
+    bool hasMaximumChildren() const override {
+      return _stats.hasMaximum();
+    }
 
-    bool hasTotalChildren() const override { return _stats.hasSum(); }
+    bool hasTotalChildren() const override {
+      return _stats.hasSum();
+    }
 
     void increase(uint64_t count) override {
       _stats.setNumberOfValues(_stats.getNumberOfValues() + count);
     }
 
-    uint64_t getNumberOfValues() const override { return _stats.getNumberOfValues(); }
+    uint64_t getNumberOfValues() const override {
+      return _stats.getNumberOfValues();
+    }
 
-    void setNumberOfValues(uint64_t value) override { _stats.setNumberOfValues(value); }
+    void setNumberOfValues(uint64_t value) override {
+      _stats.setNumberOfValues(value);
+    }
 
-    bool hasNull() const override { return _stats.hasNull(); }
+    bool hasNull() const override {
+      return _stats.hasNull();
+    }
 
-    void setHasNull(bool hasNull) override { _stats.setHasNull(hasNull); }
+    void setHasNull(bool hasNull) override {
+      _stats.setHasNull(hasNull);
+    }
 
     uint64_t getMinimumChildren() const override {
       if (hasMinimumChildren()) {
@@ -1403,7 +1601,9 @@ namespace orc {
       _stats.setSum(sum);
     }
 
-    void setHasTotalChildren(bool hasSum) override { _stats.setHasSum(hasSum); }
+    void setHasTotalChildren(bool hasSum) override {
+      _stats.setHasSum(hasSum);
+    }
 
     void merge(const MutableColumnStatistics& other) override {
       const CollectionColumnStatisticsImpl& collectionStats =
@@ -1505,7 +1705,9 @@ namespace orc {
 
     virtual ~StatisticsImpl() override;
 
-    uint32_t getNumberOfColumns() const override { return static_cast<uint32_t>(colStats.size()); }
+    uint32_t getNumberOfColumns() const override {
+      return static_cast<uint32_t>(colStats.size());
+    }
   };
 
   class StripeStatisticsImpl : public StripeStatistics {
@@ -1526,7 +1728,9 @@ namespace orc {
       return columnStats->getColumnStatistics(columnId);
     }
 
-    uint32_t getNumberOfColumns() const override { return columnStats->getNumberOfColumns(); }
+    uint32_t getNumberOfColumns() const override {
+      return columnStats->getNumberOfColumns();
+    }
 
     virtual const ColumnStatistics* getRowIndexStatistics(uint32_t columnId,
                                                           uint32_t rowIndex) const override {

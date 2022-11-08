@@ -80,9 +80,13 @@ namespace orc {
    public:
     virtual ~FileParam();
 
-    std::string getFilename() { return findExample(GetParam().filename); }
+    std::string getFilename() {
+      return findExample(GetParam().filename);
+    }
 
-    std::string getJsonFilename() { return findExample("expected/" + GetParam().json); }
+    std::string getJsonFilename() {
+      return findExample("expected/" + GetParam().json);
+    }
   };
 
   FileParam::~FileParam() {

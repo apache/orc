@@ -130,9 +130,13 @@ namespace orc {
       totalLength = stat_info.length;
     }
 
-    uint64_t getLength() const override { return totalLength; }
+    uint64_t getLength() const override {
+      return totalLength;
+    }
 
-    uint64_t getNaturalReadSize() const override { return READ_SIZE; }
+    uint64_t getNaturalReadSize() const override {
+      return READ_SIZE;
+    }
 
     void read(void* buf, uint64_t length, uint64_t offset) override {
       SCOPED_STOPWATCH(metrics, IOBlockingLatencyUs, IOCount);
@@ -157,7 +161,9 @@ namespace orc {
       } while (total_bytes_read < length);
     }
 
-    const std::string& getName() const override { return filename; }
+    const std::string& getName() const override {
+      return filename;
+    }
 
     ~HdfsFileInputStream() override;
   };

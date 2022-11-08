@@ -35,7 +35,9 @@ namespace orc {
     ~TypeAttributes();
 
    protected:
-    static void SetUpTestCase() { memStream.reset(); }
+    static void SetUpTestCase() {
+      memStream.reset();
+    }
 
     static void TearDownTestCase() {}
 

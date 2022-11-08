@@ -32,17 +32,25 @@ namespace orc {
 
     ~MemoryInputStream() override;
 
-    virtual uint64_t getLength() const override { return size; }
+    virtual uint64_t getLength() const override {
+      return size;
+    }
 
-    virtual uint64_t getNaturalReadSize() const override { return naturalReadSize; }
+    virtual uint64_t getNaturalReadSize() const override {
+      return naturalReadSize;
+    }
 
     virtual void read(void* buf, uint64_t length, uint64_t offset) override {
       memcpy(buf, buffer + offset, length);
     }
 
-    virtual const std::string& getName() const override { return name; }
+    virtual const std::string& getName() const override {
+      return name;
+    }
 
-    const char* getData() const { return buffer; }
+    const char* getData() const {
+      return buffer;
+    }
 
    private:
     const char* buffer;

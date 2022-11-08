@@ -93,11 +93,17 @@ namespace orc {
     /**
      * Get the number of blocks that are fully or partially occupied
      */
-    uint64_t getBlockNumber() const { return (currentSize + blockSize - 1) / blockSize; }
+    uint64_t getBlockNumber() const {
+      return (currentSize + blockSize - 1) / blockSize;
+    }
 
-    uint64_t size() const { return currentSize; }
+    uint64_t size() const {
+      return currentSize;
+    }
 
-    uint64_t capacity() const { return currentCapacity; }
+    uint64_t capacity() const {
+      return currentCapacity;
+    }
 
     void resize(uint64_t size);
     /**
