@@ -22,13 +22,13 @@
 
 #ifndef HAS_STOLL
 namespace std {
-int64_t std::stoll(std::string str) {
-  int64_t val = 0;
-  stringstream ss;
-  ss << str;
-  ss >> val;
-  return val;
-}
+  int64_t std::stoll(std::string str) {
+    int64_t val = 0;
+    stringstream ss;
+    ss << str;
+    ss >> val;
+    return val;
+  }
 }  // namespace std
 #endif
 
@@ -67,14 +67,14 @@ ssize_t pread(int fd, void* buf, size_t size, off_t offset) {
 
 namespace orc {
 #ifdef HAS_DOUBLE_TO_STRING
-std::string to_string(double val) { return std::to_string(val); }
+  std::string to_string(double val) { return std::to_string(val); }
 #else
-std::string to_string(double val) { return std::to_string(static_cast<long double>(val)); }
+  std::string to_string(double val) { return std::to_string(static_cast<long double>(val)); }
 #endif
 
 #ifdef HAS_INT64_TO_STRING
-std::string to_string(int64_t val) { return std::to_string(val); }
+  std::string to_string(int64_t val) { return std::to_string(val); }
 #else
-std::string to_string(int64_t val) { return std::to_string(static_cast<long long int>(val)); }
+  std::string to_string(int64_t val) { return std::to_string(static_cast<long long int>(val)); }
 #endif
 }  // namespace orc

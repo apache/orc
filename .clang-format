@@ -22,3 +22,4 @@ IndentWidth: 2
 UseTab: Never
 DerivePointerAlignment: false
 IncludeBlocks: Preserve
+NamespaceIndentation: All

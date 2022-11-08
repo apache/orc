@@ -30,8 +30,8 @@
 #include <vector>
 
 namespace {
-const char* exampleDirectory = 0;
-const char* buildDirectory = 0;
+  const char* exampleDirectory = 0;
+  const char* buildDirectory = 0;
 }  // namespace
 
 GTEST_API_ int main(int argc, char** argv) {

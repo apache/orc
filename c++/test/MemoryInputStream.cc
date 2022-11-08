@@ -19,5 +19,5 @@
 #include "MemoryInputStream.hh"
 
 namespace orc {
-MemoryInputStream::~MemoryInputStream() {}
+  MemoryInputStream::~MemoryInputStream() {}
 }  // namespace orc

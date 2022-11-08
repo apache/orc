@@ -26,19 +26,19 @@
 
 namespace orc {
 
-class BloomFilter {
- public:
-  virtual ~BloomFilter();
+  class BloomFilter {
+   public:
+    virtual ~BloomFilter();
 
-  // test if the element exists in BloomFilter
-  virtual bool testBytes(const char* data, int64_t length) const = 0;
-  virtual bool testLong(int64_t data) const = 0;
-  virtual bool testDouble(double data) const = 0;
-};
+    // test if the element exists in BloomFilter
+    virtual bool testBytes(const char* data, int64_t length) const = 0;
+    virtual bool testLong(int64_t data) const = 0;
+    virtual bool testDouble(double data) const = 0;
+  };
 
-struct BloomFilterIndex {
-  std::vector<std::shared_ptr<BloomFilter>> entries;
-};
+  struct BloomFilterIndex {
+    std::vector<std::shared_ptr<BloomFilter>> entries;
+  };
 
 }  // namespace orc
 

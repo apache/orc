@@ -26,97 +26,98 @@
 
 namespace orc {
 
-class ByteRleEncoder {
- public:
-  virtual ~ByteRleEncoder();
+  class ByteRleEncoder {
+   public:
+    virtual ~ByteRleEncoder();
+
+    /**
+     * Encode the next batch of values
+     * @param data to be encoded
+     * @param numValues the number of values to be encoded
+     * @param notNull If the pointer is null, all values are read. If the
+     *    pointer is not null, positions that are false are skipped.
+     */
+    virtual void add(const char* data, uint64_t numValues, const char* notNull) = 0;
+
+    /**
+     * Get size of buffer used so far.
+     */
+    virtual uint64_t getBufferSize() const = 0;
+
+    /**
+     * Flushing underlying output stream
+     */
+    virtual uint64_t flush() = 0;
+
+    /**
+     * record current position
+     * @param recorder use the recorder to record current positions
+     */
+    virtual void recordPosition(PositionRecorder* recorder) const = 0;
+
+    /**
+     * suppress the data and reset to initial state
+     */
+    virtual void suppress() = 0;
+  };
+
+  class ByteRleDecoder {
+   public:
+    virtual ~ByteRleDecoder();
+
+    /**
+     * Seek to a particular spot.
+     */
+    virtual void seek(PositionProvider&) = 0;
+
+    /**
+     * Seek over a given number of values.
+     */
+    virtual void skip(uint64_t numValues) = 0;
+
+    /**
+     * Read a number of values into the batch.
+     * @param data the array to read into
+     * @param numValues the number of values to read
+     * @param notNull If the pointer is null, all values are read. If the
+     *    pointer is not null, positions that are false are skipped.
+     */
+    virtual void next(char* data, uint64_t numValues, char* notNull) = 0;
+  };
 
   /**
-   * Encode the next batch of values
-   * @param data to be encoded
-   * @param numValues the number of values to be encoded
-   * @param notNull If the pointer is null, all values are read. If the
-   *    pointer is not null, positions that are false are skipped.
+   * Create a byte RLE encoder.
+   * @param output the output stream to write to
    */
-  virtual void add(const char* data, uint64_t numValues, const char* notNull) = 0;
+  std::unique_ptr<ByteRleEncoder> createByteRleEncoder(
+      std::unique_ptr<BufferedOutputStream> output);
 
   /**
-   * Get size of buffer used so far.
+   * Create a boolean RLE encoder.
+   * @param output the output stream to write to
    */
-  virtual uint64_t getBufferSize() const = 0;
+  std::unique_ptr<ByteRleEncoder> createBooleanRleEncoder(
+      std::unique_ptr<BufferedOutputStream> output);
 
   /**
-   * Flushing underlying output stream
+   * Create a byte RLE decoder.
+   * @param input the input stream to read from
+   * @param metrics the metrics of the decoder
    */
-  virtual uint64_t flush() = 0;
+  std::unique_ptr<ByteRleDecoder> createByteRleDecoder(std::unique_ptr<SeekableInputStream> input,
+                                                       ReaderMetrics* metrics);
 
   /**
-   * record current position
-   * @param recorder use the recorder to record current positions
+   * Create a boolean RLE decoder.
+   *
+   * Unlike the other RLE decoders, the boolean decoder sets the data to 0
+   * if the value is masked by notNull. This is required for the notNull stream
+   * processing to properly apply multiple masks from nested types.
+   * @param input the input stream to read from
+   * @param metrics the metrics of the decoder
    */
-  virtual void recordPosition(PositionRecorder* recorder) const = 0;
-
-  /**
-   * suppress the data and reset to initial state
-   */
-  virtual void suppress() = 0;
-};
-
-class ByteRleDecoder {
- public:
-  virtual ~ByteRleDecoder();
-
-  /**
-   * Seek to a particular spot.
-   */
-  virtual void seek(PositionProvider&) = 0;
-
-  /**
-   * Seek over a given number of values.
-   */
-  virtual void skip(uint64_t numValues) = 0;
-
-  /**
-   * Read a number of values into the batch.
-   * @param data the array to read into
-   * @param numValues the number of values to read
-   * @param notNull If the pointer is null, all values are read. If the
-   *    pointer is not null, positions that are false are skipped.
-   */
-  virtual void next(char* data, uint64_t numValues, char* notNull) = 0;
-};
-
-/**
- * Create a byte RLE encoder.
- * @param output the output stream to write to
- */
-std::unique_ptr<ByteRleEncoder> createByteRleEncoder(std::unique_ptr<BufferedOutputStream> output);
-
-/**
- * Create a boolean RLE encoder.
- * @param output the output stream to write to
- */
-std::unique_ptr<ByteRleEncoder> createBooleanRleEncoder(
-    std::unique_ptr<BufferedOutputStream> output);
-
-/**
- * Create a byte RLE decoder.
- * @param input the input stream to read from
- * @param metrics the metrics of the decoder
- */
-std::unique_ptr<ByteRleDecoder> createByteRleDecoder(std::unique_ptr<SeekableInputStream> input,
-                                                     ReaderMetrics* metrics);
-
-/**
- * Create a boolean RLE decoder.
- *
- * Unlike the other RLE decoders, the boolean decoder sets the data to 0
- * if the value is masked by notNull. This is required for the notNull stream
- * processing to properly apply multiple masks from nested types.
- * @param input the input stream to read from
- * @param metrics the metrics of the decoder
- */
-std::unique_ptr<ByteRleDecoder> createBooleanRleDecoder(std::unique_ptr<SeekableInputStream> input,
-                                                        ReaderMetrics* metrics);
+  std::unique_ptr<ByteRleDecoder> createBooleanRleDecoder(
+      std::unique_ptr<SeekableInputStream> input, ReaderMetrics* metrics);
 }  // namespace orc
 
 #endif

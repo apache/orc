@@ -26,65 +26,65 @@
 
 namespace orc {
 
-class RleEncoderV1 : public RleEncoder {
- public:
-  RleEncoderV1(std::unique_ptr<BufferedOutputStream> outStream, bool hasSigned);
-  ~RleEncoderV1() override;
+  class RleEncoderV1 : public RleEncoder {
+   public:
+    RleEncoderV1(std::unique_ptr<BufferedOutputStream> outStream, bool hasSigned);
+    ~RleEncoderV1() override;
 
-  /**
-   * Flushing underlying BufferedOutputStream
-   */
-  uint64_t flush() override;
+    /**
+     * Flushing underlying BufferedOutputStream
+     */
+    uint64_t flush() override;
 
-  void write(int64_t val) override;
+    void write(int64_t val) override;
 
- private:
-  int64_t delta;
-  bool repeat;
-  uint64_t tailRunLength;
+   private:
+    int64_t delta;
+    bool repeat;
+    uint64_t tailRunLength;
 
-  void writeValues();
-};
+    void writeValues();
+  };
 
-class RleDecoderV1 : public RleDecoder {
- public:
-  RleDecoderV1(std::unique_ptr<SeekableInputStream> input, bool isSigned, ReaderMetrics* metrics);
+  class RleDecoderV1 : public RleDecoder {
+   public:
+    RleDecoderV1(std::unique_ptr<SeekableInputStream> input, bool isSigned, ReaderMetrics* metrics);
 
-  /**
-   * Seek to a particular spot.
-   */
-  void seek(PositionProvider&) override;
+    /**
+     * Seek to a particular spot.
+     */
+    void seek(PositionProvider&) override;
 
-  /**
-   * Seek over a given number of values.
-   */
-  void skip(uint64_t numValues) override;
+    /**
+     * Seek over a given number of values.
+     */
+    void skip(uint64_t numValues) override;
 
-  /**
-   * Read a number of values into the batch.
-   */
-  void next(int64_t* data, uint64_t numValues, const char* notNull) override;
+    /**
+     * Read a number of values into the batch.
+     */
+    void next(int64_t* data, uint64_t numValues, const char* notNull) override;
 
- private:
-  inline signed char readByte();
+   private:
+    inline signed char readByte();
 
-  inline void readHeader();
+    inline void readHeader();
 
-  inline uint64_t readLong();
+    inline uint64_t readLong();
 
-  inline void skipLongs(uint64_t numValues);
+    inline void skipLongs(uint64_t numValues);
 
-  inline void reset();
+    inline void reset();
 
-  const std::unique_ptr<SeekableInputStream> inputStream;
-  const bool isSigned;
-  uint64_t remainingValues;
-  int64_t value;
-  const char* bufferStart;
-  const char* bufferEnd;
-  int64_t delta;
-  bool repeating;
-};
+    const std::unique_ptr<SeekableInputStream> inputStream;
+    const bool isSigned;
+    uint64_t remainingValues;
+    int64_t value;
+    const char* bufferStart;
+    const char* bufferEnd;
+    int64_t delta;
+    bool repeating;
+  };
 }  // namespace orc
 
 #endif  // ORC_RLEV1_HH

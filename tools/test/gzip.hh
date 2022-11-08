@@ -25,28 +25,28 @@
 
 namespace orc {
 
-class GzipTextReader {
- private:
-  std::string filename;
-  FILE* file;
-  z_stream stream;
-  unsigned char input[64 * 1024];
-  unsigned char output[64 * 1024];
-  unsigned char* outPtr;
-  unsigned char* outEnd;
-  bool isDone;
+  class GzipTextReader {
+   private:
+    std::string filename;
+    FILE* file;
+    z_stream stream;
+    unsigned char input[64 * 1024];
+    unsigned char output[64 * 1024];
+    unsigned char* outPtr;
+    unsigned char* outEnd;
+    bool isDone;
 
-  bool nextBuffer();
+    bool nextBuffer();
 
-  // NOT IMPLEMENTED
-  GzipTextReader(const GzipTextReader&);
-  GzipTextReader& operator=(const GzipTextReader&);
+    // NOT IMPLEMENTED
+    GzipTextReader(const GzipTextReader&);
+    GzipTextReader& operator=(const GzipTextReader&);
 
- public:
-  GzipTextReader(const std::string& filename);
-  ~GzipTextReader();
-  bool nextLine(std::string& line);
-};
+   public:
+    GzipTextReader(const std::string& filename);
+    ~GzipTextReader();
+    bool nextLine(std::string& line);
+  };
 
 }  // namespace orc
 #endif

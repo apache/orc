@@ -32,254 +32,254 @@
 
 namespace orc {
 
-// classes that hold data members so we can maintain binary compatibility
-struct WriterOptionsPrivate;
+  // classes that hold data members so we can maintain binary compatibility
+  struct WriterOptionsPrivate;
 
-enum CompressionStrategy { CompressionStrategy_SPEED = 0, CompressionStrategy_COMPRESSION };
+  enum CompressionStrategy { CompressionStrategy_SPEED = 0, CompressionStrategy_COMPRESSION };
 
-enum RleVersion { RleVersion_1 = 0, RleVersion_2 = 1 };
+  enum RleVersion { RleVersion_1 = 0, RleVersion_2 = 1 };
 
-class Timezone;
-
-/**
- * Expose the IO metrics for write operation.
- */
-struct WriterMetrics {
-  // Record the number of IO requests written to the output file
-  std::atomic<uint64_t> IOCount{0};
-  // Record the lantency of IO blocking
-  std::atomic<uint64_t> IOBlockingLatencyUs{0};
-};
-/**
- * Options for creating a Writer.
- */
-class WriterOptions {
- private:
-  ORC_UNIQUE_PTR<WriterOptionsPrivate> privateBits;
-
- public:
-  WriterOptions();
-  WriterOptions(const WriterOptions&);
-  WriterOptions(WriterOptions&);
-  WriterOptions& operator=(const WriterOptions&);
-  virtual ~WriterOptions();
+  class Timezone;
 
   /**
-   * Set the strip size.
+   * Expose the IO metrics for write operation.
    */
-  WriterOptions& setStripeSize(uint64_t size);
-
+  struct WriterMetrics {
+    // Record the number of IO requests written to the output file
+    std::atomic<uint64_t> IOCount{0};
+    // Record the lantency of IO blocking
+    std::atomic<uint64_t> IOBlockingLatencyUs{0};
+  };
   /**
-   * Get the strip size.
-   * @return if not set, return default value.
+   * Options for creating a Writer.
    */
-  uint64_t getStripeSize() const;
+  class WriterOptions {
+   private:
+    ORC_UNIQUE_PTR<WriterOptionsPrivate> privateBits;
 
-  /**
-   * Set the data compression block size.
-   */
-  WriterOptions& setCompressionBlockSize(uint64_t size);
+   public:
+    WriterOptions();
+    WriterOptions(const WriterOptions&);
+    WriterOptions(WriterOptions&);
+    WriterOptions& operator=(const WriterOptions&);
+    virtual ~WriterOptions();
 
-  /**
-   * Get the data compression block size.
-   * @return if not set, return default value.
-   */
-  uint64_t getCompressionBlockSize() const;
+    /**
+     * Set the strip size.
+     */
+    WriterOptions& setStripeSize(uint64_t size);
 
-  /**
-   * Set row index stride (the number of rows per an entry in the row index). Use value 0 to disable
-   * row index.
-   */
-  WriterOptions& setRowIndexStride(uint64_t stride);
+    /**
+     * Get the strip size.
+     * @return if not set, return default value.
+     */
+    uint64_t getStripeSize() const;
 
-  /**
-   * Get the row index stride (the number of rows per an entry in the row index).
-   * @return if not set, return default value.
-   */
-  uint64_t getRowIndexStride() const;
+    /**
+     * Set the data compression block size.
+     */
+    WriterOptions& setCompressionBlockSize(uint64_t size);
 
-  /**
-   * Set the dictionary key size threshold.
-   * 0 to disable dictionary encoding.
-   * 1 to always enable dictionary encoding.
-   */
-  WriterOptions& setDictionaryKeySizeThreshold(double val);
+    /**
+     * Get the data compression block size.
+     * @return if not set, return default value.
+     */
+    uint64_t getCompressionBlockSize() const;
 
-  /**
-   * Get the dictionary key size threshold.
-   */
-  double getDictionaryKeySizeThreshold() const;
+    /**
+     * Set row index stride (the number of rows per an entry in the row index). Use value 0 to
+     * disable row index.
+     */
+    WriterOptions& setRowIndexStride(uint64_t stride);
 
-  /**
-   * Set Orc file version
-   */
-  WriterOptions& setFileVersion(const FileVersion& version);
+    /**
+     * Get the row index stride (the number of rows per an entry in the row index).
+     * @return if not set, return default value.
+     */
+    uint64_t getRowIndexStride() const;
 
-  /**
-   * Get Orc file version
-   */
-  FileVersion getFileVersion() const;
+    /**
+     * Set the dictionary key size threshold.
+     * 0 to disable dictionary encoding.
+     * 1 to always enable dictionary encoding.
+     */
+    WriterOptions& setDictionaryKeySizeThreshold(double val);
 
-  /**
-   * Set compression kind.
-   */
-  WriterOptions& setCompression(CompressionKind comp);
+    /**
+     * Get the dictionary key size threshold.
+     */
+    double getDictionaryKeySizeThreshold() const;
 
-  /**
-   * Get the compression kind.
-   * @return if not set, return default value which is ZLIB.
-   */
-  CompressionKind getCompression() const;
+    /**
+     * Set Orc file version
+     */
+    WriterOptions& setFileVersion(const FileVersion& version);
 
-  /**
-   * Set the compression strategy.
-   */
-  WriterOptions& setCompressionStrategy(CompressionStrategy strategy);
+    /**
+     * Get Orc file version
+     */
+    FileVersion getFileVersion() const;
 
-  /**
-   * Get the compression strategy.
-   * @return if not set, return default value which is speed.
-   */
-  CompressionStrategy getCompressionStrategy() const;
+    /**
+     * Set compression kind.
+     */
+    WriterOptions& setCompression(CompressionKind comp);
 
-  /**
-   * Get if the bitpacking should be aligned.
-   * @return true if should be aligned, return false otherwise
-   */
-  bool getAlignedBitpacking() const;
+    /**
+     * Get the compression kind.
+     * @return if not set, return default value which is ZLIB.
+     */
+    CompressionKind getCompression() const;
 
-  /**
-   * Set the padding tolerance.
-   */
-  WriterOptions& setPaddingTolerance(double tolerance);
+    /**
+     * Set the compression strategy.
+     */
+    WriterOptions& setCompressionStrategy(CompressionStrategy strategy);
 
-  /**
-   * Get the padding tolerance.
-   * @return if not set, return default value which is zero.
-   */
-  double getPaddingTolerance() const;
+    /**
+     * Get the compression strategy.
+     * @return if not set, return default value which is speed.
+     */
+    CompressionStrategy getCompressionStrategy() const;
 
-  /**
-   * Set the memory pool.
-   */
-  WriterOptions& setMemoryPool(MemoryPool* memoryPool);
+    /**
+     * Get if the bitpacking should be aligned.
+     * @return true if should be aligned, return false otherwise
+     */
+    bool getAlignedBitpacking() const;
 
-  /**
-   * Get the memory pool.
-   * @return if not set, return default memory pool.
-   */
-  MemoryPool* getMemoryPool() const;
+    /**
+     * Set the padding tolerance.
+     */
+    WriterOptions& setPaddingTolerance(double tolerance);
 
-  /**
-   * Set the error stream.
-   */
-  WriterOptions& setErrorStream(std::ostream& errStream);
+    /**
+     * Get the padding tolerance.
+     * @return if not set, return default value which is zero.
+     */
+    double getPaddingTolerance() const;
 
-  /**
-   * Get the error stream.
-   * @return if not set, return std::err.
-   */
-  std::ostream* getErrorStream() const;
+    /**
+     * Set the memory pool.
+     */
+    WriterOptions& setMemoryPool(MemoryPool* memoryPool);
 
-  /**
-   * Get the RLE version.
-   */
-  RleVersion getRleVersion() const;
+    /**
+     * Get the memory pool.
+     * @return if not set, return default memory pool.
+     */
+    MemoryPool* getMemoryPool() const;
 
-  /**
-   * Get whether or not to write row group index
-   * @return if not set, the default is false
-   */
-  bool getEnableIndex() const;
+    /**
+     * Set the error stream.
+     */
+    WriterOptions& setErrorStream(std::ostream& errStream);
 
-  /**
-   * Get whether or not to enable dictionary encoding
-   * @return if not set, the default is false
-   */
-  bool getEnableDictionary() const;
+    /**
+     * Get the error stream.
+     * @return if not set, return std::err.
+     */
+    std::ostream* getErrorStream() const;
 
-  /**
-   * Set columns that use BloomFilter
-   */
-  WriterOptions& setColumnsUseBloomFilter(const std::set<uint64_t>& columns);
+    /**
+     * Get the RLE version.
+     */
+    RleVersion getRleVersion() const;
 
-  /**
-   * Get whether this column uses BloomFilter
-   */
-  bool isColumnUseBloomFilter(uint64_t column) const;
+    /**
+     * Get whether or not to write row group index
+     * @return if not set, the default is false
+     */
+    bool getEnableIndex() const;
 
-  /**
-   * Set false positive probability of BloomFilter
-   */
-  WriterOptions& setBloomFilterFPP(double fpp);
+    /**
+     * Get whether or not to enable dictionary encoding
+     * @return if not set, the default is false
+     */
+    bool getEnableDictionary() const;
 
-  /**
-   * Get false positive probability of BloomFilter
-   */
-  double getBloomFilterFPP() const;
+    /**
+     * Set columns that use BloomFilter
+     */
+    WriterOptions& setColumnsUseBloomFilter(const std::set<uint64_t>& columns);
 
-  /**
-   * Get version of BloomFilter
-   */
-  BloomFilterVersion getBloomFilterVersion() const;
+    /**
+     * Get whether this column uses BloomFilter
+     */
+    bool isColumnUseBloomFilter(uint64_t column) const;
 
-  /**
-   * Get writer timezone
-   * @return writer timezone
-   */
-  const Timezone& getTimezone() const;
+    /**
+     * Set false positive probability of BloomFilter
+     */
+    WriterOptions& setBloomFilterFPP(double fpp);
 
-  /**
-   * Get writer timezone name
-   * @return writer timezone name
-   */
-  const std::string& getTimezoneName() const;
+    /**
+     * Get false positive probability of BloomFilter
+     */
+    double getBloomFilterFPP() const;
 
-  /**
-   * Set writer timezone
-   * @param zone writer timezone name
-   */
-  WriterOptions& setTimezoneName(const std::string& zone);
+    /**
+     * Get version of BloomFilter
+     */
+    BloomFilterVersion getBloomFilterVersion() const;
 
-  /**
-   * Set the writer metrics.
-   */
-  WriterOptions& setWriterMetrics(WriterMetrics* metrics);
+    /**
+     * Get writer timezone
+     * @return writer timezone
+     */
+    const Timezone& getTimezone() const;
 
-  /**
-   * Get the writer metrics.
-   * @return if not set, return nullptr.
-   */
-  WriterMetrics* getWriterMetrics() const;
-};
+    /**
+     * Get writer timezone name
+     * @return writer timezone name
+     */
+    const std::string& getTimezoneName() const;
 
-class Writer {
- public:
-  virtual ~Writer();
+    /**
+     * Set writer timezone
+     * @param zone writer timezone name
+     */
+    WriterOptions& setTimezoneName(const std::string& zone);
 
-  /**
-   * Create a row batch for writing the columns into this file.
-   * @param size the number of rows to write.
-   * @return a new ColumnVectorBatch to write into.
-   */
-  virtual ORC_UNIQUE_PTR<ColumnVectorBatch> createRowBatch(uint64_t size) const = 0;
+    /**
+     * Set the writer metrics.
+     */
+    WriterOptions& setWriterMetrics(WriterMetrics* metrics);
 
-  /**
-   * Add a row batch into current writer.
-   * @param rowsToAdd the row batch data to write.
-   */
-  virtual void add(ColumnVectorBatch& rowsToAdd) = 0;
+    /**
+     * Get the writer metrics.
+     * @return if not set, return nullptr.
+     */
+    WriterMetrics* getWriterMetrics() const;
+  };
 
-  /**
-   * Close the writer and flush any pending data to the output stream.
-   */
-  virtual void close() = 0;
+  class Writer {
+   public:
+    virtual ~Writer();
 
-  /**
-   * Add user metadata to the writer.
-   */
-  virtual void addUserMetadata(const std::string name, const std::string value) = 0;
-};
+    /**
+     * Create a row batch for writing the columns into this file.
+     * @param size the number of rows to write.
+     * @return a new ColumnVectorBatch to write into.
+     */
+    virtual ORC_UNIQUE_PTR<ColumnVectorBatch> createRowBatch(uint64_t size) const = 0;
+
+    /**
+     * Add a row batch into current writer.
+     * @param rowsToAdd the row batch data to write.
+     */
+    virtual void add(ColumnVectorBatch& rowsToAdd) = 0;
+
+    /**
+     * Close the writer and flush any pending data to the output stream.
+     */
+    virtual void close() = 0;
+
+    /**
+     * Add user metadata to the writer.
+     */
+    virtual void addUserMetadata(const std::string name, const std::string value) = 0;
+  };
 }  // namespace orc
 
 #endif

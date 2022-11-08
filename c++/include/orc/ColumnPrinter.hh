@@ -30,20 +30,20 @@
 
 namespace orc {
 
-class ColumnPrinter {
- protected:
-  std::string& buffer;
-  bool hasNulls;
-  const char* notNull;
+  class ColumnPrinter {
+   protected:
+    std::string& buffer;
+    bool hasNulls;
+    const char* notNull;
 
- public:
-  ColumnPrinter(std::string&);
-  virtual ~ColumnPrinter();
-  virtual void printRow(uint64_t rowId) = 0;
-  // should be called once at the start of each batch of rows
-  virtual void reset(const ColumnVectorBatch& batch);
-};
+   public:
+    ColumnPrinter(std::string&);
+    virtual ~ColumnPrinter();
+    virtual void printRow(uint64_t rowId) = 0;
+    // should be called once at the start of each batch of rows
+    virtual void reset(const ColumnVectorBatch& batch);
+  };
 
-ORC_UNIQUE_PTR<ColumnPrinter> createColumnPrinter(std::string&, const Type* type);
+  ORC_UNIQUE_PTR<ColumnPrinter> createColumnPrinter(std::string&, const Type* type);
 }  // namespace orc
 #endif
