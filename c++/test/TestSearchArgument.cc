@@ -116,9 +116,13 @@ namespace orc {
     return std::make_shared<ExpressionTree>(ExpressionTree::Operator::OR, NodeList{l, r});
   }
 
-  static TreeNode _leaf(int leaf) { return std::make_shared<ExpressionTree>(leaf); }
+  static TreeNode _leaf(int leaf) {
+    return std::make_shared<ExpressionTree>(leaf);
+  }
 
-  static TreeNode _constant(TruthValue val) { return std::make_shared<ExpressionTree>(val); }
+  static TreeNode _constant(TruthValue val) {
+    return std::make_shared<ExpressionTree>(val);
+  }
 
   TEST(TestSearchArgument, testNotPushdown) {
     EXPECT_EQ("leaf-1", SearchArgumentBuilderImpl::pushDownNot(_leaf(1))->toString());

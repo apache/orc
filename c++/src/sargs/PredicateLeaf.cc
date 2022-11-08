@@ -140,28 +140,42 @@ namespace orc {
     }
   }
 
-  PredicateLeaf::Operator PredicateLeaf::getOperator() const { return mOperator; }
+  PredicateLeaf::Operator PredicateLeaf::getOperator() const {
+    return mOperator;
+  }
 
-  PredicateDataType PredicateLeaf::getType() const { return mType; }
+  PredicateDataType PredicateLeaf::getType() const {
+    return mType;
+  }
 
-  bool PredicateLeaf::hasColumnName() const { return mHasColumnName; }
+  bool PredicateLeaf::hasColumnName() const {
+    return mHasColumnName;
+  }
 
   /**
    * Get the simple column name.
    */
-  const std::string& PredicateLeaf::getColumnName() const { return mColumnName; }
+  const std::string& PredicateLeaf::getColumnName() const {
+    return mColumnName;
+  }
 
-  uint64_t PredicateLeaf::getColumnId() const { return mColumnId; }
+  uint64_t PredicateLeaf::getColumnId() const {
+    return mColumnId;
+  }
 
   /**
    * Get the literal half of the predicate leaf.
    */
-  Literal PredicateLeaf::getLiteral() const { return mLiterals.at(0); }
+  Literal PredicateLeaf::getLiteral() const {
+    return mLiterals.at(0);
+  }
 
   /**
    * For operators with multiple literals (IN and BETWEEN), get the literals.
    */
-  const std::vector<Literal>& PredicateLeaf::getLiteralList() const { return mLiterals; }
+  const std::vector<Literal>& PredicateLeaf::getLiteralList() const {
+    return mLiterals;
+  }
 
   static std::string getLiteralString(const std::vector<Literal>& literals) {
     return literals.at(0).toString();

@@ -38,7 +38,9 @@ namespace orc {
     out << std::dec;
   }
 
-  PositionProvider::PositionProvider(const std::list<uint64_t>& posns) { position = posns.begin(); }
+  PositionProvider::PositionProvider(const std::list<uint64_t>& posns) {
+    position = posns.begin();
+  }
 
   uint64_t PositionProvider::next() {
     uint64_t result = *position;
@@ -46,7 +48,9 @@ namespace orc {
     return result;
   }
 
-  uint64_t PositionProvider::current() { return *position; }
+  uint64_t PositionProvider::current() {
+    return *position;
+  }
 
   SeekableInputStream::~SeekableInputStream() {
     // PASS
@@ -187,7 +191,9 @@ namespace orc {
     return position < length;
   }
 
-  int64_t SeekableFileInputStream::ByteCount() const { return static_cast<int64_t>(position); }
+  int64_t SeekableFileInputStream::ByteCount() const {
+    return static_cast<int64_t>(position);
+  }
 
   void SeekableFileInputStream::seek(PositionProvider& location) {
     position = location.next();

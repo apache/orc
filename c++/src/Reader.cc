@@ -47,7 +47,9 @@ namespace orc {
     return &internal;
   }
 
-  const RowReaderOptions::IdReadIntentMap EMPTY_IDREADINTENTMAP() { return {}; }
+  const RowReaderOptions::IdReadIntentMap EMPTY_IDREADINTENTMAP() {
+    return {};
+  }
 
   const WriterVersionImpl& WriterVersionImpl::VERSION_HIVE_8732() {
     static const WriterVersionImpl version(WriterVersion_HIVE_8732);
@@ -334,11 +336,17 @@ namespace orc {
     return false;
   }
 
-  CompressionKind RowReaderImpl::getCompression() const { return contents->compression; }
+  CompressionKind RowReaderImpl::getCompression() const {
+    return contents->compression;
+  }
 
-  uint64_t RowReaderImpl::getCompressionSize() const { return contents->blockSize; }
+  uint64_t RowReaderImpl::getCompressionSize() const {
+    return contents->blockSize;
+  }
 
-  const std::vector<bool> RowReaderImpl::getSelectedColumns() const { return selectedColumns; }
+  const std::vector<bool> RowReaderImpl::getSelectedColumns() const {
+    return selectedColumns;
+  }
 
   const Type& RowReaderImpl::getSelectedType() const {
     if (selectedSchema.get() == nullptr) {
@@ -347,7 +355,9 @@ namespace orc {
     return *(selectedSchema.get());
   }
 
-  uint64_t RowReaderImpl::getRowNumber() const { return previousRow; }
+  uint64_t RowReaderImpl::getRowNumber() const {
+    return previousRow;
+  }
 
   void RowReaderImpl::seekToRow(uint64_t rowNumber) {
     // Empty file
@@ -489,13 +499,17 @@ namespace orc {
     reader->seekToRowGroup(positionProviders);
   }
 
-  const FileContents& RowReaderImpl::getFileContents() const { return *contents; }
+  const FileContents& RowReaderImpl::getFileContents() const {
+    return *contents;
+  }
 
   bool RowReaderImpl::getThrowOnHive11DecimalOverflow() const {
     return throwOnHive11DecimalOverflow;
   }
 
-  bool RowReaderImpl::getIsDecimalAsLong() const { return contents->isDecimalAsLong; }
+  bool RowReaderImpl::getIsDecimalAsLong() const {
+    return contents->isDecimalAsLong;
+  }
 
   int32_t RowReaderImpl::getForcedScaleOnHive11Decimal() const {
     return forcedScaleOnHive11Decimal;
@@ -554,13 +568,21 @@ namespace orc {
     return result;
   }
 
-  const ReaderOptions& ReaderImpl::getReaderOptions() const { return options; }
+  const ReaderOptions& ReaderImpl::getReaderOptions() const {
+    return options;
+  }
 
-  CompressionKind ReaderImpl::getCompression() const { return contents->compression; }
+  CompressionKind ReaderImpl::getCompression() const {
+    return contents->compression;
+  }
 
-  uint64_t ReaderImpl::getCompressionSize() const { return contents->blockSize; }
+  uint64_t ReaderImpl::getCompressionSize() const {
+    return contents->blockSize;
+  }
 
-  uint64_t ReaderImpl::getNumberOfStripes() const { return numberOfStripes; }
+  uint64_t ReaderImpl::getNumberOfStripes() const {
+    return numberOfStripes;
+  }
 
   uint64_t ReaderImpl::getNumberOfStripeStatistics() const {
     if (!isMetadataLoaded) {
@@ -590,7 +612,9 @@ namespace orc {
     return {contents->postscript->version(0), contents->postscript->version(1)};
   }
 
-  uint64_t ReaderImpl::getNumberOfRows() const { return footer->numberofrows(); }
+  uint64_t ReaderImpl::getNumberOfRows() const {
+    return footer->numberofrows();
+  }
 
   WriterId ReaderImpl::getWriterId() const {
     if (footer->has_writer()) {
@@ -625,21 +649,33 @@ namespace orc {
     return getWriterVersionImpl(contents.get());
   }
 
-  uint64_t ReaderImpl::getContentLength() const { return footer->contentlength(); }
+  uint64_t ReaderImpl::getContentLength() const {
+    return footer->contentlength();
+  }
 
   uint64_t ReaderImpl::getStripeStatisticsLength() const {
     return contents->postscript->metadatalength();
   }
 
-  uint64_t ReaderImpl::getFileFooterLength() const { return contents->postscript->footerlength(); }
+  uint64_t ReaderImpl::getFileFooterLength() const {
+    return contents->postscript->footerlength();
+  }
 
-  uint64_t ReaderImpl::getFilePostscriptLength() const { return postscriptLength; }
+  uint64_t ReaderImpl::getFilePostscriptLength() const {
+    return postscriptLength;
+  }
 
-  uint64_t ReaderImpl::getFileLength() const { return fileLength; }
+  uint64_t ReaderImpl::getFileLength() const {
+    return fileLength;
+  }
 
-  uint64_t ReaderImpl::getRowIndexStride() const { return footer->rowindexstride(); }
+  uint64_t ReaderImpl::getRowIndexStride() const {
+    return footer->rowindexstride();
+  }
 
-  const std::string& ReaderImpl::getStreamName() const { return contents->stream->getName(); }
+  const std::string& ReaderImpl::getStreamName() const {
+    return contents->stream->getName();
+  }
 
   std::list<std::string> ReaderImpl::getMetadataKeys() const {
     std::list<std::string> result;
@@ -708,7 +744,9 @@ namespace orc {
     return false;
   }
 
-  const Type& ReaderImpl::getType() const { return *(contents->schema.get()); }
+  const Type& ReaderImpl::getType() const {
+    return *(contents->schema.get());
+  }
 
   std::unique_ptr<StripeStatistics> ReaderImpl::getStripeStatistics(uint64_t stripeIndex) const {
     if (!isMetadataLoaded) {

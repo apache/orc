@@ -254,7 +254,9 @@ namespace orc {
     }
   }
 
-  bool Literal::operator!=(const Literal& r) const { return !(*this == r); }
+  bool Literal::operator!=(const Literal& r) const {
+    return !(*this == r);
+  }
 
   inline void validate(const bool& isNull, const PredicateDataType& type,
                        const PredicateDataType& expected) {

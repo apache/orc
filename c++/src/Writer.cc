@@ -105,7 +105,9 @@ namespace orc {
     return *this;
   }
 
-  uint64_t WriterOptions::getStripeSize() const { return privateBits->stripeSize; }
+  uint64_t WriterOptions::getStripeSize() const {
+    return privateBits->stripeSize;
+  }
 
   WriterOptions& WriterOptions::setCompressionBlockSize(uint64_t size) {
     privateBits->compressionBlockSize = size;
@@ -122,7 +124,9 @@ namespace orc {
     return *this;
   }
 
-  uint64_t WriterOptions::getRowIndexStride() const { return privateBits->rowIndexStride; }
+  uint64_t WriterOptions::getRowIndexStride() const {
+    return privateBits->rowIndexStride;
+  }
 
   WriterOptions& WriterOptions::setDictionaryKeySizeThreshold(double val) {
     privateBits->dictionaryKeySizeThreshold = val;
@@ -150,14 +154,18 @@ namespace orc {
     throw std::logic_error("Unsupported file version specified.");
   }
 
-  FileVersion WriterOptions::getFileVersion() const { return privateBits->fileVersion; }
+  FileVersion WriterOptions::getFileVersion() const {
+    return privateBits->fileVersion;
+  }
 
   WriterOptions& WriterOptions::setCompression(CompressionKind comp) {
     privateBits->compression = comp;
     return *this;
   }
 
-  CompressionKind WriterOptions::getCompression() const { return privateBits->compression; }
+  CompressionKind WriterOptions::getCompression() const {
+    return privateBits->compression;
+  }
 
   WriterOptions& WriterOptions::setCompressionStrategy(CompressionStrategy strategy) {
     privateBits->compressionStrategy = strategy;
@@ -177,23 +185,31 @@ namespace orc {
     return *this;
   }
 
-  double WriterOptions::getPaddingTolerance() const { return privateBits->paddingTolerance; }
+  double WriterOptions::getPaddingTolerance() const {
+    return privateBits->paddingTolerance;
+  }
 
   WriterOptions& WriterOptions::setMemoryPool(MemoryPool* memoryPool) {
     privateBits->memoryPool = memoryPool;
     return *this;
   }
 
-  MemoryPool* WriterOptions::getMemoryPool() const { return privateBits->memoryPool; }
+  MemoryPool* WriterOptions::getMemoryPool() const {
+    return privateBits->memoryPool;
+  }
 
   WriterOptions& WriterOptions::setErrorStream(std::ostream& errStream) {
     privateBits->errorStream = &errStream;
     return *this;
   }
 
-  std::ostream* WriterOptions::getErrorStream() const { return privateBits->errorStream; }
+  std::ostream* WriterOptions::getErrorStream() const {
+    return privateBits->errorStream;
+  }
 
-  bool WriterOptions::getEnableIndex() const { return privateBits->enableIndex; }
+  bool WriterOptions::getEnableIndex() const {
+    return privateBits->enableIndex;
+  }
 
   bool WriterOptions::getEnableDictionary() const {
     return privateBits->dictionaryKeySizeThreshold > 0.0;
@@ -228,14 +244,18 @@ namespace orc {
     return getTimezoneByName(privateBits->timezone);
   }
 
-  const std::string& WriterOptions::getTimezoneName() const { return privateBits->timezone; }
+  const std::string& WriterOptions::getTimezoneName() const {
+    return privateBits->timezone;
+  }
 
   WriterOptions& WriterOptions::setTimezoneName(const std::string& zone) {
     privateBits->timezone = zone;
     return *this;
   }
 
-  WriterMetrics* WriterOptions::getWriterMetrics() const { return privateBits->metrics; }
+  WriterMetrics* WriterOptions::getWriterMetrics() const {
+    return privateBits->metrics;
+  }
 
   WriterOptions& WriterOptions::setWriterMetrics(WriterMetrics* metrics) {
     privateBits->metrics = metrics;

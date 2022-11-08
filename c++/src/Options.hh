@@ -84,35 +84,45 @@ namespace orc {
     return *this;
   }
 
-  MemoryPool* ReaderOptions::getMemoryPool() const { return privateBits->memoryPool; }
+  MemoryPool* ReaderOptions::getMemoryPool() const {
+    return privateBits->memoryPool;
+  }
 
   ReaderOptions& ReaderOptions::setReaderMetrics(ReaderMetrics* metrics) {
     privateBits->metrics = metrics;
     return *this;
   }
 
-  ReaderMetrics* ReaderOptions::getReaderMetrics() const { return privateBits->metrics; }
+  ReaderMetrics* ReaderOptions::getReaderMetrics() const {
+    return privateBits->metrics;
+  }
 
   ReaderOptions& ReaderOptions::setTailLocation(uint64_t offset) {
     privateBits->tailLocation = offset;
     return *this;
   }
 
-  uint64_t ReaderOptions::getTailLocation() const { return privateBits->tailLocation; }
+  uint64_t ReaderOptions::getTailLocation() const {
+    return privateBits->tailLocation;
+  }
 
   ReaderOptions& ReaderOptions::setSerializedFileTail(const std::string& value) {
     privateBits->serializedTail = value;
     return *this;
   }
 
-  std::string ReaderOptions::getSerializedFileTail() const { return privateBits->serializedTail; }
+  std::string ReaderOptions::getSerializedFileTail() const {
+    return privateBits->serializedTail;
+  }
 
   ReaderOptions& ReaderOptions::setErrorStream(std::ostream& stream) {
     privateBits->errorStream = &stream;
     return *this;
   }
 
-  std::ostream* ReaderOptions::getErrorStream() const { return privateBits->errorStream; }
+  std::ostream* ReaderOptions::getErrorStream() const {
+    return privateBits->errorStream;
+  }
 
   /**
    * RowReaderOptions Implementation
@@ -232,9 +242,13 @@ namespace orc {
     return privateBits->includedColumnNames;
   }
 
-  uint64_t RowReaderOptions::getOffset() const { return privateBits->dataStart; }
+  uint64_t RowReaderOptions::getOffset() const {
+    return privateBits->dataStart;
+  }
 
-  uint64_t RowReaderOptions::getLength() const { return privateBits->dataLength; }
+  uint64_t RowReaderOptions::getLength() const {
+    return privateBits->dataLength;
+  }
 
   RowReaderOptions& RowReaderOptions::throwOnHive11DecimalOverflow(bool shouldThrow) {
     privateBits->throwOnHive11DecimalOverflow = shouldThrow;
@@ -254,7 +268,9 @@ namespace orc {
     return privateBits->forcedScaleOnHive11Decimal;
   }
 
-  bool RowReaderOptions::getEnableLazyDecoding() const { return privateBits->enableLazyDecoding; }
+  bool RowReaderOptions::getEnableLazyDecoding() const {
+    return privateBits->enableLazyDecoding;
+  }
 
   RowReaderOptions& RowReaderOptions::setEnableLazyDecoding(bool enable) {
     privateBits->enableLazyDecoding = enable;

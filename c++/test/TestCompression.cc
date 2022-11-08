@@ -141,7 +141,9 @@ namespace orc {
     decompressAndVerify(memStream, kind, testData, 170, *pool);
   }
 
-  TEST(TestCompression, zlib_compress_two_blocks) { compress_two_blocks(CompressionKind_ZLIB); }
+  TEST(TestCompression, zlib_compress_two_blocks) {
+    compress_two_blocks(CompressionKind_ZLIB);
+  }
 
   void compress_random_letters(orc::CompressionKind kind) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
@@ -181,7 +183,9 @@ namespace orc {
     delete[] testData;
   }
 
-  TEST(TestCompression, zlib_compress_random_bytes) { compress_random_bytes(CompressionKind_ZLIB); }
+  TEST(TestCompression, zlib_compress_random_bytes) {
+    compress_random_bytes(CompressionKind_ZLIB);
+  }
 
   void protobuff_compression(orc::CompressionKind kind, proto::CompressionKind protoKind) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
@@ -237,27 +241,41 @@ namespace orc {
     compress_simple_repeated_string(CompressionKind_ZSTD);
   }
 
-  TEST(Compression, zstd_compress_two_blocks) { compress_two_blocks(CompressionKind_ZSTD); }
+  TEST(Compression, zstd_compress_two_blocks) {
+    compress_two_blocks(CompressionKind_ZSTD);
+  }
 
-  TEST(Compression, zstd_compress_random_letters) { compress_random_letters(CompressionKind_ZSTD); }
+  TEST(Compression, zstd_compress_random_letters) {
+    compress_random_letters(CompressionKind_ZSTD);
+  }
 
-  TEST(Compression, zstd_compress_random_bytes) { compress_random_bytes(CompressionKind_ZSTD); }
+  TEST(Compression, zstd_compress_random_bytes) {
+    compress_random_bytes(CompressionKind_ZSTD);
+  }
 
   TEST(Compression, zstd_protobuff_compression) {
     protobuff_compression(CompressionKind_ZSTD, proto::ZSTD);
   }
 
-  TEST(Compression, lz4_compress_original_string) { compress_original_string(CompressionKind_LZ4); }
+  TEST(Compression, lz4_compress_original_string) {
+    compress_original_string(CompressionKind_LZ4);
+  }
 
   TEST(Compression, lz4_compress_simple_repeated_string) {
     compress_simple_repeated_string(CompressionKind_LZ4);
   }
 
-  TEST(Compression, lz4_compress_two_blocks) { compress_two_blocks(CompressionKind_LZ4); }
+  TEST(Compression, lz4_compress_two_blocks) {
+    compress_two_blocks(CompressionKind_LZ4);
+  }
 
-  TEST(Compression, lz4_compress_random_letters) { compress_random_letters(CompressionKind_LZ4); }
+  TEST(Compression, lz4_compress_random_letters) {
+    compress_random_letters(CompressionKind_LZ4);
+  }
 
-  TEST(Compression, lz4_compress_random_bytes) { compress_random_bytes(CompressionKind_LZ4); }
+  TEST(Compression, lz4_compress_random_bytes) {
+    compress_random_bytes(CompressionKind_LZ4);
+  }
 
   TEST(Compression, lz4_protobuff_compression) {
     protobuff_compression(CompressionKind_LZ4, proto::LZ4);
@@ -271,13 +289,17 @@ namespace orc {
     compress_simple_repeated_string(CompressionKind_SNAPPY);
   }
 
-  TEST(Compression, snappy_compress_two_blocks) { compress_two_blocks(CompressionKind_SNAPPY); }
+  TEST(Compression, snappy_compress_two_blocks) {
+    compress_two_blocks(CompressionKind_SNAPPY);
+  }
 
   TEST(Compression, snappy_compress_random_letters) {
     compress_random_letters(CompressionKind_SNAPPY);
   }
 
-  TEST(Compression, snappy_compress_random_bytes) { compress_random_bytes(CompressionKind_SNAPPY); }
+  TEST(Compression, snappy_compress_random_bytes) {
+    compress_random_bytes(CompressionKind_SNAPPY);
+  }
 
   TEST(Compression, snappy_protobuff_compression) {
     protobuff_compression(CompressionKind_SNAPPY, proto::SNAPPY);

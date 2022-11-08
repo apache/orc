@@ -81,7 +81,9 @@ namespace orc {
     return std::unique_ptr<SeekableInputStream>(getStreamProxy(columnId, kind, shouldStream));
   }
 
-  bool isNotNull(tm* timeptr) { return timeptr != nullptr; }
+  bool isNotNull(tm* timeptr) {
+    return timeptr != nullptr;
+  }
 
   class TestColumnReaderEncoded : public TestWithParam<bool> {
     virtual void SetUp();
@@ -90,7 +92,9 @@ namespace orc {
     bool encoded;
   };
 
-  void TestColumnReaderEncoded::SetUp() { encoded = GetParam(); }
+  void TestColumnReaderEncoded::SetUp() {
+    encoded = GetParam();
+  }
 
   TEST(TestColumnReader, testBooleanWithNulls) {
     MockStripeStreams streams;

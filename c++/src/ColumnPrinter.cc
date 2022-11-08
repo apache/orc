@@ -194,7 +194,9 @@ namespace orc {
     void reset(const ColumnVectorBatch& batch) override;
   };
 
-  void writeChar(std::string& file, char ch) { file += ch; }
+  void writeChar(std::string& file, char ch) {
+    file += ch;
+  }
 
   void writeString(std::string& file, const char* ptr) {
     size_t len = strlen(ptr);
@@ -299,7 +301,9 @@ namespace orc {
     // PASS
   }
 
-  void VoidColumnPrinter::printRow(uint64_t) { writeString(buffer, "null"); }
+  void VoidColumnPrinter::printRow(uint64_t) {
+    writeString(buffer, "null");
+  }
 
   LongColumnPrinter::LongColumnPrinter(std::string& _buffer)
       : ColumnPrinter(_buffer), data(nullptr) {

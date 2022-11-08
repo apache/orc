@@ -48,13 +48,17 @@ namespace orc {
     }
   }
 
-  void ColumnVectorBatch::clear() { numElements = 0; }
+  void ColumnVectorBatch::clear() {
+    numElements = 0;
+  }
 
   uint64_t ColumnVectorBatch::getMemoryUsage() {
     return static_cast<uint64_t>(notNull.capacity() * sizeof(char));
   }
 
-  bool ColumnVectorBatch::hasVariableLength() { return false; }
+  bool ColumnVectorBatch::hasVariableLength() {
+    return false;
+  }
 
   LongVectorBatch::LongVectorBatch(uint64_t _capacity, MemoryPool& pool)
       : ColumnVectorBatch(_capacity, pool), data(pool, _capacity) {
@@ -78,7 +82,9 @@ namespace orc {
     }
   }
 
-  void LongVectorBatch::clear() { numElements = 0; }
+  void LongVectorBatch::clear() {
+    numElements = 0;
+  }
 
   uint64_t LongVectorBatch::getMemoryUsage() {
     return ColumnVectorBatch::getMemoryUsage() +
@@ -107,7 +113,9 @@ namespace orc {
     }
   }
 
-  void DoubleVectorBatch::clear() { numElements = 0; }
+  void DoubleVectorBatch::clear() {
+    numElements = 0;
+  }
 
   uint64_t DoubleVectorBatch::getMemoryUsage() {
     return ColumnVectorBatch::getMemoryUsage() +
@@ -167,7 +175,9 @@ namespace orc {
     }
   }
 
-  void StringVectorBatch::clear() { numElements = 0; }
+  void StringVectorBatch::clear() {
+    numElements = 0;
+  }
 
   uint64_t StringVectorBatch::getMemoryUsage() {
     return ColumnVectorBatch::getMemoryUsage() +
@@ -197,7 +207,9 @@ namespace orc {
     return buffer.str();
   }
 
-  void StructVectorBatch::resize(uint64_t cap) { ColumnVectorBatch::resize(cap); }
+  void StructVectorBatch::resize(uint64_t cap) {
+    ColumnVectorBatch::resize(cap);
+  }
 
   void StructVectorBatch::clear() {
     for (size_t i = 0; i < fields.size(); i++) {
@@ -256,7 +268,9 @@ namespace orc {
            static_cast<uint64_t>(offsets.capacity() * sizeof(int64_t)) + elements->getMemoryUsage();
   }
 
-  bool ListVectorBatch::hasVariableLength() { return true; }
+  bool ListVectorBatch::hasVariableLength() {
+    return true;
+  }
 
   MapVectorBatch::MapVectorBatch(uint64_t cap, MemoryPool& pool)
       : ColumnVectorBatch(cap, pool), offsets(pool, cap + 1) {
@@ -294,7 +308,9 @@ namespace orc {
            (keys ? keys->getMemoryUsage() : 0) + (elements ? elements->getMemoryUsage() : 0);
   }
 
-  bool MapVectorBatch::hasVariableLength() { return true; }
+  bool MapVectorBatch::hasVariableLength() {
+    return true;
+  }
 
   UnionVectorBatch::UnionVectorBatch(uint64_t cap, MemoryPool& pool)
       : ColumnVectorBatch(cap, pool), tags(pool, cap), offsets(pool, cap) {
@@ -381,7 +397,9 @@ namespace orc {
     }
   }
 
-  void Decimal64VectorBatch::clear() { numElements = 0; }
+  void Decimal64VectorBatch::clear() {
+    numElements = 0;
+  }
 
   uint64_t Decimal64VectorBatch::getMemoryUsage() {
     return ColumnVectorBatch::getMemoryUsage() +
@@ -415,7 +433,9 @@ namespace orc {
     }
   }
 
-  void Decimal128VectorBatch::clear() { numElements = 0; }
+  void Decimal128VectorBatch::clear() {
+    numElements = 0;
+  }
 
   uint64_t Decimal128VectorBatch::getMemoryUsage() {
     return ColumnVectorBatch::getMemoryUsage() +
@@ -471,7 +491,9 @@ namespace orc {
     }
   }
 
-  void TimestampVectorBatch::clear() { numElements = 0; }
+  void TimestampVectorBatch::clear() {
+    numElements = 0;
+  }
 
   uint64_t TimestampVectorBatch::getMemoryUsage() {
     return ColumnVectorBatch::getMemoryUsage() +

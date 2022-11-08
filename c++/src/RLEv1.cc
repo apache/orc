@@ -43,7 +43,9 @@ namespace orc {
     tailRunLength = 0;
   }
 
-  RleEncoderV1::~RleEncoderV1() { delete[] literals; }
+  RleEncoderV1::~RleEncoderV1() {
+    delete[] literals;
+  }
 
   void RleEncoderV1::writeValues() {
     if (numLiterals != 0) {

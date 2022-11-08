@@ -23,7 +23,9 @@
 
 namespace orc {
 
-  inline uint64_t rotl64(uint64_t x, int8_t r) { return (x << r) | (x >> (64 - r)); }
+  inline uint64_t rotl64(uint64_t x, int8_t r) {
+    return (x << r) | (x >> (64 - r));
+  }
 
   inline uint64_t Murmur3::fmix64(uint64_t value) {
     value ^= (value >> 33);

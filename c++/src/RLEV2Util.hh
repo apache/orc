@@ -28,7 +28,9 @@ namespace orc {
   extern const uint8_t BitWidthToFBSMap[65];
 
   // The input n must be less than FixedBitSizes::SIZE.
-  inline uint32_t decodeBitWidth(uint32_t n) { return FBSToBitWidthMap[n]; }
+  inline uint32_t decodeBitWidth(uint32_t n) {
+    return FBSToBitWidthMap[n];
+  }
 
   inline uint32_t getClosestFixedBits(uint32_t n) {
     if (n <= 64) {

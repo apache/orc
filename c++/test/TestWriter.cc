@@ -83,7 +83,9 @@ namespace orc {
     WriterTest() : fileVersion(FileVersion::v_0_11()) {}
   };
 
-  void WriterTest::SetUp() { fileVersion = GetParam(); }
+  void WriterTest::SetUp() {
+    fileVersion = GetParam();
+  }
 
   TEST_P(WriterTest, writeEmptyFile) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);

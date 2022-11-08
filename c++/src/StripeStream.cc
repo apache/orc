@@ -65,9 +65,13 @@ namespace orc {
     return footer.columns(static_cast<int>(columnId));
   }
 
-  const Timezone& StripeStreamsImpl::getWriterTimezone() const { return writerTimezone; }
+  const Timezone& StripeStreamsImpl::getWriterTimezone() const {
+    return writerTimezone;
+  }
 
-  const Timezone& StripeStreamsImpl::getReaderTimezone() const { return readerTimezone; }
+  const Timezone& StripeStreamsImpl::getReaderTimezone() const {
+    return readerTimezone;
+  }
 
   std::ostream* StripeStreamsImpl::getErrorStream() const {
     return reader.getFileContents().errorStream;
@@ -105,7 +109,9 @@ namespace orc {
     return std::unique_ptr<SeekableInputStream>();
   }
 
-  MemoryPool& StripeStreamsImpl::getMemoryPool() const { return *reader.getFileContents().pool; }
+  MemoryPool& StripeStreamsImpl::getMemoryPool() const {
+    return *reader.getFileContents().pool;
+  }
 
   ReaderMetrics* StripeStreamsImpl::getReaderMetrics() const {
     return reader.getFileContents().readerMetrics;
@@ -115,7 +121,9 @@ namespace orc {
     return reader.getThrowOnHive11DecimalOverflow();
   }
 
-  bool StripeStreamsImpl::isDecimalAsLong() const { return reader.getIsDecimalAsLong(); }
+  bool StripeStreamsImpl::isDecimalAsLong() const {
+    return reader.getIsDecimalAsLong();
+  }
 
   int32_t StripeStreamsImpl::getForcedScaleOnHive11Decimal() const {
     return reader.getForcedScaleOnHive11Decimal();

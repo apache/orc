@@ -92,19 +92,33 @@ namespace orc {
     return static_cast<uint64_t>(maximumColumnId);
   }
 
-  TypeKind TypeImpl::getKind() const { return kind; }
+  TypeKind TypeImpl::getKind() const {
+    return kind;
+  }
 
-  uint64_t TypeImpl::getSubtypeCount() const { return subtypeCount; }
+  uint64_t TypeImpl::getSubtypeCount() const {
+    return subtypeCount;
+  }
 
-  const Type* TypeImpl::getSubtype(uint64_t i) const { return subTypes[i].get(); }
+  const Type* TypeImpl::getSubtype(uint64_t i) const {
+    return subTypes[i].get();
+  }
 
-  const std::string& TypeImpl::getFieldName(uint64_t i) const { return fieldNames[i]; }
+  const std::string& TypeImpl::getFieldName(uint64_t i) const {
+    return fieldNames[i];
+  }
 
-  uint64_t TypeImpl::getMaximumLength() const { return maxLength; }
+  uint64_t TypeImpl::getMaximumLength() const {
+    return maxLength;
+  }
 
-  uint64_t TypeImpl::getPrecision() const { return precision; }
+  uint64_t TypeImpl::getPrecision() const {
+    return precision;
+  }
 
-  uint64_t TypeImpl::getScale() const { return scale; }
+  uint64_t TypeImpl::getScale() const {
+    return scale;
+  }
 
   Type& TypeImpl::setAttribute(const std::string& key, const std::string& value) {
     attributes[key] = value;
@@ -362,7 +376,9 @@ namespace orc {
     return std::unique_ptr<Type>(new TypeImpl(DECIMAL, precision, scale));
   }
 
-  std::unique_ptr<Type> createStructType() { return std::unique_ptr<Type>(new TypeImpl(STRUCT)); }
+  std::unique_ptr<Type> createStructType() {
+    return std::unique_ptr<Type>(new TypeImpl(STRUCT));
+  }
 
   std::unique_ptr<Type> createListType(std::unique_ptr<Type> elements) {
     TypeImpl* result = new TypeImpl(LIST);
@@ -379,7 +395,9 @@ namespace orc {
     return return_value;
   }
 
-  std::unique_ptr<Type> createUnionType() { return std::unique_ptr<Type>(new TypeImpl(UNION)); }
+  std::unique_ptr<Type> createUnionType() {
+    return std::unique_ptr<Type>(new TypeImpl(UNION));
+  }
 
   std::string printProtobufMessage(const google::protobuf::Message& message);
   std::unique_ptr<Type> convertType(const proto::Type& type, const proto::Footer& footer) {

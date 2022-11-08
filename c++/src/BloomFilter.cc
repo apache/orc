@@ -54,7 +54,9 @@ namespace orc {
     return (mData[index >> SHIFT_6_BITS] & (1ULL << (index % BITS_OF_LONG))) != 0;
   }
 
-  uint64_t BitSet::bitSize() { return mData.size() << SHIFT_6_BITS; }
+  uint64_t BitSet::bitSize() {
+    return mData.size() << SHIFT_6_BITS;
+  }
 
   void BitSet::merge(const BitSet& other) {
     if (mData.size() != other.mData.size()) {
@@ -69,11 +71,17 @@ namespace orc {
     }
   }
 
-  void BitSet::clear() { memset(mData.data(), 0, sizeof(uint64_t) * mData.size()); }
+  void BitSet::clear() {
+    memset(mData.data(), 0, sizeof(uint64_t) * mData.size());
+  }
 
-  const uint64_t* BitSet::getData() const { return mData.data(); }
+  const uint64_t* BitSet::getData() const {
+    return mData.data();
+  }
 
-  bool BitSet::operator==(const BitSet& other) const { return mData == other.mData; }
+  bool BitSet::operator==(const BitSet& other) const {
+    return mData == other.mData;
+  }
 
   /**
    * Helper functions
@@ -129,20 +137,30 @@ namespace orc {
     addHash(static_cast<int64_t>(hash64));
   }
 
-  void BloomFilterImpl::addLong(int64_t data) { addHash(getLongHash(data)); }
+  void BloomFilterImpl::addLong(int64_t data) {
+    addHash(getLongHash(data));
+  }
 
   bool BloomFilterImpl::testBytes(const char* data, int64_t length) const {
     uint64_t hash64 = getBytesHash(data, length);
     return testHash(static_cast<int64_t>(hash64));
   }
 
-  bool BloomFilterImpl::testLong(int64_t data) const { return testHash(getLongHash(data)); }
+  bool BloomFilterImpl::testLong(int64_t data) const {
+    return testHash(getLongHash(data));
+  }
 
-  uint64_t BloomFilterImpl::sizeInBytes() const { return getBitSize() >> SHIFT_3_BITS; }
+  uint64_t BloomFilterImpl::sizeInBytes() const {
+    return getBitSize() >> SHIFT_3_BITS;
+  }
 
-  uint64_t BloomFilterImpl::getBitSize() const { return mBitSet->bitSize(); }
+  uint64_t BloomFilterImpl::getBitSize() const {
+    return mBitSet->bitSize();
+  }
 
-  int32_t BloomFilterImpl::getNumHashFunctions() const { return mNumHashFunctions; }
+  int32_t BloomFilterImpl::getNumHashFunctions() const {
+    return mNumHashFunctions;
+  }
 
   DIAGNOSTIC_PUSH
 
@@ -181,7 +199,9 @@ namespace orc {
     }
   }
 
-  void BloomFilterImpl::addDouble(double data) { addLong(reinterpret_cast<int64_t&>(data)); }
+  void BloomFilterImpl::addDouble(double data) {
+    addLong(reinterpret_cast<int64_t&>(data));
+  }
 
   bool BloomFilterImpl::testDouble(double data) const {
     return testLong(reinterpret_cast<int64_t&>(data));
@@ -238,7 +258,9 @@ namespace orc {
     mBitSet->merge(*other.mBitSet);
   }
 
-  void BloomFilterImpl::reset() { mBitSet->clear(); }
+  void BloomFilterImpl::reset() {
+    mBitSet->clear();
+  }
 
   void BloomFilterImpl::serialize(proto::BloomFilter& bloomFilter) const {
     bloomFilter.set_numhashfunctions(static_cast<uint32_t>(mNumHashFunctions));

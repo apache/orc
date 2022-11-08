@@ -20,7 +20,9 @@
 
 namespace orc {
 
-  MemoryOutputStream::~MemoryOutputStream() { delete[] data; }
+  MemoryOutputStream::~MemoryOutputStream() {
+    delete[] data;
+  }
 
   void MemoryOutputStream::write(const void* buf, size_t size) {
     memcpy(data + length, buf, size);

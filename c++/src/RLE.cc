@@ -68,7 +68,9 @@ namespace orc {
     }
   }
 
-  void RleEncoder::writeVslong(int64_t val) { writeVulong((val << 1) ^ (val >> 63)); }
+  void RleEncoder::writeVslong(int64_t val) {
+    writeVulong((val << 1) ^ (val >> 63));
+  }
 
   void RleEncoder::writeVulong(int64_t val) {
     while (true) {

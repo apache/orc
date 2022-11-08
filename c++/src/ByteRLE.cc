@@ -180,7 +180,9 @@ namespace orc {
     }
   }
 
-  uint64_t ByteRleEncoderImpl::getBufferSize() const { return outputStream->getSize(); }
+  uint64_t ByteRleEncoderImpl::getBufferSize() const {
+    return outputStream->getSize();
+  }
 
   void ByteRleEncoderImpl::recordPosition(PositionRecorder* recorder) const {
     uint64_t flushedSize = outputStream->getSize();

@@ -51,16 +51,22 @@ namespace orc {
     }
   }
 
-  ExpressionTree::Operator ExpressionTree::getOperator() const { return mOperator; }
+  ExpressionTree::Operator ExpressionTree::getOperator() const {
+    return mOperator;
+  }
 
-  const std::vector<TreeNode>& ExpressionTree::getChildren() const { return mChildren; }
+  const std::vector<TreeNode>& ExpressionTree::getChildren() const {
+    return mChildren;
+  }
 
   std::vector<TreeNode>& ExpressionTree::getChildren() {
     return const_cast<std::vector<TreeNode>&>(
         const_cast<const ExpressionTree*>(this)->getChildren());
   }
 
-  const TreeNode ExpressionTree::getChild(size_t i) const { return mChildren.at(i); }
+  const TreeNode ExpressionTree::getChild(size_t i) const {
+    return mChildren.at(i);
+  }
 
   TreeNode ExpressionTree::getChild(size_t i) {
     return std::const_pointer_cast<ExpressionTree>(
@@ -82,7 +88,9 @@ namespace orc {
     mLeaf = leaf;
   }
 
-  void ExpressionTree::addChild(TreeNode child) { mChildren.push_back(child); }
+  void ExpressionTree::addChild(TreeNode child) {
+    mChildren.push_back(child);
+  }
 
   TruthValue ExpressionTree::evaluate(const std::vector<TruthValue>& leaves) const {
     TruthValue result;

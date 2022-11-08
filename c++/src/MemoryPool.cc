@@ -39,9 +39,13 @@ namespace orc {
     void free(char* p) override;
   };
 
-  char* MemoryPoolImpl::malloc(uint64_t size) { return static_cast<char*>(std::malloc(size)); }
+  char* MemoryPoolImpl::malloc(uint64_t size) {
+    return static_cast<char*>(std::malloc(size));
+  }
 
-  void MemoryPoolImpl::free(char* p) { std::free(p); }
+  void MemoryPoolImpl::free(char* p) {
+    std::free(p);
+  }
 
   MemoryPoolImpl::~MemoryPoolImpl() {
     // PASS

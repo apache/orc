@@ -144,7 +144,9 @@ namespace orc {
     streams.push_back(stream);
   }
 
-  uint64_t ColumnWriter::getEstimatedSize() const { return notNullEncoder->getBufferSize(); }
+  uint64_t ColumnWriter::getEstimatedSize() const {
+    return notNullEncoder->getBufferSize();
+  }
 
   void ColumnWriter::getStripeStatistics(std::vector<proto::ColumnStatistics>& stats) const {
     getProtoBufStatistics(stats, colStripeStatistics.get());
@@ -950,10 +952,14 @@ namespace orc {
   }
 
   // return count of entries
-  size_t SortedStringDictionary::size() const { return dict.size(); }
+  size_t SortedStringDictionary::size() const {
+    return dict.size();
+  }
 
   // return total length of strings in the dictioanry
-  uint64_t SortedStringDictionary::length() const { return totalLength; }
+  uint64_t SortedStringDictionary::length() const {
+    return totalLength;
+  }
 
   void SortedStringDictionary::clear() {
     totalLength = 0;

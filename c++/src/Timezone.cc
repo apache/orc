@@ -54,7 +54,9 @@ namespace orc {
   /**
    * Is the given year a leap year?
    */
-  bool isLeap(int64_t year) { return (year % 4 == 0) && ((year % 100 != 0) || (year % 400 == 0)); }
+  bool isLeap(int64_t year) {
+    return (year % 4 == 0) && ((year % 100 != 0) || (year % 400 == 0));
+  }
 
   /**
    * Find the position that is the closest and less than or equal to the
@@ -243,7 +245,9 @@ namespace orc {
     // PASS
   }
 
-  bool FutureRuleImpl::isDefined() const { return ruleString.size() > 0; }
+  bool FutureRuleImpl::isDefined() const {
+    return ruleString.size() > 0;
+  }
 
   const TimezoneVariant& FutureRuleImpl::getVariant(int64_t clk) const {
     if (!hasDst) {

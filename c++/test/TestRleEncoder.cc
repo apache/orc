@@ -50,7 +50,9 @@ namespace orc {
                  bool isSigned, uint64_t numNulls = 0);
   };
 
-  void RleTest::SetUp() { alignBitpacking = GetParam(); }
+  void RleTest::SetUp() {
+    alignBitpacking = GetParam();
+  }
 
   void generateData(uint64_t numValues, int64_t start, int64_t delta, bool random, int64_t* data,
                     uint64_t numNulls = 0, char* notNull = nullptr) {
@@ -155,9 +157,13 @@ namespace orc {
     runTest(RleVersion_1, 1024, 100, -3, false, true, 500);
   }
 
-  TEST_P(RleTest, rRleV1_andom_sequance_signed) { runTest(RleVersion_1, 1024, 0, 0, true, true); }
+  TEST_P(RleTest, rRleV1_andom_sequance_signed) {
+    runTest(RleVersion_1, 1024, 0, 0, true, true);
+  }
 
-  TEST_P(RleTest, RleV1_all_null) { runTest(RleVersion_1, 1024, 100, -3, false, true, 1024); }
+  TEST_P(RleTest, RleV1_all_null) {
+    runTest(RleVersion_1, 1024, 100, -3, false, true, 1024);
+  }
 
   TEST_P(RleTest, RleV2_delta_increasing_sequance_unsigned) {
     runTest(RleVersion_2, 1024, 0, 1, false, false);
@@ -179,15 +185,25 @@ namespace orc {
     runTest(RleVersion_2, 1024, 100, -3, false, true, 500);
   }
 
-  TEST_P(RleTest, RleV2_random_sequance_signed) { runTest(RleVersion_2, 1024, 0, 0, true, true); }
+  TEST_P(RleTest, RleV2_random_sequance_signed) {
+    runTest(RleVersion_2, 1024, 0, 0, true, true);
+  }
 
-  TEST_P(RleTest, RleV2_all_null) { runTest(RleVersion_2, 1024, 100, -3, false, true, 1024); }
+  TEST_P(RleTest, RleV2_all_null) {
+    runTest(RleVersion_2, 1024, 100, -3, false, true, 1024);
+  }
 
-  TEST_P(RleTest, RleV2_delta_zero_unsigned) { runTest(RleVersion_2, 1024, 123, 0, false, false); }
+  TEST_P(RleTest, RleV2_delta_zero_unsigned) {
+    runTest(RleVersion_2, 1024, 123, 0, false, false);
+  }
 
-  TEST_P(RleTest, RleV2_delta_zero_signed) { runTest(RleVersion_2, 1024, 123, 0, false, true); }
+  TEST_P(RleTest, RleV2_delta_zero_signed) {
+    runTest(RleVersion_2, 1024, 123, 0, false, true);
+  }
 
-  TEST_P(RleTest, RleV2_short_repeat) { runTest(RleVersion_2, 8, 123, 0, false, false); }
+  TEST_P(RleTest, RleV2_short_repeat) {
+    runTest(RleVersion_2, 8, 123, 0, false, false);
+  }
 
   TEST_P(RleTest, RleV2_short_repeat_example) {
     int64_t data[5] = {10000, 10000, 10000, 10000, 10000};

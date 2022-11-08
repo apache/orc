@@ -29,9 +29,13 @@ namespace orc {
     // PASS
   }
 
-  const std::vector<PredicateLeaf>& SearchArgumentImpl::getLeaves() const { return mLeaves; }
+  const std::vector<PredicateLeaf>& SearchArgumentImpl::getLeaves() const {
+    return mLeaves;
+  }
 
-  const ExpressionTree* SearchArgumentImpl::getExpression() const { return mExpressionTree.get(); }
+  const ExpressionTree* SearchArgumentImpl::getExpression() const {
+    return mExpressionTree.get();
+  }
 
   TruthValue SearchArgumentImpl::evaluate(const std::vector<TruthValue>& leaves) const {
     return mExpressionTree == nullptr ? TruthValue::YES : mExpressionTree->evaluate(leaves);

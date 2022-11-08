@@ -69,7 +69,9 @@ namespace orc {
     throw NotImplementedYet("WriteAliasedRaw is not supported.");
   }
 
-  bool BufferedOutputStream::AllowsAliasing() const { return false; }
+  bool BufferedOutputStream::AllowsAliasing() const {
+    return false;
+  }
 
   std::string BufferedOutputStream::getName() const {
     std::ostringstream result;
@@ -77,7 +79,9 @@ namespace orc {
     return result.str();
   }
 
-  uint64_t BufferedOutputStream::getSize() const { return dataBuffer->size(); }
+  uint64_t BufferedOutputStream::getSize() const {
+    return dataBuffer->size();
+  }
 
   uint64_t BufferedOutputStream::flush() {
     uint64_t dataSize = dataBuffer->size();
@@ -90,7 +94,9 @@ namespace orc {
     return dataSize;
   }
 
-  void BufferedOutputStream::suppress() { dataBuffer->resize(0); }
+  void BufferedOutputStream::suppress() {
+    dataBuffer->resize(0);
+  }
 
   void AppendOnlyBufferedStream::write(const char* data, size_t size) {
     size_t dataOffset = 0;
@@ -109,7 +115,9 @@ namespace orc {
     }
   }
 
-  uint64_t AppendOnlyBufferedStream::getSize() const { return outStream->getSize(); }
+  uint64_t AppendOnlyBufferedStream::getSize() const {
+    return outStream->getSize();
+  }
 
   uint64_t AppendOnlyBufferedStream::flush() {
     outStream->BackUp(bufferLength - bufferOffset);

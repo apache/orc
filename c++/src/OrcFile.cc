@@ -91,7 +91,9 @@ namespace orc {
     const std::string& getName() const override { return filename; }
   };
 
-  FileInputStream::~FileInputStream() { close(file); }
+  FileInputStream::~FileInputStream() {
+    close(file);
+  }
 
   std::unique_ptr<InputStream> readFile(const std::string& path, ReaderMetrics* metrics) {
 #ifdef BUILD_LIBHDFSPP

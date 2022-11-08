@@ -284,7 +284,9 @@ namespace orc {
     return strm.total_out;
   }
 
-  std::string ZlibCompressionStream::getName() const { return "ZlibCompressionStream"; }
+  std::string ZlibCompressionStream::getName() const {
+    return "ZlibCompressionStream";
+  }
 
   DIAGNOSTIC_PUSH
 
@@ -303,7 +305,9 @@ namespace orc {
     }
   }
 
-  void ZlibCompressionStream::end() { (void)deflateEnd(&strm); }
+  void ZlibCompressionStream::end() {
+    (void)deflateEnd(&strm);
+  }
 
   DIAGNOSTIC_PUSH
 
@@ -410,7 +414,9 @@ namespace orc {
         bytesReturned(0),
         metrics(_metrics) {}
 
-  std::string DecompressionStream::getStreamName() const { return input->getName(); }
+  std::string DecompressionStream::getStreamName() const {
+    return input->getName();
+  }
 
   void DecompressionStream::readBuffer(bool failOnEof) {
     SCOPED_MINUS_STOPWATCH(metrics, DecompressionLatencyUs);
@@ -516,7 +522,9 @@ namespace orc {
     bytesReturned -= count;
   }
 
-  int64_t DecompressionStream::ByteCount() const { return bytesReturned; }
+  int64_t DecompressionStream::ByteCount() const {
+    return bytesReturned;
+  }
 
   bool DecompressionStream::Skip(int count) {
     bytesReturned += count;

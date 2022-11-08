@@ -51,7 +51,9 @@ namespace orc {
     return ret;
   }
 
-  inline int64_t RleDecoderV2::readVslong() { return unZigZag(readVulong()); }
+  inline int64_t RleDecoderV2::readVslong() {
+    return unZigZag(readVulong());
+  }
 
   uint64_t RleDecoderV2::readVulong() {
     uint64_t ret = 0, b;
