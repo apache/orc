@@ -45,7 +45,7 @@ namespace orc {
         size_t group = std::min(static_cast<size_t>(18), length - posn);
         int64_t chunk = std::stoll(str.substr(posn, group));
         int64_t multiple = 1;
-        for(size_t i=0; i < group; ++i) {
+        for (size_t i = 0; i < group; ++i) {
           multiple *= 10;
         }
         *this *= multiple;
@@ -58,7 +58,7 @@ namespace orc {
     }
   }
 
-  Int128& Int128::operator*=(const Int128 &right) {
+  Int128& Int128::operator*=(const Int128& right) {
     const uint64_t INT_MASK = 0xffffffff;
     const uint64_t CARRY_BIT = INT_MASK + 1;
 
@@ -100,7 +100,7 @@ namespace orc {
    * @param wasNegative a flag for whether the value was original negative
    * @result the output length of the array
    */
-  int64_t Int128::fillInArray(uint32_t* array, bool &wasNegative) const {
+  int64_t Int128::fillInArray(uint32_t* array, bool& wasNegative) const {
     uint64_t high;
     uint64_t low;
     if (highbits < 0) {
@@ -140,7 +140,6 @@ namespace orc {
     }
   }
 
-
   /**
    * Find last set bit in a 32 bit integer. Bit 1 is the LSB and bit 32 is
    * the MSB. We can replace this with bsrq asm instruction on x64.
@@ -162,10 +161,10 @@ namespace orc {
    */
   void shiftArrayLeft(uint32_t* array, int64_t length, int64_t bits) {
     if (length > 0 && bits != 0) {
-      for(int64_t i=0; i < length-1; ++i) {
-        array[i] = (array[i] << bits) | (array[i+1] >> (32 - bits));
+      for (int64_t i = 0; i < length - 1; ++i) {
+        array[i] = (array[i] << bits) | (array[i + 1] >> (32 - bits));
       }
-      array[length-1] <<= bits;
+      array[length - 1] <<= bits;
     }
   }
 
@@ -177,8 +176,8 @@ namespace orc {
    */
   void shiftArrayRight(uint32_t* array, int64_t length, int64_t bits) {
     if (length > 0 && bits != 0) {
-      for(int64_t i=length-1; i > 0; --i) {
-        array[i] = (array[i] >> bits) | (array[i-1] << (32 - bits));
+      for (int64_t i = length - 1; i > 0; --i) {
+        array[i] = (array[i] >> bits) | (array[i - 1] << (32 - bits));
       }
       array[0] >>= bits;
     }
@@ -188,8 +187,8 @@ namespace orc {
    * Fix the signs of the result and remainder at the end of the division
    * based on the signs of the dividend and divisor.
    */
-  void fixDivisionSigns(Int128 &result, Int128 &remainder,
-                        bool dividendWasNegative, bool divisorWasNegative) {
+  void fixDivisionSigns(Int128& result, Int128& remainder, bool dividendWasNegative,
+                        bool divisorWasNegative) {
     if (dividendWasNegative != divisorWasNegative) {
       result.negate();
     }
@@ -203,44 +202,42 @@ namespace orc {
    */
   void buildFromArray(Int128& value, uint32_t* array, int64_t length) {
     switch (length) {
-    case 0:
-      value = 0;
-      break;
-    case 1:
-      value = array[0];
-      break;
-    case 2:
-      value = Int128(0, (static_cast<uint64_t>(array[0]) << 32) + array[1]);
-      break;
-    case 3:
-      value = Int128(array[0],
-                     (static_cast<uint64_t>(array[1]) << 32) + array[2]);
-      break;
-    case 4:
-      value = Int128((static_cast<int64_t>(array[0]) << 32) + array[1],
-                     (static_cast<uint64_t>(array[2]) << 32) + array[3]);
-      break;
-    case 5:
-      if (array[0] != 0) {
-        throw std::logic_error("Can't build Int128 with 5 ints.");
-      }
-      value = Int128((static_cast<int64_t>(array[1]) << 32) + array[2],
-                     (static_cast<uint64_t>(array[3]) << 32) + array[4]);
-      break;
-    default:
-      throw std::logic_error("Unsupported length for building Int128");
+      case 0:
+        value = 0;
+        break;
+      case 1:
+        value = array[0];
+        break;
+      case 2:
+        value = Int128(0, (static_cast<uint64_t>(array[0]) << 32) + array[1]);
+        break;
+      case 3:
+        value = Int128(array[0], (static_cast<uint64_t>(array[1]) << 32) + array[2]);
+        break;
+      case 4:
+        value = Int128((static_cast<int64_t>(array[0]) << 32) + array[1],
+                       (static_cast<uint64_t>(array[2]) << 32) + array[3]);
+        break;
+      case 5:
+        if (array[0] != 0) {
+          throw std::logic_error("Can't build Int128 with 5 ints.");
+        }
+        value = Int128((static_cast<int64_t>(array[1]) << 32) + array[2],
+                       (static_cast<uint64_t>(array[3]) << 32) + array[4]);
+        break;
+      default:
+        throw std::logic_error("Unsupported length for building Int128");
     }
   }
 
   /**
    * Do a division where the divisor fits into a single 32 bit value.
    */
-  Int128 singleDivide(uint32_t* dividend, int64_t dividendLength,
-                      uint32_t divisor, Int128& remainder,
-                      bool dividendWasNegative, bool divisorWasNegative) {
+  Int128 singleDivide(uint32_t* dividend, int64_t dividendLength, uint32_t divisor,
+                      Int128& remainder, bool dividendWasNegative, bool divisorWasNegative) {
     uint64_t r = 0;
     uint32_t resultArray[5];
-    for(int64_t j=0; j < dividendLength; j++) {
+    for (int64_t j = 0; j < dividendLength; j++) {
       r <<= 32;
       r += dividend[j];
       resultArray[j] = static_cast<uint32_t>(r / divisor);
@@ -249,12 +246,11 @@ namespace orc {
     Int128 result;
     buildFromArray(result, resultArray, dividendLength);
     remainder = static_cast<int64_t>(r);
-    fixDivisionSigns(result, remainder, dividendWasNegative,
-                     divisorWasNegative);
+    fixDivisionSigns(result, remainder, dividendWasNegative, divisorWasNegative);
     return result;
   }
 
-  Int128 Int128::divide(const Int128 &divisor, Int128 &remainder) const {
+  Int128 Int128::divide(const Int128& divisor, Int128& remainder) const {
     // Split the dividend and divisor into integer pieces so that we can
     // work on them.
     uint32_t dividendArray[5];
@@ -263,7 +259,7 @@ namespace orc {
     bool divisorWasNegative;
     // leave an extra zero before the dividend
     dividendArray[0] = 0;
-    int64_t dividendLength = fillInArray(dividendArray + 1, dividendWasNegative)+1;
+    int64_t dividendLength = fillInArray(dividendArray + 1, dividendWasNegative) + 1;
     int64_t divisorLength = divisor.fillInArray(divisorArray, divisorWasNegative);
 
     // Handle some of the easy cases.
@@ -273,8 +269,8 @@ namespace orc {
     } else if (divisorLength == 0) {
       throw std::range_error("Division by 0 in Int128");
     } else if (divisorLength == 1) {
-      return singleDivide(dividendArray, dividendLength, divisorArray[0],
-                          remainder, dividendWasNegative, divisorWasNegative);
+      return singleDivide(dividendArray, dividendLength, divisorArray[0], remainder,
+                          dividendWasNegative, divisorWasNegative);
     }
 
     int64_t resultLength = dividendLength - divisorLength;
@@ -288,11 +284,10 @@ namespace orc {
     shiftArrayLeft(dividendArray, dividendLength, normalizeBits);
 
     // compute each digit in the result
-    for(int64_t j=0; j < resultLength; ++j) {
+    for (int64_t j = 0; j < resultLength; ++j) {
       // Guess the next digit. At worst it is two too large
       uint32_t guess = UINT32_MAX;
-      uint64_t highDividend = static_cast<uint64_t>(dividendArray[j]) << 32 |
-        dividendArray[j+1];
+      uint64_t highDividend = static_cast<uint64_t>(dividendArray[j]) << 32 | dividendArray[j + 1];
       if (dividendArray[j] != divisorArray[0]) {
         guess = static_cast<uint32_t>(highDividend / divisorArray[0]);
       }
@@ -300,10 +295,9 @@ namespace orc {
       // catch all of the cases where guess is two too large and most of the
       // cases where it is one too large
       uint32_t rhat =
-        static_cast<uint32_t>(highDividend - guess *
-                              static_cast<uint64_t>(divisorArray[0]));
+          static_cast<uint32_t>(highDividend - guess * static_cast<uint64_t>(divisorArray[0]));
       while (static_cast<uint64_t>(divisorArray[1]) * guess >
-             (static_cast<uint64_t>(rhat) << 32) + dividendArray[j+2]) {
+             (static_cast<uint64_t>(rhat) << 32) + dividendArray[j + 2]) {
         guess -= 1;
         rhat += divisorArray[0];
         if (static_cast<uint64_t>(rhat) < divisorArray[0]) {
@@ -313,12 +307,12 @@ namespace orc {
 
       // subtract off the guess * divisor from the dividend
       uint64_t mult = 0;
-      for(int64_t i=divisorLength-1; i >= 0; --i) {
+      for (int64_t i = divisorLength - 1; i >= 0; --i) {
         mult += static_cast<uint64_t>(guess) * divisorArray[i];
-        uint32_t prev = dividendArray[j+i+1];
-        dividendArray[j+i+1] -= static_cast<uint32_t>(mult);
+        uint32_t prev = dividendArray[j + i + 1];
+        dividendArray[j + i + 1] -= static_cast<uint32_t>(mult);
         mult >>= 32;
-        if (dividendArray[j+i+1] > prev) {
+        if (dividendArray[j + i + 1] > prev) {
           mult += 1;
         }
       }
@@ -329,10 +323,9 @@ namespace orc {
       if (dividendArray[j] > prev) {
         guess -= 1;
         uint32_t carry = 0;
-        for(int64_t i=divisorLength-1; i >= 0; --i) {
-          uint64_t sum = static_cast<uint64_t>(divisorArray[i]) +
-            dividendArray[j+i+1] + carry;
-          dividendArray[j+i+1] = static_cast<uint32_t>(sum);
+        for (int64_t i = divisorLength - 1; i >= 0; --i) {
+          uint64_t sum = static_cast<uint64_t>(divisorArray[i]) + dividendArray[j + i + 1] + carry;
+          dividendArray[j + i + 1] = static_cast<uint32_t>(sum);
           carry = static_cast<uint32_t>(sum >> 32);
         }
         dividendArray[j] += carry;
@@ -348,8 +341,7 @@ namespace orc {
     Int128 result;
     buildFromArray(result, resultArray, resultLength);
     buildFromArray(remainder, dividendArray, dividendLength);
-    fixDivisionSigns(result, remainder,
-                     dividendWasNegative, divisorWasNegative);
+    fixDivisionSigns(result, remainder, dividendWasNegative, divisorWasNegative);
     return result;
   }
 
@@ -400,8 +392,7 @@ namespace orc {
       int32_t len = static_cast<int32_t>(str.length());
       if (len - 1 > scale) {
         result = str.substr(0, static_cast<size_t>(len - scale)) + "." +
-                 str.substr(static_cast<size_t>(len - scale),
-                            static_cast<size_t>(len));
+                 str.substr(static_cast<size_t>(len - scale), static_cast<size_t>(len));
       } else if (len - 1 == scale) {
         result = "-0." + str.substr(1, std::string::npos);
       } else {
@@ -415,8 +406,7 @@ namespace orc {
       int32_t len = static_cast<int32_t>(str.length());
       if (len > scale) {
         result = str.substr(0, static_cast<size_t>(len - scale)) + "." +
-                 str.substr(static_cast<size_t>(len - scale),
-                            static_cast<size_t>(len));
+                 str.substr(static_cast<size_t>(len - scale), static_cast<size_t>(len));
       } else if (len == scale) {
         result = "0." + str;
       } else {
@@ -440,37 +430,33 @@ namespace orc {
 
   std::string Int128::toHexString() const {
     std::stringstream buf;
-    buf << std::hex << "0x"
-        << std::setw(16) << std::setfill('0') << highbits
-        << std::setw(16) << std::setfill('0') << lowbits;
+    buf << std::hex << "0x" << std::setw(16) << std::setfill('0') << highbits << std::setw(16)
+        << std::setfill('0') << lowbits;
     return buf.str();
   }
 
   const static int32_t MAX_PRECISION_64 = 18;
-  const static int64_t POWERS_OF_TEN[MAX_PRECISION_64 + 1] =
-    {1,
-     10,
-     100,
-     1000,
-     10000,
-     100000,
-     1000000,
-     10000000,
-     100000000,
-     1000000000,
-     10000000000,
-     100000000000,
-     1000000000000,
-     10000000000000,
-     100000000000000,
-     1000000000000000,
-     10000000000000000,
-     100000000000000000,
-     1000000000000000000};
+  const static int64_t POWERS_OF_TEN[MAX_PRECISION_64 + 1] = {1,
+                                                              10,
+                                                              100,
+                                                              1000,
+                                                              10000,
+                                                              100000,
+                                                              1000000,
+                                                              10000000,
+                                                              100000000,
+                                                              1000000000,
+                                                              10000000000,
+                                                              100000000000,
+                                                              1000000000000,
+                                                              10000000000000,
+                                                              100000000000000,
+                                                              1000000000000000,
+                                                              10000000000000000,
+                                                              100000000000000000,
+                                                              1000000000000000000};
 
-  Int128 scaleUpInt128ByPowerOfTen(Int128 value,
-                                   int32_t power,
-                                   bool &overflow) {
+  Int128 scaleUpInt128ByPowerOfTen(Int128 value, int32_t power, bool& overflow) {
     overflow = false;
     Int128 remainder;
 
@@ -479,7 +465,8 @@ namespace orc {
       if (value > 0 && Int128::maximumValue().divide(POWERS_OF_TEN[step], remainder) < value) {
         overflow = true;
         return Int128::maximumValue();
-      } else if (value < 0 && Int128::minimumValue().divide(POWERS_OF_TEN[step], remainder) > value) {
+      } else if (value < 0 &&
+                 Int128::minimumValue().divide(POWERS_OF_TEN[step], remainder) > value) {
         overflow = true;
         return Int128::minimumValue();
       }
@@ -501,4 +488,4 @@ namespace orc {
     return value;
   }
 
-}
+}  // namespace orc

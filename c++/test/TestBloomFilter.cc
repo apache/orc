@@ -60,23 +60,23 @@ namespace orc {
 
     // set every non-9th bit
     for (uint64_t l = 8; l < 16; ++l) {
-      for(uint64_t b = 0; b < 8; ++b) {
+      for (uint64_t b = 0; b < 8; ++b) {
         if (b != l - 8) {
           bitset.set(l * 8 + b);
         }
       }
     }
 
-    for(uint64_t b = 0; b < 64; ++b) {
+    for (uint64_t b = 0; b < 64; ++b) {
       EXPECT_EQ(b % 9 == 0, bitset.get(b));
     }
 
-    for(uint64_t b = 64; b < 128; ++b) {
+    for (uint64_t b = 64; b < 128; ++b) {
       EXPECT_EQ((b % 8) != (b - 64) / 8, bitset.get(b));
     }
 
     // test that the longs are mapped correctly
-    const uint64_t * longs = bitset.getData();
+    const uint64_t* longs = bitset.getData();
     EXPECT_EQ(128, bitset.bitSize());
     EXPECT_EQ(0x8040201008040201L, longs[0]);
     EXPECT_EQ(~0x8040201008040201L, longs[1]);
@@ -174,7 +174,7 @@ namespace orc {
     bloomFilter.addDouble(1.1);
     CheckBitSet(bloomFilter, 522, 692, 12, 370, 753);
     bloomFilter.addDouble(11.11);
-    CheckBitSet(bloomFilter,  210, 188, 89, 720, 389);
+    CheckBitSet(bloomFilter, 210, 188, 89, 720, 389);
     bloomFilter.addDouble(111.111);
     CheckBitSet(bloomFilter, 831, 252, 583, 500, 335);
     bloomFilter.addDouble(1111.1111);
@@ -202,16 +202,13 @@ namespace orc {
 
     // test strings
     bloomFilter.reset();
-    const char * emptyStr = "";
-    const char * enStr = "english";
-    const char * cnStr = "中国字";
+    const char* emptyStr = "";
+    const char* enStr = "english";
+    const char* cnStr = "中国字";
 
-    EXPECT_FALSE(bloomFilter.testBytes(emptyStr,
-                                       static_cast<int64_t>(strlen(emptyStr))));
-    EXPECT_FALSE(bloomFilter.testBytes(enStr,
-                                       static_cast<int64_t>(strlen(enStr))));
-    EXPECT_FALSE(bloomFilter.testBytes(cnStr,
-                                       static_cast<int64_t>(strlen(cnStr))));
+    EXPECT_FALSE(bloomFilter.testBytes(emptyStr, static_cast<int64_t>(strlen(emptyStr))));
+    EXPECT_FALSE(bloomFilter.testBytes(enStr, static_cast<int64_t>(strlen(enStr))));
+    EXPECT_FALSE(bloomFilter.testBytes(cnStr, static_cast<int64_t>(strlen(cnStr))));
 
     bloomFilter.addBytes(emptyStr, static_cast<int64_t>(strlen(emptyStr)));
     CheckBitSet(bloomFilter, 656, 807, 480, 151, 304);
@@ -220,12 +217,9 @@ namespace orc {
     bloomFilter.addBytes(cnStr, static_cast<int64_t>(strlen(cnStr)));
     CheckBitSet(bloomFilter, 602, 636, 44, 362, 318);
 
-    EXPECT_TRUE(bloomFilter.testBytes(emptyStr,
-                                      static_cast<int64_t>(strlen(emptyStr))));
-    EXPECT_TRUE(bloomFilter.testBytes(enStr,
-                                      static_cast<int64_t>(strlen(enStr))));
-    EXPECT_TRUE(bloomFilter.testBytes(cnStr,
-                                      static_cast<int64_t>(strlen(cnStr))));
+    EXPECT_TRUE(bloomFilter.testBytes(emptyStr, static_cast<int64_t>(strlen(emptyStr))));
+    EXPECT_TRUE(bloomFilter.testBytes(enStr, static_cast<int64_t>(strlen(enStr))));
+    EXPECT_TRUE(bloomFilter.testBytes(cnStr, static_cast<int64_t>(strlen(cnStr))));
   }
 
   TEST(TestBloomFilter, testBloomFilterSerialization) {
@@ -255,7 +249,7 @@ namespace orc {
 
     // deserialize
     std::unique_ptr<BloomFilter> dstBloomFilter = BloomFilterUTF8Utils::deserialize(
-      proto::Stream_Kind_BLOOM_FILTER_UTF8, encoding, pbBloomFilter);
+        proto::Stream_Kind_BLOOM_FILTER_UTF8, encoding, pbBloomFilter);
 
     EXPECT_TRUE(srcBloomFilter == dynamic_cast<BloomFilterImpl&>(*dstBloomFilter));
     EXPECT_TRUE(dstBloomFilter->testLong(1));
@@ -269,4 +263,4 @@ namespace orc {
     EXPECT_TRUE(dstBloomFilter->testLong(-1111));
   }
 
-}
+}  // namespace orc

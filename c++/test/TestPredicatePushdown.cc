@@ -16,26 +16,26 @@
  * limitations under the License.
  */
 
-#include "orc/OrcFile.hh"
-#include "orc/sargs/SearchArgument.hh"
 #include "MemoryInputStream.hh"
 #include "MemoryOutputStream.hh"
+#include "orc/OrcFile.hh"
+#include "orc/sargs/SearchArgument.hh"
 #include "wrap/gtest-wrapper.h"
 
 namespace orc {
 
-  static const int DEFAULT_MEM_STREAM_SIZE = 10 * 1024 * 1024; // 10M
+  static const int DEFAULT_MEM_STREAM_SIZE = 10 * 1024 * 1024;  // 10M
 
   void createMemTestFile(MemoryOutputStream& memStream, uint64_t rowIndexStride) {
-    MemoryPool * pool = getDefaultPool();
-    auto type = std::unique_ptr<Type>(Type::buildTypeFromString(
-      "struct<int1:bigint,string1:string>"));
+    MemoryPool* pool = getDefaultPool();
+    auto type =
+        std::unique_ptr<Type>(Type::buildTypeFromString("struct<int1:bigint,string1:string>"));
     WriterOptions options;
     options.setStripeSize(1024 * 1024)
-      .setCompressionBlockSize(1024)
-      .setCompression(CompressionKind_NONE)
-      .setMemoryPool(pool)
-      .setRowIndexStride(rowIndexStride);
+        .setCompressionBlockSize(1024)
+        .setCompression(CompressionKind_NONE)
+        .setMemoryPool(pool)
+        .setRowIndexStride(rowIndexStride);
 
     auto writer = createWriter(*type, &memStream, options);
     auto batch = writer->createRowBatch(3500);
@@ -73,27 +73,26 @@ namespace orc {
     for (int k = 0; k < 2; ++k) {
       std::unique_ptr<SearchArgument> sarg;
       if (k == 0) {
-        sarg = SearchArgumentFactory::newBuilder()
-          ->startAnd()
-          .startNot()
-          .lessThan("int1", PredicateDataType::LONG,
-                    Literal(static_cast<int64_t>(300000L)))
-          .end()
-          .lessThan("int1", PredicateDataType::LONG,
-                    Literal(static_cast<int64_t>(600000L)))
-          .end()
-          .build();
+        sarg =
+            SearchArgumentFactory::newBuilder()
+                ->startAnd()
+                .startNot()
+                .lessThan("int1", PredicateDataType::LONG, Literal(static_cast<int64_t>(300000L)))
+                .end()
+                .lessThan("int1", PredicateDataType::LONG, Literal(static_cast<int64_t>(600000L)))
+                .end()
+                .build();
       } else {
         sarg = SearchArgumentFactory::newBuilder()
-          ->startAnd()
-          .startNot()
-          .lessThan(/*columnId=*/1, PredicateDataType::LONG,
-                    Literal(static_cast<int64_t>(300000L)))
-          .end()
-          .lessThan(/*columnId=*/1, PredicateDataType::LONG,
-                    Literal(static_cast<int64_t>(600000L)))
-          .end()
-          .build();
+                   ->startAnd()
+                   .startNot()
+                   .lessThan(/*columnId=*/1, PredicateDataType::LONG,
+                             Literal(static_cast<int64_t>(300000L)))
+                   .end()
+                   .lessThan(/*columnId=*/1, PredicateDataType::LONG,
+                             Literal(static_cast<int64_t>(600000L)))
+                   .end()
+                   .build();
       }
 
       RowReaderOptions rowReaderOpts;
@@ -111,7 +110,7 @@ namespace orc {
       for (uint64_t i = 1000; i < 2000; ++i) {
         EXPECT_EQ(300 * i, batch1.data[i - 1000]);
         EXPECT_EQ(std::to_string(10 * i),
-          std::string(batch2.data[i - 1000], static_cast<size_t>(batch2.length[i - 1000])));
+                  std::string(batch2.data[i - 1000], static_cast<size_t>(batch2.length[i - 1000])));
       }
       EXPECT_EQ(false, rowReader->next(*readBatch));
       EXPECT_EQ(3500, rowReader->getRowNumber());
@@ -125,18 +124,17 @@ namespace orc {
       std::unique_ptr<SearchArgument> sarg;
       if (i == 0) {
         sarg = SearchArgumentFactory::newBuilder()
-          ->startAnd()
-          .lessThan("int1", PredicateDataType::LONG,
-                    Literal(static_cast<int64_t>(0)))
-          .end()
-          .build();
+                   ->startAnd()
+                   .lessThan("int1", PredicateDataType::LONG, Literal(static_cast<int64_t>(0)))
+                   .end()
+                   .build();
       } else {
-        sarg = SearchArgumentFactory::newBuilder()
-          ->startAnd()
-          .lessThan(/*columnId=*/1, PredicateDataType::LONG,
-                    Literal(static_cast<int64_t>(0)))
-          .end()
-          .build();
+        sarg =
+            SearchArgumentFactory::newBuilder()
+                ->startAnd()
+                .lessThan(/*columnId=*/1, PredicateDataType::LONG, Literal(static_cast<int64_t>(0)))
+                .end()
+                .build();
       }
 
       RowReaderOptions rowReaderOpts;
@@ -155,27 +153,27 @@ namespace orc {
     for (int k = 0; k < 2; ++k) {
       std::unique_ptr<SearchArgument> sarg;
       if (k == 0) {
-        sarg = SearchArgumentFactory::newBuilder()
-          ->startOr()
-          .lessThan("int1", PredicateDataType::LONG,
-                    Literal(static_cast<int64_t>(300 * 100)))
-          .startNot()
-          .lessThan("int1", PredicateDataType::LONG,
-                    Literal(static_cast<int64_t>(300 * 3400)))
-          .end()
-          .end()
-          .build();
+        sarg =
+            SearchArgumentFactory::newBuilder()
+                ->startOr()
+                .lessThan("int1", PredicateDataType::LONG, Literal(static_cast<int64_t>(300 * 100)))
+                .startNot()
+                .lessThan("int1", PredicateDataType::LONG,
+                          Literal(static_cast<int64_t>(300 * 3400)))
+                .end()
+                .end()
+                .build();
       } else {
         sarg = SearchArgumentFactory::newBuilder()
-          ->startOr()
-          .lessThan(/*columnId=*/1, PredicateDataType::LONG,
-                    Literal(static_cast<int64_t>(300 * 100)))
-          .startNot()
-          .lessThan(/*columnId=*/1, PredicateDataType::LONG,
-                    Literal(static_cast<int64_t>(300 * 3400)))
-          .end()
-          .end()
-          .build();
+                   ->startOr()
+                   .lessThan(/*columnId=*/1, PredicateDataType::LONG,
+                             Literal(static_cast<int64_t>(300 * 100)))
+                   .startNot()
+                   .lessThan(/*columnId=*/1, PredicateDataType::LONG,
+                             Literal(static_cast<int64_t>(300 * 3400)))
+                   .end()
+                   .end()
+                   .build();
       }
 
       RowReaderOptions rowReaderOpts;
@@ -227,10 +225,10 @@ namespace orc {
     // Build search argument (x < 300000) for column 'int1'. Only the first row group
     // will be selected. It has 1000 rows: (0, "0"), (300, "10"), (600, "20"), ...,
     // (299700, "9990").
-    std::unique_ptr<SearchArgument> sarg = SearchArgumentFactory::newBuilder()
-        ->lessThan("int1", PredicateDataType::LONG,
-                   Literal(static_cast<int64_t>(300000)))
-        .build();
+    std::unique_ptr<SearchArgument> sarg =
+        SearchArgumentFactory::newBuilder()
+            ->lessThan("int1", PredicateDataType::LONG, Literal(static_cast<int64_t>(300000)))
+            .build();
     RowReaderOptions rowReaderOpts;
     rowReaderOpts.searchArgument(std::move(sarg));
     auto rowReader = reader->createRowReader(rowReaderOpts);
@@ -262,16 +260,15 @@ namespace orc {
   void TestMultipleSeeksWithPredicates(Reader* reader) {
     // Build search argument (x >= 300000 AND x < 600000) for column 'int1'. Only the 2nd
     // row group will be selected.
-    std::unique_ptr<SearchArgument> sarg = SearchArgumentFactory::newBuilder()
-        ->startAnd()
-        .startNot()
-        .lessThan("int1", PredicateDataType::LONG,
-                  Literal(static_cast<int64_t>(300000L)))
-        .end()
-        .lessThan("int1", PredicateDataType::LONG,
-                  Literal(static_cast<int64_t>(600000L)))
-        .end()
-        .build();
+    std::unique_ptr<SearchArgument> sarg =
+        SearchArgumentFactory::newBuilder()
+            ->startAnd()
+            .startNot()
+            .lessThan("int1", PredicateDataType::LONG, Literal(static_cast<int64_t>(300000L)))
+            .end()
+            .lessThan("int1", PredicateDataType::LONG, Literal(static_cast<int64_t>(600000L)))
+            .end()
+            .build();
     RowReaderOptions rowReaderOpts;
     rowReaderOpts.searchArgument(std::move(sarg));
     auto rowReader = reader->createRowReader(rowReaderOpts);
@@ -313,8 +310,8 @@ namespace orc {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
     createMemTestFile(memStream, 1000);
-    std::unique_ptr<InputStream> inStream(new MemoryInputStream (
-      memStream.getData(), memStream.getLength()));
+    std::unique_ptr<InputStream> inStream(
+        new MemoryInputStream(memStream.getData(), memStream.getLength()));
     ReaderOptions readerOptions;
     readerOptions.setMemoryPool(*pool);
     std::unique_ptr<Reader> reader = createReader(std::move(inStream), readerOptions);
@@ -337,10 +334,10 @@ namespace orc {
     if (createSarg) {
       // Build search argument x < 300000 for column 'int1'. All rows will be selected
       // since there are no row indexes in the file.
-      std::unique_ptr<SearchArgument> sarg = SearchArgumentFactory::newBuilder()
-          ->lessThan("int1", PredicateDataType::LONG,
-                     Literal(static_cast<int64_t>(300000L)))
-          .build();
+      std::unique_ptr<SearchArgument> sarg =
+          SearchArgumentFactory::newBuilder()
+              ->lessThan("int1", PredicateDataType::LONG, Literal(static_cast<int64_t>(300000L)))
+              .build();
       rowReaderOpts.searchArgument(std::move(sarg));
     }
     auto rowReader = reader->createRowReader(rowReaderOpts);
@@ -375,8 +372,8 @@ namespace orc {
     MemoryPool* pool = getDefaultPool();
     // Create the file with rowIndexStride=0, so there are no row groups or row indexes.
     createMemTestFile(memStream, 0);
-    std::unique_ptr<InputStream> inStream(new MemoryInputStream (
-      memStream.getData(), memStream.getLength()));
+    std::unique_ptr<InputStream> inStream(
+        new MemoryInputStream(memStream.getData(), memStream.getLength()));
     ReaderOptions readerOptions;
     readerOptions.setMemoryPool(*pool);
     std::unique_ptr<Reader> reader = createReader(std::move(inStream), readerOptions);
@@ -390,12 +387,11 @@ namespace orc {
   // Seeking to 'seekRowNumber' (if it's non-negative) before reads.
   void TestNoRowsSelectedWithFileStats(Reader* reader, int seekRowNumber) {
     std::unique_ptr<SearchArgument> sarg =
-      SearchArgumentFactory::newBuilder()
-        ->startAnd()
-        .lessThan("col1", PredicateDataType::LONG,
-                  Literal(static_cast<int64_t>(0)))
-        .end()
-        .build();
+        SearchArgumentFactory::newBuilder()
+            ->startAnd()
+            .lessThan("col1", PredicateDataType::LONG, Literal(static_cast<int64_t>(0)))
+            .end()
+            .build();
 
     RowReaderOptions rowReaderOpts;
     rowReaderOpts.searchArgument(std::move(sarg));
@@ -412,12 +408,10 @@ namespace orc {
   void TestLastStripeSelectedWithStripeStats(Reader* reader, int seekRowNumber) {
     // Sargs: col1 between 3500 and 7000. First stripe (3500 rows) will be skipped.
     std::unique_ptr<SearchArgument> sarg =
-      SearchArgumentFactory::newBuilder()
-          ->between("col1",
-                    PredicateDataType::LONG,
-                    Literal(static_cast<int64_t>(3500)),
-                    Literal(static_cast<int64_t>(7000)))
-          .build();
+        SearchArgumentFactory::newBuilder()
+            ->between("col1", PredicateDataType::LONG, Literal(static_cast<int64_t>(3500)),
+                      Literal(static_cast<int64_t>(7000)))
+            .build();
 
     RowReaderOptions rowReaderOpts;
     rowReaderOpts.searchArgument(std::move(sarg));
@@ -438,7 +432,7 @@ namespace orc {
       auto& batch0 = dynamic_cast<StructVectorBatch&>(*readBatch);
       auto& batch1 = dynamic_cast<LongVectorBatch&>(*batch0.fields[0]);
       for (uint64_t i = 0; i < 2000; ++i) {
-        EXPECT_EQ(i + 3500 , batch1.data[i]);
+        EXPECT_EQ(i + 3500, batch1.data[i]);
       }
 
       // 2nd batch of the remaining 1500 rows
@@ -447,7 +441,7 @@ namespace orc {
       EXPECT_EQ(5500, rowReader->getRowNumber());
       EXPECT_EQ(1500, readBatch->numElements);
       for (uint64_t i = 0; i < 1500; ++i) {
-        EXPECT_EQ(i + 5500 , batch1.data[i]);
+        EXPECT_EQ(i + 5500, batch1.data[i]);
       }
       // no more batches
       EXPECT_EQ(false, rowReader->next(*readBatch));
@@ -481,11 +475,10 @@ namespace orc {
 
   void TestFirstStripeSelectedWithStripeStats(Reader* reader, int seekRowNumber) {
     // Sargs: col1 < 3500. Last stripe (3500 rows) will be skipped.
-    std::unique_ptr<SearchArgument> sarg = SearchArgumentFactory::newBuilder()
-        ->lessThan("col1",
-                   PredicateDataType::LONG,
-                   Literal(static_cast<int64_t>(3500)))
-        .build();
+    std::unique_ptr<SearchArgument> sarg =
+        SearchArgumentFactory::newBuilder()
+            ->lessThan("col1", PredicateDataType::LONG, Literal(static_cast<int64_t>(3500)))
+            .build();
     RowReaderOptions rowReaderOpts;
     rowReaderOpts.searchArgument(std::move(sarg));
     auto rowReader = reader->createRowReader(rowReaderOpts);
@@ -514,15 +507,14 @@ namespace orc {
 
   TEST(TestPredicatePushdown, testStripeAndFileStats) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    MemoryPool * pool = getDefaultPool();
-    auto type = std::unique_ptr<Type>(Type::buildTypeFromString(
-      "struct<col1:bigint>"));
+    MemoryPool* pool = getDefaultPool();
+    auto type = std::unique_ptr<Type>(Type::buildTypeFromString("struct<col1:bigint>"));
     WriterOptions options;
     options.setStripeSize(1)
-      .setCompressionBlockSize(1024)
-      .setCompression(CompressionKind_NONE)
-      .setMemoryPool(pool)
-      .setRowIndexStride(1000);
+        .setCompressionBlockSize(1024)
+        .setCompression(CompressionKind_NONE)
+        .setMemoryPool(pool)
+        .setRowIndexStride(1000);
 
     auto writer = createWriter(*type, &memStream, options);
     auto batch = writer->createRowBatch(3500);
@@ -541,8 +533,8 @@ namespace orc {
       writer->add(*batch);
     }
     writer->close();
-    std::unique_ptr<InputStream> inStream(new MemoryInputStream (
-      memStream.getData(), memStream.getLength()));
+    std::unique_ptr<InputStream> inStream(
+        new MemoryInputStream(memStream.getData(), memStream.getLength()));
     ReaderOptions readerOptions;
     readerOptions.setMemoryPool(*pool);
     std::unique_ptr<Reader> reader = createReader(std::move(inStream), readerOptions);

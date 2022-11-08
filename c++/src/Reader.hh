@@ -26,20 +26,21 @@
 
 #include "ColumnReader.hh"
 #include "RLE.hh"
-#include "sargs/SargsApplier.hh"
 #include "TypeImpl.hh"
+#include "sargs/SargsApplier.hh"
 
 namespace orc {
 
   static const uint64_t DIRECTORY_SIZE_GUESS = 16 * 1024;
 
   /**
-  * WriterVersion Implementation
-  */
+   * WriterVersion Implementation
+   */
   class WriterVersionImpl {
-  private:
+   private:
     WriterVersion version;
-  public:
+
+   public:
     // Known Versions with issues resolved
     // The static method below is to fix global constructors Clang warning
     static const WriterVersionImpl& VERSION_HIVE_8732();
@@ -52,8 +53,8 @@ namespace orc {
   };
 
   /**
-  * State shared between Reader and Row Reader
-  */
+   * State shared between Reader and Row Reader
+   */
   struct FileContents {
     std::unique_ptr<InputStream> stream;
     std::unique_ptr<proto::PostScript> postscript;
@@ -61,8 +62,8 @@ namespace orc {
     std::unique_ptr<Type> schema;
     uint64_t blockSize;
     CompressionKind compression;
-    MemoryPool *pool;
-    std::ostream *errorStream;
+    MemoryPool* pool;
+    std::ostream* errorStream;
     /// Decimal64 in ORCv2 uses RLE to store values. This flag indicates whether
     /// this new encoding is used.
     bool isDecimalAsLong;
@@ -110,10 +111,10 @@ namespace orc {
     // is selected.
     bool selectParents(std::vector<bool>& selectedColumns, const Type& type);
 
-   /**
-    * Constructor that selects columns.
-    * @param contents of the file
-    */
+    /**
+     * Constructor that selects columns.
+     * @param contents of the file
+     */
     ColumnSelector(const FileContents* contents);
 
     // Select the columns from the RowReaderoptions object
@@ -123,9 +124,8 @@ namespace orc {
     void updateSelected(std::vector<bool>& selectedColumns, const ReaderOptions& options);
   };
 
-
   class RowReaderImpl : public RowReader {
-  private:
+   private:
     const Timezone& localTimezone;
 
     // contents
@@ -146,7 +146,7 @@ namespace orc {
     uint64_t previousRow;
     uint64_t firstStripe;
     uint64_t currentStripe;
-    uint64_t lastStripe; // the stripe AFTER the last one
+    uint64_t lastStripe;  // the stripe AFTER the last one
     uint64_t processingStripe;
     uint64_t currentRowInStripe;
     uint64_t rowsInCurrentStripe;
@@ -176,15 +176,12 @@ namespace orc {
     // In case of PPD, batch size should be aware of row group boundaries.
     // If only a subset of row groups are selected then the next read should
     // stop at the end of selected range.
-    static uint64_t computeBatchSize(uint64_t requestedSize,
-                                     uint64_t currentRowInStripe,
-                                     uint64_t rowsInCurrentStripe,
-                                     uint64_t rowIndexStride,
+    static uint64_t computeBatchSize(uint64_t requestedSize, uint64_t currentRowInStripe,
+                                     uint64_t rowsInCurrentStripe, uint64_t rowIndexStride,
                                      const std::vector<uint64_t>& nextSkippedRows);
 
     // Skip non-selected rows
-    static uint64_t advanceToNextRowGroup(uint64_t currentRowInStripe,
-                                          uint64_t rowsInCurrentStripe,
+    static uint64_t advanceToNextRowGroup(uint64_t currentRowInStripe, uint64_t rowsInCurrentStripe,
                                           uint64_t rowIndexStride,
                                           const std::vector<uint64_t>& nextSkippedRows);
 
@@ -209,22 +206,20 @@ namespace orc {
      */
     bool hasBadBloomFilters();
 
-  public:
-   /**
-    * Constructor that lets the user specify additional options.
-    * @param contents of the file
-    * @param options options for reading
-    */
-    RowReaderImpl(std::shared_ptr<FileContents> contents,
-                  const RowReaderOptions& options);
+   public:
+    /**
+     * Constructor that lets the user specify additional options.
+     * @param contents of the file
+     * @param options options for reading
+     */
+    RowReaderImpl(std::shared_ptr<FileContents> contents, const RowReaderOptions& options);
 
     // Select the columns from the options object
     const std::vector<bool> getSelectedColumns() const override;
 
     const Type& getSelectedType() const override;
 
-    std::unique_ptr<ColumnVectorBatch> createRowBatch(uint64_t size
-                                                      ) const override;
+    std::unique_ptr<ColumnVectorBatch> createRowBatch(uint64_t size) const override;
 
     bool next(ColumnVectorBatch& data) override;
 
@@ -260,12 +255,14 @@ namespace orc {
     // internal methods
     void readMetadata() const;
     void checkOrcVersion();
-    void getRowIndexStatistics(const proto::StripeInformation& stripeInfo, uint64_t stripeIndex,
-                               const proto::StripeFooter& currentStripeFooter,
-                               std::vector<std::vector<proto::ColumnStatistics> >* indexStats) const;
+    void getRowIndexStatistics(
+        const proto::StripeInformation& stripeInfo, uint64_t stripeIndex,
+        const proto::StripeFooter& currentStripeFooter,
+        std::vector<std::vector<proto::ColumnStatistics> >* indexStats) const;
 
     // metadata
     mutable bool isMetadataLoaded;
+
    public:
     /**
      * Constructor that lets the user specify additional options.
@@ -274,10 +271,8 @@ namespace orc {
      * @param fileLength the length of the file in bytes
      * @param postscriptLength the length of the postscript in bytes
      */
-    ReaderImpl(std::shared_ptr<FileContents> contents,
-               const ReaderOptions& options,
-               uint64_t fileLength,
-               uint64_t postscriptLength);
+    ReaderImpl(std::shared_ptr<FileContents> contents, const ReaderOptions& options,
+               uint64_t fileLength, uint64_t postscriptLength);
 
     const ReaderOptions& getReaderOptions() const;
 
@@ -307,20 +302,17 @@ namespace orc {
 
     uint64_t getNumberOfStripes() const override;
 
-    std::unique_ptr<StripeInformation> getStripe(uint64_t
-                                                 ) const override;
+    std::unique_ptr<StripeInformation> getStripe(uint64_t) const override;
 
     uint64_t getNumberOfStripeStatistics() const override;
 
     const std::string& getStreamName() const override;
 
-    std::unique_ptr<StripeStatistics>
-    getStripeStatistics(uint64_t stripeIndex) const override;
+    std::unique_ptr<StripeStatistics> getStripeStatistics(uint64_t stripeIndex) const override;
 
     std::unique_ptr<RowReader> createRowReader() const override;
 
-    std::unique_ptr<RowReader> createRowReader(const RowReaderOptions& options
-                                               ) const override;
+    std::unique_ptr<RowReader> createRowReader(const RowReaderOptions& options) const override;
 
     uint64_t getContentLength() const override;
     uint64_t getStripeStatisticsLength() const override;
@@ -330,8 +322,7 @@ namespace orc {
 
     std::unique_ptr<Statistics> getStatistics() const override;
 
-    std::unique_ptr<ColumnStatistics> getColumnStatistics(uint32_t columnId
-                                                          ) const override;
+    std::unique_ptr<ColumnStatistics> getColumnStatistics(uint32_t columnId) const override;
 
     std::string getSerializedFileTail() const override;
 
@@ -343,27 +334,37 @@ namespace orc {
       return contents->readerMetrics;
     }
 
-    const proto::PostScript* getPostscript() const {return contents->postscript.get();}
+    const proto::PostScript* getPostscript() const {
+      return contents->postscript.get();
+    }
 
-    uint64_t getBlockSize() const {return contents->blockSize;}
+    uint64_t getBlockSize() const {
+      return contents->blockSize;
+    }
 
-    const proto::Footer* getFooter() const {return contents->footer.get();}
+    const proto::Footer* getFooter() const {
+      return contents->footer.get();
+    }
 
-    const Type* getSchema() const {return contents->schema.get();}
+    const Type* getSchema() const {
+      return contents->schema.get();
+    }
 
-    InputStream* getStream() const {return contents->stream.get();}
+    InputStream* getStream() const {
+      return contents->stream.get();
+    }
 
     uint64_t getMemoryUse(int stripeIx = -1) override;
 
-    uint64_t getMemoryUseByFieldId(const std::list<uint64_t>& include, int stripeIx=-1) override;
+    uint64_t getMemoryUseByFieldId(const std::list<uint64_t>& include, int stripeIx = -1) override;
 
-    uint64_t getMemoryUseByName(const std::list<std::string>& names, int stripeIx=-1) override;
+    uint64_t getMemoryUseByName(const std::list<std::string>& names, int stripeIx = -1) override;
 
-    uint64_t getMemoryUseByTypeId(const std::list<uint64_t>& include, int stripeIx=-1) override;
+    uint64_t getMemoryUseByTypeId(const std::list<uint64_t>& include, int stripeIx = -1) override;
 
-    std::map<uint32_t, BloomFilterIndex>
-    getBloomFilters(uint32_t stripeIndex, const std::set<uint32_t>& included) const override;
+    std::map<uint32_t, BloomFilterIndex> getBloomFilters(
+        uint32_t stripeIndex, const std::set<uint32_t>& included) const override;
   };
-}// namespace
+}  // namespace orc
 
 #endif

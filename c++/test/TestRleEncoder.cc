@@ -21,11 +21,11 @@
 #include "MemoryOutputStream.hh"
 #include "RLEv1.hh"
 
-#include "wrap/orc-proto-wrapper.hh"
 #include "wrap/gtest-wrapper.h"
+#include "wrap/orc-proto-wrapper.hh"
 
 #ifdef __clang__
-  DIAGNOSTIC_IGNORE("-Wmissing-variable-declarations")
+DIAGNOSTIC_IGNORE("-Wmissing-variable-declarations")
 #endif
 
 namespace orc {
@@ -33,42 +33,29 @@ namespace orc {
   using ::testing::TestWithParam;
   using ::testing::Values;
 
-  const int DEFAULT_MEM_STREAM_SIZE = 1024 * 1024; // 1M
-
+  const int DEFAULT_MEM_STREAM_SIZE = 1024 * 1024;  // 1M
 
   class RleTest : public TestWithParam<bool> {
     virtual void SetUp();
 
-  protected:
+   protected:
     bool alignBitpacking;
-    std::unique_ptr<RleEncoder> getEncoder(RleVersion version,
-                                           MemoryOutputStream& memStream,
+    std::unique_ptr<RleEncoder> getEncoder(RleVersion version, MemoryOutputStream& memStream,
                                            bool isSigned);
 
-    void runExampleTest(int64_t* inputData, uint64_t inputLength,
-                        unsigned char* expectedOutput, uint64_t outputLength);
+    void runExampleTest(int64_t* inputData, uint64_t inputLength, unsigned char* expectedOutput,
+                        uint64_t outputLength);
 
-    void runTest(RleVersion version,
-                 uint64_t numValues,
-                 int64_t start,
-                 int64_t delta,
-                 bool random,
-                 bool isSigned,
-                 uint64_t numNulls = 0);
+    void runTest(RleVersion version, uint64_t numValues, int64_t start, int64_t delta, bool random,
+                 bool isSigned, uint64_t numNulls = 0);
   };
 
   void RleTest::SetUp() {
     alignBitpacking = GetParam();
   }
 
-  void generateData(
-                     uint64_t numValues,
-                     int64_t start,
-                     int64_t delta,
-                     bool random,
-                     int64_t* data,
-                     uint64_t numNulls = 0,
-                     char* notNull = nullptr) {
+  void generateData(uint64_t numValues, int64_t start, int64_t delta, bool random, int64_t* data,
+                    uint64_t numNulls = 0, char* notNull = nullptr) {
     if (numNulls != 0 && notNull != nullptr) {
       memset(notNull, 1, numValues);
       while (numNulls > 0) {
@@ -81,8 +68,7 @@ namespace orc {
     }
 
     for (uint64_t i = 0; i < numValues; ++i) {
-      if (notNull == nullptr || notNull[i])
-      {
+      if (notNull == nullptr || notNull[i]) {
         if (!random) {
           data[i] = start + delta * static_cast<int64_t>(i);
         } else {
@@ -92,19 +78,12 @@ namespace orc {
     }
   }
 
-  void decodeAndVerify(
-                       RleVersion version,
-                       const MemoryOutputStream& memStream,
-                       int64_t * data,
-                       uint64_t numValues,
-                       const char* notNull,
-                       bool isSinged) {
-    std::unique_ptr<RleDecoder> decoder = createRleDecoder(
-            std::unique_ptr<SeekableArrayInputStream>(new SeekableArrayInputStream(
-                    memStream.getData(),
-                    memStream.getLength())),
-            isSinged, version, *getDefaultPool(),
-            getDefaultReaderMetrics());
+  void decodeAndVerify(RleVersion version, const MemoryOutputStream& memStream, int64_t* data,
+                       uint64_t numValues, const char* notNull, bool isSinged) {
+    std::unique_ptr<RleDecoder> decoder =
+        createRleDecoder(std::unique_ptr<SeekableArrayInputStream>(new SeekableArrayInputStream(
+                             memStream.getData(), memStream.getLength())),
+                         isSinged, version, *getDefaultPool(), getDefaultReaderMetrics());
 
     int64_t* decodedData = new int64_t[numValues];
     decoder->next(decodedData, numValues, notNull);
@@ -115,26 +94,20 @@ namespace orc {
       }
     }
 
-    delete [] decodedData;
+    delete[] decodedData;
   }
 
-  std::unique_ptr<RleEncoder> RleTest::getEncoder(RleVersion version,
-                                        MemoryOutputStream& memStream,
-                                        bool isSigned)
-  {
-    MemoryPool * pool = getDefaultPool();
+  std::unique_ptr<RleEncoder> RleTest::getEncoder(RleVersion version, MemoryOutputStream& memStream,
+                                                  bool isSigned) {
+    MemoryPool* pool = getDefaultPool();
 
-    return createRleEncoder(
-            std::unique_ptr<BufferedOutputStream>(
-                    new BufferedOutputStream(
-                            *pool, &memStream, 500 * 1024, 1024, nullptr)),
-            isSigned, version, *pool, alignBitpacking);
+    return createRleEncoder(std::unique_ptr<BufferedOutputStream>(new BufferedOutputStream(
+                                *pool, &memStream, 500 * 1024, 1024, nullptr)),
+                            isSigned, version, *pool, alignBitpacking);
   }
 
-  void RleTest::runExampleTest(int64_t* inputData,
-                      uint64_t inputLength,
-                      unsigned char* expectedOutput,
-                      uint64_t outputLength) {
+  void RleTest::runExampleTest(int64_t* inputData, uint64_t inputLength,
+                               unsigned char* expectedOutput, uint64_t outputLength) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
 
     std::unique_ptr<RleEncoder> encoder = getEncoder(RleVersion_2, memStream, false);
@@ -142,18 +115,13 @@ namespace orc {
     encoder->add(inputData, inputLength, nullptr);
     encoder->flush();
     const char* output = memStream.getData();
-    for(int i = 0; i < outputLength; i++) {
+    for (int i = 0; i < outputLength; i++) {
       EXPECT_EQ(expectedOutput[i], static_cast<unsigned char>(output[i]));
     }
   }
 
-  void RleTest::runTest(RleVersion version,
-               uint64_t numValues,
-               int64_t start,
-               int64_t delta,
-               bool random,
-               bool isSigned,
-               uint64_t numNulls) {
+  void RleTest::runTest(RleVersion version, uint64_t numValues, int64_t start, int64_t delta,
+                        bool random, bool isSigned, uint64_t numNulls) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
 
     std::unique_ptr<RleEncoder> encoder = getEncoder(version, memStream, isSigned);
@@ -165,8 +133,8 @@ namespace orc {
     encoder->flush();
 
     decodeAndVerify(version, memStream, data, numValues, notNull, isSigned);
-    delete [] data;
-    delete [] notNull;
+    delete[] data;
+    delete[] notNull;
   }
 
   TEST_P(RleTest, RleV1_delta_increasing_sequance_unsigned) {
@@ -245,16 +213,17 @@ namespace orc {
 
   TEST_P(RleTest, RleV2_direct_example) {
     int64_t data[4] = {23713, 43806, 57005, 48879};
-    unsigned char expectedEncoded[10] = {0x5e, 0x03, 0x5c, 0xa1, 0xab, 0x1e, 0xde, 0xad, 0xbe, 0xef};
+    unsigned char expectedEncoded[10] = {0x5e, 0x03, 0x5c, 0xa1, 0xab,
+                                         0x1e, 0xde, 0xad, 0xbe, 0xef};
     runExampleTest(data, 4, expectedEncoded, 10);
   }
 
   TEST_P(RleTest, RleV2_Patched_base_example) {
-    int64_t data[20] = {2030, 2000, 2020, 1000000, 2040, 2050, 2060, 2070, 2080,
-                        2090, 2100, 2110, 2120, 2130, 2140, 2150, 2160, 2170, 2180, 2190};
-    unsigned char expectedEncoded[28] = {0x8e, 0x13, 0x2b, 0x21, 0x07, 0xd0, 0x1e, 0x00, 0x14,
-                                0x70, 0x28, 0x32, 0x3c, 0x46, 0x50, 0x5a, 0x64, 0x6e, 0x78, 0x82, 0x8c,
-                                0x96, 0xa0, 0xaa, 0xb4, 0xbe, 0xfc, 0xe8};
+    int64_t data[20] = {2030, 2000, 2020, 1000000, 2040, 2050, 2060, 2070, 2080, 2090,
+                        2100, 2110, 2120, 2130,    2140, 2150, 2160, 2170, 2180, 2190};
+    unsigned char expectedEncoded[28] = {0x8e, 0x13, 0x2b, 0x21, 0x07, 0xd0, 0x1e, 0x00, 0x14, 0x70,
+                                         0x28, 0x32, 0x3c, 0x46, 0x50, 0x5a, 0x64, 0x6e, 0x78, 0x82,
+                                         0x8c, 0x96, 0xa0, 0xaa, 0xb4, 0xbe, 0xfc, 0xe8};
     runExampleTest(data, 20, expectedEncoded, 28);
   }
 
@@ -264,9 +233,9 @@ namespace orc {
     // only patched value and the gap of this patch is 511.
     const int numValues = 512;
     int64_t data[512];
-    for (int i = 0; i < 511; i+=2) {
+    for (int i = 0; i < 511; i += 2) {
       data[i] = 2;
-      data[i+1] = 1;
+      data[i + 1] = 1;
     }
     data[511] = 1024;
 
@@ -286,12 +255,9 @@ namespace orc {
     int64_t data[10] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29};
     unsigned char expectedEncoded[8] = {0xc6, 0x09, 0x02, 0x02, 0x22, 0x42, 0x42, 0x46};
     unsigned char unalignedExpectedEncoded[7] = {0xc4, 0x09, 0x02, 0x02, 0x4A, 0x28, 0xA6};
-    if (alignBitpacking)
-    {
+    if (alignBitpacking) {
       runExampleTest(data, 10, expectedEncoded, 8);
-    }
-    else
-    {
+    } else {
       runExampleTest(data, 10, unalignedExpectedEncoded, 7);
     }
   }
@@ -304,9 +270,10 @@ namespace orc {
 
   TEST_P(RleTest, RleV2_direct_repeat_example2) {
     int64_t data[9] = {23713, 43806, 57005, 48879, 10000, 10000, 10000, 10000, 10000};
-    unsigned char expectedEncoded[13] = {0x5e, 0x03, 0x5c, 0xa1, 0xab, 0x1e, 0xde, 0xad, 0xbe, 0xef, 0x0a, 0x27, 0x10};
+    unsigned char expectedEncoded[13] = {0x5e, 0x03, 0x5c, 0xa1, 0xab, 0x1e, 0xde,
+                                         0xad, 0xbe, 0xef, 0x0a, 0x27, 0x10};
     runExampleTest(data, 9, expectedEncoded, 13);
   }
 
   INSTANTIATE_TEST_SUITE_P(OrcTest, RleTest, Values(true, false));
-}
+}  // namespace orc

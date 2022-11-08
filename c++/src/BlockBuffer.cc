@@ -17,18 +17,15 @@
  */
 
 #include "BlockBuffer.hh"
-#include "orc/Writer.hh"
 #include "orc/OrcFile.hh"
+#include "orc/Writer.hh"
 
 #include <algorithm>
 
 namespace orc {
 
   BlockBuffer::BlockBuffer(MemoryPool& pool, uint64_t _blockSize)
-      : memoryPool(pool),
-        currentSize(0),
-        currentCapacity(0),
-        blockSize(_blockSize) {
+      : memoryPool(pool), currentSize(0), currentCapacity(0), blockSize(_blockSize) {
     if (blockSize == 0) {
       throw std::logic_error("Block size cannot be zero");
     }
@@ -47,15 +44,13 @@ namespace orc {
     if (blockIndex >= getBlockNumber()) {
       throw std::out_of_range("Block index out of range");
     }
-    return Block(blocks[blockIndex],
-                 std::min(currentSize - blockIndex * blockSize, blockSize));
+    return Block(blocks[blockIndex], std::min(currentSize - blockIndex * blockSize, blockSize));
   }
 
   BlockBuffer::Block BlockBuffer::getNextBlock() {
     if (currentSize < currentCapacity) {
-      Block emptyBlock(
-          blocks[currentSize / blockSize] + currentSize % blockSize,
-          blockSize - currentSize % blockSize);
+      Block emptyBlock(blocks[currentSize / blockSize] + currentSize % blockSize,
+                       blockSize - currentSize % blockSize);
       currentSize = (currentSize / blockSize + 1) * blockSize;
       return emptyBlock;
     } else {
@@ -85,8 +80,7 @@ namespace orc {
     }
   }
 
-  void BlockBuffer::writeTo(OutputStream* output,
-                            WriterMetrics* metrics) {
+  void BlockBuffer::writeTo(OutputStream* output, WriterMetrics* metrics) {
     if (currentSize == 0) {
       return;
     }
@@ -110,8 +104,7 @@ namespace orc {
         uint64_t blockOffset = 0;
         while (blockOffset < block.size) {
           // copy current block into chunk
-          uint64_t copySize =
-            std::min(chunkSize - chunkOffset, block.size - blockOffset);
+          uint64_t copySize = std::min(chunkSize - chunkOffset, block.size - blockOffset);
           memcpy(chunk + chunkOffset, block.data + blockOffset, copySize);
           chunkOffset += copySize;
           blockOffset += copySize;
@@ -135,4 +128,4 @@ namespace orc {
       metrics->IOCount.fetch_add(ioCount);
     }
   }
-} // namespace orc
+}  // namespace orc

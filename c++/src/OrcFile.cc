@@ -16,16 +16,16 @@
  * limitations under the License.
  */
 
+#include "orc/OrcFile.hh"
 #include "Adaptor.hh"
 #include "Utils.hh"
-#include "orc/OrcFile.hh"
 #include "orc/Exceptions.hh"
 
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
-#include <sys/stat.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #ifdef _MSC_VER
 #include <io.h>
@@ -40,24 +40,22 @@
 
 namespace orc {
 
-DIAGNOSTIC_PUSH
+  DIAGNOSTIC_PUSH
 
 #ifdef __clang__
   DIAGNOSTIC_IGNORE("-Wunused-private-field")
 #endif
 
   class FileInputStream : public InputStream {
-  private:
+   private:
     std::string filename;
     int file;
     uint64_t totalLength;
     ReaderMetrics* metrics;
 
-  public:
-    FileInputStream(std::string _filename,
-                    ReaderMetrics* _metrics)
-                    : filename(_filename),
-                      metrics(_metrics) {
+   public:
+    FileInputStream(std::string _filename, ReaderMetrics* _metrics)
+        : filename(_filename), metrics(_metrics) {
       file = open(filename.c_str(), O_BINARY | O_RDONLY);
       if (file == -1) {
         throw ParseError("Can't open " + filename);
@@ -79,9 +77,7 @@ DIAGNOSTIC_PUSH
       return 128 * 1024;
     }
 
-    void read(void* buf,
-              uint64_t length,
-              uint64_t offset) override {
+    void read(void* buf, uint64_t length, uint64_t offset) override {
       SCOPED_STOPWATCH(metrics, IOBlockingLatencyUs, IOCount);
       if (!buf) {
         throw ParseError("Buffer is null");
@@ -105,46 +101,41 @@ DIAGNOSTIC_PUSH
     close(file);
   }
 
-  std::unique_ptr<InputStream> readFile(const std::string& path,
-                                        ReaderMetrics* metrics) {
+  std::unique_ptr<InputStream> readFile(const std::string& path, ReaderMetrics* metrics) {
 #ifdef BUILD_LIBHDFSPP
-    if(strncmp (path.c_str(), "hdfs://", 7) == 0){
+    if (strncmp(path.c_str(), "hdfs://", 7) == 0) {
       return orc::readHdfsFile(std::string(path), metrics);
     } else {
 #endif
       return orc::readLocalFile(std::string(path), metrics);
 #ifdef BUILD_LIBHDFSPP
-      }
+    }
 #endif
   }
 
-DIAGNOSTIC_POP
+  DIAGNOSTIC_POP
 
-  std::unique_ptr<InputStream> readLocalFile(const std::string& path,
-                                             ReaderMetrics* metrics) {
-      return std::unique_ptr<InputStream>(new FileInputStream(path, metrics));
+  std::unique_ptr<InputStream> readLocalFile(const std::string& path, ReaderMetrics* metrics) {
+    return std::unique_ptr<InputStream>(new FileInputStream(path, metrics));
   }
 
-  OutputStream::~OutputStream() {
+  OutputStream::~OutputStream(){
       // PASS
   };
 
   class FileOutputStream : public OutputStream {
-  private:
+   private:
     std::string filename;
     int file;
     uint64_t bytesWritten;
     bool closed;
 
-  public:
+   public:
     FileOutputStream(std::string _filename) {
       bytesWritten = 0;
       filename = _filename;
       closed = false;
-      file = open(
-                  filename.c_str(),
-                  O_BINARY | O_CREAT | O_WRONLY | O_TRUNC,
-                  S_IRUSR | S_IWUSR);
+      file = open(filename.c_str(), O_BINARY | O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
       if (file == -1) {
         throw ParseError("Can't open " + filename);
       }
@@ -196,4 +187,4 @@ DIAGNOSTIC_POP
   std::unique_ptr<OutputStream> writeLocalFile(const std::string& path) {
     return std::unique_ptr<OutputStream>(new FileOutputStream(path));
   }
-}
+}  // namespace orc

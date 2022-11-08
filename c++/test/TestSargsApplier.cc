@@ -22,43 +22,39 @@
 namespace orc {
 
   TEST(TestSargsApplier, findColumnTest) {
-    auto type = std::unique_ptr<Type>(Type::buildTypeFromString(
-      "struct<a:int,c:string,e:struct<f:bigint,g:double>>"));
+    auto type = std::unique_ptr<Type>(
+        Type::buildTypeFromString("struct<a:int,c:string,e:struct<f:bigint,g:double>>"));
     EXPECT_EQ(1, SargsApplier::findColumn(*type, "a"));
     EXPECT_EQ(2, SargsApplier::findColumn(*type, "c"));
     EXPECT_EQ(3, SargsApplier::findColumn(*type, "e"));
     EXPECT_EQ(4, SargsApplier::findColumn(*type, "f"));
     EXPECT_EQ(5, SargsApplier::findColumn(*type, "g"));
-    EXPECT_EQ(std::numeric_limits<uint64_t>::max(),
-      SargsApplier::findColumn(*type, "b"));
+    EXPECT_EQ(std::numeric_limits<uint64_t>::max(), SargsApplier::findColumn(*type, "b"));
   }
 
   TEST(TestSargsApplier, findArrayColumnTest) {
-    auto type = std::unique_ptr<Type>(Type::buildTypeFromString(
-      "struct<a:int,c:string,e:array<struct<f:bigint,g:double>>>"));
+    auto type = std::unique_ptr<Type>(
+        Type::buildTypeFromString("struct<a:int,c:string,e:array<struct<f:bigint,g:double>>>"));
     EXPECT_EQ(1, SargsApplier::findColumn(*type, "a"));
     EXPECT_EQ(2, SargsApplier::findColumn(*type, "c"));
     EXPECT_EQ(3, SargsApplier::findColumn(*type, "e"));
     EXPECT_EQ(5, SargsApplier::findColumn(*type, "f"));
     EXPECT_EQ(6, SargsApplier::findColumn(*type, "g"));
-    EXPECT_EQ(std::numeric_limits<uint64_t>::max(),
-      SargsApplier::findColumn(*type, "b"));
+    EXPECT_EQ(std::numeric_limits<uint64_t>::max(), SargsApplier::findColumn(*type, "b"));
   }
 
   TEST(TestSargsApplier, findMapColumnTest) {
-    auto type = std::unique_ptr<Type>(Type::buildTypeFromString(
-      "struct<a:int,c:string,e:map<int,struct<f:bigint,g:double>>>"));
+    auto type = std::unique_ptr<Type>(
+        Type::buildTypeFromString("struct<a:int,c:string,e:map<int,struct<f:bigint,g:double>>>"));
     EXPECT_EQ(1, SargsApplier::findColumn(*type, "a"));
     EXPECT_EQ(2, SargsApplier::findColumn(*type, "c"));
     EXPECT_EQ(3, SargsApplier::findColumn(*type, "e"));
     EXPECT_EQ(6, SargsApplier::findColumn(*type, "f"));
     EXPECT_EQ(7, SargsApplier::findColumn(*type, "g"));
-    EXPECT_EQ(std::numeric_limits<uint64_t>::max(),
-      SargsApplier::findColumn(*type, "b"));
+    EXPECT_EQ(std::numeric_limits<uint64_t>::max(), SargsApplier::findColumn(*type, "b"));
   }
 
-  static proto::ColumnStatistics createIntStats(
-    int64_t min, int64_t max, bool hasNull = false) {
+  static proto::ColumnStatistics createIntStats(int64_t min, int64_t max, bool hasNull = false) {
     proto::ColumnStatistics statistics;
     statistics.set_hasnull(hasNull);
     auto intStats = statistics.mutable_intstatistics();
@@ -68,51 +64,35 @@ namespace orc {
   }
 
   TEST(TestSargsApplier, testPickRowGroups) {
-    auto type = std::unique_ptr<Type>(
-      Type::buildTypeFromString("struct<x:int,y:int>"));
+    auto type = std::unique_ptr<Type>(Type::buildTypeFromString("struct<x:int,y:int>"));
     auto sarg = SearchArgumentFactory::newBuilder()
-      ->startAnd()
-      .equals(
-              "x",
-              PredicateDataType::LONG,
-              Literal(static_cast<int64_t>(100)))
-      .equals(
-              "y",
-              PredicateDataType::LONG,
-              Literal(static_cast<int64_t>(10)))
-      .end()
-      .build();
+                    ->startAnd()
+                    .equals("x", PredicateDataType::LONG, Literal(static_cast<int64_t>(100)))
+                    .equals("y", PredicateDataType::LONG, Literal(static_cast<int64_t>(10)))
+                    .end()
+                    .build();
 
     // prepare row group column statistics
     std::unordered_map<uint64_t, proto::RowIndex> rowIndexes;
     // col 1
     proto::RowIndex rowIndex1;
-    *rowIndex1.mutable_entry()->Add()->mutable_statistics() =
-      createIntStats(0L, 10L);
-    *rowIndex1.mutable_entry()->Add()->mutable_statistics() =
-      createIntStats(100L, 200L);
-    *rowIndex1.mutable_entry()->Add()->mutable_statistics() =
-      createIntStats(300L, 500L);
-    *rowIndex1.mutable_entry()->Add()->mutable_statistics() =
-      createIntStats(100L, 100L);
+    *rowIndex1.mutable_entry()->Add()->mutable_statistics() = createIntStats(0L, 10L);
+    *rowIndex1.mutable_entry()->Add()->mutable_statistics() = createIntStats(100L, 200L);
+    *rowIndex1.mutable_entry()->Add()->mutable_statistics() = createIntStats(300L, 500L);
+    *rowIndex1.mutable_entry()->Add()->mutable_statistics() = createIntStats(100L, 100L);
     rowIndexes[1] = rowIndex1;
 
     // col 2
     proto::RowIndex rowIndex2;
-    *rowIndex2.mutable_entry()->Add()->mutable_statistics() =
-      createIntStats(0L, 9L);
-    *rowIndex2.mutable_entry()->Add()->mutable_statistics() =
-      createIntStats(11L, 20L);
-    *rowIndex2.mutable_entry()->Add()->mutable_statistics() =
-      createIntStats(10L, 10L);
-    *rowIndex2.mutable_entry()->Add()->mutable_statistics() =
-      createIntStats(0L, 100LL);
+    *rowIndex2.mutable_entry()->Add()->mutable_statistics() = createIntStats(0L, 9L);
+    *rowIndex2.mutable_entry()->Add()->mutable_statistics() = createIntStats(11L, 20L);
+    *rowIndex2.mutable_entry()->Add()->mutable_statistics() = createIntStats(10L, 10L);
+    *rowIndex2.mutable_entry()->Add()->mutable_statistics() = createIntStats(0L, 100LL);
     rowIndexes[2] = rowIndex2;
 
     // evaluate row group index
     ReaderMetrics metrics;
-    SargsApplier applier(
-      *type, sarg.get(), 1000, WriterVersion_ORC_135, &metrics);
+    SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135, &metrics);
     EXPECT_TRUE(applier.pickRowGroups(4000, rowIndexes, {}));
     const auto& nextSkippedRows = applier.getNextSkippedRows();
     EXPECT_EQ(4, nextSkippedRows.size());
@@ -125,20 +105,13 @@ namespace orc {
   }
 
   TEST(TestSargsApplier, testStripeAndFileStats) {
-    auto type = std::unique_ptr<Type>(
-      Type::buildTypeFromString("struct<x:int,y:int>"));
+    auto type = std::unique_ptr<Type>(Type::buildTypeFromString("struct<x:int,y:int>"));
     auto sarg = SearchArgumentFactory::newBuilder()
-      ->startAnd()
-      .equals(
-              "x",
-              PredicateDataType::LONG,
-              Literal(static_cast<int64_t>(20)))
-      .equals(
-              "y",
-              PredicateDataType::LONG,
-              Literal(static_cast<int64_t>(40)))
-      .end()
-      .build();
+                    ->startAnd()
+                    .equals("x", PredicateDataType::LONG, Literal(static_cast<int64_t>(20)))
+                    .equals("y", PredicateDataType::LONG, Literal(static_cast<int64_t>(40)))
+                    .end()
+                    .build();
     // Test stripe stats 0 <= x <= 10 and 0 <= y <= 50
     {
       orc::proto::StripeStatistics stripeStats;
@@ -148,8 +121,7 @@ namespace orc {
       *stripeStats.add_colstats() = createIntStats(0L, 10L);
       *stripeStats.add_colstats() = createIntStats(0L, 50L);
       ReaderMetrics metrics;
-      SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135,
-                           &metrics);
+      SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135, &metrics);
       EXPECT_FALSE(applier.evaluateStripeStatistics(stripeStats, 1));
       EXPECT_EQ(metrics.SelectedRowGroupCount.load(), 0);
       EXPECT_EQ(metrics.EvaluatedRowGroupCount.load(), 1);
@@ -163,8 +135,7 @@ namespace orc {
       *stripeStats.add_colstats() = createIntStats(0L, 50L);
       *stripeStats.add_colstats() = createIntStats(0L, 50L);
       ReaderMetrics metrics;
-      SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135,
-                           &metrics);
+      SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135, &metrics);
       EXPECT_TRUE(applier.evaluateStripeStatistics(stripeStats, 1));
       EXPECT_EQ(metrics.SelectedRowGroupCount.load(), 0);
       EXPECT_EQ(metrics.EvaluatedRowGroupCount.load(), 0);
@@ -178,8 +149,7 @@ namespace orc {
       *footer.add_statistics() = createIntStats(0L, 10L);
       *footer.add_statistics() = createIntStats(0L, 50L);
       ReaderMetrics metrics;
-      SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135,
-                           &metrics);
+      SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135, &metrics);
       EXPECT_FALSE(applier.evaluateFileStatistics(footer, 1));
       EXPECT_EQ(metrics.SelectedRowGroupCount.load(), 0);
       EXPECT_EQ(metrics.EvaluatedRowGroupCount.load(), 1);
@@ -193,8 +163,7 @@ namespace orc {
       *footer.add_statistics() = createIntStats(0L, 50L);
       *footer.add_statistics() = createIntStats(0L, 30L);
       ReaderMetrics metrics;
-      SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135,
-                           &metrics);
+      SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135, &metrics);
       EXPECT_FALSE(applier.evaluateFileStatistics(footer, 1));
       EXPECT_EQ(metrics.SelectedRowGroupCount.load(), 0);
       EXPECT_EQ(metrics.EvaluatedRowGroupCount.load(), 1);
@@ -208,8 +177,7 @@ namespace orc {
       *footer.add_statistics() = createIntStats(0L, 50L);
       *footer.add_statistics() = createIntStats(0L, 50L);
       ReaderMetrics metrics;
-      SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135,
-                           &metrics);
+      SargsApplier applier(*type, sarg.get(), 1000, WriterVersion_ORC_135, &metrics);
       EXPECT_TRUE(applier.evaluateFileStatistics(footer, 1));
       EXPECT_EQ(metrics.SelectedRowGroupCount.load(), 0);
       EXPECT_EQ(metrics.EvaluatedRowGroupCount.load(), 0);

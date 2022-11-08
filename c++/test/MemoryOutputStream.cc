@@ -25,7 +25,7 @@ namespace orc {
   }
 
   void MemoryOutputStream::write(const void* buf, size_t size) {
-      memcpy(data + length, buf, size);
-      length += size;
+    memcpy(data + length, buf, size);
+    length += size;
   }
-}
+}  // namespace orc

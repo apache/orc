@@ -20,9 +20,9 @@
 #define ORC_WRITER_HH
 
 #include "orc/Common.hh"
-#include "orc/orc-config.hh"
 #include "orc/Type.hh"
 #include "orc/Vector.hh"
+#include "orc/orc-config.hh"
 
 #include <atomic>
 #include <memory>
@@ -35,15 +35,9 @@ namespace orc {
   // classes that hold data members so we can maintain binary compatibility
   struct WriterOptionsPrivate;
 
-  enum CompressionStrategy {
-    CompressionStrategy_SPEED = 0,
-    CompressionStrategy_COMPRESSION
-  };
+  enum CompressionStrategy { CompressionStrategy_SPEED = 0, CompressionStrategy_COMPRESSION };
 
-  enum RleVersion {
-    RleVersion_1 = 0,
-    RleVersion_2 = 1
-  };
+  enum RleVersion { RleVersion_1 = 0, RleVersion_2 = 1 };
 
   class Timezone;
 
@@ -60,10 +54,10 @@ namespace orc {
    * Options for creating a Writer.
    */
   class WriterOptions {
-  private:
+   private:
     ORC_UNIQUE_PTR<WriterOptionsPrivate> privateBits;
 
-  public:
+   public:
     WriterOptions();
     WriterOptions(const WriterOptions&);
     WriterOptions(WriterOptions&);
@@ -93,7 +87,8 @@ namespace orc {
     uint64_t getCompressionBlockSize() const;
 
     /**
-     * Set row index stride (the number of rows per an entry in the row index). Use value 0 to disable row index.
+     * Set row index stride (the number of rows per an entry in the row index). Use value 0 to
+     * disable row index.
      */
     WriterOptions& setRowIndexStride(uint64_t stride);
 
@@ -167,13 +162,13 @@ namespace orc {
     /**
      * Set the memory pool.
      */
-    WriterOptions& setMemoryPool(MemoryPool * memoryPool);
+    WriterOptions& setMemoryPool(MemoryPool* memoryPool);
 
     /**
      * Get the memory pool.
      * @return if not set, return default memory pool.
      */
-    MemoryPool * getMemoryPool() const;
+    MemoryPool* getMemoryPool() const;
 
     /**
      * Set the error stream.
@@ -184,7 +179,7 @@ namespace orc {
      * Get the error stream.
      * @return if not set, return std::err.
      */
-    std::ostream * getErrorStream() const;
+    std::ostream* getErrorStream() const;
 
     /**
      * Get the RLE version.
@@ -249,17 +244,17 @@ namespace orc {
     /**
      * Set the writer metrics.
      */
-    WriterOptions& setWriterMetrics(WriterMetrics * metrics);
+    WriterOptions& setWriterMetrics(WriterMetrics* metrics);
 
     /**
      * Get the writer metrics.
      * @return if not set, return nullptr.
      */
-    WriterMetrics * getWriterMetrics() const;
+    WriterMetrics* getWriterMetrics() const;
   };
 
   class Writer {
-  public:
+   public:
     virtual ~Writer();
 
     /**
@@ -267,8 +262,7 @@ namespace orc {
      * @param size the number of rows to write.
      * @return a new ColumnVectorBatch to write into.
      */
-    virtual ORC_UNIQUE_PTR<ColumnVectorBatch> createRowBatch(uint64_t size
-                                                             ) const = 0;
+    virtual ORC_UNIQUE_PTR<ColumnVectorBatch> createRowBatch(uint64_t size) const = 0;
 
     /**
      * Add a row batch into current writer.
@@ -286,6 +280,6 @@ namespace orc {
      */
     virtual void addUserMetadata(const std::string name, const std::string value) = 0;
   };
-}
+}  // namespace orc
 
 #endif

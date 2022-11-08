@@ -20,13 +20,13 @@
 DIAGNOSTIC_PUSH
 
 #if defined(__GNUC__) || defined(__clang__)
-  DIAGNOSTIC_IGNORE("-Wdeprecated")
-  DIAGNOSTIC_IGNORE("-Wpadded")
-  DIAGNOSTIC_IGNORE("-Wunused-parameter")
+DIAGNOSTIC_IGNORE("-Wdeprecated")
+DIAGNOSTIC_IGNORE("-Wpadded")
+DIAGNOSTIC_IGNORE("-Wunused-parameter")
 #endif
 
 #ifdef __clang__
-  DIAGNOSTIC_IGNORE("-Wreserved-id-macro")
+DIAGNOSTIC_IGNORE("-Wreserved-id-macro")
 #endif
 
 #include <google/protobuf/io/zero_copy_stream.h>

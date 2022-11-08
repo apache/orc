@@ -26,11 +26,9 @@
 
 namespace orc {
 
-  const int DEFAULT_MEM_STREAM_SIZE = 1024 * 1024; // 1M
+  const int DEFAULT_MEM_STREAM_SIZE = 1024 * 1024;  // 1M
 
-  void generateNotNull(uint64_t numValues,
-                       uint64_t numNulls,
-                       char* notNull) {
+  void generateNotNull(uint64_t numValues, uint64_t numNulls, char* notNull) {
     if (numNulls != 0 && notNull != nullptr) {
       memset(notNull, 1, numValues);
       while (numNulls > 0) {
@@ -43,37 +41,29 @@ namespace orc {
     }
   }
 
-  void generateData(uint64_t numValues,
-                      char* data,
-                      uint64_t numNulls = 0,
-                      char* notNull = nullptr) {
+  void generateData(uint64_t numValues, char* data, uint64_t numNulls = 0,
+                    char* notNull = nullptr) {
     generateNotNull(numValues, numNulls, notNull);
     for (uint64_t i = 0; i < numValues; ++i) {
-        data[i] = static_cast<char>(std::rand() % 256);
+      data[i] = static_cast<char>(std::rand() % 256);
     }
   }
 
-  void generateBoolData(uint64_t numValues,
-                          char* data,
-                          uint64_t numNulls = 0,
-                          char* notNull = nullptr) {
+  void generateBoolData(uint64_t numValues, char* data, uint64_t numNulls = 0,
+                        char* notNull = nullptr) {
     generateNotNull(numValues, numNulls, notNull);
     for (uint64_t i = 0; i < numValues; ++i) {
-        data[i] = static_cast<char>(std::rand() % 2);
+      data[i] = static_cast<char>(std::rand() % 2);
     }
   }
 
-  void decodeAndVerify(
-                       const MemoryOutputStream& memStream,
-                       char * data,
-                       uint64_t numValues,
+  void decodeAndVerify(const MemoryOutputStream& memStream, char* data, uint64_t numValues,
                        char* notNull) {
-
     std::unique_ptr<SeekableInputStream> inStream(
-      new SeekableArrayInputStream(memStream.getData(), memStream.getLength()));
+        new SeekableArrayInputStream(memStream.getData(), memStream.getLength()));
 
     std::unique_ptr<ByteRleDecoder> decoder =
-      createByteRleDecoder(std::move(inStream), getDefaultReaderMetrics());
+        createByteRleDecoder(std::move(inStream), getDefaultReaderMetrics());
 
     char* decodedData = new char[numValues];
     decoder->next(decodedData, numValues, notNull);
@@ -84,20 +74,16 @@ namespace orc {
       }
     }
 
-    delete [] decodedData;
+    delete[] decodedData;
   }
 
-  void decodeAndVerifyBoolean(
-                       const MemoryOutputStream& memStream,
-                       char * data,
-                       uint64_t numValues,
-                       char* notNull) {
-
+  void decodeAndVerifyBoolean(const MemoryOutputStream& memStream, char* data, uint64_t numValues,
+                              char* notNull) {
     std::unique_ptr<SeekableInputStream> inStream(
-      new SeekableArrayInputStream(memStream.getData(), memStream.getLength()));
+        new SeekableArrayInputStream(memStream.getData(), memStream.getLength()));
 
     std::unique_ptr<ByteRleDecoder> decoder =
-      createBooleanRleDecoder(std::move(inStream), getDefaultReaderMetrics());
+        createBooleanRleDecoder(std::move(inStream), getDefaultReaderMetrics());
 
     char* decodedData = new char[numValues];
     decoder->next(decodedData, numValues, notNull);
@@ -110,12 +96,12 @@ namespace orc {
       }
     }
 
-    delete [] decodedData;
+    delete[] decodedData;
   }
 
   TEST(ByteRleEncoder, random_chars) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    MemoryPool * pool = getDefaultPool();
+    MemoryPool* pool = getDefaultPool();
 
     uint64_t capacity = 500 * 1024;
     uint64_t block = 1024;
@@ -124,8 +110,7 @@ namespace orc {
     std::unique_ptr<BufferedOutputStream> outStream(
         new BufferedOutputStream(*pool, &memStream, capacity, block, nullptr));
 
-    std::unique_ptr<ByteRleEncoder> encoder =
-      createByteRleEncoder(std::move(outStream));
+    std::unique_ptr<ByteRleEncoder> encoder = createByteRleEncoder(std::move(outStream));
 
     char* data = new char[102400];
     generateData(102400, data);
@@ -133,12 +118,12 @@ namespace orc {
     encoder->flush();
 
     decodeAndVerify(memStream, data, 102400, nullptr);
-    delete [] data;
+    delete[] data;
   }
 
   TEST(ByteRleEncoder, random_chars_with_null) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    MemoryPool * pool = getDefaultPool();
+    MemoryPool* pool = getDefaultPool();
 
     uint64_t capacity = 500 * 1024;
     uint64_t block = 1024;
@@ -147,8 +132,7 @@ namespace orc {
     std::unique_ptr<BufferedOutputStream> outStream(
         new BufferedOutputStream(*pool, &memStream, capacity, block, nullptr));
 
-    std::unique_ptr<ByteRleEncoder> encoder =
-      createByteRleEncoder(std::move(outStream));
+    std::unique_ptr<ByteRleEncoder> encoder = createByteRleEncoder(std::move(outStream));
 
     char* notNull = new char[102400];
     char* data = new char[102400];
@@ -157,13 +141,13 @@ namespace orc {
     encoder->flush();
 
     decodeAndVerify(memStream, data, 102400, notNull);
-    delete [] data;
-    delete [] notNull;
+    delete[] data;
+    delete[] notNull;
   }
 
   TEST(BooleanRleEncoder, random_bits_not_aligned) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    MemoryPool * pool = getDefaultPool();
+    MemoryPool* pool = getDefaultPool();
 
     uint64_t capacity = 500 * 1024;
     uint64_t block = 1024;
@@ -172,8 +156,7 @@ namespace orc {
     std::unique_ptr<BufferedOutputStream> outStream(
         new BufferedOutputStream(*pool, &memStream, capacity, block, nullptr));
 
-    std::unique_ptr<ByteRleEncoder> encoder =
-      createBooleanRleEncoder(std::move(outStream));
+    std::unique_ptr<ByteRleEncoder> encoder = createBooleanRleEncoder(std::move(outStream));
 
     char* data = new char[1779];
     generateBoolData(1779, data);
@@ -181,12 +164,12 @@ namespace orc {
     encoder->flush();
 
     decodeAndVerifyBoolean(memStream, data, 1779, nullptr);
-    delete [] data;
+    delete[] data;
   }
 
   TEST(BooleanRleEncoder, random_bits_aligned) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    MemoryPool * pool = getDefaultPool();
+    MemoryPool* pool = getDefaultPool();
 
     uint64_t capacity = 500 * 1024;
     uint64_t block = 1024;
@@ -195,8 +178,7 @@ namespace orc {
     std::unique_ptr<BufferedOutputStream> outStream(
         new BufferedOutputStream(*pool, &memStream, capacity, block, nullptr));
 
-    std::unique_ptr<ByteRleEncoder> encoder =
-      createBooleanRleEncoder(std::move(outStream));
+    std::unique_ptr<ByteRleEncoder> encoder = createBooleanRleEncoder(std::move(outStream));
 
     char* data = new char[8000];
     generateBoolData(8000, data);
@@ -204,12 +186,12 @@ namespace orc {
     encoder->flush();
 
     decodeAndVerifyBoolean(memStream, data, 8000, nullptr);
-    delete [] data;
+    delete[] data;
   }
 
   TEST(BooleanRleEncoder, random_bits_aligned_with_null) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    MemoryPool * pool = getDefaultPool();
+    MemoryPool* pool = getDefaultPool();
 
     uint64_t capacity = 500 * 1024;
     uint64_t block = 1024;
@@ -218,8 +200,7 @@ namespace orc {
     std::unique_ptr<BufferedOutputStream> outStream(
         new BufferedOutputStream(*pool, &memStream, capacity, block, nullptr));
 
-    std::unique_ptr<ByteRleEncoder> encoder =
-      createBooleanRleEncoder(std::move(outStream));
+    std::unique_ptr<ByteRleEncoder> encoder = createBooleanRleEncoder(std::move(outStream));
 
     char* notNull = new char[8000];
     char* data = new char[8000];
@@ -228,7 +209,7 @@ namespace orc {
     encoder->flush();
 
     decodeAndVerifyBoolean(memStream, data, 8000, notNull);
-    delete [] data;
-    delete [] notNull;
+    delete[] data;
+    delete[] notNull;
   }
-}
+}  // namespace orc

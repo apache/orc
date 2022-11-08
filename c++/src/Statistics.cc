@@ -1,4 +1,4 @@
- /**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,9 +16,9 @@
  * limitations under the License.
  */
 
-#include "orc/Exceptions.hh"
-#include "RLE.hh"
 #include "Statistics.hh"
+#include "RLE.hh"
+#include "orc/Exceptions.hh"
 
 #include "wrap/coded-stream-wrapper.h"
 
@@ -51,24 +51,20 @@ namespace orc {
 
   StatisticsImpl::StatisticsImpl(const proto::StripeStatistics& stripeStats,
                                  const StatContext& statContext) {
-    for(int i = 0; i < stripeStats.colstats_size(); i++) {
-      colStats.push_back(
-                convertColumnStatistics(stripeStats.colstats(i), statContext));
+    for (int i = 0; i < stripeStats.colstats_size(); i++) {
+      colStats.push_back(convertColumnStatistics(stripeStats.colstats(i), statContext));
     }
   }
 
-  StatisticsImpl::StatisticsImpl(const proto::Footer& footer,
-                                 const StatContext& statContext) {
-    for(int i = 0; i < footer.statistics_size(); i++) {
-      colStats.push_back(
-                convertColumnStatistics(footer.statistics(i), statContext));
+  StatisticsImpl::StatisticsImpl(const proto::Footer& footer, const StatContext& statContext) {
+    for (int i = 0; i < footer.statistics_size(); i++) {
+      colStats.push_back(convertColumnStatistics(footer.statistics(i), statContext));
     }
   }
 
   StatisticsImpl::~StatisticsImpl() {
-    for(std::vector<ColumnStatistics*>::iterator ptr = colStats.begin();
-        ptr != colStats.end();
-        ++ptr) {
+    for (std::vector<ColumnStatistics*>::iterator ptr = colStats.begin(); ptr != colStats.end();
+         ++ptr) {
       delete *ptr;
     }
   }
@@ -86,20 +82,18 @@ namespace orc {
   }
 
   StripeStatisticsImpl::StripeStatisticsImpl(
-                const proto::StripeStatistics& stripeStats,
-                std::vector<std::vector<proto::ColumnStatistics> >& indexStats,
-                const StatContext& statContext) {
+      const proto::StripeStatistics& stripeStats,
+      std::vector<std::vector<proto::ColumnStatistics> >& indexStats,
+      const StatContext& statContext) {
     columnStats.reset(new StatisticsImpl(stripeStats, statContext));
     rowIndexStats.resize(indexStats.size());
-    for(size_t i = 0; i < rowIndexStats.size(); i++) {
-      for(size_t j = 0; j < indexStats[i].size(); j++) {
-        rowIndexStats[i].push_back(
-            std::shared_ptr<const ColumnStatistics>(
-                convertColumnStatistics(indexStats[i][j], statContext)));
+    for (size_t i = 0; i < rowIndexStats.size(); i++) {
+      for (size_t j = 0; j < indexStats[i].size(); j++) {
+        rowIndexStats[i].push_back(std::shared_ptr<const ColumnStatistics>(
+            convertColumnStatistics(indexStats[i][j], statContext)));
       }
     }
   }
-
 
   ColumnStatistics::~ColumnStatistics() {
     // PASS
@@ -185,25 +179,23 @@ namespace orc {
     // PASS
   }
 
-  ColumnStatisticsImpl::ColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb) {
+  ColumnStatisticsImpl::ColumnStatisticsImpl(const proto::ColumnStatistics& pb) {
     _stats.setNumberOfValues(pb.numberofvalues());
     _stats.setHasNull(pb.hasnull());
   }
 
-  BinaryColumnStatisticsImpl::BinaryColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb, const StatContext& statContext){
+  BinaryColumnStatisticsImpl::BinaryColumnStatisticsImpl(const proto::ColumnStatistics& pb,
+                                                         const StatContext& statContext) {
     _stats.setNumberOfValues(pb.numberofvalues());
     _stats.setHasNull(pb.hasnull());
     if (pb.has_binarystatistics() && statContext.correctStats) {
       _stats.setHasTotalLength(pb.binarystatistics().has_sum());
-      _stats.setTotalLength(
-          static_cast<uint64_t>(pb.binarystatistics().sum()));
+      _stats.setTotalLength(static_cast<uint64_t>(pb.binarystatistics().sum()));
     }
   }
 
-  BooleanColumnStatisticsImpl::BooleanColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb, const StatContext& statContext){
+  BooleanColumnStatisticsImpl::BooleanColumnStatisticsImpl(const proto::ColumnStatistics& pb,
+                                                           const StatContext& statContext) {
     _stats.setNumberOfValues(pb.numberofvalues());
     _stats.setHasNull(pb.hasnull());
     if (pb.has_bucketstatistics() && statContext.correctStats) {
@@ -215,8 +207,8 @@ namespace orc {
     }
   }
 
-  DateColumnStatisticsImpl::DateColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb, const StatContext& statContext){
+  DateColumnStatisticsImpl::DateColumnStatisticsImpl(const proto::ColumnStatistics& pb,
+                                                     const StatContext& statContext) {
     _stats.setNumberOfValues(pb.numberofvalues());
     _stats.setHasNull(pb.hasnull());
     if (!pb.has_datestatistics() || !statContext.correctStats) {
@@ -232,8 +224,8 @@ namespace orc {
     }
   }
 
-  DecimalColumnStatisticsImpl::DecimalColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb, const StatContext& statContext){
+  DecimalColumnStatisticsImpl::DecimalColumnStatisticsImpl(const proto::ColumnStatistics& pb,
+                                                           const StatContext& statContext) {
     _stats.setNumberOfValues(pb.numberofvalues());
     _stats.setHasNull(pb.hasnull());
     if (pb.has_decimalstatistics() && statContext.correctStats) {
@@ -248,15 +240,14 @@ namespace orc {
     }
   }
 
-  DoubleColumnStatisticsImpl::DoubleColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb){
+  DoubleColumnStatisticsImpl::DoubleColumnStatisticsImpl(const proto::ColumnStatistics& pb) {
     _stats.setNumberOfValues(pb.numberofvalues());
     _stats.setHasNull(pb.hasnull());
     if (!pb.has_doublestatistics()) {
       _stats.setMinimum(0);
       _stats.setMaximum(0);
       _stats.setSum(0);
-    }else{
+    } else {
       const proto::DoubleStatistics& stats = pb.doublestatistics();
       _stats.setHasMinimum(stats.has_minimum());
       _stats.setHasMaximum(stats.has_maximum());
@@ -268,15 +259,14 @@ namespace orc {
     }
   }
 
-  IntegerColumnStatisticsImpl::IntegerColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb){
+  IntegerColumnStatisticsImpl::IntegerColumnStatisticsImpl(const proto::ColumnStatistics& pb) {
     _stats.setNumberOfValues(pb.numberofvalues());
     _stats.setHasNull(pb.hasnull());
     if (!pb.has_intstatistics()) {
       _stats.setMinimum(0);
       _stats.setMaximum(0);
       _stats.setSum(0);
-    }else{
+    } else {
       const proto::IntegerStatistics& stats = pb.intstatistics();
       _stats.setHasMinimum(stats.has_minimum());
       _stats.setHasMaximum(stats.has_maximum());
@@ -288,13 +278,13 @@ namespace orc {
     }
   }
 
-  StringColumnStatisticsImpl::StringColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb, const StatContext& statContext){
+  StringColumnStatisticsImpl::StringColumnStatisticsImpl(const proto::ColumnStatistics& pb,
+                                                         const StatContext& statContext) {
     _stats.setNumberOfValues(pb.numberofvalues());
     _stats.setHasNull(pb.hasnull());
     if (!pb.has_stringstatistics() || !statContext.correctStats) {
       _stats.setTotalLength(0);
-    }else{
+    } else {
       const proto::StringStatistics& stats = pb.stringstatistics();
       _stats.setHasMinimum(stats.has_minimum());
       _stats.setHasMaximum(stats.has_maximum());
@@ -306,8 +296,8 @@ namespace orc {
     }
   }
 
-  TimestampColumnStatisticsImpl::TimestampColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb, const StatContext& statContext) {
+  TimestampColumnStatisticsImpl::TimestampColumnStatisticsImpl(const proto::ColumnStatistics& pb,
+                                                               const StatContext& statContext) {
     _stats.setNumberOfValues(pb.numberofvalues());
     _stats.setHasNull(pb.hasnull());
     if (!pb.has_timestampstatistics() || !statContext.correctStats) {
@@ -317,22 +307,18 @@ namespace orc {
       _upperBound = 0;
       _minimumNanos = DEFAULT_MIN_NANOS;
       _maximumNanos = DEFAULT_MAX_NANOS;
-    }else{
+    } else {
       const proto::TimestampStatistics& stats = pb.timestampstatistics();
-      _stats.setHasMinimum(
-                stats.has_minimumutc() ||
-                (stats.has_minimum() && (statContext.writerTimezone != nullptr)));
-      _stats.setHasMaximum(
-                stats.has_maximumutc() ||
-                (stats.has_maximum() && (statContext.writerTimezone != nullptr)));
+      _stats.setHasMinimum(stats.has_minimumutc() ||
+                           (stats.has_minimum() && (statContext.writerTimezone != nullptr)));
+      _stats.setHasMaximum(stats.has_maximumutc() ||
+                           (stats.has_maximum() && (statContext.writerTimezone != nullptr)));
       _hasLowerBound = stats.has_minimumutc() || stats.has_minimum();
       _hasUpperBound = stats.has_maximumutc() || stats.has_maximum();
       // to be consistent with java side, non-default minimumnanos and maximumnanos
       // are added by one in their serialized form.
-      _minimumNanos = stats.has_minimumnanos() ?
-                     stats.minimumnanos() - 1 : DEFAULT_MIN_NANOS;
-      _maximumNanos = stats.has_maximumnanos() ?
-                     stats.maximumnanos() - 1 : DEFAULT_MAX_NANOS;
+      _minimumNanos = stats.has_minimumnanos() ? stats.minimumnanos() - 1 : DEFAULT_MIN_NANOS;
+      _maximumNanos = stats.has_maximumnanos() ? stats.maximumnanos() - 1 : DEFAULT_MAX_NANOS;
 
       // Timestamp stats are stored in milliseconds
       if (stats.has_minimumutc()) {
@@ -342,10 +328,8 @@ namespace orc {
       } else if (statContext.writerTimezone) {
         int64_t writerTimeSec = stats.minimum() / 1000;
         // multiply the offset by 1000 to convert to millisecond
-        int64_t minimum =
-          stats.minimum() +
-            (statContext.writerTimezone->getVariant(writerTimeSec).gmtOffset)
-              * 1000;
+        int64_t minimum = stats.minimum() +
+                          (statContext.writerTimezone->getVariant(writerTimeSec).gmtOffset) * 1000;
         _stats.setMinimum(minimum);
         _lowerBound = minimum;
       } else {
@@ -364,23 +348,22 @@ namespace orc {
         int64_t writerTimeSec = stats.maximum() / 1000;
         // multiply the offset by 1000 to convert to millisecond
         int64_t maximum = stats.maximum() +
-          (statContext.writerTimezone->getVariant(writerTimeSec).gmtOffset)
-            * 1000;
+                          (statContext.writerTimezone->getVariant(writerTimeSec).gmtOffset) * 1000;
         _stats.setMaximum(maximum);
         _upperBound = maximum;
       } else {
         _stats.setMaximum(0);
         // add 1 day 1 hour (25 hours) in milliseconds to handle unknown
         // TZ and daylight savings
-        _upperBound = stats.maximum() +  (25 * SECONDS_PER_HOUR * 1000);
+        _upperBound = stats.maximum() + (25 * SECONDS_PER_HOUR * 1000);
       }
       // Add 1 millisecond to account for microsecond precision of values
       _upperBound += 1;
     }
   }
 
-  CollectionColumnStatisticsImpl::CollectionColumnStatisticsImpl
-  (const proto::ColumnStatistics& pb) {
+  CollectionColumnStatisticsImpl::CollectionColumnStatisticsImpl(
+      const proto::ColumnStatistics& pb) {
     _stats.setNumberOfValues(pb.numberofvalues());
     _stats.setHasNull(pb.hasnull());
     if (!pb.has_collectionstatistics()) {
@@ -399,51 +382,40 @@ namespace orc {
     }
   }
 
-  std::unique_ptr<MutableColumnStatistics> createColumnStatistics(
-    const Type& type) {
+  std::unique_ptr<MutableColumnStatistics> createColumnStatistics(const Type& type) {
     switch (static_cast<int64_t>(type.getKind())) {
       case BOOLEAN:
-        return std::unique_ptr<MutableColumnStatistics>(
-          new BooleanColumnStatisticsImpl());
+        return std::unique_ptr<MutableColumnStatistics>(new BooleanColumnStatisticsImpl());
       case BYTE:
       case INT:
       case LONG:
       case SHORT:
-        return std::unique_ptr<MutableColumnStatistics>(
-          new IntegerColumnStatisticsImpl());
+        return std::unique_ptr<MutableColumnStatistics>(new IntegerColumnStatisticsImpl());
       case MAP:
       case LIST:
-        return std::unique_ptr<MutableColumnStatistics>(
-          new CollectionColumnStatisticsImpl());
+        return std::unique_ptr<MutableColumnStatistics>(new CollectionColumnStatisticsImpl());
       case STRUCT:
       case UNION:
-        return std::unique_ptr<MutableColumnStatistics>(
-          new ColumnStatisticsImpl());
+        return std::unique_ptr<MutableColumnStatistics>(new ColumnStatisticsImpl());
       case FLOAT:
       case DOUBLE:
-        return std::unique_ptr<MutableColumnStatistics>(
-          new DoubleColumnStatisticsImpl());
+        return std::unique_ptr<MutableColumnStatistics>(new DoubleColumnStatisticsImpl());
       case BINARY:
-        return std::unique_ptr<MutableColumnStatistics>(
-          new BinaryColumnStatisticsImpl());
+        return std::unique_ptr<MutableColumnStatistics>(new BinaryColumnStatisticsImpl());
       case STRING:
       case CHAR:
       case VARCHAR:
-        return std::unique_ptr<MutableColumnStatistics>(
-          new StringColumnStatisticsImpl());
+        return std::unique_ptr<MutableColumnStatistics>(new StringColumnStatisticsImpl());
       case DATE:
-        return std::unique_ptr<MutableColumnStatistics>(
-          new DateColumnStatisticsImpl());
+        return std::unique_ptr<MutableColumnStatistics>(new DateColumnStatisticsImpl());
       case TIMESTAMP:
       case TIMESTAMP_INSTANT:
-        return std::unique_ptr<MutableColumnStatistics>(
-          new TimestampColumnStatisticsImpl());
+        return std::unique_ptr<MutableColumnStatistics>(new TimestampColumnStatisticsImpl());
       case DECIMAL:
-        return std::unique_ptr<MutableColumnStatistics>(
-          new DecimalColumnStatisticsImpl());
+        return std::unique_ptr<MutableColumnStatistics>(new DecimalColumnStatisticsImpl());
       default:
         throw NotImplementedYet("Not supported type: " + type.toString());
     }
   }
 
-}// namespace
+}  // namespace orc

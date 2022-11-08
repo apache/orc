@@ -19,11 +19,11 @@
 #ifndef ORC_SARGSAPPLIER_HH
 #define ORC_SARGSAPPLIER_HH
 
-#include "wrap/orc-proto-wrapper.hh"
 #include <orc/Common.hh>
 #include "orc/BloomFilter.hh"
-#include "orc/Type.hh"
 #include "orc/Reader.hh"
+#include "orc/Type.hh"
+#include "wrap/orc-proto-wrapper.hh"
 
 #include "sargs/SearchArgument.hh"
 
@@ -32,12 +32,9 @@
 namespace orc {
 
   class SargsApplier {
-  public:
-    SargsApplier(const Type& type,
-                 const SearchArgument * searchArgument,
-                 uint64_t rowIndexStride,
-                 WriterVersion writerVersion,
-                 ReaderMetrics* metrics);
+   public:
+    SargsApplier(const Type& type, const SearchArgument* searchArgument, uint64_t rowIndexStride,
+                 WriterVersion writerVersion, ReaderMetrics* metrics);
 
     /**
      * Evaluate search argument on file statistics
@@ -47,8 +44,7 @@ namespace orc {
      * will require further evaluation.
      * @return true if file statistics satisfy the sargs
      */
-    bool evaluateFileStatistics(const proto::Footer& footer,
-                                uint64_t numRowGroupsInStripeRange);
+    bool evaluateFileStatistics(const proto::Footer& footer, uint64_t numRowGroupsInStripeRange);
 
     /**
      * Evaluate search argument on stripe statistics
@@ -66,27 +62,32 @@ namespace orc {
      * Pick the row groups that we need to load from the current stripe.
      * @return true if any row group is selected
      */
-    bool pickRowGroups(
-                      uint64_t rowsInStripe,
-                      const std::unordered_map<uint64_t, proto::RowIndex>& rowIndexes,
-                      const std::map<uint32_t, BloomFilterIndex>& bloomFilters);
+    bool pickRowGroups(uint64_t rowsInStripe,
+                       const std::unordered_map<uint64_t, proto::RowIndex>& rowIndexes,
+                       const std::map<uint32_t, BloomFilterIndex>& bloomFilters);
 
     /**
      * Return a vector of the next skipped row for each RowGroup. Each value is the row id
      * in stripe. 0 means the current RowGroup is entirely skipped.
      * Only valid after invoking pickRowGroups().
      */
-    const std::vector<uint64_t>& getNextSkippedRows() const { return mNextSkippedRows; }
+    const std::vector<uint64_t>& getNextSkippedRows() const {
+      return mNextSkippedRows;
+    }
 
     /**
      * Indicate whether any row group is selected in the last evaluation
      */
-    bool hasSelected() const { return mHasSelected; }
+    bool hasSelected() const {
+      return mHasSelected;
+    }
 
     /**
      * Indicate whether any row group is skipped in the last evaluation
      */
-    bool hasSkipped() const { return mHasSkipped; }
+    bool hasSkipped() const {
+      return mHasSkipped;
+    }
 
     /**
      * Whether any row group from current row in the stripe matches PPD.
@@ -110,10 +111,9 @@ namespace orc {
       }
     }
 
-  private:
+   private:
     // evaluate column statistics in the form of protobuf::RepeatedPtrField
-    typedef ::google::protobuf::RepeatedPtrField<proto::ColumnStatistics>
-      PbColumnStatistics;
+    typedef ::google::protobuf::RepeatedPtrField<proto::ColumnStatistics> PbColumnStatistics;
     bool evaluateColumnStatistics(const PbColumnStatistics& colStats) const;
 
     friend class TestSargsApplier_findColumnTest_Test;
@@ -121,9 +121,9 @@ namespace orc {
     friend class TestSargsApplier_findMapColumnTest_Test;
     static uint64_t findColumn(const Type& type, const std::string& colName);
 
-  private:
+   private:
     const Type& mType;
-    const SearchArgument * mSearchArgument;
+    const SearchArgument* mSearchArgument;
     uint64_t mRowIndexStride;
     WriterVersion mWriterVersion;
     // column ids for each predicate leaf in the search argument
@@ -144,6 +144,6 @@ namespace orc {
     ReaderMetrics* mMetrics;
   };
 
-}
+}  // namespace orc
 
-#endif //ORC_SARGSAPPLIER_HH
+#endif  // ORC_SARGSAPPLIER_HH

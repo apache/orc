@@ -19,15 +19,15 @@
 #ifndef ORC_MEMORYOUTPUTSTREAM_HH
 #define ORC_MEMORYOUTPUTSTREAM_HH
 
-#include "orc/OrcFile.hh"
 #include "io/OutputStream.hh"
+#include "orc/OrcFile.hh"
 
 #include <iostream>
 
 namespace orc {
 
   class MemoryOutputStream : public OutputStream {
-  public:
+   public:
     MemoryOutputStream(size_t capacity) : name("MemoryOutputStream") {
       data = new char[capacity];
       length = 0;
@@ -50,22 +50,21 @@ namespace orc {
       return name;
     }
 
-    const char * getData() const {
+    const char* getData() const {
       return data;
     }
 
-    void close() override {
-    }
+    void close() override {}
 
-    void reset()  {
+    void reset() {
       length = 0;
     }
 
-  private:
-    char * data;
+   private:
+    char* data;
     std::string name;
     uint64_t length, naturalWriteSize;
   };
-}
+}  // namespace orc
 
 #endif

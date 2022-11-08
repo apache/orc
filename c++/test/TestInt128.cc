@@ -18,8 +18,8 @@
 
 #include "orc/Int128.hh"
 
-#include "wrap/gtest-wrapper.h"
 #include "OrcTest.hh"
+#include "wrap/gtest-wrapper.h"
 
 #include <iostream>
 
@@ -80,7 +80,7 @@ namespace orc {
     EXPECT_EQ("0x00000000000010010000000000000010", n.toHexString());
     n -= 0x20;
     EXPECT_EQ("0x0000000000001000fffffffffffffff0", n.toHexString());
-    n += Int128(2,3);
+    n += Int128(2, 3);
     EXPECT_EQ("0x0000000000001002fffffffffffffff3", n.toHexString());
 
     Int128 x(static_cast<int64_t>(0xffffffffffffff00), 0x200);
@@ -91,7 +91,7 @@ namespace orc {
     EXPECT_EQ("0xfffffffffffffefffffffffffffffe00", x.toHexString());
     x += 0x400;
     EXPECT_EQ("0xffffffffffffff000000000000000200", x.toHexString());
-    x -= Int128(1,2);
+    x -= Int128(1, 2);
     EXPECT_EQ("0xfffffffffffffeff00000000000001fe", x.toHexString());
   }
 
@@ -99,13 +99,13 @@ namespace orc {
     Int128 n = Int128(0x00000000100000002, 0x0000000400000008);
     n |= Int128(0x0000001000000020, 0x0000004000000080);
     EXPECT_EQ("0x00000011000000220000004400000088", n.toHexString());
-    n =  Int128(0x0000111100002222, 0x0000333300004444);
+    n = Int128(0x0000111100002222, 0x0000333300004444);
     n &= Int128(0x0000f00000000f00, 0x000000f00000000f);
-    EXPECT_EQ( "0x00001000000002000000003000000004", n.toHexString());
+    EXPECT_EQ("0x00001000000002000000003000000004", n.toHexString());
   }
 
   TEST(Int128, testShift) {
-    Int128 n(0x123456789abcdef0,0xfedcba9876543210);
+    Int128 n(0x123456789abcdef0, 0xfedcba9876543210);
     EXPECT_EQ("0x123456789abcdef0fedcba9876543210", n.toHexString());
     n <<= 0;
     EXPECT_EQ("0x123456789abcdef0fedcba9876543210", n.toHexString());
@@ -126,7 +126,7 @@ namespace orc {
     n <<= 128;
     EXPECT_EQ(0, n.toLong());
 
-    n = Int128(0x123456789abcdef0,0xfedcba9876543210);
+    n = Int128(0x123456789abcdef0, 0xfedcba9876543210);
     EXPECT_EQ("0x123456789abcdef0fedcba9876543210", n.toHexString());
     n >>= 0;
     EXPECT_EQ("0x123456789abcdef0fedcba9876543210", n.toHexString());
@@ -142,11 +142,11 @@ namespace orc {
     EXPECT_EQ("0x2400000000000000240123456789abcd", n.toHexString());
     n >>= 129;
     EXPECT_EQ(0, n.toLong());
-    n = Int128(static_cast<int64_t>(0xfedcba0987654321),0x1234567890abcdef);
+    n = Int128(static_cast<int64_t>(0xfedcba0987654321), 0x1234567890abcdef);
     EXPECT_EQ("0xfedcba09876543211234567890abcdef", n.toHexString());
     n >>= 64;
     EXPECT_EQ("0xfffffffffffffffffedcba0987654321", n.toHexString());
-    n = Int128(static_cast<int64_t>(0xfedcba0987654321),0x1234567890abcdef);
+    n = Int128(static_cast<int64_t>(0xfedcba0987654321), 0x1234567890abcdef);
     n >>= 129;
     EXPECT_EQ("0xffffffffffffffffffffffffffffffff", n.toHexString());
     n = Int128(-1, 0xffffffffffffffff);
@@ -205,8 +205,7 @@ namespace orc {
   TEST(Int128, testHash) {
     EXPECT_EQ(0, Int128().hash());
     EXPECT_EQ(0x123, Int128(0x123).hash());
-    EXPECT_EQ(0xc3c3c3c3,
-              Int128(0x0101010102020202, 0x4040404080808080).hash());
+    EXPECT_EQ(0xc3c3c3c3, Int128(0x0101010102020202, 0x4040404080808080).hash());
     EXPECT_EQ(0x122, Int128(-0x123).hash());
     EXPECT_EQ(0x12345678, Int128(0x1234567800000000, 0x0).hash());
     EXPECT_EQ(0x12345678, Int128(0x12345678, 0x0).hash());
@@ -225,7 +224,7 @@ namespace orc {
     EXPECT_EQ(true, !Int128(-2, 0x7fffffffffffffff).fitsInLong());
 
     EXPECT_EQ(0x7fffffffffffffff, Int128(0x0, 0x7fffffffffffffff).toLong());
-    EXPECT_THROW(Int128(1,1).toLong(), std::runtime_error);
+    EXPECT_THROW(Int128(1, 1).toLong(), std::runtime_error);
     EXPECT_EQ(0x8000000000000000, Int128(-1, 0x8000000000000000).toLong());
   }
 
@@ -239,7 +238,7 @@ namespace orc {
     EXPECT_EQ(-120, x.toLong());
     x *= -7;
     EXPECT_EQ(840, x.toLong());
-    x = Int128(0x0123456776543210,0x1111222233334444);
+    x = Int128(0x0123456776543210, 0x1111222233334444);
     x *= 2;
     EXPECT_EQ(0x02468aceeca86420, x.getHighBits());
     EXPECT_EQ(0x2222444466668888, x.getLowBits());
@@ -397,8 +396,8 @@ namespace orc {
     EXPECT_EQ(0x87654321, array[3]);
   }
 
-  void fixDivisionSigns(Int128 &result, Int128 &remainder,
-                        bool dividendWasNegative, bool divisorWasNegative);
+  void fixDivisionSigns(Int128& result, Int128& remainder, bool dividendWasNegative,
+                        bool divisorWasNegative);
 
   TEST(Int128, testFixDivisionSigns) {
     Int128 x = 123;
@@ -424,14 +423,13 @@ namespace orc {
     fixDivisionSigns(x, y, true, true);
     EXPECT_EQ(123, x.toLong());
     EXPECT_EQ(-456, y.toLong());
-
   }
 
   void buildFromArray(Int128& value, uint32_t* array, int64_t length);
 
   TEST(Int128, testBuildFromArray) {
     Int128 result;
-    uint32_t array[5]={0x12345678, 0x9abcdef0, 0xfedcba98, 0x76543210, 0};
+    uint32_t array[5] = {0x12345678, 0x9abcdef0, 0xfedcba98, 0x76543210, 0};
 
     buildFromArray(result, array, 0);
     EXPECT_EQ(0, result.toLong());
@@ -451,9 +449,8 @@ namespace orc {
     EXPECT_THROW(buildFromArray(result, array, 5), std::logic_error);
   }
 
-  Int128 singleDivide(uint32_t* dividend, int64_t dividendLength,
-                      uint32_t divisor, Int128& remainder,
-                      bool dividendWasNegative, bool divisorWasNegative);
+  Int128 singleDivide(uint32_t* dividend, int64_t dividendLength, uint32_t divisor,
+                      Int128& remainder, bool dividendWasNegative, bool divisorWasNegative);
 
   TEST(Int128, testSingleDivide) {
     Int128 remainder;
@@ -562,15 +559,11 @@ namespace orc {
 
   TEST(Int128, testToDecimalString) {
     Int128 num = Int128("98765432109876543210987654321098765432");
-    EXPECT_EQ("98765432109876543210987654321098765432",
-              num.toDecimalString(0));
-    EXPECT_EQ("987654321098765432109876543210987.65432",
-              num.toDecimalString(5));
+    EXPECT_EQ("98765432109876543210987654321098765432", num.toDecimalString(0));
+    EXPECT_EQ("987654321098765432109876543210987.65432", num.toDecimalString(5));
     num.negate();
-    EXPECT_EQ("-98765432109876543210987654321098765432",
-              num.toDecimalString(0));
-    EXPECT_EQ("-987654321098765432109876543210987.65432",
-              num.toDecimalString(5));
+    EXPECT_EQ("-98765432109876543210987654321098765432", num.toDecimalString(0));
+    EXPECT_EQ("-987654321098765432109876543210987.65432", num.toDecimalString(5));
     num = 123;
     EXPECT_EQ("12.3", num.toDecimalString(1));
     EXPECT_EQ("0.123", num.toDecimalString(3));
@@ -584,7 +577,6 @@ namespace orc {
     EXPECT_EQ("-0.0123", num.toDecimalString(4));
     EXPECT_EQ("-0.00123", num.toDecimalString(5));
   }
-
 
   TEST(Int128, testInt128Scale) {
     Int128 num = Int128(10);

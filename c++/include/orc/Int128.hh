@@ -35,7 +35,7 @@ namespace orc {
    *
    */
   class Int128 {
-  public:
+   public:
     Int128() {
       highbits = 0;
       lowbits = 0;
@@ -110,7 +110,7 @@ namespace orc {
      * @param right the number to add
      * @return *this
      */
-    Int128& operator+=(const Int128 &right) {
+    Int128& operator+=(const Int128& right) {
       uint64_t sum = lowbits + right.lowbits;
       highbits += right.highbits;
       if (sum < lowbits) {
@@ -125,7 +125,7 @@ namespace orc {
      * @param right the number to subtract
      * @return *this
      */
-    Int128& operator-=(const Int128 &right) {
+    Int128& operator-=(const Int128& right) {
       uint64_t diff = lowbits - right.lowbits;
       highbits -= right.highbits;
       if (diff > lowbits) {
@@ -140,7 +140,7 @@ namespace orc {
      * @param right the number to multiply by
      * @return *this
      */
-    Int128& operator*=(const Int128 &right);
+    Int128& operator*=(const Int128& right);
 
     /**
      * Divide this number by right and return the result. This operation is
@@ -154,14 +154,14 @@ namespace orc {
      * @param right the number to divide by
      * @param remainder the remainder after the division
      */
-    Int128 divide(const Int128 &right, Int128& remainder) const;
+    Int128 divide(const Int128& right, Int128& remainder) const;
 
     /**
      * Logical or between two Int128.
      * @param right the number to or in
      * @return *this
      */
-    Int128& operator|=(const Int128 &right) {
+    Int128& operator|=(const Int128& right) {
       lowbits |= right.lowbits;
       highbits |= right.highbits;
       return *this;
@@ -172,7 +172,7 @@ namespace orc {
      * @param right the number to and in
      * @return *this
      */
-    Int128& operator&=(const Int128 &right) {
+    Int128& operator&=(const Int128& right) {
       lowbits &= right.lowbits;
       highbits &= right.highbits;
       return *this;
@@ -183,7 +183,7 @@ namespace orc {
      * @param right the number to and in
      * @return logical and result
      */
-    Int128 operator&(const Int128 &right) {
+    Int128 operator&(const Int128& right) {
       Int128 value = *this;
       value &= right;
       return value;
@@ -219,8 +219,7 @@ namespace orc {
         if (bits < 64) {
           lowbits >>= bits;
           lowbits |= static_cast<uint64_t>(highbits << (64 - bits));
-          highbits = static_cast<int64_t>
-            (static_cast<uint64_t>(highbits) >> bits);
+          highbits = static_cast<int64_t>(static_cast<uint64_t>(highbits) >> bits);
         } else if (bits < 128) {
           lowbits = static_cast<uint64_t>(highbits >> (bits - 64));
           highbits = highbits >= 0 ? 0 : -1l;
@@ -240,7 +239,7 @@ namespace orc {
       return highbits != right.highbits || lowbits != right.lowbits;
     }
 
-    bool operator<(const Int128 &right) const {
+    bool operator<(const Int128& right) const {
       if (highbits == right.highbits) {
         return lowbits < right.lowbits;
       } else {
@@ -248,7 +247,7 @@ namespace orc {
       }
     }
 
-    bool operator<=(const Int128 &right) const {
+    bool operator<=(const Int128& right) const {
       if (highbits == right.highbits) {
         return lowbits <= right.lowbits;
       } else {
@@ -256,7 +255,7 @@ namespace orc {
       }
     }
 
-    bool operator>(const Int128 &right) const {
+    bool operator>(const Int128& right) const {
       if (highbits == right.highbits) {
         return lowbits > right.lowbits;
       } else {
@@ -264,7 +263,7 @@ namespace orc {
       }
     }
 
-    bool operator>=(const Int128 &right) const {
+    bool operator>=(const Int128& right) const {
       if (highbits == right.highbits) {
         return lowbits >= right.lowbits;
       } else {
@@ -273,10 +272,8 @@ namespace orc {
     }
 
     uint32_t hash() const {
-      return static_cast<uint32_t>(highbits >> 32) ^
-        static_cast<uint32_t>(highbits) ^
-        static_cast<uint32_t>(lowbits >> 32) ^
-        static_cast<uint32_t>(lowbits);
+      return static_cast<uint32_t>(highbits >> 32) ^ static_cast<uint32_t>(highbits) ^
+             static_cast<uint32_t>(lowbits >> 32) ^ static_cast<uint32_t>(lowbits);
     }
 
     /**
@@ -284,12 +281,12 @@ namespace orc {
      */
     bool fitsInLong() const {
       switch (highbits) {
-      case 0:
-        return 0 == (lowbits & LONG_SIGN_BIT);
-      case -1:
-        return 0 != (lowbits & LONG_SIGN_BIT);
-      default:
-        return false;
+        case 0:
+          return 0 == (lowbits & LONG_SIGN_BIT);
+        case -1:
+          return 0 != (lowbits & LONG_SIGN_BIT);
+        default:
+          return false;
       }
     }
 
@@ -316,8 +313,7 @@ namespace orc {
      * @param trimTrailingZeros whether or not to trim trailing zeros
      * @return converted string representation
      */
-    std::string toDecimalString(int32_t scale = 0,
-                                bool trimTrailingZeros = false) const;
+    std::string toDecimalString(int32_t scale = 0, bool trimTrailingZeros = false) const;
 
     /**
      * Return the base 16 string representation of the two's complement with
@@ -347,14 +343,13 @@ namespace orc {
      * @param wasNegative set to true if the original number was negative
      * @return the number of elements that were set in the array (1 to 4)
      */
-    int64_t fillInArray(uint32_t* array, bool &wasNegative) const;
+    int64_t fillInArray(uint32_t* array, bool& wasNegative) const;
 
-  private:
+   private:
     static const uint64_t LONG_SIGN_BIT = 0x8000000000000000u;
     int64_t highbits;
     uint64_t lowbits;
   };
-
 
   /**
    * Scales up an Int128 value
@@ -363,9 +358,7 @@ namespace orc {
    * @param overflow returns whether the result overflows or not
    * @return the scaled value
    */
-  Int128 scaleUpInt128ByPowerOfTen(Int128 value,
-                                   int32_t power,
-                                   bool &overflow);
+  Int128 scaleUpInt128ByPowerOfTen(Int128 value, int32_t power, bool& overflow);
   /**
    * Scales down an Int128 value
    * @param value the Int128 value to scale
@@ -373,5 +366,5 @@ namespace orc {
    * @return the scaled value
    */
   Int128 scaleDownInt128ByPowerOfTen(Int128 value, int32_t power);
-}
+}  // namespace orc
 #endif

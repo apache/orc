@@ -21,18 +21,15 @@
 #include "MemoryOutputStream.hh"
 #include "RLEv1.hh"
 
-#include "wrap/orc-proto-wrapper.hh"
 #include "wrap/gtest-wrapper.h"
+#include "wrap/orc-proto-wrapper.hh"
 
 #include <algorithm>
 
 namespace orc {
-  const int DEFAULT_MEM_STREAM_SIZE = 1024 * 1024 * 2; // 2M
+  const int DEFAULT_MEM_STREAM_SIZE = 1024 * 1024 * 2;  // 2M
 
-  void generateRandomData(
-                          char * data,
-                          size_t size,
-                          bool letter) {
+  void generateRandomData(char* data, size_t size, bool letter) {
     for (size_t i = 0; i < size; ++i) {
       if (letter) {
         bool capitalized = std::rand() % 2 == 0;
@@ -44,25 +41,19 @@ namespace orc {
     }
   }
 
-  void decompressAndVerify(const MemoryOutputStream& memStream,
-                           CompressionKind kind,
-                           const char * data,
-                           size_t size,
-                           MemoryPool& pool) {
-
+  void decompressAndVerify(const MemoryOutputStream& memStream, CompressionKind kind,
+                           const char* data, size_t size, MemoryPool& pool) {
     std::unique_ptr<SeekableInputStream> inputStream(
-      new SeekableArrayInputStream(memStream.getData(), memStream.getLength()));
+        new SeekableArrayInputStream(memStream.getData(), memStream.getLength()));
 
     std::unique_ptr<SeekableInputStream> decompressStream =
-      createDecompressor(kind, std::move(inputStream), 1024, pool,
-                         getDefaultReaderMetrics());
+        createDecompressor(kind, std::move(inputStream), 1024, pool, getDefaultReaderMetrics());
 
-    const char * decompressedBuffer;
+    const char* decompressedBuffer;
     int decompressedSize;
     int pos = 0;
-    while (decompressStream->Next(
-      reinterpret_cast<const void**>(&decompressedBuffer),
-      &decompressedSize)) {
+    while (decompressStream->Next(reinterpret_cast<const void**>(&decompressedBuffer),
+                                  &decompressedSize)) {
       for (int i = 0; i < decompressedSize; ++i) {
         EXPECT_LT(static_cast<size_t>(pos), size);
         EXPECT_EQ(data[pos], decompressedBuffer[i]);
@@ -71,33 +62,18 @@ namespace orc {
     }
   }
 
-  void compressAndVerify(CompressionKind kind,
-                         OutputStream * outStream,
-                         CompressionStrategy strategy,
-                         uint64_t capacity,
-                         uint64_t block,
-                         MemoryPool& pool,
-                         const char * data,
-                         size_t dataSize) {
+  void compressAndVerify(CompressionKind kind, OutputStream* outStream,
+                         CompressionStrategy strategy, uint64_t capacity, uint64_t block,
+                         MemoryPool& pool, const char* data, size_t dataSize) {
     std::unique_ptr<BufferedOutputStream> compressStream =
-      createCompressor(kind,
-                       outStream,
-                       strategy,
-                       capacity,
-                       block,
-                       pool,
-                       nullptr);
+        createCompressor(kind, outStream, strategy, capacity, block, pool, nullptr);
 
     size_t pos = 0;
-    char * compressBuffer;
+    char* compressBuffer;
     int compressBufferSize = 0;
     while (dataSize > 0 &&
-           compressStream->Next(
-             reinterpret_cast<void**>(&compressBuffer),
-             &compressBufferSize)) {
-      size_t copy_size = std::min(
-        static_cast<size_t>(compressBufferSize),
-        dataSize);
+           compressStream->Next(reinterpret_cast<void**>(&compressBuffer), &compressBufferSize)) {
+      size_t copy_size = std::min(static_cast<size_t>(compressBufferSize), dataSize);
       memcpy(compressBuffer, data + pos, copy_size);
 
       if (copy_size == dataSize) {
@@ -114,26 +90,16 @@ namespace orc {
 
   void compress_original_string(orc::CompressionKind kind) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    MemoryPool * pool = getDefaultPool();
+    MemoryPool* pool = getDefaultPool();
 
     uint64_t capacity = 1024;
     uint64_t block = 128;
 
     // simple, short string which will result in the original being saved
-    char testData [] = "hello world!";
-    compressAndVerify(kind,
-                      &memStream,
-                      CompressionStrategy_SPEED,
-                      capacity,
-                      block,
-                      *pool,
-                      testData,
+    char testData[] = "hello world!";
+    compressAndVerify(kind, &memStream, CompressionStrategy_SPEED, capacity, block, *pool, testData,
                       sizeof(testData));
-    decompressAndVerify(memStream,
-                        kind,
-                        testData,
-                        sizeof(testData),
-                        *pool);
+    decompressAndVerify(memStream, kind, testData, sizeof(testData), *pool);
   }
 
   TEST(TestCompression, zlib_compress_original_string) {
@@ -142,26 +108,16 @@ namespace orc {
 
   void compress_simple_repeated_string(orc::CompressionKind kind) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    MemoryPool * pool = getDefaultPool();
+    MemoryPool* pool = getDefaultPool();
 
     uint64_t capacity = 1024;
     uint64_t block = 128;
 
     // simple repeated string (50 'a's) which should be compressed
-    char testData [] = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-    compressAndVerify(kind,
-                      &memStream,
-                      CompressionStrategy_SPEED,
-                      capacity,
-                      block,
-                      *pool,
-                      testData,
+    char testData[] = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    compressAndVerify(kind, &memStream, CompressionStrategy_SPEED, capacity, block, *pool, testData,
                       sizeof(testData));
-    decompressAndVerify(memStream,
-                        kind,
-                        testData,
-                        sizeof(testData),
-                        *pool);
+    decompressAndVerify(memStream, kind, testData, sizeof(testData), *pool);
   }
 
   TEST(TestCompression, compress_simple_repeated_string) {
@@ -170,29 +126,19 @@ namespace orc {
 
   void compress_two_blocks(orc::CompressionKind kind) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    MemoryPool * pool = getDefaultPool();
+    MemoryPool* pool = getDefaultPool();
 
     uint64_t capacity = 1024;
     uint64_t block = 128;
 
     // testData will be compressed in two blocks
-    char testData [170];
+    char testData[170];
     for (int i = 0; i < 170; ++i) {
       testData[i] = 'a';
     }
-    compressAndVerify(kind,
-                      &memStream,
-                      CompressionStrategy_SPEED,
-                      capacity,
-                      block,
-                      *pool,
-                      testData,
+    compressAndVerify(kind, &memStream, CompressionStrategy_SPEED, capacity, block, *pool, testData,
                       170);
-    decompressAndVerify(memStream,
-                        kind,
-                        testData,
-                        170,
-                        *pool);
+    decompressAndVerify(memStream, kind, testData, 170, *pool);
   }
 
   TEST(TestCompression, zlib_compress_two_blocks) {
@@ -201,29 +147,19 @@ namespace orc {
 
   void compress_random_letters(orc::CompressionKind kind) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    MemoryPool * pool = getDefaultPool();
+    MemoryPool* pool = getDefaultPool();
 
     uint64_t capacity = 4096;
     uint64_t block = 1024;
-    size_t dataSize = 1024 * 1024; // 1M
+    size_t dataSize = 1024 * 1024;  // 1M
 
     // testData will be compressed in two blocks
-    char * testData = new char [dataSize];
+    char* testData = new char[dataSize];
     generateRandomData(testData, dataSize, true);
-    compressAndVerify(kind,
-                      &memStream,
-                      CompressionStrategy_SPEED,
-                      capacity,
-                      block,
-                      *pool,
-                      testData,
+    compressAndVerify(kind, &memStream, CompressionStrategy_SPEED, capacity, block, *pool, testData,
                       dataSize);
-    decompressAndVerify(memStream,
-                        kind,
-                        testData,
-                        dataSize,
-                        *pool);
-    delete [] testData;
+    decompressAndVerify(memStream, kind, testData, dataSize, *pool);
+    delete[] testData;
   }
 
   TEST(TestCompression, zlib_compress_random_letters) {
@@ -232,39 +168,28 @@ namespace orc {
 
   void compress_random_bytes(orc::CompressionKind kind) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    MemoryPool * pool = getDefaultPool();
+    MemoryPool* pool = getDefaultPool();
 
     uint64_t capacity = 4096;
     uint64_t block = 1024;
-    size_t dataSize = 1024 * 1024; // 1M
+    size_t dataSize = 1024 * 1024;  // 1M
 
     // testData will be compressed in two blocks
-    char * testData = new char [dataSize];
+    char* testData = new char[dataSize];
     generateRandomData(testData, dataSize, false);
-    compressAndVerify(kind,
-                      &memStream,
-                      CompressionStrategy_SPEED,
-                      capacity,
-                      block,
-                      *pool,
-                      testData,
+    compressAndVerify(kind, &memStream, CompressionStrategy_SPEED, capacity, block, *pool, testData,
                       dataSize);
-    decompressAndVerify(memStream,
-                        kind,
-                        testData,
-                        dataSize,
-                        *pool);
-    delete [] testData;
+    decompressAndVerify(memStream, kind, testData, dataSize, *pool);
+    delete[] testData;
   }
 
   TEST(TestCompression, zlib_compress_random_bytes) {
     compress_random_bytes(CompressionKind_ZLIB);
   }
 
-  void protobuff_compression(orc::CompressionKind kind,
-                             proto::CompressionKind protoKind) {
+  void protobuff_compression(orc::CompressionKind kind, proto::CompressionKind protoKind) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    MemoryPool * pool = getDefaultPool();
+    MemoryPool* pool = getDefaultPool();
 
     uint64_t capacity = 4096;
     uint64_t block = 256;
@@ -279,27 +204,17 @@ namespace orc {
       ps.add_version(static_cast<uint32_t>(std::rand()));
     }
 
-    std::unique_ptr<BufferedOutputStream> compressStream =
-      createCompressor(kind,
-                       &memStream,
-                       CompressionStrategy_SPEED,
-                       capacity,
-                       block,
-                       *pool,
-                       nullptr);
+    std::unique_ptr<BufferedOutputStream> compressStream = createCompressor(
+        kind, &memStream, CompressionStrategy_SPEED, capacity, block, *pool, nullptr);
 
     EXPECT_TRUE(ps.SerializeToZeroCopyStream(compressStream.get()));
     compressStream->flush();
 
     std::unique_ptr<SeekableInputStream> inputStream(
-      new SeekableArrayInputStream(memStream.getData(), memStream.getLength()));
+        new SeekableArrayInputStream(memStream.getData(), memStream.getLength()));
 
     std::unique_ptr<SeekableInputStream> decompressStream =
-      createDecompressor(kind,
-                         std::move(inputStream),
-                         1024,
-                         *pool,
-                         getDefaultReaderMetrics());
+        createDecompressor(kind, std::move(inputStream), 1024, *pool, getDefaultReaderMetrics());
 
     proto::PostScript ps2;
     ps2.ParseFromZeroCopyStream(decompressStream.get());
@@ -392,18 +307,12 @@ namespace orc {
 
   void testSeekDecompressionStream(CompressionKind kind) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    MemoryPool * pool = getDefaultPool();
+    MemoryPool* pool = getDefaultPool();
     CompressionStrategy strategy = CompressionStrategy_COMPRESSION;
     uint64_t batchSize = 1024, blockSize = 256;
 
-    AppendOnlyBufferedStream outStream(
-      createCompressor(kind,
-                       &memStream,
-                       strategy,
-                       DEFAULT_MEM_STREAM_SIZE,
-                       blockSize,
-                       *pool,
-                       nullptr));
+    AppendOnlyBufferedStream outStream(createCompressor(
+        kind, &memStream, strategy, DEFAULT_MEM_STREAM_SIZE, blockSize, *pool, nullptr));
 
     // write 3 batches of data and record positions between every batch
     size_t row = 0;
@@ -424,13 +333,9 @@ namespace orc {
 
     // try to decompress them
     std::unique_ptr<SeekableInputStream> inputStream(
-      new SeekableArrayInputStream(memStream.getData(), memStream.getLength()));
-    std::unique_ptr<SeekableInputStream> decompressStream =
-      createDecompressor(kind,
-                         std::move(inputStream),
-                         blockSize,
-                         *pool,
-                         getDefaultReaderMetrics());
+        new SeekableArrayInputStream(memStream.getData(), memStream.getLength()));
+    std::unique_ptr<SeekableInputStream> decompressStream = createDecompressor(
+        kind, std::move(inputStream), blockSize, *pool, getDefaultReaderMetrics());
 
     // prepare positions to seek to
     EXPECT_EQ(rowIndexEntry1.positions_size(), rowIndexEntry2.positions_size());
@@ -464,4 +369,4 @@ namespace orc {
     testSeekDecompressionStream(CompressionKind_LZ4);
     testSeekDecompressionStream(CompressionKind_SNAPPY);
   }
-}
+}  // namespace orc

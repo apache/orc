@@ -35,20 +35,18 @@ namespace orc {
   }
 
   class RleEncoder {
-  public:
+   public:
     // must be non-inline!
     virtual ~RleEncoder();
 
-    RleEncoder(
-            std::unique_ptr<BufferedOutputStream> outStream,
-            bool hasSigned):
-            outputStream(std::move(outStream)),
-            bufferPosition(0),
-            bufferLength(0),
-            numLiterals(0),
-            isSigned(hasSigned),
-            buffer(nullptr){
-      //pass
+    RleEncoder(std::unique_ptr<BufferedOutputStream> outStream, bool hasSigned)
+        : outputStream(std::move(outStream)),
+          bufferPosition(0),
+          bufferLength(0),
+          numLiterals(0),
+          isSigned(hasSigned),
+          buffer(nullptr) {
+      // pass
     }
 
     /**
@@ -58,14 +56,13 @@ namespace orc {
      * @param notNull If the pointer is null, all values are read. If the
      *    pointer is not null, positions that are false are skipped.
      */
-    virtual void add(const int64_t* data, uint64_t numValues,
-                      const char* notNull);
+    virtual void add(const int64_t* data, uint64_t numValues, const char* notNull);
 
     /**
      * Get size of buffer used so far.
      */
     uint64_t getBufferSize() const {
-        return outputStream->getSize();
+      return outputStream->getSize();
     }
 
     /**
@@ -81,7 +78,7 @@ namespace orc {
 
     virtual void write(int64_t val) = 0;
 
-  protected:
+   protected:
     std::unique_ptr<BufferedOutputStream> outputStream;
     size_t bufferPosition;
     size_t bufferLength;
@@ -98,7 +95,7 @@ namespace orc {
   };
 
   class RleDecoder {
-  public:
+   public:
     // must be non-inline!
     virtual ~RleDecoder();
 
@@ -123,10 +120,9 @@ namespace orc {
      * @param notNull If the pointer is null, all values are read. If the
      *    pointer is not null, positions that are false are skipped.
      */
-    virtual void next(int64_t* data, uint64_t numValues,
-                      const char* notNull) = 0;
+    virtual void next(int64_t* data, uint64_t numValues, const char* notNull) = 0;
 
-  protected:
+   protected:
     ReaderMetrics* metrics;
   };
 
@@ -137,12 +133,9 @@ namespace orc {
    * @param version version of RLE decoding to do
    * @param pool memory pool to use for allocation
    */
-  std::unique_ptr<RleEncoder> createRleEncoder
-                         (std::unique_ptr<BufferedOutputStream> output,
-                          bool isSigned,
-                          RleVersion version,
-                          MemoryPool& pool,
-                          bool alignedBitpacking);
+  std::unique_ptr<RleEncoder> createRleEncoder(std::unique_ptr<BufferedOutputStream> output,
+                                               bool isSigned, RleVersion version, MemoryPool& pool,
+                                               bool alignedBitpacking);
 
   /**
    * Create an RLE decoder.
@@ -151,12 +144,9 @@ namespace orc {
    * @param version version of RLE decoding to do
    * @param pool memory pool to use for allocation
    */
-  std::unique_ptr<RleDecoder> createRleDecoder
-                      (std::unique_ptr<SeekableInputStream> input,
-                       bool isSigned,
-                       RleVersion version,
-                       MemoryPool& pool,
-                       ReaderMetrics* metrics);
+  std::unique_ptr<RleDecoder> createRleDecoder(std::unique_ptr<SeekableInputStream> input,
+                                               bool isSigned, RleVersion version, MemoryPool& pool,
+                                               ReaderMetrics* metrics);
 
 }  // namespace orc
 

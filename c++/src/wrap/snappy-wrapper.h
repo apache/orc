@@ -20,7 +20,7 @@
 DIAGNOSTIC_PUSH
 
 #ifdef __clang__
-  DIAGNOSTIC_IGNORE("-Wreserved-id-macro")
+DIAGNOSTIC_IGNORE("-Wreserved-id-macro")
 #endif
 
 #include <snappy.h>

@@ -138,14 +138,14 @@ namespace orc {
     ss << majorVersion << '.' << minorVersion;
     return ss.str();
   }
-  
-  const FileVersion& FileVersion::v_0_11(){
-    static FileVersion version(0,11);
+
+  const FileVersion& FileVersion::v_0_11() {
+    static FileVersion version(0, 11);
     return version;
   }
-  
-  const FileVersion& FileVersion::v_0_12(){
-    static FileVersion version(0,12);
+
+  const FileVersion& FileVersion::v_0_12() {
+    static FileVersion version(0, 12);
     return version;
   }
 
@@ -156,9 +156,9 @@ namespace orc {
    * without providing any forward or backward compatibility.
    *
    * When 2.0 is released, this version identifier will be completely removed.
-  */
+   */
   const FileVersion& FileVersion::UNSTABLE_PRE_2_0() {
     static FileVersion version(1, 9999);
     return version;
   }
-}
+}  // namespace orc

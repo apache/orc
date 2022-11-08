@@ -19,9 +19,11 @@
 #ifndef ORC_STATISTICS_HH
 #define ORC_STATISTICS_HH
 
-#include "orc/orc-config.hh"
 #include "orc/Type.hh"
 #include "orc/Vector.hh"
+#include "orc/orc-config.hh"
+
+#include <sstream>
 
 namespace orc {
 
@@ -29,7 +31,7 @@ namespace orc {
    * Statistics that are available for all types of columns.
    */
   class ColumnStatistics {
-  public:
+   public:
     virtual ~ColumnStatistics();
 
     /**
@@ -54,8 +56,8 @@ namespace orc {
   /**
    * Statistics for binary columns.
    */
-  class BinaryColumnStatistics: public ColumnStatistics {
-  public:
+  class BinaryColumnStatistics : public ColumnStatistics {
+   public:
     virtual ~BinaryColumnStatistics();
 
     /**
@@ -70,8 +72,8 @@ namespace orc {
   /**
    * Statistics for boolean columns.
    */
-  class BooleanColumnStatistics: public ColumnStatistics {
-  public:
+  class BooleanColumnStatistics : public ColumnStatistics {
+   public:
     virtual ~BooleanColumnStatistics();
 
     /**
@@ -87,8 +89,8 @@ namespace orc {
   /**
    * Statistics for date columns.
    */
-  class DateColumnStatistics: public ColumnStatistics {
-  public:
+  class DateColumnStatistics : public ColumnStatistics {
+   public:
     virtual ~DateColumnStatistics();
 
     /**
@@ -119,8 +121,8 @@ namespace orc {
   /**
    * Statistics for decimal columns.
    */
-  class DecimalColumnStatistics: public ColumnStatistics {
-  public:
+  class DecimalColumnStatistics : public ColumnStatistics {
+   public:
     virtual ~DecimalColumnStatistics();
 
     /**
@@ -163,8 +165,8 @@ namespace orc {
   /**
    * Statistics for float and double columns.
    */
-  class DoubleColumnStatistics: public ColumnStatistics {
-  public:
+  class DoubleColumnStatistics : public ColumnStatistics {
+   public:
     virtual ~DoubleColumnStatistics();
 
     /**
@@ -210,8 +212,8 @@ namespace orc {
    * Statistics for all of the integer columns, such as byte, short, int, and
    * long.
    */
-  class IntegerColumnStatistics: public ColumnStatistics {
-  public:
+  class IntegerColumnStatistics : public ColumnStatistics {
+   public:
     virtual ~IntegerColumnStatistics();
 
     /**
@@ -256,8 +258,8 @@ namespace orc {
   /**
    * Statistics for string columns.
    */
-  class StringColumnStatistics: public ColumnStatistics {
-  public:
+  class StringColumnStatistics : public ColumnStatistics {
+   public:
     virtual ~StringColumnStatistics();
 
     /**
@@ -282,13 +284,13 @@ namespace orc {
      * Get the minimum value for the column.
      * @return minimum value
      */
-    virtual const std::string & getMinimum() const = 0;
+    virtual const std::string& getMinimum() const = 0;
 
     /**
      * Get the maximum value for the column.
      * @return maximum value
      */
-    virtual const std::string & getMaximum() const = 0;
+    virtual const std::string& getMaximum() const = 0;
 
     /**
      * Get the total length of all values.
@@ -300,8 +302,8 @@ namespace orc {
   /**
    * Statistics for timestamp columns.
    */
-  class TimestampColumnStatistics: public ColumnStatistics {
-  public:
+  class TimestampColumnStatistics : public ColumnStatistics {
+   public:
     virtual ~TimestampColumnStatistics();
 
     /**
@@ -366,7 +368,7 @@ namespace orc {
   };
 
   class Statistics {
-  public:
+   public:
     virtual ~Statistics();
 
     /**
@@ -374,8 +376,7 @@ namespace orc {
      * @param colId id of the column
      * @return one column's statistics
      */
-    virtual const ColumnStatistics* getColumnStatistics(uint32_t colId
-                                                        ) const = 0;
+    virtual const ColumnStatistics* getColumnStatistics(uint32_t colId) const = 0;
 
     /**
      * Get the number of columns.
@@ -388,7 +389,7 @@ namespace orc {
    * Statistics for all of collections such as Map and List.
    */
   class CollectionColumnStatistics : public ColumnStatistics {
-  public:
+   public:
     virtual ~CollectionColumnStatistics();
 
     /**
@@ -453,7 +454,7 @@ namespace orc {
   };
 
   class StripeStatistics : public Statistics {
-  public:
+   public:
     virtual ~StripeStatistics();
 
     /**
@@ -462,9 +463,8 @@ namespace orc {
      * @param rowIndexId RowIndex entry id
      * @return statistics of the given RowIndex entry
      */
-    virtual const ColumnStatistics*
-                      getRowIndexStatistics(
-                          uint32_t columnId, uint32_t rowIndexId) const = 0;
+    virtual const ColumnStatistics* getRowIndexStatistics(uint32_t columnId,
+                                                          uint32_t rowIndexId) const = 0;
 
     /**
      * Get the number of RowIndex statistics in a given column.
@@ -473,6 +473,6 @@ namespace orc {
      */
     virtual uint32_t getNumberOfRowIndexStats(uint32_t columnId) const = 0;
   };
-}
+}  // namespace orc
 
 #endif

@@ -16,14 +16,14 @@
  * limitations under the License.
  */
 
-#include "Adaptor.hh"
 #include "Murmur3.hh"
+#include "Adaptor.hh"
 
 #define ROTL64(x, r) ((x << r) | (x >> (64 - r)))
 
 namespace orc {
 
-  inline uint64_t rotl64 ( uint64_t x, int8_t r ) {
+  inline uint64_t rotl64(uint64_t x, int8_t r) {
     return (x << r) | (x >> (64 - r));
   }
 
@@ -36,17 +36,17 @@ namespace orc {
     return value;
   }
 
-  uint64_t Murmur3::hash64(const uint8_t *data, uint32_t len) {
+  uint64_t Murmur3::hash64(const uint8_t* data, uint32_t len) {
     return hash64(data, len, DEFAULT_SEED);
   }
 
   DIAGNOSTIC_PUSH
 
 #if defined(__clang__)
-    DIAGNOSTIC_IGNORE("-Wimplicit-fallthrough")
+  DIAGNOSTIC_IGNORE("-Wimplicit-fallthrough")
 #endif
 
-  uint64_t Murmur3::hash64(const uint8_t *data, uint32_t len, uint32_t seed) {
+  uint64_t Murmur3::hash64(const uint8_t* data, uint32_t len, uint32_t seed) {
     uint64_t h = seed;
     uint32_t blocks = len >> 3;
 
@@ -95,4 +95,4 @@ namespace orc {
 
   DIAGNOSTIC_POP
 
-}
+}  // namespace orc

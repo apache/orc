@@ -19,17 +19,17 @@
 #ifndef ORC_VECTOR_HH
 #define ORC_VECTOR_HH
 
-#include "orc/orc-config.hh"
-#include "MemoryPool.hh"
 #include "Int128.hh"
+#include "MemoryPool.hh"
+#include "orc/orc-config.hh"
 
+#include <cstdlib>
+#include <cstring>
+#include <iostream>
 #include <list>
 #include <memory>
-#include <cstring>
-#include <vector>
 #include <stdexcept>
-#include <cstdlib>
-#include <iostream>
+#include <vector>
 
 namespace orc {
 
@@ -83,12 +83,12 @@ namespace orc {
      */
     virtual bool hasVariableLength();
 
-  private:
+   private:
     ColumnVectorBatch(const ColumnVectorBatch&);
     ColumnVectorBatch& operator=(const ColumnVectorBatch&);
   };
 
-  struct LongVectorBatch: public ColumnVectorBatch {
+  struct LongVectorBatch : public ColumnVectorBatch {
     LongVectorBatch(uint64_t capacity, MemoryPool& pool);
     virtual ~LongVectorBatch();
 
@@ -99,7 +99,7 @@ namespace orc {
     uint64_t getMemoryUsage();
   };
 
-  struct DoubleVectorBatch: public ColumnVectorBatch {
+  struct DoubleVectorBatch : public ColumnVectorBatch {
     DoubleVectorBatch(uint64_t capacity, MemoryPool& pool);
     virtual ~DoubleVectorBatch();
     std::string toString() const;
@@ -110,7 +110,7 @@ namespace orc {
     DataBuffer<double> data;
   };
 
-  struct StringVectorBatch: public ColumnVectorBatch {
+  struct StringVectorBatch : public ColumnVectorBatch {
     StringVectorBatch(uint64_t capacity, MemoryPool& pool);
     virtual ~StringVectorBatch();
     std::string toString() const;
@@ -161,7 +161,7 @@ namespace orc {
     DataBuffer<int64_t> index;
   };
 
-  struct StructVectorBatch: public ColumnVectorBatch {
+  struct StructVectorBatch : public ColumnVectorBatch {
     StructVectorBatch(uint64_t capacity, MemoryPool& pool);
     virtual ~StructVectorBatch();
     std::string toString() const;
@@ -173,7 +173,7 @@ namespace orc {
     std::vector<ColumnVectorBatch*> fields;
   };
 
-  struct ListVectorBatch: public ColumnVectorBatch {
+  struct ListVectorBatch : public ColumnVectorBatch {
     ListVectorBatch(uint64_t capacity, MemoryPool& pool);
     virtual ~ListVectorBatch();
     std::string toString() const;
@@ -192,7 +192,7 @@ namespace orc {
     ORC_UNIQUE_PTR<ColumnVectorBatch> elements;
   };
 
-  struct MapVectorBatch: public ColumnVectorBatch {
+  struct MapVectorBatch : public ColumnVectorBatch {
     MapVectorBatch(uint64_t capacity, MemoryPool& pool);
     virtual ~MapVectorBatch();
     std::string toString() const;
@@ -213,7 +213,7 @@ namespace orc {
     ORC_UNIQUE_PTR<ColumnVectorBatch> elements;
   };
 
-  struct UnionVectorBatch: public ColumnVectorBatch {
+  struct UnionVectorBatch : public ColumnVectorBatch {
     UnionVectorBatch(uint64_t capacity, MemoryPool& pool);
     virtual ~UnionVectorBatch();
     std::string toString() const;
@@ -246,7 +246,7 @@ namespace orc {
     int32_t scale;
   };
 
-  struct Decimal64VectorBatch: public ColumnVectorBatch {
+  struct Decimal64VectorBatch : public ColumnVectorBatch {
     Decimal64VectorBatch(uint64_t capacity, MemoryPool& pool);
     virtual ~Decimal64VectorBatch();
     std::string toString() const;
@@ -262,7 +262,7 @@ namespace orc {
     // the numeric values
     DataBuffer<int64_t> values;
 
-  protected:
+   protected:
     /**
      * Contains the scales that were read from the file. Should NOT be
      * used.
@@ -272,7 +272,7 @@ namespace orc {
     friend class Decimal64ColumnWriter;
   };
 
-  struct Decimal128VectorBatch: public ColumnVectorBatch {
+  struct Decimal128VectorBatch : public ColumnVectorBatch {
     Decimal128VectorBatch(uint64_t capacity, MemoryPool& pool);
     virtual ~Decimal128VectorBatch();
     std::string toString() const;
@@ -288,7 +288,7 @@ namespace orc {
     // the numeric values
     DataBuffer<Int128> values;
 
-  protected:
+   protected:
     /**
      * Contains the scales that were read from the file. Should NOT be
      * used.
@@ -304,7 +304,7 @@ namespace orc {
    * The timestamps are stored split into the time_t value (seconds since
    * 1 Jan 1970 00:00:00) and the nanoseconds within the time_t value.
    */
-  struct TimestampVectorBatch: public ColumnVectorBatch {
+  struct TimestampVectorBatch : public ColumnVectorBatch {
     TimestampVectorBatch(uint64_t capacity, MemoryPool& pool);
     virtual ~TimestampVectorBatch();
     std::string toString() const;
@@ -322,6 +322,6 @@ namespace orc {
     DataBuffer<int64_t> nanoseconds;
   };
 
-}
+}  // namespace orc
 
 #endif

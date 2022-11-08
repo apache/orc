@@ -29,12 +29,12 @@
 
 namespace orc {
 
-  const int DEFAULT_MEM_STREAM_SIZE = 10 * 1024 * 1024; // 10M
+  const int DEFAULT_MEM_STREAM_SIZE = 10 * 1024 * 1024;  // 10M
   const int DICTIONARY_SIZE_1K = 1000;
-  const double DICT_THRESHOLD = 0.2;         // make sure dictionary is used
-  const double FALLBACK_THRESHOLD = 0.0;    // make sure fallback happens
+  const double DICT_THRESHOLD = 0.2;      // make sure dictionary is used
+  const double FALLBACK_THRESHOLD = 0.0;  // make sure fallback happens
 
-  static std::unique_ptr<Reader> createReader(MemoryPool * memoryPool,
+  static std::unique_ptr<Reader> createReader(MemoryPool* memoryPool,
                                               std::unique_ptr<InputStream> stream) {
     ReaderOptions options;
     options.setMemoryPool(*memoryPool);
@@ -48,7 +48,7 @@ namespace orc {
 
   void testStringDictionary(bool enableIndex, double threshold) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    MemoryPool * pool = getDefaultPool();
+    MemoryPool* pool = getDefaultPool();
     std::unique_ptr<Type> type(Type::buildTypeFromString("struct<col1:string>"));
 
     WriterOptions options;
@@ -62,12 +62,9 @@ namespace orc {
 
     char dataBuffer[327675];
     uint64_t offset = 0, rowCount = 65535;
-    std::unique_ptr<ColumnVectorBatch> batch =
-      writer->createRowBatch(rowCount);
-    StructVectorBatch * structBatch =
-      dynamic_cast<StructVectorBatch *>(batch.get());
-    StringVectorBatch * strBatch =
-      dynamic_cast<StringVectorBatch *>(structBatch->fields[0]);
+    std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
+    StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
+    StringVectorBatch* strBatch = dynamic_cast<StringVectorBatch*>(structBatch->fields[0]);
 
     uint64_t dictionarySize = DICTIONARY_SIZE_1K;
     for (uint64_t i = 0; i < rowCount; ++i) {
@@ -86,7 +83,7 @@ namespace orc {
     writer->close();
 
     std::unique_ptr<InputStream> inStream(
-      new MemoryInputStream (memStream.getData(), memStream.getLength()));
+        new MemoryInputStream(memStream.getData(), memStream.getLength()));
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
     EXPECT_EQ(rowCount, reader->getNumberOfRows());
@@ -96,11 +93,9 @@ namespace orc {
     EXPECT_EQ(rowCount, batch->numElements);
 
     for (uint64_t i = 0; i < rowCount; ++i) {
-      structBatch = dynamic_cast<StructVectorBatch *>(batch.get());
-      strBatch = dynamic_cast<StringVectorBatch *>(structBatch->fields[0]);
-      std::string str(
-        strBatch->data[i],
-        static_cast<size_t>(strBatch->length[i]));
+      structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
+      strBatch = dynamic_cast<StringVectorBatch*>(structBatch->fields[0]);
+      std::string str(strBatch->data[i], static_cast<size_t>(strBatch->length[i]));
       EXPECT_EQ(i % dictionarySize, static_cast<uint64_t>(atoi(str.c_str())));
     }
 
@@ -109,7 +104,7 @@ namespace orc {
 
   void testVarcharDictionary(bool enableIndex, double threshold) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    MemoryPool * pool = getDefaultPool();
+    MemoryPool* pool = getDefaultPool();
     std::unique_ptr<Type> type(Type::buildTypeFromString("struct<col1:varchar(2)>"));
 
     WriterOptions options;
@@ -123,12 +118,9 @@ namespace orc {
 
     char dataBuffer[327675];
     uint64_t offset = 0, rowCount = 65535;
-    std::unique_ptr<ColumnVectorBatch> batch =
-      writer->createRowBatch(rowCount);
-    StructVectorBatch * structBatch =
-      dynamic_cast<StructVectorBatch *>(batch.get());
-    StringVectorBatch * varcharBatch =
-      dynamic_cast<StringVectorBatch *>(structBatch->fields[0]);
+    std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
+    StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
+    StringVectorBatch* varcharBatch = dynamic_cast<StringVectorBatch*>(structBatch->fields[0]);
 
     uint64_t dictionarySize = DICTIONARY_SIZE_1K;
     for (uint64_t i = 0; i < rowCount; ++i) {
@@ -147,7 +139,7 @@ namespace orc {
     writer->close();
 
     std::unique_ptr<InputStream> inStream(
-      new MemoryInputStream (memStream.getData(), memStream.getLength()));
+        new MemoryInputStream(memStream.getData(), memStream.getLength()));
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
     EXPECT_EQ(rowCount, reader->getNumberOfRows());
@@ -157,15 +149,13 @@ namespace orc {
     EXPECT_EQ(rowCount, batch->numElements);
 
     for (uint64_t i = 0; i < rowCount; ++i) {
-      structBatch = dynamic_cast<StructVectorBatch *>(batch.get());
-      varcharBatch = dynamic_cast<StringVectorBatch *>(structBatch->fields[0]);
+      structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
+      varcharBatch = dynamic_cast<StringVectorBatch*>(structBatch->fields[0]);
 
       std::ostringstream os;
       os << (i % dictionarySize);
       EXPECT_FALSE(varcharBatch->length[i] > 2);
-      std::string varcharRead(
-        varcharBatch->data[i],
-        static_cast<size_t>(varcharBatch->length[i]));
+      std::string varcharRead(varcharBatch->data[i], static_cast<size_t>(varcharBatch->length[i]));
       std::string varcharExpected = os.str().substr(0, 2);
       EXPECT_EQ(varcharRead, varcharExpected);
     }
@@ -175,7 +165,7 @@ namespace orc {
 
   void testCharDictionary(bool enableIndex, double threshold) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    MemoryPool * pool = getDefaultPool();
+    MemoryPool* pool = getDefaultPool();
     std::unique_ptr<Type> type(Type::buildTypeFromString("struct<col1:char(3)>"));
 
     WriterOptions options;
@@ -189,12 +179,9 @@ namespace orc {
 
     char dataBuffer[327675];
     uint64_t offset = 0, rowCount = 10000;
-    std::unique_ptr<ColumnVectorBatch> batch =
-      writer->createRowBatch(rowCount);
-    StructVectorBatch * structBatch =
-      dynamic_cast<StructVectorBatch *>(batch.get());
-    StringVectorBatch * charBatch =
-      dynamic_cast<StringVectorBatch *>(structBatch->fields[0]);
+    std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
+    StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
+    StringVectorBatch* charBatch = dynamic_cast<StringVectorBatch*>(structBatch->fields[0]);
 
     uint64_t dictionarySize = DICTIONARY_SIZE_1K;
     for (uint64_t i = 0; i < rowCount; ++i) {
@@ -211,7 +198,7 @@ namespace orc {
     writer->close();
 
     std::unique_ptr<InputStream> inStream(
-      new MemoryInputStream (memStream.getData(), memStream.getLength()));
+        new MemoryInputStream(memStream.getData(), memStream.getLength()));
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
     EXPECT_EQ(rowCount, reader->getNumberOfRows());
@@ -221,13 +208,11 @@ namespace orc {
     EXPECT_EQ(rowCount, batch->numElements);
 
     for (uint64_t i = 0; i < rowCount; ++i) {
-      structBatch = dynamic_cast<StructVectorBatch *>(batch.get());
-      charBatch = dynamic_cast<StringVectorBatch *>(structBatch->fields[0]);
+      structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
+      charBatch = dynamic_cast<StringVectorBatch*>(structBatch->fields[0]);
 
       EXPECT_EQ(3, charBatch->length[i]);
-      std::string charsRead(
-        charBatch->data[i],
-        static_cast<size_t>(charBatch->length[i]));
+      std::string charsRead(charBatch->data[i], static_cast<size_t>(charBatch->length[i]));
 
       std::ostringstream os;
       os << (i % dictionarySize);
@@ -243,7 +228,7 @@ namespace orc {
 
   void testStringDictionaryWithNull(double threshold, bool enableIndex) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    MemoryPool * pool = getDefaultPool();
+    MemoryPool* pool = getDefaultPool();
     std::unique_ptr<Type> type(Type::buildTypeFromString("struct<col1:string>"));
 
     WriterOptions options;
@@ -257,12 +242,9 @@ namespace orc {
 
     char dataBuffer[327675];
     uint64_t offset = 0, rowCount = 65535;
-    std::unique_ptr<ColumnVectorBatch> batch =
-      writer->createRowBatch(rowCount);
-    StructVectorBatch * structBatch =
-      dynamic_cast<StructVectorBatch *>(batch.get());
-    StringVectorBatch * strBatch =
-      dynamic_cast<StringVectorBatch *>(structBatch->fields[0]);
+    std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
+    StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
+    StringVectorBatch* strBatch = dynamic_cast<StringVectorBatch*>(structBatch->fields[0]);
 
     uint64_t dictionarySize = DICTIONARY_SIZE_1K;
     for (uint64_t i = 0; i < rowCount; ++i) {
@@ -288,7 +270,7 @@ namespace orc {
     writer->close();
 
     std::unique_ptr<InputStream> inStream(
-      new MemoryInputStream (memStream.getData(), memStream.getLength()));
+        new MemoryInputStream(memStream.getData(), memStream.getLength()));
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
     EXPECT_EQ(rowCount, reader->getNumberOfRows());
@@ -298,15 +280,14 @@ namespace orc {
     EXPECT_EQ(rowCount, batch->numElements);
 
     for (uint64_t i = 0; i < rowCount; ++i) {
-      structBatch = dynamic_cast<StructVectorBatch *>(batch.get());
-      strBatch = dynamic_cast<StringVectorBatch *>(structBatch->fields[0]);
+      structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
+      strBatch = dynamic_cast<StringVectorBatch*>(structBatch->fields[0]);
 
       if (i % 2 == 0) {
         EXPECT_FALSE(strBatch->notNull[i]);
       } else {
         EXPECT_TRUE(strBatch->notNull[i]);
-        std::string str(strBatch->data[i],
-                        static_cast<size_t>(strBatch->length[i]));
+        std::string str(strBatch->data[i], static_cast<size_t>(strBatch->length[i]));
         EXPECT_EQ(i % dictionarySize, static_cast<uint64_t>(atoi(str.c_str())));
       }
     }
@@ -316,7 +297,7 @@ namespace orc {
 
   void testDictionaryMultipleStripes(double threshold, bool enableIndex) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
-    MemoryPool * pool = getDefaultPool();
+    MemoryPool* pool = getDefaultPool();
     std::unique_ptr<Type> type(Type::buildTypeFromString("struct<col1:string>"));
 
     WriterOptions options;
@@ -330,12 +311,9 @@ namespace orc {
 
     char dataBuffer[800000];
     uint64_t offset = 0, rowCount = 65535, stripeCount = 3;
-    std::unique_ptr<ColumnVectorBatch> batch =
-      writer->createRowBatch(rowCount);
-    StructVectorBatch * structBatch =
-      dynamic_cast<StructVectorBatch *>(batch.get());
-    StringVectorBatch * strBatch =
-      dynamic_cast<StringVectorBatch *>(structBatch->fields[0]);
+    std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
+    StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
+    StringVectorBatch* strBatch = dynamic_cast<StringVectorBatch*>(structBatch->fields[0]);
 
     uint64_t dictionarySize = DICTIONARY_SIZE_1K;
 
@@ -359,8 +337,8 @@ namespace orc {
 
     writer->close();
 
-    std::unique_ptr<InputStream> inStream(new MemoryInputStream(
-      memStream.getData(), memStream.getLength()));
+    std::unique_ptr<InputStream> inStream(
+        new MemoryInputStream(memStream.getData(), memStream.getLength()));
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
 
@@ -374,10 +352,9 @@ namespace orc {
       EXPECT_EQ(true, rowReader->next(*batch));
 
       for (uint64_t i = 0; i < rowCount; ++i) {
-        structBatch = dynamic_cast<StructVectorBatch *>(batch.get());
-        strBatch = dynamic_cast<StringVectorBatch *>(structBatch->fields[0]);
-        std::string str(strBatch->data[i],
-                        static_cast<size_t>(strBatch->length[i]));
+        structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
+        strBatch = dynamic_cast<StringVectorBatch*>(structBatch->fields[0]);
+        std::string str(strBatch->data[i], static_cast<size_t>(strBatch->length[i]));
         EXPECT_EQ(i % dictionarySize, static_cast<uint64_t>(atoi(str.c_str())));
       }
     }
@@ -391,10 +368,9 @@ namespace orc {
         rowReader->seekToRow(stripe * rowCount + i);
         EXPECT_EQ(true, rowReader->next(*batch));
 
-        structBatch = dynamic_cast<StructVectorBatch *>(batch.get());
-        strBatch = dynamic_cast<StringVectorBatch *>(structBatch->fields[0]);
-        std::string str(strBatch->data[0],
-                        static_cast<size_t>(strBatch->length[0]));
+        structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
+        strBatch = dynamic_cast<StringVectorBatch*>(structBatch->fields[0]);
+        std::string str(strBatch->data[0], static_cast<size_t>(strBatch->length[0]));
         EXPECT_EQ(i % dictionarySize, static_cast<uint64_t>(atoi(str.c_str())));
       }
     }
@@ -453,4 +429,4 @@ namespace orc {
     testDictionaryMultipleStripes(DICT_THRESHOLD, false);
     testDictionaryMultipleStripes(FALLBACK_THRESHOLD, false);
   }
-}
+}  // namespace orc

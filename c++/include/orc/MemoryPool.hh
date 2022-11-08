@@ -19,15 +19,15 @@
 #ifndef MEMORYPOOL_HH_
 #define MEMORYPOOL_HH_
 
-#include "orc/orc-config.hh"
 #include "orc/Int128.hh"
+#include "orc/orc-config.hh"
 
 #include <memory>
 
 namespace orc {
 
   class MemoryPool {
-  public:
+   public:
     virtual ~MemoryPool();
 
     virtual char* malloc(uint64_t size) = 0;
@@ -37,7 +37,7 @@ namespace orc {
 
   template <class T>
   class DataBuffer {
-  private:
+   private:
     MemoryPool& memoryPool;
     T* buf;
     // current size
@@ -49,7 +49,7 @@ namespace orc {
     DataBuffer(DataBuffer& buffer);
     DataBuffer& operator=(DataBuffer& buffer);
 
-  public:
+   public:
     DataBuffer(MemoryPool& pool, uint64_t _size = 0);
 
     DataBuffer(DataBuffer<T>&& buffer) ORC_NOEXCEPT;
@@ -132,10 +132,10 @@ namespace orc {
   template <>
   void DataBuffer<unsigned char>::resize(uint64_t newSize);
 
-  #ifdef __clang__
-    #pragma clang diagnostic push
-    #pragma clang diagnostic ignored "-Wweak-template-vtables"
-  #endif
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wweak-template-vtables"
+#endif
 
   extern template class DataBuffer<char>;
   extern template class DataBuffer<char*>;
@@ -145,10 +145,9 @@ namespace orc {
   extern template class DataBuffer<uint64_t>;
   extern template class DataBuffer<unsigned char>;
 
-  #ifdef __clang__
-    #pragma clang diagnostic pop
-  #endif
-} // namespace orc
-
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
+}  // namespace orc
 
 #endif /* MEMORYPOOL_HH_ */

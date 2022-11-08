@@ -33,7 +33,7 @@ namespace orc {
    * for allocation.
    */
   class BlockBuffer {
-  private:
+   private:
     MemoryPool& memoryPool;
     // current buffer size
     uint64_t currentSize;
@@ -50,15 +50,15 @@ namespace orc {
     BlockBuffer(BlockBuffer&& buffer) = delete;
     BlockBuffer& operator=(BlockBuffer&& buffer) = delete;
 
-  public:
+   public:
     BlockBuffer(MemoryPool& pool, uint64_t blockSize);
 
     ~BlockBuffer();
 
     /**
-    * Block points to a section of memory allocated by BlockBuffer,
-    * containing the corresponding physical memory address and available size.
-    */
+     * Block points to a section of memory allocated by BlockBuffer,
+     * containing the corresponding physical memory address and available size.
+     */
     struct Block {
       // the start of block
       char* data;
@@ -117,8 +117,7 @@ namespace orc {
      * @param output the output stream to write to
      * @param metrics the metrics of the writer
      */
-    void writeTo(OutputStream* output,
-                 WriterMetrics* metrics);
+    void writeTo(OutputStream* output, WriterMetrics* metrics);
   };
 }  // namespace orc
 

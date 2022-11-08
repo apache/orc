@@ -22,7 +22,7 @@
 #include "wrap/gtest-wrapper.h"
 
 namespace orc {
-  const int DEFAULT_MEM_STREAM_SIZE = 10 * 1024 * 1024; // 10M
+  const int DEFAULT_MEM_STREAM_SIZE = 10 * 1024 * 1024;  // 10M
 
   TEST(TestBlockBuffer, size_and_capacity) {
     MemoryPool* pool = getDefaultPool();
@@ -118,4 +118,4 @@ namespace orc {
     // test block size > natural write size
     writeToOutputStream(4096);
   }
-}
+}  // namespace orc

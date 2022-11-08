@@ -18,8 +18,8 @@
 
 #include <cstring>
 
-#include "orc/Reader.hh"
 #include "Reader.hh"
+#include "orc/Reader.hh"
 
 #include "Adaptor.hh"
 #include "MemoryInputStream.hh"
@@ -32,7 +32,7 @@ namespace orc {
 
   using ::testing::ElementsAreArray;
 
-  static const int DEFAULT_MEM_STREAM_SIZE = 1024 * 1024; // 1M
+  static const int DEFAULT_MEM_STREAM_SIZE = 1024 * 1024;  // 1M
 
   TEST(TestReader, testWriterVersions) {
     EXPECT_EQ("original", writerVersionToString(WriterVersion_ORIGINAL));
@@ -40,8 +40,7 @@ namespace orc {
     EXPECT_EQ("HIVE-4243", writerVersionToString(WriterVersion_HIVE_4243));
     EXPECT_EQ("HIVE-12055", writerVersionToString(WriterVersion_HIVE_12055));
     EXPECT_EQ("HIVE-13083", writerVersionToString(WriterVersion_HIVE_13083));
-    EXPECT_EQ("future - 99",
-              writerVersionToString(static_cast<WriterVersion>(99)));
+    EXPECT_EQ("future - 99", writerVersionToString(static_cast<WriterVersion>(99)));
   }
 
   TEST(TestReader, testCompressionNames) {
@@ -51,67 +50,64 @@ namespace orc {
     EXPECT_EQ("lzo", compressionKindToString(CompressionKind_LZO));
     EXPECT_EQ("lz4", compressionKindToString(CompressionKind_LZ4));
     EXPECT_EQ("zstd", compressionKindToString(CompressionKind_ZSTD));
-    EXPECT_EQ("unknown - 99",
-              compressionKindToString(static_cast<CompressionKind>(99)));
+    EXPECT_EQ("unknown - 99", compressionKindToString(static_cast<CompressionKind>(99)));
   }
 
   TEST(TestRowReader, computeBatchSize) {
     uint64_t rowIndexStride = 100;
     uint64_t rowsInCurrentStripe = 100 * 8 + 50;
-    std::vector<uint64_t> nextSkippedRows =
-      { 0, 0, 400, 400, 0, 0, 800, 800, 0 };
+    std::vector<uint64_t> nextSkippedRows = {0, 0, 400, 400, 0, 0, 800, 800, 0};
 
-    EXPECT_EQ(0, RowReaderImpl::computeBatchSize(
-      1024, 0, rowsInCurrentStripe, rowIndexStride, nextSkippedRows));
-    EXPECT_EQ(0, RowReaderImpl::computeBatchSize(
-      1024, 50, rowsInCurrentStripe, rowIndexStride, nextSkippedRows));
-    EXPECT_EQ(200, RowReaderImpl::computeBatchSize(
-      1024, 200, rowsInCurrentStripe, rowIndexStride, nextSkippedRows));
-    EXPECT_EQ(150, RowReaderImpl::computeBatchSize(
-      1024, 250, rowsInCurrentStripe, rowIndexStride, nextSkippedRows));
-    EXPECT_EQ(0, RowReaderImpl::computeBatchSize(
-      1024, 550, rowsInCurrentStripe, rowIndexStride, nextSkippedRows));
-    EXPECT_EQ(100, RowReaderImpl::computeBatchSize(
-      1024, 700, rowsInCurrentStripe, rowIndexStride, nextSkippedRows));
-    EXPECT_EQ(50, RowReaderImpl::computeBatchSize(
-      50, 700, rowsInCurrentStripe, rowIndexStride, nextSkippedRows));
-    EXPECT_EQ(0, RowReaderImpl::computeBatchSize(
-      50, 810, rowsInCurrentStripe, rowIndexStride, nextSkippedRows));
-    EXPECT_EQ(0, RowReaderImpl::computeBatchSize(
-      50, 900, rowsInCurrentStripe, rowIndexStride, nextSkippedRows));
+    EXPECT_EQ(0, RowReaderImpl::computeBatchSize(1024, 0, rowsInCurrentStripe, rowIndexStride,
+                                                 nextSkippedRows));
+    EXPECT_EQ(0, RowReaderImpl::computeBatchSize(1024, 50, rowsInCurrentStripe, rowIndexStride,
+                                                 nextSkippedRows));
+    EXPECT_EQ(200, RowReaderImpl::computeBatchSize(1024, 200, rowsInCurrentStripe, rowIndexStride,
+                                                   nextSkippedRows));
+    EXPECT_EQ(150, RowReaderImpl::computeBatchSize(1024, 250, rowsInCurrentStripe, rowIndexStride,
+                                                   nextSkippedRows));
+    EXPECT_EQ(0, RowReaderImpl::computeBatchSize(1024, 550, rowsInCurrentStripe, rowIndexStride,
+                                                 nextSkippedRows));
+    EXPECT_EQ(100, RowReaderImpl::computeBatchSize(1024, 700, rowsInCurrentStripe, rowIndexStride,
+                                                   nextSkippedRows));
+    EXPECT_EQ(50, RowReaderImpl::computeBatchSize(50, 700, rowsInCurrentStripe, rowIndexStride,
+                                                  nextSkippedRows));
+    EXPECT_EQ(0, RowReaderImpl::computeBatchSize(50, 810, rowsInCurrentStripe, rowIndexStride,
+                                                 nextSkippedRows));
+    EXPECT_EQ(0, RowReaderImpl::computeBatchSize(50, 900, rowsInCurrentStripe, rowIndexStride,
+                                                 nextSkippedRows));
   }
 
   TEST(TestRowReader, advanceToNextRowGroup) {
     uint64_t rowIndexStride = 100;
     uint64_t rowsInCurrentStripe = 100 * 8 + 50;
-    std::vector<uint64_t> nextSkippedRows =
-      { 0, 0, 400, 400, 0, 0, 800, 800, 0 };
+    std::vector<uint64_t> nextSkippedRows = {0, 0, 400, 400, 0, 0, 800, 800, 0};
 
-    EXPECT_EQ(200, RowReaderImpl::advanceToNextRowGroup(
-      0, rowsInCurrentStripe, rowIndexStride, nextSkippedRows));
-    EXPECT_EQ(200, RowReaderImpl::advanceToNextRowGroup(
-      150, rowsInCurrentStripe, rowIndexStride, nextSkippedRows));
-    EXPECT_EQ(250, RowReaderImpl::advanceToNextRowGroup(
-      250, rowsInCurrentStripe, rowIndexStride, nextSkippedRows));
-    EXPECT_EQ(350, RowReaderImpl::advanceToNextRowGroup(
-      350, rowsInCurrentStripe, rowIndexStride, nextSkippedRows));
-    EXPECT_EQ(350, RowReaderImpl::advanceToNextRowGroup(
-      350, rowsInCurrentStripe, rowIndexStride, nextSkippedRows));
-    EXPECT_EQ(600, RowReaderImpl::advanceToNextRowGroup(
-      500, rowsInCurrentStripe, rowIndexStride, nextSkippedRows));
-    EXPECT_EQ(699, RowReaderImpl::advanceToNextRowGroup(
-      699, rowsInCurrentStripe, rowIndexStride, nextSkippedRows));
-    EXPECT_EQ(799, RowReaderImpl::advanceToNextRowGroup(
-      799, rowsInCurrentStripe, rowIndexStride, nextSkippedRows));
-    EXPECT_EQ(850, RowReaderImpl::advanceToNextRowGroup(
-      800, rowsInCurrentStripe, rowIndexStride, nextSkippedRows));
-    EXPECT_EQ(850, RowReaderImpl::advanceToNextRowGroup(
-      900, rowsInCurrentStripe, rowIndexStride, nextSkippedRows));
+    EXPECT_EQ(200, RowReaderImpl::advanceToNextRowGroup(0, rowsInCurrentStripe, rowIndexStride,
+                                                        nextSkippedRows));
+    EXPECT_EQ(200, RowReaderImpl::advanceToNextRowGroup(150, rowsInCurrentStripe, rowIndexStride,
+                                                        nextSkippedRows));
+    EXPECT_EQ(250, RowReaderImpl::advanceToNextRowGroup(250, rowsInCurrentStripe, rowIndexStride,
+                                                        nextSkippedRows));
+    EXPECT_EQ(350, RowReaderImpl::advanceToNextRowGroup(350, rowsInCurrentStripe, rowIndexStride,
+                                                        nextSkippedRows));
+    EXPECT_EQ(350, RowReaderImpl::advanceToNextRowGroup(350, rowsInCurrentStripe, rowIndexStride,
+                                                        nextSkippedRows));
+    EXPECT_EQ(600, RowReaderImpl::advanceToNextRowGroup(500, rowsInCurrentStripe, rowIndexStride,
+                                                        nextSkippedRows));
+    EXPECT_EQ(699, RowReaderImpl::advanceToNextRowGroup(699, rowsInCurrentStripe, rowIndexStride,
+                                                        nextSkippedRows));
+    EXPECT_EQ(799, RowReaderImpl::advanceToNextRowGroup(799, rowsInCurrentStripe, rowIndexStride,
+                                                        nextSkippedRows));
+    EXPECT_EQ(850, RowReaderImpl::advanceToNextRowGroup(800, rowsInCurrentStripe, rowIndexStride,
+                                                        nextSkippedRows));
+    EXPECT_EQ(850, RowReaderImpl::advanceToNextRowGroup(900, rowsInCurrentStripe, rowIndexStride,
+                                                        nextSkippedRows));
   }
 
   void CheckFileWithSargs(const char* fileName, const char* softwareVersion) {
     std::stringstream ss;
-    if(const char* example_dir = std::getenv("ORC_EXAMPLE_DIR")) {
+    if (const char* example_dir = std::getenv("ORC_EXAMPLE_DIR")) {
       ss << example_dir;
     } else {
       ss << "../../../examples";
@@ -121,9 +117,7 @@ namespace orc {
     ReaderOptions readerOpts;
     readerOpts.setReaderMetrics(nullptr);
     std::unique_ptr<Reader> reader =
-      createReader(readLocalFile(ss.str().c_str(),
-                                 readerOpts.getReaderMetrics()),
-                   readerOpts);
+        createReader(readLocalFile(ss.str().c_str(), readerOpts.getReaderMetrics()), readerOpts);
     EXPECT_EQ(WriterId::ORC_CPP_WRITER, reader->getWriterId());
     EXPECT_EQ(softwareVersion, reader->getSoftwareVersion());
 
@@ -131,14 +125,13 @@ namespace orc {
     RowReaderOptions rowReaderOpts;
     std::unique_ptr<SearchArgumentBuilder> sarg = SearchArgumentFactory::newBuilder();
     // Integer value 18000000000 has an inconsistent hash before the fix of ORC-1024.
-    sarg->equals(1, PredicateDataType::LONG,Literal(static_cast<int64_t>(18000000000L)));
+    sarg->equals(1, PredicateDataType::LONG, Literal(static_cast<int64_t>(18000000000L)));
     std::unique_ptr<SearchArgument> final_sarg = sarg->build();
     rowReaderOpts.searchArgument(std::move(final_sarg));
     std::unique_ptr<RowReader> rowReader = reader->createRowReader(rowReaderOpts);
 
     // Make sure bad bloom filters won't affect the results.
-    std::unique_ptr<ColumnVectorBatch> batch =
-      rowReader->createRowBatch(1024);
+    std::unique_ptr<ColumnVectorBatch> batch = rowReader->createRowBatch(1024);
     EXPECT_TRUE(rowReader->next(*batch));
     EXPECT_EQ(5, batch->numElements);
     EXPECT_FALSE(rowReader->next(*batch));
@@ -154,10 +147,8 @@ namespace orc {
                        const std::vector<uint32_t>& expectedSelection) {
     RowReaderOptions rowReaderOpts;
     rowReaderOpts.includeTypesWithIntents(idReadIntentMap);
-    std::unique_ptr<RowReader> rowReader =
-        reader->createRowReader(rowReaderOpts);
-    std::vector<bool> expected(reader->getType().getMaximumColumnId() + 1,
-                               false);
+    std::unique_ptr<RowReader> rowReader = reader->createRowReader(rowReaderOpts);
+    std::vector<bool> expected(reader->getType().getMaximumColumnId() + 1, false);
     for (auto id : expectedSelection) {
       expected[id] = true;
     }
@@ -275,16 +266,14 @@ namespace orc {
     std::unique_ptr<Reader> reader = createNestedListMemReader(memStream);
 
     // select all of int_array and only the offsets of int_array_array.
-    RowReaderOptions::IdReadIntentMap idReadIntentMap =
-        {{1, ReadIntent_ALL}, {3, ReadIntent_OFFSETS}};
+    RowReaderOptions::IdReadIntentMap idReadIntentMap = {{1, ReadIntent_ALL},
+                                                         {3, ReadIntent_OFFSETS}};
     RowReaderOptions rowReaderOpts;
     rowReaderOpts.includeTypesWithIntents(idReadIntentMap);
-    std::unique_ptr<RowReader> rowReader =
-        reader->createRowReader(rowReaderOpts);
+    std::unique_ptr<RowReader> rowReader = reader->createRowReader(rowReaderOpts);
 
     // Read a row batch.
-    std::unique_ptr<ColumnVectorBatch> batch =
-        rowReader->createRowBatch(1024);
+    std::unique_ptr<ColumnVectorBatch> batch = rowReader->createRowBatch(1024);
     EXPECT_TRUE(rowReader->next(*batch));
     EXPECT_EQ(1, batch->numElements);
     auto& structBatch = dynamic_cast<StructVectorBatch&>(*batch);
@@ -682,9 +671,8 @@ namespace orc {
     uint64_t rowCount = 5000;
     {
       auto type = std::unique_ptr<Type>(
-        Type::buildTypeFromString(
-          "struct<col1:struct<col2:int>,col3:struct<col4:int>,"
-          "col5:array<int>,col6:map<int,int>>"));
+          Type::buildTypeFromString("struct<col1:struct<col2:int>,col3:struct<col4:int>,"
+                                    "col5:array<int>,col6:map<int,int>>"));
       WriterOptions options;
       options.setStripeSize(1024 * 1024)
           .setCompressionBlockSize(1024)
@@ -745,14 +733,12 @@ namespace orc {
     }
     {
       std::unique_ptr<InputStream> inStream(
-        new MemoryInputStream(memStream.getData(), memStream.getLength()));
+          new MemoryInputStream(memStream.getData(), memStream.getLength()));
       ReaderOptions readerOptions;
       readerOptions.setMemoryPool(*pool);
-      std::unique_ptr<Reader> reader =
-        createReader(std::move(inStream), readerOptions);
+      std::unique_ptr<Reader> reader = createReader(std::move(inStream), readerOptions);
       EXPECT_EQ(rowCount, reader->getNumberOfRows());
-      std::unique_ptr<RowReader> rowReader =
-        reader->createRowReader(RowReaderOptions());
+      std::unique_ptr<RowReader> rowReader = reader->createRowReader(RowReaderOptions());
       auto batch = rowReader->createRowBatch(1000);
       // seek over the empty present stream
       rowReader->seekToRow(2000);
@@ -774,4 +760,4 @@ namespace orc {
       }
     }
   }
-}  // namespace
+}  // namespace orc

@@ -23,19 +23,19 @@
 DIAGNOSTIC_PUSH
 
 #if defined(__GNUC__) || defined(__clang__)
-  DIAGNOSTIC_IGNORE("-Wdeprecated")
-  DIAGNOSTIC_IGNORE("-Wmissing-noreturn")
-  DIAGNOSTIC_IGNORE("-Wpadded")
-  DIAGNOSTIC_IGNORE("-Wsign-compare")
-  DIAGNOSTIC_IGNORE("-Wsign-conversion")
-  DIAGNOSTIC_IGNORE("-Wundef")
+DIAGNOSTIC_IGNORE("-Wdeprecated")
+DIAGNOSTIC_IGNORE("-Wmissing-noreturn")
+DIAGNOSTIC_IGNORE("-Wpadded")
+DIAGNOSTIC_IGNORE("-Wsign-compare")
+DIAGNOSTIC_IGNORE("-Wsign-conversion")
+DIAGNOSTIC_IGNORE("-Wundef")
 #endif
 
 #ifdef __clang__
-  DIAGNOSTIC_IGNORE("-Wnull-dereference")
-  DIAGNOSTIC_IGNORE("-Wshift-sign-overflow")
-  DIAGNOSTIC_IGNORE("-Wused-but-marked-unused")
-  DIAGNOSTIC_IGNORE("-Wweak-vtables")
+DIAGNOSTIC_IGNORE("-Wnull-dereference")
+DIAGNOSTIC_IGNORE("-Wshift-sign-overflow")
+DIAGNOSTIC_IGNORE("-Wused-but-marked-unused")
+DIAGNOSTIC_IGNORE("-Wweak-vtables")
 #endif
 
 #include "gmock/gmock.h"

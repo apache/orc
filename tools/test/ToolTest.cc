@@ -16,13 +16,12 @@
  * limitations under the License.
  */
 
-
-#include "orc/orc-config.hh"
-#include "orc/OrcFile.hh"
 #include "ToolTest.hh"
+#include "orc/OrcFile.hh"
+#include "orc/orc-config.hh"
 
-#include "wrap/orc-proto-wrapper.hh"
 #include "wrap/gtest-wrapper.h"
+#include "wrap/orc-proto-wrapper.hh"
 
 #include <cerrno>
 #include <iostream>
@@ -31,11 +30,11 @@
 #include <vector>
 
 namespace {
-  const char *exampleDirectory = 0;
-  const char *buildDirectory = 0;
-}
+  const char* exampleDirectory = 0;
+  const char* buildDirectory = 0;
+}  // namespace
 
-GTEST_API_ int main(int argc, char **argv) {
+GTEST_API_ int main(int argc, char** argv) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
   std::cout << "ORC version: " << ORC_VERSION << "\n";
   if (argc >= 2) {
@@ -63,12 +62,9 @@ GTEST_API_ int main(int argc, char **argv) {
  * the output on each of the streams. The return code of the program is
  * returned as the result.
  */
-int runProgram(const std::vector<std::string> &args,
-               std::string &out,
-               std::string &err) {
+int runProgram(const std::vector<std::string>& args, std::string& out, std::string& err) {
   std::ostringstream command;
-  std::copy(args.begin(), args.end(),
-            std::ostream_iterator<std::string>(command, " "));
+  std::copy(args.begin(), args.end(), std::ostream_iterator<std::string>(command, " "));
 
   testing::internal::CaptureStdout();
   testing::internal::CaptureStderr();
@@ -85,7 +81,7 @@ int runProgram(const std::vector<std::string> &args,
  * Get the name of the given example file.
  * @param name the simple name of the example file
  */
-std::string findExample(const std::string &name) {
+std::string findExample(const std::string& name) {
   std::string result = exampleDirectory;
   result += "/";
   result += name;
@@ -96,7 +92,7 @@ std::string findExample(const std::string &name) {
  * Get the name of the given executable.
  * @param name the simple name of the executable
  */
-std::string findProgram(const std::string &name) {
+std::string findProgram(const std::string& name) {
   std::string result = buildDirectory;
   result += "/";
   result += name;

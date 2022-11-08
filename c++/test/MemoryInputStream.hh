@@ -19,20 +19,16 @@
 #ifndef ORC_MEMORYINPUTSTREAM_HH
 #define ORC_MEMORYINPUTSTREAM_HH
 
-#include "orc/OrcFile.hh"
 #include "io/InputStream.hh"
+#include "orc/OrcFile.hh"
 
 #include <iostream>
 
 namespace orc {
   class MemoryInputStream : public InputStream {
-  public:
-    MemoryInputStream(const char * _buffer, size_t _size) :
-                                        buffer(_buffer),
-                                        size(_size),
-                                        naturalReadSize(1024),
-                                        name("MemoryInputStream") {
-    }
+   public:
+    MemoryInputStream(const char* _buffer, size_t _size)
+        : buffer(_buffer), size(_size), naturalReadSize(1024), name("MemoryInputStream") {}
 
     ~MemoryInputStream() override;
 
@@ -52,15 +48,15 @@ namespace orc {
       return name;
     }
 
-    const char * getData() const {
+    const char* getData() const {
       return buffer;
     }
 
-  private:
-    const char * buffer;
+   private:
+    const char* buffer;
     uint64_t size, naturalReadSize;
     std::string name;
   };
-}
+}  // namespace orc
 
 #endif

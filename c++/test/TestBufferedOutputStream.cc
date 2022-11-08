@@ -16,25 +16,24 @@
  * limitations under the License.
  */
 
-#include "wrap/orc-proto-wrapper.hh"
 #include "wrap/gtest-wrapper.h"
+#include "wrap/orc-proto-wrapper.hh"
 
 #include "MemoryOutputStream.hh"
 
 namespace orc {
   TEST(BufferedOutputStream, block_aligned) {
     MemoryOutputStream memStream(1024);
-    MemoryPool * pool = getDefaultPool();
+    MemoryPool* pool = getDefaultPool();
 
     uint64_t capacity = 1000;
     uint64_t block = 10;
     WriterMetrics metrics;
-    BufferedOutputStream bufStream(
-            *pool, &memStream, capacity, block, &metrics);
+    BufferedOutputStream bufStream(*pool, &memStream, capacity, block, &metrics);
     for (int i = 0; i < 100; ++i) {
-      char * buf;
+      char* buf;
       int len;
-      EXPECT_TRUE(bufStream.Next(reinterpret_cast<void **>(&buf), &len));
+      EXPECT_TRUE(bufStream.Next(reinterpret_cast<void**>(&buf), &len));
       EXPECT_EQ(10, len);
       for (int j = 0; j < 10; ++j) {
         buf[j] = static_cast<char>('a' + j);
@@ -53,21 +52,20 @@ namespace orc {
 
   TEST(BufferedOutputStream, block_not_aligned) {
     MemoryOutputStream memStream(1024);
-    MemoryPool * pool = getDefaultPool();
+    MemoryPool* pool = getDefaultPool();
 
     uint64_t capacity = 20;
     uint64_t block = 10;
     WriterMetrics metrics;
-    BufferedOutputStream bufStream(
-            *pool, &memStream, capacity, block, &metrics);
+    BufferedOutputStream bufStream(*pool, &memStream, capacity, block, &metrics);
 
-    char * buf;
+    char* buf;
     int len;
-    EXPECT_TRUE(bufStream.Next(reinterpret_cast<void **>(&buf), &len));
+    EXPECT_TRUE(bufStream.Next(reinterpret_cast<void**>(&buf), &len));
     EXPECT_EQ(10, len);
 
     for (int i = 0; i < 7; ++i) {
-        buf[i] = static_cast<char>('a' + i);
+      buf[i] = static_cast<char>('a' + i);
     }
 
     bufStream.BackUp(3);
@@ -78,11 +76,11 @@ namespace orc {
       EXPECT_EQ(memStream.getData()[i], 'a' + i);
     }
 
-    EXPECT_TRUE(bufStream.Next(reinterpret_cast<void **>(&buf), &len));
+    EXPECT_TRUE(bufStream.Next(reinterpret_cast<void**>(&buf), &len));
     EXPECT_EQ(10, len);
 
     for (int i = 0; i < 5; ++i) {
-        buf[i] = static_cast<char>('a' + i);
+      buf[i] = static_cast<char>('a' + i);
     }
 
     bufStream.BackUp(5);
@@ -94,7 +92,7 @@ namespace orc {
     }
 
     for (int i = 0; i < 5; ++i) {
-     EXPECT_EQ(memStream.getData()[i + 7], 'a' + i);
+      EXPECT_EQ(memStream.getData()[i + 7], 'a' + i);
     }
 #if ENABLE_METRICS
     EXPECT_EQ(metrics.IOCount.load(), 2);
@@ -103,13 +101,12 @@ namespace orc {
 
   TEST(BufferedOutputStream, protobuff_serialization) {
     MemoryOutputStream memStream(1024);
-    MemoryPool * pool = getDefaultPool();
+    MemoryPool* pool = getDefaultPool();
 
     uint64_t capacity = 20;
     uint64_t block = 10;
     WriterMetrics metrics;
-    BufferedOutputStream bufStream(
-            *pool, &memStream, capacity, block, &metrics);
+    BufferedOutputStream bufStream(*pool, &memStream, capacity, block, &metrics);
 
     proto::PostScript ps;
     ps.set_footerlength(197934);
@@ -125,9 +122,7 @@ namespace orc {
     EXPECT_EQ(ps.ByteSizeLong(), memStream.getLength());
 
     proto::PostScript ps2;
-    ps2.ParseFromArray(
-                       memStream.getData(),
-                       static_cast<int>(memStream.getLength()));
+    ps2.ParseFromArray(memStream.getData(), static_cast<int>(memStream.getLength()));
 
     EXPECT_EQ(ps.footerlength(), ps2.footerlength());
     EXPECT_EQ(ps.compression(), ps2.compression());
@@ -137,4 +132,4 @@ namespace orc {
     EXPECT_EQ(ps.writerversion(), ps2.writerversion());
     EXPECT_EQ(ps.magic(), ps2.magic());
   }
-}
+}  // namespace orc

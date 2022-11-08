@@ -27,56 +27,43 @@
 
 namespace orc {
   StreamsFactory::~StreamsFactory() {
-    //PASS
+    // PASS
   }
 
   class StreamsFactoryImpl : public StreamsFactory {
-  public:
-    StreamsFactoryImpl(
-                       const WriterOptions& writerOptions,
-                       OutputStream* outputStream) :
-                       options(writerOptions),
-                       outStream(outputStream) {
-                       }
+   public:
+    StreamsFactoryImpl(const WriterOptions& writerOptions, OutputStream* outputStream)
+        : options(writerOptions), outStream(outputStream) {}
 
-    virtual std::unique_ptr<BufferedOutputStream>
-                    createStream(proto::Stream_Kind kind) const override;
-  private:
+    virtual std::unique_ptr<BufferedOutputStream> createStream(
+        proto::Stream_Kind kind) const override;
+
+   private:
     const WriterOptions& options;
     OutputStream* outStream;
   };
 
-  std::unique_ptr<BufferedOutputStream> StreamsFactoryImpl::createStream(
-                                                    proto::Stream_Kind) const {
+  std::unique_ptr<BufferedOutputStream> StreamsFactoryImpl::createStream(proto::Stream_Kind) const {
     // In the future, we can decide compression strategy and modifier
     // based on stream kind. But for now we just use the setting from
     // WriterOption
-    return createCompressor(
-                            options.getCompression(),
-                            outStream,
-                            options.getCompressionStrategy(),
+    return createCompressor(options.getCompression(), outStream, options.getCompressionStrategy(),
                             // BufferedOutputStream initial capacity
-                            1 * 1024 * 1024,
-                            options.getCompressionBlockSize(),
-                            *options.getMemoryPool(),
-                            options.getWriterMetrics());
+                            1 * 1024 * 1024, options.getCompressionBlockSize(),
+                            *options.getMemoryPool(), options.getWriterMetrics());
   }
 
-  std::unique_ptr<StreamsFactory> createStreamsFactory(
-                                        const WriterOptions& options,
-                                        OutputStream* outStream) {
-    return std::unique_ptr<StreamsFactory>(
-                                   new StreamsFactoryImpl(options, outStream));
+  std::unique_ptr<StreamsFactory> createStreamsFactory(const WriterOptions& options,
+                                                       OutputStream* outStream) {
+    return std::unique_ptr<StreamsFactory>(new StreamsFactoryImpl(options, outStream));
   }
 
   RowIndexPositionRecorder::~RowIndexPositionRecorder() {
     // PASS
   }
 
-  proto::ColumnEncoding_Kind RleVersionMapper(RleVersion rleVersion)
-  {
-    switch (rleVersion)
-    {
+  proto::ColumnEncoding_Kind RleVersionMapper(RleVersion rleVersion) {
+    switch (rleVersion) {
       case RleVersion_1:
         return proto::ColumnEncoding_Kind_DIRECT;
       case RleVersion_2:
@@ -86,24 +73,21 @@ namespace orc {
     }
   }
 
-  ColumnWriter::ColumnWriter(
-                             const Type& type,
-                             const StreamsFactory& factory,
-                             const WriterOptions& options) :
-                                columnId(type.getColumnId()),
-                                colIndexStatistics(),
-                                colStripeStatistics(),
-                                colFileStatistics(),
-                                enableIndex(options.getEnableIndex()),
-                                rowIndex(),
-                                rowIndexEntry(),
-                                rowIndexPosition(),
-                                enableBloomFilter(false),
-                                memPool(*options.getMemoryPool()),
-                                indexStream(),
-                                bloomFilterStream(),
-                                hasNullValue(false) {
-
+  ColumnWriter::ColumnWriter(const Type& type, const StreamsFactory& factory,
+                             const WriterOptions& options)
+      : columnId(type.getColumnId()),
+        colIndexStatistics(),
+        colStripeStatistics(),
+        colFileStatistics(),
+        enableIndex(options.getEnableIndex()),
+        rowIndex(),
+        rowIndexEntry(),
+        rowIndexPosition(),
+        enableBloomFilter(false),
+        memPool(*options.getMemoryPool()),
+        indexStream(),
+        bloomFilterStream(),
+        hasNullValue(false) {
     std::unique_ptr<BufferedOutputStream> presentStream =
         factory.createStream(proto::Stream_Kind_PRESENT);
     notNullEncoder = createBooleanRleEncoder(std::move(presentStream));
@@ -114,19 +98,17 @@ namespace orc {
 
     if (enableIndex) {
       rowIndex = std::unique_ptr<proto::RowIndex>(new proto::RowIndex());
-      rowIndexEntry =
-        std::unique_ptr<proto::RowIndexEntry>(new proto::RowIndexEntry());
-      rowIndexPosition = std::unique_ptr<RowIndexPositionRecorder>(
-                     new RowIndexPositionRecorder(*rowIndexEntry));
-      indexStream =
-        factory.createStream(proto::Stream_Kind_ROW_INDEX);
+      rowIndexEntry = std::unique_ptr<proto::RowIndexEntry>(new proto::RowIndexEntry());
+      rowIndexPosition =
+          std::unique_ptr<RowIndexPositionRecorder>(new RowIndexPositionRecorder(*rowIndexEntry));
+      indexStream = factory.createStream(proto::Stream_Kind_ROW_INDEX);
 
       // BloomFilters for non-UTF8 strings and non-UTC timestamps are not supported
-      if (options.isColumnUseBloomFilter(columnId)
-          && options.getBloomFilterVersion() == BloomFilterVersion::UTF8) {
+      if (options.isColumnUseBloomFilter(columnId) &&
+          options.getBloomFilterVersion() == BloomFilterVersion::UTF8) {
         enableBloomFilter = true;
-        bloomFilter.reset(new BloomFilterImpl(
-          options.getRowIndexStride(), options.getBloomFilterFPP()));
+        bloomFilter.reset(
+            new BloomFilterImpl(options.getRowIndexStride(), options.getBloomFilterFPP()));
         bloomFilterIndex.reset(new proto::BloomFilterIndex());
         bloomFilterStream = factory.createStream(proto::Stream_Kind_BLOOM_FILTER_UTF8);
       }
@@ -137,9 +119,7 @@ namespace orc {
     // PASS
   }
 
-  void ColumnWriter::add(ColumnVectorBatch& batch,
-                         uint64_t offset,
-                         uint64_t numValues,
+  void ColumnWriter::add(ColumnVectorBatch& batch, uint64_t offset, uint64_t numValues,
                          const char* incomingMask) {
     const char* notNull = batch.notNull.data() + offset;
     notNullEncoder->add(notNull, numValues, incomingMask);
@@ -168,8 +148,7 @@ namespace orc {
     return notNullEncoder->getBufferSize();
   }
 
-  void ColumnWriter::getStripeStatistics(
-    std::vector<proto::ColumnStatistics>& stats) const {
+  void ColumnWriter::getStripeStatistics(std::vector<proto::ColumnStatistics>& stats) const {
     getProtoBufStatistics(stats, colStripeStatistics.get());
   }
 
@@ -183,13 +162,12 @@ namespace orc {
     colIndexStatistics->reset();
   }
 
-  void ColumnWriter::getFileStatistics(
-    std::vector<proto::ColumnStatistics>& stats) const {
+  void ColumnWriter::getFileStatistics(std::vector<proto::ColumnStatistics>& stats) const {
     getProtoBufStatistics(stats, colFileStatistics.get());
   }
 
   void ColumnWriter::createRowIndexEntry() {
-    proto::ColumnStatistics *indexStats = rowIndexEntry->mutable_statistics();
+    proto::ColumnStatistics* indexStats = rowIndexEntry->mutable_statistics();
     colIndexStatistics->toProtoBuf(*indexStats);
 
     *rowIndex->add_entry() = *rowIndexEntry;
@@ -212,7 +190,7 @@ namespace orc {
     }
   }
 
-  void ColumnWriter::writeIndex(std::vector<proto::Stream> &streams) const {
+  void ColumnWriter::writeIndex(std::vector<proto::Stream>& streams) const {
     if (!hasNullValue) {
       // remove positions of present stream
       int presentCount = indexStream->isCompressed() ? 4 : 3;
@@ -276,28 +254,21 @@ namespace orc {
   }
 
   class StructColumnWriter : public ColumnWriter {
-  public:
-    StructColumnWriter(
-                       const Type& type,
-                       const StreamsFactory& factory,
+   public:
+    StructColumnWriter(const Type& type, const StreamsFactory& factory,
                        const WriterOptions& options);
 
-    virtual void add(ColumnVectorBatch& rowBatch,
-                     uint64_t offset,
-                     uint64_t numValues,
+    virtual void add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                      const char* incomingMask) override;
 
     virtual void flush(std::vector<proto::Stream>& streams) override;
 
     virtual uint64_t getEstimatedSize() const override;
-    virtual void getColumnEncoding(
-      std::vector<proto::ColumnEncoding>& encodings) const override;
+    virtual void getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const override;
 
-    virtual void getStripeStatistics(
-      std::vector<proto::ColumnStatistics>& stats) const override;
+    virtual void getStripeStatistics(std::vector<proto::ColumnStatistics>& stats) const override;
 
-    virtual void getFileStatistics(
-      std::vector<proto::ColumnStatistics>& stats) const override;
+    virtual void getFileStatistics(std::vector<proto::ColumnStatistics>& stats) const override;
 
     virtual void mergeStripeStatsIntoFileStats() override;
 
@@ -305,23 +276,20 @@ namespace orc {
 
     virtual void createRowIndexEntry() override;
 
-    virtual void writeIndex(
-      std::vector<proto::Stream> &streams) const override;
+    virtual void writeIndex(std::vector<proto::Stream>& streams) const override;
 
     virtual void writeDictionary() override;
 
     virtual void reset() override;
 
-  private:
+   private:
     std::vector<std::unique_ptr<ColumnWriter>> children;
   };
 
-  StructColumnWriter::StructColumnWriter(
-                                         const Type& type,
-                                         const StreamsFactory& factory,
-                                         const WriterOptions& options) :
-                                         ColumnWriter(type, factory, options) {
-    for(unsigned int i = 0; i < type.getSubtypeCount(); ++i) {
+  StructColumnWriter::StructColumnWriter(const Type& type, const StreamsFactory& factory,
+                                         const WriterOptions& options)
+      : ColumnWriter(type, factory, options) {
+    for (unsigned int i = 0; i < type.getSubtypeCount(); ++i) {
       const Type& child = *type.getSubtype(i);
       children.push_back(buildWriter(child, factory, options));
     }
@@ -331,20 +299,15 @@ namespace orc {
     }
   }
 
-  void StructColumnWriter::add(
-                               ColumnVectorBatch& rowBatch,
-                               uint64_t offset,
-                               uint64_t numValues,
+  void StructColumnWriter::add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                                const char* incomingMask) {
-    const StructVectorBatch* structBatch =
-      dynamic_cast<const StructVectorBatch *>(&rowBatch);
+    const StructVectorBatch* structBatch = dynamic_cast<const StructVectorBatch*>(&rowBatch);
     if (structBatch == nullptr) {
       throw InvalidArgument("Failed to cast to StructVectorBatch");
     }
 
     ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
-    const char* notNull = structBatch->hasNulls ?
-                          structBatch->notNull.data() + offset : nullptr;
+    const char* notNull = structBatch->hasNulls ? structBatch->notNull.data() + offset : nullptr;
     for (uint32_t i = 0; i < children.size(); ++i) {
       children[i]->add(*structBatch->fields[i], offset, numValues, notNull);
     }
@@ -373,8 +336,7 @@ namespace orc {
     }
   }
 
-  void StructColumnWriter::writeIndex(
-                      std::vector<proto::Stream> &streams) const {
+  void StructColumnWriter::writeIndex(std::vector<proto::Stream>& streams) const {
     ColumnWriter::writeIndex(streams);
     for (uint32_t i = 0; i < children.size(); ++i) {
       children[i]->writeIndex(streams);
@@ -389,8 +351,7 @@ namespace orc {
     return size;
   }
 
-  void StructColumnWriter::getColumnEncoding(
-                      std::vector<proto::ColumnEncoding>& encodings) const {
+  void StructColumnWriter::getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
     encoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
     encoding.set_dictionarysize(0);
@@ -400,8 +361,7 @@ namespace orc {
     }
   }
 
-  void StructColumnWriter::getStripeStatistics(
-    std::vector<proto::ColumnStatistics>& stats) const {
+  void StructColumnWriter::getStripeStatistics(std::vector<proto::ColumnStatistics>& stats) const {
     ColumnWriter::getStripeStatistics(stats);
 
     for (uint32_t i = 0; i < children.size(); ++i) {
@@ -417,8 +377,7 @@ namespace orc {
     }
   }
 
-  void StructColumnWriter::getFileStatistics(
-    std::vector<proto::ColumnStatistics>& stats) const {
+  void StructColumnWriter::getFileStatistics(std::vector<proto::ColumnStatistics>& stats) const {
     ColumnWriter::getFileStatistics(stats);
 
     for (uint32_t i = 0; i < children.size(); ++i) {
@@ -426,7 +385,7 @@ namespace orc {
     }
   }
 
-  void StructColumnWriter::mergeRowGroupStatsIntoStripeStats()  {
+  void StructColumnWriter::mergeRowGroupStatsIntoStripeStats() {
     ColumnWriter::mergeRowGroupStatsIntoStripeStats();
 
     for (uint32_t i = 0; i < children.size(); ++i) {
@@ -457,46 +416,34 @@ namespace orc {
   }
 
   class IntegerColumnWriter : public ColumnWriter {
-  public:
-    IntegerColumnWriter(
-                        const Type& type,
-                        const StreamsFactory& factory,
+   public:
+    IntegerColumnWriter(const Type& type, const StreamsFactory& factory,
                         const WriterOptions& options);
 
-    virtual void add(ColumnVectorBatch& rowBatch,
-                     uint64_t offset,
-                     uint64_t numValues,
+    virtual void add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                      const char* incomingMask) override;
 
     virtual void flush(std::vector<proto::Stream>& streams) override;
 
     virtual uint64_t getEstimatedSize() const override;
 
-    virtual void getColumnEncoding(
-              std::vector<proto::ColumnEncoding>& encodings) const override;
+    virtual void getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const override;
 
     virtual void recordPosition() const override;
 
-  protected:
+   protected:
     std::unique_ptr<RleEncoder> rleEncoder;
 
-  private:
+   private:
     RleVersion rleVersion;
   };
 
-  IntegerColumnWriter::IntegerColumnWriter(
-                           const Type& type,
-                           const StreamsFactory& factory,
-                           const WriterOptions& options) :
-                             ColumnWriter(type, factory, options),
-                             rleVersion(options.getRleVersion()) {
+  IntegerColumnWriter::IntegerColumnWriter(const Type& type, const StreamsFactory& factory,
+                                           const WriterOptions& options)
+      : ColumnWriter(type, factory, options), rleVersion(options.getRleVersion()) {
     std::unique_ptr<BufferedOutputStream> dataStream =
-      factory.createStream(proto::Stream_Kind_DATA);
-    rleEncoder = createRleEncoder(
-                                  std::move(dataStream),
-                                  true,
-                                  rleVersion,
-                                  memPool,
+        factory.createStream(proto::Stream_Kind_DATA);
+    rleEncoder = createRleEncoder(std::move(dataStream), true, rleVersion, memPool,
                                   options.getAlignedBitpacking());
 
     if (enableIndex) {
@@ -504,13 +451,9 @@ namespace orc {
     }
   }
 
-  void IntegerColumnWriter::add(
-                                ColumnVectorBatch& rowBatch,
-                                uint64_t offset,
-                                uint64_t numValues,
+  void IntegerColumnWriter::add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                                 const char* incomingMask) {
-    const LongVectorBatch* longBatch =
-      dynamic_cast<const LongVectorBatch*>(&rowBatch);
+    const LongVectorBatch* longBatch = dynamic_cast<const LongVectorBatch*>(&rowBatch);
     if (longBatch == nullptr) {
       throw InvalidArgument("Failed to cast to LongVectorBatch");
     }
@@ -523,8 +466,7 @@ namespace orc {
     ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
     const int64_t* data = longBatch->data.data() + offset;
-    const char* notNull = longBatch->hasNulls ?
-                          longBatch->notNull.data() + offset : nullptr;
+    const char* notNull = longBatch->hasNulls ? longBatch->notNull.data() + offset : nullptr;
 
     rleEncoder->add(data, numValues, notNull);
 
@@ -561,8 +503,7 @@ namespace orc {
     return size;
   }
 
-  void IntegerColumnWriter::getColumnEncoding(
-                       std::vector<proto::ColumnEncoding>& encodings) const {
+  void IntegerColumnWriter::getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
     encoding.set_kind(RleVersionMapper(rleVersion));
     encoding.set_dictionarysize(0);
@@ -578,36 +519,29 @@ namespace orc {
   }
 
   class ByteColumnWriter : public ColumnWriter {
-  public:
-    ByteColumnWriter(const Type& type,
-                     const StreamsFactory& factory,
-                     const WriterOptions& options);
+   public:
+    ByteColumnWriter(const Type& type, const StreamsFactory& factory, const WriterOptions& options);
 
-    virtual void add(ColumnVectorBatch& rowBatch,
-                     uint64_t offset,
-                     uint64_t numValues,
+    virtual void add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                      const char* incomingMask) override;
 
     virtual void flush(std::vector<proto::Stream>& streams) override;
 
     virtual uint64_t getEstimatedSize() const override;
 
-    virtual void getColumnEncoding(
-            std::vector<proto::ColumnEncoding>& encodings) const override;
+    virtual void getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const override;
 
     virtual void recordPosition() const override;
 
-  private:
+   private:
     std::unique_ptr<ByteRleEncoder> byteRleEncoder;
   };
 
-  ByteColumnWriter::ByteColumnWriter(
-                        const Type& type,
-                        const StreamsFactory& factory,
-                        const WriterOptions& options) :
-                             ColumnWriter(type, factory, options) {
+  ByteColumnWriter::ByteColumnWriter(const Type& type, const StreamsFactory& factory,
+                                     const WriterOptions& options)
+      : ColumnWriter(type, factory, options) {
     std::unique_ptr<BufferedOutputStream> dataStream =
-                                  factory.createStream(proto::Stream_Kind_DATA);
+        factory.createStream(proto::Stream_Kind_DATA);
     byteRleEncoder = createByteRleEncoder(std::move(dataStream));
 
     if (enableIndex) {
@@ -615,9 +549,7 @@ namespace orc {
     }
   }
 
-  void ByteColumnWriter::add(ColumnVectorBatch& rowBatch,
-                             uint64_t offset,
-                             uint64_t numValues,
+  void ByteColumnWriter::add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                              const char* incomingMask) {
     LongVectorBatch* byteBatch = dynamic_cast<LongVectorBatch*>(&rowBatch);
     if (byteBatch == nullptr) {
@@ -632,8 +564,7 @@ namespace orc {
     ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
     int64_t* data = byteBatch->data.data() + offset;
-    const char* notNull = byteBatch->hasNulls ?
-                          byteBatch->notNull.data() + offset : nullptr;
+    const char* notNull = byteBatch->hasNulls ? byteBatch->notNull.data() + offset : nullptr;
 
     char* byteData = reinterpret_cast<char*>(data);
     for (uint64_t i = 0; i < numValues; ++i) {
@@ -673,8 +604,7 @@ namespace orc {
     return size;
   }
 
-  void ByteColumnWriter::getColumnEncoding(
-    std::vector<proto::ColumnEncoding>& encodings) const {
+  void ByteColumnWriter::getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
     encoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
     encoding.set_dictionarysize(0);
@@ -690,36 +620,30 @@ namespace orc {
   }
 
   class BooleanColumnWriter : public ColumnWriter {
-  public:
-    BooleanColumnWriter(const Type& type,
-                        const StreamsFactory& factory,
+   public:
+    BooleanColumnWriter(const Type& type, const StreamsFactory& factory,
                         const WriterOptions& options);
 
-    virtual void add(ColumnVectorBatch& rowBatch,
-                     uint64_t offset,
-                     uint64_t numValues,
+    virtual void add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                      const char* incomingMask) override;
 
     virtual void flush(std::vector<proto::Stream>& streams) override;
 
     virtual uint64_t getEstimatedSize() const override;
 
-    virtual void getColumnEncoding(
-        std::vector<proto::ColumnEncoding>& encodings) const override;
+    virtual void getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const override;
 
     virtual void recordPosition() const override;
 
-  private:
+   private:
     std::unique_ptr<ByteRleEncoder> rleEncoder;
   };
 
-  BooleanColumnWriter::BooleanColumnWriter(
-                           const Type& type,
-                           const StreamsFactory& factory,
-                           const WriterOptions& options) :
-                               ColumnWriter(type, factory, options) {
+  BooleanColumnWriter::BooleanColumnWriter(const Type& type, const StreamsFactory& factory,
+                                           const WriterOptions& options)
+      : ColumnWriter(type, factory, options) {
     std::unique_ptr<BufferedOutputStream> dataStream =
-      factory.createStream(proto::Stream_Kind_DATA);
+        factory.createStream(proto::Stream_Kind_DATA);
     rleEncoder = createBooleanRleEncoder(std::move(dataStream));
 
     if (enableIndex) {
@@ -727,9 +651,7 @@ namespace orc {
     }
   }
 
-  void BooleanColumnWriter::add(ColumnVectorBatch& rowBatch,
-                                uint64_t offset,
-                                uint64_t numValues,
+  void BooleanColumnWriter::add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                                 const char* incomingMask) {
     LongVectorBatch* byteBatch = dynamic_cast<LongVectorBatch*>(&rowBatch);
     if (byteBatch == nullptr) {
@@ -744,8 +666,7 @@ namespace orc {
     ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
     int64_t* data = byteBatch->data.data() + offset;
-    const char* notNull = byteBatch->hasNulls ?
-                          byteBatch->notNull.data() + offset : nullptr;
+    const char* notNull = byteBatch->hasNulls ? byteBatch->notNull.data() + offset : nullptr;
 
     char* byteData = reinterpret_cast<char*>(data);
     for (uint64_t i = 0; i < numValues; ++i) {
@@ -785,8 +706,7 @@ namespace orc {
     return size;
   }
 
-  void BooleanColumnWriter::getColumnEncoding(
-                       std::vector<proto::ColumnEncoding>& encodings) const {
+  void BooleanColumnWriter::getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
     encoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
     encoding.set_dictionarysize(0);
@@ -802,42 +722,33 @@ namespace orc {
   }
 
   class DoubleColumnWriter : public ColumnWriter {
-  public:
-    DoubleColumnWriter(const Type& type,
-                       const StreamsFactory& factory,
-                       const WriterOptions& options,
-                       bool isFloat);
+   public:
+    DoubleColumnWriter(const Type& type, const StreamsFactory& factory,
+                       const WriterOptions& options, bool isFloat);
 
-    virtual void add(ColumnVectorBatch& rowBatch,
-                     uint64_t offset,
-                     uint64_t numValues,
+    virtual void add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                      const char* incomingMask) override;
 
     virtual void flush(std::vector<proto::Stream>& streams) override;
 
     virtual uint64_t getEstimatedSize() const override;
 
-    virtual void getColumnEncoding(
-        std::vector<proto::ColumnEncoding>& encodings) const override;
+    virtual void getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const override;
 
     virtual void recordPosition() const override;
 
-  private:
+   private:
     bool isFloat;
     std::unique_ptr<AppendOnlyBufferedStream> dataStream;
     DataBuffer<char> buffer;
   };
 
-  DoubleColumnWriter::DoubleColumnWriter(
-                          const Type& type,
-                          const StreamsFactory& factory,
-                          const WriterOptions& options,
-                          bool isFloatType) :
-                              ColumnWriter(type, factory, options),
-                              isFloat(isFloatType),
-                              buffer(*options.getMemoryPool()) {
-    dataStream.reset(new AppendOnlyBufferedStream(
-                             factory.createStream(proto::Stream_Kind_DATA)));
+  DoubleColumnWriter::DoubleColumnWriter(const Type& type, const StreamsFactory& factory,
+                                         const WriterOptions& options, bool isFloatType)
+      : ColumnWriter(type, factory, options),
+        isFloat(isFloatType),
+        buffer(*options.getMemoryPool()) {
+    dataStream.reset(new AppendOnlyBufferedStream(factory.createStream(proto::Stream_Kind_DATA)));
     buffer.resize(isFloat ? 4 : 8);
 
     if (enableIndex) {
@@ -855,17 +766,14 @@ namespace orc {
     }
   }
 
-  void DoubleColumnWriter::add(ColumnVectorBatch& rowBatch,
-                               uint64_t offset,
-                               uint64_t numValues,
+  void DoubleColumnWriter::add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                                const char* incomingMask) {
-    const DoubleVectorBatch* dblBatch =
-      dynamic_cast<const DoubleVectorBatch*>(&rowBatch);
+    const DoubleVectorBatch* dblBatch = dynamic_cast<const DoubleVectorBatch*>(&rowBatch);
     if (dblBatch == nullptr) {
       throw InvalidArgument("Failed to cast to DoubleVectorBatch");
     }
     DoubleColumnStatisticsImpl* doubleStats =
-      dynamic_cast<DoubleColumnStatisticsImpl*>(colIndexStatistics.get());
+        dynamic_cast<DoubleColumnStatisticsImpl*>(colIndexStatistics.get());
     if (doubleStats == nullptr) {
       throw InvalidArgument("Failed to cast to DoubleColumnStatisticsImpl");
     }
@@ -873,8 +781,7 @@ namespace orc {
     ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
     const double* doubleData = dblBatch->data.data() + offset;
-    const char* notNull = dblBatch->hasNulls ?
-                          dblBatch->notNull.data() + offset : nullptr;
+    const char* notNull = dblBatch->hasNulls ? dblBatch->notNull.data() + offset : nullptr;
 
     size_t bytes = isFloat ? 4 : 8;
     char* data = buffer.data();
@@ -916,8 +823,7 @@ namespace orc {
     return size;
   }
 
-  void DoubleColumnWriter::getColumnEncoding(
-                      std::vector<proto::ColumnEncoding>& encodings) const {
+  void DoubleColumnWriter::getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
     encoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
     encoding.set_dictionarysize(0);
@@ -936,27 +842,26 @@ namespace orc {
    * Implementation of increasing sorted string dictionary
    */
   class SortedStringDictionary {
-  public:
+   public:
     struct DictEntry {
-      DictEntry(const char * str, size_t len):data(str),length(len) {}
-      const char * data;
+      DictEntry(const char* str, size_t len) : data(str), length(len) {}
+      const char* data;
       size_t length;
     };
 
-    SortedStringDictionary():totalLength(0) {}
+    SortedStringDictionary() : totalLength(0) {}
 
     // insert a new string into dictionary, return its insertion order
-    size_t insert(const char * data, size_t len);
+    size_t insert(const char* data, size_t len);
 
     // write dictionary data & length to output buffer
-    void flush(AppendOnlyBufferedStream * dataStream,
-               RleEncoder * lengthEncoder) const;
+    void flush(AppendOnlyBufferedStream* dataStream, RleEncoder* lengthEncoder) const;
 
     // reorder input index buffer from insertion order to dictionary order
     void reorder(std::vector<int64_t>& idxBuffer) const;
 
     // get dict entries in insertion order
-    void getEntriesInInsertionOrder(std::vector<const DictEntry *>&) const;
+    void getEntriesInInsertionOrder(std::vector<const DictEntry*>&) const;
 
     // return count of entries
     size_t size() const;
@@ -966,7 +871,7 @@ namespace orc {
 
     void clear();
 
-  private:
+   private:
     struct LessThan {
       bool operator()(const DictEntry& left, const DictEntry& right) const {
         int ret = memcmp(left.data, right.data, std::min(left.length, right.length));
@@ -990,14 +895,14 @@ namespace orc {
   };
 
   // insert a new string into dictionary, return its insertion order
-  size_t SortedStringDictionary::insert(const char * str, size_t len) {
+  size_t SortedStringDictionary::insert(const char* str, size_t len) {
     auto ret = dict.insert({DictEntry(str, len), dict.size()});
     if (ret.second) {
       // make a copy to internal storage
       data.push_back(std::vector<char>(len));
       memcpy(data.back().data(), str, len);
       // update dictionary entry to link pointer to internal storage
-      DictEntry * entry = const_cast<DictEntry *>(&(ret.first->first));
+      DictEntry* entry = const_cast<DictEntry*>(&(ret.first->first));
       entry->data = data.back().data();
       totalLength += len;
     }
@@ -1005,8 +910,8 @@ namespace orc {
   }
 
   // write dictionary data & length to output buffer
-  void SortedStringDictionary::flush(AppendOnlyBufferedStream * dataStream,
-                               RleEncoder * lengthEncoder) const {
+  void SortedStringDictionary::flush(AppendOnlyBufferedStream* dataStream,
+                                     RleEncoder* lengthEncoder) const {
     for (auto it = dict.cbegin(); it != dict.cend(); ++it) {
       dataStream->write(it->first.data, it->first.length);
       lengthEncoder->write(static_cast<int64_t>(it->first.length));
@@ -1033,14 +938,13 @@ namespace orc {
 
     // do the transformation
     for (size_t i = 0; i != idxBuffer.size(); ++i) {
-      idxBuffer[i] = static_cast<int64_t>(
-        mapping[static_cast<size_t>(idxBuffer[i])]);
+      idxBuffer[i] = static_cast<int64_t>(mapping[static_cast<size_t>(idxBuffer[i])]);
     }
   }
 
   // get dict entries in insertion order
   void SortedStringDictionary::getEntriesInInsertionOrder(
-                    std::vector<const DictEntry *>& entries) const {
+      std::vector<const DictEntry*>& entries) const {
     entries.resize(dict.size());
     for (auto it = dict.cbegin(); it != dict.cend(); ++it) {
       entries[it->second] = &(it->first);
@@ -1057,29 +961,25 @@ namespace orc {
     return totalLength;
   }
 
-  void SortedStringDictionary::clear()  {
+  void SortedStringDictionary::clear() {
     totalLength = 0;
     data.clear();
     dict.clear();
   }
 
   class StringColumnWriter : public ColumnWriter {
-  public:
-    StringColumnWriter(const Type& type,
-                       const StreamsFactory& factory,
+   public:
+    StringColumnWriter(const Type& type, const StreamsFactory& factory,
                        const WriterOptions& options);
 
-    virtual void add(ColumnVectorBatch& rowBatch,
-                     uint64_t offset,
-                     uint64_t numValues,
+    virtual void add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                      const char* incomingMask) override;
 
     virtual void flush(std::vector<proto::Stream>& streams) override;
 
     virtual uint64_t getEstimatedSize() const override;
 
-    virtual void getColumnEncoding(
-        std::vector<proto::ColumnEncoding>& encodings) const override;
+    virtual void getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const override;
 
     virtual void recordPosition() const override;
 
@@ -1089,7 +989,7 @@ namespace orc {
 
     virtual void reset() override;
 
-  private:
+   private:
     /**
      * dictionary related functions
      */
@@ -1099,7 +999,7 @@ namespace orc {
     void deleteDictStreams();
     void fallbackToDirectEncoding();
 
-  protected:
+   protected:
     RleVersion rleVersion;
     bool useCompression;
     const StreamsFactory& streamsFactory;
@@ -1129,18 +1029,16 @@ namespace orc {
     mutable std::vector<size_t> startOfRowGroups;
   };
 
-  StringColumnWriter::StringColumnWriter(
-                          const Type& type,
-                          const StreamsFactory& factory,
-                          const WriterOptions& options) :
-                              ColumnWriter(type, factory, options),
-                              rleVersion(options.getRleVersion()),
-                              useCompression(options.getCompression() != CompressionKind_NONE),
-                              streamsFactory(factory),
-                              alignedBitPacking(options.getAlignedBitpacking()),
-                              doneDictionaryCheck(false),
-                              useDictionary(options.getEnableDictionary()),
-                              dictSizeThreshold(options.getDictionaryKeySizeThreshold()){
+  StringColumnWriter::StringColumnWriter(const Type& type, const StreamsFactory& factory,
+                                         const WriterOptions& options)
+      : ColumnWriter(type, factory, options),
+        rleVersion(options.getRleVersion()),
+        useCompression(options.getCompression() != CompressionKind_NONE),
+        streamsFactory(factory),
+        alignedBitPacking(options.getAlignedBitpacking()),
+        doneDictionaryCheck(false),
+        useDictionary(options.getEnableDictionary()),
+        dictSizeThreshold(options.getDictionaryKeySizeThreshold()) {
     if (type.getKind() == TypeKind::BINARY) {
       useDictionary = false;
       doneDictionaryCheck = true;
@@ -1158,12 +1056,9 @@ namespace orc {
     }
   }
 
-  void StringColumnWriter::add(ColumnVectorBatch& rowBatch,
-                               uint64_t offset,
-                               uint64_t numValues,
+  void StringColumnWriter::add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                                const char* incomingMask) {
-    const StringVectorBatch* stringBatch =
-      dynamic_cast<const StringVectorBatch*>(&rowBatch);
+    const StringVectorBatch* stringBatch = dynamic_cast<const StringVectorBatch*>(&rowBatch);
     if (stringBatch == nullptr) {
       throw InvalidArgument("Failed to cast to StringVectorBatch");
     }
@@ -1176,12 +1071,11 @@ namespace orc {
 
     ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
-    char *const * data = stringBatch->data.data() + offset;
+    char* const* data = stringBatch->data.data() + offset;
     const int64_t* length = stringBatch->length.data() + offset;
-    const char* notNull = stringBatch->hasNulls ?
-                          stringBatch->notNull.data() + offset : nullptr;
+    const char* notNull = stringBatch->hasNulls ? stringBatch->notNull.data() + offset : nullptr;
 
-    if (!useDictionary){
+    if (!useDictionary) {
       directLengthEncoder->add(length, numValues, notNull);
     }
 
@@ -1260,17 +1154,14 @@ namespace orc {
     return size;
   }
 
-  void StringColumnWriter::getColumnEncoding(
-    std::vector<proto::ColumnEncoding>& encodings) const {
+  void StringColumnWriter::getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
     if (!useDictionary) {
-      encoding.set_kind(rleVersion == RleVersion_1 ?
-                        proto::ColumnEncoding_Kind_DIRECT :
-                        proto::ColumnEncoding_Kind_DIRECT_V2);
+      encoding.set_kind(rleVersion == RleVersion_1 ? proto::ColumnEncoding_Kind_DIRECT
+                                                   : proto::ColumnEncoding_Kind_DIRECT_V2);
     } else {
-      encoding.set_kind(rleVersion == RleVersion_1 ?
-                        proto::ColumnEncoding_Kind_DICTIONARY :
-                        proto::ColumnEncoding_Kind_DICTIONARY_V2);
+      encoding.set_kind(rleVersion == RleVersion_1 ? proto::ColumnEncoding_Kind_DICTIONARY
+                                                   : proto::ColumnEncoding_Kind_DICTIONARY_V2);
     }
     encoding.set_dictionarysize(static_cast<uint32_t>(dictionary.size()));
     if (enableBloomFilter) {
@@ -1293,8 +1184,9 @@ namespace orc {
 
   bool StringColumnWriter::checkDictionaryKeyRatio() {
     if (!doneDictionaryCheck) {
-      useDictionary = dictionary.size() <= static_cast<size_t>(
-        static_cast<double>(dictionary.idxInDictBuffer.size()) * dictSizeThreshold);
+      useDictionary = dictionary.size() <=
+                      static_cast<size_t>(static_cast<double>(dictionary.idxInDictBuffer.size()) *
+                                          dictSizeThreshold);
       doneDictionaryCheck = true;
     }
 
@@ -1321,33 +1213,24 @@ namespace orc {
 
   void StringColumnWriter::createDirectStreams() {
     std::unique_ptr<BufferedOutputStream> directLengthStream =
-      streamsFactory.createStream(proto::Stream_Kind_LENGTH);
-    directLengthEncoder = createRleEncoder(std::move(directLengthStream),
-                                           false,
-                                           rleVersion,
-                                           memPool,
-                                           alignedBitPacking);
-    directDataStream.reset(new AppendOnlyBufferedStream(
-      streamsFactory.createStream(proto::Stream_Kind_DATA)));
+        streamsFactory.createStream(proto::Stream_Kind_LENGTH);
+    directLengthEncoder = createRleEncoder(std::move(directLengthStream), false, rleVersion,
+                                           memPool, alignedBitPacking);
+    directDataStream.reset(
+        new AppendOnlyBufferedStream(streamsFactory.createStream(proto::Stream_Kind_DATA)));
   }
 
   void StringColumnWriter::createDictStreams() {
     std::unique_ptr<BufferedOutputStream> dictDataStream =
-      streamsFactory.createStream(proto::Stream_Kind_DATA);
-    dictDataEncoder = createRleEncoder(std::move(dictDataStream),
-                                       false,
-                                       rleVersion,
-                                       memPool,
-                                       alignedBitPacking);
+        streamsFactory.createStream(proto::Stream_Kind_DATA);
+    dictDataEncoder =
+        createRleEncoder(std::move(dictDataStream), false, rleVersion, memPool, alignedBitPacking);
     std::unique_ptr<BufferedOutputStream> dictLengthStream =
-      streamsFactory.createStream(proto::Stream_Kind_LENGTH);
-    dictLengthEncoder = createRleEncoder(std::move(dictLengthStream),
-                                         false,
-                                         rleVersion,
-                                         memPool,
+        streamsFactory.createStream(proto::Stream_Kind_LENGTH);
+    dictLengthEncoder = createRleEncoder(std::move(dictLengthStream), false, rleVersion, memPool,
                                          alignedBitPacking);
     dictStream.reset(new AppendOnlyBufferedStream(
-      streamsFactory.createStream(proto::Stream_Kind_DICTIONARY_DATA)));
+        streamsFactory.createStream(proto::Stream_Kind_DICTIONARY_DATA)));
   }
 
   void StringColumnWriter::deleteDictStreams() {
@@ -1361,7 +1244,7 @@ namespace orc {
   }
 
   void StringColumnWriter::writeDictionary() {
-    if (useDictionary  && !doneDictionaryCheck) {
+    if (useDictionary && !doneDictionaryCheck) {
       // when index is disabled, dictionary check happens while writing 1st stripe
       if (!checkDictionaryKeyRatio()) {
         fallbackToDirectEncoding();
@@ -1377,7 +1260,7 @@ namespace orc {
       dictionary.reorder(dictionary.idxInDictBuffer);
 
       // write data sequences
-      int64_t * data = dictionary.idxInDictBuffer.data();
+      int64_t* data = dictionary.idxInDictBuffer.data();
       if (enableIndex) {
         size_t prevOffset = 0;
         for (size_t i = 0; i < startOfRowGroups.size(); ++i) {
@@ -1387,9 +1270,9 @@ namespace orc {
 
           // update index positions
           int rowGroupId = static_cast<int>(i);
-          proto::RowIndexEntry* indexEntry =
-            (rowGroupId < rowIndex->entry_size()) ?
-            rowIndex->mutable_entry(rowGroupId) : rowIndexEntry.get();
+          proto::RowIndexEntry* indexEntry = (rowGroupId < rowIndex->entry_size())
+                                                 ? rowIndex->mutable_entry(rowGroupId)
+                                                 : rowIndexEntry.get();
 
           // add positions for direct streams
           RowIndexPositionRecorder recorder(*indexEntry);
@@ -1398,8 +1281,7 @@ namespace orc {
           prevOffset = offset;
         }
 
-        dictDataEncoder->add(data + prevOffset,
-                             dictionary.idxInDictBuffer.size() - prevOffset,
+        dictDataEncoder->add(data + prevOffset, dictionary.idxInDictBuffer.size() - prevOffset,
                              nullptr);
       } else {
         dictDataEncoder->add(data, dictionary.idxInDictBuffer.size(), nullptr);
@@ -1413,18 +1295,18 @@ namespace orc {
     if (enableIndex) {
       // fallback happens at the 1st row group;
       // simply complete positions for direct streams
-      proto::RowIndexEntry * indexEntry = rowIndexEntry.get();
+      proto::RowIndexEntry* indexEntry = rowIndexEntry.get();
       RowIndexPositionRecorder recorder(*indexEntry);
       directDataStream->recordPosition(&recorder);
       directLengthEncoder->recordPosition(&recorder);
     }
 
     // get dictionary entries in insertion order
-    std::vector<const SortedStringDictionary::DictEntry *> entries;
+    std::vector<const SortedStringDictionary::DictEntry*> entries;
     dictionary.getEntriesInInsertionOrder(entries);
 
     // store each length of the data into a vector
-    const SortedStringDictionary::DictEntry * dictEntry = nullptr;
+    const SortedStringDictionary::DictEntry* dictEntry = nullptr;
     for (uint64_t i = 0; i != dictionary.idxInDictBuffer.size(); ++i) {
       // write one row data in direct encoding
       dictEntry = entries[static_cast<size_t>(dictionary.idxInDictBuffer[i])];
@@ -1439,7 +1321,7 @@ namespace orc {
     /**
      * Counts how many utf-8 chars of the input data
      */
-    static uint64_t charLength(const char * data, uint64_t length) {
+    static uint64_t charLength(const char* data, uint64_t length) {
       uint64_t chars = 0;
       for (uint64_t i = 0; i < length; i++) {
         if (isUtfStartByte(data[i])) {
@@ -1459,9 +1341,7 @@ namespace orc {
      * @param data the bytes of UTF-8
      * @param length the length of data to truncate
      */
-    static uint64_t truncateBytesTo(uint64_t maxCharLength,
-                                    const char * data,
-                                    uint64_t length) {
+    static uint64_t truncateBytesTo(uint64_t maxCharLength, const char* data, uint64_t length) {
       uint64_t chars = 0;
       if (length <= maxCharLength) {
         return length;
@@ -1491,8 +1371,8 @@ namespace orc {
      * @param from the first byte location
      * @param until the last byte location
      * @return the index of the last character
-    */
-    static uint64_t findLastCharacter(const char * text, uint64_t from, uint64_t until) {
+     */
+    static uint64_t findLastCharacter(const char* text, uint64_t from, uint64_t until) {
       uint64_t posn = until;
       /* we don't expect characters more than 5 bytes */
       while (posn >= from) {
@@ -1502,36 +1382,29 @@ namespace orc {
         posn -= 1;
       }
       /* beginning of a valid char not found */
-      throw std::logic_error(
-        "Could not truncate string, beginning of a valid char not found");
+      throw std::logic_error("Could not truncate string, beginning of a valid char not found");
     }
   };
 
   class CharColumnWriter : public StringColumnWriter {
-  public:
-    CharColumnWriter(const Type& type,
-                     const StreamsFactory& factory,
-                     const WriterOptions& options) :
-                         StringColumnWriter(type, factory, options),
-                         maxLength(type.getMaximumLength()),
-                         padBuffer(*options.getMemoryPool()) {
+   public:
+    CharColumnWriter(const Type& type, const StreamsFactory& factory, const WriterOptions& options)
+        : StringColumnWriter(type, factory, options),
+          maxLength(type.getMaximumLength()),
+          padBuffer(*options.getMemoryPool()) {
       // utf-8 is currently 4 bytes long, but it could be up to 6
       padBuffer.resize(maxLength * 6);
     }
 
-    virtual void add(ColumnVectorBatch& rowBatch,
-                     uint64_t offset,
-                     uint64_t numValues,
+    virtual void add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                      const char* incomingMask) override;
 
-  private:
+   private:
     uint64_t maxLength;
     DataBuffer<char> padBuffer;
   };
 
-  void CharColumnWriter::add(ColumnVectorBatch& rowBatch,
-                             uint64_t offset,
-                             uint64_t numValues,
+  void CharColumnWriter::add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                              const char* incomingMask) {
     StringVectorBatch* charsBatch = dynamic_cast<StringVectorBatch*>(&rowBatch);
     if (charsBatch == nullptr) {
@@ -1548,26 +1421,24 @@ namespace orc {
 
     char** data = charsBatch->data.data() + offset;
     int64_t* length = charsBatch->length.data() + offset;
-    const char* notNull = charsBatch->hasNulls ?
-                          charsBatch->notNull.data() + offset : nullptr;
+    const char* notNull = charsBatch->hasNulls ? charsBatch->notNull.data() + offset : nullptr;
 
     uint64_t count = 0;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!notNull || notNull[i]) {
-        const char * charData = nullptr;
+        const char* charData = nullptr;
         uint64_t originLength = static_cast<uint64_t>(length[i]);
         uint64_t charLength = Utf8Utils::charLength(data[i], originLength);
         if (charLength >= maxLength) {
           charData = data[i];
-          length[i] = static_cast<int64_t>(
-            Utf8Utils::truncateBytesTo(maxLength, data[i], originLength));
+          length[i] =
+              static_cast<int64_t>(Utf8Utils::truncateBytesTo(maxLength, data[i], originLength));
         } else {
           charData = padBuffer.data();
           // the padding is exactly 1 byte per char
           length[i] = length[i] + static_cast<int64_t>(maxLength - charLength);
           memcpy(padBuffer.data(), data[i], originLength);
-          memset(padBuffer.data() + originLength,
-                 ' ',
+          memset(padBuffer.data() + originLength, ' ',
                  static_cast<size_t>(length[i]) - originLength);
         }
 
@@ -1597,27 +1468,21 @@ namespace orc {
   }
 
   class VarCharColumnWriter : public StringColumnWriter {
-  public:
-    VarCharColumnWriter(const Type& type,
-                        const StreamsFactory& factory,
-                        const WriterOptions& options) :
-                            StringColumnWriter(type, factory, options),
-                            maxLength(type.getMaximumLength()) {
+   public:
+    VarCharColumnWriter(const Type& type, const StreamsFactory& factory,
+                        const WriterOptions& options)
+        : StringColumnWriter(type, factory, options), maxLength(type.getMaximumLength()) {
       // PASS
     }
 
-    virtual void add(ColumnVectorBatch& rowBatch,
-                     uint64_t offset,
-                     uint64_t numValues,
+    virtual void add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                      const char* incomingMask) override;
 
-  private:
+   private:
     uint64_t maxLength;
   };
 
-  void VarCharColumnWriter::add(ColumnVectorBatch& rowBatch,
-                                uint64_t offset,
-                                uint64_t numValues,
+  void VarCharColumnWriter::add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                                 const char* incomingMask) {
     StringVectorBatch* charsBatch = dynamic_cast<StringVectorBatch*>(&rowBatch);
     if (charsBatch == nullptr) {
@@ -1634,14 +1499,13 @@ namespace orc {
 
     char* const* data = charsBatch->data.data() + offset;
     int64_t* length = charsBatch->length.data() + offset;
-    const char* notNull = charsBatch->hasNulls ?
-                          charsBatch->notNull.data() + offset : nullptr;
+    const char* notNull = charsBatch->hasNulls ? charsBatch->notNull.data() + offset : nullptr;
 
     uint64_t count = 0;
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!notNull || notNull[i]) {
-        uint64_t itemLength = Utf8Utils::truncateBytesTo(
-          maxLength, data[i], static_cast<uint64_t>(length[i]));
+        uint64_t itemLength =
+            Utf8Utils::truncateBytesTo(maxLength, data[i], static_cast<uint64_t>(length[i]));
         length[i] = static_cast<int64_t>(itemLength);
 
         if (useDictionary) {
@@ -1670,23 +1534,18 @@ namespace orc {
   }
 
   class BinaryColumnWriter : public StringColumnWriter {
-  public:
-    BinaryColumnWriter(const Type& type,
-                       const StreamsFactory& factory,
-                       const WriterOptions& options) :
-                           StringColumnWriter(type, factory, options) {
+   public:
+    BinaryColumnWriter(const Type& type, const StreamsFactory& factory,
+                       const WriterOptions& options)
+        : StringColumnWriter(type, factory, options) {
       // PASS
     }
 
-    virtual void add(ColumnVectorBatch& rowBatch,
-                     uint64_t offset,
-                     uint64_t numValues,
+    virtual void add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                      const char* incomingMask) override;
   };
 
-  void BinaryColumnWriter::add(ColumnVectorBatch& rowBatch,
-                               uint64_t offset,
-                               uint64_t numValues,
+  void BinaryColumnWriter::add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                                const char* incomingMask) {
     StringVectorBatch* binBatch = dynamic_cast<StringVectorBatch*>(&rowBatch);
     if (binBatch == nullptr) {
@@ -1703,8 +1562,7 @@ namespace orc {
 
     char** data = binBatch->data.data() + offset;
     int64_t* length = binBatch->length.data() + offset;
-    const char* notNull = binBatch->hasNulls ?
-                          binBatch->notNull.data() + offset : nullptr;
+    const char* notNull = binBatch->hasNulls ? binBatch->notNull.data() + offset : nullptr;
 
     uint64_t count = 0;
     for (uint64_t i = 0; i < numValues; ++i) {
@@ -1727,60 +1585,43 @@ namespace orc {
   }
 
   class TimestampColumnWriter : public ColumnWriter {
-  public:
-    TimestampColumnWriter(const Type& type,
-                          const StreamsFactory& factory,
-                          const WriterOptions& options,
-                          bool isInstantType);
+   public:
+    TimestampColumnWriter(const Type& type, const StreamsFactory& factory,
+                          const WriterOptions& options, bool isInstantType);
 
-    virtual void add(ColumnVectorBatch& rowBatch,
-                     uint64_t offset,
-                     uint64_t numValues,
+    virtual void add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                      const char* incomingMask) override;
 
     virtual void flush(std::vector<proto::Stream>& streams) override;
 
     virtual uint64_t getEstimatedSize() const override;
 
-    virtual void getColumnEncoding(
-        std::vector<proto::ColumnEncoding>& encodings) const override;
+    virtual void getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const override;
 
     virtual void recordPosition() const override;
 
-  protected:
+   protected:
     std::unique_ptr<RleEncoder> secRleEncoder, nanoRleEncoder;
 
-  private:
+   private:
     RleVersion rleVersion;
     const Timezone& timezone;
     const bool isUTC;
   };
 
-  TimestampColumnWriter::TimestampColumnWriter(
-                             const Type& type,
-                             const StreamsFactory& factory,
-                             const WriterOptions& options,
-                             bool isInstantType) :
-                                 ColumnWriter(type, factory, options),
-                                 rleVersion(options.getRleVersion()),
-                                 timezone(isInstantType ?
-                                          getTimezoneByName("GMT") :
-                                          options.getTimezone()),
-                                 isUTC(isInstantType ||
-                                       options.getTimezoneName() == "GMT") {
+  TimestampColumnWriter::TimestampColumnWriter(const Type& type, const StreamsFactory& factory,
+                                               const WriterOptions& options, bool isInstantType)
+      : ColumnWriter(type, factory, options),
+        rleVersion(options.getRleVersion()),
+        timezone(isInstantType ? getTimezoneByName("GMT") : options.getTimezone()),
+        isUTC(isInstantType || options.getTimezoneName() == "GMT") {
     std::unique_ptr<BufferedOutputStream> dataStream =
         factory.createStream(proto::Stream_Kind_DATA);
     std::unique_ptr<BufferedOutputStream> secondaryStream =
         factory.createStream(proto::Stream_Kind_SECONDARY);
-    secRleEncoder = createRleEncoder(std::move(dataStream),
-                                     true,
-                                     rleVersion,
-                                     memPool,
+    secRleEncoder = createRleEncoder(std::move(dataStream), true, rleVersion, memPool,
                                      options.getAlignedBitpacking());
-    nanoRleEncoder = createRleEncoder(std::move(secondaryStream),
-                                      false,
-                                      rleVersion,
-                                      memPool,
+    nanoRleEncoder = createRleEncoder(std::move(secondaryStream), false, rleVersion, memPool,
                                       options.getAlignedBitpacking());
 
     if (enableIndex) {
@@ -1809,12 +1650,9 @@ namespace orc {
     }
   }
 
-  void TimestampColumnWriter::add(ColumnVectorBatch& rowBatch,
-                                  uint64_t offset,
-                                  uint64_t numValues,
+  void TimestampColumnWriter::add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                                   const char* incomingMask) {
-    TimestampVectorBatch* tsBatch =
-      dynamic_cast<TimestampVectorBatch*>(&rowBatch);
+    TimestampVectorBatch* tsBatch = dynamic_cast<TimestampVectorBatch*>(&rowBatch);
     if (tsBatch == nullptr) {
       throw InvalidArgument("Failed to cast to TimestampVectorBatch");
     }
@@ -1827,10 +1665,9 @@ namespace orc {
 
     ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
-    const char* notNull = tsBatch->hasNulls ?
-                          tsBatch->notNull.data() + offset : nullptr;
-    int64_t *secs = tsBatch->data.data() + offset;
-    int64_t *nanos = tsBatch->nanoseconds.data() + offset;
+    const char* notNull = tsBatch->hasNulls ? tsBatch->notNull.data() + offset : nullptr;
+    int64_t* secs = tsBatch->data.data() + offset;
+    int64_t* nanos = tsBatch->nanoseconds.data() + offset;
 
     uint64_t count = 0;
     for (uint64_t i = 0; i < numValues; ++i) {
@@ -1887,7 +1724,7 @@ namespace orc {
   }
 
   void TimestampColumnWriter::getColumnEncoding(
-    std::vector<proto::ColumnEncoding>& encodings) const {
+      std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
     encoding.set_kind(RleVersionMapper(rleVersion));
     encoding.set_dictionarysize(0);
@@ -1904,31 +1741,22 @@ namespace orc {
   }
 
   class DateColumnWriter : public IntegerColumnWriter {
-  public:
-    DateColumnWriter(const Type& type,
-                     const StreamsFactory& factory,
-                     const WriterOptions& options);
+   public:
+    DateColumnWriter(const Type& type, const StreamsFactory& factory, const WriterOptions& options);
 
-    virtual void add(ColumnVectorBatch& rowBatch,
-                     uint64_t offset,
-                     uint64_t numValues,
+    virtual void add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                      const char* incomingMask) override;
   };
 
-  DateColumnWriter::DateColumnWriter(
-                        const Type &type,
-                        const StreamsFactory &factory,
-                        const WriterOptions &options) :
-                            IntegerColumnWriter(type, factory, options) {
+  DateColumnWriter::DateColumnWriter(const Type& type, const StreamsFactory& factory,
+                                     const WriterOptions& options)
+      : IntegerColumnWriter(type, factory, options) {
     // PASS
   }
 
-  void DateColumnWriter::add(ColumnVectorBatch& rowBatch,
-                             uint64_t offset,
-                             uint64_t numValues,
+  void DateColumnWriter::add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                              const char* incomingMask) {
-    const LongVectorBatch* longBatch =
-      dynamic_cast<const LongVectorBatch*>(&rowBatch);
+    const LongVectorBatch* longBatch = dynamic_cast<const LongVectorBatch*>(&rowBatch);
     if (longBatch == nullptr) {
       throw InvalidArgument("Failed to cast to LongVectorBatch");
     }
@@ -1942,8 +1770,7 @@ namespace orc {
     ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
     const int64_t* data = longBatch->data.data() + offset;
-    const char* notNull = longBatch->hasNulls ?
-                          longBatch->notNull.data() + offset : nullptr;
+    const char* notNull = longBatch->hasNulls ? longBatch->notNull.data() + offset : nullptr;
 
     rleEncoder->add(data, numValues, notNull);
 
@@ -1964,55 +1791,45 @@ namespace orc {
   }
 
   class Decimal64ColumnWriter : public ColumnWriter {
-  public:
+   public:
     static const uint32_t MAX_PRECISION_64 = 18;
     static const uint32_t MAX_PRECISION_128 = 38;
 
-    Decimal64ColumnWriter(const Type& type,
-                          const StreamsFactory& factory,
+    Decimal64ColumnWriter(const Type& type, const StreamsFactory& factory,
                           const WriterOptions& options);
 
-    virtual void add(ColumnVectorBatch& rowBatch,
-                     uint64_t offset,
-                     uint64_t numValues,
+    virtual void add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                      const char* incomingMask) override;
 
     virtual void flush(std::vector<proto::Stream>& streams) override;
 
     virtual uint64_t getEstimatedSize() const override;
 
-    virtual void getColumnEncoding(
-        std::vector<proto::ColumnEncoding>& encodings) const override;
+    virtual void getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const override;
 
     virtual void recordPosition() const override;
 
-  protected:
+   protected:
     RleVersion rleVersion;
     uint64_t precision;
     uint64_t scale;
     std::unique_ptr<AppendOnlyBufferedStream> valueStream;
     std::unique_ptr<RleEncoder> scaleEncoder;
 
-  private:
+   private:
     char buffer[10];
   };
 
-  Decimal64ColumnWriter::Decimal64ColumnWriter(
-                             const Type& type,
-                             const StreamsFactory& factory,
-                             const WriterOptions& options) :
-                                 ColumnWriter(type, factory, options),
-                                 rleVersion(options.getRleVersion()),
-                                 precision(type.getPrecision()),
-                                 scale(type.getScale()) {
-    valueStream.reset(new AppendOnlyBufferedStream(
-        factory.createStream(proto::Stream_Kind_DATA)));
+  Decimal64ColumnWriter::Decimal64ColumnWriter(const Type& type, const StreamsFactory& factory,
+                                               const WriterOptions& options)
+      : ColumnWriter(type, factory, options),
+        rleVersion(options.getRleVersion()),
+        precision(type.getPrecision()),
+        scale(type.getScale()) {
+    valueStream.reset(new AppendOnlyBufferedStream(factory.createStream(proto::Stream_Kind_DATA)));
     std::unique_ptr<BufferedOutputStream> scaleStream =
         factory.createStream(proto::Stream_Kind_SECONDARY);
-    scaleEncoder = createRleEncoder(std::move(scaleStream),
-                                    true,
-                                    rleVersion,
-                                    memPool,
+    scaleEncoder = createRleEncoder(std::move(scaleStream), true, rleVersion, memPool,
                                     options.getAlignedBitpacking());
 
     if (enableIndex) {
@@ -2020,26 +1837,22 @@ namespace orc {
     }
   }
 
-  void Decimal64ColumnWriter::add(ColumnVectorBatch& rowBatch,
-                                  uint64_t offset,
-                                  uint64_t numValues,
+  void Decimal64ColumnWriter::add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                                   const char* incomingMask) {
-    const Decimal64VectorBatch* decBatch =
-      dynamic_cast<const Decimal64VectorBatch*>(&rowBatch);
+    const Decimal64VectorBatch* decBatch = dynamic_cast<const Decimal64VectorBatch*>(&rowBatch);
     if (decBatch == nullptr) {
       throw InvalidArgument("Failed to cast to Decimal64VectorBatch");
     }
 
     DecimalColumnStatisticsImpl* decStats =
-      dynamic_cast<DecimalColumnStatisticsImpl*>(colIndexStatistics.get());
+        dynamic_cast<DecimalColumnStatisticsImpl*>(colIndexStatistics.get());
     if (decStats == nullptr) {
       throw InvalidArgument("Failed to cast to DecimalColumnStatisticsImpl");
     }
 
     ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
-    const char* notNull = decBatch->hasNulls ?
-                          decBatch->notNull.data() + offset : nullptr;
+    const char* notNull = decBatch->hasNulls ? decBatch->notNull.data() + offset : nullptr;
     const int64_t* values = decBatch->values.data() + offset;
 
     uint64_t count = 0;
@@ -2060,10 +1873,8 @@ namespace orc {
         valueStream->write(buffer, static_cast<size_t>(data - buffer));
         ++count;
         if (enableBloomFilter) {
-          std::string decimal = Decimal(
-            values[i], static_cast<int32_t>(scale)).toString(true);
-          bloomFilter->addBytes(
-            decimal.c_str(), static_cast<int64_t>(decimal.size()));
+          std::string decimal = Decimal(values[i], static_cast<int32_t>(scale)).toString(true);
+          bloomFilter->addBytes(decimal.c_str(), static_cast<int64_t>(decimal.size()));
         }
         decStats->update(Decimal(values[i], static_cast<int32_t>(scale)));
       }
@@ -2100,7 +1911,7 @@ namespace orc {
   }
 
   void Decimal64ColumnWriter::getColumnEncoding(
-    std::vector<proto::ColumnEncoding>& encodings) const {
+      std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
     encoding.set_kind(RleVersionMapper(rleVersion));
     encoding.set_dictionarysize(0);
@@ -2117,44 +1928,35 @@ namespace orc {
   }
 
   class Decimal64ColumnWriterV2 : public ColumnWriter {
-  public:
-    Decimal64ColumnWriterV2(const Type& type,
-                            const StreamsFactory& factory,
+   public:
+    Decimal64ColumnWriterV2(const Type& type, const StreamsFactory& factory,
                             const WriterOptions& options);
 
-    virtual void add(ColumnVectorBatch& rowBatch,
-                     uint64_t offset,
-                     uint64_t numValues,
+    virtual void add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                      const char* incomingMask) override;
 
     virtual void flush(std::vector<proto::Stream>& streams) override;
 
     virtual uint64_t getEstimatedSize() const override;
 
-    virtual void getColumnEncoding(
-        std::vector<proto::ColumnEncoding>& encodings) const override;
+    virtual void getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const override;
 
     virtual void recordPosition() const override;
 
-  protected:
+   protected:
     uint64_t precision;
     uint64_t scale;
     std::unique_ptr<RleEncoder> valueEncoder;
   };
 
-  Decimal64ColumnWriterV2::Decimal64ColumnWriterV2(
-                               const Type& type,
-                               const StreamsFactory& factory,
-                               const WriterOptions& options) :
-                                   ColumnWriter(type, factory, options),
-                                   precision(type.getPrecision()),
-                                   scale(type.getScale()) {
+  Decimal64ColumnWriterV2::Decimal64ColumnWriterV2(const Type& type, const StreamsFactory& factory,
+                                                   const WriterOptions& options)
+      : ColumnWriter(type, factory, options),
+        precision(type.getPrecision()),
+        scale(type.getScale()) {
     std::unique_ptr<BufferedOutputStream> dataStream =
         factory.createStream(proto::Stream_Kind_DATA);
-    valueEncoder = createRleEncoder(std::move(dataStream),
-                                    true,
-                                    RleVersion_2,
-                                    memPool,
+    valueEncoder = createRleEncoder(std::move(dataStream), true, RleVersion_2, memPool,
                                     options.getAlignedBitpacking());
 
     if (enableIndex) {
@@ -2162,18 +1964,15 @@ namespace orc {
     }
   }
 
-  void Decimal64ColumnWriterV2::add(ColumnVectorBatch& rowBatch,
-                                    uint64_t offset,
-                                    uint64_t numValues,
-                                    const char* incomingMask) {
-    const Decimal64VectorBatch* decBatch =
-      dynamic_cast<const Decimal64VectorBatch*>(&rowBatch);
+  void Decimal64ColumnWriterV2::add(ColumnVectorBatch& rowBatch, uint64_t offset,
+                                    uint64_t numValues, const char* incomingMask) {
+    const Decimal64VectorBatch* decBatch = dynamic_cast<const Decimal64VectorBatch*>(&rowBatch);
     if (decBatch == nullptr) {
       throw InvalidArgument("Failed to cast to Decimal64VectorBatch");
     }
 
     DecimalColumnStatisticsImpl* decStats =
-      dynamic_cast<DecimalColumnStatisticsImpl*>(colIndexStatistics.get());
+        dynamic_cast<DecimalColumnStatisticsImpl*>(colIndexStatistics.get());
     if (decStats == nullptr) {
       throw InvalidArgument("Failed to cast to DecimalColumnStatisticsImpl");
     }
@@ -2181,8 +1980,7 @@ namespace orc {
     ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
     const int64_t* data = decBatch->values.data() + offset;
-    const char* notNull = decBatch->hasNulls ?
-                          decBatch->notNull.data() + offset : nullptr;
+    const char* notNull = decBatch->hasNulls ? decBatch->notNull.data() + offset : nullptr;
 
     valueEncoder->add(data, numValues, notNull);
 
@@ -2191,10 +1989,8 @@ namespace orc {
       if (!notNull || notNull[i]) {
         ++count;
         if (enableBloomFilter) {
-          std::string decimal = Decimal(
-            data[i], static_cast<int32_t>(scale)).toString(true);
-          bloomFilter->addBytes(
-            decimal.c_str(), static_cast<int64_t>(decimal.size()));
+          std::string decimal = Decimal(data[i], static_cast<int32_t>(scale)).toString(true);
+          bloomFilter->addBytes(decimal.c_str(), static_cast<int64_t>(decimal.size()));
         }
         decStats->update(Decimal(data[i], static_cast<int32_t>(scale)));
       }
@@ -2222,7 +2018,7 @@ namespace orc {
   }
 
   void Decimal64ColumnWriterV2::getColumnEncoding(
-    std::vector<proto::ColumnEncoding>& encodings) const {
+      std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
     encoding.set_kind(RleVersionMapper(RleVersion_2));
     encoding.set_dictionarysize(0);
@@ -2238,25 +2034,20 @@ namespace orc {
   }
 
   class Decimal128ColumnWriter : public Decimal64ColumnWriter {
-  public:
-    Decimal128ColumnWriter(const Type& type,
-                           const StreamsFactory& factory,
+   public:
+    Decimal128ColumnWriter(const Type& type, const StreamsFactory& factory,
                            const WriterOptions& options);
 
-    virtual void add(ColumnVectorBatch& rowBatch,
-                     uint64_t offset,
-                     uint64_t numValues,
+    virtual void add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                      const char* incomingMask) override;
 
-  private:
+   private:
     char buffer[20];
   };
 
-  Decimal128ColumnWriter::Decimal128ColumnWriter(
-                              const Type& type,
-                              const StreamsFactory& factory,
-                              const WriterOptions& options) :
-                                Decimal64ColumnWriter(type, factory, options) {
+  Decimal128ColumnWriter::Decimal128ColumnWriter(const Type& type, const StreamsFactory& factory,
+                                                 const WriterOptions& options)
+      : Decimal64ColumnWriter(type, factory, options) {
     // PASS
   }
 
@@ -2273,26 +2064,22 @@ namespace orc {
     return val;
   }
 
-  void Decimal128ColumnWriter::add(ColumnVectorBatch& rowBatch,
-                                   uint64_t offset,
-                                   uint64_t numValues,
+  void Decimal128ColumnWriter::add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                                    const char* incomingMask) {
-    const Decimal128VectorBatch* decBatch =
-      dynamic_cast<const Decimal128VectorBatch*>(&rowBatch);
+    const Decimal128VectorBatch* decBatch = dynamic_cast<const Decimal128VectorBatch*>(&rowBatch);
     if (decBatch == nullptr) {
       throw InvalidArgument("Failed to cast to Decimal128VectorBatch");
     }
 
     DecimalColumnStatisticsImpl* decStats =
-      dynamic_cast<DecimalColumnStatisticsImpl*>(colIndexStatistics.get());
+        dynamic_cast<DecimalColumnStatisticsImpl*>(colIndexStatistics.get());
     if (decStats == nullptr) {
       throw InvalidArgument("Failed to cast to DecimalColumnStatisticsImpl");
     }
 
     ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
-    const char* notNull = decBatch->hasNulls ?
-                          decBatch->notNull.data() + offset : nullptr;
+    const char* notNull = decBatch->hasNulls ? decBatch->notNull.data() + offset : nullptr;
     const Int128* values = decBatch->values.data() + offset;
 
     // The current encoding of decimal columns stores the integer representation
@@ -2315,10 +2102,8 @@ namespace orc {
 
         ++count;
         if (enableBloomFilter) {
-          std::string decimal = Decimal(
-            values[i], static_cast<int32_t>(scale)).toString(true);
-          bloomFilter->addBytes(
-            decimal.c_str(), static_cast<int64_t>(decimal.size()));
+          std::string decimal = Decimal(values[i], static_cast<int32_t>(scale)).toString(true);
+          bloomFilter->addBytes(decimal.c_str(), static_cast<int64_t>(decimal.size()));
         }
         decStats->update(Decimal(values[i], static_cast<int32_t>(scale)));
       }
@@ -2332,29 +2117,22 @@ namespace orc {
   }
 
   class ListColumnWriter : public ColumnWriter {
-  public:
-    ListColumnWriter(const Type& type,
-                     const StreamsFactory& factory,
-                     const WriterOptions& options);
+   public:
+    ListColumnWriter(const Type& type, const StreamsFactory& factory, const WriterOptions& options);
     ~ListColumnWriter() override;
 
-    virtual void add(ColumnVectorBatch& rowBatch,
-                     uint64_t offset,
-                     uint64_t numValues,
+    virtual void add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                      const char* incomingMask) override;
 
     virtual void flush(std::vector<proto::Stream>& streams) override;
 
     virtual uint64_t getEstimatedSize() const override;
 
-    virtual void getColumnEncoding(
-      std::vector<proto::ColumnEncoding>& encodings) const override;
+    virtual void getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const override;
 
-    virtual void getStripeStatistics(
-      std::vector<proto::ColumnStatistics>& stats) const override;
+    virtual void getStripeStatistics(std::vector<proto::ColumnStatistics>& stats) const override;
 
-    virtual void getFileStatistics(
-      std::vector<proto::ColumnStatistics>& stats) const override;
+    virtual void getFileStatistics(std::vector<proto::ColumnStatistics>& stats) const override;
 
     virtual void mergeStripeStatsIntoFileStats() override;
 
@@ -2362,8 +2140,7 @@ namespace orc {
 
     virtual void createRowIndexEntry() override;
 
-    virtual void writeIndex(
-      std::vector<proto::Stream> &streams) const override;
+    virtual void writeIndex(std::vector<proto::Stream>& streams) const override;
 
     virtual void recordPosition() const override;
 
@@ -2371,24 +2148,18 @@ namespace orc {
 
     virtual void reset() override;
 
-  private:
+   private:
     std::unique_ptr<RleEncoder> lengthEncoder;
     RleVersion rleVersion;
     std::unique_ptr<ColumnWriter> child;
   };
 
-  ListColumnWriter::ListColumnWriter(const Type& type,
-                                     const StreamsFactory& factory,
-                                     const WriterOptions& options) :
-                                       ColumnWriter(type, factory, options),
-                                       rleVersion(options.getRleVersion()){
-
+  ListColumnWriter::ListColumnWriter(const Type& type, const StreamsFactory& factory,
+                                     const WriterOptions& options)
+      : ColumnWriter(type, factory, options), rleVersion(options.getRleVersion()) {
     std::unique_ptr<BufferedOutputStream> lengthStream =
-      factory.createStream(proto::Stream_Kind_LENGTH);
-    lengthEncoder = createRleEncoder(std::move(lengthStream),
-                                     false,
-                                     rleVersion,
-                                     memPool,
+        factory.createStream(proto::Stream_Kind_LENGTH);
+    lengthEncoder = createRleEncoder(std::move(lengthStream), false, rleVersion, memPool,
                                      options.getAlignedBitpacking());
 
     if (type.getSubtypeCount() == 1) {
@@ -2404,9 +2175,7 @@ namespace orc {
     // PASS
   }
 
-  void ListColumnWriter::add(ColumnVectorBatch& rowBatch,
-                             uint64_t offset,
-                             uint64_t numValues,
+  void ListColumnWriter::add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                              const char* incomingMask) {
     ListVectorBatch* listBatch = dynamic_cast<ListVectorBatch*>(&rowBatch);
     if (listBatch == nullptr) {
@@ -2421,8 +2190,7 @@ namespace orc {
     ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
     int64_t* offsets = listBatch->offsets.data() + offset;
-    const char* notNull = listBatch->hasNulls ?
-                          listBatch->notNull.data() + offset : nullptr;
+    const char* notNull = listBatch->hasNulls ? listBatch->notNull.data() + offset : nullptr;
 
     uint64_t elemOffset = static_cast<uint64_t>(offsets[0]);
     uint64_t totalNumValues = static_cast<uint64_t>(offsets[numValues] - offsets[0]);
@@ -2474,7 +2242,7 @@ namespace orc {
     }
   }
 
-  void ListColumnWriter::writeIndex(std::vector<proto::Stream> &streams) const {
+  void ListColumnWriter::writeIndex(std::vector<proto::Stream>& streams) const {
     ColumnWriter::writeIndex(streams);
     if (child.get()) {
       child->writeIndex(streams);
@@ -2490,8 +2258,7 @@ namespace orc {
     return size;
   }
 
-  void ListColumnWriter::getColumnEncoding(
-                    std::vector<proto::ColumnEncoding>& encodings) const {
+  void ListColumnWriter::getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
     encoding.set_kind(RleVersionMapper(rleVersion));
     encoding.set_dictionarysize(0);
@@ -2504,8 +2271,7 @@ namespace orc {
     }
   }
 
-  void ListColumnWriter::getStripeStatistics(
-                    std::vector<proto::ColumnStatistics>& stats) const {
+  void ListColumnWriter::getStripeStatistics(std::vector<proto::ColumnStatistics>& stats) const {
     ColumnWriter::getStripeStatistics(stats);
     if (child.get()) {
       child->getStripeStatistics(stats);
@@ -2519,15 +2285,14 @@ namespace orc {
     }
   }
 
-  void ListColumnWriter::getFileStatistics(
-                    std::vector<proto::ColumnStatistics>& stats) const {
+  void ListColumnWriter::getFileStatistics(std::vector<proto::ColumnStatistics>& stats) const {
     ColumnWriter::getFileStatistics(stats);
     if (child.get()) {
       child->getFileStatistics(stats);
     }
   }
 
-  void ListColumnWriter::mergeRowGroupStatsIntoStripeStats()  {
+  void ListColumnWriter::mergeRowGroupStatsIntoStripeStats() {
     ColumnWriter::mergeRowGroupStatsIntoStripeStats();
     if (child.get()) {
       child->mergeRowGroupStatsIntoStripeStats();
@@ -2560,29 +2325,22 @@ namespace orc {
   }
 
   class MapColumnWriter : public ColumnWriter {
-  public:
-    MapColumnWriter(const Type& type,
-                    const StreamsFactory& factory,
-                    const WriterOptions& options);
+   public:
+    MapColumnWriter(const Type& type, const StreamsFactory& factory, const WriterOptions& options);
     ~MapColumnWriter() override;
 
-    virtual void add(ColumnVectorBatch& rowBatch,
-                     uint64_t offset,
-                     uint64_t numValues,
+    virtual void add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                      const char* incomingMask) override;
 
     virtual void flush(std::vector<proto::Stream>& streams) override;
 
     virtual uint64_t getEstimatedSize() const override;
 
-    virtual void getColumnEncoding(
-      std::vector<proto::ColumnEncoding>& encodings) const override;
+    virtual void getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const override;
 
-    virtual void getStripeStatistics(
-      std::vector<proto::ColumnStatistics>& stats) const override;
+    virtual void getStripeStatistics(std::vector<proto::ColumnStatistics>& stats) const override;
 
-    virtual void getFileStatistics(
-      std::vector<proto::ColumnStatistics>& stats) const override;
+    virtual void getFileStatistics(std::vector<proto::ColumnStatistics>& stats) const override;
 
     virtual void mergeStripeStatsIntoFileStats() override;
 
@@ -2590,8 +2348,7 @@ namespace orc {
 
     virtual void createRowIndexEntry() override;
 
-    virtual void writeIndex(
-      std::vector<proto::Stream> &streams) const override;
+    virtual void writeIndex(std::vector<proto::Stream>& streams) const override;
 
     virtual void recordPosition() const override;
 
@@ -2599,24 +2356,19 @@ namespace orc {
 
     virtual void reset() override;
 
-  private:
+   private:
     std::unique_ptr<ColumnWriter> keyWriter;
     std::unique_ptr<ColumnWriter> elemWriter;
     std::unique_ptr<RleEncoder> lengthEncoder;
     RleVersion rleVersion;
   };
 
-  MapColumnWriter::MapColumnWriter(const Type& type,
-                                   const StreamsFactory& factory,
-                                   const WriterOptions& options) :
-                                     ColumnWriter(type, factory, options),
-                                     rleVersion(options.getRleVersion()){
+  MapColumnWriter::MapColumnWriter(const Type& type, const StreamsFactory& factory,
+                                   const WriterOptions& options)
+      : ColumnWriter(type, factory, options), rleVersion(options.getRleVersion()) {
     std::unique_ptr<BufferedOutputStream> lengthStream =
-      factory.createStream(proto::Stream_Kind_LENGTH);
-    lengthEncoder = createRleEncoder(std::move(lengthStream),
-                                     false,
-                                     rleVersion,
-                                     memPool,
+        factory.createStream(proto::Stream_Kind_LENGTH);
+    lengthEncoder = createRleEncoder(std::move(lengthStream), false, rleVersion, memPool,
                                      options.getAlignedBitpacking());
 
     if (type.getSubtypeCount() > 0) {
@@ -2636,9 +2388,7 @@ namespace orc {
     // PASS
   }
 
-  void MapColumnWriter::add(ColumnVectorBatch& rowBatch,
-                            uint64_t offset,
-                            uint64_t numValues,
+  void MapColumnWriter::add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                             const char* incomingMask) {
     MapVectorBatch* mapBatch = dynamic_cast<MapVectorBatch*>(&rowBatch);
     if (mapBatch == nullptr) {
@@ -2653,8 +2403,7 @@ namespace orc {
     ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
     int64_t* offsets = mapBatch->offsets.data() + offset;
-    const char* notNull = mapBatch->hasNulls ?
-                          mapBatch->notNull.data() + offset : nullptr;
+    const char* notNull = mapBatch->hasNulls ? mapBatch->notNull.data() + offset : nullptr;
 
     uint64_t elemOffset = static_cast<uint64_t>(offsets[0]);
     uint64_t totalNumValues = static_cast<uint64_t>(offsets[numValues] - offsets[0]);
@@ -2713,8 +2462,7 @@ namespace orc {
     }
   }
 
-  void MapColumnWriter::writeIndex(
-    std::vector<proto::Stream> &streams) const {
+  void MapColumnWriter::writeIndex(std::vector<proto::Stream>& streams) const {
     ColumnWriter::writeIndex(streams);
     if (keyWriter.get()) {
       keyWriter->writeIndex(streams);
@@ -2736,8 +2484,7 @@ namespace orc {
     return size;
   }
 
-  void MapColumnWriter::getColumnEncoding(
-                   std::vector<proto::ColumnEncoding>& encodings) const {
+  void MapColumnWriter::getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
     encoding.set_kind(RleVersionMapper(rleVersion));
     encoding.set_dictionarysize(0);
@@ -2753,8 +2500,7 @@ namespace orc {
     }
   }
 
-  void MapColumnWriter::getStripeStatistics(
-                   std::vector<proto::ColumnStatistics>& stats) const {
+  void MapColumnWriter::getStripeStatistics(std::vector<proto::ColumnStatistics>& stats) const {
     ColumnWriter::getStripeStatistics(stats);
     if (keyWriter.get()) {
       keyWriter->getStripeStatistics(stats);
@@ -2774,8 +2520,7 @@ namespace orc {
     }
   }
 
-  void MapColumnWriter::getFileStatistics(
-                   std::vector<proto::ColumnStatistics>& stats) const {
+  void MapColumnWriter::getFileStatistics(std::vector<proto::ColumnStatistics>& stats) const {
     ColumnWriter::getFileStatistics(stats);
     if (keyWriter.get()) {
       keyWriter->getFileStatistics(stats);
@@ -2785,7 +2530,7 @@ namespace orc {
     }
   }
 
-  void MapColumnWriter::mergeRowGroupStatsIntoStripeStats()  {
+  void MapColumnWriter::mergeRowGroupStatsIntoStripeStats() {
     ColumnWriter::mergeRowGroupStatsIntoStripeStats();
     if (keyWriter.get()) {
       keyWriter->mergeRowGroupStatsIntoStripeStats();
@@ -2830,28 +2575,22 @@ namespace orc {
   }
 
   class UnionColumnWriter : public ColumnWriter {
-  public:
-    UnionColumnWriter(const Type& type,
-                      const StreamsFactory& factory,
+   public:
+    UnionColumnWriter(const Type& type, const StreamsFactory& factory,
                       const WriterOptions& options);
 
-    virtual void add(ColumnVectorBatch& rowBatch,
-                     uint64_t offset,
-                     uint64_t numValues,
+    virtual void add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                      const char* incomingMask) override;
 
     virtual void flush(std::vector<proto::Stream>& streams) override;
 
     virtual uint64_t getEstimatedSize() const override;
 
-    virtual void getColumnEncoding(
-      std::vector<proto::ColumnEncoding>& encodings) const override;
+    virtual void getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const override;
 
-    virtual void getStripeStatistics(
-      std::vector<proto::ColumnStatistics>& stats) const override;
+    virtual void getStripeStatistics(std::vector<proto::ColumnStatistics>& stats) const override;
 
-    virtual void getFileStatistics(
-      std::vector<proto::ColumnStatistics>& stats) const override;
+    virtual void getFileStatistics(std::vector<proto::ColumnStatistics>& stats) const override;
 
     virtual void mergeStripeStatsIntoFileStats() override;
 
@@ -2859,8 +2598,7 @@ namespace orc {
 
     virtual void createRowIndexEntry() override;
 
-    virtual void writeIndex(
-      std::vector<proto::Stream> &streams) const override;
+    virtual void writeIndex(std::vector<proto::Stream>& streams) const override;
 
     virtual void recordPosition() const override;
 
@@ -2868,24 +2606,20 @@ namespace orc {
 
     virtual void reset() override;
 
-  private:
+   private:
     std::unique_ptr<ByteRleEncoder> rleEncoder;
     std::vector<std::unique_ptr<ColumnWriter>> children;
   };
 
-  UnionColumnWriter::UnionColumnWriter(const Type& type,
-                                       const StreamsFactory& factory,
-                                       const WriterOptions& options) :
-    ColumnWriter(type, factory, options) {
-
+  UnionColumnWriter::UnionColumnWriter(const Type& type, const StreamsFactory& factory,
+                                       const WriterOptions& options)
+      : ColumnWriter(type, factory, options) {
     std::unique_ptr<BufferedOutputStream> dataStream =
-      factory.createStream(proto::Stream_Kind_DATA);
+        factory.createStream(proto::Stream_Kind_DATA);
     rleEncoder = createByteRleEncoder(std::move(dataStream));
 
     for (uint64_t i = 0; i != type.getSubtypeCount(); ++i) {
-      children.push_back(buildWriter(*type.getSubtype(i),
-                                     factory,
-                                     options));
+      children.push_back(buildWriter(*type.getSubtype(i), factory, options));
     }
 
     if (enableIndex) {
@@ -2893,9 +2627,7 @@ namespace orc {
     }
   }
 
-  void UnionColumnWriter::add(ColumnVectorBatch& rowBatch,
-                              uint64_t offset,
-                              uint64_t numValues,
+  void UnionColumnWriter::add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                               const char* incomingMask) {
     UnionVectorBatch* unionBatch = dynamic_cast<UnionVectorBatch*>(&rowBatch);
     if (unionBatch == nullptr) {
@@ -2904,10 +2636,9 @@ namespace orc {
 
     ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
-    const char* notNull = unionBatch->hasNulls ?
-                          unionBatch->notNull.data() + offset : nullptr;
-    unsigned char * tags = unionBatch->tags.data() + offset;
-    uint64_t * offsets = unionBatch->offsets.data() + offset;
+    const char* notNull = unionBatch->hasNulls ? unionBatch->notNull.data() + offset : nullptr;
+    unsigned char* tags = unionBatch->tags.data() + offset;
+    uint64_t* offsets = unionBatch->offsets.data() + offset;
 
     std::vector<int64_t> childOffset(children.size(), -1);
     std::vector<uint64_t> childLength(children.size(), 0);
@@ -2923,8 +2654,7 @@ namespace orc {
 
     for (uint32_t i = 0; i < children.size(); ++i) {
       if (childLength[i] > 0) {
-        children[i]->add(*unionBatch->children[i],
-                         static_cast<uint64_t>(childOffset[i]),
+        children[i]->add(*unionBatch->children[i], static_cast<uint64_t>(childOffset[i]),
                          childLength[i], nullptr);
       }
     }
@@ -2965,7 +2695,7 @@ namespace orc {
     }
   }
 
-  void UnionColumnWriter::writeIndex(std::vector<proto::Stream> &streams) const {
+  void UnionColumnWriter::writeIndex(std::vector<proto::Stream>& streams) const {
     ColumnWriter::writeIndex(streams);
     for (uint32_t i = 0; i < children.size(); ++i) {
       children[i]->writeIndex(streams);
@@ -2981,8 +2711,7 @@ namespace orc {
     return size;
   }
 
-  void UnionColumnWriter::getColumnEncoding(
-                     std::vector<proto::ColumnEncoding>& encodings) const {
+  void UnionColumnWriter::getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
     encoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
     encoding.set_dictionarysize(0);
@@ -2995,8 +2724,7 @@ namespace orc {
     }
   }
 
-  void UnionColumnWriter::getStripeStatistics(
-                     std::vector<proto::ColumnStatistics>& stats) const {
+  void UnionColumnWriter::getStripeStatistics(std::vector<proto::ColumnStatistics>& stats) const {
     ColumnWriter::getStripeStatistics(stats);
     for (uint32_t i = 0; i < children.size(); ++i) {
       children[i]->getStripeStatistics(stats);
@@ -3010,15 +2738,14 @@ namespace orc {
     }
   }
 
-  void UnionColumnWriter::getFileStatistics(
-                     std::vector<proto::ColumnStatistics>& stats) const {
+  void UnionColumnWriter::getFileStatistics(std::vector<proto::ColumnStatistics>& stats) const {
     ColumnWriter::getFileStatistics(stats);
     for (uint32_t i = 0; i < children.size(); ++i) {
       children[i]->getFileStatistics(stats);
     }
   }
 
-  void UnionColumnWriter::mergeRowGroupStatsIntoStripeStats()  {
+  void UnionColumnWriter::mergeRowGroupStatsIntoStripeStats() {
     ColumnWriter::mergeRowGroupStatsIntoStripeStats();
     for (uint32_t i = 0; i < children.size(); ++i) {
       children[i]->mergeRowGroupStatsIntoStripeStats();
@@ -3050,140 +2777,63 @@ namespace orc {
     }
   }
 
-  std::unique_ptr<ColumnWriter> buildWriter(
-                                            const Type& type,
-                                            const StreamsFactory& factory,
+  std::unique_ptr<ColumnWriter> buildWriter(const Type& type, const StreamsFactory& factory,
                                             const WriterOptions& options) {
     switch (static_cast<int64_t>(type.getKind())) {
       case STRUCT:
-        return std::unique_ptr<ColumnWriter>(
-          new StructColumnWriter(
-                                 type,
-                                 factory,
-                                 options));
+        return std::unique_ptr<ColumnWriter>(new StructColumnWriter(type, factory, options));
       case INT:
       case LONG:
       case SHORT:
-        return std::unique_ptr<ColumnWriter>(
-          new IntegerColumnWriter(
-                                  type,
-                                  factory,
-                                  options));
+        return std::unique_ptr<ColumnWriter>(new IntegerColumnWriter(type, factory, options));
       case BYTE:
-        return std::unique_ptr<ColumnWriter>(
-          new ByteColumnWriter(
-                               type,
-                               factory,
-                               options));
+        return std::unique_ptr<ColumnWriter>(new ByteColumnWriter(type, factory, options));
       case BOOLEAN:
-        return std::unique_ptr<ColumnWriter>(
-          new BooleanColumnWriter(
-                                  type,
-                                  factory,
-                                  options));
+        return std::unique_ptr<ColumnWriter>(new BooleanColumnWriter(type, factory, options));
       case DOUBLE:
-        return std::unique_ptr<ColumnWriter>(
-          new DoubleColumnWriter(
-                                 type,
-                                 factory,
-                                 options,
-                                 false));
+        return std::unique_ptr<ColumnWriter>(new DoubleColumnWriter(type, factory, options, false));
       case FLOAT:
-        return std::unique_ptr<ColumnWriter>(
-          new DoubleColumnWriter(
-                                 type,
-                                 factory,
-                                 options,
-                                 true));
+        return std::unique_ptr<ColumnWriter>(new DoubleColumnWriter(type, factory, options, true));
       case BINARY:
-        return std::unique_ptr<ColumnWriter>(
-          new BinaryColumnWriter(
-                                 type,
-                                 factory,
-                                 options));
+        return std::unique_ptr<ColumnWriter>(new BinaryColumnWriter(type, factory, options));
       case STRING:
-        return std::unique_ptr<ColumnWriter>(
-          new StringColumnWriter(
-                                 type,
-                                 factory,
-                                 options));
+        return std::unique_ptr<ColumnWriter>(new StringColumnWriter(type, factory, options));
       case CHAR:
-        return std::unique_ptr<ColumnWriter>(
-          new CharColumnWriter(
-                               type,
-                               factory,
-                               options));
+        return std::unique_ptr<ColumnWriter>(new CharColumnWriter(type, factory, options));
       case VARCHAR:
-        return std::unique_ptr<ColumnWriter>(
-          new VarCharColumnWriter(
-                                  type,
-                                  factory,
-                                  options));
+        return std::unique_ptr<ColumnWriter>(new VarCharColumnWriter(type, factory, options));
       case DATE:
-        return std::unique_ptr<ColumnWriter>(
-          new DateColumnWriter(
-                               type,
-                               factory,
-                               options));
+        return std::unique_ptr<ColumnWriter>(new DateColumnWriter(type, factory, options));
       case TIMESTAMP:
         return std::unique_ptr<ColumnWriter>(
-          new TimestampColumnWriter(
-                                    type,
-                                    factory,
-                                    options,
-                                    false));
+            new TimestampColumnWriter(type, factory, options, false));
       case TIMESTAMP_INSTANT:
         return std::unique_ptr<ColumnWriter>(
-          new TimestampColumnWriter(
-                                    type,
-                                    factory,
-                                    options,
-                                    true));
+            new TimestampColumnWriter(type, factory, options, true));
       case DECIMAL:
         if (type.getPrecision() <= Decimal64ColumnWriter::MAX_PRECISION_64) {
           if (options.getFileVersion() == FileVersion::UNSTABLE_PRE_2_0()) {
             return std::unique_ptr<ColumnWriter>(
-              new Decimal64ColumnWriterV2(
-                                          type,
-                                          factory,
-                                          options));
+                new Decimal64ColumnWriterV2(type, factory, options));
           }
-          return std::unique_ptr<ColumnWriter>(
-            new Decimal64ColumnWriter(
-                                      type,
-                                      factory,
-                                      options));
+          return std::unique_ptr<ColumnWriter>(new Decimal64ColumnWriter(type, factory, options));
         } else if (type.getPrecision() <= Decimal64ColumnWriter::MAX_PRECISION_128) {
-          return std::unique_ptr<ColumnWriter>(
-            new Decimal128ColumnWriter(
-                                       type,
-                                       factory,
-                                       options));
+          return std::unique_ptr<ColumnWriter>(new Decimal128ColumnWriter(type, factory, options));
         } else {
-          throw NotImplementedYet("Decimal precision more than 38 is not "
-                                    "supported");
+          throw NotImplementedYet(
+              "Decimal precision more than 38 is not "
+              "supported");
         }
       case LIST:
-        return std::unique_ptr<ColumnWriter>(
-          new ListColumnWriter(
-                               type,
-                               factory,
-                               options));
+        return std::unique_ptr<ColumnWriter>(new ListColumnWriter(type, factory, options));
       case MAP:
-        return std::unique_ptr<ColumnWriter>(
-          new MapColumnWriter(
-                              type,
-                              factory,
-                              options));
+        return std::unique_ptr<ColumnWriter>(new MapColumnWriter(type, factory, options));
       case UNION:
-        return std::unique_ptr<ColumnWriter>(
-          new UnionColumnWriter(
-                                type,
-                                factory,
-                                options));
+        return std::unique_ptr<ColumnWriter>(new UnionColumnWriter(type, factory, options));
       default:
-        throw NotImplementedYet("Type is not supported yet for creating "
-                                  "ColumnWriter.");
+        throw NotImplementedYet(
+            "Type is not supported yet for creating "
+            "ColumnWriter.");
     }
   }
-}
+}  // namespace orc

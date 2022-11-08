@@ -19,21 +19,21 @@
 #ifndef ORC_GZIP
 #define ORC_GZIP
 
-#include <string>
 #include <stdio.h>
+#include <string>
 #include "zlib.h"
 
 namespace orc {
 
   class GzipTextReader {
-  private:
+   private:
     std::string filename;
     FILE* file;
     z_stream stream;
     unsigned char input[64 * 1024];
     unsigned char output[64 * 1024];
-    unsigned char *outPtr;
-    unsigned char *outEnd;
+    unsigned char* outPtr;
+    unsigned char* outEnd;
     bool isDone;
 
     bool nextBuffer();
@@ -42,11 +42,11 @@ namespace orc {
     GzipTextReader(const GzipTextReader&);
     GzipTextReader& operator=(const GzipTextReader&);
 
-  public:
+   public:
     GzipTextReader(const std::string& filename);
     ~GzipTextReader();
     bool nextLine(std::string& line);
   };
 
-}
+}  // namespace orc
 #endif

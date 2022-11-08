@@ -28,12 +28,13 @@
 #include <sstream>
 
 namespace orc {
-  const int DEFAULT_MEM_STREAM_SIZE = 10 * 1024 * 1024; // 10M
+  const int DEFAULT_MEM_STREAM_SIZE = 10 * 1024 * 1024;  // 10M
 
   class TypeAttributes : public ::testing::Test {
-  public:
+   public:
     ~TypeAttributes();
-  protected:
+
+   protected:
     static void SetUpTestCase() {
       memStream.reset();
     }
@@ -42,20 +43,18 @@ namespace orc {
 
     std::unique_ptr<Reader> createReader() {
       std::unique_ptr<InputStream> inStream(
-        new MemoryInputStream (memStream.getData(), memStream.getLength()));
+          new MemoryInputStream(memStream.getData(), memStream.getLength()));
       ReaderOptions options;
       return orc::createReader(std::move(inStream), options);
     }
 
-    std::unique_ptr<RowReader> createRowReader(
-        const std::unique_ptr<Reader>& reader) {
+    std::unique_ptr<RowReader> createRowReader(const std::unique_ptr<Reader>& reader) {
       RowReaderOptions rowReaderOpts;
       return reader->createRowReader(rowReaderOpts);
     }
 
-    std::unique_ptr<RowReader> createRowReader(
-        const std::unique_ptr<Reader>& reader,
-        const std::list<uint64_t>& includeTypes) {
+    std::unique_ptr<RowReader> createRowReader(const std::unique_ptr<Reader>& reader,
+                                               const std::list<uint64_t>& includeTypes) {
       RowReaderOptions rowReaderOpts;
       rowReaderOpts.includeTypes(includeTypes);
       return reader->createRowReader(rowReaderOpts);
@@ -67,8 +66,7 @@ namespace orc {
       writer->close();
     }
 
-    const Type* getTypeByPath(const Type* root,
-                              const std::vector<uint64_t>& path) {
+    const Type* getTypeByPath(const Type* root, const std::vector<uint64_t>& path) {
       const Type* ret = root;
       for (uint64_t idx : path) {
         ret = ret->getSubtype(idx);
@@ -76,7 +74,7 @@ namespace orc {
       return ret;
     }
 
-  private:
+   private:
     static MemoryOutputStream memStream;
   };
 
@@ -165,8 +163,7 @@ namespace orc {
     auto rowReader = createRowReader(reader);
     auto& root = rowReader->getSelectedType();
 
-    auto getVal = [this, &root] (const std::vector<uint64_t>& path,
-                                 const std::string& key) {
+    auto getVal = [this, &root](const std::vector<uint64_t>& path, const std::string& key) {
       auto t = getTypeByPath(&root, path);
       return t->getAttributeValue(key);
     };
@@ -194,17 +191,15 @@ namespace orc {
 
   TEST_F(TypeAttributes, readExampleFile) {
     std::stringstream ss;
-    if(const char* example_dir = std::getenv("ORC_EXAMPLE_DIR")) {
+    if (const char* example_dir = std::getenv("ORC_EXAMPLE_DIR")) {
       ss << example_dir;
     } else {
       ss << "../../../examples";
     }
     ss << "/complextypes_iceberg.orc";
     ReaderOptions readerOpts;
-    std::unique_ptr<orc::Reader> reader =
-      orc::createReader(readLocalFile(ss.str().c_str(),
-                                      readerOpts.getReaderMetrics()),
-                        readerOpts);
+    std::unique_ptr<orc::Reader> reader = orc::createReader(
+        readLocalFile(ss.str().c_str(), readerOpts.getReaderMetrics()), readerOpts);
     auto rowReader = createRowReader(reader);
     auto& root = rowReader->getSelectedType();
     std::vector<uint64_t> fieldIds;
@@ -212,7 +207,7 @@ namespace orc {
     EXPECT_EQ(29, fieldIds.size());
     sort(fieldIds.begin(), fieldIds.end());
     for (uint64_t i = 0; i < fieldIds.size(); ++i) {
-      EXPECT_EQ(i+1, fieldIds[i]);
+      EXPECT_EQ(i + 1, fieldIds[i]);
     }
   }
-}
+}  // namespace orc

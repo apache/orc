@@ -20,12 +20,12 @@
 DIAGNOSTIC_PUSH
 
 #ifdef __clang__
-  DIAGNOSTIC_IGNORE("-Wshorten-64-to-32")
-  DIAGNOSTIC_IGNORE("-Wreserved-id-macro")
+DIAGNOSTIC_IGNORE("-Wshorten-64-to-32")
+DIAGNOSTIC_IGNORE("-Wreserved-id-macro")
 #endif
 
 #if defined(__GNUC__) || defined(__clang__)
-  DIAGNOSTIC_IGNORE("-Wconversion")
+DIAGNOSTIC_IGNORE("-Wconversion")
 #endif
 
 #include <google/protobuf/io/coded_stream.h>

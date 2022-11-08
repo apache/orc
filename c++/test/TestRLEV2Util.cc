@@ -20,8 +20,8 @@
 
 #include "RLEV2Util.hh"
 
-#include "wrap/orc-proto-wrapper.hh"
 #include "wrap/gtest-wrapper.h"
+#include "wrap/orc-proto-wrapper.hh"
 
 namespace orc {
   TEST(RLEV2Util, decodeBitWidth) {
@@ -102,7 +102,7 @@ namespace orc {
       } else {
         EXPECT_EQ(64, result);
       }
-    }   
+    }
   }
 
   TEST(RLEV2Util, encodeBitWidth) {

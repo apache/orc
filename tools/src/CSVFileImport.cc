@@ -16,19 +16,19 @@
  * limitations under the License.
  */
 
+#include "Timezone.hh"
 #include "orc/Exceptions.hh"
 #include "orc/OrcFile.hh"
-#include "Timezone.hh"
 
+#include <getopt.h>
+#include <sys/time.h>
+#include <time.h>
 #include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <list>
 #include <memory>
-#include <getopt.h>
 #include <string>
-#include <sys/time.h>
-#include <time.h>
 
 static char gDelimiter = ',';
 
@@ -53,12 +53,9 @@ static const char* GetDate(void) {
   return buf;
 }
 
-void fillLongValues(const std::vector<std::string>& data,
-                    orc::ColumnVectorBatch* batch,
-                    uint64_t numValues,
-                    uint64_t colIndex) {
-  orc::LongVectorBatch* longBatch =
-    dynamic_cast<orc::LongVectorBatch*>(batch);
+void fillLongValues(const std::vector<std::string>& data, orc::ColumnVectorBatch* batch,
+                    uint64_t numValues, uint64_t colIndex) {
+  orc::LongVectorBatch* longBatch = dynamic_cast<orc::LongVectorBatch*>(batch);
   bool hasNull = false;
   for (uint64_t i = 0; i < numValues; ++i) {
     std::string col = extractColumn(data[i], colIndex);
@@ -74,14 +71,10 @@ void fillLongValues(const std::vector<std::string>& data,
   longBatch->numElements = numValues;
 }
 
-void fillStringValues(const std::vector<std::string>& data,
-                      orc::ColumnVectorBatch* batch,
-                      uint64_t numValues,
-                      uint64_t colIndex,
-                      orc::DataBuffer<char>& buffer) {
+void fillStringValues(const std::vector<std::string>& data, orc::ColumnVectorBatch* batch,
+                      uint64_t numValues, uint64_t colIndex, orc::DataBuffer<char>& buffer) {
   uint64_t offset = 0;
-  orc::StringVectorBatch* stringBatch =
-    dynamic_cast<orc::StringVectorBatch*>(batch);
+  orc::StringVectorBatch* stringBatch = dynamic_cast<orc::StringVectorBatch*>(batch);
   bool hasNull = false;
   for (uint64_t i = 0; i < numValues; ++i) {
     std::string col = extractColumn(data[i], colIndex);
@@ -97,14 +90,13 @@ void fillStringValues(const std::vector<std::string>& data,
       }
       char* newBufferAddress = buffer.data();
       // Refill stringBatch->data with the new addresses, if buffer's address has changed.
-      if (newBufferAddress != oldBufferAddress){
-        for (uint64_t refillIndex = 0; refillIndex < i; ++refillIndex){
-        stringBatch->data[refillIndex] = stringBatch->data[refillIndex] - oldBufferAddress + newBufferAddress;
+      if (newBufferAddress != oldBufferAddress) {
+        for (uint64_t refillIndex = 0; refillIndex < i; ++refillIndex) {
+          stringBatch->data[refillIndex] =
+              stringBatch->data[refillIndex] - oldBufferAddress + newBufferAddress;
         }
       }
-      memcpy(buffer.data() + offset,
-             col.c_str(),
-             col.size());
+      memcpy(buffer.data() + offset, col.c_str(), col.size());
       stringBatch->data[i] = buffer.data() + offset;
       stringBatch->length[i] = static_cast<int64_t>(col.size());
       offset += col.size();
@@ -114,12 +106,9 @@ void fillStringValues(const std::vector<std::string>& data,
   stringBatch->numElements = numValues;
 }
 
-void fillDoubleValues(const std::vector<std::string>& data,
-                      orc::ColumnVectorBatch* batch,
-                      uint64_t numValues,
-                      uint64_t colIndex) {
-  orc::DoubleVectorBatch* dblBatch =
-    dynamic_cast<orc::DoubleVectorBatch*>(batch);
+void fillDoubleValues(const std::vector<std::string>& data, orc::ColumnVectorBatch* batch,
+                      uint64_t numValues, uint64_t colIndex) {
+  orc::DoubleVectorBatch* dblBatch = dynamic_cast<orc::DoubleVectorBatch*>(batch);
   bool hasNull = false;
   for (uint64_t i = 0; i < numValues; ++i) {
     std::string col = extractColumn(data[i], colIndex);
@@ -136,14 +125,8 @@ void fillDoubleValues(const std::vector<std::string>& data,
 }
 
 // parse fixed point decimal numbers
-void fillDecimalValues(const std::vector<std::string>& data,
-                       orc::ColumnVectorBatch* batch,
-                       uint64_t numValues,
-                       uint64_t colIndex,
-                       size_t scale,
-                       size_t precision) {
-
-
+void fillDecimalValues(const std::vector<std::string>& data, orc::ColumnVectorBatch* batch,
+                       uint64_t numValues, uint64_t colIndex, size_t scale, size_t precision) {
   orc::Decimal128VectorBatch* d128Batch = ORC_NULLPTR;
   orc::Decimal64VectorBatch* d64Batch = ORC_NULLPTR;
   if (precision <= 18) {
@@ -184,12 +167,9 @@ void fillDecimalValues(const std::vector<std::string>& data,
   batch->numElements = numValues;
 }
 
-void fillBoolValues(const std::vector<std::string>& data,
-                    orc::ColumnVectorBatch* batch,
-                    uint64_t numValues,
-                    uint64_t colIndex) {
-  orc::LongVectorBatch* boolBatch =
-    dynamic_cast<orc::LongVectorBatch*>(batch);
+void fillBoolValues(const std::vector<std::string>& data, orc::ColumnVectorBatch* batch,
+                    uint64_t numValues, uint64_t colIndex) {
+  orc::LongVectorBatch* boolBatch = dynamic_cast<orc::LongVectorBatch*>(batch);
   bool hasNull = false;
   for (uint64_t i = 0; i < numValues; ++i) {
     std::string col = extractColumn(data[i], colIndex);
@@ -211,12 +191,9 @@ void fillBoolValues(const std::vector<std::string>& data,
 }
 
 // parse date string from format YYYY-mm-dd
-void fillDateValues(const std::vector<std::string>& data,
-                    orc::ColumnVectorBatch* batch,
-                    uint64_t numValues,
-                    uint64_t colIndex) {
-  orc::LongVectorBatch* longBatch =
-    dynamic_cast<orc::LongVectorBatch*>(batch);
+void fillDateValues(const std::vector<std::string>& data, orc::ColumnVectorBatch* batch,
+                    uint64_t numValues, uint64_t colIndex) {
+  orc::LongVectorBatch* longBatch = dynamic_cast<orc::LongVectorBatch*>(batch);
   bool hasNull = false;
   for (uint64_t i = 0; i < numValues; ++i) {
     std::string col = extractColumn(data[i], colIndex);
@@ -231,7 +208,7 @@ void fillDateValues(const std::vector<std::string>& data,
       time_t t = mktime(&tm);
       time_t t1970 = 0;
       double seconds = difftime(t, t1970);
-      int64_t days = static_cast<int64_t>(seconds / (60*60*24));
+      int64_t days = static_cast<int64_t>(seconds / (60 * 60 * 24));
       longBatch->data[i] = days;
     }
   }
@@ -240,13 +217,10 @@ void fillDateValues(const std::vector<std::string>& data,
 }
 
 // parse timestamp values in seconds
-void fillTimestampValues(const std::vector<std::string>& data,
-                         orc::ColumnVectorBatch* batch,
-                         uint64_t numValues,
-                         uint64_t colIndex) {
+void fillTimestampValues(const std::vector<std::string>& data, orc::ColumnVectorBatch* batch,
+                         uint64_t numValues, uint64_t colIndex) {
   struct tm timeStruct;
-  orc::TimestampVectorBatch* tsBatch =
-    dynamic_cast<orc::TimestampVectorBatch*>(batch);
+  orc::TimestampVectorBatch* tsBatch = dynamic_cast<orc::TimestampVectorBatch*>(batch);
   bool hasNull = false;
   for (uint64_t i = 0; i < numValues; ++i) {
     std::string col = extractColumn(data[i], colIndex);
@@ -255,19 +229,19 @@ void fillTimestampValues(const std::vector<std::string>& data,
       hasNull = true;
     } else {
       memset(&timeStruct, 0, sizeof(timeStruct));
-      char *left=strptime(col.c_str(), "%Y-%m-%d %H:%M:%S", &timeStruct);
+      char* left = strptime(col.c_str(), "%Y-%m-%d %H:%M:%S", &timeStruct);
       if (left == ORC_NULLPTR) {
-	batch->notNull[i] = 0;
+        batch->notNull[i] = 0;
       } else {
-	batch->notNull[i] = 1;
-	tsBatch->data[i] = timegm(&timeStruct);
-	char *tail;
-	double d = strtod(left, &tail);
-	if (tail != left) {
+        batch->notNull[i] = 1;
+        tsBatch->data[i] = timegm(&timeStruct);
+        char* tail;
+        double d = strtod(left, &tail);
+        if (tail != left) {
           tsBatch->nanoseconds[i] = static_cast<long>(d * 1000000000.0);
-	} else {
+        } else {
           tsBatch->nanoseconds[i] = 0;
-	}
+        }
       }
     }
   }
@@ -293,26 +267,24 @@ int main(int argc, char* argv[]) {
   std::string input;
   std::string output;
   std::string schema;
-  std::string timezoneName="GMT";
-  uint64_t stripeSize = (128 << 20); // 128M
-  uint64_t blockSize = 64 << 10;     // 64K
+  std::string timezoneName = "GMT";
+  uint64_t stripeSize = (128 << 20);  // 128M
+  uint64_t blockSize = 64 << 10;      // 64K
   uint64_t batchSize = 1024;
   orc::CompressionKind compression = orc::CompressionKind_ZLIB;
 
-  static struct option longOptions[] = {
-    {"help", no_argument, ORC_NULLPTR, 'h'},
-    {"metrics", no_argument, ORC_NULLPTR, 'm'},
-    {"delimiter", required_argument, ORC_NULLPTR, 'd'},
-    {"stripe", required_argument, ORC_NULLPTR, 's'},
-    {"block", required_argument, ORC_NULLPTR, 'c'},
-    {"batch", required_argument, ORC_NULLPTR, 'b'},
-    {"timezone", required_argument, ORC_NULLPTR, 't'},
-    {ORC_NULLPTR, 0, ORC_NULLPTR, 0}
-  };
+  static struct option longOptions[] = {{"help", no_argument, ORC_NULLPTR, 'h'},
+                                        {"metrics", no_argument, ORC_NULLPTR, 'm'},
+                                        {"delimiter", required_argument, ORC_NULLPTR, 'd'},
+                                        {"stripe", required_argument, ORC_NULLPTR, 's'},
+                                        {"block", required_argument, ORC_NULLPTR, 'c'},
+                                        {"batch", required_argument, ORC_NULLPTR, 'b'},
+                                        {"timezone", required_argument, ORC_NULLPTR, 't'},
+                                        {ORC_NULLPTR, 0, ORC_NULLPTR, 0}};
   bool helpFlag = false;
   bool showMetrics = false;
   int opt;
-  char *tail;
+  char* tail;
   do {
     opt = getopt_long(argc, argv, "d:s:c:b:t:mh", longOptions, ORC_NULLPTR);
     switch (opt) {
@@ -383,17 +355,15 @@ int main(int argc, char* argv[]) {
   options.setWriterMetrics(showMetrics ? &metrics : nullptr);
 
   ORC_UNIQUE_PTR<orc::OutputStream> outStream = orc::writeLocalFile(output);
-  ORC_UNIQUE_PTR<orc::Writer> writer =
-    orc::createWriter(*fileType, outStream.get(), options);
-  ORC_UNIQUE_PTR<orc::ColumnVectorBatch> rowBatch =
-    writer->createRowBatch(batchSize);
+  ORC_UNIQUE_PTR<orc::Writer> writer = orc::createWriter(*fileType, outStream.get(), options);
+  ORC_UNIQUE_PTR<orc::ColumnVectorBatch> rowBatch = writer->createRowBatch(batchSize);
 
   bool eof = false;
   std::string line;
-  std::vector<std::string> data; // buffer that holds a batch of rows in raw text
+  std::vector<std::string> data;  // buffer that holds a batch of rows in raw text
   std::ifstream finput(input.c_str());
   while (!eof) {
-    uint64_t numValues = 0;      // num of lines read in a batch
+    uint64_t numValues = 0;  // num of lines read in a batch
 
     data.clear();
     memset(rowBatch->notNull.data(), 1, batchSize);
@@ -409,8 +379,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (numValues != 0) {
-      orc::StructVectorBatch* structBatch =
-        dynamic_cast<orc::StructVectorBatch*>(rowBatch.get());
+      orc::StructVectorBatch* structBatch = dynamic_cast<orc::StructVectorBatch*>(rowBatch.get());
       structBatch->numElements = numValues;
 
       for (uint64_t i = 0; i < structBatch->fields.size(); ++i) {
@@ -420,55 +389,32 @@ int main(int argc, char* argv[]) {
           case orc::INT:
           case orc::SHORT:
           case orc::LONG:
-            fillLongValues(data,
-                           structBatch->fields[i],
-                           numValues,
-                           i);
+            fillLongValues(data, structBatch->fields[i], numValues, i);
             break;
           case orc::STRING:
           case orc::CHAR:
           case orc::VARCHAR:
-          case orc::BINARY: 
+          case orc::BINARY:
             bufferList.emplace_back(*orc::getDefaultPool(), 1 * 1024 * 1024);
-            fillStringValues(data,
-                             structBatch->fields[i],
-                             numValues,
-                             i,
-                             bufferList.back());
+            fillStringValues(data, structBatch->fields[i], numValues, i, bufferList.back());
             break;
           case orc::FLOAT:
           case orc::DOUBLE:
-            fillDoubleValues(data,
-                             structBatch->fields[i],
-                             numValues,
-                             i);
+            fillDoubleValues(data, structBatch->fields[i], numValues, i);
             break;
           case orc::DECIMAL:
-            fillDecimalValues(data,
-                              structBatch->fields[i],
-                              numValues,
-                              i,
-                              subType->getScale(),
+            fillDecimalValues(data, structBatch->fields[i], numValues, i, subType->getScale(),
                               subType->getPrecision());
             break;
           case orc::BOOLEAN:
-            fillBoolValues(data,
-                           structBatch->fields[i],
-                           numValues,
-                           i);
+            fillBoolValues(data, structBatch->fields[i], numValues, i);
             break;
           case orc::DATE:
-            fillDateValues(data,
-                           structBatch->fields[i],
-                           numValues,
-                           i);
+            fillDateValues(data, structBatch->fields[i], numValues, i);
             break;
           case orc::TIMESTAMP:
           case orc::TIMESTAMP_INSTANT:
-            fillTimestampValues(data,
-                                structBatch->fields[i],
-                                numValues,
-                                i);
+            fillTimestampValues(data, structBatch->fields[i], numValues, i);
             break;
           case orc::STRUCT:
           case orc::LIST:
@@ -486,9 +432,9 @@ int main(int argc, char* argv[]) {
 
       totalCPUTime += (clock() - c_start);
       gettimeofday(&t_end, ORC_NULLPTR);
-      totalElapsedTime +=
-        (static_cast<double>(t_end.tv_sec - t_start.tv_sec) * 1000000.0
-          + static_cast<double>(t_end.tv_usec - t_start.tv_usec)) / 1000000.0;
+      totalElapsedTime += (static_cast<double>(t_end.tv_sec - t_start.tv_sec) * 1000000.0 +
+                           static_cast<double>(t_end.tv_usec - t_start.tv_usec)) /
+                          1000000.0;
     }
   }
 
@@ -500,22 +446,19 @@ int main(int argc, char* argv[]) {
 
   totalCPUTime += (clock() - c_start);
   gettimeofday(&t_end, ORC_NULLPTR);
-  totalElapsedTime +=
-    (static_cast<double>(t_end.tv_sec - t_start.tv_sec) * 1000000.0
-     + static_cast<double>(t_end.tv_usec - t_start.tv_usec)) / 1000000.0;
+  totalElapsedTime += (static_cast<double>(t_end.tv_sec - t_start.tv_sec) * 1000000.0 +
+                       static_cast<double>(t_end.tv_usec - t_start.tv_usec)) /
+                      1000000.0;
 
   std::cout << GetDate() << " Finish importing Orc file." << std::endl;
-  std::cout << GetDate() << " Total writer elasped time: "
-            << totalElapsedTime << "s." << std::endl;
-  std::cout << GetDate() << " Total writer CPU time: "
-            << static_cast<double>(totalCPUTime) / CLOCKS_PER_SEC
+  std::cout << GetDate() << " Total writer elasped time: " << totalElapsedTime << "s." << std::endl;
+  std::cout << GetDate()
+            << " Total writer CPU time: " << static_cast<double>(totalCPUTime) / CLOCKS_PER_SEC
             << "s." << std::endl;
   if (showMetrics) {
     std::cout << GetDate() << " IO block lantency: "
-              << static_cast<double>(metrics.IOBlockingLatencyUs) / 1000000.0
-              << "s." << std::endl;
-    std::cout << GetDate() << " IO count: "
-              << metrics.IOCount << std::endl;
+              << static_cast<double>(metrics.IOBlockingLatencyUs) / 1000000.0 << "s." << std::endl;
+    std::cout << GetDate() << " IO count: " << metrics.IOCount << std::endl;
   }
   return 0;
 }

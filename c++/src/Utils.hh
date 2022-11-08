@@ -24,57 +24,52 @@
 
 namespace orc {
 
-class AutoStopwatch {
-  std::chrono::high_resolution_clock::time_point start;
-  std::atomic<uint64_t>* latencyUs;
-  std::atomic<uint64_t>* count;
-  bool minus;
+  class AutoStopwatch {
+    std::chrono::high_resolution_clock::time_point start;
+    std::atomic<uint64_t>* latencyUs;
+    std::atomic<uint64_t>* count;
+    bool minus;
 
-public:
-  AutoStopwatch(std::atomic<uint64_t>* _latencyUs,
-                std::atomic<uint64_t>* _count,
-                bool _minus = false)
-                : latencyUs(_latencyUs),
-                  count(_count),
-                  minus(_minus) {
-    if (latencyUs) {
-      start = std::chrono::high_resolution_clock::now();
-    }
-  }
-
-  ~AutoStopwatch() {
-    if (latencyUs) {
-      std::chrono::microseconds elapsedTime =
-        std::chrono::duration_cast<std::chrono::microseconds>(
-          std::chrono::high_resolution_clock::now() - start);
-      if (!minus) {
-        latencyUs->fetch_add(static_cast<uint64_t>(elapsedTime.count()));
-      } else {
-        latencyUs->fetch_sub(static_cast<uint64_t>(elapsedTime.count()));
+   public:
+    AutoStopwatch(std::atomic<uint64_t>* _latencyUs, std::atomic<uint64_t>* _count,
+                  bool _minus = false)
+        : latencyUs(_latencyUs), count(_count), minus(_minus) {
+      if (latencyUs) {
+        start = std::chrono::high_resolution_clock::now();
       }
     }
 
-    if (count) {
-      count->fetch_add(1);
+    ~AutoStopwatch() {
+      if (latencyUs) {
+        std::chrono::microseconds elapsedTime =
+            std::chrono::duration_cast<std::chrono::microseconds>(
+                std::chrono::high_resolution_clock::now() - start);
+        if (!minus) {
+          latencyUs->fetch_add(static_cast<uint64_t>(elapsedTime.count()));
+        } else {
+          latencyUs->fetch_sub(static_cast<uint64_t>(elapsedTime.count()));
+        }
+      }
+
+      if (count) {
+        count->fetch_add(1);
+      }
     }
-  }
-};
+  };
 
 #if ENABLE_METRICS
-#define SCOPED_STOPWATCH(METRICS_PTR, LATENCY_VAR, COUNT_VAR)         \
-  AutoStopwatch measure(                                              \
-    (METRICS_PTR == nullptr ? nullptr : &METRICS_PTR->LATENCY_VAR),   \
-    (METRICS_PTR == nullptr ? nullptr : &METRICS_PTR->COUNT_VAR))
+#define SCOPED_STOPWATCH(METRICS_PTR, LATENCY_VAR, COUNT_VAR)                           \
+  AutoStopwatch measure((METRICS_PTR == nullptr ? nullptr : &METRICS_PTR->LATENCY_VAR), \
+                        (METRICS_PTR == nullptr ? nullptr : &METRICS_PTR->COUNT_VAR))
 
-#define SCOPED_MINUS_STOPWATCH(METRICS_PTR, LATENCY_VAR)              \
-  AutoStopwatch measure(                                              \
-    (METRICS_PTR == nullptr ? nullptr : &METRICS_PTR->LATENCY_VAR),   \
-    nullptr, true)
+#define SCOPED_MINUS_STOPWATCH(METRICS_PTR, LATENCY_VAR)                                         \
+  AutoStopwatch measure((METRICS_PTR == nullptr ? nullptr : &METRICS_PTR->LATENCY_VAR), nullptr, \
+                        true)
 #else
 #define SCOPED_STOPWATCH(METRICS_PTR, LATENCY_VAR, COUNT_VAR)
 #define SCOPED_MINUS_STOPWATCH(METRICS_PTR, LATENCY_VAR)
 #endif
 
-}
+}  // namespace orc
 
 #endif

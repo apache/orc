@@ -20,6 +20,6 @@
 #define ORC_TEST_HH
 
 // determine the size of an array
-#define ARRAY_SIZE(array) (sizeof(array)/sizeof(*array))
+#define ARRAY_SIZE(array) (sizeof(array) / sizeof(*array))
 
 #endif

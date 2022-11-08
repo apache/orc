@@ -16,10 +16,10 @@
  * limitations under the License.
  */
 
+#include "Reader.hh"
 #include "Adaptor.hh"
 #include "BloomFilter.hh"
 #include "Options.hh"
-#include "Reader.hh"
 #include "Statistics.hh"
 #include "StripeStream.hh"
 #include "Utils.hh"
@@ -28,19 +28,19 @@
 
 #include <algorithm>
 #include <iostream>
+#include <iterator>
 #include <memory>
+#include <set>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <iterator>
-#include <set>
 
 namespace orc {
   // ORC files writen by these versions of cpp writers have inconsistent bloom filter
   // hashing. Bloom filters of them should not be used.
   static const char* BAD_CPP_BLOOM_FILTER_VERSIONS[] = {
-    "1.6.0", "1.6.1", "1.6.2", "1.6.3", "1.6.4", "1.6.5", "1.6.6", "1.6.7", "1.6.8",
-    "1.6.9", "1.6.10", "1.6.11", "1.7.0"};
+      "1.6.0", "1.6.1", "1.6.2", "1.6.3",  "1.6.4",  "1.6.5", "1.6.6",
+      "1.6.7", "1.6.8", "1.6.9", "1.6.10", "1.6.11", "1.7.0"};
 
   ReaderMetrics* getDefaultReaderMetrics() {
     static ReaderMetrics internal;
@@ -51,7 +51,7 @@ namespace orc {
     return {};
   }
 
-  const WriterVersionImpl &WriterVersionImpl::VERSION_HIVE_8732() {
+  const WriterVersionImpl& WriterVersionImpl::VERSION_HIVE_8732() {
     static const WriterVersionImpl version(WriterVersion_HIVE_8732);
     return version;
   }
@@ -73,17 +73,17 @@ namespace orc {
   }
 
   std::string ColumnSelector::toDotColumnPath() {
-      if (columns.empty()) {
-          return std::string();
-      }
-      std::ostringstream columnStream;
-      std::copy(columns.begin(), columns.end(),
+    if (columns.empty()) {
+      return std::string();
+    }
+    std::ostringstream columnStream;
+    std::copy(columns.begin(), columns.end(),
               std::ostream_iterator<std::string>(columnStream, "."));
-      std::string columnPath = columnStream.str();
-      return columnPath.substr(0, columnPath.length() - 1);
+    std::string columnPath = columnStream.str();
+    return columnPath.substr(0, columnPath.length() - 1);
   }
 
-  WriterVersion getWriterVersionImpl(const FileContents * contents) {
+  WriterVersion getWriterVersionImpl(const FileContents* contents) {
     if (!contents->postscript->has_writerversion()) {
       return WriterVersion_ORIGINAL;
     }
@@ -94,10 +94,8 @@ namespace orc {
     return selectChildren(selectedColumns, type, EMPTY_IDREADINTENTMAP());
   }
 
-  void ColumnSelector::selectChildren(
-      std::vector<bool> &selectedColumns,
-      const Type &type,
-      const RowReaderOptions::IdReadIntentMap& idReadIntentMap) {
+  void ColumnSelector::selectChildren(std::vector<bool>& selectedColumns, const Type& type,
+                                      const RowReaderOptions::IdReadIntentMap& idReadIntentMap) {
     size_t id = static_cast<size_t>(type.getColumnId());
     TypeKind kind = type.getKind();
     if (!selectedColumns[id]) {
@@ -105,8 +103,7 @@ namespace orc {
       bool selectChild = true;
       if (kind == TypeKind::LIST || kind == TypeKind::MAP || kind == TypeKind::UNION) {
         auto elem = idReadIntentMap.find(id);
-        if (elem != idReadIntentMap.end() &&
-            elem->second == ReadIntent_OFFSETS) {
+        if (elem != idReadIntentMap.end() && elem->second == ReadIntent_OFFSETS) {
           selectChild = false;
         }
       }
@@ -127,7 +124,7 @@ namespace orc {
     size_t id = static_cast<size_t>(type.getColumnId());
     bool result = selectedColumns[id];
     uint64_t numSubtypeSelected = 0;
-    for(uint64_t c=0; c < type.getSubtypeCount(); ++c) {
+    for (uint64_t c = 0; c < type.getSubtypeCount(); ++c) {
       if (selectParents(selectedColumns, *type.getSubtype(c))) {
         result = true;
         numSubtypeSelected++;
@@ -175,20 +172,19 @@ namespace orc {
                                       const RowReaderOptions& options) {
     selectedColumns.assign(static_cast<size_t>(contents->footer->types_size()), false);
     if (contents->schema->getKind() == STRUCT && options.getIndexesSet()) {
-      for(std::list<uint64_t>::const_iterator field = options.getInclude().begin();
-          field != options.getInclude().end(); ++field) {
+      for (std::list<uint64_t>::const_iterator field = options.getInclude().begin();
+           field != options.getInclude().end(); ++field) {
         updateSelectedByFieldId(selectedColumns, *field);
       }
     } else if (contents->schema->getKind() == STRUCT && options.getNamesSet()) {
-      for(std::list<std::string>::const_iterator field = options.getIncludeNames().begin();
-          field != options.getIncludeNames().end(); ++field) {
+      for (std::list<std::string>::const_iterator field = options.getIncludeNames().begin();
+           field != options.getIncludeNames().end(); ++field) {
         updateSelectedByName(selectedColumns, *field);
       }
     } else if (options.getTypeIdsSet()) {
-      const RowReaderOptions::IdReadIntentMap idReadIntentMap =
-          options.getIdReadIntentMap();
-      for(std::list<uint64_t>::const_iterator typeId = options.getInclude().begin();
-          typeId != options.getInclude().end(); ++typeId) {
+      const RowReaderOptions::IdReadIntentMap idReadIntentMap = options.getIdReadIntentMap();
+      for (std::list<uint64_t>::const_iterator typeId = options.getInclude().begin();
+           typeId != options.getInclude().end(); ++typeId) {
         updateSelectedByTypeId(selectedColumns, *typeId, idReadIntentMap);
       }
     } else {
@@ -196,7 +192,7 @@ namespace orc {
       std::fill(selectedColumns.begin(), selectedColumns.end(), true);
     }
     selectParents(selectedColumns, *contents->schema.get());
-    selectedColumns[0] = true; // column 0 is selected by default
+    selectedColumns[0] = true;  // column 0 is selected by default
   }
 
   void ColumnSelector::updateSelectedByFieldId(std::vector<bool>& selectedColumns,
@@ -216,16 +212,14 @@ namespace orc {
   }
 
   void ColumnSelector::updateSelectedByTypeId(
-      std::vector<bool> &selectedColumns,
-      uint64_t typeId,
+      std::vector<bool>& selectedColumns, uint64_t typeId,
       const RowReaderOptions::IdReadIntentMap& idReadIntentMap) {
     if (typeId < selectedColumns.size()) {
       const Type& type = *idTypeMap[typeId];
       selectChildren(selectedColumns, type, idReadIntentMap);
     } else {
       std::stringstream buffer;
-      buffer << "Invalid type id selected " << typeId << " out of "
-             << selectedColumns.size();
+      buffer << "Invalid type id selected " << typeId << " out of " << selectedColumns.size();
       throw ParseError(buffer.str());
     }
   }
@@ -248,20 +242,20 @@ namespace orc {
     }
   }
 
-  ColumnSelector::ColumnSelector(const FileContents* _contents): contents(_contents) {
+  ColumnSelector::ColumnSelector(const FileContents* _contents) : contents(_contents) {
     buildTypeNameIdMap(contents->schema.get());
   }
 
   RowReaderImpl::RowReaderImpl(std::shared_ptr<FileContents> _contents,
-                               const RowReaderOptions& opts
-                         ): localTimezone(getLocalTimezone()),
-                            contents(_contents),
-                            throwOnHive11DecimalOverflow(opts.getThrowOnHive11DecimalOverflow()),
-                            forcedScaleOnHive11Decimal(opts.getForcedScaleOnHive11Decimal()),
-                            footer(contents->footer.get()),
-                            firstRowOfStripe(*contents->pool, 0),
-                            enableEncodedBlock(opts.getEnableLazyDecoding()),
-                            readerTimezone(getTimezoneByName(opts.getTimezoneName())) {
+                               const RowReaderOptions& opts)
+      : localTimezone(getLocalTimezone()),
+        contents(_contents),
+        throwOnHive11DecimalOverflow(opts.getThrowOnHive11DecimalOverflow()),
+        forcedScaleOnHive11Decimal(opts.getForcedScaleOnHive11Decimal()),
+        footer(contents->footer.get()),
+        firstRowOfStripe(*contents->pool, 0),
+        enableEncodedBlock(opts.getEnableLazyDecoding()),
+        readerTimezone(getTimezoneByName(opts.getTimezoneName())) {
     uint64_t numberOfStripes;
     numberOfStripes = static_cast<uint64_t>(footer->stripes_size());
     currentStripe = numberOfStripes;
@@ -272,13 +266,12 @@ namespace orc {
     uint64_t rowTotal = 0;
 
     firstRowOfStripe.resize(numberOfStripes);
-    for(size_t i=0; i < numberOfStripes; ++i) {
+    for (size_t i = 0; i < numberOfStripes; ++i) {
       firstRowOfStripe[i] = rowTotal;
-      proto::StripeInformation stripeInfo =
-        footer->stripes(static_cast<int>(i));
+      proto::StripeInformation stripeInfo = footer->stripes(static_cast<int>(i));
       rowTotal += stripeInfo.numberofrows();
       bool isStripeInRange = stripeInfo.offset() >= opts.getOffset() &&
-        stripeInfo.offset() < opts.getOffset() + opts.getLength();
+                             stripeInfo.offset() < opts.getOffset() + opts.getLength();
       if (isStripeInRange) {
         if (i < currentStripe) {
           currentStripe = i;
@@ -288,7 +281,7 @@ namespace orc {
         }
         if (footer->rowindexstride() > 0) {
           numRowGroupsInStripeRange +=
-            (stripeInfo.numberofrows() + footer->rowindexstride() - 1) / footer->rowindexstride();
+              (stripeInfo.numberofrows() + footer->rowindexstride() - 1) / footer->rowindexstride();
         }
       }
     }
@@ -300,7 +293,7 @@ namespace orc {
     } else if (currentStripe == numberOfStripes) {
       previousRow = footer->numberofrows();
     } else {
-      previousRow = firstRowOfStripe[firstStripe]-1;
+      previousRow = firstRowOfStripe[firstStripe] - 1;
     }
 
     ColumnSelector column_selector(contents.get());
@@ -309,9 +302,7 @@ namespace orc {
     // prepare SargsApplier if SearchArgument is available
     if (opts.getSearchArgument() && footer->rowindexstride() > 0) {
       sargs = opts.getSearchArgument();
-      sargsApplier.reset(new SargsApplier(*contents->schema,
-                                          sargs.get(),
-                                          footer->rowindexstride(),
+      sargsApplier.reset(new SargsApplier(*contents->schema, sargs.get(), footer->rowindexstride(),
                                           getWriterVersionImpl(_contents.get()),
                                           contents->readerMetrics));
     }
@@ -329,7 +320,7 @@ namespace orc {
     // and with 'softwareVersion' unset would have bad bloom filters.
     if (!footer->has_softwareversion()) return true;
 
-    const std::string &fullVersion = footer->softwareversion();
+    const std::string& fullVersion = footer->softwareversion();
     std::string version;
     // Deal with snapshot versions, e.g. 1.6.12-SNAPSHOT.
     if (fullVersion.find('-') != std::string::npos) {
@@ -337,7 +328,7 @@ namespace orc {
     } else {
       version = fullVersion;
     }
-    for (const char *v : BAD_CPP_BLOOM_FILTER_VERSIONS) {
+    for (const char* v : BAD_CPP_BLOOM_FILTER_VERSIONS) {
       if (version == v) {
         return true;
       }
@@ -359,8 +350,7 @@ namespace orc {
 
   const Type& RowReaderImpl::getSelectedType() const {
     if (selectedSchema.get() == nullptr) {
-      selectedSchema = buildSelectedType(contents->schema.get(),
-                                         selectedColumns);
+      selectedSchema = buildSelectedType(contents->schema.get(), selectedColumns);
     }
     return *(selectedSchema.get());
   }
@@ -382,18 +372,15 @@ namespace orc {
 
     // seeking past lastStripe
     uint64_t num_stripes = static_cast<uint64_t>(footer->stripes_size());
-    if ( (lastStripe == num_stripes
-            && rowNumber >= footer->numberofrows())  ||
-         (lastStripe < num_stripes
-            && rowNumber >= firstRowOfStripe[lastStripe])   ) {
+    if ((lastStripe == num_stripes && rowNumber >= footer->numberofrows()) ||
+        (lastStripe < num_stripes && rowNumber >= firstRowOfStripe[lastStripe])) {
       currentStripe = num_stripes;
       previousRow = footer->numberofrows();
       return;
     }
 
     uint64_t seekToStripe = 0;
-    while (seekToStripe+1 < lastStripe &&
-                  firstRowOfStripe[seekToStripe+1] <= rowNumber) {
+    while (seekToStripe + 1 < lastStripe && firstRowOfStripe[seekToStripe + 1] <= rowNumber) {
       seekToStripe++;
     }
 
@@ -406,10 +393,8 @@ namespace orc {
 
     previousRow = rowNumber;
     auto rowIndexStride = footer->rowindexstride();
-    if (!isCurrentStripeInited()
-        || currentStripe != seekToStripe
-        || rowIndexStride == 0
-        || currentStripeInfo.indexlength() == 0) {
+    if (!isCurrentStripeInited() || currentStripe != seekToStripe || rowIndexStride == 0 ||
+        currentStripeInfo.indexlength() == 0) {
       // current stripe is not initialized or
       // target stripe is not current stripe or
       // current stripe doesn't have row indexes
@@ -423,10 +408,9 @@ namespace orc {
       currentRowInStripe = rowNumber - firstRowOfStripe[currentStripe];
       if (sargsApplier) {
         // advance to selected row group if predicate pushdown is enabled
-        currentRowInStripe = advanceToNextRowGroup(currentRowInStripe,
-                                                   rowsInCurrentStripe,
-                                                   footer->rowindexstride(),
-                                                   sargsApplier->getNextSkippedRows());
+        currentRowInStripe =
+            advanceToNextRowGroup(currentRowInStripe, rowsInCurrentStripe, footer->rowindexstride(),
+                                  sargsApplier->getNextSkippedRows());
       }
     }
 
@@ -458,20 +442,14 @@ namespace orc {
     for (int i = 0; i < currentStripeFooter.streams_size(); ++i) {
       const proto::Stream& pbStream = currentStripeFooter.streams(i);
       uint64_t colId = pbStream.column();
-      if (selectedColumns[colId] && pbStream.has_kind()
-          && (pbStream.kind() == proto::Stream_Kind_ROW_INDEX ||
-              pbStream.kind() == proto::Stream_Kind_BLOOM_FILTER_UTF8)) {
-        std::unique_ptr<SeekableInputStream> inStream =
-          createDecompressor(getCompression(),
-                             std::unique_ptr<SeekableInputStream>
-                               (new SeekableFileInputStream
-                                  (contents->stream.get(),
-                                   offset,
-                                   pbStream.length(),
-                                   *contents->pool)),
-                             getCompressionSize(),
-                             *contents->pool,
-                             contents->readerMetrics);
+      if (selectedColumns[colId] && pbStream.has_kind() &&
+          (pbStream.kind() == proto::Stream_Kind_ROW_INDEX ||
+           pbStream.kind() == proto::Stream_Kind_BLOOM_FILTER_UTF8)) {
+        std::unique_ptr<SeekableInputStream> inStream = createDecompressor(
+            getCompression(),
+            std::unique_ptr<SeekableInputStream>(new SeekableFileInputStream(
+                contents->stream.get(), offset, pbStream.length(), *contents->pool)),
+            getCompressionSize(), *contents->pool, contents->readerMetrics);
 
         if (pbStream.kind() == proto::Stream_Kind_ROW_INDEX) {
           proto::RowIndex rowIndex;
@@ -479,7 +457,7 @@ namespace orc {
             throw ParseError("Failed to parse the row index");
           }
           rowIndexes[colId] = rowIndex;
-        } else if (!skipBloomFilters) { // Stream_Kind_BLOOM_FILTER_UTF8
+        } else if (!skipBloomFilters) {  // Stream_Kind_BLOOM_FILTER_UTF8
           proto::BloomFilterIndex pbBFIndex;
           if (!pbBFIndex.ParseFromZeroCopyStream(inStream.get())) {
             throw ParseError("Failed to parse bloom filter index");
@@ -487,9 +465,8 @@ namespace orc {
           BloomFilterIndex bfIndex;
           for (int j = 0; j < pbBFIndex.bloomfilter_size(); j++) {
             bfIndex.entries.push_back(BloomFilterUTF8Utils::deserialize(
-              pbStream.kind(),
-              currentStripeFooter.columns(static_cast<int>(pbStream.column())),
-              pbBFIndex.bloomfilter(j)));
+                pbStream.kind(), currentStripeFooter.columns(static_cast<int>(pbStream.column())),
+                pbBFIndex.bloomfilter(j)));
           }
           // add bloom filters to result for one column
           bloomFilterIndex[pbStream.column()] = bfIndex;
@@ -505,11 +482,10 @@ namespace orc {
     // store position providers for selected colimns
     std::unordered_map<uint64_t, PositionProvider> positionProviders;
 
-    for (auto rowIndex = rowIndexes.cbegin();
-         rowIndex != rowIndexes.cend(); ++rowIndex) {
+    for (auto rowIndex = rowIndexes.cbegin(); rowIndex != rowIndexes.cend(); ++rowIndex) {
       uint64_t colId = rowIndex->first;
       const proto::RowIndexEntry& entry =
-        rowIndex->second.entry(static_cast<int32_t>(rowGroupEntryId));
+          rowIndex->second.entry(static_cast<int32_t>(rowGroupEntryId));
 
       // copy index positions for a specific column
       positions.push_back({});
@@ -541,23 +517,16 @@ namespace orc {
 
   proto::StripeFooter getStripeFooter(const proto::StripeInformation& info,
                                       const FileContents& contents) {
-    uint64_t stripeFooterStart = info.offset() + info.indexlength() +
-      info.datalength();
+    uint64_t stripeFooterStart = info.offset() + info.indexlength() + info.datalength();
     uint64_t stripeFooterLength = info.footerlength();
-    std::unique_ptr<SeekableInputStream> pbStream =
-      createDecompressor(contents.compression,
-                         std::unique_ptr<SeekableInputStream>
-                         (new SeekableFileInputStream(contents.stream.get(),
-                                                      stripeFooterStart,
-                                                      stripeFooterLength,
-                                                      *contents.pool)),
-                         contents.blockSize,
-                         *contents.pool,
-                         contents.readerMetrics);
+    std::unique_ptr<SeekableInputStream> pbStream = createDecompressor(
+        contents.compression,
+        std::unique_ptr<SeekableInputStream>(new SeekableFileInputStream(
+            contents.stream.get(), stripeFooterStart, stripeFooterLength, *contents.pool)),
+        contents.blockSize, *contents.pool, contents.readerMetrics);
     proto::StripeFooter result;
     if (!result.ParseFromZeroCopyStream(pbStream.get())) {
-      throw ParseError(std::string("bad StripeFooter from ") +
-                       pbStream->getName());
+      throw ParseError(std::string("bad StripeFooter from ") + pbStream->getName());
     }
     // Verify StripeFooter in case it's corrupt
     if (result.columns_size() != contents.footer->types_size()) {
@@ -569,28 +538,26 @@ namespace orc {
     return result;
   }
 
-  ReaderImpl::ReaderImpl(std::shared_ptr<FileContents> _contents,
-                         const ReaderOptions& opts,
-                         uint64_t _fileLength,
-                         uint64_t _postscriptLength
-                         ): contents(std::move(_contents)),
-                            options(opts),
-                            fileLength(_fileLength),
-                            postscriptLength(_postscriptLength),
-                            footer(contents->footer.get()) {
+  ReaderImpl::ReaderImpl(std::shared_ptr<FileContents> _contents, const ReaderOptions& opts,
+                         uint64_t _fileLength, uint64_t _postscriptLength)
+      : contents(std::move(_contents)),
+        options(opts),
+        fileLength(_fileLength),
+        postscriptLength(_postscriptLength),
+        footer(contents->footer.get()) {
     isMetadataLoaded = false;
     checkOrcVersion();
     numberOfStripes = static_cast<uint64_t>(footer->stripes_size());
     contents->schema = REDUNDANT_MOVE(convertType(footer->types(0), *footer));
     contents->blockSize = getCompressionBlockSize(*contents->postscript);
-    contents->compression= convertCompressionKind(*contents->postscript);
+    contents->compression = convertCompressionKind(*contents->postscript);
   }
 
   std::string ReaderImpl::getSerializedFileTail() const {
     proto::FileTail tail;
-    proto::PostScript *mutable_ps = tail.mutable_postscript();
+    proto::PostScript* mutable_ps = tail.mutable_postscript();
     mutable_ps->CopyFrom(*contents->postscript);
-    proto::Footer *mutableFooter = tail.mutable_footer();
+    proto::Footer* mutableFooter = tail.mutable_footer();
     mutableFooter->CopyFrom(*footer);
     tail.set_filelength(fileLength);
     tail.set_postscriptlength(postscriptLength);
@@ -621,30 +588,21 @@ namespace orc {
     if (!isMetadataLoaded) {
       readMetadata();
     }
-    return contents->metadata == nullptr ? 0 :
-      static_cast<uint64_t>(contents->metadata->stripestats_size());
+    return contents->metadata == nullptr
+               ? 0
+               : static_cast<uint64_t>(contents->metadata->stripestats_size());
   }
 
-  std::unique_ptr<StripeInformation>
-  ReaderImpl::getStripe(uint64_t stripeIndex) const {
+  std::unique_ptr<StripeInformation> ReaderImpl::getStripe(uint64_t stripeIndex) const {
     if (stripeIndex > getNumberOfStripes()) {
       throw std::logic_error("stripe index out of range");
     }
-    proto::StripeInformation stripeInfo =
-      footer->stripes(static_cast<int>(stripeIndex));
+    proto::StripeInformation stripeInfo = footer->stripes(static_cast<int>(stripeIndex));
 
-    return std::unique_ptr<StripeInformation>
-      (new StripeInformationImpl
-       (stripeInfo.offset(),
-        stripeInfo.indexlength(),
-        stripeInfo.datalength(),
-        stripeInfo.footerlength(),
-        stripeInfo.numberofrows(),
-        contents->stream.get(),
-        *contents->pool,
-        contents->compression,
-        contents->blockSize,
-        contents->readerMetrics));
+    return std::unique_ptr<StripeInformation>(new StripeInformationImpl(
+        stripeInfo.offset(), stripeInfo.indexlength(), stripeInfo.datalength(),
+        stripeInfo.footerlength(), stripeInfo.numberofrows(), contents->stream.get(),
+        *contents->pool, contents->compression, contents->blockSize, contents->readerMetrics));
   }
 
   FileVersion ReaderImpl::getFormatVersion() const {
@@ -664,7 +622,7 @@ namespace orc {
       if (id > WriterId::TRINO_WRITER) {
         return WriterId::UNKNOWN_WRITER;
       } else {
-	return static_cast<WriterId>(id);
+        return static_cast<WriterId>(id);
       }
     }
     return WriterId::ORC_JAVA_WRITER;
@@ -721,14 +679,14 @@ namespace orc {
 
   std::list<std::string> ReaderImpl::getMetadataKeys() const {
     std::list<std::string> result;
-    for(int i=0; i < footer->metadata_size(); ++i) {
+    for (int i = 0; i < footer->metadata_size(); ++i) {
       result.push_back(footer->metadata(i).name());
     }
     return result;
   }
 
   std::string ReaderImpl::getMetadataValue(const std::string& key) const {
-    for(int i=0; i < footer->metadata_size(); ++i) {
+    for (int i = 0; i < footer->metadata_size(); ++i) {
       if (footer->metadata(i).name() == key) {
         return footer->metadata(i).value();
       }
@@ -736,9 +694,10 @@ namespace orc {
     throw std::range_error("key not found");
   }
 
-  void ReaderImpl::getRowIndexStatistics(const proto::StripeInformation& stripeInfo,
-      uint64_t stripeIndex, const proto::StripeFooter& currentStripeFooter,
-      std::vector<std::vector<proto::ColumnStatistics> >* indexStats) const {
+  void ReaderImpl::getRowIndexStatistics(
+      const proto::StripeInformation& stripeInfo, uint64_t stripeIndex,
+      const proto::StripeFooter& currentStripeFooter,
+      std::vector<std::vector<proto::ColumnStatistics>>* indexStats) const {
     int num_streams = currentStripeFooter.streams_size();
     uint64_t offset = stripeInfo.offset();
     uint64_t indexEnd = stripeInfo.offset() + stripeInfo.indexlength();
@@ -751,20 +710,15 @@ namespace orc {
           std::stringstream msg;
           msg << "Malformed RowIndex stream meta in stripe " << stripeIndex
               << ": streamOffset=" << offset << ", streamLength=" << length
-              << ", stripeOffset=" << stripeInfo.offset() << ", stripeIndexLength="
-              << stripeInfo.indexlength();
+              << ", stripeOffset=" << stripeInfo.offset()
+              << ", stripeIndexLength=" << stripeInfo.indexlength();
           throw ParseError(msg.str());
         }
         std::unique_ptr<SeekableInputStream> pbStream =
-          createDecompressor(contents->compression,
-                  std::unique_ptr<SeekableInputStream>
-                  (new SeekableFileInputStream(contents->stream.get(),
-                                                offset,
-                                                length,
-                                                *contents->pool)),
-                  contents->blockSize,
-                  *(contents->pool),
-                  contents->readerMetrics);
+            createDecompressor(contents->compression,
+                               std::unique_ptr<SeekableInputStream>(new SeekableFileInputStream(
+                                   contents->stream.get(), offset, length, *contents->pool)),
+                               contents->blockSize, *(contents->pool), contents->readerMetrics);
 
         proto::RowIndex rowIndex;
         if (!rowIndex.ParseFromZeroCopyStream(pbStream.get())) {
@@ -782,7 +736,7 @@ namespace orc {
   }
 
   bool ReaderImpl::hasMetadataValue(const std::string& key) const {
-    for(int i=0; i < footer->metadata_size(); ++i) {
+    for (int i = 0; i < footer->metadata_size(); ++i) {
       if (footer->metadata(i).name() == key) {
         return true;
       }
@@ -794,8 +748,7 @@ namespace orc {
     return *(contents->schema.get());
   }
 
-  std::unique_ptr<StripeStatistics>
-  ReaderImpl::getStripeStatistics(uint64_t stripeIndex) const {
+  std::unique_ptr<StripeStatistics> ReaderImpl::getStripeStatistics(uint64_t stripeIndex) const {
     if (!isMetadataLoaded) {
       readMetadata();
     }
@@ -803,43 +756,35 @@ namespace orc {
       throw std::logic_error("No stripe statistics in file");
     }
     size_t num_cols = static_cast<size_t>(
-                          contents->metadata->stripestats(
-                              static_cast<int>(stripeIndex)).colstats_size());
-    std::vector<std::vector<proto::ColumnStatistics> > indexStats(num_cols);
+        contents->metadata->stripestats(static_cast<int>(stripeIndex)).colstats_size());
+    std::vector<std::vector<proto::ColumnStatistics>> indexStats(num_cols);
 
-    proto::StripeInformation currentStripeInfo =
-        footer->stripes(static_cast<int>(stripeIndex));
-    proto::StripeFooter currentStripeFooter =
-        getStripeFooter(currentStripeInfo, *contents.get());
+    proto::StripeInformation currentStripeInfo = footer->stripes(static_cast<int>(stripeIndex));
+    proto::StripeFooter currentStripeFooter = getStripeFooter(currentStripeInfo, *contents.get());
 
     getRowIndexStatistics(currentStripeInfo, stripeIndex, currentStripeFooter, &indexStats);
 
-    const Timezone& writerTZ =
-      currentStripeFooter.has_writertimezone() ?
-        getTimezoneByName(currentStripeFooter.writertimezone()) :
-        getLocalTimezone();
+    const Timezone& writerTZ = currentStripeFooter.has_writertimezone()
+                                   ? getTimezoneByName(currentStripeFooter.writertimezone())
+                                   : getLocalTimezone();
     StatContext statContext(hasCorrectStatistics(), &writerTZ);
-    return std::unique_ptr<StripeStatistics>
-           (new StripeStatisticsImpl(contents->metadata->stripestats(static_cast<int>(stripeIndex)),
-                                                   indexStats, statContext));
+    return std::unique_ptr<StripeStatistics>(new StripeStatisticsImpl(
+        contents->metadata->stripestats(static_cast<int>(stripeIndex)), indexStats, statContext));
   }
 
   std::unique_ptr<Statistics> ReaderImpl::getStatistics() const {
     StatContext statContext(hasCorrectStatistics());
-    return std::unique_ptr<Statistics>
-      (new StatisticsImpl(*footer, statContext));
+    return std::unique_ptr<Statistics>(new StatisticsImpl(*footer, statContext));
   }
 
-  std::unique_ptr<ColumnStatistics>
-  ReaderImpl::getColumnStatistics(uint32_t index) const {
+  std::unique_ptr<ColumnStatistics> ReaderImpl::getColumnStatistics(uint32_t index) const {
     if (index >= static_cast<uint64_t>(footer->statistics_size())) {
       throw std::logic_error("column index out of range");
     }
-    proto::ColumnStatistics col =
-      footer->statistics(static_cast<int32_t>(index));
+    proto::ColumnStatistics col = footer->statistics(static_cast<int32_t>(index));
 
     StatContext statContext(hasCorrectStatistics());
-    return std::unique_ptr<ColumnStatistics> (convertColumnStatistics(col, statContext));
+    return std::unique_ptr<ColumnStatistics>(convertColumnStatistics(col, statContext));
   }
 
   void ReaderImpl::readMetadata() const {
@@ -854,16 +799,11 @@ namespace orc {
     }
     uint64_t metadataStart = fileLength - metadataSize - footerLength - postscriptLength - 1;
     if (metadataSize != 0) {
-      std::unique_ptr<SeekableInputStream> pbStream =
-        createDecompressor(contents->compression,
-                           std::unique_ptr<SeekableInputStream>
-                             (new SeekableFileInputStream(contents->stream.get(),
-                                                          metadataStart,
-                                                          metadataSize,
-                                                          *contents->pool)),
-                           contents->blockSize,
-                           *contents->pool,
-                           contents->readerMetrics);
+      std::unique_ptr<SeekableInputStream> pbStream = createDecompressor(
+          contents->compression,
+          std::unique_ptr<SeekableInputStream>(new SeekableFileInputStream(
+              contents->stream.get(), metadataStart, metadataSize, *contents->pool)),
+          contents->blockSize, *contents->pool, contents->readerMetrics);
       contents->metadata.reset(new proto::Metadata());
       if (!contents->metadata->ParseFromZeroCopyStream(pbStream.get())) {
         throw ParseError("Failed to parse the metadata");
@@ -879,10 +819,9 @@ namespace orc {
   void ReaderImpl::checkOrcVersion() {
     FileVersion version = getFormatVersion();
     if (version != FileVersion(0, 11) && version != FileVersion(0, 12)) {
-      *(options.getErrorStream())
-        << "Warning: ORC file " << contents->stream->getName()
-        << " was written in an unknown format version "
-        << version.toString() << "\n";
+      *(options.getErrorStream()) << "Warning: ORC file " << contents->stream->getName()
+                                  << " was written in an unknown format version "
+                                  << version.toString() << "\n";
     }
   }
 
@@ -891,8 +830,7 @@ namespace orc {
     return createRowReader(defaultOpts);
   }
 
-  std::unique_ptr<RowReader> ReaderImpl::createRowReader(
-           const RowReaderOptions& opts) const {
+  std::unique_ptr<RowReader> ReaderImpl::createRowReader(const RowReaderOptions& opts) const {
     if (opts.getSearchArgument() && !isMetadataLoaded) {
       // load stripe statistics for PPD
       readMetadata();
@@ -926,8 +864,8 @@ namespace orc {
       case proto::Type_Kind_VARCHAR:
         return 4;
       default:
-          return 0;
-      }
+        return 0;
+    }
   }
 
   uint64_t ReaderImpl::getMemoryUse(int stripeIx) {
@@ -941,8 +879,8 @@ namespace orc {
     selectedColumns.assign(static_cast<size_t>(contents->footer->types_size()), false);
     ColumnSelector column_selector(contents.get());
     if (contents->schema->getKind() == STRUCT && include.begin() != include.end()) {
-      for(std::list<uint64_t>::const_iterator field = include.begin();
-          field != include.end(); ++field) {
+      for (std::list<uint64_t>::const_iterator field = include.begin(); field != include.end();
+           ++field) {
         column_selector.updateSelectedByFieldId(selectedColumns, *field);
       }
     } else {
@@ -950,7 +888,7 @@ namespace orc {
       std::fill(selectedColumns.begin(), selectedColumns.end(), true);
     }
     column_selector.selectParents(selectedColumns, *contents->schema.get());
-    selectedColumns[0] = true; // column 0 is selected by default
+    selectedColumns[0] = true;  // column 0 is selected by default
     return getMemoryUse(stripeIx, selectedColumns);
   }
 
@@ -959,8 +897,8 @@ namespace orc {
     selectedColumns.assign(static_cast<size_t>(contents->footer->types_size()), false);
     ColumnSelector column_selector(contents.get());
     if (contents->schema->getKind() == STRUCT && names.begin() != names.end()) {
-      for(std::list<std::string>::const_iterator field = names.begin();
-          field != names.end(); ++field) {
+      for (std::list<std::string>::const_iterator field = names.begin(); field != names.end();
+           ++field) {
         column_selector.updateSelectedByName(selectedColumns, *field);
       }
     } else {
@@ -968,7 +906,7 @@ namespace orc {
       std::fill(selectedColumns.begin(), selectedColumns.end(), true);
     }
     column_selector.selectParents(selectedColumns, *contents->schema.get());
-    selectedColumns[0] = true; // column 0 is selected by default
+    selectedColumns[0] = true;  // column 0 is selected by default
     return getMemoryUse(stripeIx, selectedColumns);
   }
 
@@ -977,8 +915,8 @@ namespace orc {
     selectedColumns.assign(static_cast<size_t>(contents->footer->types_size()), false);
     ColumnSelector column_selector(contents.get());
     if (include.begin() != include.end()) {
-      for(std::list<uint64_t>::const_iterator field = include.begin();
-          field != include.end(); ++field) {
+      for (std::list<uint64_t>::const_iterator field = include.begin(); field != include.end();
+           ++field) {
         column_selector.updateSelectedByTypeId(selectedColumns, *field);
       }
     } else {
@@ -986,7 +924,7 @@ namespace orc {
       std::fill(selectedColumns.begin(), selectedColumns.end(), true);
     }
     column_selector.selectParents(selectedColumns, *contents->schema.get());
-    selectedColumns[0] = true; // column 0 is selected by default
+    selectedColumns[0] = true;  // column 0 is selected by default
     return getMemoryUse(stripeIx, selectedColumns);
   }
 
@@ -999,7 +937,7 @@ namespace orc {
         maxDataLength = stripe;
       }
     } else {
-      for (int i=0; i < footer->stripes_size(); i++) {
+      for (int i = 0; i < footer->stripes_size(); i++) {
         uint64_t stripe = footer->stripes(i).datalength();
         if (maxDataLength < stripe) {
           maxDataLength = stripe;
@@ -1009,10 +947,10 @@ namespace orc {
 
     bool hasStringColumn = false;
     uint64_t nSelectedStreams = 0;
-    for (int i=0; !hasStringColumn && i < footer->types_size(); i++) {
+    for (int i = 0; !hasStringColumn && i < footer->types_size(); i++) {
       if (selectedColumns[static_cast<size_t>(i)]) {
         const proto::Type& type = footer->types(i);
-        nSelectedStreams += maxStreamsForType(type) ;
+        nSelectedStreams += maxStreamsForType(type);
         switch (static_cast<int64_t>(type.kind())) {
           case proto::Type_Kind_CHAR:
           case proto::Type_Kind_STRING:
@@ -1034,16 +972,17 @@ namespace orc {
      * in the input stream and in the seekable input stream.
      * If no string column is read, estimate from the number of streams.
      */
-    uint64_t memory = hasStringColumn ? 2 * maxDataLength :
-        std::min(uint64_t(maxDataLength),
-                 nSelectedStreams * contents->stream->getNaturalReadSize());
+    uint64_t memory = hasStringColumn
+                          ? 2 * maxDataLength
+                          : std::min(uint64_t(maxDataLength),
+                                     nSelectedStreams * contents->stream->getNaturalReadSize());
 
     // Do we need even more memory to read the footer or the metadata?
     if (memory < contents->postscript->footerlength() + DIRECTORY_SIZE_GUESS) {
-      memory =  contents->postscript->footerlength() + DIRECTORY_SIZE_GUESS;
+      memory = contents->postscript->footerlength() + DIRECTORY_SIZE_GUESS;
     }
     if (memory < contents->postscript->metadatalength()) {
-      memory =  contents->postscript->metadatalength();
+      memory = contents->postscript->metadatalength();
     }
 
     // Account for firstRowOfStripe.
@@ -1052,7 +991,7 @@ namespace orc {
     // Decompressors need buffers for each stream
     uint64_t decompressorMemory = 0;
     if (contents->compression != CompressionKind_NONE) {
-      for (int i=0; i < footer->types_size(); i++) {
+      for (int i = 0; i < footer->types_size(); i++) {
         if (selectedColumns[static_cast<size_t>(i)]) {
           const proto::Type& type = footer->types(i);
           decompressorMemory += maxStreamsForType(type) * contents->blockSize;
@@ -1063,7 +1002,7 @@ namespace orc {
       }
     }
 
-    return memory + decompressorMemory ;
+    return memory + decompressorMemory;
   }
 
   // Update fields to indicate we've reached the end of file
@@ -1076,12 +1015,12 @@ namespace orc {
       previousRow = 0;
     } else {
       previousRow = firstRowOfStripe[lastStripe - 1] +
-          footer->stripes(static_cast<int>(lastStripe - 1)).numberofrows();
+                    footer->stripes(static_cast<int>(lastStripe - 1)).numberofrows();
     }
   }
 
   void RowReaderImpl::startNextStripe() {
-    reader.reset(); // ColumnReaders use lots of memory; free old memory first
+    reader.reset();  // ColumnReaders use lots of memory; free old memory first
     rowIndexes.clear();
     bloomFilterIndex.clear();
 
@@ -1096,11 +1035,14 @@ namespace orc {
       currentStripeInfo = footer->stripes(static_cast<int>(currentStripe));
       uint64_t fileLength = contents->stream->getLength();
       if (currentStripeInfo.offset() + currentStripeInfo.indexlength() +
-        currentStripeInfo.datalength() + currentStripeInfo.footerlength() >= fileLength) {
+              currentStripeInfo.datalength() + currentStripeInfo.footerlength() >=
+          fileLength) {
         std::stringstream msg;
-        msg << "Malformed StripeInformation at stripe index " << currentStripe << ": fileLength="
-            << fileLength << ", StripeInfo=(offset=" << currentStripeInfo.offset() << ", indexLength="
-            << currentStripeInfo.indexlength() << ", dataLength=" << currentStripeInfo.datalength()
+        msg << "Malformed StripeInformation at stripe index " << currentStripe
+            << ": fileLength=" << fileLength
+            << ", StripeInfo=(offset=" << currentStripeInfo.offset()
+            << ", indexLength=" << currentStripeInfo.indexlength()
+            << ", dataLength=" << currentStripeInfo.datalength()
             << ", footerLength=" << currentStripeInfo.footerlength() << ")";
         throw ParseError(msg.str());
       }
@@ -1112,11 +1054,12 @@ namespace orc {
         bool isStripeNeeded = true;
         if (contents->metadata) {
           const auto& currentStripeStats =
-            contents->metadata->stripestats(static_cast<int>(currentStripe));
+              contents->metadata->stripestats(static_cast<int>(currentStripe));
           // skip this stripe after stats fail to satisfy sargs
           uint64_t stripeRowGroupCount =
-            (rowsInCurrentStripe + footer->rowindexstride() - 1) / footer->rowindexstride();
-          isStripeNeeded = sargsApplier->evaluateStripeStatistics(currentStripeStats, stripeRowGroupCount);
+              (rowsInCurrentStripe + footer->rowindexstride() - 1) / footer->rowindexstride();
+          isStripeNeeded =
+              sargsApplier->evaluateStripeStatistics(currentStripeStats, stripeRowGroupCount);
         }
 
         if (isStripeNeeded) {
@@ -1124,9 +1067,7 @@ namespace orc {
           loadStripeIndex();
 
           // select row groups to read in the current stripe
-          sargsApplier->pickRowGroups(rowsInCurrentStripe,
-                                      rowIndexes,
-                                      bloomFilterIndex);
+          sargsApplier->pickRowGroups(rowsInCurrentStripe, rowIndexes, bloomFilterIndex);
           if (sargsApplier->hasSelectedFrom(currentRowInStripe)) {
             // current stripe has at least one row group matching the predicate
             break;
@@ -1143,24 +1084,19 @@ namespace orc {
 
     if (currentStripe < lastStripe) {
       // get writer timezone info from stripe footer to help understand timestamp values.
-      const Timezone& writerTimezone =
-        currentStripeFooter.has_writertimezone() ?
-          getTimezoneByName(currentStripeFooter.writertimezone()) :
-          localTimezone;
-      StripeStreamsImpl stripeStreams(*this, currentStripe, currentStripeInfo,
-                                      currentStripeFooter,
-                                      currentStripeInfo.offset(),
-                                      *contents->stream,
-                                      writerTimezone,
+      const Timezone& writerTimezone = currentStripeFooter.has_writertimezone()
+                                           ? getTimezoneByName(currentStripeFooter.writertimezone())
+                                           : localTimezone;
+      StripeStreamsImpl stripeStreams(*this, currentStripe, currentStripeInfo, currentStripeFooter,
+                                      currentStripeInfo.offset(), *contents->stream, writerTimezone,
                                       readerTimezone);
       reader = buildReader(*contents->schema, stripeStreams);
 
       if (sargsApplier) {
         // move to the 1st selected row group when PPD is enabled.
-        currentRowInStripe = advanceToNextRowGroup(currentRowInStripe,
-                                                   rowsInCurrentStripe,
-                                                   footer->rowindexstride(),
-                                                   sargsApplier->getNextSkippedRows());
+        currentRowInStripe =
+            advanceToNextRowGroup(currentRowInStripe, rowsInCurrentStripe, footer->rowindexstride(),
+                                  sargsApplier->getNextSkippedRows());
         previousRow = firstRowOfStripe[currentStripe] + currentRowInStripe - 1;
         if (currentRowInStripe > 0) {
           seekToRowGroup(static_cast<uint32_t>(currentRowInStripe / footer->rowindexstride()));
@@ -1173,8 +1109,7 @@ namespace orc {
   }
 
   bool RowReaderImpl::next(ColumnVectorBatch& data) {
-    SCOPED_STOPWATCH(
-      contents->readerMetrics, ReaderInclusiveLatencyUs, ReaderCall);
+    SCOPED_STOPWATCH(contents->readerMetrics, ReaderInclusiveLatencyUs, ReaderCall);
     if (currentStripe >= lastStripe) {
       data.numElements = 0;
       markEndOfFile();
@@ -1184,14 +1119,10 @@ namespace orc {
       startNextStripe();
     }
     uint64_t rowsToRead =
-      std::min(static_cast<uint64_t>(data.capacity),
-               rowsInCurrentStripe - currentRowInStripe);
+        std::min(static_cast<uint64_t>(data.capacity), rowsInCurrentStripe - currentRowInStripe);
     if (sargsApplier && rowsToRead > 0) {
-      rowsToRead = computeBatchSize(rowsToRead,
-                                    currentRowInStripe,
-                                    rowsInCurrentStripe,
-                                    footer->rowindexstride(),
-                                    sargsApplier->getNextSkippedRows());
+      rowsToRead = computeBatchSize(rowsToRead, currentRowInStripe, rowsInCurrentStripe,
+                                    footer->rowindexstride(), sargsApplier->getNextSkippedRows());
     }
     data.numElements = rowsToRead;
     if (rowsToRead == 0) {
@@ -1200,8 +1131,7 @@ namespace orc {
     }
     if (enableEncodedBlock) {
       reader->nextEncoded(data, rowsToRead, nullptr);
-    }
-    else {
+    } else {
       reader->next(data, rowsToRead, nullptr);
     }
     // update row number
@@ -1210,10 +1140,9 @@ namespace orc {
 
     // check if we need to advance to next selected row group
     if (sargsApplier) {
-      uint64_t nextRowToRead = advanceToNextRowGroup(currentRowInStripe,
-                                                     rowsInCurrentStripe,
-                                                     footer->rowindexstride(),
-                                                     sargsApplier->getNextSkippedRows());
+      uint64_t nextRowToRead =
+          advanceToNextRowGroup(currentRowInStripe, rowsInCurrentStripe, footer->rowindexstride(),
+                                sargsApplier->getNextSkippedRows());
       if (currentRowInStripe != nextRowToRead) {
         // it is guaranteed to be at start of a row group
         currentRowInStripe = nextRowToRead;
@@ -1230,10 +1159,8 @@ namespace orc {
     return rowsToRead != 0;
   }
 
-  uint64_t RowReaderImpl::computeBatchSize(uint64_t requestedSize,
-                                           uint64_t currentRowInStripe,
-                                           uint64_t rowsInCurrentStripe,
-                                           uint64_t rowIndexStride,
+  uint64_t RowReaderImpl::computeBatchSize(uint64_t requestedSize, uint64_t currentRowInStripe,
+                                           uint64_t rowsInCurrentStripe, uint64_t rowIndexStride,
                                            const std::vector<uint64_t>& nextSkippedRows) {
     // In case of PPD, batch size should be aware of row group boundaries. If only a subset of row
     // groups are selected then marker position is set to the end of range (subset of row groups
@@ -1276,18 +1203,14 @@ namespace orc {
     return rowsInCurrentStripe;
   }
 
-  std::unique_ptr<ColumnVectorBatch> RowReaderImpl::createRowBatch
-                                              (uint64_t capacity) const {
+  std::unique_ptr<ColumnVectorBatch> RowReaderImpl::createRowBatch(uint64_t capacity) const {
     return getSelectedType().createRowBatch(capacity, *contents->pool, enableEncodedBlock);
   }
 
-  void ensureOrcFooter(InputStream* stream,
-                       DataBuffer<char> *buffer,
-                       uint64_t postscriptLength) {
-
+  void ensureOrcFooter(InputStream* stream, DataBuffer<char>* buffer, uint64_t postscriptLength) {
     const std::string MAGIC("ORC");
     const uint64_t magicLength = MAGIC.length();
-    const char * const bufferStart = buffer->data();
+    const char* const bufferStart = buffer->data();
     const uint64_t bufferLength = buffer->size();
 
     if (postscriptLength < magicLength || bufferLength < magicLength) {
@@ -1299,7 +1222,7 @@ namespace orc {
     if (memcmp(magicStart, MAGIC.c_str(), magicLength) != 0) {
       // If there is no magic string at the end, check the beginning.
       // Only files written by Hive 0.11.0 don't have the tail ORC string.
-      std::unique_ptr<char[]> frontBuffer( new char[magicLength] );
+      std::unique_ptr<char[]> frontBuffer(new char[magicLength]);
       stream->read(frontBuffer.get(), magicLength, 0);
       bool foundMatch = memcmp(frontBuffer.get(), MAGIC.c_str(), magicLength) == 0;
 
@@ -1315,26 +1238,24 @@ namespace orc {
    * @param buffer the buffer with the tail of the file.
    * @param postscriptSize the length of postscript in bytes
    */
-  std::unique_ptr<proto::PostScript> readPostscript(InputStream *stream,
-                                                    DataBuffer<char> *buffer,
+  std::unique_ptr<proto::PostScript> readPostscript(InputStream* stream, DataBuffer<char>* buffer,
                                                     uint64_t postscriptSize) {
-    char *ptr = buffer->data();
+    char* ptr = buffer->data();
     uint64_t readSize = buffer->size();
 
     ensureOrcFooter(stream, buffer, postscriptSize);
 
     std::unique_ptr<proto::PostScript> postscript =
-      std::unique_ptr<proto::PostScript>(new proto::PostScript());
+        std::unique_ptr<proto::PostScript>(new proto::PostScript());
     if (readSize < 1 + postscriptSize) {
       std::stringstream msg;
-      msg << "Invalid ORC postscript length: " << postscriptSize << ", file length = "
-          << stream->getLength();
+      msg << "Invalid ORC postscript length: " << postscriptSize
+          << ", file length = " << stream->getLength();
       throw ParseError(msg.str());
     }
     if (!postscript->ParseFromArray(ptr + readSize - 1 - postscriptSize,
-                                   static_cast<int>(postscriptSize))) {
-      throw ParseError("Failed to parse the postscript from " +
-                       stream->getName());
+                                    static_cast<int>(postscriptSize))) {
+      throw ParseError("Failed to parse the postscript from " + stream->getName());
     }
     return REDUNDANT_MOVE(postscript);
   }
@@ -1344,7 +1265,7 @@ namespace orc {
    * so we won't crash when we convert the proto::Types to TypeImpls (ORC-317).
    * For STRUCT types, fieldName size should match subTypes size (ORC-581).
    */
-  void checkProtoTypes(const proto::Footer &footer) {
+  void checkProtoTypes(const proto::Footer& footer) {
     std::stringstream msg;
     int maxId = footer.types_size();
     if (maxId <= 0) {
@@ -1352,8 +1273,8 @@ namespace orc {
     }
     for (int i = 0; i < maxId; ++i) {
       const proto::Type& type = footer.types(i);
-      if (type.kind() == proto::Type_Kind_STRUCT
-         && type.subtypes_size() != type.fieldnames_size()) {
+      if (type.kind() == proto::Type_Kind_STRUCT &&
+          type.subtypes_size() != type.fieldnames_size()) {
         msg << "Footer is corrupt: STRUCT type " << i << " has " << type.subtypes_size()
             << " subTypes, but has " << type.fieldnames_size() << " fieldNames";
         throw ParseError(msg.str());
@@ -1361,8 +1282,7 @@ namespace orc {
       for (int j = 0; j < type.subtypes_size(); ++j) {
         int subTypeId = static_cast<int>(type.subtypes(j));
         if (subTypeId <= i) {
-          msg << "Footer is corrupt: malformed link from type " << i << " to "
-              << subTypeId;
+          msg << "Footer is corrupt: malformed link from type " << i << " to " << subTypeId;
           throw ParseError(msg.str());
         }
         if (subTypeId >= maxId) {
@@ -1370,9 +1290,8 @@ namespace orc {
           throw ParseError(msg.str());
         }
         if (j > 0 && static_cast<int>(type.subtypes(j - 1)) >= subTypeId) {
-          msg << "Footer is corrupt: subType(" << (j-1) << ") >= subType(" << j
-              << ") in types(" << i << "). (" << type.subtypes(j - 1) << " >= "
-              << subTypeId << ")";
+          msg << "Footer is corrupt: subType(" << (j - 1) << ") >= subType(" << j << ") in types("
+              << i << "). (" << type.subtypes(j - 1) << " >= " << subTypeId << ")";
           throw ParseError(msg.str());
         }
       }
@@ -1387,28 +1306,20 @@ namespace orc {
    * @param ps the file's postscript
    * @param memoryPool the memory pool to use
    */
-  std::unique_ptr<proto::Footer> readFooter(InputStream* stream,
-                                            const DataBuffer<char> *buffer,
-                                            uint64_t footerOffset,
-                                            const proto::PostScript& ps,
-                                            MemoryPool& memoryPool,
-                                            ReaderMetrics* readerMetrics) {
-    const char *footerPtr = buffer->data() + footerOffset;
+  std::unique_ptr<proto::Footer> readFooter(InputStream* stream, const DataBuffer<char>* buffer,
+                                            uint64_t footerOffset, const proto::PostScript& ps,
+                                            MemoryPool& memoryPool, ReaderMetrics* readerMetrics) {
+    const char* footerPtr = buffer->data() + footerOffset;
 
     std::unique_ptr<SeekableInputStream> pbStream =
-      createDecompressor(convertCompressionKind(ps),
-                         std::unique_ptr<SeekableInputStream>
-                         (new SeekableArrayInputStream(footerPtr,
-                                                       ps.footerlength())),
-                         getCompressionBlockSize(ps),
-                         memoryPool,
-                         readerMetrics);
+        createDecompressor(convertCompressionKind(ps),
+                           std::unique_ptr<SeekableInputStream>(
+                               new SeekableArrayInputStream(footerPtr, ps.footerlength())),
+                           getCompressionBlockSize(ps), memoryPool, readerMetrics);
 
-    std::unique_ptr<proto::Footer> footer =
-      std::unique_ptr<proto::Footer>(new proto::Footer());
+    std::unique_ptr<proto::Footer> footer = std::unique_ptr<proto::Footer>(new proto::Footer());
     if (!footer->ParseFromZeroCopyStream(pbStream.get())) {
-      throw ParseError("Failed to parse the footer from " +
-                       stream->getName());
+      throw ParseError("Failed to parse the footer from " + stream->getName());
     }
 
     checkProtoTypes(*footer);
@@ -1436,20 +1347,19 @@ namespace orc {
       postscriptLength = tail.postscriptlength();
     } else {
       // figure out the size of the file using the option or filesystem
-      fileLength = std::min(options.getTailLocation(),
-                            static_cast<uint64_t>(stream->getLength()));
+      fileLength = std::min(options.getTailLocation(), static_cast<uint64_t>(stream->getLength()));
 
-      //read last bytes into buffer to get PostScript
+      // read last bytes into buffer to get PostScript
       uint64_t readSize = std::min(fileLength, DIRECTORY_SIZE_GUESS);
       if (readSize < 4) {
         throw ParseError("File size too small");
       }
-      std::unique_ptr<DataBuffer<char>> buffer( new DataBuffer<char>(*contents->pool, readSize) );
+      std::unique_ptr<DataBuffer<char>> buffer(new DataBuffer<char>(*contents->pool, readSize));
       stream->read(buffer->data(), readSize, fileLength - readSize);
 
       postscriptLength = buffer->data()[readSize - 1] & 0xff;
-      contents->postscript = REDUNDANT_MOVE(readPostscript(stream.get(),
-        buffer.get(), postscriptLength));
+      contents->postscript =
+          REDUNDANT_MOVE(readPostscript(stream.get(), buffer.get(), postscriptLength));
       uint64_t footerSize = contents->postscript->footerlength();
       uint64_t tailSize = 1 + postscriptLength + footerSize;
       if (tailSize >= fileLength) {
@@ -1467,8 +1377,9 @@ namespace orc {
         footerOffset = readSize - tailSize;
       }
 
-      contents->footer = REDUNDANT_MOVE(readFooter(stream.get(), buffer.get(),
-        footerOffset, *contents->postscript,  *contents->pool, contents->readerMetrics));
+      contents->footer =
+          REDUNDANT_MOVE(readFooter(stream.get(), buffer.get(), footerOffset, *contents->postscript,
+                                    *contents->pool, contents->readerMetrics));
     }
     contents->isDecimalAsLong = false;
     if (contents->postscript->version_size() == 2) {
@@ -1478,25 +1389,22 @@ namespace orc {
       }
     }
     contents->stream = std::move(stream);
-    return std::unique_ptr<Reader>(new ReaderImpl(std::move(contents),
-                                                  options,
-                                                  fileLength,
-                                                  postscriptLength));
+    return std::unique_ptr<Reader>(
+        new ReaderImpl(std::move(contents), options, fileLength, postscriptLength));
   }
 
-  std::map<uint32_t, BloomFilterIndex>
-  ReaderImpl::getBloomFilters(uint32_t stripeIndex,
-                              const std::set<uint32_t>& included) const {
+  std::map<uint32_t, BloomFilterIndex> ReaderImpl::getBloomFilters(
+      uint32_t stripeIndex, const std::set<uint32_t>& included) const {
     std::map<uint32_t, BloomFilterIndex> ret;
 
     // find stripe info
     if (stripeIndex >= static_cast<uint32_t>(footer->stripes_size())) {
-      throw std::logic_error("Illegal stripe index: " + to_string(static_cast<int64_t>(stripeIndex)));
+      throw std::logic_error("Illegal stripe index: " +
+                             to_string(static_cast<int64_t>(stripeIndex)));
     }
     const proto::StripeInformation currentStripeInfo =
-      footer->stripes(static_cast<int>(stripeIndex));
-    const proto::StripeFooter currentStripeFooter =
-      getStripeFooter(currentStripeInfo, *contents);
+        footer->stripes(static_cast<int>(stripeIndex));
+    const proto::StripeFooter currentStripeFooter = getStripeFooter(currentStripeInfo, *contents);
 
     // iterate stripe footer to get stream of bloomfilter
     uint64_t offset = static_cast<uint64_t>(currentStripeInfo.offset());
@@ -1508,17 +1416,11 @@ namespace orc {
       // a bloom filter stream from a selected column is found
       if (stream.kind() == proto::Stream_Kind_BLOOM_FILTER_UTF8 &&
           (included.empty() || included.find(column) != included.end())) {
-
         std::unique_ptr<SeekableInputStream> pbStream =
-          createDecompressor(contents->compression,
-                             std::unique_ptr<SeekableInputStream>
-                               (new SeekableFileInputStream(contents->stream.get(),
-                                                            offset,
-                                                            length,
-                                                            *contents->pool)),
-                             contents->blockSize,
-                             *(contents->pool),
-                             contents->readerMetrics);
+            createDecompressor(contents->compression,
+                               std::unique_ptr<SeekableInputStream>(new SeekableFileInputStream(
+                                   contents->stream.get(), offset, length, *contents->pool)),
+                               contents->blockSize, *(contents->pool), contents->readerMetrics);
 
         proto::BloomFilterIndex pbBFIndex;
         if (!pbBFIndex.ParseFromZeroCopyStream(pbStream.get())) {
@@ -1527,10 +1429,9 @@ namespace orc {
 
         BloomFilterIndex bfIndex;
         for (int j = 0; j < pbBFIndex.bloomfilter_size(); j++) {
-	  std::unique_ptr<BloomFilter> entry = BloomFilterUTF8Utils::deserialize(
-            stream.kind(),
-            currentStripeFooter.columns(static_cast<int>(stream.column())),
-            pbBFIndex.bloomfilter(j));
+          std::unique_ptr<BloomFilter> entry = BloomFilterUTF8Utils::deserialize(
+              stream.kind(), currentStripeFooter.columns(static_cast<int>(stream.column())),
+              pbBFIndex.bloomfilter(j));
           bfIndex.entries.push_back(std::shared_ptr<BloomFilter>(std::move(entry)));
         }
 
@@ -1552,10 +1453,8 @@ namespace orc {
     // PASS
   }
 
-  InputStream::~InputStream() {
-    // PASS
+  InputStream::~InputStream(){
+      // PASS
   };
 
-
-
-}// namespace
+}  // namespace orc

@@ -31,7 +31,7 @@
 namespace orc {
 
   class StripeStreams {
-  public:
+   public:
     virtual ~StripeStreams();
 
     /**
@@ -53,10 +53,9 @@ namespace orc {
      * @param shouldStream should the reading page the stream in
      * @return the new stream
      */
-    virtual std::unique_ptr<SeekableInputStream>
-                    getStream(uint64_t columnId,
-                              proto::Stream_Kind kind,
-                              bool shouldStream) const = 0;
+    virtual std::unique_ptr<SeekableInputStream> getStream(uint64_t columnId,
+                                                           proto::Stream_Kind kind,
+                                                           bool shouldStream) const = 0;
 
     /**
      * Get the memory pool for this reader.
@@ -108,13 +107,13 @@ namespace orc {
    * The interface for reading ORC data types.
    */
   class ColumnReader {
-  protected:
+   protected:
     std::unique_ptr<ByteRleDecoder> notNullDecoder;
     uint64_t columnId;
     MemoryPool& memoryPool;
     ReaderMetrics* metrics;
 
-  public:
+   public:
     ColumnReader(const Type& type, StripeStreams& stipe);
 
     virtual ~ColumnReader();
@@ -134,9 +133,7 @@ namespace orc {
      *           a mask (with at least numValues bytes) for which values to
      *           set.
      */
-    virtual void next(ColumnVectorBatch& rowBatch,
-                      uint64_t numValues,
-                      char* notNull);
+    virtual void next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull);
 
     /**
      * Read the next group of values without decoding
@@ -146,10 +143,7 @@ namespace orc {
      *           a mask (with at least numValues bytes) for which values to
      *           set.
      */
-    virtual void nextEncoded(ColumnVectorBatch& rowBatch,
-                      uint64_t numValues,
-                      char* notNull)
-    {
+    virtual void nextEncoded(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) {
       rowBatch.isEncoded = false;
       next(rowBatch, numValues, notNull);
     }
@@ -158,16 +152,13 @@ namespace orc {
      * Seek to beginning of a row group in the current stripe
      * @param positions a list of PositionProviders storing the positions
      */
-    virtual void seekToRowGroup(
-      std::unordered_map<uint64_t, PositionProvider>& positions);
-
+    virtual void seekToRowGroup(std::unordered_map<uint64_t, PositionProvider>& positions);
   };
 
   /**
    * Create a reader for the given stripe.
    */
-  std::unique_ptr<ColumnReader> buildReader(const Type& type,
-                                            StripeStreams& stripe);
-}
+  std::unique_ptr<ColumnReader> buildReader(const Type& type, StripeStreams& stripe);
+}  // namespace orc
 
 #endif
