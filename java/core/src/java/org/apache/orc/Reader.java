@@ -236,7 +236,7 @@ public interface Reader extends Closeable {
     private boolean allowPluginFilters = false;
     private int minSeekSize = (int) OrcConf.ORC_MIN_DISK_SEEK_SIZE.getDefaultValue();
     private double minSeekSizeTolerance = (double) OrcConf.ORC_MIN_DISK_SEEK_SIZE_TOLERANCE
-      .getDefaultValue();
+        .getDefaultValue();
 
     /**
      * @since 1.1.0

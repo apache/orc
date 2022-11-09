@@ -32,8 +32,7 @@ import java.nio.charset.StandardCharsets;
 
 public class CoreWriter {
   public static void main(Configuration conf, String[] args) throws IOException {
-    TypeDescription schema =
-      TypeDescription.fromString("struct<x:int,y:string>");
+    TypeDescription schema = TypeDescription.fromString("struct<x:int,y:string>");
     Writer writer = OrcFile.createWriter(new Path("my-file.orc"),
                                          OrcFile.writerOptions(conf)
                                           .setSchema(schema));

@@ -138,7 +138,7 @@ public class RecordReaderImpl implements RecordReader {
   static TypeDescription findColumnType(SchemaEvolution evolution, String columnName) {
     try {
       TypeDescription readerColumn = evolution.getReaderBaseSchema().findSubtype(
-        columnName, evolution.isSchemaEvolutionCaseAware);
+          columnName, evolution.isSchemaEvolutionCaseAware);
       return evolution.getFileType(readerColumn);
     } catch (IllegalArgumentException e) {
       throw new IllegalArgumentException("Filter could not find column with name: " +
@@ -160,7 +160,7 @@ public class RecordReaderImpl implements RecordReader {
   static TypeDescription findMostCommonColumn(SchemaEvolution evolution, String columnName) {
     try {
       TypeDescription readerColumn = evolution.getReaderBaseSchema().findSubtype(
-        columnName, evolution.isSchemaEvolutionCaseAware);
+          columnName, evolution.isSchemaEvolutionCaseAware);
       TypeDescription fileColumn;
       do {
         fileColumn = evolution.getFileType(readerColumn);
@@ -301,7 +301,7 @@ public class RecordReaderImpl implements RecordReader {
     String[] filterCols = null;
     Consumer<OrcFilterContext> filterCallBack = null;
     String filePath = options.allowPluginFilters() ?
-      fileReader.getFileSystem().makeQualified(fileReader.path).toString() : null;
+        fileReader.getFileSystem().makeQualified(fileReader.path).toString() : null;
     BatchFilter filter = FilterFactory.createBatchFilter(options,
                                                          evolution.getReaderBaseSchema(),
                                                          evolution.isSchemaEvolutionCaseAware(),
@@ -546,14 +546,14 @@ public class RecordReaderImpl implements RecordReader {
     TruthValue addNull(TruthValue value) {
       if (hasNulls) {
         switch (value) {
-        case YES:
-          return TruthValue.YES_NULL;
-        case NO:
-          return TruthValue.NO_NULL;
-        case YES_NO:
-          return TruthValue.YES_NO_NULL;
-        default:
-          return value;
+          case YES:
+            return TruthValue.YES_NULL;
+          case NO:
+            return TruthValue.NO_NULL;
+          case YES_NO:
+            return TruthValue.YES_NO_NULL;
+          default:
+            return value;
         }
       } else {
         return value;
@@ -947,13 +947,13 @@ public class RecordReaderImpl implements RecordReader {
         result = TruthValue.YES_NO_NULL;
       }
     } else {
-        // if the predicate object is null and if hasNull says there are no nulls then return NO
-        if (predObj == null && !hasNull) {
-          result = TruthValue.NO;
-        } else {
-          result = TruthValue.YES_NO_NULL;
-        }
+      // if the predicate object is null and if hasNull says there are no nulls then return NO
+      if (predObj == null && !hasNull) {
+        result = TruthValue.NO;
+      } else {
+        result = TruthValue.YES_NO_NULL;
       }
+    }
 
     if (result == TruthValue.YES_NO_NULL && !hasNull) {
       result = TruthValue.YES_NO;

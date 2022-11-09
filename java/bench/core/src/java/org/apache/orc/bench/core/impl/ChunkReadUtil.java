@@ -127,7 +127,7 @@ public class ChunkReadUtil {
 
   private static TypeDescription createSchema(int colCount) {
     TypeDescription schema = TypeDescription.createStruct()
-      .addField("id", TypeDescription.createLong());
+        .addField("id", TypeDescription.createLong());
     for (int i = 1; i <= colCount; i++) {
       TypeDescription fieldType;
       switch (i % 3) {

@@ -193,7 +193,7 @@ public class PhysicalFsWriter implements PhysicalWriter {
           builder.setColumn(name.getColumn())
               .setKind(name.getKind())
               .setLength(size);
-            result.add(builder.build());
+          result.add(builder.build());
         }
       }
       return result;
@@ -556,7 +556,7 @@ public class PhysicalFsWriter implements PhysicalWriter {
       if (!isSuppressed) {
         for (ByteBuffer buffer: output) {
           raw.write(buffer.array(), buffer.arrayOffset() + buffer.position(),
-            buffer.remaining());
+              buffer.remaining());
         }
         output.clear();
         return true;

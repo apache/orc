@@ -54,5 +54,14 @@
     </module>
     <module name="UpperEll"/>
     <module name="ArrayTypeStyle"/>
+    <module name="Indentation">
+      <property name="severity" value="error"/>
+      <property name="basicOffset" value="2"/>
+      <property name="braceAdjustment" value="0"/>
+      <property name="caseIndent" value="2"/>
+      <property name="throwsIndent" value="2"/>
+      <property name="lineWrappingIndentation" value="4"/>
+      <property name="arrayInitIndent" value="2"/>
+    </module>
   </module>
 </module>

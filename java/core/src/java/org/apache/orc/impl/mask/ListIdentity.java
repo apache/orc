@@ -47,12 +47,12 @@ public class ListIdentity implements DataMask {
             (int) source.lengths[0]);
       }
     } else if (source.noNulls) {
-        for(int r=start; r < start+length; ++r) {
-          target.offsets[r] = source.offsets[r];
-          target.lengths[r] = source.lengths[r];
-          child.maskData(source.child, target.child, (int) target.offsets[r],
-              (int) target.lengths[r]);
-        }
+      for(int r=start; r < start+length; ++r) {
+        target.offsets[r] = source.offsets[r];
+        target.lengths[r] = source.lengths[r];
+        child.maskData(source.child, target.child, (int) target.offsets[r],
+            (int) target.lengths[r]);
+      }
     } else {
       for(int r=start; r < start+length; ++r) {
         target.isNull[r] = source.isNull[r];

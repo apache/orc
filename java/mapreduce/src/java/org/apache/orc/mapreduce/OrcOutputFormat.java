@@ -50,9 +50,9 @@ public class OrcOutputFormat<V extends Writable>
     Path filename = getDefaultWorkFile(taskAttemptContext, EXTENSION);
     Writer writer = OrcFile.createWriter(filename,
         org.apache.orc.mapred.OrcOutputFormat.buildOptions(conf));
-     return new OrcMapreduceRecordWriter<V>(writer,
-         OrcConf.ROW_BATCH_SIZE.getInt(conf),
-         OrcConf.ROW_BATCH_CHILD_LIMIT.getInt(conf));
+    return new OrcMapreduceRecordWriter<V>(writer,
+        OrcConf.ROW_BATCH_SIZE.getInt(conf),
+        OrcConf.ROW_BATCH_CHILD_LIMIT.getInt(conf));
   }
 
   @Override

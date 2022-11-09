@@ -940,44 +940,44 @@ public class ReaderImpl implements Reader {
     long numVals = colStat.getNumberOfValues();
 
     switch (column.getCategory()) {
-    case BINARY:
-      // old orc format doesn't support binary statistics. checking for binary
-      // statistics is not required as protocol buffers takes care of it.
-      return colStat.getBinaryStatistics().getSum();
-    case STRING:
-    case CHAR:
-    case VARCHAR:
-      // old orc format doesn't support sum for string statistics. checking for
-      // existence is not required as protocol buffers takes care of it.
+      case BINARY:
+        // old orc format doesn't support binary statistics. checking for binary
+        // statistics is not required as protocol buffers takes care of it.
+        return colStat.getBinaryStatistics().getSum();
+      case STRING:
+      case CHAR:
+      case VARCHAR:
+        // old orc format doesn't support sum for string statistics. checking for
+        // existence is not required as protocol buffers takes care of it.
 
-      // ORC strings are deserialized to java strings. so use java data model's
-      // string size
-      numVals = numVals == 0 ? 1 : numVals;
-      int avgStrLen = (int) (colStat.getStringStatistics().getSum() / numVals);
-      return numVals * JavaDataModel.get().lengthForStringOfLength(avgStrLen);
-    case TIMESTAMP:
-    case TIMESTAMP_INSTANT:
-      return numVals * JavaDataModel.get().lengthOfTimestamp();
-    case DATE:
-      return numVals * JavaDataModel.get().lengthOfDate();
-    case DECIMAL:
-      return numVals * JavaDataModel.get().lengthOfDecimal();
-    case DOUBLE:
-    case LONG:
-      return numVals * JavaDataModel.get().primitive2();
-    case FLOAT:
-    case INT:
-    case SHORT:
-    case BOOLEAN:
-    case BYTE:
-    case STRUCT:
-    case UNION:
-    case MAP:
-    case LIST:
-      return numVals * JavaDataModel.get().primitive1();
-    default:
-      LOG.debug("Unknown primitive category: {}", column.getCategory());
-      break;
+        // ORC strings are deserialized to java strings. so use java data model's
+        // string size
+        numVals = numVals == 0 ? 1 : numVals;
+        int avgStrLen = (int) (colStat.getStringStatistics().getSum() / numVals);
+        return numVals * JavaDataModel.get().lengthForStringOfLength(avgStrLen);
+      case TIMESTAMP:
+      case TIMESTAMP_INSTANT:
+        return numVals * JavaDataModel.get().lengthOfTimestamp();
+      case DATE:
+        return numVals * JavaDataModel.get().lengthOfDate();
+      case DECIMAL:
+        return numVals * JavaDataModel.get().lengthOfDecimal();
+      case DOUBLE:
+      case LONG:
+        return numVals * JavaDataModel.get().primitive2();
+      case FLOAT:
+      case INT:
+      case SHORT:
+      case BOOLEAN:
+      case BYTE:
+      case STRUCT:
+      case UNION:
+      case MAP:
+      case LIST:
+        return numVals * JavaDataModel.get().primitive1();
+      default:
+        LOG.debug("Unknown primitive category: {}", column.getCategory());
+        break;
     }
 
     return 0;
@@ -1017,12 +1017,11 @@ public class ReaderImpl implements Reader {
     return fileStats;
   }
 
-  private static
-  List<OrcProto.StripeStatistics> deserializeStripeStats(BufferChunk tailBuffer,
-                                                         long offset,
-                                                         int length,
-                                                         InStream.StreamOptions options
-                                                         ) throws IOException {
+  private static List<OrcProto.StripeStatistics> deserializeStripeStats(
+      BufferChunk tailBuffer,
+      long offset,
+      int length,
+      InStream.StreamOptions options) throws IOException {
     InStream stream = InStream.create("stripe stats", tailBuffer, offset,
         length, options);
     OrcProto.Metadata meta = OrcProto.Metadata.parseFrom(

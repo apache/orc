@@ -44,7 +44,7 @@ public class RunLengthByteWriter {
       if (repeat) {
         output.write(numLiterals - MIN_REPEAT_SIZE);
         output.write(literals, 0, 1);
-     } else {
+      } else {
         output.write(-numLiterals);
         output.write(literals, 0, numLiterals);
       }

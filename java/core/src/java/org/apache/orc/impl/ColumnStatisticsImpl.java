@@ -117,7 +117,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     public OrcProto.ColumnStatistics.Builder serialize() {
       OrcProto.ColumnStatistics.Builder builder = super.serialize();
       OrcProto.BucketStatistics.Builder bucket =
-        OrcProto.BucketStatistics.newBuilder();
+          OrcProto.BucketStatistics.newBuilder();
       bucket.addCount(trueCount);
       builder.setBucketStatistics(bucket);
       return builder;
@@ -584,7 +584,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     public OrcProto.ColumnStatistics.Builder serialize() {
       OrcProto.ColumnStatistics.Builder builder = super.serialize();
       OrcProto.DoubleStatistics.Builder dbl =
-        OrcProto.DoubleStatistics.newBuilder();
+          OrcProto.DoubleStatistics.newBuilder();
       if (hasMinimum) {
         dbl.setMinimum(minimum);
         dbl.setMaximum(maximum);
@@ -790,7 +790,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
     public OrcProto.ColumnStatistics.Builder serialize() {
       OrcProto.ColumnStatistics.Builder result = super.serialize();
       OrcProto.StringStatistics.Builder str =
-        OrcProto.StringStatistics.newBuilder();
+          OrcProto.StringStatistics.newBuilder();
       if (getNumberOfValues() != 0) {
         if (isLowerBoundSet) {
           str.setLowerBound(minimum.toString());
@@ -2011,7 +2011,7 @@ public class ColumnStatisticsImpl implements ColumnStatistics {
 
   public OrcProto.ColumnStatistics.Builder serialize() {
     OrcProto.ColumnStatistics.Builder builder =
-      OrcProto.ColumnStatistics.newBuilder();
+        OrcProto.ColumnStatistics.newBuilder();
     builder.setNumberOfValues(count);
     builder.setHasNull(hasNull);
     if (bytesOnDisk != 0) {
