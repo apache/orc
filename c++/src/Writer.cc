@@ -44,6 +44,7 @@ namespace orc {
     BloomFilterVersion bloomFilterVersion;
     std::string timezone;
     WriterMetrics* metrics;
+    bool useTightNumericVector;
 
     WriterOptionsPrivate() : fileVersion(FileVersion::v_0_12()) {  // default to Hive_0_12
       stripeSize = 64 * 1024 * 1024;                               // 64M
@@ -63,6 +64,7 @@ namespace orc {
       // Explictly set the writer timezone if the use case depends on it.
       timezone = "GMT";
       metrics = nullptr;
+      useTightNumericVector = false;
     }
   };
 
@@ -262,6 +264,15 @@ namespace orc {
     return *this;
   }
 
+  WriterOptions& WriterOptions::setUseTightNumericVector(bool useTightNumericVector) {
+    privateBits->useTightNumericVector = useTightNumericVector;
+    return *this;
+  }
+
+  bool WriterOptions::getUseTightNumericVector() const {
+    return privateBits->useTightNumericVector;
+  }
+
   Writer::~Writer() {
     // PASS
   }
@@ -284,6 +295,7 @@ namespace orc {
 
     static const char* magicId;
     static const WriterId writerId;
+    bool useTightNumericVector;
 
    public:
     WriterImpl(const Type& type, OutputStream* stream, const WriterOptions& options);
@@ -318,6 +330,8 @@ namespace orc {
     stripeRows = totalRows = indexRows = 0;
     currentOffset = 0;
 
+    useTightNumericVector = opts.getUseTightNumericVector();
+
     // compression stream for stripe footer, file footer and metadata
     compressionStream = createCompressor(
         options.getCompression(), outStream, options.getCompressionStrategy(),
@@ -334,7 +348,7 @@ namespace orc {
   }
 
   std::unique_ptr<ColumnVectorBatch> WriterImpl::createRowBatch(uint64_t size) const {
-    return type.createRowBatch(size, *options.getMemoryPool());
+    return type.createRowBatch(size, *options.getMemoryPool(), false, useTightNumericVector);
   }
 
   void WriterImpl::add(ColumnVectorBatch& rowsToAdd) {

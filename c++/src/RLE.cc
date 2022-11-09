@@ -60,12 +60,25 @@ namespace orc {
     }
   }
 
-  void RleEncoder::add(const int64_t* data, uint64_t numValues, const char* notNull) {
+  template <typename T>
+  void RleEncoder::add(const T* data, uint64_t numValues, const char* notNull) {
     for (uint64_t i = 0; i < numValues; ++i) {
       if (!notNull || notNull[i]) {
-        write(data[i]);
+        write(static_cast<int64_t>(data[i]));
       }
     }
+  }
+
+  void RleEncoder::add(const int64_t* data, uint64_t numValues, const char* notNull) {
+    add<int64_t>(data, numValues, notNull);
+  }
+
+  void RleEncoder::add(const int32_t* data, uint64_t numValues, const char* notNull) {
+    add<int32_t>(data, numValues, notNull);
+  }
+
+  void RleEncoder::add(const int16_t* data, uint64_t numValues, const char* notNull) {
+    add<int16_t>(data, numValues, notNull);
   }
 
   void RleEncoder::writeVslong(int64_t val) {

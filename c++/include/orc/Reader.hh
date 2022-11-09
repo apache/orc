@@ -324,6 +324,18 @@ namespace orc {
      * Get the IdReadIntentMap map that was supplied by client.
      */
     const IdReadIntentMap getIdReadIntentMap() const;
+
+    /**
+     * Set whether use fixed width numeric vectorBatch or not, such as int32_t / int16_t / int8_t /
+     * float vectorBatch.
+     */
+    RowReaderOptions& setUseTightNumericVector(bool useTightNumericVector);
+
+    /**
+     * Get whether or not to use fixed width numeric columnVectorBatch.
+     * @return if not set, the default is false
+     */
+    bool getUseTightNumericVector() const;
   };
 
   class RowReader;

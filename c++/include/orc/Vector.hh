@@ -25,9 +25,9 @@
 
 #include <cstdlib>
 #include <cstring>
-#include <iostream>
 #include <list>
 #include <memory>
+#include <sstream>
 #include <stdexcept>
 #include <vector>
 
@@ -88,27 +88,115 @@ namespace orc {
     ColumnVectorBatch& operator=(const ColumnVectorBatch&);
   };
 
-  struct LongVectorBatch : public ColumnVectorBatch {
-    LongVectorBatch(uint64_t capacity, MemoryPool& pool);
-    virtual ~LongVectorBatch();
+  template <typename ValueType>
+  struct IntegerVectorBatch : public ColumnVectorBatch {
+    IntegerVectorBatch(uint64_t cap, MemoryPool& pool)
+        : ColumnVectorBatch(cap, pool), data(pool, cap) {
+      // PASS
+    }
 
-    DataBuffer<int64_t> data;
-    std::string toString() const;
-    void resize(uint64_t capacity);
-    void clear();
-    uint64_t getMemoryUsage();
+    virtual ~IntegerVectorBatch() = default;
+
+    inline std::string toString() const;
+
+    void resize(uint64_t cap) {
+      if (capacity < cap) {
+        ColumnVectorBatch::resize(cap);
+        data.resize(cap);
+      }
+    }
+
+    void clear() {
+      numElements = 0;
+    }
+
+    uint64_t getMemoryUsage() {
+      return ColumnVectorBatch::getMemoryUsage() +
+             static_cast<uint64_t>(data.capacity() * sizeof(int64_t));
+    }
+
+    DataBuffer<ValueType> data;
   };
 
-  struct DoubleVectorBatch : public ColumnVectorBatch {
-    DoubleVectorBatch(uint64_t capacity, MemoryPool& pool);
-    virtual ~DoubleVectorBatch();
-    std::string toString() const;
-    void resize(uint64_t capacity);
-    void clear();
-    uint64_t getMemoryUsage();
+  using LongVectorBatch = IntegerVectorBatch<int64_t>;
+  using IntVectorBatch = IntegerVectorBatch<int32_t>;
+  using ShortVectorBatch = IntegerVectorBatch<int16_t>;
+  using ByteVectorBatch = IntegerVectorBatch<int8_t>;
 
-    DataBuffer<double> data;
+  template <>
+  inline std::string LongVectorBatch::toString() const {
+    std::ostringstream buffer;
+    buffer << "Long vector <" << numElements << " of " << capacity << ">";
+    return buffer.str();
+  }
+
+  template <>
+  inline std::string IntVectorBatch::toString() const {
+    std::ostringstream buffer;
+    buffer << "Int vector <" << numElements << " of " << capacity << ">";
+    return buffer.str();
+  }
+
+  template <>
+  inline std::string ShortVectorBatch::toString() const {
+    std::ostringstream buffer;
+    buffer << "Short vector <" << numElements << " of " << capacity << ">";
+    return buffer.str();
+  }
+
+  template <>
+  inline std::string ByteVectorBatch::toString() const {
+    std::ostringstream buffer;
+    buffer << "Byte vector <" << numElements << " of " << capacity << ">";
+    return buffer.str();
+  }
+
+  template <typename FloatType>
+  struct BaseDoubleVectorBatch : public ColumnVectorBatch {
+    BaseDoubleVectorBatch(uint64_t cap, MemoryPool& pool)
+        : ColumnVectorBatch(cap, pool), data(pool, cap) {
+      // PASS
+    }
+
+    virtual ~BaseDoubleVectorBatch() = default;
+
+    inline std::string toString() const;
+
+    void resize(uint64_t cap) {
+      if (capacity < cap) {
+        ColumnVectorBatch::resize(cap);
+        data.resize(cap);
+      }
+    }
+
+    void clear() {
+      numElements = 0;
+    }
+
+    uint64_t getMemoryUsage() {
+      return ColumnVectorBatch::getMemoryUsage() +
+             static_cast<uint64_t>(data.capacity() * sizeof(FloatType));
+    }
+
+    DataBuffer<FloatType> data;
   };
+
+  using DoubleVectorBatch = BaseDoubleVectorBatch<double>;
+  using FloatVectorBatch = BaseDoubleVectorBatch<float>;
+
+  template <>
+  inline std::string DoubleVectorBatch::toString() const {
+    std::ostringstream buffer;
+    buffer << "Double vector <" << numElements << " of " << capacity << ">";
+    return buffer.str();
+  }
+
+  template <>
+  inline std::string FloatVectorBatch::toString() const {
+    std::ostringstream buffer;
+    buffer << "Float vector <" << numElements << " of " << capacity << ">";
+    return buffer.str();
+  }
 
   struct StringVectorBatch : public ColumnVectorBatch {
     StringVectorBatch(uint64_t capacity, MemoryPool& pool);

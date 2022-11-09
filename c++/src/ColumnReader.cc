@@ -129,6 +129,12 @@ namespace orc {
     }
   }
 
+  void expandBytesToLongs(int8_t* buffer, uint64_t numValues) {
+    for (size_t i = numValues - 1; i < numValues; --i) {
+      buffer[i] = reinterpret_cast<char*>(buffer)[i];
+    }
+  }
+
   class BooleanColumnReader : public ColumnReader {
    private:
     std::unique_ptr<orc::ByteRleDecoder> rle;
@@ -178,99 +184,78 @@ namespace orc {
     rle->seek(positions.at(columnId));
   }
 
+  template <typename BatchType>
   class ByteColumnReader : public ColumnReader {
    private:
     std::unique_ptr<orc::ByteRleDecoder> rle;
 
    public:
-    ByteColumnReader(const Type& type, StripeStreams& stipe);
-    ~ByteColumnReader() override;
+    ByteColumnReader(const Type& type, StripeStreams& stripe) : ColumnReader(type, stripe) {
+      std::unique_ptr<SeekableInputStream> stream =
+          stripe.getStream(columnId, proto::Stream_Kind_DATA, true);
+      if (stream == nullptr) throw ParseError("DATA stream not found in Byte column");
+      rle = createByteRleDecoder(std::move(stream), metrics);
+    }
 
-    uint64_t skip(uint64_t numValues) override;
+    ~ByteColumnReader() override = default;
 
-    void next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override;
+    uint64_t skip(uint64_t numValues) override {
+      numValues = ColumnReader::skip(numValues);
+      rle->skip(numValues);
+      return numValues;
+    }
 
-    void seekToRowGroup(std::unordered_map<uint64_t, PositionProvider>& positions) override;
+    void next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override {
+      ColumnReader::next(rowBatch, numValues, notNull);
+      // Since the byte rle places the output in a char* instead of long*,
+      // we cheat here and use the long* and then expand it in a second pass.
+      auto* ptr = dynamic_cast<BatchType&>(rowBatch).data.data();
+      rle->next(reinterpret_cast<char*>(ptr), numValues,
+                rowBatch.hasNulls ? rowBatch.notNull.data() : nullptr);
+      expandBytesToLongs(ptr, numValues);
+    }
+
+    void seekToRowGroup(std::unordered_map<uint64_t, PositionProvider>& positions) override {
+      ColumnReader::seekToRowGroup(positions);
+      rle->seek(positions.at(columnId));
+    }
   };
 
-  ByteColumnReader::ByteColumnReader(const Type& type, StripeStreams& stripe)
-      : ColumnReader(type, stripe) {
-    std::unique_ptr<SeekableInputStream> stream =
-        stripe.getStream(columnId, proto::Stream_Kind_DATA, true);
-    if (stream == nullptr) throw ParseError("DATA stream not found in Byte column");
-    rle = createByteRleDecoder(std::move(stream), metrics);
-  }
-
-  ByteColumnReader::~ByteColumnReader() {
-    // PASS
-  }
-
-  uint64_t ByteColumnReader::skip(uint64_t numValues) {
-    numValues = ColumnReader::skip(numValues);
-    rle->skip(numValues);
-    return numValues;
-  }
-
-  void ByteColumnReader::next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) {
-    ColumnReader::next(rowBatch, numValues, notNull);
-    // Since the byte rle places the output in a char* instead of long*,
-    // we cheat here and use the long* and then expand it in a second pass.
-    int64_t* ptr = dynamic_cast<LongVectorBatch&>(rowBatch).data.data();
-    rle->next(reinterpret_cast<char*>(ptr), numValues,
-              rowBatch.hasNulls ? rowBatch.notNull.data() : nullptr);
-    expandBytesToLongs(ptr, numValues);
-  }
-
-  void ByteColumnReader::seekToRowGroup(std::unordered_map<uint64_t, PositionProvider>& positions) {
-    ColumnReader::seekToRowGroup(positions);
-    rle->seek(positions.at(columnId));
-  }
-
+  template <typename BatchType>
   class IntegerColumnReader : public ColumnReader {
    protected:
     std::unique_ptr<orc::RleDecoder> rle;
 
    public:
-    IntegerColumnReader(const Type& type, StripeStreams& stripe);
-    ~IntegerColumnReader() override;
+    IntegerColumnReader(const Type& type, StripeStreams& stripe) : ColumnReader(type, stripe) {
+      RleVersion vers = convertRleVersion(stripe.getEncoding(columnId).kind());
+      std::unique_ptr<SeekableInputStream> stream =
+          stripe.getStream(columnId, proto::Stream_Kind_DATA, true);
+      if (stream == nullptr) throw ParseError("DATA stream not found in Integer column");
+      rle = createRleDecoder(std::move(stream), true, vers, memoryPool, metrics);
+    }
 
-    uint64_t skip(uint64_t numValues) override;
+    ~IntegerColumnReader() override {
+      // PASS
+    }
 
-    void next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override;
+    uint64_t skip(uint64_t numValues) override {
+      numValues = ColumnReader::skip(numValues);
+      rle->skip(numValues);
+      return numValues;
+    }
 
-    void seekToRowGroup(std::unordered_map<uint64_t, PositionProvider>& positions) override;
+    void next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) override {
+      ColumnReader::next(rowBatch, numValues, notNull);
+      rle->next(dynamic_cast<BatchType&>(rowBatch).data.data(), numValues,
+                rowBatch.hasNulls ? rowBatch.notNull.data() : nullptr);
+    }
+
+    void seekToRowGroup(std::unordered_map<uint64_t, PositionProvider>& positions) override {
+      ColumnReader::seekToRowGroup(positions);
+      rle->seek(positions.at(columnId));
+    }
   };
-
-  IntegerColumnReader::IntegerColumnReader(const Type& type, StripeStreams& stripe)
-      : ColumnReader(type, stripe) {
-    RleVersion vers = convertRleVersion(stripe.getEncoding(columnId).kind());
-    std::unique_ptr<SeekableInputStream> stream =
-        stripe.getStream(columnId, proto::Stream_Kind_DATA, true);
-    if (stream == nullptr) throw ParseError("DATA stream not found in Integer column");
-    rle = createRleDecoder(std::move(stream), true, vers, memoryPool, metrics);
-  }
-
-  IntegerColumnReader::~IntegerColumnReader() {
-    // PASS
-  }
-
-  uint64_t IntegerColumnReader::skip(uint64_t numValues) {
-    numValues = ColumnReader::skip(numValues);
-    rle->skip(numValues);
-    return numValues;
-  }
-
-  void IntegerColumnReader::next(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) {
-    ColumnReader::next(rowBatch, numValues, notNull);
-    rle->next(dynamic_cast<LongVectorBatch&>(rowBatch).data.data(), numValues,
-              rowBatch.hasNulls ? rowBatch.notNull.data() : nullptr);
-  }
-
-  void IntegerColumnReader::seekToRowGroup(
-      std::unordered_map<uint64_t, PositionProvider>& positions) {
-    ColumnReader::seekToRowGroup(positions);
-    rle->seek(positions.at(columnId));
-  }
 
   class TimestampColumnReader : public ColumnReader {
    private:
@@ -368,7 +353,7 @@ namespace orc {
     nanoRle->seek(positions.at(columnId));
   }
 
-  template <TypeKind columnKind, bool isLittleEndian>
+  template <TypeKind columnKind, bool isLittleEndian, typename ValueType, typename BatchType>
   class DoubleColumnReader : public ColumnReader {
    public:
     DoubleColumnReader(const Type& type, StripeStreams& stripe);
@@ -397,7 +382,8 @@ namespace orc {
       return static_cast<unsigned char>(*(bufferPointer++));
     }
 
-    double readDouble() {
+    template <typename FloatType>
+    FloatType readDouble() {
       int64_t bits = 0;
       if (bufferEnd - bufferPointer >= 8) {
         if (isLittleEndian) {
@@ -418,11 +404,12 @@ namespace orc {
           bits |= static_cast<int64_t>(readByte()) << (i * 8);
         }
       }
-      double* result = reinterpret_cast<double*>(&bits);
+      FloatType* result = reinterpret_cast<FloatType*>(&bits);
       return *result;
     }
 
-    double readFloat() {
+    template <typename FloatType>
+    FloatType readFloat() {
       int32_t bits = 0;
       if (bufferEnd - bufferPointer >= 4) {
         if (isLittleEndian) {
@@ -440,20 +427,24 @@ namespace orc {
         }
       }
       float* result = reinterpret_cast<float*>(&bits);
-      return static_cast<double>(*result);
+      if (!result) {
+        std::cerr << "read float empty." << std::endl;
+      }
+      return static_cast<FloatType>(*result);
     }
   };
 
-  template <TypeKind columnKind, bool isLittleEndian>
-  DoubleColumnReader<columnKind, isLittleEndian>::DoubleColumnReader(const Type& type,
-                                                                     StripeStreams& stripe)
+  template <TypeKind columnKind, bool isLittleEndian, typename ValueType, typename BatchType>
+  DoubleColumnReader<columnKind, isLittleEndian, ValueType, BatchType>::DoubleColumnReader(
+      const Type& type, StripeStreams& stripe)
       : ColumnReader(type, stripe), bufferPointer(nullptr), bufferEnd(nullptr) {
     inputStream = stripe.getStream(columnId, proto::Stream_Kind_DATA, true);
     if (inputStream == nullptr) throw ParseError("DATA stream not found in Double column");
   }
 
-  template <TypeKind columnKind, bool isLittleEndian>
-  uint64_t DoubleColumnReader<columnKind, isLittleEndian>::skip(uint64_t numValues) {
+  template <TypeKind columnKind, bool isLittleEndian, typename ValueType, typename BatchType>
+  uint64_t DoubleColumnReader<columnKind, isLittleEndian, ValueType, BatchType>::skip(
+      uint64_t numValues) {
     numValues = ColumnReader::skip(numValues);
 
     if (static_cast<size_t>(bufferEnd - bufferPointer) >= bytesPerValue * numValues) {
@@ -474,31 +465,32 @@ namespace orc {
     return numValues;
   }
 
-  template <TypeKind columnKind, bool isLittleEndian>
-  void DoubleColumnReader<columnKind, isLittleEndian>::next(ColumnVectorBatch& rowBatch,
-                                                            uint64_t numValues, char* notNull) {
+  template <TypeKind columnKind, bool isLittleEndian, typename ValueType, typename BatchType>
+  void DoubleColumnReader<columnKind, isLittleEndian, ValueType, BatchType>::next(
+      ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull) {
     ColumnReader::next(rowBatch, numValues, notNull);
     // update the notNull from the parent class
     notNull = rowBatch.hasNulls ? rowBatch.notNull.data() : nullptr;
-    double* outArray = dynamic_cast<DoubleVectorBatch&>(rowBatch).data.data();
+    ValueType* outArray =
+        reinterpret_cast<ValueType*>(dynamic_cast<BatchType&>(rowBatch).data.data());
 
     if (columnKind == FLOAT) {
       if (notNull) {
         for (size_t i = 0; i < numValues; ++i) {
           if (notNull[i]) {
-            outArray[i] = readFloat();
+            outArray[i] = readFloat<ValueType>();
           }
         }
       } else {
         for (size_t i = 0; i < numValues; ++i) {
-          outArray[i] = readFloat();
+          outArray[i] = readFloat<ValueType>();
         }
       }
     } else {
       if (notNull) {
         for (size_t i = 0; i < numValues; ++i) {
           if (notNull[i]) {
-            outArray[i] = readDouble();
+            outArray[i] = readDouble<ValueType>();
           }
         }
       } else {
@@ -513,14 +505,14 @@ namespace orc {
           bufferPointer += bufferBytes;
         }
         for (size_t i = bufferNum; i < numValues; ++i) {
-          outArray[i] = readDouble();
+          outArray[i] = readDouble<ValueType>();
         }
       }
     }
   }
 
-  template <TypeKind columnKind, bool isLittleEndian>
-  void DoubleColumnReader<columnKind, isLittleEndian>::seekToRowGroup(
+  template <TypeKind columnKind, bool isLittleEndian, typename ValueType, typename BatchType>
+  void DoubleColumnReader<columnKind, isLittleEndian, ValueType, BatchType>::seekToRowGroup(
       std::unordered_map<uint64_t, PositionProvider>& positions) {
     ColumnReader::seekToRowGroup(positions);
     inputStream->seek(positions.at(columnId));
@@ -830,7 +822,7 @@ namespace orc {
     std::vector<std::unique_ptr<ColumnReader>> children;
 
    public:
-    StructColumnReader(const Type& type, StripeStreams& stipe);
+    StructColumnReader(const Type& type, StripeStreams& stipe, bool useTightNumericVector = false);
 
     uint64_t skip(uint64_t numValues) override;
 
@@ -845,7 +837,8 @@ namespace orc {
     void nextInternal(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull);
   };
 
-  StructColumnReader::StructColumnReader(const Type& type, StripeStreams& stripe)
+  StructColumnReader::StructColumnReader(const Type& type, StripeStreams& stripe,
+                                         bool useTightNumericVector)
       : ColumnReader(type, stripe) {
     // count the number of selected sub-columns
     const std::vector<bool> selectedColumns = stripe.getSelectedColumns();
@@ -854,7 +847,7 @@ namespace orc {
         for (unsigned int i = 0; i < type.getSubtypeCount(); ++i) {
           const Type& child = *type.getSubtype(i);
           if (selectedColumns[static_cast<uint64_t>(child.getColumnId())]) {
-            children.push_back(buildReader(child, stripe));
+            children.push_back(buildReader(child, stripe, useTightNumericVector));
           }
         }
         break;
@@ -914,7 +907,7 @@ namespace orc {
     std::unique_ptr<RleDecoder> rle;
 
    public:
-    ListColumnReader(const Type& type, StripeStreams& stipe);
+    ListColumnReader(const Type& type, StripeStreams& stipe, bool useTightNumericVector = false);
     ~ListColumnReader() override;
 
     uint64_t skip(uint64_t numValues) override;
@@ -930,7 +923,8 @@ namespace orc {
     void nextInternal(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull);
   };
 
-  ListColumnReader::ListColumnReader(const Type& type, StripeStreams& stripe)
+  ListColumnReader::ListColumnReader(const Type& type, StripeStreams& stripe,
+                                     bool useTightNumericVector)
       : ColumnReader(type, stripe) {
     // count the number of selected sub-columns
     const std::vector<bool> selectedColumns = stripe.getSelectedColumns();
@@ -941,7 +935,7 @@ namespace orc {
     rle = createRleDecoder(std::move(stream), false, vers, memoryPool, metrics);
     const Type& childType = *type.getSubtype(0);
     if (selectedColumns[static_cast<uint64_t>(childType.getColumnId())]) {
-      child = buildReader(childType, stripe);
+      child = buildReader(childType, stripe, useTightNumericVector);
     }
   }
 
@@ -1033,7 +1027,7 @@ namespace orc {
     std::unique_ptr<RleDecoder> rle;
 
    public:
-    MapColumnReader(const Type& type, StripeStreams& stipe);
+    MapColumnReader(const Type& type, StripeStreams& stipe, bool useTightNumericVector = false);
     ~MapColumnReader() override;
 
     uint64_t skip(uint64_t numValues) override;
@@ -1049,7 +1043,8 @@ namespace orc {
     void nextInternal(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull);
   };
 
-  MapColumnReader::MapColumnReader(const Type& type, StripeStreams& stripe)
+  MapColumnReader::MapColumnReader(const Type& type, StripeStreams& stripe,
+                                   bool useTightNumericVector)
       : ColumnReader(type, stripe) {
     // Determine if the key and/or value columns are selected
     const std::vector<bool> selectedColumns = stripe.getSelectedColumns();
@@ -1060,11 +1055,11 @@ namespace orc {
     rle = createRleDecoder(std::move(stream), false, vers, memoryPool, metrics);
     const Type& keyType = *type.getSubtype(0);
     if (selectedColumns[static_cast<uint64_t>(keyType.getColumnId())]) {
-      keyReader = buildReader(keyType, stripe);
+      keyReader = buildReader(keyType, stripe, useTightNumericVector);
     }
     const Type& elementType = *type.getSubtype(1);
     if (selectedColumns[static_cast<uint64_t>(elementType.getColumnId())]) {
-      elementReader = buildReader(elementType, stripe);
+      elementReader = buildReader(elementType, stripe, useTightNumericVector);
     }
   }
 
@@ -1174,7 +1169,7 @@ namespace orc {
     uint64_t numChildren;
 
    public:
-    UnionColumnReader(const Type& type, StripeStreams& stipe);
+    UnionColumnReader(const Type& type, StripeStreams& stipe, bool useTightNumericVector = false);
 
     uint64_t skip(uint64_t numValues) override;
 
@@ -1189,7 +1184,8 @@ namespace orc {
     void nextInternal(ColumnVectorBatch& rowBatch, uint64_t numValues, char* notNull);
   };
 
-  UnionColumnReader::UnionColumnReader(const Type& type, StripeStreams& stripe)
+  UnionColumnReader::UnionColumnReader(const Type& type, StripeStreams& stripe,
+                                       bool useTightNumericVector)
       : ColumnReader(type, stripe) {
     numChildren = type.getSubtypeCount();
     childrenReader.resize(numChildren);
@@ -1204,7 +1200,7 @@ namespace orc {
     for (unsigned int i = 0; i < numChildren; ++i) {
       const Type& child = *type.getSubtype(i);
       if (selectedColumns[static_cast<size_t>(child.getColumnId())]) {
-        childrenReader[i] = buildReader(child, stripe);
+        childrenReader[i] = buildReader(child, stripe, useTightNumericVector);
       }
     }
   }
@@ -1696,13 +1692,25 @@ namespace orc {
   /**
    * Create a reader for the given stripe.
    */
-  std::unique_ptr<ColumnReader> buildReader(const Type& type, StripeStreams& stripe) {
+  std::unique_ptr<ColumnReader> buildReader(const Type& type, StripeStreams& stripe,
+                                            bool useTightNumericVector) {
     switch (static_cast<int64_t>(type.getKind())) {
-      case DATE:
-      case INT:
+      case SHORT: {
+        if (useTightNumericVector) {
+          return std::unique_ptr<ColumnReader>(
+              new IntegerColumnReader<ShortVectorBatch>(type, stripe));
+        }
+      }
+      case INT: {
+        if (useTightNumericVector) {
+          return std::unique_ptr<ColumnReader>(
+              new IntegerColumnReader<IntVectorBatch>(type, stripe));
+        }
+      }
       case LONG:
-      case SHORT:
-        return std::unique_ptr<ColumnReader>(new IntegerColumnReader(type, stripe));
+      case DATE:
+        return std::unique_ptr<ColumnReader>(
+            new IntegerColumnReader<LongVectorBatch>(type, stripe));
       case BINARY:
       case CHAR:
       case STRING:
@@ -1722,32 +1730,51 @@ namespace orc {
         return std::unique_ptr<ColumnReader>(new BooleanColumnReader(type, stripe));
 
       case BYTE:
-        return std::unique_ptr<ColumnReader>(new ByteColumnReader(type, stripe));
+        if (useTightNumericVector) {
+          return std::unique_ptr<ColumnReader>(new ByteColumnReader<ByteVectorBatch>(type, stripe));
+        }
+        return std::unique_ptr<ColumnReader>(new ByteColumnReader<LongVectorBatch>(type, stripe));
 
       case LIST:
-        return std::unique_ptr<ColumnReader>(new ListColumnReader(type, stripe));
+        return std::unique_ptr<ColumnReader>(
+            new ListColumnReader(type, stripe, useTightNumericVector));
 
       case MAP:
-        return std::unique_ptr<ColumnReader>(new MapColumnReader(type, stripe));
+        return std::unique_ptr<ColumnReader>(
+            new MapColumnReader(type, stripe, useTightNumericVector));
 
       case UNION:
-        return std::unique_ptr<ColumnReader>(new UnionColumnReader(type, stripe));
+        return std::unique_ptr<ColumnReader>(
+            new UnionColumnReader(type, stripe, useTightNumericVector));
 
       case STRUCT:
-        return std::unique_ptr<ColumnReader>(new StructColumnReader(type, stripe));
+        return std::unique_ptr<ColumnReader>(
+            new StructColumnReader(type, stripe, useTightNumericVector));
 
-      case FLOAT:
-        if (isLittleEndian()) {
-          return std::unique_ptr<ColumnReader>(new DoubleColumnReader<FLOAT, true>(type, stripe));
+      case FLOAT: {
+        if (useTightNumericVector) {
+          if (isLittleEndian()) {
+            return std::unique_ptr<ColumnReader>(
+                new DoubleColumnReader<FLOAT, true, float, FloatVectorBatch>(type, stripe));
+          }
+          return std::unique_ptr<ColumnReader>(
+              new DoubleColumnReader<FLOAT, false, float, FloatVectorBatch>(type, stripe));
         }
-        return std::unique_ptr<ColumnReader>(new DoubleColumnReader<FLOAT, false>(type, stripe));
-
-      case DOUBLE:
         if (isLittleEndian()) {
-          return std::unique_ptr<ColumnReader>(new DoubleColumnReader<DOUBLE, true>(type, stripe));
+          return std::unique_ptr<ColumnReader>(
+              new DoubleColumnReader<FLOAT, true, double, DoubleVectorBatch>(type, stripe));
         }
-        return std::unique_ptr<ColumnReader>(new DoubleColumnReader<DOUBLE, false>(type, stripe));
-
+        return std::unique_ptr<ColumnReader>(
+            new DoubleColumnReader<FLOAT, false, double, DoubleVectorBatch>(type, stripe));
+      }
+      case DOUBLE: {
+        if (isLittleEndian()) {
+          return std::unique_ptr<ColumnReader>(
+              new DoubleColumnReader<DOUBLE, true, double, DoubleVectorBatch>(type, stripe));
+        }
+        return std::unique_ptr<ColumnReader>(
+            new DoubleColumnReader<DOUBLE, false, double, DoubleVectorBatch>(type, stripe));
+      }
       case TIMESTAMP:
         return std::unique_ptr<ColumnReader>(new TimestampColumnReader(type, stripe, false));
 

@@ -279,16 +279,37 @@ namespace orc {
   std::unique_ptr<ColumnVectorBatch> TypeImpl::createRowBatch(uint64_t capacity,
                                                               MemoryPool& memoryPool,
                                                               bool encoded) const {
+    return createRowBatch(capacity, memoryPool, encoded, false);
+  }
+
+  std::unique_ptr<ColumnVectorBatch> TypeImpl::createRowBatch(uint64_t capacity,
+                                                              MemoryPool& memoryPool, bool encoded,
+                                                              bool useTightNumericVector) const {
     switch (static_cast<int64_t>(kind)) {
       case BOOLEAN:
-      case BYTE:
-      case SHORT:
-      case INT:
+      case BYTE: {
+        if (useTightNumericVector) {
+          return std::unique_ptr<ColumnVectorBatch>(new ByteVectorBatch(capacity, memoryPool));
+        }
+      }
+      case SHORT: {
+        if (useTightNumericVector) {
+          return std::unique_ptr<ColumnVectorBatch>(new ShortVectorBatch(capacity, memoryPool));
+        }
+      }
+      case INT: {
+        if (useTightNumericVector) {
+          return std::unique_ptr<ColumnVectorBatch>(new IntVectorBatch(capacity, memoryPool));
+        }
+      }
       case LONG:
       case DATE:
         return std::unique_ptr<ColumnVectorBatch>(new LongVectorBatch(capacity, memoryPool));
 
       case FLOAT:
+        if (useTightNumericVector) {
+          return std::unique_ptr<ColumnVectorBatch>(new FloatVectorBatch(capacity, memoryPool));
+        }
       case DOUBLE:
         return std::unique_ptr<ColumnVectorBatch>(new DoubleVectorBatch(capacity, memoryPool));
 
@@ -311,7 +332,9 @@ namespace orc {
             std::unique_ptr<ColumnVectorBatch>(result);
         for (uint64_t i = 0; i < getSubtypeCount(); ++i) {
           result->fields.push_back(
-              getSubtype(i)->createRowBatch(capacity, memoryPool, encoded).release());
+              getSubtype(i)
+                  ->createRowBatch(capacity, memoryPool, encoded, useTightNumericVector)
+                  .release());
         }
         return return_value;
       }
@@ -321,7 +344,8 @@ namespace orc {
         std::unique_ptr<ColumnVectorBatch> return_value =
             std::unique_ptr<ColumnVectorBatch>(result);
         if (getSubtype(0) != nullptr) {
-          result->elements = getSubtype(0)->createRowBatch(capacity, memoryPool, encoded);
+          result->elements =
+              getSubtype(0)->createRowBatch(capacity, memoryPool, encoded, useTightNumericVector);
         }
         return return_value;
       }
@@ -331,10 +355,12 @@ namespace orc {
         std::unique_ptr<ColumnVectorBatch> return_value =
             std::unique_ptr<ColumnVectorBatch>(result);
         if (getSubtype(0) != nullptr) {
-          result->keys = getSubtype(0)->createRowBatch(capacity, memoryPool, encoded);
+          result->keys =
+              getSubtype(0)->createRowBatch(capacity, memoryPool, encoded, useTightNumericVector);
         }
         if (getSubtype(1) != nullptr) {
-          result->elements = getSubtype(1)->createRowBatch(capacity, memoryPool, encoded);
+          result->elements =
+              getSubtype(1)->createRowBatch(capacity, memoryPool, encoded, useTightNumericVector);
         }
         return return_value;
       }
@@ -354,7 +380,9 @@ namespace orc {
             std::unique_ptr<ColumnVectorBatch>(result);
         for (uint64_t i = 0; i < getSubtypeCount(); ++i) {
           result->children.push_back(
-              getSubtype(i)->createRowBatch(capacity, memoryPool, encoded).release());
+              getSubtype(i)
+                  ->createRowBatch(capacity, memoryPool, encoded, useTightNumericVector)
+                  .release());
         }
         return return_value;
       }
