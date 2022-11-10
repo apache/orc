@@ -112,7 +112,7 @@ namespace orc {
 
     uint64_t getMemoryUsage() {
       return ColumnVectorBatch::getMemoryUsage() +
-             static_cast<uint64_t>(data.capacity() * sizeof(int64_t));
+             static_cast<uint64_t>(data.capacity() * sizeof(ValueType));
     }
 
     DataBuffer<ValueType> data;
@@ -152,13 +152,13 @@ namespace orc {
   }
 
   template <typename FloatType>
-  struct BaseDoubleVectorBatch : public ColumnVectorBatch {
-    BaseDoubleVectorBatch(uint64_t cap, MemoryPool& pool)
+  struct FloatingVectorBatch : public ColumnVectorBatch {
+    FloatingVectorBatch(uint64_t cap, MemoryPool& pool)
         : ColumnVectorBatch(cap, pool), data(pool, cap) {
       // PASS
     }
 
-    virtual ~BaseDoubleVectorBatch() = default;
+    virtual ~FloatingVectorBatch() = default;
 
     inline std::string toString() const;
 
@@ -181,8 +181,8 @@ namespace orc {
     DataBuffer<FloatType> data;
   };
 
-  using DoubleVectorBatch = BaseDoubleVectorBatch<double>;
-  using FloatVectorBatch = BaseDoubleVectorBatch<float>;
+  using DoubleVectorBatch = FloatingVectorBatch<double>;
+  using FloatVectorBatch = FloatingVectorBatch<float>;
 
   template <>
   inline std::string DoubleVectorBatch::toString() const {

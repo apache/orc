@@ -26,7 +26,7 @@
 #include "orc/Exceptions.hh"
 #include "orc/OrcFile.hh"
 
-// #include "Adaptor.hh"
+//#include "Adaptor.hh"
 #include "wrap/orc-proto-wrapper.hh"
 
 void printStripeInformation(std::ostream& out, uint64_t index, uint64_t columns,

@@ -116,20 +116,18 @@ namespace orc {
   }
 
   /**
-   * Expand an array of bytes in place to the corresponding array of longs.
+   * Expand an array of bytes in place to the corresponding array of longs/.
    * Has to work backwards so that they data isn't clobbered during the
    * expansion.
    * @param buffer the array of chars and array of longs that need to be
    *        expanded
    * @param numValues the number of bytes to convert to longs
    */
-  void expandBytesToLongs(int64_t* buffer, uint64_t numValues) {
-    for (size_t i = numValues - 1; i < numValues; --i) {
-      buffer[i] = reinterpret_cast<char*>(buffer)[i];
+  template <typename T>
+  void expandBytesToIntegers(T* buffer, uint64_t numValues) {
+    if (sizeof(T) == sizeof(char)) {
+      return;
     }
-  }
-
-  void expandBytesToLongs(int8_t* buffer, uint64_t numValues) {
     for (size_t i = numValues - 1; i < numValues; --i) {
       buffer[i] = reinterpret_cast<char*>(buffer)[i];
     }
@@ -175,7 +173,7 @@ namespace orc {
     int64_t* ptr = dynamic_cast<LongVectorBatch&>(rowBatch).data.data();
     rle->next(reinterpret_cast<char*>(ptr), numValues,
               rowBatch.hasNulls ? rowBatch.notNull.data() : nullptr);
-    expandBytesToLongs(ptr, numValues);
+    expandBytesToIntegers(ptr, numValues);
   }
 
   void BooleanColumnReader::seekToRowGroup(
@@ -212,7 +210,7 @@ namespace orc {
       auto* ptr = dynamic_cast<BatchType&>(rowBatch).data.data();
       rle->next(reinterpret_cast<char*>(ptr), numValues,
                 rowBatch.hasNulls ? rowBatch.notNull.data() : nullptr);
-      expandBytesToLongs(ptr, numValues);
+      expandBytesToIntegers(ptr, numValues);
     }
 
     void seekToRowGroup(std::unordered_map<uint64_t, PositionProvider>& positions) override {
@@ -474,7 +472,7 @@ namespace orc {
     ValueType* outArray =
         reinterpret_cast<ValueType*>(dynamic_cast<BatchType&>(rowBatch).data.data());
 
-    if (columnKind == FLOAT) {
+    if constexpr (columnKind == FLOAT) {
       if (notNull) {
         for (size_t i = 0; i < numValues; ++i) {
           if (notNull[i]) {
