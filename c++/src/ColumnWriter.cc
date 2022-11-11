@@ -419,84 +419,18 @@ namespace orc {
   class IntegerColumnWriter : public ColumnWriter {
    public:
     IntegerColumnWriter(const Type& type, const StreamsFactory& factory,
-                        const WriterOptions& options)
-        : ColumnWriter(type, factory, options), rleVersion(options.getRleVersion()) {
-      std::unique_ptr<BufferedOutputStream> dataStream =
-          factory.createStream(proto::Stream_Kind_DATA);
-      rleEncoder = createRleEncoder(std::move(dataStream), true, rleVersion, memPool,
-                                    options.getAlignedBitpacking());
-
-      if (enableIndex) {
-        recordPosition();
-      }
-    }
+                        const WriterOptions& options);
 
     virtual void add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
-                     const char* incomingMask) override {
-      const BatchType* intBatch = dynamic_cast<const BatchType*>(&rowBatch);
-      if (intBatch == nullptr) {
-        throw InvalidArgument("Failed to cast to LongVectorBatch");
-      }
-      IntegerColumnStatisticsImpl* intStats =
-          dynamic_cast<IntegerColumnStatisticsImpl*>(colIndexStatistics.get());
-      if (intStats == nullptr) {
-        throw InvalidArgument("Failed to cast to IntegerColumnStatisticsImpl");
-      }
+                     const char* incomingMask) override;
 
-      ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
+    virtual void flush(std::vector<proto::Stream>& streams) override;
 
-      const auto* data = intBatch->data.data() + offset;
-      const char* notNull = intBatch->hasNulls ? intBatch->notNull.data() + offset : nullptr;
+    virtual uint64_t getEstimatedSize() const override;
 
-      rleEncoder->add(data, numValues, notNull);
+    virtual void getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const override;
 
-      // update stats
-      uint64_t count = 0;
-      for (uint64_t i = 0; i < numValues; ++i) {
-        if (notNull == nullptr || notNull[i]) {
-          ++count;
-          if (enableBloomFilter) {
-            bloomFilter->addLong(static_cast<int64_t>(data[i]));
-          }
-          intStats->update(static_cast<int64_t>(data[i]), 1);
-        }
-      }
-      intStats->increase(count);
-      if (count < numValues) {
-        intStats->setHasNull(true);
-      }
-    }
-
-    virtual void flush(std::vector<proto::Stream>& streams) override {
-      ColumnWriter::flush(streams);
-
-      proto::Stream stream;
-      stream.set_kind(proto::Stream_Kind_DATA);
-      stream.set_column(static_cast<uint32_t>(columnId));
-      stream.set_length(rleEncoder->flush());
-      streams.push_back(stream);
-    }
-
-    virtual uint64_t getEstimatedSize() const override {
-      uint64_t size = ColumnWriter::getEstimatedSize();
-      size += rleEncoder->getBufferSize();
-      return size;
-    }
-
-    virtual void getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const override {
-      proto::ColumnEncoding encoding;
-      encoding.set_kind(RleVersionMapper(rleVersion));
-      encoding.set_dictionarysize(0);
-      if (enableBloomFilter) {
-        encoding.set_bloomencoding(BloomFilterVersion::UTF8);
-      }
-      encodings.push_back(encoding);
-    }
-
-    virtual void recordPosition() const override {
-      ColumnWriter::recordPosition();
-      rleEncoder->recordPosition(rowIndexPosition.get());
-    }
+    virtual void recordPosition() const override;
 
    protected:
     std::unique_ptr<RleEncoder> rleEncoder;
@@ -504,6 +438,94 @@ namespace orc {
    private:
     RleVersion rleVersion;
   };
+
+  template <typename BatchType>
+  IntegerColumnWriter<BatchType>::IntegerColumnWriter(const Type& type,
+                                                      const StreamsFactory& factory,
+                                                      const WriterOptions& options)
+      : ColumnWriter(type, factory, options), rleVersion(options.getRleVersion()) {
+    std::unique_ptr<BufferedOutputStream> dataStream =
+        factory.createStream(proto::Stream_Kind_DATA);
+    rleEncoder = createRleEncoder(std::move(dataStream), true, rleVersion, memPool,
+                                  options.getAlignedBitpacking());
+
+    if (enableIndex) {
+      recordPosition();
+    }
+  }
+
+  template <typename BatchType>
+  void IntegerColumnWriter<BatchType>::add(ColumnVectorBatch& rowBatch, uint64_t offset,
+                                           uint64_t numValues, const char* incomingMask) {
+    const BatchType* intBatch = dynamic_cast<const BatchType*>(&rowBatch);
+    if (intBatch == nullptr) {
+      throw InvalidArgument("Failed to cast to IntegerVectorBatch");
+    }
+    IntegerColumnStatisticsImpl* intStats =
+        dynamic_cast<IntegerColumnStatisticsImpl*>(colIndexStatistics.get());
+    if (intStats == nullptr) {
+      throw InvalidArgument("Failed to cast to IntegerColumnStatisticsImpl");
+    }
+
+    ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
+
+    const auto* data = intBatch->data.data() + offset;
+    const char* notNull = intBatch->hasNulls ? intBatch->notNull.data() + offset : nullptr;
+
+    rleEncoder->add(data, numValues, notNull);
+
+    // update stats
+    uint64_t count = 0;
+    for (uint64_t i = 0; i < numValues; ++i) {
+      if (notNull == nullptr || notNull[i]) {
+        ++count;
+        if (enableBloomFilter) {
+          bloomFilter->addLong(static_cast<int64_t>(data[i]));
+        }
+        intStats->update(static_cast<int64_t>(data[i]), 1);
+      }
+    }
+    intStats->increase(count);
+    if (count < numValues) {
+      intStats->setHasNull(true);
+    }
+  }
+
+  template <typename BatchType>
+  void IntegerColumnWriter<BatchType>::flush(std::vector<proto::Stream>& streams) {
+    ColumnWriter::flush(streams);
+
+    proto::Stream stream;
+    stream.set_kind(proto::Stream_Kind_DATA);
+    stream.set_column(static_cast<uint32_t>(columnId));
+    stream.set_length(rleEncoder->flush());
+    streams.push_back(stream);
+  }
+
+  template <typename BatchType>
+  uint64_t IntegerColumnWriter<BatchType>::getEstimatedSize() const {
+    uint64_t size = ColumnWriter::getEstimatedSize();
+    size += rleEncoder->getBufferSize();
+    return size;
+  }
+
+  template <typename BatchType>
+  void IntegerColumnWriter<BatchType>::getColumnEncoding(
+      std::vector<proto::ColumnEncoding>& encodings) const {
+    proto::ColumnEncoding encoding;
+    encoding.set_kind(RleVersionMapper(rleVersion));
+    encoding.set_dictionarysize(0);
+    if (enableBloomFilter) {
+      encoding.set_bloomencoding(BloomFilterVersion::UTF8);
+    }
+    encodings.push_back(encoding);
+  }
+
+  template <typename BatchType>
+  void IntegerColumnWriter<BatchType>::recordPosition() const {
+    ColumnWriter::recordPosition();
+    rleEncoder->recordPosition(rowIndexPosition.get());
+  }
 
   template <typename BatchType>
   class ByteColumnWriter : public ColumnWriter {
@@ -543,7 +565,7 @@ namespace orc {
                                         uint64_t numValues, const char* incomingMask) {
     BatchType* byteBatch = dynamic_cast<BatchType*>(&rowBatch);
     if (byteBatch == nullptr) {
-      throw InvalidArgument("Failed to cast to LongVectorBatch");
+      throw InvalidArgument("Failed to cast to IntegerVectorBatch");
     }
     IntegerColumnStatisticsImpl* intStats =
         dynamic_cast<IntegerColumnStatisticsImpl*>(colIndexStatistics.get());
@@ -771,7 +793,7 @@ namespace orc {
                                                        const char* incomingMask) {
     const BatchType* dblBatch = dynamic_cast<const BatchType*>(&rowBatch);
     if (dblBatch == nullptr) {
-      throw InvalidArgument("Failed to cast to DoubleVectorBatch");
+      throw InvalidArgument("Failed to cast to FloatingVectorBatch");
     }
     DoubleColumnStatisticsImpl* doubleStats =
         dynamic_cast<DoubleColumnStatisticsImpl*>(colIndexStatistics.get());

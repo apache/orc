@@ -1878,7 +1878,7 @@ namespace orc {
         createWriter(stripeSize, compressionBlockSize, CompressionKind_ZLIB, *type, pool,
                      &memStream, fileVersion, 0, "GMT", true);
     // start from here/
-    std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount);
+    std::unique_ptr<ColumnVectorBatch> batch = writer->createRowBatch(rowCount / 2);
     StructVectorBatch* structBatch = dynamic_cast<StructVectorBatch*>(batch.get());
     DoubleVectorBatch* doubleBatch = dynamic_cast<DoubleVectorBatch*>(structBatch->fields[0]);
     FloatVectorBatch* floatBatch = dynamic_cast<FloatVectorBatch*>(structBatch->fields[1]);
@@ -1886,8 +1886,23 @@ namespace orc {
     ShortVectorBatch* shortBatch = dynamic_cast<ShortVectorBatch*>(structBatch->fields[3]);
     ByteVectorBatch* byteBatch = dynamic_cast<ByteVectorBatch*>(structBatch->fields[4]);
     LongVectorBatch* longBatch = dynamic_cast<LongVectorBatch*>(structBatch->fields[5]);
+    structBatch->resize(rowCount);
+    doubleBatch->resize(rowCount);
+    floatBatch->resize(rowCount);
+    intBatch->resize(rowCount);
+    shortBatch->resize(rowCount);
+    byteBatch->resize(rowCount);
+    longBatch->resize(rowCount);
 
     for (uint64_t i = 0; i < rowCount; ++i) {
+      structBatch->notNull[i] = 1;
+      doubleBatch->notNull[i] = 1;
+      floatBatch->notNull[i] = 1;
+      intBatch->notNull[i] = 1;
+      shortBatch->notNull[i] = 1;
+      byteBatch->notNull[i] = 1;
+      longBatch->notNull[i] = 1;
+
       doubleBatch->data[i] = data[i];
       floatBatch->data[i] = static_cast<float>(data[i]);
       intBatch->data[i] = static_cast<int32_t>(i);
