@@ -72,6 +72,10 @@ namespace orc {
     virtual ORC_UNIQUE_PTR<ColumnVectorBatch> createRowBatch(uint64_t size, MemoryPool& pool,
                                                              bool encoded = false) const = 0;
 
+    virtual ORC_UNIQUE_PTR<ColumnVectorBatch> createRowBatch(
+        uint64_t size, MemoryPool& pool, bool encoded = false,
+        bool useTightNumericVector = false) const = 0;
+
     /**
      * Add a new field to a struct type.
      * @param fieldName the name of the new field

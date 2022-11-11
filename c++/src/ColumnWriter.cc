@@ -415,6 +415,7 @@ namespace orc {
     }
   }
 
+  template <typename BatchType>
   class IntegerColumnWriter : public ColumnWriter {
    public:
     IntegerColumnWriter(const Type& type, const StreamsFactory& factory,
@@ -438,8 +439,10 @@ namespace orc {
     RleVersion rleVersion;
   };
 
-  IntegerColumnWriter::IntegerColumnWriter(const Type& type, const StreamsFactory& factory,
-                                           const WriterOptions& options)
+  template <typename BatchType>
+  IntegerColumnWriter<BatchType>::IntegerColumnWriter(const Type& type,
+                                                      const StreamsFactory& factory,
+                                                      const WriterOptions& options)
       : ColumnWriter(type, factory, options), rleVersion(options.getRleVersion()) {
     std::unique_ptr<BufferedOutputStream> dataStream =
         factory.createStream(proto::Stream_Kind_DATA);
@@ -451,11 +454,12 @@ namespace orc {
     }
   }
 
-  void IntegerColumnWriter::add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
-                                const char* incomingMask) {
-    const LongVectorBatch* longBatch = dynamic_cast<const LongVectorBatch*>(&rowBatch);
-    if (longBatch == nullptr) {
-      throw InvalidArgument("Failed to cast to LongVectorBatch");
+  template <typename BatchType>
+  void IntegerColumnWriter<BatchType>::add(ColumnVectorBatch& rowBatch, uint64_t offset,
+                                           uint64_t numValues, const char* incomingMask) {
+    const BatchType* intBatch = dynamic_cast<const BatchType*>(&rowBatch);
+    if (intBatch == nullptr) {
+      throw InvalidArgument("Failed to cast to IntegerVectorBatch");
     }
     IntegerColumnStatisticsImpl* intStats =
         dynamic_cast<IntegerColumnStatisticsImpl*>(colIndexStatistics.get());
@@ -465,8 +469,8 @@ namespace orc {
 
     ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
-    const int64_t* data = longBatch->data.data() + offset;
-    const char* notNull = longBatch->hasNulls ? longBatch->notNull.data() + offset : nullptr;
+    const auto* data = intBatch->data.data() + offset;
+    const char* notNull = intBatch->hasNulls ? intBatch->notNull.data() + offset : nullptr;
 
     rleEncoder->add(data, numValues, notNull);
 
@@ -476,9 +480,9 @@ namespace orc {
       if (notNull == nullptr || notNull[i]) {
         ++count;
         if (enableBloomFilter) {
-          bloomFilter->addLong(data[i]);
+          bloomFilter->addLong(static_cast<int64_t>(data[i]));
         }
-        intStats->update(data[i], 1);
+        intStats->update(static_cast<int64_t>(data[i]), 1);
       }
     }
     intStats->increase(count);
@@ -487,7 +491,8 @@ namespace orc {
     }
   }
 
-  void IntegerColumnWriter::flush(std::vector<proto::Stream>& streams) {
+  template <typename BatchType>
+  void IntegerColumnWriter<BatchType>::flush(std::vector<proto::Stream>& streams) {
     ColumnWriter::flush(streams);
 
     proto::Stream stream;
@@ -497,13 +502,16 @@ namespace orc {
     streams.push_back(stream);
   }
 
-  uint64_t IntegerColumnWriter::getEstimatedSize() const {
+  template <typename BatchType>
+  uint64_t IntegerColumnWriter<BatchType>::getEstimatedSize() const {
     uint64_t size = ColumnWriter::getEstimatedSize();
     size += rleEncoder->getBufferSize();
     return size;
   }
 
-  void IntegerColumnWriter::getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const {
+  template <typename BatchType>
+  void IntegerColumnWriter<BatchType>::getColumnEncoding(
+      std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
     encoding.set_kind(RleVersionMapper(rleVersion));
     encoding.set_dictionarysize(0);
@@ -513,11 +521,13 @@ namespace orc {
     encodings.push_back(encoding);
   }
 
-  void IntegerColumnWriter::recordPosition() const {
+  template <typename BatchType>
+  void IntegerColumnWriter<BatchType>::recordPosition() const {
     ColumnWriter::recordPosition();
     rleEncoder->recordPosition(rowIndexPosition.get());
   }
 
+  template <typename BatchType>
   class ByteColumnWriter : public ColumnWriter {
    public:
     ByteColumnWriter(const Type& type, const StreamsFactory& factory, const WriterOptions& options);
@@ -537,8 +547,9 @@ namespace orc {
     std::unique_ptr<ByteRleEncoder> byteRleEncoder;
   };
 
-  ByteColumnWriter::ByteColumnWriter(const Type& type, const StreamsFactory& factory,
-                                     const WriterOptions& options)
+  template <typename BatchType>
+  ByteColumnWriter<BatchType>::ByteColumnWriter(const Type& type, const StreamsFactory& factory,
+                                                const WriterOptions& options)
       : ColumnWriter(type, factory, options) {
     std::unique_ptr<BufferedOutputStream> dataStream =
         factory.createStream(proto::Stream_Kind_DATA);
@@ -549,11 +560,12 @@ namespace orc {
     }
   }
 
-  void ByteColumnWriter::add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
-                             const char* incomingMask) {
-    LongVectorBatch* byteBatch = dynamic_cast<LongVectorBatch*>(&rowBatch);
+  template <typename BatchType>
+  void ByteColumnWriter<BatchType>::add(ColumnVectorBatch& rowBatch, uint64_t offset,
+                                        uint64_t numValues, const char* incomingMask) {
+    BatchType* byteBatch = dynamic_cast<BatchType*>(&rowBatch);
     if (byteBatch == nullptr) {
-      throw InvalidArgument("Failed to cast to LongVectorBatch");
+      throw InvalidArgument("Failed to cast to IntegerVectorBatch");
     }
     IntegerColumnStatisticsImpl* intStats =
         dynamic_cast<IntegerColumnStatisticsImpl*>(colIndexStatistics.get());
@@ -563,7 +575,7 @@ namespace orc {
 
     ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
-    int64_t* data = byteBatch->data.data() + offset;
+    auto* data = byteBatch->data.data() + offset;
     const char* notNull = byteBatch->hasNulls ? byteBatch->notNull.data() + offset : nullptr;
 
     char* byteData = reinterpret_cast<char*>(data);
@@ -588,7 +600,8 @@ namespace orc {
     }
   }
 
-  void ByteColumnWriter::flush(std::vector<proto::Stream>& streams) {
+  template <typename BatchType>
+  void ByteColumnWriter<BatchType>::flush(std::vector<proto::Stream>& streams) {
     ColumnWriter::flush(streams);
 
     proto::Stream stream;
@@ -598,13 +611,16 @@ namespace orc {
     streams.push_back(stream);
   }
 
-  uint64_t ByteColumnWriter::getEstimatedSize() const {
+  template <typename BatchType>
+  uint64_t ByteColumnWriter<BatchType>::getEstimatedSize() const {
     uint64_t size = ColumnWriter::getEstimatedSize();
     size += byteRleEncoder->getBufferSize();
     return size;
   }
 
-  void ByteColumnWriter::getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const {
+  template <typename BatchType>
+  void ByteColumnWriter<BatchType>::getColumnEncoding(
+      std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
     encoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
     encoding.set_dictionarysize(0);
@@ -614,7 +630,8 @@ namespace orc {
     encodings.push_back(encoding);
   }
 
-  void ByteColumnWriter::recordPosition() const {
+  template <typename BatchType>
+  void ByteColumnWriter<BatchType>::recordPosition() const {
     ColumnWriter::recordPosition();
     byteRleEncoder->recordPosition(rowIndexPosition.get());
   }
@@ -721,10 +738,11 @@ namespace orc {
     rleEncoder->recordPosition(rowIndexPosition.get());
   }
 
-  class DoubleColumnWriter : public ColumnWriter {
+  template <typename ValueType, typename BatchType>
+  class FloatingColumnWriter : public ColumnWriter {
    public:
-    DoubleColumnWriter(const Type& type, const StreamsFactory& factory,
-                       const WriterOptions& options, bool isFloat);
+    FloatingColumnWriter(const Type& type, const StreamsFactory& factory,
+                         const WriterOptions& options, bool isFloat);
 
     virtual void add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
                      const char* incomingMask) override;
@@ -743,8 +761,11 @@ namespace orc {
     DataBuffer<char> buffer;
   };
 
-  DoubleColumnWriter::DoubleColumnWriter(const Type& type, const StreamsFactory& factory,
-                                         const WriterOptions& options, bool isFloatType)
+  template <typename ValueType, typename BatchType>
+  FloatingColumnWriter<ValueType, BatchType>::FloatingColumnWriter(const Type& type,
+                                                                   const StreamsFactory& factory,
+                                                                   const WriterOptions& options,
+                                                                   bool isFloatType)
       : ColumnWriter(type, factory, options),
         isFloat(isFloatType),
         buffer(*options.getMemoryPool()) {
@@ -766,11 +787,13 @@ namespace orc {
     }
   }
 
-  void DoubleColumnWriter::add(ColumnVectorBatch& rowBatch, uint64_t offset, uint64_t numValues,
-                               const char* incomingMask) {
-    const DoubleVectorBatch* dblBatch = dynamic_cast<const DoubleVectorBatch*>(&rowBatch);
+  template <typename ValueType, typename BatchType>
+  void FloatingColumnWriter<ValueType, BatchType>::add(ColumnVectorBatch& rowBatch, uint64_t offset,
+                                                       uint64_t numValues,
+                                                       const char* incomingMask) {
+    const BatchType* dblBatch = dynamic_cast<const BatchType*>(&rowBatch);
     if (dblBatch == nullptr) {
-      throw InvalidArgument("Failed to cast to DoubleVectorBatch");
+      throw InvalidArgument("Failed to cast to FloatingVectorBatch");
     }
     DoubleColumnStatisticsImpl* doubleStats =
         dynamic_cast<DoubleColumnStatisticsImpl*>(colIndexStatistics.get());
@@ -780,7 +803,7 @@ namespace orc {
 
     ColumnWriter::add(rowBatch, offset, numValues, incomingMask);
 
-    const double* doubleData = dblBatch->data.data() + offset;
+    const ValueType* doubleData = dblBatch->data.data() + offset;
     const char* notNull = dblBatch->hasNulls ? dblBatch->notNull.data() + offset : nullptr;
 
     size_t bytes = isFloat ? 4 : 8;
@@ -791,14 +814,14 @@ namespace orc {
         if (isFloat) {
           encodeFloatNum<float, int32_t>(static_cast<float>(doubleData[i]), data);
         } else {
-          encodeFloatNum<double, int64_t>(doubleData[i], data);
+          encodeFloatNum<double, int64_t>(static_cast<double>(doubleData[i]), data);
         }
         dataStream->write(data, bytes);
         ++count;
         if (enableBloomFilter) {
-          bloomFilter->addDouble(doubleData[i]);
+          bloomFilter->addDouble(static_cast<double>(doubleData[i]));
         }
-        doubleStats->update(doubleData[i]);
+        doubleStats->update(static_cast<double>(doubleData[i]));
       }
     }
     doubleStats->increase(count);
@@ -807,7 +830,8 @@ namespace orc {
     }
   }
 
-  void DoubleColumnWriter::flush(std::vector<proto::Stream>& streams) {
+  template <typename ValueType, typename BatchType>
+  void FloatingColumnWriter<ValueType, BatchType>::flush(std::vector<proto::Stream>& streams) {
     ColumnWriter::flush(streams);
 
     proto::Stream stream;
@@ -817,13 +841,16 @@ namespace orc {
     streams.push_back(stream);
   }
 
-  uint64_t DoubleColumnWriter::getEstimatedSize() const {
+  template <typename ValueType, typename BatchType>
+  uint64_t FloatingColumnWriter<ValueType, BatchType>::getEstimatedSize() const {
     uint64_t size = ColumnWriter::getEstimatedSize();
     size += dataStream->getSize();
     return size;
   }
 
-  void DoubleColumnWriter::getColumnEncoding(std::vector<proto::ColumnEncoding>& encodings) const {
+  template <typename ValueType, typename BatchType>
+  void FloatingColumnWriter<ValueType, BatchType>::getColumnEncoding(
+      std::vector<proto::ColumnEncoding>& encodings) const {
     proto::ColumnEncoding encoding;
     encoding.set_kind(proto::ColumnEncoding_Kind_DIRECT);
     encoding.set_dictionarysize(0);
@@ -833,7 +860,8 @@ namespace orc {
     encodings.push_back(encoding);
   }
 
-  void DoubleColumnWriter::recordPosition() const {
+  template <typename ValueType, typename BatchType>
+  void FloatingColumnWriter<ValueType, BatchType>::recordPosition() const {
     ColumnWriter::recordPosition();
     dataStream->recordPosition(rowIndexPosition.get());
   }
@@ -1740,7 +1768,7 @@ namespace orc {
     nanoRleEncoder->recordPosition(rowIndexPosition.get());
   }
 
-  class DateColumnWriter : public IntegerColumnWriter {
+  class DateColumnWriter : public IntegerColumnWriter<LongVectorBatch> {
    public:
     DateColumnWriter(const Type& type, const StreamsFactory& factory, const WriterOptions& options);
 
@@ -1750,7 +1778,7 @@ namespace orc {
 
   DateColumnWriter::DateColumnWriter(const Type& type, const StreamsFactory& factory,
                                      const WriterOptions& options)
-      : IntegerColumnWriter(type, factory, options) {
+      : IntegerColumnWriter<LongVectorBatch>(type, factory, options) {
     // PASS
   }
 
@@ -2782,18 +2810,38 @@ namespace orc {
     switch (static_cast<int64_t>(type.getKind())) {
       case STRUCT:
         return std::unique_ptr<ColumnWriter>(new StructColumnWriter(type, factory, options));
-      case INT:
-      case LONG:
       case SHORT:
-        return std::unique_ptr<ColumnWriter>(new IntegerColumnWriter(type, factory, options));
+        if (options.getUseTightNumericVector()) {
+          return std::unique_ptr<ColumnWriter>(
+              new IntegerColumnWriter<ShortVectorBatch>(type, factory, options));
+        }
+      case INT:
+        if (options.getUseTightNumericVector()) {
+          return std::unique_ptr<ColumnWriter>(
+              new IntegerColumnWriter<IntVectorBatch>(type, factory, options));
+        }
+      case LONG:
+        return std::unique_ptr<ColumnWriter>(
+            new IntegerColumnWriter<LongVectorBatch>(type, factory, options));
       case BYTE:
-        return std::unique_ptr<ColumnWriter>(new ByteColumnWriter(type, factory, options));
+        if (options.getUseTightNumericVector()) {
+          return std::unique_ptr<ColumnWriter>(
+              new ByteColumnWriter<ByteVectorBatch>(type, factory, options));
+        }
+        return std::unique_ptr<ColumnWriter>(
+            new ByteColumnWriter<LongVectorBatch>(type, factory, options));
       case BOOLEAN:
         return std::unique_ptr<ColumnWriter>(new BooleanColumnWriter(type, factory, options));
       case DOUBLE:
-        return std::unique_ptr<ColumnWriter>(new DoubleColumnWriter(type, factory, options, false));
+        return std::unique_ptr<ColumnWriter>(
+            new FloatingColumnWriter<double, DoubleVectorBatch>(type, factory, options, false));
       case FLOAT:
-        return std::unique_ptr<ColumnWriter>(new DoubleColumnWriter(type, factory, options, true));
+        if (options.getUseTightNumericVector()) {
+          return std::unique_ptr<ColumnWriter>(
+              new FloatingColumnWriter<float, FloatVectorBatch>(type, factory, options, true));
+        }
+        return std::unique_ptr<ColumnWriter>(
+            new FloatingColumnWriter<double, DoubleVectorBatch>(type, factory, options, true));
       case BINARY:
         return std::unique_ptr<ColumnWriter>(new BinaryColumnWriter(type, factory, options));
       case STRING:

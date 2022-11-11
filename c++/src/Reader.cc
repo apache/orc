@@ -263,6 +263,7 @@ namespace orc {
     currentRowInStripe = 0;
     rowsInCurrentStripe = 0;
     numRowGroupsInStripeRange = 0;
+    useTightNumericVector = opts.getUseTightNumericVector();
     uint64_t rowTotal = 0;
 
     firstRowOfStripe.resize(numberOfStripes);
@@ -1090,7 +1091,7 @@ namespace orc {
       StripeStreamsImpl stripeStreams(*this, currentStripe, currentStripeInfo, currentStripeFooter,
                                       currentStripeInfo.offset(), *contents->stream, writerTimezone,
                                       readerTimezone);
-      reader = buildReader(*contents->schema, stripeStreams);
+      reader = buildReader(*contents->schema, stripeStreams, useTightNumericVector);
 
       if (sargsApplier) {
         // move to the 1st selected row group when PPD is enabled.
@@ -1204,7 +1205,8 @@ namespace orc {
   }
 
   std::unique_ptr<ColumnVectorBatch> RowReaderImpl::createRowBatch(uint64_t capacity) const {
-    return getSelectedType().createRowBatch(capacity, *contents->pool, enableEncodedBlock);
+    return getSelectedType().createRowBatch(capacity, *contents->pool, enableEncodedBlock,
+                                            useTightNumericVector);
   }
 
   void ensureOrcFooter(InputStream* stream, DataBuffer<char>* buffer, uint64_t postscriptLength) {

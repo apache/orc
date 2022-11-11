@@ -63,7 +63,14 @@ namespace orc {
     /**
      * Read a number of values into the batch.
      */
+    template <typename T>
+    void next(T* data, uint64_t numValues, const char* notNull);
+
     void next(int64_t* data, uint64_t numValues, const char* notNull) override;
+
+    void next(int32_t* data, uint64_t numValues, const char* notNull) override;
+
+    void next(int16_t* data, uint64_t numValues, const char* notNull) override;
 
    private:
     inline signed char readByte();

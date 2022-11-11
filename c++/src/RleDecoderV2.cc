@@ -438,8 +438,8 @@ namespace orc {
     }
   }
 
-  void RleDecoderV2::next(int64_t* const data, const uint64_t numValues,
-                          const char* const notNull) {
+  template <typename T>
+  void RleDecoderV2::next(T* const data, const uint64_t numValues, const char* const notNull) {
     SCOPED_STOPWATCH(metrics, DecodingLatencyUs, DecodingCall);
     uint64_t nRead = 0;
 
@@ -478,7 +478,20 @@ namespace orc {
     }
   }
 
-  uint64_t RleDecoderV2::nextShortRepeats(int64_t* const data, uint64_t offset, uint64_t numValues,
+  void RleDecoderV2::next(int64_t* data, uint64_t numValues, const char* notNull) {
+    next<int64_t>(data, numValues, notNull);
+  }
+
+  void RleDecoderV2::next(int32_t* data, uint64_t numValues, const char* notNull) {
+    next<int32_t>(data, numValues, notNull);
+  }
+
+  void RleDecoderV2::next(int16_t* data, uint64_t numValues, const char* notNull) {
+    next<int16_t>(data, numValues, notNull);
+  }
+
+  template <typename T>
+  uint64_t RleDecoderV2::nextShortRepeats(T* const data, uint64_t offset, uint64_t numValues,
                                           const char* const notNull) {
     if (runRead == runLength) {
       // extract the number of fixed bytes
@@ -503,13 +516,13 @@ namespace orc {
     if (notNull) {
       for (uint64_t pos = offset; pos < offset + nRead; ++pos) {
         if (notNull[pos]) {
-          data[pos] = literals[0];
+          data[pos] = static_cast<T>(literals[0]);
           ++runRead;
         }
       }
     } else {
       for (uint64_t pos = offset; pos < offset + nRead; ++pos) {
-        data[pos] = literals[0];
+        data[pos] = static_cast<T>(literals[0]);
         ++runRead;
       }
     }
@@ -517,7 +530,8 @@ namespace orc {
     return nRead;
   }
 
-  uint64_t RleDecoderV2::nextDirect(int64_t* const data, uint64_t offset, uint64_t numValues,
+  template <typename T>
+  uint64_t RleDecoderV2::nextDirect(T* const data, uint64_t offset, uint64_t numValues,
                                     const char* const notNull) {
     if (runRead == runLength) {
       // extract the number of fixed bits
@@ -565,7 +579,8 @@ namespace orc {
     *patchIdx = idx;
   }
 
-  uint64_t RleDecoderV2::nextPatched(int64_t* const data, uint64_t offset, uint64_t numValues,
+  template <typename T>
+  uint64_t RleDecoderV2::nextPatched(T* const data, uint64_t offset, uint64_t numValues,
                                      const char* const notNull) {
     if (runRead == runLength) {
       // extract the number of fixed bits
@@ -663,7 +678,8 @@ namespace orc {
     return copyDataFromBuffer(data, offset, numValues, notNull);
   }
 
-  uint64_t RleDecoderV2::nextDelta(int64_t* const data, uint64_t offset, uint64_t numValues,
+  template <typename T>
+  uint64_t RleDecoderV2::nextDelta(T* const data, uint64_t offset, uint64_t numValues,
                                    const char* const notNull) {
     if (runRead == runLength) {
       // extract the number of fixed bits
@@ -727,18 +743,20 @@ namespace orc {
     return copyDataFromBuffer(data, offset, numValues, notNull);
   }
 
-  uint64_t RleDecoderV2::copyDataFromBuffer(int64_t* data, uint64_t offset, uint64_t numValues,
+  template <typename T>
+  uint64_t RleDecoderV2::copyDataFromBuffer(T* data, uint64_t offset, uint64_t numValues,
                                             const char* notNull) {
     uint64_t nRead = std::min(runLength - runRead, numValues);
     if (notNull) {
       for (uint64_t i = offset; i < (offset + nRead); ++i) {
         if (notNull[i]) {
-          data[i] = literals[runRead++];
+          data[i] = static_cast<T>(literals[runRead++]);
         }
       }
     } else {
-      memcpy(data + offset, literals.data() + runRead, nRead * sizeof(int64_t));
-      runRead += nRead;
+      for (uint64_t i = offset; i < (offset + nRead); ++i) {
+        data[i] = static_cast<T>(literals[runRead++]);
+      }
     }
     return nRead;
   }
