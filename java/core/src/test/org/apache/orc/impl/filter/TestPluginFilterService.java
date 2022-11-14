@@ -19,12 +19,13 @@
 package org.apache.orc.impl.filter;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.orc.filter.BatchFilter;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestPluginFilterService {
   private final Configuration conf;
@@ -55,5 +56,25 @@ public class TestPluginFilterService {
   @Test
   public void testMissingFilter() {
     assertTrue(FilterFactory.findPluginFilters("file://db/table11/file1", conf).isEmpty());
+  }
+
+  @Test
+  public void testWhiteListFilter() {
+    conf.set("my.filter.name", "my_str_i_eq");
+    List<BatchFilter> pluginFilters = FilterFactory.findPluginFilters("file://db/table1/file1", conf);
+    // Hit the whitelist.
+    List<String> whiteListHit = new ArrayList<>();
+    whiteListHit.add("org.apache.orc.impl.filter.BatchFilterFactory$BatchFilterImpl");
+    FilterFactory.deleteFilterNotInWhiteList(pluginFilters, whiteListHit);
+    assertEquals(1, pluginFilters.size());
+    // Empty whitelist.
+    List<String> emptyWhiteListNotHit = new ArrayList<>();
+    FilterFactory.deleteFilterNotInWhiteList(pluginFilters, emptyWhiteListNotHit);
+    assertEquals(1, pluginFilters.size());
+    // Not hit the whitelist.
+    List<String> whiteListNotHit = new ArrayList<>();
+    whiteListNotHit.add("abc");
+    FilterFactory.deleteFilterNotInWhiteList(pluginFilters, whiteListNotHit);
+    assertEquals(0, pluginFilters.size());
   }
 }

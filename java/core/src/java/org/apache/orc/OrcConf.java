@@ -197,7 +197,7 @@ public enum OrcConf {
                       "orc.filter.plugin.whitelist",
                       "",
                       "A comma-separated list of whitelist classes. It is used to specify the " +
-                          "className which will be loaded as org.apache.orc.filter.PluginFilterService. " +
+                          "className which will be loaded as PluginFilterService. " +
                           "Classes that not in the list will be ignored."),
 
   WRITE_VARIABLE_LENGTH_BLOCKS("orc.write.variable.length.blocks", null, false,

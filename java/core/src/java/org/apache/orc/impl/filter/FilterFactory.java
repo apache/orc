@@ -72,7 +72,7 @@ public class FilterFactory {
     // 2. Process PluginFilter
     if (opts.allowPluginFilters()) {
       List<BatchFilter> pluginFilters = findPluginFilters(filePath, conf);
-      deleteFilterNotInWhiteList(pluginFilters, opts);
+      deleteFilterNotInWhiteList(pluginFilters, opts.pluginWhiteListFilters());
       if (!pluginFilters.isEmpty()) {
         LOG.debug("Added plugin filters {} to the read", pluginFilters);
         filters.addAll(pluginFilters);
@@ -191,10 +191,10 @@ public class FilterFactory {
    * Delete filter(s) which is not in the whitelist.
    *
    * @param filters fully filter list we load from class path.
-   * @param opts     reader configuration of ORC, can be used to configure the filter whiteList
+   * @param whiteList filter whiteList. The plugin service will not be
+   *                  loaded if it is not in whiteList.
    */
-  static void deleteFilterNotInWhiteList(List<BatchFilter> filters, Reader.Options opts) {
-    List<String> whiteList = opts.pluginWhiteListFilters();
+  static void deleteFilterNotInWhiteList(List<BatchFilter> filters, List<String> whiteList) {
     if (whiteList != null && whiteList.size() > 0) {
       Iterator<BatchFilter> iterator = filters.iterator();
       while (iterator.hasNext()) {
