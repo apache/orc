@@ -20,6 +20,8 @@ package org.apache.orc;
 
 import org.apache.hadoop.conf.Configuration;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -190,6 +192,14 @@ public enum OrcConf {
                       + "determined, they are combined using AND. The order of application is "
                       + "non-deterministic and the filter functionality should not depend on the "
                       + "order of application."),
+
+  PLUGIN_FILTER_WHITELIST("orc.filter.plugin.whitelist",
+                      "orc.filter.plugin.whitelist",
+                      "",
+                      "A comma-separated list of whitelist classes. It is used to specify the " +
+                          "className which will be loaded as org.apache.orc.filter.PluginFilterService. " +
+                          "Classes that not in the list will be ignored."),
+
   WRITE_VARIABLE_LENGTH_BLOCKS("orc.write.variable.length.blocks", null, false,
       "A boolean flag as to whether the ORC writer should write variable length\n"
       + "HDFS blocks."),
@@ -327,6 +337,10 @@ public enum OrcConf {
 
   public String getString(Configuration conf) {
     return getString(null, conf);
+  }
+
+  public List<String> getStringAsList(Configuration conf) {
+    return Arrays.asList(getString(null, conf).split(","));
   }
 
   public void setString(Configuration conf, String value) {

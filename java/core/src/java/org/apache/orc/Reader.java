@@ -24,6 +24,7 @@ import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -234,6 +235,7 @@ public interface Reader extends Closeable {
     private boolean allowSARGToFilter = false;
     private boolean useSelected = false;
     private boolean allowPluginFilters = false;
+    private List<String> pluginWhiteListFilters = null;
     private int minSeekSize = (int) OrcConf.ORC_MIN_DISK_SEEK_SIZE.getDefaultValue();
     private double minSeekSizeTolerance = (double) OrcConf.ORC_MIN_DISK_SEEK_SIZE_TOLERANCE
         .getDefaultValue();
@@ -260,6 +262,7 @@ public interface Reader extends Closeable {
       allowSARGToFilter = OrcConf.ALLOW_SARG_TO_FILTER.getBoolean(conf);
       useSelected = OrcConf.READER_USE_SELECTED.getBoolean(conf);
       allowPluginFilters = OrcConf.ALLOW_PLUGIN_FILTER.getBoolean(conf);
+      pluginWhiteListFilters = OrcConf.PLUGIN_FILTER_WHITELIST.getStringAsList(conf);
       minSeekSize = OrcConf.ORC_MIN_DISK_SEEK_SIZE.getInt(conf);
       minSeekSizeTolerance = OrcConf.ORC_MIN_DISK_SEEK_SIZE_TOLERANCE.getDouble(conf);
       rowBatchSize = OrcConf.ROW_BATCH_SIZE.getInt(conf);
@@ -653,6 +656,15 @@ public interface Reader extends Closeable {
 
     public Options allowPluginFilters(boolean allowPluginFilters) {
       this.allowPluginFilters = allowPluginFilters;
+      return this;
+    }
+
+    public List<String> pluginWhiteListFilters() {
+      return pluginWhiteListFilters;
+    }
+
+    public Options pluginWhiteListFilters(String... whiteLists) {
+      this.pluginWhiteListFilters = Arrays.asList(whiteLists);
       return this;
     }
 

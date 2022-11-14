@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.Set;
@@ -71,6 +72,7 @@ public class FilterFactory {
     // 2. Process PluginFilter
     if (opts.allowPluginFilters()) {
       List<BatchFilter> pluginFilters = findPluginFilters(filePath, conf);
+      deleteFilterNotInWhiteList(pluginFilters, opts);
       if (!pluginFilters.isEmpty()) {
         LOG.debug("Added plugin filters {} to the read", pluginFilters);
         filters.addAll(pluginFilters);
@@ -183,5 +185,25 @@ public class FilterFactory {
       }
     }
     return filters;
+  }
+
+  /**
+   * Delete filter(s) which is not in the whitelist.
+   *
+   * @param filters fully filter list we load from class path.
+   * @param opts     reader configuration of ORC, can be used to configure the filter whiteList
+   */
+  static void deleteFilterNotInWhiteList(List<BatchFilter> filters, Reader.Options opts) {
+    List<String> whiteList = opts.pluginWhiteListFilters();
+    if (whiteList != null && whiteList.size() > 0) {
+      Iterator<BatchFilter> iterator = filters.iterator();
+      while (iterator.hasNext()) {
+        BatchFilter filter = iterator.next();
+        if (!whiteList.contains(filter.getClass().getName())) {
+          LOG.debug("Ignoring filter service {}", filter);
+          iterator.remove();
+        }
+      }
+    }
   }
 }
