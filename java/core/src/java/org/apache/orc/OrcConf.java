@@ -20,6 +20,7 @@ package org.apache.orc;
 
 import org.apache.hadoop.conf.Configuration;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -340,7 +341,11 @@ public enum OrcConf {
   }
 
   public List<String> getStringAsList(Configuration conf) {
-    return Arrays.asList(getString(null, conf).split(","));
+    String confStr = getString(null, conf);
+    if (confStr == null || confStr.length() == 0) {
+      return new ArrayList<>();
+    }
+    return Arrays.asList(confStr.split(","));
   }
 
   public void setString(Configuration conf, String value) {
