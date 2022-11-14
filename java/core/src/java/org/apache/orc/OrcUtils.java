@@ -316,7 +316,7 @@ public class OrcUtils {
       case DATE:
         result = TypeDescription.createDate();
         break;
-      case DECIMAL: {
+      case DECIMAL:
         result = TypeDescription.createDecimal();
         if (type.hasScale()) {
           result.withScale(type.getScale());
@@ -324,8 +324,7 @@ public class OrcUtils {
         if (type.hasPrecision()) {
           result.withPrecision(type.getPrecision());
         }
-      }
-      break;
+        break;
       case LIST:
         if (type.getSubtypesCount() != 1) {
           throw new FileFormatException("LIST type should contain exactly " +
@@ -343,7 +342,7 @@ public class OrcUtils {
             convertTypeFromProtobuf(types, type.getSubtypes(0)),
             convertTypeFromProtobuf(types, type.getSubtypes(1)));
         break;
-      case STRUCT: {
+      case STRUCT:
         result = TypeDescription.createStruct();
         for(int f=0; f < type.getSubtypesCount(); ++f) {
           String name = type.getFieldNames(f);
@@ -351,9 +350,8 @@ public class OrcUtils {
           String fieldName = ParserUtils.parseName(new ParserUtils.StringPosition(name));
           result.addField(fieldName, convertTypeFromProtobuf(types, type.getSubtypes(f)));
         }
-      }
-      break;
-      case UNION: {
+        break;
+      case UNION:
         if (type.getSubtypesCount() == 0) {
           throw new FileFormatException("UNION type should contain at least" +
                 " one subtype but has none");
@@ -363,8 +361,7 @@ public class OrcUtils {
           result.addUnionChild(
               convertTypeFromProtobuf(types, type.getSubtypes(f)));
         }
-      }
-      break;
+        break;
       default:
         throw new IllegalArgumentException("Unknown ORC type " + type.getKind());
     }
