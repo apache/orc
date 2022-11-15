@@ -235,7 +235,7 @@ public interface Reader extends Closeable {
     private boolean allowSARGToFilter = false;
     private boolean useSelected = false;
     private boolean allowPluginFilters = false;
-    private List<String> pluginWhiteListFilters = null;
+    private List<String> pluginAllowListFilters = null;
     private int minSeekSize = (int) OrcConf.ORC_MIN_DISK_SEEK_SIZE.getDefaultValue();
     private double minSeekSizeTolerance = (double) OrcConf.ORC_MIN_DISK_SEEK_SIZE_TOLERANCE
         .getDefaultValue();
@@ -262,7 +262,7 @@ public interface Reader extends Closeable {
       allowSARGToFilter = OrcConf.ALLOW_SARG_TO_FILTER.getBoolean(conf);
       useSelected = OrcConf.READER_USE_SELECTED.getBoolean(conf);
       allowPluginFilters = OrcConf.ALLOW_PLUGIN_FILTER.getBoolean(conf);
-      pluginWhiteListFilters = OrcConf.PLUGIN_FILTER_WHITELIST.getStringAsList(conf);
+      pluginAllowListFilters = OrcConf.PLUGIN_FILTER_ALLOWLIST.getStringAsList(conf);
       minSeekSize = OrcConf.ORC_MIN_DISK_SEEK_SIZE.getInt(conf);
       minSeekSizeTolerance = OrcConf.ORC_MIN_DISK_SEEK_SIZE_TOLERANCE.getDouble(conf);
       rowBatchSize = OrcConf.ROW_BATCH_SIZE.getInt(conf);
@@ -659,12 +659,12 @@ public interface Reader extends Closeable {
       return this;
     }
 
-    public List<String> pluginWhiteListFilters() {
-      return pluginWhiteListFilters;
+    public List<String> pluginAllowListFilters() {
+      return pluginAllowListFilters;
     }
 
-    public Options pluginWhiteListFilters(String... whiteLists) {
-      this.pluginWhiteListFilters = Arrays.asList(whiteLists);
+    public Options pluginAllowListFilters(String... allowLists) {
+      this.pluginAllowListFilters = Arrays.asList(allowLists);
       return this;
     }
 

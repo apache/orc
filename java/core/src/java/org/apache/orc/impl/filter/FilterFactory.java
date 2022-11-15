@@ -72,7 +72,7 @@ public class FilterFactory {
     // 2. Process PluginFilter
     if (opts.allowPluginFilters()) {
       List<BatchFilter> pluginFilters = findPluginFilters(filePath, conf);
-      deleteFilterNotInWhiteList(pluginFilters, opts.pluginWhiteListFilters());
+      deleteFilterNotInAllowList(pluginFilters, opts.pluginAllowListFilters());
       if (!pluginFilters.isEmpty()) {
         LOG.debug("Added plugin filters {} to the read", pluginFilters);
         filters.addAll(pluginFilters);
@@ -188,18 +188,18 @@ public class FilterFactory {
   }
 
   /**
-   * Delete filter(s) which is not in the whitelist.
+   * Delete filter(s) which is not in the allowlist.
    *
    * @param filters fully filter list we load from class path.
-   * @param whiteList filter whiteList. The plugin service will not be
-   *                  loaded if it is not in whiteList.
+   * @param allowList filter allowList. The plugin service will not be
+   *                  loaded if it is not in allowList.
    */
-  static void deleteFilterNotInWhiteList(List<BatchFilter> filters, List<String> whiteList) {
-    if (whiteList != null && whiteList.size() > 0) {
+  static void deleteFilterNotInAllowList(List<BatchFilter> filters, List<String> allowList) {
+    if (allowList != null && allowList.size() > 0) {
       Iterator<BatchFilter> iterator = filters.iterator();
       while (iterator.hasNext()) {
         BatchFilter filter = iterator.next();
-        if (!whiteList.contains(filter.getClass().getName())) {
+        if (!allowList.contains(filter.getClass().getName())) {
           LOG.debug("Ignoring filter service {}", filter);
           iterator.remove();
         }

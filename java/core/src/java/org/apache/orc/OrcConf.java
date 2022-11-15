@@ -194,10 +194,10 @@ public enum OrcConf {
                       + "non-deterministic and the filter functionality should not depend on the "
                       + "order of application."),
 
-  PLUGIN_FILTER_WHITELIST("orc.filter.plugin.whitelist",
-                          "orc.filter.plugin.whitelist",
+  PLUGIN_FILTER_ALLOWLIST("orc.filter.plugin.allowlist",
+                          "orc.filter.plugin.allowlist",
                           "",
-                          "A comma-separated list of whitelist classes. It is used to specify the "
+                          "A comma-separated list of allowlist classes. It is used to specify the "
                           + "className which will be loaded as PluginFilterService. "
                           + "Classes that not in the list will be ignored."),
 

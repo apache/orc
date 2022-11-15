@@ -62,22 +62,22 @@ public class TestPluginFilterService {
   }
 
   @Test
-  public void testWhiteListFilter() {
+  public void testAllowListFilter() {
     conf.set("my.filter.name", "my_str_i_eq");
     List<BatchFilter> pluginFilters = FilterFactory.findPluginFilters("file://db/table1/file1", conf);
-    // Hit the whitelist.
-    List<String> whiteListHit = new ArrayList<>();
-    whiteListHit.add("org.apache.orc.impl.filter.BatchFilterFactory$BatchFilterImpl");
-    FilterFactory.deleteFilterNotInWhiteList(pluginFilters, whiteListHit);
+    // Hit the allowlist.
+    List<String> allowListHit = new ArrayList<>();
+    allowListHit.add("org.apache.orc.impl.filter.BatchFilterFactory$BatchFilterImpl");
+    FilterFactory.deleteFilterNotInAllowList(pluginFilters, allowListHit);
     assertEquals(1, pluginFilters.size());
-    // Empty whitelist.
-    List<String> emptyWhiteListNotHit = new ArrayList<>();
-    FilterFactory.deleteFilterNotInWhiteList(pluginFilters, emptyWhiteListNotHit);
+    // Empty allowlist.
+    List<String> emptyAllowListNotHit = new ArrayList<>();
+    FilterFactory.deleteFilterNotInAllowList(pluginFilters, emptyAllowListNotHit);
     assertEquals(1, pluginFilters.size());
-    // Not hit the whitelist.
-    List<String> whiteListNotHit = new ArrayList<>();
-    whiteListNotHit.add("abc");
-    FilterFactory.deleteFilterNotInWhiteList(pluginFilters, whiteListNotHit);
+    // Not hit the allowlist.
+    List<String> allowListNotHit = new ArrayList<>();
+    allowListNotHit.add("abc");
+    FilterFactory.deleteFilterNotInAllowList(pluginFilters, allowListNotHit);
     assertEquals(0, pluginFilters.size());
   }
 }
