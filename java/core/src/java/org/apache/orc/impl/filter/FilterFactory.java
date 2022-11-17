@@ -72,10 +72,10 @@ public class FilterFactory {
     // 2. Process PluginFilter
     if (opts.allowPluginFilters()) {
       List<BatchFilter> pluginFilters = findPluginFilters(filePath, conf);
-      deleteFilterNotInAllowList(pluginFilters, opts.pluginAllowListFilters());
-      if (!pluginFilters.isEmpty()) {
-        LOG.debug("Added plugin filters {} to the read", pluginFilters);
-        filters.addAll(pluginFilters);
+      List<BatchFilter> allowListFilters = getAllowedBatchFilter(pluginFilters, opts.pluginAllowListFilters());
+      if (!allowListFilters.isEmpty()) {
+        LOG.debug("Added plugin filters {} to the read", allowListFilters);
+        filters.addAll(allowListFilters);
       }
     }
 
@@ -188,22 +188,30 @@ public class FilterFactory {
   }
 
   /**
-   * Delete filter(s) which is not in the allowlist.
+   * Filter BatchFilter which is in the allowList.
    *
-   * @param filters fully filter list we load from class path.
-   * @param allowList filter allowList. The plugin service will not be
-   *                  loaded if it is not in allowList.
+   * @param filters whole BatchFilter list we load from class path.
+   * @param allowList a Class-Name list that we want to load in.
    */
-  static void deleteFilterNotInAllowList(List<BatchFilter> filters, List<String> allowList) {
-    if (allowList != null && allowList.size() > 0) {
-      Iterator<BatchFilter> iterator = filters.iterator();
-      while (iterator.hasNext()) {
-        BatchFilter filter = iterator.next();
-        if (!allowList.contains(filter.getClass().getName())) {
-          LOG.debug("Ignoring filter service {}", filter);
-          iterator.remove();
-        }
+  static List<BatchFilter> getAllowedBatchFilter(List<BatchFilter> filters, List<String> allowList) {
+    List<BatchFilter> allowBatchFilters = new ArrayList<>();
+
+    if (allowList == null || allowList.size() == 0 || filters == null) {
+      LOG.debug("Disable all BatchFilter.");
+      return allowBatchFilters;
+    }
+
+    if (allowList.contains("*")) {
+      return filters;
+    }
+
+    for (BatchFilter filter: filters) {
+      if (allowList.contains(filter.getClass().getName())) {
+        allowBatchFilters.add(filter);
+      } else {
+        LOG.debug("Ignoring filter service {}", filter);
       }
     }
+    return allowBatchFilters;
   }
 }

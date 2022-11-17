@@ -196,7 +196,7 @@ public enum OrcConf {
 
   PLUGIN_FILTER_ALLOWLIST("orc.filter.plugin.allowlist",
                           "orc.filter.plugin.allowlist",
-                          "",
+                          "*",
                           "A comma-separated list of allowlist classes. It is used to specify the "
                           + "className which will be loaded as PluginFilterService. "
                           + "Classes that not in the list will be ignored."),

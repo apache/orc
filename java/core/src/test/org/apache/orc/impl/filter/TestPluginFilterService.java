@@ -62,22 +62,35 @@ public class TestPluginFilterService {
   }
 
   @Test
-  public void testAllowListFilter() {
+  public void testHitAllowListFilter() {
     conf.set("my.filter.name", "my_str_i_eq");
     List<BatchFilter> pluginFilters = FilterFactory.findPluginFilters("file://db/table1/file1", conf);
     // Hit the allowlist.
     List<String> allowListHit = new ArrayList<>();
     allowListHit.add("org.apache.orc.impl.filter.BatchFilterFactory$BatchFilterImpl");
-    FilterFactory.deleteFilterNotInAllowList(pluginFilters, allowListHit);
+    List<BatchFilter> allowListFilter = FilterFactory.getAllowedBatchFilter(pluginFilters, allowListHit);
     assertEquals(1, pluginFilters.size());
-    // Empty allowlist.
-    List<String> emptyAllowListNotHit = new ArrayList<>();
-    FilterFactory.deleteFilterNotInAllowList(pluginFilters, emptyAllowListNotHit);
-    assertEquals(1, pluginFilters.size());
-    // Not hit the allowlist.
-    List<String> allowListNotHit = new ArrayList<>();
-    allowListNotHit.add("abc");
-    FilterFactory.deleteFilterNotInAllowList(pluginFilters, allowListNotHit);
-    assertEquals(0, pluginFilters.size());
+  }
+
+  @Test
+  public void testAllowListFilterAllowAll() {
+    conf.set("my.filter.name", "my_str_i_eq");
+    List<BatchFilter> pluginFilters = FilterFactory.findPluginFilters("file://db/table1/file1", conf);
+    // Hit the allowlist.
+    List<String> allowListHit = new ArrayList<>();
+    allowListHit.add("*");
+    List<BatchFilter> allowListFilter = FilterFactory.getAllowedBatchFilter(pluginFilters, allowListHit);
+    assertEquals(1, allowListFilter.size());
+  }
+
+  @Test
+  public void testAllowListFilterDisallowAll() {
+    conf.set("my.filter.name", "my_str_i_eq");
+    List<BatchFilter> pluginFilters = FilterFactory.findPluginFilters("file://db/table1/file1", conf);
+    // Hit the allowlist.
+    List<String> allowListHit = new ArrayList<>();
+    allowListHit.add("");
+    List<BatchFilter> allowListFilter = FilterFactory.getAllowedBatchFilter(pluginFilters, allowListHit);
+    assertEquals(0, allowListFilter.size());
   }
 }
