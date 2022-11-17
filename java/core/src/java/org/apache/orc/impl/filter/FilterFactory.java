@@ -33,7 +33,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.Set;
@@ -72,10 +71,11 @@ public class FilterFactory {
     // 2. Process PluginFilter
     if (opts.allowPluginFilters()) {
       List<BatchFilter> pluginFilters = findPluginFilters(filePath, conf);
-      List<BatchFilter> allowListFilters = getAllowedBatchFilter(pluginFilters, opts.pluginAllowListFilters());
-      if (!allowListFilters.isEmpty()) {
-        LOG.debug("Added plugin filters {} to the read", allowListFilters);
-        filters.addAll(allowListFilters);
+      List<BatchFilter> allowFilters =
+          getAllowedFilters(pluginFilters, opts.pluginAllowListFilters());
+      if (!allowFilters.isEmpty()) {
+        LOG.debug("Added plugin filters {} to the read", allowFilters);
+        filters.addAll(allowFilters);
       }
     }
 
@@ -193,7 +193,7 @@ public class FilterFactory {
    * @param filters whole BatchFilter list we load from class path.
    * @param allowList a Class-Name list that we want to load in.
    */
-  static List<BatchFilter> getAllowedBatchFilter(List<BatchFilter> filters, List<String> allowList) {
+  static List<BatchFilter> getAllowedFilters(List<BatchFilter> filters, List<String> allowList) {
     List<BatchFilter> allowBatchFilters = new ArrayList<>();
 
     if (allowList == null || allowList.size() == 0 || filters == null) {

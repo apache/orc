@@ -68,7 +68,7 @@ public class TestPluginFilterService {
     // Hit the allowlist.
     List<String> allowListHit = new ArrayList<>();
     allowListHit.add("org.apache.orc.impl.filter.BatchFilterFactory$BatchFilterImpl");
-    List<BatchFilter> allowListFilter = FilterFactory.getAllowedBatchFilter(pluginFilters, allowListHit);
+    List<BatchFilter> allowListFilter = FilterFactory.getAllowedFilters(pluginFilters, allowListHit);
     assertEquals(1, pluginFilters.size());
   }
 
@@ -79,7 +79,7 @@ public class TestPluginFilterService {
     // Hit the allowlist.
     List<String> allowListHit = new ArrayList<>();
     allowListHit.add("*");
-    List<BatchFilter> allowListFilter = FilterFactory.getAllowedBatchFilter(pluginFilters, allowListHit);
+    List<BatchFilter> allowListFilter = FilterFactory.getAllowedFilters(pluginFilters, allowListHit);
     assertEquals(1, allowListFilter.size());
   }
 
@@ -90,7 +90,7 @@ public class TestPluginFilterService {
     // Hit the allowlist.
     List<String> allowListHit = new ArrayList<>();
     allowListHit.add("");
-    List<BatchFilter> allowListFilter = FilterFactory.getAllowedBatchFilter(pluginFilters, allowListHit);
+    List<BatchFilter> allowListFilter = FilterFactory.getAllowedFilters(pluginFilters, allowListHit);
     assertEquals(0, allowListFilter.size());
   }
 }
