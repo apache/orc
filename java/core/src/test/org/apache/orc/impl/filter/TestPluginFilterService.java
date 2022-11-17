@@ -64,33 +64,39 @@ public class TestPluginFilterService {
   @Test
   public void testHitAllowListFilter() {
     conf.set("my.filter.name", "my_str_i_eq");
-    List<BatchFilter> pluginFilters = FilterFactory.findPluginFilters("file://db/table1/file1", conf);
     // Hit the allowlist.
     List<String> allowListHit = new ArrayList<>();
     allowListHit.add("org.apache.orc.impl.filter.BatchFilterFactory$BatchFilterImpl");
+
+    List<BatchFilter> pluginFilters = FilterFactory.findPluginFilters("file://db/table1/file1", conf);
     List<BatchFilter> allowListFilter = FilterFactory.getAllowedFilters(pluginFilters, allowListHit);
-    assertEquals(1, pluginFilters.size());
+
+    assertEquals(1, allowListFilter.size());
   }
 
   @Test
   public void testAllowListFilterAllowAll() {
     conf.set("my.filter.name", "my_str_i_eq");
-    List<BatchFilter> pluginFilters = FilterFactory.findPluginFilters("file://db/table1/file1", conf);
     // Hit the allowlist.
     List<String> allowListHit = new ArrayList<>();
     allowListHit.add("*");
+
+    List<BatchFilter> pluginFilters = FilterFactory.findPluginFilters("file://db/table1/file1", conf);
     List<BatchFilter> allowListFilter = FilterFactory.getAllowedFilters(pluginFilters, allowListHit);
+
     assertEquals(1, allowListFilter.size());
   }
 
   @Test
   public void testAllowListFilterDisallowAll() {
     conf.set("my.filter.name", "my_str_i_eq");
-    List<BatchFilter> pluginFilters = FilterFactory.findPluginFilters("file://db/table1/file1", conf);
     // Hit the allowlist.
     List<String> allowListHit = new ArrayList<>();
     allowListHit.add("");
+
+    List<BatchFilter> pluginFilters = FilterFactory.findPluginFilters("file://db/table1/file1", conf);
     List<BatchFilter> allowListFilter = FilterFactory.getAllowedFilters(pluginFilters, allowListHit);
+
     assertEquals(0, allowListFilter.size());
   }
 }
