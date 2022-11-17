@@ -20,18 +20,6 @@
 #include <iomanip>
 #include <sstream>
 
-#ifndef HAS_STOLL
-namespace std {
-  int64_t std::stoll(std::string str) {
-    int64_t val = 0;
-    stringstream ss;
-    ss << str;
-    ss >> val;
-    return val;
-  }
-}  // namespace std
-#endif
-
 #ifndef HAS_STRPTIME
 char* strptime(const char* s, const char* f, struct tm* tm) {
   std::istringstream input(s);

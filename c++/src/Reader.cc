@@ -549,7 +549,7 @@ namespace orc {
     isMetadataLoaded = false;
     checkOrcVersion();
     numberOfStripes = static_cast<uint64_t>(footer->stripes_size());
-    contents->schema = REDUNDANT_MOVE(convertType(footer->types(0), *footer));
+    contents->schema = convertType(footer->types(0), *footer);
     contents->blockSize = getCompressionBlockSize(*contents->postscript);
     contents->compression = convertCompressionKind(*contents->postscript);
   }
@@ -1259,7 +1259,7 @@ namespace orc {
                                     static_cast<int>(postscriptSize))) {
       throw ParseError("Failed to parse the postscript from " + stream->getName());
     }
-    return REDUNDANT_MOVE(postscript);
+    return postscript;
   }
 
   /**
@@ -1325,7 +1325,7 @@ namespace orc {
     }
 
     checkProtoTypes(*footer);
-    return REDUNDANT_MOVE(footer);
+    return footer;
   }
 
   std::unique_ptr<Reader> createReader(std::unique_ptr<InputStream> stream,
@@ -1360,8 +1360,7 @@ namespace orc {
       stream->read(buffer->data(), readSize, fileLength - readSize);
 
       postscriptLength = buffer->data()[readSize - 1] & 0xff;
-      contents->postscript =
-          REDUNDANT_MOVE(readPostscript(stream.get(), buffer.get(), postscriptLength));
+      contents->postscript = readPostscript(stream.get(), buffer.get(), postscriptLength);
       uint64_t footerSize = contents->postscript->footerlength();
       uint64_t tailSize = 1 + postscriptLength + footerSize;
       if (tailSize >= fileLength) {
@@ -1379,9 +1378,8 @@ namespace orc {
         footerOffset = readSize - tailSize;
       }
 
-      contents->footer =
-          REDUNDANT_MOVE(readFooter(stream.get(), buffer.get(), footerOffset, *contents->postscript,
-                                    *contents->pool, contents->readerMetrics));
+      contents->footer = readFooter(stream.get(), buffer.get(), footerOffset, *contents->postscript,
+                                    *contents->pool, contents->readerMetrics);
     }
     contents->isDecimalAsLong = false;
     if (contents->postscript->version_size() == 2) {
