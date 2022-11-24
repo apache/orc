@@ -128,8 +128,9 @@ namespace orc {
     if (sizeof(T) == sizeof(char)) {
       return;
     }
-    for (size_t i = numValues - 1; i < numValues; --i) {
-      buffer[i] = static_cast<T>(reinterpret_cast<char*>(buffer)[i]);
+    for (uint64_t i = 0UL; i < numValues; ++i) {
+      buffer[numValues - 1 - i] =
+          static_cast<T>(reinterpret_cast<char*>(buffer)[numValues - 1 - i]);
     }
   }
 
