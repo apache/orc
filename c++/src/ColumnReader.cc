@@ -116,7 +116,7 @@ namespace orc {
   }
 
   /**
-   * Expand an array of bytes in place to the corresponding array of longs/.
+   * Expand an array of bytes in place to the corresponding array of integer.
    * Has to work backwards so that they data isn't clobbered during the
    * expansion.
    * @param buffer the array of chars and array of longs that need to be
@@ -128,8 +128,9 @@ namespace orc {
     if (sizeof(T) == sizeof(char)) {
       return;
     }
-    for (size_t i = numValues - 1; i < numValues; --i) {
-      buffer[i] = reinterpret_cast<char*>(buffer)[i];
+    for (uint64_t i = 0UL; i < numValues; ++i) {
+      buffer[numValues - 1 - i] =
+          static_cast<T>(reinterpret_cast<char*>(buffer)[numValues - 1 - i]);
     }
   }
 
