@@ -56,6 +56,12 @@ RUN yum install -y \
 # Our scripts assume that cmake is called 'cmake'
 RUN ln -s /usr/bin/cmake3 /usr/bin/cmake
 
+# Install gcc-9
+RUN yum install -y centos-release-scl
+RUN yum install -y devtoolset-9
+RUN echo "source /opt/rh/devtoolset-9/enable" >> /etc/bashrc
+SHELL ["/bin/bash", "--login", "-c"]
+
 ENV TZ=America/Los_Angeles
 WORKDIR /root
 VOLUME /root/.m2/repository
