@@ -129,8 +129,7 @@ namespace orc {
       return;
     }
     for (uint64_t i = 0UL; i < numValues; ++i) {
-      buffer[numValues - 1 - i] =
-          static_cast<T>(reinterpret_cast<int8_t*>(buffer)[numValues - 1 - i]);
+      buffer[numValues - 1 - i] = reinterpret_cast<int8_t*>(buffer)[numValues - 1 - i];
     }
   }
 
