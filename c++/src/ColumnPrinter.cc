@@ -319,10 +319,8 @@ namespace orc {
     if (hasNulls && !notNull[rowId]) {
       writeString(buffer, "null");
     } else {
-      char numBuffer[64];
-      snprintf(numBuffer, sizeof(numBuffer), "%" INT64_FORMAT_STRING "d",
-               static_cast<int64_t>(data[rowId]));
-      writeString(buffer, numBuffer);
+      const auto numBuffer = std::to_string(static_cast<int64_t>(data[rowId]));
+      writeString(buffer, numBuffer.c_str());
     }
   }
 
@@ -542,10 +540,8 @@ namespace orc {
       writeString(buffer, "null");
     } else {
       writeString(buffer, "{\"tag\": ");
-      char numBuffer[64];
-      snprintf(numBuffer, sizeof(numBuffer), "%" INT64_FORMAT_STRING "d",
-               static_cast<int64_t>(tags[rowId]));
-      writeString(buffer, numBuffer);
+      const auto numBuffer = std::to_string(static_cast<int64_t>(tags[rowId]));
+      writeString(buffer, numBuffer.c_str());
       writeString(buffer, ", \"value\": ");
       fieldPrinter[tags[rowId]]->printRow(offsets[rowId]);
       writeChar(buffer, '}');
@@ -643,10 +639,8 @@ namespace orc {
         if (i != 0) {
           writeString(buffer, ", ");
         }
-        char numBuffer[64];
-        snprintf(numBuffer, sizeof(numBuffer), "%d",
-                 (static_cast<const int>(start[rowId][i]) & 0xff));
-        writeString(buffer, numBuffer);
+        const auto numBuffer = std::to_string(static_cast<const int>(start[rowId][i]) & 0xff);
+        writeString(buffer, numBuffer.c_str());
       }
       writeChar(buffer, ']');
     }
@@ -687,10 +681,13 @@ namespace orc {
           zeroDigits += 1;
         }
       }
-      char numBuffer[64];
-      snprintf(numBuffer, sizeof(numBuffer), "%0*" INT64_FORMAT_STRING "d\"",
-               static_cast<int>(NANO_DIGITS - zeroDigits), static_cast<int64_t>(nanos));
-      writeString(buffer, numBuffer);
+      const auto numBuffer = std::to_string(static_cast<int64_t>(nanos));
+      const int64_t padDigits = NANO_DIGITS - zeroDigits - static_cast<int64_t>(numBuffer.size());
+      for (int i = 0; i < padDigits; ++i) {
+        writeChar(buffer, '0');
+      }
+      writeString(buffer, numBuffer.c_str());
+      writeChar(buffer, '"');
     }
   }
 

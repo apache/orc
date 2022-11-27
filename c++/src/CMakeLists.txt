@@ -35,28 +35,11 @@ CHECK_CXX_SOURCE_COMPILES("
 )
 
 CHECK_CXX_SOURCE_COMPILES("
-    #include<string>
-    int main(int,char* argv[]){
-      return static_cast<int>(std::stoll(argv[0]));
-    }"
-  HAS_STOLL
-)
-
-CHECK_CXX_SOURCE_COMPILES("
     int main(){
       int a;
       return __builtin_add_overflow(1, 2, &a);
     }"
   HAS_BUILTIN_OVERFLOW_CHECK
-)
-
-CHECK_CXX_SOURCE_COMPILES("
-    #include<stdint.h>
-    #include<stdio.h>
-    int main(int,char*[]){
-      int64_t x = 1; printf(\"%lld\",x);
-    }"
-  INT64_IS_LL
 )
 
 CHECK_CXX_SOURCE_COMPILES("
@@ -88,25 +71,6 @@ CHECK_CXX_SOURCE_COMPILES("
 )
 
 CHECK_CXX_SOURCE_COMPILES("
-    #include<mutex>
-    int main(int, char *[]) {
-       std::mutex test_mutex;
-       std::lock_guard<std::mutex> lock_mutex(test_mutex);
-    }"
-  HAS_STD_MUTEX
-)
-
-CHECK_CXX_SOURCE_COMPILES("
-    #include<string>
-    std::string func() {
-      std::string var = \"test\";
-      return std::move(var);
-    }
-    int main(int, char *[]) {}"
-  NEEDS_REDUNDANT_MOVE
-)
-
-CHECK_CXX_SOURCE_COMPILES("
     #include<string>
     int main(int, char *[]) {
       double d = 5;
@@ -123,16 +87,6 @@ CHECK_CXX_SOURCE_COMPILES("
       std::to_string(d);
     }"
   HAS_INT64_TO_STRING
-)
-
-CHECK_CXX_SOURCE_COMPILES("
-  constexpr int foo(int x, int y) {
-    return x+y;
-  }
-  int main(int, char*[]) {
-    return foo(1,3);
-  }"
-  HAS_CONSTEXPR
 )
 
 INCLUDE(CheckCXXSourceRuns)
