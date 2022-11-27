@@ -259,7 +259,8 @@ namespace orc {
         EXPECT_EQ(0, longBatch->notNull[i]) << "Wrong value at " << i;
       } else {
         EXPECT_EQ(1, longBatch->notNull[i]) << "Wrong value at " << i;
-        EXPECT_EQ(static_cast<char>(next++), longBatch->data[i]) << "Wrong value at " << i;
+        EXPECT_EQ(static_cast<char>(next++), static_cast<char>(longBatch->data[i]))
+            << "Wrong value at " << i;
       }
     }
   }
@@ -318,7 +319,7 @@ namespace orc {
     ASSERT_EQ(true, !batch.hasNulls);
     ASSERT_EQ(5, longBatch->numElements);
     ASSERT_EQ(true, longBatch->hasNulls);
-    EXPECT_EQ(static_cast<char>(-1), longBatch->data[0]);
+    EXPECT_EQ(static_cast<char>(-1), static_cast<char>(longBatch->data[0]));
     EXPECT_EQ(true, !longBatch->notNull[1]);
     EXPECT_EQ(true, !longBatch->notNull[2]);
     EXPECT_EQ(true, !longBatch->notNull[3]);
