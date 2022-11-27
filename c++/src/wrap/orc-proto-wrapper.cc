@@ -23,7 +23,6 @@ DIAGNOSTIC_IGNORE("-Wpadded")
 DIAGNOSTIC_IGNORE("-Wsign-compare")
 DIAGNOSTIC_IGNORE("-Wsign-conversion")
 DIAGNOSTIC_IGNORE("-Wunused-parameter")
-DIAGNOSTIC_IGNORE("-Wstringop-overread")
 #endif
 
 #ifdef __clang__

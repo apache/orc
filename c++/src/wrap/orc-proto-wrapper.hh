@@ -24,8 +24,6 @@ DIAGNOSTIC_IGNORE("-Wconversion")
 DIAGNOSTIC_IGNORE("-Wdeprecated")
 DIAGNOSTIC_IGNORE("-Wsign-conversion")
 DIAGNOSTIC_IGNORE("-Wunused-parameter")
-DIAGNOSTIC_IGNORE("-Wstringop-overread")
-DIAGNOSTIC_IGNORE("-Warray-bounds")
 #endif
 
 #ifdef __clang__

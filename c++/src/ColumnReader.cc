@@ -125,11 +125,12 @@ namespace orc {
    */
   template <typename T>
   void expandBytesToIntegers(T* buffer, uint64_t numValues) {
-    if (sizeof(T) == sizeof(int8_t)) {
+    if (sizeof(T) == sizeof(char)) {
       return;
     }
     for (uint64_t i = 0UL; i < numValues; ++i) {
-      buffer[numValues - 1 - i] = reinterpret_cast<int8_t*>(buffer)[numValues - 1 - i];
+      buffer[numValues - 1 - i] =
+          static_cast<T>(reinterpret_cast<char*>(buffer)[numValues - 1 - i]);
     }
   }
 
