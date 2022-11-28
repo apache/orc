@@ -36,7 +36,7 @@
     <maven.compiler.useIncrementalCompilation>false</maven.compiler.useIncrementalCompilation>
 
     <!-- Spark Jackson version may not be same as ORC -->
-    <spark.jackson.version>2.13.4</spark.jackson.version>
+    <spark.jackson.version>2.14.1</spark.jackson.version>
   </properties>
 
   <dependencies>
