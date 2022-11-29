@@ -28,8 +28,6 @@ RUN yum install -y \
   curl-devel \
   cyrus-sasl-devel \
   expat-devel \
-  gcc \
-  gcc-c++ \
   gettext-devel \
   git \
   libtool \

@@ -326,6 +326,7 @@ if (BUILD_CPP_TESTS)
 
     set(GTEST_CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                          -DCMAKE_INSTALL_PREFIX=${GTEST_PREFIX}
+                         -DCMAKE_INSTALL_LIBDIR=lib
                          -Dgtest_force_shared_crt=ON
                          -DCMAKE_CXX_FLAGS=${GTEST_CMAKE_CXX_FLAGS})
 
