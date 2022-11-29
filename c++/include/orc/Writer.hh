@@ -262,6 +262,17 @@ namespace orc {
      * @return if not set, the default is false
      */
     bool getUseTightNumericVector() const;
+
+     /**
+     * Set the buffer capacity of output stream.
+     */
+    WriterOptions& setOutputBufferCapacity(uint64_t capacity);
+
+    /**
+     * Get the buffer capacity of output stream.
+     * @return if not set, return default value which is 1 MB.
+     */
+    uint64_t getOutputBufferCapacity() const;
   };
 
   class Writer {

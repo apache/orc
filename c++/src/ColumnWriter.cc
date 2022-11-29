@@ -49,7 +49,7 @@ namespace orc {
     // WriterOption
     return createCompressor(options.getCompression(), outStream, options.getCompressionStrategy(),
                             // BufferedOutputStream initial capacity
-                            1 * 1024 * 1024, options.getCompressionBlockSize(),
+                            options.getOutputBufferCapacity(), options.getCompressionBlockSize(),
                             *options.getMemoryPool(), options.getWriterMetrics());
   }
 

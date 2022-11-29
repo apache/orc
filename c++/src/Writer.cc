@@ -45,6 +45,7 @@ namespace orc {
     std::string timezone;
     WriterMetrics* metrics;
     bool useTightNumericVector;
+    uint64_t outputBufferCapacity;
 
     WriterOptionsPrivate() : fileVersion(FileVersion::v_0_12()) {  // default to Hive_0_12
       stripeSize = 64 * 1024 * 1024;                               // 64M
@@ -65,6 +66,7 @@ namespace orc {
       timezone = "GMT";
       metrics = nullptr;
       useTightNumericVector = false;
+      outputBufferCapacity = 1024 * 1024;
     }
   };
 
@@ -273,6 +275,15 @@ namespace orc {
     return privateBits->useTightNumericVector;
   }
 
+  WriterOptions& WriterOptions::setOutputBufferCapacity(uint64_t capacity) {
+    privateBits->outputBufferCapacity = capacity;
+    return *this;
+  }
+
+  uint64_t WriterOptions::getOutputBufferCapacity() const {
+    return privateBits->outputBufferCapacity;
+  }
+
   Writer::~Writer() {
     // PASS
   }
@@ -335,7 +346,7 @@ namespace orc {
     // compression stream for stripe footer, file footer and metadata
     compressionStream = createCompressor(
         options.getCompression(), outStream, options.getCompressionStrategy(),
-        1 * 1024 * 1024,  // buffer capacity: 1M
+        options.getOutputBufferCapacity(),
         options.getCompressionBlockSize(), *options.getMemoryPool(), options.getWriterMetrics());
 
     // uncompressed stream for post script
