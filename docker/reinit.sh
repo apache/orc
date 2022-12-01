@@ -16,7 +16,11 @@
 # limitations under the License.
 
 start=`date`
-for build in `cat os-list.txt`; do
+
+TARGET=${@:-`cat os-list.txt`}
+echo "Target:" $TARGET
+
+for build in $TARGET; do
   OS=$(echo "$build" | cut -d '_' -f1)
   REST=$(echo "$build" | cut -d '_' -f2- -s)
   if [ -z "$REST" ]; then
