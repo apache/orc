@@ -140,6 +140,7 @@ namespace orc {
     std::shared_ptr<SearchArgument> sargs;
     std::string readerTimezone;
     RowReaderOptions::IdReadIntentMap idReadIntentMap;
+    bool useTightNumericVector;
 
     RowReaderOptionsPrivate() {
       selection = ColumnSelection_NONE;
@@ -149,6 +150,7 @@ namespace orc {
       forcedScaleOnHive11Decimal = 6;
       enableLazyDecoding = false;
       readerTimezone = "GMT";
+      useTightNumericVector = false;
     }
   };
 
@@ -297,6 +299,15 @@ namespace orc {
 
   const RowReaderOptions::IdReadIntentMap RowReaderOptions::getIdReadIntentMap() const {
     return privateBits->idReadIntentMap;
+  }
+
+  RowReaderOptions& RowReaderOptions::setUseTightNumericVector(bool useTightNumericVector) {
+    privateBits->useTightNumericVector = useTightNumericVector;
+    return *this;
+  }
+
+  bool RowReaderOptions::getUseTightNumericVector() const {
+    return privateBits->useTightNumericVector;
   }
 }  // namespace orc
 

@@ -146,7 +146,7 @@ namespace orc {
       bufferStart = static_cast<const char*>(bufferPointer);
       bufferEnd = bufferStart + bufferLength;
     }
-    return *(bufferStart++);
+    return static_cast<signed char>(*(bufferStart++));
   }
 
   uint64_t RleDecoderV1::readLong() {
@@ -227,8 +227,8 @@ namespace orc {
     }
   }
 
-  void RleDecoderV1::next(int64_t* const data, const uint64_t numValues,
-                          const char* const notNull) {
+  template <typename T>
+  void RleDecoderV1::next(T* const data, const uint64_t numValues, const char* const notNull) {
     SCOPED_STOPWATCH(metrics, DecodingLatencyUs, DecodingCall);
     uint64_t position = 0;
     // skipNulls()
@@ -250,13 +250,13 @@ namespace orc {
         if (notNull) {
           for (uint64_t i = 0; i < count; ++i) {
             if (notNull[position + i]) {
-              data[position + i] = value + static_cast<int64_t>(consumed) * delta;
+              data[position + i] = static_cast<T>(value + static_cast<int64_t>(consumed) * delta);
               consumed += 1;
             }
           }
         } else {
           for (uint64_t i = 0; i < count; ++i) {
-            data[position + i] = value + static_cast<int64_t>(i) * delta;
+            data[position + i] = static_cast<T>(value + static_cast<int64_t>(i) * delta);
           }
           consumed = count;
         }
@@ -266,18 +266,18 @@ namespace orc {
           for (uint64_t i = 0; i < count; ++i) {
             if (notNull[position + i]) {
               data[position + i] =
-                  isSigned ? unZigZag(readLong()) : static_cast<int64_t>(readLong());
+                  isSigned ? static_cast<T>(unZigZag(readLong())) : static_cast<T>(readLong());
               ++consumed;
             }
           }
         } else {
           if (isSigned) {
             for (uint64_t i = 0; i < count; ++i) {
-              data[position + i] = unZigZag(readLong());
+              data[position + i] = static_cast<T>(unZigZag(readLong()));
             }
           } else {
             for (uint64_t i = 0; i < count; ++i) {
-              data[position + i] = static_cast<int64_t>(readLong());
+              data[position + i] = static_cast<T>(readLong());
             }
           }
           consumed = count;
@@ -296,4 +296,15 @@ namespace orc {
     }
   }
 
+  void RleDecoderV1::next(int64_t* data, uint64_t numValues, const char* notNull) {
+    next<int64_t>(data, numValues, notNull);
+  }
+
+  void RleDecoderV1::next(int32_t* data, uint64_t numValues, const char* notNull) {
+    next<int32_t>(data, numValues, notNull);
+  }
+
+  void RleDecoderV1::next(int16_t* data, uint64_t numValues, const char* notNull) {
+    next<int16_t>(data, numValues, notNull);
+  }
 }  // namespace orc

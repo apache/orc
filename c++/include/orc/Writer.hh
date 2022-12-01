@@ -251,6 +251,17 @@ namespace orc {
      * @return if not set, return nullptr.
      */
     WriterMetrics* getWriterMetrics() const;
+
+    /**
+     * Set use tight numeric vectorBatch or not.
+     */
+    WriterOptions& setUseTightNumericVector(bool useTightNumericVector);
+
+    /**
+     * Get whether or not to use dedicated columnVectorBatch
+     * @return if not set, the default is false
+     */
+    bool getUseTightNumericVector() const;
   };
 
   class Writer {

@@ -56,8 +56,14 @@ namespace orc {
      * @param notNull If the pointer is null, all values are read. If the
      *    pointer is not null, positions that are false are skipped.
      */
+    template <typename T>
+    void add(const T* data, uint64_t numValues, const char* notNull);
+
     virtual void add(const int64_t* data, uint64_t numValues, const char* notNull);
 
+    virtual void add(const int32_t* data, uint64_t numValues, const char* notNull);
+
+    virtual void add(const int16_t* data, uint64_t numValues, const char* notNull);
     /**
      * Get size of buffer used so far.
      */
@@ -121,6 +127,10 @@ namespace orc {
      *    pointer is not null, positions that are false are skipped.
      */
     virtual void next(int64_t* data, uint64_t numValues, const char* notNull) = 0;
+
+    virtual void next(int32_t* data, uint64_t numValues, const char* notNull) = 0;
+
+    virtual void next(int16_t* data, uint64_t numValues, const char* notNull) = 0;
 
    protected:
     ReaderMetrics* metrics;

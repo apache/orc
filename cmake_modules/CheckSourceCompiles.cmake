@@ -15,51 +15,6 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX17_FLAGS} ${WARN_FLAGS}")
 INCLUDE(CheckCXXSourceCompiles)
 
 CHECK_CXX_SOURCE_COMPILES("
-    #include <initializer_list>
-    struct A {
-      A(std::initializer_list<int> list);
-    };
-    int main(int,char*[]){
-    }"
-  ORC_CXX_HAS_INITIALIZER_LIST
-)
-
-CHECK_CXX_SOURCE_COMPILES("
-    int main(int,char*[]) noexcept {
-      return 0;
-    }"
-  ORC_CXX_HAS_NOEXCEPT
-)
-
-CHECK_CXX_SOURCE_COMPILES("
-    int main(int,char* argv[]){
-      return argv[0] != nullptr;
-    }"
-  ORC_CXX_HAS_NULLPTR
-)
-
-CHECK_CXX_SOURCE_COMPILES("
-    struct A {
-      virtual ~A();
-      virtual void foo();
-    };
-    struct B: public A {
-      virtual void foo() override;
-    };
-    int main(int,char*[]){
-    }"
-  ORC_CXX_HAS_OVERRIDE
-)
-
-CHECK_CXX_SOURCE_COMPILES("
-    #include<memory>
-    int main(int,char* []){
-      std::unique_ptr<int> ptr(new int);
-    }"
-  ORC_CXX_HAS_UNIQUE_PTR
-)
-
-CHECK_CXX_SOURCE_COMPILES("
     #include <cstdint>
     int main(int, char*[]) { }"
   ORC_CXX_HAS_CSTDINT

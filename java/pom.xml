@@ -77,12 +77,12 @@
     <zookeeper.version>3.8.0</zookeeper.version>
     <maven.version>3.8.6</maven.version>
     <maven-assembly-plugin.version>3.4.2</maven-assembly-plugin.version>
-    <maven-shade-plugin.version>3.4.0</maven-shade-plugin.version>
-    <slf4j.version>2.0.1</slf4j.version>
+    <maven-shade-plugin.version>3.4.1</maven-shade-plugin.version>
+    <slf4j.version>2.0.4</slf4j.version>
     <surefire.version>3.0.0-M5</surefire.version>
     <junit.version>5.9.0</junit.version>
-    <mockito.version>4.8.0</mockito.version>
-    <checkstyle.version>10.3.2</checkstyle.version>
+    <mockito.version>4.9.0</mockito.version>
+    <checkstyle.version>10.5.0</checkstyle.version>
   </properties>
 
   <repositories>
@@ -904,7 +904,7 @@
       <dependency>
         <groupId>net.bytebuddy</groupId>
         <artifactId>byte-buddy</artifactId>
-        <version>1.12.16</version>
+        <version>1.12.19</version>
         <scope>test</scope>
       </dependency>
       <dependency>

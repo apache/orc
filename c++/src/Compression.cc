@@ -1184,7 +1184,7 @@ namespace orc {
       MemoryPool& pool, ReaderMetrics* metrics) {
     switch (static_cast<int64_t>(kind)) {
       case CompressionKind_NONE:
-        return REDUNDANT_MOVE(input);
+        return input;
       case CompressionKind_ZLIB:
         return std::unique_ptr<SeekableInputStream>(
             new ZlibDecompressionStream(std::move(input), blockSize, pool, metrics));

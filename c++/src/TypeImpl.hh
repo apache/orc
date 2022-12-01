@@ -94,6 +94,10 @@ namespace orc {
     std::unique_ptr<ColumnVectorBatch> createRowBatch(uint64_t size, MemoryPool& memoryPool,
                                                       bool encoded = false) const override;
 
+    std::unique_ptr<ColumnVectorBatch> createRowBatch(
+        uint64_t size, MemoryPool& memoryPool, bool encoded = false,
+        bool useTightNumericVector = false) const override;
+
     /**
      * Explicitly set the column ids. Only for internal usage.
      */
