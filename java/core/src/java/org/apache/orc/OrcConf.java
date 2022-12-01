@@ -197,9 +197,10 @@ public enum OrcConf {
   PLUGIN_FILTER_ALLOWLIST("orc.filter.plugin.allowlist",
                           "orc.filter.plugin.allowlist",
                           "*",
-                          "A list of comma-separated class names. It is used to specify the "
-                          + "className which will be loaded as PluginFilterService. "
-                          + "Classes that not in the list will be ignored."),
+                          "A list of comma-separated class names. If specified it restricts "
+                          + "the PluginFilters to just these classes as discovered by the "
+                          + "PluginFilterService. The default of * allows all discovered classes "
+                          + "and an empty string would not allow any plugins to be applied."),
 
   WRITE_VARIABLE_LENGTH_BLOCKS("orc.write.variable.length.blocks", null, false,
       "A boolean flag as to whether the ORC writer should write variable length\n"
@@ -342,7 +343,7 @@ public enum OrcConf {
 
   public List<String> getStringAsList(Configuration conf) {
     String confStr = getString(null, conf);
-    if (confStr == null || confStr.length() == 0) {
+    if (confStr == null || confStr.isEmpty()) {
       return new ArrayList<>();
     }
     return Arrays.asList(confStr.split(","));

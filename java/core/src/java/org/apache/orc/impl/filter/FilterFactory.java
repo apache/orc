@@ -196,13 +196,13 @@ public class FilterFactory {
   static List<BatchFilter> getAllowedFilters(List<BatchFilter> filters, List<String> allowList) {
     List<BatchFilter> allowBatchFilters = new ArrayList<>();
 
-    if (allowList == null || allowList.size() == 0 || filters == null) {
-      LOG.debug("Disable all BatchFilter.");
-      return allowBatchFilters;
+    if (allowList != null && allowList.contains("*")) {
+      return filters;
     }
 
-    if (allowList.contains("*")) {
-      return filters;
+    if (allowList == null || allowList.isEmpty() || filters == null) {
+      LOG.debug("Disable all PluginFilter.");
+      return allowBatchFilters;
     }
 
     for (BatchFilter filter: filters) {

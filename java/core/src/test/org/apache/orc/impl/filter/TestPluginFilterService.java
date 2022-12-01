@@ -90,13 +90,12 @@ public class TestPluginFilterService {
   @Test
   public void testAllowListFilterDisallowAll() {
     conf.set("my.filter.name", "my_str_i_eq");
-    // Hit the allowlist.
-    List<String> allowListHit = new ArrayList<>();
-    allowListHit.add("");
 
     List<BatchFilter> pluginFilters = FilterFactory.findPluginFilters("file://db/table1/file1", conf);
-    List<BatchFilter> allowListFilter = FilterFactory.getAllowedFilters(pluginFilters, allowListHit);
+    List<BatchFilter> allowListFilter = FilterFactory.getAllowedFilters(pluginFilters, new ArrayList<>());
+    List<BatchFilter> allowListFilterWithNull = FilterFactory.getAllowedFilters(pluginFilters, null);
 
     assertEquals(0, allowListFilter.size());
+    assertEquals(0, allowListFilterWithNull.size());
   }
 }
