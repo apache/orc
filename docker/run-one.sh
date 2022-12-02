@@ -37,7 +37,7 @@ else
 
   echo "Started $GITHUB_USER/$BRANCH on $BUILD at $(date)"
 
-  docker run $VOLUME "$TAG" /bin/bash -c \
+  docker run $VOLUME "$TAG" /bin/bash --login -c \
      "$CLONE && $MAKEDIR && cmake $OPTS .. && make package test-out" \
        || failure
 fi
