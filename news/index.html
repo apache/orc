@@ -99,6 +99,8 @@
     <option value="/news/">Home</option>
     <optgroup label="v1.x">
       
+      <option value="/news/2022/12/02/ORC-1.8.1/">ORC 1.8.1 Released</option>
+      
       <option value="/news/2022/11/17/ORC-1.7.7/">ORC 1.7.7 Released</option>
       
       <option value="/news/2022/09/21/william-chair/">William Hyun elected as Chair</option>
@@ -268,6 +270,77 @@
         
   <article>
   <h2>
+    <a href="/news/2022/12/02/ORC-1.8.1/">
+      ORC 1.8.1 Released
+    </a>
+  </h2>
+  <span class="post-category">
+    <span class="label">
+      release
+    </span>
+  </span>
+  <div class="post-meta">
+    <span class="post-date">
+      02 Dec 2022
+    </span>
+    <a href="https://people.apache.org/~dongjoon" class="post-author">
+      <img src="https://people.apache.org/~dongjoon//dongjoon.png"
+           class="avatar" alt="dongjoon avatar"
+           width="24" height="24">
+      dongjoon
+    </a>
+  </div>
+  <div class="post-content">
+    <p>The ORC team is excited to announce the release of ORC v1.8.1.</p>
+
+<ul>
+  <li>Released: 2 December 2022</li>
+  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.8.1/orc-1.8.1.tar.gz">orc-1.8.1.tar.gz</a></li>
+  <li><a href="https://downloads.apache.org/orc/orc-1.8.1/orc-1.8.1.tar.gz.asc">GPG Signature</a>
+signed by <a href="https://downloads.apache.org/orc/KEYS">Dongjoon Hyun (34F0FC5C)</a></li>
+  <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.8.1">rel/release-1.8.1</a></li>
+  <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.8.1%22">ORC 1.8.1</a></li>
+  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.8.1/orc-1.8.1.tar.gz.sha256">ba5877bd737e1fbc…</a></li>
+  <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.8.1%22&amp;tempMax=500">ORC-1.8.1</a></li>
+</ul>
+
+<p>The bug fixes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1283">ORC-1283</a> ENABLE_INDEXES does not take effect</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1288">ORC-1288</a> Invalid memory freeing with ZLIB compression</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1291">ORC-1291</a> NullPointerException in TypeDescription</li>
+</ul>
+
+<p>The improvements:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1268">ORC-1268</a> Set CMP0135 policy for CMake 3.24+</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1282">ORC-1282</a> Add slf4j impl to avoid warning message</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1294">ORC-1294</a> Build error when skip tests build</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1295">ORC-1295</a> Improve ORC Spec example (Decoding RLE v2 direct)</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1299">ORC-1299</a> benchmark can’t work for data resource 403</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1305">ORC-1305</a> Add more orc java examples</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1308">ORC-1308</a> Avoid star import</li>
+</ul>
+
+<p>The test changes:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1290">ORC-1290</a> Bump spotbugs to 4.7.3</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1300">ORC-1300</a> Update Spark to 3.3.1 and its dependencies</li>
+</ul>
+
+<p>The tasks:</p>
+<ul>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1269">ORC-1269</a> Remove FindBugs</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1270">ORC-1270</a> Move opencsv dependency to the tools module</li>
+  <li><a href="https://issues.apache.org/jira/browse/ORC-1292">ORC-1292</a> Add paragraph in java documentation</li>
+</ul>
+
+  </div>
+</article>
+
+
+  <article>
+  <h2>
     <a href="/news/2022/11/17/ORC-1.7.7/">
       ORC 1.7.7 Released
     </a>
@@ -387,12 +460,12 @@ and revamped user experiences through updating websites and Homebrew.</p>
 
 <ul>
   <li>Released: 3 September 2022</li>
-  <li>Source code: <a href="https://www.apache.org/dyn/closer.cgi/orc/orc-1.8.0/orc-1.8.0.tar.gz">orc-1.8.0.tar.gz</a></li>
-  <li><a href="https://downloads.apache.org/orc/orc-1.8.0/orc-1.8.0.tar.gz.asc">GPG Signature</a>
+  <li>Source code: <a href="https://archive.apache.org/dist/orc/orc-1.8.0/orc-1.8.0.tar.gz">orc-1.8.0.tar.gz</a></li>
+  <li><a href="https://archive.apache.org/dist/orc/orc-1.8.0/orc-1.8.0.tar.gz.asc">GPG Signature</a>
 signed by <a href="https://downloads.apache.org/orc/KEYS">William Hyun (DECDFA29)</a></li>
   <li>Git tag: <a href="https://github.com/apache/orc/releases/tag/rel/release-1.8.0">rel/release-1.8.0</a></li>
   <li>Maven Central: <a href="https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.orc%22%20AND%20v%3A%221.8.0%22">ORC 1.8.0</a></li>
-  <li>SHA 256: <a href="https://downloads.apache.org/orc/orc-1.8.0/orc-1.8.0.tar.gz.sha256">859d78bfded98405…</a></li>
+  <li>SHA 256: <a href="https://archive.apache.org/dist/orc/orc-1.8.0/orc-1.8.0.tar.gz.sha256">859d78bfded98405…</a></li>
   <li>Fixed issues: <a href="https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-printable/temp/SearchRequest.html?jqlQuery=project+%3D+ORC+AND+status+%3D+Closed+AND+fixVersion+%3D+%221.8.0%22&amp;tempMax=500">ORC-1.8.0</a></li>
 </ul>
 
@@ -4811,6 +4884,10 @@ together with the Java implementation.</p>
     <ul>
       
       <li class="">
+        <a href="/news/2022/12/02/ORC-1.8.1/">Version 1.8.1</a>
+      </li>
+      
+      <li class="">
         <a href="/news/2022/11/17/ORC-1.7.7/">Version 1.7.7</a>
       </li>
       
@@ -4826,13 +4903,11 @@ together with the Java implementation.</p>
         <a href="/news/2022/06/16/ORC-1.7.5/">Version 1.7.5</a>
       </li>
       
-      <li class="">
-        <a href="/news/2022/04/15/ORC-1.7.4/">Version 1.7.4</a>
-      </li>
-      
     </ul>
     <h4>Other News</h4>
     <ul>
+        
+        
         
         
         
