@@ -18,8 +18,11 @@
 
 package org.apache.orc;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -327,6 +330,21 @@ public enum OrcConf {
 
   public String getString(Configuration conf) {
     return getString(null, conf);
+  }
+
+  public List<String> getStringAsList(Configuration conf) {
+    String value = getString(null, conf);
+    List<String> confList = new ArrayList<>();
+    if (StringUtils.isEmpty(value)) {
+      return confList;
+    }
+    for (String str: value.split(",")) {
+      String trimStr = StringUtils.trim(str);
+      if (StringUtils.isNotEmpty(trimStr)) {
+        confList.add(trimStr);
+      }
+    }
+    return confList;
   }
 
   public void setString(Configuration conf, String value) {
