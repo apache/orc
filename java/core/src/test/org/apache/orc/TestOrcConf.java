@@ -20,6 +20,7 @@ package org.apache.orc;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -138,5 +139,28 @@ public class TestOrcConf {
 
     conf.setInt(ORC_STRIPE_SIZE_CONF.getHiveConfName(), 2000);
     assertEquals(2000, ORC_STRIPE_SIZE_CONF.getLong(tableProperties, conf));
+  }
+
+  @Test
+  public void testGetStringAsList() {
+    Configuration conf = new Configuration();
+
+    conf.set(ORC_COMPRESS_CONF.getHiveConfName(), "a,,b,c, ,d,");
+    List<String> valueList1 =  ORC_COMPRESS_CONF.getStringAsList(conf);
+    assertEquals(valueList1.size(), 4);
+    assertEquals(valueList1.get(0), "a");
+    assertEquals(valueList1.get(1), "b");
+    assertEquals(valueList1.get(2), "c");
+    assertEquals(valueList1.get(3), "d");
+
+    conf.set(ORC_COMPRESS_CONF.getHiveConfName(), "");
+    List<String> valueList2 =  ORC_COMPRESS_CONF.getStringAsList(conf);
+    assertEquals(valueList2.size(), 0);
+
+    conf.set(ORC_COMPRESS_CONF.getHiveConfName(), " abc,  efg,  ");
+    List<String> valueList3 =  ORC_COMPRESS_CONF.getStringAsList(conf);
+    assertEquals(valueList3.size(), 2);
+    assertEquals(valueList3.get(0), "abc");
+    assertEquals(valueList3.get(1), "efg");
   }
 }
