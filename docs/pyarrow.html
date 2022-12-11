@@ -920,27 +920,27 @@
 
 <p><a href="https://arrow.apache.org">Apache Arrow</a> project’s <a href="https://pypi.org/project/pyarrow/">PyArrow</a> is the recommended package.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pip3 install pyarrow==7.0.0
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pip3 install pyarrow==10.0.1
 pip3 install pandas
 </code></pre></div></div>
 
 <h2 id="how-to-write-and-read-an-orc-file">How to write and read an ORC file</h2>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [1]: import pandas as pd
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In [1]: import pyarrow as pa
 
-In [2]: import pyarrow as pa
+In [2]: from pyarrow import orc
 
-In [3]: from pyarrow import orc
+In [3]: orc.write_table(pa.table({"col1": [1, 2, 3]}), "test.orc", compression="zstd")
 
-In [4]: orc.write_table(pa.table({"col1": [1, 2, 3]}), "test.orc")
-
-In [5]: orc.read_table("test.orc").to_pandas()
-Out[5]:
+In [4]: orc.read_table("test.orc").to_pandas()
+Out[4]:
    col1
 0     1
 1     2
 2     3
 </code></pre></div></div>
+
+<p><a href="https://arrow.apache.org/docs/python/orc.html">Apache Arrow ORC</a> page provides more information.</p>
 
           
 
