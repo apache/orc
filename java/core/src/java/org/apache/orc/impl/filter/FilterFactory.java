@@ -71,11 +71,10 @@ public class FilterFactory {
     // 2. Process PluginFilter
     if (opts.allowPluginFilters()) {
       List<BatchFilter> pluginFilters = findPluginFilters(filePath, conf);
-      List<BatchFilter> allowFilters =
-          getAllowedFilters(pluginFilters, opts.pluginAllowListFilters());
-      if (!allowFilters.isEmpty()) {
-        LOG.debug("Added plugin filters {} to the read", allowFilters);
-        filters.addAll(allowFilters);
+      pluginFilters = getAllowedFilters(pluginFilters, opts.pluginAllowListFilters());
+      if (!pluginFilters.isEmpty()) {
+        LOG.debug("Added plugin filters {} to the read", pluginFilters);
+        filters.addAll(pluginFilters);
       }
     }
 
