@@ -22,6 +22,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.orc.filter.BatchFilter;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -61,39 +63,50 @@ public class TestPluginFilterService {
     assertTrue(FilterFactory.findPluginFilters("file://db/table11/file1", conf).isEmpty());
   }
 
+  private Method getAllowedFilters() {
+    Method method = null;
+    try {
+      method = FilterFactory.class.getDeclaredMethod("getAllowedFilters", List.class, List.class);
+    } catch (NoSuchMethodException e) {
+      assert(false);
+    }
+    method.setAccessible(true);
+    return method;
+  }
+
   @Test
-  public void testHitAllowListFilter() {
+  public void testHitAllowListFilter() throws Exception {
     conf.set("my.filter.name", "my_str_i_eq");
     // Hit the allowlist.
     List<String> allowListHit = new ArrayList<>();
     allowListHit.add("org.apache.orc.impl.filter.BatchFilterFactory$BatchFilterImpl");
 
     List<BatchFilter> pluginFilters = FilterFactory.findPluginFilters("file://db/table1/file1", conf);
-    List<BatchFilter> allowListFilter = FilterFactory.getAllowedFilters(pluginFilters, allowListHit);
+    List<BatchFilter> allowListFilter = (List<BatchFilter>)getAllowedFilters().invoke(null, pluginFilters, allowListHit);
 
     assertEquals(1, allowListFilter.size());
   }
 
   @Test
-  public void testAllowListFilterAllowAll() {
+  public void testAllowListFilterAllowAll() throws Exception {
     conf.set("my.filter.name", "my_str_i_eq");
     // Hit the allowlist.
     List<String> allowListHit = new ArrayList<>();
     allowListHit.add("*");
 
     List<BatchFilter> pluginFilters = FilterFactory.findPluginFilters("file://db/table1/file1", conf);
-    List<BatchFilter> allowListFilter = FilterFactory.getAllowedFilters(pluginFilters, allowListHit);
+    List<BatchFilter> allowListFilter = (List<BatchFilter>)getAllowedFilters().invoke(null, pluginFilters, allowListHit);
 
     assertEquals(1, allowListFilter.size());
   }
 
   @Test
-  public void testAllowListFilterDisallowAll() {
+  public void testAllowListFilterDisallowAll() throws Exception {
     conf.set("my.filter.name", "my_str_i_eq");
 
     List<BatchFilter> pluginFilters = FilterFactory.findPluginFilters("file://db/table1/file1", conf);
-    List<BatchFilter> allowListFilter = FilterFactory.getAllowedFilters(pluginFilters, new ArrayList<>());
-    List<BatchFilter> allowListFilterWithNull = FilterFactory.getAllowedFilters(pluginFilters, null);
+    List<BatchFilter> allowListFilter = (List<BatchFilter>)getAllowedFilters().invoke(null, pluginFilters, new ArrayList<>());
+    List<BatchFilter> allowListFilterWithNull = (List<BatchFilter>)getAllowedFilters().invoke(null, pluginFilters, null);
 
     assertEquals(0, allowListFilter.size());
     assertEquals(0, allowListFilterWithNull.size());
