@@ -193,7 +193,8 @@ public class FilterFactory {
    * @param filters whole BatchFilter list we load from class path.
    * @param allowList a Class-Name list that we want to load in.
    */
-  static List<BatchFilter> getAllowedFilters(List<BatchFilter> filters, List<String> allowList) {
+  private static List<BatchFilter> getAllowedFilters(
+      List<BatchFilter> filters, List<String> allowList) {
     List<BatchFilter> allowBatchFilters = new ArrayList<>();
 
     if (allowList != null && allowList.contains("*")) {
