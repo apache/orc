@@ -71,6 +71,7 @@ public class FilterFactory {
     // 2. Process PluginFilter
     if (opts.allowPluginFilters()) {
       List<BatchFilter> pluginFilters = findPluginFilters(filePath, conf);
+      pluginFilters = getAllowedFilters(pluginFilters, opts.pluginAllowListFilters());
       if (!pluginFilters.isEmpty()) {
         LOG.debug("Added plugin filters {} to the read", pluginFilters);
         filters.addAll(pluginFilters);
@@ -183,5 +184,34 @@ public class FilterFactory {
       }
     }
     return filters;
+  }
+
+  /**
+   * Filter BatchFilter which is in the allowList.
+   *
+   * @param filters whole BatchFilter list we load from class path.
+   * @param allowList a Class-Name list that we want to load in.
+   */
+  private static List<BatchFilter> getAllowedFilters(
+      List<BatchFilter> filters, List<String> allowList) {
+    List<BatchFilter> allowBatchFilters = new ArrayList<>();
+
+    if (allowList != null && allowList.contains("*")) {
+      return filters;
+    }
+
+    if (allowList == null || allowList.isEmpty() || filters == null) {
+      LOG.debug("Disable all PluginFilter.");
+      return allowBatchFilters;
+    }
+
+    for (BatchFilter filter: filters) {
+      if (allowList.contains(filter.getClass().getName())) {
+        allowBatchFilters.add(filter);
+      } else {
+        LOG.debug("Ignoring filter service {}", filter);
+      }
+    }
+    return allowBatchFilters;
   }
 }

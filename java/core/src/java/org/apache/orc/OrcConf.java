@@ -193,6 +193,15 @@ public enum OrcConf {
                       + "determined, they are combined using AND. The order of application is "
                       + "non-deterministic and the filter functionality should not depend on the "
                       + "order of application."),
+
+  PLUGIN_FILTER_ALLOWLIST("orc.filter.plugin.allowlist",
+                          "orc.filter.plugin.allowlist",
+                          "*",
+                          "A list of comma-separated class names. If specified it restricts "
+                          + "the PluginFilters to just these classes as discovered by the "
+                          + "PluginFilterService. The default of * allows all discovered classes "
+                          + "and an empty string would not allow any plugins to be applied."),
+
   WRITE_VARIABLE_LENGTH_BLOCKS("orc.write.variable.length.blocks", null, false,
       "A boolean flag as to whether the ORC writer should write variable length\n"
       + "HDFS blocks."),
