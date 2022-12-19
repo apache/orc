@@ -2582,10 +2582,10 @@ public class TestRecordReaderImpl {
     fs.delete(testFilePath, true);
 
     TypeDescription schema =
-            TypeDescription.fromString("struct<str:string>");
+        TypeDescription.fromString("struct<str:string>");
     Writer writer = OrcFile.createWriter(
-            testFilePath,
-            OrcFile.writerOptions(conf).setSchema(schema).rowIndexStride(-1));
+        testFilePath,
+        OrcFile.writerOptions(conf).setSchema(schema).rowIndexStride(-1));
     VectorizedRowBatch batch = schema.createRowBatch();
     BytesColumnVector strVector = (BytesColumnVector) batch.cols[0];
     for (int i = 0; i < 32 * 1024; i++) {
@@ -2603,8 +2603,8 @@ public class TestRecordReaderImpl {
 
     Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf).filesystem(fs));
     SearchArgument sarg = SearchArgumentFactory.newBuilder(conf)
-            .startNot().isNull("str", PredicateLeaf.Type.STRING).end()
-            .build();
+        .startNot().isNull("str", PredicateLeaf.Type.STRING).end()
+        .build();
     RecordReader recordReader = reader.rows(reader.options().searchArgument(sarg, null));
     batch = reader.getSchema().createRowBatch();
     strVector = (BytesColumnVector) batch.cols[0];
