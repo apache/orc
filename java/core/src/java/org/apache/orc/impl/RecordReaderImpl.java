@@ -231,7 +231,7 @@ public class RecordReaderImpl implements RecordReader {
     this.fileIncluded = evolution.getFileIncluded();
     SearchArgument sarg = options.getSearchArgument();
     boolean[] rowIndexCols = new boolean[evolution.getFileIncluded().length];
-    if (sarg != null && rowIndexStride != 0) {
+    if (sarg != null && rowIndexStride > 0) {
       sargApp = new SargApplier(sarg,
           rowIndexStride,
           evolution,

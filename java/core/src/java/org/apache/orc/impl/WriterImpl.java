@@ -182,7 +182,11 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
     this.encodingStrategy = opts.getEncodingStrategy();
     this.compressionStrategy = opts.getCompressionStrategy();
 
-    this.rowIndexStride = opts.getRowIndexStride();
+    if (opts.getRowIndexStride() >= 0) {
+      this.rowIndexStride = opts.getRowIndexStride();
+    } else {
+      this.rowIndexStride = 0;
+    }
 
     this.buildIndex = opts.isBuildIndex() && (rowIndexStride > 0);
     if (buildIndex && rowIndexStride < MIN_ROW_INDEX_STRIDE) {
