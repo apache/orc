@@ -12,7 +12,7 @@ tag_url: https://github.com/apache/orc/releases/tag/rel
 dist_archive: https://archive.apache.org/dist/orc
 destination: target
 exclude: [README.md, Gemfile*, Dockerfile]
-keep_files: [.git]
+keep_files: [.git, .asf.yaml, api, talks/ORC-Deep-Dive-2020.pptx]
 highlight_color: "#67cf56"
 
 collections:
