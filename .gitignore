@@ -12,3 +12,4 @@ dependency-reduced-pom.xml
 .DS_Store
 .java-version
 java/bench/data
+.swp
