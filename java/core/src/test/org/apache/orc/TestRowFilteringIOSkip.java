@@ -254,6 +254,7 @@ public class TestRowFilteringIOSkip {
       .in("f1", PredicateLeaf.Type.LONG, 0L)
       .build();
     Reader.Options options = r.options()
+      .allowSARGToFilter(false)
       .useSelected(true)
       .searchArgument(sarg, new String[] {"f1"});
     VectorizedRowBatch b = schema.createRowBatch();
@@ -504,6 +505,7 @@ public class TestRowFilteringIOSkip {
       .in("ridx", PredicateLeaf.Type.LONG, 0L, 1000000L, 2000000L, 3000000L)
       .build();
     Reader.Options options = r.options()
+      .allowSARGToFilter(false)
       .useSelected(true)
       .searchArgument(sarg, new String[] {"ridx"});
 
