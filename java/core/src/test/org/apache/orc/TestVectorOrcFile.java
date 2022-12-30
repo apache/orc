@@ -2749,7 +2749,8 @@ public class TestVectorOrcFile {
     rows = reader.rows(reader.options()
         .range(0L, Long.MAX_VALUE)
         .include(new boolean[]{true, true, true})
-        .searchArgument(sarg, new String[]{null, "int1", "string1"}));
+        .searchArgument(sarg, new String[]{null, "int1", "string1"})
+        .allowSARGToFilter(false));
     assertEquals(0, rows.getRowNumber());
     assertTrue(rows.nextBatch(batch));
     assertEquals(1000, batch.size);
@@ -4275,7 +4276,8 @@ public class TestVectorOrcFile {
     rows = reader.rows(reader.options()
             .range(0L, Long.MAX_VALUE)
             .include(new boolean[]{true, true,true,true, true})
-            .searchArgument(sarg, new String[]{null, "int1",null, "int2","string1"}));
+            .searchArgument(sarg, new String[]{null, "int1",null, "int2","string1"})
+            .allowSARGToFilter(false));
     assertEquals(0, rows.getRowNumber());
     assertTrue(rows.nextBatch(batch));
     assertEquals(1000, batch.size);
@@ -4346,7 +4348,8 @@ public class TestVectorOrcFile {
 
     RecordReader rows = reader.rows(reader.options()
             .range(0L, Long.MAX_VALUE)
-            .searchArgument(sarg, new String[]{"double1"}));
+            .searchArgument(sarg, new String[]{"double1"})
+            .allowSARGToFilter(false));
     batch = reader.getSchema().createRowBatch(3500);
 
     rows.nextBatch(batch);
@@ -4369,7 +4372,8 @@ public class TestVectorOrcFile {
 
     rows = reader.rows(reader.options()
         .range(0L, Long.MAX_VALUE)
-        .searchArgument(sarg, new String[]{"float1"}));
+        .searchArgument(sarg, new String[]{"float1"})
+        .allowSARGToFilter(false));
     batch = reader.getSchema().createRowBatch(3500);
 
     rows.nextBatch(batch);
