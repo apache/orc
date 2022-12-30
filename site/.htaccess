@@ -2,8 +2,9 @@
 RedirectMatch Permanent ^/jira$ https://issues.apache.org/jira/browse/orc
 RedirectMatch Permanent ^/github$ https://github.com/apache/orc
 RedirectMatch Permanent ^/bugs$ https://issues.apache.org/jira/browse/orc
-RedirectMatch Permanent ^/downloads$ https://www.apache.org/dyn/closer.cgi/orc/
-RedirectMatch Permanent ^/releases$ https://orc.apache.org/docs/releases.html
+RedirectMatch Permanent ^/issues$ https://github.com/apache/orc/issues
+RedirectMatch Permanent ^/milestones$ https://github.com/apache/orc/milestones
+RedirectMatch Permanent ^/downloads$ https://downloads.apache.org/orc/
 RedirectMatch Permanent ^/src$ https://github.com/apache/orc
 RedirectMatch Permanent ^/web-src$ https://github.com/apache/orc/tree/main/site
 RewriteEngine On
