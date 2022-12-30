@@ -412,7 +412,7 @@ public class TestOrcFileEvolution {
 
       Reader.Options options = reader.options().schema(readTypeDescr);
       if (sArg != null && sCols != null) {
-        options.searchArgument(sArg, sCols);
+        options.searchArgument(sArg, sCols).allowSARGToFilter(false);
       }
 
       OrcMapredRecordReader<OrcStruct> recordReader =

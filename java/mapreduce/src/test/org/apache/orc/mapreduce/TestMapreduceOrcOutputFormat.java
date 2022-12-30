@@ -79,6 +79,7 @@ public class TestMapreduceOrcOutputFormat {
     OrcConf.MAPRED_OUTPUT_SCHEMA.setString(conf, typeStr);
     conf.set("mapreduce.output.fileoutputformat.outputdir", workDir.toString());
     conf.setInt(OrcConf.ROW_INDEX_STRIDE.getAttribute(), 1000);
+    conf.setBoolean(OrcConf.ALLOW_SARG_TO_FILTER.getAttribute(), false);
     conf.setBoolean(OrcOutputFormat.SKIP_TEMP_DIRECTORY, true);
     OutputFormat<NullWritable, OrcStruct> outputFormat =
         new OrcOutputFormat<OrcStruct>();
