@@ -83,7 +83,7 @@ public enum OrcConf {
           "3.2Mb, a new smaller stripe will be inserted to fit within that\n" +
           "space. This will make sure that no stripe written will block\n" +
           " boundaries and cause remote reads within a node local task."),
-  BLOOM_FILTER_FPP("orc.bloom.filter.fpp", "orc.default.bloom.fpp", 0.05,
+  BLOOM_FILTER_FPP("orc.bloom.filter.fpp", "orc.default.bloom.fpp", 0.01,
       "Define the default false positive probability for bloom filters."),
   USE_ZEROCOPY("orc.use.zerocopy", "hive.exec.orc.zerocopy", false,
       "Use zerocopy reads with ORC. (This requires Hadoop 2.3 or later.)"),
