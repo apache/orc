@@ -2,7 +2,7 @@
   "fileName": "TestFileDump.testDump.orc",
   "fileVersion": "0.12",
   "writerVersion": "ORC_14",
-  "softwareVersion": "ORC Java 1.8.0-SNAPSHOT",
+  "softwareVersion": "ORC Java 1.9.0-SNAPSHOT",
   "numberOfRows": 21000,
   "compression": "ZLIB",
   "compressionBufferSize": 4096,
@@ -268,7 +268,7 @@
       "stripeNumber": 1,
       "stripeInformation": {
         "offset": 3,
-        "indexLength": 768,
+        "indexLength": 1349,
         "dataLength": 63770,
         "footerLength": 89,
         "rowCount": 5000
@@ -302,42 +302,42 @@
           "columnId": 3,
           "section": "BLOOM_FILTER_UTF8",
           "startOffset": 461,
-          "length": 310
+          "length": 891
         },
         {
           "columnId": 1,
           "section": "DATA",
-          "startOffset": 771,
+          "startOffset": 1352,
           "length": 20035
         },
         {
           "columnId": 2,
           "section": "DATA",
-          "startOffset": 20806,
+          "startOffset": 21387,
           "length": 40050
         },
         {
           "columnId": 3,
           "section": "PRESENT",
-          "startOffset": 60856,
+          "startOffset": 61437,
           "length": 17
         },
         {
           "columnId": 3,
           "section": "DATA",
-          "startOffset": 60873,
+          "startOffset": 61454,
           "length": 3510
         },
         {
           "columnId": 3,
           "section": "LENGTH",
-          "startOffset": 64383,
+          "startOffset": 64964,
           "length": 25
         },
         {
           "columnId": 3,
           "section": "DICTIONARY_DATA",
-          "startOffset": 64408,
+          "startOffset": 64989,
           "length": 133
         }
       ],
@@ -458,51 +458,51 @@
           "bloomFilterIndexes": [
             {
               "entryId": 0,
-              "numHashFunctions": 4,
-              "bitCount": 6272,
-              "popCount": 138,
-              "loadFactor": 0.022002551704645157,
-              "expectedFpp": 2.3436470542037569E-7
+              "numHashFunctions": 7,
+              "bitCount": 9600,
+              "popCount": 238,
+              "loadFactor": 0.024791667237877846,
+              "expectedFpp": 5.756256582500896E-12
             },
             {
               "entryId": 1,
-              "numHashFunctions": 4,
-              "bitCount": 6272,
-              "popCount": 138,
-              "loadFactor": 0.022002551704645157,
-              "expectedFpp": 2.3436470542037569E-7
+              "numHashFunctions": 7,
+              "bitCount": 9600,
+              "popCount": 238,
+              "loadFactor": 0.024791667237877846,
+              "expectedFpp": 5.756256582500896E-12
             },
             {
               "entryId": 2,
-              "numHashFunctions": 4,
-              "bitCount": 6272,
-              "popCount": 138,
-              "loadFactor": 0.022002551704645157,
-              "expectedFpp": 2.3436470542037569E-7
+              "numHashFunctions": 7,
+              "bitCount": 9600,
+              "popCount": 238,
+              "loadFactor": 0.024791667237877846,
+              "expectedFpp": 5.756256582500896E-12
             },
             {
               "entryId": 3,
-              "numHashFunctions": 4,
-              "bitCount": 6272,
-              "popCount": 138,
-              "loadFactor": 0.022002551704645157,
-              "expectedFpp": 2.3436470542037569E-7
+              "numHashFunctions": 7,
+              "bitCount": 9600,
+              "popCount": 238,
+              "loadFactor": 0.024791667237877846,
+              "expectedFpp": 5.756256582500896E-12
             },
             {
               "entryId": 4,
-              "numHashFunctions": 4,
-              "bitCount": 6272,
-              "popCount": 138,
-              "loadFactor": 0.022002551704645157,
-              "expectedFpp": 2.3436470542037569E-7
+              "numHashFunctions": 7,
+              "bitCount": 9600,
+              "popCount": 238,
+              "loadFactor": 0.024791667237877846,
+              "expectedFpp": 5.756256582500896E-12
             }
           ],
           "stripeLevelBloomFilter": {
-            "numHashFunctions": 4,
-            "bitCount": 6272,
-            "popCount": 138,
-            "loadFactor": 0.022002551704645157,
-            "expectedFpp": 2.3436470542037569E-7
+            "numHashFunctions": 7,
+            "bitCount": 9600,
+            "popCount": 238,
+            "loadFactor": 0.024791667237877846,
+            "expectedFpp": 5.756256582500896E-12
           }
         }
       ]
@@ -510,8 +510,8 @@
     {
       "stripeNumber": 2,
       "stripeInformation": {
-        "offset": 64630,
-        "indexLength": 759,
+        "offset": 65211,
+        "indexLength": 1340,
         "dataLength": 63763,
         "footerLength": 88,
         "rowCount": 5000
@@ -520,67 +520,67 @@
         {
           "columnId": 0,
           "section": "ROW_INDEX",
-          "startOffset": 64630,
+          "startOffset": 65211,
           "length": 17
         },
         {
           "columnId": 1,
           "section": "ROW_INDEX",
-          "startOffset": 64647,
+          "startOffset": 65228,
           "length": 166
         },
         {
           "columnId": 2,
           "section": "ROW_INDEX",
-          "startOffset": 64813,
+          "startOffset": 65394,
           "length": 166
         },
         {
           "columnId": 3,
           "section": "ROW_INDEX",
-          "startOffset": 64979,
+          "startOffset": 65560,
           "length": 100
         },
         {
           "columnId": 3,
           "section": "BLOOM_FILTER_UTF8",
-          "startOffset": 65079,
-          "length": 310
+          "startOffset": 65660,
+          "length": 891
         },
         {
           "columnId": 1,
           "section": "DATA",
-          "startOffset": 65389,
+          "startOffset": 66551,
           "length": 20035
         },
         {
           "columnId": 2,
           "section": "DATA",
-          "startOffset": 85424,
+          "startOffset": 86586,
           "length": 40050
         },
         {
           "columnId": 3,
           "section": "PRESENT",
-          "startOffset": 125474,
+          "startOffset": 126636,
           "length": 17
         },
         {
           "columnId": 3,
           "section": "DATA",
-          "startOffset": 125491,
+          "startOffset": 126653,
           "length": 3503
         },
         {
           "columnId": 3,
           "section": "LENGTH",
-          "startOffset": 128994,
+          "startOffset": 130156,
           "length": 25
         },
         {
           "columnId": 3,
           "section": "DICTIONARY_DATA",
-          "startOffset": 129019,
+          "startOffset": 130181,
           "length": 133
         }
       ],
@@ -701,51 +701,51 @@
           "bloomFilterIndexes": [
             {
               "entryId": 0,
-              "numHashFunctions": 4,
-              "bitCount": 6272,
-              "popCount": 138,
-              "loadFactor": 0.022002551704645157,
-              "expectedFpp": 2.3436470542037569E-7
+              "numHashFunctions": 7,
+              "bitCount": 9600,
+              "popCount": 238,
+              "loadFactor": 0.024791667237877846,
+              "expectedFpp": 5.756256582500896E-12
             },
             {
               "entryId": 1,
-              "numHashFunctions": 4,
-              "bitCount": 6272,
-              "popCount": 138,
-              "loadFactor": 0.022002551704645157,
-              "expectedFpp": 2.3436470542037569E-7
+              "numHashFunctions": 7,
+              "bitCount": 9600,
+              "popCount": 238,
+              "loadFactor": 0.024791667237877846,
+              "expectedFpp": 5.756256582500896E-12
             },
             {
               "entryId": 2,
-              "numHashFunctions": 4,
-              "bitCount": 6272,
-              "popCount": 138,
-              "loadFactor": 0.022002551704645157,
-              "expectedFpp": 2.3436470542037569E-7
+              "numHashFunctions": 7,
+              "bitCount": 9600,
+              "popCount": 238,
+              "loadFactor": 0.024791667237877846,
+              "expectedFpp": 5.756256582500896E-12
             },
             {
               "entryId": 3,
-              "numHashFunctions": 4,
-              "bitCount": 6272,
-              "popCount": 138,
-              "loadFactor": 0.022002551704645157,
-              "expectedFpp": 2.3436470542037569E-7
+              "numHashFunctions": 7,
+              "bitCount": 9600,
+              "popCount": 238,
+              "loadFactor": 0.024791667237877846,
+              "expectedFpp": 5.756256582500896E-12
             },
             {
               "entryId": 4,
-              "numHashFunctions": 4,
-              "bitCount": 6272,
-              "popCount": 138,
-              "loadFactor": 0.022002551704645157,
-              "expectedFpp": 2.3436470542037569E-7
+              "numHashFunctions": 7,
+              "bitCount": 9600,
+              "popCount": 238,
+              "loadFactor": 0.024791667237877846,
+              "expectedFpp": 5.756256582500896E-12
             }
           ],
           "stripeLevelBloomFilter": {
-            "numHashFunctions": 4,
-            "bitCount": 6272,
-            "popCount": 138,
-            "loadFactor": 0.022002551704645157,
-            "expectedFpp": 2.3436470542037569E-7
+            "numHashFunctions": 7,
+            "bitCount": 9600,
+            "popCount": 238,
+            "loadFactor": 0.024791667237877846,
+            "expectedFpp": 5.756256582500896E-12
           }
         }
       ]
@@ -753,77 +753,77 @@
     {
       "stripeNumber": 3,
       "stripeInformation": {
-        "offset": 129240,
-        "indexLength": 760,
+        "offset": 130402,
+        "indexLength": 1341,
         "dataLength": 63770,
-        "footerLength": 89,
+        "footerLength": 90,
         "rowCount": 5000
       },
       "streams": [
         {
           "columnId": 0,
           "section": "ROW_INDEX",
-          "startOffset": 129240,
+          "startOffset": 130402,
           "length": 17
         },
         {
           "columnId": 1,
           "section": "ROW_INDEX",
-          "startOffset": 129257,
+          "startOffset": 130419,
           "length": 164
         },
         {
           "columnId": 2,
           "section": "ROW_INDEX",
-          "startOffset": 129421,
+          "startOffset": 130583,
           "length": 167
         },
         {
           "columnId": 3,
           "section": "ROW_INDEX",
-          "startOffset": 129588,
+          "startOffset": 130750,
           "length": 102
         },
         {
           "columnId": 3,
           "section": "BLOOM_FILTER_UTF8",
-          "startOffset": 129690,
-          "length": 310
+          "startOffset": 130852,
+          "length": 891
         },
         {
           "columnId": 1,
           "section": "DATA",
-          "startOffset": 130000,
+          "startOffset": 131743,
           "length": 20035
         },
         {
           "columnId": 2,
           "section": "DATA",
-          "startOffset": 150035,
+          "startOffset": 151778,
           "length": 40050
         },
         {
           "columnId": 3,
           "section": "PRESENT",
-          "startOffset": 190085,
+          "startOffset": 191828,
           "length": 17
         },
         {
           "columnId": 3,
           "section": "DATA",
-          "startOffset": 190102,
+          "startOffset": 191845,
           "length": 3510
         },
         {
           "columnId": 3,
           "section": "LENGTH",
-          "startOffset": 193612,
+          "startOffset": 195355,
           "length": 25
         },
         {
           "columnId": 3,
           "section": "DICTIONARY_DATA",
-          "startOffset": 193637,
+          "startOffset": 195380,
           "length": 133
         }
       ],
@@ -944,51 +944,51 @@
           "bloomFilterIndexes": [
             {
               "entryId": 0,
-              "numHashFunctions": 4,
-              "bitCount": 6272,
-              "popCount": 138,
-              "loadFactor": 0.022002551704645157,
-              "expectedFpp": 2.3436470542037569E-7
+              "numHashFunctions": 7,
+              "bitCount": 9600,
+              "popCount": 238,
+              "loadFactor": 0.024791667237877846,
+              "expectedFpp": 5.756256582500896E-12
             },
             {
               "entryId": 1,
-              "numHashFunctions": 4,
-              "bitCount": 6272,
-              "popCount": 138,
-              "loadFactor": 0.022002551704645157,
-              "expectedFpp": 2.3436470542037569E-7
+              "numHashFunctions": 7,
+              "bitCount": 9600,
+              "popCount": 238,
+              "loadFactor": 0.024791667237877846,
+              "expectedFpp": 5.756256582500896E-12
             },
             {
               "entryId": 2,
-              "numHashFunctions": 4,
-              "bitCount": 6272,
-              "popCount": 138,
-              "loadFactor": 0.022002551704645157,
-              "expectedFpp": 2.3436470542037569E-7
+              "numHashFunctions": 7,
+              "bitCount": 9600,
+              "popCount": 238,
+              "loadFactor": 0.024791667237877846,
+              "expectedFpp": 5.756256582500896E-12
             },
             {
               "entryId": 3,
-              "numHashFunctions": 4,
-              "bitCount": 6272,
-              "popCount": 138,
-              "loadFactor": 0.022002551704645157,
-              "expectedFpp": 2.3436470542037569E-7
+              "numHashFunctions": 7,
+              "bitCount": 9600,
+              "popCount": 238,
+              "loadFactor": 0.024791667237877846,
+              "expectedFpp": 5.756256582500896E-12
             },
             {
               "entryId": 4,
-              "numHashFunctions": 4,
-              "bitCount": 6272,
-              "popCount": 138,
-              "loadFactor": 0.022002551704645157,
-              "expectedFpp": 2.3436470542037569E-7
+              "numHashFunctions": 7,
+              "bitCount": 9600,
+              "popCount": 238,
+              "loadFactor": 0.024791667237877846,
+              "expectedFpp": 5.756256582500896E-12
             }
           ],
           "stripeLevelBloomFilter": {
-            "numHashFunctions": 4,
-            "bitCount": 6272,
-            "popCount": 138,
-            "loadFactor": 0.022002551704645157,
-            "expectedFpp": 2.3436470542037569E-7
+            "numHashFunctions": 7,
+            "bitCount": 9600,
+            "popCount": 238,
+            "loadFactor": 0.024791667237877846,
+            "expectedFpp": 5.756256582500896E-12
           }
         }
       ]
@@ -996,8 +996,8 @@
     {
       "stripeNumber": 4,
       "stripeInformation": {
-        "offset": 193859,
-        "indexLength": 771,
+        "offset": 195603,
+        "indexLength": 1352,
         "dataLength": 63756,
         "footerLength": 90,
         "rowCount": 5000
@@ -1006,67 +1006,67 @@
         {
           "columnId": 0,
           "section": "ROW_INDEX",
-          "startOffset": 193859,
+          "startOffset": 195603,
           "length": 17
         },
         {
           "columnId": 1,
           "section": "ROW_INDEX",
-          "startOffset": 193876,
+          "startOffset": 195620,
           "length": 166
         },
         {
           "columnId": 2,
           "section": "ROW_INDEX",
-          "startOffset": 194042,
+          "startOffset": 195786,
           "length": 171
         },
         {
           "columnId": 3,
           "section": "ROW_INDEX",
-          "startOffset": 194213,
+          "startOffset": 195957,
           "length": 107
         },
         {
           "columnId": 3,
           "section": "BLOOM_FILTER_UTF8",
-          "startOffset": 194320,
-          "length": 310
+          "startOffset": 196064,
+          "length": 891
         },
         {
           "columnId": 1,
           "section": "DATA",
-          "startOffset": 194630,
+          "startOffset": 196955,
           "length": 20035
         },
         {
           "columnId": 2,
           "section": "DATA",
-          "startOffset": 214665,
+          "startOffset": 216990,
           "length": 40050
         },
         {
           "columnId": 3,
           "section": "PRESENT",
-          "startOffset": 254715,
+          "startOffset": 257040,
           "length": 17
         },
         {
           "columnId": 3,
           "section": "DATA",
-          "startOffset": 254732,
+          "startOffset": 257057,
           "length": 3496
         },
         {
           "columnId": 3,
           "section": "LENGTH",
-          "startOffset": 258228,
+          "startOffset": 260553,
           "length": 25
         },
         {
           "columnId": 3,
           "section": "DICTIONARY_DATA",
-          "startOffset": 258253,
+          "startOffset": 260578,
           "length": 133
         }
       ],
@@ -1187,51 +1187,51 @@
           "bloomFilterIndexes": [
             {
               "entryId": 0,
-              "numHashFunctions": 4,
-              "bitCount": 6272,
-              "popCount": 138,
-              "loadFactor": 0.022002551704645157,
-              "expectedFpp": 2.3436470542037569E-7
+              "numHashFunctions": 7,
+              "bitCount": 9600,
+              "popCount": 238,
+              "loadFactor": 0.024791667237877846,
+              "expectedFpp": 5.756256582500896E-12
             },
             {
               "entryId": 1,
-              "numHashFunctions": 4,
-              "bitCount": 6272,
-              "popCount": 138,
-              "loadFactor": 0.022002551704645157,
-              "expectedFpp": 2.3436470542037569E-7
+              "numHashFunctions": 7,
+              "bitCount": 9600,
+              "popCount": 238,
+              "loadFactor": 0.024791667237877846,
+              "expectedFpp": 5.756256582500896E-12
             },
             {
               "entryId": 2,
-              "numHashFunctions": 4,
-              "bitCount": 6272,
-              "popCount": 138,
-              "loadFactor": 0.022002551704645157,
-              "expectedFpp": 2.3436470542037569E-7
+              "numHashFunctions": 7,
+              "bitCount": 9600,
+              "popCount": 238,
+              "loadFactor": 0.024791667237877846,
+              "expectedFpp": 5.756256582500896E-12
             },
             {
               "entryId": 3,
-              "numHashFunctions": 4,
-              "bitCount": 6272,
-              "popCount": 138,
-              "loadFactor": 0.022002551704645157,
-              "expectedFpp": 2.3436470542037569E-7
+              "numHashFunctions": 7,
+              "bitCount": 9600,
+              "popCount": 238,
+              "loadFactor": 0.024791667237877846,
+              "expectedFpp": 5.756256582500896E-12
             },
             {
               "entryId": 4,
-              "numHashFunctions": 4,
-              "bitCount": 6272,
-              "popCount": 138,
-              "loadFactor": 0.022002551704645157,
-              "expectedFpp": 2.3436470542037569E-7
+              "numHashFunctions": 7,
+              "bitCount": 9600,
+              "popCount": 238,
+              "loadFactor": 0.024791667237877846,
+              "expectedFpp": 5.756256582500896E-12
             }
           ],
           "stripeLevelBloomFilter": {
-            "numHashFunctions": 4,
-            "bitCount": 6272,
-            "popCount": 138,
-            "loadFactor": 0.022002551704645157,
-            "expectedFpp": 2.3436470542037569E-7
+            "numHashFunctions": 7,
+            "bitCount": 9600,
+            "popCount": 238,
+            "loadFactor": 0.024791667237877846,
+            "expectedFpp": 5.756256582500896E-12
           }
         }
       ]
@@ -1239,77 +1239,77 @@
     {
       "stripeNumber": 5,
       "stripeInformation": {
-        "offset": 258476,
-        "indexLength": 376,
+        "offset": 260801,
+        "indexLength": 527,
         "dataLength": 12943,
-        "footerLength": 85,
+        "footerLength": 84,
         "rowCount": 1000
       },
       "streams": [
         {
           "columnId": 0,
           "section": "ROW_INDEX",
-          "startOffset": 258476,
+          "startOffset": 260801,
           "length": 12
         },
         {
           "columnId": 1,
           "section": "ROW_INDEX",
-          "startOffset": 258488,
+          "startOffset": 260813,
           "length": 38
         },
         {
           "columnId": 2,
           "section": "ROW_INDEX",
-          "startOffset": 258526,
+          "startOffset": 260851,
           "length": 41
         },
         {
           "columnId": 3,
           "section": "ROW_INDEX",
-          "startOffset": 258567,
+          "startOffset": 260892,
           "length": 41
         },
         {
           "columnId": 3,
           "section": "BLOOM_FILTER_UTF8",
-          "startOffset": 258608,
-          "length": 244
+          "startOffset": 260933,
+          "length": 395
         },
         {
           "columnId": 1,
           "section": "DATA",
-          "startOffset": 258852,
+          "startOffset": 261328,
           "length": 4007
         },
         {
           "columnId": 2,
           "section": "DATA",
-          "startOffset": 262859,
+          "startOffset": 265335,
           "length": 8010
         },
         {
           "columnId": 3,
           "section": "PRESENT",
-          "startOffset": 270869,
+          "startOffset": 273345,
           "length": 16
         },
         {
           "columnId": 3,
           "section": "DATA",
-          "startOffset": 270885,
+          "startOffset": 273361,
           "length": 752
         },
         {
           "columnId": 3,
           "section": "LENGTH",
-          "startOffset": 271637,
+          "startOffset": 274113,
           "length": 25
         },
         {
           "columnId": 3,
           "section": "DICTIONARY_DATA",
-          "startOffset": 271662,
+          "startOffset": 274138,
           "length": 133
         }
       ],
@@ -1358,25 +1358,25 @@
           "bloomFilterIndexes": [
             {
               "entryId": 0,
-              "numHashFunctions": 4,
-              "bitCount": 6272,
-              "popCount": 138,
-              "loadFactor": 0.022002551704645157,
-              "expectedFpp": 2.3436470542037569E-7
+              "numHashFunctions": 7,
+              "bitCount": 9600,
+              "popCount": 238,
+              "loadFactor": 0.024791667237877846,
+              "expectedFpp": 5.756256582500896E-12
             }
           ],
           "stripeLevelBloomFilter": {
-            "numHashFunctions": 4,
-            "bitCount": 6272,
-            "popCount": 138,
-            "loadFactor": 0.022002551704645157,
-            "expectedFpp": 2.3436470542037569E-7
+            "numHashFunctions": 7,
+            "bitCount": 9600,
+            "popCount": 238,
+            "loadFactor": 0.024791667237877846,
+            "expectedFpp": 5.756256582500896E-12
           }
         }
       ]
     }
   ],
-  "fileLength": 272529,
+  "fileLength": 275003,
   "paddingLength": 0,
   "paddingRatio": 0.0,
   "status": "OK"
