@@ -1859,6 +1859,63 @@ namespace orc {
     testSuppressPresentStream(CompressionKind_SNAPPY);
   }
 
+  void testSetOutputBufferCapacity(uint64_t capacity) {
+    MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
+    MemoryPool* pool = getDefaultPool();
+    size_t rowCount = 1000;
+    {
+      auto type = std::unique_ptr<Type>(
+        Type::buildTypeFromString("struct<col1:int,col2:int>"));
+      WriterOptions options;
+      options.setStripeSize(1024 * 1024)
+          .setCompressionBlockSize(1024)
+          .setCompression(CompressionKind_NONE)
+          .setMemoryPool(pool)
+          .setRowIndexStride(1000)
+          .setOutputBufferCapacity(capacity);
+
+      auto writer = createWriter(*type, &memStream, options);
+      auto batch = writer->createRowBatch(rowCount);
+      auto& structBatch = dynamic_cast<StructVectorBatch&>(*batch);
+      auto& longBatch1 = dynamic_cast<LongVectorBatch&>(*structBatch.fields[0]);
+      auto& longBatch2 = dynamic_cast<LongVectorBatch&>(*structBatch.fields[1]);
+      structBatch.numElements = rowCount;
+      longBatch1.numElements = rowCount;
+      longBatch2.numElements = rowCount;
+      for (size_t i = 0; i < rowCount; ++i) {
+        longBatch1.data[i] = static_cast<int64_t>(i * 100);
+        longBatch2.data[i] = static_cast<int64_t>(i * 300);
+      }
+      writer->add(*batch);
+      writer->close();
+    }
+    // read orc file & check the data
+    {
+      std::unique_ptr<InputStream> inStream(
+          new MemoryInputStream(memStream.getData(), memStream.getLength()));
+      ReaderOptions readerOptions;
+      readerOptions.setMemoryPool(*pool);
+      std::unique_ptr<Reader> reader = createReader(std::move(inStream), readerOptions);
+      std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
+      auto batch = rowReader->createRowBatch(rowCount);
+      EXPECT_TRUE(rowReader->next(*batch));
+      EXPECT_EQ(rowCount, batch->numElements);
+      auto& structBatch = dynamic_cast<StructVectorBatch&>(*batch);
+      auto& longBatch1 = dynamic_cast<LongVectorBatch&>(*structBatch.fields[0]);
+      auto& longBatch2 = dynamic_cast<LongVectorBatch&>(*structBatch.fields[1]);
+      for (size_t i = 0; i < rowCount; ++i) {
+        EXPECT_EQ(longBatch1.data[i], static_cast<int64_t>(i * 100));
+        EXPECT_EQ(longBatch2.data[i], static_cast<int64_t>(i * 300));
+      }
+    }
+  }
+
+  TEST(WriterTest, setOutputBufferCapacity) {
+    testSetOutputBufferCapacity(1024);
+    testSetOutputBufferCapacity(1024 * 1024);
+    testSetOutputBufferCapacity(1024 * 1024 * 1024);
+  }
+
   TEST_P(WriterTest, testWriteFixedWidthNumericVectorBatch) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
