@@ -621,7 +621,8 @@ public class TestStringDictionary {
     SearchArgument sarg = SearchArgumentFactory.newBuilder(conf)
         .lessThan("str", PredicateLeaf.Type.STRING, "row 001000")
         .build();
-    RecordReader recordReader = reader.rows(reader.options().searchArgument(sarg, null));
+    Reader.Options options = reader.options().searchArgument(sarg, null).allowSARGToFilter(false);
+    RecordReader recordReader = reader.rows(options);
     batch = reader.getSchema().createRowBatch();
     strVector = (BytesColumnVector) batch.cols[0];
     long base = 0;
@@ -648,7 +649,8 @@ public class TestStringDictionary {
         .lessThan("str", PredicateLeaf.Type.STRING, "row 001000")
         .build();
     try (Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf).filesystem(fs))) {
-      try (RecordReader recordReader = reader.rows(reader.options().searchArgument(sarg, null))) {
+      Reader.Options options = reader.options().searchArgument(sarg, null).allowSARGToFilter(false);
+      try (RecordReader recordReader = reader.rows(options)) {
         VectorizedRowBatch batch = reader.getSchema().createRowBatch();
         BytesColumnVector strVector = (BytesColumnVector) batch.cols[0];
         long base = 0;

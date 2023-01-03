@@ -27,6 +27,7 @@ import org.apache.hadoop.fs.PositionedReadable;
 import org.apache.hadoop.fs.Seekable;
 import org.apache.hadoop.hive.common.io.DiskRangeList;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
+import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
@@ -65,6 +66,7 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.text.DateFormat;
@@ -2569,6 +2571,50 @@ public class TestRecordReaderImpl {
           assertEquals(expectedVal, readX.vector[i]);
         }
       }
+    }
+  }
+
+  @Test
+  public void testRowIndexStrideNegativeFilter() throws Exception {
+    Path testFilePath = new Path(workDir, "rowIndexStrideNegative.orc");
+    Configuration conf = new Configuration();
+    FileSystem fs = FileSystem.get(conf);
+    fs.delete(testFilePath, true);
+
+    TypeDescription schema =
+        TypeDescription.fromString("struct<str:string>");
+    Writer writer = OrcFile.createWriter(
+        testFilePath,
+        OrcFile.writerOptions(conf).setSchema(schema).rowIndexStride(-1));
+    VectorizedRowBatch batch = schema.createRowBatch();
+    BytesColumnVector strVector = (BytesColumnVector) batch.cols[0];
+    for (int i = 0; i < 32 * 1024; i++) {
+      if (batch.size == batch.getMaxSize()) {
+        writer.addRowBatch(batch);
+        batch.reset();
+      }
+      byte[] value = String.format("row %06d", i).getBytes(StandardCharsets.UTF_8);
+      strVector.setRef(batch.size, value, 0, value.length);
+      ++batch.size;
+    }
+    writer.addRowBatch(batch);
+    batch.reset();
+    writer.close();
+
+    Reader reader = OrcFile.createReader(testFilePath, OrcFile.readerOptions(conf).filesystem(fs));
+    SearchArgument sarg = SearchArgumentFactory.newBuilder(conf)
+        .startNot().isNull("str", PredicateLeaf.Type.STRING).end()
+        .build();
+    RecordReader recordReader = reader.rows(reader.options().searchArgument(sarg, null));
+    batch = reader.getSchema().createRowBatch();
+    strVector = (BytesColumnVector) batch.cols[0];
+    long base = 0;
+    while (recordReader.nextBatch(batch)) {
+      for (int r = 0; r < batch.size; ++r) {
+        String value = String.format("row %06d", r + base);
+        assertEquals(value, strVector.toString(r), "row " + (r + base));
+      }
+      base += batch.size;
     }
   }
 }

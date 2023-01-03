@@ -18,8 +18,11 @@
 
 package org.apache.orc;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -80,7 +83,7 @@ public enum OrcConf {
           "3.2Mb, a new smaller stripe will be inserted to fit within that\n" +
           "space. This will make sure that no stripe written will block\n" +
           " boundaries and cause remote reads within a node local task."),
-  BLOOM_FILTER_FPP("orc.bloom.filter.fpp", "orc.default.bloom.fpp", 0.05,
+  BLOOM_FILTER_FPP("orc.bloom.filter.fpp", "orc.default.bloom.fpp", 0.01,
       "Define the default false positive probability for bloom filters."),
   USE_ZEROCOPY("orc.use.zerocopy", "hive.exec.orc.zerocopy", false,
       "Use zerocopy reads with ORC. (This requires Hadoop 2.3 or later.)"),
@@ -190,6 +193,15 @@ public enum OrcConf {
                       + "determined, they are combined using AND. The order of application is "
                       + "non-deterministic and the filter functionality should not depend on the "
                       + "order of application."),
+
+  PLUGIN_FILTER_ALLOWLIST("orc.filter.plugin.allowlist",
+                          "orc.filter.plugin.allowlist",
+                          "*",
+                          "A list of comma-separated class names. If specified it restricts "
+                          + "the PluginFilters to just these classes as discovered by the "
+                          + "PluginFilterService. The default of * allows all discovered classes "
+                          + "and an empty string would not allow any plugins to be applied."),
+
   WRITE_VARIABLE_LENGTH_BLOCKS("orc.write.variable.length.blocks", null, false,
       "A boolean flag as to whether the ORC writer should write variable length\n"
       + "HDFS blocks."),
@@ -327,6 +339,21 @@ public enum OrcConf {
 
   public String getString(Configuration conf) {
     return getString(null, conf);
+  }
+
+  public List<String> getStringAsList(Configuration conf) {
+    String value = getString(null, conf);
+    List<String> confList = new ArrayList<>();
+    if (StringUtils.isEmpty(value)) {
+      return confList;
+    }
+    for (String str: value.split(",")) {
+      String trimStr = StringUtils.trim(str);
+      if (StringUtils.isNotEmpty(trimStr)) {
+        confList.add(trimStr);
+      }
+    }
+    return confList;
   }
 
   public void setString(Configuration conf, String value) {
