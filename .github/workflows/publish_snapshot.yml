@@ -23,4 +23,4 @@ jobs:
       run: |
         cd java
         echo "<settings><servers><server><id>apache.snapshots.https</id><username>$ASF_USERNAME</username><password>$ASF_PASSWORD</password></server></servers></settings>" > settings.xml
-        ./mvnw --settings settings.xml -DskipTests deploy
+        ./mvnw --settings settings.xml -nsu -ntp -DskipTests deploy
