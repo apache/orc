@@ -35,11 +35,9 @@ namespace orc {
                                                bool alignedBitpacking) {
     switch (static_cast<int64_t>(version)) {
       case RleVersion_1:
-        // We don't have std::make_unique() yet.
-        return std::unique_ptr<RleEncoder>(new RleEncoderV1(std::move(output), isSigned));
+        return std::make_unique<RleEncoderV1>(std::move(output), isSigned);
       case RleVersion_2:
-        return std::unique_ptr<RleEncoder>(
-            new RleEncoderV2(std::move(output), isSigned, alignedBitpacking));
+        return std::make_unique<RleEncoderV2>(std::move(output), isSigned, alignedBitpacking);
       default:
         throw NotImplementedYet("Not implemented yet");
     }
@@ -50,11 +48,9 @@ namespace orc {
                                                ReaderMetrics* metrics) {
     switch (static_cast<int64_t>(version)) {
       case RleVersion_1:
-        // We don't have std::make_unique() yet.
-        return std::unique_ptr<RleDecoder>(new RleDecoderV1(std::move(input), isSigned, metrics));
+        return std::make_unique<RleDecoderV1>(std::move(input), isSigned, metrics);
       case RleVersion_2:
-        return std::unique_ptr<RleDecoder>(
-            new RleDecoderV2(std::move(input), isSigned, pool, metrics));
+        return std::make_unique<RleDecoderV2>(std::move(input), isSigned, pool, metrics);
       default:
         throw NotImplementedYet("Not implemented yet");
     }

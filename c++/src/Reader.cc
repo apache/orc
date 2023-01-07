@@ -522,8 +522,8 @@ namespace orc {
     uint64_t stripeFooterLength = info.footerlength();
     std::unique_ptr<SeekableInputStream> pbStream = createDecompressor(
         contents.compression,
-        std::unique_ptr<SeekableInputStream>(new SeekableFileInputStream(
-            contents.stream.get(), stripeFooterStart, stripeFooterLength, *contents.pool)),
+        std::make_unique<SeekableFileInputStream>(contents.stream.get(), stripeFooterStart,
+                                                  stripeFooterLength, *contents.pool),
         contents.blockSize, *contents.pool, contents.readerMetrics);
     proto::StripeFooter result;
     if (!result.ParseFromZeroCopyStream(pbStream.get())) {
@@ -769,13 +769,13 @@ namespace orc {
                                    ? getTimezoneByName(currentStripeFooter.writertimezone())
                                    : getLocalTimezone();
     StatContext statContext(hasCorrectStatistics(), &writerTZ);
-    return std::unique_ptr<StripeStatistics>(new StripeStatisticsImpl(
-        contents->metadata->stripestats(static_cast<int>(stripeIndex)), indexStats, statContext));
+    return std::make_unique<StripeStatisticsImpl>(
+        contents->metadata->stripestats(static_cast<int>(stripeIndex)), indexStats, statContext);
   }
 
   std::unique_ptr<Statistics> ReaderImpl::getStatistics() const {
     StatContext statContext(hasCorrectStatistics());
-    return std::unique_ptr<Statistics>(new StatisticsImpl(*footer, statContext));
+    return std::make_unique<StatisticsImpl>(*footer, statContext);
   }
 
   std::unique_ptr<ColumnStatistics> ReaderImpl::getColumnStatistics(uint32_t index) const {
@@ -802,8 +802,8 @@ namespace orc {
     if (metadataSize != 0) {
       std::unique_ptr<SeekableInputStream> pbStream = createDecompressor(
           contents->compression,
-          std::unique_ptr<SeekableInputStream>(new SeekableFileInputStream(
-              contents->stream.get(), metadataStart, metadataSize, *contents->pool)),
+          std::make_unique<SeekableFileInputStream>(contents->stream.get(), metadataStart,
+                                                    metadataSize, *contents->pool),
           contents->blockSize, *contents->pool, contents->readerMetrics);
       contents->metadata.reset(new proto::Metadata());
       if (!contents->metadata->ParseFromZeroCopyStream(pbStream.get())) {
@@ -836,7 +836,7 @@ namespace orc {
       // load stripe statistics for PPD
       readMetadata();
     }
-    return std::unique_ptr<RowReader>(new RowReaderImpl(contents, opts));
+    return std::make_unique<RowReaderImpl>(contents, opts);
   }
 
   uint64_t maxStreamsForType(const proto::Type& type) {
@@ -1247,8 +1247,7 @@ namespace orc {
 
     ensureOrcFooter(stream, buffer, postscriptSize);
 
-    std::unique_ptr<proto::PostScript> postscript =
-        std::unique_ptr<proto::PostScript>(new proto::PostScript());
+    auto postscript = std::make_unique<proto::PostScript>();
     if (readSize < 1 + postscriptSize) {
       std::stringstream msg;
       msg << "Invalid ORC postscript length: " << postscriptSize
@@ -1315,11 +1314,10 @@ namespace orc {
 
     std::unique_ptr<SeekableInputStream> pbStream =
         createDecompressor(convertCompressionKind(ps),
-                           std::unique_ptr<SeekableInputStream>(
-                               new SeekableArrayInputStream(footerPtr, ps.footerlength())),
+                           std::make_unique<SeekableArrayInputStream>(footerPtr, ps.footerlength()),
                            getCompressionBlockSize(ps), memoryPool, readerMetrics);
 
-    std::unique_ptr<proto::Footer> footer = std::unique_ptr<proto::Footer>(new proto::Footer());
+    auto footer = std::make_unique<proto::Footer>();
     if (!footer->ParseFromZeroCopyStream(pbStream.get())) {
       throw ParseError("Failed to parse the footer from " + stream->getName());
     }
@@ -1330,7 +1328,7 @@ namespace orc {
 
   std::unique_ptr<Reader> createReader(std::unique_ptr<InputStream> stream,
                                        const ReaderOptions& options) {
-    std::shared_ptr<FileContents> contents = std::shared_ptr<FileContents>(new FileContents());
+    auto contents = std::make_shared<FileContents>();
     contents->pool = options.getMemoryPool();
     contents->errorStream = options.getErrorStream();
     contents->readerMetrics = options.getReaderMetrics();
@@ -1343,8 +1341,8 @@ namespace orc {
       if (!tail.ParseFromString(serializedFooter)) {
         throw ParseError("Failed to parse the file tail from string");
       }
-      contents->postscript.reset(new proto::PostScript(tail.postscript()));
-      contents->footer.reset(new proto::Footer(tail.footer()));
+      contents->postscript = std::make_unique<proto::PostScript>(tail.postscript());
+      contents->footer = std::make_unique<proto::Footer>(tail.footer());
       fileLength = tail.filelength();
       postscriptLength = tail.postscriptlength();
     } else {
@@ -1356,7 +1354,7 @@ namespace orc {
       if (readSize < 4) {
         throw ParseError("File size too small");
       }
-      std::unique_ptr<DataBuffer<char>> buffer(new DataBuffer<char>(*contents->pool, readSize));
+      auto buffer = std::make_unique<DataBuffer<char>>(*contents->pool, readSize);
       stream->read(buffer->data(), readSize, fileLength - readSize);
 
       postscriptLength = buffer->data()[readSize - 1] & 0xff;
@@ -1389,8 +1387,7 @@ namespace orc {
       }
     }
     contents->stream = std::move(stream);
-    return std::unique_ptr<Reader>(
-        new ReaderImpl(std::move(contents), options, fileLength, postscriptLength));
+    return std::make_unique<ReaderImpl>(std::move(contents), options, fileLength, postscriptLength);
   }
 
   std::map<uint32_t, BloomFilterIndex> ReaderImpl::getBloomFilters(
@@ -1418,8 +1415,8 @@ namespace orc {
           (included.empty() || included.find(column) != included.end())) {
         std::unique_ptr<SeekableInputStream> pbStream =
             createDecompressor(contents->compression,
-                               std::unique_ptr<SeekableInputStream>(new SeekableFileInputStream(
-                                   contents->stream.get(), offset, length, *contents->pool)),
+                               std::make_unique<SeekableFileInputStream>(
+                                   contents->stream.get(), offset, length, *contents->pool),
                                contents->blockSize, *(contents->pool), contents->readerMetrics);
 
         proto::BloomFilterIndex pbBFIndex;

@@ -85,7 +85,7 @@ namespace orc {
       const proto::StripeStatistics& stripeStats,
       std::vector<std::vector<proto::ColumnStatistics> >& indexStats,
       const StatContext& statContext) {
-    columnStats.reset(new StatisticsImpl(stripeStats, statContext));
+    columnStats = std::make_unique<StatisticsImpl>(stripeStats, statContext);
     rowIndexStats.resize(indexStats.size());
     for (size_t i = 0; i < rowIndexStats.size(); i++) {
       for (size_t j = 0; j < indexStats[i].size(); j++) {
@@ -385,34 +385,34 @@ namespace orc {
   std::unique_ptr<MutableColumnStatistics> createColumnStatistics(const Type& type) {
     switch (static_cast<int64_t>(type.getKind())) {
       case BOOLEAN:
-        return std::unique_ptr<MutableColumnStatistics>(new BooleanColumnStatisticsImpl());
+        return std::make_unique<BooleanColumnStatisticsImpl>();
       case BYTE:
       case INT:
       case LONG:
       case SHORT:
-        return std::unique_ptr<MutableColumnStatistics>(new IntegerColumnStatisticsImpl());
+        return std::make_unique<IntegerColumnStatisticsImpl>();
       case MAP:
       case LIST:
-        return std::unique_ptr<MutableColumnStatistics>(new CollectionColumnStatisticsImpl());
+        return std::make_unique<CollectionColumnStatisticsImpl>();
       case STRUCT:
       case UNION:
-        return std::unique_ptr<MutableColumnStatistics>(new ColumnStatisticsImpl());
+        return std::make_unique<ColumnStatisticsImpl>();
       case FLOAT:
       case DOUBLE:
-        return std::unique_ptr<MutableColumnStatistics>(new DoubleColumnStatisticsImpl());
+        return std::make_unique<DoubleColumnStatisticsImpl>();
       case BINARY:
-        return std::unique_ptr<MutableColumnStatistics>(new BinaryColumnStatisticsImpl());
+        return std::make_unique<BinaryColumnStatisticsImpl>();
       case STRING:
       case CHAR:
       case VARCHAR:
-        return std::unique_ptr<MutableColumnStatistics>(new StringColumnStatisticsImpl());
+        return std::make_unique<StringColumnStatisticsImpl>();
       case DATE:
-        return std::unique_ptr<MutableColumnStatistics>(new DateColumnStatisticsImpl());
+        return std::make_unique<DateColumnStatisticsImpl>();
       case TIMESTAMP:
       case TIMESTAMP_INSTANT:
-        return std::unique_ptr<MutableColumnStatistics>(new TimestampColumnStatisticsImpl());
+        return std::make_unique<TimestampColumnStatisticsImpl>();
       case DECIMAL:
-        return std::unique_ptr<MutableColumnStatistics>(new DecimalColumnStatisticsImpl());
+        return std::make_unique<DecimalColumnStatisticsImpl>();
       default:
         throw NotImplementedYet("Not supported type: " + type.toString());
     }

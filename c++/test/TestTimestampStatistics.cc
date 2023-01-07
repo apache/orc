@@ -94,8 +94,7 @@ namespace orc {
     writer->add(*batch);
     writer->close();
 
-    std::unique_ptr<InputStream> inStream(
-        new MemoryInputStream(memStream.getData(), memStream.getLength()));
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     ReaderOptions rOptions;
     rOptions.setMemoryPool(*pool);
     std::unique_ptr<Reader> reader = createReader(std::move(inStream), rOptions);
@@ -139,8 +138,7 @@ namespace orc {
     writer->add(*batch);
     writer->close();
 
-    std::unique_ptr<InputStream> inStream(
-        new MemoryInputStream(memStream.getData(), memStream.getLength()));
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     ReaderOptions rOptions;
     rOptions.setMemoryPool(*pool);
     std::unique_ptr<Reader> reader = createReader(std::move(inStream), rOptions);

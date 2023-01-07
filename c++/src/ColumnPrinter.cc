@@ -222,75 +222,75 @@ namespace orc {
   }
 
   std::unique_ptr<ColumnPrinter> createColumnPrinter(std::string& buffer, const Type* type) {
-    ColumnPrinter* result = nullptr;
+    std::unique_ptr<ColumnPrinter> result;
     if (type == nullptr) {
-      result = new VoidColumnPrinter(buffer);
+      result = std::make_unique<VoidColumnPrinter>(buffer);
     } else {
       switch (static_cast<int64_t>(type->getKind())) {
         case BOOLEAN:
-          result = new BooleanColumnPrinter(buffer);
+          result = std::make_unique<BooleanColumnPrinter>(buffer);
           break;
 
         case BYTE:
         case SHORT:
         case INT:
         case LONG:
-          result = new LongColumnPrinter(buffer);
+          result = std::make_unique<LongColumnPrinter>(buffer);
           break;
 
         case FLOAT:
         case DOUBLE:
-          result = new DoubleColumnPrinter(buffer, *type);
+          result = std::make_unique<DoubleColumnPrinter>(buffer, *type);
           break;
 
         case STRING:
         case VARCHAR:
         case CHAR:
-          result = new StringColumnPrinter(buffer);
+          result = std::make_unique<StringColumnPrinter>(buffer);
           break;
 
         case BINARY:
-          result = new BinaryColumnPrinter(buffer);
+          result = std::make_unique<BinaryColumnPrinter>(buffer);
           break;
 
         case TIMESTAMP:
         case TIMESTAMP_INSTANT:
-          result = new TimestampColumnPrinter(buffer);
+          result = std::make_unique<TimestampColumnPrinter>(buffer);
           break;
 
         case LIST:
-          result = new ListColumnPrinter(buffer, *type);
+          result = std::make_unique<ListColumnPrinter>(buffer, *type);
           break;
 
         case MAP:
-          result = new MapColumnPrinter(buffer, *type);
+          result = std::make_unique<MapColumnPrinter>(buffer, *type);
           break;
 
         case STRUCT:
-          result = new StructColumnPrinter(buffer, *type);
+          result = std::make_unique<StructColumnPrinter>(buffer, *type);
           break;
 
         case DECIMAL:
           if (type->getPrecision() == 0 || type->getPrecision() > 18) {
-            result = new Decimal128ColumnPrinter(buffer);
+            result = std::make_unique<Decimal128ColumnPrinter>(buffer);
           } else {
-            result = new Decimal64ColumnPrinter(buffer);
+            result = std::make_unique<Decimal64ColumnPrinter>(buffer);
           }
           break;
 
         case DATE:
-          result = new DateColumnPrinter(buffer);
+          result = std::make_unique<DateColumnPrinter>(buffer);
           break;
 
         case UNION:
-          result = new UnionColumnPrinter(buffer, *type);
+          result = std::make_unique<UnionColumnPrinter>(buffer, *type);
           break;
 
         default:
           throw std::logic_error("unknown batch type");
       }
     }
-    return std::unique_ptr<ColumnPrinter>(result);
+    return result;
   }
 
   VoidColumnPrinter::VoidColumnPrinter(std::string& _buffer) : ColumnPrinter(_buffer) {

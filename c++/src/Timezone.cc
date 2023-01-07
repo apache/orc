@@ -447,9 +447,9 @@ namespace orc {
    * Parse the POSIX TZ string.
    */
   std::shared_ptr<FutureRule> parseFutureRule(const std::string& ruleString) {
-    std::shared_ptr<FutureRule> result(new FutureRuleImpl());
+    auto result = std::make_shared<FutureRuleImpl>();
     FutureRuleParser parser(ruleString, dynamic_cast<FutureRuleImpl*>(result.get()));
-    return result;
+    return std::move(result);
   }
 
   std::string TimezoneVariant::toString() const {
@@ -674,7 +674,7 @@ namespace orc {
       size_t size = static_cast<size_t>(file->getLength());
       std::vector<unsigned char> buffer(size);
       file->read(&buffer[0], size, 0);
-      timezoneCache[filename] = std::shared_ptr<Timezone>(new TimezoneImpl(filename, buffer));
+      timezoneCache[filename] = std::make_shared<TimezoneImpl>(filename, buffer);
     } catch (ParseError& err) {
       throw TimezoneError(err.what());
     }
@@ -708,7 +708,7 @@ namespace orc {
    */
   std::unique_ptr<Timezone> getTimezone(const std::string& filename,
                                         const std::vector<unsigned char>& b) {
-    return std::unique_ptr<Timezone>(new TimezoneImpl(filename, b));
+    return std::make_unique<TimezoneImpl>(filename, b);
   }
 
   TimezoneImpl::~TimezoneImpl() {
