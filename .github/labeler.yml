@@ -20,10 +20,11 @@
 INFRA:
   - ".github/**/*"
   - "appveyor.yml"
-  - ".travis.yml"
   - ".asf.yaml"
   - ".gitignore"
+  - "dev/**/*"
   - "docker/**/*"
+  - ".clang-format"
 BUILD:
   - "CMakeLists.txt"
   - "cmake_modules/**/*"
