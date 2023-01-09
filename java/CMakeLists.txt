@@ -62,7 +62,7 @@ add_custom_target(java_build ALL DEPENDS ${ORC_JARS})
 add_test(
   NAME java-test
   COMMAND ./mvnw ${NO_DOWNLOAD_MSG} -Pcmake
-           -Dbuild.dir=${CMAKE_CURRENT_BINARY_DIR} -Dcyclonedx.skip test
+           -Dbuild.dir=${CMAKE_CURRENT_BINARY_DIR} test
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 # TOOD(ORC-1003)
