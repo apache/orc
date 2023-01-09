@@ -52,7 +52,7 @@ endif()
 add_custom_command(
    OUTPUT ${ORC_JARS}
    COMMAND ./mvnw ${NO_DOWNLOAD_MSG} ${JAVA_PROFILE}
-             -Dbuild.dir=${CMAKE_CURRENT_BINARY_DIR} -DskipTests package
+             -Dbuild.dir=${CMAKE_CURRENT_BINARY_DIR} -Dcyclonedx.skip -DskipTests package
    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
    COMMENT "Build the java directory"
    VERBATIM)
@@ -62,7 +62,7 @@ add_custom_target(java_build ALL DEPENDS ${ORC_JARS})
 add_test(
   NAME java-test
   COMMAND ./mvnw ${NO_DOWNLOAD_MSG} -Pcmake
-           -Dbuild.dir=${CMAKE_CURRENT_BINARY_DIR} test
+           -Dbuild.dir=${CMAKE_CURRENT_BINARY_DIR} -Dcyclonedx.skip test
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 # TOOD(ORC-1003)

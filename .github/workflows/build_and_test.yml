@@ -40,7 +40,7 @@ jobs:
             java: 19
             cxx: g++
     env:
-      MAVEN_OPTS: -Xmx2g -Dcyclonedx.skip
+      MAVEN_OPTS: -Xmx2g
       MAVEN_SKIP_RC: true
     steps:
     - name: Checkout
