@@ -63,15 +63,15 @@ void printStatistics(const char* filename, bool withIndex) {
 }
 
 int main(int argc, char* argv[]) {
-  static struct option longOptions[] = {{"help", no_argument, ORC_NULLPTR, 'h'},
-                                        {"withIndex", no_argument, ORC_NULLPTR, 'i'},
-                                        {ORC_NULLPTR, 0, ORC_NULLPTR, 0}};
-  const char* filename = ORC_NULLPTR;
+  static struct option longOptions[] = {{"help", no_argument, nullptr, 'h'},
+                                        {"withIndex", no_argument, nullptr, 'i'},
+                                        {nullptr, 0, nullptr, 0}};
+  const char* filename = nullptr;
   bool withIndex = false;
   bool helpFlag = false;
   int opt;
   do {
-    opt = getopt_long(argc, argv, "hi", longOptions, ORC_NULLPTR);
+    opt = getopt_long(argc, argv, "hi", longOptions, nullptr);
     switch (opt) {
       case '?':
       case 'h':

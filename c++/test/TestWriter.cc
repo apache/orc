@@ -94,7 +94,7 @@ namespace orc {
   TEST_P(WriterTest, writeEmptyFile) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
-    ORC_UNIQUE_PTR<Type> type(Type::buildTypeFromString("struct<col1:int>"));
+    std::unique_ptr<Type> type(Type::buildTypeFromString("struct<col1:int>"));
 
     uint64_t stripeSize = 16 * 1024;       // 16K
     uint64_t compressionBlockSize = 1024;  // 1k
@@ -122,7 +122,7 @@ namespace orc {
   TEST_P(WriterTest, writeIntFileOneStripe) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
-    ORC_UNIQUE_PTR<Type> type(Type::buildTypeFromString("struct<col1:int>"));
+    std::unique_ptr<Type> type(Type::buildTypeFromString("struct<col1:int>"));
 
     uint64_t stripeSize = 16 * 1024;       // 16K
     uint64_t compressionBlockSize = 1024;  // 1k
@@ -182,7 +182,7 @@ namespace orc {
   TEST_P(WriterTest, writeIntFileMultipleStripes) {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
-    ORC_UNIQUE_PTR<Type> type(Type::buildTypeFromString("struct<col1:int>"));
+    std::unique_ptr<Type> type(Type::buildTypeFromString("struct<col1:int>"));
 
     uint64_t stripeSize = 1024;            // 1K
     uint64_t compressionBlockSize = 1024;  // 1k

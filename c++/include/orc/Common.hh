@@ -204,7 +204,7 @@ namespace orc {
     /**
      * Get the StreamInformation for the given stream.
      */
-    virtual ORC_UNIQUE_PTR<StreamInformation> getStreamInformation(uint64_t streamId) const = 0;
+    virtual std::unique_ptr<StreamInformation> getStreamInformation(uint64_t streamId) const = 0;
 
     /**
      * Get the column encoding for the given column.

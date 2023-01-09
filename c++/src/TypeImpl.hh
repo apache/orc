@@ -108,8 +108,8 @@ namespace orc {
      */
     void addChildType(std::unique_ptr<Type> childType);
 
-    static std::pair<ORC_UNIQUE_PTR<Type>, size_t> parseType(const std::string& input, size_t start,
-                                                             size_t end);
+    static std::pair<std::unique_ptr<Type>, size_t> parseType(const std::string& input,
+                                                              size_t start, size_t end);
 
    private:
     /**

@@ -67,7 +67,7 @@ namespace orc {
    */
   class ReaderOptions {
    private:
-    ORC_UNIQUE_PTR<ReaderOptionsPrivate> privateBits;
+    std::unique_ptr<ReaderOptionsPrivate> privateBits;
 
    public:
     ReaderOptions();
@@ -145,7 +145,7 @@ namespace orc {
    */
   class RowReaderOptions {
    private:
-    ORC_UNIQUE_PTR<RowReaderOptionsPrivate> privateBits;
+    std::unique_ptr<RowReaderOptionsPrivate> privateBits;
 
    public:
     RowReaderOptions();
@@ -435,7 +435,7 @@ namespace orc {
      * @param stripeIndex the index of the stripe (0 to N-1) to get information about
      * @return the information about that stripe
      */
-    virtual ORC_UNIQUE_PTR<StripeInformation> getStripe(uint64_t stripeIndex) const = 0;
+    virtual std::unique_ptr<StripeInformation> getStripe(uint64_t stripeIndex) const = 0;
 
     /**
      * Get the number of stripe statistics in the file.
@@ -448,7 +448,7 @@ namespace orc {
      * @param stripeIndex the index of the stripe (0 to N-1) to get statistics about
      * @return the statistics about that stripe
      */
-    virtual ORC_UNIQUE_PTR<StripeStatistics> getStripeStatistics(uint64_t stripeIndex) const = 0;
+    virtual std::unique_ptr<StripeStatistics> getStripeStatistics(uint64_t stripeIndex) const = 0;
 
     /**
      * Get the length of the data stripes in the file.
@@ -484,14 +484,14 @@ namespace orc {
      * Get the statistics about the columns in the file.
      * @return the information about the column
      */
-    virtual ORC_UNIQUE_PTR<Statistics> getStatistics() const = 0;
+    virtual std::unique_ptr<Statistics> getStatistics() const = 0;
 
     /**
      * Get the statistics about a single column in the file.
      * @param columnId id of the column
      * @return the information about the column
      */
-    virtual ORC_UNIQUE_PTR<ColumnStatistics> getColumnStatistics(uint32_t columnId) const = 0;
+    virtual std::unique_ptr<ColumnStatistics> getColumnStatistics(uint32_t columnId) const = 0;
 
     /**
      * Check if the file has correct column statistics.
@@ -523,14 +523,14 @@ namespace orc {
      * Create a RowReader based on this reader with the default options.
      * @return a RowReader to read the rows
      */
-    virtual ORC_UNIQUE_PTR<RowReader> createRowReader() const = 0;
+    virtual std::unique_ptr<RowReader> createRowReader() const = 0;
 
     /**
      * Create a RowReader based on this reader.
      * @param options RowReader Options
      * @return a RowReader to read the rows
      */
-    virtual ORC_UNIQUE_PTR<RowReader> createRowReader(const RowReaderOptions& options) const = 0;
+    virtual std::unique_ptr<RowReader> createRowReader(const RowReaderOptions& options) const = 0;
 
     /**
      * Get the name of the input stream.
@@ -614,7 +614,7 @@ namespace orc {
      * @param size the number of rows to read
      * @return a new ColumnVectorBatch to read into
      */
-    virtual ORC_UNIQUE_PTR<ColumnVectorBatch> createRowBatch(uint64_t size) const = 0;
+    virtual std::unique_ptr<ColumnVectorBatch> createRowBatch(uint64_t size) const = 0;
 
     /**
      * Read the next row batch from the current position.
