@@ -52,7 +52,7 @@ endif()
 add_custom_command(
    OUTPUT ${ORC_JARS}
    COMMAND ./mvnw ${NO_DOWNLOAD_MSG} ${JAVA_PROFILE}
-             -Dbuild.dir=${CMAKE_CURRENT_BINARY_DIR} -DskipTests package
+             -Dbuild.dir=${CMAKE_CURRENT_BINARY_DIR} -Dcyclonedx.skip -DskipTests package
    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
    COMMENT "Build the java directory"
    VERBATIM)
