@@ -318,8 +318,7 @@ namespace orc {
     }
     std::unique_ptr<SeekableInputStream> result =
         createDecompressor(CompressionKind_NONE,
-                           std::unique_ptr<SeekableInputStream>(
-                               new SeekableArrayInputStream(bytes.data(), bytes.size())),
+                           std::make_unique<SeekableArrayInputStream>(bytes.data(), bytes.size()),
                            32768, *getDefaultPool(), getDefaultReaderMetrics());
     const void* ptr;
     int length;
@@ -332,8 +331,7 @@ namespace orc {
   TEST_F(TestDecompression, testLzoEmpty) {
     const unsigned char buffer[] = {0};
     std::unique_ptr<SeekableInputStream> result = createDecompressor(
-        CompressionKind_LZO,
-        std::unique_ptr<SeekableInputStream>(new SeekableArrayInputStream(buffer, 0)), 32768,
+        CompressionKind_LZO, std::make_unique<SeekableArrayInputStream>(buffer, 0), 32768,
         *getDefaultPool(), getDefaultReaderMetrics());
     EXPECT_EQ("lzo(SeekableArrayInputStream 0 of 0)", result->getName());
     const void* ptr;
@@ -345,11 +343,9 @@ namespace orc {
     const unsigned char buffer[] = {70,  0,   0,   48,  88,  88,  88, 88, 97, 98, 99, 100, 97,
                                     98,  99,  100, 65,  66,  67,  68, 65, 66, 67, 68, 119, 120,
                                     121, 122, 119, 122, 121, 122, 49, 50, 51, 17, 0,  0};
-    std::unique_ptr<SeekableInputStream> result =
-        createDecompressor(CompressionKind_LZO,
-                           std::unique_ptr<SeekableInputStream>(
-                               new SeekableArrayInputStream(buffer, ARRAY_SIZE(buffer))),
-                           128 * 1024, *getDefaultPool(), getDefaultReaderMetrics());
+    std::unique_ptr<SeekableInputStream> result = createDecompressor(
+        CompressionKind_LZO, std::make_unique<SeekableArrayInputStream>(buffer, ARRAY_SIZE(buffer)),
+        128 * 1024, *getDefaultPool(), getDefaultReaderMetrics());
     const void* ptr;
     int length;
     ASSERT_EQ(true, result->Next(&ptr, &length));
@@ -386,11 +382,9 @@ namespace orc {
     buffer[458] = 2;
     memset(buffer + 459, 97, 20);
     buffer[479] = 17;
-    std::unique_ptr<SeekableInputStream> result =
-        createDecompressor(CompressionKind_LZO,
-                           std::unique_ptr<SeekableInputStream>(
-                               new SeekableArrayInputStream(buffer, ARRAY_SIZE(buffer))),
-                           128 * 1024, *getDefaultPool(), getDefaultReaderMetrics());
+    std::unique_ptr<SeekableInputStream> result = createDecompressor(
+        CompressionKind_LZO, std::make_unique<SeekableArrayInputStream>(buffer, ARRAY_SIZE(buffer)),
+        128 * 1024, *getDefaultPool(), getDefaultReaderMetrics());
     const void* ptr;
     int length;
     ASSERT_EQ(true, result->Next(&ptr, &length));
@@ -404,8 +398,7 @@ namespace orc {
   TEST_F(TestDecompression, testLz4Empty) {
     const unsigned char buffer[] = {0};
     std::unique_ptr<SeekableInputStream> result = createDecompressor(
-        CompressionKind_LZ4,
-        std::unique_ptr<SeekableInputStream>(new SeekableArrayInputStream(buffer, 0)), 32768,
+        CompressionKind_LZ4, std::make_unique<SeekableArrayInputStream>(buffer, 0), 32768,
         *getDefaultPool(), getDefaultReaderMetrics());
     EXPECT_EQ("lz4(SeekableArrayInputStream 0 of 0)", result->getName());
     const void* ptr;
@@ -417,11 +410,9 @@ namespace orc {
     const unsigned char buffer[] = {60,  0,   0,   128, 88,  88,  88,  88,  97, 98, 99,
                                     100, 4,   0,   64,  65,  66,  67,  68,  4,  0,  176,
                                     119, 120, 121, 122, 119, 122, 121, 122, 49, 50, 51};
-    std::unique_ptr<SeekableInputStream> result =
-        createDecompressor(CompressionKind_LZ4,
-                           std::unique_ptr<SeekableInputStream>(
-                               new SeekableArrayInputStream(buffer, ARRAY_SIZE(buffer))),
-                           128 * 1024, *getDefaultPool(), getDefaultReaderMetrics());
+    std::unique_ptr<SeekableInputStream> result = createDecompressor(
+        CompressionKind_LZ4, std::make_unique<SeekableArrayInputStream>(buffer, ARRAY_SIZE(buffer)),
+        128 * 1024, *getDefaultPool(), getDefaultReaderMetrics());
     const void* ptr;
     int length;
     ASSERT_EQ(true, result->Next(&ptr, &length));
@@ -451,11 +442,9 @@ namespace orc {
     buffer[400] = 80;
     memset(buffer + 401, 97, 5);
 
-    std::unique_ptr<SeekableInputStream> result =
-        createDecompressor(CompressionKind_LZ4,
-                           std::unique_ptr<SeekableInputStream>(
-                               new SeekableArrayInputStream(buffer, ARRAY_SIZE(buffer))),
-                           128 * 1024, *getDefaultPool(), getDefaultReaderMetrics());
+    std::unique_ptr<SeekableInputStream> result = createDecompressor(
+        CompressionKind_LZ4, std::make_unique<SeekableArrayInputStream>(buffer, ARRAY_SIZE(buffer)),
+        128 * 1024, *getDefaultPool(), getDefaultReaderMetrics());
     const void* ptr;
     int length;
     ASSERT_EQ(true, result->Next(&ptr, &length));
@@ -470,8 +459,7 @@ namespace orc {
     const unsigned char buffer[] = {0x0b, 0x0, 0x0, 0x0, 0x1, 0x2, 0x3, 0x4};
     std::unique_ptr<SeekableInputStream> result =
         createDecompressor(CompressionKind_ZLIB,
-                           std::unique_ptr<SeekableInputStream>(
-                               new SeekableArrayInputStream(buffer, ARRAY_SIZE(buffer))),
+                           std::make_unique<SeekableArrayInputStream>(buffer, ARRAY_SIZE(buffer)),
                            32768, *getDefaultPool(), getDefaultReaderMetrics());
     EXPECT_EQ("zlib(SeekableArrayInputStream 0 of 8)", result->getName());
     const void* ptr;
@@ -495,11 +483,10 @@ namespace orc {
   TEST(Zlib, testLiteralBlocks) {
     const unsigned char buffer[] = {0x19, 0x0, 0x0, 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8,
                                     0x9,  0xa, 0xb, 0xb, 0x0, 0x0, 0xc, 0xd, 0xe, 0xf, 0x10};
-    std::unique_ptr<SeekableInputStream> result =
-        createDecompressor(CompressionKind_ZLIB,
-                           std::unique_ptr<SeekableInputStream>(
-                               new SeekableArrayInputStream(buffer, ARRAY_SIZE(buffer), 5)),
-                           5, *getDefaultPool(), getDefaultReaderMetrics());
+    std::unique_ptr<SeekableInputStream> result = createDecompressor(
+        CompressionKind_ZLIB,
+        std::make_unique<SeekableArrayInputStream>(buffer, ARRAY_SIZE(buffer), 5), 5,
+        *getDefaultPool(), getDefaultReaderMetrics());
     EXPECT_EQ("zlib(SeekableArrayInputStream 0 of 23)", result->getName());
     const void* ptr;
     int length;
@@ -536,8 +523,7 @@ namespace orc {
     const unsigned char buffer[] = {0xe, 0x0, 0x0, 0x63, 0x60, 0x64, 0x62, 0xc0, 0x8d, 0x0};
     std::unique_ptr<SeekableInputStream> result =
         createDecompressor(CompressionKind_ZLIB,
-                           std::unique_ptr<SeekableInputStream>(
-                               new SeekableArrayInputStream(buffer, ARRAY_SIZE(buffer))),
+                           std::make_unique<SeekableArrayInputStream>(buffer, ARRAY_SIZE(buffer)),
                            1000, *getDefaultPool(), getDefaultReaderMetrics());
     const void* ptr;
     int length;
@@ -553,11 +539,10 @@ namespace orc {
   TEST(Zlib, testInflateSequence) {
     const unsigned char buffer[] = {0xe, 0x0, 0x0, 0x63, 0x60, 0x64, 0x62, 0xc0, 0x8d, 0x0,
                                     0xe, 0x0, 0x0, 0x63, 0x60, 0x64, 0x62, 0xc0, 0x8d, 0x0};
-    std::unique_ptr<SeekableInputStream> result =
-        createDecompressor(CompressionKind_ZLIB,
-                           std::unique_ptr<SeekableInputStream>(
-                               new SeekableArrayInputStream(buffer, ARRAY_SIZE(buffer), 3)),
-                           1000, *getDefaultPool(), getDefaultReaderMetrics());
+    std::unique_ptr<SeekableInputStream> result = createDecompressor(
+        CompressionKind_ZLIB,
+        std::make_unique<SeekableArrayInputStream>(buffer, ARRAY_SIZE(buffer), 3), 1000,
+        *getDefaultPool(), getDefaultReaderMetrics());
     const void* ptr;
     int length;
     ASSERT_THROW(result->BackUp(20), std::logic_error);
@@ -587,11 +572,10 @@ namespace orc {
   TEST(Zlib, testSkip) {
     const unsigned char buffer[] = {0x19, 0x0, 0x0, 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8,
                                     0x9,  0xa, 0xb, 0xb, 0x0, 0x0, 0xc, 0xd, 0xe, 0xf, 0x10};
-    std::unique_ptr<SeekableInputStream> result =
-        createDecompressor(CompressionKind_ZLIB,
-                           std::unique_ptr<SeekableInputStream>(
-                               new SeekableArrayInputStream(buffer, ARRAY_SIZE(buffer), 5)),
-                           5, *getDefaultPool(), getDefaultReaderMetrics());
+    std::unique_ptr<SeekableInputStream> result = createDecompressor(
+        CompressionKind_ZLIB,
+        std::make_unique<SeekableArrayInputStream>(buffer, ARRAY_SIZE(buffer), 5), 5,
+        *getDefaultPool(), getDefaultReaderMetrics());
     const void* ptr;
     int length;
     ASSERT_EQ(true, result->Next(&ptr, &length));
@@ -669,8 +653,8 @@ namespace orc {
     const long blockSize = 3;
     std::unique_ptr<SeekableInputStream> result = createDecompressor(
         CompressionKind_SNAPPY,
-        std::unique_ptr<SeekableInputStream>(new SeekableArrayInputStream(
-            compressBuffer.getBuffer(), compressBuffer.getBufferSize(), blockSize)),
+        std::make_unique<SeekableArrayInputStream>(compressBuffer.getBuffer(),
+                                                   compressBuffer.getBufferSize(), blockSize),
         buf.size(), *getDefaultPool(), getDefaultReaderMetrics());
     const void* data;
     int length;
@@ -705,11 +689,10 @@ namespace orc {
              compressBuffer.getBufferSize());
 
     const long blockSize = 3;
-    std::unique_ptr<SeekableInputStream> result =
-        createDecompressor(CompressionKind_SNAPPY,
-                           std::unique_ptr<SeekableInputStream>(
-                               new SeekableArrayInputStream(input.data(), input.size(), blockSize)),
-                           buf.size(), *getDefaultPool(), getDefaultReaderMetrics());
+    std::unique_ptr<SeekableInputStream> result = createDecompressor(
+        CompressionKind_SNAPPY,
+        std::make_unique<SeekableArrayInputStream>(input.data(), input.size(), blockSize),
+        buf.size(), *getDefaultPool(), getDefaultReaderMetrics());
     for (int i = 0; i < 4; ++i) {
       const void* data;
       int length;
@@ -737,8 +720,8 @@ namespace orc {
     const long blockSize = 3;
     std::unique_ptr<SeekableInputStream> result = createDecompressor(
         CompressionKind_SNAPPY,
-        std::unique_ptr<SeekableInputStream>(new SeekableArrayInputStream(
-            compressBuffer.getBuffer(), compressBuffer.getBufferSize(), blockSize)),
+        std::make_unique<SeekableArrayInputStream>(compressBuffer.getBuffer(),
+                                                   compressBuffer.getBufferSize(), blockSize),
         buf.size(), *getDefaultPool(), getDefaultReaderMetrics());
     const void* data;
     int length;
@@ -767,8 +750,7 @@ namespace orc {
 
     // Choose a block size larger than the chunk size.
     const long blockSize = 300;
-    std::unique_ptr<SeekableInputStream> input(
-        new SeekableArrayInputStream(buf.data(), buf.size(), blockSize));
+    auto input = std::make_unique<SeekableArrayInputStream>(buf.data(), buf.size(), blockSize);
     std::unique_ptr<SeekableInputStream> stream =
         createDecompressor(CompressionKind_SNAPPY, std::move(input), chunkSize, *getDefaultPool(),
                            getDefaultReaderMetrics());

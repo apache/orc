@@ -43,8 +43,8 @@ namespace orc {
 
   void decompressAndVerify(const MemoryOutputStream& memStream, CompressionKind kind,
                            const char* data, size_t size, MemoryPool& pool) {
-    std::unique_ptr<SeekableInputStream> inputStream(
-        new SeekableArrayInputStream(memStream.getData(), memStream.getLength()));
+    auto inputStream =
+        std::make_unique<SeekableArrayInputStream>(memStream.getData(), memStream.getLength());
 
     std::unique_ptr<SeekableInputStream> decompressStream =
         createDecompressor(kind, std::move(inputStream), 1024, pool, getDefaultReaderMetrics());
@@ -210,8 +210,8 @@ namespace orc {
     EXPECT_TRUE(ps.SerializeToZeroCopyStream(compressStream.get()));
     compressStream->flush();
 
-    std::unique_ptr<SeekableInputStream> inputStream(
-        new SeekableArrayInputStream(memStream.getData(), memStream.getLength()));
+    auto inputStream =
+        std::make_unique<SeekableArrayInputStream>(memStream.getData(), memStream.getLength());
 
     std::unique_ptr<SeekableInputStream> decompressStream =
         createDecompressor(kind, std::move(inputStream), 1024, *pool, getDefaultReaderMetrics());
@@ -332,8 +332,8 @@ namespace orc {
     outStream.flush();
 
     // try to decompress them
-    std::unique_ptr<SeekableInputStream> inputStream(
-        new SeekableArrayInputStream(memStream.getData(), memStream.getLength()));
+    auto inputStream =
+        std::make_unique<SeekableArrayInputStream>(memStream.getData(), memStream.getLength());
     std::unique_ptr<SeekableInputStream> decompressStream = createDecompressor(
         kind, std::move(inputStream), blockSize, *pool, getDefaultReaderMetrics());
 

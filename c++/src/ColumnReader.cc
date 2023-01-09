@@ -1695,20 +1695,17 @@ namespace orc {
     switch (static_cast<int64_t>(type.getKind())) {
       case SHORT: {
         if (useTightNumericVector) {
-          return std::unique_ptr<ColumnReader>(
-              new IntegerColumnReader<ShortVectorBatch>(type, stripe));
+          return std::make_unique<IntegerColumnReader<ShortVectorBatch>>(type, stripe);
         }
       }
       case INT: {
         if (useTightNumericVector) {
-          return std::unique_ptr<ColumnReader>(
-              new IntegerColumnReader<IntVectorBatch>(type, stripe));
+          return std::make_unique<IntegerColumnReader<IntVectorBatch>>(type, stripe);
         }
       }
       case LONG:
       case DATE:
-        return std::unique_ptr<ColumnReader>(
-            new IntegerColumnReader<LongVectorBatch>(type, stripe));
+        return std::make_unique<IntegerColumnReader<LongVectorBatch>>(type, stripe);
       case BINARY:
       case CHAR:
       case STRING:
@@ -1716,83 +1713,79 @@ namespace orc {
         switch (static_cast<int64_t>(stripe.getEncoding(type.getColumnId()).kind())) {
           case proto::ColumnEncoding_Kind_DICTIONARY:
           case proto::ColumnEncoding_Kind_DICTIONARY_V2:
-            return std::unique_ptr<ColumnReader>(new StringDictionaryColumnReader(type, stripe));
+            return std::make_unique<StringDictionaryColumnReader>(type, stripe);
           case proto::ColumnEncoding_Kind_DIRECT:
           case proto::ColumnEncoding_Kind_DIRECT_V2:
-            return std::unique_ptr<ColumnReader>(new StringDirectColumnReader(type, stripe));
+            return std::make_unique<StringDirectColumnReader>(type, stripe);
           default:
             throw NotImplementedYet("buildReader unhandled string encoding");
         }
 
       case BOOLEAN:
-        return std::unique_ptr<ColumnReader>(new BooleanColumnReader(type, stripe));
+        return std::make_unique<BooleanColumnReader>(type, stripe);
 
       case BYTE:
         if (useTightNumericVector) {
-          return std::unique_ptr<ColumnReader>(new ByteColumnReader<ByteVectorBatch>(type, stripe));
+          return std::make_unique<ByteColumnReader<ByteVectorBatch>>(type, stripe);
         }
-        return std::unique_ptr<ColumnReader>(new ByteColumnReader<LongVectorBatch>(type, stripe));
+        return std::make_unique<ByteColumnReader<LongVectorBatch>>(type, stripe);
 
       case LIST:
-        return std::unique_ptr<ColumnReader>(
-            new ListColumnReader(type, stripe, useTightNumericVector));
+        return std::make_unique<ListColumnReader>(type, stripe, useTightNumericVector);
 
       case MAP:
-        return std::unique_ptr<ColumnReader>(
-            new MapColumnReader(type, stripe, useTightNumericVector));
+        return std::make_unique<MapColumnReader>(type, stripe, useTightNumericVector);
 
       case UNION:
-        return std::unique_ptr<ColumnReader>(
-            new UnionColumnReader(type, stripe, useTightNumericVector));
+        return std::make_unique<UnionColumnReader>(type, stripe, useTightNumericVector);
 
       case STRUCT:
-        return std::unique_ptr<ColumnReader>(
-            new StructColumnReader(type, stripe, useTightNumericVector));
+        return std::make_unique<StructColumnReader>(type, stripe, useTightNumericVector);
 
       case FLOAT: {
         if (useTightNumericVector) {
           if (isLittleEndian()) {
-            return std::unique_ptr<ColumnReader>(
-                new DoubleColumnReader<FLOAT, true, float, FloatVectorBatch>(type, stripe));
+            return std::make_unique<DoubleColumnReader<FLOAT, true, float, FloatVectorBatch>>(
+                type, stripe);
           }
-          return std::unique_ptr<ColumnReader>(
-              new DoubleColumnReader<FLOAT, false, float, FloatVectorBatch>(type, stripe));
+          return std::make_unique<DoubleColumnReader<FLOAT, false, float, FloatVectorBatch>>(
+              type, stripe);
         }
         if (isLittleEndian()) {
-          return std::unique_ptr<ColumnReader>(
-              new DoubleColumnReader<FLOAT, true, double, DoubleVectorBatch>(type, stripe));
+          return std::make_unique<DoubleColumnReader<FLOAT, true, double, DoubleVectorBatch>>(
+              type, stripe);
         }
-        return std::unique_ptr<ColumnReader>(
-            new DoubleColumnReader<FLOAT, false, double, DoubleVectorBatch>(type, stripe));
+        return std::make_unique<DoubleColumnReader<FLOAT, false, double, DoubleVectorBatch>>(
+            type, stripe);
       }
       case DOUBLE: {
         if (isLittleEndian()) {
-          return std::unique_ptr<ColumnReader>(
-              new DoubleColumnReader<DOUBLE, true, double, DoubleVectorBatch>(type, stripe));
+          return std::make_unique<DoubleColumnReader<DOUBLE, true, double, DoubleVectorBatch>>(
+              type, stripe);
         }
-        return std::unique_ptr<ColumnReader>(
-            new DoubleColumnReader<DOUBLE, false, double, DoubleVectorBatch>(type, stripe));
+        return std::make_unique<DoubleColumnReader<DOUBLE, false, double, DoubleVectorBatch>>(
+            type, stripe);
       }
       case TIMESTAMP:
-        return std::unique_ptr<ColumnReader>(new TimestampColumnReader(type, stripe, false));
+        return std::make_unique<TimestampColumnReader>(type, stripe, false);
 
       case TIMESTAMP_INSTANT:
-        return std::unique_ptr<ColumnReader>(new TimestampColumnReader(type, stripe, true));
+        return std::make_unique<TimestampColumnReader>(type, stripe, true);
 
       case DECIMAL:
         // is this a Hive 0.11 or 0.12 file?
         if (type.getPrecision() == 0) {
-          return std::unique_ptr<ColumnReader>(new DecimalHive11ColumnReader(type, stripe));
+          return std::make_unique<DecimalHive11ColumnReader>(type, stripe);
         }
         // can we represent the values using int64_t?
         if (type.getPrecision() <= Decimal64ColumnReader::MAX_PRECISION_64) {
           if (stripe.isDecimalAsLong()) {
-            return std::unique_ptr<ColumnReader>(new Decimal64ColumnReaderV2(type, stripe));
+            return std::make_unique<Decimal64ColumnReaderV2>(type, stripe);
           }
-          return std::unique_ptr<ColumnReader>(new Decimal64ColumnReader(type, stripe));
+          return std::make_unique<Decimal64ColumnReader>(type, stripe);
         }
         // otherwise we use the Int128 implementation
-        return std::unique_ptr<ColumnReader>(new Decimal128ColumnReader(type, stripe));
+        return std::make_unique<Decimal128ColumnReader>(type, stripe);
 
       default:
         throw NotImplementedYet("buildReader unhandled type");

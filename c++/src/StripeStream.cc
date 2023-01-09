@@ -99,14 +99,14 @@ namespace orc {
           throw ParseError(msg.str());
         }
         return createDecompressor(reader.getCompression(),
-                                  std::unique_ptr<SeekableInputStream>(new SeekableFileInputStream(
-                                      &input, offset, stream.length(), *pool, myBlock)),
+                                  std::make_unique<SeekableFileInputStream>(
+                                      &input, offset, stream.length(), *pool, myBlock),
                                   reader.getCompressionSize(), *pool,
                                   reader.getFileContents().readerMetrics);
       }
       offset += stream.length();
     }
-    return std::unique_ptr<SeekableInputStream>();
+    return nullptr;
   }
 
   MemoryPool& StripeStreamsImpl::getMemoryPool() const {
@@ -133,10 +133,10 @@ namespace orc {
     if (stripeFooter.get() == nullptr) {
       std::unique_ptr<SeekableInputStream> pbStream =
           createDecompressor(compression,
-                             std::unique_ptr<SeekableInputStream>(new SeekableFileInputStream(
-                                 stream, offset + indexLength + dataLength, footerLength, memory)),
+                             std::make_unique<SeekableFileInputStream>(
+                                 stream, offset + indexLength + dataLength, footerLength, memory),
                              blockSize, memory, metrics);
-      stripeFooter.reset(new proto::StripeFooter());
+      stripeFooter = std::make_unique<proto::StripeFooter>();
       if (!stripeFooter->ParseFromZeroCopyStream(pbStream.get())) {
         throw ParseError("Failed to parse the stripe footer");
       }
@@ -150,8 +150,8 @@ namespace orc {
     for (uint64_t s = 0; s < streamId; ++s) {
       streamOffset += stripeFooter->streams(static_cast<int>(s)).length();
     }
-    return ORC_UNIQUE_PTR<StreamInformation>(
-        new StreamInformationImpl(streamOffset, stripeFooter->streams(static_cast<int>(streamId))));
+    return std::make_unique<StreamInformationImpl>(
+        streamOffset, stripeFooter->streams(static_cast<int>(streamId)));
   }
 
 }  // namespace orc

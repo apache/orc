@@ -217,7 +217,7 @@ namespace orc {
 
   std::unique_ptr<ByteRleEncoder> createByteRleEncoder(
       std::unique_ptr<BufferedOutputStream> output) {
-    return std::unique_ptr<ByteRleEncoder>(new ByteRleEncoderImpl(std::move(output)));
+    return std::make_unique<ByteRleEncoderImpl>(std::move(output));
   }
 
   class BooleanRleEncoderImpl : public ByteRleEncoderImpl {
@@ -488,7 +488,7 @@ namespace orc {
 
   std::unique_ptr<ByteRleDecoder> createByteRleDecoder(std::unique_ptr<SeekableInputStream> input,
                                                        ReaderMetrics* metrics) {
-    return std::unique_ptr<ByteRleDecoder>(new ByteRleDecoderImpl(std::move(input), metrics));
+    return std::make_unique<ByteRleDecoderImpl>(std::move(input), metrics);
   }
 
   class BooleanRleDecoderImpl : public ByteRleDecoderImpl {
@@ -626,7 +626,6 @@ namespace orc {
 
   std::unique_ptr<ByteRleDecoder> createBooleanRleDecoder(
       std::unique_ptr<SeekableInputStream> input, ReaderMetrics* metrics) {
-    BooleanRleDecoderImpl* decoder = new BooleanRleDecoderImpl(std::move(input), metrics);
-    return std::unique_ptr<ByteRleDecoder>(reinterpret_cast<ByteRleDecoder*>(decoder));
+    return std::make_unique<BooleanRleDecoderImpl>(std::move(input), metrics);
   }
 }  // namespace orc

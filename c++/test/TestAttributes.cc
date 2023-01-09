@@ -42,8 +42,8 @@ namespace orc {
     static void TearDownTestCase() {}
 
     std::unique_ptr<Reader> createReader() {
-      std::unique_ptr<InputStream> inStream(
-          new MemoryInputStream(memStream.getData(), memStream.getLength()));
+      auto inStream =
+          std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
       ReaderOptions options;
       return orc::createReader(std::move(inStream), options);
     }

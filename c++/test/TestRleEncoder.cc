@@ -80,10 +80,9 @@ namespace orc {
 
   void decodeAndVerify(RleVersion version, const MemoryOutputStream& memStream, int64_t* data,
                        uint64_t numValues, const char* notNull, bool isSinged) {
-    std::unique_ptr<RleDecoder> decoder =
-        createRleDecoder(std::unique_ptr<SeekableArrayInputStream>(new SeekableArrayInputStream(
-                             memStream.getData(), memStream.getLength())),
-                         isSinged, version, *getDefaultPool(), getDefaultReaderMetrics());
+    std::unique_ptr<RleDecoder> decoder = createRleDecoder(
+        std::make_unique<SeekableArrayInputStream>(memStream.getData(), memStream.getLength()),
+        isSinged, version, *getDefaultPool(), getDefaultReaderMetrics());
 
     int64_t* decodedData = new int64_t[numValues];
     decoder->next(decodedData, numValues, notNull);
@@ -101,9 +100,9 @@ namespace orc {
                                                   bool isSigned) {
     MemoryPool* pool = getDefaultPool();
 
-    return createRleEncoder(std::unique_ptr<BufferedOutputStream>(new BufferedOutputStream(
-                                *pool, &memStream, 500 * 1024, 1024, nullptr)),
-                            isSigned, version, *pool, alignBitpacking);
+    return createRleEncoder(
+        std::make_unique<BufferedOutputStream>(*pool, &memStream, 500 * 1024, 1024, nullptr),
+        isSigned, version, *pool, alignBitpacking);
   }
 
   void RleTest::runExampleTest(int64_t* inputData, uint64_t inputLength,

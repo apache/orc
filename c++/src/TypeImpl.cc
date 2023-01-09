@@ -289,71 +289,63 @@ namespace orc {
       case BOOLEAN:
       case BYTE: {
         if (useTightNumericVector) {
-          return std::unique_ptr<ColumnVectorBatch>(new ByteVectorBatch(capacity, memoryPool));
+          return std::make_unique<ByteVectorBatch>(capacity, memoryPool);
         }
       }
       case SHORT: {
         if (useTightNumericVector) {
-          return std::unique_ptr<ColumnVectorBatch>(new ShortVectorBatch(capacity, memoryPool));
+          return std::make_unique<ShortVectorBatch>(capacity, memoryPool);
         }
       }
       case INT: {
         if (useTightNumericVector) {
-          return std::unique_ptr<ColumnVectorBatch>(new IntVectorBatch(capacity, memoryPool));
+          return std::make_unique<IntVectorBatch>(capacity, memoryPool);
         }
       }
       case LONG:
       case DATE:
-        return std::unique_ptr<ColumnVectorBatch>(new LongVectorBatch(capacity, memoryPool));
+        return std::make_unique<LongVectorBatch>(capacity, memoryPool);
 
       case FLOAT:
         if (useTightNumericVector) {
-          return std::unique_ptr<ColumnVectorBatch>(new FloatVectorBatch(capacity, memoryPool));
+          return std::make_unique<FloatVectorBatch>(capacity, memoryPool);
         }
       case DOUBLE:
-        return std::unique_ptr<ColumnVectorBatch>(new DoubleVectorBatch(capacity, memoryPool));
+        return std::make_unique<DoubleVectorBatch>(capacity, memoryPool);
 
       case STRING:
       case BINARY:
       case CHAR:
       case VARCHAR:
-        return encoded ? std::unique_ptr<ColumnVectorBatch>(
-                             new EncodedStringVectorBatch(capacity, memoryPool))
-                       : std::unique_ptr<ColumnVectorBatch>(
-                             new StringVectorBatch(capacity, memoryPool));
+        return encoded ? std::make_unique<EncodedStringVectorBatch>(capacity, memoryPool)
+                       : std::make_unique<StringVectorBatch>(capacity, memoryPool);
 
       case TIMESTAMP:
       case TIMESTAMP_INSTANT:
-        return std::unique_ptr<ColumnVectorBatch>(new TimestampVectorBatch(capacity, memoryPool));
+        return std::make_unique<TimestampVectorBatch>(capacity, memoryPool);
 
       case STRUCT: {
-        StructVectorBatch* result = new StructVectorBatch(capacity, memoryPool);
-        std::unique_ptr<ColumnVectorBatch> return_value =
-            std::unique_ptr<ColumnVectorBatch>(result);
+        auto result = std::make_unique<StructVectorBatch>(capacity, memoryPool);
         for (uint64_t i = 0; i < getSubtypeCount(); ++i) {
           result->fields.push_back(
               getSubtype(i)
                   ->createRowBatch(capacity, memoryPool, encoded, useTightNumericVector)
                   .release());
         }
-        return return_value;
+        return std::move(result);
       }
 
       case LIST: {
-        ListVectorBatch* result = new ListVectorBatch(capacity, memoryPool);
-        std::unique_ptr<ColumnVectorBatch> return_value =
-            std::unique_ptr<ColumnVectorBatch>(result);
+        auto result = std::make_unique<ListVectorBatch>(capacity, memoryPool);
         if (getSubtype(0) != nullptr) {
           result->elements =
               getSubtype(0)->createRowBatch(capacity, memoryPool, encoded, useTightNumericVector);
         }
-        return return_value;
+        return std::move(result);
       }
 
       case MAP: {
-        MapVectorBatch* result = new MapVectorBatch(capacity, memoryPool);
-        std::unique_ptr<ColumnVectorBatch> return_value =
-            std::unique_ptr<ColumnVectorBatch>(result);
+        auto result = std::make_unique<MapVectorBatch>(capacity, memoryPool);
         if (getSubtype(0) != nullptr) {
           result->keys =
               getSubtype(0)->createRowBatch(capacity, memoryPool, encoded, useTightNumericVector);
@@ -362,29 +354,26 @@ namespace orc {
           result->elements =
               getSubtype(1)->createRowBatch(capacity, memoryPool, encoded, useTightNumericVector);
         }
-        return return_value;
+        return std::move(result);
       }
 
       case DECIMAL: {
         if (getPrecision() == 0 || getPrecision() > 18) {
-          return std::unique_ptr<ColumnVectorBatch>(
-              new Decimal128VectorBatch(capacity, memoryPool));
+          return std::make_unique<Decimal128VectorBatch>(capacity, memoryPool);
         } else {
-          return std::unique_ptr<ColumnVectorBatch>(new Decimal64VectorBatch(capacity, memoryPool));
+          return std::make_unique<Decimal64VectorBatch>(capacity, memoryPool);
         }
       }
 
       case UNION: {
-        UnionVectorBatch* result = new UnionVectorBatch(capacity, memoryPool);
-        std::unique_ptr<ColumnVectorBatch> return_value =
-            std::unique_ptr<ColumnVectorBatch>(result);
+        auto result = std::make_unique<UnionVectorBatch>(capacity, memoryPool);
         for (uint64_t i = 0; i < getSubtypeCount(); ++i) {
           result->children.push_back(
               getSubtype(i)
                   ->createRowBatch(capacity, memoryPool, encoded, useTightNumericVector)
                   .release());
         }
-        return return_value;
+        return std::move(result);
       }
 
       default:
@@ -393,38 +382,36 @@ namespace orc {
   }
 
   std::unique_ptr<Type> createPrimitiveType(TypeKind kind) {
-    return std::unique_ptr<Type>(new TypeImpl(kind));
+    return std::make_unique<TypeImpl>(kind);
   }
 
   std::unique_ptr<Type> createCharType(TypeKind kind, uint64_t maxLength) {
-    return std::unique_ptr<Type>(new TypeImpl(kind, maxLength));
+    return std::make_unique<TypeImpl>(kind, maxLength);
   }
 
   std::unique_ptr<Type> createDecimalType(uint64_t precision, uint64_t scale) {
-    return std::unique_ptr<Type>(new TypeImpl(DECIMAL, precision, scale));
+    return std::make_unique<TypeImpl>(DECIMAL, precision, scale);
   }
 
   std::unique_ptr<Type> createStructType() {
-    return std::unique_ptr<Type>(new TypeImpl(STRUCT));
+    return std::make_unique<TypeImpl>(STRUCT);
   }
 
   std::unique_ptr<Type> createListType(std::unique_ptr<Type> elements) {
-    TypeImpl* result = new TypeImpl(LIST);
-    std::unique_ptr<Type> return_value = std::unique_ptr<Type>(result);
+    auto result = std::make_unique<TypeImpl>(LIST);
     result->addChildType(std::move(elements));
-    return return_value;
+    return std::move(result);
   }
 
   std::unique_ptr<Type> createMapType(std::unique_ptr<Type> key, std::unique_ptr<Type> value) {
-    TypeImpl* result = new TypeImpl(MAP);
-    std::unique_ptr<Type> return_value = std::unique_ptr<Type>(result);
+    auto result = std::make_unique<TypeImpl>(MAP);
     result->addChildType(std::move(key));
     result->addChildType(std::move(value));
-    return return_value;
+    return std::move(result);
   }
 
   std::unique_ptr<Type> createUnionType() {
-    return std::unique_ptr<Type>(new TypeImpl(UNION));
+    return std::make_unique<TypeImpl>(UNION);
   }
 
   std::string printProtobufMessage(const google::protobuf::Message& message);
@@ -443,24 +430,22 @@ namespace orc {
       case proto::Type_Kind_TIMESTAMP:
       case proto::Type_Kind_TIMESTAMP_INSTANT:
       case proto::Type_Kind_DATE:
-        ret = std::unique_ptr<Type>(new TypeImpl(static_cast<TypeKind>(type.kind())));
+        ret = std::make_unique<TypeImpl>(static_cast<TypeKind>(type.kind()));
         break;
 
       case proto::Type_Kind_CHAR:
       case proto::Type_Kind_VARCHAR:
-        ret = std::unique_ptr<Type>(
-            new TypeImpl(static_cast<TypeKind>(type.kind()), type.maximumlength()));
+        ret = std::make_unique<TypeImpl>(static_cast<TypeKind>(type.kind()), type.maximumlength());
         break;
 
       case proto::Type_Kind_DECIMAL:
-        ret = std::unique_ptr<Type>(new TypeImpl(DECIMAL, type.precision(), type.scale()));
+        ret = std::make_unique<TypeImpl>(DECIMAL, type.precision(), type.scale());
         break;
 
       case proto::Type_Kind_LIST:
       case proto::Type_Kind_MAP:
       case proto::Type_Kind_UNION: {
-        TypeImpl* result = new TypeImpl(static_cast<TypeKind>(type.kind()));
-        ret = std::unique_ptr<Type>(result);
+        ret = std::make_unique<TypeImpl>(static_cast<TypeKind>(type.kind()));
         if (type.kind() == proto::Type_Kind_LIST && type.subtypes_size() != 1)
           throw ParseError("Illegal LIST type that doesn't contain one subtype");
         if (type.kind() == proto::Type_Kind_MAP && type.subtypes_size() != 2)
@@ -468,19 +453,17 @@ namespace orc {
         if (type.kind() == proto::Type_Kind_UNION && type.subtypes_size() == 0)
           throw ParseError("Illegal UNION type that doesn't contain any subtypes");
         for (int i = 0; i < type.subtypes_size(); ++i) {
-          result->addUnionChild(
-              convertType(footer.types(static_cast<int>(type.subtypes(i))), footer));
+          ret->addUnionChild(convertType(footer.types(static_cast<int>(type.subtypes(i))), footer));
         }
         break;
       }
 
       case proto::Type_Kind_STRUCT: {
-        TypeImpl* result = new TypeImpl(STRUCT);
-        ret = std::unique_ptr<Type>(result);
+        ret = std::make_unique<TypeImpl>(STRUCT);
         if (type.subtypes_size() > type.fieldnames_size())
           throw ParseError("Illegal STRUCT type that contains less fieldnames than subtypes");
         for (int i = 0; i < type.subtypes_size(); ++i) {
-          result->addStructField(
+          ret->addStructField(
               type.fieldnames(i),
               convertType(footer.types(static_cast<int>(type.subtypes(i))), footer));
         }
@@ -506,10 +489,10 @@ namespace orc {
    */
   std::unique_ptr<Type> buildSelectedType(const Type* fileType, const std::vector<bool>& selected) {
     if (fileType == nullptr || !selected[fileType->getColumnId()]) {
-      return std::unique_ptr<Type>();
+      return nullptr;
     }
 
-    TypeImpl* result;
+    std::unique_ptr<TypeImpl> result;
     switch (static_cast<int>(fileType->getKind())) {
       case BOOLEAN:
       case BYTE:
@@ -523,31 +506,32 @@ namespace orc {
       case TIMESTAMP:
       case TIMESTAMP_INSTANT:
       case DATE:
-        result = new TypeImpl(fileType->getKind());
+        result = std::make_unique<TypeImpl>(fileType->getKind());
         break;
 
       case DECIMAL:
-        result = new TypeImpl(fileType->getKind(), fileType->getPrecision(), fileType->getScale());
+        result = std::make_unique<TypeImpl>(fileType->getKind(), fileType->getPrecision(),
+                                            fileType->getScale());
         break;
 
       case VARCHAR:
       case CHAR:
-        result = new TypeImpl(fileType->getKind(), fileType->getMaximumLength());
+        result = std::make_unique<TypeImpl>(fileType->getKind(), fileType->getMaximumLength());
         break;
 
       case LIST:
-        result = new TypeImpl(fileType->getKind());
+        result = std::make_unique<TypeImpl>(fileType->getKind());
         result->addChildType(buildSelectedType(fileType->getSubtype(0), selected));
         break;
 
       case MAP:
-        result = new TypeImpl(fileType->getKind());
+        result = std::make_unique<TypeImpl>(fileType->getKind());
         result->addChildType(buildSelectedType(fileType->getSubtype(0), selected));
         result->addChildType(buildSelectedType(fileType->getSubtype(1), selected));
         break;
 
       case STRUCT: {
-        result = new TypeImpl(fileType->getKind());
+        result = std::make_unique<TypeImpl>(fileType->getKind());
         for (uint64_t child = 0; child < fileType->getSubtypeCount(); ++child) {
           std::unique_ptr<Type> childType =
               buildSelectedType(fileType->getSubtype(child), selected);
@@ -559,7 +543,7 @@ namespace orc {
       }
 
       case UNION: {
-        result = new TypeImpl(fileType->getKind());
+        result = std::make_unique<TypeImpl>(fileType->getKind());
         for (uint64_t child = 0; child < fileType->getSubtypeCount(); ++child) {
           std::unique_ptr<Type> childType =
               buildSelectedType(fileType->getSubtype(child), selected);
@@ -578,7 +562,7 @@ namespace orc {
       const auto& value = fileType->getAttributeValue(key);
       result->setAttribute(key, value);
     }
-    return std::unique_ptr<Type>(result);
+    return std::move(result);
   }
 
   ORC_UNIQUE_PTR<Type> Type::buildTypeFromString(const std::string& input) {
@@ -592,8 +576,7 @@ namespace orc {
 
   std::unique_ptr<Type> TypeImpl::parseArrayType(const std::string& input, size_t start,
                                                  size_t end) {
-    TypeImpl* arrayType = new TypeImpl(LIST);
-    std::unique_ptr<Type> return_value = std::unique_ptr<Type>(arrayType);
+    auto result = std::make_unique<TypeImpl>(LIST);
     if (input[start] != '<') {
       throw std::logic_error("Missing < after array.");
     }
@@ -601,13 +584,12 @@ namespace orc {
     if (res.second != end) {
       throw std::logic_error("Array type must contain exactly one sub type.");
     }
-    arrayType->addChildType(std::move(res.first));
-    return return_value;
+    result->addChildType(std::move(res.first));
+    return std::move(result);
   }
 
   std::unique_ptr<Type> TypeImpl::parseMapType(const std::string& input, size_t start, size_t end) {
-    TypeImpl* mapType = new TypeImpl(MAP);
-    std::unique_ptr<Type> return_value = std::unique_ptr<Type>(mapType);
+    auto result = std::make_unique<TypeImpl>(MAP);
     if (input[start] != '<') {
       throw std::logic_error("Missing < after map.");
     }
@@ -619,9 +601,9 @@ namespace orc {
     if (val.second != end) {
       throw std::logic_error("Map type must contain exactly two sub types.");
     }
-    mapType->addChildType(std::move(key.first));
-    mapType->addChildType(std::move(val.first));
-    return return_value;
+    result->addChildType(std::move(key.first));
+    result->addChildType(std::move(val.first));
+    return std::move(result);
   }
 
   std::pair<std::string, size_t> TypeImpl::parseName(const std::string& input, const size_t start,
@@ -664,8 +646,7 @@ namespace orc {
 
   std::unique_ptr<Type> TypeImpl::parseStructType(const std::string& input, size_t start,
                                                   size_t end) {
-    TypeImpl* structType = new TypeImpl(STRUCT);
-    std::unique_ptr<Type> return_value = std::unique_ptr<Type>(structType);
+    auto result = std::make_unique<TypeImpl>(STRUCT);
     size_t pos = start + 1;
     if (input[start] != '<') {
       throw std::logic_error("Missing < after struct.");
@@ -677,7 +658,7 @@ namespace orc {
         throw std::logic_error("Invalid struct type. No field name set.");
       }
       std::pair<ORC_UNIQUE_PTR<Type>, size_t> typeRes = TypeImpl::parseType(input, ++pos, end);
-      structType->addStructField(nameRes.first, std::move(typeRes.first));
+      result->addStructField(nameRes.first, std::move(typeRes.first));
       pos = typeRes.second;
       if (pos != end && input[pos] != ',') {
         throw std::logic_error("Missing comma after field.");
@@ -685,20 +666,19 @@ namespace orc {
       ++pos;
     }
 
-    return return_value;
+    return std::move(result);
   }
 
   std::unique_ptr<Type> TypeImpl::parseUnionType(const std::string& input, size_t start,
                                                  size_t end) {
-    TypeImpl* unionType = new TypeImpl(UNION);
-    std::unique_ptr<Type> return_value = std::unique_ptr<Type>(unionType);
+    auto result = std::make_unique<TypeImpl>(UNION);
     size_t pos = start + 1;
     if (input[start] != '<') {
       throw std::logic_error("Missing < after uniontype.");
     }
     while (pos < end) {
       std::pair<ORC_UNIQUE_PTR<Type>, size_t> res = TypeImpl::parseType(input, pos, end);
-      unionType->addChildType(std::move(res.first));
+      result->addChildType(std::move(res.first));
       pos = res.second;
       if (pos != end && input[pos] != ',') {
         throw std::logic_error("Missing comma after union sub type.");
@@ -706,7 +686,7 @@ namespace orc {
       ++pos;
     }
 
-    return return_value;
+    return std::move(result);
   }
 
   std::unique_ptr<Type> TypeImpl::parseDecimalType(const std::string& input, size_t start,
@@ -721,7 +701,7 @@ namespace orc {
     }
     uint64_t precision = static_cast<uint64_t>(atoi(input.substr(pos, sep - pos).c_str()));
     uint64_t scale = static_cast<uint64_t>(atoi(input.substr(sep + 1, end - sep - 1).c_str()));
-    return std::unique_ptr<Type>(new TypeImpl(DECIMAL, precision, scale));
+    return std::make_unique<TypeImpl>(DECIMAL, precision, scale);
   }
 
   void validatePrimitiveType(std::string category, const std::string& input, const size_t pos) {
@@ -736,37 +716,37 @@ namespace orc {
                                                 size_t start, size_t end) {
     if (category == "boolean") {
       validatePrimitiveType(category, input, start);
-      return std::unique_ptr<Type>(new TypeImpl(BOOLEAN));
+      return std::make_unique<TypeImpl>(BOOLEAN);
     } else if (category == "tinyint") {
       validatePrimitiveType(category, input, start);
-      return std::unique_ptr<Type>(new TypeImpl(BYTE));
+      return std::make_unique<TypeImpl>(BYTE);
     } else if (category == "smallint") {
       validatePrimitiveType(category, input, start);
-      return std::unique_ptr<Type>(new TypeImpl(SHORT));
+      return std::make_unique<TypeImpl>(SHORT);
     } else if (category == "int") {
       validatePrimitiveType(category, input, start);
-      return std::unique_ptr<Type>(new TypeImpl(INT));
+      return std::make_unique<TypeImpl>(INT);
     } else if (category == "bigint") {
       validatePrimitiveType(category, input, start);
-      return std::unique_ptr<Type>(new TypeImpl(LONG));
+      return std::make_unique<TypeImpl>(LONG);
     } else if (category == "float") {
       validatePrimitiveType(category, input, start);
-      return std::unique_ptr<Type>(new TypeImpl(FLOAT));
+      return std::make_unique<TypeImpl>(FLOAT);
     } else if (category == "double") {
       validatePrimitiveType(category, input, start);
-      return std::unique_ptr<Type>(new TypeImpl(DOUBLE));
+      return std::make_unique<TypeImpl>(DOUBLE);
     } else if (category == "string") {
       validatePrimitiveType(category, input, start);
-      return std::unique_ptr<Type>(new TypeImpl(STRING));
+      return std::make_unique<TypeImpl>(STRING);
     } else if (category == "binary") {
       validatePrimitiveType(category, input, start);
-      return std::unique_ptr<Type>(new TypeImpl(BINARY));
+      return std::make_unique<TypeImpl>(BINARY);
     } else if (category == "timestamp") {
       validatePrimitiveType(category, input, start);
-      return std::unique_ptr<Type>(new TypeImpl(TIMESTAMP));
+      return std::make_unique<TypeImpl>(TIMESTAMP);
     } else if (category == "timestamp with local time zone") {
       validatePrimitiveType(category, input, start);
-      return std::unique_ptr<Type>(new TypeImpl(TIMESTAMP_INSTANT));
+      return std::make_unique<TypeImpl>(TIMESTAMP_INSTANT);
     } else if (category == "array") {
       return parseArrayType(input, start, end);
     } else if (category == "map") {
@@ -779,21 +759,21 @@ namespace orc {
       return parseDecimalType(input, start, end);
     } else if (category == "date") {
       validatePrimitiveType(category, input, start);
-      return std::unique_ptr<Type>(new TypeImpl(DATE));
+      return std::make_unique<TypeImpl>(DATE);
     } else if (category == "varchar") {
       if (input[start] != '(') {
         throw std::logic_error("Missing ( after varchar.");
       }
       uint64_t maxLength =
           static_cast<uint64_t>(atoi(input.substr(start + 1, end - start + 1).c_str()));
-      return std::unique_ptr<Type>(new TypeImpl(VARCHAR, maxLength));
+      return std::make_unique<TypeImpl>(VARCHAR, maxLength);
     } else if (category == "char") {
       if (input[start] != '(') {
         throw std::logic_error("Missing ( after char.");
       }
       uint64_t maxLength =
           static_cast<uint64_t>(atoi(input.substr(start + 1, end - start + 1).c_str()));
-      return std::unique_ptr<Type>(new TypeImpl(CHAR, maxLength));
+      return std::make_unique<TypeImpl>(CHAR, maxLength);
     } else {
       throw std::logic_error("Unknown type " + category);
     }

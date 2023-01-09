@@ -104,8 +104,7 @@ namespace orc {
                      &memStream, fileVersion);
     writer->close();
 
-    std::unique_ptr<InputStream> inStream(
-        new MemoryInputStream(memStream.getData(), memStream.getLength()));
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
     EXPECT_EQ(fileVersion, reader->getFormatVersion());
@@ -154,8 +153,7 @@ namespace orc {
     writer->addUserMetadata("name1", "value1");
     writer->close();
 
-    std::unique_ptr<InputStream> inStream(
-        new MemoryInputStream(memStream.getData(), memStream.getLength()));
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
     EXPECT_EQ(2000, reader->getNumberOfRows());
@@ -208,8 +206,7 @@ namespace orc {
 
     writer->close();
 
-    std::unique_ptr<InputStream> inStream(
-        new MemoryInputStream(memStream.getData(), memStream.getLength()));
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
     EXPECT_EQ(655350, reader->getNumberOfRows());
@@ -265,8 +262,7 @@ namespace orc {
     writer->add(*batch);
     writer->close();
 
-    std::unique_ptr<InputStream> inStream(
-        new MemoryInputStream(memStream.getData(), memStream.getLength()));
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
     EXPECT_EQ(65535, reader->getNumberOfRows());
@@ -322,8 +318,7 @@ namespace orc {
     writer->add(*batch);
     writer->close();
 
-    std::unique_ptr<InputStream> inStream(
-        new MemoryInputStream(memStream.getData(), memStream.getLength()));
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
     EXPECT_EQ(rowCount, reader->getNumberOfRows());
@@ -375,8 +370,7 @@ namespace orc {
     writer->add(*batch);
     writer->close();
 
-    std::unique_ptr<InputStream> inStream(
-        new MemoryInputStream(memStream.getData(), memStream.getLength()));
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
     EXPECT_EQ(rowCount, reader->getNumberOfRows());
@@ -420,8 +414,7 @@ namespace orc {
     writer->add(*batch);
     writer->close();
 
-    std::unique_ptr<InputStream> inStream(
-        new MemoryInputStream(memStream.getData(), memStream.getLength()));
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
     EXPECT_EQ(rowCount, reader->getNumberOfRows());
@@ -461,8 +454,7 @@ namespace orc {
     writer->add(*batch);
     writer->close();
 
-    std::unique_ptr<InputStream> inStream(
-        new MemoryInputStream(memStream.getData(), memStream.getLength()));
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
     EXPECT_EQ(rowCount, reader->getNumberOfRows());
@@ -503,8 +495,7 @@ namespace orc {
     writer->add(*batch);
     writer->close();
 
-    std::unique_ptr<InputStream> inStream(
-        new MemoryInputStream(memStream.getData(), memStream.getLength()));
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
     EXPECT_EQ(rowCount, reader->getNumberOfRows());
@@ -548,8 +539,7 @@ namespace orc {
     writer->add(*batch);
     writer->close();
 
-    std::unique_ptr<InputStream> inStream(
-        new MemoryInputStream(memStream.getData(), memStream.getLength()));
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
     EXPECT_EQ(rowCount, reader->getNumberOfRows());
@@ -594,8 +584,7 @@ namespace orc {
     writer->add(*batch);
     writer->close();
 
-    std::unique_ptr<InputStream> inStream(
-        new MemoryInputStream(memStream.getData(), memStream.getLength()));
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     auto reader = createReader(pool, std::move(inStream));
     auto rowReader = createRowReader(reader.get());
     batch = rowReader->createRowBatch(batchCount);
@@ -664,8 +653,7 @@ namespace orc {
     writer->close();
 
     // read timestamp from the reader timezone
-    std::unique_ptr<InputStream> inStream(
-        new MemoryInputStream(memStream.getData(), memStream.getLength()));
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get(), readerTimezone);
     EXPECT_EQ(true, rowReader->next(*batch));
@@ -758,8 +746,7 @@ namespace orc {
     writer->add(*batch);
     writer->close();
 
-    std::unique_ptr<InputStream> inStream(
-        new MemoryInputStream(memStream.getData(), memStream.getLength()));
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
     EXPECT_EQ(rowCount, reader->getNumberOfRows());
@@ -816,8 +803,7 @@ namespace orc {
     writer->add(*batch);
     writer->close();
 
-    std::unique_ptr<InputStream> inStream(
-        new MemoryInputStream(memStream.getData(), memStream.getLength()));
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
     EXPECT_EQ(rowCount, reader->getNumberOfRows());
@@ -897,8 +883,7 @@ namespace orc {
 
     writer->close();
 
-    std::unique_ptr<InputStream> inStream(
-        new MemoryInputStream(memStream.getData(), memStream.getLength()));
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
     EXPECT_EQ((rowCount + maxPrecision) * 2, reader->getNumberOfRows());
@@ -980,8 +965,7 @@ namespace orc {
 
     writer->close();
 
-    std::unique_ptr<InputStream> inStream(
-        new MemoryInputStream(memStream.getData(), memStream.getLength()));
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
     EXPECT_EQ((rowCount + maxPrecision) * 2, reader->getNumberOfRows());
@@ -1055,8 +1039,7 @@ namespace orc {
     writer->add(*batch);
     writer->close();
 
-    std::unique_ptr<InputStream> inStream(
-        new MemoryInputStream(memStream.getData(), memStream.getLength()));
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
     EXPECT_EQ(rowCount, reader->getNumberOfRows());
@@ -1129,8 +1112,7 @@ namespace orc {
     writer->add(*batch);
     writer->close();
 
-    std::unique_ptr<InputStream> inStream(
-        new MemoryInputStream(memStream.getData(), memStream.getLength()));
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
     EXPECT_EQ(rowCount, reader->getNumberOfRows());
@@ -1214,8 +1196,7 @@ namespace orc {
     writer->add(*batch);
     writer->close();
 
-    std::unique_ptr<InputStream> inStream(
-        new MemoryInputStream(memStream.getData(), memStream.getLength()));
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
     EXPECT_EQ(rowCount, reader->getNumberOfRows());
@@ -1295,8 +1276,7 @@ namespace orc {
     writer->close();
 
     // read and verify data
-    std::unique_ptr<InputStream> inStream(
-        new MemoryInputStream(memStream.getData(), memStream.getLength()));
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
     EXPECT_EQ(rowCount, reader->getNumberOfRows());
@@ -1378,8 +1358,7 @@ namespace orc {
     writer->add(*batch);
     writer->close();
 
-    std::unique_ptr<InputStream> inStream(
-        new MemoryInputStream(memStream.getData(), memStream.getLength()));
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
     EXPECT_EQ(4, reader->getNumberOfRows());
@@ -1450,8 +1429,7 @@ namespace orc {
     writer->add(*batch);
     writer->close();
 
-    std::unique_ptr<InputStream> inStream(
-        new MemoryInputStream(memStream.getData(), memStream.getLength()));
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
     EXPECT_EQ(5, reader->getNumberOfRows());
@@ -1535,8 +1513,7 @@ namespace orc {
     writer->add(*batch);
     writer->close();
 
-    std::unique_ptr<InputStream> inStream(
-        new MemoryInputStream(memStream.getData(), memStream.getLength()));
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get());
     EXPECT_EQ(10000, reader->getNumberOfRows());
@@ -1688,8 +1665,7 @@ namespace orc {
     writer->close();
 
     // verify bloomfilters
-    std::unique_ptr<InputStream> inStream(
-        new MemoryInputStream(memStream.getData(), memStream.getLength()));
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     EXPECT_EQ(rowCount, reader->getNumberOfRows());
 
@@ -1759,8 +1735,8 @@ namespace orc {
     }
     // read file & check the present stream
     {
-      std::unique_ptr<InputStream> inStream(
-          new MemoryInputStream(memStream.getData(), memStream.getLength()));
+      auto inStream =
+          std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
       ReaderOptions readerOptions;
       readerOptions.setMemoryPool(*pool);
       std::unique_ptr<Reader> reader = createReader(std::move(inStream), readerOptions);
@@ -1797,10 +1773,10 @@ namespace orc {
       // fetch StripeFooter from pb stream
       std::unique_ptr<StripeInformation> stripeInfo = reader->getStripe(0);
       ReaderImpl* readerImpl = dynamic_cast<ReaderImpl*>(reader.get());
-      std::unique_ptr<SeekableInputStream> pbStream(new SeekableFileInputStream(
+      auto pbStream = std::make_unique<SeekableFileInputStream>(
           readerImpl->getStream(),
           stripeInfo->getOffset() + stripeInfo->getIndexLength() + stripeInfo->getDataLength(),
-          stripeInfo->getFooterLength(), *pool));
+          stripeInfo->getFooterLength(), *pool);
       proto::StripeFooter stripeFooter;
       if (!stripeFooter.ParseFromZeroCopyStream(pbStream.get())) {
         throw ParseError("Parse stripe footer from pb stream failed");
@@ -1922,8 +1898,7 @@ namespace orc {
     writer->add(*batch);
     writer->close();
 
-    std::unique_ptr<InputStream> inStream(
-        new MemoryInputStream(memStream.getData(), memStream.getLength()));
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     std::unique_ptr<Reader> reader = createReader(pool, std::move(inStream));
     std::unique_ptr<RowReader> rowReader = createRowReader(reader.get(), "GMT", true);
 
