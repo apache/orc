@@ -105,7 +105,6 @@ namespace orc {
 
     uint64_t capacity = 500 * 1024;
     uint64_t block = 1024;
-    BufferedOutputStream bufStream(*pool, &memStream, capacity, block, nullptr);
 
     auto outStream =
         std::make_unique<BufferedOutputStream>(*pool, &memStream, capacity, block, nullptr);
@@ -127,7 +126,6 @@ namespace orc {
 
     uint64_t capacity = 500 * 1024;
     uint64_t block = 1024;
-    BufferedOutputStream bufStream(*pool, &memStream, capacity, block, nullptr);
 
     auto outStream =
         std::make_unique<BufferedOutputStream>(*pool, &memStream, capacity, block, nullptr);
@@ -151,7 +149,6 @@ namespace orc {
 
     uint64_t capacity = 500 * 1024;
     uint64_t block = 1024;
-    BufferedOutputStream bufStream(*pool, &memStream, capacity, block, nullptr);
 
     auto outStream =
         std::make_unique<BufferedOutputStream>(*pool, &memStream, capacity, block, nullptr);
@@ -173,7 +170,6 @@ namespace orc {
 
     uint64_t capacity = 500 * 1024;
     uint64_t block = 1024;
-    BufferedOutputStream bufStream(*pool, &memStream, capacity, block, nullptr);
 
     auto outStream =
         std::make_unique<BufferedOutputStream>(*pool, &memStream, capacity, block, nullptr);
@@ -195,7 +191,6 @@ namespace orc {
 
     uint64_t capacity = 500 * 1024;
     uint64_t block = 1024;
-    BufferedOutputStream bufStream(*pool, &memStream, capacity, block, nullptr);
 
     auto outStream =
         std::make_unique<BufferedOutputStream>(*pool, &memStream, capacity, block, nullptr);
