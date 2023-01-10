@@ -72,7 +72,7 @@ TEST(TestFileScan, testNominal) {
  * stripPrefix("abcdef", "cd") -> "cdef"
  * stripPrefix("abcdef", "xx") -> "abcdef"
  */
-std::string stripPrefix(const std::string& input, const std::string goal) {
+std::string stripPrefix(const std::string& input, const std::string& goal) {
   size_t loc = input.find(goal);
   if (loc == std::string::npos) {
     return input;

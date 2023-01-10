@@ -289,7 +289,7 @@ namespace orc {
     /**
      * Add user metadata to the writer.
      */
-    virtual void addUserMetadata(const std::string name, const std::string value) = 0;
+    virtual void addUserMetadata(const std::string& name, const std::string& value) = 0;
   };
 }  // namespace orc
 
