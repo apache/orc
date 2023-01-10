@@ -67,6 +67,10 @@ option(BUILD_CPP_ENABLE_METRICS
     "Enable the metrics collection at compile phase"
     OFF)
 
+option(ENABLE_AVX512_BIT_PACKING
+    "Enable AVX512 vector decode of bit-packing"
+     OFF)
+
 # Make sure that a build type is selected
 if (NOT CMAKE_BUILD_TYPE)
   message(STATUS "No build type selected, default to ReleaseWithDebugInfo")
@@ -90,14 +94,6 @@ endif ()
 #
 # Compiler specific flags
 #
-# This ensures that things like c++17 get passed correctly
-if(NOT DEFINED CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 17)
-elseif(${CMAKE_CXX_STANDARD} VERSION_LESS 17)
-  message(FATAL_ERROR "Cannot set a CMAKE_CXX_STANDARD smaller than 17")
-endif()
-# We require a C++17 compliant compiler
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if (NOT MSVC)
   set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -fno-omit-frame-pointer")
   set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g -DNDEBUG -fno-omit-frame-pointer")
@@ -105,18 +101,13 @@ if (NOT MSVC)
 endif ()
 message(STATUS "compiler ${CMAKE_CXX_COMPILER_ID} version ${CMAKE_CXX_COMPILER_VERSION}")
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  if (CMAKE_CXX_COMPILER_VERSION STREQUAL "" OR
-      CMAKE_CXX_COMPILER_VERSION VERSION_LESS "5.0")
-    message(FATAL_ERROR "A c++17-compliant compiler is required, please use at least Clang 5")
-  else ()
-    set (CXX17_FLAGS "-std=c++17")
-  endif ()
+  set (CXX11_FLAGS "-std=c++11")
   set (WARN_FLAGS "-Weverything -Wno-c++98-compat -Wno-missing-prototypes")
   set (WARN_FLAGS "${WARN_FLAGS} -Wno-c++98-compat-pedantic -Wno-padded")
   set (WARN_FLAGS "${WARN_FLAGS} -Wno-covered-switch-default")
   set (WARN_FLAGS "${WARN_FLAGS} -Wno-missing-noreturn -Wno-unknown-pragmas")
   set (WARN_FLAGS "${WARN_FLAGS} -Wno-gnu-zero-variadic-macro-arguments")
-  set (WARN_FLAGS "${WARN_FLAGS} -Wconversion")
+  set (WARN_FLAGS "${WARN_FLAGS} -Wno-conversion")
   if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "13.0")
     set (WARN_FLAGS "${WARN_FLAGS} -Wno-reserved-identifier -Wno-suggest-destructor-override -Wno-suggest-override")
   endif()
@@ -129,27 +120,22 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set (WARN_FLAGS "${WARN_FLAGS} -Werror")
   endif ()
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  if (CMAKE_CXX_COMPILER_VERSION STREQUAL "" OR
-      CMAKE_CXX_COMPILER_VERSION VERSION_LESS "5.0")
-    message(FATAL_ERROR "A c++17-compliant compiler is required, please use at least GCC 5")
-  else ()
-    set (CXX17_FLAGS "-std=c++17")
-  endif ()
-  set (WARN_FLAGS "-Wall -Wno-unknown-pragmas -Wconversion")
+  set (WARN_FLAGS "-Wall -Wno-unknown-pragmas -Wno-conversion")
   if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "12.0")
     set (WARN_FLAGS "${WARN_FLAGS} -Wno-array-bounds -Wno-stringop-overread") # To compile protobuf in Fedora37
+  elseif (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9")
+    set (WARN_FLAGS "${WARN_FLAGS} -Wno-unused-function")
   endif ()
   if (STOP_BUILD_ON_WARNING)
     set (WARN_FLAGS "${WARN_FLAGS} -Werror")
   endif ()
-elseif (MSVC)
-  include(CheckCXXCompilerFlag)
-  CHECK_CXX_COMPILER_FLAG("/std:c++17" CPP17_FLAG_SUPPORTED)
-  if (CPP17_FLAG_SUPPORTED)
-    add_compile_options("/std:c++17")
+  if (CMAKE_CXX_COMPILER_VERSION STREQUAL "" OR
+      CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.7")
+    set (CXX11_FLAGS "-std=c++0x")
   else ()
-    message(FATAL_ERROR "A c++17-compliant compiler is required")
+    set (CXX11_FLAGS "-std=c++11")
   endif ()
+elseif (MSVC)
   add_definitions (-D_SCL_SECURE_NO_WARNINGS)
   add_definitions (-D_CRT_SECURE_NO_WARNINGS)
   add_definitions (-D_CRT_NONSTDC_NO_DEPRECATE) # The POSIX name for this item is deprecated
@@ -163,6 +149,14 @@ if (BUILD_CPP_ENABLE_METRICS)
 else ()
   message(STATUS "Disable the metrics collection")
   add_compile_definitions(ENABLE_METRICS=0)
+endif ()
+
+if (ENABLE_AVX512_BIT_PACKING)
+  message(STATUS "Enable the AVX512 vector decode of bit-packing")
+  add_compile_definitions(ENABLE_AVX512=1)
+else ()
+  message(STATUS "Disable the AVX512 vector decode of bit-packing")
+  add_compile_definitions(ENABLE_AVX512=0)
 endif ()
 
 enable_testing()
