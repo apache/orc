@@ -16,12 +16,13 @@ include_directories(
   ${PROJECT_BINARY_DIR}/c++/src
 )
 
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX11_FLAGS} ${WARN_FLAGS}")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX17_FLAGS} ${WARN_FLAGS}")
 
 add_executable (orc-test
   MemoryInputStream.cc
   MemoryOutputStream.cc
   TestAttributes.cc
+  TestBlockBuffer.cc
   TestBufferedOutputStream.cc
   TestBloomFilter.cc
   TestByteRle.cc
@@ -58,6 +59,7 @@ target_link_libraries (orc-test
   orc::protobuf
   orc::snappy
   orc::zlib
+  orc::gtest
   orc::gmock
 )
 
