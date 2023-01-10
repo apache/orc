@@ -179,7 +179,7 @@ namespace orc {
   }
 
   bool WriterOptions::getAlignedBitpacking() const {
-    return privateBits->compressionStrategy == CompressionStrategy ::CompressionStrategy_SPEED;
+    return privateBits->compressionStrategy == CompressionStrategy::CompressionStrategy_SPEED;
   }
 
   WriterOptions& WriterOptions::setPaddingTolerance(double tolerance) {
