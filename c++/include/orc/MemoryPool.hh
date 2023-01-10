@@ -52,7 +52,7 @@ namespace orc {
    public:
     DataBuffer(MemoryPool& pool, uint64_t _size = 0);
 
-    DataBuffer(DataBuffer<T>&& buffer) ORC_NOEXCEPT;
+    DataBuffer(DataBuffer<T>&& buffer) noexcept;
 
     virtual ~DataBuffer();
 

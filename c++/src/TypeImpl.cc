@@ -565,9 +565,9 @@ namespace orc {
     return std::move(result);
   }
 
-  ORC_UNIQUE_PTR<Type> Type::buildTypeFromString(const std::string& input) {
+  std::unique_ptr<Type> Type::buildTypeFromString(const std::string& input) {
     size_t size = input.size();
-    std::pair<ORC_UNIQUE_PTR<Type>, size_t> res = TypeImpl::parseType(input, 0, size);
+    std::pair<std::unique_ptr<Type>, size_t> res = TypeImpl::parseType(input, 0, size);
     if (res.second != size) {
       throw std::logic_error("Invalid type string.");
     }
@@ -580,7 +580,7 @@ namespace orc {
     if (input[start] != '<') {
       throw std::logic_error("Missing < after array.");
     }
-    std::pair<ORC_UNIQUE_PTR<Type>, size_t> res = TypeImpl::parseType(input, start + 1, end);
+    std::pair<std::unique_ptr<Type>, size_t> res = TypeImpl::parseType(input, start + 1, end);
     if (res.second != end) {
       throw std::logic_error("Array type must contain exactly one sub type.");
     }
@@ -593,11 +593,11 @@ namespace orc {
     if (input[start] != '<') {
       throw std::logic_error("Missing < after map.");
     }
-    std::pair<ORC_UNIQUE_PTR<Type>, size_t> key = TypeImpl::parseType(input, start + 1, end);
+    std::pair<std::unique_ptr<Type>, size_t> key = TypeImpl::parseType(input, start + 1, end);
     if (input[key.second] != ',') {
       throw std::logic_error("Missing comma after key.");
     }
-    std::pair<ORC_UNIQUE_PTR<Type>, size_t> val = TypeImpl::parseType(input, key.second + 1, end);
+    std::pair<std::unique_ptr<Type>, size_t> val = TypeImpl::parseType(input, key.second + 1, end);
     if (val.second != end) {
       throw std::logic_error("Map type must contain exactly two sub types.");
     }
@@ -657,7 +657,7 @@ namespace orc {
       if (input[pos] != ':') {
         throw std::logic_error("Invalid struct type. No field name set.");
       }
-      std::pair<ORC_UNIQUE_PTR<Type>, size_t> typeRes = TypeImpl::parseType(input, ++pos, end);
+      std::pair<std::unique_ptr<Type>, size_t> typeRes = TypeImpl::parseType(input, ++pos, end);
       result->addStructField(nameRes.first, std::move(typeRes.first));
       pos = typeRes.second;
       if (pos != end && input[pos] != ',') {
@@ -677,7 +677,7 @@ namespace orc {
       throw std::logic_error("Missing < after uniontype.");
     }
     while (pos < end) {
-      std::pair<ORC_UNIQUE_PTR<Type>, size_t> res = TypeImpl::parseType(input, pos, end);
+      std::pair<std::unique_ptr<Type>, size_t> res = TypeImpl::parseType(input, pos, end);
       result->addChildType(std::move(res.first));
       pos = res.second;
       if (pos != end && input[pos] != ',') {
@@ -779,8 +779,8 @@ namespace orc {
     }
   }
 
-  std::pair<ORC_UNIQUE_PTR<Type>, size_t> TypeImpl::parseType(const std::string& input,
-                                                              size_t start, size_t end) {
+  std::pair<std::unique_ptr<Type>, size_t> TypeImpl::parseType(const std::string& input,
+                                                               size_t start, size_t end) {
     size_t pos = start;
     while (pos < end && (isalpha(input[pos]) || input[pos] == ' ')) {
       ++pos;

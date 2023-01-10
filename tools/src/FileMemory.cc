@@ -30,7 +30,7 @@ class TestMemoryPool : public orc::MemoryPool {
   uint64_t maxMemory;
 
  public:
-  char* malloc(uint64_t size) ORC_OVERRIDE {
+  char* malloc(uint64_t size) override {
     char* p = static_cast<char*>(std::malloc(size));
     blocks[p] = size;
     totalMemory += size;
@@ -40,7 +40,7 @@ class TestMemoryPool : public orc::MemoryPool {
     return p;
   }
 
-  void free(char* p) ORC_OVERRIDE {
+  void free(char* p) override {
     std::free(p);
     totalMemory -= blocks[p];
     blocks.erase(p);
@@ -51,7 +51,7 @@ class TestMemoryPool : public orc::MemoryPool {
   }
 
   TestMemoryPool() : totalMemory(0), maxMemory(0) {}
-  ~TestMemoryPool() ORC_OVERRIDE;
+  ~TestMemoryPool() override;
 };
 
 TestMemoryPool::~TestMemoryPool() {}

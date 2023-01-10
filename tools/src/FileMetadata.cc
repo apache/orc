@@ -26,7 +26,7 @@
 #include "orc/Exceptions.hh"
 #include "orc/OrcFile.hh"
 
-//#include "Adaptor.hh"
+// #include "Adaptor.hh"
 #include "wrap/orc-proto-wrapper.hh"
 
 void printStripeInformation(std::ostream& out, uint64_t index, uint64_t columns,
@@ -57,7 +57,7 @@ void printStripeInformation(std::ostream& out, uint64_t index, uint64_t columns,
       if (str != 0) {
         out << ",\n";
       }
-      ORC_UNIQUE_PTR<orc::StreamInformation> stream = stripe->getStreamInformation(str);
+      std::unique_ptr<orc::StreamInformation> stream = stripe->getStreamInformation(str);
       out << "        { \"id\": " << str << ", \"column\": " << stream->getColumnId()
           << ", \"kind\": \"" << streamKindToString(stream->getKind())
           << "\", \"offset\": " << stream->getOffset() << ", \"length\": " << stream->getLength()
@@ -179,16 +179,16 @@ void printMetadata(std::ostream& out, const char* filename, bool verbose) {
 }
 
 int main(int argc, char* argv[]) {
-  static struct option longOptions[] = {{"help", no_argument, ORC_NULLPTR, 'h'},
-                                        {"raw", no_argument, ORC_NULLPTR, 'r'},
-                                        {"verbose", no_argument, ORC_NULLPTR, 'v'},
-                                        {ORC_NULLPTR, 0, ORC_NULLPTR, 0}};
+  static struct option longOptions[] = {{"help", no_argument, nullptr, 'h'},
+                                        {"raw", no_argument, nullptr, 'r'},
+                                        {"verbose", no_argument, nullptr, 'v'},
+                                        {nullptr, 0, nullptr, 0}};
   bool helpFlag = false;
   bool verboseFlag = false;
   bool rawFlag = false;
   int opt;
   do {
-    opt = getopt_long(argc, argv, "hrv", longOptions, ORC_NULLPTR);
+    opt = getopt_long(argc, argv, "hrv", longOptions, nullptr);
     switch (opt) {
       case '?':
       case 'h':

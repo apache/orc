@@ -277,7 +277,7 @@ namespace orc {
     DataBuffer<int64_t> offsets;
 
     // the concatenated elements
-    ORC_UNIQUE_PTR<ColumnVectorBatch> elements;
+    std::unique_ptr<ColumnVectorBatch> elements;
   };
 
   struct MapVectorBatch : public ColumnVectorBatch {
@@ -296,9 +296,9 @@ namespace orc {
     DataBuffer<int64_t> offsets;
 
     // the concatenated keys
-    ORC_UNIQUE_PTR<ColumnVectorBatch> keys;
+    std::unique_ptr<ColumnVectorBatch> keys;
     // the concatenated elements
-    ORC_UNIQUE_PTR<ColumnVectorBatch> elements;
+    std::unique_ptr<ColumnVectorBatch> elements;
   };
 
   struct UnionVectorBatch : public ColumnVectorBatch {

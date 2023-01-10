@@ -32,19 +32,19 @@ void printOptions(std::ostream& out) {
 
 bool parseOptions(int* argc, char** argv[], uint64_t* batchSize,
                   orc::RowReaderOptions* rowReaderOpts, bool* showMetrics) {
-  static struct option longOptions[] = {{"help", no_argument, ORC_NULLPTR, 'h'},
-                                        {"batch", required_argument, ORC_NULLPTR, 'b'},
-                                        {"columns", required_argument, ORC_NULLPTR, 'c'},
-                                        {"columnTypeIds", required_argument, ORC_NULLPTR, 't'},
-                                        {"columnNames", required_argument, ORC_NULLPTR, 'n'},
-                                        {"metrics", no_argument, ORC_NULLPTR, 'm'},
-                                        {ORC_NULLPTR, 0, ORC_NULLPTR, 0}};
+  static struct option longOptions[] = {{"help", no_argument, nullptr, 'h'},
+                                        {"batch", required_argument, nullptr, 'b'},
+                                        {"columns", required_argument, nullptr, 'c'},
+                                        {"columnTypeIds", required_argument, nullptr, 't'},
+                                        {"columnNames", required_argument, nullptr, 'n'},
+                                        {"metrics", no_argument, nullptr, 'm'},
+                                        {nullptr, 0, nullptr, 0}};
   std::list<uint64_t> cols;
   std::list<std::string> colNames;
   int opt;
   char* tail;
   do {
-    opt = getopt_long(*argc, *argv, "hb:c:t:n:m", longOptions, ORC_NULLPTR);
+    opt = getopt_long(*argc, *argv, "hb:c:t:n:m", longOptions, nullptr);
     switch (opt) {
       case '?':
       case 'h':
@@ -68,7 +68,7 @@ bool parseOptions(int* argc, char** argv[], uint64_t* batchSize,
             cols.emplace_back(static_cast<uint64_t>(std::atoi(col)));
           }
           empty = false;
-          col = std::strtok(ORC_NULLPTR, ",");
+          col = std::strtok(nullptr, ",");
         }
         if (!empty) {
           if (opt == 'c') {

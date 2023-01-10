@@ -47,7 +47,7 @@ std::string extractColumn(std::string s, uint64_t colIndex) {
 
 static const char* GetDate(void) {
   static char buf[200];
-  time_t t = time(ORC_NULLPTR);
+  time_t t = time(nullptr);
   struct tm* p = localtime(&t);
   strftime(buf, sizeof(buf), "[%Y-%m-%d %H:%M:%S]", p);
   return buf;
@@ -127,8 +127,8 @@ void fillDoubleValues(const std::vector<std::string>& data, orc::ColumnVectorBat
 // parse fixed point decimal numbers
 void fillDecimalValues(const std::vector<std::string>& data, orc::ColumnVectorBatch* batch,
                        uint64_t numValues, uint64_t colIndex, size_t scale, size_t precision) {
-  orc::Decimal128VectorBatch* d128Batch = ORC_NULLPTR;
-  orc::Decimal64VectorBatch* d64Batch = ORC_NULLPTR;
+  orc::Decimal128VectorBatch* d128Batch = nullptr;
+  orc::Decimal64VectorBatch* d64Batch = nullptr;
   if (precision <= 18) {
     d64Batch = dynamic_cast<orc::Decimal64VectorBatch*>(batch);
     d64Batch->scale = static_cast<int32_t>(scale);
@@ -230,7 +230,7 @@ void fillTimestampValues(const std::vector<std::string>& data, orc::ColumnVector
     } else {
       memset(&timeStruct, 0, sizeof(timeStruct));
       char* left = strptime(col.c_str(), "%Y-%m-%d %H:%M:%S", &timeStruct);
-      if (left == ORC_NULLPTR) {
+      if (left == nullptr) {
         batch->notNull[i] = 0;
       } else {
         batch->notNull[i] = 1;
@@ -273,20 +273,20 @@ int main(int argc, char* argv[]) {
   uint64_t batchSize = 1024;
   orc::CompressionKind compression = orc::CompressionKind_ZLIB;
 
-  static struct option longOptions[] = {{"help", no_argument, ORC_NULLPTR, 'h'},
-                                        {"metrics", no_argument, ORC_NULLPTR, 'm'},
-                                        {"delimiter", required_argument, ORC_NULLPTR, 'd'},
-                                        {"stripe", required_argument, ORC_NULLPTR, 's'},
-                                        {"block", required_argument, ORC_NULLPTR, 'c'},
-                                        {"batch", required_argument, ORC_NULLPTR, 'b'},
-                                        {"timezone", required_argument, ORC_NULLPTR, 't'},
-                                        {ORC_NULLPTR, 0, ORC_NULLPTR, 0}};
+  static struct option longOptions[] = {{"help", no_argument, nullptr, 'h'},
+                                        {"metrics", no_argument, nullptr, 'm'},
+                                        {"delimiter", required_argument, nullptr, 'd'},
+                                        {"stripe", required_argument, nullptr, 's'},
+                                        {"block", required_argument, nullptr, 'c'},
+                                        {"batch", required_argument, nullptr, 'b'},
+                                        {"timezone", required_argument, nullptr, 't'},
+                                        {nullptr, 0, nullptr, 0}};
   bool helpFlag = false;
   bool showMetrics = false;
   int opt;
   char* tail;
   do {
-    opt = getopt_long(argc, argv, "d:s:c:b:t:mh", longOptions, ORC_NULLPTR);
+    opt = getopt_long(argc, argv, "d:s:c:b:t:mh", longOptions, nullptr);
     switch (opt) {
       case 'h':
         helpFlag = true;
@@ -338,7 +338,7 @@ int main(int argc, char* argv[]) {
   output = argv[2];
 
   std::cout << GetDate() << " Start importing Orc file..." << std::endl;
-  ORC_UNIQUE_PTR<orc::Type> fileType = orc::Type::buildTypeFromString(schema);
+  std::unique_ptr<orc::Type> fileType = orc::Type::buildTypeFromString(schema);
 
   double totalElapsedTime = 0.0;
   clock_t totalCPUTime = 0;
@@ -354,9 +354,9 @@ int main(int argc, char* argv[]) {
   options.setTimezoneName(timezoneName);
   options.setWriterMetrics(showMetrics ? &metrics : nullptr);
 
-  ORC_UNIQUE_PTR<orc::OutputStream> outStream = orc::writeLocalFile(output);
-  ORC_UNIQUE_PTR<orc::Writer> writer = orc::createWriter(*fileType, outStream.get(), options);
-  ORC_UNIQUE_PTR<orc::ColumnVectorBatch> rowBatch = writer->createRowBatch(batchSize);
+  std::unique_ptr<orc::OutputStream> outStream = orc::writeLocalFile(output);
+  std::unique_ptr<orc::Writer> writer = orc::createWriter(*fileType, outStream.get(), options);
+  std::unique_ptr<orc::ColumnVectorBatch> rowBatch = writer->createRowBatch(batchSize);
 
   bool eof = false;
   std::string line;
@@ -425,13 +425,13 @@ int main(int argc, char* argv[]) {
       }
 
       struct timeval t_start, t_end;
-      gettimeofday(&t_start, ORC_NULLPTR);
+      gettimeofday(&t_start, nullptr);
       clock_t c_start = clock();
 
       writer->add(*rowBatch);
 
       totalCPUTime += (clock() - c_start);
-      gettimeofday(&t_end, ORC_NULLPTR);
+      gettimeofday(&t_end, nullptr);
       totalElapsedTime += (static_cast<double>(t_end.tv_sec - t_start.tv_sec) * 1000000.0 +
                            static_cast<double>(t_end.tv_usec - t_start.tv_usec)) /
                           1000000.0;
@@ -439,13 +439,13 @@ int main(int argc, char* argv[]) {
   }
 
   struct timeval t_start, t_end;
-  gettimeofday(&t_start, ORC_NULLPTR);
+  gettimeofday(&t_start, nullptr);
   clock_t c_start = clock();
 
   writer->close();
 
   totalCPUTime += (clock() - c_start);
-  gettimeofday(&t_end, ORC_NULLPTR);
+  gettimeofday(&t_end, nullptr);
   totalElapsedTime += (static_cast<double>(t_end.tv_sec - t_start.tv_sec) * 1000000.0 +
                        static_cast<double>(t_end.tv_usec - t_start.tv_usec)) /
                       1000000.0;
