@@ -1220,7 +1220,7 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-    bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+    	  bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
           srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
@@ -1403,7 +1403,7 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-    bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+    	  bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
           srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
@@ -1525,7 +1525,7 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-    bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+    	  bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
           srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
@@ -1717,7 +1717,7 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-    bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+    	  bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
           srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
@@ -1839,7 +1839,7 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-    bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+    	  bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
           srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
@@ -2031,7 +2031,7 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-    bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+    	  bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
           srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
@@ -2165,7 +2165,7 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-    bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+    	  bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
           srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
@@ -2432,7 +2432,7 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-    bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+    	  bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
           srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
@@ -2615,7 +2615,7 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-    bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+    	  bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
           srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
@@ -2798,7 +2798,7 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-    bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+    	  bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
           srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
@@ -2981,7 +2981,7 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-    bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+    	  bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
           srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
@@ -3103,7 +3103,7 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-    bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+    	  bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
           srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
@@ -3286,7 +3286,7 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-    bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+    	  bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
           srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
@@ -3449,12 +3449,12 @@ namespace orc {
         if (startBit != 0) {
           numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) / bitWidth;
           len -= numElements;
-    tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
+    	  tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
           resetBuf = true;
         } else {
           numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
           len -= numElements;
-    tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH, bitWidth);
+    	  tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH, bitWidth);
           resetBuf = true;
         }
       }
@@ -3470,7 +3470,7 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-    bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+    	  bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
           srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
