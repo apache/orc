@@ -85,7 +85,7 @@ void printRawTail(std::ostream& out, const char* filename) {
   out << tail.DebugString();
 }
 
-void printAttributes(std::ostream& out, const orc::Type& type, const std::string name,
+void printAttributes(std::ostream& out, const orc::Type& type, const std::string& name,
                      bool* hasAnyAttributes) {
   const auto& attributeKeys = type.getAttributeKeys();
   bool typeHasAttrs = !attributeKeys.empty();
