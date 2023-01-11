@@ -19,6 +19,8 @@
 #ifndef ORC_DETECTPLATFORM_HH
 #define ORC_DETECTPLATFORM_HH
 
+namespace orc
+{
 #ifdef _WIN32
 
 #include "intrin.h"
@@ -45,8 +47,6 @@ unsigned long long _xgetbv(unsigned int index) {
 
 #endif
 
-namespace orc
-{
   #define CPUID_AVX512F       0x00100000
   #define CPUID_AVX512CD      0x00200000
   #define CPUID_AVX512VL      0x04000000
