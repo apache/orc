@@ -632,8 +632,8 @@ namespace orc {
     }
     printf("\n");
   }
-#endif
 
-  INSTANTIATE_TEST_CASE_P(OrcTest, RleVectorTest, Values(true,false));
+  INSTANTIATE_TEST_SUITE_P(OrcTest, RleVectorTest, Values(true,false));
+#endif
 }
 
