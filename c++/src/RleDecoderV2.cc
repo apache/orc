@@ -177,7 +177,7 @@ namespace orc {
           unrolledUnpackVector30(data, offset, len);
           return;
         case 32:
-          unrolledUnpack32(data, offset, len);
+          unrolledUnpackVector32(data, offset, len);
           return;
         case 40:
           unrolledUnpack40(data, offset, len);
