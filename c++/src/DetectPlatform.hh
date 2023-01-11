@@ -35,7 +35,7 @@ void cpuid(int info[4], int InfoType) {
   __cpuid_count(InfoType, 0, info[0], info[1], info[2], info[3]);
 }
 
-unsigned long long _xgetbv(unsigned int index) {
+unsigned long long xgetbv(unsigned int index) {
     unsigned int eax, edx;
     __asm__ __volatile__(
     "xgetbv;"
@@ -72,7 +72,7 @@ unsigned long long _xgetbv(unsigned int index) {
 
     if (avx512_support_cpu && os_uses_XSAVE_XSTORE) {
       // Check if XMM state and YMM state are saved
-      unsigned long long xcr_feature_mask = _xgetbv(0);
+      unsigned long long xcr_feature_mask = xgetbv(0);
 
       if ((xcr_feature_mask & 0x6) == 0x6) { // AVX2 is supported now
         if ((xcr_feature_mask & 0xe0) == 0xe0) { // AVX512 is supported now
