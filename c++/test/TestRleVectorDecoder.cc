@@ -27,6 +27,7 @@
 
 #ifdef __clang__
   DIAGNOSTIC_IGNORE("-Wmissing-variable-declarations")
+  DIAGNOSTIC_IGNORE("-Wclang-format-violations")
 #endif
 
 namespace orc {

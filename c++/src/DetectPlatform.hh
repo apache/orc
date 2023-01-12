@@ -76,7 +76,11 @@ namespace orc
 
     if (avx512_support_cpu && os_uses_XSAVE_XSTORE) {
       // Check if XMM state and YMM state are saved
+#ifdef _WIN32
+      unsigned long long xcr_feature_mask = _xgetbv(0);  /* min VS2010 SP1 compiler is required */
+#else
       unsigned long long xcr_feature_mask = xgetbv(0);
+#endif
 
       if ((xcr_feature_mask & 0x6) == 0x6) { // AVX2 is supported now
         if ((xcr_feature_mask & 0xe0) == 0xe0) { // AVX512 is supported now
