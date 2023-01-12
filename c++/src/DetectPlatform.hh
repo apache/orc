@@ -66,13 +66,13 @@ namespace orc
     avx512_arch = 2
   };
 
-  arch_t detect_platform() {
+  arch_t detectPlatform() {
     arch_t detected_platform = arch_t::px_arch;
-    int    cpu_info[4];
-    cpuid(cpu_info, 1);
+    int    cpuInfo[4];
+    cpuid(cpuInfo, 1);
 
-    bool avx512_support_cpu   = cpu_info[1] & CPUID_AVX512_MASK;
-    bool os_uses_XSAVE_XSTORE = cpu_info[2] & EXC_OSXSAVE;
+    bool avx512_support_cpu   = cpuInfo[1] & CPUID_AVX512_MASK;
+    bool os_uses_XSAVE_XSTORE = cpuInfo[2] & EXC_OSXSAVE;
 
     if (avx512_support_cpu && os_uses_XSAVE_XSTORE) {
       // Check if XMM state and YMM state are saved

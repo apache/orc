@@ -21,14 +21,14 @@
 #include "MemoryOutputStream.hh"
 #include "RLEv2.hh"
 
+#ifdef __clang__
+DIAGNOSTIC_IGNORE("-Wmissing-variable-declarations")
+DIAGNOSTIC_IGNORE("-Wclang-format-violations")
+#endif
+
 #include "wrap/orc-proto-wrapper.hh"
 #include "wrap/gtest-wrapper.h"
 #include <inttypes.h>
-
-#ifdef __clang__
-  DIAGNOSTIC_IGNORE("-Wmissing-variable-declarations")
-  DIAGNOSTIC_IGNORE("-Wclang-format-violations")
-#endif
 
 namespace orc {
 

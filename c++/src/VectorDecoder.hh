@@ -19,11 +19,11 @@
 #ifndef VECTOR_DECODER_HH
 #define VECTOR_DECODER_HH
 
+#if ENABLE_AVX512
 #include <immintrin.h>
 #include <vector>
 
 namespace orc {
-#if ENABLE_AVX512
 #define ORC_VECTOR_BITS_2_BYTE(x) (((x) + 7u) >> 3u)         /**< Convert a number of bits to a number of bytes */
 #define ORC_VECTOR_ONE_64U       (1ULL)
 #define ORC_VECTOR_MAX_16U       0xFFFF                      /**< Max value for uint16_t */
@@ -501,6 +501,6 @@ inline uint64_t moveLen(uint64_t x, uint64_t y) {
     }
     return result;
 }
+} // namespace orc
 #endif
-}
 #endif
