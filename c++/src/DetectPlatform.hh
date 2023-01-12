@@ -19,6 +19,10 @@
 #ifndef ORC_DETECTPLATFORM_HH
 #define ORC_DETECTPLATFORM_HH
 
+#if defined(__GNUC__) || defined(__clang__)
+  DIAGNOSTIC_IGNORE("-Wold-style-cast")
+#endif
+
 namespace orc
 {
 #ifdef _WIN32
@@ -31,11 +35,11 @@ namespace orc
 #include <cpuid.h>
 #include <dlfcn.h>
 
-void cpuid(int info[4], int InfoType) {
-  __cpuid_count(InfoType, 0, info[0], info[1], info[2], info[3]);
-}
+  void cpuid(int info[4], int InfoType) {
+    __cpuid_count(InfoType, 0, info[0], info[1], info[2], info[3]);
+  }
 
-unsigned long long xgetbv(unsigned int index) {
+  unsigned long long xgetbv(unsigned int index) {
     unsigned int eax, edx;
     __asm__ __volatile__(
     "xgetbv;"
@@ -43,7 +47,7 @@ unsigned long long xgetbv(unsigned int index) {
     : "c" (index)
     );
     return ((unsigned long long) edx << 32) | eax;
-}
+  }
 
 #endif
 
