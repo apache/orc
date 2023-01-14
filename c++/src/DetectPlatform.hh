@@ -60,14 +60,14 @@ namespace orc
 
   #define CPUID_AVX512_MASK (CPUID_AVX512F | CPUID_AVX512CD | CPUID_AVX512VL | CPUID_AVX512BW | CPUID_AVX512DQ)
 
-  enum arch_t {
-    px_arch     = 0,
-    avx2_arch   = 1,
-    avx512_arch = 2
+  enum class Arch {
+    PX_ARCH     = 0,
+    AVX2_ARCH   = 1,
+    AVX512_ARCH = 2
   };
 
-  arch_t detectPlatform() {
-    arch_t detected_platform = arch_t::px_arch;
+  Arch detectPlatform() {
+    Arch detected_platform = Arch::PX_ARCH;
     int    cpuInfo[4];
     cpuid(cpuInfo, 1);
 
@@ -84,7 +84,7 @@ namespace orc
 
       if ((xcr_feature_mask & 0x6) == 0x6) { // AVX2 is supported now
         if ((xcr_feature_mask & 0xe0) == 0xe0) { // AVX512 is supported now
-            detected_platform = arch_t::avx512_arch;
+            detected_platform = Arch::AVX512_ARCH;
         }
       }
     }

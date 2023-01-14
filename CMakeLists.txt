@@ -69,7 +69,7 @@ option(BUILD_CPP_ENABLE_METRICS
 
 option(BUILD_ENABLE_AVX512
     "Enable AVX512 vector decode of bit-packing"
-     OFF)
+    ON)
 
 # Make sure that a build type is selected
 if (NOT CMAKE_BUILD_TYPE)
@@ -90,6 +90,17 @@ INCLUDE(ExternalProject)
 if (BUILD_POSITION_INDEPENDENT_LIB)
   set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif ()
+
+if(NOT DEFINED ORC_SIMD_LEVEL)
+  set(ORC_SIMD_LEVEL
+      "DEFAULT"
+      CACHE STRING "Compile time SIMD optimization level")
+endif()
+if(NOT DEFINED ORC_RUNTIME_SIMD_LEVEL)
+  set(ORC_RUNTIME_SIMD_LEVEL
+      "MAX"
+      CACHE STRING "Max runtime SIMD optimization level")
+endif()
 
 #
 # Compiler specific flags
@@ -161,6 +172,135 @@ elseif (MSVC)
   set (WARN_FLAGS "${WARN_FLAGS} -wd4146") # unary minus operator applied to unsigned type, result still unsigned
 endif ()
 
+include(CheckCXXCompilerFlag)
+include(CheckCXXSourceCompiles)
+message(STATUS "System processor: ${CMAKE_SYSTEM_PROCESSOR}")
+
+if(NOT DEFINED ORC_CPU_FLAG)
+  if(CMAKE_SYSTEM_PROCESSOR MATCHES "AMD64|X86|x86|i[3456]86|x64")
+    set(ORC_CPU_FLAG "x86")
+  elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|ARM64|arm64")
+    set(ORC_CPU_FLAG "aarch64")
+  elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^arm$|armv[4-7]")
+    set(ORC_CPU_FLAG "aarch32")
+  elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "powerpc|ppc")
+    set(ORC_CPU_FLAG "ppc")
+  elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "s390x")
+    set(ORC_CPU_FLAG "s390x")
+  elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "riscv64")
+    set(ORC_CPU_FLAG "riscv64")
+  else()
+    message(FATAL_ERROR "Unknown system processor")
+  endif()
+endif()
+
+# Check architecture specific compiler flags
+if(ORC_CPU_FLAG STREQUAL "x86")
+  # x86/amd64 compiler flags, msvc/gcc/clang
+  if(MSVC)
+    set(ORC_SSE4_2_FLAG "")
+    set(ORC_AVX2_FLAG "/arch:AVX2")
+    set(ORC_AVX512_FLAG "/arch:AVX512")
+    set(CXX_SUPPORTS_SSE4_2 TRUE)
+  else()
+    set(ORC_SSE4_2_FLAG "-msse4.2")
+    set(ORC_AVX2_FLAG "-march=haswell")
+    # skylake-avx512 consists of AVX512F,AVX512BW,AVX512VL,AVX512CD,AVX512DQ
+    set(ORC_AVX512_FLAG "-march=skylake-avx512 -mbmi2")
+    # Append the avx2/avx512 subset option also, fix issue ORC-9877 for homebrew-cpp
+    set(ORC_AVX2_FLAG "${ORC_AVX2_FLAG} -mavx2")
+    set(ORC_AVX512_FLAG
+        "${ORC_AVX512_FLAG} -mavx512f -mavx512cd -mavx512vl -mavx512dq -mavx512bw -mavx512vbmi")
+    check_cxx_compiler_flag(${ORC_SSE4_2_FLAG} CXX_SUPPORTS_SSE4_2)
+  endif()
+  check_cxx_compiler_flag(${ORC_AVX512_FLAG} CXX_SUPPORTS_AVX512)
+  if(MINGW)
+    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=65782
+    message(STATUS "Disable AVX512 support on MINGW for now")
+  else()
+    # Check for AVX512 support in the compiler.
+    set(OLD_CMAKE_REQURED_FLAGS ${CMAKE_REQUIRED_FLAGS})
+    set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} ${ORC_AVX512_FLAG}")
+    check_cxx_source_compiles("
+      #ifdef _MSC_VER
+      #include <intrin.h>
+      #else
+      #include <immintrin.h>
+      #endif
+
+      int main() {
+        __m512i mask = _mm512_set1_epi32(0x1);
+        char out[32];
+        _mm512_storeu_si512(out, mask);
+        return 0;
+      }"
+      CXX_SUPPORTS_AVX512)
+    set(CMAKE_REQUIRED_FLAGS ${OLD_CMAKE_REQURED_FLAGS})
+  endif()
+  # Runtime SIMD level it can get from compiler and ORC_RUNTIME_SIMD_LEVEL
+  if(CXX_SUPPORTS_SSE4_2 AND ORC_RUNTIME_SIMD_LEVEL MATCHES
+                             "^(SSE4_2|AVX2|AVX512|MAX)$")
+    set(ORC_HAVE_RUNTIME_SSE4_2 ON)
+    add_definitions(-DORC_HAVE_RUNTIME_SSE4_2)
+  endif()
+  if(CXX_SUPPORTS_AVX2 AND ORC_RUNTIME_SIMD_LEVEL MATCHES "^(AVX2|AVX512|MAX)$")
+    set(ORC_HAVE_RUNTIME_AVX2 ON)
+    add_definitions(-DORC_HAVE_RUNTIME_AVX2 -DORC_HAVE_RUNTIME_BMI2)
+  endif()
+  if(CXX_SUPPORTS_AVX512 AND ORC_RUNTIME_SIMD_LEVEL MATCHES "^(AVX512|MAX)$")
+    set(ORC_HAVE_RUNTIME_AVX512 ON)
+    add_definitions(-DORC_HAVE_RUNTIME_AVX512 -DORC_HAVE_RUNTIME_BMI2)
+  endif()
+  if(ORC_SIMD_LEVEL STREQUAL "DEFAULT")
+    set(ORC_SIMD_LEVEL "AVX512")
+  endif()
+
+elseif(ORC_CPU_FLAG STREQUAL "ppc")
+  # power compiler flags, gcc/clang only
+  set(ORC_ALTIVEC_FLAG "-maltivec")
+  check_cxx_compiler_flag(${ORC_ALTIVEC_FLAG} CXX_SUPPORTS_ALTIVEC)
+  if(ORC_SIMD_LEVEL STREQUAL "DEFAULT")
+    set(ORC_SIMD_LEVEL "NONE")
+  endif()
+elseif(ORC_CPU_FLAG STREQUAL "aarch64")
+  # Arm64 compiler flags, gcc/clang only
+  set(ORC_ARMV8_MARCH "armv8-a")
+  check_cxx_compiler_flag("-march=${ORC_ARMV8_MARCH}+sve" CXX_SUPPORTS_SVE)
+  if(ORC_SIMD_LEVEL STREQUAL "DEFAULT")
+    set(ORC_SIMD_LEVEL "NEON")
+  endif()
+endif()
+
+# Only enable additional instruction sets if they are supported
+if(ORC_CPU_FLAG STREQUAL "x86")
+  if(MINGW)
+    # Enable _xgetbv() intrinsic to query OS support for ZMM register saves
+    set(CXX_COMMON_FLAGS "${CXX_COMMON_FLAGS} -mxsave")
+  endif()
+  if(ORC_SIMD_LEVEL STREQUAL "AVX512")
+    if(NOT CXX_SUPPORTS_AVX512)
+      message(FATAL_ERROR "AVX512 required but compiler doesn't support it.")
+    endif()
+    set(CXX_COMMON_FLAGS "${CXX_COMMON_FLAGS} ${ORC_AVX512_FLAG}")
+    add_definitions(-DORC_HAVE_AVX512 -DORC_HAVE_AVX2 -DORC_HAVE_BMI2
+                    -DORC_HAVE_SSE4_2)
+  elseif(ORC_SIMD_LEVEL STREQUAL "AVX2")
+    if(NOT CXX_SUPPORTS_AVX2)
+      message(FATAL_ERROR "AVX2 required but compiler doesn't support it.")
+    endif()
+    set(CXX_COMMON_FLAGS "${CXX_COMMON_FLAGS} ${ORC_AVX2_FLAG}")
+    add_definitions(-DORC_HAVE_AVX2 -DORC_HAVE_BMI2 -DORC_HAVE_SSE4_2)
+  elseif(ORC_SIMD_LEVEL STREQUAL "SSE4_2")
+    if(NOT CXX_SUPPORTS_SSE4_2)
+      message(FATAL_ERROR "SSE4.2 required but compiler doesn't support it.")
+    endif()
+    set(CXX_COMMON_FLAGS "${CXX_COMMON_FLAGS} ${ORC_SSE4_2_FLAG}")
+    add_definitions(-DORC_HAVE_SSE4_2)
+  elseif(NOT ORC_SIMD_LEVEL STREQUAL "NONE")
+    message(WARNING "ORC_SIMD_LEVEL=${ORC_SIMD_LEVEL} not supported by x86.")
+  endif()
+endif()
+
 if (BUILD_CPP_ENABLE_METRICS)
   message(STATUS "Enable the metrics collection")
   add_compile_definitions(ENABLE_METRICS=1)
@@ -169,7 +309,7 @@ else ()
   add_compile_definitions(ENABLE_METRICS=0)
 endif ()
 
-if (BUILD_ENABLE_AVX512)
+if (BUILD_ENABLE_AVX512 AND CXX_SUPPORTS_AVX512 AND ORC_SIMD_LEVEL STREQUAL "AVX512")
   message(STATUS "Enable the AVX512 vector decode of bit-packing")
   add_compile_definitions(ENABLE_AVX512=1)
 else ()

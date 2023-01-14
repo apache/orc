@@ -22,8 +22,8 @@
 #include "RLEv2.hh"
 
 #ifdef __clang__
-DIAGNOSTIC_IGNORE("-Wmissing-variable-declarations")
-DIAGNOSTIC_IGNORE("-Wclang-format-violations")
+#pragma clang diagnostic ignored "-Wmissing-variable-declarations"
+#pragma clang diagnostic ignored "-Wclang-format-violations"
 #endif
 
 #include "wrap/orc-proto-wrapper.hh"

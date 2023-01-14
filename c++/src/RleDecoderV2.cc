@@ -93,7 +93,7 @@ namespace orc {
   void RleDecoderV2::readLongs(int64_t* data, uint64_t offset, uint64_t len, uint64_t fbs) {
     uint64_t startBit = 0;
 #if ENABLE_AVX512
-    if (detectPlatform() == arch_t::avx512_arch) {
+    if (detectPlatform() == Arch::AVX512_ARCH) {
       switch (fbs) {
         case 1:
           unrolledUnpackVector1(data, offset, len);
