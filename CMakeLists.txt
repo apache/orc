@@ -206,12 +206,11 @@ if(ORC_CPU_FLAG STREQUAL "x86")
     set(ORC_SSE4_2_FLAG "-msse4.2")
     set(ORC_AVX2_FLAG "-march=haswell")
     # skylake-avx512 consists of AVX512F,AVX512BW,AVX512VL,AVX512CD,AVX512DQ
-    set(ORC_AVX512_FLAG "-march=skylake-avx512 -mbmi2")
+    set(ORC_AVX512_FLAG "-march=native -mbmi2")
     # Append the avx2/avx512 subset option also, fix issue ORC-9877 for homebrew-cpp
     set(ORC_AVX2_FLAG "${ORC_AVX2_FLAG} -mavx2")
     set(ORC_AVX512_FLAG
         "${ORC_AVX512_FLAG} -mavx512f -mavx512cd -mavx512vl -mavx512dq -mavx512bw -mavx512vbmi")
-    check_cxx_compiler_flag(${ORC_SSE4_2_FLAG} CXX_SUPPORTS_SSE4_2)
   endif()
   check_cxx_compiler_flag(${ORC_AVX512_FLAG} CXX_SUPPORTS_AVX512)
   if(MINGW)
