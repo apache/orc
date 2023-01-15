@@ -12,9 +12,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.apache.orc</groupId>
@@ -26,14 +24,12 @@
   <artifactId>orc-benchmarks-spark</artifactId>
   <packaging>jar</packaging>
   <name>ORC Benchmarks Spark</name>
-  <description>
-    Benchmarks for comparing ORC, Parquet, JSON, and Avro performance under
-    Spark.
-  </description>
+  <description>Benchmarks for comparing ORC, Parquet, JSON, and Avro performance under
+    Spark.</description>
 
   <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.useIncrementalCompilation>false</maven.compiler.useIncrementalCompilation>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!-- Spark Jackson version may not be same as ORC -->
     <spark.jackson.version>2.13.4</spark.jackson.version>
@@ -161,12 +157,12 @@
         <artifactId>maven-shade-plugin</artifactId>
         <executions>
           <execution>
-            <phase>package</phase>
             <goals>
               <goal>shade</goal>
             </goals>
+            <phase>package</phase>
             <configuration>
-	      <createDependencyReducedPom>false</createDependencyReducedPom>
+              <createDependencyReducedPom>false</createDependencyReducedPom>
               <artifactSet>
                 <includes>
                   <include>*:*</include>
@@ -203,15 +199,13 @@
                 </relocation>
               </relocations>
               <transformers>
-                <transformer
-                    implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                   <manifestEntries>
                     <Main-Class>org.apache.orc.bench.core.Driver</Main-Class>
                   </manifestEntries>
                 </transformer>
-                <transformer
-                    implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer" />
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer"></transformer>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"></transformer>
               </transformers>
             </configuration>
           </execution>
