@@ -63,7 +63,7 @@
     <checkstyle.version>10.6.0</checkstyle.version>
     <example.dir>${project.basedir}/../../examples</example.dir>
     <hadoop.version>2.7.3</hadoop.version>
-    <junit.version>5.9.0</junit.version>
+    <junit.version>5.9.2</junit.version>
     <maven-assembly-plugin.version>3.4.2</maven-assembly-plugin.version>
     <maven-shade-plugin.version>3.4.1</maven-shade-plugin.version>
     <maven.compiler.source>1.8</maven.compiler.source>
