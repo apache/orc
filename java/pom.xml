@@ -72,7 +72,7 @@
     <maven.version>3.8.6</maven.version>
 
     <min.hadoop.version>2.7.3</min.hadoop.version>
-    <mockito.version>4.11.0</mockito.version>
+    <mockito.version>5.0.0</mockito.version>
     <!-- Build Properties -->
     <project.build.outputTimestamp>2022-05-06T16:02:45Z</project.build.outputTimestamp>
     <slf4j.version>2.0.6</slf4j.version>
