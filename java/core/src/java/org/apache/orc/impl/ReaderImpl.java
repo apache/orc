@@ -718,9 +718,9 @@ public class ReaderImpl implements Reader {
    * Read compression block size from the postscript if it is set; otherwise,
    * use the same 256k default the C++ implementation uses.
    */
-  private static long getCompressionBlockSize(OrcProto.PostScript postScript) {
+  public static int getCompressionBlockSize(OrcProto.PostScript postScript) {
     if (postScript.hasCompressionBlockSize()) {
-      return postScript.getCompressionBlockSize();
+      return (int) postScript.getCompressionBlockSize();
     } else {
       return 256 * 1024;
     }
@@ -753,7 +753,7 @@ public class ReaderImpl implements Reader {
     try (CompressionCodec codec = OrcCodecPool.getCodec(compressionKind)){
       if (codec != null) {
         compression.withCodec(codec)
-            .withBufferSize((int) getCompressionBlockSize(ps));
+            .withBufferSize(getCompressionBlockSize(ps));
       }
 
       OrcProto.Footer footer =
@@ -835,7 +835,7 @@ public class ReaderImpl implements Reader {
       try (CompressionCodec codec = OrcCodecPool.getCodec(compressionKind)) {
         if (codec != null) {
           compression.withCodec(codec)
-              .withBufferSize((int) getCompressionBlockSize(ps));
+              .withBufferSize(getCompressionBlockSize(ps));
         }
         OrcProto.Footer footer =
             OrcProto.Footer.parseFrom(
