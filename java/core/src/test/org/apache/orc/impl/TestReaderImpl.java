@@ -505,4 +505,26 @@ public class TestReaderImpl {
       assertEquals(tail.getFooter().getStripesList(), extractedTail.getFooter().getStripesList());
     }
   }
+
+  @Test
+  public void testWithoutCompressionBlockSize() throws IOException {
+    Configuration conf = new Configuration();
+    Path path = new Path(workDir, "TestOrcFile.testWithoutCompressionBlockSize.orc");
+    FileSystem fs = path.getFileSystem(conf);
+    try (ReaderImpl reader = (ReaderImpl) OrcFile.createReader(path,
+            OrcFile.readerOptions(conf).filesystem(fs))) {
+      try (RecordReader rows = reader.rows()) {
+        TypeDescription schema = reader.getSchema();
+        assertEquals("bigint", schema.toString());
+        VectorizedRowBatch batch = schema.createRowBatchV2();
+        assertTrue(rows.nextBatch(batch), "No rows read out!");
+        assertEquals(100, batch.size);
+        LongColumnVector col1 = (LongColumnVector) batch.cols[0];
+        for (int i = 0; i < batch.size; ++i) {
+          assertEquals(1L + i, col1.vector[i]);
+        }
+        assertFalse(rows.nextBatch(batch));
+      }
+    }
+  }
 }
