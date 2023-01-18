@@ -12,9 +12,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.apache.orc</groupId>
@@ -26,10 +24,8 @@
   <artifactId>orc-core</artifactId>
   <packaging>jar</packaging>
   <name>ORC Core</name>
-  <description>
-    The core reader and writer for ORC files. Uses the vectorized column batch
-    for the in memory representation.
-  </description>
+  <description>The core reader and writer for ORC files. Uses the vectorized column batch
+    for the in memory representation.</description>
 
   <dependencies>
     <!-- internal -->
@@ -110,11 +106,9 @@
   </dependencies>
 
   <build>
-    <sourceDirectory>${basedir}/src/java</sourceDirectory>
-    <testSourceDirectory>${basedir}/src/test</testSourceDirectory>
     <resources>
       <resource>
-	<directory>${basedir}/src/resources</directory>
+        <directory>${basedir}/src/resources</directory>
       </resource>
     </resources>
     <testResources>
@@ -168,6 +162,8 @@
         </configuration>
       </plugin>
     </plugins>
+    <sourceDirectory>${basedir}/src/java</sourceDirectory>
+    <testSourceDirectory>${basedir}/src/test</testSourceDirectory>
   </build>
 
   <profiles>
