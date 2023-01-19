@@ -64,6 +64,7 @@ public class ReaderImpl implements Reader {
   private static final Logger LOG = LoggerFactory.getLogger(ReaderImpl.class);
 
   private static final int DIRECTORY_SIZE_GUESS = 16 * 1024;
+  public static final int DEFAULT_COMPRESSION_BLOCK_SIZE = 256 * 1024;
 
   private final long maxLength;
   protected final Path path;
@@ -722,7 +723,7 @@ public class ReaderImpl implements Reader {
     if (postScript.hasCompressionBlockSize()) {
       return (int) postScript.getCompressionBlockSize();
     } else {
-      return 256 * 1024;
+      return DEFAULT_COMPRESSION_BLOCK_SIZE;
     }
   }
 
