@@ -623,8 +623,8 @@ DIRECT        | PRESENT         | Yes      | Boolean RLE
               | LENGTH          | No       | Unsigned Integer RLE v1
 DICTIONARY    | PRESENT         | Yes      | Boolean RLE
               | DATA            | No       | Unsigned Integer RLE v1
-              | DICTIONARY_DATA | No       | String contents
-              | LENGTH          | No       | Unsigned Integer RLE v1
+              | LENGTH          | Yes      | Unsigned Integer RLE v1
+              | DICTIONARY_DATA | Yes      | String contents
 
 ## Boolean Columns
 
@@ -689,11 +689,16 @@ records non-null values, a DATA stream that records the number of
 seconds after 1 January 2015, and a SECONDARY stream that records the
 number of nanoseconds.
 
-Because the number of nanoseconds often has a large number of trailing
-zeros, the number has trailing decimal zero digits removed and the
-last three bits are used to record how many zeros were removed. if the
-trailing zeros are more than 2. Thus 1000 nanoseconds would be
-serialized as 0x0a and 100000 would be serialized as 0x0c.
+Because the number of nanoseconds often has a large number of
+trailing zeros, further encoding is employed before unsigned integer
+run length encoding.  When the number of trailing zero digits is 2
+or more, these trailing zero digits are removed and the last three
+bits are used to record how many zeros were removed, relative to 1.
+If there are fewer than 2 trailing zero digits, the last three
+bits are 0, and the raw nanoseconds are bit shifted by 3.  Thus
+1000 nanoseconds would be serialized as 0x0a; 100000 would be
+serialized as 0x0c; and 21 nanoseconds would be serialized as 0xA8.
+
 
 Encoding      | Stream Kind     | Optional | Contents
 :------------ | :-------------- | :------- | :-------
