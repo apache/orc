@@ -1290,7 +1290,12 @@ public class RecordReaderImpl implements RecordReader {
   private void readStripe() throws IOException {
     StripeInformation stripe = beginReadStripe();
     planner.parseStripe(stripe, fileIncluded);
-    includedRowGroups = pickRowGroups();
+    try {
+      includedRowGroups = pickRowGroups();
+    } catch (Throwable e) {
+      // We should not exit directly when pickRowGroup failed.
+      LOG.warn("Skip to pick up row groups for " + e.getMessage());
+    }
 
     // move forward to the first unskipped row
     if (includedRowGroups != null) {

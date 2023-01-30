@@ -189,8 +189,12 @@ public class WriterImpl implements WriterInternal, MemoryManager.Callback {
       this.rowIndexStride = 0;
     }
 
-    // ORC-1343: We ignore `opts.isBuildIndex` due to the lack of reader support
-    this.buildIndex = rowIndexStride > 0;
+    if (!opts.isBuildIndex() && rowIndexStride > 0) {
+      throw new IllegalArgumentException("Please set rowIndexStride to zero " +
+          "if you want to disable row index. (current:" + rowIndexStride + ")");
+    }
+    this.buildIndex = opts.isBuildIndex() && (rowIndexStride > 0);
+
     if (buildIndex && rowIndexStride < MIN_ROW_INDEX_STRIDE) {
       throw new IllegalArgumentException("Row stride must be at least " +
           MIN_ROW_INDEX_STRIDE);
