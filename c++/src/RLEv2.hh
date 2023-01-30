@@ -199,37 +199,37 @@ namespace orc {
     int64_t readVslong();
     uint64_t readVulong();
     void readLongs(int64_t* data, uint64_t offset, uint64_t len, uint64_t fbs);
-    void plainUnpackLongs(int64_t *data, uint64_t offset, uint64_t len, uint64_t fbs,
-                        uint64_t& startBit);
+    void plainUnpackLongs(int64_t* data, uint64_t offset, uint64_t len, uint64_t fbs,
+                          uint64_t& startBit);
 
 #if ENABLE_AVX512
-    void unrolledUnpackVector1(int64_t *data, uint64_t offset, uint64_t len);
-    void unrolledUnpackVector2(int64_t *data, uint64_t offset, uint64_t len);
-    void unrolledUnpackVector3(int64_t *data, uint64_t offset, uint64_t len);
-    void unrolledUnpackVector4(int64_t *data, uint64_t offset, uint64_t len);
-    void unrolledUnpackVector5(int64_t *data, uint64_t offset, uint64_t len);
-    void unrolledUnpackVector6(int64_t *data, uint64_t offset, uint64_t len);
-    void unrolledUnpackVector7(int64_t *data, uint64_t offset, uint64_t len);
-    void unrolledUnpackVector9(int64_t *data, uint64_t offset, uint64_t len);
-    void unrolledUnpackVector10(int64_t *data, uint64_t offset, uint64_t len);
-    void unrolledUnpackVector11(int64_t *data, uint64_t offset, uint64_t len);
-    void unrolledUnpackVector12(int64_t *data, uint64_t offset, uint64_t len);
-    void unrolledUnpackVector13(int64_t *data, uint64_t offset, uint64_t len);
-    void unrolledUnpackVector14(int64_t *data, uint64_t offset, uint64_t len);
-    void unrolledUnpackVector15(int64_t *data, uint64_t offset, uint64_t len);
-    void unrolledUnpackVector16(int64_t *data, uint64_t offset, uint64_t len);
-    void unrolledUnpackVector17(int64_t *data, uint64_t offset, uint64_t len);
-    void unrolledUnpackVector18(int64_t *data, uint64_t offset, uint64_t len);
-    void unrolledUnpackVector19(int64_t *data, uint64_t offset, uint64_t len);
-    void unrolledUnpackVector20(int64_t *data, uint64_t offset, uint64_t len);
-    void unrolledUnpackVector21(int64_t *data, uint64_t offset, uint64_t len);
-    void unrolledUnpackVector22(int64_t *data, uint64_t offset, uint64_t len);
-    void unrolledUnpackVector23(int64_t *data, uint64_t offset, uint64_t len);
-    void unrolledUnpackVector24(int64_t *data, uint64_t offset, uint64_t len);
-    void unrolledUnpackVector26(int64_t *data, uint64_t offset, uint64_t len);
-    void unrolledUnpackVector28(int64_t *data, uint64_t offset, uint64_t len);
-    void unrolledUnpackVector30(int64_t *data, uint64_t offset, uint64_t len);
-    void unrolledUnpackVector32(int64_t *data, uint64_t offset, uint64_t len);
+    void unrolledUnpackVector1(int64_t* data, uint64_t offset, uint64_t len);
+    void unrolledUnpackVector2(int64_t* data, uint64_t offset, uint64_t len);
+    void unrolledUnpackVector3(int64_t* data, uint64_t offset, uint64_t len);
+    void unrolledUnpackVector4(int64_t* data, uint64_t offset, uint64_t len);
+    void unrolledUnpackVector5(int64_t* data, uint64_t offset, uint64_t len);
+    void unrolledUnpackVector6(int64_t* data, uint64_t offset, uint64_t len);
+    void unrolledUnpackVector7(int64_t* data, uint64_t offset, uint64_t len);
+    void unrolledUnpackVector9(int64_t* data, uint64_t offset, uint64_t len);
+    void unrolledUnpackVector10(int64_t* data, uint64_t offset, uint64_t len);
+    void unrolledUnpackVector11(int64_t* data, uint64_t offset, uint64_t len);
+    void unrolledUnpackVector12(int64_t* data, uint64_t offset, uint64_t len);
+    void unrolledUnpackVector13(int64_t* data, uint64_t offset, uint64_t len);
+    void unrolledUnpackVector14(int64_t* data, uint64_t offset, uint64_t len);
+    void unrolledUnpackVector15(int64_t* data, uint64_t offset, uint64_t len);
+    void unrolledUnpackVector16(int64_t* data, uint64_t offset, uint64_t len);
+    void unrolledUnpackVector17(int64_t* data, uint64_t offset, uint64_t len);
+    void unrolledUnpackVector18(int64_t* data, uint64_t offset, uint64_t len);
+    void unrolledUnpackVector19(int64_t* data, uint64_t offset, uint64_t len);
+    void unrolledUnpackVector20(int64_t* data, uint64_t offset, uint64_t len);
+    void unrolledUnpackVector21(int64_t* data, uint64_t offset, uint64_t len);
+    void unrolledUnpackVector22(int64_t* data, uint64_t offset, uint64_t len);
+    void unrolledUnpackVector23(int64_t* data, uint64_t offset, uint64_t len);
+    void unrolledUnpackVector24(int64_t* data, uint64_t offset, uint64_t len);
+    void unrolledUnpackVector26(int64_t* data, uint64_t offset, uint64_t len);
+    void unrolledUnpackVector28(int64_t* data, uint64_t offset, uint64_t len);
+    void unrolledUnpackVector30(int64_t* data, uint64_t offset, uint64_t len);
+    void unrolledUnpackVector32(int64_t* data, uint64_t offset, uint64_t len);
 #endif
 
     void unrolledUnpack4(int64_t* data, uint64_t offset, uint64_t len);
@@ -266,9 +266,12 @@ namespace orc {
     DataBuffer<int64_t> unpackedPatch;  // Used by PATCHED_BASE
     DataBuffer<int64_t> literals;       // Values of the current run
 #if ENABLE_AVX512
-    uint8_t vectorBuf8[MAX_VECTOR_BUF_8BIT_LENGTH + 1]; // Used by vectorially 1~8 bit-unpacking data
-    uint16_t vectorBuf16[MAX_VECTOR_BUF_16BIT_LENGTH + 1]; // Used by vectorially 9~16 bit-unpacking data
-    uint32_t vectorBuf32[MAX_VECTOR_BUF_32BIT_LENGTH + 1]; // Used by vectorially 17~32 bit-unpacking data
+    uint8_t
+        vectorBuf8[MAX_VECTOR_BUF_8BIT_LENGTH + 1];  // Used by vectorially 1~8 bit-unpacking data
+    uint16_t vectorBuf16[MAX_VECTOR_BUF_16BIT_LENGTH +
+                         1];  // Used by vectorially 9~16 bit-unpacking data
+    uint32_t vectorBuf32[MAX_VECTOR_BUF_32BIT_LENGTH +
+                         1];  // Used by vectorially 17~32 bit-unpacking data
 #endif
   };
 }  // namespace orc

@@ -18,11 +18,11 @@
 
 #include "Adaptor.hh"
 #include "Compression.hh"
+#include "DetectPlatform.hh"
 #include "RLEV2Util.hh"
 #include "RLEv2.hh"
 #include "Utils.hh"
 #include "VectorDecoder.hh"
-#include "DetectPlatform.hh"
 
 namespace orc {
   void RleDecoderV2::resetBufferStart(uint64_t len, bool resetBuf, uint32_t backupByteLen) {
@@ -271,7 +271,7 @@ namespace orc {
 #if ENABLE_AVX512
   void RleDecoderV2::unrolledUnpackVector1(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 1;
-    const uint8_t *srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     uint32_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
@@ -283,7 +283,8 @@ namespace orc {
 
     while (len > 0) {
       if (startBit != 0) {
-        bufMoveByteLen += moveLen(len * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
+        bufMoveByteLen +=
+            moveLen(len * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
       } else {
         bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
       }
@@ -294,9 +295,12 @@ namespace orc {
         len -= numElements;
       } else {
         if (startBit != 0) {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) / bitWidth;
+          numElements =
+              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
+              bitWidth;
           len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
+          tailBitLen = fmod(
+              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
           resetBuf = true;
         } else {
           numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
@@ -317,9 +321,10 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-          bufMoveByteLen -= moveLen(align * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -=
+              moveLen(align * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+          srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
           dstPtr += align;
           numElements -= align;
@@ -329,7 +334,7 @@ namespace orc {
       if (numElements >= 64) {
         __m512i reverseMask1u = _mm512_load_si512(reverseMaskTable1u);
         while (numElements >= 64) {
-          uint64_t src_64 = *(uint64_t *)srcPtr;
+          uint64_t src_64 = *(uint64_t*)srcPtr;
           // convert mask to 512-bit register. 0 --> 0x00, 1 --> 0xFF
           __m512i srcmm = _mm512_movm_epi8(src_64);
           // make 0x00 --> 0x00, 0xFF --> 0x01
@@ -349,12 +354,13 @@ namespace orc {
 
       if (numElements > 0) {
         if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -= moveLen(numElements * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH,
+                                    ORC_VECTOR_BYTE_WIDTH);
         } else {
           bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
         }
         plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+        srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
         dstPtr += numElements;
         bufRestByteLen = bufferEnd - bufferStart;
       }
@@ -376,13 +382,13 @@ namespace orc {
 
       bufRestByteLen = bufferEnd - bufferStart;
       bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+      srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     }
   }
 
   void RleDecoderV2::unrolledUnpackVector2(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 2;
-    const uint8_t *srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     uint32_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
@@ -394,7 +400,8 @@ namespace orc {
 
     while (len > 0) {
       if (startBit != 0) {
-        bufMoveByteLen += moveLen(len * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
+        bufMoveByteLen +=
+            moveLen(len * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
       } else {
         bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
       }
@@ -405,9 +412,12 @@ namespace orc {
         len -= numElements;
       } else {
         if (startBit != 0) {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) / bitWidth;
+          numElements =
+              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
+              bitWidth;
           len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
+          tailBitLen = fmod(
+              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
           resetBuf = true;
         } else {
           numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
@@ -428,9 +438,10 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-          bufMoveByteLen -= moveLen(align * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -=
+              moveLen(align * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+          srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
           dstPtr += align;
           numElements -= align;
@@ -438,8 +449,8 @@ namespace orc {
       }
 
       if (numElements >= 64) {
-        __mmask64 readMask = ORC_VECTOR_MAX_16U; // first 16 bytes (64 elements)
-        __m512i   parse_mask = _mm512_set1_epi16(0x0303); // 2 times 1 then (8 - 2) times 0
+        __mmask64 readMask = ORC_VECTOR_MAX_16U;         // first 16 bytes (64 elements)
+        __m512i parse_mask = _mm512_set1_epi16(0x0303);  // 2 times 1 then (8 - 2) times 0
         while (numElements >= 64) {
           __m512i srcmm3 = _mm512_maskz_loadu_epi8(readMask, srcPtr);
           __m512i srcmm0, srcmm1, srcmm2, tmpmm;
@@ -453,18 +464,18 @@ namespace orc {
           // srcmm0: a e i m 0 0 0 0 0 0 0 0 0 0 0 0
           // srcmm1: b f j n 0 0 0 0 0 0 0 0 0 0 0 0
           tmpmm = _mm512_unpacklo_epi8(srcmm0, srcmm1);        // ab ef 00 00 00 00 00 00
-          srcmm0 = _mm512_unpackhi_epi8(srcmm0, srcmm1);        // ij mn 00 00 00 00 00 00
-          srcmm0 = _mm512_shuffle_i64x2(tmpmm, srcmm0, 0x00); // ab ef ab ef ij mn ij mn
+          srcmm0 = _mm512_unpackhi_epi8(srcmm0, srcmm1);       // ij mn 00 00 00 00 00 00
+          srcmm0 = _mm512_shuffle_i64x2(tmpmm, srcmm0, 0x00);  // ab ef ab ef ij mn ij mn
 
           // srcmm2: c g k o 0 0 0 0 0 0 0 0 0 0 0 0
           // srcmm3: d h l p 0 0 0 0 0 0 0 0 0 0 0 0
           tmpmm = _mm512_unpacklo_epi8(srcmm2, srcmm3);        // cd gh 00 00 00 00 00 00
-          srcmm1 = _mm512_unpackhi_epi8(srcmm2, srcmm3);        // kl op 00 00 00 00 00 00
-          srcmm1 = _mm512_shuffle_i64x2(tmpmm, srcmm1, 0x00); // cd gh cd gh kl op kl op
+          srcmm1 = _mm512_unpackhi_epi8(srcmm2, srcmm3);       // kl op 00 00 00 00 00 00
+          srcmm1 = _mm512_shuffle_i64x2(tmpmm, srcmm1, 0x00);  // cd gh cd gh kl op kl op
 
-          tmpmm = _mm512_unpacklo_epi16(srcmm0, srcmm1);       // abcd abcd ijkl ijkl
+          tmpmm = _mm512_unpacklo_epi16(srcmm0, srcmm1);        // abcd abcd ijkl ijkl
           srcmm0 = _mm512_unpackhi_epi16(srcmm0, srcmm1);       // efgh efgh mnop mnop
-          srcmm0 = _mm512_shuffle_i64x2(tmpmm, srcmm0, 0x88); // abcd ijkl efgh mnop
+          srcmm0 = _mm512_shuffle_i64x2(tmpmm, srcmm0, 0x88);   // abcd ijkl efgh mnop
           srcmm0 = _mm512_shuffle_i64x2(srcmm0, srcmm0, 0xD8);  // abcd efgh ijkl mnop
 
           srcmm0 = _mm512_and_si512(srcmm0, parse_mask);
@@ -483,12 +494,13 @@ namespace orc {
 
       if (numElements > 0) {
         if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -= moveLen(numElements * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH,
+                                    ORC_VECTOR_BYTE_WIDTH);
         } else {
           bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
         }
         plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+        srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
         dstPtr += numElements;
         bufRestByteLen = bufferEnd - bufferStart;
       }
@@ -510,13 +522,13 @@ namespace orc {
 
       bufRestByteLen = bufferEnd - bufferStart;
       bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+      srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     }
   }
 
   void RleDecoderV2::unrolledUnpackVector3(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 3;
-    const uint8_t *srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     uint32_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
@@ -528,7 +540,8 @@ namespace orc {
 
     while (len > 0) {
       if (startBit != 0) {
-        bufMoveByteLen += moveLen(len * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
+        bufMoveByteLen +=
+            moveLen(len * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
       } else {
         bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
       }
@@ -539,9 +552,12 @@ namespace orc {
         len -= numElements;
       } else {
         if (startBit != 0) {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) / bitWidth;
+          numElements =
+              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
+              bitWidth;
           len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
+          tailBitLen = fmod(
+              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
           resetBuf = true;
         } else {
           numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
@@ -562,9 +578,10 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-          bufMoveByteLen -= moveLen(align * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -=
+              moveLen(align * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+          srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
           dstPtr += align;
           numElements -= align;
@@ -573,15 +590,15 @@ namespace orc {
 
       if (numElements >= 64) {
         __mmask64 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_BYTE(bitWidth * 64));
-        __m512i   parseMask = _mm512_set1_epi8(ORC_VECTOR_BIT_MASK(bitWidth));
+        __m512i parseMask = _mm512_set1_epi8(ORC_VECTOR_BIT_MASK(bitWidth));
 
-        __m512i   permutexIdx = _mm512_load_si512(permutexIdxTable3u);
+        __m512i permutexIdx = _mm512_load_si512(permutexIdxTable3u);
 
-        __m512i   shuffleIdxPtr[2];
+        __m512i shuffleIdxPtr[2];
         shuffleIdxPtr[0] = _mm512_load_si512(shuffleIdxTable3u_0);
         shuffleIdxPtr[1] = _mm512_load_si512(shuffleIdxTable3u_1);
 
-        __m512i   shiftMaskPtr[2];
+        __m512i shiftMaskPtr[2];
         shiftMaskPtr[0] = _mm512_load_si512(shiftTable3u_0);
         shiftMaskPtr[1] = _mm512_load_si512(shiftTable3u_1);
 
@@ -617,12 +634,13 @@ namespace orc {
 
       if (numElements > 0) {
         if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -= moveLen(numElements * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH,
+                                    ORC_VECTOR_BYTE_WIDTH);
         } else {
           bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
         }
         plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+        srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
         dstPtr += numElements;
         bufRestByteLen = bufferEnd - bufferStart;
       }
@@ -644,13 +662,13 @@ namespace orc {
 
       bufRestByteLen = bufferEnd - bufferStart;
       bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+      srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     }
   }
 
-  void RleDecoderV2::unrolledUnpackVector4(int64_t* data, uint64_t offset, uint64_t len){
+  void RleDecoderV2::unrolledUnpackVector4(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 4;
-    const uint8_t *srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
@@ -662,7 +680,8 @@ namespace orc {
 
     while (len > 0) {
       if (startBit != 0) {
-        bufMoveByteLen += moveLen(len * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
+        bufMoveByteLen +=
+            moveLen(len * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
       } else {
         bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
       }
@@ -673,9 +692,12 @@ namespace orc {
         len -= numElements;
       } else {
         if (startBit != 0) {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) / bitWidth;
+          numElements =
+              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
+              bitWidth;
           len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
+          tailBitLen = fmod(
+              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
           resetBuf = true;
         } else {
           numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
@@ -696,9 +718,10 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-          bufMoveByteLen -= moveLen(align * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -=
+              moveLen(align * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+          srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
           dstPtr += align;
           numElements -= align;
@@ -706,8 +729,8 @@ namespace orc {
       }
 
       if (numElements >= 64) {
-        __mmask64 readMask = ORC_VECTOR_MAX_32U; // first 32 bytes (64 elements)
-        __m512i   parseMask = _mm512_set1_epi16(0x0F0F); // 4 times 1 then (8 - 4) times 0
+        __mmask64 readMask = ORC_VECTOR_MAX_32U;        // first 32 bytes (64 elements)
+        __m512i parseMask = _mm512_set1_epi16(0x0F0F);  // 4 times 1 then (8 - 4) times 0
         while (numElements >= 64) {
           __m512i srcmm0, srcmm1, tmpmm;
 
@@ -717,9 +740,9 @@ namespace orc {
           // move elements into their places
           // srcmm0: a c e g 0 0 0 0
           // srcmm1: b d f h 0 0 0 0
-          tmpmm = _mm512_unpacklo_epi8(srcmm0, srcmm1);        // ab ef 00 00
+          tmpmm = _mm512_unpacklo_epi8(srcmm0, srcmm1);         // ab ef 00 00
           srcmm0 = _mm512_unpackhi_epi8(srcmm0, srcmm1);        // cd gh 00 00
-          srcmm0 = _mm512_shuffle_i64x2(tmpmm, srcmm0, 0x44); // ab ef cd gh
+          srcmm0 = _mm512_shuffle_i64x2(tmpmm, srcmm0, 0x44);   // ab ef cd gh
           srcmm0 = _mm512_shuffle_i64x2(srcmm0, srcmm0, 0xD8);  // ab cd ef gh
 
           // turn 4 bitWidth into 8 by zeroing 4 of each 8 bits.
@@ -739,12 +762,13 @@ namespace orc {
 
       if (numElements > 0) {
         if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -= moveLen(numElements * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH,
+                                    ORC_VECTOR_BYTE_WIDTH);
         } else {
           bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
         }
         plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+        srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
         dstPtr += numElements;
         bufRestByteLen = bufferEnd - bufferStart;
       }
@@ -766,13 +790,13 @@ namespace orc {
 
       bufRestByteLen = bufferEnd - bufferStart;
       bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+      srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     }
   }
 
-  void RleDecoderV2::unrolledUnpackVector5(int64_t* data, uint64_t offset, uint64_t len){
+  void RleDecoderV2::unrolledUnpackVector5(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 5;
-    const uint8_t *srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
@@ -784,7 +808,8 @@ namespace orc {
 
     while (len > 0) {
       if (startBit != 0) {
-        bufMoveByteLen += moveLen(len * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
+        bufMoveByteLen +=
+            moveLen(len * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
       } else {
         bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
       }
@@ -795,9 +820,12 @@ namespace orc {
         len -= numElements;
       } else {
         if (startBit != 0) {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) / bitWidth;
+          numElements =
+              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
+              bitWidth;
           len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
+          tailBitLen = fmod(
+              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
           resetBuf = true;
         } else {
           numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
@@ -818,9 +846,10 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-          bufMoveByteLen -= moveLen(align * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -=
+              moveLen(align * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+          srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
           dstPtr += align;
           numElements -= align;
@@ -829,15 +858,15 @@ namespace orc {
 
       if (numElements >= 64) {
         __mmask64 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_BYTE(bitWidth * 64));
-        __m512i   parseMask = _mm512_set1_epi8(ORC_VECTOR_BIT_MASK(bitWidth));
+        __m512i parseMask = _mm512_set1_epi8(ORC_VECTOR_BIT_MASK(bitWidth));
 
-        __m512i   permutexIdx = _mm512_load_si512(permutexIdxTable5u);
+        __m512i permutexIdx = _mm512_load_si512(permutexIdxTable5u);
 
-        __m512i   shuffleIdxPtr[2];
+        __m512i shuffleIdxPtr[2];
         shuffleIdxPtr[0] = _mm512_load_si512(shuffleIdxTable5u_0);
         shuffleIdxPtr[1] = _mm512_load_si512(shuffleIdxTable5u_1);
 
-        __m512i   shiftMaskPtr[2];
+        __m512i shiftMaskPtr[2];
         shiftMaskPtr[0] = _mm512_load_si512(shiftTable5u_0);
         shiftMaskPtr[1] = _mm512_load_si512(shiftTable5u_1);
 
@@ -873,12 +902,13 @@ namespace orc {
 
       if (numElements > 0) {
         if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -= moveLen(numElements * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH,
+                                    ORC_VECTOR_BYTE_WIDTH);
         } else {
           bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
         }
         plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+        srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
         dstPtr += numElements;
         bufRestByteLen = bufferEnd - bufferStart;
       }
@@ -900,13 +930,13 @@ namespace orc {
 
       bufRestByteLen = bufferEnd - bufferStart;
       bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+      srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     }
   }
 
-  void RleDecoderV2::unrolledUnpackVector6(int64_t *data, uint64_t offset, uint64_t len) {
+  void RleDecoderV2::unrolledUnpackVector6(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 6;
-    const uint8_t *srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
@@ -918,7 +948,8 @@ namespace orc {
 
     while (len > 0) {
       if (startBit != 0) {
-        bufMoveByteLen += moveLen(len * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
+        bufMoveByteLen +=
+            moveLen(len * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
       } else {
         bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
       }
@@ -929,9 +960,12 @@ namespace orc {
         len -= numElements;
       } else {
         if (startBit != 0) {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) / bitWidth;
+          numElements =
+              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
+              bitWidth;
           len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
+          tailBitLen = fmod(
+              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
           resetBuf = true;
         } else {
           numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
@@ -952,9 +986,10 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-          bufMoveByteLen -= moveLen(align * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -=
+              moveLen(align * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+          srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
           dstPtr += align;
           numElements -= align;
@@ -963,15 +998,15 @@ namespace orc {
 
       if (numElements >= 64) {
         __mmask64 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_BYTE(bitWidth * 64));
-        __m512i   parseMask = _mm512_set1_epi8(ORC_VECTOR_BIT_MASK(bitWidth));
+        __m512i parseMask = _mm512_set1_epi8(ORC_VECTOR_BIT_MASK(bitWidth));
 
-        __m512i   permutexIdx = _mm512_load_si512(permutexIdxTable6u);
+        __m512i permutexIdx = _mm512_load_si512(permutexIdxTable6u);
 
-        __m512i   shuffleIdxPtr[2];
+        __m512i shuffleIdxPtr[2];
         shuffleIdxPtr[0] = _mm512_load_si512(shuffleIdxTable6u_0);
         shuffleIdxPtr[1] = _mm512_load_si512(shuffleIdxTable6u_1);
 
-        __m512i   shiftMaskPtr[2];
+        __m512i shiftMaskPtr[2];
         shiftMaskPtr[0] = _mm512_load_si512(shiftTable6u_0);
         shiftMaskPtr[1] = _mm512_load_si512(shiftTable6u_1);
 
@@ -1007,12 +1042,13 @@ namespace orc {
 
       if (numElements > 0) {
         if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -= moveLen(numElements * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH,
+                                    ORC_VECTOR_BYTE_WIDTH);
         } else {
           bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
         }
         plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+        srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
         dstPtr += numElements;
         bufRestByteLen = bufferEnd - bufferStart;
       }
@@ -1034,13 +1070,13 @@ namespace orc {
 
       bufRestByteLen = bufferEnd - bufferStart;
       bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+      srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     }
   }
 
-  void RleDecoderV2::unrolledUnpackVector7(int64_t *data, uint64_t offset, uint64_t len) {
+  void RleDecoderV2::unrolledUnpackVector7(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 7;
-    const uint8_t *srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
@@ -1052,7 +1088,8 @@ namespace orc {
 
     while (len > 0) {
       if (startBit != 0) {
-        bufMoveByteLen += moveLen(len * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH , ORC_VECTOR_BYTE_WIDTH);
+        bufMoveByteLen +=
+            moveLen(len * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
       } else {
         bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
       }
@@ -1063,9 +1100,12 @@ namespace orc {
         len -= numElements;
       } else {
         if (startBit != 0) {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) / bitWidth;
+          numElements =
+              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
+              bitWidth;
           len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
+          tailBitLen = fmod(
+              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
           resetBuf = true;
         } else {
           numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
@@ -1086,9 +1126,10 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-          bufMoveByteLen -= moveLen(align * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -=
+              moveLen(align * bitWidth + startBit - ORC_VECTOR_BYTE_WIDTH, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+          srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
           dstPtr += align;
           numElements -= align;
@@ -1097,15 +1138,15 @@ namespace orc {
 
       if (numElements >= 64) {
         __mmask64 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_BYTE(bitWidth * 64));
-        __m512i   parseMask = _mm512_set1_epi8(ORC_VECTOR_BIT_MASK(bitWidth));
+        __m512i parseMask = _mm512_set1_epi8(ORC_VECTOR_BIT_MASK(bitWidth));
 
-        __m512i   permutexIdx = _mm512_load_si512(permutexIdxTable7u);
+        __m512i permutexIdx = _mm512_load_si512(permutexIdxTable7u);
 
-        __m512i   shuffleIdxPtr[2];
+        __m512i shuffleIdxPtr[2];
         shuffleIdxPtr[0] = _mm512_load_si512(shuffleIdxTable7u_0);
         shuffleIdxPtr[1] = _mm512_load_si512(shuffleIdxTable7u_1);
 
-        __m512i   shiftMaskPtr[2];
+        __m512i shiftMaskPtr[2];
         shiftMaskPtr[0] = _mm512_load_si512(shiftTable7u_0);
         shiftMaskPtr[1] = _mm512_load_si512(shiftTable7u_1);
 
@@ -1141,12 +1182,13 @@ namespace orc {
 
       if (numElements > 0) {
         if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
+                                    ORC_VECTOR_BYTE_WIDTH);
         } else {
           bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
         }
         plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+        srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
         dstPtr += numElements;
         bufRestByteLen = bufferEnd - bufferStart;
       }
@@ -1168,13 +1210,13 @@ namespace orc {
 
       bufRestByteLen = bufferEnd - bufferStart;
       bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+      srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     }
   }
 
-  void RleDecoderV2::unrolledUnpackVector9(int64_t *data, uint64_t offset, uint64_t len) {
+  void RleDecoderV2::unrolledUnpackVector9(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 9;
-    const uint8_t *srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
@@ -1186,7 +1228,8 @@ namespace orc {
 
     while (len > 0) {
       if (startBit != 0) {
-        bufMoveByteLen += moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+        bufMoveByteLen +=
+            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
       } else {
         bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
       }
@@ -1197,9 +1240,12 @@ namespace orc {
         len -= numElements;
       } else {
         if (startBit != 0) {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) / bitWidth;
+          numElements =
+              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
+              bitWidth;
           len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
+          tailBitLen = fmod(
+              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
           resetBuf = true;
         } else {
           numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
@@ -1220,9 +1266,10 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-    	  bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -=
+              moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+          srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
           dstPtr += align;
           numElements -= align;
@@ -1231,23 +1278,23 @@ namespace orc {
 
       if (numElements >= 32) {
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_WORD(bitWidth * 32));
-        __m512i   parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
-        __m512i   nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
-        __m512i   reverseMask16u = _mm512_load_si512(reverseMaskTable16u);
-        __m512i   maskmm = _mm512_set1_epi8(0x0F);
+        __m512i parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
+        __m512i nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
+        __m512i reverseMask16u = _mm512_load_si512(reverseMaskTable16u);
+        __m512i maskmm = _mm512_set1_epi8(0x0F);
 
-        __m512i   shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable9u_0);
+        __m512i shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable9u_0);
 
-        __m512i   permutexIdxPtr[2];
+        __m512i permutexIdxPtr[2];
         permutexIdxPtr[0] = _mm512_load_si512(permutexIdxTable9u_0);
         permutexIdxPtr[1] = _mm512_load_si512(permutexIdxTable9u_1);
 
-        __m512i   shiftMaskPtr[3];
+        __m512i shiftMaskPtr[3];
         shiftMaskPtr[0] = _mm512_load_si512(shiftTable9u_0);
         shiftMaskPtr[1] = _mm512_load_si512(shiftTable9u_1);
         shiftMaskPtr[2] = _mm512_load_si512(shiftTable9u_2);
 
-        __m512i   gatherIdxmm = _mm512_load_si512(gatherIdxTable9u);
+        __m512i gatherIdxmm = _mm512_load_si512(gatherIdxTable9u);
 
         while (numElements >= 64) {
           __m512i srcmm, zmm[2];
@@ -1324,12 +1371,13 @@ namespace orc {
 
       if (numElements > 0) {
         if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
+                                    ORC_VECTOR_BYTE_WIDTH);
         } else {
           bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
         }
         plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+        srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
         dstPtr += numElements;
         bufRestByteLen = bufferEnd - bufferStart;
       }
@@ -1351,13 +1399,13 @@ namespace orc {
 
       bufRestByteLen = bufferEnd - bufferStart;
       bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+      srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     }
   }
 
-  void RleDecoderV2::unrolledUnpackVector10(int64_t *data, uint64_t offset, uint64_t len) {
+  void RleDecoderV2::unrolledUnpackVector10(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 10;
-    const uint8_t *srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
@@ -1369,7 +1417,8 @@ namespace orc {
 
     while (len > 0) {
       if (startBit != 0) {
-        bufMoveByteLen += moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+        bufMoveByteLen +=
+            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
       } else {
         bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
       }
@@ -1380,9 +1429,12 @@ namespace orc {
         len -= numElements;
       } else {
         if (startBit != 0) {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) / bitWidth;
+          numElements =
+              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
+              bitWidth;
           len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
+          tailBitLen = fmod(
+              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
           resetBuf = true;
         } else {
           numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
@@ -1403,9 +1455,10 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-    	  bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -=
+              moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+          srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
           dstPtr += align;
           numElements -= align;
@@ -1414,11 +1467,11 @@ namespace orc {
 
       if (numElements >= 32) {
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_WORD(bitWidth * 32));
-        __m512i   parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
+        __m512i parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
 
-        __m512i   shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable10u_0);
-        __m512i   permutexIdx = _mm512_load_si512(permutexIdxTable10u);
-        __m512i   shiftMask = _mm512_load_si512(shiftTable10u);
+        __m512i shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable10u_0);
+        __m512i permutexIdx = _mm512_load_si512(permutexIdxTable10u);
+        __m512i shiftMask = _mm512_load_si512(shiftTable10u);
 
         while (numElements >= 32) {
           __m512i srcmm, zmm;
@@ -1446,12 +1499,13 @@ namespace orc {
 
       if (numElements > 0) {
         if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
+                                    ORC_VECTOR_BYTE_WIDTH);
         } else {
           bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
         }
         plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+        srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
         dstPtr += numElements;
         bufRestByteLen = bufferEnd - bufferStart;
       }
@@ -1473,13 +1527,13 @@ namespace orc {
 
       bufRestByteLen = bufferEnd - bufferStart;
       bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+      srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     }
   }
 
-  void RleDecoderV2::unrolledUnpackVector11(int64_t *data, uint64_t offset, uint64_t len) {
+  void RleDecoderV2::unrolledUnpackVector11(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 11;
-    const uint8_t *srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
@@ -1491,7 +1545,8 @@ namespace orc {
 
     while (len > 0) {
       if (startBit != 0) {
-        bufMoveByteLen += moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+        bufMoveByteLen +=
+            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
       } else {
         bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
       }
@@ -1502,9 +1557,12 @@ namespace orc {
         len -= numElements;
       } else {
         if (startBit != 0) {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) / bitWidth;
+          numElements =
+              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
+              bitWidth;
           len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
+          tailBitLen = fmod(
+              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
           resetBuf = true;
         } else {
           numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
@@ -1525,9 +1583,10 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-    	  bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -=
+              moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+          srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
           dstPtr += align;
           numElements -= align;
@@ -1536,26 +1595,26 @@ namespace orc {
 
       if (numElements >= 32) {
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_WORD(bitWidth * 32));
-        __m512i   parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
-        __m512i   nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
-        __m512i   reverse_mask_16u = _mm512_load_si512(reverseMaskTable16u);
-        __m512i   maskmm = _mm512_set1_epi8(0x0F);
+        __m512i parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
+        __m512i nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
+        __m512i reverse_mask_16u = _mm512_load_si512(reverseMaskTable16u);
+        __m512i maskmm = _mm512_set1_epi8(0x0F);
 
-        __m512i   shuffleIdxPtr[2];
+        __m512i shuffleIdxPtr[2];
         shuffleIdxPtr[0] = _mm512_load_si512(shuffleIdxTable11u_0);
         shuffleIdxPtr[1] = _mm512_load_si512(shuffleIdxTable11u_1);
 
-        __m512i   permutexIdxPtr[2];
+        __m512i permutexIdxPtr[2];
         permutexIdxPtr[0] = _mm512_load_si512(permutexIdxTable11u_0);
         permutexIdxPtr[1] = _mm512_load_si512(permutexIdxTable11u_1);
 
-        __m512i   shiftMaskPtr[4];
+        __m512i shiftMaskPtr[4];
         shiftMaskPtr[0] = _mm512_load_si512(shiftTable11u_0);
         shiftMaskPtr[1] = _mm512_load_si512(shiftTable11u_1);
         shiftMaskPtr[2] = _mm512_load_si512(shiftTable11u_2);
         shiftMaskPtr[3] = _mm512_load_si512(shiftTable11u_3);
 
-        __m512i   gatherIdxmm = _mm512_load_si512(gatherIdxTable11u);
+        __m512i gatherIdxmm = _mm512_load_si512(gatherIdxTable11u);
 
         while (numElements >= 64) {
           __m512i srcmm, zmm[2];
@@ -1638,12 +1697,13 @@ namespace orc {
 
       if (numElements > 0) {
         if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
+                                    ORC_VECTOR_BYTE_WIDTH);
         } else {
           bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
         }
         plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+        srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
         dstPtr += numElements;
         bufRestByteLen = bufferEnd - bufferStart;
       }
@@ -1665,13 +1725,13 @@ namespace orc {
 
       bufRestByteLen = bufferEnd - bufferStart;
       bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+      srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     }
   }
 
-  void RleDecoderV2::unrolledUnpackVector12(int64_t *data, uint64_t offset, uint64_t len) {
+  void RleDecoderV2::unrolledUnpackVector12(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 12;
-    const uint8_t *srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
@@ -1683,7 +1743,8 @@ namespace orc {
 
     while (len > 0) {
       if (startBit != 0) {
-        bufMoveByteLen += moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+        bufMoveByteLen +=
+            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
       } else {
         bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
       }
@@ -1694,9 +1755,12 @@ namespace orc {
         len -= numElements;
       } else {
         if (startBit != 0) {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) / bitWidth;
+          numElements =
+              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
+              bitWidth;
           len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
+          tailBitLen = fmod(
+              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
           resetBuf = true;
         } else {
           numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
@@ -1717,9 +1781,10 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-    	  bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -=
+              moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+          srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
           dstPtr += align;
           numElements -= align;
@@ -1728,11 +1793,11 @@ namespace orc {
 
       if (numElements >= 32) {
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_WORD(bitWidth * 32));
-        __m512i   parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
+        __m512i parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
 
-        __m512i   shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable12u_0);
-        __m512i   permutexIdx = _mm512_load_si512(permutexIdxTable12u);
-        __m512i   shiftMask = _mm512_load_si512(shiftTable12u);
+        __m512i shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable12u_0);
+        __m512i permutexIdx = _mm512_load_si512(permutexIdxTable12u);
+        __m512i shiftMask = _mm512_load_si512(shiftTable12u);
 
         while (numElements >= 32) {
           __m512i srcmm, zmm;
@@ -1760,12 +1825,13 @@ namespace orc {
 
       if (numElements > 0) {
         if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
+                                    ORC_VECTOR_BYTE_WIDTH);
         } else {
           bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
         }
         plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+        srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
         dstPtr += numElements;
         bufRestByteLen = bufferEnd - bufferStart;
       }
@@ -1787,13 +1853,13 @@ namespace orc {
 
       bufRestByteLen = bufferEnd - bufferStart;
       bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+      srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     }
   }
 
-  void RleDecoderV2::unrolledUnpackVector13(int64_t *data, uint64_t offset, uint64_t len) {
+  void RleDecoderV2::unrolledUnpackVector13(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 13;
-    const uint8_t *srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
@@ -1805,7 +1871,8 @@ namespace orc {
 
     while (len > 0) {
       if (startBit != 0) {
-        bufMoveByteLen += moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+        bufMoveByteLen +=
+            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
       } else {
         bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
       }
@@ -1816,9 +1883,12 @@ namespace orc {
         len -= numElements;
       } else {
         if (startBit != 0) {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) / bitWidth;
+          numElements =
+              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
+              bitWidth;
           len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
+          tailBitLen = fmod(
+              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
           resetBuf = true;
         } else {
           numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
@@ -1839,9 +1909,10 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-    	  bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -=
+              moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+          srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
           dstPtr += align;
           numElements -= align;
@@ -1850,26 +1921,26 @@ namespace orc {
 
       if (numElements >= 32) {
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_WORD(bitWidth * 32));
-        __m512i   parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
-        __m512i   nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
-        __m512i   reverse_mask_16u = _mm512_load_si512(reverseMaskTable16u);
-        __m512i   maskmm = _mm512_set1_epi8(0x0F);
+        __m512i parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
+        __m512i nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
+        __m512i reverse_mask_16u = _mm512_load_si512(reverseMaskTable16u);
+        __m512i maskmm = _mm512_set1_epi8(0x0F);
 
-        __m512i   shuffleIdxPtr[2];
+        __m512i shuffleIdxPtr[2];
         shuffleIdxPtr[0] = _mm512_load_si512(shuffleIdxTable13u_0);
         shuffleIdxPtr[1] = _mm512_load_si512(shuffleIdxTable13u_1);
 
-        __m512i   permutexIdxPtr[2];
+        __m512i permutexIdxPtr[2];
         permutexIdxPtr[0] = _mm512_load_si512(permutexIdxTable13u_0);
         permutexIdxPtr[1] = _mm512_load_si512(permutexIdxTable13u_1);
 
-        __m512i   shiftMaskPtr[4];
+        __m512i shiftMaskPtr[4];
         shiftMaskPtr[0] = _mm512_load_si512(shiftTable13u_0);
         shiftMaskPtr[1] = _mm512_load_si512(shiftTable13u_1);
         shiftMaskPtr[2] = _mm512_load_si512(shiftTable13u_2);
         shiftMaskPtr[3] = _mm512_load_si512(shiftTable13u_3);
 
-        __m512i   gatherIdxmm = _mm512_load_si512(gatherIdxTable13u);
+        __m512i gatherIdxmm = _mm512_load_si512(gatherIdxTable13u);
 
         while (numElements >= 64) {
           __m512i srcmm, zmm[2];
@@ -1952,12 +2023,13 @@ namespace orc {
 
       if (numElements > 0) {
         if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
+                                    ORC_VECTOR_BYTE_WIDTH);
         } else {
           bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
         }
         plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+        srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
         dstPtr += numElements;
         bufRestByteLen = bufferEnd - bufferStart;
       }
@@ -1979,13 +2051,13 @@ namespace orc {
 
       bufRestByteLen = bufferEnd - bufferStart;
       bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+      srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     }
   }
 
-  void RleDecoderV2::unrolledUnpackVector14(int64_t *data, uint64_t offset, uint64_t len) {
+  void RleDecoderV2::unrolledUnpackVector14(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 14;
-    const uint8_t *srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
@@ -1997,7 +2069,8 @@ namespace orc {
 
     while (len > 0) {
       if (startBit != 0) {
-        bufMoveByteLen += moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+        bufMoveByteLen +=
+            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
       } else {
         bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
       }
@@ -2008,9 +2081,12 @@ namespace orc {
         len -= numElements;
       } else {
         if (startBit != 0) {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) / bitWidth;
+          numElements =
+              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
+              bitWidth;
           len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
+          tailBitLen = fmod(
+              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
           resetBuf = true;
         } else {
           numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
@@ -2031,9 +2107,10 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-    	  bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -=
+              moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+          srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
           dstPtr += align;
           numElements -= align;
@@ -2042,15 +2119,15 @@ namespace orc {
 
       if (numElements >= 32) {
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_WORD(bitWidth * 32));
-        __m512i   parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
+        __m512i parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
 
-        __m512i   shuffleIdxPtr[2];
+        __m512i shuffleIdxPtr[2];
         shuffleIdxPtr[0] = _mm512_load_si512(shuffleIdxTable14u_0);
         shuffleIdxPtr[1] = _mm512_load_si512(shuffleIdxTable14u_1);
 
-        __m512i   permutexIdx = _mm512_load_si512(permutexIdxTable14u);
+        __m512i permutexIdx = _mm512_load_si512(permutexIdxTable14u);
 
-        __m512i   shiftMaskPtr[2];
+        __m512i shiftMaskPtr[2];
         shiftMaskPtr[0] = _mm512_load_si512(shiftTable14u_0);
         shiftMaskPtr[1] = _mm512_load_si512(shiftTable14u_1);
 
@@ -2086,12 +2163,13 @@ namespace orc {
 
       if (numElements > 0) {
         if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
+                                    ORC_VECTOR_BYTE_WIDTH);
         } else {
           bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
         }
         plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+        srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
         dstPtr += numElements;
         bufRestByteLen = bufferEnd - bufferStart;
       }
@@ -2113,13 +2191,13 @@ namespace orc {
 
       bufRestByteLen = bufferEnd - bufferStart;
       bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+      srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     }
   }
 
-  void RleDecoderV2::unrolledUnpackVector15(int64_t *data, uint64_t offset, uint64_t len) {
+  void RleDecoderV2::unrolledUnpackVector15(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 15;
-    const uint8_t *srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
@@ -2131,7 +2209,8 @@ namespace orc {
 
     while (len > 0) {
       if (startBit != 0) {
-        bufMoveByteLen += moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+        bufMoveByteLen +=
+            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
       } else {
         bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
       }
@@ -2142,9 +2221,12 @@ namespace orc {
         len -= numElements;
       } else {
         if (startBit != 0) {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) / bitWidth;
+          numElements =
+              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
+              bitWidth;
           len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
+          tailBitLen = fmod(
+              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
           resetBuf = true;
         } else {
           numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
@@ -2165,9 +2247,10 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-    	  bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -=
+              moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+          srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
           dstPtr += align;
           numElements -= align;
@@ -2176,26 +2259,26 @@ namespace orc {
 
       if (numElements >= 32) {
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_WORD(bitWidth * 32));
-        __m512i   parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
-        __m512i   nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
-        __m512i   reverseMask16u = _mm512_load_si512(reverseMaskTable16u);
-        __m512i   maskmm = _mm512_set1_epi8(0x0F);
+        __m512i parseMask0 = _mm512_set1_epi16(ORC_VECTOR_BIT_MASK(bitWidth));
+        __m512i nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
+        __m512i reverseMask16u = _mm512_load_si512(reverseMaskTable16u);
+        __m512i maskmm = _mm512_set1_epi8(0x0F);
 
-        __m512i   shuffleIdxPtr[2];
+        __m512i shuffleIdxPtr[2];
         shuffleIdxPtr[0] = _mm512_load_si512(shuffleIdxTable15u_0);
         shuffleIdxPtr[1] = _mm512_load_si512(shuffleIdxTable15u_1);
 
-        __m512i   permutexIdxPtr[2];
+        __m512i permutexIdxPtr[2];
         permutexIdxPtr[0] = _mm512_load_si512(permutexIdxTable15u_0);
         permutexIdxPtr[1] = _mm512_load_si512(permutexIdxTable15u_1);
 
-        __m512i   shiftMaskPtr[4];
+        __m512i shiftMaskPtr[4];
         shiftMaskPtr[0] = _mm512_load_si512(shiftTable15u_0);
         shiftMaskPtr[1] = _mm512_load_si512(shiftTable15u_1);
         shiftMaskPtr[2] = _mm512_load_si512(shiftTable15u_2);
         shiftMaskPtr[3] = _mm512_load_si512(shiftTable15u_3);
 
-        __m512i   gatherIdxmm = _mm512_load_si512(gatherIdxTable15u);
+        __m512i gatherIdxmm = _mm512_load_si512(gatherIdxTable15u);
 
         while (numElements >= 64) {
           __m512i srcmm, zmm[2];
@@ -2278,12 +2361,13 @@ namespace orc {
 
       if (numElements > 0) {
         if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
+                                    ORC_VECTOR_BYTE_WIDTH);
         } else {
           bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
         }
         plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+        srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
         dstPtr += numElements;
         bufRestByteLen = bufferEnd - bufferStart;
       }
@@ -2305,13 +2389,13 @@ namespace orc {
 
       bufRestByteLen = bufferEnd - bufferStart;
       bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+      srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     }
   }
 
-  void RleDecoderV2::unrolledUnpackVector16(int64_t *data, uint64_t offset, uint64_t len) {
+  void RleDecoderV2::unrolledUnpackVector16(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 16;
-    const uint8_t *srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     uint64_t numElements = len;
     uint64_t bufMoveByteLen = 0;
     uint64_t bufRestByteLen = bufferEnd - bufferStart;
@@ -2358,7 +2442,7 @@ namespace orc {
       if (numElements > 0) {
         bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
         unrolledUnpack16(dstPtr, 0, numElements);
-        srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+        srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
         dstPtr += numElements;
         bufRestByteLen = bufferEnd - bufferStart;
       }
@@ -2366,10 +2450,11 @@ namespace orc {
       if (bufMoveByteLen <= bufRestByteLen) {
         resetBufferStart(bufMoveByteLen, resetBuf, backupByteLen);
         return;
-      } 
-      
+      }
+
       if (backupByteLen != 0) {
-        resetBufferStart(bufRestByteLen, resetBuf, backupByteLen);;
+        resetBufferStart(bufRestByteLen, resetBuf, backupByteLen);
+        ;
         unrolledUnpack16(dstPtr, 0, 1);
         dstPtr++;
         backupByteLen = 0;
@@ -2380,13 +2465,13 @@ namespace orc {
 
       bufRestByteLen = bufferEnd - bufferStart;
       bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+      srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     }
   }
 
-  void RleDecoderV2::unrolledUnpackVector17(int64_t *data, uint64_t offset, uint64_t len) {
+  void RleDecoderV2::unrolledUnpackVector17(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 17;
-    const uint8_t *srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
@@ -2398,7 +2483,8 @@ namespace orc {
 
     while (len > 0) {
       if (startBit != 0) {
-        bufMoveByteLen += moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+        bufMoveByteLen +=
+            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
       } else {
         bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
       }
@@ -2409,9 +2495,12 @@ namespace orc {
         len -= numElements;
       } else {
         if (startBit != 0) {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) / bitWidth;
+          numElements =
+              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
+              bitWidth;
           len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
+          tailBitLen = fmod(
+              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
           resetBuf = true;
         } else {
           numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
@@ -2432,9 +2521,10 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-    	  bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -=
+              moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+          srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
           dstPtr += align;
           numElements -= align;
@@ -2443,23 +2533,23 @@ namespace orc {
 
       if (numElements >= 16) {
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(bitWidth);
-        __m512i   parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
-        __m512i   nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
-        __m512i   reverseMask32u = _mm512_load_si512(reverseMaskTable32u);
-        __m512i   maskmm = _mm512_set1_epi8(0x0F);
+        __m512i parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
+        __m512i nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
+        __m512i reverseMask32u = _mm512_load_si512(reverseMaskTable32u);
+        __m512i maskmm = _mm512_set1_epi8(0x0F);
 
-        __m512i   shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable17u_0);
+        __m512i shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable17u_0);
 
-        __m512i   permutexIdxPtr[2];
+        __m512i permutexIdxPtr[2];
         permutexIdxPtr[0] = _mm512_load_si512(permutexIdxTable17u_0);
         permutexIdxPtr[1] = _mm512_load_si512(permutexIdxTable17u_1);
 
-        __m512i   shiftMaskPtr[3];
+        __m512i shiftMaskPtr[3];
         shiftMaskPtr[0] = _mm512_load_si512(shiftTable17u_0);
         shiftMaskPtr[1] = _mm512_load_si512(shiftTable17u_1);
         shiftMaskPtr[2] = _mm512_load_si512(shiftTable17u_2);
 
-        __m512i   gatherIdxmm = _mm512_load_si512(gatherIdxTable17u);
+        __m512i gatherIdxmm = _mm512_load_si512(gatherIdxTable17u);
 
         while (numElements >= 32) {
           __m512i srcmm, zmm[2];
@@ -2536,12 +2626,13 @@ namespace orc {
 
       if (numElements > 0) {
         if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
+                                    ORC_VECTOR_BYTE_WIDTH);
         } else {
           bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
         }
         plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+        srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
         dstPtr += numElements;
         bufRestByteLen = bufferEnd - bufferStart;
       }
@@ -2563,13 +2654,13 @@ namespace orc {
 
       bufRestByteLen = bufferEnd - bufferStart;
       bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+      srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     }
   }
 
-  void RleDecoderV2::unrolledUnpackVector18(int64_t *data, uint64_t offset, uint64_t len) {
+  void RleDecoderV2::unrolledUnpackVector18(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 18;
-    const uint8_t *srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
@@ -2581,7 +2672,8 @@ namespace orc {
 
     while (len > 0) {
       if (startBit != 0) {
-        bufMoveByteLen += moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+        bufMoveByteLen +=
+            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
       } else {
         bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
       }
@@ -2592,9 +2684,12 @@ namespace orc {
         len -= numElements;
       } else {
         if (startBit != 0) {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) / bitWidth;
+          numElements =
+              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
+              bitWidth;
           len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
+          tailBitLen = fmod(
+              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
           resetBuf = true;
         } else {
           numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
@@ -2615,9 +2710,10 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-    	  bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -=
+              moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+          srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
           dstPtr += align;
           numElements -= align;
@@ -2626,23 +2722,23 @@ namespace orc {
 
       if (numElements >= 16) {
         __mmask16 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_DWORD(bitWidth * 16));
-        __m512i   parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
-        __m512i   nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
-        __m512i   reverseMask32u = _mm512_load_si512(reverseMaskTable32u);
-        __m512i   maskmm = _mm512_set1_epi8(0x0F);
+        __m512i parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
+        __m512i nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
+        __m512i reverseMask32u = _mm512_load_si512(reverseMaskTable32u);
+        __m512i maskmm = _mm512_set1_epi8(0x0F);
 
-        __m512i   shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable18u_0);
+        __m512i shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable18u_0);
 
-        __m512i   permutexIdxPtr[2];
+        __m512i permutexIdxPtr[2];
         permutexIdxPtr[0] = _mm512_load_si512(permutexIdxTable18u_0);
         permutexIdxPtr[1] = _mm512_load_si512(permutexIdxTable18u_1);
 
-        __m512i   shiftMaskPtr[3];
+        __m512i shiftMaskPtr[3];
         shiftMaskPtr[0] = _mm512_load_si512(shiftTable18u_0);
         shiftMaskPtr[1] = _mm512_load_si512(shiftTable18u_1);
         shiftMaskPtr[2] = _mm512_load_si512(shiftTable18u_2);
 
-        __m512i   gatherIdxmm = _mm512_load_si512(gatherIdxTable18u);
+        __m512i gatherIdxmm = _mm512_load_si512(gatherIdxTable18u);
 
         while (numElements >= 32) {
           __m512i srcmm, zmm[2];
@@ -2719,12 +2815,13 @@ namespace orc {
 
       if (numElements > 0) {
         if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
+                                    ORC_VECTOR_BYTE_WIDTH);
         } else {
           bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
         }
         plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+        srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
         dstPtr += numElements;
         bufRestByteLen = bufferEnd - bufferStart;
       }
@@ -2746,13 +2843,13 @@ namespace orc {
 
       bufRestByteLen = bufferEnd - bufferStart;
       bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+      srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     }
   }
 
-  void RleDecoderV2::unrolledUnpackVector19(int64_t *data, uint64_t offset, uint64_t len) {
+  void RleDecoderV2::unrolledUnpackVector19(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 19;
-    const uint8_t *srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
@@ -2764,7 +2861,8 @@ namespace orc {
 
     while (len > 0) {
       if (startBit != 0) {
-        bufMoveByteLen += moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+        bufMoveByteLen +=
+            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
       } else {
         bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
       }
@@ -2775,9 +2873,12 @@ namespace orc {
         len -= numElements;
       } else {
         if (startBit != 0) {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) / bitWidth;
+          numElements =
+              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
+              bitWidth;
           len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
+          tailBitLen = fmod(
+              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
           resetBuf = true;
         } else {
           numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
@@ -2798,9 +2899,10 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-    	  bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -=
+              moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+          srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
           dstPtr += align;
           numElements -= align;
@@ -2809,23 +2911,23 @@ namespace orc {
 
       if (numElements >= 16) {
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(bitWidth);
-        __m512i   parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
-        __m512i   nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
-        __m512i   reverseMask32u = _mm512_load_si512(reverseMaskTable32u);
-        __m512i   maskmm = _mm512_set1_epi8(0x0F);
+        __m512i parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
+        __m512i nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
+        __m512i reverseMask32u = _mm512_load_si512(reverseMaskTable32u);
+        __m512i maskmm = _mm512_set1_epi8(0x0F);
 
-        __m512i   shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable19u_0);
+        __m512i shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable19u_0);
 
-        __m512i   permutexIdxPtr[2];
+        __m512i permutexIdxPtr[2];
         permutexIdxPtr[0] = _mm512_load_si512(permutexIdxTable19u_0);
         permutexIdxPtr[1] = _mm512_load_si512(permutexIdxTable19u_1);
 
-        __m512i   shiftMaskPtr[3];
+        __m512i shiftMaskPtr[3];
         shiftMaskPtr[0] = _mm512_load_si512(shiftTable19u_0);
         shiftMaskPtr[1] = _mm512_load_si512(shiftTable19u_1);
         shiftMaskPtr[2] = _mm512_load_si512(shiftTable19u_2);
 
-        __m512i   gatherIdxmm = _mm512_load_si512(gatherIdxTable19u);
+        __m512i gatherIdxmm = _mm512_load_si512(gatherIdxTable19u);
 
         while (numElements >= 32) {
           __m512i srcmm, zmm[2];
@@ -2902,12 +3004,13 @@ namespace orc {
 
       if (numElements > 0) {
         if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
+                                    ORC_VECTOR_BYTE_WIDTH);
         } else {
           bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
         }
         plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+        srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
         dstPtr += numElements;
         bufRestByteLen = bufferEnd - bufferStart;
       }
@@ -2929,13 +3032,13 @@ namespace orc {
 
       bufRestByteLen = bufferEnd - bufferStart;
       bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+      srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     }
   }
 
-  void RleDecoderV2::unrolledUnpackVector20(int64_t *data, uint64_t offset, uint64_t len) {
+  void RleDecoderV2::unrolledUnpackVector20(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 20;
-    const uint8_t *srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
@@ -2947,7 +3050,8 @@ namespace orc {
 
     while (len > 0) {
       if (startBit != 0) {
-        bufMoveByteLen += moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+        bufMoveByteLen +=
+            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
       } else {
         bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
       }
@@ -2958,9 +3062,12 @@ namespace orc {
         len -= numElements;
       } else {
         if (startBit != 0) {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) / bitWidth;
+          numElements =
+              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
+              bitWidth;
           len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
+          tailBitLen = fmod(
+              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
           resetBuf = true;
         } else {
           numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
@@ -2981,9 +3088,10 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-    	  bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -=
+              moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+          srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
           dstPtr += align;
           numElements -= align;
@@ -2992,11 +3100,11 @@ namespace orc {
 
       if (numElements >= 16u) {
         __mmask16 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_DWORD(bitWidth * 16));
-        __m512i   parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
+        __m512i parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
 
-        __m512i   shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable20u_0);
-        __m512i   permutexIdx = _mm512_load_si512(permutexIdxTable20u);
-        __m512i   shiftMask = _mm512_load_si512(shiftTable20u);
+        __m512i shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable20u_0);
+        __m512i permutexIdx = _mm512_load_si512(permutexIdxTable20u);
+        __m512i shiftMask = _mm512_load_si512(shiftTable20u);
 
         while (numElements >= 16u) {
           __m512i srcmm, zmm;
@@ -3024,12 +3132,13 @@ namespace orc {
 
       if (numElements > 0) {
         if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
+                                    ORC_VECTOR_BYTE_WIDTH);
         } else {
           bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
         }
         plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+        srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
         dstPtr += numElements;
         bufRestByteLen = bufferEnd - bufferStart;
       }
@@ -3051,13 +3160,13 @@ namespace orc {
 
       bufRestByteLen = bufferEnd - bufferStart;
       bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+      srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     }
   }
 
-  void RleDecoderV2::unrolledUnpackVector21(int64_t *data, uint64_t offset, uint64_t len) {
+  void RleDecoderV2::unrolledUnpackVector21(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 21;
-    const uint8_t *srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
@@ -3069,7 +3178,8 @@ namespace orc {
 
     while (len > 0) {
       if (startBit != 0) {
-        bufMoveByteLen += moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+        bufMoveByteLen +=
+            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
       } else {
         bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
       }
@@ -3080,9 +3190,12 @@ namespace orc {
         len -= numElements;
       } else {
         if (startBit != 0) {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) / bitWidth;
+          numElements =
+              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
+              bitWidth;
           len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
+          tailBitLen = fmod(
+              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
           resetBuf = true;
         } else {
           numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
@@ -3103,9 +3216,10 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-    	  bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -=
+              moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+          srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
           dstPtr += align;
           numElements -= align;
@@ -3114,23 +3228,23 @@ namespace orc {
 
       if (numElements >= 16) {
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(bitWidth);
-        __m512i   parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
-        __m512i   nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
-        __m512i   reverseMask32u = _mm512_load_si512(reverseMaskTable32u);
-        __m512i   maskmm = _mm512_set1_epi8(0x0F);
+        __m512i parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
+        __m512i nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
+        __m512i reverseMask32u = _mm512_load_si512(reverseMaskTable32u);
+        __m512i maskmm = _mm512_set1_epi8(0x0F);
 
-        __m512i   shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable21u_0);
+        __m512i shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable21u_0);
 
-        __m512i   permutexIdxPtr[2];
+        __m512i permutexIdxPtr[2];
         permutexIdxPtr[0] = _mm512_load_si512(permutexIdxTable21u_0);
         permutexIdxPtr[1] = _mm512_load_si512(permutexIdxTable21u_1);
 
-        __m512i   shiftMaskPtr[3];
+        __m512i shiftMaskPtr[3];
         shiftMaskPtr[0] = _mm512_load_si512(shiftTable21u_0);
         shiftMaskPtr[1] = _mm512_load_si512(shiftTable21u_1);
         shiftMaskPtr[2] = _mm512_load_si512(shiftTable21u_2);
 
-        __m512i   gatherIdxmm = _mm512_load_si512(gatherIdxTable21u);
+        __m512i gatherIdxmm = _mm512_load_si512(gatherIdxTable21u);
 
         while (numElements >= 32) {
           __m512i srcmm, zmm[2];
@@ -3207,12 +3321,13 @@ namespace orc {
 
       if (numElements > 0) {
         if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
+                                    ORC_VECTOR_BYTE_WIDTH);
         } else {
           bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
         }
         plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+        srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
         dstPtr += numElements;
         bufRestByteLen = bufferEnd - bufferStart;
       }
@@ -3234,13 +3349,13 @@ namespace orc {
 
       bufRestByteLen = bufferEnd - bufferStart;
       bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+      srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     }
   }
 
-  void RleDecoderV2::unrolledUnpackVector22(int64_t *data, uint64_t offset, uint64_t len) {
+  void RleDecoderV2::unrolledUnpackVector22(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 22;
-    const uint8_t *srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
@@ -3252,7 +3367,8 @@ namespace orc {
 
     while (len > 0) {
       if (startBit != 0) {
-        bufMoveByteLen += moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+        bufMoveByteLen +=
+            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
       } else {
         bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
       }
@@ -3263,9 +3379,12 @@ namespace orc {
         len -= numElements;
       } else {
         if (startBit != 0) {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) / bitWidth;
+          numElements =
+              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
+              bitWidth;
           len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
+          tailBitLen = fmod(
+              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
           resetBuf = true;
         } else {
           numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
@@ -3286,9 +3405,10 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-    	  bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -=
+              moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+          srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
           dstPtr += align;
           numElements -= align;
@@ -3297,23 +3417,23 @@ namespace orc {
 
       if (numElements >= 16) {
         __mmask16 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_DWORD(bitWidth * 16));
-        __m512i   parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
-        __m512i   nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
-        __m512i   reverseMask32u = _mm512_load_si512(reverseMaskTable32u);
-        __m512i   maskmm = _mm512_set1_epi8(0x0F);
+        __m512i parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
+        __m512i nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
+        __m512i reverseMask32u = _mm512_load_si512(reverseMaskTable32u);
+        __m512i maskmm = _mm512_set1_epi8(0x0F);
 
-        __m512i   shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable22u_0);
+        __m512i shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable22u_0);
 
-        __m512i   permutexIdxPtr[2];
+        __m512i permutexIdxPtr[2];
         permutexIdxPtr[0] = _mm512_load_si512(permutexIdxTable22u_0);
         permutexIdxPtr[1] = _mm512_load_si512(permutexIdxTable22u_1);
 
-        __m512i   shiftMaskPtr[3];
+        __m512i shiftMaskPtr[3];
         shiftMaskPtr[0] = _mm512_load_si512(shiftTable22u_0);
         shiftMaskPtr[1] = _mm512_load_si512(shiftTable22u_1);
         shiftMaskPtr[2] = _mm512_load_si512(shiftTable22u_2);
 
-        __m512i   gatherIdxmm = _mm512_load_si512(gatherIdxTable22u);
+        __m512i gatherIdxmm = _mm512_load_si512(gatherIdxTable22u);
 
         while (numElements >= 32) {
           __m512i srcmm, zmm[2];
@@ -3390,12 +3510,13 @@ namespace orc {
 
       if (numElements > 0) {
         if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
+                                    ORC_VECTOR_BYTE_WIDTH);
         } else {
           bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
         }
         plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+        srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
         dstPtr += numElements;
         bufRestByteLen = bufferEnd - bufferStart;
       }
@@ -3417,13 +3538,13 @@ namespace orc {
 
       bufRestByteLen = bufferEnd - bufferStart;
       bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+      srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     }
   }
 
-  void RleDecoderV2::unrolledUnpackVector23(int64_t *data, uint64_t offset, uint64_t len) {
+  void RleDecoderV2::unrolledUnpackVector23(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 23;
-    const uint8_t *srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
@@ -3436,7 +3557,8 @@ namespace orc {
 
     while (len > 0) {
       if (startBit != 0) {
-        bufMoveByteLen += moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+        bufMoveByteLen +=
+            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
       } else {
         bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
       }
@@ -3447,14 +3569,17 @@ namespace orc {
         len -= numElements;
       } else {
         if (startBit != 0) {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) / bitWidth;
+          numElements =
+              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
+              bitWidth;
           len -= numElements;
-    	  tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
+          tailBitLen = fmod(
+              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
           resetBuf = true;
         } else {
           numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
           len -= numElements;
-    	  tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH, bitWidth);
+          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH, bitWidth);
           resetBuf = true;
         }
       }
@@ -3470,34 +3595,35 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-    	  bufMoveByteLen -= moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -=
+              moveLen(align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+          srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
           dstPtr += align;
           numElements -= align;
         }
       }
-      
+
       if (numElements >= 16) {
         __mmask32 readMask = ORC_VECTOR_BIT_MASK(bitWidth);
-        __m512i   parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
-        __m512i   nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
-        __m512i   reverseMask32u = _mm512_load_si512(reverseMaskTable32u);
-        __m512i   maskmm = _mm512_set1_epi8(0x0F);
+        __m512i parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
+        __m512i nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
+        __m512i reverseMask32u = _mm512_load_si512(reverseMaskTable32u);
+        __m512i maskmm = _mm512_set1_epi8(0x0F);
 
-        __m512i   shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable23u_0);
+        __m512i shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable23u_0);
 
-        __m512i   permutexIdxPtr[2];
+        __m512i permutexIdxPtr[2];
         permutexIdxPtr[0] = _mm512_load_si512(permutexIdxTable23u_0);
         permutexIdxPtr[1] = _mm512_load_si512(permutexIdxTable23u_1);
 
-        __m512i   shiftMaskPtr[3];
+        __m512i shiftMaskPtr[3];
         shiftMaskPtr[0] = _mm512_load_si512(shiftTable23u_0);
         shiftMaskPtr[1] = _mm512_load_si512(shiftTable23u_1);
         shiftMaskPtr[2] = _mm512_load_si512(shiftTable23u_2);
 
-        __m512i   gatherIdxmm = _mm512_load_si512(gatherIdxTable23u);
+        __m512i gatherIdxmm = _mm512_load_si512(gatherIdxTable23u);
 
         while (numElements >= 32) {
           __m512i srcmm, zmm[2];
@@ -3574,12 +3700,13 @@ namespace orc {
 
       if (numElements > 0) {
         if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
+                                    ORC_VECTOR_BYTE_WIDTH);
         } else {
           bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
         }
         plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+        srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
         dstPtr += numElements;
         bufRestByteLen = bufferEnd - bufferStart;
       }
@@ -3587,8 +3714,8 @@ namespace orc {
       if (bufMoveByteLen <= bufRestByteLen) {
         resetBufferStart(bufMoveByteLen, resetBuf, backupByteLen);
         return;
-      } 
-      
+      }
+
       if (backupByteLen != 0) {
         resetBufferStart(bufRestByteLen, resetBuf, backupByteLen);
         plainUnpackLongs(dstPtr, 0, 1, bitWidth, startBit);
@@ -3601,13 +3728,13 @@ namespace orc {
 
       bufRestByteLen = bufferEnd - bufferStart;
       bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+      srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     }
   }
 
-  void RleDecoderV2::unrolledUnpackVector24(int64_t *data, uint64_t offset, uint64_t len) {
+  void RleDecoderV2::unrolledUnpackVector24(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 24;
-    const uint8_t *srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
@@ -3636,7 +3763,7 @@ namespace orc {
 
       if (numElements >= 16) {
         __mmask16 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_DWORD(bitWidth * 16));
-        
+
         __m512i shuffleIdx = _mm512_load_si512(shuffleIdxTable24u_0);
         __m512i permutexIdx = _mm512_load_si512(permutexIdxTable24u);
 
@@ -3663,7 +3790,7 @@ namespace orc {
       if (numElements > 0) {
         bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
         unrolledUnpack24(dstPtr, 0, numElements);
-        srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+        srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
         dstPtr += numElements;
         bufRestByteLen = bufferEnd - bufferStart;
       }
@@ -3671,10 +3798,11 @@ namespace orc {
       if (bufMoveByteLen <= bufRestByteLen) {
         resetBufferStart(bufMoveByteLen, resetBuf, backupByteLen);
         return;
-      } 
-      
+      }
+
       if (backupByteLen != 0) {
-        resetBufferStart(bufRestByteLen, resetBuf, backupByteLen);;
+        resetBufferStart(bufRestByteLen, resetBuf, backupByteLen);
+        ;
         unrolledUnpack24(dstPtr, 0, 1);
         dstPtr++;
         backupByteLen = 0;
@@ -3685,13 +3813,13 @@ namespace orc {
 
       bufRestByteLen = bufferEnd - bufferStart;
       bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+      srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     }
   }
 
-  void RleDecoderV2::unrolledUnpackVector26(int64_t *data, uint64_t offset, uint64_t len) {
+  void RleDecoderV2::unrolledUnpackVector26(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 26;
-    const uint8_t *srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
@@ -3703,7 +3831,8 @@ namespace orc {
 
     while (len > 0) {
       if (startBit != 0) {
-        bufMoveByteLen += moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+        bufMoveByteLen +=
+            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
       } else {
         bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
       }
@@ -3714,9 +3843,12 @@ namespace orc {
         len -= numElements;
       } else {
         if (startBit != 0) {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) / bitWidth;
+          numElements =
+              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
+              bitWidth;
           len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
+          tailBitLen = fmod(
+              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
           resetBuf = true;
         } else {
           numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
@@ -3737,9 +3869,10 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-          bufMoveByteLen -= (align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit) / ORC_VECTOR_BYTE_WIDTH;
+          bufMoveByteLen -=
+              (align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit) / ORC_VECTOR_BYTE_WIDTH;
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+          srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
           dstPtr += align;
           numElements -= align;
@@ -3748,23 +3881,23 @@ namespace orc {
 
       if (numElements >= 16) {
         __mmask16 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_DWORD(bitWidth * 16));
-        __m512i   parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
-        __m512i   nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
-        __m512i   reverseMask32u = _mm512_load_si512(reverseMaskTable32u);
-        __m512i   maskmm = _mm512_set1_epi8(0x0F);
+        __m512i parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
+        __m512i nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
+        __m512i reverseMask32u = _mm512_load_si512(reverseMaskTable32u);
+        __m512i maskmm = _mm512_set1_epi8(0x0F);
 
-        __m512i   shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable26u_0);
+        __m512i shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable26u_0);
 
-        __m512i   permutexIdxPtr[2];
+        __m512i permutexIdxPtr[2];
         permutexIdxPtr[0] = _mm512_load_si512(permutexIdxTable26u_0);
         permutexIdxPtr[1] = _mm512_load_si512(permutexIdxTable26u_1);
 
-        __m512i   shiftMaskPtr[3];
+        __m512i shiftMaskPtr[3];
         shiftMaskPtr[0] = _mm512_load_si512(shiftTable26u_0);
         shiftMaskPtr[1] = _mm512_load_si512(shiftTable26u_1);
         shiftMaskPtr[2] = _mm512_load_si512(shiftTable26u_2);
 
-        __m512i   gatherIdxmm = _mm512_load_si512(gatherIdxTable26u);
+        __m512i gatherIdxmm = _mm512_load_si512(gatherIdxTable26u);
 
         while (numElements >= 32) {
           __m512i srcmm, zmm[2];
@@ -3841,12 +3974,13 @@ namespace orc {
 
       if (numElements > 0) {
         if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
+                                    ORC_VECTOR_BYTE_WIDTH);
         } else {
           bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
         }
         plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+        srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
         dstPtr += numElements;
         bufRestByteLen = bufferEnd - bufferStart;
       }
@@ -3868,13 +4002,13 @@ namespace orc {
 
       bufRestByteLen = bufferEnd - bufferStart;
       bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+      srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     }
   }
 
-  void RleDecoderV2::unrolledUnpackVector28(int64_t *data, uint64_t offset, uint64_t len) {
+  void RleDecoderV2::unrolledUnpackVector28(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 28;
-    const uint8_t *srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
@@ -3886,7 +4020,8 @@ namespace orc {
 
     while (len > 0) {
       if (startBit != 0) {
-        bufMoveByteLen += moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+        bufMoveByteLen +=
+            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
       } else {
         bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
       }
@@ -3897,9 +4032,12 @@ namespace orc {
         len -= numElements;
       } else {
         if (startBit != 0) {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) / bitWidth;
+          numElements =
+              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
+              bitWidth;
           len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
+          tailBitLen = fmod(
+              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
           resetBuf = true;
         } else {
           numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
@@ -3920,9 +4058,10 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-          bufMoveByteLen -= (align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit) / ORC_VECTOR_BYTE_WIDTH;
+          bufMoveByteLen -=
+              (align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit) / ORC_VECTOR_BYTE_WIDTH;
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+          srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
           dstPtr += align;
           numElements -= align;
@@ -3931,11 +4070,11 @@ namespace orc {
 
       if (numElements >= 16) {
         __mmask16 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_DWORD(bitWidth * 16));
-        __m512i   parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
+        __m512i parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
 
-        __m512i   shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable28u_0);
-        __m512i   permutexIdx = _mm512_load_si512(permutexIdxTable28u);
-        __m512i   shiftMask = _mm512_load_si512(shiftTable28u);
+        __m512i shuffleIdxPtr = _mm512_load_si512(shuffleIdxTable28u_0);
+        __m512i permutexIdx = _mm512_load_si512(permutexIdxTable28u);
+        __m512i shiftMask = _mm512_load_si512(shiftTable28u);
 
         while (numElements >= 16) {
           __m512i srcmm, zmm;
@@ -3963,12 +4102,13 @@ namespace orc {
 
       if (numElements > 0) {
         if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
+                                    ORC_VECTOR_BYTE_WIDTH);
         } else {
           bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
         }
         plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+        srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
         dstPtr += numElements;
         bufRestByteLen = bufferEnd - bufferStart;
       }
@@ -3990,13 +4130,13 @@ namespace orc {
 
       bufRestByteLen = bufferEnd - bufferStart;
       bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+      srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     }
   }
 
-  void RleDecoderV2::unrolledUnpackVector30(int64_t *data, uint64_t offset, uint64_t len) {
+  void RleDecoderV2::unrolledUnpackVector30(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 30;
-    const uint8_t *srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
@@ -4008,7 +4148,8 @@ namespace orc {
 
     while (len > 0) {
       if (startBit != 0) {
-        bufMoveByteLen += moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+        bufMoveByteLen +=
+            moveLen(len * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
       } else {
         bufMoveByteLen += moveLen(len * bitWidth, ORC_VECTOR_BYTE_WIDTH);
       }
@@ -4019,9 +4160,12 @@ namespace orc {
         len -= numElements;
       } else {
         if (startBit != 0) {
-          numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) / bitWidth;
+          numElements =
+              (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit) /
+              bitWidth;
           len -= numElements;
-          tailBitLen = fmod(bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
+          tailBitLen = fmod(
+              bufRestByteLen * ORC_VECTOR_BYTE_WIDTH + ORC_VECTOR_BYTE_WIDTH - startBit, bitWidth);
           resetBuf = true;
         } else {
           numElements = (bufRestByteLen * ORC_VECTOR_BYTE_WIDTH) / bitWidth;
@@ -4042,9 +4186,10 @@ namespace orc {
           align = numElements;
         }
         if (align != 0) {
-          bufMoveByteLen -= (align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit) / ORC_VECTOR_BYTE_WIDTH;
+          bufMoveByteLen -=
+              (align * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit) / ORC_VECTOR_BYTE_WIDTH;
           plainUnpackLongs(dstPtr, 0, align, bitWidth, startBit);
-          srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+          srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
           bufRestByteLen = bufferEnd - bufferStart;
           dstPtr += align;
           numElements -= align;
@@ -4053,26 +4198,26 @@ namespace orc {
 
       if (numElements >= 16) {
         __mmask16 readMask = ORC_VECTOR_BIT_MASK(ORC_VECTOR_BITS_2_DWORD(bitWidth * 16));
-        __m512i   parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
-        __m512i   nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
-        __m512i   reverseMask32u = _mm512_load_si512(reverseMaskTable32u);
-        __m512i   maskmm = _mm512_set1_epi8(0x0F);
+        __m512i parseMask0 = _mm512_set1_epi32(ORC_VECTOR_BIT_MASK(bitWidth));
+        __m512i nibbleReversemm = _mm512_load_si512(nibbleReverseTable);
+        __m512i reverseMask32u = _mm512_load_si512(reverseMaskTable32u);
+        __m512i maskmm = _mm512_set1_epi8(0x0F);
 
-        __m512i   shuffleIdxPtr[2];
+        __m512i shuffleIdxPtr[2];
         shuffleIdxPtr[0] = _mm512_load_si512(shuffleIdxTable30u_0);
         shuffleIdxPtr[1] = _mm512_load_si512(shuffleIdxTable30u_1);
 
-        __m512i   permutexIdxPtr[2];
+        __m512i permutexIdxPtr[2];
         permutexIdxPtr[0] = _mm512_load_si512(permutexIdxTable30u_0);
         permutexIdxPtr[1] = _mm512_load_si512(permutexIdxTable30u_1);
 
-        __m512i   shiftMaskPtr[4];
+        __m512i shiftMaskPtr[4];
         shiftMaskPtr[0] = _mm512_load_si512(shiftTable30u_0);
         shiftMaskPtr[1] = _mm512_load_si512(shiftTable30u_1);
         shiftMaskPtr[2] = _mm512_load_si512(shiftTable30u_2);
         shiftMaskPtr[3] = _mm512_load_si512(shiftTable30u_3);
 
-        __m512i   gatherIdxmm = _mm512_load_si512(gatherIdxTable30u);
+        __m512i gatherIdxmm = _mm512_load_si512(gatherIdxTable30u);
 
         while (numElements >= 32) {
           __m512i srcmm, zmm[2];
@@ -4154,12 +4299,13 @@ namespace orc {
 
       if (numElements > 0) {
         if (startBit != 0) {
-          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit, ORC_VECTOR_BYTE_WIDTH);
+          bufMoveByteLen -= moveLen(numElements * bitWidth - ORC_VECTOR_BYTE_WIDTH + startBit,
+                                    ORC_VECTOR_BYTE_WIDTH);
         } else {
           bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
         }
         plainUnpackLongs(dstPtr, 0, numElements, bitWidth, startBit);
-        srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+        srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
         dstPtr += numElements;
         bufRestByteLen = bufferEnd - bufferStart;
       }
@@ -4181,13 +4327,13 @@ namespace orc {
 
       bufRestByteLen = bufferEnd - bufferStart;
       bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+      srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     }
   }
 
-  void RleDecoderV2::unrolledUnpackVector32(int64_t *data, uint64_t offset, uint64_t len) {
+  void RleDecoderV2::unrolledUnpackVector32(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 32;
-    const uint8_t *srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+    const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     uint64_t numElements = 0;
     int64_t* dstPtr = data + offset;
     uint64_t bufMoveByteLen = 0;
@@ -4230,11 +4376,11 @@ namespace orc {
           dstPtr += 16;
         }
       }
-      
+
       if (numElements > 0) {
         bufMoveByteLen -= moveLen(numElements * bitWidth, ORC_VECTOR_BYTE_WIDTH);
         unrolledUnpack32(dstPtr, 0, numElements);
-        srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+        srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
         dstPtr += numElements;
         bufRestByteLen = bufferEnd - bufferStart;
       }
@@ -4242,10 +4388,11 @@ namespace orc {
       if (bufMoveByteLen <= bufRestByteLen) {
         resetBufferStart(bufMoveByteLen, resetBuf, backupByteLen);
         return;
-      } 
-      
+      }
+
       if (backupByteLen != 0) {
-        resetBufferStart(bufRestByteLen, resetBuf, backupByteLen);;
+        resetBufferStart(bufRestByteLen, resetBuf, backupByteLen);
+        ;
         unrolledUnpack32(dstPtr, 0, 1);
         dstPtr++;
         backupByteLen = 0;
@@ -4256,7 +4403,7 @@ namespace orc {
 
       bufRestByteLen = bufferEnd - bufferStart;
       bufMoveByteLen = 0;
-      srcPtr = reinterpret_cast<const uint8_t *>(bufferStart);
+      srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);
     }
   }
 #endif
@@ -4535,8 +4682,8 @@ namespace orc {
     }
   }
 
-  void RleDecoderV2::plainUnpackLongs(int64_t *data, uint64_t offset, uint64_t len,
-                                      uint64_t fbs, uint64_t& startBit) {
+  void RleDecoderV2::plainUnpackLongs(int64_t* data, uint64_t offset, uint64_t len, uint64_t fbs,
+                                      uint64_t& startBit) {
     for (uint64_t i = offset; i < (offset + len); i++) {
       uint64_t result = 0;
       uint64_t bitsLeftToRead = fbs;
