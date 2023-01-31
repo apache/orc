@@ -59,29 +59,29 @@ namespace orc {
   enum class Arch { PX_ARCH = 0, AVX2_ARCH = 1, AVX512_ARCH = 2 };
 
   Arch detectPlatform() {
-    Arch detected_platform = Arch::PX_ARCH;
+    Arch detectedPlatform = Arch::PX_ARCH;
     int cpuInfo[4];
     cpuid(cpuInfo, 1);
 
-    bool avx512_support_cpu = cpuInfo[1] & CPUID_AVX512_MASK;
-    bool os_uses_XSAVE_XSTORE = cpuInfo[2] & EXC_OSXSAVE;
+    bool avx512SupportCpu = cpuInfo[1] & CPUID_AVX512_MASK;
+    bool osUsesXSaveXStore = cpuInfo[2] & EXC_OSXSAVE;
 
-    if (avx512_support_cpu && os_uses_XSAVE_XSTORE) {
+    if (avx512SupportCpu && osUsesXSaveXStore) {
       // Check if XMM state and YMM state are saved
 #ifdef _WIN32
-      unsigned long long xcr_feature_mask = _xgetbv(0); /* min VS2010 SP1 compiler is required */
+      unsigned long long xcrFeatureMask = _xgetbv(0); /* min VS2010 SP1 compiler is required */
 #else
-      unsigned long long xcr_feature_mask = xgetbv(0);
+      unsigned long long xcrFeatureMask = xgetbv(0);
 #endif
 
-      if ((xcr_feature_mask & 0x6) == 0x6) {      // AVX2 is supported now
-        if ((xcr_feature_mask & 0xe0) == 0xe0) {  // AVX512 is supported now
-          detected_platform = Arch::AVX512_ARCH;
+      if ((xcrFeatureMask & 0x6) == 0x6) {      // AVX2 is supported now
+        if ((xcrFeatureMask & 0xe0) == 0xe0) {  // AVX512 is supported now
+          detectedPlatform = Arch::AVX512_ARCH;
         }
       }
     }
 
-    return detected_platform;
+    return detectedPlatform;
   }
 }  // namespace orc
 

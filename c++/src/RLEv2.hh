@@ -202,7 +202,7 @@ namespace orc {
     void plainUnpackLongs(int64_t* data, uint64_t offset, uint64_t len, uint64_t fbs,
                           uint64_t& startBit);
 
-#if ENABLE_AVX512
+#if defined(ORC_HAVE_RUNTIME_AVX512)
     void unrolledUnpackVector1(int64_t* data, uint64_t offset, uint64_t len);
     void unrolledUnpackVector2(int64_t* data, uint64_t offset, uint64_t len);
     void unrolledUnpackVector3(int64_t* data, uint64_t offset, uint64_t len);
@@ -265,7 +265,7 @@ namespace orc {
     uint32_t curByte;                   // Used by anything that uses readLongs
     DataBuffer<int64_t> unpackedPatch;  // Used by PATCHED_BASE
     DataBuffer<int64_t> literals;       // Values of the current run
-#if ENABLE_AVX512
+#if defined(ORC_HAVE_RUNTIME_AVX512)
     uint8_t
         vectorBuf8[MAX_VECTOR_BUF_8BIT_LENGTH + 1];  // Used by vectorially 1~8 bit-unpacking data
     uint16_t vectorBuf16[MAX_VECTOR_BUF_16BIT_LENGTH +

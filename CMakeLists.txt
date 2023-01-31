@@ -69,7 +69,7 @@ option(BUILD_CPP_ENABLE_METRICS
 
 option(BUILD_ENABLE_AVX512
     "Enable AVX512 vector decode of bit-packing"
-    OFF)
+    ON)
 
 # Make sure that a build type is selected
 if (NOT CMAKE_BUILD_TYPE)
@@ -240,20 +240,25 @@ if(ORC_CPU_FLAG STREQUAL "x86")
   if(CXX_SUPPORTS_SSE4_2 AND ORC_RUNTIME_SIMD_LEVEL MATCHES
                              "^(SSE4_2|AVX2|AVX512|MAX)$")
     set(ORC_HAVE_RUNTIME_SSE4_2 ON)
+    set(ORC_SIMD_LEVEL "SSE4_2")
     add_definitions(-DORC_HAVE_RUNTIME_SSE4_2)
   endif()
   if(CXX_SUPPORTS_AVX2 AND ORC_RUNTIME_SIMD_LEVEL MATCHES "^(AVX2|AVX512|MAX)$")
     set(ORC_HAVE_RUNTIME_AVX2 ON)
+    set(ORC_SIMD_LEVEL "AVX2")
     add_definitions(-DORC_HAVE_RUNTIME_AVX2 -DORC_HAVE_RUNTIME_BMI2)
   endif()
-  if(CXX_SUPPORTS_AVX512 AND ORC_RUNTIME_SIMD_LEVEL MATCHES "^(AVX512|MAX)$")
+  if(BUILD_ENABLE_AVX512 AND CXX_SUPPORTS_AVX512 AND ORC_RUNTIME_SIMD_LEVEL MATCHES "^(AVX512|MAX)$")
+    message(STATUS "Enable the AVX512 vector decode of bit-packing")
     set(ORC_HAVE_RUNTIME_AVX512 ON)
+    set(ORC_SIMD_LEVEL "AVX512")
     add_definitions(-DORC_HAVE_RUNTIME_AVX512 -DORC_HAVE_RUNTIME_BMI2)
+  else ()
+    message(STATUS "Disable the AVX512 vector decode of bit-packing")
   endif()
   if(ORC_SIMD_LEVEL STREQUAL "DEFAULT")
-    set(ORC_SIMD_LEVEL "AVX512")
+    set(ORC_SIMD_LEVEL "NONE")
   endif()
-
 elseif(ORC_CPU_FLAG STREQUAL "ppc")
   # power compiler flags, gcc/clang only
   set(ORC_ALTIVEC_FLAG "-maltivec")
@@ -306,14 +311,6 @@ if (BUILD_CPP_ENABLE_METRICS)
 else ()
   message(STATUS "Disable the metrics collection")
   add_compile_definitions(ENABLE_METRICS=0)
-endif ()
-
-if (BUILD_ENABLE_AVX512 AND CXX_SUPPORTS_AVX512 AND ORC_SIMD_LEVEL STREQUAL "AVX512")
-  message(STATUS "Enable the AVX512 vector decode of bit-packing")
-  add_compile_definitions(ENABLE_AVX512=1)
-else ()
-  message(STATUS "Disable the AVX512 vector decode of bit-packing")
-  add_compile_definitions(ENABLE_AVX512=0)
 endif ()
 
 enable_testing()

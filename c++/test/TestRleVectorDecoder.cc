@@ -141,7 +141,7 @@ namespace orc {
     delete[] notNull;
   }
 
-#if ENABLE_AVX512
+#if defined(ORC_HAVE_RUNTIME_AVX512)
   TEST_P(RleVectorTest, RleV2_basic_vector_decode_1bit) {
     uint8_t bitWidth = 1;
     for (uint64_t blockSize = 1; blockSize <= 10000; blockSize++) {

@@ -92,8 +92,10 @@ namespace orc {
 
   void RleDecoderV2::readLongs(int64_t* data, uint64_t offset, uint64_t len, uint64_t fbs) {
     uint64_t startBit = 0;
-#if ENABLE_AVX512
-    if (detectPlatform() == Arch::AVX512_ARCH) {
+#if defined(ORC_HAVE_RUNTIME_AVX512)
+    const auto runtimeEnable = getenv("ENABLE_RUNTIME_AVX512");
+    std::string avxRuntimeEnable = runtimeEnable == nullptr ? "OFF" : std::string(runtimeEnable);
+    if (detectPlatform() == Arch::AVX512_ARCH && strcasecmp(avxRuntimeEnable.c_str(), "on") == 0) {
       switch (fbs) {
         case 1:
           unrolledUnpackVector1(data, offset, len);
@@ -268,7 +270,7 @@ namespace orc {
 #endif
   }
 
-#if ENABLE_AVX512
+#if defined(ORC_HAVE_RUNTIME_AVX512)
   void RleDecoderV2::unrolledUnpackVector1(int64_t* data, uint64_t offset, uint64_t len) {
     uint32_t bitWidth = 1;
     const uint8_t* srcPtr = reinterpret_cast<const uint8_t*>(bufferStart);

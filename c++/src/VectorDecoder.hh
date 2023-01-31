@@ -19,7 +19,15 @@
 #ifndef VECTOR_DECODER_HH
 #define VECTOR_DECODER_HH
 
-#if ENABLE_AVX512
+#include <string.h>
+// Mingw-w64 defines strcasecmp in string.h
+#if defined(_WIN32) && !defined(strcasecmp)
+#define strcasecmp stricmp
+#else
+#include <strings.h>
+#endif
+
+#if defined(ORC_HAVE_RUNTIME_AVX512)
 #include <immintrin.h>
 #include <vector>
 
