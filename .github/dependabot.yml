@@ -51,3 +51,6 @@ updates:
       # Pin mockito to 4.x
       - dependency-name: "org.mockito"
         versions: "[5.0.0,)"
+      # Pin spotless to 2.30.0 due to Java 8 support
+      - dependency-name: "com.diffplug.spotless:spotless-maven-plugin"
+        versions: "[2.31.0,)"
