@@ -67,7 +67,7 @@ option(BUILD_CPP_ENABLE_METRICS
     "Enable the metrics collection at compile phase"
     OFF)
 
-option(BUILD_ENABLE_AVX512
+option(BUILD_CPP_AVX512
     "Enable AVX512 vector decode of bit-packing"
     ON)
 
