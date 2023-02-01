@@ -68,7 +68,7 @@ option(BUILD_CPP_ENABLE_METRICS
     OFF)
 
 option(BUILD_CPP_AVX512
-    "Enable AVX512 vector decode of bit-packing"
+    "Enable build with AVX512 at compile time"
     ON)
 
 # Make sure that a build type is selected
