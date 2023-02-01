@@ -1148,30 +1148,30 @@ namespace orc {
                                                          MemoryPool& pool, WriterMetrics* metrics) {
     switch (static_cast<int64_t>(kind)) {
       case CompressionKind_NONE: {
-        return std::unique_ptr<BufferedOutputStream>(new BufferedOutputStream(
-            pool, outStream, bufferCapacity, compressionBlockSize, metrics));
+        return std::make_unique<BufferedOutputStream>(pool, outStream, bufferCapacity,
+                                                      compressionBlockSize, metrics);
       }
       case CompressionKind_ZLIB: {
         int level =
             (strategy == CompressionStrategy_SPEED) ? Z_BEST_SPEED + 1 : Z_DEFAULT_COMPRESSION;
-        return std::unique_ptr<BufferedOutputStream>(new ZlibCompressionStream(
-            outStream, level, bufferCapacity, compressionBlockSize, pool, metrics));
+        return std::make_unique<ZlibCompressionStream>(outStream, level, bufferCapacity,
+                                                       compressionBlockSize, pool, metrics);
       }
       case CompressionKind_ZSTD: {
         int level = (strategy == CompressionStrategy_SPEED) ? 1 : ZSTD_CLEVEL_DEFAULT;
-        return std::unique_ptr<BufferedOutputStream>(new ZSTDCompressionStream(
-            outStream, level, bufferCapacity, compressionBlockSize, pool, metrics));
+        return std::make_unique<ZSTDCompressionStream>(outStream, level, bufferCapacity,
+                                                       compressionBlockSize, pool, metrics);
       }
       case CompressionKind_LZ4: {
         int level = (strategy == CompressionStrategy_SPEED) ? LZ4_ACCELERATION_MAX
                                                             : LZ4_ACCELERATION_DEFAULT;
-        return std::unique_ptr<BufferedOutputStream>(new Lz4CompressionSteam(
-            outStream, level, bufferCapacity, compressionBlockSize, pool, metrics));
+        return std::make_unique<Lz4CompressionSteam>(outStream, level, bufferCapacity,
+                                                     compressionBlockSize, pool, metrics);
       }
       case CompressionKind_SNAPPY: {
         int level = 0;
-        return std::unique_ptr<BufferedOutputStream>(new SnappyCompressionStream(
-            outStream, level, bufferCapacity, compressionBlockSize, pool, metrics));
+        return std::make_unique<SnappyCompressionStream>(outStream, level, bufferCapacity,
+                                                         compressionBlockSize, pool, metrics);
       }
       case CompressionKind_LZO:
       default:
@@ -1186,20 +1186,18 @@ namespace orc {
       case CompressionKind_NONE:
         return input;
       case CompressionKind_ZLIB:
-        return std::unique_ptr<SeekableInputStream>(
-            new ZlibDecompressionStream(std::move(input), blockSize, pool, metrics));
+        return std::make_unique<ZlibDecompressionStream>(std::move(input), blockSize, pool,
+                                                         metrics);
       case CompressionKind_SNAPPY:
-        return std::unique_ptr<SeekableInputStream>(
-            new SnappyDecompressionStream(std::move(input), blockSize, pool, metrics));
+        return std::make_unique<SnappyDecompressionStream>(std::move(input), blockSize, pool,
+                                                           metrics);
       case CompressionKind_LZO:
-        return std::unique_ptr<SeekableInputStream>(
-            new LzoDecompressionStream(std::move(input), blockSize, pool, metrics));
+        return std::make_unique<LzoDecompressionStream>(std::move(input), blockSize, pool, metrics);
       case CompressionKind_LZ4:
-        return std::unique_ptr<SeekableInputStream>(
-            new Lz4DecompressionStream(std::move(input), blockSize, pool, metrics));
+        return std::make_unique<Lz4DecompressionStream>(std::move(input), blockSize, pool, metrics);
       case CompressionKind_ZSTD:
-        return std::unique_ptr<SeekableInputStream>(
-            new ZSTDDecompressionStream(std::move(input), blockSize, pool, metrics));
+        return std::make_unique<ZSTDDecompressionStream>(std::move(input), blockSize, pool,
+                                                         metrics);
       default: {
         std::ostringstream buffer;
         buffer << "Unknown compression codec " << kind;

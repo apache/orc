@@ -298,25 +298,22 @@ namespace orc {
   std::unique_ptr<BloomFilter> BloomFilterUTF8Utils::deserialize(
       const proto::Stream_Kind& streamKind, const proto::ColumnEncoding& encoding,
       const proto::BloomFilter& bloomFilter) {
-    std::unique_ptr<BloomFilter> ret(nullptr);
-
     // only BLOOM_FILTER_UTF8 is supported
     if (streamKind != proto::Stream_Kind_BLOOM_FILTER_UTF8) {
-      return ret;
+      return nullptr;
     }
 
     // make sure we don't use unknown encodings or original timestamp encodings
     if (!encoding.has_bloomencoding() || encoding.bloomencoding() != 1) {
-      return ret;
+      return nullptr;
     }
 
     // make sure all required fields exist
     if (!bloomFilter.has_numhashfunctions() || !bloomFilter.has_utf8bitset()) {
-      return ret;
+      return nullptr;
     }
 
-    ret.reset(new BloomFilterImpl(bloomFilter));
-    return ret;
+    return std::make_unique<BloomFilterImpl>(bloomFilter);
   }
 
 }  // namespace orc

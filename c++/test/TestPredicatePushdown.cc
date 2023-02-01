@@ -310,8 +310,7 @@ namespace orc {
     MemoryOutputStream memStream(DEFAULT_MEM_STREAM_SIZE);
     MemoryPool* pool = getDefaultPool();
     createMemTestFile(memStream, 1000);
-    std::unique_ptr<InputStream> inStream(
-        new MemoryInputStream(memStream.getData(), memStream.getLength()));
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     ReaderOptions readerOptions;
     readerOptions.setMemoryPool(*pool);
     std::unique_ptr<Reader> reader = createReader(std::move(inStream), readerOptions);
@@ -372,8 +371,7 @@ namespace orc {
     MemoryPool* pool = getDefaultPool();
     // Create the file with rowIndexStride=0, so there are no row groups or row indexes.
     createMemTestFile(memStream, 0);
-    std::unique_ptr<InputStream> inStream(
-        new MemoryInputStream(memStream.getData(), memStream.getLength()));
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     ReaderOptions readerOptions;
     readerOptions.setMemoryPool(*pool);
     std::unique_ptr<Reader> reader = createReader(std::move(inStream), readerOptions);
@@ -533,8 +531,7 @@ namespace orc {
       writer->add(*batch);
     }
     writer->close();
-    std::unique_ptr<InputStream> inStream(
-        new MemoryInputStream(memStream.getData(), memStream.getLength()));
+    auto inStream = std::make_unique<MemoryInputStream>(memStream.getData(), memStream.getLength());
     ReaderOptions readerOptions;
     readerOptions.setMemoryPool(*pool);
     std::unique_ptr<Reader> reader = createReader(std::move(inStream), readerOptions);

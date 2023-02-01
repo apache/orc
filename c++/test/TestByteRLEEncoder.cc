@@ -59,8 +59,8 @@ namespace orc {
 
   void decodeAndVerify(const MemoryOutputStream& memStream, char* data, uint64_t numValues,
                        char* notNull) {
-    std::unique_ptr<SeekableInputStream> inStream(
-        new SeekableArrayInputStream(memStream.getData(), memStream.getLength()));
+    auto inStream =
+        std::make_unique<SeekableArrayInputStream>(memStream.getData(), memStream.getLength());
 
     std::unique_ptr<ByteRleDecoder> decoder =
         createByteRleDecoder(std::move(inStream), getDefaultReaderMetrics());
@@ -79,8 +79,8 @@ namespace orc {
 
   void decodeAndVerifyBoolean(const MemoryOutputStream& memStream, char* data, uint64_t numValues,
                               char* notNull) {
-    std::unique_ptr<SeekableInputStream> inStream(
-        new SeekableArrayInputStream(memStream.getData(), memStream.getLength()));
+    auto inStream =
+        std::make_unique<SeekableArrayInputStream>(memStream.getData(), memStream.getLength());
 
     std::unique_ptr<ByteRleDecoder> decoder =
         createBooleanRleDecoder(std::move(inStream), getDefaultReaderMetrics());
@@ -105,10 +105,9 @@ namespace orc {
 
     uint64_t capacity = 500 * 1024;
     uint64_t block = 1024;
-    BufferedOutputStream bufStream(*pool, &memStream, capacity, block, nullptr);
 
-    std::unique_ptr<BufferedOutputStream> outStream(
-        new BufferedOutputStream(*pool, &memStream, capacity, block, nullptr));
+    auto outStream =
+        std::make_unique<BufferedOutputStream>(*pool, &memStream, capacity, block, nullptr);
 
     std::unique_ptr<ByteRleEncoder> encoder = createByteRleEncoder(std::move(outStream));
 
@@ -127,10 +126,9 @@ namespace orc {
 
     uint64_t capacity = 500 * 1024;
     uint64_t block = 1024;
-    BufferedOutputStream bufStream(*pool, &memStream, capacity, block, nullptr);
 
-    std::unique_ptr<BufferedOutputStream> outStream(
-        new BufferedOutputStream(*pool, &memStream, capacity, block, nullptr));
+    auto outStream =
+        std::make_unique<BufferedOutputStream>(*pool, &memStream, capacity, block, nullptr);
 
     std::unique_ptr<ByteRleEncoder> encoder = createByteRleEncoder(std::move(outStream));
 
@@ -151,10 +149,9 @@ namespace orc {
 
     uint64_t capacity = 500 * 1024;
     uint64_t block = 1024;
-    BufferedOutputStream bufStream(*pool, &memStream, capacity, block, nullptr);
 
-    std::unique_ptr<BufferedOutputStream> outStream(
-        new BufferedOutputStream(*pool, &memStream, capacity, block, nullptr));
+    auto outStream =
+        std::make_unique<BufferedOutputStream>(*pool, &memStream, capacity, block, nullptr);
 
     std::unique_ptr<ByteRleEncoder> encoder = createBooleanRleEncoder(std::move(outStream));
 
@@ -173,10 +170,9 @@ namespace orc {
 
     uint64_t capacity = 500 * 1024;
     uint64_t block = 1024;
-    BufferedOutputStream bufStream(*pool, &memStream, capacity, block, nullptr);
 
-    std::unique_ptr<BufferedOutputStream> outStream(
-        new BufferedOutputStream(*pool, &memStream, capacity, block, nullptr));
+    auto outStream =
+        std::make_unique<BufferedOutputStream>(*pool, &memStream, capacity, block, nullptr);
 
     std::unique_ptr<ByteRleEncoder> encoder = createBooleanRleEncoder(std::move(outStream));
 
@@ -195,10 +191,9 @@ namespace orc {
 
     uint64_t capacity = 500 * 1024;
     uint64_t block = 1024;
-    BufferedOutputStream bufStream(*pool, &memStream, capacity, block, nullptr);
 
-    std::unique_ptr<BufferedOutputStream> outStream(
-        new BufferedOutputStream(*pool, &memStream, capacity, block, nullptr));
+    auto outStream =
+        std::make_unique<BufferedOutputStream>(*pool, &memStream, capacity, block, nullptr);
 
     std::unique_ptr<ByteRleEncoder> encoder = createBooleanRleEncoder(std::move(outStream));
 

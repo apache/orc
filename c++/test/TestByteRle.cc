@@ -32,8 +32,7 @@ namespace orc {
   TEST(ByteRle, simpleTest) {
     const unsigned char buffer[] = {0x61, 0x00, 0xfd, 0x44, 0x45, 0x46};
     std::unique_ptr<ByteRleDecoder> rle =
-        createByteRleDecoder(std::unique_ptr<SeekableInputStream>(
-                                 new SeekableArrayInputStream(buffer, ARRAY_SIZE(buffer))),
+        createByteRleDecoder(std::make_unique<SeekableArrayInputStream>(buffer, ARRAY_SIZE(buffer)),
                              getDefaultReaderMetrics());
     std::vector<char> data(103);
     rle->next(data.data(), data.size(), nullptr);
@@ -59,9 +58,9 @@ namespace orc {
     for (int i = 0; i < 266; ++i) {
       notNull[i] = static_cast<char>(i >= 10);
     }
-    std::unique_ptr<ByteRleDecoder> rle = createByteRleDecoder(
-        std::unique_ptr<SeekableInputStream>(new SeekableArrayInputStream(buffer, sizeof(buffer))),
-        getDefaultReaderMetrics());
+    std::unique_ptr<ByteRleDecoder> rle =
+        createByteRleDecoder(std::make_unique<SeekableArrayInputStream>(buffer, sizeof(buffer)),
+                             getDefaultReaderMetrics());
     rle->next(result, sizeof(result), notNull);
     for (size_t i = 0; i < sizeof(result); ++i) {
       if (i >= 10) {
@@ -73,10 +72,9 @@ namespace orc {
   TEST(ByteRle, literalCrossBuffer) {
     const unsigned char buffer[] = {0xf6, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
                                     0x06, 0x07, 0x08, 0x09, 0x07, 0x10};
-    std::unique_ptr<ByteRleDecoder> rle =
-        createByteRleDecoder(std::unique_ptr<SeekableInputStream>(
-                                 new SeekableArrayInputStream(buffer, ARRAY_SIZE(buffer), 6)),
-                             getDefaultReaderMetrics());
+    std::unique_ptr<ByteRleDecoder> rle = createByteRleDecoder(
+        std::make_unique<SeekableArrayInputStream>(buffer, ARRAY_SIZE(buffer), 6),
+        getDefaultReaderMetrics());
     std::vector<char> data(20);
     rle->next(data.data(), data.size(), nullptr);
 
@@ -90,10 +88,9 @@ namespace orc {
 
   TEST(ByteRle, skipLiteralBufferUnderflowTest) {
     const unsigned char buffer[] = {0xf8, 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7};
-    std::unique_ptr<ByteRleDecoder> rle =
-        createByteRleDecoder(std::unique_ptr<SeekableInputStream>(
-                                 new SeekableArrayInputStream(buffer, ARRAY_SIZE(buffer), 4)),
-                             getDefaultReaderMetrics());
+    std::unique_ptr<ByteRleDecoder> rle = createByteRleDecoder(
+        std::make_unique<SeekableArrayInputStream>(buffer, ARRAY_SIZE(buffer), 4),
+        getDefaultReaderMetrics());
     std::vector<char> data(8);
     rle->next(data.data(), 3, nullptr);
     EXPECT_EQ(0x0, data[0]);
@@ -110,8 +107,7 @@ namespace orc {
   TEST(ByteRle, simpleRuns) {
     const unsigned char buffer[] = {0x0d, 0xff, 0x0d, 0xfe, 0x0d, 0xfd};
     std::unique_ptr<ByteRleDecoder> rle =
-        createByteRleDecoder(std::unique_ptr<SeekableInputStream>(
-                                 new SeekableArrayInputStream(buffer, ARRAY_SIZE(buffer))),
+        createByteRleDecoder(std::make_unique<SeekableArrayInputStream>(buffer, ARRAY_SIZE(buffer)),
                              getDefaultReaderMetrics());
     std::vector<char> data(16);
     for (size_t i = 0; i < 3; ++i) {
@@ -128,10 +124,9 @@ namespace orc {
                                     0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
                                     0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
                                     0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x20};
-    std::unique_ptr<ByteRleDecoder> rle =
-        createByteRleDecoder(std::unique_ptr<orc::SeekableInputStream>(
-                                 new SeekableArrayInputStream(buffer, ARRAY_SIZE(buffer), 1)),
-                             getDefaultReaderMetrics());
+    std::unique_ptr<ByteRleDecoder> rle = createByteRleDecoder(
+        std::make_unique<SeekableArrayInputStream>(buffer, ARRAY_SIZE(buffer), 1),
+        getDefaultReaderMetrics());
     std::vector<char> data(35);
     rle->next(data.data(), data.size(), nullptr);
     for (size_t i = 0; i < 3; ++i) {
@@ -146,8 +141,7 @@ namespace orc {
     const unsigned char buffer[] = {0x0d, 0x02, 0xf0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                                     0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10};
     std::unique_ptr<ByteRleDecoder> rle =
-        createByteRleDecoder(std::unique_ptr<orc::SeekableInputStream>(
-                                 new SeekableArrayInputStream(buffer, ARRAY_SIZE(buffer))),
+        createByteRleDecoder(std::make_unique<SeekableArrayInputStream>(buffer, ARRAY_SIZE(buffer)),
                              getDefaultReaderMetrics());
     std::vector<char> data(5);
     for (size_t i = 0; i < 3; ++i) {
@@ -176,10 +170,9 @@ namespace orc {
   TEST(ByteRle, testNulls) {
     const unsigned char buffer[] = {0xf0, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
                                     0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x3d, 0xdc};
-    std::unique_ptr<ByteRleDecoder> rle =
-        createByteRleDecoder(std::unique_ptr<orc::SeekableInputStream>(
-                                 new SeekableArrayInputStream(buffer, ARRAY_SIZE(buffer), 3)),
-                             getDefaultReaderMetrics());
+    std::unique_ptr<ByteRleDecoder> rle = createByteRleDecoder(
+        std::make_unique<SeekableArrayInputStream>(buffer, ARRAY_SIZE(buffer), 3),
+        getDefaultReaderMetrics());
     std::vector<char> data(16, static_cast<char>(-1));
     std::vector<char> notNull(data.size());
     for (size_t i = 0; i < data.size(); ++i) {
@@ -209,8 +202,7 @@ namespace orc {
     const unsigned char buffer[] = {0xf0, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
                                     0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x3d, 0xdc};
     std::unique_ptr<ByteRleDecoder> rle =
-        createByteRleDecoder(std::unique_ptr<orc::SeekableInputStream>(
-                                 new SeekableArrayInputStream(buffer, ARRAY_SIZE(buffer))),
+        createByteRleDecoder(std::make_unique<SeekableArrayInputStream>(buffer, ARRAY_SIZE(buffer)),
                              getDefaultReaderMetrics());
     std::vector<char> data(16, static_cast<char>(-1));
     std::vector<char> allNull(data.size(), 0);
@@ -326,9 +318,9 @@ namespace orc {
         0xec, 0xed, 0xee, 0xef, 0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa,
         0xfb, 0xfc, 0xfd, 0xfe, 0xff,
     };
-    SeekableInputStream* const stream = new SeekableArrayInputStream(buffer, ARRAY_SIZE(buffer));
-    std::unique_ptr<ByteRleDecoder> rle = createByteRleDecoder(
-        std::unique_ptr<orc::SeekableInputStream>(stream), getDefaultReaderMetrics());
+    std::unique_ptr<ByteRleDecoder> rle =
+        createByteRleDecoder(std::make_unique<SeekableArrayInputStream>(buffer, ARRAY_SIZE(buffer)),
+                             getDefaultReaderMetrics());
     std::vector<char> data(1);
     for (size_t i = 0; i < 2048; i += 10) {
       rle->next(data.data(), data.size(), nullptr);
@@ -456,8 +448,7 @@ namespace orc {
         0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9, 0xea, 0xeb, 0xec, 0xed, 0xee, 0xef, 0xf0, 0xf1,
         0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff,
     };
-    std::unique_ptr<SeekableInputStream> stream(
-        new SeekableArrayInputStream(buffer, ARRAY_SIZE(buffer)));
+    auto stream = std::make_unique<SeekableArrayInputStream>(buffer, ARRAY_SIZE(buffer));
     const uint64_t fileLocs[] = {
         0,    0,    0,    0,    0,    2,    2,    2,    2,    4,    4,    4,    4,    6,    6,
         6,    6,    8,    8,    8,    8,    10,   10,   10,   10,   12,   12,   12,   12,   14,
@@ -738,8 +729,7 @@ namespace orc {
   TEST(ByteRle, seekOverEmptyPresentStream) {
     const char* buffer = nullptr;
     std::unique_ptr<ByteRleDecoder> rle = createByteRleDecoder(
-        std::unique_ptr<orc::SeekableInputStream>(new SeekableArrayInputStream(buffer, 0, 1)),
-        getDefaultReaderMetrics());
+        std::make_unique<SeekableArrayInputStream>(buffer, 0, 1), getDefaultReaderMetrics());
     std::list<uint64_t> position(2, 0);
     PositionProvider location(position);
     rle->seek(location);
@@ -747,10 +737,9 @@ namespace orc {
 
   TEST(BooleanRle, simpleTest) {
     const unsigned char buffer[] = {0x61, 0xf0, 0xfd, 0x55, 0xAA, 0x55};
-    std::unique_ptr<SeekableInputStream> stream(
-        new SeekableArrayInputStream(buffer, ARRAY_SIZE(buffer)));
-    std::unique_ptr<ByteRleDecoder> rle =
-        createBooleanRleDecoder(std::move(stream), getDefaultReaderMetrics());
+    std::unique_ptr<ByteRleDecoder> rle = createBooleanRleDecoder(
+        std::make_unique<SeekableArrayInputStream>(buffer, ARRAY_SIZE(buffer)),
+        getDefaultReaderMetrics());
     std::vector<char> data(50);
     for (size_t i = 0; i < 16; ++i) {
       rle->next(data.data(), data.size(), nullptr);
@@ -770,10 +759,9 @@ namespace orc {
 
   TEST(BooleanRle, runsTest) {
     const unsigned char buffer[] = {0xf7, 0xff, 0x80, 0x3f, 0xe0, 0x0f, 0xf8, 0x03, 0xfe, 0x00};
-    std::unique_ptr<SeekableInputStream> stream(
-        new SeekableArrayInputStream(buffer, ARRAY_SIZE(buffer)));
-    std::unique_ptr<ByteRleDecoder> rle =
-        createBooleanRleDecoder(std::move(stream), getDefaultReaderMetrics());
+    std::unique_ptr<ByteRleDecoder> rle = createBooleanRleDecoder(
+        std::make_unique<SeekableArrayInputStream>(buffer, ARRAY_SIZE(buffer)),
+        getDefaultReaderMetrics());
     std::vector<char> data(72);
     rle->next(data.data(), data.size(), nullptr);
     for (size_t i = 0; i < data.size(); ++i) {
@@ -790,10 +778,9 @@ namespace orc {
 
   TEST(BooleanRle, runsTestWithNull) {
     const unsigned char buffer[] = {0xf7, 0xff, 0x80, 0x3f, 0xe0, 0x0f, 0xf8, 0x03, 0xfe, 0x00};
-    std::unique_ptr<SeekableInputStream> stream(
-        new SeekableArrayInputStream(buffer, ARRAY_SIZE(buffer)));
-    std::unique_ptr<ByteRleDecoder> rle =
-        createBooleanRleDecoder(std::move(stream), getDefaultReaderMetrics());
+    std::unique_ptr<ByteRleDecoder> rle = createBooleanRleDecoder(
+        std::make_unique<SeekableArrayInputStream>(buffer, ARRAY_SIZE(buffer)),
+        getDefaultReaderMetrics());
     std::vector<char> data(72);
     std::vector<char> notNull(data.size(), 1);
     rle->next(data.data(), data.size(), notNull.data());
@@ -887,10 +874,9 @@ namespace orc {
         0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c,
         0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c,
         0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71};
-    std::unique_ptr<SeekableInputStream> stream(
-        new SeekableArrayInputStream(buffer, ARRAY_SIZE(buffer)));
-    std::unique_ptr<ByteRleDecoder> rle =
-        createBooleanRleDecoder(std::move(stream), getDefaultReaderMetrics());
+    std::unique_ptr<ByteRleDecoder> rle = createBooleanRleDecoder(
+        std::make_unique<SeekableArrayInputStream>(buffer, ARRAY_SIZE(buffer)),
+        getDefaultReaderMetrics());
     std::vector<char> data(1);
     for (size_t i = 0; i < 16384; i += 5) {
       rle->next(data.data(), data.size(), nullptr);
@@ -980,10 +966,9 @@ namespace orc {
         0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c,
         0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c,
         0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71};
-    std::unique_ptr<SeekableInputStream> stream(
-        new SeekableArrayInputStream(buffer, ARRAY_SIZE(buffer)));
-    std::unique_ptr<ByteRleDecoder> rle =
-        createBooleanRleDecoder(std::move(stream), getDefaultReaderMetrics());
+    std::unique_ptr<ByteRleDecoder> rle = createBooleanRleDecoder(
+        std::make_unique<SeekableArrayInputStream>(buffer, ARRAY_SIZE(buffer)),
+        getDefaultReaderMetrics());
     std::vector<char> data(3);
     std::vector<char> someNull(data.size(), 0);
     someNull[1] = 1;
@@ -1084,10 +1069,9 @@ namespace orc {
         0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c,
         0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c,
         0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71};
-    std::unique_ptr<SeekableInputStream> stream(
-        new SeekableArrayInputStream(buffer, ARRAY_SIZE(buffer)));
-    std::unique_ptr<ByteRleDecoder> rle =
-        createBooleanRleDecoder(std::move(stream), getDefaultReaderMetrics());
+    std::unique_ptr<ByteRleDecoder> rle = createBooleanRleDecoder(
+        std::make_unique<SeekableArrayInputStream>(buffer, ARRAY_SIZE(buffer)),
+        getDefaultReaderMetrics());
     std::vector<char> data(16384);
     rle->next(data.data(), data.size(), nullptr);
     for (size_t i = 0; i < data.size(); ++i) {
@@ -1194,10 +1178,9 @@ namespace orc {
         0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c,
         0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c,
         0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71, 0xc7, 0x1c, 0x71};
-    std::unique_ptr<SeekableInputStream> stream(
-        new SeekableArrayInputStream(buffer, ARRAY_SIZE(buffer)));
-    std::unique_ptr<ByteRleDecoder> rle =
-        createBooleanRleDecoder(std::move(stream), getDefaultReaderMetrics());
+    std::unique_ptr<ByteRleDecoder> rle = createBooleanRleDecoder(
+        std::make_unique<SeekableArrayInputStream>(buffer, ARRAY_SIZE(buffer)),
+        getDefaultReaderMetrics());
     std::vector<char> data(16384);
     std::vector<char> allNull(data.size(), 0);
     std::vector<char> noNull(data.size(), 1);
@@ -1249,10 +1232,9 @@ namespace orc {
                         0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1};
     const unsigned char buffer[] = {0xf9, 0xf0, 0xf0, 0xf7, 0x1c, 0x71, 0xc1, 0x80};
 
-    std::unique_ptr<SeekableInputStream> stream(
-        new SeekableArrayInputStream(buffer, ARRAY_SIZE(buffer)));
-    std::unique_ptr<ByteRleDecoder> rle =
-        createBooleanRleDecoder(std::move(stream), getDefaultReaderMetrics());
+    std::unique_ptr<ByteRleDecoder> rle = createBooleanRleDecoder(
+        std::make_unique<SeekableArrayInputStream>(buffer, ARRAY_SIZE(buffer)),
+        getDefaultReaderMetrics());
     std::vector<char> data(sizeof(num) / sizeof(char));
     rle->next(data.data(), data.size(), nullptr);
     for (size_t i = 0; i < data.size(); ++i) {
@@ -1287,10 +1269,10 @@ namespace orc {
 
     // create BooleanRleDecoder and prepare decoding
     std::unique_ptr<ByteRleDecoder> decoder = createBooleanRleDecoder(
-        createDecompressor(CompressionKind_ZSTD,
-                           std::unique_ptr<SeekableInputStream>(new SeekableArrayInputStream(
-                               memStream.getData(), memStream.getLength())),
-                           blockSize, *getDefaultPool(), getDefaultReaderMetrics()),
+        createDecompressor(
+            CompressionKind_ZSTD,
+            std::make_unique<SeekableArrayInputStream>(memStream.getData(), memStream.getLength()),
+            blockSize, *getDefaultPool(), getDefaultReaderMetrics()),
         getDefaultReaderMetrics());
 
     // before fix of ORC-470, skip all remaining boolean values will get an
@@ -1308,8 +1290,8 @@ namespace orc {
 
     uint64_t capacity = 500 * 1024;
     uint64_t block = 1024;
-    std::unique_ptr<BufferedOutputStream> outStream(
-        new BufferedOutputStream(*getDefaultPool(), &memStream, capacity, block, nullptr));
+    auto outStream = std::make_unique<BufferedOutputStream>(*getDefaultPool(), &memStream, capacity,
+                                                            block, nullptr);
 
     std::unique_ptr<ByteRleEncoder> encoder = createBooleanRleEncoder(std::move(outStream));
 
@@ -1321,8 +1303,8 @@ namespace orc {
     encoder->add(data, numValues, nullptr);
     encoder->flush();
 
-    std::unique_ptr<SeekableInputStream> inStream(
-        new SeekableArrayInputStream(memStream.getData(), memStream.getLength()));
+    auto inStream =
+        std::make_unique<SeekableArrayInputStream>(memStream.getData(), memStream.getLength());
 
     std::unique_ptr<ByteRleDecoder> decoder =
         createBooleanRleDecoder(std::move(inStream), getDefaultReaderMetrics());

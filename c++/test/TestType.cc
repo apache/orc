@@ -276,7 +276,7 @@ namespace orc {
 
   void expectLogicErrorDuringParse(std::string typeStr, const char* errMsg) {
     try {
-      ORC_UNIQUE_PTR<Type> type = Type::buildTypeFromString(typeStr);
+      std::unique_ptr<Type> type = Type::buildTypeFromString(typeStr);
       FAIL() << "'" << typeStr << "'"
              << " should throw std::logic_error for invalid schema";
     } catch (std::logic_error& e) {
@@ -288,7 +288,7 @@ namespace orc {
 
   TEST(TestType, buildTypeFromString) {
     std::string typeStr = "struct<a:int,b:string,c:decimal(10,2),d:varchar(5)>";
-    ORC_UNIQUE_PTR<Type> type = Type::buildTypeFromString(typeStr);
+    std::unique_ptr<Type> type = Type::buildTypeFromString(typeStr);
     EXPECT_EQ(typeStr, type->toString());
 
     typeStr = "map<boolean,float>";
@@ -330,7 +330,7 @@ namespace orc {
   }
 
   TEST(TestType, quotedFieldNames) {
-    ORC_UNIQUE_PTR<Type> type = createStructType();
+    std::unique_ptr<Type> type = createStructType();
     type->addStructField("foo bar", createPrimitiveType(INT));
     type->addStructField("`some`thing`", createPrimitiveType(INT));
     type->addStructField("1234567890_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",

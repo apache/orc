@@ -147,7 +147,7 @@ the data as a buffer of integers for the offsets and a
 ~~~ cpp
   struct ListVectorBatch: public ColumnVectorBatch {
     DataBuffer<int64_t> offsets;
-    ORC_UNIQUE_PTR<ColumnVectorBatch> elements;
+    std::unique_ptr<ColumnVectorBatch> elements;
     ...
   };
 ~~~
@@ -159,8 +159,8 @@ for the keys and values.
 ~~~ cpp
   struct MapVectorBatch: public ColumnVectorBatch {
     DataBuffer<int64_t> offsets;
-    ORC_UNIQUE_PTR<ColumnVectorBatch> keys;
-    ORC_UNIQUE_PTR<ColumnVectorBatch> elements;
+    std::unique_ptr<ColumnVectorBatch> keys;
+    std::unique_ptr<ColumnVectorBatch> elements;
     ...
   };
 ~~~
@@ -174,12 +174,12 @@ sets the required schema parameter, but there are many other
 options to control the ORC writer.
 
 ~~~ cpp
-ORC_UNIQUE_PTR<OutputStream> outStream =
+std::unique_ptr<OutputStream> outStream =
   writeLocalFile("my-file.orc");
-ORC_UNIQUE_PTR<Type> schema(
+std::unique_ptr<Type> schema(
   Type::buildTypeFromString("struct<x:int,y:int>"));
 WriterOptions options;
-ORC_UNIQUE_PTR<Writer> writer =
+std::unique_ptr<Writer> writer =
   createWriter(*schema, outStream.get(), options);
 ~~~
 
@@ -188,7 +188,7 @@ as the batch fills up. When the file is done, close the `Writer`.
 
 ~~~ cpp
 uint64_t batchSize = 1024, rowCount = 10000;
-ORC_UNIQUE_PTR<ColumnVectorBatch> batch =
+std::unique_ptr<ColumnVectorBatch> batch =
   writer->createRowBatch(batchSize);
 StructVectorBatch *root =
   dynamic_cast<StructVectorBatch *>(batch.get());
@@ -234,10 +234,10 @@ required. The reader has methods for getting the number of rows,
 schema, compression, etc. from the file.
 
 ~~~ cpp
-ORC_UNIQUE_PTR<InputStream> inStream =
+std::unique_ptr<InputStream> inStream =
   readLocalFile("my-file.orc");
 ReaderOptions options;
-ORC_UNIQUE_PTR<Reader> reader =
+std::unique_ptr<Reader> reader =
   createReader(inStream, options);
 ~~~
 
@@ -247,9 +247,9 @@ options to control the data that is read.
 
 ~~~ cpp
 RowReaderOptions rowReaderOptions;
-ORC_UNIQUE_PTR<RowReader> rowReader =
+std::unique_ptr<RowReader> rowReader =
   reader->createRowReader(rowReaderOptions);
-ORC_UNIQUE_PTR<ColumnVectorBatch> batch =
+std::unique_ptr<ColumnVectorBatch> batch =
   rowReader->createRowBatch(1024);
 ~~~
 

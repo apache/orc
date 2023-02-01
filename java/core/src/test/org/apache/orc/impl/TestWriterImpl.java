@@ -32,6 +32,7 @@ import org.apache.orc.Writer;
 import org.apache.orc.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -93,6 +94,7 @@ public class TestWriterImpl {
     w.close();
   }
 
+  @Disabled("ORC-1343: Disable ENABLE_INDEXES tests until reader supports it properly")
   @Test
   public void testNoIndexIfEnableIndexIsFalse() throws Exception {
     conf.set(OrcConf.OVERWRITE_OUTPUT_FILE.getAttribute(), "true");

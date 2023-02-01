@@ -52,14 +52,12 @@ namespace orc {
     }
   };
 
-  ReaderOptions::ReaderOptions()
-      : privateBits(std::unique_ptr<ReaderOptionsPrivate>(new ReaderOptionsPrivate())) {
+  ReaderOptions::ReaderOptions() : privateBits(std::make_unique<ReaderOptionsPrivate>()) {
     // PASS
   }
 
   ReaderOptions::ReaderOptions(const ReaderOptions& rhs)
-      : privateBits(std::unique_ptr<ReaderOptionsPrivate>(
-            new ReaderOptionsPrivate(*(rhs.privateBits.get())))) {
+      : privateBits(std::make_unique<ReaderOptionsPrivate>(*(rhs.privateBits.get()))) {
     // PASS
   }
 
@@ -154,14 +152,12 @@ namespace orc {
     }
   };
 
-  RowReaderOptions::RowReaderOptions()
-      : privateBits(std::unique_ptr<RowReaderOptionsPrivate>(new RowReaderOptionsPrivate())) {
+  RowReaderOptions::RowReaderOptions() : privateBits(std::make_unique<RowReaderOptionsPrivate>()) {
     // PASS
   }
 
   RowReaderOptions::RowReaderOptions(const RowReaderOptions& rhs)
-      : privateBits(std::unique_ptr<RowReaderOptionsPrivate>(
-            new RowReaderOptionsPrivate(*(rhs.privateBits.get())))) {
+      : privateBits(std::make_unique<RowReaderOptionsPrivate>(*(rhs.privateBits.get()))) {
     // PASS
   }
 

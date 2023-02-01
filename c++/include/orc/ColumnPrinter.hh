@@ -44,6 +44,6 @@ namespace orc {
     virtual void reset(const ColumnVectorBatch& batch);
   };
 
-  ORC_UNIQUE_PTR<ColumnPrinter> createColumnPrinter(std::string&, const Type* type);
+  std::unique_ptr<ColumnPrinter> createColumnPrinter(std::string&, const Type* type);
 }  // namespace orc
 #endif

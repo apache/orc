@@ -55,7 +55,7 @@ namespace orc {
 
   std::unique_ptr<StreamsFactory> createStreamsFactory(const WriterOptions& options,
                                                        OutputStream* outStream) {
-    return std::unique_ptr<StreamsFactory>(new StreamsFactoryImpl(options, outStream));
+    return std::make_unique<StreamsFactoryImpl>(options, outStream);
   }
 
   RowIndexPositionRecorder::~RowIndexPositionRecorder() {
@@ -97,10 +97,9 @@ namespace orc {
     colFileStatistics = createColumnStatistics(type);
 
     if (enableIndex) {
-      rowIndex = std::unique_ptr<proto::RowIndex>(new proto::RowIndex());
-      rowIndexEntry = std::unique_ptr<proto::RowIndexEntry>(new proto::RowIndexEntry());
-      rowIndexPosition =
-          std::unique_ptr<RowIndexPositionRecorder>(new RowIndexPositionRecorder(*rowIndexEntry));
+      rowIndex = std::make_unique<proto::RowIndex>();
+      rowIndexEntry = std::make_unique<proto::RowIndexEntry>();
+      rowIndexPosition = std::make_unique<RowIndexPositionRecorder>(*rowIndexEntry);
       indexStream = factory.createStream(proto::Stream_Kind_ROW_INDEX);
 
       // BloomFilters for non-UTF8 strings and non-UTC timestamps are not supported
@@ -2809,75 +2808,67 @@ namespace orc {
                                             const WriterOptions& options) {
     switch (static_cast<int64_t>(type.getKind())) {
       case STRUCT:
-        return std::unique_ptr<ColumnWriter>(new StructColumnWriter(type, factory, options));
+        return std::make_unique<StructColumnWriter>(type, factory, options);
       case SHORT:
         if (options.getUseTightNumericVector()) {
-          return std::unique_ptr<ColumnWriter>(
-              new IntegerColumnWriter<ShortVectorBatch>(type, factory, options));
+          return std::make_unique<IntegerColumnWriter<ShortVectorBatch>>(type, factory, options);
         }
       case INT:
         if (options.getUseTightNumericVector()) {
-          return std::unique_ptr<ColumnWriter>(
-              new IntegerColumnWriter<IntVectorBatch>(type, factory, options));
+          return std::make_unique<IntegerColumnWriter<IntVectorBatch>>(type, factory, options);
         }
       case LONG:
-        return std::unique_ptr<ColumnWriter>(
-            new IntegerColumnWriter<LongVectorBatch>(type, factory, options));
+        return std::make_unique<IntegerColumnWriter<LongVectorBatch>>(type, factory, options);
       case BYTE:
         if (options.getUseTightNumericVector()) {
-          return std::unique_ptr<ColumnWriter>(
-              new ByteColumnWriter<ByteVectorBatch>(type, factory, options));
+          return std::make_unique<ByteColumnWriter<ByteVectorBatch>>(type, factory, options);
         }
-        return std::unique_ptr<ColumnWriter>(
-            new ByteColumnWriter<LongVectorBatch>(type, factory, options));
+        return std::make_unique<ByteColumnWriter<LongVectorBatch>>(type, factory, options);
       case BOOLEAN:
-        return std::unique_ptr<ColumnWriter>(new BooleanColumnWriter(type, factory, options));
+        return std::make_unique<BooleanColumnWriter>(type, factory, options);
       case DOUBLE:
-        return std::unique_ptr<ColumnWriter>(
-            new FloatingColumnWriter<double, DoubleVectorBatch>(type, factory, options, false));
+        return std::make_unique<FloatingColumnWriter<double, DoubleVectorBatch>>(type, factory,
+                                                                                 options, false);
       case FLOAT:
         if (options.getUseTightNumericVector()) {
-          return std::unique_ptr<ColumnWriter>(
-              new FloatingColumnWriter<float, FloatVectorBatch>(type, factory, options, true));
+          return std::make_unique<FloatingColumnWriter<float, FloatVectorBatch>>(type, factory,
+                                                                                 options, true);
         }
-        return std::unique_ptr<ColumnWriter>(
-            new FloatingColumnWriter<double, DoubleVectorBatch>(type, factory, options, true));
+        return std::make_unique<FloatingColumnWriter<double, DoubleVectorBatch>>(type, factory,
+                                                                                 options, true);
       case BINARY:
-        return std::unique_ptr<ColumnWriter>(new BinaryColumnWriter(type, factory, options));
+        return std::make_unique<BinaryColumnWriter>(type, factory, options);
       case STRING:
-        return std::unique_ptr<ColumnWriter>(new StringColumnWriter(type, factory, options));
+        return std::make_unique<StringColumnWriter>(type, factory, options);
       case CHAR:
-        return std::unique_ptr<ColumnWriter>(new CharColumnWriter(type, factory, options));
+        return std::make_unique<CharColumnWriter>(type, factory, options);
       case VARCHAR:
-        return std::unique_ptr<ColumnWriter>(new VarCharColumnWriter(type, factory, options));
+        return std::make_unique<VarCharColumnWriter>(type, factory, options);
       case DATE:
-        return std::unique_ptr<ColumnWriter>(new DateColumnWriter(type, factory, options));
+        return std::make_unique<DateColumnWriter>(type, factory, options);
       case TIMESTAMP:
-        return std::unique_ptr<ColumnWriter>(
-            new TimestampColumnWriter(type, factory, options, false));
+        return std::make_unique<TimestampColumnWriter>(type, factory, options, false);
       case TIMESTAMP_INSTANT:
-        return std::unique_ptr<ColumnWriter>(
-            new TimestampColumnWriter(type, factory, options, true));
+        return std::make_unique<TimestampColumnWriter>(type, factory, options, true);
       case DECIMAL:
         if (type.getPrecision() <= Decimal64ColumnWriter::MAX_PRECISION_64) {
           if (options.getFileVersion() == FileVersion::UNSTABLE_PRE_2_0()) {
-            return std::unique_ptr<ColumnWriter>(
-                new Decimal64ColumnWriterV2(type, factory, options));
+            return std::make_unique<Decimal64ColumnWriterV2>(type, factory, options);
           }
-          return std::unique_ptr<ColumnWriter>(new Decimal64ColumnWriter(type, factory, options));
+          return std::make_unique<Decimal64ColumnWriter>(type, factory, options);
         } else if (type.getPrecision() <= Decimal64ColumnWriter::MAX_PRECISION_128) {
-          return std::unique_ptr<ColumnWriter>(new Decimal128ColumnWriter(type, factory, options));
+          return std::make_unique<Decimal128ColumnWriter>(type, factory, options);
         } else {
           throw NotImplementedYet(
               "Decimal precision more than 38 is not "
               "supported");
         }
       case LIST:
-        return std::unique_ptr<ColumnWriter>(new ListColumnWriter(type, factory, options));
+        return std::make_unique<ListColumnWriter>(type, factory, options);
       case MAP:
-        return std::unique_ptr<ColumnWriter>(new MapColumnWriter(type, factory, options));
+        return std::make_unique<MapColumnWriter>(type, factory, options);
       case UNION:
-        return std::unique_ptr<ColumnWriter>(new UnionColumnWriter(type, factory, options));
+        return std::make_unique<UnionColumnWriter>(type, factory, options);
       default:
         throw NotImplementedYet(
             "Type is not supported yet for creating "

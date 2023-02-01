@@ -64,6 +64,7 @@ public class ReaderImpl implements Reader {
   private static final Logger LOG = LoggerFactory.getLogger(ReaderImpl.class);
 
   private static final int DIRECTORY_SIZE_GUESS = 16 * 1024;
+  public static final int DEFAULT_COMPRESSION_BLOCK_SIZE = 256 * 1024;
 
   private final long maxLength;
   protected final Path path;
@@ -715,6 +716,18 @@ public class ReaderImpl implements Reader {
   }
 
   /**
+   * Read compression block size from the postscript if it is set; otherwise,
+   * use the same 256k default the C++ implementation uses.
+   */
+  public static int getCompressionBlockSize(OrcProto.PostScript postScript) {
+    if (postScript.hasCompressionBlockSize()) {
+      return (int) postScript.getCompressionBlockSize();
+    } else {
+      return DEFAULT_COMPRESSION_BLOCK_SIZE;
+    }
+  }
+
+  /**
    * @deprecated Use {@link ReaderImpl#extractFileTail(FileSystem, Path, long)} instead.
    * This is for backward compatibility.
    */
@@ -741,7 +754,7 @@ public class ReaderImpl implements Reader {
     try (CompressionCodec codec = OrcCodecPool.getCodec(compressionKind)){
       if (codec != null) {
         compression.withCodec(codec)
-            .withBufferSize((int) ps.getCompressionBlockSize());
+            .withBufferSize(getCompressionBlockSize(ps));
       }
 
       OrcProto.Footer footer =
@@ -823,7 +836,7 @@ public class ReaderImpl implements Reader {
       try (CompressionCodec codec = OrcCodecPool.getCodec(compressionKind)) {
         if (codec != null) {
           compression.withCodec(codec)
-              .withBufferSize((int) ps.getCompressionBlockSize());
+              .withBufferSize(getCompressionBlockSize(ps));
         }
         OrcProto.Footer footer =
             OrcProto.Footer.parseFrom(

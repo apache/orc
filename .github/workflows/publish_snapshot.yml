@@ -12,8 +12,9 @@ jobs:
     steps:
     - uses: actions/checkout@master
 
-    - uses: actions/setup-java@v1
+    - uses: actions/setup-java@v3
       with:
+        distribution: temurin
         java-version: 8
 
     - name: Publish snapshot
@@ -23,4 +24,4 @@ jobs:
       run: |
         cd java
         echo "<settings><servers><server><id>apache.snapshots.https</id><username>$ASF_USERNAME</username><password>$ASF_PASSWORD</password></server></servers></settings>" > settings.xml
-        ./mvnw --settings settings.xml -DskipTests deploy
+        ./mvnw --settings settings.xml -nsu -ntp -DskipTests deploy

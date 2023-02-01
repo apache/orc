@@ -55,7 +55,7 @@ namespace orc {
    */
   class WriterOptions {
    private:
-    ORC_UNIQUE_PTR<WriterOptionsPrivate> privateBits;
+    std::unique_ptr<WriterOptionsPrivate> privateBits;
 
    public:
     WriterOptions();
@@ -284,7 +284,7 @@ namespace orc {
      * @param size the number of rows to write.
      * @return a new ColumnVectorBatch to write into.
      */
-    virtual ORC_UNIQUE_PTR<ColumnVectorBatch> createRowBatch(uint64_t size) const = 0;
+    virtual std::unique_ptr<ColumnVectorBatch> createRowBatch(uint64_t size) const = 0;
 
     /**
      * Add a row batch into current writer.
@@ -300,7 +300,7 @@ namespace orc {
     /**
      * Add user metadata to the writer.
      */
-    virtual void addUserMetadata(const std::string name, const std::string value) = 0;
+    virtual void addUserMetadata(const std::string& name, const std::string& value) = 0;
   };
 }  // namespace orc
 

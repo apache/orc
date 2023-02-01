@@ -317,7 +317,7 @@ namespace orc {
 
     void close() override;
 
-    void addUserMetadata(const std::string name, const std::string value) override;
+    void addUserMetadata(const std::string& name, const std::string& value) override;
 
    private:
     void init();
@@ -400,7 +400,7 @@ namespace orc {
     outStream->close();
   }
 
-  void WriterImpl::addUserMetadata(const std::string name, const std::string value) {
+  void WriterImpl::addUserMetadata(const std::string& name, const std::string& value) {
     proto::UserMetadataItem* userMetadataItem = fileFooter.add_metadata();
     userMetadataItem->set_name(name);
     userMetadataItem->set_value(value);

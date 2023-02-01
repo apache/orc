@@ -25,6 +25,7 @@
   #include <stdint.h>
 #endif
 
+// Following MACROS should be keeped for backward compatibility.
 #define ORC_NOEXCEPT noexcept
 #define ORC_NULLPTR nullptr
 #define ORC_OVERRIDE override

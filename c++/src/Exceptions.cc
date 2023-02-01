@@ -32,7 +32,7 @@ namespace orc {
     // PASS
   }
 
-  NotImplementedYet::~NotImplementedYet() ORC_NOEXCEPT {
+  NotImplementedYet::~NotImplementedYet() noexcept {
     // PASS
   }
 
@@ -48,7 +48,7 @@ namespace orc {
     // PASS
   }
 
-  ParseError::~ParseError() ORC_NOEXCEPT {
+  ParseError::~ParseError() noexcept {
     // PASS
   }
 
@@ -64,7 +64,7 @@ namespace orc {
     // PASS
   }
 
-  InvalidArgument::~InvalidArgument() ORC_NOEXCEPT {
+  InvalidArgument::~InvalidArgument() noexcept {
     // PASS
   }
 }  // namespace orc

@@ -109,7 +109,7 @@ namespace orc {
    public:
     TimezoneError(const std::string& what);
     TimezoneError(const TimezoneError&);
-    virtual ~TimezoneError() ORC_NOEXCEPT;
+    virtual ~TimezoneError() noexcept;
   };
 
   /**

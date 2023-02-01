@@ -116,7 +116,7 @@ namespace orc {
   DIAGNOSTIC_POP
 
   std::unique_ptr<InputStream> readLocalFile(const std::string& path, ReaderMetrics* metrics) {
-    return std::unique_ptr<InputStream>(new FileInputStream(path, metrics));
+    return std::make_unique<FileInputStream>(path, metrics);
   }
 
   OutputStream::~OutputStream(){
@@ -185,6 +185,6 @@ namespace orc {
   }
 
   std::unique_ptr<OutputStream> writeLocalFile(const std::string& path) {
-    return std::unique_ptr<OutputStream>(new FileOutputStream(path));
+    return std::make_unique<FileOutputStream>(path);
   }
 }  // namespace orc

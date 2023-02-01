@@ -447,9 +447,9 @@ namespace orc {
    * Parse the POSIX TZ string.
    */
   std::shared_ptr<FutureRule> parseFutureRule(const std::string& ruleString) {
-    std::shared_ptr<FutureRule> result(new FutureRuleImpl());
+    auto result = std::make_shared<FutureRuleImpl>();
     FutureRuleParser parser(ruleString, dynamic_cast<FutureRuleImpl*>(result.get()));
-    return result;
+    return std::move(result);
   }
 
   std::string TimezoneVariant::toString() const {
@@ -565,7 +565,7 @@ namespace orc {
 
   class TimezoneImpl : public Timezone {
    public:
-    TimezoneImpl(const std::string& name, const std::vector<unsigned char> bytes);
+    TimezoneImpl(const std::string& _filename, const std::vector<unsigned char>& buffer);
     virtual ~TimezoneImpl() override;
 
     /**
@@ -633,7 +633,7 @@ namespace orc {
     // PASS
   }
 
-  TimezoneImpl::TimezoneImpl(const std::string& _filename, const std::vector<unsigned char> buffer)
+  TimezoneImpl::TimezoneImpl(const std::string& _filename, const std::vector<unsigned char>& buffer)
       : filename(_filename) {
     parseZoneFile(&buffer[0], 0, buffer.size(), Version1Parser());
     // Build the literal for the ORC epoch
@@ -670,11 +670,11 @@ namespace orc {
       return *(itr->second).get();
     }
     try {
-      ORC_UNIQUE_PTR<InputStream> file = readFile(filename);
+      std::unique_ptr<InputStream> file = readFile(filename);
       size_t size = static_cast<size_t>(file->getLength());
       std::vector<unsigned char> buffer(size);
       file->read(&buffer[0], size, 0);
-      timezoneCache[filename] = std::shared_ptr<Timezone>(new TimezoneImpl(filename, buffer));
+      timezoneCache[filename] = std::make_shared<TimezoneImpl>(filename, buffer);
     } catch (ParseError& err) {
       throw TimezoneError(err.what());
     }
@@ -708,7 +708,7 @@ namespace orc {
    */
   std::unique_ptr<Timezone> getTimezone(const std::string& filename,
                                         const std::vector<unsigned char>& b) {
-    return std::unique_ptr<Timezone>(new TimezoneImpl(filename, b));
+    return std::make_unique<TimezoneImpl>(filename, b);
   }
 
   TimezoneImpl::~TimezoneImpl() {
@@ -887,7 +887,7 @@ namespace orc {
     // PASS
   }
 
-  TimezoneError::~TimezoneError() ORC_NOEXCEPT {
+  TimezoneError::~TimezoneError() noexcept {
     // PASS
   }
 

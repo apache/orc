@@ -35,7 +35,7 @@ a columnar format lets the reader read, decompress, and process only
 the values that are required for the current query.</description>
     <bug-database rdf:resource="https://issues.apache.org/jira/browse/orc" />
     <mailing-list rdf:resource="https://orc.apache.org/develop" />
-    <download-page rdf:resource="https://orc.apache.org/docs/releases.html" />
+    <download-page rdf:resource="https://orc.apache.org/releases" />
     <programming-language>Java</programming-language>
     <programming-language>C++</programming-language>
     <category rdf:resource="http://projects.apache.org/category/big-data" />
@@ -45,13 +45,13 @@ the values that are required for the current query.</description>
     <release>
       <Version>
         <name>Latest release</name>
-        <created>2022-06-16</created>
-        <revision>1.7.5</revision>
+        <created>2022-12-02</created>
+        <revision>1.8.1</revision>
       </Version>
       <Version>
         <name>Stable release</name>
-        <created>2022-04-14</created>
-        <revision>1.6.14</revision>
+        <created>2022-11-17</created>
+        <revision>1.7.7</revision>
       </Version>
     </release>
     <repository>

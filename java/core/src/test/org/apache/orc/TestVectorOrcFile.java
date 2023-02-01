@@ -85,6 +85,7 @@ import java.util.UUID;
 import java.util.function.IntFunction;
 import java.util.stream.Stream;
 
+import static org.apache.orc.impl.ReaderImpl.DEFAULT_COMPRESSION_BLOCK_SIZE;
 import static org.apache.orc.impl.mask.SHA256MaskFactory.printHexBinary;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -1495,7 +1496,7 @@ public class TestVectorOrcFile {
     assertFalse(reader.rows().nextBatch(batch));
     assertEquals(CompressionKind.NONE, reader.getCompressionKind());
     assertEquals(0, reader.getNumberOfRows());
-    assertEquals(0, reader.getCompressionSize());
+    assertEquals(DEFAULT_COMPRESSION_BLOCK_SIZE, reader.getCompressionSize());
     assertFalse(reader.getMetadataKeys().iterator().hasNext());
     assertEquals(3, reader.getContentLength());
     assertFalse(reader.getStripes().iterator().hasNext());
@@ -4126,7 +4127,7 @@ public class TestVectorOrcFile {
     assertEquals(CompressionKind.NONE, reader.getCompressionKind());
     assertEquals(0, reader.getRawDataSize());
     assertEquals(0, reader.getRowIndexStride());
-    assertEquals(0, reader.getCompressionSize());
+    assertEquals(DEFAULT_COMPRESSION_BLOCK_SIZE, reader.getCompressionSize());
     assertEquals(0, reader.getMetadataSize());
     assertEquals(OrcFile.Version.CURRENT, reader.getFileVersion());
     assertEquals(0, reader.getStripes().size());

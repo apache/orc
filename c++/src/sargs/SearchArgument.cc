@@ -582,11 +582,11 @@ namespace orc {
         leafList[newLoc] = leaf.first;
       }
     }
-    return std::unique_ptr<SearchArgument>(new SearchArgumentImpl(mRoot, leafList));
+    return std::make_unique<SearchArgumentImpl>(mRoot, leafList);
   }
 
   std::unique_ptr<SearchArgumentBuilder> SearchArgumentFactory::newBuilder() {
-    return std::unique_ptr<SearchArgumentBuilder>(new SearchArgumentBuilderImpl());
+    return std::make_unique<SearchArgumentBuilderImpl>();
   }
 
 }  // namespace orc
