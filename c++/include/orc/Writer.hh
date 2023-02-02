@@ -263,8 +263,10 @@ namespace orc {
      */
     bool getUseTightNumericVector() const;
 
-     /**
-     * Set the buffer capacity of output stream.
+    /**
+     * Set the initial buffer capacity of output stream.
+     * Each column contains multiple output streams with buffers,
+     * and these buffers will automatically expand when memory is exhausted.
      */
     WriterOptions& setOutputBufferCapacity(uint64_t capacity);
 

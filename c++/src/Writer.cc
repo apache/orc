@@ -344,10 +344,10 @@ namespace orc {
     useTightNumericVector = opts.getUseTightNumericVector();
 
     // compression stream for stripe footer, file footer and metadata
-    compressionStream = createCompressor(
-        options.getCompression(), outStream, options.getCompressionStrategy(),
-        options.getOutputBufferCapacity(),
-        options.getCompressionBlockSize(), *options.getMemoryPool(), options.getWriterMetrics());
+    compressionStream =
+        createCompressor(options.getCompression(), outStream, options.getCompressionStrategy(),
+                         options.getOutputBufferCapacity(), options.getCompressionBlockSize(),
+                         *options.getMemoryPool(), options.getWriterMetrics());
 
     // uncompressed stream for post script
     bufferedStream.reset(new BufferedOutputStream(*options.getMemoryPool(), outStream,

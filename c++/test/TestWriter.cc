@@ -1840,11 +1840,10 @@ namespace orc {
     MemoryPool* pool = getDefaultPool();
     size_t rowCount = 1000;
     {
-      auto type = std::unique_ptr<Type>(
-        Type::buildTypeFromString("struct<col1:int,col2:int>"));
+      auto type = std::unique_ptr<Type>(Type::buildTypeFromString("struct<col1:int,col2:int>"));
       WriterOptions options;
       options.setStripeSize(1024 * 1024)
-          .setCompressionBlockSize(1024)
+          .setCompressionBlockSize(64 * 1024)
           .setCompression(CompressionKind_NONE)
           .setMemoryPool(pool)
           .setRowIndexStride(1000)
@@ -1887,9 +1886,12 @@ namespace orc {
   }
 
   TEST(WriterTest, setOutputBufferCapacity) {
+    // compression block size > output buffer capacity
     testSetOutputBufferCapacity(1024);
+    // compression block size = output buffer capacity
+    testSetOutputBufferCapacity(64 * 1024);
+    // compression block size < output buffer capacity
     testSetOutputBufferCapacity(1024 * 1024);
-    testSetOutputBufferCapacity(1024 * 1024 * 1024);
   }
 
   TEST_P(WriterTest, testWriteFixedWidthNumericVectorBatch) {
