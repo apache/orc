@@ -262,6 +262,19 @@ namespace orc {
      * @return if not set, the default is false
      */
     bool getUseTightNumericVector() const;
+
+    /**
+     * Set the initial capacity of output buffer in the class BufferedOutputStream.
+     * Each column contains one or more BufferOutputStream depending on its type,
+     * and these buffers will automatically expand when more memory is required.
+     */
+    WriterOptions& setOutputBufferCapacity(uint64_t capacity);
+
+    /**
+     * Get the initial capacity of output buffer in the class BufferedOutputStream.
+     * @return if not set, return default value which is 1 MB.
+     */
+    uint64_t getOutputBufferCapacity() const;
   };
 
   class Writer {
