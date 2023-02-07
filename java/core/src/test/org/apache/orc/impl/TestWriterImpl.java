@@ -37,8 +37,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestWriterImpl {
 
@@ -118,6 +117,21 @@ public class TestWriterImpl {
     for (StripeInformation information: w.getStripes()) {
       assertEquals(0, information.getIndexLength());
     }
+  }
+
+  @Test
+  public void testNoIndexWithIndexStripeGreaterThanZero() throws Exception {
+    conf.set(OrcConf.OVERWRITE_OUTPUT_FILE.getAttribute(), "true");
+    conf.set(OrcConf.ROW_INDEX_STRIDE.getAttribute(), "1000");
+    conf.setBoolean(OrcConf.ENABLE_INDEXES.getAttribute(), false);
+    VectorizedRowBatch b = schema.createRowBatch();
+    LongColumnVector f1 = (LongColumnVector) b.cols[0];
+    LongColumnVector f2 = (LongColumnVector) b.cols[1];
+    Throwable e = assertThrows(IllegalArgumentException.class, () -> {
+      // orc.create.index=true && orc.row.index.stride > 0 should fail
+      Writer w = OrcFile.createWriter(testFilePath, OrcFile.writerOptions(conf).setSchema(schema));
+    });
+    assertTrue(e.getMessage().contains("Please set rowIndexStride to zero if you want to disable row index"));
   }
 
   @Test
