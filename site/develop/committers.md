@@ -51,6 +51,7 @@ Vaibhav Gumashta        | vgumashta    | Committer
 Wei Zheng               | weiz         | Committer
 William Hyun            | william      | PMC Chair
 Xiening Dai             | xndai        | Committer
+Xin Zhang               | xinzhang     | Committer
 Xuefu Zhang             | xuefu        | Committer
 Ferdinand Xu            | xuf          | Committer
 Yongzhi Chen            | ychena       | Committer
