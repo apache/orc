@@ -22,7 +22,7 @@
 namespace orc {
 
   UnpackDefault::UnpackDefault(RleDecoderV2* dec)
-      : decoder(dec), bitsLeft(decoder->bitsLeft), curByte(decoder->curByte) {
+      : decoder(dec) {
     // PASS
   }
 
@@ -34,9 +34,9 @@ namespace orc {
     uint64_t curIdx = offset;
     while (curIdx < offset + len) {
       // Make sure bitsLeft is 0 before the loop. bitsLeft can only be 0, 4, or 8.
-      while (bitsLeft > 0 && curIdx < offset + len) {
-        bitsLeft -= 4;
-        data[curIdx++] = (curByte >> bitsLeft) & 15;
+      while (decoder->bitsLeft > 0 && curIdx < offset + len) {
+        decoder->bitsLeft -= 4;
+        data[curIdx++] = (decoder->curByte >> decoder->bitsLeft) & 15;
       }
       if (curIdx == offset + len) return;
 
@@ -57,8 +57,8 @@ namespace orc {
       if (curIdx == offset + len) return;
 
       // readByte() will update 'bufferStart' and 'bufferEnd'
-      curByte = decoder->readByte(&decoder->bufferStart, &decoder->bufferEnd);
-      bitsLeft = 8;
+      decoder->curByte = decoder->readByte(&decoder->bufferStart, &decoder->bufferEnd);
+      decoder->bitsLeft = 8;
     }
   }
 
@@ -316,19 +316,19 @@ namespace orc {
     for (uint64_t i = offset; i < (offset + len); i++) {
       uint64_t result = 0;
       uint64_t bitsLeftToRead = fbs;
-      while (bitsLeftToRead > bitsLeft) {
-        result <<= bitsLeft;
-        result |= curByte & ((1 << bitsLeft) - 1);
-        bitsLeftToRead -= bitsLeft;
-        curByte = decoder->readByte(&decoder->bufferStart, &decoder->bufferEnd);
-        bitsLeft = 8;
+      while (bitsLeftToRead > decoder->bitsLeft) {
+        result <<= decoder->bitsLeft;
+        result |= decoder->curByte & ((1 << decoder->bitsLeft) - 1);
+        bitsLeftToRead -= decoder->bitsLeft;
+        decoder->curByte = decoder->readByte(&decoder->bufferStart, &decoder->bufferEnd);
+        decoder->bitsLeft = 8;
       }
 
       // handle the left over bits
       if (bitsLeftToRead > 0) {
         result <<= bitsLeftToRead;
-        bitsLeft -= static_cast<uint32_t>(bitsLeftToRead);
-        result |= (curByte >> bitsLeft) & ((1 << bitsLeftToRead) - 1);
+        decoder->bitsLeft -= static_cast<uint32_t>(bitsLeftToRead);
+        result |= (decoder->curByte >> decoder->bitsLeft) & ((1 << bitsLeftToRead) - 1);
       }
       data[i] = static_cast<int64_t>(result);
     }

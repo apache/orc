@@ -18,7 +18,6 @@
 
 #include "Adaptor.hh"
 #include "Compression.hh"
-// #include "DetectPlatform.hh"
 #include "Bpacking.hh"
 #include "Dispatch.hh"
 #include "RLEV2Util.hh"
@@ -26,7 +25,6 @@
 #include "Utils.hh"
 #if defined(ORC_HAVE_RUNTIME_AVX512)
 #include "BpackingAvx512.hh"
-// #include "BitUnpackerAvx512.hh"
 #endif
 
 namespace orc {
@@ -97,7 +95,6 @@ namespace orc {
     return ret;
   }
 
-  ///////
   struct UnpackDynamicFunction {
     using FunctionType = decltype(&readLongsDefault);
 
@@ -115,7 +112,6 @@ namespace orc {
     static DynamicDispatch<UnpackDynamicFunction> dispatch;
     return dispatch.func(this, data, offset, len, fbs);
   }
-  ///////
 
   RleDecoderV2::RleDecoderV2(std::unique_ptr<SeekableInputStream> input, bool _isSigned,
                              MemoryPool& pool, ReaderMetrics* _metrics)

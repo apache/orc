@@ -75,17 +75,12 @@ namespace orc {
     RleDecoderV2* decoder;
     UnpackDefault unpackDefault;
 
-    // char* bufferStart;
-    // char* bufferEnd;
-    uint32_t bitsLeft;
-    uint32_t curByte;
-
-    uint8_t
-        vectorBuf8[MAX_VECTOR_BUF_8BIT_LENGTH + 1];  // Used by vectorially 1~8 bit-unpacking data
-    uint16_t vectorBuf16[MAX_VECTOR_BUF_16BIT_LENGTH +
-                         1];  // Used by vectorially 9~16 bit-unpacking data
-    uint32_t vectorBuf32[MAX_VECTOR_BUF_32BIT_LENGTH +
-                         1];  // Used by vectorially 17~32 bit-unpacking data
+    // Used by vectorially 1~8 bit-unpacking data
+    uint8_t vectorBuf8[MAX_VECTOR_BUF_8BIT_LENGTH + 1];
+    // Used by vectorially 9~16 bit-unpacking data
+    uint16_t vectorBuf16[MAX_VECTOR_BUF_16BIT_LENGTH + 1];
+    // Used by vectorially 17~32 bit-unpacking data
+    uint32_t vectorBuf32[MAX_VECTOR_BUF_32BIT_LENGTH + 1];
   };
 #endif
 

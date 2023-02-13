@@ -22,7 +22,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-// #include "Adaptor.hh"
 #include "RLEv2.hh"
 #include "io/InputStream.hh"
 #include "io/OutputStream.hh"
@@ -46,22 +45,8 @@ namespace orc {
 
     void plainUnpackLongs(int64_t* data, uint64_t offset, uint64_t len, uint64_t fbs);
 
-    /*  void setBuf(char* bufStart, char* bufEnd) {
-        bufferStart = bufStart;
-        bufferEnd = bufEnd;
-      }
-
-      void getBuf(char** bufStart, char** bufEnd) {
-        *bufStart = bufferStart;
-        *bufEnd = bufferEnd;
-      }*/
-
    private:
     RleDecoderV2* decoder;
-    //  char* bufferStart;
-    //  char* bufferEnd;
-    uint32_t bitsLeft;
-    uint32_t curByte;
   };
 
 }  // namespace orc

@@ -22,14 +22,8 @@
 #include "Adaptor.hh"
 #include "RLE.hh"
 #include "orc/Exceptions.hh"
-// #include "BpackingDefault.hh"
-// #include "Bpacking.hh"
 
 #include <vector>
-
-#define MAX_VECTOR_BUF_8BIT_LENGTH 64
-#define MAX_VECTOR_BUF_16BIT_LENGTH 32
-#define MAX_VECTOR_BUF_32BIT_LENGTH 16
 
 #define MAX_LITERAL_SIZE 512
 #define MIN_REPEAT 3
@@ -172,23 +166,14 @@ namespace orc {
 
     void next(int16_t* data, uint64_t numValues, const char* notNull) override;
 
-    //
     unsigned char readByte(char** bufStart, char** bufEnd);
     void resetBufferStart(char** bufStart, char** bufEnd, uint64_t len, bool resetBuf,
                           uint32_t backupLen);
 
-    char* getBufferStart() {
-      return bufferStart;
-    }
-
-    char* getBufferEnd() {
-      return bufferEnd;
-    }
     char* bufferStart;
     char* bufferEnd;
     uint32_t bitsLeft;  // Used by readLongs when bitSize < 8
     uint32_t curByte;   // Used by anything that uses readLongs
-                        //
 
    private:
     /**
@@ -212,9 +197,6 @@ namespace orc {
     void resetRun() {
       resetReadLongs();
     }
-
-    // void resetBufferStart(uint64_t len, bool resetBuf, uint32_t backupLen);
-    // unsigned char readByte();
 
     int64_t readLongBE(uint64_t bsz);
     int64_t readVslong();
@@ -250,21 +232,8 @@ namespace orc {
     unsigned char firstByte;
     uint64_t runLength;  // Length of the current run
     uint64_t runRead;    // Number of returned values of the current run
-                         //    char* bufferStart;
-                         //    char* bufferEnd;
-    // uint32_t bitsLeft;                  // Used by readLongs when bitSize < 8
-    // uint32_t curByte;                   // Used by anything that uses readLongs
     DataBuffer<int64_t> unpackedPatch;  // Used by PATCHED_BASE
     DataBuffer<int64_t> literals;       // Values of the current run
-
-#if defined(ORC_HAVE_RUNTIME_AVX512)
-    uint8_t
-        vectorBuf8[MAX_VECTOR_BUF_8BIT_LENGTH + 1];  // Used by vectorially 1~8 bit-unpacking data
-    uint16_t vectorBuf16[MAX_VECTOR_BUF_16BIT_LENGTH +
-                         1];  // Used by vectorially 9~16 bit-unpacking data
-    uint32_t vectorBuf32[MAX_VECTOR_BUF_32BIT_LENGTH +
-                         1];  // Used by vectorially 17~32 bit-unpacking data
-#endif
   };
 }  // namespace orc
 

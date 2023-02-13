@@ -25,9 +25,7 @@ namespace orc {
 #if defined(ORC_HAVE_RUNTIME_AVX512)
   UnpackAvx512::UnpackAvx512(RleDecoderV2* dec)
       : decoder(dec),
-        unpackDefault(UnpackDefault(dec)),
-        bitsLeft(decoder->bitsLeft),
-        curByte(decoder->curByte) {
+        unpackDefault(UnpackDefault(dec)) {
     // PASS
   }
 
@@ -4298,22 +4296,22 @@ namespace orc {
     for (uint64_t i = offset; i < (offset + len); i++) {
       uint64_t result = 0;
       uint64_t bitsLeftToRead = fbs;
-      while (bitsLeftToRead > bitsLeft) {
-        result <<= bitsLeft;
-        result |= curByte & ((1 << bitsLeft) - 1);
-        bitsLeftToRead -= bitsLeft;
-        curByte = decoder->readByte(&decoder->bufferStart, &decoder->bufferEnd);
-        bitsLeft = 8;
+      while (bitsLeftToRead > decoder->bitsLeft) {
+        result <<= decoder->bitsLeft;
+        result |= decoder->curByte & ((1 << decoder->bitsLeft) - 1);
+        bitsLeftToRead -= decoder->bitsLeft;
+        decoder->curByte = decoder->readByte(&decoder->bufferStart, &decoder->bufferEnd);
+        decoder->bitsLeft = 8;
       }
 
       // handle the left over bits
       if (bitsLeftToRead > 0) {
         result <<= bitsLeftToRead;
-        bitsLeft -= static_cast<uint32_t>(bitsLeftToRead);
-        result |= (curByte >> bitsLeft) & ((1 << bitsLeftToRead) - 1);
+        decoder->bitsLeft -= static_cast<uint32_t>(bitsLeftToRead);
+        result |= (decoder->curByte >> decoder->bitsLeft) & ((1 << bitsLeftToRead) - 1);
       }
       data[i] = static_cast<int64_t>(result);
-      startBit = bitsLeft == 0 ? 0 : (8 - bitsLeft);
+      startBit = decoder->bitsLeft == 0 ? 0 : (8 - decoder->bitsLeft);
     }
   }
 #endif
